@@ -777,7 +777,7 @@ Har sessiya promt boshida ROL oladi:
 
 ---
 
-## JARAYON VA BOSHQARUV QOIDALARI (Q-24..Q-43) 🧭
+## JARAYON VA BOSHQARUV QOIDALARI (Q-24..Q-45) 🧭
 
 > Ish jarayoni/boshqaruv qoidalari (kod uslubi qoidalari A,B,1-23 yuqorida).
 > Manba: 2026-06-02 bajaruvchi sessiyasi (parallel-sessiya nazorati + verify-don't-trust saboqlari).
@@ -815,6 +815,10 @@ Har sessiya promt boshida ROL oladi:
 - **Q-42 — Tab ierarxiyasi:** ⭐ Tab ichida tab — MAKS 2 daraja (asosiy tab → ichki tab); 3+ daraja TAQIQ (chalkashtiradi). Tab tuzilmasi TEKIS yoki aniq 2 daraja; har modul tab tartibi master rejada (`docs/`) belgilanadi. Mavjud 3+ daraja "tab ichida tab" → tekislanadi (faqat egasi ruxsati bilan).
 - **Q-43 — Forma saqlash majburiy:** ⭐ Har forma REAL saqlaydi: FE mutation (POST/PUT) → BE endpoint → real INSERT/UPDATE → DB. "Saqlash" tugmasi faqat local state o'zgartirsa yoki echo qaytarsa = XATO. Forma yaratilsa: BE endpoint + DB jadval + real saqlash + qayta yuklashda ko'rinish (F1/F2). ⭐ "Ko'rinadi lekin saqlamaydi" (fake-create) TAQIQ — Q-40 ning amaliy holati. Verify: kirit → saqla → sahifani qayta och → ko'rinadimi (real saqlangan). Skript: `scripts/check-form-has-save.mjs` (diff-aware, WARN) — forma bor lekin mutation yo'q → WARN; escape `// no-save-form`.
 
+### 🅵️ Operatsion / muhit
+- **Q-44 — Windows `nest watch` crash = muhit, kod emas:** Katta rebuilddan keyin backend :3030 tushishi mumkin (000) — Windows `nest watch` tree-kill bug (manba: `docs/dedup-safety-rules.md`). Bu KOD xatosi EMAS (typecheck + DB-proof PASS bo'lsa). **Belgi:** `/api/auth/health` ham 000 (butun server tushgan, bitta endpoint emas). **Chora:** dev-serverni qayta ishga tushir (`pnpm --filter @europrint/api run dev:unsafe`) — panik yo'q. **Verify (Q-32):** server tushganda → static fallback (typecheck + rollback-tx DB-proof) bilan fix tasdiqlanadi; jonli-HTTP isbot server qaytgach + login bilan.
+- **Q-45 — Log fayllar HECH QACHON commit qilinmaydi (xavfsizlik) 🔴:** `backend.log*` va boshqa loglar JWT token / sezgir runtime ma'lumot saqlashi mumkin → `.gitignore`'da, HECH QACHON commit qilinmaydi. ⚠️ Nozik nuance: `*.log` rotated loglarni (`backend.log.prev3` — `.prev3` bilan tugaydi) **ushlamaydi** → `backend.log*` + `*.log.*` kerak. Agar log commit'ga tushib qolsa → darrov olib tashla (`git rm --cached`).
+
 ---
 
-*Yangilangan: 2026-06-03 | Q-39..Q-43 qo'shildi (Q-39 kod-qotirish/regressiya, Q-40 ishlaydi≠to'g'ri + master-reja o'lchovi, Q-41 dizayn izchillik, Q-42 tab ierarxiya ≤2 daraja, Q-43 forma saqlash majburiy + `check-form-has-save` guard). Q-24..Q-38 (jarayon/boshqaruv — sessiya protokoli, ruxsat darvozasi, verify-don't-trust, secret-himoya, subagent izolyatsiya). Qoida 23 (2026-06-02, parallel sessiya rollari). Qoida 22 (2026-05-30, Ombor+POS sidebar). Qoidalar 17-21 (2026-05-28..29).*
+*Yangilangan: 2026-06-03 | Q-44..Q-45 qo'shildi (Q-44 Windows nest-watch crash = muhit, kod emas; Q-45 log fayllar hech qachon commit qilinmaydi — JWT token xavfi, `*.log` rotated loglarni ushlamaydi → `backend.log*`+`*.log.*`). Q-39..Q-43 (kod-qotirish, ishlaydi≠to'g'ri+master-reja, dizayn izchillik, tab ≤2 daraja, forma saqlash + `check-form-has-save`). Q-24..Q-38 (jarayon/boshqaruv). Qoida 23 (parallel sessiya rollari). Qoida 22 (Ombor+POS sidebar). Qoidalar 17-21.*
