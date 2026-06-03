@@ -80,10 +80,6 @@ export default function PosLedger() {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("ledger.title")}</h2>
-        <div style={{ flex: 1 }} />
-        <a className="pos-btn pos-btn-ghost" href={`${(import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "")}/api/pos/reports/statement/pdf`} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>
-          📄 {t("ledger.getPdf")}
-        </a>
       </div>
 
       {/* Summary cards */}
