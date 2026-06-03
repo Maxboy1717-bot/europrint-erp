@@ -19,6 +19,7 @@ export interface IFinanceExtendedRepository {
   updateIncomeExpense(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   deleteIncomeExpense(id: number): Promise<Result<void>>;
   findInventoryCounts(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
+  createInventoryCount(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   findAssetInventory(limit: number, offset: number, status?: string): Promise<Result<{ data: Row[]; count: number }>>;
   findAssetInventoryById(id: string): Promise<Result<object | null>>;
   findDailyMetrics(limit: number, offset: number, date?: string): Promise<Result<{ data: Row[]; count: number }>>;

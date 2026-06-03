@@ -107,6 +107,14 @@ export class FinanceExtendedService {
   
     });}
 
+  async createInventoryCount(dto: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.repo.createInventoryCount(dto);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
   async findAssetInventory(query: Record<string, unknown> = {}){
     return safeCall(async () => {
     const page = Number(query.page ?? 1);

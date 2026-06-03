@@ -111,6 +111,23 @@ export class DrizzleFinanceExtendedRepository implements IFinanceExtendedReposit
     } catch (e: unknown) { return Err((e as Error).message || 'Inventarizatsiya topilmadi'); }
   }
 
+  async createInventoryCount(dto: Row): Promise<Result<Row>> {
+    try {
+      const warehouseId = dto.warehouseId != null ? Number(dto.warehouseId) : null;
+      const countDate   = dto.countDate  != null ? String(dto.countDate)    : null;
+      const countType   = dto.countType  != null ? String(dto.countType)    : 'full';
+      const notes       = dto.notes      != null ? String(dto.notes)        : null;
+      // Raw parametrized SQL (Qoida B): inventory_counts has columns the Drizzle stub may lack;
+      // count_number/count_date/count_type are NOT NULL, so generate count_number + default the rest.
+      const r = await runQuery<Row>(sql`
+        INSERT INTO inventory_counts (count_number, count_date, warehouse_id, count_type, notes)
+        VALUES ('INV-' || to_char(NOW(), 'YYYYMMDDHH24MISS'), COALESCE(${countDate}::date, CURRENT_DATE), ${warehouseId}, ${countType}, ${notes})
+        RETURNING *
+      `);
+      return Ok((r.rows[0] ?? {}) as Row);
+    } catch (e: unknown) { return Err((e as Error).message || 'Inventarizatsiya yaratishda xatolik'); }
+  }
+
   async findAssetInventory(limit: number, offset: number, status?: string): Promise<Result<{ data: Row[]; count: number }>> {
     try {
       const [rowsResult, countResult] = await Promise.all([
