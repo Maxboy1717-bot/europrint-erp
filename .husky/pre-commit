@@ -102,3 +102,6 @@ node scripts/check-endpoint-test.mjs || true
 
 # Q-35 — New CREATE TABLE without an "APPROVED:" owner marker (WARN only).
 node scripts/check-unauthorized-migration.mjs || true
+
+# Q-43 — Staged FE form with no real save path (WARN only): form mutates only local state.
+node scripts/check-form-has-save.mjs || true
