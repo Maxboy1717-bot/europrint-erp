@@ -77,14 +77,11 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/video-progress',            LessonPlayerPage],         // Video lesson player
 
   // ── Still Stub (no real backend/page built yet) ───────────────────────────
-  ['/auth',                      Stub],   // auth handled by auth system
   ['/export',                    Stub],   // export module not yet built
-  ['/gpt',                       Stub],   // external GPT, deferred
   ['/micro-modules',             Stub],   // LMS micro-modules, deferred
   ['/modules',                   Stub],   // module manager, deferred
   ['/pos/printer-config',        Stub],   // printer HW config, deferred
   ['/sap',                       Stub],   // SAP integration, deferred
-  ['/v2/pos/printer-config',     Stub],   // duplicate, deferred
 
   // ── Real pages (prior sessions) ───────────────────────────────────────────
   ['/3way-match',                ThreeWayMatchPage],
