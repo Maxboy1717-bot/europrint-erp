@@ -9,6 +9,7 @@ import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
+import { COMMISSION_RATE } from '@common/constants/business.constants';
 
 import { SECONDS_PER_DAY } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
@@ -50,8 +51,8 @@ export class SalesRepository {
   async getCommissionCalculations(managerId: number | null): Promise<Result<Row[]>>  {
   try {
       return managerId
-        ? exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * 0.05)::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to = e.id AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.id = ${managerId} AND e.department = 'Sales' GROUP BY e.id, e.full_name`)
-        : exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * 0.05)::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to = e.id AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.department = 'Sales' GROUP BY e.id, e.full_name`);  } catch (_e) {
+        ? exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * ${COMMISSION_RATE})::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to = e.id AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.id = ${managerId} AND e.department = 'Sales' GROUP BY e.id, e.full_name`)
+        : exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * ${COMMISSION_RATE})::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to = e.id AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.department = 'Sales' GROUP BY e.id, e.full_name`);  } catch (_e) {
     return Err(String(_e));
   }
 

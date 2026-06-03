@@ -8,6 +8,7 @@ import { runQuery } from '@shared/db';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AiRouterCallService } from '../ai/application/services/ai-router-call.service';
 import { isOk } from '@common/result';
+import { VIP_REVENUE_THRESHOLD_UZS, VIP_ACTIVE_WINDOW_DAYS, CHURN_MED_DAYS } from '@common/constants/business.constants';
 
 @Injectable()
 export class MarketingAgentService {
@@ -53,7 +54,7 @@ export class MarketingAgentService {
     return r.rows.map(row => {
       const total = Number(row.total);
       const lastDays = row.last ? Math.floor((Date.now() - new Date(row.last).getTime()) / 86400_000) : 999;
-      const segment: 'VIP' | 'regular' | 'at_risk' = total > 100_000_000 && lastDays < 30 ? 'VIP' : lastDays > 90 ? 'at_risk' : 'regular';
+      const segment: 'VIP' | 'regular' | 'at_risk' = total > VIP_REVENUE_THRESHOLD_UZS && lastDays < VIP_ACTIVE_WINDOW_DAYS ? 'VIP' : lastDays > CHURN_MED_DAYS ? 'at_risk' : 'regular';
       return { customerId: Number(row.id), segment };
     });
   }

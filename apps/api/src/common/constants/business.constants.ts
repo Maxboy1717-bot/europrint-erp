@@ -138,6 +138,11 @@ export const BULK_DISCOUNT_SMALL = { minQty: 50,  rate: 0.05 } as const;
 export const CHURN_HIGH_DAYS = 180;
 export const CHURN_MED_DAYS  = 90;
 
+/** RFM customer segmentation (marketing-agent.segmentCustomers): VIP = lifetime deal
+ *  value above the threshold AND last order within the active window; at-risk reuses CHURN_MED_DAYS. */
+export const VIP_REVENUE_THRESHOLD_UZS = 100_000_000;
+export const VIP_ACTIVE_WINDOW_DAYS    = 30;
+
 // ---------------------------------------------------------------------------
 // ABC score weighting (customer value ranking)
 // ---------------------------------------------------------------------------
