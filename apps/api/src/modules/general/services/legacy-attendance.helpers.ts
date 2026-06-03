@@ -69,6 +69,43 @@ export async function getMyAttendanceRaw(empId?: string): Promise<Record<string,
   } catch { return []; }
 }
 
+function buildAttendanceTs(date: string | null, time: unknown): string | null {
+  if (time == null) return null;
+  const t = String(time).trim();
+  if (!t) return null;
+  // A bare "HH:MM[:SS]" time is combined with the date; a full ISO datetime is used as-is.
+  if (t.includes('T') || t.length > 8) return t;
+  return date ? `${date}T${t}` : null;
+}
+
+/**
+ * Real INSERT for the legacy POST /api/attendance form (AddAttendanceDialog) — this was a
+ * `{ id: Date.now(), ... }` echo. Writes attendance_records, the SAME table getAttendanceRaw
+ * reads, so a saved record shows up on reload. event_type is NOT NULL → 'manual'; event_time is
+ * set so the new row sorts to the top of the getAttendanceRaw list. Parametrized (Qoida B).
+ */
+export async function insertAttendanceRecordRaw(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const rawUser = body['userId'] ?? body['employeeId'];
+  const userId =
+    rawUser != null && String(rawUser).trim() !== '' && !Number.isNaN(Number(rawUser)) ? Number(rawUser) : null;
+  const date = body['date'] != null && String(body['date']).trim() !== '' ? String(body['date']) : null;
+  const checkIn = buildAttendanceTs(date, body['checkIn']);
+  const checkOut = buildAttendanceTs(date, body['checkOut']);
+  const status = body['status'] != null ? String(body['status']) : null;
+  const notes = body['notes'] != null ? String(body['notes']) : null;
+  const r = await db.execute(sql`
+    INSERT INTO attendance_records
+      (user_id, employee_id, date, check_in, check_out, status, notes, event_type, source, event_time)
+    VALUES
+      (${userId}, ${userId}, ${date}::date, ${checkIn}::timestamp, ${checkOut}::timestamp,
+       ${status}, ${notes}, 'manual', 'manual', NOW())
+    RETURNING *
+  `);
+  const row = r.rows[0] as Record<string, unknown> | undefined;
+  if (!row) throw new Error('attendance_records insert returned no row');
+  return row;
+}
+
 export async function getZoneLogsRaw(): Promise<Record<string, unknown>[]> {
   try {
     const rows = await db.select().from(zone_tracking_logs).orderBy(desc(zone_tracking_logs.created_at)).limit(100);

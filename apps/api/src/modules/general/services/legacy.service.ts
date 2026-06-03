@@ -35,10 +35,12 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
+import { safeCall, Result } from '@common/result';
 import {
   findAdminByUsernameRaw, findAdminByIdRaw,
   getFaceEmbeddingsRaw, deleteFaceEmbeddingRaw,
   getAttendanceRaw, getMyAttendanceRaw, getZoneLogsRaw, getAttendanceStatsRaw,
+  insertAttendanceRecordRaw,
   getSafetyViolationsUserRaw, getDisciplineUserRaw, getCertificatesUserRaw,
 } from './legacy-attendance.helpers';
 import {
@@ -70,6 +72,9 @@ export class LegacyService {
   async getMyAttendance(empId?: string)       { return getMyAttendanceRaw(empId); }
   async getZoneLogs()                         { return getZoneLogsRaw(); }
   async getAttendanceStats()                  { return getAttendanceStatsRaw(); }
+  async createAttendance(body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    return safeCall(() => insertAttendanceRecordRaw(body), 'DB_ERROR');
+  }
 
   // ─── Papka Orders / Machine Tasks ───────────────────────────────────────────
   async getPapkaOrders(opts?: Parameters<typeof getPapkaOrdersRaw>[0])    { return getPapkaOrdersRaw(opts); }

@@ -202,6 +202,6 @@ export class GeneralLegacyBController {
   @HttpCode(HttpStatus.CREATED)
   async createAttendance(@Body() body: unknown) {
     const dto = CreateAttendanceSchema.parse(body);
-    return { id: Date.now(), ...dto, created: true };
+    return unwrapOrInternal(await this.svc.createAttendance(dto));
   }
 }
