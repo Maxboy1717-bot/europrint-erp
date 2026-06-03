@@ -104,11 +104,11 @@ export default function WarehouseDashboardPage() {
             <Badge variant={data.totals.lowStockCount > 0 ? "destructive" : "secondary"}>{data.totals.lowStockCount}</Badge>
           </CardHeader>
           <CardContent>
-            {data.lowStock.length === 0 ? (
+            {(Array.isArray(data.lowStock) ? data.lowStock : []).length === 0 ? (
               <p className="py-2 text-sm text-muted-foreground">{tLabel("common.whDash.lowStockOk", "Barcha materiallar yetarli")}</p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {data.lowStock.map((it) => (
+                {(Array.isArray(data.lowStock) ? data.lowStock : []).map((it) => (
                   <Link
                     key={`${it.warehouseId}-${it.materialId}`}
                     href={`/wms/warehouse-stock/${it.warehouseId}`}

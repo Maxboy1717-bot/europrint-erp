@@ -58,7 +58,7 @@ export class WeeklyPlanService {
         plans = (plansR.ok ? plansR.data : []) as Record<string, unknown>[];
       }
       // P1.28.1: translate snake_case DB rows to camelCase so FE types work
-      const normalised = plans.map((p) => ({
+      const normalised = (Array.isArray(plans) ? plans : []).map((p) => ({
         id:              p['id'],
         employeeId:      p['employee_id'] ?? p['employeeId'],
         weekStart:       p['week_start']  ?? p['weekStart'],

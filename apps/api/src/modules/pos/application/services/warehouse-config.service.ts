@@ -81,7 +81,7 @@ export class WarehouseConfigService {
         ORDER BY mc.xom_ashyo NULLS LAST, ws.id
         LIMIT 500
       `));
-      const totalQuantity = stock.reduce((s, r) => s + Number(r['quantity'] ?? 0), 0);
+      const totalQuantity = (Array.isArray(stock) ? stock : []).reduce((s, r) => s + Number(r['quantity'] ?? 0), 0);
       return { warehouse: wh, typeConfig, stock, lineCount: stock.length, totalQuantity };
     });
   }

@@ -211,7 +211,7 @@ export default function ProcurementPage() {
               <Search className="mr-1 h-4 w-4" /> {tLabel("common.procurement.view", "Ko'rish")}
             </Button>
           </div>
-          {worklist && (worklist.length === 0 ? (
+          {Array.isArray(worklist) && (worklist.length === 0 ? (
             <p className="text-sm text-muted-foreground">{tLabel("common.procurement.noWorklist", "Tasdiq kutayotgan so'rov yo'q.")}</p>
           ) : (
             <ul className="space-y-2">

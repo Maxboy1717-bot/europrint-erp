@@ -163,13 +163,13 @@ function Donut({ segments, centerLabel, centerValue, size = 168, thickness = 26 
   centerLabel: string; centerValue: string; size?: number; thickness?: number;
 }) {
   const r = (size - thickness) / 2;
-  const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+  const total = (Array.isArray(segments) ? segments : []).reduce((s, x) => s + x.value, 0) || 1;
   let cumulative = 0;
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line-warm-dim)" strokeWidth={thickness} />
-        {segments.map((s, i) => {
+        {(Array.isArray(segments) ? segments : []).map((s, i) => {
           const pct = (s.value / total) * 100;
           const start = cumulative;
           cumulative += pct;
