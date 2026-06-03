@@ -194,11 +194,15 @@ export class AssetManagementController {
   }
 
   @Put('assets/:id/depreciate')
-  depreciate(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, depreciated: true, ...b }; }
+  async depreciate(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.depreciateAsset(id));
+  }
 
   @Post('assets/:id/depreciate')
   @HttpCode(HttpStatus.OK)
-  postDepreciate(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, depreciated: true, ...b }; }
+  async postDepreciate(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.depreciateAsset(id));
+  }
 
   @Post('insurance')
   @HttpCode(HttpStatus.CREATED)
@@ -208,8 +212,12 @@ export class AssetManagementController {
   }
 
   @Put('maintenance/:id/complete')
-  completeMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, status: 'completed', ...b }; }
+  async completeMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) {
+    return unwrapOrInternal(await this.svc.completeMaintenance(id, b));
+  }
 
   @Patch('maintenance/:id/complete')
-  patchCompleteMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) { return { id, status: 'completed', ...b }; }
+  async patchCompleteMaintenance(@Param('id') id: string, @Body() b: Record<string, unknown>) {
+    return unwrapOrInternal(await this.svc.completeMaintenance(id, b));
+  }
 }

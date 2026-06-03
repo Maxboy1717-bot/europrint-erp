@@ -178,4 +178,25 @@ export class AssetManagementService {
     if (!result.ok) return Err(result.error);
     return Ok(result.data[0] as TransferRow | undefined);
   }
+
+  async depreciateAsset(id: string): Promise<Result<Record<string, unknown>>> {
+    const assetId = Number(id);
+    if (!Number.isInteger(assetId) || assetId <= 0) {
+      return Err({ code: 'BAD_REQUEST', message: `Invalid asset id: ${id}` });
+    }
+    const result = await this.repo.depreciateAsset(assetId);
+    if (!result.ok) return Err(result.error);
+    const row = (Array.isArray(result.data) ? result.data : [])[0];
+    if (!row) return Err({ code: 'NOT_FOUND', message: `Asset ${id} not found` });
+    return Ok(row);
+  }
+
+  async completeMaintenance(id: string, body: { cost?: unknown }): Promise<Result<Record<string, unknown>>> {
+    const cost = body?.cost != null ? String(body.cost) : null;
+    const result = await this.repo.completeMaintenance(id, cost);
+    if (!result.ok) return Err(result.error);
+    const row = (Array.isArray(result.data) ? result.data : [])[0];
+    if (!row) return Err({ code: 'NOT_FOUND', message: `Maintenance ${id} not found` });
+    return Ok(row);
+  }
 }

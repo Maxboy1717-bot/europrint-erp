@@ -8,6 +8,7 @@ import { db, runQuery } from '@shared/db';
 import { assetItems, assetMaintenance, assetDisposals, assetTransfers } from '@shared/db/europrint-compat';
 import { eq, desc, sql } from 'drizzle-orm';
 import { Ok, Err, safeCall, AppErr } from '@common/result';
+import { MONTHS_PER_YEAR } from '@common/constants/business.constants';
 
 type Row = Record<string, unknown>;
 
@@ -184,6 +185,48 @@ export class AssetManagementRepo {
         ${data.contactInfo ?? null},
         ${data.notes ?? null}
       )
+      RETURNING *
+    `)).rows, 'DB_ERROR');
+  }
+
+  /**
+   * Straight-line one-month depreciation (Stage 1.4 — was a fake echo).
+   * monthly = (purchase_value − salvage_value) / (useful_life_years × MONTHS_PER_YEAR);
+   * a missing/zero useful_life yields 0 (no depreciation). current_value is floored at
+   * salvage_value and accumulated_depreciation is capped at the depreciable base so an
+   * asset can never over-depreciate. salvage_value/useful_life/accumulated_depreciation
+   * are not in the Drizzle compat barrel → parametrized raw SQL (Qoida B).
+   */
+  depreciateAsset(id: number) {
+    return safeCall(async () => (await runQuery<Row>(sql`
+      UPDATE asset_items a SET
+        accumulated_depreciation = LEAST(
+          COALESCE(a.accumulated_depreciation, 0) + COALESCE(d.monthly, 0),
+          GREATEST(COALESCE(a.purchase_value, 0) - COALESCE(a.salvage_value, 0), 0)
+        ),
+        current_value = GREATEST(
+          COALESCE(a.salvage_value, 0),
+          COALESCE(a.current_value, a.purchase_value, 0) - COALESCE(d.monthly, 0)
+        )
+      FROM (
+        SELECT GREATEST(COALESCE(purchase_value, 0) - COALESCE(salvage_value, 0), 0)
+               / (NULLIF(COALESCE(useful_life, 0), 0) * ${MONTHS_PER_YEAR}::numeric) AS monthly
+        FROM asset_items WHERE id = ${id}
+      ) d
+      WHERE a.id = ${id}
+      RETURNING a.id,
+                a.current_value::float8            AS "currentValue",
+                a.accumulated_depreciation::float8 AS "accumulatedDepreciation",
+                COALESCE(d.monthly, 0)::float8     AS "monthlyDepreciation"
+    `)).rows, 'DB_ERROR');
+  }
+
+  /** Mark a maintenance record completed (Stage 1.4 — was a fake echo). */
+  completeMaintenance(id: string, cost: string | null) {
+    return safeCall(async () => (await runQuery<Row>(sql`
+      UPDATE asset_maintenance
+      SET status = 'completed', completed_at = NOW(), cost = COALESCE(${cost}, cost)
+      WHERE id = ${id}::uuid
       RETURNING *
     `)).rows, 'DB_ERROR');
   }
