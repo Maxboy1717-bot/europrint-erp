@@ -4,6 +4,7 @@
  */
 
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { papka_orders_tech, technology_approvals, tech_cards, clients } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 
@@ -20,7 +21,7 @@ type Row = Record<string, unknown>;
 export async function queryTechOrders(status?: string): Promise<Row[]> {
   const t = papka_orders_tech as unknown as Record<string, never>;
   void t;
-  const rows = await db.execute(sql`
+  const rows = await typedExecute<Row>(sql`
     SELECT
       po.id::text AS id,
       po.papka_no AS "papkaNo",
@@ -39,7 +40,7 @@ export async function queryTechOrders(status?: string): Promise<Row[]> {
     LIMIT 100
   `);
   void clients; void eq;
-  return ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[])) as Row[];
+  return rows;
 }
 
 // Functions below use raw SQL to access the print-orders papka_orders schema
@@ -47,7 +48,7 @@ export async function queryTechOrders(status?: string): Promise<Row[]> {
 // TODO PA-SCHEMA: Unify papka_orders duplicates and restore Drizzle column access.
 
 export async function queryTechApprovalLog(orderId: string): Promise<Row> {
-  const rows = await db.execute(sql`
+  const rows = await typedExecute<Row>(sql`
     SELECT
       ta.id::text AS id,
       po.papka_no AS order_no,
@@ -65,12 +66,12 @@ export async function queryTechApprovalLog(orderId: string): Promise<Row> {
     WHERE po.id::text = ${orderId}
     LIMIT 1
   `);
-  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  const out = rows[0];
   return (out ?? {}) as Row;
 }
 
 export async function queryTechDashboardStats(): Promise<Row> {
-  const rows = await db.execute(sql`
+  const rows = await typedExecute<Row>(sql`
     SELECT
       COUNT(*) FILTER (WHERE status = 'pending_tech') AS pending,
       COUNT(*) FILTER (WHERE status = 'approved' AND updated_at::date = CURRENT_DATE) AS approved_today,
@@ -78,12 +79,12 @@ export async function queryTechDashboardStats(): Promise<Row> {
     FROM papka_orders
     WHERE created_at >= NOW() - INTERVAL '30 days'
   `);
-  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  const out = rows[0];
   return (out ?? {}) as Row;
 }
 
 export async function queryTechCards(): Promise<Row[]> {
-  const rows = await db.execute(sql`
+  const rows = await typedExecute<Row>(sql`
     SELECT
       tc.id::text AS id,
       tc.papka_order_id::text AS order_id,
@@ -98,11 +99,11 @@ export async function queryTechCards(): Promise<Row[]> {
     ORDER BY tc.created_at DESC
     LIMIT 50
   `);
-  return ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[])) as Row[];
+  return rows;
 }
 
 export async function queryOrderTechCard(orderId: string): Promise<Row> {
-  const rows = await db.execute(sql`
+  const rows = await typedExecute<Row>(sql`
     SELECT
       tc.id,
       tc.papka_order_id,
@@ -117,12 +118,12 @@ export async function queryOrderTechCard(orderId: string): Promise<Row> {
     WHERE tc.papka_order_id = ${Number(orderId)}
     LIMIT 1
   `);
-  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  const out = rows[0];
   return (out ?? { orderId, message: 'Texkarta yaratilmagan' }) as Row;
 }
 
 export async function queryRunAiCheck(orderId: string): Promise<Row> {
-  const rows = await db.execute(sql`
+  const rows = await typedExecute<Row>(sql`
     SELECT
       po.papka_no AS order_number,
       po.tiraj AS quantity,
@@ -135,7 +136,7 @@ export async function queryRunAiCheck(orderId: string): Promise<Row> {
     WHERE po.id = ${Number(orderId)}
     LIMIT 1
   `);
-  const out = ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[]))[0];
+  const out = rows[0];
   return (out ?? {}) as Row;
 }
 

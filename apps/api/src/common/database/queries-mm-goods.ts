@@ -12,6 +12,7 @@
  */
 
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import {
   mm_goods_receipts_ext, mm_goods_receipt_items,
   mm_goods_issues_ext, mm_goods_issue_items,
@@ -23,7 +24,7 @@ import { eq, sql, desc } from 'drizzle-orm';
 type Row = Record<string, unknown>;
 
 export async function queryGoodsReceipts(pid: number | null, status: string | undefined, lim: number, off: number): Promise<Row[]> {
-  const rows = await db.execute(sql`
+  const rows = await typedExecute<Row>(sql`
     SELECT
       gr.id,
       gr.purchase_order_id,
@@ -43,11 +44,11 @@ export async function queryGoodsReceipts(pid: number | null, status: string | un
     ORDER BY gr.created_at DESC
     LIMIT ${lim} OFFSET ${off}
   `);
-  return ((rows as unknown as { rows?: Row[] }).rows ?? (rows as unknown as Row[])) as Row[];
+  return rows;
 }
 
 export async function queryGoodsReceipt(gid: number): Promise<{ receipt: Row | null; items: Row[] }> {
-  const receiptRowsRaw = await db.execute(sql`
+  const receiptRowsRaw = await typedExecute<Row>(sql`
     SELECT
       gr.id,
       gr.purchase_order_id,
@@ -63,7 +64,7 @@ export async function queryGoodsReceipt(gid: number): Promise<{ receipt: Row | n
     LEFT JOIN mm_vendors v ON v.id = po.vendor_id
     WHERE gr.id = ${gid}
   `);
-  const receiptRows = ((receiptRowsRaw as unknown as { rows?: Row[] }).rows ?? (receiptRowsRaw as unknown as Row[])) as Row[];
+  const receiptRows = receiptRowsRaw;
   if (!receiptRows.length) return { receipt: null, items: [] };
 
   const itemRows = await db.select({
@@ -83,13 +84,13 @@ export async function queryGoodsReceipt(gid: number): Promise<{ receipt: Row | n
 }
 
 export async function execCreateGoodsReceipt(purchase_order_id: unknown, received_by: unknown, notes: unknown, delivery_note: unknown): Promise<Row> {
-  const rowsRaw = await db.execute(sql`
+  const rowsRaw = await typedExecute<Row>(sql`
     INSERT INTO mm_goods_receipts (purchase_order_id, received_by, notes, delivery_note, status)
     VALUES (${purchase_order_id as number}, ${(received_by as number | null) ?? null},
       ${(notes as string | null) ?? null}, ${(delivery_note as string | null) ?? null}, 'pending')
     RETURNING *
   `);
-  const rows = ((rowsRaw as unknown as { rows?: Row[] }).rows ?? (rowsRaw as unknown as Row[])) as Row[];
+  const rows = rowsRaw;
   return (rows[0] ?? {}) as Row;
 }
 
@@ -104,7 +105,7 @@ export async function execInsertGoodsReceiptItem(receiptId: unknown, material_id
 }
 
 export async function execUpdateGoodsReceipt(gid: number, status: unknown, notes: unknown): Promise<Row[]> {
-  const rowsRaw = await db.execute(sql`
+  const rowsRaw = await typedExecute<Row>(sql`
     UPDATE mm_goods_receipts
     SET status = COALESCE(${status ?? null}, status),
         notes = COALESCE(${notes ?? null}, notes),
@@ -112,7 +113,7 @@ export async function execUpdateGoodsReceipt(gid: number, status: unknown, notes
     WHERE id = ${gid}
     RETURNING *
   `);
-  return (((rowsRaw as unknown as { rows?: Row[] }).rows ?? (rowsRaw as unknown as Row[])) as Row[]);
+  return rowsRaw;
 }
 
 export async function execDeleteGoodsReceipt(gid: number): Promise<void> {
@@ -120,7 +121,7 @@ export async function execDeleteGoodsReceipt(gid: number): Promise<void> {
 }
 
 export async function queryGoodsIssues(status: string | undefined, lim: number, off: number): Promise<Row[]> {
-  const rowsRaw = await db.execute(sql`
+  const rowsRaw = await typedExecute<Row>(sql`
     SELECT
       id, issued_by, cost_center, work_order_id, notes, status, created_at,
       (SELECT full_name FROM employees WHERE id = issued_by LIMIT 1) AS issued_by_name
@@ -129,18 +130,18 @@ export async function queryGoodsIssues(status: string | undefined, lim: number, 
     ORDER BY created_at DESC
     LIMIT ${lim} OFFSET ${off}
   `);
-  return (((rowsRaw as unknown as { rows?: Row[] }).rows ?? (rowsRaw as unknown as Row[])) as Row[]);
+  return rowsRaw;
 }
 
 export async function queryGoodsIssue(gid: number): Promise<{ issue: Row | null; items: Row[] }> {
-  const issueRowsRaw = await db.execute(sql`
+  const issueRowsRaw = await typedExecute<Row>(sql`
     SELECT
       id, issued_by, cost_center, work_order_id, notes, status, created_at,
       (SELECT full_name FROM employees WHERE id = issued_by LIMIT 1) AS issued_by_name
     FROM mm_goods_issues
     WHERE id = ${gid}
   `);
-  const issueRows = (((issueRowsRaw as unknown as { rows?: Row[] }).rows ?? (issueRowsRaw as unknown as Row[])) as Row[]);
+  const issueRows = issueRowsRaw;
   if (!issueRows.length) return { issue: null, items: [] };
 
   const itemRows = await db.select({
@@ -159,13 +160,13 @@ export async function queryGoodsIssue(gid: number): Promise<{ issue: Row | null;
 }
 
 export async function execCreateGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, notes: unknown): Promise<Row> {
-  const rowsRaw = await db.execute(sql`
+  const rowsRaw = await typedExecute<Row>(sql`
     INSERT INTO mm_goods_issues (issued_by, cost_center, work_order_id, notes, status)
     VALUES (${(issued_by as number | null) ?? null}, ${(cost_center as string | null) ?? null},
       ${(work_order_id as number | null) ?? null}, ${(notes as string | null) ?? null}, 'pending')
     RETURNING *
   `);
-  const rows = (((rowsRaw as unknown as { rows?: Row[] }).rows ?? (rowsRaw as unknown as Row[])) as Row[]);
+  const rows = rowsRaw;
   return (rows[0] ?? {}) as Row;
 }
 
@@ -179,7 +180,7 @@ export async function execInsertGoodsIssueItem(issueId: unknown, material_id: un
 }
 
 export async function execUpdateGoodsIssue(gid: number, status: unknown, notes: unknown): Promise<Row[]> {
-  const rowsRaw = await db.execute(sql`
+  const rowsRaw = await typedExecute<Row>(sql`
     UPDATE mm_goods_issues
     SET status = COALESCE(${status ?? null}, status),
         notes = COALESCE(${notes ?? null}, notes),
@@ -187,7 +188,7 @@ export async function execUpdateGoodsIssue(gid: number, status: unknown, notes: 
     WHERE id = ${gid}
     RETURNING *
   `);
-  return (((rowsRaw as unknown as { rows?: Row[] }).rows ?? (rowsRaw as unknown as Row[])) as Row[]);
+  return rowsRaw;
 }
 
 export async function execDeleteGoodsIssue(gid: number): Promise<void> {
@@ -196,8 +197,8 @@ export async function execDeleteGoodsIssue(gid: number): Promise<void> {
 
 export async function queryThreeWayMatch(pid: number): Promise<{ purchase_order: unknown; goods_receipts: Row[]; purchase_invoices: Row[] }> {
   const [poRow] = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, pid)).limit(1);
-  const receiptsRaw = await db.execute(sql`SELECT * FROM mm_goods_receipts WHERE purchase_order_id = ${pid}`);
-  const receipts = (((receiptsRaw as unknown as { rows?: Row[] }).rows ?? (receiptsRaw as unknown as Row[])) as Row[]);
+  const receiptsRaw = await typedExecute<Row>(sql`SELECT * FROM mm_goods_receipts WHERE purchase_order_id = ${pid}`);
+  const receipts = receiptsRaw;
   const invoices = poRow?.vendor_id
     ? await db.select().from(purchase_invoices).where(eq(purchase_invoices.vendor_id, poRow.vendor_id))
     : [];
