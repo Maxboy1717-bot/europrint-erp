@@ -202,7 +202,7 @@ export class WmsWarehouseGatewayController {
     @Body() body: unknown,
   ) {
     const dto = GoodsReceiptLineSchema.parse(body);
-    return { id: Date.now(), receiptId: safeInt(id, 0), ...dto, created: true };
+    return await this.svc.addGoodsReceiptLine(safeInt(id, 0), dto);
   }
 
   @ApiOperation({ summary: 'Complete goods receipt' })

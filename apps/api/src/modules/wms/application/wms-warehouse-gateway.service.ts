@@ -65,6 +65,10 @@ export class WmsWarehouseGatewayService {
     return this.repo.getGoodsReceiptLines(receiptId);
   }
 
+  async addGoodsReceiptLine(receiptId: number, body: Record<string, unknown>) {
+    return this.repo.addGoodsReceiptLine(receiptId, body);
+  }
+
   async qcLine(lineId: number, passed: boolean, notes: string | null, userId: number | null) {
     return this.repo.qcLine(lineId, passed, notes, userId);
   }

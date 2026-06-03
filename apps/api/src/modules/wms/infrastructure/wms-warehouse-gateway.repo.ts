@@ -174,6 +174,20 @@ export class WmsWarehouseGatewayRepo {
     return rows.rows as Row[];
   }
 
+  async addGoodsReceiptLine(receiptId: number, body: Row): Promise<Row> {
+    const materialId = body.materialId ?? body.material_id ?? null;
+    const quantity   = body.quantity ?? 0;
+    const unitCost   = body.unitCost ?? body.unit_cost ?? 0;
+    // receipt_id is NOT NULL; goods_receipt_id is what getGoodsReceiptLines() filters on -> set both.
+    // received_quantity is NOT NULL -> fall back to quantity.
+    const rows = await runQuery<Row>(sql`
+      INSERT INTO mm_goods_receipt_lines (receipt_id, goods_receipt_id, material_id, received_quantity, quantity, unit_cost, created_at)
+      VALUES (${receiptId}, ${receiptId}, ${materialId}, ${quantity}, ${quantity}, ${unitCost}, NOW())
+      RETURNING *
+    `);
+    return (rows.rows[0] ?? {}) as Row;
+  }
+
   async qcLine(lineId: number, passed: boolean, notes: string | null, userId: number | null): Promise<Row> {
     const rows = await runQuery<Row>(sql`
       UPDATE mm_goods_receipt_lines SET qc_status = ${passed ? 'passed' : 'failed'}, qc_notes = ${notes}, qc_by = ${userId}, qc_at = NOW()
