@@ -5,7 +5,7 @@
 
 import { GL } from "../constants/gl-accounts.constants";
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { Result, Ok, Err, AppErr } from '@common/result';
+import { Result, Err } from '@common/result';
 import { IGlPostingRepository, GL_POSTING_REPO } from '../repositories/i-gl-posting.repo';
 
 export interface JournalLine {
@@ -92,30 +92,27 @@ export class GlPostingService {
     }
 
     const entryDate = new Date().toISOString().slice(0, 10);
-    let firstId: number | undefined;
 
-    for (const line of safeLines) {
-      const amount = line.debit > 0 ? line.debit : line.credit;
-      if (amount <= 0) continue;
-
-      const entryNumber = `${reference}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const insertResult = await this.glPostingRepo.insertEntry({
-        entryNumber,
+    // Build one row per non-zero leg, then insert ALL legs atomically (insertJournal
+    // wraps them in a single db.transaction — a mid-journal failure rolls back every
+    // leg instead of leaving an unbalanced half-journal). Account codes / OFFSET /
+    // entryNumber format / amount selection are unchanged.
+    const rows = safeLines
+      .filter((line) => (line.debit > 0 ? line.debit : line.credit) > 0)
+      .map((line) => ({
+        entryNumber: `${reference}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         entryDate,
         documentType: 'journal',
         debitAccountId:  line.debit  > 0 ? line.accountCode : 'OFFSET',
         creditAccountId: line.credit > 0 ? line.accountCode : 'OFFSET',
-        amount,
+        amount: line.debit > 0 ? line.debit : line.credit,
         description: `${reference} — ${line.accountName}`,
-      });
+      }));
 
-      if (!insertResult.ok) {
-        return Err(AppErr('DB_ERROR', `Failed to insert GL line for ${line.accountName}: ${insertResult.error.message}`));
-      }
-      if (firstId === undefined) firstId = insertResult.data;
+    const result = await this.glPostingRepo.insertJournal(rows);
+    if (result.ok) {
+      this.logger.debug(`Journal entry created - Reference: ${reference}, Debit/Credit: ${totalDebit}`);
     }
-
-    this.logger.debug(`Journal entry created - Reference: ${reference}, Debit/Credit: ${totalDebit}`);
-    return Ok(firstId ?? 0);
+    return result;
   }
 }

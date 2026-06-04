@@ -12,6 +12,7 @@ import type { IGlPostingRepository } from '../../src/modules/finance/domain/repo
 
 const mockGlRepo: IGlPostingRepository = {
   insertEntry: jest.fn().mockResolvedValue(Ok(1)),
+  insertJournal: jest.fn().mockResolvedValue(Ok(1)),
 };
 
 describe('GlPostingService', () => {

@@ -18,6 +18,19 @@ export interface IGlPostingRepository {
     description?: string;
     createdBy?: number;
   }): Promise<Result<number>>;
+
+  /** Atomic multi-leg journal insert — all legs commit together or none (rolls back on any failure). */
+  insertJournal(rows: Array<{
+    entryNumber: string;
+    entryDate: string;
+    documentType: string;
+    documentId?: string;
+    debitAccountId: string;
+    creditAccountId: string;
+    amount: number;
+    description?: string;
+    createdBy?: number;
+  }>): Promise<Result<number>>;
 }
 
 export const GL_POSTING_REPO = Symbol('IGlPostingRepository');
