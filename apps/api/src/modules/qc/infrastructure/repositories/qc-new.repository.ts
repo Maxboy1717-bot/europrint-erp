@@ -199,6 +199,31 @@ export class QcNewRepository {
     }, 'DB_ERROR');
   }
 
+  async updateInspection(id: string, fields: { status?: string; result?: string; notes?: string }): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      // RULE4_EXCEPTION: partial COALESCE update on confirmed live columns (status/result/notes);
+      // id cast to int to match the integer PK. Only provided fields change.
+      const r = await db.execute(sql`
+        UPDATE qc_inspections SET
+          status     = COALESCE(${fields.status ?? null}, status),
+          result     = COALESCE(${fields.result ?? null}, result),
+          notes      = COALESCE(${fields.notes ?? null}, notes),
+          updated_at = NOW()
+        WHERE id = ${Number(id)}
+        RETURNING *
+      `);
+      const rows = ((r as { rows?: Row[] }).rows) ?? [];
+      return rows[0] ?? null;
+    }, 'DB_ERROR');
+  }
+
+  async deleteInspection(id: string): Promise<Result<boolean>> {
+    return safeCall(async () => {
+      const r = await db.execute(sql`DELETE FROM qc_inspections WHERE id = ${Number(id)} RETURNING id`);
+      return (((r as { rows?: Row[] }).rows) ?? []).length > 0;
+    }, 'DB_ERROR');
+  }
+
   async getSupplierRatings(): Promise<Result<unknown[]>> {
     return safeCall(async () => {
       const rows = await db.select({

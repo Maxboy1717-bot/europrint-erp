@@ -95,4 +95,17 @@ export class QcNewService {
   getInspectionById(id: string): ReturnType<QcNewRepository['findInspectionById']> {
     return this.repo.findInspectionById(id);
   }
+
+  updateInspection(id: string, dto: Record<string, unknown>): ReturnType<QcNewRepository['updateInspection']> {
+    // Whitelist the persistable fields; the FE sends `reason` on reject → notes.
+    return this.repo.updateInspection(id, {
+      status: typeof dto.status === 'string' ? dto.status : undefined,
+      result: typeof dto.result === 'string' ? dto.result : undefined,
+      notes:  typeof dto.notes === 'string' ? dto.notes : (typeof dto.reason === 'string' ? dto.reason : undefined),
+    });
+  }
+
+  deleteInspection(id: string): ReturnType<QcNewRepository['deleteInspection']> {
+    return this.repo.deleteInspection(id);
+  }
 }

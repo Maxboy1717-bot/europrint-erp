@@ -108,7 +108,8 @@ export class QcInspectionsController {
     if (!existing.ok || existing.data == null) {
       throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
     }
-    return { statusCode: HttpStatus.OK, data: { id: inspectionId, ...dto, updated: true } };
+    const updated = await this.qcNewService.updateInspection(inspectionId, dto);
+    return { statusCode: HttpStatus.OK, data: unwrapOrNotFoundDefined(updated, `Inspection ${inspectionId} not found`) };
   }
 
   @ApiOperation({ summary: 'Delete inspection' })
@@ -123,6 +124,8 @@ export class QcInspectionsController {
     if (!existing.ok || existing.data == null) {
       throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
     }
-    return { statusCode: HttpStatus.OK, data: { id: inspectionId, deleted: true } };
+    const deleted = await this.qcNewService.deleteInspection(inspectionId);
+    if (!deleted.ok) throw new NotFoundException(`Inspection ${inspectionId} o'chirib bo'lmadi`);
+    return { statusCode: HttpStatus.OK, data: { id: inspectionId, deleted: deleted.data } };
   }
 }
