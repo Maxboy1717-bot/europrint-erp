@@ -60,7 +60,7 @@ export class ProductionRepository {
 
   async addShiftDowntime(id: number, body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`INSERT INTO downtime_events (session_id, duration_min, downtime_type, reason, start_time) VALUES (${id}, ${body.duration_min ?? body.durationMin ?? 0}, ${body.category ?? body.downtimeType ?? 'unplanned'}, ${body.reason ?? null}, NOW()) RETURNING *`);
+      const r = await exec(sql`INSERT INTO downtime_events (session_id, duration_min, event_type, reason_description, started_at) VALUES (${id}, ${body.duration_min ?? body.durationMin ?? 0}, ${body.category ?? body.downtimeType ?? 'unplanned'}, ${body.reason ?? null}, NOW()) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

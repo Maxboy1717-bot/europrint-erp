@@ -44,7 +44,7 @@ export class PpEquipmentRepository implements IPpEquipmentRepo {
 
   async create(body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`INSERT INTO equipment (name, code, work_center_id, status, description) VALUES (${body['name'] ?? null}, ${body['code'] ?? null}, ${body['workCenterId'] ?? null}, ${body['status'] ?? 'active'}, ${body['description'] ?? null}) RETURNING *`);
+      const r = await exec(sql`INSERT INTO equipment (name, equipment_number, work_center_id, status, description) VALUES (${body['name'] ?? null}, ${body['code'] ?? null}, ${body['workCenterId'] ?? null}, ${body['status'] ?? 'active'}, ${body['description'] ?? null}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
