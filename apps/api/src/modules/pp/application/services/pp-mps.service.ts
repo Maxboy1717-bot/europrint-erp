@@ -90,25 +90,18 @@ export class PpMpsService {
   }
 
   private async loadCommittedDemand(): Promise<Map<string, Map<number, number>>> {
-    // Errors propagate: a failed committed-demand query produces incorrect ATP; fail fast
-    // Note: sales_order_items.order_id is varchar, sales_orders.id is integer — cast for join.
-    // delivery_date is varchar; use NULLIF+regexp guard before ::date cast.
+    // Errors propagate: a failed committed-demand query produces incorrect ATP; fail fast.
+    // Live schema: sales_order_items uses sales_order_id / material_id / order_quantity
+    // (integer join to sales_orders.id); sales_orders.delivery_date is timestamptz, so cast
+    // straight to ::date (NULL falls back to created_at via COALESCE).
     const rows = await runQuery(sql`
-      SELECT soi.product_id::text AS product_id,
-             COALESCE(soi.quantity, 0)::numeric AS qty,
-             EXTRACT(WEEK FROM COALESCE(
-               CASE WHEN so.delivery_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
-                    THEN so.delivery_date::date ELSE NULL END,
-               so.created_at::date
-             ))::integer AS week_num
+      SELECT soi.material_id::text AS product_id,
+             COALESCE(soi.order_quantity, 0)::numeric AS qty,
+             EXTRACT(WEEK FROM COALESCE(so.delivery_date::date, so.created_at::date))::integer AS week_num
       FROM sales_order_items soi
-      JOIN sales_orders so ON so.id::text = soi.order_id
+      JOIN sales_orders so ON so.id = soi.sales_order_id
       WHERE so.status NOT IN ('cancelled', 'delivered')
-        AND COALESCE(
-              CASE WHEN so.delivery_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
-                   THEN so.delivery_date::date ELSE NULL END,
-              so.created_at::date
-            ) >= CURRENT_DATE - 28
+        AND COALESCE(so.delivery_date::date, so.created_at::date) >= CURRENT_DATE - 28
       ORDER BY so.delivery_date NULLS LAST
       LIMIT 500
     `);
