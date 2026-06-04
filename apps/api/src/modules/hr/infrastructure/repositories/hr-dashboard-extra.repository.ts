@@ -52,7 +52,7 @@ export class HrDashboardExtraRepository implements IHrDashboardExtraRepo {
           SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
-          LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+          LEFT JOIN org_functions of2 ON of2.department_id = eod.org_department_id
           WHERE eod.user_id = u.id AND eod.is_primary = true
           ORDER BY eod.assigned_at DESC LIMIT 1
         ) primary_org ON true
