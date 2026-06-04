@@ -18,7 +18,7 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 export class PosMiniAppRepository {
   async getUserDetails(userId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT u.id, u.first_name, u.last_name, u.role, u.department_code, e.department_name FROM users u LEFT JOIN employees e ON e.id = u.employee_id WHERE u.id = ${userId} LIMIT 1`);
+      const r = await exec(sql`SELECT u.id, u.first_name, u.last_name, u.role, u.department AS department_code, e.department_name FROM users u LEFT JOIN employees e ON e.id = u.employee_id WHERE u.id = ${userId} LIMIT 1`);
       return r[0] ?? null;
       }, 'DB_ERROR');
   }
@@ -43,13 +43,13 @@ export class PosMiniAppRepository {
 
   async getPendingApprovals(userId: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      return exec(sql`SELECT pmr.id, pmr.request_number AS "requestNumber", pmr.status, pmr.priority, pmr.notes, pmr.created_at AS "createdAt", pmr.department_code AS "departmentCode", u.first_name || ' ' || u.last_name AS "requestedByName", (SELECT json_agg(json_build_object('materialId', prl.material_id, 'name', mc.xom_ashyo, 'nameRu', mc.xom_ashyo_ru, 'requestedQty', prl.requested_qty, 'unit', mc.unit_of_measure)) FROM pos_material_request_lines prl JOIN material_cards mc ON mc.id = prl.material_id WHERE prl.request_id = pmr.id) AS lines FROM pos_material_requests pmr JOIN users u ON u.id = pmr.requested_by WHERE pmr.status = 'pending' AND pmr.department_code IN (SELECT department_code FROM users WHERE id = ${userId}) ORDER BY CASE pmr.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END, pmr.created_at ASC LIMIT 30`);
+      return exec(sql`SELECT pmr.id, pmr.request_number AS "requestNumber", pmr.status, pmr.priority, pmr.notes, pmr.created_at AS "createdAt", pmr.department_code AS "departmentCode", u.first_name || ' ' || u.last_name AS "requestedByName", (SELECT json_agg(json_build_object('materialId', prl.material_id, 'name', mc.xom_ashyo, 'nameRu', mc.xom_ashyo_ru, 'requestedQty', prl.requested_qty, 'unit', mc.unit_of_measure)) FROM pos_material_request_lines prl JOIN material_cards mc ON mc.id = prl.material_id WHERE prl.request_id = pmr.id) AS lines FROM pos_material_requests pmr JOIN users u ON u.id = pmr.requested_by WHERE pmr.status = 'pending' AND pmr.department_code IN (SELECT department FROM users WHERE id = ${userId}) ORDER BY CASE pmr.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END, pmr.created_at ASC LIMIT 30`);
       }, 'DB_ERROR');
   }
 
   async getWarehouses(userId: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      return exec(sql`SELECT DISTINCT w.id, w.name, w.code, w.type FROM warehouses w LEFT JOIN warehouse_access_grants wag ON wag.warehouse_id = w.id AND wag.user_id = ${userId} AND wag.is_active = TRUE LEFT JOIN department_warehouse_map dwm ON dwm.warehouse_id = w.id LEFT JOIN users u ON u.department_code = dwm.department_code AND u.id = ${userId} WHERE w.is_active = TRUE AND (wag.user_id IS NOT NULL OR u.id IS NOT NULL OR EXISTS (SELECT 1 FROM users WHERE id = ${userId} AND role IN ('admin','warehouse_manager','pos_manager'))) ORDER BY w.name LIMIT 20`);
+      return exec(sql`SELECT DISTINCT w.id, w.name, w.code, w.type FROM warehouses w LEFT JOIN warehouse_access_grants wag ON wag.warehouse_id = w.id AND wag.user_id = ${userId} AND wag.is_active = TRUE LEFT JOIN department_warehouse_map dwm ON dwm.warehouse_id = w.id LEFT JOIN users u ON u.department = dwm.department_code AND u.id = ${userId} WHERE w.is_active = TRUE AND (wag.user_id IS NOT NULL OR u.id IS NOT NULL OR EXISTS (SELECT 1 FROM users WHERE id = ${userId} AND role IN ('admin','warehouse_manager','pos_manager'))) ORDER BY w.name LIMIT 20`);
       }, 'DB_ERROR');
   }
 }

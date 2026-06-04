@@ -61,7 +61,7 @@ export class PosReportsRepository {
 
   async getLiabilityReport(): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT elc.*, CONCAT(u.first_name, ' ', u.last_name) AS employee_name, u.department_code, mc.xom_ashyo AS material_name, mc.unit_of_measure FROM employee_liability_cases elc JOIN users u ON u.id = elc.user_id JOIN material_cards mc ON mc.id = elc.material_id WHERE elc.status IN ('OPEN', 'UNDER_REVIEW') ORDER BY elc.assessed_value::numeric DESC`);  } catch (_e) {
+      return exec(sql`SELECT elc.*, CONCAT(u.first_name, ' ', u.last_name) AS employee_name, u.department AS department_code, mc.xom_ashyo AS material_name, mc.unit_of_measure FROM employee_liability_cases elc JOIN users u ON u.id = elc.user_id JOIN material_cards mc ON mc.id = elc.material_id WHERE elc.status IN ('OPEN', 'UNDER_REVIEW') ORDER BY elc.assessed_value::numeric DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 

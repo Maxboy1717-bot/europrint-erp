@@ -49,7 +49,7 @@ export class PosWarehouseAccessGuard implements CanActivate {
     if (fullAccessRoles.includes(user.role)) return true;
     const warehouseId = request.body?.warehouseId ?? request.body?.fromWarehouseId ?? request.body?.toWarehouseId ?? request.query?.warehouseId ?? request.params?.warehouseId;
     if (!warehouseId) return true;
-    const access = await exec(sql`SELECT 1 FROM warehouse_access_grants wag WHERE wag.user_id = ${user.id} AND wag.warehouse_id = ${warehouseId} AND wag.is_active = TRUE AND (wag.expires_at IS NULL OR wag.expires_at > NOW()) UNION SELECT 1 FROM department_warehouse_map dwm JOIN users u ON u.department_code = dwm.department_code WHERE u.id = ${user.id} AND dwm.warehouse_id = ${warehouseId} LIMIT 1`);
+    const access = await exec(sql`SELECT 1 FROM warehouse_access_grants wag WHERE wag.user_id = ${user.id} AND wag.warehouse_id = ${warehouseId} AND wag.is_active = TRUE AND (wag.expires_at IS NULL OR wag.expires_at > NOW()) UNION SELECT 1 FROM department_warehouse_map dwm JOIN users u ON u.department = dwm.department_code WHERE u.id = ${user.id} AND dwm.warehouse_id = ${warehouseId} LIMIT 1`);
     if (access.length === 0) throw new ForbiddenException(`Ombor ${warehouseId} ga kirishga ruxsatingiz yo'q`);
     return true;
   }

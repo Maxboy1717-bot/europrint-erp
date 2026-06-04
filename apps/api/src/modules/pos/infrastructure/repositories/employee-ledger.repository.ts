@@ -59,7 +59,7 @@ export class EmployeeLedgerRepository {
 
   async getDepartmentBalance(departmentCode: string): Promise<Result<EmployeeBalance[]>>  {
   try {  
-      const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_id JOIN users u ON u.id = eil.user_id WHERE u.department_code = ${departmentCode} GROUP BY eil.user_id, eil.material_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
+      const r = await exec(sql`SELECT ${BALANCE_COLS} FROM employee_inventory_ledger eil LEFT JOIN material_cards mc ON mc.id = eil.material_id JOIN users u ON u.id = eil.user_id WHERE u.department = ${departmentCode} GROUP BY eil.user_id, eil.material_id, eil.warehouse_id, mc.xom_ashyo, mc.is_consumable HAVING SUM(CASE WHEN eil.entry_type = 'DEBIT' THEN eil.quantity::numeric ELSE 0 END) - SUM(CASE WHEN eil.entry_type = 'CREDIT' THEN eil.quantity::numeric ELSE 0 END) > 0`);
       return r.ok ? Ok((Array.isArray(r?.data) ? r?.data : []).map(mapBalance)) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

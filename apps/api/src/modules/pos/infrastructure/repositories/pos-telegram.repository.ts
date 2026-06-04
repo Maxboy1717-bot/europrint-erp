@@ -20,14 +20,14 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 export class PosTelegramRepository {
   async getUserByTelegramId(telegramUserId: bigint): Promise<Result<Row | null>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT id, first_name, last_name, department_code FROM users WHERE telegram_id = ${String(telegramUserId)} AND is_active = TRUE LIMIT 1`);
+      const r = await exec(sql`SELECT id, first_name, last_name, department AS department_code FROM users WHERE telegram_id = ${String(telegramUserId)} AND is_active = TRUE LIMIT 1`);
       return (r[0] as Row) ?? null;
       }, 'DB_ERROR');
   }
 
   async getManagersByDepartment(departmentCode: string): Promise<Result<{ telegram_id: unknown }[]>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT telegram_id FROM users WHERE department_code = ${departmentCode} AND role IN ('department_manager', 'warehouse_manager') AND telegram_id IS NOT NULL AND is_active = TRUE`);
+      const r = await exec(sql`SELECT telegram_id FROM users WHERE department = ${departmentCode} AND role IN ('department_manager', 'warehouse_manager') AND telegram_id IS NOT NULL AND is_active = TRUE`);
       return r as { telegram_id: unknown }[];
       }, 'DB_ERROR');
   }
