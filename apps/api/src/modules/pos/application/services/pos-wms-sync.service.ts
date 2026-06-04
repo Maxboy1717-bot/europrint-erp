@@ -82,7 +82,7 @@ export class PosWmsSyncService {
         SELECT
           material_id AS material_card_id,
           quantity,
-          unit_of_measure
+          unit AS unit_of_measure
         FROM pos_movement_lines
         WHERE movement_id = ${movId}
       `);
@@ -189,7 +189,7 @@ export class PosWmsSyncService {
       if (!movement) return;
 
       const lines = await runQuery<MovementLineRow>(sql`
-        SELECT material_id AS material_card_id, quantity, unit_of_measure
+        SELECT material_id AS material_card_id, quantity, unit AS unit_of_measure
         FROM pos_movement_lines
         WHERE movement_id = ${movId}
       `);
@@ -197,6 +197,8 @@ export class PosWmsSyncService {
       const txDate   = new Date().toISOString().slice(0, 10);
       const docNumber = movement.movement_number ?? String(movId);
       const bulim     = movement.bulim;
+      const movementType = movement.movement_type ?? '';
+      const transType    = MOVEMENT_TYPE_MAP[movementType] ?? 'adjustment';
 
       for (const line of lines) {
         const matId = line.material_card_id;
@@ -211,7 +213,7 @@ export class PosWmsSyncService {
               (material_id, transaction_date, transaction_type,
                quantity, unit_of_measure, bulim, document_number, created_at)
             VALUES
-              (${matId}, ${txDate}, 'kirim',
+              (${matId}, ${txDate}, ${transType},
                ${qty}, ${uom}, ${bulim ?? null}, ${docNumber}, NOW())
           `);
         } catch (txErr) {
