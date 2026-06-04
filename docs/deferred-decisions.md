@@ -127,6 +127,16 @@ cross-checked; its "warehouse_stock empty" claim was corrected (the table holds 
 
 ## Found bugs (out of current scope) — fix later
 
+### 2026-06-04 — kanban assignCard → honest 501, real fix is a 1-line owner_user_id UPDATE
+`PATCH /api/kanban/cards/:id/assign` (kanban-cards.controller.ts) was a fake
+`{ id, assignedTo, updated:true }` (no write). Converted to an honest 501 (STAGE B.2). The
+real fix is small but deferred for a confirmation: `kanban_cards` has only `owner_user_id`
+(integer) as a user field — no separate assignee vs creator column. Assigning would
+`UPDATE kanban_cards SET owner_user_id = :assignedTo, updated_at = NOW()` via
+`KanbanExtCardService` → `DrizzleKanbanExtRepository`. Deferred only to confirm that "assign"
+should overwrite `owner_user_id` (vs. add a dedicated `assignee_id` column). Once confirmed,
+it is a one-method add + delegators. Lower-stakes (kanban card assignment).
+
 ### 2026-06-04 — vendor-invoice payment → honest 501, waits on `fi_payments` (money)
 `PATCH /api/mm/vendor-invoices/:id/payment` (mm-dashboard.controller.ts) was a fake
 `{ success: true }` — it claimed an invoice was paid but wrote nothing. Converted to an honest
