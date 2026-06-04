@@ -57,6 +57,59 @@ owner resolves the order-table question, re-open this as a real-UPDATE fix.
 
 ---
 
+## 2026-06-04 — FIX 4: POS→WMS/GL event bridge (PosMovementCompletedEvent NOT published)
+
+**What was proposed:** publish `PosMovementCompletedEvent` when a POS movement is completed, so the
+(currently dormant) CQRS listeners run and the POS→warehouse/GL bridge comes alive:
+- `PosWmsSyncCompletedListener` → `PosWmsSyncService.onMovementCompleted` — writes `warehouse_stock` + `warehouse_transactions`
+- `PosGlAutoListener` → `pos-gl-auto` — writes `gl_posting_log`
+
+Today nothing publishes it on the CQRS bus. `pos-movement-status.service.ts:86` emits the legacy
+EventEmitter2 string `pos.movement.data.completed`, but that reaches only the notification handler — there
+is no EE2→CQRS reverse bridge, so the WMS/GL `@EventsHandler` listeners never fire.
+
+**Why deferred — DOUBLE-WRITE on stock (Q-40 "green but wrong"):** on-hand stock lives in TWO parallel
+tables, each already written by a different LIVE path:
+
+| Table | Live writer | Rows |
+|-------|-------------|------|
+| `current_stock` | `pos-movement-status.service.ts:163-174` `_processCompletedMovement` (completion **inline**: upsertStockIn / decrementStock) | 25 |
+| `warehouse_stock` | `compatibility/pos-warehouse-integration*.service.ts` (separate POS→warehouse path) + `pos-wms-sync.helpers.ts upsertWarehouseStock` (the dormant listener) | 25 |
+
+Publishing the event would make the dormant `onMovementCompleted` a THIRD writer to `warehouse_stock`, so
+every completion would increment stock in two parallel tables (current_stock inline + warehouse_stock via
+the listener) → on-hand counted 2–3×. That is exactly the double-count the executor was instructed to stop on.
+
+**Nuance — only the stock leg conflicts; the journal + GL legs are safe.** Publishing the event activates
+three consumers; two have NO inline writer (safe), one conflicts:
+
+| Event consumer | Target | Verdict |
+|----------------|--------|---------|
+| onMovementCompleted → stock | `warehouse_stock` | ⚠️ CONFLICT (current_stock inline + compat already write stock) |
+| onMovementCompleted → journal | `warehouse_transactions` | ✅ safe (no inline writer; FIX 2 fixed its direction + `unit` drift) |
+| pos-gl-auto → GL | `gl_posting_log` | ✅ safe (no inline writer) |
+
+**Decision needed (owner / architecture, Q-27/Q-34):** which table is the canonical on-hand stock —
+`current_stock` (POS-movement flow) or `warehouse_stock` (WMS + compatibility integration)? This is part of
+the known master-data-overlap / "two worlds" architecture item. Until it is resolved the event must NOT be
+published (would triple-write stock).
+
+**Left untouched (Q-39):** `pos-movement-status.service.ts` is unchanged; no event publish was added; the
+listeners stay dormant — nothing that works today is broken.
+
+**De-risked for the future (FIX 2, commit 497a731c):** when the bridge IS eventually activated,
+`warehouse_transactions` will record the correct movement direction and the handler will not crash on the
+`unit` column (both fixed in FIX 2). So the journal + GL legs are ready; only the stock-table canonicity
+blocks activation.
+
+**Verified by:** code read (`pos-movement-status.service.ts` updateStatus + _processCompletedMovement;
+`pos-wms-sync.service.ts` onMovementCompleted; `pos-wms-sync.helpers.ts` upsertWarehouseStock) + grep of
+warehouse_stock writers (8 files incl. compatibility/pos-warehouse-integration*) + DB counts
+(current_stock=25, warehouse_stock=25) via `_audit/q.cjs`. A read-only subagent investigation was
+cross-checked; its "warehouse_stock empty" claim was corrected (the table holds 25 rows).
+
+---
+
 ## Found bugs (out of current scope) — fix later
 
 ### 2026-06-04 — eNPS respond: `surveyId` hardcoded to 0 (responses not bound to a survey)
