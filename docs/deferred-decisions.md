@@ -59,6 +59,29 @@ owner resolves the order-table question, re-open this as a real-UPDATE fix.
 
 ## Found bugs (out of current scope) — fix later
 
+### 2026-06-04 — eNPS respond: `surveyId` hardcoded to 0 (responses not bound to a survey)
+**Symptom:** `apps/api/src/modules/hr/enps/enps.controller.ts:86` — `respond()` passes
+`surveyId: 0, // placeholder for now` to `repo.respond(...)`, so **every** eNPS response is written
+with `survey_id = 0` instead of the survey it answers. Responses are therefore not linkable back to
+their survey (silent data-integrity loss — a Q-40 "green but wrong").
+
+**Found during:** FIX 1 (PIP/eNPS role gate, 2026-06-04). The role-gate subagent surfaced it while
+auditing the controller. **Not fixed in the security pass** — it is a separate *functional* defect, and
+the endpoint has **no live FE consumer** (grep: nothing calls `hr-v2/enps/respond`; the eNPS page
+`HREnps.tsx` uses a different `/api/hr/enps/surveys*` path family).
+
+**Also latent (same endpoint):** `employee_id` is taken from the request body unchecked — a self-response
+endpoint should derive it from `request.user` so a user can only submit as themselves. Moot today (HR-gated
+by FIX 1 + no FE caller), but must be addressed if eNPS self-response is ever exposed to employees.
+
+**Fix candidates (owner picks later):**
+- (a) take `survey_id` from a route param (`POST /hr-v2/enps/:id/respond`) or the body, validate it exists; AND
+- (b) derive `employee_id` from `request.user` (self-ownership), not the body — and decide whether `respond`
+  should be reachable by all employees (with self-ownership) vs HR-only (it is HR-only now).
+
+**Left untouched (Q-39):** the handler is unchanged; it is now HR-gated (FIX 1) and has no live caller, so
+nothing that "works" today is broken while this waits.
+
 ### 2026-06-04 — POST /api/asset-management/maintenance returns 400 (maintenance create broken)
 **Symptom:** the FE "add maintenance" form (`AssetManagement.tsx` → `completeMaintenanceForm` flow uses
 `POST /api/asset-management/maintenance` to create) gets HTTP 400. Surfaced during the STAGE-1.4
