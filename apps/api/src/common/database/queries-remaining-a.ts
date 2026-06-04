@@ -25,11 +25,11 @@ type Row = Record<string, unknown>;
 
 export async function execCurrentStockUpsert(matId: number, warehouseId: unknown, qty: number): Promise<void> {
   await db.insert(current_stock).values({
-    material_card_id: matId,
+    material_id: matId,
     warehouse_id: warehouseId as number,
     quantity_on_hand: String(qty),
   }).onConflictDoUpdate({
-    target: [current_stock.material_card_id, current_stock.warehouse_id],
+    target: [current_stock.material_id, current_stock.warehouse_id],
     set: {
       quantity_on_hand: sql`${current_stock.quantity_on_hand} + ${qty}`,
       last_movement_at: sql`NOW()`,
@@ -44,7 +44,7 @@ export async function execCurrentStockDecrement(matId: number, warehouseId: unkn
       last_movement_at: sql`NOW()`,
     })
     .where(and(
-      eq(current_stock.material_card_id, matId),
+      eq(current_stock.material_id, matId),
       eq(current_stock.warehouse_id, warehouseId as number),
     ));
 }

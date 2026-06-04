@@ -39,10 +39,15 @@ export const stocks = pgTable('stocks', {
 });
 
 // ─── POS: Current Stock ───────────────────────────────────────────────────────
-// TODO: current_stock not found in lib/db — kept as local stub
+// NOTE: current_stock is a VIEW over warehouse_stock (quantity AS quantity_on_hand,
+// last_updated_at AS last_movement_at, material_id passthrough). Modeled here as a
+// local Drizzle table-stub for write access; the view is auto-updatable so inserts/
+// updates pass through to warehouse_stock, which holds the UNIQUE(warehouse_id,
+// material_id) index that the upsert ON CONFLICT resolves against. Column must be
+// material_id to match the view/base table.
 export const current_stock = pgTable('current_stock', {
   id:               serial('id').primaryKey(),
-  material_card_id: integer('material_card_id').notNull(),
+  material_id:      integer('material_id').notNull(),
   warehouse_id:     integer('warehouse_id'),
   quantity_on_hand: numeric('quantity_on_hand', { precision: 15, scale: 4 }).default('0'),
   last_movement_at: timestamp('last_movement_at'),
