@@ -60,7 +60,7 @@ export class SalesRepository {
 
   async getPipelineForecast(): Promise<Result<Row>>  {
   try {
-      const rows = await exec(sql`SELECT COALESCE(SUM(expected_amount), 0)::numeric(15,2) AS pipeline_value, COUNT(*)::int AS deal_count FROM crm_deals WHERE status NOT IN ('won', 'lost')`);
+      const rows = await exec(sql`SELECT COALESCE(SUM(forecast_amount), 0)::numeric(15,2) AS pipeline_value, COUNT(*)::int AS deal_count FROM crm_deals WHERE status NOT IN ('won', 'lost')`);
       return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);  } catch (_e) {
     return Err(String(_e));
   }
