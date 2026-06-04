@@ -142,7 +142,7 @@ export class IotSensorsMainController {
   @Roles(...IOT_READ)
   async createSensor(@Body() body: unknown) {
     const dto = CreateSensorSchema.parse(body);
-    return { id: Date.now(), ...dto, created: true };
+    return unwrapOrThrow(await this.svc.createSensor(dto));
   }
 
   @ApiOperation({ summary: 'Post resolve alert' })
@@ -152,8 +152,10 @@ export class IotSensorsMainController {
   @Post('alerts/:alertId/resolve')
   @HttpCode(HttpStatus.OK)
   @Roles(...IOT_READ)
-  async postResolveAlert(@Param('alertId') alertId: string, @Body() body: unknown) {
+  async postResolveAlert(@Param('alertId') _alertId: string, @Body() body: unknown) {
     ResolveAlertSchema.parse(body ?? {});
-    return { alertId, resolved: true };
+    // Honest 501 (was a fake { resolved:true }): alert-resolve is not wired to any store — the
+    // PATCH twin above is also notImplemented. No alert-state table is updated here.
+    throw new HttpException('Alert resolve hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
   }
 }

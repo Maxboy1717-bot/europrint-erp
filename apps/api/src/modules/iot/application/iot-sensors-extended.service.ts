@@ -27,6 +27,15 @@ export class IotSensorsExtendedService {
     return this.repo.findDashboard();
   }
 
+  createSensor(data: { name?: string; type?: string; location?: string; status?: string }): ReturnType<DrizzleIotSensorsRepo['insertSensor']> {
+    return this.repo.insertSensor({
+      name: data.name ?? 'Unnamed sensor',
+      type: data.type ?? 'generic',
+      location: data.location,
+      status: data.status,
+    });
+  }
+
   getLiveReadings(
     type: string | undefined,
     location: string | undefined,

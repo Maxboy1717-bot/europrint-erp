@@ -28,6 +28,18 @@ export class DrizzleIotSensorsRepo {
     } catch (e) { return Err((e as Error).message); }
   }
 
+  async insertSensor(data: { name: string; type: string; location?: string; status?: string }) {
+    try {
+      const sensorCode = `SEN-${_time.now().getTime()}`;
+      const rows = await exec(sql`
+        INSERT INTO iot_sensors (sensor_code, name, type, location, status, is_active, created_at)
+        VALUES (${sensorCode}, ${data.name}, ${data.type}, ${data.location ?? null}, ${data.status ?? 'active'}, true, NOW())
+        RETURNING *
+      `);
+      return Ok(rows[0] ?? {});
+    } catch (e) { return Err((e as Error).message); }
+  }
+
   async findLiveReadings(type: string | undefined, location: string | undefined, limit: number) {
     try {
       const result = type && location
