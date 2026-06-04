@@ -101,7 +101,7 @@ export class EmployeesCompatProfileRawService {
             FROM employees e
             JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
             JOIN employee_org_departments eod ON eod.user_id = u.id AND eod.is_primary = true
-            LEFT JOIN org_functions of2 ON of2.org_department_id = eod.org_department_id
+            LEFT JOIN org_functions of2 ON of2.department_id = eod.org_department_id
             WHERE eod.org_department_id = ${orgDeptId} AND e.id != ${si(id)} AND e.status = 'active'
             ORDER BY e.first_name LIMIT 20
           `)
