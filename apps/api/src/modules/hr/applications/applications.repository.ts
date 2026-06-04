@@ -96,4 +96,13 @@ export class ApplicationsRepository {
       return Err(String(_e));
     }
   }
+
+  async updateResponse(id: number, body: Row): Promise<Result<Row | null>> {
+    try {
+      const r = await exec(sql`UPDATE hr_application_responses SET status = COALESCE(${body.status ?? null}, status), notes = COALESCE(${body.notes ?? null}, notes), response = COALESCE(${body.response ?? null}, response), assigned_to = COALESCE(${body.assignedTo ?? null}, assigned_to), reviewed_by = COALESCE(${body.reviewedBy ?? null}, reviewed_by), reviewed_at = NOW() WHERE id = ${id} RETURNING *`);
+      return Ok(r[0] ?? null);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
 }

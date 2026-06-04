@@ -93,6 +93,6 @@ export class ApplicationResponsesController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateApplicationResponseSchema.parse(body);
-    return { id, ...dto, updated: true };
+    return unwrapOrThrow(await this.svc.updateResponse(Number(id), dto));
   }
 }

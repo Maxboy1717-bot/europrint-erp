@@ -44,4 +44,8 @@ export class ApplicationsService {
   async createResponse(body: Record<string, unknown>) {
     return this.repo.createResponse(body);
   }
+
+  async updateResponse(id: number, body: Record<string, unknown>) {
+    return this.repo.updateResponse(id, body);
+  }
 }
