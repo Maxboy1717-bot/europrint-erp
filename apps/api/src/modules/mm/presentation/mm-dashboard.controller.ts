@@ -244,9 +244,13 @@ export class MmDashboardController {
   }
 
   @ApiOperation({ summary: 'Patch pay vendor invoice' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 501, description: 'Not implemented — needs fi_payments table' })
   @Patch('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
-  async patchPayVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) { return { success: true }; }
+  async patchPayVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
+    // Honest 501 (was a fake { success:true }): vendor_invoices has only `status` — no
+    // paid_amount/paid_at/payment_method — and the payment-ledger table `fi_payments` does not
+    // exist. Marking status='paid' without a payment record would be a NEW fake-success on a
+    // money path. Re-enable once fi_payments is added (DDL, owner-gated). See deferred-decisions.md.
+    throw new HttpException("To'lov hali amalga oshirilmagan — fi_payments jadval qurilgach ishlaydi", HttpStatus.NOT_IMPLEMENTED);
+  }
 }

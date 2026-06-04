@@ -127,6 +127,20 @@ cross-checked; its "warehouse_stock empty" claim was corrected (the table holds 
 
 ## Found bugs (out of current scope) — fix later
 
+### 2026-06-04 — vendor-invoice payment → honest 501, waits on `fi_payments` (money)
+`PATCH /api/mm/vendor-invoices/:id/payment` (mm-dashboard.controller.ts) was a fake
+`{ success: true }` — it claimed an invoice was paid but wrote nothing. Converted to an honest
+**501** (STAGE B.2) because a real payment record is **C-blocked**:
+- `vendor_invoices` has only `status` — NO `paid_amount` / `paid_at` / `payment_method` column.
+- the payment-ledger table **`fi_payments` does not exist** (also flagged in `docs/drift-c-class-2026-06-04.md`).
+- no FE consumer calls this endpoint today.
+
+Marking `status='paid'` without a payment record would be a NEW fake-success on a money path, so
+it was rejected (owner decision). **To re-enable:** add the `fi_payments` table (or paid_amount/
+paid_at/method columns on vendor_invoices) — DDL, owner-gated (Q-35) — then implement a real
+INSERT into fi_payments + set vendor_invoices.status. This is tied to the finance GL/payment
+build-out (drizzle-finance-invoice.repo also needs fi_payments + the gl_documents repoint).
+
 ### 2026-06-04 — eNPS respond: `surveyId` hardcoded to 0 (responses not bound to a survey)
 **Symptom:** `apps/api/src/modules/hr/enps/enps.controller.ts:86` — `respond()` passes
 `surveyId: 0, // placeholder for now` to `repo.respond(...)`, so **every** eNPS response is written
