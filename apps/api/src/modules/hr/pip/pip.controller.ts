@@ -6,6 +6,8 @@
 import { Controller, UseGuards, Get, Post, Patch, Body, Param, ParseIntPipe, Query, Logger, UseInterceptors, NotFoundException, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Roles } from '@common/decorators/roles.decorator';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { z } from 'zod';
@@ -34,7 +36,8 @@ class ProgressDto extends createZodDto(ProgressSchema) {}
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
 @ApiTags('PIP')
 @ApiBearerAuth()
 @Controller('hr-v2/pip')
