@@ -18,7 +18,7 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 export class PosMiniAppRepository {
   async getUserDetails(userId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT u.id, u.first_name, u.last_name, u.role, u.department AS department_code, e.department_name FROM users u LEFT JOIN employees e ON e.id = u.employee_id WHERE u.id = ${userId} LIMIT 1`);
+      const r = await exec(sql`SELECT u.id, u.first_name, u.last_name, u.role, u.department AS department_code, e.department AS department_name FROM users u LEFT JOIN employees e ON e.id = u.employee_id WHERE u.id = ${userId} LIMIT 1`);
       return r[0] ?? null;
       }, 'DB_ERROR');
   }
