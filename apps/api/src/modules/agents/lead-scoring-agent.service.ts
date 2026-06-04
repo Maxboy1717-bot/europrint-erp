@@ -56,8 +56,8 @@ export class LeadScoringAgentService {
   /** Tijorat taklifi yaratish */
   async generateProposal(leadId: number): Promise<{ html: string }> {
     return this.audit.wrap({ agentName: this.AGENT, action: 'generate_proposal', targetType: 'lead', targetId: String(leadId), aiUsed: true }, async () => {
-      const r = await runQuery<{ name: string | null; company_id: number | null }>(sql`
-        SELECT name, company_id FROM crm_leads WHERE id = ${leadId} LIMIT 1
+      const r = await runQuery<{ name: string | null }>(sql`
+        SELECT name FROM crm_leads WHERE id = ${leadId} LIMIT 1
       `);
       const lead = r.rows[0];
       if (!lead) throw new NotFoundException(await this.i18n.t('errors.leadNotFound'));
