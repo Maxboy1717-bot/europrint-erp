@@ -143,7 +143,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
   async insertOrderFromLead(customer_id: unknown, expected_amount: unknown, lid: number, notes: unknown): Promise<Result<Row>>  {
   try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO sales_orders (customer_id, total_amount, status, sd_lead_id, notes)
+        INSERT INTO sales_orders (customer_id, total_amount, status, crm_lead_id, notes)
         VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
         RETURNING *
       `);
@@ -175,7 +175,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
     try {
       const order = await db.transaction(async (tx) => {
         const res = await tx.execute(sql`
-          INSERT INTO sales_orders (customer_id, total_amount, status, sd_lead_id, notes)
+          INSERT INTO sales_orders (customer_id, total_amount, status, crm_lead_id, notes)
           VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
           RETURNING *
         `);
