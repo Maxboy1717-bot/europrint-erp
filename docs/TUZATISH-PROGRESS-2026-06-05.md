@@ -25,6 +25,14 @@ Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: stri
 - ~~**#4** — DONE (Variant C, `05dcd49b`): inline GL leg, ikki-yozuvdan qochildi.~~
 - **BOSQICH 2** — sales_orders line-items, entries post* ulash, davomat→payroll.
 
+## ⛔ DEFERRED — egasi qarori kerak (Q-34 ikki-dunyo / two-worlds)
+- **Campaign (marketing) ikki-dunyo** — `create-campaign.handler` SOXTA-CREATE (repo yo'q, saqlamaydi). Lekin tuzatish **ikki-dunyo qaroriga** taqaladi:
+  - `marketing.controller` **bo'lingan-miya**: LIST `@Get()` + DELETE → `campaignsSvc` (legacy) → **`marketing_campaigns`** (id=varchar, created_by=**integer** nullable, soft-delete) — ⭐ FE shu jadvalni o'qiydi. CREATE/GET-ONE/PATCH/LAUNCH → CQRS → **`campaigns`** (id=uuid, created_by=**uuid NOT NULL**).
+  - id turlari ham zid: DELETE `parseInt(id,10)` (integer) ╳ PATCH uuid-string.
+  - `campaigns.created_by` uuid, lekin app user-id = **integer** (`users.id`=integer) → CQRS save "30"→uuid CRASH. Ikkala jadval ham 0 qator.
+  - **Kanonik nomzod: `marketing_campaigns`** (FE-list+delete+ext-repos shuni o'qiydi, integer-mos). To'liq fix = CREATE/GET-ONE/PATCH/LAUNCH ni `marketing_campaigns`ga ko'chirish (4 handler) — egasi tasdiqi kerak (Q-34/Q-35 emas, faqat table-tanlash).
+  - ⚠️ Yarim-fix TAQIQ (Q-33): faqat create'ni ko'chirsam, get-one/patch boshqa jadvaldan o'qiydi = nomuvofiq.
+
 ## Eslatma (verify-don't-trust topilmalari)
 - hitl_approvals.id sequence-siz edi (drift) — DDL bilan tuzatildi.
 - Leverage #1 (manager_id) 0/30 derive — manbasiz, daraxt-yurish/org-data kerak.
