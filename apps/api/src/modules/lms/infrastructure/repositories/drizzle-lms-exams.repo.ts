@@ -48,6 +48,36 @@ export class LmsExamsRepository {
     }
   }
 
+  /**
+   * A5: record lesson progress on the user's course enrollment (REAL write — was a
+   * {success:true} green-lie). Touches the enrollment (current lesson + activity, status
+   * kept >= in_progress); enrolls the user if no row exists yet. No certificate is
+   * auto-issued (no fake cert) — certificateIssued=false until real completion logic exists.
+   */
+  async recordLessonProgress(userId: string, courseId: number, lessonId: number | null): Promise<Result<{ certificateIssued: boolean; saved: boolean }>> {
+    try {
+      const empId = parseInt(userId, 10);
+      const upd = await exec(sql`
+        UPDATE enrollments
+        SET current_lesson_id = ${lessonId},
+            last_accessed_at  = NOW(),
+            started_at        = COALESCE(started_at, NOW()),
+            status            = CASE WHEN status = 'completed' THEN 'completed' ELSE 'in_progress' END,
+            updated_at        = NOW()
+        WHERE employee_id = ${empId} AND course_id = ${courseId}
+        RETURNING id`);
+      if (!upd.length) {
+        await exec(sql`
+          INSERT INTO enrollments (employee_id, course_id, current_lesson_id, status, last_accessed_at, started_at)
+          VALUES (${empId}, ${courseId}, ${lessonId}, 'in_progress', NOW(), NOW())`);
+      }
+      return Ok({ certificateIssued: false, saved: true });
+    } catch (error) {
+      this.logger.error(`recordLessonProgress: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   async submitExam(examId: string, userId: string, answers: unknown[]): Promise<Result<Row>> {
     try {
       const r = await exec(sql`INSERT INTO lms_exam_attempts (exam_id, employee_id, answers, submitted_at, status, created_at) VALUES (${parseInt(examId, 10)}, ${parseInt(userId, 10)}, ${JSON.stringify(answers)}, NOW(), 'submitted', NOW()) RETURNING *`);

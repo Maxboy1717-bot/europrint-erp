@@ -126,7 +126,19 @@ export class LmsCoreController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('progress/complete')
-  async completeCourse(@Body() _body: Record<string, unknown>) { return { success: true }; }
+  @HttpCode(HttpStatus.CREATED)
+  async completeCourse(
+    @Body() body: { courseId?: number | string; lessonId?: number | string },
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    // A5: was a {success:true} green-lie that saved nothing. Record lesson progress on the
+    // user's enrollment (LessonPlayer POSTs {userId,lessonId,courseId}; we trust the authed
+    // user, not body.userId). FE then re-reads /api/lms/progress/my.
+    const userId = String(user?.id ?? 0);
+    const courseId = body?.courseId != null ? parseInt(String(body.courseId), 10) : 0;
+    const lessonId = body?.lessonId != null ? parseInt(String(body.lessonId), 10) : null;
+    return unwrapOrInternal(await this.svc.completeCourse(userId, courseId, lessonId));
+  }
 
   @ApiOperation({ summary: 'Create support ticket' })
   @ApiResponse({ status: 201, description: 'OK' })

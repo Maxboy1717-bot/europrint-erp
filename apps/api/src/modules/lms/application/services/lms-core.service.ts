@@ -43,4 +43,11 @@ export class LmsCoreService {
     if (!userId || userId === '0') return Err('Foydalanuvchi aniqlanmadi');
     return this.examsRepo.findMyProgress(userId);
   }
+
+  /** A5: records a lesson completion on the user's course enrollment (real progress write). */
+  async completeCourse(userId: string, courseId: number, lessonId: number | null): Promise<Result<{ certificateIssued: boolean; saved: boolean }>> {
+    if (!userId || userId === '0') return Err('Foydalanuvchi aniqlanmadi');
+    if (!courseId) return Err('courseId talab qilinadi');
+    return this.examsRepo.recordLessonProgress(userId, courseId, lessonId);
+  }
 }
