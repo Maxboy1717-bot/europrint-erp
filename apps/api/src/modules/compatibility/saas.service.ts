@@ -114,4 +114,17 @@ export class SaasService {
     if (!r.ok) return Err(r.error);
     return Ok({ tenantId, modules: r.data });
   }
+
+  // Onboard = activate the tenant + enable the chosen modules (composes two real operations).
+  // NOTE: admin-user creation from dto.adminEmail is deferred (needs the user-provisioning flow).
+  async onboardTenant(tenantId: string, dto: { adminEmail?: string; modules?: string[] }): Promise<Result<{ tenantId: string; status: string; modules: unknown[] }>> {
+    const statusR = await this.updateTenantStatus(tenantId, 'active');
+    if (!statusR.ok) return Err(statusR.error);
+    let modules: unknown[] = [];
+    if (Array.isArray(dto.modules) && dto.modules.length > 0) {
+      const modR = await this.repo.setTenantModules(tenantId, dto.modules);
+      if (modR.ok) modules = modR.data;
+    }
+    return Ok({ tenantId, status: 'active', modules });
+  }
 }

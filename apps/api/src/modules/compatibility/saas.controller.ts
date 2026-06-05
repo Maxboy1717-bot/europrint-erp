@@ -139,9 +139,9 @@ export class SaasController {
   }
 
   @Post('tenants/:id/onboard')
-  async onboardTenant(@Param('id') _id: string, @Body() body: unknown) {
-    OnboardTenantSchema.parse(body ?? {});
-    return notImplemented('POST /saas/tenants/:id/onboard');
+  async onboardTenant(@Param('id') id: string, @Body() body: unknown) {
+    const dto = OnboardTenantSchema.parse(body ?? {});
+    return unwrapOrInternal(await this.svc.onboardTenant(id, { adminEmail: dto.adminEmail, modules: dto.modules }));
   }
 }
 
