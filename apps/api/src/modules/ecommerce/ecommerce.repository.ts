@@ -9,7 +9,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { I18nService } from 'nestjs-i18n';
 import { db } from '../../infrastructure/database/database';
 import {
-  customerOrders, customerAccounts, publicProducts, documentSequences, sdLeads, insertCustomerOrderSchema,
+  customerOrders, customerAccounts, publicProducts, documentSequences, insertCustomerOrderSchema,
 } from '@europrint/schemas';
 import { eq, desc, and, sql, count } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
@@ -149,12 +149,9 @@ export class EcommerceRepository {
 
   async insertLeadAsync(firstName: string, lastName: string, phone: string, loggerRef: { error: (msg: string, ctx: unknown) => void }) : Promise<Result<void>>{
     return safeCall(async () => {
-      // sd_leads canonical schema: contactName (text), contactPhone (varchar), status.
-      db.insert(sdLeads).values({
-        contactName: `${firstName} ${lastName}`.trim(),
-        contactPhone: phone,
-        status: 'new',
-      }).catch((e: Error) => loggerRef.error('CRM lead creation failed', { error: (e as Error).message }));
+      // STEP 1b: repoint to canonical crm_leads (raw SQL; tenant_id defaults to 1).
+      db.execute(sql`INSERT INTO crm_leads (contact_name, contact_phone, status, source) VALUES (${`${firstName} ${lastName}`.trim()}, ${phone}, 'new', 'ecommerce')`)
+        .catch((e: Error) => loggerRef.error('CRM lead creation failed', { error: (e as Error).message }));
       }, 'DB_ERROR');
   }
 
