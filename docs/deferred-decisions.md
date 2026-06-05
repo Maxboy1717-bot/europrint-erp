@@ -151,7 +151,21 @@ production columns, OR (iii) drop if truly dead. **LEFT UNTOUCHED for now (Q-39)
 structure; only the director order-count KPI was repointed to sales_orders (STEP 3 A.1, commit a1bb3ec5,
 which correctly counts the 12 real sales orders instead of the empty sd_orders view).
 
-### 2026-06-04 — SD lead→order convert BROKEN: `sales_orders.sd_lead_id` column does not exist
+### 2026-06-04 — sd_sales_orders VIEW = redundant passthrough — KEPT (not dropped) — STEP 3 C
+`sd_sales_orders` is a pure passthrough VIEW over `sales_orders` (verified live: no WHERE/JOIN/computed
+columns; exposes 56 of the 72 sales_orders columns; auto-updatable). It is NOT a CQRS read-model — the
+SD order repo (`drizzle-sales-order.repo.ts`) + `execSdSalesOrderInsert` + the fan-out departments repo
+just use it as a table alias (raw SELECT/UPDATE/INSERT). So it is a redundant alias like the old sd_leads.
+
+**DROP is technically feasible** (repoint ~3 files to sales_orders + DROP VIEW, exactly like sd_leads),
+**but DEFERRED** (owner decision, risk×benefit): the benefit is purely COSMETIC (removes audit "two order
+tables" noise + the pgTable-stub drift); the risk is HIGH — it is the **critical SD order CRUD path over
+12 real sales orders (money)**. Unlike sd_leads (0 rows, low risk), this is live money data. Keeping the
+harmless view is reversible (drop anytime later); a wrong drop risks the money path and is hard to undo.
+The canonical-order goal is ALREADY met (sales_orders is the one physical table; the view is a transparent
+alias). To be resolved together with the production-order-world question at the order-architecture interview.
+
+### 2026-06-04 — [RESOLVED — STEP 3 B, commit d0e723f3] SD lead→order convert (was: `sales_orders.sd_lead_id` missing)
 Found during STEP 1b (leads→crm_leads). `sd-leads.repository.ts` `insertOrderFromLead` (:146) and
 `convertLeadToOrderAtomic` (:178) do `INSERT INTO sales_orders (customer_id, total_amount, status,
 sd_lead_id, notes)` — but **`sales_orders` has NO `sd_lead_id` column** (verified:
