@@ -8,6 +8,7 @@ import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
 import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
+import { ThreeWayMatchFailedEvent } from '../../domain/events/three-way-match-failed.event';
 
 export class GoodsReceiptCommand {
   constructor(public poId: number,
@@ -71,10 +72,7 @@ export class GoodsReceiptHandler implements ICommandHandler<GoodsReceiptCommand>
       const errMsg = outcome.error?.message ?? '';
       if (errMsg.startsWith('THREE_WAY_MATCH_FAILED|')) {
         const [, poId, difference] = errMsg.split('|');
-        this.eventBus.publish('THREE_WAY_MATCH_FAILED', {
-          poId: Number(poId),
-          difference: Number(difference),
-        });
+        this.eventBus.publish(new ThreeWayMatchFailedEvent(Number(poId), Number(difference)));
         return Err(`Farq: ${difference}. Xarid menejer tasdiqlashi kerak`);
       }
       return Err(outcome.error);
