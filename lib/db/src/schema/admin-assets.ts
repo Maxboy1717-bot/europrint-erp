@@ -4,6 +4,7 @@
  */
 
 import { sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import {
   pgTable, uuid, text, boolean, integer, timestamp, index, check,
 } from "drizzle-orm/pg-core";
@@ -52,7 +53,7 @@ export type InsertAssetItem = z.infer<typeof insertAssetItemSchema>;
 
 
 export const assetMaintenance = pgTable("asset_maintenance", {
-  id:              uuid("id").primaryKey().defaultRandom(),
+  id:              uuid("id").primaryKey().$defaultFn(() => randomUUID()),
   assetId:         uuid("asset_id").notNull(),
   maintenanceType: text("maintenance_type").notNull().default("routine"),
   scheduledAt:     timestamp("scheduled_at", { withTimezone: true }),
@@ -60,7 +61,7 @@ export const assetMaintenance = pgTable("asset_maintenance", {
   cost:            text("cost"),
   notes:           text("notes"),
   status:          text("status").notNull().default("scheduled"),
-  createdAt:       timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt:       timestamp("created_at", { withTimezone: true }).$defaultFn(() => new Date()).notNull(),
 }, (t) => [
   check("asset_maint_status_chk", sql`${t.status} IN ('scheduled','in_progress','completed','cancelled')`),
   check("asset_maint_type_chk", sql`${t.maintenanceType} IN ('routine','emergency','preventive','corrective')`),
