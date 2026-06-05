@@ -64,4 +64,32 @@ export class IntegrationEmployeeService {
     if (!r.ok) return Ok({ employeeId, totalOperations: 0, transactions: [] });
     return Ok({ employeeId, totalOperations: r.data.length, transactions: r.data });
   }
+
+  async getAllComplaints() {
+    const r = await this.repo.findAllComplaints();
+    return Ok({ complaints: r.ok ? r.data : [] });
+  }
+
+  async getAllAssessmentSkips() {
+    const r = await this.repo.findAllAssessmentSkips();
+    return Ok({ skips: r.ok ? r.data : [] });
+  }
+
+  async getAllMentorships() {
+    const r = await this.repo.findAllMentorships();
+    return Ok(r.ok ? r.data : []);
+  }
+
+  async getAllMesSummary() {
+    const r = await this.repo.findAllMesProduction();
+    const data = r.ok ? r.data : [];
+    const total = (Array.isArray(data) ? data : []).reduce((s, d) => s + Number(d['quantity'] ?? 0), 0);
+    return Ok({ totalProduced: total, totalRecords: data.length, records: data });
+  }
+
+  async getAllWmsSummary() {
+    const r = await this.repo.findAllWmsTransactions();
+    const data = r.ok ? r.data : [];
+    return Ok({ totalOperations: data.length, transactions: data });
+  }
 }

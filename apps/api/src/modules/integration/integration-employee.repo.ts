@@ -57,4 +57,27 @@ export class IntegrationEmployeeRepository {
   findWmsTransactions(employeeId: string): Promise<Result<Row[]>> {
     return safeCall(async () => exec(sql`SELECT id, operation_type, quantity, item_code, warehouse_id, created_at FROM wms_transactions WHERE performed_by = ${employeeId} ORDER BY created_at DESC LIMIT 100`));
   }
+
+  // List-all variants (no employee filter) for the /integration/employee-*-summary list endpoints.
+  // SELECT * + ORDER BY id is drift-proof (id always exists) — the per-id finders above have column
+  // drift (sd_customer_complaints has no employee_id, production_facts no operator_id, etc.).
+  findAllComplaints(): Promise<Result<Row[]>> {
+    return safeCall(async () => exec(sql`SELECT * FROM sd_customer_complaints ORDER BY id DESC LIMIT 100`));
+  }
+
+  findAllAssessmentSkips(): Promise<Result<Row[]>> {
+    return safeCall(async () => exec(sql`SELECT * FROM assessment_skips ORDER BY id DESC LIMIT 100`));
+  }
+
+  findAllMentorships(): Promise<Result<Row[]>> {
+    return safeCall(async () => exec(sql`SELECT * FROM mentorships ORDER BY id DESC LIMIT 100`));
+  }
+
+  findAllMesProduction(): Promise<Result<Row[]>> {
+    return safeCall(async () => exec(sql`SELECT * FROM production_facts ORDER BY id DESC LIMIT 200`));
+  }
+
+  findAllWmsTransactions(): Promise<Result<Row[]>> {
+    return safeCall(async () => exec(sql`SELECT * FROM wms_transactions ORDER BY id DESC LIMIT 100`));
+  }
 }

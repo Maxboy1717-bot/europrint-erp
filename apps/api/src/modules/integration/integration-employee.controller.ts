@@ -113,7 +113,8 @@ export class IntegrationEmployeeController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-complaints')
   async getEmployeeComplaintsList() {
-    return notImplemented('GET /integration/employee-complaints');
+    const r = await this.svc.getAllComplaints();
+    return r.ok ? r.data : { complaints: [] };
   }
 
   @ApiOperation({ summary: 'Get employee assessment skips list' })
@@ -121,7 +122,8 @@ export class IntegrationEmployeeController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-assessment-skips')
   async getEmployeeAssessmentSkipsList() {
-    return notImplemented('GET /integration/employee-assessment-skips');
+    const r = await this.svc.getAllAssessmentSkips();
+    return r.ok ? r.data : { skips: [] };
   }
 
   @ApiOperation({ summary: 'Get skill gap list' })
@@ -137,7 +139,8 @@ export class IntegrationEmployeeController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-mentorships')
   async getEmployeeMentorshipsList() {
-    return notImplemented('GET /integration/employee-mentorships');
+    const r = await this.svc.getAllMentorships();
+    return r.ok ? r.data : [];
   }
 
   @ApiOperation({ summary: 'Get employee mes summary list' })
@@ -145,7 +148,8 @@ export class IntegrationEmployeeController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-mes-summary')
   async getEmployeeMesSummaryList() {
-    return notImplemented('GET /integration/employee-mes-summary');
+    const r = await this.svc.getAllMesSummary();
+    return r.ok ? r.data : { totalProduced: 0, records: [] };
   }
 
   @ApiOperation({ summary: 'Get employee wms summary list' })
@@ -153,7 +157,8 @@ export class IntegrationEmployeeController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-wms-summary')
   async getEmployeeWmsSummaryList() {
-    return notImplemented('GET /integration/employee-wms-summary');
+    const r = await this.svc.getAllWmsSummary();
+    return r.ok ? r.data : { totalOperations: 0, transactions: [] };
   }
 
   @ApiOperation({ summary: 'Get expense list' })
