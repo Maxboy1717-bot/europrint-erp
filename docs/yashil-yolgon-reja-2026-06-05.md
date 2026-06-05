@@ -169,3 +169,13 @@ Shu branch (`chore/schema-convergence`) da **boshqa bajaruvchi sessiya FAOL** (M
 
 **Naqsh:** 4 ta RETIRE (ishlatilmagan soxta endpoint), 5 ta REAL (upsert/progress/log/upload). Har biri DB/FS-proof + alohida commit. BE+FE tsc 0. Worktree→main (Muslimbek to'xtatilgan).
 ➡️ **Keyingi (alohida ruxsat bilan):** GROUP 2 (A10-A12 xato-yo'l echo), GROUP 3 (dublikat C1-C4), GROUP 4+ (501 stub).
+
+### ✅ GROUP 2 TUGADI — xato-yo'l echolar (commit `d997d18d`)
+general-legacy-a da 4 ta `.catch(()=>soxta)` olib tashlandi (A10 createMachineTask, A11 createPlanningOperation, A12 updatePapkaOrder, **A13** deletePapkaOrder — qo'shimcha topildi) → xato yashirilmaydi, 500 honest. tsc 0.
+
+### ✅ GROUP 3 TUGADI — dublikatlar (verify-don't-trust)
+- **C1** ✅ RETIRE — warehouse-catalog `GET /warehouse/movements` 501 alias o'chirildi (kanonik `wms/movements`). Commit `e06468d7`.
+- **C2/C3/C4** — ❌ **SOXTA-POZITIV** (dup-skaner xato): C2 hr-compat-safety:91 = IZOH (DELETE faqat hr-safety'da); C3 `/employee` ╳ `/employee/:id` = ataylab boshqa route; C4 general-legacy-b:82 = IZOH (WmsWarehouseGateway'ga ko'chirilgan). ⭐ Skaner izohlarni + route-collapse'ni ko'p-hisoblaydi → "7 dup" asosan soxta.
+
+### ⏭️ GROUP 4 (501 stub) — EGASI QARORI KERAK
+~140 stub / 19 modul. Ko'pi **⚠️DDL** (yangi jadval = Q-35 ruxsati) yoki **#FX-gated** (ataylab o'chirilgan = mahsulot qarori). DDL-siz agregatsiya (tez/xavfsiz): B8 transactions, B13 POS hisobotlar, B15 QC control-charts, B7 mes/wms-summary. Ruxsat bersangiz shularni qilaman; DDL/feature stublar har biri uchun qaror kerak.
