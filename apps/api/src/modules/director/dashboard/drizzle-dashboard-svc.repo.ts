@@ -5,7 +5,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { users, sdOrders, hitlApprovals } from '@europrint/schemas';
+import { users, salesOrders, hitlApprovals } from '@europrint/schemas';
 import { eq, count } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IDashboardSvcRepository } from './i-dashboard-svc.repo';
@@ -23,7 +23,8 @@ export class DrizzleDashboardSvcRepository implements IDashboardSvcRepository {
 
   async countOrders(): Promise<Result<number>> {
     try {
-      const result = await db.select({ count: count() }).from(sdOrders);
+      // STEP 3 A.1: count canonical sales_orders (12 real), not the dormant sd_orders view (0).
+      const result = await db.select({ count: count() }).from(salesOrders);
       return Ok(Number(result[0]?.count || 0));
     } catch (e: unknown) {
       return Err((e as Error)?.message || 'Buyurtmalarni sanashda xatolik');
