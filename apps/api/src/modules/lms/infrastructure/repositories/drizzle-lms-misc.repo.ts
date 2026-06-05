@@ -119,4 +119,32 @@ export class LmsMiscRepository {
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`saveModule: ${(error as Error).message}`); return Err((error as Error).message); }
   }
+
+  // Video progress for the current user (video_progress.user_id is INTEGER — matches the auth id).
+  // NOTE: the writer saveVideoProgress targets employee_id/progress_seconds which DON'T exist on this
+  // table (a separate broken-writer drift); this read uses the real user_id/current_time columns.
+  async findVideoProgress(userId: string): Promise<Result<object[]>> {
+    try {
+      const rows = await exec(sql`SELECT * FROM video_progress WHERE user_id = ${parseInt(userId, 10)} ORDER BY last_watched_at DESC NULLS LAST, id DESC`);
+      return Ok(rows);
+    } catch (error) { this.logger.error(`findVideoProgress: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  // All enrollment progress (course completion %) for GET /progress.
+  async findAllProgress(): Promise<Result<object[]>> {
+    try {
+      const rows = await exec(sql`SELECT e.*, c.title_uz AS course_title FROM lms_enrollments e LEFT JOIN courses c ON c.id = e.course_id ORDER BY e.updated_at DESC NULLS LAST, e.id DESC LIMIT 200`);
+      return Ok(rows);
+    } catch (error) { this.logger.error(`findAllProgress: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  // One user's enrollment progress for GET /progress/user/:id. Filter by employee_id (integer);
+  // lms_enrollments.user_id is UUID (not the integer auth id), so it is intentionally NOT used here.
+  async findProgressByUser(userId: string): Promise<Result<object[]>> {
+    try {
+      const uid = parseInt(userId, 10);
+      const rows = await exec(sql`SELECT e.*, c.title_uz AS course_title FROM lms_enrollments e LEFT JOIN courses c ON c.id = e.course_id WHERE e.employee_id = ${uid} ORDER BY e.updated_at DESC NULLS LAST, e.id DESC`);
+      return Ok(rows);
+    } catch (error) { this.logger.error(`findProgressByUser: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
 }

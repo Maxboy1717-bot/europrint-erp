@@ -106,8 +106,8 @@ export class LmsVideoProgressController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
-  async listVideoProgress() {
-    return notImplemented('GET /video-progress');
+  async listVideoProgress(@CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrInternal(await this.svc.listVideoProgress(String(user?.id ?? 0)));
   }
 
   @ApiOperation({ summary: 'Save video progress' })
@@ -167,22 +167,21 @@ export class LmsMentorsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class LmsProgressCompatController {
+  constructor(private readonly svc: LmsMiscService) {}
+
   @ApiOperation({ summary: 'List progress' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async listProgress() {
-    return notImplemented('GET /progress');
+    return unwrapOrInternal(await this.svc.listAllProgress());
   }
 
   @ApiOperation({ summary: 'Get user progress' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('user/:id')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
-  async getUserProgress(@Param('id') _id: string) {
-    return notImplemented('GET /progress/user/:id');
+  async getUserProgress(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getProgressByUser(id));
   }
 }

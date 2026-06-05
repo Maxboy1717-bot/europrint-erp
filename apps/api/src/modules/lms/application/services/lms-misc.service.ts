@@ -34,4 +34,16 @@ export class LmsMiscService {
   async listMentors(specialization?: string): Promise<Result<object[]>> {
     return this.repo.findMentors(specialization);
   }
+
+  async listVideoProgress(userId: string): Promise<Result<object[]>> {
+    return this.repo.findVideoProgress(userId);
+  }
+
+  async listAllProgress(): Promise<Result<object[]>> {
+    return this.repo.findAllProgress();
+  }
+
+  async getProgressByUser(userId: string): Promise<Result<object[]>> {
+    return this.repo.findProgressByUser(userId);
+  }
 }
