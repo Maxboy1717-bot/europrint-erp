@@ -19,7 +19,7 @@ import { ApprovePurchaseOrderCommand } from '../application/commands/approve-pur
 import { GoodsReceiptCommand } from '../application/commands/goods-receipt.handler';
 import { db } from '@shared/db';
 import { mm_purchase_orders } from '@shared/db';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
 enum Role {
@@ -94,9 +94,24 @@ export class MmPurchaseOrdersController {
   @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-10 (use list endpoint)' })
   @Get(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
-  async getPo(@Param('id') _id: number){
-    this.logger.log('Getting purchase order');
-    return notImplemented('GET /mm/purchase-orders/:id');
+  async getPo(@Param('id') id: string){
+    const poId = Number(id);
+    const rows = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
+    const r = rows[0];
+    if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
+    return {
+      id: String(r.id),
+      po_number: `PO-${String(r.id).padStart(6, '0')}`,
+      vendor_name: `Vendor #${r.vendor_id ?? 0}`,
+      order_date: r.order_date ?? '',
+      delivery_date: r.expected_date ?? '',
+      status: r.status ?? 'draft',
+      total_amount: String(r.total_amount ?? 0),
+      currency: r.currency ?? 'UZS',
+      received_amount: '0',
+      pending_amount: String(r.total_amount ?? 0),
+      receipt_count: 0,
+    };
   }
 
   @ApiOperation({ summary: 'Create po' })
@@ -154,8 +169,14 @@ export class MmPurchaseOrdersController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
-  async deletePo(@Param('id') _id: number) {
-    return notImplemented('DELETE /mm/purchase-orders/:id');
+  async deletePo(@Param('id') id: string) {
+    const poId = Number(id);
+    const rows = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
+    const r = rows[0];
+    if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
+    if ((r.status ?? 'draft') !== 'draft') throw new HttpException("Faqat 'draft' holatdagi buyurtmani o'chirish mumkin", HttpStatus.BAD_REQUEST);
+    await db.execute(sql`UPDATE mm_purchase_orders SET deleted_at = NOW() WHERE id = ${poId}`);
+    return { id: String(poId), deleted: true };
   }
 
   @ApiOperation({ summary: 'Update po' })
@@ -163,10 +184,20 @@ export class MmPurchaseOrdersController {
   @Patch(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async updatePo(
-    @Param('id') _id: number,
-    @Body() _dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
+    @Param('id') id: string,
+    @Body() dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
   ) {
-    return notImplemented('PATCH /mm/purchase-orders/:id');
+    const poId = Number(id);
+    const rows = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
+    const r = rows[0];
+    if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
+    if ((r.status ?? 'draft') !== 'draft') throw new HttpException("Faqat 'draft' holatdagi buyurtmani tahrirlash mumkin", HttpStatus.BAD_REQUEST);
+    // Header-only update (notes + vendor); line-item recalc is a larger task, deferred.
+    await db.execute(sql`UPDATE mm_purchase_orders SET
+      notes = COALESCE(${dto.notes ?? null}, notes),
+      vendor_id = COALESCE(${dto.supplierId != null ? Number(dto.supplierId) : null}, vendor_id)
+      WHERE id = ${poId}`);
+    return { id: String(poId), updated: true };
   }
 
   @ApiOperation({ summary: 'Patch approve po' })
