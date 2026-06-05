@@ -76,6 +76,7 @@ import { HrMapCompatService }            from './hr-map-compat.service';
 import { GoalsCompatService }            from './goals-compat.service';
 import { EmployeeFilesCompatService }    from './employee-files-compat.service';
 import { SaasService }                   from './saas.service';
+import { OrdersRegistryService }         from './orders-registry.service';
 import { TelegramAdminService }          from './telegram-admin.service';
 import { SettingsAdminService }          from './settings-admin.service';
 import { ApprovalWorkflowService }       from './approval-workflow.service';
@@ -167,6 +168,7 @@ import { AuthModule }                 from '../auth/auth.module';
     GoalsCompatService,
     EmployeeFilesCompatService,
     SaasService,
+    OrdersRegistryService,
     TelegramAdminService,
     SettingsAdminService,
     ApprovalWorkflowService,

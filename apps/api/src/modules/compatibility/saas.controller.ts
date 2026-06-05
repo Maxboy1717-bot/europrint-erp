@@ -18,6 +18,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { z } from 'zod';
 import { SaasService } from './saas.service';
+import { OrdersRegistryService } from './orders-registry.service';
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
@@ -42,6 +43,17 @@ const UpdateTenantModulesSchema = z.object({
 const OnboardTenantSchema = z.object({
   adminEmail: z.string().email().optional(),
   modules: z.array(z.string()).optional(),
+}).passthrough();
+
+const OrderRegistrySchema = z.object({
+  number: z.string().max(100).optional(),
+  category: z.string().max(100).optional(),
+  title: z.string().min(1).max(500),
+  content: z.string().optional(),
+  issuedBy: z.union([z.string(), z.number()]).optional(),
+  issuedDate: z.string().optional(),
+  status: z.string().max(50).optional(),
+  departmentIds: z.array(z.union([z.string(), z.number()])).optional(),
 }).passthrough();
 
 @ApiTags('SAAS')
@@ -150,15 +162,27 @@ export class SaasController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class OrdersRegistryCompatController {
+  constructor(private readonly svc: OrdersRegistryService) {}
+
   @Get()
   @Roles('admin', 'super_admin', 'manager', 'director', 'accountant', 'sales')
   async listOrders() {
-    return notImplemented('GET /orders-registry');
+    return unwrapOrInternal(await this.svc.listOrders());
   }
 
   @Post()
   @Roles('admin', 'super_admin', 'manager', 'director', 'accountant', 'sales')
-  async createOrder(@Body() _body: unknown) {
-    return notImplemented('POST /orders-registry');
+  async createOrder(@Body() body: unknown) {
+    const dto = OrderRegistrySchema.parse(body);
+    return unwrapOrInternal(await this.svc.createOrder({
+      number: dto.number,
+      category: dto.category,
+      title: dto.title,
+      content: dto.content,
+      issuedBy: dto.issuedBy != null ? String(dto.issuedBy) : undefined,
+      issuedDate: dto.issuedDate,
+      status: dto.status,
+      departmentIds: dto.departmentIds,
+    }));
   }
 }
