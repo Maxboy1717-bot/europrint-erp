@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -27,10 +27,9 @@ export class IdealRasmController {
 
   constructor(private readonly svc: IdealRasmService) {}
 
-  @Post()
-  async create() {
-    return { success: true };
-  }
+  // A9/green-lie retire (2026-06-05): `POST /api/ideal-rasm` create() returned {success:true}
+  // and saved nothing. The FE (IdealRasmPage) saves targets via PUT /api/ideal-rasm (updateAll);
+  // this POST had no caller. Removed the lie. See docs/yashil-yolgon-reja-2026-06-05.md A9.
 
   @Get()
   async getAll() {
