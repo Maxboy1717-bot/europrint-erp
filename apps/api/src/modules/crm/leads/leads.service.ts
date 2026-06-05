@@ -54,6 +54,15 @@ export class LeadsService {
     const result = await this.crmLeadsRepo.softDelete(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return { message: "O'chirildi" };
-  
+
+    });}
+
+  /** A3: logs an outbound email as a real lead activity (honest queued record, not fake-sent). */
+  async logEmail(leadId: number, subject: string, body: string, managerId: number | null){
+    return safeCall(async () => {
+    await this.findOne(leadId); // 404 if the lead does not exist
+    const result = await this.crmLeadsRepo.logEmail(leadId, subject, body, managerId);
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    return result.data;
     });}
 }

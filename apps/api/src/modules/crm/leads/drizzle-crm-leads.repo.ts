@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { crmLeads } from '@europrint/schemas';
-import { eq, and, isNull, count, desc } from 'drizzle-orm';
+import { eq, and, isNull, count, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { toBitrixStatusId } from './lead-status-id.util';
 import { ICrmLeadsRepository } from './i-crm-leads.repo';
@@ -155,5 +155,20 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       await db.update(crmLeads).set({ deleted_at: _time.now() }).where(eq(crmLeads.id, id));
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error)?.message || "O'chirishda xatolik"); }
+  }
+
+  // A3: log an outbound lead email as a REAL activity (no mail provider is configured, so this
+  // is an honest "queued/logged" record — NOT a fake sent:true). sd_lead_activities is the
+  // shared lead-activity log (lead_id -> crm_leads.id post-merge); real columns: type, note, manager_id.
+  async logEmail(leadId: number, subject: string, body: string, managerId: number | null): Promise<Result<Row>> {
+    try {
+      const note = `Email — Subject: ${subject}${body ? ` — ${body.slice(0, 1000)}` : ''}`;
+      const r = await db.execute(sql`
+        INSERT INTO sd_lead_activities (lead_id, type, note, manager_id, created_at)
+        VALUES (${leadId}, 'email', ${note}, ${managerId}, NOW())
+        RETURNING id`);
+      const activityId = ((r as { rows?: Row[] }).rows?.[0]?.id) ?? null;
+      return Ok({ leadId, subject, queued: true, activityId });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Email logini saqlashda xatolik'); }
   }
 }

@@ -11,5 +11,6 @@ export interface ICrmLeadsRepository {
   create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
   update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   softDelete(id: number): Promise<Result<void>>;
+  logEmail(leadId: number, subject: string, body: string, managerId: number | null): Promise<Result<Row>>;
 }
 export const CRM_LEADS_REPO = 'ICrmLeadsRepository';

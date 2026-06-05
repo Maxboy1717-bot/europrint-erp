@@ -16,6 +16,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { QualifyLeadCommand } from '../application/commands/qualify-lead.handler';
 import { LeadsService } from '../leads/leads.service';
 import { safeInt } from '@common/db/db-rows';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
 
 const LeadCreateSchema = z.object({
   firstName: z.string().max(200).optional(),
@@ -181,9 +183,13 @@ export class CrmLeadsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post(':id/emails')
-  async sendLeadEmail(@Param('id') id: string, @Body() body: unknown) {
+  async sendLeadEmail(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const parsed = SendLeadEmailSchema.parse(body);
-    return { id: Date.now(), leadId: safeInt(id, 0), ...parsed, sent: true };
+    // A3: was { id: Date.now(), sent: true } — a green-lie (no email sent, nothing saved). No mail
+    // provider is configured, so we honestly LOG the email as a lead activity (queued) instead of
+    // claiming it was sent. Returns { leadId, subject, queued: true, activityId }.
+    const bodyText = parsed.body != null ? String(parsed.body) : '';
+    return unwrapOrThrow(await this.leadsService.logEmail(safeInt(id, 0), String(parsed.subject ?? ''), bodyText, user?.id ?? null));
   }
 
   @ApiOperation({ summary: 'Create quick lead' })
