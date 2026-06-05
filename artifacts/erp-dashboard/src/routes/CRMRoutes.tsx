@@ -13,7 +13,6 @@ const CRMActivities = lazy(() => import("@/pages/CRMActivities"));
 const CRMSettings = lazy(() => import("@/pages/CRMSettings"));
 const CRMWorkspace = lazy(() => import("@/pages/CRMWorkspace"));
 const SalesOrders = lazy(() => import("@/pages/SalesOrders"));
-const SDQuotations = lazy(() => import("@/pages/SDQuotations"));
 const SDEuroprint = lazy(() => import("@/pages/SDEuroprint"));
 const SDDashboard = lazy(() => import("@/pages/SDDashboard"));
 const SDCustomers = lazy(() => import("@/pages/SDCustomers"));
@@ -54,7 +53,9 @@ export const SALES_ROUTES: [string, React.ComponentType][] = [
   ['/crm/activities',          CRMActivities],
   ['/crm/settings',            CRMSettings],
   ['/erp/sales',               SalesOrders],
-  ['/sd/quotations',           SDQuotations],
+  // STEP 2: legacy /sd/quotations now renders the canonical SDSalesQuotes page
+  // (sd_quotations was a duplicate FE page over the SAME `quotations` table; sidebar uses sd/sales-quotes).
+  ['/sd/quotations',           SDSalesQuotes],
   ['/sd/crm',                  SDEuroprint],
   ['/sd/dashboard',            SDDashboard],
   ['/sd/customers',            SDCustomers],
