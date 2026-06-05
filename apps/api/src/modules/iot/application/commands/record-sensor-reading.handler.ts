@@ -10,6 +10,7 @@ import { RecordSensorReadingCommand } from './record-sensor-reading.command';
 import { SensorReading } from '../../domain/aggregates/sensor-reading.aggregate';
 import { AnomalyDetectedEvent } from '../../domain/events';
 import { ITelegramSender, TELEGRAM_SENDER } from '@modules/notifications/domain/ports/i-telegram-sender.port';
+import { ISensorRepo, SENSOR_REPO } from '../../domain/repositories/i-sensor.repo';
 
 @Injectable()
 @CommandHandler(RecordSensorReadingCommand)
@@ -19,10 +20,18 @@ export class RecordSensorReadingHandler implements ICommandHandler<RecordSensorR
   constructor(
     private readonly eventBus: EventBus,
     @Inject(TELEGRAM_SENDER) private readonly telegramService: ITelegramSender,
-      ) {}
+    @Inject(SENSOR_REPO) private readonly sensorRepo: ISensorRepo,
+  ) {}
 
   async execute(command: RecordSensorReadingCommand): Promise<Result<string>> {
       const reading = SensorReading.create(command.deviceId, command.value, command.unit);
+
+      // Leverage #6: was a fake-create (no repo → reading never persisted). Persist to iot_sensor_readings.
+      const saveResult = await this.sensorRepo.saveReading(reading);
+      if (!saveResult.ok) {
+        this.logger.error('Failed to persist sensor reading');
+        return saveResult as unknown as Result<string>;
+      }
 
       // Anomaly detection logic
       const isAnomaly = this.detectAnomaly(command.value);
@@ -40,8 +49,8 @@ export class RecordSensorReadingHandler implements ICommandHandler<RecordSensorR
         this.logger.warn('Anomaly detected');
       }
 
-      this.logger.log('Sensor reading recorded');
-      return Ok(reading.id);
+      this.logger.log('Sensor reading recorded and persisted');
+      return Ok(saveResult.data.id);
   }
 
   private detectAnomaly(value: number): boolean {

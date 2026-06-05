@@ -119,7 +119,9 @@ export class DrizzleSensorRepo implements ISensorRepo {
       let status = 'normal';
       if (thresholds.min !== undefined && reading.value < thresholds.min) status = 'anomaly';
       if (thresholds.max !== undefined && reading.value > thresholds.max) status = 'anomaly';
-      const r = await exec(sql`INSERT INTO iot_sensor_readings (sensor_id, value, status, recorded_at) VALUES (${reading.deviceId}, ${reading.value}, ${status}, ${reading.timestamp ?? _time.now()}) RETURNING id, sensor_id AS device_id, value, status, recorded_at`);
+      // iot_sensor_readings is a VIEW over sensor_readings (device_id NOT NULL) — set both device_id
+      // and sensor_id to the reading's device so the cascading insert satisfies the base-table constraint.
+      const r = await exec(sql`INSERT INTO iot_sensor_readings (device_id, sensor_id, value, status, recorded_at) VALUES (${reading.deviceId}, ${reading.deviceId}, ${reading.value}, ${status}, ${reading.timestamp ?? _time.now()}) RETURNING id, sensor_id AS device_id, value, status, recorded_at`);
       if (!r.length) return Err('Failed to save reading');
       return this.mapToReadingWithUnit(r[0], reading.unit);
     } catch { this.logger.error('Save reading error'); return Err('Failed to save reading'); }
