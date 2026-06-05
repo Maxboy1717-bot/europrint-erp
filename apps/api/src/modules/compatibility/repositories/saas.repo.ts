@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { saasTenants } from '@shared/db/europrint-compat';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { Ok, Err, safeCall, AppErr } from '@common/result';
 
 type TenantInsert = { name: string; domain?: string; plan: string; employeeLimit: number };
@@ -56,5 +56,27 @@ export class SaasRepo {
 
   delete(id: string) {
     return safeCall(() => db.delete(saasTenants).where(eq(saasTenants.id, id)).returning(), 'DB_ERROR');
+  }
+
+  // saas_tenant_modules is not a Drizzle import here — raw SQL. tenant_id is varchar.
+  findTenantModules(tenantId: string) {
+    return safeCall(async () => {
+      const r = await db.execute(sql`SELECT id, tenant_id, module_key, is_enabled, enabled_at, config FROM saas_tenant_modules WHERE tenant_id = ${tenantId} ORDER BY module_key`);
+      return ((r as { rows?: unknown[] }).rows ?? []) as unknown[];
+    }, 'DB_ERROR');
+  }
+
+  // Replace-set the tenant's enabled modules (no unique constraint on tenant_id+module_key → DELETE+INSERT in a tx).
+  setTenantModules(tenantId: string, modules: string[]) {
+    return safeCall(async () => {
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`DELETE FROM saas_tenant_modules WHERE tenant_id = ${tenantId}`);
+        for (const key of modules) {
+          await tx.execute(sql`INSERT INTO saas_tenant_modules (tenant_id, module_key, is_enabled, enabled_at) VALUES (${tenantId}, ${String(key)}, true, NOW())`);
+        }
+      });
+      const r = await db.execute(sql`SELECT id, tenant_id, module_key, is_enabled FROM saas_tenant_modules WHERE tenant_id = ${tenantId} ORDER BY module_key`);
+      return ((r as { rows?: unknown[] }).rows ?? []) as unknown[];
+    }, 'DB_ERROR');
   }
 }

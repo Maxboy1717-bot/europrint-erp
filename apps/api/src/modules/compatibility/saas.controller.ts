@@ -128,14 +128,14 @@ export class SaasController {
   }
 
   @Get('tenants/:id/modules')
-  async getTenantModules(@Param('id') _id: string) {
-    return notImplemented('GET /saas/tenants/:id/modules');
+  async getTenantModules(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getTenantModules(id));
   }
 
   @Patch('tenants/:id/modules')
-  async updateTenantModules(@Param('id') _id: string, @Body() body: unknown) {
-    UpdateTenantModulesSchema.parse(body);
-    return notImplemented('PATCH /saas/tenants/:id/modules');
+  async updateTenantModules(@Param('id') id: string, @Body() body: unknown) {
+    const dto = UpdateTenantModulesSchema.parse(body);
+    return unwrapOrInternal(await this.svc.updateTenantModules(id, Array.isArray(dto.modules) ? dto.modules : []));
   }
 
   @Post('tenants/:id/onboard')

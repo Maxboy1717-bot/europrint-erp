@@ -102,4 +102,16 @@ export class SaasService {
       }));
     return Ok({ alerts, total: alerts.length });
   }
+
+  async getTenantModules(tenantId: string): Promise<Result<{ tenantId: string; modules: unknown[] }>> {
+    const r = await this.repo.findTenantModules(tenantId);
+    if (!r.ok) return Err(r.error);
+    return Ok({ tenantId, modules: r.data });
+  }
+
+  async updateTenantModules(tenantId: string, modules: string[]): Promise<Result<{ tenantId: string; modules: unknown[] }>> {
+    const r = await this.repo.setTenantModules(tenantId, modules);
+    if (!r.ok) return Err(r.error);
+    return Ok({ tenantId, modules: r.data });
+  }
 }
