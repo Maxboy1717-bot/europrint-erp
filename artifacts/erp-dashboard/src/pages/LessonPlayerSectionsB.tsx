@@ -112,7 +112,7 @@ export function LessonContentArea({
                   src={
                     activeLesson.videoUrl ||
                     (activeLesson.filePath
-                      ? `/uploads/${activeLesson.filePath}`
+                      ? `/storage/${activeLesson.filePath}`
                       : undefined)
                   }
                   onEnded={onMarkComplete}
@@ -130,7 +130,7 @@ export function LessonContentArea({
                 style={{ height: "600px" }}
               >
                 <iframe
-                  src={`/uploads/${activeLesson.filePath}`}
+                  src={`/storage/${activeLesson.filePath}`}
                   className="w-full h-full"
                   title={activeLesson.title}
                 />
@@ -140,7 +140,7 @@ export function LessonContentArea({
                 size="sm"
                 className="mt-3"
                 onClick={() =>
-                  window.open(`/uploads/${activeLesson.filePath}`, "_blank")
+                  window.open(`/storage/${activeLesson.filePath}`, "_blank")
                 }
               >
                 <Download className="h-4 w-4 mr-2" />

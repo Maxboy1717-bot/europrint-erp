@@ -12,8 +12,11 @@ Controller,
   Patch,
   Body,
   Param,
-  Query, Logger, UseGuards, UseInterceptors, UsePipes,
+  Query, Logger, UseGuards, UseInterceptors, UsePipes, BadRequestException, Req, HttpCode,
 } from '@nestjs/common';
+import * as fs from 'fs';
+import * as nodePath from 'path';
+import type { FastifyRequest } from 'fastify';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -28,10 +31,17 @@ import {
   LegacyUpdatePapkaOrderSchema, LegacyUpdatePapkaOrderDto,
   LegacyCreateMachineTaskSchema, LegacyCreateMachineTaskDto,
   LegacyCreatePlanningOperationSchema, LegacyCreatePlanningOperationDto,
-  LegacyUploadSchema, LegacyUploadDto,
   LegacyClientErrorSchema, LegacyClientErrorDto,
 } from '../dto/legacy.dto';
 import { unwrapOrInternal } from '@common/http-result';
+
+// A4 upload constants (mirror storage.controller safety: dir under cwd/uploads, ext allowlist, size cap).
+const LEGACY_UPLOADS_DIR = nodePath.resolve(process.cwd(), 'uploads');
+const LEGACY_MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+const LEGACY_ALLOWED_UPLOAD_EXT = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.pdf', '.docx', '.xlsx', '.csv', '.txt',
+  '.mp4', '.webm', '.ogg', '.mp3', '.wav',
+]);
 
 @ApiTags('General Legacy Routes A')
 @ApiThrottle()
@@ -181,9 +191,26 @@ export class GeneralLegacyAController {
   }
 
   @Post('upload')
-  @UsePipes(new ZodValidationPipe(LegacyUploadSchema))
-  async uploadFile(@Body() _body: LegacyUploadDto) {
-    return { url: '', filename: '', message: 'Fayl yuklandi' };
+  @HttpCode(200)
+  async uploadFile(@Req() req: FastifyRequest) {
+    // A4: was a green-lie — returned {message:'Fayl yuklandi'} with empty url and stored NOTHING,
+    // so lesson files were silently lost. Now writes the multipart file to UPLOADS_DIR/lessons/<key>
+    // and returns {filePath}. Served via the canonical storage route (GET /api/storage/<key>; the FE
+    // proxies /storage/* -> /api/storage/*). @fastify/multipart is registered in main.ts.
+    const mp = await (req as unknown as { file(): Promise<{ filename?: string; toBuffer(): Promise<Buffer> } | undefined> }).file();
+    if (!mp) throw new BadRequestException('Fayl topilmadi');
+    const ext = nodePath.extname(mp.filename || '').toLowerCase();
+    if (!LEGACY_ALLOWED_UPLOAD_EXT.has(ext)) throw new BadRequestException(`Fayl turi ruxsat etilmagan: ${ext || '(yo\'q)'}`);
+    const buf = await mp.toBuffer();
+    if (!buf.length) throw new BadRequestException('Bo\'sh fayl');
+    if (buf.length > LEGACY_MAX_UPLOAD_BYTES) throw new BadRequestException('Fayl juda katta (maks 25MB)');
+    const safeName = (mp.filename || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const key = `lessons/${Date.now()}-${safeName}`;
+    const dest = nodePath.join(LEGACY_UPLOADS_DIR, key);
+    fs.mkdirSync(nodePath.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, buf);
+    this.logger.log(`Uploaded lesson file: ${key} (${buf.length} bytes)`);
+    return { filePath: key, url: `/storage/${key}`, filename: safeName };
   }
 
   @Public()
