@@ -19,6 +19,8 @@ import { StockLedgerService }        from './stock-ledger.service';
 import { PosNotificationsService }   from './pos-notifications.service';
 import { UpdateMovementStatusDto, QcDecisionDto } from '../../dto/movement.dto';
 import { PosMovementStatusRepository } from '../../infrastructure/repositories/pos-movement-status.repository';
+import { GlPostingLogRepository } from '../../infrastructure/repositories/gl-posting-log.repository';
+import { GL_PAIRS } from './pos-gl-auto.service';
 import {
   ConfirmDecision,
   isTransitionAllowed,
@@ -44,6 +46,7 @@ export class PosMovementStatusService {
     private readonly notifications:    PosNotificationsService,
     private readonly eventEmitter:     EventEmitter2,
     private readonly repo:             PosMovementStatusRepository,
+    private readonly glRepo:           GlPostingLogRepository,
   ) {}
 
   async updateStatus(movementId: number, dto: UpdateMovementStatusDto, updatedById: number, ipAddress?: string): Promise<Result<object, AppError>> {
@@ -196,6 +199,31 @@ export class PosMovementStatusService {
       Number(movement.id), 'FINANCE', processedById, 'APPROVED' as ConfirmDecision,
       `Movement ${String(movement.movementNumber)} completed`,
     );
+
+    // Leverage #4 (Variant C): GL auto-posting INLINE — NOT via the dead PosMovementCompletedEvent.
+    // Publishing that event would re-run the WMS-sync listener which ALSO writes stock (already written
+    // in the loop above) => double-write (the deferred FIX4 risk). Here we add ONLY the missing GL leg,
+    // reusing GL_PAIRS + gl_posting_log (status=AWAITING_REVIEW; Finance reviews manually). One per movement.
+    const glLines = lines.ok ? (lines.data as Record<string, unknown>[]) : [];
+    const totalValue = glLines.reduce((s, l) => s + Number(l.quantity ?? 0) * Number(l.unitPrice ?? 0), 0);
+    const pairFn = GL_PAIRS[code];
+    if (pairFn && totalValue > 0) {
+      const glEntries = pairFn(totalValue, code);
+      const glResult = await this.glRepo.insertLog({
+        movementId: Number(movement.id),
+        stage: 5,
+        stageName: 'POST',
+        status: 'AWAITING_REVIEW',
+        glEntries,
+        aiConfidence: null,
+        processedAt: _time.now(),
+      });
+      if (glResult.ok) {
+        this.logger.log(`[GL-AUTO] gl_posting_log yozildi: movementId=${movement.id} total=${totalValue.toFixed(2)} entries=${glEntries.length}`);
+      } else {
+        this.logger.error(`[GL-AUTO] GL yozishda xato (movementId=${movement.id}): ${glResult.error}`);
+      }
+    }
 
     this.logger.log(`[POS] Harakat yakunlandi: id=${movement.id} number=${movement.movementNumber}`);
   }
