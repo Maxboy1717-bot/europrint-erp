@@ -112,11 +112,10 @@ export class WarehouseRentalController {
     return unwrapOrThrow(await this.svc.markPaid(safeInt(id, 0), user?.id ?? null, body.notes ? String(body.notes) : undefined));
   }
 
-  @ApiOperation({ summary: 'Recalculate' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post('recalculate')
-  async recalculate(@Body() _body: Record<string, unknown>) { return { success: true }; }
+  // A8/green-lie retire (2026-06-05): `POST /api/warehouse-rental/recalculate` returned
+  // {success:true} and recomputed NOTHING (no service method, no defined formula). No FE
+  // caller (WarehouseRental page has no recalculate call). Removed rather than ship an
+  // unspecified/guessed recompute (Q-40). See docs/yashil-yolgon-reja-2026-06-05.md A8.
 
   @ApiOperation({ summary: 'Patch close record' })
   @ApiResponse({ status: 200, description: 'OK' })
