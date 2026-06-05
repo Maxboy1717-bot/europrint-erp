@@ -134,11 +134,14 @@ hr `/hr/contracts` `/hr-capital/courses` `/hr-capital/stats` (#FX-9); finance `/
 | POST /technology/cards/generate, /:id/optimize | technology_cards | ✅ | runAiCheck + INSERT/UPDATE | M |
 | GET /production/orders | production_orders | ✅ | getOrder360Card JOIN'lar → list | M |
 
-## POS (hammasi ✅, pos_stock_ledger)
-| GET /pos/sales/daily | retail_pos_transactions | ✅ | CashRegisterService findByDate agregat | S |
-| GET /pos/inventory/low-stock | stock_alerts | ✅ | StockLedgerService.getLowAlerts (delegate) | S |
-| GET /pos/inventory/movements, /pos/stock/movements | pos_stock_ledger | ✅ | getLedgerHistory + paginate | S/M |
-| GET /pos/inventory/monthly-report | pos_stock_ledger | ✅ | date_trunc month agregat | M |
+## POS — IJRO BOSHLANDI (pos_stock_ledger ✅, ⚠️ warehouse_id=INTEGER)
+| Endpoint | Jadval | Holat | Izoh |
+|---|---|---|---|
+| GET /pos/stock/movements | pos_stock_ledger | ✅ **DONE `06ecc453`** | StockLedgerService.getMovements (yangi) + DB-proof |
+| GET /pos/inventory/movements | pos_stock_ledger | ⏭️ DUP of stock/movements | wire (getMovements) yoki retire — egasi qaror |
+| GET /pos/sales/daily | retail_pos_transactions | ⏭️ keyingi (DDL-siz) | CashRegisterService aggregate |
+| GET /pos/inventory/monthly-report | pos_stock_ledger | ⏭️ keyingi (DDL-siz) | date_trunc month aggregat |
+| GET /pos/inventory/low-stock | ⚠️ **stock_alerts YO'Q (drift!)** | 🔴 BLOK | dup of /pos/stock/low-alerts; getLowAlerts stock_alerts'ni o'qiydi — DB'da yo'q. Avval drift hал |
 
 ## Compat (hammasi ✅)
 | GET+PATCH /saas/tenants/:id/modules | saas_tenant_modules | ✅ | getTenantById + upsert | S/M |
