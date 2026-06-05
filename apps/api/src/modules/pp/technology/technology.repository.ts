@@ -10,6 +10,8 @@ import {
   queryTechCards, queryOrderTechCard, queryRunAiCheck,
   execTechApproveOrder, execTechRejectOrder,
 } from '@common/database/queries-technology';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
 
@@ -73,10 +75,27 @@ export class TechnologyRepository {
   }
 
   async findTechCards(): Promise<Result<object[]>> {
-    
+
     return safeCall(async () => {
       return (await queryTechCards()) as object[];
     }, 'DB_ERROR');
+  }
+
+  // The rich AI-generated technology_cards (distinct from the simpler tech_cards above). Direct SQL.
+  async findTechnologyCards(): Promise<Result<object[]>> {
+    try {
+      const r = await db.execute(sql`SELECT id, product_id, papka_order_id, product_type, format_a, format_b, operations, total_duration_minutes, setup_duration_minutes, calculated_by_ai, ai_model, is_active, created_at FROM technology_cards WHERE deleted_at IS NULL AND is_active = true ORDER BY created_at DESC LIMIT 200`);
+      return Ok(((r as { rows?: object[] }).rows ?? []) as object[]);
+    } catch (e) { return Err(String(e)); }
+  }
+
+  async findTechnologyCardById(id: string): Promise<Result<Row>> {
+    try {
+      const r = await db.execute(sql`SELECT * FROM technology_cards WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1`);
+      const row = (((r as { rows?: Row[] }).rows ?? [])[0]);
+      if (!row) return Err('Texnologik karta topilmadi');
+      return Ok(row);
+    } catch (e) { return Err(String(e)); }
   }
 
   async findOrderTechCard(orderId: string): Promise<Result<Row>> {

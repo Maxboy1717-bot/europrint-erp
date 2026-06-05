@@ -104,7 +104,7 @@ export class TechnologyController {
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'List technology cards' })
   async getCards(@Query('status') _status?: string) {
-    return notImplemented('GET /technology/cards');
+    return unwrapOrInternal(await this.svc.getCards());
   }
 
   @Post('cards/generate')
@@ -117,8 +117,10 @@ export class TechnologyController {
   @Get('cards/:id')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Get technology card by ID' })
-  async getCardById(@Param('id') _id: string) {
-    return notImplemented('GET /technology/cards/:id');
+  async getCardById(@Param('id') id: string) {
+    const r = await this.svc.getCardById(id);
+    if (!r.ok) throw new HttpException('Texnologik karta topilmadi', HttpStatus.NOT_FOUND);
+    return r.data;
   }
 
   @Post('cards/:id/optimize')
