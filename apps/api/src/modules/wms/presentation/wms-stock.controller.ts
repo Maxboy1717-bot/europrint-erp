@@ -43,14 +43,10 @@ export class WmsStockController {
     private readonly i18n: I18nService,
   ) {}
 
-  @ApiOperation({ summary: 'Create stock' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post()
-  @Roles(Role.WAREHOUSE_KEEPER, Role.SUPER_ADMIN, Role.DIRECTOR)
-  async createStock() {
-    return { success: true };
-  }
+  // A2/green-lie retire (2026-06-05): `POST /api/wms/stock` `createStock()` returned
+  // {success:true} and wrote NOTHING. Stock rows are created canonically via goods-receipt
+  // (mm-goods) + POS/WMS sync, never by this bare POST (no FE caller; no crudSvc create method).
+  // Removed rather than double-write a second stock writer. See docs/yashil-yolgon-reja-2026-06-05.md A1.
 
   @ApiOperation({ summary: 'List stock' })
   @ApiResponse({ status: 200, description: 'OK' })
