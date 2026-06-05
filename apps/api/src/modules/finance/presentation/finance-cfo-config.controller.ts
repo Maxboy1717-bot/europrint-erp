@@ -18,6 +18,11 @@ const UpdateCfoConfigDto = z.object({
   value: z.number({ required_error: 'value maydoni talab qilinadi', invalid_type_error: 'value raqam bo\'lishi kerak' }).finite(),
 });
 
+const CreateCfoConfigDto = z.object({
+  key:   z.string().min(1, 'key maydoni talab qilinadi').max(100),
+  value: z.number({ required_error: 'value maydoni talab qilinadi', invalid_type_error: 'value raqam bo\'lishi kerak' }).finite(),
+});
+
 @ApiThrottle()
 @ApiTags('Finance Cfo Config')
 @ApiBearerAuth()
@@ -27,14 +32,18 @@ const UpdateCfoConfigDto = z.object({
 export class FinanceCfoConfigController {
   constructor(private readonly cfoConfig: CfoConfigService) {}
 
-  /** POST /api/finance/cfo-config — not yet implemented */
+  /** POST /api/finance/cfo-config — create-or-update a config entry by key (upsert). */
   @ApiOperation({ summary: 'Create' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @RequirePermission('finance.cfo-config:FULL')
-  async create() {
-    return { success: true };
+  async create(@Body() body: unknown) {
+    // A6: was a {success:true} green-lie that saved nothing. POST now upserts a CFO config
+    // entry by key via the SAME canonical path as PUT /:key (cfoConfig.update ->
+    // repo.upsertCfoConfig). cfo_config(config_key, config_value) table exists.
+    const dto = CreateCfoConfigDto.parse(body);
+    return unwrapOrInternal(await this.cfoConfig.update(dto.key, dto.value));
   }
 
   /** GET /api/finance/cfo-config — returns all CFO config entries */
