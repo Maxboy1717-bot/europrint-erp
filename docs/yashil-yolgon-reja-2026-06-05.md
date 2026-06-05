@@ -153,3 +153,19 @@ Shu branch (`chore/schema-convergence`) da **boshqa bajaruvchi sessiya FAOL** (M
 - ✅ **A6** finance-cfo-config POST upsert — **DONE** (commit `a78c3b08`; DB-proof: cfo_config value=0.123456 yozildi→tozalandi). `cfoConfig.update` (upsert) qayta-ishlatildi (PUT bilan bir xil kanonik yo'l).
 - ⚠️ **A4** (`/api/upload`) — tekshiruvда **chuqurroq muammo**: 1-qatorli emas, **kichik funksiya bo'shlig'i**: (1) upload hech narsa yozmaydi (green-lie); (2) FE darsni `/uploads/<filePath>` dан o'qiydi, kanonik storage esa `/api/storage/*` dан beradi (mos emas); (3) BE bootstrap'da `/uploads/*` static route TOPILMADI. To'g'ri tuzatish = multipart upload-yozuv + serve-yo'l moslashtirish (FE+BE birga). "Ishlaydi-lekin-ko'rinmaydi" (Q-40) dан saqlanish uchun **alohida diqqat bilan** — keyingi fokus-vazifa.
 - **GROUP 1 yangi holati:** A7 ✅ · A1 ✅ · A2 ✅ · A6 ✅ (4/9) · **A4** (funksiya-gap, alohida) · A3,A5 (implementatsiya) · A8,A9 (qaror).
+
+### ✅ GROUP 1 TUGADI (2026-06-05) — 9/9
+| Item | Endpoint | Yechim | Commit |
+|---|---|---|---|
+| A7 | POST /cc/notification-prefs | upsert (real) | `1d65eaf0` |
+| A1 | POST /wms/stock | RETIRE (ishlatilmagan) | `e36e36ee` |
+| A2 | POST /wms/inventory | RETIRE (ishlatilmagan) | `9c592e9f` |
+| A6 | POST /finance/cfo-config | upsert (real) | `a78c3b08` |
+| A8 | POST /warehouse-rental/recalculate | RETIRE (ishlatilmagan, spec yo'q) | `4718b48f` |
+| A9 | POST /ideal-rasm | RETIRE (FE PUT ishlatadi) | `4b137022` |
+| A5 | POST /lms/progress/complete | real progress (enrollments) | `bbeb0f8c` |
+| A3 | POST /crm/leads/:id/emails | real activity log (halol queued) | `ab60deb8` |
+| A4 | POST /upload | real upload + serve (storage) | `841608e` |
+
+**Naqsh:** 4 ta RETIRE (ishlatilmagan soxta endpoint), 5 ta REAL (upsert/progress/log/upload). Har biri DB/FS-proof + alohida commit. BE+FE tsc 0. Worktree→main (Muslimbek to'xtatilgan).
+➡️ **Keyingi (alohida ruxsat bilan):** GROUP 2 (A10-A12 xato-yo'l echo), GROUP 3 (dublikat C1-C4), GROUP 4+ (501 stub).
