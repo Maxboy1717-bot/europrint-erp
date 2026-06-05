@@ -27,7 +27,6 @@ import type { AuthenticatedUser } from '@common/types/user.types';
 import { CashRegisterService } from '../application/services/cash-register.service';
 import { StockLedgerService } from '../application/services/stock-ledger.service';
 import { unwrapOrInternal } from '@common/http-result';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 const LegacySaleItemSchema = z.object({
   productId: z.union([z.string(), z.number()]).transform((v) => String(v)),
@@ -112,8 +111,10 @@ export class PosStubController {
   }
 
   @Get('sales/daily')
-  @ApiOperation({ summary: 'Kunlik sotuvlar' })
-  getSalesDaily() { return notImplemented('GET /pos/sales/daily'); }
+  @ApiOperation({ summary: 'Kunlik sotuvlar (retail_pos_transactions)' })
+  async getSalesDaily(@Query('date') date?: string) {
+    return this.cashRegisterService.getDailySales(date);
+  }
 
   @Get('inventory/low-stock')
   @ApiOperation({ summary: 'Ombordagi kam qoldiq mahsulotlar (pos_stock_ledger balansidan)' })

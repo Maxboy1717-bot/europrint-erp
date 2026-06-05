@@ -172,6 +172,13 @@ export class CashRegisterService {
     return result.data;
   }
 
+  /** Daily sales summary (count, total, payment-method breakdown) for GET /pos/sales/daily. */
+  async getDailySales(date?: string) {
+    const result = await this.repo.findDailySales(date);
+    if (!result.ok) throw new InternalServerErrorException(result.error.message);
+    return result.data;
+  }
+
   private mapTransaction(t: RetailTransaction) {
     return {
       id:                t.id,

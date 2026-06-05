@@ -244,6 +244,40 @@ export class CashRegisterRepository implements ICashRegisterRepository {
     }
   }
 
+  /** Kunlik sotuvlar aggregati (retail_pos_transactions) — GET /pos/sales/daily uchun. */
+  async findDailySales(date?: string): Promise<Result<{ date: string; transactionCount: number; totalAmount: number; byPaymentMethod: { method: string; count: number; total: number }[] }>> {
+    try {
+      return safeCall(async () => {
+        const dayStart = date ? new Date(`${date}T00:00:00`) : (() => { const d = _time.now(); d.setHours(0, 0, 0, 0); return d; })();
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 1);
+        const where = and(
+          gte(retail_pos_transactions.created_at, dayStart),
+          lt(retail_pos_transactions.created_at, dayEnd),
+          eq(retail_pos_transactions.status, 'completed'),
+        );
+        const [totals] = await db.select({
+          total: sql<number>`COALESCE(SUM(total_amount::numeric), 0)`,
+          count: sql<number>`COUNT(*)`,
+        }).from(retail_pos_transactions).where(where);
+        const byMethod = await db.select({
+          method: retail_pos_transactions.payment_method,
+          total: sql<number>`COALESCE(SUM(total_amount::numeric), 0)`,
+          count: sql<number>`COUNT(*)`,
+        }).from(retail_pos_transactions).where(where).groupBy(retail_pos_transactions.payment_method);
+        const isoDate = `${dayStart.getFullYear()}-${String(dayStart.getMonth() + 1).padStart(2, '0')}-${String(dayStart.getDate()).padStart(2, '0')}`;
+        return {
+          date: isoDate,
+          transactionCount: Number(totals?.count ?? 0),
+          totalAmount: Number(totals?.total ?? 0),
+          byPaymentMethod: (Array.isArray(byMethod) ? byMethod : []).map((m) => ({ method: String(m.method ?? 'unknown'), count: Number(m.count), total: Number(m.total) })),
+        };
+      });
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   /** POS-1: Sotuv va stock kamaytirish — bitta DB transaction ichida (atomik) */
   async insertTransactionAtomic(
     data: CreateTransactionInput,
