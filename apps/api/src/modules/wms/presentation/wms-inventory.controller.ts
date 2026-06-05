@@ -1,7 +1,7 @@
 /**
  * @module wms-inventory.controller
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
- */import { BadRequestException, Body, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+ */import { BadRequestException, Body, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Patch, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 
@@ -42,14 +42,11 @@ export class WmsInventoryController {
     private readonly crudSvc: WmsCrudService,
   ) {}
 
-  @ApiOperation({ summary: 'Create inventory adjustment' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @Post()
-  @Roles(Role.SUPER_ADMIN, Role.WAREHOUSE_MANAGER)
-  async createInventoryAdjustment() {
-    return { success: true };
-  }
+  // A2/green-lie retire (2026-06-05, owner-approved): `POST /api/wms/inventory`
+  // `createInventoryAdjustment()` returned {success:true} and wrote NOTHING. Inventory
+  // adjustments are recorded via the canonical inventory-counts flow (POST /api/wms/inventory-counts);
+  // this bare POST had no FE caller and no WmsCrudService create method. Removed rather than
+  // double-write a second stock writer. See docs/yashil-yolgon-reja-2026-06-05.md A2.
 
   @ApiOperation({ summary: 'Get all' })
   @ApiResponse({ status: 200, description: 'OK' })
