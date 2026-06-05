@@ -35,8 +35,13 @@ export class CcNotificationPrefsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
-  create() {
-    return { success: true };
+  create(
+    @Body(new ZodValidationPipe(UpdateSchema)) body: CcNotificationPrefsUpdate,
+    @CurrentUser() user: { id: number },
+  ) {
+    // POST = create-or-update (upsert) of the caller's own single prefs row (PK user_id),
+    // the SAME canonical path as PUT. Was a {success:true} green-lie that saved nothing.
+    return this.repo.upsert(user.id, body);
   }
 
   @ApiOperation({ summary: 'Get' })
