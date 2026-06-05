@@ -37,7 +37,7 @@ export class SdDashboardRepository implements ISdDashboardRepo {
   try {
       // Live cols: total_value (not total_amount), overall_status (not status); customer name JOINed from sd_customers
       return mid
-        ? exec(sql`SELECT o.id, o.document_number AS order_number, c.name AS customer_name, o.total_value AS total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} LEFT JOIN sd_customers c ON c.id = o.customer_id WHERE COALESCE(o.advance_paid_amount, 0) < (o.total_value * COALESCE(o.advance_percent, 30) / 100) AND COALESCE(o.overall_status,'') NOT IN ('CANCELLED') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
+        ? exec(sql`SELECT o.id, o.document_number AS order_number, c.name AS customer_name, o.total_value AS total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o JOIN crm_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} LEFT JOIN sd_customers c ON c.id = o.customer_id WHERE COALESCE(o.advance_paid_amount, 0) < (o.total_value * COALESCE(o.advance_percent, 30) / 100) AND COALESCE(o.overall_status,'') NOT IN ('CANCELLED') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
         : exec(sql`SELECT o.id, o.document_number AS order_number, c.name AS customer_name, o.total_value AS total_amount, o.advance_paid_amount AS advance_amount, o.created_at, 'advance_required' AS action_type FROM sales_orders o LEFT JOIN sd_customers c ON c.id = o.customer_id WHERE COALESCE(o.advance_paid_amount, 0) < (o.total_value * COALESCE(o.advance_percent, 30) / 100) AND COALESCE(o.overall_status,'') NOT IN ('CANCELLED') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
     return Err(String(_e));
   }
@@ -47,7 +47,7 @@ export class SdDashboardRepository implements ISdDashboardRepo {
   async getPendingTechCheckpoints(mid: number | null, lim: number): Promise<Result<Row[]>>  {
   try {
       return mid
-        ? exec(sql`SELECT o.id, o.document_number AS order_number, c.name AS customer_name, o.total_value AS total_amount, o.module_status AS tech_checkpoint_status, 'tech_checkpoint' AS action_type FROM sales_orders o JOIN sd_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} LEFT JOIN sd_customers c ON c.id = o.customer_id WHERE o.module_status = 'pending' AND COALESCE(o.overall_status,'') NOT IN ('CANCELLED') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
+        ? exec(sql`SELECT o.id, o.document_number AS order_number, c.name AS customer_name, o.total_value AS total_amount, o.module_status AS tech_checkpoint_status, 'tech_checkpoint' AS action_type FROM sales_orders o JOIN crm_leads l ON l.customer_id = o.customer_id AND l.manager_id = ${mid} LEFT JOIN sd_customers c ON c.id = o.customer_id WHERE o.module_status = 'pending' AND COALESCE(o.overall_status,'') NOT IN ('CANCELLED') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`)
         : exec(sql`SELECT o.id, o.document_number AS order_number, c.name AS customer_name, o.total_value AS total_amount, o.module_status AS tech_checkpoint_status, 'tech_checkpoint' AS action_type FROM sales_orders o LEFT JOIN sd_customers c ON c.id = o.customer_id WHERE o.module_status = 'pending' AND COALESCE(o.overall_status,'') NOT IN ('CANCELLED') AND o.deleted_at IS NULL ORDER BY o.created_at ASC LIMIT ${lim}`);  } catch (_e) {
     return Err(String(_e));
   }
@@ -57,8 +57,8 @@ export class SdDashboardRepository implements ISdDashboardRepo {
   async getQuotaStats(mid: number | null): Promise<Result<Row[]>>  {
   try {
       return mid
-        ? exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, 0::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN sd_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) WHERE e.id = ${mid} GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC`)
-        : exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, 0::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN sd_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC LIMIT 20`);  } catch (_e) {
+        ? exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, 0::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN crm_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) WHERE e.id = ${mid} GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC`)
+        : exec(sql`SELECT e.id AS manager_id, CONCAT(e.first_name, ' ', e.last_name) AS manager_name, COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS achieved, 0::numeric(15,2) AS target, COUNT(o.id)::int AS order_count FROM employees e LEFT JOIN crm_leads l ON l.manager_id = e.id LEFT JOIN sales_orders o ON o.customer_id = l.customer_id AND DATE(o.created_at) >= DATE_TRUNC('month', NOW()) GROUP BY e.id, e.first_name, e.last_name ORDER BY achieved DESC LIMIT 20`);  } catch (_e) {
     return Ok([]);
   }
 
