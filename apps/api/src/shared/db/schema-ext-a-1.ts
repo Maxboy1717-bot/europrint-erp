@@ -125,7 +125,12 @@ export const sd_customer_documents = canonicalSdCustomerDocuments;
 // sd_customer_competitors: re-exported from canonical definition in @workspace/db (sd-customer-relations.ts)
 export const sd_customer_competitors = canonicalSdCustomerCompetitors;
 
-// TODO: sd_sales_orders not found in lib/db — kept as local stub
+// sd_sales_orders = auto-updatable VIEW over sales_orders (pure passthrough, 56 of 72 cols) — NOT a real
+// table. Declared as a pgTable stub (not pgView) ON PURPOSE: execSdSalesOrderInsert (queries-sd.ts) uses
+// Drizzle .insert(sd_sales_orders), and Drizzle pgView is read-only (no .insert()), so pgView would break
+// the SD order-create path. DROP / repoint to sales_orders is deferred (see deferred-decisions.md —
+// order-architecture interview; it is the critical SD order CRUD over 12 real, money-bearing orders).
+// Audit: already accounted for in the schema-dup ratchet known-165 allowlist (not a new/growing dup).
 export const sd_sales_orders = pgTable('sd_sales_orders', {
   id:             serial('id').primaryKey(),
   order_number:   text('order_number'),
