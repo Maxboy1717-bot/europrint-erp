@@ -39,7 +39,17 @@ export function EditDialog({
     tskpRu: node.tskpRu || "",
     description: node.description || "",
     nodeType: node.nodeType,
+    headUserId: node.headUserId ?? null,
   });
+
+  // STEP C: department-head picker options. node.employees are user-id native
+  // (org-queries findOneWithDetails returns appUsers.id), so emp.id IS the user id
+  // head_user_id expects. Surface the current head even if not a dept member.
+  const headOptions: { id: number; name: string }[] = (Array.isArray(node.employees) ? node.employees : [])
+    .map((e) => ({ id: e.id, name: e.fullName }));
+  if (node.headUserId != null && !headOptions.some((o) => o.id === node.headUserId)) {
+    headOptions.unshift({ id: node.headUserId, name: node.headUserName || `#${node.headUserId}` });
+  }
 
   const mutation = useMutation({
     mutationFn: () => apiRequest("PATCH", `/api/org-structure/nodes/${node.id}`, form),
@@ -102,6 +112,24 @@ export function EditDialog({
             <Label>{t("progress.description")}</Label>
             <Input value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+          </div>
+          <div className="col-span-2">
+            <Label>Bo'lim boshlig'i</Label>
+            <Select
+              value={form.headUserId == null ? "__none__" : String(form.headUserId)}
+              onValueChange={(v) => setForm((f) => ({ ...f, headUserId: v === "__none__" ? null : Number(v) }))}
+            >
+              <SelectTrigger><SelectValue placeholder="Boshliq tanlang" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Yo'q (bo'sh) —</SelectItem>
+                {headOptions.map((o) => (
+                  <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {headOptions.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-0.5">Bu bo'limda hali xodim yo'q — avval xodim biriktiring.</p>
+            )}
           </div>
         </div>
         <DialogFooter>

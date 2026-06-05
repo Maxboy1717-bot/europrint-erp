@@ -43,6 +43,9 @@ const OrgNodeSchema = z.object({
   positionId:  z.union([z.string(), z.number()]).optional(),
   description: z.string().max(2000).optional(),
   level:       z.union([z.string(), z.number()]).nullable().optional(),
+  // STEP C: department head ("the boss") — references users.id. nullable = clear the head.
+  // Repo updateFromDto maps dto.headUserId -> head_user_id (org-mutations.repo :59).
+  headUserId:  z.union([z.number(), z.null()]).optional(),
 }).strict();
 
 const MoveNodeSchema = z.object({
