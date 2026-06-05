@@ -165,6 +165,29 @@ harmless view is reversible (drop anytime later); a wrong drop risks the money p
 The canonical-order goal is ALREADY met (sales_orders is the one physical table; the view is a transparent
 alias). To be resolved together with the production-order-world question at the order-architecture interview.
 
+### 2026-06-04 — QC VERDICT CHAIN (STEP 3 D) — a BUILD, not a fix; deferred to the order/QC interview
+The QC order-level 3-decision (accept→warehouse / rework→MES / reject→supplier) has **never** worked —
+it was always an echo. This is new functionality, not a repair, so it is deferred.
+- **Now:** `qc-defects.controller.ts` has 8 ECHO handlers — approve/qc (:164,174), approve/finance
+  (:144,154), reject (:184,194), inspector-submit (:204,214) all just `{orderId, approved/rejected/
+  submitted:true}` with NO DB write; `GET pending/qc` (:135) = 501.
+- **Infra ready:** `qc_inspections` table EXISTS (0 rows; can hold an order verdict — has order_id, status,
+  result, inspector_id, notes). `QcPassedListener` EXISTS (`@EventsHandler(QcPassedEvent)` → WMS
+  finished-goods receipt) BUT has **NO publisher** — the echo never emits QcPassedEvent → chain DORMANT
+  (a textbook "listener waits, nobody signals" gap). FinanceApproval reads `/api/papka-orders` (empty/
+  wrong source — papka is messaging).
+- **UNBLOCKED:** the canonical order (sales_orders) is now settled, so the verdict has a home to point at.
+- **Interview questions (owner — these are business-process decisions, not guessable):**
+  1. Where is the QC verdict written — `qc_inspections` (exists) or a new `qc_approvals` table?
+  2. Does the QC decision change `sales_orders.status` / `overall_status`? (⚠️ 12 real, money-bearing orders.)
+  3. The "pending QC" list — which orders are awaiting QC? (source query / status field.)
+  4. approve → QcPassedEvent → WMS (warehouse receipt) — wire the auto-chain?
+  5. On reject, what happens: back to supplier / to rework (→MES) / other?
+  6. What is the QC inspector's ACTUAL factory workflow?
+- **Why not a partial (MINIMAL) now:** wiring only approve→warehouse leaves reject/pending/status open;
+  if the interview changes the model, it's rework — a half-bridge. Resolve as ONE order→QC→warehouse
+  architecture with the production-order world + sd_sales_orders, not piecemeal. **LEFT UNTOUCHED (Q-39).**
+
 ### 2026-06-04 — [RESOLVED — STEP 3 B, commit d0e723f3] SD lead→order convert (was: `sales_orders.sd_lead_id` missing)
 Found during STEP 1b (leads→crm_leads). `sd-leads.repository.ts` `insertOrderFromLead` (:146) and
 `convertLeadToOrderAtomic` (:178) do `INSERT INTO sales_orders (customer_id, total_amount, status,
