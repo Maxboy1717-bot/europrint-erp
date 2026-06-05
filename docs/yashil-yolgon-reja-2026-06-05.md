@@ -148,3 +148,8 @@ Shu branch (`chore/schema-convergence`) da **boshqa bajaruvchi sessiya FAOL** (M
 - **A6 yangilik:** `cfo_config` jadval **MAVJUD** → DDL kerak EMAS; `CfoConfigService` orqali real-save mumkin.
 - **Keyingi (main'da, to'liq gate bilan):** A6 (cfo-config save), A4 (upload→storage real), A3 (email→cc honest-queued), A5 (lms progress). **A8** (recalc) → 1-qatorli spec kerak. **A9** (ideal-rasm) → real yoki olib tashlash.
 - **GROUP 1 holati:** A7 ✅ · A1 ✅ · A2 ✅ (3/9) · A3,A4,A5,A6 implementatsiya kutyapti · A8,A9 qaror kutyapti.
+
+### 🔄 YANGILANISH-2 (2026-06-05, "davom et")
+- ✅ **A6** finance-cfo-config POST upsert — **DONE** (commit `a78c3b08`; DB-proof: cfo_config value=0.123456 yozildi→tozalandi). `cfoConfig.update` (upsert) qayta-ishlatildi (PUT bilan bir xil kanonik yo'l).
+- ⚠️ **A4** (`/api/upload`) — tekshiruvда **chuqurroq muammo**: 1-qatorli emas, **kichik funksiya bo'shlig'i**: (1) upload hech narsa yozmaydi (green-lie); (2) FE darsni `/uploads/<filePath>` dан o'qiydi, kanonik storage esa `/api/storage/*` dан beradi (mos emas); (3) BE bootstrap'da `/uploads/*` static route TOPILMADI. To'g'ri tuzatish = multipart upload-yozuv + serve-yo'l moslashtirish (FE+BE birga). "Ishlaydi-lekin-ko'rinmaydi" (Q-40) dан saqlanish uchun **alohida diqqat bilan** — keyingi fokus-vazifa.
+- **GROUP 1 yangi holati:** A7 ✅ · A1 ✅ · A2 ✅ · A6 ✅ (4/9) · **A4** (funksiya-gap, alohida) · A3,A5 (implementatsiya) · A8,A9 (qaror).
