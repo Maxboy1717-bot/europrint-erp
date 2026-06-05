@@ -9,11 +9,12 @@
 | # | Leverage | Nima qilindi | DB-proof | Commit |
 |---|---|---|---|---|
 | 1 | **#5 PO HITL** | STRING `'PO_REQUIRES_DIRECTOR_APPROVAL'` (poId=0, save-oldidan, CQRS route qilolmaydi) → `PoRequiresDirectorApprovalEvent` klass + `@EventsHandler` → `hitl_approvals` insert (direktor dashboard o'qiydi). + owner-approved DDL: hitl_approvals.id'ga identity (sequence drift). | direktor pending PO ko'radi; auto-id; cleanup 0 | `68d3cb56` |
+| 2 | **#5b 3-way-match** | STRING `'THREE_WAY_MATCH_FAILED'` → `ThreeWayMatchFailedEvent` klass + listener → hitl_approvals (entity_type='three_way_match'). | menejer pending match-fail ko'radi; cleanup 0 | `c0ffa9c5` |
+| 3 | **#6 Security** | report-incident FAKE-CREATE (repo yo'q → saqlamaydi) → INCIDENT_REPO inject + save; ⭐ drifted repo.save (string-id→integer, type/location/reported_by yo'q) raw-SQL bilan live ustunlarga tuzatildi. | security_incidents real persist; cleanup 0 | `f41c984c` |
 
 ## Keyingi qadamlar (poydevor tayyor, tartibda)
-- **#5b** — `THREE_WAY_MATCH_FAILED` (goods-receipt.handler.ts:74) → klass + listener (target: procurement_approvals / GR flag).
-- **#5c** — `iot.sos.raised`, `SecurityIncidentDetected` → klass + listener.
-- **#6** — soxta-create → `repo.save()` (dizayn order #50, LMS, security — har biri 1 INSERT).
+- **#5c** — `iot.sos.raised` (grep: topilmadi — tekshir), `SecurityIncidentDetected` (allaqachon klass — listener ixtiyoriy).
+- **#6 (davomi)** — boshqa soxta-create → `repo.save()` (dizayn order #50, LMS, sensor — har biri 1 INSERT).
 - **#1** — manager_id: daraxt-yurish (ancestor head) yoki org-head data.
 - **#4** — movement event emit → warehouse_stock (kanonik).
 - **BOSQICH 2** — sales_orders line-items, entries post* ulash, davomat→payroll.
