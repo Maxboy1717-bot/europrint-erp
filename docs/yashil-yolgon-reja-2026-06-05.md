@@ -141,3 +141,10 @@ Shu branch (`chore/schema-convergence`) da **boshqa bajaruvchi sessiya FAOL** (M
 | **A6** finance `cfo-config` | `cfo_config` jadval bor-yo'qligi tekshirilmagan | Jadval yo'q bo'lsa → **DDL ruxsati** (STOP-ask) |
 | **A8** warehouse-rental `recalculate` | "qayta hisob" ANIQ EMAS (servisда recalc yo'q) | **1 qatorli spec** kerak: nimani qayta hisoblaydi? |
 | **A9** ideal-rasm `create` | ACL demonstrator | Real saqlaymizmi yoki **olib tashlaymizmi**? |
+
+### 🔄 YANGILANISH (2026-06-05 kechqurun — worktree→main)
+- ✅ **A2** RETIRE — **DONE** (commit `9c592e9f`, main, gate'lar o'tdi). Owner tasdiqladi.
+- **Parallel sessiya hал:** Muslimbek sessiyasi to'xtatildi (owner qarori) → men ASOSIY checkout'da yagona bajaruvchi. (Worktree Windows-friction: node_modules→lib/db build→ws... — tark etildi; ish saqlandi.) Plan qayta-track (`a395eae3`).
+- **A6 yangilik:** `cfo_config` jadval **MAVJUD** → DDL kerak EMAS; `CfoConfigService` orqali real-save mumkin.
+- **Keyingi (main'da, to'liq gate bilan):** A6 (cfo-config save), A4 (upload→storage real), A3 (email→cc honest-queued), A5 (lms progress). **A8** (recalc) → 1-qatorli spec kerak. **A9** (ideal-rasm) → real yoki olib tashlash.
+- **GROUP 1 holati:** A7 ✅ · A1 ✅ · A2 ✅ (3/9) · A3,A4,A5,A6 implementatsiya kutyapti · A8,A9 qaror kutyapti.
