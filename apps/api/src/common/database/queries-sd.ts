@@ -6,7 +6,7 @@
 import { db } from '@shared/db';
 import {
   sd_customers, sd_customer_contacts, sd_customer_documents,
-  sd_customer_competitors, sdLeads, sd_sales_orders,
+  sd_customer_competitors, sd_sales_orders,
   ai_report_subscriptions, ai_report_categories,
 } from '@shared/db';
 import { eq, and, sql } from 'drizzle-orm';
@@ -35,13 +35,13 @@ export async function execSdCompetitorDelete(competitorId: number, customerId: n
 }
 
 export async function execSdLeadDelete(lid: number): Promise<void> {
-  await db.delete(sdLeads).where(eq(sdLeads.id, lid));
+  // STEP 1b: soft-delete on canonical crm_leads (was a hard delete on the sd_leads view;
+  // crm_leads has 5 real rows and readers filter `deleted_at IS NULL`, so soft is correct).
+  await db.execute(sql`UPDATE crm_leads SET deleted_at = NOW() WHERE id = ${lid}`);
 }
 
 export async function execSdLeadConvert(lid: number): Promise<void> {
-  await db.update(sdLeads)
-    .set({ status: 'converted', updatedAt: sql`NOW()` })
-    .where(eq(sdLeads.id, lid));
+  await db.execute(sql`UPDATE crm_leads SET status = 'converted', updated_at = NOW() WHERE id = ${lid}`);
 }
 
 export async function execSdSalesOrderInsert(
