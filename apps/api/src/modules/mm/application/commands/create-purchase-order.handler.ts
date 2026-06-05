@@ -9,6 +9,7 @@ import { Result, Err } from '@common/result';
 import { PurchaseOrder, PurchaseOrderItem } from '../../domain/aggregates/purchase-order.aggregate';
 import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
 import { PO_MAX_AMOUNT_UZS } from '@common/constants/app.constants';
+import { PoRequiresDirectorApprovalEvent } from '../../domain/events/po-requires-director-approval.event';
 
 export class CreatePurchaseOrderCommand {
   constructor(public supplierId: number,
@@ -42,22 +43,17 @@ export class CreatePurchaseOrderHandler
 
     const totalAmount = po.getTotalAmount();
 
-    // §7 HITL: > 50 mln UZS → Director tasdiqlashi kerak
-    if (totalAmount > PO_MAX_AMOUNT_UZS) {
-      this.logger.log(
-        { poNumber, totalAmount, createdBy: command.createdBy },
-        'HITL required: PO exceeds 50 million UZS',
-      );
-      this.eventBus.publish('PO_REQUIRES_DIRECTOR_APPROVAL', {
-        poId: po.getId(),
-        totalAmount,
-        createdBy: command.createdBy,
-      });
-    }
-
     const saveResult = await this.mmRepo.savePurchaseOrder(po);
     if (!saveResult.ok) {
       return saveResult;
+    }
+
+    // §7 HITL: > 50 mln UZS → Director approval. Publish AFTER save so poId is the REAL saved id
+    // (was a STRING event published BEFORE save with poId=0 — unroutable by CQRS + wrong id). The
+    // class event is handled by PoRequiresDirectorApprovalListener → hitl_approvals (director reads it).
+    if (totalAmount > PO_MAX_AMOUNT_UZS) {
+      this.logger.log({ poNumber, totalAmount, createdBy: command.createdBy }, 'HITL required: PO exceeds 50 million UZS');
+      this.eventBus.publish(new PoRequiresDirectorApprovalEvent(saveResult.data, totalAmount, command.createdBy));
     }
 
     this.logger.log('Purchase order created');

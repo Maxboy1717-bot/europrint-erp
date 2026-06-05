@@ -33,6 +33,7 @@ import { DrizzleMaterialRepository } from './infrastructure/repositories/drizzle
 import { MM_REPO, MM_MATERIAL_REPO } from './domain/repositories/mm.repository';
 import { PpReleasedListener } from './infrastructure/event-handlers/pp-released.listener';
 import { SupplierQualityFailListener } from './infrastructure/event-handlers/supplier-quality-fail.listener';
+import { PoRequiresDirectorApprovalListener } from './infrastructure/event-handlers/po-requires-director-approval.listener';
 import { PurchaseService } from './purchase/purchase.service';
 import { DrizzlePurchaseSvcRepository } from './purchase/drizzle-purchase-svc.repo';
 import { PURCHASE_SVC_REPO } from './purchase/i-purchase-svc.repo';
@@ -55,7 +56,7 @@ const commandHandlers = [
 
 const queryHandlers = [GetPurchaseOrdersHandler, GetVendorsHandler, GetMaterialsHandler];
 
-const listeners = [PpReleasedListener, SupplierQualityFailListener];
+const listeners = [PpReleasedListener, SupplierQualityFailListener, PoRequiresDirectorApprovalListener];
 
 const repositories = [
   { provide: MM_REPO, useClass: DrizzleMmRepository },
