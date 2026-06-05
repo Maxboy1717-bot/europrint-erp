@@ -50,7 +50,7 @@ async function seed(): Promise<void> {
     log("sd_leads ga ma'lumot kiritilmoqda...");
     const phones = ['+998901234567', '+998712345678', '+998905678901'];
     const existingLeads = await pool.query<{ contact_phone: string }>(
-      `SELECT contact_phone FROM sd_leads WHERE contact_phone = ANY($1)`,
+      `SELECT contact_phone FROM crm_leads WHERE contact_phone = ANY($1)`,
       [phones]
     );
     const existingPhones = new Set(existingLeads.rows.map(r => r.contact_phone));
@@ -67,10 +67,10 @@ async function seed(): Promise<void> {
       const phone = row[4] as string;
       if (existingPhones.has(phone)) continue;
       await pool.query(`
-        INSERT INTO sd_leads
+        INSERT INTO crm_leads
           (customer_id, source, status, contact_name, contact_phone, manager_id,
-           product_interest, estimated_volume, estimated_value,
-           next_contact_date, created_at, updated_at)
+           product_interest, estimated_volume, opportunity_amount,
+           next_activity_at, created_at, updated_at)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW())
       `, row);
       leadsInserted++;

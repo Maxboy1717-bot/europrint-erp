@@ -85,8 +85,8 @@ export class SdDashboardRepository implements ISdDashboardRepo {
   }
 
   async getLeadFunnelStats(): Promise<Result<Row[]>> {
-    // sd_leads has no deleted_at column in the live DB
-    return exec(sql`SELECT status, COUNT(*)::int AS count FROM sd_leads GROUP BY status`);
+    // STEP 1b: canonical crm_leads (excludes soft-deleted).
+    return exec(sql`SELECT status, COUNT(*)::int AS count FROM crm_leads WHERE deleted_at IS NULL GROUP BY status`);
   }
 
   async getDebitorStats(): Promise<Result<Row>> {

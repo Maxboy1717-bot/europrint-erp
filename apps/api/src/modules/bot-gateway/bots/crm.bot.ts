@@ -42,7 +42,8 @@ export class CrmBotService {
   private async getLeads(): Promise<BotReply> {
     const rows = await execSql<{ contact_name: string; source: string; status: string }>(sql`
       SELECT contact_name, source, status
-      FROM sd_leads
+      FROM crm_leads
+      WHERE deleted_at IS NULL
       ORDER BY created_at DESC
       LIMIT 5
     `);

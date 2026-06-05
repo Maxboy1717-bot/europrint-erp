@@ -75,7 +75,7 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
 
   async getKpiTeam(): Promise<Result<Row[]>> {
     try {
-      return exec(sql`SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS full_name, e.position_id AS position, COUNT(DISTINCT o.id)::int AS orders_count, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_revenue, COUNT(DISTINCT l.id)::int AS leads_count FROM employees e LEFT JOIN sales_orders o ON o.customer_id IN (SELECT l2.customer_id FROM sd_leads l2 WHERE l2.manager_id = e.id) LEFT JOIN sd_leads l ON l.manager_id = e.id GROUP BY e.id, e.first_name, e.last_name, e.position_id ORDER BY total_revenue DESC LIMIT 20`);
+      return exec(sql`SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS full_name, e.position_id AS position, COUNT(DISTINCT o.id)::int AS orders_count, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_revenue, COUNT(DISTINCT l.id)::int AS leads_count FROM employees e LEFT JOIN sales_orders o ON o.customer_id IN (SELECT l2.customer_id FROM crm_leads l2 WHERE l2.manager_id = e.id) LEFT JOIN crm_leads l ON l.manager_id = e.id GROUP BY e.id, e.first_name, e.last_name, e.position_id ORDER BY total_revenue DESC LIMIT 20`);
     } catch {
       return Ok([]);
     }
