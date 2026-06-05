@@ -125,7 +125,9 @@ export class GeneralLegacyAController {
   @Delete('papka-orders/:id')
   async deletePapkaOrder(@Param('id') id: string) {
     // Soft-delete via status (matches the FE delete path which PATCHes status=cancelled).
-    return this.svc.updatePapkaOrder(id, { status: 'cancelled' }).catch(() => ({ id, deleted: true }));
+    // A13: removed `.catch(() => ({ id, deleted: true }))` — it hid delete failures behind a fake
+    // success. Errors now surface (500) honestly.
+    return this.svc.updatePapkaOrder(id, { status: 'cancelled' });
   }
 
   @Patch('papka-orders/:id')
@@ -149,7 +151,9 @@ export class GeneralLegacyAController {
     if (b['tayyorBolishSanasi'] !== undefined) updates.tayyor_bolish_sanasi = b['tayyorBolishSanasi'] ? String(b['tayyorBolishSanasi']) : null;
     if (b['notes']              !== undefined) updates.notes                = b['notes'] ? String(b['notes']) : null;
     if (Object.keys(updates).length === 0) return body;
-    return this.svc.updatePapkaOrder(id, updates).catch(() => body);
+    // A12: removed `.catch(() => body)` — it swallowed DB errors and echoed the UNSAVED body
+    // (a fake success). Errors now surface (500) honestly.
+    return this.svc.updatePapkaOrder(id, updates);
   }
 
   @Get('machine-tasks')
@@ -167,7 +171,9 @@ export class GeneralLegacyAController {
       planned_start: body.planned_start ? String(body.planned_start) : null,
       planned_end: body.planned_end ? String(body.planned_end) : null,
       status: String(body.status || 'pending'),
-    }).catch((): Record<string, unknown> => ({ ...body, id: Date.now() }));
+    });
+    // A10: removed `.catch(() => ({ ...body, id: Date.now() }))` — it hid DB failures behind a
+    // fake success row (fake id, nothing saved). Errors now surface (500) honestly.
     return row;
   }
 
@@ -186,7 +192,9 @@ export class GeneralLegacyAController {
       planned_start: body.planned_start ? String(body.planned_start) : null,
       planned_end: body.planned_end ? String(body.planned_end) : null,
       status: String(body.status || 'pending'),
-    }).catch((): Record<string, unknown> => ({ ...body, id: Date.now() }));
+    });
+    // A11: removed `.catch(() => ({ ...body, id: Date.now() }))` — it hid DB failures behind a
+    // fake success row (fake id, nothing saved). Errors now surface (500) honestly.
     return row;
   }
 
