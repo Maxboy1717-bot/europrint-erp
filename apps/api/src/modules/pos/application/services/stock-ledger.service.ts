@@ -109,6 +109,32 @@ export class StockLedgerService {
     }
   }
 
+  /** Low-stock list for GET /pos/inventory/low-stock — derived from the ledger balance summary
+   *  (NOT the stock_alerts table, which is absent in this DB). Filters balance <= threshold. */
+  async getLowStock(): Promise<Result<{ materialCardId: number; warehouseId: string; balance: number }[], AppError>> {
+    try {
+      const r = await this.repo.getAllStockSummary();
+      if (!r.ok) return Err(r.error);
+      const low = (Array.isArray(r.data) ? r.data : []).filter((s) => s.balance <= MIN_LOW_STOCK_THRESHOLD);
+      return Ok(low);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
+  }
+
+  /** Monthly inventory report for GET /pos/inventory/monthly-report (kirim/chiqim/count by month). */
+  async getMonthlyReport(warehouseId?: string): Promise<Result<Array<{ month: string; inQty: number; outQty: number; movements: number }>, AppError>> {
+    try {
+      const r = await this.repo.getMonthlyReport(warehouseId);
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
+  }
+
   /** Stock-movement journal (all materials) for GET /pos/stock/movements — paginated, newest-first. */
   async getMovements(limit = 50, offset = 0, warehouseId?: string): Promise<Result<LedgerRow[], AppError>> {
     try {

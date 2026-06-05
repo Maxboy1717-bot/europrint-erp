@@ -15,7 +15,7 @@
  * keep wire compatibility without touching callers.
  */
 
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -25,6 +25,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@common/types/user.types';
 import { CashRegisterService } from '../application/services/cash-register.service';
+import { StockLedgerService } from '../application/services/stock-ledger.service';
 import { unwrapOrInternal } from '@common/http-result';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
@@ -88,7 +89,10 @@ function adaptLegacySale(body: unknown): Record<string, unknown> {
 @UseInterceptors(AuditInterceptor)
 @Controller('pos')
 export class PosStubController {
-  constructor(private readonly cashRegisterService: CashRegisterService) {}
+  constructor(
+    private readonly cashRegisterService: CashRegisterService,
+    private readonly stockLedgerService: StockLedgerService,
+  ) {}
 
   // A.2 (P0): Legacy `/pos/sales` now persists via CashRegisterService.
   // The wire payload (`items[].productId`, `items[].quantity`, `paymentMethod`,
@@ -112,16 +116,28 @@ export class PosStubController {
   getSalesDaily() { return notImplemented('GET /pos/sales/daily'); }
 
   @Get('inventory/low-stock')
-  @ApiOperation({ summary: 'Ombordagi kam qoldiq mahsulotlar' })
-  getInventoryLowStock() { return notImplemented('GET /pos/inventory/low-stock'); }
+  @ApiOperation({ summary: 'Ombordagi kam qoldiq mahsulotlar (pos_stock_ledger balansidan)' })
+  async getInventoryLowStock() {
+    return unwrapOrInternal(await this.stockLedgerService.getLowStock());
+  }
 
   @Get('inventory/movements')
-  @ApiOperation({ summary: 'Inventar harakatlari' })
-  getInventoryMovements() { return notImplemented('GET /pos/inventory/movements'); }
+  @ApiOperation({ summary: 'Inventar harakatlari (pos_stock_ledger jurnali)' })
+  async getInventoryMovements(
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('warehouseId') warehouseId?: string,
+  ) {
+    const lim = Math.min(limit ? parseInt(limit, 10) : 50, 200);
+    const off = offset ? parseInt(offset, 10) : 0;
+    return unwrapOrInternal(await this.stockLedgerService.getMovements(lim, off, warehouseId));
+  }
 
   @Get('inventory/monthly-report')
-  @ApiOperation({ summary: 'Oylik inventar hisoboti' })
-  getInventoryMonthlyReport() { return notImplemented('GET /pos/inventory/monthly-report'); }
+  @ApiOperation({ summary: 'Oylik inventar hisoboti (pos_stock_ledger oylik aggregat)' })
+  async getInventoryMonthlyReport(@Query('warehouseId') warehouseId?: string) {
+    return unwrapOrInternal(await this.stockLedgerService.getMonthlyReport(warehouseId));
+  }
 
   // LEGACY_NOOP: Legacy adjust shim. pos-v2's WmsInventoryService is the real
   // writer; this returns the echoed payload so old screens stay functional.

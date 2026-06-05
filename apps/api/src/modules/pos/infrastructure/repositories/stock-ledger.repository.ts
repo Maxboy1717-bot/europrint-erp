@@ -89,6 +89,33 @@ export class StockLedgerRepository {
     }
   }
 
+  /** Monthly inventory report: aggregate pos_stock_ledger movements by month (kirim/chiqim/count).
+   *  Raw SQL: Drizzle has no clean date_trunc GROUP BY helper. Powers GET /pos/inventory/monthly-report. */
+  async getMonthlyReport(warehouseId?: string): Promise<Result<Array<{ month: string; inQty: number; outQty: number; movements: number }>>> {
+    try {
+      const base = sql`
+        SELECT to_char(date_trunc('month', ts), 'YYYY-MM') AS month,
+               COALESCE(SUM(CASE WHEN qty_change > 0 THEN qty_change ELSE 0 END), 0) AS in_qty,
+               COALESCE(SUM(CASE WHEN qty_change < 0 THEN -qty_change ELSE 0 END), 0) AS out_qty,
+               COUNT(*) AS movements
+        FROM pos_stock_ledger
+        WHERE ts IS NOT NULL`;
+      const q = warehouseId
+        ? sql`${base} AND warehouse_id = ${Number(warehouseId)} GROUP BY 1 ORDER BY 1 DESC LIMIT 24`
+        : sql`${base} GROUP BY 1 ORDER BY 1 DESC LIMIT 24`;
+      const res = await db.execute(q);
+      const rows = ((res as { rows?: Record<string, unknown>[] }).rows) ?? [];
+      return Ok(rows.map((x) => ({
+        month: String(x.month),
+        inQty: Number(x.in_qty),
+        outQty: Number(x.out_qty),
+        movements: Number(x.movements),
+      })));
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
   async insertStockAlert(data: typeof stockAlerts.$inferInsert): Promise<Result<AlertRow>> {
     try {
       const [row] = await db.insert(stockAlerts).values(data).returning();
