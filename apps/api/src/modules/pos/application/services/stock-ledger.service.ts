@@ -109,6 +109,18 @@ export class StockLedgerService {
     }
   }
 
+  /** Stock-movement journal (all materials) for GET /pos/stock/movements — paginated, newest-first. */
+  async getMovements(limit = 50, offset = 0, warehouseId?: string): Promise<Result<LedgerRow[], AppError>> {
+    try {
+      const r = await this.repo.getMovements(limit, offset, warehouseId);
+      if (!r.ok) return Err(r.error);
+      return Ok(r.data ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return Err(AppErr('INTERNAL', message));
+    }
+  }
+
   async getLowAlerts(): Promise<Result<AlertRow[], AppError>> {
     try {
       const r = await this.repo.getUnresolvedAlerts(undefined, ['LOW_STOCK', 'OUT_OF_STOCK']);

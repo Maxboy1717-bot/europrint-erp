@@ -70,6 +70,25 @@ export class StockLedgerRepository {
     }
   }
 
+  /** General stock-movement journal (all materials): only actual ledger entries (ts set),
+   *  newest first, optional warehouse filter + pagination. Powers GET /pos/stock/movements. */
+  async getMovements(limit = 50, offset = 0, warehouseId?: string): Promise<Result<LedgerRow[]>> {
+    try {
+      const filters = [isNotNull(stockLedger.ts)];
+      if (warehouseId) filters.push(eq(stockLedger.warehouseId, warehouseId));
+      const rows = await db
+        .select()
+        .from(stockLedger)
+        .where(and(...filters))
+        .orderBy(desc(stockLedger.ts))
+        .limit(limit)
+        .offset(offset);
+      return Ok(rows);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
   async insertStockAlert(data: typeof stockAlerts.$inferInsert): Promise<Result<AlertRow>> {
     try {
       const [row] = await db.insert(stockAlerts).values(data).returning();

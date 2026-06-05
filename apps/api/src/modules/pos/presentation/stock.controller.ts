@@ -22,7 +22,6 @@ import { AuthenticatedUser } from '@common/types/user.types';
 import { unwrapOrInternal } from '@common/http-result';
 import { StockLedgerService } from '../application/services/stock-ledger.service';
 import { z } from 'zod';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 const AdjustStockSchema = z.object({
   materialCardId: z.number().int().positive(),
@@ -85,22 +84,20 @@ export class StockController {
   }
 
   /**
-   * PosMovementsPage calls GET /api/pos/stock/movements for the
-   * stock-ledger journal. Real implementation: paginate pos_stock_movements
-   * filtered by date / warehouse.
-   *
-   * P3-26: returns 501 until the pagination/filter helper lands in
-   * StockLedgerService.
+   * PosMovementsPage calls GET /api/pos/stock/movements for the stock-ledger journal.
+   * Returns pos_stock_ledger movement entries (ts set), newest first, paginated + warehouse filter.
    */
   @Get('movements')
   @RequirePermission('pos.reports.read')
-  @ApiOperation({ summary: 'Stock movements journal (placeholder)' })
+  @ApiOperation({ summary: 'Stock movements journal (pos_stock_ledger)' })
   async getStockMovements(
-    @Query('limit') _limit?: string,
-    @Query('offset') _offset?: string,
-    @Query('warehouseId') _warehouseId?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('warehouseId') warehouseId?: string,
   ) {
-    return notImplemented('GET /pos/stock/movements');
+    const lim = Math.min(limit ? parseInt(limit, 10) : 50, 200);
+    const off = offset ? parseInt(offset, 10) : 0;
+    return unwrapOrInternal(await this.stockLedgerService.getMovements(lim, off, warehouseId));
   }
 
   @Get(':warehouseId/:materialId')
