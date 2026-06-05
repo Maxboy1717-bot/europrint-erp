@@ -12,6 +12,10 @@
 | 2 | **#5b 3-way-match** | STRING `'THREE_WAY_MATCH_FAILED'` → `ThreeWayMatchFailedEvent` klass + listener → hitl_approvals (entity_type='three_way_match'). | menejer pending match-fail ko'radi; cleanup 0 | `c0ffa9c5` |
 | 3 | **#6 Security** | report-incident FAKE-CREATE (repo yo'q → saqlamaydi) → INCIDENT_REPO inject + save; ⭐ drifted repo.save (string-id→integer, type/location/reported_by yo'q) raw-SQL bilan live ustunlarga tuzatildi. | security_incidents real persist; cleanup 0 | `f41c984c` |
 | 4 | **#6 Sensor** | record-sensor-reading FAKE-CREATE (repo yo'q) → SENSOR_REPO inject + saveReading; ⭐ drifted saveReading (iot_sensor_readings=VIEW over sensor_readings, device_id NOT NULL yo'q edi) tuzatildi. | iot_sensor_readings real persist; cleanup 0 | `60f441fb` |
+| 5 | **MES→QC no-op** | mes-completed.listener HECH NARSA qilmasdi (faqat log) → real qc_inspection insert (status=pending, order_id=sessionId, reference_type='mes_session'). ⭐ qc save drift (string-id→int, reference_id=uuid, inspector_id=int) → direct drift-proof insert. | QC pending inspeksiya ko'radi; cleanup 0 | `a82cfd82` |
+
+## ⭐ Naqsh (verify-don't-trust): har leverage-fix yashirin drift tutdi
+Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: string-id→integer ustun, VIEW→base-jadval NOT NULL, uuid╳integer, omitted-columns. Ya'ni "yashil skelet" nafaqat ulanmagan — DB-yozuv yo'llari ham drifted edi. Har biri DB-proof bilan tutildi va tuzatildi.
 
 ## Keyingi qadamlar (poydevor tayyor, tartibda)
 - **#5c** — `iot.sos.raised` (grep: topilmadi — tekshir), `SecurityIncidentDetected` (allaqachon klass — listener ixtiyoriy).
