@@ -127,6 +127,30 @@ cross-checked; its "warehouse_stock empty" claim was corrected (the table holds 
 
 ## Found bugs (out of current scope) — fix later
 
+### 2026-06-04 — PRODUCTION-ORDER WORLD (`orders`/sd_orders/ow_orders) — separate from sales_orders (STEP 3 A.4)
+Found during STEP 3 BO'LAK A. The "second order world" is a **production-order** concept, distinct
+from the canonical `sales_orders` (12 real sales orders). Scope: `orders` table + `sd_orders` VIEW +
+`ow_orders` VIEW + the **order-workflow module** (`drizzle-order.repo.ts`, `order-transition.guard.ts`)
++ **legacy-iot production reports** (`legacy-iot.service.ts:96,111` getProductionOrdersReport/
+getPpProductionOrders) + **legacy-warehouse** (`legacy-warehouse.helpers.ts:176` getOrdersByDateRaw) +
+**seed-sd-marketing** sd_orders seed.
+
+**Why it's NOT a clean repoint to sales_orders (verified live):**
+- `orders` is a **CONFLATED table**: production fields (`product_id`, `work_center_id`,
+  `production_order_id` — used by legacy-iot's production joins) MIXED WITH SD-ish fields
+  (`advance_percent`, `balance_due`, `delivery_*`, `receiver_*` — used by the seed). sales_orders has
+  NEITHER set fully, so a naive `FROM orders -> FROM sales_orders` repoint **breaks** (missing columns)
+  and is **semantically wrong** (production order ≠ sales order).
+- order-workflow is a separate **lifecycle** with its own columns (`state_version`, `customer_tier`,
+  `assigned_sales_manager`, `tenant_id`) not on sales_orders.
+- All of it is **0 rows (dormant)**. All ids are integer (no uuid issue — verified).
+
+**Decision needed (owner interview, after production-order vs sales-order distinction is clarified):**
+(i) split into a clean standalone production-order system, OR (ii) merge into sales_orders by adding the
+production columns, OR (iii) drop if truly dead. **LEFT UNTOUCHED for now (Q-39)** — misunderstood
+structure; only the director order-count KPI was repointed to sales_orders (STEP 3 A.1, commit a1bb3ec5,
+which correctly counts the 12 real sales orders instead of the empty sd_orders view).
+
 ### 2026-06-04 — SD lead→order convert BROKEN: `sales_orders.sd_lead_id` column does not exist
 Found during STEP 1b (leads→crm_leads). `sd-leads.repository.ts` `insertOrderFromLead` (:146) and
 `convertLeadToOrderAtomic` (:178) do `INSERT INTO sales_orders (customer_id, total_amount, status,
