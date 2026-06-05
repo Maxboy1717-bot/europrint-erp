@@ -147,4 +147,14 @@ export class LmsMiscRepository {
       return Ok(rows);
     } catch (error) { this.logger.error(`findProgressByUser: ${(error as Error).message}`); return Err((error as Error).message); }
   }
+
+  // All LMS modules (optional course filter) for GET /modules — mirrors findModuleById's lms_modules JOIN.
+  async findAllModules(courseId?: string): Promise<Result<object[]>> {
+    try {
+      const rows = courseId
+        ? await exec(sql`SELECT m.*, c.title_uz AS course_title FROM lms_modules m LEFT JOIN courses c ON c.id = m.course_id WHERE m.course_id = ${parseInt(courseId, 10)} ORDER BY m.sort_order ASC, m.created_at DESC`)
+        : await exec(sql`SELECT m.*, c.title_uz AS course_title FROM lms_modules m LEFT JOIN courses c ON c.id = m.course_id ORDER BY m.sort_order ASC, m.created_at DESC`);
+      return Ok(rows);
+    } catch (error) { this.logger.error(`findAllModules: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
 }

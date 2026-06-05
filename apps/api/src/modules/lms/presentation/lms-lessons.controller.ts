@@ -29,6 +29,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { LmsCoursesExtendedService } from '../application/services/lms-courses-extended.service';
+import { LmsMiscService } from '../application/services/lms-misc.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   CreateLessonSchema, CreateLessonDto,
@@ -120,15 +121,18 @@ export class LmsLessonsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class LmsModulesController {
-  constructor(private readonly svc: LmsCoursesExtendedService) {}
+  constructor(
+    private readonly svc: LmsCoursesExtendedService,
+    private readonly lmsMiscService: LmsMiscService,
+  ) {}
 
   @ApiOperation({ summary: 'List modules' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
-  async listModules() {
-    return notImplemented('GET /modules');
+  async listModules(@Query('courseId') courseId?: string) {
+    return unwrapOrInternal(await this.lmsMiscService.listModules(courseId));
   }
 
   @ApiOperation({ summary: 'Create module' })

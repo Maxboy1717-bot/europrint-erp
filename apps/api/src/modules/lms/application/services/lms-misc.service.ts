@@ -46,4 +46,8 @@ export class LmsMiscService {
   async getProgressByUser(userId: string): Promise<Result<object[]>> {
     return this.repo.findProgressByUser(userId);
   }
+
+  async listModules(courseId?: string): Promise<Result<object[]>> {
+    return this.repo.findAllModules(courseId);
+  }
 }
