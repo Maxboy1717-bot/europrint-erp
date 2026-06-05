@@ -14,7 +14,6 @@ import { WarehouseCatalogService } from './warehouse-catalog.service';
 import { CompatBodyDto } from './dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { z } from 'zod';
 import {
   WarehouseMaterialAclTranslator,
@@ -74,23 +73,9 @@ export class WarehouseCatalogController {
     return unwrapOrInternal(await this.svc.createMaterial(dto));
   }
 
-  /**
-   * MaterialsAccounting page calls GET /api/warehouse/movements for the
-   * cross-warehouse movement journal. Mirrors the shape produced by
-   * wms/movements (which lives at /api/wms/movements) but kept here so the
-   * accounting page does not need to change its URL.
-   *
-   * P3-26: aggregator service not yet wired - clients should use
-   * /api/wms/movements directly until this gateway is implemented.
-   */
-  @Get('movements')
-  async getWarehouseMovements(
-    @Query('limit') _limit?: string,
-    @Query('warehouseId') _warehouseId?: string,
-    @Query('materialId') _materialId?: string,
-  ) {
-    return notImplemented('GET /warehouse/movements (use /wms/movements instead)');
-  }
+  // C1 retire (2026-06-05): GET /api/warehouse/movements was a 501 alias for the canonical
+  // GET /api/wms/movements (no FE GET caller — MaterialsAccounting uses POST elsewhere). Removed
+  // the alias stub on this @deprecated shim. See docs/yashil-yolgon-reja-2026-06-05.md C1.
 
   @Get('batches/stats')
   async getBatchesStats() {
