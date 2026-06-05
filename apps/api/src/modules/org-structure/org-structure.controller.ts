@@ -26,14 +26,23 @@ import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
-// P2.6: .strict() instead of .passthrough() for mass-assignment protection
+// P2.6: .strict() (mass-assignment guard) — the allow-list MUST match the real org_departments
+// columns the FE dialogs send + the repo maps. STEP B (2026-06-05): added nodeType/tskp/tskpRu/
+// color/level — they were rejected as unknown keys, so "Add bo'lim"/"Tahrirlash" silently failed
+// (AddNodeDialog sends nodeType/tskp/level; EditDialog sends color/tskp/tskpRu/nodeType). Still
+// .strict() — only the allowed keys grew to the columns that genuinely exist. (`type` was dead:
+// read by nobody; `level` is allowed-but-ignored — service computes hierarchy level from parent.)
 const OrgNodeSchema = z.object({
   name:        z.string().max(500).optional(),
   nameRu:      z.string().max(500).optional(),
-  type:        z.string().max(50).optional(),
+  nodeType:    z.string().max(50).optional(),
+  tskp:        z.string().max(500).optional(),
+  tskpRu:      z.string().max(500).optional(),
+  color:       z.string().max(20).optional(),
   parentId:    z.union([z.string(), z.number()]).nullable().optional(),
   positionId:  z.union([z.string(), z.number()]).optional(),
   description: z.string().max(2000).optional(),
+  level:       z.union([z.string(), z.number()]).nullable().optional(),
 }).strict();
 
 const MoveNodeSchema = z.object({
