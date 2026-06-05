@@ -127,6 +127,18 @@ cross-checked; its "warehouse_stock empty" claim was corrected (the table holds 
 
 ## Found bugs (out of current scope) — fix later
 
+### 2026-06-04 — SD lead→order convert BROKEN: `sales_orders.sd_lead_id` column does not exist
+Found during STEP 1b (leads→crm_leads). `sd-leads.repository.ts` `insertOrderFromLead` (:146) and
+`convertLeadToOrderAtomic` (:178) do `INSERT INTO sales_orders (customer_id, total_amount, status,
+sd_lead_id, notes)` — but **`sales_orders` has NO `sd_lead_id` column** (verified:
+`information_schema` → `sd_lead_id_exists = 0`; no `%lead%` column on sales_orders at all). So every
+SD lead→order conversion's INSERT errors (returns Err) — the lead→order link is silently lost.
+This is **pre-existing drift, orthogonal to the leads→crm_leads repoint** (that repoint only changes
+the lead-table reference `UPDATE sd_leads`→`crm_leads`; it does NOT touch the sales_orders INSERT).
+**Left untouched (Q-39).** Fix = a DDL/semantic decision (owner): either add `sd_lead_id integer`
+to sales_orders (to record the source lead) OR drop `sd_lead_id` from the INSERT (if the link isn't
+needed). Owner decides — separate task. `sd_lead_activities.lead_id` (integer) is fine.
+
 ### 2026-06-04 — kanban assignCard → honest 501, real fix is a 1-line owner_user_id UPDATE
 `PATCH /api/kanban/cards/:id/assign` (kanban-cards.controller.ts) was a fake
 `{ id, assignedTo, updated:true }` (no write). Converted to an honest 501 (STAGE B.2). The

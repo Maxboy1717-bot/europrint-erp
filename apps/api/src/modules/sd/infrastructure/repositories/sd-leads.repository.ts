@@ -20,7 +20,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
   try {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
-        FROM sd_leads l
+        FROM crm_leads l
         LEFT JOIN employees e ON e.id::text = l.assigned_to::text
         LEFT JOIN sd_customers c ON c.id = l.customer_id
         WHERE (${status ?? null}::text IS NULL OR l.status = ${status ?? null})
@@ -42,7 +42,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
                COUNT(*) FILTER (WHERE status = 'in_progress')::int AS in_progress,
                COUNT(*) FILTER (WHERE status = 'converted')::int AS converted,
                COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS this_week
-        FROM sd_leads
+        FROM crm_leads
       `);
       return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
     return Err(String(_e));
@@ -54,7 +54,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
   try {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
-        FROM sd_leads l
+        FROM crm_leads l
         LEFT JOIN employees e ON e.id::text = l.assigned_to::text
         LEFT JOIN sd_customers c ON c.id = l.customer_id
         WHERE (${from ?? null}::text IS NULL OR l.created_at::date >= ${from ?? null}::date)
@@ -72,7 +72,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
   try {
       const rows = await runQuery<Row>(sql`
         SELECT l.*, e.full_name AS assigned_to_name, c.name AS customer_name
-        FROM sd_leads l
+        FROM crm_leads l
         LEFT JOIN employees e ON e.id::text = l.assigned_to::text
         LEFT JOIN sd_customers c ON c.id = l.customer_id
         WHERE l.id = ${lid} AND l.deleted_at IS NULL
@@ -86,7 +86,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
   async create(body: Row): Promise<Result<Row>>  {
   try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO sd_leads (title, customer_id, assigned_to, expected_amount, notes, source, status)
+        INSERT INTO crm_leads (title, customer_id, assigned_to, opportunity_amount, notes, source, status)
         VALUES (${body.title}, ${body.customer_id ?? null}, ${body.assigned_to ?? null}, ${body.expected_amount ?? 0}, ${body.notes ?? null}, ${body.source ?? 'manual'}, 'new')
         RETURNING *
       `);
@@ -99,10 +99,10 @@ export class SdLeadsRepository implements ISdLeadsRepo {
   async update(lid: number, body: Row): Promise<Result<Row[]>>  {
   try {
       const rows = await runQuery<Row>(sql`
-        UPDATE sd_leads
+        UPDATE crm_leads
         SET title = COALESCE(${body.title ?? null}, title),
             assigned_to = COALESCE(${body.assigned_to ?? null}, assigned_to),
-            expected_amount = COALESCE(${body.expected_amount ?? null}, expected_amount),
+            opportunity_amount = COALESCE(${body.expected_amount ?? null}, opportunity_amount),
             notes = COALESCE(${body.notes ?? null}, notes),
             status = COALESCE(${body.status ?? null}, status),
             updated_at = NOW()
@@ -116,7 +116,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
 
   async updateStatus(lid: number, status: string): Promise<Result<Row[]>>  {
   try {
-      const rows = await runQuery<Row>(sql`UPDATE sd_leads SET status = ${status}, updated_at = NOW() WHERE id = ${lid} RETURNING *`);
+      const rows = await runQuery<Row>(sql`UPDATE crm_leads SET status = ${status}, updated_at = NOW() WHERE id = ${lid} RETURNING *`);
       return Ok(rows.rows as Row[]);  } catch (_e) {
     return Err(String(_e));
   }
@@ -133,7 +133,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
 
   async getLeadForConvert(lid: number): Promise<Result<Row | null>>  {
   try {
-      const rows = await runQuery<Row>(sql`SELECT * FROM sd_leads WHERE id = ${lid} AND deleted_at IS NULL`);
+      const rows = await runQuery<Row>(sql`SELECT * FROM crm_leads WHERE id = ${lid} AND deleted_at IS NULL`);
       return Ok((rows.rows[0] ?? null) as Row | null);  } catch (_e) {
     return Err(String(_e));
   }
@@ -181,7 +181,7 @@ export class SdLeadsRepository implements ISdLeadsRepo {
         `);
         const inserted = (res.rows?.[0] ?? {}) as Row;
         await tx.execute(sql`
-          UPDATE sd_leads SET status = 'converted', updated_at = NOW() WHERE id = ${lid}
+          UPDATE crm_leads SET status = 'converted', updated_at = NOW() WHERE id = ${lid}
         `);
         return inserted;
       });
