@@ -38,6 +38,17 @@ export class EuroprintControlDirectorService {
     return Ok(dbRows(r.data));
   }
 
+  // AuditorPanel: admin-role menu structure from role_menus (the live table; "rbac_menus" was the old name).
+  async getAdminMenus(): Promise<Result<object, AppError>> {
+    const r = await safeCall(() => rawSql(sql`
+      SELECT id, role, menu_code AS "menuCode", menu_name AS "menuName", menu_name_ru AS "menuNameRu",
+             parent_menu_id AS "parentMenuId", menu_path AS "menuPath", menu_icon AS "menuIcon",
+             sort_order AS "sortOrder", is_visible AS "isVisible", permissions
+      FROM role_menus WHERE role = 'admin' AND is_visible = true ORDER BY sort_order, menu_code`));
+    if (!r.ok) { this.logger.warn('role_menus table not available, returning empty menus'); return Ok([]); }
+    return Ok(dbRows(r.data));
+  }
+
   async getDirectorSummary(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const alertsR = await rawSql(sql`

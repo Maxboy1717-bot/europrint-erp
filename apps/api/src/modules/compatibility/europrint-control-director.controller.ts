@@ -121,6 +121,6 @@ export class EuroprintControlDirectorController {
    */
   @Get('menus/admin')
   async getAdminMenus() {
-    return notImplemented('GET /europrint-control/menus/admin');
+    return unwrapOrInternal(await this.svc.getAdminMenus());
   }
 }
