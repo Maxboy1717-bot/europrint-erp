@@ -33,6 +33,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { LmsRepository } from '../infrastructure/repositories/drizzle-lms.repo';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { EnrollCourseCommand } from '../application/commands/enroll-course.handler';
 import { GetCoursesQuery } from '../application/queries/get-courses.query';
 import { AuthenticatedUser } from '@auth/types';
@@ -111,7 +113,21 @@ export class LmsCoursesController {
   @Patch(':id')
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
   async patchCourse(@Param('id') id: string, @Body() body: unknown) {
-    return { id, ...(body as Record<string, unknown>), updated: true };
+    // Was a green-lie (echoed body, no DB). Persist the editable fields to `courses` via COALESCE.
+    const b = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      UPDATE courses SET
+        title          = COALESCE(${(b.title as string) ?? null}, title),
+        title_uz       = COALESCE(${(b.titleUz as string) ?? (b.title_uz as string) ?? null}, title_uz),
+        description    = COALESCE(${(b.description as string) ?? null}, description),
+        category       = COALESCE(${(b.category as string) ?? null}, category),
+        duration_hours = COALESCE(${(b.durationHours ?? b.duration_hours ?? null) as number}::numeric, duration_hours),
+        is_mandatory   = COALESCE(${(b.isMandatory ?? b.is_mandatory ?? null) as boolean}::boolean, is_mandatory),
+        is_active      = COALESCE(${(b.isActive ?? b.is_active ?? null) as boolean}::boolean, is_active),
+        updated_at     = NOW()
+      WHERE id = ${parseInt(id, 10)}`);
+    if (((r as unknown as { rowCount?: number }).rowCount ?? 0) === 0) throw new NotFoundException(`Course #${id} topilmadi`);
+    return { id, updated: true };
   }
 
   @ApiOperation({ summary: 'Delete course' })
