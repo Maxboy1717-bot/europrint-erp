@@ -105,7 +105,7 @@ export class CrmExtendedCompatController {
     return unwrapOrInternal(await this.svc.processChat(body));
   }
 
-  @Post('auto-tasks')
+  @Post(['auto-tasks', 'ai/extended/auto-tasks/create'])
   @HttpCode(HttpStatus.OK)
   async runAutoTasks(@Body() body: CrmAutoTasksDto) {
     return unwrapOrInternal(await this.svc.runAutoTasks(body));
