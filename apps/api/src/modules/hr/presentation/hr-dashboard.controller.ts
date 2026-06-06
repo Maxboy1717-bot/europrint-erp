@@ -384,4 +384,46 @@ export class HrDashboardController {
   }
 
   // NOTE: offboarding/cases/stats served by HrDashboardExtraController (dup removed).
+
+  @Get('employee-corp/:id')
+  async getEmployeeCorpById(@Param('id') id: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM employee_career_profiles
+      WHERE employee_id = ${parseInt(id, 10)}
+      LIMIT 1
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    return { data: row };
+  }
+
+  @Patch('adaptation/:id')
+  async updateAdaptation(@Param('id') id: string, @Body() body: unknown) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      UPDATE adaptation_records SET
+        mentor_id     = COALESCE(${dto['mentor_id']     ?? null}::int, mentor_id),
+        status        = COALESCE(${dto['status']        ?? null}::text, status),
+        current_phase = COALESCE(${dto['current_phase'] ?? null}::text, current_phase),
+        notes         = COALESCE(${dto['notes']         ?? null}::text, notes),
+        updated_at    = NOW()
+      WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
+      RETURNING id
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    return { id, updated: true };
+  }
+
+  @Patch('ai-interview/session/:id/review')
+  async reviewAiInterviewSession(@Param('id') id: string, @Body() body: unknown) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    await db.execute(sql`
+      UPDATE ai_interview_sessions SET
+        evaluation = COALESCE(${dto['evaluation'] != null ? JSON.stringify(dto['evaluation']) : null}::jsonb, evaluation),
+        status     = COALESCE(${'reviewed'}::text, status)
+      WHERE id = ${parseInt(id, 10)}
+    `);
+    return { id, reviewed: true, recruiter_notes: dto['recruiter_notes'] ?? null, recommendation: dto['recommendation'] ?? null };
+  }
 }

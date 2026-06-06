@@ -39,6 +39,13 @@ export class CrmCustomFieldsController {
     return unwrapOrThrow(await this.svc.list(entityType ?? null));
   }
 
+  @ApiOperation({ summary: 'List by entity type (path param alias)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':entityType')
+  async listByType(@Param('entityType') entityType: string) {
+    return unwrapOrThrow(await this.svc.list(entityType));
+  }
+
   @ApiOperation({ summary: 'Create' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
