@@ -183,15 +183,14 @@ export class ForecastWeeklyJob implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Aktiv materiallar ro'yxatini `materials` jadvalidan yuklaydi (is_active=true).
-   * Bu — manba haqiqati (single source of truth); forecast_series'ga qaraganda
-   * to'g'ri, chunki yangi materiallar uchun tarix bo'lmasligi mumkin.
+   * Aktiv materiallar ro'yxatini `material_cards` jadvalidan yuklaydi (is_active=true).
+   * Canonical EuroPrint material master (21+ rows). `materials` was 0 rows — forecast never ran.
    */
   private async loadActiveMaterials(): Promise<string[]> {
     try {
       const result = await runQuery<Record<string, unknown>>(sql`
         SELECT id::text AS material_id
-        FROM materials
+        FROM material_cards
         WHERE is_active = TRUE
         LIMIT 1000
       `);
