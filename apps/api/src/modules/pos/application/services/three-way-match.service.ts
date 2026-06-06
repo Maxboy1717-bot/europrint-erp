@@ -76,11 +76,7 @@ export class ThreeWayMatchService {
   }
 
   async listVariances(): Promise<Result<unknown[], AppError>> {
-    try {
-      return Ok(await this.repo.listVariances());
-    } catch (e) {
-      return Err({ message: String(e), code: 'DB_ERROR' });
-    }
+    return this.repo.listVariances();
   }
 
   /**
@@ -89,7 +85,8 @@ export class ThreeWayMatchService {
    */
   async getResults(poId: number | null, _limit: number): Promise<Result<unknown, AppError>> {
     try {
-      const rows = await this.repo.listVariances() as Array<Record<string, unknown>>;
+      const r = await this.repo.listVariances();
+      const rows = (r.ok ? r.data : []) as Array<Record<string, unknown>>;
       const data = poId != null
         ? rows.filter(r => Number(r['movementId']) === poId || r['poId'] === poId)
         : rows;
@@ -123,7 +120,9 @@ export class ThreeWayMatchService {
 
   async autoMatchAll(): Promise<Result<{ processed: number }, AppError>> {
     try {
-      const movs = await this.repo.findUnmatchedCompleted();
+      const movResult = await this.repo.findUnmatchedCompleted();
+      if (!movResult.ok) return Err({ message: String(movResult.error), code: 'DB_ERROR' });
+      const movs = movResult.data;
       let processed = 0;
       for (const m of movs) {
         await this.match({

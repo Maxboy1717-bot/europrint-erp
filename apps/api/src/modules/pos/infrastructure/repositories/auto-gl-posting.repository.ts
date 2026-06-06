@@ -90,24 +90,24 @@ export class AutoGlPostingRepository {
     }, 'DB_ERROR');
   }
 
-  async listForMovement(movementId: number): Promise<unknown[]> {
-    return typedExecute<unknown>(sql`
+  async listForMovement(movementId: number): Promise<Result<unknown[]>> {
+    return safeCall(async () => typedExecute<unknown>(sql`
       SELECT id, debit_account, credit_account, amount, currency,
              amount_base, description, posted_by, is_approved,
              posting_date, created_at
       FROM pos_gl_postings
       WHERE movement_id = ${movementId}
       ORDER BY id
-    `);
+    `), 'DB_ERROR');
   }
 
   async getJournal(filters?: {
     dateFrom?: string; dateTo?: string;
     debitAccount?: string; creditAccount?: string;
     limit?: number;
-  }): Promise<unknown[]> {
+  }): Promise<Result<unknown[]>> {
     const lim = Math.min(filters?.limit ?? 200, 1000);
-    return typedExecute<unknown>(sql`
+    return safeCall(async () => typedExecute<unknown>(sql`
       SELECT
         gl.id,
         gl.movement_id        AS "movementId",
@@ -131,6 +131,6 @@ export class AutoGlPostingRepository {
         AND (${filters?.creditAccount?? null}::text IS NULL OR gl.credit_account = ${filters?.creditAccount?? null})
       ORDER BY gl.posting_date DESC, gl.id DESC
       LIMIT ${lim}
-    `);
+    `), 'DB_ERROR');
   }
 }

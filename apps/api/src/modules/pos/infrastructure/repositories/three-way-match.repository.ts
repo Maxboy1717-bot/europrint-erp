@@ -99,8 +99,8 @@ export class ThreeWayMatchRepository {
     }, 'DB_ERROR');
   }
 
-  async listVariances(): Promise<unknown[]> {
-    return typedExecute<unknown>(sql`
+  async listVariances(): Promise<Result<unknown[]>> {
+    return safeCall(async () => typedExecute<unknown>(sql`
       SELECT
         twm.id,
         twm.movement_id              AS "movementId",
@@ -123,15 +123,15 @@ export class ThreeWayMatchRepository {
       WHERE twm.match_status IN ('VARIANCE', 'FAILED')
       ORDER BY twm.created_at DESC
       LIMIT 200
-    `);
+    `), 'DB_ERROR');
   }
 
-  async findUnmatchedCompleted(): Promise<Array<{
+  async findUnmatchedCompleted(): Promise<Result<Array<{
     id: number; movement_number: string;
     purchase_order_id: string | null; invoice_id: string | null;
     total_amount: string | number; qty: string | number;
-  }>> {
-    return typedExecute<{
+  }>>> {
+    return safeCall(async () => typedExecute<{
       id: number; movement_number: string;
       purchase_order_id: string | null; invoice_id: string | null;
       total_amount: string | number; qty: string | number;
@@ -145,6 +145,6 @@ export class ThreeWayMatchRepository {
         AND NOT EXISTS (SELECT 1 FROM three_way_match_log WHERE movement_id = pm.id)
         AND pm.deleted_at IS NULL
       LIMIT 100
-    `);
+    `), 'DB_ERROR');
   }
 }

@@ -123,25 +123,15 @@ export class AutoGlPostingService {
     }
   }
 
-  async listForMovement(movementId: number) {
-    return this.repo.listForMovement(movementId)
-      .then(rows => ({ ok: true as const, data: rows }))
-      .catch((e: Error) => {
-        this.logger.error(`[AutoGL] listForMovement xato: ${e.message}`);
-        return Err({ message: e.message, code: 'DB_ERROR' as const });
-      });
+  async listForMovement(movementId: number): Promise<Result<unknown[], AppError>> {
+    return this.repo.listForMovement(movementId);
   }
 
   async getJournal(filters?: {
     dateFrom?: string; dateTo?: string;
     debitAccount?: string; creditAccount?: string;
     limit?: number;
-  }) {
-    return this.repo.getJournal(filters)
-      .then(rows => ({ ok: true as const, data: rows }))
-      .catch((e: Error) => {
-        this.logger.error(`[AutoGL] getJournal xato: ${e.message}`);
-        return Err({ message: e.message, code: 'DB_ERROR' as const });
-      });
+  }): Promise<Result<unknown[], AppError>> {
+    return this.repo.getJournal(filters);
   }
 }
