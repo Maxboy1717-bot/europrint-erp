@@ -199,6 +199,29 @@ export class ChatExtController {
     return result.data;
   }
 
+  @ApiOperation({ summary: 'Archive admin room (PATCH alias)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Patch('admin/rooms/:roomId/archive')
+  @Roles('admin', 'director')
+  @HttpCode(HttpStatus.OK)
+  async archiveRoomPatch(@Param('roomId') roomId: string) {
+    const result = await this.chatAdminSvc.archiveRoom(roomId);
+    assertOk(result);
+    return result.data;
+  }
+
+  @ApiOperation({ summary: 'Unpin message (DELETE)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete('messages/:id/pin')
+  @HttpCode(HttpStatus.OK)
+  async unpinMessage(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ) {
+    const result = await this.chatService.pinMessage(id, user.id, false);
+    return { pinned: false, id, result };
+  }
+
   @ApiOperation({ summary: 'Pin message' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

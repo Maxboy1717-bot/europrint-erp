@@ -8,6 +8,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Param,
@@ -19,6 +20,9 @@ import {
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrInternal } from '@common/http-result';
@@ -155,5 +159,15 @@ export class LmsModulesController {
   async getModule(@Param('id') id: string) {
     const result = await this.svc.getModule(id);
     return unwrapOrInternal(result);
+  }
+
+  @ApiOperation({ summary: 'Delete module (soft)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async deleteModule(@Param('id') id: string) {
+    await db.execute(sql`UPDATE modules SET deleted_at = NOW() WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL`);
+    return { deleted: true, id };
   }
 }

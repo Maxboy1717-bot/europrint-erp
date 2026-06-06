@@ -9,9 +9,12 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  Controller, Get, Post, Body, Param, Query,
+  Controller, Get, Patch, Post, Body, Param, Query,
   UseGuards, Logger, UseInterceptors, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -198,6 +201,30 @@ export class ChatController {
     const me = (members as Array<{ userId: string | number; isMuted?: boolean }>)
       .find((m) => String(m.userId) === String(user.id));
     return { muted: me?.isMuted ?? false };
+  }
+
+  @ApiOperation({ summary: 'Update room' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Patch('rooms/:roomId')
+  @HttpCode(HttpStatus.OK)
+  async updateRoom(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('roomId') roomId: string,
+    @Body() body: unknown,
+  ) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    await this.chatService.assertRoomMember(roomId, user.id);
+    const r = await db.execute(sql`
+      UPDATE chat_rooms SET
+        name        = COALESCE(${dto['name']        ?? null}::text,    name),
+        description = COALESCE(${dto['description'] ?? null}::text,    description),
+        avatar_url  = COALESCE(${dto['avatar_url']  ?? null}::text,    avatar_url),
+        updated_at  = NOW()
+      WHERE id = ${parseInt(roomId, 10)}
+      RETURNING id, name, description
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? { id: roomId };
+    return row;
   }
 
   @ApiOperation({ summary: 'Mute room' })

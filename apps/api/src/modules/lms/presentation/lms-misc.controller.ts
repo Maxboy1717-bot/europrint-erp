@@ -6,7 +6,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Param,
@@ -17,6 +19,9 @@ import {
   UseInterceptors,
   UsePipes
 } from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrInternal } from '@common/http-result';
@@ -74,6 +79,31 @@ export class LmsMicroModulesController {
     const result = await this.svc.recordMicroModuleView(id, userId);
     const data = unwrapOrInternal(result);
     return { message: "Ko'rildi", data };
+  }
+
+  @ApiOperation({ summary: 'Create micro module' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async createMicroModule(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      INSERT INTO micro_modules (title, title_ru, course_id, description, sort_order, is_active, created_by, created_at, updated_at)
+      VALUES (
+        ${String(dto['title'] ?? dto['titleUz'] ?? '')}::text,
+        ${dto['title_ru'] ?? dto['titleRu'] ?? null}::text,
+        ${dto['course_id'] ?? dto['courseId'] ?? null}::int,
+        ${dto['description'] ?? null}::text,
+        ${Number(dto['sort_order'] ?? dto['sortOrder'] ?? 0)}::int,
+        ${dto['is_active'] !== false}::boolean,
+        ${user?.id ?? 0}::int,
+        NOW(), NOW()
+      )
+      RETURNING id, title
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    return { message: 'Mikro modul yaratildi', data: row };
   }
 }
 
@@ -183,5 +213,21 @@ export class LmsProgressCompatController {
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getUserProgress(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.getProgressByUser(id));
+  }
+
+  @ApiOperation({ summary: 'Progress summary stats' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('summary')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async getProgressSummary() {
+    const r = await db.execute(sql`
+      SELECT
+        COUNT(*)::int                                                 AS total,
+        SUM(CASE WHEN completed = true  THEN 1 ELSE 0 END)::int     AS completed,
+        SUM(CASE WHEN completed = false THEN 1 ELSE 0 END)::int     AS in_progress
+      FROM course_progress
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? { total: 0, completed: 0, in_progress: 0 };
+    return { summary: row };
   }
 }

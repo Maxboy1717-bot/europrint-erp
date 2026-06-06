@@ -8,7 +8,10 @@ const _time = new TashkentTimeService();
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Query,
@@ -17,6 +20,9 @@ import {
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 import { unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -74,6 +80,14 @@ export class LmsCertificatesStandaloneController {
     // for now return a typed placeholder so the page can render the empty
     // detail card instead of 404.
     return { id, status: 'unknown', issuedAt: null, expiresAt: null };
+  }
+
+  @Delete(':id')
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  @HttpCode(HttpStatus.OK)
+  async deleteCertificate(@Param('id') id: string) {
+    await db.execute(sql`DELETE FROM certificates WHERE id = ${parseInt(id, 10)}`);
+    return { deleted: true, id };
   }
 
   @Get(':id/download')
