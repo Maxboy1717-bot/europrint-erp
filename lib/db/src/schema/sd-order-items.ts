@@ -185,6 +185,9 @@ export const salesOrderItems = pgTable("sales_order_items", {
   
   // Material data
   materialId: varchar("material_id").references(() => products.id, { onDelete: "set null" }),
+  // Finished-good ordered (owner 2026-06-05): order line-items bind to products; material_id is the
+  // production/material-consumption side (vision #10).
+  productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
   materialNumber: varchar("material_number", { length: 50 }),
   description: text("description").notNull(),
   
