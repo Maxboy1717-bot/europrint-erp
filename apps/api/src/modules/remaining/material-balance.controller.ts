@@ -12,6 +12,8 @@ import { MaterialBalanceService } from './material-balance.service';
 import { MaterialBalanceBodyDto } from '../compatibility/dto/operations.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   MaterialBalanceOverviewAclTranslator,
@@ -119,8 +121,13 @@ export class MaterialBalanceController {
    * /api/material-balance/:materialId/history per-material.
    */
   @Get('movements')
-  async getMovements(@Query() _q: Record<string, string>) {
-    return notImplemented('GET /material-balance/movements');
+  async getMovements(@Query('limit') limit?: string) {
+    const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
+    const r = await db.execute(sql`
+      SELECT * FROM material_movements ORDER BY created_at DESC LIMIT ${lim}
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get(':materialId/reconciliation')

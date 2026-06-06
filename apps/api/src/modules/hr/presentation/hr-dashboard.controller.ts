@@ -5,6 +5,8 @@ import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { HrDashboardService } from '../application/hr-dashboard.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto, CreatePipSchema, CreatePipDto, UpdatePipSchema, UpdatePipDto } from './dto/hr.dto';
@@ -116,9 +118,17 @@ export class HrDashboardController {
   }
 
   @Get('dashboard-stats')
-  getDashboardStats() {
-    // TODO: implement real HR summary stats (totalEmployees, active, onLeave, alerts)
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getDashboardStats() {
+    const r = await db.execute(sql`
+      SELECT
+        COUNT(*)::int AS total_employees,
+        COUNT(*) FILTER (WHERE is_active=true)::int AS active,
+        COUNT(*) FILTER (WHERE status='on_leave')::int AS on_leave,
+        COUNT(*) FILTER (WHERE is_active=false)::int AS inactive
+      FROM employees WHERE deleted_at IS NULL
+    `);
+    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @Get('adaptation')
@@ -127,8 +137,13 @@ export class HrDashboardController {
   }
 
   @Get('adaptation/:id')
-  getAdaptationById(@Param('id') _id: string) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getAdaptationById(@Param('id') id: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM adaptation_records WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
+    `);
+    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
+    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    return { data: row };
   }
 
   @Get('alumni')
@@ -191,8 +206,12 @@ export class HrDashboardController {
   // The previous stub here shadowed the real handler. Removed in Phase 4 Task 4.5.
 
   @Get('fp-cycle')
-  getFpCycle() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getFpCycle() {
+    const r = await db.execute(sql`
+      SELECT * FROM fp_cycles ORDER BY created_at DESC LIMIT 20
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('hrc-tests/employee')
