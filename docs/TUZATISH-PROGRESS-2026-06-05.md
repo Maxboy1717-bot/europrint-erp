@@ -25,7 +25,11 @@
 
 | 2.4 | **sales_orders line-items** (vizyon yadrosi: buyurtma→ishlab chiqarish) — 5 STEP, egasi qarori: line=**products** (tayyor mahsulot), material_id=ishlab chiqarish tomoni | **STEP1** shakl tahlil (faqat material_id, product_id yo'q) → **STEP2** DDL `product_id`→products FK (`e29400c9`) → **STEP3** BE: order create line-items saqlash (saveItems, tx-atomik, `4ea38f49`) → **STEP4** FE qator editori + ⭐ snake→camel contract drift fix (`c8407271`) → **STEP5** MPS `COALESCE(product_id,material_id)` o'qiydi (`f4bab1ec`) | STEP3: 2 qator product-bound saqlandi; STEP5: product line-item MPS'da ko'rindi (eski material_id NULL=topmasdi); har biri cleanup 0 | 5 commit |
 
-⚠️ Keyingi (BOSQICH 2 davomi): products katalogni egasi to'ldiradi (kod-tayyor, data-keyin) → FE picker jonli bo'ladi. EXTERNAL_OUT tannarx legi (multi-leg). Payroll proration (biznes-qaror). Production order (BOM material explosion).
+| 2.5 | **Production fan-out** (Phase 4 oxirgi bo'lim — line-items bilan ochildi) | Advance-approved fan-out mold/design/cliche/logistics/warehouse ulagan, lekin **production DEFERRED** edi ("line-item+katalog yo'q"). Endi bor → wire qildim: `createProductionJob` har product line-item uchun `production_orders` yaratadi (order_number `PRO-<so>-<item>`, product_id, planned_quantity=order_quantity, sales_order_id link); bom_id NULL (explosion keyin); idempotent. Listener `dept==='production'` branch. | order 2 product-qator → 2 production_order (product/qty/so to'g'ri, bom NULL); re-fire 0; cleanup 0 | `c1b73d3a` |
+
+✅ **Order → ishlab chiqarish zanjiri TO'LIQ**: order(line-items) → advance → fan-out → **6/6 bo'lim** (mold/design/cliche/logistics/warehouse/**production**).
+
+⚠️ Keyingi (BOSQICH 2 davomi): **BOM material explosion** (production_order → bom_items → material requirements) — egasi BOM'larni aniqlagach (bom_* jadvallar bo'sh). products katalog (egasi). EXTERNAL_OUT tannarx legi (multi-leg). Payroll proration (biznes-qaror).
 
 ## ⭐ Naqsh (verify-don't-trust): har leverage-fix yashirin drift tutdi
 Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: string-id→integer ustun, VIEW→base-jadval NOT NULL, uuid╳integer, omitted-columns. Ya'ni "yashil skelet" nafaqat ulanmagan — DB-yozuv yo'llari ham drifted edi. Har biri DB-proof bilan tutildi va tuzatildi.
