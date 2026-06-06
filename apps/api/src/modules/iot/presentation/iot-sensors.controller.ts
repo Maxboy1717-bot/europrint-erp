@@ -32,6 +32,8 @@ import { GetDevicesQuery } from '../application/queries/get-devices.query';
 import { GetReadingsQuery } from '../application/queries/get-readings.query';
 import { GetAnomaliesQuery } from '../application/queries/get-anomalies.query';
 import { RegisterDeviceDtoSchema, RecordReadingDtoSchema, UpdateThresholdsDtoSchema } from '../presentation/dto/iot.dto';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 enum Role {
   OPERATOR = 'operator',
@@ -73,7 +75,10 @@ export class IotSensorsController {
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getDevice(@Param('id') deviceId: string) {
     this.logger.log('Get device');
-    return { statusCode: HttpStatus.OK, data: { id: deviceId } };
+    const r = await db.execute(sql`SELECT * FROM iot_devices WHERE id=${parseInt(deviceId, 10)} LIMIT 1`);
+    const rows = (r as unknown as { rows: unknown[] }).rows ?? [];
+    if (!rows[0]) throw new NotFoundException(`Device #${deviceId} topilmadi`);
+    return { statusCode: HttpStatus.OK, data: rows[0] };
   }
 
   @ApiOperation({ summary: 'Register device' })
@@ -164,6 +169,12 @@ export class IotSensorsController {
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getOEE(@Param('id') sensorId: string) {
     this.logger.log('Get OEE');
-    return { statusCode: HttpStatus.OK, data: { oee: 85.5 } };
+    const r = await db.execute(sql`
+      SELECT availability, performance, quality, oee, date, shift_number
+      FROM oee_records WHERE machine_id=${parseInt(sensorId, 10)}
+      ORDER BY date DESC, shift_number DESC LIMIT 1
+    `);
+    const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+    return { statusCode: HttpStatus.OK, data: row ?? { oee: 0, availability: 0, performance: 0, quality: 0 } };
   }
 }
