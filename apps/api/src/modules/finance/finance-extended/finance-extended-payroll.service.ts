@@ -11,7 +11,7 @@
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { payrollContracts, payrollCalculations, users } from '@workspace/db';
-import { and, eq, desc } from 'drizzle-orm';
+import { and, eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 
 // ERP is gross-only: tax (INPS/JSHD) and the statutory min-wage guarantee are
@@ -220,10 +220,15 @@ export class FinanceExtendedPayrollService {
         productionUnits: 0,
         bonuses: 0, allowances: 0, advances: 0, loans: 0, otherDeductions: 0,
       });
-      await this.insertCalc(contract, employeeId, DEFAULT_WORK_DAYS, workHours, 0, 0, 0, parts);
-      const employeeName = await this.resolveEmployeeName(employeeId);
       const periodMonth = dto.periodMonth ?? new Date().toISOString().slice(0, 7);
-      return Ok(this.buildAiResult(contract, employeeId, employeeName, periodMonth, workHours, parts));
+      // BOSQICH 2 — pull REAL worked days + overtime from `attendance` for the period (was hardcoded
+      // DEFAULT_WORK_DAYS). Pay math is unchanged (compute() does not use workDays); this makes the
+      // evidence the Finance approver sees reflect actual attendance instead of a constant 22.
+      const att = await this.getAttendanceWorkDays(employeeId, periodMonth);
+      const effWorkDays = att.hasData ? att.workDays : DEFAULT_WORK_DAYS;
+      await this.insertCalc(contract, employeeId, effWorkDays, workHours, 0, 0, 0, parts);
+      const employeeName = await this.resolveEmployeeName(employeeId);
+      return Ok(this.buildAiResult(contract, employeeId, employeeName, periodMonth, workHours, parts, att));
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `PAYROLL_AI_CALCULATE_FAILED: ${String(e)}`));
     }
@@ -245,6 +250,38 @@ export class FinanceExtendedPayrollService {
     }
   }
 
+  /**
+   * Real worked days + overtime from `attendance` records for the period.
+   * present/late = 1 day, half_day = 0.5; overtime from overtime_minutes. hasData=false when the period
+   * has NO attendance rows -> caller falls back to DEFAULT_WORK_DAYS (never reports 0 as "no work").
+   * NOTE: this feeds the displayed/stored worked-days + the AI evidence ONLY. It does NOT prorate pay —
+   * docking fixed salary for absences is a separate business-policy decision (deferred).
+   */
+  private async getAttendanceWorkDays(
+    employeeId: number,
+    periodMonth?: string,
+  ): Promise<{ workDays: number; overtimeHours: number; hasData: boolean }> {
+    try {
+      const period = periodMonth ? `${periodMonth}-01` : null;
+      const res = await db.execute(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE status IN ('present','late'))::int AS full_days,
+          COUNT(*) FILTER (WHERE status = 'half_day')::int        AS half_days,
+          COALESCE(SUM(overtime_minutes), 0)::int                 AS overtime_minutes,
+          COUNT(*)::int                                            AS total_rows
+        FROM attendance
+        WHERE employee_id = ${employeeId}
+          AND (${period}::date IS NULL OR date_trunc('month', attendance_date) = date_trunc('month', ${period}::date))`);
+      const r = (res as unknown as { rows: Array<{ full_days: number; half_days: number; overtime_minutes: number; total_rows: number }> }).rows[0];
+      if (!r || Number(r.total_rows) === 0) return { workDays: DEFAULT_WORK_DAYS, overtimeHours: 0, hasData: false };
+      const workDays = Number(r.full_days) + Number(r.half_days) * 0.5;
+      const overtimeHours = Number(r.overtime_minutes) / 60;
+      return { workDays, overtimeHours, hasData: true };
+    } catch {
+      return { workDays: DEFAULT_WORK_DAYS, overtimeHours: 0, hasData: false };
+    }
+  }
+
   private buildAiResult(
     contract: ContractRow,
     employeeId: number,
@@ -252,6 +289,7 @@ export class FinanceExtendedPayrollService {
     periodMonth: string,
     workHours: number,
     p: ComputeParts,
+    att: { workDays: number; overtimeHours: number; hasData: boolean },
   ) {
     const recommendations: AiRecommendation[] = [];
     if (contract.payType === 'piecework') {
@@ -269,9 +307,9 @@ export class FinanceExtendedPayrollService {
       employeeName,
       periodMonth,
       payType: contract.payType,
-      workDays: DEFAULT_WORK_DAYS,
+      workDays: att.hasData ? att.workDays : DEFAULT_WORK_DAYS,
       workHours,
-      overtimeHours: 0,
+      overtimeHours: att.overtimeHours,
       productionUnits: 0,
       basePay: p.basePay,
       hourlyPay: p.hourlyPay,
@@ -284,15 +322,15 @@ export class FinanceExtendedPayrollService {
       dataQuality,
       recommendations,
       evidence: {
-        attendanceWorkDays: DEFAULT_WORK_DAYS,
+        attendanceWorkDays: att.hasData ? att.workDays : DEFAULT_WORK_DAYS,
         attendanceWorkHours: workHours,
-        attendanceConfidence: 50,
+        attendanceConfidence: att.hasData ? 90 : 50,
         productionUnits: 0,
         productionConfidence: 0,
         trackedHours: 0,
         taskCompletionCount: 0,
         timeTrackingConfidence: 0,
-        overtimeHours: 0,
+        overtimeHours: att.overtimeHours,
         overallConfidence: confidence,
         dataQualityScore: dataQuality,
         anomaliesDetected: false,
