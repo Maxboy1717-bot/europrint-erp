@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, Post, Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, UseInterceptors, HttpCode, HttpStatus } from '@nestjs/common';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -12,7 +12,11 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { IntegrationEmployeeService } from './integration-employee.service';
+
+type Rows = { rows?: unknown[] };
 
 const ExpenseSchema = z.object({
   employeeId: z.union([z.string(), z.number()]).optional(),
@@ -163,37 +167,73 @@ export class IntegrationEmployeeController {
 
   @ApiOperation({ summary: 'Get expense list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('expense')
-  async getExpenseList() {
-    return notImplemented('GET /integration/expense');
+  async getExpenseList(@Query('limit') limit?: string) {
+    const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
+    const r = await db.execute(sql`
+      SELECT * FROM expense_reports ORDER BY created_at DESC LIMIT ${lim}
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @ApiOperation({ summary: 'Create expense' })
-  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 201, description: 'Created' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post('expense')
+  @HttpCode(HttpStatus.CREATED)
   async createExpense(@Body() body: unknown) {
-    ExpenseSchema.parse(body);
-    return notImplemented('POST /integration/expense');
+    const dto = ExpenseSchema.parse(body);
+    const reportNumber = `EXP-${Date.now()}`;
+    const amount = dto.amount ? Number(dto.amount) : 0;
+    const submittedBy = dto.employeeId ? Number(dto.employeeId) : 0;
+    const r = await db.execute(sql`
+      INSERT INTO expense_reports
+        (expense_request_id, report_number, total_spent, total_receipts, status, submitted_by,
+         employee_id, notes, currency, created_at)
+      VALUES
+        (0, ${reportNumber}, ${amount}, 0, 'pending', ${submittedBy},
+         ${submittedBy}, ${dto.description ?? null}, 'UZS', NOW())
+      RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Get invoice list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('invoice')
-  async getInvoiceList() {
-    return notImplemented('GET /integration/invoice');
+  async getInvoiceList(@Query('limit') limit?: string) {
+    const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
+    const r = await db.execute(sql`
+      SELECT * FROM invoices ORDER BY id DESC LIMIT ${lim}
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @ApiOperation({ summary: 'Create invoice' })
-  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 201, description: 'Created' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post('invoice')
+  @HttpCode(HttpStatus.CREATED)
   async createInvoice(@Body() body: unknown) {
-    InvoiceSchema.parse(body);
-    return notImplemented('POST /integration/invoice');
+    const dto = InvoiceSchema.parse(body);
+    const invoiceNumber = `INV-${Date.now()}`;
+    const total = dto.amount ? Number(dto.amount) : 0;
+    const customerId = dto.customerId ? Number(dto.customerId) : null;
+    const r = await db.execute(sql`
+      INSERT INTO invoices
+        (id, invoice_number, customer_name, customer_id, items,
+         subtotal, tax_amount, total_amount, status, due_date,
+         created_by)
+      VALUES
+        (gen_random_uuid(), ${invoiceNumber}, ${dto.description ?? 'Unknown'}, ${customerId},
+         '[]'::jsonb, ${total}, 0, ${total}, 'draft', ${dto.dueDate ?? null},
+         '00000000-0000-0000-0000-000000000000'::uuid)
+      RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 }
