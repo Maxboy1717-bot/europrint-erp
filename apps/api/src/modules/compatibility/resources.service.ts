@@ -184,6 +184,13 @@ export class ResourcesCompatService {
       WHERE id = ${id}
     `);
     return { message: 'Ombor yangilandi', id };
-  
+
     });}
+
+  async deleteWarehouse(id: string){
+    return safeCall(async () => {
+      await rawSql(sql`UPDATE warehouses SET deleted_at = NOW() WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL`);
+      return { deleted: true, id };
+    });
+  }
 }

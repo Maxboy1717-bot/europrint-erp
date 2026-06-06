@@ -52,6 +52,18 @@ export class WarehousesCompatController {
   async update(@Param('id') id: string, @Body() body: WarehouseUpdateDto) {
     return unwrapOrInternal(await this.svc.updateWarehouse(id, body));
   }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async delete(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.deleteWarehouse(id));
+  }
+
+  @Post('notify-vacancies')
+  @HttpCode(HttpStatus.OK)
+  async notifyVacancies(@Body() _body: unknown) {
+    return { notified: true };
+  }
 }
 
 @ApiTags('Material Cards (Compat)')

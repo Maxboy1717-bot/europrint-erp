@@ -6,6 +6,11 @@
  *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
 import { Controller, UseGuards, Get, Post, Patch, Body, Query, Param, HttpCode, HttpException, HttpStatus , UseInterceptors} from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
+type Rows = { rows?: unknown[] };
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -101,5 +106,29 @@ export class WarehouseCatalogController {
   @Patch('batches/:id')
   async updateBatch(@Param('id') id: string, @Body() body: CompatBodyDto) {
     return unwrapOrInternal(await this.svc.updateBatch(id, body));
+  }
+
+  @Post('movements')
+  @HttpCode(HttpStatus.CREATED)
+  async createMovement(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      INSERT INTO material_movements
+        (session_id, order_id, material_id, material_name, movement_type, quantity, unit, performed_by, scanned_at)
+      VALUES (
+        ${dto['session_id'] ?? dto['sessionId'] ?? null}::int,
+        ${dto['order_id']   ?? dto['orderId']   ?? null}::int,
+        ${dto['material_id'] ?? dto['materialId'] ?? null}::int,
+        ${String(dto['material_name'] ?? dto['materialName'] ?? '')}::text,
+        ${String(dto['movement_type'] ?? dto['type'] ?? 'in')}::text,
+        ${Number(dto['quantity'] ?? 1)}::numeric,
+        ${String(dto['unit'] ?? 'шт')}::text,
+        ${user?.id ?? 0}::int,
+        NOW()
+      )
+      RETURNING id
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    return { message: "Harakat qayd etildi", data: row };
   }
 }
