@@ -267,21 +267,33 @@ export class IotMainController {
 
   @ApiOperation({ summary: 'Get downtime reason codes' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
-  async getDowntimeReasonCodes() { return notImplemented('GET /iot/downtime-reason-codes'); }
+  async getDowntimeReasonCodes() {
+    const r = await db.execute(sql`
+      SELECT * FROM downtime_reason_codes WHERE is_active=true ORDER BY sort_order, name
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
+  }
 
   // -- Device patch ------------------------------------------------------------
   @ApiOperation({ summary: 'Patch device' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Patch('devices/:id') @Roles(...IOT_WRITE)
   @UseInterceptors(AuditInterceptor)
-  async patchDevice(@Param('id') _id: string, @Body() body: unknown) {
-    PatchDeviceSchema.parse(body);
-    return notImplemented('PATCH /iot/devices/:id');
+  async patchDevice(@Param('id') id: string, @Body() body: unknown) {
+    const dto = PatchDeviceSchema.parse(body);
+    await db.execute(sql`
+      UPDATE iot_devices SET
+        name=COALESCE(${dto.name ?? null}, name),
+        location=COALESCE(${dto.location ?? null}, location),
+        status=COALESCE(${dto.status ?? null}, status),
+        updated_at=NOW()
+      WHERE id=${parseInt(id, 10)}
+    `);
+    return { id: parseInt(id, 10), updated: true };
   }
 
   // OEE live snapshot - real values come from sensor_readings + production_sessions

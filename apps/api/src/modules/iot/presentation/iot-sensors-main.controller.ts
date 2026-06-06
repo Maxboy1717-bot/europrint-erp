@@ -28,6 +28,8 @@ const CreateSensorSchema = z.object({
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
@@ -123,15 +125,17 @@ export class IotSensorsMainController {
     return notImplemented('GET /iot/sensors/predictive-maintenance');
   }
 
-  @ApiOperation({ summary: 'Resolve alert' })
+  @ApiOperation({ summary: 'Resolve alert (UPDATE iot_alerts)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Patch('alerts/:alertId/resolve')
-  async resolveAlert(@Param('alertId') _alertId: string, @Body() body: unknown) {
+  async resolveAlert(@Param('alertId') alertId: string, @Body() body: unknown) {
     ResolveAlertSchema.parse(body ?? {});
-    return notImplemented('PATCH /iot/sensors/alerts/:alertId/resolve');
+    await db.execute(sql`
+      UPDATE iot_alerts SET is_resolved=true, resolved_at=NOW()
+      WHERE id=${parseInt(alertId, 10)}
+    `);
+    return { id: parseInt(alertId, 10), resolved: true };
   }
 
   @ApiOperation({ summary: 'Create sensor' })

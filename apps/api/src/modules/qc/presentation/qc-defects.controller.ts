@@ -132,20 +132,32 @@ export class QcDefectsController {
     
   }
 
-  @ApiOperation({ summary: 'Get braks cost impact' })
+  @ApiOperation({ summary: 'Get braks cost impact aggregated by stage' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('braks/cost-impact')
   async getBraksCostImpact() {
-    return notImplemented('GET /qc/braks/cost-impact');
+    const r = await db.execute(sql`
+      SELECT stage, COUNT(*)::int AS count, SUM(quantity)::int AS total_quantity,
+        SUM(COALESCE(cost_impact, 0))::numeric AS total_cost
+      FROM qc_braks
+      WHERE deleted_at IS NULL OR deleted_at IS NULL
+      GROUP BY stage ORDER BY total_cost DESC
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
-  @ApiOperation({ summary: 'Get pending qc' })
+  @ApiOperation({ summary: 'Get pending QC defects' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('pending/qc')
   async getPendingQc() {
-    return notImplemented('GET /qc/pending/qc');
+    const r = await db.execute(sql`
+      SELECT * FROM qc_defects
+      WHERE (status IS NULL OR status NOT IN ('resolved','closed'))
+      ORDER BY created_at DESC LIMIT 100
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @ApiOperation({ summary: 'Approve finance' })

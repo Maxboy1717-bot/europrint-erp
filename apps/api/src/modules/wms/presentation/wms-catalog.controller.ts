@@ -4,7 +4,7 @@
  */
 
 import {
-  Controller, Get, HttpException, HttpStatus, Logger, Query,
+  Controller, Get, HttpException, HttpStatus, Logger, Param, Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -12,6 +12,8 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { WmsCatalogService } from '../application/wms-catalog.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
@@ -134,21 +136,30 @@ export class WmsCatalogController {
 
   // -- MISC ------------------------------------------------------------------
 
-  @ApiOperation({ summary: 'Get transactions' })
+  @ApiOperation({ summary: 'Get warehouse transactions' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('transactions')
   @Roles(...WH_READ)
-  getTransactions() {
-    return notImplemented('GET /warehouse/transactions');
+  async getTransactions(@Query('limit') limit?: string) {
+    const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
+    const r = await db.execute(sql`
+      SELECT * FROM warehouse_transactions ORDER BY created_at DESC LIMIT ${lim}
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
-  @ApiOperation({ summary: 'Get orders by date' })
+  @ApiOperation({ summary: 'Get warehouse transactions by date' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('orders-by-date/:date')
   @Roles(...WH_READ)
-  getOrdersByDate() {
-    return notImplemented('GET /warehouse/orders-by-date/:date');
+  async getOrdersByDate(@Param('date') date: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM warehouse_transactions
+      WHERE transaction_date = ${date}
+      ORDER BY created_at DESC LIMIT 200
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 }

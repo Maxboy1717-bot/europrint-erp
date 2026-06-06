@@ -13,6 +13,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { QcNewService } from '../application/qc-new.service';
 import { SpcService } from '../domain/services/spc.service';
 import { z } from 'zod';
@@ -108,12 +110,22 @@ export class QcNewController {
     return unwrapOrInternal(await this.svc.getSpcControlChart(pid));
   }
 
-  // FEATURE_FLAGGED: SPC control-charts list aggregation not yet wired (#FX-11).
   @Get('control-charts')
   @Roles(...QC_ROLES)
-  @ApiOperation({ summary: 'SPC control charts list' })
+  @ApiOperation({ summary: 'SPC control charts aggregated per parameter' })
   async getControlCharts() {
-    return notImplemented('GET /qc/control-charts');
+    const r = await db.execute(sql`
+      SELECT parameter_id,
+        COUNT(*)::int AS data_points,
+        AVG(value)::numeric AS mean,
+        MIN(value)::numeric AS min_val,
+        MAX(value)::numeric AS max_val,
+        MAX(measured_at) AS last_measured_at
+      FROM qc_spc_data
+      GROUP BY parameter_id ORDER BY last_measured_at DESC NULLS LAST
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('control-charts/:processId')

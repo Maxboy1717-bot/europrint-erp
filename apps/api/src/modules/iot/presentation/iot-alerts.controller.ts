@@ -13,6 +13,8 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { IotMainService } from '../application/iot-main.service';
 import { CameraAlertsQuerySchema } from './dto/iot-camera.dto';
 import { notImplemented } from '@common/exceptions/not-implemented';
@@ -59,15 +61,20 @@ export class IotAlertsController {
     return unwrapOrThrow(await this.svc.getSafetyViolations(q.status, q.severity, q.limit));
   }
 
-  @ApiOperation({ summary: 'Create alert' })
+  @ApiOperation({ summary: 'Create alert (INSERT iot_alerts)' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post('alerts') @Roles(...IOT_WRITE)
   @UseInterceptors(AuditInterceptor)
   async createAlert(@Body() body: unknown) {
-    CreateAlertSchema.parse(body);
-    return notImplemented('POST /iot/alerts');
+    const dto = CreateAlertSchema.parse(body);
+    const r = await db.execute(sql`
+      INSERT INTO iot_alerts (sensor_id, alert_type, severity, message, is_resolved, created_at)
+      VALUES (0, ${dto.type ?? 'manual'}, ${dto.severity ?? 'medium'}, ${dto.message ?? ''}, false, NOW())
+      RETURNING *
+    `);
+    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Patch acknowledge alert' })
