@@ -60,17 +60,70 @@
 
 ---
 
-## KATEGORIYA C — 501-STUBLAR (95 ta)
-> table-exists → implement; needs-table → DDL-GATE; #FX → leave
+## KATEGORIYA C — 501-STUBLAR — FAZA 1 NATIJASI
 
-| Modul | Endpoint | Holat |
+### ✅ Phase 1: DDL-FREE (table exists → implemented)
+
+| Commit | Modul | Route(lar) |
 |---|---|---|
-| marketing | exhibitions/pr/inbox/settings/ab-tests | **[TODO]** |
-| iot-tablet | production-sessions: start/stop/defect/inline-qc/handover/material-kit | **[TODO]** |
-| design | notifications/tooling/messages | **[TODO]** |
-| finance | reports/loans/tax-calendar | **[TODO]** |
-| qc | control-charts | **[TODO]** |
-| hr | contracts/courses (lms) | **[TODO]** |
+| `c868c59b` | marketing | exhibitions(CRUD)/settings/ab-tests/social-api/blog(18 routes) |
+| `e23d04df` | design | notifications/tooling/messages (5 routes) |
+| `ef79407a` | iot-tablet | sessions/start/stop/defect/inline-qc/handover/kit-scan (10 routes) |
+| `1baffb2` | iot+qc+wms | downtime-reason-codes, PATCH device, createAlert, resolveAlert, getBraksCostImpact, getPendingQc, getControlCharts, getTransactions, getOrdersByDate (9 routes) |
+| `b41e0417` | hr+material-balance | getDashboardStats, getAdaptationById, getFpCycle, getMovements (4 routes) |
+| `114790ac` | kanban | PATCH cards/:id/assign (1 route) |
+| `cf69d6b6` | integration | GET/POST expense (expense_reports), GET/POST invoice (invoices) (4 routes) |
+| `83da337a` | hr-compat+hr-dashboard+iot-enhanced | PATCH/DELETE/POST test_questions, GET ai_interview_sessions, GET session/:id/review, GET production_orders (6 routes) |
+
+**JAMI: ~57 DDL-free stub → real DB (8 commit)**
+
+---
+
+### 🟥 Phase 2: DDL-GATE (jadval yo'q — egasi ruxsati kerak)
+
+| # | Modul / Controller | Route(lar) | Sabab |
+|---|---|---|---|
+| 1 | marketing-analytics-stubs | GET/POST/GET marketing/pr, GET marketing/pr/:id | `pr_campaigns` jadval yo'q |
+| 2 | marketing-analytics-stubs | GET inbox/conversations, GET conversations/:id/messages, POST conversations/:id/reply, POST inbox/ai-reply/:id, PATCH conversations/:id/status | `inbox_conversations` jadval yo'q |
+| 3 | iot-tablet | GET production-sessions/:id/crew | `session_crew` jadval yo'q |
+| 4 | iot-tablet | POST production-sessions/:id/evaluation | `production_evaluations` jadval yo'q |
+| 5 | iot-tablet | POST production-sessions/:id/material-return | `material_returns` jadval yo'q |
+| 6 | iot-sensors-main | GET iot/sensors/predictive-maintenance | Predictive maintenance table yo'q |
+| 7 | kanban-cards | GET/POST kanban/chat-messages/:id/files | Chat message files table yo'q |
+| 8 | kanban-reports | GET kanban/projects | `kanban_projects` jadval yo'q |
+| 9 | finance-main | GET finance/reports | Finance reports aggregate table yo'q |
+| 10 | finance-main | GET finance/loans | `finance_loans` / `loan_applications` jadval yo'q |
+| 11 | finance-extended-payroll | GET finance-extended/tax-calendar | `tax_calendar_entries` jadval yo'q |
+| 12 | finance-extended-payroll | GET finance-extended/salary-benchmark/:id | `salary_benchmarks` jadval yo'q |
+| 13 | reports.controller | GET reports/production-efficiency | Production efficiency aggregate table yo'q |
+| 14 | hr-compat-a | GET hr/hrc-tests/employee/:id/results | `test_results` / `employee_test_results` jadval yo'q |
+| 15 | hr-compat-a | POST hr/hrc-tests/sessions | `hrc_sessions` / `test_sessions` jadval yo'q |
+| 16 | hr-dashboard | GET/POST/GET hr/birthdays/settings + GET hr/birthdays/settings/:id | `hr_birthday_settings` jadval yo'q |
+| 17 | hr-dashboard | GET/GET hr/hrc-tests/employee, hr/hrc-tests/public, hr/hrc-tests/stats | `hrc_tests` jadval yo'q |
+| 18 | hr-dashboard | GET hr/360/reviewable | `feedback_360_reviewable` jadval yo'q |
+| 19 | hr-dashboard | GET hr/enps/surveys/results | `enps_survey_results` jadval yo'q |
+| 20 | hr-dashboard | GET hr/employee-corp | Employee corp profile table yo'q |
+| 21 | hr-dashboard | GET hr/offboarding/questions | Offboarding questions table yo'q |
+| 22 | hr-vacancies-pipeline | GET hr/pipeline/:id/checklist | `pipeline_checklists` jadval yo'q |
+| 23 | org-structure | GET org-structure/nodes/:nodeId/history | `org_node_history` jadval yo'q |
+| 24 | pp/production-reports | GET production-reports/orders | Production reports aggregate table yo'q |
+| 25 | integration | GET integration/skill-gap | `skill_gaps` / `employee_skill_gaps` jadval yo'q |
+
+---
+
+### 🔵 Phase 3: [INTENTIONAL] (#FX-gated yoki AI-engine)
+
+| Controller | Route(lar) | Sabab |
+|---|---|---|
+| security.controller | GET/POST security/daily-summary, ppe-checks, ppe-stats, ppe-violations, fire-sensors | **#FX-6** — Feature gated |
+| wms-integration | GET/POST warehouse/integration/mm/*, fi/stock-valuation, summary, root | **#FX-3** — Feature gated |
+| hr-dashboard-extra | GET hr/contracts | **#FX-9** — Feature gated |
+| hr-dashboard-extra | GET hr-capital/courses, GET hr-capital/stats | **#FX-9** — Feature gated |
+| mm-dashboard | GET/POST/PATCH mm/vendor-invoices/*, three-way-match, 3way-match/:id, fleet/*, vehicles/*, driver/expenses, materials/:id/suppliers | **#FX-2** — Feature gated |
+| ai.controller | GET ai/forecast/demand, GET/POST ai/rush-orders, GET/POST rush-orders/:id/approve/reject | **AI-engine** — demand forecast engine kerak |
+| ai-agents.controller | POST ai-agents/:agentId/trigger | **AI-engine** — agent trigger engine kerak |
+| pp/technology | POST technology/cards/generate, POST technology/cards/:id/optimize | **AI-engine** — `calculated_by_ai` flag, AI routing logic kerak |
+| marketing-analytics-stubs | POST content/ai-generate, POST churn-risk/ai-signal, GET ai-assistant, POST leads/recalculate-scores, POST leads/:id/convert-to-crm, POST website/blog/ai-generate | **AI-engine** — ML/AI model kerak |
 
 ---
 
