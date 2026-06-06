@@ -152,7 +152,7 @@ return result.data;
 ```
 
 **Reviewer:** `bash scripts/reviewer-result-pattern.sh`  
-**Hozirgi holat:** FAIL: 143 ta metod tuzatilishi kerak
+**Hozirgi holat:** ✅ FAIL: 0 (WARN: 6 — forecast/ai-data/finance-ai/pos-event/quarantine/warehouse-kpi repos)
 
 ---
 
@@ -175,7 +175,7 @@ const filtered = Array.isArray(sessions) ? sessions.filter(s => s.status === 'ac
 ```
 
 **Reviewer:** `bash scripts/reviewer-array-safety.sh`  
-**Hozirgi holat:** FAIL: 678 (backend: ~380, frontend: ~298)
+**Hozirgi holat:** ✅ FAIL: 0 (PASS: 1172)
 
 ---
 
@@ -646,8 +646,8 @@ Quyidagi routelar hali `StubPage.tsx` ko'rsatadi — real sahifaga almashtirilis
 
 | Skript | Qoida | Holat |
 |--------|-------|-------|
-| `reviewer-array-safety.sh` | Array.isArray | **FAIL: 678** |
-| `reviewer-result-pattern.sh` | Result\<T\> | **FAIL: 143** |
+| `reviewer-array-safety.sh` | Array.isArray | ✅ PASS (0 FAIL, 1172 pass) |
+| `reviewer-result-pattern.sh` | Result\<T\> | ✅ PASS (0 FAIL, 6 WARN) |
 | `reviewer-as-unknown.sh` | as unknown stub | FAIL: 3 |
 | `reviewer-dto-validation.sh` | Zod validation | ✅ PASS |
 | `reviewer-process-env.sh` | ConfigService | ✅ PASS |
@@ -687,8 +687,8 @@ Quyidagi routelar hali `StubPage.tsx` ko'rsatadi — real sahifaga almashtirilis
 
 ### 🟡 KEYINROQ (Kod sifati)
 
-11. `FAIL: 143` — Result pattern (repository metodlar)
-12. `FAIL: 678` — Array.isArray tekshiruvlari
+11. ✅ Result pattern — FAIL: 0 (WARN: 6 deferred — forecast/ai-data/finance-ai/pos-event/quarantine/warehouse-kpi)
+12. ✅ Array.isArray — FAIL: 0 (PASS: 1172)
 13. Magic numberlar → `business.constants.ts`
 14. 300+ qatorli fayllarni bo'laklash
 15. 22 ta stub route → real sahifalar
