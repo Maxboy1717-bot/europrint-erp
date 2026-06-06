@@ -14,19 +14,21 @@
 | 4 | **#6 Sensor** | record-sensor-reading FAKE-CREATE (repo yo'q) → SENSOR_REPO inject + saveReading; ⭐ drifted saveReading (iot_sensor_readings=VIEW over sensor_readings, device_id NOT NULL yo'q edi) tuzatildi. | iot_sensor_readings real persist; cleanup 0 | `60f441fb` |
 | 5 | **MES→QC no-op** | mes-completed.listener HECH NARSA qilmasdi (faqat log) → real qc_inspection insert (status=pending, order_id=sessionId, reference_type='mes_session'). ⭐ qc save drift (string-id→int, reference_id=uuid, inspector_id=int) → direct drift-proof insert. | QC pending inspeksiya ko'radi; cleanup 0 | `a82cfd82` |
 | 6 | **#4 POS movement→GL** | ⭐ verify-don't-trust master-plan tuzatildi: stock ALLAQACHON yoziladi (inline `_processCompletedMovement`); o'lik narsa = GL leg. `PosMovementCompletedEvent`ni publish qilsam WMS-sync listener stock'ni QAYTA yozardi (deferred FIX4 ikki-yozuv). **Variant C** (egasi tasdiqi): event YO'Q — faqat yetishmagan GL leg inline qo'shildi (GL_PAIRS → `pos_gl_posting_log` stage=POST, status=AWAITING_REVIEW; Moliya qo'lda tasdiqlaydi). ⭐ table real nomi=`pos_gl_posting_log` (Drizzle `gl_posting_log` emas); id sequence+enum'lar toza (drift yo'q). | EXTERNAL_IN total=56000→4 balansli entry (debit==credit=112000); ikki-yozuv yo'q; cleanup 0 | `05dcd49b` |
+| 7 | **#6 Campaign two-worlds** | create-campaign SOXTA-CREATE + controller bo'lingan-miya (list/delete→marketing_campaigns ╳ create/get-one/patch→CQRS campaigns/uuid). Egasi qarori: **marketing_campaigns kanonik**. ⭐ verify-don't-trust kaskad drift: stub `marketingCampaigns.id`=number/serial, lekin jonli id=varchar(36) uuid default-siz → create id NULL, findOne/update varchar╳integer; stub description/platform yo'q; 3-vokabulyar type zid. To'liq fix: `campaigns.repository`ni RAW SQL (string id, jonli ustunlar, ::numeric/::timestamp/::integer cast, camelCase alias) qildim; controller 5 route campaignsSvc'ga (uuid id). CQRS slice o'lik kod. | to'liq lifecycle: create(camelCase, created_by 30 int)→update(COALESCE saqlaydi)→list ko'radi→softdelete yashiradi→cleanup 0 | `0eb419b4` |
 
 ## ⭐ Naqsh (verify-don't-trust): har leverage-fix yashirin drift tutdi
 Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: string-id→integer ustun, VIEW→base-jadval NOT NULL, uuid╳integer, omitted-columns. Ya'ni "yashil skelet" nafaqat ulanmagan — DB-yozuv yo'llari ham drifted edi. Har biri DB-proof bilan tutildi va tuzatildi.
 
 ## Keyingi qadamlar (poydevor tayyor, tartibda)
 - **#5c** — `iot.sos.raised` (grep: topilmadi — tekshir), `SecurityIncidentDetected` (allaqachon klass — listener ixtiyoriy).
-- **#6 (davomi)** — boshqa soxta-create → `repo.save()` (dizayn order #50, LMS, CRM — har biri 1 INSERT).
-- **#1** — manager_id: daraxt-yurish (ancestor head) yoki org-head data.
+- ~~**#6 fake-create sweep** — TUGADI: security/sensor (repo.save), campaign (marketing_campaigns repoint). Keng skan: boshqa CQRS soxta-create YO'Q; design (request-design) allaqachon real (DESIGN_REPO.save).~~
+- **#1** — manager_id: daraxt-yurish (ancestor head) yoki org-head data (BLOKLANGAN — manba yo'q).
 - ~~**#4** — DONE (Variant C, `05dcd49b`): inline GL leg, ikki-yozuvdan qochildi.~~
-- **BOSQICH 2** — sales_orders line-items, entries post* ulash, davomat→payroll.
+- **BOSQICH 2** (keyingi katta) — sales_orders line-items, entries post* ulash, davomat→payroll. Kanonik tayyor (qaror kerak emas).
 
 ## ⛔ DEFERRED — egasi qarori kerak (Q-34 ikki-dunyo / two-worlds)
-- **Campaign (marketing) ikki-dunyo** — `create-campaign.handler` SOXTA-CREATE (repo yo'q, saqlamaydi). Lekin tuzatish **ikki-dunyo qaroriga** taqaladi:
+- ✅ ~~**Campaign two-worlds — HAL QILINDI** (`0eb419b4`): egasi `marketing_campaigns`ni tanladi; repo RAW SQL'ga (varchar id) ko'chirildi, controller 5 route campaignsSvc'ga. To'liq lifecycle DB-proof PASS.~~
+- **(arxiv) Campaign (marketing) ikki-dunyo** — `create-campaign.handler` SOXTA-CREATE (repo yo'q, saqlamaydi). Tuzatish **ikki-dunyo qaroriga** taqalgandi:
   - `marketing.controller` **bo'lingan-miya**: LIST `@Get()` + DELETE → `campaignsSvc` (legacy) → **`marketing_campaigns`** (id=varchar, created_by=**integer** nullable, soft-delete) — ⭐ FE shu jadvalni o'qiydi. CREATE/GET-ONE/PATCH/LAUNCH → CQRS → **`campaigns`** (id=uuid, created_by=**uuid NOT NULL**).
   - id turlari ham zid: DELETE `parseInt(id,10)` (integer) ╳ PATCH uuid-string.
   - `campaigns.created_by` uuid, lekin app user-id = **integer** (`users.id`=integer) → CQRS save "30"→uuid CRASH. Ikkala jadval ham 0 qator.
