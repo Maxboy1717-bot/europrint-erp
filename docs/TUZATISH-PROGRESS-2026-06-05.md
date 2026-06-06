@@ -35,6 +35,13 @@
 
 ⚠️ Keyingi (BOSQICH 2 davomi): BOM+products katalogni egasi to'ldiradi. EXTERNAL_OUT tannarx legi (multi-leg COGS). Payroll proration (biznes-qaror). Material reservation→issue (warehouse).
 
+## BOSQICH 3 — chekka/infra zanjirlar (no-op → real)
+| # | Ish | Nima qilindi | DB-proof | Commit |
+|---|---|---|---|---|
+| 3.1 | **IoT anomaly handler** | `AnomalyDetectedHandler` faqat log qilardi (no-op) → `iot_alerts` ga yozadi (sensor_id=Number(deviceId) FK-siz, alert_type, severity='high', message, value, is_resolved=false). Endi IoT dashboard'da ko'rinadi, operator hal qiladi. | anomaliya → dashboard active-alert query qaytaradi (#high_value/high/150); cleanup 0 | `e230be56` |
+
+⚠️ Keyingi (BOSQICH 3): CC MANAGER_OF_SENDER (manager_id 0/30 — #1 blok), 13+ zero-listener event (string→class), outbox→domain_events.
+
 ## ⭐ Naqsh (verify-don't-trust): har leverage-fix yashirin drift tutdi
 Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: string-id→integer ustun, VIEW→base-jadval NOT NULL, uuid╳integer, omitted-columns. Ya'ni "yashil skelet" nafaqat ulanmagan — DB-yozuv yo'llari ham drifted edi. Har biri DB-proof bilan tutildi va tuzatildi.
 
