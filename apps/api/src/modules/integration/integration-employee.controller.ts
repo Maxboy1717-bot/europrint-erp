@@ -135,7 +135,14 @@ export class IntegrationEmployeeController {
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('skill-gap')
   async getSkillGapList() {
-    return notImplemented('GET /integration/skill-gap');
+    const r = await db.execute(sql`
+      SELECT id, employee_id, skill_code, current_level, assessed_by, last_assessed_at, created_at
+      FROM employee_skill_scores
+      ORDER BY employee_id ASC, last_assessed_at DESC NULLS LAST
+      LIMIT 200
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @ApiOperation({ summary: 'Get employee mentorships list' })

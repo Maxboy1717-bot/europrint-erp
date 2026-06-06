@@ -25,6 +25,9 @@ import type { AuthenticatedUser } from '@common/types/user.types';
 import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 
 // P2.6: .strict() (mass-assignment guard) — the allow-list MUST match the real org_departments
 // columns the FE dialogs send + the repo maps. STEP B (2026-06-05): added nodeType/tskp/tskpRu/
@@ -243,8 +246,15 @@ export class OrgStructureController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('nodes/:nodeId/history')
-  async getNodeHistory(@Param('nodeId') _nodeId: string) {
-    return notImplemented('GET /org-structure/nodes/:nodeId/history');
+  async getNodeHistory(@Param('nodeId') nodeId: string) {
+    const r = await db.execute(sql`
+      SELECT id, node_id, request_type, priority, status, comment, node_name, requester_id, created_at, updated_at
+      FROM node_hr_requests
+      WHERE node_id = ${parseInt(nodeId, 10)}
+      ORDER BY created_at DESC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @ApiOperation({ summary: 'Get node hr requests' })
