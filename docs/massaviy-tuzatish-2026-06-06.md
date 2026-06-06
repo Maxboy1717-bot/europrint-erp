@@ -43,14 +43,20 @@
 
 | Klaster | Kanonik | Alternativ (o'chirish/stub) | Holat |
 |---|---|---|---|
-| material-kits (iot-enhanced vs wms-barcode) | iot-enhanced (real) | wms-barcode 501 stubs → retire | **[TODO]** |
-| printer-config (iot-enhanced vs wms-barcode) | iot-enhanced (real) | wms-barcode 501 stubs → retire | **[TODO]** |
-| budgets standalone vs finance/budgets | finance/budgets (real) | standalone → redirect/501 | **[TODO]** |
-| gl standalone vs finance/gl | finance/gl (real) | standalone → redirect/501 | **[TODO]** |
-| wms/warehouses vs warehouse/warehouses | warehouse/warehouses (real) | wms → proxy/501 | **[TODO]** |
-| chat /hr-v2/chat (8 dup routes) | canonical chat | hr-v2/chat parallel → 501 | **[TODO]** |
-| kanban CQRS (dead) vs Ext kanban_cards (live) | Ext kanban_cards | CQRS dead code → remove | **[TODO]** |
-| verb-dups (production-shift-reports, finance-payments, etc.) | — | — | **[TODO]** |
+| material-kits (iot-enhanced vs wms-barcode) | pos_printer_configs / material_kits (DB) | wms-barcode 501 stubs wired to real DB tables | **[FIXED `98363e9e`]** |
+| printer-config (iot-enhanced vs wms-barcode) | pos_printer_configs (DB) | wms-barcode 501 stubs wired to real DB tables | **[FIXED `98363e9e`]** |
+| budgets standalone vs finance/budgets | both real, same service | FE uses standalone paths; both delegate to same BE | **[KEEP]** |
+| gl standalone vs finance/gl | both real, same service | FE uses standalone paths; both delegate | **[KEEP]** |
+| wms/warehouses vs warehouse/warehouses | warehouse/warehouses | general-legacy-b routes COMMENTED OUT (no active dup) | **[ALREADY-CLEAN fp]** |
+| chat /hr-v2/chat (8 dup routes) | canonical /chat | ChatAdvancedController (5 dup routes) de-registered from ChatModule; ChatAdvancedUploadsController (thread/forward UNIQUE) kept | **[FIXED `b98fa32a`]** |
+| kanban CQRS (dead) vs Ext kanban_cards (live) | Ext kanban_cards | KanbanController (5 CQRS routes → kanban_tasks 0 rows) de-registered; live KanbanBoardsController/CardsController stay | **[FIXED `4969ddf5`]** |
+| verb-dups: shift-reports POST/PUT close; payments PATCH/POST approve; gl GET/POST reverse; director kpi/kpis; saas tenants/v2 | — | All: same handler, intentional alias; FE uses kpis (plural) | **[KEEP x5]** |
+
+### KATEGORIYA B — YOPIQ ✅ (8/8 klaster)
+- ✅ **FIXED ×3**: material-kits+printer-config (98363e9e), chat hr-v2 dup (b98fa32a), kanban CQRS (4969ddf5)
+- ✅ **KEEP ×3**: budgets/gl standalone (real, FE uses), verb-dups (intentional aliases)
+- ✅ **ALREADY-CLEAN ×1**: wms/warehouses (commented out)
+- Commits: 98363e9e / b98fa32a / 4969ddf5
 
 ---
 
