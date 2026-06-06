@@ -36,7 +36,7 @@ const SALES_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @ApiTags('Sales')
-@Controller(['sales', 'sd'])
+@Controller('sales')
 @UseGuards(RolesGuard)
 @Roles(...SALES_ROLES)
 export class SalesController {
