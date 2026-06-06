@@ -61,6 +61,7 @@ export class GlPostingLogService {
       const r = await this.repo.approveEntry(id, approvedBy);
       if (!r.ok) return Err(r.error);
       this.logger.log(`[GL] Entry ${id} approved by ${approvedBy}`);
+      await this.postToLedger(r.data.movementId, approvedBy);
       return Ok(r.data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -85,10 +86,27 @@ export class GlPostingLogService {
       const r = await this.repo.approveByMovement(movementId, approvedBy);
       if (!r.ok) return Err(r.error);
       this.logger.log(`[GL] Movement ${movementId}: ${r.data.length} entries approved by ${approvedBy}`);
+      await this.postToLedger(movementId, approvedBy);
       return Ok(r.data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return Err(AppErr('INTERNAL', message));
+    }
+  }
+
+  /**
+   * BOSQICH 2 — post the approved movement's GL to the canonical `entries` ledger.
+   * Non-fatal: a missing account mapping (gl_account_mappings is owner/accountant data) just logs a
+   * warning and posts nothing, rather than failing the approval or inventing accounts (Q-40).
+   */
+  private async postToLedger(movementId: number, approvedBy: number): Promise<void> {
+    const post = await this.repo.postMovementToLedger(movementId, approvedBy);
+    if (post.ok && post.data.posted) {
+      this.logger.log(`[GL] Movement ${movementId} → canonical entries ledger ✓`);
+    } else if (post.ok) {
+      this.logger.warn(`[GL] Movement ${movementId} NOT posted to ledger: ${post.data.reason}`);
+    } else {
+      this.logger.error(`[GL] Movement ${movementId} ledger posting error: ${String(post.error)}`);
     }
   }
 
