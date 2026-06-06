@@ -26,9 +26,9 @@ export class WmsWarehouseGatewayRepo {
     const rows = await runQuery<Row>(sql`
       SELECT
         (SELECT COUNT(*)::int FROM wms_warehouses WHERE is_active = true) AS active_warehouses,
-        COALESCE((SELECT SUM(quantity_on_hand) FROM wms_stock_levels), 0)::numeric AS total_stock_qty,
-        COALESCE((SELECT SUM(quantity_on_hand * unit_cost) FROM wms_stock_levels), 0)::numeric(15,2) AS total_stock_value,
-        (SELECT COUNT(*)::int FROM wms_stock_levels WHERE quantity_on_hand <= min_stock AND min_stock > 0) AS low_stock_alerts,
+        COALESCE((SELECT SUM(quantity) FROM warehouse_stock), 0)::numeric AS total_stock_qty,
+        0::numeric(15,2) AS total_stock_value,
+        (SELECT COUNT(*)::int FROM warehouse_stock WHERE quantity <= reorder_point AND reorder_point > 0) AS low_stock_alerts,
         (SELECT COUNT(*)::int FROM wms_transactions WHERE DATE(created_at) = CURRENT_DATE) AS today_movements
     `);
     return (rows.rows[0] ?? {}) as Row;
@@ -37,10 +37,10 @@ export class WmsWarehouseGatewayRepo {
   async getWarehouseOccupancy(): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
       SELECT w.id, w.name, w.location,
-             COALESCE(SUM(sl.quantity_on_hand), 0)::numeric AS total_qty,
-             COALESCE(SUM(sl.quantity_on_hand * sl.unit_cost), 0)::numeric(15,2) AS total_value,
-             COUNT(DISTINCT sl.material_id)::int AS material_count
-      FROM wms_warehouses w LEFT JOIN wms_stock_levels sl ON sl.warehouse_id = w.id
+             COALESCE(SUM(ws.quantity), 0)::numeric AS total_qty,
+             0::numeric(15,2) AS total_value,
+             COUNT(DISTINCT ws.material_id)::int AS material_count
+      FROM wms_warehouses w LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
       WHERE w.is_active = true GROUP BY w.id, w.name, w.location ORDER BY w.name
     `);
     return rows.rows as Row[];
@@ -53,22 +53,22 @@ export class WmsWarehouseGatewayRepo {
 
   async getStock(warehouseId?: number, materialId?: number): Promise<{ stock: Row[]; total: number }> {
     const rows = await runQuery<Row>(sql`
-      SELECT sl.*, m.name AS material_name, m.unit_of_measure, m.sku, w.name AS warehouse_name
-      FROM wms_stock_levels sl
-      JOIN mm_materials m ON m.id = sl.material_id
-      JOIN wms_warehouses w ON w.id = sl.warehouse_id
-      WHERE (${warehouseId ?? null}::int IS NULL OR sl.warehouse_id = ${warehouseId ?? null})
-        AND (${materialId ?? null}::int IS NULL OR sl.material_id = ${materialId ?? null})
-      ORDER BY m.name
+      SELECT ws.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.kod AS sku, w.name AS warehouse_name
+      FROM warehouse_stock ws
+      JOIN material_cards mc ON mc.id = ws.material_id
+      JOIN wms_warehouses w ON w.id = ws.warehouse_id
+      WHERE (${warehouseId ?? null}::int IS NULL OR ws.warehouse_id = ${warehouseId ?? null})
+        AND (${materialId ?? null}::int IS NULL OR ws.material_id = ${materialId ?? null})
+      ORDER BY mc.xom_ashyo
     `);
     return { stock: rows.rows as Row[], total: rows.rows.length };
   }
 
   async getLots(materialId?: number, warehouseId?: number): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      SELECT b.*, m.name AS material_name, w.name AS warehouse_name
+      SELECT b.*, mc.xom_ashyo AS material_name, w.name AS warehouse_name
       FROM wms_stock_batches b
-      JOIN mm_materials m ON m.id = b.material_id
+      JOIN material_cards mc ON mc.id = b.material_id
       JOIN wms_warehouses w ON w.id = b.warehouse_id
       WHERE b.quantity_on_hand > 0
         AND (${materialId ?? null}::int IS NULL OR b.material_id = ${materialId ?? null})

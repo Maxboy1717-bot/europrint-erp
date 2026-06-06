@@ -52,7 +52,7 @@ export const varianceTypeEnum = pgEnum('pos_variance_type_enum', [
 
 // ─── 1. POS_STOCK_LEDGER — Append-only stok registri ────────────────────────
 
-export const posStockLedger = pgTable('pos_stock_ledger', {
+export const posStockLedger = pgTable('stock_ledger', {
   id:             bigserial('id', { mode: 'number' }).primaryKey(),
   ts:             timestamp('ts').notNull().defaultNow(),
   materialCardId: integer('material_id').notNull(),
