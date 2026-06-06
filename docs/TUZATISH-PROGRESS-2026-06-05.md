@@ -45,6 +45,18 @@
 
 ⚠️ Keyingi (BOSQICH 3): 13+ zero-listener event = asosan bildirishnoma (Q-40 — listener qo'shish soxta ish). Qolgan haqiqiy progress = egasi katalog-data (BOM/products/cost) + 2 biznes-qaror (proration/COGS).
 
+## BOSQICH 4 — QATLAM FORMULASI (kg↔list) — vision #7 "miya" (egasi tasdiqi)
+> Konfiguratsiyalanadigan: GSM/o'lcham/take-up material config'idan. Reja: `docs/LAYER-FORMULA-REJA-2026-06-06.md`
+| STEP | Ish | DB-proof | Commit |
+|---|---|---|---|
+| 1 | Tahlil: material_cards'da grammage+format_a/b BOR; gofra config YO'Q; mavjud formula YO'Q. Reja+formula tekshirildi. | — | (reja doc) |
+| 2 | DDL: `material_cards.material_kind` + yangi `material_layer_config` (liner/flute, gsm, flute_type, take_up_factor — take_up NULL "joy qoldirib"). | material_kind + 9-ustun jadval + FK CASCADE | `3211c116` |
+| 3 | `LayerFormulaService` — sof matematika + `convert(materialId,{kg\|sheets})` config o'qiydi (plain=grammage, corrugated=Σliner+Σ(flute×takeup)). | oddiy 100kg/300/1000×700→**476 list**; teskari 100kg; gofra 205+205+127×1.43→**592 GSM**→241 list; cleanup 0 | `184be5ea` |
+| 4 | Ombor endpoint `GET /api/mm/materials/:id/sheet-conversion?kg=X` (egasi: ombor faqat kg kirim/chiqim). | jonli **401** (route mapped+guard); convert DB-proven | `59815805` |
+| + | jest unit-test (egasi misollari 476/592) | 6/6 PASS | `(test)` |
+
+✅ **Vision #7 "miya" tayyor**: kg↔list konvertatsiya konfiguratsiyalanadigan, DB-proven + jonli endpoint + unit-test. Egasi material config'ni (format_a/b, gofra qatlamlar, take-up) to'ldiradi → butun BOM/xarid/MPS to'g'ri kg/list bilan ishlaydi.
+
 ## ⭐ Naqsh (verify-don't-trust): har leverage-fix yashirin drift tutdi
 Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: string-id→integer ustun, VIEW→base-jadval NOT NULL, uuid╳integer, omitted-columns. Ya'ni "yashil skelet" nafaqat ulanmagan — DB-yozuv yo'llari ham drifted edi. Har biri DB-proof bilan tutildi va tuzatildi.
 
