@@ -61,7 +61,7 @@ export class MmPurchaseOrdersController {
         pending_amount: String(r.total_amount ?? 0),
         receipt_count: 0,
       }));
-    } catch (_e) { return []; }
+    } catch (e) { throw new InternalServerErrorException(String(e)); }
   }
 
   @ApiOperation({ summary: 'Get pending receipt' })
@@ -87,7 +87,7 @@ export class MmPurchaseOrdersController {
         pending_amount: String(r.total_amount ?? 0),
         receipt_count: 0,
       }));
-    } catch (_e) { return []; }
+    } catch (e) { throw new InternalServerErrorException(String(e)); }
   }
 
   @ApiOperation({ summary: 'Get po' })

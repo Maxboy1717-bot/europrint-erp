@@ -7,7 +7,7 @@
 
 import {
   Controller, Get, Patch, Param, Query,
-  UseGuards, UseInterceptors,
+  UseGuards, UseInterceptors, InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -63,8 +63,8 @@ export class SdContractsController {
         signedAt: r.signed_at ? r.signed_at.toISOString() : null,
         createdAt: r.created_at ? r.created_at.toISOString() : new Date().toISOString(),
       }));
-    } catch (_e) {
-      return [];
+    } catch (e) {
+      throw new InternalServerErrorException(String(e));
     }
   }
 
