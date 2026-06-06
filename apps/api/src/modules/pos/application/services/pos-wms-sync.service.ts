@@ -5,7 +5,7 @@
  * warehouse_transactions) sinxronlashtiradi.  Bu service asosiy
  * business logikaga ta'sir qilmaydi — faqat side-effect tinglaydi.
  *
- * Eventlar: 'pos.movement.data.completed', 'pos.movement.data.created'
+ * Eventlar: 'pos.movement.data.created'  (completed path removed 2026-06-06 — inline)
  *
  *   Type definitions, constants and the warehouse_stock upsert helper live in
  *   pos-wms-sync.helpers.ts (Rule 16 — 300 line cap).
@@ -22,141 +22,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
-import { broadcastPosEvent } from '../../presentation/pos.gateway';
 import {
   MOVEMENT_TYPE_MAP,
-  PosMovementCompletedEvent,
   PosMovementCreatedEvent,
   MovementRow,
   MovementLineRow,
-  upsertWarehouseStock,
 } from './pos-wms-sync.helpers';
 
 @Injectable()
 export class PosWmsSyncService {
   private readonly logger = new Logger(PosWmsSyncService.name);
 
-  // =========================================================================
-  // COMPLETED — warehouse_stock upsert + warehouse_transactions insert
-  //
-  // Wave 4 round-4 (PA2-18): the legacy @OnEvent('pos.movement.data.completed')
-  // wrapper was removed — the canonical CQRS handler now lives in
-  // `pos-wms-sync-completed.listener.ts` and delegates back into this method.
-  // The method body is unchanged so the WMS sync semantics are preserved.
-  // =========================================================================
-  async onMovementCompleted(event: PosMovementCompletedEvent): Promise<void> {
-    try {
-      const movId = event.movementId;
-
-      // 1. Fetch movement header
-      const movRows = await runQuery<MovementRow>(sql`
-        SELECT
-          id,
-          movement_type,
-          from_warehouse_id,
-          to_warehouse_id,
-          movement_number,
-          bulim
-        FROM pos_movements
-        WHERE id = ${movId}
-        LIMIT 1
-      `);
-
-      const movement = movRows[0];
-      if (!movement) {
-        this.logger.warn(`[PosWmsSync] Movement not found: id=${movId}`);
-        return;
-      }
-
-      const movementType  = movement.movement_type ?? '';
-      const transType     = MOVEMENT_TYPE_MAP[movementType] ?? 'adjustment';
-      const isIn          = transType === 'kirim';
-      const isTransfer    = transType === 'transfer';
-      const fromWh        = movement.from_warehouse_id;
-      const toWh          = movement.to_warehouse_id;
-      const docNumber     = movement.movement_number ?? String(movId);
-      const bulim         = movement.bulim;
-
-      // 2. Fetch movement lines
-      const lines = await runQuery<MovementLineRow>(sql`
-        SELECT
-          material_id AS material_card_id,
-          quantity,
-          unit AS unit_of_measure
-        FROM pos_movement_lines
-        WHERE movement_id = ${movId}
-      `);
-
-      if (!lines.length) {
-        this.logger.warn(`[PosWmsSync] No lines for movement id=${movId}`);
-        return;
-      }
-
-      for (const line of lines) {
-        const matId = line.material_card_id;
-        const qty   = parseFloat(line.quantity ?? '0');
-        const uom   = line.unit_of_measure ?? 'dona';
-
-        if (!matId || qty <= 0) continue;
-
-        // warehouse_stock — upsert (delta: +qty for 'in', -qty for 'out')
-        if (isIn && toWh) {
-          await upsertWarehouseStock(toWh, matId, qty);
-        } else if (!isIn && !isTransfer && fromWh) {
-          await upsertWarehouseStock(fromWh, matId, -qty);
-        } else if (isTransfer) {
-          if (fromWh) await upsertWarehouseStock(fromWh, matId, -qty);
-          if (toWh)   await upsertWarehouseStock(toWh,   matId, +qty);
-        }
-
-        // warehouse_transactions — insert
-        const txDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-        try {
-          await runQuery(sql`
-            INSERT INTO warehouse_transactions
-              (material_id, transaction_date, transaction_type,
-               quantity, unit_of_measure, bulim, document_number, created_at)
-            VALUES
-              (${matId}, ${txDate}, ${transType},
-               ${qty}, ${uom}, ${bulim ?? null}, ${docNumber}, NOW())
-          `);
-        } catch (txErr) {
-          this.logger.error(
-            `[PosWmsSync] warehouse_transactions insert failed (movId=${movId}, matId=${matId}): ${String(txErr)}`,
-          );
-        }
-
-        // Emit Socket.IO — 'warehouse.stock.updated'
-        const targetWarehouseId = (isIn ? toWh : fromWh) ?? null;
-        if (targetWarehouseId) {
-          try {
-            const newQtyRows = await runQuery<{ qty: string }>(sql`
-              SELECT available_quantity::text AS qty
-              FROM warehouse_stock
-              WHERE warehouse_id = ${targetWarehouseId}
-                AND material_id = ${String(matId)}
-              LIMIT 1
-            `);
-            const newQty = parseFloat(newQtyRows[0]?.qty ?? '0');
-            broadcastPosEvent('warehouse.stock.updated', {
-              warehouseId:    targetWarehouseId,
-              materialCardId: matId,
-              newQty,
-            });
-          } catch (emitErr) {
-            this.logger.warn(`[PosWmsSync] Socket emit failed: ${String(emitErr)}`);
-          }
-        }
-      }
-
-      this.logger.log(
-        `[PosWmsSync] Synced completed movement id=${movId} (${movementType}) — ${lines.length} line(s)`,
-      );
-    } catch (err) {
-      // Never throw from an event listener — just log
-      this.logger.error(`[PosWmsSync] onMovementCompleted failed: ${String(err)}`);
-    }
-  }
+  // onMovementCompleted REMOVED 2026-06-06:
+  // Stock+transactions write is now done INLINE in PosMovementStatusService._processCompletedMovement().
+  // The dead pos-wms-sync-completed.listener.ts (sole caller) was deleted — confirmed 0 publish() sites.
+  // See: docs/deleted-routes.md (chore/pos: remove dead PosMovementCompletedEvent duplicate listeners)
 
   // =========================================================================
   // CREATED — draft warehouse_transaction insert

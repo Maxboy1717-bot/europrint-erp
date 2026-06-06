@@ -71,7 +71,7 @@ const EVENT_NAME_MAP: Record<string, string> = {
   // emit sites keep firing until publishers are switched to typed events.
   CcSpawnRequestedEvent: 'cc.spawn',
   TechThreeCheckpointEvent: ERP_EVENTS.TECH_THREE_CHECKPOINT,
-  PosMovementCompletedEvent: 'pos.movement.data.completed',
+  // PosMovementCompletedEvent removed 2026-06-06: 0 publish() sites, listeners deleted, inline path canonical.
   // PosMovementCreatedEvent intentionally NOT mapped: pos-movement.service.ts
   // publishes both the typed event AND the legacy string topic directly. If
   // the bridge re-emitted, string consumers would fire twice.

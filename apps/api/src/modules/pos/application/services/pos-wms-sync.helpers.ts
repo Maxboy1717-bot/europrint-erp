@@ -35,13 +35,8 @@ export const MOVEMENT_TYPE_MAP: Record<string, string> = {
 // ---------------------------------------------------------------------------
 // Incoming event shapes
 // ---------------------------------------------------------------------------
-export interface PosMovementCompletedEvent {
-  movementId:     number | string;
-  movementNumber: string | null;
-  oldStatus:      string;
-  newStatus:      string;
-  updatedById:    number;
-}
+// PosMovementCompletedEvent removed 2026-06-06: 0 publish() sites, listeners
+// deleted, inline path in PosMovementStatusService._processCompletedMovement() canonical.
 
 export interface PosMovementCreatedEvent {
   movementId:     number | string;
