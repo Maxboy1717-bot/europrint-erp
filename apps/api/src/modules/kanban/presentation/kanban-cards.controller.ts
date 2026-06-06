@@ -19,7 +19,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { unwrapOrBadRequest } from '@common/http-result';
-import { runQuery } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
@@ -123,13 +123,13 @@ export class KanbanCardsController {
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Karta tayinlash' })
-  assignCard(@Param('id') _id: string, @Body() body: unknown) {
-    AssignCardSchema.parse(body);
-    // Honest 501 (was a fake { updated:true }): kanban_cards's only user field is owner_user_id
-    // (no separate assignee/creator). The real fix is a 1-line UPDATE kanban_cards SET
-    // owner_user_id=:assignedTo through KanbanExtCardService->DrizzleKanbanExtRepository, but
-    // whether "assign" should overwrite owner_user_id needs confirmation. See deferred-decisions.md.
-    throw new HttpException('Karta tayinlash hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async assignCard(@Param('id') id: string, @Body() body: unknown) {
+    const dto = AssignCardSchema.parse(body);
+    await db.execute(sql`
+      UPDATE kanban_cards SET owner_user_id=${dto.assignedTo ? Number(dto.assignedTo) : null}
+      WHERE id=${id}
+    `);
+    return { id, assigned: true };
   }
 
   @Put('cards/:id/accept')
