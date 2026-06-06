@@ -64,10 +64,11 @@ export const materialCards = pgTable("material_cards", {
   xomAshyoRu: text("xom_ashyo_ru"),
   unitOfMeasure: varchar("unit_of_measure", { length: 20 }).notNull(), // kg, dona, m2, rlon
   category: varchar("category", { length: 30 }), // qogoz, kley, plastina, boshqa
-  // Format (qog'oz uchun)
-  formatA: numericMoney("format_a"),
-  formatB: numericMoney("format_b"),
-  grammage: numericMoney("grammage"), // gramm
+  // Format (qog'oz uchun) — layer-formula inputs (kg<->sheet, vision #7)
+  formatA: numericMoney("format_a"),     // length_mm
+  formatB: numericMoney("format_b"),     // width_mm
+  grammage: numericMoney("grammage"),    // GSM (plain layer)
+  materialKind: varchar("material_kind", { length: 20 }), // 'plain' | 'corrugated' (formula tanlovi)
   // Qoldiq
   currentStock: numericMoney("current_stock").default(0),
   reservedStock: numericMoney("reserved_stock").default(0),
@@ -106,6 +107,21 @@ export const materialCards = pgTable("material_cards", {
   check("material_cards_reserved_chk", sql`${t.reservedStock} IS NULL OR ${t.reservedStock} >= 0`),
 ]);
 
+// Corrugated layer config (kg<->sheet, vision #7). Plain materials use only grammage (NO rows here);
+// corrugated materials have N rows (liner+flute) -> total_GSM = Σliner + Σ(flute × take_up_factor).
+export const materialLayerConfig = pgTable("material_layer_config", {
+  id: serial("id").primaryKey(),
+  materialCardId: integer("material_card_id").notNull().references(() => materialCards.id, { onDelete: "cascade" }),
+  layerIndex: integer("layer_index").notNull(),
+  role: varchar("role", { length: 10 }).notNull(),  // 'liner' | 'flute'
+  gsm: numericMoney("gsm").notNull(),
+  fluteType: varchar("flute_type", { length: 2 }),  // A/B/C/E (flute only)
+  takeUpFactor: numericMoney("take_up_factor"),     // owner-edited per material (nullable by design)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (t) => [
+  index("idx_material_layer_config_card").on(t.materialCardId),
+]);
 
 export const insertMaterialCardSchema = createInsertSchema(materialCards, {
   kod: z.string().min(1, "Kod kerak"),
