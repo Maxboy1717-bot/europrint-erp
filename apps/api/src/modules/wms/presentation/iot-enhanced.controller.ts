@@ -32,6 +32,8 @@ import { IotEnhancedService } from '../application/iot-enhanced.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const IOT_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'production_manager', 'ERP_MANAGER'];
 const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager', 'ERP_MANAGER'];
@@ -121,12 +123,15 @@ export class IotEnhancedController {
     return unwrapOrThrow(await this.svc.calculateBom(safeInt(id, 0)));
   }
 
-  // P3-26: orders listing for the IoT-enhanced module isn't yet wired.
-  @ApiOperation({ summary: 'Get orders' })
+  @ApiOperation({ summary: 'Get production orders for IoT-enhanced monitoring' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('orders')
-  async getOrders() {
-    return notImplemented('GET /iot-enhanced/orders');
+  async getOrders(@Query('limit') limit?: string) {
+    const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
+    const r = await db.execute(sql`
+      SELECT * FROM production_orders ORDER BY created_at DESC LIMIT ${lim}
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 }

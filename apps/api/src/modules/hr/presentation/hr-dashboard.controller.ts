@@ -252,13 +252,23 @@ export class HrDashboardController {
   }
 
   @Get('ai-interview/session')
-  getAiInterviewSession() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getAiInterviewSession() {
+    const r = await db.execute(sql`
+      SELECT id, candidate_id, vacancy_id, interview_type, language, current_stage, status, created_at
+      FROM ai_interview_sessions ORDER BY created_at DESC LIMIT 50
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('ai-interview/session/:id/review')
-  getAiInterviewSessionReview(@Param('id') _id: string) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getAiInterviewSessionReview(@Param('id') id: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM ai_interview_sessions WHERE id=${parseInt(id, 10)} LIMIT 1
+    `);
+    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
+    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    return { data: row };
   }
 
   @Get('documents/employee')

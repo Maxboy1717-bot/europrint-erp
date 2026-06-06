@@ -33,6 +33,9 @@ import { HrCompatAService } from '../application/hr-compat-a.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 import {
   Hr360ReviewSchema, Hr360ReviewDto,
   HrConflictReportSchema, HrConflictReportDto,
@@ -239,14 +242,23 @@ export class HrCompatAController {
   }
 
   @Patch('hrc-tests/tool-test/questions/:id')
-  async updateTestQuestion(@Param('id') _id: string, @Body() body: unknown) {
-    TestQuestionUpdateSchema.parse(body);
-    return notImplemented('PATCH /hr/hrc-tests/tool-test/questions/:id');
+  async updateTestQuestion(@Param('id') id: string, @Body() body: unknown) {
+    const dto = TestQuestionUpdateSchema.parse(body);
+    await db.execute(sql`
+      UPDATE test_questions SET
+        question_text = COALESCE(${dto.question ?? null}, question_text),
+        question_type = COALESCE(${dto.category ?? null}, question_type),
+        weight        = COALESCE(${dto.weight  ?? null}, weight)
+      WHERE id=${parseInt(id, 10)}
+    `);
+    return { id, updated: true };
   }
 
   @Delete('hrc-tests/tool-test/questions/:id')
-  async deleteTestQuestion(@Param('id') _id: string) {
-    return notImplemented('DELETE /hr/hrc-tests/tool-test/questions/:id');
+  @HttpCode(HttpStatus.OK)
+  async deleteTestQuestion(@Param('id') id: string) {
+    await db.execute(sql`DELETE FROM test_questions WHERE id=${parseInt(id, 10)}`);
+    return { id, deleted: true };
   }
 
   @Get('hrc-tests/employee/:employeeId/results')
@@ -309,8 +321,19 @@ export class HrCompatAController {
   }
 
   @Post('hrc-tests/tool-test/questions')
+  @HttpCode(HttpStatus.CREATED)
   async createHrcTestQuestion(@Body() body: unknown) {
-    HrcQuestionSchema.parse(body);
-    return notImplemented('POST /hr/hrc-tests/tool-test/questions');
+    const dto = HrcQuestionSchema.parse(body);
+    const r = await db.execute(sql`
+      INSERT INTO test_questions
+        (test_id, question_text, question_type, options, weight, sort_order, created_at)
+      VALUES
+        (0, ${dto.question ?? ''}, ${dto.category ?? 'text'},
+         ${dto.answers ? JSON.stringify(dto.answers) : '[]'}::jsonb,
+         ${dto.weight ?? 1}, 0, NOW())
+      RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 }
