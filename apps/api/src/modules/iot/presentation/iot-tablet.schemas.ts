@@ -58,6 +58,38 @@ export const WorkerScheduleQuerySchema = z.object({
   to: z.string().max(30).optional(),
 }).passthrough();
 
+export const DefectReportSchema = z.object({
+  defectCount: z.coerce.number().int().min(0).default(1),
+  eventType: z.string().max(50).default('defect'),
+  reasonCode: z.string().max(100).optional(),
+  reasonDescription: z.string().max(1000).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+export const InlineQcSchema = z.object({
+  sampleSize: z.coerce.number().int().min(1).default(1),
+  defectCount: z.coerce.number().int().min(0).default(0),
+  passRate: z.coerce.number().int().min(0).max(100).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+export const HandoverSchema = z.object({
+  department: z.string().max(200).default('unknown'),
+  handoverDate: z.string().max(50).optional(),
+  machineStatus: z.string().max(1000).optional(),
+  pendingTasks: z.string().max(2000).optional(),
+  qualityIssues: z.string().max(2000).optional(),
+  safetyNotes: z.string().max(2000).optional(),
+  materialStatus: z.string().max(1000).optional(),
+  handedOverBy: z.coerce.number().int().min(0).default(0),
+  receivedBy: z.coerce.number().int().optional(),
+  status: z.string().max(50).default('pending'),
+}).passthrough();
+
+export const MaterialKitScanSchema = z.object({
+  scannedBy: z.coerce.number().int().optional(),
+}).passthrough();
+
 export const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
 
 /**

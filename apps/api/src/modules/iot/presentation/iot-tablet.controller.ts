@@ -2,12 +2,12 @@
  * @module iot-tablet.controller
  * @description NestJS controller for IoT tablet/PWA + production-session passthrough endpoints.
  *   Wave 11 P1 (2026-05-18): five endpoints are now implemented against IotTabletService —
- *   login, sos-alert, equipment, orders, worker-schedule. The rest are P3-26 stubs that
- *   return HTTP 501 until the real services are wired (tablet PWA shows a "coming soon"
- *   empty state in the meantime).
+ *   login, sos-alert, equipment, orders, worker-schedule.
+ *   Category-C Phase-1 (2026-06-06): production-sessions CRUD, inline-qc, defect report,
+ *   shift-handover, material-kit scan — all wired to real DB tables.
  *
- *   Zod schemas + role constants live in `iot-tablet.schemas.ts` to keep this
- *   file under the 300-line cap (Rule 16).
+ *   DDL-GATE (needs new table): crew, evaluation, material-return.
+ *   Zod schemas + role constants live in `iot-tablet.schemas.ts` (Rule 16).
  */
 
 import {
@@ -28,6 +28,8 @@ import { TabletTokenGuard } from '@common/guards/tablet-token.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Public } from '@common/decorators/public.decorator';
 import { unwrapOrThrow } from '@common/http-result';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { IotTabletService } from '../application/iot-tablet.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
@@ -39,9 +41,15 @@ import {
   TabletEquipmentQuerySchema,
   TabletOrdersQuerySchema,
   WorkerScheduleQuerySchema,
+  DefectReportSchema,
+  InlineQcSchema,
+  HandoverSchema,
+  MaterialKitScanSchema,
   IOT_READ,
   coerceWorkerId,
 } from './iot-tablet.schemas';
+
+type Rows = { rows?: unknown[] };
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -52,8 +60,6 @@ export class IotTabletController {
   constructor(private readonly tabletSvc: IotTabletService) {}
 
   // -- Tablet PWA endpoints ----------------------------------------------------
-  // Wave 11 P1: orders, equipment, worker-schedule, login, sos-alert are LIVE.
-  // The rest (sessions, shift, handover) remain P3-26 stubs.
 
   @ApiOperation({ summary: 'Get tablet orders' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -91,22 +97,51 @@ export class IotTabletController {
     );
   }
 
-  @ApiOperation({ summary: 'Get tablet shift' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiOperation({ summary: 'Get today shift handovers for tablet' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('tablet/shift') @Roles(...IOT_READ)
-  async getTabletShift() { return notImplemented('GET /iot/tablet/shift'); }
+  async getTabletShift() {
+    const r = await db.execute(sql`
+      SELECT * FROM shift_handovers
+      WHERE handover_date >= to_char(NOW(), 'YYYY-MM-DD')
+      ORDER BY created_at DESC LIMIT 20
+    `);
+    const items = (r as Rows).rows ?? [];
+    return { items, total: items.length };
+  }
 
-  @ApiOperation({ summary: 'Get tablet sessions' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiOperation({ summary: 'Get tablet sessions (production_sessions)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('tablet/sessions') @Roles(...IOT_READ)
-  async getTabletSessions() { return notImplemented('GET /iot/tablet/sessions'); }
+  async getTabletSessions() {
+    const r = await db.execute(sql`
+      SELECT * FROM production_sessions WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 50
+    `);
+    const items = (r as Rows).rows ?? [];
+    return { items, total: items.length };
+  }
 
-  @ApiOperation({ summary: 'Create tablet session' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiOperation({ summary: 'Create tablet session (production_sessions)' })
+  @ApiResponse({ status: 201, description: 'OK' })
   @Post('tablet/sessions') @Roles(...IOT_READ)
   async createTabletSession(@Body() body: unknown) {
-    TabletSessionSchema.parse(body);
-    return notImplemented('POST /iot/tablet/sessions');
+    const dto = TabletSessionSchema.parse(body ?? {});
+    const workerId = dto.workerId ? Number(dto.workerId) : 0;
+    const r = await db.execute(sql`
+      INSERT INTO production_sessions (
+        session_number, production_order_id, equipment_id, worker_id, status,
+        target_quantity, actual_quantity, defect_quantity,
+        running_time_seconds, stopped_time_seconds,
+        started_at, created_at, updated_at
+      ) VALUES (
+        'SES-' || extract(epoch from now())::bigint,
+        0, 0, ${workerId}, 'pending',
+        0, 0, 0, 0, 0,
+        ${dto.startedAt ?? null}, NOW(), NOW()
+      ) RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Tablet login' })
@@ -128,8 +163,7 @@ export class IotTabletController {
   async tabletSosAlert(@Body() body: unknown) {
     const dto = TabletSosAlertSchema.parse(body ?? {});
     // workerId=0 means "anonymous panic press"; we still log + insert so the
-    // safety button cannot fail closed. The downstream listener uses the
-    // event payload, which carries the alert id even when worker is unknown.
+    // safety button cannot fail closed.
     return unwrapOrThrow(
       await this.tabletSvc.raiseSosAlert({
         workerId: coerceWorkerId(dto.workerId),
@@ -142,89 +176,180 @@ export class IotTabletController {
     );
   }
 
-  @ApiOperation({ summary: 'Tablet handover' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiOperation({ summary: 'Tablet shift handover (INSERT shift_handovers)' })
+  @ApiResponse({ status: 201, description: 'OK' })
   @Post('tablet/handover') @Roles(...IOT_READ)
   async tabletHandover(@Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/tablet/handover');
+    const dto = HandoverSchema.parse(body ?? {});
+    const today = new Date().toISOString().slice(0, 10);
+    const r = await db.execute(sql`
+      INSERT INTO shift_handovers (
+        handover_date, department, machine_status, pending_tasks,
+        quality_issues, safety_notes, material_status,
+        handed_over_by, received_by, status, created_at
+      ) VALUES (
+        ${dto.handoverDate ?? today},
+        ${dto.department},
+        ${dto.machineStatus ?? null},
+        ${dto.pendingTasks ?? null},
+        ${dto.qualityIssues ?? null},
+        ${dto.safetyNotes ?? null},
+        ${dto.materialStatus ?? null},
+        ${dto.handedOverBy},
+        ${dto.receivedBy ?? null},
+        ${dto.status},
+        NOW()
+      ) RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   // -- Material kit scan endpoints ---------------------------------------------
-  @ApiOperation({ summary: 'Scan material kit item' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+
+  @ApiOperation({ summary: 'Scan material kit item (POST)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Post('material-kit-items/:id/scan') @Roles(...IOT_READ)
-  async scanMaterialKitItem(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/material-kit-items/:id/scan');
+  async scanMaterialKitItem(@Param('id') id: string, @Body() body: unknown) {
+    const dto = MaterialKitScanSchema.parse(body ?? {});
+    await db.execute(sql`
+      UPDATE material_kit_items
+      SET is_scanned=true, scanned_at=NOW(), scanned_by=${dto.scannedBy ?? null}
+      WHERE id=${parseInt(id, 10)}
+    `);
+    return { id: parseInt(id, 10), scanned: true };
   }
 
-  @ApiOperation({ summary: 'Patch scan material kit item' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiOperation({ summary: 'Scan material kit item (PATCH)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Patch('material-kit-items/:id/scan') @Roles(...IOT_READ)
-  async patchScanMaterialKitItem(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('PATCH /iot/material-kit-items/:id/scan');
+  async patchScanMaterialKitItem(@Param('id') id: string, @Body() body: unknown) {
+    const dto = MaterialKitScanSchema.parse(body ?? {});
+    await db.execute(sql`
+      UPDATE material_kit_items
+      SET is_scanned=true, scanned_at=NOW(), scanned_by=${dto.scannedBy ?? null}
+      WHERE id=${parseInt(id, 10)}
+    `);
+    return { id: parseInt(id, 10), scanned: true };
   }
 
   // -- Production-sessions endpoints -------------------------------------------
   // Note: list (GET) is already served by general-legacy-b.controller.ts at
   //       @Get('iot/production-sessions'). Fastify rejects duplicate GET
   //       declarations, so we keep only POST/Sub-routes here.
+
   @ApiOperation({ summary: 'Create production session' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 201, description: 'OK' })
   @Post('production-sessions') @Roles(...IOT_READ)
   async createProductionSession(@Body() body: unknown) {
-    ProductionSessionSchema.parse(body);
-    return notImplemented('POST /iot/production-sessions');
+    const dto = ProductionSessionSchema.parse(body ?? {});
+    const r = await db.execute(sql`
+      INSERT INTO production_sessions (
+        session_number, production_order_id, equipment_id, worker_id, status,
+        target_quantity, actual_quantity, defect_quantity,
+        running_time_seconds, stopped_time_seconds,
+        order_id, machine_id, shift_id, created_at, updated_at
+      ) VALUES (
+        'SES-' || extract(epoch from now())::bigint,
+        ${dto.orderId ? Number(dto.orderId) : 0},
+        0, 0, 'pending', 0, 0, 0, 0, 0,
+        ${dto.orderId ? Number(dto.orderId) : null},
+        ${dto.machineId ? Number(dto.machineId) : null},
+        ${dto.shiftId ? Number(dto.shiftId) : null},
+        NOW(), NOW()
+      ) RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Get production session crew' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 501, description: 'DDL-GATE: no session_crew table yet' })
   @Get('production-sessions/:id/crew') @Roles(...IOT_READ)
   async getProductionSessionCrew(@Param('id') _id: string) {
     return notImplemented('GET /iot/production-sessions/:id/crew');
   }
+
   @ApiOperation({ summary: 'Start production session' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Post('production-sessions/:id/start') @Roles(...IOT_READ)
-  async startProductionSession(@Param('id') _id: string, @Body() body: unknown) {
+  async startProductionSession(@Param('id') id: string, @Body() body: unknown) {
     IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/start');
+    await db.execute(sql`
+      UPDATE production_sessions
+      SET status='running', started_at=COALESCE(started_at, NOW()), updated_at=NOW()
+      WHERE id=${parseInt(id, 10)}
+    `);
+    return { id: parseInt(id, 10), status: 'running' };
   }
+
   @ApiOperation({ summary: 'Stop production session' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Post('production-sessions/:id/stop') @Roles(...IOT_READ)
-  async stopProductionSession(@Param('id') _id: string, @Body() body: unknown) {
+  async stopProductionSession(@Param('id') id: string, @Body() body: unknown) {
     IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/stop');
+    await db.execute(sql`
+      UPDATE production_sessions
+      SET status='stopped', ended_at=COALESCE(ended_at, NOW()), updated_at=NOW()
+      WHERE id=${parseInt(id, 10)}
+    `);
+    return { id: parseInt(id, 10), status: 'stopped' };
   }
-  @ApiOperation({ summary: 'Report production defect' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+
+  @ApiOperation({ summary: 'Report production defect (updates session + inserts downtime_event)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Post('production-sessions/:id/defect') @Roles(...IOT_READ)
-  async reportProductionDefect(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/defect');
+  async reportProductionDefect(@Param('id') id: string, @Body() body: unknown) {
+    const dto = DefectReportSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+    await db.execute(sql`
+      UPDATE production_sessions
+      SET defect_quantity = defect_quantity + ${dto.defectCount}, updated_at=NOW()
+      WHERE id=${sessionId}
+    `);
+    await db.execute(sql`
+      INSERT INTO downtime_events (
+        session_id, event_type, started_at,
+        reason_code, reason_description, is_planned, notes, created_at
+      ) VALUES (
+        ${sessionId}, ${dto.eventType}, NOW(),
+        ${dto.reasonCode ?? null}, ${dto.reasonDescription ?? null},
+        false, ${dto.notes ?? null}, NOW()
+      )
+    `);
+    return { sessionId, defectCount: dto.defectCount, reported: true };
   }
+
   @ApiOperation({ summary: 'Submit production evaluation' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 501, description: 'DDL-GATE: production_evaluations table needed' })
   @Post('production-sessions/:id/evaluation') @Roles(...IOT_READ)
   async submitProductionEvaluation(@Param('id') _id: string, @Body() body: unknown) {
     IotPassthroughSchema.parse(body ?? {});
     return notImplemented('POST /iot/production-sessions/:id/evaluation');
   }
+
   @ApiOperation({ summary: 'Submit material return' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 501, description: 'DDL-GATE: material_returns table needed' })
   @Post('production-sessions/:id/material-return') @Roles(...IOT_READ)
   async submitMaterialReturn(@Param('id') _id: string, @Body() body: unknown) {
     IotPassthroughSchema.parse(body ?? {});
     return notImplemented('POST /iot/production-sessions/:id/material-return');
   }
-  @ApiOperation({ summary: 'Submit inline qc' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+
+  @ApiOperation({ summary: 'Submit inline QC check' })
+  @ApiResponse({ status: 201, description: 'OK' })
   @Post('production-sessions/:id/inline-qc') @Roles(...IOT_READ)
-  async submitInlineQc(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/inline-qc');
+  async submitInlineQc(@Param('id') id: string, @Body() body: unknown) {
+    const dto = InlineQcSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+    const passRate = dto.passRate ??
+      (dto.sampleSize > 0 ? Math.round((dto.sampleSize - dto.defectCount) / dto.sampleSize * 100) : 100);
+    const r = await db.execute(sql`
+      INSERT INTO inline_qc_checks (session_id, sample_size, defect_count, pass_rate, notes, checked_at)
+      VALUES (${sessionId}, ${dto.sampleSize}, ${dto.defectCount}, ${passRate}, ${dto.notes ?? null}, NOW())
+      RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 }
