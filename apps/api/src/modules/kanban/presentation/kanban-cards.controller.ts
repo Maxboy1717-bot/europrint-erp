@@ -25,6 +25,14 @@ import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
+type Rows = { rows?: unknown[] };
+const ChatFileSchema = z.object({
+  fileName: z.string().max(500).default('file'),
+  fileUrl: z.string().max(2000).default(''),
+  fileSize: z.coerce.number().int().optional(),
+  mimeType: z.string().max(100).optional(),
+}).passthrough();
+
 const KanbanCardCreateSchema = z.object({
   boardId: z.string().optional(),
   columnId: z.string().optional(),
@@ -181,16 +189,37 @@ export class KanbanCardsController {
   }
 
   @Get('chat-messages/:id/files')
-  @ApiOperation({ summary: 'Chat xabari fayllari' })
-  async getChatMessageFiles(@Param('id') _id: string) {
-    return notImplemented('GET /kanban/chat-messages/:id/files');
+  @ApiOperation({ summary: 'Chat xabari fayllari (task_chat_message_files)' })
+  async getChatMessageFiles(@Param('id') id: string) {
+    const messageId = parseInt(id, 10);
+    const r = await db.execute(sql`
+      SELECT * FROM task_chat_message_files
+      WHERE message_id = ${messageId}
+      ORDER BY id ASC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Post('chat-messages/:id/files')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Chat xabariga fayl biriktirish (stub)' })
-  async attachChatMessageFile(@Param('id') _id: string) {
-    return notImplemented('POST /kanban/chat-messages/:id/files');
+  @ApiOperation({ summary: 'Chat xabariga fayl biriktirish (task_chat_message_files)' })
+  async attachChatMessageFile(@Param('id') id: string, @Body() body: unknown) {
+    const dto = ChatFileSchema.parse(body ?? {});
+    const messageId = parseInt(id, 10);
+    const r = await db.execute(sql`
+      INSERT INTO task_chat_message_files (message_id, file_name, file_url, file_size, mime_type, created_at)
+      VALUES (
+        ${messageId},
+        ${dto.fileName},
+        ${dto.fileUrl},
+        ${dto.fileSize ?? null},
+        ${dto.mimeType ?? null},
+        NOW()
+      ) RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   // --- Tags -----------------------------------------------------------------

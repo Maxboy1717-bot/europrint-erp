@@ -33,6 +33,8 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }  from '@common/guards/roles.guard';
 import { Roles }       from '@common/decorators/roles.decorator';
 import { unwrapOrBadRequest } from '@common/http-result';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { KanbanExtService } from '../application/kanban-ext.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
@@ -229,10 +231,16 @@ export class KanbanReportsController {
 
   // --- Projects -------------------------------------------------------------
 
-  // P3-26: projects list service not yet wired; return 501.
   @Get('projects')
-  @ApiOperation({ summary: 'Loyihalar ro\'yxati' })
-  getProjects() {
-    return notImplemented('GET /kanban/projects');
+  @ApiOperation({ summary: 'Loyihalar ro\'yxati (task_projects)' })
+  async getProjects(@Query('status') status?: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM task_projects
+      WHERE deleted_at IS NULL
+      ${status ? sql`AND status = ${status}` : sql``}
+      ORDER BY created_at DESC
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 }
