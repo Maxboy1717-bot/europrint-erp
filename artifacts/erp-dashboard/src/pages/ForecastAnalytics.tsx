@@ -92,9 +92,9 @@ export default function ForecastAnalytics() {
   const [result, setResult]     = useState<AnyResult>(null);
 
   const refreshForecastMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/forecasts/run", {}),
+    mutationFn: () => apiRequest("POST", "/api/sales/forecast/generate", {}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/forecasts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/forecast"] });
       toast({ title: "Prognoz yangilandi", description: "Barcha prognozlar muvaffaqiyatli yangilandi." });
     },
     onError: (e: Error) => toast({ title: t('error'), description: e.message, variant: "destructive" }),
