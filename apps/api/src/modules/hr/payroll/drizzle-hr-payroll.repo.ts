@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { salaryHistory, payrollPeriods, payrollRows } from '@europrint/schemas';
-import { gl_journal_entries } from '@shared/db';
-import { eq, and, count, desc, gte, lte } from 'drizzle-orm';
+import { sql, eq, and, count, desc, gte, lte } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IHrPayrollRepository } from './i-hr-payroll.repo';
 
@@ -94,19 +93,26 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
         this.logger.log(`GL journal: period #${periodId} → 0 lines, skipping insert`);
         return Ok({ inserted: 0 });
       }
-      await db.insert(gl_journal_entries).values(
-        safeLines.map(line => ({
-          document_type: 'payroll',
-          document_id:   periodId,
-          debit_account: line.account,
-          credit_account: line.account,
-          amount:        String(line.debit !== 0 ? line.debit : line.credit),
-          currency:      'UZS',
-          description:   line.memo ?? 'Payroll GL entry',
-          posted_at:     new Date(),
-          created_at:    new Date(),
-        }))
-      );
+      for (const line of safeLines) {
+        const lineAmount = line.debit !== 0 ? line.debit : line.credit;
+        await runQuery(sql`
+          INSERT INTO entries
+            (entry_date, document_type, document_id, amount, description,
+             debit_account, credit_account, currency, posted_at, created_at)
+          VALUES (
+            TO_CHAR(NOW(), 'YYYY-MM-DD'),
+            'payroll',
+            ${periodId},
+            ${String(lineAmount)},
+            ${line.memo ?? 'Payroll GL entry'},
+            ${line.account},
+            ${line.account},
+            'UZS',
+            NOW(),
+            NOW()
+          )
+        `);
+      }
       this.logger.log(`GL journal: period #${periodId} → ${safeLines.length} lines inserted`);
       return Ok({ inserted: safeLines.length });
     } catch (e: unknown) {

@@ -147,22 +147,21 @@ export class FinancePlanningRepo {
   async fetchFinancialRatiosGl(period: string): Promise<FinancialRatiosGl | null> {
     const r = await runQuery<RawRow>(sql`
       SELECT
-        COALESCE(SUM(CASE WHEN a.account_type = 'REVENUE'  THEN jl.credit - jl.debit ELSE 0 END), 0) AS revenue,
-        COALESCE(SUM(CASE WHEN a.account_type = 'COGS'     THEN jl.debit - jl.credit ELSE 0 END), 0) AS cogs,
-        COALESCE(SUM(CASE WHEN a.account_type = 'OPEX'     THEN jl.debit - jl.credit ELSE 0 END), 0) AS opex,
-        COALESCE(SUM(CASE WHEN a.account_type = 'INTEREST' THEN jl.debit - jl.credit ELSE 0 END), 0) AS interest_exp,
-        COALESCE(SUM(CASE WHEN a.account_type = 'ASSET'    THEN jl.debit - jl.credit ELSE 0 END), 0) AS total_assets,
-        COALESCE(SUM(CASE WHEN a.account_type = 'EQUITY'   THEN jl.credit - jl.debit ELSE 0 END), 0) AS total_equity,
-        COALESCE(SUM(CASE WHEN a.account_type = 'DEBT'     THEN jl.credit - jl.debit ELSE 0 END), 0) AS total_debt,
-        COALESCE(SUM(CASE WHEN a.code LIKE '2%'            THEN jl.debit - jl.credit ELSE 0 END), 0) AS current_assets,
-        COALESCE(SUM(CASE WHEN a.code LIKE '3%'            THEN jl.credit - jl.debit ELSE 0 END), 0) AS current_liabilities,
-        COALESCE(SUM(CASE WHEN a.code LIKE '14%'           THEN jl.debit - jl.credit ELSE 0 END), 0) AS inventory,
-        COALESCE(SUM(CASE WHEN a.code LIKE '11%'           THEN jl.debit - jl.credit ELSE 0 END), 0) AS cash,
-        COALESCE(SUM(CASE WHEN a.account_type = 'RETAINED' THEN jl.credit - jl.debit ELSE 0 END), 0) AS retained_earnings
-      FROM gl_journal_lines jl
-      JOIN gl_accounts a ON a.id = jl.account_id
-      JOIN gl_journal_entries e ON e.id = jl.entry_id
-      WHERE TO_CHAR(e.entry_date, 'YYYY-MM') = ${period}
+        COALESCE(SUM(CASE WHEN a.account_type = 'revenue'   THEN e.amount ELSE 0 END), 0) AS revenue,
+        COALESCE(SUM(CASE WHEN a.account_code LIKE '6%'     THEN e.amount ELSE 0 END), 0) AS cogs,
+        COALESCE(SUM(CASE WHEN a.account_code LIKE '7%'     THEN e.amount ELSE 0 END), 0) AS opex,
+        COALESCE(SUM(CASE WHEN a.account_code LIKE '9%'     THEN e.amount ELSE 0 END), 0) AS interest_exp,
+        COALESCE(SUM(CASE WHEN a.account_type = 'asset'     THEN e.amount ELSE 0 END), 0) AS total_assets,
+        COALESCE(SUM(CASE WHEN a.account_type = 'equity'    THEN e.amount ELSE 0 END), 0) AS total_equity,
+        COALESCE(SUM(CASE WHEN a.account_type = 'liability' THEN e.amount ELSE 0 END), 0) AS total_debt,
+        COALESCE(SUM(CASE WHEN a.account_code LIKE '2%'     THEN e.amount ELSE 0 END), 0) AS current_assets,
+        COALESCE(SUM(CASE WHEN a.account_code LIKE '3%'     THEN e.amount ELSE 0 END), 0) AS current_liabilities,
+        COALESCE(SUM(CASE WHEN a.account_code LIKE '14%'    THEN e.amount ELSE 0 END), 0) AS inventory,
+        COALESCE(SUM(CASE WHEN a.account_code LIKE '11%'    THEN e.amount ELSE 0 END), 0) AS cash,
+        COALESCE(SUM(CASE WHEN a.account_type = 'equity'    THEN e.amount ELSE 0 END), 0) AS retained_earnings
+      FROM entries e
+      LEFT JOIN accounts a ON a.id = e.debit_account_id
+      WHERE e.entry_date LIKE ${period + '-%'}
     `);
     const g = r.rows[0];
     if (!g) return null;

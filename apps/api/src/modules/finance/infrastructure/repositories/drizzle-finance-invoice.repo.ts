@@ -198,17 +198,21 @@ export class FinanceInvoiceRepo {
 
   async saveGlEntry(entry: FinanceRow): Promise<Result<FinanceRow>> {
     try {
+      const entryDate = entry['entry_date']
+        ? sql`TO_CHAR(${entry['entry_date']}::timestamptz AT TIME ZONE 'UTC', 'YYYY-MM-DD')`
+        : sql`TO_CHAR(NOW(), 'YYYY-MM-DD')`;
+      const amount = entry['total_debit'] ?? entry['total_credit'] ?? 0;
       const r = await runQuery<FinanceRow>(sql`
-        INSERT INTO gl_journal_entries
-          (source_type, source_id, entry_date, total_debit, total_credit, notes, created_at)
+        INSERT INTO entries
+          (entry_date, document_type, amount, description, debit_account, currency, created_at)
         VALUES
-          (${entry['source_type'] ?? null},
-           ${entry['source_id'] ?? null},
-           ${entry['entry_date'] ?? new Date()},
-           ${entry['total_debit'] ?? 0},
-           ${entry['total_credit'] ?? 0},
+          (${entryDate},
+           ${entry['source_type'] ?? 'other'},
+           ${amount},
            ${entry['notes'] ?? null},
-           ${entry['created_at'] ?? new Date()})
+           ${entry['source_type'] ?? null},
+           'UZS',
+           COALESCE(${entry['created_at'] ?? null}::timestamptz, NOW()))
         RETURNING *
       `);
       return Ok((r.rows[0] ?? entry) as FinanceRow);
@@ -224,23 +228,20 @@ export class FinanceInvoiceRepo {
       const limit = filters.limit || 10;
       const offset = (page - 1) * limit;
 
-      const accountCond = filters.account ? sql`AND gje.source_id = ${filters.account}` : sql``;
-      const fromCond    = filters.from    ? sql`AND gje.entry_date >= ${filters.from}`   : sql``;
-      const toCond      = filters.to      ? sql`AND gje.entry_date <= ${filters.to}`     : sql``;
+      const accountCond = filters.account ? sql`AND e.description ILIKE ${`%${filters.account}%`}` : sql``;
+      const fromCond    = filters.from    ? sql`AND e.entry_date >= TO_CHAR(${filters.from}::date, 'YYYY-MM-DD')` : sql``;
+      const toCond      = filters.to      ? sql`AND e.entry_date <= TO_CHAR(${filters.to}::date, 'YYYY-MM-DD')`   : sql``;
 
       const [countResult, itemsResult] = await Promise.all([
         runQuery<{ count: number }>(sql`
-          SELECT COUNT(*)::int AS count FROM gl_journal_entries gje
+          SELECT COUNT(*)::int AS count FROM entries e
           WHERE 1=1 ${accountCond} ${fromCond} ${toCond}
         `),
         runQuery<FinanceRow>(sql`
-          SELECT gje.*,
-                 COALESCE(json_agg(json_build_object('account_id', gjl.account_id, 'debit', gjl.debit, 'credit', gjl.credit)) FILTER (WHERE gjl.id IS NOT NULL), '[]') AS lines
-          FROM gl_journal_entries gje
-          LEFT JOIN gl_journal_lines gjl ON gjl.entry_id = gje.id
+          SELECT e.*, '[]'::json AS lines
+          FROM entries e
           WHERE 1=1 ${accountCond} ${fromCond} ${toCond}
-          GROUP BY gje.id
-          ORDER BY gje.created_at DESC LIMIT ${limit} OFFSET ${offset}
+          ORDER BY e.created_at DESC LIMIT ${limit} OFFSET ${offset}
         `),
       ]);
       return { ok: true, data: { items: itemsResult.rows as FinanceRow[], total: Number(countResult.rows[0]?.count ?? 0) } };

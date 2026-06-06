@@ -56,18 +56,20 @@ export class FinanceReportRepo {
       const [receiptRows, expenseRows, payrollRows] = await Promise.all([
         // Inflows: paid invoices filtered by payment_date (actual cash receipt date)
         exec(sql`SELECT COALESCE(SUM(total_amount), 0) AS total FROM fi_invoices WHERE status = 'paid' AND payment_date BETWEEN ${from} AND ${to}`),
-        // Outflows part 1: expense GL entries — exclude payroll/advance source_type to
+        // Outflows part 1: expense GL entries — exclude payroll/advance document_type to
         // avoid double-counting with the payroll_advances query below.
         exec(sql`
-          SELECT COALESCE(SUM(total_debit), 0) AS total
-          FROM gl_journal_entries
-          WHERE entry_date BETWEEN ${from} AND ${to}
-            AND source_type NOT IN ('payroll', 'advance', 'salary')
+          SELECT COALESCE(SUM(e.amount), 0) AS total
+          FROM entries e
+          LEFT JOIN accounts a ON a.id = e.debit_account_id
+          WHERE e.entry_date BETWEEN TO_CHAR(${from}::date, 'YYYY-MM-DD')
+                                  AND TO_CHAR(${to}::date, 'YYYY-MM-DD')
+            AND e.document_type NOT IN ('payroll', 'advance', 'salary')
             AND (
-              account_type = 'expense'
-              OR account_code LIKE '6%'
-              OR account_code LIKE '7%'
-              OR source_type IN ('expense', 'procurement')
+              a.account_type = 'expense'
+              OR a.account_code LIKE '6%'
+              OR a.account_code LIKE '7%'
+              OR e.document_type IN ('expense', 'procurement')
             )
         `),
         // Outflows part 2: payroll advances (actual cash paid out)

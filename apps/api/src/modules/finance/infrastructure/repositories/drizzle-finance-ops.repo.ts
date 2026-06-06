@@ -187,12 +187,12 @@ export class FinanceOpsRepo {
 
   async getOtherReceipts(startDate: Date, endDate: Date): Promise<number> {
     try {
-      // Restrict to non-operating income sources only — sales receipts are counted separately via getSalesReceipts
       const r = await runQuery<{ total: string }>(sql`
-        SELECT COALESCE(SUM(total_debit), 0) AS total
-        FROM gl_journal_entries
-        WHERE entry_date BETWEEN ${startDate} AND ${endDate}
-          AND source_type IN ('other_income', 'interest', 'misc', 'rental_income')
+        SELECT COALESCE(SUM(amount), 0) AS total
+        FROM entries
+        WHERE entry_date BETWEEN TO_CHAR(${startDate}::date, 'YYYY-MM-DD')
+                              AND TO_CHAR(${endDate}::date, 'YYYY-MM-DD')
+          AND document_type IN ('other_income', 'interest', 'misc', 'rental_income')
       `);
       return parseFloat(r.rows[0]?.total || '0');
     } catch { return 0; }
@@ -200,26 +200,27 @@ export class FinanceOpsRepo {
 
   async getExpenses(startDate: Date, endDate: Date): Promise<number> {
     try {
-      // Filter to expense accounts only (account codes 6xx or 7xx, or account_type = 'expense')
       const r = await runQuery<{ total: string }>(sql`
-        SELECT COALESCE(SUM(total_debit), 0) AS total
-        FROM gl_journal_entries
-        WHERE entry_date BETWEEN ${startDate} AND ${endDate}
+        SELECT COALESCE(SUM(e.amount), 0) AS total
+        FROM entries e
+        LEFT JOIN accounts a ON a.id = e.debit_account_id
+        WHERE e.entry_date BETWEEN TO_CHAR(${startDate}::date, 'YYYY-MM-DD')
+                                AND TO_CHAR(${endDate}::date, 'YYYY-MM-DD')
           AND (
-            account_type = 'expense'
-            OR account_code LIKE '6%'
-            OR account_code LIKE '7%'
+            a.account_type = 'expense'
+            OR a.account_code LIKE '6%'
+            OR a.account_code LIKE '7%'
           )
       `);
       return parseFloat(r.rows[0]?.total || '0');
     } catch {
-      // Fallback: filter by source_type if account columns don't exist
       try {
         const r2 = await runQuery<{ total: string }>(sql`
-          SELECT COALESCE(SUM(total_debit), 0) AS total
-          FROM gl_journal_entries
-          WHERE entry_date BETWEEN ${startDate} AND ${endDate}
-            AND source_type IN ('expense', 'payroll', 'procurement')
+          SELECT COALESCE(SUM(amount), 0) AS total
+          FROM entries
+          WHERE entry_date BETWEEN TO_CHAR(${startDate}::date, 'YYYY-MM-DD')
+                                AND TO_CHAR(${endDate}::date, 'YYYY-MM-DD')
+            AND document_type IN ('expense', 'payroll', 'procurement')
         `);
         return parseFloat(r2.rows[0]?.total || '0');
       } catch { return 0; }
@@ -228,7 +229,6 @@ export class FinanceOpsRepo {
 
   async getPayrollDisbursements(startDate: Date, endDate: Date): Promise<number> {
     try {
-      // Sum net_salary from payroll records paid within the date range
       const r = await runQuery<{ total: string }>(sql`
         SELECT COALESCE(SUM(net_salary), 0) AS total
         FROM payroll
@@ -236,7 +236,6 @@ export class FinanceOpsRepo {
       `);
       return parseFloat(r.rows[0]?.total || '0');
     } catch {
-      // Fallback: approved advances within date range
       try {
         const r2 = await runQuery<{ total: string }>(sql`
           SELECT COALESCE(SUM(amount), 0) AS total
@@ -251,12 +250,12 @@ export class FinanceOpsRepo {
 
   async getOtherDisbursements(startDate: Date, endDate: Date): Promise<number> {
     try {
-      // Exclude payroll and sales credit entries (those are counted separately)
       const r = await runQuery<{ total: string }>(sql`
-        SELECT COALESCE(SUM(total_credit), 0) AS total
-        FROM gl_journal_entries
-        WHERE entry_date BETWEEN ${startDate} AND ${endDate}
-          AND source_type NOT IN ('payroll', 'sales')
+        SELECT COALESCE(SUM(amount), 0) AS total
+        FROM entries
+        WHERE entry_date BETWEEN TO_CHAR(${startDate}::date, 'YYYY-MM-DD')
+                              AND TO_CHAR(${endDate}::date, 'YYYY-MM-DD')
+          AND document_type NOT IN ('payroll', 'sale')
       `);
       return parseFloat(r.rows[0]?.total || '0');
     } catch { return 0; }

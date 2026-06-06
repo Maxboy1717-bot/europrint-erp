@@ -78,14 +78,13 @@ export class FinanceBudgetRepo {
       // Exact equality (LOWER(...) = LOWER(...)) is used instead of ILIKE to avoid unreliable
       // partial-text matching on free-text accounting fields.
       const agg = await exec(sql`
-        SELECT bl.id AS line_id, COALESCE(SUM(gje.amount), 0) AS actual
+        SELECT bl.id AS line_id, COALESCE(SUM(e.amount), 0) AS actual
         FROM budget_lines bl
-        LEFT JOIN gl_journal_entries gje ON (
-          LOWER(gje.description) = LOWER(bl.category)
-          OR gje.account_code = bl.account_code
-        )
+        LEFT JOIN entries e ON LOWER(e.description) = LOWER(bl.category)
         WHERE bl.budget_id = ${budgetId}
-          AND (gje.entry_date BETWEEN ${yearStart} AND ${yearEnd} OR gje.id IS NULL)
+          AND (e.entry_date BETWEEN TO_CHAR(${yearStart}::date, 'YYYY-MM-DD')
+                                AND TO_CHAR(${yearEnd}::date, 'YYYY-MM-DD')
+               OR e.id IS NULL)
         GROUP BY bl.id
       `);
 

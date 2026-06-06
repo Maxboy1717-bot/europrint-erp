@@ -67,6 +67,7 @@ export const entries = pgTable("entries", {
   referenceType: varchar("reference_type", { length: 30 }),
   postedBy: integer("posted_by"),
   postedAt: timestamp("posted_at"),
+  currency: varchar("currency", { length: 10 }).notNull().default('UZS'),
 }, (t) => [
   check("entries_amount_chk", sql`${t.amount} > 0`),
 ]);
