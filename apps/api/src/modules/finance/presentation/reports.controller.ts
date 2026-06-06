@@ -13,6 +13,10 @@ import { FinanceReportsService } from '../reports/reports.service';
 import { unwrapOrInternal } from '@common/http-result';
 import { TashkentTimeService } from '@common/time';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+
+type Rows = { rows?: unknown[] };
 
 @ApiThrottle()
 @ApiTags('Reports')
@@ -67,14 +71,31 @@ export class ReportsController {
     return unwrapOrInternal(await this.svc.findKpiDashboard());
   }
 
-  // P3-26: production-efficiency aggregation isn't yet wired. Return 501 so
-  // the report page can show an honest "coming soon" instead of zero values.
-  @ApiOperation({ summary: 'Get production efficiency' })
+  @ApiOperation({ summary: 'Get production efficiency (oee_records aggregate)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('production-efficiency')
-  getProductionEfficiency() {
-    return notImplemented('GET /reports/production-efficiency');
+  async getProductionEfficiency(@Query('from') from?: string, @Query('to') to?: string) {
+    const r = await db.execute(sql`
+      SELECT
+        machine_id,
+        COUNT(*)::int                         AS records,
+        ROUND(AVG(oee)::numeric, 2)          AS avg_oee,
+        ROUND(AVG(availability)::numeric, 2) AS avg_availability,
+        ROUND(AVG(performance)::numeric, 2)  AS avg_performance,
+        ROUND(AVG(quality)::numeric, 2)      AS avg_quality,
+        SUM(downtime_minutes)::int           AS total_downtime_min,
+        SUM(total_count)::int                AS total_count,
+        SUM(good_count)::int                 AS good_count,
+        MAX(date)                            AS latest_date
+      FROM oee_records
+      WHERE TRUE
+      ${from ? sql`AND date >= ${from}` : sql``}
+      ${to ? sql`AND date <= ${to}` : sql``}
+      GROUP BY machine_id
+      ORDER BY avg_oee DESC NULLS LAST
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   /**

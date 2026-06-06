@@ -30,6 +30,10 @@ import { safeInt } from '../../hr/common/db-rows';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+
+type Rows = { rows?: unknown[] };
 const PROD_ROLES = ['super_admin', 'director', 'production_manager', 'operator', 'technologist'];
 
 @ApiThrottle()
@@ -72,12 +76,22 @@ export class ProductionReportsController {
     return r;
   }
 
-  // P3-26: orders aggregation for production reports isn't wired yet.
-  @ApiOperation({ summary: 'Get orders' })
+  @ApiOperation({ summary: 'Get production orders (production_orders)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('orders')
-  async getOrders() {
-    return notImplemented('GET /production-reports/orders');
+  async getOrders(
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
+    const r = await db.execute(sql`
+      SELECT * FROM production_orders
+      WHERE deleted_at IS NULL
+      ${status ? sql`AND status = ${status}` : sql``}
+      ORDER BY created_at DESC
+      LIMIT ${lim}
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 }
