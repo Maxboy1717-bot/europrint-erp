@@ -40,7 +40,10 @@
 |---|---|---|---|---|
 | 3.1 | **IoT anomaly handler** | `AnomalyDetectedHandler` faqat log qilardi (no-op) → `iot_alerts` ga yozadi (sensor_id=Number(deviceId) FK-siz, alert_type, severity='high', message, value, is_resolved=false). Endi IoT dashboard'da ko'rinadi, operator hal qiladi. | anomaliya → dashboard active-alert query qaytaradi (#high_value/high/150); cleanup 0 | `e230be56` |
 
-⚠️ Keyingi (BOSQICH 3): CC MANAGER_OF_SENDER (manager_id 0/30 — #1 blok), 13+ zero-listener event (string→class), outbox→domain_events.
+| 3.2 | **CC MANAGER_OF_SENDER** (#1 — eng yuqori leverage, manager_id BLOK edi) | `resolveManagerOfSender` `employees.manager_id` (0/30 NULL) → har doim throw. ⭐ Daraxt-yurish fallback: manager_id yo'q bo'lsa, `org_departments.parent_id` bo'ylab YUQORIGA yur → eng yaqin `head_user_id` = menejer (recursive CTE, depth<20). 18/142 bo'limda head bor → ko'pchilik hal bo'ladi, manager_id data'siz. | child-dept(head yo'q)→yuqoriga→parent head; cleanup 0 | `43af0c9e` |
+| 3.3 | **outbox→domain_events** (memory flag) | ⭐ verify-don't-trust: BREAK EMAS. `OutboxPublisher` REAL (har 10s fetchUnpublished→emit→markPublished); `domain_events=0` = shunchaki bo'sh data (jonli order yo'q). Round-trip isbotlandi. KOD O'ZGARMADI. | write→fetch ushlaydi→markPublished→qayta-emit yo'q; cleanup 0 | (proof only) |
+
+⚠️ Keyingi (BOSQICH 3): 13+ zero-listener event = asosan bildirishnoma (Q-40 — listener qo'shish soxta ish). Qolgan haqiqiy progress = egasi katalog-data (BOM/products/cost) + 2 biznes-qaror (proration/COGS).
 
 ## ⭐ Naqsh (verify-don't-trust): har leverage-fix yashirin drift tutdi
 Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: string-id→integer ustun, VIEW→base-jadval NOT NULL, uuid╳integer, omitted-columns. Ya'ni "yashil skelet" nafaqat ulanmagan — DB-yozuv yo'llari ham drifted edi. Har biri DB-proof bilan tutildi va tuzatildi.
