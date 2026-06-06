@@ -91,11 +91,11 @@ export class PpMpsService {
 
   private async loadCommittedDemand(): Promise<Map<string, Map<number, number>>> {
     // Errors propagate: a failed committed-demand query produces incorrect ATP; fail fast.
-    // Live schema: sales_order_items uses sales_order_id / material_id / order_quantity
-    // (integer join to sales_orders.id); sales_orders.delivery_date is timestamptz, so cast
-    // straight to ::date (NULL falls back to created_at via COALESCE).
+    // Order line-items bind to product_id (finished goods the customer orders, owner 2026-06-05);
+    // COALESCE falls back to legacy material_id for any pre-existing rows. Integer join to
+    // sales_orders.id; delivery_date is timestamptz so cast ::date (NULL falls back to created_at).
     const rows = await runQuery(sql`
-      SELECT soi.material_id::text AS product_id,
+      SELECT COALESCE(soi.product_id, soi.material_id)::text AS product_id,
              COALESCE(soi.order_quantity, 0)::numeric AS qty,
              EXTRACT(WEEK FROM COALESCE(so.delivery_date::date, so.created_at::date))::integer AS week_num
       FROM sales_order_items soi
