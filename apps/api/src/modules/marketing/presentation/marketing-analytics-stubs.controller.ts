@@ -75,6 +75,30 @@ const TelegramWebhookSchema = z.object({
 
 const StubBodySchema = z.record(z.unknown());
 
+const PrActivitySchema = z.object({
+  type:         z.string().max(100).optional(),
+  title:        z.string().max(500).optional(),
+  media:        z.string().max(200).optional(),
+  media_name:   z.string().max(200).optional(),
+  date:         z.string().optional(),
+  publish_date: z.string().optional(),
+  url:          z.string().max(1000).optional(),
+  reach:        z.number().int().optional(),
+  sentiment:    z.string().max(50).optional(),
+  status:       z.string().max(50).optional(),
+  description:  z.string().optional(),
+  notes:        z.string().optional(),
+}).passthrough();
+
+const InboxReplySchema = z.object({
+  message: z.string().max(5000).optional(),
+  content: z.string().max(5000).optional(),
+}).passthrough();
+
+const InboxStatusSchema = z.object({
+  status: z.string().max(50).optional(),
+}).passthrough();
+
 @ApiTags('§17 Marketing Analytics')
 @ApiBearerAuth()
 @ApiThrottle()
@@ -165,19 +189,59 @@ export class MarketingAnalyticsStubsController {
   }
 
   @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'director')
-  async getInboxConversations() { return stub('GET /marketing/inbox/conversations'); }
+  async getInboxConversations(@Query('platform') platform?: string, @Query('status') status?: string) {
+    const data = rows(await db.execute(sql`
+      SELECT * FROM social_conversations
+      WHERE (${platform ?? null} IS NULL OR platform=${platform ?? null})
+        AND (${status ?? null} IS NULL OR status=${status ?? null})
+      ORDER BY last_message_at DESC NULLS LAST
+      LIMIT 50
+    `));
+    return { items: data, total: data.length };
+  }
 
   @Get('inbox/conversations/:id/messages') @Roles('super_admin', 'marketing_manager', 'director')
-  async getConversationMessages(@Param('id') _id: string) { return stub('GET /marketing/inbox/conversations/:id/messages'); }
+  async getConversationMessages(@Param('id') id: string) {
+    const convId = parseInt(id, 10);
+    const data = rows(await db.execute(sql`
+      SELECT * FROM social_messages
+      WHERE conversation_id=${isNaN(convId) ? 0 : convId}
+      ORDER BY sent_at ASC
+      LIMIT 200
+    `));
+    return { items: data, total: data.length };
+  }
 
   @Post('inbox/conversations/:id/reply') @Roles('super_admin', 'marketing_manager', 'director')
-  async replyToConversation(@Param('id') _id: string, @Body() _body: unknown) { return stub('POST /marketing/inbox/conversations/:id/reply'); }
+  @HttpCode(HttpStatus.CREATED)
+  async replyToConversation(@Param('id') id: string, @Body() body: unknown) {
+    const dto = InboxReplySchema.parse(body ?? {});
+    const convId = parseInt(id, 10);
+    const msgId = `MSG-${Date.now()}`;
+    const row = first(await db.execute(sql`
+      INSERT INTO social_messages (id, conversation_id, direction, text, is_read, is_ai, sent_at)
+      VALUES (${msgId}, ${isNaN(convId) ? 0 : convId}, 'outbound',
+              ${String(dto.message ?? dto.content ?? '')}, true, false, NOW())
+      RETURNING *
+    `));
+    await db.execute(sql`
+      UPDATE social_conversations SET last_message=${String(dto.message ?? dto.content ?? '')},
+        last_message_at=NOW(), updated_at=NOW() WHERE id=${id}
+    `);
+    return { data: row };
+  }
 
   @Post('inbox/ai-reply/:id') @Roles('super_admin', 'marketing_manager', 'director')
   async aiReplyToConversation(@Param('id') _id: string) { return stub('POST /marketing/inbox/ai-reply/:id'); }
 
   @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'director')
-  async updateConversationStatus(@Param('id') _id: string, @Body() _body: unknown) { return stub('PATCH /marketing/inbox/conversations/:id/status'); }
+  async updateConversationStatus(@Param('id') id: string, @Body() body: unknown) {
+    const dto = InboxStatusSchema.parse(body ?? {});
+    await db.execute(sql`
+      UPDATE social_conversations SET status=${dto.status ?? 'open'}, updated_at=NOW() WHERE id=${id}
+    `);
+    return { id, updated: true };
+  }
 
   // -- A/B tests (marketing_ab_tests EXISTS) ---------------------------------
   @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'director')
@@ -272,15 +336,68 @@ export class MarketingAnalyticsStubsController {
     return { data: { exhibition_id: id, qr_code: code } };
   }
 
-  // -- PR (no table — DDL-NEEDED) -------------------------------------------
+  // -- PR (pr_activities table) ---------------------------------------------
   @Get('pr') @Roles('super_admin', 'marketing_manager', 'director')
-  async getPr() { return stub('GET /marketing/pr'); }
+  async getPr(@Query('limit') limit?: string) {
+    const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
+    const data = rows(await db.execute(sql`
+      SELECT * FROM pr_activities WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ${lim}
+    `));
+    return { items: data, total: data.length };
+  }
 
   @Get('pr/:id') @Roles('super_admin', 'marketing_manager', 'director')
-  async getPrById(@Param('id') _id: string) { return stub('GET /marketing/pr/:id'); }
+  async getPrById(@Param('id') id: string) {
+    const row = first(await db.execute(sql`
+      SELECT * FROM pr_activities WHERE id=${id} AND deleted_at IS NULL LIMIT 1
+    `));
+    if (!row) throw new NotFoundException(`PR activity #${id} not found`);
+    return { data: row };
+  }
 
   @Post('pr') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
-  async createPr(@Body() _body: unknown) { return stub('POST /marketing/pr'); }
+  async createPr(@Body() body: unknown) {
+    const dto = PrActivitySchema.parse(body ?? {});
+    const id = `PR-${Date.now()}`;
+    const row = first(await db.execute(sql`
+      INSERT INTO pr_activities (id, type, title, media, media_name, date, publish_date, url, reach, sentiment, status, description, notes, created_at, updated_at)
+      VALUES (${id}, ${dto.type ?? 'press_release'}, ${dto.title ?? 'Untitled'}, ${dto.media ?? null}, ${dto.media_name ?? null},
+              ${dto.date ?? null}::timestamp, ${dto.publish_date ?? null}::timestamp,
+              ${dto.url ?? null}, ${dto.reach ?? 0}, ${dto.sentiment ?? null},
+              ${dto.status ?? 'planned'}, ${dto.description ?? null}, ${dto.notes ?? null},
+              NOW(), NOW())
+      RETURNING *
+    `));
+    return { data: row };
+  }
+
+  @Patch('pr/:id') @Roles('super_admin', 'marketing_manager')
+  async updatePr(@Param('id') id: string, @Body() body: unknown) {
+    const dto = PrActivitySchema.parse(body ?? {});
+    await db.execute(sql`
+      UPDATE pr_activities SET
+        type        = COALESCE(${dto.type        ?? null}, type),
+        title       = COALESCE(${dto.title       ?? null}, title),
+        media       = COALESCE(${dto.media       ?? null}, media),
+        media_name  = COALESCE(${dto.media_name  ?? null}, media_name),
+        status      = COALESCE(${dto.status      ?? null}, status),
+        description = COALESCE(${dto.description ?? null}, description),
+        notes       = COALESCE(${dto.notes       ?? null}, notes),
+        reach       = COALESCE(${dto.reach !== undefined ? dto.reach : null}, reach),
+        sentiment   = COALESCE(${dto.sentiment   ?? null}, sentiment),
+        updated_at  = NOW()
+      WHERE id=${id} AND deleted_at IS NULL
+    `);
+    return { id, updated: true };
+  }
+
+  @Delete('pr/:id') @Roles('super_admin', 'marketing_manager')
+  async deletePr(@Param('id') id: string) {
+    await db.execute(sql`
+      UPDATE pr_activities SET deleted_at=NOW() WHERE id=${id} AND deleted_at IS NULL
+    `);
+    return { id, deleted: true };
+  }
 
   // -- Settings (marketing_settings + social_api_configs EXIST) -------------
   @Get('settings') @Roles('super_admin', 'marketing_manager')
