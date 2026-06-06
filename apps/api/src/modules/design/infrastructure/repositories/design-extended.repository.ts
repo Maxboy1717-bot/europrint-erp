@@ -78,9 +78,20 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
   async generateDesigns(orderId: string, prompt: string, count: number): Promise<Result<{ designs: unknown[]; generationTime: number }>> {
     return safeCall(async () => {
       const start = Date.now();
-      const designs = Array.from({ length: count }, (_, i) => ({ id: `design-${orderId.slice(-4)}-v${i+1}-${Date.now()}`, title: `AI Dizayn v${i+1}`, slogan: prompt ? `Variant ${i+1}: ${prompt.slice(0,30)}` : `Variant ${i+1}`, version: i + 1, orderId, status: 'ai_generated', imageUrl: null }));
-      await db.update(design_orders).set({ status: 'ai_generated' as 'pending', updated_at: _time.now() }).where(eq(design_orders.id, parseInt(orderId, 10)));
-      return { designs, generationTime: Math.round((Date.now() - start) / 100) / 10 };
+      const oid = parseInt(orderId, 10);
+      // Was a green-lie: built Date.now() ids in memory, never saved. Persist each variant to `designs`.
+      const saved: Row[] = [];
+      for (let i = 1; i <= count; i++) {
+        const designNumber = `DSN-${oid}-v${i}-${Date.now()}`;
+        const slogan = prompt ? `Variant ${i}: ${prompt.slice(0, 60)}` : `Variant ${i}`;
+        const rows = await exec(sql`
+          INSERT INTO designs (order_id, design_number, version, title, slogan, status)
+          VALUES (${oid}, ${designNumber}, ${i}, ${`AI Dizayn v${i}`}, ${slogan}, 'ai_generated')
+          RETURNING id, order_id AS "orderId", design_number AS "designNumber", version, title, slogan, status, image_url AS "imageUrl"`);
+        if (rows[0]) saved.push(rows[0]);
+      }
+      await db.update(design_orders).set({ status: 'ai_generated' as 'pending', updated_at: _time.now() }).where(eq(design_orders.id, oid));
+      return { designs: saved, generationTime: Math.round((Date.now() - start) / 100) / 10 };
     }, 'DB_ERROR');
   }
 
@@ -93,10 +104,22 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
   }
 
   async approveDesign(designId: string): Promise<Result<{ id: string; status: string }>> {
-    return Ok({ id: designId, status: 'approved' });
+    // Was an echo (no DB). Persist the approval to `designs`.
+    return safeCall(async () => {
+      const rows = await exec(sql`UPDATE designs SET status='approved' WHERE id=${parseInt(designId, 10)} RETURNING id, status`);
+      const r = rows[0];
+      if (!r) throw new Error('Design topilmadi');
+      return { id: String(r.id), status: String(r.status) };
+    }, 'DB_ERROR');
   }
 
   async rejectDesign(designId: string, reason: string): Promise<Result<{ id: string; status: string; reason: string }>> {
-    return Ok({ id: designId, status: 'rejected', reason });
+    // Was an echo (no DB). Persist the rejection + reason to `designs`.
+    return safeCall(async () => {
+      const rows = await exec(sql`UPDATE designs SET status='rejected', rejection_reason=${reason} WHERE id=${parseInt(designId, 10)} RETURNING id, status, rejection_reason`);
+      const r = rows[0];
+      if (!r) throw new Error('Design topilmadi');
+      return { id: String(r.id), status: String(r.status), reason: String(r.rejection_reason ?? reason) };
+    }, 'DB_ERROR');
   }
 }
