@@ -159,3 +159,53 @@ Emitlanadi lekin `@OnEvent` tinglovchi **YO'Q** (9 ta):
 | `pos.requisition.cancelled` | `pos-requisition-workflow.service.ts:228` | Talab bekor qilinganda | Owner: notification kerakmi? |
 
 **Tahlil:** Bular "fire-and-forget" — emit qilinadi, ammo hech kim tinglomaydi. Hozircha runtime xatosi yo'q (EventEmitter2 tinglovchisiz emit'ni ignor qiladi). Lekin `pos.requisition.*` va `payroll.*` ehtimol notification/GL trigger talab qiladi. **Owner qaror qabul qilsin.**
+
+---
+
+## KATEGORIYA D — UZILISHLAR: YAKUNIY NATIJA (2026-06-06 sprint)
+
+### ✅ D1 — FE→BE URL drift TUZATILDI (30 → 9 qoldi)
+
+Ikki sessiyada **21+ drift TUZATILDI**:
+
+| Commit | Modul | Nima tuzatildi |
+|---|---|---|
+| `26b14a22` | HR, CRM | employee-corp/:id GET, adaptation PATCH, ai-interview review PATCH, crm/custom-fields/:entityType GET |
+| `b0e5501` | LMS, Chat | micro-modules POST, progress/summary GET, certificates DELETE, modules DELETE, chat rooms PATCH+archive+unpin |
+| `77bc0832` | WMS | warehouses DELETE softdelete, notify-vacancies stub, movements POST |
+| `595c0977` | HR | employees/:id/files POST (employee_files), hr/employees/:id/documents GET/POST/DELETE |
+| `95765961` | Marketing | marketing/nps POST (gen_random_uuid id fix: id=varchar NN no default) |
+| `2ec77e54` | MM | mm/vendor-performance POST, material-balance/movements POST |
+| `eb39bd78` | SD | sd/payments/:id PUT (uuid id fix: sd_payments.id=uuid not int) |
+| `52144dfd` | CRM | crm/ai/extended/auto-tasks/create alias (array route) |
+| `81524ad8` | Marketing | marketing/ai-assistant POST alias |
+
+### 🟡 D2 — 9 ta qolgan drift tasnifi
+
+| Route | Tasnif | Sabab |
+|---|---|---|
+| `DELETE /api/cameras/*` | **[INTENTIONAL]** | Camera: `@Controller('camera')` + `@Delete('cameras/:id')` → `/api/camera/cameras/:id`, FE `/api/cameras/:id`. Prefix dizayn tanlov. |
+| `POST /api/camera-settings` | **[INTENTIONAL]** | Camera module prefix mismatch (yuqorida) |
+| `POST /api/cameras` | **[INTENTIONAL]** | Camera module prefix mismatch (yuqorida) |
+| `POST /api/crm/ai/extended/auto-tasks/create` | **[FALSE POSITIVE]** | `@Post(['auto-tasks','ai/extended/auto-tasks/create'])` wired (commit `52144dfd`). Checker array route parslamaydi. |
+| `POST /api/crm/ai/extended/chat/respond` | **[FALSE POSITIVE]** | `@Post(['chat','ai/extended/chat/respond'])` wired. Checker array parslamaydi. |
+| `POST /api/crm/ai/extended/churn/analyze` | **[FALSE POSITIVE]** | `@Post(['ai/churn','ai/extended/churn/analyze'])` wired. |
+| `POST /api/crm/ai/extended/voice/analyze-call` | **[FALSE POSITIVE]** | `@Post(['ai/voice','ai/extended/voice/analyze-call'])` wired. |
+| `POST /api/forecasts/run` | **[OWNER DECISION]** | `forecasts` controller mavjud emas. `ForecastAnalytics.tsx:95` chaqiradi. Yangi modul kerak yoki FE URL o'zgartirilishi kerak. |
+| `POST /api/sd/forecast/generate` | **[OWNER DECISION]** | BE: `@Controller('sales')` + `@Post('forecast/generate')` → `/api/sales/forecast/generate`. FE: `/api/sd/forecast/generate`. Prefix drift `sales` vs `sd`. Fix: `sales.controller.ts` → `@Controller(['sales','sd'])` yoki FE URL tuzatish. |
+
+### 🔴 D3 — Owner qarorlari kerak
+
+**Zero-listener events (9 ta)** — yuqoridagi D.ZL jadval, harakat aniqlanmagan:
+- `hr.attendance.recorded`, `hr.payroll.calculated`, `payroll.period.closed`
+- `pos.gl.auto_posted`
+- `pos.requisition.*` (5 ta: submitted/approved/rejected/fulfilled/cancelled)
+
+**Orphan/two-worlds jadvallar** (DDL DROP taqiqlangan — owner qaror):
+- `orders` — **TASDIQLANDI TO'LIQ O'LIK**: kod ichida hech qanday `INSERT INTO orders` topilmadi. Xavfsiz DROP. (`sales_orders` kanonik).
+- `gl_journal_entries` — **IKKI DUNYO**: `drizzle-gl-posting.repo.ts`, `drizzle-finance-invoice.repo.ts`, `drizzle-hr-payroll.repo.ts` yozadi lekin `gl_entries` kanonik (transmission map). Owner: `gl_entries` ga migratsiya va eski repo metod almashtirish.
+- `gl_lines` — **IKKI DUNYO**: `queries-remaining-b.ts:210` yozadi lekin `gl_entries` kanonik. Bir xil qaror `gl_journal_entries` bilan.
+
+**Tovar qoldiqlari** (qolgan 2 ta DECISION item):
+- HR `gsd` → model aniqlanmagan
+- `forecasts/run` → yangi modul kerak
