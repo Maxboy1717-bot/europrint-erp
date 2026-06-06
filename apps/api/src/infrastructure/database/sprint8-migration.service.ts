@@ -37,9 +37,11 @@ export class Sprint8MigrationService implements OnApplicationBootstrap {
     this.seedWorkCentres().catch((e: unknown) =>
       this.logger.warn(`Sprint8 Phase A (work_centres) failed: ${String(e)}`),
     );
-    this.backfillManagerId().catch((e: unknown) =>
-      this.logger.warn(`Sprint8 Phase B (manager_id) failed: ${String(e)}`),
-    );
+    // Phase B (employees.manager_id backfill) — DISABLED at boot.
+    // Reason: data preconditions not met — no employee belongs to a department
+    // that has head_user_id set (0/30 would-update proven by audit 2026-06-06).
+    // Re-enable manually in Faza 3 after head_user_id data is populated.
+    // this.backfillManagerId().catch(...)
     this.seedInventoryPolicy().catch((e: unknown) =>
       this.logger.warn(`Sprint8 Phase C (inventory_policy) failed: ${String(e)}`),
     );
