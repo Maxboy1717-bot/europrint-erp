@@ -252,7 +252,7 @@ export default function EmployeeProfile() {
     },
     enabled: !!id
   });
-  const { data: payrollSummary } = useQuery<any | null>({ 
+  const { data: payrollSummary } = useQuery<{ totalSalary?: number; periodName?: string; [key: string]: unknown } | null>({
     queryKey: ['/api/employees', id, 'payroll-summary'],
     queryFn: async () => {
       try {
@@ -311,7 +311,7 @@ export default function EmployeeProfile() {
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimProfili")}</b></>}
         title={t("xodimProfili")}
       /></div>
-      <ProfileHeader employee={employee} abcData={abcData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} onEdit={() => setEditDialogOpen(true)} attendanceStats={attStats} attendanceData={attendanceData} />
+      <ProfileHeader employee={employee} abcData={abcData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary ?? undefined} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} onEdit={() => setEditDialogOpen(true)} attendanceStats={attStats} attendanceData={attendanceData} />
       {isAdminOrHrManager && (
         <Card className="border border-border shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> {t("kirishHuquqlari")}</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-9 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> {t("ornatilgan")}</Badge> : <Badge className="bg-red-50 text-[var(--ep-red)] text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> {t("ornatilmagan")}</Badge>}</div></CardContent></Card>
       )}

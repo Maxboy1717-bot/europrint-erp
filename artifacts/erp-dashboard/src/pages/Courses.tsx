@@ -232,7 +232,7 @@ export default function Courses() {
                   const courseToEdit = (Array.isArray(courses) ? courses : []).find(c => c.id === course.id);
                   if (courseToEdit) {
                     try {
-                      const fullCourse = (await apiRequest('GET', `/api/courses/${course.id}`)) as Record<string, any>;
+                      const fullCourse = (await apiRequest('GET', `/api/courses/${course.id}`)) as CourseForEdit;
                       setEditingCourse({
                         id: fullCourse.id,
                         code: fullCourse.code,

@@ -98,7 +98,7 @@ export default function AIInterviewPublicPage() {
       setMicReady(false);
       if (!token) return;
       try {
-        const data = (await apiRequest('POST', `/api/hr-v2/ai-interview/session/${token}/camera-rejected`)) as Record<string, any>;
+        const data = (await apiRequest('POST', `/api/hr-v2/ai-interview/session/${token}/camera-rejected`)) as { rejections?: number; cancelled?: boolean };
         const newCount = data.rejections ?? cameraRejections + 1;
         setCameraRejections(newCount);
         if (data.cancelled) {

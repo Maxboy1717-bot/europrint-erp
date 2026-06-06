@@ -45,7 +45,38 @@ export interface Vacancy {
   deadline_working_days?: number;
   is_urgent?: boolean;
   channels?: Record<string, { active: boolean; views?: number; applications?: number }> | null;
-  portret?: Record<string, any> | null;
+  portret?: {
+    main_purpose?: string;
+    problem_solved?: string;
+    reports_to?: string;
+    age_min?: number;
+    age_max?: number;
+    main_duties?: string;
+    expected_result?: string;
+    salary_min?: number | null;
+    salary_max?: number | null;
+    danger_candidate?: string;
+    probation_months?: number;
+    candidate_presentation?: {
+      sinov_maosh_min?: number;
+      sinov_maosh_max?: number;
+      kompaniya_taqdimoti?: string;
+      ish_tartibi?: string;
+      instrumentlar?: string;
+      guruh_javob?: string;
+      xizmat_safari?: string;
+      sinov_muddat?: string;
+      asosiy_maosh?: string;
+      martaba?: string;
+      tatil_kun?: string;
+      ish_rejimi?: string;
+      shartnoma_tur?: string;
+      sotsial_paket?: string;
+      oqutish?: string;
+      jalb_qiluvchi?: string;
+    } | null;
+    [key: string]: unknown;
+  } | null;
   tool_test_requirements?: { traits: Record<string, number>; iq_min?: number } | null;
 }
 

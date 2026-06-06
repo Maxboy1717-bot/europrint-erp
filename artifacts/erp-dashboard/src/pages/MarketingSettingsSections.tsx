@@ -27,7 +27,7 @@ export function TelegramWebhookActivation() {
     setIsActivating(true);
     try {
       const webhookUrl = `${window.location.origin}/api/marketing/webhook/telegram-customer`;
-      const data = (await apiRequest('POST', "/api/marketing/settings/setup-telegram-webhook", { webhookUrl })) as Record<string, any>;
+      const data = (await apiRequest('POST', "/api/marketing/settings/setup-telegram-webhook", { webhookUrl })) as { message?: string };
       toast({ title: "Muvaffaqiyat", description: String(data.message) || "Telegram webhook faollashtirildi" });
     } catch {
       toast({ title: "Xatolik", description: "Serverga ulanishda xatolik", variant: "destructive" });

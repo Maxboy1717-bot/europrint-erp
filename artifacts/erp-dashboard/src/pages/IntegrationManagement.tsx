@@ -17,7 +17,7 @@ import { queryClient } from "@/lib/queryClient";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
-const INTEGRATION_ICONS: Record<string, any> = {
+const INTEGRATION_ICONS: Record<string, typeof Zap> = {
   telegram: MessageSquare,
   openai: Brain,
   gemini: Brain,
@@ -78,7 +78,7 @@ function IntegrationCard({ intg }: { intg: IntegrationItem }) {
 
 export default function IntegrationManagement() {
   const { t } = useTranslation("common");
-  const { data: integrations, isLoading } = useQuery<any[]>({
+  const { data: integrations, isLoading } = useQuery<IntegrationItem[]>({
     queryKey: ["/api/system/integrations"],
     refetchInterval: 60000,
   });

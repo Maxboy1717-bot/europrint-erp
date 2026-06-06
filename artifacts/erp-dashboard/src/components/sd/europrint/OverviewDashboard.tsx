@@ -9,9 +9,21 @@ import { ShoppingCart, Package, Warehouse, Truck, AlertTriangle, DollarSign, Arr
 import { fmt, LEAD_STATUS_COLORS, LEAD_STATUS_LABELS } from "./types";
 
 import { useTranslation } from '@/lib/i18n';
+
+interface OverviewData {
+  newOrders?: { count?: number; amount?: number };
+  inProduction?: { count?: number; amount?: number };
+  inWarehouse?: { count?: number; amount?: number };
+  delivering?: { count?: number };
+  debitors?: { amount?: number; count?: number };
+  monthlyRevenue?: number;
+  monthlyCollected?: number;
+  leadFunnel?: Record<string, number>;
+}
+
 export function OverviewDashboard() {
   const { t } = useTranslation('common');
-  const { data: overview, isLoading } = useQuery<Record<string, any>>({
+  const { data: overview, isLoading } = useQuery<OverviewData>({
     queryKey: ["/api/sd/dashboard/overview"],
   });
 

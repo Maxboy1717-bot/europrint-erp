@@ -96,7 +96,7 @@ export function PrinterSettingsTab({ lang, t }: PrinterSettingsTabProps) {
     setTestingId(config.id);
     setTestResult(null);
     try {
-      const data = (await apiRequest('POST', `/api/v2/pos/printer-config/${config.id}/test`)) as Record<string, any>;
+      const data = (await apiRequest('POST', `/api/v2/pos/printer-config/${config.id}/test`)) as { success: boolean; message: string };
       setTestResult({ id: config.id, success: data.success, message: data.message });
     } catch {
       setTestResult({ id: config.id, success: false, message: lang === "uz" ? "Ulanib bo'lmadi" : "Не удалось подключиться" });
