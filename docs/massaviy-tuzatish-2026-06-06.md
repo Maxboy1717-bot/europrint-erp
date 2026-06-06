@@ -133,8 +133,29 @@
 ## KATEGORIYA D — UZILISHLAR
 | Item | Tavsif | Holat |
 |---|---|---|
-| `lms.certificate.issued` vs `_issued` event drift | 2 ta event name | **[TODO]** |
-| `lms.course.enrolled` vs `_assigned` event drift | 2 ta event name | **[TODO]** |
-| 13+ zero-listener events | classify each | **[TODO]** |
-| FE→BE drift: security/crm-ai-extended/employee-files | FE URL !== BE route | **[TODO]** |
+| `lms.certificate.issued` vs `_issued` event drift | 2 ta event name | ✅ TUZATILDI (8994d36c) |
+| `lms.course.enrolled` vs `_assigned` event drift | 2 ta event name | ✅ TUZATILDI (8994d36c) |
+| Zero-listener events — **9 ta** (tasniflandi) | ko'ring: D.ZL jadval | **[OWNER]** |
+| FE→BE drift security POST routes (visitors/incidents/ppe-checks) | 3 ta yo'q route | ✅ TUZATILDI (8994d36c) |
+| FE→BE drift marketing DELETE/PATCH (budget/calendar/exhibitions) | 5 ta yo'q route | ✅ TUZATILDI (d99ad62f) |
+| FE→BE drift HR employees PATCH | PUT bor edi, PATCH yo'q | ✅ TUZATILDI (932757a0) |
+| FE→BE drift qolgan (cameras/certificates/chat/modules/warehouses/...) | 25 ta | **[INTENTIONAL/GATED]** |
 | manager_id/head_user_id 30 NULL | data masalasi | **[DATA]** |
+
+### D.ZL — Zero-listener events tasnifi (2026-06-06)
+
+Emitlanadi lekin `@OnEvent` tinglovchi **YO'Q** (9 ta):
+
+| Event name | Emitter fayl | Turi | Harakat |
+|---|---|---|---|
+| `hr.attendance.recorded` | `record-attendance.handler.ts:48` | Davomad yozilganda | Owner: notification/WFM listener kerakmi? |
+| `hr.payroll.calculated` | `calculate-payroll.handler.ts:95` | Oylik hisoblaganda | Owner: journal/notification kerakmi? |
+| `payroll.period.closed` | `payroll.service.ts:93` | Davr yopilganda (har xodim) | Owner: GL posting kerakmi? |
+| `pos.gl.auto_posted` | `pos-gl-auto.listener.ts:108` | GL avtomatik yozilganda | `pos.gl.approved` bor — log yoki notification? |
+| `pos.requisition.submitted` | `pos-requisition-workflow.service.ts:57` | Talab yuborilganda | Owner: notification kerakmi? |
+| `pos.requisition.approved` | `pos-requisition-workflow.service.ts:88` | Talab tasdiqlanganda | Owner: notification kerakmi? |
+| `pos.requisition.rejected` | `pos-requisition-workflow.service.ts:116` | Talab rad etilganda | Owner: notification kerakmi? |
+| `pos.requisition.fulfilled` | `pos-requisition-workflow.service.ts:195` | Talab bajarilganda | Owner: stock-update trigger? |
+| `pos.requisition.cancelled` | `pos-requisition-workflow.service.ts:228` | Talab bekor qilinganda | Owner: notification kerakmi? |
+
+**Tahlil:** Bular "fire-and-forget" — emit qilinadi, ammo hech kim tinglomaydi. Hozircha runtime xatosi yo'q (EventEmitter2 tinglovchisiz emit'ni ignor qiladi). Lekin `pos.requisition.*` va `payroll.*` ehtimol notification/GL trigger talab qiladi. **Owner qaror qabul qilsin.**
