@@ -105,12 +105,12 @@ export default function SDSalesManagement() {
 
   const generateForecast = useMutation({
     mutationFn: () =>
-      apiRequest("POST", "/api/sd/forecast/generate", {
+      apiRequest("POST", "/api/sales/forecast/generate", {
         type: "monthly",
         period: new Date().toISOString().slice(0, 7),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sd/forecast"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/forecast"] });
       toast({
         title: tLabel("sd.forecast.created", "Prognoz yaratildi"),
         description: tLabel("sd.forecast.createdDesc", "AI prognoz muvaffaqiyatli yaratildi"),
