@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Post, Param, Body, UseGuards, UseInterceptors, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Post, Param, Body, HttpCode, HttpStatus, UseGuards, UseInterceptors, InternalServerErrorException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -18,6 +18,7 @@ import { CrostonService }                        from '../forecast/croston.servi
 import { EnsembleForecastService, EnsembleResult } from '../forecast/ensemble-forecast.service';
 import type { CrostonResult }                    from '../forecast/croston.service';
 import { ForecastPersistenceService }            from '../forecast/forecast-persistence.service';
+import { ForecastWeeklyJob }                     from '../forecast/forecast-weekly.job';
 
 const EmaBodyDto = z.object({
   series:  z.array(z.number()).min(2),
@@ -53,17 +54,27 @@ function weekPeriod(i: number): Date {
 @ApiTags('Forecast Extended')
 @ApiBearerAuth()
 @AiThrottle()
-@Controller('forecast')
+@Controller(['forecast', 'forecasts'])
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @UseInterceptors(AuditInterceptor)
 export class ForecastExtController {
   constructor(
-    private readonly forecastSvc:   ForecastService,
-    private readonly hwSvc:         HoltWintersService,
-    private readonly crostonSvc:    CrostonService,
-    private readonly ensembleSvc:   EnsembleForecastService,
-    private readonly persistenceSvc: ForecastPersistenceService,
+    private readonly forecastSvc:     ForecastService,
+    private readonly hwSvc:           HoltWintersService,
+    private readonly crostonSvc:      CrostonService,
+    private readonly ensembleSvc:     EnsembleForecastService,
+    private readonly persistenceSvc:  ForecastPersistenceService,
+    private readonly weeklyJob:       ForecastWeeklyJob,
   ) {}
+
+  @Post('run')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermission('forecast.ext:READ')
+  @ApiOperation({ summary: 'Trigger bulk weekly forecast re-run for all active materials' })
+  async runAll() {
+    await this.weeklyJob.scheduleForecastJobs();
+    return { ok: true, message: 'Forecast jobs enqueued' };
+  }
 
   @Post(':id/ema')
   @RequirePermission('forecast.ext:READ')
