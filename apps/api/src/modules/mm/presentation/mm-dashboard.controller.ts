@@ -31,6 +31,8 @@ import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { MmCreateFleetVehicleSchema, MmCreateFleetVehicleDto, MmCreateFuelLogSchema, MmCreateFuelLogDto } from '../dto/mm.dto';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const MM_READ = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director', 'purchasing_manager'];
 const MM_WRITE = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director'];
@@ -247,10 +249,28 @@ export class MmDashboardController {
   @ApiResponse({ status: 501, description: 'Not implemented — needs fi_payments table' })
   @Patch('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
   async patchPayVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    // Honest 501 (was a fake { success:true }): vendor_invoices has only `status` — no
-    // paid_amount/paid_at/payment_method — and the payment-ledger table `fi_payments` does not
-    // exist. Marking status='paid' without a payment record would be a NEW fake-success on a
-    // money path. Re-enable once fi_payments is added (DDL, owner-gated). See deferred-decisions.md.
     throw new HttpException("To'lov hali amalga oshirilmagan — fi_payments jadval qurilgach ishlaydi", HttpStatus.NOT_IMPLEMENTED);
+  }
+
+  @ApiOperation({ summary: 'Record vendor performance score' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @Post('vendor-performance')
+  @Roles(...MM_WRITE)
+  async createVendorPerformance(@Body() body: unknown) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      INSERT INTO vendor_performance (vendor_id, score, on_time_rate, quality_rate, period, created_at)
+      VALUES (
+        ${dto['vendor_id'] ?? dto['vendorId'] ?? null}::int,
+        ${Number(dto['score'] ?? 0)}::numeric,
+        ${Number(dto['on_time_rate'] ?? dto['onTimeRate'] ?? 0)}::numeric,
+        ${Number(dto['quality_rate'] ?? dto['qualityRate'] ?? 0)}::numeric,
+        ${dto['period'] ?? null}::text,
+        NOW()
+      )
+      RETURNING id, vendor_id, score
+    `);
+    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
+    return { message: 'Sotuvchi unumdorligi saqlandi', data: row };
   }
 }

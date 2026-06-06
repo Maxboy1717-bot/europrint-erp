@@ -3,7 +3,8 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Query, UseGuards , UseInterceptors} from '@nestjs/common';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -128,6 +129,30 @@ export class MaterialBalanceController {
     `);
     const items = ((r as { rows?: unknown[] }).rows) ?? [];
     return { items, total: items.length };
+  }
+
+  @Post('movements')
+  @HttpCode(HttpStatus.CREATED)
+  async createMovement(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      INSERT INTO material_movements
+        (session_id, order_id, material_id, material_name, movement_type, quantity, unit, performed_by, scanned_at)
+      VALUES (
+        ${dto['session_id'] ?? dto['sessionId'] ?? null}::int,
+        ${dto['order_id']   ?? dto['orderId']   ?? null}::int,
+        ${dto['material_id'] ?? dto['materialId'] ?? null}::int,
+        ${String(dto['material_name'] ?? dto['materialName'] ?? '')}::text,
+        ${String(dto['movement_type'] ?? dto['type'] ?? 'in')}::text,
+        ${Number(dto['quantity'] ?? 1)}::numeric,
+        ${String(dto['unit'] ?? 'шт')}::text,
+        ${user?.id ?? 0}::int,
+        NOW()
+      )
+      RETURNING id
+    `);
+    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
+    return { message: 'Harakat qayd etildi', data: row };
   }
 
   @Get(':materialId/reconciliation')
