@@ -95,8 +95,23 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
     }, 'DB_ERROR');
   }
 
-  async verifyDesign(_designId: string, checkTypes: string[]): Promise<Result<{ checks: Record<string,unknown>; overallScore: number }>> {
-    return Ok({ checks: Object.fromEntries((Array.isArray(checkTypes) ? checkTypes : []).map(ct => [ct, { passed: Math.random() > 0.2, score: Math.round(70 + Math.random()*30), issues: [] }])), overallScore: Math.round(75 + Math.random()*20) });
+  async verifyDesign(designId: string, checkTypes: string[]): Promise<Result<{ checks: Record<string,unknown>; overallScore: number }>> {
+    // Real check: design must exist and be in 'approved' or 'ai_generated' status to pass.
+    // Deterministic — no Math.random(): pass=true if approved, score=100; else pass=false, score=60.
+    return safeCall(async () => {
+      const did = parseInt(designId, 10);
+      const rows = await exec(sql`
+        SELECT status FROM designs WHERE id = ${isNaN(did) ? 0 : did} LIMIT 1
+      `);
+      const status = rows[0] ? String(rows[0]['status'] ?? '') : '';
+      const passed  = status === 'approved' || status === 'ai_generated';
+      const score   = passed ? 100 : 60;
+      const issues  = passed ? [] : [`Dizayn "${status}" holatida — tekshiruv o'tolmadi`];
+      const types   = Array.isArray(checkTypes) ? checkTypes : [];
+      const checks  = Object.fromEntries(types.map(ct => [ct, { passed, score, issues }]));
+      const overall = types.length > 0 ? score : 0;
+      return { checks, overallScore: overall };
+    }, 'DB_ERROR');
   }
 
   async generateMockup(designId: string, productType: string): Promise<Result<{ mockupUrl: string; designId: string; productType: string }>> {

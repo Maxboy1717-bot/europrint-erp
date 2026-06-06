@@ -36,6 +36,17 @@ import { MaintenanceService } from '../maintenance/maintenance.service';
 import { unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 
+const CreateCanteenLogSchema = z.object({
+  log_date:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  meal_name:        z.string().min(1).max(200),
+  portion_count:    z.number().int().nonnegative().optional(),
+  cost_per_portion: z.number().nonnegative().optional(),
+  total_cost:       z.number().nonnegative().optional(),
+  employees_served: z.number().int().nonnegative().optional(),
+});
+
+const UpdateCanteenLogSchema = CreateCanteenLogSchema.partial();
+
 const CreateEquipmentSchema = z.object({
   name: z.string().max(200).optional(),
   code: z.string().max(50).optional(),
@@ -234,5 +245,38 @@ export class MroController {
    const dto = UpdateEquipmentStatusSchema.parse(body);
    const status = String(dto.status ?? 'active');
    return unwrapOrInternal(await this.maintenanceSvc.updateEquipmentStatus(id, status));
+ }
+
+ // ─── Oshxona / Ovqatlanish jurnali ─────────────────────────────────────────
+
+ @ApiOperation({ summary: 'List canteen logs (oshxona kunlik jurnali)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('canteen/logs')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async listCanteenLogs(@Query('date') date?: string) {
+   return unwrapOrInternal(await this.maintenanceSvc.listCanteenLogs(date));
+ }
+
+ @ApiOperation({ summary: 'Create canteen log (oshxona yozuvi qo\'shish)' })
+ @ApiResponse({ status: 201, description: 'Created' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @Post('canteen/logs')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async createCanteenLog(@Body() body: unknown) {
+   const dto = CreateCanteenLogSchema.parse(body);
+   return unwrapOrInternal(await this.maintenanceSvc.createCanteenLog(dto as Record<string, unknown>));
+ }
+
+ @ApiOperation({ summary: 'Update canteen log (oshxona yozuvini yangilash)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @Patch('canteen/logs/:id')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
+ async updateCanteenLog(
+   @Param('id', ParseIntPipe) id: number,
+   @Body() body: unknown,
+ ) {
+   const dto = UpdateCanteenLogSchema.parse(body);
+   return unwrapOrInternal(await this.maintenanceSvc.updateCanteenLog(id, dto as Record<string, unknown>));
  }
 }

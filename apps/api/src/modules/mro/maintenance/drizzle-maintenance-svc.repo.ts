@@ -207,6 +207,57 @@ export class DrizzleMaintenanceSvcRepository implements IMaintenanceSvcRepositor
     } catch (e: unknown) { return Err((e as Error)?.message || 'Oshxona statistikasi topilmadi'); }
   }
 
+  async listCanteenLogs(logDate?: string): Promise<Result<Record<string, unknown>[]>> {
+    try {
+      const rows = logDate
+        ? await db.select().from(mro_canteen_logs)
+            .where(eq(mro_canteen_logs.log_date, logDate))
+            .orderBy(desc(mro_canteen_logs.created_at))
+        : await db.select().from(mro_canteen_logs)
+            .orderBy(desc(mro_canteen_logs.log_date))
+            .limit(100);
+      return Ok(rows as unknown as Record<string, unknown>[]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Oshxona yozuvlari topilmadi'); }
+  }
+
+  async createCanteenLog(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    try {
+      const rows = await db.insert(mro_canteen_logs).values({
+        log_date:        String(dto.log_date ?? new Date().toISOString().split('T')[0]),
+        meal_name:       String(dto.meal_name ?? 'Tushlik'),
+        portion_count:   Number(dto.portion_count ?? 0),
+        cost_per_portion: String(Number(dto.cost_per_portion ?? 0)),
+        total_cost:      String(Number(dto.total_cost ?? Number(dto.portion_count ?? 0) * Number(dto.cost_per_portion ?? 0))),
+        employees_served: Number(dto.employees_served ?? 0),
+      }).returning();
+      return Ok(rows[0] as Record<string, unknown>);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Oshxona yozuvi yaratilmadi'); }
+  }
+
+  async updateCanteenLog(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    try {
+      // Build typed patch — only include fields present in dto
+      type CanteenPatch = {
+        meal_name?: string; portion_count?: number; cost_per_portion?: string;
+        total_cost?: string; employees_served?: number; log_date?: string;
+        updated_at?: Date;
+      };
+      const patch: CanteenPatch = { updated_at: new Date() };
+      if (dto['meal_name']       !== undefined) patch.meal_name        = String(dto['meal_name']);
+      if (dto['portion_count']   !== undefined) patch.portion_count    = Number(dto['portion_count']);
+      if (dto['cost_per_portion'] !== undefined) patch.cost_per_portion = String(Number(dto['cost_per_portion']));
+      if (dto['total_cost']      !== undefined) patch.total_cost       = String(Number(dto['total_cost']));
+      if (dto['employees_served'] !== undefined) patch.employees_served = Number(dto['employees_served']);
+      if (dto['log_date']        !== undefined) patch.log_date         = String(dto['log_date']);
+      const rows = await db.update(mro_canteen_logs)
+        .set(patch)
+        .where(eq(mro_canteen_logs.id, id))
+        .returning();
+      if (!rows[0]) return Err('Yozuv topilmadi');
+      return Ok(rows[0] as Record<string, unknown>);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Oshxona yozuvi yangilanmadi'); }
+  }
+
   async findSpareParts(search?: string): Promise<Result<Record<string, unknown>[]>> {
     try {
       const query = db.select().from(mro_items).orderBy(mro_items.name);

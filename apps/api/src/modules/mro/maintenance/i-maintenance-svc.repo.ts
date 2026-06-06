@@ -18,6 +18,9 @@ export interface IMaintenanceSvcRepository {
   findPmSchedules(): Promise<Result<Record<string, unknown>[]>>;
   findUtilityReadings(): Promise<Result<Record<string, unknown>[]>>;
   getCanteenStats(): Promise<Result<Record<string, unknown>>>;
+  listCanteenLogs(logDate?: string): Promise<Result<Record<string, unknown>[]>>;
+  createCanteenLog(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
+  updateCanteenLog(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   findSpareParts(search?: string): Promise<Result<Record<string, unknown>[]>>;
 }
 

@@ -138,6 +138,30 @@ export class MaintenanceService {
     });
   }
 
+  async listCanteenLogs(logDate?: string): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.listCanteenLogs(logDate);
+      if (!result.ok) { this.logger.warn(`listCanteenLogs: ${result.error}`); return []; }
+      return result.data;
+    });
+  }
+
+  async createCanteenLog(dto: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.createCanteenLog(dto);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async updateCanteenLog(id: number, dto: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.updateCanteenLog(id, dto);
+      if (!result.ok) throw new NotFoundException(String(result.error));
+      return result.data;
+    });
+  }
+
   async findSpareParts(search?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const result = await this.maintenanceSvcRepo.findSpareParts(search);

@@ -29,7 +29,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { sql } from 'drizzle-orm';
-import { runQuery } from '@shared/db';
+import { runQuery, db } from '@shared/db';
 import { isOk } from '@common/result';
 import { CcWorkflowService } from '../application/cc-workflow.service';
 import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
@@ -91,6 +91,30 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
       }
 
       this.logger.log(`cc.spawn: draft ${draftR.data.documentNumber} yaratildi (${payload.templateCode})`);
+
+      // 4) CC→Kanban ko'prik: har CC draft uchun kanban karta yaratamiz.
+      //    Board 2 = EUROPRINT; Column 7 = "Birinchi bosqich".
+      //    Xato bo'lsa ignore — kanban qo'shimcha funksiya (taskmengement).
+      try {
+        await db.execute(sql`
+          INSERT INTO kanban_cards
+            (board_id, column_id, title, description, related_type, related_id,
+             owner_user_id, priority, created_at, updated_at)
+          VALUES (
+            2, 7,
+            ${payload.subject},
+            ${payload.body ?? ''},
+            'cc_document',
+            ${String(draftR.data.id)},
+            ${payload.senderUserId},
+            ${payload.priority ?? 'normal'},
+            NOW(), NOW()
+          )
+        `);
+        this.logger.log(`cc.spawn: kanban karta yaratildi (CC draft ${draftR.data.id})`);
+      } catch (kanbanErr) {
+        this.logger.warn(`cc.spawn: kanban karta yaratilmadi (ignore): ${String(kanbanErr)}`);
+      }
 
       // 3) autoSend bo'lsa — workflow ishga tushadi (PIN talab qilinmasligi uchun
       //    "tizim PIN'i" mexanizmi keyingi versiyada qo'shiladi; hozir draft holatda qoladi)
