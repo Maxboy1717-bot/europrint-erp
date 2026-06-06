@@ -135,6 +135,28 @@ export class MarketingAnalyticsStubsController {
     return unwrapOrThrow(await this.svc.getNps());
   }
 
+  @Post('nps')
+  @Roles('super_admin', 'marketing_manager', 'director', 'manager')
+  @HttpCode(HttpStatus.CREATED)
+  async createNpsResponse(@Body() body: unknown) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const score = Number(dto['score'] ?? dto['npsScore'] ?? 0);
+    const r = await db.execute(sql`
+      INSERT INTO nps_responses (id, papka_order_id, customer_id, score, comment, created_at)
+      VALUES (
+        gen_random_uuid()::text,
+        ${dto['papka_order_id'] ?? dto['orderId'] ?? null}::int,
+        ${dto['customer_id'] ?? dto['customerId'] ?? null}::int,
+        ${score}::int,
+        ${dto['comment'] ?? dto['feedback'] ?? null}::text,
+        NOW()
+      )
+      RETURNING id, score
+    `);
+    const row = rows(r)[0] ?? null;
+    return { message: 'NPS javobi saqlandi', data: row };
+  }
+
   @Get('churn-risk/ai-signal')
   @Roles('super_admin', 'marketing_manager', 'director')
   async getChurnRiskAiSignal() {
