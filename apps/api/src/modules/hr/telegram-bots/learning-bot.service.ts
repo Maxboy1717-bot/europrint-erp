@@ -244,7 +244,7 @@ export class LearningBotService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  @OnEvent('lms.course_assigned')
+  @OnEvent('lms.course.enrolled')
   async onCourseAssigned(payload: { employeeId: number; courseTitle: string; deadline: string; url: string; employeeName?: string }): Promise<void> {
     try {
       await this.notifBot.sendNotification({
@@ -262,7 +262,7 @@ export class LearningBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  @OnEvent('lms.certificate_issued')
+  @OnEvent('lms.certificate.issued')
   async onCertificateIssued(payload: { employeeId: number; certName: string; pdfUrl: string }): Promise<void> {
     try {
       const chatIdR = await this.telegramRepo.getEmployeeTelegramChatId(payload.employeeId);

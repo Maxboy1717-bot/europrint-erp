@@ -28,6 +28,34 @@ import { AccessService } from '../access/access.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { z } from 'zod';
+type Rows = { rows?: unknown[] };
+
+const VisitorCreateSchema = z.object({
+  fullName: z.string().max(500).default(''),
+  company: z.string().max(500).optional(),
+  purpose: z.string().max(500).optional(),
+  hostEmployeeName: z.string().max(500).optional(),
+  badgeNumber: z.string().max(100).optional(),
+}).passthrough();
+
+const IncidentCreateSchema = z.object({
+  type: z.string().max(100).default('general'),
+  description: z.string().max(2000).optional(),
+  severity: z.string().max(50).default('medium'),
+  location: z.string().max(500).optional(),
+  reportedBy: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const PpeCheckCreateSchema = z.object({
+  employeeName: z.string().max(500).default(''),
+  department: z.string().max(500).optional(),
+  helmetOk: z.boolean().default(true),
+  vestOk: z.boolean().default(true),
+  glovesOk: z.boolean().default(true),
+  bootsOk: z.boolean().default(true),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -228,5 +256,64 @@ export class SecurityController {
  async patchVisitorExit(@Param('id') id: string) {
    await db.execute(sql`UPDATE security_visitors SET exited_at=NOW(), status='exited' WHERE id=${parseInt(id, 10)}`);
    return { visitorId: id, exitedAt: _time.now().toISOString(), status: 'exited' };
+ }
+
+ @ApiOperation({ summary: 'Create visitor' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @Post('visitors')
+ @HttpCode(HttpStatus.CREATED)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
+ async createVisitor(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+   const dto = VisitorCreateSchema.parse(body);
+   const r = await db.execute(sql`
+     INSERT INTO security_visitors
+       (full_name, company, purpose, host_employee_name, badge_number, status, entered_at, created_by, created_at)
+     VALUES
+       (${dto.fullName}, ${dto.company ?? null}, ${dto.purpose ?? null},
+        ${dto.hostEmployeeName ?? ''}, ${dto.badgeNumber ?? null},
+        'active', NOW(), ${user.id}, NOW())
+     RETURNING *
+   `);
+   const row = ((r as Rows).rows ?? [])[0] ?? {};
+   return { data: row };
+ }
+
+ @ApiOperation({ summary: 'Create incident' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @Post('incidents')
+ @HttpCode(HttpStatus.CREATED)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
+ async createIncident(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+   const dto = IncidentCreateSchema.parse(body);
+   const r = await db.execute(sql`
+     INSERT INTO security_incidents
+       (type, description, severity, location, reported_by, status, created_by, created_at, updated_at)
+     VALUES
+       (${dto.type}, ${dto.description ?? null}, ${dto.severity},
+        ${dto.location ?? ''}, ${user.id}, 'open', ${user.id}, NOW(), NOW())
+     RETURNING *
+   `);
+   const row = ((r as Rows).rows ?? [])[0] ?? {};
+   return { data: row };
+ }
+
+ @ApiOperation({ summary: 'Create PPE check' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @Post('ppe-checks')
+ @HttpCode(HttpStatus.CREATED)
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
+ async createPpeCheck(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+   const dto = PpeCheckCreateSchema.parse(body);
+   const r = await db.execute(sql`
+     INSERT INTO security_ppe_checks
+       (employee_name, department, helmet_ok, vest_ok, gloves_ok, boots_ok, notes, checked_by, created_at)
+     VALUES
+       (${dto.employeeName}, ${dto.department ?? null},
+        ${dto.helmetOk}, ${dto.vestOk}, ${dto.glovesOk}, ${dto.bootsOk},
+        ${dto.notes ?? null}, ${user.id}, NOW())
+     RETURNING *
+   `);
+   const row = ((r as Rows).rows ?? [])[0] ?? {};
+   return { data: row };
  }
 }
