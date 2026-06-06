@@ -79,8 +79,7 @@ export async function createPapkaOrderRaw(params: {
 }
 
 export async function updatePapkaOrderRaw(id: string, updates: PapkaOrderUpdates): Promise<Record<string, unknown> | null> {
-  try {
-    const r = await db.execute(sql`
+  const r = await db.execute(sql`
       UPDATE papka_orders SET
         papka_no             = COALESCE(${updates.papka_no ?? null}, papka_no),
         mijoz_nomi           = COALESCE(${updates.mijoz_nomi ?? null}, mijoz_nomi),
@@ -99,8 +98,7 @@ export async function updatePapkaOrderRaw(id: string, updates: PapkaOrderUpdates
       WHERE id = ${id}
       RETURNING *
     `);
-    return (r.rows[0] as Record<string, unknown>) ?? null;
-  } catch { return null; }
+  return (r.rows[0] as Record<string, unknown>) ?? null;
 }
 
 export async function getMachineTasksRaw(): Promise<Record<string, unknown>[]> {
@@ -124,14 +122,12 @@ export async function createMachineTaskRaw(params: {
   planned_end: string | null;
   status: string;
 }): Promise<Record<string, unknown> | null> {
-  try {
-    const r = await db.execute(sql`
+  const r = await db.execute(sql`
       INSERT INTO machine_tasks (papka_order_id, work_center_id, employee_id, planned_start, planned_end, status)
       VALUES (${params.papka_order_id}, ${params.work_center_id}, ${params.employee_id}, ${params.planned_start}, ${params.planned_end}, ${params.status})
       RETURNING *
     `);
-    return (r.rows[0] as Record<string, unknown>) ?? null;
-  } catch { return null; }
+  return (r.rows[0] as Record<string, unknown>) ?? null;
 }
 
 export async function getPlanningOperationsRaw(): Promise<Record<string, unknown>[]> {
@@ -154,14 +150,12 @@ export async function createPlanningOperationRaw(params: {
   planned_end: string | null;
   status: string;
 }): Promise<Record<string, unknown> | null> {
-  try {
-    const r = await db.execute(sql`
+  const r = await db.execute(sql`
       INSERT INTO planning_operations (papka_order_id, work_center_id, operation_name, planned_start, planned_end, status)
       VALUES (${params.papka_order_id}, ${params.work_center_id}, ${params.operation_name}, ${params.planned_start}, ${params.planned_end}, ${params.status})
       RETURNING *
     `);
-    return (r.rows[0] as Record<string, unknown>) ?? null;
-  } catch { return null; }
+  return (r.rows[0] as Record<string, unknown>) ?? null;
 }
 
 export async function getKanbanEmployeesRaw(): Promise<Record<string, unknown>[]> {

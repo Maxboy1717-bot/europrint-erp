@@ -167,8 +167,8 @@ export class WmsWarehouseGatewayRepo {
 
   async getGoodsReceiptLines(receiptId: number): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      SELECT grl.*, m.name AS material_name, m.unit_of_measure
-      FROM mm_goods_receipt_lines grl JOIN mm_materials m ON m.id = grl.material_id
+      SELECT grl.*, mc.xom_ashyo AS material_name, mc.unit_of_measure
+      FROM mm_goods_receipt_lines grl JOIN material_cards mc ON mc.id = grl.material_id
       WHERE grl.goods_receipt_id = ${receiptId} ORDER BY grl.id
     `);
     return rows.rows as Row[];
@@ -206,22 +206,22 @@ export class WmsWarehouseGatewayRepo {
 
   async getLowStock(): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      SELECT sl.*, m.name AS material_name, m.unit_of_measure, w.name AS warehouse_name,
-             (sl.min_stock - sl.quantity_on_hand) AS shortage
-      FROM wms_stock_levels sl
-      JOIN mm_materials m ON m.id = sl.material_id
-      JOIN wms_warehouses w ON w.id = sl.warehouse_id
-      WHERE sl.quantity_on_hand <= sl.min_stock AND sl.min_stock > 0
-      ORDER BY (sl.min_stock - sl.quantity_on_hand) DESC
+      SELECT ws.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, w.name AS warehouse_name,
+             (ws.reorder_point - ws.quantity) AS shortage
+      FROM warehouse_stock ws
+      JOIN material_cards mc ON mc.id = ws.material_id
+      JOIN wms_warehouses w ON w.id = ws.warehouse_id
+      WHERE ws.quantity <= ws.reorder_point AND ws.reorder_point > 0
+      ORDER BY (ws.reorder_point - ws.quantity) DESC
     `);
     return rows.rows as Row[];
   }
 
   async barcodeScan(barcode: string): Promise<Row> {
     const rows = await runQuery<Row>(sql`
-      SELECT b.*, m.name AS material_name, m.unit_of_measure, w.name AS warehouse_name
-      FROM wms_stock_batches b JOIN mm_materials m ON m.id = b.material_id JOIN wms_warehouses w ON w.id = b.warehouse_id
-      WHERE b.batch_number = ${barcode} OR m.barcode = ${barcode} OR m.sku = ${barcode} LIMIT 1
+      SELECT b.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, w.name AS warehouse_name
+      FROM wms_stock_batches b JOIN material_cards mc ON mc.id = b.material_id JOIN wms_warehouses w ON w.id = b.warehouse_id
+      WHERE b.batch_number = ${barcode} OR mc.barcode = ${barcode} OR mc.kod = ${barcode} LIMIT 1
     `);
     return (rows.rows[0] ?? { found: false, barcode }) as Row;
   }
