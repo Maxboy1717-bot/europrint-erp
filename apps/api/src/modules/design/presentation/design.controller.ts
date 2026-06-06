@@ -34,6 +34,8 @@ import { RequestDesignDto, UpdateDesignStatusDto} from './dto/design.dto';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { IDesignRepo, DESIGN_REPO } from '../domain/repositories/i-design.repo';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const CreateOrderSchema = z.object({
   salesOrderId: z.union([z.string(), z.number()]).optional(),
@@ -153,10 +155,14 @@ export class DesignController {
 }
 
  @ApiOperation({ summary: 'Get notifications' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('notifications')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getNotifications() { return notImplemented('GET /design/notifications'); }
+ async getNotifications() {
+   const r = await db.execute(sql`SELECT * FROM "designOrderNotifications" ORDER BY "createdAt" DESC LIMIT 50`);
+   const items = ((r as { rows?: unknown[] }).rows) ?? [];
+   return { items, total: items.length };
+ }
 
  @ApiOperation({ summary: 'Get statistics' })
  @ApiResponse({ status: 200, description: 'OK' })
@@ -169,25 +175,42 @@ export class DesignController {
  }
 
  @ApiOperation({ summary: 'Get tooling' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('tooling')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getTooling() { return notImplemented('GET /design/tooling'); }
+ async getTooling() {
+   const r = await db.execute(sql`SELECT * FROM design_tooling WHERE deleted_at IS NULL ORDER BY created_at DESC`);
+   const items = ((r as { rows?: unknown[] }).rows) ?? [];
+   return { items, total: items.length };
+ }
 
  @ApiOperation({ summary: 'Get tooling wear forecast' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('tooling/:id/wear-forecast')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER)
- getToolingWearForecast(@Param('id') _id: string) {
-   return notImplemented('GET /design/tooling/:id/wear-forecast');
+ async getToolingWearForecast(@Param('id') id: string) {
+   const r = await db.execute(sql`
+     SELECT id, tooling_number, name, wear_percentage, max_usage_count, total_usage_count,
+       CASE
+         WHEN max_usage_count > 0 THEN GREATEST(0, max_usage_count - total_usage_count)
+         ELSE NULL
+       END AS remaining_uses,
+       next_maintenance_date
+     FROM design_tooling WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
+   `);
+   const row = (((r as { rows?: unknown[] }).rows) ?? [])[0] ?? null;
+   if (!row) throw new BadRequestException(`Tooling #${id} not found`);
+   return { data: row };
  }
 
  @ApiOperation({ summary: 'Get order messages' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-7' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('orders/:id/messages')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER, Role.SALES_MANAGER)
- getOrderMessages(@Param('id') _id: string) {
-   return notImplemented('GET /design/orders/:id/messages');
+ async getOrderMessages(@Param('id') id: string) {
+   const r = await db.execute(sql`SELECT * FROM "designOrderMessages" WHERE "orderId"=${id} ORDER BY "createdAt" ASC`);
+   const items = ((r as { rows?: unknown[] }).rows) ?? [];
+   return { items, total: items.length };
  }
 
  @ApiOperation({ summary: 'Create order' })
@@ -212,9 +235,14 @@ export class DesignController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Post('orders/:id/messages')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.DESIGNER, Role.SALES_MANAGER)
- async createOrderMessage(@Param('id') _id: string, @Body() body: unknown) {
-   CreateOrderMessageSchema.parse(body);
-   // 501: design_order_messages table does not exist in the live DB.
-   throw new NotImplementedException('Design order messages are not available (no design_order_messages table).');
+ async createOrderMessage(@Param('id') id: string, @Body() body: unknown) {
+   const dto = CreateOrderMessageSchema.parse(body);
+   const r = await db.execute(sql`
+     INSERT INTO "designOrderMessages" ("orderId", "senderId", "senderName", message, is_read, "createdAt")
+     VALUES (${id}, ${String(dto.authorId ?? '')}, ${String(dto.authorId ?? '')}, ${dto.message ?? ''}, false, NOW())
+     RETURNING *
+   `);
+   const row = (((r as { rows?: unknown[] }).rows) ?? [])[0] ?? {};
+   return { data: row };
  }
 }
