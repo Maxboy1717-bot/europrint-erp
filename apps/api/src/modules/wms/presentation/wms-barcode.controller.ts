@@ -4,7 +4,7 @@
  */
 
 import {
-  Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post,
+  Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -14,9 +14,9 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
-// P3-26: barcode/material-kit persistence is not yet wired. Return 501 instead of
 const PrinterConfigSchema = z.object({
   name: z.string().max(200).optional(),
   ipAddress: z.string().max(50).optional(),
@@ -38,10 +38,13 @@ const MaterialKitStatusSchema = z.object({
 const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
 const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
 
+type Row = Record<string, unknown>;
+const rows = (r: unknown): Row[] => ((r as { rows?: Row[] }).rows) ?? [];
+
 /**
  * WmsBarcodeController
  * Routes: /warehouse/printer-config, /warehouse/material-kits
- * Handles barcode label printing configuration and material kit scanning.
+ * Wired to pos_printer_configs and material_kits tables (were notImplemented stubs).
  */
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -51,96 +54,114 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 export class WmsBarcodeController {
   constructor(private readonly svc: WmsWarehouseGatewayService) {}
 
-  // -- PRINTER CONFIG --------------------------------------------------------
+  // -- PRINTER CONFIG (pos_printer_configs) ------------------------------------
 
   @ApiOperation({ summary: 'Get printer configs' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('printer-config')
   @Roles(...WH_READ)
   async getPrinterConfigs() {
-    return notImplemented('GET /warehouse/printer-config');
+    return rows(await db.execute(sql`SELECT * FROM pos_printer_configs ORDER BY is_default DESC, id DESC`));
   }
 
   @ApiOperation({ summary: 'Create printer config' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post('printer-config')
   @Roles(...WH_WRITE)
   async createPrinterConfig(@Body() body: unknown) {
-    PrinterConfigSchema.parse(body);
-    return notImplemented('POST /warehouse/printer-config');
+    const dto = PrinterConfigSchema.parse(body);
+    const r = await db.execute(sql`
+      INSERT INTO pos_printer_configs (name, ip_address, port, is_active, settings, created_at, updated_at)
+      VALUES (
+        ${dto.name ?? ''},
+        ${dto.ipAddress ?? ''},
+        ${dto.port ?? 9100},
+        ${dto.active ?? true},
+        ${JSON.stringify({ paperSize: dto.paperSize ?? 'A4' })}::jsonb,
+        NOW(), NOW()
+      ) RETURNING *
+    `);
+    return rows(r)[0] ?? {};
   }
 
   @ApiOperation({ summary: 'Update printer config' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Patch('printer-config/:id')
   @Roles(...WH_WRITE)
-  async updatePrinterConfig(
-    @Param('id') _id: string,
-    @Body() body: unknown,
-  ) {
-    PrinterConfigSchema.partial().parse(body);
-    return notImplemented('PATCH /warehouse/printer-config/:id');
+  async updatePrinterConfig(@Param('id') id: string, @Body() body: unknown) {
+    const dto = PrinterConfigSchema.partial().parse(body);
+    await db.execute(sql`
+      UPDATE pos_printer_configs SET
+        name       = COALESCE(${dto.name       ?? null}, name),
+        ip_address = COALESCE(${dto.ipAddress  ?? null}, ip_address),
+        port       = COALESCE(${dto.port       ?? null}, port),
+        is_active  = COALESCE(${dto.active     ?? null}, is_active),
+        updated_at = NOW()
+      WHERE id = ${parseInt(id, 10)}
+    `);
+    return { id: parseInt(id, 10), updated: true };
   }
 
   @ApiOperation({ summary: 'Delete printer config' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Delete('printer-config/:id')
   @Roles(...WH_WRITE)
-  async deletePrinterConfig(@Param('id') _id: string) {
-    return notImplemented('DELETE /warehouse/printer-config/:id');
+  async deletePrinterConfig(@Param('id') id: string) {
+    await db.execute(sql`DELETE FROM pos_printer_configs WHERE id=${parseInt(id, 10)}`);
+    return { id: parseInt(id, 10), deleted: true };
   }
 
-  // -- MATERIAL KITS (item-scan / kit assembly) ------------------------------
+  // -- MATERIAL KITS (material_kits + material_kit_items) ----------------------
 
   @ApiOperation({ summary: 'Get material kits' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('material-kits')
   @Roles(...WH_READ)
   async getMaterialKits() {
-    return notImplemented('GET /warehouse/material-kits');
+    return rows(await db.execute(sql`SELECT * FROM material_kits WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 50`));
   }
 
   @ApiOperation({ summary: 'Create material kit' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Post('material-kits')
   @Roles(...WH_WRITE)
   async createMaterialKit(@Body() body: unknown) {
-    MaterialKitSchema.parse(body);
-    return notImplemented('POST /warehouse/material-kits');
+    const dto = MaterialKitSchema.parse(body);
+    const r = await db.execute(sql`
+      INSERT INTO material_kits (kit_number, order_id, scheduled_date, status, notes, created_at)
+      VALUES (
+        'MK-' || extract(epoch from now())::bigint,
+        0,
+        CURRENT_DATE,
+        'pending',
+        ${dto.name ?? null},
+        NOW()
+      ) RETURNING *
+    `);
+    return rows(r)[0] ?? {};
   }
 
   @ApiOperation({ summary: 'Update material kit status' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Patch('material-kits/:id/status')
   @Roles(...WH_WRITE)
-  async updateMaterialKitStatus(
-    @Param('id') _id: string,
-    @Body() body: unknown,
-  ) {
-    MaterialKitStatusSchema.parse(body);
-    return notImplemented('PATCH /warehouse/material-kits/:id/status');
+  async updateMaterialKitStatus(@Param('id') id: string, @Body() body: unknown) {
+    const dto = MaterialKitStatusSchema.parse(body);
+    await db.execute(sql`UPDATE material_kits SET status=${dto.status} WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL`);
+    return { id: parseInt(id, 10), status: dto.status, updated: true };
   }
 
   @ApiOperation({ summary: 'Get material kit items' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('material-kits/:id/items')
   @Roles(...WH_READ)
-  async getMaterialKitItems(@Param('id') _id: string) {
-    return notImplemented('GET /warehouse/material-kits/:id/items');
+  async getMaterialKitItems(@Param('id') id: string) {
+    return rows(await db.execute(sql`SELECT * FROM material_kit_items WHERE kit_id=${parseInt(id, 10)} ORDER BY id`));
   }
 }
