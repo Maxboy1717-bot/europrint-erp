@@ -181,8 +181,8 @@ export class SdOrderDepartmentsRepository {
   async createMaterialRequirementJob(orderId: number): Promise<Result<{ created: boolean }>> {
     try {
       const r = await runQuery<Row>(sql`
-        INSERT INTO ow_material_requirements (order_id, material_id, qty_required)
-        SELECT ${orderId}, 'TBD', 0
+        INSERT INTO ow_material_requirements (id, order_id, material_id, qty_required, qty_reserved, qty_issued, lab_passed, status)
+        SELECT gen_random_uuid(), ${orderId}, 'TBD', 0, 0, 0, false, 'NEEDED'
         WHERE NOT EXISTS (SELECT 1 FROM ow_material_requirements WHERE order_id = ${orderId})
         RETURNING id
       `);
@@ -208,6 +208,24 @@ export class SdOrderDepartmentsRepository {
             WHERE po.sales_order_id = soi.sales_order_id AND po.product_id = soi.product_id
           )
         RETURNING id
+      `);
+      // BOM material explosion (vision #10 — material consumed per order): expand each production order's
+      // product BOM (bom_headers -> bom_items) into ow_material_requirements. material_id = component_id;
+      // qty = bom_qty * planned_qty * (1 + scrap%). Data-driven & graceful: with no BOM defined nothing is
+      // exploded (bom_* tables are owner-defined data). Idempotent per (order_id, material_id).
+      await runQuery(sql`
+        INSERT INTO ow_material_requirements (id, order_id, material_id, qty_required, qty_reserved, qty_issued, lab_passed, status)
+        SELECT gen_random_uuid(), po.sales_order_id, bi.component_id::text,
+               (bi.quantity * po.planned_quantity * (1 + COALESCE(bi.scrap_percentage, 0) / 100))::numeric,
+               0, 0, false, 'NEEDED'
+        FROM production_orders po
+        JOIN bom_headers bh ON bh.product_id = po.product_id
+        JOIN bom_items bi ON bi.bom_id = bh.id AND bi.deleted_at IS NULL
+        WHERE po.sales_order_id = ${orderId}
+          AND NOT EXISTS (
+            SELECT 1 FROM ow_material_requirements mr
+            WHERE mr.order_id = po.sales_order_id AND mr.material_id = bi.component_id::text
+          )
       `);
       return Ok({ created: r.rows.length > 0 });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Ishlab chiqarish order yaratishda xatolik'); }
