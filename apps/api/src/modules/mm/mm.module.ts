@@ -15,6 +15,7 @@ import { MmRawMaterialsController } from './presentation/mm-raw-materials.contro
 import { MmMaterialCardsController } from './presentation/mm-material-cards.controller';
 import { MmDashboardController } from './presentation/mm-dashboard.controller';
 import { MmMaterialsExtrasService } from './application/mm-materials-extras.service';
+import { LayerFormulaService } from './application/layer-formula.service';
 import { MmMaterialsExtrasRepository } from './infrastructure/repositories/mm-materials-extras.repository';
 import { MM_MATERIALS_EXTRAS_REPO } from './domain/repositories/i-mm-materials-extras.repo';
 import { MmDashboardService } from './application/mm-dashboard.service';
@@ -78,7 +79,8 @@ const repositories = [
     MmMaterialsExtrasService,
     MmDashboardRepository,
     { provide: MM_DASHBOARD_REPO, useClass: MmDashboardRepository },
-    MmDashboardService],
-  exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, MATERIALS_SVC_REPO, PurchaseService, MaterialsService],
+    MmDashboardService,
+    LayerFormulaService],
+  exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, MATERIALS_SVC_REPO, PurchaseService, MaterialsService, LayerFormulaService],
 })
 export class MmModule {}
