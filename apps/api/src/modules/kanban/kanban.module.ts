@@ -54,7 +54,6 @@ const repositories = [
   imports:     [CqrsModule, AuthModule],
   controllers: [
     KanbanBoardsController,
-    KanbanController,
     KanbanCoreController,
     KanbanReportsController,
     KanbanCardsController,
