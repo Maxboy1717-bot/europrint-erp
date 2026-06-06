@@ -182,6 +182,10 @@ export class MarketingAnalyticsStubsController {
   @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director')
   async getAiAssistant() { return stub('GET /marketing/ai-assistant'); }
 
+  @Post('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director')
+  @HttpCode(HttpStatus.OK)
+  async postAiAssistant(@Body() body: unknown) { return stub('POST /marketing/ai-assistant'); }
+
   @Get('leads/sources/summary')
   @Roles('super_admin', 'marketing_manager', 'director')
   async getLeadsSourcesSummary() {
