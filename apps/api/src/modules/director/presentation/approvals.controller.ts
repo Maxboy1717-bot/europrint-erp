@@ -32,6 +32,8 @@ import { CreateApprovalRequestCommand } from '../application/commands/create-app
 import { ApproveRequestCommand } from '../application/commands/approve-request.command';
 import { RejectRequestCommand } from '../application/commands/reject-request.command';
 import { GetPendingApprovalsQuery } from '../application/queries/get-pending-approvals.query';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { GetApprovalHistoryQuery } from '../application/queries/get-approval-history.query';
 import {
   CreateApprovalRequestDto,
@@ -103,10 +105,17 @@ export class ApprovalsController {
   async getStats(@CurrentUser() _user: AuthenticatedUser) {
     const result = await this.queryBus.execute(new GetPendingApprovalsQuery());
     assertOk(result);
+    const r = await db.execute(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE status='approved' AND DATE(approved_at)=CURRENT_DATE)::int AS approved_today,
+        COUNT(*) FILTER (WHERE status='rejected' AND DATE(rejected_at)=CURRENT_DATE)::int AS rejected_today
+      FROM approval_requests
+    `);
+    const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
     return {
       pending: result.data.total,
-      approvedToday: 0,
-      rejectedToday: 0,
+      approvedToday: Number(row?.approved_today ?? 0),
+      rejectedToday: Number(row?.rejected_today ?? 0),
       avgApprovalTimeHours: 0,
     };
   }

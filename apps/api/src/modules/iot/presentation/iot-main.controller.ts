@@ -17,6 +17,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotMainService } from '../application/iot-main.service';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import {
   DeptLimitQuerySchema,
   DeviceIdQuerySchema,
@@ -287,7 +289,27 @@ export class IotMainController {
   @ApiOperation({ summary: 'Get oee live' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('oee/live') @Roles(...IOT_READ)
-  async getOeeLive(@Query('device_id') _deviceId?: string) {
-    return { availability: 0, performance: 0, quality: 0, oee: 0, sample_size: 0, generated_at: new Date().toISOString(), by_machine: [] };
+  async getOeeLive(@Query('device_id') deviceId?: string) {
+    // Aggregate the latest shift's OEE records from oee_records (real DB).
+    const r = await db.execute(sql`
+      SELECT AVG(availability)::numeric(6,2) AS availability,
+             AVG(performance)::numeric(6,2)  AS performance,
+             AVG(quality)::numeric(6,2)      AS quality,
+             AVG(oee)::numeric(6,2)          AS oee,
+             COUNT(*)::int                   AS sample_size
+      FROM oee_records
+      WHERE date = (SELECT MAX(date) FROM oee_records)
+        ${deviceId ? sql`AND machine_id = ${parseInt(deviceId, 10)}` : sql``}
+    `);
+    const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+    return {
+      availability: Number(row?.availability ?? 0),
+      performance:  Number(row?.performance  ?? 0),
+      quality:      Number(row?.quality      ?? 0),
+      oee:          Number(row?.oee          ?? 0),
+      sample_size:  Number(row?.sample_size  ?? 0),
+      generated_at: new Date().toISOString(),
+      by_machine: [],
+    };
   }
 }
