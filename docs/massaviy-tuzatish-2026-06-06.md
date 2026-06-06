@@ -14,9 +14,9 @@
 | **QC** approve/finance, approve/qc, reject, inspector-submit (×Patch+Post = 8) | echo {approved:true} | **[FIXED `1cca0f52`]** → qc_inspections.status transitions |
 | **LMS** patchCourse | echo {…body, updated} | **[FIXED `0ba9aec8`]** → UPDATE courses (COALESCE editable fields) |
 | **HR** updateGsdEmployee | echo {updated} | **[DECISION]** `gsd` jadval YO'Q — egasi model aniqlashi kerak |
-| **HR** patchVacancyChannels | echo {channels,updated} | **[DDL-GATE]** `vacancy_channels` jadval yo'q; `vacancies`+`hr_vacancy_profiles`da channels ustun yo'q |
+| **HR** patchVacancyChannels | echo {channels,updated} | **[FIXED `a487aac2`]** DDL: ADD channels jsonb → UPDATE hr_vacancy_profiles SET channels=dto.channels::jsonb |
 | **HR** patchPortret | echo {portret,updated} | **[FIXED `c0bcd287`]** → UPDATE hr_vacancy_profiles SET candidate_portrait JSONB merge WHERE vacancy_id |
-| **HR** patchProbationDates | echo {start_date,end_date,updated} | **[DDL-GATE]** probation_start/end ustun yo'q (hr_vacancy_profiles.probation_days=int faqat) |
+| **HR** patchProbationDates | echo {start_date,end_date,updated} | **[FIXED `a487aac2`]** DDL: ADD probation_start/end date → UPDATE via funnel JOIN WHERE hcf.id=pipeline_id |
 | **SECURITY** getVisitors | return [] | **[FIXED `72dd210b`]** → SELECT FROM security_visitors ORDER BY created_at DESC LIMIT 50 |
 | **SECURITY** recordVisitorExit (POST) | echo {exitedAt,status} | **[FIXED `72dd210b`]** → UPDATE security_visitors SET exited_at=NOW(), status='exited' |
 | **SECURITY** patchVisitorExit (PATCH) | echo {exitedAt,status} | **[FIXED `72dd210b`]** → UPDATE security_visitors SET exited_at=NOW(), status='exited' |
@@ -29,13 +29,12 @@
 | **DIRECTOR** approvals getStats | approvedToday/rejectedToday = 0 | **[FIXED `a4b4dfd8`]** → COUNT FROM approval_requests WHERE status+date match today. avgApprovalTime=0 hali [DATA] |
 | **ADMIN** deleteFailedJob | echo {id,deleted} | **[DATA]** admin-queue service butunlay mock/stub (BullMQ yo'q) — egasi qaror qiladi |
 
-### KATEGORIYA A — YAKUNIY holat ✅
-- ✅ **20 green-lie TUZATILDI** (DESIGN 3, QC 8, LMS 1, SECURITY 3, IOT 3, HR portret 1, DIRECTOR stats 1)
-- 🔐 **DDL-GATE × 2**: HR vacancies channels + probation-dates (egasi ruxsati kerak — ustun qo'shish)
+### KATEGORIYA A — YOPIQ ✅ (22/22)
+- ✅ **22 green-lie TUZATILDI** (DESIGN 3, QC 8, LMS 1, SECURITY 3, IOT 3, HR portret+channels+probation 3, DIRECTOR stats 1)
 - 🟡 **DECISION × 1**: HR gsd (model noaniq); **DATA × 2**: councils hardcoded / admin-queue mock
 - ⭐ **INTENTIONAL × 5**: AI-verify/mockup, templates, heatmap export, missions AI
 - ⭐ **ALREADY-REAL × 1**: analyzeByMissions getDashboard real, missions passthrough AI-dependent
-- verify-don't-trust: DESIGN "no table" = false-positive (designs bor); camera-analyze = real service bor
+- Commits: ecf796c7 / 1cca0f52 / 0ba9aec8 / c0bcd287 / 72dd210b / c398677f / a4b4dfd8 / a487aac2
 
 ---
 
