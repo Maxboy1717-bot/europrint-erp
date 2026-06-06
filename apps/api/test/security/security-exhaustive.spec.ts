@@ -116,7 +116,10 @@ const TRAVERSAL_PAYLOADS = [
 ];
 
 function safePath(root: string, input: string): { ok: boolean; abs?: string; error?: string } {
-  const decoded = decodeURIComponent(input);
+  // Normalize backslashes → forward slashes and detect Windows absolute paths cross-platform
+  const decoded = decodeURIComponent(input).replace(/\\/g, '/');
+  // Windows absolute path (e.g. 'C:/Windows') is always traversal
+  if (/^[A-Za-z]:\//.test(decoded)) return { ok: false, error: 'TRAVERSAL' };
   const joined = path.resolve(root, decoded);
   const normRoot = path.resolve(root) + path.sep;
   if (!joined.startsWith(normRoot) && joined !== path.resolve(root)) return { ok: false, error: 'TRAVERSAL' };

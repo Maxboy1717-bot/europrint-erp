@@ -85,8 +85,8 @@ jobs:
         run: pnpm --filter @europrint/api run test
         env:
           NODE_ENV: test
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://mock:mock@localhost:5432/testdb' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'mock-jwt-secret-for-unit-tests-only' }}
 
       - name: erp-dashboard testlarni ishga tushirish (coverage bilan)
         run: pnpm --filter @workspace/erp-dashboard run test:coverage
