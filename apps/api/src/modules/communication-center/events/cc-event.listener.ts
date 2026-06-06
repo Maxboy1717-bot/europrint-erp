@@ -93,25 +93,45 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
       this.logger.log(`cc.spawn: draft ${draftR.data.documentNumber} yaratildi (${payload.templateCode})`);
 
       // 4) CC→Kanban ko'prik: har CC draft uchun kanban karta yaratamiz.
-      //    Board 2 = EUROPRINT; Column 7 = "Birinchi bosqich".
-      //    Xato bo'lsa ignore — kanban qo'shimcha funksiya (taskmengement).
+      //    Board va column ID'lari runtime'da nom bo'yicha qidiriladi (qattiq ID emas).
+      //    Xato bo'lsa ignore — kanban qo'shimcha funksiya (task management).
       try {
-        await db.execute(sql`
-          INSERT INTO kanban_cards
-            (board_id, column_id, title, description, related_type, related_id,
-             owner_user_id, priority, created_at, updated_at)
-          VALUES (
-            2, 7,
-            ${payload.subject},
-            ${payload.body ?? ''},
-            'cc_document',
-            ${String(draftR.data.id)},
-            ${payload.senderUserId},
-            ${payload.priority ?? 'normal'},
-            NOW(), NOW()
-          )
+        // Runtime lookup — fragile hardcoded ID'lar o'rniga nom bo'yicha
+        const boardR = await runQuery<{ id: number }>(sql`
+          SELECT id FROM kanban_boards WHERE name = 'EUROPRINT' LIMIT 1
         `);
-        this.logger.log(`cc.spawn: kanban karta yaratildi (CC draft ${draftR.data.id})`);
+        const board = boardR.rows[0];
+        if (!board) {
+          this.logger.warn(`cc.spawn: kanban board "EUROPRINT" topilmadi — karta yaratilmadi`);
+        } else {
+          const colR = await runQuery<{ id: number }>(sql`
+            SELECT id FROM kanban_columns
+            WHERE board_id = ${board.id}
+            ORDER BY position ASC
+            LIMIT 1
+          `);
+          const col = colR.rows[0];
+          if (!col) {
+            this.logger.warn(`cc.spawn: board ${board.id} uchun ustun topilmadi — karta yaratilmadi`);
+          } else {
+            await db.execute(sql`
+              INSERT INTO kanban_cards
+                (board_id, column_id, title, description, related_type, related_id,
+                 owner_user_id, priority, created_at, updated_at)
+              VALUES (
+                ${board.id}, ${col.id},
+                ${payload.subject},
+                ${payload.body ?? ''},
+                'cc_document',
+                ${String(draftR.data.id)},
+                ${payload.senderUserId},
+                ${payload.priority ?? 'normal'},
+                NOW(), NOW()
+              )
+            `);
+            this.logger.log(`cc.spawn: kanban karta yaratildi (board=${board.id}, col=${col.id}, draft=${draftR.data.id})`);
+          }
+        }
       } catch (kanbanErr) {
         this.logger.warn(`cc.spawn: kanban karta yaratilmadi (ignore): ${String(kanbanErr)}`);
       }
