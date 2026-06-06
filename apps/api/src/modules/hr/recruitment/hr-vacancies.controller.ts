@@ -21,6 +21,8 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { HrVacanciesService } from './hr-vacancies.service';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import {
   HrVacancyChannelStatusUpdateSchema, HrVacancyChannelStatusUpdateDto,
 } from './dto/hr-vacancies.dto';
@@ -249,6 +251,13 @@ export class HrVacanciesController {
   @Patch('vacancies/:id/portret')
   async patchPortret(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const dto = PatchPortretSchema.parse(body);
+    // Merge portret fields into hr_vacancy_profiles.candidate_portrait JSONB (upsert-safe).
+    await db.execute(sql`
+      UPDATE hr_vacancy_profiles
+      SET candidate_portrait = COALESCE(candidate_portrait, '{}'::jsonb) || ${JSON.stringify(dto)}::jsonb,
+          updated_at = NOW()
+      WHERE vacancy_id = ${id}
+    `);
     return { data: { vacancy_id: id, ...dto, updated: true } };
   }
 }
