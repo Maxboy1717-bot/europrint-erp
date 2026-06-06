@@ -290,7 +290,7 @@ export default function SDDashboard() {
     { name: tLabel("sd.kutilmoqda", "Kutilmoqda"), value: pend, color: "var(--ep-yellow)" },
     { name: tLabel("sd.boshqa", "Boshqa"), value: otherOrders, color: "var(--line-warm)" },
   ].filter((s) => s.value > 0);
-  const donutTotal = donutSegments.reduce((s, x) => s + x.value, 0);
+  const donutTotal = (Array.isArray(donutSegments) ? donutSegments : []).reduce((s, x) => s + x.value, 0);
 
   const funnelItems = [
     { l: tLabel("sd.leadlar", "Leadlar"), v: String(funnel?.total_leads ?? 0) },
@@ -358,7 +358,7 @@ export default function SDDashboard() {
             />
           </div>
           <div className="donut-legend">
-            {donutSegments.map((s) => (
+            {(Array.isArray(donutSegments) ? donutSegments : []).map((s) => (
               <div key={s.name} className="donut-leg-row">
                 <span className="swatch" style={{ background: s.color }} />
                 <span className="name">{s.name}</span>

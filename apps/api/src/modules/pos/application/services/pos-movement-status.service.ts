@@ -204,7 +204,7 @@ export class PosMovementStatusService {
     // Publishing that event would re-run the WMS-sync listener which ALSO writes stock (already written
     // in the loop above) => double-write (the deferred FIX4 risk). Here we add ONLY the missing GL leg,
     // reusing GL_PAIRS + gl_posting_log (status=AWAITING_REVIEW; Finance reviews manually). One per movement.
-    const glLines = lines.ok ? (lines.data as Record<string, unknown>[]) : [];
+    const glLines = lines.ok && Array.isArray(lines.data) ? (lines.data as Record<string, unknown>[]) : [];
     const totalValue = glLines.reduce((s, l) => s + Number(l.quantity ?? 0) * Number(l.unitPrice ?? 0), 0);
     const pairFn = GL_PAIRS[code];
     if (pairFn && totalValue > 0) {

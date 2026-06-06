@@ -72,7 +72,7 @@ export function ThreeBasketsPanel({ t }: ThreeBasketsProps) {
       </div>
 
       <div className="grid grid-cols-3 gap-3 mt-3">
-        {baskets.map((b) => (
+        {[...baskets].map((b) => (
           <button
             key={b.key}
             type="button"

@@ -257,7 +257,7 @@ export default function ProcurementPage() {
               <p className="text-sm text-muted-foreground">{tLabel("common.procurement.noChain", "Tasdiq zanjiri topilmadi (org-bo'lim/rahbar yo'q).")}</p>
             ) : (
               <ol className="space-y-2">
-                {chain.map((s) => (
+                {(Array.isArray(chain) ? chain : []).map((s) => (
                   <li key={s.depth} className="flex items-center justify-between rounded-md border p-2 text-sm">
                     <span className="flex items-center gap-2">
                       <Badge variant="secondary">{s.depth + 1}</Badge>

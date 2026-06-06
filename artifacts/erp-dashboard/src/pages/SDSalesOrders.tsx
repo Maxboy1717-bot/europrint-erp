@@ -484,7 +484,7 @@ export default function SDSalesOrders() {
                   {tLabel("sd.orders.mahsulotYoq", "Mahsulot katalogi bo'sh — avval mahsulot qo'shing.")}
                 </p>
               )}
-              {orderLines.map((line, idx) => {
+              {(Array.isArray(orderLines) ? orderLines : []).map((line, idx) => {
                 const lineTotal = (Number(line.orderQuantity) || 0) * (Number(line.netPrice) || 0);
                 return (
                   <div key={idx} className="flex items-end gap-2" data-testid={`order-line-${idx}`}>
