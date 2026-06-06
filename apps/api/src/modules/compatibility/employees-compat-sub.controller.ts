@@ -13,6 +13,11 @@
  *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, HttpCode, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
+type Rows = { rows?: unknown[] };
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -167,6 +172,31 @@ export class EmployeesCompatSubController {
   // --- Files ---
   @Get(':id/files')
   async getFiles(@Param('id') id: string) { return toList(await this.profile.getFiles(id)); }
+
+  @Post(':id/files') @HttpCode(HttpStatus.CREATED)
+  async createFile(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      INSERT INTO employee_files
+        (employee_id, user_id, file_name, file_path, file_url, file_type, file_size, description, category, uploaded_by, created_at)
+      VALUES (
+        ${parseInt(id, 10)},
+        ${parseInt(id, 10)},
+        ${String(dto['file_name'] ?? dto['fileName'] ?? dto['name'] ?? 'file')}::text,
+        ${String(dto['file_path'] ?? dto['filePath'] ?? dto['url'] ?? '')}::text,
+        ${dto['file_url'] ?? dto['fileUrl'] ?? null}::text,
+        ${dto['file_type'] ?? dto['fileType'] ?? null}::text,
+        ${dto['file_size'] ?? dto['fileSize'] ?? null}::int,
+        ${dto['description'] ?? null}::text,
+        ${dto['category'] ?? null}::text,
+        ${user?.id ?? 0}::int,
+        NOW()
+      )
+      RETURNING id, file_name
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    return { message: "Fayl yuklandi", data: row };
+  }
 
   @Delete(':id/files/:fileId')
   async deleteFile(@Param('id') id: string, @Param('fileId') fileId: string) { return unwrapOrInternal(await this.financials.deleteEmployeeFile(id, fileId)); }

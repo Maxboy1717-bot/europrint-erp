@@ -11,6 +11,9 @@ import {
   Param, ParseIntPipe, Patch, Post, Put,
   Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, throwFromError, unwrapOrThrow, unwrapOrDefault } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -158,6 +161,53 @@ export class HrEmployeesController {
     });
     assertOk(result);
     return { success: true, message: "Xodim o'chirildi", deletedBy: user?.id ?? null };
+  }
+
+  @ApiOperation({ summary: 'Get employee documents' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':employeeId/documents')
+  @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR')
+  async getEmployeeDocuments(@Param('employeeId') employeeId: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM hr_documents WHERE employee_id = ${parseInt(employeeId, 10)} ORDER BY id DESC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Create employee document' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @Post(':employeeId/documents')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('HR_MANAGER', 'SUPER_ADMIN')
+  async createEmployeeDocument(@Param('employeeId') employeeId: string, @Body() body: unknown) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      INSERT INTO hr_documents (employee_id, document_type, doc_type, title, doc_number, status, content, pdf_url)
+      VALUES (
+        ${parseInt(employeeId, 10)},
+        ${dto['document_type'] ?? dto['documentType'] ?? dto['doc_type'] ?? null}::text,
+        ${dto['doc_type'] ?? dto['docType'] ?? null}::text,
+        ${dto['title'] ?? null}::text,
+        ${dto['doc_number'] ?? dto['docNumber'] ?? null}::text,
+        ${dto['status'] ?? 'pending'}::text,
+        ${dto['content'] ?? null}::text,
+        ${dto['pdf_url'] ?? dto['pdfUrl'] ?? null}::text
+      )
+      RETURNING id, title
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    return { message: "Hujjat yaratildi", data: row };
+  }
+
+  @ApiOperation({ summary: 'Delete employee document' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete(':employeeId/documents/:docId')
+  @HttpCode(HttpStatus.OK)
+  @Roles('HR_MANAGER', 'SUPER_ADMIN')
+  async deleteEmployeeDocument(@Param('employeeId') _id: string, @Param('docId') docId: string) {
+    await db.execute(sql`DELETE FROM hr_documents WHERE id = ${parseInt(docId, 10)}`);
+    return { deleted: true, id: docId };
   }
 
   @ApiOperation({ summary: 'Review salary' })
