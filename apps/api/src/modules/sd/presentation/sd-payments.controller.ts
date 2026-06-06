@@ -8,13 +8,20 @@ import {
 Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Logger,
+  Param,
   Post,
+  Put,
   Query,
   UseGuards,
   UseInterceptors,
   InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -90,5 +97,28 @@ export class SdPaymentsController {
   @Get('active-rentals')
   async getActiveRentals(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     return unwrapOrThrow(await this.svc.getActiveRentals(safeInt(limit, 50), safeInt(offset, 0)));
+  }
+
+  @ApiOperation({ summary: 'Update payment' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Put('payments/:id')
+  @HttpCode(HttpStatus.OK)
+  async updatePayment(@Param('id') id: string, @Body() body: unknown) {
+    const dto = (body ?? {}) as Record<string, unknown>;
+    const r = await db.execute(sql`
+      UPDATE sd_payments SET
+        amount           = COALESCE(${dto['amount']           ?? null}::numeric,       amount),
+        currency         = COALESCE(${dto['currency']         ?? null}::text,          currency),
+        payment_method   = COALESCE(${dto['payment_method']   ?? dto['paymentMethod']   ?? null}::text, payment_method),
+        reference_number = COALESCE(${dto['reference_number'] ?? dto['referenceNumber'] ?? null}::text, reference_number),
+        paid_at          = COALESCE(${dto['paid_at']          ?? dto['paidAt']          ?? null}::timestamptz, paid_at),
+        notes            = COALESCE(${dto['notes']            ?? null}::text,          notes),
+        status           = COALESCE(${dto['status']           ?? null}::varchar,       status),
+        updated_at       = NOW()
+      WHERE id = ${id}::uuid
+      RETURNING id, amount, currency, payment_method, status
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    return { updated: true, data: row };
   }
 }
