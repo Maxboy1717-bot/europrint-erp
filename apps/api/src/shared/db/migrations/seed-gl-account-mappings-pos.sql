@@ -1,4 +1,5 @@
 -- Seed: POS movement type -> GL debit/credit account mapping (Uzbek NAS chart of accounts).
+-- APPROVED: owner 2026-06-05 (data seed into existing gl_account_mappings; NO CREATE TABLE / no DDL).
 -- Owner-approved 2026-06-05. Data seed (NOT DDL — no CREATE TABLE). Idempotent / re-runnable.
 -- The codes (debit_account/credit_account) resolve to accounts.id at post time
 -- (GlPostingLogRepository.postMovementToLedger). INTERNAL_TRANSFER is intentionally omitted
