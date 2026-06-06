@@ -336,6 +336,45 @@ export class MarketingAnalyticsStubsController {
     return { data: { exhibition_id: id, qr_code: code } };
   }
 
+  @Patch('exhibitions/:id') @Roles('super_admin', 'marketing_manager')
+  async updateExhibition(@Param('id') id: string, @Body() body: unknown) {
+    const dto = z.object({
+      name:        z.string().max(500).optional(),
+      location:    z.string().max(500).optional(),
+      country:     z.string().max(100).optional(),
+      start_date:  z.string().optional(),
+      end_date:    z.string().optional(),
+      budget:      z.number().optional(),
+      description: z.string().max(2000).optional(),
+      status:      z.string().max(50).optional(),
+    }).passthrough().parse(body);
+    const r = await db.execute(sql`
+      UPDATE exhibitions SET
+        name        = COALESCE(${dto.name        ?? null}, name),
+        location    = COALESCE(${dto.location    ?? null}, location),
+        country     = COALESCE(${dto.country     ?? null}, country),
+        start_date  = COALESCE(${dto.start_date  ?? null}::date, start_date),
+        end_date    = COALESCE(${dto.end_date    ?? null}::date, end_date),
+        budget      = COALESCE(${dto.budget      ?? null}, budget),
+        description = COALESCE(${dto.description ?? null}, description),
+        status      = COALESCE(${dto.status      ?? null}, status),
+        updated_at  = NOW()
+      WHERE id = ${id} AND deleted_at IS NULL
+      RETURNING *
+    `);
+    const row = rows(r)[0] ?? null;
+    if (!row) throw new NotFoundException('Ko\'rgazma topilmadi');
+    return { data: row };
+  }
+
+  @Delete('exhibitions/:id') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
+  async deleteExhibition(@Param('id') id: string) {
+    await db.execute(sql`
+      UPDATE exhibitions SET deleted_at = NOW() WHERE id = ${id} AND deleted_at IS NULL
+    `);
+    return { id, deleted: true };
+  }
+
   // -- PR (pr_activities table) ---------------------------------------------
   @Get('pr') @Roles('super_admin', 'marketing_manager', 'director')
   async getPr(@Query('limit') limit?: string) {

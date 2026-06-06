@@ -14,7 +14,7 @@
 import {
   Controller, Get, Post, Patch, Put, Delete,
   Param, Body, Query,
-  UseGuards, Logger, HttpCode, HttpStatus,
+  UseGuards, Logger, HttpCode, HttpStatus, HttpException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -24,6 +24,9 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { unwrapOrThrow, unwrapOrBadRequest } from '@common/http-result';
 import { z } from 'zod';
 import { MarketingGroup2Service } from '../application/marketing-group2.service';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
+type Rows = { rows?: unknown[] };
 
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
@@ -178,6 +181,15 @@ export class MarketingGroup2Controller {
     return unwrapOrThrow(result);
   }
 
+  @Delete('budget/:id')
+  @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Byudjet qatorini o\'chirish' })
+  async deleteBudget(@Param('id') id: string) {
+    await db.execute(sql`DELETE FROM marketing_budget_lines WHERE id=${id}`);
+    return { id, deleted: true };
+  }
+
   // ── Calendar ──────────────────────────────────────────────────────────────
 
   @Get('calendar')
@@ -207,6 +219,43 @@ export class MarketingGroup2Controller {
     const dto = CreateCalendarEventSchema.parse(body);
     const result = await this.svc.createCalendarEvent(dto as unknown as Record<string, unknown>);
     return unwrapOrThrow(result);
+  }
+
+  @Patch('calendar/:id')
+  @Roles('super_admin', 'marketing_manager')
+  @ApiOperation({ summary: 'Taqvim tadbirini yangilash' })
+  async updateCalendarEvent(@Param('id') id: string, @Body() body: unknown) {
+    const dto = z.object({
+      title: z.string().max(500).optional(),
+      event_type: z.string().max(100).optional(),
+      start_date: z.string().optional(),
+      end_date: z.string().optional(),
+      description: z.string().max(2000).optional(),
+      status: z.string().max(50).optional(),
+    }).passthrough().parse(body);
+    const r = await db.execute(sql`
+      UPDATE marketing_calendar_events SET
+        title       = COALESCE(${dto.title ?? null}, title),
+        event_type  = COALESCE(${dto.event_type ?? null}, event_type),
+        start_date  = COALESCE(${dto.start_date ?? null}::date, start_date),
+        end_date    = COALESCE(${dto.end_date ?? null}::date, end_date),
+        description = COALESCE(${dto.description ?? null}, description),
+        status      = COALESCE(${dto.status ?? null}, status)
+      WHERE id = ${parseInt(id, 10)}
+      RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? null;
+    if (!row) throw new HttpException('Topilmadi', 404);
+    return { data: row };
+  }
+
+  @Delete('calendar/:id')
+  @Roles('super_admin', 'marketing_manager')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Taqvim tadbirini o\'chirish' })
+  async deleteCalendarEvent(@Param('id') id: string) {
+    await db.execute(sql`DELETE FROM marketing_calendar_events WHERE id = ${parseInt(id, 10)}`);
+    return { id, deleted: true };
   }
 
   // ── Competitors ───────────────────────────────────────────────────────────
