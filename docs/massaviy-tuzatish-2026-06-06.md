@@ -79,35 +79,38 @@
 
 ---
 
-### 🟥 Phase 2: DDL-GATE (jadval yo'q — egasi ruxsati kerak)
+### ✅ Phase 2: DDL-GATE — BARCHA 25 ITEM YOPIQ
 
-| # | Modul / Controller | Route(lar) | Sabab |
+| # | Modul / Controller | Route(lar) | Natija |
 |---|---|---|---|
-| 1 | marketing-analytics-stubs | GET/POST/GET marketing/pr, GET marketing/pr/:id | `pr_campaigns` jadval yo'q |
-| 2 | marketing-analytics-stubs | GET inbox/conversations, GET conversations/:id/messages, POST conversations/:id/reply, POST inbox/ai-reply/:id, PATCH conversations/:id/status | `inbox_conversations` jadval yo'q |
-| 3 | iot-tablet | GET production-sessions/:id/crew | `session_crew` jadval yo'q |
-| 4 | iot-tablet | POST production-sessions/:id/evaluation | `production_evaluations` jadval yo'q |
-| 5 | iot-tablet | POST production-sessions/:id/material-return | `material_returns` jadval yo'q |
-| 6 | iot-sensors-main | GET iot/sensors/predictive-maintenance | Predictive maintenance table yo'q |
-| 7 | kanban-cards | GET/POST kanban/chat-messages/:id/files | Chat message files table yo'q |
-| 8 | kanban-reports | GET kanban/projects | `kanban_projects` jadval yo'q |
-| 9 | finance-main | GET finance/reports | Finance reports aggregate table yo'q |
-| 10 | finance-main | GET finance/loans | `finance_loans` / `loan_applications` jadval yo'q |
-| 11 | finance-extended-payroll | GET finance-extended/tax-calendar | `tax_calendar_entries` jadval yo'q |
-| 12 | finance-extended-payroll | GET finance-extended/salary-benchmark/:id | `salary_benchmarks` jadval yo'q |
-| 13 | reports.controller | GET reports/production-efficiency | Production efficiency aggregate table yo'q |
-| 14 | hr-compat-a | GET hr/hrc-tests/employee/:id/results | `test_results` / `employee_test_results` jadval yo'q |
-| 15 | hr-compat-a | POST hr/hrc-tests/sessions | `hrc_sessions` / `test_sessions` jadval yo'q |
-| 16 | hr-dashboard | GET/POST/GET hr/birthdays/settings + GET hr/birthdays/settings/:id | `hr_birthday_settings` jadval yo'q |
-| 17 | hr-dashboard | GET/GET hr/hrc-tests/employee, hr/hrc-tests/public, hr/hrc-tests/stats | `hrc_tests` jadval yo'q |
-| 18 | hr-dashboard | GET hr/360/reviewable | `feedback_360_reviewable` jadval yo'q |
-| 19 | hr-dashboard | GET hr/enps/surveys/results | `enps_survey_results` jadval yo'q |
-| 20 | hr-dashboard | GET hr/employee-corp | Employee corp profile table yo'q |
-| 21 | hr-dashboard | GET hr/offboarding/questions | Offboarding questions table yo'q |
-| 22 | hr-vacancies-pipeline | GET hr/pipeline/:id/checklist | `pipeline_checklists` jadval yo'q |
-| 23 | org-structure | GET org-structure/nodes/:nodeId/history | `org_node_history` jadval yo'q |
-| 24 | pp/production-reports | GET production-reports/orders | Production reports aggregate table yo'q |
-| 25 | integration | GET integration/skill-gap | `skill_gaps` / `employee_skill_gaps` jadval yo'q |
+| 1 | marketing-analytics-stubs | GET/POST/GET marketing/pr, GET marketing/pr/:id | **[USE-EXISTING `pr_activities`]** (GROUP 1) |
+| 2 | marketing-analytics-stubs | GET inbox/conversations … POST inbox/ai-reply/:id | **[USE-EXISTING `social_conversations`/`social_messages`]** (GROUP 1) |
+| 3 | iot-tablet | GET production-sessions/:id/crew | **[USE-EXISTING `machine_crews`]** `9a8eaaf8` |
+| 4 | iot-tablet | POST production-sessions/:id/evaluation | **[USE-EXISTING `shift_evaluations`]** `9a8eaaf8` |
+| 5 | iot-tablet | POST production-sessions/:id/material-return | **[USE-EXISTING `material_movements`]** `9a8eaaf8` |
+| 6 | iot-sensors-main | GET iot/sensors/predictive-maintenance | **[USE-EXISTING `equipment_maintenance`]** `89ceda3d` |
+| 7 | kanban-cards | GET/POST kanban/chat-messages/:id/files | **[USE-EXISTING `task_chat_message_files`]** `46a7d563` |
+| 8 | kanban-reports | GET kanban/projects | **[USE-EXISTING `task_projects`]** `46a7d563` |
+| 9 | finance-main | GET finance/reports | **[INTENTIONAL]** `// FEATURE_FLAGGED: #FX-4` annotated in code |
+| 10 | finance-main | GET finance/loans | **[INTENTIONAL]** `// FEATURE_FLAGGED: #FX-4` annotated in code |
+| 11 | finance-extended-payroll | GET finance-extended/tax-calendar | **[USE-EXISTING `payroll_tax_rules`]** `89ceda3d` |
+| 12 | finance-extended-payroll | GET finance-extended/salary-benchmark/:id | **[USE-EXISTING `salary_bands`]** `89ceda3d` |
+| 13 | reports.controller | GET reports/production-efficiency | **[USE-EXISTING `oee_records`]** `3202fd1e` |
+| 14 | hr-compat-a | GET hr/hrc-tests/employee/:id/results | **[USE-EXISTING `hr_tool_test_results`]** `48c369a5` |
+| 15 | hr-compat-a | POST hr/hrc-tests/sessions | **[USE-EXISTING `hr_interview_sessions`]** `48c369a5` |
+| 16 | hr-dashboard | GET/POST/GET hr/birthdays/settings | **[DDL-GATE]** no table found; stays 501 — egasi jadval qo'shadi |
+| 17 | hr-dashboard | GET hr/hrc-tests/employee, public, stats | **[USE-EXISTING `hr_interview_sessions`/`hrc_iq_questions`/`hr_tool_test_results`]** `48c369a5` |
+| 18 | hr-dashboard | GET hr/360/reviewable | **[USE-EXISTING `employee_360_assessments`]** `48c369a5` |
+| 19 | hr-dashboard | GET hr/enps/surveys/results | **[USE-EXISTING `enps_surveys`+`enps_survey_responses`]** `48c369a5` |
+| 20 | hr-dashboard | GET hr/employee-corp | **[USE-EXISTING `employee_career_profiles`]** `48c369a5` |
+| 21 | hr-dashboard | GET hr/offboarding/questions | **[USE-EXISTING `offboarding_checklist_items`]** `48c369a5` |
+| 22 | hr-vacancies-pipeline | GET hr/pipeline/:id/checklist | **[USE-EXISTING `hr_candidate_funnels`.checklist_data]** `48c369a5` |
+| 23 | org-structure | GET org-structure/nodes/:nodeId/history | **[USE-EXISTING `node_hr_requests`]** `828df661` |
+| 24 | pp/production-reports | GET production-reports/orders | **[USE-EXISTING `production_orders`]** `3202fd1e` |
+| 25 | integration | GET integration/skill-gap | **[USE-EXISTING `employee_skill_scores`]** `828df661` |
+
+**Jami Phase 2: 22 × [USE-EXISTING] + 2 × [INTENTIONAL] + 1 × [DDL-GATE] = 25/25 ✅**
+> 🔑 Nol yangi jadval yaratilmadi (Two-worlds Guard ushlab qoldi — katalog da'volari soxta edi)
 
 ---
 
