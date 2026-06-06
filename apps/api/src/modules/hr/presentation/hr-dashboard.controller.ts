@@ -12,6 +12,8 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto, CreatePipSchema, CreatePipDto, UpdatePipSchema, UpdatePipDto } from './dto/hr.dto';
 import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 
+type Rows = { rows?: unknown[] };
+
 @Throttle({ default: { limit: 100, ttl: 60_000 } })
 @Controller('hr')
 @UseGuards(RolesGuard)
@@ -197,8 +199,14 @@ export class HrDashboardController {
   // real handler depending on module-registration order. Removed in Phase 4 Task 4.4.
 
   @Get('offboarding/questions')
-  getOffboardingQuestions() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getOffboardingQuestions() {
+    const r = await db.execute(sql`
+      SELECT DISTINCT item_key, label, order_num
+      FROM offboarding_checklist_items
+      ORDER BY order_num ASC NULLS LAST
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   // `GET hr/onboarding-checklists` is implemented by
@@ -215,23 +223,47 @@ export class HrDashboardController {
   }
 
   @Get('hrc-tests/employee')
-  getHrcTestsEmployee() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getHrcTestsEmployee() {
+    const r = await db.execute(sql`
+      SELECT * FROM hr_interview_sessions ORDER BY created_at DESC LIMIT 100
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('hrc-tests/public')
-  getHrcTestsPublic() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getHrcTestsPublic() {
+    const r = await db.execute(sql`
+      SELECT * FROM hrc_iq_questions ORDER BY id ASC LIMIT 200
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('hrc-tests/stats')
-  getHrcTestsStats() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getHrcTestsStats() {
+    const r1 = await db.execute(sql`
+      SELECT COUNT(*)::int AS session_count,
+             SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END)::int AS completed
+      FROM hr_interview_sessions
+    `);
+    const r2 = await db.execute(sql`
+      SELECT COUNT(*)::int AS result_count,
+             ROUND(AVG(total_score)::numeric, 2) AS avg_score
+      FROM hr_tool_test_results
+    `);
+    const sessions = ((r1 as Rows).rows ?? [])[0] ?? {};
+    const results = ((r2 as Rows).rows ?? [])[0] ?? {};
+    return { sessions, results };
   }
 
   @Get('360/reviewable')
-  get360Reviewable() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async get360Reviewable() {
+    const r = await db.execute(sql`
+      SELECT * FROM employee_360_assessments ORDER BY created_at DESC LIMIT 100
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('birthdays/settings')
@@ -287,8 +319,12 @@ export class HrDashboardController {
   }
 
   @Get('employee-corp')
-  getEmployeeCorp() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getEmployeeCorp() {
+    const r = await db.execute(sql`
+      SELECT * FROM employee_career_profiles ORDER BY created_at DESC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('employees/operator-stats')
@@ -299,8 +335,17 @@ export class HrDashboardController {
   }
 
   @Get('enps/surveys/results')
-  getEnpsSurveyResults() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getEnpsSurveyResults() {
+    const r = await db.execute(sql`
+      SELECT s.*, COUNT(r.id)::int AS response_count,
+             ROUND(AVG(r.score)::numeric, 2) AS avg_score
+      FROM enps_surveys s
+      LEFT JOIN enps_survey_responses r ON r.survey_id = s.id
+      GROUP BY s.id
+      ORDER BY s.created_at DESC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('abc-analysis/:id/calculate')

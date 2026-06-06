@@ -262,8 +262,14 @@ export class HrCompatAController {
   }
 
   @Get('hrc-tests/employee/:employeeId/results')
-  async getEmployeeTestResults(@Param('employeeId') _employeeId: string) {
-    return notImplemented('GET /hr/hrc-tests/employee/:employeeId/results');
+  async getEmployeeTestResults(@Param('employeeId') employeeId: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM hr_tool_test_results
+      WHERE candidate_id = ${safeInt(employeeId, 0)}
+      ORDER BY test_date DESC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Delete('employee-skills/:id')
@@ -316,8 +322,20 @@ export class HrCompatAController {
 
   @Post('hrc-tests/sessions')
   async createHrcTestSession(@Body() body: unknown) {
-    HrcSessionSchema.parse(body);
-    return notImplemented('POST /hr/hrc-tests/sessions');
+    const dto = HrcSessionSchema.parse(body);
+    const candidateId = dto.employeeId ? safeInt(String(dto.employeeId), 0) : null;
+    const r = await db.execute(sql`
+      INSERT INTO hr_interview_sessions (candidate_id, candidate_name, session_type, status, created_at)
+      VALUES (
+        ${candidateId},
+        ${dto.testType ?? null},
+        ${dto.testType ?? 'hrc'},
+        'pending',
+        NOW()
+      ) RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @Post('hrc-tests/tool-test/questions')

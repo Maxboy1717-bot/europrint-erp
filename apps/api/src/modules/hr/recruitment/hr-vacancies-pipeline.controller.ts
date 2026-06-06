@@ -21,6 +21,8 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { HrVacanciesService } from './hr-vacancies.service';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import {
   HrNdaRequestSchema, HrNdaRequestDto,
   HrMakeOfferSchema, HrMakeOfferDto,
@@ -207,13 +209,19 @@ export class HrVacanciesPipelineController {
     return { data: { pipeline_id: id, submitted_by: user.id, items } };
   }
 
-  @ApiOperation({ summary: 'Get pipeline checklist' })
+  @ApiOperation({ summary: 'Get pipeline checklist (hr_candidate_funnels.checklist_data)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('pipeline/:id/checklist')
-  getPipelineChecklist(@Param('id', ParseIntPipe) _id: number) {
-    // Qoida 10: stub bo'sh array qaytarmasligi kerak
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getPipelineChecklist(@Param('id', ParseIntPipe) id: number) {
+    const r = await db.execute(sql`
+      SELECT id, candidate_id, vacancy_id, stage, checklist_data, updated_at
+      FROM hr_candidate_funnels
+      WHERE id = ${id}
+    `);
+    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
+    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Patch pipeline checklist' })
