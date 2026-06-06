@@ -26,6 +26,8 @@ import { IIncidentRepo, INCIDENT_REPO } from '../domain/repositories/i-incident.
 import { AttendanceService } from '../attendance/attendance.service';
 import { AccessService } from '../access/access.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -144,6 +146,7 @@ export class SecurityController {
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
  async recordVisitorExit(@Param('id') id: string) {
+   await db.execute(sql`UPDATE security_visitors SET exited_at=NOW(), status='exited' WHERE id=${parseInt(id, 10)}`);
    return { visitorId: id, exitedAt: _time.now().toISOString(), status: 'exited' };
  }
 
@@ -151,7 +154,10 @@ export class SecurityController {
  @ApiResponse({ status: 200, description: 'OK' })
  @Get('visitors')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getVisitors() { return []; }
+ async getVisitors() {
+   const r = await db.execute(sql`SELECT id, full_name, company, purpose, host_employee_name, entered_at, exited_at, badge_number, status FROM security_visitors ORDER BY created_at DESC LIMIT 50`);
+   return (r as unknown as { rows: unknown[] }).rows ?? [];
+ }
 
  @ApiOperation({ summary: 'Get incidents' })
  @ApiResponse({ status: 200, description: 'OK' })
@@ -220,6 +226,7 @@ export class SecurityController {
  @HttpCode(HttpStatus.OK)
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
  async patchVisitorExit(@Param('id') id: string) {
+   await db.execute(sql`UPDATE security_visitors SET exited_at=NOW(), status='exited' WHERE id=${parseInt(id, 10)}`);
    return { visitorId: id, exitedAt: _time.now().toISOString(), status: 'exited' };
  }
 }
