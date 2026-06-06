@@ -117,12 +117,19 @@ export class IotSensorsMainController {
     return unwrapOrThrow(await this.svc.getSensorHistory(id, q.from, q.to, q.limit));
   }
 
-  @ApiOperation({ summary: 'Get predictive maintenance' })
+  @ApiOperation({ summary: 'Get predictive maintenance schedule (equipment_maintenance)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('predictive-maintenance')
+  @Roles(...IOT_READ)
   async getPredictiveMaintenance() {
-    return notImplemented('GET /iot/sensors/predictive-maintenance');
+    const r = await db.execute(sql`
+      SELECT * FROM equipment_maintenance
+      WHERE status IS DISTINCT FROM 'completed'
+      ORDER BY next_maintenance_date ASC NULLS LAST
+      LIMIT 100
+    `);
+    const items = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @ApiOperation({ summary: 'Resolve alert (UPDATE iot_alerts)' })

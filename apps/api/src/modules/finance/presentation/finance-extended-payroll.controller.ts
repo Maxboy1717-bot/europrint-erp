@@ -16,7 +16,11 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FINANCE_ROLES, PayrollCalculateSchema, PayrollAiCalculateSchema, ApprovePayrollSchema, PayrollRunSchema } from './finance-extended-dtos';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { unwrapOrInternal } from '@common/http-result';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { FinanceExtendedPayrollService } from '../finance-extended/finance-extended-payroll.service';
+
+type Rows = { rows?: unknown[] };
 
 @ApiThrottle()
 @ApiTags('Finance Extended Payroll')
@@ -87,17 +91,32 @@ export class FinanceExtendedPayrollController {
   }
 
 
-  @ApiOperation({ summary: 'Get tax calendar' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-1' })
+  @ApiOperation({ summary: 'Get tax calendar (payroll_tax_rules with validity dates)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('tax-calendar')
-  getTaxCalendar(@Query('year') _year?: string) {
-    return notImplemented('GET /finance-extended/tax-calendar');
+  async getTaxCalendar(@Query('year') year?: string) {
+    const r = await db.execute(sql`
+      SELECT * FROM payroll_tax_rules
+      WHERE is_active = true
+      ${year ? sql`AND (effective_from ILIKE ${year + '%'} OR effective_to IS NULL OR effective_to ILIKE ${year + '%'})` : sql``}
+      ORDER BY effective_from DESC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
-  @ApiOperation({ summary: 'Get salary benchmark' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-1' })
+  @ApiOperation({ summary: 'Get salary benchmark for position (salary_bands)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('salary-benchmark/:id')
-  getSalaryBenchmark(@Param('id') _id: string) {
-    return notImplemented('GET /finance-extended/salary-benchmark/:id');
+  async getSalaryBenchmark(@Param('id') id: string) {
+    const positionId = parseInt(id, 10);
+    const r = await db.execute(sql`
+      SELECT * FROM salary_bands
+      WHERE position_id = ${positionId} AND is_active = true
+      ORDER BY effective_from DESC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { positionId, items, total: items.length };
   }
 }
