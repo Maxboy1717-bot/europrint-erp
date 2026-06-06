@@ -132,6 +132,9 @@ export class SdOrdersController {
    validated.designFlag,
    validated.sampleFlag,
    user.id,
+   undefined, // dealId
+   undefined, // customerId
+   validated.items,
   );
 
   const res = await this.commandBus.execute(command);

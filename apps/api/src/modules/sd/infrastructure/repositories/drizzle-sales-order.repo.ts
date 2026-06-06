@@ -24,7 +24,7 @@ import { execSdSalesOrderInsert, execSdSalesOrderUpdate, execSdSalesOrderDelete 
 import { Err } from '@common/result';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
-import { ISalesOrderRepository, DrizzleTxExecutor } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, DrizzleTxExecutor, SalesOrderLineInput } from '../../domain/repositories/i-sales-order.repo';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
 
@@ -46,6 +46,31 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       // instead of the create()-time placeholder 0.
       order.assignPersistedId(newId);
       return { ok: true as const, data: order };
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
+  }
+
+  async saveItems(orderId: number, items: SalesOrderLineInput[], tx?: DrizzleTxExecutor): Promise<Result<number>> {
+    try {
+      if (!Array.isArray(items) || items.length === 0) return { ok: true as const, data: 0 };
+      // Tx-aware: when called inside the create transaction, items + order header commit atomically.
+      const exec = (tx ?? db) as { execute: (q: ReturnType<typeof sql>) => Promise<unknown> };
+      let saved = 0;
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        const itemNumber = String((i + 1) * 10).padStart(6, '0'); // 000010, 000020, ...
+        const qty = Number(it.orderQuantity);
+        const price = Number(it.netPrice);
+        const total = qty * price;
+        // Raw SQL targets the LIVE columns (the drizzle salesOrderItems stub drifts material_id/sales_order_id
+        // to varchar; live is integer). product_id binds to products (finished goods, owner 2026-06-05).
+        await exec.execute(sql`
+          INSERT INTO sales_order_items
+            (sales_order_id, item_number, product_id, description, order_quantity, open_quantity, unit, net_price, total_price, created_at)
+          VALUES
+            (${orderId}, ${itemNumber}, ${it.productId}, ${it.description}, ${qty}, ${qty}, ${it.unit ?? 'PC'}, ${price}, ${total}, NOW())`);
+        saved++;
+      }
+      return { ok: true as const, data: saved };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 

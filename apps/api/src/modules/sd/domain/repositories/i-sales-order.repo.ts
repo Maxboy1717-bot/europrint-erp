@@ -15,8 +15,19 @@ import { SalesOrder } from '../aggregates/sales-order.aggregate';
  */
 export type DrizzleTxExecutor = unknown;
 
+/** One order line — binds to a finished-good product (owner 2026-06-05). */
+export interface SalesOrderLineInput {
+  productId: number;
+  description: string;
+  orderQuantity: number;
+  unit?: string;
+  netPrice: number;
+}
+
 export interface ISalesOrderRepository {
   save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>>;
+  /** Persist order line-items into sales_order_items (product_id-bound). Runs in the create tx. */
+  saveItems(orderId: number, items: SalesOrderLineInput[], tx?: DrizzleTxExecutor): Promise<Result<number>>;
   findById(id: number): Promise<Result<SalesOrder | null>>;
   findByOrderNumber(orderNumber: string): Promise<Result<SalesOrder | null>>;
   findByCompanyId(companyId: number, limit: number, offset: number): Promise<Result<SalesOrder[]>>;

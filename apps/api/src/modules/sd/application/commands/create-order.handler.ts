@@ -12,7 +12,7 @@ import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
 import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
-import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, SALES_ORDER_REPO, SalesOrderLineInput } from '../../domain/repositories/i-sales-order.repo';
 import { OrderCreatedEvent } from '../../domain/events/order-created.event';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 import { OutboxRepository } from '../../../shared/outbox/outbox.repository';
@@ -26,7 +26,8 @@ export class CreateOrderCommand {
     public readonly sampleFlag: boolean = false,
     public readonly createdBy: number = 1,
     public readonly dealId?: number,
-    public readonly customerId?: number) {}
+    public readonly customerId?: number,
+    public readonly items: SalesOrderLineInput[] = []) {}
 }
 
 type OutboxRow = {
@@ -97,6 +98,12 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
           throw new Error(saveResult.error?.message ?? 'Failed to save order');
         }
         const savedOrder = saveResult.data as SalesOrder;
+
+        // STEP 3 — persist product-bound line-items in the SAME tx as the header + outbox.
+        const itemsResult = await this.orderRepo.saveItems(savedOrder.getId(), command.items, tx);
+        if (!itemsResult.ok) {
+          throw new Error(itemsResult.error?.message ?? 'Failed to save order items');
+        }
 
         const outboxRows = this._buildOutboxEntries(savedOrder, orderNumber, command);
         const outboxInsert = await this.outboxRepo.insertBatch(outboxRows, tx);
