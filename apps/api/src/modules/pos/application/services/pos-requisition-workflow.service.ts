@@ -54,6 +54,7 @@ export class PosRequisitionWorkflowService {
       }
       const updated = await setStatus(requestId, 'SUBMITTED');
 
+      // fire-and-forget: no listener by design (owner decision 2026-06-06)
       this.eventEmitter.emit('pos.requisition.submitted', {
         requestId, departmentId: req.departmentCode, requestedById: req.requestedBy,
       });
@@ -85,6 +86,7 @@ export class PosRequisitionWorkflowService {
         ...(note ? { justification: note } : {}),
       } as Partial<typeof posMaterialRequests.$inferInsert>);
 
+      // fire-and-forget: no listener by design (owner decision 2026-06-06)
       this.eventEmitter.emit('pos.requisition.approved', {
         requestId, approverId, requestNumber: req.requestNumber,
       });
@@ -113,6 +115,7 @@ export class PosRequisitionWorkflowService {
         rejectionReason: reason,
       } as Partial<typeof posMaterialRequests.$inferInsert>);
 
+      // fire-and-forget: no listener by design (owner decision 2026-06-06)
       this.eventEmitter.emit('pos.requisition.rejected', {
         requestId, approverId, reason, requestNumber: req.requestNumber,
       });
@@ -192,6 +195,7 @@ export class PosRequisitionWorkflowService {
         posMovementId: movement.id,
       } as Partial<typeof posMaterialRequests.$inferInsert>);
 
+      // fire-and-forget: no listener by design (owner decision 2026-06-06)
       this.eventEmitter.emit('pos.requisition.fulfilled', {
         requestId, movementId: movement.id, fulfilledById, requestNumber: req.requestNumber,
       });
@@ -225,6 +229,7 @@ export class PosRequisitionWorkflowService {
         rejectionReason: reason,
       } as Partial<typeof posMaterialRequests.$inferInsert>);
 
+      // fire-and-forget: no listener by design (owner decision 2026-06-06)
       this.eventEmitter.emit('pos.requisition.cancelled', {
         requestId, cancelledById, reason, requestNumber: req.requestNumber,
       });

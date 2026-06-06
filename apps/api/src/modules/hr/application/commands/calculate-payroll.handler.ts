@@ -92,6 +92,7 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
         `Payroll calculated - Employee: ${command.employeeId}, Gross: ${grossSalary}, Net: ${netSalary}`,
       );
 
+      // fire-and-forget: no listener by design (owner decision 2026-06-06)
       this.eventEmitter.emit('hr.payroll.calculated', {
         employeeId: command.employeeId,
         period: command.period,

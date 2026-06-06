@@ -90,6 +90,7 @@ export class PayrollService {
     // event bus. Additive — the legacy period-level emit below stays.
     const recordEvents = this.emitPayrollRecordCompletions(periodId, rows);
 
+    // fire-and-forget: no listener by design (owner decision 2026-06-06)
     this.eventEmitter.emit('payroll.period.closed', {
       periodId,
       totals,

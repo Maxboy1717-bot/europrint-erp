@@ -45,6 +45,7 @@ export class RecordAttendanceHandler implements ICommandHandler<RecordAttendance
       });
 
       if (result.ok) {
+        // fire-and-forget: no listener by design (owner decision 2026-06-06)
         this.eventEmitter.emit('hr.attendance.recorded', {
           employeeId: command.employeeId,
           date: command.attendanceDate,

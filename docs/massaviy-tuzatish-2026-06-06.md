@@ -158,7 +158,7 @@ Emitlanadi lekin `@OnEvent` tinglovchi **YO'Q** (9 ta):
 | `pos.requisition.fulfilled` | `pos-requisition-workflow.service.ts:195` | Talab bajarilganda | Owner: stock-update trigger? |
 | `pos.requisition.cancelled` | `pos-requisition-workflow.service.ts:228` | Talab bekor qilinganda | Owner: notification kerakmi? |
 
-**Tahlil:** Bular "fire-and-forget" — emit qilinadi, ammo hech kim tinglomaydi. Hozircha runtime xatosi yo'q (EventEmitter2 tinglovchisiz emit'ni ignor qiladi). Lekin `pos.requisition.*` va `payroll.*` ehtimol notification/GL trigger talab qiladi. **Owner qaror qabul qilsin.**
+**Owner qaror (2026-06-06):** Bular **intentional fire-and-forget** — tinglovchi kerak emas. Har bir emit saytiga `// fire-and-forget: no listener by design (owner decision 2026-06-06)` izoh qo'shildi (commit `docs/events` below). EventEmitter2 tinglovchisiz emit'ni ignor qiladi — runtime xatosi yo'q.
 
 ---
 
@@ -191,12 +191,12 @@ Ikki sessiyada **21+ drift TUZATILDI**:
 | `POST /api/crm/ai/extended/chat/respond` | **[FALSE POSITIVE]** | `@Post(['chat','ai/extended/chat/respond'])` wired. Checker array parslamaydi. |
 | `POST /api/crm/ai/extended/churn/analyze` | **[FALSE POSITIVE]** | `@Post(['ai/churn','ai/extended/churn/analyze'])` wired. |
 | `POST /api/crm/ai/extended/voice/analyze-call` | **[FALSE POSITIVE]** | `@Post(['ai/voice','ai/extended/voice/analyze-call'])` wired. |
-| `POST /api/forecasts/run` | **[OWNER DECISION]** | `forecasts` controller mavjud emas. `ForecastAnalytics.tsx:95` chaqiradi. Yangi modul kerak yoki FE URL o'zgartirilishi kerak. |
-| `POST /api/sd/forecast/generate` | **[OWNER DECISION]** | BE: `@Controller('sales')` + `@Post('forecast/generate')` → `/api/sales/forecast/generate`. FE: `/api/sd/forecast/generate`. Prefix drift `sales` vs `sd`. Fix: `sales.controller.ts` → `@Controller(['sales','sd'])` yoki FE URL tuzatish. |
+| `POST /api/forecasts/run` | **[FIXED `ad8701f8`]** | `forecast-ext.controller.ts` → `@Controller(['forecast','forecasts'])` + `@Post('run')` → `ForecastWeeklyJob.scheduleForecastJobs()`. Checker array parslamaydi (false positive). |
+| `POST /api/sd/forecast/generate` | **[FIXED `ad8701f8`]** | `sales.controller.ts` → `@Controller(['sales','sd'])`. Checker array parslamaydi (false positive). |
 
-### 🔴 D3 — Owner qarorlari kerak
+### ✅ D3 — Owner qarorlari: YOPIQ
 
-**Zero-listener events (9 ta)** — yuqoridagi D.ZL jadval, harakat aniqlanmagan:
+**Zero-listener events (9 ta)** — `[INTENTIONAL fire-and-forget]` owner qaror 2026-06-06. Izoh qo'shildi:
 - `hr.attendance.recorded`, `hr.payroll.calculated`, `payroll.period.closed`
 - `pos.gl.auto_posted`
 - `pos.requisition.*` (5 ta: submitted/approved/rejected/fulfilled/cancelled)

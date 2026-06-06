@@ -105,6 +105,7 @@ export class PosGlAutoListener implements IEventHandler<PosMovementCompletedEven
       );
 
       // 5. Muvaffaqiyatli event emit qilish
+      // fire-and-forget: no listener by design (owner decision 2026-06-06)
       this.eventEmitter.emit('pos.gl.auto_posted', {
         movementId,
         movementNumber,
