@@ -18,6 +18,7 @@ import {
   index,
   check,
   pgEnum,
+  date,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -129,6 +130,9 @@ export const hrVacancyProfiles = pgTable("hr_vacancy_profiles", {
   workSchedule: varchar("work_schedule", { length: 50 }), // "5/2", "6/1", "smenali"
   workLocation: varchar("work_location", { length: 30 }), // "ofis", "uzoqdan", "gibrid"
   probationDays: integer("probation_days").default(90),
+  probationStart: date("probation_start"),
+  probationEnd: date("probation_end"),
+  channels: jsonb("channels").$type<Array<string | Record<string, unknown>>>(),
   perks: text("perks").array(), // ["ovqat", "transport", "sog'liqni saqlash"]
 
   isActive: boolean("is_active").notNull().default(true),

@@ -228,6 +228,13 @@ export class HrVacanciesController {
   @Patch('vacancies/:id/channels')
   async patchVacancyChannels(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const dto = PatchVacancyChannelsSchema.parse(body);
+    // Persist posting channels to hr_vacancy_profiles.channels (new nullable jsonb column).
+    await db.execute(sql`
+      UPDATE hr_vacancy_profiles
+      SET channels = ${JSON.stringify(dto.channels ?? [])}::jsonb,
+          updated_at = NOW()
+      WHERE vacancy_id = ${id}
+    `);
     return { data: { vacancy_id: id, ...dto, updated: true } };
   }
 

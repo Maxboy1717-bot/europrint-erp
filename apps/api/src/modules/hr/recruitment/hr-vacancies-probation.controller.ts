@@ -20,6 +20,8 @@ import { AuthenticatedUser } from '@common/types/user.types';
 import { HrVacanciesService } from './hr-vacancies.service';
 import { HrProbationReviewSchema, HrProbationReviewDto } from './dto/hr-vacancies.dto';
 import { z } from 'zod';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const ProbationDatesSchema = z.object({
   start_date: z.string().optional(),
@@ -89,6 +91,17 @@ export class HrVacanciesProbationController {
   @Patch('pipeline/:id/probation-dates')
   async patchProbationDates(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const dto = ProbationDatesSchema.parse(body);
+    // Persist probation dates to hr_vacancy_profiles using pipeline→vacancy lookup via hr_candidate_funnels.
+    // pipeline_id = hr_candidate_funnels.id which has vacancy_id FK.
+    await db.execute(sql`
+      UPDATE hr_vacancy_profiles hvp
+      SET probation_start = COALESCE(${dto.start_date ?? null}::date, hvp.probation_start),
+          probation_end   = COALESCE(${dto.end_date   ?? null}::date, hvp.probation_end),
+          updated_at      = NOW()
+      FROM hr_candidate_funnels hcf
+      WHERE hcf.id = ${id}
+        AND hvp.vacancy_id = hcf.vacancy_id
+    `);
     return { data: { pipeline_id: id, ...dto, updated: true } };
   }
 
