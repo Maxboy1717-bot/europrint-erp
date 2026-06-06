@@ -51,17 +51,40 @@ export class CcOrgResolverService {
   }
 
   private async resolveManagerOfSender(senderUserId: number): Promise<number> {
-    // sender → employee → manager_id → manager.user_id
-    const r = await runQuery<{ user_id: number | null }>(sql`
+    // 1. Direct: sender → employee → manager_id → manager.user_id.
+    const direct = await runQuery<{ user_id: number | null }>(sql`
       SELECT m.user_id
       FROM employees e
-      LEFT JOIN employees m ON m.id = e.manager_id
-      WHERE e.user_id = ${senderUserId}
+      JOIN employees m ON m.id = e.manager_id
+      WHERE e.user_id = ${senderUserId} AND e.manager_id IS NOT NULL AND e.manager_id <> 0
       LIMIT 1
     `);
-    const id = r.rows[0]?.user_id ?? null;
-    if (!id) throw new BadRequestException("Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan");
-    return id;
+    const directId = direct.rows[0]?.user_id ?? null;
+    if (directId) return directId;
+
+    // 2. Fallback (employees.manager_id is unset across the org): walk UP the org tree from the
+    //    sender's primary department to the nearest department that HAS a head — that head is the
+    //    manager. Resolves MANAGER_OF_SENDER without any manager_id data. depth<20 guards cycles.
+    const walk = await runQuery<{ head_user_id: number | null }>(sql`
+      WITH RECURSIVE chain AS (
+        SELECT od.id, od.parent_id, od.head_user_id, 0 AS depth
+        FROM employee_org_departments eod
+        JOIN org_departments od ON od.id = eod.org_department_id
+        WHERE eod.user_id = ${senderUserId} AND eod.is_primary = true
+        UNION ALL
+        SELECT p.id, p.parent_id, p.head_user_id, c.depth + 1
+        FROM chain c
+        JOIN org_departments p ON p.id = c.parent_id
+        WHERE c.depth < 20
+      )
+      SELECT head_user_id FROM chain
+      WHERE head_user_id IS NOT NULL AND head_user_id <> ${senderUserId}
+      ORDER BY depth
+      LIMIT 1
+    `);
+    const headId = walk.rows[0]?.head_user_id ?? null;
+    if (!headId) throw new BadRequestException("Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan");
+    return headId;
   }
 
   private async resolveDeptHead(senderUserId: number): Promise<number> {
