@@ -61,14 +61,16 @@ describe('SuccessionCompatController', () => {
     expect(svc.getTalentPool).toHaveBeenCalled();
   });
 
-  it('getKeyPositions wraps array in items+total', async () => {
+  it('getKeyPositions returns bare array (P1.16.1: FE uses Array.isArray guard)', async () => {
+    // P1.16.1: controller returns bare array so FE Array.isArray() check works.
     (svc.getKeyPositions as jest.Mock).mockResolvedValue(ok([{ id: 'p1' }]));
-    expect(await ctrl.getKeyPositions()).toEqual({ items: [{ id: 'p1' }], total: 1 });
+    expect(await ctrl.getKeyPositions()).toEqual([{ id: 'p1' }]);
   });
 
-  it('getSuccessionRisks returns empty wrapper on error', async () => {
+  it('getSuccessionRisks returns empty array on error', async () => {
+    // P1.16.1: on Err, returns [] (bare array) not { items: [], total: 0 }
     (svc.getSuccessionRisks as jest.Mock).mockResolvedValue(err());
-    expect(await ctrl.getSuccessionRisks()).toEqual({ items: [], total: 0 });
+    expect(await ctrl.getSuccessionRisks()).toEqual([]);
   });
 
   it('getReadinessStats returns fallback shape on error', async () => {

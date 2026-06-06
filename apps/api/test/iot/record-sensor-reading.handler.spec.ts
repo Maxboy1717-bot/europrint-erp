@@ -11,9 +11,26 @@ import { RecordSensorReadingHandler } from '../../src/modules/iot/application/co
 import { RecordSensorReadingCommand } from '../../src/modules/iot/application/commands/record-sensor-reading.command';
 import { AnomalyDetectedEvent } from '../../src/modules/iot/domain/events';
 import { TELEGRAM_SENDER } from '../../src/modules/notifications/domain/ports/i-telegram-sender.port';
+import { SENSOR_REPO } from '../../src/modules/iot/domain/repositories/i-sensor.repo';
+import { Ok } from '../../src/common/result';
 
 interface TelegramMock {
   sendAlert: jest.Mock;
+}
+
+function makeSensorRepoMock() {
+  return {
+    saveReading: jest.fn().mockResolvedValue(Ok({ id: 'reading-1' })),
+    findDeviceById: jest.fn(),
+    findAllDevices: jest.fn(),
+    saveDevice: jest.fn(),
+    updateDevice: jest.fn(),
+    findReadings: jest.fn(),
+    findAnomalies: jest.fn(),
+    existsByCode: jest.fn(),
+    registerDevice: jest.fn(),
+    updateThresholds: jest.fn(),
+  };
 }
 
 async function build(bus: EventBus, telegram: TelegramMock): Promise<RecordSensorReadingHandler> {
@@ -22,6 +39,8 @@ async function build(bus: EventBus, telegram: TelegramMock): Promise<RecordSenso
       RecordSensorReadingHandler,
       { provide: EventBus, useValue: bus },
       { provide: TELEGRAM_SENDER, useValue: telegram },
+      // Handler now persists readings via SENSOR_REPO (Leverage #6 fix)
+      { provide: SENSOR_REPO, useValue: makeSensorRepoMock() },
     ],
   }).compile();
   return module.get(RecordSensorReadingHandler);

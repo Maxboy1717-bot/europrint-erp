@@ -18,6 +18,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditInterceptor } from '../../src/common/interceptors/audit.interceptor';
 import { PosStubController } from '../../src/modules/pos/presentation/pos-stub.controller';
 import { CashRegisterService } from '../../src/modules/pos/application/services/cash-register.service';
+import { StockLedgerService } from '../../src/modules/pos/application/services/stock-ledger.service';
 import {
   CashRegisterRepository,
   type CreateTransactionInput,
@@ -119,6 +120,12 @@ async function buildController(repo: CashRegisterRepository): Promise<PosStubCon
     providers: [
       CashRegisterService,
       { provide: CashRegisterRepository, useValue: repo },
+      // StockLedgerService is injected by PosStubController at index [1]; mock it.
+      { provide: StockLedgerService, useValue: {
+        getLowStock: jest.fn().mockResolvedValue(Ok([])),
+        getMovements: jest.fn().mockResolvedValue(Ok([])),
+        getMonthlyReport: jest.fn().mockResolvedValue(Ok({})),
+      } },
       // Stub interceptor — AuditInterceptor pulls in DB-backed deps we don't
       // need for this controller-level integration test.
       { provide: APP_INTERCEPTOR, useValue: { intercept: (_ctx: unknown, next: { handle: () => unknown }) => next.handle() } },

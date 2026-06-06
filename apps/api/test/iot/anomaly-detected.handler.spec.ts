@@ -1,13 +1,20 @@
 /**
  * test/iot/anomaly-detected.handler.spec.ts
  *
- * Unit tests for AnomalyDetectedHandler. The handler currently only logs the
- * event; we verify it accepts every event shape without throwing and exercise
- * the logger side-effect via a spy.
+ * Unit tests for AnomalyDetectedHandler. The handler now persists an iot_alerts
+ * row via db.execute. We mock @shared/db so no real DB is needed.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
+
+// Mock @shared/db before importing the handler so the module-level import is intercepted.
+jest.mock('@shared/db', () => ({
+  db: {
+    execute: jest.fn().mockResolvedValue({ rows: [] }),
+  },
+}));
+
 import { AnomalyDetectedHandler } from '../../src/modules/iot/infrastructure/event-handlers/anomaly-detected.handler';
 import { AnomalyDetectedEvent } from '../../src/modules/iot/domain/events';
 
@@ -26,9 +33,11 @@ describe('AnomalyDetectedHandler', () => {
     await expect(handler.handle(ev)).resolves.toBeUndefined();
   });
 
-  it('logs an error entry containing the deviceId and anomaly type', async () => {
+  it('logs a warn entry containing the deviceId and anomaly type on success', async () => {
+    // Handler now persists to iot_alerts via db.execute, then calls logger.warn
+    // (not logger.error) when the insert succeeds.
     const handler = await build();
-    const spy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const spy = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
     const ev = new AnomalyDetectedEvent('dev-9', 'mach-9', 'high_value', 200);
 
     await handler.handle(ev);

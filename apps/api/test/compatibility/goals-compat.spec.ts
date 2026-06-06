@@ -38,8 +38,10 @@ describe('GoalsCompatController', () => {
   });
 
   it('createGoal persists and returns id', async () => {
+    // P1.8.2: createGoal now validates via CreateGoalSchema requiring title,
+    // startDate, and endDate (P1.8.3). Pass all required fields.
     (svc.createGoal as jest.Mock).mockResolvedValue(ok({ id: 'g2' }));
-    expect(await ctrl.createGoal({ title: 'Sales' })).toEqual({ id: 'g2' });
+    expect(await ctrl.createGoal({ title: 'Sales', startDate: '2026-01-01', endDate: '2026-12-31' })).toEqual({ id: 'g2' });
   });
 
   it('getGoal returns service payload', async () => {

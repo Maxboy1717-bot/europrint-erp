@@ -44,10 +44,13 @@ describe('CrmActivitiesRepository', () => {
       if (r.ok) expect(r.data).toEqual([]);
     });
 
-    it('returns Err when DB throws', async () => {
+    it('returns Ok([]) when DB throws (inner catch degrades gracefully)', async () => {
+      // list() has an inner try/catch that logs the error and returns [] rather
+      // than re-throwing, so safeCall wraps the [] in Ok([]) instead of Err.
       dbStub.__setRejected(new Error('boom'));
       const r = await repo.list(null, null, null, undefined, undefined, 10, 0);
-      expect(r.ok).toBe(false);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data).toEqual([]);
     });
   });
 

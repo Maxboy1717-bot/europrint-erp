@@ -48,8 +48,9 @@ describe('HrOffboardingController', () => {
       // @Query() q: DTO — pass the DTO-shaped object directly
       const out = await controller.listCases({ status: 'active' } as never);
 
+      // P1.18: controller returns { items, total } (not { data })
       expect(svc.listCases).toHaveBeenCalledWith({ status: 'active', employeeId: undefined });
-      expect(out).toEqual({ data: rows });
+      expect(out).toEqual({ items: rows, total: rows.length });
     });
 
     it('passes employee_id filter through', async () => {
@@ -58,32 +59,38 @@ describe('HrOffboardingController', () => {
       expect(svc.listCases).toHaveBeenCalledWith({ status: undefined, employeeId: 5 });
     });
 
-    it('returns empty data array on empty result', async () => {
+    it('returns empty items array on empty result', async () => {
       svc.listCases.mockResolvedValue(ok([]));
       const out = await controller.listCases({} as never);
-      expect(out).toEqual({ data: [] });
+      // P1.18: returns { items: [], total: 0 }
+      expect(out).toEqual({ items: [], total: 0 });
     });
 
-    it('propagates repository errors as HTTP exceptions', async () => {
+    it('returns empty items on repository error (does not throw)', async () => {
+      // P1.18: on Err, controller returns { items: [], total: 0 } instead of throwing
       svc.listCases.mockResolvedValue(err(AppErr('INTERNAL', 'boom')));
-      await expect(controller.listCases({} as never)).rejects.toThrow();
+      const out = await controller.listCases({} as never);
+      expect(out).toEqual({ items: [], total: 0 });
     });
   });
 
   // ─── getStats ─────────────────────────────────────────────────────────────
   describe('getStats', () => {
-    it('returns aggregate counts wrapped in data field', async () => {
+    it('returns stats object directly (P1.18: FE accesses stats.active/completed/total)', async () => {
       const stats = { active: 3, completed: 5, cancelled: 0 };
       svc.getStats.mockResolvedValue(ok(stats));
 
       const out = await controller.getStats();
 
-      expect(out).toEqual({ data: stats });
+      // P1.18: controller returns the stats object directly, not { data: stats }
+      expect(out).toEqual(stats);
     });
 
-    it('propagates failures with HTTP exception', async () => {
+    it('returns fallback stats shape on error (does not throw)', async () => {
+      // P1.18: on Err, returns { active:0, completed:0, cancelled:0, total:0 } fallback
       svc.getStats.mockResolvedValue(err(AppErr('INTERNAL', 'db down')));
-      await expect(controller.getStats()).rejects.toThrow();
+      const out = await controller.getStats();
+      expect(out).toEqual({ active: 0, completed: 0, cancelled: 0, total: 0 });
     });
   });
 
