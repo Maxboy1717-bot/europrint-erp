@@ -124,6 +124,7 @@ const EMPTY_ORDER_FORM = {
   currency: "UZS" as string,
   designFlag: false,
   sampleFlag: false,
+  items: [] as Array<{ productId: string; description: string; orderQuantity: string; unit: string; netPrice: string }>,
 };
 
 export default function SDSalesOrders() {
@@ -190,14 +191,26 @@ export default function SDSalesOrders() {
   });
 
   const createMut = useMutation({
-    mutationFn: (body: typeof EMPTY_ORDER_FORM) =>
-      apiRequest("POST", "/api/sd/orders", {
-        company_id: Number(body.companyId),
-        total_amount: Number(body.totalAmount),
+    mutationFn: (body: typeof EMPTY_ORDER_FORM) => {
+      // camelCase to match the BE Zod DTO (companyId/items). When lines exist the order total
+      // is derived from them; otherwise the manual total is used.
+      const lines = body.items.filter(it => it.productId);
+      const linesSum = lines.reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
+      return apiRequest("POST", "/api/sd/orders", {
+        companyId: Number(body.companyId),
+        totalAmount: lines.length > 0 ? linesSum : Number(body.totalAmount),
         currency: body.currency,
-        design_flag: body.designFlag,
-        sample_flag: body.sampleFlag,
-      }),
+        designFlag: body.designFlag,
+        sampleFlag: body.sampleFlag,
+        items: lines.map(it => ({
+          productId: Number(it.productId),
+          description: it.description || "Mahsulot",
+          orderQuantity: Number(it.orderQuantity) || 0,
+          unit: it.unit || "PC",
+          netPrice: Number(it.netPrice) || 0,
+        })),
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       setCreateDialog(false);
@@ -210,6 +223,27 @@ export default function SDSalesOrders() {
   const orders = Array.isArray(data?.data) ? data.data : [];
   const totalItems = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+  // STEP 4 — finished-goods catalog for the line-item picker. Empty until the owner adds products.
+  const { data: productsData } = useQuery<{ data?: Array<Record<string, unknown>> } | Array<Record<string, unknown>>>({
+    queryKey: ["/api/erp/products"],
+    enabled: createDialog,
+  });
+  const products: Array<Record<string, unknown>> = Array.isArray((productsData as { data?: unknown[] })?.data)
+    ? (productsData as { data: Array<Record<string, unknown>> }).data
+    : (Array.isArray(productsData) ? (productsData as Array<Record<string, unknown>>) : []);
+  const orderLines = orderForm.items;
+  const linesTotal = orderLines.reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
+
+  function addLine() {
+    setOrderForm(f => ({ ...f, items: [...f.items, { productId: "", description: "", orderQuantity: "1", unit: "PC", netPrice: "0" }] }));
+  }
+  function removeLine(idx: number) {
+    setOrderForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
+  }
+  function updateLine(idx: number, patch: Partial<(typeof EMPTY_ORDER_FORM)["items"][number]>) {
+    setOrderForm(f => ({ ...f, items: f.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }));
+  }
 
   function handleSearchChange(val: string) {
     setSearch(val);
@@ -435,6 +469,54 @@ export default function SDSalesOrders() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            {/* STEP 4 — Buyurtma qatorlari (tayyor mahsulotlar) */}
+            <div className="space-y-2 pt-2 border-t border-border mt-1">
+              <div className="flex items-center justify-between">
+                <Label>{tLabel("sd.orders.qatorlar", "Buyurtma qatorlari (mahsulotlar)")}</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addLine}
+                  disabled={products.length === 0} data-testid="btn-add-line">
+                  + {tLabel("sd.orders.qator", "Qator")}
+                </Button>
+              </div>
+              {products.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {tLabel("sd.orders.mahsulotYoq", "Mahsulot katalogi bo'sh — avval mahsulot qo'shing.")}
+                </p>
+              )}
+              {orderLines.map((line, idx) => {
+                const lineTotal = (Number(line.orderQuantity) || 0) * (Number(line.netPrice) || 0);
+                return (
+                  <div key={idx} className="flex items-end gap-2" data-testid={`order-line-${idx}`}>
+                    <div className="flex-1">
+                      <Select value={line.productId} onValueChange={v => {
+                        const p = products.find(pr => String(pr.id) === v);
+                        updateLine(idx, { productId: v, description: String(p?.name ?? p?.description ?? "") });
+                      }}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder={tLabel("sd.orders.mahsulot", "Mahsulot")} /></SelectTrigger>
+                        <SelectContent>
+                          {products.map(p => (
+                            <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name ?? p.code ?? p.id)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Input className="w-20" type="number" value={line.orderQuantity}
+                      onChange={e => updateLine(idx, { orderQuantity: e.target.value })} placeholder={tLabel("sd.orders.soni", "Soni")} data-testid={`line-qty-${idx}`} />
+                    <Input className="w-16" value={line.unit}
+                      onChange={e => updateLine(idx, { unit: e.target.value })} placeholder={tLabel("sd.orders.birlik", "Birlik")} />
+                    <Input className="w-24" type="number" value={line.netPrice}
+                      onChange={e => updateLine(idx, { netPrice: e.target.value })} placeholder={tLabel("sd.orders.narx", "Narx")} data-testid={`line-price-${idx}`} />
+                    <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">{lineTotal.toLocaleString()}</span>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)} data-testid={`btn-remove-line-${idx}`}>✕</Button>
+                  </div>
+                );
+              })}
+              {orderLines.length > 0 && (
+                <div className="flex justify-end text-sm font-medium pt-1">
+                  {tLabel("sd.orders.qatorlarJami", "Qatorlar jami")}: {linesTotal.toLocaleString()} {orderForm.currency}
+                </div>
+              )}
             </div>
             <div className="space-y-2 pt-1">
               <div className="flex items-center gap-2">
