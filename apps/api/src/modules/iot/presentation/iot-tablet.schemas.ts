@@ -90,6 +90,29 @@ export const MaterialKitScanSchema = z.object({
   scannedBy: z.coerce.number().int().optional(),
 }).passthrough();
 
+export const EvaluationSchema = z.object({
+  operatorId: z.coerce.number().int().optional(),
+  shiftName: z.string().max(200).optional(),
+  safetyScore: z.coerce.number().int().min(0).max(100).optional(),
+  qualityScore: z.coerce.number().int().min(0).max(100).optional(),
+  productivityScore: z.coerce.number().int().min(0).max(100).optional(),
+  teamworkScore: z.coerce.number().int().min(0).max(100).optional(),
+  overallScore: z.coerce.number().int().min(0).max(100).default(0),
+  issuesReported: z.string().max(2000).optional(),
+  suggestions: z.string().max(2000).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
+export const MaterialReturnSchema = z.object({
+  materialId: z.coerce.number().int().optional(),
+  materialName: z.string().max(500).default('Unknown'),
+  quantity: z.coerce.number().default(1),
+  unit: z.string().max(50).default('pcs'),
+  performedBy: z.coerce.number().int().default(0),
+  reason: z.string().max(1000).optional(),
+  notes: z.string().max(2000).optional(),
+}).passthrough();
+
 export const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
 
 /**

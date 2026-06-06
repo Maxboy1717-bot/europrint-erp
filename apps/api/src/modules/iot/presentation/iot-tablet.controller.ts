@@ -45,6 +45,8 @@ import {
   InlineQcSchema,
   HandoverSchema,
   MaterialKitScanSchema,
+  EvaluationSchema,
+  MaterialReturnSchema,
   IOT_READ,
   coerceWorkerId,
 } from './iot-tablet.schemas';
@@ -264,10 +266,15 @@ export class IotTabletController {
   }
 
   @ApiOperation({ summary: 'Get production session crew' })
-  @ApiResponse({ status: 501, description: 'DDL-GATE: no session_crew table yet' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('production-sessions/:id/crew') @Roles(...IOT_READ)
-  async getProductionSessionCrew(@Param('id') _id: string) {
-    return notImplemented('GET /iot/production-sessions/:id/crew');
+  async getProductionSessionCrew(@Param('id') id: string) {
+    const sessionId = parseInt(id, 10);
+    const r = await db.execute(sql`
+      SELECT * FROM machine_crews WHERE session_id = ${sessionId} ORDER BY id ASC
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @ApiOperation({ summary: 'Start production session' })
@@ -321,19 +328,60 @@ export class IotTabletController {
   }
 
   @ApiOperation({ summary: 'Submit production evaluation' })
-  @ApiResponse({ status: 501, description: 'DDL-GATE: production_evaluations table needed' })
+  @ApiResponse({ status: 201, description: 'OK' })
   @Post('production-sessions/:id/evaluation') @Roles(...IOT_READ)
-  async submitProductionEvaluation(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/evaluation');
+  async submitProductionEvaluation(@Param('id') id: string, @Body() body: unknown) {
+    const dto = EvaluationSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+    const r = await db.execute(sql`
+      INSERT INTO shift_evaluations (
+        eval_id, shift_name, operator_id,
+        safety_score, quality_score, productivity_score, teamwork_score,
+        overall_score, issues_reported, suggestions, notes, skipped, created_at
+      ) VALUES (
+        ${sessionId},
+        ${dto.shiftName ?? `Session ${sessionId}`},
+        ${dto.operatorId ?? null},
+        ${dto.safetyScore ?? null},
+        ${dto.qualityScore ?? null},
+        ${dto.productivityScore ?? null},
+        ${dto.teamworkScore ?? null},
+        ${dto.overallScore},
+        ${dto.issuesReported ?? null},
+        ${dto.suggestions ?? null},
+        ${dto.notes ?? null},
+        false,
+        NOW()
+      ) RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Submit material return' })
-  @ApiResponse({ status: 501, description: 'DDL-GATE: material_returns table needed' })
+  @ApiResponse({ status: 201, description: 'OK' })
   @Post('production-sessions/:id/material-return') @Roles(...IOT_READ)
-  async submitMaterialReturn(@Param('id') _id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
-    return notImplemented('POST /iot/production-sessions/:id/material-return');
+  async submitMaterialReturn(@Param('id') id: string, @Body() body: unknown) {
+    const dto = MaterialReturnSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+    const r = await db.execute(sql`
+      INSERT INTO material_movements (
+        session_id, movement_type, material_name, quantity, unit,
+        performed_by, material_id, reason, notes, created_at
+      ) VALUES (
+        ${sessionId}, 'RETURN',
+        ${dto.materialName},
+        ${dto.quantity},
+        ${dto.unit},
+        ${dto.performedBy},
+        ${dto.materialId ?? null},
+        ${dto.reason ?? null},
+        ${dto.notes ?? null},
+        NOW()
+      ) RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Submit inline QC check' })
