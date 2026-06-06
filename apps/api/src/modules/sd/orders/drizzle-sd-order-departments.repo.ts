@@ -190,6 +190,29 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Material requirement yaratishda xatolik'); }
   }
 
+  /** Production fan-out (Phase 4 final dept, unblocked by order line-items): create one production order
+   *  per product line-item the order carries (sales_order_items.product_id = finished goods).
+   *  planned_quantity = order_quantity; sales_order_id links back. bom_id/routing_id are left NULL until
+   *  BOMs are defined (BOM material explosion is a later step). Idempotent — re-firing does not duplicate
+   *  per (sales_order_id, product_id). */
+  async createProductionJob(orderId: number): Promise<Result<{ created: boolean }>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        INSERT INTO production_orders (order_number, product_id, planned_quantity, sales_order_id, status, created_at, updated_at)
+        SELECT 'PRO-' || soi.sales_order_id || '-' || soi.item_number, soi.product_id, soi.order_quantity, soi.sales_order_id, 'created', NOW(), NOW()
+        FROM sales_order_items soi
+        WHERE soi.sales_order_id = ${orderId}
+          AND soi.product_id IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM production_orders po
+            WHERE po.sales_order_id = soi.sales_order_id AND po.product_id = soi.product_id
+          )
+        RETURNING id
+      `);
+      return Ok({ created: r.rows.length > 0 });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Ishlab chiqarish order yaratishda xatolik'); }
+  }
+
   /** Advance a material requirement's status (NEEDED->RESERVED->ISSUED->RETURNED). ISSUED is the
    *  done signal — the rolls/material were issued to production — and marks the warehouse dept 'done'. */
   async setMaterialStatus(orderId: number, reqId: string, status: string): Promise<Result<Row | null>> {

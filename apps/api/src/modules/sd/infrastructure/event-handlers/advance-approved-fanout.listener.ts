@@ -78,9 +78,16 @@ export class AdvanceApprovedFanoutListener implements IEventHandler<AdvanceAppro
         } else {
           this.logger.warn({ msg: 'Fan-out: warehouse dispatch failed', orderId, error: created.error?.message });
         }
+      } else if (dept === 'production') {
+        // Unblocked: order line-items now bind to products, so production orders are created per line.
+        const created = await this.deptRepo.createProductionJob(orderId);
+        if (created.ok) {
+          await this.deptRepo.markStatus(orderId, 'production', 'started');
+          this.logger.log({ msg: 'Fan-out: production order(s) dispatched from line-items', orderId, newlyCreated: created.data.created });
+        } else {
+          this.logger.warn({ msg: 'Fan-out: production dispatch failed', orderId, error: created.error?.message });
+        }
       } else {
-        // production is intentionally deferred (needs a product catalog + order line-item
-        // model — see docs/phase4-production-deferred-2026-06-01.md). No fake job is created.
         this.logger.log({ msg: 'Fan-out: department not yet wired (Phase 4 incremental)', orderId, dept });
       }
     }
