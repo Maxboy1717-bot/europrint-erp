@@ -116,6 +116,7 @@ export class HrEmployeesController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Put(':id')
+  @Patch(':id')
   @Roles('HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrUpdateEmployeeSchema))
   async updateEmployee(@Param('id') id: string, @Body() body: HrUpdateEmployeeDto) {
