@@ -53,6 +53,9 @@ export class WmsRentalController {
       amount: number;
       batchNumber: string;
       expiryDate?: Date;
+      /** Optional: enables rental-timer Trigger 12 in WmsFgReceivedListener */
+      orderId?: number;
+      areaM2?: number;
     },
   ) {
     const command = new ReceiveFgCommand(
@@ -61,6 +64,8 @@ export class WmsRentalController {
       dto.amount,
       dto.batchNumber,
       dto.expiryDate || null,
+      dto.orderId,
+      dto.areaM2,
     );
     const res = await this.commandBus.execute(command);
     return unwrapOrThrow(res);

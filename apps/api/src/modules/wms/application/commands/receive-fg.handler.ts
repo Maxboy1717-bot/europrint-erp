@@ -14,11 +14,16 @@ import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.reposito
 import { WmsFgReceivedEvent } from '../events/wms-fg-received.event';
 
 export class ReceiveFgCommand {
-  constructor(public materialId: number,
+  constructor(
+    public materialId: number,
     public warehouseId: number,
     public amount: number,
     public batchNumber: string,
-    public expiryDate: Date | null = null) {}
+    public expiryDate: Date | null = null,
+    /** orderId enables the rental-timer trigger in WmsFgReceivedListener (Trigger 12). */
+    public orderId?: number,
+    public areaM2?: number,
+  ) {}
 }
 
 @CommandHandler(ReceiveFgCommand)
@@ -52,12 +57,15 @@ export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
 
     // Trigger 12: WMS FG → FI ijara taymer
     // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy @OnEvent listeners.
+    // orderId/areaM2 are optional; when present, WmsFgReceivedListener starts the rental timer.
     this.eventBus.publish(
       new WmsFgReceivedEvent(
         command.materialId,
         command.amount,
         command.warehouseId,
         _time.now(),
+        command.orderId,
+        command.areaM2,
       ),
     );
 
