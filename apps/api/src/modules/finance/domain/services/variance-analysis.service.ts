@@ -176,27 +176,19 @@ export class VarianceAnalysisService {
   }
 
   private parseBomItems(json: string): Array<{ qty: number; unitCost: number }> {
-    try {
-      const items = JSON.parse(json) as Array<Record<string, unknown>>;
-      if (!Array.isArray(items)) return [];
-      return items.map(i => ({
-        qty:      safeNum(i['qty'] ?? i['quantity'], 0),
-        unitCost: safeNum(i['unitCost'] ?? i['unit_cost'] ?? i['cost'], 0),
-      }));
-    } catch {
-      return [];
-    }
+    const items = JSON.parse(json) as Array<Record<string, unknown>>;
+    if (!Array.isArray(items)) return [];
+    return items.map(i => ({
+      qty:      safeNum(i['qty'] ?? i['quantity'], 0),
+      unitCost: safeNum(i['unitCost'] ?? i['unit_cost'] ?? i['cost'], 0),
+    }));
   }
 
   private parseRoutingSteps(json: string): Array<{ hours: number }> {
-    try {
-      const steps = JSON.parse(json) as Array<Record<string, unknown>>;
-      if (!Array.isArray(steps)) return [];
-      return steps.map(s => ({
-        hours: safeNum(s['hours'] ?? s['duration_hours'] ?? s['durationHours'], 0),
-      }));
-    } catch {
-      return [];
-    }
+    const steps = JSON.parse(json) as Array<Record<string, unknown>>;
+    if (!Array.isArray(steps)) return [];
+    return steps.map(s => ({
+      hours: safeNum(s['hours'] ?? s['duration_hours'] ?? s['durationHours'], 0),
+    }));
   }
 }
