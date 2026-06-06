@@ -17,11 +17,21 @@ import { RequestDesignHandler } from '../../src/modules/design/application/comma
 import { RequestDesignCommand } from '../../src/modules/design/application/commands/request-design.command';
 import { DesignRequestedEvent } from '../../src/modules/design/domain/events';
 import { TELEGRAM_SENDER } from '../../src/modules/notifications/domain/ports/i-telegram-sender.port';
+import { DESIGN_REPO } from '../../src/modules/design/domain/repositories/i-design.repo';
+import { Ok } from '../../src/common/result';
 
 interface BusMock { publish: jest.Mock }
 interface TgMock { sendAlert: jest.Mock }
+interface RepoMock { save: jest.Mock; findById: jest.Mock; findAll: jest.Mock; findBySalesOrderId: jest.Mock; update: jest.Mock; getStatistics: jest.Mock }
 function makeBus(): BusMock { return { publish: jest.fn() }; }
 function makeTg(): TgMock { return { sendAlert: jest.fn().mockResolvedValue(undefined) }; }
+function makeRepo(): RepoMock {
+  return {
+    save: jest.fn().mockImplementation((order: unknown) => Promise.resolve(Ok(order))),
+    findById: jest.fn(), findAll: jest.fn(), findBySalesOrderId: jest.fn(),
+    update: jest.fn(), getStatistics: jest.fn(),
+  };
+}
 
 describe('RequestDesignHandler', () => {
   let handler: RequestDesignHandler;
@@ -36,6 +46,7 @@ describe('RequestDesignHandler', () => {
         RequestDesignHandler,
         { provide: EventBus, useValue: bus },
         { provide: TELEGRAM_SENDER, useValue: tg },
+        { provide: DESIGN_REPO, useValue: makeRepo() },
       ],
     }).compile();
     handler = moduleRef.get(RequestDesignHandler);

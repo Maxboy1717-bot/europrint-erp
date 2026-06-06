@@ -18,6 +18,7 @@ import {
 } from '../../src/modules/mm/domain/aggregates/purchase-order.aggregate';
 import { Ok, Err, AppErr, Result } from '../../src/common/result';
 import { IMmRepository, MM_REPO } from '../../src/modules/mm/domain/repositories/mm.repository';
+import { ThreeWayMatchFailedEvent } from '../../src/modules/mm/domain/events/three-way-match-failed.event';
 
 type RepoMock = Partial<Record<keyof IMmRepository, jest.Mock>> & {
   getPurchaseOrder: jest.Mock<Promise<Result<PurchaseOrder>>, [number]>;
@@ -88,10 +89,11 @@ describe('GoodsReceiptHandler', () => {
     const r = await handler.execute(new GoodsReceiptCommand(1, 100, 88));
 
     expect(r.ok).toBe(false);
-    expect(eventBus.publish).toHaveBeenCalledWith(
-      'THREE_WAY_MATCH_FAILED',
-      expect.objectContaining({ difference: 12 }),
-    );
+    expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    const publishedEvent = eventBus.publish.mock.calls[0][0];
+    expect(publishedEvent).toBeInstanceOf(ThreeWayMatchFailedEvent);
+    expect(publishedEvent.poId).toBe(1);
+    expect(publishedEvent.difference).toBe(12);
   });
 
   it('records receipt on the PO aggregate and persists when match succeeds', async () => {

@@ -151,8 +151,7 @@ describe('CreateEmployeeHandler (Phase 2 / Task 2.4)', () => {
     const result = await handler.execute(makeCommand());
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('unreachable');
-    expect(result.error.message).toMatch(/Failed to create employee/);
-    expect(result.error.message).toMatch(/INSERT returned no row/);
+    expect(result.error.message).toMatch(/CreateEmployee: employee INSERT returned no row/);
     expect(txOps).toContainEqual({ kind: 'tx-rollback' });
     expect(txOps).not.toContainEqual({ kind: 'tx-commit' });
   });
@@ -164,7 +163,7 @@ describe('CreateEmployeeHandler (Phase 2 / Task 2.4)', () => {
     }));
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('unreachable');
-    expect(result.error.message).toMatch(/user account INSERT/);
+    expect(result.error.message).toMatch(/CreateEmployee: user INSERT returned no row/);
     expect(txOps).toContainEqual({ kind: 'tx-rollback' });
   });
 

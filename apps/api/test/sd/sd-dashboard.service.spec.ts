@@ -16,6 +16,9 @@ type RepoMock = {
   getPendingAdvanceOrders: jest.Mock;
   getPendingTechCheckpoints: jest.Mock;
   getQuotaStats: jest.Mock;
+  getExtendedStats: jest.Mock;
+  getLeadFunnelStats: jest.Mock;
+  getDebitorStats: jest.Mock;
 };
 
 function makeRepo(): RepoMock {
@@ -25,6 +28,9 @@ function makeRepo(): RepoMock {
     getPendingAdvanceOrders: jest.fn(),
     getPendingTechCheckpoints: jest.fn(),
     getQuotaStats: jest.fn(),
+    getExtendedStats: jest.fn().mockResolvedValue(Ok({})),
+    getLeadFunnelStats: jest.fn().mockResolvedValue(Ok([])),
+    getDebitorStats: jest.fn().mockResolvedValue(Ok({})),
   };
 }
 

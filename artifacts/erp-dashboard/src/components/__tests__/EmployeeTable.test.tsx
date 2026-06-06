@@ -33,6 +33,7 @@ vi.mock('wouter', () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
+  useLocation: vi.fn(() => ['/', vi.fn()]),
 }));
 
 vi.mock('@/lib/format', () => ({

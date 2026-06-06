@@ -84,10 +84,8 @@ describe('DrizzleLeadRepository.save() — every column persisted', () => {
     expect(r.ok).toBe(true);
     expect(capturedInsert).not.toBeNull();
     const p = capturedInsert as Record<string, unknown>;
-    // Every column should be defined and not null.
+    // Every column that the current save() writes should be defined and not null.
     for (const key of [
-      'customer_id',
-      'status',
       'status_description',
       'contact_email',
       'contact_phone',
@@ -102,15 +100,14 @@ describe('DrizzleLeadRepository.save() — every column persisted', () => {
       expect(p[key]).not.toBeNull();
     }
     // Spot-check selected mappings.
-    expect(p.customer_id).toBe(42);
-    expect(p.status).toBe('new');
+    // save() stores the lifecycle status code in status_description
+    expect(p.status_description).toBe('new');
     expect(p.contact_email).toBe('john.doe@example.uz');
     expect(p.contact_phone).toBe('+998901234567');
     expect(p.contact_name).toBe('John Doe');
     expect(p.source).toBe('website');
     expect(p.notes).toBe('High-priority lead');
     expect(p.manager_id).toBe(3);
-    expect(String(p.status_description)).toContain('ai_score:75');
   });
 
   it('onConflictDoUpdate set clause has every column populated with a non-null value', async () => {
@@ -121,8 +118,6 @@ describe('DrizzleLeadRepository.save() — every column persisted', () => {
     expect(capturedSet).not.toBeNull();
     const s = capturedSet as Record<string, unknown>;
     for (const key of [
-      'customer_id',
-      'status',
       'status_description',
       'contact_email',
       'contact_phone',

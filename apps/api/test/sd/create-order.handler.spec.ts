@@ -31,6 +31,7 @@ function makeRepo(saveOk = true, count = 5): jest.Mocked<ISalesOrderRepository> 
     save: jest.fn().mockImplementation((order: SalesOrder) =>
       Promise.resolve(saveOk ? Ok(order) : Err(AppErr('DB_ERROR', 'save failed'))),
     ),
+    saveItems: jest.fn().mockResolvedValue(Ok(0)),
     count: jest.fn().mockResolvedValue(Ok(count)),
     findById: jest.fn(),
     findByOrderNumber: jest.fn(),

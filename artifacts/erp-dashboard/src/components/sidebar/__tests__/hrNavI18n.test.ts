@@ -77,7 +77,10 @@ describe('HR sidebar i18n (Phase 3 / T3.3)', () => {
     expect(dashboard?.title).toBe('HR Dashboard');
   });
 
-  it('disambiguates duplicate "discipline" url to hrDisciplineV2 when title is "Intizom V2"', () => {
+  // SKIP: "Intizom V2" item was removed from HR sidebar in session 2026-05-27 cleanup.
+  // The disambiguation key (hrDisciplineV2) still exists in navigation.json but the
+  // duplicate sidebar item no longer exists, so translateHrModule never produces it.
+  it.skip('disambiguates duplicate "discipline" url to hrDisciplineV2 when title is "Intizom V2"', () => {
     const tRu = (k: string) => ru[k] ?? k;
     const out = translateHrModule(tRu, menuGroups.tz11);
     const v2 = out.items.find((i) => i.title === ru.hrDisciplineV2);
