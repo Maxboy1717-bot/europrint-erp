@@ -20,6 +20,8 @@ import { DefectStatus } from '../domain/aggregates/defect.aggregate';
 import { ReportDefectDtoSchema, ResolveDefectDtoSchema, GetDefectsDtoSchema } from './dto/defect.dto';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
 import { z } from 'zod';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const QcApprovalSchema = z.object({
   notes: z.string().max(2000).optional(),
@@ -51,6 +53,15 @@ export class QcDefectsController {
   private readonly logger = new Logger(QcDefectsController.name);
 
   constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
+
+  /** Persist a QC status transition on the order's qc_inspections row (opened by the MES->QC trigger).
+   *  Was missing: the approve/reject/submit routes echoed {approved:true} without writing the DB. */
+  private async _setQcStatus(orderId: string, status: string): Promise<boolean> {
+    const oid = parseInt(orderId, 10);
+    if (!Number.isFinite(oid)) return false;
+    const r = await db.execute(sql`UPDATE qc_inspections SET status=${status}, updated_at=NOW() WHERE order_id=${oid}`);
+    return ((r as unknown as { rowCount?: number }).rowCount ?? 0) > 0;
+  }
 
   @ApiOperation({ summary: 'Get defects' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -144,6 +155,7 @@ export class QcDefectsController {
   @Patch('approve/finance/:orderId')
   async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'finance_approved');
     return { orderId, approved: true };
   }
 
@@ -154,6 +166,7 @@ export class QcDefectsController {
   @Post('approve/finance/:orderId')
   async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'finance_approved');
     return { orderId, approved: true };
   }
 
@@ -164,6 +177,7 @@ export class QcDefectsController {
   @Patch('approve/qc/:orderId')
   async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'qc_approved');
     return { orderId, approved: true };
   }
 
@@ -174,6 +188,7 @@ export class QcDefectsController {
   @Post('approve/qc/:orderId')
   async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'qc_approved');
     return { orderId, approved: true };
   }
 
@@ -184,6 +199,7 @@ export class QcDefectsController {
   @Patch('reject/:orderId')
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcRejectionSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'rejected');
     return { orderId, rejected: true };
   }
 
@@ -194,6 +210,7 @@ export class QcDefectsController {
   @Post('reject/:orderId')
   async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcRejectionSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'rejected');
     return { orderId, rejected: true };
   }
 
@@ -204,6 +221,7 @@ export class QcDefectsController {
   @Patch('inspector-submit/:orderId')
   async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'inspector_submitted');
     return { orderId, submitted: true };
   }
 
@@ -214,6 +232,7 @@ export class QcDefectsController {
   @Post('inspector-submit/:orderId')
   async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
+    await this._setQcStatus(orderId, 'inspector_submitted');
     return { orderId, submitted: true };
   }
 }
