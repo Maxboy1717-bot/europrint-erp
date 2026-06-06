@@ -163,10 +163,15 @@ export class IotSensorsMainController {
   @Post('alerts/:alertId/resolve')
   @HttpCode(HttpStatus.OK)
   @Roles(...IOT_READ)
-  async postResolveAlert(@Param('alertId') _alertId: string, @Body() body: unknown) {
+  async postResolveAlert(@Param('alertId') alertId: string, @Body() body: unknown) {
     ResolveAlertSchema.parse(body ?? {});
-    // Honest 501 (was a fake { resolved:true }): alert-resolve is not wired to any store — the
-    // PATCH twin above is also notImplemented. No alert-state table is updated here.
-    throw new HttpException('Alert resolve hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+    const id = parseInt(alertId, 10);
+    if (!Number.isFinite(id)) throw new HttpException('alertId must be numeric', HttpStatus.BAD_REQUEST);
+    await db.execute(sql`
+      UPDATE iot_alerts
+         SET is_resolved = TRUE, resolved_at = COALESCE(resolved_at, NOW())
+       WHERE id = ${id}
+    `);
+    return { id, resolved: true };
   }
 }

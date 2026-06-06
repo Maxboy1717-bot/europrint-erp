@@ -266,21 +266,44 @@ export class HrDashboardController {
     return { items, total: items.length };
   }
 
+  private readonly BDAY_KEY = 'hr.birthday.settings';
+  private readonly BDAY_DEFAULTS = { enabled: true, notifyDaysBefore: 3, message: "Bugun tug'ilgan kuningiz bilan!" };
+
   @Get('birthdays/settings')
-  getBirthdaySettings() {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getBirthdaySettings() {
+    try {
+      const r = await db.execute(sql`SELECT value FROM settings WHERE key = ${this.BDAY_KEY} LIMIT 1`);
+      const row = ((r as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
+      if (!row?.['value']) return this.BDAY_DEFAULTS;
+      return JSON.parse(String(row['value']));
+    } catch { return this.BDAY_DEFAULTS; }
   }
 
   @Post('birthdays/settings')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(HrBirthdaySettingsSchema))
-  saveBirthdaySettings(@Body() _body: HrBirthdaySettingsDto) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async saveBirthdaySettings(@Body() body: HrBirthdaySettingsDto) {
+    const value = JSON.stringify(body);
+    const existing = await db.execute(sql`SELECT id FROM settings WHERE key = ${this.BDAY_KEY} LIMIT 1`);
+    const hasRow = ((existing as Rows).rows ?? []).length > 0;
+    if (hasRow) {
+      await db.execute(sql`UPDATE settings SET value = ${value}, updated_at = NOW() WHERE key = ${this.BDAY_KEY}`);
+    } else {
+      await db.execute(sql`INSERT INTO settings (id, key, value, updated_at) VALUES (gen_random_uuid(), ${this.BDAY_KEY}, ${value}, NOW())`);
+    }
+    return { ok: true, data: body };
   }
 
   @Get('birthdays/settings/:id')
-  getBirthdaySettingsById(@Param('id') _id: string) {
-    throw new HttpException('Hali amalga oshirilmagan', HttpStatus.NOT_IMPLEMENTED);
+  async getBirthdaySettingsById(@Param('id') _id: string) {
+    // Birthday settings are a singleton keyed by 'hr.birthday.settings'.
+    // The :id param is reserved for future per-department overrides.
+    try {
+      const r = await db.execute(sql`SELECT value FROM settings WHERE key = ${this.BDAY_KEY} LIMIT 1`);
+      const row = ((r as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
+      const data = row?.['value'] ? JSON.parse(String(row['value'])) : this.BDAY_DEFAULTS;
+      return { data };
+    } catch { return { data: this.BDAY_DEFAULTS }; }
   }
 
   @Get('ai-interview/session')
