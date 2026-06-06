@@ -31,6 +31,7 @@ import {
  UpdateMaterialDtoSchema,
  GetMaterialsDtoSchema,
 } from './dto/material.dto';
+import { LayerFormulaService } from '../application/layer-formula.service';
 
 enum Role {
  WAREHOUSE_MANAGER = 'warehouse_manager',
@@ -47,7 +48,30 @@ export class MmMaterialsController {
 
  constructor(
  private readonly commandBus: CommandBus,
- private readonly queryBus: QueryBus) {}
+ private readonly queryBus: QueryBus,
+ private readonly layerFormula: LayerFormulaService) {}
+
+ @ApiOperation({ summary: 'kg<->list konvertatsiya (qatlam formulasi, vision #7)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get(':id/sheet-conversion')
+ @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
+ async sheetConversion(
+ @Param('id') id: string,
+ @Query('kg') kg?: string,
+ @Query('sheets') sheets?: string) {
+ // Ombor kg bilan kirim/chiqim qiladi -> material config'i bo'yicha list-soni hisoblanadi.
+ const materialId = parseInt(id, 10);
+ if (!Number.isFinite(materialId)) throw new BadRequestException('Material id raqam bo\'lishi kerak');
+ const opts: { totalKg?: number; sheetCount?: number } = {};
+ if (kg != null && kg !== '') opts.totalKg = Number(kg);
+ if (sheets != null && sheets !== '') opts.sheetCount = Number(sheets);
+ const r = await this.layerFormula.convert(materialId, opts);
+ if (!r.ok) {
+   if (r.error.code === 'NOT_FOUND') throw new NotFoundException(r.error.message);
+   throw new BadRequestException(r.error.message);
+ }
+ return r.data;
+}
 
  @ApiOperation({ summary: 'Get materials' })
  @ApiResponse({ status: 200, description: 'OK' })
