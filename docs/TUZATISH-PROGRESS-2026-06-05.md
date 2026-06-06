@@ -29,7 +29,11 @@
 
 ✅ **Order → ishlab chiqarish zanjiri TO'LIQ**: order(line-items) → advance → fan-out → **6/6 bo'lim** (mold/design/cliche/logistics/warehouse/**production**).
 
-⚠️ Keyingi (BOSQICH 2 davomi): **BOM material explosion** (production_order → bom_items → material requirements) — egasi BOM'larni aniqlagach (bom_* jadvallar bo'sh). products katalog (egasi). EXTERNAL_OUT tannarx legi (multi-leg). Payroll proration (biznes-qaror).
+| 2.6 | **BOM material explosion** (vizyon #10: material iste'mol) | createProductionJob production order'dan keyin product BOM'ini portlatadi: `bom_headers`(product_id)→`bom_items`→`ow_material_requirements` (material_id=component_id→material_cards, qty=bom_qty×planned×(1+scrap%)). Data-driven (BOM bo'sh→hech narsa), idempotent. ⭐ verify-don't-trust: `ow_material_requirements` id/qty_reserved/qty_issued/lab_passed/status **DB-default'siz** → eski `createMaterialRequirementJob` runtime'da yiqilardi (0 qator hech qachon!) — ikkala insertni gen_random_uuid()+default'lar bilan tuzatdim. | BOM(M1 qty2 scrap0, M2 qty5 scrap10%)×1000 → M1=2000, M2=5500; idempotent; latent warehouse bug tuzatildi | `b8bc6bd9` |
+
+✅ **TO'LIQ MATERIAL ZANJIRI**: Order(products) → advance → fan-out → production order → **BOM portlash** → material requirements (material_cards). Vizyon #10 "har buyurtmaga material iste'mol" — kod-tayyor, BOM+products katalog (egasi) jonlilashtiradi.
+
+⚠️ Keyingi (BOSQICH 2 davomi): BOM+products katalogni egasi to'ldiradi. EXTERNAL_OUT tannarx legi (multi-leg COGS). Payroll proration (biznes-qaror). Material reservation→issue (warehouse).
 
 ## ⭐ Naqsh (verify-don't-trust): har leverage-fix yashirin drift tutdi
 Transmissiya ulaganda har repo.save/insert **buzuq** (drift) bo'lib chiqdi: string-id→integer ustun, VIEW→base-jadval NOT NULL, uuid╳integer, omitted-columns. Ya'ni "yashil skelet" nafaqat ulanmagan — DB-yozuv yo'llari ham drifted edi. Har biri DB-proof bilan tutildi va tuzatildi.
