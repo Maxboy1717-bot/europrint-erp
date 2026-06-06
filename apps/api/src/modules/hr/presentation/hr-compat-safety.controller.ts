@@ -87,9 +87,8 @@ export class HrCompatSafetyController {
     return unwrapOrInternal(await this.svc.getSafetyIncidents(status));
   }
 
-  // NOTE: DELETE /api/hr/safety/incidents/:id is served by HrSafetyController
-  // (@Controller('hr/safety') + @Delete('incidents/:id'), soft-close pattern).
-  // Duplicate declaration here removed (Fastify boot collision).
+  // NOTE: DELETE /api/hr/safety/incidents/:id is served by HrSafetyController (incidents delete).
+  // This compat controller only exposes GET list + PDF export for the safety section.
 
   // P1.23.1: PDF export — GET /api/hr/safety/export/pdf
   @Get('safety/export/pdf')

@@ -34,7 +34,7 @@ import { LmsCoreController } from './presentation/lms-core.controller';
 import { CoursesController } from './presentation/courses.controller';
 import { LmsLessonsController, LmsModulesController } from './presentation/lms-lessons.controller';
 import { LmsTestsController, LmsQuestionsController, LmsAssignmentsController } from './presentation/lms-tests.controller';
-import { LmsAttemptsController, LmsAttemptsAliasController } from './presentation/lms-attempts.controller';
+import { LmsAttemptsController } from './presentation/lms-attempts.controller';
 import { LmsProgressCompatController } from './presentation/lms-misc.controller';
 import { LmsCertificatesStandaloneController } from './presentation/lms-certificates-standalone.controller';
 import {
@@ -71,7 +71,6 @@ const appControllers = [
   LmsQuestionsController,
   LmsAssignmentsController,
   LmsAttemptsController,
-  LmsAttemptsAliasController,
   LmsCertificatesStandaloneController,
   LmsMicroModulesController,
   LmsKnowledgeController,

@@ -57,7 +57,7 @@ export class GeneralLegacyBController {
     return unwrapOrInternal(await this.svc.getOrdersByDate());
   }
 
-  // @Get('warehouse/warehouses') — moved to WmsWarehouseGatewayController (real DB implementation)
+  // Route warehouse/warehouses moved to WmsWarehouseGatewayController (real DB implementation)
 
   @Get('warehouse/stock')
   async getWarehouseStock(@Query() query: Record<string, string | undefined>) {
@@ -79,7 +79,7 @@ export class GeneralLegacyBController {
     return unwrapOrInternal(await this.svc.getWarehouseInternalRequests());
   }
 
-  // @Get('warehouse/dashboard/kpis') — moved to WmsWarehouseGatewayController (real DB implementation)
+  // Route warehouse/dashboard/kpis moved to WmsWarehouseGatewayController (real DB implementation)
 
   @Get('warehouse/dashboard/warehouse-occupancy')
   async getWarehouseOccupancy() {

@@ -4,7 +4,7 @@
  */
 
 import {
-  Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Query,
+  Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query,
   UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 
@@ -159,16 +159,7 @@ export class HrEmployeesExtController {
     return { items, total: items.length };
   }
 
-  @ApiOperation({ summary: 'Get employee documents' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Get(':employeeId/documents')
-  async getEmployeeDocuments(@Param('employeeId') employeeId: string) {
-    // P3-26: hr_documents table has employee_id FK. Returns docs for this employee.
-    const result = await this.svc.getEmployeeDocuments(employeeId);
-    if (!result || !result.ok) return { data: [] };
-    return { data: Array.isArray(result.data) ? result.data : [] };
-  }
+  // NOTE: GET hr/employees/:employeeId/documents is served by HrEmployeesController (canonical, role-guarded).
 
   @ApiOperation({ summary: 'Get employee document by id' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -180,16 +171,7 @@ export class HrEmployeesExtController {
     return { data: result.data };
   }
 
-  @ApiOperation({ summary: 'Delete employee document' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
-  @Delete(':employeeId/documents/:docId')
-  async deleteEmployeeDocument(@Param('employeeId') employeeId: string, @Param('docId') docId: string) {
-    const result = await this.svc.deleteEmployeeDocument(employeeId, docId);
-    if (!result || !result.ok) return { message: 'Document not found or already deleted', deleted: false };
-    return { message: "Hujjat o'chirildi", deleted: true };
-  }
+  // NOTE: DELETE hr/employees/:employeeId/documents/:docId is served by HrEmployeesController (canonical, role-guarded).
 
   @ApiOperation({ summary: 'Get operator stats' })
   @ApiResponse({ status: 200, description: 'OK' })

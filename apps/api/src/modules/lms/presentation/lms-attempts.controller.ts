@@ -92,18 +92,5 @@ export class LmsAttemptsController {
   }
 }
 
-/**
- * Placeholder controller at `/lms/attempts`.  The original duplicate
- * `@Post(':id/submit')` (which mirrored {@link LmsAttemptsController.submitExam}
- * verbatim) was removed to silence the Fastify "duplicate route" boot
- * warning.  The canonical submit route is now exposed only by
- * {@link LmsAttemptsController} at `/attempts/:id/submit`.
- *
- * This class is intentionally left empty so the module wiring keeps
- * compiling; it can be removed entirely once `lms.module.ts` is updated.
- */
-@ApiThrottle()
-@Controller('lms/attempts')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@UseInterceptors(AuditInterceptor)
-export class LmsAttemptsAliasController {}
+// NOTE: LmsAttemptsAliasController (lms/attempts prefix) was removed — it had no routes.
+// Canonical submit is LmsAttemptsController above (attempts prefix).

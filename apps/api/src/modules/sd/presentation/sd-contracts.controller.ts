@@ -1,8 +1,8 @@
 /**
  * @module sd-contracts.controller
  * @description NestJS controller. HTTP route handlers for SD Contracts.
- * NOTE: POST /sd/contracts is handled by SdQuotationsController (@Controller('sd'))
- * at @Post('contracts'). This controller handles GET list + PATCH sign only.
+ * NOTE: Contract creation (POST) is handled by SdQuotationsController (@Controller 'sd').
+ * This controller handles GET list and PATCH sign only.
  */
 
 import {

@@ -116,7 +116,7 @@ export class DailyReportController {
    *   GET /api/hr-v2/daily-reports/employee?employeeId=X&limit=14
    * so we accept `employeeId` as a required query param here.
    *
-   * Declared before `@Get('employee/:id')` so the static path matches first.
+   * Declared before the parameterised by-id variant so the static path matches first.
    */
   @Get('employee')
   async byEmployeeQuery(
