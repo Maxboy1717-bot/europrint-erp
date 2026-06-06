@@ -45,27 +45,27 @@ export class GetInventoryLevelsTool implements IAishaTool {
       const start = Date.now();
       const rows = rowsOf<{
         sku: string; name: string; qty: number; reorder_point: number;
-        avg_daily_use: number | null; warehouse_code: string;
+        warehouse_code: string;
       }>(await db.execute(sql`
-        SELECT m.sku, m.name, s.qty_on_hand AS qty,
-               COALESCE(m.reorder_point,0) AS reorder_point,
-               s.avg_daily_use, s.warehouse_code
-        FROM mm_materials m
-        JOIN wms_warehouse_stock s ON s.material_id = m.id
-        WHERE (${item} = '' OR LOWER(m.name) LIKE LOWER('%' || ${item} || '%') OR m.sku = ${item})
-          AND (${wh} = '' OR s.warehouse_code = ${wh})
-        ORDER BY s.qty_on_hand ASC LIMIT 50
+        SELECT m.kod AS sku, m.xom_ashyo AS name, s.quantity AS qty,
+               COALESCE(s.reorder_point, 0) AS reorder_point,
+               s.warehouse_id::text AS warehouse_code
+        FROM material_cards m
+        JOIN warehouse_stock s ON s.material_id = m.id
+        WHERE (${item} = '' OR LOWER(m.xom_ashyo) LIKE LOWER('%' || ${item} || '%') OR m.kod = ${item})
+          AND (${wh} = '' OR s.warehouse_id::text = ${wh})
+        ORDER BY s.quantity ASC LIMIT 50
       `));
       const data = rows.map(r => ({
         sku: r.sku, name: r.name, qty: r.qty,
         reorderPoint: r.reorder_point, warehouseCode: r.warehouse_code,
-        daysUntilDepletion: r.avg_daily_use && r.avg_daily_use > 0 ? Math.floor(r.qty / r.avg_daily_use) : null,
+        daysUntilDepletion: null,
       }));
       return provResult<InventoryLevel[]>({
         data,
         sources: [
-          provSource({ type: 'database', identifier: 'wms.warehouse_stock', startMs: start, rowCount: data.length }),
-          provSource({ type: 'database', identifier: 'mm.materials', startMs: start, rowCount: data.length }),
+          provSource({ type: 'database', identifier: 'warehouse_stock', startMs: start, rowCount: data.length }),
+          provSource({ type: 'database', identifier: 'material_cards', startMs: start, rowCount: data.length }),
         ],
       });
     });

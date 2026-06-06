@@ -136,11 +136,10 @@ export class BarcodeWarehouseCompatService extends BarcodeWarehouseQueriesServic
   async scanBarcodeById(id: string) {
     return safeCall(async () => {
       const res = await rawSql(sql`
-        SELECT pm.*, m.name AS material_name, m.unit_of_measure, w.name AS warehouse_name
+        SELECT pm.*, NULL AS material_name, NULL AS unit_of_measure, w.name AS warehouse_name
         FROM pos_movements pm
-        LEFT JOIN mm_materials m ON m.id = pm.material_id
         LEFT JOIN wms_warehouses w ON w.id = pm.warehouse_id
-        WHERE pm.id = ${id} OR pm.barcode = ${id}
+        WHERE pm.id::text = ${id}
         LIMIT 1
       `);
       const found = dbRows(res);
