@@ -4,7 +4,6 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { marketingCampaigns } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { CampaignsRepository } from './campaigns.repository';
 
@@ -32,35 +31,45 @@ export class CampaignsService {
     });
   }
 
-  async findOne(id: number) {
-    const row = await this.repo.findOne(id);
+  async findOne(id: string) {
+    const r = await this.repo.findOne(id);
+    const row = r.ok ? r.data : null;
     if (!row) throw new NotFoundException(`#${id} topilmadi`);
     return row;
   }
 
   async create(dto: Record<string, unknown>, createdBy?: number) {
     return safeCall(async () => {
-      const row: Omit<typeof marketingCampaigns.$inferInsert, 'id'> = {
+      const row: Record<string, unknown> = {
         name: (dto['name'] as string | undefined) ?? '',
-        type: (dto['type'] as string | undefined) ?? 'email',
+        description: dto['description'] as string | undefined,
+        type: (dto['type'] as string | undefined) ?? 'digital',
+        platform: dto['platform'] as string | undefined,
         status: (dto['status'] as string | undefined) ?? 'draft',
-        budget: dto['budget'] as string | undefined,
-        startDate: dto['startDate'] as Date | undefined,
-        endDate: dto['endDate'] as Date | undefined,
-        createdBy: createdBy ? String(createdBy) : (dto['createdBy'] as string | undefined),
+        budget: dto['budget'] != null ? String(dto['budget']) : undefined,
+        startDate: dto['startDate'],
+        endDate: dto['endDate'],
+        targetAudience: dto['targetAudience'] != null
+          ? (typeof dto['targetAudience'] === 'string' ? dto['targetAudience'] : JSON.stringify(dto['targetAudience']))
+          : undefined,
+        createdBy: createdBy ?? (dto['createdBy'] as number | undefined),
       };
-      return this.repo.create(row as typeof marketingCampaigns.$inferInsert);
+      const r = await this.repo.create(row);
+      if (!r.ok) throw new Error(String(r.error));
+      return r.data;
     });
   }
 
-  async update(id: number, dto: Record<string, unknown>) {
+  async update(id: string, dto: Record<string, unknown>) {
     return safeCall(async () => {
       await this.findOne(id);
-      return this.repo.update(id, dto as Partial<typeof marketingCampaigns.$inferInsert>);
+      const r = await this.repo.update(id, dto);
+      if (!r.ok) throw new Error(String(r.error));
+      return r.data;
     });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     return safeCall(async () => {
       await this.findOne(id);
       await this.repo.softDelete(id);

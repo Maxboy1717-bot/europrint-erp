@@ -85,10 +85,8 @@ export class MarketingController {
  @Get(':id')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
  async getById(@Param('id') id: string) {
- const result = await this.queryBus.execute(new GetCampaignQuery(id));
-
- assertOk(result);
- return result.data;
+ // Canonical = marketing_campaigns (owner 2026-06-05) — same table list/delete read. id is a uuid (varchar).
+ return await this.campaignsSvc.findOne(id);
 }
 
  @ApiOperation({ summary: 'Create' })
@@ -99,22 +97,13 @@ export class MarketingController {
  async create(
  @Body() dto: CreateCampaignDto,
  @CurrentUser() user: AuthenticatedUser) {
- const cmd = new CreateCampaignCommand(
- dto.name,
- dto.type,
- dto.description || '',
- dto.targetAudience ? JSON.stringify(dto.targetAudience) : '{}',
- dto.budget || 0,
- dto.startDate || _time.now(),
- dto.endDate || _time.now(),
- user.id);
-
- const result = await this.commandBus.execute(cmd);
-
- assertOk(result);
+ // Canonical = marketing_campaigns (owner 2026-06-05). The CQRS create-campaign path persisted the
+ // orphan `campaigns` (uuid) table the FE never reads (and its created_by uuid is incompatible with
+ // integer user-ids). Route through campaignsSvc so the row lands where list/detail read, preserving
+ // name/description/type/platform/status/budget/dates.
+ const created = unwrapOrThrow(await this.campaignsSvc.create(dto as unknown as Record<string, unknown>, user.id));
  this.logger.log('Campaign created');
-
- return result.data;
+ return created;
 }
 
  @ApiOperation({ summary: 'Update' })
@@ -126,23 +115,10 @@ export class MarketingController {
  @Param('id') id: string,
  @Body() dto: UpdateCampaignDto,
  @CurrentUser() user: AuthenticatedUser) {
- const cmd = new UpdateCampaignCommand(
- id,
- dto.name,
- dto.description,
- dto.status,
- dto.budget,
- dto.startDate,
- dto.endDate,
- dto.targetAudience,
- String(user.id));
-
- const result = await this.commandBus.execute(cmd);
-
- assertOk(result);
+ void user;
+ const updated = unwrapOrThrow(await this.campaignsSvc.update(id, dto as unknown as Record<string, unknown>));
  this.logger.log('Campaign updated');
-
- return result.data;
+ return updated;
 }
 
  @ApiOperation({ summary: 'Remove' })
@@ -154,7 +130,7 @@ export class MarketingController {
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  @UseInterceptors(AuditInterceptor)
  async remove(@Param('id') id: string) {
-   return unwrapOrThrow(await this.campaignsSvc.remove(parseInt(id, 10)));
+   return unwrapOrThrow(await this.campaignsSvc.remove(id));
  }
 
  @ApiOperation({ summary: 'Launch' })
@@ -165,13 +141,10 @@ export class MarketingController {
  async launch(
  @Param('id') id: string,
  @CurrentUser() user: AuthenticatedUser) {
- const cmd = new LaunchCampaignCommand(id, String(user.id));
-
- const result = await this.commandBus.execute(cmd);
-
- assertOk(result);
+ void user;
+ // Launch = activate the campaign (status -> active) on the canonical marketing_campaigns row.
+ const launched = unwrapOrThrow(await this.campaignsSvc.update(id, { status: 'active' }));
  this.logger.log('Campaign launched');
-
- return result.data;
+ return launched;
 }
 }
