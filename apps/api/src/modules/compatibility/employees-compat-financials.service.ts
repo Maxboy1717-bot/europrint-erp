@@ -191,10 +191,11 @@ export class EmployeesCompatFinancialsService {
 
   async createOvertime(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
+      const overtimeMinutes = Math.round(Number(body['overtime_hours'] ?? body['overtimeHours'] ?? 0) * 60);
       const r = await rawSql(sql`
-        INSERT INTO attendance_logs (employee_id, log_date, check_in, check_out, overtime_hours)
-        VALUES (${si(employeeId)}, ${body['log_date'] ?? body['logDate'] ?? body['date'] ?? new Date().toISOString().slice(0,10)}, ${body['check_in'] ?? body['checkIn'] ?? null}, ${body['check_out'] ?? body['checkOut'] ?? null}, ${body['overtime_hours'] ?? body['overtimeHours'] ?? 0})
-        RETURNING id, employee_id, log_date, overtime_hours, created_at
+        INSERT INTO attendance (employee_id, attendance_date, check_in_time, check_out_time, overtime_minutes, updated_at)
+        VALUES (${si(employeeId)}, ${body['log_date'] ?? body['logDate'] ?? body['date'] ?? new Date().toISOString().slice(0,10)}, ${body['check_in'] ?? body['checkIn'] ?? null}, ${body['check_out'] ?? body['checkOut'] ?? null}, ${overtimeMinutes}, NOW())
+        RETURNING id, employee_id, attendance_date AS log_date, overtime_minutes AS overtime_hours, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
       if (!item) throw new InternalServerErrorException('Overtime creation failed');

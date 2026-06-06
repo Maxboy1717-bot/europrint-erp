@@ -198,20 +198,19 @@ export class TelegramBotsManagerRepo {
 
   async recordManualAttendance(chatId: number, status: string, reason?: string): Promise<void> {
     await runQuery(sql`
-      INSERT INTO attendance_logs (employee_id, date, status, source, notes, created_at)
-      SELECT e.id, CURRENT_DATE, ${status}, 'telegram', ${reason ?? null}, NOW()
+      INSERT INTO attendance (employee_id, date, status, source, notes, updated_at, created_at)
+      SELECT e.id, CURRENT_DATE::text, ${status}, 'telegram', ${reason ?? null}, NOW(), NOW()
       FROM employees e
       WHERE e.telegram_chat_id = ${String(chatId)} AND e.status = 'active'
-      ON CONFLICT (employee_id, date) DO UPDATE
-        SET status = EXCLUDED.status, notes = EXCLUDED.notes, updated_at = NOW()
+      ON CONFLICT DO NOTHING
     `);
   }
 
   async recordLateReason(employeeId: number, reason: string): Promise<void> {
     await runQuery(sql`
-      UPDATE attendance_logs
-      SET late_reason = ${reason}, updated_at = NOW()
-      WHERE employee_id = ${employeeId} AND date = CURRENT_DATE
+      UPDATE attendance
+      SET notes = ${reason}, updated_at = NOW()
+      WHERE employee_id = ${employeeId} AND date = CURRENT_DATE::text
     `);
   }
 
