@@ -23,6 +23,8 @@ import { BudgetsService } from '../budgets/budgets.service';
 import { RATE_USD_UZS, RATE_EUR_UZS, RATE_CNY_UZS } from '@common/constants/app.constants';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 export { FinanceMainActionsController } from './finance-main-actions.controller';
 
@@ -69,11 +71,33 @@ export class FinanceMainController {
   @ApiOperation({ summary: 'Get exchange rates' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('exchange-rates')
-  getExchangeRates() {
+  async getExchangeRates() {
+    try {
+      const r = await rawSql(sql`
+        SELECT UPPER(from_currency) AS cur, rate::numeric AS rate, rate_date
+        FROM exchange_rates
+        WHERE UPPER(to_currency) = 'UZS'
+        ORDER BY created_at DESC LIMIT 10
+      `);
+      const rows = (r as { rows?: Record<string, unknown>[] }).rows ?? [];
+      if (rows.length > 0) {
+        const rates: Record<string, number> = {};
+        let rateDate = _time.now().toISOString().slice(0, 10);
+        for (const row of rows) {
+          const cur = String(row['cur'] ?? '');
+          if (cur && rates[cur] === undefined) {
+            rates[cur] = Number(row['rate']);
+            if (row['rate_date']) rateDate = String(row['rate_date']).slice(0, 10);
+          }
+        }
+        return { base: 'UZS', date: rateDate, rates, source: 'db' };
+      }
+    } catch { /* fall through to defaults */ }
     return {
       base: 'UZS',
       date: _time.now().toISOString().slice(0, 10),
       rates: { USD: RATE_USD_UZS, EUR: RATE_EUR_UZS, RUB: 140, CNY: RATE_CNY_UZS },
+      source: 'default',
     };
   }
 

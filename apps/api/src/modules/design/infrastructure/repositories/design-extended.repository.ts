@@ -66,13 +66,17 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
   }
 
   async findTemplates(): Promise<Result<{ id: string; name: string; category: string }[]>> {
-    return Ok([
-      { id: 'tmpl-001', name: 'EuroPrint Standart', category: 'brand' },
-      { id: 'tmpl-002', name: 'Qoʻyimta Klassik', category: 'packaging' },
-      { id: 'tmpl-003', name: 'Flayer Minimal', category: 'print' },
-      { id: 'tmpl-004', name: 'Vizitka Corporate', category: 'card' },
-      { id: 'tmpl-005', name: 'Banner Outdoor', category: 'banner' },
-    ]);
+    return safeCall(async () => {
+      const rows = await exec(sql`
+        SELECT id::text AS id, name, type AS category,
+               file_url AS "fileUrl", thumbnail_url AS "thumbnailUrl",
+               tags, status
+        FROM design_library_items
+        WHERE deleted_at IS NULL
+        ORDER BY created_at DESC LIMIT 100
+      `);
+      return rows as unknown as { id: string; name: string; category: string }[];
+    });
   }
 
   async generateDesigns(orderId: string, prompt: string, count: number): Promise<Result<{ designs: unknown[]; generationTime: number }>> {

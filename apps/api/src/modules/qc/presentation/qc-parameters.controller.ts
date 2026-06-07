@@ -14,6 +14,8 @@ import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal } from '@common/http-result';
 import { QcParametersService } from '../application/qc-parameters.service';
 import { z } from 'zod';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const ParameterDto = z.object({
   name: z.string().min(1),
@@ -119,9 +121,18 @@ export class QcParametersController {
   @Roles(...QC_ROLES)
   @ApiOperation({ summary: 'Get a single QC test by id (used by QCApproval page detail view)' })
   async getTestById(@Param('id') id: string) {
-    // Service-level findById helper pending. Return a typed null shape so the
-    // QCApproval detail panel can render "test topilmadi" instead of 404.
-    return { id, results: [], passed: null, testedAt: null };
+    try {
+      const r = await rawSql(sql`
+        SELECT qmt.id::text AS id, qmt.test_results AS results,
+               qmt.overall_status AS status, qmt.passed_count AS "passedCount",
+               qmt.failed_count AS "failedCount", qmt.test_date AS "testedAt",
+               qmt.notes, qmt.batch_number AS "batchNumber",
+               qmt.material_id AS "materialId"
+        FROM qc_material_tests qmt WHERE qmt.id = ${parseInt(id, 10)}
+      `);
+      const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+      return row ?? { id, results: [], passed: null, testedAt: null, found: false };
+    } catch { return { id, results: [], passed: null, testedAt: null, found: false }; }
   }
 
   @Post('tests')

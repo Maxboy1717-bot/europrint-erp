@@ -23,6 +23,8 @@ import {
   FinanceRecordPaymentSchema, FinanceRecordPaymentDto,
   FinanceVerifyPaymentSchema, FinanceVerifyPaymentDto,
 } from './dto/finance.dto';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 enum Role {
   FINANCE_OFFICER = 'FINANCE_OFFICER',
@@ -132,9 +134,18 @@ export class FinancePaymentsController {
   @Get(':invoiceId/outstanding')
   @Roles(Role.FINANCE_OFFICER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async getOutstandingPayment(@Param('invoiceId') invoiceId: number) {
-
-      return { data: { invoiceId, outstanding: 0 } };
-    
+    try {
+      const r = await rawSql(sql`
+        SELECT id::text AS id,
+               COALESCE(total_amount, 0)::numeric   AS "totalAmount",
+               COALESCE(paid_amount,  0)::numeric   AS "paidAmount",
+               GREATEST(0, COALESCE(total_amount, 0) - COALESCE(paid_amount, 0))::numeric AS outstanding
+        FROM invoices WHERE id = ${Number(invoiceId)}
+      `);
+      const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+      if (!row) return { data: { invoiceId, outstanding: 0, found: false } };
+      return { data: { invoiceId: row['id'], outstanding: Number(row['outstanding']), totalAmount: Number(row['totalAmount']), paidAmount: Number(row['paidAmount']), found: true } };
+    } catch { return { data: { invoiceId, outstanding: 0, found: false } }; }
   }
 
   @ApiOperation({ summary: 'Approve payment' })

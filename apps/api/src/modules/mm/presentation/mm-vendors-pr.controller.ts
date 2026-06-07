@@ -17,6 +17,8 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { MmVendorsPrService } from '../application/mm-vendors-pr.service';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import {
   MmCreateVendorSchema, MmCreateVendorDto,
   MmUpdateVendorSchema, MmUpdateVendorDto,
@@ -52,8 +54,23 @@ export class MmVendorsPrController {
   @ApiOperation({ summary: 'List vendor performance' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('vendor-performance')
-  async listVendorPerformance() {
-    return [];
+  async listVendorPerformance(
+    @Query('period') period?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const lim = Math.min(parseInt(limit ?? '50', 10) || 50, 200);
+    try {
+      const r = await rawSql(sql`
+        SELECT vp.id::text AS id, vp.vendor_id AS "vendorId", v.name AS "vendorName",
+               vp.score, vp.on_time_rate AS "onTimeRate", vp.quality_rate AS "qualityRate",
+               vp.period, vp.created_at AS "createdAt"
+        FROM vendor_performance vp
+        LEFT JOIN vendors v ON v.id = vp.vendor_id
+        WHERE (${period ?? null}::text IS NULL OR vp.period = ${period ?? null})
+        ORDER BY vp.created_at DESC LIMIT ${lim}
+      `);
+      return (r as { rows?: Record<string, unknown>[] }).rows ?? [];
+    } catch { return []; }
   }
 
   @ApiOperation({ summary: 'Get vendor' })

@@ -12,6 +12,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Query,
@@ -20,7 +21,7 @@ import {
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };
 import { unwrapOrInternal } from '@common/http-result';
@@ -75,11 +76,15 @@ export class LmsCertificatesStandaloneController {
   @Get(':id')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getCertificateById(@Param('id') id: string) {
-    // The Certificates page expects GET /api/certificates/:id for the detail
-    // view. Service-level retrieval lands once the repo has a findById helper;
-    // for now return a typed placeholder so the page can render the empty
-    // detail card instead of 404.
-    return { id, status: 'unknown', issuedAt: null, expiresAt: null };
+    const r = await rawSql(sql`
+      SELECT id::text AS id, status, certificate_number AS "certificateNumber",
+             cert_number AS "certNumber", name, issued_at AS "issuedAt",
+             expires_at AS "expiresAt", is_active AS "isActive", created_at AS "createdAt"
+      FROM certificates WHERE id = ${parseInt(id, 10)}
+    `);
+    const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+    if (!row) throw new NotFoundException(`Certificate ${id} not found`);
+    return row;
   }
 
   @Delete(':id')
