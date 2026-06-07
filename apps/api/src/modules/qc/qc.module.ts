@@ -14,7 +14,10 @@ import { CreateInspectionHandler } from './application/commands/create-inspectio
 import { GetInspectionsHandler } from './application/queries/get-inspections.handler';
 import { GetInspectionStatsHandler } from './application/queries/get-inspection-stats.handler';
 import { GetDefectsHandler } from './application/queries/get-defects.handler';
+import { GetDefectStatsHandler } from './application/queries/get-defect-stats.handler';
+import { GetDefectByIdHandler } from './application/queries/get-defect-by-id.handler';
 import { GetReclamationsHandler } from './application/queries/get-reclamations.handler';
+import { GetReclamationByIdHandler } from './application/queries/get-reclamation-by-id.handler';
 import { MesCompletedListener } from './infrastructure/event-handlers/mes-completed.listener';
 import { SoSampleRequestedListener } from './infrastructure/event-handlers/so-sample-requested.listener';
 import { QcInspectionsController } from './presentation/qc-inspections.controller';
@@ -74,7 +77,10 @@ const queryHandlers = [
   GetInspectionsHandler,
   GetInspectionStatsHandler,
   GetDefectsHandler,
+  GetDefectStatsHandler,
+  GetDefectByIdHandler,
   GetReclamationsHandler,
+  GetReclamationByIdHandler,
 ];
 
 const repositories = [

@@ -21,6 +21,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CreateReclamationCommand } from '../application/commands/create-reclamation.command';
 import { GetReclamationsQuery } from '../application/queries/get-reclamations.query';
+import { GetReclamationByIdQuery } from '../application/queries/get-reclamation-by-id.query';
 import { CreateReclamationDtoSchema, GetReclamationsDtoSchema } from './dto/defect.dto';
 import { ReclamationStatus } from '../domain/aggregates/reclamation.aggregate';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
@@ -82,7 +83,7 @@ export class QcReclamationsController {
   @Get('reclamations/:id')
   async getReclamationById(@Param('id') id: string) {
 
-      const result = await this.commandBus.execute({ type: 'GetReclamationByIdQuery', id });
+      const result = await this.queryBus.execute(new GetReclamationByIdQuery(id));
       return unwrapOrNotFoundDefined(result, 'Reclamation not found');
     
   }

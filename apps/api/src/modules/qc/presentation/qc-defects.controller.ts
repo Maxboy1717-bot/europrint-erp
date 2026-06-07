@@ -16,6 +16,8 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ReportDefectCommand } from '../application/commands/report-defect.command';
 import { ResolveDefectCommand } from '../application/commands/resolve-defect.command';
 import { GetDefectsQuery } from '../application/queries/get-defects.query';
+import { GetDefectStatsQuery } from '../application/queries/get-defect-stats.query';
+import { GetDefectByIdQuery } from '../application/queries/get-defect-by-id.query';
 import { DefectStatus } from '../domain/aggregates/defect.aggregate';
 import { ReportDefectDtoSchema, ResolveDefectDtoSchema, GetDefectsDtoSchema } from './dto/defect.dto';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
@@ -82,7 +84,7 @@ export class QcDefectsController {
   @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async getDefectStats() {
 
-      const result = await this.commandBus.execute({ type: 'GetDefectStatsQuery' });
+      const result = await this.queryBus.execute(new GetDefectStatsQuery());
       assertOk(result);
       return (result).data;
     
@@ -94,7 +96,7 @@ export class QcDefectsController {
   @Get('defects/:id')
   async getDefectById(@Param('id') id: string) {
 
-      const result = await this.commandBus.execute({ type: 'GetDefectByIdQuery', id });
+      const result = await this.queryBus.execute(new GetDefectByIdQuery(id));
       return unwrapOrNotFoundDefined(result, 'Defect not found');
     
   }
