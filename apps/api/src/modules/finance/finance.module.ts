@@ -38,6 +38,7 @@ import { GetInvoicesHandler } from './application/queries/get-invoices.handler';
 import { GetPaymentsHandler } from './application/queries/get-payments.handler';
 import { GetGlEntriesHandler } from './application/queries/get-gl-entries.handler';
 import { GetBudgetsHandler } from './application/queries/get-budgets.handler';
+import { GetBudgetByIdHandler } from './application/queries/get-budget-by-id.handler';
 import { GetBudgetVarianceHandler } from './application/queries/get-budget-variance.handler';
 import { GetBudgetStatsHandler } from './application/queries/get-budget-stats.handler';
 import { WmsFgReceivedListener } from './infrastructure/event-handlers/wms-fg-received.listener';
@@ -135,7 +136,7 @@ const commandHandlers = [
 
 const queryHandlers = [
   ArAgingHandler, CashFlowHandler, GetInvoicesHandler, GetPaymentsHandler,
-  GetGlEntriesHandler, GetBudgetsHandler, GetBudgetVarianceHandler, GetBudgetStatsHandler,
+  GetGlEntriesHandler, GetBudgetsHandler, GetBudgetByIdHandler, GetBudgetVarianceHandler, GetBudgetStatsHandler,
 ];
 
 const eventListeners = [

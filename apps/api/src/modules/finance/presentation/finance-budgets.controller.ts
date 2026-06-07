@@ -30,6 +30,7 @@ import { CreateBudgetCommand} from '../application/commands/create-budget.comman
 import { ApproveBudgetCommand} from '../application/commands/approve-budget.command';
 import { SubmitBudgetForApprovalCommand} from '../application/commands/submit-budget-for-approval.command';
 import { GetBudgetsQuery} from '../application/queries/get-budgets.query';
+import { GetBudgetByIdQuery } from '../application/queries/get-budget-by-id.query';
 import { GetBudgetVarianceQuery} from '../application/queries/get-budget-variance.query';
 import { GetBudgetStatsQuery} from '../application/queries/get-budget-stats.query';
 import {
@@ -76,7 +77,7 @@ export class FinanceBudgetsController {
  @Roles('FINANCE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
  async getBudgetById(@Param('id') id: string) {
    this.logger.debug(`Fetching budget: ${id}`);
-   const result = await this.queryBus.execute(new (class GetBudgetByIdQuery { constructor(public id: string) {} })(id));
+   const result = await this.queryBus.execute(new GetBudgetByIdQuery(id));
    assertOkOrThrow(result, (e) => this.logger.warn(`getBudgetById(${id}): ${e?.message ?? String(e)}`), new NotFoundException(`Byudjet topilmadi: ${id}`));
    return result.data;
  }
