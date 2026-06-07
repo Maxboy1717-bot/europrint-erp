@@ -80,7 +80,7 @@ export class MesMaintenanceRepository {
       SELECT s.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name, wc.name AS work_center_name
       FROM mes_sos_events s
       LEFT JOIN employees e ON e.id = s.employee_id
-      LEFT JOIN mes_work_centers wc ON wc.id = s.work_center_id
+      LEFT JOIN work_centers wc ON wc.id = s.work_center_id
       ORDER BY s.created_at DESC LIMIT ${lim}
     `);
     return rows.rows as Row[];
@@ -92,19 +92,20 @@ export class MesMaintenanceRepository {
   }
 
   async createDowntimeEvent(session_id: number, reason_id: number | null, notes: string | null): Promise<Row[]> {
+    // Wire to canonical downtime_events (live schema: session_id=INT, event_type/reason_code NOT NULL)
     const rows = await runQuery<Row>(sql`
-      INSERT INTO mes_downtime_events (session_id, reason_id, notes, started_at)
-      VALUES (${session_id}, ${reason_id ?? null}, ${notes ?? null}, NOW())
+      INSERT INTO downtime_events (session_id, event_type, reason_code, reason_code_id, notes, started_at, is_planned)
+      VALUES (${session_id}, 'downtime', ${reason_id !== null ? String(reason_id) : 'unknown'}, ${reason_id ?? null}, ${notes ?? null}, NOW(), false)
       RETURNING *
     `);
     return rows.rows as Row[];
   }
 
   async getDowntimeEvents(sid: number): Promise<Row[]> {
+    // Wire to canonical downtime_events; session_id is INTEGER — no cast needed
     const rows = await runQuery<Row>(sql`
-      SELECT de.*, dr.name AS reason_name
-      FROM mes_downtime_events de
-      LEFT JOIN mes_downtime_reasons dr ON dr.id = de.reason_id
+      SELECT de.*
+      FROM downtime_events de
       WHERE de.session_id = ${sid} ORDER BY de.started_at DESC
     `);
     return rows.rows as Row[];
