@@ -66,6 +66,17 @@ export const SdUpdateDeliveryStatusSchema = z.object({
 });
 export type SdUpdateDeliveryStatusDto = z.infer<typeof SdUpdateDeliveryStatusSchema>;
 
+// deliveryNumber is generated server-side (DLV-XXXXXXXXXX); callers provide optional metadata
+export const SdCreateDeliverySchema = z.object({
+  salesOrderId:             z.string().optional(),
+  customerId:               z.number().int().positive().optional(),
+  plannedGoodsMovementDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD').optional(),
+  driverName:               z.string().max(100).optional(),
+  vehicleNumber:            z.string().max(20).optional(),
+  createdBy:                z.number().int().positive().optional(),
+});
+export type SdCreateDeliveryDto = z.infer<typeof SdCreateDeliverySchema>;
+
 export const SdCreatePaymentSchema = z.object({
   order_id:       z.number().int().positive().optional(),
   amount:         z.number().positive().optional(),
