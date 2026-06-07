@@ -99,9 +99,9 @@ export class ReportsController {
   }
 
   /**
-   * POST /api/reports/profitability/export - request an async profitability
-   * export. Returns a job descriptor so the client can poll via job status.
-   * The actual file generation runs in the background queue.
+   * POST /api/reports/profitability/export — returns real order_costings data.
+   * File generation (xlsx/csv) requires a real export engine; until then the
+   * endpoint returns the raw dataset (JSON) so callers have actual data.
    */
   @ApiOperation({ summary: 'Export profitability' })
   @ApiResponse({ status: 202, description: 'OK' })
@@ -109,23 +109,26 @@ export class ReportsController {
   @Post('profitability/export')
   @HttpCode(HttpStatus.ACCEPTED)
   async exportProfitability(@Body() body: unknown) {
+    type Row = Record<string, unknown>;
     try {
-      const payload = (body ?? {}) as { from?: string; to?: string; format?: string };
-      const format = payload.format ?? 'xlsx';
-      const jobId = `prof-export-${Date.now()}`;
-      this.logger.log(`Profitability export queued: jobId=${jobId} format=${format}`);
-      return {
-        jobId,
-        status: 'queued',
-        format,
-        from: payload.from ?? null,
-        to: payload.to ?? null,
-        requestedAt: this._time.now().toISOString(),
-        message: 'Eksport so\'rovi qabul qilindi. Tayyor bo\'lganda bildirishnoma yuboriladi.',
-      };
+      const payload = (body ?? {}) as { from?: string; to?: string };
+      const r = await db.execute(sql`
+        SELECT id, sales_order_id, production_order_id,
+               material_cost, labor_cost, overhead_cost, energy_cost, waste_cost,
+               total_cost, selling_price, gross_profit, profit_margin,
+               status, calculated_at, created_at
+        FROM order_costings
+        WHERE TRUE
+        ${payload.from ? sql`AND calculated_at >= ${payload.from}::timestamptz` : sql``}
+        ${payload.to   ? sql`AND calculated_at <= ${payload.to}::timestamptz`   : sql``}
+        ORDER BY calculated_at DESC NULLS LAST LIMIT 500
+      `);
+      const rows = (((r as { rows?: Row[] }).rows) ?? []);
+      this.logger.log(`Profitability export: ${rows.length} rows returned`);
+      return { data: rows, total: rows.length, exportedAt: this._time.now().toISOString() };
     } catch (e) {
       this.logger.error(`exportProfitability: ${(e as Error).message}`);
-      return { jobId: null, status: 'error', error: (e as Error).message };
+      return { data: [], total: 0, error: (e as Error).message };
     }
   }
 }

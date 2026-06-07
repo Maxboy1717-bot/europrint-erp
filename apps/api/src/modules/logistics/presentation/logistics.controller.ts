@@ -33,6 +33,7 @@ import { AssignDriverCommand} from '../application/commands/assign-driver.comman
 import { GetDeliveriesQuery} from '../application/queries/get-deliveries.query';
 import { DispatchDeliveryDto, AssignDriverDto, CompleteDeliveryDto} from './dto/logistics.dto';
 import { IDeliveryRepo, DELIVERY_REPO } from '../domain/repositories/i-delivery.repo';
+import { DeliveryStatus } from '../domain/enums/delivery-status.enum';
 
 enum Role {
  SUPER_ADMIN = 'super_admin',
@@ -132,6 +133,10 @@ export class LogisticsController {
  @Body() dto?: CompleteDeliveryDto) {
  this.logger.log('Completing delivery');
 
+ // Real DB update — mark delivery as DELIVERED
+ const updated = await this.deliveryRepo.update(id, { status: DeliveryStatus.DELIVERED });
+ if (!updated.ok) this.logger.warn(`completeDelivery: DB update failed for id=${id}: ${updated.error}`);
+
  // Emit completion event (Trigger 14)
  this.eventEmitter.emit(ERP_EVENTS.DELIVERY_COMPLETED, {
  deliveryId: id,
@@ -143,7 +148,7 @@ export class LogisticsController {
 
  return {
  statusCode: HttpStatus.OK,
- data: { id, status: 'completed'},
+ data: { id, status: DeliveryStatus.DELIVERED, updated: updated.ok },
 };
 }
 }

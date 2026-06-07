@@ -205,6 +205,6 @@ export class BarcodeWarehouseCompatController {
 
   @Patch('debts/:id')
   async patchDebt(@Param('id') id: string, @Body() body: CompatBodyDto) {
-    return { id, ...body, updated: true };
+    return unwrapOrInternal(await this.debtSvc.updateDebt(id, body as unknown as Record<string, unknown>));
   }
 }
