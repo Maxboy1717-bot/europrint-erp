@@ -115,7 +115,7 @@ export class RequestsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/status')
   @UsePipes(new ZodValidationPipe(UpdateTransferStatusDtoSchema))
- @Roles('WAREHOUSE_MANAGER')
+ @Roles('manager')
  async updateStatus(
  @Param('id') requestId: string,
  @Body() body: UpdateTransferStatusDto,

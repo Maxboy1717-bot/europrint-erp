@@ -114,7 +114,7 @@ export class InventoryCountController {
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/complete')
- @Roles('WAREHOUSE_MANAGER')
+ @Roles('manager')
  async completeCount(
  @Param('id') countId: string,
  @CurrentUser() user: AuthenticatedUser,
@@ -128,7 +128,7 @@ export class InventoryCountController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Patch(':id/approve')
   @UsePipes(new ZodValidationPipe(ApproveCountDtoSchema))
- @Roles('WAREHOUSE_MANAGER', 'SUPER_ADMIN')
+ @Roles('manager', 'super_admin')
  async approveCount(
  @Param('id') countId: string,
  @Body() body: ApproveCountDto,

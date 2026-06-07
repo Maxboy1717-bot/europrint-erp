@@ -41,7 +41,7 @@ export class ReportsController {
  @ApiOperation({ summary: 'Get movement report' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get('movements')
- @Roles('WAREHOUSE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+ @Roles('manager', 'super_admin', 'director')
  async getMovementReport(
  @Query() query: Record<string, unknown>,
  @CurrentUser() user: AuthenticatedUser,
@@ -60,7 +60,7 @@ export class ReportsController {
  @ApiOperation({ summary: 'Get employee activity' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get('employee-activity')
- @Roles('HR_MANAGER', 'SUPER_ADMIN')
+ @Roles('manager', 'super_admin')
  async getEmployeeActivity(
  @Query() query: Record<string, unknown>,
  @CurrentUser() user: AuthenticatedUser,
@@ -79,7 +79,7 @@ export class ReportsController {
  @ApiOperation({ summary: 'Get low stock report' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get('low-stock')
- @Roles('WAREHOUSE_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+ @Roles('manager', 'super_admin', 'director')
  async getLowStockReport(
  @Query() query: Record<string, unknown>,
  @CurrentUser() user: AuthenticatedUser,
