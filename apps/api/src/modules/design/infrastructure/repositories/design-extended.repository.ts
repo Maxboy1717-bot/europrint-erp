@@ -122,7 +122,16 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
   }
 
   async generateMockup(designId: string, productType: string): Promise<Result<{ mockupUrl: string; designId: string; productType: string }>> {
-    return Ok({ mockupUrl: `/mockups/${designId}-${productType}.png`, designId, productType });
+    return safeCall(async () => {
+      const rows = await exec(sql`
+        SELECT id::text AS id, image_url AS "imageUrl" FROM designs WHERE id = ${parseInt(designId, 10)}
+      `);
+      const r = rows[0];
+      if (!r) throw new Error('Design topilmadi');
+      // Use the stored image_url as the mockup source; real 3D rendering deferred.
+      const mockupUrl = r['imageUrl'] ? String(r['imageUrl']) : `/mockups/${designId}-${productType}.png`;
+      return { mockupUrl, designId, productType };
+    }, 'DB_ERROR');
   }
 
   async approveDesign(designId: string): Promise<Result<{ id: string; status: string }>> {
