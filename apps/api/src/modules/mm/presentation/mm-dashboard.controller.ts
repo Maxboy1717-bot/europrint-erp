@@ -259,16 +259,16 @@ export class MmDashboardController {
   async createVendorPerformance(@Body() body: unknown) {
     const dto = (body ?? {}) as Record<string, unknown>;
     const r = await db.execute(sql`
-      INSERT INTO vendor_performance (vendor_id, score, on_time_rate, quality_rate, period, created_at)
+      INSERT INTO mm_vendor_ratings (vendor_id, quality_score, delivery_score, price_score, notes, rated_at)
       VALUES (
         ${dto['vendor_id'] ?? dto['vendorId'] ?? null}::int,
-        ${Number(dto['score'] ?? 0)}::numeric,
-        ${Number(dto['on_time_rate'] ?? dto['onTimeRate'] ?? 0)}::numeric,
         ${Number(dto['quality_rate'] ?? dto['qualityRate'] ?? 0)}::numeric,
-        ${dto['period'] ?? null}::text,
+        ${Number(dto['on_time_rate'] ?? dto['onTimeRate'] ?? 0)}::numeric,
+        ${Number(dto['score'] ?? 0)}::numeric,
+        ${dto['period'] ? `period: ${String(dto['period'])}` : null},
         NOW()
       )
-      RETURNING id, vendor_id, score
+      RETURNING id, vendor_id, quality_score, delivery_score, price_score
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
     return { message: 'Sotuvchi unumdorligi saqlandi', data: row };
