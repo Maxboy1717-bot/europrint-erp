@@ -48,7 +48,9 @@ export const FinanceCreateInvoiceSchema = z.object({
 export type FinanceCreateInvoiceDto = z.infer<typeof FinanceCreateInvoiceSchema>;
 
 export const FinancePostInvoiceSchema = z.object({
-  postedBy: z.number().int().positive(),
+  postedBy:  z.number().int().positive(),
+  amount:    z.number().min(0),
+  taxAmount: z.number().min(0).optional().default(0),
 });
 export type FinancePostInvoiceDto = z.infer<typeof FinancePostInvoiceSchema>;
 

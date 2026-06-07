@@ -118,24 +118,29 @@ export class FinanceInvoicesController {
     return { invoiceId: row['id'], invoiceNumber };
   }
 
-  @ApiOperation({ summary: 'Post invoice' })
+  @ApiOperation({ summary: 'Post invoice to GL' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':invoiceId/post')
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinancePostInvoiceSchema))
   async postInvoice(
-    @Param('invoiceId') invoiceId: number,
-    @Body() body: FinancePostInvoiceDto
+    @Param('invoiceId') invoiceId: string,
+    @Body() body: FinancePostInvoiceDto,
   ) {
-    const result = await this.invoiceRepo.updateInvoice(String(invoiceId), {
-      status: 'posted',
-      updated_at: new Date(),
-    } as Record<string, unknown>);
+    const result = await this.invoiceRepo.postInvoiceWithGl(
+      invoiceId,
+      body.amount,
+      body.taxAmount ?? 0,
+      body.postedBy,
+    );
     if (!result.ok) {
-      throw new InternalServerErrorException('Invoice postlanmadi');
+      throw new InternalServerErrorException('Invoice GL postlanmadi');
     }
-    return { message: 'Invoice posted to GL', invoiceId };
+    if (result.data.alreadyPosted) {
+      return { message: 'Invoice already posted to GL (idempotent)', invoiceId };
+    }
+    return { message: 'Invoice posted to GL', invoiceId, entryId: result.data.entryId };
   }
 
   @ApiOperation({ summary: 'Get invoice' })
