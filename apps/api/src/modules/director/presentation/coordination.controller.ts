@@ -6,6 +6,8 @@
 import { Body, Controller, Delete, Get, Logger, Param, Patch, Post, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -36,14 +38,12 @@ export class CoordinationController {
   @ApiOperation({ summary: 'Get councils' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('councils')
-  getCouncils() {
-    return [
-      { id: 1, name: 'Boshqaruv Kengashi', type: 'management' },
-      { id: 2, name: 'Sifat Kengashi', type: 'quality' },
-      { id: 3, name: 'Moliya Kengashi', type: 'finance' },
-      { id: 4, name: 'HR Kengashi', type: 'hr' },
-      { id: 5, name: 'Texnik Kengash', type: 'technical' },
-    ];
+  async getCouncils() {
+    const r = await db.execute(sql`
+      SELECT id, name, council_type AS type, description, is_active, created_at
+      FROM councils WHERE is_active = true ORDER BY id
+    `);
+    return ((r as { rows?: unknown[] }).rows) ?? [];
   }
 
   @ApiOperation({ summary: 'Get baskets' })
