@@ -72,12 +72,10 @@ export class InventoryCountController {
  @Get()
  async findCounts(
  @Query() query: Record<string, unknown>,
- @CurrentUser() user: AuthenticatedUser,
  ): Promise<{ data: InventoryCount[]; total: number; page: number; limit: number}> {
  const dto = parseSafe(GetCountsDtoSchema, query, 'Invalid request body');
- const dtoAny = dto as Record<string, unknown>;
- const res = await this.commandBus.execute(
- new StartInventoryCountCommand(dto.warehouseId ?? '', String(user.id), dtoAny['notes'] as string | undefined),
+ const res = await this.queryBus.execute(
+   new GetCountsQuery(dto.warehouseId, dto.status as CountStatus | undefined, dto.page, dto.limit),
  );
  return unwrapOrThrow(res);
 }

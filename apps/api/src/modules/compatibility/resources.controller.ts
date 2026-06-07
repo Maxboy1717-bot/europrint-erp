@@ -62,7 +62,7 @@ export class WarehousesCompatController {
   @Post('notify-vacancies')
   @HttpCode(HttpStatus.OK)
   async notifyVacancies(@Body() _body: unknown) {
-    return { notified: true };
+    return { notified: false, reason: 'notification service not configured' };
   }
 }
 

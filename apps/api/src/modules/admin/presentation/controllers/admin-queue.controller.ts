@@ -61,6 +61,6 @@ export class AdminQueueController {
   @ApiResponse({ status: 200, description: 'Job deleted' })
   @ApiResponse({ status: 404, description: 'Job not found' })
   async deleteFailedJob(@Param('id') id: string) {
-    return { id, deleted: true };
+    return this.svc.deleteFailedJob(id);
   }
 }

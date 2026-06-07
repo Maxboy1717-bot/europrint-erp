@@ -31,6 +31,10 @@ export class AdminQueueService {
   }
 
   retryJob(queue: string, jobId: string) {
-    return { queue, jobId, status: 'retried', retriedAt: _time.now().toISOString() };
+    return { queue, jobId, status: 'not_wired', reason: 'BullMQ not configured; retry has no effect' };
+  }
+
+  deleteFailedJob(id: string) {
+    return { id, deleted: false, reason: 'BullMQ not configured; no job to delete' };
   }
 }
