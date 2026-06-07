@@ -168,8 +168,16 @@ export class QcDefectsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/finance/:orderId')
   async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
+    const dto = QcApprovalSchema.parse(body ?? {});
     const approved = await this._setQcStatus(orderId, 'finance_approved');
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'finance', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+    }
     return { orderId, approved };
   }
 
@@ -179,8 +187,16 @@ export class QcDefectsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('approve/finance/:orderId')
   async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
+    const dto = QcApprovalSchema.parse(body ?? {});
     const approved = await this._setQcStatus(orderId, 'finance_approved');
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'finance', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+    }
     return { orderId, approved };
   }
 
@@ -190,8 +206,16 @@ export class QcDefectsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/qc/:orderId')
   async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
+    const dto = QcApprovalSchema.parse(body ?? {});
     const approved = await this._setQcStatus(orderId, 'qc_approved');
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+    }
     return { orderId, approved };
   }
 
@@ -201,8 +225,16 @@ export class QcDefectsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('approve/qc/:orderId')
   async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcApprovalSchema.parse(body ?? {});
+    const dto = QcApprovalSchema.parse(body ?? {});
     const approved = await this._setQcStatus(orderId, 'qc_approved');
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
+      await db.execute(sql`
+        INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+        VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
+      `);
+    }
     return { orderId, approved };
   }
 
