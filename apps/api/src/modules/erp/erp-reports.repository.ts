@@ -130,6 +130,26 @@ export class ErpReportsRepository {
 
   }
 
+  async updateWorkCenterCapacity(id: number, patches: Row): Promise<Result<Row | null>> {
+    try {
+      const capacityPerHour = patches['capacity_per_hour'] !== undefined ? Number(patches['capacity_per_hour']) : null;
+      const hoursPerDay     = patches['hours_per_day']     !== undefined ? Number(patches['hours_per_day'])     : null;
+      const efficiencyRate  = patches['efficiency_rate']   !== undefined ? Number(patches['efficiency_rate'])   : null;
+      const capacity        = patches['capacity']          !== undefined ? Number(patches['capacity'])          : null;
+      const r = await exec(sql`
+        UPDATE work_centers SET
+          capacity_per_hour = COALESCE(${capacityPerHour}, capacity_per_hour),
+          hours_per_day     = COALESCE(${hoursPerDay},     hours_per_day),
+          efficiency_rate   = COALESCE(${efficiencyRate},  efficiency_rate),
+          capacity          = COALESCE(${capacity},        capacity),
+          updated_at        = NOW()
+        WHERE id = ${id}
+        RETURNING id, name, capacity_per_hour, hours_per_day, efficiency_rate, capacity, updated_at
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+    } catch (_e) { return Err(String(_e)); }
+  }
+
   async createDailyReport(body: Row): Promise<Result<Row | null>> {
   try {
     const r = await exec(sql`INSERT INTO erp_daily_reports (work_center_id, report_date, shift, planned_qty, actual_qty, notes) VALUES (${body.workCenterId ?? null}, ${body.reportDate ?? body.date ?? new Date().toISOString().slice(0,10)}, ${body.shift ?? null}, ${body.plannedQty ?? 0}, ${body.actualQty ?? 0}, ${body.notes ?? null}) RETURNING *`);

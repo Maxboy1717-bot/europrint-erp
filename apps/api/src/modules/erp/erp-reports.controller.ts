@@ -287,13 +287,19 @@ export class ErpReportsController {
     return unwrapOrThrow(await this.svc.workCenterCapacity());
   }
 
-  @ApiOperation({ summary: 'Create work center capacity' })
-  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiOperation({ summary: 'Update work center capacity' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('work-center-capacity')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
-  async createWorkCenterCapacity(@Body() _body: ErpBodyDto) {
-    return { message: 'Work center capacity updated', updatedAt: new Date().toISOString() };
+  async createWorkCenterCapacity(@Body() body: ErpBodyDto) {
+    const patch = body as Record<string, unknown>;
+    const id = patch['id'] !== undefined ? safeInt(String(patch['id']), 0) : 0;
+    if (!id) {
+      // No id — return current capacity list (read-only fallback)
+      return unwrapOrThrow(await this.svc.workCenterCapacity());
+    }
+    return unwrapOrThrow(await this.svc.updateWorkCenterCapacity(id, patch));
   }
 }

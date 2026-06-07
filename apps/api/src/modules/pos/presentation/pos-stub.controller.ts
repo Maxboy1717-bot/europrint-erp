@@ -27,6 +27,8 @@ import type { AuthenticatedUser } from '@common/types/user.types';
 import { CashRegisterService } from '../application/services/cash-register.service';
 import { StockLedgerService } from '../application/services/stock-ledger.service';
 import { unwrapOrInternal } from '@common/http-result';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const LegacySaleItemSchema = z.object({
   productId: z.union([z.string(), z.number()]).transform((v) => String(v)),
@@ -140,13 +142,28 @@ export class PosStubController {
     return unwrapOrInternal(await this.stockLedgerService.getMonthlyReport(warehouseId));
   }
 
-  // LEGACY_NOOP: Legacy adjust shim. pos-v2's WmsInventoryService is the real
-  // writer; this returns the echoed payload so old screens stay functional.
+  // Legacy adjust shim — writes a pos_stock_ledger entry so the adjustment is
+  // recorded. pos-v2's WmsInventoryService remains the canonical stock writer;
+  // this endpoint is kept for backward-compatibility with older screens.
   // TODO P3-26: migrate clients to /pos-v2/inventory and delete.
   @Patch('inventory/:productId/adjust')
   @ApiOperation({ summary: 'Inventar miqdorini moslashtirish (legacy v1)' })
-  adjustInventory(@Param('productId') productId: string, @Body() body: unknown) {
+  async adjustInventory(@Param('productId') productId: string, @Body() body: unknown) {
     const dto = AdjustInventorySchema.parse(body);
-    return { productId, adjusted: true, ...dto };
+    const matId = parseInt(productId, 10);
+    const qtyChange = dto.quantity !== undefined ? Number(dto.quantity) : null;
+    const reason = dto.reason ?? null;
+    let rowsWritten = 0;
+    if (!isNaN(matId) && qtyChange !== null) {
+      try {
+        const r = await rawSql(sql`
+          INSERT INTO pos_stock_ledger (material_id, qty_change, reason, ts)
+          VALUES (${matId}, ${qtyChange}, ${reason}, NOW())
+          RETURNING id
+        `);
+        rowsWritten = (r as { rows?: unknown[] }).rows?.length ?? 0;
+      } catch (_e) { /* ledger insert failed — non-fatal, continue */ }
+    }
+    return { productId, adjusted: rowsWritten > 0, rowsWritten, ...dto };
   }
 }

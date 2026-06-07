@@ -169,8 +169,8 @@ export class QcDefectsController {
   @Patch('approve/finance/:orderId')
   async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'finance_approved');
-    return { orderId, approved: true };
+    const approved = await this._setQcStatus(orderId, 'finance_approved');
+    return { orderId, approved };
   }
 
   @ApiOperation({ summary: 'Post approve finance' })
@@ -180,8 +180,8 @@ export class QcDefectsController {
   @Post('approve/finance/:orderId')
   async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'finance_approved');
-    return { orderId, approved: true };
+    const approved = await this._setQcStatus(orderId, 'finance_approved');
+    return { orderId, approved };
   }
 
   @ApiOperation({ summary: 'Approve qc' })
@@ -191,8 +191,8 @@ export class QcDefectsController {
   @Patch('approve/qc/:orderId')
   async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'qc_approved');
-    return { orderId, approved: true };
+    const approved = await this._setQcStatus(orderId, 'qc_approved');
+    return { orderId, approved };
   }
 
   @ApiOperation({ summary: 'Post approve qc' })
@@ -202,8 +202,8 @@ export class QcDefectsController {
   @Post('approve/qc/:orderId')
   async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcApprovalSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'qc_approved');
-    return { orderId, approved: true };
+    const approved = await this._setQcStatus(orderId, 'qc_approved');
+    return { orderId, approved };
   }
 
   @ApiOperation({ summary: 'Reject order' })
@@ -213,8 +213,8 @@ export class QcDefectsController {
   @Patch('reject/:orderId')
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcRejectionSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'rejected');
-    return { orderId, rejected: true };
+    const rejected = await this._setQcStatus(orderId, 'rejected');
+    return { orderId, rejected };
   }
 
   @ApiOperation({ summary: 'Post reject order' })
@@ -224,8 +224,8 @@ export class QcDefectsController {
   @Post('reject/:orderId')
   async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcRejectionSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'rejected');
-    return { orderId, rejected: true };
+    const rejected = await this._setQcStatus(orderId, 'rejected');
+    return { orderId, rejected };
   }
 
   @ApiOperation({ summary: 'Inspector submit' })
@@ -235,8 +235,8 @@ export class QcDefectsController {
   @Patch('inspector-submit/:orderId')
   async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'inspector_submitted');
-    return { orderId, submitted: true };
+    const submitted = await this._setQcStatus(orderId, 'inspector_submitted');
+    return { orderId, submitted };
   }
 
   @ApiOperation({ summary: 'Post inspector submit' })
@@ -246,7 +246,7 @@ export class QcDefectsController {
   @Post('inspector-submit/:orderId')
   async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
-    await this._setQcStatus(orderId, 'inspector_submitted');
-    return { orderId, submitted: true };
+    const submitted = await this._setQcStatus(orderId, 'inspector_submitted');
+    return { orderId, submitted };
   }
 }

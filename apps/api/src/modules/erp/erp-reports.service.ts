@@ -78,4 +78,7 @@ export class ErpReportsService {
   async createEmployeeWorkCenter(body: Record<string, unknown>) { return this.repo.createEmployeeWorkCenter(body); }
   async updateEmployeeWorkCenter(id: number, body: Record<string, unknown>) { return this.repo.updateEmployeeWorkCenter(id, body); }
   async deleteEmployeeWorkCenter(id: number) { return this.repo.deleteEmployeeWorkCenter(id); }
+  async updateWorkCenterCapacity(id: number, patches: Record<string, unknown>) {
+    return this.repo.updateWorkCenterCapacity(id, patches);
+  }
 }

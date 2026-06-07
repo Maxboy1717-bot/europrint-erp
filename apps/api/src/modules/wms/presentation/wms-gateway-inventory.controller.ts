@@ -162,7 +162,17 @@ export class WmsGatewayInventoryController {
     @Body() body: unknown,
   ) {
     const dto = UpdateInventoryCountLineSchema.parse(body);
-    return { lineId, ...dto };
+    const countedQty = dto.counted_qty !== undefined ? Number(dto.counted_qty) : null;
+    try {
+      const r = await rawSql(sql`
+        UPDATE inventory_count_lines SET
+          counted_quantity = COALESCE(${countedQty}::numeric, counted_quantity),
+          actual_qty       = COALESCE(${countedQty}::numeric, actual_qty)
+        WHERE id = ${parseInt(lineId, 10)}
+        RETURNING id::text AS id, counted_quantity, actual_qty
+      `);
+      return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? { lineId, ...dto };
+    } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
   @ApiOperation({ summary: 'Get inventory count by id' })

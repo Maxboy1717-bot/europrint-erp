@@ -5,9 +5,11 @@
 
 import { assertInternal } from '@common/assertions';
 import {
-  Body, Controller, Get, Param, Post, Patch,
+  Body, BadRequestException, Controller, Get, Param, Post, Patch,
   UseGuards, UseInterceptors, Logger, Query, UsePipes,
 } from '@nestjs/common';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
@@ -99,7 +101,15 @@ export class WmsWarehouseGatewayController {
     @Body() body: unknown,
   ) {
     const dto = TransferStatusUpdateSchema.parse(body);
-    return { id, ...dto };
+    try {
+      const intId = parseInt(id, 10);
+      const r = await rawSql(sql`
+        UPDATE warehouse_transfers SET status = ${dto.status}
+        WHERE id = ${intId}
+        RETURNING id::text AS id, status, from_warehouse_id, to_warehouse_id, quantity
+      `);
+      return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? { id, ...dto };
+    } catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
   // ── INTERNAL REQUESTS ─────────────────────────────────────────────────────
