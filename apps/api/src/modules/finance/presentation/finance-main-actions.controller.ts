@@ -18,6 +18,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GlService } from '../gl/gl.service';
 import { FinanceActionsService } from '../application/finance-actions.service';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
+import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 
 const FINANCE_ROLES = ['FINANCE_MANAGER', 'ACCOUNTANT', 'SUPER_ADMIN', 'DIRECTOR'];
 
@@ -76,8 +78,25 @@ export class FinanceMainActionsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('gl-entries/:id/reverse')
-  getGlEntryReverse(@Param('id') _id: string) {
-    return { reversed: false };
+  async getGlEntryReverse(@Param('id') id: string) {
+    type Row = Record<string, unknown>;
+    // Fetch the original entry from the canonical GL table
+    const entryR = await db.execute(sql`
+      SELECT id, entry_number, entry_date, document_type, debit_account, credit_account,
+             amount, description, currency, created_at
+      FROM entries WHERE id::text = ${id} LIMIT 1
+    `);
+    const entry = (((entryR as { rows?: Row[] }).rows) ?? [])[0] ?? null;
+    // Search gl_documents for any [REVERSAL] document — no FK exists so we can
+    // only find reversals created by this app (POST /gl-entries/:id/reverse).
+    const revR = await db.execute(sql`
+      SELECT id, document_number, description, total_debit, total_credit, status, created_at
+      FROM gl_documents
+      WHERE description ILIKE '[REVERSAL]%'
+      ORDER BY created_at DESC LIMIT 20
+    `);
+    const reversals = (((revR as { rows?: Row[] }).rows) ?? []);
+    return { entryId: id, entry, reversed: reversals.length > 0, reversals };
   }
 
   @ApiOperation({ summary: 'Post gl entry reverse' })
@@ -119,9 +138,11 @@ export class FinanceMainActionsController {
   }
 
   /**
-   * POST /api/finance/profitability/recalculate — trigger a profitability
-   * recalculation across all open order-costing rows. The compute work is
-   * offloaded; this endpoint returns the job descriptor synchronously.
+   * POST /api/finance/profitability/recalculate — real recalculation:
+   * UPDATE order_costings SET gross_profit = selling_price - total_cost,
+   *   profit_margin = (selling_price - total_cost) / NULLIF(selling_price,0) * 100,
+   *   calculated_at = NOW()
+   * Optionally scoped to a single orderId.
    */
   @ApiOperation({ summary: 'Recalculate profitability' })
   @ApiResponse({ status: 202, description: 'OK' })
@@ -130,21 +151,39 @@ export class FinanceMainActionsController {
   @HttpCode(HttpStatus.ACCEPTED)
   async recalculateProfitability(@Body() body: unknown) {
     try {
-      const payload = (body ?? {}) as { orderId?: string; from?: string; to?: string };
-      const jobId = `prof-recalc-${Date.now()}`;
-      this.logger.log(`Profitability recalc queued: jobId=${jobId} orderId=${payload.orderId ?? 'all'}`);
-      return {
-        jobId,
-        status: 'queued',
-        orderId: payload.orderId ?? null,
-        from: payload.from ?? null,
-        to: payload.to ?? null,
-        queuedAt: _time.now().toISOString(),
-        message: 'Rentabellik qayta hisoblash navbatga qo\'shildi.',
-      };
+      const payload = (body ?? {}) as { orderId?: string };
+      type Row = Record<string, unknown>;
+      const r = await db.execute(
+        payload.orderId
+          ? sql`
+              UPDATE order_costings
+              SET gross_profit  = (selling_price::numeric - total_cost::numeric),
+                  profit_margin = ROUND(
+                    (selling_price::numeric - total_cost::numeric)
+                    / NULLIF(selling_price::numeric, 0) * 100, 4
+                  ),
+                  calculated_at = NOW()
+              WHERE sales_order_id::text = ${payload.orderId}
+                 OR production_order_id::text = ${payload.orderId}
+              RETURNING id, gross_profit, profit_margin, calculated_at
+            `
+          : sql`
+              UPDATE order_costings
+              SET gross_profit  = (selling_price::numeric - total_cost::numeric),
+                  profit_margin = ROUND(
+                    (selling_price::numeric - total_cost::numeric)
+                    / NULLIF(selling_price::numeric, 0) * 100, 4
+                  ),
+                  calculated_at = NOW()
+              RETURNING id, gross_profit, profit_margin, calculated_at
+            `,
+      );
+      const rows = (((r as { rows?: Row[] }).rows) ?? []);
+      this.logger.log(`Profitability recalc done: ${rows.length} rows updated orderId=${payload.orderId ?? 'all'}`);
+      return { status: 'done', updated: rows.length, orderId: payload.orderId ?? null, recalcAt: _time.now().toISOString() };
     } catch (e) {
       this.logger.error(`recalculateProfitability: ${(e as Error).message}`);
-      return { jobId: null, status: 'error', error: (e as Error).message };
+      return { status: 'error', error: (e as Error).message };
     }
   }
 
