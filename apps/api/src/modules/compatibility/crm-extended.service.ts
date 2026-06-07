@@ -26,7 +26,7 @@ export class CrmExtendedCompatService {
     const result = await rawSql(sql`
       SELECT i.id, i.number, i.title, i.deal_id, i.company_id, i.contact_id,
              i.status, i.total_amount, i.paid_amount, i.currency,
-             i.issue_date, i.due_date, i.paid_date, i.created_at, i.updated_at
+             i.invoice_date, i.due_date, i.paid_date, i.created_at, i.updated_at
       FROM crm_invoices i
       ORDER BY i.created_at DESC LIMIT ${lim} OFFSET ${off}
     `);

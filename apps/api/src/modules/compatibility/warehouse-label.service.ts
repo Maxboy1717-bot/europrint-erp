@@ -71,7 +71,7 @@ export class WarehouseLabelCompatService {
                TO_CHAR(wb.expiry_date, 'YYYY-MM-DD') AS expiry_date,
                wb.quantity, w.name AS warehouse_name
         FROM warehouse_batches wb
-        JOIN material_cards mc ON mc.id = wb.material_card_id
+        JOIN material_cards mc ON mc.id = wb.item_id
         LEFT JOIN warehouses w ON w.id = wb.warehouse_id
         WHERE wb.id = ${batchId}
       `);
@@ -88,7 +88,7 @@ export class WarehouseLabelCompatService {
              mc.xom_ashyo AS material_name, mc.barcode,
              w.name AS warehouse_name
       FROM warehouse_batches wb
-      JOIN material_cards mc ON mc.id = wb.material_card_id
+      JOIN material_cards mc ON mc.id = wb.item_id
       LEFT JOIN warehouses w ON w.id = wb.warehouse_id
       WHERE true ${warehouseFilter} ${statusFilter}
       ORDER BY wb.created_at DESC LIMIT 100
@@ -105,7 +105,7 @@ export class WarehouseLabelCompatService {
              mc.xom_ashyo AS material_name, wb.batch_number
       FROM pos_barcode_print_queue q
       LEFT JOIN warehouse_batches wb ON wb.id = q.batch_id
-      LEFT JOIN material_cards mc ON mc.id = wb.material_card_id
+      LEFT JOIN material_cards mc ON mc.id = wb.item_id
       WHERE true ${warehouseFilter}
       ORDER BY q.created_at DESC LIMIT ${limit}
     `);
