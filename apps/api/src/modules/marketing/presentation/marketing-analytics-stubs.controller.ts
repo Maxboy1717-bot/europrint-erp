@@ -393,7 +393,7 @@ export class MarketingAnalyticsStubsController {
   @Get('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'director')
   async getExhibitionById(@Param('id') id: string) {
     const row = first(await db.execute(sql`
-      SELECT * FROM exhibitions WHERE id=${id} AND deleted_at IS NULL LIMIT 1
+      SELECT * FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
     `));
     if (!row) throw new NotFoundException(`Exposition #${id} not found`);
     return { data: row };
@@ -402,7 +402,7 @@ export class MarketingAnalyticsStubsController {
   @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director')
   async getExhibitionLeads(@Param('id') id: string) {
     const data = rows(await db.execute(sql`
-      SELECT * FROM exhibition_leads WHERE exhibition_id::text=${id} ORDER BY created_at DESC
+      SELECT * FROM exhibition_leads WHERE exhibition_id=${parseInt(id, 10)} ORDER BY created_at DESC
     `));
     return { items: data, total: data.length };
   }
@@ -410,7 +410,7 @@ export class MarketingAnalyticsStubsController {
   @Get('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'director')
   async getExhibitionQr(@Param('id') id: string) {
     const row = first(await db.execute(sql`
-      SELECT id, name, qr_code FROM exhibitions WHERE id=${id} AND deleted_at IS NULL LIMIT 1
+      SELECT id, name, qr_code FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
     `));
     if (!row) throw new NotFoundException(`Exposition #${id} not found`);
     return { data: row };
@@ -420,9 +420,8 @@ export class MarketingAnalyticsStubsController {
   async createExhibition(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = ExhibitionSchema.parse(body ?? {});
     const r = await db.execute(sql`
-      INSERT INTO exhibitions (id, name, location, country, start_date, end_date, budget, description, status, created_at, updated_at)
+      INSERT INTO exhibitions (name, location, country, start_date, end_date, budget, description, status, created_at, updated_at)
       VALUES (
-        gen_random_uuid()::text,
         ${dto.name ?? 'Unnamed'},
         ${dto.location ?? null},
         ${dto.country ?? null},
@@ -463,7 +462,7 @@ export class MarketingAnalyticsStubsController {
   async generateExhibitionQr(@Param('id') id: string) {
     const code = `EXH-${id}-${Date.now()}`;
     await db.execute(sql`
-      UPDATE exhibitions SET qr_code=${code}, updated_at=NOW() WHERE id=${id} AND deleted_at IS NULL
+      UPDATE exhibitions SET qr_code=${code}, updated_at=NOW() WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL
     `);
     return { data: { exhibition_id: id, qr_code: code } };
   }
@@ -491,7 +490,7 @@ export class MarketingAnalyticsStubsController {
         description = COALESCE(${dto.description ?? null}, description),
         status      = COALESCE(${dto.status      ?? null}, status),
         updated_at  = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
+      WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
       RETURNING *
     `);
     const row = rows(r)[0] ?? null;
@@ -502,7 +501,7 @@ export class MarketingAnalyticsStubsController {
   @Delete('exhibitions/:id') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
   async deleteExhibition(@Param('id') id: string) {
     await db.execute(sql`
-      UPDATE exhibitions SET deleted_at = NOW() WHERE id = ${id} AND deleted_at IS NULL
+      UPDATE exhibitions SET deleted_at = NOW() WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
     `);
     return { id, deleted: true };
   }
