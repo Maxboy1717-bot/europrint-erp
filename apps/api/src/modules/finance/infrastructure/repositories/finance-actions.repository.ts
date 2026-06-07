@@ -54,6 +54,26 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
     }
   }
 
+  /**
+   * Verify a payment — UPDATE finance_payments.status = 'verified'.
+   * finance_payments has no Drizzle schema; raw SQL used (RULE4_EXCEPTION).
+   */
+  async verifyPayment(id: number, verifiedBy: number): Promise<Result<Row>> {
+    try {
+      const r = await db.execute(sql`
+        UPDATE finance_payments
+        SET    status = 'verified'
+        WHERE  id = ${id}
+        RETURNING *
+      `);
+      const rows = ((r as { rows?: Row[] }).rows) ?? [];
+      if (!rows[0]) return Err(`Payment ${id} topilmadi yoki allaqachon verified`);
+      return Ok({ ...rows[0], verified_by: verifiedBy } as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
   async listAdvances(lim: number, off: number, page: number): Promise<Result<{ items: Row[]; total: number; page: number; limit: number }>> {
     try {
       const [items, countRows] = await Promise.all([

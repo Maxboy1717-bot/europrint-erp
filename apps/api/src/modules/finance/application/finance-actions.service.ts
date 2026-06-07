@@ -21,6 +21,10 @@ export class FinanceActionsService {
     return this.repo.approvePayment(id, approvedBy);
   }
 
+  verifyPayment(id: number, verifiedBy: number): Promise<Result<Row>> {
+    return this.repo.verifyPayment(id, verifiedBy);
+  }
+
   listAdvances(lim: number, off: number, page: number) {
     return this.repo.listAdvances(lim, off, page);
   }

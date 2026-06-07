@@ -15,6 +15,7 @@ type Row = Record<string, unknown>;
 export interface IFinanceActionsRepo {
   getSalaryBenchmark(): Promise<Result<Row>>;
   approvePayment(id: number, approvedBy: number | string): Promise<Result<Row>>;
+  verifyPayment(id: number, verifiedBy: number): Promise<Result<Row>>;
   listAdvances(
     lim: number,
     off: number,

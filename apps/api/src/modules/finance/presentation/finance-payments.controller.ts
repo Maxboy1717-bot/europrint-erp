@@ -120,10 +120,10 @@ export class FinancePaymentsController {
   @Post(':paymentId/verify')
   @Roles(Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceVerifyPaymentSchema))
-  async verifyPayment(@Param('paymentId') paymentId: number, @Body() body: FinanceVerifyPaymentDto) {
-
-      return { message: 'Payment verified', paymentId };
-    
+  async verifyPayment(@Param('paymentId') paymentId: string, @Body() body: FinanceVerifyPaymentDto) {
+    const r = await this.actionsSvc.verifyPayment(Number(paymentId), body.verifiedBy);
+    assertOkLog(r, (e) => this.logger.error(`verifyPayment: DB update failed for id=${paymentId}: ${e?.message ?? String(e)}`));
+    return { message: 'Payment verified', paymentId: Number(paymentId), data: r.data };
   }
 
   @ApiOperation({ summary: 'Get outstanding payment' })
