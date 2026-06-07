@@ -71,7 +71,7 @@ export class PpWorkCentersController {
     this.logger.log('Getting work center by ID');
     const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
     assertOk(result);
-    const workCenter = result.data?.find((wc: Record<string, unknown>) => wc.id === id);
+    const workCenter = result.data?.find((wc: Record<string, unknown>) => String(wc.id) === id);
     assertRequired(workCenter, 'Work center topilmadi');
     return workCenter;
   }
@@ -128,7 +128,7 @@ export class PpWorkCentersController {
     this.logger.log('Toggling work center active status');
     const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
     assertOk(result);
-    const existing = result.data?.find((wc: Record<string, unknown>) => wc.id === id);
+    const existing = result.data?.find((wc: Record<string, unknown>) => String(wc.id) === id);
     assertRequired(existing, 'Work center topilmadi');
     const command = new UpdateWorkCenterCommand(id);
     return unwrapOrThrow(await this.commandBus.execute(command));
