@@ -168,7 +168,7 @@ export class MesShiftsStatsRepository {
              COALESCE(e_in.first_name,'') || ' ' || COALESCE(e_in.last_name,'') AS incoming_supervisor_name
       FROM mes_shift_handovers sh
       LEFT JOIN employees e_out ON e_out.id = sh.outgoing_supervisor
-      LEFT JOIN employees e_in  ON e_in.id  = sh.incoming_supervisor
+      LEFT JOIN employees e_in  ON e_in.id  = sh.received_by
       WHERE (${from ?? null}::date IS NULL OR sh.handover_time::date >= ${from ?? null}::date)
         AND (${to ?? null}::date IS NULL OR sh.handover_time::date <= ${to ?? null}::date)
       ORDER BY sh.handover_time DESC LIMIT ${lim}
