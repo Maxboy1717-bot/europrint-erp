@@ -59,7 +59,7 @@ export class InventoryMaterialsRepository implements IInventoryMaterialsRepo {
 
   async getMaterialRecentPurchases(id: number): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT pol.*, po.created_at, v.name AS vendor_name, po.status FROM mm_purchase_order_lines pol JOIN mm_purchase_orders po ON po.id = pol.purchase_order_id JOIN mm_vendors v ON v.id = po.vendor_id WHERE pol.material_id = ${id} ORDER BY po.created_at DESC LIMIT 10`);  } catch (_e) {
+      return exec(sql`SELECT pol.*, po.created_at, v.name AS vendor_name, po.status FROM purchase_order_items pol JOIN mm_purchase_orders po ON po.id = pol.purchase_order_id JOIN mm_vendors v ON v.id = po.vendor_id WHERE pol.material_id = ${id} ORDER BY po.created_at DESC LIMIT 10`);  } catch (_e) {
     return Err(String(_e));
   }
 
