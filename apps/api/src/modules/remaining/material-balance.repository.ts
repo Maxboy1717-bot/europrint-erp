@@ -31,7 +31,7 @@ export class MaterialBalanceRepository {
 
   async getInternalRequests(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT ir.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, w.name AS from_warehouse_name FROM internal_requests ir LEFT JOIN material_cards mc ON mc.id = ir.material_card_id LEFT JOIN warehouses w ON w.id = ir.from_warehouse_id ORDER BY ir.created_at DESC LIMIT 100`);  } catch (_e) {
+      return exec(sql`SELECT ir.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, w.name AS from_warehouse_name FROM internal_requests ir LEFT JOIN material_cards mc ON mc.id = ir.material_id LEFT JOIN warehouses w ON w.id = ir.warehouse_id ORDER BY ir.created_at DESC LIMIT 100`);  } catch (_e) {
     return Err(String(_e));
   }
 
