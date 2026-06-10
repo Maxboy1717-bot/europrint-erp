@@ -98,7 +98,7 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async getPriceHistory(materialId: number): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT pol.unit_price, pol.quantity, po.created_at, v.name AS vendor_name FROM mm_purchase_order_lines pol JOIN mm_purchase_orders po ON po.id = pol.purchase_order_id JOIN mm_vendors v ON v.id = po.vendor_id WHERE pol.material_id = ${materialId} ORDER BY po.created_at DESC LIMIT 50`);  } catch (_e) {
+      return exec(sql`SELECT pol.unit_price, pol.quantity, po.created_at, v.name AS vendor_name FROM purchase_order_items pol JOIN mm_purchase_orders po ON po.id = pol.purchase_order_id JOIN mm_vendors v ON v.id = po.vendor_id WHERE pol.material_id = ${materialId} ORDER BY po.created_at DESC LIMIT 50`);  } catch (_e) {
     return Err(String(_e));
   }
 
