@@ -102,4 +102,21 @@ Bular jadval tanlash/qayta-yo'naltirish — A2 (PosLowStockJob) bilan bir xil na
 
 **So'rov:** Har item yoniga **HA / YO'Q / boshqa-variant** belgilang. A-guruh (S1,S2) DDL'siz — istasangiz darrov boshlayman. D-guruh har biri Q-35 ruxsatini kutadi.
 
-*Tayyorlandi: 2026-06-08 · Bajaruvchi · Hech qanday DDL/kod hali o'zgartirilmadi (bu faqat taklif).*
+---
+
+## ✅ BAJARILDI — 2026-06-08 (owner #01C: hammasi tasdiqlandi)
+
+| Item | Commit | Natija |
+|---|---|---|
+| S1 | `fb2206f1` | getStockById → warehouse_stock (real row) |
+| S2+D4 | `2fd181e4` | erp_downtime_logs machine_id/duration_min + ADD resolved/reported_by/updated_at |
+| D3 | `ecca3293` | erp_daily_reports +6 cols (work_center_id/shift/planned_qty/actual_qty/notes/updated_at) |
+| D5 | `f82bc04d` | wms_transactions +deleted_at/deleted_by/updated_at |
+| D1 | `5866d289` | mes_shift_handovers=VIEW → base shift_handovers ADD notes + view recreate + INSERT required cols |
+| D2 | `5d84f145` | mes_maintenance_requests ADD assigned_to + getMaintenanceRequests equipment join |
+
+**Yangi topilmalar (verify-don't-trust):** D1 — `mes_shift_handovers` = auto-updatable VIEW over `shift_handovers` (ADD COLUMN view'da ishlamaydi → base + CREATE OR REPLACE VIEW); base'da `handover_date`/`department`/`handed_over_by` NOT NULL → INSERT'ga qo'shildi. D2 — `equipment_id` → `equipment` jadvaliga JOIN (work_centers emas).
+
+**Verify:** 5 migration jonli ishladi · har query DB-proof (BEGIN/ROLLBACK / SELECT) · BE tsc 0 · pre-commit PASS · server qayta yuklandi 200 (Q-44 restart) · barcha ustun persist. Push: `5d84f145`.
+
+*Tayyorlandi: 2026-06-08 · Bajaruvchi · BAJARILDI.*
