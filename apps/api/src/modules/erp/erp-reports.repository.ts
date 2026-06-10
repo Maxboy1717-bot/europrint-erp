@@ -83,7 +83,7 @@ export class ErpReportsRepository {
 
   async getCapacity(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT wc.id, wc.name, wc.hours_per_day AS capacity_per_hour, COUNT(ms.id) FILTER (WHERE ms.status = 'active') AS active_sessions, ROUND(100.0 * COUNT(ms.id) FILTER (WHERE ms.status = 'active') / NULLIF(wc.hours_per_day, 0), 2) AS utilization_pct FROM work_centers wc LEFT JOIN mes_sessions ms ON ms.work_center_id = wc.id GROUP BY wc.id, wc.name, wc.hours_per_day ORDER BY wc.name`);  } catch (_e) {
+      return exec(sql`SELECT wc.id, wc.name, wc.hours_per_day AS capacity_per_hour, COUNT(ms.id) FILTER (WHERE ms.status = 'active') AS active_sessions, ROUND(100.0 * COUNT(ms.id) FILTER (WHERE ms.status = 'active') / NULLIF(wc.hours_per_day, 0), 2) AS utilization_pct FROM work_centers wc LEFT JOIN mes_sessions ms ON ms.work_center_id::text = wc.id::text GROUP BY wc.id, wc.name, wc.hours_per_day ORDER BY wc.name`);  } catch (_e) {
     return Err(String(_e));
   }
 
