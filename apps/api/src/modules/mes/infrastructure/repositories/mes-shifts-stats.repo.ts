@@ -183,7 +183,7 @@ export class MesShiftsStatsRepository {
              wc.name AS work_center_name
       FROM mes_maintenance_requests mr
       LEFT JOIN employees e  ON e.id  = mr.assigned_to
-      LEFT JOIN work_centers wc ON wc.id = mr.work_center_id
+      LEFT JOIN equipment wc ON wc.id = mr.equipment_id
       WHERE (${status ?? null}::text IS NULL OR mr.status = ${status ?? null})
       ORDER BY mr.created_at DESC LIMIT ${lim} OFFSET ${off}
     `);
