@@ -22,8 +22,8 @@ export class MesShiftsStatsRepository {
 
   async shiftHandover(outgoing_supervisor: number, incoming_supervisor: number, notes: string | null, issues: string | null): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      INSERT INTO mes_shift_handovers (outgoing_supervisor, incoming_supervisor, notes, issues, handover_time)
-      VALUES (${outgoing_supervisor}, ${incoming_supervisor}, ${notes ?? null}, ${issues ?? null}, NOW()) RETURNING *
+      INSERT INTO mes_shift_handovers (outgoing_supervisor, received_by, handed_over_by, handover_date, department, notes, issues, handover_time)
+      VALUES (${outgoing_supervisor}, ${incoming_supervisor}, ${outgoing_supervisor}, to_char(NOW(),'YYYY-MM-DD'), '', ${notes ?? null}, ${issues ?? null}, NOW()) RETURNING *
     `);
     return rows.rows as Row[];
   }
