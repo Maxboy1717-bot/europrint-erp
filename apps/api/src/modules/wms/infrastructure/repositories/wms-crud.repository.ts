@@ -158,10 +158,10 @@ export class WmsCrudRepository implements IWmsCrudRepo {
   async getStockById(id: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
       SELECT ws.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, w.name AS warehouse_name
-      FROM wms_stock ws
-      LEFT JOIN material_cards mc ON ws.material_card_id = mc.id
+      FROM warehouse_stock ws
+      LEFT JOIN material_cards mc ON ws.material_id = mc.id
       LEFT JOIN warehouses w ON ws.warehouse_id = w.id
-      WHERE ws.id = ${id} AND ws.deleted_at IS NULL
+      WHERE ws.id = ${id}
     `);
     if (!r.ok) return Err(r.error);
     return Ok(Array.isArray(r.data) && r.data.length > 0 ? r.data[0] : null);
