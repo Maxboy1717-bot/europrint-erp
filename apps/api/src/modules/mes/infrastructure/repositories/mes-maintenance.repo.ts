@@ -25,7 +25,7 @@ export class MesMaintenanceRepository {
 
   async createMaintenanceRequest(title: string, description: string | null, work_center_id: number | null, priority: string, userId: number | null): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      INSERT INTO mes_maintenance_requests (title, description, work_center_id, priority, requested_by, status)
+      INSERT INTO mes_maintenance_requests (title, description, equipment_id, priority, requested_by, status)
       VALUES (${title}, ${description ?? null}, ${work_center_id ?? null}, ${priority ?? 'normal'}, ${userId}, 'open')
       RETURNING *
     `);
