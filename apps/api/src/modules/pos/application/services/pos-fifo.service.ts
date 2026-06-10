@@ -128,19 +128,21 @@ export class PosFifoService {
    */
   async getLowStockMaterials(): Promise<Result<Array<{ materialId: number; materialCode: string; warehouseId: number; currentQty: number; minQty: number }>>> {
     try {
+      // Canonical stock = warehouse_stock + material_cards (pos_stock_balances/pos_materials
+      // do not exist — they crashed the hourly cron every run).
       const r = await runQuery<{ materialId: number; materialCode: string; warehouseId: number; currentQty: number; minQty: number }>(sql`
         SELECT
-          m.id          AS "materialId",
-          m.code        AS "materialCode",
-          sb.warehouse_id AS "warehouseId",
-          COALESCE(sb.available_qty, 0) AS "currentQty",
-          COALESCE(m.min_stock, 0)      AS "minQty"
-        FROM pos_stock_balances sb
-        JOIN pos_materials m ON m.id = sb.material_id
-        WHERE COALESCE(sb.available_qty, 0) < COALESCE(m.min_stock, 0)
-          AND COALESCE(m.min_stock, 0) > 0
-          AND m.is_active = true
-        ORDER BY (COALESCE(sb.available_qty, 0) / NULLIF(m.min_stock, 0)) ASC
+          mc.id           AS "materialId",
+          mc.kod          AS "materialCode",
+          ws.warehouse_id AS "warehouseId",
+          COALESCE(ws.available_quantity, 0) AS "currentQty",
+          COALESCE(mc.min_stock, 0)          AS "minQty"
+        FROM warehouse_stock ws
+        JOIN material_cards mc ON mc.id = ws.material_id
+        WHERE COALESCE(ws.available_quantity, 0) < COALESCE(mc.min_stock, 0)
+          AND COALESCE(mc.min_stock, 0) > 0
+          AND mc.is_active = true
+        ORDER BY (COALESCE(ws.available_quantity, 0) / NULLIF(mc.min_stock, 0)) ASC
         LIMIT 200
       `);
       return Ok(r.rows);
