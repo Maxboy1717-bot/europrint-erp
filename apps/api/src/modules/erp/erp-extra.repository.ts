@@ -137,7 +137,11 @@ export class ErpExtraRepository {
   async createOrder(body: Row): Promise<Result<Row | null>> {
   try {
     const orderNumber = body.orderNumber ?? `PO-${Date.now()}`;
-    const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, customer_name, due_date, priority, status, notes) VALUES (${orderNumber}, ${body.productId ?? null}, ${body.quantity ?? 1}, ${body.customerName ?? null}, ${body.dueDate ?? null}, ${body.priority ?? 'normal'}, ${body.status ?? 'pending'}, ${body.notes ?? null}) RETURNING *`);
+    // planned_quantity is NOT NULL (no default); priority is integer; customer_name/due_date
+    // do not exist on production_orders (customer comes via sales_order, due → planned_end_date).
+    const qty = Number(body.quantity ?? body.plannedQuantity ?? 1);
+    const priorityNum = Number.isFinite(Number(body.priority)) ? Number(body.priority) : 3;
+    const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_end_date, priority, status, notes) VALUES (${orderNumber}, ${body.productId ?? null}, ${qty}, ${qty}, ${body.dueDate ?? null}, ${priorityNum}, ${body.status ?? 'pending'}, ${body.notes ?? null}) RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }
