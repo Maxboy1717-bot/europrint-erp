@@ -74,7 +74,7 @@ export class ErpReportsRepository {
 
   async updateDowntimeLog(id: number, body: Row): Promise<Result<Row | null>>  {
   try {  
-      const r = await exec(sql`UPDATE erp_downtime_logs SET reason = COALESCE(${body.reason ?? null}, reason), duration_minutes = COALESCE(${body.durationMinutes ?? null}, duration_minutes), resolved = COALESCE(${body.resolved ?? null}, resolved), updated_at = NOW() WHERE id = ${id} RETURNING *`);
+      const r = await exec(sql`UPDATE erp_downtime_logs SET reason = COALESCE(${body.reason ?? null}, reason), duration_min = COALESCE(${body.durationMinutes ?? null}, duration_min), resolved = COALESCE(${body.resolved ?? null}, resolved), updated_at = NOW() WHERE id = ${id} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -187,7 +187,7 @@ export class ErpReportsRepository {
 
   async createDowntimeLog(body: Row): Promise<Result<Row | null>> {
   try {
-    const r = await exec(sql`INSERT INTO erp_downtime_logs (work_center_id, started_at, reason, duration_minutes, resolved, reported_by) VALUES (${body.workCenterId ?? null}, ${body.startedAt ?? body.date ?? new Date().toISOString()}, ${body.reason ?? 'Noma\'lum sabab'}, ${body.durationMinutes ?? 0}, ${body.resolved ?? false}, ${body.reportedBy ?? null}) RETURNING *`);
+    const r = await exec(sql`INSERT INTO erp_downtime_logs (machine_id, started_at, reason, duration_min, resolved, reported_by) VALUES (${body.workCenterId ?? body.machineId ?? null}, ${body.startedAt ?? body.date ?? new Date().toISOString()}, ${body.reason ?? 'Noma\'lum sabab'}, ${body.durationMinutes ?? 0}, ${body.resolved ?? false}, ${body.reportedBy ?? null}) RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }
