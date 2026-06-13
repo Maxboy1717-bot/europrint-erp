@@ -13,10 +13,13 @@ import { PositionFolderRepository } from './position-folder.repository';
 import { NodePortretService } from './node-portret.service';
 import { NodePortretRepository } from './node-portret.repository';
 import { OrgStructureRepository, OrgQueriesRepo, OrgMutationsRepo } from './org-structure.repository';
+import { CardController } from './card.controller';
+import { CardService } from './card.service';
+import { CardRepository } from './card.repository';
 
 @Module({
-  controllers: [OrgStructureController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository],
-  exports: [OrgStructureService, PositionFolderService],
+  controllers: [OrgStructureController, CardController],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository],
+  exports: [OrgStructureService, PositionFolderService, CardService],
 })
 export class OrgStructureModule {}
