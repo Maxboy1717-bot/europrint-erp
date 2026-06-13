@@ -238,4 +238,22 @@ export class CardRepository {
     `);
     return r.ok ? Ok(Number(r.data[0]?.total ?? 0)) : Err(r.error);
   }
+
+  /**
+   * EP-ORG-047 cert-in-card: certificates earned by the card's active occupants + a 30-day expiry flag.
+   * Reuses the canonical `certificates` table (no new cert table, C6). Occupants via employee_cards (M:N).
+   */
+  async listCertificates(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT c.id, c.name, c.certificate_number, c.issued_date, c.expiry_date,
+             e.id AS employee_id,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
+             (c.expiry_date IS NOT NULL AND c.expiry_date <= (now()::date + 30)) AS expiring_soon
+      FROM employee_cards ec
+      JOIN employees e   ON e.id = ec.employee_id
+      JOIN certificates c ON c.employee_id = e.id
+      WHERE ec.card_id = ${cardId} AND ec.is_active AND COALESCE(c.is_active, true) = true
+      ORDER BY c.expiry_date NULLS LAST, c.issued_date DESC NULLS LAST
+    `);
+  }
 }

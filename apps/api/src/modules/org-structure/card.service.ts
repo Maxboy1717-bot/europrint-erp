@@ -113,4 +113,7 @@ export class CardService {
     if (!total.ok) return Err(total.error);
     return Ok({ cards: cards.data, totalSalary: total.data });
   }
+
+  /** EP-ORG-047: the card's occupants' certificates + 30-day expiry flag (reuses `certificates`). */
+  listCertificates(cardId: number): Promise<Result<Row[]>> { return this.repo.listCertificates(cardId); }
 }

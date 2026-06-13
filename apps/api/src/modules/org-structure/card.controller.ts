@@ -153,6 +153,15 @@ export class CardController {
     return unwrapOrThrow(await this.service.unassignEmployeeFromCard(id, employeeId));
   }
 
+  @ApiOperation({ summary: "Card occupants' certificates + 30-day expiry (EP-ORG-047)" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/certificates')
+  async certificates(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.listCertificates(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
   @ApiOperation({ summary: 'Create card' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

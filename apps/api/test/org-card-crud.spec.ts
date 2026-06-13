@@ -28,6 +28,7 @@ function makeRepo(over: Partial<Record<keyof CardRepository, jest.Mock>> = {}): 
     repointPrimaryMirror: jest.fn().mockResolvedValue(Ok([])),
     listEmployeeCards:   jest.fn().mockResolvedValue(Ok([])),
     employeeSalaryTotal: jest.fn().mockResolvedValue(Ok(0)),
+    listCertificates:    jest.fn().mockResolvedValue(Ok([])),
     ...over,
   } as unknown as CardRepository;
 }
@@ -162,5 +163,14 @@ describe('ORG card CRUD (CardService)', () => {
       expect(r.data.cards.length).toBe(2);
       expect(r.data.totalSalary).toBe(5_000_000); // 3M + 2M, full sum
     }
+  });
+
+  it('listCertificates → delegates to the repo with the card id (EP-ORG-047 cert-in-card)', async () => {
+    const listCertificates = jest.fn().mockResolvedValue(Ok([{ id: 1, expiring_soon: true }]));
+    const svc = new CardService(makeRepo({ listCertificates }));
+    const r = await svc.listCertificates(5);
+    expect(listCertificates).toHaveBeenCalledWith(5);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) expect(r.data.length).toBe(1);
   });
 });
