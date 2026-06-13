@@ -10073,5 +10073,10 @@
   "kartaPapkasi": "Карта папкаси",
   "toliqlik": "Тўлиқлик",
   "papkaSaqlandi": "Папка сақланди",
-  "tskpTarif": "ЦКП таърифи"
+  "tskpTarif": "ЦКП таърифи",
+  "kartaImtihonlari": "Карта имтиҳонлари",
+  "aiImtihonTayinlash": "AI имтиҳон тайинлаш",
+  "imtihonTayinlandi": "Имтиҳон тайинланди",
+  "imtihonlarYoq": "Имтиҳонлар йўқ",
+  "imtihonlarYoqMatn": "Бу картага ҳали AI имтиҳон тайинланмаган."
 }

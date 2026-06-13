@@ -6,7 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Pencil, LayoutGrid, FolderOpen } from "lucide-react";
+import { Plus, Pencil, LayoutGrid, FolderOpen, GraduationCap } from "lucide-react";
 import type { EPStatusTone } from "@/components/ep";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import { EPPageHeader, EPLoader, EPErrorState, EPEmptyState, EPStatusPill } from
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { CardFormDialog, type OrgCard } from "@/components/hr/org/CardFormDialog";
 import { CardFolderDialog } from "@/components/hr/org/CardFolderDialog";
+import { CardExamsDialog } from "@/components/hr/org/CardExamsDialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
@@ -38,6 +39,7 @@ export default function OrgCards() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<OrgCard | null>(null);
   const [folderCard, setFolderCard] = useState<OrgCard | null>(null);
+  const [examsCard, setExamsCard] = useState<OrgCard | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery<{ items: OrgCard[]; total: number }>({
     queryKey: [CARDS_KEY],
@@ -109,6 +111,9 @@ export default function OrgCards() {
                       <Button size="icon" variant="ghost" onClick={() => setFolderCard(c)} title={t("kartaPapkasi")} data-testid={`button-card-folder-${c.id}`}>
                         <FolderOpen className="h-4 w-4" />
                       </Button>
+                      <Button size="icon" variant="ghost" onClick={() => setExamsCard(c)} title={t("kartaImtihonlari")} data-testid={`button-card-exams-${c.id}`}>
+                        <GraduationCap className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => openEdit(c)} data-testid={`button-card-edit-${c.id}`}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -129,6 +134,7 @@ export default function OrgCards() {
 
       <CardFormDialog open={formOpen} onClose={() => setFormOpen(false)} card={editing} />
       <CardFolderDialog open={!!folderCard} onClose={() => setFolderCard(null)} card={folderCard} />
+      <CardExamsDialog open={!!examsCard} onClose={() => setExamsCard(null)} card={examsCard} />
     </div>
   );
 }

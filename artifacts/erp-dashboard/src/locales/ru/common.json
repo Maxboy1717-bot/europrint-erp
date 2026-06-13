@@ -8682,5 +8682,10 @@
   "kartaPapkasi": "Папка карты",
   "toliqlik": "Заполненность",
   "papkaSaqlandi": "Папка сохранена",
-  "tskpTarif": "Определение ЦКП"
+  "tskpTarif": "Определение ЦКП",
+  "kartaImtihonlari": "Экзамены карты",
+  "aiImtihonTayinlash": "Назначить AI-экзамен",
+  "imtihonTayinlandi": "Экзамен назначен",
+  "imtihonlarYoq": "Экзаменов нет",
+  "imtihonlarYoqMatn": "Этой карте ещё не назначен AI-экзамен."
 }

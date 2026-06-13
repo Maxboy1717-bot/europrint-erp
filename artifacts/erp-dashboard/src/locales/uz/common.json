@@ -8682,5 +8682,10 @@
   "kartaPapkasi": "Karta papkasi",
   "toliqlik": "To'liqlik",
   "papkaSaqlandi": "Papka saqlandi",
-  "tskpTarif": "ЦКП ta'rifi"
+  "tskpTarif": "ЦКП ta'rifi",
+  "kartaImtihonlari": "Karta imtihonlari",
+  "aiImtihonTayinlash": "AI imtihon tayinlash",
+  "imtihonTayinlandi": "Imtihon tayinlandi",
+  "imtihonlarYoq": "Imtihonlar yo'q",
+  "imtihonlarYoqMatn": "Bu kartaga hali AI imtihon tayinlanmagan."
 }
