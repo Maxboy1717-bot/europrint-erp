@@ -10078,5 +10078,15 @@
   "aiImtihonTayinlash": "AI имтиҳон тайинлаш",
   "imtihonTayinlandi": "Имтиҳон тайинланди",
   "imtihonlarYoq": "Имтиҳонлар йўқ",
-  "imtihonlarYoqMatn": "Бу картага ҳали AI имтиҳон тайинланмаган."
+  "imtihonlarYoqMatn": "Бу картага ҳали AI имтиҳон тайинланмаган.",
+  "kartaTopilmadi": "Карта топилмади",
+  "farzandlar": "Фарзандлар",
+  "tarixJurnali": "Тарих-журнал",
+  "xodimlarYoq": "Бу картага бириктирилган ходим йўқ",
+  "farzandlarYoq": "Қуйи (фарзанд) карталар йўқ",
+  "farzandlarYoqMatn": "Бу картага бўйсунадиган карталар ҳали белгиланмаган",
+  "vakansiyaYoq": "Очиқ вакансия йўқ",
+  "vakansiyaYoqMatn": "Бу карта учун ҳозирча вакансия очилмаган",
+  "portretComingSoon": "Карта портрети ҳали тайёр эмас — портрет ҳозирча бўлим (org_departments) даражасида сақланади",
+  "tarixYoqMatn": "Бу карта бўйича ўзгаришлар журнали ҳали бўш"
 }

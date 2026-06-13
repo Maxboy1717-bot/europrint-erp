@@ -8687,5 +8687,15 @@
   "aiImtihonTayinlash": "Назначить AI-экзамен",
   "imtihonTayinlandi": "Экзамен назначен",
   "imtihonlarYoq": "Экзаменов нет",
-  "imtihonlarYoqMatn": "Этой карте ещё не назначен AI-экзамен."
+  "imtihonlarYoqMatn": "Этой карте ещё не назначен AI-экзамен.",
+  "kartaTopilmadi": "Карточка не найдена",
+  "farzandlar": "Дочерние",
+  "tarixJurnali": "Журнал истории",
+  "xodimlarYoq": "К этой карточке не привязан ни один сотрудник",
+  "farzandlarYoq": "Нет дочерних карточек",
+  "farzandlarYoqMatn": "Подчинённые карточки для этой карточки ещё не заданы",
+  "vakansiyaYoq": "Нет открытых вакансий",
+  "vakansiyaYoqMatn": "Для этой карточки пока нет открытых вакансий",
+  "portretComingSoon": "Портрет карточки пока не готов — портрет сейчас хранится на уровне подразделения (org_departments)",
+  "tarixYoqMatn": "Журнал изменений по этой карточке пока пуст"
 }

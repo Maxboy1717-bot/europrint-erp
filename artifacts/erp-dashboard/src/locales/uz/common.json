@@ -8687,5 +8687,15 @@
   "aiImtihonTayinlash": "AI imtihon tayinlash",
   "imtihonTayinlandi": "Imtihon tayinlandi",
   "imtihonlarYoq": "Imtihonlar yo'q",
-  "imtihonlarYoqMatn": "Bu kartaga hali AI imtihon tayinlanmagan."
+  "imtihonlarYoqMatn": "Bu kartaga hali AI imtihon tayinlanmagan.",
+  "kartaTopilmadi": "Karta topilmadi",
+  "farzandlar": "Farzandlar",
+  "tarixJurnali": "Tarix-jurnal",
+  "xodimlarYoq": "Bu kartaga biriktirilgan xodim yo'q",
+  "farzandlarYoq": "Quyi (farzand) kartalar yo'q",
+  "farzandlarYoqMatn": "Bu kartaga bo'ysunadigan kartalar hali belgilanmagan",
+  "vakansiyaYoq": "Ochiq vakansiya yo'q",
+  "vakansiyaYoqMatn": "Bu karta uchun hozircha vakansiya ochilmagan",
+  "portretComingSoon": "Karta portreti hali tayyor emas — portret hozircha bo'lim (org_departments) darajasida saqlanadi",
+  "tarixYoqMatn": "Bu karta bo'yicha o'zgarishlar jurnali hali bo'sh"
 }

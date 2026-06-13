@@ -6,7 +6,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Pencil, LayoutGrid, FolderOpen, GraduationCap } from "lucide-react";
+import { useLocation } from "wouter";
+import { Plus, Pencil, LayoutGrid, FolderOpen, GraduationCap, Eye } from "lucide-react";
 import type { EPStatusTone } from "@/components/ep";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,7 @@ export default function OrgCards() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<OrgCard | null>(null);
@@ -108,6 +110,9 @@ export default function OrgCards() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => navigate(`/org-structure/cards/${c.id}`)} title={t("korish")} data-testid={`button-card-view-${c.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => setFolderCard(c)} title={t("kartaPapkasi")} data-testid={`button-card-folder-${c.id}`}>
                         <FolderOpen className="h-4 w-4" />
                       </Button>
