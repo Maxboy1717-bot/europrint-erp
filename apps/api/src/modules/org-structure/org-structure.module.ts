@@ -16,10 +16,13 @@ import { OrgStructureRepository, OrgQueriesRepo, OrgMutationsRepo } from './org-
 import { CardController } from './card.controller';
 import { CardService } from './card.service';
 import { CardRepository } from './card.repository';
+import { RazryadController } from './razryad.controller';
+import { RazryadService } from './razryad.service';
+import { RazryadRepository } from './razryad.repository';
 
 @Module({
-  controllers: [OrgStructureController, CardController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository],
-  exports: [OrgStructureService, PositionFolderService, CardService],
+  controllers: [OrgStructureController, CardController, RazryadController],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository],
+  exports: [OrgStructureService, PositionFolderService, CardService, RazryadService],
 })
 export class OrgStructureModule {}
