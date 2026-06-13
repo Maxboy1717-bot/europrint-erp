@@ -73,6 +73,7 @@ const MAIN_NAV: NavSection = {
     { title: "Kurslar",        titleKey: "courses",           url: "courses",                 icon: BookOpen        },
     { title: "Xodimlar",       titleKey: "employees",         url: "employees",               icon: Users           },
     { title: "Tashkiliy",      titleKey: "orgStructure",      url: "org-structure/hierarchy", icon: Network         },
+    { title: "Kartalar",       titleKey: "orgCards",          url: "org-structure/cards",     icon: Network         },
     { title: "Testlar",        titleKey: "tests",             url: "tests",                   icon: ClipboardList   },
     { title: "AI Imtihonlar",  titleKey: "aiExams",           url: "ai-exams",                icon: BrainCircuit    },
     { title: "Barcha imtihon", titleKey: "allExams",          url: "all-exams",               icon: FileCheck       },

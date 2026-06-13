@@ -19,6 +19,7 @@ const HRDashboard = lazy(() => import("@/pages/HRDashboard"));
 const HRCapitalTests = lazy(() => import("@/pages/HRCapitalTests"));
 const OrgStructureHierarchy = lazy(() => import("@/pages/OrgStructureHierarchy"));
 const OrgNodeDetail = lazy(() => import("@/pages/OrgNodeDetail"));
+const OrgCards = lazy(() => import("@/pages/OrgCards"));
 const HROnboarding = lazy(() => import("@/pages/HROnboarding"));
 const HRVacationSick = lazy(() => import("@/pages/HRVacationSick"));
 const HROffboarding = lazy(() => import("@/pages/HROffboarding"));
@@ -64,6 +65,7 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/hr-capital/tests',                 HRCapitalTests],
   ['/org-structure/hierarchy',          OrgStructureHierarchy],
   ['/org-structure/hierarchy/node/:id', OrgNodeDetail],
+  ['/org-structure/cards',              OrgCards],
   ['/hr/onboarding',                    HROnboarding],
   ['/hr/vacation-sick',                 HRVacationSick],
   ['/hr/succession',                    HRSuccessionPlanning],
