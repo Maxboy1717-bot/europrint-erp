@@ -8697,5 +8697,18 @@
   "vakansiyaYoq": "Ochiq vakansiya yo'q",
   "vakansiyaYoqMatn": "Bu karta uchun hozircha vakansiya ochilmagan",
   "portretComingSoon": "Karta portreti hali tayyor emas — portret hozircha bo'lim (org_departments) darajasida saqlanadi",
-  "tarixYoqMatn": "Bu karta bo'yicha o'zgarishlar jurnali hali bo'sh"
+  "tarixYoqMatn": "Bu karta bo'yicha o'zgarishlar jurnali hali bo'sh",
+  "xodimBiriktirildi": "Xodim biriktirildi",
+  "kartaBand": "Karta band yoki xatolik (1 o'rin = 1 xodim)",
+  "xodimBiriktirish": "Xodim biriktirish",
+  "asosiyKarta": "Asosiy karta",
+  "bekorQilish": "Bekor qilish",
+  "biriktirish": "Biriktirish",
+  "kartalarVaUmumiyOylik": "Kartalar va umumiy oylik",
+  "kartaBiriktirilmagan": "Karta biriktirilmagan",
+  "umumiyOylikFormulaA": "Umumiy oylik (barcha kartalar yig'indisi)",
+  "umumiyOylik": "Umumiy oylik",
+  "xodimAjratish": "Xodimni ajratish",
+  "xodimAjratishMatn": "Bu xodim kartadan ajratiladi (yumshoq). Davom etilsinmi?",
+  "sertifikatYoq": "Sertifikat yo'q"
 }

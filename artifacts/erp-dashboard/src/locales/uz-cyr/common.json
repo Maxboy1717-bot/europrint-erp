@@ -10088,5 +10088,18 @@
   "vakansiyaYoq": "Очиқ вакансия йўқ",
   "vakansiyaYoqMatn": "Бу карта учун ҳозирча вакансия очилмаган",
   "portretComingSoon": "Карта портрети ҳали тайёр эмас — портрет ҳозирча бўлим (org_departments) даражасида сақланади",
-  "tarixYoqMatn": "Бу карта бўйича ўзгаришлар журнали ҳали бўш"
+  "tarixYoqMatn": "Бу карта бўйича ўзгаришлар журнали ҳали бўш",
+  "xodimBiriktirildi": "Ходим бириктирилди",
+  "kartaBand": "Карта банд ёки хатолик (1 ўрин = 1 ходим)",
+  "xodimBiriktirish": "Ходим бириктириш",
+  "asosiyKarta": "Асосий карта",
+  "bekorQilish": "Бекор қилиш",
+  "biriktirish": "Бириктириш",
+  "kartalarVaUmumiyOylik": "Карталар ва умумий ойлик",
+  "kartaBiriktirilmagan": "Карта бириктирилмаган",
+  "umumiyOylikFormulaA": "Умумий ойлик (барча карталар йиғиндиси)",
+  "umumiyOylik": "Умумий ойлик",
+  "xodimAjratish": "Ходимни ажратиш",
+  "xodimAjratishMatn": "Бу ходим картадан ажратилади (юмшоқ). Давом этилсинми?",
+  "sertifikatYoq": "Сертификат йўқ"
 }

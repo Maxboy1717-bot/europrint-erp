@@ -6,25 +6,36 @@
  *   Reuses Phase 1-4 dialogs (CardFormDialog/CardFolderDialog) + queries — no duplication.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Pencil, FolderOpen } from "lucide-react";
+import { ArrowLeft, Pencil, FolderOpen, UserPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { EPPageHeader, EPLoader, EPErrorState, EPEmptyState, EPStatusPill, EPComingSoon } from "@/components/ep";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { CardFormDialog, type OrgCard } from "@/components/hr/org/CardFormDialog";
 import { CardFolderDialog } from "@/components/hr/org/CardFolderDialog";
+import { CardAssignDialog } from "@/components/hr/org/CardAssignDialog";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
+
+const fmtSom = (v: unknown): string => {
+  const n = Number(v ?? 0);
+  return (Number.isFinite(n) ? n.toLocaleString("ru-RU") : "0") + " so'm";
+};
 
 type Row = Record<string, unknown>;
 const listOf = (d: { items?: Row[] } | undefined): Row[] => (Array.isArray(d?.items) ? d!.items : []);
 
 export default function CardDetail() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [, params] = useRoute("/org-structure/cards/:id");
   const [, navigate] = useLocation();
   const id = Number(params?.id ?? 0);
@@ -32,6 +43,7 @@ export default function CardDetail() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [folderOpen, setFolderOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   const { data: card, isLoading, isError, refetch } = useQuery<OrgCard & { department_name?: string; tskp?: string | null }>({
     queryKey: [base], enabled: id > 0,
@@ -42,6 +54,16 @@ export default function CardDetail() {
   const history   = useQuery<{ items: Row[] }>({ queryKey: [`${base}/history`], enabled: id > 0 });
   const folder    = useQuery<{ completeness?: number; filledSections?: number }>({ queryKey: [`${base}/folder`], enabled: id > 0 });
   const exams     = useQuery<Row[]>({ queryKey: [`/api/ai-exam/by-card/${id}`], enabled: id > 0 });
+  const certs     = useQuery<{ items: Row[] }>({ queryKey: [`${base}/certificates`], enabled: id > 0 });
+
+  const unassignMutation = useMutation({
+    mutationFn: (employeeId: number) => apiRequest("DELETE", `${base}/assign/${employeeId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`${base}/employees`] });
+      toast({ title: t("xodimAjratildi") });
+    },
+    onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
+  });
 
   if (isLoading) return <div className="p-6"><EPLoader /></div>;
   if (isError)  return <div className="p-6"><EPErrorState onRetry={() => refetch()} /></div>;
@@ -102,13 +124,71 @@ export default function CardDetail() {
           </div>
         </TabsContent>
 
-        {/* 2. Xodimlar */}
-        <TabsContent value="xodimlar" className="mt-4">
+        {/* 2. Xodimlar — M:N occupants + FORMULA-A salary + assign/unassign + certificates */}
+        <TabsContent value="xodimlar" className="mt-4 space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => setAssignOpen(true)} data-testid="button-card-assign">
+              <UserPlus className="h-4 w-4 mr-2" />{t("xodimBiriktirish")}
+            </Button>
+          </div>
           {employees.isLoading ? <EPLoader /> : listOf(employees.data).length === 0 ? (
-            <EPEmptyState icon={ArrowLeft} title={t("xodimlarYoq")} />
+            <EPEmptyState icon={UserPlus} title={t("xodimlarYoq")} />
           ) : (
-            <SimpleTable cols={[t("ism"), t("holati")]} rows={listOf(employees.data).map((e) => [String(e.full_name ?? ""), String(e.status ?? "")])} />
+            <div className="rounded-lg border border-border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("ism")}</TableHead>
+                    <TableHead>{t("tur")}</TableHead>
+                    <TableHead>{t("umumiyOylik")}</TableHead>
+                    <TableHead>{t("holati")}</TableHead>
+                    <TableHead className="text-right">{t("amallar")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {listOf(employees.data).map((e) => (
+                    <TableRow key={String(e.id)} data-testid={`row-occupant-${e.id}`}>
+                      <TableCell className="font-medium">{String(e.full_name ?? "")}</TableCell>
+                      <TableCell>
+                        {e.is_primary
+                          ? <EPStatusPill tone="brand">{t("asosiy")}</EPStatusPill>
+                          : <EPStatusPill tone="neutral">{t("qoshimcha")}</EPStatusPill>}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{fmtSom(e.total_salary)}</TableCell>
+                      <TableCell className="text-muted-foreground">{String(e.status ?? "")}</TableCell>
+                      <TableCell className="text-right">
+                        <DeleteConfirmDialog
+                          title={t("xodimAjratish")}
+                          description={t("xodimAjratishMatn")}
+                          trigger={<Button size="icon" variant="ghost" data-testid={`button-unassign-${e.id}`}><Trash2 className="h-4 w-4" /></Button>}
+                          isPending={unassignMutation.isPending}
+                          onConfirm={() => unassignMutation.mutate(Number(e.id))}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
+
+          {/* EP-ORG-047 cert-in-card: occupants' certificates + 30-day expiry */}
+          <div>
+            <h3 className="text-[14px] font-semibold mb-2">{t("sertifikatlar")}</h3>
+            {certs.isLoading ? <EPLoader /> : listOf(certs.data).length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">{t("sertifikatYoq")}</p>
+            ) : (
+              <SimpleTable
+                cols={[t("nomi"), t("xodim"), t("amalQilishMuddati"), t("holati")]}
+                rows={listOf(certs.data).map((c) => [
+                  String(c.name ?? c.certificate_number ?? ""),
+                  String(c.employee_name ?? ""),
+                  String(c.expiry_date ?? "—"),
+                  c.expiring_soon ? "⚠ " + t("muddatiTugayapti") : t("amalda"),
+                ])}
+              />
+            )}
+          </div>
         </TabsContent>
 
         {/* 3. Farzandlar */}
@@ -169,6 +249,7 @@ export default function CardDetail() {
 
       <CardFormDialog open={editOpen} onClose={() => setEditOpen(false)} card={card} />
       <CardFolderDialog open={folderOpen} onClose={() => setFolderOpen(false)} card={card} />
+      <CardAssignDialog open={assignOpen} onClose={() => setAssignOpen(false)} card={card} />
     </div>
   );
 }

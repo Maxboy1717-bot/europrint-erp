@@ -8697,5 +8697,18 @@
   "vakansiyaYoq": "Нет открытых вакансий",
   "vakansiyaYoqMatn": "Для этой карточки пока нет открытых вакансий",
   "portretComingSoon": "Портрет карточки пока не готов — портрет сейчас хранится на уровне подразделения (org_departments)",
-  "tarixYoqMatn": "Журнал изменений по этой карточке пока пуст"
+  "tarixYoqMatn": "Журнал изменений по этой карточке пока пуст",
+  "xodimBiriktirildi": "Сотрудник назначен",
+  "kartaBand": "Карточка занята или ошибка (1 место = 1 сотрудник)",
+  "xodimBiriktirish": "Назначить сотрудника",
+  "asosiyKarta": "Основная карточка",
+  "bekorQilish": "Отмена",
+  "biriktirish": "Назначить",
+  "kartalarVaUmumiyOylik": "Карточки и общая зарплата",
+  "kartaBiriktirilmagan": "Карточка не назначена",
+  "umumiyOylikFormulaA": "Общая зарплата (сумма всех карточек)",
+  "umumiyOylik": "Общая зарплата",
+  "xodimAjratish": "Открепить сотрудника",
+  "xodimAjratishMatn": "Сотрудник будет откреплён от карточки (мягко). Продолжить?",
+  "sertifikatYoq": "Нет сертификатов"
 }
