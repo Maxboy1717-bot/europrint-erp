@@ -18,6 +18,10 @@ function makeRepo(over: Partial<Record<keyof CardRepository, jest.Mock>> = {}): 
     update:              jest.fn().mockResolvedValue(Ok(null)),
     softDelete:          jest.fn().mockResolvedValue(Ok(null)),
     activeOccupantCount: jest.fn().mockResolvedValue(Ok(0)),
+    listEmployees:       jest.fn().mockResolvedValue(Ok([])),
+    listChildren:        jest.fn().mockResolvedValue(Ok([])),
+    listVacancies:       jest.fn().mockResolvedValue(Ok([])),
+    listHistory:         jest.fn().mockResolvedValue(Ok([])),
     ...over,
   } as unknown as CardRepository;
 }
@@ -70,5 +74,28 @@ describe('ORG card CRUD (CardService)', () => {
     const r = await svc.canAssignEmployee(99);
     expect(isOk(r)).toBe(true);
     if (isOk(r)) expect(r.data.canAssign).toBe(true);
+  });
+
+  // Phase 5 card-detail tabs (read-only delegation)
+  it('listEmployees → delegates to repo with the card id (Xodimlar tab)', async () => {
+    const listEmployees = jest.fn().mockResolvedValue(Ok([{ id: 17, full_name: 'Gulnora Karimova' }]));
+    const svc = new CardService(makeRepo({ listEmployees }));
+    const r = await svc.listEmployees(14);
+    expect(listEmployees).toHaveBeenCalledWith(14);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) expect(r.data.length).toBe(1);
+  });
+
+  it('listChildren / listVacancies / listHistory → delegate with the card id', async () => {
+    const children = jest.fn().mockResolvedValue(Ok([]));
+    const vacancies = jest.fn().mockResolvedValue(Ok([]));
+    const history = jest.fn().mockResolvedValue(Ok([]));
+    const svc = new CardService(makeRepo({ listChildren: children, listVacancies: vacancies, listHistory: history }));
+    await svc.listChildren(5);
+    await svc.listVacancies(5);
+    await svc.listHistory(5);
+    expect(children).toHaveBeenCalledWith(5);
+    expect(vacancies).toHaveBeenCalledWith(5);
+    expect(history).toHaveBeenCalledWith(5);
   });
 });

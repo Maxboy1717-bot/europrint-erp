@@ -81,6 +81,44 @@ export class CardController {
     return unwrapOrThrow(await this.service.canAssignEmployee(id));
   }
 
+  // ─── Phase 5 card-detail tabs (read-only) ──────────────────────────────────
+
+  @ApiOperation({ summary: 'Card employees (Xodimlar tab)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/employees')
+  async employees(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.listEmployees(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Child cards (Farzandlar tab)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/children')
+  async children(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.listChildren(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Card vacancies (Vakant tab)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/vacancies')
+  async vacancies(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.listVacancies(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Card change history (Tarix tab)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/history')
+  async history(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.listHistory(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
   @ApiOperation({ summary: 'Create card' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

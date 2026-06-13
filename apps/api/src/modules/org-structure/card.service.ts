@@ -55,4 +55,10 @@ export class CardService {
     if (!r.ok) return Err(r.error);
     return Ok({ canAssign: r.data === 0, activeOccupants: r.data });
   }
+
+  // ─── Phase 5 card-detail tabs (read-only) ──────────────────────────────────
+  listEmployees(cardId: number): Promise<Result<Row[]>> { return this.repo.listEmployees(cardId); }
+  listChildren(cardId: number): Promise<Result<Row[]>> { return this.repo.listChildren(cardId); }
+  listVacancies(cardId: number): Promise<Result<Row[]>> { return this.repo.listVacancies(cardId); }
+  listHistory(cardId: number): Promise<Result<Row[]>> { return this.repo.listHistory(cardId); }
 }

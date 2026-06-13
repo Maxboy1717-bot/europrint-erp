@@ -121,4 +121,43 @@ export class CardRepository {
     `);
     return r.ok ? Ok(Number(r.data[0]?.c ?? 0)) : Err(r.error);
   }
+
+  // ─── Phase 5 card-detail tabs (read-only related data) ─────────────────────
+
+  /** Xodimlar tab: employees occupying this card (org_function_id link). */
+  async listEmployees(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT id, first_name, last_name, status,
+             COALESCE(first_name,'') || ' ' || COALESCE(last_name,'') AS full_name
+      FROM employees WHERE org_function_id = ${cardId}
+      ORDER BY status, last_name, first_name
+    `);
+  }
+
+  /** Farzandlar tab: child cards (manager_id = this card, EP-ORG-021). */
+  async listChildren(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT id, position_name, code, level, status
+      FROM org_functions WHERE manager_id = ${cardId} AND deleted_at IS NULL
+      ORDER BY level NULLS LAST, position_name
+    `);
+  }
+
+  /** Vakant tab: vacancies opened for this card. */
+  async listVacancies(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT id, title, status, number_of_positions, open_positions, created_at
+      FROM vacancies WHERE org_function_id = ${cardId} AND deleted_at IS NULL
+      ORDER BY created_at DESC NULLS LAST
+    `);
+  }
+
+  /** Tarix tab: card change history from the audit log (AuditInterceptor tags CardController as 'card'). */
+  async listHistory(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT id, action, user_full_name, reason, changed_fields, created_at
+      FROM audit_logs WHERE table_name = 'card' AND record_id = ${String(cardId)}
+      ORDER BY created_at DESC NULLS LAST LIMIT 50
+    `);
+  }
 }
