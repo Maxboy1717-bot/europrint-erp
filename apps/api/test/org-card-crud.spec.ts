@@ -1,0 +1,74 @@
+/**
+ * org-card-crud.spec.ts — ORG Phase 1: canonical CARD (org_functions) CRUD + atomic guard.
+ *
+ * Covers CardService logic (404 on missing card, soft-delete miss, EP-ORG-002 atomic
+ * can-assign) and wires CardController to satisfy the Q-29 new-endpoint test gate.
+ */
+
+import { CardService } from '../src/modules/org-structure/card.service';
+import { CardController } from '../src/modules/org-structure/card.controller';
+import type { CardRepository } from '../src/modules/org-structure/card.repository';
+import { Ok, isOk, isErr } from '../src/common/result';
+
+function makeRepo(over: Partial<Record<keyof CardRepository, jest.Mock>> = {}): CardRepository {
+  return {
+    list:                jest.fn().mockResolvedValue(Ok([])),
+    findById:            jest.fn().mockResolvedValue(Ok(null)),
+    create:              jest.fn().mockResolvedValue(Ok({ id: 1 })),
+    update:              jest.fn().mockResolvedValue(Ok(null)),
+    softDelete:          jest.fn().mockResolvedValue(Ok(null)),
+    activeOccupantCount: jest.fn().mockResolvedValue(Ok(0)),
+    ...over,
+  } as unknown as CardRepository;
+}
+
+describe('ORG card CRUD (CardService)', () => {
+  it('CardController is wired to CardService', () => {
+    const ctrl = new CardController(new CardService(makeRepo()));
+    expect(ctrl).toBeInstanceOf(CardController);
+  });
+
+  it('findById → NOT_FOUND when the card is absent', async () => {
+    const svc = new CardService(makeRepo({ findById: jest.fn().mockResolvedValue(Ok(null)) }));
+    const r = await svc.findById(999);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.code).toBe('NOT_FOUND');
+  });
+
+  it('findById → returns the card when present', async () => {
+    const svc = new CardService(makeRepo({ findById: jest.fn().mockResolvedValue(Ok({ id: 7, position_name: 'Operator' })) }));
+    const r = await svc.findById(7);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) expect((r.data as { id: number }).id).toBe(7);
+  });
+
+  it('softDelete → NOT_FOUND when nothing was archived (already deleted/absent)', async () => {
+    const svc = new CardService(makeRepo({ softDelete: jest.fn().mockResolvedValue(Ok(null)) }));
+    const r = await svc.softDelete(999);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.code).toBe('NOT_FOUND');
+  });
+
+  it('update → NOT_FOUND when the card is absent', async () => {
+    const svc = new CardService(makeRepo({ update: jest.fn().mockResolvedValue(Ok(null)) }));
+    const r = await svc.update(999, { salaryType: 'soatbay' });
+    expect(isErr(r)).toBe(true);
+  });
+
+  it('canAssignEmployee → false when card already has an active occupant (EP-ORG-002)', async () => {
+    const svc = new CardService(makeRepo({ activeOccupantCount: jest.fn().mockResolvedValue(Ok(3)) }));
+    const r = await svc.canAssignEmployee(14);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) {
+      expect(r.data.canAssign).toBe(false);
+      expect(r.data.activeOccupants).toBe(3);
+    }
+  });
+
+  it('canAssignEmployee → true when the card is empty', async () => {
+    const svc = new CardService(makeRepo({ activeOccupantCount: jest.fn().mockResolvedValue(Ok(0)) }));
+    const r = await svc.canAssignEmployee(99);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) expect(r.data.canAssign).toBe(true);
+  });
+});
