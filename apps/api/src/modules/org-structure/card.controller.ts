@@ -40,6 +40,11 @@ const CardCreateSchema = z.object({
 
 const CardUpdateSchema = CardCreateSchema.partial();
 
+const AssignSchema = z.object({
+  employeeId: z.number().int().positive(),
+  isPrimary:  z.boolean().optional(),
+}).strict();
+
 @Roles('admin', 'manager', 'hr_manager', 'director', 'super_admin')
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -117,6 +122,35 @@ export class CardController {
     const data = unwrapOrInternal(await this.service.listHistory(id));
     const items = Array.isArray(data) ? data : [];
     return { items, total: items.length };
+  }
+
+  // ─── Phase 6 employee↔card M:N + FORMULA A salary ──────────────────────────
+
+  @ApiOperation({ summary: "An employee's cards + FORMULA-A total salary (EP-ORG-142)" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('by-employee/:employeeId')
+  async byEmployee(@Param('employeeId', ParseIntPipe) employeeId: number) {
+    return unwrapOrThrow(await this.service.listEmployeeCards(employeeId));
+  }
+
+  @ApiOperation({ summary: 'Assign an employee to a card (atomic guard EP-ORG-002)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 409, description: 'Card already occupied' })
+  @Post(':id/assign')
+  async assign(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = AssignSchema.parse(body);
+    return unwrapOrThrow(await this.service.assignEmployeeToCard(id, dto.employeeId, dto.isPrimary ?? false));
+  }
+
+  @ApiOperation({ summary: 'Unassign an employee from a card (soft)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Link not found' })
+  @Delete(':id/assign/:employeeId')
+  async unassign(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('employeeId', ParseIntPipe) employeeId: number,
+  ) {
+    return unwrapOrThrow(await this.service.unassignEmployeeFromCard(id, employeeId));
   }
 
   @ApiOperation({ summary: 'Create card' })

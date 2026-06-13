@@ -22,6 +22,12 @@ function makeRepo(over: Partial<Record<keyof CardRepository, jest.Mock>> = {}): 
     listChildren:        jest.fn().mockResolvedValue(Ok([])),
     listVacancies:       jest.fn().mockResolvedValue(Ok([])),
     listHistory:         jest.fn().mockResolvedValue(Ok([])),
+    assignEmployee:      jest.fn().mockResolvedValue(Ok({ id: 1 })),
+    unassignEmployee:    jest.fn().mockResolvedValue(Ok({ id: 1, is_primary: false })),
+    setPrimaryCard:      jest.fn().mockResolvedValue(Ok([])),
+    repointPrimaryMirror: jest.fn().mockResolvedValue(Ok([])),
+    listEmployeeCards:   jest.fn().mockResolvedValue(Ok([])),
+    employeeSalaryTotal: jest.fn().mockResolvedValue(Ok(0)),
     ...over,
   } as unknown as CardRepository;
 }
@@ -97,5 +103,64 @@ describe('ORG card CRUD (CardService)', () => {
     expect(children).toHaveBeenCalledWith(5);
     expect(vacancies).toHaveBeenCalledWith(5);
     expect(history).toHaveBeenCalledWith(5);
+  });
+
+  // Phase 6 employee↔card M:N + FORMULA A salary
+  it('assignEmployeeToCard → CONFLICT when the card already has an active occupant (EP-ORG-002 guard reused)', async () => {
+    const assignEmployee = jest.fn().mockResolvedValue(Ok({ id: 9 }));
+    const svc = new CardService(makeRepo({
+      findById: jest.fn().mockResolvedValue(Ok({ id: 5, position_name: 'Operator' })),
+      activeOccupantCount: jest.fn().mockResolvedValue(Ok(1)),
+      assignEmployee,
+    }));
+    const r = await svc.assignEmployeeToCard(5, 42, false);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.code).toBe('CONFLICT');
+    expect(assignEmployee).not.toHaveBeenCalled(); // guard blocks BEFORE insert
+  });
+
+  it('assignEmployeeToCard → assigns + syncs the primary mirror when the card is empty', async () => {
+    const assignEmployee = jest.fn().mockResolvedValue(Ok({ id: 9 }));
+    const setPrimaryCard = jest.fn().mockResolvedValue(Ok([]));
+    const svc = new CardService(makeRepo({
+      findById: jest.fn().mockResolvedValue(Ok({ id: 5 })),
+      activeOccupantCount: jest.fn().mockResolvedValue(Ok(0)),
+      assignEmployee, setPrimaryCard,
+    }));
+    const r = await svc.assignEmployeeToCard(5, 42, true);
+    expect(isOk(r)).toBe(true);
+    expect(assignEmployee).toHaveBeenCalledWith(5, 42, true);
+    expect(setPrimaryCard).toHaveBeenCalledWith(42, 5); // mirror synced for primary
+  });
+
+  it('unassignEmployeeFromCard → NOT_FOUND when no active link exists', async () => {
+    const svc = new CardService(makeRepo({ unassignEmployee: jest.fn().mockResolvedValue(Ok(null)) }));
+    const r = await svc.unassignEmployeeFromCard(5, 42);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.code).toBe('NOT_FOUND');
+  });
+
+  it('unassignEmployeeFromCard → repoints the mirror when the removed link was primary', async () => {
+    const repointPrimaryMirror = jest.fn().mockResolvedValue(Ok([]));
+    const svc = new CardService(makeRepo({
+      unassignEmployee: jest.fn().mockResolvedValue(Ok({ id: 1, is_primary: true })),
+      repointPrimaryMirror,
+    }));
+    const r = await svc.unassignEmployeeFromCard(5, 42);
+    expect(isOk(r)).toBe(true);
+    expect(repointPrimaryMirror).toHaveBeenCalledWith(42);
+  });
+
+  it('listEmployeeCards → returns the cards + the FORMULA-A total (EP-ORG-142, no cap)', async () => {
+    const svc = new CardService(makeRepo({
+      listEmployeeCards: jest.fn().mockResolvedValue(Ok([{ card_id: 6 }, { card_id: 50 }])),
+      employeeSalaryTotal: jest.fn().mockResolvedValue(Ok(5_000_000)),
+    }));
+    const r = await svc.listEmployeeCards(2);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) {
+      expect(r.data.cards.length).toBe(2);
+      expect(r.data.totalSalary).toBe(5_000_000); // 3M + 2M, full sum
+    }
   });
 });

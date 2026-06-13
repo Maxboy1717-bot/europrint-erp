@@ -61,4 +61,56 @@ export class CardService {
   listChildren(cardId: number): Promise<Result<Row[]>> { return this.repo.listChildren(cardId); }
   listVacancies(cardId: number): Promise<Result<Row[]>> { return this.repo.listVacancies(cardId); }
   listHistory(cardId: number): Promise<Result<Row[]>> { return this.repo.listHistory(cardId); }
+
+  // ─── Phase 6: employee↔card M:N + FORMULA A salary ──────────────────────────
+
+  /**
+   * Assign an employee to a card. Reuses the EP-ORG-002 atomic guard (≤1 active employee per card):
+   * rejects with CONFLICT when the card already has an active occupant. If isPrimary, syncs the
+   * employees.org_function_id mirror (Q-39 back-compat).
+   */
+  async assignEmployeeToCard(
+    cardId: number, employeeId: number, isPrimary: boolean,
+  ): Promise<Result<{ assigned: boolean; cardId: number; employeeId: number; isPrimary: boolean }>> {
+    const card = await this.repo.findById(cardId);
+    if (!card.ok) return Err(card.error);
+    if (!card.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+
+    const guard = await this.canAssignEmployee(cardId);
+    if (!guard.ok) return Err(guard.error);
+    if (!guard.data.canAssign) {
+      return Err(AppErr('CONFLICT', `Karta band: ${guard.data.activeOccupants} faol xodim (1 o'rin = 1 xodim, EP-ORG-002)`));
+    }
+
+    const r = await this.repo.assignEmployee(cardId, employeeId, isPrimary);
+    if (!r.ok) return Err(r.error);
+    if (isPrimary) {
+      const m = await this.repo.setPrimaryCard(employeeId, cardId);
+      if (!m.ok) return Err(m.error);
+    }
+    return Ok({ assigned: true, cardId, employeeId, isPrimary });
+  }
+
+  /** Unassign an employee from a card (soft). If it was the primary card, repoints the org_function_id mirror. */
+  async unassignEmployeeFromCard(
+    cardId: number, employeeId: number,
+  ): Promise<Result<{ unassigned: boolean; cardId: number; employeeId: number }>> {
+    const r = await this.repo.unassignEmployee(cardId, employeeId);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Bog'lanish topilmadi (karta #${cardId}, xodim #${employeeId})`));
+    if (r.data.is_primary) {
+      const m = await this.repo.repointPrimaryMirror(employeeId);
+      if (!m.ok) return Err(m.error);
+    }
+    return Ok({ unassigned: true, cardId, employeeId });
+  }
+
+  /** An employee's active cards + the FORMULA-A total salary (SUM of card max_salary, no cap, EP-ORG-142). */
+  async listEmployeeCards(employeeId: number): Promise<Result<{ cards: Row[]; totalSalary: number }>> {
+    const cards = await this.repo.listEmployeeCards(employeeId);
+    if (!cards.ok) return Err(cards.error);
+    const total = await this.repo.employeeSalaryTotal(employeeId);
+    if (!total.ok) return Err(total.error);
+    return Ok({ cards: cards.data, totalSalary: total.data });
+  }
 }
