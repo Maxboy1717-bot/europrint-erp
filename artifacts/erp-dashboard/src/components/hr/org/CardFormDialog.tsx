@@ -5,7 +5,7 @@
  */
 
 import { useState, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,6 +101,12 @@ export function CardFormDialog({
   const queryClient = useQueryClient();
   const isEdit = !!card?.id;
 
+  // Razryad dropdown options (Phase 2 — real master-data from /api/org-structure/razryad-levels).
+  const { data: razryadData } = useQuery<{ items: { id: number; level: number; name: string }[] }>({
+    queryKey: ["/api/org-structure/razryad-levels"],
+  });
+  const razryads = Array.isArray(razryadData?.items) ? razryadData!.items : [];
+
   const [form, setForm] = useState<FormState>(() => toForm(card));
 
   // Reset the form when the dialog is (re)opened for a different card.
@@ -175,8 +181,15 @@ export function CardFormDialog({
             <Input type="number" value={form.level} onChange={(e) => set("level", e.target.value)} />
           </div>
           <div>
-            <Label>{t("razryadId")}</Label>
-            <Input type="number" value={form.razryadLevelId} onChange={(e) => set("razryadLevelId", e.target.value)} />
+            <Label>{t("razryad")}</Label>
+            <Select value={form.razryadLevelId || undefined} onValueChange={(v) => set("razryadLevelId", v)}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                {razryads.map((r) => (
+                  <SelectItem key={r.id} value={String(r.id)}>{r.level}-razryad — {r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>{t("holati")}</Label>
