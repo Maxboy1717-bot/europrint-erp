@@ -10059,5 +10059,19 @@
   "razryadniArxivlash": "Разрядни архивлаш",
   "razryadniArxivlashMatn": "Разряд нофаол қилинади (is_active=false).",
   "razryad": "Разряд",
-  "razryadLevels": "Разрядлар"
+  "razryadLevels": "Разрядлар",
+  "javobgarlik": "Жавобгарлик",
+  "gsd": "GSD / ЦКП",
+  "reglament": "Регламент",
+  "talim": "Таълим",
+  "glossaryVazifa": "Ушбу лавозим бажарадиган асосий иш",
+  "glossaryJavobgarlik": "Лавозим нима учун жавобгар",
+  "glossaryGsd": "Якуний маҳсулот / бош статистик даража (ЦКП)",
+  "glossaryReglament": "Ишни тартибга солувчи қоидалар ва стандартлар",
+  "glossaryJarayon": "Ишнинг босқичма-босқич тартиби",
+  "glossaryTalim": "Лавозим учун зарур ўқув ва дарсликлар",
+  "kartaPapkasi": "Карта папкаси",
+  "toliqlik": "Тўлиқлик",
+  "papkaSaqlandi": "Папка сақланди",
+  "tskpTarif": "ЦКП таърифи"
 }

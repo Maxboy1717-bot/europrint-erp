@@ -8668,5 +8668,19 @@
   "razryadniArxivlash": "Архивировать разряд",
   "razryadniArxivlashMatn": "Разряд будет деактивирован (is_active=false).",
   "razryad": "Разряд",
-  "razryadLevels": "Разряды"
+  "razryadLevels": "Разряды",
+  "javobgarlik": "Ответственность",
+  "gsd": "GSD / ЦКП",
+  "reglament": "Регламент",
+  "talim": "Обучение",
+  "glossaryVazifa": "Основная работа, выполняемая этой должностью",
+  "glossaryJavobgarlik": "За что отвечает должность",
+  "glossaryGsd": "Конечный продукт / ЦКП",
+  "glossaryReglament": "Правила и стандарты, регулирующие работу",
+  "glossaryJarayon": "Пошаговый порядок работы",
+  "glossaryTalim": "Необходимое обучение для должности",
+  "kartaPapkasi": "Папка карты",
+  "toliqlik": "Заполненность",
+  "papkaSaqlandi": "Папка сохранена",
+  "tskpTarif": "Определение ЦКП"
 }

@@ -8668,5 +8668,19 @@
   "razryadniArxivlash": "Razryadni arxivlash",
   "razryadniArxivlashMatn": "Razryad nofaol qilinadi (is_active=false).",
   "razryad": "Razryad",
-  "razryadLevels": "Razryadlar"
+  "razryadLevels": "Razryadlar",
+  "javobgarlik": "Javobgarlik",
+  "gsd": "GSD / ЦКП",
+  "reglament": "Reglament",
+  "talim": "Ta'lim",
+  "glossaryVazifa": "Ushbu lavozim bajaradigan asosiy ish",
+  "glossaryJavobgarlik": "Lavozim nima uchun javobgar",
+  "glossaryGsd": "Yakuniy mahsulot / bosh statistik daraja (ЦКП)",
+  "glossaryReglament": "Ishni tartibga soluvchi qoidalar va standartlar",
+  "glossaryJarayon": "Ishning bosqichma-bosqich tartibi",
+  "glossaryTalim": "Lavozim uchun zarur o'quv va darsliklar",
+  "kartaPapkasi": "Karta papkasi",
+  "toliqlik": "To'liqlik",
+  "papkaSaqlandi": "Papka saqlandi",
+  "tskpTarif": "ЦКП ta'rifi"
 }
