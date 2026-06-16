@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { stocks } from '@shared/db';
 import { eq, and, asc, sql } from 'drizzle-orm';
 
@@ -47,14 +47,21 @@ export async function execUpdateStockIssued(id: unknown, newQty: number, newRese
 }
 
 export async function execReceiveFg(warehouseId: number, materialId: number, amount: number): Promise<void> {
-  await db.insert(stocks).values({
-    warehouse_id: warehouseId,
-    material_id: materialId,
-    quantity: String(amount),
-    reserved_quantity: '0',
-    batch_number: `FG-${Date.now()}`,
-    received_at: new Date(),
-  });
+  // #03 HOP-4: QC-passed finished goods land in the CANONICAL warehouse_stock (was non-canonical `stocks`,
+  // conflict #8 — invisible to every downstream WMS/POS reader). Idempotent upsert on (warehouse_id, material_id);
+  // the unique index warehouse_stock_wh_mat_uniq backs the ON CONFLICT. Same proven pattern as pos-wms-sync.helpers.
+  await runQuery(sql`
+    INSERT INTO warehouse_stock
+      (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+    VALUES
+      (${warehouseId}, ${materialId}, ${amount}, 0, ${amount}, NOW(), NOW(), NOW())
+    ON CONFLICT (warehouse_id, material_id)
+    DO UPDATE SET
+      quantity           = warehouse_stock.quantity + ${amount},
+      available_quantity = warehouse_stock.available_quantity + ${amount},
+      last_movement_at   = NOW(),
+      last_updated_at    = NOW()
+  `);
 }
 
 export async function queryAllStockByWarehouse(warehouseId: number): Promise<StockRow[]> {
