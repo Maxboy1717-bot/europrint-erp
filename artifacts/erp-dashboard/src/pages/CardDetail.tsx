@@ -9,7 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Pencil, FolderOpen, UserPlus, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, FolderOpen, UserPlus, Trash2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -45,7 +45,7 @@ export default function CardDetail() {
   const [folderOpen, setFolderOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
 
-  const { data: card, isLoading, isError, refetch } = useQuery<OrgCard & { department_name?: string; tskp?: string | null }>({
+  const { data: card, isLoading, isError, refetch } = useQuery<OrgCard & { department_name?: string; tskp?: string | null; is_stale?: boolean; last_reviewed_at?: string | null }>({
     queryKey: [base], enabled: id > 0,
   });
   const employees = useQuery<{ items: Row[] }>({ queryKey: [`${base}/employees`], enabled: id > 0 });
@@ -61,6 +61,15 @@ export default function CardDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`${base}/employees`] });
       toast({ title: t("xodimAjratildi") });
+    },
+    onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: () => apiRequest("PATCH", `${base}/review`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [base] });
+      toast({ title: t("kartaKoribChiqildi") });
     },
     onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
   });
@@ -83,12 +92,15 @@ export default function CardDetail() {
     <div className="p-4 sm:p-6 space-y-4">
       <EPPageHeader
         breadcrumb={<>{t("orgStructure")} · <a className="hover:underline cursor-pointer" onClick={() => navigate("/org-structure/cards")}>{t("kartalar")}</a> · <b>{card.position_name}</b></>}
-        title={card.position_name}
+        title={<span className="flex items-center gap-2">{card.position_name}{card.is_stale ? <EPStatusPill tone="warning">{t("eskirgan")}</EPStatusPill> : null}</span>}
         subtitle={`${card.code ?? ""}${card.department_name ? " · " + card.department_name : ""}`}
         actions={
           <>
             <Button variant="outline" onClick={() => navigate("/org-structure/cards")}>
               <ArrowLeft className="h-4 w-4 mr-2" />{t("orqaga")}
+            </Button>
+            <Button variant="outline" onClick={() => reviewMutation.mutate()} disabled={reviewMutation.isPending}>
+              <CheckCircle2 className="h-4 w-4 mr-2" />{t("koribChiqildi")}
             </Button>
             <Button onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4 mr-2" />{t("tahrirlash")}
@@ -150,9 +162,11 @@ export default function CardDetail() {
                     <TableRow key={String(e.id)} data-testid={`row-occupant-${e.id}`}>
                       <TableCell className="font-medium">{String(e.full_name ?? "")}</TableCell>
                       <TableCell>
-                        {e.is_primary
-                          ? <EPStatusPill tone="brand">{t("asosiy")}</EPStatusPill>
-                          : <EPStatusPill tone="neutral">{t("qoshimcha")}</EPStatusPill>}
+                        {e.is_acting
+                          ? <EPStatusPill tone="warning">{t("io")}</EPStatusPill>
+                          : e.is_primary
+                            ? <EPStatusPill tone="brand">{t("asosiy")}</EPStatusPill>
+                            : <EPStatusPill tone="neutral">{t("qoshimcha")}</EPStatusPill>}
                       </TableCell>
                       <TableCell className="text-muted-foreground">{fmtSom(e.total_salary)}</TableCell>
                       <TableCell className="text-muted-foreground">{String(e.status ?? "")}</TableCell>
@@ -200,12 +214,20 @@ export default function CardDetail() {
           )}
         </TabsContent>
 
-        {/* 4. Vakant */}
+        {/* 4. Vakant — priority + aging bucket (EP-ORG-072/073) */}
         <TabsContent value="vakant" className="mt-4">
           {vacancies.isLoading ? <EPLoader /> : listOf(vacancies.data).length === 0 ? (
             <EPEmptyState icon={ArrowLeft} title={t("vakansiyaYoq")} description={t("vakansiyaYoqMatn")} />
           ) : (
-            <SimpleTable cols={[t("nomi"), t("holati")]} rows={listOf(vacancies.data).map((v) => [String(v.title ?? ""), String(v.status ?? "")])} />
+            <SimpleTable
+              cols={[t("nomi"), t("muhimligi"), t("yoshi"), t("holati")]}
+              rows={listOf(vacancies.data).map((v) => [
+                String(v.title ?? ""),
+                String(v.priority ?? "—"),
+                `${String(v.aging_bucket ?? "—")} (${String(v.aging_days ?? 0)} ${t("kun")})`,
+                String(v.status ?? ""),
+              ])}
+            />
           )}
         </TabsContent>
 
@@ -229,6 +251,12 @@ export default function CardDetail() {
             <Field label={t("razryad")} value={card.razryad_level_id ?? "—"} />
             <Field label={t("farzandlar")} value={listOf(children.data).length} />
             <Field label={t("vakant")} value={listOf(vacancies.data).length} />
+            <Field
+              label={t("oxirgiKorik")}
+              value={card.last_reviewed_at
+                ? <span className={card.is_stale ? "text-amber-600" : ""}>{String(card.last_reviewed_at).slice(0, 10)}{card.is_stale ? ` · ${t("eskirgan")}` : ""}</span>
+                : <span className="text-amber-600">{t("hechQachon")} · {t("eskirgan")}</span>}
+            />
           </div>
         </TabsContent>
 

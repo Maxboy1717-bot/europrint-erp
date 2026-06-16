@@ -8710,5 +8710,15 @@
   "umumiyOylik": "Umumiy oylik",
   "xodimAjratish": "Xodimni ajratish",
   "xodimAjratishMatn": "Bu xodim kartadan ajratiladi (yumshoq). Davom etilsinmi?",
-  "sertifikatYoq": "Sertifikat yo'q"
+  "sertifikatYoq": "Sertifikat yo'q",
+  "ioVaqtinchalik": "i.o. (vaqtinchalik ish bajaruvchi)",
+  "kartaKoribChiqildi": "Karta ko'rib chiqildi",
+  "eskirgan": "Eskirgan",
+  "koribChiqildi": "Ko'rib chiqildi",
+  "io": "i.o.",
+  "muhimligi": "Muhimligi",
+  "oxirgiKorik": "Oxirgi ko'rik",
+  "hechQachon": "Hech qachon",
+  "glossaryIo": "i.o. = vaqtinchalik ishni bajaruvchi: dated tayinlov, muddat tugashi bilan avtomatik bekor bo'ladi; oyligi = o'z oyligi + ustama",
+  "glossaryAging": "Vakansiya yoshi: ochilganidan beri o'tgan kunlar (0-14 yangi, 15-45 o'rta, 45+ eskirgan)"
 }
