@@ -84,8 +84,10 @@ export class GlPostingService {
 
   private async createJournalEntry(lines: JournalLine[], reference: string): Promise<Result<number>> {
     const safeLines = Array.isArray(lines) ? lines : [];
-    const totalDebit  = safeLines.reduce((sum, line) => sum + line.debit, 0);
-    const totalCredit = safeLines.reduce((sum, line) => sum + line.credit, 0);
+    const debits = safeLines.filter((l) => l.debit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.debit }));
+    const credits = safeLines.filter((l) => l.credit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.credit }));
+    const totalDebit  = debits.reduce((s, d) => s + d.amt, 0);
+    const totalCredit = credits.reduce((s, c) => s + c.amt, 0);
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       return Err(`Double-entry validation failed: Debit ${totalDebit} != Credit ${totalCredit}`);
@@ -93,21 +95,27 @@ export class GlPostingService {
 
     const entryDate = new Date().toISOString().slice(0, 10);
 
-    // Build one row per non-zero leg, then insert ALL legs atomically (insertJournal
-    // wraps them in a single db.transaction — a mid-journal failure rolls back every
-    // leg instead of leaving an unbalanced half-journal). Account codes / OFFSET /
-    // entryNumber format / amount selection are unchanged.
-    const rows = safeLines
-      .filter((line) => (line.debit > 0 ? line.debit : line.credit) > 0)
-      .map((line) => ({
-        entryNumber: `${reference}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    // #04 fix: the live `entries` row is a BALANCED PAIR (debit_account_id + credit_account_id both set
+    // to a real account) — like postMovementToLedger. The old code wrote one row per leg with 'OFFSET'
+    // for the missing side, which crashed against the integer account columns. Decompose the multi-leg
+    // journal into balanced (debit, credit, amount) rows by greedily allocating debits against credits.
+    const rows: Array<{ entryNumber: string; entryDate: string; documentType: string; debitAccountId: string; creditAccountId: string; amount: number; description: string }> = [];
+    let di = 0, ci = 0, dRem = debits[0]?.amt ?? 0, cRem = credits[0]?.amt ?? 0, guard = 0;
+    while (di < debits.length && ci < credits.length && guard++ < 1000) {
+      const alloc = Math.min(dRem, cRem);
+      rows.push({
+        entryNumber: `${reference}-${Date.now()}-${rows.length}`,
         entryDate,
         documentType: 'journal',
-        debitAccountId:  line.debit  > 0 ? line.accountCode : 'OFFSET',
-        creditAccountId: line.credit > 0 ? line.accountCode : 'OFFSET',
-        amount: line.debit > 0 ? line.debit : line.credit,
-        description: `${reference} — ${line.accountName}`,
-      }));
+        debitAccountId: debits[di].code,
+        creditAccountId: credits[ci].code,
+        amount: Math.round(alloc * 100) / 100,
+        description: `${reference} — ${debits[di].name} / ${credits[ci].name}`,
+      });
+      dRem -= alloc; cRem -= alloc;
+      if (dRem <= 0.001) { di++; dRem = debits[di]?.amt ?? 0; }
+      if (cRem <= 0.001) { ci++; cRem = credits[ci]?.amt ?? 0; }
+    }
 
     const result = await this.glPostingRepo.insertJournal(rows);
     if (result.ok) {

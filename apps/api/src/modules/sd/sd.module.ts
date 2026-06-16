@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { FinanceModule } from '@modules/finance/finance.module'; // #04 EP-SD-030: GlPostingService for payment→entries
 import { SdOrdersController } from './presentation/sd-orders.controller';
 import { SdOrderDepartmentsController } from './presentation/sd-order-departments.controller';
 import { SdOrderDepartmentsService } from './application/sd-order-departments.service';
@@ -92,7 +93,7 @@ const repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot()],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule],
   controllers: [
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
     SdDashboardController, SdCustomersController, SdLeadsController,

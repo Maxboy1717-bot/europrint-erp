@@ -8,10 +8,25 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { entries } from '@workspace/db';
+import { sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import { IGlPostingRepository } from '../../domain/repositories/i-gl-posting.repo';
+
+/**
+ * Resolve GL account CODES (e.g. '5010') to the integer accounts.id the live `entries.*_account_id`
+ * columns require (the Drizzle def says varchar but the live columns are integer FKs to accounts.id).
+ * Returns a code→id map; callers Err if any code is missing rather than insert a wrong/NULL account.
+ */
+async function resolveAccountIds(codes: string[]): Promise<Map<string, number>> {
+  const distinct = [...new Set(codes.filter(Boolean))];
+  if (distinct.length === 0) return new Map();
+  const res = await runQuery<{ account_code: string; id: number }>(
+    sql`SELECT account_code, id FROM accounts WHERE account_code = ANY(${distinct})`,
+  );
+  return new Map((Array.isArray(res.rows) ? res.rows : []).map((r) => [String(r.account_code), Number(r.id)]));
+}
 
 @Injectable()
 export class DrizzleGlPostingRepository implements IGlPostingRepository {
@@ -66,6 +81,13 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
     createdBy?: number;
   }>): Promise<Result<number>> {
     try {
+      // #04 fix: rows carry account CODES in debitAccountId/creditAccountId (both real legs, no 'OFFSET').
+      // Resolve them to integer accounts.id (live entries.*_account_id are integer) before insert; if any
+      // code is absent from the chart of accounts, fail honestly (no wrong/NULL account, no fake-green).
+      const idByCode = await resolveAccountIds(rows.flatMap((r) => [r.debitAccountId, r.creditAccountId]));
+      const missing = [...new Set(rows.flatMap((r) => [r.debitAccountId, r.creditAccountId]).filter((c) => c && !idByCode.has(c)))];
+      if (missing.length) return Err(AppErr('DB_ERROR', `GL account code(s) not in chart of accounts: ${missing.join(', ')}`));
+
       // Atomic: all journal legs commit together — a mid-journal failure rolls
       // back every leg (no orphaned half-journal). Mirrors saveBudget pattern.
       const firstId = await db.transaction(async (tx) => {
@@ -76,8 +98,10 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
             entryDate: row.entryDate,
             documentType: row.documentType,
             documentId: row.documentId ?? null,
-            debitAccountId: row.debitAccountId,
-            creditAccountId: row.creditAccountId,
+            debitAccountId: String(idByCode.get(row.debitAccountId)),   // int accounts.id (Drizzle varchar drift)
+            creditAccountId: String(idByCode.get(row.creditAccountId)),
+            debitAccount: row.debitAccountId,                            // human-readable code text
+            creditAccount: row.creditAccountId,
             amount: row.amount,
             description: row.description ?? null,
             createdBy: row.createdBy ?? null,

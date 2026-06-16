@@ -9,9 +9,12 @@
  * 2200=SALES_TAX+DEDUCTIONS; 7000=MATERIAL+EMPLOYER). Use GL_ACCOUNTS_V2 for new code.
  */
 export const GL = {
-  CASH:                     '1000', // Kassa
-  ACCOUNTS_RECEIVABLE:      '1100', // Debitorlik qarzlar
-  ACCOUNTS_RECEIVABLE_TRADE:'1200', // Savdo debitorlari
+  // #04 fix: remapped CASH + AR to the LIVE Uzbek chart of accounts (1000 was "Materiallar"; 1200 absent).
+  // 5010=Kassa, 4000=Mijozlardan olinadigan summalar (Debitorlar). Other codes below remain to be remapped
+  // against the live CoA in FIN #10 (the GL writer now Err's honestly on any code not in `accounts`).
+  CASH:                     '5010', // Kassa (live CoA)
+  ACCOUNTS_RECEIVABLE:      '4000', // Debitorlar (live CoA)
+  ACCOUNTS_RECEIVABLE_TRADE:'4000', // Mijozlardan olinadigan summalar (live CoA)
   INVENTORY:                '1040', // Tovar-moddiy qiymatliklar
   FIXED_ASSETS:             '3000', // Asosiy vositalar
   ACCOUNTS_PAYABLE:         '4000', // Kreditorlik qarzlar

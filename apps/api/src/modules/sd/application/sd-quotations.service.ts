@@ -28,8 +28,9 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
+import { GlPostingService } from '@modules/finance/domain/services/gl-posting.service';
 
 /** EP-SD-037 price-engine input (carton dims + colours + qty). */
 export type PriceCalcInput = {
@@ -56,9 +57,11 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class SdQuotationsService {
+  private readonly logger = new Logger(SdQuotationsService.name);
   constructor(
     @Inject(SD_QUOTATIONS_REPO) private readonly repo: ISdQuotationsRepo,
     @Inject(QUOTATION_REPO) private readonly quotationRepo: IQuotationRepo,
+    private readonly gl: GlPostingService,
   ) {}
 
   async listQuotations(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<object, AppError>> {
@@ -249,6 +252,15 @@ export class SdQuotationsService {
     const r = await this.quotationRepo.markPaymentPaid(id, body['payment_date']);
     if (!r.ok) return r as Result<Row>;
     if (!r.data) return Err(AppErr('NOT_FOUND', `Payment ${id} topilmadi`));
+    // EP-SD-030: on payment confirm, post the GL leg to the canonical `entries` ledger
+    // (DR Kassa 5010 / CR Debitorlar 4000). Non-fatal — the payment IS recorded; a GL hiccup
+    // is logged + retryable, never blocks the paid status or fakes a posting.
+    const amount = Number(r.data['amount'] ?? 0);
+    if (amount > 0) {
+      const gl = await this.gl.postCustomerPayment(Number.isFinite(Number(id)) ? Number(id) : 0, amount);
+      if (!gl.ok) this.logger.warn(`[EP-SD-030] GL post failed for payment ${id}: ${String(gl.error)}`);
+      else this.logger.log(`[EP-SD-030] payment ${id} → entries ledger (${amount})`);
+    }
     return Ok({ id, paid: true, status: 'paid', updated_at: r.data['updated_at'] });
   }
 
