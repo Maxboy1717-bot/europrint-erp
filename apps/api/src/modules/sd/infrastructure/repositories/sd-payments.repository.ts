@@ -34,7 +34,23 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
 
   async getDebitors(lim: number, off: number): Promise<Result<Row[]>>  {
   try {
-      const r = await exec(sql`SELECT c.id, c.name, COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0)::numeric(15,2) AS debt_amount, COUNT(DISTINCT CASE WHEN p.status = 'pending' THEN p.id END)::int AS pending_payments, MIN(CASE WHEN p.status = 'pending' THEN p.due_date END) AS earliest_due FROM sd_customers c LEFT JOIN sd_payments p ON p.customer_id = c.id AND p.deleted_at IS NULL WHERE c.deleted_at IS NULL GROUP BY c.id, c.name HAVING COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0) > 0 ORDER BY debt_amount DESC LIMIT ${lim} OFFSET ${off}`);
+      // EP-SD-013/112: debitor aging buckets (0-30 / 31-60 / 61-90 / 90+ days overdue), computed from
+      // pending payments' due_date age (varchar date → ::date). FE renders these columns.
+      const r = await exec(sql`
+        SELECT c.id, c.name,
+          COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0)::numeric(15,2) AS debt_amount,
+          COUNT(DISTINCT CASE WHEN p.status = 'pending' THEN p.id END)::int AS pending_payments,
+          MIN(CASE WHEN p.status = 'pending' THEN p.due_date END) AS earliest_due,
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 0 AND 30  THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_0_30,
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 31 AND 60 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_31_60,
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 61 AND 90 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_61_90,
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) > 90 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_90_plus
+        FROM sd_customers c
+        LEFT JOIN sd_payments p ON p.customer_id = c.id AND p.deleted_at IS NULL
+        WHERE c.deleted_at IS NULL
+        GROUP BY c.id, c.name
+        HAVING COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0) > 0
+        ORDER BY debt_amount DESC LIMIT ${lim} OFFSET ${off}`);
       return r.ok ? r : Err(String(r.error));
   } catch (_e) {
     return Err(String(_e));

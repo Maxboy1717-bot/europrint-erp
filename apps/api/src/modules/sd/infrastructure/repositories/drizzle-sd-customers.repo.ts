@@ -64,6 +64,31 @@ export class DrizzleSdCustomersRepository {
     }));
   }
 
+  /**
+   * EP-SD-060/061/062 credit-limit check: a customer's credit_limit vs current outstanding (pending
+   * payments) + the requested order amount. Returns withinLimit + a flag (AI flags → human decides, E1 —
+   * never auto-blocks). credit_limit=0 means "no limit set" → always within.
+   */
+  async getCreditStatus(cid: number, amount: number): Promise<Row> {
+    const rows = await runQuery<Row>(sql`
+      SELECT c.id, COALESCE(c.credit_limit, 0)::numeric AS credit_limit,
+             COALESCE((SELECT SUM(p.amount) FROM sd_payments p
+                       WHERE p.customer_id = c.id AND p.status = 'pending' AND p.deleted_at IS NULL), 0)::numeric AS outstanding
+      FROM sd_customers c WHERE c.id = ${cid} AND c.status != 'deleted'
+    `);
+    const row = rows.rows[0] as Row | undefined;
+    if (!row) return { found: false };
+    const creditLimit = Number(row.credit_limit ?? 0);
+    const outstanding = Number(row.outstanding ?? 0);
+    const available = creditLimit - outstanding;
+    const exceeds = creditLimit > 0 && outstanding + amount > creditLimit;
+    return {
+      found: true, customer_id: cid, credit_limit: creditLimit, outstanding, available,
+      requested_amount: amount, within_limit: !exceeds,
+      flag: exceeds ? `Kredit-limit oshib ketadi: mavjud ${available}, so'ralgan ${amount} — direktor tasdig'i kerak (EP-SD-061)` : null,
+    };
+  }
+
   async get360View(cid: number): Promise<Record<string, unknown>> {
     const safe = async (q: ReturnType<typeof runQuery<Row>>) =>
       q.then(r => r.rows as Row[]).catch(() => [] as Row[]);

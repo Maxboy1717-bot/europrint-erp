@@ -1,29 +1,10 @@
 /**
  * @module sd-quotations.service
- * @description Sales-Distribution quotation + contract + price-formula service.
- *   The notable piece of business logic here is `calculatePrice` — a single
- *   place where bulk-discount tiers turn a base price into a customer-facing
- *   unit price. Everything else delegates to the repository.
+ * @description Sales-Distribution quotation + contract + price-formula service. The core business logic
+ *   is `calculatePrice` (EP-SD-037) — a real config-driven cost engine that reads the live
+ *   `sd_price_formulas` row and builds paper/print/die/labour/delivery from the carton dims + colours +
+ *   qty, then applies markup% + VAT%. Everything else delegates to the repository.
  * @layer Application Service (SD)
- *
- * WHY DISCOUNT TIERS LIVE IN business.constants
- *   `BULK_DISCOUNT_SMALL` / `BULK_DISCOUNT_LARGE` define the qty threshold
- *   and discount rate. Two reasons they're constants, not config rows:
- *     1. Sales engineers needed *predictable* tiering — quotes are validated
- *        against these constants in QA tests; flipping them mid-run would
- *        invalidate open quotations.
- *     2. Tier names appear in the print-out (Contract template uses
- *        "5%+5% bulk discount applied") and changing tiers would invalidate
- *        countersigned PDFs.
- *   If you ever need per-customer pricing, build a `PriceFormula` row and
- *   route through `formulaId` — that's the configurable path.
- *
- * WHY THE STRICT ORDER `> BULK_DISCOUNT_LARGE > BULK_DISCOUNT_SMALL`
- *   The check uses `>` not `>=`, and `LARGE` is tested first. This means an
- *   order *equal* to the small threshold gets 0% — the tier is "more than X
- *   units". If business rules ever switch to inclusive thresholds, change
- *   the comparator here and update the contract template's wording in
- *   `print/templates/contract.tsx`.
  */
 
 import { TashkentTimeService } from '@common/time';
@@ -84,20 +65,6 @@ export class SdQuotationsService {
     return this.repo.listPriceFormulas(lim, off);
   }
 
-  /**
-   * @description Compute a quoted unit price + total for a given product/qty.
-   *   Currently uses a hardcoded `QUOTATION_BASE_NUMBER` because real per-SKU
-   *   pricing lives in `price_formulas` — when `formulaId` is provided callers
-   *   should hit a separate formula evaluation path. The discount band is
-   *   applied uniformly:
-   *     qty > LARGE.minQty → LARGE.rate
-   *     qty > SMALL.minQty → SMALL.rate
-   *     else                → 0%
-   * @param productId - logging context; product price is NOT looked up here
-   * @param quantity  - units ordered; drives discount band
-   * @param formulaId - reserved for future per-formula pricing
-   * @returns Ok({ unit_price, total_price, discount_percent, ... })
-   */
   /**
    * EP-ORG #04 / EP-SD-037 — REAL config-driven price engine (replaced the hardcoded
    * QUOTATION_BASE_NUMBER stub). Reads the live `sd_price_formulas` row and builds the cost from the

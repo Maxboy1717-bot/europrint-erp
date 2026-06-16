@@ -22,6 +22,11 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.getById(cid));
   }
 
+  /** EP-SD-060/061/062 credit-limit check (flag, not auto-block — E1). */
+  async getCreditStatus(cid: number, amount: number) {
+    return safeCall(async () => this.repo.getCreditStatus(cid, amount));
+  }
+
   async get360View(cid: number) {
     return safeCall(async () => this.repo.get360View(cid));
   }

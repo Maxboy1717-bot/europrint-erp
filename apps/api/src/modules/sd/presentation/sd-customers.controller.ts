@@ -182,6 +182,13 @@ export class SdCustomersController {
     return data;
   }
 
+  @ApiOperation({ summary: 'Credit-limit check (EP-SD-060/061/062)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/credit-check')
+  async creditCheck(@Param('id') id: string, @Query('amount') amount?: string) {
+    return unwrapOrThrow(await this.svc.getCreditStatus(safeInt(id, 0), Number(amount ?? 0)));
+  }
+
   @ApiOperation({ summary: 'Create' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
