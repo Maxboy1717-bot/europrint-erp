@@ -35,6 +35,8 @@ import { AbsenceBlockCron } from './absence-block.cron'
 import { VacancyDeadlineCron } from './vacancy-deadline.cron'
 import { RetentionCron } from './retention.cron'
 import { KanbanRecurringCron } from './kanban-recurring.cron'
+import { ActingRevertCron } from './acting-revert.cron'
+import { CardRepository } from '../modules/org-structure/card.repository'
 import { CronStatusService } from './cron-status.service'
 import { AbsenceBlockRepository } from './repositories/absence-block.repository'
 import { EnpsCronRepository } from './repositories/enps-cron.repository'
@@ -73,6 +75,9 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     CandidateArchiveCron,
     AbsenceBlockCron,
     VacancyDeadlineCron,
+    // ORG Phase 7 — i.o./acting auto-revert (EP-ORG-060); CardRepository = standalone (runQuery, no deps)
+    ActingRevertCron,
+    CardRepository,
     // Data retention cron (Task #180)
     RetentionCron,
     // Kanban — takrorlanuvchi kartalar yaratish (har kuni 07:00)

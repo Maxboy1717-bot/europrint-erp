@@ -65,30 +65,45 @@ export class CardService {
   // ─── Phase 6: employee↔card M:N + FORMULA A salary ──────────────────────────
 
   /**
-   * Assign an employee to a card. Reuses the EP-ORG-002 atomic guard (≤1 active employee per card):
-   * rejects with CONFLICT when the card already has an active occupant. If isPrimary, syncs the
-   * employees.org_function_id mirror (Q-39 back-compat).
+   * Assign an employee to a card. Substantive assigns reuse the EP-ORG-002 atomic guard (≤1 active
+   * substantive employee per card) → CONFLICT when occupied; if isPrimary, syncs the
+   * employees.org_function_id mirror (Q-39 back-compat). Phase 7 (EP-ORG-060/061/062, D2): an
+   * i.o./acting assignment (isActing) carries a supplement + a revert end-date and does NOT consume
+   * the substantive seat → it SKIPS the guard and is never the primary mirror.
    */
   async assignEmployeeToCard(
     cardId: number, employeeId: number, isPrimary: boolean,
-  ): Promise<Result<{ assigned: boolean; cardId: number; employeeId: number; isPrimary: boolean }>> {
+    isActing = false, actingSupplement: number | null = null, endedAt: string | null = null,
+  ): Promise<Result<{ assigned: boolean; cardId: number; employeeId: number; isPrimary: boolean; isActing: boolean }>> {
     const card = await this.repo.findById(cardId);
     if (!card.ok) return Err(card.error);
     if (!card.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
 
-    const guard = await this.canAssignEmployee(cardId);
-    if (!guard.ok) return Err(guard.error);
-    if (!guard.data.canAssign) {
-      return Err(AppErr('CONFLICT', `Karta band: ${guard.data.activeOccupants} faol xodim (1 o'rin = 1 xodim, EP-ORG-002)`));
+    // i.o./acting does NOT consume the single substantive seat (D2) → skip the guard for it.
+    if (!isActing) {
+      const guard = await this.canAssignEmployee(cardId);
+      if (!guard.ok) return Err(guard.error);
+      if (!guard.data.canAssign) {
+        return Err(AppErr('CONFLICT', `Karta band: ${guard.data.activeOccupants} faol xodim (1 o'rin = 1 xodim, EP-ORG-002)`));
+      }
     }
 
-    const r = await this.repo.assignEmployee(cardId, employeeId, isPrimary);
+    const primary = isPrimary && !isActing;
+    const r = await this.repo.assignEmployee(cardId, employeeId, primary, isActing, actingSupplement, endedAt);
     if (!r.ok) return Err(r.error);
-    if (isPrimary) {
+    if (primary) {
       const m = await this.repo.setPrimaryCard(employeeId, cardId);
       if (!m.ok) return Err(m.error);
     }
-    return Ok({ assigned: true, cardId, employeeId, isPrimary });
+    return Ok({ assigned: true, cardId, employeeId, isPrimary: primary, isActing });
+  }
+
+  /** EP-ORG-137: mark a card as reviewed now (resets the 1-year staleness clock). */
+  async markReviewed(cardId: number): Promise<Result<Row>> {
+    const r = await this.repo.markReviewed(cardId);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+    return Ok(r.data);
   }
 
   /** Unassign an employee from a card (soft). If it was the primary card, repoints the org_function_id mirror. */

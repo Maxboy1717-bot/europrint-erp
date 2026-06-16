@@ -41,8 +41,11 @@ const CardCreateSchema = z.object({
 const CardUpdateSchema = CardCreateSchema.partial();
 
 const AssignSchema = z.object({
-  employeeId: z.number().int().positive(),
-  isPrimary:  z.boolean().optional(),
+  employeeId:       z.number().int().positive(),
+  isPrimary:        z.boolean().optional(),
+  isActing:         z.boolean().optional(),
+  actingSupplement: z.number().nonnegative().optional(),
+  endedAt:          z.string().optional(),
 }).strict();
 
 @Roles('admin', 'manager', 'hr_manager', 'director', 'super_admin')
@@ -139,7 +142,10 @@ export class CardController {
   @Post(':id/assign')
   async assign(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const dto = AssignSchema.parse(body);
-    return unwrapOrThrow(await this.service.assignEmployeeToCard(id, dto.employeeId, dto.isPrimary ?? false));
+    return unwrapOrThrow(await this.service.assignEmployeeToCard(
+      id, dto.employeeId, dto.isPrimary ?? false,
+      dto.isActing ?? false, dto.actingSupplement ?? null, dto.endedAt ?? null,
+    ));
   }
 
   @ApiOperation({ summary: 'Unassign an employee from a card (soft)' })
@@ -160,6 +166,14 @@ export class CardController {
     const data = unwrapOrInternal(await this.service.listCertificates(id));
     const items = Array.isArray(data) ? data : [];
     return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Mark card reviewed now — resets the 1-year staleness clock (EP-ORG-137)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/review')
+  async review(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.service.markReviewed(id));
   }
 
   @ApiOperation({ summary: 'Create card' })

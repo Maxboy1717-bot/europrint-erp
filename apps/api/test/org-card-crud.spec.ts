@@ -29,6 +29,8 @@ function makeRepo(over: Partial<Record<keyof CardRepository, jest.Mock>> = {}): 
     listEmployeeCards:   jest.fn().mockResolvedValue(Ok([])),
     employeeSalaryTotal: jest.fn().mockResolvedValue(Ok(0)),
     listCertificates:    jest.fn().mockResolvedValue(Ok([])),
+    markReviewed:        jest.fn().mockResolvedValue(Ok({ id: 1, last_reviewed_at: '2026-06-13' })),
+    revertExpiredActing: jest.fn().mockResolvedValue(Ok(0)),
     ...over,
   } as unknown as CardRepository;
 }
@@ -130,7 +132,7 @@ describe('ORG card CRUD (CardService)', () => {
     }));
     const r = await svc.assignEmployeeToCard(5, 42, true);
     expect(isOk(r)).toBe(true);
-    expect(assignEmployee).toHaveBeenCalledWith(5, 42, true);
+    expect(assignEmployee).toHaveBeenCalledWith(5, 42, true, false, null, null); // substantive: not acting
     expect(setPrimaryCard).toHaveBeenCalledWith(42, 5); // mirror synced for primary
   });
 
@@ -172,5 +174,48 @@ describe('ORG card CRUD (CardService)', () => {
     expect(listCertificates).toHaveBeenCalledWith(5);
     expect(isOk(r)).toBe(true);
     if (isOk(r)) expect(r.data.length).toBe(1);
+  });
+
+  // Phase 7 i.o./acting + staleness
+  it('assignEmployeeToCard(isActing) → SKIPS the seat guard, never primary (D2, EP-ORG-060/061)', async () => {
+    const activeOccupantCount = jest.fn().mockResolvedValue(Ok(1)); // card is occupied by a substantive emp
+    const assignEmployee = jest.fn().mockResolvedValue(Ok({ id: 9, is_acting: true }));
+    const setPrimaryCard = jest.fn().mockResolvedValue(Ok([]));
+    const svc = new CardService(makeRepo({
+      findById: jest.fn().mockResolvedValue(Ok({ id: 5 })),
+      activeOccupantCount, assignEmployee, setPrimaryCard,
+    }));
+    // acting assign to an OCCUPIED card succeeds (i.o. does not consume the seat)
+    const r = await svc.assignEmployeeToCard(5, 42, true /*isPrimary ignored*/, true /*isActing*/, 500000, '2026-12-31');
+    expect(isOk(r)).toBe(true);
+    expect(activeOccupantCount).not.toHaveBeenCalled();         // guard skipped for acting
+    expect(assignEmployee).toHaveBeenCalledWith(5, 42, false, true, 500000, '2026-12-31'); // primary forced false
+    expect(setPrimaryCard).not.toHaveBeenCalled();              // acting never becomes the mirror
+    if (isOk(r)) { expect(r.data.isActing).toBe(true); expect(r.data.isPrimary).toBe(false); }
+  });
+
+  it('assignEmployeeToCard(substantive) → still enforces the seat guard', async () => {
+    const svc = new CardService(makeRepo({
+      findById: jest.fn().mockResolvedValue(Ok({ id: 5 })),
+      activeOccupantCount: jest.fn().mockResolvedValue(Ok(1)),
+    }));
+    const r = await svc.assignEmployeeToCard(5, 42, false, false);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.code).toBe('CONFLICT');
+  });
+
+  it('markReviewed → NOT_FOUND when the card is absent (EP-ORG-137)', async () => {
+    const svc = new CardService(makeRepo({ markReviewed: jest.fn().mockResolvedValue(Ok(null)) }));
+    const r = await svc.markReviewed(999);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.code).toBe('NOT_FOUND');
+  });
+
+  it('markReviewed → stamps last_reviewed_at when the card exists', async () => {
+    const markReviewed = jest.fn().mockResolvedValue(Ok({ id: 5, last_reviewed_at: '2026-06-13' }));
+    const svc = new CardService(makeRepo({ markReviewed }));
+    const r = await svc.markReviewed(5);
+    expect(markReviewed).toHaveBeenCalledWith(5);
+    expect(isOk(r)).toBe(true);
   });
 });

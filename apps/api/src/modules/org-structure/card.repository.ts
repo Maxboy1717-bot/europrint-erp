@@ -38,9 +38,12 @@ export class CardRepository {
     return safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
   }
 
+  /** EP-ORG-137 staleness flag: a card with no review, or reviewed > 1 year ago, is stale. */
+  private readonly staleExpr = sql`(f.last_reviewed_at IS NULL OR f.last_reviewed_at < now() - interval '1 year')`;
+
   async list(departmentId: number | null, status: string | null): Promise<Result<Row[]>> {
     return this.exec(sql`
-      SELECT f.*, d.name AS department_name
+      SELECT f.*, d.name AS department_name, ${this.staleExpr} AS is_stale
       FROM org_functions f
       LEFT JOIN org_departments d ON d.id = f.department_id
       WHERE f.deleted_at IS NULL
@@ -52,7 +55,7 @@ export class CardRepository {
 
   async findById(id: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      SELECT f.*, d.name AS department_name
+      SELECT f.*, d.name AS department_name, ${this.staleExpr} AS is_stale
       FROM org_functions f
       LEFT JOIN org_departments d ON d.id = f.department_id
       WHERE f.id = ${id} AND f.deleted_at IS NULL
@@ -115,13 +118,17 @@ export class CardRepository {
   }
 
   /**
-   * EP-ORG-002 atomic guard input: how many ACTIVE employees occupy this card.
-   * Phase 6: counts via the canonical M:N link `employee_cards` (not the org_function_id mirror),
-   * so multi-card assignments are reflected. Variant C — the ≤1 rule is enforced here (app layer).
+   * EP-ORG-002 atomic guard input: how many SUBSTANTIVE active employees occupy this card.
+   * Phase 6: counts via the canonical M:N link `employee_cards` (not the org_function_id mirror).
+   * Phase 7 (D2): EXCLUDES i.o./acting occupants (an i.o. does not consume the single substantive
+   * seat) + on-read revert guard (an expired acting/dated link no longer counts).
    */
   async activeOccupantCount(cardId: number): Promise<Result<number>> {
     const r = await this.exec(sql`
-      SELECT COUNT(*)::int AS c FROM employee_cards WHERE card_id = ${cardId} AND is_active
+      SELECT COUNT(*)::int AS c FROM employee_cards
+      WHERE card_id = ${cardId} AND is_active
+        AND COALESCE(is_acting, false) = false
+        AND (ended_at IS NULL OR ended_at > now())
     `);
     return r.ok ? Ok(Number(r.data[0]?.c ?? 0)) : Err(r.error);
   }
@@ -134,15 +141,18 @@ export class CardRepository {
    */
   async listEmployees(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
-      SELECT e.id, e.first_name, e.last_name, COALESCE(e.status,'active') AS status, ec.is_primary,
+      SELECT e.id, e.first_name, e.last_name, COALESCE(e.status,'active') AS status,
+             ec.is_primary, COALESCE(ec.is_acting, false) AS is_acting, ec.acting_supplement, ec.ended_at,
              COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
-             (SELECT COALESCE(SUM(COALESCE(f2.max_salary,0)),0)
+             (SELECT COALESCE(SUM(CASE WHEN COALESCE(ec2.is_acting,false) THEN 0 ELSE COALESCE(f2.max_salary,0) END),0)
+                   + COALESCE(SUM(CASE WHEN ec2.is_acting THEN COALESCE(ec2.acting_supplement,0) ELSE 0 END),0)
                 FROM employee_cards ec2 JOIN org_functions f2 ON f2.id = ec2.card_id
-               WHERE ec2.employee_id = e.id AND ec2.is_active AND f2.deleted_at IS NULL) AS total_salary
+               WHERE ec2.employee_id = e.id AND ec2.is_active
+                 AND (ec2.ended_at IS NULL OR ec2.ended_at > now()) AND f2.deleted_at IS NULL) AS total_salary
       FROM employee_cards ec
       JOIN employees e ON e.id = ec.employee_id
-      WHERE ec.card_id = ${cardId} AND ec.is_active
-      ORDER BY ec.is_primary DESC, e.last_name, e.first_name
+      WHERE ec.card_id = ${cardId} AND ec.is_active AND (ec.ended_at IS NULL OR ec.ended_at > now())
+      ORDER BY ec.is_primary DESC, ec.is_acting, e.last_name, e.first_name
     `);
   }
 
@@ -175,13 +185,22 @@ export class CardRepository {
 
   // ─── Phase 6: employee↔card M:N (employee_cards) + FORMULA A salary ─────────
 
-  /** Assign an employee to a card (M:N). Service guards with canAssignEmployee first. Idempotent on active link. */
-  async assignEmployee(cardId: number, employeeId: number, isPrimary: boolean): Promise<Result<Row | null>> {
+  /**
+   * Assign an employee to a card (M:N). Service guards substantive assigns with canAssignEmployee.
+   * Phase 7: an acting (i.o.) assignment carries isActing + acting_supplement + ended_at (revert date).
+   * Idempotent on the active (employee_id, card_id) pair.
+   */
+  async assignEmployee(
+    cardId: number, employeeId: number, isPrimary: boolean,
+    isActing = false, actingSupplement: number | null = null, endedAt: string | null = null,
+  ): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      INSERT INTO employee_cards (employee_id, card_id, is_primary, is_active, assigned_at, created_at, updated_at)
-      VALUES (${employeeId}, ${cardId}, ${isPrimary}, true, NOW(), NOW(), NOW())
+      INSERT INTO employee_cards
+        (employee_id, card_id, is_primary, is_active, is_acting, acting_supplement, assigned_at, ended_at, created_at, updated_at)
+      VALUES
+        (${employeeId}, ${cardId}, ${isPrimary}, true, ${isActing}, ${actingSupplement}, NOW(), ${endedAt}::timestamptz, NOW(), NOW())
       ON CONFLICT (employee_id, card_id) WHERE is_active DO NOTHING
-      RETURNING id, employee_id, card_id, is_primary
+      RETURNING id, employee_id, card_id, is_primary, is_acting
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
@@ -217,24 +236,39 @@ export class CardRepository {
     `);
   }
 
-  /** An employee's active cards + each card's max_salary (the FORMULA-A components). */
+  /**
+   * An employee's active cards + each card's max_salary (the FORMULA-A components).
+   * Phase 7: includes the acting flag + supplement per link; an acting card's effective contribution
+   * = its acting_supplement (own salary is its substantive card). On-read revert guard excludes expired links.
+   */
   async listEmployeeCards(employeeId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
-      SELECT ec.card_id, ec.is_primary, f.position_name, f.code,
-             f.max_salary, COALESCE(f.max_salary, 0) AS card_salary
+      SELECT ec.card_id, ec.is_primary, COALESCE(ec.is_acting, false) AS is_acting,
+             ec.acting_supplement, ec.ended_at, f.position_name, f.code, f.max_salary,
+             -- effective contribution to FORMULA A: acting card → supplement only; substantive → max_salary
+             (CASE WHEN COALESCE(ec.is_acting,false) THEN COALESCE(ec.acting_supplement,0) ELSE COALESCE(f.max_salary,0) END) AS card_salary
       FROM employee_cards ec
       JOIN org_functions f ON f.id = ec.card_id
-      WHERE ec.employee_id = ${employeeId} AND ec.is_active AND f.deleted_at IS NULL
-      ORDER BY ec.is_primary DESC, f.position_name
+      WHERE ec.employee_id = ${employeeId} AND ec.is_active
+        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.deleted_at IS NULL
+      ORDER BY ec.is_primary DESC, ec.is_acting, f.position_name
     `);
   }
 
-  /** FORMULA A (EP-ORG-142): employee profile total = SUM of active cards' max_salary (full, no cap, COALESCE 0). */
+  /**
+   * FORMULA A (EP-ORG-142/061): employee profile total = "own + supplement", no cap.
+   *   own        = SUM of the employee's SUBSTANTIVE (non-acting) cards' max_salary;
+   *   supplement = SUM of acting_supplement for i.o./acting links (the i.o. earns the SUPPLEMENT only,
+   *                NOT the acting card's full salary — that seat belongs to its substantive holder).
+   * On-read revert guard (EP-ORG-060): expired dated links drop out automatically. COALESCE NULL→0.
+   */
   async employeeSalaryTotal(employeeId: number): Promise<Result<number>> {
     const r = await this.exec(sql`
-      SELECT COALESCE(SUM(COALESCE(f.max_salary, 0)), 0)::numeric AS total
+      SELECT ( COALESCE(SUM(CASE WHEN COALESCE(ec.is_acting,false) THEN 0 ELSE COALESCE(f.max_salary,0) END), 0)
+             + COALESCE(SUM(CASE WHEN ec.is_acting THEN COALESCE(ec.acting_supplement,0) ELSE 0 END), 0) )::numeric AS total
       FROM employee_cards ec JOIN org_functions f ON f.id = ec.card_id
-      WHERE ec.employee_id = ${employeeId} AND ec.is_active AND f.deleted_at IS NULL
+      WHERE ec.employee_id = ${employeeId} AND ec.is_active
+        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.deleted_at IS NULL
     `);
     return r.ok ? Ok(Number(r.data[0]?.total ?? 0)) : Err(r.error);
   }
@@ -255,5 +289,31 @@ export class CardRepository {
       WHERE ec.card_id = ${cardId} AND ec.is_active AND COALESCE(c.is_active, true) = true
       ORDER BY c.expiry_date NULLS LAST, c.issued_date DESC NULLS LAST
     `);
+  }
+
+  // ─── Phase 7: card staleness (EP-ORG-137) + acting auto-revert (EP-ORG-060) ──
+
+  /** EP-ORG-137: stamp last_reviewed_at = NOW() (resets the 1-year staleness clock). 404 if the card is gone. */
+  async markReviewed(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_functions SET last_reviewed_at = NOW(), updated_at = NOW()
+      WHERE id = ${cardId} AND deleted_at IS NULL
+      RETURNING id, last_reviewed_at
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * EP-ORG-060 acting auto-revert (cron housekeeping mirror): physically deactivate acting links whose
+   * end date has passed. The on-read guard already excludes them from sums/occupancy; this keeps rows tidy.
+   * Returns the number of links reverted.
+   */
+  async revertExpiredActing(): Promise<Result<number>> {
+    const r = await this.exec(sql`
+      UPDATE employee_cards SET is_active = false, updated_at = NOW()
+      WHERE is_acting = true AND is_active = true AND ended_at IS NOT NULL AND ended_at <= now()
+      RETURNING id
+    `);
+    return r.ok ? Ok(r.data.length) : Err(r.error);
   }
 }
