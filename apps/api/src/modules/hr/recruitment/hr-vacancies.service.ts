@@ -10,6 +10,13 @@ import { Result, safeCall } from '@common/result';
 
 type Row = Record<string, unknown>;
 
+/** Vacancy create/import input (Phase 7 D4: card link + priority + counts + closing_date now persisted). */
+export type VacancyInput = {
+  title: string; description?: string; department?: string; status?: string;
+  orgFunctionId?: number | null; priority?: string | null;
+  openPositions?: number | null; numberOfPositions?: number | null; closingDate?: string | null;
+};
+
 const SUPPORTED_CHANNELS = ['telegram', 'linkedin', 'hhuz', 'uzjob', 'myjob'] as const;
 type Channel = typeof SUPPORTED_CHANNELS[number];
 
@@ -29,8 +36,13 @@ export class HrVacanciesService {
     return this.repo.findById(id);
   }
 
-  create(data: { title: string; description?: string; department?: string; status?: string }): Promise<Result<Row>> {
+  create(data: VacancyInput): Promise<Result<Row>> {
     return this.repo.create(data);
+  }
+
+  /** EP-ORG-075/076 bulk import. */
+  bulkCreate(items: VacancyInput[]): Promise<Result<{ inserted: number; ids: number[] }>> {
+    return this.repo.bulkCreate(items);
   }
 
   findPipeline(vacancyId?: number): Promise<Result<Row[]>> {

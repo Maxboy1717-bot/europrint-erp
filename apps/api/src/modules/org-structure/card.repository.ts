@@ -165,10 +165,14 @@ export class CardRepository {
     `);
   }
 
-  /** Vakant tab: vacancies opened for this card. */
+  /** Vakant tab: vacancies opened for this card + priority + aging bucket (EP-ORG-072/073). */
   async listVacancies(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
-      SELECT id, title, status, number_of_positions, open_positions, created_at
+      SELECT id, title, status, priority, number_of_positions, open_positions, closing_date, created_at,
+             (now()::date - created_at::date) AS aging_days,
+             CASE WHEN (now()::date - created_at::date) <= 14 THEN '0-14'
+                  WHEN (now()::date - created_at::date) <= 45 THEN '15-45'
+                  ELSE '45+' END AS aging_bucket
       FROM vacancies WHERE org_function_id = ${cardId} AND deleted_at IS NULL
       ORDER BY created_at DESC NULLS LAST
     `);

@@ -34,7 +34,27 @@ const CreateVacancySchema = z.object({
   department: z.string().max(200).optional(),
   salary: z.union([z.string(), z.number()]).optional(),
   status: z.string().max(50).optional(),
+  // Phase 7 (D4): card link + priority + counts + closing_date — now persisted (were dropped).
+  orgFunctionId: z.number().int().positive().optional(),
+  priority: z.string().max(50).optional(),
+  openPositions: z.number().int().nonnegative().optional(),
+  numberOfPositions: z.number().int().nonnegative().optional(),
+  closingDate: z.string().optional(),
 }).passthrough();
+
+const BulkVacancySchema = z.object({
+  items: z.array(z.object({
+    title: z.string().min(1).max(500),
+    description: z.string().max(10000).optional(),
+    department: z.string().max(200).optional(),
+    status: z.string().max(50).optional(),
+    orgFunctionId: z.number().int().positive().optional(),
+    priority: z.string().max(50).optional(),
+    openPositions: z.number().int().nonnegative().optional(),
+    numberOfPositions: z.number().int().nonnegative().optional(),
+    closingDate: z.string().optional(),
+  })).min(1).max(500),
+});
 
 const PublishVacancySchema = z.object({
   channels: z.array(z.string()).optional(),
@@ -176,16 +196,35 @@ export class HrVacanciesController {
   @HttpCode(HttpStatus.CREATED)
   async createVacancy(@Body() body: unknown) {
     const dto = CreateVacancySchema.parse(body);
-    // NOTE: salary / vacancy_type / deadline_working_days are intentionally NOT persisted —
-    // no canonical column (vacancy_type, deadline_working_days don't exist) or ambiguous min/max
-    // mapping (salary). Recorded as a FE<->BE drift gap for a later stage.
+    // NOTE: salary / vacancy_type / deadline_working_days still NOT persisted — no canonical single
+    // column. Phase 7 (D4) NOW persists the card link + priority + counts + closing_date (were dropped).
     const row = unwrapOrInternal(await this.svc.create({
       title: dto.title,
       description: dto.description,
       department: dto.department,
       status: dto.status,
+      orgFunctionId: dto.orgFunctionId ?? null,
+      priority: dto.priority ?? null,
+      openPositions: dto.openPositions ?? null,
+      numberOfPositions: dto.numberOfPositions ?? null,
+      closingDate: dto.closingDate ?? null,
     }));
     return { data: row };
+  }
+
+  @ApiOperation({ summary: 'Bulk-import vacancies (EP-ORG-075/076)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('vacancies/bulk')
+  @HttpCode(HttpStatus.CREATED)
+  async bulkVacancies(@Body() body: unknown) {
+    const dto = BulkVacancySchema.parse(body);
+    return unwrapOrInternal(await this.svc.bulkCreate(dto.items.map((i) => ({
+      title: i.title, description: i.description, department: i.department, status: i.status,
+      orgFunctionId: i.orgFunctionId ?? null, priority: i.priority ?? null,
+      openPositions: i.openPositions ?? null, numberOfPositions: i.numberOfPositions ?? null,
+      closingDate: i.closingDate ?? null,
+    }))));
   }
 
   @ApiOperation({ summary: 'Publish vacancy' })
