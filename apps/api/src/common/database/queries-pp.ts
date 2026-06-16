@@ -88,9 +88,14 @@ export async function queryRoutingByProduct(productId: number): Promise<DbRow | 
 }
 
 export async function execUnlockPlanning(orderId: number): Promise<void> {
-  await db.update(production_orders_int)
-    .set({ status: 'pending' })
-    .where(eq(production_orders_int.id, orderId));
+  // #03 HOP-1 fix: the caller (advance-approved.listener) passes the SALES order id, and the SD fan-out
+  // creates production_orders keyed by sales_order_id — so transition planning by sales_order_id, NOT id
+  // (the old `WHERE id = orderId` matched the sales id against the PO PK → UPDATEd 0 rows = dead Trigger-7).
+  // Only move not-yet-finished POs into planning. Raw parametrized SQL (sales_order_id is a live column).
+  await db.execute(sql`
+    UPDATE production_orders SET status = 'pending', updated_at = NOW()
+    WHERE sales_order_id = ${orderId} AND status NOT IN ('completed', 'cancelled')
+  `);
 }
 
 export async function queryProductionPlan(startDate: Date, endDate: Date): Promise<DbRow[]> {
