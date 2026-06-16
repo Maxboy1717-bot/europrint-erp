@@ -31,9 +31,35 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
   }
 
   async createQuotation(body: Row): Promise<Result<Row | null>> {
-    const r = await exec(sql`INSERT INTO sd_quotations (customer_id, title, total_amount, currency, valid_until, status, notes, items) VALUES (${body.customer_id ?? null}, ${body.title ?? 'Quotation'}, ${body.total_amount ?? 0}, ${body.currency ?? 'UZS'}, ${body.valid_until ?? null}, ${body.status ?? 'draft'}, ${body.notes ?? null}, ${body.items ? JSON.stringify(body.items) : null}) RETURNING *`);
+    // #04 SD fix: live sd_quotations has NO title/items columns (the old INSERT crashed with DB_ERROR).
+    // Write the real header columns; accept camelCase from FE; line items go to sd_quotation_items (was
+    // orphaned). Generates a quotation_number. Real persist, no fake.
+    const customerId = body.customer_id ?? body.customerId ?? null;
+    const total = Number(body.total_amount ?? body.total_value ?? body.totalAmount ?? 0);
+    const validUntil = body.valid_until ?? body.validUntil ?? null;
+    const qNum = (body.quotation_number as string) ?? `KP-${Math.floor(Date.now() / 1000)}`;
+    const r = await exec(sql`
+      INSERT INTO sd_quotations
+        (quotation_number, customer_id, customer_name, quotation_date, total_value, total_amount, net_value,
+         currency, valid_until, status, notes, payment_terms, markup_percent, created_at, updated_at)
+      VALUES
+        (${qNum}, ${customerId}, ${body.customer_name ?? null}, to_char(NOW(),'YYYY-MM-DD'), ${total}, ${total}, ${total},
+         ${body.currency ?? 'UZS'}, COALESCE(${validUntil}, to_char(NOW() + INTERVAL '14 days', 'YYYY-MM-DD')), ${body.status ?? 'draft'}, ${body.notes ?? null},
+         ${body.payment_terms ?? body.paymentTerms ?? null}, ${body.markup_percent ?? body.markupPercent ?? null}, NOW(), NOW())
+      RETURNING *`);
     if (!r.ok) return r as Result<Row | null>;
-    return Ok(r.data[0] ?? null);
+    const quote = r.data[0] ?? null;
+    const items = Array.isArray(body.items) ? (body.items as Row[]) : [];
+    if (quote && items.length > 0) {
+      const qId = Number((quote as Row).id);
+      for (const it of items) {
+        await exec(sql`
+          INSERT INTO sd_quotation_items (quotation_id, product_type, quantity, unit_price)
+          VALUES (${qId}, ${it.product_type ?? it.productType ?? null},
+                  ${Number(it.quantity ?? it.qty ?? 1)}, ${Number(it.unit_price ?? it.unitPrice ?? 0)})`);
+      }
+    }
+    return Ok(quote);
   }
 
   async listContracts(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>> {

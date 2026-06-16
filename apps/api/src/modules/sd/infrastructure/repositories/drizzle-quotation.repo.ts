@@ -123,20 +123,19 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async updateQuotation(id: string, patch: QuotationUpdatePatch): Promise<Result<MutationRow | null>> {
     try {
-      const itemsJson = patch.items !== undefined && patch.items !== null
-        ? JSON.stringify(patch.items)
-        : null;
+      // #04 SD fix: live sd_quotations has NO title/items columns (they crashed UPDATE). Patch the real
+      // columns only; payment_terms is a live column and is now honored. Line items live in sd_quotation_items.
       const r = await runQuery<MutationRow>(sql`
         UPDATE sd_quotations
         SET
-          title        = COALESCE(${patch.title ?? null}, title),
-          total_amount = COALESCE(${patch.total_amount ?? null}, total_amount),
-          currency     = COALESCE(${patch.currency ?? null}, currency),
-          valid_until  = COALESCE(${patch.valid_until ?? null}, valid_until),
-          notes        = COALESCE(${patch.notes ?? null}, notes),
-          status       = COALESCE(${patch.status ?? null}, status),
-          items        = COALESCE(${itemsJson}, items),
-          updated_at   = NOW()
+          total_amount  = COALESCE(${patch.total_amount ?? null}, total_amount),
+          total_value   = COALESCE(${patch.total_amount ?? null}, total_value),
+          currency      = COALESCE(${patch.currency ?? null}, currency),
+          valid_until   = COALESCE(${patch.valid_until ?? null}, valid_until),
+          notes         = COALESCE(${patch.notes ?? null}, notes),
+          status        = COALESCE(${patch.status ?? null}, status),
+          payment_terms = COALESCE(${(patch as { payment_terms?: string }).payment_terms ?? null}, payment_terms),
+          updated_at    = NOW()
         WHERE id = ${id} AND deleted_at IS NULL
         RETURNING *
       `);
