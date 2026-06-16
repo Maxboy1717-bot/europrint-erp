@@ -176,6 +176,14 @@ export class CardController {
     return unwrapOrThrow(await this.service.markReviewed(id));
   }
 
+  @ApiOperation({ summary: "User's card-gate: card-derived RBAC tier + salary eligibility (EP-ORG-003)" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get('gate/by-user/:userId')
+  async gate(@Param('userId', ParseIntPipe) userId: number) {
+    return unwrapOrThrow(await this.service.resolveGate(userId));
+  }
+
   @ApiOperation({ summary: 'Create card' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

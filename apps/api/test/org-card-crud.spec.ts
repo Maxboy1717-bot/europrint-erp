@@ -31,6 +31,7 @@ function makeRepo(over: Partial<Record<keyof CardRepository, jest.Mock>> = {}): 
     listCertificates:    jest.fn().mockResolvedValue(Ok([])),
     markReviewed:        jest.fn().mockResolvedValue(Ok({ id: 1, last_reviewed_at: '2026-06-13' })),
     revertExpiredActing: jest.fn().mockResolvedValue(Ok(0)),
+    resolveGate:         jest.fn().mockResolvedValue(Ok({ user_id: 1, has_card: true })),
     ...over,
   } as unknown as CardRepository;
 }
@@ -217,5 +218,31 @@ describe('ORG card CRUD (CardService)', () => {
     const r = await svc.markReviewed(5);
     expect(markReviewed).toHaveBeenCalledWith(5);
     expect(isOk(r)).toBe(true);
+  });
+
+  // EP-ORG-003 card-gate (non-blocking)
+  it('resolveGate → carded user: gated=false (RBAC/salary from card)', async () => {
+    const svc = new CardService(makeRepo({
+      resolveGate: jest.fn().mockResolvedValue(Ok({ user_id: 34, has_card: true, rbac_tier: 'owner', salary_eligible: true })),
+    }));
+    const r = await svc.resolveGate(34);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) { expect(r.data.gated).toBe(false); expect(r.data.flag).toBeNull(); expect(r.data.rbac_tier).toBe('owner'); }
+  });
+
+  it('resolveGate → card-less user: gated=true + flag, but NOT blocked (no lockout)', async () => {
+    const svc = new CardService(makeRepo({
+      resolveGate: jest.fn().mockResolvedValue(Ok({ user_id: 1, has_card: false, rbac_tier: null, salary_eligible: false })),
+    }));
+    const r = await svc.resolveGate(1);
+    expect(isOk(r)).toBe(true);
+    if (isOk(r)) { expect(r.data.gated).toBe(true); expect(typeof r.data.flag).toBe('string'); }
+  });
+
+  it('resolveGate → NOT_FOUND when the user is absent', async () => {
+    const svc = new CardService(makeRepo({ resolveGate: jest.fn().mockResolvedValue(Ok(null)) }));
+    const r = await svc.resolveGate(999);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.code).toBe('NOT_FOUND');
   });
 });

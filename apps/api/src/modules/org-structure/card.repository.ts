@@ -320,4 +320,27 @@ export class CardRepository {
     `);
     return r.ok ? Ok(r.data.length) : Err(r.error);
   }
+
+  // ─── EP-ORG-003 card-gate (RBAC + salary from the card) ─────────────────────
+
+  /**
+   * The card-gate for a user: their card (org_functions via users.org_function_id), the card-derived
+   * RBAC tier, and salary eligibility (an active employee_cards link). Read-only, non-blocking — the
+   * card-LESS case is FLAGGED (principle 1: AI flags → human decides), NOT a login block (login is
+   * never gated here, so the admin/owner can never be locked out).
+   */
+  async resolveGate(userId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      SELECT u.id AS user_id, u.username, u.role,
+             u.org_function_id AS card_id, ofn.position_name AS card_name, ofn.rbac_tier AS rbac_tier,
+             (u.org_function_id IS NOT NULL AND ofn.id IS NOT NULL) AS has_card,
+             EXISTS (SELECT 1 FROM employees e JOIN employee_cards ec ON ec.employee_id = e.id
+                     WHERE e.user_id = u.id AND ec.is_active
+                       AND (ec.ended_at IS NULL OR ec.ended_at > now())) AS salary_eligible
+      FROM users u
+      LEFT JOIN org_functions ofn ON ofn.id = u.org_function_id AND ofn.deleted_at IS NULL
+      WHERE u.id = ${userId}
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
 }

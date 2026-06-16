@@ -106,6 +106,22 @@ export class CardService {
     return Ok(r.data);
   }
 
+  /**
+   * EP-ORG-003 card-gate: resolve a user's card-derived RBAC tier + salary eligibility.
+   * NON-BLOCKING — a card-less user is flagged (gated=true), never denied login (no login is gated here).
+   */
+  async resolveGate(userId: number): Promise<Result<Row>> {
+    const r = await this.repo.resolveGate(userId);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Foydalanuvchi #${userId} topilmadi`));
+    const hasCard = r.data.has_card === true;
+    return Ok({
+      ...r.data,
+      gated: !hasCard,
+      flag: hasCard ? null : "Kartaga ulanmagan — RBAC/oylik kartadan kelmaydi (admin biriktirsin)",
+    });
+  }
+
   /** Unassign an employee from a card (soft). If it was the primary card, repoints the org_function_id mirror. */
   async unassignEmployeeFromCard(
     cardId: number, employeeId: number,

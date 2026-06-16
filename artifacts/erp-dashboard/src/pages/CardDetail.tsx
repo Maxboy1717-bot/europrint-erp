@@ -283,15 +283,17 @@ export default function CardDetail() {
 }
 
 function SimpleTable({ cols, rows }: { cols: string[]; rows: string[][] }) {
+  const safeCols = Array.isArray(cols) ? cols : [];
+  const safeRows = Array.isArray(rows) ? rows : [];
   return (
     <div className="rounded-lg border border-border overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>{cols.map((c, i) => <TableHead key={i}>{c}</TableHead>)}</TableRow>
+          <TableRow>{safeCols.map((c, i) => <TableHead key={i}>{c}</TableHead>)}</TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((r, ri) => (
-            <TableRow key={ri}>{r.map((cell, ci) => <TableCell key={ci} className={ci === 0 ? "font-medium" : "text-muted-foreground"}>{cell}</TableCell>)}</TableRow>
+          {safeRows.map((r, ri) => (
+            <TableRow key={ri}>{(Array.isArray(r) ? r : []).map((cell, ci) => <TableCell key={ci} className={ci === 0 ? "font-medium" : "text-muted-foreground"}>{cell}</TableCell>)}</TableRow>
           ))}
         </TableBody>
       </Table>
