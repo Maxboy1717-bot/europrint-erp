@@ -99,6 +99,16 @@ export class GlPostingLogService {
    * Non-fatal: a missing account mapping (gl_account_mappings is owner/accountant data) just logs a
    * warning and posts nothing, rather than failing the approval or inventing accounts (Q-40).
    */
+  /**
+   * #03 HOP-5: auto-post a COMPLETED movement straight to the canonical `entries` ledger — idempotent
+   * (skips if document_type='pos_movement'+document_id already posted), mapping-driven, and INDEPENDENT
+   * of the gl_posting_log approve flow (that table is absent live). This is the event-driven path so a
+   * stock movement/sale produces a real ledger row without a manual approve click.
+   */
+  async postMovementToCanonicalLedger(movementId: number, postedBy: number): Promise<void> {
+    await this.postToLedger(movementId, postedBy);
+  }
+
   private async postToLedger(movementId: number, approvedBy: number): Promise<void> {
     const post = await this.repo.postMovementToLedger(movementId, approvedBy);
     if (post.ok && post.data.posted) {
