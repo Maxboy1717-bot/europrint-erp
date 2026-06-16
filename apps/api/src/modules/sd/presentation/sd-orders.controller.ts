@@ -155,18 +155,8 @@ export class SdOrdersController {
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
-
- @ApiOperation({ summary: 'Cancel order' })
- @ApiResponse({ status: 200, description: 'OK' })
- @ApiResponse({ status: 404, description: 'Not found' })
- // #04 SD fix: FE called PATCH /sd/orders/:id/cancel which did not exist (404). Route it through the
- // canonical status transition ('cancelled' is in VALID_TRANSITIONS) — reuse, no parallel cancel path.
- @Patch(':id/cancel')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async cancel(@Param('id', ParseIntPipe) id: number) {
-  const res = await this.commandBus.execute(new UpdateOrderStatusCommand(id, 'cancelled'));
-  return unwrapOrThrow(res);
- }
+ // NOTE: order-cancel is already handled by SdQuotationsController (svc.cancelOrder); the re-audit's
+ // "404" was wrong. No cancel handler added here to avoid a duplicate route. FE contract already satisfied.
 
  @ApiOperation({ summary: 'Bypass advance' })
  @ApiResponse({ status: 201, description: 'OK' })
