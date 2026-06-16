@@ -29,9 +29,20 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Inject } from '@nestjs/common';
-import { QUOTATION_BASE_NUMBER } from '@common/constants/app.constants';
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
-import { BULK_DISCOUNT_LARGE, BULK_DISCOUNT_SMALL } from '@common/constants/business.constants';
+
+/** EP-SD-037 price-engine input (carton dims + colours + qty). */
+export type PriceCalcInput = {
+  productType?: string;
+  paperType?: string;
+  lengthMm: number;
+  widthMm: number;
+  heightMm: number;
+  thicknessMm?: number;
+  printColors: number;
+  quantity: number;
+  isNewDie: boolean;
+};
 import { ISdQuotationsRepo, SD_QUOTATIONS_REPO } from '../domain/repositories/i-sd-quotations.repo';
 import {
   IQuotationRepo,
@@ -84,25 +95,63 @@ export class SdQuotationsService {
    * @param formulaId - reserved for future per-formula pricing
    * @returns Ok({ unit_price, total_price, discount_percent, ... })
    */
-  async calculatePrice(productId: number, quantity: number, formulaId: number | null) {
+  /**
+   * EP-ORG #04 / EP-SD-037 — REAL config-driven price engine (replaced the hardcoded
+   * QUOTATION_BASE_NUMBER stub). Reads the live `sd_price_formulas` row and builds the cost from the
+   * carton dimensions + colors + qty, then applies the configured markup + VAT. Every component is
+   * returned for the FE breakdown (paperCost/printCost/dieCost/productionCost/deliveryCost/costPrice).
+   */
+  async calculatePrice(input: PriceCalcInput) {
     return safeCall(async () => {
-      const base = QUOTATION_BASE_NUMBER;
-      // WHY ternary chain instead of an if/else block:
-      //   Reviewer rule 6 forbids controller-level branching; keeping this as
-      //   a single ternary keeps the function deterministic and small. The
-      //   strict-greater-than comparator means edge-case quantities (exactly
-      //   at a tier threshold) stay in the lower band — see module-level NOTE.
-      const discount = quantity > BULK_DISCOUNT_LARGE.minQty ? BULK_DISCOUNT_LARGE.rate : quantity > BULK_DISCOUNT_SMALL.minQty ? BULK_DISCOUNT_SMALL.rate : 0;
-      const unitPrice = base * (1 - discount);
+      const f = await this.quotationRepo.getPriceSettings();
+      const cfg = (f.ok ? f.data : null) ?? {};
+      const num = (v: unknown, d = 0): number => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+      const round2 = (x: number): number => Math.round(x * 100) / 100;
+
+      const qty = Math.max(1, num(input.quantity, 1));
+      const L = num(input.lengthMm), W = num(input.widthMm), H = num(input.heightMm);
+      const colors = Math.max(0, num(input.printColors));
+
+      // RSC carton blank area per unit (m²): blank = (2*(L+W)+glueFlap) × (H+W). Real geometry, not a constant.
+      const GLUE_FLAP_MM = 40;
+      const MM2_PER_M2 = 1_000_000;
+      const areaPerUnitM2 = ((2 * (L + W) + GLUE_FLAP_MM) * (H + W)) / MM2_PER_M2;
+
+      const paperRates: Record<string, number> = {
+        'B-flute': num(cfg.paper_b_price), 'C-flute': num(cfg.paper_c_price),
+        'BC-flute': num(cfg.paper_bc_price), 'E-flute': num(cfg.paper_e_price),
+      };
+      const paperRate = paperRates[input.paperType ?? 'B-flute'] ?? num(cfg.paper_b_price);
+      const paperCost = areaPerUnitM2 * paperRate * qty;
+
+      // Print = plates per colour (one-time klishe) + the per-job run rate for that colour count.
+      const printRunRate = colors >= 4 ? num(cfg.print_4color_price)
+        : colors >= 2 ? num(cfg.print_2color_price)
+        : colors >= 1 ? num(cfg.print_1color_price) : 0;
+      const printCost = colors > 0 ? num(cfg.plate_cost_per_color) * colors + printRunRate : 0;
+
+      // Die/shtamp: new vs existing (EP-SD-042/125 klishe ownership).
+      const dieCost = input.isNewDie ? num(cfg.die_cost_new) : num(cfg.die_cost_existing);
+
+      // Labour throughput assumption: 1 labour-hour per UNITS_PER_LABOR_HOUR units.
+      const UNITS_PER_LABOR_HOUR = 1000;
+      const productionCost = num(cfg.hourly_labor_rate) * (qty / UNITS_PER_LABOR_HOUR);
+
+      const deliveryCost = num(cfg.delivery_base_cost);
+
+      const costPrice = paperCost + printCost + dieCost + productionCost + deliveryCost;
+      const markupPercent = num(cfg.default_markup_percent, 35);
+      const vatRate = num(cfg.vat_rate, 12);
+      const priceBeforeVat = costPrice * (1 + markupPercent / 100);
+      const totalPrice = priceBeforeVat * (1 + vatRate / 100);
+      const unitPrice = qty > 0 ? totalPrice / qty : 0;
+
       return {
-        product_id: productId,
-        quantity,
-        formula_id: formulaId,
-        unit_price: unitPrice,
-        total_price: unitPrice * quantity,
-        discount_percent: discount * 100,
-        currency: 'UZS',
-        calculated_at: _time.now(),
+        paperCost: round2(paperCost), printCost: round2(printCost), dieCost: round2(dieCost),
+        productionCost: round2(productionCost), deliveryCost: round2(deliveryCost),
+        costPrice: round2(costPrice), unitPrice: round2(unitPrice), totalPrice: round2(totalPrice),
+        margin: round2(totalPrice - costPrice), markupPercent, vatRate,
+        areaPerUnitM2: round2(areaPerUnitM2), quantity: qty, currency: 'UZS', calculated_at: _time.now(),
       };
     });
   }

@@ -104,10 +104,18 @@ export class SdQuotationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('calculate-price') @UsePipes(new ZodValidationPipe(SdCalculatePriceSchema))
   async calculatePrice(@Body() body: SdCalculatePriceDto) {
-    const r = await this.svc.calculatePrice(
-      safeInt(body.product_id, 0), safeInt(body.quantity, 1),
-      body.formula_id ? safeInt(body.formula_id, 0) : null,
-    );
+    // EP-SD-037: pass carton dims/colours/qty to the real price engine (reads sd_price_formulas).
+    const r = await this.svc.calculatePrice({
+      productType: body.productType,
+      paperType: body.paperType,
+      lengthMm: Number(body.lengthMm ?? 0),
+      widthMm: Number(body.widthMm ?? 0),
+      heightMm: Number(body.heightMm ?? 0),
+      thicknessMm: body.thicknessMm != null ? Number(body.thicknessMm) : undefined,
+      printColors: Number(body.printColors ?? 0),
+      quantity: Number(body.quantity ?? 1),
+      isNewDie: body.isNewDie === true,
+    });
     assertOk(r);
     return r.data;
   }

@@ -29,9 +29,19 @@ export const SdCreateContractSchema = z.object({
 }).passthrough();
 export type SdCreateContractDto = z.infer<typeof SdCreateContractSchema>;
 
+// EP-SD-037: real price-engine input — carton dims + paper + colours + qty (FE calcForm shape).
+// product_id/formula_id kept optional for back-compat. coerce so '300'/300 both parse.
 export const SdCalculatePriceSchema = z.object({
-  product_id: z.union([z.string().min(1), z.number().int().positive()]),
-  quantity:   z.union([z.string().min(1), z.number().positive()]),
-  formula_id: z.union([z.string(), z.number().int().positive()]).optional(),
-});
+  productType:  z.string().max(50).optional(),
+  paperType:    z.string().max(50).optional(),
+  lengthMm:     z.coerce.number().nonnegative().default(0),
+  widthMm:      z.coerce.number().nonnegative().default(0),
+  heightMm:     z.coerce.number().nonnegative().default(0),
+  thicknessMm:  z.coerce.number().nonnegative().optional(),
+  printColors:  z.coerce.number().int().nonnegative().default(0),
+  quantity:     z.coerce.number().positive().default(1),
+  isNewDie:     z.coerce.boolean().optional().default(false),
+  product_id:   z.union([z.string(), z.number()]).optional(),
+  formula_id:   z.union([z.string(), z.number()]).optional(),
+}).passthrough();
 export type SdCalculatePriceDto = z.infer<typeof SdCalculatePriceSchema>;
