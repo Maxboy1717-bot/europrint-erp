@@ -133,7 +133,7 @@ export class SdOrdersController {
    validated.sampleFlag,
    user.id,
    undefined, // dealId
-   undefined, // customerId
+   validated.customerId, // #03 HOP-0: customer link (was hardcoded undefined → customer_id NULL)
    validated.items,
   );
 

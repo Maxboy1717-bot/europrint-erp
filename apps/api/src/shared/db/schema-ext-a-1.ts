@@ -136,6 +136,7 @@ export const sd_sales_orders = pgTable('sd_sales_orders', {
   order_number:   text('order_number'),
   status:         text('status').default('pending'),
   company_id:     integer('company_id'),
+  customer_id:    integer('customer_id'),
   total_amount:   numeric('total_amount', { precision: 15, scale: 2 }),
   advance_required: integer('advance_required').default(70),
   advance_paid:   numeric('advance_paid', { precision: 15, scale: 2 }).default('0'),

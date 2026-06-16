@@ -40,6 +40,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         order.getOrderNumber(), order.getStatus(), order.getCompanyId(),
         order.getTotalAmount(), (castTo<Row>(order))['createdBy'],
         tx,
+        order.getCustomerId() ?? null, // #03 HOP-0: carry the customer link into sales_orders
       );
       // Carry the DB-generated serial id back onto the aggregate so the command
       // handler (and the outbox entries it builds) reference the real order id

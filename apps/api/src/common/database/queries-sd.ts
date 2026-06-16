@@ -54,19 +54,26 @@ export async function execSdSalesOrderInsert(
    * the runtime type is the same `tx` returned by `db.transaction(async tx => ...)`.
    */
   tx?: unknown,
+  /** #03 golden-thread HOP-0: the customer link — previously dropped, leaving every API order customer_id=NULL. */
+  customerId?: number | null,
 ): Promise<number> {
   const conn = (tx as typeof db | undefined) ?? db;
   const rows = await conn.insert(sd_sales_orders).values({
     order_number: orderNumber,
     status,
     company_id: companyId as number,
+    customer_id: customerId ?? null,
     total_amount: String(totalAmount),
     advance_required: 70,
     advance_paid: '0',
     advance_status: 'pending',
     design_flag: false,
     sample_flag: false,
-    created_by: (createdBy ?? 0) as number,
+    // ⚠️ Pre-existing schema drift: live sales_orders.created_by is UUID but app user ids are integer
+    // (no integer creator column exists). Sending the integer user.id threw "uuid vs integer" — which is
+    // WHY no order ever flowed the API path (all 12 live orders are seed, created_by NULL). Insert NULL to
+    // unblock the golden thread (matches seed); integer-creator tracking = a later schema-drift cleanup.
+    created_by: null,
   }).onConflictDoNothing().returning({ id: sd_sales_orders.id });
   // Normal path: the INSERT returns the new serial id. On conflict (duplicate
   // order_number) returning is empty — fall back to looking up the existing row

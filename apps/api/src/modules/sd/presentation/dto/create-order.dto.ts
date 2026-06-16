@@ -16,6 +16,8 @@ export const OrderLineItemSchema = z.object({
 
 export const CreateOrderDtoSchema = z.object({
   companyId: z.number().int().positive('Company ID must be positive'),
+  // #03 golden-thread HOP-0: the customer link (was dropped → orders had customer_id=NULL).
+  customerId: z.number().int().positive('Customer ID must be positive').optional(),
   totalAmount: z.number().positive('Total amount must be positive'),
   currency: z.string().length(3).toUpperCase().default('USD'),
   designFlag: z.boolean().default(false),
