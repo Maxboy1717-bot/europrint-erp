@@ -156,6 +156,18 @@ export class SdOrdersController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Cancel order' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ // #04 SD fix: FE called PATCH /sd/orders/:id/cancel which did not exist (404). Route it through the
+ // canonical status transition ('cancelled' is in VALID_TRANSITIONS) — reuse, no parallel cancel path.
+ @Patch(':id/cancel')
+ @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ async cancel(@Param('id', ParseIntPipe) id: number) {
+  const res = await this.commandBus.execute(new UpdateOrderStatusCommand(id, 'cancelled'));
+  return unwrapOrThrow(res);
+ }
+
  @ApiOperation({ summary: 'Bypass advance' })
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })

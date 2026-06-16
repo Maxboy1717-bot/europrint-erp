@@ -15,9 +15,9 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { sd_contracts } from '@shared/db';
-import { eq, desc } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'FINANCE_MANAGER', 'ACCOUNTANT'];
 
@@ -38,7 +38,11 @@ export class SdContractsController {
     @Query('status') status?: string,
   ) {
     try {
-      let rows = await db.select().from(sd_contracts).orderBy(desc(sd_contracts.created_at));
+      // #04 SD fix: the Drizzle sd_contracts stub declares phantom columns (start_date/end_date/
+      // total_amount/payment_terms) absent in live DB → db.select() threw 500. Raw SELECT * returns the
+      // real columns only; the mapping below maps missing ones to null (honest, not fake).
+      const res = await runQuery<Record<string, unknown>>(sql`SELECT * FROM sd_contracts ORDER BY created_at DESC`);
+      let rows = (Array.isArray(res.rows) ? res.rows : []) as Array<Record<string, any>>;
       if (search) {
         const q = search.toLowerCase();
         rows = rows.filter((r) =>

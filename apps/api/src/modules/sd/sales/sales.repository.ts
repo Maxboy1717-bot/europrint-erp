@@ -51,8 +51,8 @@ export class SalesRepository {
   async getCommissionCalculations(managerId: number | null): Promise<Result<Row[]>>  {
   try {
       return managerId
-        ? exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * ${COMMISSION_RATE})::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to = e.id AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.id = ${managerId} AND e.department = 'Sales' GROUP BY e.id, e.full_name`)
-        : exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * ${COMMISSION_RATE})::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to = e.id AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.department = 'Sales' GROUP BY e.id, e.full_name`);  } catch (_e) {
+        ? exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * ${COMMISSION_RATE})::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to::text = e.id::text AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.id = ${managerId} AND e.department = 'Sales' GROUP BY e.id, e.full_name`)
+        : exec(sql`SELECT e.id, e.full_name, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_sales, (COALESCE(SUM(o.total_amount), 0) * ${COMMISSION_RATE})::numeric(15,2) AS commission_5pct, COUNT(DISTINCT o.id)::int AS order_count FROM employees e LEFT JOIN sales_orders o ON o.assigned_to::text = e.id::text AND o.status IN ('delivered', 'completed') AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.department = 'Sales' GROUP BY e.id, e.full_name`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -69,7 +69,7 @@ export class SalesRepository {
 
   async getLeaderboard(limit: number): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT e.id, e.full_name, e.position, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_revenue, COUNT(DISTINCT o.id)::int AS order_count, RANK() OVER (ORDER BY COALESCE(SUM(o.total_amount), 0) DESC)::int AS rank FROM employees e LEFT JOIN sales_orders o ON o.assigned_to = e.id AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.department = 'Sales' GROUP BY e.id, e.full_name, e.position ORDER BY total_revenue DESC LIMIT ${limit}`);  } catch (_e) {
+      return exec(sql`SELECT e.id, e.full_name, e.position, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_revenue, COUNT(DISTINCT o.id)::int AS order_count, RANK() OVER (ORDER BY COALESCE(SUM(o.total_amount), 0) DESC)::int AS rank FROM employees e LEFT JOIN sales_orders o ON o.assigned_to::text = e.id::text AND o.created_at >= DATE_TRUNC('month', NOW()) WHERE e.department = 'Sales' GROUP BY e.id, e.full_name, e.position ORDER BY total_revenue DESC LIMIT ${limit}`);  } catch (_e) {
     return Err(String(_e));
   }
 
