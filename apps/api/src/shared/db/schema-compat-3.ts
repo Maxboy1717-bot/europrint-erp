@@ -128,7 +128,8 @@ export const notifications = pgTable('notifications', {
   id: integer('id').primaryKey(),
   userId: text('user_id').notNull(),
   title: text('title').notNull(),
-  message: text('message'),
+  body: text('body'),         // live column is NOT NULL — was missing from this Drizzle def, so every
+  message: text('message'),   // notification insert omitted it -> 23502. Now settable.
   type: text('type').notNull().default('info'),
   isRead: boolean('is_read').default(false),
   entityType: text('entity_type'),

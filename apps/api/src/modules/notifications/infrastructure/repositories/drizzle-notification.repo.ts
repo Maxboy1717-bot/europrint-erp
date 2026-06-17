@@ -101,6 +101,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
       .values({
         userId: String(notification.userId),
         title: notification.title,
+        body: notification.body,    // live NOT NULL — must be set (was omitted -> 23502)
         message: notification.body,
         type: notification.type,
         isRead: notification.isRead,

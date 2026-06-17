@@ -35,7 +35,10 @@ export class AlertsService {
 
   async create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const values = { ...dto, ...(createdBy ? { createdBy } : {}) } as typeof notifications.$inferInsert;
+      // notifications.body is NOT NULL in the live DB — guarantee it (fall back to message/title) so the
+      // insert can't 23502 when the caller only sent message/title.
+      const body = dto.body ?? dto.message ?? dto.title ?? '';
+      const values = { ...dto, body, ...(createdBy ? { createdBy } : {}) } as typeof notifications.$inferInsert;
       return this.repo.create(values);
     });
   }
