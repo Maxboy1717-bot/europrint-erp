@@ -16,19 +16,25 @@ export interface GlEntry {
   description:   string;
 }
 
+// #10 GL-unify (P2): corrected to LIVE Uzbek BHMS codes (table `accounts`). This POS auto-posting feeds
+// the `pos_gl_postings` SUBLEDGER (not the canonical `entries`), but it was using codes that don't exist
+// (6010/4010/9110/1020/1030) and 9430 = Amortizatsiya (depreciation) for damage. FLAGGED for owner: the
+// chart has no distinct quarantine-inventory or tools/MRO account → both map to 1010 (Xom ashyo); and
+// INTERNAL_TRANSFER between same-class warehouses has no GL value change (1010↔1010 nets to zero — a
+// harmless wash; ideally it would post no entry at all).
 const GL_ACCOUNTS = {
-  WAREHOUSE_RM:        '1010',
-  WAREHOUSE_WIP:       '1020',
-  WAREHOUSE_FG:        '1030',
-  WAREHOUSE_QC:        '1040',
-  WAREHOUSE_TOOLS:     '1050',
-  ACCOUNTS_PAYABLE:    '6010',
-  ACCOUNTS_RECEIVABLE: '4010',
-  REVENUE:             '9010',
-  COGS:                '9110',
-  DEPT_EXPENSE:        '2010',
-  QC_EXPENSE:          '9410',
-  DAMAGE_EXPENSE:      '9430',
+  WAREHOUSE_RM:        '1010', // Xom ashyo va materiallar
+  WAREHOUSE_WIP:       '2010', // Asosiy ishlab chiqarish (WIP)
+  WAREHOUSE_FG:        '2810', // Tayyor mahsulot
+  WAREHOUSE_QC:        '1010', // quarantine RM → Xom ashyo (no distinct quarantine account — FLAGGED)
+  WAREHOUSE_TOOLS:     '1010', // no distinct tools/MRO inventory account — FLAGGED
+  ACCOUNTS_PAYABLE:    '6000', // Yetkazib beruvchilarga to'lovlar (Kreditorlar)
+  ACCOUNTS_RECEIVABLE: '4000', // Mijozlardan olinadigan summalar (Debitorlar)
+  REVENUE:             '9010', // Tayyor mahsulot sotuvidan tushum
+  COGS:                '9100', // Sotilgan mahsulot tannarxi
+  DEPT_EXPENSE:        '2010', // Asosiy ishlab chiqarish (material issued to production / WIP)
+  QC_EXPENSE:          '9500', // Boshqa operatsion xarajatlar (no distinct QC-expense account)
+  DAMAGE_EXPENSE:      '9500', // Boshqa operatsion xarajatlar (shortage/damage write-off — NOT depreciation)
 } as const;
 
 @Injectable()
