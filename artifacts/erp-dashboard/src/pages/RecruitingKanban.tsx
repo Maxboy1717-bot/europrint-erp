@@ -6,9 +6,9 @@ import { useChatStore } from "@/store/chatStore";
 import { getSharedSocket } from "@/hooks/chat/useChatSocket";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { EPPageHeader, EPKpiCard } from "@/components/ep";
 import {
-  Briefcase, TrendingUp, Users, CheckCircle, CalendarDays,
+  Briefcase, TrendingUp, Users, CheckCircle, XCircle,
+  AlertTriangle, Bot, CalendarDays,
 } from "lucide-react";
 import { VacancyPortretDialog } from "./VacancyPortretDialog";
 import { ProductivityInterviewDialog } from "./ProductivityInterviewDialog";
@@ -20,7 +20,7 @@ import { OnboardingRoadmapDialog } from "@/components/hr/OnboardingRoadmapDialog
 import {
   type FunnelStage,
   STAGES, TERMINAL_STAGES,
-  HCMethodologyBanner,
+  StatCard, HCMethodologyBanner,
 } from "@/components/recruiting/helpers";
 import type { PipelineEntry, Vacancy, CreateVacancyResponse, AIInterviewSession } from "@/components/recruiting/types";
 import { KanbanBoardGrid } from "@/components/recruiting/KanbanBoardGrid";
@@ -190,49 +190,48 @@ export default function RecruitingKanban() {
 
   return (
     <div className="flex-1 overflow-auto bg-surface p-6 flex flex-col h-full">
-      <EPPageHeader
-        title="Yollash Kanban"
-        subtitle="HR Capital 7-bosqich metodologiyasi · Vakansiya muddatiga asoslangan"
-        actions={
-          <RecruitingHeaderActions
-            urgentVacancyCount={urgentVacancies.length}
-            search={search}
-            setSearch={setSearch}
-            createVacancyOpen={createVacancyOpen}
-            setCreateVacancyOpen={setCreateVacancyOpen}
-            newVacancyForm={newVacancyForm}
-            setNewVacancyForm={setNewVacancyForm}
-            createVacancyMutation={createVacancyMutation}
-            addOpen={addOpen}
-            setAddOpen={setAddOpen}
-            newForm={newForm}
-            setNewForm={setNewForm}
-            openVacancies={openVacancies}
-            createMutation={createMutation}
-          />
-        }
-      />
-
-      {/* Compact KPI strip — 5 key metrics, EP tokens (Qabul=success, rest uniform) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 my-4">
-        <EPKpiCard icon={Users} iconBg="hr" label={tLabel("recruiting.stats.total_candidates", "Jami nomzodlar")} value={entries.length} />
-        <EPKpiCard icon={TrendingUp} iconBg="hr" label={tLabel("recruiting.stats.active_processes", "Faol jarayonlar")} value={activeCount} />
-        <EPKpiCard icon={CheckCircle} iconBg="var(--ep-green)" label={tLabel("recruiting.stats.hired", "Qabul qilindi")} value={hiredCount} />
-        <EPKpiCard icon={TrendingUp} iconBg="hr" label={tLabel("recruiting.stats.conversion", "Samaradorlik")} staticValue={`${conversionRate}%`} />
-        <EPKpiCard icon={Briefcase} iconBg="hr" label={tLabel("recruiting.stats.open_vacancies", "Ochiq vakansiya")} value={openVacancies.length} />
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div>
+          <h1 className="text-4xl font-light tracking-tight text-on-surface">Yollash <span className="font-bold text-primary">Kanban</span></h1>
+          <p className="text-on-surface-variant -mt-1">HR Capital 7-bosqich metodologiyasi · Vakansiya muddatiga asoslangan</p>
+        </div>
+        <RecruitingHeaderActions
+          urgentVacancyCount={urgentVacancies.length}
+          search={search}
+          setSearch={setSearch}
+          createVacancyOpen={createVacancyOpen}
+          setCreateVacancyOpen={setCreateVacancyOpen}
+          newVacancyForm={newVacancyForm}
+          setNewVacancyForm={setNewVacancyForm}
+          createVacancyMutation={createVacancyMutation}
+          addOpen={addOpen}
+          setAddOpen={setAddOpen}
+          newForm={newForm}
+          setNewForm={setNewForm}
+          openVacancies={openVacancies}
+          createMutation={createMutation}
+        />
       </div>
 
-      {/* One compact banner row — methodology + live alerts (both collapsed by default) */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <HCMethodologyBanner />
-        <HRAlertBanner className="flex-1 min-w-[240px]" />
+      <HCMethodologyBanner />
+
+      <div className="flex flex-wrap gap-3 mb-4">
+        <StatCard icon={Users} label={tLabel("recruiting.stats.total_candidates", "Jami nomzodlar")} value={entries.length} />
+        <StatCard icon={TrendingUp} label={tLabel("recruiting.stats.active_processes", "Faol jarayonlar")} value={activeCount} />
+        <StatCard icon={CheckCircle} label={tLabel("recruiting.stats.hired", "Qabul qilindi")} value={hiredCount} color="bg-green-500" />
+        <StatCard icon={XCircle} label={tLabel("recruiting.stats.rejected", "Rad etildi")} value={rejectedCount} color="bg-red-500" />
+        <StatCard icon={TrendingUp} label={tLabel("recruiting.stats.conversion", "Samaradorlik")} value={`${conversionRate}%`} />
+        <StatCard icon={Briefcase} label={tLabel("recruiting.stats.open_vacancies", "Ochiq vakansiya")} value={openVacancies.length} color="bg-indigo-500" />
+        <StatCard icon={AlertTriangle} label={tLabel("recruiting.stats.urgent", "Shoshilinch")} value={urgentVacancies.length} color="bg-red-500" />
+        <StatCard icon={Bot} label={tLabel("recruiting.stats.ai_sessions", "AI Sessiyalar")} value={aiSessions.length} color="bg-violet-500" />
+        <StatCard icon={CalendarDays} label={tLabel("recruiting.stats.probation", "Sinov davri")} value={counts.PROBATION ?? 0} color="bg-emerald-500" />
       </div>
 
       <div className="flex items-center gap-2 mb-3">
-        <Button size="sm" variant={showProbationOnly ? "default" : "outline"} onClick={() => setShowProbationOnly(p => !p)} data-testid="button-filter-probation">
+        <Button size="sm" variant={showProbationOnly ? "default" : "outline"} onClick={() => setShowProbationOnly(p => !p)} className={showProbationOnly ? "bg-emerald-600 hover:bg-emerald-700 border-emerald-600" : "border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"} data-testid="button-filter-probation">
           <CalendarDays className="w-3.5 h-3.5 mr-1" />Sinov Davri ({(counts.PROBATION ?? 0) + (counts.SINOV_COMPLETE ?? 0)})
         </Button>
-        {showProbationOnly && <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">Faqat sinov davrida</span>}
+        {showProbationOnly && <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2 py-0.5">Faqat sinov davrida</span>}
       </div>
 
       <VacancyFilterPanel
@@ -248,6 +247,8 @@ export default function RecruitingKanban() {
         onOpenVacancyChat={handleOpenVacancyChat}
         openingContextRoom={openingContextRoom}
       />
+
+      <HRAlertBanner className="mb-3" />
 
       <KanbanBoardGrid
         dnd={dnd}
