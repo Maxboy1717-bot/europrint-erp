@@ -76,7 +76,14 @@ export class DrizzleDefectRepository implements IQcDefectRepository {
 
   async saveDefect(defect: Defect): Promise<Result<Defect>> {
     try {
-      await db.insert(qcDefects).values({ id: defect.id, inspectionId: defect.inspectionId, productionOrderId: defect.productionOrderId, workCenterId: defect.workCenterId, defectCode: defect.defectCode, description: defect.description, severity: defect.severity, status: defect.status, quantity: defect.quantity.toString(), unit: defect.unit, reportedBy: defect.reportedBy, resolvedBy: defect.resolvedBy, resolvedAt: defect.resolvedAt, resolution: defect.resolution, createdAt: defect.createdAt, updatedAt: defect.updatedAt });
+      // Live qc_defects.id is an INTEGER sequence (Drizzle drift declares text/uuid); the handler hands
+      // a random STRING id, which cast-crashed every report-defect (22P02). Let the sequence assign id.
+      // production_order_id / work_center_id are uuid columns but the system's PO/WC ids are integers,
+      // so they can't be stored here -- the defect links via inspection_id (integer). Raw SQL, no cast.
+      const inspectionId = defect.inspectionId != null && String(defect.inspectionId) !== '' ? Number(defect.inspectionId) : null;
+      await db.execute(sql`
+        INSERT INTO qc_defects (inspection_id, defect_code, description, severity, status, quantity, unit, reported_by, created_at, updated_at)
+        VALUES (${inspectionId}, ${defect.defectCode}, ${defect.description}, ${defect.severity}, ${defect.status}, ${defect.quantity}, ${defect.unit}, ${defect.reportedBy}, NOW(), NOW())`);
       return { ok: true as const, data: defect };
     } catch (error: unknown) {
       this.logger.error('Failed to save defect');
