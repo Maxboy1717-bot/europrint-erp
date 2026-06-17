@@ -117,4 +117,18 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
       return Err(AppErr('DB_ERROR', `GL_JOURNAL_INSERT_FAILED: ${String(e)}`));
     }
   }
+
+  async findEntryIdByReference(reference: string): Promise<Result<number | null>> {
+    try {
+      // entry_number is `${reference}-${ts}-${n}`; the trailing '-' separator makes the prefix exact
+      // (SI-123-% does NOT match SI-1234-...). Returns the earliest entry id for this business event.
+      const res = await runQuery<{ id: number }>(
+        sql`SELECT id FROM entries WHERE entry_number LIKE ${reference + '-%'} ORDER BY id LIMIT 1`,
+      );
+      const row = Array.isArray(res.rows) ? res.rows[0] : undefined;
+      return Ok(row ? Number(row.id) : null);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `GL_REF_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
 }

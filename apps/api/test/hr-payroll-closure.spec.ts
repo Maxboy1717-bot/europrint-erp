@@ -159,6 +159,15 @@ describe('PayrollClosureService — T7.4 domain', () => {
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error.code).toBe('VALIDATION');
     });
+
+    it('H2: a 0.2 imbalance (passed the old 0.5 tol) is now rejected at the engine 0.01 tol', () => {
+      const r = svc.buildJournal(
+        { rowCount: 1, totalBase: 100.2, totalBonus: 0, totalDeductions: 0, totalNet: 100 },
+        '2026-05',
+      );
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.code).toBe('VALIDATION');
+    });
   });
 
   describe('validatePeriodDates', () => {
@@ -190,7 +199,6 @@ describe('PayrollService.closePeriod — T7.4 orchestration', () => {
     listRowsByPeriod: jest.Mock;
     markPeriodClosed: jest.Mock;
     markRowsPosted: jest.Mock;
-    insertGlJournalLines: jest.Mock;
   };
   let repo: RepoMock;
   let gl: { postJournal: jest.Mock };
@@ -210,7 +218,6 @@ describe('PayrollService.closePeriod — T7.4 orchestration', () => {
       listRowsByPeriod: jest.fn(),
       markPeriodClosed: jest.fn(),
       markRowsPosted: jest.fn(),
-      insertGlJournalLines: jest.fn(),
     };
     gl = { postJournal: jest.fn() };
     emitter = new EventEmitter2();
@@ -256,6 +263,19 @@ describe('PayrollService.closePeriod — T7.4 orchestration', () => {
       'payroll.period.closed',
       expect.objectContaining({ periodId: 1 }),
     );
+  });
+
+  it('H3: GL post fails → Err and period NOT marked closed (stays open, retryable)', async () => {
+    repo.findPeriodById.mockResolvedValueOnce(Ok(validPeriod));
+    repo.listRowsByPeriod.mockResolvedValueOnce(Ok([validRow]));
+    gl.postJournal.mockResolvedValueOnce(Err('GL down')); // engine fails
+
+    const r = await svc.closePeriod(1);
+    expect(r.ok).toBe(false);
+    // GL ran before the close, so the period was never closed → safe to retry (H1 makes retry idempotent)
+    expect(gl.postJournal).toHaveBeenCalled();
+    expect(repo.markPeriodClosed).not.toHaveBeenCalled();
+    expect(repo.markRowsPosted).not.toHaveBeenCalled();
   });
 
   it('period already closed → CONFLICT', async () => {

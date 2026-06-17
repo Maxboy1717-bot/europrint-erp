@@ -31,6 +31,12 @@ export interface IGlPostingRepository {
     description?: string;
     createdBy?: number;
   }>): Promise<Result<number>>;
+
+  /**
+   * Idempotency lookup: the first entries.id already posted for a business reference (entry_number
+   * prefix `${reference}-%`), or null if none. Lets the engine skip a duplicate post for the same event.
+   */
+  findEntryIdByReference(reference: string): Promise<Result<number | null>>;
 }
 
 export const GL_POSTING_REPO = Symbol('IGlPostingRepository');

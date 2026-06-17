@@ -76,6 +76,16 @@ export class PayrollService {
     const journalR = this.closure.buildJournal(totals, period.periodName ?? `#${periodId}`);
     if (!journalR.ok) return journalR as unknown as Result<never>;
 
+    // H3: post the GL journal FIRST (through the ONE engine — resolves codes → accounts.id, balanced
+    // pair-rows into entries._id). Only mark the period closed AFTER the GL succeeds, so a GL failure
+    // leaves the period OPEN (retryable). H1 idempotency on `PR-${periodId}` makes a retry safe (no
+    // double-post). Replaces the old insertGlJournalLines text-path (same account both sides, NULL _id).
+    const glLines: JournalLine[] = (Array.isArray(journalR.data) ? journalR.data : []).map((l) => ({
+      accountCode: l.account, accountName: l.memo, debit: l.debit, credit: l.credit,
+    }));
+    const glR = await this.gl.postJournal(glLines, `PR-${periodId}`);
+    if (!glR.ok) return glR as unknown as Result<never>;
+
     const closedR = await this.hrPayrollRepo.markPeriodClosed(periodId, totals);
     if (!closedR.ok) return closedR as unknown as Result<never>;
 
@@ -83,15 +93,6 @@ export class PayrollService {
     if (!postedR.ok) {
       this.logger.warn(`markRowsPosted xatolik: ${postedR.error.message}`);
     }
-
-    // Post the balanced payroll journal through the ONE engine (resolves codes → accounts.id, writes
-    // balanced pair-rows into entries._id) — replaces the old insertGlJournalLines text-path that wrote
-    // the same account on both sides with NULL _id (self-canceling, invisible to id-based reports).
-    const glLines: JournalLine[] = (Array.isArray(journalR.data) ? journalR.data : []).map((l) => ({
-      accountCode: l.account, accountName: l.memo, debit: l.debit, credit: l.credit,
-    }));
-    const glR = await this.gl.postJournal(glLines, `PR-${periodId}`);
-    if (!glR.ok) return glR as unknown as Result<never>;
 
     // Per-employee domain events: hydrate a PayrollRecord aggregate for each
     // row, transition it to `posted`, drain events and forward through the

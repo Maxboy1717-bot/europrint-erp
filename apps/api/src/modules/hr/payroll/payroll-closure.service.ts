@@ -57,6 +57,9 @@ export const PAYROLL_GL_ACCOUNTS = {
   LIABILITY_TAXES: '6520', // INPS, JSHD (deductions) — LIABILITY
 } as const;
 
+/** Max allowed debit/credit imbalance — matches GlPostingService.createJournalEntry (engine). */
+const GL_BALANCE_TOLERANCE = 0.01;
+
 @Injectable()
 export class PayrollClosureService {
   /** Sum up payroll rows into period totals; ignores nulls/NaN. */
@@ -138,7 +141,9 @@ export class PayrollClosureService {
     const sumDebit  = lines.reduce((s, l) => s + l.debit, 0);
     const sumCredit = lines.reduce((s, l) => s + l.credit, 0);
     const diff = Math.abs(sumDebit - sumCredit);
-    if (diff > 0.5) {
+    // H2: tolerance aligned to the engine (GlPostingService rejects diff > 0.01). A 0.01–0.5 rounding
+    // imbalance used to pass here but fail the engine AFTER the period was closed; now caught up front.
+    if (diff > GL_BALANCE_TOLERANCE) {
       return Err(AppErr('VALIDATION', `GL jurnal balansda emas: debit ${sumDebit} != credit ${sumCredit}`));
     }
     return Ok(lines);

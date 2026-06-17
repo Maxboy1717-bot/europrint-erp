@@ -5,7 +5,7 @@
 
 import { GL } from "../constants/gl-accounts.constants";
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { Result, Err } from '@common/result';
+import { Result, Err, Ok } from '@common/result';
 import { IGlPostingRepository, GL_POSTING_REPO } from '../repositories/i-gl-posting.repo';
 
 export interface JournalLine {
@@ -92,6 +92,15 @@ export class GlPostingService {
   }
 
   private async createJournalEntry(lines: JournalLine[], reference: string): Promise<Result<number>> {
+    // H1 idempotency: if this business reference (e.g. SI-123, PR-7) was already posted, return the
+    // existing entry id WITHOUT inserting again. Covers every caller (invoice/payroll/GR/VP/MC + the
+    // finance-gl admin endpoints) at the source — closes the double-post window between post + status-flip.
+    const already = await this.glPostingRepo.findEntryIdByReference(reference);
+    if (already.ok && already.data) {
+      this.logger.debug(`Journal already posted for ${reference} (idempotent) — entry id=${already.data}`);
+      return Ok(already.data);
+    }
+
     const safeLines = Array.isArray(lines) ? lines : [];
     const debits = safeLines.filter((l) => l.debit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.debit }));
     const credits = safeLines.filter((l) => l.credit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.credit }));
