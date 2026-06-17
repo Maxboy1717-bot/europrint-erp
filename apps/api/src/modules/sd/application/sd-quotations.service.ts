@@ -66,10 +66,9 @@ export class SdQuotationsService {
   }
 
   /**
-   * EP-ORG #04 / EP-SD-037 — REAL config-driven price engine (replaced the hardcoded
-   * QUOTATION_BASE_NUMBER stub). Reads the live `sd_price_formulas` row and builds the cost from the
-   * carton dimensions + colors + qty, then applies the configured markup + VAT. Every component is
-   * returned for the FE breakdown (paperCost/printCost/dieCost/productionCost/deliveryCost/costPrice).
+   * EP-SD-037 — REAL config-driven price engine. Reads the live `sd_price_formulas` row and builds the
+   * cost from the carton dimensions + colors + qty, then applies the configured markup + VAT. Every
+   * component is returned for the FE breakdown (paperCost/printCost/dieCost/productionCost/deliveryCost).
    */
   async calculatePrice(input: PriceCalcInput) {
     return safeCall(async () => {

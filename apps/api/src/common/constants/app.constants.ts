@@ -128,7 +128,6 @@ export const HR_SALARY_MEDIUM_UZS = 3_000_000;        // O'rtacha maosh chegaras
 export const DELIVERY_FREE_THRESHOLD_UZS = 500_000;   // Bepul yetkazib berish
 export const DELIVERY_FEE_UZS = 25_000;               // Standart yetkazib berish
 export const SENSOR_MAX_FETCH = 9_999;                // IoT sensor so'rovi limiti
-export const QUOTATION_BASE_NUMBER = 100_000;         // SD taklifnoma bazaviy raqam
 export const SIDECAR_PORT = 1_106;                    // Replit object storage port
 export const MM_TO_PT_RATIO = 2.83_46;               // Millimetr → PostScript nuqta
 
