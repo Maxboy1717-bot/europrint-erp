@@ -30,6 +30,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { AishaConfig } from '../../config/aisha.config';
 import { CLAUDE_PORT, IClaudePort } from '../../domain/ports/i-claude-port';
 import { ToolRegistry } from '../../application/tools/tool.registry';
+import { AishaConversationService } from '../../application/conversation/aisha-conversation.service';
 
 const ChatRequestSchema = z.object({
   message:   z.string().min(1).max(2_000),
@@ -39,9 +40,11 @@ const ChatRequestSchema = z.object({
 interface ChatResponse {
   success: true;
   data: {
-    reply:      string;
-    sessionId:  string;
-    toolsUsed?: string[];
+    reply:            string;
+    sessionId:        string;
+    toolsUsed?:       string[];
+    toolResults?:     Array<{ name: string; ok: boolean; result: unknown }>;
+    pendingApprovals?: Array<{ toolUseId: string; name: string; input: Record<string, unknown>; stake: 'high' }>;
   };
 }
 
@@ -62,6 +65,7 @@ export class AishaChatController {
     private readonly cfg: AishaConfig,
     @Inject(CLAUDE_PORT) private readonly claude: IClaudePort,
     private readonly tools: ToolRegistry,
+    private readonly conversation: AishaConversationService,
   ) {}
 
   private notConfiguredReply(sessionId: string): ChatResponse {
@@ -128,9 +132,12 @@ export class AishaChatController {
     const routed = this.routeOrReply(sessionId, dto.message.length);
     if (routed) return routed;
     try {
-      const { reply, toolsUsed } = await this.collectClaudeReply(dto.message);
-      this.logger.log({ sessionId, replyLength: reply.length, toolsUsed: toolsUsed.length }, 'AIsha chat answered via Claude');
-      return { success: true, data: { reply, sessionId, toolsUsed } };
+      // #15 P0: full tool-execution loop — tools actually run (read tools execute; high-stake pause for approval).
+      const turnR = await this.conversation.runTurn(dto.message, SYSTEM_PROMPT);
+      if (!turnR.ok) return this.errorReply(sessionId, turnR.error.message);
+      const { reply, toolsUsed, toolResults, pendingApprovals } = turnR.data;
+      this.logger.log({ sessionId, replyLength: reply.length, toolsUsed: toolsUsed.length, ran: toolResults.length, pending: pendingApprovals.length }, 'AIsha chat answered via tool loop');
+      return { success: true, data: { reply, sessionId, toolsUsed, toolResults, pendingApprovals } };
     } catch (err) {
       const msg = (err as Error).message;
       this.logger.error({ sessionId, error: msg }, 'AIsha Claude stream failed');

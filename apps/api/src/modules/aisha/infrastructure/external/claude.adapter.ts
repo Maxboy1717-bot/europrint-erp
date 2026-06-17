@@ -26,11 +26,14 @@ import {
   IClaudePort,
   ClaudeRequest,
   ClaudeStreamEvent,
+  ClaudeToolTurn,
+  ClaudeToolUse,
 } from '../../domain/ports/i-claude-port';
 
 interface SdkLike {
   messages: {
     stream(params: Record<string, unknown>): AsyncIterable<Record<string, unknown>>;
+    create?(params: Record<string, unknown>): Promise<Record<string, unknown>>;
   };
 }
 
@@ -96,6 +99,43 @@ export class ClaudeAdapter implements IClaudePort {
       return;
     }
     for (const ev of collected) yield ev;
+  }
+
+  async createWithTools(request: ClaudeRequest): Promise<Result<ClaudeToolTurn>> {
+    const params: Record<string, unknown> = {
+      model:      request.model ?? 'claude-sonnet-4-6-20251022',
+      max_tokens: request.maxTokens ?? 2048,
+      messages:   request.messages,
+    };
+    if (request.tools)  params.tools  = request.tools;
+    if (request.system) params.system = request.system;
+    try {
+      const turn = await withRetry<ClaudeToolTurn>(async () => {
+        const sdk = await this.getSdk();
+        if (!sdk.messages.create) throw new Error('SDK messages.create unavailable');
+        const res = await sdk.messages.create(params);
+        const content = Array.isArray((res as { content?: unknown }).content)
+          ? (res as { content: Record<string, unknown>[] }).content : [];
+        let text = '';
+        const toolUses: ClaudeToolUse[] = [];
+        for (const block of content) {
+          if (block['type'] === 'text' && typeof block['text'] === 'string') text += block['text'];
+          else if (block['type'] === 'tool_use') {
+            toolUses.push({
+              id:    String(block['id'] ?? ''),
+              name:  String(block['name'] ?? ''),
+              input: (block['input'] as Record<string, unknown>) ?? {},
+            });
+          }
+        }
+        return { text, toolUses, stopReason: (res['stop_reason'] as string | null) ?? null };
+      });
+      return Ok(turn);
+    } catch (err) {
+      this.logger.error(`Claude createWithTools failed: ${(err as Error).message}`);
+      const code = classifyRetryError(err);
+      return Err(AppErr(code === 'EXTERNAL_TIMEOUT' ? 'EXTERNAL_TIMEOUT' : 'EXTERNAL_5XX', `Claude unavailable: ${(err as Error).message}`));
+    }
   }
 
   private mapEvent(ev: Record<string, unknown>): ClaudeStreamEvent | null {

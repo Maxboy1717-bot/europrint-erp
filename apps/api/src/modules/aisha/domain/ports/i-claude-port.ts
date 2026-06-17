@@ -58,4 +58,23 @@ export interface IClaudePort {
    * on failure (translated by the adapter from the underlying transport error).
    */
   sendOneShot(request: ClaudeRequest): Promise<Result<string>>;
+
+  /**
+   * Non-streaming call that returns COMPLETE content blocks — the assistant text plus any tool_use
+   * blocks with their FULL input (the streaming path only surfaces tool_use at content_block_start where
+   * the input is still empty). The tool-execution loop uses this so tools run with real arguments.
+   */
+  createWithTools(request: ClaudeRequest): Promise<Result<ClaudeToolTurn>>;
+}
+
+export interface ClaudeToolUse {
+  id:    string;
+  name:  string;
+  input: Record<string, unknown>;
+}
+
+export interface ClaudeToolTurn {
+  text:       string;
+  toolUses:   ClaudeToolUse[];
+  stopReason: string | null;
 }

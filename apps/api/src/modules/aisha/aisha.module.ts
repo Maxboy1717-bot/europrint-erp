@@ -40,6 +40,7 @@ import { CLAUDE_PORT } from './domain/ports/i-claude-port';
 import { GEMINI_PORT } from './domain/ports/i-gemini-port';
 import { BudgetTrackerService } from './application/llm/budget-tracker.service';
 import { ToolRegistry } from './application/tools/tool.registry';
+import { AishaConversationService } from './application/conversation/aisha-conversation.service';
 import { AishaToolBootstrap } from './application/tools/tool-bootstrap.service';
 // 25 tools — each is @Injectable() and registered in providers below
 import { AnalyzeCameraFeedTool }       from './application/tools/analyze-camera-feed.tool';
@@ -94,6 +95,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     GeminiFallbackService,
     BudgetTrackerService,
     ToolRegistry,
+    AishaConversationService,   // #15 P0 tool-execution loop
     // 25 AIsha tools — each @Injectable, registered with ToolRegistry on
     // module init by AishaToolBootstrap. Order alphabetical, matches the
     // bootstrap service's constructor.
