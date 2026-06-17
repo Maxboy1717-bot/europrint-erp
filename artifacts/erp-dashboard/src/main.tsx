@@ -19,7 +19,7 @@ const sentryEnvironment =
 const sentryRelease = import.meta.env.VITE_SENTRY_RELEASE as string | undefined;
 const isProduction = import.meta.env.PROD === true;
 
-if (sentryDsn && sentryDsn.length > 0) {
+if (sentryDsn && sentryDsn.length > 0 && isProduction) {
   Sentry.init({
     dsn: sentryDsn,
     environment: sentryEnvironment,
