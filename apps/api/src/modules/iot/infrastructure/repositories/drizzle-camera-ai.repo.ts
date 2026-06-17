@@ -144,7 +144,7 @@ export class DrizzleCameraAiRepo {
         .from(cameras)
         .leftJoin(
           camera_events,
-          and(sql`${cameras.id}::text = ${camera_events.camera_id}`, gte(camera_events.created_at, since)),
+          and(eq(cameras.id, camera_events.camera_id), gte(camera_events.created_at, since)),
         )
         .leftJoin(
           camera_safety_violations,
@@ -168,7 +168,7 @@ export class DrizzleCameraAiRepo {
         active_events: sql<number>`COUNT(*) FILTER (WHERE ${camera_events.event_type} = 'active')`,
       })
         .from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(gte(camera_events.created_at, since))
         .groupBy(camera_events.camera_id, cameras.name)
         .orderBy(sql`event_count DESC`);
@@ -190,7 +190,7 @@ export class DrizzleCameraAiRepo {
         location: cameras.location,
       })
         .from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(
           sql`${camera_events.severity} = 'high' OR ${camera_events.event_type} = 'anomaly'`,
         )

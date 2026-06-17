@@ -47,7 +47,7 @@ export class DrizzleCameraRepo {
         location: cameras.location,
       })
         .from(camera_events)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_events.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_events.camera_id))
         .where(and(...conds))
         .orderBy(desc(camera_events.created_at))
         .limit(limit);
@@ -94,7 +94,7 @@ export class DrizzleCameraRepo {
         location: cameras.location,
       })
         .from(camera_alerts)
-        .leftJoin(cameras, sql`${cameras.id}::text = ${camera_alerts.camera_id}`)
+        .leftJoin(cameras, eq(cameras.id, camera_alerts.camera_id))
         .where(conds.length ? and(...conds) : undefined)
         .orderBy(desc(camera_alerts.created_at))
         .limit(limit);
