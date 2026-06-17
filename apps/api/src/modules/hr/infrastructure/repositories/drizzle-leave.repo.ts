@@ -65,7 +65,12 @@ export class LeaveRepository {
 
   async saveLeave(leave: Row): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, duration_days, reason, status, submitted_by, submitted_date, created_at, updated_at) VALUES (${leave.employeeId ?? leave.employee_id}, ${leave.leaveType ?? leave.leave_type}, ${leave.startDate ?? leave.start_date}, ${leave.endDate ?? leave.end_date}, ${leave.durationDays ?? leave.duration_days ?? leave.daysRequested ?? null}, ${leave.reason ?? null}, ${leave.status ?? 'draft'}, ${leave.submittedBy ?? leave.submitted_by ?? null}, NOW(), NOW(), NOW()) RETURNING *`);
+      // leave_requests is an ADD-ONLY superset: the canonical NOT NULL columns are user_id + total_days,
+      // while employee_id + duration_days are added/legacy. The old insert wrote only the legacy pair and
+      // omitted user_id/total_days (NOT NULL) → 23502. Supply both: user_id := employee_id, total_days := duration.
+      const empId = leave.employeeId ?? leave.employee_id;
+      const dur = leave.durationDays ?? leave.duration_days ?? leave.daysRequested ?? null;
+      const r = await exec(sql`INSERT INTO leave_requests (employee_id, user_id, leave_type, start_date, end_date, duration_days, total_days, reason, status, submitted_by, submitted_date, created_at, updated_at) VALUES (${empId}, ${empId}, ${leave.leaveType ?? leave.leave_type}, ${leave.startDate ?? leave.start_date}, ${leave.endDate ?? leave.end_date}, ${dur}, ${dur}, ${leave.reason ?? null}, ${leave.status ?? 'draft'}, ${leave.submittedBy ?? leave.submitted_by ?? null}, NOW(), NOW(), NOW()) RETURNING *`);
       const saved = r[0];
 
       // TASK 4 — Dual-table sync (ADD-ONLY):
