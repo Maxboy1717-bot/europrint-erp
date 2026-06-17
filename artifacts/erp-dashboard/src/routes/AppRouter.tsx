@@ -54,7 +54,8 @@ const ALL_MODULE_ROUTES = [
 const REDIRECT_PATHS = [
   '/chat', '/chat/admin',
   '/orgstructure', '/org-structure/builder',
-  '/org-structure/view', '/erp-analytics', '/erp-roles',
+  '/org-structure/view', '/org-structure/cards', '/org-structure/razryad-levels',
+  '/erp-analytics', '/erp-roles',
   '/warehouse-management', '/warehouse/dashboard', '/logistics/dashboard',
   '/accounting-dashboard', '/fi-finance', '/erp-finance', '/fi/dashboard',
   '/cfo-dashboard', '/accounting/payroll', '/integration/shift-scheduling',
@@ -126,6 +127,10 @@ export function AppRouter() {
       <Route path="/orgstructure"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/builder"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/org-structure/view"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
+      {/* Cards + Razryad folded into Org Tuzilma tabs (owner 2026-06-17) — old standalone routes redirect in. */}
+      <Route path="/org-structure/cards/:id"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
+      <Route path="/org-structure/cards"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
+      <Route path="/org-structure/razryad-levels"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
       <Route path="/erp-analytics"><RoleRoute roles={ADMIN_ROLES}><Redirect to="/analytics" /></RoleRoute></Route>
       <Route path="/erp-roles"><RoleRoute roles={ADMIN_ROLES}><Redirect to="/settings" /></RoleRoute></Route>
       <Route path="/warehouse-management"><RoleRoute roles={WAREHOUSE_ROLES}><Redirect to="/warehouse/hub" /></RoleRoute></Route>

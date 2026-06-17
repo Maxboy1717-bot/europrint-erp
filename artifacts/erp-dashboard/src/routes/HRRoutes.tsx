@@ -19,9 +19,8 @@ const HRDashboard = lazy(() => import("@/pages/HRDashboard"));
 const HRCapitalTests = lazy(() => import("@/pages/HRCapitalTests"));
 const OrgStructureHierarchy = lazy(() => import("@/pages/OrgStructureHierarchy"));
 const OrgNodeDetail = lazy(() => import("@/pages/OrgNodeDetail"));
-const OrgCards = lazy(() => import("@/pages/OrgCards"));
-const CardDetail = lazy(() => import("@/pages/CardDetail"));
-const RazryadLevels = lazy(() => import("@/pages/RazryadLevels"));
+// Cards + Razryad catalog moved INSIDE Org Tuzilma (tabs) — no standalone pages (owner 2026-06-17).
+// Old /org-structure/cards · /cards/:id · /razryad-levels routes now redirect (see AppRouter).
 const HROnboarding = lazy(() => import("@/pages/HROnboarding"));
 const HRVacationSick = lazy(() => import("@/pages/HRVacationSick"));
 const HROffboarding = lazy(() => import("@/pages/HROffboarding"));
@@ -67,9 +66,6 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/hr-capital/tests',                 HRCapitalTests],
   ['/org-structure/hierarchy',          OrgStructureHierarchy],
   ['/org-structure/hierarchy/node/:id', OrgNodeDetail],
-  ['/org-structure/cards',              OrgCards],
-  ['/org-structure/cards/:id',          CardDetail],
-  ['/org-structure/razryad-levels',     RazryadLevels],
   ['/hr/onboarding',                    HROnboarding],
   ['/hr/vacation-sick',                 HRVacationSick],
   ['/hr/succession',                    HRSuccessionPlanning],

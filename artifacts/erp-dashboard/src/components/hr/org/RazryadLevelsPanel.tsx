@@ -1,7 +1,8 @@
 /**
- * @module RazryadLevels
- * @description Razryad (grade) master-data page — list + create/edit/archive.
- *   Consumes /api/org-structure/razryad-levels. Mirrors OrgCards (EP-ORG-009/043).
+ * @module RazryadLevelsPanel
+ * @description Razryad (grade) catalog — list + create/edit/archive. Rendered as the "Razryadlar" TAB
+ *   inside Org Tuzilma (org-structure/hierarchy), NOT a standalone sidebar page (owner 2026-06-17).
+ *   Consumes /api/org-structure/razryad-levels. Folded from the former pages/RazryadLevels.tsx.
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { EPPageHeader, EPLoader, EPErrorState, EPEmptyState } from "@/components/ep";
+import { EPLoader, EPErrorState, EPEmptyState } from "@/components/ep";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { RazryadFormDialog, type RazryadLevel } from "@/components/hr/org/RazryadFormDialog";
 import { apiRequest } from "@/lib/queryClient";
@@ -25,7 +26,7 @@ const fmtSalary = (v: unknown): string => {
   return v != null && Number.isFinite(n) ? n.toLocaleString("ru-RU") : "—";
 };
 
-export default function RazryadLevels() {
+export function RazryadLevelsPanel() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -51,17 +52,16 @@ export default function RazryadLevels() {
   const openEdit = (r: RazryadLevel) => { setEditing(r); setFormOpen(true); };
 
   return (
-    <div className="p-4 sm:p-6 space-y-4">
-      <EPPageHeader
-        breadcrumb={<>{t("orgStructure")}<b> · {t("razryadlar")}</b></>}
-        title={t("razryadlar")}
-        subtitle={t("razryadlarPageSubtitle")}
-        actions={
-          <Button onClick={openCreate} data-testid="button-razryad-create">
-            <Plus className="h-4 w-4 mr-2" />{t("yangiRazryad")}
-          </Button>
-        }
-      />
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[16px] font-semibold">{t("razryadlar")}</h2>
+          <p className="text-[13px] text-muted-foreground">{t("razryadlarPageSubtitle")}</p>
+        </div>
+        <Button onClick={openCreate} data-testid="button-razryad-create">
+          <Plus className="h-4 w-4 mr-2" />{t("yangiRazryad")}
+        </Button>
+      </div>
 
       {isLoading ? (
         <EPLoader />

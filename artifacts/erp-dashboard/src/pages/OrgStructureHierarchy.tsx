@@ -15,9 +15,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { OrgCardsPanel } from "@/components/hr/org/OrgCardsPanel";
+import { RazryadLevelsPanel } from "@/components/hr/org/RazryadLevelsPanel";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { OrgNode, OrgStats, LEVEL_COLORS, LEVEL_LABELS } from "@/components/hr/org/types";
@@ -45,6 +48,10 @@ export default function OrgStructureHierarchy() {
   const [filterLevels, setFilterLevels] = useState<Set<number>>(new Set());
   const [addOpen, setAddOpen] = useState(false);
   const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
+  // Org Tuzilma is tabbed (owner 2026-06-17): Tuzilma (chart) | Kartalar | Razryadlar — razryad lives
+  // INSIDE here, not as separate sidebar pages. Controlled so the chart's wheel-zoom listener re-attaches
+  // when the chart tab is re-entered (inactive tabs unmount).
+  const [tab, setTab] = useState<"tuzilma" | "kartalar" | "razryadlar">("tuzilma");
 
   const { data: stats } = useQuery<OrgStats>({ queryKey: ["/api/org-structure/stats"] });
   const { data: hierarchyData, isLoading, isError, error, refetch } = useQuery<{ nodes: OrgNode[] }>({
@@ -81,7 +88,7 @@ export default function OrgStructureHierarchy() {
     };
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
-  }, []);
+  }, [tab]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 0) { setIsDragging(true); setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y }); }
@@ -163,6 +170,14 @@ export default function OrgStructureHierarchy() {
 
   return (
     <div className="h-full flex flex-col bg-background">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="flex-1 flex flex-col min-h-0">
+        <TabsList className="shrink-0 w-fit mx-6 mt-2">
+          <TabsTrigger value="tuzilma">{t("tuzilma")}</TabsTrigger>
+          <TabsTrigger value="kartalar">{t("kartalar")}</TabsTrigger>
+          <TabsTrigger value="razryadlar">{t("razryadlar")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tuzilma" className="flex-1 flex flex-col min-h-0 overflow-hidden mt-2">
       <div className="px-6 py-3 border-b shrink-0">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
@@ -274,6 +289,16 @@ export default function OrgStructureHierarchy() {
           </div>
         ))}
       </div>
+        </TabsContent>
+
+        <TabsContent value="kartalar" className="flex-1 overflow-y-auto p-4 sm:p-6 mt-2">
+          <OrgCardsPanel />
+        </TabsContent>
+
+        <TabsContent value="razryadlar" className="flex-1 overflow-y-auto p-4 sm:p-6 mt-2">
+          <RazryadLevelsPanel />
+        </TabsContent>
+      </Tabs>
 
       <AddNodeDialog
         open={addOpen}

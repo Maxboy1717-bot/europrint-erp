@@ -1,28 +1,32 @@
 /**
- * @module OrgCards
- * @description Canonical ORG CARD (org_functions) management page — list + create/edit/soft-delete.
- *   Consumes /api/org-structure/cards. Extends the OrgStructure area (card-centric, EP-ORG-001/004/005).
+ * @module OrgCardsPanel
+ * @description Canonical ORG CARD (org_functions) list — rendered as the "Kartalar" TAB inside Org
+ *   Tuzilma (org-structure/hierarchy), NOT a standalone sidebar page (owner 2026-06-17). Each card shows
+ *   its RAZRYAD as a badge (sourced from razryad_level_id → razryad_levels). Card detail + razryad
+ *   assignment open as dialogs INSIDE this flow. Folded from the former pages/OrgCards.tsx.
+ *   Consumes /api/org-structure/cards + /api/org-structure/razryad-levels.
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { Plus, Pencil, LayoutGrid, FolderOpen, GraduationCap, Eye } from "lucide-react";
 import type { EPStatusTone } from "@/components/ep";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { EPPageHeader, EPLoader, EPErrorState, EPEmptyState, EPStatusPill } from "@/components/ep";
+import { EPLoader, EPErrorState, EPEmptyState, EPStatusPill } from "@/components/ep";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { CardFormDialog, type OrgCard } from "@/components/hr/org/CardFormDialog";
 import { CardFolderDialog } from "@/components/hr/org/CardFolderDialog";
 import { CardExamsDialog } from "@/components/hr/org/CardExamsDialog";
+import { CardDetailDialog } from "@/components/hr/org/CardDetailDialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 
 const CARDS_KEY = "/api/org-structure/cards";
+const RAZRYAD_KEY = "/api/org-structure/razryad-levels";
 
 const STATUS_LABEL: Record<string, string> = {
   active: "faol", vacant: "vakansiya", io: "ijrochi", frozen: "muzlatilgan", archived: "arxiv",
@@ -32,21 +36,32 @@ const STATUS_TONE: Record<string, EPStatusTone> = {
   active: "success", vacant: "warning", io: "info", frozen: "neutral", archived: "danger",
 };
 
-export default function OrgCards() {
+export function OrgCardsPanel() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, navigate] = useLocation();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<OrgCard | null>(null);
   const [folderCard, setFolderCard] = useState<OrgCard | null>(null);
   const [examsCard, setExamsCard] = useState<OrgCard | null>(null);
+  const [detailId, setDetailId] = useState<number | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery<{ items: OrgCard[]; total: number }>({
     queryKey: [CARDS_KEY],
   });
   const cards = Array.isArray(data?.items) ? data!.items : [];
+
+  // Razryad catalog → label lookup so each card shows "N-razryad" instead of the raw FK id.
+  const { data: razryadData } = useQuery<{ items: { id: number; level: number; name: string }[] }>({
+    queryKey: [RAZRYAD_KEY],
+  });
+  const razryadById = new Map((Array.isArray(razryadData?.items) ? razryadData!.items : []).map((r) => [r.id, r]));
+  const razryadLabel = (rid: number | null | undefined): string => {
+    if (rid == null) return "—";
+    const r = razryadById.get(rid);
+    return r ? `${r.level}-${t("razryad")}` : `#${rid}`;
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `${CARDS_KEY}/${id}`),
@@ -61,17 +76,16 @@ export default function OrgCards() {
   const openEdit = (card: OrgCard) => { setEditing(card); setFormOpen(true); };
 
   return (
-    <div className="p-4 sm:p-6 space-y-4">
-      <EPPageHeader
-        breadcrumb={<>{t("orgStructure")}<b> · {t("kartalar")}</b></>}
-        title={t("kartalar")}
-        subtitle={t("kartalarPageSubtitle")}
-        actions={
-          <Button onClick={openCreate} data-testid="button-card-create">
-            <Plus className="h-4 w-4 mr-2" />{t("yangiKarta")}
-          </Button>
-        }
-      />
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[16px] font-semibold">{t("kartalar")}</h2>
+          <p className="text-[13px] text-muted-foreground">{t("kartalarPageSubtitle")}</p>
+        </div>
+        <Button onClick={openCreate} data-testid="button-card-create">
+          <Plus className="h-4 w-4 mr-2" />{t("yangiKarta")}
+        </Button>
+      </div>
 
       {isLoading ? (
         <EPLoader />
@@ -88,6 +102,7 @@ export default function OrgCards() {
                 <TableHead>{t("kartaKodi")}</TableHead>
                 <TableHead>{t("bolim")}</TableHead>
                 <TableHead>{t("daraja")}</TableHead>
+                <TableHead>{t("razryad")}</TableHead>
                 <TableHead>{t("oylikTuri")}</TableHead>
                 <TableHead>{t("holati")}</TableHead>
                 <TableHead className="text-right">{t("amallar")}</TableHead>
@@ -102,6 +117,11 @@ export default function OrgCards() {
                     {(c as OrgCard & { department_name?: string }).department_name ?? "—"}
                   </TableCell>
                   <TableCell>{c.level ?? "—"}</TableCell>
+                  <TableCell data-testid={`razryad-badge-${c.id}`}>
+                    {c.razryad_level_id != null
+                      ? <EPStatusPill tone="info">{razryadLabel(c.razryad_level_id)}</EPStatusPill>
+                      : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{c.salary_type ?? "—"}</TableCell>
                   <TableCell>
                     <EPStatusPill tone={STATUS_TONE[c.status ?? "active"] ?? "neutral"}>
@@ -110,7 +130,7 @@ export default function OrgCards() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => navigate(`/org-structure/cards/${c.id}`)} title={t("korish")} data-testid={`button-card-view-${c.id}`}>
+                      <Button size="icon" variant="ghost" onClick={() => setDetailId(c.id)} title={t("korish")} data-testid={`button-card-view-${c.id}`}>
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => setFolderCard(c)} title={t("kartaPapkasi")} data-testid={`button-card-folder-${c.id}`}>
@@ -140,6 +160,7 @@ export default function OrgCards() {
       <CardFormDialog open={formOpen} onClose={() => setFormOpen(false)} card={editing} />
       <CardFolderDialog open={!!folderCard} onClose={() => setFolderCard(null)} card={folderCard} />
       <CardExamsDialog open={!!examsCard} onClose={() => setExamsCard(null)} card={examsCard} />
+      <CardDetailDialog open={detailId != null} cardId={detailId ?? 0} onClose={() => setDetailId(null)} />
     </div>
   );
 }
