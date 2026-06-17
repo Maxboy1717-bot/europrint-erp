@@ -8742,5 +8742,6 @@
   "useCRMWorkspace.kochirildi": "Перемещено",
   "ExtraTabs.jamiBolimlarFarzand": "Всего подразделений (дочерних)",
   "AIDesignGenerator.dizaynTasdiqlangandaPapkaordersStatusPending": "При утверждении дизайна papkaOrders.status меняется на \"pending_tech\" — модуль технолога получает автоматический сигнал",
-  "IoTExtended.ogohlantirishlar": "Оповещения"
+  "IoTExtended.ogohlantirishlar": "Оповещения",
+  "helpers-channel-status.untitled": "Ждёт"
 }

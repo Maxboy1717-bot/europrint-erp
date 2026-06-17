@@ -61,9 +61,9 @@ export function CandidateCard({entry, stage, aiSessions, vacancyMap,
       className={`bg-card rounded-lg p-4 hover-elevate flex flex-col gap-2 shadow-sm ${isUrgent ? "border border-red-500/30" : ""}`}
     >
       <div className="flex items-start justify-between gap-1">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-          <span data-testid={`text-candidate-name-${entry.id}`} className="text-sm font-medium leading-tight truncate">{entry.candidate_name}</span>
+        <div className="flex items-start gap-1.5 min-w-0">
+          <User className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+          <span data-testid={`text-candidate-name-${entry.id}`} className="text-sm font-semibold leading-tight break-words">{entry.candidate_name}</span>
           <ChecklistProgressBadge pipelineEntryId={entry.id} />
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">

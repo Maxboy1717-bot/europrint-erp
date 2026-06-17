@@ -254,6 +254,7 @@ const DATA = {
     'helpers-constants.tsx.tavsiyalarTekshiruvi': { uz: 'Tavsiyalar tekshiruvi',  ru: 'Проверка рекомендаций' },
     'helpers-constants.tsx.elonBerildi':          { uz: "E'lon berildi",          ru: 'Объявление размещено' },
     'helpers-constants.tsx.untitled':             { uz: 'Kutilmoqda',             ru: 'Ждёт', cyr: 'Кутилмоқда' },
+    'helpers-channel-status.untitled': { uz: 'Kutilmoqda', ru: 'Ждёт', cyr: 'Кутилмоқда' },
     'KanbanColumn.tsx.yuklanmoqda': { uz: 'Yuklanmoqda...', ru: 'Загрузка...' },
     'KanbanColumn.tsx.bosh':        { uz: "Bo'sh",          ru: 'Пусто' },
     'CandidateCard.tsx.radEtish':   { uz: 'Rad etish',      ru: 'Отклонить' },

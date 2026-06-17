@@ -10133,5 +10133,6 @@
   "useCRMWorkspace.kochirildi": "Кўчирилди",
   "ExtraTabs.jamiBolimlarFarzand": "Жами бўлимлар (фарзанд)",
   "AIDesignGenerator.dizaynTasdiqlangandaPapkaordersStatusPending": "Дизайн тасдиқланганда папкаОрдерс.статус = \"пендинг_теч\" га ўзгаради — технолог модули автоматик сигнал олади",
-  "IoTExtended.ogohlantirishlar": "Огоҳлантиришлар"
+  "IoTExtended.ogohlantirishlar": "Огоҳлантиришлар",
+  "helpers-channel-status.untitled": "Кутилмоқда"
 }

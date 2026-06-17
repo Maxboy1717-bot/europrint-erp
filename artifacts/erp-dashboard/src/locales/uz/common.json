@@ -8742,5 +8742,6 @@
   "useCRMWorkspace.kochirildi": "Ko'chirildi",
   "ExtraTabs.jamiBolimlarFarzand": "Jami bo'limlar (farzand)",
   "AIDesignGenerator.dizaynTasdiqlangandaPapkaordersStatusPending": "Dizayn tasdiqlanganda papkaOrders.status = \"pending_tech\" ga o'zgaradi — texnolog moduli avtomatik signal oladi",
-  "IoTExtended.ogohlantirishlar": "Ogohlantirishlar"
+  "IoTExtended.ogohlantirishlar": "Ogohlantirishlar",
+  "helpers-channel-status.untitled": "Kutilmoqda"
 }
