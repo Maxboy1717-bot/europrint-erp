@@ -37,9 +37,12 @@ export class QcExtendedFinalRepository {
 
   async createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row>>  {
     try {
+      // qc_final_inspections.papka_order_id is NOT NULL (no default) → must be supplied; the legacy
+      // order_id/inspector_id/status columns are optional. Map to canonical cols (result is read by the
+      // list query, status by update/complete — set both for consistency). inspected_by = FK to users.
       const rows = await runQuery<Row>(sql`
-        INSERT INTO qc_final_inspections (order_id, inspector_id, status, notes, passed)
-        VALUES (${order_id ?? null}, ${inspector_id ?? null}, ${status ?? 'pending'}, ${notes ?? null}, ${passed ?? false})
+        INSERT INTO qc_final_inspections (papka_order_id, inspected_by, result, status, notes, passed)
+        VALUES (${order_id ?? null}, ${inspector_id ?? null}, ${status ?? 'pending'}, ${status ?? 'pending'}, ${notes ?? null}, ${passed ?? false})
         RETURNING *
       `);
       return Ok(rows.rows[0] as Row);
@@ -72,7 +75,7 @@ export class QcExtendedFinalRepository {
       // join is best-effort and may be null until orders cross to papka workflow.
       const rows = await runQuery<Row>(sql`
         SELECT so.id, so.document_number AS order_number, so.master_status AS status,
-               COALESCE(cc.name, so.sold_to_party) AS customer_name,
+               COALESCE(cc.title, so.sold_to_party) AS customer_name,
                NULL::text AS inspection_status, NULL::int AS inspection_id
         FROM sales_orders so
         LEFT JOIN crm_companies cc ON cc.id = so.customer_id

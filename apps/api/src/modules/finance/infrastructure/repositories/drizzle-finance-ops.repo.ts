@@ -83,12 +83,14 @@ export class FinanceOpsRepo {
     paymentId: number; invoiceId: number; amount: number; status: string; recordedBy: number; recordedAt: Date;
   }): Promise<void> {
     try {
+      // Canonical table is finance_payments (fi_payments does not exist). It has no recorded_by
+      // column, so the recorder is preserved in notes for the audit trail.
       await runQuery(sql`
-        INSERT INTO fi_payments
-          (invoice_id, amount, status, recorded_by, payment_date)
+        INSERT INTO finance_payments
+          (invoice_id, amount, status, payment_date, notes)
         VALUES
           (${payment.invoiceId}, ${payment.amount}, ${payment.status},
-           ${payment.recordedBy}, ${payment.recordedAt})
+           ${payment.recordedAt}, ${`Recorded by user #${payment.recordedBy}`})
       `);
       this.logger.debug(`Payment recorded - Payment ID: ${payment.paymentId}`);
     } catch (error: unknown) {
