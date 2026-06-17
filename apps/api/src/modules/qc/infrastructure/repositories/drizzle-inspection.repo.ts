@@ -4,9 +4,8 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, SQL } from 'drizzle-orm';
 import { db, qc_inspections } from '@shared/db';
-import { execQcInspectionUpsert } from '@common/database/queries-remaining';
 import { AppErr, Err, Result } from '@common/result';
 import { Inspection } from '../../domain/aggregates/inspection.aggregate';
 import { IQcRepository, DrizzleExecutor } from '../../application/repositories/qc.repository';
@@ -29,39 +28,31 @@ const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as Exec
 export class DrizzleQcInspectionRepository implements IQcRepository {
   private readonly logger = new Logger(DrizzleQcInspectionRepository.name);
 
+  /**
+   * Persist a submitted inspection's result. submit-inspection always loads the row first
+   * (findById), so this UPDATEs by id. Live qc_inspections.id / inspector_id are INTEGER while the
+   * Drizzle schema drifted to uuid — the old Drizzle insert cast the aggregate uuid id + the uuid
+   * inspector fallback into integer columns and a numeric orderId into the uuid reference_id, so it
+   * crashed (22P02). Raw UPDATE on the existing integer id avoids every cast (same approach as
+   * create-inspection.handler).
+   */
   async save(inspection: Inspection, tx?: DrizzleExecutor): Promise<void> {
+    const checked = Number(inspection.sampleSize) || 0;
+    const failed = Number(inspection.defectsFoundCount) || 0;
+    const passed = Math.max(0, checked - failed);
+    const validStatus = ['pending', 'in_progress', 'on_hold', 'passed', 'failed'].includes(inspection.status)
+      ? inspection.status
+      : 'pending';
+    const q = sql`
+      UPDATE qc_inspections
+      SET status = ${validStatus}, items_checked = ${checked}, items_passed = ${passed},
+          items_failed = ${failed}, updated_at = NOW()
+      WHERE id = ${Number(inspection.id)}`;
     if (tx) {
-      // In-transaction path: inline upsert against the supplied tx executor.
-      const exec = asExec(tx);
-      const checked = Number(inspection.sampleSize) || 0;
-      const failed = Number(inspection.defectsFoundCount) || 0;
-      const passed = Math.max(0, checked - failed);
-      const validStatus = ['pending', 'in_progress', 'on_hold', 'passed', 'failed'].includes(inspection.status)
-        ? (inspection.status as 'pending' | 'in_progress' | 'on_hold' | 'passed' | 'failed')
-        : 'pending';
-      const inspectorId = String(inspection.inspectorId || '00000000-0000-0000-0000-000000000000');
-      const referenceId = String(inspection.orderId ?? inspection.id);
-      await exec.insert(qc_inspections).values({
-        id: inspection.id,
-        reference_id: referenceId,
-        reference_type: inspection.batchId ? 'batch' : 'order',
-        inspector_id: inspectorId,
-        status: validStatus,
-        items_checked: checked,
-        items_passed: passed,
-        items_failed: failed,
-      }).onConflictDoUpdate({
-        target: qc_inspections.id,
-        set: {
-          status: validStatus,
-          items_failed: failed,
-          items_passed: passed,
-          updated_at: sql`NOW()`,
-        },
-      });
-      return;
+      await (tx as unknown as { execute: (q: SQL) => Promise<unknown> }).execute(q);
+    } else {
+      await db.execute(q);
     }
-    await execQcInspectionUpsert(inspection);
   }
 
   async findById(id: string, tx?: DrizzleExecutor): Promise<Inspection | null> {
