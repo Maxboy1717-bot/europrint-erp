@@ -469,5 +469,19 @@
   "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "30-kun baholash suhbati o'tkazildi",
   "AIProductionPlanning.avtoTasdiqlangan": "Avto-tasdiqlangan",
   "AIProductionPlanning.tasdiqlangan": "Tasdiqlangan",
-  "AIProductionPlanning.bajarilmoqda": "Bajarilmoqda"
+  "AIProductionPlanning.bajarilmoqda": "Bajarilmoqda",
+  "helpers.jarayonda": "Jarayonda",
+  "helpers.qcToxtatdi": "QC To'xtatdi",
+  "helpers.rejalashtirilganTexnikKorik": "Rejalashtirilgan texnik ko'rik",
+  "ProductionOrder360.jarayonda": "Jarayonda",
+  "ProductionOrder360.qcToxtatdi": "QC To'xtatdi",
+  "TechPPExtended.stanoqTanlash": "Stanoq Tanlash",
+  "TechPPExtended.xarajatOptimizatsiya": "Xarajat Optimizatsiya",
+  "TechPPExtended.mijozTalablari": "Mijoz Talablari",
+  "TechPPExtended.ozgarishlarTarixi": "O'zgarishlar Tarixi",
+  "TechPPExtended.parallelBuyurtmalar": "Parallel Buyurtmalar",
+  "TechPPExtended.smenaBoshqaruvi": "Smena Boshqaruvi",
+  "TechPPExtended.parallelJarayonlar": "Parallel Jarayonlar",
+  "TechPPExtended.yetkazishKalk": "Yetkazish Kalk.",
+  "TechPPExtended.kpiOgish": "KPI Og'ish"
 }

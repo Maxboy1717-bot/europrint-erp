@@ -374,5 +374,13 @@
   "formNoSource": "Belgilanmagan",
   "formEstimatedValue": "Mo'ljallangan summa",
   "formNotes": "Izoh",
-  "formNotesPlaceholder": "Qo'shimcha ma'lumot..."
+  "formNotesPlaceholder": "Qo'shimcha ma'lumot...",
+  "orders.qatorlar": "Буюртма қаторлари (маҳсулотлар)",
+  "orders.qator": "Қатор",
+  "orders.mahsulotYoq": "Маҳсулот каталоги бўш — аввал маҳсулот қўшинг.",
+  "orders.mahsulot": "Маҳсулот",
+  "orders.soni": "Сони",
+  "orders.birlik": "Бирлик",
+  "orders.narx": "Нарх",
+  "orders.qatorlarJami": "Қаторлар жами"
 }

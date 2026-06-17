@@ -1,5 +1,20 @@
 {
   "title": "Tahlil",
   "loading": "Yuklanmoqda...",
-  "error": "Xatolik yuz berdi"
+  "error": "Xatolik yuz berdi",
+  "EngagementTab.faolFoydalanuvchilar": "Faol foydalanuvchilar",
+  "LeaderboardTab.tugatish": "Tugatish %",
+  "LeaderboardTab.ortachaBall": "O'rtacha ball",
+  "OutcomesTab.faolOquvchilar": "Faol o'quvchilar",
+  "OutcomesTab.tugatish": "Tugatish %",
+  "OutcomesTab.ortachaBall": "O'rtacha ball",
+  "OutcomesTab.ortachaDaraja": "O'rtacha daraja",
+  "OutcomesTab.tasdiqlangan": "Tasdiqlangan (%)",
+  "RemainingTabsA.yangiTayinlanganlar": "Yangi tayinlanganlar",
+  "RemainingTabsB.ortachaBall": "O'rtacha ball %",
+  "RemainingTabsB.ortachaVaqtS": "O'rtacha vaqt (s)",
+  "RemainingTabsB.xodimlarSoni": "Xodimlar soni",
+  "RemainingTabsB.otishFoizi": "O'tish foizi %",
+  "RemainingTabsUsers.aktivXodimlar": "Aktiv xodimlar",
+  "RemainingTabsUsers.xodimlarSoni": "Xodimlar soni"
 }

@@ -466,5 +466,7 @@
   "RobotsView.emailYuborish": "Email yuborish",
   "RobotsView.telegramYuborish": "Telegram yuborish",
   "EntityCard.qongiroq": "Qo'ng'iroq",
-  "EntityCard.orta": "→ O'rta"
+  "EntityCard.orta": "→ O'rta",
+  "ExtendedAIPanelSections.slaBuzilishlar": "SLA buzilishlar",
+  "ExtendedAIPanelSections.faoliyatsizBitimlar3Kun": "Faoliyatsiz bitimlar (3+ kun)"
 }

@@ -1,5 +1,11 @@
 {
   "title": "Rejalashtirish",
   "loading": "Yuklanmoqda...",
-  "error": "Xatolik yuz berdi"
+  "error": "Xatolik yuz berdi",
+  "PlanningDialogsA.1Smena": "1-smena",
+  "PlanningDialogsA.2Smena": "2-smena",
+  "PlanningDialogsA.3Smena": "3-smena",
+  "PlanningDialogsB.1Smena": "1-smena",
+  "PlanningDialogsB.2Smena": "2-smena",
+  "PlanningDialogsB.3Smena": "3-smena"
 }
