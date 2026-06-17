@@ -555,6 +555,7 @@ import { LayoutDashboard, X,
     items: [
       { title: "UMUMIY PANEL", url: "", icon: Crown, separator: true },
       { title: "Direktor Dashboard", url: "europrint/director", icon: Crown },
+      { title: "AIsha (AI Yordamchi)", url: "aisha", icon: Sparkles },
       { title: "Nazorat Markazi", url: "europrint/control", icon: ShieldCheck },
       { title: "TAHLIL", url: "", icon: BarChart3, separator: true },
       { title: "Auditor Panel", url: "europrint/auditor", icon: FileCheck },

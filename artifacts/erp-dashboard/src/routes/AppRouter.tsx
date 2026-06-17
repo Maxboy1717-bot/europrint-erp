@@ -37,6 +37,7 @@ import {
 
 const DirectorDashboard = lazy(() => import("@/pages/DirectorDashboard"));
 const OrderWorkflowPage = lazy(() => import("@/pages/OrderWorkflowPage"));
+const AishaPage = lazy(() => import("@/pages/AishaPage"));
 
 const ALL_MODULE_ROUTES = [
   ...ANALYTICS_ROUTES, ...HR_ROUTES, ...AI_HR_ROUTES, ...ADMIN_ROUTES, ...SELF_SERVICE_ROUTES,
@@ -66,7 +67,7 @@ const REDIRECT_PATHS = [
   '/qc/parameters', '/qc/tests', '/succession-planning',
   '/hr/succession-planning', '/hr/leave',
   '/feedback', '/logout',
-  '/order-workflow', '/sales',
+  '/order-workflow', '/sales', '/aisha',
   // Dead sidebar links → canonical redirects
   '/assets', '/hr/documents', '/cfo', '/org-chart',
 ];
@@ -191,6 +192,13 @@ export function AppRouter() {
       <Route path="/chat/admin">
         <RoleRoute roles={["admin", "director"]}>
           <ErrorBoundary><Suspense fallback={<PageLoader />}><ChatAdminPage /></Suspense></ErrorBoundary>
+        </RoleRoute>
+      </Route>
+
+      {/* ── AIsha (decoupled from Director Dashboard, #15 P1) ── */}
+      <Route path="/aisha">
+        <RoleRoute roles={DIRECTOR_ROLES}>
+          <ErrorBoundary><Suspense fallback={<PageLoader />}><AishaPage /></Suspense></ErrorBoundary>
         </RoleRoute>
       </Route>
 
