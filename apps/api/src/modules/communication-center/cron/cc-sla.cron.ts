@@ -208,12 +208,14 @@ export class CcSlaCron {
     messageUz: string; messageRu: string;
     priority?: 'low' | 'normal' | 'high' | 'urgent';
   }): Promise<void> {
+    // cc_notifications is a VIEW over `notifications` whose NOT NULL cols are title + body — the insert
+    // omitted both (only title_uz/message_uz) -> 23502. Supply title := titleUz, body := messageUz.
     await runQuery(sql`
       INSERT INTO cc_notifications
-        (user_id, document_id, type, priority, title_uz, title_ru, message_uz, message_ru)
+        (user_id, document_id, type, priority, title_uz, title_ru, message_uz, message_ru, title, body)
       VALUES
         (${args.userId}, ${args.docId}, ${args.type}, ${args.priority ?? 'normal'},
-         ${args.titleUz}, ${args.titleRu}, ${args.messageUz}, ${args.messageRu})
+         ${args.titleUz}, ${args.titleRu}, ${args.messageUz}, ${args.messageRu}, ${args.titleUz}, ${args.messageUz})
     `);
   }
 }
