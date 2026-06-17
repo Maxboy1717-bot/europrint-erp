@@ -6,7 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   queryGoodsReceipts, queryGoodsReceipt, execCreateGoodsReceipt, execInsertGoodsReceiptItem,
-  execUpdateGoodsReceipt, execDeleteGoodsReceipt,
+  execUpdateGoodsReceipt, execDeleteGoodsReceipt, execPostGoodsReceiptStock,
   queryGoodsIssues, queryGoodsIssue, execCreateGoodsIssue, execInsertGoodsIssueItem,
   execUpdateGoodsIssue, execDeleteGoodsIssue,
   queryThreeWayMatch, queryCurrencies, queryPriceComparison,
@@ -24,12 +24,25 @@ export class DrizzleMmGoodsRepository {
     return queryGoodsReceipt(gid);
   }
 
-  async createGoodsReceipt(purchase_order_id: unknown, received_by: unknown, notes: unknown, delivery_note: unknown): Promise<Row> {
-    return execCreateGoodsReceipt(purchase_order_id, received_by, notes, delivery_note);
+  async createGoodsReceipt(purchase_order_id: unknown, received_by: unknown, notes: unknown, delivery_note: unknown, warehouse_id?: unknown): Promise<Row> {
+    return execCreateGoodsReceipt(purchase_order_id, received_by, notes, delivery_note, warehouse_id);
   }
 
   async insertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown): Promise<void> {
     return execInsertGoodsReceiptItem(receiptId, material_id, ordered_qty, received_qty, batch_number);
+  }
+
+  /**
+   * #09 xarid->kirim: post the receipt's received quantities into canonical warehouse_stock, then mark
+   * it 'received'. Idempotent — a receipt already 'received' is not posted again (no double stock).
+   */
+  async postGoodsReceipt(gid: number): Promise<{ posted: boolean; lines: number; status: string }> {
+    const { receipt } = await queryGoodsReceipt(gid);
+    if (!receipt) return { posted: false, lines: 0, status: 'not_found' };
+    if (String(receipt.status ?? '') === 'received') return { posted: false, lines: 0, status: 'already_received' };
+    const lines = await execPostGoodsReceiptStock(gid);
+    await execUpdateGoodsReceipt(gid, 'received', null);
+    return { posted: true, lines, status: 'received' };
   }
 
   async updateGoodsReceipt(gid: number, status: unknown, notes: unknown): Promise<Row[]> {

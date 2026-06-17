@@ -83,33 +83,69 @@ export async function queryGoodsReceipt(gid: number): Promise<{ receipt: Row | n
   return { receipt: receiptRows[0] as Row, items: itemRows as Row[] };
 }
 
-export async function execCreateGoodsReceipt(purchase_order_id: unknown, received_by: unknown, notes: unknown, delivery_note: unknown): Promise<Row> {
+export async function execCreateGoodsReceipt(purchase_order_id: unknown, received_by: unknown, notes: unknown, delivery_note: unknown, warehouse_id?: unknown): Promise<Row> {
+  // mm_goods_receipts is a VIEW over goods_receipts — insert into the BASE table with its NOT NULL
+  // columns (receipt_number, receipt_date). The view/base have no delivery_note or updated_at column,
+  // so delivery_note is folded into notes. received_by is INTEGER (the DTO sends a string) -> coerce.
+  const rb = received_by != null && String(received_by).trim() !== '' && Number.isFinite(Number(received_by)) ? Number(received_by) : null;
+  const note = [notes, delivery_note].filter(Boolean).join(' | ') || null;
   const rowsRaw = await typedExecute<Row>(sql`
-    INSERT INTO mm_goods_receipts (purchase_order_id, received_by, notes, delivery_note, status)
-    VALUES (${purchase_order_id as number}, ${(received_by as number | null) ?? null},
-      ${(notes as string | null) ?? null}, ${(delivery_note as string | null) ?? null}, 'pending')
+    INSERT INTO goods_receipts (receipt_number, receipt_date, purchase_order_id, received_by, notes, warehouse_id, status)
+    VALUES (
+      'GR-' || (extract(epoch from now())::bigint)::text,
+      to_char(NOW(), 'YYYY-MM-DD'),
+      ${(purchase_order_id as number | null) ?? null},
+      ${rb},
+      ${note},
+      ${(warehouse_id as number | null) ?? null},
+      'pending'
+    )
     RETURNING *
   `);
-  const rows = rowsRaw;
-  return (rows[0] ?? {}) as Row;
+  return (rowsRaw[0] ?? {}) as Row;
 }
 
-export async function execInsertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown): Promise<void> {
-  await db.insert(mm_goods_receipt_items).values({
-    receipt_id: receiptId as number,
-    material_id: material_id as number,
-    ordered_qty: String(ordered_qty ?? 0),
-    received_qty: String(received_qty ?? 0),
-    batch_number: batch_number as string | null,
-  });
+/**
+ * #09 xarid->kirim: post a goods receipt into the CANONICAL warehouse_stock. Sums received_qty per
+ * material for the receipt's warehouse and upserts on (warehouse_id, material_id) — same proven
+ * pattern as execReceiveFg. Reads the BASE goods_receipt_items (gr_id/raw_material_id, received_qty is
+ * numeric). GROUP BY collapses duplicate-material lines so ON CONFLICT never updates one row twice.
+ * Returns the number of (material) rows posted (0 if no warehouse_id or nothing received).
+ */
+export async function execPostGoodsReceiptStock(receiptId: number): Promise<number> {
+  const r = await typedExecute<Row>(sql`
+    INSERT INTO warehouse_stock
+      (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+    SELECT gr.warehouse_id, i.raw_material_id, SUM(i.received_qty), 0, SUM(i.received_qty), NOW(), NOW(), NOW()
+    FROM goods_receipt_items i
+    JOIN goods_receipts gr ON gr.id = i.gr_id
+    WHERE i.gr_id = ${receiptId} AND gr.warehouse_id IS NOT NULL AND i.received_qty > 0
+    GROUP BY gr.warehouse_id, i.raw_material_id
+    ON CONFLICT (warehouse_id, material_id) DO UPDATE SET
+      quantity           = warehouse_stock.quantity + EXCLUDED.quantity,
+      available_quantity = warehouse_stock.available_quantity + EXCLUDED.available_quantity,
+      last_movement_at   = NOW(),
+      last_updated_at    = NOW()
+    RETURNING material_id
+  `);
+  return Array.isArray(r) ? r.length : 0;
+}
+
+export async function execInsertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown, unit?: unknown): Promise<void> {
+  // Base goods_receipt_items: gr_id/raw_material_id, numeric ordered_qty/received_qty, NOT NULL unit.
+  await typedExecute<Row>(sql`
+    INSERT INTO goods_receipt_items (gr_id, raw_material_id, ordered_qty, received_qty, unit, batch_number)
+    VALUES (${receiptId as number}, ${material_id as number}, ${Number(ordered_qty ?? 0)}, ${Number(received_qty ?? 0)},
+      ${(unit as string | null) ?? 'dona'}, ${(batch_number as string | null) ?? null})
+  `);
 }
 
 export async function execUpdateGoodsReceipt(gid: number, status: unknown, notes: unknown): Promise<Row[]> {
+  // Base goods_receipts (mm_goods_receipts is a VIEW over it) has no updated_at column.
   const rowsRaw = await typedExecute<Row>(sql`
-    UPDATE mm_goods_receipts
+    UPDATE goods_receipts
     SET status = COALESCE(${status ?? null}, status),
-        notes = COALESCE(${notes ?? null}, notes),
-        updated_at = NOW()
+        notes = COALESCE(${notes ?? null}, notes)
     WHERE id = ${gid}
     RETURNING *
   `);

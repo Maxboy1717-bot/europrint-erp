@@ -61,7 +61,15 @@ export class MmGoodsController {
   @Roles(...MM_WRITE_ROLES)
   async createGoodsReceipt(@Body() body: MmCreateGoodsReceiptDto) {
     assertRequired((body as Record<string, unknown>).purchase_order_id ?? (body as Record<string, unknown>).vendor_id, 'purchase_order_id required');
-    return unwrapOrThrow(await this.svc.createGoodsReceipt(body.purchase_order_id, body.received_by, (body.items ?? []) as Array<Record<string, unknown>>, body.notes, body.delivery_note));
+    return unwrapOrThrow(await this.svc.createGoodsReceipt(body.purchase_order_id, body.received_by, (body.items ?? []) as Array<Record<string, unknown>>, body.notes, body.delivery_note, body.warehouse_id));
+  }
+
+  @ApiOperation({ summary: 'Post goods receipt to canonical warehouse_stock (xarid -> kirim)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Post('goods-receipts/:id/post')
+  @Roles(...MM_WRITE_ROLES)
+  async postGoodsReceipt(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.postGoodsReceipt(safeInt(id, 0)));
   }
 
   @ApiOperation({ summary: 'Update goods receipt' })

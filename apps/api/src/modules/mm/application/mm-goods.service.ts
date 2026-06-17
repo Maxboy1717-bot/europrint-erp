@@ -28,15 +28,22 @@ export class MmGoodsService {
     });
   }
 
-  async createGoodsReceipt(purchase_order_id: unknown, received_by: unknown, items: Array<Record<string, unknown>>, notes: unknown, delivery_note: unknown) {
+  async createGoodsReceipt(purchase_order_id: unknown, received_by: unknown, items: Array<Record<string, unknown>>, notes: unknown, delivery_note: unknown, warehouse_id?: unknown) {
     return safeCall(async () => {
-      const receipt = await this.repo.createGoodsReceipt(purchase_order_id, received_by, notes, delivery_note);
-      // Pattern 2: line-item inserts are independent — run in parallel rather than serial N+1
-      await Promise.all(items.map(item =>
-        this.repo.insertGoodsReceiptItem(receipt.id, item.material_id, item.ordered_qty, item.received_qty, item.batch_number),
-      ));
+      const receipt = await this.repo.createGoodsReceipt(purchase_order_id, received_by, notes, delivery_note, warehouse_id);
+      // Pattern 2: line-item inserts are independent — run in parallel rather than serial N+1.
+      // The DTO sends `quantity`; map it to received_qty/ordered_qty (was always 0 — received_qty key never sent).
+      await Promise.all(items.map(item => {
+        const qty = item.received_qty ?? item.quantity ?? 0;
+        return this.repo.insertGoodsReceiptItem(receipt.id, item.material_id, item.ordered_qty ?? qty, qty, item.batch_number);
+      }));
       return receipt;
     });
+  }
+
+  /** #09 xarid->kirim: post received quantities into canonical warehouse_stock + mark receipt received. */
+  async postGoodsReceipt(gid: number) {
+    return safeCall(async () => this.repo.postGoodsReceipt(gid));
   }
 
   async updateGoodsReceipt(gid: number, status: unknown, notes: unknown) {

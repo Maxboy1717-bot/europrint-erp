@@ -30,13 +30,15 @@ export type MmGoodsReceiptFromOrderDto = z.infer<typeof MmGoodsReceiptFromOrderS
 
 export const MmCreateGoodsReceiptSchema = z.object({
   purchase_order_id: z.number().int().positive(),
+  warehouse_id:      z.number().int().positive().optional(), // receiving warehouse — needed to post stock (kirim)
   received_date:     z.string().optional(),
   received_by:       z.string().optional(),
   delivery_note:     z.string().optional(),
   notes:             z.string().optional(),
   items:             z.array(z.object({
-    material_id: z.number().int().positive(),
-    quantity:    z.number().positive(),
+    material_id:  z.number().int().positive(),
+    quantity:     z.number().positive(),
+    received_qty: z.number().nonnegative().optional(),
   })).optional(),
 });
 export type MmCreateGoodsReceiptDto = z.infer<typeof MmCreateGoodsReceiptSchema>;
