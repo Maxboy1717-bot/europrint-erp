@@ -15,7 +15,7 @@ import { Bom } from '../../domain/aggregates/bom.aggregate';
 import { Routing } from '../../domain/aggregates/routing.aggregate';
 import { IPpRepository, BomComponentRow } from '../../domain/repositories/pp.repository';
 import {
-  execSavePo, queryPo, queryPoByStatus,
+  execSavePo, execUpdatePoStatus, queryPo, queryPoByStatus,
   execSaveBom, queryBom, queryBomByProduct,
   execSaveRouting, queryRouting, queryRoutingByProduct,
   execUnlockPlanning, queryProductionPlan, queryMachineLoad,
@@ -31,7 +31,13 @@ export class DrizzlePpRepository implements IPpRepository {
 
   async savePo(po: ProductionOrder): Promise<Result<number>> {
     try {
-      const id = await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd());
+      // Existing order (release/transition) → UPDATE status; new order → INSERT (with product_id +
+      // sales_order_id). Previously this always re-inserted, so release created a duplicate row.
+      if (po.getId() > 0) {
+        const id = await execUpdatePoStatus(po.getId(), po.getStatus());
+        return Ok(id);
+      }
+      const id = await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd(), po.getProductId());
       return Ok(id);
     } catch {
       this.logger.error('Failed to save production order');

@@ -31,6 +31,7 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
   private _routingId: number;
   private _plannedStart: Date;
   private _plannedEnd: Date;
+  private _productId: number = 0; // finished-good id (NOT NULL in production_orders); set from the BOM
   private _materialList: MaterialRequirement[] = [];
   private _checkpointValidated: boolean = false;
   // NOTE PA2-16: orderNumber / createdAt / updatedAt / createdBy are placeholder
@@ -66,6 +67,8 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
   getSoId(): number { return this._soId; }
   getBomId(): number { return this._bomId; }
   getRoutingId(): number { return this._routingId; }
+  getProductId(): number { return this._productId; }
+  setProductId(productId: number): void { this._productId = productId; }
   getPlannedStart(): Date { return this._plannedStart; }
   getPlannedEnd(): Date { return this._plannedEnd; }
 

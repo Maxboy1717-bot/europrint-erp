@@ -12,19 +12,33 @@ type DbRow = Record<string, unknown>;
 export async function execSavePo(
   soId: number | null, status: string, bomId: number | null,
   routingId: number | null, plannedStart: unknown, plannedEnd: unknown,
+  productId: number | null = null,
   createdBy: string | null = null,
 ): Promise<number> {
   type PoInsert = typeof production_orders_int.$inferInsert;
+  // FIX: product_id is NOT NULL (FK products) and sales_order_id used to be dropped — both supplied
+  // now so the production order actually inserts and stays linked to its sales order (SD->PP thread).
   const rows = await db.insert(production_orders_int).values({
     status,
     bomId: bomId,
     routingId: routingId,
+    salesOrderId: soId,
+    productId: productId,
     plannedStartDate: plannedStart != null ? String(plannedStart) : undefined,
     plannedEndDate: plannedEnd != null ? String(plannedEnd) : undefined,
     orderNumber: `PO-${Date.now()}`,
     plannedQuantity: 1,
     createdBy: createdBy != null ? Number(createdBy) : undefined,
   } as PoInsert).returning({ id: production_orders_int.id });
+  return rows[0]?.id ?? 0;
+}
+
+/** Update an existing production order's status (used by release/transition — savePo no longer re-inserts). */
+export async function execUpdatePoStatus(id: number, status: string): Promise<number> {
+  const rows = await db.update(production_orders_int)
+    .set({ status })
+    .where(eq(production_orders_int.id, id))
+    .returning({ id: production_orders_int.id });
   return rows[0]?.id ?? 0;
 }
 

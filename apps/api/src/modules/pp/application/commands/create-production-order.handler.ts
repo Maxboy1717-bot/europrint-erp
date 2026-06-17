@@ -52,6 +52,8 @@ export class CreateProductionOrderHandler implements ICommandHandler<CreateProdu
       command.plannedEnd,
     );
     po.setCheckpointValidated(true);
+    // product_id is NOT NULL on production_orders — the finished good is the BOM's product.
+    po.setProductId(bomResult.data.getProductId());
 
     // Calculate MRP: Add material requirements from BOM
     bomResult.data.getItems().forEach((item) => {

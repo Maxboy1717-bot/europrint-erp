@@ -25,7 +25,7 @@ export class PpPlanningRepository implements IPpPlanningRepo {
 
   async createScheduleEntry(body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_start_date, planned_end_date, work_center_id, status) VALUES (CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint), ${body.productId ?? null}, ${body.quantity ?? 1}, ${body.plannedStart ?? null}, ${body.plannedEnd ?? null}, ${body.workCenterId ?? null}, 'planned') RETURNING *`);
+      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_start_date, planned_end_date, work_center_id, status) VALUES (CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint), ${body.productId ?? null}, ${body.quantity ?? 1}, ${body.quantity ?? 1}, ${body.plannedStart ?? null}, ${body.plannedEnd ?? null}, ${body.workCenterId ?? null}, 'planned') RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
