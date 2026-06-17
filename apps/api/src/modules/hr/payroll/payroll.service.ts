@@ -8,6 +8,7 @@ import {
 } from './payroll-closure.service';
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { PayrollRecord } from '../domain/aggregates/payroll-record.aggregate';
+import { GlPostingService, type JournalLine } from '../../finance/domain/services/gl-posting.service';
 import type { DomainEvent } from '@shared/domain/domain-event';
 
 type Row = Record<string, unknown>;
@@ -19,6 +20,7 @@ export class PayrollService {
   constructor(
     @Inject(HR_PAYROLL_REPO) private readonly hrPayrollRepo: IHrPayrollRepository,
     private readonly closure: PayrollClosureService,
+    private readonly gl: GlPostingService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -82,7 +84,13 @@ export class PayrollService {
       this.logger.warn(`markRowsPosted xatolik: ${postedR.error.message}`);
     }
 
-    const glR = await this.hrPayrollRepo.insertGlJournalLines(periodId, journalR.data);
+    // Post the balanced payroll journal through the ONE engine (resolves codes → accounts.id, writes
+    // balanced pair-rows into entries._id) — replaces the old insertGlJournalLines text-path that wrote
+    // the same account on both sides with NULL _id (self-canceling, invisible to id-based reports).
+    const glLines: JournalLine[] = (Array.isArray(journalR.data) ? journalR.data : []).map((l) => ({
+      accountCode: l.account, accountName: l.memo, debit: l.debit, credit: l.credit,
+    }));
+    const glR = await this.gl.postJournal(glLines, `PR-${periodId}`);
     if (!glR.ok) return glR as unknown as Result<never>;
 
     // Per-employee domain events: hydrate a PayrollRecord aggregate for each
@@ -101,7 +109,7 @@ export class PayrollService {
     return Ok({
       period: closedR.data as Row,
       totals,
-      gl: glR.data,
+      gl: { inserted: glLines.length },
     });
   }
 

@@ -21,6 +21,7 @@ import { TelegramBotsModule } from './telegram-bots/telegram-bots.module';
 import { InspectionModule } from './inspection/inspection.module';
 import { EnpsModule } from './enps/enps.module';
 import { PipModule } from './pip/pip.module';
+import { FinanceModule } from '../finance/finance.module';
 import { hrControllers, hrProviders, hrExports } from './hr.providers';
 
 @Module({
@@ -40,6 +41,7 @@ import { hrControllers, hrProviders, hrExports } from './hr.providers';
     InspectionModule,
     EnpsModule,
     PipModule,
+    FinanceModule, // exports GlPostingService — payroll closure posts the GL journal through the ONE engine
   ],
   controllers: hrControllers,
   providers: hrProviders,

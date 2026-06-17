@@ -83,40 +83,7 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
     }
   }
 
-  async insertGlJournalLines(
-    periodId: number,
-    lines: ReadonlyArray<{ account: string; debit: number; credit: number; memo: string }>,
-  ): Promise<Result<{ inserted: number }>> {
-    try {
-      const safeLines = Array.isArray(lines) ? lines : [];
-      if (safeLines.length === 0) {
-        this.logger.log(`GL journal: period #${periodId} → 0 lines, skipping insert`);
-        return Ok({ inserted: 0 });
-      }
-      for (const line of safeLines) {
-        const lineAmount = line.debit !== 0 ? line.debit : line.credit;
-        await runQuery(sql`
-          INSERT INTO entries
-            (entry_date, document_type, document_id, amount, description,
-             debit_account, credit_account, currency, posted_at, created_at)
-          VALUES (
-            TO_CHAR(NOW(), 'YYYY-MM-DD'),
-            'payroll',
-            ${periodId},
-            ${String(lineAmount)},
-            ${line.memo ?? 'Payroll GL entry'},
-            ${line.account},
-            ${line.account},
-            'UZS',
-            NOW(),
-            NOW()
-          )
-        `);
-      }
-      this.logger.log(`GL journal: period #${periodId} → ${safeLines.length} lines inserted`);
-      return Ok({ inserted: safeLines.length });
-    } catch (e: unknown) {
-      return Err((e as Error)?.message || `GL journal yozishda xatolik: #${periodId}`);
-    }
-  }
+  // insertGlJournalLines REMOVED (#10 GL-unify): it wrote debit_account == credit_account (self-
+  // canceling) with NULL _id into `entries`. Payroll closure now posts through GlPostingService.postJournal
+  // (resolveAccountIds → balanced pair-rows on the _id columns). See payroll.service.closePeriod.
 }

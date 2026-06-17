@@ -15,7 +15,7 @@ export interface IHrPayrollRepository {
   listRowsByPeriod(periodId: number): Promise<Result<Row[]>>;
   markPeriodClosed(periodId: number, totals: { totalBase: number; totalBonus: number; totalDeductions: number; totalNet: number; rowCount: number }): Promise<Result<Row>>;
   markRowsPosted(periodId: number): Promise<Result<{ updated: number }>>;
-  insertGlJournalLines(periodId: number, lines: ReadonlyArray<{ account: string; debit: number; credit: number; memo: string }>): Promise<Result<{ inserted: number }>>;
+  // insertGlJournalLines removed (#10 GL-unify) — payroll closure posts via GlPostingService.postJournal.
 }
 
 export const HR_PAYROLL_REPO = 'IHrPayrollRepository';

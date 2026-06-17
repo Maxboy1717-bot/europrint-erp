@@ -82,6 +82,15 @@ export class GlPostingService {
     return result;
   }
 
+  /**
+   * Public entry point for other modules to post a balanced multi-leg journal through the ONE engine
+   * (resolves GL codes → accounts.id, validates ΣDR==ΣCR, writes balanced pair-rows to `entries._id`).
+   * Use this instead of bespoke per-module INSERTs into `entries`.
+   */
+  async postJournal(lines: JournalLine[], reference: string): Promise<Result<number>> {
+    return this.createJournalEntry(lines, reference);
+  }
+
   private async createJournalEntry(lines: JournalLine[], reference: string): Promise<Result<number>> {
     const safeLines = Array.isArray(lines) ? lines : [];
     const debits = safeLines.filter((l) => l.debit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.debit }));
