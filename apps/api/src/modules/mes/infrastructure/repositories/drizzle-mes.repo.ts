@@ -32,14 +32,45 @@ const exec = async (q: SQL | SQLWrapper, tx?: DrizzleExecutor): Promise<Row[]> =
 export class DrizzleMesRepository implements IMesRepository {
   private readonly logger = new Logger(DrizzleMesRepository.name);
 
+  /**
+   * Persist a session's state change (start → running, complete → sent_to_qc). Both callers load an
+   * existing row via getSession first, so this UPDATEs by id — the old code INSERTed into columns that
+   * don't exist (pp_id/certification_required/completed_at), so it crashed AND would have duplicated the
+   * row. Canonical columns: status / started_at / ended_at (mes_production_sessions is a VIEW over this).
+   */
   async saveSession(session: ProductionSession, tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
-      const r = await exec(sql`INSERT INTO production_sessions (pp_id, work_center_id, operator_id, status, certification_required, started_at, completed_at) VALUES (${session['ppId']}, ${session['workCenterId']}, ${session.getOperatorId()}, ${session.getStatus()}, ${session.getCertificationRequired()}, ${session['startedAt']}, ${session['completedAt']}) RETURNING id`, tx);
-      return Ok(Number(r[0]?.id ?? 0));
+      const startedAt = session.getStartedAt();
+      const endedAt = session.getCompletedAt();
+      const r = await exec(sql`
+        UPDATE production_sessions
+        SET status = ${session.getStatus()},
+            started_at = COALESCE(${startedAt}, started_at),
+            ended_at = COALESCE(${endedAt}, ended_at),
+            updated_at = NOW()
+        WHERE id = ${session.getId()}
+        RETURNING id`, tx);
+      if (!r[0]) return Err('Sessiya topilmadi');
+      return Ok(Number(r[0].id ?? 0));
     } catch {
       this.logger.error('Failed to save production session');
       return Err('Sessiya saqlashda xatolik');
     }
+  }
+
+  /**
+   * Rebuild the aggregate from a production_sessions row using the canonical columns
+   * (production_order_id / equipment_id / worker_id). certification_required has no column on this
+   * table, so it defaults to false — the start-handler cert gate stays opt-in via LMS, not this flag.
+   */
+  private toSession(row: Row): ProductionSession {
+    return new ProductionSession(
+      Number(row.id),
+      Number(row.production_order_id),
+      Number(row.equipment_id),
+      Number(row.worker_id),
+      false,
+    );
   }
 
   async getSession(id: number, tx?: DrizzleExecutor): Promise<Result<ProductionSession>> {
@@ -47,7 +78,7 @@ export class DrizzleMesRepository implements IMesRepository {
       const r = await exec(sql`SELECT * FROM production_sessions WHERE id = ${id} LIMIT 1`, tx);
       if (!r[0]) return Err('Sessiya topilmadi');
       const row = r[0];
-      return Ok(new ProductionSession(Number(row.id), Number(row.pp_id), Number(row.work_center_id), Number(row.operator_id), Boolean(row.certification_required)));
+      return Ok(this.toSession(row));
     } catch {
       this.logger.error('Failed to get session');
       return Err('Oqish xatoligi');
@@ -67,10 +98,10 @@ export class DrizzleMesRepository implements IMesRepository {
 
   async getSessionByPpId(ppId: number): Promise<Result<ProductionSession>> {
     try {
-      const r = await exec(sql`SELECT * FROM production_sessions WHERE pp_id = ${ppId} LIMIT 1`);
+      const r = await exec(sql`SELECT * FROM production_sessions WHERE production_order_id = ${ppId} LIMIT 1`);
       if (!r[0]) return Err('Sessiya topilmadi');
       const row = r[0];
-      return Ok(new ProductionSession(Number(row.id), Number(row.pp_id), Number(row.work_center_id), Number(row.operator_id), Boolean(row.certification_required)));
+      return Ok(this.toSession(row));
     } catch {
       this.logger.error('Failed to get session by PP');
       return Err('Oqish xatoligi');
@@ -80,7 +111,7 @@ export class DrizzleMesRepository implements IMesRepository {
   async getAllSessionsByStatus(status: string): Promise<Result<ProductionSession[]>> {
     try {
       const r = await exec(sql`SELECT * FROM production_sessions WHERE status = ${status}`);
-      return Ok(r.map((row) => new ProductionSession(Number(row.id), Number(row.pp_id), Number(row.work_center_id), Number(row.operator_id), Boolean(row.certification_required))));
+      return Ok(r.map((row) => this.toSession(row)));
     } catch {
       this.logger.error('Failed to get sessions');
       return Err('Oqish xatoligi');

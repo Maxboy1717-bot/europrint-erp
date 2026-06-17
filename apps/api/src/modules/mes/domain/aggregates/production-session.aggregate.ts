@@ -66,6 +66,14 @@ export class ProductionSession extends AggregateRoot {
     return this.operatorId;
   }
 
+  getStartedAt(): Date | null {
+    return this.startedAt;
+  }
+
+  getCompletedAt(): Date | null {
+    return this.completedAt;
+  }
+
   getDowntimes(): Downtime[] {
     return this.downtimes;
   }
