@@ -65,13 +65,15 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       // Live crm_deals columns: currency_id (not currency), close_date (not
       // expected_closure_date), additional_info (not description); no lead_id column
       // (lead link → metadata jsonb).
+      // crm_deals is a VIEW over `deals`; base `amount` is NOT NULL while the insert only set the
+      // duplicate `opportunity` -> 23502. amount := opportunity (same deal value, no value-logic change).
       const res = await runQuery<Row>(sql`
         INSERT INTO crm_deals (
-          title, stage_id, company_id, opportunity, assigned_by_id, created_by_id,
+          title, stage_id, company_id, opportunity, amount, assigned_by_id, created_by_id,
           probability, currency_id, close_date, additional_info, metadata
         )
         VALUES (
-          ${title}, ${stageId}, ${companyId}, ${opportunity}, ${assignedById}, ${createdById},
+          ${title}, ${stageId}, ${companyId}, ${opportunity}, ${opportunity}, ${assignedById}, ${createdById},
           ${probability}, ${currency}, ${expectedClosureDate}, ${description},
           ${JSON.stringify({ lead_id: leadId })}::jsonb
         )

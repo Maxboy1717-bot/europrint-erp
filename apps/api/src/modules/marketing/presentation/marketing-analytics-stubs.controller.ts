@@ -112,9 +112,10 @@ export class MarketingAnalyticsStubsController {
     const title = String(dto['title'] ?? dto['topic'] ?? 'AI-generated draft');
     const content = String(dto['content'] ?? dto['prompt'] ?? '');
     const platform = String(dto['platform'] ?? 'general');
+    // marketing_content.id is varchar with NO default — supply one (insert omitted it -> 23502).
     const row = first(await db.execute(sql`
-      INSERT INTO marketing_content (title, content, type, platform, status, created_at)
-      VALUES (${title}, ${content}, ${'ai-generated'}, ${platform}, ${'draft'}, NOW())
+      INSERT INTO marketing_content (id, title, content, type, platform, status, created_at)
+      VALUES (gen_random_uuid()::text, ${title}, ${content}, ${'ai-generated'}, ${platform}, ${'draft'}, NOW())
       RETURNING id, title, status
     `));
     return { data: row, ai_provider: 'pending', message: 'Mazmun saqlandi (AI provayder konfiguratsiyasi kerak)' };
@@ -670,10 +671,11 @@ export class MarketingAnalyticsStubsController {
     const dto = StubBodySchema.parse(body ?? {});
     const titleUz = String(dto['title_uz'] ?? dto['title'] ?? dto['topic'] ?? 'AI-generated maqola');
     const slug = titleUz.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 100) + '-' + Date.now();
+    // blog_posts.id is varchar with NO default — supply one (insert omitted it -> 23502).
     const row = first(await db.execute(sql`
-      INSERT INTO blog_posts (slug, title_uz, title_ru, body_uz, body_ru, is_published, created_at, updated_at)
+      INSERT INTO blog_posts (id, slug, title_uz, title_ru, body_uz, body_ru, is_published, created_at, updated_at)
       VALUES (
-        ${slug}, ${titleUz}, ${String(dto['title_ru'] ?? titleUz)},
+        gen_random_uuid()::text, ${slug}, ${titleUz}, ${String(dto['title_ru'] ?? titleUz)},
         ${String(dto['body_uz'] ?? dto['content'] ?? '')},
         ${String(dto['body_ru'] ?? '')},
         FALSE, NOW(), NOW()
