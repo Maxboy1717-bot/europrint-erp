@@ -43,7 +43,19 @@ export class LmsMiscRepository {
 
   async saveVideoProgress(data: Row): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO video_progress (employee_id, lesson_id, progress_seconds, total_seconds, completed, updated_at) VALUES (${parseInt(String(data.employeeId ?? data.userId ?? 0), 10)}, ${parseInt(String(data.lessonId ?? 0), 10)}, ${parseInt(String(data.progressSeconds ?? 0), 10)}, ${parseInt(String(data.totalSeconds ?? 0), 10)}, ${Boolean(data.completed)}, NOW()) ON CONFLICT (employee_id, lesson_id) DO UPDATE SET progress_seconds = EXCLUDED.progress_seconds, completed = EXCLUDED.completed, updated_at = NOW() RETURNING *`);
+      // video_progress has no employee_id column (canonical = user_id -> 42703) and no unique index on
+      // (user_id, lesson_id) for ON CONFLICT (42P10). Upsert manually: UPDATE the existing (user,lesson)
+      // row, else INSERT — no DDL needed.
+      const uid = parseInt(String(data.employeeId ?? data.userId ?? 0), 10);
+      const lid = parseInt(String(data.lessonId ?? 0), 10);
+      const ps = parseInt(String(data.progressSeconds ?? 0), 10);
+      const ts = parseInt(String(data.totalSeconds ?? 0), 10);
+      const done = Boolean(data.completed);
+      // Real video_progress cols: "current_time" (reserved word), duration, completed, last_watched_at
+      // (no progress_seconds/total_seconds/updated_at). Map progress->current_time, total->duration.
+      const upd = await exec(sql`UPDATE video_progress SET "current_time" = ${ps}, duration = ${ts}, completed = ${done}, last_watched_at = NOW() WHERE user_id = ${uid} AND lesson_id = ${lid} RETURNING *`);
+      if (Array.isArray(upd) && upd.length > 0) return Ok(upd[0] as Row);
+      const r = await exec(sql`INSERT INTO video_progress (user_id, lesson_id, "current_time", duration, completed, last_watched_at) VALUES (${uid}, ${lid}, ${ps}, ${ts}, ${done}, NOW()) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`saveVideoProgress: ${(error as Error).message}`); return Err((error as Error).message); }
   }
@@ -115,7 +127,10 @@ export class LmsMiscRepository {
 
   async saveModule(data: Row): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO lms_modules (title, course_id, description, sort_order, is_active, created_at) VALUES (${String(data.title)}, ${data.courseId ? parseInt(String(data.courseId), 10) : null}, ${data.description ? String(data.description) : null}, ${data.sortOrder ? parseInt(String(data.sortOrder), 10) : 0}, true, NOW()) RETURNING *`);
+      // lms_modules is a VIEW over `modules` whose NOT NULL col is "order" (reserved word) — the insert
+      // wrote only sort_order and omitted "order" -> 23502. Supply both with the same value.
+      const so = data.sortOrder ? parseInt(String(data.sortOrder), 10) : 0;
+      const r = await exec(sql`INSERT INTO lms_modules (title, course_id, description, sort_order, "order", created_at) VALUES (${String(data.title)}, ${data.courseId ? parseInt(String(data.courseId), 10) : null}, ${data.description ? String(data.description) : null}, ${so}, ${so}, NOW()) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`saveModule: ${(error as Error).message}`); return Err((error as Error).message); }
   }

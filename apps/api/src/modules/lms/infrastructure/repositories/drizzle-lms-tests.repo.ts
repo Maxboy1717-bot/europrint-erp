@@ -108,9 +108,11 @@ export class LmsTestsRepository {
 
   async saveQuestion(data: Row): Promise<Result<Row>> {
     try {
+      // lms_questions is a VIEW over `questions` whose NOT NULL cols include `type` + "order" (reserved
+      // word) — the insert omitted both -> 23502. Default type='single' (correct_option is one index).
       const rows = await runQuery<Row>(sql`
-        INSERT INTO lms_questions (test_id, question_text, options, correct_option, score, created_at)
-        VALUES (${data.testId ? parseInt(String(data.testId), 10) : null}, ${String(data.questionText ?? data.text ?? '')}, ${JSON.stringify(data.options ?? [])}::jsonb, ${data.correctOption !== undefined ? parseInt(String(data.correctOption), 10) : 0}, ${data.score ? parseInt(String(data.score), 10) : 1}, NOW())
+        INSERT INTO lms_questions (test_id, question, type, "order", options, correct_option, score, created_at)
+        VALUES (${data.testId ? parseInt(String(data.testId), 10) : null}, ${String(data.questionText ?? data.text ?? '')}, ${String(data.type ?? 'single')}, ${data.order ? parseInt(String(data.order), 10) : 0}, ${JSON.stringify(data.options ?? [])}::jsonb, ${data.correctOption !== undefined ? parseInt(String(data.correctOption), 10) : 0}, ${data.score ? parseInt(String(data.score), 10) : 1}, NOW())
         RETURNING *
       `);
       return Ok((rows.rows[0] ?? data) as Row);

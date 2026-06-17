@@ -32,7 +32,10 @@ export class LmsCertRepo {
 
   async saveCertificate(certificate: Row, issuedBy?: number): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO certificates (employee_id, course_id, issued_date, expiry_date, score, is_active, created_at) VALUES (${certificate.employeeId ?? certificate.employee_id}, ${certificate.courseId ?? certificate.course_id}, NOW(), ${certificate.expiresAt ?? certificate.expiry_date ?? null}, ${certificate.score ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING *`);
+      // certificates: user_id + certificate_number are NOT NULL (no default); the old insert wrote only
+      // the legacy employee_id and omitted both -> 23502. user_id := employee, certificate_number generated.
+      const emp = certificate.employeeId ?? certificate.employee_id;
+      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_date, expiry_date, score, is_active, created_at) VALUES (${emp}, ${emp}, ${certificate.courseId ?? certificate.course_id}, ${'CERT-' + Date.now()}, NOW(), ${certificate.expiresAt ?? certificate.expiry_date ?? null}, ${certificate.score ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING *`);
       return Ok(r[0]);
     } catch (error: unknown) {
       this.logger.error(`saveCertificate: ${(error as Error).message}`);
@@ -113,7 +116,9 @@ export class LmsCertRepo {
 
   async saveCertificateLegacy(certificate: Row, issuedBy: number): Promise<number> {
     try {
-      const r = await exec(sql`INSERT INTO certificates (employee_id, course_id, issued_date, expiry_date, is_active, created_at) VALUES (${certificate.employeeId ?? certificate['employeeId']}, ${certificate.courseId ?? certificate['courseId']}, NOW(), ${certificate.expiresAt ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING id`);
+      // user_id + certificate_number NOT NULL (no default) — supply both (was omitted -> 23502).
+      const emp = certificate.employeeId ?? certificate['employeeId'];
+      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_date, expiry_date, is_active, created_at) VALUES (${emp}, ${emp}, ${certificate.courseId ?? certificate['courseId']}, ${'CERT-' + Date.now()}, NOW(), ${certificate.expiresAt ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING id`);
       return Number(r[0]?.id ?? 0);
     } catch (error: unknown) {
       this.logger.error(`saveCertificateLegacy: ${(error as Error).message}`);

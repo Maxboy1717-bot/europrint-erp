@@ -48,7 +48,10 @@ export class LmsCoursesExtendedRepository {
 
   async create(data: Row, userId: string): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO courses (title_uz, description, category, is_mandatory, passing_score, is_active, author_id, created_at) VALUES (${String(data.title)}, ${data.description ? String(data.description) : null}, ${data.category ? String(data.category) : null}, ${Boolean(data.isMandatory)}, ${data.passingScore ? parseInt(String(data.passingScore), 10) : 70}, true, ${parseInt(userId, 10)}, NOW()) RETURNING *`);
+      // courses: code + title are NOT NULL (no default); the old insert wrote only title_uz -> 23502.
+      // title := title_uz value, code generated.
+      const t = String(data.title);
+      const r = await exec(sql`INSERT INTO courses (title_uz, title, code, description, category, is_mandatory, passing_score, is_active, author_id, created_at) VALUES (${t}, ${t}, ${'CRS-' + Date.now()}, ${data.description ? String(data.description) : null}, ${data.category ? String(data.category) : null}, ${Boolean(data.isMandatory)}, ${data.passingScore ? parseInt(String(data.passingScore), 10) : 70}, true, ${parseInt(userId, 10)}, NOW()) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`create: ${(error as Error).message}`); return Err((error as Error).message); }
   }
@@ -101,7 +104,9 @@ export class LmsCoursesExtendedRepository {
 
   async saveCertificate(data: Row, userId: string): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO certificates (employee_id, course_id, issued_at, expiry_date, issued_by, is_active, created_at) VALUES (${parseInt(String(data.employeeId), 10)}, ${parseInt(String(data.courseId), 10)}, NOW(), ${data.expiryDate ? String(data.expiryDate) : null}, ${parseInt(userId, 10)}, true, NOW()) RETURNING *`);
+      // user_id + certificate_number NOT NULL (no default) — supply both (was omitted -> 23502).
+      const emp = parseInt(String(data.employeeId), 10);
+      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_at, expiry_date, issued_by, is_active, created_at) VALUES (${emp}, ${emp}, ${parseInt(String(data.courseId), 10)}, ${'CERT-' + Date.now()}, NOW(), ${data.expiryDate ? String(data.expiryDate) : null}, ${parseInt(userId, 10)}, true, NOW()) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`saveCertificate: ${(error as Error).message}`); return Err((error as Error).message); }
   }

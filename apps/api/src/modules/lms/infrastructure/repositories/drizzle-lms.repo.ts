@@ -83,7 +83,8 @@ export class LmsRepository implements ILmsRepo {
 
   async saveCourse(course: Course): Promise<Result<Course>> {
     try {
-      const r = await exec(sql`INSERT INTO courses (title_uz, description, category, is_mandatory, passing_score, is_active, created_at) VALUES (${course.title}, ${course.description ?? null}, ${course.category ?? null}, ${course.is_mandatory}, ${course.passing_score}, true, NOW()) RETURNING *`);
+      // courses.code + title are NOT NULL (no default); old insert wrote only title_uz -> 23502.
+      const r = await exec(sql`INSERT INTO courses (title_uz, title, code, description, category, is_mandatory, passing_score, is_active, created_at) VALUES (${course.title}, ${course.title}, ${'CRS-' + Date.now()}, ${course.description ?? null}, ${course.category ?? null}, ${course.is_mandatory}, ${course.passing_score}, true, NOW()) RETURNING *`);
       return Ok(mapCourse(r[0]));
     } catch (error: unknown) {
       this.logger.error(`saveCourse: ${(error as Error).message}`);
