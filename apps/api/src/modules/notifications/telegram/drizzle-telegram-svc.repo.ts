@@ -18,6 +18,7 @@ export class DrizzleTelegramSvcRepository implements ITelegramSvcRepository {
         id:      sql`DEFAULT`,
         userId:  String(dto.userId),
         title:   dto.title,
+        body:    dto.message ?? dto.title,   // live NOT NULL — must be set (was omitted -> 23502)
         message: dto.message,
         type:    dto.type,
         isRead:  dto.read,
