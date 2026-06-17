@@ -23,7 +23,7 @@ export class GlPostingService {
     @Inject(GL_POSTING_REPO) private readonly glPostingRepo: IGlPostingRepository,
   ) {}
 
-  async postSalesInvoice(invoiceId: number, amount: number, tax: number): Promise<Result<number>> {
+  async postSalesInvoice(invoiceId: number | string, amount: number, tax: number): Promise<Result<number>> {
     this.logger.debug(`Posting Sales Invoice - ID: ${invoiceId}, Amount: ${amount}, Tax: ${tax}`);
     const lines: JournalLine[] = [
       { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Accounts Receivable', debit: amount + tax, credit: 0 },

@@ -19,6 +19,7 @@ import {
   FinancePostInvoiceSchema, FinancePostInvoiceDto,
 } from './dto/finance.dto';
 import { FinanceInvoiceRepo } from '../infrastructure/repositories/drizzle-finance-invoice.repo';
+import { GlPostingService } from '../domain/services/gl-posting.service';
 
 const CreateInvoiceRootSchema = z.object({
   customerId: z.union([z.string(), z.number()]).optional(),
@@ -48,6 +49,7 @@ export class FinanceInvoicesController {
     private commandBus: CommandBus,
     private queryBus: QueryBus,
     private readonly invoiceRepo: FinanceInvoiceRepo,
+    private readonly gl: GlPostingService,
   ) {}
 
   @ApiOperation({ summary: 'List invoices' })
@@ -128,19 +130,21 @@ export class FinanceInvoicesController {
     @Param('invoiceId') invoiceId: string,
     @Body() body: FinancePostInvoiceDto,
   ) {
-    const result = await this.invoiceRepo.postInvoiceWithGl(
-      invoiceId,
-      body.amount,
-      body.taxAmount ?? 0,
-      body.postedBy,
-    );
-    if (!result.ok) {
-      throw new InternalServerErrorException('Invoice GL postlanmadi');
-    }
-    if (result.data.alreadyPosted) {
+    // #10 GL-unify: post the GL legs through the ONE engine (DR AR / CR Revenue + VAT, resolved to
+    // entries._id via the chart of accounts), then flip the invoice status. Idempotency = invoice status.
+    const existing = await this.invoiceRepo.findInvoiceById(invoiceId);
+    if (existing.ok && existing.data && (existing.data as Record<string, unknown>)['status'] === 'posted') {
       return { message: 'Invoice already posted to GL (idempotent)', invoiceId };
     }
-    return { message: 'Invoice posted to GL', invoiceId, entryId: result.data.entryId };
+    const glR = await this.gl.postSalesInvoice(invoiceId, body.amount, body.taxAmount ?? 0);
+    if (!glR.ok) {
+      throw new InternalServerErrorException('Invoice GL postlanmadi');
+    }
+    const flip = await this.invoiceRepo.markInvoicePosted(invoiceId);
+    if (!flip.ok) {
+      throw new InternalServerErrorException('Invoice status yangilanmadi');
+    }
+    return { message: 'Invoice posted to GL', invoiceId, entryId: glR.data };
   }
 
   @ApiOperation({ summary: 'Get invoice' })

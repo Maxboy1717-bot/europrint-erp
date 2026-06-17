@@ -210,83 +210,23 @@ export class FinanceInvoiceRepo {
    * integer-string lookup produces 0 rows updated (not a type error) while a UUID-string
    * lookup works correctly.
    */
-  async postInvoiceWithGl(
-    invoiceId: string,
-    amount: number,
-    taxAmount: number,
-    postedBy: number,
-  ): Promise<Result<{ entryId: number; alreadyPosted: boolean }>> {
+  /**
+   * Data op only: flip an invoice to 'posted'. GL posting (DR AR / CR Revenue + VAT) is orchestrated by
+   * the controller through GlPostingService (the ONE engine, resolves codes → entries._id, balanced) —
+   * #10 GL-unify. The old postInvoiceWithGl inserted text labels (accounts_receivable/revenue/tax_payable)
+   * into entries with NULL _id, bypassing the chart of accounts; it has been removed.
+   * fi_invoices.id is UUID; `id::text = $1` lets an integer-string lookup yield 0 rows (no type error).
+   */
+  async markInvoicePosted(invoiceId: string): Promise<Result<{ updated: number }>> {
     try {
-      // Idempotency guard
-      const existing = await this.findInvoiceById(invoiceId);
-      if (existing.ok && existing.data) {
-        const inv = existing.data as Record<string, unknown>;
-        if (inv['status'] === 'posted') {
-          return Ok({ entryId: 0, alreadyPosted: true });
-        }
-      }
-
-      const entryNumber = `GL-INV-${invoiceId}-${Date.now()}`;
-      const entryDate   = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-      const entryId = await db.transaction(async (tx) => {
-        // Dr Accounts-Receivable / Cr Revenue (main amount)
-        const r = await tx.execute(sql`
-          INSERT INTO entries
-            (entry_number, entry_date, document_type,
-             debit_account, credit_account,
-             amount, description, currency, created_at)
-          VALUES
-            (${entryNumber},
-             ${entryDate},
-             'invoice',
-             'accounts_receivable',
-             'revenue',
-             ${amount},
-             ${'GL post invoice ' + invoiceId + ' by ' + postedBy},
-             'UZS',
-             NOW())
-          RETURNING id
-        `);
-        const rows = ((r as { rows?: Record<string, unknown>[] }).rows) ?? [];
-        const id   = Number(rows[0]?.['id'] ?? 0);
-        if (!id) throw new Error('GL DR entry insert returned no id');
-
-        // Dr Accounts-Receivable / Cr Tax-Payable (if tax > 0)
-        if (taxAmount > 0) {
-          await tx.execute(sql`
-            INSERT INTO entries
-              (entry_number, entry_date, document_type,
-               debit_account, credit_account,
-               amount, description, currency, created_at)
-            VALUES
-              (${entryNumber + '-TAX'},
-               ${entryDate},
-               'invoice',
-               'accounts_receivable',
-               'tax_payable',
-               ${taxAmount},
-               ${'GL tax invoice ' + invoiceId},
-               'UZS',
-               NOW())
-          `);
-        }
-
-        // Status flip — cast UUID to text to prevent type-cast error when
-        // the caller passes an integer string (0 rows updated is acceptable).
-        await tx.execute(sql`
-          UPDATE fi_invoices
-          SET    status = 'posted', updated_at = NOW()
-          WHERE  id::text = ${invoiceId}
-        `);
-
-        return id;
-      });
-
-      this.logger.log(`Invoice ${invoiceId} posted to GL — entry id=${entryId}`);
-      return Ok({ entryId, alreadyPosted: false });
+      const r = await db.execute(sql`
+        UPDATE fi_invoices SET status = 'posted', updated_at = NOW()
+        WHERE id::text = ${invoiceId} RETURNING id
+      `);
+      const rows = ((r as { rows?: unknown[] }).rows) ?? [];
+      return Ok({ updated: rows.length });
     } catch (e: unknown) {
-      this.logger.error(`postInvoiceWithGl failed: ${(e as Error).message}`);
+      this.logger.error(`markInvoicePosted failed: ${(e as Error).message}`);
       return Err((e as Error).message);
     }
   }
