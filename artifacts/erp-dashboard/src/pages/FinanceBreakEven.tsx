@@ -206,8 +206,8 @@ export default function FinanceBreakEven() {
       {data && (
         <>
           {data.warning && (
-            <Card className="border-amber-300 bg-amber-50/40 dark:bg-amber-950/20">
-              <CardContent className="pt-4 pb-4 flex items-center gap-2 text-sm text-[var(--ep-yellow)] dark:text-amber-400">
+            <Card className="border-[var(--ep-yellow)] bg-[var(--ep-yellow-soft)]">
+              <CardContent className="pt-4 pb-4 flex items-center gap-2 text-sm text-[var(--ep-yellow)]">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 {data.warning}
               </CardContent>
@@ -235,7 +235,7 @@ export default function FinanceBreakEven() {
                 <div className="text-xl font-bold">{formatCurrency(data.breakEvenRevenue)}</div>
               </CardContent>
             </Card>
-            <Card className={data.marginOfSafetyPct >= 0 ? "border-emerald-300" : "border-red-300"}>
+            <Card className={data.marginOfSafetyPct >= 0 ? "border-[var(--ep-green)]" : "border-[var(--ep-red)]"}>
               <CardContent className="pt-5">
                 <div className="text-xs text-muted-foreground mb-1">{t('safetyMargin')}</div>
                 <div className={`text-xl font-bold ${data.marginOfSafetyPct >= 20 ? "text-[var(--ep-green)]" : data.marginOfSafetyPct >= 0 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]"}`}>
@@ -261,12 +261,12 @@ export default function FinanceBreakEven() {
                   <Legend />
                   <ReferenceLine
                     x={data.breakEvenQty}
-                    stroke="#f59e0b"
+                    stroke="var(--ep-yellow)"
                     strokeDasharray="6 3"
-                    label={{ value: t('bepLabel'), fill: "#f59e0b", fontSize: 11 }}
+                    label={{ value: t('bepLabel'), fill: "var(--ep-yellow)", fontSize: 11 }}
                   />
-                  <Line type="monotone" dataKey="revenue"   name={t('revenueLabel')}   stroke="#10b981" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="totalCost" name={t('totalCostLabel')} stroke="#ef4444" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="revenue"   name={t('revenueLabel')}   stroke="var(--ep-green)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="totalCost" name={t('totalCostLabel')} stroke="var(--ep-red)" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

@@ -59,7 +59,7 @@ function downloadCsv(filename: string, csv: string) {
 }
 
 function VarianceBar({ label, value, favorable }: { label: string; value: number; favorable: boolean }) {
-  const color = value === 0 ? "#6b7280" : favorable ? "#10b981" : "#ef4444";
+  const color = value === 0 ? "var(--ep-muted)" : favorable ? "var(--ep-green)" : "var(--ep-red)";
   return (
     <div className="flex items-center gap-3 py-2 border-b last:border-0">
       <div className="w-40 text-sm text-muted-foreground shrink-0">{label}</div>
@@ -100,11 +100,11 @@ export default function FinanceVariance() {
 
   const chartData = data
     ? [
-        { name: "MPV", value: data.mpv, fill: data.mpv < 0 ? "#10b981" : "#ef4444" },
-        { name: "MQV", value: data.mqv, fill: data.mqv < 0 ? "#10b981" : "#ef4444" },
-        { name: "LRV", value: data.lrv, fill: data.lrv < 0 ? "#10b981" : "#ef4444" },
-        { name: "LEV", value: data.lev, fill: data.lev < 0 ? "#10b981" : "#ef4444" },
-        { name: "OV",  value: data.ov,  fill: data.ov  > 0 ? "#f59e0b" : "#8b5cf6" },
+        { name: "MPV", value: data.mpv, fill: data.mpv < 0 ? "var(--ep-green)" : "var(--ep-red)" },
+        { name: "MQV", value: data.mqv, fill: data.mqv < 0 ? "var(--ep-green)" : "var(--ep-red)" },
+        { name: "LRV", value: data.lrv, fill: data.lrv < 0 ? "var(--ep-green)" : "var(--ep-red)" },
+        { name: "LEV", value: data.lev, fill: data.lev < 0 ? "var(--ep-green)" : "var(--ep-red)" },
+        { name: "OV",  value: data.ov,  fill: data.ov  > 0 ? "var(--ep-yellow)" : "var(--ep-purple)" },
       ]
     : [];
 
@@ -219,7 +219,7 @@ export default function FinanceVariance() {
                 <div className="font-semibold">{formatCurrency(data.actualTotalCost)}</div>
               </CardContent>
             </Card>
-            <Card className={data.totalVariance < 0 ? "border-emerald-400" : data.totalVariance > 0 ? "border-red-400" : ""}>
+            <Card className={data.totalVariance < 0 ? "border-[var(--ep-green)]" : data.totalVariance > 0 ? "border-[var(--ep-red)]" : ""}>
               <CardContent className="pt-5">
                 <div className="text-xs text-muted-foreground mb-1">{t("variance.totalVariance")}</div>
                 <div className={`font-bold text-lg ${data.totalVariance < 0 ? "text-[var(--ep-green)]" : data.totalVariance > 0 ? "text-[var(--ep-red)]" : ""}`}>
@@ -259,7 +259,7 @@ export default function FinanceVariance() {
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={v => (v / 1000).toFixed(0) + "K"} />
                     <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                    <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="4 2" />
+                    <ReferenceLine y={0} stroke="var(--ep-muted)" strokeDasharray="4 2" />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                       {chartData.map((entry, index) => (
                         <rect key={index} fill={entry.fill} />
