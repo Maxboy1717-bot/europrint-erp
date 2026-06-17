@@ -748,5 +748,14 @@
   "saqlash": "Сақлаш",
   "manager.select_label": "Rahbar tanlash",
   "manager.search_placeholder": "Ism yoki familiya bo'yicha qidiring",
-  "hrAiDashboard": "HR AI Dashboard"
+  "hrAiDashboard": "HR AI Dashboard",
+  "toshkentShahri": "Тошкент шаҳри",
+  "uzbekistan": "Ўзбекистон",
+  "xalqBanki": "Халқ банки",
+  "ismFamiliya": "Исм Фамилия",
+  "otaOnaTurmushORtogI": "Ота-она / турмуш ўртоғи",
+  "muddatsiz": "Муддациз",
+  "muddatli": "Муддатли",
+  "sinovMuddati": "Синов муддати",
+  "loyihaAsosida": "Лойиҳа асосида"
 }

@@ -138,6 +138,18 @@ const DATA = {
       uz: "Hali marshrutlash qoidasi yo'q. Yuqoridagi shakl orqali qo'shing.",
       ru: 'Пока нет правил маршрутизации. Добавьте через форму выше.',
     },
+
+    // ─── employee profile (EmployeeProfile t=hr) + contract types (WorkTabContractSection t=hr) ──
+    //     owner 2026-06-17 console-gap cleanup. These t() calls resolve in the `hr` namespace.
+    toshkentShahri:      { uz: 'Toshkent shahri',           ru: 'город Ташкент' },
+    uzbekistan:          { uz: "O'zbekiston",               ru: 'Узбекистан' },
+    xalqBanki:           { uz: 'Xalq banki',                ru: 'Народный банк' },
+    ismFamiliya:         { uz: 'Ism Familiya',              ru: 'Имя Фамилия' },
+    otaOnaTurmushORtogI: { uz: "Ota-ona / turmush o'rtog'i", ru: 'Родитель / супруг(а)' },
+    muddatsiz:           { uz: 'Muddatsiz',                 ru: 'Бессрочный' },
+    muddatli:            { uz: 'Muddatli',                  ru: 'Срочный' },
+    sinovMuddati:        { uz: 'Sinov muddati',             ru: 'Испытательный срок' },
+    loyihaAsosida:       { uz: 'Loyiha asosida',            ru: 'На проектной основе' },
   },
 
   // ─── production (CandidateChecklistTypes.ts) ──────────────────────────────
@@ -246,6 +258,41 @@ const DATA = {
     'KanbanColumn.tsx.bosh':        { uz: "Bo'sh",          ru: 'Пусто' },
     'CandidateCard.tsx.radEtish':   { uz: 'Rad etish',      ru: 'Отклонить' },
     'CandidateCard.tsx.bekorQilish': { uz: 'Bekor qilish',  ru: 'Отменить' },
+
+    // ─── warehouse dashboard (WarehouseDashboardPage.tsx, tLabel 'common.whDash.*') ──
+    //     owner 2026-06-17 console-gap cleanup. uz = the exact in-source fallback.
+    'whDash.title':       { uz: 'Ombor — Moliya nazorati',  ru: 'Склад — Финансовый контроль' },
+    'whDash.error':       { uz: 'Xato',                     ru: 'Ошибка' },
+    'whDash.totalValue':  { uz: 'Jami qiymat',              ru: 'Общая стоимость' },
+    'whDash.sum':         { uz: "so'm",                     ru: 'сум' },
+    'whDash.warehouses':  { uz: 'Omborlar',                 ru: 'Склады' },
+    'whDash.stocked':     { uz: 'qoldiqli / jami',          ru: 'с остатком / всего' },
+    'whDash.stockLines':  { uz: 'Stok qatorlari',           ru: 'Складские строки' },
+    'whDash.materials':   { uz: 'material pozitsiyasi',     ru: 'позиций материалов' },
+    'whDash.lowStock':    { uz: 'Kam qoldiq',               ru: 'Низкий остаток' },
+    'whDash.lowStockOk':  { uz: 'Barcha materiallar yetarli', ru: 'Всех материалов достаточно' },
+    'whDash.byWarehouse': { uz: "Omborlar bo'yicha qiymat", ru: 'Стоимость по складам' },
+    'whDash.empty':       { uz: "Ombor yo'q",               ru: 'Нет складов' },
+    'whDash.warehouse':   { uz: 'Ombor',                    ru: 'Склад' },
+    'whDash.lines':       { uz: 'Qator',                    ru: 'Строк' },
+    'whDash.qty':         { uz: 'Qoldiq',                   ru: 'Остаток' },
+    'whDash.value':       { uz: 'Qiymat',                   ru: 'Стоимость' },
+    'whDash.recent':      { uz: "So'nggi harakatlar",       ru: 'Последние движения' },
+    'whDash.noMoves':     { uz: "Harakat yo'q",             ru: 'Нет движений' },
+
+    // ─── other seen console gaps (tLabel 'common.*') ──
+    'useCRMWorkspace.kochirildi':    { uz: "Ko'chirildi",              ru: 'Перемещено' },
+    'ExtraTabs.jamiBolimlarFarzand': { uz: "Jami bo'limlar (farzand)", ru: 'Всего подразделений (дочерних)' },
+    'AIDesignGenerator.dizaynTasdiqlangandaPapkaordersStatusPending': { uz: "Dizayn tasdiqlanganda papkaOrders.status = \"pending_tech\" ga o'zgaradi — texnolog moduli avtomatik signal oladi", ru: 'При утверждении дизайна papkaOrders.status меняется на "pending_tech" — модуль технолога получает автоматический сигнал' },
+    'IoTExtended.ogohlantirishlar':  { uz: 'Ogohlantirishlar',         ru: 'Оповещения' },
+
+    // ─── profile/contract t() keys resolved in `common` (ContractDialog, PerformanceTabSections, etc.) ──
+    abcDaraja:        { uz: 'ABC daraja',          ru: 'ABC уровень' },
+    kursTugatish:     { uz: 'Kurs tugatish',       ru: 'Завершение курса' },
+    samaradorlik:     { uz: 'Samaradorlik',        ru: 'Эффективность' },
+    qoshimchaMalumot: { uz: "Qo'shimcha ma'lumot", ru: 'Дополнительная информация' },
+    muddatli:         { uz: 'Muddatli',            ru: 'Срочный' },
+    sinovMuddati:     { uz: 'Sinov muddati',       ru: 'Испытательный срок' },
   },
 };
 

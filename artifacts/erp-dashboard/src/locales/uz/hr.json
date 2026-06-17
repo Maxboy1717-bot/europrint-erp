@@ -664,5 +664,14 @@
   "saqlash": "Saqlash",
   "manager.select_label": "Rahbar tanlash",
   "manager.search_placeholder": "Ism yoki familiya bo'yicha qidiring",
-  "hrAiDashboard": "HR AI Dashboard"
+  "hrAiDashboard": "HR AI Dashboard",
+  "toshkentShahri": "Toshkent shahri",
+  "uzbekistan": "O'zbekiston",
+  "xalqBanki": "Xalq banki",
+  "ismFamiliya": "Ism Familiya",
+  "otaOnaTurmushORtogI": "Ota-ona / turmush o'rtog'i",
+  "muddatsiz": "Muddatsiz",
+  "muddatli": "Muddatli",
+  "sinovMuddati": "Sinov muddati",
+  "loyihaAsosida": "Loyiha asosida"
 }

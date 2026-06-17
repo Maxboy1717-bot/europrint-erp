@@ -664,5 +664,14 @@
   "saqlash": "Сохранить",
   "manager.select_label": "Rahbar tanlash",
   "manager.search_placeholder": "Ism yoki familiya bo'yicha qidiring",
-  "hrAiDashboard": "HR AI Dashboard"
+  "hrAiDashboard": "HR AI Dashboard",
+  "toshkentShahri": "город Ташкент",
+  "uzbekistan": "Узбекистан",
+  "xalqBanki": "Народный банк",
+  "ismFamiliya": "Имя Фамилия",
+  "otaOnaTurmushORtogI": "Родитель / супруг(а)",
+  "muddatsiz": "Бессрочный",
+  "muddatli": "Срочный",
+  "sinovMuddati": "Испытательный срок",
+  "loyihaAsosida": "На проектной основе"
 }
