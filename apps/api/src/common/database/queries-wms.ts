@@ -64,6 +64,24 @@ export async function execReceiveFg(warehouseId: number, materialId: number, amo
   `);
 }
 
+/**
+ * #08 chiqim (goods-issue): guarded atomic decrement of the CANONICAL warehouse_stock (same table
+ * receiveFg fills). The `>= amount` guard makes the single UPDATE both the stock check and the write,
+ * so it can't go negative. Returns the row id, or 0 if material missing / insufficient available.
+ * FEFO/batch-lot issue (the `stocks` table) is a separate deep-vision layer, not used here.
+ */
+export async function execIssueFromWarehouseStock(warehouseId: number, materialId: number, amount: number): Promise<number> {
+  const r = await runQuery(sql`
+    UPDATE warehouse_stock
+    SET quantity = quantity - ${amount},
+        available_quantity = available_quantity - ${amount},
+        last_movement_at = NOW(), last_updated_at = NOW()
+    WHERE warehouse_id = ${warehouseId} AND material_id = ${materialId}
+      AND available_quantity >= ${amount}
+    RETURNING id`);
+  return Number((r.rows[0] as { id?: unknown } | undefined)?.id ?? 0);
+}
+
 export async function queryAllStockByWarehouse(warehouseId: number): Promise<StockRow[]> {
   const rows = await db.select().from(stocks).where(eq(stocks.warehouse_id, warehouseId));
   return rows as StockRow[];

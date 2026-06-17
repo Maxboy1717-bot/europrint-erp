@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { AppErr, Err , Ok } from '@common/result';
+import { Err, Ok } from '@common/result';
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { WmsGoodsIssuedEvent } from '../events/wms-goods-issued.event';
 import { Inject, Logger } from '@nestjs/common';
@@ -30,47 +30,18 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
   async execute(command: GoodsIssueCommand): Promise<Result<void>> {
     this.logger.log(
       { materialId: command.materialId, amount: command.amount },
-      'Issuing goods - FEFO order',
+      'Issuing goods from canonical warehouse_stock',
     );
 
-    // FEFO read + multi-row write atomically — partial failures must roll back.
-    const outcome = await this.wmsRepo.withTransaction(async (tx) => {
-      // §8.5 FEFO/FIFO: Get stock ordered by expiry date
-      const stockResult = await this.wmsRepo.getFefoStock(command.materialId, command.warehouseId, tx);
-      if (!stockResult.ok) {
-        return Err(stockResult.error);
-      }
-
-      if (stockResult.data.length === 0) {
-        return Err(AppErr('NOT_FOUND', 'Stock topilmadi'));
-      }
-
-      let remainingAmount = command.amount;
-      for (const stock of stockResult.data) {
-        if (remainingAmount <= 0) break;
-
-        const toIssue = Math.min(stock.getAvailableQuantity(), remainingAmount);
-        if (toIssue <= 0) continue;
-
-        const issueResult = stock.issue(toIssue);
-        if (!issueResult.ok) {
-          return issueResult;
-        }
-
-        const saveResult = await this.wmsRepo.saveStock(stock, tx);
-        if (!saveResult.ok) {
-          return Err(saveResult.error);
-        }
-
-        remainingAmount -= toIssue;
-      }
-
-      if (remainingAmount > 0) {
-        return Err(`Yetarli stock yo'q. Etishmayotgan: ${remainingAmount}`);
-      }
-
-      return Ok(undefined);
-    });
+    // #08: chiqim decrements the CANONICAL warehouse_stock (the table receiveFg fills) via one guarded
+    // atomic UPDATE — so a QC-passed FG that was received can actually be issued. The old path read the
+    // non-canonical `stocks` table (empty for received FG) and the Stock aggregate's issue() required a
+    // prior reserve, so it always failed. FEFO/batch-lot issue stays a separate deep-vision layer.
+    const outcome = await this.wmsRepo.issueFromWarehouseStock(
+      command.materialId,
+      command.warehouseId,
+      command.amount,
+    );
 
     if (!outcome.ok) {
       return Err(outcome.error);

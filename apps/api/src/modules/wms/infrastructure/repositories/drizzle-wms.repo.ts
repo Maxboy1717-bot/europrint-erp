@@ -17,7 +17,7 @@ import { Stock } from '../../domain/aggregates/stock.aggregate';
 import { IWmsRepository, DrizzleExecutor, CreateWarehouseInput } from '../../domain/repositories/wms.repository';
 import {
   execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock,
-  execUpdateStockReserved, execUpdateStockIssued, execReceiveFg, queryAllStockByWarehouse,
+  execUpdateStockReserved, execUpdateStockIssued, execReceiveFg, execIssueFromWarehouseStock, queryAllStockByWarehouse,
 } from '@common/database/queries-wms';
 
 type StockRow = Record<string, unknown>;
@@ -196,6 +196,17 @@ export class DrizzleWmsRepository implements IWmsRepository {
     } catch {
       this.logger.error('Failed to receive FG');
       return Err('FG qabul qilishda xatolik');
+    }
+  }
+
+  async issueFromWarehouseStock(materialId: number, warehouseId: number, amount: number): Promise<Result<void>> {
+    try {
+      const id = await execIssueFromWarehouseStock(warehouseId, materialId, amount);
+      if (id === 0) return Err("Yetarli stock yo'q yoki material topilmadi");
+      return Ok(undefined);
+    } catch {
+      this.logger.error('Failed to issue from warehouse_stock');
+      return Err('Chiqarish xatoligi');
     }
   }
 
