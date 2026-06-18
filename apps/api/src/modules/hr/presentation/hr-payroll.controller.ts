@@ -90,25 +90,29 @@ export class HrPayrollController {
       );
     }
 
-    const period       = body.period ?? _time.now().toISOString().slice(0, 7);
-    const overtimeRate = body.overtimeRate ?? 1.5;
-    const dailyRate    = body.baseSalary / 22;
-    const overtimePay  = (body.overtimeHours ?? 0) * (dailyRate / 8) * overtimeRate;
-    const grossSalary  = body.baseSalary + overtimePay + (body.bonus ?? 0);
+    const period         = body.period ?? _time.now().toISOString().slice(0, 7);
+    const overtimeRate   = body.overtimeRate ?? 1.5;
+    // Razryad koeffitsienti: employees.org_function_id → org_functions.razryad_level_id → coefficient
+    // 1-razryad=1.00, 2=1.25, 3=1.55, 4=1.90, 5=2.30, 6=2.80 (seed-02-razryad.sql)
+    const razryadCoeff   = await this.hrRepo.getRazryadCoefficient(body.employeeId);
+    const effectiveSalary = body.baseSalary * razryadCoeff;
+    const dailyRate      = effectiveSalary / 22;
+    const overtimePay    = (body.overtimeHours ?? 0) * (dailyRate / 8) * overtimeRate;
+    const grossSalary    = effectiveSalary + overtimePay + (body.bonus ?? 0);
     // ERP is gross-only: net = gross − NON-TAX deductions. Tax (INPS/JSHD) is computed in 1C.
-    const netSalary    = grossSalary - (body.otherDeductions ?? 0);
+    const netSalary      = grossSalary - (body.otherDeductions ?? 0);
 
     const result = await this.hrRepo.savePayroll({
       employeeId:    body.employeeId,
       periodStart:   new Date(`${period}-01`),
       periodEnd:     new Date(new Date(`${period}-01`).setMonth(new Date(`${period}-01`).getMonth() + 1) - MS_PER_DAY),
-      baseSalary:    body.baseSalary,
+      baseSalary:    effectiveSalary,
       netSalary,
       bonus:         body.bonus ?? 0,
       otherDeductions: body.otherDeductions ?? 0,
     });
     assertOk(result);
-    return { ...result.data, grossSalary, netSalary, period };
+    return { ...result.data, grossSalary, netSalary, period, razryadCoefficient: razryadCoeff };
   }
 
   @ApiOperation({ summary: 'Approve payroll' })

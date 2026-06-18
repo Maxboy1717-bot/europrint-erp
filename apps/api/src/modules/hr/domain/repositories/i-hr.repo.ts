@@ -64,6 +64,13 @@ export interface IHrRepo {
    * windows; nulls returned when no active policy exists.
    */
   findActiveOvertimePolicy(): Promise<Result<OvertimePolicyRow | null>>;
+
+  /**
+   * Returns the razryad coefficient for an employee via:
+   *   employees.org_function_id → org_functions.razryad_level_id → razryad_levels.coefficient
+   * Returns 1.0 if no razryad is assigned (coefficient neutral — no change to base_salary).
+   */
+  getRazryadCoefficient(employeeId: number): Promise<number>;
 }
 
 export interface OvertimePolicyRow {

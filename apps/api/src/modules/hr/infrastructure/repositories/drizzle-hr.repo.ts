@@ -302,4 +302,21 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   getAttendanceStats(employeeId: string, period: string) { return this.leaveRepo.getAttendanceStats(employeeId, period); }
   getFeedbackByPeriod(empId: number, start: Date, end: Date) { return this.leaveRepo.getFeedbackByPeriod(empId, start, end); }
   getAttendanceByPeriod(empId: number, start: Date, end: Date) { return this.leaveRepo.getAttendanceByPeriod(empId, start, end); }
+
+  async getRazryadCoefficient(employeeId: number): Promise<number> {
+    try {
+      const rows = await runQuery<{ coefficient: string | null }>(sql`
+        SELECT COALESCE(rl.coefficient, 1.0)::numeric AS coefficient
+        FROM employees e
+        LEFT JOIN org_functions ofn ON ofn.id = e.org_function_id
+        LEFT JOIN razryad_levels rl ON rl.id = ofn.razryad_level_id
+        WHERE e.id = ${employeeId}
+        LIMIT 1
+      `);
+      const coeff = parseFloat(String(rows.rows[0]?.coefficient ?? '1'));
+      return isNaN(coeff) || coeff <= 0 ? 1.0 : coeff;
+    } catch {
+      return 1.0;
+    }
+  }
 }
