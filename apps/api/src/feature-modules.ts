@@ -46,7 +46,6 @@ export { PosModule } from './modules/pos/pos.module';
 export { PosV2Module } from './modules/pos-v2/pos-v2.module';
 export { CoreModule } from './modules/core/core.module';
 export { OrgStructureModule } from './modules/org-structure/org-structure.module';
-export { OrgModule } from './modules/org/org.module';
 export { ChatModule } from './modules/chat/chat.module';
 export { StorageModule } from './modules/storage/storage.module';
 

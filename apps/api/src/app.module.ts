@@ -48,7 +48,7 @@ import {
   MarketingModule, MroModule, SecurityModule, KanbanModule, AiModule,
   AiAgentsModule, BotGatewayModule, DirectorModule, AishaModule,
   CommunicationCenterModule, AgentsModule, PosModule, PosV2Module,
-  CoreModule, OrgStructureModule, OrgModule, ChatModule, StorageModule,
+  CoreModule, OrgStructureModule, ChatModule, StorageModule,
   EcommerceModule, LegacyModule, CompatibilityModule,
   CronModule, TelegramModule, RemainingModule, IntegrationModule,
   ErpModule, ExportModule, OrderWorkflowModule,
@@ -154,7 +154,6 @@ import {
     PosV2Module,
     CoreModule,
     OrgStructureModule,
-    OrgModule,
     ChatModule,
     StorageModule,
 
