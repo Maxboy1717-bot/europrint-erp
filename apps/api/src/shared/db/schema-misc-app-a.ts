@@ -43,6 +43,9 @@ export const hrEmployees = pgTable('employees', {
   middle_name:       varchar('middle_name'),
   department_id:     integer('department_id'),
   position_id:       integer('position_id'),
+  org_function_id:   integer('org_function_id'),
+  org_department_id: integer('org_department_id'),
+  vysotskiy_category: varchar('vysotskiy_category'),
   status:            varchar('status'),
   employment_status: varchar('employment_status'),
   employment_type:   varchar('employment_type'),
@@ -127,3 +130,21 @@ export const employeeOrgDepartments = pgTable('employee_org_departments', {
 });
 
 export { chatMessages, chatMembers, chatRooms } from './schema-chat';
+
+export const razryadLevels = pgTable('razryad_levels', {
+  id:             serial('id').primaryKey(),
+  level:          integer('level').notNull(),
+  name:           text('name').notNull(),
+  nameUz:         text('name_uz'),
+  nameRu:         text('name_ru'),
+  coefficient:    decimal('coefficient', { precision: 4, scale: 2 }),
+  minMonths:      integer('min_months').default(0),
+  minRequirement: text('min_requirement'),
+  salaryMin:      decimal('salary_min', { precision: 14, scale: 2 }),
+  salaryMax:      decimal('salary_max', { precision: 14, scale: 2 }),
+  descriptionUz:  text('description_uz'),
+  description:    text('description'),
+  isActive:       boolean('is_active').notNull().default(true),
+  createdAt:      timestamp('created_at').defaultNow(),
+  updatedAt:      timestamp('updated_at').defaultNow(),
+});

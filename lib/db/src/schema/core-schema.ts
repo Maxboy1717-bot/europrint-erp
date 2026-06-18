@@ -333,6 +333,20 @@ export const orgFunctions = pgTable("org_functions", {
   displayOrder: integer("display_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // Phase-1 card columns (EP-ORG-2026-06-08 migration — org-phase1-canonical-card)
+  status:         text("status").default("active"),
+  deletedAt:      timestamp("deleted_at"),
+  razryadLevelId: integer("razryad_level_id"),
+  salaryType:     text("salary_type"),
+  code:           text("code"),
+  level:          integer("level"),
+  rbacTier:       text("rbac_tier"),
+  minSalary:      numericMoney("min_salary"),
+  maxSalary:      numericMoney("max_salary"),
+  aiExamEnabled:  boolean("ai_exam_enabled").default(false),
+  statisticsType: text("statistics_type"),
+  managerId:      integer("manager_id"),
+  updatedAt:      timestamp("updated_at").defaultNow(),
 });
 
 export const insertOrgFunctionSchema = createInsertSchema(orgFunctions, {
