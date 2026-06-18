@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, Post, Param, Query, Body, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -21,6 +21,35 @@ import { notImplemented } from '@common/exceptions/not-implemented';
 
 const ApproveDto = z.object({ bomApproved: z.boolean().default(false), routingApproved: z.boolean().default(false), techCardApproved: z.boolean().default(false), notes: z.string().optional() });
 const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manager', 'designer']).default('manager') });
+
+const CreateCardDto = z.object({
+  code: z.string().max(50).optional(),
+  name: z.string().max(200).optional(),
+  direction: z.string().max(20).optional(),
+  materialType: z.string().max(50).optional(),
+  productType: z.string().optional(),
+  formatA: z.coerce.number().int().optional(),
+  formatB: z.coerce.number().int().optional(),
+  formatCode: z.string().max(20).optional(),
+  gofraProfile: z.string().max(20).optional(),
+  raskroyPerList: z.coerce.number().int().optional(),
+  scrapPct: z.coerce.number().optional(),
+  qolipId: z.coerce.number().int().optional(),
+  printParams: z.any().optional(),
+  kesim: z.any().optional(),
+  postPress: z.any().optional(),
+  ishTartibi: z.any().optional(),
+  operations: z.string().optional(),
+});
+const UpdateCardDto = CreateCardDto.extend({ status: z.enum(['draft', 'approved', 'archived']).optional() });
+const BomItemDto = z.object({ materialCode: z.string().min(1), quantity: z.coerce.number(), unit: z.string().max(10).optional(), layer: z.string().max(20).optional() });
+const RouteDto = z.object({
+  opSeq: z.coerce.number().int(), operation: z.string().min(1).max(100),
+  machineId: z.coerce.number().int().optional(), altMachineId: z.coerce.number().int().optional(),
+  normPerHour: z.coerce.number().optional(), setupMinutes: z.coerce.number().int().optional(),
+  scrapFixed: z.coerce.number().int().optional(), scrapPct: z.coerce.number().optional(),
+  minRazryad: z.coerce.number().int().optional(), isCore: z.boolean().optional(),
+});
 
 
 
@@ -128,5 +157,91 @@ export class TechnologyController {
   @ApiOperation({ summary: 'Optimize technology card' })
   async optimizeCard(@Param('id') _id: string, @Body() _body: unknown) {
     return notImplemented('POST /technology/cards/:id/optimize');
+  }
+
+  // ── Phase 1: texkarta MASTER CRUD ─────────────────────────────────────────
+  @Post('cards')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Create a technology master card' })
+  async createCard(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = CreateCardDto.parse(body);
+    return unwrapOrInternal(await this.svc.createCard({ ...dto, createdBy: Number(user.id) }));
+  }
+
+  @Put('cards/:id')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Update a technology master card (bumps version + snapshots)' })
+  async updateCard(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = UpdateCardDto.parse(body);
+    const r = await this.svc.updateCard(id, dto, Number(user.id));
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Delete('cards/:id')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Soft-delete a technology master card' })
+  async deleteCard(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    unwrapOrInternal(await this.svc.deleteCard(id, Number(user.id)));
+    return { id, deletedAt: _time.now().toISOString() };
+  }
+
+  @Post('cards/:id/lab-approve')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Mark lab-approved gate' })
+  async labApprove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const r = await this.svc.labApprove(id, Number(user.id));
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.NOT_FOUND);
+    return r.data;
+  }
+
+  @Post('cards/:id/maket-approve')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Mark maket-approved gate' })
+  async maketApprove(@Param('id') id: string) {
+    const r = await this.svc.maketApprove(id);
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.NOT_FOUND);
+    return r.data;
+  }
+
+  @Get('cards/:id/bom')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'List BOM rows of a card' })
+  async getBom(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getBom(id));
+  }
+
+  @Post('cards/:id/bom')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Add a BOM row to a card' })
+  async addBom(@Param('id') id: string, @Body() body: unknown) {
+    const dto = BomItemDto.parse(body);
+    const r = await this.svc.addBomItem(id, dto);
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Get('cards/:id/routes')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'List route operations of a card' })
+  async getRoutes(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getRoutes(id));
+  }
+
+  @Post('cards/:id/routes')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Add a route operation to a card' })
+  async addRoute(@Param('id') id: string, @Body() body: unknown) {
+    const dto = RouteDto.parse(body);
+    const r = await this.svc.addRoute(id, dto);
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Get('cards/:id/versions')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'List version history of a card' })
+  async getVersions(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getVersions(id));
   }
 }
