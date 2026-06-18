@@ -3,8 +3,8 @@
  * @description Section components for ChartOfAccounts page.
  */
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,17 +18,17 @@ import type { Account, SortField } from "./ChartOfAccountsTypes";
 export function getAccountTypeBadge(type: string) {
   switch (type) {
     case "asset":
-      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">{type}</Badge>;
+      return <EPStatusPill tone="info">{type}</EPStatusPill>;
     case "liability":
-      return <Badge variant="outline" className="bg-red-500/20 text-red-400 border-red-500/40">{type}</Badge>;
+      return <EPStatusPill tone="danger">{type}</EPStatusPill>;
     case "equity":
-      return <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/40">{type}</Badge>;
+      return <EPStatusPill tone="neutral">{type}</EPStatusPill>;
     case "revenue":
-      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{type}</Badge>;
+      return <EPStatusPill tone="success">{type}</EPStatusPill>;
     case "expense":
-      return <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-500/40">{type}</Badge>;
+      return <EPStatusPill tone="brand">{type}</EPStatusPill>;
     default:
-      return <Badge variant="outline">{type}</Badge>;
+      return <EPStatusPill tone="neutral">{type}</EPStatusPill>;
   }
 }
 
@@ -234,36 +234,21 @@ export function PageHeader({ onRefresh, onOpenCreate, createDialogSlot }: PageHe
   const { t } = useTranslation('finance');
 
   return (
-    <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-      <div className="px-4 lg:px-6 py-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <BookOpen className="h-8 w-8" />
-            <div>
-              <h1 className="text-2xl font-bold">{t('chartOfAccounts')}</h1>
-              <p className="text-white/75 text-sm">{t('accounting')}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              className="bg-card/10 border-white/30 text-white hover:bg-card/20"
-              onClick={onRefresh}
-              data-testid="button-refresh"
-            >
-              {"Yangilash"}
-            </Button>
-            {createDialogSlot}
-            <Button
-              variant="outline"
-              className="bg-card/10 border-white/30 text-white hover:bg-card/20"
-              data-testid="button-export"
-            >
-              {t("excel")}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <EPPageHeader
+      icon={<BookOpen className="h-5 w-5" />}
+      title={t('chartOfAccounts')}
+      subtitle={t('accounting')}
+      actions={
+        <>
+          <Button variant="outline" onClick={onRefresh} data-testid="button-refresh">
+            {"Yangilash"}
+          </Button>
+          {createDialogSlot}
+          <Button variant="outline" data-testid="button-export">
+            {t("excel")}
+          </Button>
+        </>
+      }
+    />
   );
 }

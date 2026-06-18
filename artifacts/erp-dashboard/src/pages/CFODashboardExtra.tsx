@@ -106,10 +106,10 @@ export function RiskSection({ financialRisk, riskLoading }: RiskSectionProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-2" data-testid="section-financial-risk">
       <div className={`rounded-xl p-6 text-white ${
-        financialRisk?.overallRiskLevel === "critical" ? "bg-red-500" :
+        financialRisk?.overallRiskLevel === "critical" ? "bg-[var(--ep-red)]" :
         financialRisk?.overallRiskLevel === "high"     ? "bg-primary" :
-        financialRisk?.overallRiskLevel === "medium"   ? "bg-amber-500" :
-        "bg-emerald-500"
+        financialRisk?.overallRiskLevel === "medium"   ? "bg-[var(--ep-yellow)]" :
+        "bg-[var(--ep-green)]"
       }`} data-testid="card-risk-score">
         {riskLoading ? (
           <div className="space-y-3">
@@ -179,10 +179,10 @@ export function RiskSection({ financialRisk, riskLoading }: RiskSectionProps) {
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium truncate">{risk.category}</span>
                     <Badge variant="outline" className={`text-xs shrink-0 ${
-                      risk.level === "critical" ? "border-red-500 text-[var(--ep-red)] dark:text-red-400" :
-                      risk.level === "high"     ? "border-orange-500 text-[var(--ep-primary)] dark:text-orange-400" :
-                      risk.level === "medium"   ? "border-amber-500 text-[var(--ep-yellow)] dark:text-amber-400" :
-                      "border-emerald-500 text-[var(--ep-green)] dark:text-emerald-400"
+                      risk.level === "critical" ? "border-[var(--ep-red)] text-[var(--ep-red)]" :
+                      risk.level === "high"     ? "border-[var(--ep-primary)] text-[var(--ep-primary)]" :
+                      risk.level === "medium"   ? "border-[var(--ep-yellow)] text-[var(--ep-yellow)]" :
+                      "border-[var(--ep-green)] text-[var(--ep-green)]"
                     }`}>
                       {risk.level === "critical" ? t('cfo.risk.criticalBadge') :
                        risk.level === "high"     ? t('cfo.risk.highBadge') :
@@ -191,9 +191,9 @@ export function RiskSection({ financialRisk, riskLoading }: RiskSectionProps) {
                   </div>
                   <div className="w-full bg-muted rounded-full h-1.5 mt-1">
                     <div className={`h-1.5 rounded-full transition-all ${
-                      risk.level === "critical" ? "bg-red-500" :
-                      risk.level === "high"     ? "bg-orange-500" :
-                      risk.level === "medium"   ? "bg-amber-500" : "bg-emerald-500"
+                      risk.level === "critical" ? "bg-[var(--ep-red)]" :
+                      risk.level === "high"     ? "bg-[var(--ep-primary)]" :
+                      risk.level === "medium"   ? "bg-[var(--ep-yellow)]" : "bg-[var(--ep-green)]"
                     }`} style={{ width: `${(risk.score / 25) * 100}%` }} />
                   </div>
                 </div>

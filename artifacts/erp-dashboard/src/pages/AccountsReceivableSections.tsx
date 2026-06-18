@@ -19,9 +19,9 @@ function getDaysOverdueBadge(days: number) {
   if (days > 90) {
     return <EPStatusPill tone="danger">{days} kun</EPStatusPill>;
   } else if (days > 60) {
-    return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{days} kun</Badge>;
+    return <EPStatusPill tone="warning">{days} kun</EPStatusPill>;
   } else if (days > 30) {
-    return <Badge className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5 text-xs font-semibold">{days} kun</Badge>;
+    return <EPStatusPill tone="warning">{days} kun</EPStatusPill>;
   }
   return <EPStatusPill tone="success">{days} kun</EPStatusPill>;
 }
@@ -114,7 +114,7 @@ export function ArAgingTable({ sortedBuckets, totals, onSort }: ArAgingTableProp
                   <div className="flex items-center justify-end gap-1"><span className="text-[var(--ep-primary)]">61-90</span><ArrowUpDown className="h-3 w-3" /></div>
                 </TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => onSort("days91to120")} data-testid="th-91-120">
-                  <div className="flex items-center justify-end gap-1"><span className="text-red-400">91-120</span><ArrowUpDown className="h-3 w-3" /></div>
+                  <div className="flex items-center justify-end gap-1"><span className="text-[var(--ep-red)]">91-120</span><ArrowUpDown className="h-3 w-3" /></div>
                 </TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => onSort("over120")} data-testid="th-over-120">
                   <div className="flex items-center justify-end gap-1"><span className="text-[var(--ep-red)]">120+</span><ArrowUpDown className="h-3 w-3" /></div>
@@ -131,7 +131,7 @@ export function ArAgingTable({ sortedBuckets, totals, onSort }: ArAgingTableProp
                   <TableCell className="text-right py-3 px-6">{formatCurrency(bucket.current)}</TableCell>
                   <TableCell className="text-right text-[var(--ep-yellow)] py-3 px-6">{formatCurrency(bucket.days31to60)}</TableCell>
                   <TableCell className="text-right text-[var(--ep-primary)] py-3 px-6">{formatCurrency(bucket.days61to90)}</TableCell>
-                  <TableCell className="text-right text-red-400 py-3 px-6">{formatCurrency(bucket.days91to120)}</TableCell>
+                  <TableCell className="text-right text-[var(--ep-red)] py-3 px-6">{formatCurrency(bucket.days91to120)}</TableCell>
                   <TableCell className="text-right text-[var(--ep-red)] font-medium py-3 px-6">{formatCurrency(bucket.over120)}</TableCell>
                   <TableCell className="text-right font-bold py-3 px-6">{formatCurrency(bucket.totalOutstanding)}</TableCell>
                 </TableRow>
@@ -141,7 +141,7 @@ export function ArAgingTable({ sortedBuckets, totals, onSort }: ArAgingTableProp
                 <TableCell className="text-right py-3 px-6">{formatCurrency(totals.current)}</TableCell>
                 <TableCell className="text-right text-[var(--ep-yellow)] py-3 px-6">{formatCurrency(totals.days31to60)}</TableCell>
                 <TableCell className="text-right text-[var(--ep-primary)] py-3 px-6">{formatCurrency(totals.days61to90)}</TableCell>
-                <TableCell className="text-right text-red-400 py-3 px-6">{formatCurrency(totals.days91to120)}</TableCell>
+                <TableCell className="text-right text-[var(--ep-red)] py-3 px-6">{formatCurrency(totals.days91to120)}</TableCell>
                 <TableCell className="text-right text-[var(--ep-red)] py-3 px-6">{formatCurrency(totals.over120)}</TableCell>
                 <TableCell className="text-right py-3 px-6">{formatCurrency(totals.totalOutstanding)}</TableCell>
               </TableRow>

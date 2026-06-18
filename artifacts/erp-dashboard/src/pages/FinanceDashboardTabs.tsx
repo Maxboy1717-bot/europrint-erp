@@ -92,10 +92,10 @@ export function DashboardOverviewTab({
           ]).map((step: { day: number; key?: string; label: string; labelRu?: string; event: string; color: string }) => {
             const isActive = fpCycle?.currentDay === step.day;
             const colorMap: Record<string, string> = {
-              emerald: "border-emerald-300 bg-emerald-50 text-emerald-800",
-              blue:    "border-blue-300 bg-blue-50 text-blue-800",
-              amber:   "border-amber-300 bg-amber-50 text-amber-800",
-              rose:    "border-rose-300 bg-rose-50 text-rose-800",
+              emerald: "border-[var(--ep-green)] bg-[var(--ep-green-soft)] text-[var(--ep-green)]",
+              blue:    "border-[var(--ep-blue)] bg-[var(--ep-blue-soft)] text-[var(--ep-blue)]",
+              amber:   "border-[var(--ep-yellow)] bg-[var(--ep-yellow-soft)] text-[var(--ep-yellow)]",
+              rose:    "border-[var(--ep-red)] bg-[var(--ep-red-soft)] text-[var(--ep-red)]",
             };
             const activeCls = colorMap[step.color] ?? "border-muted bg-muted text-muted-foreground";
             const inactiveCls = "border-border bg-background text-muted-foreground";
@@ -122,9 +122,9 @@ export function DashboardOverviewTab({
           })}
         </div>
         {(fpCycle?.pending ?? 0) > 0 && (
-          <div className="mt-3 flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="mt-3 flex items-center gap-2 p-3 bg-[var(--ep-yellow-soft)] border border-[var(--ep-yellow)] rounded-lg">
             <AlertCircle className="w-4 h-4 text-[var(--ep-yellow)] shrink-0" />
-            <p className="text-xs text-amber-800">
+            <p className="text-xs text-[var(--ep-yellow)]">
               <span className="font-semibold">{fpCycle?.pending} ta ЗВС ariza</span> tasdiqlashni kutmoqda
               {fpCycle?.approvedTotal ? ` · Tasdiqlangan: ${Number(fpCycle.approvedTotal).toLocaleString()} UZS` : ""}
             </p>
