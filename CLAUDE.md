@@ -38,6 +38,11 @@
 > [`docs/SPRINT_DOD.md`](docs/SPRINT_DOD.md) — Sprint Definition of Done: global checklisti (tsc/test/golden-thread/sec), Sprint 0 to'liq ro'yxati ✅, Sprint 1-10 maxsus DoD, sign-off tartibi.
 > [`docs/GOLDEN_THREAD_TEKSHIRUV.md`](docs/GOLDEN_THREAD_TEKSHIRUV.md) — Oltin zanjir tekshiruvi: SD→PP→MES→QC→WMS→FIN curl qadamlari, domain_events SQL, listener grep, sprint holati jadvali.
 > [`docs/FUNDAMENT_STATUS.md`](docs/FUNDAMENT_STATUS.md) — ⭐ MASTER CHECKLISTI: 30 hujjat kategoriya bo'yicha (Arxitektura/Jarayon/Xavfsizlik/Ma'lumot/Xavf/Integratsiya/Muhit/Reja). Sprint 0 ✅ 100% tugadi. Sprint 1 tayyor.
+> [`docs/V2_YOQILISH_REJASI.md`](docs/V2_YOQILISH_REJASI.md) — ⭐ V2 GA O'TISH REJASI: Strangler Fig, 10 sprint jadvali (Auth+Org→Material+SD→PP→MES→QC→WMS→FIN→CRM→AI+IoT→Test), har sprint foydalanuvchi ko'radigan yangiliklar, xavf/yechim jadvali, muvaffaqiyat mezonlari. "V2 ga qanday o'tamiz?" — aniq javob.
+> [`docs/NOMLASHTIRISH_QOIDALARI.md`](docs/NOMLASHTIRISH_QOIDALARI.md) — Nomlashtirish standartlari: fayl (kebab-case), class (PascalCase), metod (camelCase), DB (snake_case), API route, event (modul.entity.amal), xato kodi (MODUL_TAVSIF), i18n kalit (modul.entity.kalit). Har kategoriya uchun ✅/❌ misollar.
+> [`docs/CI_CD_STANDARTLARI.md`](docs/CI_CD_STANDARTLARI.md) — CI/CD: ci.yml bosqichlari, pre-commit hooklar ro'yxati, branch strategiyasi (chore/schema-convergence de-facto main), deployment tartibi (pull→install→build→migrate→restart), backup qoidasi, muhit tekshiruvi.
+> [`docs/DEPENDENCY_STANDARTLARI.md`](docs/DEPENDENCY_STANDARTLARI.md) — Dependency boshqaruvi: 5-savol tekshiruvi (kerak/tavsiya/yangilanish/litsenziya/zaiflik), tasdiqlangan paketlar (NestJS/Drizzle/React/TanStack), taqiqlangan paketlar (moment/axios/sequelize/typeorm/redux/webpack), versiya strategiyasi (^/~/Exact), pnpm workspace qoidasi, audit (sprint boshida).
+> [`docs/ROLLBACK_PLAYBOOK.md`](docs/ROLLBACK_PLAYBOOK.md) — Rollback: qaror daraxti (API tushdi/DB muammo/migration xato/V2 bug/secret leak/relay to'xtadi/FE ishlamaydi), har holat uchun aniq buyruqlar, < 5 daqiqada tiklash maqsadi, incident log shabloni.
 > Test factory base (`apps/api/src/common/factories/`): har modul Drizzle sxemasi yaratilgandan keyin qo'shiladi (real DB, mock emas — Backend_Reja/14_Test.md §1 qoida).
 
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
