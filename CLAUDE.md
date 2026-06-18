@@ -21,6 +21,9 @@
 > [`docs/DB_ERD.md`](docs/DB_ERD.md) — Jadvallar munosabati (matnli ERD): kanonik vs eskirgan jadvallar xaritasi, FK bog'lanishlar.
 > [`docs/SPRINT_REJA.md`](docs/SPRINT_REJA.md) — Sprint 0-10 reja: tartib, bog'liqlik, tekshiruv mezonlari. Sprint 0 ✅ bajarildi.
 > [`docs/migration/MIGRATION_TARTIB.md`](docs/migration/MIGRATION_TARTIB.md) — Migration tartib: poydevor→org→material→SD→PP→MES→QC→WMS→FIN.
+> [`docs/V2_PAPKA_STRUKTURASI.md`](docs/V2_PAPKA_STRUKTURASI.md) — ⭐ V2 papka arxitekturasi: Strangler Fig pattern, `modules/` = V2 toza DDD, `_legacy/` = V1 o'chirilish kutmoqda, qaerda nima yoziladi jadvali.
+> [`docs/PARAZIT_KOD_QOIDALARI.md`](docs/PARAZIT_KOD_QOIDALARI.md) — ⭐ Parazit kod qoidalari: 8 tur (soxta/o'lik/stub/echo/phantom/ghost/view-yozish), oldini olish P-1..P-5, o'chirish tartibi, V1 katalog (~130 parazit).
+> [`docs/MASTER_DATA_STANDARTLARI.md`](docs/MASTER_DATA_STANDARTLARI.md) — Master data standartlari: jadval egalari, kim yarata/o'zgartira oladi, versiyalash (technology_cards), soft delete, biznes kalit, lookup=seed-only, material kod formati.
 > Test factory base (`apps/api/src/common/factories/`): har modul Drizzle sxemasi yaratilgandan keyin qo'shiladi (real DB, mock emas — Backend_Reja/14_Test.md §1 qoida).
 
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
