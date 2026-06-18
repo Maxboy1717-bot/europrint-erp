@@ -3,6 +3,11 @@
 > Bu fayl Claude Code terminaliga loyihaning arxitekturasi, qoidalari va hozirgi holati
 > haqida to'liq ma'lumot beradi. Har bir vazifani boshlashdan oldin bu faylni o'qing.
 
+> ⭐ **LOYIHA KONSTITUTSIYASI (yangi, kanonik):**
+> [`LOYIHA_QOIDALARI.md`](LOYIHA_QOIDALARI.md) — 17 bo'lim: 23 arxitektura qoidasi, DB, DDD, Security, FE, Test, CI/CD + EuroPrint-maxsus qoidalar (C/E/F/H).
+> [`DIZAYN_QOIDALARI.md`](DIZAYN_QOIDALARI.md) — EP Design System: tokenlar, EPPageHeader/EPKpiCard/EPCard/EPStatusPill, AppShell, modul ranglar.
+> [`docs/V2-REBUILD/Backend_Reja/00_Indeks.md`](docs/V2-REBUILD/Backend_Reja/00_Indeks.md) — 18 fazali backend reja (indeks).
+
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
 > [`docs/agent-constitution.md`](docs/agent-constitution.md) — Ish metodologiyasi,
 > modul holatlari, katta vazifalar jarayoni (dizayn o'zgartirish, refactor), commit qoidalari,
@@ -819,6 +824,13 @@ Har sessiya promt boshida ROL oladi:
 - **Q-44 — Windows `nest watch` crash = muhit, kod emas:** Katta rebuilddan keyin backend :3030 tushishi mumkin (000) — Windows `nest watch` tree-kill bug (manba: `docs/dedup-safety-rules.md`). Bu KOD xatosi EMAS (typecheck + DB-proof PASS bo'lsa). **Belgi:** `/api/auth/health` ham 000 (butun server tushgan, bitta endpoint emas). **Chora:** dev-serverni qayta ishga tushir (`pnpm --filter @europrint/api run dev:unsafe`) — panik yo'q. **Verify (Q-32):** server tushganda → static fallback (typecheck + rollback-tx DB-proof) bilan fix tasdiqlanadi; jonli-HTTP isbot server qaytgach + login bilan.
 - **Q-45 — Log fayllar HECH QACHON commit qilinmaydi (xavfsizlik) 🔴:** `backend.log*` va boshqa loglar JWT token / sezgir runtime ma'lumot saqlashi mumkin → `.gitignore`'da, HECH QACHON commit qilinmaydi. ⚠️ Nozik nuance: `*.log` rotated loglarni (`backend.log.prev3` — `.prev3` bilan tugaydi) **ushlamaydi** → `backend.log*` + `*.log.*` kerak. Agar log commit'ga tushib qolsa → darrov olib tashla (`git rm --cached`).
 
+### 🅶️ Kod hayoti va direktiva (Q-46..Q-47) — egasi 2026-06-17
+- **Q-46 — Ishlab turgan kod O'CHIRILMAYDI; to'g'ri ishlamaydigan kod TO'LIQ o'chiriladi ✂️🔴 (egasi qoidasi):** Bu Q-39 (kod-qotirish/regressiya) ning to'ldirmasi. ⭐ **Ikki tomonlama qoida:**
+  - ✅ **Ishlab turgan (to'g'ri ishlaydigan) kod/funksiya/sahifa/element HECH QACHON o'chirilmaydi** — dizayn moslash, refactor, "tozalash" bahonasida ham YO'Q. Statistika kartasi, tugma, feature, ma'lumot maydoni — ishlayotgan bo'lsa, qoladi (recruiting 9→5 stat olib tashlash = BU QOIDA BUZILISHI edi). "Dizaynni moslash = faqat ko'rinish; mazmun/funksiya o'chmaydi."
+  - ❌ **To'g'ri ISHLAMAYDIGAN kod — yarim-ishlaydigan, soxta (fake/echo/hardcoded), crash beradigan, o'lik (de-routed/orphan), dublikat — TO'LIQ o'chiriladi.** Buzuq kodni "saqlab qo'yish" yoki yarim holatda qoldirish TAQIQ — yo to'g'irlanadi, yo butunlay olib tashlanadi (chala qoldirilmaydi). O'chirishdan oldin: kod haqiqatan ishlamasligini tasdiqla (Q-29 verify) + boshqa joy import qilmasligini tekshir (Q-39 regress).
+  - O'lchov: "ishlaydimi + to'g'rimi?" (Q-40). Ishlaydi+to'g'ri → saqlanadi. Ishlamaydi/noto'g'ri → to'liq o'chiriladi yoki to'g'irlanadi, chala emas.
+- **Q-47 — Bajaruvchi direktivasi ≥1000 qator (egasi qoidasi) 📜:** Muslimbekka beriladigan har bir direktiva fayli **1000 qatordan kam bo'lmasin** — to'liq, batafsil, hech qanday noaniqlik qoldirmaydigan. Har faza/modul/fayl/pattern alohida yoziladi: aniq `fayl:satr`, oldin/keyin kod misollari, standart spetsifikatsiyasi (API, token ro'yxati), qabul-mezoni, edge-holatlar, self-verify qadamlari. ⚠️ To'ldiruvchi "filler" emas — haqiqiy batafsillik (massiv ish ko'lami buni oqlaydi). Kichik vazifa bo'lsa ham, direktiva to'liq kontekst + qoidalar bloki + har bosqich isboti bilan yoziladi.
+
 ---
 
-*Yangilangan: 2026-06-03 | Q-44..Q-45 qo'shildi (Q-44 Windows nest-watch crash = muhit, kod emas; Q-45 log fayllar hech qachon commit qilinmaydi — JWT token xavfi, `*.log` rotated loglarni ushlamaydi → `backend.log*`+`*.log.*`). Q-39..Q-43 (kod-qotirish, ishlaydi≠to'g'ri+master-reja, dizayn izchillik, tab ≤2 daraja, forma saqlash + `check-form-has-save`). Q-24..Q-38 (jarayon/boshqaruv). Qoida 23 (parallel sessiya rollari). Qoida 22 (Ombor+POS sidebar). Qoidalar 17-21.*
+*Yangilangan: 2026-06-17 (Q-46 ishlab-turgan-kod-o'chmaydi/buzuq-kod-to'liq-o'chiriladi [egasi]; Q-47 direktiva ≥1000 qator [egasi]). 2026-06-03 | Q-44..Q-45 qo'shildi (Q-44 Windows nest-watch crash = muhit, kod emas; Q-45 log fayllar hech qachon commit qilinmaydi — JWT token xavfi, `*.log` rotated loglarni ushlamaydi → `backend.log*`+`*.log.*`). Q-39..Q-43 (kod-qotirish, ishlaydi≠to'g'ri+master-reja, dizayn izchillik, tab ≤2 daraja, forma saqlash + `check-form-has-save`). Q-24..Q-38 (jarayon/boshqaruv). Qoida 23 (parallel sessiya rollari). Qoida 22 (Ombor+POS sidebar). Qoidalar 17-21.*
