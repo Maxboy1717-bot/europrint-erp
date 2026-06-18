@@ -10,6 +10,11 @@
 > [`EuroPrint_Master_Prompt.md`](EuroPrint_Master_Prompt.md) — ⭐ BAJARUVCHI (Muslimbek) har sessiyada o'qi: doimiy kontekst (A) + 22 faz prompti (B).
 > [`docs/V2-REBUILD/Backend_Reja/00_Indeks.md`](docs/V2-REBUILD/Backend_Reja/00_Indeks.md) — 18 fazali backend reja (indeks, hamma faz tayyor).
 > [`docs/adr/`](docs/adr/) — Arxitektura qarorlari (ADR-001..006): org_functions/sales_orders/entries/warehouse_stock/Result-T/technology_cards.
+> [`FE_STANDARTLAR.md`](FE_STANDARTLAR.md) — ⭐ FRONTEND standartlari: useQuery/useMutation/forma/jadval/modal shablonlar (copy-paste tayyor), EP komponentlar, rang/token/AppShell qoidalari, pre-commit tekshiruv ro'yxati.
+> [`BOSHLASH.md`](BOSHLASH.md) — Dev setup: clone, .env, Docker, migratsiya, seed, ishga tushirish, smoke test, umumiy muammolar va hal yo'llari.
+> [`docs/LUGAT.md`](docs/LUGAT.md) — Domain lug'at: gofra/offset atamalar, kanonik jadval nomlari, ERP qisqartmalar, aralashtirilmasligi kerak terminlar.
+> [`docs/GIT_QOIDALARI.md`](docs/GIT_QOIDALARI.md) — Git qoidalar: branch, commit format, `git add <aniq-fayl>` (HECH QACHON `-A`), migration commit, taqiqlangan amallar.
+> [`docs/migration/seed/`](docs/migration/seed/) — Seed SQL (idempotent): roles, razryad 1-6, unit_of_measures, accounts (BHMS), defect_catalog (gofra/offset/silkscreen/flexi).
 
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
 > [`docs/agent-constitution.md`](docs/agent-constitution.md) — Ish metodologiyasi,
