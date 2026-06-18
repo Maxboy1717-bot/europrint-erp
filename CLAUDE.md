@@ -31,6 +31,13 @@
 > [`docs/MUHIT_STANDARTLARI.md`](docs/MUHIT_STANDARTLARI.md) — Muhit: port standartlari (3030/5173/5432), .env majburiy o'zgaruvchilar, Docker Compose, dev/test/prod farqlari, secret rotation, startup validatsiya, pre-deploy tekshiruv.
 > [`docs/MONITORING_STANDARTLARI.md`](docs/MONITORING_STANDARTLARI.md) — Monitoring: log darajalari (error/warn/log/debug), nima loglanadi/loglanmaydi (JWT/parol taqiq), JSON strukturalangan log, GlobalExceptionFilter, health check format, performance monitoring.
 > [`docs/XAVF_REESTRI.md`](docs/XAVF_REESTRI.md) — ⭐ Xavf reestri: 23 aniqlangan xavf (R-01..R-23) E×T=M ball bilan. Kritik (M≥15): ikki-dunyo, GL atomarligi, secret leak, event yo'qolishi, N+1. Har sprint yangilanadi.
+> [`docs/KOCHIRISH_QOIDALARI.md`](docs/KOCHIRISH_QOIDALARI.md) — ⭐ V1→V2 ko'chirish: 6-bosqich (tahlil→domen→app→infra→presentation→cleanup), nima saqlash/qayta yozish, zero-downtime, rollback, modul tartib (auth→org→hr→mm→sd→...).
+> [`docs/CODE_REVIEW_STANDARTLARI.md`](docs/CODE_REVIEW_STANDARTLARI.md) — Code review: commit format, PR shabloni, tekshiruv ro'yxati (SEC/DB/DDD/TEST/PERF/NAMING), bloker vs taklif, merge qoidalari, self-review.
+> [`docs/DRIZZLE_STANDARTLARI.md`](docs/DRIZZLE_STANDARTLARI.md) — Drizzle ORM: schema definition pattern, SELECT/INSERT/UPDATE/softdelete, JOIN (N+1 yo'q), transaction, VIEW, migration workflow, kanonik jadval nomlari.
+> [`docs/TEXNIK_QARZ.md`](docs/TEXNIK_QARZ.md) — Texnik qarz reestri: 18 qarz T-01..T-18 (P0/P1/P2/P3). P0: ikki-dunyo, outbox. P1: ghost endpoint, hardcoded matn, parazit ~130. Sprint bo'yicha to'lash rejasi.
+> [`docs/SPRINT_DOD.md`](docs/SPRINT_DOD.md) — Sprint Definition of Done: global checklisti (tsc/test/golden-thread/sec), Sprint 0 to'liq ro'yxati ✅, Sprint 1-10 maxsus DoD, sign-off tartibi.
+> [`docs/GOLDEN_THREAD_TEKSHIRUV.md`](docs/GOLDEN_THREAD_TEKSHIRUV.md) — Oltin zanjir tekshiruvi: SD→PP→MES→QC→WMS→FIN curl qadamlari, domain_events SQL, listener grep, sprint holati jadvali.
+> [`docs/FUNDAMENT_STATUS.md`](docs/FUNDAMENT_STATUS.md) — ⭐ MASTER CHECKLISTI: 30 hujjat kategoriya bo'yicha (Arxitektura/Jarayon/Xavfsizlik/Ma'lumot/Xavf/Integratsiya/Muhit/Reja). Sprint 0 ✅ 100% tugadi. Sprint 1 tayyor.
 > Test factory base (`apps/api/src/common/factories/`): har modul Drizzle sxemasi yaratilgandan keyin qo'shiladi (real DB, mock emas — Backend_Reja/14_Test.md §1 qoida).
 
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
