@@ -7,10 +7,11 @@ import { z } from 'zod';
 import { MAX_NOTES_LENGTH, MAX_NAME_LENGTH } from '@common/constants/app.constants';
 
 export const HrCheckInSchema = z.object({
-  employeeId:     z.number().int().positive(),
-  attendanceDate: z.string().optional(),
-  checkInTime:    z.string().optional(),
-  source:         z.string().max(50).optional(),
+  employeeId:          z.number().int().positive(),
+  attendanceDate:      z.string().optional(),
+  checkInTime:         z.string().optional(),
+  source:              z.string().max(50).optional(),
+  scheduledStartTime:  z.string().regex(/^\d{2}:\d{2}$/).optional(),  // "HH:MM"
 });
 export type HrCheckInDto = z.infer<typeof HrCheckInSchema>;
 

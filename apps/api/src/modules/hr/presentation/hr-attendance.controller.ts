@@ -20,6 +20,7 @@ import { HR_REPO, IHrRepo } from '../domain/repositories/i-hr.repo';
 import { HrAttendanceService } from '../application/hr-attendance.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrCheckInSchema, HrCheckInDto, HrCheckOutSchema, HrCheckOutDto } from './dto/hr.dto';
+import { RecordAttendanceCommand } from '../application/commands/record-attendance.handler';
 
 @ApiThrottle()
 @ApiTags('Hr Attendance')
@@ -84,15 +85,20 @@ export class HrAttendanceController {
   @Roles('HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(HrCheckInSchema))
   async checkIn(@Body() body: HrCheckInDto) {
-    const result = await this.hrRepo.saveAttendance({
-      employeeId:     body.employeeId,
-      attendanceDate: body.attendanceDate ?? _time.now().toISOString().split('T')[0],
-      checkInTime:    body.checkInTime ? new Date(body.checkInTime) : _time.now(),
-      status:         'present',
-      source:         body.source ?? 'manual',
-      createdAt:      _time.now(),
-      updatedAt:      _time.now(),
-    });
+    const attendanceDate = body.attendanceDate ?? _time.now().toISOString().split('T')[0];
+    const checkInTime    = body.checkInTime ? new Date(body.checkInTime) : _time.now();
+    // Route through CQRS handler: classifies 'late' status + triggers discipline threshold check
+    const result = await this.commandBus.execute(
+      new RecordAttendanceCommand(
+        body.employeeId,
+        attendanceDate,
+        checkInTime,
+        undefined,
+        0,
+        body.source ?? 'manual',
+        body.scheduledStartTime,
+      ),
+    );
     assertOk(result);
     return { message: 'Kirish qayd etildi', ...result.data };
   }
