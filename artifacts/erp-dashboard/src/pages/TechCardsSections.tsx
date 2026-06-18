@@ -7,11 +7,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
 import { FileText, Zap, Search, Download, TrendingDown, Eye } from "lucide-react";
 import type { TechCard, PapkaOrder } from "./TechCardsTypes";
+import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 // ---------------------------------------------------------------------------
@@ -148,19 +148,26 @@ export function SingleTechCard({
       data-testid={`card-tech-${card.id}`}
     >
       <CardHeader className="pb-2 flex flex-row items-start justify-between gap-4">
-        <div>
-          <CardTitle className="text-base text-foreground">{card.name}</CardTitle>
+        <div className="min-w-0">
+          <CardTitle className="text-base text-foreground flex items-center gap-2 flex-wrap">
+            {card.code && <span className="font-mono text-xs text-muted-foreground">{card.code}</span>}
+            {card.name}
+            {card.version != null && (
+              <span className="text-xs text-muted-foreground font-normal">v{card.version}</span>
+            )}
+          </CardTitle>
           <p className="text-sm text-muted-foreground">{card.productType}</p>
         </div>
-        <Badge
-          className={
-            card.isActive
-              ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-              : "bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold"
-          }
-        >
-          {card.isActive ? "Faol" : "Nofaol"}
-        </Badge>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <EPStatusPill tone={card.isActive ? "success" : "neutral"}>
+            {card.isActive ? "Faol" : "Nofaol"}
+          </EPStatusPill>
+          {card.status && card.status !== "draft" && (
+            <EPStatusPill tone={card.status === "approved" ? "info" : "warning"} hideDot>
+              {card.status}
+            </EPStatusPill>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent>
