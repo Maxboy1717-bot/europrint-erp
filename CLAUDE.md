@@ -15,6 +15,13 @@
 > [`docs/LUGAT.md`](docs/LUGAT.md) — Domain lug'at: gofra/offset atamalar, kanonik jadval nomlari, ERP qisqartmalar, aralashtirilmasligi kerak terminlar.
 > [`docs/GIT_QOIDALARI.md`](docs/GIT_QOIDALARI.md) — Git qoidalar: branch, commit format, `git add <aniq-fayl>` (HECH QACHON `-A`), migration commit, taqiqlangan amallar.
 > [`docs/migration/seed/`](docs/migration/seed/) — Seed SQL (idempotent): roles, razryad 1-6, unit_of_measures, accounts (BHMS), defect_catalog (gofra/offset/silkscreen/flexi).
+> [`docs/EVENT_KATALOGI.md`](docs/EVENT_KATALOGI.md) — ⭐ Domain events: 19 event (nom, payload schema, emitter, listener, holat: ✅/⚠️/🔲). Oltin zanjir SD→PP→MES→QC→WMS→FIN.
+> [`docs/API_SHARTNOMA.md`](docs/API_SHARTNOMA.md) — FE↔BE kelishuv: success/error/pagination format, HTTP kodlar, ID=integer, sana=ISO8601, endpoint nomlash.
+> [`docs/XATO_KODLARI.md`](docs/XATO_KODLARI.md) — Standart xato kodlari: HR_*/SD_*/PP_*/MES_*/QC_*/WMS_*/FIN_*/CRM_*/AUTH_*. Result<T> bilan birga ishlaydi.
+> [`docs/DB_ERD.md`](docs/DB_ERD.md) — Jadvallar munosabati (matnli ERD): kanonik vs eskirgan jadvallar xaritasi, FK bog'lanishlar.
+> [`docs/SPRINT_REJA.md`](docs/SPRINT_REJA.md) — Sprint 0-10 reja: tartib, bog'liqlik, tekshiruv mezonlari. Sprint 0 ✅ bajarildi.
+> [`docs/migration/MIGRATION_TARTIB.md`](docs/migration/MIGRATION_TARTIB.md) — Migration tartib: poydevor→org→material→SD→PP→MES→QC→WMS→FIN.
+> Test factory base (`apps/api/src/common/factories/`): har modul Drizzle sxemasi yaratilgandan keyin qo'shiladi (real DB, mock emas — Backend_Reja/14_Test.md §1 qoida).
 
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
 > [`docs/agent-constitution.md`](docs/agent-constitution.md) — Ish metodologiyasi,
