@@ -6,6 +6,7 @@
 > ⭐ **LOYIHA KONSTITUTSIYASI (yangi, kanonik):**
 > [`LOYIHA_QOIDALARI.md`](LOYIHA_QOIDALARI.md) — 17 bo'lim: 23 arxitektura qoidasi, DB, DDD, Security, FE, Test, CI/CD + EuroPrint-maxsus qoidalar (C/E/F/H).
 > [`DIZAYN_QOIDALARI.md`](DIZAYN_QOIDALARI.md) — EP Design System: tokenlar, EPPageHeader/EPKpiCard/EPCard/EPStatusPill, AppShell, modul ranglar.
+> [`STANDARTLAR.md`](STANDARTLAR.md) — ⭐ AGENT QOʻLLANMASI: kanonik jadvallar (nima ishlat/ishlaTMA), jadval/ustun/API nomlash, DDD tuzilma, Drizzle/controller/service/repo/DTO shablonlar, duplikat tekshiruv skriptlari.
 > [`docs/V2-REBUILD/Backend_Reja/00_Indeks.md`](docs/V2-REBUILD/Backend_Reja/00_Indeks.md) — 18 fazali backend reja (indeks).
 
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
