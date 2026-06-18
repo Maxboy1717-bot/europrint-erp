@@ -77,7 +77,7 @@ export default function DailyKPIDashboard() {
   ];
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="daily-kpi-dashboard">
+    <div className="space-y-6" data-testid="daily-kpi-dashboard">
       <EPPageHeader
         icon={<BarChart3 className="h-5 w-5" />}
         title={t("kunlikMoliyaKpi")}
@@ -91,7 +91,7 @@ export default function DailyKPIDashboard() {
         }
       />
 
-      <div className="flex-1 min-h-0 overflow-auto space-y-6">
+      <div className="space-y-6">
         {todayLoading ? <EPSkeletonKpiRow count={4} /> : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {(Array.isArray(kpiCards) ? kpiCards : []).map((card, i) => (

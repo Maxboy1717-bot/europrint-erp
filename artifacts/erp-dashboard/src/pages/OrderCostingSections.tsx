@@ -2,7 +2,7 @@
 
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { EPStatusPill } from "@/components/ep";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -292,12 +292,12 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const { t } = useTranslation("common");
   switch (status) {
     case "draft":
-      return <Badge variant="outline" className="bg-muted text-muted-foreground">{t("draft")}</Badge>;
+      return <EPStatusPill tone="neutral">{t("draft")}</EPStatusPill>;
     case "calculated":
-      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">{t("hisoblangan")}</Badge>;
+      return <EPStatusPill tone="info">{t("hisoblangan")}</EPStatusPill>;
     case "approved":
-      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{t("approved")}</Badge>;
+      return <EPStatusPill tone="success">{t("approved")}</EPStatusPill>;
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return <EPStatusPill tone="neutral">{status}</EPStatusPill>;
   }
 }
