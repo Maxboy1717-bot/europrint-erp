@@ -23,6 +23,7 @@ import {
   HrImportEmployeesSchema, HrImportEmployeesDto,
   HrAssignAssetSchema, HrAssignAssetDto,
   HrCreateComplaintSchema, HrCreateComplaintDto,
+  HrAssignCardSchema, HrAssignCardDto,
 } from './dto/hr.dto';
 
 interface AuthenticatedUser { id: number; role: string; }
@@ -157,6 +158,18 @@ export class HrEmployeesExtController {
     const result = await this.svc.getEmployeesList(lm, (pg - 1) * lm);
     const items = Array.isArray(result) ? result : [];
     return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Xodimni org_function kartasiga biriktirish (razryad karta orqali)' })
+  @ApiResponse({ status: 201, description: 'OK — employeeId, orgFunctionId, razryadLevelId' })
+  @ApiResponse({ status: 400, description: 'Bad request — karta topilmadi yoki nofaol' })
+  @Post(':id/assign-card')
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  @UsePipes(new ZodValidationPipe(HrAssignCardSchema))
+  async assignCard(@Param('id') id: string, @Body() body: HrAssignCardDto) {
+    const result = await this.svc.assignCard(id, body.org_function_id);
+    if (!result.ok) throw new HttpException(result.error?.message ?? 'Xato', HttpStatus.BAD_REQUEST);
+    return result.data;
   }
 
   // NOTE: GET hr/employees/:employeeId/documents is served by HrEmployeesController (canonical, role-guarded).

@@ -269,3 +269,9 @@ export const UpdatePipSchema = z.object({
   outcome: z.string().max(2000).optional(),
 });
 export type UpdatePipDto = z.infer<typeof UpdatePipSchema>;
+
+/** Razryad assignment: xodimni org_function kartasiga biriktirish */
+export const HrAssignCardSchema = z.object({
+  org_function_id: z.number().int().positive(),
+});
+export type HrAssignCardDto = z.infer<typeof HrAssignCardSchema>;

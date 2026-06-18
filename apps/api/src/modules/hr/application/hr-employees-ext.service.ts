@@ -66,4 +66,8 @@ export class HrEmployeesExtService {
   async deleteEmployeeDocument(employeeId: string, docId: string) {
     return this.repo.deleteEmployeeDocument(safeInt(employeeId, 0), safeInt(docId, 0));
   }
+
+  async assignCard(employeeId: string, orgFunctionId: number) {
+    return this.repo.assignCard(safeInt(employeeId, 0), orgFunctionId);
+  }
 }

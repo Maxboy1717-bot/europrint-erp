@@ -227,4 +227,28 @@ export class HrEmployeesExtRepository implements IHrEmployeesExtRepo {
       return rows.length > 0;
     }, 'DB_ERROR');
   }
+
+  async assignCard(employeeId: number, orgFunctionId: number): Promise<Result<Row>> {
+    return safeCall(async () => {
+      // Verify the org_function exists and is active
+      const fn = await runQuery<{ id: number; razryad_level_id: number | null }>(sql`
+        SELECT id, razryad_level_id FROM org_functions
+        WHERE id = ${orgFunctionId} AND deleted_at IS NULL AND is_active = true
+        LIMIT 1
+      `);
+      if (!fn.rows[0]) throw new Error(`Karta ID=${orgFunctionId} topilmadi yoki nofaol`);
+
+      // Update employee org_function_id (razryad flows through karta)
+      await db.update(hrEmployees)
+        .set({ org_function_id: orgFunctionId, updated_at: _time.now() })
+        .where(eq(hrEmployees.id, employeeId));
+
+      return {
+        employeeId,
+        orgFunctionId,
+        razryadLevelId: fn.rows[0].razryad_level_id ?? null,
+        message: 'Xodim kartaga biriktirildi',
+      };
+    }, 'DB_ERROR');
+  }
 }

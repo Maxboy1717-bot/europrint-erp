@@ -149,12 +149,7 @@ export class OrgDepartmentsCompatController {
 export class OrgFunctionsCompatController {
   constructor(private readonly svc: ResourcesCompatService) {}
 
-  /**
-   * GET /api/org-functions
-   * Org-sxemadagi "Lavozim" (position) ro'yxati — `org_functions` jadvalidan
-   * { id, name(=position_name), departmentId, ... } qaytaradi. Legacy
-   * `/api/positions` o'rnini bosadi (dropdown'lar uchun org-sxema manba).
-   */
+  /** GET /api/org-functions — ro'yxat (dropdown uchun) */
   @Get()
   async getAll(
     @Query('page') page?: string,
@@ -162,6 +157,28 @@ export class OrgFunctionsCompatController {
     @Query('departmentId') departmentId?: string,
   ) {
     return unwrapOrInternal(await this.svc.getOrgFunctions(page, limit, departmentId));
+  }
+
+  /** POST /api/org-functions — yangi karta yaratish */
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async create(@Body() body: CompatBodyDto) {
+    return unwrapOrInternal(await this.svc.createOrgFunction(body as Record<string, unknown>));
+  }
+
+  /** PATCH /api/org-functions/:id — kartani yangilash */
+  @Patch(':id')
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async update(@Param('id') id: string, @Body() body: CompatBodyDto) {
+    return unwrapOrInternal(await this.svc.updateOrgFunction(id, body as Record<string, unknown>));
+  }
+
+  /** DELETE /api/org-functions/:id — soft-delete */
+  @Delete(':id')
+  @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
+  async remove(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.deleteOrgFunction(id));
   }
 }
 

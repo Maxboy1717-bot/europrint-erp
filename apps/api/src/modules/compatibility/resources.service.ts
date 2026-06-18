@@ -160,6 +160,62 @@ export class ResourcesCompatService {
     `);
   }
 
+  async createOrgFunction(body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      if (!body['position_name'] && !body['name']) throw new BadRequestException('position_name majburiy');
+      const positionName   = String(body['position_name'] ?? body['name'] ?? '');
+      const departmentId   = body['department_id']    ?? body['departmentId']    ?? null;
+      const razryadLevelId = body['razryad_level_id'] ?? body['razryadLevelId'] ?? null;
+      const code           = body['code'] ?? null;
+      const salaryType     = body['salary_type']      ?? body['salaryType']      ?? null;
+      const r = await rawSql(sql`
+        INSERT INTO org_functions (
+          position_name, department_id, razryad_level_id, code, salary_type,
+          display_order, is_active, created_at, updated_at
+        ) VALUES (
+          ${positionName},
+          ${departmentId ? parseInt(String(departmentId), 10) : null},
+          ${razryadLevelId ? parseInt(String(razryadLevelId), 10) : null},
+          ${code}, ${salaryType},
+          0, true, NOW(), NOW()
+        )
+        RETURNING id, position_name AS name, department_id AS "departmentId", razryad_level_id AS "razryadLevelId"
+      `);
+      const created = dbRows(r)[0];
+      return { message: 'Karta yaratildi', id: created?.['id'] ?? null, data: created };
+    });
+  }
+
+  async updateOrgFunction(id: string, body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      const positionName   = body['position_name']    ?? body['name']            ?? null;
+      const departmentId   = body['department_id']    ?? body['departmentId']    ?? null;
+      const razryadLevelId = body['razryad_level_id'] ?? body['razryadLevelId'] ?? null;
+      await rawSql(sql`
+        UPDATE org_functions SET
+          position_name    = COALESCE(${positionName},   position_name),
+          department_id    = COALESCE(${departmentId    ? parseInt(String(departmentId), 10)    : null}, department_id),
+          razryad_level_id = COALESCE(${razryadLevelId ? parseInt(String(razryadLevelId), 10) : null}, razryad_level_id),
+          code             = COALESCE(${body['code']         ?? null}, code),
+          salary_type      = COALESCE(${body['salary_type']  ?? body['salaryType'] ?? null}, salary_type),
+          is_active        = COALESCE(${body['is_active']    ?? null}, is_active),
+          updated_at       = NOW()
+        WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
+      `);
+      return { message: 'Karta yangilandi', id };
+    });
+  }
+
+  async deleteOrgFunction(id: string): Promise<Result<Record<string, unknown>>> {
+    return safeCall(async () => {
+      await rawSql(sql`
+        UPDATE org_functions SET deleted_at = NOW(), status = 'deleted', is_active = false, updated_at = NOW()
+        WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
+      `);
+      return { deleted: true, id };
+    });
+  }
+
   async createWarehouse(body: Record<string, unknown>){
     return safeCall(async () => {
     if (!body['name']) throw new BadRequestException('name majburiy');
