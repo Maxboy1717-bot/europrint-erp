@@ -319,4 +319,21 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       return 1.0;
     }
   }
+
+  async getMonthlyLateCount(employeeId: number, year: number, month: number): Promise<number> {
+    try {
+      const rows = await runQuery<{ cnt: string }>(sql`
+        SELECT COUNT(*)::text AS cnt
+        FROM attendance
+        WHERE employee_id = ${employeeId}
+          AND status = 'late'
+          AND EXTRACT(YEAR  FROM attendance_date) = ${year}
+          AND EXTRACT(MONTH FROM attendance_date) = ${month}
+      `);
+      const cnt = parseInt(String(rows.rows[0]?.cnt ?? '0'), 10);
+      return isNaN(cnt) ? 0 : cnt;
+    } catch {
+      return 0;
+    }
+  }
 }

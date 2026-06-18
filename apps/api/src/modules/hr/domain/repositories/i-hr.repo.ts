@@ -71,6 +71,13 @@ export interface IHrRepo {
    * Returns 1.0 if no razryad is assigned (coefficient neutral — no change to base_salary).
    */
   getRazryadCoefficient(employeeId: number): Promise<number>;
+
+  /**
+   * Counts attendance rows where status = 'late' for a given employee in the
+   * specified calendar month. Used by the discipline threshold classifier in
+   * RecordAttendanceHandler (skill spec: 3–4=warning, 5–7=reprimand, 8+=discharge).
+   */
+  getMonthlyLateCount(employeeId: number, year: number, month: number): Promise<number>;
 }
 
 export interface OvertimePolicyRow {

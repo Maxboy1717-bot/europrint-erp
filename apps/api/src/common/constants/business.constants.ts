@@ -186,3 +186,15 @@ export const KPI_WEIGHT_ACHIEVEMENT = 0.4;
 export const KPI_WEIGHT_QUALITY     = 0.3;
 export const KPI_WEIGHT_OEE         = 0.2;
 export const KPI_WEIGHT_ATTENDANCE  = 0.1;
+
+// ---------------------------------------------------------------------------
+// HR — Discipline thresholds (kech kelganlik, oylik hisob) — skill spec
+// ---------------------------------------------------------------------------
+/** Monthly late arrivals before a warning is issued (3 = first threshold) */
+export const DISCIPLINE_LATE_WARNING_THRESHOLD   = 3;
+/** Monthly late arrivals before a reprimand is issued */
+export const DISCIPLINE_LATE_REPRIMAND_THRESHOLD = 5;
+/** Monthly late arrivals before a discharge notice is issued */
+export const DISCIPLINE_LATE_DISCHARGE_THRESHOLD = 8;
+/** Minutes after scheduled start before a check-in is classified as late */
+export const ATTENDANCE_LATE_GRACE_MINUTES       = 15;
