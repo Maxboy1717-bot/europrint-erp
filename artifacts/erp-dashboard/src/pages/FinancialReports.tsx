@@ -33,7 +33,7 @@ import { ProductionAnalysis } from "@/components/finance/reports/ProductionAnaly
 
 // Types
 import { WeeklySummary, MonthlySummary, KPIDashboard, ProductionEfficiency } from "@/components/finance/reports/types";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function FinancialReports() {
@@ -95,40 +95,24 @@ export default function FinancialReports() {
   }
 
   return (
-    <div data-testid="financial-reports">
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <FileText className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">{t("moliyaviyHisobotlar1")}</h1>
-                <p className="text-white/75 text-sm">{t("haftalikOylikVaKpiHisobotlari")}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button 
-                variant="outline" 
-                className="bg-card/10 border-white/30 text-white hover:bg-card/20 gap-2"
-                onClick={handleExportPDF}
-                data-testid="button-export-pdf"
-              >
-                <Download className="h-4 w-4" />
-                {t("pdfYuklabOlish")}
-              </Button>
-              <Button 
-                variant="outline" 
-                className="bg-card/10 border-white/30 text-white hover:bg-card/20 gap-2"
-                onClick={handleExportExcel}
-                data-testid="button-export-excel"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                {t("excelYuklabOlish")}
-              </Button>
-            </div>
+    <div className="space-y-6" data-testid="financial-reports">
+      <EPPageHeader
+        icon={<FileText className="h-5 w-5" />}
+        title={t("moliyaviyHisobotlar1")}
+        subtitle={t("haftalikOylikVaKpiHisobotlari")}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" className="gap-2" onClick={handleExportPDF} data-testid="button-export-pdf">
+              <Download className="h-4 w-4" />
+              {t("pdfYuklabOlish")}
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={handleExportExcel} data-testid="button-export-excel">
+              <FileSpreadsheet className="h-4 w-4" />
+              {t("excelYuklabOlish")}
+            </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>

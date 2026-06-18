@@ -14,7 +14,7 @@ import { DEFAULT_MOV_FORM } from "./MaterialsAccountingTypes";
 import { RecordMovementDialog } from "./MaterialsAccountingDialogs";
 import { StatCards, MovementsCard } from "./MaterialsAccountingSections";
 import { OrderConsumptionCard, InventoryValuationCard } from "./MaterialsAccountingPanels";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function MaterialsAccounting() {
@@ -128,40 +128,28 @@ export default function MaterialsAccounting() {
   }
 
   return (
-    <div data-testid="materials-accounting-page">
-      {/* Page Header */}
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <Warehouse className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">{t("materiallarHisobi")}</h1>
-                <p className="text-white/75 text-sm">{t("omborBuxgalteriMaterialHarakatlariVa")}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <RecordMovementDialog
-                open={movDialogOpen}
-                onOpenChange={setMovDialogOpen}
-                form={movForm}
-                onFormChange={setMovForm}
-                onSubmit={() => recordMovementMutation.mutate()}
-                isPending={recordMovementMutation.isPending}
-              />
-              <Button
-                variant="outline"
-                className="bg-card/10 border-white/30 text-white hover:bg-card/20"
-                onClick={() => refetchMovements()}
-                data-testid="button-refresh"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {t("refresh")}
-              </Button>
-            </div>
+    <div className="space-y-6" data-testid="materials-accounting-page">
+      <EPPageHeader
+        icon={<Warehouse className="h-5 w-5" />}
+        title={t("materiallarHisobi")}
+        subtitle={t("omborBuxgalteriMaterialHarakatlariVa")}
+        actions={
+          <div className="flex items-center gap-2">
+            <RecordMovementDialog
+              open={movDialogOpen}
+              onOpenChange={setMovDialogOpen}
+              form={movForm}
+              onFormChange={setMovForm}
+              onSubmit={() => recordMovementMutation.mutate()}
+              isPending={recordMovementMutation.isPending}
+            />
+            <Button variant="outline" onClick={() => refetchMovements()} data-testid="button-refresh">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t("refresh")}
+            </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Page Body */}
       <div className="space-y-6 pt-6">

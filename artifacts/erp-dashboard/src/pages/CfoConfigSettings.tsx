@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EPPageHeader } from "@/components/ep";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Save, RefreshCw } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
@@ -113,20 +114,18 @@ export default function CfoConfigSettings() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Settings className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-xl font-bold">{t("cfoKonfiguratsiyasi")}</h1>
-            <p className="text-sm text-muted-foreground">{t("moliyaviyKoeffitsientlarVaEclStavkalarini")}</p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t("refresh")}
-        </Button>
-      </div>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <EPPageHeader
+        icon={<Settings className="h-5 w-5" />}
+        title={t("cfoKonfiguratsiyasi")}
+        subtitle={t("moliyaviyKoeffitsientlarVaEclStavkalarini")}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t("refresh")}
+          </Button>
+        }
+      />
 
       {isLoading ? (
         <div className="space-y-3">

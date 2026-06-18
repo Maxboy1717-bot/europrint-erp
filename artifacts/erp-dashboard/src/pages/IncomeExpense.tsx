@@ -22,7 +22,7 @@ import { TransactionDialog } from "@/components/finance/income-expense/Transacti
 import { CategoryDialog } from "@/components/finance/income-expense/CategoryDialog";
 import { TransactionFilters } from "@/components/finance/income-expense/TransactionFilters";
 import { TransactionTable } from "@/components/finance/income-expense/TransactionTable";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 
 export default function IncomeExpense() {
   const { t } = useTranslation("finance");
@@ -63,32 +63,18 @@ export default function IncomeExpense() {
   }
 
   return (
-    <div data-testid="income-expense-page">
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <Wallet className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {t("inflow")} / {t("outflow")}
-                </h1>
-                <p className="text-white/75 text-sm">{t("incomeExpense")}</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                data-testid="button-add-transaction"
-                onClick={() => setTransactionDialogOpen(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {tCommon("create")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6" data-testid="income-expense-page">
+      <EPPageHeader
+        icon={<Wallet className="h-5 w-5" />}
+        title={`${t("inflow")} / ${t("outflow")}`}
+        subtitle={t("incomeExpense")}
+        actions={
+          <Button data-testid="button-add-transaction" onClick={() => setTransactionDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {tCommon("create")}
+          </Button>
+        }
+      />
 
       <div className="space-y-6 pt-6">
         <SummaryCards summary={summary} loading={summaryLoading} />

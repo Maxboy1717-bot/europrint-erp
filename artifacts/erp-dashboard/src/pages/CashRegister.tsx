@@ -25,7 +25,7 @@ import { PaymentPanel } from "@/components/pos/PaymentPanel";
 import { ProductList } from "@/components/pos/ProductList";
 import { TransactionDetailDialog } from "@/components/pos/TransactionDetailDialog";
 import { useCashRegister } from "@/components/pos/hooks/useCashRegister";
-import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { EPErrorState, EPStatusPill, EPPageHeader } from "@/components/ep";
 
 const paymentMethodLabels: Record<string, { uz: string; ru: string; icon: React.ComponentType<{ className?: string }> }> = {
   cash: { uz: "Naqd", ru: "Наличные", icon: Banknote },
@@ -70,23 +70,24 @@ export default function CashRegister() {
   if (cr.isError) return <EPErrorState onRetry={cr.refetch} />;
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between gap-2 flex-wrap p-4 pb-2">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-xl font-semibold" data-testid="text-page-title">{t('cashRegister')}</h1>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {cr.dashboard && (
-            <EPStatusPill tone="neutral" data-testid="badge-sales-today">
-              Bugun: {formatCurrency(cr.dashboard.salesToday)} ({cr.dashboard.transactionsToday} ta)
-            </EPStatusPill>
-          )}
-          <Button variant="ghost" size="sm" onClick={() => cr.refetch()} title={t("refresh")}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col h-full gap-5">
+      <EPPageHeader
+        data-testid="text-page-title"
+        icon={<ShoppingCart className="h-5 w-5" />}
+        title={t('cashRegister')}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            {cr.dashboard && (
+              <EPStatusPill tone="neutral" data-testid="badge-sales-today">
+                Bugun: {formatCurrency(cr.dashboard.salesToday)} ({cr.dashboard.transactionsToday} ta)
+              </EPStatusPill>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => cr.refetch()} title={t("refresh")}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        }
+      />
 
       <Tabs value={cr.activeTab} onValueChange={cr.setActiveTab} className="flex-1 flex flex-col px-4">
         <TabsList data-testid="tabs-pos-nav">

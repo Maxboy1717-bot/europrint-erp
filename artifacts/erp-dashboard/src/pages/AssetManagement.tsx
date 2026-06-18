@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
+import { EPPageHeader } from "@/components/ep";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
@@ -187,23 +188,18 @@ export default function AssetManagement() {
   const handleRefresh = () => { refetchAssets(); refetchSummary(); refetchMaintenance(); refetchDisposals(); refetchTransfers(); refetchInsurance(); };
 
   return (
-    <div data-testid="asset-management-page">
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <Building2 className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("pageTitle")}</h1>
-                <p className="text-white/75 text-sm">{t("pageDesc")}</p>
-              </div>
-            </div>
-            <Button variant="secondary" size="sm" onClick={handleRefresh} data-testid="button-refresh">
-              <RefreshCw className="h-4 w-4 mr-1" />{t("refresh")}
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6" data-testid="asset-management-page">
+      <EPPageHeader
+        data-testid="text-page-title"
+        icon={<Building2 className="h-5 w-5" />}
+        title={t("pageTitle")}
+        subtitle={t("pageDesc")}
+        actions={
+          <Button variant="outline" size="sm" onClick={handleRefresh} data-testid="button-refresh">
+            <RefreshCw className="h-4 w-4 mr-1" />{t("refresh")}
+          </Button>
+        }
+      />
 
       <div className="space-y-6 pt-6">
         <AssetSummaryCards assetSummary={assetSummary} summaryLoading={summaryLoading} totalDepreciationPercent={totalDepreciationPercent} />

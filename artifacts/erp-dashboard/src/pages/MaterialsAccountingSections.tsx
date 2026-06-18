@@ -3,7 +3,7 @@
  * @description Stat cards and movements table for MaterialsAccounting page.
  */
 
-import { Badge } from "@/components/ui/badge";
+import { EPStatusPill } from "@/components/ep";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,17 +32,17 @@ export function getMoveTypeBadge(moveType: string, t: ReturnType<typeof useTrans
     case "in":
     case "receipt":
     case "kirim":
-      return <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/40">{t("kirim")}</Badge>;
+      return <EPStatusPill tone="success">{t("kirim")}</EPStatusPill>;
     case "out":
     case "issue":
     case "chiqim":
-      return <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-500/40">{t("chiqim")}</Badge>;
+      return <EPStatusPill tone="brand">{t("chiqim")}</EPStatusPill>;
     case "transfer":
-      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/40">{t("otkazma")}</Badge>;
+      return <EPStatusPill tone="info">{t("otkazma")}</EPStatusPill>;
     case "adjustment":
-      return <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/40">{t("tuzatish")}</Badge>;
+      return <EPStatusPill tone="neutral">{t("tuzatish")}</EPStatusPill>;
     default:
-      return <Badge variant="outline">{moveType}</Badge>;
+      return <EPStatusPill tone="neutral">{moveType}</EPStatusPill>;
   }
 }
 

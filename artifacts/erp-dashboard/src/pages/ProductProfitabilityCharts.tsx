@@ -69,7 +69,7 @@ export function TopProfitableSection({ isLoading, topProfitable, chartData }: To
                     formatter={(value: number) => [formatCurrency(value), "Foyda"]}
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
                   />
-                  <Bar dataKey="profit" fill="#22c55e" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="profit" fill="var(--ep-green)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -155,7 +155,7 @@ export function TopLossSection({ isLoading, topLoss, chartData }: TopLossProps) 
                     formatter={(value: number) => [formatCurrency(value), "Zarar"]}
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
                   />
-                  <Bar dataKey="loss" fill="#ef4444" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="loss" fill="var(--ep-red)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

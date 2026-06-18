@@ -37,7 +37,7 @@ import { CountLinesDialog } from "@/components/wms/valuation/CountLinesDialog";
 import { CreateCountDialog } from "@/components/wms/valuation/CreateCountDialog";
 import { CreateAssetDialog } from "@/components/wms/valuation/CreateAssetDialog";
 import { useInventoryValuationMutations } from "@/components/wms/valuation/useInventoryValuationMutations";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 
@@ -178,40 +178,25 @@ export default function InventoryValuation() {
   }
 
   return (
-    <div data-testid="inventory-valuation-page">
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <ClipboardList className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("inventarizatsiya")}</h1>
-                <p className="text-white/75 text-sm">{t("materialVaAsosiyVositalarInventarizatsiyasi")}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleExportCsv}
-                data-testid="button-export-csv"
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Export CSV
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => activeTab === "material" ? refetchCounts() : refetchAssets()}
-                data-testid="button-refresh"
-              >
-                <RefreshCw className="h-4 w-4 mr-1" />
-                {t("refresh")}
-              </Button>
-            </div>
+    <div className="space-y-6" data-testid="inventory-valuation-page">
+      <EPPageHeader
+        data-testid="text-page-title"
+        icon={<ClipboardList className="h-5 w-5" />}
+        title={t("inventarizatsiya")}
+        subtitle={t("materialVaAsosiyVositalarInventarizatsiyasi")}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCsv} data-testid="button-export-csv">
+              <Download className="h-4 w-4 mr-1" />
+              Export CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => activeTab === "material" ? refetchCounts() : refetchAssets()} data-testid="button-refresh">
+              <RefreshCw className="h-4 w-4 mr-1" />
+              {t("refresh")}
+            </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="space-y-6 pt-6">
         <ValuationOverview 
