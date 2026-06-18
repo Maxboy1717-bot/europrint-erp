@@ -24,6 +24,13 @@
 > [`docs/V2_PAPKA_STRUKTURASI.md`](docs/V2_PAPKA_STRUKTURASI.md) — ⭐ V2 papka arxitekturasi: Strangler Fig pattern, `modules/` = V2 toza DDD, `_legacy/` = V1 o'chirilish kutmoqda, qaerda nima yoziladi jadvali.
 > [`docs/PARAZIT_KOD_QOIDALARI.md`](docs/PARAZIT_KOD_QOIDALARI.md) — ⭐ Parazit kod qoidalari: 8 tur (soxta/o'lik/stub/echo/phantom/ghost/view-yozish), oldini olish P-1..P-5, o'chirish tartibi, V1 katalog (~130 parazit).
 > [`docs/MASTER_DATA_STANDARTLARI.md`](docs/MASTER_DATA_STANDARTLARI.md) — Master data standartlari: jadval egalari, kim yarata/o'zgartira oladi, versiyalash (technology_cards), soft delete, biznes kalit, lookup=seed-only, material kod formati.
+> [`docs/XAVFSIZLIK_STANDARTLARI.md`](docs/XAVFSIZLIK_STANDARTLARI.md) — ⭐ Xavfsizlik: 4 global guard qoidasi, rol matrisi, input validatsiya (whitelist=true), SQL injection (Drizzle), JWT (HS256+pin), RBAC, bcrypt×12, OWASP Top10 EuroPrint uchun.
+> [`docs/TEST_STANDARTLARI.md`](docs/TEST_STANDARTLARI.md) — Test standartlari: real DB qoidasi (mock repo taqiq), unit/integration/e2e tuzilma, factory pattern, coverage maqsadlari (domain≥90%), Jest config, nima test qilinmaydi.
+> [`docs/PERFORMANCE_STANDARTLARI.md`](docs/PERFORMANCE_STANDARTLARI.md) — Performance: N+1 taqiq (1 so'rov=1 SQL), pagination majburiy (max 100), index standartlari (FK+deleted_at+FTS), javob vaqti maqsadlari, EXPLAIN ANALYZE, katta jadval strategiyasi.
+> [`docs/MODUL_SHARTNOMASI.md`](docs/MODUL_SHARTNOMASI.md) — Modul chegaralari: modul A → modul B faqat event orqali (servis import taqiq), jadval egasi xaritasi, outbox pattern, shared read qoidasi, NestJS import tuzilmasi.
+> [`docs/MUHIT_STANDARTLARI.md`](docs/MUHIT_STANDARTLARI.md) — Muhit: port standartlari (3030/5173/5432), .env majburiy o'zgaruvchilar, Docker Compose, dev/test/prod farqlari, secret rotation, startup validatsiya, pre-deploy tekshiruv.
+> [`docs/MONITORING_STANDARTLARI.md`](docs/MONITORING_STANDARTLARI.md) — Monitoring: log darajalari (error/warn/log/debug), nima loglanadi/loglanmaydi (JWT/parol taqiq), JSON strukturalangan log, GlobalExceptionFilter, health check format, performance monitoring.
+> [`docs/XAVF_REESTRI.md`](docs/XAVF_REESTRI.md) — ⭐ Xavf reestri: 23 aniqlangan xavf (R-01..R-23) E×T=M ball bilan. Kritik (M≥15): ikki-dunyo, GL atomarligi, secret leak, event yo'qolishi, N+1. Har sprint yangilanadi.
 > Test factory base (`apps/api/src/common/factories/`): har modul Drizzle sxemasi yaratilgandan keyin qo'shiladi (real DB, mock emas — Backend_Reja/14_Test.md §1 qoida).
 
 > 🏛️ **AGENT KONSTITUTSIYASI — Har sessiyada majburiy o'qish:**
