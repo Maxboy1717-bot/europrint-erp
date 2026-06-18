@@ -937,6 +937,663 @@ node scripts/golden-thread-chain-proof.cjs
 
 ---
 
+## § 15. TARIXIY XATOLAR KATALOGI
+
+> **Maqsad:** EuroPrint ERP ning ~8 oylik tarixida aniqlangan barcha xato naqshlari.
+> Har xato: **kod** · muammo · qoida · tekshiruv · ❌/✅ misol.
+> Bu ro'yxat qoidadir — har yangi agent bu xatolarni QAYTA qilmasligi shart.
+> Manba: 80+ agent audit sessiyasi (2026-05-14 — 2026-06-18).
+
+---
+
+### 15.1 XAVFSIZLIK XATOLARI (SEC)
+
+---
+
+**SEC-1 — Fail-open RolesGuard: `@UseGuards` bor, `@Roles` yo'q**
+
+- **Muammo:** `JwtAuthGuard` foydalanuvchini tasdiqlaydi (autentifikatsiya), lekin `@Roles()` dekoratori bo'lmasa `RolesGuard` hamma ruxsat beradi. 27 menejer barcha xodimlarning maxfiy PIP/eNPS ma'lumotlarini o'qidi.
+- **Qoida:** Har himoyalangan endpoint da ikkalasi ham bo'lishi SHART: `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles('hr_manager', 'super_admin')`. `JwtAuthGuard` yolg'iz yetarli emas.
+- **Tekshiruv:** `grep -rn "@UseGuards" apps/api/src/ | grep -v "@Roles"` — natija bo'sh bo'lishi kerak.
+- ❌ XATO: `@UseGuards(JwtAuthGuard, RolesGuard)` — `@Roles` dekoratori yo'q → hamma kiradi.
+- ✅ TO'G'RI: `@Roles('hr_manager', 'super_admin')` + `@UseGuards(JwtAuthGuard, RolesGuard)`.
+
+---
+
+**SEC-2 — `@Public()` dekoratori asossiz ishlatilgan**
+
+- **Muammo:** IoT tablet va storage endpointlari `@Public()` bilan belgilangan edi — autentifikatsiyasiz 200 OK qaytardi. Bu High darajali zaiflik.
+- **Qoida:** `@Public()` faqat yozma asoslash bilan: `// PUBLIC: IoT terminal — IP whitelist bilan himoyalangan`. Yozuvsiz `@Public()` = taqiq.
+- **Tekshiruv:** `grep -rn "@Public()" apps/api/src/ | grep -v "// PUBLIC:"`.
+- ❌ XATO: `@Public() @Get('worker-schedule')` — izoh yo'q, hech qanday himoya yo'q.
+- ✅ TO'G'RI: `@Public() // PUBLIC: IoT tablet — TabletTokenGuard + IP whitelist @Get('worker-schedule')`.
+
+---
+
+**SEC-3 — Hardcoded parol fallback**
+
+- **Muammo:** `ADMIN_SEED_PASSWORD ?? 'Admin123!'` — env o'rnatilmasa `Admin123!` ishlatilgan. Production da ham ishlashi mumkin edi.
+- **Qoida:** Env yo'q bo'lsa `throw new Error('ADMIN_SEED_PASSWORD env missing')`. Hech qachon hardcoded fallback parol.
+- **Tekshiruv:** `grep -rn "'Admin\|'admin\|'password\|'secret\|'123" apps/api/src/ --include="*.ts"`.
+- ❌ XATO: `const pw = process.env.ADMIN_SEED_PASSWORD ?? 'Admin123!';`
+- ✅ TO'G'RI: `const pw = process.env.ADMIN_SEED_PASSWORD; if (!pw) throw new Error('ADMIN_SEED_PASSWORD env missing');`
+
+---
+
+**SEC-4 — `sql.raw(o'zgaruvchi)` — SQL Injection xavfi**
+
+- **Muammo:** `sql.raw(rawQuery)` va `sql.raw(q)` foydalanuvchidan kelgan qiymat bilan ishlatilingan. Bu SQL injection ni to'g'ridan imkon beradi.
+- **Qoida:** `sql.raw()` faqat **literal** DDL/string bilan — hech qachon o'zgaruvchi bilan. Dinamik qiymatlar uchun Drizzle parametrli sintaksis: `` sql`WHERE id = ${id}` ``.
+- **Tekshiruv:** `grep -rn "sql\.raw(" apps/api/src/ lib/db/src/` — har natijani ko'zdan kechir.
+- ❌ XATO: `db.execute(sql.raw(userInputQuery))`
+- ✅ TO'G'RI: `` db.execute(sql`SELECT * FROM users WHERE id = ${userId}`) ``
+
+---
+
+**SEC-5 — JWT refresh token noto'g'ri secret bilan tekshirilgan**
+
+- **Muammo:** `jwtService.verify(body.refreshToken)` — `JWT_SECRET` (access token uchun) bilan tekshirilgan. Refresh token uchun `JWT_REFRESH_SECRET` alohida bo'lishi kerak.
+- **Qoida:** Access token → `JWT_SECRET`. Refresh token → `JWT_REFRESH_SECRET`. `ConfigService.getOrThrow('JWT_REFRESH_SECRET')` ishlatilsin.
+- **Tekshiruv:** Auth controller + refresh handler da secret alohida ekanini tekshir.
+- ❌ XATO: `this.jwtService.verify(refreshToken)` — default (access) secret ishlatiladi.
+- ✅ TO'G'RI: `this.jwtService.verify(refreshToken, { secret: this.config.getOrThrow('JWT_REFRESH_SECRET') })`
+
+---
+
+**SEC-6 — JWT `algorithms` pinlanmagan**
+
+- **Muammo:** Algoritm ko'rsatilmagan — token almashtirish hujumi mumkin (algorithm confusion).
+- **Qoida:** `JwtModule.registerAsync` da `algorithms: ['HS256']` explicit ko'rsatilsin.
+- ✅ TO'G'RI: `JwtModule.registerAsync({ useFactory: (c) => ({ secret: c.getOrThrow('JWT_SECRET'), signOptions: { expiresIn: '15m', algorithm: 'HS256' }, verifyOptions: { algorithms: ['HS256'] } }) })`
+
+---
+
+**SEC-7 — OTP per-sessiya cheklov yo'q**
+
+- **Muammo:** OTP brute-force uchun faqat IP bo'yicha rate-limit bor. Bir sessiyada cheksiz urinish mumkin.
+- **Qoida:** `otp_sessions.attempts` ustuni qo'shilsin. Maksimum 5 urinishdan so'ng sessiya o'chirilsin.
+- **Tekshiruv:** `otp_sessions` jadvalida `attempts INTEGER DEFAULT 0` ustuni bor-yo'qligini tekshir.
+
+---
+
+**SEC-8 — Log fayllari `.gitignore` da to'liq emas**
+
+- **Muammo:** `.gitignore` faqat `*.log` ni tutadi. `backend.log.prev3`, `backend.log.2026-06-01` kabi rotatsiya fayllari tushib qolishi mumkin. JWT token va maxfiy ma'lumotlar log da bo'lishi mumkin.
+- **Qoida:** `.gitignore` da: `backend.log*` + `*.log.*` + `logs/` + `*.log` — to'rt qator.
+- **Tekshiruv:** `grep -n "\.log" .gitignore` — barcha variant bor ekanini tekshir.
+
+---
+
+**SEC-9 — Migration ichida test paroli hash**
+
+- **Muammo:** `org-structure-sync.sql` da `test123` ning bcrypt hash i bor. Migration faqat tuzilma uchun — parol hech qachon SQL da bo'lmasin.
+- **Qoida:** Parol → faqat seed script + env orqali. Migration SQL da hash, parol, token bo'lmasin.
+- **Tekshiruv:** `grep -rn "bcrypt\|password\|hash" docs/migration/*.sql`.
+
+---
+
+### 15.2 SOXTA DATA XATOLARI (FAKE)
+
+---
+
+**FAKE-1 — `return { ok: true }` — DB ga yozilmaydi**
+
+- **Muammo:** Controller `{ ok: true }` qaytaradi, ammo hech qanday DB operatsiyasi bajarmaydi. Foydalanuvchi ma'lumot saqlandı deb o'ylaydi.
+- **Qoida:** Ma'lumotlar saqlanmagan → `501 NOT_IMPLEMENTED`. `{ ok: true }` soxta muvaffaqiyat = taqiq.
+- **Tekshiruv:** `grep -rn "return { ok: true }" apps/api/src/` — har natijani tekshir.
+- ❌ XATO: `async saveData(@Body() dto) { return { ok: true }; }`
+- ✅ TO'G'RI: `throw new HttpException('Not implemented', 501);`
+
+---
+
+**FAKE-2 — `return { data: [] }` — hardcoded bo'sh massiv**
+
+- **Muammo:** Endpoint `{ data: [] }` qaytaradi — foydalanuvchi jadval bo'sh deb o'ylaydi, aslida query yozilmagan.
+- **Qoida:** Real DB query yo'q bo'lsa → `501`. Bo'sh massiv faqat DB query natijasi bo'lishi mumkin.
+- **Tekshiruv:** `grep -rn "return { data: \[\]" apps/api/src/`.
+- ❌ XATO: `async getAll() { return { data: [], total: 0 }; }`
+- ✅ TO'G'RI: `const result = await this.service.findAll(dto); if (!result.ok) throw ...; return result.value;`
+
+---
+
+**FAKE-3 — Butun controller stub, FE ishlayotgandek ko'rinadi**
+
+- **Muammo:** `FinanceExtendedPayrollController` ning 7 ta route si `notImplemented()` qaytarardi. TypeScript tsc PASS bo'ldi chunki URL string tekshirilmaydi. FE Calculate, Run, Approve tugmalari ishlayotgandek ko'rindi.
+- **Qoida:** tsc 0 ≠ feature ishlayapti. Har feature uchun round-trip isboti shart: kirit → saqla → qayta och → ko'rin.
+- **Tekshiruv:** Har yangi endpoint uchun: `curl -X POST http://localhost:3030/api/[path] -H "Authorization: Bearer [token]" -d '{...}'` — 200 va real DB yozuvi.
+
+---
+
+**FAKE-4 — `return {} as unknown as T` — type-safe soxta**
+
+- **Muammo:** `as unknown as ReturnType` pattern — TypeScript da ishlaydi, runtime da crash.
+- **Qoida:** `as unknown` faqat test mock larda ruxsat. Production kodda `as unknown as T` = taqiq.
+- **Tekshiruv:** `grep -rn "as unknown as" apps/api/src/ --include="*.ts"` — production fayllarida 0 bo'lishi kerak.
+
+---
+
+**FAKE-5 — Mock ob'ekt production kodida**
+
+- **Muammo:** `mockQueueStats`, `mockDashboardData` nomlari production service da qoldirilgan. Real ma'lumot o'rniga statik ob'ekt qaytarilgan.
+- **Qoida:** `mock`, `stub`, `dummy`, `fake` nomli har qanday ob'ekt/funksiya production build da bo'lmasin. Faqat `*.spec.ts` va `*.test.ts` da ruxsat.
+- **Tekshiruv:** `grep -rn "mock\|stub\|dummy\|fake" apps/api/src/ --include="*.ts" | grep -v "\.spec\|\.test"`.
+
+---
+
+**FAKE-6 — MES→QC handoff no-op stub**
+
+- **Muammo:** `qc/mes-completed.listener.ts` event ni qabul qiladi, lekin `CreateInspectionCommand` handler yo'q. Event yuboriladi, QC tekshiruvi hech qachon yaratilmaydi.
+- **Qoida:** Listener yozilmagan bo'lsa event publish qilinmasin YOKI stub handler `501` qaytarsin va log qilsin.
+- ❌ XATO: `@OnEvent('mes.order.completed') async handle(e) { this.logger.log('received'); }` — hech ish qilmaydi.
+- ✅ TO'G'RI: Ya handler to'liq yoziladi, ya event publish `TODO` bilan belgilanadi va `@OnEvent` qo'shilmaydi.
+
+---
+
+**FAKE-7 — IoT anomaly handler pure `console.log`**
+
+- **Muammo:** `anomaly-detected.handler.ts` faqat `console.log('anomaly received')` qiladi. Hech qanday ogohlantirish, DB yozuvi, yoki amal yo'q.
+- **Qoida:** Handler logikasi yo'q bo'lsa — `@OnEvent` ro'yxatdan o'chirsin. "Ushlab qolgan" deb ko'rinadigan lekin hech narsa qilmaydigan handler = FAKE.
+- **Tekshiruv:** `grep -rn "@OnEvent" apps/api/src/` — har listenerning tanasini ko'r, faqat `logger` bo'lsa tekshir.
+
+---
+
+**FAKE-8 — 13+ event: yuboriladim, hech kim olmaydi (zero-listener)**
+
+- **Muammo:** `DealLost`, `StockUpdated`, `3×ApprovalGranted`, `stock.critical`, `iot.anomaly`, `crm.hot_leads_found` va boshqalar — `eventEmitter.emit()` chaqiriladi, lekin `@OnEvent(...)` listener yo'q.
+- **Qoida:** Event publish qilishdan OLDIN: `grep -rn "@OnEvent('[event_name]')" apps/api/src/` — kamida bitta natija bo'lishi shart.
+- **Tekshiruv:** `grep -rn "eventEmitter\.emit\|this\.eventEmitter\.emit" apps/api/src/` — har event nomi uchun listener borligini tekshir.
+
+---
+
+**FAKE-9 — Outbox ishlaydi, `domain_events` da 0 yozuv**
+
+- **Muammo:** Outbox relay 10 sekundda ishlaydi. Lekin `domain_events` jadvalida hech qachon yozuv bo'lmagan — chunki hech bir service `domain_events` ga yozgani yo'q.
+- **Qoida:** Outbox faqat `domain_events` ga real yozuv borligida yoqilsin. `domain_events` bo'sh bo'lsa cron isrof.
+- **Tekshiruv:** `node _audit/q.cjs "SELECT COUNT(*) FROM domain_events"` — 0 bo'lsa outbox relay o'chirilsin.
+
+---
+
+### 15.3 IKKI-DUNYO XATOLARI (TWO)
+
+---
+
+**TWO-1 — `sales_orders` vs `orders`: ikkita parallel buyurtma jadvali**
+
+- **Muammo:** `sales_orders` (int PK, SD moduli) va `orders` (boshqa asos, PP moduli) — hech qanday FK/event aloqasi yo'q. PP `OrderCreatedEvent` ni tinglamaydi. SD buyurtmasi PP ga hech qachon yetib bormagan.
+- **Qoida:** Kanonik jadval: `sales_orders`. `orders` → ehtiyotkorlik bilan tekshir, kerak bo'lsa `sales_orders` ga FK qo'sh. Yangi jadval yaratishdan OLDIN "bu tushuncha uchun jadval bormi?" tekshiruvi MAJBURIY.
+- **Tekshiruv:** `node _audit/q.cjs "SELECT table_name FROM information_schema.tables WHERE table_name LIKE '%order%'"`.
+
+---
+
+**TWO-2 — UUID vs INT PK mismatch: silent bo'sh JOIN**
+
+- **Muammo:** `crm_deals.lead_id UUID` joined `crm_leads.id INT` — type mismatch tufayli join doim bo'sh natija beradi. Hech qanday xato yo'q, faqat 0 qator. 
+- **Qoida:** JOIN yozishdan OLDIN: ikki jadvalning bog'lanuvchi ustunlari tiplarini tekshir. `UUID ↔ INT` mismatch = silent data loss.
+- **Tekshiruv:** `node _audit/q.cjs "SELECT a.column_name, a.data_type, b.column_name, b.data_type FROM information_schema.columns a JOIN information_schema.columns b ON a.column_name LIKE '%_id' WHERE a.table_name='crm_deals' AND b.table_name='crm_leads'"`.
+- ❌ XATO: `JOIN crm_leads ON crm_deals.lead_id = crm_leads.id` — UUID ↔ INT, doim 0 qator.
+- ✅ TO'G'RI: Avval type ni moslashtir yoki explicit cast + comment: `crm_deals.lead_id::int` (agar xavfsiz bo'lsa).
+
+---
+
+**TWO-3 — `gl_journal_entries` + `gl_lines` vs `entries`: ikkita GL model**
+
+- **Muammo:** `gl_journal_entries` + `gl_lines` jadvallari mavjud ammo 0 qator. Haqiqiy GL yozuvlari `entries` jadvalga yoziladi. Ikki parallel model = data mos emas.
+- **Qoida:** GL posting FAQAT `entries` jadvaliga. `gl_journal_entries` va `gl_lines` ga TEGMA (SAP#76). Bu jadvallar eski arxitektura qoldig'i.
+- **Tekshiruv:** `grep -rn "gl_journal_entries\|gl_lines" apps/api/src/` — agar INSERT/UPDATE bo'lsa — STOP, egadan ruxsat ol.
+
+---
+
+**TWO-4 — `warehouse_stock` vs `stocks` vs `wms_stock`: uchta stock jadvali**
+
+- **Muammo:** `warehouse_stock` (kanonik, UI ishlatadi), `stocks` (WMS `receiveFg` shu yozgan, lekin UI da ko'rinmagan), `wms_stock` (deprecated stub). WMS yozuvi ko'rinmagan — UI da ombor doim bo'sh ko'ringani shu sabab.
+- **Qoida:** Stock yozuvi FAQAT `warehouse_stock` ga. `stocks` va `wms_stock` → tegma.
+- **Tekshiruv:** `grep -rn "\.stocks\|'stocks'" lib/db/src/schema/ apps/api/src/` — foydalanish bo'lsa tekshir.
+
+---
+
+**TWO-5 — `current_stock` VIEW, TABLE emas**
+
+- **Muammo:** Agent `current_stock` ga `CREATE UNIQUE INDEX` tavsiya qildi. Aslida `current_stock` — `warehouse_stock` ustidagi VIEW. INDEX VIEW ga qo'shilmaydi.
+- **Qoida:** Yangi jadval yoki INDEX yaratishdan OLDIN VIEW yoki TABLE ekanini tekshir: `SELECT table_type FROM information_schema.tables WHERE table_name='[nom]'`.
+- **Tekshiruv:** `node _audit/q.cjs "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('current_stock','sd_sales_orders','mes_shift_handovers')"`.
+
+---
+
+### 15.4 DB / SCHEMA XATOLARI (DB)
+
+---
+
+**DB-1 — VIEW ga `ALTER TABLE ADD COLUMN` — crash**
+
+- **Muammo:** `mes_shift_handovers` VIEW edi. `ALTER TABLE mes_shift_handovers ADD COLUMN ...` — PostgreSQL xato berdi, deployment to'xtadi.
+- **Qoida:** Har `ALTER TABLE` dan OLDIN: `SELECT table_type FROM information_schema.tables WHERE table_name='...'` — `BASE TABLE` bo'lsa ALTER ruxsat, `VIEW` bo'lsa ALTER yozma.
+- ❌ XATO: `ALTER TABLE mes_shift_handovers ADD COLUMN notes TEXT;` — VIEW ga ALTER.
+- ✅ TO'G'RI: VIEW asosiy jadvalga ALTER: `ALTER TABLE shift_handovers ADD COLUMN notes TEXT;`
+
+---
+
+**DB-2 — Noto'g'ri ustun nomi → query crash**
+
+- **Muammo:** `mes-shifts-stats` query `incoming_supervisor` ustunini ishlatgan. Real ustun nomi `received_by`. 500 xatosi.
+- **Qoida:** Har yangi query yozishdan OLDIN ustun nomlarini live DB dan tekshir: `node _audit/q.cjs "SELECT column_name FROM information_schema.columns WHERE table_name='[jadval]' ORDER BY 1"`.
+- **Tekshiruv:** Har query → ustun nomlari `information_schema.columns` bilan solishtir.
+
+---
+
+**DB-3 — `::text` cast bilan JOIN → crash yoki bo'sh natija**
+
+- **Muammo:** `cameras.id::text = camera_events.camera_id` — ikkalasi ham INT. `::text` cast keraksiz va INDEX ni o'chiradi.
+- **Qoida:** Drizzle ORM type-safe join ishlatilsin: `eq(table1.id, table2.foreignId)`. `::text` cast faqat hujjatlangan sababda.
+- ❌ XATO: `sql\`cameras.id::text = camera_events.camera_id\``
+- ✅ TO'G'RI: `eq(cameras.id, cameraEvents.cameraId)` — Drizzle type-safe.
+
+---
+
+**DB-4 — `material_card_id` vs `material_id`: 35+ jadvalda drift**
+
+- **Muammo:** Eski jadvallar `material_card_id` ishlatgan. Kanonik nom `material_id` ga o'zgartirilgan. 35+ jadvalda drift edi — JOIN lar silent fail qilar edi.
+- **Qoida:** Referenced jadval uchun bitta kanonik FK nomi: `material_cards` → `material_id`. `material_card_id` ishlatilsa — STOP, to'g'ri nom bilan almashtir.
+- **Tekshiruv:** `grep -rn "material_card_id" lib/db/src/schema/ apps/api/src/` — agar topilsa, `material_id` bilan almashtir.
+
+---
+
+**DB-5 — `delivery_date TIMESTAMPTZ` ga regex `~` operatori → crash**
+
+- **Muammo:** PP MPS service `delivery_date` ga `~ '^[0-9]...'` regex ishlatar edi. PostgreSQL: `operator does not exist: timestamptz ~ unknown`. Deployment crash.
+- **Qoida:** Har operatorda type mosligini tekshir. `TIMESTAMPTZ` → `>`, `<`, `BETWEEN`, `::date`. Regex faqat `VARCHAR`/`TEXT`.
+- ❌ XATO: `sql\`delivery_date ~ '^2026'\``
+- ✅ TO'G'RI: `sql\`delivery_date::date >= '2026-01-01'\``
+
+---
+
+**DB-6 — 104 ta `NOT NULL` ustunda DB default yo'q**
+
+- **Muammo:** Drizzle schema da `.default(...)` bor, lekin DB da `DEFAULT` yo'q (migration da `SET DEFAULT` yozilmagan). Insert da `NOT NULL` violation — 503.
+- **Qoida:** Drizzle `.default(val)` va DB `DEFAULT val` birga bo'lishi shart. Migration: `ALTER TABLE t ALTER COLUMN c SET DEFAULT val;`.
+- **Tekshiruv:** `node _audit/q.cjs "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema='public' AND is_nullable='NO' AND column_default IS NULL AND column_name NOT IN ('id','created_at') ORDER BY 1,2" | head -20`.
+
+---
+
+**DB-7 — `NOT NULL` ustun uchun fallback zanjiri yo'q**
+
+- **Muammo:** `crm_deals.assigned_by_id NOT NULL` — lead convert da `assigned_by_id` null kelib qoldi → 500.
+- **Qoida:** `NOT NULL` ustunlar uchun fallback zanjiri majburiy: `command.assignedById ?? lead.ownerId ?? adminId`.
+- ❌ XATO: `assigned_by_id: command.userId` — null bo'lsa crash.
+- ✅ TO'G'RI: `assigned_by_id: command.userId ?? deal.owner_id ?? this.defaultAdminId`.
+
+---
+
+**DB-8 — Drizzle stub ustun nomi noto'g'ri → upsert silent fail**
+
+- **Muammo:** `schema-ext-a-1.ts` stub da `material_card_id` deb yozilgan. Real DB ustuni `material_id`. Drizzle upsert `WHERE material_card_id = X` — ustun yo'q, hech narsa yangilanmaydi, xato ham yo'q.
+- **Qoida:** Drizzle stub = live DB schema bilan EXACT match. Har ustun nomini `information_schema.columns` dan olib yoz.
+- **Tekshiruv:** Yangi Drizzle schema yozgandan keyin: `node _audit/q.cjs "SELECT column_name FROM information_schema.columns WHERE table_name='[jadval]'"` — har ustun borligini solishtir.
+
+---
+
+**DB-9 — Drizzle da jadval bor, DB da yo'q → cron flood**
+
+- **Muammo:** `AiMesMonitorService` har 30 sekundda `mes_telemetry` ga so'rov qildi. Jadval Drizzle da bor, DB da yo'q. 6900+ xato log to'pladi. Server resurs isrof.
+- **Qoida:** Har cron/service boshlashdan OLDIN: `node _audit/q.cjs "SELECT table_name FROM information_schema.tables WHERE table_name='[jadval]'"` — mavjud bo'lsa ishga tushirsin, yo'q bo'lsa migration kutsin.
+- **Tekshiruv:** `grep -rn "setInterval\|@Cron" apps/api/src/` — har cron, ishlatiladigan jadvalini tekshir.
+
+---
+
+**DB-10 — Drizzle-only jadvallar: DB da yo'q, runtime crash**
+
+- **Muammo:** `payroll_calculations`, `posTransactions` — Drizzle schema da bor, live DB da yo'q. Ular import qilinsa runtime `relation does not exist` xatosi.
+- **Qoida:** Har Drizzle table import qilishdan OLDIN `information_schema.tables` da bor-yo'qligini tekshir. Drizzle-only = migration kerak.
+- **Tekshiruv:** `node _audit/q.cjs "SELECT table_name FROM information_schema.tables WHERE table_schema='public'" | sort > /tmp/db_tables.txt && grep "pgTable" lib/db/src/schema/*.ts | sed "s/.*pgTable('\([^']*\)'.*/\1/" | sort > /tmp/drizzle_tables.txt && comm -23 /tmp/drizzle_tables.txt /tmp/db_tables.txt`.
+
+---
+
+### 15.5 BACKEND / API XATOLARI (API)
+
+---
+
+**API-1 — GL journal multi-leg, transaction yo'q → orphan entry**
+
+- **Muammo:** `createJournalEntry` — for-loop ichida har leg alohida INSERT. Leg 2 muvaffaqiyatsiz bo'lsa, leg 1 orphan qoladi. GL balans buziladi.
+- **Qoida:** Barcha GL legs BITTA `db.transaction()` ichida. Bitta leg muvaffaqiyatsiz = hammasi rollback.
+- ❌ XATO: `for (const leg of legs) { await db.insert(entries).values(leg); }` — atomic emas.
+- ✅ TO'G'RI: `await db.transaction(async (tx) => { for (const leg of legs) { await tx.insert(entries).values(leg); } });`
+
+---
+
+**API-2 — POS sync: `unit_of_measure` vs `unit` ustun nomi drift**
+
+- **Muammo:** `pos-wms-sync.service.ts` `unit_of_measure` ustunini ishlatdi. Real ustun nomi `unit`. Barcha warehouse transactions yozilmadi.
+- **Qoida:** Har INSERT/UPDATE/SELECT ustun nomi live DB schema bilan tekshirilsin. `information_schema.columns` dan ko'r.
+- ❌ XATO: `await db.insert(warehouseTransactions).values({ unit_of_measure: dto.unit })`
+- ✅ TO'G'RI: `await db.insert(warehouseTransactions).values({ unit: dto.unit })`
+
+---
+
+**API-3 — Hardcoded `'kirim'` transaction type**
+
+- **Muammo:** `pos-wms-sync.service.ts` `transaction_type = 'kirim'` hardcoded edi. `chiqim` ham `kirim` sifatida yozilardi.
+- **Qoida:** Status/type qiymatlar hech qachon hardcoded string emas. `MOVEMENT_TYPE_MAP: Record<string, string>` yoki `enum` ishlatilsin.
+- ❌ XATO: `transaction_type: 'kirim'` — doim bir xil.
+- ✅ TO'G'RI: `const MOVEMENT_TYPE_MAP = { sell: 'chiqim', receive: 'kirim' }; transaction_type: MOVEMENT_TYPE_MAP[event.type]`
+
+---
+
+**API-4 — `@Param('id')` null tekshirilmaydi → 200 + null**
+
+- **Muammo:** `findById(id)` — id null yoki undefined bo'lsa, query `WHERE id = null` → 0 qator → `null` qaytaradi. Frontend crash.
+- **Qoida:** `if (!result || !result.ok) throw new NotFoundException(\`${id} topilmadi\`)`.
+- ❌ XATO: `return await this.service.findById(id);` — result null bo'lsa frontend crash.
+- ✅ TO'G'RI: `const r = await this.service.findById(id); if (!r.ok) throw new NotFoundException(); return r.value;`
+
+---
+
+**API-5 — FE URL ≠ BE endpoint → 404 (Windows `find` silent fail)**
+
+- **Muammo:** `check-fe-api-urls.mjs` script Windows da `execSync('find ...')` bilan barcha URL PASS deb hisobot qildi. Aslida `find` cmd.exe da boshqacha ishlaydi — natija to'g'ri emas. `POST /api/hr/payroll/run` endpoint umuman yo'q edi.
+- **Qoida:** `check-fe-api-urls.mjs` → `execSync('find')` o'rniga Node.js native `fs.readdirSync` yoki `glob` package ishlatilsin. Windows compatibility majburiy.
+
+---
+
+**API-6 — Service to'g'ridan `db.*` chaqiradi (repository layer aylanib o'tiladi)**
+
+- **Muammo:** `legacy.service.ts`, `financial-reports-query.service.ts`, `ai-alerts.service.ts` — `db.select()`, `db.insert()` to'g'ridan. Repository pattern buzilgan.
+- **Qoida:** Service faqat repository orqali DB bilan ishlaydi. `db.*` faqat `*.repository.ts` fayllarida.
+- **Tekshiruv:** `grep -rn "db\.select\|db\.insert\|db\.update\|db\.delete" apps/api/src/ --include="*.service.ts"` — 0 bo'lishi kerak.
+
+---
+
+**API-7 — Controller ichida biznes logika**
+
+- **Muammo:** `wms-catalog.controller.ts` (ABC hisob), `hr-payroll.controller.ts` (INPS/NDFL), `crm-ai-extended.controller.ts` (discount hisob) — barcha logika controller da.
+- **Qoida:** Controller = faqat transport (parse → service → format response). Hisob-kitob, biznes qoidalar → service yoki domain. Repository → faqat DB.
+- ❌ XATO: `@Get() async abc() { const items = await this.db.select(...); return items.sort((a,b) => b.revenue - a.revenue).slice(0, 10); }`
+- ✅ TO'G'RI: `@Get() async abc(@Query() q) { const r = await this.service.getAbcReport(q); if (!r.ok) throw ...; return r.value; }`
+
+---
+
+**API-8 — `queryKey` mismatch: yangi yozuv ko'rinmaydi**
+
+- **Muammo:** `GLDocuments.tsx` da `invalidateQueries(["/api/finance/gl/documents"])` — lekin `useQuery` key boshqa edi. Yangi hujjat saqlangandan keyin ro'yxat yangilanmaydi.
+- **Qoida:** `invalidateQueries` key = `useQuery` key bilan EXACT match. Bir joyda konstant sifatida chiqarilsin: `const GL_DOCS_KEY = ['gl', 'documents'];`.
+- ❌ XATO: `useQuery({ queryKey: ['glDocs'] })` + `invalidateQueries(['/api/finance/gl/documents'])` — ikki xil format.
+- ✅ TO'G'RI: `const KEY = ['gl', 'docs']; useQuery({ queryKey: KEY })` + `invalidateQueries({ queryKey: KEY })`.
+
+---
+
+**API-9 — Magic number: biznes qoidalar hardcoded**
+
+- **Muammo:** `0.5 + 0.3 + 0.2` (KPI og'irliklari), `> 180` (churn kunlar), `* 0.05` (komissiya), `/ 12` (amortizatsiya). Biznes qoidalar o'zgarsa — hamma joyni topib o'zgartirish kerak.
+- **Qoida:** `business.constants.ts` faylida nom bilan: `KPI_WEIGHT_SALES = 0.5`, `CHURN_DAYS_THRESHOLD = 180`. Sehrli raqam = taqiq.
+- **Tekshiruv:** `grep -rn "0\.08\|0\.12\|1120000\|0\.85\|0\.5\|0\.3" apps/api/src/ --include="*.ts"` — har topilganni konstantga o'tkazish kerakmi tekshir.
+
+---
+
+### 15.6 EVENT / XABAR XATOLARI (EVT)
+
+---
+
+**EVT-1 — CQRS `EventsHandler` va `EventEmitter2` ko'prigi yo'q**
+
+- **Muammo:** `pos-movement-status.service.ts` `eventEmitter.emit('pos.movement.completed', ...)` chaqirdi. WMS va GL `@EventsHandler(PosMovementCompletedEvent)` bilan kutdi — lekin `EventEmitter2` string event ni CQRS `@EventsHandler` ga bermaydi.
+- **Qoida:** `EventEmitter2.emit()` va `CommandBus/EventBus.publish()` alohida kanallar. Agar CQRS handler kerak bo'lsa, `this.eventBus.publish(new PosMovementCompletedEvent(...))` ishlatilsin.
+- ❌ XATO: `this.eventEmitter.emit('pos.movement.completed', data)` + `@EventsHandler(PosMovementCompletedEvent)` — hech qachon yetib bormaydi.
+- ✅ TO'G'RI: `this.eventBus.publish(new PosMovementCompletedEvent(data))` + `@EventsHandler(PosMovementCompletedEvent)`.
+
+---
+
+**EVT-2 — Double-write: bir jadvalni ikki mustaqil yozuvchi**
+
+- **Muammo:** `warehouse_stock` ga: (1) inline writer, (2) compat writer, (3) aktivlashtirilgan listener — hammasi parallel yozdi. Race condition, noto'g'ri qiymat.
+- **Qoida:** Har jadvalda BITTA yozuvchi. Yangisini aktivlashtirishdan OLDIN mavjud writerlarni sanab chiq va o'chir.
+- **Tekshiruv:** `grep -rn "\.insert(warehouseStock\|\.update(warehouseStock" apps/api/src/` — bir joy bo'lishi kerak.
+
+---
+
+**EVT-3 — Backbone link yo'q: SD→PP o'tish hech qachon ishlamagan**
+
+- **Muammo:** Butun PP, MES, QC zanjiri `SalesOrderConfirmedEvent` ni kutgan. Lekin SD module shu eventni hech qachon publish qilmagan. Zanjirning birinchi halqasi uzilgan — barcha keyingi modullar "ishlaydi" lekin aslida hech narsa olmagan.
+- **Qoida:** Backbone link BIRINCHI quriladi. Downstream modullar backbone ishlaganini isbotlash bilan yoziladi.
+- **Tekshiruv:** `grep -rn "SalesOrderConfirmedEvent\|OrderConfirmed" apps/api/src/` — emit qilinishi + kamida bitta listener bo'lishi kerak.
+
+---
+
+### 15.7 FRONTEND / UI XATOLARI (FE)
+
+---
+
+**FE-1 — `useQuery` loading holati yo'q → `undefined.map` crash**
+
+- **Muammo:** `const { data } = useQuery(...)` → `<Table data={data} />` — sahifa yuklanganda `data` undefined. `data.map(...)` crash.
+- **Qoida:** Har `useQuery` da: `isLoading` → Skeleton, `isError` → EPErrorState, `data ?? []` default.
+- ❌ XATO: `const { data } = useQuery(...); return <Table rows={data} />;`
+- ✅ TO'G'RI: `const { data, isLoading, isError } = useQuery(...); if (isLoading) return <EPSkeletonTable />; if (isError) return <EPErrorState />; return <Table rows={data?.data ?? []} />;`
+
+---
+
+**FE-2 — `useMutation` `onError` handler yo'q → silent fail**
+
+- **Muammo:** Delete mutation muvaffaqiyatsiz bo'lsa — foydalanuvchi bilmaydi. Toast ham yo'q, reload ham yo'q.
+- **Qoida:** Har mutation da: `onSuccess: () => { queryClient.invalidateQueries(...); toast({...}); }` + `onError: () => { toast({ variant: 'destructive', ... }); }`.
+- **Tekshiruv:** `grep -B2 -A10 "useMutation" artifacts/erp-dashboard/src/ -r | grep -L "onError"` — har mutation `onError` borligini tekshir.
+
+---
+
+**FE-3 — Delete tugmasi tasdiqlashsiz to'g'ridan mutation**
+
+- **Muammo:** O'chirish tugmasi bosilganda darhol `deleteMutation.mutate(id)` — tasdiqlash so'ralmaydi. Tasodifiy o'chirishlar bo'lgan.
+- **Qoida:** Har delete uchun `ConfirmDialog` yoki `AlertDialog` majburiy: "O'chirishni tasdiqlaysizmi?"
+- ❌ XATO: `<Button onClick={() => deleteMutation.mutate(id)}>O'chir</Button>`
+- ✅ TO'G'RI: `<ConfirmDialog onConfirm={() => deleteMutation.mutate(id)} trigger={<Button>O'chir</Button>} />`
+
+---
+
+**FE-4 — Xom rang (raw color): design token ishlatilmaydi**
+
+- **Muammo:** `style={{ color: '#fff' }}`, `text-[#94a3b8]`, `bg-[#FF902F]` — hardcoded. Design token o'zgarsa — hamma joyni topib o'zgartirish kerak.
+- **Qoida:** Faqat `var(--ep-*)` va Tailwind semantic. Xom HEX/RGB = taqiq.
+- **Tekshiruv:** `node scripts/check-design-tokens.mjs` — 0 bo'lishi kerak.
+- ❌ XATO: `<div style={{ backgroundColor: '#FF902F' }}>`
+- ✅ TO'G'RI: `<div style={{ backgroundColor: 'var(--ep-primary)' }}>` yoki `<div className="bg-primary">`
+
+---
+
+**FE-5 — Brand rang ko'k deb taxmin qilingan (aslida ORANGE)**
+
+- **Muammo:** Agent "EuroPrint brand rangini ko'k (#235D9F) ishlatamiz" dedi. EuroPrint brand rang ORANGE `#FF902F`. Barcha UI element noto'g'ri rang bilan bo'lgan.
+- **Qoida:** `--ep-primary: #FF902F` — ORANGE. Har rang ishlatishdan oldin `DIZAYN_QOIDALARI.md §1.1` tekshirilsin.
+- **Tekshiruv:** `grep -rn "235D9F\|#2563EB\|#3B82F6" artifacts/erp-dashboard/src/` — topilsa — STOP, `var(--ep-primary)` bilan almashtir.
+
+---
+
+**FE-6 — AppShell double-padding: sahifa root noto'g'ri**
+
+- **Muammo:** `AppShellModern.tsx` allaqachon `p-4 lg:p-6` + `overflowY:auto` beradi. Ba'zi sahifalar o'ziga ham `flex h-full p-5 overflow-auto` qo'shgan → ikki marta padding + scroll.
+- **Qoida:** Sahifa root FAQAT `<div className="space-y-6">`. `flex h-full overflow-auto` yoki `p-*` TAQIQ sahifa root da.
+- ❌ XATO: `return <div className="flex h-full flex-col overflow-auto p-6"><PageContent /></div>`
+- ✅ TO'G'RI: `return <div className="space-y-6"><EPPageHeader ... /><MainContent /></div>`
+
+---
+
+**FE-7 — Sahifa tekshiruvida co-located fayllar o'tkazib yuborilgan**
+
+- **Muammo:** Audit faqat `<PageName>.tsx` fayllarini tekshirdi. `<PageName>Sections/`, `<PageName>Tabs/`, `<PageName>Charts/` papkalaridagi komponentlar tekshirilmadi. Bu papkalarda xatolar qoldi.
+- **Qoida:** Har sahifa audit da: `find artifacts/erp-dashboard/src/pages -name "*Page.tsx" -o -name "*Sections*" -o -name "*Tabs*" -o -name "*Charts*"` — hammasi tekshirilsin.
+
+---
+
+**FE-8 — Sentry dev muhitda ishga tushiriladi → 403 spam**
+
+- **Muammo:** `VITE_SENTRY_DSN` local `.env` da set qilingan → Sentry dev da inits → har console xatosi Sentry ga ketadi.
+- **Qoida:** `main.tsx` da `if (import.meta.env.PROD)` tekshiruvi bilan Sentry init qilinsin.
+- ❌ XATO: `Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN });`
+- ✅ TO'G'RI: `if (import.meta.env.PROD) { Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN }); }`
+
+---
+
+### 15.8 NOMLASH XATOLARI (NAM)
+
+---
+
+**NAM-1 — Jadval nomini taxmin qilish, DB da tekshirmaslik**
+
+- **Muammo:** `mm_purchase_order_lines` deb yozilgan — jadval yo'q. Real nom `purchase_order_items`. `pos_stock_balances`, `pos_materials` — ham yo'q. Cron har soat crash.
+- **Qoida:** HECH QACHON jadval nomini taxmin qilma. Har yangi jadval ishlatishdan OLDIN: `node _audit/q.cjs "SELECT table_name FROM information_schema.tables WHERE table_name LIKE '%[so'z]%'"`.
+
+---
+
+**NAM-2 — Drizzle schema ustun nomi ≠ DB ustun nomi**
+
+- **Muammo:** `crm_deals` Drizzle schema: `assigned_to` (yo'q), `created_by` (yo'q), `status` (yo'q). Real: `assigned_by_id`, `created_by_id`, `stage_id`. Har INSERT crash yoki silent fail.
+- **Qoida:** Yangi Drizzle schema → `.columnName('real_db_column')` yoki `information_schema.columns` bilan tekshir.
+- **Tekshiruv:** Drizzle schema yozgandan keyin: `node _audit/q.cjs "SELECT column_name FROM information_schema.columns WHERE table_name='[jadval]' ORDER BY 1"` — har Drizzle ustun shu ro'yxatda bo'lishi kerak.
+
+---
+
+**NAM-3 — `positions` jadval deprecated, `org_functions` kanonik**
+
+- **Muammo:** Yangi FK lar `positions` jadvaliga yozilgan — 0 FK hub, UI ishlatmaydi. Kanonik: `org_functions` (29 FK, karta-markaz model).
+- **Qoida:** Lavozim/funksiya ma'lumoti → `org_functions`. `positions` → faqat legacy compat, yangi FK yozma.
+- **Tekshiruv:** `grep -rn "positions\." lib/db/src/schema/ apps/api/src/` — yangi FK `positions` ga bo'lsa tekshir.
+
+---
+
+### 15.9 JARAYON XATOLARI (PRC)
+
+---
+
+**PRC-1 — Agent da'volarini tekshirmay qabul qilish**
+
+- **Muammo:** "FAKE-CREATE=10, duplikatlar bor" degan agent da'vosi qabul qilindi. Tekshirgandan so'ng: FAKE-CREATE=0, duplikatlar allaqachon kanonik jadvallar. Noto'g'ri asosda ish qilingan.
+- **Qoida:** Har agent da'vosi: kod + live DB + probe bilan mustaqil tasdiqlansin. "Agent shunday dedi" = isbotlanmagan.
+- **Qoida:** `verify-don't-trust` — har katta da'vo uchun mustaqil tekshiruv.
+
+---
+
+**PRC-2 — Docker image rebuild qilinmagan (stale kod brauzerda)**
+
+- **Muammo:** Fix :3000 portida yashil, egasi :3030 da 500. Eski image ishlab turgan edi.
+- **Qoida:** Fix deploy = to'g'ri portda rebuild: `docker compose up --build -d`. Ikki xil port = ikki xil muhit.
+
+---
+
+**PRC-3 — `localhost` IPv6 vs IPv4 bind mismatch**
+
+- **Muammo:** API faqat `0.0.0.0:3030` (IPv4) bind qilgan. Docker healthcheck `localhost:3030` → IPv6 `::1:3030` → "unhealthy" yolg'on signal.
+- **Qoida:** Docker healthcheck, Vite proxy, va har service config da `localhost` o'rniga `127.0.0.1` ishlatilsin.
+- ❌ XATO: `CMD ["wget", "-qO-", "http://localhost:3030/health"]`
+- ✅ TO'G'RI: `CMD ["wget", "-qO-", "http://127.0.0.1:3030/health"]`
+
+---
+
+**PRC-4 — `git add -A`: parallel sessiya ishini o'chirib yuborish**
+
+- **Muammo:** Parallel sessiya `git add -A` qildi — egasining "faqat tahlil qilgin" degan boshqa sessiya fayllarini ham staged qilib commit qildi.
+- **Qoida:** `git add <aniq-fayl-nomi>` FAQAT. `git add -A`, `git add .`, `git add src/` = TAQIQ. Har commit faqat o'z fayllarini.
+
+---
+
+**PRC-5 — TypeScript tsc 0 = feature ishlayapti taxmini (XATO)**
+
+- **Muammo:** `FinanceExtendedPayrollController` — tsc 0, lekin 7 route 501. URL string typecheck qilinmaydi.
+- **Qoida:** tsc 0 + round-trip isboti = tayyor. Round-trip: kirit → saqla → qayta och → ko'rin.
+
+---
+
+**PRC-6 — Docker logs soati muzlab qolgan (ishonchsiz vaqt)**
+
+- **Muammo:** Docker daemon saat 9 kun orqada edi. Log da vaqt bo'yicha muammo aniqlash noto'g'ri natija berdi.
+- **Qoida:** Vaqt bo'yicha emas, strukturaviy tekshir: `SELECT COUNT(*)`, `curl -I endpoint`, `docker exec -it postgres psql`.
+
+---
+
+**PRC-7 — Ishlab turgan funksiyani cleanup bahonasida o'chirish**
+
+- **Muammo:** HR Recruiting 9 ta stat kartasi ishlab turgan edi. "Dizayn moslash" bahonasida 5 ta o'chirildi.
+- **Qoida (Q-46):** Ishlaydi + to'g'ri = SAQLANADI. Faqat: broken kod yoki fake/stub = to'liq o'chiriladi. "Dizayn" sababi ishlayotgan funksiyani o'chirish uchun yetarli emas.
+
+---
+
+**PRC-8 — Bajaruvchi ruxsatsiz ish qiladi**
+
+- **Muammo:** Tahlil hisobotidagi "o'chirib yuboring" tavsiyasi — bajaruvchi egadan ruxsat olmay bajardi.
+- **Qoida:** Tavsiya ≠ ruxsat. Faqat egasi aniq "ha" deguncha hech qanday o'chirish/o'zgartirish yo'q. Analizchi (Claude advisor) = faqat hujjat/direktiv. Bajaruvchi (Muslimbek) = faqat tasdiqlangan vazifa.
+
+---
+
+**PRC-9 — Windows da `find` komandasi boshqacha ishlaydi**
+
+- **Muammo:** `check-fe-api-urls.mjs` da `execSync('find . -name "*.tsx"')` — Linux da ishlaydi, Windows cmd.exe da boshqa natija. Barcha URL PASS deb noto'g'ri hisobot.
+- **Qoida:** Cross-platform skriptlar faqat Node.js native API: `fs.readdirSync`, `path.join`, `glob` package. `find`, `grep`, `sed`, `awk` = Unix-only, skriptda taqiq.
+
+---
+
+**PRC-10 — Parallel agent sessiyalari bir-birining fayllarini to'qnash qiladi**
+
+- **Muammo:** Ikki sessiya bir vaqtda bir filga edit qildi. Birinchi commit ikkinchisi tomonidan overwrite qilindi.
+- **Qoida (Q-23):** BIR VAQTDA BITTA bajaruvchi. Parallel agent faqat alohida modullarda, bir-biriga tegmaydigan fayllarda. Git conflict = sessiyani to'xtat, egaga xabar ber.
+
+---
+
+### 15.10 PERFORMANCE XATOLARI (PF)
+
+---
+
+**PF-1 — N+1 query: loop ichida DB so'rov**
+
+- **Muammo:** `for (const emp of employees) { const dept = await db.select().from(departments).where(eq(departments.id, emp.deptId)); }` — 100 xodim = 100+1 query.
+- **Qoida:** Bitta `JOIN` yoki `WHERE id IN (...)`. Loop ichida `await db.select()` = taqiq.
+- ❌ XATO: `for (const e of emps) { e.dept = await this.deptRepo.findById(e.deptId); }`
+- ✅ TO'G'RI: `const emps = await db.select({ ...employees, deptName: departments.name }).from(employees).leftJoin(departments, eq(employees.deptId, departments.id));`
+
+---
+
+**PF-2 — Non-null assertion `!` → runtime crash**
+
+- **Muammo:** `config!.value`, `results[0]!.name`, `list.find(x => x.id === id)!` — TypeScript da ishlaydi, runtime da undefined bo'lsa crash.
+- **Qoida:** `!` faqat 100% kafolatli bo'lsa. Shubhali bo'lsa optional chaining `?.` yoki explicit null check.
+- ❌ XATO: `const user = users.find(u => u.id === id)!;`
+- ✅ TO'G'RI: `const user = users.find(u => u.id === id); if (!user) throw new NotFoundException();`
+
+---
+
+**PF-3 — `Array.isArray()` tekshiruvisiz `.map()/.filter()`**
+
+- **Muammo:** API `data` field ba'zan array, ba'zan object qaytardi. `data.map(...)` — data object bo'lsa crash.
+- **Qoida:** `const rows = Array.isArray(data?.data) ? data.data : [];` — har FE component da.
+- ❌ XATO: `{data.map(item => <Row key={item.id} {...item} />)}`
+- ✅ TO'G'RI: `{(data?.data ?? []).map(item => <Row key={item.id} {...item} />)}`
+
+---
+
+**PF-4 — Pagination yo'q: barcha yozuvlar bir so'rovda**
+
+- **Muammo:** `/api/hr/employees` — `LIMIT` yo'q. 10,000 xodim bo'lsa browser freeze.
+- **Qoida:** Har `findAll` endpoint da `LIMIT/OFFSET` yoki cursor pagination. Default: `limit = 20`.
+- **Tekshiruv:** `grep -rn "\.select()" apps/api/src/ --include="*.repository.ts" | grep -v "limit\|LIMIT"` — limitni tekshir.
+
+---
+
+## § 15 YAKUNIY TEKSHIRUV BUYRUG'I
+
+Yangi modul yozishdan OLDIN barcha 4 qoida:
+
+```bash
+# 1. Jadval bor-yo'q (tahmin qilma)
+node _audit/q.cjs "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE '%[so_z]%'"
+
+# 2. Ustun nomlari to'g'ri (draft Drizzle dan oldin)
+node _audit/q.cjs "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name='[jadval]' ORDER BY 1"
+
+# 3. Listener bor (event yozishdan oldin)
+grep -rn "@OnEvent('[event_name]')" apps/api/src/
+
+# 4. Security (endpoint yozgandan keyin)
+# @UseGuards? @Roles? @Public izoh? Guard fail-open emas?
+grep -rn "@UseGuards" apps/api/src/ | grep -v "@Roles" | grep -v "// PUBLIC:"
+```
+
+---
+
 *Hujjat oxiri · [LOYIHA_QOIDALARI.md](LOYIHA_QOIDALARI.md) bilan birga o'qiladi*
-*EuroPrint ERP · Agent Reference Manual · Versiya: 2026-06-18*
+*EuroPrint ERP · Agent Reference Manual · Versiya: 2026-06-18 · §15 qo'shildi*
 *Yangilash: har sessiyada yangi standart kirganda shu faylga qo'sh*
