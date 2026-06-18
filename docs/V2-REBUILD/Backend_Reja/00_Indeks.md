@@ -14,24 +14,24 @@
 | № | Hujjat | Mavzu | Holat | Bog'liqlik |
 |---|--------|-------|-------|-----------|
 | 00 | `00_Indeks.md` | Shu indeks | ✅ | — |
-| 01 | `01_Poydevor.md` | Monorepo, auth, RBAC, org, audit, i18n, CI | 🔲 | — |
-| 02 | `02_Malumotlar_bazasi.md` | DB strategiya, nomlash, kanonik jadvallar, dedup | 🔲 | 01 |
-| 03 | `03_Datalar_almashuvi.md` | Event-driven, outbox, BullMQ, API kontrakt | 🔲 | 01 |
-| 04 | `04_Bosqich1_ORG_HR.md` | Org tuzilma (karta-markaz) + HR (xodim, razryad, LMS) | 🔲 | 01-02 |
-| 05 | `05_Bosqich2_SD.md` | Savdo (buyurtma, mijoz, narxlash, faktura) | 🔲 | 01-02-04 |
-| 06 | `06_Bosqich3_PP.md` | Ishlab chiqarish rejasi (tech-karta, CRP, MRP, AI 7-qadam) | 🔲 | 05 |
-| 07 | `07_Bosqich4_MES.md` | Ishlab chiqarish bajarilishi (sex terminali, smena, brak) | 🔲 | 06 |
-| 08 | `08_Bosqich5_QC.md` | Sifat nazorati (reklama, TBD chek-list, AI kamera) | 🔲 | 07 |
-| 09 | `09_Bosqich6_WMS.md` | Ombor (kirim/chiqim, zaxira, POS, QR/barcode) | 🔲 | 04-07 |
-| 10 | `10_Bosqich7_FIN.md` | Moliya (GL, AR/AP, kassa, oylik, e-faktura) | 🔲 | 05-09 |
-| 11 | `11_Bosqich8_CRM.md` | CRM (lead, deal, mijoz, marketing) | 🔲 | 05 |
-| 12 | `12_Bosqich9_AI_IOT.md` | AI (planner, kamera, prognoz) + IoT (OEE, sensor) | 🔲 | 07-08 |
-| 13 | `13_Bosqich10_DIR.md` | Direktor (dashboard, analytics, andon, BI) | 🔲 | 07-10-12 |
-| 14 | `14_Test_strategiyasi.md` | Unit/integ/e2e, CI gate, coverage | 🔲 | — |
-| 15 | `15_DevOps_Infra.md` | Docker, CI/CD, migratsiya, monitoring, backup | 🔲 | — |
-| 16 | `16_Xavfsizlik.md` | Auth, RBAC/ABAC, RLS, injection, maxfiylik | 🔲 | 01 |
-| 17 | `17_Yol_xaritasi.md` | Sprint reja, bog'liqlik, person-week | 🔲 | — |
-| 18 | `18_Code_Review.md` | To'liq audit: qoidalar + eski kod qayta tekshiruvi | 🔲 | — |
+| 01 | `01_Poydevor.md` | Monorepo, auth, RBAC, org, audit, i18n, CI | ✅ | — |
+| 02 | `02_Malumotlar_bazasi.md` | DB strategiya, nomlash, kanonik jadvallar, dedup | ✅ | 01 |
+| 03 | `03_Datalar_almashuvi.md` | Event-driven, outbox, EventEmitter2 vs CQRS, oltin zanjir | ✅ | 01 |
+| 04 | `04_Bosqich1_ORG_HR.md` | Org tuzilma (karta-markaz) + HR (xodim, razryad) | ✅ | 01-02 |
+| 05 | `05_Bosqich2_SD.md` | Savdo (buyurtma, mijoz, narxlash, faktura) | ✅ | 01-02-04 |
+| 06 | `06_Bosqich3_PP.md` | Ishlab chiqarish rejasi (tech-karta, CRP, AI 7-qadam) | ✅ | 05 |
+| 07 | `07_Bosqich4_MES.md` | MES (smena, work_order, IoT, OEE, Andon) | ✅ | 06 |
+| 08 | `08_Bosqich5_QC.md` | Sifat nazorati (tekshiruv, AI kamera, defekt katalogi) | ✅ | 07 |
+| 09 | `09_Bosqich6_WMS.md` | Ombor (kirim/chiqim, lot, POS sync, rezerv) | ✅ | 04-07 |
+| 10 | `10_Bosqich7_FIN.md` | Moliya (GL entries, kassa, byudjet, e-faktura) | ✅ | 05-09 |
+| 11 | `11_Bosqich8_CRM.md` | CRM (lead, deal, AI scoring, SD ko'prigi) | ✅ | 05 |
+| 12 | `12_Bosqich9_AI_IOT.md` | AI (7-qadam planner, prognoz, chat) + IoT (OEE, anomaliya) | ✅ | 07-08 |
+| 13 | `13_Bosqich10_DIR.md` | Direktor (dashboard, Andon WS, snapshot, BI) | ✅ | 07-10-12 |
+| 14 | `14_Test.md` | Unit/integ/e2e, Jest, factory, coverage ≥70% | ✅ | — |
+| 15 | `15_DevOps.md` | Docker, CI/CD, muhit o'zgaruvchilari, backup | ✅ | — |
+| 16 | `16_Xavfsizlik.md` | Guards, JWT, SQL injection, RBAC, audit log, rate limit | ✅ | 01 |
+| 17 | `17_Yol_xaritasi.md` | Sprint reja, joriy holat, demo kriterlari | ✅ | — |
+| 18 | `18_Code_Review.md` | CR checklist: SEC/FAKE/DB/TWO/API/EVT/FE/ARCH/VIZ 9 o'lchov | ✅ | — |
 
 > Holat: ✅ Tayyor · 🔧 Qisman · 🔲 Yozilmagan
 
