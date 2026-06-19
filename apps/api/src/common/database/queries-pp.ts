@@ -101,6 +101,77 @@ export async function queryRoutingByProduct(productId: number): Promise<DbRow | 
   return (rows[0] ?? null) as DbRow | null;
 }
 
+/**
+ * Golden-thread SD→PP: how many production orders already reference this sales order.
+ * Used by the sales-order-ready listener for idempotency (skip if a plan exists).
+ * `sales_order_id` is a live column (varchar FK → sales_orders serial PK); Postgres
+ * coerces the numeric id, matching the existing execSavePo / execUnlockPlanning pattern.
+ */
+export async function countPoBySalesOrder(salesOrderId: number): Promise<number> {
+  const rows = await db
+    .select({ id: production_orders_int.id })
+    .from(production_orders_int)
+    .where(eq(production_orders_int.salesOrderId, String(salesOrderId)));
+  return Array.isArray(rows) ? rows.length : 0;
+}
+
+/**
+ * Golden-thread SD→PP: read the finished-good lines of a confirmed sales order so the
+ * listener can open a production order per line. `product_id` is the finished good
+ * (sales_order_items.product_id → products.id; matches production_orders.product_id
+ * NOT NULL FK). Only lines with a resolved product_id can become a production order.
+ */
+export async function querySalesOrderItemsForPlanning(
+  salesOrderId: number,
+): Promise<Array<{ productId: number; quantity: number; unit: string | null }>> {
+  const rows = await db.execute<DbRow>(sql`
+    SELECT product_id AS "productId",
+           order_quantity AS "quantity",
+           unit AS "unit"
+    FROM sales_order_items
+    WHERE sales_order_id = ${salesOrderId}
+      AND product_id IS NOT NULL
+    ORDER BY id ASC
+  `);
+  const list = Array.isArray((rows as { rows?: DbRow[] }).rows)
+    ? (rows as { rows: DbRow[] }).rows
+    : (Array.isArray(rows) ? (rows as DbRow[]) : []);
+  return list.map((r) => ({
+    productId: Number(r['productId']),
+    quantity: Number(r['quantity'] ?? 1) || 1,
+    unit: r['unit'] != null ? String(r['unit']) : null,
+  }));
+}
+
+/**
+ * Golden-thread SD→PP: open ONE production order for a confirmed sales-order line.
+ * Reuses the production_orders table (no duplication). bom_id/routing_id stay NULL —
+ * the technologist resolves them later; product_id (NOT NULL FK) + sales_order_id link
+ * the plan back to the order. Status 'created' = freshly planned (MPS line).
+ */
+export async function execCreatePlanLine(
+  salesOrderId: number,
+  productId: number,
+  plannedQuantity: number,
+  unit: string | null,
+  createdBy: number | null = null,
+): Promise<number> {
+  type PoInsert = typeof production_orders_int.$inferInsert;
+  const rows = await db
+    .insert(production_orders_int)
+    .values({
+      status: 'created',
+      salesOrderId: String(salesOrderId),
+      productId,
+      plannedQuantity: plannedQuantity > 0 ? plannedQuantity : 1,
+      orderNumber: `PO-${salesOrderId}-${productId}-${Date.now()}`,
+      unit: unit ?? undefined,
+      createdBy: createdBy ?? undefined,
+    } as PoInsert)
+    .returning({ id: production_orders_int.id });
+  return rows[0]?.id ?? 0;
+}
+
 export async function execUnlockPlanning(orderId: number): Promise<void> {
   // #03 HOP-1 fix: the caller (advance-approved.listener) passes the SALES order id, and the SD fan-out
   // creates production_orders keyed by sales_order_id — so transition planning by sales_order_id, NOT id

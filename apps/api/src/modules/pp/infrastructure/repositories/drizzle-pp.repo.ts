@@ -19,6 +19,7 @@ import {
   execSaveBom, queryBom, queryBomByProduct,
   execSaveRouting, queryRouting, queryRoutingByProduct,
   execUnlockPlanning, queryProductionPlan, queryMachineLoad,
+  countPoBySalesOrder, querySalesOrderItemsForPlanning, execCreatePlanLine,
 } from '@common/database/queries-pp';
 
 type DbRow = Record<string, unknown>;
@@ -137,6 +138,52 @@ export class DrizzlePpRepository implements IPpRepository {
     } catch {
       this.logger.error('Failed to unlock planning');
       return Err('Kilid ochishda xatolik');
+    }
+  }
+
+  async createPlanFromSalesOrder(
+    salesOrderId: number,
+    createdBy?: number,
+  ): Promise<Result<number>> {
+    try {
+      // Idempotency: a production order already exists for this sales order → skip.
+      const existing = await countPoBySalesOrder(salesOrderId);
+      if (existing > 0) {
+        this.logger.log(
+          `createPlanFromSalesOrder: ${existing} PO already exist for sales order ${salesOrderId} — skip`,
+        );
+        return Ok(0);
+      }
+
+      const items = await querySalesOrderItemsForPlanning(salesOrderId);
+      if (items.length === 0) {
+        // No product-bound line items → nothing plannable yet (no DDL, no fake row).
+        this.logger.warn(
+          `createPlanFromSalesOrder: sales order ${salesOrderId} has no product-bound line items — no plan created`,
+        );
+        return Ok(0);
+      }
+
+      let created = 0;
+      for (const item of items) {
+        if (!Number.isFinite(item.productId) || item.productId <= 0) continue;
+        const id = await execCreatePlanLine(
+          salesOrderId,
+          item.productId,
+          item.quantity,
+          item.unit,
+          createdBy ?? null,
+        );
+        if (id > 0) created += 1;
+      }
+
+      this.logger.log(
+        `createPlanFromSalesOrder: opened ${created} production order(s) for sales order ${salesOrderId}`,
+      );
+      return Ok(created);
+    } catch (e) {
+      this.logger.error(`Failed to create plan from sales order: ${String(e)}`);
+      return Err('Reja yaratishda xatolik');
     }
   }
 

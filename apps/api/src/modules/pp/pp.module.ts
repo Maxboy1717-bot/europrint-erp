@@ -37,6 +37,7 @@ import { DrizzlePpRepository } from './infrastructure/repositories/drizzle-pp.re
 import { DrizzleWorkCenterRepository } from './infrastructure/repositories/drizzle-work-center.repo';
 import { PP_REPO, WORK_CENTER_REPO } from './domain/repositories/pp.repository';
 import { AdvanceApprovedListener } from './infrastructure/event-handlers/advance-approved.listener';
+import { SalesOrderReadyPlanningListener } from './infrastructure/event-handlers/sales-order-ready-planning.listener';
 import { MroStopListener } from './infrastructure/event-handlers/mro-stop.listener';
 // Wave 4 round-2 (PA2-18): DesignLabCompletedListener split into two
 // canonical @EventsHandler listeners + a shared join service.
@@ -100,6 +101,7 @@ const handlers = [
 ];
 
 const listeners = [
+  SalesOrderReadyPlanningListener,    // Golden-thread SD→PP entry (sales order confirm → production plan)
   AdvanceApprovedListener,            // Trigger 7
   MroStopListener,                    // Trigger 18
   DesignApprovedTrigger5Listener,     // Trigger 5 (design side, Wave 4 round-2)

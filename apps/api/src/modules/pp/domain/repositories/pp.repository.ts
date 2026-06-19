@@ -28,6 +28,15 @@ export interface IPpRepository {
   getRoutingByProductId(productId: number): Promise<Result<Routing>>;
 
   unlockPlanning(orderId: number): Promise<Result<void>>;
+
+  /**
+   * Golden-thread SD→PP entry: open production order(s) for a confirmed sales order.
+   * Idempotent — if any production order already references the sales order, returns
+   * `0` created (skip). Otherwise inserts one production order per finished-good line
+   * (sales_order_items.product_id), linked via sales_order_id. Returns the count created.
+   */
+  createPlanFromSalesOrder(salesOrderId: number, createdBy?: number): Promise<Result<number>>;
+
   getProductionPlan(startDate: Date, endDate: Date): Promise<Result<object[]>>;
   getMachineLoad(workCenterId: number): Promise<Result<object[]>>;
 
