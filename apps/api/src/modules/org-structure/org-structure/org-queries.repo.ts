@@ -244,4 +244,75 @@ export class OrgQueriesRepo {
       return rows.length > 0;
     }, 'DB_ERROR');
   }
+
+  /**
+   * P51 — Derives the *direct manager* of a node by walking the parent chain
+   * upward and returning the nearest ANCESTOR node's `head_user_id`.
+   *
+   * Vizyon §2.3 Q1/Q4: manager_id = the head of the immediately-higher node in
+   * the tree (NOT "the dept head" — each branch has a different depth). When an
+   * intermediate ancestor has a NULL head, the recursion skips it and keeps
+   * climbing (depth-limited to 10, which also breaks any accidental cycle).
+   *
+   * Returns `managerUserId: null` (with all fields null) when no non-null head
+   * exists anywhere up the chain — this is the CORRECT, non-fabricated answer
+   * for a root node or an unstaffed branch (Q-40: no invented who-manages-whom).
+   *
+   * Distinct from the legacy {@link getDirectManager} (which COALESCEs the node's
+   * own head as a fallback — the RETRACTED model). Both coexist (Q-46).
+   */
+  async deriveManagerForNode(nodeId: number): Promise<Result<{
+    managerUserId: number | null;
+    managerName: string | null;
+    resolvedAtNodeId: number | null;
+    resolvedAtNodeName: string | null;
+    depth: number;
+  }>> {
+    return safeCall(async () => {
+      // RULE4_EXCEPTION: recursive CTE (ancestor walk) — Drizzle cannot express
+      // WITH RECURSIVE; same pattern as getApprovalChain above.
+      const rows = await exec(sql`
+        WITH RECURSIVE ancestor AS (
+          SELECT od.id, od.name, od.parent_id, od.head_user_id, 1 AS depth
+          FROM   org_departments od
+          WHERE  od.id = ${nodeId} AND od.is_active = true
+
+          UNION ALL
+
+          SELECT od2.id, od2.name, od2.parent_id, od2.head_user_id, a.depth + 1
+          FROM   org_departments od2
+          JOIN   ancestor a ON od2.id = a.parent_id
+          WHERE  od2.is_active = true AND a.depth < 10
+        )
+        SELECT
+          a.head_user_id AS "managerUserId",
+          a.id           AS "resolvedAtNodeId",
+          a.name         AS "resolvedAtNodeName",
+          a.depth        AS "depth",
+          TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) AS "managerName"
+        FROM   ancestor a
+        LEFT   JOIN users u ON u.id = a.head_user_id AND u.is_active = true
+        WHERE  a.head_user_id IS NOT NULL
+          AND  a.id <> ${nodeId}
+        ORDER  BY a.depth
+        LIMIT  1
+      `);
+
+      const r = rows[0];
+      if (!r) {
+        return { managerUserId: null, managerName: null, resolvedAtNodeId: null, resolvedAtNodeName: null, depth: 0 };
+      }
+      const muid = r['managerUserId'];
+      const rid  = r['resolvedAtNodeId'];
+      const rname = r['resolvedAtNodeName'];
+      const mname = r['managerName'];
+      return {
+        managerUserId:      muid  === null || muid  === undefined ? null : Number(muid),
+        managerName:        mname === null || mname === undefined ? null : String(mname),
+        resolvedAtNodeId:   rid   === null || rid   === undefined ? null : Number(rid),
+        resolvedAtNodeName: rname === null || rname === undefined ? null : String(rname),
+        depth:              r['depth'] === null || r['depth'] === undefined ? 0 : Number(r['depth']),
+      };
+    }, 'DB_ERROR');
+  }
 }
