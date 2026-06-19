@@ -61,6 +61,8 @@ export function throwFromError(error: AppError): never {
       throw new HttpException(msg, HttpStatus.PAYMENT_REQUIRED);
     case 'BUSINESS_RULE_VIOLATION':
       throw new UnprocessableEntityException(msg);
+    case 'NOT_IMPLEMENTED':
+      throw new HttpException(msg, HttpStatus.NOT_IMPLEMENTED);
     default:
       throw new InternalServerErrorException(msg);
   }

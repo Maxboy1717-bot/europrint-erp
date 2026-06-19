@@ -52,7 +52,8 @@ export type AppErrorCode =
   | 'MOVEMENT_REPORT_ERROR'
   | 'EMPLOYEE_ACTIVITY_ERROR'
   | 'LOW_STOCK_ERROR'
-  | 'GET_REQUESTS_ERROR';
+  | 'GET_REQUESTS_ERROR'
+  | 'NOT_IMPLEMENTED';
 
 /**
  * Structured error payload returned inside `Result.error`.
