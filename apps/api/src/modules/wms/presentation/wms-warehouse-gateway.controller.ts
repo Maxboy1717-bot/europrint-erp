@@ -4,6 +4,7 @@
  */
 
 import { assertInternal } from '@common/assertions';
+import { unwrapOrThrow } from '@common/http-result';
 import {
   Body, BadRequestException, Controller, Get, Param, Post, Patch,
   UseGuards, UseInterceptors, Logger, Query, UsePipes,
@@ -25,6 +26,11 @@ const GoodsReceiptLineSchema = z.object({
   quantity: z.union([z.string(), z.number()]).optional(),
   unitCost: z.union([z.string(), z.number()]).optional(),
   unit_cost: z.union([z.string(), z.number()]).optional(),
+}).passthrough();
+
+const QcReceiptDecisionSchema = z.object({
+  decision: z.enum(['QABUL', 'REWORK', 'CHIQARISH']),
+  note: z.string().max(2000).optional(),
 }).passthrough();
 import {
   WmsCreateTransferSchema, WmsCreateTransferDto,
@@ -215,7 +221,37 @@ export class WmsWarehouseGatewayController {
     return await this.svc.addGoodsReceiptLine(safeInt(id, 0), dto);
   }
 
-  @ApiOperation({ summary: 'Complete goods receipt' })
+  @ApiOperation({ summary: 'Send goods receipt to quarantine (DRAFT -> KARANTIN)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('goods-receipts/:id/quarantine')
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...WH_WRITE)
+  async sendGoodsReceiptToQuarantine(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return unwrapOrThrow(await this.svc.sendToQuarantine(safeInt(id, 0), user?.id ?? null));
+  }
+
+  @ApiOperation({ summary: 'QC decision on goods receipt (QABUL/REWORK/CHIQARISH)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('goods-receipts/:id/qc-decision')
+  @UseInterceptors(AuditInterceptor)
+  @Roles(...WH_WRITE)
+  async qcReceiptDecision(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = QcReceiptDecisionSchema.parse(body);
+    return unwrapOrThrow(
+      await this.svc.qcReceiptDecision(safeInt(id, 0), dto.decision, user?.id ?? null, dto.note ?? null),
+    );
+  }
+
+  @ApiOperation({ summary: 'Complete goods receipt (QC_PASS -> MAIN; quarantine-gated)' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('goods-receipts/:id/complete')
@@ -225,6 +261,6 @@ export class WmsWarehouseGatewayController {
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return await this.svc.completeGoodsReceipt(safeInt(id, 0), user?.id ?? null);
+    return unwrapOrThrow(await this.svc.completeGoodsReceipt(safeInt(id, 0), user?.id ?? null));
   }
 }

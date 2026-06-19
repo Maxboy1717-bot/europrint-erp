@@ -52,6 +52,10 @@ import { WmsExtendedService } from './application/wms-extended.service';
 import { WmsExtendedRepository } from './infrastructure/repositories/wms-extended.repository';
 import { WmsWarehouseGatewayService } from './application/wms-warehouse-gateway.service';
 import { WmsWarehouseGatewayRepo } from './infrastructure/wms-warehouse-gateway.repo';
+import { QuarantineGateService } from './domain/services/quarantine-gate.service';
+import { WmsQuarantineGateService } from './application/wms-quarantine-gate.service';
+import { WmsQuarantineRepository } from './infrastructure/repositories/wms-quarantine.repository';
+import { WMS_QUARANTINE_REPO } from './domain/repositories/i-wms-quarantine.repo';
 import { InventoryMaterialsService } from './application/inventory-materials.service';
 import { InventoryMaterialsRepository } from './infrastructure/repositories/inventory-materials.repository';
 import { IotEnhancedService } from './application/iot-enhanced.service';
@@ -153,6 +157,10 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     WmsExtendedService,
     WmsWarehouseGatewayRepo,
     WmsWarehouseGatewayService,
+    QuarantineGateService,
+    WmsQuarantineGateService,
+    WmsQuarantineRepository,
+    { provide: WMS_QUARANTINE_REPO, useClass: WmsQuarantineRepository },
     InventoryMaterialsRepository,
     { provide: INVENTORY_MATERIALS_REPO, useClass: InventoryMaterialsRepository },
     InventoryMaterialsService,

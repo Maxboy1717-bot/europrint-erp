@@ -196,13 +196,11 @@ export class WmsWarehouseGatewayRepo {
     return (rows.rows[0] ?? {}) as Row;
   }
 
-  async completeGoodsReceipt(receiptId: number, userId: number | null): Promise<Row> {
-    const rows = await runQuery<Row>(sql`
-      UPDATE mm_goods_receipts SET status = 'completed', completed_by = ${userId}, completed_at = NOW()
-      WHERE id = ${receiptId} RETURNING *
-    `);
-    return (rows.rows[0] ?? {}) as Row;
-  }
+  // NOTE: legacy completeGoodsReceipt() (status='completed', no QC check) REMOVED
+  // 2026-06-19. It bypassed the karantin gate (DRAFT→KARANTIN→QC_PASS→MAIN) and
+  // let stock be posted while in quarantine. Completion now flows ONLY through
+  // WmsQuarantineGateService.releaseToMain (QC_PASS → MAIN, enforced). Q-46: dead
+  // bypass writer removed rather than left as a second un-gated path.
 
   async getLowStock(): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
