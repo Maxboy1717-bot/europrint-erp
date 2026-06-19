@@ -129,11 +129,14 @@ export class CcWorkflowService {
   ): Promise<number[]> {
     const approvers: number[] = [];
     for (const step of firstStepRows) {
-      const approverId = await this.org.resolveApprover(step.approverPositionCode, senderUserId);
-      if (!approverId) {
-        this.logger.warn(`Step ${step.stepOrder}: approver unresolvable — skipping. Document ${doc.id} may get stuck.`);
+      const approverResult = await this.org.resolveApprover(step.approverPositionCode, senderUserId);
+      if (!approverResult.ok) {
+        this.logger.warn(
+          `Step ${step.stepOrder}: approver unresolvable (${approverResult.error.message}) — skipping. Document ${doc.id} may get stuck.`,
+        );
         continue;
       }
+      const approverId = approverResult.data;
       approvers.push(approverId);
       unwrapOrThrow(await this.docs.createApproval({
         documentId:     doc.id,

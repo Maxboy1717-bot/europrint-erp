@@ -9,11 +9,17 @@
  *
  * Yana faol delegatsiya tekshiriladi (cc_delegations) — agar bor bo'lsa,
  * delegatsiya egasi qaytariladi.
+ *
+ * BUG FIX (2026-06-19): resolveApprover endi Result<number> qaytaradi —
+ * manager_id NULL/0 bo'lsa THROW qilmaydi, Err(...) qaytaradi va chaqiruvchi
+ * graceful degradation (warn + skip) qiladi. (memory: MANAGER_OF_SENDER throws
+ * when manager_id is NULL/0/30 — crashing escalation flow).
  */
 
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+import { Result, Ok, Err, AppErr } from '@common/result';
 
 @Injectable()
 export class CcOrgResolverService {
@@ -22,36 +28,51 @@ export class CcOrgResolverService {
   /**
    * Position kod va yuboruvchi ID bo'yicha tasdiqlovchi xodim ID'sini topadi.
    * Faol delegatsiya bo'lsa, o'rinbosar qaytariladi.
+   *
+   * NOTE: throws EMAS — Result<number> qaytaradi. Chaqiruvchi .ok ni tekshirib,
+   * Err holatda warn log + skip qilishi kerak (graceful degradation).
    */
-  async resolveApprover(positionCode: string, senderUserId: number): Promise<number> {
-    const baseUserId = await this.resolveBase(positionCode, senderUserId);
-    const delegated  = await this.checkDelegation(baseUserId);
-    return delegated ?? baseUserId;
+  async resolveApprover(positionCode: string, senderUserId: number): Promise<Result<number>> {
+    try {
+      const baseResult = await this.resolveBase(positionCode, senderUserId);
+      if (!baseResult.ok) return baseResult;
+      const delegated = await this.checkDelegation(baseResult.data);
+      return Ok(delegated ?? baseResult.data);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.warn(`resolveApprover(${positionCode}, sender=${senderUserId}): unexpected error — ${msg}`);
+      return Err(AppErr('INTERNAL', msg));
+    }
   }
 
   // ── ichki: kod bo'yicha asosiy egasi ─────────────────────────────────
-  private async resolveBase(positionCode: string, senderUserId: number): Promise<number> {
+  private async resolveBase(positionCode: string, senderUserId: number): Promise<Result<number>> {
     const code = positionCode.trim().toUpperCase();
     if (code === 'CEO')               return this.resolveCeo();
     if (code === 'MANAGER_OF_SENDER') return this.resolveManagerOfSender(senderUserId);
     if (code === 'DEPT_HEAD')         return this.resolveDeptHead(senderUserId);
     if (code.startsWith('POSITION:')) return this.resolveByPosition(code);
-    throw new BadRequestException(`Noma'lum tasdiqlash lavozim kodi: ${positionCode}`);
+    return Err(AppErr('BAD_REQUEST', `Noma'lum tasdiqlash lavozim kodi: ${positionCode}`));
   }
 
-  private async resolveCeo(): Promise<number> {
+  private async resolveCeo(): Promise<Result<number>> {
     const r = await runQuery<{ head_user_id: number | null }>(sql`
       SELECT head_user_id FROM org_departments
       WHERE parent_id IS NULL AND head_user_id IS NOT NULL
       ORDER BY id ASC LIMIT 1
     `);
     const id = r.rows[0]?.head_user_id ?? null;
-    if (!id) throw new BadRequestException('CEO orgsxemada belgilanmagan');
-    return id;
+    if (!id) {
+      this.logger.warn('resolveCeo: CEO orgsxemada belgilanmagan — escalation skip');
+      return Err(AppErr('NOT_FOUND', 'CEO orgsxemada belgilanmagan'));
+    }
+    return Ok(id);
   }
 
-  private async resolveManagerOfSender(senderUserId: number): Promise<number> {
+  private async resolveManagerOfSender(senderUserId: number): Promise<Result<number>> {
     // 1. Direct: sender → employee → manager_id → manager.user_id.
+    //    manager_id NULL yoki 0 bo'lsa (0/30 populated case) — bu query 0 qator qaytaradi,
+    //    THROW QILMAYDI — fallback 2 ga o'tadi.
     const direct = await runQuery<{ user_id: number | null }>(sql`
       SELECT m.user_id
       FROM employees e
@@ -60,7 +81,7 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const directId = direct.rows[0]?.user_id ?? null;
-    if (directId) return directId;
+    if (directId) return Ok(directId);
 
     // 2. Fallback (employees.manager_id is unset across the org): walk UP the org tree from the
     //    sender's primary department to the nearest department that HAS a head — that head is the
@@ -83,11 +104,17 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const headId = walk.rows[0]?.head_user_id ?? null;
-    if (!headId) throw new BadRequestException("Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan");
-    return headId;
+    if (!headId) {
+      this.logger.warn(
+        `resolveManagerOfSender(sender=${senderUserId}): ` +
+        `manager_id NULL/0 va org tree'da bo'lim rahbari yo'q — escalation step skip`,
+      );
+      return Err(AppErr('NOT_FOUND', "Yuboruvchining bo'lim rahbari orgsxemada belgilanmagan"));
+    }
+    return Ok(headId);
   }
 
-  private async resolveDeptHead(senderUserId: number): Promise<number> {
+  private async resolveDeptHead(senderUserId: number): Promise<Result<number>> {
     // sender's department → org_departments.head_user_id (via employee_org_departments)
     const r = await runQuery<{ head_user_id: number | null }>(sql`
       SELECT od.head_user_id
@@ -99,13 +126,18 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const id = r.rows[0]?.head_user_id ?? null;
-    if (!id) throw new BadRequestException("Yuboruvchining bo'lim rahbari topilmadi");
-    return id;
+    if (!id) {
+      this.logger.warn(
+        `resolveDeptHead(sender=${senderUserId}): bo'lim rahbari topilmadi — escalation step skip`,
+      );
+      return Err(AppErr('NOT_FOUND', "Yuboruvchining bo'lim rahbari topilmadi"));
+    }
+    return Ok(id);
   }
 
-  private async resolveByPosition(code: string): Promise<number> {
+  private async resolveByPosition(code: string): Promise<Result<number>> {
     const posCode = code.slice('POSITION:'.length).trim();
-    if (!posCode) throw new BadRequestException('POSITION: kod ko\'rsatilmagan');
+    if (!posCode) return Err(AppErr('BAD_REQUEST', "POSITION: kod ko'rsatilmagan"));
     const r = await runQuery<{ user_id: number | null }>(sql`
       SELECT e.user_id
       FROM employees e
@@ -117,8 +149,13 @@ export class CcOrgResolverService {
       LIMIT 1
     `);
     const id = r.rows[0]?.user_id ?? null;
-    if (!id) throw new BadRequestException(`Lavozim ${posCode} bo'sh — orgsxemada xodim biriktirilmagan`);
-    return id;
+    if (!id) {
+      this.logger.warn(
+        `resolveByPosition(${posCode}): orgsxemada xodim biriktirilmagan — escalation step skip`,
+      );
+      return Err(AppErr('NOT_FOUND', `Lavozim ${posCode} bo'sh — orgsxemada xodim biriktirilmagan`));
+    }
+    return Ok(id);
   }
 
   // ── ichki: faol delegatsiya tekshiruvi ───────────────────────────────

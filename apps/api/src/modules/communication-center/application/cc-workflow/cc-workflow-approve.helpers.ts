@@ -62,11 +62,14 @@ export async function executeApproveTransaction(
       const nextRows = steps.filter(s => s.stepOrder === nextOrder);
       const nextApprovers: number[] = [];
       for (const step of nextRows) {
-        const approverId = await org.resolveApprover(step.approverPositionCode, doc.senderUserId);
-        if (!approverId) {
-          logger.warn(`Step ${step.stepOrder}: approver unresolvable — skipping. Document ${doc.id} may get stuck.`);
+        const approverResult = await org.resolveApprover(step.approverPositionCode, doc.senderUserId);
+        if (!approverResult.ok) {
+          logger.warn(
+            `Step ${step.stepOrder}: approver unresolvable (${approverResult.error.message}) — skipping. Document ${doc.id} may get stuck.`,
+          );
           continue;
         }
+        const approverId = approverResult.data;
         nextApprovers.push(approverId);
         unwrapOrThrow(await docs.createApproval({
           documentId: doc.id,
