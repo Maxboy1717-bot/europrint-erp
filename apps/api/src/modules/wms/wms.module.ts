@@ -92,6 +92,11 @@ import { MovementsService } from './movements/movements.service';
 import { WMS_WAREHOUSES_REPO } from './warehouses/i-wms-warehouses.repo';
 import { DrizzleWmsWarehousesRepository } from './warehouses/drizzle-wms-warehouses.repo';
 import { WarehousesService } from './warehouses/warehouses.service';
+import { RulonCardController } from './presentation/rulon-card.controller';
+import { RulonCardService } from './application/rulon-card.service';
+import { DrizzleRulonCardRepository } from './infrastructure/repositories/drizzle-rulon-card.repo';
+import { RULON_CARD_REPO } from './domain/repositories/i-rulon-card.repo';
+import { WmsRollCalcService } from './domain/services/wms-roll-calc.service';
 
 const handlers = [
   GoodsIssueHandler,
@@ -138,6 +143,7 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     InventoryAdvancedController,
     WmsEoqController,
     WmsAnalyticsController,
+    RulonCardController,
   ],
   providers: [
     ...handlers,
@@ -185,6 +191,11 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     InventoryTurnoverService,
     WmsEoqService,
     WmsAnalyticsService,
+    // Rulon qog'oz karta (paper-roll card) — WMS core (PROMT-08 §PHASE 3).
+    WmsRollCalcService,
+    DrizzleRulonCardRepository,
+    { provide: RULON_CARD_REPO, useClass: DrizzleRulonCardRepository },
+    RulonCardService,
   ],
   exports: [WMS_REPO],
 })
