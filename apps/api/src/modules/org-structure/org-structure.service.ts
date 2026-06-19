@@ -196,4 +196,46 @@ export class OrgStructureService implements OnModuleInit {
       return { telegramGroup: r.ok ? r.data : null };
     });
   }
+
+  /**
+   * P51 — Derives the direct manager of a node by walking the parent chain
+   * (vizyon §2.3 Q1/Q4: head of the immediately-higher node). Returns a null
+   * manager when no non-null head exists up the chain — NOT fabricated (Q-40).
+   */
+  async deriveManagerForNode(nodeId: number) {
+    return safeCall(async () => {
+      const r = await this.repo.deriveManagerForNode(nodeId);
+      return {
+        derivedManager: r.ok
+          ? r.data
+          : { managerUserId: null, managerName: null, resolvedAtNodeId: null, resolvedAtNodeName: null, depth: 0 },
+      };
+    });
+  }
+
+  /**
+   * P51 — Admin operation: recomputes org_functions.manager_id and
+   * employees.manager_id from the org tree. DATA-gated — if any active node
+   * still has a NULL head_user_id, the backfill is refused (dataGateOpen=false)
+   * and nothing is written. dryRun (default true) previews the row counts only.
+   */
+  async triggerManagerBackfill(dryRun: boolean) {
+    return safeCall(async () => {
+      const r = await this.repo.backfillManagerIds(dryRun);
+      if (!r.ok) {
+        return {
+          nullHeadCount: -1,
+          dataGateOpen: false,
+          updatedFunctions: 0,
+          updatedEmployees: 0,
+          message: r.error.message,
+        };
+      }
+      this.logger.log(
+        `manager backfill: dryRun=${dryRun}, dataGateOpen=${r.data.dataGateOpen}, ` +
+        `functions=${r.data.updatedFunctions}, employees=${r.data.updatedEmployees}`,
+      );
+      return r.data;
+    });
+  }
 }

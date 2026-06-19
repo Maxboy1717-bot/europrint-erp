@@ -27,6 +27,8 @@ export class OrgStructureRepository {
   getApprovalChain = (id: number) => this.queries.getApprovalChain(id);
   getDirectManager = (id: number) => this.queries.getDirectManager(id);
   getTelegramGroupForNode = (id: number) => this.queries.getTelegramGroupForNode(id);
+  // P51 — derive manager up the parent chain (vizyon §2.3 Q1/Q4)
+  deriveManagerForNode = (nodeId: number) => this.queries.deriveManagerForNode(nodeId);
 
   // ─── Mutations ───────────────────────────────────────────────────────────
   create = (dto: Record<string, unknown>, lvl: number) => this.mutations.create(dto, lvl);
@@ -34,4 +36,6 @@ export class OrgStructureRepository {
   deactivate = (id: number) => this.mutations.deactivate(id);
   move = (id: number, parent: number | null, lvl: number) => this.mutations.move(id, parent, lvl);
   assignUser = (uid: number, nid: number) => this.mutations.assignUser(uid, nid);
+  // P51 — backfill manager_id from the org tree (DATA-gated, idempotent)
+  backfillManagerIds = (dryRun: boolean) => this.mutations.backfillManagerIds(dryRun);
 }
