@@ -460,6 +460,14 @@ export const productionOrders = pgTable("production_orders", {
   actualStartDate: varchar("actual_start_date", { length: 10 }),
   actualEndDate: varchar("actual_end_date", { length: 10 }),
   priority: integer("priority").notNull().default(3),
+  // EP-PP-097 ZARUR (urgent) flag — floats the order above every non-urgent one
+  // in the production queue. Orthogonal to the numeric priority band.
+  isUrgent: boolean("is_urgent").notNull().default(false),
+  // EP-PP-025 / EP-PP-061 frozen-zone (no-preempt): once committed to the
+  // near-term window the order cannot be displaced by a new higher-priority order.
+  // Cleared only by owner/director authority.
+  isFrozen: boolean("is_frozen").notNull().default(false),
+  frozenUntil: timestamp("frozen_until"),
   workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   productionType: varchar("production_type", { length: 30 }).default("other"),
   defectiveQty: numericMoney("defective_qty").notNull().default(0),
@@ -486,10 +494,14 @@ export const productionOrders = pgTable("production_orders", {
   index("idx_production_orders_work_center_id").on(t.workCenterId),
   index("idx_production_orders_status").on(t.status),
   index("idx_production_orders_priority").on(t.priority),
+  index("idx_production_orders_urgent").on(t.isUrgent),
+  index("idx_production_orders_frozen").on(t.isFrozen),
   index("idx_production_orders_created_at").on(t.createdAt),
   index("idx_production_orders_updated_at").on(t.updatedAt),
   check("production_orders_order_type_chk", sql`${t.orderType} IN ('standard','rework','sample')`),
-  check("production_orders_status_chk", sql`${t.status} IN ('created','released','in_progress','completed','closed','qc_hold')`),
+  // EP-PP-082 (7-status owner override) + legacy strings kept as a SUPERSET so
+  // nothing that already persisted ('created'/'pending'/'released'/'qc_hold') breaks (Q-46).
+  check("production_orders_status_chk", sql`${t.status} IN ('created','pending','planned','confirmed','released','released_to_production','in_progress','in_qc','qc_hold','completed','closed','cancelled','paused')`),
 ]);
 
 export const insertProductionOrderSchema = createInsertSchema(productionOrders, {

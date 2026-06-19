@@ -63,6 +63,7 @@ import { SchedulingCapacityService } from './domain/services/scheduling-capacity
 import { SchedulingService } from './domain/services/scheduling.service';
 import { CrpService } from './domain/services/crp.service';
 import { LearningCurveService } from './domain/services/learning-curve.service';
+import { ProductionPriorityService } from './domain/services/production-priority.service';
 import { MpsAtpHandler } from './application/queries/mps-atp.handler';
 import { RunMrpHandler } from './application/commands/run-mrp.handler';
 import { BomExplosionService } from './domain/services/bom-explosion.service';
@@ -151,6 +152,7 @@ const listeners = [
     SchedulingService,
     CrpService,
     LearningCurveService,
+    ProductionPriorityService,
     BomExplosionService,
     MpsAtpHandler,
     RunMrpHandler,
