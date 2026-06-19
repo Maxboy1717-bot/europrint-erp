@@ -95,8 +95,18 @@ export class WmsCatalogController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('dashboard')
   @Roles(...WH_READ)
-  getDashboard() {
-    return { totalItems: 0, lowStock: 0, pendingReceipts: 0, pendingTransfers: 0 };
+  async getDashboard() {
+    const kpis = await this.catalogService.getDashboardKpis();
+    return {
+      totalItems: kpis.totalMaterials,
+      lowStock: kpis.lowStockCount,
+      pendingReceipts: kpis.pendingReceipts,
+      pendingTransfers: kpis.pendingTransfers,
+      totalMaterials: kpis.totalMaterials,
+      totalValue: kpis.totalValue,
+      lowStockCount: kpis.lowStockCount,
+      overdueReservations: kpis.overdueReservations,
+    };
   }
 
   @ApiOperation({ summary: 'Get dashboard kpis' })
