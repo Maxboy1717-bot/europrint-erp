@@ -72,6 +72,12 @@ const HrRequestSchema = z.object({
   node_name:    z.string().max(500).nullable().optional(),
 }).passthrough();
 
+// P51 — backfill admin op. dryRun defaults to true (preview-only) so an
+// accidental empty body never triggers a write. .strict() rejects extra keys.
+const BackfillManagerSchema = z.object({
+  dryRun: z.boolean().default(true),
+}).strict();
+
 // Matches OrgNodePortretTab.tsx payload: { portret_data: { portret, tool_test_requirements } }
 const NodePortretSchema = z.object({
   portret_data: z.object({
@@ -331,5 +337,31 @@ export class OrgStructureController {
   @Get('nodes/:nodeId/telegram-group')
   async getTelegramGroup(@Param('nodeId', ParseIntPipe) nodeId: number) {
     return unwrapOrInternal(await this.service.getTelegramGroupForNode(nodeId));
+  }
+
+  // --- P51: manager_id derivation ------------------------------------------
+
+  // Distinct from GET nodes/:nodeId/direct-manager (legacy COALESCE-self model).
+  // This walks ONLY the parent chain (vizyon §2.3 Q1/Q4); null when no head up
+  // the tree. Any authenticated org-structure role may read it.
+  @ApiOperation({ summary: 'Derive manager up the parent chain (P51)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('manager-chain/:nodeId')
+  async getDerivedManager(@Param('nodeId', ParseIntPipe) nodeId: number) {
+    return unwrapOrInternal(await this.service.deriveManagerForNode(nodeId));
+  }
+
+  // Admin-only: recompute manager_id across org_functions + employees from the
+  // tree. DATA-gated (refuses while any active node has NULL head_user_id).
+  // dryRun defaults to true → preview only. @Roles here OVERRIDES the class
+  // role list (reflector getAllAndOverride takes the method decorator first).
+  @ApiOperation({ summary: 'Backfill manager_id from org tree (ADMIN/HR, P51)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Roles('super_admin', 'hr')
+  @Post('admin/backfill-manager-ids')
+  async backfillManagerIds(@Body() body: unknown) {
+    const dto = BackfillManagerSchema.parse(body);
+    return unwrapOrInternal(await this.service.triggerManagerBackfill(dto.dryRun));
   }
 }
