@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok } from '@common/result';
 import { Result } from '@common/result';
-import { ProductionSession } from '../../domain/aggregates/production-session.aggregate';
+import { ProductionSession, ChecklistStatus } from '../../domain/aggregates/production-session.aggregate';
 import { IMesRepository, DrizzleExecutor } from '../../domain/repositories/mes.repository';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
@@ -115,6 +115,33 @@ export class DrizzleMesRepository implements IMesRepository {
     } catch {
       this.logger.error('Failed to get sessions');
       return Err('Oqish xatoligi');
+    }
+  }
+
+  /**
+   * Reads the session's TB-safety / smena-readiness checklist from the canonical
+   * `setup_checklists` (one row per session) → `checklist_items` tables. Returns
+   * only REQUIRED items: total count + titles of those not yet completed. The
+   * production-session aggregate uses this to BLOCK start when readiness is unmet
+   * (Q-40 — no silent status flip). session_id is a varchar column, so the integer
+   * id is cast to text for the match.
+   */
+  async getChecklistStatus(sessionId: number, tx?: DrizzleExecutor): Promise<Result<ChecklistStatus>> {
+    try {
+      const rows = await exec(sql`
+        SELECT ci.title AS title,
+               COALESCE(ci.is_completed, false) AS is_completed
+        FROM checklist_items ci
+        JOIN setup_checklists sc ON sc.id = ci.checklist_id
+        WHERE sc.session_id = ${String(sessionId)}
+          AND COALESCE(ci.is_required, true) = true`, tx);
+      const requiredIncomplete = rows
+        .filter((r) => r.is_completed !== true)
+        .map((r) => String(r.title ?? 'Nomsiz band'));
+      return Ok({ requiredTotal: rows.length, requiredIncomplete });
+    } catch {
+      this.logger.error('Failed to load checklist status');
+      return Err('Chek-list holatini o\'qishda xatolik');
     }
   }
 

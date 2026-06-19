@@ -18,6 +18,7 @@ import {
   Patch,
   Post,
   Query,
+  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -279,15 +280,45 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Start production session' })
   @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 422, description: 'BLOCKED — TB-safety / readiness checklist incomplete' })
   @Post('production-sessions/:id/start') @Roles(...IOT_READ)
   async startProductionSession(@Param('id') id: string, @Body() body: unknown) {
     IotPassthroughSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+
+    // TB-safety / smena-readiness gate (Q-40 — real enforcement, no silent flip).
+    // Operator tablet is the floor hub (E4): a session may not go RUNNING unless
+    // every REQUIRED item of its setup_checklists/checklist_items is completed.
+    // No required checklist configured = BLOCKED (fail-safe: safety unverified).
+    const chk = await db.execute(sql`
+      SELECT ci.title AS title,
+             COALESCE(ci.is_completed, false) AS is_completed
+      FROM checklist_items ci
+      JOIN setup_checklists sc ON sc.id = ci.checklist_id
+      WHERE sc.session_id = ${String(sessionId)}
+        AND COALESCE(ci.is_required, true) = true
+    `);
+    const items = (((chk as Rows).rows) ?? []) as Array<{ title?: unknown; is_completed?: unknown }>;
+    const incomplete = items
+      .filter((it) => it.is_completed !== true)
+      .map((it) => String(it.title ?? 'Nomsiz band'));
+    if (items.length === 0) {
+      throw new UnprocessableEntityException(
+        'BLOCKED: smena-tayyorlik / TB-xavfsizlik chek-listi sozlanmagan — sessiyani boshlab bo\'lmaydi',
+      );
+    }
+    if (incomplete.length > 0) {
+      throw new UnprocessableEntityException(
+        `BLOCKED: majburiy chek-list bandlari bajarilmagan (${incomplete.length}): ${incomplete.join(', ')}`,
+      );
+    }
+
     await db.execute(sql`
       UPDATE production_sessions
       SET status='running', started_at=COALESCE(started_at, NOW()), updated_at=NOW()
-      WHERE id=${parseInt(id, 10)}
+      WHERE id=${sessionId}
     `);
-    return { id: parseInt(id, 10), status: 'running' };
+    return { id: sessionId, status: 'running' };
   }
 
   @ApiOperation({ summary: 'Stop production session' })

@@ -8,10 +8,19 @@
 import {
   ProductionSession,
   MesStatus,
+  ChecklistStatus,
 } from '../../src/modules/mes/domain/aggregates/production-session.aggregate';
 
 function makeSession(): ProductionSession {
   return new ProductionSession(1, 10, 3, 77, false);
+}
+
+/** Checklist where every required item is completed → start allowed. */
+const PASSING_CHECKLIST: ChecklistStatus = { requiredTotal: 3, requiredIncomplete: [] };
+
+/** Advance a session through the gate using a passing checklist (test helper). */
+function passOk(s: ProductionSession): void {
+  s.passChecklist(PASSING_CHECKLIST);
 }
 
 describe('ProductionSession.constructor', () => {
@@ -34,18 +43,51 @@ describe('ProductionSession.constructor', () => {
   });
 });
 
-describe('ProductionSession.passChecklist', () => {
-  it('moves READY session to CHECKLIST_PENDING when passChecklist is called', () => {
+describe('ProductionSession.passChecklist (TB-safety gate — Q-40)', () => {
+  it('moves READY session to CHECKLIST_PENDING when all required items are completed', () => {
     const s = makeSession();
-    const r = s.passChecklist();
+    const r = s.passChecklist({ requiredTotal: 3, requiredIncomplete: [] });
     expect(r.ok).toBe(true);
     expect(s.getStatus()).toBe(MesStatus.CHECKLIST_PENDING);
   });
 
+  it('BLOCKS and does NOT advance status when a required item is incomplete', () => {
+    const s = makeSession();
+    const r = s.passChecklist({
+      requiredTotal: 3,
+      requiredIncomplete: ['Material skani', 'TB-xavfsizlik'],
+    });
+    expect(r.ok).toBe(false);
+    // status NOT advanced — stays READY
+    expect(s.getStatus()).toBe(MesStatus.READY);
+    if (!r.ok) {
+      expect(r.error.code).toBe('BUSINESS_RULE_VIOLATION');
+      expect(r.error.message).toMatch(/BLOCKED/);
+      // lists the missing items
+      expect(r.error.message).toContain('Material skani');
+      expect(r.error.message).toContain('TB-xavfsizlik');
+      const details = r.error.details as { incomplete?: string[] } | undefined;
+      expect(details?.incomplete).toEqual(['Material skani', 'TB-xavfsizlik']);
+    }
+  });
+
+  it('BLOCKS (fail-safe) and stays READY when no required checklist is configured', () => {
+    const s = makeSession();
+    const r = s.passChecklist({ requiredTotal: 0, requiredIncomplete: [] });
+    expect(r.ok).toBe(false);
+    expect(s.getStatus()).toBe(MesStatus.READY);
+    if (!r.ok) {
+      expect(r.error.code).toBe('BUSINESS_RULE_VIOLATION');
+      expect(r.error.message).toMatch(/BLOCKED/);
+      const details = r.error.details as { reason?: string } | undefined;
+      expect(details?.reason).toBe('NO_CHECKLIST_CONFIGURED');
+    }
+  });
+
   it('rejects passChecklist when session is not in READY status', () => {
     const s = makeSession();
-    s.passChecklist();
-    const r = s.passChecklist();
+    passOk(s);
+    const r = s.passChecklist(PASSING_CHECKLIST);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.error.message).toMatch(/tayyor/);
@@ -56,7 +98,7 @@ describe('ProductionSession.passChecklist', () => {
 describe('ProductionSession.start', () => {
   it('starts session when status is CHECKLIST_PENDING', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     const r = s.start();
     expect(r.ok).toBe(true);
     expect(s.getStatus()).toBe(MesStatus.RUNNING);
@@ -73,7 +115,7 @@ describe('ProductionSession.start', () => {
 
   it('rejects start when session is already RUNNING', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     const r = s.start();
     expect(r.ok).toBe(false);
@@ -83,7 +125,7 @@ describe('ProductionSession.start', () => {
 describe('ProductionSession.pause', () => {
   it('pauses session when status is RUNNING', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     const r = s.pause('Material yetishmasligi');
     expect(r.ok).toBe(true);
@@ -101,7 +143,7 @@ describe('ProductionSession.pause', () => {
 
   it('rejects pause when session is already PAUSED', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     s.pause('first');
     const r = s.pause('second');
@@ -112,7 +154,7 @@ describe('ProductionSession.pause', () => {
 describe('ProductionSession.complete', () => {
   it('completes RUNNING session when complete is called', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     const r = s.complete();
     expect(r.ok).toBe(true);
@@ -121,7 +163,7 @@ describe('ProductionSession.complete', () => {
 
   it('completes PAUSED session when complete is called', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     s.pause('break');
     const r = s.complete();
@@ -140,7 +182,7 @@ describe('ProductionSession.complete', () => {
 
   it('rejects complete when session is already COMPLETED', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     s.complete();
     const r = s.complete();
@@ -193,7 +235,7 @@ describe('ProductionSession.recordDowntime', () => {
 describe('ProductionSession.moveToQc', () => {
   it('moves COMPLETED session to SENT_TO_QC when moveToQc is called', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     s.complete();
     const r = s.moveToQc();
@@ -203,7 +245,7 @@ describe('ProductionSession.moveToQc', () => {
 
   it('rejects moveToQc when session is not COMPLETED', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     const r = s.moveToQc();
     expect(r.ok).toBe(false);
@@ -214,7 +256,7 @@ describe('ProductionSession.moveToQc', () => {
 
   it('rejects moveToQc when session is already SENT_TO_QC', () => {
     const s = makeSession();
-    s.passChecklist();
+    passOk(s);
     s.start();
     s.complete();
     s.moveToQc();

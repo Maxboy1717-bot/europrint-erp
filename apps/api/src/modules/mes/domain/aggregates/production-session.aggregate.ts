@@ -6,8 +6,22 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { AggregateRoot } from '@shared/domain/aggregate-root.base';
-import { Err } from '@common/result';
+import { Err, AppErr } from '@common/result';
 import { Result } from '@common/result';
+
+/**
+ * Snapshot of the TB-safety / smena-readiness checklist for a session, loaded by
+ * the repository from the canonical `setup_checklists` + `checklist_items` tables
+ * and handed to {@link ProductionSession.passChecklist}. The aggregate stays pure
+ * (no DB access) — it only enforces the rule, the repo supplies the data.
+ *
+ * @property requiredTotal     - how many REQUIRED items exist for this session
+ * @property requiredIncomplete - titles of REQUIRED items not yet completed/passed
+ */
+export interface ChecklistStatus {
+  requiredTotal: number;
+  requiredIncomplete: string[];
+}
 
 export enum MesStatus {
   READY = 'ready',
@@ -150,10 +164,48 @@ export class ProductionSession extends AggregateRoot {
     return { ok: true, data: undefined };
   }
 
-  passChecklist(): Result<void> {
+  /**
+   * TB-safety / smena-readiness gate (Q-40 — real enforcement, no silent flip).
+   *
+   * Transitions READY → CHECKLIST_PENDING ONLY when every REQUIRED checklist item
+   * for this session is completed/passed. The caller (StartSessionHandler) loads
+   * the real {@link ChecklistStatus} from the canonical `setup_checklists` /
+   * `checklist_items` tables and passes it in — the aggregate never reaches the DB.
+   *
+   * Blocking rules:
+   *  - any required item incomplete → Err(BUSINESS_RULE_VIOLATION, "BLOCKED: ...")
+   *    with `details.incomplete` listing the offending item titles; status stays READY.
+   *  - no required items configured → BLOCKED (fail-safe): a missing safety checklist
+   *    is treated as "safety not verified", NOT as "nothing to check". An operator may
+   *    not start a session on a work-center whose readiness checklist was never set up.
+   *
+   * @param checklist - required-item snapshot for this session
+   */
+  passChecklist(checklist: ChecklistStatus): Result<void> {
     if (this.status !== MesStatus.READY) {
       return Err('Faqat tayyor sessiyani tekshiruv qilish mumkin');
     }
+
+    if (checklist.requiredTotal === 0) {
+      return Err(
+        AppErr(
+          'BUSINESS_RULE_VIOLATION',
+          'BLOCKED: smena-tayyorlik / TB-xavfsizlik chek-listi sozlanmagan — sessiyani boshlab bo\'lmaydi',
+          { sessionId: this.id, reason: 'NO_CHECKLIST_CONFIGURED' },
+        ),
+      );
+    }
+
+    if (checklist.requiredIncomplete.length > 0) {
+      return Err(
+        AppErr(
+          'BUSINESS_RULE_VIOLATION',
+          `BLOCKED: majburiy chek-list bandlari bajarilmagan (${checklist.requiredIncomplete.length}): ${checklist.requiredIncomplete.join(', ')}`,
+          { sessionId: this.id, incomplete: checklist.requiredIncomplete },
+        ),
+      );
+    }
+
     this.status = MesStatus.CHECKLIST_PENDING;
     return { ok: true, data: undefined };
   }

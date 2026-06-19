@@ -22,7 +22,7 @@ import { MesToHr360Event } from '../../src/modules/mes/domain/events/mes-to-hr-3
 
 function readyToComplete(): ProductionSession {
   const s = new ProductionSession(7, 12, 4, 88, false);
-  s.passChecklist();
+  s.passChecklist({ requiredTotal: 1, requiredIncomplete: [] });
   s.start();
   return s;
 }
@@ -34,6 +34,7 @@ function makeRepo(getSession: jest.Mock): jest.Mocked<IMesRepository> {
     getAllSessionsByStatus: jest.fn(),
     saveSession: jest.fn().mockResolvedValue(Ok(7)),
     checkOperatorCertification: jest.fn(),
+    getChecklistStatus: jest.fn().mockResolvedValue(Ok({ requiredTotal: 1, requiredIncomplete: [] })),
     withTransaction: jest.fn(),
   } as jest.Mocked<IMesRepository>;
   (repo.withTransaction as jest.Mock).mockImplementation(

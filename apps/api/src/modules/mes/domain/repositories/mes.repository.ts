@@ -3,7 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
-import { ProductionSession } from '../aggregates/production-session.aggregate';
+import { ProductionSession, ChecklistStatus } from '../aggregates/production-session.aggregate';
 import { Result, Ok, Err } from '@common/result';
 import type { DrizzleExecutor } from '../../../../common/types/drizzle.types';
 export type { DrizzleExecutor };
@@ -14,6 +14,13 @@ export interface IMesRepository {
   getSessionByPpId(ppId: number): Promise<Result<ProductionSession>>;
   getAllSessionsByStatus(status: string): Promise<Result<ProductionSession[]>>;
   checkOperatorCertification(operatorId: number, courseId: number): Promise<Result<Record<string, unknown>>>;
+
+  /**
+   * Loads the TB-safety / smena-readiness checklist status for a session from the
+   * canonical `setup_checklists` + `checklist_items` tables (required items only).
+   * Feeds {@link ProductionSession.passChecklist} so the start gate is real (Q-40).
+   */
+  getChecklistStatus(sessionId: number, tx?: DrizzleExecutor): Promise<Result<ChecklistStatus>>;
 
   /**
    * Runs the supplied work inside a Drizzle transaction. Lets callers keep the

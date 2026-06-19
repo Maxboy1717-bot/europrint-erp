@@ -59,9 +59,20 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       }
     }
 
-    // Pass checklist
-    const checklistResult = session.passChecklist();
+    // TB-safety / smena-readiness gate (Q-40 — real enforcement, no silent flip):
+    // load REQUIRED checklist items from setup_checklists/checklist_items and BLOCK
+    // start unless every required item is completed.
+    const checklistStatusResult = await this.mesRepo.getChecklistStatus(command.sessionId);
+    if (!checklistStatusResult.ok) {
+      return Err(checklistStatusResult.error);
+    }
+
+    const checklistResult = session.passChecklist(checklistStatusResult.data);
     if (!checklistResult.ok) {
+      this.logger.warn(
+        { sessionId: command.sessionId, error: checklistResult.error },
+        'MES session start BLOCKED — checklist incomplete',
+      );
       return checklistResult;
     }
 
