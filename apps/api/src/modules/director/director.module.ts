@@ -51,6 +51,7 @@ import { ZnoRepository } from './infrastructure/repositories/zno.repository';
 import { ZvsService } from './application/zvs.service';
 import { ZvsRepository } from './infrastructure/repositories/zvs.repository';
 import { KaizenRepository } from './infrastructure/repositories/kaizen.repository';
+import { DirectorHolatService } from './application/director-holat.service';
 import { AdvanceBypassApprovedListener } from './infrastructure/event-handlers/advance-bypass-approved.listener';
 // PA3-17 Wave 6: merged from former modules/analytics/ (route prefix '/analytics' preserved)
 import { AnalyticsController } from './analytics/analytics.controller';
@@ -133,6 +134,8 @@ const Repositories = [
     ZvsRepository,
     { provide: ZVS_REPO, useClass: ZvsRepository },
     ZvsService,
+    // EP-DIR-001/EP-DIR-029: pure holat formula service
+    DirectorHolatService,
     // PA0 Trigger 20 — advance bypass audit listener
     AdvanceBypassApprovedListener,
     // PA3-17 Wave 6: merged from modules/analytics/
@@ -141,6 +144,6 @@ const Repositories = [
     AnalyticsRepository,
     AnalyticsExtendedRepository,
   ],
-  exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService],
+  exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService, DirectorHolatService],
 })
 export class DirectorModule {}
