@@ -91,6 +91,50 @@ export class GlPostingService {
     return this.createJournalEntry(lines, reference);
   }
 
+  /**
+   * EP-FIN-005 (golden thread T-14): Delivery completed → full sales-invoice GL split, posted to the
+   * canonical `entries` ledger only (never gl_journal_entries / gl_lines — SAP#76 forbidden).
+   *
+   * Double-entry, two balanced pairs (5 legs collapsed by createJournalEntry into balanced rows):
+   *   Dr AR (4000)            +totalAmount
+   *     Cr Revenue (9010)         -(totalAmount - tax)   ← net of VAT
+   *     Cr Sales Tax (6310)       -tax                   ← 12% UZ VAT
+   *   Dr COGS (9100)          +costOfGoods               ← cost recognised on delivery
+   *     Cr Inventory (1000)       -costOfGoods           ← goods leave stock
+   *
+   * Balance check (enforced by createJournalEntry):
+   *   ΣDr  = totalAmount + costOfGoods
+   *   ΣCr  = (totalAmount - tax) + tax + costOfGoods = totalAmount + costOfGoods  ✓
+   *
+   * Idempotent: reference `DC-${orderId}` — a re-fired DeliveryCompletedEvent returns the existing
+   * entry id without a second post (findEntryIdByReference covers it).
+   */
+  async postDeliveryCompleted(
+    orderId: number,
+    totalAmount: number,
+    tax: number,
+    costOfGoods: number,
+  ): Promise<Result<number>> {
+    this.logger.debug(
+      `EP-FIN-005 delivery GL - Order: ${orderId}, Total: ${totalAmount}, Tax: ${tax}, COGS: ${costOfGoods}`,
+    );
+    if (!(totalAmount > 0)) {
+      return Err(`EP-FIN-005: totalAmount must be > 0 (got ${totalAmount})`);
+    }
+    if (costOfGoods < 0 || tax < 0) {
+      return Err(`EP-FIN-005: tax/costOfGoods must be >= 0 (tax=${tax}, cogs=${costOfGoods})`);
+    }
+    const amount = totalAmount - tax; // revenue net of VAT
+    const lines: JournalLine[] = [
+      { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Debitorlar (AR)', debit: totalAmount, credit: 0 },
+      { accountCode: GL.REVENUE,                   accountName: 'Tushum (Revenue)', debit: 0, credit: amount },
+      { accountCode: GL.SALES_TAX_PAYABLE,         accountName: 'QQS (Sales Tax Payable)', debit: 0, credit: tax },
+      { accountCode: GL.COGS,                      accountName: 'Tannarx (COGS) - Dr', debit: costOfGoods, credit: 0 },
+      { accountCode: GL.INVENTORY,                 accountName: 'Materiallar (Inventory) - Cr', debit: 0, credit: costOfGoods },
+    ];
+    return this.createJournalEntry(lines, `DC-${orderId}`);
+  }
+
   private async createJournalEntry(lines: JournalLine[], reference: string): Promise<Result<number>> {
     // H1 idempotency: if this business reference (e.g. SI-123, PR-7) was already posted, return the
     // existing entry id WITHOUT inserting again. Covers every caller (invoice/payroll/GR/VP/MC + the
