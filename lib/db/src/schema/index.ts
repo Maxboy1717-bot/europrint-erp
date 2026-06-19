@@ -39,6 +39,7 @@ export * from "./mm-material-cards";
 export * from "./marketing-schema";
 export * from "./mm-schema";
 export * from "./pp-schema";
+export * from "./pp/pp-gofra-formula";
 export * from "./qc-schema";
 export * from "./saas-schema";
 export * from "./sd-europrint-schema";

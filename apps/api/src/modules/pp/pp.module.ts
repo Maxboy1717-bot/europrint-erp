@@ -81,6 +81,11 @@ import { ProductionShiftReportsController } from './production/production-shift-
 import { ProductionReportsController } from './production/production-reports.controller';
 import { ProductionService } from './production/production.service';
 import { ProductionRepository } from './production/production.repository';
+// ⭐ Gofra/Sloy 3-formula conversion engine (kg↔m²↔list) — vision §29
+import { GofraConversionController } from './conversion/gofra-conversion.controller';
+import { GofraConversionService } from './conversion/gofra-conversion.service';
+import { GOFRA_FACTORS_REPO } from './conversion/i-gofra-factors.repo';
+import { DrizzleGofraFactorsRepo } from './conversion/drizzle-gofra-factors.repo';
 
 const handlers = [
   CreateProductionOrderHandler,
@@ -117,6 +122,8 @@ const listeners = [
     // PA3-17 Wave 6: merged from modules/production/
     ProductionShiftReportsController,
     ProductionReportsController,
+    // ⭐ Gofra 3-formula conversion entry
+    GofraConversionController,
   ],
   providers: [
     ...handlers,
@@ -158,7 +165,10 @@ const listeners = [
     // PA3-17 Wave 6: merged from modules/production/
     ProductionService,
     ProductionRepository,
+    // ⭐ Gofra 3-formula conversion engine
+    GofraConversionService,
+    { provide: GOFRA_FACTORS_REPO, useClass: DrizzleGofraFactorsRepo },
   ],
-  exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService, ProductionService],
+  exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService, ProductionService, GofraConversionService],
 })
 export class PpModule {}
