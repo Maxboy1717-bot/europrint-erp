@@ -3,10 +3,11 @@
  * @description Source module. See exports for details.
  */
 
-import { Injectable, Logger, Inject } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventsHandler, IEventHandler, CommandBus } from '@nestjs/cqrs';
 import { QcPassedEvent } from '../../../qc/domain/events';
-import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.repository';
+import { ReceiveFgCommand } from '../../application/commands/receive-fg.handler';
+import { Result } from '@common/result';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
@@ -21,7 +22,7 @@ interface FgLookupRow {
 export class QcPassedListener implements IEventHandler<QcPassedEvent> {
   private readonly logger = new Logger(QcPassedListener.name);
 
-  constructor(@Inject(WMS_REPO) private readonly wmsRepo: IWmsRepository) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   async handle(event: QcPassedEvent) {
     this.logger.log(
@@ -50,18 +51,31 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
       return;
     }
 
-    const result = await this.wmsRepo.receiveFg(
-      lookup.material_id,
-      lookup.warehouse_id,
-      lookup.quantity,
+    // Dispatch via ReceiveFgHandler so orderId flows into WmsFgReceivedEvent
+    // and the rental timer (Trigger 12) can fire. A direct wmsRepo.receiveFg()
+    // call cannot carry orderId — command dispatch is the canonical path that
+    // both performs the warehouse_stock UPSERT and publishes the order-attributed
+    // WmsFgReceivedEvent.
+    const result = await this.commandBus.execute<ReceiveFgCommand, Result<void>>(
+      new ReceiveFgCommand(
+        lookup.material_id,
+        lookup.warehouse_id,
+        lookup.quantity,
+        `QC-${event.inspectionId}`, // batchNumber — traceable to the inspection
+        null, // expiryDate — FG has no expiry by default
+        event.orderId, // orderId — attributes the FG + enables Trigger 12 rental timer
+      ),
     );
 
     if (!result.ok) {
-      this.logger.error(result.error, 'Failed to receive FG after QC passed');
+      this.logger.error(
+        { orderId: event.orderId, error: String(result.error) },
+        'Failed to receive FG after QC passed',
+      );
     } else {
       this.logger.log(
         { orderId: event.orderId, materialId: lookup.material_id, qty: lookup.quantity },
-        'FG receipt created successfully',
+        'Trigger 11 -> 12: FG receipt UPSERTed to warehouse_stock, rental timer will start',
       );
     }
   }
