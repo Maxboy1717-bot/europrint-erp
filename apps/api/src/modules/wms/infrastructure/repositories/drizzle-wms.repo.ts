@@ -15,9 +15,11 @@ import { sql, eq, isNull, and, asc } from 'drizzle-orm';
 import { wms_stock } from '@shared/db/schema-compat-5';
 import { Stock } from '../../domain/aggregates/stock.aggregate';
 import { IWmsRepository, DrizzleExecutor, CreateWarehouseInput } from '../../domain/repositories/wms.repository';
+import { IssuableBatchLot } from '../../domain/services/batch-selection.service';
 import {
   execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock,
   execUpdateStockReserved, execUpdateStockIssued, execReceiveFg, execIssueFromWarehouseStock, queryAllStockByWarehouse,
+  queryIssuableBatchLots, queryHasAnyBatchLots, execDecrementBatchLot, BatchLotRow,
 } from '@common/database/queries-wms';
 
 type StockRow = Record<string, unknown>;
@@ -33,6 +35,11 @@ type ExecLike = {
 };
 
 const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as ExecLike;
+
+/** Raw-SQL executor surface (db or tx) for the batch-lot query helpers. */
+type ExecuteLike = { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: unknown[] }> };
+const asTxExec = (tx?: DrizzleExecutor): ExecuteLike | undefined =>
+  tx ? (tx as unknown as ExecuteLike) : undefined;
 
 const toStock = (r: StockRow): Stock =>
   new Stock(Number(r['id']), Number(r['warehouse_id']), Number(r['material_id']), Number(r['quantity']), r['expiry_date'] ? new Date(String(r['expiry_date'])) : null, String(r['batch_number'] ?? ''));
@@ -199,14 +206,65 @@ export class DrizzleWmsRepository implements IWmsRepository {
     }
   }
 
-  async issueFromWarehouseStock(materialId: number, warehouseId: number, amount: number): Promise<Result<void>> {
+  async issueFromWarehouseStock(materialId: number, warehouseId: number, amount: number, tx?: DrizzleExecutor): Promise<Result<void>> {
     try {
-      const id = await execIssueFromWarehouseStock(warehouseId, materialId, amount);
+      const id = await execIssueFromWarehouseStock(warehouseId, materialId, amount, asTxExec(tx));
       if (id === 0) return Err("Yetarli stock yo'q yoki material topilmadi");
       return Ok(undefined);
     } catch {
       this.logger.error('Failed to issue from warehouse_stock');
       return Err('Chiqarish xatoligi');
+    }
+  }
+
+  async getIssuableBatchLots(
+    materialId: number,
+    warehouseId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<IssuableBatchLot[]>> {
+    try {
+      const rows = await queryIssuableBatchLots(materialId, warehouseId, asTxExec(tx));
+      const lots: IssuableBatchLot[] = (Array.isArray(rows) ? rows : []).map(
+        (r: BatchLotRow) => ({
+          id: Number(r.id),
+          remaining: Number(r.remaining_quantity ?? 0),
+          expiryDate: r.expiry_date ? new Date(String(r.expiry_date)) : null,
+          receivedAt: r.received_date ? new Date(String(r.received_date)) : null,
+        }),
+      );
+      return Ok(lots);
+    } catch {
+      this.logger.error('Failed to get issuable batch lots');
+      return Err('Partiya o\'qishda xatolik');
+    }
+  }
+
+  async hasAnyBatchLots(
+    materialId: number,
+    warehouseId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<boolean>> {
+    try {
+      const has = await queryHasAnyBatchLots(materialId, warehouseId, asTxExec(tx));
+      return Ok(has);
+    } catch {
+      this.logger.error('Failed to check batch lots existence');
+      return Err('Partiya tekshirishda xatolik');
+    }
+  }
+
+  async decrementBatchLot(
+    lotId: number,
+    qty: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<void>> {
+    try {
+      const id = await execDecrementBatchLot(lotId, qty, asTxExec(tx));
+      if (id === 0) return Err(AppErr('INVALID_QUANTITY', "Partiyada yetarli qoldiq yo'q"));
+      return Ok(undefined);
+    } catch {
+      this.logger.error('Failed to decrement batch lot');
+      return Err('Partiya kamaytirishda xatolik');
     }
   }
 
