@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -47,9 +47,56 @@ export class DashboardController {
 
   @Get('')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
-  @ApiOperation({ summary: 'Director dashboard — DirDashboard shape' })
-  async getDashboard() {
-    return unwrapOrInternal(await this.directorData.getDashboard());
+  @ApiOperation({ summary: 'Director dashboard — DirDashboard shape (P30: mode + widgets)' })
+  async getDashboard(@Query('mode') mode?: string) {
+    // P30 EP-DIR-025/053: ?mode=snapshot (07:00 muzlatilgan) | realtime (joriy).
+    const isSnapshot = mode === 'snapshot';
+    const [base, planFact, orderProgress, statTrends, openIssues] = await Promise.all([
+      this.directorData.getDashboard(),
+      this.queries.getPlanFact(),
+      this.queries.getOrderProgress(),
+      this.queries.getStatTrends(),
+      this.queries.getOpenIssues(),
+    ]);
+    const baseData = (base.ok ? base.data : {}) as Record<string, unknown>;
+    return {
+      ...baseData,
+      mode:          isSnapshot ? 'snapshot' : 'realtime',
+      planFact:      Array.isArray(planFact) ? planFact : [],
+      orderProgress: Array.isArray(orderProgress) ? orderProgress : [],
+      statTrends:    Array.isArray(statTrends) ? statTrends : [],
+      openIssues:    Array.isArray(openIssues) ? openIssues : [],
+      // EP-DIR-026 (kunlik AI tahlilchi) — to'liq P35/P36 (AI) ga deferred.
+      aiInsights:    [],
+    };
+  }
+
+  @Get('plan-fact')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Plan vs fact by department (today)' })
+  async getPlanFact() {
+    return { data: await this.queries.getPlanFact() };
+  }
+
+  @Get('order-progress')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Order readiness progress' })
+  async getOrderProgress() {
+    return { data: await this.queries.getOrderProgress() };
+  }
+
+  @Get('stat-trends')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Stat-regulation trend skeleton' })
+  async getStatTrends() {
+    return { data: await this.queries.getStatTrends() };
+  }
+
+  @Get('open-issues')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: "Today's unresolved diary issues" })
+  async getOpenIssues() {
+    return { data: await this.queries.getOpenIssues() };
   }
 
   @Get('kpis')

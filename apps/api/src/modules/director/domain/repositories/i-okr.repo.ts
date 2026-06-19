@@ -18,6 +18,7 @@ export interface IOkrRepo {
     year: number | null,
     quarter: string | null,
     status: string | null,
+    parentGoalId?: number | null,
   ): Promise<Result<Row[]>>;
   getObjective(id: number): Promise<Result<Row[]>>;
   createObjective(
@@ -27,6 +28,8 @@ export interface IOkrRepo {
     quarter: string,
     description: string | null,
     ownerId: number,
+    parentGoalId?: number | null,
+    ownerCardId?: number | null,
   ): Promise<Result<Row>>;
   updateObjective(
     id: number,

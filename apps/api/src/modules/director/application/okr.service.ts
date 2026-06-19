@@ -11,16 +11,16 @@ import { OKR_REPO, type IOkrRepo } from '../domain/repositories/i-okr.repo';
 export class OkrService {
   constructor(@Inject(OKR_REPO) private readonly repo: IOkrRepo) {}
 
-  async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null): Promise<Result<object, AppError>> {
-    return this.repo.listObjectives(type, year, quarter, status);
+  async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null, parentGoalId?: number | null): Promise<Result<object, AppError>> {
+    return this.repo.listObjectives(type, year, quarter, status, parentGoalId ?? null);
   }
 
   async getObjective(id: number) {
     return this.repo.getObjective(id);
   }
 
-  async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number) {
-    return this.repo.createObjective(title, type, year, quarter, description, ownerId);
+  async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number, parentGoalId?: number | null, ownerCardId?: number | null) {
+    return this.repo.createObjective(title, type, year, quarter, description, ownerId, parentGoalId ?? null, ownerCardId ?? null);
   }
 
   async updateObjective(id: number, title: string | null, status: string | null, description: string | null) {

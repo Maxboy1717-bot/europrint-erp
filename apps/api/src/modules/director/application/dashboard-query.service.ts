@@ -8,12 +8,21 @@ const _time = new TashkentTimeService();
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, Err } from '@common/types/result.type';
 import { DASHBOARD_QUERY_REPO, type IDashboardQueryRepo } from '../domain/repositories/i-dashboard-query.repo';
+import { DashboardQueryRepository } from '../infrastructure/repositories/dashboard-query.repository';
+
+type Row = Record<string, unknown>;
 
 @Injectable()
 export class DashboardQueryService {
   private readonly logger = new Logger(DashboardQueryService.name);
 
-  constructor(@Inject(DASHBOARD_QUERY_REPO) private readonly repo: IDashboardQueryRepo) {}
+  // P30: token-tipidagi `repo` (IDashboardQueryRepo) yangi metodlarni
+  // ko'rmaydi (interfeys P30 owned emas); shu sababli concrete repo'ni alohida
+  // inject qilamiz. Ikkalasi ham bitta DashboardQueryRepository instansi.
+  constructor(
+    @Inject(DASHBOARD_QUERY_REPO) private readonly repo: IDashboardQueryRepo,
+    private readonly statRepo: DashboardQueryRepository,
+  ) {}
 
   async getActivePoCount(): Promise<Result<number>> {
     try {
@@ -143,5 +152,29 @@ export class DashboardQueryService {
       openPayrollCount: openPayrollResult.ok ? openPayrollResult.data : 0,
       generatedAt:      _time.now(),
     };
+  }
+
+  // ── P30 EP-DIR-025/036/053/073 ─────────────────────────────────────────────
+  // Dashboard widget'lari uchun ma'lumot. Xato bo'lsa bo'sh array (degrade) —
+  // dashboard hech qachon crash bermaydi.
+
+  async getPlanFact(): Promise<Row[]> {
+    const r = await this.statRepo.getPlanFact();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
+  }
+
+  async getOrderProgress(): Promise<Row[]> {
+    const r = await this.statRepo.getOrderProgress();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
+  }
+
+  async getStatTrends(): Promise<Row[]> {
+    const r = await this.statRepo.getStatTrends();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
+  }
+
+  async getOpenIssues(): Promise<Row[]> {
+    const r = await this.statRepo.getOpenIssues();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
   }
 }

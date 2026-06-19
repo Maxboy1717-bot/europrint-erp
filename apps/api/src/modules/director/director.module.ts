@@ -62,6 +62,19 @@ import { AnalyticsRepository } from './analytics/analytics.repository';
 import { AnalyticsExtendedRepository } from './analytics/analytics-extended.repository';
 import { COORDINATION_REPO } from './domain/repositories/i-coordination.repo';
 import { DASHBOARD_QUERY_REPO } from './domain/repositories/i-dashboard-query.repo';
+// P30 Wave 3: stat-regulation + diary + monthly-plan
+import { StatRegulationController } from './presentation/stat-regulation.controller';
+import { StatRegulationService } from './application/stat-regulation.service';
+import { StatRegulationRepository } from './infrastructure/repositories/stat-regulation.repository';
+import { STAT_REGULATION_REPO } from './domain/repositories/i-stat-regulation.repo';
+import { DiaryController } from './presentation/diary.controller';
+import { DiaryService } from './application/diary.service';
+import { DiaryRepository } from './infrastructure/repositories/diary.repository';
+import { DIARY_REPO } from './domain/repositories/i-diary.repo';
+import { MonthlyPlanController } from './presentation/monthly-plan.controller';
+import { MonthlyPlanService } from './application/monthly-plan.service';
+import { MonthlyPlanRepository } from './infrastructure/repositories/monthly-plan.repository';
+import { MONTHLY_PLAN_REPO } from './domain/repositories/i-monthly-plan.repo';
 import { DIRECTOR_DATA_REPO } from './domain/repositories/i-director-data.repo';
 import { DIRECTOR_STATE_REPO } from './domain/repositories/i-director-state.repo';
 import { KAIZEN_REPO } from './domain/repositories/i-kaizen.repo';
@@ -107,6 +120,10 @@ const Repositories = [
     // PA3-17 Wave 6: merged from modules/analytics/
     AnalyticsController,
     AnalyticsExtendedController,
+    // P30 Wave 3
+    StatRegulationController,
+    DiaryController,
+    MonthlyPlanController,
   ],
   providers: [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
@@ -143,6 +160,16 @@ const Repositories = [
     AnalyticsExtendedService,
     AnalyticsRepository,
     AnalyticsExtendedRepository,
+    // P30 Wave 3: stat-regulation + diary + monthly-plan
+    StatRegulationRepository,
+    { provide: STAT_REGULATION_REPO, useClass: StatRegulationRepository },
+    StatRegulationService,
+    DiaryRepository,
+    { provide: DIARY_REPO, useClass: DiaryRepository },
+    DiaryService,
+    MonthlyPlanRepository,
+    { provide: MONTHLY_PLAN_REPO, useClass: MonthlyPlanRepository },
+    MonthlyPlanService,
   ],
   exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService, DirectorHolatService],
 })

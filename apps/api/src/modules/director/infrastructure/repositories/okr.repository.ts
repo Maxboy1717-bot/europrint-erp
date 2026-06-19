@@ -11,6 +11,7 @@ import { castTo } from '@common/db-rows';
 import { sql, eq, desc } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { okr_objectives, okr_key_results } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { safeCall, Result } from '@common/result';
 import type { IOkrRepo, KeyResultsDashboard } from '../../domain/repositories/i-okr.repo';
 
@@ -20,16 +21,24 @@ export type { KeyResultsDashboard };
 
 @Injectable()
 export class OkrRepository implements IOkrRepo {
-  async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null): Promise<Result<Row[]>> {
+  // P30 EP-DIR-015/016: kaskad uchun typedExecute — parent_goal_id self-JOIN
+  // (parent_title) va parentGoalId filtri. parent_goal_id/owner_card_id
+  // ustunlari gated P30 migration bilan qo'shiladi (Drizzle schema'da hali yo'q).
+  async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null, parentGoalId?: number | null): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      return db.select().from(okr_objectives)
-        .where(sql`
-          (${type}::text IS NULL OR ${okr_objectives.type} = ${type}) AND
-          (${year}::int IS NULL OR ${okr_objectives.year} = ${year}::int) AND
-          (${quarter}::text IS NULL OR ${okr_objectives.quarter} = ${quarter}) AND
-          (${status}::text IS NULL OR ${okr_objectives.status} = ${status})
-        `)
-        .orderBy(desc(okr_objectives.createdAt)).then(r => castTo<Row[]>(r));
+      return typedExecute<Row>(sql`
+        SELECT o.*, p.title AS parent_title
+        FROM okr_objectives o
+        LEFT JOIN okr_objectives p ON p.id = o.parent_goal_id
+        WHERE
+          (${type}::text IS NULL OR o.type = ${type}) AND
+          (${year}::int IS NULL OR o.year = ${year}::int) AND
+          (${quarter}::text IS NULL OR o.quarter = ${quarter}) AND
+          (${status}::text IS NULL OR o.status = ${status}) AND
+          (${parentGoalId ?? null}::int IS NULL
+            OR o.parent_goal_id = ${parentGoalId ?? null}::int)
+        ORDER BY o.created_at DESC
+      `);
       }, 'DB_ERROR');
   }
 
@@ -39,11 +48,19 @@ export class OkrRepository implements IOkrRepo {
       }, 'DB_ERROR');
   }
 
-  async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number): Promise<Result<Row>> {
+  // P30 EP-DIR-015/016: parent_goal_id (kaskad) + owner_card_id (karta egasi).
+  // typedExecute — yangi ustunlar gated P30 migration bilan qo'shiladi.
+  async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number, parentGoalId?: number | null, ownerCardId?: number | null): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.insert(okr_objectives).values({
-        title, type, year, quarter, description, ownerId, status: 'active',
-      }).returning();
+      const rows = await typedExecute<Row>(sql`
+        INSERT INTO okr_objectives
+          (title, type, year, quarter, description, owner_id, status,
+           parent_goal_id, owner_card_id)
+        VALUES
+          (${title}, ${type}, ${year}, ${quarter}, ${description}, ${ownerId},
+           'active', ${parentGoalId ?? null}, ${ownerCardId ?? null})
+        RETURNING *
+      `);
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
   }

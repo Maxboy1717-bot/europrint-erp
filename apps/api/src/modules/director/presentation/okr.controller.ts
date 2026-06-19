@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { assertFound, assertRequired } from '@common/assertions';
+import { z } from 'zod';
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
@@ -17,7 +18,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { OkrService } from '../application/okr.service';
 import {
-  OkrCreateObjectiveSchema, OkrCreateObjectiveDto,
+  OkrCreateObjectiveSchema,
   OkrUpdateObjectiveSchema, OkrUpdateObjectiveDto,
   OkrCreateKeyResultSchema, OkrCreateKeyResultDto,
   OkrUpdateKeyResultSchema, OkrUpdateKeyResultDto,
@@ -25,6 +26,14 @@ import {
 
 const MANAGER_ROLES = ['manager', 'director', 'super_admin'];
 const DIRECTOR_ROLES = ['director', 'super_admin'];
+
+// P30 EP-DIR-015/016: OkrCreateObjectiveSchema (director.dto.ts — not owned)
+// extended with cascade fields. Parsed inline so unknown keys are not stripped
+// by the shared ZodValidationPipe before reaching the handler.
+const OkrCreateObjectiveP30Schema = OkrCreateObjectiveSchema.extend({
+  parent_goal_id: z.coerce.number().int().positive().nullish(),
+  owner_card_id:  z.coerce.number().int().positive().nullish(),
+});
 
 @ApiThrottle()
 @ApiTags('Okr')
@@ -45,8 +54,15 @@ export class OkrController {
     @Query('year') year?: string,
     @Query('quarter') quarter?: string,
     @Query('status') status?: string,
+    @Query('parent_goal_id') parentGoalId?: string,
   ) {
-    return unwrapOrInternal(await this.svc.listObjectives(type ?? null, year ? parseInt(year, 10) : null, quarter ?? null, status ?? null));
+    return unwrapOrInternal(await this.svc.listObjectives(
+      type ?? null,
+      year ? parseInt(year, 10) : null,
+      quarter ?? null,
+      status ?? null,
+      parentGoalId ? parseInt(parentGoalId, 10) : null,
+    ));
   }
 
   @ApiOperation({ summary: 'Get objective' })
@@ -65,17 +81,18 @@ export class OkrController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('objectives')
-  @UsePipes(new ZodValidationPipe(OkrCreateObjectiveSchema))
   async createObjective(
-    @Body() body: OkrCreateObjectiveDto,
+    @Body() body: unknown,
     @CurrentUser() user: { id: number },
   ) {
-    const { title, type, year, quarter, description } = body;
+    const dto = OkrCreateObjectiveP30Schema.parse(body);
+    const { title, type, year, quarter, description, parent_goal_id, owner_card_id } = dto;
     assertRequired(title, 'title majburiy');
     return unwrapOrInternal(await this.svc.createObjective(
       title, type ?? 'company',
       year ? Number(year) : _time.now().getFullYear(),
       quarter ?? 'Q1', description ?? null, user.id,
+      parent_goal_id ?? null, owner_card_id ?? null,
     ));
   }
 
