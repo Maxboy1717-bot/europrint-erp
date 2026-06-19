@@ -17,7 +17,7 @@
  * EP codes: EP-MKT-051, EP-MKT-052, EP-MKT-053, EP-MKT-031.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import {
   MKT_CHANNELS,
@@ -124,7 +124,7 @@ export class MarketingRoiService {
    *   In NestJS context this is normally not injected (service uses defaults);
    *   tests can pass a custom config directly to the constructor.
    */
-  constructor(config?: Partial<MarketingRoiConfig>) {
+  constructor(@Optional() config?: Partial<MarketingRoiConfig>) {
     this.cfg = { ...MKT_ROI_DEFAULT_CONFIG, ...config };
   }
 
