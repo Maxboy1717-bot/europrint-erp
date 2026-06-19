@@ -22,10 +22,13 @@ import { RazryadRepository } from './razryad.repository';
 import { CardFolderController } from './card-folder.controller';
 import { CardFolderService } from './card-folder.service';
 import { CardFolderRepository } from './card-folder.repository';
+// EP-ORG-041 (ORG-CASCADE, owner decision #13)
+import { OrgCascadeListener } from './cascade/org-cascade.listener';
+import { OrgCascadeRepository } from './cascade/org-cascade.repository';
 
 @Module({
   controllers: [OrgStructureController, CardController, RazryadController, CardFolderController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, CardFolderService, CardFolderRepository],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository],
   exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService],
 })
 export class OrgStructureModule {}

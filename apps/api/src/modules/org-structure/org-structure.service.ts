@@ -4,9 +4,12 @@
  */
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Ok, Err, safeCall, Result, AppError } from '@common/result';
 import { backfillEmployeeUserId } from '@common/database/ddl-migrations';
 import { OrgStructureRepository } from './org-structure.repository';
+import { ORG_CASCADE_EVENT } from './cascade/org-cascade.constants';
+import { DepartmentCreatedEvent } from './cascade/department-created.event';
 
 const ORG_DEFAULT_PAGE_LIMIT = 50;
 
@@ -14,7 +17,12 @@ const ORG_DEFAULT_PAGE_LIMIT = 50;
 export class OrgStructureService implements OnModuleInit {
   private readonly logger = new Logger(OrgStructureService.name);
 
-  constructor(private readonly repo: OrgStructureRepository) {}
+  constructor(
+    private readonly repo: OrgStructureRepository,
+    // Optional so existing single-arg tests (org-structure-move.spec) keep
+    // working; injected at runtime by Nest for the EP-ORG-041 cascade.
+    private readonly eventEmitter?: EventEmitter2,
+  ) {}
 
   /**
    * Self-heal the employees↔users link on boot. The communication-center
@@ -101,7 +109,29 @@ export class OrgStructureService implements OnModuleInit {
         const levelR = await this.repo.getParentLevel(dto.parentId);
         level = levelR.ok ? (levelR.data as number) : 0;
       }
-      return this.repo.create(dto, level);
+      const createdR = await this.repo.create(dto, level);
+
+      // EP-ORG-041 (ORG-CASCADE, owner decision #13): publish AFTER commit so a
+      // warehouse-bearing node auto-provisions a warehouse + grants the head the
+      // warehouse RBAC role. Emitted on the canonical EventEmitter2 channel; the
+      // OrgCascadeListener decides whether the node type is warehouse-bearing.
+      if (createdR.ok && this.eventEmitter) {
+        const row = createdR.data as Record<string, unknown>;
+        const nodeId = Number(row.id);
+        if (Number.isFinite(nodeId)) {
+          this.eventEmitter.emit(
+            ORG_CASCADE_EVENT,
+            new DepartmentCreatedEvent(
+              nodeId,
+              String(row.node_type ?? (dto.nodeType as string) ?? 'department'),
+              row.head_user_id != null ? Number(row.head_user_id) : null,
+              String(row.name ?? (dto.name as string) ?? ''),
+            ),
+          );
+        }
+      }
+
+      return createdR;
     });
   }
 
