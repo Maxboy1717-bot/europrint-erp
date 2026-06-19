@@ -42,6 +42,7 @@ import { WebsiteLeadService } from './listeners/website-lead.service';
 import { WebsiteLeadRepository } from './listeners/website-lead.repository';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { LeadScorerService } from './domain/services/lead-scorer.service';
+import { CrmLeadScoringService } from './domain/services/crm-lead-scoring.service';
 import { CrmAiController } from './presentation/crm-ai.controller';
 import { CrmAutoLeadController } from './presentation/crm-auto-lead.controller';
 import { CrmBitrixCompatController } from './presentation/crm-bitrix-compat.controller';
@@ -159,6 +160,7 @@ const repositories = [
     ...eventListeners,
     ...repositories,
     LeadScorerService,
+    CrmLeadScoringService,
     { provide: CRM_DEALS_REPO, useClass: DrizzleCrmDealsRepository },
     DealsService,
     { provide: CRM_CONTACTS_REPO, useClass: DrizzleCrmContactsRepository },
@@ -214,6 +216,6 @@ const repositories = [
     WebsiteLeadRepository,
     WebsiteLeadService,
   ],
-  exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
+  exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, CrmLeadScoringService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
 })
 export class CrmModule {}
