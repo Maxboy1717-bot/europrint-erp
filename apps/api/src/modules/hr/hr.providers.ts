@@ -20,6 +20,8 @@ import { KpiService } from './domain/services/kpi.service';
 import { AttritionService } from './analytics/attrition.service';
 import { UtilizationService } from './analytics/utilization.service';
 import { OvertimeCalculatorService } from './domain/services/overtime-calculator.service';
+import { HrRatingReader } from './infrastructure/repositories/hr-rating.reader';
+import { HrRatingService } from './domain/services/hr-rating.service';
 import { RecordAttendanceHandler } from './application/commands/record-attendance.handler';
 import { CalculatePayrollHandler } from './application/commands/calculate-payroll.handler';
 import { ApproveLeaveHandler } from './application/commands/approve-leave.handler';
@@ -152,6 +154,7 @@ export const hrEventListeners = [MesTo360Listener];
 
 export const hrDomainServices = [
   KpiService, AttritionService, UtilizationService, OvertimeCalculatorService,
+  HrRatingService, HrRatingReader,
 ];
 
 export const hrLegacyRepositories = [LeaveRepository, HrLeaveRepo];
