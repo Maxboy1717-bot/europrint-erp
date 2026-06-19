@@ -9,7 +9,6 @@ import { Ok, Err } from '@common/result';
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { Stock } from '../../domain/aggregates/stock.aggregate';
 import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.repository';
 import { WmsFgReceivedEvent } from '../events/wms-fg-received.event';
 
@@ -40,17 +39,16 @@ export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
       'Receiving finished goods',
     );
 
-    // Create new stock for FG
-    const stock = new Stock(
-      0,
-      command.warehouseId,
+    // Canonical FG receipt: warehouse_stock idempotent UPSERT (ON CONFLICT
+    // (warehouse_id, material_id), backed by execReceiveFg). The legacy
+    // saveStock() targeted the non-canonical `stocks` table, so QC-passed
+    // finished goods never became visible to downstream WMS/POS Monitor readers
+    // (golden-thread break #8). receiveFg() lands the FG in warehouse_stock.
+    const saveResult = await this.wmsRepo.receiveFg(
       command.materialId,
+      command.warehouseId,
       command.amount,
-      command.expiryDate,
-      command.batchNumber,
     );
-
-    const saveResult = await this.wmsRepo.saveStock(stock);
     if (!saveResult.ok) {
       return Err(saveResult.error);
     }
