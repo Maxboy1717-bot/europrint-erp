@@ -4,19 +4,21 @@
  */
 
 import { Controller, Get, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
-import { unwrapOrInternal, unwrapOrNotFound } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrNotFound, throwFromError } from '@common/http-result';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { QcNewService } from '../application/qc-new.service';
 import { SpcService } from '../domain/services/spc.service';
+import { QcAqlService } from '../domain/services/qc-aql.service';
+import type { AqlInspectionLevel, AqlLevel } from '../constants/qc-aql.constants';
 import { z } from 'zod';
 
 const CheckpointDto = z.object({
@@ -24,6 +26,19 @@ const CheckpointDto = z.object({
   description: z.string().optional(),
   stage: z.enum(['incoming', 'in_process', 'final', 'dispatch']).default('in_process'),
   standard_id: z.number().optional(),
+});
+
+/**
+ * Zod schema for GET /qc/aql/plan query parameters.
+ * All three fields are required; defaults mirror the ISO 2859-1 owner defaults.
+ */
+const AqlPlanQuerySchema = z.object({
+  lotSize: z.coerce.number().int().positive('lotSize must be a positive integer'),
+  aql: z.coerce.number().refine(
+    (v): v is AqlLevel => [0.65, 1.0, 1.5, 2.5, 4.0, 6.5].includes(v),
+    { message: 'aql must be one of: 0.65, 1.0, 1.5, 2.5, 4.0, 6.5' },
+  ).default(2.5),
+  level: z.enum(['I', 'II', 'III']).default('II'),
 });
 
 const LabTestDto = z.object({
@@ -49,6 +64,7 @@ export class QcNewController {
   constructor(
     private readonly svc: QcNewService,
     private readonly spcSvc: SpcService,
+    private readonly aqlSvc: QcAqlService,
   ) {}
 
   @Get('dashboard')
@@ -145,5 +161,96 @@ export class QcNewController {
   @ApiOperation({ summary: 'Supplier quality ratings aggregated' })
   async getSupplierQualityRatings() {
     return unwrapOrInternal(await this.svc.getSupplierQualityRatings());
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // AQL sampling-plan endpoints
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * GET /qc/aql/plan?lotSize=<n>&aql=<aql>&level=<I|II|III>
+   *
+   * Returns the ISO 2859-1 single-sampling plan for the supplied lot-size and
+   * AQL/level parameters.  No DB access — the QcAqlService is pure compute.
+   *
+   * 400 when lotSize ≤ 0 / non-integer / below ISO minimum (2), or when the
+   * AQL value is not supported for the resolved code letter.
+   */
+  @Get('aql/plan')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'ISO 2859-1 AQL sampling plan for a given lot size (pure compute)' })
+  @ApiQuery({ name: 'lotSize', type: Number, required: true, description: 'Lot size (integer ≥ 2)' })
+  @ApiQuery({ name: 'aql', type: Number, required: false, description: 'AQL level (default 2.5)' })
+  @ApiQuery({ name: 'level', enum: ['I', 'II', 'III'], required: false, description: 'Inspection level (default II)' })
+  getAqlPlan(@Query() query: unknown) {
+    const parsed = AqlPlanQuerySchema.safeParse(query);
+    if (!parsed.success) {
+      // Zod error → 400 with first issue message
+      const msg = parsed.error.issues[0]?.message ?? 'Invalid query parameters';
+      throwFromError({ code: 'VALIDATION', message: msg });
+    }
+    const { lotSize, aql, level } = (parsed as { success: true; data: { lotSize: number; aql: AqlLevel; level: AqlInspectionLevel } }).data;
+    const result = this.aqlSvc.plan(lotSize, aql, level);
+    if (!result.ok) throwFromError(result.error);
+    return result.data;
+  }
+
+  /**
+   * GET /qc/inspections/:id/aql-plan
+   *
+   * Reads the qc_inspections row for the given id, uses items_checked as the
+   * lot size (the count written at create time), and returns the ISO 2859-1
+   * sampling plan.
+   *
+   * Accepts optional ?aql= and ?level= overrides; defaults to AQL 2.5 / Level II.
+   * 404 when no inspection row exists.
+   * 400 when items_checked is 0 / null (no lot size recorded yet).
+   */
+  @Get('inspections/:id/aql-plan')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'ISO 2859-1 AQL plan derived from an existing inspection\'s lot size' })
+  @ApiQuery({ name: 'aql', type: Number, required: false, description: 'AQL override (default 2.5)' })
+  @ApiQuery({ name: 'level', enum: ['I', 'II', 'III'], required: false, description: 'Inspection level override (default II)' })
+  async getInspectionAqlPlan(
+    @Param('id') id: string,
+    @Query() query: unknown,
+  ) {
+    // Parse optional overrides (lotSize is not accepted here — it comes from the DB)
+    const overrideSchema = z.object({
+      aql: z.coerce.number().refine(
+        (v): v is AqlLevel => [0.65, 1.0, 1.5, 2.5, 4.0, 6.5].includes(v),
+        { message: 'aql must be one of: 0.65, 1.0, 1.5, 2.5, 4.0, 6.5' },
+      ).default(2.5),
+      level: z.enum(['I', 'II', 'III']).default('II'),
+    });
+    const parsedOverride = overrideSchema.safeParse(query);
+    if (!parsedOverride.success) {
+      const msg = parsedOverride.error.issues[0]?.message ?? 'Invalid query parameters';
+      throwFromError({ code: 'VALIDATION', message: msg });
+    }
+    const { aql, level } = (parsedOverride as { success: true; data: { aql: AqlLevel; level: AqlInspectionLevel } }).data;
+
+    // Fetch the inspection row — uses the existing service/repo (no new DB access)
+    const inspResult = await this.svc.getInspectionById(id);
+    if (!inspResult.ok) throwFromError(inspResult.error);
+    const row = inspResult.data as Record<string, unknown> | null;
+    if (row == null) {
+      throwFromError({ code: 'NOT_FOUND', message: `Inspection ${id} topilmadi` });
+    }
+
+    // items_checked is the lot-size column that exists in both the Drizzle schema
+    // and the live DB.  Graceful degrade: if the column is absent or zero → 400.
+    const rawLotSize = (row as Record<string, unknown>)['items_checked'];
+    const lotSize = rawLotSize != null ? Number(rawLotSize) : 0;
+    if (!Number.isFinite(lotSize) || lotSize < 2) {
+      throwFromError({
+        code: 'VALIDATION',
+        message: `Inspection ${id} da items_checked=${rawLotSize ?? 'null'} — AQL hisoblash uchun kamida 2 bo'lishi kerak`,
+      });
+    }
+
+    const planResult = this.aqlSvc.plan(lotSize, aql, level);
+    if (!planResult.ok) throwFromError(planResult.error);
+    return { inspectionId: id, lotSize, aql, level, plan: planResult.data };
   }
 }
