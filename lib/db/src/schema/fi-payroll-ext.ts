@@ -151,8 +151,12 @@ export type PayrollAiRecommendation = typeof payrollAiRecommendations.$inferSele
 export type InsertPayrollAiRecommendation = z.infer<typeof insertPayrollAiRecommendationSchema>;
 
 
-// 7. STOCK LEDGER - Ombor qoldig'i real-time
-export const stockLedger = pgTable("stock_ledger", {
+// 7. STOCK BALANCE SNAPSHOT - Ombor qoldig'i real-time (balans-snapshot, LEDGER EMAS).
+//    SQL nomi 'stock_ledger' → 'stock_balance_snapshot' (schema-convergence 2026-06-19):
+//    POS pos-schema-extensions.ts dagi append-only `stock_ledger` bilan SQL-nom to'qnashuvi
+//    bor edi (drizzle-kit push'ni bloklardi). Bu eksport hech qayerda import qilinmagan;
+//    balanslar kanonik `warehouse_stock`. Eksport nomi (stockLedger) saqlandi.
+export const stockLedger = pgTable("stock_balance_snapshot", {
   id: serial("id").primaryKey(),
   productMasterId: varchar("product_master_id").references(() => productMasters.id, { onDelete: "set null" }),
   materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
@@ -171,8 +175,8 @@ export const stockLedger = pgTable("stock_ledger", {
   expiryDate: varchar("expiry_date", { length: 10 }),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
-  index("idx_stock_ledger_product_master_id").on(t.productMasterId),
-  index("idx_stock_ledger_warehouse_id").on(t.warehouseId),
+  index("idx_stock_balance_snapshot_product").on(t.productMasterId),
+  index("idx_stock_balance_snapshot_warehouse").on(t.warehouseId),
 ]);
 
 
