@@ -169,7 +169,8 @@ export class QcDefectsController {
   @Patch('approve/finance/:orderId')
   async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
-    const approved = await this._setQcStatus(orderId, 'finance_approved');
+    const updated = await this._setQcStatus(orderId, 'finance_approved');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -178,7 +179,7 @@ export class QcDefectsController {
         VALUES (${oid}, 'finance', ${approver}, 'approved', ${dto.notes ?? null})
       `);
     }
-    return { orderId, approved };
+    return { orderId, approved: true };
   }
 
   @ApiOperation({ summary: 'Post approve finance' })
@@ -188,7 +189,8 @@ export class QcDefectsController {
   @Post('approve/finance/:orderId')
   async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
-    const approved = await this._setQcStatus(orderId, 'finance_approved');
+    const updated = await this._setQcStatus(orderId, 'finance_approved');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -197,7 +199,7 @@ export class QcDefectsController {
         VALUES (${oid}, 'finance', ${approver}, 'approved', ${dto.notes ?? null})
       `);
     }
-    return { orderId, approved };
+    return { orderId, approved: true };
   }
 
   @ApiOperation({ summary: 'Approve qc' })
@@ -207,7 +209,8 @@ export class QcDefectsController {
   @Patch('approve/qc/:orderId')
   async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
-    const approved = await this._setQcStatus(orderId, 'qc_approved');
+    const updated = await this._setQcStatus(orderId, 'qc_approved');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -216,7 +219,7 @@ export class QcDefectsController {
         VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
       `);
     }
-    return { orderId, approved };
+    return { orderId, approved: true };
   }
 
   @ApiOperation({ summary: 'Post approve qc' })
@@ -226,7 +229,8 @@ export class QcDefectsController {
   @Post('approve/qc/:orderId')
   async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
-    const approved = await this._setQcStatus(orderId, 'qc_approved');
+    const updated = await this._setQcStatus(orderId, 'qc_approved');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -235,7 +239,7 @@ export class QcDefectsController {
         VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
       `);
     }
-    return { orderId, approved };
+    return { orderId, approved: true };
   }
 
   @ApiOperation({ summary: 'Reject order' })
@@ -245,8 +249,9 @@ export class QcDefectsController {
   @Patch('reject/:orderId')
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcRejectionSchema.parse(body ?? {});
-    const rejected = await this._setQcStatus(orderId, 'rejected');
-    return { orderId, rejected };
+    const updated = await this._setQcStatus(orderId, 'rejected');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    return { orderId, rejected: true };
   }
 
   @ApiOperation({ summary: 'Post reject order' })
@@ -256,8 +261,9 @@ export class QcDefectsController {
   @Post('reject/:orderId')
   async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     QcRejectionSchema.parse(body ?? {});
-    const rejected = await this._setQcStatus(orderId, 'rejected');
-    return { orderId, rejected };
+    const updated = await this._setQcStatus(orderId, 'rejected');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    return { orderId, rejected: true };
   }
 
   @ApiOperation({ summary: 'Inspector submit' })
@@ -267,8 +273,9 @@ export class QcDefectsController {
   @Patch('inspector-submit/:orderId')
   async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
-    const submitted = await this._setQcStatus(orderId, 'inspector_submitted');
-    return { orderId, submitted };
+    const updated = await this._setQcStatus(orderId, 'inspector_submitted');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    return { orderId, submitted: true };
   }
 
   @ApiOperation({ summary: 'Post inspector submit' })
@@ -278,7 +285,8 @@ export class QcDefectsController {
   @Post('inspector-submit/:orderId')
   async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
-    const submitted = await this._setQcStatus(orderId, 'inspector_submitted');
-    return { orderId, submitted };
+    const updated = await this._setQcStatus(orderId, 'inspector_submitted');
+    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    return { orderId, submitted: true };
   }
 }
