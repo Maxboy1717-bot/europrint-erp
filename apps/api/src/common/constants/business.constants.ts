@@ -188,6 +188,43 @@ export const KPI_WEIGHT_OEE         = 0.2;
 export const KPI_WEIGHT_ATTENDANCE  = 0.1;
 
 // ---------------------------------------------------------------------------
+// HR — 7-Factor Employee Rating (reyting-7-faktor, CHAT-TARIXI-YANGI §1)
+// ---------------------------------------------------------------------------
+/**
+ * Default weights for the 7-factor employee rating formula.
+ * All values MUST sum to exactly 1.0.
+ * Owner can override per-org via HrRatingService.computeRating(factors, weights).
+ *
+ * Factor semantics (each input is a 0-100 score):
+ *   norm        — Norma % (bajarilgan ish / target norm completion)
+ *   attendance  — Davomat (shift presence %)
+ *   quality     — Sifat / brak (100 − defect_rate)
+ *   seniority   — Staj / razryad level (scaled 0-100 by razryad_levels table)
+ *   discipline  — Intizom (no-penalty = 100; each infraction reduces score)
+ *   peer        — O'zaro baho (only from the direct service chain, 0-100)
+ *   aiKpi       — AI kunlik KPI (daily AI-computed KPI score, 0-100)
+ */
+export const HR_RATING_WEIGHTS = {
+  norm:        0.25,   // production volume completion is the primary driver
+  attendance:  0.20,   // physical presence / shift coverage
+  quality:     0.20,   // sifat / brak — defect rate inversely penalises
+  seniority:   0.10,   // razryad level (experience / skill tier)
+  discipline:  0.10,   // intizom — tardiness, infractions
+  peer:        0.10,   // o'zaro baho (service-chain peer review)
+  aiKpi:       0.05,   // AI kunlik KPI (automated daily target score)
+} as const satisfies Record<string, number>;
+
+/** Minimum acceptable total weight deviation from 1.0 (floating-point tolerance) */
+export const HR_RATING_WEIGHT_TOLERANCE = 1e-9;
+
+/** 7-factor rating score → label thresholds (0–100 scale) */
+export const HR_RATING_THRESHOLDS = {
+  excellent: 85,
+  good:      70,
+  average:   50,
+} as const;
+
+// ---------------------------------------------------------------------------
 // HR — Discipline thresholds (kech kelganlik, oylik hisob) — skill spec
 // ---------------------------------------------------------------------------
 /** Monthly late arrivals before a warning is issued (3 = first threshold) */
@@ -198,3 +235,18 @@ export const DISCIPLINE_LATE_REPRIMAND_THRESHOLD = 5;
 export const DISCIPLINE_LATE_DISCHARGE_THRESHOLD = 8;
 /** Minutes after scheduled start before a check-in is classified as late */
 export const ATTENDANCE_LATE_GRACE_MINUTES       = 15;
+
+// ---------------------------------------------------------------------------
+// Director — Holat Formula (EP-DIR-001 / EP-DIR-029)
+// Default coefficients live in the module-specific constants file so the
+// director module can own them without coupling all services to this file.
+// The values below are re-exported for cross-module consumers that only
+// need the numeric constants, not the full type definitions.
+// ---------------------------------------------------------------------------
+
+/** Floating-point tolerance for holat weight-sum check (|sum - 1.0| < ε) */
+export const HOLAT_WEIGHT_SUM_EPSILON = 0.001;
+
+/** Normalised score scale for each holat metric (0–100) */
+export const HOLAT_SCORE_MIN = 0;
+export const HOLAT_SCORE_MAX = 100;
