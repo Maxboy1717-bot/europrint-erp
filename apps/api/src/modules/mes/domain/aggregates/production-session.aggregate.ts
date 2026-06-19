@@ -54,6 +54,12 @@ export class ProductionSession extends AggregateRoot {
     return this.id;
   }
 
+  /** Production-plan (ishlab chiqarish-reja/buyurtma) id this session belongs to.
+   *  Used to link downstream QC/golden-thread records to the real production order. */
+  getPpId(): number {
+    return this.ppId;
+  }
+
   getStatus(): MesStatus {
     return this.status;
   }

@@ -6,7 +6,8 @@
  *
  *   NOTE: a direct insert (not qcRepository.save) is used on purpose — the aggregate save writes the
  *   aggregate's STRING id into qc_inspections.id, which is an INTEGER sequence (drift) and would fail.
- *   Here the sequence assigns the id and reference_id/reference_type link the inspection to the MES session.
+ *   Here the sequence assigns the id; order_id + reference_type='production_order' link the inspection to
+ *   the real production order (event.ppId) so the QC work-list queries pick it up.
  */
 
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
@@ -22,18 +23,25 @@ export class MesCompletedListener implements IEventHandler<MesCompletedEvent> {
 
   async handle(event: MesCompletedEvent): Promise<void> {
     try {
-      // order_id (integer) holds the completed MES session id — reference_id is a uuid column so the
-      // numeric session id can't go there; reference_type='mes_session' clarifies the link.
-      // inspector_id (integer) is left NULL — assigned later by a QC operator.
+      // GOLDEN-THREAD FIX (2026-06-19): link the inspection to the PRODUCTION ORDER (event.ppId), and
+      // use reference_type='production_order' so the QC work-list queries actually pick it up
+      // (drizzle-qc.repo.ts: `reference_type IN ('print_job','production_order')`). Previously this wrote
+      // order_id=sessionId + reference_type='mes_session', so MES-originated inspections were created but
+      // were INVISIBLE to every QC query — the chain broke silently here. inspector_id stays NULL
+      // (assigned later by a QC operator).
       await db.execute(sql`
         INSERT INTO qc_inspections (order_id, reference_type, status, items_checked, items_passed, items_failed, created_at, updated_at)
-        VALUES (${event.sessionId}, 'mes_session', 'pending', 0, 0, 0, NOW(), NOW())`);
+        VALUES (${event.ppId}, 'production_order', 'pending', 0, 0, 0, NOW(), NOW())`);
       this.logger.log(
-        { sessionId: event.sessionId, timestamp: event.timestamp },
-        'MES completed - Trigger 10: PENDING QC inspection opened',
+        { sessionId: event.sessionId, ppId: event.ppId, timestamp: event.timestamp },
+        'MES completed - Trigger 10: PENDING QC inspection opened (linked to production order)',
       );
     } catch (error: unknown) {
-      this.logger.error('MES completed listener error');
+      // Q-40: never swallow silently — a failed insert breaks the golden thread invisibly.
+      this.logger.error(
+        { sessionId: event.sessionId, ppId: event.ppId, err: error instanceof Error ? error.message : String(error) },
+        'MES completed listener FAILED to open QC inspection — golden thread broken for this session',
+      );
     }
   }
 }
