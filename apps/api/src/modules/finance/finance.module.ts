@@ -128,6 +128,11 @@ import { FinanceCashflowForecastController } from './presentation/finance-cashfl
 import { PricingController } from './presentation/pricing.controller';
 // PA3-17: GeneralTaxService relocated from `modules/fi/tax/`.
 import { GeneralTaxService } from './application/general-tax.service';
+// CASHIER-HUB KAS-1: factory cashier hub (shift open/close + cash movements → canonical GL).
+import { CASHIER_HUB_REPO } from './cashier-hub/i-cashier-hub.repo';
+import { DrizzleCashierHubRepository } from './cashier-hub/drizzle-cashier-hub.repo';
+import { CashierHubService } from './cashier-hub/cashier-hub.service';
+import { CashierHubController } from './cashier-hub/cashier-hub.controller';
 
 const commandHandlers = [
   CheckAdvanceHandler, RecordPaymentHandler, StartRentalTimerHandler,
@@ -160,6 +165,8 @@ const eventListeners = [
     // Sprint 1 controllers
     FinanceStandardCostController, FinanceVarianceController, FinanceBreakEvenController,
     FinanceRatiosController, FinanceCashflowForecastController, PricingController,
+    // CASHIER-HUB KAS-1
+    CashierHubController,
   ],
   providers: [
     FinanceInvoiceRepo, FinanceReportRepo, FinanceBudgetRepo,
@@ -212,6 +219,9 @@ const eventListeners = [
     TieredPricingService, FinancialRatiosService, CashflowForecastService,
     // PA3-17: tax calculator merged from `modules/fi/`
     GeneralTaxService,
+    // CASHIER-HUB KAS-1 (reuses GlPostingService already provided above)
+    { provide: CASHIER_HUB_REPO, useClass: DrizzleCashierHubRepository },
+    CashierHubService,
   ],
   exports: [FINANCE_REPO, GlPostingService, CfoConfigService, GeneralTaxService],
 })

@@ -70,6 +70,7 @@ export {
 } from "./admin-assets";
 export type { AssetItem, InsertAssetItem, AssetMaintenance } from "./admin-assets";
 export * from "./fi-financial-reports";
+export * from "./fi-cashier-hub";
 export * from "./communication-center";
 export * from "./sd-customer-relations";
 export * from "./aisha-schema";
