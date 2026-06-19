@@ -25,6 +25,7 @@ import { CampaignsService } from './campaigns/campaigns.service';
 import { CampaignsRepository } from './campaigns/campaigns.repository';
 import { CAMPAIGN_REPO } from './domain/repositories/i-campaign.repo';
 import { DrizzleCampaignRepository } from './infrastructure/repositories/drizzle-campaign.repo';
+import { MarketingRoiService } from './application/marketing-roi.service';
 
 const commandHandlers = [CreateCampaignHandler, UpdateCampaignHandler, LaunchCampaignHandler];
 const queryHandlers = [GetCampaignsHandler, GetCampaignHandler];
@@ -56,7 +57,8 @@ const repositories = [
     LeadsService,
     CampaignsRepository,
     CampaignsService,
+    MarketingRoiService,
   ],
-  exports: [CAMPAIGN_REPO],
+  exports: [CAMPAIGN_REPO, MarketingRoiService],
 })
 export class MarketingModule {}
