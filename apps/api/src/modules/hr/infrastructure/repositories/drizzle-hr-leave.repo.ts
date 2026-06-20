@@ -132,24 +132,30 @@ export class HrLeaveRepo {
 
   async getLeaveBalance(employeeId: string): Promise<Result<{ annual: { used: number; remaining: number; total: number }; sick: { used: number }; maternity: { used: number } }>> {
     try {
-      const ANNUAL_TOTAL = 24;
+      // Canonical quota source is hr_leave_balances (per employee/year/leave_type:
+      // total_days, used_days, remaining_days). The old code hardcoded ANNUAL_TOTAL=24
+      // and summed leave_requests — ignoring the real per-employee allocation.
       const currentYear = _time.now().getFullYear();
       const eid = parseInt(employeeId, 10);
-      const rows = await db.select({
-        leave_type: leaveRequestsApp.leave_type,
-        used_days:  sql<string>`COALESCE(SUM(${leaveRequestsApp.duration_days}), 0)`,
-      })
-        .from(leaveRequestsApp)
-        .where(sql`
-          ${leaveRequestsApp.employee_id} = ${eid} AND
-          ${leaveRequestsApp.status} IN ('approved', 'draft') AND
-          EXTRACT(YEAR FROM ${leaveRequestsApp.start_date}::date) = ${currentYear}
-        `)
-        .groupBy(leaveRequestsApp.leave_type);
-      const byType: Record<string, number> = {};
-      for (const row of rows) { byType[row.leave_type ?? ''] = Number(row.used_days ?? 0); }
-      const annualUsed = byType['annual'] ?? byType['yillik'] ?? 0;
-      return { ok: true, data: { annual: { used: annualUsed, remaining: Math.max(0, ANNUAL_TOTAL - annualUsed), total: ANNUAL_TOTAL }, sick: { used: byType['sick'] ?? byType['kasal'] ?? 0 }, maternity: { used: byType['maternity'] ?? byType['dekret'] ?? 0 } } };
+      const res = await db.execute(sql`
+        SELECT leave_type, total_days, used_days, remaining_days
+        FROM hr_leave_balances
+        WHERE employee_id = ${eid} AND year = ${currentYear}
+      `);
+      const rows = (Array.isArray(res) ? res : (res as { rows?: unknown[] }).rows ?? []) as Array<Record<string, unknown>>;
+      const byType: Record<string, { total: number; used: number; remaining: number }> = {};
+      for (const r of rows) {
+        byType[String(r.leave_type ?? '')] = {
+          total: Number(r.total_days ?? 0),
+          used: Number(r.used_days ?? 0),
+          remaining: Number(r.remaining_days ?? 0),
+        };
+      }
+      const z = { total: 0, used: 0, remaining: 0 };
+      const annual = byType['annual'] ?? z;
+      const sick = byType['sick'] ?? z;
+      const maternity = byType['maternity'] ?? z;
+      return { ok: true, data: { annual: { used: annual.used, remaining: annual.remaining, total: annual.total }, sick: { used: sick.used }, maternity: { used: maternity.used } } };
     } catch (error: unknown) {
       this.logger.error(`getLeaveBalance: ${(error as Error).message}`);
       return Err((error as Error).message);
