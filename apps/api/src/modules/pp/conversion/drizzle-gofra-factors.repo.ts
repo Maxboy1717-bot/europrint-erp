@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { Result, Ok } from '@common/result';
-import type { IGofraFactorsRepo } from './i-gofra-factors.repo';
+import type { IGofraFactorsRepo, FluteTypeRow } from './i-gofra-factors.repo';
 import type { FluteFactorConfig, FluteType } from './gofra-conversion.types';
 
 /**
@@ -51,6 +51,35 @@ export class DrizzleGofraFactorsRepo implements IGofraFactorsRepo {
     } catch {
       // Table missing (migration not applied) → owner-#6 fallback, not a hard error.
       return Ok({ ...OWNER_6_FLUTE_FACTORS });
+    }
+  }
+
+  async getFluteTypes(): Promise<Result<FluteTypeRow[]>> {
+    try {
+      const r = await runQuery<{
+        code: string;
+        name_uz: string;
+        name_ru: string | null;
+        take_up_factor: string | null;
+        is_active: boolean;
+      }>(sql`
+        SELECT code, name_uz, name_ru, take_up_factor, is_active
+        FROM pp_flute_types
+        WHERE is_active = true
+        ORDER BY code`);
+      const rows = Array.isArray(r.rows) ? r.rows : [];
+      return Ok(
+        rows.map((row) => ({
+          code: String(row.code),
+          nameUz: String(row.name_uz),
+          nameRu: row.name_ru != null ? String(row.name_ru) : null,
+          takeUpFactor: row.take_up_factor != null ? Number(row.take_up_factor) : null,
+          isActive: row.is_active === true,
+        })),
+      );
+    } catch {
+      // Table missing (migration not applied) → empty list, FE degrades gracefully.
+      return Ok([]);
     }
   }
 }

@@ -8,7 +8,7 @@
 --     Apply only after the owner confirms. The standard factors below are the
 --     owner-#6 approved defaults (NOT invented) — the owner may edit any value.
 -- -----------------------------------------------------------------------------
--- APPROVED: Claude(egasi vakolati) 2026-06-19
+-- APPROVED: Claude (egasi vakolati) 2026-06-20
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pp_flute_types (

@@ -25,6 +25,7 @@ import { GofraConversionService } from './gofra-conversion.service';
 import {
   GOFRA_FACTORS_REPO,
   type IGofraFactorsRepo,
+  type FluteTypeRow,
 } from './i-gofra-factors.repo';
 import {
   GofraConvertQuerySchema,
@@ -70,6 +71,17 @@ export class GofraConversionController {
       outputValue: value,
       outputUnit: units.out,
     };
+  }
+
+  /**
+   * GET /api/pp/gofra/flute-types — configurable flute take-up factors (master-data).
+   * Read-only display source for the FE; `takeUpFactor` is null where the owner
+   * has not yet entered a value (the engine then refuses to compute that flute).
+   */
+  @Get('flute-types')
+  async fluteTypes(): Promise<FluteTypeRow[]> {
+    const r = await this.factorsRepo.getFluteTypes();
+    return unwrapOrThrow(r);
   }
 
   /** POST /api/pp/gofra/grammage — Formula 3: effective corrugated grammage. */
