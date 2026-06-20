@@ -44,6 +44,9 @@ import { CoordinationRepository } from './infrastructure/repositories/coordinati
 import { KaizenService } from './application/kaizen.service';
 import { OkrService } from './application/okr.service';
 import { OkrRepository } from './infrastructure/repositories/okr.repository';
+import { WorkflowRulesController } from './presentation/workflow-rules.controller';
+import { WorkflowRulesService } from './application/workflow-rules.service';
+import { WorkflowRulesRepository } from './infrastructure/repositories/workflow-rules.repository';
 import { StrategicService } from './application/strategic.service';
 import { StrategicRepository } from './infrastructure/repositories/strategic.repository';
 import { ZnoService } from './application/zno.service';
@@ -124,6 +127,8 @@ const Repositories = [
     StatRegulationController,
     DiaryController,
     MonthlyPlanController,
+    // Vysotskiy-7 GORIZONTAL: cross-department workflow routing config
+    WorkflowRulesController,
   ],
   providers: [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
@@ -142,6 +147,8 @@ const Repositories = [
     OkrRepository,
     { provide: OKR_REPO, useClass: OkrRepository },
     OkrService,
+    WorkflowRulesRepository,
+    WorkflowRulesService,
     StrategicRepository,
     { provide: STRATEGIC_REPO, useClass: StrategicRepository },
     StrategicService,

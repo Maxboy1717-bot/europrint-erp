@@ -29,9 +29,11 @@ const ReportsHub = lazy(() => import("@/pages/ReportsHub"));
 const DirectorExtended = lazy(() => import("@/pages/DirectorExtended"));
 const IdealRasmPage = lazy(() => import("@/pages/IdealRasmPage"));
 const DirectorAiAudit = lazy(() => import("@/pages/DirectorAiAudit"));
+const WorkflowRules = lazy(() => import("@/pages/WorkflowRules"));
 
 export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/coordination',             CoordinationPage],
+  ['/coordination/workflow-rules', WorkflowRules],
   ['/agents',                   AgentsHub],
   ['/agents/production',        ProductionAgentDashboard],
   ['/agents/hr-performance',    HRPerformanceAgentDash],
