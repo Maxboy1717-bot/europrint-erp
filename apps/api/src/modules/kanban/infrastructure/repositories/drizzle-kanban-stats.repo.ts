@@ -244,26 +244,39 @@ export class DrizzleKanbanStatsRepository {
     });
   }
 
-  async getEmployeePerformance(): Promise<Result<Record<string, unknown>>> {
+  async getEmployeePerformance(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
+      // NOTE: kanban_cards.owner_user_id = integer, users.id = integer (direct join).
+      // kanban_time_tracks.card_id = text, kanban_results.card_id = text → cast kc.id::text.
+      // Return shape matches FE EmployeePerformance[] (user.id/fullName/profileImageUrl + totals).
       const rows = await runQuery<Record<string, unknown>>(sql`
         SELECT
-          kc.owner_user_id,
-          (u.first_name || ' ' || u.last_name) AS full_name,
-          COUNT(*) AS total,
-          COUNT(*) FILTER (WHERE kc.completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE kc.due_date < CURRENT_DATE AND kc.completed_at IS NULL) AS overdue
+          u.id::text                                     AS user_id,
+          COALESCE(u.first_name || ' ' || u.last_name, u.email) AS full_name,
+          u.profile_image_url,
+          COUNT(DISTINCT kc.id)::int                    AS total_tasks,
+          COALESCE(SUM(ktt.duration_minutes), 0)::int   AS total_time_minutes,
+          COUNT(DISTINCT kr.id)::int                    AS total_results
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        WHERE kc.owner_user_id IS NOT NULL AND kc.deleted_at IS NULL
-        GROUP BY kc.owner_user_id, u.first_name, u.last_name
-        ORDER BY completed DESC
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN kanban_time_tracks ktt
+               ON ktt.card_id = kc.id::text AND ktt.user_id = u.id
+        LEFT JOIN kanban_results kr ON kr.card_id = kc.id::text
+        WHERE kc.deleted_at IS NULL AND kc.owner_user_id IS NOT NULL
+        GROUP BY u.id, u.first_name, u.last_name, u.email, u.profile_image_url
+        ORDER BY total_tasks DESC
         LIMIT 50
       `);
-      return {
-        employees: rows.rows,
-        generatedAt: _time.now().toISOString(),
-      };
+      return rows.rows.map((r) => ({
+        user: {
+          id:              String(r.user_id ?? ''),
+          fullName:        String(r.full_name ?? 'Noma\'lum'),
+          profileImageUrl: (r.profile_image_url as string | null) ?? null,
+        },
+        totalTasks:       Number(r.total_tasks       ?? 0),
+        totalTimeMinutes: Number(r.total_time_minutes ?? 0),
+        totalResults:     Number(r.total_results      ?? 0),
+      }));
     });
   }
 }

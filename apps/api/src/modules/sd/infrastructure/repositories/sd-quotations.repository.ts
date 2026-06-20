@@ -109,7 +109,35 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
 
   async getKpiTargets(managerId: number | null): Promise<Result<Row[]>> {
     try {
-      return Ok([]);
+      if (managerId != null) {
+        return exec(sql`
+          SELECT
+            q.id,
+            q.manager_id,
+            CONCAT(e.first_name, ' ', e.last_name) AS manager_name,
+            q.year,
+            q.month,
+            q.quota_amount,
+            q.achieved_amount
+          FROM sd_manager_quotas q
+          LEFT JOIN employees e ON e.id = q.manager_id
+          WHERE q.manager_id = ${managerId}
+          ORDER BY q.year DESC, q.month DESC
+        `);
+      }
+      return exec(sql`
+        SELECT
+          q.id,
+          q.manager_id,
+          CONCAT(e.first_name, ' ', e.last_name) AS manager_name,
+          q.year,
+          q.month,
+          q.quota_amount,
+          q.achieved_amount
+        FROM sd_manager_quotas q
+        LEFT JOIN employees e ON e.id = q.manager_id
+        ORDER BY q.year DESC, q.month DESC
+      `);
     } catch {
       return Ok([]);
     }

@@ -3,8 +3,8 @@
  * @description Card 8-tab detail as a DIALOG (Q-42: 8 flat tabs inside a modal). Opened from the
  *   "Kartalar" tab inside Org Tuzilma — the card detail lives INSIDE the Org Tuzilma flow, not a
  *   standalone /org-structure/cards/:id route (owner 2026-06-17). Folded from pages/CardDetail.tsx.
- *   Tabs: Asosiy/Xodimlar/Farzandlar/Vakant/Papka/Statistika/Portret/Tarix — each REAL data or honest
- *   EPComingSoon (Portret — node-keyed, no per-card source).
+ *   Tabs: Asosiy/Xodimlar/Farzandlar/Vakant/Papka/Statistika/Portret/Tarix — all REAL data.
+ *   Portret: Bo'lim 1 = Lavozim ta'rifi (card fields); Bo'lim 2 = Ishlar papkasi (folder 6 sections).
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { EPLoader, EPErrorState, EPEmptyState, EPStatusPill, EPComingSoon } from "@/components/ep";
+import { EPLoader, EPErrorState, EPEmptyState, EPStatusPill } from "@/components/ep";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { CardFormDialog, type OrgCard } from "@/components/hr/org/CardFormDialog";
 import { CardFolderDialog } from "@/components/hr/org/CardFolderDialog";
@@ -53,14 +53,33 @@ export function CardDetailDialog({
   const [folderOpen, setFolderOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
 
-  const { data: card, isLoading, isError, refetch } = useQuery<OrgCard & { department_name?: string; tskp?: string | null; is_stale?: boolean; last_reviewed_at?: string | null }>({
+  const { data: card, isLoading, isError, refetch } = useQuery<OrgCard & {
+    department_name?: string;
+    tskp?: string | null;
+    tskp_target?: number | null;
+    tskp_measurement_unit?: string | null;
+    function_description?: string | null;
+    function_description_ru?: string | null;
+    is_stale?: boolean;
+    last_reviewed_at?: string | null;
+  }>({
     queryKey: [base], enabled,
   });
   const employees = useQuery<{ items: Row[] }>({ queryKey: [`${base}/employees`], enabled });
   const children  = useQuery<{ items: Row[] }>({ queryKey: [`${base}/children`], enabled });
   const vacancies = useQuery<{ items: Row[] }>({ queryKey: [`${base}/vacancies`], enabled });
   const history   = useQuery<{ items: Row[] }>({ queryKey: [`${base}/history`], enabled });
-  const folder    = useQuery<{ completeness?: number; filledSections?: number }>({ queryKey: [`${base}/folder`], enabled });
+  const folder    = useQuery<{
+    completeness?: number;
+    filledSections?: number;
+    totalSections?: number;
+    vazifa?: string | null;
+    javobgarlik?: string | null;
+    gsd?: string | null;
+    reglament?: string | null;
+    jarayon?: string | null;
+    talim?: string | null;
+  }>({ queryKey: [`${base}/folder`], enabled });
   const exams     = useQuery<Row[]>({ queryKey: [`/api/ai-exam/by-card/${id}`], enabled });
   const certs     = useQuery<{ items: Row[] }>({ queryKey: [`${base}/certificates`], enabled });
 
@@ -273,9 +292,79 @@ export function CardDetailDialog({
                 </div>
               </TabsContent>
 
-              {/* 7. Portret — node-keyed (org_departments), no per-card source yet */}
-              <TabsContent value="portret" className="mt-4">
-                <EPComingSoon title={t("portret")} description={t("portretComingSoon")} />
+              {/* 7. Portret — karta tavsifi + ishlar papkasi */}
+              <TabsContent value="portret" className="mt-4 space-y-6">
+                {/* Bo'lim 1: Lavozim ta'rifi (org_functions ustunlari) */}
+                <div>
+                  <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {t("lavozimTavsifi")}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="sm:col-span-2">
+                      <Field
+                        label={t("lavozimTavsifiUz")}
+                        value={card.function_description
+                          ? <span className="whitespace-pre-wrap">{card.function_description}</span>
+                          : <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Field
+                        label={t("lavozimTavsifiRu")}
+                        value={card.function_description_ru
+                          ? <span className="whitespace-pre-wrap">{card.function_description_ru}</span>
+                          : <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>}
+                      />
+                    </div>
+                    <Field
+                      label={t("tskpMaqsad")}
+                      value={card.tskp
+                        ? <span className="whitespace-pre-wrap">{card.tskp}</span>
+                        : <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>}
+                    />
+                    <Field
+                      label={t("tskpMaqsadSon")}
+                      value={card.tskp_target != null
+                        ? `${card.tskp_target}${card.tskp_measurement_unit ? " " + card.tskp_measurement_unit : ""}`
+                        : <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>}
+                    />
+                    <Field label={t("razryad")} value={card.razryad_level_id ?? <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>} />
+                    <Field label={t("rbacDaraja")} value={card.rbac_tier ?? <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>} />
+                  </div>
+                </div>
+
+                {/* Bo'lim 2: Ishlar papkasi (card_folders ustunlari) */}
+                <div>
+                  <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {t("ishlarPapkasi")}
+                  </h3>
+                  {folder.isLoading ? (
+                    <EPLoader />
+                  ) : (
+                    <div className="space-y-3">
+                      {(
+                        [
+                          { key: "vazifa",       label: t("vazifa") },
+                          { key: "javobgarlik",  label: t("javobgarlik") },
+                          { key: "gsd",          label: t("gsd") },
+                          { key: "reglament",    label: t("reglament") },
+                          { key: "jarayon",      label: t("jarayon") },
+                          { key: "talim",        label: t("talim") },
+                        ] as const
+                      ).map(({ key, label }) => {
+                        const val = folder.data?.[key];
+                        return (
+                          <div key={key} className="rounded-md border border-border p-3">
+                            <p className="text-[12px] text-muted-foreground">{label}</p>
+                            {val
+                              ? <p className="text-[14px] mt-0.5 whitespace-pre-wrap">{val}</p>
+                              : <p className="text-[13px] mt-0.5 text-muted-foreground italic">{t("toldirilmagan")}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
               {/* 8. Tarix-jurnali */}

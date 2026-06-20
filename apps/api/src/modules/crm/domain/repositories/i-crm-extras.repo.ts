@@ -11,6 +11,16 @@ import type { Result } from '@common/result';
 
 type Row = Record<string, unknown>;
 
+export interface CrmActivityRow {
+  id: number;
+  entity_type: string | null;
+  entity_id: number | null;
+  type: string | null;
+  status: string | null;
+  due_date: Date | null;
+  created_at: Date | null;
+}
+
 export const CRM_EXTRAS_REPO = Symbol('CRM_EXTRAS_REPO');
 
 export interface ICrmExtrasRepo {
@@ -26,4 +36,5 @@ export interface ICrmExtrasRepo {
   listInvoices(lim: number, off: number): Promise<Result<Row[]>>;
   listProposals(lim: number, off: number): Promise<Result<Row[]>>;
   getLeadStages(): Promise<Result<Row[]>>;
+  getEntityActivities(entityType: string, entityId: number): Promise<Result<CrmActivityRow[]>>;
 }

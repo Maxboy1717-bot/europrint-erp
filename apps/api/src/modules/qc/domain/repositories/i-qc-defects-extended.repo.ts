@@ -25,12 +25,14 @@ export interface IQcDefectsExtendedRepo {
   ): Promise<Result<Row>>;
   listSupplierQuality(vid: number | null, lim: number): Promise<Result<Row[]>>;
   createSupplierQuality(
-    vendor_id: number,
+    vendor_id: number | null,
+    supplier_name: string,
     receipt_id: number | null,
     material_id: number | null,
     batch_number: string | null,
     sample_size: number,
     defects_found: number,
+    quality_score: number | null,
     notes: string | null,
     status: string | null,
   ): Promise<Result<Row>>;

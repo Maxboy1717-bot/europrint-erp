@@ -5,7 +5,7 @@
  *     stopped) — Drizzle has no native FILTER clause and would require
  *     four separate queries or CASE-based SUM workarounds.
  *   - Legacy compatibility layer queries against tables (equipment,
- *     production_sessions, downtime_events, defect_types, technology_cards,
+ *     production_sessions, downtime_events, technology_cards,
  *     products) that have no Drizzle schema definitions in lib/db/src/schema/.
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
@@ -72,18 +72,18 @@ export class LegacyIotService {
     } catch { return []; }
   }
 
-  // NOTE: P3-30 — no pgTable definition found for `defect_types`; needs schema work first.
   async getIotTabletDefectReasons(): Promise<Record<string, unknown>[]> {
-    try {
-      const r = await db.execute(sql`SELECT * FROM defect_types ORDER BY name`);
-      return r.rows as Record<string, unknown>[];
-    } catch {
-      return [
-        { id: 1, name: 'Bosma sifatsiz', code: 'PRINT_DEFECT' },
-        { id: 2, name: "O'lcham xatosi", code: 'SIZE_ERROR' },
-        { id: 3, name: 'Rang xatosi', code: 'COLOR_ERROR' },
-      ];
-    }
+    const r = await db.execute(sql`
+      SELECT
+        code       AS code,
+        name       AS "labelUz",
+        name       AS "labelRu",
+        category   AS stage
+      FROM mes_downtime_reasons
+      WHERE is_active = true
+      ORDER BY code
+    `);
+    return r.rows as Record<string, unknown>[];
   }
 
   // ─── Production Orders ───────────────────────────────────────────────────────

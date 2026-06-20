@@ -9,7 +9,7 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { sql, eq, desc } from 'drizzle-orm';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { dokla, rasporyazhenie } from '@shared/db';
 import { hrEmployees } from '@shared/db';
 import { appUsers } from '@shared/db';
@@ -172,8 +172,29 @@ export class CoordinationRepository implements ICoordinationRepo {
   }
 
   async listBaskets(): Promise<Result<Row[]>> {
-    // WHY: stub — returns empty until the basket UI is wired (Sprint H deferred).
-    return safeCall(async () => [], 'DB_ERROR');
+    // NOTE: Raw SQL retained — director coordinator overview shows ALL baskets
+    // (not per-user filtered), joined with users for from_name.
+    // Drizzle cannot express priority-CASE ordering + LEFT JOIN in one clean builder call.
+    return safeCall(async () => {
+      const r = await runQuery<Row>(sql`
+        SELECT
+          d.id::text                                                        AS id,
+          d.subject                                                         AS title,
+          d.basket_state                                                    AS basket,
+          d.is_inbox_overdue                                                AS overdue,
+          d.created_at::text                                                AS created_at,
+          NULLIF(TRIM(COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')), '') AS from_name
+        FROM cc_documents d
+        LEFT JOIN users u ON u.id = d.sender_user_id
+        WHERE d.archived_at IS NULL
+        ORDER BY
+          CASE d.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END,
+          d.is_inbox_overdue DESC,
+          d.basket_entered_at ASC NULLS LAST
+        LIMIT 200
+      `);
+      return castTo<Row[]>(r.rows);
+    }, 'DB_ERROR');
   }
 
   async getStatsRasp(): Promise<Result<RaspStats>> {

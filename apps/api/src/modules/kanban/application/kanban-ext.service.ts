@@ -148,5 +148,5 @@ export class KanbanExtService {
   createCardFlat(body: Record<string, unknown>, _userId: number): Promise<Result<Record<string, unknown>>> { return this.card.createCardFlat(body); }
   getProductivityReport(): Promise<Result<Record<string, unknown>>> { return this.flow.getProductivityReport(); }
   getOverdueReport(): Promise<Result<Record<string, unknown>>> { return this.flow.getOverdueReport(); }
-  getEmployeePerformance(): Promise<Result<Record<string, unknown>>> { return this.flow.getEmployeePerformance(); }
+  getEmployeePerformance(): Promise<Result<Record<string, unknown>[]>> { return this.flow.getEmployeePerformance(); }
 }

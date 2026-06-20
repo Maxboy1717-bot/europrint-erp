@@ -228,6 +228,28 @@ export class HrEmployeesExtRepository implements IHrEmployeesExtRepo {
     }, 'DB_ERROR');
   }
 
+  async getPendingDocuments(): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:            hr_documents.id,
+        document_type: hr_documents.documentType,
+        title:         hr_documents.title,
+        status:        hr_documents.status,
+        employee_id:   hr_documents.employeeId,
+        initiated_by:  hr_documents.initiatedBy,
+        total_steps:   hr_documents.totalSteps,
+        current_step:  hr_documents.currentStep,
+        created_at:    hr_documents.createdAt,
+        updated_at:    hr_documents.updatedAt,
+      })
+        .from(hr_documents)
+        .where(eq(hr_documents.status, 'pending'))
+        .orderBy(sql`${hr_documents.createdAt} DESC`)
+        .limit(100);
+      return castTo<Row[]>(rows);
+    }, 'DB_ERROR');
+  }
+
   async assignCard(employeeId: number, orgFunctionId: number): Promise<Result<Row>> {
     return safeCall(async () => {
       // Verify the org_function exists and is active

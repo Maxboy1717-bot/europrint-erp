@@ -70,4 +70,8 @@ export class HrEmployeesExtService {
   async assignCard(employeeId: string, orgFunctionId: number) {
     return this.repo.assignCard(safeInt(employeeId, 0), orgFunctionId);
   }
+
+  async getPendingDocuments() {
+    return this.repo.getPendingDocuments();
+  }
 }

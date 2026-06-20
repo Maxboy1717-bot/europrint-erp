@@ -12,7 +12,7 @@ import { Ok, Err, Result } from '@common/result';
 import {
   marketingLeads,
   blogPosts,
-  marketingBudgetLines,
+  marketingBudgetItems,
   marketingCalendarEvents,
   marketingLeadContacts,
   sdCustomerCompetitors,
@@ -148,14 +148,14 @@ export class DrizzleMarketingGroup2Repository {
     try {
       const rows = await db
         .select()
-        .from(marketingBudgetLines)
+        .from(marketingBudgetItems)
         .where(
           and(
-            opts.year !== undefined ? eq(marketingBudgetLines.year, opts.year) : undefined,
-            opts.month !== undefined ? eq(marketingBudgetLines.month, opts.month) : undefined,
+            opts.year !== undefined ? eq(marketingBudgetItems.year, opts.year) : undefined,
+            opts.month !== undefined ? eq(marketingBudgetItems.month, opts.month) : undefined,
           ),
         )
-        .orderBy(desc(marketingBudgetLines.year), marketingBudgetLines.month);
+        .orderBy(desc(marketingBudgetItems.year), marketingBudgetItems.month);
       return Ok(Array.isArray(rows) ? rows : []);
     } catch (e) {
       return Err(String(e));
@@ -166,8 +166,8 @@ export class DrizzleMarketingGroup2Repository {
     try {
       const rows = await db
         .select()
-        .from(marketingBudgetLines)
-        .where(eq(marketingBudgetLines.id, id))
+        .from(marketingBudgetItems)
+        .where(eq(marketingBudgetItems.id, id))
         .limit(1);
       if (!rows[0]) return Err({ code: 'NOT_FOUND' as const, message: `Byudjet qatori topilmadi: ${id}` });
       return Ok(rows[0]);
@@ -178,15 +178,17 @@ export class DrizzleMarketingGroup2Repository {
 
   async createBudgetLine(data: Record<string, unknown>): Promise<Result<unknown>> {
     try {
+      // marketing_budget_items has `name` column — maps directly from FE form
       const [row] = await db
-        .insert(marketingBudgetLines)
+        .insert(marketingBudgetItems)
         .values({
           year: Number(data['year']),
           month: data['month'] != null ? Number(data['month']) : null,
           category: String(data['category'] ?? 'other'),
+          name: String(data['name'] ?? data['description'] ?? ''),
           plannedAmount: String(data['plannedAmount'] ?? data['planned_amount'] ?? '0'),
           actualAmount: String(data['actualAmount'] ?? data['actual_amount'] ?? '0'),
-          description: data['description'] as string | undefined,
+          notes: (data['notes'] as string | undefined) ?? (data['description'] as string | undefined),
         })
         .returning();
       return Ok(row);
@@ -197,17 +199,21 @@ export class DrizzleMarketingGroup2Repository {
 
   async updateBudgetLine(id: string, data: Record<string, unknown>): Promise<Result<unknown>> {
     try {
-      const updateData: Partial<typeof marketingBudgetLines.$inferInsert> = {};
+      const updateData: Partial<typeof marketingBudgetItems.$inferInsert> = {};
       if (data['year'] !== undefined) updateData.year = Number(data['year']);
       if (data['month'] !== undefined) updateData.month = data['month'] != null ? Number(data['month']) : null;
       if (data['category'] !== undefined) updateData.category = String(data['category']);
+      if (data['name'] !== undefined) updateData.name = String(data['name']);
       if (data['plannedAmount'] !== undefined) updateData.plannedAmount = String(data['plannedAmount']);
       if (data['actualAmount'] !== undefined) updateData.actualAmount = String(data['actualAmount']);
-      if (data['description'] !== undefined) updateData.description = String(data['description']);
+      if (data['notes'] !== undefined) updateData.notes = String(data['notes']);
+      if (data['description'] !== undefined && updateData.notes === undefined) {
+        updateData.notes = String(data['description']);
+      }
       const [row] = await db
-        .update(marketingBudgetLines)
+        .update(marketingBudgetItems)
         .set(updateData)
-        .where(eq(marketingBudgetLines.id, id))
+        .where(eq(marketingBudgetItems.id, id))
         .returning();
       if (!row) return Err({ code: 'NOT_FOUND' as const, message: `Byudjet qatori topilmadi: ${id}` });
       return Ok(row);

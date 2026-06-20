@@ -45,10 +45,12 @@ const UpdateBlogPostSchema = CreateBlogPostSchema.partial();
 const CreateBudgetLineSchema = z.object({
   year: z.coerce.number().int().min(2000).max(2100),
   month: z.coerce.number().int().min(1).max(12).optional(),
-  category: z.enum(['digital', 'events', 'print', 'other']),
+  category: z.string().min(2).max(50),
+  name: z.string().max(500).optional(),
   plannedAmount: z.coerce.number().min(0).optional().default(0),
   actualAmount: z.coerce.number().min(0).optional().default(0),
   description: z.string().max(500).optional(),
+  notes: z.string().max(500).optional(),
 }).strict();
 
 const UpdateBudgetLineSchema = CreateBudgetLineSchema.partial();
@@ -186,7 +188,7 @@ export class MarketingGroup2Controller {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Byudjet qatorini o\'chirish' })
   async deleteBudget(@Param('id') id: string) {
-    await db.execute(sql`DELETE FROM marketing_budget_lines WHERE id=${id}`);
+    await db.execute(sql`DELETE FROM marketing_budget_items WHERE id=${id}`);
     return { id, deleted: true };
   }
 

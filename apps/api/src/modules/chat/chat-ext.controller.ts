@@ -193,8 +193,11 @@ export class ChatExtController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('admin/audit-logs')
   @Roles('admin', 'director')
-  async getAdminAuditLogs(@Query('limit') limit?: string) {
-    const result = await this.chatAdminSvc.getAuditLogs(Number(limit) || 100);
+  async getAdminAuditLogs(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const result = await this.chatAdminSvc.getAuditLogs(
+      Number(page) || 1,
+      Number(limit) || 50,
+    );
     assertOk(result);
     return result.data;
   }

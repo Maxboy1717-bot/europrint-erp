@@ -183,7 +183,7 @@ export class KanbanExtFlowService {
     return this.repo.getOverdueReport();
   }
 
-  getEmployeePerformance(): Promise<Result<Record<string, unknown>>> {
+  getEmployeePerformance(): Promise<Result<Record<string, unknown>[]>> {
     return this.repo.getEmployeePerformance();
   }
 

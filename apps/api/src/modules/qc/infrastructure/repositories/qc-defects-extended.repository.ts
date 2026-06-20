@@ -62,9 +62,9 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
 
   }
 
-  async createSupplierQuality(vendor_id: number, _receipt_id: number | null, material_id: number | null, _batch_number: string | null, sample_size: number, defects_found: number, notes: string | null, _status: string | null): Promise<Result<Row>>  {
+  async createSupplierQuality(vendor_id: number | null, supplier_name: string, _receipt_id: number | null, material_id: number | null, _batch_number: string | null, sample_size: number, defects_found: number, quality_score: number | null, notes: string | null, _status: string | null): Promise<Result<Row>>  {
   try {
-      const r = await exec(sql`INSERT INTO qc_supplier_quality (supplier_id, material_card_id, total_quantity, rejected_quantity, notes, delivery_date) VALUES (${String(vendor_id)}, ${material_id ? String(material_id) : null}, ${sample_size}, ${defects_found}, ${notes ?? null}, NOW()::date::text) RETURNING *`);
+      const r = await exec(sql`INSERT INTO qc_supplier_quality (supplier_id, supplier_name, material_id, total_quantity, rejected_quantity, quality_score, notes, delivery_date, sample_size, defects_found, status) VALUES (${vendor_id ?? null}, ${supplier_name}, ${material_id ?? null}, ${sample_size}, ${defects_found}, ${quality_score ?? null}, ${notes ?? null}, NOW()::date::text, ${sample_size}, ${defects_found}, ${_status ?? 'pending'}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

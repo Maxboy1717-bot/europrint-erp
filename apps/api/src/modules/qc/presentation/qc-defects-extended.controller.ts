@@ -105,14 +105,16 @@ export class QcDefectsExtendedController {
   @UsePipes(new ZodValidationPipe(QcCreateSupplierQualitySchema))
   @Roles(...QC_WRITE_ROLES)
   async createSupplierQuality(@Body() body: QcCreateSupplierQualityDto) {
-    assertRequired(body.vendor_id, 'vendor_id required');
+    assertRequired(body.supplier_name, 'supplier_name required');
     const _rCreateSupplierQuality = await this.svc.createSupplierQuality(
-      safeInt(body.vendor_id ?? 0, 0),
+      body.vendor_id != null ? safeInt(body.vendor_id, 0) : null,
+      String(body.supplier_name),
       body.receipt_id != null ? safeInt(body.receipt_id, 0) : null,
       body.material_id != null ? safeInt(body.material_id, 0) : null,
       body.batch_number != null ? String(body.batch_number) : null,
       safeInt(body.sample_size ?? 0, 0),
       safeInt(body.defects_found ?? 0, 0),
+      body.quality_score != null ? Number(body.quality_score) : null,
       body.notes != null ? String(body.notes) : null,
       body.status != null ? String(body.status) : null);
     assertOk(_rCreateSupplierQuality);

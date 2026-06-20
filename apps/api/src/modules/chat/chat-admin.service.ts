@@ -7,10 +7,19 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, AppErr, Result, isErr } from '@common/result';
 import { ChatAdminRepository } from './repositories/chat-admin.repository';
 
+// snake_case keys to match FE ChatAdminPageTypes.AdminRoom interface
 export interface AdminRoom {
   id: string;
   name: string;
   type: string;
+  description: string;
+  member_count: number;
+  message_count: number;
+  is_archived: boolean;
+  created_at: string;
+  last_message_at: string;
+  created_by_name: string;
+  // camelCase aliases kept for backward compat (service internal use)
   memberCount: number;
   isArchived: boolean;
   createdAt: string;
@@ -65,9 +74,10 @@ export class ChatAdminService {
     return Ok({ roomId, userId, role });
   }
 
-  async getAuditLogs(limit: number): Promise<Result<{ items: unknown[]; total: number }>> {
-    const result = await this.repo.findAuditLogs(limit);
+  async getAuditLogs(page: number, limit: number): Promise<Result<{ logs: unknown[]; total: number; pages: number }>> {
+    const result = await this.repo.findAuditLogs(page, limit);
     if (isErr(result)) return Err(result.error);
-    return Ok({ items: result.data, total: result.data.length });
+    const { logs, total } = result.data;
+    return Ok({ logs, total, pages: Math.ceil(total / limit) || 1 });
   }
 }

@@ -10,9 +10,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { sql, eq, and } from 'drizzle-orm';
 import { crm_activities, crm_lead_stages, crmLeads } from '@shared/db';
 import { safeCall, Result } from '@common/result';
+import type { CrmActivityRow } from '../../domain/repositories/i-crm-extras.repo';
 
 type Row = Record<string, unknown>;
 
@@ -107,5 +108,38 @@ export class CrmExtrasDashboardRepository {
         return [];
       }
       }, 'DB_ERROR');
+  }
+
+  /**
+   * Returns last 5 activities for a given entity (lead/deal) ordered by created_at DESC.
+   * Used by getNba() to derive real next-best-action from live DB state.
+   */
+  async getEntityActivities(entityType: string, entityId: number): Promise<Result<CrmActivityRow[]>> {
+    return safeCall(async () => {
+      try {
+        const rows = await db.select({
+          id:          crm_activities.id,
+          entity_type: crm_activities.entity_type,
+          entity_id:   crm_activities.entity_id,
+          type:        crm_activities.type,
+          status:      crm_activities.status,
+          due_date:    crm_activities.due_date,
+          created_at:  crm_activities.created_at,
+        })
+          .from(crm_activities)
+          .where(
+            and(
+              eq(crm_activities.entity_type, entityType),
+              eq(crm_activities.entity_id, entityId),
+            ),
+          )
+          .orderBy(sql`${crm_activities.created_at} DESC NULLS LAST`)
+          .limit(5);
+        return rows as CrmActivityRow[];
+      } catch (err) {
+        this.logger.warn(`getEntityActivities: ${(err as Error).message}`);
+        return [];
+      }
+    }, 'DB_ERROR');
   }
 }

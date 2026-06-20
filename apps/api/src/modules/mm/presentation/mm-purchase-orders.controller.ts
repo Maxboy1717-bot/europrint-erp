@@ -19,7 +19,7 @@ import { ApprovePurchaseOrderCommand } from '../application/commands/approve-pur
 import { GoodsReceiptCommand } from '../application/commands/goods-receipt.handler';
 import { db } from '@shared/db';
 import { mm_purchase_orders } from '@shared/db';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, getTableColumns } from 'drizzle-orm';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
 enum Role {
@@ -47,11 +47,11 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async listPos(){
     try {
-      const rows = await db.select().from(mm_purchase_orders).orderBy(desc(mm_purchase_orders.created_at)).limit(50);
+      const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).orderBy(desc(mm_purchase_orders.created_at)).limit(50);
       return rows.map((r) => ({
         id: String(r.id),
         po_number: `PO-${String(r.id).padStart(6, '0')}`,
-        vendor_name: `Vendor #${r.vendor_id ?? 0}`,
+        vendor_name: r.vendorName ?? r.vendor_id?.toString() ?? '',
         order_date: r.order_date ?? '',
         delivery_date: r.expected_date ?? '',
         status: r.status ?? 'draft',
@@ -70,14 +70,14 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPendingReceipt(){
     try {
-      const rows = await db.select().from(mm_purchase_orders)
+      const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders)
         .where(eq(mm_purchase_orders.status, 'approved'))
         .orderBy(desc(mm_purchase_orders.created_at))
         .limit(20);
       return rows.map((r) => ({
         id: String(r.id),
         po_number: `PO-${String(r.id).padStart(6, '0')}`,
-        vendor_name: `Vendor #${r.vendor_id ?? 0}`,
+        vendor_name: r.vendorName ?? r.vendor_id?.toString() ?? '',
         order_date: r.order_date ?? '',
         delivery_date: r.expected_date ?? '',
         status: r.status ?? 'approved',
@@ -96,13 +96,13 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPo(@Param('id') id: string){
     const poId = Number(id);
-    const rows = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
+    const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
     const r = rows[0];
     if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
     return {
       id: String(r.id),
       po_number: `PO-${String(r.id).padStart(6, '0')}`,
-      vendor_name: `Vendor #${r.vendor_id ?? 0}`,
+      vendor_name: r.vendorName ?? r.vendor_id?.toString() ?? '',
       order_date: r.order_date ?? '',
       delivery_date: r.expected_date ?? '',
       status: r.status ?? 'draft',
@@ -171,7 +171,7 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async deletePo(@Param('id') id: string) {
     const poId = Number(id);
-    const rows = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
+    const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
     const r = rows[0];
     if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
     if ((r.status ?? 'draft') !== 'draft') throw new HttpException("Faqat 'draft' holatdagi buyurtmani o'chirish mumkin", HttpStatus.BAD_REQUEST);
@@ -188,7 +188,7 @@ export class MmPurchaseOrdersController {
     @Body() dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
   ) {
     const poId = Number(id);
-    const rows = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
+    const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
     const r = rows[0];
     if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
     if ((r.status ?? 'draft') !== 'draft') throw new HttpException("Faqat 'draft' holatdagi buyurtmani tahrirlash mumkin", HttpStatus.BAD_REQUEST);

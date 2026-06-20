@@ -19,18 +19,24 @@ export class DrizzleFinanceReportsRepository implements IFinanceReportsRepositor
     try {
       const year = fiscalYear ?? _time.now().getFullYear();
       const rows = await db.select({
-        code: accounts.accountCode,
-        name: accounts.accountName,
-        type: accounts.accountType,
-        debit: sql<number>`COALESCE(SUM(CASE WHEN ${entries.debitAccountId} = ${accounts.id}::varchar THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
-        credit: sql<number>`COALESCE(SUM(CASE WHEN ${entries.creditAccountId} = ${accounts.id}::varchar THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
+        accountCode: accounts.accountCode,
+        accountName: accounts.accountName,
+        accountType: accounts.accountType,
+        debitBalance: sql<number>`COALESCE(SUM(CASE WHEN ${entries.debitAccountId} = ${accounts.id} THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
+        creditBalance: sql<number>`COALESCE(SUM(CASE WHEN ${entries.creditAccountId} = ${accounts.id} THEN ${entries.amount}::numeric ELSE 0 END), 0)`,
       })
         .from(accounts)
         .leftJoin(entries, sql`EXTRACT(YEAR FROM ${entries.createdAt}) = ${year}`)
         .where(eq(accounts.isActive, true))
         .groupBy(accounts.id, accounts.accountCode, accounts.accountName, accounts.accountType)
         .orderBy(accounts.accountCode);
-      return Ok(rows);
+      const totalDebit = rows.reduce((s, r) => s + Number(r.debitBalance), 0);
+      const totalCredit = rows.reduce((s, r) => s + Number(r.creditBalance), 0);
+      return Ok({
+        accounts: rows,
+        totals: { debitBalance: totalDebit, creditBalance: totalCredit },
+        asOfDate: _time.now().toISOString(),
+      } as unknown as object[]);
     } catch (e: unknown) { return Err((e as Error).message || 'Sinov balansi topilmadi'); }
   }
 

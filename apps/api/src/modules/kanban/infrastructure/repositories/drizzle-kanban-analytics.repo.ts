@@ -111,7 +111,7 @@ export class DrizzleKanbanAnalyticsRepository {
     return this.stats.getAnalyticsSummary();
   }
 
-  getEmployeePerformance(): Promise<Result<Record<string, unknown>>> {
+  getEmployeePerformance(): Promise<Result<Record<string, unknown>[]>> {
     return this.stats.getEmployeePerformance();
   }
 }

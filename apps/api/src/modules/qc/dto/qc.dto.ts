@@ -51,6 +51,7 @@ export type QcCreateBrakDto = z.infer<typeof QcCreateBrakSchema>;
 
 export const QcCreateSupplierQualitySchema = z.object({
   vendor_id:     z.number().int().positive().optional(),
+  supplier_name: z.string().min(1).max(MAX_TITLE_LENGTH),
   material_id:   z.number().int().positive().optional(),
   batch_number:  z.string().optional(),
   sample_size:   z.number().int().min(0).optional(),

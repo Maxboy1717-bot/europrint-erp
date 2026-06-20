@@ -8,6 +8,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { HrDashboardService } from '../application/hr-dashboard.service';
+import { HrEmployeesExtService } from '../application/hr-employees-ext.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto, CreatePipSchema, CreatePipDto, UpdatePipSchema, UpdatePipDto } from './dto/hr.dto';
 import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
@@ -20,7 +21,10 @@ type Rows = { rows?: unknown[] };
 @UseInterceptors(AuditInterceptor)
 @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER')
 export class HrDashboardController {
-  constructor(private readonly svc: HrDashboardService) {}
+  constructor(
+    private readonly svc: HrDashboardService,
+    private readonly empExtSvc: HrEmployeesExtService,
+  ) {}
 
   @Get('birthdays')
   async getBirthdays(@Query('days') days?: string) {
@@ -337,8 +341,10 @@ export class HrDashboardController {
   }
 
   @Get('documents/pending')
-  getPendingDocuments() {
-    return { items: [], total: 0 };
+  async getPendingDocuments() {
+    const r = await this.empExtSvc.getPendingDocuments();
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
   }
 
   @Get('employee-corp')

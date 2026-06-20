@@ -52,7 +52,25 @@ export class WmsCountsRepository implements IWmsCountsRepo {
 
   async createInternalRequest(requestedBy: number | null, fromWarehouseId: number | null, toWarehouseId: number | null, materialId: number, quantity: number, notes: string | null): Promise<Result<Row>>  {
   try {
-      const r = await exec(sql`INSERT INTO wms_internal_requests (requested_by, from_warehouse_id, to_warehouse_id, material_id, quantity, notes, status) VALUES (${requestedBy}, ${fromWarehouseId ?? null}, ${toWarehouseId ?? null}, ${materialId}, ${quantity}, ${notes ?? null}, 'pending') RETURNING *`);
+      const warehouseId = toWarehouseId ?? fromWarehouseId ?? null;
+      const requestNo = `IR-${Date.now()}`;
+      const r = await exec(sql`
+        INSERT INTO internal_requests
+          (request_no, requested_by, warehouse_id, material_id,
+           material_name, quantity, unit, urgency, notes, status)
+        VALUES (
+          ${requestNo},
+          ${requestedBy},
+          ${warehouseId},
+          ${materialId},
+          COALESCE((SELECT name FROM mm_materials WHERE id = ${materialId}), 'Material ' || ${materialId}::text),
+          ${quantity},
+          'dona',
+          'normal',
+          ${notes ?? null},
+          'pending'
+        )
+        RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

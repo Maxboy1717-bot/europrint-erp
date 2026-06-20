@@ -101,7 +101,20 @@ export class LmsExamsRepository {
 
   async findMyProgress(userId: string): Promise<Result<Row>> {
     try {
-      const rows = await exec(sql`SELECT COUNT(*) FILTER (WHERE status = 'completed') AS completed, COUNT(*) FILTER (WHERE status = 'in_progress') AS in_progress, COUNT(*) AS total, ROUND(AVG(progress_percent)) AS avg_progress FROM enrollments WHERE employee_id = ${parseInt(userId, 10)}`);
+      // LEFT JOIN lms_exam_attempts so exam stats (passed/failed) are included.
+      // lms_exam_attempts.employee_id is TEXT, enrollments.employee_id is INT — cast required.
+      // Field names match LmsProgress interface expected by LMSDashboard.tsx (line 30).
+      const rows = await exec(sql`
+        SELECT
+          COUNT(*)              FILTER (WHERE e.status = 'completed')                    AS "completedCourses",
+          COUNT(*)                                                                        AS "totalCourses",
+          COALESCE(ROUND(AVG(e.progress_percent)), 0)                                   AS "averageScore",
+          COUNT(a.id)           FILTER (WHERE a.passed = true)                           AS "examsPassed",
+          COUNT(a.id)           FILTER (WHERE a.passed = false AND a.status = 'submitted') AS "examsFailed"
+        FROM enrollments e
+        LEFT JOIN lms_exam_attempts a ON a.employee_id::integer = e.employee_id
+        WHERE e.employee_id = ${parseInt(userId, 10)}
+      `);
       return Ok((rows[0] ?? {}) as Row);
     } catch (error) {
       this.logger.error(`findMyProgress: ${(error as Error).message}`);

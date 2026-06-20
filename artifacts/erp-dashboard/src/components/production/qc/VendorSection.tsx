@@ -36,7 +36,15 @@ export function VendorSection() {
   const [showVendorDialog, setShowVendorDialog] = useState(false);
   const [searchQ, setSearchQ] = useState("");
 
-  const { data: vendorList = [], isLoading: vLoad } = useQuery<QCVendor[]>({ queryKey: ["/api/qc/supplier-quality"] });
+  const { data: rawVendors, isLoading: vLoad } = useQuery<unknown>({ queryKey: ["/api/qc/supplier-quality"] });
+  const vendorList: QCVendor[] = (Array.isArray(rawVendors) ? rawVendors : []).map((v: Record<string, unknown>) => ({
+    id: v.id as number,
+    supplierName: (v.supplier_name ?? v.supplierName) as string | undefined,
+    materialType: (v.material_type ?? v.materialType) as string | undefined,
+    qualityScore: (v.quality_score ?? v.qualityScore) as number | undefined,
+    createdAt: (v.created_at ?? v.createdAt) as string | undefined,
+    status: v.status as string | undefined,
+  }));
 
   const vendorForm = useForm<VendorQualityData>({
     resolver: zodResolver(VendorQualitySchema),
@@ -44,8 +52,15 @@ export function VendorSection() {
   });
 
   const createVendor = useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/qc/supplier-quality", data),
+    mutationFn: (data: VendorQualityData) => apiRequest("POST", "/api/qc/supplier-quality", {
+      supplier_name: data.supplierName,
+      notes: data.notes ?? undefined,
+      quality_score: data.qualityScore,
+      sample_size: 0,
+      defects_found: 0,
+    }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/qc/supplier-quality"] }); setShowVendorDialog(false); toast({ title: "Yetkazuvchi baholandi" }); },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
   const scoreColor = (s: number) => s >= 85 ? "text-[var(--ep-green)]" : s >= 70 ? "text-[var(--ep-yellow)]" : "text-[var(--ep-red)]";

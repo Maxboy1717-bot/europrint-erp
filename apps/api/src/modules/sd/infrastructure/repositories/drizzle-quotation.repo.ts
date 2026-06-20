@@ -160,11 +160,22 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async updateKpiTarget(id: string, patch: KpiTargetPatch): Promise<Result<MutationRow | null>> {
     try {
+      // sd_kpi_targets does not exist in the live DB — canonical table is sd_manager_quotas.
+      // patch.target_value maps to quota_amount; patch.period is decomposed into year/month
+      // if provided as "YYYY-MM" string; otherwise year/month are kept unchanged via COALESCE.
+      const num = (v: unknown) =>
+        v != null && v !== '' && !Number.isNaN(Number(v)) ? Number(v) : null;
+      const periodStr = patch.period != null ? String(patch.period) : null;
+      const periodParts = periodStr?.match(/^(\d{4})-(\d{2})$/) ?? null;
+      const periodYear = periodParts ? parseInt(periodParts[1] ?? '0', 10) : null;
+      const periodMonth = periodParts ? parseInt(periodParts[2] ?? '0', 10) : null;
+
       const r = await runQuery<MutationRow>(sql`
-        UPDATE sd_kpi_targets
+        UPDATE sd_manager_quotas
         SET
-          target_value = COALESCE(${patch.target_value ?? null}, target_value),
-          period       = COALESCE(${patch.period ?? null}, period),
+          quota_amount = COALESCE(${num(patch.target_value)}, quota_amount),
+          year         = COALESCE(${periodYear}, year),
+          month        = COALESCE(${periodMonth}, month),
           updated_at   = NOW()
         WHERE id = ${id}
         RETURNING *

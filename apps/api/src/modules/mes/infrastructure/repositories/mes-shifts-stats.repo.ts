@@ -52,14 +52,19 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
-  async getOee(): Promise<Row[]> {
+  async getOee(): Promise<{ machines: Row[]; averageOee: number }> {
     const rows = await runQuery<Row>(sql`
       SELECT e.id, e.name, e.status, COALESCE(AVG(ps.oee), 0)::numeric(5,2) AS oee
       FROM equipment e
       LEFT JOIN production_sessions ps ON ps.equipment_id = e.id AND ps.deleted_at IS NULL
       WHERE e.is_active = true GROUP BY e.id, e.name, e.status ORDER BY e.name
     `);
-    return rows.rows as Row[];
+    const machines = rows.rows as Row[];
+    const avgOee =
+      machines.length > 0
+        ? machines.reduce((s, r) => s + Number(r['oee'] ?? 0), 0) / machines.length
+        : 0;
+    return { machines, averageOee: Math.round(avgOee * 10) / 10 };
   }
 
   async getStats(d: string): Promise<Row> {
