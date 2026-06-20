@@ -145,9 +145,91 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
 
   }
 
-  async getDashboardFlow(): Promise<Result<Row[]>>  {
+  async getDashboardFlow(): Promise<Result<Row>>  {
   try {
-      return exec(sql`SELECT fi.result AS status, COUNT(*)::int AS count FROM qc_final_inspections fi WHERE fi.inspected_at >= NOW() - INTERVAL '30 days' GROUP BY fi.result`);  } catch (_e) {
+      // 4 parallel queries — one per QC flow stream
+      const [rIncoming, rInline, rFinal, rRec] = await Promise.all([
+        // a) incoming: qc_supplier_quality — total entries + low-quality count (score < 70)
+        exec(sql`
+          SELECT
+            COUNT(*)::int                                           AS total,
+            COUNT(*) FILTER (WHERE quality_score < 70)::int        AS low_quality
+          FROM qc_supplier_quality
+        `),
+        // b) inline: qc_in_process_inspections — active (not closed) inspections
+        exec(sql`
+          SELECT
+            COUNT(*) FILTER (WHERE status IS DISTINCT FROM 'closed')::int AS in_production
+          FROM qc_in_process_inspections
+        `),
+        // c) finalInspection: qc_final_inspections — pending + GROUP BY result
+        exec(sql`
+          SELECT
+            COUNT(*) FILTER (WHERE result IS NULL OR status = 'pending')::int AS pending_orders,
+            COUNT(*) FILTER (WHERE result = 'passed')::int                    AS cnt_passed,
+            COUNT(*) FILTER (WHERE result = 'conditional_pass')::int          AS cnt_conditional_pass,
+            COUNT(*) FILTER (WHERE result = 'rework_required')::int           AS cnt_rework_required,
+            COUNT(*) FILTER (WHERE result = 'failed')::int                    AS cnt_failed
+          FROM qc_final_inspections
+        `),
+        // d) reclamation: qc_reclamations — open (new) + investigating
+        exec(sql`
+          SELECT
+            COUNT(*) FILTER (WHERE status = 'new')::int            AS open,
+            COUNT(*) FILTER (WHERE status = 'investigating')::int  AS investigating
+          FROM qc_reclamations
+        `),
+      ]);
+
+      if (!rIncoming.ok) return Err(rIncoming.error);
+      if (!rInline.ok)   return Err(rInline.error);
+      if (!rFinal.ok)    return Err(rFinal.error);
+      if (!rRec.ok)      return Err(rRec.error);
+
+      const inc  = rIncoming.data[0] ?? {};
+      const inl  = rInline.data[0]   ?? {};
+      const fin  = rFinal.data[0]    ?? {};
+      const rec  = rRec.data[0]      ?? {};
+
+      const totalIncoming  = Number(inc['total']        ?? 0);
+      const lowQuality     = Number(inc['low_quality']  ?? 0);
+      const inProduction   = Number(inl['in_production'] ?? 0);
+      const pendingOrders  = Number(fin['pending_orders'] ?? 0);
+      const recOpen        = Number(rec['open']          ?? 0);
+      const recInvest      = Number(rec['investigating'] ?? 0);
+
+      const shaped: Row = {
+        streams: {
+          incoming: {
+            total:      totalIncoming,
+            lowQuality: lowQuality,
+            status:     lowQuality > 0 ? 'warning' : 'ok',
+          },
+          inline: {
+            inProduction: inProduction,
+            status:       inProduction > 0 ? 'active' : 'ok',
+          },
+          finalInspection: {
+            pendingOrders: pendingOrders,
+            resultCounts: {
+              passed:           Number(fin['cnt_passed']           ?? 0),
+              conditional_pass: Number(fin['cnt_conditional_pass'] ?? 0),
+              rework_required:  Number(fin['cnt_rework_required']  ?? 0),
+              failed:           Number(fin['cnt_failed']           ?? 0),
+            },
+            status: pendingOrders > 0 ? 'needs_attention' : 'ok',
+          },
+          reclamation: {
+            open:         recOpen,
+            investigating: recInvest,
+            status:       recOpen > 0 ? 'needs_attention' : 'ok',
+          },
+        },
+        rca: { open: recOpen },
+      };
+
+      return Ok(shaped);
+  } catch (_e) {
     return Err(String(_e));
   }
 

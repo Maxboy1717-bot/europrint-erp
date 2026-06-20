@@ -21,25 +21,136 @@ export class DrizzleKanbanStatsRepository {
 
   async getTaskStats(boardId?: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const boardFilter = boardId ? sql`AND board_id = ${boardId}` : sql``;
-      const today = _time.now().toISOString().split('T')[0];
-      const rows = await runQuery<Record<string, unknown>>(sql`
-        SELECT
-          COUNT(*) FILTER (WHERE deleted_at IS NULL)                            AS total,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NULL)   AS in_progress,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date < ${today} AND completed_at IS NULL) AS overdue,
-          COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date = ${today})    AS today_due
-        FROM kanban_cards
-        WHERE 1=1 ${boardFilter}
-      `);
-      const s = rows.rows[0] ?? {};
+      const boardFilter     = boardId ? sql`AND board_id = ${boardId}`    : sql``;
+      const boardFilterKtt  = boardId
+        ? sql`AND ktt.card_id IN (SELECT id::text FROM kanban_cards WHERE board_id = ${boardId})`
+        : sql``;
+
+      // ── 1. Summary ────────────────────────────────────────────────────────
+      const [summaryRes, weeklyRes, timeRes, empRes] = await Promise.all([
+
+        runQuery<Record<string, unknown>>(sql`
+          SELECT
+            COUNT(*) FILTER (WHERE deleted_at IS NULL)                                               AS total_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)                  AS completed_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NULL)                      AS pending_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND accepted_at IS NOT NULL AND completed_at IS NULL) AS accepted_not_completed,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND source = 'telegram')                       AS telegram_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date::date < CURRENT_DATE AND completed_at IS NULL) AS overdue_tasks,
+            ROUND(
+              CASE WHEN COUNT(*) FILTER (WHERE deleted_at IS NULL) = 0 THEN 0
+                   ELSE COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)::numeric
+                      / COUNT(*) FILTER (WHERE deleted_at IS NULL) * 100
+              END
+            )                                                                                         AS completion_rate,
+            ROUND(
+              AVG(
+                EXTRACT(EPOCH FROM (completed_at - created_at)) / 86400.0
+              ) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)
+            )                                                                                         AS avg_completion_days
+          FROM kanban_cards
+          WHERE 1=1 ${boardFilter}
+        `),
+
+        // ── 2. Weekly trend (last 7 days) ──────────────────────────────────
+        runQuery<Record<string, unknown>>(sql`
+          SELECT
+            DATE_TRUNC('day', d.day)::date::text                        AS date,
+            TO_CHAR(d.day, 'Dy')                                        AS day_name,
+            COUNT(kc_created.id)::int                                   AS created,
+            COUNT(kc_completed.id)::int                                 AS completed
+          FROM generate_series(
+            CURRENT_DATE - INTERVAL '6 days',
+            CURRENT_DATE,
+            INTERVAL '1 day'
+          ) AS d(day)
+          LEFT JOIN kanban_cards kc_created
+            ON kc_created.deleted_at IS NULL
+            AND DATE_TRUNC('day', kc_created.created_at) = DATE_TRUNC('day', d.day)
+            ${boardFilter}
+          LEFT JOIN kanban_cards kc_completed
+            ON kc_completed.deleted_at IS NULL
+            AND kc_completed.completed_at IS NOT NULL
+            AND DATE_TRUNC('day', kc_completed.completed_at) = DATE_TRUNC('day', d.day)
+            ${boardFilter}
+          GROUP BY d.day
+          ORDER BY d.day
+        `),
+
+        // ── 3. Time tracking ───────────────────────────────────────────────
+        runQuery<Record<string, unknown>>(sql`
+          SELECT
+            COALESCE(SUM(ktt.duration_minutes), 0)::int AS total_tracked_minutes
+          FROM kanban_time_tracks ktt
+          WHERE ktt.ended_at IS NOT NULL
+            ${boardFilterKtt}
+        `),
+
+        // ── 4. Employee stats ──────────────────────────────────────────────
+        runQuery<Record<string, unknown>>(sql`
+          SELECT
+            kc.owner_user_id::text                                       AS user_id,
+            COUNT(*)::int                                                 AS assigned,
+            COUNT(*) FILTER (WHERE kc.completed_at IS NOT NULL)::int     AS completed,
+            COUNT(*) FILTER (
+              WHERE kc.completed_at IS NOT NULL
+                AND kc.due_date IS NOT NULL
+                AND kc.completed_at <= kc.due_date::timestamp
+            )::int                                                        AS on_time,
+            COUNT(*) FILTER (
+              WHERE kc.completed_at IS NOT NULL
+                AND kc.due_date IS NOT NULL
+                AND kc.completed_at > kc.due_date::timestamp
+            )::int                                                        AS late,
+            ROUND(
+              AVG(
+                EXTRACT(EPOCH FROM (kc.completed_at - kc.created_at)) / 3600.0
+              ) FILTER (WHERE kc.completed_at IS NOT NULL)
+            )::float                                                      AS avg_completion_time
+          FROM kanban_cards kc
+          WHERE kc.deleted_at IS NULL
+            AND kc.owner_user_id IS NOT NULL
+            ${boardFilter}
+          GROUP BY kc.owner_user_id
+          ORDER BY assigned DESC
+          LIMIT 50
+        `),
+      ]);
+
+      const s  = summaryRes.rows[0]  ?? {};
+      const t  = timeRes.rows[0]     ?? {};
+
+      const totalTrackedMinutes = Number(t.total_tracked_minutes ?? 0);
+
       return {
-        total:      Number(s.total       ?? 0),
-        completed:  Number(s.completed   ?? 0),
-        inProgress: Number(s.in_progress ?? 0),
-        overdue:    Number(s.overdue     ?? 0),
-        todayDue:   Number(s.today_due   ?? 0),
+        summary: {
+          totalTasks:           Number(s.total_tasks           ?? 0),
+          completedTasks:       Number(s.completed_tasks       ?? 0),
+          pendingTasks:         Number(s.pending_tasks         ?? 0),
+          acceptedNotCompleted: Number(s.accepted_not_completed ?? 0),
+          telegramTasks:        Number(s.telegram_tasks        ?? 0),
+          overdueTasks:         Number(s.overdue_tasks         ?? 0),
+          completionRate:       Number(s.completion_rate       ?? 0),
+          avgCompletionDays:    Number(s.avg_completion_days   ?? 0),
+        },
+        weeklyTrend: (Array.isArray(weeklyRes.rows) ? weeklyRes.rows : []).map((r) => ({
+          date:      String(r.date      ?? ''),
+          dayName:   String(r.day_name  ?? ''),
+          created:   Number(r.created   ?? 0),
+          completed: Number(r.completed ?? 0),
+        })),
+        timeTracking: {
+          totalTrackedMinutes,
+          totalTrackedHours: Math.round(totalTrackedMinutes / 60),
+        },
+        employeeStats: (Array.isArray(empRes.rows) ? empRes.rows : []).map((r) => ({
+          userId:            String(r.user_id            ?? ''),
+          assigned:          Number(r.assigned           ?? 0),
+          completed:         Number(r.completed          ?? 0),
+          onTime:            Number(r.on_time            ?? 0),
+          late:              Number(r.late               ?? 0),
+          avgCompletionTime: Number(r.avg_completion_time ?? 0),
+        })),
       };
     });
   }

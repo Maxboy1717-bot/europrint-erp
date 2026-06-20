@@ -47,7 +47,7 @@ import {
   getPapkaOrdersRaw, createPapkaOrderRaw, updatePapkaOrderRaw,
   getMachineTasksRaw, createMachineTaskRaw,
   getPlanningOperationsRaw, createPlanningOperationRaw, getKanbanEmployeesRaw,
-  getOrdersByDateRaw, getWarehouseListRaw, getWarehouseStockRaw,
+  getWarehouseListRaw, getWarehouseStockRaw,
   getWarehouseTransfersRaw, getWarehouseLotsRaw, getWarehouseInternalRequestsRaw,
   getWarehouseDashboardKpisRaw, getWarehouseOccupancyRaw,
   getSalaryBenchmarkRaw, getResourceAllocationRaw,
@@ -87,7 +87,7 @@ export class LegacyService {
   async getKanbanEmployees()                                             { return getKanbanEmployeesRaw(); }
 
   // ─── Warehouse ──────────────────────────────────────────────────────────────
-  async getOrdersByDate()                       { return getOrdersByDateRaw(); }
+  // NOTE: orders-by-date route removed — handled by WmsCatalogController (wms module, papka_orders JOIN material_kits)
   async getWarehouseList()                      { return getWarehouseListRaw(); }
   async getWarehouseStock(warehouseId?: string) { return getWarehouseStockRaw(warehouseId); }
   async getWarehouseTransfers()                 { return getWarehouseTransfersRaw(); }

@@ -36,6 +36,7 @@ import { OeeCalculatorService } from '../oee/oee-calculator.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   IotPassthroughSchema,
+  StopSessionSchema,
   TabletLoginSchema,
   TabletSessionSchema,
   ProductionSessionSchema,
@@ -352,10 +353,27 @@ export class IotTabletController {
   @ApiResponse({ status: 200, description: 'OK — includes OEE report in report field' })
   @Post('production-sessions/:id/stop') @Roles(...IOT_READ)
   async stopProductionSession(@Param('id') id: string, @Body() body: unknown) {
-    IotPassthroughSchema.parse(body ?? {});
+    // Step 1: parse typed stop body (FE sends runningTimeSeconds + actualQuantity)
+    const dto = StopSessionSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
 
-    // 1. Read session row from DB before updating
+    const bodyRunTimeSec = (dto.runningTimeSeconds !== undefined && Number.isFinite(dto.runningTimeSeconds))
+      ? dto.runningTimeSeconds : null;
+    const bodyActualQty  = (dto.actualQuantity !== undefined && Number.isFinite(dto.actualQuantity))
+      ? dto.actualQuantity : null;
+
+    // Step 2: persist FE stopwatch/qty values into DB before reading for OEE
+    if (bodyRunTimeSec !== null || bodyActualQty !== null) {
+      await db.execute(sql`
+        UPDATE production_sessions
+        SET running_time_seconds = COALESCE(${bodyRunTimeSec}, running_time_seconds),
+            actual_quantity      = COALESCE(${bodyActualQty},  actual_quantity),
+            updated_at           = NOW()
+        WHERE id = ${sessionId}
+      `);
+    }
+
+    // 1. Read session row from DB (now contains real FE values)
     const sessionRes = await db.execute(sql`
       SELECT actual_quantity, target_quantity, defect_quantity,
              running_time_seconds, stopped_time_seconds

@@ -52,11 +52,7 @@ export class GeneralLegacyBController {
   ) {}
 
   // ─── Warehouse ─────────────────────────────────────────────────────────
-  @Get('warehouse/orders-by-date')
-  async getOrdersByDate(@Query() _query: Record<string, string | undefined>) {
-    return unwrapOrInternal(await this.svc.getOrdersByDate());
-  }
-
+  // NOTE: GET warehouse/orders-by-date/:date handled by WmsCatalogController (real papka_orders JOIN material_kits query)
   // Route warehouse/warehouses moved to WmsWarehouseGatewayController (real DB implementation)
 
   @Get('warehouse/stock')

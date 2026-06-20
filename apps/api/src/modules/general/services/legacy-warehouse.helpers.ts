@@ -165,12 +165,7 @@ export async function getKanbanEmployeesRaw(): Promise<Record<string, unknown>[]
   } catch { return []; }
 }
 
-export async function getOrdersByDateRaw(): Promise<Record<string, unknown>[]> {
-  try {
-    const r = await db.execute(sql`SELECT DATE(created_at) AS date, COUNT(*) AS count FROM orders GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`);
-    return r.rows as Record<string, unknown>[];
-  } catch { return []; }
-}
+// getOrdersByDateRaw removed — route deleted; real query lives in WmsCatalogController.getOrdersByDate (papka_orders JOIN material_kits)
 
 export async function getWarehouseListRaw(): Promise<Record<string, unknown>[]> {
   try {

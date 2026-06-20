@@ -444,7 +444,11 @@ export class DrizzleMarketingExtRepository {
     });
   }
 
-  async getLeadsSourcesSummary(): Promise<Result<{ source: string; count: number; totalValue: number; conversionRate: number }[]>> {
+  async getLeadsSourcesSummary(): Promise<Result<{
+    total: number;
+    channels: { key: string; label: string; count: number; converted: number; percent: number; conversionRate: number }[];
+    topChannel: string;
+  }>> {
     return safeCall(async () => {
       const grouped = await db.select({
         source:     marketingLeadsCanonical.source,
@@ -453,16 +457,27 @@ export class DrizzleMarketingExtRepository {
       })
         .from(marketingLeadsCanonical)
         .where(isNull(marketingLeadsCanonical.deletedAt))
-        .groupBy(marketingLeadsCanonical.source);
+        .groupBy(marketingLeadsCanonical.source)
+        .orderBy(sql`count(*) desc`);
 
-      return (Array.isArray(grouped) ? grouped : []).map(r => ({
-        source:         r.source ?? 'unknown',
-        count:          Number(r.totalCount ?? 0),
-        totalValue:     0,
-        conversionRate: Number(r.totalCount) > 0
-          ? Math.round((Number(r.wonCount) / Number(r.totalCount)) * 100 * 10) / 10
-          : 0,
-      }));
+      const rows = Array.isArray(grouped) ? grouped : [];
+      const total = rows.reduce((s, r) => s + Number(r.totalCount ?? 0), 0);
+
+      const channels = rows.map(r => {
+        const count     = Number(r.totalCount ?? 0);
+        const converted = Number(r.wonCount ?? 0);
+        const key       = r.source ?? 'unknown';
+        const label     = key.charAt(0).toUpperCase() + key.slice(1);
+        const percent   = total > 0 ? Math.round((count / total) * 100 * 10) / 10 : 0;
+        const conversionRate = count > 0 ? Math.round((converted / count) * 100 * 10) / 10 : 0;
+        return { key, label, count, converted, percent, conversionRate };
+      });
+
+      return {
+        total,
+        channels,
+        topChannel: channels[0]?.key ?? '',
+      };
     });
   }
 

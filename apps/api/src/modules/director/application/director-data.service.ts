@@ -51,7 +51,4 @@ export class DirectorDataService {
     return this.repo.queryAiSummary();
   }
 
-  markVip(_orderId: number): Result<{ marked: boolean }> {
-    return Ok({ marked: true });
-  }
 }

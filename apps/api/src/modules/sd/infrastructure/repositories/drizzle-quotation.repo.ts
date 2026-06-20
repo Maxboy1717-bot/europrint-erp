@@ -170,10 +170,12 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
       const periodYear = periodParts ? parseInt(periodParts[1] ?? '0', 10) : null;
       const periodMonth = periodParts ? parseInt(periodParts[2] ?? '0', 10) : null;
 
+      // quota_amount: prefer patch.quota_amount (mapped from FE revenueTarget),
+      // fall back to legacy patch.target_value for backward compatibility.
       const r = await runQuery<MutationRow>(sql`
         UPDATE sd_manager_quotas
         SET
-          quota_amount = COALESCE(${num(patch.target_value)}, quota_amount),
+          quota_amount = COALESCE(${num(patch.quota_amount ?? patch.target_value)}, quota_amount),
           year         = COALESCE(${periodYear}, year),
           month        = COALESCE(${periodMonth}, month),
           updated_at   = NOW()

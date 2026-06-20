@@ -63,10 +63,30 @@ export class IntegrationExtendedHrRepository {
   }
 
   findVendorPerformance(): Promise<Result<Row[]>> {
-    return safeCall(async () => exec(sql`SELECT * FROM vendor_performance ORDER BY overall_score DESC LIMIT 100`));
+    return safeCall(async () => exec(sql`SELECT * FROM vendor_performance ORDER BY score DESC LIMIT 100`));
   }
 
   findVendorSpendAnalysis(): Promise<Result<Row[]>> {
-    return safeCall(async () => exec(sql`SELECT * FROM vendor_spend_analysis ORDER BY total_spend DESC LIMIT 100`));
+    return safeCall(async () => exec(sql`
+      SELECT
+        mv.id::text          AS id,
+        mv.name              AS "vendorName",
+        COUNT(po.id)::int    AS "totalOrders",
+        COALESCE(SUM(po.total_amount), 0)::numeric(15,2) AS "totalSpend",
+        ROUND(COALESCE(AVG(
+          mvr.quality_score  * 0.4 +
+          mvr.delivery_score * 0.3 +
+          mvr.price_score    * 0.2
+        ), 0), 2)            AS "avgRating"
+      FROM mm_vendors mv
+      LEFT JOIN purchase_orders po
+             ON po.vendor_id = mv.id AND po.deleted_at IS NULL
+      LEFT JOIN mm_vendor_ratings mvr
+             ON mvr.vendor_id = mv.id
+      WHERE mv.is_active = true
+      GROUP BY mv.id, mv.name
+      ORDER BY "totalSpend" DESC
+      LIMIT 100
+    `));
   }
 }

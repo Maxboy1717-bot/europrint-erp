@@ -137,7 +137,11 @@ export class MarketingExtService {
     return this.repo.getOverdueLeads();
   }
 
-  getLeadsSourcesSummary(): Promise<Result<{ source: string; count: number; totalValue: number; conversionRate: number }[]>> {
+  getLeadsSourcesSummary(): Promise<Result<{
+    total: number;
+    channels: { key: string; label: string; count: number; converted: number; percent: number; conversionRate: number }[];
+    topChannel: string;
+  }>> {
     return this.repo.getLeadsSourcesSummary();
   }
 

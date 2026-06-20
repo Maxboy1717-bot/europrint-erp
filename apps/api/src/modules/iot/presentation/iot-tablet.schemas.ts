@@ -8,6 +8,11 @@ import { z } from 'zod';
 
 export const IotPassthroughSchema = z.record(z.unknown());
 
+export const StopSessionSchema = z.object({
+  runningTimeSeconds: z.coerce.number().int().min(0).optional(),
+  actualQuantity:     z.coerce.number().int().min(0).optional(),
+}).passthrough();
+
 // Wave 11 P1: tabel-number + password login. The proper QR-token flow is
 // deferred to P3-31 (no `tablet_logins` / `iot_qr_tokens` table exists yet).
 export const TabletLoginSchema = z.object({

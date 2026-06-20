@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { CardFolderService } from './card-folder.service';
 import type { FolderInput } from './card-folder.repository';
 
-const SECTION = z.string().max(20000).optional();
+const SECTION = z.string().max(20000).nullable().optional();
 const FolderSchema = z.object({
   vazifa: SECTION,
   javobgarlik: SECTION,

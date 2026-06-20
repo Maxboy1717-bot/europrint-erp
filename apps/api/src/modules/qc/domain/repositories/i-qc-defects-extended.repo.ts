@@ -40,7 +40,7 @@ export interface IQcDefectsExtendedRepo {
     status: string | null,
   ): Promise<Result<Row>>;
   getDashboardStats(from?: string, to?: string): Promise<Result<Row>>;
-  getDashboardFlow(): Promise<Result<Row[]>>;
+  getDashboardFlow(): Promise<Result<Row>>;
   listApprovals(type?: string, status?: string): Promise<Result<Row[]>>;
   createApproval(
     type: string,

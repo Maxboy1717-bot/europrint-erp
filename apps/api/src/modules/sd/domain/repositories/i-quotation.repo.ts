@@ -23,6 +23,8 @@ export interface QuotationUpdatePatch {
 }
 
 export interface KpiTargetPatch {
+  /** Canonical DB column — maps FE revenueTarget / quota_amount / target_value. */
+  quota_amount?: unknown;
   target_value?: unknown;
   period?: unknown;
 }

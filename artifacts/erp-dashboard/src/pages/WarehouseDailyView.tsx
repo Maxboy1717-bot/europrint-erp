@@ -33,12 +33,15 @@ export default function WarehouseDailyView() {
   const dateLocale = lang === "uz" ? uz : ru;
   const formattedDate = format(selectedDate, "yyyy-MM-dd");
 
-  const { data: ordersData = [], isLoading: ordersLoading, refetch: refetchOrders, isError, error } = useQuery({
+  const { data: ordersData, isLoading: ordersLoading, refetch: refetchOrders, isError, error } = useQuery({
     queryKey: ['/api/warehouse/orders-by-date', formattedDate],
     queryFn: getQueryFn({ on401: "returnNull" }),
     refetchInterval: 30000,
   });
-  const orders = ordersData as DailyOrder[];
+  // BE returns { items: DailyOrder[], total: number } from wms-catalog.controller GET orders-by-date/:date
+  const orders: DailyOrder[] = Array.isArray((ordersData as { items?: unknown })?.items)
+    ? (ordersData as { items: DailyOrder[] }).items
+    : [];
 
   const { data: equipmentData = [] } = useQuery({
     queryKey: ['/api/equipment'],

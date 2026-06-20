@@ -131,7 +131,7 @@ export class CoordinationService {
   }
 
   async getBaskets(): Promise<Result<object, AppError>> {
-    return safeCall(async () => this.repo.listBaskets());
+    return this.repo.listBaskets();
   }
 
   async getStats() {

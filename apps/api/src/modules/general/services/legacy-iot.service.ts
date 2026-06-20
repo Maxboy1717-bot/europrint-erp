@@ -35,16 +35,26 @@ export class LegacyIotService {
           FROM equipment
         `);
         const row = (r.rows[0] as Record<string, unknown>) ?? {};
+
+        const oeeRow = await db.execute(sql`
+          SELECT
+            COALESCE(ROUND(AVG(oee)::numeric, 2), 0)          AS average_oee,
+            COALESCE(ROUND(AVG(availability)::numeric, 2), 0)  AS average_efficiency
+          FROM production_sessions
+          WHERE deleted_at IS NULL AND oee IS NOT NULL
+        `);
+        const oeeData = (oeeRow.rows[0] as Record<string, unknown>) ?? {};
+
         return {
-          totalEquipment:    parseInt(String(row['total']       ?? '0')),
-          runningCount:      parseInt(String(row['running']     ?? '0')),
-          maintenanceCount:  parseInt(String(row['maintenance'] ?? '0')),
-          stoppedCount:      parseInt(String(row['stopped']     ?? '0')),
-          oeeAvg: 78.5,
-          efficiency: 82.0,
+          totalEquipment:   parseInt(String(row['total']       ?? '0')),
+          runningCount:     parseInt(String(row['running']     ?? '0')),
+          maintenanceCount: parseInt(String(row['maintenance'] ?? '0')),
+          stoppedCount:     parseInt(String(row['stopped']     ?? '0')),
+          averageOee:       parseFloat(String(oeeData['average_oee']        ?? '0')),
+          efficiency:       parseFloat(String(oeeData['average_efficiency']  ?? '0')),
         };
       } catch {
-        return { totalEquipment: 0, runningCount: 0, maintenanceCount: 0, stoppedCount: 0, oeeAvg: 78.5, efficiency: 82.0 };
+        return { totalEquipment: 0, runningCount: 0, maintenanceCount: 0, stoppedCount: 0, averageOee: 0, efficiency: 0 };
       }
     });
   }

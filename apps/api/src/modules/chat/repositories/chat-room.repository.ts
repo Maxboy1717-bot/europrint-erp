@@ -126,7 +126,7 @@ export class ChatRoomRepository {
           createdAt: chatRooms.createdAt,
           lastReadAt: chatMembers.lastReadAt,
           memberRole: chatMembers.role,
-          unreadCount: sql<number>`COALESCE(${chatMembers.unreadCount}, 0)`,
+          unreadCount: sql<number>`(SELECT COUNT(*)::int FROM chat_messages m WHERE m.room_id = ${chatRooms.id} AND m.is_deleted = false AND m.sender_id != ${chatMembers.userId}::int AND (${chatMembers.lastReadAt} IS NULL OR m.created_at > ${chatMembers.lastReadAt}))`,
           lastMessage: sql<unknown>`(SELECT json_build_object('id', m.id, 'content', COALESCE(m.content, m.text), 'senderName', (u.first_name || ' ' || u.last_name), 'createdAt', m.created_at, 'messageType', LOWER(m.message_type)) FROM chat_messages m LEFT JOIN users u ON u.id = m.sender_id::int WHERE m.room_id = ${chatRooms.id} AND m.is_deleted = false ORDER BY m.created_at DESC LIMIT 1)`,
           displayName: sql<string>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT (u.first_name || ' ' || u.last_name) FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE ${chatRooms.name} END`,
           avatarUrl: sql<string>`CASE WHEN ${chatRooms.type} = 'DIRECT' THEN (SELECT u.profile_image_url FROM chat_members ocm LEFT JOIN users u ON u.id = ocm.user_id::int WHERE ocm.room_id = ${chatRooms.id} AND ocm.user_id != ${userIdStr} LIMIT 1) ELSE NULL END`,
@@ -216,7 +216,16 @@ export class ChatRoomRepository {
   async getTotalUnread(userIdStr: string): Promise<Result<number>> {
     return safeCall(async () => {
       const [row] = await db
-        .select({ total: sql<number>`COALESCE(SUM(COALESCE(${chatMembers.unreadCount}, 0)), 0)::int` })
+        .select({
+          total: sql<number>`COALESCE(SUM(
+            (SELECT COUNT(*)::int
+             FROM chat_messages m
+             WHERE m.room_id = ${chatMembers.roomId}
+               AND m.is_deleted = false
+               AND m.sender_id != ${chatMembers.userId}::int
+               AND (${chatMembers.lastReadAt} IS NULL OR m.created_at > ${chatMembers.lastReadAt}))
+          ), 0)::int`,
+        })
         .from(chatMembers)
         .where(eq(chatMembers.userId, userIdStr));
       return Number(row?.total ?? 0);
@@ -231,10 +240,18 @@ export class ChatRoomRepository {
     return safeCall(async () => {
       if (!userIds.length) return {} as Record<number, number>;
       const rows = await db.execute<{ user_id: number; total: number }>(
-        sql`SELECT user_id::int, COALESCE(SUM(unread_count), 0)::int AS total
-            FROM chat_members
-            WHERE user_id::int = ANY(ARRAY[${sql.join(userIds.map(id => sql`${id}`), sql`, `)}])
-            GROUP BY user_id`,
+        sql`SELECT cm.user_id::int,
+                   COALESCE(SUM(
+                     (SELECT COUNT(*)::int
+                      FROM chat_messages m
+                      WHERE m.room_id = cm.room_id
+                        AND m.is_deleted = false
+                        AND m.sender_id != cm.user_id
+                        AND (cm.last_read_at IS NULL OR m.created_at > cm.last_read_at))
+                   ), 0)::int AS total
+            FROM chat_members cm
+            WHERE cm.user_id::int = ANY(ARRAY[${sql.join(userIds.map(id => sql`${id}`), sql`, `)}])
+            GROUP BY cm.user_id`,
       );
       const map: Record<number, number> = {};
       for (const row of (Array.isArray(rows) ? rows : (rows as { rows?: { user_id: number; total: number }[] }).rows ?? [])) {

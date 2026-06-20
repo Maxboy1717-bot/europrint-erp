@@ -101,6 +101,7 @@ export class ProductionRepository {
           po.scrap_quantity,
           po.planned_cost,
           po.actual_cost,
+          po.bom_id,
           po.planned_start_date,
           po.planned_end_date,
           po.actual_start_date,
@@ -134,7 +135,8 @@ export class ProductionRepository {
           started_at,
           ended_at,
           running_time_seconds,
-          stopped_time_seconds
+          stopped_time_seconds,
+          equipment_id
         FROM production_sessions
         WHERE production_order_id = ${id}
           AND deleted_at IS NULL
@@ -142,6 +144,22 @@ export class ProductionRepository {
       `);
       if (!sessRes.ok) return Err(sessRes.error);
       const sessions = sessRes.data;
+
+      // 2b. Equipment used in this order (via production_sessions.equipment_id)
+      const equipRes = await exec(sql`
+        SELECT DISTINCT
+          e.id,
+          e.name,
+          e.type         AS equipment_type,
+          e.location,
+          e.status
+        FROM equipment e
+        JOIN production_sessions ps ON ps.equipment_id = e.id
+        WHERE ps.production_order_id = ${id}
+          AND ps.deleted_at IS NULL
+      `);
+      if (!equipRes.ok) return Err(equipRes.error);
+      const equipRows = equipRes.data;
 
       // 3. Downtime events for all sessions of this order
       const dtRes = await exec(sql`
@@ -197,10 +215,41 @@ export class ProductionRepository {
       if (!allocRes.ok) return Err(allocRes.error);
       const allocRows = allocRes.data;
 
+      // 5b. BOM items for requiredQuantity — only runs if this order has a bom_id
+      const bomId = po.bom_id != null ? Number(po.bom_id) : null;
+      let bomRows: Row[] = [];
+      if (bomId) {
+        const bomRes = await exec(sql`
+          SELECT
+            bi.material_id,
+            mc.xom_ashyo    AS material_name,
+            mc.unit_of_measure AS mc_unit,
+            bi.quantity     AS bom_quantity,
+            bi.unit
+          FROM bom_items bi
+          LEFT JOIN material_cards mc ON mc.id::text = bi.material_id
+          WHERE bi.bom_id = ${bomId}
+            AND bi.deleted_at IS NULL
+        `);
+        if (bomRes.ok) bomRows = bomRes.data;
+      }
+
+      // Build a lookup: material_id (string) → bom required qty
+      const bomByMaterial = new Map<string, { bomQuantity: number; materialName: string; unit: string }>();
+      for (const b of bomRows) {
+        bomByMaterial.set(String(b.material_id), {
+          bomQuantity:  Number(b.bom_quantity) || 0,
+          materialName: String(b.material_name ?? ''),
+          unit:         String(b.unit ?? b.mc_unit ?? ''),
+        });
+      }
+
       const materialCost = allocRows.reduce(
         (sum, r) => sum + (Number(r.total_actual_cost) || 0),
         0,
       );
+
+      // costAnalysis.components — same as before (for Cost tab)
       const components = allocRows.map(r => ({
         materialId:      r.material_id,
         materialName:    r.material_name ?? '',
@@ -209,6 +258,51 @@ export class ProductionRepository {
         unitCost:        Number(r.unit_cost) || 0,
         totalActualCost: Number(r.total_actual_cost) || 0,
       }));
+
+      // materials.components — enriched with requiredQuantity from bom_items
+      const materialComponents = allocRows.map(r => {
+        const matKey = String(r.material_id);
+        const bom = bomByMaterial.get(matKey);
+        const issuedQty   = Number(r.issued_quantity) || 0;
+        const requiredQty = bom?.bomQuantity ?? 0;
+        const diff        = issuedQty - requiredQty;
+        return {
+          id:               r.material_id,
+          materialName:     (r.material_name ?? bom?.materialName ?? '') as string,
+          unit:             (r.unit ?? bom?.unit ?? '') as string,
+          requiredQuantity: requiredQty,
+          issuedQuantity:   issuedQty,
+          diff,
+          unitCost:         Number(r.unit_cost) || 0,
+          totalActualCost:  Number(r.total_actual_cost) || 0,
+          totalPlannedCost: bom ? requiredQty * (Number(r.unit_cost) || 0) : 0,
+        };
+      });
+
+      // Also include any BOM items that have no allocation yet (required but not issued)
+      for (const b of bomRows) {
+        const matKey = String(b.material_id);
+        const alreadyIncluded = allocRows.some(r => String(r.material_id) === matKey);
+        if (!alreadyIncluded) {
+          const requiredQty = Number(b.bom_quantity) || 0;
+          materialComponents.push({
+            id:               b.material_id,
+            materialName:     String(b.material_name ?? ''),
+            unit:             String(b.unit ?? b.mc_unit ?? ''),
+            requiredQuantity: requiredQty,
+            issuedQuantity:   0,
+            diff:             -requiredQty,
+            unitCost:         0,
+            totalActualCost:  0,
+            totalPlannedCost: 0,
+          });
+        }
+      }
+
+      const totalPlannedCost = materialComponents.reduce(
+        (sum, c) => sum + (c.totalPlannedCost || 0),
+        0,
+      );
 
       // 5. Compute derived metrics in JS
       const plannedQty = Number(po.planned_quantity) || 0;
@@ -295,6 +389,12 @@ export class ProductionRepository {
           totalRunningHours: Math.round(totalRunningHours * 100) / 100,
           totalStoppedHours: Math.round(totalStoppedHours * 100) / 100,
         },
+        // materials key — FE reads materials.totalPlannedCost / totalActualCost / components
+        materials: {
+          totalPlannedCost: totalPlannedCost > 0 ? totalPlannedCost : plannedCost,
+          totalActualCost:  materialCost,
+          components:       materialComponents,
+        },
         quality: {
           totalChecked: qcTotalChecked,
           totalFailed: qcChecks.reduce((s, q) => s + (Number(q.fail_count) || 0), 0),
@@ -307,6 +407,23 @@ export class ProductionRepository {
             inspectedAt: q.inspected_at,
             notes: q.notes,
           })),
+        },
+        // equipment key — FE reads equipment.list / equipment.sessions
+        equipment: {
+          list: equipRows.map(e => ({
+            id:            e.id,
+            name:          e.name,
+            equipmentType: e.equipment_type,
+            location:      e.location,
+            status:        e.status,
+          })),
+          sessions: sessions
+            .filter(s => s.equipment_id != null)
+            .map(s => ({
+              equipmentId:     s.equipment_id,
+              actualQuantity:  s.actual_quantity != null ? Number(s.actual_quantity) : null,
+              oee:             s.oee != null ? Number(s.oee) : null,
+            })),
         },
         costAnalysis: {
           plannedCost,

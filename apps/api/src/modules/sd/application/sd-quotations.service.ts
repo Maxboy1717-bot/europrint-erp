@@ -197,8 +197,12 @@ export class SdQuotationsService {
   }
 
   async updateKpiTarget(id: string, body: Record<string, unknown>): Promise<Result<{ data: Row }>> {
+    // FE sends { revenueTarget, orderCountTarget, newCustomerTarget }.
+    // revenueTarget → quota_amount (the only column available without DDL).
+    // orderCountTarget / newCustomerTarget need new columns — DEFERRED (no DDL here).
+    // Legacy callers may send target_value or quota_amount directly — all honoured.
     const patch: KpiTargetPatch = {
-      target_value: body['target_value'],
+      quota_amount: body['revenueTarget'] ?? body['quota_amount'] ?? body['target_value'],
       period: body['period'],
     };
     const r = await this.quotationRepo.updateKpiTarget(id, patch);

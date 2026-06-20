@@ -14,8 +14,8 @@ import { salary_history } from '@shared/db/schema-business-c-2';
 import { payroll_advances } from '@shared/db/schema-business-b-1';
 import { hrEmployees } from '@shared/db/schema-misc-app-a';
 import { customer_payments } from '@shared/db/schema-compat-5';
-import { vendor_invoices } from '@shared/db/schema-business-b-2';
-import { sales_invoices } from '@shared/db/schema-business-c-2';
+// vendor_invoices / sales_invoices have NOT NULL constraints that crash AR/AP inserts;
+// canonical target is `invoices` table (via fi_invoices view) — raw SQL used (RULE4_EXCEPTION).
 import type { IFinanceActionsRepo } from '../../domain/repositories/i-finance-actions.repo';
 
 type Row = Record<string, unknown>;
@@ -123,33 +123,69 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
     }
   }
 
+  /**
+   * Create AP (Accounts Payable) entry — inserts into `invoices` table (fi_invoices view).
+   * vendor_invoices has NOT NULL constraints (invoice_number, vendor_id, invoice_date,
+   * total_amount, currency, status, match_status, created_by) that cause 23502 crash.
+   * `invoices` is the canonical table behind fi_invoices (all nullable except id/invoice_number/
+   * customer_name/subtotal/tax_amount/total_amount/created_by — all provided here).
+   * NOTE: Drizzle fi_invoices schema has serial id vs live uuid — raw SQL used (RULE4_EXCEPTION).
+   */
   async createApEntry(data: Record<string, unknown>): Promise<Result<Row>> {
     try {
-      const inserted = await db.insert(vendor_invoices).values({
-        vendor_id:    data['vendorId'] ? Number(data['vendorId']) : null,
-        invoice_no:   `AP-${Date.now()}`,
-        amount:       data['amount'] ? String(data['amount']) : '0',
-        match_status: 'unmatched',
-        invoice_date: data['dueDate'] ? String(data['dueDate']) : null,
-      }).returning({ id: vendor_invoices.id });
-      return Ok({ id: inserted[0]?.id ?? null, ...data } as Row);
+      const invoiceNumber = `AP-${Date.now()}`;
+      const totalAmount   = data['amount'] ? String(data['amount']) : '0';
+      const customerName  = data['vendorName'] ? String(data['vendorName']) : 'Vendor';
+      const dueDateRaw    = data['dueDate'] ? String(data['dueDate']) : null;
+      const dueDate       = dueDateRaw
+        ? sql`${dueDateRaw}::timestamp`
+        : sql`NOW() + INTERVAL '30 days'`;
+      const r = await db.execute(sql`
+        INSERT INTO invoices
+          (id, invoice_number, customer_name, items, subtotal, tax_amount, total_amount,
+           status, created_by, type, due_date, vendor_id, notes)
+        VALUES
+          (gen_random_uuid(), ${invoiceNumber}, ${customerName}, '[]', 0, 0, ${totalAmount}::numeric,
+           'draft', '00000000-0000-0000-0000-000000000001'::uuid, 'payable',
+           ${dueDate}, ${data['vendorId'] ? Number(data['vendorId']) : null},
+           ${data['notes'] ? String(data['notes']) : null})
+        RETURNING id, invoice_number, status, total_amount, type, created_at
+      `);
+      const rows = ((r as { rows?: Row[] }).rows) ?? [];
+      return Ok({ ...rows[0], ...data } as Row);
     } catch (e) {
       return Err(String(e));
     }
   }
 
+  /**
+   * Create AR (Accounts Receivable) entry — inserts into `invoices` table (fi_invoices view).
+   * sales_invoices has NOT NULL constraints (invoice_number, invoice_date, net_value,
+   * paid_amount, payment_status, created_at, updated_at, tenant_id) that cause 23502 crash.
+   * `invoices` is the canonical table behind fi_invoices — type='receivable'.
+   * NOTE: Drizzle fi_invoices schema has serial id vs live uuid — raw SQL used (RULE4_EXCEPTION).
+   */
   async createArEntry(data: Record<string, unknown>): Promise<Result<Row>> {
     try {
-      const inserted = await db.insert(sales_invoices).values({
-        customer_id:    data['customerId'] ? String(data['customerId']) : null,
-        customer_name:  data['customerName'] ? String(data['customerName']) : null,
-        invoice_number: `AR-${Date.now()}`,
-        total_amount:   data['amount'] ? String(data['amount']) : '0',
-        payment_status: 'unpaid',
-        status:         'issued',
-        due_date:       data['dueDate'] ? String(data['dueDate']) : null,
-      }).returning({ id: sales_invoices.id });
-      return Ok({ id: inserted[0]?.id ?? null, ...data } as Row);
+      const invoiceNumber = `AR-${Date.now()}`;
+      const totalAmount   = data['amount'] ? String(data['amount']) : '0';
+      const customerName  = data['customerName'] ? String(data['customerName']) : 'Mijoz';
+      const dueDateRaw    = data['dueDate'] ? String(data['dueDate']) : null;
+      const dueDate       = dueDateRaw
+        ? sql`${dueDateRaw}::timestamp`
+        : sql`NOW() + INTERVAL '30 days'`;
+      const r = await db.execute(sql`
+        INSERT INTO invoices
+          (id, invoice_number, customer_name, items, subtotal, tax_amount, total_amount,
+           status, created_by, type, due_date, notes)
+        VALUES
+          (gen_random_uuid(), ${invoiceNumber}, ${customerName}, '[]', 0, 0, ${totalAmount}::numeric,
+           'draft', '00000000-0000-0000-0000-000000000001'::uuid, 'receivable',
+           ${dueDate}, ${data['notes'] ? String(data['notes']) : null})
+        RETURNING id, invoice_number, status, total_amount, type, created_at
+      `);
+      const rows = ((r as { rows?: Row[] }).rows) ?? [];
+      return Ok({ ...rows[0], ...data } as Row);
     } catch (e) {
       return Err(String(e));
     }
