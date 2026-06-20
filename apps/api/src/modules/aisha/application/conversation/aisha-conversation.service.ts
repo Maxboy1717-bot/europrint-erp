@@ -14,6 +14,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { CLAUDE_PORT, IClaudePort, ClaudeMessage } from '../../domain/ports/i-claude-port';
 import { ToolRegistry } from '../tools/tool.registry';
+import { AishaHistoryRepository } from '../../infrastructure/persistence/aisha-history.repo';
 
 /** Tools that mutate the outside world (email/telegram/calendar) — never auto-run; always confirm-gated. */
 const HIGH_STAKE_TOOLS = new Set(['send_email', 'send_telegram_to_team', 'schedule_meeting']);
@@ -33,6 +34,7 @@ export interface AishaPendingApproval {
 }
 
 export interface AishaTurnResult {
+  conversationId:   string;
   reply:            string;
   toolsUsed:        string[];
   toolResults:      AishaToolRun[];
@@ -46,14 +48,22 @@ export class AishaConversationService {
   constructor(
     @Inject(CLAUDE_PORT) private readonly claude: IClaudePort,
     private readonly tools: ToolRegistry,
+    private readonly history: AishaHistoryRepository,
   ) {}
 
   /**
-   * Run one user turn through the full tool-use loop. Returns the final reply plus provenance
-   * (which tools ran + their real data) and any high-stake tools awaiting human approval.
+   * Run one user turn through the full tool-use loop. Persists the turn:
+   * a conversation row (created on the first message), a transcript row for the
+   * user text, one tool_call row per executed/proposed tool, and a
+   * pending_approval row for each high-stake tool that paused for HITL.
+   *
+   * Returns the final reply plus provenance (which tools ran + their real data),
+   * any high-stake tools awaiting human approval, and the persisted
+   * conversationId so the caller can correlate the transcript.
    */
-  async runTurn(userMessage: string, system: string): Promise<Result<AishaTurnResult, AppError>> {
+  async runTurn(userId: number, userMessage: string, system: string): Promise<Result<AishaTurnResult, AppError>> {
     return safeCall(async () => {
+      const conversationId = await this.startConversation(userId, userMessage);
       const toolDefs = this.tools.size() > 0
         ? (this.tools.getDefinitions() as unknown as Array<Record<string, unknown>>)
         : undefined;
@@ -85,6 +95,7 @@ export class AishaConversationService {
           if (HIGH_STAKE_TOOLS.has(tu.name)) {
             paused = true;
             pendingApprovals.push({ toolUseId: tu.id, name: tu.name, input: tu.input, stake: 'high' });
+            await this.persistPendingApproval(conversationId, tu.name, tu.input);
             resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: false,
               content: `APPROVAL_REQUIRED: "${tu.name}" yuqori xavfli amal — inson tasdig'ini kutmoqda, avtomatik bajarilmadi (E1).` });
             continue;
@@ -94,9 +105,12 @@ export class AishaConversationService {
             resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: true, content: `unknown tool: ${tu.name}` });
             continue;
           }
+          const startMs = Date.now();
           const exec = await toolR.data.execute(tu.input);   // REAL execution
+          const latencyMs = Date.now() - startMs;
           const payload = exec.ok ? exec.data : exec.error;
           toolResults.push({ name: tu.name, ok: exec.ok, result: payload });
+          await this.persistToolCall(conversationId, tu.name, tu.input, payload, exec.ok, latencyMs);
           resultBlocks.push({ type: 'tool_result', tool_use_id: tu.id, is_error: !exec.ok, content: JSON.stringify(payload) });
         }
         messages.push({ role: 'user', content: resultBlocks });
@@ -105,7 +119,43 @@ export class AishaConversationService {
         if (paused) break;
       }
 
-      return { reply: reply.trim(), toolsUsed, toolResults, pendingApprovals };
+      return { conversationId, reply: reply.trim(), toolsUsed, toolResults, pendingApprovals };
     });
+  }
+
+  /** Create the conversation + transcript row. Persistence failures are logged, not fatal. */
+  private async startConversation(userId: number, userMessage: string): Promise<string> {
+    const convR = await this.history.insertConversation(userId);
+    if (!convR.ok) {
+      this.logger.error({ userId, error: convR.error.message }, 'AIsha: conversation INSERT failed');
+      throw new Error(convR.error.message);
+    }
+    const conversationId = convR.data.id;
+    const trR = await this.history.insertTranscript(conversationId, userMessage);
+    if (!trR.ok) this.logger.warn({ conversationId, error: trR.error.message }, 'AIsha: transcript INSERT failed (non-fatal)');
+    return conversationId;
+  }
+
+  /** Persist one executed tool call. Logged, non-fatal — a DB hiccup must not break the chat reply. */
+  private async persistToolCall(conversationId: string, name: string, input: Record<string, unknown>, output: unknown, ok: boolean, latencyMs: number): Promise<void> {
+    const r = await this.history.insertToolCall({
+      conversationId, toolName: name, input, output,
+      source: ok ? 'tool' : 'tool_error', latencyMs,
+    });
+    if (!r.ok) this.logger.warn({ conversationId, tool: name, error: r.error.message }, 'AIsha: tool_call INSERT failed (non-fatal)');
+  }
+
+  /** Persist a high-stake tool as a tool_call (output=null) then a pending_approval referencing it. */
+  private async persistPendingApproval(conversationId: string, name: string, input: Record<string, unknown>): Promise<void> {
+    const tcR = await this.history.insertToolCall({
+      conversationId, toolName: name, input, output: null,
+      source: 'pending_approval', latencyMs: null,
+    });
+    if (!tcR.ok) {
+      this.logger.warn({ conversationId, tool: name, error: tcR.error.message }, 'AIsha: HITL tool_call INSERT failed (non-fatal)');
+      return;
+    }
+    const paR = await this.history.insertPendingApproval(conversationId, tcR.data.id);
+    if (!paR.ok) this.logger.warn({ conversationId, tool: name, error: paR.error.message }, 'AIsha: pending_approval INSERT failed (non-fatal)');
   }
 }

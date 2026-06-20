@@ -32,9 +32,10 @@ export const AishaChatRequestSchema = z.object({
 export const AishaChatResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
-    reply:     z.string(),
-    sessionId: z.string(),
-    toolsUsed: z.array(z.string()).optional(),
+    reply:          z.string(),
+    sessionId:      z.string(),
+    conversationId: z.string().optional(),
+    toolsUsed:      z.array(z.string()).optional(),
   }),
 });
 
@@ -63,6 +64,77 @@ export const AishaWakeConfigSchema = z.union([
   WakeConfigDataSchema,
 ]);
 
+// ─── History list (GET /api/aisha/conversations) ─────────────────────────────
+
+export const AishaConversationListItemSchema = z.object({
+  id:           z.string(),
+  status:       z.string(),
+  startedAt:    z.string().nullable().optional(),
+  endedAt:      z.string().nullable().optional(),
+  createdAt:    z.string().nullable().optional(),
+  firstMessage: z.string().nullable().optional(),
+  messageCount: z.number().int().nonnegative().default(0),
+  toolCount:    z.number().int().nonnegative().default(0),
+});
+
+export const AishaConversationListResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    items: z.array(AishaConversationListItemSchema),
+    total: z.number().int().nonnegative(),
+    page:  z.number().int().positive().optional(),
+    limit: z.number().int().positive().optional(),
+  }),
+});
+
+// ─── Conversation detail (GET /api/aisha/conversations/:id) ───────────────────
+
+export const AishaToolCallSchema = z.object({
+  id:        z.string(),
+  toolName:  z.string(),
+  input:     z.unknown(),
+  output:    z.unknown(),
+  source:    z.string().nullable().optional(),
+  latencyMs: z.number().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+});
+
+export const AishaConversationDetailResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    id:        z.string(),
+    userId:    z.number().int(),
+    status:    z.string(),
+    startedAt: z.string().nullable().optional(),
+    endedAt:   z.string().nullable().optional(),
+    createdAt: z.string().nullable().optional(),
+    toolCalls: z.array(AishaToolCallSchema),
+  }),
+});
+
+// ─── Approvals queue (GET /api/aisha/approvals) ───────────────────────────────
+
+export const AishaApprovalSchema = z.object({
+  id:             z.string(),
+  conversationId: z.string(),
+  toolCallId:     z.string(),
+  status:         z.string(),
+  approvedAt:     z.string().nullable().optional(),
+  createdAt:      z.string().nullable().optional(),
+  toolName:       z.string().nullable().optional(),
+  input:          z.unknown(),
+});
+
+export const AishaApprovalListResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    items: z.array(AishaApprovalSchema),
+    total: z.number().int().nonnegative(),
+    page:  z.number().int().positive().optional(),
+    limit: z.number().int().positive().optional(),
+  }),
+});
+
 // ─── Stream (SSE) events ─────────────────────────────────────────────────────
 
 export const AishaStreamEventSchema = z.discriminatedUnion('kind', [
@@ -90,6 +162,10 @@ export type AishaChatRequest   = z.infer<typeof AishaChatRequestSchema>;
 export type AishaChatResponse  = z.infer<typeof AishaChatResponseSchema>;
 export type AishaWakeConfig    = z.infer<typeof AishaWakeConfigSchema>;
 export type AishaStreamEvent   = z.infer<typeof AishaStreamEventSchema>;
+export type AishaConversationListItem = z.infer<typeof AishaConversationListItemSchema>;
+export type AishaToolCall             = z.infer<typeof AishaToolCallSchema>;
+export type AishaConversationDetail   = z.infer<typeof AishaConversationDetailResponseSchema>['data'];
+export type AishaApproval             = z.infer<typeof AishaApprovalSchema>;
 
 /**
  * Normalised wake-config view-model used by the React tree. Hides the

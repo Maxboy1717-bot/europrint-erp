@@ -21,11 +21,13 @@ import {
   Inject,
   Logger,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
+import type { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { AishaConfig } from '../../config/aisha.config';
 import { CLAUDE_PORT, IClaudePort } from '../../domain/ports/i-claude-port';
@@ -37,11 +39,16 @@ const ChatRequestSchema = z.object({
   sessionId: z.string().optional(),
 });
 
+interface AuthedReq extends FastifyRequest {
+  user?: { id?: number; userId?: number; sub?: number; role?: string };
+}
+
 interface ChatResponse {
   success: true;
   data: {
     reply:            string;
     sessionId:        string;
+    conversationId?:  string;
     toolsUsed?:       string[];
     toolResults?:     Array<{ name: string; ok: boolean; result: unknown }>;
     pendingApprovals?: Array<{ toolUseId: string; name: string; input: Record<string, unknown>; stake: 'high' }>;
@@ -126,18 +133,20 @@ export class AishaChatController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('chat')
-  async chat(@Body() body: unknown): Promise<ChatResponse> {
+  async chat(@Body() body: unknown, @Req() req: AuthedReq): Promise<ChatResponse> {
     const dto = ChatRequestSchema.parse(body);
     const sessionId = dto.sessionId ?? randomUUID();
+    const userId = req.user?.userId ?? req.user?.id ?? req.user?.sub ?? 0;
     const routed = this.routeOrReply(sessionId, dto.message.length);
     if (routed) return routed;
     try {
       // #15 P0: full tool-execution loop — tools actually run (read tools execute; high-stake pause for approval).
-      const turnR = await this.conversation.runTurn(dto.message, SYSTEM_PROMPT);
+      // The turn is persisted (conversation + transcript + tool_calls + pending_approvals) inside runTurn.
+      const turnR = await this.conversation.runTurn(userId, dto.message, SYSTEM_PROMPT);
       if (!turnR.ok) return this.errorReply(sessionId, turnR.error.message);
-      const { reply, toolsUsed, toolResults, pendingApprovals } = turnR.data;
-      this.logger.log({ sessionId, replyLength: reply.length, toolsUsed: toolsUsed.length, ran: toolResults.length, pending: pendingApprovals.length }, 'AIsha chat answered via tool loop');
-      return { success: true, data: { reply, sessionId, toolsUsed, toolResults, pendingApprovals } };
+      const { conversationId, reply, toolsUsed, toolResults, pendingApprovals } = turnR.data;
+      this.logger.log({ sessionId, conversationId, replyLength: reply.length, toolsUsed: toolsUsed.length, ran: toolResults.length, pending: pendingApprovals.length }, 'AIsha chat answered via tool loop');
+      return { success: true, data: { reply, sessionId, conversationId, toolsUsed, toolResults, pendingApprovals } };
     } catch (err) {
       const msg = (err as Error).message;
       this.logger.error({ sessionId, error: msg }, 'AIsha Claude stream failed');

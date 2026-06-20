@@ -19,10 +19,14 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import {
   AishaChatResponseSchema,
+  AishaConversationListResponseSchema,
+  AishaConversationDetailResponseSchema,
   AishaStreamEventSchema,
   AishaWakeConfigSchema,
   normaliseWakeConfig,
   type AishaChatResponse,
+  type AishaConversationListItem,
+  type AishaConversationDetail,
   type AishaMessage,
   type AishaWakeConfigView,
 } from '@/lib/api/aisha.schema';
@@ -219,4 +223,64 @@ function appendStreamDelta(prev: AishaMessage[], text: string): AishaMessage[] {
     return [...prev.slice(0, -1), { ...last, content: last.content + text }];
   }
   return [...prev, makeMessage('assistant', text)];
+}
+
+// ─── History (read API: conversations list + transcript replay) ───────────────
+
+async function getConversations(): Promise<AishaConversationListItem[]> {
+  const raw = await apiRequest<unknown>('GET', '/api/aisha/conversations?limit=50');
+  const parsed = AishaConversationListResponseSchema.parse(raw);
+  return Array.isArray(parsed.data.items) ? parsed.data.items : [];
+}
+
+async function getConversationDetail(id: string): Promise<AishaConversationDetail> {
+  const raw = await apiRequest<unknown>('GET', `/api/aisha/conversations/${encodeURIComponent(id)}`);
+  return AishaConversationDetailResponseSchema.parse(raw).data;
+}
+
+export interface UseAishaHistoryReturn {
+  conversations:        AishaConversationListItem[];
+  isLoadingList:        boolean;
+  selectedId:           string | null;
+  selectConversation:   (id: string | null) => void;
+  detail:               AishaConversationDetail | null;
+  isLoadingDetail:      boolean;
+  error:                Error | null;
+}
+
+/**
+ * Read-only history hook for the AIsha chat panel: lists the caller's past
+ * conversations and lazily loads one conversation's tool-call transcript when
+ * selected. Pure GET surface — no mutations (the chat turn itself does writes).
+ */
+export function useAishaHistory(): UseAishaHistoryReturn {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const listQuery = useQuery<AishaConversationListItem[]>({
+    queryKey: ['/api/aisha/conversations'],
+    queryFn:  getConversations,
+    staleTime: 30 * 1000,
+  });
+
+  const detailQuery = useQuery<AishaConversationDetail>({
+    queryKey: ['/api/aisha/conversations', selectedId],
+    queryFn:  () => getConversationDetail(selectedId as string),
+    enabled:  !!selectedId,
+  });
+
+  const error = useMemo<Error | null>(() => {
+    if (listQuery.error)   return listQuery.error as Error;
+    if (detailQuery.error) return detailQuery.error as Error;
+    return null;
+  }, [listQuery.error, detailQuery.error]);
+
+  return {
+    conversations:      Array.isArray(listQuery.data) ? listQuery.data : [],
+    isLoadingList:      listQuery.isLoading,
+    selectedId,
+    selectConversation: setSelectedId,
+    detail:             detailQuery.data ?? null,
+    isLoadingDetail:    detailQuery.isLoading,
+    error,
+  };
 }

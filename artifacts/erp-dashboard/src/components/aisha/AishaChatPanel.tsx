@@ -21,17 +21,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Bot, Mic, MicOff, Send, X } from 'lucide-react';
+import { Bot, History, Mic, MicOff, Send, X } from 'lucide-react';
 import { z } from 'zod';
 import { useTranslation } from '@/lib/i18n';
-import { useAisha } from '@/hooks/useAisha';
+import { useAisha, useAishaHistory } from '@/hooks/useAisha';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EPErrorState } from '@/components/ep/EPErrorState';
 import { cn } from '@/lib/utils';
-import type { AishaMessage } from '@/lib/api/aisha.schema';
+import type {
+  AishaMessage,
+  AishaConversationListItem,
+  AishaToolCall,
+} from '@/lib/api/aisha.schema';
 
 // ─── Form schema ─────────────────────────────────────────────────────────────
 const ChatFormSchema = z.object({
@@ -96,6 +100,85 @@ function MessageList({ messages, isLoading }: { messages: AishaMessage[]; isLoad
   );
 }
 
+// ─── History + transparency replay sub-components ────────────────────────────
+
+function ConversationRow({
+  item, active, onSelect,
+}: { item: AishaConversationListItem; active: boolean; onSelect: () => void }) {
+  const title = item.firstMessage?.trim() || item.id.slice(0, 8);
+  const when = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      data-testid="aisha-history-row"
+      className={cn(
+        'w-full text-left rounded-md border px-2 py-1.5 text-xs transition-colors',
+        active ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted',
+      )}
+    >
+      <div className="font-medium text-foreground line-clamp-1">{title}</div>
+      <div className="text-[10px] text-muted-foreground">
+        {when} · {item.messageCount} · {item.toolCount} tool
+      </div>
+    </button>
+  );
+}
+
+function ToolCallRow({ tc }: { tc: AishaToolCall }) {
+  return (
+    <li className="rounded-md border bg-background/60 px-2 py-1.5 text-[11px]">
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-foreground">{tc.toolName}</span>
+        <span className="text-muted-foreground">
+          {typeof tc.latencyMs === 'number' ? `${tc.latencyMs}ms` : tc.source ?? ''}
+        </span>
+      </div>
+    </li>
+  );
+}
+
+function HistoryPanel({ h }: { h: ReturnType<typeof useAishaHistory> }) {
+  const { t } = useTranslation('aisha');
+  const convs = Array.isArray(h.conversations) ? h.conversations : [];
+  const tools = Array.isArray(h.detail?.toolCalls) ? h.detail!.toolCalls : [];
+  return (
+    <div className="space-y-2 border rounded-md bg-background/50 p-2" data-testid="aisha-history-panel">
+      {h.error ? (
+        <p className="text-[11px] text-destructive">{h.error.message}</p>
+      ) : h.isLoadingList ? (
+        <p className="text-[11px] italic text-muted-foreground">{t('thinking')}</p>
+      ) : convs.length === 0 ? (
+        <p className="text-[11px] text-center text-muted-foreground py-3">{t('noMessages')}</p>
+      ) : (
+        <div className="max-h-32 overflow-y-auto space-y-1">
+          {convs.map((c) => (
+            <ConversationRow
+              key={c.id}
+              item={c}
+              active={h.selectedId === c.id}
+              onSelect={() => h.selectConversation(h.selectedId === c.id ? null : c.id)}
+            />
+          ))}
+        </div>
+      )}
+      {h.selectedId && (
+        <div className="border-t pt-2">
+          {h.isLoadingDetail ? (
+            <p className="text-[11px] italic text-muted-foreground">{t('thinking')}</p>
+          ) : tools.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">—</p>
+          ) : (
+            <ul className="space-y-1" data-testid="aisha-history-transcript">
+              {tools.map((tc) => <ToolCallRow key={tc.id} tc={tc} />)}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export interface AishaChatPanelProps {
@@ -110,7 +193,9 @@ export interface AishaChatPanelProps {
 export function AishaChatPanel({ isDirector = true, className, closable = true }: AishaChatPanelProps) {
   const { t } = useTranslation('aisha');
   const [open, setOpen] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const a = useAisha();
+  const h = useAishaHistory();
 
   const form = useForm<ChatFormValues>({
     resolver: zodResolver(ChatFormSchema),
@@ -141,6 +226,15 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
         </CardTitle>
         <div className="flex items-center gap-1">
           <StatusPill connected={a.isConnected} />
+          <Button
+            variant="ghost" size="icon"
+            aria-label={t('panel.history')}
+            onClick={() => setShowHistory((v) => !v)}
+            data-testid="aisha-chat-history-toggle"
+            className={cn('h-7 w-7', showHistory && 'bg-primary/10 text-primary')}
+          >
+            <History className="h-4 w-4" />
+          </Button>
           {closable && (
             <Button
               variant="ghost" size="icon" className="h-7 w-7"
@@ -154,6 +248,7 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {showHistory && <HistoryPanel h={h} />}
         <div className="max-h-72 min-h-[8rem] overflow-y-auto pr-1 border rounded-md bg-background/50 p-3">
           {a.error ? (
             <EPErrorState

@@ -28,6 +28,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AishaConfig } from './config/aisha.config';
 import { WakeConfigController } from './presentation/controllers/wake-config.controller';
 import { AishaChatController } from './presentation/controllers/chat.controller';
+import { AishaHistoryController } from './presentation/controllers/aisha-history.controller';
 import { VoiceController } from './presentation/controllers/voice.controller';
 import { AishaSseGateway } from './infrastructure/streaming/aisha-sse.gateway';
 import { WhisperService } from './application/voice/whisper.service';
@@ -41,6 +42,8 @@ import { GEMINI_PORT } from './domain/ports/i-gemini-port';
 import { BudgetTrackerService } from './application/llm/budget-tracker.service';
 import { ToolRegistry } from './application/tools/tool.registry';
 import { AishaConversationService } from './application/conversation/aisha-conversation.service';
+import { AishaHistoryService } from './application/conversation/aisha-history.service';
+import { AishaHistoryRepository } from './infrastructure/persistence/aisha-history.repo';
 import { AishaToolBootstrap } from './application/tools/tool-bootstrap.service';
 // 25 tools — each is @Injectable() and registered in providers below
 import { AnalyzeCameraFeedTool }       from './application/tools/analyze-camera-feed.tool';
@@ -95,7 +98,9 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     GeminiFallbackService,
     BudgetTrackerService,
     ToolRegistry,
-    AishaConversationService,   // #15 P0 tool-execution loop
+    AishaHistoryRepository,      // persistence + read adapter for the 4 aisha_* tables
+    AishaHistoryService,         // read/governance surface (history + HITL queue)
+    AishaConversationService,   // #15 P0 tool-execution loop (now persists turns)
     // 25 AIsha tools — each @Injectable, registered with ToolRegistry on
     // module init by AishaToolBootstrap. Order alphabetical, matches the
     // bootstrap service's constructor.
@@ -113,6 +118,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
   controllers: [
     WakeConfigController,
     AishaChatController,
+    AishaHistoryController,
     VoiceController,
     AishaSseGateway,
   ],
