@@ -6,7 +6,7 @@
  */
 
 import {
-  Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query,
+  Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query,
   UseGuards, UseInterceptors, Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -14,6 +14,8 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { CardService } from './card.service';
@@ -49,6 +51,16 @@ const AssignSchema = z.object({
   actingSupplement: z.number().nonnegative().optional(),
   endedAt:          z.string().optional(),
 }).strict();
+
+/**
+ * Card Portret body. Permissive structured object stored as `portret_data` jsonb:
+ * ЦКП / talablar / razryad / kutilmalar / KPI + any further keys. Accept the wrapped
+ * `{ portret_data: {...} }` shape OR a bare object; both normalise to a single jsonb object.
+ */
+const CardPortretSchema = z.union([
+  z.object({ portret_data: z.record(z.unknown()) }).passthrough(),
+  z.record(z.unknown()),
+]);
 
 @Roles('admin', 'manager', 'hr_manager', 'director', 'super_admin')
 @ApiThrottle()
@@ -89,6 +101,34 @@ export class CardController {
   @Get(':id/can-assign')
   async canAssign(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.service.canAssignEmployee(id));
+  }
+
+  // ─── Card-level Portret (org_node_portret, card_id-keyed) ────────────────────
+
+  @ApiOperation({ summary: "Get a card's portret (ЦКП/talablar/razryad/kutilmalar). Null when unfilled." })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/portret')
+  async getPortret(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.getCardPortret(id));
+    return { portret: data ?? null };
+  }
+
+  @ApiOperation({ summary: "Save a card's portret (upsert portret_data jsonb)" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Put(':id/portret')
+  async savePortret(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const parsed = CardPortretSchema.parse(body) as Record<string, unknown>;
+    const portretData = (parsed.portret_data && typeof parsed.portret_data === 'object'
+      ? parsed.portret_data
+      : parsed) as Record<string, unknown>;
+    const creatorId = user?.id ?? user?.sub ?? null;
+    const data = unwrapOrThrow(await this.service.saveCardPortret(id, portretData, creatorId));
+    return { portret: data };
   }
 
   // ─── Phase 5 card-detail tabs (read-only) ──────────────────────────────────

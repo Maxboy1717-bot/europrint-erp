@@ -147,4 +147,23 @@ export class CardService {
 
   /** EP-ORG-047: the card's occupants' certificates + 30-day expiry flag (reuses `certificates`). */
   listCertificates(cardId: number): Promise<Result<Row[]>> { return this.repo.listCertificates(cardId); }
+
+  // ─── Card-level Portret (org_node_portret, card_id-keyed) ────────────────────
+
+  /** Read a card's portret row (null when not yet filled). */
+  getCardPortret(cardId: number): Promise<Result<Row | null>> {
+    return this.repo.getCardPortret(cardId);
+  }
+
+  /** Upsert a card's portret_data (manual SELECT-then-write in the repo). */
+  async saveCardPortret(
+    cardId: number,
+    data: Record<string, unknown>,
+    creatorId: number | null,
+  ): Promise<Result<Row>> {
+    const r = await this.repo.saveCardPortret(cardId, data, creatorId);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('INTERNAL', `Karta #${cardId} portreti saqlanmadi`));
+    return Ok(r.data);
+  }
 }

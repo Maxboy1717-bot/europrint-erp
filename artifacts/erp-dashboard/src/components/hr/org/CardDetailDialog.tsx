@@ -8,11 +8,13 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { FolderOpen, UserPlus, Trash2, CheckCircle2, Pencil, Inbox } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FolderOpen, UserPlus, Trash2, CheckCircle2, Pencil, Inbox, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -97,6 +99,34 @@ export function CardDetailDialog({
   }>({ queryKey: [`${base}/folder`], enabled });
   const exams     = useQuery<Row[]>({ queryKey: [`/api/ai-exam/by-card/${id}`], enabled });
   const certs     = useQuery<{ items: Row[] }>({ queryKey: [`${base}/certificates`], enabled });
+
+  // Card-level Portret (org_node_portret, card_id-keyed): editable ЦКП/talablar/razryad/kutilmalar
+  const portret = useQuery<{ portret: { portret_data?: Record<string, unknown> } | null }>({
+    queryKey: [`${base}/portret`], enabled,
+  });
+  const [portretForm, setPortretForm] = useState<{
+    ckp: string; requirements: string; razryad: string; expectations: string; kpis: string;
+  }>({ ckp: "", requirements: "", razryad: "", expectations: "", kpis: "" });
+
+  useEffect(() => {
+    const pd = (portret.data?.portret?.portret_data ?? {}) as Record<string, unknown>;
+    setPortretForm({
+      ckp:          String(pd.ckp ?? ""),
+      requirements: String(pd.requirements ?? ""),
+      razryad:      String(pd.razryad ?? ""),
+      expectations: String(pd.expectations ?? ""),
+      kpis:         String(pd.kpis ?? ""),
+    });
+  }, [portret.data]);
+
+  const portretMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) => apiRequest("PUT", `${base}/portret`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`${base}/portret`] });
+      toast({ title: t("portretSaqlandi") });
+    },
+    onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
+  });
 
   const unassignMutation = useMutation({
     mutationFn: (employeeId: number) => apiRequest("DELETE", `${base}/assign/${employeeId}`),
@@ -307,8 +337,76 @@ export function CardDetailDialog({
                 </div>
               </TabsContent>
 
-              {/* 7. Portret — karta tavsifi + ishlar papkasi */}
+              {/* 7. Portret — tahrirlanadigan portret + karta tavsifi + ishlar papkasi */}
               <TabsContent value="portret" className="mt-4 space-y-6">
+                {/* Bo'lim 0: Tahrirlanadigan Portret (org_node_portret.portret_data) */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      {t("portret")}
+                    </h3>
+                    <Button
+                      size="sm"
+                      onClick={() => portretMutation.mutate({ ...portretForm })}
+                      disabled={portretMutation.isPending || portret.isLoading}
+                      data-testid="button-save-portret"
+                    >
+                      <Save className="h-4 w-4 mr-2" />{t("saqlash")}
+                    </Button>
+                  </div>
+                  {portret.isLoading ? (
+                    <EPLoader />
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <Label className="text-[12px] text-muted-foreground">{t("tskpMaqsad")}</Label>
+                        <Textarea
+                          rows={2}
+                          value={portretForm.ckp}
+                          onChange={(e) => setPortretForm((f) => ({ ...f, ckp: e.target.value }))}
+                          data-testid="input-portret-ckp"
+                        />
+                      </div>
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <Label className="text-[12px] text-muted-foreground">{t("talablar")}</Label>
+                        <Textarea
+                          rows={3}
+                          value={portretForm.requirements}
+                          onChange={(e) => setPortretForm((f) => ({ ...f, requirements: e.target.value }))}
+                          data-testid="input-portret-requirements"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[12px] text-muted-foreground">{t("razryad")}</Label>
+                        <Textarea
+                          rows={2}
+                          value={portretForm.razryad}
+                          onChange={(e) => setPortretForm((f) => ({ ...f, razryad: e.target.value }))}
+                          data-testid="input-portret-razryad"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[12px] text-muted-foreground">{t("kpi")}</Label>
+                        <Textarea
+                          rows={2}
+                          value={portretForm.kpis}
+                          onChange={(e) => setPortretForm((f) => ({ ...f, kpis: e.target.value }))}
+                          data-testid="input-portret-kpis"
+                        />
+                      </div>
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <Label className="text-[12px] text-muted-foreground">{t("kutilmalar")}</Label>
+                        <Textarea
+                          rows={3}
+                          value={portretForm.expectations}
+                          onChange={(e) => setPortretForm((f) => ({ ...f, expectations: e.target.value }))}
+                          data-testid="input-portret-expectations"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Bo'lim 1: Lavozim ta'rifi (org_functions ustunlari) */}
                 <div>
                   <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">

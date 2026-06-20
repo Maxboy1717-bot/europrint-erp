@@ -329,6 +329,50 @@ export class CardRepository {
     return r.ok ? Ok(r.data.length) : Err(r.error);
   }
 
+  // ─── Card-level Portret (org_node_portret, card_id-keyed) ────────────────────
+
+  /**
+   * Read a card's portret row (org_node_portret keyed by card_id; node_id is NULL for card rows).
+   * Returns null when the card has no portret yet.
+   */
+  async getCardPortret(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      SELECT * FROM org_node_portret WHERE card_id = ${cardId} LIMIT 1
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * Manual upsert of a card's portret (SELECT-then-write — does NOT rely on ON CONFLICT predicate
+   * inference over the partial unique index). A card row = node_id NULL + card_id set + portret_data jsonb.
+   */
+  async saveCardPortret(
+    cardId: number,
+    portretData: Record<string, unknown>,
+    creatorId: number | null,
+  ): Promise<Result<Row | null>> {
+    const existing = await this.getCardPortret(cardId);
+    if (!existing.ok) return existing;
+
+    if (existing.data) {
+      const r = await this.exec(sql`
+        UPDATE org_node_portret
+           SET portret_data = ${sql`${JSON.stringify(portretData)}::jsonb`},
+               updated_at   = NOW()
+         WHERE card_id = ${cardId}
+        RETURNING *
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+    }
+
+    const r = await this.exec(sql`
+      INSERT INTO org_node_portret (card_id, node_id, portret_data, creator_id, created_at, updated_at)
+      VALUES (${cardId}, NULL, ${sql`${JSON.stringify(portretData)}::jsonb`}, ${creatorId}, NOW(), NOW())
+      RETURNING *
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
   // ─── EP-ORG-003 card-gate (RBAC + salary from the card) ─────────────────────
 
   /**
