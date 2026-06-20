@@ -69,6 +69,7 @@ export class FinanceRepository implements IFinanceRepo {
   async findInvoiceBySalesOrderId(sid: string): Promise<Result<FinanceRow | null>> { return this.invoiceRepo.findInvoiceBySalesOrderId(sid); }
   async saveInvoice(inv: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.saveInvoice(inv); }
   async updateInvoice(id: string, data: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.updateInvoice(id, data); }
+  async updateInvoicePaidAmount(invoiceId: number, paidAmount: number, paymentStatus: string): Promise<Result<void>> { return this.invoiceRepo.updateInvoicePaidAmount(invoiceId, paidAmount, paymentStatus); }
   async findPayments(f: Parameters<FinanceInvoiceRepo['findPayments']>[0]): Promise<Result<{ items: FinanceRow[]; total: number }>> { return this.invoiceRepo.findPayments(f); }
   async savePayment(p: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.savePayment(p); }
   async saveGlEntry(entry: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.saveGlEntry(entry); }

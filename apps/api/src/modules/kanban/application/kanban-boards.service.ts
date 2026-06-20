@@ -81,13 +81,28 @@ export class KanbanBoardsService {
   updateCard(id: string, body: Record<string, unknown>): Promise<Result<KanbanCard>> {
     const str = (v: unknown) => (v != null && v !== '' ? String(v) : null);
     const num = (v: unknown) => (v != null && v !== '' ? Number(v) || null : null);
+
+    // owner_user_id uchun maxsus mantiq:
+    // - kalit body da mavjud VA qiymati null/''  → '__CLEAR__' sentinel (DB da NULL ga o'zgartiriladi)
+    // - kalit body da mavjud VA qiymati bor     → String(value)
+    // - kalit body da umuman yo'q               → null (COALESCE eski qiymatni saqlaydi)
+    const ownerRaw = 'ownerUserId' in body ? body.ownerUserId
+                   : 'owner_user_id' in body ? body.owner_user_id
+                   : undefined;
+    const ownerUserId: string | null =
+      ownerRaw === undefined
+        ? null                         // kalit yo'q → o'zgarmaydi (COALESCE)
+        : (ownerRaw == null || ownerRaw === '')
+          ? '__CLEAR__'                // null/'' → sentinel → DB da NULL
+          : String(ownerRaw);          // qiymat bor → normal string
+
     return this.boardsRepo.updateCard(id, {
       title:               str(body.title),
       description:         body.description !== undefined ? str(body.description) : null,
       priority:            str(body.priority),
       due_date:            str(body.dueDate ?? body.due_date),
       start_date:          str(body.startDate ?? body.start_date),
-      owner_user_id:       str(body.ownerUserId ?? body.owner_user_id),
+      owner_user_id:       ownerUserId,
       estimated_time:      num(body.estimatedTime ?? body.estimated_time),
       parent_card_id:      num(body.parentCardId ?? body.parent_card_id),
       project_id:          num(body.projectId ?? body.project_id),

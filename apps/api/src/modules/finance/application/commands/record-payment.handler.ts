@@ -47,7 +47,8 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
         return Err(AppErr('NOT_FOUND', 'Invoice not found'));
       }
 
-      // Map raw snake_case DB row to camelCase to avoid NaN arithmetic
+      // Map raw snake_case DB row to camelCase to avoid NaN arithmetic.
+      // finance_invoices uses `payment_status` column (not `status`).
       const raw = invoiceResult.data;
       const invoiceData = {
         id:            raw['id'] as number,
@@ -56,7 +57,7 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
         dueDate:       (raw['due_date'] ?? raw['dueDate']) as Date,
         invoiceNumber: String(raw['invoice_number'] ?? raw['invoiceNumber'] ?? raw['id']),
         customerId:    (raw['customer_id'] ?? raw['customerId']) as number,
-        status:        raw['status'] as import('../../domain/aggregates/invoice.aggregate').InvoiceProps['status'],
+        status:        (raw['payment_status'] ?? raw['status']) as import('../../domain/aggregates/invoice.aggregate').InvoiceProps['status'],
         createdAt:     (raw['created_at'] ?? raw['createdAt']) as Date,
       };
       const invoice = Invoice.create(invoiceData);
@@ -87,6 +88,13 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
           recordedBy: command.recordedBy,
           recordedAt: command.paymentDate,
         });
+
+        // Sync finance_invoices.paid_amount + payment_status after recording payment.
+        await this.financeRepo.updateInvoicePaidAmount(
+          command.invoiceId,
+          invoice.paidAmount,
+          'paid',
+        );
 
         const glResult = await this.glPostingService.postCustomerPayment(
           command.paymentId,
@@ -130,6 +138,13 @@ export class RecordPaymentHandler implements ICommandHandler<RecordPaymentComman
         recordedBy: command.recordedBy,
         recordedAt: command.paymentDate,
       });
+
+      // Sync finance_invoices.paid_amount + payment_status after partial payment.
+      await this.financeRepo.updateInvoicePaidAmount(
+        command.invoiceId,
+        invoice.paidAmount,
+        'partial',
+      );
 
       const glResult2 = await this.glPostingService.postCustomerPayment(
         command.paymentId,

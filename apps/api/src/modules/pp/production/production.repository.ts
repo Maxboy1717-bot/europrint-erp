@@ -33,8 +33,41 @@ export class ProductionRepository {
 
   async createShiftReport(body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`INSERT INTO production_sessions (worker_id, equipment_id, status, started_at, worker_notes) VALUES (${body.operatorId ?? null}, ${body.workCenterId ?? null}, 'running', NOW(), ${body.notes ?? null}) RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+      // Resolve equipment_id: try by name first, then fallback to first row
+      const machineName = String(body.machine_name ?? '');
+      let equipmentId = body.equipment_id ? Number(body.equipment_id) : 0;
+      if (!equipmentId) {
+        const eqRes = await exec(
+          machineName
+            ? sql`SELECT id FROM equipment WHERE name ILIKE ${'%' + machineName + '%'} LIMIT 1`
+            : sql`SELECT id FROM equipment ORDER BY id LIMIT 1`,
+        );
+        equipmentId = eqRes.ok && eqRes.data[0] ? Number(eqRes.data[0].id) : 1;
+      }
+
+      // Resolve worker_id: use body.worker_id or fallback to first employee
+      let workerId = body.worker_id ? Number(body.worker_id) : 0;
+      if (!workerId) {
+        const empRes = await exec(sql`SELECT id FROM employees ORDER BY id LIMIT 1`);
+        workerId = empRes.ok && empRes.data[0] ? Number(empRes.data[0].id) : 1;
+      }
+
+      const productionOrderId = body.production_order_id ? Number(body.production_order_id) : null;
+      if (!productionOrderId) return Err('production_order_id majburiy');
+
+      const targetQty = body.planned_qty ? Number(body.planned_qty) : 0;
+      const sessionNumber = `SHIFT-${Date.now()}`;
+      const startedAt = body.shift_start ? new Date(String(body.shift_start)).toISOString() : new Date().toISOString();
+
+      const r = await exec(sql`
+        INSERT INTO production_sessions
+          (session_number, production_order_id, equipment_id, worker_id, status, target_quantity, started_at, worker_notes)
+        VALUES
+          (${sessionNumber}, ${productionOrderId}, ${equipmentId}, ${workerId}, 'running', ${targetQty}, ${startedAt}, ${body.notes ?? null})
+        RETURNING *
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) {
     return Err(String(_e));
   }
 

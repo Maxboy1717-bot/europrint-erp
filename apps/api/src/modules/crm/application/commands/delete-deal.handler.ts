@@ -11,7 +11,7 @@ import { AppErr, Err, Ok, Result } from '@common/result';
 import { CRM_DEALS_REPO, ICrmDealsRepository } from '../../deals/i-crm-deals.repo';
 
 export class DeleteDealCommand {
-  constructor(public readonly id: number) {}
+  constructor(public readonly id: string) {}
 }
 
 @CommandHandler(DeleteDealCommand)

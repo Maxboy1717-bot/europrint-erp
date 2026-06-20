@@ -156,6 +156,7 @@ export interface IFinanceRepo {
   findInvoiceBySalesOrderId(salesOrderId: string): Promise<Result<FinanceRow | null>>;
   saveInvoice(invoice: FinanceRow): Promise<Result<FinanceRow>>;
   updateInvoice(id: string, data: FinanceRow): Promise<Result<FinanceRow>>;
+  updateInvoicePaidAmount(invoiceId: number, paidAmount: number, paymentStatus: string): Promise<Result<void>>;
 
   // Payments
   findPayments(filters: { invoiceId?: string; from?: Date; to?: Date; page?: number; limit?: number }): Promise<Result<{ items: FinanceRow[]; total: number }>>;

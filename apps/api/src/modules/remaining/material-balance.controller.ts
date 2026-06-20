@@ -135,21 +135,49 @@ export class MaterialBalanceController {
   @HttpCode(HttpStatus.CREATED)
   async createMovement(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = (body ?? {}) as Record<string, unknown>;
+
+    // FE sends { material: "<kod or name>", quantity, type }
+    // Resolve material_id + material_name via lookup in material_cards.
+    const materialRaw = String(
+      dto['material'] ?? dto['material_name'] ?? dto['materialName'] ?? '',
+    ).trim();
+
+    let resolvedMaterialId: number | null =
+      typeof dto['material_id'] === 'number'
+        ? dto['material_id']
+        : typeof dto['materialId'] === 'number'
+          ? dto['materialId']
+          : null;
+    let resolvedMaterialName = materialRaw;
+
+    if (materialRaw) {
+      const lookupR = await db.execute(sql`
+        SELECT id, xom_ashyo FROM material_cards
+        WHERE kod = ${materialRaw} OR xom_ashyo ILIKE ${materialRaw}
+        LIMIT 1
+      `);
+      const found = ((lookupR as { rows?: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+      if (found) {
+        resolvedMaterialId = Number(found['id']);
+        resolvedMaterialName = String(found['xom_ashyo'] ?? materialRaw);
+      }
+    }
+
     const r = await db.execute(sql`
       INSERT INTO material_movements
         (session_id, order_id, material_id, material_name, movement_type, quantity, unit, performed_by, scanned_at)
       VALUES (
         ${dto['session_id'] ?? dto['sessionId'] ?? null}::int,
         ${dto['order_id']   ?? dto['orderId']   ?? null}::int,
-        ${dto['material_id'] ?? dto['materialId'] ?? null}::int,
-        ${String(dto['material_name'] ?? dto['materialName'] ?? '')}::text,
+        ${resolvedMaterialId}::int,
+        ${resolvedMaterialName}::text,
         ${String(dto['movement_type'] ?? dto['type'] ?? 'in')}::text,
         ${Number(dto['quantity'] ?? 1)}::numeric,
         ${String(dto['unit'] ?? 'шт')}::text,
         ${user?.id ?? 0}::int,
         NOW()
       )
-      RETURNING id
+      RETURNING id, material_id, material_name
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
     return { message: 'Harakat qayd etildi', data: row };

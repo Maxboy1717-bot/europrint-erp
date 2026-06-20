@@ -184,6 +184,20 @@ export class FinanceInvoiceRepo {
    * the controller through GlPostingService (the ONE engine, resolves codes → entries._id, balanced) —
    * #10 GL-unify. Canonical table: finance_invoices (integer id, payment_status column).
    */
+  async updateInvoicePaidAmount(invoiceId: number, paidAmount: number, paymentStatus: string): Promise<Result<void>> {
+    try {
+      await runQuery(sql`
+        UPDATE finance_invoices
+        SET paid_amount = ${paidAmount}, payment_status = ${paymentStatus}, updated_at = NOW()
+        WHERE id = ${invoiceId}
+      `);
+      return { ok: true, data: undefined };
+    } catch (error: unknown) {
+      this.logger.error(`updateInvoicePaidAmount failed: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   async markInvoicePosted(invoiceId: string): Promise<Result<{ updated: number }>> {
     try {
       const r = await db.execute(sql`

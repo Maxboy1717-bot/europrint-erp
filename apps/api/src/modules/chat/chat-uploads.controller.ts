@@ -24,6 +24,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
+import { db } from '@shared/db';
+import { chatVideoCalls } from '@shared/db/schema-chat';
 
 const RegisterPushSchema = z.object({
   channel:    z.enum(['WEB_PUSH', 'FCM', 'APNS']),
@@ -56,6 +58,11 @@ const CompleteUploadSchema = z.object({
   fileSize: z.number().int().positive().optional(),
 });
 type CompleteUploadDto = z.infer<typeof CompleteUploadSchema>;
+
+const VideoTokenSchema = z.object({
+  roomId: z.string().min(1).max(255),
+});
+type VideoTokenDto = z.infer<typeof VideoTokenSchema>;
 
 @ApiTags('Chat')
 @ApiBearerAuth()
@@ -166,12 +173,24 @@ export class ChatUploadsController {
   @HttpCode(HttpStatus.OK)
   async getVideoToken(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() body: { roomId: string },
+    @Body(new ZodValidationPipe(VideoTokenSchema)) body: VideoTokenDto,
   ) {
     const u = user as unknown as Record<string, unknown>;
-    return this.videoToken.generate(
+    const result = this.videoToken.generate(
       { id: user.id, fullName: u['fullName'] as string, email: u['email'] as string },
       body.roomId,
     );
+
+    // Fire-and-forget: log video call initiation to chat_video_calls
+    db.insert(chatVideoCalls).values({
+      roomId:      body.roomId,
+      initiatorId: String(user.id),
+      status:      'RINGING',
+      participants: [String(user.id)],
+    }).onConflictDoNothing().catch((err: unknown) => {
+      this.logger.error(`chat_video_calls INSERT xatosi: ${String(err)}`);
+    });
+
+    return result;
   }
 }

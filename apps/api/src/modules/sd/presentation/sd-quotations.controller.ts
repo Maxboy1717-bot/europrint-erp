@@ -123,7 +123,17 @@ export class SdQuotationsController {
   @ApiOperation({ summary: 'Get kpi team' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('kpi/team')
-  async getKpiTeam(@Query('period') period?: string) { return unwrapOrThrow(await this.svc.getKpiTeam(period ?? null)); }
+  async getKpiTeam(
+    @Query('period') period?: string,
+    @Query('year')   year?: string,
+    @Query('month')  month?: string,
+  ) {
+    // FE sends ?year=YYYY&month=M separately; build a "YYYY-MM" period string so the
+    // service can parse it. A pre-composed ?period=YYYY-MM is also accepted as-is.
+    const resolvedPeriod = period
+      ?? (year && month ? `${year}-${month.padStart(2, '0')}` : null);
+    return unwrapOrThrow(await this.svc.getKpiTeam(resolvedPeriod));
+  }
 
   @ApiOperation({ summary: 'Get kpi targets' })
   @ApiResponse({ status: 200, description: 'OK' })

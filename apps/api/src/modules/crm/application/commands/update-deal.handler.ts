@@ -18,7 +18,7 @@ import { CRM_DEALS_REPO, ICrmDealsRepository } from '../../deals/i-crm-deals.rep
 
 export class UpdateDealCommand {
   constructor(
-    public readonly id: number,
+    public readonly id: string,
     public readonly patch: Record<string, unknown>,
   ) {}
 }

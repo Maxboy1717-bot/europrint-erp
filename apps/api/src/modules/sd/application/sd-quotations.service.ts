@@ -126,9 +126,21 @@ export class SdQuotationsService {
   }
 
   async getKpiTeam(period: string | null): Promise<Result<{ team_kpi: Row[]; period: string }, AppError>> {
-    const r = await this.repo.getKpiTeam();
+    // Parse "YYYY-MM" or fall back to the current calendar month so the FE period
+    // selector is honoured end-to-end (previously year/month were dropped here).
+    const now = new Date();
+    let year  = now.getFullYear();
+    let month = now.getMonth() + 1;
+    if (period) {
+      const parts = period.match(/^(\d{4})-(\d{2})$/);
+      if (parts) {
+        year  = parseInt(parts[1] ?? String(year),  10);
+        month = parseInt(parts[2] ?? String(month), 10);
+      }
+    }
+    const r = await this.repo.getKpiTeam(year, month);
     if (!r.ok) return Err(r.error);
-    return Ok({ team_kpi: r.data, period: period ?? 'monthly' });
+    return Ok({ team_kpi: r.data, period: period ?? `${year}-${String(month).padStart(2, '0')}` });
   }
 
   async getKpiTargets(managerId: number | null) {

@@ -56,7 +56,7 @@ export class ProductionShiftReportsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return unwrapOrThrow(await this.svc.listShiftReports(safeInt(page, 1), safeInt(limit, 20)));
+    return { reports: unwrapOrThrow(await this.svc.listShiftReports(safeInt(page, 1), safeInt(limit, 20))) };
   }
 
   @ApiOperation({ summary: 'Get by id' })

@@ -61,7 +61,11 @@ export class KanbanCardsRepository {
           priority            = COALESCE(${input.priority ?? null},             priority),
           due_date            = COALESCE(${input.due_date ?? null},             due_date),
           start_date          = COALESCE(${input.start_date ?? null},           start_date),
-          owner_user_id       = COALESCE(${input.owner_user_id ?? null},        owner_user_id),
+          owner_user_id       = CASE
+                                  WHEN ${input.owner_user_id} = '__CLEAR__' THEN NULL
+                                  WHEN ${input.owner_user_id} IS NOT NULL    THEN ${input.owner_user_id}::integer
+                                  ELSE owner_user_id
+                                END,
           estimated_time      = COALESCE(${input.estimated_time ?? null},       estimated_time),
           parent_card_id      = COALESCE(${input.parent_card_id ?? null},       parent_card_id),
           project_id          = COALESCE(${input.project_id ?? null},           project_id),

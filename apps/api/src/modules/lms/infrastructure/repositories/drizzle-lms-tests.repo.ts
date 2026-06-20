@@ -20,7 +20,9 @@ export class LmsTestsRepository {
       const rows = await runQuery<Row>(sql`
         SELECT t.*,
           c.title_uz AS course_title,
-          (SELECT COUNT(*)::int FROM lms_questions q WHERE q.test_id = t.id) AS "questionCount"
+          (SELECT COUNT(*)::int FROM lms_questions q WHERE q.test_id = t.id) AS "questionCount",
+          (SELECT COUNT(*)::int FROM lms_test_attempts a WHERE a.test_id = t.id::text) AS "attemptsCount",
+          (SELECT COALESCE(ROUND(100.0 * COUNT(*) FILTER (WHERE a.passed = true) / NULLIF(COUNT(*),0)), 0)::int FROM lms_test_attempts a WHERE a.test_id = t.id::text) AS "passRate"
         FROM lms_tests t
         LEFT JOIN courses c ON c.id = t.course_id
         WHERE (${courseId ? parseInt(courseId, 10) : null}::int IS NULL OR t.course_id = ${courseId ? parseInt(courseId, 10) : null})

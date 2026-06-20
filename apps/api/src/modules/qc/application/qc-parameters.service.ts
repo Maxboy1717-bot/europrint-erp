@@ -66,24 +66,53 @@ export class QcParametersService {
   }
 
   async aiAnalyzeTest(id: number): Promise<Result<Record<string, unknown>>> {
-    const r = await this.repo.findTestById(id);
+    // Step 1: Read from qc_material_tests (FE creates tests there via POST /api/qc/tests)
+    const r = await this.repo.findMaterialTestById(id);
     if (!isOk(r)) return Err(r.error);
     if (!r.data) return Err({ code: 'NOT_FOUND' as const, message: 'Test not found' });
     const test = r.data;
-    const value = Number(test.value ?? 0);
-    const min = Number(test.minValue ?? test.min_value ?? 0);
-    const max = Number(test.maxValue ?? test.max_value ?? 100);
-    const range = max - min;
-    const deviation = range > 0 ? Math.abs(value - (min + range / 2)) / (range / 2) : 0;
-    const confidenceScore = Math.max(0, Math.min(1, 1 - deviation * 0.5));
+
+    // Step 2: Derive passed/failed from test_results JSONB array if counts are zero/null
+    const rawResults = Array.isArray(test.testResults) ? test.testResults as Row[] : [];
+    const passedCount = typeof test.passedCount === 'number' && test.passedCount > 0
+      ? test.passedCount
+      : rawResults.filter((row) => String(row.result ?? row.status ?? '').toLowerCase() === 'pass').length;
+    const failedCount = typeof test.failedCount === 'number' && test.failedCount > 0
+      ? test.failedCount
+      : rawResults.filter((row) => String(row.result ?? row.status ?? '').toLowerCase() === 'fail').length;
+    const totalCount = passedCount + failedCount;
+    const passRate = totalCount > 0 ? passedCount / totalCount : (test.overallStatus === 'passed' ? 1 : 0);
+    const confidenceScore = Number(Math.max(0, Math.min(1, passRate)).toFixed(3));
+
+    const overallStatus = String(test.overallStatus ?? 'pending');
+    const riskLevel = overallStatus === 'passed' ? 'low'
+      : overallStatus === 'conditional' ? 'medium'
+      : overallStatus === 'failed' ? 'high'
+      : failedCount > 0 ? 'medium' : 'low';
+
+    const analysis: Record<string, unknown> = {
+      passedCount,
+      failedCount,
+      totalCount,
+      passRate: `${(passRate * 100).toFixed(1)}%`,
+      riskLevel,
+      trend: confidenceScore >= 0.8 ? 'stable' : confidenceScore >= 0.5 ? 'warning' : 'critical',
+      recommendation: confidenceScore >= 0.8
+        ? "Jarayon barqaror — qayta sinovdan o'tkazish shart emas"
+        : confidenceScore >= 0.5
+          ? "Jarayonni kuzatish tavsiya etiladi"
+          : "Ishlab chiqarish to'xtatilsin, muammoni tekshiring",
+      analyzedAt: new Date().toISOString(),
+    };
+
+    // Step 3: Persist analysis and confidence score back to qc_material_tests
+    const updateR = await this.repo.updateMaterialTestAiAnalysis(id, analysis, confidenceScore);
+    if (!isOk(updateR)) return Err(updateR.error);
+
     return Ok({
-      test,
-      analysis: {
-        deviation: `${(deviation * 100).toFixed(1)}%`,
-        trend: deviation < 0.2 ? 'stable' : deviation < 0.5 ? 'warning' : 'critical',
-        recommendation: deviation < 0.2 ? 'Jarayon barqaror' : 'Jarayonni tekshirish kerak',
-      },
-      confidenceScore: Number(confidenceScore.toFixed(3)),
+      test: { ...test, aiAnalysis: analysis, aiConfidenceScore: confidenceScore },
+      analysis,
+      confidenceScore,
     });
   }
 

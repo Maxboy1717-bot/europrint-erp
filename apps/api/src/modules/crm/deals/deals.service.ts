@@ -26,7 +26,7 @@ export class DealsService {
   
     });}
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const result = await this.crmDealsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     if (!result.data) throw new NotFoundException(`#${id} topilmadi`);
@@ -38,24 +38,24 @@ export class DealsService {
     const result = await this.crmDealsRepo.create(dto, createdBy);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
-  async update(id: number, dto: Record<string, unknown>){
+  async update(id: string, dto: Record<string, unknown>){
     return safeCall(async () => {
     await this.findOne(id);
     const result = await this.crmDealsRepo.update(id, dto);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
-  async remove(id: number){
+  async remove(id: string){
     return safeCall(async () => {
     await this.findOne(id);
     const result = await this.crmDealsRepo.softDelete(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return { message: "O'chirildi" };
-  
+
     });}
 }

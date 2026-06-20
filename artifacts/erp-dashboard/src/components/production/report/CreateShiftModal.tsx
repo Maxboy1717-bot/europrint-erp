@@ -110,15 +110,15 @@ export function CreateShiftModal({ open, onClose, onCreated }: CreateShiftModalP
               <Input type="number" placeholder="0" value={form.planned_qty} onChange={(e) => setForm((f) => ({ ...f, planned_qty: e.target.value }))} data-testid="input-planned-qty" />
             </div>
             <div>
-              <Label>{t("buyurtma1")}</Label>
-              <Input placeholder={t("Ixtiyoriy")} value={form.production_order_id} onChange={(e) => setForm((f) => ({ ...f, production_order_id: e.target.value }))} data-testid="input-order-id" />
+              <Label>{t("buyurtma1")} <span className="text-destructive">*</span></Label>
+              <Input placeholder={t("masalan") + ": 48"} value={form.production_order_id} onChange={(e) => setForm((f) => ({ ...f, production_order_id: e.target.value }))} data-testid="input-order-id" />
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
           <Button
-            disabled={!form.department || !form.shift_date || !form.shift_start || mut.isPending}
+            disabled={!form.department || !form.shift_date || !form.shift_start || !form.production_order_id || mut.isPending}
             onClick={handleSubmit}
             data-testid="button-create-shift-confirm"
           >

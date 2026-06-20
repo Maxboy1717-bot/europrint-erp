@@ -84,7 +84,11 @@ export class MesShiftsStatsRepository {
 
   async getOee(): Promise<{ machines: Row[]; averageOee: number }> {
     const rows = await runQuery<Row>(sql`
-      SELECT e.id, e.name, e.status, COALESCE(AVG(ps.oee), 0)::numeric(5,2) AS oee
+      SELECT e.id, e.name, e.status,
+             COALESCE(AVG(ps.oee), 0)::numeric(5,2)          AS oee,
+             COALESCE(AVG(ps.availability), 0)::numeric(5,2) AS availability,
+             COALESCE(AVG(ps.performance),  0)::numeric(5,2) AS performance,
+             COALESCE(AVG(ps.quality),      0)::numeric(5,2) AS quality
       FROM equipment e
       LEFT JOIN production_sessions ps ON ps.equipment_id = e.id AND ps.deleted_at IS NULL
       WHERE e.is_active = true GROUP BY e.id, e.name, e.status ORDER BY e.name

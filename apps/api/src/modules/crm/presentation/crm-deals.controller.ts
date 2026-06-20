@@ -94,12 +94,12 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
- async getById(@Param('id') id: number) {
+ async getById(@Param('id') id: string) {
   this.logger.log('Fetching deal');
   // findOne already unwraps — it returns the row or throws NotFound/500. It is NOT a
   // Result envelope, so it must NOT be passed through unwrapOrThrow again (doing so read
   // `.error.message` on a plain row → "Cannot read properties of undefined").
-  return await this.dealsService.findOne(Number(id));
+  return await this.dealsService.findOne(String(id));
 }
 
  @ApiOperation({ summary: 'Create' })
@@ -132,10 +132,10 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/won')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async markWon(@Param('id') id: number) {
+ async markWon(@Param('id') id: string) {
   this.logger.log('Marking deal as won');
 
-  const command = new MarkDealWonCommand(id);
+  const command = new MarkDealWonCommand(Number(id));
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
@@ -146,13 +146,13 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/stage')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async updateStage(@Param('id') id: number, @Body() body: unknown) {
+ async updateStage(@Param('id') id: string, @Body() body: unknown) {
   const dto = UpdateDealStageSchema.parse(body);
   const stageId = dto.stageId ?? dto.stage_id ?? dto.statusId;
   if (!stageId || typeof stageId !== 'string') {
     throw new BadRequestException(await this.i18n.t('errors.stageIdRequired'));
   }
-  const res = await this.commandBus.execute(new UpdateDealStageCommand(Number(id), stageId));
+  const res = await this.commandBus.execute(new UpdateDealStageCommand(String(id), stageId));
   return unwrapOrThrow(res);
 }
 
@@ -162,13 +162,13 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async patchDeal(@Param('id') id: number, @Body() body: unknown) {
+ async patchDeal(@Param('id') id: string, @Body() body: unknown) {
   const dto = PatchDealSchema.parse(body);
   const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(dto)) {
     if (value !== undefined) sanitized[key] = value;
   }
-  const res = await this.commandBus.execute(new UpdateDealCommand(Number(id), sanitized));
+  const res = await this.commandBus.execute(new UpdateDealCommand(String(id), sanitized));
   return unwrapOrThrow(res);
 }
 
@@ -178,8 +178,8 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Delete(':id')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async deleteDeal(@Param('id') id: number) {
-  const res = await this.commandBus.execute(new DeleteDealCommand(Number(id)));
+ async deleteDeal(@Param('id') id: string) {
+  const res = await this.commandBus.execute(new DeleteDealCommand(String(id)));
   return unwrapOrThrow(res);
 }
 

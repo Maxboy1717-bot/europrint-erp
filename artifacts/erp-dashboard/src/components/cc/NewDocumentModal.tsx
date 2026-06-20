@@ -4,6 +4,8 @@
  *   2. AI intervyu (savol-javob)
  *   3. Ko'rib chiqish (AI yaratgan matn + izoh)
  *   4. PIN imzolash + yuborish
+ *      4a. Agar PIN o'rnatilmagan bo'lsa — PIN o'rnatish sub-qadami
+ *      4b. PIN o'rnatilgan bo'lsa — imzolash maydoni
  */
 
 import { useState, useEffect } from "react";
@@ -14,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2, FileText, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import { Loader2, FileText, ArrowRight, ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
 
 import { EPLoader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -54,6 +56,9 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
   const [reviewSubject, setReviewSubject] = useState("");
   const [draftDocId, setDraftDocId]   = useState<string | null>(null);
   const [pin, setPin]                 = useState("");
+  // PIN o'rnatish sub-qadami uchun
+  const [newPin, setNewPin]           = useState("");
+  const [newPinConfirm, setNewPinConfirm] = useState("");
 
   // Templates
   const tmplsQ = useQuery<Template[]>({
@@ -102,6 +107,28 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
     onError: (e) => toast({ title: "AI xatosi", description: e.message, variant: "destructive" }),
   });
 
+  // PIN holati: step 4 da yuklanadi
+  const pinStatusQ = useQuery<{ hasPin: boolean }>({
+    queryKey: ["/api/cc/pin/status"],
+    queryFn: () => apiRequest<{ hasPin: boolean }>("GET", "/api/cc/pin/status"),
+    enabled: open && step === 4,
+    staleTime: 0,
+  });
+
+  // PIN o'rnatish mutatsiyasi
+  const setPinMut = useMutation<unknown, Error, void>({
+    mutationFn: () => apiRequest("POST", "/api/cc/pin", { pin: newPin }),
+    onSuccess: () => {
+      toast({ title: "PIN muvaffaqiyatli o'rnatildi" });
+      setNewPin("");
+      setNewPinConfirm("");
+      qc.invalidateQueries({ queryKey: ["/api/cc/pin/status"] });
+    },
+    onError: (e: Error) => {
+      toast({ title: "PIN o'rnatish xatosi", description: e.message, variant: "destructive" });
+    },
+  });
+
   const sendDoc = useMutation<unknown, Error, void>({
     mutationFn: () => apiRequest("POST", `/api/cc/documents/${draftDocId}/send`, { pin }),
     onSuccess: () => {
@@ -124,6 +151,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
       setStep(1); setTmplId(null); setSessionId(null);
       setAnswer(""); setReviewBody(""); setReviewSubject("");
       setDraftDocId(null); setPin("");
+      setNewPin(""); setNewPinConfirm("");
     }
   }, [open]);
 
@@ -232,15 +260,56 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
         {/* STEP 4 — PIN */}
         {step === 4 && (
           <div className="space-y-3 py-4">
-            <div className="text-sm text-muted-foreground">
-              {t("hujjatniRasmiyYuborishUchunPin")}
-            </div>
-            <Input
-              type="password" maxLength={8} autoFocus
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              placeholder="••••"
-            />
+            {pinStatusQ.isLoading ? (
+              <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                <Loader2 className="animate-spin mr-2" size={16} />
+                PIN holati tekshirilmoqda...
+              </div>
+            ) : pinStatusQ.data?.hasPin === false ? (
+              /* ── 4a: PIN o'rnatilmagan — setup sub-form ── */
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+                  <ShieldCheck size={16} className="shrink-0" />
+                  Siz hali PIN o'rnatmagansiz. Hujjatni imzolash uchun avval PIN o'rnating.
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Yangi PIN (4-8 raqam)</label>
+                  <Input
+                    type="password" maxLength={8} autoFocus
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                    placeholder="••••"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">PIN ni tasdiqlang</label>
+                  <Input
+                    type="password" maxLength={8}
+                    value={newPinConfirm}
+                    onChange={(e) => setNewPinConfirm(e.target.value.replace(/\D/g, ''))}
+                    placeholder="••••"
+                    className="mt-1"
+                  />
+                </div>
+                {newPin && newPinConfirm && newPin !== newPinConfirm && (
+                  <p className="text-xs text-destructive">PIN lar mos emas</p>
+                )}
+              </div>
+            ) : (
+              /* ── 4b: PIN o'rnatilgan — imzolash maydoni ── */
+              <div className="space-y-3">
+                <div className="text-sm text-muted-foreground">
+                  {t("hujjatniRasmiyYuborishUchunPin")}
+                </div>
+                <Input
+                  type="password" maxLength={8} autoFocus
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                  placeholder="••••"
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -271,7 +340,27 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
               {t("imzolashgaOtish")}<ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           )}
-          {step === 4 && (
+          {step === 4 && pinStatusQ.data?.hasPin === false && (
+            /* 4a: PIN o'rnatish tugmasi */
+            <Button
+              variant="default"
+              onClick={() => setPinMut.mutate()}
+              disabled={
+                !/^\d{4,8}$/.test(newPin) ||
+                newPin !== newPinConfirm ||
+                setPinMut.isPending
+              }
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {setPinMut.isPending ? (
+                <><Loader2 className="animate-spin mr-2" size={14} /> Saqlanmoqda...</>
+              ) : (
+                <>PIN o'rnatish<ShieldCheck className="ml-2" size={14} /></>
+              )}
+            </Button>
+          )}
+          {step === 4 && pinStatusQ.data?.hasPin === true && (
+            /* 4b: Imzolash va yuborish tugmasi */
             <Button
               variant="default"
               onClick={() => sendDoc.mutate()}

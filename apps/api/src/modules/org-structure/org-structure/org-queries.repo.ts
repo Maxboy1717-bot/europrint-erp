@@ -61,7 +61,7 @@ export class OrgQueriesRepo {
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND node_type = 'department') AS "totalDepartments",
           (SELECT COUNT(*)::int FROM users u JOIN employee_org_departments eod ON eod.user_id = u.id WHERE u.is_active = TRUE) AS "totalEmployees",
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND head_user_id IS NULL) AS "vacantCount",
-          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND created_at >= NOW() - INTERVAL '30 days') AS "recentChanges"
+          (SELECT COUNT(*)::int FROM audit_logs WHERE table_name = 'orgstructure' AND created_at >= NOW() - INTERVAL '30 days') AS "recentChanges"
       `);
       return castTo<Record<string, unknown>>((rows[0] ?? {}));
     }, 'DB_ERROR');

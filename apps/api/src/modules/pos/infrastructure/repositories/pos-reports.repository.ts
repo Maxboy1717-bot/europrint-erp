@@ -15,12 +15,42 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 @Injectable()
 export class PosReportsRepository {
   async getKpi(): Promise<Result<Row>>  {
-  try {  
-      const rows = await exec(sql`SELECT (SELECT COUNT(*) FROM pos_movements WHERE status = 'pending') AS pending_approvals, (SELECT COUNT(*) FROM pos_movements WHERE status = 'qc_pending') AS qc_pending, (SELECT COUNT(*) FROM pos_material_requests WHERE status = 'pending') AS pending_requests, (SELECT COUNT(*) FROM employee_liability_cases WHERE status IN ('OPEN', 'UNDER_REVIEW')) AS open_liabilities, (SELECT COUNT(*) FROM material_card_suggestions WHERE status = 'PENDING') AS ai_suggestions_pending, (SELECT COUNT(*) FROM pos_inventory_counts WHERE status IN ('draft', 'in_progress', 'review')) AS active_counts, (SELECT COUNT(*) FROM pos_barcode_print_queue WHERE status = 'QUEUED') AS print_queue, (SELECT COALESCE(SUM(quantity_on_hand), 0) FROM current_stock) AS total_stock_qty, (SELECT COUNT(*) FROM pos_movements WHERE created_at >= NOW() - INTERVAL '24 hours') AS movements_today`);
-      return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);  } catch (_e) {
+  try {
+      // WHY: PosDashboard.tsx reads todayMovementsCount, todayTotalAmount,
+      // pendingApprovalCount, lowStockCount — the old query returned
+      // movements_today/pending_approvals (mismatched names) and was missing
+      // todayTotalAmount and lowStockCount entirely, so all 4 stat cards showed 0
+      // even when real data existed in DB.  Fixed by aliasing to the camelCase
+      // field names the FE expects and adding the two missing subqueries.
+      const rows = await exec(sql`
+        SELECT
+          (SELECT COUNT(*) FROM pos_movements WHERE created_at >= NOW() - INTERVAL '24 hours')
+            AS "todayMovementsCount",
+          (SELECT COALESCE(SUM(total_amount), 0) FROM pos_movements WHERE created_at >= NOW() - INTERVAL '24 hours')
+            AS "todayTotalAmount",
+          (SELECT COUNT(*) FROM pos_movements WHERE status = 'pending')
+            AS "pendingApprovalCount",
+          (SELECT COUNT(*) FROM pos_stock_alerts WHERE alert_type = 'LOW_STOCK' AND resolved = false)
+            AS "lowStockCount",
+          (SELECT COUNT(*) FROM pos_movements WHERE status = 'qc_pending')
+            AS qc_pending,
+          (SELECT COUNT(*) FROM pos_material_requests WHERE status = 'pending')
+            AS pending_requests,
+          (SELECT COUNT(*) FROM employee_liability_cases WHERE status IN ('OPEN', 'UNDER_REVIEW'))
+            AS open_liabilities,
+          (SELECT COUNT(*) FROM material_card_suggestions WHERE status = 'PENDING')
+            AS ai_suggestions_pending,
+          (SELECT COUNT(*) FROM pos_inventory_counts WHERE status IN ('draft', 'in_progress', 'review'))
+            AS active_counts,
+          (SELECT COUNT(*) FROM pos_barcode_print_queue WHERE status = 'QUEUED')
+            AS print_queue,
+          (SELECT COALESCE(SUM(quantity_on_hand), 0) FROM current_stock)
+            AS total_stock_qty
+      `);
+      return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);
+  } catch (_e) {
     return Err(String(_e));
   }
-
   }
 
   async getStockReport(warehouseId?: string, category?: string): Promise<Result<Row[]>>  {

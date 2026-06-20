@@ -23,7 +23,7 @@ export function AiAssistantSection() {
 
   const aiMutation = useMutation({
     mutationFn: (question: string) => apiRequest("POST", "/api/marketing/ai-assistant", { question }),
-    onSuccess: (data: unknown) => setAiAnswer((data as { answer: string }).answer),
+    onSuccess: (data: unknown) => setAiAnswer((data as { reply: string }).reply),
   });
 
   return (

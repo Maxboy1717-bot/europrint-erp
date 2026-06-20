@@ -193,10 +193,46 @@ export class QcParametersRepository {
   }
 
   async findTestById(id: number): Promise<Result<Row | null>> {
-    
+
     return safeCall(async () => {
       const rows = await db.select().from(qc_lab_tests).where(eq(qc_lab_tests.id, id)).limit(1);
       return rows[0] as Row ?? null;
+    }, 'DB_ERROR');
+  }
+
+  async findMaterialTestById(id: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        SELECT id, order_id AS "orderId", material_id AS "materialId",
+               test_category AS "testCategory", test_date AS "testDate",
+               test_results AS "testResults", overall_status AS "overallStatus",
+               passed_count AS "passedCount", failed_count AS "failedCount",
+               ai_analysis AS "aiAnalysis", ai_confidence_score AS "aiConfidenceScore",
+               notes, created_at AS "createdAt", updated_at AS "updatedAt"
+        FROM qc_material_tests WHERE id = ${id} LIMIT 1
+      `);
+      const row = (r as { rows?: Row[] }).rows?.[0];
+      return row ?? null;
+    }, 'DB_ERROR');
+  }
+
+  async updateMaterialTestAiAnalysis(
+    id: number,
+    analysis: Record<string, unknown>,
+    confidenceScore: number,
+  ): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        UPDATE qc_material_tests
+        SET ai_analysis = ${JSON.stringify(analysis)}::jsonb,
+            ai_confidence_score = ${confidenceScore},
+            updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING id, ai_analysis AS "aiAnalysis", ai_confidence_score AS "aiConfidenceScore", updated_at AS "updatedAt"
+      `);
+      const row = (r as { rows?: Row[] }).rows?.[0];
+      if (!row) throw new Error(`qc_material_tests id=${id} not found`);
+      return row;
     }, 'DB_ERROR');
   }
 

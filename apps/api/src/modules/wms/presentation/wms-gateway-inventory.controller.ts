@@ -69,20 +69,20 @@ export class WmsGatewayInventoryController {
     try {
       const r = await rawSql(sql`
         SELECT
-          COUNT(*)::int AS total,
-          COUNT(*) FILTER (WHERE status = 'completed')::int   AS completed,
-          COUNT(*) FILTER (WHERE status = 'in_progress')::int AS in_progress,
-          COUNT(*) FILTER (WHERE status = 'draft')::int       AS draft
+          COUNT(*) FILTER (WHERE created_at >= date_trunc('month', NOW()))::int  AS "totalThisMonth",
+          COUNT(*) FILTER (WHERE status = 'completed')::int                       AS completed,
+          COUNT(*) FILTER (WHERE COALESCE(variance_items, 0) > 0)::int            AS "withVariances",
+          COALESCE(ABS(SUM(total_variance)), 0)::numeric                          AS "totalVarianceValue"
         FROM inventory_counts
       `);
       const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
       return {
-        total:      Number(row.total       ?? 0),
-        completed:  Number(row.completed   ?? 0),
-        inProgress: Number(row.in_progress ?? 0),
-        draft:      Number(row.draft       ?? 0),
+        totalThisMonth:    Number(row['totalThisMonth']    ?? 0),
+        completed:         Number(row['completed']         ?? 0),
+        withVariances:     Number(row['withVariances']     ?? 0),
+        totalVarianceValue: Number(row['totalVarianceValue'] ?? 0),
       };
-    } catch { return { total: 0, completed: 0, inProgress: 0, draft: 0 }; }
+    } catch { return { totalThisMonth: 0, completed: 0, withVariances: 0, totalVarianceValue: 0 }; }
   }
 
   @ApiOperation({ summary: 'Get inventory counts' })

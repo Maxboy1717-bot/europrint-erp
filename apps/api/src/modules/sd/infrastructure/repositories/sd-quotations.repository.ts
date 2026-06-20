@@ -99,9 +99,35 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     return exec(sql`SELECT * FROM sd_price_formulas ORDER BY id LIMIT ${lim} OFFSET ${off}`);
   }
 
-  async getKpiTeam(): Promise<Result<Row[]>> {
+  async getKpiTeam(year: number, month: number): Promise<Result<Row[]>> {
     try {
-      return exec(sql`SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS full_name, e.position_id AS position, COUNT(DISTINCT o.id)::int AS orders_count, COALESCE(SUM(o.total_amount), 0)::numeric(15,2) AS total_revenue, COUNT(DISTINCT l.id)::int AS leads_count FROM employees e LEFT JOIN sales_orders o ON o.customer_id IN (SELECT l2.customer_id FROM crm_leads l2 WHERE l2.manager_id = e.id) LEFT JOIN crm_leads l ON l.manager_id = e.id GROUP BY e.id, e.first_name, e.last_name, e.position_id ORDER BY total_revenue DESC LIMIT 20`);
+      // Filter sales_orders to the requested calendar month so the FE period selector
+      // actually changes what is shown (previously ALL-TIME data was returned).
+      // Column aliases match the FE TeamKpiItem interface exactly:
+      //   managerId  → m.id (string coerced by FE)
+      //   totalSales → COALESCE(SUM(total_value), 0) — total_value is canonical (total_amount also present)
+      //   ordersCount → COUNT(DISTINCT o.id)
+      // total_value is used because it is the canonical revenue column per ADR (docs/adr/).
+      return exec(sql`
+        SELECT
+          e.id::text                                                      AS "managerId",
+          CONCAT(e.first_name, ' ', e.last_name)                         AS "full_name",
+          COUNT(DISTINCT o.id)::int                                       AS "ordersCount",
+          COALESCE(SUM(o.total_value), 0)::numeric(15,2)                 AS "totalSales",
+          COUNT(DISTINCT l.id)::int                                       AS "leads_count"
+        FROM employees e
+        LEFT JOIN crm_leads l ON l.manager_id = e.id
+        LEFT JOIN sales_orders o
+          ON o.customer_id IN (
+               SELECT l2.customer_id FROM crm_leads l2 WHERE l2.manager_id = e.id
+             )
+          AND EXTRACT(YEAR  FROM o.created_at) = ${year}
+          AND EXTRACT(MONTH FROM o.created_at) = ${month}
+          AND o.deleted_at IS NULL
+        GROUP BY e.id, e.first_name, e.last_name
+        ORDER BY "totalSales" DESC
+        LIMIT 20
+      `);
     } catch {
       return Ok([]);
     }

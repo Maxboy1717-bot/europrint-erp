@@ -37,10 +37,10 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Bitimlar topilmadi'); }
   }
 
-  async findById(id: number): Promise<Result<Row | null>> {
+  async findById(id: string): Promise<Result<Row | null>> {
     try {
       const res = await runQuery<Row>(sql`
-        SELECT * FROM crm_deals WHERE id = ${id} AND deleted_at IS NULL LIMIT 1
+        SELECT * FROM crm_deals WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
       `);
       return Ok(res.rows[0] || null);
     } catch (e: unknown) { return Err((e as Error)?.message || `Bitim #${id} topilmadi`); }
@@ -83,7 +83,7 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }
 
-  async update(id: number, dto: Record<string, unknown>): Promise<Result<Row>> {
+  async update(id: string, dto: Record<string, unknown>): Promise<Result<Row>> {
     try {
       const title        = (dto.title        != null) ? String(dto.title)                                        : null;
       const stageId      = (dto.stageId      ?? dto.stage_id)      != null ? String(dto.stageId      ?? dto.stage_id)      : null;
@@ -109,17 +109,17 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
           close_date     = COALESCE(${closeDate},    close_date),
           comments       = COALESCE(${notes},        comments),
           date_modify    = NOW()
-        WHERE id = ${id} AND deleted_at IS NULL
+        WHERE id = ${id}::uuid AND deleted_at IS NULL
         RETURNING *
       `);
       return Ok(res.rows[0] ?? {});
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
   }
 
-  async softDelete(id: number): Promise<Result<void>> {
+  async softDelete(id: string): Promise<Result<void>> {
     try {
       await runQuery(sql`
-        UPDATE crm_deals SET deleted_at = NOW() WHERE id = ${id} AND deleted_at IS NULL
+        UPDATE crm_deals SET deleted_at = NOW() WHERE id = ${id}::uuid AND deleted_at IS NULL
       `);
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error)?.message || "O'chirishda xatolik"); }
