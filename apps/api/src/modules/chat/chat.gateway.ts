@@ -19,6 +19,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 import { NotificationBotService } from '../hr/telegram-bots/notification-bot.service';
 import { ChatGatewayHelperService } from './chat-gateway-helper.service';
+import { ChatPresenceRepository } from './repositories/chat-presence.repository';
 import {
   setChatServer,
   getChatServer as _getChatServer,
@@ -56,6 +57,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly notificationBot: NotificationBotService,
     private readonly jwtService: JwtService,
     private readonly helper: ChatGatewayHelperService,
+    private readonly presenceRepo: ChatPresenceRepository,
     cfg: ConfigService,
   ) {
     configureChatWsCors(cfg.get<string>('ALLOWED_ORIGINS') ?? '', cfg.get<string>('NODE_ENV'));
@@ -107,6 +109,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const unread = await this.chatService.getTotalUnreadCount(userId);
       client.emit('unread_count', { count: unread });
 
+      // Persist ONLINE status to DB so presence survives server restarts
+      this.presenceRepo.upsertPresence(String(userId), 'ONLINE').catch((e: unknown) => {
+        this.logger.warn(`Failed to persist ONLINE presence for user ${userId}: ${String(e)}`);
+      });
+
       this.server.emit('user:online', { userId });
       this.logger.log(`User ${userId} connected (socket: ${client.id})`);
     } catch (err) {
@@ -123,6 +130,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         sockets.delete(client.id);
         if (sockets.size === 0) {
           this.userSockets.delete(userId);
+          // Persist OFFLINE status to DB — all sockets for this user are gone
+          this.presenceRepo.upsertPresence(String(userId), 'OFFLINE').catch((e: unknown) => {
+            this.logger.warn(`Failed to persist OFFLINE presence for user ${userId}: ${String(e)}`);
+          });
           this.server.emit('user:offline', { userId });
         }
       }

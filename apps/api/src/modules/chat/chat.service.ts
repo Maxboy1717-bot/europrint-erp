@@ -10,6 +10,7 @@ import { ChatRoomService } from './chat-room.service';
 import { ChatMessageService } from './chat-message.service';
 import { ChatMessageExtService } from './chat-message-ext.service';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
+import { ChatPresenceRepository } from './repositories/chat-presence.repository';
 
 @Injectable()
 export class ChatService {
@@ -22,6 +23,7 @@ export class ChatService {
     private readonly msgExtSvc: ChatMessageExtService,
     private readonly roomRepo: ChatRoomRepository,
     private readonly i18n: I18nService,
+    private readonly presenceRepo: ChatPresenceRepository,
   ) {}
 
   async ensureTables(): Promise<Result<void, AppError>> {
@@ -131,4 +133,7 @@ export class ChatService {
   getReactions(messageId: string | number) { return this.msgExtSvc.getReactions(messageId); }
   createPoll(roomId: string | number, senderId: number, question: string, options: string[], isMultiple: boolean, isAnonymous: boolean) { return this.msgExtSvc.createPoll(roomId, senderId, question, options, isMultiple, isAnonymous); }
   votePoll(pollId: string | number, userId: number, optionIndices: number[]) { return this.msgExtSvc.votePoll(pollId, userId, optionIndices); }
+
+  /** Returns users with status=ONLINE from DB (survives server restart). */
+  getOnlineUsers() { return this.presenceRepo.findOnlineUsers(); }
 }

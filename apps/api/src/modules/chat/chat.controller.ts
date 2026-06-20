@@ -215,6 +215,13 @@ export class ChatController {
     return { muted: me?.isMuted ?? false };
   }
 
+  @ApiOperation({ summary: 'Get online users from DB (presence)' })
+  @ApiResponse({ status: 200, description: 'Array of {userId, lastSeenAt} for ONLINE users' })
+  @Get('presence')
+  async getOnlineUsers() {
+    return unwrapOrInternal(await this.chatService.getOnlineUsers());
+  }
+
   @ApiOperation({ summary: 'Update room' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Patch('rooms/:roomId')

@@ -20,6 +20,7 @@ import { ChatAdminRepository } from './repositories/chat-admin.repository';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
 import { ChatMessageRepository } from './repositories/chat-message.repository';
 import { PushNotificationRepository } from './repositories/push-notification.repository';
+import { ChatPresenceRepository } from './repositories/chat-presence.repository';
 import { ChatController, ChatUploadsController, ChatReactionsController } from './chat.controller';
 import { ChatAdvancedUploadsController } from './chat-advanced-uploads.controller';
 import { ChatExtController } from './chat-ext.controller';
@@ -54,6 +55,7 @@ import { TelegramBotsModule } from '../hr/telegram-bots/telegram-bots.module';
     ChatRoomRepository, ChatMessageRepository,
     PushService,
     PushNotificationRepository,
+    ChatPresenceRepository,
     UploadService,
     VideoTokenService,
   ],

@@ -195,7 +195,7 @@ export function RaspoSection({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{r.task}</p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className="text-[11px] text-muted-foreground">{isRu ? "Кому:" : "Kimga:"} <b>{r.to_user}</b></span>
+                    <span className="text-[11px] text-muted-foreground">{isRu ? "Кому:" : "Kimga:"} <b>{r.to_name ?? r.to_user}</b></span>
                     {r.from_name && <span className="text-[11px] text-muted-foreground">{isRu ? "От:" : "Kimdan:"} {r.from_name}</span>}
                     <span className={cn("text-[11px] flex items-center", overdue ? "text-[var(--ep-red)] font-semibold" : "text-muted-foreground")}>
                       <Clock className="w-2.5 h-2.5 mr-0.5" />

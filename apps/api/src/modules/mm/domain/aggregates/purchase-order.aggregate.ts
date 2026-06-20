@@ -143,6 +143,10 @@ export class PurchaseOrder extends AggregateRoot implements IOrderHeader {
     return { ok: true, data: undefined };
   }
 
+  getItems(): PurchaseOrderItem[] {
+    return [...this._items];
+  }
+
   // --- IOrderHeader marker (cross-context "an order" shape) ---
   get id(): number { return this._id; }
   /** Alias for poNumber so cross-context audit code can use a single name. */

@@ -49,6 +49,7 @@ import {
   EvaluationSchema,
   MaterialReturnSchema,
   DowntimeEventSchema,
+  CrewSchema,
   IOT_READ,
   coerceWorkerId,
 } from './iot-tablet.schemas';
@@ -277,6 +278,27 @@ export class IotTabletController {
     `);
     const items = ((r as Rows).rows) ?? [];
     return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Save production session crew (upsert)' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @Post('production-sessions/:id/crew') @Roles(...IOT_READ)
+  async saveProductionSessionCrew(@Param('id') id: string, @Body() body: unknown) {
+    const dto = CrewSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+    // master_id is NOT NULL in DB — default to 0 when not provided
+    const masterId    = dto.masterId    ?? 0;
+    const polmasterId = dto.polmasterId ?? null;
+    const shogirdId   = dto.shogirdId   ?? null;
+    const roklerId    = dto.roklerId    ?? null;
+    const r = await db.execute(sql`
+      INSERT INTO machine_crews (session_id, master_id, polmaster_id, shogird_id, rokler_id, created_at)
+      VALUES (${sessionId}, ${masterId}, ${polmasterId}, ${shogirdId}, ${roklerId}, NOW())
+      ON CONFLICT DO NOTHING
+      RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
   }
 
   @ApiOperation({ summary: 'Start production session' })

@@ -50,7 +50,7 @@ export default function MESExtended() {
 
   const maintForm = useForm<MaintFormValues>({
     resolver: zodResolver(MaintSchema),
-    defaultValues: { machineId: "", issue: "", priority: "medium" },
+    defaultValues: { title: "", work_center_id: undefined, priority: "medium" },
   });
 
   // ─── Queries ───────────────────────────────────────────────────────────────

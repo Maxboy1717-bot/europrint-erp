@@ -124,6 +124,10 @@ export class OrgQueriesRepo {
             SELECT COUNT(*)::int FROM org_departments
             WHERE parent_id = ${orgDepartments.id} AND is_active = true
           )`,
+          vacantChildCount: sql<number>`(
+            SELECT COUNT(*)::int FROM org_departments
+            WHERE parent_id = ${orgDepartments.id} AND is_active = true AND head_user_id IS NULL
+          )`,
         })
         .from(orgDepartments)
         .leftJoin(appUsers, and(eq(appUsers.id, orgDepartments.head_user_id), eq(appUsers.is_active, true)))

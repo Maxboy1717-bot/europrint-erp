@@ -148,6 +148,7 @@ export class DrizzleWorkCenterRepository {
 
       const byType: Record<string, number> = {};
       let withCertification = 0;
+      let costSum = 0;
 
       for (const wc of (allWorkCenters as Record<string, unknown>[])) {
         const wcType = String(wc['type'] ?? 'machine');
@@ -155,12 +156,14 @@ export class DrizzleWorkCenterRepository {
         if (wc['certificationLmsCourseId']) {
           withCertification++;
         }
+        costSum += safeNum(wc['costPerHour'] ?? wc['cost_per_hour'], 0);
       }
 
+      const total = allWorkCenters.length;
       const stats: WorkCenterStats = {
-        total: allWorkCenters.length,
+        total,
         byType,
-        avgCostPerHour: 0,
+        avgCostPerHour: total > 0 ? costSum / total : 0,
         withLmsCertification: withCertification,
       };
 
@@ -194,7 +197,7 @@ export class DrizzleWorkCenterRepository {
       String(row['name'] ?? ''),
       ((row['type'] ?? 'machine') as WorkCenterType),
       safeNum(row['capacity'] ?? 0),
-      0,
+      safeNum(row['costPerHour'] ?? row['cost_per_hour'], 0),
       row['certificationLmsCourseId'] ? String(row['certificationLmsCourseId']) : null,
       row['departmentId'] ? String(row['departmentId']) : null,
       Boolean(row['isActive'] ?? row['is_active']),

@@ -82,7 +82,11 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
                  created_at, updated_at,
                  (SELECT row_to_json(t) FROM kanban_time_tracks t
                   WHERE t.card_id = kanban_cards.id::text AND t.is_running = true
-                  LIMIT 1) AS active_time_track
+                  LIMIT 1) AS active_time_track,
+                 (SELECT COALESCE(SUM(t.duration_minutes), 0)
+                  FROM kanban_time_tracks t
+                  WHERE t.card_id = kanban_cards.id::text AND t.is_running = false
+                 ) AS total_tracked_time
           FROM kanban_cards WHERE board_id = ${boardId} AND deleted_at IS NULL ORDER BY sort_order ASC
         `),
       ]);

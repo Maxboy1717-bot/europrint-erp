@@ -12,7 +12,7 @@
  *       JS bindings against the same physical table.
  */
 
-import { pgTable, serial, integer, varchar, boolean, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, varchar, boolean, timestamp, index, numeric } from 'drizzle-orm/pg-core';
 
 export const ppWorkCenters = pgTable(
   'work_centers',
@@ -28,6 +28,7 @@ export const ppWorkCenters = pgTable(
     nameRu:                    varchar('name_ru', { length: 255 }),
     nameUz:                    varchar('name_uz', { length: 255 }),
     requiredSkillName:         varchar('required_skill_name', { length: 255 }),
+    costPerHour:               numeric('cost_per_hour'),
     createdAt:                 timestamp('created_at').defaultNow(),
     deletedAt:                 timestamp('deleted_at'),
   },

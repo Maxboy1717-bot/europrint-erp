@@ -67,11 +67,11 @@ export class SalesService {
   }
 
   async getForecastHistory(managerId: number | null, lim: number) {
-    return safeCall(async () => ({
-      manager_id: managerId,
-      history: [],
-      limit: lim,
-    }));
+    return safeCall(async () => {
+      const r = await this.repo.getForecastHistory(managerId, lim);
+      const history = r.ok ? r.data : [];
+      return { manager_id: managerId, history, limit: lim };
+    });
   }
 
   async getLeaderboard(period: string | null, limit: number) {

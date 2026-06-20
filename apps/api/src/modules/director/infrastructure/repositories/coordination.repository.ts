@@ -13,8 +13,11 @@ import { db, runQuery } from '@shared/db';
 import { dokla, rasporyazhenie } from '@shared/db';
 import { hrEmployees } from '@shared/db';
 import { appUsers } from '@shared/db';
+import { alias } from 'drizzle-orm/pg-core';
 import { safeCall, Result } from '@common/result';
 import type { ICoordinationRepo, DoklaStats, RaspStats } from '../../domain/repositories/i-coordination.repo';
+
+const toUserAlias = alias(appUsers, 'to_user_ref');
 
 type Row = Record<string, unknown>;
 
@@ -111,11 +114,13 @@ export class CoordinationRepository implements ICoordinationRepo {
         done_note:    rasporyazhenie.done_note,
         created_at:   rasporyazhenie.created_at,
         updated_at:   rasporyazhenie.updated_at,
-        from_name:      sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), '')`,
+        from_name:    sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), '')`,
+        to_name:      sql<string>`NULLIF(TRIM(COALESCE(${toUserAlias.first_name},'') || ' ' || COALESCE(${toUserAlias.last_name},'')), '')`,
       })
         .from(rasporyazhenie)
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${rasporyazhenie.from_user_id}::text`)
         .leftJoin(appUsers, sql`${appUsers.id}::text = ${rasporyazhenie.from_user_id}::text`)
+        .leftJoin(toUserAlias, sql`${toUserAlias.id}::text = ${rasporyazhenie.to_user}`)
         .orderBy(
           sql`CASE WHEN ${rasporyazhenie.status} != 'done' AND ${rasporyazhenie.deadline} IS NOT NULL AND ${rasporyazhenie.deadline} < CURRENT_DATE THEN 0 WHEN ${rasporyazhenie.status} = 'in_progress' THEN 1 WHEN ${rasporyazhenie.status} = 'assigned' THEN 2 WHEN ${rasporyazhenie.status} = 'done' THEN 3 ELSE 4 END`,
           sql`${rasporyazhenie.deadline} ASC NULLS LAST`,

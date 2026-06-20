@@ -565,6 +565,112 @@ export class HrDashboardRepository implements IHrDashboardRepo {
     }, 'DB_ERROR');
   }
 
+  async getReportsByDate(
+    date: string | undefined,
+    type: string | undefined,
+    limit: number,
+  ): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const resolvedDate = date ?? new Date().toISOString().split('T')[0];
+      const rows = await runQuery<Row>(sql`
+        SELECT r.id, r.report_date, r.employee_id, r.status,
+               r.tasks_completed, r.tomorrow_plan, r.blockers,
+               r.submitted_at, r.created_at,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
+               e.department_id,
+               r.is_machine_operator_report AS report_type
+        FROM hr_daily_reports r
+        LEFT JOIN employees e ON e.id = r.employee_id
+        WHERE r.report_date = ${resolvedDate}
+          AND r.deleted_at IS NULL
+          AND (
+            ${type ?? null}::text IS NULL
+            OR (${type ?? null}::text = 'machine_operator' AND r.is_machine_operator_report = true)
+            OR (${type ?? null}::text = 'regular' AND r.is_machine_operator_report = false)
+          )
+        ORDER BY r.created_at DESC
+        LIMIT ${limit}
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
+  async getReportsByDepartment(
+    departmentId: number | undefined,
+    date: string | undefined,
+  ): Promise<Result<{ submitted: Row[]; missing: Row[] }>> {
+    return safeCall(async () => {
+      const resolvedDate = date ?? new Date().toISOString().split('T')[0];
+
+      const submittedRows = await runQuery<Row>(sql`
+        SELECT r.id, r.report_date, r.employee_id, r.status,
+               r.tasks_completed, r.submitted_at,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
+               e.department_id
+        FROM hr_daily_reports r
+        JOIN employees e ON e.id = r.employee_id
+        WHERE r.report_date = ${resolvedDate}
+          AND r.deleted_at IS NULL
+          AND (${departmentId ?? null}::int IS NULL OR e.department_id = ${departmentId ?? null}::int)
+        ORDER BY e.last_name ASC
+        LIMIT 200
+      `);
+
+      const missingRows = await runQuery<Row>(sql`
+        SELECT e.id AS employee_id, e.first_name, e.last_name,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS employee_name,
+               e.department_id
+        FROM employees e
+        WHERE e.status = 'active'
+          AND e.deleted_at IS NULL
+          AND (${departmentId ?? null}::int IS NULL OR e.department_id = ${departmentId ?? null}::int)
+          AND NOT EXISTS (
+            SELECT 1 FROM hr_daily_reports r
+            WHERE r.employee_id = e.id
+              AND r.report_date = ${resolvedDate}
+              AND r.deleted_at IS NULL
+          )
+        ORDER BY e.last_name ASC
+        LIMIT 200
+      `);
+
+      return {
+        submitted: submittedRows.rows as Row[],
+        missing:   missingRows.rows as Row[],
+      };
+    }, 'DB_ERROR');
+  }
+
+  async getMyReports(userId: number, limit: number): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      // Resolve employee_id from user_id first
+      const empRows = await db
+        .select({ id: hrEmployees.id })
+        .from(hrEmployees)
+        .where(eq(hrEmployees.user_id, userId))
+        .limit(1);
+      const employeeId = empRows[0]?.id;
+
+      if (!employeeId) {
+        // user has no employee record — return empty list
+        return [] as Row[];
+      }
+
+      const rows = await runQuery<Row>(sql`
+        SELECT r.id, r.report_date, r.employee_id, r.status,
+               r.tasks_completed, r.tomorrow_plan, r.blockers,
+               r.submitted_at, r.created_at,
+               r.is_machine_operator_report AS report_type
+        FROM hr_daily_reports r
+        WHERE r.employee_id = ${employeeId}
+          AND r.deleted_at IS NULL
+        ORDER BY r.report_date DESC
+        LIMIT ${limit}
+      `);
+      return rows.rows as Row[];
+    }, 'DB_ERROR');
+  }
+
   async createDailyReport(dto: {
     user_id:         number;
     report_date:     string;

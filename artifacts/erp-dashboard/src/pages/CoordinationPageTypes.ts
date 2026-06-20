@@ -76,6 +76,7 @@ export interface Dokla {
 export interface Raspo {
   id: string;
   to_user: string;
+  to_name?: string | null;
   task: string;
   deadline?: string;
   status: RaspoStatus;

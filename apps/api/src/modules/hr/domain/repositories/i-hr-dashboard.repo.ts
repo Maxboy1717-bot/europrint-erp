@@ -52,6 +52,10 @@ export interface IHrDashboardRepo {
   getAttendanceSummary(days?: number): Promise<Result<Row[]>>;
   getGamificationLeaderboard(period: string): Promise<Result<Row[]>>;
   getOffboardingStats(): Promise<Result<Row>>;
+  // ── Daily-report list endpoints (real DB reads) ────────────────────────────
+  getReportsByDate(date: string | undefined, type: string | undefined, limit: number): Promise<Result<Row[]>>;
+  getReportsByDepartment(departmentId: number | undefined, date: string | undefined): Promise<Result<{ submitted: Row[]; missing: Row[] }>>;
+  getMyReports(userId: number, limit: number): Promise<Result<Row[]>>;
 }
 
 export const HR_DASHBOARD_REPO = Symbol('HR_DASHBOARD_REPO');

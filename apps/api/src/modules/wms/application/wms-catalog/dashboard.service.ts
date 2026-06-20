@@ -92,7 +92,7 @@ export class WmsCatalogDashboardService {
 
   async getDashboardAlerts() {
     try {
-      const [lowStockRows, expiryRows] = await Promise.all([
+      const [lowStockRows, expiryRows, qcRows] = await Promise.all([
         rawSql(sql`
           SELECT mc.id, COALESCE(mc.xom_ashyo, mc.kod) AS name, mc.kod,
                  COALESCE(SUM(ws.quantity), 0)::numeric AS current_stock,
@@ -111,14 +111,19 @@ export class WmsCatalogDashboardService {
             AND expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days'
             AND is_active = true
         `).catch(() => ({ rows: [{ cnt: 0 }] })),
+        rawSql(sql`
+          SELECT COUNT(*)::int AS cnt FROM pos_movements
+          WHERE status = 'qc_pending' AND deleted_at IS NULL
+        `).catch(() => ({ rows: [{ cnt: 0 }] })),
       ]);
       const lowStock = ((lowStockRows as { rows?: Record<string, unknown>[] }).rows ?? []).map(r => ({
         id: Number(r.id), name: String(r.name ?? '—'), kod: String(r.kod ?? ''),
         currentStock: Number(r.current_stock ?? 0), minStock: Number(r.min_stock ?? 0),
       }));
       const expiryCount = Number(((expiryRows as { rows?: Record<string, unknown>[] }).rows)?.[0]?.cnt ?? 0);
+      const pendingQC = Number(((qcRows as { rows?: Record<string, unknown>[] }).rows)?.[0]?.cnt ?? 0);
       return {
-        lowStock, lowStockCount: lowStock.length, pendingQC: 0,
+        lowStock, lowStockCount: lowStock.length, pendingQC,
         expiringBatches: expiryCount, overdueTasks: 0,
       };
     } catch {

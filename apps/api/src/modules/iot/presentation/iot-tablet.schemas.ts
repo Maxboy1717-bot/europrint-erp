@@ -122,6 +122,13 @@ export const DowntimeEventSchema = z.object({
   notes:           z.string().max(2000).optional(),
 });
 
+export const CrewSchema = z.object({
+  masterId:    z.coerce.number().int().nullable().optional(),
+  polmasterId: z.coerce.number().int().nullable().optional(),
+  shogirdId:   z.coerce.number().int().nullable().optional(),
+  roklerId:    z.coerce.number().int().nullable().optional(),
+}).passthrough();
+
 export const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
 
 /**

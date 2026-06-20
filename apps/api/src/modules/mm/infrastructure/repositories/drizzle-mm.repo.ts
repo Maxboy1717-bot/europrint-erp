@@ -15,7 +15,7 @@ import { PurchaseOrder } from '../../domain/aggregates/purchase-order.aggregate'
 import { IMmRepository, DrizzleExecutor } from '../../domain/repositories/mm.repository';
 import { db , runQuery } from '@shared/db';
 import { materials, purchase_orders, purchase_orders_legacy, vendors } from '@shared/db';
-import { execMmMaterialInsert, execMmPurchaseOrderInsert } from '@common/database/queries-remaining';
+import { execMmMaterialInsert } from '@common/database/queries-remaining';
 
 type DbRow = Record<string, unknown>;
 
@@ -71,24 +71,43 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
-  async savePurchaseOrder(po: PurchaseOrder, tx?: DrizzleExecutor): Promise<Result<number>> {
+  async savePurchaseOrder(po: PurchaseOrder, _tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
-      if (tx) {
-        // In-transaction path: inline against the supplied tx executor.
-        // purchase_orders status is an enum union; cast the runtime string at the call site.
-        type PoStatus = 'draft' | 'cancelled' | 'invoiced' | 'pending' | 'approved' | 'partially_received' | 'received' | 'paid';
-        const exec = asExec(tx);
-        await exec.insert(purchase_orders_legacy).values({
-          po_number: po.getPoNumber(),
-          vendor_name: String(po.getSupplierId()),
-          total_amount: String(po.getTotalAmount()),
-          status: String(po.getStatus()) as PoStatus,
-          created_by: String(po.getCreatedBy()),
-        });
-        return Ok(1);
+      // mm_purchase_orders is a VIEW over the purchase_orders base table (integer-PK).
+      // The LIST/GET endpoints read from this view. We INSERT into the base table directly.
+      // Required NOT-NULL columns: po_number, vendor_id, order_date, status, tenant_id(default=1).
+      // NOTE: raw SQL is used because the Drizzle 'purchase_orders' schema in schema-wms.ts
+      // maps to a different uuid-PK variant — not the integer-PK base table we need here.
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const poNumber = po.getPoNumber(); // generated as PO-{timestamp} in the handler
+      const result = await db.execute(sql`
+        INSERT INTO purchase_orders
+          (po_number, vendor_id, order_date, status, total_amount, currency, created_by)
+        VALUES
+          (${poNumber}, ${po.getSupplierId()}, ${today},
+           ${po.getStatus()}, ${po.getTotalAmount()}, ${'UZS'}, ${po.getCreatedBy()})
+        RETURNING id
+      `);
+      const rows = Array.isArray(result) ? result : ((result as { rows?: unknown[] }).rows ?? []);
+      const poId = (rows[0] as Record<string, unknown>)?.['id'] as number | undefined;
+      if (!poId) return Err('PO saqlashda xatolik: id qaytarilmadi');
+
+      // Insert line items into purchase_order_items (integer purchase_order_id).
+      // The LIST query JOINs this table on purchase_order_id to aggregate item count/totals.
+      // NOT NULL cols: po_id, raw_material_id, quantity, unit, unit_price, total_price.
+      // 'unit' is not on PurchaseOrderItem domain object — default to 'sht' (piece).
+      const items = po.getItems();
+      for (const item of items) {
+        await db.execute(sql`
+          INSERT INTO purchase_order_items
+            (po_id, purchase_order_id, material_id, raw_material_id, quantity, unit, unit_price, total_price)
+          VALUES
+            (${poId}, ${poId}, ${item.materialId}, ${item.materialId},
+             ${item.quantity}, ${'sht'}, ${item.unitPrice}, ${item.quantity * item.unitPrice})
+        `);
       }
-      await execMmPurchaseOrderInsert(po.getPoNumber(), String(po.getSupplierId()), po.getTotalAmount(), String(po.getStatus()), String(po.getCreatedBy()));
-      return Ok(1);
+
+      return Ok(poId);
     } catch (error: unknown) {
       this.logger.error('Failed to save purchase order');
       return Err('PO saqlashda xatolik');

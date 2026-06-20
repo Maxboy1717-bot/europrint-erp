@@ -90,4 +90,14 @@ export class HrDashboardService {
   async getAttendanceSummary(days?: number) { return this.repo.getAttendanceSummary(days); }
   async getGamificationLeaderboard(period: string) { return this.repo.getGamificationLeaderboard(period); }
   async getOffboardingStats() { return this.repo.getOffboardingStats(); }
+  // ── Daily-report list endpoints ────────────────────────────────────────────
+  async getReportsByDate(date: string | undefined, type: string | undefined, limit: number) {
+    return this.repo.getReportsByDate(date, type, limit);
+  }
+  async getReportsByDepartment(departmentId: number | undefined, date: string | undefined) {
+    return this.repo.getReportsByDepartment(departmentId, date);
+  }
+  async getMyReports(userId: number, limit: number) {
+    return this.repo.getMyReports(userId, limit);
+  }
 }

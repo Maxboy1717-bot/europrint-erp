@@ -46,7 +46,7 @@ export function MaintenanceDialog({
           {/* Machine selector */}
           <div className="space-y-1">
           <Label>{t("stanoq")}</Label>
-            <Select onValueChange={v => form.setValue("machineId", v)}>
+            <Select onValueChange={v => form.setValue("work_center_id", Number(v))}>
               <SelectTrigger data-testid="select-machine" className="h-9">
                 <SelectValue placeholder={t("stanoqTanlang")} />
               </SelectTrigger>
@@ -64,7 +64,7 @@ export function MaintenanceDialog({
           <div className="space-y-1">
           <Label>{t("muammoTavsifi1")}</Label>
             <Input
-              {...form.register("issue")}
+              {...form.register("title")}
               data-testid="input-maintenance-issue"
             />
           </div>

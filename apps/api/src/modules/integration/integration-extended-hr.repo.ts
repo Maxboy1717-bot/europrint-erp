@@ -17,7 +17,7 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 @Injectable()
 export class IntegrationExtendedHrRepository {
   findHrLmsPositionSkills(): Promise<Result<Row[]>> {
-    return safeCall(async () => exec(sql`SELECT * FROM position_skills ORDER BY position_title ASC LIMIT ${MAX_QUERY_LIMIT}`));
+    return safeCall(async () => exec(sql`SELECT * FROM position_skill_requirements ORDER BY position_name ASC LIMIT ${MAX_QUERY_LIMIT}`));
   }
 
   findHrLmsEmployeeSkills(): Promise<Result<Row[]>> {

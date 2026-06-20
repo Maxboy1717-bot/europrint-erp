@@ -83,6 +83,16 @@ export class SalesRepository {
 
   }
 
+  async getForecastHistory(managerId: number | null, lim: number): Promise<Result<Row[]>> {
+    try {
+      return managerId !== null
+        ? exec(sql`SELECT id, forecast_period AS period, forecasted_revenue, actual_revenue, accuracy, confidence_level, forecast_method, created_at FROM sales_forecasts WHERE created_by = ${managerId} ORDER BY created_at DESC LIMIT ${lim}`)
+        : exec(sql`SELECT id, forecast_period AS period, forecasted_revenue, actual_revenue, accuracy, confidence_level, forecast_method, created_at FROM sales_forecasts ORDER BY created_at DESC LIMIT ${lim}`);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   /**
    * Calculates forecast accuracy by comparing monthly deal forecast_amount
    * (from crm_deals grouped by COALESCE(won_at, date_create)) against

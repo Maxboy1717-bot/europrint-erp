@@ -127,9 +127,9 @@ export const MES_PILLS: Array<{ key: string; label: string }> = [
 // ─── Zod schemas ─────────────────────────────────────────────────────────────
 
 export const MaintSchema = z.object({
-  machineId: z.string().min(1),
-  issue:     z.string().min(1),
-  priority:  z.string().min(1),
+  title:          z.string().min(1),
+  work_center_id: z.number().int().positive().optional(),
+  priority:       z.string().min(1),
 });
 
 export type MaintFormValues = z.infer<typeof MaintSchema>;

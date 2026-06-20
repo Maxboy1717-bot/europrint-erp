@@ -202,7 +202,7 @@ export class CashRegisterRepository implements ICashRegisterRepository {
       const tomorrowStart = new Date(todayStart);
       tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
-      const [todayRows, allRows, lowStockRows] = await Promise.all([
+      const [todayRows, allRows, lowStockRows, paymentRows, topProductRows] = await Promise.all([
         db.select({
           total:        sql<number>`COALESCE(SUM(total_amount::numeric), 0)`,
           count:        sql<number>`COUNT(*)`,
@@ -225,6 +225,30 @@ export class CashRegisterRepository implements ICashRegisterRepository {
               sql`stock_quantity::numeric < min_stock::numeric`,
             ),
           ),
+        // payment breakdown: group completed transactions by payment method
+        db.execute(sql`
+          SELECT payment_method AS method,
+                 COUNT(*)::int AS count,
+                 COALESCE(SUM(total_amount::numeric), 0) AS total
+          FROM retail_pos_transactions
+          WHERE status = 'completed'
+          GROUP BY payment_method
+          ORDER BY total DESC
+        `),
+        // top 10 products by revenue from completed transactions
+        db.execute(sql`
+          SELECT
+            elem->>'name'    AS name,
+            elem->>'barcode' AS barcode,
+            SUM((elem->>'quantity')::numeric)::int  AS "totalSold",
+            SUM((elem->>'quantity')::numeric * (elem->>'unitPrice')::numeric) AS "totalRevenue"
+          FROM retail_pos_transactions,
+               jsonb_array_elements(items) AS elem
+          WHERE status = 'completed'
+          GROUP BY elem->>'name', elem->>'barcode'
+          ORDER BY "totalRevenue" DESC
+          LIMIT 10
+        `),
       ]);
 
       const salesToday = Number(todayRows[0]?.total ?? 0);
@@ -234,9 +258,26 @@ export class CashRegisterRepository implements ICashRegisterRepository {
       const avgBasket = totalTransactionsAll > 0 ? totalSalesAll / totalTransactionsAll : 0;
       const lowStockCount = Number(lowStockRows[0]?.count ?? 0);
 
+      const paymentBreakdown = Array.isArray(paymentRows.rows)
+        ? paymentRows.rows.map((r) => ({
+            method: String(r['method'] ?? ''),
+            count: Number(r['count'] ?? 0),
+            total: Number(r['total'] ?? 0),
+          }))
+        : [];
+
+      const topProducts = Array.isArray(topProductRows.rows)
+        ? topProductRows.rows.map((r) => ({
+            name: String(r['name'] ?? ''),
+            barcode: String(r['barcode'] ?? ''),
+            totalSold: Number(r['totalSold'] ?? 0),
+            totalRevenue: Number(r['totalRevenue'] ?? 0),
+          }))
+        : [];
+
       return {
         salesToday, transactionsToday, avgBasket, totalSalesAll, totalTransactionsAll,
-        paymentBreakdown: [], topProducts: [], lowStockCount,
+        paymentBreakdown, topProducts, lowStockCount,
       };
     });
       } catch (_e) {

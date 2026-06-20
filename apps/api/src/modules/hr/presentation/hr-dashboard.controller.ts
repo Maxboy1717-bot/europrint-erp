@@ -170,21 +170,36 @@ export class HrDashboardController {
   }
 
   @Get('daily-reports')
-  async getDailyReports(@Query('date') _date?: string) {
-    const r = await this.svc.getDailyReportsStats();
-    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
+  async getDailyReports(
+    @Query('date')  date?: string,
+    @Query('type')  type?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    const limit = Math.min(parseInt(limitStr ?? '100', 10) || 100, 500);
+    const items = unwrapOrDefault(await this.svc.getReportsByDate(date, type, limit), []);
+    return { items, total: (items as unknown[]).length };
   }
 
   @Get('daily-reports/department')
-  async getDailyReportsByDept(@Query('departmentId') _departmentId?: string) {
-    const r = await this.svc.getDailyReportsStats();
-    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
+  async getDailyReportsByDept(
+    @Query('departmentId') departmentId?: string,
+    @Query('date')         date?: string,
+  ) {
+    const deptId = departmentId ? parseInt(departmentId, 10) : undefined;
+    const r = await this.svc.getReportsByDepartment(deptId, date);
+    return r.ok && r.data
+      ? r.data
+      : { submitted: [], missing: [] };
   }
 
   @Get('daily-reports/my')
-  async getDailyReportsMy() {
-    const r = await this.svc.getDailyReportsStats();
-    return r.ok && r.data ? r.data : { total: 0, approved: 0, pending: 0, today: 0 };
+  async getDailyReportsMy(
+    @CurrentUser() user: { id: number },
+    @Query('limit') limitStr?: string,
+  ) {
+    const limit = Math.min(parseInt(limitStr ?? '50', 10) || 50, 200);
+    const items = unwrapOrDefault(await this.svc.getMyReports(user?.id ?? 0, limit), []);
+    return { items, total: (items as unknown[]).length };
   }
 
   @Post('daily-reports')

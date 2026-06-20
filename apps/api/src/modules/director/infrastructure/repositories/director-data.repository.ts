@@ -141,7 +141,7 @@ export class DirectorDataRepository implements IDirectorDataRepo {
       }));
       const ov = (sessCountRow as Row | undefined) ?? {};
       const overdueOrders = ((overdueRows ?? []) as Row[]).map(r => ({
-        id: r.id, orderNumber: String(r.order_number ?? ''), plannedEndDate: String(r.planned_end_date ?? ''), status: String(r.status ?? ''),
+        id: r.id, papkaNo: String(r.order_number ?? ''), tayyorBolishSanasi: String(r.planned_end_date ?? ''), status: String(r.status ?? ''),
       }));
       const qualityRate = ov['quality_rate'] != null ? String(ov['quality_rate']) : null;
       const dr = defRow as Row | undefined;

@@ -87,11 +87,14 @@ export default function MMPurchaseOrders() {
 
   const createPO = useMutation({
     mutationFn: async (data: POFormValues) => {
-      const totalAmount = data.items?.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
       await apiRequest("POST", "/api/mm/purchase-orders", {
-        ...data,
-        totalAmount,
-        status: "draft",
+        supplierId: Number(data.vendorId),
+        items: (Array.isArray(data.items) ? data.items : []).map((item) => ({
+          materialId: Number(item.rawMaterialId),
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        })),
+        createdBy: 1,
       });
     },
     onSuccess: () => {
