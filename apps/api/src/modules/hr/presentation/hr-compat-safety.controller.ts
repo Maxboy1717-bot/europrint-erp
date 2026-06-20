@@ -192,7 +192,9 @@ export class HrCompatSafetyController {
     const startDate  = dto.start_date ?? dto.startDate;
     const endDate    = dto.end_date   ?? dto.endDate;
     const reason     = dto.reason     ?? '';
-    const data = await this.svc.createLeaveRequest(employeeId, startDate, endDate, reason);
+    const leaveType  = dto.type ?? dto.leaveType ?? dto.leave_type;
+    const userId     = user?.id ?? user?.sub ?? null;
+    const data = await this.svc.createLeaveRequest(employeeId, startDate, endDate, reason, leaveType, userId);
     return { data };
   }
 

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { ArrowUp, ArrowDown, Clock, Search, BookOpen, User, Calendar } from "lucide-react";
+import { ArrowUp, ArrowDown, Clock, Search, BookOpen, User, Calendar, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { CommunicationCenter } from "@/components/cc/CommunicationCenter";
@@ -243,9 +243,10 @@ export function BasketsSection() {
 interface CouncilsSectionProps {
   councils: Council[];
   councilsLoading: boolean;
+  onEditCouncil: (council: Council) => void;
 }
 
-export function CouncilsSection({ councils, councilsLoading }: CouncilsSectionProps) {
+export function CouncilsSection({ councils, councilsLoading, onEditCouncil }: CouncilsSectionProps) {
   const { t, language } = useTranslation("coordination");
   const isRu = language === "ru";
 
@@ -287,10 +288,19 @@ export function CouncilsSection({ councils, councilsLoading }: CouncilsSectionPr
                     <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", style.color)}>
                       <Icon className="w-3.5 h-3.5" />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <div className="text-[10px] font-bold text-muted-foreground">{c.council_type}</div>
                       <div className="font-semibold text-sm leading-tight">{c.name}</div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                      onClick={() => onEditCouncil(c)}
+                      data-testid={`btn-edit-council-${c.id}`}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1.5 text-xs">

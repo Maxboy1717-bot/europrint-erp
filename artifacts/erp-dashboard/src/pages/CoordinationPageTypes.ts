@@ -55,9 +55,16 @@ export interface Council {
   council_type: string;
   description: string | null;
   is_active: boolean;
+  chairperson_id?: number | null;
   chairperson_name?: string | null;
   meeting_schedule?: string | null;
 }
+
+export type CouncilFormState = {
+  chairperson_id: string;
+  description: string;
+  meeting_schedule: string;
+};
 
 export type DoklaStatus   = "sent" | "read" | "resolved";
 export type RaspoStatus   = "assigned" | "in_progress" | "done" | "overdue";

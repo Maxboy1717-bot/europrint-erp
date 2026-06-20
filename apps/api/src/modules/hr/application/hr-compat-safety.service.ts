@@ -109,8 +109,8 @@ export class HrCompatSafetyService {
     return safeCall(() => this.repo.getLeaveRequests(employeeId ? safeInt(employeeId, 0) : undefined, status));
   }
 
-  async createLeaveRequest(employeeId: unknown, startDate: unknown, endDate: unknown, reason: unknown) {
-    return this.repo.createLeaveRequest(employeeId, startDate, endDate, reason);
+  async createLeaveRequest(employeeId: unknown, startDate: unknown, endDate: unknown, reason: unknown, leaveType?: unknown, userId?: unknown) {
+    return this.repo.createLeaveRequest(employeeId, startDate, endDate, reason, leaveType, userId);
   }
 
   async getGamLeaderboardMonthly() {

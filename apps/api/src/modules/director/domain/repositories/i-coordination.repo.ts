@@ -42,6 +42,13 @@ export interface ICoordinationRepo {
   getStatsDokla(): Promise<Result<DoklaStats>>;
   listBaskets(): Promise<Result<Row[]>>;
   getStatsRasp(): Promise<Result<RaspStats>>;
+  getCouncilById(id: number): Promise<Result<unknown[]>>;
+  updateCouncil(
+    id: number,
+    chairpersonId: number | null,
+    description: string | null,
+    meetingSchedule: string | null,
+  ): Promise<Result<Row>>;
 }
 
 export const COORDINATION_REPO = Symbol('COORDINATION_REPO');

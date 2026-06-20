@@ -15,7 +15,7 @@ import { safeCall, Result } from '@common/result';
 import {
   hr_brand_settings, hr_documents, document_templates,
   safety_incidents, safety_training_records, hazard_zones,
-  ppe_compliance, hr_leave_requests, adaptation_milestones,
+  ppe_compliance, leaveRequestsApp, adaptation_milestones,
   adaptation_records, adaptation_programs, hrEmployees, hrDepartments,
   gamification_totals,
 } from '@shared/db';
@@ -241,39 +241,57 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
   async getLeaveRequests(employeeId?: number, status?: string): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await db.select({
-        id:           hr_leave_requests.id,
-        employee_id:  hr_leave_requests.employee_id,
-        start_date:   hr_leave_requests.start_date,
-        end_date:     hr_leave_requests.end_date,
-        reason:       hr_leave_requests.reason,
-        status:       hr_leave_requests.status,
-        requested_at: hr_leave_requests.requested_at,
-        reviewed_at:  hr_leave_requests.reviewed_at,
-        notes:        hr_leave_requests.notes,
+        id:           leaveRequestsApp.id,
+        employee_id:  leaveRequestsApp.employee_id,
+        leave_type:   leaveRequestsApp.leave_type,
+        start_date:   leaveRequestsApp.start_date,
+        end_date:     leaveRequestsApp.end_date,
+        reason:       leaveRequestsApp.reason,
+        status:       leaveRequestsApp.status,
+        created_at:   leaveRequestsApp.created_at,
+        updated_at:   leaveRequestsApp.updated_at,
         employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
       })
-        .from(hr_leave_requests)
-        .leftJoin(hrEmployees, eq(hrEmployees.id, hr_leave_requests.employee_id))
+        .from(leaveRequestsApp)
+        .leftJoin(hrEmployees, eq(hrEmployees.id, leaveRequestsApp.employee_id))
         .where(sql`
-          (${employeeId ?? null}::int IS NULL OR ${hr_leave_requests.employee_id} = ${employeeId ?? null}) AND
-          (${status ?? null}::text IS NULL OR ${hr_leave_requests.status} = ${status ?? null})
+          (${employeeId ?? null}::int IS NULL OR ${leaveRequestsApp.employee_id} = ${employeeId ?? null}) AND
+          (${status ?? null}::text IS NULL OR ${leaveRequestsApp.status} = ${status ?? null}) AND
+          ${leaveRequestsApp.deleted_at} IS NULL
         `)
-        .orderBy(sql`${hr_leave_requests.requested_at} DESC`)
+        .orderBy(sql`${leaveRequestsApp.created_at} DESC`)
         .limit(100);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');
   }
 
-  async createLeaveRequest(employeeId: unknown, startDate: unknown, endDate: unknown, reason: unknown): Promise<Result<Row>> {
+  async createLeaveRequest(employeeId: unknown, startDate: unknown, endDate: unknown, reason: unknown, leaveType?: unknown, userId?: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.insert(hr_leave_requests).values({
-        employee_id:  (employeeId ?? null) as number,
-        start_date:   (startDate ?? null) as string,
-        end_date:     (endDate ?? null) as string,
-        reason:       (reason ?? null) as string,
-        status:       'pending',
-      }).returning();
-      return castTo<Row>((rows[0] ?? {}));
+      const start = (startDate as string | null) ?? '';
+      const end   = (endDate   as string | null) ?? '';
+      // total_days is NOT NULL in live DB but absent from leaveRequestsApp Drizzle schema
+      // (shared/db is frozen). Using parameterised raw SQL for INSERT only — Qoida 4 exception.
+      let totalDays = 1;
+      if (start && end) {
+        const diff = new Date(end).getTime() - new Date(start).getTime();
+        totalDays = Math.max(1, Math.round(diff / 86400000) + 1);
+      }
+      const rows = await db.execute(sql`
+        INSERT INTO leave_requests
+          (employee_id, user_id, leave_type, start_date, end_date, total_days, reason, status)
+        VALUES
+          (${(employeeId ?? null) as number | null},
+           ${(userId ?? employeeId ?? 0) as number},
+           ${(leaveType ?? 'annual') as string},
+           ${start},
+           ${end},
+           ${totalDays},
+           ${(reason ?? null) as string | null},
+           'pending')
+        RETURNING id, employee_id, leave_type, start_date, end_date, total_days, reason, status, created_at
+      `);
+      const inserted = (rows as unknown as { rows?: Row[] }).rows ?? (Array.isArray(rows) ? rows : []);
+      return castTo<Row>((inserted[0] ?? {}));
       }, 'DB_ERROR');
   }
 

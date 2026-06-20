@@ -63,7 +63,28 @@ export class IntegrationExtendedHrRepository {
   }
 
   findVendorPerformance(): Promise<Result<Row[]>> {
-    return safeCall(async () => exec(sql`SELECT * FROM vendor_performance ORDER BY score DESC LIMIT 100`));
+    return safeCall(async () => exec(sql`
+      SELECT
+        vr.id::text                          AS id,
+        mv.name                              AS vendor_name,
+        EXTRACT(YEAR  FROM vr.rated_at)::int AS period_year,
+        EXTRACT(MONTH FROM vr.rated_at)::int AS period_month,
+        (SELECT COUNT(*)::int FROM mm_purchase_orders po
+           WHERE po.vendor_id = vr.vendor_id AND po.deleted_at IS NULL) AS total_orders,
+        ROUND(
+          (vr.delivery_score / 100.0) *
+          COALESCE((SELECT COUNT(*) FROM mm_purchase_orders po
+                     WHERE po.vendor_id = vr.vendor_id AND po.deleted_at IS NULL), 0)
+        )::int                               AS on_time_deliveries,
+        0::int                               AS late_deliveries,
+        vr.quality_score::numeric            AS quality_score,
+        ROUND((vr.quality_score * 0.4 + vr.delivery_score * 0.3 + vr.price_score * 0.2), 2)
+                                             AS overall_rating
+      FROM mm_vendor_ratings vr
+      LEFT JOIN mm_vendors mv ON mv.id = vr.vendor_id
+      ORDER BY vr.rated_at DESC
+      LIMIT 100
+    `));
   }
 
   findVendorSpendAnalysis(): Promise<Result<Row[]>> {

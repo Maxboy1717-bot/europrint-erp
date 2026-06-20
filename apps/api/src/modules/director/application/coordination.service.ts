@@ -130,6 +130,22 @@ export class CoordinationService {
     return { ok: true, data: { message: "O'chirildi", deleted: String(id) } };
   }
 
+  async updateCouncilWithAuth(
+    id: number,
+    userRole: string,
+    chairpersonId: number | null,
+    description: string | null,
+    meetingSchedule: string | null,
+  ): Promise<Result<object, AppError>> {
+    if (!PRIVILEGED_ROLES.has(userRole))
+      return Err({ code: 'FORBIDDEN', message: "Faqat administrator, direktor yoki CEO o'zgartira oladi" });
+    const existing = await this.repo.getCouncilById(id);
+    if (!existing.ok) return existing;
+    if (!Array.isArray(existing.data) || !existing.data.length)
+      return Err({ code: 'BAD_REQUEST', message: 'Kengash topilmadi' });
+    return safeCall(() => this.repo.updateCouncil(id, chairpersonId, description, meetingSchedule));
+  }
+
   async getBaskets(): Promise<Result<object, AppError>> {
     return this.repo.listBaskets();
   }

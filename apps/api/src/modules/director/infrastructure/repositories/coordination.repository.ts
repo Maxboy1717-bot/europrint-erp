@@ -201,6 +201,38 @@ export class CoordinationRepository implements ICoordinationRepo {
     }, 'DB_ERROR');
   }
 
+  async getCouncilById(id: number): Promise<Result<unknown[]>> {
+    return safeCall(async () => {
+      const r = await db.execute(sql`
+        SELECT id, chairperson_id FROM councils WHERE id = ${id} LIMIT 1
+      `);
+      return ((r as { rows?: unknown[] }).rows) ?? [];
+    }, 'DB_ERROR');
+  }
+
+  async updateCouncil(
+    id: number,
+    chairpersonId: number | null,
+    description: string | null,
+    meetingSchedule: string | null,
+  ): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const r = await db.execute(sql`
+        UPDATE councils
+        SET
+          chairperson_id   = COALESCE(${chairpersonId}, chairperson_id),
+          description      = COALESCE(${description}, description),
+          meeting_schedule = COALESCE(${meetingSchedule}, meeting_schedule)
+        WHERE id = ${id}
+        RETURNING
+          id, name, council_type, description, is_active, created_at,
+          chairperson_id, meeting_schedule
+      `);
+      const rows = ((r as { rows?: unknown[] }).rows) ?? [];
+      return (rows[0] ?? { message: 'Yangilandi' }) as Row;
+    }, 'DB_ERROR');
+  }
+
   async getStatsRasp(): Promise<Result<RaspStats>> {
     return safeCall(async () => {
       const r = await db.select({

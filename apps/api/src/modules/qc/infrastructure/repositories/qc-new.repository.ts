@@ -72,6 +72,15 @@ export interface QcDashboardData { stats: QcDashboardStats; recentDefects: Row[]
 export interface QcAiTrendData { defectTrend: Row[]; topDefectCodes: Row[]; brakTrend: Row[] }
 export interface SpcChartData { points: Row[]; processCapability: SpcCapability }
 
+export interface AiTrendSummary {
+  summary: { totalTests: number; totalBraks: number; avgPassRate: number; trend: string };
+  weeklyTrend: Array<{ week: string; total: number; passed: number; failed: number; passRate: number }>;
+  byReason: Array<{ reason: string; count: number }>;
+  byStage: Array<{ stage: string; count: number }>;
+  categoryStats: Array<{ category: string; total: number; passed: number; passRate: number }>;
+  aiInsights: string[];
+}
+
 @Injectable()
 export class QcNewRepository {
   async getDashboardStats(): Promise<Result<QcDashboardData>> {
@@ -187,6 +196,155 @@ export class QcNewRepository {
       ]);
 
       return { defectTrend: trend, topDefectCodes: topDefects, brakTrend };
+    }, 'DB_ERROR');
+  }
+
+  async getAiTrendSummary(): Promise<Result<AiTrendSummary>> {
+    return safeCall(async () => {
+      // a) summary — total lab tests + pass count + total braks
+      const [labSummaryResult, brakSummaryResult] = await Promise.all([
+        db.select({
+          totalTests: sql<number>`count(*)::int`,
+          passedTests: sql<number>`count(*) filter (where ${qc_lab_tests.result} = 'pass')::int`,
+        }).from(qc_lab_tests),
+
+        db.execute(sql`SELECT COUNT(*)::int AS total_braks FROM qc_braks`),
+      ]);
+
+      const totalTests  = labSummaryResult[0]?.totalTests  ?? 0;
+      const passedTests = labSummaryResult[0]?.passedTests ?? 0;
+      const totalBraks  = Number(
+        (((brakSummaryResult as { rows?: Row[] }).rows) ?? [])[0]?.['total_braks'] ?? 0,
+      );
+      const avgPassRate = totalTests > 0
+        ? Math.round((passedTests / totalTests) * 100)
+        : 0;
+
+      // b) weeklyTrend — braks per week with pass_rate derived from lab_tests
+      const weeklyBrakResult = await db.execute(sql`
+        SELECT
+          DATE_TRUNC('week', created_at)::date::text AS week,
+          COUNT(*)::int                              AS total,
+          COUNT(*)::int                              AS failed
+        FROM qc_braks
+        GROUP BY 1
+        ORDER BY 1 DESC
+        LIMIT 12
+      `);
+      const weeklyBrakRows = (((weeklyBrakResult as { rows?: Row[] }).rows) ?? []) as Array<{ week: string; total: number; failed: number }>;
+
+      // pass count per week from lab_tests (using created_at week)
+      const weeklyLabResult = await db.execute(sql`
+        SELECT
+          DATE_TRUNC('week', created_at)::date::text AS week,
+          COUNT(*) FILTER (WHERE result = 'pass')::int AS passed,
+          COUNT(*)::int                                AS lab_total
+        FROM qc_lab_tests
+        GROUP BY 1
+      `);
+      const weeklyLabMap = new Map<string, { passed: number; lab_total: number }>();
+      for (const r of ((weeklyLabResult as { rows?: Row[] }).rows) ?? []) {
+        const row = r as { week: string; passed: number; lab_total: number };
+        weeklyLabMap.set(row.week, { passed: Number(row.passed), lab_total: Number(row.lab_total) });
+      }
+
+      const weeklyTrend = weeklyBrakRows.map(r => {
+        const lab  = weeklyLabMap.get(r.week);
+        const passed   = lab?.passed    ?? 0;
+        const labTotal = lab?.lab_total ?? 0;
+        const passRate = labTotal > 0 ? Math.round((passed / labTotal) * 100) : 0;
+        return {
+          week:     r.week,
+          total:    Number(r.total),
+          passed,
+          failed:   Number(r.failed),
+          passRate,
+        };
+      });
+
+      // c) byReason — top 10 brak reasons
+      const byReasonResult = await db.execute(sql`
+        SELECT COALESCE(reason, 'other') AS reason, COUNT(*)::int AS count
+        FROM qc_braks
+        GROUP BY 1
+        ORDER BY 2 DESC
+        LIMIT 10
+      `);
+      const byReason = ((byReasonResult as { rows?: Row[] }).rows ?? []).map(r => ({
+        reason: String(r['reason'] ?? 'other'),
+        count:  Number(r['count']  ?? 0),
+      }));
+
+      // d) byStage — brak count per stage
+      const byStageResult = await db.execute(sql`
+        SELECT COALESCE(stage, 'unknown') AS stage, COUNT(*)::int AS count
+        FROM qc_braks
+        GROUP BY 1
+        ORDER BY 2 DESC
+      `);
+      const byStage = ((byStageResult as { rows?: Row[] }).rows ?? []).map(r => ({
+        stage: String(r['stage'] ?? 'unknown'),
+        count: Number(r['count'] ?? 0),
+      }));
+
+      // e) categoryStats — from qc_material_tests (no Drizzle schema → raw SQL)
+      const catResult = await db.execute(sql`
+        SELECT
+          test_category AS category,
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE overall_status = 'passed')::int AS passed,
+          CASE WHEN COUNT(*) = 0 THEN 0
+               ELSE ROUND(100.0 * COUNT(*) FILTER (WHERE overall_status = 'passed') / COUNT(*))
+          END::int AS pass_rate
+        FROM qc_material_tests
+        GROUP BY 1
+        ORDER BY total DESC
+      `);
+      const categoryStats = ((catResult as { rows?: Row[] }).rows ?? []).map(r => ({
+        category: String(r['category'] ?? ''),
+        total:    Number(r['total']    ?? 0),
+        passed:   Number(r['passed']   ?? 0),
+        passRate: Number(r['pass_rate'] ?? 0),
+      }));
+
+      // f) aiInsights — computed from real aggregates (never hardcoded)
+      const aiInsights: string[] = [];
+      if (totalBraks > 10 && byReason[0]) {
+        aiInsights.push(`Top brak sababi: "${byReason[0].reason}" (${byReason[0].count} ta)`);
+      }
+      if (avgPassRate > 0 && avgPassRate < 80) {
+        aiInsights.push(`Pass darajasi pastlashmoqda: ${avgPassRate}% (maqsad ≥ 80%)`);
+      }
+      if (totalBraks > 0 && byStage[0]) {
+        aiInsights.push(`Eng ko'p brak "${byStage[0].stage}" bosqichida (${byStage[0].count} ta)`);
+      }
+      const lowPassCats = categoryStats.filter(c => c.total > 0 && c.passRate < 80);
+      if (lowPassCats.length > 0) {
+        aiInsights.push(`${lowPassCats.length} ta kategoriyada pass darajasi 80% dan past`);
+      }
+      if (aiInsights.length === 0) {
+        aiInsights.push(totalTests === 0 && totalBraks === 0
+          ? 'Hozircha sinov yozuvlari mavjud emas'
+          : "Barcha ko'rsatkichlar maqbul darajada");
+      }
+
+      // trend: compare last week vs previous week brak count
+      const lastWeekBraks  = weeklyTrend[0]?.failed ?? 0;
+      const prevWeekBraks  = weeklyTrend[1]?.failed ?? 0;
+      const trend = lastWeekBraks < prevWeekBraks
+        ? 'improving'
+        : lastWeekBraks > prevWeekBraks
+          ? 'declining'
+          : 'stable';
+
+      return {
+        summary: { totalTests, totalBraks, avgPassRate, trend },
+        weeklyTrend,
+        byReason,
+        byStage,
+        categoryStats,
+        aiInsights,
+      };
     }, 'DB_ERROR');
   }
 

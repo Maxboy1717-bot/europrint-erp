@@ -60,6 +60,8 @@ export interface IHrCompatSafetyRepo {
     startDate: unknown,
     endDate: unknown,
     reason: unknown,
+    leaveType?: unknown,
+    userId?: unknown,
   ): Promise<Result<Row>>;
   getGamLeaderboardMonthly(): Promise<Result<Row[]>>;
   getAdaptationMilestones(employeeId?: number): Promise<Result<Row[]>>;

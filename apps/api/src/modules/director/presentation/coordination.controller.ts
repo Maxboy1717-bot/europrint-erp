@@ -21,6 +21,7 @@ import {
   CoordinationUpdateRaspSchema, CoordinationUpdateRaspDto,
   CoordinationMarkDoneSchema, CoordinationMarkDoneDto,
   CoordinationCreateRaspSchema, CoordinationCreateRaspDto,
+  CoordinationUpdateCouncilSchema, CoordinationUpdateCouncilDto,
 } from './dto/director.dto';
 
 
@@ -48,6 +49,30 @@ export class CoordinationController {
       WHERE c.is_active = true ORDER BY c.id
     `);
     return ((r as { rows?: unknown[] }).rows) ?? [];
+  }
+
+  @ApiOperation({ summary: 'Update council (chairperson, description, meeting_schedule)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @Patch('councils/:id')
+  @Roles('admin', 'director', 'ceo')
+  @UsePipes(new ZodValidationPipe(CoordinationUpdateCouncilSchema))
+  async updateCouncil(
+    @Param('id') id: string,
+    @Body() body: CoordinationUpdateCouncilDto,
+    @CurrentUser() user: { id: number; role: string },
+  ) {
+    const { chairperson_id, description, meeting_schedule } = body;
+    return unwrapOrThrow(
+      await this.svc.updateCouncilWithAuth(
+        parseInt(id, 10),
+        user.role,
+        chairperson_id ?? null,
+        description ?? null,
+        meeting_schedule ?? null,
+      ),
+    );
   }
 
   @ApiOperation({ summary: 'Get baskets' })

@@ -4,15 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { Ok, Err, Result } from '@common/result';
 import { QcNewRepository } from '../infrastructure/repositories/qc-new.repository';
-
-type AiTrendBase = Extract<
-  Awaited<ReturnType<QcNewRepository['getAiTrendData']>>,
-  { ok: true; data: unknown }
->['data'];
-
-type AiTrendPrediction = { nextWeekRisk: string; confidenceScore: number; recommendation: string };
 
 @Injectable()
 export class QcNewService {
@@ -37,14 +29,8 @@ export class QcNewService {
     });
   }
 
-  async getAiTrend(): Promise<Result<AiTrendBase & { prediction: AiTrendPrediction }>> {
-    const prediction: AiTrendPrediction = {
-      nextWeekRisk: 'medium',
-      confidenceScore: 0.72,
-      recommendation: 'Sifat nazoratini kuchaytirish tavsiya etiladi',
-    };
-    const r = await this.repo.getAiTrendData();
-    return r.ok ? Ok({ ...r.data, prediction }) : Err(r.error);
+  getAiTrend(): ReturnType<QcNewRepository['getAiTrendSummary']> {
+    return this.repo.getAiTrendSummary();
   }
 
   getCertificates(status?: string): ReturnType<QcNewRepository['findCertificates']> {

@@ -86,12 +86,33 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
                  (SELECT COALESCE(SUM(t.duration_minutes), 0)
                   FROM kanban_time_tracks t
                   WHERE t.card_id = kanban_cards.id::text AND t.is_running = false
-                 ) AS total_tracked_time
+                 ) AS total_tracked_time,
+                 (SELECT COUNT(*)::int FROM kanban_checklists cl
+                  WHERE cl.card_id = kanban_cards.id::text
+                 ) AS subtasks_count,
+                 (SELECT COUNT(*)::int FROM kanban_checklists cl
+                  JOIN kanban_checklist_items ci ON ci.checklist_id = cl.id::text
+                  WHERE cl.card_id = kanban_cards.id::text AND ci.is_completed = true
+                 ) AS subtasks_completed,
+                 (SELECT COUNT(*)::int FROM kanban_card_comments cc
+                  WHERE cc.card_id = kanban_cards.id::text
+                 ) AS comments_count,
+                 (SELECT COUNT(*)::int FROM kanban_files kf
+                  WHERE kf.card_id = kanban_cards.id::text AND kf.deleted_at IS NULL
+                 ) AS files_count
           FROM kanban_cards WHERE board_id = ${boardId} AND deleted_at IS NULL ORDER BY sort_order ASC
         `),
       ]);
 
-      return Ok({ ...(castTo<KanbanBoard>(board)), columns: castTo<KanbanColumn[]>(columnsRows.rows), cards: castTo<KanbanCard[]>(cardsRows.rows)});
+      // Map DB snake_case counter columns to the camelCase names the FE expects
+      const cards = (cardsRows.rows as Record<string, unknown>[]).map((row) => ({
+        ...row,
+        subtasksCount:     row['subtasks_count']     ?? 0,
+        subtasksCompleted: row['subtasks_completed']  ?? 0,
+        commentsCount:     row['comments_count']      ?? 0,
+        filesCount:        row['files_count']         ?? 0,
+      }));
+      return Ok({ ...(castTo<KanbanBoard>(board)), columns: castTo<KanbanColumn[]>(columnsRows.rows), cards: castTo<KanbanCard[]>(cards)});
     } catch (error) {
       this.logger.error('getBoardById: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });

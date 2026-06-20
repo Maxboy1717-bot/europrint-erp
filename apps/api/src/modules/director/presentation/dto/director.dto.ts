@@ -48,6 +48,16 @@ export const CoordinationCreateRaspSchema = z.object({
 }).refine(d => !!(d.title || d.task), { message: 'title yoki task majburiy' });
 export type CoordinationCreateRaspDto = z.infer<typeof CoordinationCreateRaspSchema>;
 
+export const CoordinationUpdateCouncilSchema = z.object({
+  chairperson_id:   z.number().int().positive().optional(),
+  description:      z.string().max(500).optional(),
+  meeting_schedule: z.string().max(200).optional(),
+}).refine(
+  d => d.chairperson_id !== undefined || d.description !== undefined || d.meeting_schedule !== undefined,
+  { message: 'Kamida bitta maydon kerak' },
+);
+export type CoordinationUpdateCouncilDto = z.infer<typeof CoordinationUpdateCouncilSchema>;
+
 export const KaizenCreateSuggestionSchema = z.object({
   title:            z.string().min(1).max(MAX_SHORT_TEXT),
   description:      z.string().min(1).max(MAX_NOTES_LENGTH),

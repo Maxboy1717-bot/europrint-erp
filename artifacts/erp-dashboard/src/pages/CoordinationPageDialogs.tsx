@@ -1,16 +1,16 @@
-/** @module CoordinationPageDialogs @description Dialog components for creating Докла (report) and Распоряжение (order) records in the CoordinationPage. Each dialog manages only its own submit interaction; form state is passed in as props. */
+/** @module CoordinationPageDialogs @description Dialog components for creating Докла (report), Распоряжение (order), and updating Council records in the CoordinationPage. Each dialog manages only its own submit interaction; form state is passed in as props. */
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Pencil } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api-request";
 import { useTranslation } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
-import { COUNCIL_LEVELS, type DoklaFormState, type RaspoFormState } from "./CoordinationPageTypes";
+import { COUNCIL_LEVELS, type DoklaFormState, type RaspoFormState, type CouncilFormState } from "./CoordinationPageTypes";
 
 import { EPLoader } from "@/components/ep";
 
@@ -237,6 +237,108 @@ export function CreateRaspoDialog({
               ? <EPLoader className="w-3.5 h-3.5 mr-1.5" />
               : <ArrowDown className="w-3.5 h-3.5 mr-1.5" />}
             {t("createRasporyazhenie")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── UpdateCouncilDialog ──────────────────────────────────────────────────
+interface UpdateCouncilDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  councilName: string;
+  form: CouncilFormState;
+  setForm: React.Dispatch<React.SetStateAction<CouncilFormState>>;
+  onSubmit: (form: CouncilFormState) => void;
+  isPending: boolean;
+}
+
+export function UpdateCouncilDialog({
+  open, onOpenChange, councilName, form, setForm, onSubmit, isPending,
+}: UpdateCouncilDialogProps) {
+  const { language } = useTranslation("coordination");
+  const { toast } = useToast();
+  const isRu = language === "ru";
+  const { data: userList, isLoading: usersLoading } = useUsersForSelect();
+  const users = Array.isArray(userList) ? userList : [];
+
+  function handleSubmit() {
+    if (!form.chairperson_id && !form.description.trim() && !form.meeting_schedule.trim()) {
+      toast({
+        title: isRu ? "Заполните хотя бы одно поле" : "Kamida bitta maydonni to'ldiring",
+        variant: "destructive",
+      });
+      return;
+    }
+    onSubmit(form);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg p-6" data-testid="dialog-update-council">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-[var(--ep-blue)]">
+            <Pencil className="w-4 h-4" />
+            {isRu ? `Редактировать: ${councilName}` : `Tahrirlash: ${councilName}`}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-1">
+          <div>
+            <Label className="text-xs">{isRu ? "Председатель" : "Rais"}</Label>
+            {usersLoading ? (
+              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                <EPLoader className="w-3 h-3" />
+                {isRu ? "Загрузка..." : "Yuklanmoqda..."}
+              </div>
+            ) : (
+              <select
+                className="w-full mt-1 border rounded-md px-3 py-2 text-sm bg-background"
+                value={form.chairperson_id}
+                onChange={e => setForm(p => ({ ...p, chairperson_id: e.target.value }))}
+                data-testid="select-council-chairperson"
+              >
+                <option value="">{isRu ? "— Не изменять / выбрать —" : "— O'zgartirmaslik / tanlash —"}</option>
+                {users.map(u => (
+                  <option key={u.id} value={String(u.id)}>
+                    {u.full_name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div>
+            <Label className="text-xs">{isRu ? "Описание" : "Tavsif"}</Label>
+            <Textarea
+              className="mt-1"
+              rows={3}
+              placeholder={isRu ? "Описание кengasha..." : "Kengash tavsifi..."}
+              value={form.description}
+              onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              data-testid="input-council-description"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">{isRu ? "График совещаний" : "Yig'ilish jadvali"}</Label>
+            <Input
+              className="mt-1"
+              placeholder={isRu ? "Пример: Каждый понедельник 09:00" : "Misol: Har dushanba 09:00"}
+              value={form.meeting_schedule}
+              onChange={e => setForm(p => ({ ...p, meeting_schedule: e.target.value }))}
+              data-testid="input-council-meeting-schedule"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {isRu ? "Отмена" : "Bekor qilish"}
+          </Button>
+          <Button onClick={handleSubmit} disabled={isPending} data-testid="btn-submit-council-update">
+            {isPending
+              ? <EPLoader className="w-3.5 h-3.5 mr-1.5" />
+              : <Pencil className="w-3.5 h-3.5 mr-1.5" />}
+            {isRu ? "Сохранить" : "Saqlash"}
           </Button>
         </DialogFooter>
       </DialogContent>

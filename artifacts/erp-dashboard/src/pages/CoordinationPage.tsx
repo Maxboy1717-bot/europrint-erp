@@ -17,16 +17,17 @@ import {
   VALID_TABS,
   type Council, type Dokla, type Raspo, type BasketDoc,
   type CoordinationStats, type DoklaStatus, type RaspoStatus,
-  type DoklaFormState, type RaspoFormState,
+  type DoklaFormState, type RaspoFormState, type CouncilFormState,
 } from "./CoordinationPageTypes";
 import { OverviewSection } from "./CoordinationPageOverview";
 import {
   DoklaSection, RaspoSection, BasketsSection, CouncilsSection,
 } from "./CoordinationPageSections";
-import { CreateDoklaDialog, CreateRaspoDialog } from "./CoordinationPageDialogs";
+import { CreateDoklaDialog, CreateRaspoDialog, UpdateCouncilDialog } from "./CoordinationPageDialogs";
 
-const DOKLA_INIT: DoklaFormState  = { subject: "", problem: "", result: "", proposal: "", councilLevel: "3" };
-const RASPO_INIT: RaspoFormState  = { to: "", task: "", deadline: "", priority: "medium" };
+const DOKLA_INIT: DoklaFormState   = { subject: "", problem: "", result: "", proposal: "", councilLevel: "3" };
+const RASPO_INIT: RaspoFormState   = { to: "", task: "", deadline: "", priority: "medium" };
+const COUNCIL_INIT: CouncilFormState = { chairperson_id: "", description: "", meeting_schedule: "" };
 
 export default function CoordinationPage() {
   const { t, language } = useTranslation("coordination");
@@ -47,12 +48,14 @@ export default function CoordinationPage() {
   // ── Dialog & filter state ──
   const [doklaOpen, setDoklaOpen]                     = useState(false);
   const [raspoOpen, setRaspoOpen]                     = useState(false);
+  const [councilEditTarget, setCouncilEditTarget]     = useState<Council | null>(null);
   const [doklaSearch, setDoklaSearch]                 = useState("");
   const [raspoSearch, setRaspoSearch]                 = useState("");
   const [doklaStatusFilter, setDoklaStatusFilter]     = useState<DoklaStatus | "">("");
   const [raspoStatusFilter, setRaspoStatusFilter]     = useState<RaspoStatus | "">("");
   const [doklaForm, setDoklaForm]                     = useState<DoklaFormState>(DOKLA_INIT);
   const [raspoForm, setRaspoForm]                     = useState<RaspoFormState>(RASPO_INIT);
+  const [councilForm, setCouncilForm]                 = useState<CouncilFormState>(COUNCIL_INIT);
 
   // ── Queries ──
   const { data: doklads = [], isLoading: doklaLoading } = useQuery<Dokla[]>({
@@ -145,6 +148,34 @@ export default function CoordinationPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/coordination/stats"] });
     },
   });
+
+  const updateCouncilMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CouncilFormState }) => {
+      const payload: Record<string, unknown> = {};
+      if (data.chairperson_id) payload.chairperson_id = parseInt(data.chairperson_id, 10);
+      if (data.description.trim()) payload.description = data.description.trim();
+      if (data.meeting_schedule.trim()) payload.meeting_schedule = data.meeting_schedule.trim();
+      return apiRequest("PATCH", `/api/coordination/councils/${id}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/coordination/councils"] });
+      toast({ title: isRu ? "Совет обновлён" : "Kengash yangilandi" });
+      setCouncilEditTarget(null);
+      setCouncilForm(COUNCIL_INIT);
+    },
+    onError: (e: unknown) => {
+      toast({ title: isRu ? "Ошибка" : "Xatolik", description: e instanceof Error ? e.message : "", variant: "destructive" });
+    },
+  });
+
+  function handleOpenCouncilEdit(council: Council) {
+    setCouncilForm({
+      chairperson_id: council.chairperson_id != null ? String(council.chairperson_id) : "",
+      description:    council.description ?? "",
+      meeting_schedule: council.meeting_schedule ?? "",
+    });
+    setCouncilEditTarget(council);
+  }
 
   // ── Derived counts for stat cards ──
   const overdueCount = rasporyazheniya.filter(r => r.status === "overdue").length;
@@ -277,7 +308,11 @@ export default function CoordinationPage() {
         />
 
         <BasketsSection />
-        <CouncilsSection councils={councils} councilsLoading={councilsLoading} />
+        <CouncilsSection
+          councils={councils}
+          councilsLoading={councilsLoading}
+          onEditCouncil={handleOpenCouncilEdit}
+        />
       </Tabs>
 
       {/* Dialogs */}
@@ -297,6 +332,18 @@ export default function CoordinationPage() {
         setForm={setRaspoForm}
         onSubmit={createRaspoMutation.mutate}
         isPending={createRaspoMutation.isPending}
+      />
+
+      <UpdateCouncilDialog
+        open={councilEditTarget !== null}
+        onOpenChange={open => { if (!open) { setCouncilEditTarget(null); setCouncilForm(COUNCIL_INIT); } }}
+        councilName={councilEditTarget?.name ?? ""}
+        form={councilForm}
+        setForm={setCouncilForm}
+        onSubmit={data => {
+          if (councilEditTarget) updateCouncilMutation.mutate({ id: councilEditTarget.id, data });
+        }}
+        isPending={updateCouncilMutation.isPending}
       />
     </div>
   );

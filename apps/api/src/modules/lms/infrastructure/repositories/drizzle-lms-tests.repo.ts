@@ -198,8 +198,14 @@ export class LmsTestsRepository {
     try {
       const rows = await runQuery<Row>(sql`
         SELECT a.*, e.title AS exam_title, emp.full_name AS employee_name
-        FROM lms_exam_attempts a JOIN lms_exams e ON e.id = a.exam_id LEFT JOIN employees emp ON emp.id = a.employee_id
-        WHERE a.attempt_number > 1 ORDER BY a.created_at DESC LIMIT 50
+        FROM lms_exam_attempts a
+        JOIN lms_exams e ON e.id = a.exam_id
+        LEFT JOIN employees emp ON emp.id::text = a.employee_id
+        WHERE (
+          SELECT COUNT(*) FROM lms_exam_attempts a2
+          WHERE a2.exam_id = a.exam_id AND a2.user_id = a.user_id
+        ) > 1
+        ORDER BY a.created_at DESC LIMIT 50
       `);
       return Ok(rows.rows as Row[]);
     } catch (error) {
