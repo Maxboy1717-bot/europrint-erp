@@ -26,7 +26,14 @@ const PrinterConfigSchema = z.object({
 }).passthrough();
 
 const MaterialKitSchema = z.object({
+  // FE createKitMutation fields
+  orderId: z.union([z.string(), z.number()]).optional(),
+  scheduledDate: z.string().max(50).optional(),
+  scheduledTime: z.string().max(50).optional(),
+  equipmentId: z.union([z.string(), z.number()]).optional(),
+  // legacy / optional
   name: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
   items: z.array(z.record(z.unknown())).optional(),
   warehouseId: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
@@ -131,14 +138,22 @@ export class WmsBarcodeController {
   @Roles(...WH_WRITE)
   async createMaterialKit(@Body() body: unknown) {
     const dto = MaterialKitSchema.parse(body);
+    const orderId = dto.orderId !== undefined ? parseInt(String(dto.orderId), 10) : null;
+    const equipmentId = dto.equipmentId !== undefined ? parseInt(String(dto.equipmentId), 10) : null;
+    const scheduledDate = dto.scheduledDate ?? null;
+    const scheduledTime = dto.scheduledTime ?? null;
+    const notes = dto.notes ?? dto.name ?? null;
     const r = await db.execute(sql`
-      INSERT INTO material_kits (kit_number, order_id, scheduled_date, status, notes, created_at)
+      INSERT INTO material_kits
+        (kit_number, order_id, equipment_id, scheduled_date, scheduled_time, status, notes, created_at)
       VALUES (
         'MK-' || extract(epoch from now())::bigint,
-        0,
-        CURRENT_DATE,
+        ${orderId},
+        ${equipmentId},
+        ${scheduledDate},
+        ${scheduledTime},
         'pending',
-        ${dto.name ?? null},
+        ${notes},
         NOW()
       ) RETURNING *
     `);

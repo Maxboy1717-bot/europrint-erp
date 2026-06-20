@@ -234,6 +234,26 @@ export class OrgQueriesRepo {
     }, 'DB_ERROR');
   }
 
+  /**
+   * Returns all active users ordered by first_name.
+   * Used by FE EditDialog to populate the department-head picker
+   * (87% of nodes have zero members, so member-based list is unusable).
+   */
+  async availableUsers(): Promise<Result<{ id: number; firstName: string; lastName: string }[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id: appUsers.id,
+          firstName: appUsers.first_name,
+          lastName: appUsers.last_name,
+        })
+        .from(appUsers)
+        .where(eq(appUsers.is_active, true))
+        .orderBy(appUsers.first_name, appUsers.last_name);
+      return castTo<{ id: number; firstName: string; lastName: string }[]>(rows);
+    }, 'DB_ERROR');
+  }
+
   async existsById(id: number): Promise<Result<boolean>> {
     return safeCall(async () => {
       const rows = await db

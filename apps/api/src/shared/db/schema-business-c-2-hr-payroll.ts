@@ -6,7 +6,7 @@
  */
 
 import {
-  pgTable, serial, text, integer, timestamp, numeric, date,
+  pgTable, serial, text, integer, timestamp, numeric, date, varchar,
 } from 'drizzle-orm/pg-core';
 
 // salary_history: used with snake_case columns (base_salary) in finance-actions.repository.ts
@@ -20,6 +20,11 @@ export const salary_history = pgTable('salary_history', {
   salary_earned:         numeric('salary_earned', { precision: 15, scale: 2 }),
   total_bonuses:         numeric('total_bonuses', { precision: 15, scale: 2 }).default('0'),
   other_bonuses:         numeric('other_bonuses', { precision: 15, scale: 2 }).default('0'),
+  // Workflow columns — exist in live DB; added to schema so updatePayroll() can write them
+  status:                varchar('status').default('draft'),
+  approved_by:           integer('approved_by'),
+  paid_by:               integer('paid_by'),
+  paid_date:             date('paid_date'),
   created_at:            timestamp('created_at').defaultNow(),
   updated_at:            timestamp('updated_at').defaultNow(),
 });

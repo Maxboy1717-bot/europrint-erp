@@ -84,7 +84,7 @@ export class CrmExtrasDashboardRepository {
                  COUNT(l.id)::int AS lead_count,
                  COALESCE(SUM(d.forecast_amount), 0) AS pipeline_value
           FROM crm_lead_stages ls
-          LEFT JOIN crm_leads l ON l.stage_id = ls.id AND l.status_description != 'converted'
+          LEFT JOIN crm_leads l ON l.status_description = ls.stage_id AND l.status_description != 'CONVERTED'
             AND (${stageId ?? null}::int IS NULL OR ls.id = ${stageId ?? null})
           LEFT JOIN crm_deals d ON (d.metadata->>'lead_id')::int = l.id AND d.stage_semantic_id NOT IN ('won','lost')
           GROUP BY ls.id, ls.name, ls.order_index

@@ -9,7 +9,7 @@ import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { marketingLeads } from '@europrint/schemas';
-import { eq, and, isNull, desc, count } from 'drizzle-orm';
+import { eq, and, isNull, desc, count, sql } from 'drizzle-orm';
 
 @Injectable()
 export class LeadsRepository {
@@ -47,18 +47,35 @@ export class LeadsRepository {
 
   }
 
-  async create(values: typeof marketingLeads.$inferInsert): Promise<Result<Record<string, unknown>>> {
-  try {  
-      const result = await db.insert(marketingLeads).values(values).returning();
-      return Ok(result[0] as Record<string, unknown>);  } catch (_e) {
-    return Err(String(_e));
+  async create(values: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    // Raw SQL: the @europrint/schemas Drizzle def for marketingLeads omits several real
+    // columns (name/company/source/channel/notes/lost_reason), so db.insert would drop
+    // them. The live marketing_leads table has all of these — insert them directly.
+    try {
+      const v = values;
+      const result = await db.execute(sql`
+        INSERT INTO marketing_leads
+          (id, name, company, phone, email, source, channel, status, score, notes,
+           lost_reason, first_name, last_name, created_at, updated_at)
+        VALUES (
+          gen_random_uuid()::text, ${String(v.name ?? '')}, ${(v.company as string) ?? null}, ${(v.phone as string) ?? null},
+          ${(v.email as string) ?? null}, ${(v.source as string) ?? 'website'}, ${(v.channel as string) ?? null},
+          ${(v.status as string) ?? 'new'}, ${Number(v.score ?? 0)}, ${(v.notes as string) ?? null},
+          ${(v.lostReason as string) ?? null}, ${(v.firstName as string) ?? null}, ${(v.lastName as string) ?? null},
+          NOW(), NOW()
+        )
+        RETURNING *
+      `);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
+      return Ok(rows[0] ?? {});
+    } catch (_e) {
+      return Err(String(_e));
+    }
   }
 
-  }
-
-  async update(id: number, values: Partial<typeof marketingLeads.$inferInsert>): Promise<Result<Record<string, unknown>>> {
-  try {  
-      const result = await db.update(marketingLeads).set(values).where(eq(marketingLeads.id, id)).returning();
+  async update(id: number, values: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+  try {
+      const result = await db.update(marketingLeads).set(values as Partial<typeof marketingLeads.$inferInsert>).where(eq(marketingLeads.id, id)).returning();
       return Ok(result[0] as Record<string, unknown>);  } catch (_e) {
     return Err(String(_e));
   }

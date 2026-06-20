@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -42,11 +42,18 @@ export function EditDialog({
     headUserId: node.headUserId ?? null,
   });
 
-  // STEP C: department-head picker options. node.employees are user-id native
-  // (org-queries findOneWithDetails returns appUsers.id), so emp.id IS the user id
-  // head_user_id expects. Surface the current head even if not a dept member.
-  const headOptions: { id: number; name: string }[] = (Array.isArray(node.employees) ? node.employees : [])
-    .map((e) => ({ id: e.id, name: e.fullName }));
+  // Fetch all active users for the department-head picker.
+  // 87% of org nodes have zero members → member-based list leaves headOptions=[].
+  // This query surfaces every active user (31 now) unconditionally.
+  const { data: usersData } = useQuery<{ users: { id: number; name: string }[] }>({
+    queryKey: ["/api/org-structure/available-users"],
+    staleTime: 60_000,
+  });
+
+  const headOptions: { id: number; name: string }[] = Array.isArray(usersData?.users)
+    ? usersData.users
+    : [];
+  // Ensure the current head is always present in the list even while loading
   if (node.headUserId != null && !headOptions.some((o) => o.id === node.headUserId)) {
     headOptions.unshift({ id: node.headUserId, name: node.headUserName || `#${node.headUserId}` });
   }
@@ -127,9 +134,6 @@ export function EditDialog({
                 ))}
               </SelectContent>
             </Select>
-            {headOptions.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-0.5">Bu bo'limda hali xodim yo'q — avval xodim biriktiring.</p>
-            )}
           </div>
         </div>
         <DialogFooter>

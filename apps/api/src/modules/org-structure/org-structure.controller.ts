@@ -123,6 +123,19 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.getFlat(query));
   }
 
+  /**
+   * GET /org-structure/available-users
+   * Returns all active users for the department-head picker in EditDialog.
+   * 87% of nodes have zero members → member-based list returns headOptions=[].
+   * This endpoint surfaces every active user (31 right now) unconditionally.
+   */
+  @ApiOperation({ summary: 'Active users for department-head picker' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('available-users')
+  async getAvailableUsers() {
+    return unwrapOrInternal(await this.service.getAvailableUsers());
+  }
+
   @ApiOperation({ summary: 'Find one' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })

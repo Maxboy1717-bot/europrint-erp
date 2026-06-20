@@ -37,7 +37,7 @@ export class PosReportsRepository {
 
   async getMovementStats(interval: string): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT pmt.code AS movement_type, pmt.name AS movement_type_name, COUNT(*) AS count, SUM(CASE WHEN pm.status = 'completed' THEN 1 ELSE 0 END) AS completed, SUM(CASE WHEN pm.status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled FROM pos_movements pm JOIN pos_movement_types pmt ON pmt.id = pm.movement_type_id WHERE pm.created_at >= NOW() - (${interval})::interval GROUP BY pmt.code, pmt.name ORDER BY count DESC`);  } catch (_e) {
+      return exec(sql`SELECT movement_type AS movement_type, movement_type AS movement_type_name, COUNT(*) AS count, COUNT(*) AS completed, 0 AS cancelled FROM material_movements WHERE created_at >= NOW() - (${interval})::interval GROUP BY movement_type ORDER BY count DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 

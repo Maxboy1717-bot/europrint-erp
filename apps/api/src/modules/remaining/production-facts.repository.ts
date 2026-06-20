@@ -47,8 +47,22 @@ export class ProductionFactsRepository {
   }
 
   async create(body: Row): Promise<Result<Row | null>>  {
-  try {  
-      const r = await exec(sql`INSERT INTO production_facts_sm72 (papka_no, fact_date, operator_id, work_center_id, planned_qty, actual_qty, variance, defects, notes, created_at, updated_at) VALUES (${body['papkaNo'] ?? null}, ${body['factDate'] ?? _time.now().toISOString().split('T')[0]}, ${body['operatorId'] ?? null}, ${body['workCenterId'] ?? null}, ${body['plannedQty'] ?? 0}, ${body['actualQty'] ?? 0}, ${Number(body['actualQty'] ?? 0) - Number(body['plannedQty'] ?? 0)}, ${body['defects'] ?? 0}, ${body['notes'] ?? null}, NOW(), NOW()) RETURNING *`);
+  try {
+      // Field mapping: accept both FE snake_case keys and legacy camelCase keys
+      const papkaNo      = (body['order_number'] ?? body['papkaNo'] ?? body['papka_no'] ?? null) as string | null;
+      const factDate     = (body['fact_date'] ?? body['factDate'] ?? _time.now().toISOString().split('T')[0]) as string;
+      const operatorId   = (body['operatorId'] ?? body['operator_id'] ?? null) as number | null;
+      const workCenterId = (body['workCenterId'] ?? body['work_center_id'] ?? null) as number | null;
+      const plannedQty   = Number(body['planned_qty'] ?? body['plannedQty'] ?? 0);
+      const actualQty    = Number(body['actual_qty'] ?? body['actualQty'] ?? 0);
+      const variance     = actualQty - plannedQty;
+      const defects      = Number(body['defect_qty'] ?? body['defects'] ?? 0);
+      const notes        = (body['notes'] ?? null) as string | null;
+
+      // production_facts_sm72 has 11 columns: id,papka_no,fact_date,operator_id,
+      // work_center_id,planned_qty,actual_qty,variance,defects,notes,created_at
+      // updated_at does NOT exist — never include it in INSERT
+      const r = await exec(sql`INSERT INTO production_facts_sm72 (papka_no, fact_date, operator_id, work_center_id, planned_qty, actual_qty, variance, defects, notes, created_at) VALUES (${papkaNo}, ${factDate}, ${operatorId}, ${workCenterId}, ${plannedQty}, ${actualQty}, ${variance}, ${defects}, ${notes}, NOW()) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

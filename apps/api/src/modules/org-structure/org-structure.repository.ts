@@ -24,6 +24,7 @@ export class OrgStructureRepository {
   findOneWithDetails = (id: number) => this.queries.findOneWithDetails(id);
   getParentLevel = (pid: unknown) => this.queries.getParentLevel(pid);
   existsById = (id: number) => this.queries.existsById(id);
+  availableUsers = () => this.queries.availableUsers();
   getApprovalChain = (id: number) => this.queries.getApprovalChain(id);
   getDirectManager = (id: number) => this.queries.getDirectManager(id);
   getTelegramGroupForNode = (id: number) => this.queries.getTelegramGroupForNode(id);

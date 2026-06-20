@@ -39,6 +39,10 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         base_salary:         salary_history.base_salary,
         salary_earned:       salary_history.salary_earned,
         total_bonuses:       salary_history.total_bonuses,
+        status:              salary_history.status,
+        approved_by:         salary_history.approved_by,
+        paid_by:             salary_history.paid_by,
+        paid_date:           salary_history.paid_date,
       })
         .from(salary_history)
         .innerJoin(hrEmployees, eq(hrEmployees.id, salary_history.employee_id))
@@ -104,12 +108,17 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   async updatePayroll(id: string, data: HrRow): Promise<Result<HrRow>> {
     try {
       const rows = await db.update(salary_history).set({
-        base_salary:   data.baseSalary    != null ? String(data.baseSalary)    : undefined,
-        salary_earned: data.netSalary     != null ? String(data.netSalary)     : undefined,
-        total_bonuses: data.totalBonuses  != null ? String(data.totalBonuses)  : (data.bonus != null ? String(data.bonus) : undefined),
-        other_bonuses: data.otherBonuses  != null ? String(data.otherBonuses)  : (data.other_bonuses != null ? String(data.other_bonuses) : undefined),
-        salary_period_end: data.paymentDate != null ? String(data.paymentDate) : undefined,
-        updated_at:    _time.now(),
+        base_salary:       data.baseSalary    != null ? String(data.baseSalary)   : undefined,
+        salary_earned:     data.netSalary     != null ? String(data.netSalary)    : undefined,
+        total_bonuses:     data.totalBonuses  != null ? String(data.totalBonuses) : (data.bonus != null ? String(data.bonus) : undefined),
+        other_bonuses:     data.otherBonuses  != null ? String(data.otherBonuses) : (data.other_bonuses != null ? String(data.other_bonuses) : undefined),
+        salary_period_end: data.paymentDate   != null ? String(data.paymentDate)  : undefined,
+        // Workflow fields — approvePayroll writes status+approved_by; postToGL writes status+paid_by+paid_date
+        status:            data.status        != null ? String(data.status)        : undefined,
+        approved_by:       data.approvedBy    != null ? Number(data.approvedBy)    : undefined,
+        paid_by:           data.postedBy      != null ? Number(data.postedBy)      : (data.paidBy != null ? Number(data.paidBy) : undefined),
+        paid_date:         data.paidDate      != null ? String(data.paidDate)      : undefined,
+        updated_at:        _time.now(),
       }).where(eq(salary_history.id, parseInt(id, 10))).returning();
       return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};
     } catch (error: unknown) {

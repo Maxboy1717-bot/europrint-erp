@@ -70,7 +70,7 @@ export class MesShiftsStatsRepository {
   async getStats(d: string): Promise<Row> {
     const rows = await runQuery<Row>(sql`
       SELECT
-        COUNT(*) FILTER (WHERE status = 'active')::int AS active_sessions,
+        COUNT(*) FILTER (WHERE status IN ('in_progress', 'running'))::int AS active_sessions,
         COUNT(*) FILTER (WHERE status = 'completed' AND DATE(end_time) = ${d}::date)::int AS completed_today,
         COALESCE(SUM(produced_qty) FILTER (WHERE DATE(end_time) = ${d}::date), 0)::int AS produced_today,
         COALESCE(AVG(CASE WHEN produced_qty > 0 THEN defect_qty::float / produced_qty END) * 100, 0)::numeric(5,2) AS defect_rate

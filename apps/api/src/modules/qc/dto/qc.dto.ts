@@ -24,11 +24,22 @@ export const QcUpdateStandardSchema = z.object({
 export type QcUpdateStandardDto = z.infer<typeof QcUpdateStandardSchema>;
 
 export const QcCreateFinalInspectionSchema = z.object({
-  order_id:     z.number().int().positive(),
-  inspector_id: z.number().int().positive().optional(),
-  status:       z.enum(['pending', 'passed', 'failed']).optional(),
-  notes:        z.string().optional(),
-});
+  order_id:      z.number().int().positive().optional(),
+  papkaOrderId:  z.number().int().positive().optional(),
+  inspector_id:  z.number().int().positive().optional(),
+  status:        z.enum(['pending', 'passed', 'failed']).optional(),
+  notes:         z.string().optional(),
+  comments:      z.string().optional(),
+  sampleQty:     z.number().int().min(1).optional(),
+  defectQty:     z.number().int().min(0).optional(),
+  visualOk:      z.boolean().optional(),
+  dimensionsOk:  z.boolean().optional(),
+  printOk:       z.boolean().optional(),
+  packagingOk:   z.boolean().optional(),
+}).refine(
+  (d) => (d.order_id != null || d.papkaOrderId != null),
+  { message: 'order_id yoki papkaOrderId talab qilinadi' }
+);
 export type QcCreateFinalInspectionDto = z.infer<typeof QcCreateFinalInspectionSchema>;
 
 export const QcUpdateFinalInspectionSchema = z.object({

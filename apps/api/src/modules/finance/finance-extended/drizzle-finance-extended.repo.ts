@@ -70,13 +70,37 @@ export class DrizzleFinanceExtendedRepository implements IFinanceExtendedReposit
 
   async findIncomeExpenseSummary(): Promise<Result<Row>> {
     try {
-      const [income, expense] = await Promise.all([
-        db.select({ total: sum(incomeExpenseTransactions.amount) }).from(incomeExpenseTransactions).where(sql`${incomeExpenseTransactions.transactionType} = 'income'`),
-        db.select({ total: sum(incomeExpenseTransactions.amount) }).from(incomeExpenseTransactions).where(sql`${incomeExpenseTransactions.transactionType} = 'expense'`),
-      ]);
-      const totalIncome = Number(income[0]?.total || 0);
-      const totalExpense = Number(expense[0]?.total || 0);
-      return Ok({ totalIncome, totalExpense, netBalance: totalIncome - totalExpense });
+      // Single-pass aggregate: income/expense sums + row count + current-month period.
+      // FE Summary type expects: totalIncome, totalExpense, netAmount, transactionCount, period{from,to}.
+      const r = await runQuery<{
+        totalIncome: string;
+        totalExpense: string;
+        netAmount: string;
+        transactionCount: string;
+        periodFrom: string;
+        periodTo: string;
+      }>(sql`
+        SELECT
+          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'income'),  0) AS "totalIncome",
+          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'expense'), 0) AS "totalExpense",
+          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'income'),  0)
+            - COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'expense'), 0) AS "netAmount",
+          COUNT(*)                                                              AS "transactionCount",
+          date_trunc('month', NOW())::date                                      AS "periodFrom",
+          NOW()::date                                                            AS "periodTo"
+        FROM income_expense_transactions
+      `);
+      const row = r.rows[0];
+      return Ok({
+        totalIncome:      Number(row?.totalIncome      ?? 0),
+        totalExpense:     Number(row?.totalExpense     ?? 0),
+        netAmount:        Number(row?.netAmount        ?? 0),
+        transactionCount: Number(row?.transactionCount ?? 0),
+        period: {
+          from: String(row?.periodFrom ?? ''),
+          to:   String(row?.periodTo   ?? ''),
+        },
+      });
     } catch (e: unknown) { return Err((e as Error).message || 'Xulosa topilmadi'); }
   }
 

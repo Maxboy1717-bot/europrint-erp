@@ -111,4 +111,8 @@ export class ChatRoomService {
   async toggleMemberMute(roomId: string, userId: string, muted: boolean): Promise<void> {
     await this.roomRepo.updateMemberMute(roomId, userId, muted);
   }
+
+  async getSharedFiles(roomId: string | number, type?: string): Promise<Result<Record<string, unknown>[], AppError>> {
+    return this.roomRepo.findSharedFiles(String(roomId), type);
+  }
 }

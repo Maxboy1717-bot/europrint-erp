@@ -140,6 +140,7 @@ export class HrPayrollController {
     const result = await this.hrRepo.updatePayroll(payrollId, {
       status:   'paid',
       postedBy: user?.sub ?? user?.id,
+      paidDate: new Date().toISOString().split('T')[0],
     } as Record<string, unknown>);
     assertOk(result);
     return { message: "Oylik maosh buxgalteriyaga o'tkazildi", ...result.data };

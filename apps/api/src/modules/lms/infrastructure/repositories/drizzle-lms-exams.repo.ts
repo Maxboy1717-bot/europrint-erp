@@ -139,6 +139,77 @@ export class LmsExamsRepository {
     }
   }
 
+  /**
+   * submitAttemptById — grades and persists an existing in-progress attempt.
+   * Called by LmsExamsService.submitExam(attemptId, userId):
+   *  1. Looks up exam_id from lms_exam_attempts WHERE id = attemptId
+   *  2. Grades answers vs lms_exam_questions.correct_option
+   *  3. UPDATEs the existing row: score, passed, submitted_at, status='submitted'
+   * Columns confirmed in DB: lms_exam_attempts(exam_id,user_id,score,passed,submitted_at,status,answers),
+   *   lms_exam_questions(correct_option,exam_id), lms_exams(passing_score).
+   */
+  async submitAttemptById(
+    attemptId: number,
+    userId: number,
+    answers: Array<{ questionId: number; selectedOption: number }>,
+  ): Promise<Result<Row>> {
+    try {
+      // 1. Find existing attempt and its exam_id
+      const attempts = await exec(sql`
+        SELECT id, exam_id, status FROM lms_exam_attempts
+        WHERE id = ${attemptId} AND user_id = ${userId}
+        LIMIT 1
+      `);
+      if (!attempts.length) return Err('Urinish topilmadi');
+      const attempt = attempts[0];
+      if (attempt.status === 'submitted') return Err('Urinish allaqachon topshirilgan');
+      const examIdInt = Number(attempt.exam_id);
+
+      // 2. Fetch exam to get passing_score
+      const exams = await exec(sql`
+        SELECT id, passing_score FROM lms_exams WHERE id = ${examIdInt} LIMIT 1
+      `);
+      if (!exams.length) return Err('Imtihon topilmadi');
+      const passingScore = Number(exams[0].passing_score ?? 70);
+
+      // 3. Fetch questions to grade
+      const questions = await exec(sql`
+        SELECT id, correct_option FROM lms_exam_questions
+        WHERE exam_id = ${examIdInt}
+        ORDER BY order_index
+      `);
+
+      // 4. Compute score (0–100) and passed flag
+      let scoreVal = 0;
+      let passedVal = false;
+      if (questions.length > 0 && Array.isArray(answers) && answers.length > 0) {
+        const correctCount = answers.filter(a =>
+          questions.find(q => Number(q.id) === a.questionId)
+            ?.correct_option === a.selectedOption
+        ).length;
+        scoreVal = Math.round((correctCount / questions.length) * 100);
+        passedVal = scoreVal >= passingScore;
+      }
+
+      // 5. UPDATE existing attempt row (do NOT insert a duplicate)
+      const r = await exec(sql`
+        UPDATE lms_exam_attempts
+        SET answers       = ${JSON.stringify(answers)}::jsonb,
+            score         = ${scoreVal},
+            passed        = ${passedVal},
+            submitted_at  = NOW(),
+            status        = 'submitted'
+        WHERE id = ${attemptId}
+        RETURNING *
+      `);
+      const row = (r[0] ?? { id: attemptId, exam_id: examIdInt, user_id: userId }) as Row;
+      return Ok({ ...row, message: 'Imtihon topshirildi' });
+    } catch (error) {
+      this.logger.error(`submitAttemptById: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   /** Returns questions (without correct_option) for a given exam — used by FE exam UI. */
   async findExamQuestions(examId: string): Promise<Result<object[]>> {
     try {

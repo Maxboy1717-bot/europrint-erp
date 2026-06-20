@@ -35,17 +35,42 @@ export class QcExtendedFinalRepository {
     }
   }
 
-  async createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row>>  {
+  async createFinalInspection(
+    order_id: number | null,
+    inspector_id: number | null,
+    status: string | null,
+    notes: string | null,
+    passed: boolean | null,
+    sampleSize: number,
+    defectCount: number,
+    passedCount: number,
+    defectRate: number | null,
+  ): Promise<Result<Row>>  {
     try {
       // qc_final_inspections.papka_order_id is NOT NULL (no default) → must be supplied; the legacy
       // order_id/inspector_id/status columns are optional. Map to canonical cols (result is read by the
       // list query, status by update/complete — set both for consistency). inspected_by = FK to users.
+      // sample_size / passed_count / defect_count / defect_rate — all exist in DB (verified info_schema).
+      const resolvedStatus = status ?? 'pending';
       const rows = await runQuery<Row>(sql`
-        INSERT INTO qc_final_inspections (papka_order_id, inspected_by, result, status, notes, passed)
-        VALUES (${order_id ?? null}, ${inspector_id ?? null}, ${status ?? 'pending'}, ${status ?? 'pending'}, ${notes ?? null}, ${passed ?? false})
+        INSERT INTO qc_final_inspections
+          (papka_order_id, inspected_by, result, status, notes, passed,
+           sample_size, passed_count, defect_count, defect_rate)
+        VALUES
+          (${order_id ?? null}, ${inspector_id ?? null},
+           ${resolvedStatus}, ${resolvedStatus}, ${notes ?? null}, ${passed ?? false},
+           ${sampleSize}, ${passedCount}, ${defectCount}, ${defectRate})
         RETURNING *
       `);
-      return Ok(rows.rows[0] as Row);
+      const row = rows.rows[0] as Row;
+      // Wrap in shape FE expects: { inspection: { ...row, status, defectRate } }
+      return Ok({
+        inspection: {
+          ...row,
+          status: (row['result'] ?? row['status']) as string,
+          defectRate: Number(row['defect_rate'] ?? 0),
+        },
+      } as Row);
     } catch (_e) {
       return Err(String(_e));
     }

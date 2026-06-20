@@ -4,7 +4,6 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { marketingLeads } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { LeadsRepository } from './leads.repository';
 
@@ -42,22 +41,29 @@ export class LeadsService {
 
   async create(dto: Record<string, unknown>, _createdBy?: number) {
     return safeCall(async () => {
-      const row: Omit<typeof marketingLeads.$inferInsert, 'id'> = {
-        campaignId: dto['campaignId'] as string | undefined,
-        firstName: dto['firstName'] as string | undefined,
-        lastName: dto['lastName'] as string | undefined,
-        email: dto['email'] as string | undefined,
-        phone: dto['phone'] as string | undefined,
+      const row: Record<string, unknown> = {
+        name: String(dto['name'] ?? dto['firstName'] ?? ''),
+        company: (dto['company'] as string | undefined) || undefined,
+        phone: (dto['phone'] as string | undefined) || undefined,
+        email: (dto['email'] as string | undefined) || undefined,
+        source: (dto['source'] as string | undefined) ?? 'website',
+        channel: (dto['channel'] as string | undefined) || undefined,
+        campaignId: (dto['campaignId'] as string | undefined) || undefined,
         status: (dto['status'] as string | undefined) ?? 'new',
+        score: dto['score'] != null ? Number(dto['score']) : 0,
+        notes: (dto['notes'] as string | undefined) || undefined,
+        lostReason: (dto['lostReason'] as string | undefined) || undefined,
+        firstName: (dto['firstName'] as string | undefined) || undefined,
+        lastName: (dto['lastName'] as string | undefined) || undefined,
       };
-      return this.repo.create(row as typeof marketingLeads.$inferInsert);
+      return this.repo.create(row);
     });
   }
 
   async update(id: number, dto: Record<string, unknown>) {
     return safeCall(async () => {
       await this.findOne(id);
-      return this.repo.update(id, dto as Partial<typeof marketingLeads.$inferInsert>);
+      return this.repo.update(id, dto);
     });
   }
 

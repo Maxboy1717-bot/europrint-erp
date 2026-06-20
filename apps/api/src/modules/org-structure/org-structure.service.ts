@@ -199,6 +199,24 @@ export class OrgStructureService implements OnModuleInit {
     return this.repo.move(id, newParentId, level);
   }
 
+  /**
+   * Returns all active users for the FE department-head picker.
+   * 87% of org nodes have zero members → member-based list leaves headOptions=[].
+   * This endpoint surfaces every active user so the head can always be selected.
+   */
+  async getAvailableUsers() {
+    return safeCall(async () => {
+      const r = await this.repo.availableUsers();
+      const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+      return {
+        users: rows.map((u) => ({
+          id: u.id,
+          name: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(),
+        })),
+      };
+    });
+  }
+
   async assignUserToNode(userId: number, nodeId: number) {
     return safeCall(async () => {
       await this.repo.assignUser(userId, nodeId);

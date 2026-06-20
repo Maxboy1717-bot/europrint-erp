@@ -108,7 +108,21 @@ export class QcExtendedController {
   @UsePipes(new ZodValidationPipe(QcCreateFinalInspectionSchema))
   @Roles(...QC_WRITE_ROLES)
   async createFinalInspection(@Body() body: QcCreateFinalInspectionDto) {
-    return unwrapOrThrow(await this.svc.createFinalInspection(body.order_id, body.inspector_id ?? null, 'pending', body.notes ?? null, false));
+    const papkaOrderId = body.order_id ?? body.papkaOrderId ?? null;
+    const sampleQty = body.sampleQty ?? 10;
+    const defectQty = body.defectQty ?? 0;
+    const passedCount = Math.max(0, sampleQty - defectQty);
+    const defectRate = sampleQty > 0 ? (defectQty / sampleQty) * 100 : null;
+    // Derive pass/fail from defect rate (>5% = failed)
+    const passed = defectRate === null ? true : defectRate <= 5;
+    const status = passed ? 'passed' : 'failed';
+    const notes = body.notes ?? body.comments ?? null;
+    return unwrapOrThrow(
+      await this.svc.createFinalInspection(
+        papkaOrderId, body.inspector_id ?? null, status, notes, passed,
+        sampleQty, defectQty, passedCount, defectRate,
+      )
+    );
   }
 
   @ApiOperation({ summary: 'Complete final inspection' })

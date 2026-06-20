@@ -81,7 +81,7 @@ export function useTaskDetailMutations(
       if (files?.length) {
         for (const f of files) {
           const fd = new FormData(); fd.append("file", f);
-          await apiRequest('POST', `/api/kanban/chat-messages/${data.id}/files`);
+          await apiRequest('POST', `/api/kanban/chat-messages/${data.id}/files`, fd);
         }
       }
       return data;
@@ -118,7 +118,7 @@ export function useTaskDetailMutations(
   const uploadResultFileMutation = useMutation({
     mutationFn: async ({ resultId, file }: { resultId: string; file: File }) => {
       const fd = new FormData(); fd.append("file", file);
-      return await apiRequest('POST', `/api/kanban/results/${resultId}/files`);
+      return await apiRequest('POST', `/api/kanban/results/${resultId}/files`, fd);
     },
     onSuccess: () => { refetch.refetchResults(); toast({ title: "Fayl biriktirildi" }); },
     onError:   () => { toast({ title: "Fayl biriktirishda xatolik", variant: "destructive" }); },
@@ -161,7 +161,7 @@ export function useTaskDetailMutations(
   const uploadFileMutation = useMutation({
     mutationFn: async (file: File) => {
       const fd = new FormData(); fd.append("file", file);
-      return await apiRequest('POST', `/api/kanban/cards/${cid}/files`);
+      return await apiRequest('POST', `/api/kanban/cards/${cid}/files`, fd);
     },
     onSuccess: () => { refetch.refetchFiles(); toast({ title: "Fayl yuklandi" }); },
     onError:   () => { toast({ title: "Fayl yuklashda xatolik", variant: "destructive" }); },

@@ -190,6 +190,18 @@ export class ChatController {
     return pinned ? [pinned] : [];
   }
 
+  @ApiOperation({ summary: 'Get shared files in room' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('rooms/:roomId/files')
+  async getSharedFiles(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('roomId') roomId: string,
+    @Query('type') type?: string,
+  ) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    return unwrapOrInternal(await this.chatService.getSharedFiles(roomId, type));
+  }
+
   @ApiOperation({ summary: 'Get mute status' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/mute')

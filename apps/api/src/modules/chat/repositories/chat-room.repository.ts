@@ -9,8 +9,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { eq, and, sql } from 'drizzle-orm';
-import { chatRooms, chatMembers, appUsers } from '@shared/db';
+import { eq, and, isNotNull, sql } from 'drizzle-orm';
+import { chatRooms, chatMembers, chatMessages, appUsers } from '@shared/db';
 import { ensureChatTables as _ensureChatTables, runChatMigrations as _runChatMigrations, ensureChatTrigger as _ensureChatTrigger } from '@common/database/ddl-migrations';
 import { safeCall, Result } from '@common/result';
 import { ChatRoomUsersRepository } from './chat-room-users.repository';
@@ -257,4 +257,43 @@ export class ChatRoomRepository {
   }
 
   async findTodayBirthdays() { return this.users.findTodayBirthdays(); }
+
+  /**
+   * Returns shared files (IMAGE / FILE message types) for a room.
+   * @param roomId  - string room id
+   * @param type    - optional filter: 'image' | 'document' (null = all)
+   */
+  async findSharedFiles(roomId: string, type?: string): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id: chatMessages.id,
+          roomId: chatMessages.roomId,
+          senderId: chatMessages.senderId,
+          fileUrl: chatMessages.fileUrl,
+          fileName: chatMessages.fileName,
+          fileType: chatMessages.fileType,
+          messageType: chatMessages.messageType,
+          createdAt: chatMessages.createdAt,
+          senderName: sql<string>`COALESCE(${appUsers.full_name}, '')`,
+        })
+        .from(chatMessages)
+        .leftJoin(appUsers, sql`${appUsers.id} = ${chatMessages.senderId}::int`)
+        .where(
+          and(
+            eq(chatMessages.roomId, roomId),
+            isNotNull(chatMessages.fileUrl),
+            sql`${chatMessages.isDeleted} = false`,
+            type === 'image'
+              ? sql`${chatMessages.messageType} = 'IMAGE'`
+              : type === 'document'
+                ? sql`${chatMessages.messageType} = 'FILE'`
+                : sql`${chatMessages.messageType} IN ('IMAGE', 'FILE')`,
+          ),
+        )
+        .orderBy(sql`${chatMessages.createdAt} DESC`)
+        .limit(100);
+      return castTo<Record<string, unknown>[]>(rows);
+    }, 'DB_ERROR');
+  }
 }

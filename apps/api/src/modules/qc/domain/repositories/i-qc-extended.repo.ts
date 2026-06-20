@@ -19,7 +19,7 @@ export interface IQcExtendedRepo {
   createStandard(name: string, category: string | null, description: string | null, parameters: Record<string, unknown> | null, is_active: boolean | null): Promise<Result<Row>>;
   updateStandard(id: number, name: string | null, category: string | null, description: string | null, is_active: boolean | null): Promise<Result<Row[]>>;
   listFinalInspections(status: string | undefined, oid: number | null, lim: number, off: number): Promise<Result<Row[]>>;
-  createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row>>;
+  createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null, sampleSize: number, defectCount: number, passedCount: number, defectRate: number | null): Promise<Result<Row>>;
   updateFinalInspection(id: number, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row[]>>;
   getFinalOrders(lim: number): Promise<Result<Row[]>>;
   completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean): Promise<Result<Row[]>>;

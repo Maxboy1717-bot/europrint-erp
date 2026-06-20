@@ -7,6 +7,8 @@ import { Body, Controller, Get, HttpCode, Post, Query, UseGuards , UseIntercepto
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { ProductionFactsService } from './production-facts.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -61,7 +63,12 @@ export class ProductionFactsController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'super_admin', 'production_manager', 'pp_manager', 'operator')
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() body: CompatBodyDto) {
-    return unwrapOrInternal(await this.svc.create(body));
+  async create(@Body() body: CompatBodyDto, @CurrentUser() user: AuthenticatedUser) {
+    // operator_id NOT NULL: use body value if numeric, else fall back to authenticated user's id
+    const bodyWithOperator = {
+      ...body,
+      operatorId: (body as Record<string, unknown>)['operatorId'] ?? (body as Record<string, unknown>)['operator_id'] ?? user?.id ?? user?.sub ?? null,
+    };
+    return unwrapOrInternal(await this.svc.create(bodyWithOperator));
   }
 }

@@ -105,7 +105,7 @@ export class CoordinationRepository implements ICoordinationRepo {
         task:         rasporyazhenie.task,
         deadline:     rasporyazhenie.deadline,
         priority:     rasporyazhenie.priority,
-        status:       rasporyazhenie.status,
+        status:       sql<string>`CASE WHEN ${rasporyazhenie.status} != 'done' AND ${rasporyazhenie.deadline} IS NOT NULL AND ${rasporyazhenie.deadline} < CURRENT_DATE THEN 'overdue' ELSE ${rasporyazhenie.status} END`,
         done_at:      rasporyazhenie.done_at,
         done_by:      rasporyazhenie.done_by,
         done_note:    rasporyazhenie.done_note,
@@ -117,7 +117,7 @@ export class CoordinationRepository implements ICoordinationRepo {
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${rasporyazhenie.from_user_id}::text`)
         .leftJoin(appUsers, sql`${appUsers.id}::text = ${rasporyazhenie.from_user_id}::text`)
         .orderBy(
-          sql`CASE ${rasporyazhenie.status} WHEN 'overdue' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'assigned' THEN 2 WHEN 'done' THEN 3 ELSE 4 END`,
+          sql`CASE WHEN ${rasporyazhenie.status} != 'done' AND ${rasporyazhenie.deadline} IS NOT NULL AND ${rasporyazhenie.deadline} < CURRENT_DATE THEN 0 WHEN ${rasporyazhenie.status} = 'in_progress' THEN 1 WHEN ${rasporyazhenie.status} = 'assigned' THEN 2 WHEN ${rasporyazhenie.status} = 'done' THEN 3 ELSE 4 END`,
           sql`${rasporyazhenie.deadline} ASC NULLS LAST`,
           desc(rasporyazhenie.created_at),
         )
@@ -202,7 +202,7 @@ export class CoordinationRepository implements ICoordinationRepo {
         assigned:    sql<number>`COUNT(*) FILTER (WHERE ${rasporyazhenie.status}='assigned')`,
         in_progress: sql<number>`COUNT(*) FILTER (WHERE ${rasporyazhenie.status}='in_progress')`,
         done:        sql<number>`COUNT(*) FILTER (WHERE ${rasporyazhenie.status}='done')`,
-        overdue:     sql<number>`COUNT(*) FILTER (WHERE ${rasporyazhenie.status}='overdue')`,
+        overdue:     sql<number>`COUNT(*) FILTER (WHERE ${rasporyazhenie.status} != 'done' AND ${rasporyazhenie.deadline} IS NOT NULL AND ${rasporyazhenie.deadline} < CURRENT_DATE)`,
         total:       sql<number>`COUNT(*)`,
       }).from(rasporyazhenie).where(sql`${rasporyazhenie.created_at} >= NOW() - INTERVAL '7 days'`);
       return r[0] ?? { total: 0, assigned: 0, in_progress: 0, done: 0, overdue: 0 };

@@ -110,6 +110,7 @@ export class ChatService {
   getTodayBirthdays() { return this.roomSvc.getTodayBirthdays(); }
   toggleMemberMute(roomId: string, userId: string, muted: boolean) { return this.roomSvc.toggleMemberMute(roomId, userId, muted); }
   getOrCreateDepartmentRooms(userId: number) { return this.roomSvc.getOrCreateDepartmentRooms(userId); }
+  getSharedFiles(roomId: string | number, type?: string) { return this.roomSvc.getSharedFiles(roomId, type); }
 
   getMessages(roomId: string | number, userId: number, limit?: number, before?: string) { return this.msgSvc.getMessages(roomId, userId, limit, before); }
   sendMessage(roomId: string | number, senderId: number, content: string, opts?: Record<string, unknown>) {
