@@ -48,7 +48,7 @@ export function MessageBubble({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [isStarred, setIsStarred] = useState(false);
+  const [isStarred, setIsStarred] = useState(msg.isStarred ?? false);
 
   const handleStar = useCallback(async () => {
     try {

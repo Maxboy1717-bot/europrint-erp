@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { assertFound, assertRequired } from '@common/assertions';
+import { assertFound } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
@@ -104,7 +104,6 @@ export class SdLeadsController {
   @UsePipes(new ZodValidationPipe(SdCreateLeadSchema))
   @Roles(...SD_WRITE_ROLES)
   async create(@Body() body: SdCreateLeadDto) {
-    assertRequired((body as Record<string, unknown>).full_name, 'full_name required');
     return unwrapOrThrow(await this.svc.create(body));
   }
 

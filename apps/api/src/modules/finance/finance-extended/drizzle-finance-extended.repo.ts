@@ -222,6 +222,29 @@ export class DrizzleFinanceExtendedRepository implements IFinanceExtendedReposit
     }
   }
 
+  async findAssetInventorySummary(): Promise<Result<Row>> {
+    try {
+      const r = await runQuery<{ total: string; active: string; depreciated: string; total_value: string }>(sql`
+        SELECT
+          COUNT(*) AS total,
+          COUNT(*) FILTER (WHERE status = 'active') AS active,
+          COUNT(*) FILTER (WHERE status = 'depreciated') AS depreciated,
+          COALESCE(SUM(current_value), 0) AS total_value
+        FROM asset_items
+      `);
+      const row = r.rows[0] ?? { total: '0', active: '0', depreciated: '0', total_value: '0' };
+      return Ok({
+        total:      Number(row.total),
+        active:     Number(row.active),
+        depreciated: Number(row.depreciated),
+        totalValue: Number(row.total_value),
+      });
+    } catch (e: unknown) {
+      this.logger.warn(`findAssetInventorySummary: ${(e as Error).message}`);
+      return Err((e as Error).message || 'Asset summary topilmadi');
+    }
+  }
+
   async findInsurance(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
     try {
       const rows = await runQuery<Row>(sql`

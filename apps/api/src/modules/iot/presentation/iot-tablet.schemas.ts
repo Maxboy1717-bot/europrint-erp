@@ -113,6 +113,15 @@ export const MaterialReturnSchema = z.object({
   notes: z.string().max(2000).optional(),
 }).passthrough();
 
+// FE: useIoTTablet.ts reportDowntime mutationFn — POST /api/iot/downtime-events
+export const DowntimeEventSchema = z.object({
+  sessionId:       z.coerce.number().int().min(1),
+  eventType:       z.string().max(100).default('manual_entry'),
+  durationMinutes: z.coerce.number().int().min(1).max(480),
+  reasonCode:      z.string().max(100),
+  notes:           z.string().max(2000).optional(),
+});
+
 export const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
 
 /**

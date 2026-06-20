@@ -76,6 +76,7 @@ export interface ChatMessage {
   threadCount?: number;
   reactions?: ChatReaction[];
   poll?: ChatPollData;
+  isStarred?: boolean;
   createdAt: string;
   senderName: string;
   senderAvatar?: string;

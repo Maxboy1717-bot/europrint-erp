@@ -73,8 +73,72 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
 
   async getDashboardStats(from?: string, to?: string): Promise<Result<Row>>  {
   try {
-      const rows = await exec(sql`SELECT COUNT(DISTINCT fi.id) FILTER (WHERE fi.result = 'passed')::int AS passed_inspections, COUNT(DISTINCT fi.id) FILTER (WHERE fi.result = 'failed')::int AS failed_inspections, (SELECT COUNT(*) FROM qc_defects WHERE status != 'resolved')::int AS open_defects, (SELECT COALESCE(SUM(quantity), 0) FROM qc_braks WHERE (${from ?? null}::date IS NULL OR created_at::date >= ${from ?? null}::date) AND (${to ?? null}::date IS NULL OR created_at::date <= ${to ?? null}::date))::int AS total_scrap FROM qc_final_inspections fi WHERE (${from ?? null}::date IS NULL OR fi.inspected_at::date >= ${from ?? null}::date) AND (${to ?? null}::date IS NULL OR fi.inspected_at::date <= ${to ?? null}::date)`);
-      return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);  } catch (_e) {
+      // qc_inspections → tests KPI
+      const rTests = await exec(sql`SELECT
+        COUNT(*)::int                                              AS total,
+        COUNT(*) FILTER (WHERE result = 'passed')::int            AS passed,
+        CASE WHEN COUNT(*) = 0 THEN 0
+             ELSE ROUND(100.0 * COUNT(*) FILTER (WHERE result = 'passed') / COUNT(*))
+        END::int                                                   AS pass_rate
+      FROM qc_inspections
+      WHERE (${from ?? null}::date IS NULL OR created_at::date >= ${from ?? null}::date)
+        AND (${to   ?? null}::date IS NULL OR created_at::date <= ${to   ?? null}::date)`);
+      if (!rTests.ok) return Err(rTests.error);
+      const tests = rTests.data[0] ?? {};
+
+      // qc_braks → braks KPI
+      const rBraks = await exec(sql`SELECT
+        COUNT(*)::int                              AS count,
+        COALESCE(SUM(quantity), 0)::int            AS total_qty,
+        COALESCE(SUM(cost_impact), 0)::numeric     AS total_cost_impact
+      FROM qc_braks
+      WHERE (${from ?? null}::date IS NULL OR created_at::date >= ${from ?? null}::date)
+        AND (${to   ?? null}::date IS NULL OR created_at::date <= ${to   ?? null}::date)`);
+      if (!rBraks.ok) return Err(rBraks.error);
+      const braksRow = rBraks.data[0] ?? {};
+
+      // qc_reclamations → reclamations KPI (status field is 'resolved' for closed)
+      const rRec = await exec(sql`SELECT
+        COUNT(*)::int                                        AS total,
+        COUNT(*) FILTER (WHERE status != 'resolved')::int   AS open
+      FROM qc_reclamations`);
+      if (!rRec.ok) return Err(rRec.error);
+      const recRow = rRec.data[0] ?? {};
+
+      // qc_supplier_quality → distinct supplier count
+      const rSup = await exec(sql`SELECT COUNT(DISTINCT COALESCE(supplier_id, vendor_id))::int AS suppliers FROM qc_supplier_quality`);
+      if (!rSup.ok) return Err(rSup.error);
+      const supRow = rSup.data[0] ?? {};
+
+      // qc_final_inspections → total count
+      const rFinal = await exec(sql`SELECT COUNT(*)::int AS final_inspections FROM qc_final_inspections`);
+      if (!rFinal.ok) return Err(rFinal.error);
+      const finalRow = rFinal.data[0] ?? {};
+
+      // open RCA = open reclamations without resolution (same as open reclamations)
+      const openRca = Number(recRow['open'] ?? 0);
+
+      const shaped: Row = {
+        tests: {
+          total:    Number(tests['total']     ?? 0),
+          passed:   Number(tests['passed']    ?? 0),
+          passRate: Number(tests['pass_rate'] ?? 0),
+        },
+        braks: {
+          count:           Number(braksRow['count']             ?? 0),
+          totalQty:        Number(braksRow['total_qty']         ?? 0),
+          totalCostImpact: Number(braksRow['total_cost_impact'] ?? 0),
+        },
+        reclamations: {
+          total: Number(recRow['total'] ?? 0),
+          open:  Number(recRow['open']  ?? 0),
+        },
+        suppliers:        Number(supRow['suppliers']        ?? 0),
+        finalInspections: Number(finalRow['final_inspections'] ?? 0),
+        openRca,
+      };
+      return Ok(shaped);
+  } catch (_e) {
     return Err(String(_e));
   }
 

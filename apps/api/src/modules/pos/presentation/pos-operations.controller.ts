@@ -158,15 +158,12 @@ export class PosOperationsController {
   async listPendingP2p(@Query('warehouseType') warehouseType?: string) {
     const result = await this.procurementRequest.listRequests({ status: 'approved' });
     const requests = unwrapOrThrow(result);
+    const list = Array.isArray(requests) ? requests : [];
     // ixtiyoriy: target_warehouse_type bo'yicha filtrlash
     if (warehouseType) {
-      const filtered = Array.isArray(requests)
-        ? requests.filter((r) => r['target_warehouse_type'] === warehouseType)
-        : [];
-      return { requests: filtered, total: filtered.length };
+      return list.filter((r) => r['target_warehouse_type'] === warehouseType);
     }
-    const list = Array.isArray(requests) ? requests : [];
-    return { requests: list, total: list.length };
+    return list;
   }
 
   /**

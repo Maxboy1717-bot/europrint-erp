@@ -54,9 +54,12 @@ export class CrmCustomFieldsController {
   @Roles(...CRM_ADMIN_ROLES)
   @UsePipes(new ZodValidationPipe(CreateCustomFieldDtoSchema))
   async create(@Body() body: CreateCustomFieldDto) {
-    assertRequired(body.name, 'name and label required');
-    assertRequired(body.label, 'name and label required');
-    return unwrapOrThrow(await this.svc.create(body));
+    // Accept camelCase (FE: fieldName/fieldLabel) or snake_case (API: name/label) keys.
+    const nameVal  = (body as Record<string, unknown>)['fieldName']  ?? body.name;
+    const labelVal = (body as Record<string, unknown>)['fieldLabel'] ?? body.label;
+    assertRequired(nameVal,  'fieldName (or name) required');
+    assertRequired(labelVal, 'fieldLabel (or label) required');
+    return unwrapOrThrow(await this.svc.create(body as Record<string, unknown>));
   }
 
   @ApiOperation({ summary: 'Update' })
@@ -83,8 +86,14 @@ export class CrmCustomFieldsController {
   @Roles(...CRM_ADMIN_ROLES)
   @UsePipes(new ZodValidationPipe(ReorderCustomFieldsDtoSchema))
   async reorder(@Body() body: ReorderCustomFieldsDto) {
-    assertRequired(body.items?.length, 'items required');
-    return unwrapOrThrow(await this.svc.reorder(body.items));
+    // Normalize: FE sends { orderedIds: number[] }; canonical API sends { items: [{id, order_index}] }
+    let items = body.items;
+    if ((!items || items.length === 0) && Array.isArray((body as Record<string, unknown>)['orderedIds'])) {
+      const orderedIds = (body as Record<string, unknown>)['orderedIds'] as number[];
+      items = orderedIds.map((id, index) => ({ id, order_index: index }));
+    }
+    assertRequired(items?.length, 'items or orderedIds required');
+    return unwrapOrThrow(await this.svc.reorder(items!));
   }
 
   @ApiOperation({ summary: 'Delete' })

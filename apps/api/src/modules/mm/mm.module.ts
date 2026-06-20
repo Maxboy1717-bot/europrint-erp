@@ -47,6 +47,7 @@ import { MmVendorsPrRepository } from './infrastructure/repositories/mm-vendors-
 import { MM_VENDORS_PR_REPO } from './domain/repositories/i-mm-vendors-pr.repo';
 import { DrizzleMaterialsSvcRepository } from './materials/drizzle-materials-svc.repo';
 import { MATERIALS_SVC_REPO } from './materials/i-materials-svc.repo';
+import { MmVendorRatingService } from './application/mm-vendor-rating.service';
 
 const commandHandlers = [
   CreatePurchaseOrderHandler,
@@ -80,6 +81,7 @@ const repositories = [
     MmDashboardRepository,
     { provide: MM_DASHBOARD_REPO, useClass: MmDashboardRepository },
     MmDashboardService,
+    MmVendorRatingService,
     LayerFormulaService],
   exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, MATERIALS_SVC_REPO, PurchaseService, MaterialsService, LayerFormulaService],
 })

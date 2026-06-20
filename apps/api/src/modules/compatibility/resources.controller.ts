@@ -134,9 +134,9 @@ export class OrgDepartmentsCompatController {
   }
 
   @Post('notify-vacancies')
-  @HttpCode(HttpStatus.ACCEPTED)
-  notifyVacancies() {
-    return { message: 'Vakansiya bildirishnomalari navbatga qo\'yildi', queued: true };
+  @HttpCode(HttpStatus.OK)
+  async notifyVacancies() {
+    return unwrapOrInternal(await this.svc.getVacantDepartments());
   }
 }
 

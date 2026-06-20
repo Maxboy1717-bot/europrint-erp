@@ -213,10 +213,10 @@ export default function SDLeads() {
     mutationFn: (data: LeadFormData) =>
       apiRequest("POST", "/api/sd/leads", {
         title: data.title,
-        customerId: data.customerId ? Number(data.customerId) : null,
-        source: data.source || null,
-        estimatedValue: data.estimatedValue ? Number(data.estimatedValue) : null,
-        notes: data.notes || null,
+        customer_id: data.customerId ? Number(data.customerId) : undefined,
+        source: data.source || undefined,
+        amount: data.estimatedValue ? Number(data.estimatedValue) : undefined,
+        notes: data.notes || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/leads"] });
@@ -236,10 +236,10 @@ export default function SDLeads() {
     mutationFn: ({ id, data }: { id: number; data: LeadFormData }) =>
       apiRequest("PATCH", `/api/sd/leads/${id}`, {
         title: data.title,
-        customerId: data.customerId ? Number(data.customerId) : null,
-        source: data.source || null,
-        estimatedValue: data.estimatedValue ? Number(data.estimatedValue) : null,
-        notes: data.notes || null,
+        customer_id: data.customerId ? Number(data.customerId) : undefined,
+        source: data.source || undefined,
+        amount: data.estimatedValue ? Number(data.estimatedValue) : undefined,
+        notes: data.notes || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/leads"] });

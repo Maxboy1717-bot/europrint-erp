@@ -4,14 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { ArrowUp, ArrowDown, CalendarDays, Clock, Search, BookOpen } from "lucide-react";
+import { ArrowUp, ArrowDown, Clock, Search, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { CommunicationCenter } from "@/components/cc/CommunicationCenter";
 import { DoklaStatusBadge, RaspoStatusBadge, PriorityDot } from "./CoordinationPageHelpers";
 import {
   COUNCIL_LEVELS, shortDate, isOverdue,
-  type Dokla, type Raspo, type DoklaStatus, type RaspoStatus,
+  type Council, type Dokla, type Raspo, type DoklaStatus, type RaspoStatus,
 } from "./CoordinationPageTypes";
 import type { UseMutateFunction } from "@tanstack/react-query";
 
@@ -240,45 +240,75 @@ export function BasketsSection() {
 }
 
 // ─── CouncilsSection ──────────────────────────────────────────────────────
-export function CouncilsSection() {
-  const { t } = useTranslation("coordination");
+interface CouncilsSectionProps {
+  councils: Council[];
+  councilsLoading: boolean;
+}
+
+export function CouncilsSection({ councils, councilsLoading }: CouncilsSectionProps) {
+  const { t, language } = useTranslation("coordination");
+  const isRu = language === "ru";
 
   return (
     <TabsContent value="councils" className="mt-4 space-y-3">
       <p className="text-sm text-muted-foreground">{t("escalationRule")} · {t("escalationProtocol")}</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {COUNCIL_LEVELS.map(c => {
-          const Icon = c.icon;
-          return (
-            <Card key={c.level} className={cn("border-2 shadow-none", c.color.replace("bg-", "border-").split(" ")[0])}>
+
+      {councilsLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5].map(i => (
+            <Card key={i} className="border-2 shadow-none animate-pulse">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", c.color)}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold text-muted-foreground">{c.level}-daraja</div>
-                    <div className="font-semibold text-sm leading-tight">{t(c.key)}</div>
-                  </div>
-                </CardTitle>
+                <div className="h-4 bg-muted rounded w-3/4" />
               </CardHeader>
-              <CardContent className="space-y-1.5 text-xs">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <CalendarDays className="w-3 h-3 shrink-0" />
-                  <span>{t(c.freqKey)}</span>
-                </div>
-                <div className="flex items-start gap-1.5 text-muted-foreground">
-                  <BookOpen className="w-3 h-3 mt-0.5 shrink-0" />
-                  <span>{t(c.purposeKey)}</span>
-                </div>
-                <div className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-1", c.badgeClass)}>
-                  {t(c.freqKey)}
-                </div>
+              <CardContent>
+                <div className="h-3 bg-muted rounded w-1/2 mb-2" />
+                <div className="h-3 bg-muted rounded w-2/3" />
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {!councilsLoading && councils.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-8">
+          {isRu ? "Советы не найдены" : "Kengashlar topilmadi"}
+        </p>
+      )}
+
+      {!councilsLoading && councils.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {councils.map((c, i) => {
+            const style = COUNCIL_LEVELS[i % COUNCIL_LEVELS.length];
+            const Icon = style.icon;
+            return (
+              <Card key={c.id} className={cn("border-2 shadow-none", style.color.replace("bg-", "border-").split(" ")[0])}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", style.color)}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-muted-foreground">{c.council_type}</div>
+                      <div className="font-semibold text-sm leading-tight">{c.name}</div>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1.5 text-xs">
+                  {c.description && (
+                    <div className="flex items-start gap-1.5 text-muted-foreground">
+                      <BookOpen className="w-3 h-3 mt-0.5 shrink-0" />
+                      <span>{c.description}</span>
+                    </div>
+                  )}
+                  <div className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-1", style.badgeClass)}>
+                    {c.council_type}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </TabsContent>
   );
 }

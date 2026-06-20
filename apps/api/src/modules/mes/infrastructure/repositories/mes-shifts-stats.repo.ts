@@ -105,18 +105,22 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
-  async pauseSession(sid: number, reason: string | undefined): Promise<Row[]> {
+  async pauseSession(sid: number, _reason: string | undefined): Promise<Row[]> {
+    // pause_reason and paused_at columns do not exist in mes_production_sessions;
+    // only status + updated_at are available (information_schema verified 2026-06-20)
     const rows = await runQuery<Row>(sql`
       UPDATE mes_production_sessions
-      SET status = 'paused', pause_reason = ${reason ?? null}, paused_at = NOW(), updated_at = NOW()
+      SET status = 'paused', updated_at = NOW()
       WHERE id = ${sid} AND status = 'active' RETURNING *
     `);
     return rows.rows as Row[];
   }
 
   async resumeSession(sid: number): Promise<Row[]> {
+    // paused_at column does not exist; clear pause by restoring status only
     const rows = await runQuery<Row>(sql`
-      UPDATE mes_production_sessions SET status = 'active', paused_at = NULL, updated_at = NOW()
+      UPDATE mes_production_sessions
+      SET status = 'active', updated_at = NOW()
       WHERE id = ${sid} AND status = 'paused' RETURNING *
     `);
     return rows.rows as Row[];

@@ -106,8 +106,8 @@ export class FinanceExtendedIncomeController {
   @ApiOperation({ summary: 'Get asset inventory summary' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('asset-inventory/summary')
-  getAssetInventorySummary() {
-    return { total: 0, active: 0, depreciated: 0, totalValue: 0 };
+  async getAssetInventorySummary() {
+    return unwrapOrInternal(await this.svc.findAssetInventorySummary());
   }
 
   @ApiOperation({ summary: 'Get asset by id' })

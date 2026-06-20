@@ -115,6 +115,14 @@ export class FinanceExtendedService {
     });
   }
 
+  async findAssetInventorySummary() {
+    return safeCall(async () => {
+      const result = await this.repo.findAssetInventorySummary();
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
   async findAssetInventory(query: Record<string, unknown> = {}){
     return safeCall(async () => {
     const page = Number(query.page ?? 1);

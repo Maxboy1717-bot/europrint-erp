@@ -206,6 +206,23 @@ export class ResourcesCompatService {
     });
   }
 
+  /**
+   * POST /api/org-departments/notify-vacancies
+   * Returns real vacant org_departments (is_active=true AND head_user_id IS NULL).
+   */
+  async getVacantDepartments(): Promise<Result<{ vacantCount: number; vacantNodes: Record<string, unknown>[]; notified: true }>> {
+    return safeCall(async () => {
+      const result = await rawSql(sql`
+        SELECT id::text AS id, COALESCE(name, '') AS name
+        FROM org_departments
+        WHERE is_active = true AND head_user_id IS NULL
+        ORDER BY level NULLS FIRST, name
+      `);
+      const rows = dbRows(result);
+      return { vacantCount: rows.length, vacantNodes: rows, notified: true as const };
+    });
+  }
+
   async deleteOrgFunction(id: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       await rawSql(sql`

@@ -59,8 +59,13 @@ export default function OrgStructureHierarchy() {
   });
 
   const notifyMutation = useMutation({
-    mutationFn: () => apiRequest<{ message?: string }>("POST", "/api/org-departments/notify-vacancies"),
-    onSuccess: (d) => toast({ title: d.message || "Xabar yuborildi" }),
+    mutationFn: () =>
+      apiRequest<{ vacantCount: number; vacantNodes: { id: string; name: string }[]; notified: boolean }>(
+        "POST",
+        "/api/org-departments/notify-vacancies",
+      ),
+    onSuccess: (d) =>
+      toast({ title: `${d.vacantCount} ta vakant bo'lim`, description: "Boshliqlari tayinlanmagan bo'limlar" }),
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 

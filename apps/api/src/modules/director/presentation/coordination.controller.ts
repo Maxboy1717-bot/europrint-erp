@@ -40,7 +40,7 @@ export class CoordinationController {
   @Get('councils')
   async getCouncils() {
     const r = await db.execute(sql`
-      SELECT id, name, council_type AS type, description, is_active, created_at
+      SELECT id, name, council_type, description, is_active, created_at
       FROM councils WHERE is_active = true ORDER BY id
     `);
     return ((r as { rows?: unknown[] }).rows) ?? [];

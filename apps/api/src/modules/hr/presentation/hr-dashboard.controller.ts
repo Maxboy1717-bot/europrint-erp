@@ -12,6 +12,7 @@ import { HrEmployeesExtService } from '../application/hr-employees-ext.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto, CreatePipSchema, CreatePipDto, UpdatePipSchema, UpdatePipDto } from './dto/hr.dto';
 import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 
 type Rows = { rows?: unknown[] };
 
@@ -331,13 +332,33 @@ export class HrDashboardController {
   }
 
   @Get('documents/employee')
-  getEmployeeDocuments() {
-    return { items: [], total: 0 };
+  async getEmployeeDocuments(@Query('employeeId') employeeId?: string, @Query('status') status?: string) {
+    const r = await db.execute(sql`
+      SELECT id, employee_id, document_type, doc_type, title, status, initiated_by,
+             total_steps, current_step, created_at, updated_at
+      FROM hr_documents
+      WHERE (${employeeId ?? null}::int IS NULL OR employee_id = ${parseInt(employeeId ?? '0', 10)})
+        AND (${status ?? null}::text IS NULL OR status = ${status ?? null}::text)
+      ORDER BY created_at DESC
+      LIMIT 200
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('documents/my')
-  getMyDocuments() {
-    return { items: [], total: 0 };
+  async getMyDocuments(@CurrentUser() user: { id: number }) {
+    // hr_documents.initiated_by = users.id of the requester
+    const r = await db.execute(sql`
+      SELECT id, employee_id, document_type, doc_type, title, status, initiated_by,
+             total_steps, current_step, created_at, updated_at
+      FROM hr_documents
+      WHERE initiated_by = ${user?.id ?? 0}
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+    const items = ((r as Rows).rows) ?? [];
+    return { items, total: items.length };
   }
 
   @Get('documents/pending')

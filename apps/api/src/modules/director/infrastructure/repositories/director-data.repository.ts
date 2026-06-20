@@ -104,7 +104,7 @@ export class DirectorDataRepository implements IDirectorDataRepo {
   async queryProduction(): Promise<Result<ProductionData>> {
 
     return safeCall(async () => {
-      const [breakRows, sessRows, [sessCountRow], overdueRows] = await Promise.all([
+      const [breakRows, sessRows, [sessCountRow], overdueRows, [defRow]] = await Promise.all([
         db.select({ status: productionOrders.status, cnt: sql<string>`COUNT(*)` }).from(productionOrders).groupBy(productionOrders.status),
         db.select({
           id: mes_sessions.id,
@@ -124,6 +124,10 @@ export class DirectorDataRepository implements IDirectorDataRepo {
           planned_end_date: sql<string>`planned_end_date::text`,
           status: productionOrders.status,
         }).from(productionOrders).where(sql`status::text NOT IN ('completed','cancelled') AND planned_end_date IS NOT NULL AND planned_end_date::date < CURRENT_DATE`).orderBy(sql`planned_end_date ASC`).limit(20),
+        db.select({
+          defect_pct: sql<string>`ROUND(COALESCE(SUM(defective_qty::numeric),0) / NULLIF(SUM(planned_quantity::numeric),0) * 100, 1)`,
+          delayed_cnt: sql<string>`COUNT(*) FILTER (WHERE status NOT IN ('completed','cancelled') AND planned_end_date IS NOT NULL AND planned_end_date::date < CURRENT_DATE)`,
+        }).from(productionOrders).where(sql`deleted_at IS NULL`),
       ]);
       type BreakRow = { status: string; cnt: string };
       const orderBreakdown: Record<string, number> = {};
@@ -140,7 +144,14 @@ export class DirectorDataRepository implements IDirectorDataRepo {
         id: r.id, orderNumber: String(r.order_number ?? ''), plannedEndDate: String(r.planned_end_date ?? ''), status: String(r.status ?? ''),
       }));
       const qualityRate = ov['quality_rate'] != null ? String(ov['quality_rate']) : null;
-      return { orderBreakdown, sessionsToday, oeeToday: { avg: qualityRate, min: qualityRate, max: qualityRate, snapshots: int(ov, 'snaps') }, overdueOrders };
+      const dr = defRow as Row | undefined;
+      return {
+        orderBreakdown, sessionsToday,
+        oeeToday: { avg: qualityRate, min: qualityRate, max: qualityRate, snapshots: int(ov, 'snaps') },
+        overdueOrders,
+        defectPct: parseFloat(String(dr?.['defect_pct'] ?? '0')) || 0,
+        delayedOrders: parseInt(String(dr?.['delayed_cnt'] ?? '0'), 10) || 0,
+      };
     }, 'DB_ERROR');
   }
 

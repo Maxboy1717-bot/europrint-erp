@@ -6,7 +6,7 @@
 import { db } from '@shared/db';
 import { castTo } from '@common/db-rows';
 import { eq, and, isNull, sql } from 'drizzle-orm';
-import { chatMessages, chatMembers, chatReactions, chatPolls, chatPollVotes, appUsers } from '@shared/db';
+import { chatMessages, chatMembers, chatReactions, chatPolls, chatPollVotes, appUsers, chatStarredMessages } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
 
@@ -51,9 +51,14 @@ export class ChatMessageBaseRepository {
           forwardFrom: sql<unknown>`CASE WHEN ${chatMessages.forwardFromId} IS NOT NULL THEN (SELECT json_build_object('id', fm.id, 'content', CASE WHEN fm.is_deleted THEN NULL ELSE COALESCE(fm.content, fm.text) END, 'senderName', (fu.first_name || ' ' || fu.last_name)) FROM chat_messages fm LEFT JOIN users fu ON fu.id = fm.sender_id::int WHERE fm.id = ${chatMessages.forwardFromId}) ELSE NULL END`,
           reactions: sql<unknown>`(SELECT json_agg(json_build_object('emoji', cr.emoji, 'count', cr.cnt, 'users', cr.user_names, 'userIds', cr.user_ids)) FROM (SELECT r.emoji, COUNT(*)::int AS cnt, json_agg(u2.first_name || ' ' || u2.last_name) AS user_names, json_agg(r.user_id) AS user_ids FROM chat_reactions r LEFT JOIN users u2 ON u2.id = r.user_id::int WHERE r.message_id = ${chatMessages.id} GROUP BY r.emoji) cr)`,
           poll: sql<unknown>`CASE WHEN ${chatMessages.messageType} = 'POLL' THEN (SELECT json_build_object('id', cp.id, 'question', cp.question, 'options', cp.options, 'isMultiple', cp.is_multiple, 'isAnonymous', cp.is_anonymous, 'totalVotes', (SELECT COUNT(*) FROM chat_poll_votes WHERE poll_id = cp.id), 'myVotes', (SELECT json_agg(option_index ORDER BY option_index) FROM chat_poll_votes WHERE poll_id = cp.id AND user_id = ${userIdStr}), 'votes', (SELECT json_object_agg(option_index::text, json_build_object('count', cnt, 'users', CASE WHEN cp.is_anonymous THEN '[]'::json ELSE user_names END)) FROM (SELECT option_index, COUNT(*)::int AS cnt, json_agg(u3.first_name || ' ' || u3.last_name) AS user_names FROM chat_poll_votes cpv LEFT JOIN users u3 ON u3.id = cpv.user_id::int WHERE poll_id = cp.id GROUP BY option_index) v)) FROM chat_polls cp WHERE cp.message_id = ${chatMessages.id} LIMIT 1) ELSE NULL END`,
+          isStarred: sql<boolean>`CASE WHEN ${chatStarredMessages.messageId} IS NOT NULL THEN TRUE ELSE FALSE END`,
         })
         .from(chatMessages)
         .leftJoin(appUsers, sql`${appUsers.id} = ${chatMessages.senderId}::int`)
+        .leftJoin(
+          chatStarredMessages,
+          sql`${chatStarredMessages.messageId} = ${chatMessages.id}::text AND ${chatStarredMessages.userId} = ${userIdStr}`,
+        )
         .where(
           and(
             eq(chatMessages.roomId, roomIdStr),

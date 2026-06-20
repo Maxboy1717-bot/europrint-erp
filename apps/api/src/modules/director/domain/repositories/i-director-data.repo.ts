@@ -33,6 +33,8 @@ export interface ProductionData {
   sessionsToday: unknown[];
   oeeToday: { avg: string | null; min: string | null; max: string | null; snapshots: number };
   overdueOrders: unknown[];
+  defectPct: number;
+  delayedOrders: number;
 }
 
 export interface HrData {

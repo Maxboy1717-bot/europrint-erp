@@ -27,12 +27,25 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { MmDashboardService } from '../application/mm-dashboard.service';
+import { MmVendorRatingService } from '../application/mm-vendor-rating.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { MmCreateFleetVehicleSchema, MmCreateFleetVehicleDto, MmCreateFuelLogSchema, MmCreateFuelLogDto } from '../dto/mm.dto';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { z } from 'zod';
+
+// Zod schema for POST /mm/vendor-performance
+const VendorPerformanceSchema = z.object({
+  vendor_id: z.number().int().positive({ message: 'vendor_id musbat butun son bo\'lishi kerak' }),
+  quality:   z.number().min(0).max(100, { message: 'quality 0-100 orasida bo\'lishi kerak' }),
+  delivery:  z.number().min(0).max(100, { message: 'delivery 0-100 orasida bo\'lishi kerak' }),
+  price:     z.number().min(0).max(100, { message: 'price 0-100 orasida bo\'lishi kerak' }),
+  document:  z.number().min(0).max(100, { message: 'document 0-100 orasida bo\'lishi kerak' }),
+  notes:     z.string().max(1000).optional(),
+});
+type VendorPerformanceDto = z.infer<typeof VendorPerformanceSchema>;
 
 const MM_READ = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director', 'purchasing_manager'];
 const MM_WRITE = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director'];
@@ -48,7 +61,10 @@ const MM_WRITE = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director'];
 export class MmDashboardController {
   private readonly logger = new Logger(MmDashboardController.name);
 
-  constructor(private readonly svc: MmDashboardService) {}
+  constructor(
+    private readonly svc: MmDashboardService,
+    private readonly ratingService: MmVendorRatingService,
+  ) {}
 
   @ApiOperation({ summary: 'Get dashboard' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -252,25 +268,67 @@ export class MmDashboardController {
     throw new HttpException("To'lov hali amalga oshirilmagan — fi_payments jadval qurilgach ishlaydi", HttpStatus.NOT_IMPLEMENTED);
   }
 
-  @ApiOperation({ summary: 'Record vendor performance score' })
+  @ApiOperation({ summary: 'Record vendor performance score (4-factor formula: quality 40% + delivery 30% + price 20% + document 10%)' })
   @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
   @Post('vendor-performance')
   @Roles(...MM_WRITE)
-  async createVendorPerformance(@Body() body: unknown) {
-    const dto = (body ?? {}) as Record<string, unknown>;
+  async createVendorPerformance(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    // 1. Validate input with Zod
+    const parsed = VendorPerformanceSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new HttpException(
+        { message: 'Noto\'g\'ri kiritilgan ma\'lumotlar', errors: parsed.error.flatten().fieldErrors },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const dto: VendorPerformanceDto = parsed.data;
+
+    // 2. Compute weighted score via pure service (no side effects)
+    const ratingResult = this.ratingService.computeRating({
+      quality:  dto.quality,
+      delivery: dto.delivery,
+      price:    dto.price,
+      document: dto.document,
+    });
+    if (!ratingResult.ok) {
+      throw new HttpException(
+        { message: ratingResult.error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const { score, grade, breakdown } = ratingResult.data;
+
+    // 3. Persist to mm_vendor_ratings
+    // Columns: vendor_id, quality_score, delivery_score, price_score, notes, rated_at, rater_id
+    // document_score has no DB column — stored in notes JSON alongside grade + breakdown
+    const notesJson = JSON.stringify({
+      grade,
+      document_score: dto.document,
+      breakdown,
+      user_notes: dto.notes ?? null,
+    });
+
     const r = await db.execute(sql`
-      INSERT INTO mm_vendor_ratings (vendor_id, quality_score, delivery_score, price_score, notes, rated_at)
+      INSERT INTO mm_vendor_ratings
+        (vendor_id, quality_score, delivery_score, price_score, notes, rated_at, rater_id)
       VALUES (
-        ${dto['vendor_id'] ?? dto['vendorId'] ?? null}::int,
-        ${Number(dto['quality_rate'] ?? dto['qualityRate'] ?? 0)}::numeric,
-        ${Number(dto['on_time_rate'] ?? dto['onTimeRate'] ?? 0)}::numeric,
-        ${Number(dto['score'] ?? 0)}::numeric,
-        ${dto['period'] ? `period: ${String(dto['period'])}` : null},
-        NOW()
+        ${dto.vendor_id}::int,
+        ${dto.quality}::numeric,
+        ${dto.delivery}::numeric,
+        ${dto.price}::numeric,
+        ${notesJson},
+        NOW(),
+        ${user?.id ?? null}::int
       )
-      RETURNING id, vendor_id, quality_score, delivery_score, price_score
+      RETURNING id, vendor_id, quality_score, delivery_score, price_score, notes, rated_at
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
-    return { message: 'Sotuvchi unumdorligi saqlandi', data: row };
+
+    this.logger.log(`POST vendor-performance: vendor=${dto.vendor_id} score=${score} grade=${grade} by user=${user?.id}`);
+    return {
+      message: 'Sotuvchi unumdorligi saqlandi',
+      data: { ...row, computed_score: score, grade },
+    };
   }
 }

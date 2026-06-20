@@ -49,6 +49,14 @@ export const COUNCIL_LEVELS = [
 ] as const;
 
 // ─── Types ────────────────────────────────────────────────────────────────
+export interface Council {
+  id: number;
+  name: string;
+  council_type: string;
+  description: string | null;
+  is_active: boolean;
+}
+
 export type DoklaStatus   = "sent" | "read" | "resolved";
 export type RaspoStatus   = "assigned" | "in_progress" | "done" | "overdue";
 export type BasketType    = "incoming" | "pending" | "outgoing";

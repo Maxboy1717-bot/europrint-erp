@@ -15,7 +15,7 @@ import { ArrowUp, ArrowDown, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   VALID_TABS,
-  type Dokla, type Raspo, type BasketDoc,
+  type Council, type Dokla, type Raspo, type BasketDoc,
   type CoordinationStats, type DoklaStatus, type RaspoStatus,
   type DoklaFormState, type RaspoFormState,
 } from "./CoordinationPageTypes";
@@ -76,6 +76,12 @@ export default function CoordinationPage() {
   useQuery<BasketDoc[]>({
     queryKey: ["/api/coordination/baskets"],
     select: selectArray<BasketDoc>,
+    enabled: !!isAuthenticated,
+  });
+
+  const { data: councils = [], isLoading: councilsLoading } = useQuery<Council[]>({
+    queryKey: ["/api/coordination/councils"],
+    select: selectArray<Council>,
     enabled: !!isAuthenticated,
   });
 
@@ -271,7 +277,7 @@ export default function CoordinationPage() {
         />
 
         <BasketsSection />
-        <CouncilsSection />
+        <CouncilsSection councils={councils} councilsLoading={councilsLoading} />
       </Tabs>
 
       {/* Dialogs */}

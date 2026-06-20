@@ -48,6 +48,7 @@ import {
   MaterialKitScanSchema,
   EvaluationSchema,
   MaterialReturnSchema,
+  DowntimeEventSchema,
   IOT_READ,
   coerceWorkerId,
 } from './iot-tablet.schemas';
@@ -427,6 +428,38 @@ export class IotTabletController {
       INSERT INTO inline_qc_checks (session_id, sample_size, defect_count, pass_rate, notes, checked_at)
       VALUES (${sessionId}, ${dto.sampleSize}, ${dto.defectCount}, ${passRate}, ${dto.notes ?? null}, NOW())
       RETURNING *
+    `);
+    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
+  }
+
+  // -- Downtime events ---------------------------------------------------------
+
+  @ApiOperation({ summary: 'Report manual downtime event (POST /api/iot/downtime-events)' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @Post('downtime-events') @Roles(...IOT_READ)
+  async reportDowntimeEvent(@Body() body: unknown) {
+    const dto = DowntimeEventSchema.parse(body ?? {});
+    const durationSeconds = dto.durationMinutes * 60;
+    const r = await db.execute(sql`
+      INSERT INTO downtime_events (
+        session_id, event_type,
+        started_at, ended_at,
+        duration_seconds, duration_minutes,
+        reason_code, is_planned,
+        notes, created_at
+      ) VALUES (
+        ${dto.sessionId},
+        ${dto.eventType},
+        NOW() - (${dto.durationMinutes} * INTERVAL '1 minute'),
+        NOW(),
+        ${durationSeconds},
+        ${dto.durationMinutes},
+        ${dto.reasonCode},
+        false,
+        ${dto.notes ?? null},
+        NOW()
+      ) RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? {};
     return { data: row };

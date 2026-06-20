@@ -280,13 +280,16 @@ export class DrizzleMarketingExtRepository {
 
   async getLeadsBySource(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
-      const rows = await db.select({
-        source: marketingLeads.status,
-        count: sql<number>`count(*)::int`,
-      })
-        .from(marketingLeads)
-        .where(isNull(marketingLeads.deletedAt))
-        .groupBy(marketingLeads.status);
+      // Raw SQL on the real `source` column: the @europrint/schemas compiled type for
+      // marketingLeads omits `source` (stale dist), though it exists in the live DB and
+      // lib/db source schema. db.execute avoids the missing-Drizzle-field type error.
+      const result = await db.execute(sql`
+        SELECT COALESCE(source, 'unknown') AS source, COUNT(*)::int AS count
+        FROM marketing_leads
+        WHERE deleted_at IS NULL
+        GROUP BY source
+      `);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
       return rows;
     });
   }

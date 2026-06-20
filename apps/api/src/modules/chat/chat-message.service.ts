@@ -30,6 +30,7 @@ export class ChatMessageService {
       replyToId: msg['reply_to_id'] ? String(msg['reply_to_id']) : null, replyToMessage,
       threadCount: 0, reactions: [], createdAt: msg['created_at'],
       senderName: user?.['full_name'], senderAvatar: user?.['profile_image_url'], senderEmployeeId: user?.['employee_id'],
+      isStarred: msg['is_starred'] ?? false,
     };
   }
 
