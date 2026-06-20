@@ -67,6 +67,10 @@ const AddObserverSchema = z.object({
   userId: z.union([z.string(), z.number()]),
 }).passthrough();
 
+const RateCardSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+}).passthrough();
+
 export { KanbanCardFilesController } from './kanban-card-files.controller';
 
 @ApiTags('§16 Kanban Extended')
@@ -126,6 +130,19 @@ export class KanbanCardsController {
     } catch {
       return { items: [], total: 0 };
     }
+  }
+
+  @Put('cards/:id/rating')
+  @ApiOperation({ summary: 'Kartani 1-5 yulduz baholash' })
+  async rateCard(@Param('id') id: string, @Body() body: unknown) {
+    const { rating } = RateCardSchema.parse(body);
+    const { rows } = await runQuery<Record<string, unknown>>(sql`
+      UPDATE kanban_cards SET rating = ${rating}, updated_at = NOW()
+      WHERE id = ${Number(id)} AND deleted_at IS NULL
+      RETURNING id, rating
+    `);
+    if (!rows[0]) throw new HttpException('Karta topilmadi', HttpStatus.NOT_FOUND);
+    return rows[0];
   }
 
   @Post('cards')

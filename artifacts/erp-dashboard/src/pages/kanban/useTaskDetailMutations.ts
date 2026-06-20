@@ -150,6 +150,13 @@ export function useTaskDetailMutations(
     onError:    () => { toast({ title: tLabel('kanban.useTaskDetailMutations.toxtatishdaXatolik', "To'xtatishda xatolik"), variant: "destructive" }); },
   });
 
+  // ── Rating mutation ──────────────────────────────────────────────────────
+  const rateCardMutation = useMutation({
+    mutationFn: async (rating: number) => { await apiRequest("PUT", `/api/kanban/cards/${cid}/rating`, { rating }); },
+    onSuccess:  () => { queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards"] }); toast({ title: tLabel('kanban.useTaskDetailMutations.bahoSaqlandi', "Baho saqlandi") }); },
+    onError:    () => { toast({ title: tLabel('kanban.useTaskDetailMutations.bahoXatolik', "Bahoni saqlashda xatolik"), variant: "destructive" }); },
+  });
+
   // ── File mutations ───────────────────────────────────────────────────────
   const uploadFileMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -188,7 +195,7 @@ export function useTaskDetailMutations(
     addObserverMutation, removeObserverMutation,
     addCoExecutorMutation, removeCoExecutorMutation,
     addResultMutation, uploadResultFileMutation, deleteResultFileMutation,
-    acceptTaskMutation, completeTaskMutation,
+    acceptTaskMutation, completeTaskMutation, rateCardMutation,
     startTimeMutation, stopTimeMutation,
     uploadFileMutation, deleteFileMutation,
     createTaskFromMessage,
