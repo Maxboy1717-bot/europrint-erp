@@ -27,16 +27,20 @@ export class CrmExtrasService {
 
   async getDashboard() {
     return safeCall(async () => {
-      const [leads, deals, todayActivities] = await Promise.all([
+      const [leadsResult, dealsResult, activitiesResult] = await Promise.all([
         this.repo.getDashboardLeads(),
         this.repo.getDashboardDeals(),
         this.repo.getDashboardActivities(),
       ]);
+      // Each repo method returns Result<T> — unwrap .data before reading fields.
+      const leadsData   = leadsResult.ok   ? leadsResult.data   : [];
+      const dealsData   = dealsResult.ok   ? (dealsResult.data as Record<string, unknown>) : {};
+      const todayCount  = activitiesResult.ok ? activitiesResult.data : 0;
       return {
-        leads_by_status: leads,
-        pipeline_total: (deals as Record<string, unknown>).pipeline ?? 0,
-        open_deals: (deals as Record<string, unknown>).total ?? 0,
-        today_activities: todayActivities,
+        leads_by_status: leadsData,
+        pipeline_total:  dealsData.pipeline ?? 0,
+        open_deals:      dealsData.total    ?? 0,
+        today_activities: todayCount,
       };
     });
   }

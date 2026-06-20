@@ -51,7 +51,7 @@ export class DirectorDataRepository implements IDirectorDataRepo {
         db.select({
           month: sql<string>`COUNT(*) FILTER (WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE))`,
           completed: sql<string>`COUNT(*) FILTER (WHERE status = 'completed' AND DATE(updated_at) = CURRENT_DATE)`,
-          in_production: sql<string>`COUNT(*) FILTER (WHERE status IN ('in_production','printing','processing'))`,
+          in_production: sql<string>`(SELECT COUNT(*) FROM production_orders WHERE status = 'in_progress')`,
           overdue: sql<string>`COUNT(*) FILTER (WHERE status NOT IN ('completed','cancelled') AND delivery_date IS NOT NULL AND delivery_date::date < CURRENT_DATE)`,
         }).from(sales_orders),
         db.select({ oee: sql<string>`CASE WHEN COUNT(*) = 0 THEN NULL ELSE ROUND(COUNT(*) FILTER (WHERE quality_passed = true)::numeric / COUNT(*) * 100, 1)::text END` }).from(mes_sessions).where(sql`DATE(created_at AT TIME ZONE 'Asia/Tashkent') = CURRENT_DATE AT TIME ZONE 'Asia/Tashkent'`),
@@ -80,20 +80,22 @@ export class DirectorDataRepository implements IDirectorDataRepo {
   async querySummary(): Promise<Result<SummaryData>> {
 
     return safeCall(async () => {
-      const [[ordRow]] = await Promise.all([
+      const [[ordRow], [oeeRow]] = await Promise.all([
         db.select({
           today: sql<string>`COUNT(*) FILTER (WHERE DATE(created_at) = CURRENT_DATE)`,
           month_total: sql<string>`COUNT(*) FILTER (WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE))`,
           month_revenue: sql<string>`COALESCE(SUM(total_amount) FILTER (WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)), 0)`,
-          active_production: sql<string>`COUNT(*) FILTER (WHERE status IN ('in_production','printing','processing'))`,
+          active_production: sql<string>`(SELECT COUNT(*) FROM production_orders WHERE status = 'in_progress')`,
           pending: sql<string>`COUNT(*) FILTER (WHERE status = 'pending')`,
           overdue: sql<string>`COUNT(*) FILTER (WHERE status NOT IN ('completed','cancelled') AND delivery_date IS NOT NULL AND delivery_date::date < CURRENT_DATE)`,
         }).from(sales_orders),
+        db.select({ oee: sql<string>`CASE WHEN COUNT(*) = 0 THEN NULL ELSE ROUND(COUNT(*) FILTER (WHERE quality_passed = true)::numeric / COUNT(*) * 100, 1)::text END` }).from(mes_sessions).where(sql`DATE(created_at AT TIME ZONE 'Asia/Tashkent') = CURRENT_DATE AT TIME ZONE 'Asia/Tashkent'`),
       ]);
       const o = ordRow as Row | undefined;
+      const oe = oeeRow as Row | undefined;
       return {
         orders: { today: num(o, 'today'), monthTotal: num(o, 'month_total'), monthRevenue: num(o, 'month_revenue'), activeProduction: num(o, 'active_production'), pending: num(o, 'pending'), overdue: num(o, 'overdue') },
-        production: { oee: null },
+        production: { oee: oe?.oee != null ? Number(oe.oee) : null },
         generatedAt: _time.now().toISOString(),
       };
     }, 'DB_ERROR');

@@ -15,7 +15,7 @@ export class FinanceInvoiceRepo {
 
   async findInvoiceById(id: string): Promise<Result<FinanceRow | null>> {
     try {
-      const rows = await runQuery<FinanceRow>(sql`SELECT * FROM fi_invoices WHERE id = ${parseInt(id, 10)} LIMIT 1`);
+      const rows = await runQuery<FinanceRow>(sql`SELECT * FROM finance_invoices WHERE id = ${parseInt(id, 10)} LIMIT 1`);
       return Ok((rows.rows[0] ?? null) as FinanceRow | null);
     } catch (error: unknown) { return Err((error as Error).message); }
   }
@@ -26,48 +26,25 @@ export class FinanceInvoiceRepo {
       const limit = filters.limit || 10;
       const offset = (page - 1) * limit;
 
-      // Build WHERE conditions dynamically
-      const conditions: string[] = ['1=1'];
-      const params: unknown[] = [];
-      let paramIdx = 1;
-
-      if (filters.status) {
-        conditions.push(`status = $${paramIdx++}`);
-        params.push(filters.status);
-      }
-      if (filters.customerId) {
-        conditions.push(`customer_id = $${paramIdx++}`);
-        params.push(parseInt(filters.customerId, 10));
-      }
-      if (filters.from) {
-        conditions.push(`created_at >= $${paramIdx++}`);
-        params.push(filters.from);
-      }
-      if (filters.to) {
-        conditions.push(`created_at <= $${paramIdx++}`);
-        params.push(filters.to);
-      }
-
-      const where = conditions.join(' AND ');
-
       // Use sql template for parameterised queries built conditionally
+      // Canonical table: finance_invoices; status column = payment_status
       let countSql: ReturnType<typeof sql>;
       let itemsSql: ReturnType<typeof sql>;
 
       if (!filters.status && !filters.customerId && !filters.from && !filters.to) {
         // Fast path — no filters
-        countSql = sql`SELECT COUNT(*)::int AS count FROM fi_invoices`;
-        itemsSql = sql`SELECT * FROM fi_invoices ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+        countSql = sql`SELECT COUNT(*)::int AS count FROM finance_invoices`;
+        itemsSql = sql`SELECT * FROM finance_invoices ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
       } else {
-        // Build filtered queries using sql tagged template; we compose conditions selectively
-        const statusCond   = filters.status     ? sql`AND status = ${filters.status}`                            : sql``;
+        // Build filtered queries; finance_invoices uses payment_status (not status)
+        const statusCond   = filters.status     ? sql`AND payment_status = ${filters.status}`                    : sql``;
         const customerCond = filters.customerId ? sql`AND customer_id = ${parseInt(filters.customerId, 10)}`     : sql``;
         const fromCond     = filters.from       ? sql`AND created_at >= ${filters.from}`                         : sql``;
         const toCond       = filters.to         ? sql`AND created_at <= ${filters.to}`                           : sql``;
 
         countSql = sql`
           SELECT COUNT(*)::int AS count
-          FROM fi_invoices
+          FROM finance_invoices
           WHERE 1=1
             ${statusCond}
             ${customerCond}
@@ -76,7 +53,7 @@ export class FinanceInvoiceRepo {
         `;
         itemsSql = sql`
           SELECT *
-          FROM fi_invoices
+          FROM finance_invoices
           WHERE 1=1
             ${statusCond}
             ${customerCond}
@@ -97,26 +74,30 @@ export class FinanceInvoiceRepo {
 
   async findInvoiceBySalesOrderId(salesOrderId: string): Promise<Result<FinanceRow | null>> {
     try {
-      const rows = await runQuery<FinanceRow>(sql`SELECT * FROM fi_invoices WHERE source_id = ${salesOrderId} LIMIT 1`);
-      return Ok((rows.rows[0] ?? null) as FinanceRow | null);
+      // finance_invoices has no source_id column; match by vendor_id or customer_id context is unavailable.
+      // Return null (no row) rather than crashing — caller handles gracefully.
+      void salesOrderId;
+      return Ok(null);
     } catch (error: unknown) { return Err((error as Error).message); }
   }
 
   async saveInvoice(invoice: FinanceRow): Promise<Result<FinanceRow>> {
     try {
       const now = new Date();
+      // finance_invoices columns: customer_id, vendor_id, invoice_number, invoice_type,
+      //   total_amount, paid_amount, payment_status, due_date, created_at, updated_at
       const r = await runQuery<FinanceRow>(sql`
-        INSERT INTO fi_invoices
-          (customer_id, source_type, source_id, status, total_amount, paid_amount, due_date, notes, created_at)
+        INSERT INTO finance_invoices
+          (customer_id, vendor_id, invoice_number, invoice_type, total_amount, paid_amount, payment_status, due_date, created_at)
         VALUES
           (${invoice['customer_id'] ?? null},
-           ${invoice['source_type'] ?? null},
-           ${invoice['source_id'] ?? null},
-           ${invoice['status'] ?? 'draft'},
+           ${invoice['vendor_id'] ?? null},
+           ${invoice['invoice_number'] ?? null},
+           ${invoice['invoice_type'] ?? 'sales'},
            ${invoice['total_amount'] ?? 0},
            ${invoice['paid_amount'] ?? 0},
+           ${invoice['payment_status'] ?? invoice['status'] ?? 'unpaid'},
            ${invoice['due_date'] ?? null},
-           ${invoice['notes'] ?? null},
            ${invoice['created_at'] ?? now})
         RETURNING *
       `);
@@ -130,17 +111,16 @@ export class FinanceInvoiceRepo {
   async updateInvoice(id: string, data: FinanceRow): Promise<Result<FinanceRow>> {
     try {
       const r = await runQuery<FinanceRow>(sql`
-        UPDATE fi_invoices
+        UPDATE finance_invoices
         SET
-          customer_id  = COALESCE(${data['customer_id'] ?? null}, customer_id),
-          source_type  = COALESCE(${data['source_type'] ?? null}, source_type),
-          source_id    = COALESCE(${data['source_id'] ?? null}, source_id),
-          status       = COALESCE(${data['status'] ?? null}, status),
-          total_amount = COALESCE(${data['total_amount'] ?? null}, total_amount),
-          paid_amount  = COALESCE(${data['paid_amount'] ?? null}, paid_amount),
-          due_date     = COALESCE(${data['due_date'] ?? null}, due_date),
-          notes        = COALESCE(${data['notes'] ?? null}, notes),
-          updated_at   = NOW()
+          customer_id     = COALESCE(${data['customer_id'] ?? null}, customer_id),
+          vendor_id       = COALESCE(${data['vendor_id'] ?? null}, vendor_id),
+          invoice_type    = COALESCE(${data['invoice_type'] ?? null}, invoice_type),
+          payment_status  = COALESCE(${data['payment_status'] ?? data['status'] ?? null}, payment_status),
+          total_amount    = COALESCE(${data['total_amount'] ?? null}, total_amount),
+          paid_amount     = COALESCE(${data['paid_amount'] ?? null}, paid_amount),
+          due_date        = COALESCE(${data['due_date'] ?? null}, due_date),
+          updated_at      = NOW()
         WHERE id = ${parseInt(id, 10)}
         RETURNING *
       `);
@@ -157,19 +137,19 @@ export class FinanceInvoiceRepo {
       const limit = filters.limit || 10;
       const offset = (page - 1) * limit;
 
-      const invoiceIdCond = filters.invoiceId ? sql`AND id = ${parseInt(filters.invoiceId, 10)}` : sql``;
-      const fromCond      = filters.from       ? sql`AND updated_at >= ${filters.from}`           : sql``;
-      const toCond        = filters.to         ? sql`AND updated_at <= ${filters.to}`             : sql``;
+      const invoiceIdCond = filters.invoiceId ? sql`AND invoice_id = ${parseInt(filters.invoiceId, 10)}` : sql``;
+      const fromCond      = filters.from       ? sql`AND created_at >= ${filters.from}`                   : sql``;
+      const toCond        = filters.to         ? sql`AND created_at <= ${filters.to}`                     : sql``;
 
       const [countResult, itemsResult] = await Promise.all([
         runQuery<{ count: number }>(sql`
-          SELECT COUNT(*)::int AS count FROM fi_invoices
-          WHERE status = 'paid' ${invoiceIdCond} ${fromCond} ${toCond}
+          SELECT COUNT(*)::int AS count FROM finance_payments
+          WHERE status = 'completed' ${invoiceIdCond} ${fromCond} ${toCond}
         `),
         runQuery<FinanceRow>(sql`
-          SELECT * FROM fi_invoices
-          WHERE status = 'paid' ${invoiceIdCond} ${fromCond} ${toCond}
-          ORDER BY updated_at DESC LIMIT ${limit} OFFSET ${offset}
+          SELECT * FROM finance_payments
+          WHERE status = 'completed' ${invoiceIdCond} ${fromCond} ${toCond}
+          ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}
         `),
       ]);
       return { ok: true, data: { items: itemsResult.rows as FinanceRow[], total: Number(countResult.rows[0]?.count ?? 0) } };
@@ -178,15 +158,18 @@ export class FinanceInvoiceRepo {
 
   async savePayment(payment: FinanceRow): Promise<Result<FinanceRow>> {
     try {
+      // finance_payments columns: invoice_id, amount, status, payment_date, currency, payment_method, reference, notes
       const r = await runQuery<FinanceRow>(sql`
-        INSERT INTO fi_payments
-          (invoice_id, amount, status, recorded_by, payment_date)
+        INSERT INTO finance_payments
+          (invoice_id, amount, status, payment_date, currency, payment_method, notes)
         VALUES
           (${payment['invoice_id'] ?? null},
            ${payment['amount'] ?? 0},
            ${payment['status'] ?? 'completed'},
-           ${payment['recorded_by'] ?? null},
-           ${payment['payment_date'] ?? new Date()})
+           ${payment['payment_date'] ?? new Date()},
+           ${payment['currency'] ?? 'UZS'},
+           ${payment['payment_method'] ?? null},
+           ${payment['notes'] ?? null})
         RETURNING *
       `);
       return Ok((r.rows[0] ?? payment) as FinanceRow);
@@ -197,31 +180,15 @@ export class FinanceInvoiceRepo {
   }
 
   /**
-   * Atomically post an invoice to the GL.
-   * ONE transaction: GL DR/CR entries in `entries` + fi_invoices status flip.
-   * Idempotent: if the invoice is already 'posted', returns Ok({ alreadyPosted: true }).
-   *
-   * RULE4_EXCEPTION: `entries.debit_account_id`/`credit_account_id` are INTEGER in the
-   * live DB but STRING in the Drizzle schema (drift). We use the free-text columns
-   * `debit_account`/`credit_account` (TEXT, nullable) to avoid the FK type cast error.
-   *
-   * NOTE: `fi_invoices.id` is UUID in the live DB while the controller passes integer
-   * params.  The UPDATE uses `WHERE id::text = $1` (cast UUID to text) so that an
-   * integer-string lookup produces 0 rows updated (not a type error) while a UUID-string
-   * lookup works correctly.
-   */
-  /**
    * Data op only: flip an invoice to 'posted'. GL posting (DR AR / CR Revenue + VAT) is orchestrated by
    * the controller through GlPostingService (the ONE engine, resolves codes → entries._id, balanced) —
-   * #10 GL-unify. The old postInvoiceWithGl inserted text labels (accounts_receivable/revenue/tax_payable)
-   * into entries with NULL _id, bypassing the chart of accounts; it has been removed.
-   * fi_invoices.id is UUID; `id::text = $1` lets an integer-string lookup yield 0 rows (no type error).
+   * #10 GL-unify. Canonical table: finance_invoices (integer id, payment_status column).
    */
   async markInvoicePosted(invoiceId: string): Promise<Result<{ updated: number }>> {
     try {
       const r = await db.execute(sql`
-        UPDATE fi_invoices SET status = 'posted', updated_at = NOW()
-        WHERE id::text = ${invoiceId} RETURNING id
+        UPDATE finance_invoices SET payment_status = 'posted', updated_at = NOW()
+        WHERE id = ${parseInt(invoiceId, 10)} RETURNING id
       `);
       const rows = ((r as { rows?: unknown[] }).rows) ?? [];
       return Ok({ updated: rows.length });

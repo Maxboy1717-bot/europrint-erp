@@ -11,7 +11,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
-import { crm_activities, crm_lead_stages, crmDeals, crmLeads } from '@shared/db';
+import { crm_activities, crm_lead_stages, crmLeads } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
@@ -37,13 +37,20 @@ export class CrmExtrasDashboardRepository {
   async getDashboardDeals(): Promise<Result<Row>> {
     return safeCall(async () => {
       try {
-        const rows = await db.select({
-          total:    sql<number>`COUNT(*)::int`,
-          pipeline: sql<number>`COALESCE(SUM(${crmDeals.expected_amount}), 0)`,
-        })
-          .from(crmDeals)
-          .where(sql`${crmDeals.status} != 'won' AND ${crmDeals.status} != 'lost'`);
-        return (rows[0] ?? {}) as Row;
+        // Live crm_deals real columns: `status` (lowercase business status —
+        // proposal/negotiation/won/lost), `opportunity` (Bitrix canonical deal value),
+        // `deleted_at`. Raw SQL with the real column names: the @shared/db compat def
+        // aliases the `status` field to the `stage_id` column and names the soft-delete
+        // field `deleted_at` (not `deletedAt`), so the ORM path produced invalid SQL
+        // (undefined column → threw → empty result). runQuery mirrors getPipeline below.
+        const r = await runQuery<Row>(sql`
+          SELECT COUNT(*)::int AS total,
+                 COALESCE(SUM(opportunity), 0)::float8 AS pipeline
+          FROM crm_deals
+          WHERE deleted_at IS NULL
+            AND (status IS NULL OR status NOT IN ('won', 'lost'))
+        `);
+        return (r.rows[0] ?? {}) as Row;
       } catch (err) {
         this.logger.warn(`getDashboardDeals: ${(err as Error).message}`);
         return {};

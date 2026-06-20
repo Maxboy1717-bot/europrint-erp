@@ -17,6 +17,7 @@ import {
 import {
   npsResponses, socialConversations, sdCustomers,
   marketingLeads as marketingLeadsCanonical,
+  marketingAds,
 } from '@workspace/db';
 
 @Injectable()
@@ -26,19 +27,44 @@ export class DrizzleMarketingExtRepository {
   async getCampaignStats(id: number): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
-      return row ? { ...row, impressions: 0, clicks: 0, conversions: 0, roi: 0 } : { id, impressions: 0, clicks: 0, conversions: 0, roi: 0 };
+      const [adStats] = await db.select({
+        impressions: sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
+        clicks:      sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
+        conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
+        totalSpent:  sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
+        totalBudget: sql<number>`coalesce(sum(${marketingAds.budget}), 0)::numeric`,
+      }).from(marketingAds).where(eq(marketingAds.campaignId, String(id)));
+
+      const spent   = Number(adStats?.totalSpent  ?? 0);
+      const budget  = Number(adStats?.totalBudget ?? 0);
+      const roi     = spent > 0 ? Math.round(((budget - spent) / spent) * 100 * 100) / 100 : 0;
+
+      const base = row ?? { id };
+      return {
+        ...base,
+        impressions: Number(adStats?.impressions ?? 0),
+        clicks:      Number(adStats?.clicks      ?? 0),
+        conversions: Number(adStats?.conversions ?? 0),
+        roi,
+      };
     });
   }
 
   async getDashboardStats(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const campaigns = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
-      const leads     = await db.select().from(marketingLeads).where(isNull(marketingLeads.deletedAt));
+      const leads     = await db.select({ status: marketingLeads.status })
+        .from(marketingLeads).where(isNull(marketingLeads.deletedAt));
+      const totalLeads     = leads.length;
+      const convertedLeads = (Array.isArray(leads) ? leads : []).filter(l => l.status === 'converted').length;
+      const conversionRate = totalLeads > 0
+        ? Math.round((convertedLeads / totalLeads) * 100 * 10) / 10
+        : 0;
       return {
-        totalCampaigns: campaigns.length,
+        totalCampaigns:  campaigns.length,
         activeCampaigns: (Array.isArray(campaigns) ? campaigns : []).filter((c) => c.status === 'active').length,
-        totalLeads: leads.length,
-        conversionRate: 0,
+        totalLeads,
+        conversionRate,
       };
     });
   }
@@ -198,15 +224,57 @@ export class DrizzleMarketingExtRepository {
   async getAnalyticsOverview(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const campaigns = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
-      const leads     = await db.select().from(marketingLeads).where(isNull(marketingLeads.deletedAt));
-      return { period: 'monthly', campaigns: campaigns.length, totalLeads: leads.length, reach: 0, engagement: 0, conversions: 0 };
+      const leads     = await db.select({ status: marketingLeads.status })
+        .from(marketingLeads).where(isNull(marketingLeads.deletedAt));
+      const [adTotals] = await db.select({
+        reach:       sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
+        engagement:  sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
+        conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
+      }).from(marketingAds).where(isNull(marketingAds.deletedAt));
+      return {
+        period:      'monthly',
+        campaigns:   campaigns.length,
+        totalLeads:  leads.length,
+        reach:       Number(adTotals?.reach       ?? 0),
+        engagement:  Number(adTotals?.engagement  ?? 0),
+        conversions: Number(adTotals?.conversions ?? 0),
+      };
     });
   }
 
   async getCampaignAnalytics(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
-      const rows = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt)).limit(20);
-      return (Array.isArray(rows) ? rows : []).map((c) => ({ id: c.id, name: c.name, impressions: 0, clicks: 0, roi: 0 }));
+      const campaigns = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt)).limit(20);
+      // Aggregate ads metrics per campaign in one query
+      const adStats = await db.select({
+        campaignId:  marketingAds.campaignId,
+        impressions: sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
+        clicks:      sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
+        conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
+        totalSpent:  sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
+        totalBudget: sql<number>`coalesce(sum(${marketingAds.budget}), 0)::numeric`,
+      }).from(marketingAds)
+        .groupBy(marketingAds.campaignId);
+
+      const statsMap = Object.fromEntries(
+        (Array.isArray(adStats) ? adStats : []).map(s => [s.campaignId, s]),
+      );
+
+      return (Array.isArray(campaigns) ? campaigns : []).map((c) => {
+        const s     = statsMap[c.id];
+        const spent  = Number(s?.totalSpent  ?? 0);
+        const budget = Number(s?.totalBudget ?? 0);
+        const roi    = spent > 0 ? Math.round(((budget - spent) / spent) * 100 * 100) / 100 : 0;
+        return {
+          id:          c.id,
+          name:        c.name,
+          status:      c.status,
+          impressions: Number(s?.impressions ?? 0),
+          clicks:      Number(s?.clicks      ?? 0),
+          conversions: Number(s?.conversions ?? 0),
+          roi,
+        };
+      });
     });
   }
 

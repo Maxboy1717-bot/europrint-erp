@@ -74,7 +74,7 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
 
   async getOpenPayrollCount(): Promise<Result<number>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COUNT(*) AS count FROM payroll WHERE status = 'open'`);
+      const r = await exec(sql`SELECT COUNT(*) AS count FROM payroll_periods WHERE status = 'open'`);
       return Number(r[0]?.count ?? 0);
       }, 'DB_ERROR');
   }

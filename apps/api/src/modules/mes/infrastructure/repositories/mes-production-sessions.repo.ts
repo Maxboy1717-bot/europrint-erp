@@ -18,7 +18,7 @@ export class MesProductionSessionsRepository {
       const rows = await runQuery<Row>(sql`
         SELECT ms.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name
         FROM mes_sessions ms
-        LEFT JOIN work_centers wc ON wc.id = ms.work_center_id
+        LEFT JOIN work_centers wc ON wc.id = ms.machine_id
         LEFT JOIN users u ON u.id = ms.operator_id
         WHERE (${status ?? null}::text IS NULL OR ms.status = ${status ?? null})
 
@@ -50,7 +50,7 @@ export class MesProductionSessionsRepository {
       const rows = await runQuery<Row>(sql`
         SELECT ms.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name
         FROM mes_sessions ms
-        LEFT JOIN work_centers wc ON wc.id = ms.work_center_id
+        LEFT JOIN work_centers wc ON wc.id = ms.machine_id
         LEFT JOIN users u ON u.id = ms.operator_id
         WHERE ms.id = ${id}
       `);
