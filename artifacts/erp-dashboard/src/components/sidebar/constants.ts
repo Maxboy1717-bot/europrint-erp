@@ -369,6 +369,7 @@ import { LayoutDashboard, X,
       { title: "Moliya Tasdiqlash", url: "finance/approval", icon: CheckCircle },
       { title: "AVANS VA KASSA", url: "", icon: Banknote, separator: true },
       { title: "Kassa", url: "accounting/cash-register", icon: DollarSign },
+      { title: "Kassir markazi", url: "accounting/cashier-hub", icon: Banknote },
       { title: "Kirim/Chiqim", url: "accounting/income-expense", icon: TrendingUp },
       // POS Monitor (pos-monitor) = yagona kanonik POS (zavod ombori tablet ilovasi).
       // Eski /pos/* klasteri /pos-monitor'ni takrorlardi; "POS Kassa" → Kassa (yuqorida).

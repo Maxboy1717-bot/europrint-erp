@@ -7,7 +7,7 @@
  * @layer Presentation (Finance)
  */
 
-import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -30,6 +30,14 @@ export class CashierPayrollController {
   ) {}
 
   // ---------------- FEATURE A: KAS-2 salary-payout approval gate ----------------
+
+  // GET /api/finance/cashier/salary-payouts — the approval queue (?status=pending default, ?status=all lifts it).
+  @ApiOperation({ summary: 'KAS-2: list the salary-payout approval queue (default status=pending)' })
+  @ApiResponse({ status: 200, description: 'OK — { data, total }' })
+  @Get('salary-payouts')
+  async listSalaryPayouts(@Query() query: unknown) {
+    return unwrapOrThrow(await this.payroll.listSalaryPayouts(query ?? {}));
+  }
 
   // POST /api/finance/cashier/salary-payouts — open an approval chain.
   @ApiOperation({ summary: 'KAS-2: request a salary payout (opens approval chain)' })
@@ -86,6 +94,14 @@ export class CashierPayrollController {
   async issueAdvance(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const operatorUserId = user?.userId ?? user?.id;
     return unwrapOrThrow(await this.podotchet.issueAdvance(body, operatorUserId));
+  }
+
+  // GET /api/finance/cashier/advance-reports — list advance reports (?status=pending|approved filter).
+  @ApiOperation({ summary: 'Podotchet: list advance reports (optional ?status=pending|approved)' })
+  @ApiResponse({ status: 200, description: 'OK — { data, total }' })
+  @Get('advance-reports')
+  async listAdvanceReports(@Query() query: unknown) {
+    return unwrapOrThrow(await this.podotchet.listAdvanceReports(query ?? {}));
   }
 
   // POST /api/finance/cashier/advance-reports — submit an advance report (receipt, pending).

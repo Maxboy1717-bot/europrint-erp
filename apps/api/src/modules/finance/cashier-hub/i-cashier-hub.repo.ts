@@ -39,6 +39,35 @@ export interface ShiftMovementTotals {
   movementCount: number;
 }
 
+/** Filters for the paginated shift list (GET shifts). */
+export interface ListShiftsFilters {
+  status?: 'open' | 'closed';
+  cashierUserId?: number;
+  limit: number;
+  offset: number;
+}
+
+/** A shift list row joined to the cashier's display name (read-only projection). */
+export interface ShiftListRow {
+  id: number;
+  cashierUserId: number;
+  cashierName: string | null;
+  openedAt: Date | string | null;
+  openedAmount: string | number | null;
+  closedAt: Date | string | null;
+  closedAmount: string | number | null;
+  expectedAmount: string | number | null;
+  variance: string | number | null;
+  status: string;
+  notes: string | null;
+}
+
+/** A page of shift rows + the total matching count (matches the codebase {data,total} list shape). */
+export interface ShiftListPage {
+  data: ShiftListRow[];
+  total: number;
+}
+
 /** X/Z reconciliation summary for a shift. */
 export interface ShiftSummary {
   shift: CashierShift;
@@ -52,6 +81,8 @@ export interface ICashierHubRepository {
   /** The currently OPEN shift for a cashier, or null if none. */
   findOpenShiftByCashier(cashierUserId: number): Promise<Result<CashierShift | null>>;
   findShiftById(id: number): Promise<Result<CashierShift | null>>;
+  /** Paginated shift list (newest first), optionally filtered by status / cashier; joined to the cashier name. */
+  listShifts(filters: ListShiftsFilters): Promise<Result<ShiftListPage>>;
   openShift(dto: OpenShiftDto): Promise<Result<CashierShift>>;
   /** Persist close fields (closedAmount/expectedAmount/variance/status). */
   closeShift(

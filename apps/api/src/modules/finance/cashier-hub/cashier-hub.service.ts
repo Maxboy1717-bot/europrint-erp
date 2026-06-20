@@ -19,7 +19,9 @@ import {
   type ICashierHubRepository,
   type CashierMovementType,
   type ShiftSummary,
+  type ShiftListPage,
 } from './i-cashier-hub.repo';
+import type { CashierShift } from '@workspace/db';
 
 /** Movement types that move cash OUT of the drawer and therefore require PIN confirmation (owner #8). */
 const PIN_REQUIRED_TYPES: ReadonlySet<CashierMovementType> = new Set([
@@ -37,6 +39,14 @@ const OpenShiftSchema = z.object({
 const CloseShiftSchema = z.object({
   closedAmount: z.number().nonnegative(),
   notes: z.string().max(2000).optional(),
+});
+
+/** GET shifts query — optional status / cashierId filters + pagination (coerced from query strings). */
+const ListShiftsQuerySchema = z.object({
+  status: z.enum(['open', 'closed']).optional(),
+  cashierId: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  offset: z.coerce.number().int().nonnegative().default(0),
 });
 
 const RecordMovementSchema = z.object({
@@ -115,6 +125,27 @@ export class CashierHubService {
       movementCount: totals.movementCount,
       expectedAmount,
     });
+  }
+
+  /** Paginated shift list (newest first) for the manager view; optional status / cashier filters. */
+  async listShifts(rawQuery: unknown): Promise<Result<ShiftListPage, AppError>> {
+    const validated = safeParse(ListShiftsQuerySchema, rawQuery);
+    if (!validated.ok) return Err(validated.error);
+    const q = validated.data;
+    return this.repo.listShifts({
+      status: q.status,
+      cashierUserId: q.cashierId,
+      limit: q.limit ?? 50,
+      offset: q.offset ?? 0,
+    });
+  }
+
+  /** The calling cashier's currently-open shift, or null when none is open (graceful — no 404). */
+  async getCurrentShift(cashierUserId?: number): Promise<Result<CashierShift | null, AppError>> {
+    if (!cashierUserId || cashierUserId <= 0) {
+      return Err(AppErr('VALIDATION', 'Joriy foydalanuvchi aniqlanmadi'));
+    }
+    return this.repo.findOpenShiftByCashier(cashierUserId);
   }
 
   /** X-report: live state of an OPEN (or any) shift — opening + running totals + expected. */

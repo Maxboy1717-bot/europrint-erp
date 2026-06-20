@@ -8,6 +8,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { cashierShifts, cashierMovements } from '@workspace/db';
 import { and, eq, sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
@@ -16,6 +17,9 @@ import type {
   OpenShiftDto,
   RecordMovementDto,
   ShiftMovementTotals,
+  ListShiftsFilters,
+  ShiftListPage,
+  ShiftListRow,
 } from './i-cashier-hub.repo';
 import type { CashierShift, CashierMovement } from '@workspace/db';
 
@@ -40,6 +44,50 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
       return Ok((rows[0] ?? null) as CashierShift | null);
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `CASHIER_SHIFT_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
+
+  async listShifts(filters: ListShiftsFilters): Promise<Result<ShiftListPage>> {
+    try {
+      // Optional WHERE — build with parametrised sql fragments (no sql.raw of variables — Qoida B).
+      const conds = [sql`1 = 1`];
+      if (filters.status) conds.push(sql`s.status = ${filters.status}`);
+      if (typeof filters.cashierUserId === 'number') {
+        conds.push(sql`s.cashier_user_id = ${filters.cashierUserId}`);
+      }
+      const whereSql = sql.join(conds, sql` AND `);
+
+      // One SQL for the page (JOIN to users for the cashier name — no N+1, Performance §).
+      const rows = await typedExecute<ShiftListRow>(sql`
+        SELECT s.id,
+               s.cashier_user_id        AS "cashierUserId",
+               COALESCE(NULLIF(TRIM(u.full_name), ''), u.username) AS "cashierName",
+               s.opened_at              AS "openedAt",
+               s.opened_amount          AS "openedAmount",
+               s.closed_at              AS "closedAt",
+               s.closed_amount          AS "closedAmount",
+               s.expected_amount        AS "expectedAmount",
+               s.variance               AS "variance",
+               s.status,
+               s.notes
+          FROM cashier_shifts s
+          LEFT JOIN users u ON u.id = s.cashier_user_id
+         WHERE ${whereSql}
+         ORDER BY s.opened_at DESC, s.id DESC
+         LIMIT ${filters.limit} OFFSET ${filters.offset}
+      `);
+
+      // Total matching count (same WHERE, no pagination) for the {data,total} list shape.
+      const countRows = await typedExecute<{ total: number }>(sql`
+        SELECT COUNT(*)::int AS total
+          FROM cashier_shifts s
+         WHERE ${whereSql}
+      `);
+      const total = Array.isArray(countRows) ? Number(countRows[0]?.total ?? 0) : 0;
+
+      return Ok({ data: Array.isArray(rows) ? rows : [], total });
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_SHIFTS_LIST_FAILED: ${String(e)}`));
     }
   }
 

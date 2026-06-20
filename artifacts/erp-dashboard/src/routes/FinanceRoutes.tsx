@@ -24,6 +24,7 @@ const GLDocuments = lazy(() => import("@/pages/GLDocuments"));
 const ChartOfAccounts = lazy(() => import("@/pages/ChartOfAccounts"));
 const PeriodClosing = lazy(() => import("@/pages/PeriodClosing"));
 const CashRegister = lazy(() => import("@/pages/CashRegister"));
+const CashierHub = lazy(() => import("@/pages/CashierHub"));
 const IncomeExpense = lazy(() => import("@/pages/IncomeExpense"));
 const InventoryValuation = lazy(() => import("@/pages/InventoryValuation"));
 const AssetManagement = lazy(() => import("@/pages/AssetManagement"));
@@ -48,6 +49,7 @@ export const FINANCE_ROUTES: [string, React.ComponentType][] = [
   ['/accounting/chart-of-accounts',    ChartOfAccounts],
   ['/accounting/period-closing',       PeriodClosing],
   ['/accounting/cash-register',        CashRegister],
+  ['/accounting/cashier-hub',          CashierHub],
   ['/accounting/income-expense',       IncomeExpense],
   ['/accounting/inventory-valuation',  InventoryValuation],
   ['/accounting/asset-management',     AssetManagement],

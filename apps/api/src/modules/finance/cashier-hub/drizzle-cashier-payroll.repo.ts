@@ -9,6 +9,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { salaryPayoutApprovals, employeeDebt, advanceReports } from '@workspace/db';
 import { and, eq, sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
@@ -18,6 +19,11 @@ import type {
   CreateSalaryApprovalDto,
   CreateDebtDto,
   CreateAdvanceReportDto,
+  ListApprovalsFilters,
+  ApprovalListRow,
+  ListAdvanceReportsFilters,
+  AdvanceReportListRow,
+  PayrollListPage,
 } from './i-cashier-payroll.repo';
 import type { SalaryPayoutApproval, EmployeeDebt, AdvanceReport } from '@workspace/db';
 
@@ -51,6 +57,50 @@ export class DrizzleCashierPayrollRepository implements ICashierPayrollRepositor
       return Ok((rows[0] ?? null) as SalaryPayoutApproval | null);
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `SALARY_APPROVAL_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
+
+  async listApprovals(filters: ListApprovalsFilters): Promise<Result<PayrollListPage<ApprovalListRow>>> {
+    try {
+      // Optional status filter — parametrised fragment (no sql.raw of variables — Qoida B).
+      const conds = [sql`1 = 1`];
+      if (filters.status) conds.push(sql`a.status = ${filters.status}`);
+      const whereSql = sql.join(conds, sql` AND `);
+
+      // One SQL for the page (JOIN employees for the name — employee_id → employees.id; no N+1).
+      const rows = await typedExecute<ApprovalListRow>(sql`
+        SELECT a.id,
+               a.employee_id            AS "employeeId",
+               COALESCE(NULLIF(TRIM(e.full_name), ''), TRIM(CONCAT_WS(' ', e.first_name, e.last_name))) AS "employeeName",
+               a.amount,
+               a.reference,
+               a.status,
+               a.ai_checked_at          AS "aiCheckedAt",
+               a.hr_approved_at         AS "hrApprovedAt",
+               a.finance_approved_at    AS "financeApprovedAt",
+               a.director_approved_at   AS "directorApprovedAt",
+               a.rejected_at            AS "rejectedAt",
+               a.rejection_reason       AS "rejectionReason",
+               a.paid_movement_id       AS "paidMovementId",
+               a.notes,
+               a.created_at             AS "createdAt"
+          FROM salary_payout_approvals a
+          LEFT JOIN employees e ON e.id = a.employee_id
+         WHERE ${whereSql}
+         ORDER BY a.created_at DESC, a.id DESC
+         LIMIT ${filters.limit} OFFSET ${filters.offset}
+      `);
+
+      const countRows = await typedExecute<{ total: number }>(sql`
+        SELECT COUNT(*)::int AS total
+          FROM salary_payout_approvals a
+         WHERE ${whereSql}
+      `);
+      const total = Array.isArray(countRows) ? Number(countRows[0]?.total ?? 0) : 0;
+
+      return Ok({ data: Array.isArray(rows) ? rows : [], total });
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `SALARY_APPROVALS_LIST_FAILED: ${String(e)}`));
     }
   }
 
@@ -211,6 +261,48 @@ export class DrizzleCashierPayrollRepository implements ICashierPayrollRepositor
       return Ok((rows[0] ?? null) as AdvanceReport | null);
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `ADVANCE_REPORT_REF_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
+
+  async listAdvanceReports(
+    filters: ListAdvanceReportsFilters,
+  ): Promise<Result<PayrollListPage<AdvanceReportListRow>>> {
+    try {
+      // 'pending' → approved=false, 'approved' → approved=true, undefined → all. Parametrised (Qoida B).
+      const conds = [sql`1 = 1`];
+      if (filters.status === 'pending') conds.push(sql`r.approved = false`);
+      if (filters.status === 'approved') conds.push(sql`r.approved = true`);
+      const whereSql = sql.join(conds, sql` AND `);
+
+      const rows = await typedExecute<AdvanceReportListRow>(sql`
+        SELECT r.id,
+               r.employee_id            AS "employeeId",
+               COALESCE(NULLIF(TRIM(e.full_name), ''), TRIM(CONCAT_WS(' ', e.first_name, e.last_name))) AS "employeeName",
+               r.debt_id                AS "debtId",
+               r.amount,
+               r.receipt_ref            AS "receiptRef",
+               r.approved,
+               r.approved_at            AS "approvedAt",
+               r.reference,
+               r.notes,
+               r.created_at             AS "createdAt"
+          FROM advance_reports r
+          LEFT JOIN employees e ON e.id = r.employee_id
+         WHERE ${whereSql}
+         ORDER BY r.created_at DESC, r.id DESC
+         LIMIT ${filters.limit} OFFSET ${filters.offset}
+      `);
+
+      const countRows = await typedExecute<{ total: number }>(sql`
+        SELECT COUNT(*)::int AS total
+          FROM advance_reports r
+         WHERE ${whereSql}
+      `);
+      const total = Array.isArray(countRows) ? Number(countRows[0]?.total ?? 0) : 0;
+
+      return Ok({ data: Array.isArray(rows) ? rows : [], total });
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `ADVANCE_REPORTS_LIST_FAILED: ${String(e)}`));
     }
   }
 

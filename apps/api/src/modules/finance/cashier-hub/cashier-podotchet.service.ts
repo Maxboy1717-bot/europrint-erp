@@ -15,7 +15,12 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Result, AppError, AppErr, Ok, Err } from '@common/result';
 import { z } from 'zod';
 import { CashierHubService } from './cashier-hub.service';
-import { CASHIER_PAYROLL_REPO, type ICashierPayrollRepository } from './i-cashier-payroll.repo';
+import {
+  CASHIER_PAYROLL_REPO,
+  type ICashierPayrollRepository,
+  type AdvanceReportListRow,
+  type PayrollListPage,
+} from './i-cashier-payroll.repo';
 
 const IssueAdvanceSchema = z.object({
   shiftId: z.number().int().positive(),
@@ -32,6 +37,13 @@ const SubmitAdvanceReportSchema = z.object({
   receiptRef: z.string().min(1).max(200), // a receipt is mandatory (EP-FIN-026/048 — no doc, no clear)
   reference: z.string().min(1).max(120),
   notes: z.string().max(2000).optional(),
+});
+
+/** GET advance-reports query — optional approved-status filter ('pending'|'approved') + pagination. */
+const ListAdvanceReportsQuerySchema = z.object({
+  status: z.enum(['pending', 'approved']).optional(),
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  offset: z.coerce.number().int().nonnegative().default(0),
 });
 
 @Injectable()
@@ -148,6 +160,17 @@ export class CashierPodotchetService {
     const cleared = await this.repo.clearDebt(report.debtId);
     if (!cleared.ok) return cleared as Result<never, AppError>;
     return Ok({ report, debt: cleared.data });
+  }
+
+  /**
+   * The advance-report list (newest first) for the manager view; optional approved-status filter
+   * ('pending' = awaiting approval, 'approved' = cleared). Read-only (joined to the employee name).
+   */
+  async listAdvanceReports(rawQuery: unknown): Promise<Result<PayrollListPage<AdvanceReportListRow>, AppError>> {
+    const validated = safeParse(ListAdvanceReportsQuerySchema, rawQuery);
+    if (!validated.ok) return Err(validated.error);
+    const q = validated.data;
+    return this.repo.listAdvanceReports({ status: q.status, limit: q.limit ?? 50, offset: q.offset ?? 0 });
   }
 
   /** Employee profile debt: jami (SUM of open debt) + the list of open debt rows. */

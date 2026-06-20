@@ -18,6 +18,8 @@ import {
   CASHIER_PAYROLL_REPO,
   type ICashierPayrollRepository,
   type ApprovalStage,
+  type ApprovalListRow,
+  type PayrollListPage,
 } from './i-cashier-payroll.repo';
 
 /** Ordered chain stages → the aggregate status each one sets (the last stage = 'approved'). */
@@ -37,6 +39,13 @@ const RequestSalaryPayoutSchema = z.object({
 
 const ApproveStageSchema = z.object({
   stage: z.enum(['ai_checked', 'hr_approved', 'finance_approved', 'director_approved']),
+});
+
+/** GET salary-payouts query — the approval queue. Defaults to status='pending'; 'all' lifts the filter. */
+const ListApprovalsQuerySchema = z.object({
+  status: z.string().min(1).max(20).default('pending'),
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  offset: z.coerce.number().int().nonnegative().default(0),
 });
 
 const RejectSchema = z.object({
@@ -83,6 +92,21 @@ export class CashierPayrollService {
     });
     if (!created.ok) return created as Result<never, AppError>;
     return Ok(created.data);
+  }
+
+  /**
+   * The salary-payout approval queue (newest first). Defaults to status='pending'; pass status='all'
+   * to lift the filter. Read-only manager view (joined to the employee name).
+   */
+  async listSalaryPayouts(rawQuery: unknown): Promise<Result<PayrollListPage<ApprovalListRow>, AppError>> {
+    const validated = safeParse(ListApprovalsQuerySchema, rawQuery);
+    if (!validated.ok) return Err(validated.error);
+    const q = validated.data;
+    return this.repo.listApprovals({
+      status: q.status === 'all' ? undefined : q.status,
+      limit: q.limit ?? 50,
+      offset: q.offset ?? 0,
+    });
   }
 
   /**

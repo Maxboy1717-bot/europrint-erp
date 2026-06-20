@@ -6,7 +6,7 @@
  * @layer Presentation (Finance)
  */
 
-import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -57,6 +57,24 @@ export class CashierHubController {
   ) {
     const operatorUserId = user?.userId ?? user?.id;
     return unwrapOrThrow(await this.service.recordMovement(id, body, operatorUserId));
+  }
+
+  // GET /api/finance/cashier/shifts — paginated shift list (?status= & ?cashierId= filters).
+  @ApiOperation({ summary: 'List cashier shifts (paginated; optional status / cashierId filters)' })
+  @ApiResponse({ status: 200, description: 'OK — { data, total }' })
+  @Get('shifts')
+  async listShifts(@Query() query: unknown) {
+    return unwrapOrThrow(await this.service.listShifts(query ?? {}));
+  }
+
+  // GET /api/finance/cashier/shifts/current — the calling user's currently-open shift, or null.
+  // Declared BEFORE shifts/:id so the literal `current` is not captured by the :id param.
+  @ApiOperation({ summary: "Get the calling cashier's currently-open shift (or null)" })
+  @ApiResponse({ status: 200, description: 'OK — the open shift, or null when none' })
+  @Get('shifts/current')
+  async getCurrentShift(@CurrentUser() user: AuthenticatedUser) {
+    const cashierUserId = user?.userId ?? user?.id;
+    return unwrapOrThrow(await this.service.getCurrentShift(cashierUserId as number | undefined));
   }
 
   // GET /api/finance/cashier/shifts/:id — shift + running X summary.
