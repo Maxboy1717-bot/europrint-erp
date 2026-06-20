@@ -121,26 +121,27 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
       `), 'DB_ERROR');
   }
 
-  /** Aktiv stat-reglamentlar uchun N-kunlik trend skeleti (UI to'ldiradi). */
+  /** Aktiv KPI definitsiyalar uchun N-kunlik haqiqiy trend (kpi_values dan). */
   async getStatTrends(days = 7): Promise<Result<Row[]>> {
+    // period_date = varchar 'YYYY-MM-DD' — text taqqoslash to_char orqali
+    const cutoff = sql`to_char(CURRENT_DATE - ${days}::int, 'YYYY-MM-DD')`;
     return safeCall(async () =>
       exec(sql`
         SELECT
-          sr.name_uz AS metric,
-          sr.unit AS unit,
+          kd.kpi_name AS metric,
+          kd.unit,
           json_agg(json_build_object(
-            'date', to_char(d::date, 'YYYY-MM-DD'),
-            'value', 0
-          ) ORDER BY d ASC) AS trend_points
-        FROM stat_regulations sr
-        CROSS JOIN generate_series(
-          CURRENT_DATE - ${days}::int,
-          CURRENT_DATE,
-          interval '1 day'
-        ) d
-        WHERE sr.is_active = TRUE
-        GROUP BY sr.id, sr.name_uz, sr.unit
-        ORDER BY sr.name_uz
+            'date',   kv.period_date,
+            'value',  kv.actual_value::float,
+            'target', kv.target_value::float,
+            'status', kv.status
+          ) ORDER BY kv.period_date ASC) AS trend_points
+        FROM kpi_definitions kd
+        JOIN kpi_values kv ON kv.kpi_id = kd.id
+        WHERE kd.is_active = TRUE
+          AND kv.period_date >= ${cutoff}
+        GROUP BY kd.id, kd.kpi_name, kd.unit
+        ORDER BY kd.kpi_name
       `), 'DB_ERROR');
   }
 

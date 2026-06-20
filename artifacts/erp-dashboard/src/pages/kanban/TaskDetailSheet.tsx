@@ -70,7 +70,7 @@ export function TaskDetailSheet({
   const [chatFiles, setChatFiles]                       = useState<File[]>([]);
   const [showHiddenFields, setShowHiddenFields]         = useState(false);
   const [showCompleteDialog, setShowCompleteDialog]     = useState(false);
-  const [completionReport, setCompletionReport]         = useState("");
+  const [completionReport, setCompletionReport]         = useState<string>(getProp<string>(card, "completion_report") ?? "");
 
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: checklists = [],  refetch: refetchChecklists } = useQuery<ChecklistWithItems[]>({

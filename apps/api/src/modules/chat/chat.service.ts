@@ -105,6 +105,7 @@ export class ChatService {
     if (!isMember) throw new ForbiddenException(await this.i18n.t('auth.permissionsDenied'));
   }
   getTotalUnreadCount(userId: number) { return this.roomSvc.getTotalUnreadCount(userId); }
+  getBulkUnreadCounts(userIds: number[]) { return this.roomSvc.getBulkUnreadCounts(userIds); }
   getAllEmployees(search?: string) { return this.roomSvc.getAllEmployees(search); }
   getTodayBirthdays() { return this.roomSvc.getTodayBirthdays(); }
   toggleMemberMute(roomId: string, userId: string, muted: boolean) { return this.roomSvc.toggleMemberMute(roomId, userId, muted); }

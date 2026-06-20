@@ -18,7 +18,11 @@ export class LmsTestsRepository {
   async findAllTests(courseId?: string): Promise<Result<object[]>> {
     try {
       const rows = await runQuery<Row>(sql`
-        SELECT t.*, c.title_uz AS course_title FROM lms_tests t LEFT JOIN courses c ON c.id = t.course_id
+        SELECT t.*,
+          c.title_uz AS course_title,
+          (SELECT COUNT(*)::int FROM lms_questions q WHERE q.test_id = t.id) AS "questionCount"
+        FROM lms_tests t
+        LEFT JOIN courses c ON c.id = t.course_id
         WHERE (${courseId ? parseInt(courseId, 10) : null}::int IS NULL OR t.course_id = ${courseId ? parseInt(courseId, 10) : null})
         ORDER BY t.created_at DESC
       `);

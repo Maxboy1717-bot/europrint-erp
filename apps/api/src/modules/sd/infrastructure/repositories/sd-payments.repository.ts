@@ -36,21 +36,25 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
   try {
       // EP-SD-013/112: debitor aging buckets (0-30 / 31-60 / 61-90 / 90+ days overdue), computed from
       // pending payments' due_date age (varchar date → ::date). FE renders these columns.
+      // Column aliases match SDDebitors.tsx Debitor interface exactly.
+      // NOTE: sd_customers and sd_payments have no deleted_at columns — soft-delete not used here.
       const r = await exec(sql`
-        SELECT c.id, c.name,
-          COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0)::numeric(15,2) AS debt_amount,
+        SELECT
+          c.id          AS "customerId",
+          c.name        AS "customerName",
+          c.segment,
+          COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0)::numeric(15,2) AS total,
           COUNT(DISTINCT CASE WHEN p.status = 'pending' THEN p.id END)::int AS pending_payments,
           MIN(CASE WHEN p.status = 'pending' THEN p.due_date END) AS earliest_due,
-          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 0 AND 30  THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_0_30,
-          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 31 AND 60 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_31_60,
-          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 61 AND 90 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_61_90,
-          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) > 90 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS bucket_90_plus
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 0 AND 30  THEN p.amount ELSE 0 END),0)::numeric(15,2) AS "0-30",
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 31 AND 60 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS "31-60",
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) BETWEEN 61 AND 90 THEN p.amount ELSE 0 END),0)::numeric(15,2) AS "61-90",
+          COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) > 90              THEN p.amount ELSE 0 END),0)::numeric(15,2) AS "90+"
         FROM sd_customers c
-        LEFT JOIN sd_payments p ON p.customer_id = c.id AND p.deleted_at IS NULL
-        WHERE c.deleted_at IS NULL
-        GROUP BY c.id, c.name
+        LEFT JOIN sd_payments p ON p.customer_id = c.id
+        GROUP BY c.id, c.name, c.segment
         HAVING COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0) > 0
-        ORDER BY debt_amount DESC LIMIT ${lim} OFFSET ${off}`);
+        ORDER BY total DESC LIMIT ${lim} OFFSET ${off}`);
       return r.ok ? r : Err(String(r.error));
   } catch (_e) {
     return Err(String(_e));

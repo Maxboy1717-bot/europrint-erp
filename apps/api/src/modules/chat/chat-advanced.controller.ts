@@ -143,10 +143,13 @@ export class ChatAdvancedController {
     this.chatGateway.server?.to(`room:${roomId}`).emit('new_message', message);
 
     const members = await this.chatService.getRoomMembers(roomId);
-    for (const member of (Array.isArray(members) ? members : []).filter((m) => m.userId !== user.id)) {
-      const unread = await this.chatService.getTotalUnreadCount(Number(member.userId));
-      this.chatGateway.emitToUser(Number(member.userId), 'unread_count', { count: unread });
-      this.chatGateway.emitToUser(Number(member.userId), 'room_updated', { roomId });
+    const others = (Array.isArray(members) ? members : []).filter((m) => m.userId !== user.id);
+    const otherIds = others.map((m) => Number(m.userId));
+    const unreadMap = await this.chatService.getBulkUnreadCounts(otherIds);
+    for (const member of others) {
+      const uid = Number(member.userId);
+      this.chatGateway.emitToUser(uid, 'unread_count', { count: unreadMap[uid] ?? 0 });
+      this.chatGateway.emitToUser(uid, 'room_updated', { roomId });
     }
 
     return message;

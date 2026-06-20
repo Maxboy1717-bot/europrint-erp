@@ -6,11 +6,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, ArrowDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/api-request";
 import { useTranslation } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { COUNCIL_LEVELS, type DoklaFormState, type RaspoFormState } from "./CoordinationPageTypes";
 
 import { EPLoader } from "@/components/ep";
+
+// ─── UserSelectOption ─────────────────────────────────────────────────────
+interface UserSelectOption {
+  id: number;
+  full_name: string;
+  role: string;
+}
+
+function useUsersForSelect() {
+  return useQuery<UserSelectOption[]>({
+    queryKey: ["/api/coordination/users-for-select"],
+    queryFn: () => apiRequest("GET", "/api/coordination/users-for-select") as Promise<UserSelectOption[]>,
+    staleTime: 5 * 60 * 1000,
+  });
+}
 // ─── CreateDoklaDialog ────────────────────────────────────────────────────
 interface CreateDoklaDialogProps {
   open: boolean;
@@ -129,6 +146,8 @@ export function CreateRaspoDialog({
   const { t, language } = useTranslation("coordination");
   const { toast } = useToast();
   const isRu = language === "ru";
+  const { data: userList, isLoading: usersLoading } = useUsersForSelect();
+  const users = Array.isArray(userList) ? userList : [];
 
   function handleSubmit() {
     if (!form.task.trim() || !form.to.trim()) {
@@ -149,12 +168,26 @@ export function CreateRaspoDialog({
         <div className="space-y-3 py-1">
           <div>
             <Label className="text-xs">{isRu ? "Кому" : "Kimga"} *</Label>
-            <Input
-              className="mt-1"
-              placeholder={isRu ? "ФИО исполнителя..." : "Ijrochi ismi..."}
-              value={form.to}
-              onChange={e => setForm(p => ({ ...p, to: e.target.value }))}
-            />
+            {usersLoading ? (
+              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                <EPLoader className="w-3 h-3" />
+                {isRu ? "Загрузка..." : "Yuklanmoqda..."}
+              </div>
+            ) : (
+              <select
+                className="w-full mt-1 border rounded-md px-3 py-2 text-sm bg-background"
+                value={form.to}
+                onChange={e => setForm(p => ({ ...p, to: e.target.value }))}
+                data-testid="select-assignee"
+              >
+                <option value="">{isRu ? "— Выберите исполнителя —" : "— Ijrochini tanlang —"}</option>
+                {users.map(u => (
+                  <option key={u.id} value={String(u.id)}>
+                    {u.full_name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           <div>
             <Label className="text-xs">{isRu ? "Задание" : "Vazifa"} *</Label>

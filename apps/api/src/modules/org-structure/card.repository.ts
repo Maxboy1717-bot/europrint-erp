@@ -30,6 +30,8 @@ export interface CardInput {
   tskpMeasurementUnit?: string | null;
   statisticsType?: string | null;
   aiExamEnabled?: boolean | null;
+  functionDescription?: string | null;
+  functionDescriptionRu?: string | null;
 }
 
 @Injectable()
@@ -68,14 +70,18 @@ export class CardRepository {
       INSERT INTO org_functions
         (position_name, position_name_ru, department_id, code, level, razryad_level_id,
          salary_type, min_salary, max_salary, rbac_tier, status, tskp, tskp_target,
-         tskp_measurement_unit, statistics_type, ai_exam_enabled, is_active, created_at, updated_at)
+         tskp_measurement_unit, statistics_type, ai_exam_enabled,
+         function_description, function_description_ru,
+         is_active, created_at, updated_at)
       VALUES
         (${dto.positionName ?? ''}, ${dto.positionNameRu ?? null}, ${dto.departmentId ?? null},
          ${dto.code ?? null}, ${dto.level ?? null}, ${dto.razryadLevelId ?? null},
          ${dto.salaryType ?? null}, ${dto.minSalary ?? null}, ${dto.maxSalary ?? null},
          ${dto.rbacTier ?? null}, ${dto.status ?? 'active'}, ${dto.tskp ?? null},
          ${dto.tskpTarget ?? null}, ${dto.tskpMeasurementUnit ?? null}, ${dto.statisticsType ?? null},
-         ${dto.aiExamEnabled ?? false}, true, NOW(), NOW())
+         ${dto.aiExamEnabled ?? false},
+         ${dto.functionDescription ?? null}, ${dto.functionDescriptionRu ?? null},
+         true, NOW(), NOW())
       RETURNING *
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
@@ -100,6 +106,8 @@ export class CardRepository {
         tskp_measurement_unit = COALESCE(${dto.tskpMeasurementUnit ?? null}, tskp_measurement_unit),
         statistics_type       = COALESCE(${dto.statisticsType ?? null}, statistics_type),
         ai_exam_enabled       = COALESCE(${dto.aiExamEnabled ?? null}, ai_exam_enabled),
+        function_description    = COALESCE(${dto.functionDescription ?? null}, function_description),
+        function_description_ru = COALESCE(${dto.functionDescriptionRu ?? null}, function_description_ru),
         updated_at            = NOW()
       WHERE id = ${id} AND deleted_at IS NULL
       RETURNING *

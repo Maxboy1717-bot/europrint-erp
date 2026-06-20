@@ -198,4 +198,27 @@ export class MesShiftsStatsRepository {
     `);
     return rows.rows as Row[];
   }
+
+  /** Real equipment norms from work_centers (capacity_per_hour, efficiency_rate, hours_per_day, cost_per_hour). */
+  async getWorkCenterNorms(): Promise<Row[]> {
+    const rows = await runQuery<Row>(sql`
+      SELECT
+        wc.id,
+        wc.name,
+        wc.code,
+        wc.type,
+        wc.capacity_per_hour,
+        wc.efficiency_rate,
+        wc.hours_per_day,
+        wc.cost_per_hour,
+        wc.capacity,
+        COUNT(eq.id)::int AS equipment_count
+      FROM work_centers wc
+      LEFT JOIN equipment eq ON eq.work_center_id = wc.id AND eq.is_active = true AND eq.deleted_at IS NULL
+      WHERE wc.is_active = true AND wc.deleted_at IS NULL
+      GROUP BY wc.id, wc.name, wc.code, wc.type, wc.capacity_per_hour, wc.efficiency_rate, wc.hours_per_day, wc.cost_per_hour, wc.capacity
+      ORDER BY wc.id
+    `);
+    return rows.rows as Row[];
+  }
 }

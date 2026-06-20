@@ -124,15 +124,6 @@ export const MES_PILLS: Array<{ key: string; label: string }> = [
   { key: "smena",        label: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish") },
 ];
 
-/** Static norms data shown on the Norms tab (no API yet). */
-export const MACHINE_NORMS = [
-  { m: "Heidelberg CD102", speed: "13,000/h", setup: "45 min", brak: "1.5%", oee: "85%" },
-  { m: "KBA Rapida 106",   speed: "16,000/h", setup: "40 min", brak: "1.2%", oee: "88%" },
-  { m: "Folding Machine",  speed: "8,000/h",  setup: "30 min", brak: "2.0%", oee: "80%" },
-  { m: "Die Cutting",      speed: "12,000/h", setup: "35 min", brak: "1.0%", oee: "90%" },
-  { m: "UV Lak",           speed: "6,000/h",  setup: "50 min", brak: "0.8%", oee: "85%" },
-] as const;
-
 // ─── Zod schemas ─────────────────────────────────────────────────────────────
 
 export const MaintSchema = z.object({

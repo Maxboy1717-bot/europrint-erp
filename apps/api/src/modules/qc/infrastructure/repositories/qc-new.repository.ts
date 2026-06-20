@@ -17,10 +17,60 @@ import { safeCall, Result } from '@common/result';
 import { MAX_QUERY_LIMIT, MS_PER_DAY } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
 
+export interface SpcCapability { cp: number | null; cpk: number | null; status: string }
+
+/** Minimum sample count to produce meaningful Cp/Cpk. */
+const MIN_SPC_SAMPLES = 2;
+/** Cpk threshold for "capable" (industry standard: 4σ from each limit). */
+const CPK_CAPABLE   = 1.33;
+/** Cpk threshold for "marginal" (≥1.0 but below 1.33). */
+const CPK_MARGINAL  = 1.0;
+const ROUND_3       = 1000;
+
+/**
+ * Compute real Cp/Cpk from fetched SPC rows.
+ * LSL = qc_parameters.min_value (lcl column), USL = qc_parameters.max_value (ucl column).
+ * Returns null indices when data is insufficient.
+ */
+function computeProcessCapability(rows: Row[]): SpcCapability {
+  const values = rows
+    .map(r => Number(r['value']))
+    .filter(v => Number.isFinite(v));
+
+  const lslRaw = rows.find(r => r['lcl'] != null)?.['lcl'];
+  const uslRaw = rows.find(r => r['ucl'] != null)?.['ucl'];
+  const lsl = lslRaw != null ? Number(lslRaw) : NaN;
+  const usl = uslRaw != null ? Number(uslRaw) : NaN;
+
+  if (values.length < MIN_SPC_SAMPLES || !Number.isFinite(lsl) || !Number.isFinite(usl) || usl <= lsl) {
+    return { cp: null, cpk: null, status: 'no_data' };
+  }
+
+  const n    = values.length;
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const variance = values.reduce((a, v) => a + (v - mean) ** 2, 0) / n;
+  const sigma = Math.sqrt(variance);
+
+  if (sigma <= 0) {
+    return { cp: null, cpk: null, status: 'no_data' };
+  }
+
+  const cp  = Math.round(((usl - lsl) / (6 * sigma)) * ROUND_3) / ROUND_3;
+  const cpu = (usl - mean) / (3 * sigma);
+  const cpl = (mean - lsl) / (3 * sigma);
+  const cpk = Math.round(Math.min(cpu, cpl) * ROUND_3) / ROUND_3;
+
+  const status = cpk >= CPK_CAPABLE ? 'capable'
+               : cpk >= CPK_MARGINAL ? 'marginal'
+               : 'incapable';
+
+  return { cp, cpk, status };
+}
+
 export interface QcDashboardStats { open_defects: number; passed_today: number; failed_today: number; scrap_7days: number }
 export interface QcDashboardData { stats: QcDashboardStats; recentDefects: Row[]; checkpointStatus: Row[] }
 export interface QcAiTrendData { defectTrend: Row[]; topDefectCodes: Row[]; brakTrend: Row[] }
-export interface SpcChartData { points: Row[]; processCapability: { cp: number; cpk: number; status: string } }
+export interface SpcChartData { points: Row[]; processCapability: SpcCapability }
 
 @Injectable()
 export class QcNewRepository {
@@ -28,7 +78,7 @@ export class QcNewRepository {
     return safeCall(async () => {
       const sevenDaysAgo = new Date(Date.now() - 7 * MS_PER_DAY);
 
-      const [openDefectsResult, recentDefects, checkpointStatus, scrapResult] = await Promise.all([
+      const [openDefectsResult, recentDefects, checkpointStatus, scrapResult, todayResult] = await Promise.all([
         db.select({ count: sql<number>`count(*)::int` })
           .from(qc_defects)
           .where(ne(qc_defects.status, 'resolved')),
@@ -51,13 +101,25 @@ export class QcNewRepository {
         db.select({ qty: sql<number>`coalesce(sum(${qcBraks.quantity}), 0)::int` })
           .from(qcBraks)
           .where(gte(qcBraks.createdAt, sevenDaysAgo)),
+
+        // items_passed / items_failed columns exist in live DB but are not in Drizzle schema —
+        // use raw SQL (columns confirmed via information_schema).
+        db.execute(sql`
+          SELECT
+            COALESCE(SUM(items_passed), 0)::int AS passed_today,
+            COALESCE(SUM(items_failed), 0)::int AS failed_today
+          FROM qc_inspections
+          WHERE created_at::date = CURRENT_DATE
+        `),
       ]);
+
+      const todayRow = (((todayResult as { rows?: Row[] }).rows) ?? [])[0] ?? {};
 
       return {
         stats: {
           open_defects: openDefectsResult[0]?.count ?? 0,
-          passed_today: 0,
-          failed_today: 0,
+          passed_today: Number(todayRow['passed_today'] ?? 0),
+          failed_today: Number(todayRow['failed_today'] ?? 0),
           scrap_7days: scrapResult[0]?.qty ?? 0,
         },
         recentDefects,
@@ -217,7 +279,9 @@ export class QcNewRepository {
         .where(parameterId ? eq(qc_spc_data.parameterId, parameterId) : or(isNull(qc_spc_data.parameterId), sql`true`))
         .orderBy(desc(qc_spc_data.measuredAt))
         .limit(100);
-      return { points: rows, processCapability: { cp: 1.33, cpk: 1.21, status: 'capable' } };
+
+      const processCapability = computeProcessCapability(rows);
+      return { points: rows, processCapability };
     }, 'DB_ERROR');
   }
 

@@ -5,7 +5,7 @@
 
 import {
   Body, Controller, Get, Logger, Param, Patch, Post, Query,
-  UseGuards, BadRequestException,
+  UseGuards, BadRequestException, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -151,7 +151,36 @@ export class WmsGatewayInventoryController {
   @Get('inventory-counts/lines/:lineId')
   @Roles(...WH_READ)
   async getInventoryCountLine(@Param('lineId') lineId: string) {
-    return { lineId, qty: 0 };
+    const id = parseInt(lineId, 10);
+    const r = await rawSql(sql`
+      SELECT
+        icl.id::text                  AS id,
+        icl.count_id::text            AS "countId",
+        icl.material_id::text         AS "materialId",
+        mc.kod                        AS "materialCode",
+        mc.xom_ashyo                  AS "materialName",
+        icl.item_type                 AS "itemType",
+        icl.book_quantity             AS "bookQuantity",
+        icl.counted_quantity          AS "countedQuantity",
+        icl.actual_qty                AS "actualQty",
+        icl.system_qty                AS "systemQty",
+        icl.variance,
+        icl.variance_percent          AS "variancePercent",
+        icl.unit_cost                 AS "unitCost",
+        icl.book_value                AS "bookValue",
+        icl.counted_value             AS "countedValue",
+        icl.value_variance            AS "valueVariance",
+        icl.reason,
+        icl.counted_by::text          AS "countedBy",
+        icl.counted_at                AS "countedAt",
+        icl.created_at                AS "createdAt"
+      FROM inventory_count_lines icl
+      LEFT JOIN material_cards mc ON mc.id = icl.material_id
+      WHERE icl.id = ${id}
+    `);
+    const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+    if (!row) throw new NotFoundException(`inventory_count_lines id=${lineId} topilmadi`);
+    return row;
   }
 
   @ApiOperation({ summary: 'Update inventory count line' })

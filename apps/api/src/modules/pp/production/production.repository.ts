@@ -180,6 +180,36 @@ export class ProductionRepository {
       if (!qcRes.ok) return Err(qcRes.error);
       const qcChecks = qcRes.data;
 
+      // 5a. Material allocations for cost breakdown
+      // production_material_allocs.production_order_id is varchar → cast id::text
+      const allocRes = await exec(sql`
+        SELECT
+          pma.material_id,
+          mc.xom_ashyo        AS material_name,
+          mc.unit_of_measure  AS unit,
+          pma.allocated_qty   AS issued_quantity,
+          pma.unit_cost,
+          pma.total_financial_value AS total_actual_cost
+        FROM production_material_allocs pma
+        LEFT JOIN material_cards mc ON mc.id = pma.material_id
+        WHERE pma.production_order_id = ${id}::text
+      `);
+      if (!allocRes.ok) return Err(allocRes.error);
+      const allocRows = allocRes.data;
+
+      const materialCost = allocRows.reduce(
+        (sum, r) => sum + (Number(r.total_actual_cost) || 0),
+        0,
+      );
+      const components = allocRows.map(r => ({
+        materialId:      r.material_id,
+        materialName:    r.material_name ?? '',
+        unit:            r.unit ?? '',
+        issuedQuantity:  Number(r.issued_quantity) || 0,
+        unitCost:        Number(r.unit_cost) || 0,
+        totalActualCost: Number(r.total_actual_cost) || 0,
+      }));
+
       // 5. Compute derived metrics in JS
       const plannedQty = Number(po.planned_quantity) || 0;
       const confirmedQty = Number(po.confirmed_quantity) || 0;
@@ -283,8 +313,8 @@ export class ProductionRepository {
           actualCost,
           variance: costVariance,
           variancePct: costVariancePct,
-          materialCost: null,
-          components: [],
+          materialCost,
+          components,
         },
       };
 

@@ -80,9 +80,9 @@ export class PosReportsRepository {
             mc.unit_of_measure,
             mc.material_type,
             COALESCE(cs.quantity_on_hand, 0)    AS qty_on_hand,
-            COALESCE(mc.last_purchase_price, 0) AS unit_price,
-            COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.last_purchase_price, 0) AS total_value,
-            SUM(COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.last_purchase_price, 0))
+            COALESCE(mc.unit_price, mc.last_purchase_price, 0) AS unit_price,
+            COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.unit_price, mc.last_purchase_price, 0) AS total_value,
+            SUM(COALESCE(cs.quantity_on_hand, 0) * COALESCE(mc.unit_price, mc.last_purchase_price, 0))
               OVER () AS grand_total
           FROM current_stock cs
           JOIN material_cards mc ON mc.id = cs.material_id

@@ -82,8 +82,27 @@ export class DrizzleFinanceExtendedRepository implements IFinanceExtendedReposit
 
   async createIncomeExpense(dto: Row): Promise<Result<Row>> {
     try {
-      const result = await db.insert(incomeExpenseTransactions).values(dto as typeof incomeExpenseTransactions.$inferInsert).returning();
-      return Ok(result[0]);
+      const transactionDate  = dto.transactionDate  != null ? String(dto.transactionDate)  : null;
+      const transactionType  = dto.transactionType  != null ? String(dto.transactionType)  : 'income';
+      const amount           = dto.amount           != null ? Number(dto.amount)           : null;
+      const categoryId       = dto.categoryId       != null ? Number(dto.categoryId)       : null;
+      const description      = dto.description      != null ? String(dto.description)      : null;
+      // income_expense_transactions.transaction_number is NOT NULL with no DB default;
+      // generate deterministically (same pattern as createInventoryCount → INV-...).
+      const r = await runQuery<Row>(sql`
+        INSERT INTO income_expense_transactions
+          (transaction_number, transaction_date, transaction_type, amount, category_id, description)
+        VALUES (
+          'TXN-' || to_char(NOW(), 'YYYYMMDDHH24MISS'),
+          ${transactionDate},
+          ${transactionType},
+          ${amount},
+          ${categoryId},
+          ${description}
+        )
+        RETURNING *
+      `);
+      return Ok((r.rows[0] ?? {}) as Row);
     } catch (e: unknown) { return Err((e as Error).message || 'Yaratishda xatolik'); }
   }
 

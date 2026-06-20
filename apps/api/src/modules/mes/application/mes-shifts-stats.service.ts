@@ -83,4 +83,8 @@ export class MesShiftsStatsService {
   async getMaintenanceRequests(status: string | undefined, lim: number, off: number) {
     return safeCall(async () => this.repo.getMaintenanceRequests(status, lim, off));
   }
+
+  async getWorkCenterNorms() {
+    return safeCall(async () => this.repo.getWorkCenterNorms());
+  }
 }

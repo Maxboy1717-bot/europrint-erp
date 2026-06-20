@@ -1,6 +1,7 @@
 /** @module MESExtendedTabsC @description Norms tab and Smena Handover tab for the MES Extended page. */
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,48 +10,92 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Clock } from "lucide-react";
-import { type MESShift, MACHINE_NORMS } from "./MESExtendedTypes";
+import { type MESShift } from "./MESExtendedTypes";
 import { useTranslation } from '@/lib/i18n';
 
 // ─── Norms Tab ───────────────────────────────────────────────────────────────
 
-/** Tab content: Uskuna Normalari (static data until API is available) */
+interface WorkCenterNorm {
+  id: number;
+  name: string;
+  code?: string;
+  type?: string;
+  capacity_per_hour?: number | null;
+  efficiency_rate?: number | null;
+  hours_per_day?: number | null;
+  cost_per_hour?: number | null;
+  capacity?: number | null;
+  equipment_count?: number;
+}
+
+function fmtEfficiency(v: number | null | undefined): string {
+  if (v == null) return "—";
+  return `${Math.round(Number(v) * 100)}%`;
+}
+
+function fmtCapacity(v: number | null | undefined): string {
+  if (v == null) return "—";
+  return `${Number(v).toLocaleString("uz-UZ")}/soat`;
+}
+
+function fmtHours(v: number | null | undefined): string {
+  if (v == null) return "—";
+  return `${Number(v)} soat/kun`;
+}
+
+/** Tab content: Uskuna Normalari — real work_centers data from GET /api/mes/work-centers/norms */
 export function NormsTab() {
   const { t } = useTranslation("common");
+
+  const { data: raw, isLoading } = useQuery<WorkCenterNorm[]>({
+    queryKey: ["/api/mes/work-centers/norms"],
+    staleTime: 60_000,
+  });
+
+  const norms: WorkCenterNorm[] = Array.isArray(raw) ? raw : [];
+
   return (
     <TabsContent value="norms" className="mt-0 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{t("uskunaNormalari")}</h2>
-        <Button size="sm" data-testid="button-add-norm">
-          <Plus className="h-3.5 w-3.5 mr-1.5" />{t("normaQoshish")}
-        </Button>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="ep-table-scroll"><Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("stanoq")}</TableHead>
-                <TableHead>{t("normativTezlik")}</TableHead>
-                <TableHead>{t("tayyorlovVaqti")}</TableHead>
-                <TableHead>{t("minBrak")}</TableHead>
-                <TableHead>{t("oeeMaqsad")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {MACHINE_NORMS.map((r, i) => (
-                <TableRow key={`norm-${i}`} data-testid={`row-norm-${i}`} className="hover:bg-muted/40 transition-colors">
-                  <TableCell className="font-medium">{r.m}</TableCell>
-                  <TableCell>{r.speed}</TableCell>
-                  <TableCell>{r.setup}</TableCell>
-                  <TableCell>{r.brak}</TableCell>
-                  <TableCell className="font-bold text-[var(--ep-green)]">{r.oee}</TableCell>
+          {isLoading ? (
+            <div className="p-4 space-y-2">
+              {[1, 2, 3].map(i => <Skeleton key={`sk-${i}`} className="h-10 w-full rounded" />)}
+            </div>
+          ) : norms.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              {t("malumotTopilmadi") ?? "Ma'lumot topilmadi"}
+            </div>
+          ) : (
+            <div className="ep-table-scroll"><Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("stanoq")}</TableHead>
+                  <TableHead>{t("normativTezlik") ?? "Soatlik unumdorlik"}</TableHead>
+                  <TableHead>{t("tayyorlovVaqti") ?? "Ish soat/kun"}</TableHead>
+                  <TableHead>{t("oeeMaqsad") ?? "OEE maqsad"}</TableHead>
+                  <TableHead>Uskuna soni</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table></div>
+              </TableHeader>
+              <TableBody>
+                {norms.map((r) => (
+                  <TableRow key={`norm-${r.id}`} data-testid={`row-norm-${r.id}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell>{fmtCapacity(r.capacity_per_hour)}</TableCell>
+                    <TableCell>{fmtHours(r.hours_per_day)}</TableCell>
+                    <TableCell className="font-bold text-[var(--ep-green)]">{fmtEfficiency(r.efficiency_rate)}</TableCell>
+                    <TableCell>{r.equipment_count ?? 0}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table></div>
+          )}
         </CardContent>
       </Card>
     </TabsContent>

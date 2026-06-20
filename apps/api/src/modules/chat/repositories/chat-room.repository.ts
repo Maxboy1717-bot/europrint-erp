@@ -223,6 +223,27 @@ export class ChatRoomRepository {
       }, 'DB_ERROR');
   }
 
+  /**
+   * Bulk unread counts for multiple users — 1 SQL instead of N.
+   * Uses raw parameterised sql (no sql.raw variable) per Qoida B.
+   */
+  async getBulkUnreadCounts(userIds: number[]): Promise<Result<Record<number, number>>> {
+    return safeCall(async () => {
+      if (!userIds.length) return {} as Record<number, number>;
+      const rows = await db.execute<{ user_id: number; total: number }>(
+        sql`SELECT user_id::int, COALESCE(SUM(unread_count), 0)::int AS total
+            FROM chat_members
+            WHERE user_id::int = ANY(ARRAY[${sql.join(userIds.map(id => sql`${id}`), sql`, `)}])
+            GROUP BY user_id`,
+      );
+      const map: Record<number, number> = {};
+      for (const row of (Array.isArray(rows) ? rows : (rows as { rows?: { user_id: number; total: number }[] }).rows ?? [])) {
+        map[Number(row.user_id)] = Number(row.total);
+      }
+      return map;
+    }, 'DB_ERROR');
+  }
+
   async findAllEmployees(search?: string) { return this.users.findAllEmployees(search); }
   async findUserByAdminId(rawId: string) { return this.users.findUserByAdminId(rawId); }
   async findUserIdByUsername(username: string) { return this.users.findUserIdByUsername(username); }

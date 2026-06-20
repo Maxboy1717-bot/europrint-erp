@@ -78,6 +78,7 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
           SELECT id, board_id, column_id, title, description, priority, due_date,
                  sort_order, owner_user_id, related_type, related_id, source,
                  start_date, estimated_time, accepted_at, completed_at,
+                 rating, completion_report,
                  created_at, updated_at,
                  (SELECT row_to_json(t) FROM kanban_time_tracks t
                   WHERE t.card_id = kanban_cards.id::text AND t.is_running = true

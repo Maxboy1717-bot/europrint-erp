@@ -53,18 +53,34 @@ export class DrizzleMarketingExtRepository {
   async getDashboardStats(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const campaigns = await db.select().from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
-      const leads     = await db.select({ status: marketingLeads.status })
+      const leads     = await db.select({ status: marketingLeads.status, createdAt: marketingLeads.createdAt })
         .from(marketingLeads).where(isNull(marketingLeads.deletedAt));
       const totalLeads     = leads.length;
       const convertedLeads = (Array.isArray(leads) ? leads : []).filter(l => l.status === 'converted').length;
       const conversionRate = totalLeads > 0
         ? Math.round((convertedLeads / totalLeads) * 100 * 10) / 10
         : 0;
+
+      // totalBudget: sum of marketing_campaigns.budget (numeric column, existing)
+      const [budgetRow] = await db.select({
+        totalBudget: sql<number>`coalesce(sum(${marketingCampaigns.budget}::numeric), 0)`,
+      }).from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
+
+      // recentLeads: leads created in last 30 days (created_at column, existing)
+      const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const recentLeads = (Array.isArray(leads) ? leads : []).filter(l => {
+        if (!l.createdAt) return false;
+        return new Date(l.createdAt) >= cutoff30;
+      }).length;
+
       return {
         totalCampaigns:  campaigns.length,
         activeCampaigns: (Array.isArray(campaigns) ? campaigns : []).filter((c) => c.status === 'active').length,
         totalLeads,
+        convertedLeads,
         conversionRate,
+        totalBudget:  Number(budgetRow?.totalBudget ?? 0),
+        recentLeads,
       };
     });
   }

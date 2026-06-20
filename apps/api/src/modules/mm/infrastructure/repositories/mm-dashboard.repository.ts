@@ -27,7 +27,7 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async getVendorRatings(): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT v.id, v.name, v.contact_email, COALESCE(AVG(vr.quality_score), 0)::numeric(4,2) AS avg_quality, COALESCE(AVG(vr.delivery_score), 0)::numeric(4,2) AS avg_delivery, COALESCE(AVG(vr.price_score), 0)::numeric(4,2) AS avg_price, COUNT(vr.id)::int AS rating_count, MAX(vr.rated_at) AS last_rated FROM mm_vendors v LEFT JOIN mm_vendor_ratings vr ON vr.vendor_id = v.id WHERE v.is_active = true GROUP BY v.id, v.name, v.contact_email ORDER BY avg_quality DESC`);  } catch (_e) {
+      return exec(sql`SELECT v.id, v.name, v.email, COALESCE(AVG(vr.quality_score), 0)::numeric(4,2) AS avg_quality, COALESCE(AVG(vr.delivery_score), 0)::numeric(4,2) AS avg_delivery, COALESCE(AVG(vr.price_score), 0)::numeric(4,2) AS avg_price, COUNT(vr.id)::int AS rating_count, MAX(vr.rated_at) AS last_rated FROM mm_vendors v LEFT JOIN mm_vendor_ratings vr ON vr.vendor_id = v.id WHERE v.is_active = true GROUP BY v.id, v.name, v.email ORDER BY avg_quality DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 

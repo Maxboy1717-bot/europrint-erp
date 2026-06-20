@@ -94,6 +94,11 @@ export class ChatRoomService {
     return result.ok ? result.data : 0;
   }
 
+  async getBulkUnreadCounts(userIds: number[]): Promise<Record<number, number>> {
+    const result = await this.roomRepo.getBulkUnreadCounts(userIds);
+    return result.ok ? result.data : {};
+  }
+
   async getAllEmployees(search?: string): Promise<Record<string, unknown>[]> {
     const result = await this.roomRepo.findAllEmployees(search);
     return (result.ok ? result.data : []) as Record<string, unknown>[];

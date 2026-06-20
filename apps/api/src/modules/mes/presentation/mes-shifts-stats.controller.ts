@@ -197,4 +197,11 @@ export class MesShiftsStatsController {
   ) {
     return unwrapOrThrow(await this.svc.getMaintenanceRequests(status, safeInt(limit, 50), safeInt(offset, 0)));
   }
+
+  @ApiOperation({ summary: 'Get work center norms (capacity, efficiency, hours)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('work-centers/norms')
+  async getWorkCenterNorms() {
+    return unwrapOrThrow(await this.svc.getWorkCenterNorms());
+  }
 }

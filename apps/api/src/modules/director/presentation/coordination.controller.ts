@@ -182,4 +182,22 @@ export class CoordinationController {
   async getStats() {
     return unwrapOrInternal(await this.svc.getStats());
   }
+
+  @ApiOperation({ summary: 'List users for assignee picker (id + full_name)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('users-for-select')
+  async usersForSelect() {
+    const r = await db.execute(sql`
+      SELECT
+        id,
+        TRIM(COALESCE(first_name,'') || ' ' || COALESCE(last_name,'')) AS full_name,
+        role
+      FROM users
+      WHERE (is_active = true OR is_active IS NULL)
+        AND TRIM(COALESCE(first_name,'') || ' ' || COALESCE(last_name,'')) <> ''
+      ORDER BY first_name, last_name
+      LIMIT 200
+    `);
+    return ((r as { rows?: unknown[] }).rows) ?? [];
+  }
 }

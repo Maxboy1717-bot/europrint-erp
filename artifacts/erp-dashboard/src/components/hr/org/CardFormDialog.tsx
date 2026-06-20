@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -38,6 +39,8 @@ export interface OrgCard {
   tskp_measurement_unit?: string | null;
   statistics_type?: string | null;
   ai_exam_enabled?: boolean | null;
+  function_description?: string | null;
+  function_description_ru?: string | null;
 }
 
 const CARDS_KEY = "/api/org-structure/cards";
@@ -59,6 +62,8 @@ type FormState = {
   tskpMeasurementUnit: string;
   statisticsType: string;
   aiExamEnabled: boolean;
+  functionDescription: string;
+  functionDescriptionRu: string;
 };
 
 function toForm(card?: OrgCard | null): FormState {
@@ -79,6 +84,8 @@ function toForm(card?: OrgCard | null): FormState {
     tskpMeasurementUnit: card?.tskp_measurement_unit ?? "",
     statisticsType: card?.statistics_type ?? "",
     aiExamEnabled: Boolean(card?.ai_exam_enabled),
+    functionDescription: card?.function_description ?? "",
+    functionDescriptionRu: card?.function_description_ru ?? "",
   };
 }
 
@@ -138,6 +145,8 @@ export function CardFormDialog({
         tskpMeasurementUnit: form.tskpMeasurementUnit || undefined,
         statisticsType: form.statisticsType || undefined,
         aiExamEnabled: form.aiExamEnabled,
+        functionDescription: form.functionDescription || undefined,
+        functionDescriptionRu: form.functionDescriptionRu || undefined,
       };
       return isEdit
         ? apiRequest("PATCH", `${CARDS_KEY}/${card!.id}`, payload)
@@ -245,6 +254,26 @@ export function CardFormDialog({
                 <SelectItem value="VAQT">{t("vaqt")}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="sm:col-span-2">
+            <Label>{t("lavozimTavsifi")}</Label>
+            <Textarea
+              value={form.functionDescription}
+              onChange={(e) => set("functionDescription", e.target.value)}
+              rows={4}
+              placeholder={t("lavozimTavsifiPlaceholder")}
+              className="resize-y"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>{t("lavozimTavsifiRu")}</Label>
+            <Textarea
+              value={form.functionDescriptionRu}
+              onChange={(e) => set("functionDescriptionRu", e.target.value)}
+              rows={4}
+              placeholder={t("lavozimTavsifiRuPlaceholder")}
+              className="resize-y"
+            />
           </div>
           <div className="sm:col-span-2 flex items-center justify-between rounded-md border border-border p-3">
             <Label className="mb-0">{t("aiImtihon")}</Label>
