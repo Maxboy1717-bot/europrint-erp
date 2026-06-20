@@ -52,15 +52,16 @@ export function MessageBubble({
 
   const handleStar = useCallback(async () => {
     try {
-      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`);
-      {
-        const data = (res as { starred: boolean });
-        setIsStarred(data.starred);
-      }
+      // Send the desired next state so the BE can toggle (star AND unstar). With no body
+      // the BE defaulted to always-star (body?.starred !== false === true).
+      const next = !isStarred;
+      const res = await apiRequest('POST', `/api/chat/messages/${msg.id}/star`, { starred: next });
+      const data = (res as { starred: boolean });
+      setIsStarred(data.starred);
     } catch {
       // ignore
     }
-  }, [msg.id]);
+  }, [msg.id, isStarred]);
 
   const handleReact = useCallback((messageId: string, emoji: string) => {
     onReact?.(messageId, emoji);
