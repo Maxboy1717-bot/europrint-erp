@@ -6,28 +6,32 @@ import { tLabel } from '@/lib/i18n/tLabel';
  */
 
 export interface DashStats {
-  activeSessions: number;
-  completedToday: number;
-  onlineDevices: number;
-  averageOee: number;
+  /** Snake_case fields from GET /api/mes/stats */
+  active_sessions: number;
+  completed_today: number;
+  produced_today: number;
+  defect_rate: string | number;
+  /** Legacy OEE field from /api/iot/dashboard/stats — not present in /api/mes/stats */
+  averageOee?: number;
 }
 
 export interface Session {
-  id: string;
-  sessionNumber: string;
-  productionOrderId: string;
-  equipmentId: string;
-  equipmentName?: string;
-  workerId: string;
+  /** Snake_case fields from GET /api/mes/production-sessions (mes_production_sessions table) */
+  id: number | string;
+  session_number: string;
+  production_order_id: number | null;
+  equipment_id: number | null;
+  equipment_name?: string;
+  worker_id: number | null;
   status: string;
-  targetQuantity: number;
-  actualQuantity: number;
-  defectQuantity: number;
-  runningTimeSeconds: number;
-  stoppedTimeSeconds: number;
-  oee?: number;
-  orderNumber?: string;
-  startedAt?: string;
+  target_quantity: number;
+  actual_quantity: number;
+  defect_quantity: number;
+  running_time_seconds: number;
+  stopped_time_seconds: number;
+  oee?: number | string | null;
+  started_at?: string;
+  ended_at?: string | null;
 }
 
 export interface Downtime {

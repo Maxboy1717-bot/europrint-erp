@@ -135,7 +135,7 @@ export class ChatNotificationRepository {
       const r = await db.execute(sql`
         SELECT
           t.id, t.room_id, t.message_id, t.title, t.assigned_to,
-          t.due_date, t.priority, t.status, t.created_at
+          t.due_date, t.priority, t.status, t.created_at, t.created_by
         FROM chat_message_tasks t
         INNER JOIN chat_messages m ON m.id = t.message_id
         INNER JOIN chat_members mb ON mb.room_id::text = m.room_id::text AND mb.user_id::int = ${userId}
@@ -153,6 +153,7 @@ export class ChatNotificationRepository {
         priority:   String(row['priority'] ?? 'medium'),
         status:     String(row['status'] ?? 'open'),
         createdAt:  String(row['created_at'] ?? ''),
+        createdBy:  row['created_by'] ? String(row['created_by']) : null,
       })) : [];
       return Ok(tasks);
     } catch (e: unknown) { return Ok([]); }
@@ -185,6 +186,7 @@ export class ChatNotificationRepository {
   async insertTask(
     messageId: string, title: string, assignedTo: string | null,
     dueDate: string | null, priority: string, roomId?: string,
+    createdBy?: string,
   ): Promise<Result<Row>> {
     try {
       // DB has integer types (id SERIAL, message_id int, assigned_to int)
@@ -192,8 +194,9 @@ export class ChatNotificationRepository {
       const msgIdInt = parseInt(messageId, 10);
       if (isNaN(msgIdInt)) return Err("messageId raqam bo'lishi kerak");
       const assignedToInt = assignedTo ? parseInt(assignedTo, 10) : null;
+      const createdByStr = createdBy ?? null;
       const r = await db.execute(sql`
-        INSERT INTO chat_message_tasks (message_id, title, assigned_to, due_date, priority, status, room_id)
+        INSERT INTO chat_message_tasks (message_id, title, assigned_to, due_date, priority, status, room_id, created_by)
         VALUES (
           ${msgIdInt},
           ${title},
@@ -201,9 +204,10 @@ export class ChatNotificationRepository {
           ${dueDate ? sql`${dueDate}::date` : sql`NULL`},
           ${priority ?? 'medium'},
           'open',
-          ${roomId ?? null}
+          ${roomId ?? null},
+          ${createdByStr}
         )
-        RETURNING id, message_id, title, assigned_to, due_date, priority, status, created_at, room_id
+        RETURNING id, message_id, title, assigned_to, due_date, priority, status, created_at, room_id, created_by
       `);
       const row = ((r as { rows?: Row[] }).rows ?? [])[0] ?? {};
       return Ok(row as Row);

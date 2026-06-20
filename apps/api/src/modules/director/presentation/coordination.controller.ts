@@ -40,12 +40,16 @@ export class CoordinationController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('councils')
   async getCouncils() {
+    // NOTE: councils.chairperson_id FK -> employees(id), NOT users(id).
+    // Double JOIN: employees for name, then users for display fallback.
     const r = await db.execute(sql`
       SELECT c.id, c.name, c.council_type, c.description, c.is_active, c.created_at,
-             TRIM(COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')) AS chairperson_name,
+             c.chairperson_id,
+             TRIM(COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'')) AS chairperson_name,
              c.meeting_schedule
       FROM councils c
-      LEFT JOIN users u ON u.id = c.chairperson_id
+      LEFT JOIN employees emp ON emp.id = c.chairperson_id
+      LEFT JOIN users u ON u.id = emp.user_id
       WHERE c.is_active = true ORDER BY c.id
     `);
     return ((r as { rows?: unknown[] }).rows) ?? [];
@@ -212,19 +216,25 @@ export class CoordinationController {
     return unwrapOrInternal(await this.svc.getStats());
   }
 
-  @ApiOperation({ summary: 'List users for assignee picker (id + full_name)' })
+  @ApiOperation({ summary: 'List employees for assignee/chairperson picker (employees.id + full_name)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('users-for-select')
   async usersForSelect() {
+    // NOTE: councils.chairperson_id FK -> employees(id).
+    // Returns employees.id as `id` so FE can set chairperson_id correctly.
+    // Also includes user_id and role for display context.
     const r = await db.execute(sql`
       SELECT
-        id,
-        TRIM(COALESCE(first_name,'') || ' ' || COALESCE(last_name,'')) AS full_name,
-        role
-      FROM users
-      WHERE (is_active = true OR is_active IS NULL)
-        AND TRIM(COALESCE(first_name,'') || ' ' || COALESCE(last_name,'')) <> ''
-      ORDER BY first_name, last_name
+        e.id,
+        u.id AS user_id,
+        TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')) AS full_name,
+        u.role
+      FROM employees e
+      JOIN users u ON u.id = e.user_id
+      WHERE (u.is_active = true OR u.is_active IS NULL)
+        AND e.deleted_at IS NULL
+        AND TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')) <> ''
+      ORDER BY e.first_name, e.last_name
       LIMIT 200
     `);
     return ((r as { rows?: unknown[] }).rows) ?? [];

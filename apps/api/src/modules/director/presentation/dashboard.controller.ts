@@ -61,6 +61,7 @@ export class DashboardController {
     const baseData = (base.ok ? base.data : {}) as Record<string, unknown>;
     return {
       ...baseData,
+      criticalStock: (baseData as { alerts?: { minStock?: number } }).alerts?.minStock ?? 0,
       mode:          isSnapshot ? 'snapshot' : 'realtime',
       planFact:      Array.isArray(planFact) ? planFact : [],
       orderProgress: Array.isArray(orderProgress) ? orderProgress : [],

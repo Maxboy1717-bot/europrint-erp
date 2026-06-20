@@ -83,15 +83,21 @@ export class LegacyIotService {
   }
 
   async getIotTabletDefectReasons(): Promise<Record<string, unknown>[]> {
+    // Q-40 fix: labelRu was echo of labelUz (name AS "labelRu" — no Russian column in
+    // mes_downtime_reasons). Wire: LEFT JOIN downtime_reason_codes on code to get name_ru.
+    // COALESCE(drc.name_ru, dr.name) falls back to Uzbek when downtime_reason_codes is
+    // empty — no regression, but Russian text appears automatically once that table is
+    // seeded (docs/migration/seed/ plans it). No new DDL: both tables already exist.
     const r = await db.execute(sql`
       SELECT
-        code       AS code,
-        name       AS "labelUz",
-        name       AS "labelRu",
-        category   AS stage
-      FROM mes_downtime_reasons
-      WHERE is_active = true
-      ORDER BY code
+        dr.code                                   AS code,
+        dr.name                                   AS "labelUz",
+        COALESCE(drc.name_ru, dr.name)            AS "labelRu",
+        dr.category                               AS stage
+      FROM mes_downtime_reasons dr
+      LEFT JOIN downtime_reason_codes drc ON drc.code = dr.code
+      WHERE dr.is_active = true
+      ORDER BY dr.code
     `);
     return r.rows as Record<string, unknown>[];
   }

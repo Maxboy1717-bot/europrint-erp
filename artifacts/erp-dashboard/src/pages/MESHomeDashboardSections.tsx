@@ -87,8 +87,8 @@ export function MesKpiRow({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <KpiCard
         title={t("faolSessiyalar")}
-        value={sLoad ? "..." : (stats?.activeSessions ?? activeSessions.length)}
-        sub={`Bugun bajarildi: ${stats?.completedToday ?? 0}`}
+        value={sLoad ? "..." : (stats?.active_sessions ?? activeSessions.length)}
+        sub={`Bugun bajarildi: ${stats?.completed_today ?? 0}`}
         icon={Play}
         color="text-[var(--ep-green)]"
         accent="bg-emerald-50 dark:bg-emerald-900/20"
@@ -105,12 +105,12 @@ export function MesKpiRow({
       />
       <KpiCard
         title={t("ishlabChiqarildi")}
-        value={sessLoad ? "..." : totalProduced.toLocaleString()}
+        value={sLoad ? "..." : totalProduced.toLocaleString()}
         sub={`Brak: ${defectRate}%`}
         icon={Factory}
         color="text-[var(--ep-blue)]"
         accent="bg-blue-50 dark:bg-blue-900/20"
-        loading={sessLoad}
+        loading={sLoad}
       />
       <KpiCard
         title={t("toxtashlar")}
@@ -147,32 +147,37 @@ export function MesMachineGrid({ sessions, sessLoad }: { sessions: Session[]; se
         <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {sessions?.slice(0, 8).map(s => {
             const st = statusInfo(s.status);
-            const progress = s.targetQuantity > 0 ? Math.min(100, Math.round((s.actualQuantity / s.targetQuantity) * 100)) : 0;
-            const oeeVal = s.oee ? Math.round(s.oee * 100) : null;
+            const oeeRaw = Number(s.oee ?? 0);
+            // oee stored as 0-100 in DB (e.g. 79.9), convert to 0-1 for helpers that expect fraction
+            const oeeFraction = oeeRaw > 1 ? oeeRaw / 100 : oeeRaw;
+            const progress = (s.target_quantity ?? 0) > 0
+              ? Math.min(100, Math.round((Number(s.actual_quantity) / Number(s.target_quantity)) * 100))
+              : 0;
+            const oeeVal = s.oee != null ? Math.round(oeeRaw > 1 ? oeeRaw : oeeRaw * 100) : null;
             return (
               <div
                 key={s.id}
                 className={cn(
                   "rounded-xl border p-4 space-y-2",
-                  s.status === "running" || s.status === "active"
+                  s.status === "running" || s.status === "active" || s.status === "in_progress"
                     ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-900/10"
                     : s.status === "stopped" || s.status === "paused"
                     ? "border-red-200 bg-red-50/60 dark:border-red-800 dark:bg-red-900/10"
                     : "border-border bg-muted/30"
                 )}
-                data-testid={`machine-cell-${s.equipmentId}`}
+                data-testid={`machine-cell-${s.equipment_id}`}
               >
                 <div className="flex items-center gap-2">
                   <span className={cn("w-2 h-2 rounded-full shrink-0", st.dot)} />
-                  <span className="text-xs font-bold text-foreground truncate">{s.equipmentName || s.equipmentId}</span>
+                  <span className="text-xs font-bold text-foreground truncate">{s.equipment_name || s.equipment_id}</span>
                 </div>
                 <p className={cn("text-xs font-medium", st.color)}>{st.label}</p>
-                {s.orderNumber && <p className="text-[10px] text-muted-foreground truncate">{s.orderNumber}</p>}
+                {s.session_number && <p className="text-[10px] text-muted-foreground truncate">{s.session_number}</p>}
                 <div className="space-y-1">
                   <Progress value={progress} className="h-1.5" />
                   <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>{s.actualQuantity}/{s.targetQuantity}</span>
-                    {oeeVal !== null && <span className={oeeColor(s.oee ?? 0)}>OEE {oeeVal}%</span>}
+                    <span>{Number(s.actual_quantity)}/{Number(s.target_quantity)}</span>
+                    {oeeVal !== null && <span className={oeeColor(oeeFraction)}>OEE {oeeVal}%</span>}
                   </div>
                 </div>
               </div>

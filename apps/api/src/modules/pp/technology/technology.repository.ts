@@ -52,16 +52,71 @@ export class TechnologyRepository {
 
   async findMaterialAlternatives(material: string): Promise<Result<{ material: string; alternatives: { name: string; saving: string; note: string }[]; note: string }>> {
     try {
-    return Ok({
-      material,
-      alternatives: [
-        { name: `${material} (Optimal)`, saving: '12% tejash', note: 'Bir xil sifat, past narx' },
-        { name: `${material} Premium`, saving: '0%', note: 'Eng yuqori sifat' },
-        { name: `${material} Eco`, saving: '20% tejash', note: 'Ekologik toza, engil' },
-      ],
-      note: `AI tavsiyasi: Optimal variant ${material} uchun eng samarali tanlov`,
-    });
-      } catch (_e) {
+      // 1. Find the base material row by name (ILIKE — user may pass partial name)
+      const baseR = await db.execute(sql`
+        SELECT id, xom_ashyo, unit_price, grammage, category, material_type
+        FROM material_cards
+        WHERE xom_ashyo ILIKE ${'%' + material.trim() + '%'}
+          AND is_active = true
+          AND unit_price IS NOT NULL
+        ORDER BY length(xom_ashyo)
+        LIMIT 1
+      `);
+      const baseRows = (baseR as { rows?: Record<string, unknown>[] }).rows ?? [];
+      const base = baseRows[0] ?? null;
+      const basePrice = base ? Number(base['unit_price']) : 0;
+
+      // 2. Find alternatives in same category OR material_type (excluding the base itself)
+      //    Fallback: if category/material_type is NULL or no base found, query all materials ILIKE
+      const altR = await db.execute(
+        base && (base['category'] || base['material_type'])
+          ? sql`
+              SELECT id, xom_ashyo, unit_price, grammage, category, material_type
+              FROM material_cards
+              WHERE (category = ${base['category'] ?? null} OR material_type = ${base['material_type'] ?? null})
+                AND is_active = true
+                AND unit_price IS NOT NULL
+                AND id != ${Number(base['id'])}
+              ORDER BY unit_price ASC
+              LIMIT 5
+            `
+          : sql`
+              SELECT id, xom_ashyo, unit_price, grammage, category, material_type
+              FROM material_cards
+              WHERE xom_ashyo ILIKE ${'%' + material.trim() + '%'}
+                AND is_active = true
+                AND unit_price IS NOT NULL
+              ORDER BY unit_price ASC
+              LIMIT 5
+            `,
+      );
+      const altRows = (altR as { rows?: Record<string, unknown>[] }).rows ?? [];
+
+      const alternatives = altRows.map(row => {
+        const altPrice = Number(row['unit_price']);
+        const savingPct =
+          basePrice > 0 && altPrice > 0
+            ? Math.round(((basePrice - altPrice) / basePrice) * 100)
+            : 0;
+        const saving =
+          savingPct > 0
+            ? `${savingPct}% tejash`
+            : savingPct < 0
+              ? `${Math.abs(savingPct)}% qimmat`
+              : 'bir xil narx';
+        const grammageNote = row['grammage'] ? ` ${Number(row['grammage'])}g/m²` : '';
+        const note = `${row['category'] ?? row['material_type'] ?? ''}${grammageNote}`.trim() || 'Material katalogdan';
+        return { name: String(row['xom_ashyo'] ?? ''), saving, note };
+      });
+
+      const baseName = base ? String(base['xom_ashyo']) : material;
+      const noteText =
+        alternatives.length > 0
+          ? `${alternatives.length} ta alternativ material topildi`
+          : 'Bir xil kategoriyada boshqa material topilmadi';
+
+      return Ok({ material: baseName, alternatives, note: noteText });
+    } catch (_e) {
       return Err(String(_e));
     }
   }

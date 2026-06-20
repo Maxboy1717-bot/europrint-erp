@@ -20,10 +20,17 @@ import { sql } from 'drizzle-orm';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 
 const CreateInventoryCountSchema = z.object({
-  count_date: z.string().optional(),
+  // snake_case (API / curl)
+  count_date:   z.string().optional(),
   warehouse_id: z.union([z.string(), z.number()]).optional(),
-  count_type: z.string().max(50).optional(),
-  notes: z.string().max(2000).optional(),
+  count_type:   z.string().max(50).optional(),
+  assigned_to:  z.union([z.string(), z.number()]).optional(),
+  // camelCase (FE mutation — InventoryCountFormValues)
+  countDate:    z.string().optional(),
+  warehouseId:  z.union([z.string(), z.number()]).optional(),
+  countType:    z.string().max(50).optional(),
+  assignedTo:   z.union([z.string(), z.number()]).optional(),
+  notes:        z.string().max(2000).optional(),
 }).passthrough();
 
 const UpdateInventoryCountLineSchema = z.object({
@@ -127,19 +134,25 @@ export class WmsGatewayInventoryController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const body = CreateInventoryCountSchema.parse(rawBody);
+    // Resolve camelCase aliases from FE (InventoryCountFormValues) over snake_case
+    const resolvedWarehouseId = body.warehouse_id ?? body.warehouseId;
+    const resolvedCountDate   = body.count_date   ?? body.countDate;
+    const resolvedCountType   = body.count_type   ?? body.countType;
+    const resolvedAssignedTo  = body.assigned_to  ?? body.assignedTo;
     try {
       const countNum = `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`;
       const r = await rawSql(sql`
         INSERT INTO inventory_counts (count_number, count_date, warehouse_id, count_type, status, total_items, counted_items, assigned_to, notes, created_at)
         VALUES (${countNum},
-                ${String(body.count_date ?? new Date().toISOString().split('T')[0])},
-                ${body.warehouse_id ? parseInt(String(body.warehouse_id), 10) : null}::int,
-                ${String(body.count_type ?? 'spot')},
+                ${String(resolvedCountDate ?? new Date().toISOString().split('T')[0])},
+                ${resolvedWarehouseId ? parseInt(String(resolvedWarehouseId), 10) : null}::int,
+                ${String(resolvedCountType ?? 'spot')},
                 'draft', 0, 0,
-                ${user?.id ?? null}::int,
+                ${resolvedAssignedTo ? parseInt(String(resolvedAssignedTo), 10) : (user?.id ?? null)}::int,
                 ${body.notes ? String(body.notes) : null},
                 NOW())
-        RETURNING id::text AS id, count_number AS "countNumber", status, count_date AS "countDate"
+        RETURNING id::text AS id, count_number AS "countNumber", status, count_date AS "countDate",
+                  warehouse_id AS "warehouseId", count_type AS "countType"
       `);
       return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? { ok: true };
     } catch (e) { throw new BadRequestException((e as Error).message); }

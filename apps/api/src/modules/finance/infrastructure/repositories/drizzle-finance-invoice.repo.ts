@@ -74,10 +74,8 @@ export class FinanceInvoiceRepo {
 
   async findInvoiceBySalesOrderId(salesOrderId: string): Promise<Result<FinanceRow | null>> {
     try {
-      // finance_invoices has no source_id column; match by vendor_id or customer_id context is unavailable.
-      // Return null (no row) rather than crashing — caller handles gracefully.
-      void salesOrderId;
-      return Ok(null);
+      const r = await runQuery<FinanceRow>(sql`SELECT * FROM fi_invoices WHERE sales_order_id = ${salesOrderId}::uuid LIMIT 1`);
+      return Ok((r.rows[0] ?? null) as FinanceRow | null);
     } catch (error: unknown) { return Err((error as Error).message); }
   }
 

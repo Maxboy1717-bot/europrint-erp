@@ -159,25 +159,30 @@ export function MesActiveSessionsTable({ activeSessions, sessLoad }: { activeSes
             <tbody>
               {(Array.isArray(activeSessions) ? activeSessions : []).map((s, i) => {
                 const st = statusInfo(s.status);
-                const oeeVal = s.oee !== undefined && s.oee !== null ? Math.round(s.oee * 100) : null;
+                const oeeRaw = s.oee != null ? Number(s.oee) : null;
+                // oee stored as 0-100 in DB (e.g. 79.9); convert to fraction for oeeColor helper
+                const oeeFraction = oeeRaw != null ? (oeeRaw > 1 ? oeeRaw / 100 : oeeRaw) : null;
+                const oeeDisplay = oeeRaw != null ? Math.round(oeeRaw > 1 ? oeeRaw : oeeRaw * 100) : null;
                 return (
                   <tr key={s.id} className={cn("border-t", i % 2 === 0 ? "" : "bg-muted/20")} data-testid={`row-session-${s.id}`}>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <span className={cn("w-2 h-2 rounded-full", st.dot)} />
-                        <span className="font-medium text-foreground">{s.equipmentName || s.equipmentId}</span>
+                        <span className="font-medium text-foreground">{s.equipment_name || s.equipment_id}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{s.orderNumber || "—"}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{s.session_number || "—"}</td>
                     <td className="px-4 py-2.5"><span className={cn("text-xs font-medium", st.color)}>{st.label}</span></td>
                     <td className="px-4 py-2.5 text-right text-muted-foreground">
                       <div className="flex items-center justify-end gap-1">
                         <Timer className="w-3 h-3" />
-                        {fmt(s.runningTimeSeconds)}
+                        {fmt(s.running_time_seconds)}
                       </div>
                     </td>
                     <td className="px-4 py-2.5 text-right font-semibold">
-                      {oeeVal !== null ? <span className={oeeColor(s.oee ?? 0)}>{oeeVal}%</span> : "—"}
+                      {oeeDisplay !== null && oeeFraction !== null
+                        ? <span className={oeeColor(oeeFraction)}>{oeeDisplay}%</span>
+                        : "—"}
                     </td>
                   </tr>
                 );

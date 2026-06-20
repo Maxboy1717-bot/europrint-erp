@@ -29,6 +29,7 @@ export interface MessageTask {
   priority: string;
   status: string;
   createdAt: string;
+  createdBy: string | null;
 }
 
 @Injectable()
@@ -85,7 +86,7 @@ export class ChatNotificationsService {
     const msgCheck = await this.repo.messageInRoom(messageIdStr, roomIdStr);
     if (isErr(msgCheck)) return Err(msgCheck.error);
     if (!msgCheck.data) return Err(AppErr('NOT_FOUND', 'Xabar topilmadi yoki boshqa xonaga tegishli'));
-    const result = await this.repo.insertTask(messageIdStr, title, assignedTo !== null ? String(assignedTo) : null, dueDate, priority, roomIdStr);
+    const result = await this.repo.insertTask(messageIdStr, title, assignedTo !== null ? String(assignedTo) : null, dueDate, priority, roomIdStr, String(callerId));
     if (isErr(result)) return Err(result.error);
     const r = result.data;
     return Ok<MessageTask>({
@@ -93,6 +94,7 @@ export class ChatNotificationsService {
       title: String(r['title']), assignedTo: r['assigned_to'] ? String(r['assigned_to']) : null,
       dueDate: r['due_date'] ? String(r['due_date']) : null,
       priority: String(r['priority']), status: String(r['status']), createdAt: String(r['created_at']),
+      createdBy: r['created_by'] ? String(r['created_by']) : null,
     });
   }
 

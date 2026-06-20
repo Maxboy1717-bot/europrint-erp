@@ -15,14 +15,34 @@ export class MesProductionSessionsRepository {
 
   async listSessions(page: number, limit: number, status?: string): Promise<Row[]> {
     try {
+      // Query mes_production_sessions (canonical IoT/MES data) with equipment join.
+      // mes_sessions lacks target_quantity, actual_quantity, oee etc. — wrong table.
       const rows = await runQuery<Row>(sql`
-        SELECT ms.*, wc.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name
-        FROM mes_sessions ms
-        LEFT JOIN work_centers wc ON wc.id = ms.machine_id
-        LEFT JOIN users u ON u.id = ms.operator_id
-        WHERE (${status ?? null}::text IS NULL OR ms.status = ${status ?? null})
-
-        ORDER BY ms.started_at DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}
+        SELECT
+          mps.id,
+          mps.session_number,
+          mps.production_order_id,
+          mps.equipment_id,
+          mps.worker_id,
+          mps.status,
+          mps.target_quantity,
+          mps.actual_quantity,
+          mps.defect_quantity,
+          mps.running_time_seconds,
+          mps.stopped_time_seconds,
+          mps.oee,
+          mps.started_at,
+          mps.ended_at,
+          mps.availability,
+          mps.performance,
+          mps.quality,
+          eq.name AS equipment_name
+        FROM mes_production_sessions mps
+        LEFT JOIN equipment eq ON eq.id = mps.equipment_id
+        WHERE mps.deleted_at IS NULL
+          AND (${status ?? null}::text IS NULL OR mps.status = ${status ?? null})
+        ORDER BY mps.started_at DESC
+        LIMIT ${limit} OFFSET ${(page - 1) * limit}
       `);
       return rows.rows as Row[];
     } catch (err) {

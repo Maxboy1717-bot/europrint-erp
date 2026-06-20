@@ -45,9 +45,7 @@ export class OrgStructureService implements OnModuleInit {
     const nodeMap = new Map<number, Record<string, unknown>>();
 
     (Array.isArray(nodes?.data) ? nodes?.data : []).forEach(n => {
-      const cap = parseInt(String(n.capacity)) || 0;
-      const emp = Number(n.employeeCount) || 0;
-      nodeMap.set(Number(n.id), { ...n, children: [], employees: [], vacantCount: Math.max(0, cap - emp) });
+      nodeMap.set(Number(n.id), { ...n, children: [], employees: [], vacantCount: Number(n.vacantCardCount) || 0 });
     });
 
     const roots: Record<string, unknown>[] = [];

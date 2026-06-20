@@ -163,11 +163,15 @@ export class KanbanCardsController {
   @ApiOperation({ summary: 'Karta tayinlash' })
   async assignCard(@Param('id') id: string, @Body() body: unknown) {
     const dto = AssignCardSchema.parse(body);
-    await db.execute(sql`
-      UPDATE kanban_cards SET owner_user_id=${dto.assignedTo ? Number(dto.assignedTo) : null}
-      WHERE id=${id}
+    const { rows } = await runQuery<Record<string, unknown>>(sql`
+      UPDATE kanban_cards
+      SET owner_user_id = ${dto.assignedTo ? Number(dto.assignedTo) : null},
+          updated_at = NOW()
+      WHERE id = ${Number(id)} AND deleted_at IS NULL
+      RETURNING id, owner_user_id, updated_at
     `);
-    return { id, assigned: true };
+    if (!rows[0]) throw new HttpException('Karta topilmadi', HttpStatus.NOT_FOUND);
+    return rows[0];
   }
 
   @Put('cards/:id/accept')
