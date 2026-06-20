@@ -43,7 +43,7 @@ export class CoordinationRepository implements ICoordinationRepo {
       return db.select({
         id:           dokla.id,
         from_user_id: dokla.from_user_id,
-        from_name:    dokla.from_name,
+        from_name:    sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), ${dokla.from_name}, '')`,
         council_level: dokla.council_level,
         subject:      dokla.subject,
         problem:      dokla.problem,
@@ -52,7 +52,6 @@ export class CoordinationRepository implements ICoordinationRepo {
         status:       dokla.status,
         created_at:   dokla.created_at,
         updated_at:   dokla.updated_at,
-        author_name:  sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), ${dokla.from_name}, '')`,
       })
         .from(dokla)
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${dokla.from_user_id}::text`)
@@ -112,7 +111,7 @@ export class CoordinationRepository implements ICoordinationRepo {
         done_note:    rasporyazhenie.done_note,
         created_at:   rasporyazhenie.created_at,
         updated_at:   rasporyazhenie.updated_at,
-        issued_by_name: sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), '')`,
+        from_name:      sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), '')`,
       })
         .from(rasporyazhenie)
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${rasporyazhenie.from_user_id}::text`)

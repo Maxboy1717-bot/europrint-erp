@@ -51,6 +51,18 @@ export class QcNewService {
     return this.repo.findCertificates(status);
   }
 
+  createCertificate(data: {
+    certNumber: string;
+    orderId?: number;
+    productName?: string;
+    issuedDate?: string;
+    status?: string;
+    notes?: string;
+    issuedBy?: string;
+  }): ReturnType<QcNewRepository['insertCertificate']> {
+    return this.repo.insertCertificate(data);
+  }
+
   getLabTests(orderId?: string): ReturnType<QcNewRepository['findLabTests']> {
     return this.repo.findLabTests(orderId ? parseInt(orderId, 10) : undefined);
   }

@@ -61,8 +61,8 @@ export class CrmExtrasService {
     return this.repo.listInvoices(lim, off);
   }
 
-  async listProposals(lim: number, off: number) {
-    return this.repo.listProposals(lim, off);
+  async listProposals(lim: number, off: number, dealId?: number | null) {
+    return this.repo.listProposals(lim, off, dealId);
   }
 
   async getLeadStages() {

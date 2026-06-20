@@ -171,6 +171,19 @@ export class ChatMessageBaseRepository {
       }, 'DB_ERROR');
   }
 
+  async incrementUnreadForOthers(roomIdStr: string, senderIdStr: string): Promise<void> {
+    await db
+      .update(chatMembers)
+      .set({ unreadCount: sql`COALESCE(${chatMembers.unreadCount}, 0) + 1` })
+      .where(
+        and(
+          eq(chatMembers.roomId, roomIdStr),
+          sql`${chatMembers.userId} != ${senderIdStr}`,
+          isNull(chatMembers.leftAt),
+        ),
+      );
+  }
+
   async setPinned(msgIdStr: string, pin: boolean): Promise<void> {
     await db.update(chatMessages).set({ isPinned: pin }).where(eq(chatMessages.id, msgIdStr));
   }

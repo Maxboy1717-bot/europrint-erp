@@ -78,13 +78,79 @@ export class LmsExamsRepository {
     }
   }
 
-  async submitExam(examId: string, userId: string, answers: unknown[]): Promise<Result<Row>> {
+  /**
+   * submitExam — persists the exam attempt with:
+   *  - user_id (INTEGER NOT NULL — was missing, caused 23502 every call)
+   *  - score   (computed from answers vs correct_option)
+   *  - passed  (score >= exam.passing_score)
+   * Columns confirmed in DB: lms_exam_attempts.user_id, .score, .passed,
+   *   lms_exam_questions.correct_option, lms_exams.passing_score.
+   */
+  async submitExam(
+    examId: string,
+    userId: string,
+    answers: Array<{ questionId: number; selectedOption: number }>,
+  ): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`INSERT INTO lms_exam_attempts (exam_id, employee_id, answers, submitted_at, status, created_at) VALUES (${parseInt(examId, 10)}, ${parseInt(userId, 10)}, ${JSON.stringify(answers)}, NOW(), 'submitted', NOW()) RETURNING *`);
-      const row = (r[0] ?? { exam_id: examId, employee_id: userId }) as Row;
+      const examIdInt = parseInt(examId, 10);
+      const userIdInt = parseInt(userId, 10);
+
+      // 1. Fetch exam to get passing_score
+      const exams = await exec(sql`SELECT id, passing_score FROM lms_exams WHERE id = ${examIdInt} LIMIT 1`);
+      if (!exams.length) return Err('Imtihon topilmadi');
+      const passingScore = Number(exams[0].passing_score ?? 70);
+
+      // 2. Fetch questions to grade answers
+      const questions = await exec(sql`
+        SELECT id, correct_option FROM lms_exam_questions
+        WHERE exam_id = ${examIdInt}
+        ORDER BY order_index
+      `);
+
+      // 3. Compute score (0–100) and passed flag
+      let scoreVal = 0;
+      let passedVal = false;
+      if (questions.length > 0 && Array.isArray(answers) && answers.length > 0) {
+        const correctCount = answers.filter(a =>
+          questions.find(q => Number(q.id) === a.questionId)
+            ?.correct_option === a.selectedOption
+        ).length;
+        scoreVal = Math.round((correctCount / questions.length) * 100);
+        passedVal = scoreVal >= passingScore;
+      }
+
+      // 4. INSERT with all required columns (user_id, score, passed)
+      const r = await exec(sql`
+        INSERT INTO lms_exam_attempts
+          (exam_id, user_id, employee_id, answers, submitted_at, status, score, passed, created_at)
+        VALUES
+          (${examIdInt}, ${userIdInt}, ${String(userIdInt)},
+           ${JSON.stringify(answers)},
+           NOW(), 'submitted',
+           ${scoreVal}, ${passedVal},
+           NOW())
+        RETURNING *
+      `);
+      const row = (r[0] ?? { exam_id: examIdInt, user_id: userIdInt }) as Row;
       return Ok({ ...row, message: 'Imtihon topshirildi' });
     } catch (error) {
       this.logger.error(`submitExam: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /** Returns questions (without correct_option) for a given exam — used by FE exam UI. */
+  async findExamQuestions(examId: string): Promise<Result<object[]>> {
+    try {
+      const r = await exec(sql`
+        SELECT id, question_text, options, order_index
+        FROM lms_exam_questions
+        WHERE exam_id = ${parseInt(examId, 10)}
+        ORDER BY order_index
+      `);
+      return Ok(r);
+    } catch (error) {
+      this.logger.error(`findExamQuestions: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

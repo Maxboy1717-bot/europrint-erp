@@ -61,6 +61,7 @@ export class ChatMessageService {
       fileName || null, fileType || null, messageType, replyToIdStr,
     );
     if (!msgResult.ok) return Err(msgResult.error.message);
+    await this.msgRepo.incrementUnreadForOthers(roomIdStr, senderIdStr);
     const msg = msgResult.data as Record<string, unknown>;
     const userResult = await this.msgRepo.findUserInfo(senderId);
     const user = (userResult.ok ? userResult.data : undefined) as Record<string, unknown> | undefined;

@@ -41,6 +41,16 @@ const AqlPlanQuerySchema = z.object({
   level: z.enum(['I', 'II', 'III']).default('II'),
 });
 
+const CertificateDto = z.object({
+  certNumber: z.string().min(1),
+  orderId: z.number().int().optional(),
+  productName: z.string().optional(),
+  issuedDate: z.string().optional(),
+  status: z.enum(['active', 'draft', 'revoked']).default('active'),
+  notes: z.string().max(2000).optional(),
+  issuedBy: z.string().optional(),
+});
+
 const LabTestDto = z.object({
   order_id: z.number().optional(),
   parameter_name: z.string().min(1),
@@ -101,6 +111,14 @@ export class QcNewController {
   @ApiOperation({ summary: 'List quality certificates' })
   async getCertificates(@Query('status') status?: string) {
     return unwrapOrInternal(await this.svc.getCertificates(status));
+  }
+
+  @Post('certificates')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'Create quality certificate' })
+  async createCertificate(@Body() body: unknown) {
+    const dto = CertificateDto.parse(body);
+    return unwrapOrInternal(await this.svc.createCertificate(dto));
   }
 
   @Get('lab-tests')

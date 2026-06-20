@@ -44,19 +44,38 @@ export class DrizzleFinanceReportsRepository implements IFinanceReportsRepositor
     try {
       const fromDate = from ?? `${_time.now().getFullYear()}-01-01`;
       const toDate = to ?? _time.now().toISOString().slice(0, 10);
-      const [revenue, expense] = await Promise.all([
-        db.select({ total: sum(entries.amount) })
+      // FIX 1: UPPER(account_type) to handle DB stores 'REVENUE'/'EXPENSE' (uppercase)
+      // FIX 2: GROUP BY account to return per-account rows for FE shape
+      const [revenueRows, expenseRows] = await Promise.all([
+        db.select({ accountName: accounts.accountName, total: sum(entries.amount) })
           .from(entries)
           .leftJoin(accounts, eq(entries.debitAccountId, accounts.id))
-          .where(sql`${accounts.accountType} = 'revenue' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
-        db.select({ total: sum(entries.amount) })
+          .where(sql`UPPER(${accounts.accountType}) = 'REVENUE' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`)
+          .groupBy(accounts.accountName),
+        db.select({ accountName: accounts.accountName, total: sum(entries.amount) })
           .from(entries)
           .leftJoin(accounts, eq(entries.debitAccountId, accounts.id))
-          .where(sql`${accounts.accountType} = 'expense' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`),
+          .where(sql`UPPER(${accounts.accountType}) = 'EXPENSE' AND ${entries.entryDate} >= ${fromDate} AND ${entries.entryDate} <= ${toDate}`)
+          .groupBy(accounts.accountName),
       ]);
-      const totalRevenue = Number(revenue[0]?.total || 0);
-      const totalExpense = Number(expense[0]?.total || 0);
-      return Ok({ from: fromDate, to: toDate, totalRevenue, totalExpense, netProfit: totalRevenue - totalExpense });
+      const revenues = revenueRows
+        .filter(r => r.accountName != null)
+        .map(r => ({ accountName: r.accountName as string, amount: Number(r.total || 0) }));
+      const expenses = expenseRows
+        .filter(r => r.accountName != null)
+        .map(r => ({ accountName: r.accountName as string, amount: Number(r.total || 0) }));
+      const totalRevenue = revenues.reduce((s, r) => s + r.amount, 0);
+      const totalExpense = expenses.reduce((s, r) => s + r.amount, 0);
+      return Ok({
+        period: { startDate: fromDate, endDate: toDate },
+        revenues,
+        expenses,
+        totalRevenue,
+        totalExpense,
+        netProfit: totalRevenue - totalExpense,
+        from: fromDate,
+        to: toDate,
+      });
     } catch (e: unknown) { return Err((e as Error).message || 'Foyda-zarar topilmadi'); }
   }
 

@@ -75,8 +75,11 @@ export class WmsCatalogController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('reports/turnover')
   @Roles(...WH_READ)
-  getReportsTurnover() {
-    return this.catalogService.getTurnover();
+  getReportsTurnover(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.catalogService.getTurnover(dateFrom, dateTo);
   }
 
   // -- STATS -----------------------------------------------------------------

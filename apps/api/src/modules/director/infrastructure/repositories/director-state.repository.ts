@@ -49,7 +49,8 @@ export class DirectorStateRepository implements IDirectorStateRepo {
       const now = _time.now();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const daysElapsed = now.getDate();
-      const r = await castTo<WRow[]>(exec(sql`SELECT w.id::text AS warehouse_id, w.name AS warehouse_name, w.type AS warehouse_type, COALESCE(SUM(si.quantity), 0) AS total_qty, COALESCE(SUM(si.quantity * si.unit_cost), 0) AS total_value, COUNT(DISTINCT si.id) AS item_count, COALESCE(w.monthly_rental_cost, 0) AS rental_cost_monthly FROM warehouses w LEFT JOIN stock_items si ON si.warehouse_id = w.id WHERE w.is_active = true GROUP BY w.id, w.name, w.type, w.monthly_rental_cost ORDER BY rental_cost_monthly DESC`));
+      // FIX: monthly_rental_cost→monthly_rate (information_schema confirmed); unit_cost→cost_price (stock_items schema)
+      const r = await castTo<WRow[]>(exec(sql`SELECT w.id::text AS warehouse_id, w.name AS warehouse_name, w.type AS warehouse_type, COALESCE(SUM(si.quantity), 0) AS total_qty, COALESCE(SUM(si.quantity * si.cost_price), 0) AS total_value, COUNT(DISTINCT si.id) AS item_count, COALESCE(w.monthly_rate, 0) AS rental_cost_monthly FROM warehouses w LEFT JOIN stock_items si ON si.warehouse_id = w.id WHERE w.is_active = true GROUP BY w.id, w.name, w.type, w.monthly_rate ORDER BY rental_cost_monthly DESC`));
       const rentalData = (Array.isArray(r) ? r : []).map(row => {
         const rentalCostMonthly = parseFloat(row.rental_cost_monthly) || 0;
         const rentalCostToDate = Math.round((rentalCostMonthly / daysInMonth) * daysElapsed);

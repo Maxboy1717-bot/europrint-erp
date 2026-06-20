@@ -296,24 +296,56 @@ export class IotMainController {
     return { id: parseInt(id, 10), updated: true };
   }
 
-  // OEE live snapshot - real values come from sensor_readings + production_sessions
-  // aggregation; for now we serve a typed empty snapshot so the page renders.
+  // OEE live snapshot - aggregated from production_sessions (real data source).
+  // oee_records table exists but has 0 rows; production_sessions has availability/
+  // performance/quality/oee columns with real numeric values from IoT devices.
   @ApiOperation({ summary: 'Get oee live' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('oee/live') @Roles(...IOT_READ)
   async getOeeLive(@Query('device_id') deviceId?: string) {
-    // Aggregate the latest shift's OEE records from oee_records (real DB).
-    const r = await db.execute(sql`
+    // (1) AVG summary — recent active sessions (last 8 h or running/in_progress).
+    const machineIdFilter = deviceId
+      ? sql`AND machine_id = ${parseInt(deviceId, 10)}`
+      : sql``;
+
+    const summaryResult = await db.execute(sql`
       SELECT AVG(availability)::numeric(6,2) AS availability,
              AVG(performance)::numeric(6,2)  AS performance,
              AVG(quality)::numeric(6,2)      AS quality,
              AVG(oee)::numeric(6,2)          AS oee,
              COUNT(*)::int                   AS sample_size
-      FROM oee_records
-      WHERE date = (SELECT MAX(date) FROM oee_records)
-        ${deviceId ? sql`AND machine_id = ${parseInt(deviceId, 10)}` : sql``}
+      FROM production_sessions
+      WHERE deleted_at IS NULL
+        AND (
+          updated_at >= NOW() - INTERVAL '8 hours'
+          OR status IN ('running', 'in_progress')
+        )
+        ${machineIdFilter}
     `);
-    const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+    const summaryRows = (summaryResult as unknown as { rows: Record<string, unknown>[] }).rows ?? [];
+    const row = summaryRows[0];
+
+    // (2) GROUP BY machine_id for the by_machine breakdown.
+    const byMachineResult = await db.execute(sql`
+      SELECT machine_id,
+             AVG(availability)::numeric(6,2) AS availability,
+             AVG(performance)::numeric(6,2)  AS performance,
+             AVG(quality)::numeric(6,2)      AS quality,
+             AVG(oee)::numeric(6,2)          AS oee,
+             COUNT(*)::int                   AS sample_size
+      FROM production_sessions
+      WHERE deleted_at IS NULL
+        AND machine_id IS NOT NULL
+        AND (
+          updated_at >= NOW() - INTERVAL '8 hours'
+          OR status IN ('running', 'in_progress')
+        )
+        ${machineIdFilter}
+      GROUP BY machine_id
+      ORDER BY machine_id
+    `);
+    const byMachineRows = (byMachineResult as unknown as { rows: Record<string, unknown>[] }).rows ?? [];
+
     return {
       availability: Number(row?.availability ?? 0),
       performance:  Number(row?.performance  ?? 0),
@@ -321,7 +353,14 @@ export class IotMainController {
       oee:          Number(row?.oee          ?? 0),
       sample_size:  Number(row?.sample_size  ?? 0),
       generated_at: new Date().toISOString(),
-      by_machine: [],
+      by_machine: byMachineRows.map(m => ({
+        machine_id:   Number(m.machine_id),
+        availability: Number(m.availability ?? 0),
+        performance:  Number(m.performance  ?? 0),
+        quality:      Number(m.quality      ?? 0),
+        oee:          Number(m.oee          ?? 0),
+        sample_size:  Number(m.sample_size  ?? 0),
+      })),
     };
   }
 }

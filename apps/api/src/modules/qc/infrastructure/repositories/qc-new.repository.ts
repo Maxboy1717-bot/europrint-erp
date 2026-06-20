@@ -138,6 +138,35 @@ export class QcNewRepository {
     }, 'DB_ERROR');
   }
 
+  async insertCertificate(data: {
+    certNumber: string;
+    orderId?: number;
+    productName?: string;
+    issuedDate?: string;
+    status?: string;
+    notes?: string;
+    issuedBy?: string;
+  }): Promise<Result<Row>> {
+    // NOTE: qc_certificates is a VIEW over 'certificates' in the live DB.
+    // The underlying table has NOT NULL LMS columns (user_id, course_id, certificate_number)
+    // with no FK constraints. We use sentinel 0/cert_number values for those columns so
+    // that QC records are distinguishable (user_id=0 = QC origin) without DDL changes.
+    return safeCall(async () => {
+      const r = await db.execute(sql`
+        INSERT INTO certificates
+          (user_id, course_id, certificate_number, cert_number, order_id, product_name, issued_date, status, notes, issued_by)
+        VALUES
+          (0, 0, ${data.certNumber}, ${data.certNumber},
+           ${data.orderId ?? null}, ${data.productName ?? null},
+           ${data.issuedDate ?? null}, ${data.status ?? 'active'},
+           ${data.notes ?? null}, ${data.issuedBy ?? null})
+        RETURNING id, cert_number, order_id, product_name, issued_date, status, notes, issued_by, created_at
+      `);
+      const rows = ((r as { rows?: Row[] }).rows) ?? [];
+      return rows[0] as Row;
+    }, 'DB_ERROR');
+  }
+
   async findLabTests(orderId?: number): Promise<Result<unknown[]>> {
     return safeCall(async () => {
       const base = db.select().from(qc_lab_tests);

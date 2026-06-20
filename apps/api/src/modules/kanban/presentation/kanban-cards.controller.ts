@@ -112,7 +112,20 @@ export class KanbanCardsController {
         return { items: [], total: 0 };
       }
     }
-    return { items: [], total: 0 };
+    try {
+      const { rows } = await runQuery<Record<string, unknown>>(sql`
+        SELECT kc.*, kb.name AS board_name, kcol.name AS column_name
+        FROM kanban_cards kc
+        LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
+        LEFT JOIN kanban_columns kcol ON kcol.id = kc.column_id
+        WHERE kc.deleted_at IS NULL
+        ORDER BY kc.sort_order ASC, kc.created_at DESC
+        LIMIT 500
+      `);
+      return { items: rows, total: rows.length };
+    } catch {
+      return { items: [], total: 0 };
+    }
   }
 
   @Post('cards')

@@ -12,8 +12,9 @@ import { sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 import {
   safety_incidents, offboarding_cases, employee_contracts, hrEmployees,
+  ppe_compliance, safety_training_records,
 } from '@shared/db';
-import type { IHrDashboardExtraRepo } from '../../domain/repositories/i-hr-dashboard-extra.repo';
+import type { IHrDashboardExtraRepo, SafetyKpis } from '../../domain/repositories/i-hr-dashboard-extra.repo';
 
 type Row = Record<string, unknown>;
 
@@ -111,5 +112,33 @@ export class HrDashboardExtraRepository implements IHrDashboardExtraRepo {
       `);
       return rows.rows as Row[];
       }, 'DB_ERROR');
+  }
+
+  async getSafetyKpis(): Promise<Result<SafetyKpis>> {
+    return safeCall(async () => {
+      const [ppeResult, trainingResult] = await Promise.all([
+        db.select({
+          ppeCompliancePercent: sql<number>`
+            ROUND(
+              COUNT(*) FILTER (WHERE ${ppe_compliance.is_compliant} = true)::numeric
+              / NULLIF(COUNT(*), 0) * 100,
+              1
+            )
+          `,
+        }).from(ppe_compliance),
+        db.select({
+          expiringTrainings: sql<number>`
+            COUNT(*) FILTER (
+              WHERE ${safety_training_records.expiry_date} BETWEEN CURRENT_DATE
+                AND CURRENT_DATE + INTERVAL '30 days'
+            )
+          `,
+        }).from(safety_training_records),
+      ]);
+      return {
+        ppeCompliancePercent: Number(ppeResult[0]?.ppeCompliancePercent ?? 0),
+        expiringTrainings:    Number(trainingResult[0]?.expiringTrainings ?? 0),
+      };
+    }, 'DB_ERROR');
   }
 }

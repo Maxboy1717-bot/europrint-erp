@@ -28,8 +28,9 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { LmsCoreService } from '../application/services/lms-core.service';
 import {
   CreateExamSchema, CreateExamDto,
-  SubmitExamSchema, SubmitExamDto
+  SubmitExamSchema, SubmitExamDto,
 } from './dto/lms-core.dto';
+import { AuthenticatedUser } from '@common/types/user.types';
 import { db } from '@shared/db';
 import { lms_support_tickets } from '@shared/db';
 
@@ -59,6 +60,16 @@ export class LmsCoreController {
   async listExams(@CurrentUser() user: AuthenticatedUser) {
     const userId = String(user?.id ?? 0);
     const result = await this.svc.listExams(userId);
+    return unwrapOrInternal(result);
+  }
+
+  @ApiOperation({ summary: 'Get exam questions (for FE exam UI — no correct_option exposed)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get('exams/:id/questions')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async getExamQuestions(@Param('id') id: string) {
+    const result = await this.svc.getExamQuestions(id);
     return unwrapOrInternal(result);
   }
 

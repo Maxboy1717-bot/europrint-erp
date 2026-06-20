@@ -34,7 +34,7 @@ export interface ICrmExtrasRepo {
   listTasks(assignedTo: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>>;
   createTask(body: Row): Promise<Result<Row | null>>;
   listInvoices(lim: number, off: number): Promise<Result<Row[]>>;
-  listProposals(lim: number, off: number): Promise<Result<Row[]>>;
+  listProposals(lim: number, off: number, dealId?: number | null): Promise<Result<Row[]>>;
   getLeadStages(): Promise<Result<Row[]>>;
   getEntityActivities(entityType: string, entityId: number): Promise<Result<CrmActivityRow[]>>;
 }

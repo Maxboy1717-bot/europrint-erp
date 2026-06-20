@@ -1,5 +1,6 @@
 /** @module MESExtendedTabsC @description Norms tab and Smena Handover tab for the MES Extended page. */
 
+import { useState } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Clock } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import { type MESShift, MACHINE_NORMS } from "./MESExtendedTypes";
 import { useTranslation } from '@/lib/i18n';
 
@@ -62,11 +62,15 @@ export function NormsTab() {
 interface SmenaTabProps {
   currentShift: MESShift | undefined;
   onHandoverToast: () => void;
+  onConfirmHandover: (incomingSupervisorId: number, notes: string, issues: string) => void;
 }
 
 /** Tab content: Smena O'tkazish Protokoli */
-export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
+export function SmenaTab({ currentShift, onHandoverToast, onConfirmHandover }: SmenaTabProps) {
   const { t } = useTranslation("common");
+  const [incomingId, setIncomingId] = useState("");
+  const [handoverNotes, setHandoverNotes] = useState("");
+
   const smenaStats = [
     { l: "Joriy smena ishlab chiqarishi", v: currentShift?.producedQty ?? "—", c: "text-primary"   },
     { l: "Brak miqdori",                  v: currentShift?.brakQty    ?? "—", c: "text-[var(--ep-red)]"   },
@@ -80,10 +84,6 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
     { label: "Eslatmalar",         value: currentShift?.notes || "Yo'q" },
   ];
 
-  async function handleConfirmHandover() {
-    await apiRequest("POST", "/api/mes/shifts/handover", { note: "handover" });
-    onHandoverToast();
-  }
 
   return (
     <TabsContent value="smena" className="mt-0 space-y-4">
@@ -148,6 +148,10 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
               <Input
                 placeholder={t("operatorIsmi")}
                 data-testid="input-incoming-operator"
+                value={incomingId}
+                onChange={e => setIncomingId(e.target.value)}
+                type="number"
+                min={1}
               />
             </div>
 
@@ -170,13 +174,19 @@ export function SmenaTab({ currentShift, onHandoverToast }: SmenaTabProps) {
               <Input
                 placeholder={t("smenaBoyichaIzoh")}
                 data-testid="input-shift-note"
+                value={handoverNotes}
+                onChange={e => setHandoverNotes(e.target.value)}
               />
             </div>
 
             <Button
               className="w-full"
               data-testid="button-confirm-handover"
-              onClick={handleConfirmHandover}
+              onClick={() => {
+                if (!incomingId) return;
+                onConfirmHandover(Number(incomingId), handoverNotes, "");
+              }}
+              disabled={!incomingId}
             >
               {t("smenaOtkazishniTasdiqlash")}
             </Button>

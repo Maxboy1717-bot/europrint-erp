@@ -19,7 +19,7 @@ import { ApprovePurchaseOrderCommand } from '../application/commands/approve-pur
 import { GoodsReceiptCommand } from '../application/commands/goods-receipt.handler';
 import { db } from '@shared/db';
 import { mm_purchase_orders } from '@shared/db';
-import { eq, desc, sql, getTableColumns } from 'drizzle-orm';
+import { eq, sql, getTableColumns } from 'drizzle-orm';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
 enum Role {
@@ -47,19 +47,46 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async listPos(){
     try {
-      const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).orderBy(desc(mm_purchase_orders.created_at)).limit(50);
-      return rows.map((r) => ({
+      // NOTE: raw sql used for LEFT JOIN aggregate — Drizzle .select() does not cleanly support
+      // subquery aggregates in the column list for this shape.
+      const result = await db.execute(sql`
+        SELECT
+          po.id,
+          po.vendor_id,
+          po.vendor_name,
+          po.order_date,
+          po.expected_date,
+          po.status,
+          po.total_amount,
+          po.currency,
+          COALESCE(poi_agg.item_count, 0)::int                                       AS receipt_count,
+          COALESCE(poi_agg.items_total, 0)::numeric(15,2)                            AS received_amount,
+          (po.total_amount - COALESCE(poi_agg.items_total, 0))::numeric(15,2)        AS pending_amount
+        FROM mm_purchase_orders po
+        LEFT JOIN (
+          SELECT purchase_order_id,
+                 COUNT(*)::int              AS item_count,
+                 SUM(quantity * unit_price) AS items_total
+          FROM purchase_order_items
+          GROUP BY purchase_order_id
+        ) poi_agg ON poi_agg.purchase_order_id = po.id
+        WHERE po.deleted_at IS NULL
+        ORDER BY po.created_at DESC
+        LIMIT 50
+      `);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
+      return rows.map((r: Record<string, unknown>) => ({
         id: String(r.id),
         po_number: `PO-${String(r.id).padStart(6, '0')}`,
-        vendor_name: r.vendorName ?? r.vendor_id?.toString() ?? '',
-        order_date: r.order_date ?? '',
-        delivery_date: r.expected_date ?? '',
-        status: r.status ?? 'draft',
+        vendor_name: (r.vendor_name as string | null) ?? (r.vendor_id != null ? String(r.vendor_id) : ''),
+        order_date: (r.order_date as string | null) ?? '',
+        delivery_date: (r.expected_date as string | null) ?? '',
+        status: (r.status as string | null) ?? 'draft',
         total_amount: String(r.total_amount ?? 0),
-        currency: r.currency ?? 'UZS',
-        received_amount: '0',
-        pending_amount: String(r.total_amount ?? 0),
-        receipt_count: 0,
+        currency: (r.currency as string | null) ?? 'UZS',
+        received_amount: String(r.received_amount ?? 0),
+        pending_amount: String(r.pending_amount ?? r.total_amount ?? 0),
+        receipt_count: Number(r.receipt_count ?? 0),
       }));
     } catch (e) { throw new InternalServerErrorException(String(e)); }
   }
@@ -70,47 +97,96 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPendingReceipt(){
     try {
-      const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders)
-        .where(eq(mm_purchase_orders.status, 'approved'))
-        .orderBy(desc(mm_purchase_orders.created_at))
-        .limit(20);
-      return rows.map((r) => ({
+      // NOTE: raw sql used for LEFT JOIN aggregate — same pattern as listPos().
+      const result = await db.execute(sql`
+        SELECT
+          po.id,
+          po.vendor_id,
+          po.vendor_name,
+          po.order_date,
+          po.expected_date,
+          po.status,
+          po.total_amount,
+          po.currency,
+          COALESCE(poi_agg.item_count, 0)::int                                       AS receipt_count,
+          COALESCE(poi_agg.items_total, 0)::numeric(15,2)                            AS received_amount,
+          (po.total_amount - COALESCE(poi_agg.items_total, 0))::numeric(15,2)        AS pending_amount
+        FROM mm_purchase_orders po
+        LEFT JOIN (
+          SELECT purchase_order_id,
+                 COUNT(*)::int              AS item_count,
+                 SUM(quantity * unit_price) AS items_total
+          FROM purchase_order_items
+          GROUP BY purchase_order_id
+        ) poi_agg ON poi_agg.purchase_order_id = po.id
+        WHERE po.deleted_at IS NULL
+          AND po.status = 'approved'
+        ORDER BY po.created_at DESC
+        LIMIT 20
+      `);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
+      return rows.map((r: Record<string, unknown>) => ({
         id: String(r.id),
         po_number: `PO-${String(r.id).padStart(6, '0')}`,
-        vendor_name: r.vendorName ?? r.vendor_id?.toString() ?? '',
-        order_date: r.order_date ?? '',
-        delivery_date: r.expected_date ?? '',
-        status: r.status ?? 'approved',
+        vendor_name: (r.vendor_name as string | null) ?? (r.vendor_id != null ? String(r.vendor_id) : ''),
+        order_date: (r.order_date as string | null) ?? '',
+        delivery_date: (r.expected_date as string | null) ?? '',
+        status: (r.status as string | null) ?? 'approved',
         total_amount: String(r.total_amount ?? 0),
-        currency: r.currency ?? 'UZS',
-        received_amount: '0',
-        pending_amount: String(r.total_amount ?? 0),
-        receipt_count: 0,
+        currency: (r.currency as string | null) ?? 'UZS',
+        received_amount: String(r.received_amount ?? 0),
+        pending_amount: String(r.pending_amount ?? r.total_amount ?? 0),
+        receipt_count: Number(r.receipt_count ?? 0),
       }));
     } catch (e) { throw new InternalServerErrorException(String(e)); }
   }
 
   @ApiOperation({ summary: 'Get po' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-10 (use list endpoint)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async getPo(@Param('id') id: string){
     const poId = Number(id);
-    const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
-    const r = rows[0];
+    const result = await db.execute(sql`
+      SELECT
+        po.id,
+        po.vendor_id,
+        po.vendor_name,
+        po.order_date,
+        po.expected_date,
+        po.status,
+        po.total_amount,
+        po.currency,
+        COALESCE(poi_agg.item_count, 0)::int                                       AS receipt_count,
+        COALESCE(poi_agg.items_total, 0)::numeric(15,2)                            AS received_amount,
+        (po.total_amount - COALESCE(poi_agg.items_total, 0))::numeric(15,2)        AS pending_amount
+      FROM mm_purchase_orders po
+      LEFT JOIN (
+        SELECT purchase_order_id,
+               COUNT(*)::int              AS item_count,
+               SUM(quantity * unit_price) AS items_total
+        FROM purchase_order_items
+        GROUP BY purchase_order_id
+      ) poi_agg ON poi_agg.purchase_order_id = po.id
+      WHERE po.id = ${poId}
+        AND po.deleted_at IS NULL
+      LIMIT 1
+    `);
+    const rows = Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? [];
+    const r = rows[0] as Record<string, unknown> | undefined;
     if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
     return {
       id: String(r.id),
       po_number: `PO-${String(r.id).padStart(6, '0')}`,
-      vendor_name: r.vendorName ?? r.vendor_id?.toString() ?? '',
-      order_date: r.order_date ?? '',
-      delivery_date: r.expected_date ?? '',
-      status: r.status ?? 'draft',
+      vendor_name: (r.vendor_name as string | null) ?? (r.vendor_id != null ? String(r.vendor_id) : ''),
+      order_date: (r.order_date as string | null) ?? '',
+      delivery_date: (r.expected_date as string | null) ?? '',
+      status: (r.status as string | null) ?? 'draft',
       total_amount: String(r.total_amount ?? 0),
-      currency: r.currency ?? 'UZS',
-      received_amount: '0',
-      pending_amount: String(r.total_amount ?? 0),
-      receipt_count: 0,
+      currency: (r.currency as string | null) ?? 'UZS',
+      received_amount: String(r.received_amount ?? 0),
+      pending_amount: String(r.pending_amount ?? r.total_amount ?? 0),
+      receipt_count: Number(r.receipt_count ?? 0),
     };
   }
 

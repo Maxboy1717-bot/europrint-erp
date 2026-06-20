@@ -31,7 +31,15 @@ export class LmsCoreService {
     dto: SubmitExamDto,
   ): Promise<Result<Record<string, unknown>>> {
     if (!userId || userId === '0') return Err('Foydalanuvchi aniqlanmadi');
-    return this.examsRepo.submitExam(examId, userId, dto.answers);
+    const answers = Array.isArray(dto.answers)
+      ? (dto.answers as Array<{ questionId: number; selectedOption: number }>)
+      : [];
+    return this.examsRepo.submitExam(examId, userId, answers);
+  }
+
+  /** Returns exam questions (no correct_option) for the FE exam-taking UI. */
+  async getExamQuestions(examId: string): Promise<Result<object[]>> {
+    return this.examsRepo.findExamQuestions(examId);
   }
 
   async getRecentActivity(userId: string): Promise<Result<object[]>> {

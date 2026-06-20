@@ -71,9 +71,10 @@ export class ProductionReportsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('orders/:id/360-card')
   async order360Card(@Param('id') id: string) {
-    const r = await this.svc.getOrder360Card(safeInt(id, 0));
-    assertFound(r, 'Production order not found');
-    return r;
+    const result = await this.svc.getOrder360Card(safeInt(id, 0));
+    const card = unwrapOrThrow(result);
+    if (!card) throw new NotFoundException('Production order not found');
+    return card;
   }
 
   @ApiOperation({ summary: 'Get production orders (production_orders)' })

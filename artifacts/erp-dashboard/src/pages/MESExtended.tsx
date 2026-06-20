@@ -101,6 +101,16 @@ export default function MESExtended() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
+  const createShiftHandover = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiRequest("POST", "/api/mes/shifts/handover", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/shifts/current"] });
+      toast({ title: "Smena o'tkazildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
   // ─── Derived stats ─────────────────────────────────────────────────────────
 
   const machines: MESMachine[] = Array.isArray(oeeData?.machines) ? (oeeData.machines as MESMachine[]) : [];
@@ -178,6 +188,14 @@ export default function MESExtended() {
             currentShift={currentShift}
             onHandoverToast={() =>
               toast({ title: "Smena o'tkazish boshlandi", description: "Yangi operator ma'lumotlarini kiriting" })
+            }
+            onConfirmHandover={(incomingId, notes, issues) =>
+              createShiftHandover.mutate({
+                outgoing_supervisor: currentShift?.operator_id ?? currentShift?.operatorId ?? 0,
+                incoming_supervisor: incomingId,
+                notes,
+                issues,
+              })
             }
           />
         </div>

@@ -143,33 +143,40 @@ export class HrDashboardExtraService {
   }
 
   async getSafetySummaryProjected(): Promise<Result<SafetySummary, AppError>> {
-    const r = await this.repo.getSafetySummary();
-    const row = (r.ok ? r.data : null) as Record<string, unknown> | null;
+    const [summaryR, kpisR] = await Promise.all([
+      this.repo.getSafetySummary(),
+      this.repo.getSafetyKpis(),
+    ]);
+    const row = (summaryR.ok ? summaryR.data : null) as Record<string, unknown> | null;
+    const kpis = kpisR.ok ? kpisR.data : { ppeCompliancePercent: 0, expiringTrainings: 0 };
     return Ok({
       incidentsThisMonth:   Number(row?.this_month ?? 0),
-      ppeCompliancePercent: 0,
-      expiringTrainings:    0,
+      ppeCompliancePercent: kpis.ppeCompliancePercent,
+      expiringTrainings:    kpis.expiringTrainings,
       openIncidents:        Number(row?.open_count ?? 0),
     });
   }
 
   async getSafetyOverview(): Promise<Result<SafetyOverview, AppError>> {
     return safeCall(async () => {
-      const [incidentsR, summaryR] = await Promise.allSettled([
+      const [incidentsR, summaryR, kpisR] = await Promise.allSettled([
         this.repo.getSafetyIncidents(),
         this.repo.getSafetySummary(),
+        this.repo.getSafetyKpis(),
       ]);
       const incV = incidentsR.status === 'fulfilled' ? incidentsR.value : null;
       const incidents = (incV?.ok && Array.isArray(incV.data) ? incV.data : []) as Record<string, unknown>[];
       const sumV = summaryR.status === 'fulfilled' ? summaryR.value : null;
       const summary = (sumV?.ok ? sumV.data : null) as Record<string, unknown> | null;
+      const kpisV = kpisR.status === 'fulfilled' ? kpisR.value : null;
+      const kpis = kpisV?.ok ? kpisV.data : { ppeCompliancePercent: 0, expiringTrainings: 0 };
       return {
         incidents: incidents.slice(0, 5),
         summary: {
           incidentsThisMonth:   Number(summary?.this_month ?? 0),
           openIncidents:        Number(summary?.open_count ?? 0),
-          ppeCompliancePercent: 0,
-          expiringTrainings:    0,
+          ppeCompliancePercent: kpis.ppeCompliancePercent,
+          expiringTrainings:    kpis.expiringTrainings,
         },
       };
     });

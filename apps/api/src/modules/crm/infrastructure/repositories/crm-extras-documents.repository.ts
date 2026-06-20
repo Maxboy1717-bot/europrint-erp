@@ -9,9 +9,8 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { db, runQuery } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
-import { crm_proposals, crmContacts } from '@shared/db';
+import { runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
@@ -40,22 +39,25 @@ export class CrmExtrasDocumentsRepository {
       }, 'DB_ERROR');
   }
 
-  async listProposals(lim: number, off: number): Promise<Result<Row[]>> {
+  async listProposals(lim: number, off: number, dealId?: number | null): Promise<Result<Row[]>> {
     return safeCall(async () => {
       try {
-        return db.select({
-          id:           crm_proposals.id,
-          contact_id:   crm_proposals.contact_id,
-          title:        crm_proposals.title,
-          status:       crm_proposals.status,
-          amount:       crm_proposals.amount,
-          created_at:   crm_proposals.created_at,
-          contact_name: sql<string>`${crmContacts.first_name} || ' ' || ${crmContacts.last_name}`,
-        })
-          .from(crm_proposals)
-          .leftJoin(crmContacts, eq(crmContacts.id, crm_proposals.contact_id))
-          .orderBy(sql`${crm_proposals.created_at} DESC`)
-          .limit(lim).offset(off).then(r => castTo<Row[]>(r));
+        const rows = await runQuery<Row>(sql`
+          SELECT p.id,
+                 p.deal_id,
+                 p.contact_id,
+                 p.title,
+                 p.status,
+                 p.amount,
+                 p.created_at,
+                 c.first_name || ' ' || c.last_name AS contact_name
+          FROM crm_proposals p
+          LEFT JOIN crm_contacts c ON c.id = p.contact_id
+          ${dealId ? sql`WHERE p.deal_id = ${dealId}` : sql``}
+          ORDER BY p.created_at DESC
+          LIMIT ${lim} OFFSET ${off}
+        `);
+        return castTo<Row[]>(rows.rows);
       } catch (err) {
         this.logger.warn(`listProposals: ${(err as Error).message}`);
         return [];

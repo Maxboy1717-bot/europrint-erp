@@ -28,11 +28,16 @@ interface ActivityRecord { id: string; type: "enrollment" | "completion" | "test
 interface LMSLeaderboardEntry { userId: string; fullName: string; completedLessons: number; completedCourses: number; averageScore: number; passedTests: number; overallScore: number; }
 interface LmsExam { id: string; title: string; courseId: number | null; durationMinutes: number; passingScore: number; isActive: boolean; }
 interface LmsProgress { completedCourses: number; totalCourses: number; averageScore: number; examsPassed: number; examsFailed: number; }
+interface LmsQuestion { id: number; question_text: string; options: string[] | Record<string, string>; order_index: number; }
 
 export default function LMSDashboard() {
   const { t, language, setLanguage } = useTranslation('lms');
   const { t: tCommon } = useTranslation('common');
   const [activeTab, setActiveTab] = useState("overview");
+  /** null = no exam in progress; string = exam id being taken */
+  const [takingExamId, setTakingExamId] = useState<string | null>(null);
+  /** questionId → selectedOption (0-based index into options array) */
+  const [examAnswers, setExamAnswers] = useState<Record<number, number>>({});
 
   const { data: courses = [], isLoading: isLoadingCourses, isError, error, refetch } = useQuery<Course[]>({ queryKey: ["/api/courses"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Course[] })?.data ?? []) });
   const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Certificate[] })?.data ?? []) });
@@ -51,17 +56,25 @@ export default function LMSDashboard() {
     queryKey: ["/api/lms/exams"],
     select: (data: unknown) => Array.isArray(data) ? data : [],
   });
+  const { data: examQuestions = [], isLoading: isLoadingQuestions } = useQuery<LmsQuestion[]>({
+    queryKey: ["/api/lms/exams", takingExamId, "questions"],
+    queryFn: () => apiRequest("GET", `/api/lms/exams/${takingExamId}/questions`),
+    enabled: takingExamId !== null,
+    select: (data: unknown) => Array.isArray(data) ? data as LmsQuestion[] : [],
+  });
   const { data: myProgress } = useQuery<unknown, Error, LmsProgress | undefined>({
     queryKey: ["/api/lms/progress/my"],
     select: (data) => (data && typeof data === 'object') ? data as LmsProgress : undefined,
   });
 
   const submitExamMutation = useMutation({
-    mutationFn: ({ examId, answers }: { examId: string; answers: unknown[] }) =>
+    mutationFn: ({ examId, answers }: { examId: string; answers: Array<{ questionId: number; selectedOption: number }> }) =>
       apiRequest("POST", `/api/lms/exams/${examId}/submit`, { answers }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/lms/progress/my"] });
       queryClient.invalidateQueries({ queryKey: ["/api/lms/recent-activity"] });
+      setTakingExamId(null);
+      setExamAnswers({});
     },
   });
 
@@ -224,44 +237,118 @@ export default function LMSDashboard() {
               </CardContent>
             </Card>
           </div>
-          <Card className="bg-card border-border shadow-none">
-            <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" />{t("mavjudImtihonlar")}</CardTitle></CardHeader>
-            <CardContent>
-              <div className="ep-table-scroll"><Table>
-                <TableHeader>
-                  <TableRow className="border-none hover:bg-transparent">
-                    {(["#", "Nomi", "Davomiyligi", "O'tish bali", "action"]).map((h) => (
-                      <TableHead key={h} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h === "action" ? "" : h}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {!Array.isArray(lmsExams) || lmsExams.length === 0
-                    ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("imtihonlarMavjudEmas")}</TableCell></TableRow>
-                    : (Array.isArray(lmsExams) ? lmsExams : []).map((exam, idx) => (
-                      <TableRow key={exam.id} data-testid={`row-exam-${exam.id}`} className="hover:bg-muted/40 transition-colors">
-                        <TableCell className="font-medium">{idx + 1}</TableCell>
-                        <TableCell>{exam.title}</TableCell>
-                        <TableCell>{exam.durationMinutes} daqiqa</TableCell>
-                        <TableCell><Badge variant="outline">{exam.passingScore}%</Badge></TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={submitExamMutation.isPending}
-                            onClick={() => submitExamMutation.mutate({ examId: exam.id, answers: [] })}
-                            data-testid={`button-submit-exam-${exam.id}`}
-                          >
-                            {submitExamMutation.isPending ? "Yuborilmoqda..." : "Topshirish"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table></div>
-            </CardContent>
-          </Card>
+
+          {/* Step 2: Question UI — shown when user clicks "Boshlash" */}
+          {takingExamId !== null && (
+            <Card className="bg-card border-border shadow-none mb-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  {(Array.isArray(lmsExams) ? lmsExams : []).find(e => e.id === takingExamId)?.title ?? "Imtihon"}
+                </CardTitle>
+                <Button size="sm" variant="ghost" onClick={() => { setTakingExamId(null); setExamAnswers({}); }}>
+                  Bekor qilish
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoadingQuestions ? (
+                  <div className="space-y-4">{[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}</div>
+                ) : examQuestions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Bu imtihon uchun savollar mavjud emas</p>
+                ) : (
+                  <div className="space-y-6">
+                    {examQuestions.map((q, qi) => {
+                      const opts: string[] = Array.isArray(q.options)
+                        ? (q.options as string[])
+                        : Object.values(q.options as Record<string, string>);
+                      const selected = examAnswers[q.id];
+                      return (
+                        <div key={q.id} className="p-4 rounded-lg bg-muted/40">
+                          <p className="font-medium mb-3">{qi + 1}. {q.question_text}</p>
+                          <div className="flex flex-col gap-2">
+                            {opts.map((opt, oi) => (
+                              <button
+                                key={oi}
+                                type="button"
+                                onClick={() => setExamAnswers(prev => ({ ...prev, [q.id]: oi }))}
+                                className={[
+                                  "text-left px-4 py-2 rounded-md border text-sm transition-colors",
+                                  selected === oi
+                                    ? "border-primary bg-primary/10 text-primary font-semibold"
+                                    : "border-border bg-background text-foreground hover:bg-muted/60",
+                                ].join(" ")}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        disabled={submitExamMutation.isPending || examQuestions.some(q => examAnswers[q.id] === undefined)}
+                        onClick={() => {
+                          const answers = examQuestions.map(q => ({
+                            questionId: q.id,
+                            selectedOption: examAnswers[q.id] ?? 0,
+                          }));
+                          submitExamMutation.mutate({ examId: takingExamId, answers });
+                        }}
+                        data-testid="button-submit-exam-answers"
+                      >
+                        {submitExamMutation.isPending ? "Yuborilmoqda..." : "Topshirish"}
+                      </Button>
+                    </div>
+                    {submitExamMutation.isError && (
+                      <p className="text-sm text-destructive text-right">{String((submitExamMutation.error as Error)?.message ?? "Xatolik yuz berdi")}</p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 1: Exam list — hidden while an exam is in progress */}
+          {takingExamId === null && (
+            <Card className="bg-card border-border shadow-none">
+              <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" />{t("mavjudImtihonlar")}</CardTitle></CardHeader>
+              <CardContent>
+                <div className="ep-table-scroll"><Table>
+                  <TableHeader>
+                    <TableRow className="border-none hover:bg-transparent">
+                      {(["#", "Nomi", "Davomiyligi", "O'tish bali", "action"]).map((h) => (
+                        <TableHead key={h} className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{h === "action" ? "" : h}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {!Array.isArray(lmsExams) || lmsExams.length === 0
+                      ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{t("imtihonlarMavjudEmas")}</TableCell></TableRow>
+                      : (Array.isArray(lmsExams) ? lmsExams : []).map((exam, idx) => (
+                        <TableRow key={exam.id} data-testid={`row-exam-${exam.id}`} className="hover:bg-muted/40 transition-colors">
+                          <TableCell className="font-medium">{idx + 1}</TableCell>
+                          <TableCell>{exam.title}</TableCell>
+                          <TableCell>{exam.durationMinutes} daqiqa</TableCell>
+                          <TableCell><Badge variant="outline">{exam.passingScore}%</Badge></TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => { setTakingExamId(exam.id); setExamAnswers({}); }}
+                              data-testid={`button-start-exam-${exam.id}`}
+                            >
+                              Boshlash
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    }
+                  </TableBody>
+                </Table></div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

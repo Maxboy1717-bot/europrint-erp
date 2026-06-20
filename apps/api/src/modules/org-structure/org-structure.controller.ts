@@ -250,13 +250,21 @@ export class OrgStructureController {
   @ApiOperation({ summary: 'Get node history' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('nodes/:nodeId/history')
   async getNodeHistory(@Param('nodeId') nodeId: string) {
+    // Read from audit_logs WHERE table_name='orgstructure' AND record_id=nodeId::text.
+    // Alias columns to match HistoryEntry interface: action, changedBy, changedAt, details.
+    // id is UUID in DB — return row index as numeric id for FE HistoryEntry.id (number).
     const r = await db.execute(sql`
-      SELECT id, node_id, request_type, priority, status, comment, node_name, requester_id, created_at, updated_at
-      FROM node_hr_requests
-      WHERE node_id = ${parseInt(nodeId, 10)}
+      SELECT
+        ROW_NUMBER() OVER (ORDER BY created_at DESC) AS id,
+        action,
+        COALESCE(user_full_name, 'Noma''lum') AS "changedBy",
+        created_at AS "changedAt",
+        COALESCE(array_to_string(changed_fields, ', '), '') AS details
+      FROM audit_logs
+      WHERE table_name = 'orgstructure'
+        AND record_id = ${nodeId}
       ORDER BY created_at DESC
     `);
     const items = ((r as Rows).rows) ?? [];

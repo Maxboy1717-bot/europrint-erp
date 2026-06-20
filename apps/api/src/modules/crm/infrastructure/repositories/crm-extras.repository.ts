@@ -49,8 +49,8 @@ export class CrmExtrasRepository implements ICrmExtrasRepo {
     return this.tasks.createTask(body);
   }
 
-  listInvoices(lim: number, off: number): Promise<Result<Row[]>>  { return this.documents.listInvoices(lim, off); }
-  listProposals(lim: number, off: number): Promise<Result<Row[]>> { return this.documents.listProposals(lim, off); }
+  listInvoices(lim: number, off: number): Promise<Result<Row[]>>                              { return this.documents.listInvoices(lim, off); }
+  listProposals(lim: number, off: number, dealId?: number | null): Promise<Result<Row[]>>    { return this.documents.listProposals(lim, off, dealId); }
 
   getEntityActivities(entityType: string, entityId: number): Promise<Result<CrmActivityRow[]>> {
     return this.dashboard.getEntityActivities(entityType, entityId);

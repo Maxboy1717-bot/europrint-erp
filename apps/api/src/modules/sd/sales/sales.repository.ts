@@ -82,4 +82,102 @@ export class SalesRepository {
   }
 
   }
+
+  /**
+   * Calculates forecast accuracy by comparing monthly deal forecast_amount
+   * (from crm_deals grouped by COALESCE(won_at, date_create)) against
+   * actual sales_orders.total_amount grouped by created_at month.
+   * accuracy_percent = (1 - |actual - forecast| / forecast) * 100, capped in query.
+   */
+  async getForecastAccuracyData(managerId: number | null, months: number): Promise<Result<{ periods: Row[]; avg_accuracy: number | null }>> {
+    try {
+      // Language: raw SQL needed for FULL OUTER JOIN + CTEs (Drizzle does not support FULL OUTER JOIN natively)
+      const periodsResult = managerId
+        ? await exec(sql`
+            WITH deal_months AS (
+              SELECT
+                DATE_TRUNC('month', COALESCE(won_at, date_create)) AS month,
+                SUM(forecast_amount) AS forecast_total
+              FROM crm_deals
+              WHERE deleted_at IS NULL
+                AND manager_id = ${managerId}
+              GROUP BY DATE_TRUNC('month', COALESCE(won_at, date_create))
+            ),
+            sales_months AS (
+              SELECT
+                DATE_TRUNC('month', created_at) AS month,
+                SUM(COALESCE(total_amount, total_value, 0)) AS actual_total
+              FROM sales_orders
+              WHERE deleted_at IS NULL
+              GROUP BY DATE_TRUNC('month', created_at)
+            )
+            SELECT
+              TO_CHAR(COALESCE(d.month, s.month), 'YYYY-MM') AS month,
+              COALESCE(d.forecast_total, 0)::numeric(15,2) AS forecast,
+              COALESCE(s.actual_total, 0)::numeric(15,2) AS actual,
+              CASE
+                WHEN COALESCE(d.forecast_total, 0) = 0 THEN NULL
+                ELSE ROUND(
+                  (1 - ABS(COALESCE(s.actual_total, 0) - d.forecast_total) / NULLIF(d.forecast_total, 0))
+                  * 100,
+                  1
+                )
+              END AS accuracy_percent
+            FROM deal_months d
+            FULL OUTER JOIN sales_months s ON d.month = s.month
+            ORDER BY COALESCE(d.month, s.month) DESC
+            LIMIT ${months}
+          `)
+        : await exec(sql`
+            WITH deal_months AS (
+              SELECT
+                DATE_TRUNC('month', COALESCE(won_at, date_create)) AS month,
+                SUM(forecast_amount) AS forecast_total
+              FROM crm_deals
+              WHERE deleted_at IS NULL
+              GROUP BY DATE_TRUNC('month', COALESCE(won_at, date_create))
+            ),
+            sales_months AS (
+              SELECT
+                DATE_TRUNC('month', created_at) AS month,
+                SUM(COALESCE(total_amount, total_value, 0)) AS actual_total
+              FROM sales_orders
+              WHERE deleted_at IS NULL
+              GROUP BY DATE_TRUNC('month', created_at)
+            )
+            SELECT
+              TO_CHAR(COALESCE(d.month, s.month), 'YYYY-MM') AS month,
+              COALESCE(d.forecast_total, 0)::numeric(15,2) AS forecast,
+              COALESCE(s.actual_total, 0)::numeric(15,2) AS actual,
+              CASE
+                WHEN COALESCE(d.forecast_total, 0) = 0 THEN NULL
+                ELSE ROUND(
+                  (1 - ABS(COALESCE(s.actual_total, 0) - d.forecast_total) / NULLIF(d.forecast_total, 0))
+                  * 100,
+                  1
+                )
+              END AS accuracy_percent
+            FROM deal_months d
+            FULL OUTER JOIN sales_months s ON d.month = s.month
+            ORDER BY COALESCE(d.month, s.month) DESC
+            LIMIT ${months}
+          `);
+
+      if (!periodsResult.ok) return Err(periodsResult.error);
+
+      const periods = periodsResult.data;
+      const validAccuracies = periods
+        .map((p) => (p['accuracy_percent'] != null ? Number(p['accuracy_percent']) : null))
+        .filter((v): v is number => v !== null);
+
+      const avg_accuracy =
+        validAccuracies.length > 0
+          ? Math.round((validAccuracies.reduce((s, v) => s + v, 0) / validAccuracies.length) * 10) / 10
+          : null;
+
+      return Ok({ periods, avg_accuracy });
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
 }

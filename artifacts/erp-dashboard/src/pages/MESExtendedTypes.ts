@@ -25,6 +25,9 @@ export interface MESMachine {
 export interface MESShift {
   shiftName?: string;
   operatorName?: string;
+  operatorId?: number;
+  /** Raw snake_case field from the live mes_sessions row (no camelCase transform on the wire). */
+  operator_id?: number;
   producedQty?: number | string;
   brakQty?: number | string;
   oee?: number | string;

@@ -132,8 +132,18 @@ export class CrmExtrasController {
   @ApiOperation({ summary: 'List proposals' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('proposals')
-  async listProposals(@Query('limit') limit?: string, @Query('offset') offset?: string) {
-    return unwrapOrThrow(await this.svc.listProposals(safeInt(limit, 50), safeInt(offset, 0)));
+  async listProposals(
+    @Query('dealId') dealId?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return unwrapOrThrow(
+      await this.svc.listProposals(
+        safeInt(limit, 50),
+        safeInt(offset, 0),
+        dealId ? safeInt(dealId, 0) : null,
+      ),
+    );
   }
 
   @ApiOperation({ summary: 'Get nba' })
