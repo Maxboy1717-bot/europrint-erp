@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { ArrowUp, ArrowDown, Clock, Search, BookOpen } from "lucide-react";
+import { ArrowUp, ArrowDown, Clock, Search, BookOpen, User, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { CommunicationCenter } from "@/components/cc/CommunicationCenter";
@@ -300,6 +300,14 @@ export function CouncilsSection({ councils, councilsLoading }: CouncilsSectionPr
                       <span>{c.description}</span>
                     </div>
                   )}
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <User className="w-3 h-3 shrink-0" />
+                    <span>{c.chairperson_name && c.chairperson_name.trim() ? c.chairperson_name : "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    <span>{c.meeting_schedule && c.meeting_schedule.trim() ? c.meeting_schedule : "—"}</span>
+                  </div>
                   <div className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-1", style.badgeClass)}>
                     {c.council_type}
                   </div>

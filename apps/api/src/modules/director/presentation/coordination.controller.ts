@@ -40,8 +40,12 @@ export class CoordinationController {
   @Get('councils')
   async getCouncils() {
     const r = await db.execute(sql`
-      SELECT id, name, council_type, description, is_active, created_at
-      FROM councils WHERE is_active = true ORDER BY id
+      SELECT c.id, c.name, c.council_type, c.description, c.is_active, c.created_at,
+             TRIM(COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')) AS chairperson_name,
+             c.meeting_schedule
+      FROM councils c
+      LEFT JOIN users u ON u.id = c.chairperson_id
+      WHERE c.is_active = true ORDER BY c.id
     `);
     return ((r as { rows?: unknown[] }).rows) ?? [];
   }

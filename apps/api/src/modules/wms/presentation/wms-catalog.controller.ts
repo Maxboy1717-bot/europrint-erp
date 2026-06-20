@@ -162,17 +162,52 @@ export class WmsCatalogController {
     return { items, total: items.length };
   }
 
-  @ApiOperation({ summary: 'Get warehouse transactions by date' })
+  @ApiOperation({ summary: 'Get papka orders with material kits by plan date' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('orders-by-date/:date')
   @Roles(...WH_READ)
   async getOrdersByDate(@Param('date') date: string) {
+    // NOTE: complex LEFT JOIN + json_agg — Drizzle does not support json_agg natively
     const r = await db.execute(sql`
-      SELECT * FROM warehouse_transactions
-      WHERE transaction_date = ${date}
-      ORDER BY created_at DESC LIMIT 200
+      SELECT
+        po.id,
+        po.papka_no        AS "papkaNo",
+        po.mijoz_nomi      AS "mijozNomi",
+        po.mahsulot_nomi   AS "mahsulotNomi",
+        po.tiraj,
+        po.format_a        AS "formatA",
+        po.format_b        AS "formatB",
+        po.mahsulot_turi   AS "mahsulotTuri",
+        po.status,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id',            mk.id,
+              'kitNumber',     mk.kit_number,
+              'orderId',       mk.order_id,
+              'status',        mk.status,
+              'barcode',       mk.barcode,
+              'scheduledDate', mk.scheduled_date,
+              'scheduledTime', mk.scheduled_time,
+              'preparedBy',    mk.prepared_by,
+              'preparedAt',    mk.prepared_at,
+              'deliveredBy',   mk.delivered_by,
+              'deliveredAt',   mk.delivered_at,
+              'createdAt',     mk.created_at
+            ) ORDER BY mk.id
+          ) FILTER (WHERE mk.id IS NOT NULL),
+          '[]'::json
+        ) AS kits
+      FROM papka_orders po
+      LEFT JOIN material_kits mk
+        ON mk.order_id = po.id
+        AND mk.deleted_at IS NULL
+      WHERE po.deleted_at IS NULL
+        AND po.plan_sana_ich = ${date}
+      GROUP BY po.id
+      ORDER BY po.id
     `);
-    const items = ((r as { rows?: unknown[] }).rows) ?? [];
-    return { items, total: items.length };
+    const rows = ((r as { rows?: unknown[] }).rows) ?? [];
+    return { items: rows, total: rows.length };
   }
 }

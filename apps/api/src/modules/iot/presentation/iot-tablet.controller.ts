@@ -32,6 +32,7 @@ import { unwrapOrThrow } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { IotTabletService } from '../application/iot-tablet.service';
+import { OeeCalculatorService } from '../oee/oee-calculator.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   IotPassthroughSchema,
@@ -62,7 +63,10 @@ type Rows = { rows?: unknown[] };
 @ApiBearerAuth()
 @Controller('iot')
 export class IotTabletController {
-  constructor(private readonly tabletSvc: IotTabletService) {}
+  constructor(
+    private readonly tabletSvc: IotTabletService,
+    private readonly oeeSvc: OeeCalculatorService,
+  ) {}
 
   // -- Tablet PWA endpoints ----------------------------------------------------
 
@@ -344,17 +348,92 @@ export class IotTabletController {
     return { id: sessionId, status: 'running' };
   }
 
-  @ApiOperation({ summary: 'Stop production session' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiOperation({ summary: 'Stop production session and compute OEE' })
+  @ApiResponse({ status: 200, description: 'OK — includes OEE report in report field' })
   @Post('production-sessions/:id/stop') @Roles(...IOT_READ)
   async stopProductionSession(@Param('id') id: string, @Body() body: unknown) {
     IotPassthroughSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+
+    // 1. Read session row from DB before updating
+    const sessionRes = await db.execute(sql`
+      SELECT actual_quantity, target_quantity, defect_quantity,
+             running_time_seconds, stopped_time_seconds
+      FROM production_sessions
+      WHERE id = ${sessionId}
+      LIMIT 1
+    `);
+    const row = ((sessionRes as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
+
+    const actualQty  = row ? Number(row['actual_quantity']  ?? 0) : 0;
+    const targetQty  = row ? Number(row['target_quantity']  ?? 1) : 1;
+    const defectQty  = row ? Number(row['defect_quantity']  ?? 0) : 0;
+    const runTimeSec = row ? Number(row['running_time_seconds']  ?? 0) : 0;
+    const stopSec    = row ? Number(row['stopped_time_seconds'] ?? 0) : 0;
+
+    // 2. Compute OEE
+    const plannedProductionTime = runTimeSec + stopSec;
+    // idealCycleTime = plannedProductionTime / GREATEST(targetQty, 1)  (seconds per unit)
+    const idealCycleTime = plannedProductionTime / Math.max(targetQty, 1);
+
+    const oeeResult = await this.oeeSvc.calculate({
+      plannedProductionTime,
+      runTime: runTimeSec,
+      idealCycleTime,
+      actualQuantity: actualQty,
+      defectQuantity: Math.min(defectQty, actualQty), // guard: defect <= actual
+    });
+
+    // Extract factors — default 0 if calculation failed (e.g. zero session)
+    const availability = oeeResult.ok ? oeeResult.data.availability : 0;
+    const performance  = oeeResult.ok ? oeeResult.data.performance  : 0;
+    const quality      = oeeResult.ok ? oeeResult.data.quality      : 0;
+    const oee          = oeeResult.ok ? oeeResult.data.oee          : 0;
+
+    // 3. UPDATE: set status, ended_at, OEE columns
     await db.execute(sql`
       UPDATE production_sessions
-      SET status='stopped', ended_at=COALESCE(ended_at, NOW()), updated_at=NOW()
-      WHERE id=${parseInt(id, 10)}
+      SET status       = 'stopped',
+          ended_at     = COALESCE(ended_at, NOW()),
+          availability = ${availability},
+          performance  = ${performance},
+          quality      = ${quality},
+          oee          = ${oee},
+          updated_at   = NOW()
+      WHERE id = ${sessionId}
     `);
-    return { id: parseInt(id, 10), status: 'stopped' };
+
+    // 4. Build FE-contract report shape (CompletionReportData)
+    const elapsedSeconds = plannedProductionTime;
+    const goodQty        = Math.max(actualQty - defectQty, 0);
+    const completionPct  = targetQty > 0
+      ? Math.round((actualQty / targetQty) * 1000) / 10
+      : 0;
+
+    return {
+      id: sessionId,
+      status: 'stopped',
+      report: {
+        production: {
+          targetQuantity:    targetQty,
+          actualQuantity:    actualQty,
+          goodQuantity:      goodQty,
+          defectQuantity:    defectQty,
+          completionPercent: completionPct,
+        },
+        time: {
+          runningSeconds:  runTimeSec,
+          downtimeSeconds: stopSec,
+          totalSeconds:    elapsedSeconds,
+        },
+        metrics: {
+          availability,
+          performance,
+          quality,
+          oee,
+        },
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Report production defect (updates session + inserts downtime_event)' })

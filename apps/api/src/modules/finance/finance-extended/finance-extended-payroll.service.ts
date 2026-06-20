@@ -109,6 +109,46 @@ export class FinanceExtendedPayrollService {
     return { ...r, id: String(r.id), employeeId: String(r.employeeId) };
   }
 
+  async createContract(dto: {
+    employeeId: number;
+    contractNumber: string;
+    payType: 'fixed' | 'hourly' | 'piecework';
+    baseSalary?: number;
+    hourlyRate?: number;
+    pieceworkRate?: number;
+    pieceworkUnit?: string;
+    effectiveFrom: string;
+    effectiveTo?: string;
+    status?: 'active' | 'suspended' | 'terminated';
+    notes?: string;
+  }): Promise<Result<unknown>> {
+    try {
+      const rows = await db.insert(payrollContracts).values({
+        employeeId: dto.employeeId,
+        contractNumber: dto.contractNumber,
+        payType: dto.payType,
+        baseSalary: dto.baseSalary ?? null,
+        hourlyRate: dto.hourlyRate ?? null,
+        pieceworkRate: dto.pieceworkRate ?? null,
+        pieceworkUnit: dto.pieceworkUnit ?? null,
+        effectiveFrom: dto.effectiveFrom,
+        effectiveTo: dto.effectiveTo ?? null,
+        status: dto.status ?? 'active',
+        notes: dto.notes ?? null,
+      }).returning();
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return Err(AppErr('DB_ERROR', 'INSERT returned no rows'));
+      }
+      return Ok(this.mapContract(rows[0]));
+    } catch (e: unknown) {
+      const msg = String(e);
+      if (msg.includes('unique') || msg.includes('duplicate') || msg.includes('23505')) {
+        return Err(AppErr('CONFLICT', `Shartnoma raqami allaqachon mavjud: ${dto.contractNumber}`));
+      }
+      return Err(AppErr('DB_ERROR', `PAYROLL_CONTRACT_CREATE_FAILED: ${msg}`));
+    }
+  }
+
   async listContracts(): Promise<Result<unknown[]>> {
     try {
       const rows = await db.select().from(payrollContracts)

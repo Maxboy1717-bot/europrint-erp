@@ -13,9 +13,25 @@ type Row = Record<string, unknown>;
 export class MesShiftsStatsRepository {
   async getCurrentShift(): Promise<Row | null> {
     const rows = await runQuery<Row>(sql`
-      SELECT ms.*
+      SELECT
+        ms.id,
+        ms.status,
+        ms.started_at                                                        AS start_time,
+        ms.operator_id,
+        ms.notes,
+        COALESCE(e.first_name || ' ' || e.last_name, 'Operator')            AS operator_name,
+        eq.status                                                            AS machine_status,
+        COALESCE(SUM(mps.actual_quantity), 0)::int                          AS produced_qty,
+        COALESCE(SUM(mps.defect_quantity), 0)::int                          AS brak_qty,
+        ROUND(COALESCE(AVG(mps.oee), 0)::numeric, 2)                       AS oee
       FROM mes_sessions ms
-      WHERE ms.status = 'active' LIMIT 1
+      LEFT JOIN employees           e   ON e.id  = ms.operator_id
+      LEFT JOIN equipment           eq  ON eq.id = ms.machine_id
+      LEFT JOIN mes_production_sessions mps ON mps.status IN ('running','in_progress')
+      WHERE ms.status = 'active'
+      GROUP BY ms.id, ms.status, ms.started_at, ms.operator_id, ms.notes,
+               e.first_name, e.last_name, eq.status
+      LIMIT 1
     `);
     return (rows.rows[0] ?? null) as Row | null;
   }

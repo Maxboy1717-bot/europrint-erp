@@ -109,10 +109,12 @@ export class AnalyticsRepository {
   }
 
   async findLeaderboardEmployees(): Promise<Result<LeaderEmpRow[]>> {
-
+    // Join path: users.id → employees.user_id → lms_enrollments.employee_id
+    // lms_enrollments.user_id (uuid) is always NULL; use employee_id (integer) instead.
+    // lms_test_attempts.user_id is text, no integer FK — excluded from join to avoid type mismatch.
     return safeCall(async () => {
       type LR = { id: string; full_name: string; position_name: string; dept_name: string; avg_score: string; completed_courses: number; passed_tests: number };
-      const rows = (await runQuery<LR>(sql`SELECT u.id, (u.first_name || ' ' || u.last_name) AS full_name, p.title AS position_name, d.name AS dept_name, AVG(ta.score)::numeric AS avg_score, COUNT(DISTINCT e.id) FILTER (WHERE e.status='completed') AS completed_courses, COUNT(DISTINCT ta.id) FILTER (WHERE ta.passed=true) AS passed_tests FROM users u LEFT JOIN employees emp ON emp.user_id = u.id LEFT JOIN positions p ON p.id = emp.position_id LEFT JOIN departments d ON d.id = emp.department_id LEFT JOIN lms_enrollments e ON e.user_id = u.id LEFT JOIN lms_test_attempts ta ON ta.user_id = u.id GROUP BY u.id, u.first_name, u.last_name, p.title, d.name ORDER BY avg_score DESC NULLS LAST LIMIT 20`)).rows as LR[];
+      const rows = (await runQuery<LR>(sql`SELECT u.id, (u.first_name || ' ' || u.last_name) AS full_name, p.title AS position_name, d.name AS dept_name, AVG(e.score)::numeric AS avg_score, COUNT(DISTINCT e.id) FILTER (WHERE e.status='completed') AS completed_courses, 0 AS passed_tests FROM users u LEFT JOIN employees emp ON emp.user_id = u.id LEFT JOIN positions p ON p.id = emp.position_id LEFT JOIN departments d ON d.id = emp.department_id LEFT JOIN lms_enrollments e ON e.employee_id = emp.id GROUP BY u.id, u.first_name, u.last_name, p.title, d.name ORDER BY avg_score DESC NULLS LAST LIMIT 20`)).rows as LR[];
       return (Array.isArray(rows) ? rows : []).map(row => ({ userId: row.id, fullName: row.full_name??'', positionName: row.position_name??'', departmentName: row.dept_name??'', overallScore: np(row.avg_score), completedCourses: ni(row.completed_courses), passedTests: ni(row.passed_tests), averageScore: np(row.avg_score), totalBonus: 0 }));
     }, 'DB_ERROR');
   }

@@ -85,7 +85,7 @@ export class ChatNotificationsService {
     const msgCheck = await this.repo.messageInRoom(messageIdStr, roomIdStr);
     if (isErr(msgCheck)) return Err(msgCheck.error);
     if (!msgCheck.data) return Err(AppErr('NOT_FOUND', 'Xabar topilmadi yoki boshqa xonaga tegishli'));
-    const result = await this.repo.insertTask(messageIdStr, title, assignedTo !== null ? String(assignedTo) : null, dueDate, priority);
+    const result = await this.repo.insertTask(messageIdStr, title, assignedTo !== null ? String(assignedTo) : null, dueDate, priority, roomIdStr);
     if (isErr(result)) return Err(result.error);
     const r = result.data;
     return Ok<MessageTask>({

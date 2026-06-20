@@ -26,12 +26,12 @@ export class LmsCoursesExtendedRepository {
       const offset = (page - 1) * limit;
       const [items, countRows] = await Promise.all([
         filters?.isMandatory !== undefined && filters?.category
-          ? exec(sql`SELECT * FROM courses WHERE is_active = true AND is_mandatory = ${filters.isMandatory} AND category = ${filters.category} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`)
+          ? exec(sql`SELECT c.*, COUNT(e.id)::int AS enrolled_count, COALESCE(ROUND(AVG(CASE WHEN e.status = 'completed' THEN 100 ELSE COALESCE(e.progress_percent, 0) END)), 0)::int AS completion_rate FROM courses c LEFT JOIN enrollments e ON e.course_id = c.id WHERE c.is_active = true AND c.is_mandatory = ${filters.isMandatory} AND c.category = ${filters.category} GROUP BY c.id ORDER BY c.created_at DESC LIMIT ${limit} OFFSET ${offset}`)
           : filters?.isMandatory !== undefined
-          ? exec(sql`SELECT * FROM courses WHERE is_active = true AND is_mandatory = ${filters.isMandatory} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`)
+          ? exec(sql`SELECT c.*, COUNT(e.id)::int AS enrolled_count, COALESCE(ROUND(AVG(CASE WHEN e.status = 'completed' THEN 100 ELSE COALESCE(e.progress_percent, 0) END)), 0)::int AS completion_rate FROM courses c LEFT JOIN enrollments e ON e.course_id = c.id WHERE c.is_active = true AND c.is_mandatory = ${filters.isMandatory} GROUP BY c.id ORDER BY c.created_at DESC LIMIT ${limit} OFFSET ${offset}`)
           : filters?.category
-          ? exec(sql`SELECT * FROM courses WHERE is_active = true AND category = ${filters.category} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`)
-          : exec(sql`SELECT * FROM courses WHERE is_active = true ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`),
+          ? exec(sql`SELECT c.*, COUNT(e.id)::int AS enrolled_count, COALESCE(ROUND(AVG(CASE WHEN e.status = 'completed' THEN 100 ELSE COALESCE(e.progress_percent, 0) END)), 0)::int AS completion_rate FROM courses c LEFT JOIN enrollments e ON e.course_id = c.id WHERE c.is_active = true AND c.category = ${filters.category} GROUP BY c.id ORDER BY c.created_at DESC LIMIT ${limit} OFFSET ${offset}`)
+          : exec(sql`SELECT c.*, COUNT(e.id)::int AS enrolled_count, COALESCE(ROUND(AVG(CASE WHEN e.status = 'completed' THEN 100 ELSE COALESCE(e.progress_percent, 0) END)), 0)::int AS completion_rate FROM courses c LEFT JOIN enrollments e ON e.course_id = c.id WHERE c.is_active = true GROUP BY c.id ORDER BY c.created_at DESC LIMIT ${limit} OFFSET ${offset}`),
         db.select({ cnt: count() }).from(courses_table).where(eq(courses_table.is_active, true)),
       ]);
       return Ok({ items, total: Number(countRows[0]?.cnt ?? 0) });

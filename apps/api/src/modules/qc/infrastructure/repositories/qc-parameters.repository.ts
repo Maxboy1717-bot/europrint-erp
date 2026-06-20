@@ -8,6 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { db, qc_parameters, qc_lab_tests, qc_standards } from '@shared/db';
 import { eq, desc, sql } from 'drizzle-orm';
+import { rawSql } from '@shared/db';
 import { safeCall, Err, Ok, isOk, Result } from '@common/result';
 
 type Row = Record<string, unknown>;
@@ -158,6 +159,36 @@ export class QcParametersRepository {
         testedAt: _time.now(),
       }).returning();
       return rows[0] as Row;
+    }, 'DB_ERROR');
+  }
+
+  async insertMaterialTest(data: {
+    orderId?: number;
+    materialId?: number;
+    testCategory: string;
+    testDate?: string;
+    testResults?: Record<string, unknown>[];
+    overallStatus: string;
+    passedCount?: number;
+    failedCount?: number;
+    notes?: string;
+  }): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const testDate = data.testDate ?? new Date().toISOString().slice(0, 10);
+      const testResults = data.testResults ?? [];
+      const r = await rawSql(sql`
+        INSERT INTO qc_material_tests
+          (order_id, material_id, test_category, test_date, test_results, overall_status,
+           passed_count, failed_count, notes, created_at)
+        VALUES
+          (${data.orderId ?? null}, ${data.materialId ?? null}, ${data.testCategory},
+           ${testDate}, ${JSON.stringify(testResults)}::jsonb, ${data.overallStatus},
+           ${data.passedCount ?? 0}, ${data.failedCount ?? 0}, ${data.notes ?? null}, NOW())
+        RETURNING id, overall_status AS "overallStatus", test_category AS "testCategory", created_at AS "createdAt"
+      `);
+      const row = (r as { rows?: Row[] }).rows?.[0];
+      if (!row) throw new Error('INSERT returned no row');
+      return row;
     }, 'DB_ERROR');
   }
 

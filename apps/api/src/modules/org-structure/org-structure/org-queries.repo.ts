@@ -60,8 +60,7 @@ export class OrgQueriesRepo {
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true) AS "totalNodes",
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND node_type = 'department') AS "totalDepartments",
           (SELECT COUNT(*)::int FROM users u JOIN employee_org_departments eod ON eod.user_id = u.id WHERE u.is_active = TRUE) AS "totalEmployees",
-          (SELECT COALESCE(SUM(CAST(NULLIF(tskp_ru, '') AS integer)), 0)
-             FROM org_departments WHERE is_active = true AND tskp_ru ~ '^[0-9]+$') AS "totalCapacity",
+          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND head_user_id IS NULL) AS "vacantCount",
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND created_at >= NOW() - INTERVAL '30 days') AS "recentChanges"
       `);
       return castTo<Record<string, unknown>>((rows[0] ?? {}));

@@ -85,6 +85,11 @@ export default function FinanceExtended() {
     queryKey: ["/api/finance-extended/tax-calendar"],
   });
 
+  const { data: taxSummaryRaw } = useQuery<{ totalThisMonth: number; paid: number; pending: number; overdue: number }>({
+    queryKey: ["/api/fi/tax-summary"],
+  });
+  const taxSummary = taxSummaryRaw ?? undefined;
+
   const createCC = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
       apiRequest("POST", "/api/fi/cost-centers", { ...data, budget: Number(data.budget) }),
@@ -147,7 +152,7 @@ export default function FinanceExtended() {
             onRefetch={refetchGL}
           />
 
-          <TaxTab taxItems={Array.isArray(taxItems) ? taxItems : []} taxLoading={taxLoading} />
+          <TaxTab taxItems={Array.isArray(taxItems) ? taxItems : []} taxLoading={taxLoading} taxSummary={taxSummary} />
 
           <TaxCalendarTab />
 

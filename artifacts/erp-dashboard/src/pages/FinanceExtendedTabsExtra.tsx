@@ -14,12 +14,26 @@ import type { TaxCalendarItem } from "./FinanceExtendedTypes";
 import { useTranslation } from '@/lib/i18n';
 import { EPComingSoon } from "@/components/ep";
 
+interface TaxSummary {
+  totalThisMonth: number;
+  paid: number;
+  pending: number;
+  overdue: number;
+}
+
 interface TaxTabProps {
   taxItems: TaxCalendarItem[];
   taxLoading: boolean;
+  taxSummary?: TaxSummary;
 }
 
-export function TaxTab({ taxItems, taxLoading }: TaxTabProps) {
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+  return String(value);
+}
+
+export function TaxTab({ taxItems, taxLoading, taxSummary }: TaxTabProps) {
   const { t } = useTranslation("common");
   return (
     <TabsContent value="tax" className="mt-0 space-y-4">
@@ -31,10 +45,10 @@ export function TaxTab({ taxItems, taxLoading }: TaxTabProps) {
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { l: "Ushbu oy jami", v: "—", c: "text-[var(--ep-red)]" },
-          { l: "To'langan", v: "—", c: "text-[var(--ep-green)]" },
-          { l: "Kutilayotgan", v: "—", c: "text-[var(--ep-primary)]" },
-          { l: "Muddati o'tgan", v: "—", c: "text-muted-foreground" },
+          { l: "Ushbu oy jami", v: formatCurrency(taxSummary?.totalThisMonth ?? 0), c: "text-[var(--ep-red)]" },
+          { l: "To'langan", v: formatCurrency(taxSummary?.paid ?? 0), c: "text-[var(--ep-green)]" },
+          { l: "Kutilayotgan", v: formatCurrency(taxSummary?.pending ?? 0), c: "text-[var(--ep-primary)]" },
+          { l: "Muddati o'tgan", v: formatCurrency(taxSummary?.overdue ?? 0), c: "text-muted-foreground" },
         ]).map(s => (
           <Card key={s.l}><CardContent className="pt-4 pb-3">
             <div className={`text-xl font-bold ${s.c}`}>{s.v}</div>

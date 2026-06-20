@@ -182,4 +182,28 @@ export class DrizzleFiRepository implements IFiRepository {
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error).message || "O'chirishda xatolik"); }
   }
+
+  async getTaxSummary(): Promise<Result<{ totalThisMonth: number; paid: number; pending: number; overdue: number }>> {
+    // NOTE: fi_invoices Drizzle schema doesn't include tax_amount/deleted_at (DB has them),
+    // so we use raw sql aggregate — justified per CLAUDE.md Qoida 4 (complex agg, no ORM equiv).
+    try {
+      const result = await db.execute(sql`
+        SELECT
+          COALESCE(SUM(tax_amount), 0) AS "totalThisMonth",
+          COALESCE(SUM(CASE WHEN status = 'paid' THEN tax_amount ELSE 0 END), 0) AS "paid",
+          COALESCE(SUM(CASE WHEN status != 'paid' AND due_date >= NOW() THEN tax_amount ELSE 0 END), 0) AS "pending",
+          COALESCE(SUM(CASE WHEN status != 'paid' AND due_date < NOW() THEN tax_amount ELSE 0 END), 0) AS "overdue"
+        FROM fi_invoices
+        WHERE deleted_at IS NULL
+          AND date_trunc('month', created_at) = date_trunc('month', NOW())
+      `);
+      const row = (result as unknown as { rows: Array<Record<string, string>> }).rows?.[0] ?? {} as Record<string, string>;
+      return Ok({
+        totalThisMonth: Number(row?.totalThisMonth ?? 0),
+        paid: Number(row?.paid ?? 0),
+        pending: Number(row?.pending ?? 0),
+        overdue: Number(row?.overdue ?? 0),
+      });
+    } catch (e: unknown) { return Err((e as Error).message || 'Soliq xulosasi topilmadi'); }
+  }
 }

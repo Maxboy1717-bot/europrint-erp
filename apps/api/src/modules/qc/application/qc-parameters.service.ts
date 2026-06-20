@@ -51,6 +51,20 @@ export class QcParametersService {
     return this.repo.insertTest({ orderId: data.order_id, parameterName: data.parameter_name, value: data.value, unit: data.unit, minValue: data.min_value, maxValue: data.max_value, testedBy: data.tested_by, notes: data.notes, result });
   }
 
+  createMaterialTest(data: {
+    orderId?: number;
+    materialId?: number;
+    testCategory: string;
+    testDate?: string;
+    testResults?: Record<string, unknown>[];
+    overallStatus: string;
+    passedCount?: number;
+    failedCount?: number;
+    notes?: string;
+  }): Promise<Result<Row>> {
+    return this.repo.insertMaterialTest(data);
+  }
+
   async aiAnalyzeTest(id: number): Promise<Result<Record<string, unknown>>> {
     const r = await this.repo.findTestById(id);
     if (!isOk(r)) return Err(r.error);

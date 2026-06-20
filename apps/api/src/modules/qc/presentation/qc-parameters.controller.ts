@@ -27,15 +27,16 @@ const ParameterDto = z.object({
   description: z.string().optional(),
 });
 
-const TestDto = z.object({
-  order_id: z.number().optional(),
-  parameter_name: z.string().min(1),
-  value: z.number().optional(),
-  unit: z.string().optional(),
-  min_value: z.number().optional(),
-  max_value: z.number().optional(),
-  tested_by: z.string().optional(),
-  notes: z.string().optional(),
+const MaterialTestDto = z.object({
+  orderId: z.number().int().optional(),
+  materialId: z.number().int().optional(),
+  testCategory: z.enum(['physical', 'mechanical', 'printability', 'chemical', 'environmental', 'logistics', 'visual', 'documentation', 'ai_analysis']).default('physical'),
+  testDate: z.string().optional(),
+  testResults: z.array(z.record(z.unknown())).optional(),
+  overallStatus: z.enum(['pending', 'passed', 'failed', 'conditional']).default('pending'),
+  passedCount: z.number().int().optional(),
+  failedCount: z.number().int().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 const QC_ROLES = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.QC_SPECIALIST, Role.PRODUCTION_MANAGER, 'qc_manager', 'qc_inspector'];
@@ -138,10 +139,10 @@ export class QcParametersController {
   @Post('tests')
   @HttpCode(HttpStatus.CREATED)
   @Roles(...QC_ROLES)
-  @ApiOperation({ summary: 'Create QC material test' })
+  @ApiOperation({ summary: 'Create QC material test (writes to qc_material_tests)' })
   async createTest(@Body() body: unknown) {
-    const dto = TestDto.parse(body);
-    return unwrapOrInternal(await this.svc.createTest(dto));
+    const dto = MaterialTestDto.parse(body);
+    return unwrapOrInternal(await this.svc.createMaterialTest(dto));
   }
 
   @Post('tests/:id/ai-analyze')

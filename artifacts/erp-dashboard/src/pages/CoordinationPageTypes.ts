@@ -55,6 +55,8 @@ export interface Council {
   council_type: string;
   description: string | null;
   is_active: boolean;
+  chairperson_name?: string | null;
+  meeting_schedule?: string | null;
 }
 
 export type DoklaStatus   = "sent" | "read" | "resolved";

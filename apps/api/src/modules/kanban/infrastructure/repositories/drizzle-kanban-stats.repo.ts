@@ -57,7 +57,7 @@ export class DrizzleKanbanStatsRepository {
           COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.completed_at IS NOT NULL) AS completed,
           COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.due_date < ${today} AND kc.completed_at IS NULL) AS overdue
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
         WHERE kc.owner_user_id IS NOT NULL ${boardFilter}
         GROUP BY kc.owner_user_id, u.first_name, u.last_name, u.email
         ORDER BY total DESC
@@ -89,13 +89,13 @@ export class DrizzleKanbanStatsRepository {
           kb.name    AS board_name,
           EXTRACT(EPOCH FROM (NOW() - kc.created_at)) / 3600 AS hours_old
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        LEFT JOIN kanban_columns kco ON kco.id::text = kc.column_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN kanban_columns kco ON kco.id = kc.column_id
+        LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         WHERE kc.deleted_at IS NULL
           AND kc.completed_at IS NULL
           AND (
-            (kc.due_date < CURRENT_DATE)
+            (kc.due_date::date < CURRENT_DATE)
             OR (LOWER(kco.name) LIKE '%kiruvchi%' AND kc.created_at < NOW() - INTERVAL '24 hours')
             OR (LOWER(kco.name) LIKE '%inbox%'    AND kc.created_at < NOW() - INTERVAL '24 hours')
           )
@@ -142,7 +142,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT DISTINCT kc.owner_user_id AS user_id,
                (u.first_name || ' ' || u.last_name) AS full_name, u.email
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
         WHERE kc.owner_user_id IS NOT NULL AND kc.deleted_at IS NULL
         ORDER BY full_name
       `);
@@ -155,9 +155,9 @@ export class DrizzleKanbanStatsRepository {
       const rows = await runQuery<Record<string, unknown>>(sql`
         SELECT kc.*, (u.first_name || ' ' || u.last_name) AS owner_name
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
         WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date < CURRENT_DATE
+          AND kc.due_date::date < CURRENT_DATE
         ORDER BY kc.due_date ASC
         LIMIT 100
       `);
@@ -170,8 +170,8 @@ export class DrizzleKanbanStatsRepository {
       const rows = await runQuery<Record<string, unknown>>(sql`
         SELECT kc.*, kco.name AS column_name, kb.name AS board_name
         FROM kanban_cards kc
-        LEFT JOIN kanban_columns kco ON kco.id::text = kc.column_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
+        LEFT JOIN kanban_columns kco ON kco.id = kc.column_id
+        LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         WHERE kc.owner_user_id = ${employeeId} AND kc.deleted_at IS NULL
         ORDER BY kc.created_at DESC
       `);
@@ -185,7 +185,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT
           COUNT(*)                                                                AS total,
           COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
+          COUNT(*) FILTER (WHERE due_date::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
           COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')        AS last_7_days,
           COUNT(*) FILTER (WHERE completed_at >= NOW() - INTERVAL '7 days')      AS completed_7_days
         FROM kanban_cards WHERE deleted_at IS NULL
@@ -209,10 +209,10 @@ export class DrizzleKanbanStatsRepository {
         SELECT kc.id, kc.title, kc.due_date, kc.priority, kc.owner_user_id,
                (u.first_name || ' ' || u.last_name) AS owner_name, kb.name AS board_name
         FROM kanban_cards kc
-        LEFT JOIN users u ON u.id::text = kc.owner_user_id
-        LEFT JOIN kanban_boards kb ON kb.id::text = kc.board_id
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date < CURRENT_DATE
+          AND kc.due_date::date < CURRENT_DATE
         ORDER BY kc.due_date ASC
         LIMIT 200
       `);
@@ -230,7 +230,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT
           COUNT(*)                                                                AS total,
           COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
+          COUNT(*) FILTER (WHERE due_date::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
           COUNT(DISTINCT owner_user_id) FILTER (WHERE owner_user_id IS NOT NULL) AS active_users
         FROM kanban_cards WHERE deleted_at IS NULL
       `);

@@ -68,15 +68,15 @@ export class OrgStructureService implements OnModuleInit {
   async getStats() {
     const s = await this.repo.getStats();
     if (!s.ok) return Err(s.error.message);
-    const totalCapacity = parseInt(String(s.data.totalCapacity)) || 0;
+    const totalNodes = parseInt(String(s.data.totalNodes)) || 0;
     const totalEmployees = parseInt(String(s.data.totalEmployees)) || 0;
-    const vacantCount = Math.max(0, totalCapacity - totalEmployees);
+    const vacantCount = parseInt(String(s.data.vacantCount)) || 0;
     return Ok({
-      totalNodes: s.data.totalNodes || 0,
+      totalNodes,
       totalDepartments: s.data.totalDepartments || 0,
       totalEmployees,
       vacantCount,
-      vacantPercent: totalCapacity > 0 ? Math.round((vacantCount / totalCapacity) * 100) : 0,
+      vacantPercent: totalNodes > 0 ? Math.round((vacantCount / totalNodes) * 100) : 0,
       recentChanges: s.data.recentChanges || 0,
     });
   }

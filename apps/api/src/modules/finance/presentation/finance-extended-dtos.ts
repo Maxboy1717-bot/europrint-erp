@@ -48,3 +48,17 @@ export const ApprovePayrollSchema = z.object({
   approvedBy: z.union([z.string(), z.number()]).optional(),
   notes: z.string().max(2000).optional(),
 }).passthrough();
+
+export const PayrollCreateContractSchema = z.object({
+  employeeId: z.coerce.number().int().positive(),
+  contractNumber: z.string().min(3).max(50),
+  payType: z.enum(['fixed', 'hourly', 'piecework']),
+  baseSalary: z.coerce.number().nonnegative().optional(),
+  hourlyRate: z.coerce.number().nonnegative().optional(),
+  pieceworkRate: z.coerce.number().nonnegative().optional(),
+  pieceworkUnit: z.string().max(20).optional(),
+  effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD format kerak'),
+  effectiveTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  status: z.enum(['active', 'suspended', 'terminated']).default('active'),
+  notes: z.string().max(2000).optional(),
+});

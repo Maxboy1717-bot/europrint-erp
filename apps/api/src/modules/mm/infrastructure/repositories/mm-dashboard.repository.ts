@@ -90,7 +90,9 @@ export class MmDashboardRepository implements IMmDashboardRepo {
 
   async getSupplierPerformance(): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT v.id, v.name, COUNT(po.id)::int AS total_orders, COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed_orders, COALESCE(SUM(po.total_amount), 0)::numeric(15,2) AS total_spend, COALESCE(AVG(EXTRACT(EPOCH FROM (gr.received_at - po.expected_delivery_date))/${SECONDS_PER_DAY}), 0)::numeric(5,1) AS avg_delay_days FROM mm_vendors v LEFT JOIN mm_purchase_orders po ON po.vendor_id = v.id LEFT JOIN mm_goods_receipts gr ON gr.purchase_order_id = po.id WHERE v.is_active = true GROUP BY v.id, v.name ORDER BY total_spend DESC`);  } catch (_e) {
+      // NOTE: mm_goods_receipts is empty; actual_delivery_date and expected_date columns
+      // on mm_purchase_orders are the canonical source for delay calculation.
+      return exec(sql`SELECT v.id, v.name, COUNT(po.id)::int AS total_orders, COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed_orders, COALESCE(SUM(po.total_amount), 0)::numeric(15,2) AS total_spend, COALESCE(AVG(EXTRACT(EPOCH FROM (po.actual_delivery_date - po.expected_date::timestamptz))/${SECONDS_PER_DAY}), 0)::numeric(5,1) AS avg_delay_days FROM mm_vendors v LEFT JOIN mm_purchase_orders po ON po.vendor_id = v.id WHERE v.is_active = true GROUP BY v.id, v.name ORDER BY total_spend DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 

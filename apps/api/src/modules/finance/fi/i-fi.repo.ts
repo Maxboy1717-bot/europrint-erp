@@ -25,6 +25,7 @@ export interface IFiRepository {
   createProfitCenter(dto: Record<string, unknown>): Promise<Result<Row>>;
   updateProfitCenter(id: number, dto: Record<string, unknown>): Promise<Result<Row>>;
   deleteProfitCenter(id: number): Promise<Result<void>>;
+  getTaxSummary(): Promise<Result<{ totalThisMonth: number; paid: number; pending: number; overdue: number }>>;
 }
 
 export const FI_REPO = 'IFiRepository';

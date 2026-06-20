@@ -106,12 +106,24 @@ export class CrmExtendedCompatService {
   
     });}
 
-  getMarketingSegments() {
-    return [
-      { id: 1, name: 'Premium mijozlar', count: 0, criteria: 'Yillik hajm > 500M UZS' },
-      { id: 2, name: "O'rta segment", count: 0, criteria: '50M — 500M UZS' },
-      { id: 3, name: 'Kichik mijozlar', count: 0, criteria: '< 50M UZS' },
-    ];
+  async getMarketingSegments(): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const r = await rawSql(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE COALESCE(opportunity_amount, budget, 0) > 500000000)::int  AS premium_count,
+          COUNT(*) FILTER (WHERE COALESCE(opportunity_amount, budget, 0) BETWEEN 50000000 AND 500000000)::int AS mid_count,
+          COUNT(*) FILTER (WHERE COALESCE(opportunity_amount, budget, 0) < 50000000
+                            OR (budget IS NULL AND opportunity_amount IS NULL))::int AS small_count
+        FROM crm_leads
+        WHERE deleted_at IS NULL
+      `);
+      const row = (dbRows(r)[0] ?? {}) as { premium_count?: number; mid_count?: number; small_count?: number };
+      return [
+        { id: 1, name: 'Premium mijozlar', count: Number(row.premium_count ?? 0), criteria: 'Yillik hajm > 500M UZS' },
+        { id: 2, name: "O'rta segment",    count: Number(row.mid_count     ?? 0), criteria: '50M — 500M UZS' },
+        { id: 3, name: 'Kichik mijozlar',  count: Number(row.small_count   ?? 0), criteria: '< 50M UZS' },
+      ];
+    });
   }
 
   async getNextBestAction(): Promise<Result<Row[], AppError>> {

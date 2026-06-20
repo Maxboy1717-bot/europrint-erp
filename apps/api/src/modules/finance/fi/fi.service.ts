@@ -172,4 +172,12 @@ export class FiService {
       return { success: true };
     });
   }
+
+  async getTaxSummary(): Promise<Result<{ totalThisMonth: number; paid: number; pending: number; overdue: number }, AppError>> {
+    return safeCall(async () => {
+      const result = await this.repo.getTaxSummary();
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
 }

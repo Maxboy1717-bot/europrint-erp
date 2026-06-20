@@ -45,7 +45,9 @@ export class PosReportsRepository {
 
   async getTopMaterials(): Promise<Result<Row[]>>  {
   try {  
-      return exec(sql`SELECT mc.id, mc.xom_ashyo AS material_name, mc.unit_of_measure, SUM(pml.quantity::numeric) AS total_issued_qty, COUNT(DISTINCT pm.id) AS movement_count FROM pos_movement_lines pml JOIN pos_movements pm ON pm.id = pml.movement_id JOIN pos_movement_types pmt ON pmt.id = pm.movement_type_id JOIN material_cards mc ON mc.id = pml.material_id WHERE pm.created_at >= NOW() - INTERVAL '30 days' AND pmt.code = 'INTERNAL_ISSUE' AND pm.status = 'completed' GROUP BY mc.id, mc.xom_ashyo, mc.unit_of_measure ORDER BY total_issued_qty DESC LIMIT 20`);  } catch (_e) {
+      // NOTE: pos_movements.movement_type_id is NULL for all rows (type stored in TEXT column movement_type).
+      // The old join on pos_movement_types permanently returned []. Using material_movements (canonical) instead.
+      return exec(sql`SELECT mm.material_id AS id, mc.xom_ashyo AS material_name, COALESCE(mc.unit_of_measure, 'dona') AS unit_of_measure, SUM(mm.quantity) AS total_issued_qty, COUNT(*) AS movement_count FROM material_movements mm JOIN material_cards mc ON mc.id = mm.material_id WHERE mm.created_at >= NOW() - INTERVAL '30 days' AND mm.movement_type = 'ISSUE' GROUP BY mm.material_id, mc.xom_ashyo, mc.unit_of_measure ORDER BY total_issued_qty DESC LIMIT 20`);  } catch (_e) {
     return Err(String(_e));
   }
 

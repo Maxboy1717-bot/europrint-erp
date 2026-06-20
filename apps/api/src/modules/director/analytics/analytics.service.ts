@@ -15,10 +15,10 @@ export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
   constructor(private readonly repo: AnalyticsRepository) {}
 
-  async getStats(): Promise<Result<StatsRow & { topUsers: unknown[] }>> {
-    const r = await this.repo.findStats();
+  async getStats(): Promise<Result<StatsRow & { topUsers: LeaderEmpRow[] }>> {
+    const [r, leaderR] = await Promise.all([this.repo.findStats(), this.repo.findLeaderboardEmployees()]);
     if (!r.ok) { this.logger.warn('getStats: DB unavailable, returning defaults'); return Ok({ ...EMPTY_STATS, topUsers: [] }); }
-    return Ok({ ...r.data, topUsers: [] });
+    return Ok({ ...r.data, topUsers: leaderR.ok ? leaderR.data : [] });
   }
 
   async getCourseProgress(): Promise<Result<CourseProgressRow[]>> {

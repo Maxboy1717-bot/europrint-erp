@@ -64,7 +64,7 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
 
   async getOverdue(lim: number, off: number): Promise<Result<Row[]>>  {
   try {
-      const r = await exec(sql`SELECT p.*, c.name AS customer_name, EXTRACT(DAY FROM (NOW() - p.due_date))::int AS days_overdue FROM sd_payments p LEFT JOIN sd_customers c ON c.id = p.customer_id AND c.deleted_at IS NULL WHERE p.status = 'pending' AND p.due_date < NOW() AND p.deleted_at IS NULL ORDER BY p.due_date ASC LIMIT ${lim} OFFSET ${off}`);
+      const r = await exec(sql`SELECT p.*, c.name AS customer_name, (CURRENT_DATE - p.due_date::date)::int AS days_overdue FROM sd_payments p LEFT JOIN sd_customers c ON c.id = p.customer_id WHERE p.status = 'pending' AND p.due_date::date < CURRENT_DATE ORDER BY p.due_date ASC LIMIT ${lim} OFFSET ${off}`);
       return r.ok ? r : Err(String(r.error));
   } catch (_e) {
     return Err(String(_e));
