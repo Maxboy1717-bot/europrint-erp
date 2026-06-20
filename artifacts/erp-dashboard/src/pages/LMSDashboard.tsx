@@ -26,6 +26,7 @@ interface Certificate { id: string; userId: string; courseId: string; issuedDate
 interface User { id: string; fullName: string; completedCourses?: number; }
 interface ActivityRecord { id: string; type: "enrollment" | "completion" | "test"; description: string; timestamp: string; userName: string; }
 interface LMSLeaderboardEntry { userId: string; fullName: string; completedLessons: number; completedCourses: number; averageScore: number; passedTests: number; overallScore: number; }
+interface LmsLeaderboardEntry { userId: number; fullName: string; completedCourses: number; totalCourses: number; avgScore: number; certificatesEarned: number; }
 interface LmsExam { id: string; title: string; courseId: number | null; durationMinutes: number; passingScore: number; isActive: boolean; }
 interface LmsProgress { completedCourses: number; totalCourses: number; averageScore: number; examsPassed: number; examsFailed: number; }
 interface LmsQuestion { id: number; question_text: string; options: string[] | Record<string, string>; order_index: number; }
@@ -52,6 +53,11 @@ export default function LMSDashboard() {
   const { data: completionTrend = [] } = useQuery<{ month: string; completed: number; enrolled: number }[]>({ queryKey: ["/api/courses/completion-trend", language] });
   const { data: recentActivity = [] } = useQuery<ActivityRecord[]>({ queryKey: ["/api/lms/recent-activity", language] });
   const { data: lmsLeaderboard = [], isLoading: isLoadingLeaderboard } = useQuery<LMSLeaderboardEntry[]>({ queryKey: ["/api/analytics/leaderboard/employees"], select: (data: unknown) => Array.isArray(data) ? data : [] });
+  const { data: lmsTopPerformers = [], isLoading: isLoadingTopPerformers } = useQuery<LmsLeaderboardEntry[]>({
+    queryKey: ["/api/lms/leaderboard"],
+    queryFn: () => apiRequest("GET", "/api/lms/leaderboard"),
+    select: (data: unknown) => Array.isArray(data) ? (data as LmsLeaderboardEntry[]) : [],
+  });
   const { data: lmsExams = [] } = useQuery<LmsExam[]>({
     queryKey: ["/api/lms/exams"],
     select: (data: unknown) => Array.isArray(data) ? data : [],
@@ -84,7 +90,6 @@ export default function LMSDashboard() {
   const activeStudents = users.length;
   const completedCertificates = certificates.length;
   const averageTestScore = courses.length > 0 ? Math.round((Array.isArray(courses) ? courses : []).reduce((sum, c) => sum + c.completionRate, 0) / courses.length) : 0;
-  const topPerformers = [...users].sort((a, b) => (a.fullName || "").localeCompare(b.fullName || "")).slice(0, 5);
 
   if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
@@ -195,20 +200,24 @@ export default function LMSDashboard() {
         <TabsContent value="performers">
           <Card><CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-[var(--ep-green)]" />{t('skillMatrix')}</CardTitle></CardHeader>
             <CardContent>
-              <div className="ep-table-scroll"><Table>
-                <TableHeader><TableRow><TableHead>#</TableHead><TableHead>{t('students')}</TableHead><TableHead>{t('coursesCompleted')}</TableHead><TableHead>{t('certificatesEarned')}</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {topPerformers.length === 0 ? <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8" data-testid="text-no-performers">{tCommon('noData')}</TableCell></TableRow>
-                  : (Array.isArray(topPerformers) ? topPerformers : []).map((performer, idx) => (
-                    <TableRow key={performer.id} data-testid={`row-performer-${performer.id}`} className="hover:bg-muted/40 transition-colors">
-                      <TableCell className="font-medium">{idx + 1}</TableCell>
-                      <TableCell>{performer.fullName}</TableCell>
-                      <TableCell>{idx + 1}</TableCell>
-                      <TableCell><Badge variant="outline">{performer.completedCourses || 0}</Badge></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table></div>
+              {isLoadingTopPerformers ? (
+                <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+              ) : (
+                <div className="ep-table-scroll"><Table>
+                  <TableHeader><TableRow><TableHead>#</TableHead><TableHead>{t('students')}</TableHead><TableHead>{t('coursesCompleted')}</TableHead><TableHead>{t('certificatesEarned')}</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {lmsTopPerformers.length === 0 ? <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8" data-testid="text-no-performers">{tCommon('noData')}</TableCell></TableRow>
+                    : (Array.isArray(lmsTopPerformers) ? lmsTopPerformers : []).map((performer, idx) => (
+                      <TableRow key={performer.userId} data-testid={`row-performer-${performer.userId}`} className="hover:bg-muted/40 transition-colors">
+                        <TableCell className="font-medium">{idx + 1}</TableCell>
+                        <TableCell>{performer.fullName}</TableCell>
+                        <TableCell>{performer.completedCourses}</TableCell>
+                        <TableCell><Badge variant="outline">{performer.certificatesEarned}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table></div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

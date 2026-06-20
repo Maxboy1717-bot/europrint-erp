@@ -169,12 +169,37 @@ export class IotSensorsController {
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getOEE(@Param('id') sensorId: string) {
     this.logger.log('Get OEE');
+    const machineId = parseInt(sensorId, 10);
+
+    // 1. Try oee_records first (persisted historical OEE)
     const r = await db.execute(sql`
       SELECT availability, performance, quality, oee, date, shift_number
-      FROM oee_records WHERE machine_id=${parseInt(sensorId, 10)}
+      FROM oee_records WHERE machine_id=${machineId}
       ORDER BY date DESC, shift_number DESC LIMIT 1
     `);
     const row = ((r as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
-    return { statusCode: HttpStatus.OK, data: row ?? { oee: 0, availability: 0, performance: 0, quality: 0 } };
+    if (row) {
+      return { statusCode: HttpStatus.OK, data: row };
+    }
+
+    // 2. Fallback: aggregate from production_sessions (real live data)
+    const ps = await db.execute(sql`
+      SELECT AVG(availability)::numeric(6,2) AS availability,
+             AVG(performance)::numeric(6,2)  AS performance,
+             AVG(quality)::numeric(6,2)      AS quality,
+             AVG(oee)::numeric(6,2)          AS oee,
+             COUNT(*)::int                   AS sample_size
+      FROM production_sessions
+      WHERE machine_id=${machineId}
+        AND deleted_at IS NULL
+        AND availability IS NOT NULL
+    `);
+    const psRow = ((ps as unknown as { rows: unknown[] }).rows ?? [])[0] as Record<string, unknown> | undefined;
+    if (psRow && psRow['sample_size'] && Number(psRow['sample_size']) > 0) {
+      return { statusCode: HttpStatus.OK, data: { ...psRow, source: 'production_sessions' } };
+    }
+
+    // 3. No data at all — 404 instead of fake zeros
+    throw new NotFoundException(`Sensor #${sensorId} uchun OEE ma'lumoti topilmadi`);
   }
 }

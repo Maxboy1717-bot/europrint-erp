@@ -236,6 +236,36 @@ export class LmsExamsRepository {
     }
   }
 
+  /**
+   * findLeaderboard — top performers ranked by completed courses then avg score.
+   * Tables: enrollments (employee_id, status, score), employees (id, full_name, first_name, last_name),
+   *         certificates (employee_id, id).
+   * No DDL required — all columns confirmed in information_schema.
+   */
+  async findLeaderboard(): Promise<Result<object[]>> {
+    try {
+      const r = await exec(sql`
+        SELECT
+          e.employee_id                                                                         AS "userId",
+          COALESCE(emp.full_name, emp.first_name || ' ' || emp.last_name)                      AS "fullName",
+          COUNT(*)           FILTER (WHERE e.status = 'completed')::integer                    AS "completedCourses",
+          COUNT(*)::integer                                                                     AS "totalCourses",
+          COALESCE(ROUND(AVG(e.score) FILTER (WHERE e.score IS NOT NULL)), 0)::integer         AS "avgScore",
+          COUNT(DISTINCT cert.id)::integer                                                     AS "certificatesEarned"
+        FROM enrollments e
+        JOIN employees emp ON emp.id = e.employee_id
+        LEFT JOIN certificates cert ON cert.employee_id = e.employee_id
+        GROUP BY e.employee_id, emp.full_name, emp.first_name, emp.last_name
+        ORDER BY "completedCourses" DESC, "avgScore" DESC
+        LIMIT 20
+      `);
+      return Ok(r);
+    } catch (error) {
+      this.logger.error(`findLeaderboard: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   async findMyProgress(userId: string): Promise<Result<Row>> {
     try {
       // LEFT JOIN lms_exam_attempts so exam stats (passed/failed) are included.

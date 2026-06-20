@@ -103,6 +103,12 @@ export class ChatMessageService {
     return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
+  async getStarredMessages(userId: string): Promise<Result<Record<string, unknown>[], AppError>> {
+    const result = await this.msgRepo.findStarredForUser(userId);
+    if (!result.ok) return Err(result.error.message);
+    return Ok(result.data as Record<string, unknown>[]);
+  }
+
   async starMessage(messageId: string, userId: string, starred: boolean): Promise<{ starred: boolean; messageId: string }> {
     const msgResult = await this.msgRepo.findMessageRoomForStar(messageId);
     const msg = (msgResult.ok ? msgResult.data : null) as Record<string, unknown> | null;

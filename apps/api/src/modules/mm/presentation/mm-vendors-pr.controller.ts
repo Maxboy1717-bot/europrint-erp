@@ -45,11 +45,10 @@ export class MmVendorsPrController {
   }
 
   /**
-   * Alias for the integration module's vendor-performance endpoint so the
-   * VendorPerformance frontend page can call /api/mm/vendor-performance.
-   * Returns the same shape that integration-extended-hr.controller.ts emits.
-   * Real DB pull will land when vendor_performance schema is added; for now
-   * we serve an empty list (page renders empty state cleanly).
+   * List vendor performance ratings from mm_vendor_ratings (canonical write table).
+   * GET /api/mm/vendor-performance
+   * Score = quality*0.4 + delivery*0.3 + price*0.2 + document*0.1
+   * document_score is stored inside the notes JSON field (see POST createVendorPerformance).
    */
   @ApiOperation({ summary: 'List vendor performance' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -61,16 +60,36 @@ export class MmVendorsPrController {
     const lim = Math.min(parseInt(limit ?? '50', 10) || 50, 200);
     try {
       const r = await rawSql(sql`
-        SELECT vp.id::text AS id, vp.vendor_id AS "vendorId", v.name AS "vendorName",
-               vp.score, vp.on_time_rate AS "onTimeRate", vp.quality_rate AS "qualityRate",
-               vp.period, vp.created_at AS "createdAt"
-        FROM vendor_performance vp
-        LEFT JOIN vendors v ON v.id = vp.vendor_id
-        WHERE (${period ?? null}::text IS NULL OR vp.period = ${period ?? null})
-        ORDER BY vp.created_at DESC LIMIT ${lim}
+        SELECT
+          mvr.id::text AS id,
+          mvr.vendor_id AS "vendorId",
+          mv.name AS "vendorName",
+          ROUND(
+            (COALESCE(mvr.quality_score, 0) * 0.4 +
+             COALESCE(mvr.delivery_score, 0) * 0.3 +
+             COALESCE(mvr.price_score, 0) * 0.2 +
+             COALESCE(
+               (CASE
+                 WHEN mvr.notes IS NOT NULL AND mvr.notes ~ '^\s*\{'
+                 THEN ((mvr.notes::json)->>'document_score')::numeric
+                 ELSE NULL
+               END), 0
+             ) * 0.1)::numeric, 2
+          ) AS score,
+          ROUND((COALESCE(mvr.delivery_score, 0) / 100.0)::numeric, 4) AS "onTimeRate",
+          ROUND((COALESCE(mvr.quality_score, 0) / 100.0)::numeric, 4) AS "qualityRate",
+          mvr.rated_at::date::text AS period,
+          mvr.rated_at AS "createdAt"
+        FROM mm_vendor_ratings mvr
+        LEFT JOIN mm_vendors mv ON mv.id = mvr.vendor_id
+        WHERE (${period ?? null}::text IS NULL OR mvr.rated_at::date::text = ${period ?? null})
+        ORDER BY mvr.rated_at DESC LIMIT ${lim}
       `);
       return (r as { rows?: Record<string, unknown>[] }).rows ?? [];
-    } catch { return []; }
+    } catch (e) {
+      this.logger.error('listVendorPerformance failed', e);
+      return [];
+    }
   }
 
   @ApiOperation({ summary: 'Get vendor' })

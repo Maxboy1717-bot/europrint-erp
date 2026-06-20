@@ -25,6 +25,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 
+const RAZRYAD_KEY = "/api/org-structure/razryad-levels";
+
 const fmtSom = (v: unknown): string => {
   const n = Number(v ?? 0);
   return (Number.isFinite(n) ? n.toLocaleString("ru-RU") : "0") + " so'm";
@@ -52,6 +54,19 @@ export function CardDetailDialog({
   const [editOpen, setEditOpen] = useState(false);
   const [folderOpen, setFolderOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+
+  const { data: razryadData } = useQuery<{ items: { id: number; level: number; name: string }[] }>({
+    queryKey: [RAZRYAD_KEY],
+    enabled,
+  });
+  const razryadById = new Map(
+    (Array.isArray(razryadData?.items) ? razryadData!.items : []).map((r) => [r.id, r])
+  );
+  const razryadLabel = (rid: number | null | undefined): string => {
+    if (rid == null) return "—";
+    const r = razryadById.get(rid);
+    return r ? r.name : `#${rid}`;
+  };
 
   const { data: card, isLoading, isError, refetch } = useQuery<OrgCard & {
     department_name?: string;
@@ -159,7 +174,7 @@ export function CardDetailDialog({
                   <Field label={t("lavozimNomi")} value={card.position_name} />
                   <Field label={t("kartaKodi")} value={card.code} />
                   <Field label={t("daraja")} value={card.level} />
-                  <Field label={t("razryad")} value={card.razryad_level_id ?? "—"} />
+                  <Field label={t("razryad")} value={razryadLabel(card.razryad_level_id)} />
                   <Field label={t("holati")} value={<EPStatusPill tone="info">{card.status ?? "active"}</EPStatusPill>} />
                   <Field label={t("oylikTuri")} value={card.salary_type} />
                   <Field label={t("rbacDaraja")} value={card.rbac_tier} />
@@ -280,7 +295,7 @@ export function CardDetailDialog({
                   <Field label={t("toliqlik")} value={`${completeness}%`} />
                   <Field label={t("kartaImtihonlari")} value={examCount} />
                   <Field label={t("xodimlar")} value={listOf(employees.data).length} />
-                  <Field label={t("razryad")} value={card.razryad_level_id ?? "—"} />
+                  <Field label={t("razryad")} value={razryadLabel(card.razryad_level_id)} />
                   <Field label={t("farzandlar")} value={listOf(children.data).length} />
                   <Field label={t("vakant")} value={listOf(vacancies.data).length} />
                   <Field
@@ -328,7 +343,7 @@ export function CardDetailDialog({
                         ? `${card.tskp_target}${card.tskp_measurement_unit ? " " + card.tskp_measurement_unit : ""}`
                         : <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>}
                     />
-                    <Field label={t("razryad")} value={card.razryad_level_id ?? <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>} />
+                    <Field label={t("razryad")} value={card.razryad_level_id != null ? razryadLabel(card.razryad_level_id) : <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>} />
                     <Field label={t("rbacDaraja")} value={card.rbac_tier ?? <span className="text-muted-foreground italic">{t("toldirilmagan")}</span>} />
                   </div>
                 </div>

@@ -136,11 +136,18 @@ export class CoordinationService {
 
   async getStats() {
     return safeCall(async () => {
-      const [dokla, rasp] = await Promise.all([
+      const [doklaResult, raspResult] = await Promise.all([
         this.repo.getStatsDokla(),
         this.repo.getStatsRasp(),
       ]);
-      return { dokla, rasporyazhenie: rasp };
+      return {
+        dokla: doklaResult.ok
+          ? doklaResult.data
+          : { total: 0, sent: 0, read: 0, resolved: 0 },
+        rasporyazhenie: raspResult.ok
+          ? raspResult.data
+          : { total: 0, assigned: 0, in_progress: 0, done: 0, overdue: 0 },
+      };
     });
   }
 }

@@ -102,6 +102,15 @@ export class LmsCoreController {
     return { message: 'Imtihon topshirildi', data };
   }
 
+  @ApiOperation({ summary: 'LMS leaderboard — top performers by completed courses and avg score' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('leaderboard')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async leaderboard() {
+    const result = await this.svc.getLeaderboard();
+    return unwrapOrInternal(result);
+  }
+
   @ApiOperation({ summary: 'Recent activity lang' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })

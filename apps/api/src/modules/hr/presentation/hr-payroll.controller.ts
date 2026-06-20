@@ -137,11 +137,7 @@ export class HrPayrollController {
   @Post(':payrollId/post-to-gl')
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async postToGL(@Param('payrollId') payrollId: string, @CurrentUser() user: AuthenticatedUser) {
-    const result = await this.hrRepo.updatePayroll(payrollId, {
-      status:   'paid',
-      postedBy: user?.sub ?? user?.id,
-      paidDate: new Date().toISOString().split('T')[0],
-    } as Record<string, unknown>);
+    const result = await this.hrRepo.postPayrollToGL(+payrollId, user?.sub ?? user?.id);
     assertOk(result);
     return { message: "Oylik maosh buxgalteriyaga o'tkazildi", ...result.data };
   }

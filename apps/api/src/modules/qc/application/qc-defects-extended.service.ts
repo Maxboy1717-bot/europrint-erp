@@ -23,8 +23,8 @@ export class QcDefectsExtendedService {
     return this.repo.getBrakCostImpact(papkaOrderId);
   }
 
-  async createBrak(session_id: number | null, material_id: number | null, quantity: number, reason: string | null, root_cause_id: number | null, reported_by: number | null, papka_order_id: number | null) {
-    return this.repo.createBrak(session_id, material_id, quantity, reason, root_cause_id, reported_by, papka_order_id);
+  async createBrak(session_id: number | null, material_id: number | null, quantity: number, reason: string | null, root_cause_id: number | null, reported_by: number | null, papka_order_id: number | null, brak_date: string | null, stage: string | null, description: string | null) {
+    return this.repo.createBrak(session_id, material_id, quantity, reason, root_cause_id, reported_by, papka_order_id, brak_date, stage, description);
   }
 
   async listSupplierQuality(vid: number | null, lim: number) {

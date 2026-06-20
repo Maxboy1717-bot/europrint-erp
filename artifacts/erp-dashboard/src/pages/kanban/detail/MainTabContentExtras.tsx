@@ -3,6 +3,10 @@
  * @description Extra section components for MainTabContent: hidden fields, tags, rating.
  */
 
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +21,7 @@ import {
   Folder,
   FolderKanban,
   Hash,
+  Loader2,
   Plus,
   Star,
   Tag,
@@ -47,6 +52,28 @@ interface HiddenFieldsProps {
 
 export function HiddenFieldsSection({ card, allCards, projects, deals, showHiddenFields, onToggleHiddenFields, onUpdate }: HiddenFieldsProps) {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const [newProjectName, setNewProjectName] = useState("");
+  const [showNewProjectInput, setShowNewProjectInput] = useState(false);
+
+  const createProjectMutation = useMutation({
+    mutationFn: (name: string) =>
+      apiRequest("POST", "/api/kanban/projects", { name, color: "#3b82f6", status: "active" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kanban/projects"] });
+      setNewProjectName("");
+      setShowNewProjectInput(false);
+      toast({ title: "Loyiha yaratildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const handleCreateProject = () => {
+    const trimmed = newProjectName.trim();
+    if (!trimmed) return;
+    createProjectMutation.mutate(trimmed);
+  };
+
   return (
     <>
       <div className="pt-2 border-t">
@@ -73,16 +100,56 @@ export function HiddenFieldsSection({ card, allCards, projects, deals, showHidde
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2">
-            <FolderKanban className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Label className="min-w-[100px]">{t("loyiha")}</Label>
-            <Select defaultValue={card.projectId || "none"} onValueChange={(v) => onUpdate({ projectId: v === "none" ? null : v })}>
-              <SelectTrigger data-testid="select-project" className="flex-1 h-9"><SelectValue placeholder={t("loyihaTanlang")} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">-</SelectItem>
-                {(Array.isArray(projects) ? projects : []).map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-start gap-2">
+            <FolderKanban className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-2" />
+            <Label className="min-w-[100px] mt-2">{t("loyiha")}</Label>
+            <div className="flex-1 space-y-1">
+              <Select defaultValue={card.projectId || "none"} onValueChange={(v) => onUpdate({ projectId: v === "none" ? null : v })}>
+                <SelectTrigger data-testid="select-project" className="h-9"><SelectValue placeholder={t("loyihaTanlang")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-</SelectItem>
+                  {(Array.isArray(projects) ? projects : []).map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
+              {showNewProjectInput ? (
+                <div className="flex gap-1">
+                  <Input
+                    autoFocus
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    placeholder="Loyiha nomi..."
+                    className="h-8 text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCreateProject();
+                      if (e.key === "Escape") { setShowNewProjectInput(false); setNewProjectName(""); }
+                    }}
+                    data-testid="input-new-project-name"
+                  />
+                  <Button
+                    size="sm"
+                    className="h-8 px-2"
+                    disabled={!newProjectName.trim() || createProjectMutation.isPending}
+                    onClick={handleCreateProject}
+                    data-testid="button-save-new-project"
+                  >
+                    {createProjectMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => { setShowNewProjectInput(false); setNewProjectName(""); }}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground px-1"
+                  onClick={() => setShowNewProjectInput(true)}
+                  data-testid="button-show-new-project"
+                >
+                  <Plus className="h-3 w-3 mr-1" />Yangi loyiha
+                </Button>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />

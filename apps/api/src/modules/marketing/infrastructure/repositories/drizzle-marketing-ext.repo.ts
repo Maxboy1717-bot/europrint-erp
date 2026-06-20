@@ -312,15 +312,43 @@ export class DrizzleMarketingExtRepository {
 
   async getMarketingFunnel(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const total = await db.select({ count: sql<number>`count(*)::int` }).from(marketingLeads).where(isNull(marketingLeads.deletedAt));
-      const converted = await db.select({ count: sql<number>`count(*)::int` }).from(marketingLeads)
-        .where(and(eq(marketingLeads.status, 'converted'), isNull(marketingLeads.deletedAt)));
-      return {
-        stages: [
-          { name: 'Leads',     count: Number(total[0]?.count ?? 0) },
-          { name: 'Converted', count: Number(converted[0]?.count ?? 0) },
-        ],
-      };
+      // Pull per-status counts in one query — all 5 live statuses: new/warm/hot/converted/lost
+      const byStatus = await db
+        .select({
+          status: marketingLeads.status,
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(marketingLeads)
+        .where(isNull(marketingLeads.deletedAt))
+        .groupBy(marketingLeads.status);
+
+      const map: Record<string, number> = {};
+      for (const r of Array.isArray(byStatus) ? byStatus : []) {
+        map[String(r.status ?? 'unknown')] = Number(r.cnt ?? 0);
+      }
+
+      const total = Object.values(map).reduce((s, n) => s + n, 0);
+      const converted = map['converted'] ?? 0;
+      const convRate = total > 0 ? Math.round((converted / total) * 100 * 10) / 10 : 0;
+
+      // Canonical funnel order: new → warm → hot → converted → lost
+      const FUNNEL_ORDER = ['new', 'warm', 'hot', 'converted', 'lost'] as const;
+      type FunnelStage = { name: string; label: string; count: number };
+      const stages: FunnelStage[] = FUNNEL_ORDER.map(s => ({
+        name: s as string,
+        label: s === 'new' ? 'Yangi' : s === 'warm' ? 'Iliq' : s === 'hot' ? 'Issiq' : s === 'converted' ? 'Konvertatsiya' : 'Yo\'qotilgan',
+        count: map[s] ?? 0,
+      }));
+
+      // Include any unknown statuses not in the canonical list
+      const known = new Set(FUNNEL_ORDER as readonly string[]);
+      for (const [status, cnt] of Object.entries(map)) {
+        if (!known.has(status)) {
+          stages.push({ name: status, label: status, count: cnt });
+        }
+      }
+
+      return { stages, total, conversionRate: convRate };
     });
   }
 

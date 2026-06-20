@@ -246,7 +246,7 @@ export class DirectorDataRepository implements IDirectorDataRepo {
   async queryAiSummary(): Promise<Result<AiSummaryData>> {
 
     return safeCall(async () => {
-      const [[ordRow], [sessCountRow], [hrRow], [invRow], [stockRow]] = await Promise.all([
+      const [[ordRow], [sessCountRow], [hrRow], [invRow], [stockRow], raspResult] = await Promise.all([
         db.select({
           total: sql<string>`COUNT(*)`,
           completed: sql<string>`COUNT(*) FILTER (WHERE status='completed')`,
@@ -262,16 +262,18 @@ export class DirectorDataRepository implements IDirectorDataRepo {
           amt: sql<string>`COALESCE(SUM(CAST(amount AS DECIMAL)),0)`,
         }).from(invoicesTable).where(sql`status IN ('overdue','unpaid') AND due_date < CURRENT_DATE`),
         db.select({ cnt: sql<string>`COUNT(*)` }).from(stock_items).where(sql`quantity IS NOT NULL AND quantity <= 0`),
+        db.execute(sql`SELECT COUNT(*) AS cnt FROM rasporyazhenie WHERE status != 'done' AND deadline IS NOT NULL AND deadline < CURRENT_DATE`),
       ]);
       const o = (ordRow as Row | undefined) ?? {};
       const h = (hrRow as Row | undefined) ?? {};
       const inv = (invRow as Row | undefined) ?? {};
       const total = num(h, 'total'); const present = num(h, 'present');
       const totalOrders = num(o, 'total'); const completedOrders = num(o, 'completed'); const overdueOrders = num(o, 'overdue');
+      const raspRow = ((raspResult as { rows?: unknown[] }).rows?.[0] as Row | undefined) ?? {};
       return {
         summary: `Bugun ${totalOrders} ta buyurtma, ${completedOrders} ta yakunlandi, ${overdueOrders} ta muddati o'tgan. Davomiylik: ${total > 0 ? Math.round((present / total) * 100) : 0}%.`,
         generatedAt: _time.now().toISOString(), aiGenerated: false,
-        stats: { totalOrders, completedOrders, overdueOrders, oee: null, attendance: { present, total, rate: total > 0 ? Math.round((present / total) * 100) : 0 }, overdueInvoices: { count: num(inv, 'cnt'), amount: num(inv, 'amt') }, stockAlerts: num((stockRow as Row | undefined) ?? {}, 'cnt'), sessionCount: int((sessCountRow as Row | undefined) ?? {}, 'snaps') },
+        stats: { totalOrders, completedOrders, overdueOrders, oee: null, attendance: { present, total, rate: total > 0 ? Math.round((present / total) * 100) : 0 }, overdueInvoices: { count: num(inv, 'cnt'), amount: num(inv, 'amt') }, stockAlerts: num((stockRow as Row | undefined) ?? {}, 'cnt'), sessionCount: int((sessCountRow as Row | undefined) ?? {}, 'snaps'), cc: { inboxOverdue: int(raspRow, 'cnt') } },
       };
     }, 'DB_ERROR');
   }

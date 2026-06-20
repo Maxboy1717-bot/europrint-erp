@@ -29,22 +29,36 @@ export class MesShiftsStatsRepository {
   }
 
   async closeShiftEvaluation(shift_id: number, supervisor_id: number | null, production_score: number, quality_score: number, safety_score: number, notes: string | null): Promise<Row[]> {
+    // INSERT into base table (shift_evaluations), NOT the VIEW (mes_shift_evaluations).
+    // Column mapping: supervisor_id→operator_id, production_score→productivity_score.
+    // eval_id (NOT NULL, unique) is seeded from shift_id; shift_name (NOT NULL) defaults to ''.
+    // ON CONFLICT uses eval_id (shift_evaluations_eval_id_unique index).
+    const prod = production_score ?? 0;
+    const qual = quality_score ?? 0;
+    const safe = safety_score ?? 0;
+    const overall = Math.round((prod + qual + safe) / 3);
     const rows = await runQuery<Row>(sql`
-      INSERT INTO mes_shift_evaluations (shift_id, supervisor_id, production_score, quality_score, safety_score, notes, evaluated_at)
-      VALUES (${shift_id}, ${supervisor_id ?? null}, ${production_score ?? 0}, ${quality_score ?? 0}, ${safety_score ?? 0}, ${notes ?? null}, NOW())
-      ON CONFLICT (shift_id) DO UPDATE
-        SET production_score = EXCLUDED.production_score, quality_score = EXCLUDED.quality_score,
-            safety_score = EXCLUDED.safety_score, notes = EXCLUDED.notes, evaluated_at = NOW()
+      INSERT INTO shift_evaluations (eval_id, shift_name, operator_id, productivity_score, quality_score, safety_score, overall_score, notes, evaluated_at, shift_id)
+      VALUES (${shift_id}, '', ${supervisor_id ?? null}, ${prod}, ${qual}, ${safe}, ${overall}, ${notes ?? null}, NOW(), ${shift_id})
+      ON CONFLICT (eval_id) DO UPDATE
+        SET productivity_score = EXCLUDED.productivity_score,
+            quality_score      = EXCLUDED.quality_score,
+            safety_score       = EXCLUDED.safety_score,
+            overall_score      = EXCLUDED.overall_score,
+            notes              = EXCLUDED.notes,
+            evaluated_at       = NOW()
       RETURNING *
     `);
     return rows.rows as Row[];
   }
 
   async getShiftEvaluations(from: string | undefined, to: string | undefined, lim: number): Promise<Row[]> {
+    // operator_id is the real column (supervisor_id does not exist in shift_evaluations).
+    // Reading from the VIEW (mes_shift_evaluations) is fine for SELECT.
     const rows = await runQuery<Row>(sql`
       SELECT se.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS supervisor_name
       FROM mes_shift_evaluations se
-      LEFT JOIN employees e ON e.id = se.supervisor_id
+      LEFT JOIN employees e ON e.id = se.operator_id
       WHERE (${from ?? null}::date IS NULL OR se.evaluated_at::date >= ${from ?? null}::date)
         AND (${to ?? null}::date IS NULL OR se.evaluated_at::date <= ${to ?? null}::date)
       ORDER BY se.evaluated_at DESC LIMIT ${lim}

@@ -11,6 +11,10 @@ import { ar_aging_buckets, sales_invoices } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import type { IFinanceArRepo, ArBucket, CreateArEntryDto } from '../../domain/repositories/i-finance-ar.repo';
 
+// NOTE: fi_invoices live DB columns (uuid id, total_amount, paid_amount, customer_name,
+// status, due_date timestamptz, deleted_at) differ from the Drizzle stub schema.
+// We query fi_invoices via sql`` template (raw SQL, parameterised) — not Drizzle column refs.
+
 type Row = Record<string, unknown>;
 
 export type { ArBucket };
@@ -39,24 +43,33 @@ export class FinanceArRepository implements IFinanceArRepo {
   }
 
   async getOverdueInvoices(today: string): Promise<Result<Row[]>> {
+    // Read from fi_invoices (canonical, 5 live rows) — NOT sales_invoices (0 rows).
+    // fi_invoices live columns: status (text), due_date (timestamptz), deleted_at.
     return safeCall(async () => {
-      return db.select().from(sales_invoices)
-        .where(sql`${sales_invoices.payment_status} != 'paid' AND ${sales_invoices.due_date} < ${today}::date`)
-        .orderBy(sales_invoices.due_date).then(r => r as Row[]);
-      }, 'DB_ERROR');
+      const result = await db.execute(
+        sql`SELECT id, due_date, total_amount, paid_amount, customer_name, status
+            FROM fi_invoices
+            WHERE status != 'paid'
+              AND deleted_at IS NULL
+              AND due_date < ${today}::timestamptz
+            ORDER BY due_date ASC`,
+      );
+      return (result.rows ?? []) as Row[];
+    }, 'DB_ERROR');
   }
 
   async getUnpaidInvoices(): Promise<Result<Row[]>> {
+    // Read from fi_invoices (canonical, 5 live rows) — NOT sales_invoices (0 rows).
+    // fi_invoices live columns: status (text), deleted_at — no payment_status field.
     return safeCall(async () => {
-      return db.select({
-        id:            sales_invoices.id,
-        due_date:      sales_invoices.due_date,
-        total_amount:  sales_invoices.total_amount,
-        paid_amount:   sales_invoices.paid_amount,
-        customer_name: sales_invoices.customer_name,
-      }).from(sales_invoices)
-        .where(sql`${sales_invoices.payment_status} != 'paid'`).then(r => r as Row[]);
-      }, 'DB_ERROR');
+      const result = await db.execute(
+        sql`SELECT id, due_date, total_amount, paid_amount, customer_name
+            FROM fi_invoices
+            WHERE status != 'paid'
+              AND deleted_at IS NULL`,
+      );
+      return (result.rows ?? []) as Row[];
+    }, 'DB_ERROR');
   }
 
   async clearArAgingBuckets(): Promise<void> {

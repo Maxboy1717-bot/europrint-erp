@@ -54,6 +54,8 @@ interface SalesOrder {
   id: string;
   orderNumber: string;
   totalAmount: number;
+  advancePaid?: number;
+  advanceStatus?: string;
 }
 
 interface OrdersResponse {
@@ -94,6 +96,14 @@ export default function SDSalesPayments() {
 
   // Detail dialog
   const [detailDialog, setDetailDialog] = useState<{ open: boolean; payment?: SalesPayment }>({ open: false });
+
+  // Advance payment dialog
+  const [advanceDialog, setAdvanceDialog] = useState<{
+    open: boolean;
+    orderId: string;
+    maxAmount: number;
+    amount: string;
+  }>({ open: false, orderId: "", maxAmount: 0, amount: "" });
 
   useForm({ resolver: zodResolver(PaymentSchema), defaultValues: { orderId: "", amount: 0, type: "advance" } });
   const { toast } = useToast();
@@ -159,9 +169,14 @@ export default function SDSalesPayments() {
   });
 
   const advancePaymentMut = useMutation({
-    mutationFn: (orderId: string) => apiRequest("POST", `/api/sd/orders/${orderId}/advance-payment`, { amount: 0 }),
+    mutationFn: ({ orderId, amount }: { orderId: string; amount: number }) => {
+      const idempotencyKey = crypto.randomUUID();
+      return apiRequest("POST", `/api/sd/orders/${orderId}/advance-payment`, { amount, idempotencyKey });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/payments"] });
+      qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
+      setAdvanceDialog({ open: false, orderId: "", maxAmount: 0, amount: "" });
       toast({ title: tLabel("sd.payments.advance", "Avans to'lovi qayd etildi") });
     },
     onError: () => toast({ title: tLabel("sd.payments.advanceError", "Avans to'lovida xatolik"), variant: "destructive" }),
@@ -336,7 +351,14 @@ export default function SDSalesPayments() {
                   </span>
                   {pay.status === "pending" && pay.type !== "advance" && (
                     <Button size="sm" variant="outline" data-testid={`button-advance-payment-${pay.id}`}
-                      onClick={(e) => { e.stopPropagation(); advancePaymentMut.mutate(pay.orderId); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const matchedOrder = Array.isArray(orders?.data)
+                          ? orders!.data.find((o) => String(o.id) === String(pay.orderId))
+                          : undefined;
+                        const maxAmt = matchedOrder?.totalAmount ?? 0;
+                        setAdvanceDialog({ open: true, orderId: pay.orderId, maxAmount: maxAmt, amount: String(maxAmt > 0 ? maxAmt : "") });
+                      }}
                       disabled={advancePaymentMut.isPending}>
                       {t("avans")}
                     </Button>
@@ -419,6 +441,65 @@ export default function SDSalesPayments() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Advance Payment Dialog ───────────────────────────────────── */}
+      <Dialog
+        open={advanceDialog.open}
+        onOpenChange={(o) => {
+          if (!o) setAdvanceDialog({ open: false, orderId: "", maxAmount: 0, amount: "" });
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tLabel("sd.payments.advanceTitle", "Avans to'lovini kiritish")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {advanceDialog.maxAmount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {tLabel("sd.payments.orderTotal", "Buyurtma summasi")}:{" "}
+                <strong>{fmt(advanceDialog.maxAmount)} so'm</strong>
+              </p>
+            )}
+            <div>
+              <Label>{tLabel("sd.payments.advanceAmount", "Avans summasi (so'm)")}</Label>
+              <Input
+                data-testid="input-advance-amount"
+                type="number"
+                min={1}
+                max={advanceDialog.maxAmount > 0 ? advanceDialog.maxAmount : undefined}
+                value={advanceDialog.amount}
+                onChange={(e) => setAdvanceDialog((prev) => ({ ...prev, amount: e.target.value }))}
+                placeholder={tLabel("sd.payments.advanceAmountPlaceholder", "Musbat son kiriting")}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setAdvanceDialog({ open: false, orderId: "", maxAmount: 0, amount: "" })}
+                disabled={advancePaymentMut.isPending}
+              >
+                {tLabel("sd.cancel", "Bekor")}
+              </Button>
+              <Button
+                data-testid="button-advance-submit"
+                onClick={() => {
+                  const parsedAmount = parseFloat(advanceDialog.amount);
+                  if (!parsedAmount || parsedAmount <= 0) {
+                    toast({ title: tLabel("sd.payments.amountRequired", "Summa musbat son bo'lishi kerak"), variant: "destructive" });
+                    return;
+                  }
+                  advancePaymentMut.mutate({ orderId: advanceDialog.orderId, amount: parsedAmount });
+                }}
+                disabled={!advanceDialog.amount || advancePaymentMut.isPending}
+              >
+                {advancePaymentMut.isPending
+                  ? tLabel("sd.saving", "Saqlanmoqda...")
+                  : tLabel("sd.payments.advanceConfirm", "Tasdiqlash")}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

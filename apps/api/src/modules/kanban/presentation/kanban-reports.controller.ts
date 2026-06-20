@@ -4,8 +4,8 @@
  */
 
 import {
-  Controller, Get, Query,
-  UseGuards, Logger, Res, HttpException, HttpStatus,
+  Controller, Get, Post, Put, Delete, Body, Param,
+  Query, UseGuards, Logger, Res, HttpException, HttpStatus, HttpCode,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import type { FastifyReply } from 'fastify';
@@ -35,8 +35,31 @@ import { Roles }       from '@common/decorators/roles.decorator';
 import { unwrapOrBadRequest } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
+
+// ── Project Zod schemas ────────────────────────────────────────────────────
+const CreateProjectSchema = z.object({
+  name:        z.string().min(1).max(200),
+  description: z.string().max(1000).optional(),
+  color:       z.string().default('#3b82f6'),
+  status:      z.string().default('active'),
+  owner_id:    z.number().int().positive().optional(),
+  start_date:  z.string().optional(),
+  end_date:    z.string().optional(),
+});
+
+const UpdateProjectSchema = z.object({
+  name:        z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).nullable().optional(),
+  color:       z.string().optional(),
+  status:      z.string().optional(),
+  end_date:    z.string().nullable().optional(),
+});
+
+type CreateProjectDto = z.infer<typeof CreateProjectSchema>;
+type UpdateProjectDto = z.infer<typeof UpdateProjectSchema>;
 
 @ApiTags('§16 Kanban Extended')
 @ApiBearerAuth()
@@ -242,5 +265,76 @@ export class KanbanReportsController {
     `);
     const items = ((r as { rows?: unknown[] }).rows) ?? [];
     return { items, total: items.length };
+  }
+
+  @Post('projects')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Yangi loyiha yaratish (task_projects INSERT)' })
+  async createProject(@Body() body: unknown) {
+    const dto: CreateProjectDto = CreateProjectSchema.parse(body);
+    const r = await db.execute(sql`
+      INSERT INTO task_projects (name, description, color, status, owner_id, start_date, end_date)
+      VALUES (
+        ${dto.name},
+        ${dto.description ?? null},
+        ${dto.color},
+        ${dto.status},
+        ${dto.owner_id ?? null},
+        ${dto.start_date ?? null},
+        ${dto.end_date ?? null}
+      )
+      RETURNING id, name, description, color, status, owner_id, start_date, end_date, created_at
+    `);
+    const rows = ((r as { rows?: unknown[] }).rows) ?? [];
+    const project = rows[0];
+    if (!project) throw new HttpException('Loyiha yaratilmadi', HttpStatus.INTERNAL_SERVER_ERROR);
+    return project;
+  }
+
+  @Put('projects/:id')
+  @ApiOperation({ summary: 'Loyihani yangilash (task_projects UPDATE)' })
+  async updateProject(@Param('id') id: string, @Body() body: unknown) {
+    const projectId = parseInt(id, 10);
+    if (isNaN(projectId)) throw new HttpException('Noto\'g\'ri ID', HttpStatus.BAD_REQUEST);
+    const dto: UpdateProjectDto = UpdateProjectSchema.parse(body);
+
+    const r = await db.execute(sql`
+      UPDATE task_projects
+      SET
+        name        = COALESCE(${dto.name        ?? null}, name),
+        description = CASE WHEN ${dto.description !== undefined ? 'y' : 'n'} = 'y'
+                          THEN ${dto.description ?? null}
+                          ELSE description END,
+        color       = COALESCE(${dto.color       ?? null}, color),
+        status      = COALESCE(${dto.status      ?? null}, status),
+        end_date    = CASE WHEN ${dto.end_date    !== undefined ? 'y' : 'n'} = 'y'
+                          THEN ${dto.end_date ?? null}
+                          ELSE end_date END,
+        updated_at  = NOW()
+      WHERE id = ${projectId} AND deleted_at IS NULL
+      RETURNING id, name, description, color, status, owner_id, start_date, end_date, updated_at
+    `);
+    const rows = ((r as { rows?: unknown[] }).rows) ?? [];
+    const project = rows[0];
+    if (!project) throw new HttpException('Loyiha topilmadi', HttpStatus.NOT_FOUND);
+    return project;
+  }
+
+  @Delete('projects/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Loyihani soft-delete qilish (deleted_at=NOW())' })
+  async deleteProject(@Param('id') id: string) {
+    const projectId = parseInt(id, 10);
+    if (isNaN(projectId)) throw new HttpException('Noto\'g\'ri ID', HttpStatus.BAD_REQUEST);
+
+    const r = await db.execute(sql`
+      UPDATE task_projects
+      SET deleted_at = NOW(), updated_at = NOW()
+      WHERE id = ${projectId} AND deleted_at IS NULL
+      RETURNING id
+    `);
+    const rows = ((r as { rows?: unknown[] }).rows) ?? [];
+    if (!rows[0]) throw new HttpException('Loyiha topilmadi', HttpStatus.NOT_FOUND);
+    return;
   }
 }

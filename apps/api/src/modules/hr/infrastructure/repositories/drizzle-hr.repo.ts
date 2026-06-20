@@ -18,7 +18,9 @@ import {
   hrEmployees, hrDepartments, hrPositions,
   salary_history, payroll_periods_hr,
   candidates, discipline_records, hr_health_checkups,
+  accounts,
 } from '@shared/db';
+import { entries } from '@workspace/db';
 
 type Row = Record<string, unknown>;
 
@@ -123,6 +125,80 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};
     } catch (error: unknown) {
       this.logger.error(`updatePayroll: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  async postPayrollToGL(payrollId: number, postedBy: number): Promise<Result<HrRow>> {
+    try {
+      // 1. Load salary_history row — need employee_id + salary_earned
+      const shRows = await db.select({
+        id:           salary_history.id,
+        employee_id:  salary_history.employee_id,
+        salary_earned: salary_history.salary_earned,
+        status:       salary_history.status,
+      })
+        .from(salary_history)
+        .where(eq(salary_history.id, payrollId))
+        .limit(1);
+
+      const sh = shRows[0];
+      if (!sh) return Err(`salary_history id=${payrollId} topilmadi`);
+      if (sh.status === 'paid') return Err(`Oylik ID=${payrollId} allaqachon buxgalteriyaga o'tkazilgan`);
+
+      const amount = Number(sh.salary_earned ?? 0);
+      if (amount <= 0) return Err(`salary_earned <= 0; GL yozuvi yaratilmaydi`);
+
+      // 2. Resolve GL account IDs (9410 debit, 6710 credit)
+      const acctRows = await db.select({ id: accounts.id, code: accounts.accountCode })
+        .from(accounts)
+        .where(sql`${accounts.accountCode} IN ('9410', '6710') AND ${accounts.isActive} = true`);
+
+      const debitAcct  = acctRows.find((a) => a.code === '9410');
+      const creditAcct = acctRows.find((a) => a.code === '6710');
+      if (!debitAcct)  return Err(`GL hisob 9410 (Ish haqi expense) topilmadi`);
+      if (!creditAcct) return Err(`GL hisob 6710 (Xodimlarga to'lanadigan) topilmadi`);
+
+      const today = _time.now().toISOString().split('T')[0];
+      const description = `Oylik maosh: xodim #${sh.employee_id ?? payrollId}`;
+
+      let glEntryId: number | null = null;
+      let updatedRow: HrRow = {};
+
+      // 3. Atomic transaction: INSERT entry + UPDATE salary_history
+      await db.transaction(async (tx) => {
+        // INSERT INTO entries using canonical @workspace/db schema
+        // entryNumber is required by schema; generate as PAYROLL-{id}-{ts}
+        // debitAccountId / creditAccountId are varchar in Drizzle schema (DB stores as int FK)
+        const entryNumber = `PAYROLL-${payrollId}-${Date.now()}`;
+        const insertedEntry = await tx.insert(entries).values({
+          entryNumber:      entryNumber,
+          entryDate:        today,
+          documentType:     'PAYROLL',
+          documentId:       String(payrollId),
+          debitAccountId:   String(debitAcct.id),
+          creditAccountId:  String(creditAcct.id),
+          amount:           amount,
+          description:      description,
+          createdBy:        postedBy,
+        }).returning({ id: entries.id });
+
+        if (!insertedEntry[0]) throw new Error('GL entries INSERT returned no rows');
+        glEntryId = insertedEntry[0].id;
+
+        // UPDATE salary_history SET status='paid', paid_by, paid_date
+        const updated = await tx.update(salary_history).set({
+          status:   'paid',
+          paid_by:  postedBy,
+          paid_date: today,
+          updated_at: _time.now(),
+        }).where(eq(salary_history.id, payrollId)).returning();
+        updatedRow = castTo<HrRow>(updated[0] ?? {});
+      });
+
+      return Ok({ ...updatedRow, gl_entry_id: glEntryId });
+    } catch (error: unknown) {
+      this.logger.error(`postPayrollToGL: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

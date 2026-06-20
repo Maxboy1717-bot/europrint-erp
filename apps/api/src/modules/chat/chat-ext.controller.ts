@@ -240,6 +240,15 @@ export class ChatExtController {
     return { pinned: isPinned };
   }
 
+  @ApiOperation({ summary: 'Get starred messages for current user' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('starred-messages')
+  async getStarredMessages(@CurrentUser() user: AuthenticatedUser) {
+    const result = await this.chatMessageSvc.getStarredMessages(String(user.id));
+    assertOk(result);
+    return result.data;
+  }
+
   @ApiOperation({ summary: 'Star message' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

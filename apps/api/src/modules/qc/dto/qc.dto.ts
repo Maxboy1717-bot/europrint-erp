@@ -57,6 +57,9 @@ export const QcCreateBrakSchema = z.object({
   root_cause_id:  z.number().int().positive().optional(),
   reported_by:    z.number().int().positive().optional(),
   papka_order_id: z.number().int().positive().optional(),
+  brak_date:      z.string().optional(),
+  stage:          z.string().optional(),
+  description:    z.string().optional(),
 });
 export type QcCreateBrakDto = z.infer<typeof QcCreateBrakSchema>;
 

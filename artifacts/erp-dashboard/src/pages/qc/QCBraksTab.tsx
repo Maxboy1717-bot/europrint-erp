@@ -41,6 +41,20 @@ export function QCBraksTab() {
 
   const { data: braksData, isLoading: braksLoading } = useQuery<Brak[]>({
     queryKey: ["/api/qc/braks"],
+    select: (raw: unknown): Brak[] => {
+      const rows = Array.isArray(raw) ? raw : (Array.isArray((raw as { data?: unknown[] })?.data) ? (raw as { data: unknown[] }).data : []);
+      return (rows as Record<string, unknown>[]).map((r) => ({
+        id: String(r['id'] ?? ''),
+        brakDate: String(r['brak_date'] ?? ''),
+        stage: String(r['stage'] ?? ''),
+        quantity: Number(r['quantity'] ?? 0),
+        reason: String(r['reason'] ?? ''),
+        description: String(r['description'] ?? ''),
+        costImpact: Number(r['cost_impact'] ?? 0),
+        isReworkable: r['is_reworkable'] === true || r['is_reworkable'] === 'true',
+        papkaOrderId: r['papka_order_id'] != null ? String(r['papka_order_id']) : undefined,
+      }));
+    },
   });
 
   const { data: costImpact, isLoading: costImpactLoading } = useQCBrakCostImpact(activeOrderId);
@@ -315,7 +329,7 @@ export function QCBraksTab() {
                     toast({ title: "Sana va miqdor kiritilishi shart", variant: "destructive" });
                     return;
                   }
-                  createBrakMutation.mutate({ brakDate, quantity, stage, reason, description });
+                  createBrakMutation.mutate({ brak_date: brakDate, quantity, stage, reason, description });
                 }}
               >
                 {createBrakMutation.isPending && <EPLoader className="w-4 h-4 mr-2" />}

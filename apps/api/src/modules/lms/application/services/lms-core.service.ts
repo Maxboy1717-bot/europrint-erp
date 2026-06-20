@@ -52,6 +52,11 @@ export class LmsCoreService {
     return this.examsRepo.findMyProgress(userId);
   }
 
+  /** Returns top performers sorted by completed_courses DESC, avg_score DESC (max 20). */
+  async getLeaderboard(): Promise<Result<object[]>> {
+    return this.examsRepo.findLeaderboard();
+  }
+
   /** A5: records a lesson completion on the user's course enrollment (real progress write). */
   async completeCourse(userId: string, courseId: number, lessonId: number | null): Promise<Result<{ certificateIssued: boolean; saved: boolean }>> {
     if (!userId || userId === '0') return Err('Foydalanuvchi aniqlanmadi');

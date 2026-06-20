@@ -155,20 +155,19 @@ export class StockLedgerRepository {
 
   async getAllStockSummary(): Promise<Result<StockSummary[]>> {
     try {
-      const rows = await db
-        .select({
-          materialCardId: stockLedger.materialCardId,
-          warehouseId:    stockLedger.warehouseId,
-          balanceAfter:   stockLedger.balanceAfter,
-        })
-        .from(stockLedger)
-        .orderBy(stockLedger.materialCardId, stockLedger.warehouseId, desc(stockLedger.ts));
-
-      const distinct = dedupByKey(rows, r => `${r.materialCardId}:${r.warehouseId}`);
-      return Ok((Array.isArray(distinct) ? distinct : []).map(r => ({
-        materialCardId: r.materialCardId,
-        warehouseId:    r.warehouseId,
-        balance:        Number(r.balanceAfter ?? 0),
+      // ADR: warehouse_stock is the canonical stock table (37 rows) vs pos_stock_ledger (1 row).
+      // Query warehouse_stock directly for real inventory data.
+      const res = await db.execute(sql`
+        SELECT warehouse_id, material_id, available_quantity AS balance
+        FROM warehouse_stock
+        WHERE available_quantity > 0
+        ORDER BY warehouse_id, material_id
+      `);
+      const rows = ((res as { rows?: Record<string, unknown>[] }).rows) ?? [];
+      return Ok((Array.isArray(rows) ? rows : []).map(r => ({
+        materialCardId: Number(r.material_id),
+        warehouseId:    String(r.warehouse_id),
+        balance:        Number(r.balance ?? 0),
       })));
     } catch (e) {
       return Err(String(e));

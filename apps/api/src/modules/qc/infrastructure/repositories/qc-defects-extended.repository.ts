@@ -42,10 +42,11 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
 
   }
 
-  async createBrak(_session_id: number | null, _material_id: number | null, quantity: number, reason: string | null, _root_cause_id: number | null, reported_by: number | null, papka_order_id: number | null): Promise<Result<Row>>  {
+  async createBrak(_session_id: number | null, _material_id: number | null, quantity: number, reason: string | null, _root_cause_id: number | null, reported_by: number | null, papka_order_id: number | null, brak_date: string | null, stage: string | null, description: string | null): Promise<Result<Row>>  {
   try {
-      const brak_date = new Date().toISOString().slice(0, 10);
-      const r = await exec(sql`INSERT INTO qc_braks (papka_order_id, quantity, reason, created_by, brak_date, stage) VALUES (${papka_order_id !== null ? String(papka_order_id) : null}, ${quantity}, ${reason ?? 'other'}, ${reported_by ?? null}, ${brak_date}, 'production') RETURNING *`);
+      const effectiveBrakDate = brak_date ?? new Date().toISOString().slice(0, 10);
+      const effectiveStage = stage ?? 'production';
+      const r = await exec(sql`INSERT INTO qc_braks (papka_order_id, quantity, reason, created_by, brak_date, stage, description) VALUES (${papka_order_id !== null ? String(papka_order_id) : null}, ${quantity}, ${reason ?? 'other'}, ${reported_by ?? null}, ${effectiveBrakDate}, ${effectiveStage}, ${description ?? null}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

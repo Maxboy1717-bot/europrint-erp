@@ -86,7 +86,10 @@ export class QcDefectsExtendedController {
       body.reason != null ? String(body.reason) : null,
       body.root_cause_id != null ? safeInt(body.root_cause_id, 0) : null,
       body.reported_by != null ? safeInt(body.reported_by, 0) : null,
-      body.papka_order_id != null ? safeInt(body.papka_order_id, 0) : null);
+      body.papka_order_id != null ? safeInt(body.papka_order_id, 0) : null,
+      body.brak_date != null ? String(body.brak_date) : null,
+      body.stage != null ? String(body.stage) : null,
+      body.description != null ? String(body.description) : null);
     assertOk(_rCreateBrak);
     return _rCreateBrak.data;
   }
