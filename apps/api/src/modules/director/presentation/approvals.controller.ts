@@ -33,6 +33,8 @@ import { RejectRequestCommand } from '../application/commands/reject-request.com
 import { GetPendingApprovalsQuery } from '../application/queries/get-pending-approvals.query';
 import { GetApprovalHistoryQuery } from '../application/queries/get-approval-history.query';
 import { IApprovalRepo, APPROVAL_REPO } from '../domain/repositories/i-approval.repo';
+import { ApprovalStepsRepository } from '../infrastructure/repositories/approval-steps.repository';
+import { unwrapOrInternal } from '@common/http-result';
 import {
   CreateApprovalRequestDto,
   CreateApprovalRequestDtoSchema,
@@ -58,6 +60,7 @@ export class ApprovalsController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     @Inject(APPROVAL_REPO) private readonly approvalRepo: IApprovalRepo,
+    private readonly stepsRepo: ApprovalStepsRepository,
   ) {}
 
   @Get()
@@ -146,10 +149,19 @@ export class ApprovalsController {
         parsedBody.currency,
         String(user.id),
         parsedBody.notes || null,
+        Number(user.id),
       ),
     );
     assertOk(result);
     return this.mapToResponse(result.data);
+  }
+
+  @Get(':id/steps')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.FINANCE_MANAGER, Role.PRODUCTION_MANAGER)
+  @ApiOperation({ summary: 'List the resolved GORIZONTAL approval chain steps for a request' })
+  async getSteps(@Param('id') id: string) {
+    const steps = unwrapOrInternal(await this.stepsRepo.listByRequest(parseInt(id, 10)));
+    return { data: Array.isArray(steps) ? steps : [] };
   }
 
   @Patch(':id/approve')

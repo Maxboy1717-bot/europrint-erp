@@ -13,6 +13,11 @@ import { APPROVAL_REPO, IApprovalRepo } from '../../domain/repositories/i-approv
 import { ApprovalStatus } from '../../domain/enums/hitl-document-type.enum';
 import { CreateApprovalRequestCommand } from './create-approval-request.command';
 import { HitlApprovalRequestedEvent } from '../../domain/events/hitl-approval-requested.event';
+import { WorkflowRulesService } from '../workflow-rules.service';
+import {
+  ApprovalStepsRepository,
+  ApprovalStepInput,
+} from '../../infrastructure/repositories/approval-steps.repository';
 
 @CommandHandler(CreateApprovalRequestCommand)
 export class CreateApprovalRequestHandler
@@ -23,6 +28,8 @@ export class CreateApprovalRequestHandler
   constructor(
     @Inject(APPROVAL_REPO) private readonly approvalRepo: IApprovalRepo,
     private readonly eventBus: EventBus,
+    private readonly workflowRules: WorkflowRulesService,
+    private readonly stepsRepo: ApprovalStepsRepository,
   ) {}
 
   async execute(
@@ -85,10 +92,67 @@ export class CreateApprovalRequestHandler
       saveResult.data.createdAt,
     ));
 
+    // Resolve the GORIZONTAL approval chain and persist it as ordered steps.
+    // Best-effort: a missing dept / empty chain / step failure must NOT fail the
+    // approval creation (the request itself is already saved). Logged + ignored.
+    await this.persistChain(
+      Number(saveResult.data.id),
+      command.documentType,
+      command.requesterUserId,
+    );
+
     this.logger.log(
       `Tasdiqlash so'rovi yaratildi: ${saveResult.data.id} (${command.documentType})`,
     );
 
     return saveResult;
+  }
+
+  /**
+   * Resolve the active workflow chain for (documentType, requester dept) and
+   * freeze it into approval_request_steps as ordered pending rows. Graceful:
+   * no dept or no rule → zero step rows, no error surfaced to the caller.
+   */
+  private async persistChain(
+    approvalRequestId: number,
+    documentType: string,
+    requesterUserId: number,
+  ): Promise<void> {
+    const deptResult = await this.stepsRepo.getUserOrgDepartmentId(requesterUserId);
+    if (!deptResult.ok) {
+      this.logger.warn(`Step chain: dept lookup failed: ${deptResult.error.message}`);
+      return;
+    }
+    const sourceDeptId = deptResult.data;
+    if (sourceDeptId == null) {
+      // No org department → no horizontal chain. Graceful empty case.
+      return;
+    }
+
+    const chainResult = await this.workflowRules.resolve(documentType, sourceDeptId);
+    if (!chainResult.ok) {
+      this.logger.warn(`Step chain: resolve failed: ${chainResult.error.message}`);
+      return;
+    }
+
+    const rules = Array.isArray(chainResult.data) ? chainResult.data : [];
+    if (rules.length === 0) return; // no rule for this dept/type → no steps
+
+    const steps: ApprovalStepInput[] = rules.map((r, idx) => {
+      const num = (v: unknown): number | null =>
+        v == null ? null : Number(v);
+      return {
+        workflow_rule_id: num(r['id']),
+        step_order: num(r['step_order']) ?? idx + 1,
+        source_department_id: num(r['source_department_id']),
+        approver_department_id: num(r['approver_department_id']),
+        approver_function_id: num(r['approver_function_id']),
+      };
+    });
+
+    const insertResult = await this.stepsRepo.insertSteps(approvalRequestId, steps);
+    if (!insertResult.ok) {
+      this.logger.warn(`Step chain: insert failed: ${insertResult.error.message}`);
+    }
   }
 }

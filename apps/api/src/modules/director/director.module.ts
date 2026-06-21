@@ -11,6 +11,7 @@ import { AuthModule } from '../auth/auth.module';
 import { APPROVAL_REPO } from './domain/repositories/i-approval.repo';
 import { DrizzleApprovalRepo } from './infrastructure/repositories/drizzle-approval.repo';
 import { DrizzleApprovalWriteRepo } from './infrastructure/repositories/drizzle-approval-write.repo';
+import { ApprovalStepsRepository } from './infrastructure/repositories/approval-steps.repository';
 import { DashboardService } from './dashboard/dashboard.service';
 import { DrizzleDashboardSvcRepository } from './dashboard/drizzle-dashboard-svc.repo';
 import { DASHBOARD_SVC_REPO } from './dashboard/i-dashboard-svc.repo';
@@ -149,6 +150,7 @@ const Repositories = [
     OkrService,
     WorkflowRulesRepository,
     WorkflowRulesService,
+    ApprovalStepsRepository,
     StrategicRepository,
     { provide: STRATEGIC_REPO, useClass: StrategicRepository },
     StrategicService,
