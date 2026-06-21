@@ -8,7 +8,9 @@
  *   GET  /api/aisha/conversations              — caller's conversations (paginated)
  *   GET  /api/aisha/conversations/:id          — one conversation + tool-call transcript
  *   GET  /api/aisha/approvals?status=pending   — HITL queue (caller-scoped)
- *   POST /api/aisha/approvals/:id/approve      — flip approval → approved (real UPDATE)
+ *   POST /api/aisha/approvals/:id/approve      — resume: run the real tool, persist
+ *                                                its output, flip approval → approved;
+ *                                                body carries the executed result/error
  *   POST /api/aisha/approvals/:id/reject       — flip approval → rejected (real UPDATE)
  */
 
@@ -84,9 +86,9 @@ export class AishaHistoryController {
     return { success: true, data: unwrapOrThrow(result) };
   }
 
-  @ApiOperation({ summary: 'Approve a pending action' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({ summary: 'Approve a pending action — resumes the real tool execution' })
+  @ApiResponse({ status: 201, description: 'OK — body carries the executed tool result/error' })
+  @ApiResponse({ status: 404, description: 'Not found or already resolved' })
   @Post('approvals/:id/approve')
   async approve(@Param('id') id: string, @Req() req: AuthedReq) {
     const approvalId = UuidParamSchema.parse(id);

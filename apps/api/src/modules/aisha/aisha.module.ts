@@ -99,7 +99,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     BudgetTrackerService,
     ToolRegistry,
     AishaHistoryRepository,      // persistence + read adapter for the 4 aisha_* tables
-    AishaHistoryService,         // read/governance surface (history + HITL queue)
+    AishaHistoryService,         // read/governance surface (history + HITL queue + resume-after-approve via ToolRegistry)
     AishaConversationService,   // #15 P0 tool-execution loop (now persists turns)
     // 25 AIsha tools — each @Injectable, registered with ToolRegistry on
     // module init by AishaToolBootstrap. Order alphabetical, matches the

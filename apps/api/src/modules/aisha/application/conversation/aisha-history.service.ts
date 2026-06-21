@@ -6,16 +6,27 @@
  *
  *   - listConversations / getConversation  → history + transparency replay
  *   - listApprovals                        → HITL queue (aisha_pending_approvals)
- *   - approve / reject                     → real status UPDATE on an approval row
+ *   - approve                              → resume-after-approve: run the real tool
+ *   - reject                               → real status UPDATE (no execution)
  *
- * Approve performs the minimal correct status flip (pending → approved, stamps
- * approved_at). Resuming the actual high-stake tool from a persisted approval is
- * a deeper flow (it needs the original Claude message context to feed the
- * tool_result back) — that is NOT faked here; see FOLLOW-UP in approve().
+ * `approve` is the resume-after-approve flow: it looks up the pending approval +
+ * its tool_call, ACTUALLY executes the high-stake tool through the AIsha
+ * ToolRegistry (the same registry runTurn uses), persists the real output back
+ * onto the tool_call (output jsonb, source 'tool'/'tool_error', latency), then
+ * flips the approval to approved. The executed result/error is returned to the
+ * caller — never a silent no-op (Q-10/Q-40). Double-execution is impossible:
+ * `findResumableApproval` only matches `pending` rows, so a re-approve resolves
+ * to NOT_FOUND and the tool does not re-run.
+ *
+ * NON-GOAL (deferred): true LLM continuation — feeding the tool_result back to
+ * Claude for a follow-on reply. The full Claude message array is not persisted,
+ * so that step is intentionally out of scope; the scoped deliverable is
+ * approve → tool executes → output persisted + returned.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Result, AppErr, Err } from '@common/result';
+import { ToolRegistry } from '../tools/tool.registry';
 import {
   AishaHistoryRepository,
   type ConversationListRow,
@@ -37,9 +48,25 @@ export interface ApprovalListResult {
   limit: number;
 }
 
+/** What `approve` returns: the executed tool's outcome + the flipped approval. */
+export interface ApprovalResumeResult {
+  approval: ApprovalRow;
+  tool: {
+    name:   string;
+    ok:     boolean;
+    /** Tool data on success, or the tool's AppError on failure (surfaced, not swallowed). */
+    result: unknown;
+  };
+}
+
 @Injectable()
 export class AishaHistoryService {
-  constructor(private readonly repo: AishaHistoryRepository) {}
+  private readonly logger = new Logger(AishaHistoryService.name);
+
+  constructor(
+    private readonly repo: AishaHistoryRepository,
+    private readonly tools: ToolRegistry,
+  ) {}
 
   async listConversations(userId: number, page: number, limit: number): Promise<Result<ConversationListResult>> {
     const offset = (page - 1) * limit;
@@ -62,16 +89,60 @@ export class AishaHistoryService {
     return { ok: true, data: { items: r.data.items, total: r.data.total, page, limit } };
   }
 
-  async approve(userId: number, approvalId: string): Promise<Result<ApprovalRow>> {
-    // FOLLOW-UP: approving only flips the governance row. Actually re-running the
-    // high-stake tool (send_email / send_telegram_to_team / schedule_meeting) and
-    // feeding its tool_result back to Claude requires replaying the conversation
-    // context, which the stateless chat surface does not retain. That resume step
-    // is intentionally out of scope for this read/governance task.
-    const r = await this.repo.setApprovalStatus(userId, approvalId, 'approved');
-    if (!r.ok) return r as Result<ApprovalRow>;
-    if (!r.data) return Err(AppErr('NOT_FOUND', 'Tasdiq so\'rovi topilmadi yoki allaqachon hal qilingan'));
-    return { ok: true, data: r.data };
+  /**
+   * Resume-after-approve: run the approved high-stake tool for real, persist its
+   * output, then flip the approval to approved. Returns the executed tool's
+   * result/error alongside the updated approval. Re-approving an already-resolved
+   * row returns NOT_FOUND and does NOT re-execute (the lookup only matches
+   * `pending` rows — see findResumableApproval).
+   */
+  async approve(userId: number, approvalId: string): Promise<Result<ApprovalResumeResult>> {
+    // 1) Load the pending approval + its tool_call. NOT_FOUND here doubles as the
+    //    idempotency guard: an already approved/rejected (or foreign) row yields null.
+    const lookup = await this.repo.findResumableApproval(userId, approvalId);
+    if (!lookup.ok) return lookup as Result<ApprovalResumeResult>;
+    const resumable = lookup.data;
+    if (!resumable) {
+      return Err(AppErr('NOT_FOUND', 'Tasdiq so\'rovi topilmadi yoki allaqachon hal qilingan'));
+    }
+
+    // 2) Resolve the tool from the same registry runTurn uses.
+    const toolR = this.tools.getToolByName(resumable.toolName);
+    if (!toolR.ok) return toolR as Result<ApprovalResumeResult>;
+
+    // 3) ACTUALLY execute the high-stake tool (real INSERT/UPDATE/external call).
+    const startMs = Date.now();
+    const exec = await toolR.data.execute(resumable.input ?? {});
+    const latencyMs = Date.now() - startMs;
+    const payload = exec.ok ? exec.data : exec.error;
+    const source = exec.ok ? 'tool' : 'tool_error';
+
+    // 4) Persist the real output back onto the tool_call row (non-fatal write;
+    //    a DB hiccup must not lose the executed outcome we surface to the caller).
+    const upd = await this.repo.updateToolCallOutput(resumable.toolCallId, payload, source, latencyMs);
+    if (!upd.ok) {
+      this.logger.warn(
+        { approvalId, toolCallId: resumable.toolCallId, error: upd.error.message },
+        'AIsha: tool_call output UPDATE failed (non-fatal)',
+      );
+    }
+
+    // 5) Flip the approval → approved (caller-scoped, still-pending guard). If the
+    //    row was resolved in a race between steps 1 and 5, treat as NOT_FOUND.
+    const flip = await this.repo.markApprovalApproved(userId, approvalId);
+    if (!flip.ok) return flip as Result<ApprovalResumeResult>;
+    if (!flip.data) {
+      return Err(AppErr('NOT_FOUND', 'Tasdiq so\'rovi topilmadi yoki allaqachon hal qilingan'));
+    }
+
+    // 6) Surface the executed tool's result/error — never a silent no-op.
+    return {
+      ok: true,
+      data: {
+        approval: flip.data,
+        tool: { name: resumable.toolName, ok: exec.ok, result: payload },
+      },
+    };
   }
 
   async reject(userId: number, approvalId: string): Promise<Result<ApprovalRow>> {

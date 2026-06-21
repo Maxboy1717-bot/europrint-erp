@@ -72,6 +72,21 @@ export interface ApprovalRow {
   input:          unknown;
 }
 
+/**
+ * A pending approval joined with its referenced tool_call, projected for the
+ * resume-after-approve flow. Only `pending` rows owned by the caller resolve
+ * here — that scoping is the double-execution guard (an already-approved row
+ * yields null, so the resume path returns NOT_FOUND and never re-runs).
+ */
+export interface ResumableApprovalRow {
+  approvalId:     string;
+  conversationId: string;
+  toolCallId:     string;
+  toolName:       string;
+  input:          Record<string, unknown>;
+  output:         unknown;
+}
+
 export interface InsertToolCallInput {
   conversationId: string;
   toolName:       string;
@@ -299,5 +314,69 @@ export class AishaHistoryRepository {
       `));
       return rows[0] ?? null;
     });
+  }
+
+  // ── Resume-after-approve (HITL → real tool execution) ──────────────────────
+
+  /**
+   * Load the pending approval + its referenced tool_call so the service can
+   * re-run the high-stake tool. Returns null when the approval is absent, not
+   * owned by the caller, NOT `pending` (already approved/rejected), or its
+   * tool_call no longer exists. The `status = 'pending'` predicate is the
+   * idempotency guard — a re-approve sees null here and must NOT re-execute.
+   */
+  async findResumableApproval(userId: number, approvalId: string): Promise<Result<ResumableApprovalRow | null>> {
+    return safeCall<ResumableApprovalRow | null>(async () => {
+      const rows = rowsOf<{
+        approvalId: string; conversationId: string; toolCallId: string;
+        toolName: string; input: Record<string, unknown>; output: unknown;
+      }>(await db.execute(sql`
+        SELECT
+          pa.id::text              AS "approvalId",
+          pa.conversation_id::text AS "conversationId",
+          pa.tool_call_id::text    AS "toolCallId",
+          tc.tool_name             AS "toolName",
+          tc.input                 AS input,
+          tc.output                AS output
+        FROM aisha_pending_approvals pa
+        JOIN aisha_conversations c  ON c.id = pa.conversation_id
+        JOIN aisha_tool_calls tc    ON tc.id = pa.tool_call_id
+        WHERE pa.id = ${approvalId}
+          AND c.user_id = ${userId}
+          AND pa.status = 'pending'
+        LIMIT 1
+      `));
+      return rows[0] ?? null;
+    });
+  }
+
+  /**
+   * Write the real tool output back onto the persisted tool_call row, flipping
+   * `source` from 'pending_approval' to 'tool' / 'tool_error' and stamping the
+   * measured latency. Mirrors `insertToolCall`'s jsonb handling.
+   */
+  async updateToolCallOutput(
+    toolCallId: string,
+    output: unknown,
+    source: string,
+    latencyMs: number,
+  ): Promise<Result<void>> {
+    return safeCall<void>(async () => {
+      const outputJson = output === undefined ? null : JSON.stringify(output);
+      await db.execute(sql`
+        UPDATE aisha_tool_calls
+        SET output = ${outputJson}::jsonb, source = ${source}, latency_ms = ${latencyMs}
+        WHERE id = ${toolCallId}
+      `);
+    });
+  }
+
+  /**
+   * Flip a still-pending approval to `approved` (caller-scoped) and return the
+   * full row. Re-runs the same `status = 'pending'` guard so two concurrent
+   * approvals cannot both win. Returns null when nothing transitioned.
+   */
+  async markApprovalApproved(userId: number, approvalId: string): Promise<Result<ApprovalRow | null>> {
+    return this.setApprovalStatus(userId, approvalId, 'approved');
   }
 }
