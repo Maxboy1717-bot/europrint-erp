@@ -13,6 +13,7 @@ const LessonPlayer = lazy(() => import("@/pages/LessonPlayer"));
 const Tests = lazy(() => import("@/pages/Tests"));
 const TestDetail = lazy(() => import("@/pages/TestDetail"));
 const AIExams = lazy(() => import("@/pages/AIExams"));
+const AIFitScores = lazy(() => import("@/pages/AIFitScores"));
 const AllExams = lazy(() => import("@/pages/AllExams"));
 const Certificates = lazy(() => import("@/pages/Certificates"));
 const GoalsKPI = lazy(() => import("@/pages/GoalsKPI"));
@@ -35,6 +36,7 @@ export const ANALYTICS_ROUTES: [string, React.ComponentType][] = [
   ['/tests',                          Tests],
   ['/tests/:id',                      TestDetail],
   ['/ai-exams',                       AIExams],
+  ['/ai/fit-scores',                  AIFitScores],
   ['/all-exams',                      AllExams],
   ['/certificates',                   Certificates],
   ['/goals',                          GoalsKPI],

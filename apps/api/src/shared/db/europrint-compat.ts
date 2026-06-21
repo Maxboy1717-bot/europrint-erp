@@ -57,6 +57,9 @@ export {
 export { blogPosts, marketingBudgetItems, marketingBudgetLines, marketingLeadContacts, sdCustomerCompetitors } from '@workspace/db';
 export { marketingCalendarEvents } from './schema-marketing-group2';
 
+// P36 — AI-fit per-card scorer (+ sibling CKP tables)
+export { aiFitScores, aiCkpScores, aiCkpChatLogs } from './schema-ai-fit';
+
 export {
   guidelines, contactSettings, systemSettings, adminFilters,
   calendarEvents, assetItems, assetMaintenance, assetDisposals, assetTransfers,

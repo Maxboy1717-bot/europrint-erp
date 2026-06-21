@@ -36,6 +36,7 @@ export { MroModule } from './modules/mro/mro.module';
 export { SecurityModule } from './modules/security/security.module';
 export { KanbanModule } from './modules/kanban/kanban.module';
 export { AiModule } from './modules/ai/ai.module';
+export { AiFitModule } from './modules/ai/ai-fit.module';
 export { AiAgentsModule } from './modules/ai-agents/ai-agents.module';
 export { BotGatewayModule } from './modules/bot-gateway/bot-gateway.module';
 export { DirectorModule } from './modules/director/director.module';
