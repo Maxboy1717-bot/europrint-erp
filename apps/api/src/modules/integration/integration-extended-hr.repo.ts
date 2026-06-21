@@ -34,7 +34,7 @@ export class IntegrationExtendedHrRepository {
 
   getHrLmsStats(): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await exec(sql`SELECT (SELECT COUNT(DISTINCT employee_id) FROM employee_skills) AS employees_with_skills, (SELECT COUNT(*) FROM employee_skills) AS total_skills, (SELECT COUNT(*) FROM lms_certificates WHERE expires_at <= NOW() + interval '90 days') AS expiring_certs, (SELECT COUNT(*) FROM position_skills) AS position_skill_requirements`);
+      const rows = await exec(sql`SELECT (SELECT COUNT(DISTINCT employee_id) FROM employee_skills) AS employees_with_skills, (SELECT COUNT(*) FROM employee_skills) AS total_skills, (SELECT COUNT(*) FROM lms_certificates WHERE expires_at <= NOW() + interval '90 days') AS expiring_certs, (SELECT COUNT(*) FROM position_skill_requirements) AS position_skill_requirements`);
       return (rows[0] ?? {}) as Row;
     });
   }
