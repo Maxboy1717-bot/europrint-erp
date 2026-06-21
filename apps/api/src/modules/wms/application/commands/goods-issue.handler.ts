@@ -25,6 +25,8 @@ export class GoodsIssueCommand {
     public warehouseId: number,
     public amount: number,
     public ppId: number,
+    /** Authenticated user who issued the goods (recorded on the wms_goods_issues row). */
+    public issuedBy: number | null = null,
     /** Optional explicit FIFO/FEFO override; otherwise auto-resolved from batches. */
     public strategy?: BatchIssueStrategy) {}
 }
@@ -80,7 +82,10 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
     if (!hasBatches.data) {
       // No batch tracking → aggregate canonical decrement (guarded, can't go negative).
       this.logger.log({ materialId, warehouseId }, 'No batch lots — aggregate fallback');
-      return this.wmsRepo.issueFromWarehouseStock(materialId, warehouseId, amount, tx);
+      const agg = await this.wmsRepo.issueFromWarehouseStock(materialId, warehouseId, amount, tx);
+      if (!agg.ok) return Err(agg.error);
+      // Record WMS's own goods-issue row in the SAME tx as the stock decrement (atomic).
+      return this.recordIssue(command, tx);
     }
 
     const lots = await this.wmsRepo.getIssuableBatchLots(materialId, warehouseId, tx);
@@ -115,6 +120,31 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
       { materialId, warehouseId, strategy: plan.data.strategy, batches: plan.data.picks.length },
       'EP-WMS-055 Batch issue applied',
     );
+    // Record WMS's own goods-issue row in the SAME tx as the batch + aggregate decrement.
+    return this.recordIssue(command, tx);
+  }
+
+  /**
+   * Persists WMS's own `wms_goods_issues` record inside the issue transaction
+   * (atomic with the stock decrement — if the INSERT fails the whole issue
+   * rolls back). The event published after commit is the cross-module trigger;
+   * this row is WMS's own audit/record of the issue (orthogonal concerns).
+   */
+  private async recordIssue(
+    command: GoodsIssueCommand,
+    tx: DrizzleExecutor,
+  ): Promise<Result<void>> {
+    const inserted = await this.wmsRepo.insertGoodsIssue(
+      {
+        materialId: command.materialId,
+        warehouseId: command.warehouseId,
+        quantity: command.amount,
+        ppId: command.ppId,
+        issuedBy: command.issuedBy,
+      },
+      tx,
+    );
+    if (!inserted.ok) return Err(inserted.error);
     return Ok(undefined);
   }
 }

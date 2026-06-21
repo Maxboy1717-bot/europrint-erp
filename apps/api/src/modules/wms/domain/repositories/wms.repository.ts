@@ -19,6 +19,15 @@ export interface CreateWarehouseInput {
   created_at: Date;
 }
 
+/** Input for recording one WMS goods-issue row (status defaults to 'issued'). */
+export interface InsertGoodsIssueInput {
+  materialId: number;
+  warehouseId: number;
+  quantity: number;
+  ppId: number | null;
+  issuedBy: number | null;
+}
+
 export interface IWmsRepository {
   saveStock(stock: Stock, tx?: DrizzleExecutor): Promise<Result<number>>;
   getStock(id: number): Promise<Result<Stock>>;
@@ -72,6 +81,16 @@ export interface IWmsRepository {
     tx?: DrizzleExecutor,
   ): Promise<Result<void>>;
   receiveFg(materialId: number, warehouseId: number, amount: number): Promise<Result<void>>;
+
+  /**
+   * Inserts one `wms_goods_issues` row. Called from inside the goods-issue
+   * transaction (same `tx` as the stock decrement) so the record is atomic
+   * with the balance change. Returns the new row id.
+   */
+  insertGoodsIssue(
+    input: InsertGoodsIssueInput,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<number>>;
   getAllStockByStatus(warehouseId: number): Promise<Result<Stock[]>>;
   softDeleteStock(id: number, deletedBy: number | null, deletedAt?: Date): Promise<Result<void>>;
 

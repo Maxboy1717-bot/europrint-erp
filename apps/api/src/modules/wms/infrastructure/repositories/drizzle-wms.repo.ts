@@ -14,7 +14,7 @@ import { db, stocks, warehouses } from '@shared/db';
 import { sql, eq, isNull, and, asc } from 'drizzle-orm';
 import { wms_stock } from '@shared/db/schema-compat-5';
 import { Stock } from '../../domain/aggregates/stock.aggregate';
-import { IWmsRepository, DrizzleExecutor, CreateWarehouseInput } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, DrizzleExecutor, CreateWarehouseInput, InsertGoodsIssueInput } from '../../domain/repositories/wms.repository';
 import { IssuableBatchLot } from '../../domain/services/batch-selection.service';
 import {
   execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock,
@@ -203,6 +203,34 @@ export class DrizzleWmsRepository implements IWmsRepository {
     } catch {
       this.logger.error('Failed to receive FG');
       return Err('FG qabul qilishda xatolik');
+    }
+  }
+
+  async insertGoodsIssue(
+    input: InsertGoodsIssueInput,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<number>> {
+    try {
+      // Run against the supplied tx (atomic with the stock decrement) or db.
+      const exec = (tx ?? db) as unknown as {
+        execute: (q: ReturnType<typeof sql>) => Promise<{ rows: unknown[] }>;
+      };
+      const res = await exec.execute(sql`
+        INSERT INTO wms_goods_issues
+          (material_id, warehouse_id, quantity, pp_id, status, issued_by)
+        VALUES (
+          ${input.materialId}, ${input.warehouseId}, ${String(input.quantity)},
+          ${input.ppId ?? null}, 'issued', ${input.issuedBy ?? null}
+        )
+        RETURNING id`);
+      const rows = Array.isArray(res?.rows) ? res.rows : [];
+      const first = rows[0] as { id?: unknown } | undefined;
+      const id = Number(first?.id ?? 0);
+      if (id === 0) return Err(AppErr('DB_ERROR', "Chiqim yozuvi saqlanmadi"));
+      return Ok(id);
+    } catch (e) {
+      this.logger.error({ method: 'insertGoodsIssue', error: e }, 'Failed to insert goods issue');
+      return Err(AppErr('DB_ERROR', `Chiqim yozuvini saqlashda xato: ${(e as Error)?.message ?? String(e)}`));
     }
   }
 
