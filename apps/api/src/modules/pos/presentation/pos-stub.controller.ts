@@ -143,9 +143,9 @@ export class PosStubController {
   }
 
   // Legacy adjust shim — writes a pos_stock_ledger entry so the adjustment is
-  // recorded. pos-v2's WmsInventoryService remains the canonical stock writer;
-  // this endpoint is kept for backward-compatibility with older screens.
-  // TODO P3-26: migrate clients to /pos-v2/inventory and delete.
+  // recorded. Canonical warehouse stock lives in warehouse_stock (WMS); this
+  // endpoint is kept for backward-compatibility with older screens.
+  // (pos-v2 module removed 2026-06-22 — it was a dead orphan duplicate.)
   @Patch('inventory/:productId/adjust')
   @ApiOperation({ summary: 'Inventar miqdorini moslashtirish (legacy v1)' })
   async adjustInventory(@Param('productId') productId: string, @Body() body: unknown) {
