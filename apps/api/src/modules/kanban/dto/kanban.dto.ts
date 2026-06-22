@@ -43,8 +43,10 @@ export const KanbanAddCardSchema = z.object({
   dueDate:       z.string().optional(),
   due_date:      z.string().optional(),
   startDate:     z.string().optional(),
-  ownerUserId:   z.string().optional(),
-  owner_user_id: z.string().optional(),
+  ownerUserId:      z.string().optional(),
+  owner_user_id:    z.string().optional(),
+  assignerUserId:   z.string().optional(),
+  assigner_user_id: z.string().optional(),
   estimatedTime: z.number().int().positive().optional(),
   projectId:     z.string().optional(),
 });

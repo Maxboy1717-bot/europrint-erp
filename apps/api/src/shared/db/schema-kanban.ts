@@ -30,18 +30,20 @@ export const kanbanColumns = pgTable('kanban_columns', {
 });
 
 export const kanbanCards = pgTable('kanban_cards', {
-  id:           serial('id').primaryKey(),
-  board_id:     integer('board_id').notNull(),
-  column_id:    integer('column_id').notNull(),
-  title:        text('title').notNull(),
-  description:  text('description'),
-  priority:     varchar('priority', { length: 20 }).notNull().default('normal'),
-  related_type: varchar('related_type', { length: 20 }),
-  related_id:   varchar('related_id', { length: 100 }),
-  sort_order:   integer('sort_order').notNull().default(0),
-  created_at:   timestamp('created_at').notNull().defaultNow(),
-  updated_at:   timestamp('updated_at').notNull().defaultNow(),
-  deleted_at:   timestamp('deleted_at'),
+  id:               serial('id').primaryKey(),
+  board_id:         integer('board_id').notNull(),
+  column_id:        integer('column_id').notNull(),
+  title:            text('title').notNull(),
+  description:      text('description'),
+  priority:         varchar('priority', { length: 20 }).notNull().default('normal'),
+  related_type:     varchar('related_type', { length: 20 }),
+  related_id:       varchar('related_id', { length: 100 }),
+  owner_user_id:    integer('owner_user_id'),       // assignee (bajaruvchi)
+  assigner_user_id: integer('assigner_user_id'),    // EP-KAN-027: topshiruvchi (assigner)
+  sort_order:       integer('sort_order').notNull().default(0),
+  created_at:       timestamp('created_at').notNull().defaultNow(),
+  updated_at:       timestamp('updated_at').notNull().defaultNow(),
+  deleted_at:       timestamp('deleted_at'),
 });
 
 export const kanbanFlows = pgTable('kanban_flows', {

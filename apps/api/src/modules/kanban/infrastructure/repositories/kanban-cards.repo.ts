@@ -29,10 +29,10 @@ export class KanbanCardsRepository {
     try {
       // sort_order: ustundagi MAX + 1 — har doim oxirga qo'shiladi
       const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, sort_order)
+        INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, assigner_user_id, sort_order)
         VALUES (
           ${input.board_id}, ${input.column_id}, ${input.title}, ${input.description},
-          ${input.priority}, ${input.due_date}, ${input.owner_user_id},
+          ${input.priority}, ${input.due_date}, ${input.owner_user_id}, ${input.assigner_user_id},
           COALESCE(
             (SELECT MAX(sort_order) FROM kanban_cards
              WHERE column_id = ${input.column_id} AND deleted_at IS NULL),

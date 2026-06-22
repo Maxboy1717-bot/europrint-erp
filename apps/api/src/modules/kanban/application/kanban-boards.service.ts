@@ -4,7 +4,8 @@
  */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Result, Err } from '@common/result';
+import { Result, Err, AppErr } from '@common/result';
+import { statusFromColumnName, KanbanStatus } from '../domain/kanban-status';
 import {
   IKanbanBoardsRepo,
   KANBAN_BOARDS_REPO,
@@ -114,20 +115,44 @@ export class KanbanBoardsService {
     });
   }
 
-  async moveCard(id: string, body: Record<string, unknown>): Promise<Result<KanbanCard>> {
+  async moveCard(
+    id: string,
+    body: Record<string, unknown>,
+    actingUserId?: number,
+  ): Promise<Result<KanbanCard>> {
     const newColumnId = (body.columnId ?? body.column_id) != null
       ? String(body.columnId ?? body.column_id) : null;
 
     // Eski column_id va board_id ni olish (robot uchun kerak)
     let boardId: string | undefined;
     let ownerUserId: string | null = null;
+    let assignerUserId: string | null = null;
     try {
-      const rows = await runQuery<{ board_id: string; owner_user_id: string | null }>(
-        sql`SELECT board_id, owner_user_id FROM kanban_cards WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`,
+      const rows = await runQuery<{
+        board_id: string; owner_user_id: string | null; assigner_user_id: string | null;
+      }>(
+        sql`SELECT board_id, owner_user_id, assigner_user_id
+            FROM kanban_cards WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`,
       );
-      boardId      = rows.rows[0]?.board_id;
-      ownerUserId  = rows.rows[0]?.owner_user_id ?? null;
+      boardId        = rows.rows[0]?.board_id;
+      ownerUserId    = rows.rows[0]?.owner_user_id ?? null;
+      assignerUserId = rows.rows[0]?.assigner_user_id ?? null;
     } catch { /* ignore, robot trigger ixtiyoriy */ }
+
+    // ─── Assigner-confirm guard (EP-KAN-027/032) ───────────────────────────────
+    // The board is column-based; a card's stage = its column NAME mapped onto the
+    // 4 canonical stages. Moving INTO the terminal "Bajarildi" stage is the
+    // CONFIRMATION step and may only be performed by the assigner (topshiruvchi),
+    // never by the assignee. The assignee can only move a card to "Tekshiruvda"
+    // to request confirmation.
+    if (newColumnId) {
+      const guard = await this.assertCanMoveTo(newColumnId, {
+        actingUserId,
+        ownerUserId,
+        assignerUserId,
+      });
+      if (!guard.ok) return guard as Result<KanbanCard>;
+    }
 
     const result = await this.boardsRepo.moveCard(id, {
       column_id:  newColumnId,
@@ -143,13 +168,82 @@ export class KanbanBoardsService {
     return result;
   }
 
-  async addCard(boardId: string, body: Record<string, unknown>): Promise<Result<KanbanCard>> {
+  /**
+   * Enforces the assigner-confirm rule when a card is moved.
+   * Only the terminal "Bajarildi" (done) stage is restricted; all other moves
+   * (reja/jarayonda/tekshiruvda and any unmapped custom column) are allowed for
+   * any permitted user — non-regressive (Q-39).
+   *
+   * Rule (EP-KAN-027/032): moving INTO a "Bajarildi" column is the CONFIRMATION
+   * step. It may only be done by the assigner (assigner_user_id). The assignee
+   * (owner_user_id) is explicitly forbidden from self-confirming and must move
+   * the card to "Tekshiruvda" instead. Cards with NO assigner recorded
+   * (legacy/null) remain freely movable to avoid blocking existing rows.
+   *
+   * @param destColumnId destination column id
+   * @param ctx acting user + card's owner/assigner ids (strings from DB)
+   * @returns Ok(void) when allowed, Err(FORBIDDEN) -> HTTP 403 when blocked
+   */
+  private async assertCanMoveTo(
+    destColumnId: string,
+    ctx: { actingUserId?: number; ownerUserId: string | null; assignerUserId: string | null },
+  ): Promise<Result<void>> {
+    // Resolve destination column NAME -> canonical stage.
+    let destName: string | null = null;
+    try {
+      const rows = await runQuery<{ name: string }>(
+        sql`SELECT name FROM kanban_columns WHERE id = ${destColumnId} AND deleted_at IS NULL LIMIT 1`,
+      );
+      destName = rows.rows[0]?.name ?? null;
+    } catch { /* if we cannot resolve the column, do not block the move */ }
+
+    if (statusFromColumnName(destName) !== KanbanStatus.BAJARILDI) {
+      return { ok: true, data: undefined };
+    }
+
+    // Terminal "Bajarildi": only the assigner may confirm.
+    const assigner = ctx.assignerUserId != null ? Number(ctx.assignerUserId) : null;
+    const owner    = ctx.ownerUserId != null ? Number(ctx.ownerUserId) : null;
+    const acting   = ctx.actingUserId ?? null;
+
+    // No assigner recorded -> legacy card, keep movable (non-regression).
+    if (assigner == null) return { ok: true, data: undefined };
+
+    // Acting user is the assigner -> this is a valid confirmation.
+    if (acting != null && acting === assigner) return { ok: true, data: undefined };
+
+    // Acting user is the assignee trying to self-confirm -> forbidden.
+    if (acting != null && owner != null && acting === owner) {
+      return Err(AppErr(
+        'FORBIDDEN',
+        "Bajaruvchi vazifani o'zi \"Bajarildi\"ga o'tkaza olmaydi. " +
+        "Avval \"Tekshiruvda\"ga o'tkazing — topshiruvchi tasdiqlaydi.",
+      ));
+    }
+
+    // Any other (non-assigner) user moving to done -> forbidden.
+    return Err(AppErr(
+      'FORBIDDEN',
+      "Faqat topshiruvchi (assigner) vazifani \"Bajarildi\"ga o'tkaza oladi.",
+    ));
+  }
+
+  async addCard(
+    boardId: string,
+    body: Record<string, unknown>,
+    creatorUserId?: number,
+  ): Promise<Result<KanbanCard>> {
     try {
       const rawCol   = body.columnId ?? body.column_id;
       const columnId = rawCol != null ? String(rawCol) : null;
       const rawOwner = body.ownerUserId ?? body.owner_user_id;
       const ownerUserId = rawOwner != null ? String(rawOwner) : null;
       const rawDue   = body.dueDate ?? body.due_date;
+      // EP-KAN-027: assigner = explicit body value, else the creating user.
+      const rawAssigner = body.assignerUserId ?? body.assigner_user_id;
+      const assignerUserId = rawAssigner != null
+        ? String(rawAssigner)
+        : (creatorUserId != null ? String(creatorUserId) : null);
 
       const result = await this.boardsRepo.addCard({
         board_id: boardId,
@@ -159,6 +253,7 @@ export class KanbanBoardsService {
         priority: String(body.priority || 'normal'),
         due_date: rawDue != null ? String(rawDue) : null,
         owner_user_id: ownerUserId,
+        assigner_user_id: assignerUserId,
       });
 
       if (result.ok && columnId && result.data?.id) {

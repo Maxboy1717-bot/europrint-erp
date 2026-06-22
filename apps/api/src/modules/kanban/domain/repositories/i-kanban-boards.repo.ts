@@ -74,6 +74,8 @@ export interface CreateCardInput {
   priority: string;
   due_date: string | null;
   owner_user_id: string | null;
+  /** EP-KAN-027: kim topshirdi (assigner) — assigner-confirm uchun. Odatda yaratuvchi. */
+  assigner_user_id: string | null;
 }
 
 export interface UpdateCardInput {

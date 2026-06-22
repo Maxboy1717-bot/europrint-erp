@@ -112,9 +112,13 @@ export class KanbanBoardsController {
   @Post('boards/:boardId/cards')
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(KanbanAddCardSchema))
-  @ApiOperation({ summary: 'Boardga karta qo\'shish' })
-  async addCard(@Param('boardId') boardId: string, @Body() body: KanbanAddCardDto) {
-    return unwrapOrThrow(await this.boardsSvc.addCard(boardId, body));
+  @ApiOperation({ summary: 'Boardga karta qo\'shish (yaratuvchi = topshiruvchi/assigner)' })
+  async addCard(
+    @Param('boardId') boardId: string,
+    @Body() body: KanbanAddCardDto,
+    @CurrentUser() user: { id: number },
+  ) {
+    return unwrapOrThrow(await this.boardsSvc.addCard(boardId, body, user?.id));
   }
 
   @Put('cards/:id')
@@ -126,9 +130,13 @@ export class KanbanBoardsController {
 
   @Put('cards/:id/move')
   @UsePipes(new ZodValidationPipe(KanbanMoveCardSchema))
-  @ApiOperation({ summary: 'Kartani ko\'chirish' })
-  async moveCard(@Param('id') id: string, @Body() body: KanbanMoveCardDto) {
-    return unwrapOrThrow(await this.boardsSvc.moveCard(id, body));
+  @ApiOperation({ summary: 'Kartani ko\'chirish (assigner-confirm: Bajarildiga faqat topshiruvchi)' })
+  async moveCard(
+    @Param('id') id: string,
+    @Body() body: KanbanMoveCardDto,
+    @CurrentUser() user: { id: number },
+  ) {
+    return unwrapOrThrow(await this.boardsSvc.moveCard(id, body, user?.id));
   }
 
   @Delete('cards/:id')

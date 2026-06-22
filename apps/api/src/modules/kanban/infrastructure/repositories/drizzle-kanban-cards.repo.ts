@@ -21,7 +21,7 @@ import {
   kanbanChecklists, kanbanChecklistItems,
   kanbanCardComments, kanbanCardWatchers, kanbanNotifications,
 } from '@shared/db';
-import { safeCall, Err, Ok, Result } from '@common/result';
+import { safeCall, Err, Ok, Result, AppErr } from '@common/result';
 import { castTo } from '@common/db-rows';
 
 @Injectable()
@@ -176,11 +176,16 @@ export class DrizzleKanbanCardsRepository {
       const title       = String(data.title     ?? 'Yangi vazifa');
       const description = data.description ? String(data.description) : null;
       const priority    = String(data.priority  ?? 'normal');
+      const rawOwner    = data.ownerUserId ?? data.owner_user_id ?? data.assignedTo;
+      const ownerId     = rawOwner != null && rawOwner !== '' ? Number(rawOwner) : null;
+      // EP-KAN-027: topshiruvchi (assigner)
+      const rawAssigner = data.assignerUserId ?? data.assigner_user_id;
+      const assignerId  = rawAssigner != null && rawAssigner !== '' ? Number(rawAssigner) : null;
       const rows = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO kanban_cards
-          (board_id, column_id, title, description, priority, sort_order)
+          (board_id, column_id, title, description, priority, owner_user_id, assigner_user_id, sort_order)
         VALUES
-          (${boardId}, ${columnId}, ${title}, ${description}, ${priority}, 0)
+          (${boardId}, ${columnId}, ${title}, ${description}, ${priority}, ${ownerId}, ${assignerId}, 0)
         RETURNING *
       `);
       if (!rows.rows[0]) return Err('Karta yaratishda xato');
@@ -220,6 +225,26 @@ export class DrizzleKanbanCardsRepository {
 
   async completeCard(cardId: string, userId: number, completionReport?: string): Promise<Result<Record<string, unknown>>> {
     try {
+      // Assigner-confirm guard (EP-KAN-027): only the assigner (topshiruvchi) may
+      // mark a card done. The assignee (owner_user_id) cannot self-complete.
+      // Cards with no assigner recorded (legacy/null) stay completable.
+      const pre = await runQuery<{ owner_user_id: number | null; assigner_user_id: number | null }>(sql`
+        SELECT owner_user_id, assigner_user_id
+        FROM kanban_cards WHERE id = ${cardId} AND deleted_at IS NULL LIMIT 1
+      `);
+      if (!pre.rows[0]) return Err(AppErr('NOT_FOUND', 'Karta topilmadi'));
+      const assigner = pre.rows[0].assigner_user_id;
+      const owner    = pre.rows[0].owner_user_id;
+      if (assigner != null && Number(assigner) !== userId) {
+        if (owner != null && Number(owner) === userId) {
+          return Err(AppErr(
+            'FORBIDDEN',
+            "Bajaruvchi vazifani o'zi yakunlay olmaydi — topshiruvchi tasdiqlaydi.",
+          ));
+        }
+        return Err(AppErr('FORBIDDEN', "Faqat topshiruvchi (assigner) vazifani yakunlay oladi."));
+      }
+
       const rows = await runQuery<Record<string, unknown>>(sql`
         UPDATE kanban_cards
         SET completed_at = NOW(),
@@ -228,7 +253,7 @@ export class DrizzleKanbanCardsRepository {
         WHERE id = ${cardId} AND deleted_at IS NULL
         RETURNING id, title, completed_at, column_id, owner_user_id
       `);
-      if (!rows.rows[0]) return Err('Karta topilmadi');
+      if (!rows.rows[0]) return Err(AppErr('NOT_FOUND', 'Karta topilmadi'));
       const card = rows.rows[0];
       if (card.owner_user_id && Number(card.owner_user_id) !== userId) {
         await db.insert(kanbanNotifications).values({

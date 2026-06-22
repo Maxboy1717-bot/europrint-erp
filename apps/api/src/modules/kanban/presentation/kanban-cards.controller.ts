@@ -154,7 +154,12 @@ export class KanbanCardsController {
     @CurrentUser() user: { id: number },
   ) {
     const dto = KanbanCardCreateSchema.parse(body);
-    return unwrapOrBadRequest(await this.svc.createCardFlat(dto as Record<string, unknown>, user?.id ?? 0));
+    // EP-KAN-027: yaratuvchi = topshiruvchi (assigner), agar body da berilmagan bo'lsa.
+    const payload: Record<string, unknown> = { ...(dto as Record<string, unknown>) };
+    if (payload.assignerUserId == null && payload.assigner_user_id == null && user?.id) {
+      payload.assigner_user_id = String(user.id);
+    }
+    return unwrapOrBadRequest(await this.svc.createCardFlat(payload, user?.id ?? 0));
   }
 
   @Patch(':id/assign')
