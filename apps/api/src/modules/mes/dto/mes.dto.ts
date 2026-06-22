@@ -7,12 +7,17 @@ import { z } from 'zod';
 import { MES_REASON_MAX_LENGTH, MES_TITLE_MAX_LENGTH, MES_SCORE_MAX } from '../constants/mes.constants';
 
 export const MesCreateProductionSessionSchema = z.object({
-  work_order_id:  z.number().int().positive().optional(),
-  machine_id:     z.number().int().positive().optional(),
-  operator_id:    z.number().int().positive().optional(),
-  product_id:     z.number().int().positive().optional(),
-  planned_qty:    z.number().positive().optional(),
-  shift:          z.enum(['morning', 'afternoon', 'night']).optional(),
+  // production_order_id / work_order_id — both accepted (FE sends either); maps to production_sessions.production_order_id
+  production_order_id: z.number().int().positive().optional(),
+  work_order_id:       z.number().int().positive().optional(),
+  // work_center_id / machine_id — both accepted; maps to production_sessions.equipment_id + machine_id
+  work_center_id:      z.number().int().positive().optional(),
+  machine_id:          z.number().int().positive().optional(),
+  operator_id:         z.number().int().positive().optional(),
+  product_id:          z.number().int().positive().optional(),
+  planned_qty:         z.number().positive().optional(),
+  shift:               z.enum(['morning', 'afternoon', 'night']).optional(),
+  notes:               z.string().optional(),
 });
 export type MesCreateProductionSessionDto = z.infer<typeof MesCreateProductionSessionSchema>;
 
@@ -117,7 +122,19 @@ export const MesRecordDowntimeSchema = MesAddDowntimeSchema;
 export type MesRecordDowntimeDto = MesAddDowntimeDto;
 
 export const MesCreateSessionSchema = z.object({
-  notes: z.string().optional(),
+  // /mes/sessions create payload — same shape as production-sessions so user input is not whitelisted away.
+  // Accept both snake_case (work_center_id/production_order_id) and camelCase (workCenterId/ppOrderId) fallbacks.
+  production_order_id: z.number().int().positive().optional(),
+  work_order_id:       z.number().int().positive().optional(),
+  ppOrderId:           z.number().int().positive().optional(),
+  work_center_id:      z.number().int().positive().optional(),
+  workCenterId:        z.number().int().positive().optional(),
+  machine_id:          z.number().int().positive().optional(),
+  operator_id:         z.number().int().positive().optional(),
+  operatorId:          z.number().int().positive().optional(),
+  planned_qty:         z.number().positive().optional(),
+  shift:               z.enum(['morning', 'afternoon', 'night']).optional(),
+  notes:               z.string().optional(),
 });
 export type MesCreateSessionDto = z.infer<typeof MesCreateSessionSchema>;
 
