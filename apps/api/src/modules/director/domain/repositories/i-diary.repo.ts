@@ -32,6 +32,12 @@ export type DiarySaveInput = {
 };
 
 export interface IDiaryRepo {
+  /**
+   * Foydalanuvchining org-kartasi (org_functions.id) ni topadi: avval
+   * users.org_function_id, bo'lmasa employees.org_function_id (user_id orqali).
+   * Karta topilmasa null qaytaradi (chaqiruvchi user.id ga fallback qiladi).
+   */
+  resolveAuthorCard(userId: number): Promise<Result<number | null>>;
   /** Mavjud kun yozuvini qaytaradi yoki auto-fill bilan yangisini yaratadi. */
   getOrCreateToday(authorCardId: number, date: string): Promise<Result<IDiaryEntry>>;
   getByAuthorDate(authorCardId: number, date: string): Promise<Result<IDiaryEntry | null>>;

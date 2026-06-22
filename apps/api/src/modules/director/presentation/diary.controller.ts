@@ -78,7 +78,9 @@ export class DiaryController {
   async open(@Query() q: unknown, @CurrentUser() user: { id: number }) {
     const dto = DiaryOpenSchema.parse(q);
     const date = dto.date ?? todayStr();
-    return unwrapOrInternal(await this.svc.openDiary(user.id, date));
+    // Karta-markazli: muallif = foydalanuvchi egallagan org-karta (org_functions.id),
+    // user.id emas. Karta topilmasa servis user.id ga fallback qiladi.
+    return unwrapOrInternal(await this.svc.openDiaryForUser(user.id, date));
   }
 
   @Patch(':id')

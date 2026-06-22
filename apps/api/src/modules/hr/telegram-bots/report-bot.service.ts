@@ -78,11 +78,11 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
       const chatId = (ctx as TCtx).chat?.id;
       if (!chatId) return;
 
-      // Hard deadline check: no new submissions after 20:00
+      // Hard deadline check: no new submissions after 16:00
       if (this.dataSvc.isDeadlinePassed()) {
         await ctx.reply(
-          '⛔ Hisobot topshirish muddati tugadi (soat 20:00).\n\n' +
-          'Ertaga 17:00 dan keyin topshirishingiz mumkin.'
+          '⛔ Hisobot topshirish muddati tugadi (soat 16:00).\n\n' +
+          'Ertaga 15:30 dan keyin topshirishingiz mumkin.'
         );
         return;
       }
@@ -101,7 +101,7 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
       if (alreadySubmitted) {
         await ctx.reply(
           '✅ Bugun hisobotingizni allaqachon topshirgansiz (yoki avtomatik belgilangan)!\n\n' +
-          'Ertaga 17:00 dan keyin qayta yuborishingiz mumkin.'
+          'Ertaga 15:30 dan keyin qayta yuborishingiz mumkin.'
         );
         return;
       }
@@ -115,7 +115,7 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
 
       await ctx.reply(
         `📝 <b>Kunlik hisobot — ${today}</b>\n\n` +
-        `⏰ Deadline: bugun soat 20:00\n\n` +
+        `⏰ Deadline: bugun soat 16:00\n\n` +
         `<b>1-savol:</b> Bugun qanday ishlarni bajardingiz? (kamida 30 ta belgi)`,
         { parse_mode: 'HTML' }
       );
@@ -165,8 +165,8 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
       if (this.dataSvc.isDeadlinePassed()) {
         this.sessions.delete(chatId);
         await ctx.reply(
-          '⛔ Hisobot topshirish muddati tugadi (soat 20:00).\n\n' +
-          'Avtomatik "yo\'q" belgisi qo\'yildi.\nErtaga 17:00 dan keyin topshirishingiz mumkin.'
+          '⛔ Hisobot topshirish muddati tugadi (soat 16:00).\n\n' +
+          'Avtomatik "yo\'q" belgisi qo\'yildi.\nErtaga 15:30 dan keyin topshirishingiz mumkin.'
         );
         return;
       }
@@ -210,7 +210,7 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
       this.sessions.delete(chatId);
 
       const hour = _time.now().getHours();
-      const pointsMsg = hour < 20 ? '\n\n⭐ +5 ball berildi (o\'z vaqtida topshirganingiz uchun)' : '';
+      const pointsMsg = hour < 16 ? '\n\n⭐ +5 ball berildi (o\'z vaqtida topshirganingiz uchun)' : '';
 
       await ctx.reply(
         `✅ <b>Hisobotingiz qabul qilindi!</b>\n\n` +
@@ -228,7 +228,7 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
   async initiateReportRequest(chatId: number | string, employeeId: number, reportDate: string) {
     if (!this.bot) return false;
 
-    // Only initiate before deadline (17:00 cron triggers this; deadline is 20:00)
+    // Only initiate before deadline (15:30 cron triggers this; deadline is 16:00)
     if (this.dataSvc.isDeadlinePassed()) return false;
 
     try {
@@ -247,7 +247,7 @@ export class ReportBotService implements OnModuleInit, OnModuleDestroy {
         chatId,
         `📊 <b>Kunlik hisobot eslatmasi!</b>\n\n` +
         `📅 Sana: ${reportDate}\n` +
-        `⏰ Deadline: soat 20:00\n\n` +
+        `⏰ Deadline: soat 16:00\n\n` +
         `<b>1-savol:</b> Bugun qanday ishlarni bajardingiz? (kamida 30 ta belgi)`,
         { parse_mode: 'HTML' }
       );

@@ -176,7 +176,7 @@ export class DailyReportService {
     });
   }
 
-  @Cron('0 17 * * 1-6')
+  @Cron('30 15 * * 1-6')
   async sendDailyReportReminder() {
     return safeCall(async () => {
       const today = _time.now().toISOString().split('T')[0];
@@ -202,14 +202,14 @@ export class DailyReportService {
     });
   }
 
-  @Cron('0 20 * * 1-6')
+  @Cron('0 16 * * 1-6')
   async markAbsentReports() {
     return safeCall(async () => {
       const today = _time.now().toISOString().split('T')[0];
       await this.repo.markAbsentForDate(today);
       this.logger.log(`markAbsentReports: processed ${today}`);
 
-      // 3-hour escalation: reminder was sent at 17:00; deadline is 20:00 (3h window).
+      // 30-minute escalation: reminder was sent at 15:30; deadline is 16:00.
       // Query current stats to get absent count, then escalate to HR.
       const statsR = await this.repo.getStats(today);
       const absentCount = statsR.ok

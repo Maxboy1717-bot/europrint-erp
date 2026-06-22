@@ -27,6 +27,26 @@ function previousDay(dateStr: string): string {
 
 @Injectable()
 export class DiaryRepository implements IDiaryRepo {
+  /**
+   * Foydalanuvchini o'z org-kartasiga (org_functions.id) bog'laydi. Karta-markazli
+   * model: daftar muallifi USER emas, KARTA. Avval users.org_function_id (login
+   * egasining kartasi), bo'lmasa employees.org_function_id (user_id orqali).
+   * Karta topilmasa null — chaqiruvchi user.id ga fallback qiladi.
+   */
+  async resolveAuthorCard(userId: number): Promise<Result<number | null>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<{ card_id: number | null }>(sql`
+        SELECT COALESCE(u.org_function_id, e.org_function_id) AS card_id
+        FROM users u
+        LEFT JOIN employees e
+          ON e.user_id = u.id AND e.deleted_at IS NULL
+        WHERE u.id = ${userId}
+        LIMIT 1
+      `);
+      return rows[0]?.card_id ?? null;
+    }, 'DB_ERROR');
+  }
+
   async getOrCreateToday(authorCardId: number, date: string): Promise<Result<IDiaryEntry>> {
     return safeCall(async () => {
       // 1. Mavjud yozuv bormi?

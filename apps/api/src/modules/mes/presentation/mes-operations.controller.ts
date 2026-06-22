@@ -20,7 +20,6 @@ import { RecordDowntimeCommand } from '../application/commands/record-downtime.h
 import { EndDowntimeCommand } from '../application/commands/end-downtime.command';
 import { GetDowntimeQuery } from '../application/queries/get-downtime.query';
 import { GetDowntimeSummaryQuery } from '../application/queries/get-downtime-summary.query';
-import { GetOeeHandler } from '../application/queries/get-oee.handler';
 import {
   CreateDowntimeDto,
   CreateDowntimeDtoSchema,
@@ -138,8 +137,7 @@ export class MesOperationsController {
     const from = query?.from ? new Date(String(query.from ?? '')) : this.getFirstDayOfMonth();
     const to = query?.to ? new Date(String(query.to ?? '')) : _time.now();
     this.logger.log('Getting OEE');
-    const oeeHandler = new GetOeeHandler();
-    return unwrapOrThrow(await oeeHandler.execute(new GetOeeQuery({ from, to })));
+    return unwrapOrThrow(await this.queryBus.execute(new GetOeeQuery({ from, to })));
   }
 
   @ApiOperation({ summary: 'Record session downtime' })

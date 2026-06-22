@@ -21,6 +21,26 @@ export class DiaryService {
   constructor(@Inject(DIARY_REPO) private readonly repo: IDiaryRepo) {}
 
   /**
+   * Kunlik daftarni FOYDALANUVCHI uchun ochadi. Karta-markazli model: muallif
+   * user.id emas, foydalanuvchi egallagan org-karta (org_functions.id). Kartani
+   * resolveAuthorCard orqali topadi; karta yo'q bo'lsa user.id ga fallback qiladi
+   * (daftar baribir ochiladi).
+   */
+  async openDiaryForUser(userId: number, date: string): Promise<Result<IDiaryEntry>> {
+    return safeCall(async () => {
+      const resolved = await this.repo.resolveAuthorCard(userId);
+      if (!resolved.ok) throw new Error(resolved.error.message);
+      const cardId = resolved.data ?? userId;
+      if (resolved.data == null) {
+        this.logger.warn({ code: 'EP-DIR-008', op: 'dir.diary.no-card', userId });
+      }
+      const opened = await this.openDiary(cardId, date);
+      if (!opened.ok) throw new Error(opened.error.message);
+      return opened.data;
+    }, 'DB_ERROR');
+  }
+
+  /**
    * Kunlik daftarni ochadi: getOrCreateToday (auto-fill) → carryOverIssues
    * (kechagi hal qilinmagan) → yangilangan yozuvni qayta o'qib qaytaradi.
    */

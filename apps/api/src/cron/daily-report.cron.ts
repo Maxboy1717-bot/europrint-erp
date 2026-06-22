@@ -16,7 +16,7 @@ export class DailyReportCron {
   private readonly logger = new Logger(DailyReportCron.name)
   constructor(private readonly cronStatus: CronStatusService) {}
 
-  @Cron('0 20 * * 1-5')
+  @Cron('0 16 * * 1-5')
   async markAbsentEmployees(): Promise<void> {
     const jobName = 'DailyReportCron'
     try {
