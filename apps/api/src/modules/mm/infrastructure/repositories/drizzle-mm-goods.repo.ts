@@ -61,8 +61,8 @@ export class DrizzleMmGoodsRepository {
     return queryGoodsIssue(gid);
   }
 
-  async createGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, notes: unknown): Promise<Row> {
-    return execCreateGoodsIssue(issued_by, cost_center, work_order_id, notes);
+  async createGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, notes: unknown, warehouse_id?: unknown): Promise<Row> {
+    return execCreateGoodsIssue(issued_by, cost_center, work_order_id, notes, warehouse_id);
   }
 
   async insertGoodsIssueItem(issueId: unknown, material_id: unknown, quantity: unknown, batch_number: unknown): Promise<void> {

@@ -67,9 +67,9 @@ export class MmGoodsService {
     });
   }
 
-  async createGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, items: Array<Record<string, unknown>>, notes: unknown) {
+  async createGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, items: Array<Record<string, unknown>>, notes: unknown, warehouse_id?: unknown) {
     return safeCall(async () => {
-      const issue = await this.repo.createGoodsIssue(issued_by, cost_center, work_order_id, notes);
+      const issue = await this.repo.createGoodsIssue(issued_by, cost_center, work_order_id, notes, warehouse_id);
       // Pattern 2: line-item inserts are independent — run in parallel rather than serial N+1
       await Promise.all(items.map(item =>
         this.repo.insertGoodsIssueItem(issue.id, item.material_id, item.quantity, item.batch_number),

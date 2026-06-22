@@ -125,7 +125,7 @@ export class MmGoodsController {
   @UsePipes(new ZodValidationPipe(MmCreateGoodsIssueSchema))
   @Roles(...MM_WRITE_ROLES)
   async createGoodsIssue(@Body() body: MmCreateGoodsIssueDto) {
-    return unwrapOrThrow(await this.svc.createGoodsIssue(body.issued_by, body.cost_center, body.work_order_id, (body.items ?? []) as Array<Record<string, unknown>>, body.notes));
+    return unwrapOrThrow(await this.svc.createGoodsIssue(body.issued_by, body.cost_center, body.work_order_id, (body.items ?? []) as Array<Record<string, unknown>>, body.notes, body.warehouse_id));
   }
 
   @ApiOperation({ summary: 'Update goods issue' })

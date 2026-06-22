@@ -156,9 +156,16 @@ export async function execDeleteGoodsReceipt(gid: number): Promise<void> {
 }
 
 export async function queryGoodsIssues(status: string | undefined, lim: number, off: number): Promise<Row[]> {
+  // mm_goods_issues (VIEW over goods_issues) exposes: id, gi_number, issue_date, issue_type,
+  // reference_id, warehouse_id, issued_by, issued_to, status, notes, created_at. It has NO
+  // cost_center / work_order_id column — select only real columns and surface those two FE/DTO
+  // keys as NULL (no invented values). work_order_id, when stored on create, lives in reference_id.
   const rowsRaw = await typedExecute<Row>(sql`
     SELECT
-      id, issued_by, cost_center, work_order_id, notes, status, created_at,
+      id, gi_number, issue_date, issue_type, reference_id, warehouse_id,
+      issued_by, issued_to, notes, status, created_at,
+      NULL::text AS cost_center,
+      NULL::integer AS work_order_id,
       (SELECT full_name FROM employees WHERE id = issued_by LIMIT 1) AS issued_by_name
     FROM mm_goods_issues
     WHERE ${status ? sql`status = ${status}` : sql`TRUE`}
@@ -169,9 +176,14 @@ export async function queryGoodsIssues(status: string | undefined, lim: number, 
 }
 
 export async function queryGoodsIssue(gid: number): Promise<{ issue: Row | null; items: Row[] }> {
+  // mm_goods_issues VIEW has no cost_center / work_order_id column — select real columns and surface
+  // those two FE/DTO keys as NULL (see queryGoodsIssues). work_order_id (on create) lives in reference_id.
   const issueRowsRaw = await typedExecute<Row>(sql`
     SELECT
-      id, issued_by, cost_center, work_order_id, notes, status, created_at,
+      id, gi_number, issue_date, issue_type, reference_id, warehouse_id,
+      issued_by, issued_to, notes, status, created_at,
+      NULL::text AS cost_center,
+      NULL::integer AS work_order_id,
       (SELECT full_name FROM employees WHERE id = issued_by LIMIT 1) AS issued_by_name
     FROM mm_goods_issues
     WHERE id = ${gid}
@@ -194,11 +206,28 @@ export async function queryGoodsIssue(gid: number): Promise<{ issue: Row | null;
   return { issue: issueRows[0] as Row, items: itemRows as Row[] };
 }
 
-export async function execCreateGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, notes: unknown): Promise<Row> {
+export async function execCreateGoodsIssue(issued_by: unknown, cost_center: unknown, work_order_id: unknown, notes: unknown, warehouse_id?: unknown): Promise<Row> {
+  // mm_goods_issues is a VIEW over goods_issues — insert into the BASE table using its REAL columns.
+  // The base table has NO cost_center / work_order_id column. Required NOT NULL columns: gi_number,
+  // issue_date, issue_type, warehouse_id (generate gi_number/issue_date deterministically, mirror the
+  // goods-receipt pattern). work_order_id is stored in reference_id (the real "what this issue
+  // references" column, text). cost_center has no column, so it is folded into notes (no data dropped,
+  // no invented values). issued_by is INTEGER -> coerce.
+  const ib = issued_by != null && String(issued_by).trim() !== '' && Number.isFinite(Number(issued_by)) ? Number(issued_by) : null;
+  const note = [notes, cost_center != null && String(cost_center).trim() !== '' ? `cost_center: ${cost_center}` : null].filter(Boolean).join(' | ') || null;
+  const refId = work_order_id != null && String(work_order_id).trim() !== '' ? String(work_order_id) : null;
   const rowsRaw = await typedExecute<Row>(sql`
-    INSERT INTO mm_goods_issues (issued_by, cost_center, work_order_id, notes, status)
-    VALUES (${(issued_by as number | null) ?? null}, ${(cost_center as string | null) ?? null},
-      ${(work_order_id as number | null) ?? null}, ${(notes as string | null) ?? null}, 'pending')
+    INSERT INTO goods_issues (gi_number, issue_date, issue_type, reference_id, warehouse_id, issued_by, notes, status)
+    VALUES (
+      'GI-' || (extract(epoch from now())::bigint)::text,
+      to_char(NOW(), 'YYYY-MM-DD'),
+      'production',
+      ${refId},
+      ${(warehouse_id as number | null) ?? null},
+      ${ib},
+      ${note},
+      'pending'
+    )
     RETURNING *
   `);
   const rows = rowsRaw;
