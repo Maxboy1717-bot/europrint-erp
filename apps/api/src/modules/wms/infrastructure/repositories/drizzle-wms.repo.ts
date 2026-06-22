@@ -10,9 +10,10 @@ import { castTo } from '@common/db-rows';
 import { AppErr, Err, Ok } from '@common/result';
 import { Database } from '@/infrastructure/database/database';
 import { Result } from '@common/result';
-import { db, stocks, warehouses } from '@shared/db';
-import { sql, eq, isNull, and, asc } from 'drizzle-orm';
+import { db, warehouses } from '@shared/db';
+import { sql, eq, isNull, and } from 'drizzle-orm';
 import { wms_stock } from '@shared/db/schema-compat-5';
+import { BATCH_ISSUABLE_QUALITY_STATUSES } from '../../domain/constants/wms-batch-issue.constants';
 import { Stock } from '../../domain/aggregates/stock.aggregate';
 import { IWmsRepository, DrizzleExecutor, CreateWarehouseInput, InsertGoodsIssueInput } from '../../domain/repositories/wms.repository';
 import { IssuableBatchLot } from '../../domain/services/batch-selection.service';
@@ -23,18 +24,6 @@ import {
 } from '@common/database/queries-wms';
 
 type StockRow = Record<string, unknown>;
-
-/**
- * Narrow shape we need from a Drizzle executor (db or tx). Restricted to the
- * surface used in this repo so we don't import `PgTransaction` types.
- */
-type ExecLike = {
-  select: typeof db.select;
-  insert: typeof db.insert;
-  update: typeof db.update;
-};
-
-const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as ExecLike;
 
 /** Raw-SQL executor surface (db or tx) for the batch-lot query helpers. */
 type ExecuteLike = { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: unknown[] }> };
@@ -120,11 +109,35 @@ export class DrizzleWmsRepository implements IWmsRepository {
   ): Promise<Result<Stock[]>> {
     try {
       if (tx) {
-        const exec = asExec(tx);
-        const rows = await exec.select().from(stocks)
-          .where(and(eq(stocks.material_id, materialId), eq(stocks.warehouse_id, warehouseId)))
-          .orderBy(sql`${stocks.expiry_date} ASC NULLS LAST`, asc(stocks.received_at));
-        return Ok((Array.isArray(rows) ? rows : []).map((r) => toStock(r as StockRow)));
+        // tx-branch repoint: was reading the DEAD `stocks` table (0 rows → chiqim found
+        // nothing). The canonical batch/expiry source is `batch_lots` (live, carries
+        // expiry_date + received_date), so true first-expiry FEFO reads it ordered by
+        // expiry ASC. `remaining_quantity` is exposed as `quantity` and `reserved_quantity`
+        // aliased to 0 (batch_lots tracks no reservation) to match the toStock mapper /
+        // the non-tx queryFefoStock shape. Same QC-allowed + active + positive-qoldiq
+        // filter as queryIssuableBatchLots so the read agrees with the issue selection.
+        const exec = asTxExec(tx);
+        const allowed = [...BATCH_ISSUABLE_QUALITY_STATUSES];
+        const res = await exec?.execute(sql`
+          SELECT id,
+                 warehouse_id,
+                 material_id,
+                 remaining_quantity AS quantity,
+                 0::numeric AS reserved_quantity,
+                 remaining_quantity AS on_hand_quantity,
+                 expiry_date,
+                 batch_number,
+                 COALESCE(received_date, created_at) AS received_at
+          FROM batch_lots
+          WHERE material_id = ${materialId}
+            AND warehouse_id = ${warehouseId}
+            AND is_active = true
+            AND remaining_quantity > 0
+            AND quality_status = ANY(${allowed})
+          ORDER BY expiry_date ASC NULLS LAST, COALESCE(received_date, created_at) ASC
+        `);
+        const rows = (Array.isArray(res?.rows) ? res.rows : []) as StockRow[];
+        return Ok(rows.map(toStock));
       }
       const rows = await queryFefoStock(materialId, warehouseId);
       return Ok((Array.isArray(rows) ? rows : []).map(toStock));
