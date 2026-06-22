@@ -8,6 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { and, eq, desc, isNull, sql, notInArray, lt } from 'drizzle-orm';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { safeCall, Result, Err } from '@common/result';
 import {
   marketingContentPosts, marketingSocialAccounts,
@@ -24,6 +25,49 @@ import {
 export class DrizzleMarketingExtRepository {
   private readonly logger = new Logger(DrizzleMarketingExtRepository.name);
 
+  /**
+   * Attributed revenue per campaign (EP-MKT-051 — profit-based ROI input).
+   *
+   * Revenue chain: marketing_campaigns → its `converted` marketing_leads →
+   * the CRM deal each lead became (marketing_leads.crm_lead_id → crm_deals.lead_id)
+   * → sum of WON crm_deals.amount.
+   *
+   * All join keys are ::text-cast because the live linkage columns are of mixed,
+   * currently-mismatched types (campaigns.id varchar, leads.campaign_id integer,
+   * leads.crm_lead_id integer, crm_deals.lead_id uuid) and most are NULL. The casts
+   * keep the query crash-safe; when no real linkage exists it honestly returns 0 —
+   * NEVER a fabricated number. Returns a map of campaignId → won-deal revenue.
+   *
+   * KNOWN GAP: the campaign→lead→deal linkage is not yet populated in the live DB
+   * (leads.campaign_id / leads.crm_lead_id / crm_deals.lead_id are all NULL), and the
+   * profit-margin source for true profit-based ROI is still owner-pending (EP-MKT-051
+   * sub-question). Until that wiring lands, attributed revenue computes as 0 and ROI
+   * reflects spend-with-no-attributed-return rather than budget utilization.
+   */
+  private async getAttributedRevenueByCampaign(): Promise<Record<string, number>> {
+    type RevRow = { campaign_id: string; revenue: string };
+    const rows = await typedExecute<RevRow>(sql`
+      SELECT mc.id::text AS campaign_id,
+             COALESCE(SUM(d.amount), 0)::numeric AS revenue
+      FROM marketing_campaigns mc
+      JOIN marketing_leads l
+        ON l.campaign_id::text = mc.id::text
+       AND l.status = 'converted'
+       AND l.deleted_at IS NULL
+      JOIN crm_deals d
+        ON d.lead_id::text = l.crm_lead_id::text
+       AND d.status = 'won'
+       AND d.deleted_at IS NULL
+      WHERE mc.deleted_at IS NULL
+      GROUP BY mc.id
+    `);
+    const map: Record<string, number> = {};
+    for (const r of Array.isArray(rows) ? rows : []) {
+      map[String(r.campaign_id)] = Number(r.revenue ?? 0);
+    }
+    return map;
+  }
+
   async getCampaignStats(id: number): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
@@ -36,15 +80,19 @@ export class DrizzleMarketingExtRepository {
       }).from(marketingAds).where(eq(marketingAds.campaignId, String(id)));
 
       const spent   = Number(adStats?.totalSpent  ?? 0);
-      const budget  = Number(adStats?.totalBudget ?? 0);
-      const roi     = spent > 0 ? Math.round(((budget - spent) / spent) * 100 * 100) / 100 : 0;
+      // EP-MKT-051: ROI = (attributed sales revenue − marketing spend) / spend.
+      // Profit-based per owner answer (NOT the old budget-utilization formula).
+      const revenueMap = await this.getAttributedRevenueByCampaign();
+      const revenue = revenueMap[String(id)] ?? 0;
+      const roi     = spent > 0 ? Math.round(((revenue - spent) / spent) * 100 * 100) / 100 : 0;
 
       const base = row ?? { id };
       return {
         ...base,
-        impressions: Number(adStats?.impressions ?? 0),
-        clicks:      Number(adStats?.clicks      ?? 0),
-        conversions: Number(adStats?.conversions ?? 0),
+        impressions:        Number(adStats?.impressions ?? 0),
+        clicks:             Number(adStats?.clicks      ?? 0),
+        conversions:        Number(adStats?.conversions ?? 0),
+        attributedRevenue:  revenue,
         roi,
       };
     });
@@ -276,18 +324,24 @@ export class DrizzleMarketingExtRepository {
         (Array.isArray(adStats) ? adStats : []).map(s => [s.campaignId, s]),
       );
 
+      // EP-MKT-051: profit-based ROI — attributed sales revenue per campaign.
+      const revenueMap = await this.getAttributedRevenueByCampaign();
+
       return (Array.isArray(campaigns) ? campaigns : []).map((c) => {
         const s     = statsMap[c.id];
-        const spent  = Number(s?.totalSpent  ?? 0);
-        const budget = Number(s?.totalBudget ?? 0);
-        const roi    = spent > 0 ? Math.round(((budget - spent) / spent) * 100 * 100) / 100 : 0;
+        const spent   = Number(s?.totalSpent  ?? 0);
+        // ROI = (attributed sales revenue − marketing spend) / spend (profit-based,
+        // per owner answer) — replaces the prior budget-utilization formula.
+        const revenue = revenueMap[String(c.id)] ?? 0;
+        const roi     = spent > 0 ? Math.round(((revenue - spent) / spent) * 100 * 100) / 100 : 0;
         return {
-          id:          c.id,
-          name:        c.name,
-          status:      c.status,
-          impressions: Number(s?.impressions ?? 0),
-          clicks:      Number(s?.clicks      ?? 0),
-          conversions: Number(s?.conversions ?? 0),
+          id:                c.id,
+          name:              c.name,
+          status:            c.status,
+          impressions:       Number(s?.impressions ?? 0),
+          clicks:            Number(s?.clicks      ?? 0),
+          conversions:       Number(s?.conversions ?? 0),
+          attributedRevenue: revenue,
           roi,
         };
       });
