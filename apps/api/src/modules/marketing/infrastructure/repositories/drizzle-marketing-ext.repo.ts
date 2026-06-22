@@ -535,6 +535,91 @@ export class DrizzleMarketingExtRepository {
     });
   }
 
+  /**
+   * Per raw-channel rollup for the channel-ROI breakdown (EP-MKT-002 / EP-MKT-031).
+   *
+   * Combines three real, independent live sources by raw channel key:
+   *   - SPEND + ad-conversions: marketing_ads.platform → SUM(spent_amount) / SUM(conversions)
+   *   - LEADS + converted-leads: marketing_leads.source → COUNT(*) / COUNT(status='converted')
+   *   - attributed REVENUE: leads.source → won crm_deals via leads.crm_lead_id → crm_deals.lead_id
+   *
+   * The three aggregates are FULL-OUTER-JOINed on the lower-cased channel key so a
+   * channel that has spend but no leads (or vice-versa) still appears. Channel-key
+   * normalization to the canonical EP-MKT-031 list happens in the service layer
+   * (normalizeChannel) — the repo returns the raw lower-cased keys verbatim.
+   *
+   * KNOWN GAP (honest 0): marketing_leads.crm_lead_id and .campaign_id are NULL in the
+   * live DB, so attributed revenue currently computes as 0 for every channel — the
+   * query returns a truthful 0, never a fabricated figure. When the lead→deal linkage
+   * is populated, revenue (and thus per-channel ROI) flows through automatically.
+   */
+  async getChannelRollup(): Promise<Result<{
+    channel: string;
+    spend: number;
+    adConversions: number;
+    leads: number;
+    convertedLeads: number;
+    revenue: number;
+  }[]>> {
+    return safeCall(async () => {
+      type Row = {
+        channel: string;
+        spend: string | null;
+        ad_conversions: number | null;
+        leads: number | null;
+        converted_leads: number | null;
+        revenue: string | null;
+      };
+      const rows = await typedExecute<Row>(sql`
+        WITH ads AS (
+          SELECT lower(COALESCE(NULLIF(TRIM(platform), ''), 'boshqa')) AS channel,
+                 COALESCE(SUM(spent_amount), 0)::numeric AS spend,
+                 COALESCE(SUM(conversions), 0)::int      AS ad_conversions
+          FROM marketing_ads
+          WHERE deleted_at IS NULL
+          GROUP BY 1
+        ),
+        leads AS (
+          SELECT lower(COALESCE(NULLIF(TRIM(source), ''), 'boshqa')) AS channel,
+                 COUNT(*)::int AS leads,
+                 COUNT(*) FILTER (WHERE status = 'converted')::int AS converted_leads
+          FROM marketing_leads
+          WHERE deleted_at IS NULL
+          GROUP BY 1
+        ),
+        rev AS (
+          SELECT lower(COALESCE(NULLIF(TRIM(l.source), ''), 'boshqa')) AS channel,
+                 COALESCE(SUM(d.amount), 0)::numeric AS revenue
+          FROM marketing_leads l
+          JOIN crm_deals d
+            ON d.lead_id::text = l.crm_lead_id::text
+           AND d.status = 'won'
+           AND d.deleted_at IS NULL
+          WHERE l.deleted_at IS NULL
+          GROUP BY 1
+        )
+        SELECT COALESCE(a.channel, le.channel, r.channel) AS channel,
+               COALESCE(a.spend, 0)::numeric              AS spend,
+               COALESCE(a.ad_conversions, 0)::int         AS ad_conversions,
+               COALESCE(le.leads, 0)::int                 AS leads,
+               COALESCE(le.converted_leads, 0)::int       AS converted_leads,
+               COALESCE(r.revenue, 0)::numeric            AS revenue
+        FROM ads a
+        FULL OUTER JOIN leads le ON le.channel = a.channel
+        FULL OUTER JOIN rev   r  ON r.channel  = COALESCE(a.channel, le.channel)
+        ORDER BY spend DESC, leads DESC
+      `);
+      return (Array.isArray(rows) ? rows : []).map((r) => ({
+        channel: String(r.channel ?? 'boshqa'),
+        spend: Number(r.spend ?? 0),
+        adConversions: Number(r.ad_conversions ?? 0),
+        leads: Number(r.leads ?? 0),
+        convertedLeads: Number(r.converted_leads ?? 0),
+        revenue: Number(r.revenue ?? 0),
+      }));
+    });
+  }
+
   async getInboxStats(): Promise<Result<{ total: number; unread: number; pending: number; resolved: number; openRate: number }>> {
     return safeCall(async () => {
       const rows = await db.select({

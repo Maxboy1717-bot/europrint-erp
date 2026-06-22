@@ -190,6 +190,15 @@ export class MarketingAnalyticsController {
     return unwrapOrBadRequest(await this.svc.getMarketingFunnel());
   }
 
+  @Get('analytics/channel-roi')
+  @ApiOperation({
+    summary: 'Kanal kesimida sarf/lid/ROI taqsimoti (EP-MKT-002 / EP-MKT-031)',
+  })
+  @ApiResponse({ status: 200, description: 'OK' })
+  async getChannelRoi() {
+    return unwrapOrInternal(await this.svc.getChannelRoi());
+  }
+
   @Get('funnel')
   @ApiOperation({ summary: 'Marketing voronkasi' })
   async getMarketingFunnel() {

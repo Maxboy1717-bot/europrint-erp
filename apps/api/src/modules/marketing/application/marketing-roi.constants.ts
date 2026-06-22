@@ -38,6 +38,49 @@ export type MktChannel = typeof MKT_CHANNELS[number];
 /** Fallback channel code for leads whose source is not one of the 8. */
 export const MKT_CHANNEL_OTHER = 'boshqa' as const;
 
+/**
+ * Alias map: raw channel identifiers seen in the live data
+ * (marketing_ads.platform / marketing_leads.source) → canonical EP-MKT-031 code.
+ *
+ * Lookup keys are lower-cased. Only DETERMINISTIC, semantically-unambiguous
+ * aliases live here (e.g. the English 'website' is the same channel as the
+ * canonical 'veb-sayt'). Raw values that are NOT a canonical channel and have
+ * no documented equivalent (google / tiktok / youtube / email ...) are NOT
+ * forced into a canonical bucket — normalizeChannel() returns them unchanged so
+ * channelEffectiveness() reports them honestly (isCanonical=false) rather than
+ * fabricating a mapping the owner has not decided (EP-MKT-031 list is owner-set).
+ */
+export const MKT_CHANNEL_ALIASES: Readonly<Record<string, MktChannel>> = {
+  website: 'veb-sayt',
+  'veb-sayt': 'veb-sayt',
+  vebsayt: 'veb-sayt',
+  web: 'veb-sayt',
+  exhibition: 'korgabma',
+  korgazma: 'korgabma',
+  'ko\'rgazma': 'korgabma',
+  referral: 'tavsiya',
+  tavsiya: 'tavsiya',
+  'cold-call': 'sovuq-qongiroq',
+  coldcall: 'sovuq-qongiroq',
+  dealer: 'vositachi-diler',
+  'vositachi-diler': 'vositachi-diler',
+  instagram: 'instagram',
+  telegram: 'telegram',
+  facebook: 'facebook',
+} as const;
+
+/**
+ * Normalize a raw channel identifier (from ads.platform / leads.source) into its
+ * canonical EP-MKT-031 code when a documented alias exists; otherwise returns the
+ * lower-cased raw value unchanged (kept honest, never invented).
+ * Null/empty input → MKT_CHANNEL_OTHER ('boshqa').
+ */
+export function normalizeChannel(raw: string | null | undefined): string {
+  const key = String(raw ?? '').trim().toLowerCase();
+  if (key.length === 0) return MKT_CHANNEL_OTHER;
+  return MKT_CHANNEL_ALIASES[key] ?? key;
+}
+
 // ─── ROI thresholds ────────────────────────────────────────────────────────
 
 /**
