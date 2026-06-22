@@ -51,25 +51,39 @@ export const routingOperations = pgTable('routing_operations', {
   createdAt: ts('created_at').defaultNow(),
 });
 
-// NOTE: convergence deferred (tier-1) — lib/db bomHeaders.productId is numeric but
-// pp-bom repo passes string; needs column-type reconciliation before re-export.
+// Live DB has more NOT NULL columns than the old stub carried (bom_number,
+// base_quantity, base_unit). Added additively so Drizzle emits them on INSERT —
+// otherwise the header INSERT 500s on the bom_number NOT NULL constraint.
 export const bomHeaders = pgTable('bom_headers', {
   id: integer('id').primaryKey(),
-  productId: text('product_id').notNull(),
+  bomNumber: text('bom_number').notNull(),
+  productId: integer('product_id').notNull(),
   version: text('version').default('1.0'),
   status: text('status').default('draft'),
+  baseQuantity: decimal('base_quantity', { precision: 18, scale: 4 }).default('1'),
+  baseUnit: text('base_unit').default('dona'),
+  description: text('description'),
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
 });
 
+// Live bom_items has item_number + component_id (both NOT NULL) and component_type/
+// scrap_percentage/position — the old stub omitted them, so component lines could
+// never be inserted. Added additively to match the real columns.
 export const bomItems = pgTable('bom_items', {
   id: integer('id').primaryKey(),
   bomId: integer('bom_id').notNull(),
-  materialId: text('material_id').notNull(),
+  itemNumber: text('item_number').notNull(),
+  componentType: text('component_type').default('material'),
+  componentId: integer('component_id').notNull(),
   quantity: decimal('quantity', { precision: 15, scale: 4 }).notNull(),
   unit: text('unit'),
+  scrapPercentage: decimal('scrap_percentage', { precision: 5, scale: 2 }).default('0'),
+  position: integer('position').default(0),
+  notes: text('notes'),
+  materialId: text('material_id'),
   scrapPercent: decimal('scrap_percent', { precision: 5, scale: 2 }).default('0'),
   createdAt: ts('created_at').defaultNow(),
 });

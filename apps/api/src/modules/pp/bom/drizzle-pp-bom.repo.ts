@@ -42,21 +42,78 @@ export class DrizzlePpBomRepository implements IPpBomRepository {
 
   async create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
-      const row: Omit<typeof bomHeaders.$inferInsert, 'id'> = {
-        productId: (dto.productId as string | undefined) ?? '',
-        version: (dto.version as string | undefined) ?? '1.0',
-        status: 'draft',
-        isActive: (dto.isActive as boolean | undefined) ?? true,
-      };
-      const result = await db.insert(bomHeaders).values(row as typeof bomHeaders.$inferInsert).returning();
-      return Ok(result[0]);
+      // product_id is an INTEGER column (FK products.id). The DTO sends a number;
+      // never coerce to string ('') — that 500s with "invalid input syntax for type integer".
+      const productId = Number(dto.productId);
+      if (!Number.isFinite(productId) || productId <= 0) {
+        return Err('Mahsulot (productId) noto\'g\'ri');
+      }
+
+      // bom_number is NOT NULL with no DB default — it MUST be supplied or the
+      // header INSERT fails with a NOT NULL violation.
+      const bomNumber =
+        (typeof dto.bomNumber === 'string' && dto.bomNumber.trim().length > 0)
+          ? (dto.bomNumber as string)
+          : `BOM-${productId}-${Date.now()}`;
+
+      // items[] component lines from the DTO — these MUST be persisted, not dropped.
+      const rawItems = Array.isArray(dto.items) ? (dto.items as Array<Record<string, unknown>>) : [];
+
+      const created = await db.transaction(async (tx) => {
+        const headerRow = {
+          bomNumber,
+          productId,
+          version: (typeof dto.version === 'string' && dto.version.length > 0) ? (dto.version as string) : '1.0',
+          status: (typeof dto.status === 'string' && dto.status.length > 0) ? (dto.status as string) : 'draft',
+          baseQuantity: dto.baseQuantity !== undefined ? Number(dto.baseQuantity) : 1,
+          baseUnit: (typeof dto.baseUnit === 'string' && dto.baseUnit.length > 0) ? (dto.baseUnit as string) : 'dona',
+          description: (typeof dto.description === 'string') ? (dto.description as string) : null,
+          isActive: (dto.isActive as boolean | undefined) ?? true,
+        };
+        const [header] = await tx
+          .insert(bomHeaders)
+          // live product_id column is INTEGER; the generated insert type (from the
+          // schema barrel) types it as string — cast through unknown to keep the
+          // numeric value Postgres actually requires.
+          .values(headerRow as unknown as typeof bomHeaders.$inferInsert)
+          .returning();
+
+        const bomId = Number((header as { id: number }).id);
+
+        if (rawItems.length > 0) {
+          const itemRows = rawItems.map((it, idx) => {
+            // accept both componentId and materialId from the form payload
+            const componentId = Number(it.componentId ?? it.materialId);
+            return {
+              bomId,
+              itemNumber: (typeof it.itemNumber === 'string' && it.itemNumber.length > 0)
+                ? (it.itemNumber as string)
+                : String(idx + 1),
+              componentType: (typeof it.componentType === 'string' && it.componentType.length > 0)
+                ? (it.componentType as string)
+                : 'material',
+              componentId,
+              quantity: Number(it.quantity),
+              unit: (typeof it.unit === 'string' && it.unit.length > 0) ? (it.unit as string) : 'dona',
+              scrapPercentage: it.scrapPercentage !== undefined ? Number(it.scrapPercentage) : 0,
+              position: it.position !== undefined ? Number(it.position) : idx,
+              notes: (typeof it.notes === 'string') ? (it.notes as string) : null,
+            } as unknown as typeof bomItems.$inferInsert;
+          });
+          await tx.insert(bomItems).values(itemRows);
+        }
+
+        return header;
+      });
+
+      return Ok(created);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }
 
   async update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
       const patch: Partial<typeof bomHeaders.$inferInsert> = {
-        ...(dto.productId !== undefined ? { productId: dto.productId as string } : {}),
+        ...(dto.productId !== undefined ? { productId: Number(dto.productId) } : {}),
         ...(dto.version !== undefined ? { version: dto.version as string } : {}),
         ...(dto.status !== undefined ? { status: dto.status as string } : {}),
         ...(dto.isActive !== undefined ? { isActive: dto.isActive as boolean } : {}),

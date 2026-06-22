@@ -22,10 +22,30 @@ enum Role {
   DIRECTOR = 'director',
 }
 
+const BomItemDtoSchema = z.object({
+  // component id may arrive as componentId or materialId from the form
+  componentId: z.coerce.number().int().positive().optional(),
+  materialId: z.coerce.number().int().positive().optional(),
+  componentType: z.enum(['material', 'sub_assembly']).optional(),
+  itemNumber: z.string().optional(),
+  quantity: z.coerce.number().positive(),
+  unit: z.string().optional(),
+  scrapPercentage: z.coerce.number().min(0).max(100).optional(),
+  position: z.coerce.number().int().optional(),
+  notes: z.string().optional(),
+}).refine((it) => it.componentId !== undefined || it.materialId !== undefined, {
+  message: 'Har bir komponentda componentId yoki materialId bo\'lishi kerak',
+});
+
 const CreateBomDtoSchema = z.object({
-  productId: z.number(),
-  items: z.array(z.any()),
-  reason: z.string().min(5),
+  productId: z.coerce.number().int().positive(),
+  version: z.string().optional(),
+  bomNumber: z.string().optional(),
+  baseQuantity: z.coerce.number().positive().optional(),
+  baseUnit: z.string().optional(),
+  description: z.string().optional(),
+  items: z.array(BomItemDtoSchema).default([]),
+  reason: z.string().min(5).optional(),
 });
 
 const ApproveBomDtoSchema = z.object({
