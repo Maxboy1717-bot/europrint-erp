@@ -7,7 +7,7 @@ import type { FunnelStage, ProductivityCategory } from './dto/create-funnel.dto'
 import type { CreateFunnelDto, MoveFunnelStageDto, QuickScreeningDto, ListFunnelDto } from './dto/create-funnel.dto';
 import { safeCall, Result, AppError } from '@common/result';
 import { Funnel } from '../domain/aggregates/funnel.aggregate';
-import { FunnelStage as FunnelStageVO } from '../domain/value-objects/funnel-stage.vo';
+import { FunnelStage as FunnelStageVO, HC_FUNNEL_STAGES, mapLegacyToHcStage, type HcFunnelStageValue } from '../domain/value-objects/funnel-stage.vo';
 import { DomainEvent } from '@shared/domain/domain-event';
 
 /**
@@ -101,7 +101,31 @@ export class RecruitmentFunnelService {
       candidates: (all as Record<string, unknown>[]).filter((c) => c['funnelStage'] === stage),
       count: (all as Record<string, unknown>[]).filter((c) => c['funnelStage'] === stage).length,
     }));
-  
+
+    });}
+
+  /**
+   * EP-HR-016 — the owner's 7-stage Human-Capital kanban view. Same live data as
+   * `getFunnelKanban` (no separate query, no data migration) but the candidates
+   * are PROJECTED onto the owner's 7 HC stages (PORTRET → KUCHAYTIRISH) via
+   * `mapLegacyToHcStage`. The legacy 12-column board is left untouched (Q-39),
+   * so this is an additive view the FE can adopt for the vision's 7-column board.
+   * Terminal/inactive candidates (HIRED / REJECTED / unknown legacy codes) map to
+   * no HC column, so they are surfaced in a separate `unmapped` group rather than
+   * silently dropped.
+   */
+  async getFunnelKanbanHc(vacancyId?: number){
+    return safeCall(async () => {
+    const result = await this.hrRecruitmentFunnelRepo.getFunnelKanban(vacancyId);
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    const all = Array.isArray(result.data) ? (result.data as Record<string, unknown>[]) : [];
+    const stages = (HC_FUNNEL_STAGES as readonly HcFunnelStageValue[]).map((hc) => {
+      const candidates = all.filter((c) => mapLegacyToHcStage(String(c['funnelStage'] ?? '')) === hc);
+      return { stage: hc, candidates, count: candidates.length };
+    });
+    const unmappedCandidates = all.filter((c) => mapLegacyToHcStage(String(c['funnelStage'] ?? '')) === null);
+    return { model: 'hc-7', stages, unmapped: { candidates: unmappedCandidates, count: unmappedCandidates.length } };
+
     });}
 
   async moveFunnelStage(funnelId: number, dto: MoveFunnelStageDto, changedById: number){

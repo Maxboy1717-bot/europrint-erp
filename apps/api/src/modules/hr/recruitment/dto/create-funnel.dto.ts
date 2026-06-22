@@ -6,10 +6,30 @@
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 
+/**
+ * Stage codes accepted by the recruitment funnel API. Mirrors the canonical
+ * list in `domain/value-objects/funnel-stage.vo.ts` (the VO owns the source of
+ * truth; this re-asserts it here so the DTO module does not depend on the
+ * domain layer — same dependency-direction note as the VO file).
+ *
+ * Owner's 7-stage Human-Capital funnel first (EP-HR-016, docs/audit/
+ * decisions/02-hr.md), then the legacy 12-stage ATS codes kept as aliases so
+ * the 11 live `hr_candidate_funnels` rows still validate (Q-39 no-regression).
+ */
+export const HC_FUNNEL_STAGES = [
+  'PORTRET', 'UPAKOVKA', 'POTOK', 'TEZ_ISHLOV',
+  'BAHOLASH', 'LAVOZIMGA_KIRITISH', 'KUCHAYTIRISH',
+] as const;
+
 export const FUNNEL_STAGES = [
+  // Owner's 7 HC stages (canonical)
+  'PORTRET', 'UPAKOVKA', 'POTOK', 'TEZ_ISHLOV',
+  'BAHOLASH', 'LAVOZIMGA_KIRITISH', 'KUCHAYTIRISH',
+  // Legacy 12-stage ATS aliases + extra live codes (REFERENCES / SINOV_COMPLETE)
   'NEW', 'QUESTIONNAIRE_SENT', 'PHONE_SCREENING', 'INTERVIEW_SCHEDULED',
   'INTERVIEWED', 'TEST_SENT', 'TEST_ANALYSIS', 'REFERENCES_CHECK',
   'PROBATION', 'OFFER_SENT', 'HIRED', 'REJECTED',
+  'REFERENCES', 'SINOV_COMPLETE',
 ] as const;
 
 export type FunnelStage = typeof FUNNEL_STAGES[number];
