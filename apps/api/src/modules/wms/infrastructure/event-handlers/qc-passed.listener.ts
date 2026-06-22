@@ -11,10 +11,15 @@ import { Result } from '@common/result';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
-interface FgLookupRow {
-  material_id: number;
+/** Passed quantity + warehouse resolved from the QC inspection row itself. */
+interface InspectionLookupRow {
+  pass_count: number;
   warehouse_id: number;
-  quantity: number;
+}
+
+/** One finished-goods line item of the sales order. */
+interface FgLineRow {
+  material_id: number;
 }
 
 @Injectable()
@@ -30,23 +35,45 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
       'Trigger 11: QC passed - Creating FG receipt',
     );
 
-    // Resolve the finished-goods material, default warehouse, and quantity from the sales order
-    const lookupRows = await runQuery<FgLookupRow>(sql`
+    // The passed quantity lives on the QC inspection row (qc_inspections.pass_count —
+    // the canonical inspection table this listener's event id refers to; fall back to
+    // items_passed which save() also writes). sales_orders has NO product_id/quantity
+    // columns, so the FG material(s) must come from the line-item table instead.
+    const inspectionRows = await runQuery<InspectionLookupRow>(sql`
       SELECT
-        COALESCE(so.product_id, 0)                     AS material_id,
-        COALESCE(w.id, 1)                              AS warehouse_id,
-        COALESCE(so.quantity, so.total_quantity, 1)    AS quantity
-      FROM sales_orders so
+        COALESCE(qi.pass_count, qi.items_passed, 0) AS pass_count,
+        COALESCE(w.id, 1)                           AS warehouse_id
+      FROM qc_inspections qi
       LEFT JOIN warehouses w ON w.type = 'finished_goods' OR w.name ILIKE '%finished%'
-      WHERE so.id = ${event.orderId}
+      WHERE qi.id = ${Number(event.inspectionId)}
       LIMIT 1
     `);
 
-    const lookup = lookupRows.rows[0];
-    if (!lookup || !lookup.material_id) {
+    const inspection = inspectionRows.rows[0];
+    if (!inspection) {
+      this.logger.warn(
+        { inspectionId: event.inspectionId, orderId: event.orderId },
+        'QcPassedListener: inspection row not found, skipping FG receipt',
+      );
+      return;
+    }
+    const passQty = Number(inspection.pass_count) || 0;
+    const warehouseId = Number(inspection.warehouse_id) || 1;
+
+    // Finished-goods material(s) come from the real line-item table. product_id is the
+    // FG material; it is nullable in live data, so fall back to material_id.
+    const lineRows = await runQuery<FgLineRow>(sql`
+      SELECT COALESCE(soi.product_id, soi.material_id) AS material_id
+      FROM sales_order_items soi
+      WHERE soi.sales_order_id = ${event.orderId}
+        AND COALESCE(soi.product_id, soi.material_id) IS NOT NULL
+    `);
+
+    const lines = Array.isArray(lineRows.rows) ? lineRows.rows : [];
+    if (lines.length === 0) {
       this.logger.warn(
         { orderId: event.orderId },
-        'QcPassedListener: could not resolve material for order, skipping FG receipt',
+        'QcPassedListener: no sales_order_items lines for order, skipping FG receipt',
       );
       return;
     }
@@ -55,28 +82,33 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
     // and the rental timer (Trigger 12) can fire. A direct wmsRepo.receiveFg()
     // call cannot carry orderId — command dispatch is the canonical path that
     // both performs the warehouse_stock UPSERT and publishes the order-attributed
-    // WmsFgReceivedEvent.
-    const result = await this.commandBus.execute<ReceiveFgCommand, Result<void>>(
-      new ReceiveFgCommand(
-        lookup.material_id,
-        lookup.warehouse_id,
-        lookup.quantity,
-        `QC-${event.inspectionId}`, // batchNumber — traceable to the inspection
-        null, // expiryDate — FG has no expiry by default
-        event.orderId, // orderId — attributes the FG + enables Trigger 12 rental timer
-      ),
-    );
+    // WmsFgReceivedEvent. One receipt per finished-goods line item.
+    for (const line of lines) {
+      const materialId = Number(line.material_id) || 0;
+      if (!materialId) continue;
 
-    if (!result.ok) {
-      this.logger.error(
-        { orderId: event.orderId, error: String(result.error) },
-        'Failed to receive FG after QC passed',
+      const result = await this.commandBus.execute<ReceiveFgCommand, Result<void>>(
+        new ReceiveFgCommand(
+          materialId,
+          warehouseId,
+          passQty, // received quantity = QC passed count
+          `QC-${event.inspectionId}`, // batchNumber — traceable to the inspection
+          null, // expiryDate — FG has no expiry by default
+          event.orderId, // orderId — attributes the FG + enables Trigger 12 rental timer
+        ),
       );
-    } else {
-      this.logger.log(
-        { orderId: event.orderId, materialId: lookup.material_id, qty: lookup.quantity },
-        'Trigger 11 -> 12: FG receipt UPSERTed to warehouse_stock, rental timer will start',
-      );
+
+      if (!result.ok) {
+        this.logger.error(
+          { orderId: event.orderId, materialId, error: String(result.error) },
+          'Failed to receive FG after QC passed',
+        );
+      } else {
+        this.logger.log(
+          { orderId: event.orderId, materialId, qty: passQty },
+          'Trigger 11 -> 12: FG receipt UPSERTed to warehouse_stock, rental timer will start',
+        );
+      }
     }
   }
 }

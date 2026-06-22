@@ -42,6 +42,7 @@ import { GetBudgetByIdHandler } from './application/queries/get-budget-by-id.han
 import { GetBudgetVarianceHandler } from './application/queries/get-budget-variance.handler';
 import { GetBudgetStatsHandler } from './application/queries/get-budget-stats.handler';
 import { WmsFgReceivedListener } from './infrastructure/event-handlers/wms-fg-received.listener';
+import { WmsGoodsIssuedListener, WmsFgReceivedGlListener } from './infrastructure/event-handlers/wms-goods-issued.listener';
 import { DeliveryCompletedListener } from './infrastructure/event-handlers/delivery-completed.listener';
 import { TechThreeCheckpointListener } from './infrastructure/event-handlers/tech-three-checkpoint.listener';
 import { FinanceInvoicesController } from './presentation/finance-invoices.controller';
@@ -151,7 +152,9 @@ const queryHandlers = [
 ];
 
 const eventListeners = [
-  WmsFgReceivedListener,           // Trigger 12
+  WmsFgReceivedListener,           // Trigger 12 (rental timer)
+  WmsGoodsIssuedListener,          // HOP 5 WMS→FIN: goods-issue → Dr COGS / Cr Inventory (entries)
+  WmsFgReceivedGlListener,         // HOP 5 WMS→FIN: FG receipt → Dr Inventory / Cr AP (entries)
   DeliveryCompletedListener,       // Trigger 14
   TechThreeCheckpointListener,     // Trigger 6
 ];

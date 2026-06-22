@@ -22,6 +22,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { EventBus } from '@nestjs/cqrs';
+import { TashkentTimeService } from '@common/time';
+import { MesCompletedEvent } from '@modules/mes/domain/events/mes-completed.event';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -64,9 +67,12 @@ type Rows = { rows?: unknown[] };
 @ApiBearerAuth()
 @Controller('iot')
 export class IotTabletController {
+  private readonly time = new TashkentTimeService();
+
   constructor(
     private readonly tabletSvc: IotTabletService,
     private readonly oeeSvc: OeeCalculatorService,
+    private readonly eventBus: EventBus,
   ) {}
 
   // -- Tablet PWA endpoints ----------------------------------------------------
@@ -374,15 +380,18 @@ export class IotTabletController {
     }
 
     // 1. Read session row from DB (now contains real FE values)
+    //    production_order_id is the canonical ppId (mirrors drizzle-mes.repo.ts toSession),
+    //    needed for the MesCompletedEvent → QC payload below.
     const sessionRes = await db.execute(sql`
       SELECT actual_quantity, target_quantity, defect_quantity,
-             running_time_seconds, stopped_time_seconds
+             running_time_seconds, stopped_time_seconds, production_order_id
       FROM production_sessions
       WHERE id = ${sessionId}
       LIMIT 1
     `);
     const row = ((sessionRes as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
 
+    const ppId       = row ? Number(row['production_order_id'] ?? 0) : 0;
     const actualQty  = row ? Number(row['actual_quantity']  ?? 0) : 0;
     const targetQty  = row ? Number(row['target_quantity']  ?? 1) : 1;
     const defectQty  = row ? Number(row['defect_quantity']  ?? 0) : 0;
@@ -420,6 +429,15 @@ export class IotTabletController {
           updated_at   = NOW()
       WHERE id = ${sessionId}
     `);
+
+    // 3b. GOLDEN-THREAD (HOP 3, MES→QC): the floor-operator tablet stop must fire the
+    //     SAME event the CQRS complete-session.handler publishes, so QC's
+    //     @EventsHandler(MesCompletedEvent) (mes-completed.listener.ts) opens a PENDING
+    //     qc_inspection for this production order. Previously the tablet stop never
+    //     published, so tablet-completed sessions silently broke the chain at QC.
+    //     Identical class + payload shape: (sessionId, ppId, timestamp). The EventBridge
+    //     re-emits to legacy @OnEvent consumers via ERP_EVENTS.MES_COMPLETED.
+    this.eventBus.publish(new MesCompletedEvent(sessionId, ppId, this.time.now()));
 
     // 4. Build FE-contract report shape (CompletionReportData)
     const elapsedSeconds = plannedProductionTime;
