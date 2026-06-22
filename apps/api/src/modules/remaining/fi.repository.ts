@@ -147,9 +147,18 @@ export class FiRepository {
 
   async getGlEntries(limit: number, offset: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
+      // Canonical GL = `entries` (ADR-003); `gl_journal_entries` is dead/empty.
+      // `entries` rows are balanced double-entry lines, so total_debit = total_credit = amount.
       const rows = await runQuery<Row>(sql`
-        SELECT je.id, je.journal_date, je.reference, je.description, je.status, je.total_debit, je.total_credit, je.created_at
-        FROM gl_journal_entries je ORDER BY je.journal_date DESC, je.created_at DESC LIMIT ${limit} OFFSET ${offset}
+        SELECT je.id,
+               je.entry_date    AS journal_date,
+               je.entry_number  AS reference,
+               je.description   AS description,
+               'posted'         AS status,
+               je.amount        AS total_debit,
+               je.amount        AS total_credit,
+               je.created_at    AS created_at
+        FROM entries je ORDER BY je.entry_date DESC, je.created_at DESC LIMIT ${limit} OFFSET ${offset}
       `);
       return rows.rows as Row[];
       }, 'DB_ERROR');

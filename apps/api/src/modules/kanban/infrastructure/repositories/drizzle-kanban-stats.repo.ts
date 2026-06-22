@@ -8,11 +8,9 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
-import { eq, ne, sql } from 'drizzle-orm';
-import { db, kanban_tasks, runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { runQuery } from '@shared/db';
 import { safeCall, Result } from '@common/result';
-
-const COUNT_EXPR = sql<number>`count(*)::int`;
 
 @Injectable()
 export class DrizzleKanbanStatsRepository {
@@ -235,12 +233,19 @@ export class DrizzleKanbanStatsRepository {
 
   async getSprintInfo(): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const active = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(ne(kanban_tasks.status, 'done'));
-      const done = await db.select({ count: COUNT_EXPR }).from(kanban_tasks)
-        .where(eq(kanban_tasks.status, 'done'));
+      // TWO-WORLD FIX: read canonical kanban_cards (has rows) instead of the
+      // dead kanban_tasks table (always empty). kanban_cards has no `status`
+      // column — completion is derived from `completed_at` (NULL = active).
+      const rows = await runQuery<Record<string, unknown>>(sql`
+        SELECT
+          COUNT(*) FILTER (WHERE completed_at IS NULL)     AS active,
+          COUNT(*) FILTER (WHERE completed_at IS NOT NULL) AS done
+        FROM kanban_cards
+        WHERE deleted_at IS NULL
+      `);
+      const s = rows.rows[0] ?? {};
       return {
-        activeSprint: { totalCards: Number(active[0]?.count ?? 0), completedCards: Number(done[0]?.count ?? 0) },
+        activeSprint: { totalCards: Number(s.active ?? 0), completedCards: Number(s.done ?? 0) },
         upcomingSprints: [],
         completedSprints: [],
       };

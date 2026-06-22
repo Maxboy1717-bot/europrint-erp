@@ -6,13 +6,42 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { and, eq, desc , sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/types/result.type';
 import { IKanbanRepo } from '../../domain/repositories/i-kanban.repo';
 import { KanbanTask } from '../../domain/aggregates/kanban-task.aggregate';
 import { TaskStatus, TaskPriority } from '../../domain/enums/task-status.enum';
-import { db, kanban_tasks } from '@shared/db';
+import { db, kanban_tasks, runQuery } from '@shared/db';
 import { safeJsonParse } from '@shared/utils/safe-json';
+
+/**
+ * TWO-WORLD FIX (audit KAN): the live kanban data is in `kanban_cards`
+ * (canonical, has rows). The legacy `kanban_tasks` table is a separate, empty
+ * schema. READ paths below now query `kanban_cards` so list/detail/assignee
+ * queries reflect real data. WRITE paths (save/update/delete) still target
+ * `kanban_tasks` and are intentionally out of scope for this read-repoint —
+ * real card writes flow through the kanban_cards CRUD repo / cards controller.
+ *
+ * Column mapping kanban_tasks -> kanban_cards:
+ *   id (uuid)        -> id (integer, aliased as text)
+ *   assigned_to(uuid)-> owner_user_id (integer)
+ *   status (enum)    -> DERIVED from completed_at (NULL='in_progress', else 'done')
+ *   created_by(uuid) -> COALESCE(accepted_by_id, owner_user_id, 0)
+ *   tags             -> NO column on kanban_cards -> NULL -> [] in toDomain
+ */
+const KANBAN_CARD_SELECT = sql`
+  kc.id::text                                                  AS id,
+  kc.title                                                     AS title,
+  kc.description                                               AS description,
+  kc.priority                                                  AS priority,
+  CASE WHEN kc.completed_at IS NOT NULL THEN 'done' ELSE 'in_progress' END AS status,
+  kc.owner_user_id                                             AS assigned_to,
+  COALESCE(kc.accepted_by_id, kc.owner_user_id, 0)             AS created_by,
+  kc.due_date                                                  AS due_date,
+  NULL                                                         AS tags,
+  kc.created_at                                                AS created_at,
+  kc.updated_at                                                AS updated_at
+`;
 
 @Injectable()
 export class DrizzleKanbanRepository implements IKanbanRepo {
@@ -21,11 +50,11 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
   constructor() {}
 
   async findById(id: string): Promise<Result<KanbanTask | null>> {
-    return db
-      .select()
-      .from(kanban_tasks)
-      .where(sql`${kanban_tasks.id} = ${id} AND ${kanban_tasks.deleted_at} IS NULL`)
-      .execute()
+    return runQuery<Record<string, unknown>>(sql`
+        SELECT ${KANBAN_CARD_SELECT}
+        FROM kanban_cards kc
+        WHERE kc.id::text = ${id} AND kc.deleted_at IS NULL
+      `)
       .then((rows) => {
         if (rows.length === 0) {
           return Ok(null);
@@ -48,35 +77,36 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
     const limit = filters.limit || 10;
     const offset = (page - 1) * limit;
 
+    // status filter mapped onto derived completion (kanban_cards has no status col)
+    const statusFilter = filters.status
+      ? (filters.status === 'done'
+          ? sql`AND kc.completed_at IS NOT NULL`
+          : sql`AND kc.completed_at IS NULL`)
+      : sql``;
+    const assigneeFilter = filters.assignedTo
+      ? sql`AND kc.owner_user_id::text = ${filters.assignedTo}`
+      : sql``;
+
     return Promise.all([
-      db
-        .select()
-        .from(kanban_tasks)
-        .where(
-          and(
-            sql`${kanban_tasks.deleted_at} IS NULL`,
-            filters.status ? sql`${kanban_tasks.status} = ${filters.status}` : undefined,
-            filters.assignedTo ? sql`${kanban_tasks.assigned_to} = ${filters.assignedTo}` : undefined))
-        .orderBy(desc(kanban_tasks.created_at))
-        .limit(limit)
-        .offset(offset)
-        .execute()
+      runQuery<Record<string, unknown>>(sql`
+        SELECT ${KANBAN_CARD_SELECT}
+        FROM kanban_cards kc
+        WHERE kc.deleted_at IS NULL ${statusFilter} ${assigneeFilter}
+        ORDER BY kc.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `)
         .catch((error) => {
-          this.logger.error('Error fetching kanban tasks');
+          this.logger.error('Error fetching kanban cards');
           throw error;
         }),
-      db
-        .select({ count: sql<number>`COUNT(*)::int` })
-        .from(kanban_tasks)
-        .where(
-          and(
-            sql`${kanban_tasks.deleted_at} IS NULL`,
-            filters.status ? sql`${kanban_tasks.status} = ${filters.status}` : undefined,
-            filters.assignedTo ? sql`${kanban_tasks.assigned_to} = ${filters.assignedTo}` : undefined))
-        .execute()
+      runQuery<{ count: number }>(sql`
+        SELECT COUNT(*)::int AS count
+        FROM kanban_cards kc
+        WHERE kc.deleted_at IS NULL ${statusFilter} ${assigneeFilter}
+      `)
         .then((rows) => Number(rows[0]?.count ?? 0))
         .catch((error) => {
-          this.logger.error('Error counting kanban tasks');
+          this.logger.error('Error counting kanban cards');
           throw error;
         }),
     ])
@@ -87,15 +117,15 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
   }
 
   async findByAssignee(assigneeId: string): Promise<Result<KanbanTask[]>> {
-    return db
-      .select()
-      .from(kanban_tasks)
-      .where(eq(kanban_tasks.assigned_to, assigneeId))
-      .orderBy(desc(kanban_tasks.created_at))
-      .execute()
-      .then((rows) => (Ok((Array.isArray(rows) ? rows : []).map((row) => this.toDomain(row)),)))
+    return runQuery<Record<string, unknown>>(sql`
+        SELECT ${KANBAN_CARD_SELECT}
+        FROM kanban_cards kc
+        WHERE kc.owner_user_id::text = ${assigneeId} AND kc.deleted_at IS NULL
+        ORDER BY kc.created_at DESC
+      `)
+      .then((rows) => (Ok((Array.isArray(rows) ? rows : []).map((row) => this.toDomain(row)))))
       .catch((error) => {
-        this.logger.error('Error finding kanban tasks by assignee');
+        this.logger.error('Error finding kanban cards by assignee');
         return Err((error as Error).message);
       });
   }
