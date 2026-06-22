@@ -250,3 +250,13 @@ export const HOLAT_WEIGHT_SUM_EPSILON = 0.001;
 /** Normalised score scale for each holat metric (0–100) */
 export const HOLAT_SCORE_MIN = 0;
 export const HOLAT_SCORE_MAX = 100;
+
+// ---------------------------------------------------------------------------
+// MM — 3-Way Match (PO ↔ Goods Receipt ↔ Invoice)
+// The match passes only when the largest pairwise spread between the PO total,
+// the received goods value and the invoice amount stays within this fraction
+// of the PO total. 0.02 = ±2%.
+// ---------------------------------------------------------------------------
+
+/** Allowed relative spread (fraction of PO total) for a passing 3-way match */
+export const MM_THREE_WAY_MATCH_TOLERANCE = 0.02;

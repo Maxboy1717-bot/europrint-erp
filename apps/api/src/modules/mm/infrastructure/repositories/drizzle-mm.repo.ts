@@ -16,6 +16,7 @@ import { IMmRepository, DrizzleExecutor } from '../../domain/repositories/mm.rep
 import { db , runQuery } from '@shared/db';
 import { materials, purchase_orders, purchase_orders_legacy, vendors } from '@shared/db';
 import { execMmMaterialInsert } from '@common/database/queries-remaining';
+import { MM_THREE_WAY_MATCH_TOLERANCE } from '@common/constants/business.constants';
 
 type DbRow = Record<string, unknown>;
 
@@ -180,14 +181,83 @@ export class DrizzleMmRepository implements IMmRepository {
     tx?: DrizzleExecutor,
   ): Promise<Result<{ matched: boolean; difference: number }>> {
     try {
-      const exec = asExec(tx);
-      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
-      const po = rows[0] as DbRow | undefined;
-      if (!po) return Err('PO topilmadi');
-      const invoiceMatched = Boolean(po['invoice_matched']);
-      const goodsReceived = Boolean(po['goods_received_at']);
-      const matched = invoiceMatched && goodsReceived;
-      return Ok({ matched, difference: matched ? 0 : 1 });
+      // §17 3-Way Match: compare the three monetary documents tied to the PO.
+      //  1. PO total       → purchase_orders.total_amount
+      //  2. Goods receipt  → mm_goods_receipts.total_value (linked by purchase_order_id).
+      //                      When total_value is missing/zero we recompute it as
+      //                      Σ(received_qty × PO line unit_price) from the receipt items.
+      //  3. Invoice        → purchase_invoices.total_amount (fallback: amount),
+      //                      linked by vendor_id — same linkage the read endpoint uses,
+      //                      since purchase_invoices has no purchase_order_id column.
+      // The match passes only when the largest pairwise spread stays within
+      // MM_THREE_WAY_MATCH_TOLERANCE of the PO total. `difference` is the real
+      // numeric spread (UZS), not a boolean flag.
+      type AmtRow = {
+        po_total: number | string | null;
+        gr_total: number | string | null;
+        invoice_total: number | string | null;
+      };
+      // Honor the caller's transaction boundary: the goods-receipt handler runs
+      // this inside `withTransaction`, so reads must go through that `tx` executor.
+      const exec = (tx ?? db) as { execute: (q: ReturnType<typeof sql>) => Promise<unknown> };
+      const query = sql`
+          SELECT
+            po.total_amount AS po_total,
+            COALESCE(
+              gr.total_value,
+              gri.computed_value,
+              0
+            ) AS gr_total,
+            COALESCE(inv.invoice_total, 0) AS invoice_total
+          FROM purchase_orders po
+          LEFT JOIN LATERAL (
+            SELECT g.id, g.total_value
+            FROM mm_goods_receipts g
+            WHERE g.purchase_order_id = po.id
+            ORDER BY g.id DESC
+            LIMIT 1
+          ) gr ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT SUM(it.received_qty * COALESCE(poi.unit_price, 0)) AS computed_value
+            FROM mm_goods_receipts g2
+            JOIN mm_goods_receipt_items it ON it.gr_id = g2.id
+            LEFT JOIN purchase_order_items poi
+              ON poi.purchase_order_id = po.id
+             AND poi.raw_material_id = it.raw_material_id
+            WHERE g2.purchase_order_id = po.id
+          ) gri ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT SUM(COALESCE(pi.total_amount, pi.amount, 0)) AS invoice_total
+            FROM purchase_invoices pi
+            WHERE pi.vendor_id = po.vendor_id
+          ) inv ON TRUE
+          WHERE po.id = ${poId}
+          LIMIT 1
+        `;
+      const result = await exec.execute(query);
+      const rows = (Array.isArray(result)
+        ? result
+        : ((result as { rows?: AmtRow[] }).rows ?? [])) as AmtRow[];
+      const row = rows[0];
+      if (!row) return Err('PO topilmadi');
+
+      const poTotal = Number(row.po_total ?? 0);
+      const grTotal = Number(row.gr_total ?? 0);
+      const invoiceTotal = Number(row.invoice_total ?? 0);
+
+      // Largest pairwise spread between the three documents (real UZS difference).
+      const amounts = [poTotal, grTotal, invoiceTotal];
+      const difference = Math.max(...amounts) - Math.min(...amounts);
+
+      // Tolerance is a fraction of the PO total (absolute floor of 1 UZS so a
+      // zero-value PO still requires the other two documents to be present/zero).
+      const toleranceAbs = Math.max(Math.abs(poTotal) * MM_THREE_WAY_MATCH_TOLERANCE, 1);
+
+      // A goods receipt and an invoice must both exist for a match to be possible.
+      const documentsPresent = grTotal > 0 && invoiceTotal > 0;
+      const matched = documentsPresent && difference <= toleranceAbs;
+
+      return Ok({ matched, difference: Math.round(difference) });
     } catch (error: unknown) {
       this.logger.error('Failed to validate three-way match');
       return Err('Tekshirishda xatolik');
