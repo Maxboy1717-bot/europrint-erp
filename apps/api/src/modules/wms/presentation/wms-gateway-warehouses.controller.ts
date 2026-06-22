@@ -193,15 +193,22 @@ export class WmsGatewayWarehousesController {
     }
   }
 
-  @ApiOperation({ summary: 'Get warehouse stats' })
+  @ApiOperation({ summary: 'Get warehouse stats (warehouse-360: stock + value + occupancy + zones/bins + batch/expiry + movements)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id/stats')
   @Roles(...WH_READ)
   async getWarehouseStats(@Param('id') id: string) {
+    const wid = safeInt(id, 0);
     try {
-      const [wRows, sRows] = await Promise.all([
-        rawSql(sql`SELECT id, code, name, name_ru, type, location, is_active, created_at FROM warehouses WHERE id = ${id} AND deleted_at IS NULL`),
+      // warehouse-360 rollup: each source is one round-trip (no N+1). Stock/value
+      // from warehouse_stock×material_cards; occupancy from warehouse_bins
+      // (current_occupancy/max_volume = the real capacity source — warehouses.capacity
+      // is unpopulated); zone count from warehouse_zones; batch/expiry from batch_lots;
+      // movements (kirim/chiqim) from warehouse_transactions. Q-40: every number is a
+      // live SELECT — empty source tables stay honestly zero, no hardcoded/echo values.
+      const [wRows, sRows, occRows, zRows, blRows, mvRows] = await Promise.all([
+        rawSql(sql`SELECT id, code, name, name_ru, type, location, is_active, capacity, created_at FROM warehouses WHERE id = ${wid} AND deleted_at IS NULL`),
         rawSql(sql`
           SELECT COUNT(DISTINCT ws.material_id)::int AS material_count,
                  COALESCE(SUM(ws.quantity),0)::numeric AS total_quantity,
@@ -211,21 +218,79 @@ export class WmsGatewayWarehousesController {
                  SUM(CASE WHEN mc.min_stock > 0 AND ws.quantity < mc.min_stock THEN 1 ELSE 0 END)::int AS low_stock_count
           FROM warehouse_stock ws
           LEFT JOIN material_cards mc ON mc.id = ws.material_id
-          WHERE ws.warehouse_id = ${id}
+          WHERE ws.warehouse_id = ${wid}
+        `),
+        rawSql(sql`
+          SELECT COUNT(*)::int AS bin_count,
+                 COUNT(*) FILTER (WHERE is_active = true)::int AS active_bin_count,
+                 COALESCE(SUM(current_occupancy),0)::numeric AS used_volume,
+                 COALESCE(SUM(max_volume),0)::numeric AS capacity_volume
+          FROM warehouse_bins
+          WHERE warehouse_id = ${wid} AND deleted_at IS NULL
+        `),
+        rawSql(sql`SELECT COUNT(*)::int AS zone_count FROM warehouse_zones WHERE warehouse_id = ${wid} AND deleted_at IS NULL`),
+        rawSql(sql`
+          SELECT COUNT(*)::int AS lot_count,
+                 COUNT(*) FILTER (WHERE expiry_date IS NOT NULL AND expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days')::int AS expiring_soon_count,
+                 COUNT(*) FILTER (WHERE expiry_date IS NOT NULL AND expiry_date < NOW())::int AS expired_count
+          FROM batch_lots WHERE warehouse_id = ${wid} AND is_active = true
+        `),
+        rawSql(sql`
+          SELECT COUNT(*)::int AS movement_count,
+                 COALESCE(SUM(CASE WHEN transaction_type IN ('receipt','goods_receipt','in','inbound','kirim') THEN quantity ELSE 0 END),0)::numeric AS total_in,
+                 COALESCE(SUM(CASE WHEN transaction_type IN ('issue','goods_issue','out','outbound','chiqim') THEN quantity ELSE 0 END),0)::numeric AS total_out,
+                 MAX(created_at)::text AS last_movement_at
+          FROM warehouse_transactions WHERE warehouse_id = ${wid}
         `),
       ]);
-      const w = (wRows as { rows?: Record<string, unknown>[] }).rows?.[0];
-      const s = (sRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const w  = (wRows  as { rows?: Record<string, unknown>[] }).rows?.[0];
+      const s  = (sRows  as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const oc = (occRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const z  = (zRows  as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const bl = (blRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const mv = (mvRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      const usedVolume     = Number(oc.used_volume     ?? 0);
+      const capacityVolume = Number(oc.capacity_volume ?? 0);
+      const totalIn  = Number(mv.total_in  ?? 0);
+      const totalOut = Number(mv.total_out ?? 0);
       return {
-        ...(w ?? { id }),
+        ...(w ?? { id: String(wid) }),
         materialCount:     Number(s.material_count    ?? 0),
         totalQuantity:     Number(s.total_quantity     ?? 0),
         reservedQuantity:  Number(s.reserved_qty       ?? 0),
         availableQuantity: Number(s.available_qty      ?? 0),
         stockValue:        Number(s.stock_value        ?? 0),
         lowStockCount:     Number(s.low_stock_count    ?? 0),
+        // Occupancy (Zona-Qator-Javon locator volume). occupancyPct = used/capacity
+        // when a capacity is defined; null when no bins/capacity yet (honest-empty).
+        occupancy: {
+          zoneCount:      Number(z.zone_count        ?? 0),
+          binCount:       Number(oc.bin_count        ?? 0),
+          activeBinCount: Number(oc.active_bin_count ?? 0),
+          usedVolume,
+          capacityVolume,
+          occupancyPct: capacityVolume > 0 ? Math.round((usedVolume / capacityVolume) * 1000) / 10 : null,
+        },
+        // Batch / expiry (FEFO-relevant) summary.
+        batch: {
+          lotCount:          Number(bl.lot_count           ?? 0),
+          expiringSoonCount: Number(bl.expiring_soon_count ?? 0),
+          expiredCount:      Number(bl.expired_count       ?? 0),
+        },
+        // Movements (kirim/chiqim). warehouse_transactions is currently empty in this
+        // environment → totals are honestly 0; populated once movements are logged.
+        movements: {
+          movementCount:  Number(mv.movement_count ?? 0),
+          totalIn,
+          totalOut,
+          netChange:      totalIn - totalOut,
+          lastMovementAt: mv.last_movement_at ? String(mv.last_movement_at) : null,
+        },
       };
-    } catch { return { id, materialCount: 0, totalQuantity: 0 }; }
+    } catch (e) {
+      this.logger.warn(`getWarehouseStats failed: ${(e as Error).message}`);
+      return { id: String(wid), materialCount: 0, totalQuantity: 0 };
+    }
   }
 
   @ApiOperation({ summary: 'Get warehouse by id' })
