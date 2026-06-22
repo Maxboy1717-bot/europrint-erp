@@ -14,7 +14,7 @@ Controller,
   UseGuards,
   UseInterceptors,
   Logger,
-  InternalServerErrorException, UsePipes,
+  InternalServerErrorException, NotFoundException, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -48,6 +48,19 @@ export class PpEquipmentController {
     @Query('limit') limit?: string,
   ) {
     return unwrapOrThrow(await this.svc.listEquipment(status ?? null, safeInt(limit, 100)));
+  }
+
+  @ApiOperation({ summary: 'Equipment 360 — status, OEE, sessions, downtime, maintenance, operator' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get(':id/360')
+  async getEquipment360(@Param('id') id: string) {
+    const result = await this.svc.getEquipment360(safeInt(id, 0));
+    if (!result.ok) throwFromError(result.error);
+    if (result.data === null) {
+      throw new NotFoundException('Uskuna topilmadi');
+    }
+    return result.data;
   }
 
   @ApiOperation({ summary: 'Get by id' })
