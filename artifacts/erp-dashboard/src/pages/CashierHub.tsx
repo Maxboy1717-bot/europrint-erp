@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   EPPageHeader,
@@ -113,6 +114,7 @@ function approvalTone(status: string): EPStatusTone {
 }
 
 export default function CashierHub() {
+  const { t } = useTranslation("finance");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [rejectId, setRejectId] = useState<number | null>(null);
@@ -147,9 +149,9 @@ export default function CashierHub() {
       apiRequest("POST", `/api/finance/cashier/salary-payouts/${vars.id}/approve`, { stage: vars.stage }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/salary-payouts"] });
-      toast({ title: "Bosqich tasdiqlandi" });
+      toast({ title: t("cashierHub.stageApproved", "Bosqich tasdiqlandi") });
     },
-    onError: () => toast({ title: "Xatolik", description: "Tasdiqlab bo'lmadi", variant: "destructive" }),
+    onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.approveFailed", "Tasdiqlab bo'lmadi"), variant: "destructive" }),
   });
 
   const rejectMutation = useMutation({
@@ -159,9 +161,9 @@ export default function CashierHub() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/salary-payouts"] });
-      toast({ title: "Zanjir rad etildi" });
+      toast({ title: t("cashierHub.chainRejected", "Zanjir rad etildi") });
     },
-    onError: () => toast({ title: "Xatolik", description: "Rad etib bo'lmadi", variant: "destructive" }),
+    onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.rejectFailed", "Rad etib bo'lmadi"), variant: "destructive" }),
   });
 
   const approveReportMutation = useMutation({
@@ -169,9 +171,9 @@ export default function CashierHub() {
       apiRequest("POST", `/api/finance/cashier/advance-reports/${id}/approve`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/advance-reports"] });
-      toast({ title: "Avans hisoboti tasdiqlandi" });
+      toast({ title: t("cashierHub.advanceReportApproved", "Avans hisoboti tasdiqlandi") });
     },
-    onError: () => toast({ title: "Xatolik", description: "Tasdiqlab bo'lmadi", variant: "destructive" }),
+    onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.approveFailed", "Tasdiqlab bo'lmadi"), variant: "destructive" }),
   });
 
   const refreshAll = () => {
@@ -189,14 +191,14 @@ export default function CashierHub() {
       <EPPageHeader
         data-testid="text-page-title"
         icon={<Banknote className="h-5 w-5" />}
-        title="Kassir markazi"
-        subtitle="Smenalar, ish haqi to'lovi tasdiqlash navbati va avans hisobotlari"
+        title={t("cashierHub.title", "Kassir markazi")}
+        subtitle={t("cashierHub.subtitle", "Smenalar, ish haqi to'lovi tasdiqlash navbati va avans hisobotlari")}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <EPStatusPill tone="info" data-testid="badge-open-shifts">
-              Ochiq smenalar: {openShiftCount}
+              {t("cashierHub.openShifts", "Ochiq smenalar")}: {openShiftCount}
             </EPStatusPill>
-            <Button variant="ghost" size="sm" onClick={refreshAll} title="Yangilash" data-testid="button-refresh">
+            <Button variant="ghost" size="sm" onClick={refreshAll} title={t("refresh", "Yangilash")} data-testid="button-refresh">
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
@@ -221,16 +223,16 @@ export default function CashierHub() {
           {approvalsQuery.isLoading ? (
             <EPSkeletonTable rows={6} />
           ) : approvals.length === 0 ? (
-            <EPEmptyState icon={CheckCircle} title="Tasdiq navbati bo'sh" description="Hozircha kutilayotgan ish haqi to'lovi yo'q." />
+            <EPEmptyState icon={CheckCircle} title={t("cashierHub.approvalsEmptyTitle", "Tasdiq navbati bo'sh")} description={t("cashierHub.approvalsEmptyDesc", "Hozircha kutilayotgan ish haqi to'lovi yo'q.")} />
           ) : (
             <Table data-testid="table-approvals">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead>Summa</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead>Keyingi bosqich</TableHead>
-                  <TableHead className="text-right">Amallar</TableHead>
+                  <TableHead>{t("cashierHub.colEmployee", "Xodim")}</TableHead>
+                  <TableHead>{t("amount", "Summa")}</TableHead>
+                  <TableHead>{t("cashierHub.colStatus", "Holat")}</TableHead>
+                  <TableHead>{t("cashierHub.colNextStage", "Keyingi bosqich")}</TableHead>
+                  <TableHead className="text-right">{t("cashierHub.colActions", "Amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -258,7 +260,7 @@ export default function CashierHub() {
                             onClick={() => next && approveStageMutation.mutate({ id: row.id, stage: next })}
                             data-testid={`button-approve-${row.id}`}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" /> Tasdiqlash
+                            <CheckCircle className="h-4 w-4 mr-1" /> {t("approve", "Tasdiqlash")}
                           </Button>
                           <Button
                             size="sm"
@@ -267,7 +269,7 @@ export default function CashierHub() {
                             onClick={() => setRejectId(row.id)}
                             data-testid={`button-reject-${row.id}`}
                           >
-                            <XCircle className="h-4 w-4 mr-1" /> Rad etish
+                            <XCircle className="h-4 w-4 mr-1" /> {t("cashierHub.reject", "Rad etish")}
                           </Button>
                         </div>
                       </TableCell>
@@ -284,17 +286,17 @@ export default function CashierHub() {
           {shiftsQuery.isLoading ? (
             <EPSkeletonTable rows={6} />
           ) : shifts.length === 0 ? (
-            <EPEmptyState icon={Banknote} title="Smena yo'q" description="Hozircha ochilgan kassir smenasi yo'q." />
+            <EPEmptyState icon={Banknote} title={t("cashierHub.shiftsEmptyTitle", "Smena yo'q")} description={t("cashierHub.shiftsEmptyDesc", "Hozircha ochilgan kassir smenasi yo'q.")} />
           ) : (
             <Table data-testid="table-shifts">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Smena</TableHead>
-                  <TableHead>Kassir</TableHead>
-                  <TableHead>Ochilgan</TableHead>
-                  <TableHead>Ochilish summasi</TableHead>
-                  <TableHead>Kutilgan balans</TableHead>
-                  <TableHead>Holat</TableHead>
+                  <TableHead>{t("cashierHub.colShift", "Smena")}</TableHead>
+                  <TableHead>{t("cashierHub.colCashier", "Kassir")}</TableHead>
+                  <TableHead>{t("cashierHub.colOpened", "Ochilgan")}</TableHead>
+                  <TableHead>{t("cashierHub.colOpenAmount", "Ochilish summasi")}</TableHead>
+                  <TableHead>{t("cashierHub.colExpectedBalance", "Kutilgan balans")}</TableHead>
+                  <TableHead>{t("cashierHub.colStatus", "Holat")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -324,16 +326,16 @@ export default function CashierHub() {
           {reportsQuery.isLoading ? (
             <EPSkeletonTable rows={6} />
           ) : reports.length === 0 ? (
-            <EPEmptyState icon={ReceiptText} title="Avans hisoboti yo'q" description="Hozircha kutilayotgan avans hisoboti yo'q." />
+            <EPEmptyState icon={ReceiptText} title={t("cashierHub.reportsEmptyTitle", "Avans hisoboti yo'q")} description={t("cashierHub.reportsEmptyDesc", "Hozircha kutilayotgan avans hisoboti yo'q.")} />
           ) : (
             <Table data-testid="table-reports">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Xodim</TableHead>
-                  <TableHead>Summa</TableHead>
-                  <TableHead>Chek</TableHead>
-                  <TableHead>Holat</TableHead>
-                  <TableHead className="text-right">Amallar</TableHead>
+                  <TableHead>{t("cashierHub.colEmployee", "Xodim")}</TableHead>
+                  <TableHead>{t("amount", "Summa")}</TableHead>
+                  <TableHead>{t("cashierHub.colReceipt", "Chek")}</TableHead>
+                  <TableHead>{t("cashierHub.colStatus", "Holat")}</TableHead>
+                  <TableHead className="text-right">{t("cashierHub.colActions", "Amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -347,7 +349,7 @@ export default function CashierHub() {
                     <TableCell className="text-[13px] text-muted-foreground">{row.receiptRef ?? "—"}</TableCell>
                     <TableCell>
                       <EPStatusPill tone={row.approved ? "success" : "warning"}>
-                        {row.approved ? "Tasdiqlangan" : "Kutilmoqda"}
+                        {row.approved ? t("cashierHub.statusApproved", "Tasdiqlangan") : t("cashierHub.statusPending", "Kutilmoqda")}
                       </EPStatusPill>
                     </TableCell>
                     <TableCell className="text-right">
@@ -358,7 +360,7 @@ export default function CashierHub() {
                         onClick={() => approveReportMutation.mutate(row.id)}
                         data-testid={`button-approve-report-${row.id}`}
                       >
-                        <CheckCircle className="h-4 w-4 mr-1" /> Tasdiqlash
+                        <CheckCircle className="h-4 w-4 mr-1" /> {t("approve", "Tasdiqlash")}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -374,10 +376,10 @@ export default function CashierHub() {
         onOpenChange={(open) => {
           if (!open) setRejectId(null);
         }}
-        title="To'lovni rad etishni tasdiqlang"
-        description="Rad etilgan tasdiq zanjirini qayta tiklab bo'lmaydi va to'lov amalga oshmaydi."
-        confirmText="Rad etish"
-        cancelText="Bekor qilish"
+        title={t("cashierHub.confirmRejectTitle", "To'lovni rad etishni tasdiqlang")}
+        description={t("cashierHub.confirmRejectDesc", "Rad etilgan tasdiq zanjirini qayta tiklab bo'lmaydi va to'lov amalga oshmaydi.")}
+        confirmText={t("cashierHub.reject", "Rad etish")}
+        cancelText={t("cancel", "Bekor qilish")}
         variant="destructive"
         onConfirm={() => {
           if (rejectId !== null) {

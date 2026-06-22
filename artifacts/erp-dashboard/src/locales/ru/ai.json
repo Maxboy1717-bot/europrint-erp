@@ -223,5 +223,19 @@
   "totalDeals": "Всего сделок",
   "contactsCount": "Контакты",
   "scored": "Оценено",
-  "churnAnalysis": "Анализ оттока"
+  "churnAnalysis": "Анализ оттока",
+  "aiFit.evaluated": "AI-fit оценён",
+  "aiFit.scoreSaved": "Новая оценка сохранена",
+  "aiFit.breadcrumbDirector": "Директор",
+  "aiFit.title": "AI оценка соответствия",
+  "aiFit.subtitle": "Оценка соответствия сотрудник ↔ карточка через AI и отчёты",
+  "aiFit.evaluateBtn": "AI оценка",
+  "aiFit.empty": "Пока нет AI-fit оценок",
+  "aiFit.viewReport": "Посмотреть отчёт",
+  "aiFit.dialogDesc": "Введите данные сотрудника и карточки",
+  "aiFit.employeeId": "ID сотрудника",
+  "aiFit.cardId": "ID карточки",
+  "aiFit.employeeProfile": "Профиль сотрудника (JSON)",
+  "aiFit.cardRequirements": "Требования карточки (JSON)",
+  "aiFit.reportTitle": "Отчёт (fit_report)"
 }

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import {
   EPPageHeader,
   EPCard,
@@ -78,6 +79,7 @@ const numOrNull = (s: string): number | null => {
 };
 
 export default function WorkflowRules() {
+  const { t } = useTranslation("coordination");
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState<RuleForm>(EMPTY_FORM);
@@ -115,20 +117,20 @@ export default function WorkflowRules() {
       apiRequest("POST", "/api/coordination/workflow-rules", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/coordination/workflow-rules"] });
-      toast({ title: "Qoida qo'shildi" });
+      toast({ title: t("workflowRules.ruleAdded", "Qoida qo'shildi") });
       setForm(EMPTY_FORM);
     },
-    onError: () => toast({ title: "Xatolik", description: "Qoida saqlanmadi", variant: "destructive" }),
+    onError: () => toast({ title: t("workflowRules.error", "Xatolik"), description: t("workflowRules.ruleSaveFailed", "Qoida saqlanmadi"), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/coordination/workflow-rules/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/coordination/workflow-rules"] });
-      toast({ title: "Qoida o'chirildi" });
+      toast({ title: t("workflowRules.ruleDeleted", "Qoida o'chirildi") });
       setDeleteId(null);
     },
-    onError: () => toast({ title: "Xatolik", description: "O'chirib bo'lmadi", variant: "destructive" }),
+    onError: () => toast({ title: t("workflowRules.error", "Xatolik"), description: t("workflowRules.deleteFailed", "O'chirib bo'lmadi"), variant: "destructive" }),
   });
 
   const canSubmit = form.request_type.trim().length > 0 && numOrNull(form.step_order) !== null;
@@ -149,15 +151,15 @@ export default function WorkflowRules() {
   return (
     <div className="space-y-6">
       <EPPageHeader
-        title="Workflow qoidalari"
-        subtitle="Gorizontal bo'limlararo tasdiqlash zanjirlari (Vysotskiy-7)"
+        title={t("workflowRules.title", "Workflow qoidalari")}
+        subtitle={t("workflowRules.subtitle", "Gorizontal bo'limlararo tasdiqlash zanjirlari (Vysotskiy-7)")}
         icon={<GitBranch className="h-5 w-5" />}
       />
 
-      <EPCard title="Yangi qadam qo'shish">
+      <EPCard title={t("workflowRules.newStep", "Yangi qadam qo'shish")}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1">
-            <Label htmlFor="wr-rt">So'rov turi *</Label>
+            <Label htmlFor="wr-rt">{t("workflowRules.requestType", "So'rov turi *")}</Label>
             <Input
               id="wr-rt"
               placeholder="advance_request"
@@ -166,16 +168,16 @@ export default function WorkflowRules() {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="wr-name">Nomi</Label>
+            <Label htmlFor="wr-name">{t("workflowRules.name", "Nomi")}</Label>
             <Input
               id="wr-name"
-              placeholder="Avans ariza"
+              placeholder={t("workflowRules.namePlaceholder", "Avans ariza")}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="wr-step">Qadam tartibi *</Label>
+            <Label htmlFor="wr-step">{t("workflowRules.stepOrder", "Qadam tartibi *")}</Label>
             <Input
               id="wr-step"
               type="number"
@@ -185,7 +187,7 @@ export default function WorkflowRules() {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="wr-sdep">Manba bo'lim ID</Label>
+            <Label htmlFor="wr-sdep">{t("workflowRules.sourceDeptId", "Manba bo'lim ID")}</Label>
             <Input
               id="wr-sdep"
               type="number"
@@ -194,7 +196,7 @@ export default function WorkflowRules() {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="wr-sfn">Manba lavozim ID</Label>
+            <Label htmlFor="wr-sfn">{t("workflowRules.sourceFnId", "Manba lavozim ID")}</Label>
             <Input
               id="wr-sfn"
               type="number"
@@ -203,7 +205,7 @@ export default function WorkflowRules() {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="wr-adep">Tasdiqlovchi bo'lim ID</Label>
+            <Label htmlFor="wr-adep">{t("workflowRules.approverDeptId", "Tasdiqlovchi bo'lim ID")}</Label>
             <Input
               id="wr-adep"
               type="number"
@@ -212,7 +214,7 @@ export default function WorkflowRules() {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="wr-afn">Tasdiqlovchi lavozim ID</Label>
+            <Label htmlFor="wr-afn">{t("workflowRules.approverFnId", "Tasdiqlovchi lavozim ID")}</Label>
             <Input
               id="wr-afn"
               type="number"
@@ -223,7 +225,7 @@ export default function WorkflowRules() {
           <div className="flex items-end">
             <Button onClick={submit} disabled={!canSubmit || createMutation.isPending} className="w-full">
               <Plus className="mr-2 h-4 w-4" />
-              Qo'shish
+              {t("workflowRules.add", "Qo'shish")}
             </Button>
           </div>
         </div>
@@ -234,7 +236,7 @@ export default function WorkflowRules() {
       ) : isError ? (
         <EPErrorState onRetry={() => refetch()} />
       ) : chains.length === 0 ? (
-        <EPEmptyState icon={GitBranch} title="Qoidalar yo'q" description="Birinchi tasdiqlash zanjiri qadamini qo'shing." />
+        <EPEmptyState icon={GitBranch} title={t("workflowRules.emptyTitle", "Qoidalar yo'q")} description={t("workflowRules.emptyDesc", "Birinchi tasdiqlash zanjiri qadamini qo'shing.")} />
       ) : (
         <div className="space-y-4">
           {chains.map((chain) => (
@@ -242,11 +244,11 @@ export default function WorkflowRules() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Qadam</TableHead>
-                    <TableHead>Tasdiqlovchi bo'lim</TableHead>
-                    <TableHead>Tasdiqlovchi lavozim</TableHead>
-                    <TableHead>Holat</TableHead>
-                    <TableHead className="text-right">Amal</TableHead>
+                    <TableHead>{t("workflowRules.colStep", "Qadam")}</TableHead>
+                    <TableHead>{t("workflowRules.colApproverDept", "Tasdiqlovchi bo'lim")}</TableHead>
+                    <TableHead>{t("workflowRules.colApproverFn", "Tasdiqlovchi lavozim")}</TableHead>
+                    <TableHead>{t("workflowRules.colStatus", "Holat")}</TableHead>
+                    <TableHead className="text-right">{t("workflowRules.colAction", "Amal")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -256,10 +258,10 @@ export default function WorkflowRules() {
                       <TableCell>{s.approver_department_name ?? (s.approver_department_id ? `#${s.approver_department_id}` : "—")}</TableCell>
                       <TableCell>{s.approver_function_name ?? (s.approver_function_id ? `#${s.approver_function_id}` : "—")}</TableCell>
                       <TableCell>
-                        <EPStatusPill tone={s.is_active ? "success" : "neutral"}>{s.is_active ? "Faol" : "O'chirilgan"}</EPStatusPill>
+                        <EPStatusPill tone={s.is_active ? "success" : "neutral"}>{s.is_active ? t("workflowRules.active", "Faol") : t("workflowRules.inactive", "O'chirilgan")}</EPStatusPill>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => setDeleteId(s.id)} aria-label="O'chirish">
+                        <Button variant="ghost" size="sm" onClick={() => setDeleteId(s.id)} aria-label={t("workflowRules.delete", "O'chirish")}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -275,9 +277,9 @@ export default function WorkflowRules() {
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
-        title="Qoidani o'chirish"
-        description="Bu qadam o'chiriladi (faolsizlantiriladi)."
-        confirmText="O'chirish"
+        title={t("workflowRules.confirmDeleteTitle", "Qoidani o'chirish")}
+        description={t("workflowRules.confirmDeleteDesc", "Bu qadam o'chiriladi (faolsizlantiriladi).")}
+        confirmText={t("workflowRules.delete", "O'chirish")}
         variant="destructive"
         onConfirm={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
       />

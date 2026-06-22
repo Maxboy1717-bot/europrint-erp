@@ -223,5 +223,19 @@
   "totalDeals": "Jami bitimlar",
   "contactsCount": "Kontaktlar",
   "scored": "Baholangan",
-  "churnAnalysis": "Churn tahlili"
+  "churnAnalysis": "Churn tahlili",
+  "aiFit.evaluated": "AI-fit baholandi",
+  "aiFit.scoreSaved": "Yangi baho saqlandi",
+  "aiFit.breadcrumbDirector": "Direktor",
+  "aiFit.title": "AI Moslik Baholash",
+  "aiFit.subtitle": "Xodim ↔ karta mosligini AI orqali baholash va hisobotlar",
+  "aiFit.evaluateBtn": "AI Baholash",
+  "aiFit.empty": "Hozircha AI-fit baholar yo'q",
+  "aiFit.viewReport": "Hisobotni ko'rish",
+  "aiFit.dialogDesc": "Xodim va karta ma'lumotlarini kiriting",
+  "aiFit.employeeId": "Xodim ID",
+  "aiFit.cardId": "Karta ID",
+  "aiFit.employeeProfile": "Xodim profili (JSON)",
+  "aiFit.cardRequirements": "Karta talablari (JSON)",
+  "aiFit.reportTitle": "Hisobot (fit_report)"
 }

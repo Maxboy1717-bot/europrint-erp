@@ -223,5 +223,19 @@
   "totalDeals": "Жами битимлар",
   "contactsCount": "Контактлар",
   "scored": "Баҳоланган",
-  "churnAnalysis": "Чурн таҳлили"
+  "churnAnalysis": "Чурн таҳлили",
+  "aiFit.evaluated": "AI-fit баҳоланди",
+  "aiFit.scoreSaved": "Янги баҳо сақланди",
+  "aiFit.breadcrumbDirector": "Директор",
+  "aiFit.title": "AI Мослик Баҳолаш",
+  "aiFit.subtitle": "Ходим ↔ карта мослигини AI орқали баҳолаш ва ҳисоботлар",
+  "aiFit.evaluateBtn": "AI Баҳолаш",
+  "aiFit.empty": "Ҳозирча AI-fit баҳолар йўқ",
+  "aiFit.viewReport": "Ҳисоботни кўриш",
+  "aiFit.dialogDesc": "Ходим ва карта маълумотларини киритинг",
+  "aiFit.employeeId": "Ходим ID",
+  "aiFit.cardId": "Карта ID",
+  "aiFit.employeeProfile": "Ходим профили (JSON)",
+  "aiFit.cardRequirements": "Карта талаблари (JSON)",
+  "aiFit.reportTitle": "Ҳисобот (fit_report)"
 }

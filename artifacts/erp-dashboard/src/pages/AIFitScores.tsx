@@ -20,6 +20,7 @@ import {
 import { BrainCircuit, Eye, Plus, Sparkles, Star, XCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 
 interface FitScore {
@@ -45,6 +46,7 @@ function scoreColor(score: number): string {
 }
 
 export default function AIFitScores() {
+  const { t } = useTranslation("ai");
   const { toast } = useToast();
   const [showEvaluate, setShowEvaluate] = useState(false);
   const [reportEmployeeId, setReportEmployeeId] = useState<number | null>(null);
@@ -78,7 +80,7 @@ export default function AIFitScores() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SCORES_KEY] });
-      toast({ title: "AI-fit baholandi", description: "Yangi baho saqlandi" });
+      toast({ title: t("aiFit.evaluated", "AI-fit baholandi"), description: t("aiFit.scoreSaved", "Yangi baho saqlandi") });
       setShowEvaluate(false);
       setEmployeeId("");
       setCardId("");
@@ -110,9 +112,9 @@ export default function AIFitScores() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <EPPageHeader
-          breadcrumb={<>Direktor / <b className="text-foreground">AI Moslik Baholash</b></>}
-          title="AI Moslik Baholash"
-          subtitle="Xodim ↔ karta mosligini AI orqali baholash va hisobotlar"
+          breadcrumb={<>{t("aiFit.breadcrumbDirector", "Direktor")} / <b className="text-foreground">{t("aiFit.title", "AI Moslik Baholash")}</b></>}
+          title={t("aiFit.title", "AI Moslik Baholash")}
+          subtitle={t("aiFit.subtitle", "Xodim ↔ karta mosligini AI orqali baholash va hisobotlar")}
           icon={<BrainCircuit className="h-5 w-5" />}
         />
         <Button
@@ -121,7 +123,7 @@ export default function AIFitScores() {
           className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold shadow-none"
         >
           <Plus className="w-4 h-4 mr-2" />
-          AI Baholash
+          {t("aiFit.evaluateBtn", "AI Baholash")}
         </Button>
       </div>
 
@@ -130,7 +132,7 @@ export default function AIFitScores() {
           <Card className="bg-card border-border shadow-none">
             <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <XCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <p>Hozircha AI-fit baholar yo'q</p>
+              <p>{t("aiFit.empty", "Hozircha AI-fit baholar yo'q")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -168,7 +170,7 @@ export default function AIFitScores() {
                     className="bg-muted/60 text-foreground hover:bg-muted border-none rounded-lg px-4 py-2 font-medium"
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Hisobotni ko'rish
+                    {t("aiFit.viewReport", "Hisobotni ko'rish")}
                   </Button>
                 </div>
               </CardContent>
@@ -182,14 +184,14 @@ export default function AIFitScores() {
         <DialogContent className="max-w-lg p-6">
           <DialogHeader>
             <DialogTitle className="text-[18px] font-semibold flex items-center gap-2">
-              <Sparkles className="h-5 w-5" /> AI Moslik Baholash
+              <Sparkles className="h-5 w-5" /> {t("aiFit.title", "AI Moslik Baholash")}
             </DialogTitle>
-            <DialogDescription>Xodim va karta ma'lumotlarini kiriting</DialogDescription>
+            <DialogDescription>{t("aiFit.dialogDesc", "Xodim va karta ma'lumotlarini kiriting")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="fit-employee">Xodim ID</Label>
+                <Label htmlFor="fit-employee">{t("aiFit.employeeId", "Xodim ID")}</Label>
                 <Input
                   id="fit-employee"
                   type="number"
@@ -200,7 +202,7 @@ export default function AIFitScores() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="fit-card">Karta ID</Label>
+                <Label htmlFor="fit-card">{t("aiFit.cardId", "Karta ID")}</Label>
                 <Input
                   id="fit-card"
                   type="number"
@@ -212,7 +214,7 @@ export default function AIFitScores() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fit-profile">Xodim profili (JSON)</Label>
+              <Label htmlFor="fit-profile">{t("aiFit.employeeProfile", "Xodim profili (JSON)")}</Label>
               <Textarea
                 id="fit-profile"
                 value={employeeProfile}
@@ -223,7 +225,7 @@ export default function AIFitScores() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fit-requirements">Karta talablari (JSON)</Label>
+              <Label htmlFor="fit-requirements">{t("aiFit.cardRequirements", "Karta talablari (JSON)")}</Label>
               <Textarea
                 id="fit-requirements"
                 value={cardRequirements}
@@ -288,7 +290,7 @@ export default function AIFitScores() {
                 </div>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Hisobot (fit_report)</CardTitle>
+                    <CardTitle className="text-base">{t("aiFit.reportTitle", "Hisobot (fit_report)")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <pre className="whitespace-pre-wrap break-words text-xs leading-relaxed bg-muted/50 rounded-md p-3">
