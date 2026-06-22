@@ -3,6 +3,10 @@
  *
  * `cc_workflow_steps.approver_position_code` formatlari:
  *   - `CEO`               → org_departments root head_user_id
+ *   - `DIRECTOR`          → Bosh Direktor (har zanjirning OXIRGI bosqichi — egasi qoidasi
+ *                           "HAMMASI OXIRI DIREKTORGA"): position 'Bosh Direktor'
+ *                           (positions.code CEO/ORG-64) → users.role='director' →
+ *                           org tree root head_user_id, shu tartibda
  *   - `MANAGER_OF_SENDER` → sender's employees.manager_id → users.id
  *   - `DEPT_HEAD`         → head of sender's department
  *   - `POSITION:<CODE>`   → faol xodim, positions.code = <CODE>
@@ -49,10 +53,60 @@ export class CcOrgResolverService {
   private async resolveBase(positionCode: string, senderUserId: number): Promise<Result<number>> {
     const code = positionCode.trim().toUpperCase();
     if (code === 'CEO')               return this.resolveCeo();
+    if (code === 'DIRECTOR')          return this.resolveDirector();
     if (code === 'MANAGER_OF_SENDER') return this.resolveManagerOfSender(senderUserId);
     if (code === 'DEPT_HEAD')         return this.resolveDeptHead(senderUserId);
     if (code.startsWith('POSITION:')) return this.resolveByPosition(code);
     return Err(AppErr('BAD_REQUEST', `Noma'lum tasdiqlash lavozim kodi: ${positionCode}`));
+  }
+
+  /**
+   * Bosh Direktor — har tasdiqlash zanjirining OXIRGI tasdiqlovchisi
+   * (egasi qoidasi: "HAMMASI OXIRI DIREKTORGA"). Yuboruvchidan mustaqil, org bo'ylab yagona.
+   *
+   * Aniqlash tartibi (birinchi topilgani qaytadi):
+   *   1. Lavozimi "Bosh Direktor" bo'lgan faol xodim (positions.code IN CEO/ORG-64,
+   *      yoki nomi 'bosh direktor') → users.id
+   *   2. users.role = 'director' bo'lgan faol xodim → users.id
+   *   3. org tree root bo'lim head_user_id (resolveCeo bilan bir xil) — eng oxirgi fallback
+   */
+  private async resolveDirector(): Promise<Result<number>> {
+    // 1. Lavozim bo'yicha — "Bosh Direktor".
+    const byPos = await runQuery<{ user_id: number | null }>(sql`
+      SELECT e.user_id
+      FROM employees e
+      INNER JOIN positions p ON p.id = e.position_id
+      WHERE (
+              UPPER(COALESCE(p.code, '')) IN ('CEO', 'ORG-64')
+              OR LOWER(COALESCE(p.title, p.name_uz, p.name, '')) LIKE '%bosh direktor%'
+            )
+        AND COALESCE(e.is_active, true) = true
+        AND e.user_id IS NOT NULL
+      ORDER BY e.id ASC
+      LIMIT 1
+    `);
+    const posId = byPos.rows[0]?.user_id ?? null;
+    if (posId) return Ok(posId);
+
+    // 2. Rol bo'yicha — users.role = 'director', faol xodim.
+    const byRole = await runQuery<{ user_id: number | null }>(sql`
+      SELECT u.id AS user_id
+      FROM users u
+      INNER JOIN employees e ON e.user_id = u.id
+      WHERE LOWER(COALESCE(u.role, '')) = 'director'
+        AND COALESCE(e.is_active, true) = true
+      ORDER BY u.id ASC
+      LIMIT 1
+    `);
+    const roleId = byRole.rows[0]?.user_id ?? null;
+    if (roleId) return Ok(roleId);
+
+    // 3. Eng oxirgi fallback — org tree root bo'lim rahbari (CEO bilan bir xil).
+    const ceo = await this.resolveCeo();
+    if (ceo.ok) return ceo;
+
+    this.logger.warn('resolveDirector: Bosh Direktor orgsxemada belgilanmagan — escalation step skip');
+    return Err(AppErr('NOT_FOUND', 'Bosh Direktor orgsxemada belgilanmagan'));
   }
 
   private async resolveCeo(): Promise<Result<number>> {

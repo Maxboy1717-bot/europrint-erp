@@ -141,12 +141,21 @@ export class IotMainController {
   }
 
   @ApiOperation({ summary: 'Get energy consumption' })
-  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 501, description: 'Energiya sensori o\'rnatilmagan (EP-IOT-018-PENDING)' })
   @Get('energy-consumption')
   @Roles(...IOT_READ)
   async getEnergyConsumption(@Query() raw: Record<string, unknown>) {
-    const q = DeviceIdQuerySchema.parse(raw);
-    return unwrapOrThrow(await this.svc.getEnvironmentData('energy', undefined, q.device_id));
+    // EP-IOT-018 (owner override, audit EP-IOT-018/030): energiya sensorlari
+    // FIZIKAN o'rnatilmagan. Bu endpoint AVVAL seed qilingan soxta sensor
+    // ma'lumotini (SNS-E-MAIN) 200 bilan qaytarardi — bu egasi taqiqlagan
+    // soxta javob. Owner MAJBURAN halol 501 talab qildi (Qoida 10/17 dan
+    // istisno: bu yagona, egasi-mandatli halol 501). Sensor o'rnatilganda
+    // shu yerda real query tiklanadi.
+    DeviceIdQuerySchema.parse(raw);
+    throw new HttpException(
+      { message: "Energiya sensori o'rnatilmagan", code: 'EP-IOT-018-PENDING' },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 
   @ApiOperation({ summary: 'Get temperature' })

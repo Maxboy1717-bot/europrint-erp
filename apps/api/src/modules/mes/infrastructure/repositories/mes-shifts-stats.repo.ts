@@ -83,12 +83,19 @@ export class MesShiftsStatsRepository {
   }
 
   async getOee(): Promise<{ machines: Row[]; averageOee: number }> {
+    // Scale normalisation: most production_sessions store OEE/availability/performance/
+    // quality on a 0-100 scale (e.g. 84.40), but some seed/demo rows store them on a
+    // 0-1 fraction (e.g. 0.92). Mixed scales corrupt the per-machine values AND the
+    // averageOee. Normalise every session to ONE scale (0-100) BEFORE averaging:
+    // any non-zero value <= 1 is a fraction and is multiplied by 100; values > 1 are
+    // already on the 0-100 scale and are left untouched. Done per-session inside AVG
+    // so a machine mixing both scales still averages correctly.
     const rows = await runQuery<Row>(sql`
       SELECT e.id, e.name, e.status,
-             COALESCE(AVG(ps.oee), 0)::numeric(5,2)          AS oee,
-             COALESCE(AVG(ps.availability), 0)::numeric(5,2) AS availability,
-             COALESCE(AVG(ps.performance),  0)::numeric(5,2) AS performance,
-             COALESCE(AVG(ps.quality),      0)::numeric(5,2) AS quality
+             COALESCE(AVG(CASE WHEN ps.oee          > 0 AND ps.oee          <= 1 THEN ps.oee          * 100 ELSE ps.oee          END), 0)::numeric(5,2) AS oee,
+             COALESCE(AVG(CASE WHEN ps.availability > 0 AND ps.availability <= 1 THEN ps.availability * 100 ELSE ps.availability END), 0)::numeric(5,2) AS availability,
+             COALESCE(AVG(CASE WHEN ps.performance  > 0 AND ps.performance  <= 1 THEN ps.performance  * 100 ELSE ps.performance  END), 0)::numeric(5,2) AS performance,
+             COALESCE(AVG(CASE WHEN ps.quality      > 0 AND ps.quality      <= 1 THEN ps.quality      * 100 ELSE ps.quality      END), 0)::numeric(5,2) AS quality
       FROM equipment e
       LEFT JOIN production_sessions ps ON ps.equipment_id = e.id AND ps.deleted_at IS NULL
       WHERE e.is_active = true GROUP BY e.id, e.name, e.status ORDER BY e.name
