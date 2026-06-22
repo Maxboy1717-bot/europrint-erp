@@ -35,6 +35,8 @@ import { CreateInvoiceHandler } from './application/commands/create-invoice.hand
 import { ConfirmAdvancePaymentHandler } from './application/commands/confirm-advance-payment.handler';
 import { ListOrdersHandler } from './application/queries/list-orders.handler';
 import { GetOrderByIdHandler } from './application/queries/get-order-by-id.handler';
+import { AtpCheckHandler } from './application/queries/atp-check.handler';
+import { DrizzleSdAtpRepository } from './infrastructure/repositories/drizzle-sd-atp.repo';
 import { PendingAdvanceOrdersHandler } from './application/queries/pending-advance-orders.handler';
 import { GetInvoicesHandler } from './application/queries/get-invoices.handler';
 import { GetInvoiceHandler } from './application/queries/get-invoice.handler';
@@ -44,6 +46,7 @@ import { DealWonListener } from './infrastructure/event-handlers/deal-won.listen
 import { PaymentReceivedListener } from './infrastructure/event-handlers/payment-received.listener';
 import { AdvanceApprovedFanoutListener } from './infrastructure/event-handlers/advance-approved-fanout.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
+import { TashkentTimeService } from '@common/time';
 import { SD_ORDERS_REPO } from './orders/i-sd-orders.repo';
 import { DrizzleSdOrdersRepository } from './orders/drizzle-sd-orders.repo';
 import { OrdersService } from './orders/orders.service';
@@ -78,6 +81,7 @@ const commandHandlers = [
 const queryHandlers = [
   ListOrdersHandler,
   GetOrderByIdHandler,
+  AtpCheckHandler,
   PendingAdvanceOrdersHandler,
   GetInvoicesHandler,
   GetInvoiceHandler,
@@ -102,6 +106,8 @@ const repositories = [
   ],
   providers: [
     loggerProvider,
+    TashkentTimeService,
+    DrizzleSdAtpRepository,
     ...commandHandlers,
     ...queryHandlers,
     ...eventListeners,

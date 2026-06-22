@@ -28,6 +28,8 @@ import { ListOrdersQuery} from '../application/queries/list-orders.handler';
 import { GetOrderByIdQuery} from '../application/queries/get-order-by-id.handler';
 import { PendingAdvanceOrdersQuery} from '../application/queries/pending-advance-orders.handler';
 import { CreateOrderDtoSchema} from './dto/create-order.dto';
+import { AtpCheckDtoSchema } from './dto/atp-check.dto';
+import { AtpCheckQuery } from '../application/queries/atp-check.handler';
 import { UpdateStatusDtoSchema} from './dto/update-status.dto';
 import { AdvanceBypassDtoSchema} from './dto/advance-bypass.dto';
 import { TechCheckpointDtoSchema} from './dto/tech-checkpoint.dto';
@@ -140,6 +142,20 @@ export class SdOrdersController {
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
+
+ @ApiOperation({ summary: 'ATP check — material availability + estimated ready date at order entry (EP-PP-066)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Order has no material-bound lines' })
+ @Post('atp-check')
+ @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
+ async atpCheck(@Body() dto: unknown) {
+  const validated = AtpCheckDtoSchema.parse(dto);
+  this.logger.log('Running ATP availability check');
+  const query = new AtpCheckQuery(validated.orderId ?? null, validated.items ?? null);
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
+ }
 
  @ApiOperation({ summary: 'Update status' })
  @ApiResponse({ status: 200, description: 'OK' })

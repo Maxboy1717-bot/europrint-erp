@@ -101,6 +101,21 @@ export const LARGE_TX_THRESHOLD_UZS = 50_000_000;
 /** Sentinel value when days-until-stockout cannot be calculated (zero demand) */
 export const MAX_FALLBACK_DAYS = 9_999;
 
+/**
+ * ATP (Available-To-Promise) — fallback procurement lead time, in days, used when
+ * a material has NO `inventory_policy.lead_time_days` row. EP-PP-065/EP-PP-066:
+ * each material is supposed to carry its own lead time; until a policy exists,
+ * the SD order-entry availability estimate must still return a conservative date
+ * rather than pretend the material is in stock. Conservative > optimistic.
+ */
+export const ATP_DEFAULT_LEAD_TIME_DAYS = 7;
+
+/**
+ * ATP — replenishment is sized in whole production/working days; an in-stock line
+ * promises immediate availability (0 days), a short line promises today + lead time.
+ */
+export const ATP_IN_STOCK_DAYS = 0;
+
 // ---------------------------------------------------------------------------
 // Time durations (ms)
 // ---------------------------------------------------------------------------
