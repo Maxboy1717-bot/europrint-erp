@@ -142,7 +142,6 @@ export class QcDefectsController {
       SELECT stage, COUNT(*)::int AS count, SUM(quantity)::int AS total_quantity,
         SUM(COALESCE(cost_impact, 0))::numeric AS total_cost
       FROM qc_braks
-      WHERE deleted_at IS NULL OR deleted_at IS NULL
       GROUP BY stage ORDER BY total_cost DESC
     `);
     const items = ((r as { rows?: unknown[] }).rows) ?? [];
