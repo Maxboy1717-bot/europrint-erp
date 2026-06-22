@@ -27,6 +27,9 @@ export type PpUpdateEquipmentDto = z.infer<typeof PpUpdateEquipmentSchema>;
 export const PpCreateScheduleEntrySchema = z.object({
   work_order_id:  z.number().int().positive().optional(),
   work_center_id: z.number().int().positive().optional(),
+  // Golden-thread SD->PP link (A1): optional so a manual planning entry can be tied to a
+  // sales order. Omitted = internal/sample run (legitimately SO-less).
+  sales_order_id: z.number().int().positive().optional(),
   planned_start:  z.string().optional(),
   planned_end:    z.string().optional(),
   operator_id:    z.number().int().positive().optional(),

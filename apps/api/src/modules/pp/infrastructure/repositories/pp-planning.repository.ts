@@ -28,7 +28,7 @@ export class PpPlanningRepository implements IPpPlanningRepo {
       // Read the DTO's snake_case keys (PpCreateScheduleEntrySchema) and map them onto the
       // real production_orders columns. is_urgent/is_frozen keep their DB defaults (golden-thread
       // priority columns — additive insert contract preserved).
-      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_start_date, planned_end_date, work_center_id, responsible_manager_id, notes, status) VALUES (CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint), ${body.work_order_id ?? null}, ${body.quantity ?? 1}, ${body.quantity ?? 1}, ${body.planned_start ?? null}, ${body.planned_end ?? null}, ${body.work_center_id ?? null}, ${body.operator_id ?? null}, ${body.notes ?? null}, 'planned') RETURNING *`);
+      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_start_date, planned_end_date, work_center_id, responsible_manager_id, sales_order_id, notes, status) VALUES (CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint), ${body.work_order_id ?? null}, ${body.quantity ?? 1}, ${body.quantity ?? 1}, ${body.planned_start ?? null}, ${body.planned_end ?? null}, ${body.work_center_id ?? null}, ${body.operator_id ?? null}, ${body.sales_order_id ?? null}, ${body.notes ?? null}, 'planned') RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

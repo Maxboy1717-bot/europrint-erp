@@ -449,6 +449,10 @@ export const productionOrders = pgTable("production_orders", {
   productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
   bomId: varchar("bom_id").references(() => bomHeaders.id, { onDelete: "set null" }),
   routingId: varchar("routing_id").references(() => routings.id, { onDelete: "set null" }),
+  // Golden-thread SD->PP link (A1). NULLABLE BY DESIGN — internal/sample production
+  // runs legitimately have no originating sales order. The two canonical create paths
+  // (POST /pp/orders CQRS requires soId; SD->PP ready-for-planning listener) always set
+  // it; manual/generic writers carry it through when supplied (never silently dropped).
   salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
   plannedQuantity: numericMoney("planned_quantity").notNull(),
   confirmedQuantity: numericMoney("confirmed_quantity").notNull().default(0),
