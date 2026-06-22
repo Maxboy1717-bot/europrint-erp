@@ -87,7 +87,7 @@ export class WmsGoodsIssuedListener implements IEventHandler<WmsGoodsIssuedEvent
       const result = await this.glPostingService.postJournal(lines, reference);
       if (!result.ok) {
         this.logger.error(
-          `WmsGoodsIssuedListener: GL posting failed (ref=${reference}): ${String(result.error)}`,
+          `WmsGoodsIssuedListener: GL posting failed (ref=${reference}): ${JSON.stringify(result.error)}`,
         );
         return;
       }

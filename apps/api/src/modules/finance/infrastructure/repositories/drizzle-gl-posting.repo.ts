@@ -9,8 +9,8 @@
 
 import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
-import { entries } from '@workspace/db';
-import { sql } from 'drizzle-orm';
+import { entries, accounts } from '@workspace/db';
+import { sql, inArray } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import { IGlPostingRepository } from '../../domain/repositories/i-gl-posting.repo';
 
@@ -22,10 +22,13 @@ import { IGlPostingRepository } from '../../domain/repositories/i-gl-posting.rep
 async function resolveAccountIds(codes: string[]): Promise<Map<string, number>> {
   const distinct = [...new Set(codes.filter(Boolean))];
   if (distinct.length === 0) return new Map();
-  const res = await runQuery<{ account_code: string; id: number }>(
-    sql`SELECT account_code, id FROM accounts WHERE account_code = ANY(${distinct})`,
-  );
-  return new Map((Array.isArray(res.rows) ? res.rows : []).map((r) => [String(r.account_code), Number(r.id)]));
+  // inArray -> "account_code IN ($1,$2,...)". (A raw sql`= ANY(${distinct})` mis-binds the
+  // JS array as a row tuple "ANY(($1,$2))" which Postgres rejects, breaking every multi-leg journal.)
+  const rows = await db
+    .select({ account_code: accounts.accountCode, id: accounts.id })
+    .from(accounts)
+    .where(inArray(accounts.accountCode, distinct));
+  return new Map((Array.isArray(rows) ? rows : []).map((r) => [String(r.account_code), Number(r.id)]));
 }
 
 @Injectable()

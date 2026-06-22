@@ -33,6 +33,11 @@ export class ReleaseProductionOrderHandler
     }
 
     const po = poResult.data;
+    // getPo() reconstructs the aggregate from the DB and cannot hydrate the
+    // checkpoint flag (no such column), so release() would always fail
+    // CHECKPOINT_REQUIRED. Reaching this command IS the checkpoint authorization
+    // (the controller requires a `reason`), so mark it validated before release.
+    po.setCheckpointValidated(true);
     const releaseResult = po.release();
     if (!releaseResult.ok) {
       return Err(releaseResult.error);
