@@ -183,7 +183,10 @@ export class FinanceOpsRepo {
             AND created_at BETWEEN ${startDate} AND ${endDate}
         `);
         return parseFloat(r2.rows[0]?.total || '0');
-      } catch { return 0; }
+      } catch (error: unknown) {
+        this.logger.error(`getSalesReceipts failed (fi_invoices query): ${(error as Error).message}`);
+        return 0;
+      }
     }
   }
 
@@ -197,7 +200,10 @@ export class FinanceOpsRepo {
           AND document_type IN ('other_income', 'interest', 'misc', 'rental_income')
       `);
       return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
+    } catch (error: unknown) {
+      this.logger.error(`getOtherReceipts failed (entries query): ${(error as Error).message}`);
+      return 0;
+    }
   }
 
   async getExpenses(startDate: Date, endDate: Date): Promise<number> {
@@ -225,7 +231,10 @@ export class FinanceOpsRepo {
             AND document_type IN ('expense', 'payroll', 'procurement')
         `);
         return parseFloat(r2.rows[0]?.total || '0');
-      } catch { return 0; }
+      } catch (error: unknown) {
+        this.logger.error(`getExpenses failed (entries fallback query): ${(error as Error).message}`);
+        return 0;
+      }
     }
   }
 
@@ -246,7 +255,10 @@ export class FinanceOpsRepo {
             AND approved_at BETWEEN ${startDate} AND ${endDate}
         `);
         return parseFloat(r2.rows[0]?.total || '0');
-      } catch { return 0; }
+      } catch (error: unknown) {
+        this.logger.error(`getPayrollDisbursements failed (payroll_advances fallback): ${(error as Error).message}`);
+        return 0;
+      }
     }
   }
 
@@ -260,6 +272,9 @@ export class FinanceOpsRepo {
           AND document_type NOT IN ('payroll', 'sale')
       `);
       return parseFloat(r.rows[0]?.total || '0');
-    } catch { return 0; }
+    } catch (error: unknown) {
+      this.logger.error(`getOtherDisbursements failed (entries query): ${(error as Error).message}`);
+      return 0;
+    }
   }
 }
