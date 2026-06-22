@@ -7,7 +7,7 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
-import { PaginatedResult } from '@common/types/result.type';
+import { PaginatedResult, Result, Ok } from '@common/types/result.type';
 import { GetBomsQuery } from './get-boms.query';
 
 type Row = Record<string, unknown>;
@@ -20,7 +20,7 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 export class GetBomsHandler implements IQueryHandler<GetBomsQuery> {
   private readonly logger = new Logger(GetBomsHandler.name);
 
-  async execute(query: GetBomsQuery): Promise<PaginatedResult<Row>> {
+  async execute(query: GetBomsQuery): Promise<Result<PaginatedResult<Row>>> {
     const page = query.filters.page || 1; const limit = query.filters.limit || 10; const offset = (page - 1) * limit;
     const [countRows, items] = await Promise.all([
       exec(sql`SELECT COUNT(*)::int AS count FROM bom_headers`),
@@ -29,6 +29,6 @@ export class GetBomsHandler implements IQueryHandler<GetBomsQuery> {
     const rawTotal = Number(countRows[0]?.count ?? 0);
     const total = Number.isFinite(rawTotal) ? rawTotal : 0;
     this.logger.debug(`BOMs fetched: page=${page}, limit=${limit}, total=${total}`);
-    return { items, total, page, limit };
+    return Ok({ items, total, page, limit });
   }
 }
