@@ -24,16 +24,16 @@ import { eq, sql, desc } from 'drizzle-orm';
 type Row = Record<string, unknown>;
 
 export async function queryGoodsReceipts(pid: number | null, status: string | undefined, lim: number, off: number): Promise<Row[]> {
+  // mm_goods_receipts (VIEW over goods_receipts) has NO delivery_note / updated_at column
+  // (see module header). Select only real columns; delivery_note is folded into notes on create.
   const rows = await typedExecute<Row>(sql`
     SELECT
       gr.id,
       gr.purchase_order_id,
       gr.received_by,
       gr.notes,
-      gr.delivery_note,
       gr.status,
       gr.created_at,
-      gr.updated_at,
       'PO-' || po.id AS po_number,
       v.name AS vendor_name
     FROM mm_goods_receipts gr
@@ -54,7 +54,6 @@ export async function queryGoodsReceipt(gid: number): Promise<{ receipt: Row | n
       gr.purchase_order_id,
       gr.received_by,
       gr.notes,
-      gr.delivery_note,
       gr.status,
       gr.created_at,
       'PO-' || po.id AS po_number,

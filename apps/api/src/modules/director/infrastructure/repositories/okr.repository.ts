@@ -137,7 +137,7 @@ export class OkrRepository implements IOkrRepo {
   async getDashboardKeyResults(): Promise<Result<KeyResultsDashboard>> {
     return safeCall(async () => {
       const r = await db.select({
-        avg_progress: sql<number>`ROUND(AVG(CASE WHEN ${okr_key_results.targetValue} > 0 THEN (${okr_key_results.currentValue}::float / ${okr_key_results.targetValue} * 100) ELSE 0 END), 1)`,
+        avg_progress: sql<number>`ROUND(AVG(CASE WHEN ${okr_key_results.targetValue} > 0 THEN (${okr_key_results.currentValue}::numeric / ${okr_key_results.targetValue} * 100) ELSE 0 END), 1)`,
         total:        sql<number>`COUNT(*)`,
       }).from(okr_key_results);
       return r[0] ?? { avg_progress: 0, total: 0 };

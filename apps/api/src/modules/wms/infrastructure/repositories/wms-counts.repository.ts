@@ -20,12 +20,12 @@ export class WmsCountsRepository implements IWmsCountsRepo {
   try {
       const wid = warehouseId ? safeInt(warehouseId, 0) : null;
       return wid && status
-        ? exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by WHERE ic.deleted_at IS NULL AND ic.warehouse_id = ${wid} AND ic.status = ${status} ORDER BY ic.created_at DESC LIMIT ${lim}`)
+        ? exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by WHERE ic.warehouse_id = ${wid} AND ic.status = ${status} ORDER BY ic.created_at DESC LIMIT ${lim}`)
         : wid
-        ? exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by WHERE ic.deleted_at IS NULL AND ic.warehouse_id = ${wid} ORDER BY ic.created_at DESC LIMIT ${lim}`)
+        ? exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by WHERE ic.warehouse_id = ${wid} ORDER BY ic.created_at DESC LIMIT ${lim}`)
         : status
-        ? exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by WHERE ic.deleted_at IS NULL AND ic.status = ${status} ORDER BY ic.created_at DESC LIMIT ${lim}`)
-        : exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by WHERE ic.deleted_at IS NULL ORDER BY ic.created_at DESC LIMIT ${lim}`);  } catch (_e) {
+        ? exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by WHERE ic.status = ${status} ORDER BY ic.created_at DESC LIMIT ${lim}`)
+        : exec(sql`SELECT ic.*, w.name AS warehouse_name, e.full_name AS counted_by_name FROM wms_inventory_counts ic LEFT JOIN wms_warehouses w ON w.id = ic.warehouse_id LEFT JOIN employees e ON e.id = ic.counted_by ORDER BY ic.created_at DESC LIMIT ${lim}`);  } catch (_e) {
     return Err(String(_e));
   }
 

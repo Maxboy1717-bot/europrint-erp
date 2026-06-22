@@ -73,7 +73,7 @@ export class DrizzleSdCustomersRepository {
     const rows = await runQuery<Row>(sql`
       SELECT c.id, COALESCE(c.credit_limit, 0)::numeric AS credit_limit,
              COALESCE((SELECT SUM(p.amount) FROM sd_payments p
-                       WHERE p.customer_id = c.id AND p.status = 'pending' AND p.deleted_at IS NULL), 0)::numeric AS outstanding
+                       WHERE p.customer_id = c.id AND p.status = 'pending'), 0)::numeric AS outstanding
       FROM sd_customers c WHERE c.id = ${cid} AND c.status != 'deleted'
     `);
     const row = rows.rows[0] as Row | undefined;
