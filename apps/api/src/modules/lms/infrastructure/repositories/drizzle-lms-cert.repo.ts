@@ -30,6 +30,22 @@ export class LmsCertRepo {
     }
   }
 
+  /**
+   * Trigger 17 daily-sweep source: certificates that are GENUINELY EXPIRED
+   * (expiry_date < NOW()), still active, and not yet flagged 'expired'. Each row
+   * becomes a CertificateExpiredEvent so the MES skill-block + notification
+   * listeners fire. Returns the fields the event needs (id/employee/course/name).
+   */
+  async findExpiredToFlag(): Promise<Result<object[]>> {
+    try {
+      const r = await exec(sql`SELECT cert.id AS certificate_id, cert.employee_id, cert.course_id, c.title_uz AS course_name, cert.expiry_date AS expires_at FROM certificates cert JOIN courses c ON c.id = cert.course_id WHERE cert.is_active = true AND cert.expiry_date IS NOT NULL AND cert.expiry_date < NOW() AND COALESCE(cert.status, '') <> 'expired' ORDER BY cert.expiry_date ASC`);
+      return Ok(r);
+    } catch (error: unknown) {
+      this.logger.error(`findExpiredToFlag: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   async saveCertificate(certificate: Row, issuedBy?: number): Promise<Result<Row>> {
     try {
       // certificates: user_id + certificate_number are NOT NULL (no default); the old insert wrote only

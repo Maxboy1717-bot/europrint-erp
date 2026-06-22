@@ -12,7 +12,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { EventsHandler, IEventHandler, EventBus } from '@nestjs/cqrs';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LmsRepository } from '../repositories/drizzle-lms.repo';
 import { CertificateExpiredEvent } from '../../domain/events/certificate-expired.event';
@@ -27,13 +27,12 @@ export class CertExpiryHandler implements IEventHandler<CertificateExpiredEvent>
   private readonly logger = new Logger(CertExpiryHandler.name);
   private telegramService?: TelegramServiceInterface;
 
-  constructor(private lmsRepo: LmsRepository) {}
+  constructor(
+    private lmsRepo: LmsRepository,
+    private readonly eventBus: EventBus,
+  ) {}
 
   async handle(event: CertificateExpiredEvent): Promise<void> {
-    // TODO PA2-18: no command currently publishes CertificateExpiredEvent on
-    // the CQRS bus — the aggregate creates it but never flushes via
-    // eventBus.publish. Once a record-cert-expiry / publish-aggregate-events
-    // step is wired, this handler will activate.
     this.logger.warn(
       `Certificate expired event - Certificate: ${event.props.certificateId}, Employee: ${event.props.employeeId}`
     );
@@ -49,13 +48,34 @@ export class CertExpiryHandler implements IEventHandler<CertificateExpiredEvent>
     this.logger.log(`Certificate expiry handled - Certificate: ${event.props.certificateId}`);
   }
 
+  /**
+   * Trigger 17 daily sweep: find genuinely-expired certificates and publish a
+   * CertificateExpiredEvent for each, so the MES skill-block + notification
+   * listeners fire. Previously a stub (logged only) → the whole cert-expiry chain
+   * was dead. Publishing the typed event flows to the registered @EventsHandler set.
+   */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async checkExpiringCertificates(): Promise<void> {
-    this.logger.debug('Running daily certificate expiry check');
-
-    const thirtyDaysFromNow = _time.now();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
-    this.logger.log('Certificate expiry check completed');
+    this.logger.debug('Running daily certificate expiry sweep');
+    const r = await this.lmsRepo.findExpiredToFlag();
+    if (!r.ok) {
+      this.logger.error(`Certificate expiry sweep failed: ${r.error}`);
+      return;
+    }
+    const rows = Array.isArray(r.data) ? (r.data as Array<Record<string, unknown>>) : [];
+    const now = _time.now();
+    for (const row of rows) {
+      this.eventBus.publish(
+        new CertificateExpiredEvent({
+          certificateId: Number(row.certificate_id),
+          employeeId: Number(row.employee_id),
+          courseId: Number(row.course_id),
+          courseName: String(row.course_name ?? ''),
+          expiresAt: row.expires_at ? new Date(String(row.expires_at)) : undefined,
+          expiredAt: now,
+        }),
+      );
+    }
+    this.logger.log(`Certificate expiry sweep: ${rows.length} expired certificate(s) flagged`);
   }
 }

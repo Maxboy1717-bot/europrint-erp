@@ -183,6 +183,7 @@ export class LmsRepository implements ILmsRepo {
   }
 
   findExpiringCertificates(d: number) { return this.certRepo.findExpiringCertificates(d) as Promise<Result<Enrollment[]>>; }
+  findExpiredToFlag() { return this.certRepo.findExpiredToFlag(); }
   saveCertificate(cert: Record<string, unknown>, issuedBy?: number) { return this.certRepo.saveCertificate(cert, issuedBy); }
   findCertificatesByEmployee(empId: number) { return this.certRepo.findCertificatesByEmployee(empId); }
   checkOperatorCertForMes(empId: number, courseId: number) { return this.certRepo.checkOperatorCertForMes(empId, courseId); }
