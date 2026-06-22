@@ -12,8 +12,16 @@ export const LmsCreateCourseSchema = z.object({
   isMandatory:  z.boolean().optional(),
   passingScore: z.number().int().min(0).max(100).optional(),
   durationDays: z.number().int().positive().optional(),
+  // Card-centric LMS (EP-LMS-001): bind the darslik to an org-CARD (org_functions.id).
+  cardId:       z.number().int().positive().optional(),
 });
 export type LmsCreateCourseDto = z.infer<typeof LmsCreateCourseSchema>;
+
+// Set/clear the org-CARD a darslik is bound to (EP-LMS-001). null = unbind.
+export const LmsSetCourseCardSchema = z.object({
+  cardId: z.number().int().positive().nullable(),
+});
+export type LmsSetCourseCardDto = z.infer<typeof LmsSetCourseCardSchema>;
 
 export const LmsEnrollEmployeeSchema = z.object({
   employeeId:  z.number().int().positive(),

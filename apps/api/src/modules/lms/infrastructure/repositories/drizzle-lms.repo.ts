@@ -26,6 +26,7 @@ function mapCourse(row: Row): Course {
     passing_score: Number(row.passing_score ?? row.passingScore ?? 70),
     created_by: String(row.author_id ?? row.created_by ?? ''),
     created_at: row.created_at instanceof Date ? row.created_at : new Date(String(row.created_at)),
+    card_id: row.card_id != null ? Number(row.card_id) : null,
   };
 }
 
@@ -84,10 +85,37 @@ export class LmsRepository implements ILmsRepo {
   async saveCourse(course: Course): Promise<Result<Course>> {
     try {
       // courses.code + title are NOT NULL (no default); old insert wrote only title_uz -> 23502.
-      const r = await exec(sql`INSERT INTO courses (title_uz, title, code, description, category, is_mandatory, passing_score, is_active, created_at) VALUES (${course.title}, ${course.title}, ${'CRS-' + Date.now()}, ${course.description ?? null}, ${course.category ?? null}, ${course.is_mandatory}, ${course.passing_score}, true, NOW()) RETURNING *`);
+      // card_id (EP-LMS-001): logical ref to org_functions.id — darslik binds to an org-CARD.
+      const r = await exec(sql`INSERT INTO courses (title_uz, title, code, description, category, is_mandatory, passing_score, card_id, is_active, created_at) VALUES (${course.title}, ${course.title}, ${'CRS-' + Date.now()}, ${course.description ?? null}, ${course.category ?? null}, ${course.is_mandatory}, ${course.passing_score}, ${course.card_id ?? null}, true, NOW()) RETURNING *`);
       return Ok(mapCourse(r[0]));
     } catch (error: unknown) {
       this.logger.error(`saveCourse: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  // EP-LMS-001 (card-centric): list active courses (darsliklar) bound to a given org-CARD (org_functions.id).
+  async findCoursesByCard(cardId: number): Promise<Result<{ items: Course[]; total: number }>> {
+    try {
+      const [rows, countRows] = await Promise.all([
+        exec(sql`SELECT * FROM courses WHERE card_id = ${cardId} AND (is_active IS NULL OR is_active = true) ORDER BY created_at DESC`),
+        runQuery<{ cnt: number }>(sql`SELECT COUNT(*) AS cnt FROM courses WHERE card_id = ${cardId} AND (is_active IS NULL OR is_active = true)`),
+      ]);
+      return Ok({ items: (Array.isArray(rows) ? rows : []).map(mapCourse), total: Number(countRows.rows[0]?.cnt ?? 0) });
+    } catch (error: unknown) {
+      this.logger.error(`findCoursesByCard: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  // EP-LMS-001 (card-centric): bind/unbind a darslik to an org-CARD (org_functions.id). null = unbind.
+  async setCourseCard(id: string, cardId: number | null): Promise<Result<Course>> {
+    try {
+      const r = await exec(sql`UPDATE courses SET card_id = ${cardId}, updated_at = NOW() WHERE id = ${parseInt(id, 10)} RETURNING *`);
+      if (!r[0]) return Err('Course not found');
+      return Ok(mapCourse(r[0]));
+    } catch (error: unknown) {
+      this.logger.error(`setCourseCard: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

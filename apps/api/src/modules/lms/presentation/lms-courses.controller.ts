@@ -38,7 +38,7 @@ import { sql } from 'drizzle-orm';
 import { EnrollCourseCommand } from '../application/commands/enroll-course.handler';
 import { GetCoursesQuery } from '../application/queries/get-courses.query';
 import { AuthenticatedUser } from '@auth/types';
-import { LmsCreateCourseSchema, LmsCreateCourseDto, LmsEnrollEmployeeSchema, LmsEnrollEmployeeDto } from '../dto/lms.dto';
+import { LmsCreateCourseSchema, LmsCreateCourseDto, LmsEnrollEmployeeSchema, LmsEnrollEmployeeDto, LmsSetCourseCardSchema, LmsSetCourseCardDto } from '../dto/lms.dto';
 
 @ApiThrottle()
 @ApiTags('Lms Courses')
@@ -72,6 +72,17 @@ export class LmsCoursesController {
     return result.data;
   }
 
+  // EP-LMS-001 (card-centric): list darsliklar bound to an org-CARD (org_functions.id).
+  // Declared BEFORE @Get(':id') so the literal path segment is not captured by the :id matcher.
+  @ApiOperation({ summary: 'List courses by org-card' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('by-card/:cardId')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async listCoursesByCard(@Param('cardId') cardId: string) {
+    const data = unwrapOrThrow(await this.lmsRepo.findCoursesByCard(parseInt(cardId, 10)));
+    return { data: data.items, pagination: { total: data.total } };
+  }
+
   @ApiOperation({ summary: 'Get course' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
@@ -101,6 +112,7 @@ export class LmsCoursesController {
       passing_score: body.passingScore ?? 70,
       created_by: String(user?.sub ?? user?.id ?? ''),
       created_at: _time.now(),
+      card_id: body.cardId ?? null,
     });
     assertOk(result);
     return { message: 'Kurs yaratildi', data: result.data };
@@ -124,10 +136,25 @@ export class LmsCoursesController {
         duration_hours = COALESCE(${(b.durationHours ?? b.duration_hours ?? null) as number}::numeric, duration_hours),
         is_mandatory   = COALESCE(${(b.isMandatory ?? b.is_mandatory ?? null) as boolean}::boolean, is_mandatory),
         is_active      = COALESCE(${(b.isActive ?? b.is_active ?? null) as boolean}::boolean, is_active),
+        card_id        = COALESCE(${(b.cardId ?? b.card_id ?? null) as number}::integer, card_id),
         updated_at     = NOW()
       WHERE id = ${parseInt(id, 10)}`);
     if (((r as unknown as { rowCount?: number }).rowCount ?? 0) === 0) throw new NotFoundException(`Course #${id} topilmadi`);
     return { id, updated: true };
+  }
+
+  // EP-LMS-001 (card-centric): bind/unbind a darslik to an org-CARD (org_functions.id). cardId=null unbinds.
+  @ApiOperation({ summary: 'Assign course to org-card' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/card')
+  @UsePipes(new ZodValidationPipe(LmsSetCourseCardSchema))
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
+  async setCourseCard(@Param('id') id: string, @Body() body: LmsSetCourseCardDto) {
+    const result = await this.lmsRepo.setCourseCard(id, body.cardId);
+    if (!result.ok) throw new NotFoundException(`Kurs topilmadi: ${id}`);
+    return { message: 'Kurs kartaga biriktirildi', data: result.data };
   }
 
   @ApiOperation({ summary: 'Delete course' })

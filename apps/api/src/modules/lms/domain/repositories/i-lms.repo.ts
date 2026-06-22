@@ -14,6 +14,8 @@ export interface Course {
   passing_score: number;
   created_by: string;
   created_at: Date;
+  // Card-centric LMS (EP-LMS-001): logical ref to the org-CARD (org_functions.id) the darslik binds to.
+  card_id?: number | null;
 }
 
 export interface Enrollment {
@@ -43,7 +45,9 @@ export interface ILmsRepo {
     limit?: number;
   }): Promise<Result<{ items: Enrollment[]; total: number }>>;
   findExpiringCertificates(daysUntilExpiry: number): Promise<Result<Enrollment[]>>;
+  findCoursesByCard(cardId: number): Promise<Result<{ items: Course[]; total: number }>>;
   saveCourse(course: Course): Promise<Result<Course>>;
+  setCourseCard(id: string, cardId: number | null): Promise<Result<Course>>;
   saveEnrollment(enrollment: Enrollment): Promise<Result<Enrollment>>;
   updateEnrollment(id: string, data: Partial<Enrollment>): Promise<Result<Enrollment>>;
 }

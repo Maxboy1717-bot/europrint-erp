@@ -120,6 +120,9 @@ export const courses = pgTable('courses', {
   status: text('status').notNull().default('active'),
   instructorId: text('instructor_id'),
   coverUrl: text('cover_url'),
+  // Card-centric LMS (EP-LMS-001): a darslik is bound to an org-CARD (org_functions.id),
+  // not a department/employee. Logical ref only (no hard FK — cross-module ADR). Keeps department_id.
+  cardId: integer('card_id'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),
