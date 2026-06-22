@@ -6,6 +6,20 @@
 export interface MigrationDef { name: string; sql: string }
 
 export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
+  // MUHIM-4 fix: INV-${Date.now()} race condition uchun atomic sequence.
+  // Dastur har ishga tushganda yaratiladi (IF NOT EXISTS — idempotent).
+  // Foydalanish: SELECT nextval('invoice_number_seq') → INV-2026-001042
+  {
+    name: 'invoice_number_seq sequence (MUHIM-4)',
+    sql: `CREATE SEQUENCE IF NOT EXISTS invoice_number_seq START 1000 INCREMENT 1 NO CYCLE`,
+  },
+  // A4: per-prefix document-number sequences (atomic, race-free) — same proven pattern as
+  // invoice_number_seq. Used by nextDocNumber() to replace `PREFIX-${Date.now()}` codegen
+  // (millisecond-collision risk in batch inserts + non-human-readable). Format PREFIX-YYYY-NNNNNN.
+  // Scoped to PO + MES (opaque formats, no strict regex validator). DLV/SO keep their
+  // PREFIX-\d{10} validators → migrated in a separate slice with a matching format.
+  { name: 'doc_seq_po sequence (A4)',  sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_po START 1 INCREMENT 1 NO CYCLE` },
+  { name: 'doc_seq_mes sequence (A4)', sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_mes START 1 INCREMENT 1 NO CYCLE` },
   {
     name: 'domain_events outbox table (PA0-6)',
     sql: `

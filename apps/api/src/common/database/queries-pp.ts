@@ -6,6 +6,7 @@
 import { db } from '@shared/db';
 import { boms_int, routings_int, production_orders_int, routing_operations_int } from '@shared/db';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
+import { nextDocNumber } from './doc-sequences.helper';
 
 type DbRow = Record<string, unknown>;
 
@@ -26,7 +27,7 @@ export async function execSavePo(
     productId: productId,
     plannedStartDate: plannedStart != null ? String(plannedStart) : undefined,
     plannedEndDate: plannedEnd != null ? String(plannedEnd) : undefined,
-    orderNumber: `PO-${Date.now()}`,
+    orderNumber: await nextDocNumber('PO'),
     plannedQuantity: 1,
     createdBy: createdBy != null ? Number(createdBy) : undefined,
   } as PoInsert).returning({ id: production_orders_int.id });
@@ -164,7 +165,7 @@ export async function execCreatePlanLine(
       salesOrderId: String(salesOrderId),
       productId,
       plannedQuantity: plannedQuantity > 0 ? plannedQuantity : 1,
-      orderNumber: `PO-${salesOrderId}-${productId}-${Date.now()}`,
+      orderNumber: await nextDocNumber('PO'),
       unit: unit ?? undefined,
       createdBy: createdBy ?? undefined,
     } as PoInsert)

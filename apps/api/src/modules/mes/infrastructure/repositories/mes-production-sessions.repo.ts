@@ -6,6 +6,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { nextDocNumber } from '@common/database/doc-sequences.helper';
 
 type Row = Record<string, unknown>;
 
@@ -64,13 +65,14 @@ export class MesProductionSessionsRepository {
       const operatorId = Number(body.operator_id ?? body.operatorId ?? 0) || 0;
       const targetQuantity = Number(body.planned_qty ?? body.target_quantity ?? 0) || 0;
       const notes = (body.notes ?? null) as string | null;
+      const sessionNumber = await nextDocNumber('MES');
 
       const rows = await runQuery<Row>(sql`
         INSERT INTO production_sessions
           (session_number, production_order_id, equipment_id, worker_id, machine_id, operator_id,
            target_quantity, worker_notes, status, started_at, created_at, updated_at)
         VALUES (
-          ${`MES-${Date.now()}`}, ${productionOrderId}, ${workCenterId}, ${operatorId},
+          ${sessionNumber}, ${productionOrderId}, ${workCenterId}, ${operatorId},
           ${workCenterId}, ${operatorId}, ${targetQuantity}, ${notes}, 'pending', NOW(), NOW(), NOW())
         RETURNING *
       `);
