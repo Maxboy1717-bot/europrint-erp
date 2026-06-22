@@ -187,12 +187,14 @@ export class MesShiftsStatsRepository {
   }
 
   async getProductionOrders(status: string | undefined, lim: number, off: number): Promise<Row[]> {
+    // mes_papka_orders has NO operator_id column (information_schema verified 2026-06-22).
+    // The order's responsible person is exposed as assigned_to → join employees on that.
     const rows = await runQuery<Row>(sql`
       SELECT po.*, so.order_number AS sales_order_number,
              COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS operator_name
       FROM mes_papka_orders po
       LEFT JOIN sales_orders so ON so.id = po.sales_order_id
-      LEFT JOIN employees e ON e.id = po.operator_id
+      LEFT JOIN employees e ON e.id = po.assigned_to
       WHERE (${status ?? null}::text IS NULL OR po.status = ${status ?? null})
       ORDER BY po.created_at DESC LIMIT ${lim} OFFSET ${off}
     `);
@@ -200,12 +202,13 @@ export class MesShiftsStatsRepository {
   }
 
   async getProductionOrderById(id: number): Promise<Row | null> {
+    // mes_papka_orders has NO operator_id column; assigned_to is the responsible person.
     const rows = await runQuery<Row>(sql`
       SELECT po.*, so.order_number AS sales_order_number,
              COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS operator_name
       FROM mes_papka_orders po
       LEFT JOIN sales_orders so ON so.id = po.sales_order_id
-      LEFT JOIN employees e ON e.id = po.operator_id
+      LEFT JOIN employees e ON e.id = po.assigned_to
       WHERE po.id = ${id} LIMIT 1
     `);
     return (rows.rows[0] ?? null) as Row | null;
