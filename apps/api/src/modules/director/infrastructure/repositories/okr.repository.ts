@@ -24,12 +24,42 @@ export class OkrRepository implements IOkrRepo {
   // P30 EP-DIR-015/016: kaskad uchun typedExecute — parent_goal_id self-JOIN
   // (parent_title) va parentGoalId filtri. parent_goal_id/owner_card_id
   // ustunlari gated P30 migration bilan qo'shiladi (Drizzle schema'da hali yo'q).
+  //
+  // EP-DIR-012/015: har maqsad uchun "bajarilish foizi" o'lchanadigan kalit
+  // natijalardan kelib chiqib hisoblanadi (klassik OKR). progress = shu maqsadning
+  // kalit natijalari bo'yicha AVG(LEAST(current/target*100, 100)). Kalit natija
+  // bo'lmasa — saqlangan progress_percent fallback. Formula `getDashboardKeyResults`
+  // dagi kanonik usul bilan bir xil (current/target → foiz, 100% bilan cheklangan).
   async listObjectives(type: string | null, year: number | null, quarter: string | null, status: string | null, parentGoalId?: number | null): Promise<Result<Row[]>> {
     return safeCall(async () => {
       return typedExecute<Row>(sql`
-        SELECT o.*, p.title AS parent_title
+        SELECT
+          o.*,
+          p.title AS parent_title,
+          COALESCE(kr.kr_count, 0)::int AS key_result_count,
+          -- EP-DIR-012: kalit natijalardan hisoblangan bajarilish foizi (yoki saqlangan fallback)
+          COALESCE(
+            ROUND(kr.kr_progress, 0)::int,
+            o.progress_percent,
+            0
+          ) AS progress
         FROM okr_objectives o
         LEFT JOIN okr_objectives p ON p.id = o.parent_goal_id
+        LEFT JOIN (
+          SELECT
+            objective_id,
+            COUNT(*) AS kr_count,
+            AVG(
+              LEAST(
+                CASE WHEN target_value > 0
+                     THEN current_value::numeric / target_value * 100
+                     ELSE 0 END,
+                100
+              )
+            ) AS kr_progress
+          FROM okr_key_results
+          GROUP BY objective_id
+        ) kr ON kr.objective_id = o.id
         WHERE
           (${type}::text IS NULL OR o.type = ${type}) AND
           (${year}::int IS NULL OR o.year = ${year}::int) AND
@@ -39,6 +69,101 @@ export class OkrRepository implements IOkrRepo {
             OR o.parent_goal_id = ${parentGoalId ?? null}::int)
         ORDER BY o.created_at DESC
       `);
+      }, 'DB_ERROR');
+  }
+
+  // EP-DIR-016: OKR kaskad daraxti — kompaniya → bo'lim → karta (lavozim).
+  // Har tugun progressi: o'z kalit natijalaridan hisoblanadi; agar kalit natija
+  // bo'lmasa, bolalarining (parent_goal_id orqali) o'rtacha rolled-up progressi.
+  // "Oltin ip": har quyi maqsad yuqori maqsadga hissa qo'shadi.
+  async getCascade(year: number | null): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      // 1) Barcha maqsadlar + har biri uchun KR dan hisoblangan xom progress.
+      const rows = await typedExecute<{
+        id: number;
+        title: string;
+        type: string | null;
+        status: string | null;
+        parent_goal_id: number | null;
+        owner_card_id: number | null;
+        department_id: number | null;
+        key_result_count: number;
+        kr_progress: number | null;
+      }>(sql`
+        SELECT
+          o.id, o.title, o.type, o.status,
+          o.parent_goal_id, o.owner_card_id, o.department_id,
+          COALESCE(kr.kr_count, 0)::int AS key_result_count,
+          kr.kr_progress
+        FROM okr_objectives o
+        LEFT JOIN (
+          SELECT
+            objective_id,
+            COUNT(*) AS kr_count,
+            AVG(
+              LEAST(
+                CASE WHEN target_value > 0
+                     THEN current_value::numeric / target_value * 100
+                     ELSE 0 END,
+                100
+              )
+            ) AS kr_progress
+          FROM okr_key_results
+          GROUP BY objective_id
+        ) kr ON kr.objective_id = o.id
+        WHERE (${year ?? null}::int IS NULL OR o.year = ${year ?? null}::int)
+        ORDER BY o.id ASC
+      `);
+
+      // 2) Bolalar indeksini qur (parent_goal_id → bolalar).
+      const childrenOf = new Map<number, number[]>();
+      for (const r of rows) {
+        if (r.parent_goal_id != null) {
+          const arr = childrenOf.get(r.parent_goal_id) ?? [];
+          arr.push(r.id);
+          childrenOf.set(r.parent_goal_id, arr);
+        }
+      }
+      const byId = new Map<number, typeof rows[number]>();
+      for (const r of rows) byId.set(r.id, r);
+
+      // 3) Rolled-up progress: KR bor bo'lsa — KR progress; aks holda bolalarning
+      //    o'rtachasi (rekursiv, sikl-himoyasi bilan).
+      const memo = new Map<number, number>();
+      const rollup = (id: number, seen: Set<number>): number => {
+        if (memo.has(id)) return memo.get(id) as number;
+        const node = byId.get(id);
+        if (!node || seen.has(id)) return 0;
+        seen.add(id);
+        let value: number;
+        if (node.key_result_count > 0) {
+          value = Math.round(Number(node.kr_progress ?? 0));
+        } else {
+          const kids = childrenOf.get(id) ?? [];
+          if (kids.length === 0) {
+            value = 0;
+          } else {
+            const sum = kids.reduce((acc, kid) => acc + rollup(kid, seen), 0);
+            value = Math.round(sum / kids.length);
+          }
+        }
+        memo.set(id, value);
+        return value;
+      };
+
+      // 4) Har tugun uchun yakuniy progress + bolalar soni + hissa metadata.
+      return rows.map((r) => ({
+        id:                r.id,
+        title:             r.title,
+        type:              r.type,
+        status:            r.status,
+        parent_goal_id:    r.parent_goal_id,
+        owner_card_id:     r.owner_card_id,
+        department_id:     r.department_id,
+        key_result_count:  r.key_result_count,
+        child_count:       (childrenOf.get(r.id) ?? []).length,
+        progress:          rollup(r.id, new Set<number>()),
+      }));
       }, 'DB_ERROR');
   }
 

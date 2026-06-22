@@ -178,4 +178,12 @@ export class OkrController {
   async getDashboard() {
     return unwrapOrInternal(await this.svc.getDashboard());
   }
+
+  // EP-DIR-016: OKR kaskad daraxti — kompaniya→bo'lim→karta, rolled-up progress.
+  @ApiOperation({ summary: 'OKR cascade tree with rolled-up progress' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('cascade')
+  async getCascade(@Query('year') year?: string) {
+    return unwrapOrInternal(await this.svc.getCascade(year ? parseInt(year, 10) : null));
+  }
 }

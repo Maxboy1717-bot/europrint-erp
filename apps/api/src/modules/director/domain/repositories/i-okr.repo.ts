@@ -56,6 +56,8 @@ export interface IOkrRepo {
   deleteKeyResult(id: number): Promise<void>;
   getDashboardObjectives(): Promise<Result<unknown[]>>;
   getDashboardKeyResults(): Promise<Result<KeyResultsDashboard>>;
+  // EP-DIR-016: kompaniya→bo'lim→karta kaskad daraxti, rolled-up progress bilan.
+  getCascade(year: number | null): Promise<Result<Row[]>>;
 }
 
 export const OKR_REPO = Symbol('OKR_REPO');

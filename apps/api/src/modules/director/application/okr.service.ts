@@ -56,4 +56,9 @@ export class OkrService {
       return { objectives: objs, keyResults: krs };
     });
   }
+
+  // EP-DIR-016: kaskad daraxti (kompaniya→bo'lim→karta), rolled-up progress bilan.
+  async getCascade(year: number | null) {
+    return this.repo.getCascade(year);
+  }
 }
