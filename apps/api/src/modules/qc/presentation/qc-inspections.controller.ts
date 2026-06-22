@@ -24,6 +24,7 @@ import { unwrapOrNotFoundDefined } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { GetInspectionsQuery } from '../application/queries/get-inspections.query';
+import { GetInspectionStatsQuery } from '../application/queries/get-inspection-stats.query';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -58,6 +59,24 @@ export class QcInspectionsController {
     @Query('limit') limit?: string,
   ) {
     return await this.queryBus.execute(new GetInspectionsQuery(status, undefined, undefined, Number(page), Number(limit)));
+  }
+
+  @ApiOperation({ summary: 'QC quality KPI panel — brak% / pass-rate / FTQ (EP-QC-077)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('stats')
+  async getInspectionStats(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const fromDate = from ? new Date(from) : undefined;
+    const toDate = to ? new Date(to) : undefined;
+    const result = await this.queryBus.execute(
+      new GetInspectionStatsQuery(
+        fromDate && !Number.isNaN(fromDate.getTime()) ? fromDate : undefined,
+        toDate && !Number.isNaN(toDate.getTime()) ? toDate : undefined,
+      ),
+    );
+    return result;
   }
 
   @ApiOperation({ summary: 'Get inspection' })
