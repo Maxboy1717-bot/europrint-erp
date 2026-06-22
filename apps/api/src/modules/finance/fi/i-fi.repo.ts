@@ -20,7 +20,6 @@ export interface IFiRepository {
   getStats(): Promise<Result<{ revenue: number; expenses: number; unpaidInvoices: number; unpaidAmount: number }>>;
   getRecentTransactions(limit: number): Promise<Result<Row[]>>;
   findGlDocuments(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
-  createGlDoc(dto: Record<string, unknown>): Promise<Result<Row>>;
   findProfitCenters(): Promise<Result<Row[]>>;
   createProfitCenter(dto: Record<string, unknown>): Promise<Result<Row>>;
   updateProfitCenter(id: number, dto: Record<string, unknown>): Promise<Result<Row>>;

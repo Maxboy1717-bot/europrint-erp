@@ -148,13 +148,6 @@ export class DrizzleFiRepository implements IFiRepository {
     } catch (e: unknown) { return Err((e as Error).message || 'GL hujjatlar topilmadi'); }
   }
 
-  async createGlDoc(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
-    try {
-      const result = await db.insert(glDocuments).values(dto as typeof glDocuments.$inferInsert).returning();
-      return Ok(result[0] as Record<string, unknown>);
-    } catch (e: unknown) { return Err((e as Error).message || 'Yaratishda xatolik'); }
-  }
-
   async findProfitCenters(): Promise<Result<Record<string, unknown>[]>> {
     try {
       const rows = await db.select().from(profit_centers).orderBy(desc(profit_centers.created_at));
