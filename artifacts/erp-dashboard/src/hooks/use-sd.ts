@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { invalidateOrderCascade } from "@/lib/cache-invalidation";
 
 export function useSDDashboard() {
   return useQuery({ queryKey: ["/api/sd/dashboard/overview"] });
@@ -56,8 +57,9 @@ export function useAdvanceOrderStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string | number; status: string }) =>
       apiRequest("PATCH", `/api/sd/orders/${id}/status`, { status }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["/api/sd/orders"] }),
+    // Golden thread: advancing an order can spawn production_orders (PP) downstream,
+    // so cascade-invalidate PP/MES/QC caches, not just SD (audit F22).
+    onSuccess: () => invalidateOrderCascade(queryClient),
   });
 }
 
