@@ -12,3 +12,15 @@ export const MES_SCORE_MAX = MAX_SCORE_VALUE;          // smenani baholash bali 
 
 // ─── MES: so'rov limiti ───────────────────────────────────────────────────────
 export const MES_QUERY_LIMIT = 100; // standart so'rov chegarasi
+
+// ─── MES: OEE (jahon-standart formula — egasi-koeffitsiyenti EMAS) ────────────
+// OEE = Availability × Performance × Quality, har omil [0..100] foizda.
+//   Availability = run / (run + stop + qayd-etilgan downtime)
+//   Performance  = actual / target  (100% bilan cheklanadi — target = rejalashtirilgan chiqim)
+//   Quality      = (actual − defect) / actual
+// Bu omillar production_sessions ning REAL ustunlaridan hisoblanadi (oldindan
+// saqlangan oee/availability/... ustunlari ECHO qilinmaydi). Jahon-standart.
+export const OEE_PERCENT_SCALE = 100;        // foiz shkalasi (0..100)
+export const OEE_PERFORMANCE_CAP = 100;      // Performance 100% dan oshmaydi (over-production tekislanadi)
+export const SECONDS_PER_MINUTE_OEE = 60;    // downtime daqiqa→sekund konversiyasi
+export const OEE_ROUND_FACTOR = 10;          // 0.1 foiz aniqlik uchun yaxlitlash koeffitsiyenti

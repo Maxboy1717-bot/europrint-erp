@@ -6,6 +6,12 @@
 import { Injectable } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import {
+  OEE_PERCENT_SCALE,
+  OEE_PERFORMANCE_CAP,
+  OEE_ROUND_FACTOR,
+  SECONDS_PER_MINUTE_OEE,
+} from '../../constants/mes.constants';
 
 type Row = Record<string, unknown>;
 
@@ -83,29 +89,90 @@ export class MesShiftsStatsRepository {
   }
 
   async getOee(): Promise<{ machines: Row[]; averageOee: number }> {
-    // Scale normalisation: most production_sessions store OEE/availability/performance/
-    // quality on a 0-100 scale (e.g. 84.40), but some seed/demo rows store them on a
-    // 0-1 fraction (e.g. 0.92). Mixed scales corrupt the per-machine values AND the
-    // averageOee. Normalise every session to ONE scale (0-100) BEFORE averaging:
-    // any non-zero value <= 1 is a fraction and is multiplied by 100; values > 1 are
-    // already on the 0-100 scale and are left untouched. Done per-session inside AVG
-    // so a machine mixing both scales still averages correctly.
+    // REAL OEE — world-standard formula computed from production_sessions actual
+    // signals, NOT the pre-stored ps.oee/availability/... columns (those held
+    // inconsistent demo seed values mixing 0-1 and 0-100 scales, and a "running"
+    // session with NULLs; averaging them was a green lie that ignored real
+    // run-time, output and defects).
+    //
+    //   OEE = Availability × Performance × Quality   (each factor on 0-100 scale)
+    //     Availability = run / (run + stop + logged-downtime)
+    //                    run/stop from running_time_seconds/stopped_time_seconds;
+    //                    downtime_events duration is FOLDED IN so logged stoppages
+    //                    (setup/changeover/breakdown) reduce availability.
+    //     Performance  = actual_quantity / target_quantity  (capped at 100% — target
+    //                    is the planned output; over-run does not inflate OEE).
+    //     Quality      = (actual_quantity − defect_quantity) / actual_quantity
+    //                    = good units / produced units (real fraction).
+    //
+    // Aggregation is numerator/denominator-first per machine (SUM the seconds and
+    // quantities across that machine's sessions, then derive the factor once) so a
+    // machine with several sessions is weighted by real volume, not a naive average
+    // of per-session percentages. Every divisor is guarded → 0, never NaN/100.
+    // A machine with no (non-deleted) sessions scores 0 (honest-empty); an empty
+    // production_sessions table yields all-zero machines and averageOee 0.
     const rows = await runQuery<Row>(sql`
+      WITH dt AS (
+        SELECT session_id,
+               SUM(COALESCE(duration_min, duration_minutes, duration_seconds / 60.0, 0))::numeric AS downtime_min
+        FROM downtime_events
+        GROUP BY session_id
+      ),
+      sess AS (
+        SELECT ps.equipment_id,
+               COUNT(*)::int                                          AS session_count,
+               SUM(COALESCE(ps.running_time_seconds, 0))::numeric     AS run_s,
+               SUM(COALESCE(ps.stopped_time_seconds, 0))::numeric     AS stop_s,
+               SUM(COALESCE(dt.downtime_min, 0) * ${SECONDS_PER_MINUTE_OEE}::numeric)::numeric AS downtime_s,
+               SUM(COALESCE(ps.target_quantity, 0))::numeric          AS target_qty,
+               SUM(COALESCE(ps.actual_quantity, 0))::numeric          AS actual_qty,
+               SUM(COALESCE(ps.defect_quantity, 0))::numeric          AS defect_qty
+        FROM production_sessions ps
+        LEFT JOIN dt ON dt.session_id = ps.id
+        WHERE ps.deleted_at IS NULL
+        GROUP BY ps.equipment_id
+      )
       SELECT e.id, e.name, e.status,
-             COALESCE(AVG(CASE WHEN ps.oee          > 0 AND ps.oee          <= 1 THEN ps.oee          * 100 ELSE ps.oee          END), 0)::numeric(5,2) AS oee,
-             COALESCE(AVG(CASE WHEN ps.availability > 0 AND ps.availability <= 1 THEN ps.availability * 100 ELSE ps.availability END), 0)::numeric(5,2) AS availability,
-             COALESCE(AVG(CASE WHEN ps.performance  > 0 AND ps.performance  <= 1 THEN ps.performance  * 100 ELSE ps.performance  END), 0)::numeric(5,2) AS performance,
-             COALESCE(AVG(CASE WHEN ps.quality      > 0 AND ps.quality      <= 1 THEN ps.quality      * 100 ELSE ps.quality      END), 0)::numeric(5,2) AS quality
+             COALESCE(s.session_count, 0)                             AS session_count,
+             CASE WHEN COALESCE(s.run_s, 0) + COALESCE(s.stop_s, 0) + COALESCE(s.downtime_s, 0) > 0
+                  THEN ROUND(${OEE_PERCENT_SCALE}::numeric * s.run_s / (s.run_s + s.stop_s + s.downtime_s), 2)
+                  ELSE 0 END::numeric(5,2)                            AS availability,
+             CASE WHEN COALESCE(s.target_qty, 0) > 0
+                  THEN ROUND(LEAST(${OEE_PERFORMANCE_CAP}::numeric, ${OEE_PERCENT_SCALE}::numeric * s.actual_qty / s.target_qty), 2)
+                  ELSE 0 END::numeric(5,2)                            AS performance,
+             CASE WHEN COALESCE(s.actual_qty, 0) > 0
+                  THEN ROUND(${OEE_PERCENT_SCALE}::numeric * (s.actual_qty - s.defect_qty) / s.actual_qty, 2)
+                  ELSE 0 END::numeric(5,2)                            AS quality
       FROM equipment e
-      LEFT JOIN production_sessions ps ON ps.equipment_id = e.id AND ps.deleted_at IS NULL
-      WHERE e.is_active = true GROUP BY e.id, e.name, e.status ORDER BY e.name
+      LEFT JOIN sess s ON s.equipment_id = e.id
+      WHERE e.is_active = true
+      GROUP BY e.id, e.name, e.status, s.session_count, s.run_s, s.stop_s, s.downtime_s, s.target_qty, s.actual_qty, s.defect_qty
+      ORDER BY e.name
     `);
-    const machines = rows.rows as Row[];
+
+    const machines: Row[] = (rows.rows as Row[]).map((r) => {
+      const availability = Number(r['availability'] ?? 0);
+      const performance = Number(r['performance'] ?? 0);
+      const quality = Number(r['quality'] ?? 0);
+      // OEE = A × P × Q. Factors are on the 0-100 scale, so divide by scale² to
+      // keep the product on the same 0-100 scale.
+      const oee =
+        Math.round(
+          (availability * performance * quality) /
+            (OEE_PERCENT_SCALE * OEE_PERCENT_SCALE) *
+            OEE_ROUND_FACTOR,
+        ) / OEE_ROUND_FACTOR;
+      return { ...r, oee };
+    });
+
+    // averageOee over machines that actually ran (session_count > 0); idle machines
+    // with no production must not drag the floor average to 0.
+    const active = machines.filter((m) => Number(m['session_count'] ?? 0) > 0);
     const avgOee =
-      machines.length > 0
-        ? machines.reduce((s, r) => s + Number(r['oee'] ?? 0), 0) / machines.length
+      active.length > 0
+        ? active.reduce((s, r) => s + Number(r['oee'] ?? 0), 0) / active.length
         : 0;
-    return { machines, averageOee: Math.round(avgOee * 10) / 10 };
+    return { machines, averageOee: Math.round(avgOee * OEE_ROUND_FACTOR) / OEE_ROUND_FACTOR };
   }
 
   async getStats(d: string): Promise<Row> {
