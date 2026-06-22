@@ -7,7 +7,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { sql, SQL } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall } from '@common/result';
-import { execGlLineInsert } from '@common/database/queries-remaining';
 
 type Row = Record<string, unknown>;
 
@@ -68,30 +67,6 @@ export class DrizzleFinanceAccountingRepo {
     if (filter.moveType)    conditions.push(sql`sm.move_type = ${filter.moveType}`);
     const where = conditions.length === 0 ? sql`1=1` : sql.join(conditions, sql` AND `);
     return this.getMaterials(where, limitVal, offsetVal);
-  }
-
-  async getGlDocumentSeq(): Promise<string> {
-    try {
-      const rows = await runQuery<{ num: string }>(sql`SELECT LPAD(NEXTVAL('gl_document_seq')::text, 6, '0') AS num`);
-      return String(rows.rows[0]?.num || Date.now());
-    } catch {
-      const rows = await runQuery<{ num: string }>(sql`SELECT 'GL-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') AS num`);
-      return String(rows.rows[0]?.num || Date.now());
-    }
-  }
-
-  async insertGlDocument(documentNumber: string, body: Row): Promise<Row> {
-    const { document_type, document_date, posting_date, description, currency = 'UZS', reference_type, reference_id, cost_center_id, profit_center_id } = body;
-    const rows = await runQuery<Row>(sql`
-      INSERT INTO gl_documents (document_number, document_type, document_date, posting_date, description, currency, reference_type, reference_id, cost_center_id, profit_center_id, status)
-      VALUES (${documentNumber}, ${document_type}, ${document_date}, ${posting_date || document_date}, ${description}, ${currency}, ${reference_type || null}, ${reference_id || null}, ${cost_center_id || null}, ${profit_center_id || null}, 'draft')
-      RETURNING *
-    `);
-    return (rows.rows[0] ?? {}) as Row;
-  }
-
-  async insertGlLine(docId: number, lineNumber: number, line: Row): Promise<void> {
-    await execGlLineInsert(docId, lineNumber, line);
   }
 
   async getPeriods(): Promise<Row[]> {

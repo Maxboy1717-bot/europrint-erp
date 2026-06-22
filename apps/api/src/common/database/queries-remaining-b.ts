@@ -206,15 +206,3 @@ export async function execHrBrandSettingsUpsert(jsonData: string): Promise<void>
   });
 }
 
-export async function execGlLineInsert(docId: number, lineNumber: number, line: Record<string, unknown>): Promise<void> {
-  await db.insert(gl_lines).values({
-    glDocumentId: String(docId),
-    lineNumber: lineNumber,
-    accountId: String(line.accountId || line.account_id || ''),
-    costCenterId: (line.costCenterId || line.cost_center_id || null) as string | null,
-    profitCenterId: (line.profitCenterId || line.profit_center_id || null) as string | null,
-    debitAmount: Number(line.debitAmount || line.debit_amount) || 0,
-    creditAmount: Number(line.creditAmount || line.credit_amount) || 0,
-    description: (line.description || null) as string | null,
-  });
-}
