@@ -75,6 +75,7 @@ import { PpIntelligenceController } from './presentation/pp-intelligence.control
 import { TechnologyController } from './technology/technology.controller';
 import { TechnologyService } from './technology/technology.service';
 import { TechnologyRepository } from './technology/technology.repository';
+import { TechnologyGrammageService } from './technology/technology-grammage.service';
 import { TechnologySchemaService } from './technology/technology-schema.service';
 import { TechnologySchemaRepository } from './technology/technology-schema.repository';
 // PA3-17 Wave 6: merged from former modules/production/ (route prefixes '/production' and '/production/shift-reports' preserved)
@@ -164,6 +165,8 @@ const listeners = [
     TechnologyRepository,
     TechnologySchemaService,
     TechnologySchemaRepository,
+    // ⭐ Gofra 3-formula consumer for tech cards (reuses GofraConversionService)
+    TechnologyGrammageService,
     // PA3-17 Wave 6: merged from modules/production/
     ProductionService,
     ProductionRepository,

@@ -8,10 +8,24 @@ import { Result, AppError } from '@common/result';
 import {
   TechnologyRepository, CreateCardInput, UpdateCardInput, AddRouteInput,
 } from './technology.repository';
+import { TechnologyGrammageService } from './technology-grammage.service';
 
 @Injectable()
 export class TechnologyService {
-  constructor(private readonly repo: TechnologyRepository) {}
+  constructor(
+    private readonly repo: TechnologyRepository,
+    private readonly grammage: TechnologyGrammageService,
+  ) {}
+
+  /**
+   * ⭐ Effective corrugated grammage (Formula 3) + kg↔sheet chains (Formula 1+2)
+   * for a tech card, via the pure GofraConversionService. Returns an HONEST
+   * `complete:false` payload when the card's material lacks layer config / flute
+   * factor / dimensions — never a fabricated number.
+   */
+  async getCardGrammage(cardId: number, materialCardId?: number) {
+    return this.grammage.computeForCard(cardId, materialCardId);
+  }
 
   async getOrders(status?: string): Promise<Result<object, AppError>> { return this.repo.findOrders(status); }
   async getDashboard() { return this.repo.findDashboardStats(); }

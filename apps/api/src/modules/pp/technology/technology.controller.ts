@@ -19,6 +19,7 @@ import { TechnologyService } from './technology.service';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
+const GrammageQueryDto = z.object({ materialCardId: z.coerce.number().int().positive().optional() });
 const ApproveDto = z.object({ bomApproved: z.boolean().default(false), routingApproved: z.boolean().default(false), techCardApproved: z.boolean().default(false), notes: z.string().optional() });
 const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manager', 'designer']).default('manager') });
 
@@ -149,6 +150,24 @@ export class TechnologyController {
   async getCardById(@Param('id') id: string) {
     const r = await this.svc.getCardById(id);
     if (!r.ok) throw new HttpException('Texnologik karta topilmadi', HttpStatus.NOT_FOUND);
+    return r.data;
+  }
+
+  // ⭐ Gofra/Sloy 3-formula consumer: effective board grammage + kg↔sheet for a tech card.
+  // Reads the card's material → material_layer_config + pp_flute_types, delegates ALL math to
+  // the pure GofraConversionService. Honest `complete:false` payload when data is unfilled (Q-40).
+  @Get('cards/:id/grammage')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Effective corrugated grammage (g/m²) + kg↔sheet conversions for a tech card' })
+  async getCardGrammage(@Param('id') id: string, @Query() query: unknown) {
+    const q = GrammageQueryDto.parse(query);
+    const cardId = parseInt(id, 10);
+    if (!Number.isFinite(cardId)) throw new HttpException('Notoʻgʻri karta ID', HttpStatus.BAD_REQUEST);
+    const r = await this.svc.getCardGrammage(cardId, q.materialCardId);
+    if (!r.ok) {
+      const code = r.error.code === 'NOT_FOUND' ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException(r.error.message, code);
+    }
     return r.data;
   }
 
