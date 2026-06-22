@@ -19,6 +19,7 @@ import { Result } from '@common/result';
 import { IWmsRepository, WMS_REPO, DrizzleExecutor } from '../../domain/repositories/wms.repository';
 import { BatchSelectionService } from '../../domain/services/batch-selection.service';
 import { BatchIssueStrategy } from '../../domain/constants/wms-batch-issue.constants';
+import { OutboundEnforcementService } from '../outbound-enforcement.service';
 
 export class GoodsIssueCommand {
   constructor(public materialId: number,
@@ -28,7 +29,16 @@ export class GoodsIssueCommand {
     /** Authenticated user who issued the goods (recorded on the wms_goods_issues row). */
     public issuedBy: number | null = null,
     /** Optional explicit FIFO/FEFO override; otherwise auto-resolved from batches. */
-    public strategy?: BatchIssueStrategy) {}
+    public strategy?: BatchIssueStrategy,
+    /**
+     * Optional tech-card id for the EP-WMS-084/085 hard-gate. When supplied AND the
+     * tech-card BOM (`tech_card_bom`) has rows, an outbound material/gofra-layer
+     * mismatch BLOCKS the issue. When null/0 (no tech-card link), the gate is a no-op
+     * — preserving the existing issue behavior (no regression).
+     */
+    public technologyCardId: number | null = null,
+    /** Optional gofra layer of the issued material (EP-WMS-085); null skips the layer check. */
+    public issuedLayer: number | null = null) {}
 }
 
 @CommandHandler(GoodsIssueCommand)
@@ -38,7 +48,8 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
 
   constructor(
     @Inject(WMS_REPO) private wmsRepo: IWmsRepository,
-    private eventBus: EventBus
+    private eventBus: EventBus,
+    private readonly enforcement: OutboundEnforcementService,
   ) {}
 
   async execute(command: GoodsIssueCommand): Promise<Result<void>> {
@@ -46,6 +57,24 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
       { materialId: command.materialId, warehouseId: command.warehouseId, amount: command.amount },
       'EP-WMS-055 Issuing goods (FIFO/FEFO batch selection)',
     );
+
+    // EP-WMS-084 / EP-WMS-085 hard-gate: when a tech-card is supplied, block a
+    // material/gofra-layer mismatch BEFORE touching stock. No tech-card → no-op (no regress).
+    const gate = await this.enforcement.checkIssueAllowed({
+      materialId: command.materialId,
+      technologyCardId: command.technologyCardId,
+      issuedLayer: command.issuedLayer,
+    });
+    if (!gate.ok) return Err(gate.error);
+    if (!gate.data.allowed) {
+      return Err(
+        AppErr(
+          'BUSINESS_RULE_VIOLATION',
+          gate.data.message ?? 'Chiqim bloklandi (texkarta/gofra mos kelmadi)',
+          { blockCode: gate.data.blockCode },
+        ),
+      );
+    }
 
     const issued = await this.wmsRepo.withTransaction((tx) =>
       this.issueInTx(command, tx),

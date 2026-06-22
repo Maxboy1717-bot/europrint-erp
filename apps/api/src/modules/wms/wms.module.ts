@@ -97,6 +97,9 @@ import { RulonCardService } from './application/rulon-card.service';
 import { DrizzleRulonCardRepository } from './infrastructure/repositories/drizzle-rulon-card.repo';
 import { RULON_CARD_REPO } from './domain/repositories/i-rulon-card.repo';
 import { WmsRollCalcService } from './domain/services/wms-roll-calc.service';
+import { WmsOverflowService } from './application/wms-overflow.service';
+import { OutboundEnforcementService } from './application/outbound-enforcement.service';
+import { WmsOverflowController } from './presentation/wms-overflow.controller';
 
 const handlers = [
   GoodsIssueHandler,
@@ -144,6 +147,7 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     WmsEoqController,
     WmsAnalyticsController,
     RulonCardController,
+    WmsOverflowController,
   ],
   providers: [
     ...handlers,
@@ -196,6 +200,9 @@ const listeners = [QcPassedListener, RopTriggerHandler];
     DrizzleRulonCardRepository,
     { provide: RULON_CARD_REPO, useClass: DrizzleRulonCardRepository },
     RulonCardService,
+    // WMS overflow (idish-yaxlitlash, OMBOR-INTERVYU §2) + chiqim hard-gate'lar (EP-WMS-084/085).
+    WmsOverflowService,
+    OutboundEnforcementService,
   ],
   exports: [WMS_REPO],
 })
