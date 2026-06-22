@@ -11,18 +11,18 @@ import { Result, Err , Ok } from '@common/types/result.type';
 import { IKanbanRepo } from '../../domain/repositories/i-kanban.repo';
 import { KanbanTask } from '../../domain/aggregates/kanban-task.aggregate';
 import { TaskStatus, TaskPriority } from '../../domain/enums/task-status.enum';
-import { db, kanban_tasks, runQuery } from '@shared/db';
+import { runQuery } from '@shared/db';
 import { safeJsonParse } from '@shared/utils/safe-json';
 
 /**
  * TWO-WORLD FIX (audit KAN): the live kanban data is in `kanban_cards`
- * (canonical, has rows). The legacy `kanban_tasks` table is a separate, empty
- * schema. READ paths below now query `kanban_cards` so list/detail/assignee
- * queries reflect real data. WRITE paths (save/update/delete) still target
- * `kanban_tasks` and are intentionally out of scope for this read-repoint —
- * real card writes flow through the kanban_cards CRUD repo / cards controller.
+ * (canonical, has rows). The legacy `kanban_tasks` table was a separate, empty
+ * schema. READ paths below query `kanban_cards` so list/detail/assignee
+ * queries reflect real data. The dead `kanban_tasks` write path
+ * (save/update/delete) has been removed — real card writes flow through the
+ * kanban_cards CRUD repo / cards controller (the canonical card path).
  *
- * Column mapping kanban_tasks -> kanban_cards:
+ * Column mapping kanban_tasks -> kanban_cards (read projection):
  *   id (uuid)        -> id (integer, aliased as text)
  *   assigned_to(uuid)-> owner_user_id (integer)
  *   status (enum)    -> DERIVED from completed_at (NULL='in_progress', else 'done')
@@ -126,77 +126,6 @@ export class DrizzleKanbanRepository implements IKanbanRepo {
       .then((rows) => (Ok((Array.isArray(rows) ? rows : []).map((row) => this.toDomain(row)))))
       .catch((error) => {
         this.logger.error('Error finding kanban cards by assignee');
-        return Err((error as Error).message);
-      });
-  }
-
-  async save(task: KanbanTask): Promise<Result<KanbanTask>> {
-    return db
-      .insert(kanban_tasks)
-      .values({ id: task.id, title: task.title, description: task.description, status: task.status, priority: task.priority,
-        assigned_to: task.assigneeId,
-        due_date: task.dueDate,
-        tags: JSON.stringify(task.tags),
-        created_by: task.createdBy.toString(),
-        created_at: task.createdAt,
-        updated_at: task.updatedAt,
-      } as typeof kanban_tasks.$inferInsert)
-      .returning()
-      .execute()
-      .then((rows) => {
-        if (rows.length === 0) {
-          return Err('Failed to save kanban task');
-        }
-        return Ok(this.toDomain(rows[0]));
-      })
-      .catch((error) => {
-        this.logger.error('Error saving kanban task');
-        return Err((error as Error).message);
-      });
-  }
-
-  async update(id: string, data: Partial<KanbanTask>): Promise<Result<KanbanTask>> {
-    const updateData: Record<string, unknown> = {};
-
-    if (data.title) updateData.title = data.title;
-    if (data.description) updateData.description = data.description;
-    if (data.status) updateData.status = data.status;
-    if (data.priority) updateData.priority = data.priority;
-    if (data.assigneeId !== undefined) updateData.assigned_to = data.assigneeId;
-    if (data.dueDate) updateData.due_date = data.dueDate;
-    if (data.tags) updateData.tags = JSON.stringify(data.tags);
-
-    updateData.updated_at = _time.now();
-
-    return db
-      .update(kanban_tasks)
-      .set(updateData)
-      .where(sql`${kanban_tasks.id} = ${id}`)
-      .returning()
-      .execute()
-      .then((rows) => {
-        if (rows.length === 0) {
-          return Err('Kanban task not found');
-        }
-        return Ok(this.toDomain(rows[0]));
-      })
-      .catch((error) => {
-        this.logger.error('Error updating kanban task');
-        return Err((error as Error).message);
-      });
-  }
-
-  async delete(id: string): Promise<Result<void>> {
-    return db
-      .update(kanban_tasks)
-      .set({ deleted_at: new Date() } as Partial<typeof kanban_tasks.$inferInsert>)
-      .where(sql`${kanban_tasks.id} = ${id} AND ${kanban_tasks.deleted_at} IS NULL`)
-      .execute()
-      .then(() => {
-        return Ok(undefined);
-      })
-      .catch((error) => {
-        this.logger.error('Error soft-deleting kanban task');
         return Err((error as Error).message);
       });
   }

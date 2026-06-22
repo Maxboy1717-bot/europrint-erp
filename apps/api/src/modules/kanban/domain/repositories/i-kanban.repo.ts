@@ -6,6 +6,12 @@
 import { Result } from '@common/types/result.type';
 import { KanbanTask } from '../aggregates/kanban-task.aggregate';
 
+/**
+ * Read-only kanban task repository over the canonical `kanban_cards` table.
+ * The write methods (save/update/delete) were removed together with the dead
+ * `kanban_tasks` write path — card writes flow through the kanban_cards CRUD
+ * repo / cards controller (the canonical card path).
+ */
 export interface IKanbanRepo {
   findById(id: string): Promise<Result<KanbanTask | null>>;
   findAll(filters: {
@@ -15,9 +21,6 @@ export interface IKanbanRepo {
     limit?: number;
   }): Promise<Result<{ items: KanbanTask[]; total: number }>>;
   findByAssignee(assigneeId: string): Promise<Result<KanbanTask[]>>;
-  save(task: KanbanTask): Promise<Result<KanbanTask>>;
-  update(id: string, data: Partial<KanbanTask>): Promise<Result<KanbanTask>>;
-  delete(id: string): Promise<Result<void>>;
 }
 
 export const KANBAN_REPO = Symbol('KANBAN_REPO');

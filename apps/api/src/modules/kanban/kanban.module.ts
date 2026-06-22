@@ -6,12 +6,8 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { AuthModule } from '../auth/auth.module';
-import { CreateTaskHandler } from './application/commands/create-task.handler';
-import { UpdateTaskHandler } from './application/commands/update-task.handler';
-import { DeleteTaskHandler } from './application/commands/delete-task.handler';
 import { GetTasksHandler } from './application/queries/get-tasks.handler';
 import { GetTaskHandler } from './application/queries/get-task.handler';
-import { KanbanService } from './application/kanban.service';
 import { KanbanBoardsService } from './application/kanban-boards.service';
 import { KanbanExtService } from './application/kanban-ext.service';
 import { KanbanExtFlowService } from './application/kanban-ext-flow.service';
@@ -30,7 +26,6 @@ import { DrizzleKanbanStatsRepository } from './infrastructure/repositories/driz
 import { KanbanBoardsRepository } from './infrastructure/repositories/kanban-boards.repo';
 import { KanbanColumnsRepository } from './infrastructure/repositories/kanban-columns.repo';
 import { KanbanCardsRepository } from './infrastructure/repositories/kanban-cards.repo';
-import { KanbanController } from './presentation/kanban.controller';
 import { KanbanBoardsController } from './presentation/kanban-boards.controller';
 import { KanbanCoreController } from './presentation/kanban-core.controller';
 import { KanbanReportsController } from './presentation/kanban-reports.controller';
@@ -41,7 +36,6 @@ import { KANBAN_BOARDS_REPO } from './domain/repositories/i-kanban-boards.repo';
 import { DrizzleKanbanRepository } from './infrastructure/repositories/drizzle-kanban.repo';
 import { KanbanRepository } from './infrastructure/kanban.repository';
 
-const commandHandlers = [CreateTaskHandler, UpdateTaskHandler, DeleteTaskHandler];
 const queryHandlers   = [GetTasksHandler, GetTaskHandler];
 const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler];
 
@@ -61,11 +55,9 @@ const repositories = [
     KanbanChecklistController,
   ],
   providers: [
-    ...commandHandlers,
     ...queryHandlers,
     ...eventHandlers,
     ...repositories,
-    KanbanService,
     KanbanBoardsService,
     KanbanExtService,
     KanbanExtFlowService,
@@ -83,6 +75,6 @@ const repositories = [
     KanbanColumnsRepository,
     KanbanCardsRepository,
   ],
-  exports: [KANBAN_REPO, KanbanService, KanbanExtService],
+  exports: [KANBAN_REPO, KanbanExtService],
 })
 export class KanbanModule {}
