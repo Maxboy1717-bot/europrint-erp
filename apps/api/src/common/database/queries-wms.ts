@@ -3,9 +3,8 @@
  * @description Source module. See exports for details.
  */
 
-import { db, runQuery } from '@shared/db';
-import { stocks } from '@shared/db';
-import { eq, and, asc, sql } from 'drizzle-orm';
+import { runQuery } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { BATCH_ISSUABLE_QUALITY_STATUSES } from '../../modules/wms/domain/constants/wms-batch-issue.constants';
 
 type StockRow = Record<string, unknown>;
@@ -31,41 +30,93 @@ const execRows = async (
   return r.rows as Record<string, unknown>[];
 };
 
-export async function execSaveStock(warehouseId: number, materialId: number, quantity: number, reservedQty: number, expiryDate: unknown, batchNumber: unknown, receivedAt: unknown): Promise<void> {
-  await db.insert(stocks).values({
-    warehouse_id: warehouseId,
-    material_id: materialId,
-    quantity: String(quantity),
-    reserved_quantity: String(reservedQty),
-    expiry_date: (expiryDate as string | null) ?? null,
-    batch_number: (batchNumber as string | null) ?? null,
-    received_at: (receivedAt as Date | null) ?? null,
-  }).onConflictDoNothing();
+/**
+ * Reserve-path persist onto the CANONICAL warehouse_stock (was the dead `stocks` table —
+ * 0 rows, so reservations vanished). `reservedQty` is the DELTA to reserve in this call
+ * (the Stock aggregate starts reserved at 0 and `reserve()` only adds the new amount).
+ * Mirrors execReceiveFg's incrementing upsert: bump reserved_quantity and shrink
+ * available_quantity by the same delta, leaving on-hand `quantity` untouched. The unique
+ * index warehouse_stock_wh_mat_uniq backs the ON CONFLICT. The `available_quantity >= delta`
+ * guard makes it atomic (check + write) so a reservation can never push available negative.
+ * expiry/batch/received args are accepted for signature compatibility but warehouse_stock
+ * does not carry them, so they are ignored.
+ */
+export async function execSaveStock(warehouseId: number, materialId: number, _quantity: number, reservedQty: number, _expiryDate: unknown, _batchNumber: unknown, _receivedAt: unknown): Promise<void> {
+  await runQuery(sql`
+    UPDATE warehouse_stock
+    SET reserved_quantity  = reserved_quantity + ${reservedQty},
+        available_quantity = available_quantity - ${reservedQty},
+        last_movement_at   = NOW(),
+        last_updated_at    = NOW()
+    WHERE warehouse_id = ${warehouseId} AND material_id = ${materialId}
+      AND available_quantity >= ${reservedQty}
+  `);
 }
 
+/**
+ * All four SELECT helpers below read the CANONICAL warehouse_stock (was the dead `stocks`
+ * table). warehouse_stock has no expiry_date / batch_number / received_at columns, so those
+ * are aliased to NULL for the Stock-aggregate mapper. `quantity` is exposed as the live
+ * AVAILABLE amount (available_quantity) so the reserve/issue callers see only un-reserved
+ * stock; the raw on-hand and reserved are also returned for callers that need them.
+ */
+const WAREHOUSE_STOCK_SELECT = sql`
+  id,
+  warehouse_id,
+  material_id,
+  available_quantity AS quantity,
+  reserved_quantity,
+  quantity AS on_hand_quantity,
+  NULL::date AS expiry_date,
+  NULL::text AS batch_number,
+  COALESCE(last_movement_at, created_at) AS received_at
+`;
+
 export async function queryStock(id: number): Promise<StockRow | null> {
-  const rows = await db.select().from(stocks).where(eq(stocks.id, id)).limit(1);
-  return (rows[0] ?? null) as StockRow | null;
+  const rows = await runQuery(sql`SELECT ${WAREHOUSE_STOCK_SELECT} FROM warehouse_stock WHERE id = ${id} LIMIT 1`);
+  return ((rows.rows as StockRow[])[0] ?? null) as StockRow | null;
 }
 
 export async function queryStockByMaterialAndWarehouse(materialId: number, warehouseId: number): Promise<StockRow[]> {
-  const rows = await db.select().from(stocks).where(and(eq(stocks.material_id, materialId), eq(stocks.warehouse_id, warehouseId)));
-  return rows as StockRow[];
+  const rows = await runQuery(sql`
+    SELECT ${WAREHOUSE_STOCK_SELECT} FROM warehouse_stock
+    WHERE material_id = ${materialId} AND warehouse_id = ${warehouseId}
+  `);
+  return rows.rows as StockRow[];
 }
 
 export async function queryFefoStock(materialId: number, warehouseId: number): Promise<StockRow[]> {
-  const rows = await db.select().from(stocks)
-    .where(and(eq(stocks.material_id, materialId), eq(stocks.warehouse_id, warehouseId)))
-    .orderBy(sql`${stocks.expiry_date} ASC NULLS LAST`, asc(stocks.received_at));
-  return rows as StockRow[];
+  const rows = await runQuery(sql`
+    SELECT ${WAREHOUSE_STOCK_SELECT} FROM warehouse_stock
+    WHERE material_id = ${materialId} AND warehouse_id = ${warehouseId}
+    ORDER BY COALESCE(last_movement_at, created_at) ASC
+  `);
+  return rows.rows as StockRow[];
 }
 
 export async function execUpdateStockReserved(id: unknown, newReserved: number): Promise<void> {
-  await db.update(stocks).set({ reserved_quantity: String(newReserved) }).where(eq(stocks.id, id as number));
+  // Set absolute reserved and recompute available = on-hand quantity - reserved.
+  await runQuery(sql`
+    UPDATE warehouse_stock
+    SET reserved_quantity  = ${newReserved},
+        available_quantity = quantity - ${newReserved},
+        last_movement_at   = NOW(),
+        last_updated_at    = NOW()
+    WHERE id = ${id as number}
+  `);
 }
 
 export async function execUpdateStockIssued(id: unknown, newQty: number, newReserved: number): Promise<void> {
-  await db.update(stocks).set({ quantity: String(newQty), reserved_quantity: String(newReserved) }).where(eq(stocks.id, id as number));
+  // newQty = new on-hand quantity, newReserved = new reserved; recompute available.
+  await runQuery(sql`
+    UPDATE warehouse_stock
+    SET quantity           = ${newQty},
+        reserved_quantity  = ${newReserved},
+        available_quantity = ${newQty} - ${newReserved},
+        last_movement_at   = NOW(),
+        last_updated_at    = NOW()
+    WHERE id = ${id as number}
+  `);
 }
 
 export async function execReceiveFg(warehouseId: number, materialId: number, amount: number): Promise<void> {
@@ -115,8 +166,10 @@ export async function execIssueFromWarehouseStock(
 }
 
 export async function queryAllStockByWarehouse(warehouseId: number): Promise<StockRow[]> {
-  const rows = await db.select().from(stocks).where(eq(stocks.warehouse_id, warehouseId));
-  return rows as StockRow[];
+  const rows = await runQuery(sql`
+    SELECT ${WAREHOUSE_STOCK_SELECT} FROM warehouse_stock WHERE warehouse_id = ${warehouseId}
+  `);
+  return rows.rows as StockRow[];
 }
 
 /**

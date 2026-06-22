@@ -53,19 +53,20 @@ export class DrizzleWmsRepository implements IWmsRepository {
   async saveStock(stock: Stock, tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
       if (tx) {
-        // In-transaction path: inline insert against the supplied tx executor.
-        const exec = asExec(tx);
-        await exec.insert(stocks).values({
-          warehouse_id: stock.getWarehouseId(),
-          material_id: stock.getMaterialId(),
-          quantity: String(stock.getQuantity()),
-          reserved_quantity: String(stock.getReservedQuantity()),
-          expiry_date: (stock.getExpiryDate() ? new Date(stock.getExpiryDate() as Date).toISOString() : null) as string | null,
-          batch_number:
-            ((castTo<StockRow>(stock))['batchNumber'] as string | null) ?? null,
-          received_at:
-            ((castTo<StockRow>(stock))['receivedAt'] as Date | null) ?? null,
-        }).onConflictDoNothing();
+        // In-transaction reserve path: increment reserved / shrink available on the CANONICAL
+        // warehouse_stock against the supplied tx executor (was a dead insert into `stocks`).
+        // getReservedQuantity() is the delta to reserve (aggregate starts reserved at 0).
+        const exec = asTxExec(tx);
+        const delta = stock.getReservedQuantity();
+        await exec?.execute(sql`
+          UPDATE warehouse_stock
+          SET reserved_quantity  = reserved_quantity + ${delta},
+              available_quantity = available_quantity - ${delta},
+              last_movement_at   = NOW(),
+              last_updated_at    = NOW()
+          WHERE warehouse_id = ${stock.getWarehouseId()} AND material_id = ${stock.getMaterialId()}
+            AND available_quantity >= ${delta}
+        `);
         return Ok(1);
       }
       await execSaveStock(
