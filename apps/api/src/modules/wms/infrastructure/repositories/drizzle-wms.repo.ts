@@ -18,7 +18,7 @@ import { Stock } from '../../domain/aggregates/stock.aggregate';
 import { IWmsRepository, DrizzleExecutor, CreateWarehouseInput, InsertGoodsIssueInput } from '../../domain/repositories/wms.repository';
 import { IssuableBatchLot } from '../../domain/services/batch-selection.service';
 import {
-  execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock,
+  execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock, queryFefoBatchLots,
   execUpdateStockReserved, execUpdateStockIssued, execReceiveFg, execIssueFromWarehouseStock, queryAllStockByWarehouse,
   queryIssuableBatchLots, queryHasAnyBatchLots, execDecrementBatchLot, BatchLotRow,
 } from '@common/database/queries-wms';
@@ -139,7 +139,11 @@ export class DrizzleWmsRepository implements IWmsRepository {
         const rows = (Array.isArray(res?.rows) ? res.rows : []) as StockRow[];
         return Ok(rows.map(toStock));
       }
-      const rows = await queryFefoStock(materialId, warehouseId);
+      // Non-tx GET /api/wms/stock/fefo read-parity: read TRUE first-expiry FEFO from the
+      // canonical batch_lots (same shape/filter/order as the tx-branch above), NOT the
+      // approximate-FIFO warehouse_stock. queryFefoStock (warehouse_stock) stays the
+      // reserve/issue writer source below — those UPDATE warehouse_stock by id.
+      const rows = await queryFefoBatchLots(materialId, warehouseId);
       return Ok((Array.isArray(rows) ? rows : []).map(toStock));
     } catch {
       this.logger.error('Failed to get FEFO stock');

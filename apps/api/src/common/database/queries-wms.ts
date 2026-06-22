@@ -94,6 +94,40 @@ export async function queryFefoStock(materialId: number, warehouseId: number): P
   return rows.rows as StockRow[];
 }
 
+/**
+ * READ-PARITY for GET /api/wms/stock/fefo/:materialId/:warehouseId.
+ * The warehouse_stock-backed queryFefoStock above is an approximate FIFO (last_movement
+ * proxy, no expiry) and stays the reserve/issue writer source (those callers UPDATE
+ * warehouse_stock BY id, so they must keep reading warehouse_stock). The GET read instead
+ * uses the CANONICAL batch/expiry source `batch_lots` for TRUE first-expiry FEFO — the same
+ * table, filter and order as the goods-issue tx-branch (getFefoStock) and queryIssuableBatchLots,
+ * so the read agrees with the issue selection. `remaining_quantity` is exposed as `quantity`
+ * and `reserved_quantity` aliased to 0 (batch_lots tracks no reservation) to match the toStock
+ * mapper shape. Order: expiry ASC NULLS LAST then COALESCE(received_date, created_at) ASC.
+ */
+export async function queryFefoBatchLots(materialId: number, warehouseId: number): Promise<StockRow[]> {
+  const allowed = [...BATCH_ISSUABLE_QUALITY_STATUSES];
+  const rows = await runQuery(sql`
+    SELECT id,
+           warehouse_id,
+           material_id,
+           remaining_quantity AS quantity,
+           0::numeric AS reserved_quantity,
+           remaining_quantity AS on_hand_quantity,
+           expiry_date,
+           batch_number,
+           COALESCE(received_date, created_at) AS received_at
+    FROM batch_lots
+    WHERE material_id = ${materialId}
+      AND warehouse_id = ${warehouseId}
+      AND is_active = true
+      AND remaining_quantity > 0
+      AND quality_status IN (${sql.join(allowed.map((s) => sql`${s}`), sql`, `)})
+    ORDER BY expiry_date ASC NULLS LAST, COALESCE(received_date, created_at) ASC
+  `);
+  return rows.rows as StockRow[];
+}
+
 export async function execUpdateStockReserved(id: unknown, newReserved: number): Promise<void> {
   // Set absolute reserved and recompute available = on-hand quantity - reserved.
   await runQuery(sql`
@@ -196,7 +230,7 @@ export async function queryIssuableBatchLots(
         AND warehouse_id = ${warehouseId}
         AND is_active = true
         AND remaining_quantity > 0
-        AND quality_status = ANY(${allowed})
+        AND quality_status IN (${sql.join(allowed.map((s) => sql`${s}`), sql`, `)})
       ORDER BY expiry_date ASC NULLS LAST, COALESCE(received_date, created_at) ASC
     `,
     exec,
