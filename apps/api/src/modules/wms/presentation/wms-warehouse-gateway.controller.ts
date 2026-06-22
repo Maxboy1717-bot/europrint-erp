@@ -6,7 +6,7 @@
 import { assertInternal } from '@common/assertions';
 import { unwrapOrThrow } from '@common/http-result';
 import {
-  Body, BadRequestException, Controller, Get, Param, Post, Patch,
+  Body, BadRequestException, Controller, Get, NotFoundException, Param, Post, Patch,
   UseGuards, UseInterceptors, Logger, Query, UsePipes,
 } from '@nestjs/common';
 import { rawSql } from '@shared/db';
@@ -94,7 +94,15 @@ export class WmsWarehouseGatewayController {
   @Get('transfers/:id')
   @Roles(...WH_READ)
   async getTransferById(@Param('id') id: string) {
-    return { id, status: 'pending' };
+    const intId = safeInt(id, 0);
+    const r = await rawSql(sql`
+      SELECT id::text AS id, from_warehouse_id, to_warehouse_id, item_id, quantity, status, created_at
+      FROM warehouse_transfers
+      WHERE id = ${intId}
+    `);
+    const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+    if (!row) throw new NotFoundException(`Transfer #${id} topilmadi`);
+    return row;
   }
 
   @ApiOperation({ summary: 'Update transfer status' })
