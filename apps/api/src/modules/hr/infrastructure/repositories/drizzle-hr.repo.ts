@@ -63,16 +63,33 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
 
   async savePayroll(payrollRecord: HrRow): Promise<Result<HrRow>> {
     try {
-      const rows = await db.insert(salary_history).values({
-        employee_id:         (payrollRecord.employeeId ?? payrollRecord.employee_id) as number,
-        salary_period_start: (payrollRecord.periodStart ?? _time.now().toISOString().split('T')[0]) as string,
-        salary_period_end:   (payrollRecord.periodEnd ?? _time.now().toISOString().split('T')[0]) as string,
-        base_salary:         String(payrollRecord.baseSalary ?? payrollRecord.gross ?? 0),
-        salary_earned:       String(payrollRecord.netSalary ?? payrollRecord.net ?? 0),
-        total_bonuses:       String(payrollRecord.bonus ?? 0),
-        other_bonuses:       String(payrollRecord.otherBonuses ?? payrollRecord.other_bonuses ?? 0),
-      }).returning();
-      return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};
+      const empId = (payrollRecord.employeeId ?? payrollRecord.employee_id) as number;
+      const toDateStr = (v: unknown): string =>
+        v instanceof Date
+          ? v.toISOString().split('T')[0]
+          : (String(v ?? '').slice(0, 10) || _time.now().toISOString().split('T')[0]);
+      const pStart  = toDateStr(payrollRecord.periodStart);
+      const pEnd    = toDateStr(payrollRecord.periodEnd);
+      const baseSal = String(payrollRecord.baseSalary ?? payrollRecord.gross ?? 0);
+      const earned  = String(payrollRecord.netSalary ?? payrollRecord.net ?? 0);
+      const bonuses = String(payrollRecord.bonus ?? 0);
+      const otherB  = String(payrollRecord.otherBonuses ?? payrollRecord.other_bonuses ?? 0);
+      // salary_history is dual-purpose: fill the payroll-period columns AND the legacy
+      // NOT-NULL change-history columns (user_id/effective_date/change_type/new_salary)
+      // via raw SQL (those columns are not in the Drizzle insert type). user_id is the
+      // employee's user (controller already guarantees it exists).
+      const r = await runQuery<HrRow>(sql`
+        INSERT INTO salary_history
+          (user_id, employee_id, effective_date, change_type, new_salary,
+           salary_period_start, salary_period_end, base_salary, salary_earned,
+           total_bonuses, other_bonuses)
+        VALUES
+          ((SELECT user_id FROM employees WHERE id = ${empId}), ${empId}, ${pStart},
+           'payroll', ${earned}::numeric, ${pStart}::date, ${pEnd}::date,
+           ${baseSal}::numeric, ${earned}::numeric, ${bonuses}::numeric, ${otherB}::numeric)
+        RETURNING *
+      `);
+      return { ok: true, data: castTo<HrRow>((r.rows[0] ?? {})) };
     } catch (error: unknown) {
       this.logger.error(`savePayroll: ${(error as Error).message}`);
       return Err((error as Error).message);
@@ -88,17 +105,20 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         await tx.update(hrEmployees)
           .set({ base_salary: String(newSalary) })
           .where(eq(hrEmployees.id, employeeId));
-        // 2. INSERT salary_history row
-        const rows = await tx.insert(salary_history).values({
-          employee_id:         employeeId,
-          salary_period_start: today,
-          salary_period_end:   today,
-          base_salary:         String(newSalary),
-          salary_earned:       String(newSalary),
-          total_bonuses:       '0',
-          other_bonuses:       '0',
-        }).returning();
-        historyRow = castTo<HrRow>(rows[0] ?? {});
+        // 2. INSERT salary_history row (raw SQL — fills legacy NOT-NULL change-history
+        //    columns user_id/effective_date/change_type/new_salary alongside the period cols)
+        const res = await tx.execute(sql`
+          INSERT INTO salary_history
+            (user_id, employee_id, effective_date, change_type, new_salary,
+             salary_period_start, salary_period_end, base_salary, salary_earned,
+             total_bonuses, other_bonuses)
+          VALUES
+            ((SELECT user_id FROM employees WHERE id = ${employeeId}), ${employeeId}, ${today},
+             'review', ${String(newSalary)}::numeric, ${today}::date, ${today}::date,
+             ${String(newSalary)}::numeric, ${String(newSalary)}::numeric, '0'::numeric, '0'::numeric)
+          RETURNING *
+        `);
+        historyRow = castTo<HrRow>(((res as unknown as { rows?: HrRow[] }).rows ?? [])[0] ?? {});
       });
       return Ok(historyRow);
     } catch (error: unknown) {
