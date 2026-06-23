@@ -2,11 +2,19 @@
  * IotSensorsReadingsTab — Live sensors grid and historical readings chart
  * for IoTDashboard.
  */
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, Cpu, Wind, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Activity, Cpu, Wind, Clock, Settings2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { IotSensor } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { SENSOR_ICONS, getStatusColor, getStatusBadge } from "./IotDashboardHelpers";
 
 interface Props {
@@ -23,6 +31,35 @@ export function IotSensorsReadingsTab({
   sensors, selectedSensorId, setSelectedSensorId,
   readingsChartData, t, tProd, language,
 }: Props) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [editingSensor, setEditingSensor] = useState<IotSensor | null>(null);
+  const [minVal, setMinVal] = useState("");
+  const [maxVal, setMaxVal] = useState("");
+
+  const updateThresholds = useMutation({
+    mutationFn: (sensor: IotSensor) =>
+      apiRequest("PATCH", `/api/iot/devices/${sensor.id}/thresholds`, {
+        thresholds: {
+          min: minVal !== "" ? Number(minVal) : undefined,
+          max: maxVal !== "" ? Number(maxVal) : undefined,
+          unit: sensor.unit ?? "unit",
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/iot-sensors/live"] });
+      toast({ title: "Chegara qiymatlari yangilandi" });
+      setEditingSensor(null);
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  function openEdit(sensor: IotSensor) {
+    setEditingSensor(sensor);
+    setMinVal(sensor.minThreshold != null ? String(sensor.minThreshold) : "");
+    setMaxVal(sensor.maxThreshold != null ? String(sensor.maxThreshold) : "");
+  }
+
   return (
     <>
       {/* ── Live Sensors ── */}
@@ -51,7 +88,18 @@ export function IotSensorsReadingsTab({
                       </div>
                       <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate max-w-[120px]">{sensor.name}</p>
                     </div>
-                    {getStatusBadge(sensor, t)}
+                    <div className="flex items-center gap-1.5">
+                      {getStatusBadge(sensor, t)}
+                      <button
+                        type="button"
+                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        onClick={e => { e.stopPropagation(); openEdit(sensor); }}
+                        data-testid={`btn-edit-threshold-${sensor.id}`}
+                        title="Chegara sozlash"
+                      >
+                        <Settings2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-1">
                     <p className={`text-4xl font-black tracking-tighter ${statusColor}`} data-testid={`text-sensor-value-${sensor.id}`}>
@@ -137,6 +185,48 @@ export function IotSensorsReadingsTab({
           </div>
         </div>
       </TabsContent>
+
+      <Dialog open={editingSensor !== null} onOpenChange={open => { if (!open) setEditingSensor(null); }}>
+        <DialogContent className="sm:max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle>Chegara qiymatlari — {editingSensor?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="iot-min">Min chegara ({editingSensor?.unit ?? "—"})</Label>
+              <Input
+                id="iot-min"
+                type="number"
+                placeholder="Masalan: 10"
+                value={minVal}
+                onChange={e => setMinVal(e.target.value)}
+                data-testid="input-iot-min"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="iot-max">Max chegara ({editingSensor?.unit ?? "—"})</Label>
+              <Input
+                id="iot-max"
+                type="number"
+                placeholder="Masalan: 85"
+                value={maxVal}
+                onChange={e => setMaxVal(e.target.value)}
+                data-testid="input-iot-max"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSensor(null)}>Bekor</Button>
+            <Button
+              onClick={() => { if (editingSensor) updateThresholds.mutate(editingSensor); }}
+              disabled={updateThresholds.isPending}
+              data-testid="btn-save-threshold"
+            >
+              Saqlash
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
