@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api-request";
-import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw } from "lucide-react";
+import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -25,6 +25,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -118,6 +122,11 @@ export default function CashierHub() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [rejectId, setRejectId] = useState<number | null>(null);
+  const [showOpenShift, setShowOpenShift] = useState(false);
+  const [openingAmount, setOpeningAmount] = useState("");
+  const [closeShiftId, setCloseShiftId] = useState<number | null>(null);
+  const [closedAmount, setClosedAmount] = useState("");
+  const [closeNotes, setCloseNotes] = useState("");
 
   // ─── (a) shifts list (open + closed, newest first) ────────────────────────────────────────
   const shiftsQuery = useQuery<ListPage<ShiftRow>>({
@@ -174,6 +183,34 @@ export default function CashierHub() {
       toast({ title: t("cashierHub.advanceReportApproved", "Avans hisoboti tasdiqlandi") });
     },
     onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.approveFailed", "Tasdiqlab bo'lmadi"), variant: "destructive" }),
+  });
+
+  const openShiftMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("POST", "/api/finance/cashier/shifts/open", { openingAmount: Number(openingAmount) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/shifts"] });
+      toast({ title: t("cashierHub.shiftOpened", "Smena ochildi") });
+      setShowOpenShift(false);
+      setOpeningAmount("");
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
+  });
+
+  const closeShiftMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest("POST", `/api/finance/cashier/shifts/${id}/close`, {
+        closedAmount: Number(closedAmount),
+        notes: closeNotes.trim() || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/shifts"] });
+      toast({ title: t("cashierHub.shiftClosed", "Smena yopildi") });
+      setCloseShiftId(null);
+      setClosedAmount("");
+      setCloseNotes("");
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
   });
 
   const refreshAll = () => {
@@ -282,7 +319,17 @@ export default function CashierHub() {
         </TabsContent>
 
         {/* (a) Shifts list */}
-        <TabsContent value="shifts" className="mt-3">
+        <TabsContent value="shifts" className="mt-3 space-y-3">
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              onClick={() => { setShowOpenShift(true); setOpeningAmount(""); }}
+              data-testid="button-open-shift"
+            >
+              <LogIn className="h-4 w-4 mr-1" />
+              {t("cashierHub.openShiftBtn", "Smena ochish")}
+            </Button>
+          </div>
           {shiftsQuery.isLoading ? (
             <EPSkeletonTable rows={6} />
           ) : shifts.length === 0 ? (
@@ -297,6 +344,7 @@ export default function CashierHub() {
                   <TableHead>{t("cashierHub.colOpenAmount", "Ochilish summasi")}</TableHead>
                   <TableHead>{t("cashierHub.colExpectedBalance", "Kutilgan balans")}</TableHead>
                   <TableHead>{t("cashierHub.colStatus", "Holat")}</TableHead>
+                  <TableHead className="text-right">{t("cashierHub.colActions", "Amallar")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -313,6 +361,20 @@ export default function CashierHub() {
                     </TableCell>
                     <TableCell>
                       <EPStatusPill tone={shiftTone(row.status)}>{row.status}</EPStatusPill>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {row.status === "open" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={closeShiftMutation.isPending}
+                          onClick={() => { setCloseShiftId(row.id); setClosedAmount(""); setCloseNotes(""); }}
+                          data-testid={`button-close-shift-${row.id}`}
+                        >
+                          <LogOut className="h-4 w-4 mr-1" />
+                          {t("cashierHub.closeShiftBtn", "Yopish")}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -388,6 +450,98 @@ export default function CashierHub() {
           }
         }}
       />
+
+      {/* Open shift dialog */}
+      <Dialog open={showOpenShift} onOpenChange={(open) => { if (!open) { setShowOpenShift(false); setOpeningAmount(""); } }}>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LogIn className="h-5 w-5" />
+              {t("cashierHub.openShiftTitle", "Yangi smena ochish")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="opening-amount">{t("cashierHub.openingAmount", "Boshlang'ich summa (so'm)")} <span className="text-destructive">*</span></Label>
+              <Input
+                id="opening-amount"
+                type="number"
+                min="0"
+                step="1000"
+                value={openingAmount}
+                onChange={e => setOpeningAmount(e.target.value)}
+                placeholder="0"
+                data-testid="input-opening-amount"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setShowOpenShift(false); setOpeningAmount(""); }} data-testid="button-cancel-open-shift">
+                {t("cancel", "Bekor")}
+              </Button>
+              <Button
+                onClick={() => openShiftMutation.mutate()}
+                disabled={!openingAmount || Number(openingAmount) < 0 || openShiftMutation.isPending}
+                data-testid="button-confirm-open-shift"
+              >
+                <LogIn className="h-4 w-4 mr-1" />
+                {openShiftMutation.isPending ? t("cashierHub.opening", "Ochilmoqda...") : t("cashierHub.openShiftBtn", "Smena ochish")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Close shift dialog */}
+      <Dialog open={closeShiftId !== null} onOpenChange={(open) => { if (!open) { setCloseShiftId(null); setClosedAmount(""); setCloseNotes(""); } }}>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LogOut className="h-5 w-5" />
+              {t("cashierHub.closeShiftTitle", "Smenani yopish")} #{closeShiftId}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="closed-amount">{t("cashierHub.closedAmount", "Kassadagi faktik summa (so'm)")} <span className="text-destructive">*</span></Label>
+              <Input
+                id="closed-amount"
+                type="number"
+                min="0"
+                step="1000"
+                value={closedAmount}
+                onChange={e => setClosedAmount(e.target.value)}
+                placeholder="0"
+                data-testid="input-closed-amount"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="close-notes">{t("cashierHub.closeNotes", "Izoh (ixtiyoriy)")}</Label>
+              <Textarea
+                id="close-notes"
+                value={closeNotes}
+                onChange={e => setCloseNotes(e.target.value)}
+                placeholder={t("cashierHub.closeNotesPlaceholder", "Smena yakunlash bo'yicha izoh...")}
+                className="min-h-[60px]"
+                data-testid="input-close-notes"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setCloseShiftId(null); setClosedAmount(""); setCloseNotes(""); }} data-testid="button-cancel-close-shift">
+                {t("cancel", "Bekor")}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => { if (closeShiftId !== null) closeShiftMutation.mutate(closeShiftId); }}
+                disabled={!closedAmount || Number(closedAmount) < 0 || closeShiftMutation.isPending}
+                data-testid="button-confirm-close-shift"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                {closeShiftMutation.isPending ? t("cashierHub.closing", "Yopilmoqda...") : t("cashierHub.closeShiftBtn", "Yopish")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
