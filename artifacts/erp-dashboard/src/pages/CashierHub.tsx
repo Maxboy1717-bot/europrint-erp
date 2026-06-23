@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api-request";
-import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw, LogIn, LogOut } from "lucide-react";
+import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw, LogIn, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -127,6 +127,12 @@ export default function CashierHub() {
   const [closeShiftId, setCloseShiftId] = useState<number | null>(null);
   const [closedAmount, setClosedAmount] = useState("");
   const [closeNotes, setCloseNotes] = useState("");
+  const [recordMoveShiftId, setRecordMoveShiftId] = useState<number | null>(null);
+  const [mvType, setMvType] = useState("cash_in");
+  const [mvAmount, setMvAmount] = useState("");
+  const [mvRef, setMvRef] = useState("");
+  const [mvDesc, setMvDesc] = useState("");
+  const [mvPin, setMvPin] = useState("");
 
   // ─── (a) shifts list (open + closed, newest first) ────────────────────────────────────────
   const shiftsQuery = useQuery<ListPage<ShiftRow>>({
@@ -209,6 +215,26 @@ export default function CashierHub() {
       setCloseShiftId(null);
       setClosedAmount("");
       setCloseNotes("");
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
+  });
+
+  const PIN_REQUIRED = new Set(["cash_out", "salary_payout", "advance", "expense"]);
+
+  const recordMoveMutation = useMutation({
+    mutationFn: (shiftId: number) =>
+      apiRequest("POST", `/api/finance/cashier/shifts/${shiftId}/movements`, {
+        type: mvType,
+        amount: Number(mvAmount),
+        reference: mvRef.trim(),
+        ...(mvDesc.trim() && { description: mvDesc.trim() }),
+        ...(mvPin && { pin: mvPin }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/shifts"] });
+      toast({ title: t("cashierHub.movementRecorded", "Harakat qayd etildi") });
+      setRecordMoveShiftId(null);
+      setMvType("cash_in"); setMvAmount(""); setMvRef(""); setMvDesc(""); setMvPin("");
     },
     onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
   });
@@ -364,16 +390,27 @@ export default function CashierHub() {
                     </TableCell>
                     <TableCell className="text-right">
                       {row.status === "open" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={closeShiftMutation.isPending}
-                          onClick={() => { setCloseShiftId(row.id); setClosedAmount(""); setCloseNotes(""); }}
-                          data-testid={`button-close-shift-${row.id}`}
-                        >
-                          <LogOut className="h-4 w-4 mr-1" />
-                          {t("cashierHub.closeShiftBtn", "Yopish")}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => { setRecordMoveShiftId(row.id); setMvType("cash_in"); setMvAmount(""); setMvRef(""); setMvDesc(""); setMvPin(""); }}
+                            data-testid={`button-record-move-${row.id}`}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            {t("cashierHub.recordMoveBtn", "Harakat")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={closeShiftMutation.isPending}
+                            onClick={() => { setCloseShiftId(row.id); setClosedAmount(""); setCloseNotes(""); }}
+                            data-testid={`button-close-shift-${row.id}`}
+                          >
+                            <LogOut className="h-4 w-4 mr-1" />
+                            {t("cashierHub.closeShiftBtn", "Yopish")}
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
@@ -485,6 +522,105 @@ export default function CashierHub() {
               >
                 <LogIn className="h-4 w-4 mr-1" />
                 {openShiftMutation.isPending ? t("cashierHub.opening", "Ochilmoqda...") : t("cashierHub.openShiftBtn", "Smena ochish")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Record movement dialog — POST /api/finance/cashier/shifts/:id/movements */}
+      <Dialog open={recordMoveShiftId !== null} onOpenChange={(open) => { if (!open) { setRecordMoveShiftId(null); setMvType("cash_in"); setMvAmount(""); setMvRef(""); setMvDesc(""); setMvPin(""); } }}>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              {t("cashierHub.recordMoveTitle", "Kassir harakati")} — smena #{recordMoveShiftId}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="mv-type">{t("cashierHub.mvType", "Harakat turi")} <span className="text-destructive">*</span></Label>
+              <select
+                id="mv-type"
+                value={mvType}
+                onChange={e => { setMvType(e.target.value); setMvPin(""); }}
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                data-testid="select-mv-type"
+              >
+                <option value="cash_in">Kirim (cash_in)</option>
+                <option value="cash_out">Chiqim (cash_out) — PIN</option>
+                <option value="salary_payout">Ish haqi (salary_payout) — PIN</option>
+                <option value="advance">Avans (advance) — PIN</option>
+                <option value="expense">Xarajat (expense) — PIN</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mv-amount">{t("amount", "Summa (so'm)")} <span className="text-destructive">*</span></Label>
+              <Input
+                id="mv-amount"
+                type="number"
+                min="0.01"
+                step="1000"
+                value={mvAmount}
+                onChange={e => setMvAmount(e.target.value)}
+                placeholder="0"
+                data-testid="input-mv-amount"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mv-ref">{t("cashierHub.mvRef", "Mos yozuv (reference)")} <span className="text-destructive">*</span></Label>
+              <Input
+                id="mv-ref"
+                value={mvRef}
+                onChange={e => setMvRef(e.target.value)}
+                maxLength={120}
+                placeholder="KIRIM-001"
+                data-testid="input-mv-ref"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mv-desc">{t("cashierHub.mvDesc", "Izoh (ixtiyoriy)")}</Label>
+              <Textarea
+                id="mv-desc"
+                value={mvDesc}
+                onChange={e => setMvDesc(e.target.value)}
+                placeholder={t("cashierHub.mvDescPlaceholder", "Harakat tavsifi...")}
+                className="min-h-[60px]"
+                data-testid="input-mv-desc"
+              />
+            </div>
+            {PIN_REQUIRED.has(mvType) && (
+              <div className="space-y-1.5">
+                <Label htmlFor="mv-pin">{t("cashierHub.mvPin", "Kassir PIN (4 raqam)")} <span className="text-destructive">*</span></Label>
+                <Input
+                  id="mv-pin"
+                  type="password"
+                  inputMode="numeric"
+                  pattern="\d{4}"
+                  maxLength={4}
+                  value={mvPin}
+                  onChange={e => setMvPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="••••"
+                  data-testid="input-mv-pin"
+                />
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setRecordMoveShiftId(null); }} data-testid="button-cancel-mv">
+                {t("cancel", "Bekor")}
+              </Button>
+              <Button
+                onClick={() => { if (recordMoveShiftId !== null) recordMoveMutation.mutate(recordMoveShiftId); }}
+                disabled={
+                  !mvAmount || Number(mvAmount) <= 0 ||
+                  !mvRef.trim() ||
+                  (PIN_REQUIRED.has(mvType) && mvPin.length !== 4) ||
+                  recordMoveMutation.isPending
+                }
+                data-testid="button-confirm-mv"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {recordMoveMutation.isPending ? t("cashierHub.recording", "Saqlanmoqda...") : t("cashierHub.recordMoveBtn", "Qayd etish")}
               </Button>
             </div>
           </div>
