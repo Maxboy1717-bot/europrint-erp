@@ -76,33 +76,36 @@ export class HrCompatARepository implements IHrCompatARepo {
 
   async getConflictReports(status?: string): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      const rows = await db.select({
-        id:          hr_conflict_reports.id,
-        party1:      hr_conflict_reports.party1,
-        party2:      hr_conflict_reports.party2,
-        description: hr_conflict_reports.description,
-        severity:    hr_conflict_reports.severity,
-        status:      hr_conflict_reports.status,
-        created_at:  hr_conflict_reports.created_at,
-      })
-        .from(hr_conflict_reports)
-        .where(sql`${status ?? null}::text IS NULL OR ${hr_conflict_reports.status} = ${status ?? null}`)
-        .orderBy(sql`${hr_conflict_reports.created_at} DESC`)
-        .limit(100);
-      return castTo<Row[]>(rows);
+      const rows = await runQuery<Row>(sql`
+        SELECT cr.id, cr.party1, cr.party2, cr.description, cr.severity, cr.status, cr.created_at,
+               COALESCE(e1.first_name || ' ' || e1.last_name, cr.party1) AS party1_name,
+               COALESCE(e2.first_name || ' ' || e2.last_name, cr.party2) AS party2_name
+        FROM hr_conflict_reports cr
+        LEFT JOIN employees e1 ON e1.id::text = cr.party1
+        LEFT JOIN employees e2 ON e2.id::text = cr.party2
+        WHERE ${status ?? null}::text IS NULL OR cr.status = ${status ?? null}
+        ORDER BY cr.created_at DESC
+        LIMIT 100
+      `);
+      return rows.rows as Row[];
       }, 'DB_ERROR');
   }
 
   async createConflictReport(party1: unknown, party2: unknown, description: unknown, severity: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.insert(hr_conflict_reports).values({
-        party1:      (party1 ?? '') as string,
-        party2:      (party2 ?? '') as string,
-        description: (description ?? null) as string,
-        severity:    (severity ?? 'medium') as string,
-        status:      'open',
-      }).returning();
-      return castTo<Row>((rows[0] ?? {}));
+      const rows = await runQuery<Row>(sql`
+        INSERT INTO hr_conflict_reports (id, party1, party2, description, severity, status)
+        VALUES (
+          'CR-' || LPAD(CAST((SELECT COUNT(*)+1 FROM hr_conflict_reports) AS TEXT), 3, '0'),
+          ${String(party1 ?? '')},
+          ${String(party2 ?? '')},
+          ${String(description ?? '')},
+          ${String(severity ?? 'medium')},
+          'open'
+        )
+        RETURNING *
+      `);
+      return castTo<Row>((rows.rows[0] ?? {}));
       }, 'DB_ERROR');
   }
 

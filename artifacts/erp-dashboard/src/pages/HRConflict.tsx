@@ -5,15 +5,22 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { MessageSquare, AlertCircle, Clock, CheckCircle2 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { MessageSquare, AlertCircle, Clock, CheckCircle2, Plus } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { apiRequest } from "@/lib/api-request";
+import { useToast } from "@/hooks/use-toast";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -111,9 +118,50 @@ function StatCard({
 
 type StatusFilter = "all" | "open" | "mediation" | "resolved";
 
+const SEVERITY_OPTIONS = [
+  { value: "low",      label: "Past" },
+  { value: "medium",   label: "O'rta" },
+  { value: "high",     label: "Yuqori" },
+  { value: "critical", label: "Kritik" },
+] as const;
+
 export default function HRConflict() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [open, setOpen] = useState(false);
+  const [party1, setParty1] = useState("");
+  const [party2, setParty2] = useState("");
+  const [description, setDescription] = useState("");
+  const [severity, setSeverity] = useState<"low" | "medium" | "high" | "critical">("low");
+
+  const createMutation = useMutation({
+    mutationFn: (data: { party1: number; party2: number; description: string; severity: string }) =>
+      apiRequest("POST", "/api/hr/conflict-reports", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/conflict-reports"] });
+      setOpen(false);
+      setParty1(""); setParty2(""); setDescription(""); setSeverity("low");
+      toast({ title: "Konflikt qayd etildi" });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const canSubmit =
+    Number.isInteger(parseInt(party1, 10)) && parseInt(party1, 10) > 0 &&
+    Number.isInteger(parseInt(party2, 10)) && parseInt(party2, 10) > 0 &&
+    description.trim().length >= 5;
+
+  function handleSubmit() {
+    if (!canSubmit) return;
+    createMutation.mutate({
+      party1:      parseInt(party1, 10),
+      party2:      parseInt(party2, 10),
+      description: description.trim(),
+      severity,
+    });
+  }
 
   const { data: rawReports, isLoading } =
     useQuery<ConflictReport[]>({ queryKey: ["/api/hr/conflict-reports"] });
@@ -133,9 +181,15 @@ export default function HRConflict() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       {/* Header */}
-      <div className="border-b border-border/50 pb-3 flex items-center gap-3">
-        <MessageSquare className="h-5 w-5 text-[var(--ep-blue)]" />
-        <h1 className="font-semibold text-base">Konflikt Boshqaruvi</h1>
+      <div className="border-b border-border/50 pb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <MessageSquare className="h-5 w-5 text-[var(--ep-blue)]" />
+          <h1 className="font-semibold text-base">Konflikt Boshqaruvi</h1>
+        </div>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Yangi konflikt
+        </Button>
       </div>
 
       {/* Stats */}
@@ -226,6 +280,66 @@ export default function HRConflict() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Create conflict dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Yangi konflikt qayd etish</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Ishtirokchi 1 ID (xodim #)</label>
+              <Input
+                type="number"
+                min={1}
+                placeholder="Masalan: 5"
+                value={party1}
+                onChange={(e) => setParty1(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Ishtirokchi 2 ID (xodim #)</label>
+              <Input
+                type="number"
+                min={1}
+                placeholder="Masalan: 12"
+                value={party2}
+                onChange={(e) => setParty2(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Tavsif</label>
+              <Input
+                placeholder="Konflikt tafsilotlari..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Jiddiylik</label>
+              <select
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={severity}
+                onChange={(e) => setSeverity(e.target.value as typeof severity)}
+              >
+                {SEVERITY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Bekor</Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit || createMutation.isPending}
+            >
+              {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -114,8 +114,11 @@ export class EmployeesCompatSubService {
   async createComplaint(employeeId: string, body: Record<string, unknown>): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const r = await rawSql(sql`
-        INSERT INTO hr_conflict_reports (party1, party2, description, severity, status)
-        VALUES (${employeeId}, ${body['party2'] ?? ''}, ${body['description'] ?? null}, ${body['severity'] ?? 'low'}, 'open')
+        INSERT INTO hr_conflict_reports (id, party1, party2, description, severity, status)
+        VALUES (
+          'CR-' || LPAD(CAST((SELECT COUNT(*)+1 FROM hr_conflict_reports) AS TEXT), 3, '0'),
+          ${employeeId}, ${body['party2'] ?? ''}, ${body['description'] ?? null}, ${body['severity'] ?? 'low'}, 'open'
+        )
         RETURNING id, severity, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
