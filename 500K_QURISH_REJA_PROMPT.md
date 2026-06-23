@@ -91,11 +91,10 @@ Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
   - (d) sex-OEE — ❌ qurildi-yu **DB-proof yashil-yolg'on ko'rsatdi** (uuid↔int link buzuq → faqat "unassigned"). **Q-40 bo'yicha revert qilindi** (ship qilinmadi).
 - **Bloker (egasi/arxitektura):** `mes_sessions`(uuid) ╳ `work_centers`(int) two-worlds — qaysi session-jadval + work_center identifikatori kanonik? Bu hal bo'lmaguncha MES per-sex analitika qurilmaydi (fabrikatsiya qilinmaydi). **Nishonlar:** `get-oee.handler.ts:107`, `mes-production-sessions.repo.ts:64`, `mes_sessions.work_center_id` uuid.
 
-### 🌊 TO'LQIN 6 — PP/MES: AI-navbat STRUKTURASI + material BRON
+### 🌊 TO'LQIN 6 — PP/MES: AI-navbat STRUKTURASI + material BRON ✅ (buildQueue ulandi)
 - **Vizyon:** AI navbat FIFO+muddat/mijoz/tiraj/summa; buyurtmada material bron; IoT-tablet AI-rank; no-preemption.
-- **Hozir:** `ProductionPriorityService.buildQueue` REAL logika LEKIN hech chaqirilmaydi; bron faqat POS; IoT-tablet buyurtma ko'rsatadi (REAL) lekin AI-rank emas.
-- **Qur (struktura, AI-narrative emas):** (a) `buildQueue`ni REAL endpointga ula (`GET /pp/queue` / scheduler). (b) PP-buyurtmada material-bron (stock_reservations) trigger. (c) IoT-tablet'ni queue-rank bilan ko'rsatish. (d) Director queue-override darvozasi.
-- **Gated:** AI'ning aqlli reordering/narrative = **AI-token** (FIFO+factor STRUKTURASI hozir quriladi).
+- **Natija (Workflow wayp6jhxd + adversarial verify + DB-proof, commit `23118e7c`):** (a) ✅ `ProductionPriorityService.buildQueue` REAL edi (frozen segment + flexible ZARUR→deadline→band, `buildQueueReal:true`) lekin **iste'molchi-YO'Q** edi (501-routing kabi) → **`GET /pp/queue` endpointga ULANDI** (query+handler: production_orders→SchedulableOrder→buildQueue→ranked; production_orders.id INT = two-worlds yo'q). DB-proof: 7 order ranked (id 48 #1 deadline-primary). (b) ✅ material-bron **allaqachon bor** (Trigger 8 / `pp-released.listener` PP release'da stock_reservations yozadi).
+- **GATED:** (c) IoT-tablet AI-rank ko'rsatish + (d) Director queue-override (`production_orders.priority/isUrgent/isFrozen` UPDATE — hozir faqat `sales_orders.is_vip`) = yangi DDL + endpoint, **AI aqlli reordering/narrative = AI-token**.
 
 ### 🌊 TO'LQIN 7 — HR/MES: Kunlik hisobot/KPI to'ldirish
 - **Vizyon:** 16-soat (smena-aware) kesim; STKP per-rol; reja-recall→PDF→eskalatsiya; cross-rating(xizmat reytingi); mashina-no-output→KPI savol.
