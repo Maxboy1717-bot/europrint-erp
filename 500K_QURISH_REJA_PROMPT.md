@@ -96,11 +96,13 @@ Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
 - **Natija (Workflow wayp6jhxd + adversarial verify + DB-proof, commit `23118e7c`):** (a) ✅ `ProductionPriorityService.buildQueue` REAL edi (frozen segment + flexible ZARUR→deadline→band, `buildQueueReal:true`) lekin **iste'molchi-YO'Q** edi (501-routing kabi) → **`GET /pp/queue` endpointga ULANDI** (query+handler: production_orders→SchedulableOrder→buildQueue→ranked; production_orders.id INT = two-worlds yo'q). DB-proof: 7 order ranked (id 48 #1 deadline-primary). (b) ✅ material-bron **allaqachon bor** (Trigger 8 / `pp-released.listener` PP release'da stock_reservations yozadi).
 - **GATED:** (c) IoT-tablet AI-rank ko'rsatish + (d) Director queue-override (`production_orders.priority/isUrgent/isFrozen` UPDATE — hozir faqat `sales_orders.is_vip`) = yangi DDL + endpoint, **AI aqlli reordering/narrative = AI-token**.
 
-### 🌊 TO'LQIN 7 — HR/MES: Kunlik hisobot/KPI to'ldirish
-- **Vizyon:** 16-soat (smena-aware) kesim; STKP per-rol; reja-recall→PDF→eskalatsiya; cross-rating(xizmat reytingi); mashina-no-output→KPI savol.
-- **Hozir:** `hr_daily_reports`=6090 REAL ✅, cron REAL, KPI(60) REAL; lekin 16h faqat soat 15:30/16:00; STKP global hardcode; PDF ulanmagan; served-rates yo'q.
-- **Qur:** (a) Smena-aware 16h kesim (shift_start'dan). (b) `stkp_config` per-rol/sex jadval (vazn override). (c) Reja-recall→PDF→eskalatsiya workflow. (d) Served-rates cross-rating. (e) Mashina-no-output→KPI-savol trigger.
-- **Gated:** STKP vazn qiymatlari = **egasi DATA**.
+### 🌊 TO'LQIN 7 — HR/MES: Kunlik hisobot/KPI to'ldirish ⛔ GATED (egasi-DATA/qaror + orphan/working-risk)
+- **Vizyon:** 16-soat (smena-aware) kesim; STKP per-rol; reja-recall→PDF→eskalatsiya; cross-rating; mashina-no-output→KPI savol.
+- **Natija (Workflow w22ixkyto + adversarial verify):** ⛔ uchala buildable qism gated:
+  - (a) 16h smena-aware — `shifts`/`shift_schedules` **BO'SH (0 qator)** = egasi-DATA; ishlaydigan cron (`@Cron 15:30/16:00`, 6090 real qator)ni o'zgartirish smena-data yo'qligida xavfli (RISK R-2 silent-exempt). Egasi: smena jadvali + deadline-model qarori.
+  - (b) STKP per-rol — `KPI_WEIGHTS` **union-kontrakt qulfli** (Q4 2026); verify Q4-defer tavsiya; bo'sh override-jadval = orphan + ishlaydigan KPI-calc (payroll) xavfi.
+  - (d) served-rates/cross-rating — jadvallar yo'q + scoring qoidalari (served vs requested, idle→KPI) **CFO/HR sign-off** = egasi; bo'sh jadval = orphan (Q-46).
+- **Bloker (egasi-DATA/qaror):** smena vaqtlari + STKP vazn (union) + served-rate/idle-KPI biznes-qoidalari. Two-worlds yo'q (employee_id INT konvergent ✅). STRUKTURA tayyor lekin orphan/working-risk → egasi DATA/qaror bergach quriladi. **Nishonlar:** `daily-report.service.ts:179,205`, `kpi.service.ts:64`, `business.constants.ts:6-11`.
 
 ### 🌊 TO'LQIN 8+ — Qolgan modullar (buildable bo'shliqlar)
 > Konsolidatsiya (`MASTER_VISION.md`) dan har modulning buildable-now bo'shliqlari; har biri alohida to'lqin:
