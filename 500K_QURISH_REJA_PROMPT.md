@@ -83,11 +83,13 @@ Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
 - **Natija (Workflow wolcex6vr + adversarial verify, commit `5fb6775d`):** (a) ✅ `work_centers`ga 5 ustun (`norma_m2_per_shift`/`norma_kg_per_shift`/`brak_limit_pct`/`min_crew_size`/`max_crew_size`) APPROVED DDL + invariants + Drizzle (2 def) sync. (d) ✅ `PUT /pp/work-centers/:id/norms` config endpoint (DTO+Command/Handler+repo.updateNorms qisman; CQRS). DB-proof rollback-tx OK; tsc GREEN. ⭐ Iste'molchi: `getWorkCenterNorms` (CRP planning) + GET :id javobi (orphan emas).
 - **GATED:** (b) `work_center_equipment_config` jadval — **DEFER** (iste'molchi-yo'q + mashina qiymat egasi-DATA = orphan jadval qurmaslik, Q-46). (c) `org_functions.work_center_id` link — **LOCKED modul** (org-structure/) + egasi link-strategiya qarori. norma/brak/crew **qiymatlari** = **egasi DATA** (struktura tayyor, PUT orqali to'ldiriladi).
 
-### 🌊 TO'LQIN 5 — MES: per-sex sessiya + m²/list/kg + downtime→rework
+### 🌊 TO'LQIN 5 — MES: per-sex sessiya + m²/list/kg + downtime→rework ⛔ GATED (ikki-dunyo bloker)
 - **Vizyon:** sessiya sex-belgili; chiqim m²/list/kg birlikda; downtime sabab→rework-routing; 4-darajali OEE per-sex.
-- **Hozir:** sessiya REAL (6 qator) lekin sex-belgi yo'q; `mes_material_consumption` birlik=text (konversiya yo'q); downtime(2) rework'ga ulanmagan.
-- **Qur:** (a) `production_sessions`ga sex/work_center-link + m²/list/kg birlik-enum. (b) Material-consumption→GofraConversion ulash. (c) Downtime reason→rework-routing (To'lqin 2 graf'iga). (d) Sex-level OEE.
-- **Nishonlar:** `mes-shifts-stats.repo.ts:91,154`, `mes-production-sessions.repo.ts`.
+- **Natija (Workflow wu7qa3jf2 + adversarial verify + DB-proof):** ⛔ **Buildable slice topilmadi — uchala qism gated:**
+  - (a) session sex/birlik — `mes_sessions.work_center_id` = **UUID**, `work_centers.id` = **serial INT** → link MOS KELMAYDI (DB-proof: hamma 6 sessiya "unassigned"). Bu **ikki-dunyo** (two-worlds) — kanonik work_center identifikatori = **egasi/arxitektura qarori**. + sex→unit mapping = egasi-DATA.
+  - (c) downtime→rework — PP rework-routing service **umuman yo'q** + rework qoidalari bo'sh (egasi-DATA 22-sex routing) → bo'sh natija topadigan cross-module zanjir = **speculative (Q-40)**.
+  - (d) sex-OEE — ❌ qurildi-yu **DB-proof yashil-yolg'on ko'rsatdi** (uuid↔int link buzuq → faqat "unassigned"). **Q-40 bo'yicha revert qilindi** (ship qilinmadi).
+- **Bloker (egasi/arxitektura):** `mes_sessions`(uuid) ╳ `work_centers`(int) two-worlds — qaysi session-jadval + work_center identifikatori kanonik? Bu hal bo'lmaguncha MES per-sex analitika qurilmaydi (fabrikatsiya qilinmaydi). **Nishonlar:** `get-oee.handler.ts:107`, `mes-production-sessions.repo.ts:64`, `mes_sessions.work_center_id` uuid.
 
 ### 🌊 TO'LQIN 6 — PP/MES: AI-navbat STRUKTURASI + material BRON
 - **Vizyon:** AI navbat FIFO+muddat/mijoz/tiraj/summa; buyurtmada material bron; IoT-tablet AI-rank; no-preemption.
