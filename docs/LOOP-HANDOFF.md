@@ -25,8 +25,11 @@
 6. [ ] Director/LMS/Marketing/POS-CC disconnected-real wiring (Wave-8 scan nomzodlari — ko'pi allaqachon qurilgan yoki gated; JONLI tekshir).
 > ESLATMA: bu navbatning ko'pi allaqachon ishlashi yoki gated bo'lishi mumkin — har birini JONLI tekshirib, ishlasa ISBOTLA+✅, buzuq bo'lsa TUZAT, gated bo'lsa pastga ko'chir.
 
-## ⛔ EGASI-DATA KUTADI (qurilMAYDI — fabrikatsiya taqiq; egasi bersa STRUKTURA darrov tiriladi)
-22-sex ro'yxati · norma/brak qiymatlari · marka take-up/chiqindi/kley · 21-material seed · CKP koeff · manager_id (kim-kimni-boshqaradi) · STKP vazn · razryad imtihon % · head_user_id · smena jadvali · served-rate qoidalari.
+## ⚙️ CONFIG-MEXANIZM (egasi-DATA EMAS — qurilADI: mexanizm qur + sample bilan self-test; egasi keyin sozlaydi)
+⭐ VIZYON-PRINSIP (egasi 2026-06-23): HAMMA narsa SOZLANADIGAN. Qiymat KUTMA — set/change endpoint+forma qur + sample bilan o'zing test qil (set→change→DB-proof). Egasi real qiymatni tizim orqali sozlaydi/o'zgartiradi. ([[feedback_everything_configurable]])
+- ✅ **PP norma/brak/crew:** config-mexanizm (`PUT /pp/work-centers/:id/norms`, T4) + 9 sex sample bilan to'ldirildi + CHANGE isbotlandi (2026-06-23). Egasi real qiymat sozlaydi.
+- ⬜ **Keyingi config-mexanizmlar (qurilADI):** STKP vazn (per-rol jadval+endpoint) · marka take-up/chiqindi/kley (config jadval) · CKP koeff (org-funksiya config) · smena jadvali (shift config) · razryad imtihon % · norma birlik (m²/kg/list tanlovi). Har biri: jadval/endpoint + sample self-test.
+- 🔴 **Haqiqiy un-fabricatable DATA (faqat egasi):** 22-sex ro'yxatining KENGAYISHI (hozir 9 bor) · 21-material nomlari · manager_id (kim-kimni-boshqaradi) · head_user_id. Bularni config-forma bilan KIRITISH mumkin, lekin qiymat egasiniki.
 
 ## 🟡 AI-KALIT KUTADI
 AISHA dispatcher · AI 7-step planning · karta-AI fit-scorer · OEE-AI · Finance-AI · lead-scoring · AI-kamera VLM.
