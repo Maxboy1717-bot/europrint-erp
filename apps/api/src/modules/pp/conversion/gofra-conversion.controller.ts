@@ -16,12 +16,16 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Param,
   Body,
   Query,
   Inject,
   BadRequestException,
 } from '@nestjs/common';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { unwrapOrThrow } from '@common/http-result';
 import { GofraConversionService } from './gofra-conversion.service';
 import {
@@ -132,6 +136,35 @@ export class GofraConversionController {
       default:
         throw new BadRequestException(`Noma'lum yo'nalish: ${String(direction)}`);
     }
+  }
+
+  // ─── gofra_config (config-mexanizm) ──────────────────────────────────────────
+
+  private static readonly UpdateGofraConfigSchema = z.object({
+    value: z.number().min(0).max(9999.9999),
+  });
+
+  /** GET /api/pp/gofra/config — list all gofra config params */
+  @Get('config')
+  async getGofraConfig() {
+    const rows = await rawSql(sql`
+      SELECT id, key, label_uz, value, unit, updated_at FROM gofra_config ORDER BY id
+    `);
+    return { items: rows.rows };
+  }
+
+  /** PATCH /api/pp/gofra/config/:key — update a gofra config param */
+  @Patch('config/:key')
+  async updateGofraConfig(@Param('key') key: string, @Body() body: unknown) {
+    const dto = GofraConversionController.UpdateGofraConfigSchema.parse(body);
+    const rows = await rawSql(sql`
+      UPDATE gofra_config SET value = ${dto.value}, updated_at = NOW()
+      WHERE key = ${key}
+      RETURNING id, key, label_uz, value, unit
+    `);
+    const result = rows.rows[0] ?? undefined;
+    if (!result) throw new BadRequestException(`gofra_config key=${key} topilmadi`);
+    return result;
   }
 
   private requireGsm(grammageGsm: number | undefined): number {
