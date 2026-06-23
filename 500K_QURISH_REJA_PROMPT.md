@@ -23,17 +23,34 @@
 
 ---
 
-## 1. PER-TO'LQIN PROTOKOL (Definition of Done)
+## 1. PER-TO'LQIN PROTOKOL (Definition of Done) — JARAYON-ASOSLI, TO'XTAMAYDI
 
-Har to'lqin ANIQ shu 7 qadam bilan tugaydi:
+> ⭐ **EGASI INTIZOMI (2026-06-23):** Loop **vaqtga emas — JARAYONGA** bog'liq. Har iteratsiya
+> bir agent tugashi bilan keyingi topshiriq darrov tushadi; **umuman to'xtamaydi** (hamma
+> buildable to'lqin ✅ bo'lgunча). Har iteratsiya MAJBURIY tartibi: **avval oldingi ishni
+> qayta-test/verify → keyin yangi ishni to'liq qur → qurilganini test → commit → keyingisiga.**
 
+Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
+
+0. **REGRESS-VERIFY (oldingi to'lqin — MAJBURIY birinchi):** Yangi ishga o'tishdan OLDIN oldingi ✅ to'lqin hali ishlayotganini qayta tasdiqla:
+   - `tsc --noEmit` hali GREEN (mening fayllarimda 0 yangi xato);
+   - oldingi to'lqinning DB-proof'i hali ushlab turibdi (`q.cjs` bilan jadval/ustun mavjud, rollback-tx hali o'tadi);
+   - oldingi endpoint hali 200/REAL (clean-dist restart bo'lgan bo'lsa — health 200);
+   - regress topilsa → **AVVAL uni tuzat** (Q-39/Q-46), keyingi to'lqinga o'tma. Toza bo'lsa → QADAM 1.
 1. **SCOPE** — to'lqin-modulning aniq `file:line` nishonlarini o'qi (Read), DB holatini `q.cjs` bilan tekshir.
 2. **DDL** (agar kerak) — idempotent migration + `APPROVED` izoh; jonli DB'ga qo'lda yoki invariants orqali; rollback-tx bilan tasdiqla.
 3. **KOD** — schema/repo/service/controller/DTO/listener; Result<T> + Zod + Drizzle (raw SQL faqat murakkab); ishlayotgan kod buzilmaydi.
 4. **FE** (agar bor) — useQuery/useMutation + EP shablon + token (yangi dizayn yo'q).
 5. **GREEN** — `apps/api/node_modules/.bin/tsc --noEmit -p apps/api/tsconfig.json` = MENING fayllarimda 0 xato (mavjud locked-modul xatolari hisobga olinmaydi, lekin yangi xato qo'shilmaydi). FE: `tsc --noEmit` MENING fayllarimda 0. `pnpm --filter @europrint/api run build` (yoki swc) PASS. Lint/reviewer skriptlar (`scripts/run-all-reviewers.sh` tegishli) WARN'siz.
-6. **VERIFY (Q-40):** clean-dist rebuild (`rm -rf apps/api/dist` → restart) → jonli HTTP yoki DB-proof (rollback-tx) → vizyonga moslik. "Kirit→saqla→qayta-och→ko'rinadimi".
-7. **COMMIT** — faqat o'z fayllarim; xabar `type(scope): subject` + Co-Authored-By; `git log -1` bilan tasdiqla. MASTER_VISION'da to'lqin holatini ✅ belgila. → **Keyingi to'lqinga o't.**
+6. **TEST + VERIFY (Q-40):** clean-dist rebuild (`rm -rf apps/api/dist` → restart) → jonli HTTP yoki DB-proof (rollback-tx) → vizyonga moslik. "Kirit→saqla→qayta-och→ko'rinadimi". Tegishli test bo'lsa ishga tushir (`pnpm --filter @europrint/api test <spec>`); yangi qurilgan element uchun DB-proof MAJBURIY.
+7. **COMMIT** — faqat o'z fayllarim; xabar `type(scope): subject` + Co-Authored-By; `git log -1` bilan tasdiqla. MASTER_VISION'da + bu faylda to'lqin holatini ✅ belgila.
+8. **TO'XTAMA → KEYINGISIGA:** Loop o'z-o'zini suradi — bu turn tugashi bilan keyingi tugallanmagan to'lqin AVTOMATIK boshlanadi (ScheduleWakeup re-arm; vaqt = zaxira-heartbeat, asosiy haydovchi = jarayon tugashi). 1-qatorli holat yoz: `To'lqin N — <modul> ✅ commit <hash> | GREEN | DB-proof OK | regress-OK`. → QADAM 0 (keyingi to'lqin).
+
+> ⭐ **ULTRACODE — har to'lqin Workflow bilan:** har to'lqin bitta `Workflow` orqasida quriladi:
+> (a) **fan-out qurish/tekshirish** (scope-readerlar + DB-prob parallel), (b) **adversarial verify** —
+> qurilgan element + oldingi to'lqin regress-i mustaqil skeptik-agentlar bilan tasdiqlanadi
+> (Q-29 verify-don't-trust; "yashil-lekin-noto'g'ri" rad etiladi), (c) sintez → commit bosh agent.
+> Token cheklov emas — eng to'liq, to'g'ri natija maqsad.
 
 > **Q-44 eslatma:** Windows `nest watch` katta rebuilddan keyin :3030 tushishi mumkin (000) — bu muhit, kod emas; clean-dist + restart. Boot DbInvariants'da bir marta hang bo'lsa → kill+restart (dist cache → tez boot).
 
@@ -112,11 +129,13 @@ Har to'lqin ANIQ shu 7 qadam bilan tugaydi:
 
 ---
 
-## 4. LOOP BOSHQARUVI
+## 4. LOOP BOSHQARUVI — JARAYON-ASOSLI (vaqt emas), TO'XTAMAYDI
 
-- Har firing: `MASTER_VISION.md` + bu fayl o'qi → birinchi ✅ bo'lmagan to'lqinni ol → PROTOKOL (§1) bo'yicha tugat → ✅ belgila → keyingi firing.
-- Hamma buildable to'lqin ✅ bo'lsa → loop to'xtaydi, egasiga "GATED qoldi: AI-token + DATA" hisoboti.
-- Har to'lqin oxirida 1-qatorli holat: `To'lqin N — <modul> ✅ commit <hash> | GREEN | DB-proof OK`.
+- **Haydovchi = JARAYON, vaqt emas:** bir iteratsiya (to'lqin) tugashi bilan keyingisi DARROV boshlanadi. ScheduleWakeup faqat zaxira-heartbeat (turn osilib qolsa) — asosiy signal: ish tugadi → keyingi ish tushdi.
+- Har firing: `MASTER_VISION.md` + bu fayl o'qi → **QADAM 0: oldingi ✅ to'lqinni regress-test** → birinchi ✅ bo'lmagan to'lqinni ol → PROTOKOL (§1, 9 qadam) bo'yicha Workflow bilan tugat → ✅ belgila → keyingi firing.
+- **UMUMAN TO'XTAMAYDI** — hamma buildable to'lqin (§2: 1–8) ✅ bo'lgunча uzluksiz. Faqat shunda to'xtaydi → egasiga "GATED qoldi: AI-token + DATA + Locked" hisoboti (§3).
+- Har to'lqin oxirida 1-qatorli holat: `To'lqin N — <modul> ✅ commit <hash> | GREEN | DB-proof OK | regress-OK`.
+- **Egasi to'xtatsa** ("loopni o'chir") → ScheduleWakeup chaqirilmaydi, kutilayotgan wakeup CronDelete bilan bekor qilinadi. Boshqa hech narsa loop'ni to'xtatmaydi.
 
 ---
 
