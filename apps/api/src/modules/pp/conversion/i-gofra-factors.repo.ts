@@ -31,6 +31,14 @@ export interface IGofraFactorsRepo {
    * so the FE master-data view degrades gracefully — never throws.
    */
   getFluteTypes(): Promise<Result<FluteTypeRow[]>>;
+
+  /**
+   * Configure (set/change) a flute's take-up factor — the owner-editable knob the
+   * grammage engine (Formula 3) consumes. Returns the updated row; Err if the code
+   * is unknown/inactive. This is the WRITE side of the configurable master-data
+   * (read side = getFluteFactors/getFluteTypes).
+   */
+  updateFluteFactor(code: string, takeUpFactor: number): Promise<Result<FluteTypeRow>>;
 }
 
 export const GOFRA_FACTORS_REPO = Symbol('IGofraFactorsRepo');

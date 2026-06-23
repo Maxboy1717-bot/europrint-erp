@@ -55,3 +55,9 @@ export const GofraGrammageBodySchema = z.object({
   layers: z.array(GofraLayerSchema).min(1),
 });
 export type GofraGrammageBody = z.infer<typeof GofraGrammageBodySchema>;
+
+/** Body for PUT /pp/gofra/flute-types/:code — configure (set/change) a flute's take-up factor. */
+export const UpdateFluteFactorSchema = z.object({
+  takeUpFactor: z.coerce.number().positive().max(5),
+});
+export type UpdateFluteFactorBody = z.infer<typeof UpdateFluteFactorSchema>;

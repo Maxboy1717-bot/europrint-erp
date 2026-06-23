@@ -15,6 +15,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Param,
   Body,
   Query,
   Inject,
@@ -30,6 +32,7 @@ import {
 import {
   GofraConvertQuerySchema,
   GofraGrammageBodySchema,
+  UpdateFluteFactorSchema,
   type GofraConvertResponse,
   type GofraDirection,
 } from './gofra-conversion.dto';
@@ -81,6 +84,18 @@ export class GofraConversionController {
   @Get('flute-types')
   async fluteTypes(): Promise<FluteTypeRow[]> {
     const r = await this.factorsRepo.getFluteTypes();
+    return unwrapOrThrow(r);
+  }
+
+  /**
+   * PUT /api/pp/gofra/flute-types/:code — CONFIGURE (set/change) a flute's take-up factor.
+   * The owner-editable knob the grammage engine consumes; changing it immediately shifts
+   * every subsequent corrugated grammage computation (vizyon: hamma narsa sozlanadigan).
+   */
+  @Put('flute-types/:code')
+  async updateFluteFactor(@Param('code') code: string, @Body() body: unknown): Promise<FluteTypeRow> {
+    const { takeUpFactor } = UpdateFluteFactorSchema.parse(body);
+    const r = await this.factorsRepo.updateFluteFactor(String(code).toUpperCase(), takeUpFactor);
     return unwrapOrThrow(r);
   }
 
