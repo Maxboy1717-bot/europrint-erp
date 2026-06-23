@@ -65,6 +65,7 @@ const RushOrderPage = lazy(() => import("@/pages/ai-planning/RushOrderPage"));
 
 // ARCHITECTURE.md §40 — TZ-04 QC dedicated
 const PaperParametersPage = lazy(() => import("@/pages/qc/PaperParametersPage"));
+const QcParametersConfig  = lazy(() => import("@/pages/qc/QcParametersConfig"));
 const SupplierQualityPage = lazy(() => import("@/pages/qc/SupplierQualityPage"));
 const DefectManagementPage = lazy(() => import("@/pages/qc/DefectManagementPage"));
 const ReclamationsPage = lazy(() => import("@/pages/qc/ReclamationsPage"));
@@ -157,6 +158,7 @@ export const QC_ROUTES: [string, React.ComponentType][] = [
   ['/qc/ai-analysis',       QCExtended],
   ['/qc/reports',           QCExtended],
   ['/qc/settings',          QCExtended],
+  ['/qc/parameters-config', QcParametersConfig],   // config-mexanizm: min/maqsad/max inline-edit
 ];
 
 export const DESIGN_ROUTES: [string, React.ComponentType][] = [
