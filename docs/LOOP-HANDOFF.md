@@ -27,8 +27,9 @@
 
 ## ⚙️ CONFIG-MEXANIZM (egasi-DATA EMAS — qurilADI: mexanizm qur + sample bilan self-test; egasi keyin sozlaydi)
 ⭐ VIZYON-PRINSIP (egasi 2026-06-23): HAMMA narsa SOZLANADIGAN. Qiymat KUTMA — set/change endpoint+forma qur + sample bilan o'zing test qil (set→change→DB-proof). Egasi real qiymatni tizim orqali sozlaydi/o'zgartiradi. ([[feedback_everything_configurable]])
-- ✅ **PP norma/brak/crew:** config-mexanizm (`PUT /pp/work-centers/:id/norms`, T4) + 9 sex sample bilan to'ldirildi + CHANGE isbotlandi (2026-06-23). Egasi real qiymat sozlaydi.
-- ⬜ **Keyingi config-mexanizmlar (qurilADI):** STKP vazn (per-rol jadval+endpoint) · marka take-up/chiqindi/kley (config jadval) · CKP koeff (org-funksiya config) · smena jadvali (shift config) · razryad imtihon % · norma birlik (m²/kg/list tanlovi). Har biri: jadval/endpoint + sample self-test.
+- ✅ **PP norma/brak/crew:** config-mexanizm (`PUT /pp/work-centers/:id/norms`, T4) + 9 sex sample + CHANGE isbotlandi (2026-06-23).
+- ✅ **Gofra take-up (marka koeff):** config-WRITE mexanizm qurildi (`PUT /pp/gofra/flute-types/:code` + `updateFluteFactor`, `4b4001d6`). DB-proof: C take-up 1.45→1.60 CHANGE → grammage 454→472 (config formulaga ta'sir). Egasi sozlaydi.
+- ⬜ **Keyingi config-mexanizmlar (qurilADI):** STKP vazn (per-rol jadval+endpoint, ⚠️ kpi.service working — ehtiyot) · gofra chiqindi%/kley (config) · CKP koeff (org-funksiya config) · smena jadvali (shift config) · razryad imtihon % · norma birlik (m²/kg/list tanlovi). Har biri: jadval/endpoint + sample self-test.
 - 🔴 **Haqiqiy un-fabricatable DATA (faqat egasi):** 22-sex ro'yxatining KENGAYISHI (hozir 9 bor) · 21-material nomlari · manager_id (kim-kimni-boshqaradi) · head_user_id. Bularni config-forma bilan KIRITISH mumkin, lekin qiymat egasiniki.
 
 ## 🟡 AI-KALIT KUTADI
