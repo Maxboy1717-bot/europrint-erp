@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { StatsCardSkeleton } from "@/components/ui/stats-card";
 import { BookOpen, Users, Award, TrendingUp, BarChart3, Activity, Clock, CheckCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -39,6 +42,8 @@ export default function LMSDashboard() {
   const [takingExamId, setTakingExamId] = useState<string | null>(null);
   /** questionId → selectedOption (0-based index into options array) */
   const [examAnswers, setExamAnswers] = useState<Record<number, number>>({});
+  const [enrollingCourse, setEnrollingCourse] = useState<Course | null>(null);
+  const [enrollEmpId, setEnrollEmpId] = useState("");
 
   const { data: courses = [], isLoading: isLoadingCourses, isError, error, refetch } = useQuery<Course[]>({ queryKey: ["/api/courses"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Course[] })?.data ?? []) });
   const { data: certificates = [], isLoading: isLoadingCertificates } = useQuery<Certificate[]>({ queryKey: ["/api/certificates"], select: (data: unknown) => Array.isArray(data) ? data : ((data as { data?: Certificate[] })?.data ?? []) });
@@ -84,6 +89,21 @@ export default function LMSDashboard() {
     },
   });
 
+
+  const enrollMutation = useMutation({
+    mutationFn: (course: Course) =>
+      apiRequest("POST", "/api/lms/enrollments", {
+        employeeId: Number(enrollEmpId),
+        courseId: Number(course.id),
+        courseName: course.name,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
+      setEnrollingCourse(null);
+      setEnrollEmpId("");
+    },
+    onError: () => {},
+  });
 
   const isLoading = isLoadingCourses || isLoadingCertificates || isLoadingUsers;
   const totalCourses = courses.length;
@@ -139,15 +159,16 @@ export default function LMSDashboard() {
               <CardHeader><CardTitle className="flex items-center gap-2 text-foreground"><BookOpen className="h-4 w-4 text-primary" />{t('courses')}</CardTitle></CardHeader>
               <CardContent>
                 <div className="ep-table-scroll"><Table>
-                  <TableHeader><TableRow className="border-none hover:bg-transparent">{(["#", t('course'), t('enrollment'), t('completionRate')]).map((h,i) => <TableHead key={h} className={`bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 ${i===0?"rounded-l-lg":""} ${i===3?"rounded-r-lg":""}`}>{h}</TableHead>)}</TableRow></TableHeader>
+                  <TableHeader><TableRow className="border-none hover:bg-transparent">{(["#", t('course'), t('enrollment'), t('completionRate'), ""]).map((h,i) => <TableHead key={`th-${i}`} className={`bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 ${i===0?"rounded-l-lg":""} ${i===4?"rounded-r-lg":""}`}>{h}</TableHead>)}</TableRow></TableHeader>
                   <TableBody>
-                    {courses.length === 0 ? <TableRow className="hover:bg-transparent"><TableCell colSpan={4} className="text-center text-muted-foreground py-8" data-testid="text-no-courses">{tCommon('noData')}</TableCell></TableRow>
+                    {courses.length === 0 ? <TableRow className="hover:bg-transparent"><TableCell colSpan={5} className="text-center text-muted-foreground py-8" data-testid="text-no-courses">{tCommon('noData')}</TableCell></TableRow>
                     : (Array.isArray(courses) ? courses : []).slice(0, 5).map((course, idx) => (
                       <TableRow key={course.id} data-testid={`row-course-${course.id}`} className="hover:bg-muted/40 transition-colors border-none">
                         <TableCell className="font-medium px-6">{idx + 1}</TableCell>
                         <TableCell className="px-6">{course.name}</TableCell>
                         <TableCell className="px-6">{course.enrolledCount}</TableCell>
                         <TableCell className="px-6"><Badge className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">{course.completionRate}%</Badge></TableCell>
+                        <TableCell className="px-3"><Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEnrollingCourse(course); setEnrollEmpId(""); }} data-testid={`btn-enroll-${course.id}`}>Yozish</Button></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -360,6 +381,37 @@ export default function LMSDashboard() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={enrollingCourse !== null} onOpenChange={open => { if (!open) setEnrollingCourse(null); }}>
+        <DialogContent className="sm:max-w-[340px]">
+          <DialogHeader>
+            <DialogTitle>Kursga yozish — {enrollingCourse?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="enroll-emp-id">Xodim ID raqami</Label>
+              <Input
+                id="enroll-emp-id"
+                type="number"
+                placeholder="Masalan: 5"
+                value={enrollEmpId}
+                onChange={e => setEnrollEmpId(e.target.value)}
+                data-testid="input-enroll-emp-id"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEnrollingCourse(null)}>Bekor</Button>
+            <Button
+              disabled={!enrollEmpId || enrollMutation.isPending}
+              onClick={() => { if (enrollingCourse) enrollMutation.mutate(enrollingCourse); }}
+              data-testid="btn-confirm-enroll"
+            >
+              Yozish
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
