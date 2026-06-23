@@ -3,9 +3,12 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
@@ -126,5 +129,47 @@ export class DashboardController {
   @ApiOperation({ summary: 'Get HR summary for dashboard' })
   async getHrSummary() {
     return { data: await this.queries.getHrSummary() };
+  }
+
+  // ─── KPI Definitions config (threshold owner-config) ────────────────────────
+
+  private static readonly UpdateKpiThresholdSchema = z.object({
+    target_value:       z.number().positive().optional(),
+    warning_threshold:  z.number().positive().optional(),
+    critical_threshold: z.number().positive().optional(),
+  });
+
+  @Get('kpi-definitions')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'List KPI threshold definitions (config-mexanizm)' })
+  async getKpiDefinitions() {
+    const rows = await rawSql(sql`
+      SELECT id, kpi_code, kpi_name, category, unit,
+             target_value, warning_threshold, critical_threshold, threshold_direction, is_active
+      FROM kpi_definitions
+      ORDER BY id
+    `);
+    return rows.rows;
+  }
+
+  @Patch('kpi-definitions/:id')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Update KPI threshold values (config-mexanizm)' })
+  async updateKpiDefinition(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    const dto = DashboardController.UpdateKpiThresholdSchema.parse(body);
+    const rows = await rawSql(sql`
+      UPDATE kpi_definitions SET
+        target_value       = COALESCE(${dto.target_value       ?? null}::numeric, target_value),
+        warning_threshold  = COALESCE(${dto.warning_threshold  ?? null}::numeric, warning_threshold),
+        critical_threshold = COALESCE(${dto.critical_threshold ?? null}::numeric, critical_threshold)
+      WHERE id = ${id}
+      RETURNING id, kpi_code, kpi_name, target_value, warning_threshold, critical_threshold
+    `);
+    const result = rows.rows[0] ?? undefined;
+    if (!result) throw new BadRequestException(`kpi_definition id=${id} topilmadi`);
+    return result;
   }
 }

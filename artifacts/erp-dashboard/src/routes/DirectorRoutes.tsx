@@ -30,6 +30,7 @@ const DirectorExtended = lazy(() => import("@/pages/DirectorExtended"));
 const IdealRasmPage = lazy(() => import("@/pages/IdealRasmPage"));
 const DirectorAiAudit = lazy(() => import("@/pages/DirectorAiAudit"));
 const WorkflowRules = lazy(() => import("@/pages/WorkflowRules"));
+const KpiThresholdConfig = lazy(() => import("@/pages/KpiThresholdConfig"));
 
 export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/coordination',             CoordinationPage],
@@ -62,4 +63,5 @@ export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/director/kpis',            DirectorExtended],
   ['/ideal-rasm',               IdealRasmPage],
   ['/director/ai-audit',        DirectorAiAudit],
+  ['/director/kpi-thresholds',  KpiThresholdConfig],
 ];
