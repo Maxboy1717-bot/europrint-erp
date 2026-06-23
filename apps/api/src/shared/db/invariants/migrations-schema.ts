@@ -20,6 +20,9 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
   // PREFIX-\d{10} validators → migrated in a separate slice with a matching format.
   { name: 'doc_seq_po sequence (A4)',  sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_po START 1 INCREMENT 1 NO CYCLE` },
   { name: 'doc_seq_mes sequence (A4)', sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_mes START 1 INCREMENT 1 NO CYCLE` },
+  // Wave 1 (500K build): PP sex taxonomy + FLEKSO/OFSET department (structure only; values = owner DATA).
+  { name: 'work_centers.sex_code column (Wave1 sex-taxonomy)', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS sex_code VARCHAR(50)` },
+  { name: 'work_centers.department_kind column (Wave1 sex-taxonomy)', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS department_kind VARCHAR(10)` },
   {
     name: 'domain_events outbox table (PA0-6)',
     sql: `
