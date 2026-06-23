@@ -126,7 +126,7 @@ export class DrizzleWorkCenterRepository {
   // qiymatlar egasi-DATA (PUT /pp/work-centers/:id/norms orqali kiritiladi). Numeric → string (Drizzle).
   async updateNorms(
     id: string,
-    norms: { normaM2PerShift?: number; normaKgPerShift?: number; brakLimitPct?: number; minCrewSize?: number; maxCrewSize?: number },
+    norms: { normaM2PerShift?: number; normaKgPerShift?: number; brakLimitPct?: number; minCrewSize?: number; maxCrewSize?: number; unitPreference?: string },
   ): Promise<Result<Record<string, unknown>>> {
     try {
       const numId = parseInt(id, 10);
@@ -136,6 +136,7 @@ export class DrizzleWorkCenterRepository {
       if (norms.brakLimitPct !== undefined) patch.brakLimitPct = String(norms.brakLimitPct);
       if (norms.minCrewSize !== undefined) patch.minCrewSize = norms.minCrewSize;
       if (norms.maxCrewSize !== undefined) patch.maxCrewSize = norms.maxCrewSize;
+      if (norms.unitPreference !== undefined) patch.unitPreference = norms.unitPreference;
       if (Object.keys(patch).length === 0) return Err('Yangilanadigan norma maydoni yo\'q');
       const rows = await db.update(workCenters).set(patch).where(eq(workCenters.id, numId)).returning();
       const row = (rows as Record<string, unknown>[])[0];

@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -32,6 +35,7 @@ interface WorkCenter {
   brak_limit_pct: string | null;
   min_crew_size: number | null;
   max_crew_size: number | null;
+  unit_preference: string | null;
 }
 
 interface NormForm {
@@ -40,12 +44,19 @@ interface NormForm {
   brakLimitPct: string;
   minCrewSize: string;
   maxCrewSize: string;
+  unitPreference: string;
   reason: string;
 }
 
+const UNIT_LABELS: Record<string, string> = {
+  m2: "m² (metr kvadrat)",
+  kg: "kg (kilogram)",
+  list: "list (varaq)",
+};
+
 const EMPTY_FORM: NormForm = {
   normaM2PerShift: "", normaKgPerShift: "", brakLimitPct: "",
-  minCrewSize: "",     maxCrewSize: "",     reason: "",
+  minCrewSize: "",     maxCrewSize: "",     unitPreference: "m2", reason: "",
 };
 
 function toForm(wc: WorkCenter): NormForm {
@@ -55,6 +66,7 @@ function toForm(wc: WorkCenter): NormForm {
     brakLimitPct:    wc.brak_limit_pct     ?? "",
     minCrewSize:     wc.min_crew_size != null ? String(wc.min_crew_size) : "",
     maxCrewSize:     wc.max_crew_size != null ? String(wc.max_crew_size) : "",
+    unitPreference:  wc.unit_preference ?? "m2",
     reason: "",
   };
 }
@@ -111,6 +123,7 @@ export default function WorkCenterNormsConfig() {
     if (!isNaN(br)) body.brakLimitPct    = br;
     if (!isNaN(mn)) body.minCrewSize     = mn;
     if (!isNaN(mx)) body.maxCrewSize     = mx;
+    if (form.unitPreference) body.unitPreference = form.unitPreference;
     updateMutation.mutate({ id: editWc.id, body });
   }
 
@@ -145,6 +158,7 @@ export default function WorkCenterNormsConfig() {
               <TableHead className="w-32 text-right">Norma m²/smena</TableHead>
               <TableHead className="w-28 text-right">Brak limit %</TableHead>
               <TableHead className="w-28 text-right">Brigada (min–max)</TableHead>
+              <TableHead className="w-24 text-center">Birlik</TableHead>
               <TableHead className="w-20 text-right">Amal</TableHead>
             </TableRow>
           </TableHeader>
@@ -152,14 +166,14 @@ export default function WorkCenterNormsConfig() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 6 }).map((__, j) => (
+                  {Array.from({ length: 7 }).map((__, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : workCenters.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   Ish markazlari topilmadi
                 </TableCell>
               </TableRow>
@@ -174,6 +188,11 @@ export default function WorkCenterNormsConfig() {
                     {wc.min_crew_size != null && wc.max_crew_size != null
                       ? `${wc.min_crew_size}–${wc.max_crew_size}`
                       : "—"}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">
+                      {wc.unit_preference ?? "m2"}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(wc)}>
@@ -204,6 +223,20 @@ export default function WorkCenterNormsConfig() {
               onChange={(v) => setForm(f => ({ ...f, minCrewSize: v }))} placeholder="Masalan: 2" />
             <Field label="Max brigada (kishilar soni)" value={form.maxCrewSize}
               onChange={(v) => setForm(f => ({ ...f, maxCrewSize: v }))} placeholder="Masalan: 4" />
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Norma birlik (m²/kg/list)</label>
+              <Select value={form.unitPreference}
+                onValueChange={(v) => setForm(f => ({ ...f, unitPreference: v }))}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(UNIT_LABELS).map(([k, label]) => (
+                    <SelectItem key={k} value={k}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Field label="Sabab (majburiy, ≥5 belgi) *" value={form.reason}
               onChange={(v) => setForm(f => ({ ...f, reason: v }))} placeholder="Masalan: Texnologik tartib yangilandi" />
           </div>

@@ -16,6 +16,7 @@ export interface WorkCenterNormsPatch {
   brakLimitPct?: number;
   minCrewSize?: number;
   maxCrewSize?: number;
+  unitPreference?: 'm2' | 'kg' | 'list';
 }
 
 export class UpdateWorkCenterNormsCommand {

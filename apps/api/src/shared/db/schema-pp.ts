@@ -37,6 +37,7 @@ export const ppWorkCenters = pgTable(
     brakLimitPct:              numeric('brak_limit_pct'),
     minCrewSize:               integer('min_crew_size'),
     maxCrewSize:               integer('max_crew_size'),
+    unitPreference:            varchar('unit_preference', { length: 10 }).notNull().default('m2'),
     createdAt:                 timestamp('created_at').defaultNow(),
     deletedAt:                 timestamp('deleted_at'),
   },

@@ -39,6 +39,7 @@ export const UpdateWorkCenterNormsDtoSchema = z
     brakLimitPct:    z.number().min(0).max(100).optional(),
     minCrewSize:     z.number().int().nonnegative().optional(),
     maxCrewSize:     z.number().int().nonnegative().optional(),
+    unitPreference:  z.enum(['m2', 'kg', 'list']).optional(),
     reason:          z.string().min(5), // §8.6 — PP o'zgartirishda sabab majburiy
   })
   .refine(
@@ -47,7 +48,8 @@ export const UpdateWorkCenterNormsDtoSchema = z
       d.normaKgPerShift !== undefined ||
       d.brakLimitPct !== undefined ||
       d.minCrewSize !== undefined ||
-      d.maxCrewSize !== undefined,
+      d.maxCrewSize !== undefined ||
+      d.unitPreference !== undefined,
     { message: 'Kamida bitta norma maydoni kerak' },
   );
 

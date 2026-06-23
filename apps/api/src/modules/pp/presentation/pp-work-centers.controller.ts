@@ -138,6 +138,7 @@ export class PpWorkCentersController {
       brakLimitPct: v.brakLimitPct,
       minCrewSize: v.minCrewSize,
       maxCrewSize: v.maxCrewSize,
+      unitPreference: v.unitPreference,
     });
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
