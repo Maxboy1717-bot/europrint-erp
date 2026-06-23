@@ -42,6 +42,7 @@ const PosMonitorPage = lazy(() => import("@/pages/PosMonitorPage"));
 const MaterialUnitPriceConfig = lazy(() => import("@/pages/MaterialUnitPriceConfig"));
 const RulonCards = lazy(() => import("@/pages/RulonCards"));
 const WarehouseBinsPage = lazy(() => import("@/pages/WarehouseBinsPage"));
+const WarehouseZonesPage = lazy(() => import("@/pages/WarehouseZonesPage"));
 
 export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   // YANGI toza ombor (ERP nazorat)
@@ -81,6 +82,7 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/material-unit-price',     MaterialUnitPriceConfig],  // config-mexanizm: birlik narx
   ['/wms/rulon-cards',             RulonCards],               // WMS rulon qog'oz karta CRUD
   ['/wms/bins',                    WarehouseBinsPage],         // WMS ombor binlari (yacheykalar) CRUD
+  ['/wms/zones',                   WarehouseZonesPage],        // WMS ombor zonalari CRUD
   // Ta'minot (MM) — tz09 sidebar ishlatadi
   ['/mm/vendors',                 MMVendors],
   ['/mm/purchase-orders',         MMPurchaseOrders],
