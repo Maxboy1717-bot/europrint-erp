@@ -73,11 +73,10 @@ Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
 - **Qur:** (a) `routing_operations` ga `predecessor_operation_id`, `successor_operation_ids` (jsonb), `return_to_operation_id`, `routing_condition` ustunlar (DDL). (b) `work_center_io_rules` jadval (work_center_id, allowed_predecessors[], allowed_successors[], rework_allowed_to[]) (DDL). (c) `production_order_operations` ga `returned_from_operation_id`, `rework_reason`, `rework_count`. (d) Routing aggregate'ga graf-nav metodlar (getNextOperations/getReturnPaths). (e) `RoutingsService.create()` REAL qil (501 olib tashla) — header + operations[] INSERT + graf-edge resolve.
 - **Nishonlar:** `lib/db/src/schema/pp/pp-production.ts:402,525`, `routing.aggregate.ts:26`, `routings.service.ts:36`, `drizzle-pp-routings.repo.ts:42`, `pp-routing.controller.ts`.
 
-### 🌊 TO'LQIN 3 — PP/MM: Material + sloy-formula ulanishi
+### 🌊 TO'LQIN 3 — PP/MM: Material + sloy-formula ulanishi ✅ (struktura)
 - **Vizyon:** material = kind(plain/corrugated)+format+grammaj+sloy-stack; gofra m²↔list↔kg formula har sarfda ishlaydi.
-- **Hozir:** sloy-formula REAL ✅ (`gofra-conversion.service.ts`, `pp_flute_types`=5) lekin `material_cards`=31 (material_kind=NULL), `material_layer_config`=0, `material_norms`=0 — formula oziq-data'siz.
-- **Qur:** (a) `material_cards`ga `material_kind`+`format_a`+`format_b` to'ldirish STRUKTURASI (egasi 21-material seed bergach). (b) `material_layer_config` seed-struktura. (c) MES/PP sarf-yo'lini `GofraConversionService`ga ULA (hozir chaqirilmaydi) — sarf m² → formula → kg/list. (d) `material_norms` per-sex+marka strukturasi.
-- **Gated:** 21-material qiymatlari + marka koeffitsientlari (take-up/chiqindi/kley) = **egasi DATA**.
+- **Natija (Workflow w6gz9wvb1 + adversarial verify):** (a) material_cards STRUKTURA **allaqachon tayyor** (`material_kind`/`format_a`/`format_b`/`grammage` ustun + `material_layer_config` + `material_norms` jadval bor; `ddlNeeded:[]`). (b) `GofraConversionService` **REAL + ULANGAN** (10 formula, tech-card oqimiga: controller + TechnologyGrammageService; `gofraReallyReal:true`). (c) ⭐ **HAQIQIY BO'SHLIQ TUZATILDI:** `mes_material_consumption.unit_of_measure` ustuni bor edi-yu yozuv-yo'li e'tiborsiz qoldirardi (doim NULL) → DTO→controller→service→repo INSERT uchma-uch **ushlandi** (commit `37f86f96`; DB-proof rollback-tx OK; tsc GREEN).
+- **Gated:** 21-material qiymatlari + marka (T21/T22/T23) + flute take-up/chiqindi/kley + `material_layer_config`/`material_norms` qatorlari = **egasi DATA**. Gofra m²↔kg konversiya ON-consumption semantikasi (informational-mi/normalize-mi; 'quantity' ma'nosi) + PP→MES modul-chegara (event-mi/shared-service) = **egasi qarori + arxitektura** (fabrikatsiya qilinmadi).
 
 ### 🌊 TO'LQIN 4 — PP: Per-sex parametrlar (norma/brak/ishchi/mashina)
 - **Vizyon:** har sex sozlanadigan: norma(m²/list/kg/smena), brak%, min/max ishchi, mashina(rang/qolib/tezlik), kirish/chiqish.
