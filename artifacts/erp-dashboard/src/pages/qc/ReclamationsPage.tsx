@@ -3,14 +3,25 @@
  * @description React page component. Route-level UI.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 import { DedicatedPageShell, KpiCard, Section } from "@/components/DedicatedPageShell";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageSquare, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { MessageSquare, Clock, CheckCircle2, AlertCircle, Plus } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
+import { useToast } from "@/hooks/use-toast";
 
 interface Reclamation {
   id: number;
@@ -41,8 +52,95 @@ const PRIORITY_CONFIG: Record<Reclamation["priority"], string> = {
 
 const SLA_RESOLUTION_DAYS = 7;
 
+const SEVERITY_LABELS = {
+  minor:    "Kichik (minor)",
+  major:    "Katta (major)",
+  critical: "Kritik (critical)",
+};
+
+// ── Create dialog ──────────────────────────────────────────────────────────────
+
+function CreateReclamationDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [customerName, setCustomerName] = useState("");
+  const [description,  setDescription]  = useState("");
+  const [severity,     setSeverity]     = useState<string>("minor");
+
+  const mutation = useMutation({
+    mutationFn: (dto: Record<string, unknown>) =>
+      apiRequest<{ id: number }>("POST", "/api/qc/reclamations", dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/reclamations"] });
+      toast({ title: "Reklamatsiya yaratildi" });
+      setCustomerName(""); setDescription(""); setSeverity("minor");
+      onClose();
+    },
+    onError: () => toast({ title: "Saqlash xatoligi", variant: "destructive" }),
+  });
+
+  function handleSubmit() {
+    if (!customerName.trim() || customerName.trim().length < 2) {
+      toast({ title: "Mijoz nomi kamida 2 belgi bo'lishi kerak", variant: "destructive" });
+      return;
+    }
+    if (description.trim().length < 10) {
+      toast({ title: "Tavsif kamida 10 belgi bo'lishi kerak", variant: "destructive" });
+      return;
+    }
+    mutation.mutate({ customerName: customerName.trim(), description: description.trim(), severity });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Yangi reklamatsiya</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-2">
+          <div className="grid gap-1.5">
+            <Label>Mijoz nomi *</Label>
+            <Input placeholder="Mijoz nomi..." value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Tavsif * (kamida 10 belgi)</Label>
+            <Input placeholder="Muammo tavsifi..." value={description}
+              onChange={(e) => setDescription(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Og'irlik darajasi</Label>
+            <Select value={severity} onValueChange={setSeverity}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(SEVERITY_LABELS).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Bekor qilish
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={mutation.isPending || !customerName.trim() || description.trim().length < 10}
+          >
+            Saqlash
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
+
 export default function ReclamationsPage() {
   const { t } = useTranslation('qc');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = useQuery<{ items: Reclamation[] }>({
     queryKey: ["/api/qc/reclamations"],
@@ -70,6 +168,12 @@ export default function ReclamationsPage() {
       </div>
 
       <Section title={t('reclamations.list', "Reklamatsiyalar ro'yxati")}>
+        <div className="flex justify-end mb-3">
+          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Yangi reklamatsiya
+          </Button>
+        </div>
         {isLoading ? (
           <div className="space-y-2">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
         ) : items.length === 0 ? (
@@ -104,6 +208,7 @@ export default function ReclamationsPage() {
           </div>
         )}
       </Section>
+      <CreateReclamationDialog open={createOpen} onClose={() => setCreateOpen(false)} />
     </DedicatedPageShell>
   );
 }
