@@ -52,6 +52,7 @@ const WarehouseMaterialKits = lazy(() => import("@/pages/WarehouseMaterialKits")
 const WarehouseDailyView = lazy(() => import("@/pages/WarehouseDailyView"));
 const MrpMatrix = lazy(() => import("@/pages/MrpMatrix"));
 const CrpPage = lazy(() => import("@/pages/CrpPage"));
+const PPEquipmentPage = lazy(() => import("@/pages/PPEquipmentPage"));
 
 const GofraFluteConfig   = lazy(() => import("@/pages/GofraFluteConfig"));
 const GofraWasteConfig   = lazy(() => import("@/pages/GofraWasteConfig"));
@@ -116,6 +117,7 @@ export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/pp/bottleneck',              BottleneckAnalysisPage],     // dedicated (TZ-06)
   ['/pp/mrp',                     MrpMatrix],
   ['/pp/crp',                     CrpPage],
+  ['/pp/equipment',               PPEquipmentPage],             // PP uskuna katalogi CRUD
   ['/pp/demand-forecast',         DemandForecastingPage],      // dedicated (TZ-06)
   ['/pp/what-if',                 TechPPExtended],
   ['/pp/delivery-calculator',     TechPPExtended],
