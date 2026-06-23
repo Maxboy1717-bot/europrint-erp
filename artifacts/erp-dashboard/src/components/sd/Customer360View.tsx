@@ -3,15 +3,22 @@
  * @description React UI component.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertTriangle, Building2, User, ArrowLeft, Phone, Mail, MapPin,
   ShoppingCart, Wallet, MessageSquare, ShieldAlert, BarChart3, TrendingUp,
-  Swords, FileText, Target, Calendar, CreditCard, Hash,
+  Swords, FileText, Target, Calendar, CreditCard, Hash, Pencil,
 } from "lucide-react";
 import { BasicTab } from "./BasicTab";
 import { OrdersTab } from "./OrdersTab";
@@ -98,6 +105,28 @@ interface Customer360Data {
 export function Customer360View({ customerId, onBack }: { customerId: number; onBack: () => void }) {
   const { t } = useTranslation("common");
   const { t: tSd } = useTranslation("sd");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [showInternalEdit, setShowInternalEdit] = useState(false);
+  const [relQuality, setRelQuality] = useState("");
+  const [internalNotes, setInternalNotes] = useState("");
+  const [shareOfWallet, setShareOfWallet] = useState("");
+
+  const updateInternalMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("PATCH", `/api/sd/customers/${customerId}/internal`, {
+        relationship_quality: relQuality || undefined,
+        internal_notes: internalNotes.trim() || undefined,
+        share_of_wallet: shareOfWallet ? Number(shareOfWallet) : undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sd/customers", customerId, "360"] });
+      toast({ title: t("sd.internalUpdated", "Ichki ma'lumot yangilandi") });
+      setShowInternalEdit(false);
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
+  });
+
   const { data, isLoading } = useQuery<Customer360Data>({
     queryKey: ["/api/sd/customers", customerId, "360"],
     queryFn: () => apiRequest<Customer360Data>("GET", `/api/sd/customers/${customerId}/360`),
@@ -260,7 +289,26 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
             <ComplaintsTab customerId={customerId} complaints={data.complaints as SdComplaintsData} />
           </TabsContent>
           <TabsContent value="segmentation">
-            <SegmentationTab segmentation={data.segmentation as SdSegmentationData} journey={data.journey as unknown as Parameters<typeof SegmentationTab>[0]["journey"]} internalIntelligence={data.internalIntelligence} />
+            <div className="space-y-3">
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const ii = data.internalIntelligence;
+                    setRelQuality(ii?.relationshipQuality || "");
+                    setInternalNotes("");
+                    setShareOfWallet("");
+                    setShowInternalEdit(true);
+                  }}
+                  data-testid="button-edit-internal"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  {t("sd.editInternal", "Ichki ma'lumot")}
+                </Button>
+              </div>
+              <SegmentationTab segmentation={data.segmentation as SdSegmentationData} journey={data.journey as unknown as Parameters<typeof SegmentationTab>[0]["journey"]} internalIntelligence={data.internalIntelligence} />
+            </div>
           </TabsContent>
           <TabsContent value="growth">
             <GrowthTab growth={data.growth as SdGrowthData} />
@@ -276,6 +324,71 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
           </TabsContent>
         </div>
       </Tabs>
+
+      {/* Internal intelligence edit dialog */}
+      <Dialog open={showInternalEdit} onOpenChange={(open) => { if (!open) setShowInternalEdit(false); }}>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              {t("sd.editInternalTitle", "Ichki ma'lumotni tahrirlash")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label>{t("sd.relationshipQuality", "Munosabat sifati")}</Label>
+              <Select value={relQuality} onValueChange={setRelQuality}>
+                <SelectTrigger className="h-9" data-testid="select-rel-quality">
+                  <SelectValue placeholder={t("sd.selectQuality", "Tanlang...")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="excellent">{t("sd.excellent", "A'lo")}</SelectItem>
+                  <SelectItem value="good">{t("sd.good", "Yaxshi")}</SelectItem>
+                  <SelectItem value="neutral">{t("sd.neutral", "Neytral")}</SelectItem>
+                  <SelectItem value="difficult">{t("sd.difficult", "Qiyin")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="share-of-wallet">{t("sd.shareOfWallet", "Hamyon ulushi (%)")}</Label>
+              <Input
+                id="share-of-wallet"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={shareOfWallet}
+                onChange={e => setShareOfWallet(e.target.value)}
+                placeholder="0–100"
+                data-testid="input-share-of-wallet"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="internal-notes">{t("sd.internalNotes", "Ichki izoh")}</Label>
+              <Textarea
+                id="internal-notes"
+                value={internalNotes}
+                onChange={e => setInternalNotes(e.target.value)}
+                placeholder={t("sd.internalNotesPlaceholder", "Ichki ma'lumot, xavf omillar...")}
+                className="min-h-[80px]"
+                data-testid="input-internal-notes"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowInternalEdit(false)} data-testid="button-cancel-internal">
+                {t("cancel", "Bekor")}
+              </Button>
+              <Button
+                onClick={() => updateInternalMutation.mutate()}
+                disabled={updateInternalMutation.isPending}
+                data-testid="button-save-internal"
+              >
+                {updateInternalMutation.isPending ? t("saving", "Saqlanmoqda...") : t("save", "Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
