@@ -172,4 +172,41 @@ export class DashboardController {
     if (!result) throw new BadRequestException(`kpi_definition id=${id} topilmadi`);
     return result;
   }
+
+  // ─── STKP vazn config (KPI score weights) ────────────────────────────────────
+
+  private static readonly UpdateKpiWeightSchema = z.object({
+    weight: z.number().min(0.01).max(1.0),
+  });
+
+  @Get('kpi-weights')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.HR_MANAGER)
+  @ApiOperation({ summary: 'List KPI score weights (config-mexanizm: attendance/performance/tasks)' })
+  async getKpiWeights() {
+    const rows = await rawSql(sql`
+      SELECT id, code, label_uz, weight, updated_at
+      FROM kpi_score_weights
+      ORDER BY id
+    `);
+    return { items: rows.rows };
+  }
+
+  @Patch('kpi-weights/:code')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Update one KPI score weight by code (config-mexanizm)' })
+  async updateKpiWeight(
+    @Param('code') code: string,
+    @Body() body: unknown,
+  ) {
+    const dto = DashboardController.UpdateKpiWeightSchema.parse(body);
+    const rows = await rawSql(sql`
+      UPDATE kpi_score_weights
+      SET weight = ${dto.weight}, updated_at = NOW()
+      WHERE code = ${code}
+      RETURNING id, code, label_uz, weight
+    `);
+    const result = rows.rows[0] ?? undefined;
+    if (!result) throw new BadRequestException(`kpi_score_weight code=${code} topilmadi`);
+    return result;
+  }
 }
