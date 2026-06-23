@@ -53,6 +53,13 @@ AISHA dispatcher · AI 7-step planning · karta-AI fit-scorer · OEE-AI · Finan
 ## ⚙️ ARXITEKTURA-QAROR
 kanonik invoice-jadval (invoices uuid / sales_invoices text / fi_invoices) · 2-order-dunyo · LOCKED: create-invoice.handler (egasi ochishi kerak).
 
+## ITER-17+ FE-WIRING TOPILGAN NOMZODLAR (iter-17 scope agenti natijasi)
+- **[iter-17 `67a1f387`] ✅ MRO Oshxona yozuv forma:** `CanteenManagementPage.tsx` — GET /mro/canteen/logs list + POST /mro/canteen/logs dialog (meal_name/date/portion/cost/employees). DB-proof: INSERT 45porsiya→ROLLBACK count=0. FE tsc 0.
+- **⛔ DefectManagementPage.tsx** — faqat GET `/qc/defects/extended` (stub/view), POST `/qc/braks` = QAYTA TEKSHIR (qc/braks brak endpoint, defects emas); scope agenti YALG'ON da'vo bergan bo'lishi mumkin.
+- **⛔ camera-quality/QualityDefectsCameraPage** — GET `/quality-defects-camera` = IoT kamera, LOCKED (ai-camera modul? Tekshir).
+- **⬜ MRO CleaningSchedulePage** — faqat GET, POST `/mro/stop-machine` va PATCH `/mro/:id/complete` bor. Scope+verify.
+- **⬜ MRO UtilityReadingsPage** — faqat GET, POST `/mro/utility-readings` bor? Verify.
+
 ## BOSHQA TOPILGAN MUAMMOLAR (har iteratsiya bu yerga yozadi → keyingi agent oladi)
 - **[iter-1] EVENT-ARXITEKTURA NOIZCHILLIGI (umumiy):** 3 xil event-mexanizm aralash — (1) CQRS `eventBus.publish(new XEvent())` klass, (2) `eventBus.publish({eventName:'string'})` plain-object, (3) outbox `domain_events` → EventEmitter2 `@OnEvent('string')`. Ba'zi publisher'lar plain-object string yuboradi-yu listener `@EventsHandler(class)` kutadi → JIM tushadi (SD design/sample shu holat). `EventBridgeService.EVENT_NAME_MAP` ba'zi nomlarни (DesignRequired/SampleRequired) map qilmaydi. **Keyingi agent:** har golden-thread sub-link event-wiring'ini publisher+listener ikkala tomonni Read qilib tekshirsin; outbox-string + `@OnEvent` yo'li eng ishonchli (durable).
 - **[iter-9 2026-06-23 `6e2d2d01`] ✅ HR conflict-reports 500-bug TO'LIQ TUZATILDI (3-qism):** (1) `hr-compat-a.repository.ts` `createConflictReport` raw SQL'ga o'tdi + `'CR-NNN'` ID generatsiyasi (subquery COUNT+LPAD); `getConflictReports` LEFT JOIN employees → `party1_name`/`party2_name` real ismlar. (2) `employees-compat-sub.service.ts:createComplaint` ham ID qo'shildi (ikkinchi INSERT site). (3) `HRConflict.tsx` create dialog: party1/party2 employee ID + description + severity + useMutation(POST)+invalidate+toast. DB-proof: CR-004 INSERT qabul (rollback-tx), JOIN: "Madina Yusupova vs Akmal Tursunov" real ism; count 3→4→3. FE+BE tsc 0. **Keyingi:** config-mexanizm navbatiga o'tish (smena jadvali / STKP vazn / CKP koeff) YOKI boshqa "BE-real, FE-yo'q" forma scope.
