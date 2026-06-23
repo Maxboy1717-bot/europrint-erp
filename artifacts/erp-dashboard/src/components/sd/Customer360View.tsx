@@ -274,7 +274,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
 
         <div className="mt-3">
           <TabsContent value="basic">
-            <BasicTab data={basic} contacts={(data.contacts || []) as SdContactItem[]} decisionMakers={(data.decisionMakers || []) as SdDecisionMaker[]} />
+            <BasicTab data={basic} contacts={(data.contacts || []) as SdContactItem[]} decisionMakers={(data.decisionMakers || []) as SdDecisionMaker[]} customerId={customerId} />
           </TabsContent>
           <TabsContent value="orders">
             <OrdersTab orders={data.orders as SdOrdersData} />
