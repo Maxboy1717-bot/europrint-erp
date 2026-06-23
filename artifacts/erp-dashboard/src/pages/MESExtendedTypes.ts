@@ -1,7 +1,7 @@
 /** @module MESExtendedTypes @description Interfaces, types, constants, and Zod schemas for the MES Extended page. No JSX. */
 
 import { z } from "zod";
-import { type LucideIcon, Activity, AlertTriangle, Wrench, Trophy, Settings, Clock, ClipboardList } from "lucide-react";
+import { type LucideIcon, Activity, AlertTriangle, Wrench, Trophy, Settings, Clock, ClipboardList, AlertOctagon } from "lucide-react";
 
 import { tLabel } from '@/lib/i18n/tLabel';
 // ─── Domain interfaces ───────────────────────────────────────────────────────
@@ -92,6 +92,23 @@ export interface MESLeaderboard {
   qualityRate?: number | string;
 }
 
+export interface SosEvent {
+  id: number;
+  session_id: number | null;
+  employee_id: number | null;
+  reason: string;
+  work_center_id: number | null;
+  created_at: string;
+  work_center_name?: string;
+  employee_name?: string;
+}
+
+export const SosSchema = z.object({
+  reason:         z.string().min(1, "Sabab kiritilishi shart").max(500),
+  work_center_id: z.number().int().positive().optional(),
+});
+export type SosFormValues = z.infer<typeof SosSchema>;
+
 // ─── Route → tab mapping ─────────────────────────────────────────────────────
 
 export const URL_TAB_MAP: Record<string, string> = {
@@ -112,6 +129,7 @@ export const tabMeta: Record<string, { title: string; icon: LucideIcon }> = {
   gamification: { title: "Gamifikatsiya",                 icon: Trophy },
   norms:        { title: "Uskuna Normalari",              icon: Settings },
   smena:        { title: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish"),               icon: Clock },
+  sos:          { title: "SOS Signallar",                                                              icon: AlertOctagon },
 };
 
 export const MES_PILLS: Array<{ key: string; label: string }> = [
@@ -122,6 +140,7 @@ export const MES_PILLS: Array<{ key: string; label: string }> = [
   { key: "gamification", label: "Gamifikatsiya" },
   { key: "norms",        label: "Normalari" },
   { key: "smena",        label: tLabel('common.MESExtended.smenaOtkazish', "Smena O'tkazish") },
+  { key: "sos",          label: "SOS" },
 ];
 
 // ─── Zod schemas ─────────────────────────────────────────────────────────────

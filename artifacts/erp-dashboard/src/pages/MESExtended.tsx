@@ -24,12 +24,15 @@ import {
   type MaintenanceRequest,
   type DowntimeReason,
   type MESLeaderboard,
+  type SosEvent,
+  type SosFormValues,
 } from "./MESExtendedTypes";
 import { MaintenanceDialog } from "./MESExtendedDialogs";
 import { OeeTab, ReasonsTab } from "./MESExtendedTabsA";
 import { ZonesTab, MaintenanceTab } from "./MESExtendedTabsB";
 import { GamificationTab } from "./MESExtendedTabsD";
 import { NormsTab, SmenaTab } from "./MESExtendedTabsC";
+import { SosTab } from "./MESExtendedTabsSos";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -87,6 +90,19 @@ export default function MESExtended() {
     select: selectArray<MESTask>,
   });
 
+  const { data: sosHistory = [], isLoading: sosLoading } = useQuery<SosEvent[]>({
+    queryKey: ["/api/mes/sos/history"],
+    select: selectArray<SosEvent>,
+  });
+
+  const { data: sosWorkCenters = [] } = useQuery<Array<{ id: string; name: string }>>({
+    queryKey: ["/api/pp/work-centers"],
+    select: (raw: unknown): Array<{ id: string; name: string }> => {
+      const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+      return items.map(item => ({ id: String(item.id ?? ""), name: String(item.name ?? "") }));
+    },
+  });
+
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
   const createMaint = useMutation({
@@ -107,6 +123,16 @@ export default function MESExtended() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mes/shifts/current"] });
       toast({ title: "Smena o'tkazildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
+
+  const createSos = useMutation({
+    mutationFn: (data: SosFormValues) =>
+      apiRequest("POST", "/api/mes/sos", data as unknown as Record<string, unknown>),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/sos/history"] });
+      toast({ title: "SOS signali yuborildi" });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -197,6 +223,13 @@ export default function MESExtended() {
                 issues,
               })
             }
+          />
+          <SosTab
+            sosHistory={sosHistory}
+            isLoading={sosLoading}
+            workCenters={sosWorkCenters}
+            onSubmit={data => createSos.mutate(data)}
+            isPending={createSos.isPending}
           />
         </div>
       </Tabs>
