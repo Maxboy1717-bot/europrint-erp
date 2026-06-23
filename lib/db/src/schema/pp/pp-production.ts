@@ -66,6 +66,10 @@ export const workCenters = pgTable("work_centers", {
    * Masalan: "Offset bosma", "Digital bosma", "Sifat nazorati"
    */
   requiredSkillName: varchar("required_skill_name", { length: 100 }),
+  // Wave 1 (500K build): PP sex taxonomy — kanonik sex kodi + FLEKSO/OFSET bo'lim.
+  // NULLABLE: qiymatlar egasi-DATA (22-sex ro'yxati), struktura hozir (Q-40).
+  sexCode: varchar("sex_code", { length: 50 }),
+  departmentKind: varchar("department_kind", { length: 10 }),
   // ── ADD-ONLY: live DB superset columns ──
   nameUz: text("name_uz"),
   hoursPerDay: numericMoney("hours_per_day"),

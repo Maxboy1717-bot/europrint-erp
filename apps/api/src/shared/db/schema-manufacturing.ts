@@ -137,6 +137,9 @@ export const work_centers = pgTable('work_centers', {
   costPerHour: decimal('cost_per_hour', { precision: 18, scale: 2 }).notNull().default('0'),
   certificationLmsCourseId: uuid('certification_lms_course_id'),
   department: text('department'),
+  // Wave 1 (500K build): PP sex taxonomy — kanonik sex kodi + FLEKSO/OFSET bo'lim (struktura; qiymat egasi-DATA).
+  sexCode: text('sex_code'),
+  departmentKind: text('department_kind'),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
