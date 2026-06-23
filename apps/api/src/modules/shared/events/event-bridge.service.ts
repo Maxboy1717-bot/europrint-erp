@@ -78,6 +78,12 @@ const EVENT_NAME_MAP: Record<string, string> = {
   DailyReportSubmittedEvent: 'daily.report.submitted',
   // OrderCreatedEvent already mapped above (Wave 4 pilot).
   OrderStatusChangedEvent: ERP_EVENTS.ORDER_STATUS_CHANGED,
+  // SD→Design golden-thread auto-trigger. create-order.handler direct-publishes
+  // the plain object {eventName:'DesignRequired'} (resolved by fallbackName) and
+  // also writes the same topic to the outbox. Bridging the direct publish lets
+  // the design listener fire immediately; the outbox tick is the durable backup.
+  // The listener is idempotent on sales_order_id, so the double-fire is safe.
+  DesignRequired: ERP_EVENTS.SO_DESIGN_REQUESTED,
 };
 
 @Injectable()
