@@ -162,4 +162,17 @@ Loop o'z dizayni bo'yicha **to'xtadi** (hamma buildable ✅/gated). Yangi toza b
 
 ---
 
+## 6. GOLDEN-THREAD CHAIN LOOP (egasi 2026-06-23: HAQIQIY ish, bosqichma-bosqich)
+
+⭐ Egasi yo'rig'i: *"loop qiling ... bosqichma-bosqich hammasini tugatish kerak ... haqiqatdan ishni bajarish kerak."* Loop endi PLUMBING emas — **men (bosh-dasturchi) two-worlds'ni o'zim yechaman** va har iteratsiya **BITTA to'liq vertikal bo'g'inni UCHMA-UCH** tugatadi.
+
+**Unit-of-work = bitta golden-thread bo'g'ini, real-data bilan ishlaydigan + isbotlangan:**
+`SD→PP` ✅ (avto avans→PO, `59341adf`, real SO.69→PO.66 proof) → **`PP→MES`** → `MES→QC` → `QC→WMS` → `WMS→FIN(invoice)`. Zanjir to'liq bo'lgach → keyingi feature (gofra-hisob, AI-karta — egasi-DATA bilan).
+
+**Har bo'g'in protokoli:** (1) scope Workflow — aniq uzilish + two-worlds DB-proof; (2) men yechaman — kanonik integer-key konvergatsiya (kerak bo'lsa idempotent APPROVED migration, DB ~bo'sh=past risk); (3) fix (Result/Zod/Drizzle); (4) **END-TO-END real-data DB-proof** ("kirit→oqdi→ko'rindi": real yozuv → keyingi bosqichda paydo bo'ldi); (5) tsc GREEN; (6) commit (o'z fayllarim, push-siz); (7) keyingi bo'g'in.
+
+**MAJBURIY:** plumbing/struktura-only YETARLI EMAS — har iteratsiya real oqim isbotlanadi. Fabrikatsiya/yashil-yolg'on/orphan TAQIQ (Q-40/Q-46). To'xtamaydi — zanjir + keyingi feature'lar tugaguncha.
+
+---
+
 *Tayyorladi: Claude (menejer+bosh dasturchi), 2026-06-23. Manba: MASTER_VISION.md + production deep-analysis + 16-modul konsolidatsiya. Push bloklangan (kalit rotatsiya kutadi) → commit-only.*
