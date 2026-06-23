@@ -17,6 +17,7 @@ export interface WorkCenterFilters {
   type?: WorkCenterType;
   isActive?: boolean;
   departmentId?: number;
+  departmentKind?: string; // Wave 1: FLEKSO | OFSET (sex taxonomy)
 }
 
 export interface WorkCenterStats {
@@ -62,6 +63,10 @@ export class DrizzleWorkCenterRepository {
 
       if (filters?.departmentId !== undefined) {
         conditions.push(eq(workCenters.departmentId, filters.departmentId));
+      }
+
+      if (filters?.departmentKind) {
+        conditions.push(eq(workCenters.departmentKind, filters.departmentKind));
       }
 
       conditions.push(isNull(workCenters.deletedAt));

@@ -28,6 +28,8 @@ export const ppWorkCenters = pgTable(
     nameRu:                    varchar('name_ru', { length: 255 }),
     nameUz:                    varchar('name_uz', { length: 255 }),
     requiredSkillName:         varchar('required_skill_name', { length: 255 }),
+    sexCode:                   varchar('sex_code', { length: 50 }),
+    departmentKind:            varchar('department_kind', { length: 10 }),
     costPerHour:               numeric('cost_per_hour'),
     createdAt:                 timestamp('created_at').defaultNow(),
     deletedAt:                 timestamp('deleted_at'),

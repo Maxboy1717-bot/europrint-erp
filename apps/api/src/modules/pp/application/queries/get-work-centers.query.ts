@@ -10,5 +10,6 @@ export class GetWorkCentersQuery {
       type?: WorkCenterType;
       isActive?: boolean;
       department?: string;
+      departmentKind?: string; // Wave 1: FLEKSO | OFSET (sex taxonomy)
     }) {}
 }

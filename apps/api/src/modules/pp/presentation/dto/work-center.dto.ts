@@ -35,6 +35,7 @@ export const GetWorkCentersDtoSchema = z.object({
   type: z.nativeEnum(WorkCenterType).optional(),
   isActive: z.boolean().optional(),
   department: z.string().optional(),
+  departmentKind: z.enum(['FLEKSO', 'OFSET']).optional(), // Wave 1: sex taxonomy bo'lim filtri
 });
 
 export type GetWorkCentersDto = z.infer<typeof GetWorkCentersDtoSchema>;

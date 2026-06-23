@@ -47,8 +47,9 @@ export class PpWorkCentersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
-  async getAll(@Body() dto?: GetWorkCentersDto) {
-    const validatedDto = GetWorkCentersDtoSchema.parse(dto || {});
+  async getAll(@Body() dto?: GetWorkCentersDto, @Query('department_kind') departmentKind?: string) {
+    // Wave 1: GET /pp/work-centers?department_kind=FLEKSO|OFSET (sex taxonomy filter).
+    const validatedDto = GetWorkCentersDtoSchema.parse({ ...(dto || {}), ...(departmentKind ? { departmentKind } : {}) });
     this.logger.log('Getting work centers');
     return unwrapOrThrow(await this.queryBus.execute(new GetWorkCentersQuery(validatedDto)));
   }
