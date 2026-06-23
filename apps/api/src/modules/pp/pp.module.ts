@@ -12,6 +12,7 @@ import { PpRoutingController } from './presentation/pp-routing.controller';
 import { PpWorkCentersController } from './presentation/pp-work-centers.controller';
 import { PpPlanningController } from './presentation/pp-planning.controller';
 import { PpEquipmentController } from './presentation/pp-equipment.controller';
+import { PpQueueController } from './presentation/pp-queue.controller';
 import { PpPlanningService } from './application/pp-planning.service';
 import { PpPlanningRepository } from './infrastructure/repositories/pp-planning.repository';
 import { PP_PLANNING_REPO } from './domain/repositories/i-pp-planning.repo';
@@ -33,6 +34,7 @@ import { GetBomsHandler } from './application/queries/get-boms.handler';
 import { GetRoutingsHandler } from './application/queries/get-routings.handler';
 import { GetMrpReportHandler } from './application/queries/get-mrp-report.handler';
 import { GetWorkCentersHandler } from './application/queries/get-work-centers.handler';
+import { GetProductionQueueHandler } from './application/queries/get-production-queue.handler';
 import { GetWorkCentersStatsHandler } from './application/queries/get-work-centers-stats.handler';
 import { DrizzlePpRepository } from './infrastructure/repositories/drizzle-pp.repo';
 import { DrizzleWorkCenterRepository } from './infrastructure/repositories/drizzle-work-center.repo';
@@ -107,6 +109,7 @@ const handlers = [
   UpdateWorkCenterNormsHandler,
   GetWorkCentersHandler,
   GetWorkCentersStatsHandler,
+  GetProductionQueueHandler,
 ];
 
 const listeners = [
@@ -120,7 +123,7 @@ const listeners = [
 
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot()],
-  controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpIntelligenceController,
+  controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpQueueController, PpIntelligenceController,
     // PA3-17 Wave 5: merged from modules/technology/
     TechnologyController,
     // PA3-17 Wave 6: merged from modules/production/
