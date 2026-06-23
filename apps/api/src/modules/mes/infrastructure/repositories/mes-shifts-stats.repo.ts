@@ -29,7 +29,25 @@ export class MesShiftsStatsRepository {
         eq.status                                                            AS machine_status,
         COALESCE(SUM(mps.actual_quantity), 0)::int                          AS produced_qty,
         COALESCE(SUM(mps.defect_quantity), 0)::int                          AS brak_qty,
-        ROUND(COALESCE(AVG(mps.oee), 0)::numeric, 2)                       AS oee
+        -- REAL live OEE (A×P×Q from actual signals) — NOT the stale pre-stored
+        -- mps.oee (documented mixed-scale demo seed; averaging it was a green lie).
+        -- Mirrors getOee()'s world-standard formula over the running sessions:
+        --   A = run/(run+stop), P = actual/target (cap 100%), Q = (actual-defect)/actual.
+        -- downtime_events fold-in is omitted here (run/stop seconds already capture
+        -- stoppage); getOee() stays the per-machine canonical. Every divisor guarded.
+        CASE
+          WHEN (SUM(COALESCE(mps.running_time_seconds,0)) + SUM(COALESCE(mps.stopped_time_seconds,0))) > 0
+           AND SUM(COALESCE(mps.target_quantity,0)) > 0
+           AND SUM(COALESCE(mps.actual_quantity,0)) > 0
+          THEN ROUND((
+                 (100.0 * SUM(mps.running_time_seconds)
+                        / NULLIF(SUM(mps.running_time_seconds) + SUM(mps.stopped_time_seconds), 0))
+               * LEAST(100.0, 100.0 * SUM(mps.actual_quantity) / NULLIF(SUM(mps.target_quantity), 0))
+               * (100.0 * (SUM(mps.actual_quantity) - SUM(mps.defect_quantity))
+                        / NULLIF(SUM(mps.actual_quantity), 0))
+               / 10000.0)::numeric, 2)
+          ELSE 0
+        END                                                                  AS oee
       FROM mes_sessions ms
       LEFT JOIN employees           e   ON e.id  = ms.operator_id
       LEFT JOIN equipment           eq  ON eq.id = ms.machine_id
