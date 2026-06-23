@@ -55,10 +55,12 @@ kanonik invoice-jadval (invoices uuid / sales_invoices text / fi_invoices) · 2-
 
 ## ITER-17+ FE-WIRING TOPILGAN NOMZODLAR (iter-17 scope agenti natijasi)
 - **[iter-17 `67a1f387`] ✅ MRO Oshxona yozuv forma:** `CanteenManagementPage.tsx` — GET /mro/canteen/logs list + POST /mro/canteen/logs dialog (meal_name/date/portion/cost/employees). DB-proof: INSERT 45porsiya→ROLLBACK count=0. FE tsc 0.
-- **⛔ DefectManagementPage.tsx** — faqat GET `/qc/defects/extended` (stub/view), POST `/qc/braks` = QAYTA TEKSHIR (qc/braks brak endpoint, defects emas); scope agenti YALG'ON da'vo bergan bo'lishi mumkin.
-- **⛔ camera-quality/QualityDefectsCameraPage** — GET `/quality-defects-camera` = IoT kamera, LOCKED (ai-camera modul? Tekshir).
-- **⬜ MRO CleaningSchedulePage** — faqat GET, POST `/mro/stop-machine` va PATCH `/mro/:id/complete` bor. Scope+verify.
-- **⬜ MRO UtilityReadingsPage** — faqat GET, POST `/mro/utility-readings` bor? Verify.
+- **[iter-18 `a26a17ad`] ✅ QC Yetkazuvchi sifat tekshiruv forma:** `SupplierQualityPage.tsx` — POST /qc/supplier-quality → qc_supplier_quality INSERT. supplier_name(required)+sample_size+defects_found+quality_score+notes. Pass-rate auto-preview. DB-proof: id=3 visible→ROLLBACK count=0. FE tsc 0.
+- **⛔ DefectManagementPage.tsx** — faqat GET `/qc/defects/extended`. POST `/qc/braks` = QCBraksTab.tsx DA ALLAQACHON ulangan (mutation bor). POST `/qc/defects` = CQRS `inspectionId`/`productionOrderId` FK kerak (tiqilinch). SKIP.
+- **⛔ MRO CleaningSchedulePage** — faqat GET, POST endpoint YO'Q. SKIP.
+- **⛔ MRO UtilityReadingsPage** — faqat GET, POST endpoint YO'Q. SKIP.
+- **⛔ MRO FacilityInventoryPage** — faqat GET `/mro/facilities`, POST endpoint YO'Q. SKIP.
+- **⬜ KEYINGI**: config-mexanizm navbatidan — STKP vazn / gofra chiqindi% / norma birlik yoki yangi FE-only GET sahifalar (boshqa modul).
 
 ## BOSHQA TOPILGAN MUAMMOLAR (har iteratsiya bu yerga yozadi → keyingi agent oladi)
 - **[iter-1] EVENT-ARXITEKTURA NOIZCHILLIGI (umumiy):** 3 xil event-mexanizm aralash — (1) CQRS `eventBus.publish(new XEvent())` klass, (2) `eventBus.publish({eventName:'string'})` plain-object, (3) outbox `domain_events` → EventEmitter2 `@OnEvent('string')`. Ba'zi publisher'lar plain-object string yuboradi-yu listener `@EventsHandler(class)` kutadi → JIM tushadi (SD design/sample shu holat). `EventBridgeService.EVENT_NAME_MAP` ba'zi nomlarни (DesignRequired/SampleRequired) map qilmaydi. **Keyingi agent:** har golden-thread sub-link event-wiring'ini publisher+listener ikkala tomonni Read qilib tekshirsin; outbox-string + `@OnEvent` yo'li eng ishonchli (durable).
