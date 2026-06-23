@@ -78,11 +78,10 @@ Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
 - **Natija (Workflow w6gz9wvb1 + adversarial verify):** (a) material_cards STRUKTURA **allaqachon tayyor** (`material_kind`/`format_a`/`format_b`/`grammage` ustun + `material_layer_config` + `material_norms` jadval bor; `ddlNeeded:[]`). (b) `GofraConversionService` **REAL + ULANGAN** (10 formula, tech-card oqimiga: controller + TechnologyGrammageService; `gofraReallyReal:true`). (c) ⭐ **HAQIQIY BO'SHLIQ TUZATILDI:** `mes_material_consumption.unit_of_measure` ustuni bor edi-yu yozuv-yo'li e'tiborsiz qoldirardi (doim NULL) → DTO→controller→service→repo INSERT uchma-uch **ushlandi** (commit `37f86f96`; DB-proof rollback-tx OK; tsc GREEN).
 - **Gated:** 21-material qiymatlari + marka (T21/T22/T23) + flute take-up/chiqindi/kley + `material_layer_config`/`material_norms` qatorlari = **egasi DATA**. Gofra m²↔kg konversiya ON-consumption semantikasi (informational-mi/normalize-mi; 'quantity' ma'nosi) + PP→MES modul-chegara (event-mi/shared-service) = **egasi qarori + arxitektura** (fabrikatsiya qilinmadi).
 
-### 🌊 TO'LQIN 4 — PP: Per-sex parametrlar (norma/brak/ishchi/mashina)
+### 🌊 TO'LQIN 4 — PP: Per-sex parametrlar (norma/brak/ishchi/mashina) ✅ (norma/brak/crew slice)
 - **Vizyon:** har sex sozlanadigan: norma(m²/list/kg/smena), brak%, min/max ishchi, mashina(rang/qolib/tezlik), kirish/chiqish.
-- **Hozir:** `work_centers`da norma/brak ustun yo'q; equipment(7) mashina-config yo'q; routing-rule yo'q.
-- **Qur:** (a) `work_centers`ga `norma_m2_per_shift`, `norma_kg_per_shift`, `brak_limit_pct`, `min_crew_size`, `max_crew_size` (DDL). (b) `work_center_equipment_config` jadval (machine_id→colors/mold/speed). (c) `org_functions.work_center_id` link (sex↔orgsxema). (d) Config endpointlar (PUT /pp/work-centers/:id/norma, /brak, /crew).
-- **Gated:** norma/brak qiymatlari = **egasi DATA** (struktura quriladi).
+- **Natija (Workflow wolcex6vr + adversarial verify, commit `5fb6775d`):** (a) ✅ `work_centers`ga 5 ustun (`norma_m2_per_shift`/`norma_kg_per_shift`/`brak_limit_pct`/`min_crew_size`/`max_crew_size`) APPROVED DDL + invariants + Drizzle (2 def) sync. (d) ✅ `PUT /pp/work-centers/:id/norms` config endpoint (DTO+Command/Handler+repo.updateNorms qisman; CQRS). DB-proof rollback-tx OK; tsc GREEN. ⭐ Iste'molchi: `getWorkCenterNorms` (CRP planning) + GET :id javobi (orphan emas).
+- **GATED:** (b) `work_center_equipment_config` jadval — **DEFER** (iste'molchi-yo'q + mashina qiymat egasi-DATA = orphan jadval qurmaslik, Q-46). (c) `org_functions.work_center_id` link — **LOCKED modul** (org-structure/) + egasi link-strategiya qarori. norma/brak/crew **qiymatlari** = **egasi DATA** (struktura tayyor, PUT orqali to'ldiriladi).
 
 ### 🌊 TO'LQIN 5 — MES: per-sex sessiya + m²/list/kg + downtime→rework
 - **Vizyon:** sessiya sex-belgili; chiqim m²/list/kg birlikda; downtime sabab→rework-routing; 4-darajali OEE per-sex.
