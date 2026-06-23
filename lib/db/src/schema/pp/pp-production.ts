@@ -425,6 +425,11 @@ export const routingOperations = pgTable("routing_operations", {
   isActive: boolean("is_active"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  // Wave 2: non-linear routing graph (live DB cols) — predecessor/successor/return-edge.
+  predecessorOperationId: integer("predecessor_operation_id"),
+  successorOperationIds: jsonb("successor_operation_ids"),
+  returnToOperationId: integer("return_to_operation_id"),
+  routingCondition: varchar("routing_condition", { length: 50 }),
 }, (t) => [
   index("idx_routing_operations_routing_id").on(t.routingId),
   index("idx_routing_operations_work_center_id").on(t.workCenterId),
@@ -539,11 +544,29 @@ export const productionOrderOperations = pgTable("production_order_operations", 
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   operatorId: integer("operator_id"),
+  // Wave 2: rework history (non-linear routing returns — tisneniya->karton tigel qaytishi).
+  returnedFromOperationId: integer("returned_from_operation_id"),
+  reworkReason: text("rework_reason"),
+  reworkCount: integer("rework_count").notNull().default(0),
 }, (t) => [
   index("idx_production_order_operations_production_order_id").on(t.productionOrderId),
   index("idx_production_order_operations_work_center_id").on(t.workCenterId),
   index("idx_production_order_operations_status").on(t.status),
   check("prod_order_ops_status_chk", sql`${t.status} IN ('pending','in_progress','completed')`),
+]);
+
+// Wave 2 (500K): sex kirish/chiqish routing qoidalari (nochiziqli graf — tigel->faqat packing;
+// tisneniya->karton tigel/rezka/skleyka return). Qiymatlar egasi 22-sex routing royxatidan (Q-40).
+export const workCenterIoRules = pgTable("work_center_io_rules", {
+  id: serial("id").primaryKey(),
+  workCenterId: integer("work_center_id").notNull().references(() => workCenters.id, { onDelete: "cascade" }),
+  allowedPredecessors: jsonb("allowed_predecessors").notNull().default(sql`'[]'::jsonb`),
+  allowedSuccessors: jsonb("allowed_successors").notNull().default(sql`'[]'::jsonb`),
+  reworkAllowedTo: jsonb("rework_allowed_to").notNull().default(sql`'[]'::jsonb`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_work_center_io_rules_wc").on(t.workCenterId),
 ]);
 
 export const insertProductionOrderOperationSchema = createInsertSchema(productionOrderOperations, {
