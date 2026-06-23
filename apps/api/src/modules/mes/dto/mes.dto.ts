@@ -152,5 +152,10 @@ export const MesMaterialConsumptionSchema = z.object({
   material_id:  z.number().int().positive(),
   quantity:     z.number().positive(),
   batch_number: z.string().optional(),
+  // To'lqin 3 (material/formula): unit_of_measure ustuni jonli DB'da BOR edi, lekin yozuv-yo'li
+  // uni e'tiborsiz qoldirardi → doim NULL (chala data-yo'li, Q-46). Endi uchma-uch ushlanadi.
+  // Qiymat = operator kiritadigan material birligi (kg/m²/list/dona). Kanonik gofra-konversiya
+  // (m²↔kg, GofraConversionService) ON-consumption semantikasi egasi-qaroriga bog'liq (GATED).
+  unit_of_measure: z.string().max(20).optional(),
 });
 export type MesMaterialConsumptionDto = z.infer<typeof MesMaterialConsumptionSchema>;

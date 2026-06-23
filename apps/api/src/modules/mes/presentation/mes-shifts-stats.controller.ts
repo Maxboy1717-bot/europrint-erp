@@ -152,7 +152,7 @@ export class MesShiftsStatsController {
   @UsePipes(new ZodValidationPipe(MesMaterialConsumptionSchema))
   @Roles(...MES_FLOOR_ROLES)
   async recordMaterialConsumption(@Body() body: MesMaterialConsumptionDto) {
-    const _rR = await this.svc.recordMaterialConsumption(body.session_id, body.material_id, body.quantity, body.batch_number ?? null);
+    const _rR = await this.svc.recordMaterialConsumption(body.session_id, body.material_id, body.quantity, body.batch_number ?? null, body.unit_of_measure ?? null);
     const r = unwrapOrThrow(_rR);
     return r[0];
   }

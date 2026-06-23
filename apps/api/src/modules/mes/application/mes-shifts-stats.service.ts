@@ -64,8 +64,8 @@ export class MesShiftsStatsService {
     return safeCall(async () => this.repo.updateSessionQuantity(sid, produced_qty, rejected_qty));
   }
 
-  async recordMaterialConsumption(session_id: number, material_id: number, quantity: number, batch_number: string | null) {
-    return safeCall(async () => this.repo.recordMaterialConsumption(session_id, material_id, quantity, batch_number));
+  async recordMaterialConsumption(session_id: number, material_id: number, quantity: number, batch_number: string | null, unit_of_measure: string | null = null) {
+    return safeCall(async () => this.repo.recordMaterialConsumption(session_id, material_id, quantity, batch_number, unit_of_measure));
   }
 
   async getProductionOrders(status: string | undefined, lim: number, off: number) {

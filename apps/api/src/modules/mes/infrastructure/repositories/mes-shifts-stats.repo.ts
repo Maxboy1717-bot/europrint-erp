@@ -245,10 +245,11 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
-  async recordMaterialConsumption(session_id: number, material_id: number, quantity: number, batch_number: string | null): Promise<Row[]> {
+  async recordMaterialConsumption(session_id: number, material_id: number, quantity: number, batch_number: string | null, unit_of_measure: string | null = null): Promise<Row[]> {
+    // To'lqin 3: unit_of_measure ustuni endi INSERT'ga kiritiladi (avval e'tiborsiz → doim NULL edi).
     const rows = await runQuery<Row>(sql`
-      INSERT INTO mes_material_consumption (session_id, material_id, quantity, batch_number, recorded_at)
-      VALUES (${session_id}, ${material_id}, ${quantity ?? 0}, ${batch_number ?? null}, NOW()) RETURNING *
+      INSERT INTO mes_material_consumption (session_id, material_id, quantity, batch_number, unit_of_measure, recorded_at)
+      VALUES (${session_id}, ${material_id}, ${quantity ?? 0}, ${batch_number ?? null}, ${unit_of_measure ?? null}, NOW()) RETURNING *
     `);
     return rows.rows as Row[];
   }
