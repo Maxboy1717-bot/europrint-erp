@@ -106,11 +106,15 @@ Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
 
 ### 🌊 TO'LQIN 8+ — Qolgan modullar (buildable bo'shliqlar)
 > Konsolidatsiya (`MASTER_VISION.md`) dan har modulning buildable-now bo'shliqlari; har biri alohida to'lqin:
-- **SD:** SoDesignRequested/SoSampleRequested listener REAL (design-order yaratish); two-sales_orders def birlashtirish.
+> **T8 BAHOLANGAN (Workflow w0qymo2ue + DB-proof, 2026-06-23):** 3 nomzodning HAMMASI ⛔ two-worlds bloker:
+> - **MM 3-way-match** ⛔ — REAL matching logika BOR (`drizzle-mm.repo.validateThreeWayMatch` + POS `three-way-match.service`) lekin `three_way_match_log.purchase_order_id` = **varchar** ╳ PK = **int**; `mm_goods_receipts` ╳ `goods_receipts` ambiguity → two-worlds.
+> - **SD design-listener** ⛔ — listener bor lekin **green-lie** (faqat log) VA **event-system two-worlds**: `@EventsHandler(SoDesignRequestedEvent class)` ╳ SD `eventBus.publish({eventName:'DesignRequired' string})` — hech qachon firing bo'lmaydi.
+> - **Finance sales_invoices→sales_orders FK** ⛔ — Workflow "int↔int" dedi (yashil-yolg'on); **DB-proof: `sales_invoices.sales_order_id` = TEXT ╳ `sales_orders.id` = INTEGER** → FK yaratib bo'lmaydi (tip-migratsiya = egasi/arxitektura). Q-29 buzuq migration yaratilishidan saqladi.
+> **XULOSA:** cross-module integratsiya = **pervasive two-worlds** (4-bloker: T5 uuid╳int, MM varchar╳int, SD class╳string, Finance text╳int) — bu tizimning markaziy P0 arxitektura qarzi (`docs/TEXNIK_QARZ.md` T-01 ikki-dunyo). Kanonik jadval/key-tip = **egasi/arxitektura qarori**; hal bo'lmaguncha bu integratsiyalar fabrikatsiyasiz qurilmaydi.
+
+Qolgan baholanmagan nomzodlar (keyingi scan — two-worlds-siz toza win izlash):
 - **WMS:** rulon-card, FEFO to'liqlik, FG-receipt sex-link, warehouse-types config.
 - **QC:** AQL-plan to'liqlik, brak→rework graf-ulanish, sof-mahsulot OEE.
-- **MM:** 3-way-match REAL (501 olib tashla), vendor-invoice.
-- **FINANCE/KASSIR:** sales_invoices→sales_orders FK (tip moslashtir), kassir-PDF 18:00, podotchet.
 - **DIRECTOR:** OKR-cascade to'liqlik, monthly-plan, stat-regulation.
 - **LMS:** card-link to'liq (16-jadval salary-gate), sertifikat-ekspiry (Trigger 17 ulangan), skills-matrix.
 - **MARKETING:** channel-ROI to'liqlik (attributed revenue ulanishi).
@@ -125,6 +129,7 @@ Har to'lqin ANIQ shu 9 qadam bilan tugaydi (0 dan 8 gача):
 | 🟡 AI-token | AISHA dispatcher · AI 7-step planning narrative · card-AI fit-scorer · AI-reports · OEE-AI matn · Finance-AI · lead-scoring · AI-camera VLM | AISHA AI kaliti |
 | 🔴 Egasi DATA | manager_id (kim-kimni-boshqaradi) · CKP koeff · 22-sex ro'yxati · norma/brak qiymatlari · 21-material seed · marka take-up/chiqindi/kley · STKP vazn · razryad imtihon % · head_user_id · to'lanmagan-daraja ta'rifi | Egasi |
 | ⚫ Locked | crm/ · ai/ · ai-agents/ ichidagi ish | Parallel sessiya |
+| 🟣 Two-worlds (P0) | MES sessiya (mes_sessions uuid╳work_centers int) · MM 3-way (varchar╳int) · SD design-event (class╳string) · Finance FK (sales_invoices text╳sales_orders int) · 2 order-dunyo (sd_sales_orders╳sales_orders) | Egasi/arxitektura: kanonik jadval+key-tip qarori (tip-migratsiya) |
 
 > STRUKTURA (jadval/endpoint/forma) AI/data kelishidan OLDIN quriladi — kelganda faqat data/kalit kiritiladi, qayta-qurish kerak emas.
 
