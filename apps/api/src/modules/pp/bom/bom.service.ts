@@ -42,6 +42,30 @@ export class BomService {
   
     });}
 
+  async findItems(bomId: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.ppBomRepo.findItemsByBomId(bomId);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async addItem(bomId: number, dto: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.ppBomRepo.addItem(bomId, dto);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async removeItem(itemId: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.ppBomRepo.removeItem(itemId);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return { deleted: true, id: itemId };
+    });
+  }
+
   async update(id: number, dto: Record<string, unknown>){
     return safeCall(async () => {
     await this.findOne(id);

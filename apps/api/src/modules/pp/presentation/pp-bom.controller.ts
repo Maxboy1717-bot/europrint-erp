@@ -97,6 +97,32 @@ export class PpBomController {
     return unwrapOrThrow(res);
   }
 
+  @ApiOperation({ summary: 'List BOM items' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/items')
+  @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR)
+  async listItems(@Param('id') id: string) {
+    return unwrapOrThrow(await this.bomService.findItems(Number(id)));
+  }
+
+  @ApiOperation({ summary: 'Add item to BOM' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @Post(':id/items')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNOLOGIST)
+  async addItem(@Param('id') id: string, @Body() dto: Record<string, unknown>) {
+    return unwrapOrThrow(await this.bomService.addItem(Number(id), dto));
+  }
+
+  @ApiOperation({ summary: 'Remove item from BOM' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete(':id/items/:itemId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN)
+  async removeItem(@Param('id') _id: string, @Param('itemId') itemId: string) {
+    return unwrapOrThrow(await this.bomService.removeItem(Number(itemId)));
+  }
+
   @ApiOperation({ summary: 'Update bom' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

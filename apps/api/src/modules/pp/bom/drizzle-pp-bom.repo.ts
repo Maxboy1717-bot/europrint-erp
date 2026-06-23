@@ -110,6 +110,32 @@ export class DrizzlePpBomRepository implements IPpBomRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }
 
+  async addItem(bomId: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    try {
+      const componentId = Number(dto.componentId ?? dto.materialId);
+      if (!Number.isFinite(componentId) || componentId <= 0) return Err('componentId majburiy (valid integer)');
+      const [row] = await db.insert(bomItems).values({
+        bomId,
+        itemNumber: (typeof dto.itemNumber === 'string' && dto.itemNumber.length > 0) ? dto.itemNumber : `${Date.now()}`,
+        componentType: (typeof dto.componentType === 'string' && dto.componentType.length > 0) ? dto.componentType : 'material',
+        componentId,
+        quantity: Number(dto.quantity ?? 1),
+        unit: (typeof dto.unit === 'string' && dto.unit.length > 0) ? dto.unit : 'dona',
+        scrapPercentage: dto.scrapPercentage !== undefined ? Number(dto.scrapPercentage) : 0,
+        position: dto.position !== undefined ? Number(dto.position) : 0,
+        notes: (typeof dto.notes === 'string') ? dto.notes : null,
+      } as unknown as typeof bomItems.$inferInsert).returning();
+      return Ok(row as Record<string, unknown>);
+    } catch (e: unknown) { return Err((e as Error)?.message || "BOM element qo'shishda xatolik"); }
+  }
+
+  async removeItem(itemId: number): Promise<Result<void>> {
+    try {
+      await db.delete(bomItems).where(eq(bomItems.id, itemId));
+      return Ok(undefined);
+    } catch (e: unknown) { return Err((e as Error)?.message || "BOM element o'chirishda xatolik"); }
+  }
+
   async update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
       const patch: Partial<typeof bomHeaders.$inferInsert> = {
