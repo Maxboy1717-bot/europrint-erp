@@ -144,7 +144,7 @@ export class LmsCertRepo {
 
   async updateCertificateStatus(certificateId: number, status: string): Promise<void> {
     try {
-      await execLmsCertificateStatusUpdate(certificateId, status === 'active');
+      await execLmsCertificateStatusUpdate(certificateId, status);
     } catch (error: unknown) {
       this.logger.error(`updateCertificateStatus: ${(error as Error).message}`);
     }

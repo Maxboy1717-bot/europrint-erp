@@ -74,10 +74,17 @@ export async function execLmsCourseDeactivate(id: number): Promise<void> {
     .where(eq(courses_table.id, id));
 }
 
-export async function execLmsCertificateStatusUpdate(certificateId: number, isActive: boolean): Promise<void> {
-  await db.update(certificates_table)
-    .set({ is_active: isActive })
-    .where(eq(certificates_table.id, certificateId));
+export async function execLmsCertificateStatusUpdate(certificateId: number, status: string): Promise<void> {
+  // The `certificates_table` Drizzle binding is a 3-col stub (id/is_active/updated_at) with
+  // NO `status` column, but the live `certificates` table HAS status (verified information_schema).
+  // Writing only is_active lost the textual status ('revoked'/'expired' collapsed to false and
+  // discarded) — so a revoked cert stayed status=NULL and the daily expiry sweep re-flagged the
+  // same rows forever. Persist the real status (+ derive is_active, bump updated_at) via raw SQL.
+  await db.execute(
+    sql`UPDATE certificates
+        SET status = ${status}, is_active = ${status === 'active'}, updated_at = NOW()
+        WHERE id = ${certificateId}`,
+  );
 }
 
 export async function execIotCameraDelete(id: number): Promise<void> {
