@@ -27,6 +27,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import { typedExecute } from '@shared/db/typed-execute';
+import { db } from '@shared/db';
 import { GofraConversionService } from '../conversion/gofra-conversion.service';
 import {
   GOFRA_FACTORS_REPO,
@@ -118,6 +119,33 @@ export class TechnologyGrammageService {
     private readonly gofra: GofraConversionService,
     @Inject(GOFRA_FACTORS_REPO) private readonly factorsRepo: IGofraFactorsRepo,
   ) {}
+
+  /**
+   * CONFIGURE (set/replace) a material's layer stack — the per-material gofra grammage source
+   * that computeForCard() consumes. Owner-editable master-data (vizyon: hamma narsa sozlanadigan):
+   * each layer = role (liner|flute) + gsm + optional fluteType/takeUpFactor. Replace-set in one
+   * transaction (delete old → insert new) so the config is atomic + idempotent.
+   */
+  async setMaterialLayers(
+    materialCardId: number,
+    layers: Array<{ layerIndex: number; role: 'liner' | 'flute'; gsm: number; fluteType?: string | null; takeUpFactor?: number | null }>,
+  ): Promise<Result<{ materialCardId: number; layerCount: number }>> {
+    try {
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`DELETE FROM material_layer_config WHERE material_card_id = ${materialCardId}`);
+        for (const l of layers) {
+          await tx.execute(sql`
+            INSERT INTO material_layer_config
+              (material_card_id, layer_index, role, gsm, flute_type, take_up_factor, created_at, updated_at)
+            VALUES (${materialCardId}, ${l.layerIndex}, ${l.role}, ${l.gsm},
+                    ${l.fluteType ?? null}, ${l.takeUpFactor ?? null}, NOW(), NOW())`);
+        }
+      });
+      return Ok({ materialCardId, layerCount: layers.length });
+    } catch (e: unknown) {
+      return Err(AppErr('INTERNAL', (e as Error)?.message || 'Material layer config saqlashda xatolik'));
+    }
+  }
 
   /**
    * Compute the effective corrugated grammage (+ kg/sheet chains) for a tech card.

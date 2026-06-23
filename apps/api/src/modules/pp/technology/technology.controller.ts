@@ -16,10 +16,21 @@ import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { TechnologyService } from './technology.service';
+import { TechnologyGrammageService } from './technology-grammage.service';
 import { z } from 'zod';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
 const GrammageQueryDto = z.object({ materialCardId: z.coerce.number().int().positive().optional() });
+// Config-mexanizm: material layer-stack (gofra grammage manbai) — owner-editable, replace-set.
+const SetMaterialLayersDto = z.object({
+  layers: z.array(z.object({
+    layerIndex: z.coerce.number().int().min(0),
+    role: z.enum(['liner', 'flute']),
+    gsm: z.coerce.number().positive(),
+    fluteType: z.enum(['A', 'B', 'C', 'E', 'BC', 'EB', 'F']).optional(),
+    takeUpFactor: z.coerce.number().positive().optional(),
+  })).min(1).max(20),
+});
 const ApproveDto = z.object({ bomApproved: z.boolean().default(false), routingApproved: z.boolean().default(false), techCardApproved: z.boolean().default(false), notes: z.string().optional() });
 const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manager', 'designer']).default('manager') });
 
@@ -61,7 +72,10 @@ const RouteDto = z.object({
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class TechnologyController {
-  constructor(private readonly svc: TechnologyService) {}
+  constructor(
+    private readonly svc: TechnologyService,
+    private readonly grammage: TechnologyGrammageService,
+  ) {}
 
   @Get('dashboard')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
@@ -176,6 +190,18 @@ export class TechnologyController {
   @ApiOperation({ summary: 'Optimize technology card' })
   async optimizeCard(@Param('id') _id: string, @Body() _body: unknown) {
     return notImplemented('POST /technology/cards/:id/optimize');
+  }
+
+  // ⭐ Config-mexanizm: material layer-stack sozlash (gofra grammage manbai). Owner-editable —
+  // layer'lar to'ldirilgach GET cards/:id/grammage real grammage hisoblaydi (complete:false o'rniga).
+  @Put('materials/:materialCardId/layers')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Configure (set/replace) a material layer stack — gofra grammage source' })
+  async setMaterialLayers(@Param('materialCardId') materialCardId: string, @Body() body: unknown) {
+    const { layers } = SetMaterialLayersDto.parse(body);
+    const id = parseInt(materialCardId, 10);
+    if (!Number.isFinite(id)) throw new HttpException('Notoʻgʻri material ID', HttpStatus.BAD_REQUEST);
+    return unwrapOrInternal(await this.grammage.setMaterialLayers(id, layers));
   }
 
   // ── Phase 1: texkarta MASTER CRUD ─────────────────────────────────────────
