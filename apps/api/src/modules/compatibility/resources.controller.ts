@@ -112,6 +112,14 @@ export class MaterialCardsCompatController {
   async create(@Body() body: CompatBodyDto) {
     return unwrapOrInternal(await this.svc.createMaterialCard(body));
   }
+
+  @Patch(':id/unit-price')
+  @UseInterceptors(AuditInterceptor)
+  async updateUnitPrice(@Param('id') id: string, @Body() body: { unit_price: unknown }) {
+    const price = Number(body?.unit_price);
+    if (!Number.isFinite(price) || price < 0) throw new BadRequestException('unit_price must be a non-negative number');
+    return unwrapOrInternal(await this.svc.updateMaterialCardUnitPrice(id, price));
+  }
 }
 
 @ApiTags('Org Departments (Compat)')

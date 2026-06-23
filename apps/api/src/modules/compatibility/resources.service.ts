@@ -49,7 +49,8 @@ export class ResourcesCompatService {
     const result = await rawSql(sql`
       SELECT mc.id, mc.xom_ashyo AS name, mc.kod AS sku,
              mc.unit_of_measure AS unit, mc.category AS category,
-             COALESCE(mc.current_stock, 0) AS "currentStock"
+             COALESCE(mc.current_stock, 0) AS "currentStock",
+             mc.unit_price AS "unitPrice"
       FROM material_cards mc
       ${searchFilter}
       ORDER BY mc.xom_ashyo LIMIT ${lim} OFFSET ${off}
@@ -79,6 +80,16 @@ export class ResourcesCompatService {
     return dbRows(result)[0];
   
     });}
+
+  async updateMaterialCardUnitPrice(id: string, price: number) {
+    return safeCall(async () => {
+      const result = await rawSql(sql`
+        UPDATE material_cards SET unit_price = ${price} WHERE id = ${si(id, 0)}
+        RETURNING id, xom_ashyo AS name, unit_price AS "unitPrice"
+      `);
+      return dbRows(result)[0] ?? null;
+    });
+  }
 
   /**
    * `/api/org-departments` — frontend `OrgStructureSection` (EmployeeDialog) ishlatadi.
