@@ -1,13 +1,22 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { BarChart3 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { BarChart3, Plus } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { EPComingSoon, EPErrorState } from "@/components/ep";
 import { isNotImplementedError } from "@/hooks/useNotImplemented";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -17,6 +26,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface EnpsSurvey {
@@ -45,6 +56,98 @@ interface EnpsResult {
   period: string;
 }
 
+
+const PERIOD_LABELS: Record<string, string> = {
+  monthly:   "Oylik",
+  quarterly: "Choraklik",
+  annual:    "Yillik",
+};
+
+function CreateEnpsSurveyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [title, setTitle]         = useState("");
+  const [description, setDesc]    = useState("");
+  const [period, setPeriod]       = useState<string>("quarterly");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate]     = useState("");
+
+  const mutation = useMutation({
+    mutationFn: (dto: Record<string, unknown>) =>
+      apiRequest<{ id: number }>("POST", "/api/hr-v2/enps", dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/enps/surveys"] });
+      toast({ title: "eNPS so'rov yaratildi" });
+      setTitle(""); setDesc(""); setPeriod("quarterly"); setStartDate(""); setEndDate("");
+      onClose();
+    },
+    onError: () => toast({ title: "Saqlash xatoligi", variant: "destructive" }),
+  });
+
+  function handleSubmit() {
+    if (!title.trim()) {
+      toast({ title: "Sarlavha majburiy", variant: "destructive" });
+      return;
+    }
+    const dto: Record<string, unknown> = { title: title.trim(), period };
+    if (description.trim()) dto.description = description.trim();
+    if (startDate)          dto.start_date  = startDate;
+    if (endDate)            dto.end_date    = endDate;
+    mutation.mutate(dto);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Yangi eNPS so'rov</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 py-2">
+          <div className="grid gap-1.5">
+            <Label>Sarlavha *</Label>
+            <Input placeholder="Masalan: Q3 2026 eNPS So'rovi" value={title}
+              onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Tavsif</Label>
+            <Input placeholder="So'rov maqsadi..." value={description}
+              onChange={(e) => setDesc(e.target.value)} />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Davr turi</Label>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(PERIOD_LABELS).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label>Boshlanish sanasi</Label>
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Tugash sanasi</Label>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Bekor qilish
+          </Button>
+          <Button onClick={handleSubmit}
+            disabled={mutation.isPending || !title.trim()}>
+            {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function statusVariant(status: string): "success" | "warning" | "neutral" {
   if (status === "active") return "success";
@@ -151,6 +254,7 @@ function NpsScoreCard({ result }: { result: EnpsResult }) {
 
 export default function HREnps() {
   const [activeTab, setActiveTab] = useState("surveys");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const {
     data: surveysRaw,
@@ -222,6 +326,12 @@ export default function HREnps() {
           )}
           {!errSurveys && (
             <Card>
+              <div className="flex justify-end px-4 pt-3">
+                <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />
+                  Yangi so'rov
+                </Button>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -310,6 +420,7 @@ export default function HREnps() {
         </TabsContent>
       </Tabs>
           )}
+      <CreateEnpsSurveyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>
   );
 }
