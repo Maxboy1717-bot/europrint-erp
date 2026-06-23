@@ -16,6 +16,7 @@ const EventsCalendar = lazy(() => import("@/pages/EventsCalendar"));
 const Applications = lazy(() => import("@/pages/Applications"));
 const ShiftSchedule = lazy(() => import("@/pages/ShiftSchedule"));
 const ShiftTypesConfig = lazy(() => import("@/pages/ShiftTypesConfig"));
+const RazryadLevelConfig = lazy(() => import("@/pages/RazryadLevelConfig"));
 const HRDashboard = lazy(() => import("@/pages/HRDashboard"));
 const HRCapitalTests = lazy(() => import("@/pages/HRCapitalTests"));
 const OrgStructureHierarchy = lazy(() => import("@/pages/OrgStructureHierarchy"));
@@ -64,6 +65,7 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/applications',                     Applications],
   ['/shift-schedule',                   ShiftSchedule],
   ['/hr/shift-types-config',            ShiftTypesConfig],
+  ['/hr/razryad-config',               RazryadLevelConfig],  // config-mexanizm: imtihon %/retakes/oylik
   ['/hr-dashboard',                     HRDashboard],
   ['/hr-capital/tests',                 HRCapitalTests],
   ['/org-structure/hierarchy',          OrgStructureHierarchy],
