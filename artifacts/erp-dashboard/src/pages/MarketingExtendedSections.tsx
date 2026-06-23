@@ -287,8 +287,35 @@ interface NpsSectionProps { npsLoading: boolean; npsData: NpsMonthly[]; churnLoa
 
 export function NpsSection({ npsLoading, npsData, churnLoading, churnData }: NpsSectionProps) {
   const { t } = useTranslation("common");
+  const queryClient = useQueryClient();
+  const [score, setScore] = useState("");
+  const [comment, setComment] = useState("");
+
+  const createNps = useMutation({
+    mutationFn: (body: { score: number; comment: string }) => apiRequest("POST", "/api/marketing/nps", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/marketing/nps/monthly"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketing/churn-risk"] });
+      setScore(""); setComment("");
+    },
+    onError: () => { /* keep entered values so the user can retry */ },
+  });
+  const scoreNum = Number(score);
+  const canSubmit = score.trim() !== "" && Number.isFinite(scoreNum) && scoreNum >= 0 && scoreNum <= 10 && !createNps.isPending;
+
   return (
     <div className="space-y-6">
+      {/* Record an NPS response (score 0-10 + optional comment) — POST /api/marketing/nps;
+          NOW() lands it in the current month so the trend cards above refresh on invalidate. */}
+      <div className="bg-card rounded-xl p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input type="number" min={0} max={10} placeholder="NPS (0-10)" value={score} onChange={(e) => setScore(e.target.value)} className="w-32" />
+          <Input placeholder={t("izoh")} value={comment} onChange={(e) => setComment(e.target.value)} className="flex-1 min-w-[160px]" />
+          <Button onClick={() => { if (canSubmit) createNps.mutate({ score: scoreNum, comment: comment.trim() }); }} disabled={!canSubmit}>
+            <Plus className="h-4 w-4 mr-1" />{t("add")}
+          </Button>
+        </div>
+      </div>
       {npsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
