@@ -27,6 +27,15 @@ type Row = Record<string, unknown>;
 const rows = (r: unknown): Row[] => ((r as { rows?: Row[] }).rows) ?? [];
 const first = (r: unknown): Row | null => rows(r)[0] ?? null;
 
+const AbTestSchema = z.object({
+  name:        z.string().min(1).max(500),
+  variant_a:   z.string().min(1).max(500),
+  variant_b:   z.string().min(1).max(500),
+  description: z.string().max(2000).optional(),
+  campaign_id: z.number().int().optional(),
+  status:      z.string().max(50).optional(),
+}).passthrough();
+
 const ExhibitionSchema = z.object({
   name: z.string().max(500).optional(),
   location: z.string().max(500).optional(),
@@ -380,6 +389,31 @@ export class MarketingAnalyticsStubsController {
   @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'director')
   async getAbTests() {
     return { items: rows(await db.execute(sql`SELECT * FROM marketing_ab_tests ORDER BY created_at DESC`)) };
+  }
+
+  @Post('ab-tests') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
+  async createAbTest(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = AbTestSchema.parse(body ?? {});
+    // marketing_ab_tests.id is varchar NOT NULL with no default (same as the PR-/AI- pattern in
+    // this file) — must supply it. campaign_id has no FK; impressions/clicks/conversions counters,
+    // status and start_date all take their DB defaults. Before this, only GET existed so the table
+    // (read by the FE A/B section) could never fill.
+    const r = await db.execute(sql`
+      INSERT INTO marketing_ab_tests
+        (id, campaign_id, name, description, variant_a, variant_b, status, created_by, created_at, updated_at)
+      VALUES (
+        ${`AB-${Date.now()}`},
+        ${dto.campaign_id ?? null},
+        ${dto.name},
+        ${dto.description ?? null},
+        ${dto.variant_a},
+        ${dto.variant_b},
+        ${dto.status ?? 'running'},
+        ${user?.id ?? null},
+        NOW(), NOW()
+      ) RETURNING *
+    `);
+    return { data: first(r) };
   }
 
   // -- Exhibitions (exhibitions + exhibition_leads EXIST) --------------------
