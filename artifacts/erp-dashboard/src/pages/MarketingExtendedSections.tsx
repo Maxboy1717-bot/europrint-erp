@@ -3,13 +3,18 @@
  * @description Major section (tab content) components for the MarketingExtended page.
  */
 
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from '@/lib/i18n';
 import {
-  Globe, GitBranch, Scale,
+  Globe, GitBranch, Scale, Plus,
   TrendingUp, TrendingDown, ArrowUpRight, Star, Users, AlertTriangle,
 } from "lucide-react";
 import {
@@ -147,8 +152,36 @@ export function SeoSection() {
   );
 }
 // --- A/B Testing section ---
+/** Variant conversion rate % = conversions / impressions, guarded (0 when no impressions). */
+function convRate(conversions?: number, impressions?: number): number {
+  if (!impressions || impressions <= 0) return 0;
+  return Math.round(((conversions ?? 0) / impressions) * 1000) / 10;
+}
+
 export function AbSection({ abTests }: { abTests: AbTest[] }) {
   const { t } = useTranslation("common");
+  const queryClient = useQueryClient();
+  const [name, setName] = useState("");
+  const [variantA, setVariantA] = useState("");
+  const [variantB, setVariantB] = useState("");
+
+  const createMutation = useMutation({
+    mutationFn: (body: { name: string; variant_a: string; variant_b: string }) =>
+      apiRequest("POST", "/api/marketing/ab-tests", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/marketing/ab-tests"] });
+      setName(""); setVariantA(""); setVariantB("");
+    },
+    onError: () => { /* keep the entered values so the user can retry */ },
+  });
+
+  const rows = Array.isArray(abTests) ? abTests : [];
+  const canSubmit = !!name.trim() && !!variantA.trim() && !!variantB.trim() && !createMutation.isPending;
+  const submit = () => {
+    if (!canSubmit) return;
+    createMutation.mutate({ name: name.trim(), variant_a: variantA.trim(), variant_b: variantB.trim() });
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-xl p-6">
@@ -156,23 +189,35 @@ export function AbSection({ abTests }: { abTests: AbTest[] }) {
           <GitBranch className="w-4 h-4 text-primary" />
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("aBTestNatijalari")}</h3>
         </div>
-        {abTests.length === 0
+
+        {/* Create A/B test — name + two variant labels */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <Input placeholder={t("testNomi")} value={name} onChange={(e) => setName(e.target.value)} className="flex-1 min-w-[160px]" />
+          <Input placeholder="Variant A" value={variantA} onChange={(e) => setVariantA(e.target.value)} className="w-32" />
+          <Input placeholder="Variant B" value={variantB} onChange={(e) => setVariantB(e.target.value)} className="w-32" />
+          <Button onClick={submit} disabled={!canSubmit}>
+            <Plus className="h-4 w-4 mr-1" />{t("add")}
+          </Button>
+        </div>
+
+        {rows.length === 0
           ? <p className="text-center text-muted-foreground py-8">{t("aBTestlarMavjudEmas")}</p>
           : (
           <div className="ep-table-scroll"><Table>
             <TableHeader>
-              <TableRow><TH>{t("testNomi")}</TH><TH>{t("variant")}</TH><TH right>{t("konversiya1")}</TH><TH right>{t("tashrif")}</TH><TH>{t("status28")}</TH></TableRow>
+              <TableRow><TH>{t("testNomi")}</TH><TH>Variant A</TH><TH right>A %</TH><TH>Variant B</TH><TH right>B %</TH><TH>{t("status28")}</TH></TableRow>
             </TableHeader>
             <TableBody>
-              {(Array.isArray(abTests) ? abTests : []).map((t, i) => (
-                <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
-                  <TableCell className="py-3 px-6">{t.name}</TableCell>
-                  <TableCell className="py-3 px-6"><Badge variant={t.variant === "B" ? "default" : "outline"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">Variant {t.variant}</Badge></TableCell>
-                  <TableCell className="text-right font-medium py-3 px-6">{t.conversion}%</TableCell>
-                  <TableCell className="text-right py-3 px-6">{t.visitors.toLocaleString()}</TableCell>
+              {rows.map((row, i) => (
+                <TableRow key={row.id ?? `k-${i}`} className="hover:bg-muted/40 transition-colors">
+                  <TableCell className="py-3 px-6">{row.name}</TableCell>
+                  <TableCell className="py-3 px-6"><Badge variant="outline" className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{row.variant_a ?? "A"}</Badge></TableCell>
+                  <TableCell className="text-right font-medium py-3 px-6">{convRate(row.conversions_a, row.impressions_a)}%</TableCell>
+                  <TableCell className="py-3 px-6"><Badge variant="default" className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{row.variant_b ?? "B"}</Badge></TableCell>
+                  <TableCell className="text-right font-medium py-3 px-6">{convRate(row.conversions_b, row.impressions_b)}%</TableCell>
                   <TableCell className="py-3 px-6">
-                    <Badge variant={t.status === "running" ? "secondary" : "default"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
-                      {t.status === "running" ? "Davom etmoqda" : "Yakunlandi"}
+                    <Badge variant={row.status === "running" ? "secondary" : "default"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">
+                      {row.status === "running" ? "Davom etmoqda" : "Yakunlandi"}
                     </Badge>
                   </TableCell>
                 </TableRow>
