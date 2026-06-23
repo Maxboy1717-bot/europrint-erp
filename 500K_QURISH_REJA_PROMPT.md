@@ -145,4 +145,21 @@ Qolgan baholanmagan nomzodlar (keyingi scan — two-worlds-siz toza win izlash):
 
 ---
 
+## 5. LOOP YAKUNI — KONVERGENSIYA (2026-06-23)
+
+Loop o'z dizayni bo'yicha **to'xtadi** (hamma buildable ✅/gated). Yangi toza buildable win YO'Q.
+
+**✅ QURILDI (5 to'lqin, commit + GREEN + DB-proof):**
+- T1 sex-taksonomiya (`c9dd38a4·73837c6b·7eda7cf7`) · T2 nochiziqli routing graf + 501-removed (`1e093fd0·0ccd1c1a·43a93587`) · T3 material/MES `unit_of_measure` (`37f86f96`) · T4 work_center norma/brak/crew + `PUT /norms` (`5fb6775d`) · T6 `buildQueue`→`GET /pp/queue` (`23118e7c`).
+
+**✅ ALLAQACHON MAVJUD (scan tasdiqladi, qurish shart emas):** WMS rulon-card (5 endpoint, registratsiya), WMS FEFO-stock, material-bron (Trigger 8 / pp-released.listener), GofraConversionService (3-formula, tech-card oqimida).
+
+**⛔ GATED — egasi qarori/DATA kutadi (§3 jadval):**
+- 🟣 **Two-worlds (P0, eng katta to'siq):** MES uuid╳int · MM varchar╳int · SD class╳string-event · Finance text╳int · campaigns uuid╳int · cc_documents uuid╳int · qc_braks varchar╳int · 2-order-dunyo. **⭐ Bitta qaror buni ochadi: kanonik jadval + key-tip (egasi/arxitektura).**
+- 🔴 Egasi-DATA · 🟡 AI-token · ⚫ Locked (§3).
+
+**Keyingi qadam (egasi):** kanonik order-jadval + key-tip qarori → 4+ two-worlds bloker ochiladi → MES per-sex, MM 3-way, SD design-listener, Finance FK, QC rework qurish mumkin bo'ladi. Egasi DATA/AI-kalit bergach struktura tayyor (qayta-qurish kerak emas).
+
+---
+
 *Tayyorladi: Claude (menejer+bosh dasturchi), 2026-06-23. Manba: MASTER_VISION.md + production deep-analysis + 16-modul konsolidatsiya. Push bloklangan (kalit rotatsiya kutadi) → commit-only.*
