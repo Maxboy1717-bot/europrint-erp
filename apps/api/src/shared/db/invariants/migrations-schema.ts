@@ -23,6 +23,15 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
   // Wave 1 (500K build): PP sex taxonomy + FLEKSO/OFSET department (structure only; values = owner DATA).
   { name: 'work_centers.sex_code column (Wave1 sex-taxonomy)', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS sex_code VARCHAR(50)` },
   { name: 'work_centers.department_kind column (Wave1 sex-taxonomy)', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS department_kind VARCHAR(10)` },
+  // Wave 2 (500K build): PP non-linear routing graph + rework returns + work_center_io_rules (structure; values = owner DATA).
+  { name: 'routing_operations.predecessor_operation_id (Wave2)', sql: `ALTER TABLE IF EXISTS routing_operations ADD COLUMN IF NOT EXISTS predecessor_operation_id INTEGER` },
+  { name: 'routing_operations.successor_operation_ids (Wave2)', sql: `ALTER TABLE IF EXISTS routing_operations ADD COLUMN IF NOT EXISTS successor_operation_ids JSONB` },
+  { name: 'routing_operations.return_to_operation_id (Wave2)', sql: `ALTER TABLE IF EXISTS routing_operations ADD COLUMN IF NOT EXISTS return_to_operation_id INTEGER` },
+  { name: 'routing_operations.routing_condition (Wave2)', sql: `ALTER TABLE IF EXISTS routing_operations ADD COLUMN IF NOT EXISTS routing_condition VARCHAR(50)` },
+  { name: 'production_order_operations.returned_from_operation_id (Wave2)', sql: `ALTER TABLE IF EXISTS production_order_operations ADD COLUMN IF NOT EXISTS returned_from_operation_id INTEGER` },
+  { name: 'production_order_operations.rework_reason (Wave2)', sql: `ALTER TABLE IF EXISTS production_order_operations ADD COLUMN IF NOT EXISTS rework_reason TEXT` },
+  { name: 'production_order_operations.rework_count (Wave2)', sql: `ALTER TABLE IF EXISTS production_order_operations ADD COLUMN IF NOT EXISTS rework_count INTEGER NOT NULL DEFAULT 0` },
+  { name: 'work_center_io_rules table (Wave2)', sql: `CREATE TABLE IF NOT EXISTS work_center_io_rules (id SERIAL PRIMARY KEY, work_center_id INTEGER NOT NULL, allowed_predecessors JSONB NOT NULL DEFAULT '[]'::jsonb, allowed_successors JSONB NOT NULL DEFAULT '[]'::jsonb, rework_allowed_to JSONB NOT NULL DEFAULT '[]'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())` },
   {
     name: 'domain_events outbox table (PA0-6)',
     sql: `
