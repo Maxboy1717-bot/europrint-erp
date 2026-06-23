@@ -140,8 +140,27 @@ export default function PlanningBoard() {
   const { data: papkaOrdersResponse } = useQuery<PapkaOrdersResponse>({ queryKey: ["/api/papka-orders"], enabled: !!isAuthenticated });
   const papkaOrdersList = papkaOrdersResponse?.items || [];
   const { data: equipmentList = [] } = useQuery<Equipment[]>({ queryKey: ["/api/equipment"], enabled: !!isAuthenticated });
-  const { data: workCenters = [] } = useQuery<WorkCenter[]>({ queryKey: ["/api/erp/work-centers"], enabled: !!isAuthenticated });
-  const { data: products = [] } = useQuery<Product[]>({ queryKey: ["/api/erp/products"], enabled: !!isAuthenticated });
+  const { data: workCenters = [] } = useQuery<WorkCenter[]>({
+    queryKey: ["/api/pp/work-centers"],
+    enabled: !!isAuthenticated,
+    select: (raw: unknown): WorkCenter[] => {
+      const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+      return items.map((item) => ({ id: String(item.id ?? ""), name: String(item.name ?? "") }));
+    },
+  });
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ["/api/material-cards"],
+    enabled: !!isAuthenticated,
+    select: (raw: unknown): Product[] => {
+      const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+      return items.map((item) => ({
+        id: String(item.id ?? ""),
+        code: String(item.sku ?? item.kod ?? ""),
+        name: String(item.name ?? item.xom_ashyo ?? ""),
+        sku: String(item.sku ?? item.kod ?? ""),
+      }));
+    },
+  });
   const { data: productionPlans = [], isLoading: loadingPlans } = useQuery<ProductionPlanRow[]>({ queryKey: ["/api/erp/production-plans"], enabled: !!isAuthenticated });
   const { data: productionFacts = [], isLoading: loadingFacts } = useQuery<ProductionFactRow[]>({ queryKey: ["/api/erp/production-facts"], enabled: !!isAuthenticated });
   const { data: mrpRuns = [], isLoading: runsLoading } = useQuery<MRPRun[]>({ queryKey: ["/api/erp/mrp-runs"], enabled: !!isAuthenticated });

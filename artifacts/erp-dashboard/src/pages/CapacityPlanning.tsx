@@ -75,7 +75,18 @@ export default function CapacityPlanning() {
 
   // Queries
   const { data: workCenters = [], isError, error: workCentersError, refetch: refetchWorkCenters } =
-    useQuery<WorkCenter[]>({ queryKey: ["/api/erp/work-centers"], enabled: !!isAuthenticated });
+    useQuery<WorkCenter[]>({
+      queryKey: ["/api/pp/work-centers"],
+      enabled: !!isAuthenticated,
+      select: (raw: unknown): WorkCenter[] => {
+        const items = Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+        return items.map((item) => ({
+          id: String(item.id ?? ""),
+          code: String(item.code ?? ""),
+          name: String(item.name ?? ""),
+        }));
+      },
+    });
 
   const { data: capacityList = [] } = useQuery<CapacityListItem[]>({
     queryKey: ["/api/erp/work-center-capacity"],
