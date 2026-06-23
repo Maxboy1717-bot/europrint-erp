@@ -5,6 +5,8 @@
 
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { assertOk, throwFromError, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
+import { rawSql } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { Throttle } from '@nestjs/throttler';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -111,5 +113,48 @@ export class HrShiftsCompatController {
   @Delete('shifts/:id')
   async deleteShift(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.shiftService.deleteShift(id));
+  }
+
+  // ─── Shift-types config (master-data, owner-editable) ──────────────────────
+
+  @Get('shifts/types')
+  async getShiftTypes() {
+    const rows = await rawSql(sql`
+      SELECT id, code, name_uz, name_ru, start_time, end_time, duration_hours,
+             is_overnight, overtime_multiplier, is_active, sort_order
+      FROM shift_types
+      ORDER BY sort_order NULLS LAST, id
+    `);
+    return rows.rows;
+  }
+
+  private static readonly UpdateShiftTypeSchema = z.object({
+    start_time:           z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    end_time:             z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    name_uz:              z.string().min(1).max(100).optional(),
+    overtime_multiplier:  z.number().min(1).max(5).optional(),
+    is_active:            z.boolean().optional(),
+  });
+
+  @Patch('shifts/types/:id')
+  async updateShiftType(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    const dto = HrShiftsCompatController.UpdateShiftTypeSchema.parse(body);
+    // COALESCE pattern: NULL param → keep existing value (safe parameterized update)
+    const rows = await rawSql(sql`
+      UPDATE shift_types SET
+        start_time          = COALESCE(${dto.start_time          ?? null}, start_time),
+        end_time            = COALESCE(${dto.end_time            ?? null}, end_time),
+        name_uz             = COALESCE(${dto.name_uz             ?? null}, name_uz),
+        overtime_multiplier = COALESCE(${dto.overtime_multiplier ?? null}::numeric, overtime_multiplier),
+        is_active           = COALESCE(${dto.is_active           ?? null}, is_active)
+      WHERE id = ${id}
+      RETURNING id, code, name_uz, start_time, end_time, overtime_multiplier, is_active
+    `);
+    const result = rows.rows[0] ?? undefined;
+    if (!result) throw new BadRequestException(`shift_type id=${id} topilmadi`);
+    return result;
   }
 }
