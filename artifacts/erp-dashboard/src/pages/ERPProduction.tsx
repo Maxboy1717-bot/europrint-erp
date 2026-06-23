@@ -23,7 +23,7 @@ export default function ERPProduction() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const { isError, error, refetch } = useQuery<WorkCenter[]>({
-    queryKey: ["/api/erp/work-centers"],
+    queryKey: ["/api/pp/work-centers"],
   });
 
   if (isError) {

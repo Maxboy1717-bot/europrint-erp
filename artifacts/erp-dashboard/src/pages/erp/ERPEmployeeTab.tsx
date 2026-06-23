@@ -47,7 +47,7 @@ export function ERPEmployeeTab() {
   });
 
   const { data: workCenters = [] } = useQuery<WorkCenter[]>({
-    queryKey: ["/api/erp/work-centers"],
+    queryKey: ["/api/pp/work-centers"],
   });
 
   const { data: employeesResponse } = useQuery<{ data: Employee[] }>({
