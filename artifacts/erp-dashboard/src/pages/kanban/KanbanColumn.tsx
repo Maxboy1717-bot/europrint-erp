@@ -3,12 +3,15 @@
  * @description React page component. Route-level UI.
  */
 
+import { useState, useRef, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus, AlertTriangle, Clock, Trash2 } from "lucide-react";
+import { Plus, AlertTriangle, Clock, Trash2, Pencil } from "lucide-react";
 import { SortableTaskCard } from "./KanbanCard";
 import type { CardWithOwner } from "./kanban-types";
 import type { KanbanColumn as KanbanColumnType } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
 // ── WIP limits ─────────────────────────────────────────────────────────────
@@ -79,6 +82,30 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
   // String() conversion — column.id integer DB'dan kelganda dnd-kit matching to'g'ri ishlashi uchun
   const { setNodeRef, isOver } = useDroppable({ id: String(column.id) });
 
+  const qc = useQueryClient();
+  const [renaming, setRenaming] = useState(false);
+  const [renameVal, setRenameVal] = useState(column.name ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (renaming) inputRef.current?.focus(); }, [renaming]);
+
+  const renameMutation = useMutation({
+    mutationFn: (name: string) =>
+      apiRequest("PATCH", `/api/kanban/boards/${column.boardId}/columns/${column.id}`, { name }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/kanban/boards"] });
+      qc.invalidateQueries({ queryKey: ["/api/kanban/boards", String(column.boardId)] });
+      setRenaming(false);
+    },
+    onError: () => setRenaming(false),
+  });
+
+  function commitRename() {
+    const trimmed = renameVal.trim();
+    if (trimmed && trimmed !== column.name) renameMutation.mutate(trimmed);
+    else setRenaming(false);
+  }
+
   const accent       = resolveAccent(column);
   const wipLimit     = getWipLimit(column.name || "");
   const isOverWip    = wipLimit !== null && cards.length > wipLimit;
@@ -121,9 +148,27 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
             boxShadow: `0 0 0 3px ${hexToRgba(accent, 0.15)}`,
             flexShrink: 0,
           }} />
-          <h3 className="truncate font-semibold" style={{ fontSize: 13, color: "#2D3748", letterSpacing: "0.01em" }}>
-            {column.name}
-          </h3>
+          {renaming ? (
+            <input
+              ref={inputRef}
+              value={renameVal}
+              onChange={e => setRenameVal(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={e => { if (e.key === "Enter") commitRename(); else if (e.key === "Escape") setRenaming(false); }}
+              className="truncate font-semibold bg-transparent border-b border-primary outline-none"
+              style={{ fontSize: 13, color: "#2D3748", width: "100%", minWidth: 60 }}
+              data-testid={`input-rename-column-${column.id}`}
+            />
+          ) : (
+            <h3
+              className="truncate font-semibold cursor-pointer hover:text-primary transition-colors"
+              style={{ fontSize: 13, color: "#2D3748", letterSpacing: "0.01em" }}
+              onDoubleClick={() => { setRenameVal(column.name ?? ""); setRenaming(true); }}
+              data-testid={`heading-column-name-${column.id}`}
+            >
+              {column.name}
+            </h3>
+          )}
           {isOverWip && <AlertTriangle style={{ width: 12, height: 12, color: "#F59E0B", flexShrink: 0 }} />}
           {isInboxCol && overdueCount > 0 && <Clock style={{ width: 11, height: 11, color: "#EF4444", flexShrink: 0 }} />}
         </div>
@@ -138,6 +183,23 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
           }}>
             {cards.length}{wipLimit !== null ? `/${wipLimit}` : ""}
           </span>
+
+          <button
+            onClick={() => { setRenameVal(column.name ?? ""); setRenaming(true); }}
+            title="Ustun nomini o'zgartirish"
+            data-testid={`button-rename-column-${column.id}`}
+            style={{
+              width: 26, height: 26, borderRadius: 8,
+              background: "rgba(163,177,198,0.10)",
+              border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.20)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.10)"; }}
+          >
+            <Pencil style={{ width: 11, height: 11, color: "#718096" }} />
+          </button>
 
           <button
             onClick={onAddCard}
