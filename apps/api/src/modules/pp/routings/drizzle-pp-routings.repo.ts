@@ -75,6 +75,33 @@ export class DrizzlePpRoutingsRepository implements IPpRoutingsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }
 
+  async addOperation(routingId: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+    try {
+      const wcId = Number(dto.workCenterId ?? dto.work_center_id);
+      if (!Number.isFinite(wcId) || wcId <= 0) return Err('work_center_id majburiy (valid integer)');
+      const result = await runQuery<{ id: number }>(sql`
+        INSERT INTO routing_operations
+          (routing_id, operation_number, operation_description, work_center_id, sequence)
+        VALUES (
+          ${routingId},
+          ${Number(dto.operationNumber ?? dto.operation_number ?? 1)},
+          ${String(dto.operationName ?? dto.operationDescription ?? dto.operation_description ?? 'Operatsiya')},
+          ${wcId},
+          ${Number(dto.sequence ?? 1)}
+        ) RETURNING id
+      `);
+      const id = result.rows[0]?.id;
+      return Ok({ id, routingId, ...dto });
+    } catch (e: unknown) { return Err((e as Error)?.message || "Operatsiya qo'shishda xatolik"); }
+  }
+
+  async removeOperation(operationId: number): Promise<Result<void>> {
+    try {
+      await runQuery(sql`DELETE FROM routing_operations WHERE id = ${operationId}`);
+      return Ok(undefined);
+    } catch (e: unknown) { return Err((e as Error)?.message || "Operatsiya o'chirishda xatolik"); }
+  }
+
   async update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
       const result = await db.update(routings).set(dto as Partial<typeof routings.$inferInsert>).where(eq(routings.id, String(id))).returning();

@@ -41,6 +41,23 @@ export class RoutingsService {
   
     });}
 
+  async addOperation(routingId: number, dto: Record<string, unknown>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      await this.findOne(routingId); // 404 guard
+      const result = await this.ppRoutingsRepo.addOperation(routingId, dto);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async removeOperation(operationId: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.ppRoutingsRepo.removeOperation(operationId);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return { deleted: true, id: operationId };
+    });
+  }
+
   async update(id: number, dto: Record<string, unknown>){
     return safeCall(async () => {
     await this.findOne(id);

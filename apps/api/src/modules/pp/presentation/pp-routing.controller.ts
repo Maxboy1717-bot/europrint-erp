@@ -80,6 +80,24 @@ export class PpRoutingController {
     return unwrapOrThrow(await this.routingsService.create(parsed as Record<string, unknown>));
   }
 
+  @ApiOperation({ summary: 'Add operation to routing' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @Post(':routingId/operations')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNOLOGIST)
+  async addOperation(@Param('routingId') routingId: string, @Body() dto: Record<string, unknown>) {
+    return unwrapOrThrow(await this.routingsService.addOperation(Number(routingId), dto));
+  }
+
+  @ApiOperation({ summary: 'Remove operation from routing' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete(':routingId/operations/:opId')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN)
+  async removeOperation(@Param('routingId') _routingId: string, @Param('opId') opId: string) {
+    return unwrapOrThrow(await this.routingsService.removeOperation(Number(opId)));
+  }
+
   @ApiOperation({ summary: 'Update routing' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
