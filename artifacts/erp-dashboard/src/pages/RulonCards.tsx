@@ -5,7 +5,7 @@
  * GET /api/wms/rulon-cards + POST /api/wms/rulon-cards
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { DedicatedPageShell, KpiCard, Section } from "@/components/DedicatedPageShell";
@@ -20,7 +20,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Package, Plus, Ruler, Scale } from "lucide-react";
+import { Package, Pencil, Plus, RefreshCw, Ruler, Scale } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -201,10 +201,122 @@ function CreateRulonDialog({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
+// ── Update Weight Dialog ───────────────────────────────────────────────────────
+
+function UpdateWeightDialog({ item, open, onClose }: { item: RulonCard | null; open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [kg, setKg] = useState("");
+
+  useEffect(() => {
+    if (item) setKg(Number(item.currentWeightKg ?? item.initialWeightKg).toFixed(1));
+  }, [item]);
+
+  const mutation = useMutation({
+    mutationFn: (currentWeightKg: number) =>
+      apiRequest("PATCH", `/api/wms/rulon-cards/${item!.id}/weight`, { currentWeightKg }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/wms/rulon-cards"] });
+      toast({ title: "Og'irlik yangilandi" });
+      onClose();
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  function handleSubmit() {
+    const w = parseFloat(kg);
+    if (isNaN(w) || w < 0) { toast({ title: "Og'irlik 0 kg yoki undan katta bo'lishi kerak", variant: "destructive" }); return; }
+    mutation.mutate(w);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={o => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-[340px]">
+        <DialogHeader>
+          <DialogTitle>Og'irlikni yangilash — {item?.rollCode ?? `R-${item?.id}`}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="upd-weight">Joriy og'irlik (kg)</Label>
+            <Input
+              id="upd-weight" type="number" step="0.1" min={0}
+              placeholder="400"
+              value={kg}
+              onChange={e => setKg(e.target.value)}
+              data-testid="input-current-weight"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button onClick={handleSubmit} disabled={mutation.isPending} data-testid="btn-save-weight">
+            Saqlash
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Change Status Dialog ───────────────────────────────────────────────────────
+
+function ChangeStatusDialog({ item, open, onClose }: { item: RulonCard | null; open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [status, setStatus] = useState<string>("");
+
+  useEffect(() => { if (item) setStatus(item.status); }, [item]);
+
+  const mutation = useMutation({
+    mutationFn: (s: string) =>
+      apiRequest("PATCH", `/api/wms/rulon-cards/${item!.id}/status`, { status: s }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/wms/rulon-cards"] });
+      toast({ title: "Holat yangilandi" });
+      onClose();
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={o => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-[320px]">
+        <DialogHeader>
+          <DialogTitle>Holat o'zgartirish — {item?.rollCode ?? `R-${item?.id}`}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger data-testid="select-rulon-status">
+              <SelectValue placeholder="Holat tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              {(["full", "opened", "remnant"] as const).map(s => (
+                <SelectItem key={s} value={s}>{STATUS_CFG[s].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Bekor</Button>
+          <Button
+            onClick={() => mutation.mutate(status)}
+            disabled={mutation.isPending || !status}
+            data-testid="btn-save-status"
+          >
+            Saqlash
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function RulonCards() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen]     = useState(false);
+  const [weightItem, setWeightItem]     = useState<RulonCard | null>(null);
+  const [statusItem, setStatusItem]     = useState<RulonCard | null>(null);
 
   const { data, isLoading } = useQuery<ListResp>({
     queryKey: ["/api/wms/rulon-cards"],
@@ -254,7 +366,8 @@ export default function RulonCards() {
                   <th className="text-right py-2 pr-4">Gramaj (gsm)</th>
                   <th className="text-right py-2 pr-4">Og'irlik (kg)</th>
                   <th className="text-left py-2 pr-4">Yetkazuvchi</th>
-                  <th className="text-left py-2">Holat</th>
+                  <th className="text-left py-2 pr-4">Holat</th>
+                  <th className="py-2"></th>
                 </tr>
               </thead>
               <tbody>
@@ -280,8 +393,28 @@ export default function RulonCards() {
                       <td className="py-2 pr-4 text-muted-foreground">
                         {r.supplier ?? "—"}
                       </td>
-                      <td className="py-2">
+                      <td className="py-2 pr-4">
                         <Badge className={s.variant}>{s.label}</Badge>
+                      </td>
+                      <td className="py-2">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost" size="icon" className="h-7 w-7"
+                            title="Og'irlikni yangilash"
+                            onClick={() => setWeightItem(r)}
+                            data-testid={`btn-weight-${r.id}`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost" size="icon" className="h-7 w-7"
+                            title="Holat o'zgartirish"
+                            onClick={() => setStatusItem(r)}
+                            data-testid={`btn-status-${r.id}`}
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -295,6 +428,18 @@ export default function RulonCards() {
       <CreateRulonDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
+      />
+
+      <UpdateWeightDialog
+        item={weightItem}
+        open={weightItem !== null}
+        onClose={() => setWeightItem(null)}
+      />
+
+      <ChangeStatusDialog
+        item={statusItem}
+        open={statusItem !== null}
+        onClose={() => setStatusItem(null)}
       />
     </DedicatedPageShell>
   );
