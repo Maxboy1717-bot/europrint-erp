@@ -10,7 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 import { tLabel } from "@/lib/i18n/tLabel";
-import { Truck, Package, CheckCircle, FolderOpen } from "lucide-react";
+import { Truck, Package, CheckCircle, FolderOpen, Plus } from "lucide-react";
 
 import {
   EPPageHeader, EPKpiCard, EPErrorState,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -108,6 +109,14 @@ export default function SDDeliveries() {
   const [newStatus, setNewStatus] = useState<DeliveryStatus>("PICKING");
   const [statusNotes, setStatusNotes] = useState("");
 
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    driverName: "",
+    vehicleNumber: "",
+    plannedGoodsMovementDate: "",
+    salesOrderId: "",
+  });
+
   // ── Queries ──
   const deliveriesQuery = useQuery<DeliveryRow[] | { data: DeliveryRow[] }>({
     queryKey: ["/api/sd/deliveries", { statusTab, page, pageSize }],
@@ -169,6 +178,28 @@ export default function SDDeliveries() {
       }),
   });
 
+  const createMutation = useMutation({
+    mutationFn: (dto: Record<string, unknown>) =>
+      apiRequest<{ data: DeliveryRow }>("POST", "/api/sd/deliveries", dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sd/deliveries"] });
+      toast({ title: tLabel("sd.deliveryCreated", "Yetkazma yaratildi") });
+      setCreateForm({ driverName: "", vehicleNumber: "", plannedGoodsMovementDate: "", salesOrderId: "" });
+      setCreateOpen(false);
+    },
+    onError: (err: Error) =>
+      toast({ title: tLabel("sd.error", "Xatolik"), description: err.message, variant: "destructive" }),
+  });
+
+  function handleCreateSubmit() {
+    const dto: Record<string, unknown> = {};
+    if (createForm.driverName.trim())             dto.driverName = createForm.driverName.trim();
+    if (createForm.vehicleNumber.trim())           dto.vehicleNumber = createForm.vehicleNumber.trim();
+    if (createForm.plannedGoodsMovementDate)       dto.plannedGoodsMovementDate = createForm.plannedGoodsMovementDate;
+    if (createForm.salesOrderId.trim())            dto.salesOrderId = createForm.salesOrderId.trim();
+    createMutation.mutate(dto);
+  }
+
   // ── Open status dialog ──
   const openStatusDialog = (delivery: DeliveryRow) => {
     setNewStatus(delivery.status);
@@ -179,10 +210,16 @@ export default function SDDeliveries() {
   // ── Render ──
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <EPPageHeader
-        title={tLabel("sd.deliveriesPage", "Yetkazib berish")}
-        subtitle={`${totalItems} ${tLabel("sd.totalDeliveries", "ta yetkazma")}`}
-      />
+      <div className="flex items-center justify-between gap-3">
+        <EPPageHeader
+          title={tLabel("sd.deliveriesPage", "Yetkazib berish")}
+          subtitle={`${totalItems} ${tLabel("sd.totalDeliveries", "ta yetkazma")}`}
+        />
+        <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5 shrink-0">
+          <Plus className="h-3.5 w-3.5" />
+          {tLabel("sd.newDelivery", "Yangi yetkazma")}
+        </Button>
+      </div>
 
       {/* KPI row */}
       {deliveriesQuery.isLoading ? (
@@ -324,6 +361,59 @@ export default function SDDeliveries() {
           )}
         </>
       )}
+
+      {/* ── Create delivery dialog ── */}
+      <Dialog open={createOpen} onOpenChange={(o) => { if (!o) setCreateOpen(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{tLabel("sd.newDeliveryTitle", "Yangi yetkazma")}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            <div className="grid gap-1.5">
+              <Label>{tLabel("sd.salesOrderId", "Buyurtma ID")}</Label>
+              <Input
+                placeholder="Masalan: 56"
+                value={createForm.salesOrderId}
+                onChange={(e) => setCreateForm({ ...createForm, salesOrderId: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>{tLabel("sd.driverName", "Haydovchi ismi")}</Label>
+              <Input
+                placeholder="Masalan: Ismoilov Sherzod"
+                value={createForm.driverName}
+                onChange={(e) => setCreateForm({ ...createForm, driverName: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>{tLabel("sd.vehicleNumber", "Avtomobil raqami")}</Label>
+              <Input
+                placeholder="Masalan: 01 A 123 BC"
+                value={createForm.vehicleNumber}
+                onChange={(e) => setCreateForm({ ...createForm, vehicleNumber: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>{tLabel("sd.plannedDate", "Rejalashtirilgan sana")}</Label>
+              <Input
+                type="date"
+                value={createForm.plannedGoodsMovementDate}
+                onChange={(e) => setCreateForm({ ...createForm, plannedGoodsMovementDate: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={createMutation.isPending}>
+              {tLabel("sd.cancel", "Bekor")}
+            </Button>
+            <Button onClick={handleCreateSubmit} disabled={createMutation.isPending}>
+              {createMutation.isPending
+                ? tLabel("sd.saving", "Saqlanmoqda...")
+                : tLabel("sd.save", "Saqlash")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Status update dialog ── */}
       <Dialog
