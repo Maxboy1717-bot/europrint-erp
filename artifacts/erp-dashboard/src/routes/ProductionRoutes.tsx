@@ -53,6 +53,8 @@ const WarehouseDailyView = lazy(() => import("@/pages/WarehouseDailyView"));
 const MrpMatrix = lazy(() => import("@/pages/MrpMatrix"));
 const CrpPage = lazy(() => import("@/pages/CrpPage"));
 
+const GofraFluteConfig = lazy(() => import("@/pages/GofraFluteConfig"));
+
 // ARCHITECTURE.md §40 — TZ-06 AI Rejalashtirish dedicated sahifalar
 const AIShiftManagementPage = lazy(() => import("@/pages/ai-planning/AIShiftManagementPage"));
 const BottleneckAnalysisPage = lazy(() => import("@/pages/ai-planning/BottleneckAnalysisPage"));
@@ -90,6 +92,7 @@ export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/erp/pp/bom',                 BOMManagement],
   ['/erp/pp/routing',             RoutingConfiguration],
   ['/erp/pp/capacity',            CapacityPlanning],
+  ['/pp/gofra-config',            GofraFluteConfig],
   ['/technology',                 Technology],
   ['/tech/dashboard-home',        TechDashboard],
   ['/tech-approval',              TechApproval],

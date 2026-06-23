@@ -113,16 +113,35 @@ export function useGofrConversion() {
     [grammageMutation],
   );
 
+  // Config-write: PUT /api/pp/gofra/flute-types/:code — owner sets take-up factor.
+  const updateFluteMutation = useMutation({
+    mutationFn: ({ code, takeUpFactor }: { code: string; takeUpFactor: number }) =>
+      apiRequest<FluteTypeRow>("PUT", `/api/pp/gofra/flute-types/${code}`, { takeUpFactor }),
+    onSuccess: () => {
+      void fluteQuery.refetch();
+      toast({ title: "Koeffitsient saqlandi" });
+    },
+    onError: () =>
+      toast({ title: "Saqlash xatoligi", variant: "destructive" }),
+  });
+
+  const updateFluteFactor = useCallback(
+    (code: string, takeUpFactor: number) => updateFluteMutation.mutateAsync({ code, takeUpFactor }),
+    [updateFluteMutation],
+  );
+
   const fluteTypes: FluteTypeRow[] = Array.isArray(fluteQuery.data) ? fluteQuery.data : [];
 
   return {
     convert,
     computeGrammage,
+    updateFluteFactor,
     fluteTypes,
     lastResult: convertMutation.data ?? null,
     lastGrammage: grammageMutation.data?.grammageGsm ?? null,
     isConverting: convertMutation.isPending,
     isComputingGrammage: grammageMutation.isPending,
     isFluteLoading: fluteQuery.isLoading,
+    isUpdatingFlute: updateFluteMutation.isPending,
   };
 }
