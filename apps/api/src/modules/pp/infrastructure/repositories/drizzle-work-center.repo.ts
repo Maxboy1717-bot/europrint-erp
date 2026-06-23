@@ -122,6 +122,31 @@ export class DrizzleWorkCenterRepository {
     }
   }
 
+  // Wave 4: per-sex norma/brak/crew config (qisman yangilash). Faqat berilgan maydonlar yoziladi;
+  // qiymatlar egasi-DATA (PUT /pp/work-centers/:id/norms orqali kiritiladi). Numeric → string (Drizzle).
+  async updateNorms(
+    id: string,
+    norms: { normaM2PerShift?: number; normaKgPerShift?: number; brakLimitPct?: number; minCrewSize?: number; maxCrewSize?: number },
+  ): Promise<Result<Record<string, unknown>>> {
+    try {
+      const numId = parseInt(id, 10);
+      const patch: Record<string, unknown> = {};
+      if (norms.normaM2PerShift !== undefined) patch.normaM2PerShift = String(norms.normaM2PerShift);
+      if (norms.normaKgPerShift !== undefined) patch.normaKgPerShift = String(norms.normaKgPerShift);
+      if (norms.brakLimitPct !== undefined) patch.brakLimitPct = String(norms.brakLimitPct);
+      if (norms.minCrewSize !== undefined) patch.minCrewSize = norms.minCrewSize;
+      if (norms.maxCrewSize !== undefined) patch.maxCrewSize = norms.maxCrewSize;
+      if (Object.keys(patch).length === 0) return Err('Yangilanadigan norma maydoni yo\'q');
+      const rows = await db.update(workCenters).set(patch).where(eq(workCenters.id, numId)).returning();
+      const row = (rows as Record<string, unknown>[])[0];
+      if (!row) return Err('Work center topilmadi');
+      return Ok(row);
+    } catch (error: unknown) {
+      this.logger.error(`Failed to update work center norms: ${(error as Error).message}`);
+      return Err('Work center norma yangilashda xatolik');
+    }
+  }
+
   async toggleActive(id: string, isActive: boolean): Promise<Result<WorkCenter>> {
     try {
       const numId = parseInt(id, 10);

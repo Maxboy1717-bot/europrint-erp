@@ -31,6 +31,28 @@ export const UpdateWorkCenterDtoSchema = z.object({
 
 export type UpdateWorkCenterDto = z.infer<typeof UpdateWorkCenterDtoSchema>;
 
+// Wave 4 (500K build): per-sex norma/brak/crew config. Qiymatlar egasi-DATA — bu yozish-shakli (Q-40).
+export const UpdateWorkCenterNormsDtoSchema = z
+  .object({
+    normaM2PerShift: z.number().nonnegative().optional(),
+    normaKgPerShift: z.number().nonnegative().optional(),
+    brakLimitPct:    z.number().min(0).max(100).optional(),
+    minCrewSize:     z.number().int().nonnegative().optional(),
+    maxCrewSize:     z.number().int().nonnegative().optional(),
+    reason:          z.string().min(5), // §8.6 — PP o'zgartirishda sabab majburiy
+  })
+  .refine(
+    (d) =>
+      d.normaM2PerShift !== undefined ||
+      d.normaKgPerShift !== undefined ||
+      d.brakLimitPct !== undefined ||
+      d.minCrewSize !== undefined ||
+      d.maxCrewSize !== undefined,
+    { message: 'Kamida bitta norma maydoni kerak' },
+  );
+
+export type UpdateWorkCenterNormsDto = z.infer<typeof UpdateWorkCenterNormsDtoSchema>;
+
 export const GetWorkCentersDtoSchema = z.object({
   type: z.nativeEnum(WorkCenterType).optional(),
   isActive: z.boolean().optional(),

@@ -79,6 +79,12 @@ export const workCenters = pgTable("work_centers", {
   capacityPerHour: numericMoney("capacity_per_hour"),
   // Per-work-center efficiency/OEE factor (0–1) used by CRP available-hours calc; defaults to 0.85.
   efficiencyRate: numericMoney("efficiency_rate"),
+  // Wave 4 (500K build): per-sex norma/brak/crew parametrlar. NULLABLE: qiymatlar egasi-DATA (Q-40).
+  normaM2PerShift: numericMoney("norma_m2_per_shift"),
+  normaKgPerShift: numericMoney("norma_kg_per_shift"),
+  brakLimitPct: numericMoney("brak_limit_pct"),
+  minCrewSize: integer("min_crew_size"),
+  maxCrewSize: integer("max_crew_size"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),

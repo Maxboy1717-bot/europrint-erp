@@ -14,6 +14,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CreateWorkCenterCommand } from '../application/commands/create-work-center.command';
 import { UpdateWorkCenterCommand } from '../application/commands/update-work-center.command';
+import { UpdateWorkCenterNormsCommand } from '../application/commands/update-work-center-norms.command';
 import { GetWorkCentersQuery } from '../application/queries/get-work-centers.query';
 import { GetWorkCentersStatsQuery } from '../application/queries/get-work-centers-stats.query';
 import {
@@ -21,6 +22,8 @@ import {
   CreateWorkCenterDtoSchema,
   UpdateWorkCenterDto,
   UpdateWorkCenterDtoSchema,
+  UpdateWorkCenterNormsDto,
+  UpdateWorkCenterNormsDtoSchema,
   GetWorkCentersDto,
   GetWorkCentersDtoSchema,
 } from './dto/work-center.dto';
@@ -116,6 +119,26 @@ export class PpWorkCentersController {
       validatedDto.certificationLmsCourseId,
       validatedDto.department,
     );
+    return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+
+  @ApiOperation({ summary: 'Update work-center norms (norma/brak/crew config)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put(':id/norms')
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async updateNorms(@Param('id') id: string, @Body() dto: UpdateWorkCenterNormsDto) {
+    // Wave 4: per-sex norma/brak/crew config. Qiymatlar egasi tomonidan kiritiladi (struktura, Q-40).
+    const v = UpdateWorkCenterNormsDtoSchema.parse(dto);
+    this.logger.log('Updating work center norms');
+    const command = new UpdateWorkCenterNormsCommand(id, {
+      normaM2PerShift: v.normaM2PerShift,
+      normaKgPerShift: v.normaKgPerShift,
+      brakLimitPct: v.brakLimitPct,
+      minCrewSize: v.minCrewSize,
+      maxCrewSize: v.maxCrewSize,
+    });
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 

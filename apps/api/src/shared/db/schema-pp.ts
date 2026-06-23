@@ -31,6 +31,12 @@ export const ppWorkCenters = pgTable(
     sexCode:                   varchar('sex_code', { length: 50 }),
     departmentKind:            varchar('department_kind', { length: 10 }),
     costPerHour:               numeric('cost_per_hour'),
+    // Wave 4 (500K build): per-sex norma/brak/crew parametrlar (struktura; qiymatlar egasi-DATA, Q-40).
+    normaM2PerShift:           numeric('norma_m2_per_shift'),
+    normaKgPerShift:           numeric('norma_kg_per_shift'),
+    brakLimitPct:              numeric('brak_limit_pct'),
+    minCrewSize:               integer('min_crew_size'),
+    maxCrewSize:               integer('max_crew_size'),
     createdAt:                 timestamp('created_at').defaultNow(),
     deletedAt:                 timestamp('deleted_at'),
   },
