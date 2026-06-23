@@ -111,11 +111,12 @@ export const MmUpdateRequisitionSchema = z.object({
 export type MmUpdateRequisitionDto = z.infer<typeof MmUpdateRequisitionSchema>;
 
 export const MmCreateFleetVehicleSchema = z.object({
-  registration_number: z.string().min(1).max(50),
-  model:               z.string().max(100).optional(),
-  year:                z.number().int().min(1900).max(2100).optional(),
-  fuel_type:           z.enum(['petrol', 'diesel', 'electric', 'gas']).optional(),
-  status:              z.enum(['active', 'maintenance', 'inactive']).optional(),
+  plate_number: z.string().min(1).max(50),
+  model:        z.string().max(100).optional(),
+  year:         z.number().int().min(1900).max(2100).optional(),
+  type:         z.enum(['own', 'rent', 'truck']).optional(),
+  status:       z.enum(['active', 'maintenance', 'inactive']).optional(),
+  notes:        z.string().max(500).optional(),
 });
 export type MmCreateFleetVehicleDto = z.infer<typeof MmCreateFleetVehicleSchema>;
 
