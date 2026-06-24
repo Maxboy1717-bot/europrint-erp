@@ -98,7 +98,8 @@ import { LayoutDashboard, X,
   PanelLeftClose,
   FolderKanban,
   Cake,
-  Megaphone
+  Megaphone,
+  Sigma
   } from "lucide-react";
   import { MenuGroup } from "./types";
   import { translateHrModule } from "./hrNavI18n";
@@ -210,6 +211,7 @@ import { LayoutDashboard, X,
       { title: "ISO Hujjatlari", url: "qc/iso", icon: BadgeCheck },
       { title: "TAHLIL", url: "", icon: BrainCircuit, separator: true },
       { title: "Sifat Trendi", url: "qc/trends", icon: TrendingUp },
+      { title: "DPMO Kalkulyator", url: "qc/dpmo-calculator", icon: Sigma },
       { title: "AI Tahlil", url: "qc/ai-analysis", icon: BrainCircuit },
       { title: "Hisobotlar", url: "qc/reports", icon: FileText },
       { title: "Sozlamalar", url: "qc/settings", icon: Settings },
