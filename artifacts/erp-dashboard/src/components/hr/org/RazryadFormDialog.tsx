@@ -27,6 +27,7 @@ export interface RazryadLevel {
   exam_type?: string | null;
   certificate?: string | null;
   description?: string | null;
+  coefficient?: string | number | null;
   is_active?: boolean;
 }
 
@@ -41,6 +42,7 @@ type FormState = {
   examType: string;
   certificate: string;
   description: string;
+  coefficient: string;
 };
 
 function toForm(r?: RazryadLevel | null): FormState {
@@ -53,6 +55,7 @@ function toForm(r?: RazryadLevel | null): FormState {
     examType: r?.exam_type ?? "",
     certificate: r?.certificate ?? "",
     description: r?.description ?? "",
+    coefficient: r?.coefficient != null ? String(r.coefficient) : "",
   };
 }
 
@@ -97,6 +100,7 @@ export function RazryadFormDialog({
         examType: form.examType || undefined,
         certificate: form.certificate || undefined,
         description: form.description || undefined,
+        coefficient: numOrUndef(form.coefficient),
       };
       return isEdit
         ? apiRequest("PATCH", `${RAZRYAD_KEY}/${razryad!.id}`, payload)
@@ -140,6 +144,11 @@ export function RazryadFormDialog({
           <div>
             <Label>{t("maxOylik")}</Label>
             <Input type="number" value={form.salaryMax} onChange={(e) => set("salaryMax", e.target.value)} />
+          </div>
+          <div>
+            <Label>{t("koeffitsiyent", "Oylik koeffitsiyenti")}</Label>
+            <Input type="number" step="0.05" min="0.01" max="20" value={form.coefficient}
+              onChange={(e) => set("coefficient", e.target.value)} placeholder="×1.00" />
           </div>
           <div>
             <Label>{t("imtihonTuri")}</Label>

@@ -76,6 +76,7 @@ export function RazryadLevelsPanel() {
               <TableRow>
                 <TableHead>{t("razryadDarajasiRaqam")}</TableHead>
                 <TableHead>{t("nomi")}</TableHead>
+                <TableHead className="text-center">{t("koeffitsiyent", "Koeff.")}</TableHead>
                 <TableHead>{t("minOylik")}</TableHead>
                 <TableHead>{t("maxOylik")}</TableHead>
                 <TableHead>{t("imtihonTuri")}</TableHead>
@@ -87,6 +88,7 @@ export function RazryadLevelsPanel() {
                 <TableRow key={r.id} data-testid={`row-razryad-${r.id}`}>
                   <TableCell className="font-medium">{r.level}</TableCell>
                   <TableCell>{r.name}</TableCell>
+                  <TableCell className="text-center font-mono tabular-nums">{r.coefficient != null ? `×${Number(r.coefficient)}` : "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{fmtSalary(r.salary_min)}</TableCell>
                   <TableCell className="text-muted-foreground">{fmtSalary(r.salary_max)}</TableCell>
                   <TableCell className="text-muted-foreground">{r.exam_type ?? "—"}</TableCell>
