@@ -39,16 +39,32 @@ export class DisciplineRecordsCompatService {
 
   async createDisciplineRecord(body: Record<string, unknown>){
     return safeCall(async () => {
-    const { employee_id, violation_type, discipline_type, severity, violation_date, description, fine_amount } = body;
-    if (!employee_id || !violation_type) throw new BadRequestException('employee_id va violation_type majburiy');
+    // FIX (iter-77 drift catalog #11): two bugs. (1) The FE (AddDisciplineDialog) sends camelCase
+    // keys (userId/type/amount/reason/reasonRu/givenBy) through CompatBodyDto.passthrough(), but the
+    // service destructured snake_case → employee_id/violation_type were undefined → guard 400'd before
+    // the INSERT. (2) reason + given_by are NOT NULL (no default) but were never written → 23502.
+    // Accept both casings; write reason/reason_ru/given_by; default violation_type structurally.
+    const employee_id    = body['employee_id']    ?? body['userId']       ?? body['employeeId'];
+    const given_by       = body['given_by']        ?? body['givenBy'];
+    const reason         = body['reason']          ?? body['description'];
+    const reason_ru      = body['reasonRu']        ?? body['reason_ru']    ?? null;
+    const discipline_type = body['discipline_type'] ?? body['disciplineType'] ?? body['type'] ?? null;
+    const violation_type = body['violation_type']  ?? body['violationType'] ?? 'general';
+    const severity       = body['severity']        ?? 'minor';
+    const violation_date = body['violation_date']  ?? body['violationDate'] ?? null;
+    const description     = body['description']      ?? body['reason']       ?? null;
+    const fine_amount    = body['fine_amount']      ?? body['amount']       ?? null;
+    if (!employee_id) throw new BadRequestException('employee_id (userId) majburiy');
+    if (!given_by)    throw new BadRequestException('given_by (givenBy) majburiy');
+    if (!reason)      throw new BadRequestException('reason majburiy');
     const r = await rawSql(sql`
       INSERT INTO discipline_records
         (employee_id, violation_type, discipline_type, severity,
-         violation_date, issued_date, description, fine_amount, status)
-      VALUES (${employee_id ?? null}, ${violation_type ?? null}, ${discipline_type ?? null},
-              ${severity ?? 'minor'}, ${violation_date ?? null}::date, NOW()::date,
-              ${description ?? null}, ${fine_amount ?? null}, 'issued')
-      RETURNING id, violation_type, severity, status, created_at
+         violation_date, issued_date, description, reason, reason_ru, given_by, fine_amount, status)
+      VALUES (${employee_id}, ${violation_type}, ${discipline_type ?? null},
+              ${severity}, ${violation_date}::date, NOW()::date,
+              ${description}, ${reason}, ${reason_ru}, ${given_by}, ${fine_amount ?? null}, 'issued')
+      RETURNING id, violation_type, reason, given_by, severity, status, created_at
     `);
     const _found = dbRows(r)[0];
     if (!_found) throw new NotFoundException('Record not found');
