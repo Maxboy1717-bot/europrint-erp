@@ -23,6 +23,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertStrategicTaskSchema } from "@shared/schema";
 import type { InsertStrategicTask } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Search,
   Target,
@@ -55,6 +57,11 @@ export default function StrategicTasksPanel() {
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [categoryName, setCategoryName] = useState("");
   const [categoryCode, setCategoryCode] = useState("");
+  const [isMilestoneDialogOpen, setIsMilestoneDialogOpen] = useState(false);
+  const [milestoneTaskId, setMilestoneTaskId] = useState<string>("");
+  const [milestoneTitle, setMilestoneTitle] = useState("");
+  const [milestoneDueDate, setMilestoneDueDate] = useState("");
+  const [milestoneDescription, setMilestoneDescription] = useState("");
 
   const { data: dashboard, isLoading: dashLoading, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ["/api/strategic/dashboard"],
@@ -128,6 +135,30 @@ export default function StrategicTasksPanel() {
       toast({ title: "Xatolik", description: "Kategoriya yaratilmadi", variant: "destructive" });
     },
   });
+
+  const createMilestoneMutation = useMutation({
+    mutationFn: (data: { title: string; due_date?: string; description?: string }) =>
+      apiRequest("POST", `/api/strategic/tasks/${milestoneTaskId}/milestones`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/strategic/tasks"] });
+      toast({ title: "Milestone qo'shildi" });
+      setIsMilestoneDialogOpen(false);
+      setMilestoneTitle(""); setMilestoneDueDate(""); setMilestoneDescription("");
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const handleSaveMilestone = () => {
+    if (!milestoneTitle.trim()) {
+      toast({ title: "Sarlavhani kiriting", variant: "destructive" });
+      return;
+    }
+    createMilestoneMutation.mutate({
+      title: milestoneTitle.trim(),
+      due_date: milestoneDueDate || undefined,
+      description: milestoneDescription.trim() || undefined,
+    });
+  };
 
   const seedMutation = useMutation({
     mutationFn: async () => apiRequest("POST", "/api/strategic/seed", {}),
@@ -327,9 +358,54 @@ export default function StrategicTasksPanel() {
             isLoading={tasksLoading}
             expandedTaskId={expandedTaskId}
             onToggleExpand={(id) => setExpandedTaskId(expandedTaskId === id ? null : id)}
+            onAddMilestone={(taskId) => {
+              setMilestoneTaskId(taskId);
+              setMilestoneTitle(""); setMilestoneDueDate(""); setMilestoneDescription("");
+              setIsMilestoneDialogOpen(true);
+            }}
           />
         </CardContent>
       </Card>
+      <Dialog open={isMilestoneDialogOpen} onOpenChange={setIsMilestoneDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">{t("milestoneQoshish", "Milestone qo'shish")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("progress.title")}</Label>
+              <Input
+                value={milestoneTitle}
+                onChange={(e) => setMilestoneTitle(e.target.value)}
+                placeholder={t("milestoneSarlavhasi", "Milestone sarlavhasi")}
+                data-testid="input-milestone-title"
+              />
+            </div>
+            <div>
+              <Label>{t("maqsadSanasi")}</Label>
+              <Input
+                type="date"
+                value={milestoneDueDate}
+                onChange={(e) => setMilestoneDueDate(e.target.value)}
+                data-testid="input-milestone-due-date"
+              />
+            </div>
+            <div>
+              <Label>{t("tavsif2")}</Label>
+              <Input
+                value={milestoneDescription}
+                onChange={(e) => setMilestoneDescription(e.target.value)}
+                placeholder={t("ixtiyoriy", "Ixtiyoriy")}
+                data-testid="input-milestone-description"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsMilestoneDialogOpen(false)}>{t("cancel")}</Button>
+              <Button onClick={handleSaveMilestone} disabled={createMilestoneMutation.isPending}>{t("Saqlash")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,6 +4,7 @@
  */
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -14,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, type TaskWithCategory } from "./StrategicTasksPanelTypes";
 
 import { useTranslation } from '@/lib/i18n';
@@ -23,6 +24,7 @@ interface TasksTableProps {
   isLoading: boolean;
   expandedTaskId: string | null;
   onToggleExpand: (id: string) => void;
+  onAddMilestone?: (taskId: string) => void;
 }
 
 function getStatusBadge(status: string) {
@@ -35,7 +37,7 @@ function getPriorityBadge(priority: string) {
   return opt ? <Badge className={opt.color}>{opt.label}</Badge> : <Badge>{priority}</Badge>;
 }
 
-export function TasksTable({tasks, isLoading, expandedTaskId, onToggleExpand }: TasksTableProps) {
+export function TasksTable({tasks, isLoading, expandedTaskId, onToggleExpand, onAddMilestone }: TasksTableProps) {
   const { t } = useTranslation('common');
   if (isLoading) {
     return (
@@ -162,6 +164,19 @@ export function TasksTable({tasks, isLoading, expandedTaskId, onToggleExpand }: 
                       <div>
                         <span className="text-xs text-muted-foreground">{t("izohlar")}</span>
                         <p className="text-sm">{task.notes}</p>
+                      </div>
+                    )}
+                    {onAddMilestone && (
+                      <div className="pt-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => { e.stopPropagation(); onAddMilestone(task.id); }}
+                          data-testid={`button-add-milestone-${task.id}`}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          {t("milestoneQoshish", "Milestone qo'shish")}
+                        </Button>
                       </div>
                     )}
                   </div>
