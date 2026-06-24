@@ -136,6 +136,19 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   // VISION (egasi 2026-06-24): har org-node (bo'lim VA lavozim/xodim) razryadga ega bo'lishi kerak.
   // org_departments YAGONA daraxt (143 node, shundan 92 'position'); razryad ustuni yo'q edi.
   { name: 'org_departments.razryad_level_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS razryad_level_id INTEGER` },
+  // VISION (egasi 2026-06-24): har node = KARTA (org_functions birlashadi). Karta-maydonlari org_departments'ga.
+  { name: 'org_departments.salary_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS salary_type TEXT` },
+  { name: 'org_departments.min_salary ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS min_salary NUMERIC` },
+  { name: 'org_departments.max_salary ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS max_salary NUMERIC` },
+  { name: 'org_departments.rbac_tier ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS rbac_tier TEXT` },
+  { name: 'org_departments.ai_exam_enabled ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ai_exam_enabled BOOLEAN` },
+  { name: 'org_departments.statistics_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS statistics_type TEXT` },
+  { name: 'org_departments.tskp_target ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS tskp_target INTEGER` },
+  { name: 'org_departments.tskp_measurement_unit ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS tskp_measurement_unit VARCHAR` },
+  { name: 'org_departments.last_reviewed_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMP` },
+  { name: 'org_departments.work_schedule ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS work_schedule TEXT` },
+  { name: 'org_departments.current_state ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS current_state TEXT` },
+  { name: 'org_departments.bonus_config ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS bonus_config TEXT` },
   { name: 'crm_leads.title ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS title TEXT` },
   { name: 'crm_leads.second_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS second_name TEXT` },
   { name: 'crm_leads.last_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS last_name TEXT` },
