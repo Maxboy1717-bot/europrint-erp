@@ -36,6 +36,17 @@ import { TaxTab, TaxCalendarTab, RiskAITab } from "./FinanceExtendedTabsExtra";
 import { CostCenterDialog, ProfitCenterDialog } from "./FinanceExtendedDialogs";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type CostCenterFormValues = z.infer<typeof CostCenterSchema>;
 type ProfitCenterFormValues = z.infer<typeof ProfitCenterSchema>;
@@ -54,6 +65,10 @@ export default function FinanceExtended() {
   const { toast } = useToast();
   const [showCCDialog, setShowCCDialog] = useState(false);
   const [showPCDialog, setShowPCDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [payAmount, setPayAmount] = useState("");
+  const [payMethod, setPayMethod] = useState("cash");
+  const [payRef, setPayRef] = useState("");
 
   const ccForm = useForm<CostCenterFormValues>({
     resolver: zodResolver(CostCenterSchema),
@@ -106,6 +121,18 @@ export default function FinanceExtended() {
       setShowCCDialog(false);
       ccForm.reset();
       toast({ title: "Xarajat markazi qo'shildi" });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const createPayment = useMutation({
+    mutationFn: (data: { amount: number; paymentMethod: string; referenceNumber?: string }) =>
+      apiRequest("POST", "/api/fi/payments", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/fi/payments"] });
+      setShowPaymentDialog(false);
+      setPayAmount(""); setPayMethod("cash"); setPayRef("");
+      toast({ title: "To'lov qo'shildi" });
     },
     onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
   });
@@ -165,6 +192,7 @@ export default function FinanceExtended() {
           <PaymentsTab
             payments={Array.isArray(payments) ? payments : []}
             paymentsLoading={paymentsLoading}
+            onAddClick={() => setShowPaymentDialog(true)}
           />
 
           <GLDocumentsTab
@@ -199,6 +227,73 @@ export default function FinanceExtended() {
         onSubmit={(d) => createPC.mutate(d)}
         isPending={createPC.isPending}
       />
+
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">
+              {t("yangiTolov", "Yangi to'lov")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("summa", "Summa")} *</Label>
+              <Input
+                type="number"
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                data-testid="input-pay-amount"
+              />
+            </div>
+            <div>
+              <Label>{t("tolovUsuli", "To'lov usuli")} *</Label>
+              <Select value={payMethod} onValueChange={setPayMethod}>
+                <SelectTrigger data-testid="select-pay-method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">{t("naqd", "Naqd")}</SelectItem>
+                  <SelectItem value="bank-transfer">{t("bankTransfer", "Bank o'tkazmasi")}</SelectItem>
+                  <SelectItem value="card">{t("karta", "Karta")}</SelectItem>
+                  <SelectItem value="other">{t("boshqa", "Boshqa")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("referensRaqam", "Referens raqam")}</Label>
+              <Input
+                value={payRef}
+                onChange={(e) => setPayRef(e.target.value)}
+                placeholder="REF-001"
+                data-testid="input-pay-ref"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+                {t("cancel")}
+              </Button>
+              <Button
+                onClick={() => {
+                  const amount = Number(payAmount);
+                  if (!payAmount || isNaN(amount) || amount <= 0) return;
+                  createPayment.mutate({
+                    amount,
+                    paymentMethod: payMethod,
+                    referenceNumber: payRef.trim() || undefined,
+                  });
+                }}
+                disabled={createPayment.isPending || !payAmount || Number(payAmount) <= 0}
+                data-testid="button-save-payment"
+              >
+                {t("Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
