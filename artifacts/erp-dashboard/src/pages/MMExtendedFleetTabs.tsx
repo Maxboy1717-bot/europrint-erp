@@ -4,6 +4,8 @@
  * Drivers, Schedule, and Routes. Each receives data as props.
  */
 
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +13,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { Navigation, MapPin, Map, Plus } from "lucide-react";
 import type { MMVehicle, MMDelivery, MMFuelLog } from "./MMExtendedTypes";
 import { fmtMoney } from "./MMExtendedTypes";
 import { useTranslation } from '@/lib/i18n';
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // ─── GPSTab ───────────────────────────────────────────────────────────────────
 
@@ -78,10 +88,116 @@ interface FuelTabProps {
 
 export function FuelTab({ fuelLogs, vehicles, fuelLoading }: FuelTabProps) {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
   const safeFuelLogs = Array.isArray(fuelLogs) ? fuelLogs : [];
+  const [isOpen, setIsOpen] = useState(false);
+  const [vehicleId, setVehicleId] = useState("");
+  const [liters, setLiters] = useState("");
+  const [cost, setCost] = useState("");
+  const [date, setDate] = useState("");
+  const [odometer, setOdometer] = useState("");
+
+  const createFuelLog = useMutation({
+    mutationFn: (payload: { vehicle_id: number; liters: number; cost?: number; date?: string; odometer?: number }) =>
+      apiRequest("POST", "/api/mm/fleet/fuel-logs", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mm/fleet/fuel-logs"] });
+      setIsOpen(false);
+      setVehicleId(""); setLiters(""); setCost(""); setDate(""); setOdometer("");
+      toast({ title: "Yoqilg'i yozuvi qo'shildi" });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  function handleSave() {
+    if (!vehicleId || !liters) {
+      toast({ title: "Mashina va litr miqdorini kiriting", variant: "destructive" });
+      return;
+    }
+    const lit = parseFloat(liters);
+    if (isNaN(lit) || lit <= 0) {
+      toast({ title: "Litr musbat son bo'lishi kerak", variant: "destructive" });
+      return;
+    }
+    createFuelLog.mutate({
+      vehicle_id: Number(vehicleId),
+      liters: lit,
+      cost: cost ? parseFloat(cost) : undefined,
+      date: date || undefined,
+      odometer: odometer ? parseInt(odometer, 10) : undefined,
+    });
+  }
+
   return (
     <TabsContent value="fuel" className="mt-0 space-y-4">
-      <h2 className="text-lg font-semibold">{t("yoqilgiNazorati")}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{t("yoqilgiNazorati")}</h2>
+        <Button size="sm" onClick={() => setIsOpen(true)} data-testid="button-add-fuel-log">
+          <Plus className="h-3.5 w-3.5 mr-1.5" />
+          Yoqilg&apos;i qo&apos;shish
+        </Button>
+      </div>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">Yoqilg&apos;i yozuvi</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Mashina *</Label>
+              {vehicles.length > 0 ? (
+                <Select value={vehicleId} onValueChange={setVehicleId}>
+                  <SelectTrigger data-testid="select-vehicle">
+                    <SelectValue placeholder="Mashina tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Array.isArray(vehicles) ? vehicles : []).map(v => (
+                      <SelectItem key={v.id} value={String(v.id)}>
+                        {v.plateNumber || `Mashina #${v.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  type="number"
+                  value={vehicleId}
+                  onChange={e => setVehicleId(e.target.value)}
+                  placeholder="Mashina ID (avval mashina qo'shing)"
+                  data-testid="input-vehicle-id"
+                />
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Litr miqdori *</Label>
+                <Input type="number" min="0.1" step="0.1" value={liters} onChange={e => setLiters(e.target.value)} placeholder="50.0" data-testid="input-liters" />
+              </div>
+              <div>
+                <Label>Narx (so&apos;m)</Label>
+                <Input type="number" min="0" value={cost} onChange={e => setCost(e.target.value)} placeholder="350000" data-testid="input-cost" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Sana</Label>
+                <Input type="date" value={date} onChange={e => setDate(e.target.value)} data-testid="input-date" />
+              </div>
+              <div>
+                <Label>Millage (km)</Label>
+                <Input type="number" min="0" value={odometer} onChange={e => setOdometer(e.target.value)} placeholder="12000" data-testid="input-odometer" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Bekor</Button>
+              <Button onClick={handleSave} disabled={createFuelLog.isPending || !vehicleId || !liters} data-testid="button-save-fuel-log">
+                Saqlash
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([
           { l: "Jami sarfi (L)",      v: safeFuelLogs.reduce((s, f) => s + Number(f.liters || 0), 0).toFixed(0) + " L", c: "text-[var(--ep-primary)]" },
