@@ -41,6 +41,12 @@ export default function OkrPage() {
   const [quarter, setQuarter] = useState("Q1");
   const [targetDate, setTargetDate] = useState("");
 
+  const [isKRDialogOpen, setIsKRDialogOpen] = useState(false);
+  const [krObjectiveId, setKrObjectiveId] = useState("");
+  const [krTitle, setKrTitle] = useState("");
+  const [krTargetValue, setKrTargetValue] = useState("");
+  const [krUnit, setKrUnit] = useState("");
+
   const { data: objectives = [], isLoading } = useQuery<Objective[]>({
     queryKey: ["/api/okr/objectives"],
   });
@@ -64,6 +70,31 @@ export default function OkrPage() {
     setDescription("");
     setQuarter("Q1");
     setTargetDate("");
+  };
+
+  const createKRMutation = useMutation({
+    mutationFn: (data: { objective_id: number; title: string; target_value?: number; unit?: string }) =>
+      apiRequest("POST", "/api/okr/key-results", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/okr/objectives"] });
+      toast({ title: "Asosiy natija qo'shildi" });
+      setIsKRDialogOpen(false);
+      setKrObjectiveId(""); setKrTitle(""); setKrTargetValue(""); setKrUnit("");
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const handleSaveKR = () => {
+    if (!krObjectiveId || !krTitle.trim()) {
+      toast({ title: "Maqsad va sarlavhani kiriting", variant: "destructive" });
+      return;
+    }
+    createKRMutation.mutate({
+      objective_id: Number(krObjectiveId),
+      title: krTitle.trim(),
+      target_value: krTargetValue ? Number(krTargetValue) : undefined,
+      unit: krUnit.trim() || undefined,
+    });
   };
 
   const handleSave = () => {
@@ -95,10 +126,16 @@ export default function OkrPage() {
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("okrMaqsadlarVaAsosiyNatijalar")}</h1>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t("yangiMaqsad")}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsKRDialogOpen(true)} data-testid="button-add-key-result">
+            <Plus className="h-4 w-4 mr-2" />
+            {t("asosiyNatija", "Asosiy natija")}
+          </Button>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t("yangiMaqsad")}
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -152,6 +189,47 @@ export default function OkrPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isKRDialogOpen} onOpenChange={setIsKRDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">{t("asosiyNatijaQoshish", "Asosiy natija qo'shish")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("Maqsad")}</Label>
+              <Select value={krObjectiveId} onValueChange={setKrObjectiveId}>
+                <SelectTrigger data-testid="select-kr-objective">
+                  <SelectValue placeholder={t("maqsadTanlang", "Maqsad tanlang")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {list.map((obj) => (
+                    <SelectItem key={obj.id} value={String(obj.id)}>{obj.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("progress.title")}</Label>
+              <Input value={krTitle} onChange={(e) => setKrTitle(e.target.value)} placeholder={t("asosiyNatijaSarlavhasi", "Asosiy natija sarlavhasi")} data-testid="input-kr-title" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t("targetValue", "Maqsad qiymati")}</Label>
+                <Input type="number" value={krTargetValue} onChange={(e) => setKrTargetValue(e.target.value)} placeholder="100" />
+              </div>
+              <div>
+                <Label>{t("unit", "Birlik")}</Label>
+                <Input value={krUnit} onChange={(e) => setKrUnit(e.target.value)} placeholder="%" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsKRDialogOpen(false)}>{t("cancel")}</Button>
+              <Button onClick={handleSaveKR} disabled={createKRMutation.isPending}>{t("Saqlash")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
