@@ -22,3 +22,15 @@
   -ms-overflow-style: none;     /* IE/legacy Edge */
 }
 .ep-module-tabs::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
+
+/* Left module sidebar nav: native vertical scroll, ingichka scrollbar (ko'p menyu sig'maganda). */
+.ep-sidebar-scroll {
+  scrollbar-width: thin;                                  /* Firefox */
+  scrollbar-color: hsl(var(--sidebar-border)) transparent;
+}
+.ep-sidebar-scroll::-webkit-scrollbar { width: 6px; }
+.ep-sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--sidebar-border));
+  border-radius: 3px;
+}
+.ep-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
