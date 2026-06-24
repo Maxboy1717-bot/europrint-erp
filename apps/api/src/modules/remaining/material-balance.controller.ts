@@ -79,7 +79,9 @@ export class MaterialBalanceController {
 
   @Get('production')
   async getProduction(@Query() _q: Record<string, string>) {
-    return unwrapOrInternal(await this.svc.getProduction());
+    // FE (MaterialBalance "production" tab) reads response.data — wrap as { success, data }.
+    const data = unwrapOrInternal(await this.svc.getProduction());
+    return { success: true, data: Array.isArray(data) ? data : [] };
   }
 
   @Post('production/take')

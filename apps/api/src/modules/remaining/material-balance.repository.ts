@@ -56,16 +56,50 @@ export class MaterialBalanceRepository {
   }
 
   async getProduction(): Promise<Result<Row[]>>  {
-  try {  
-      return exec(sql`SELECT pmb.*, mc.xom_ashyo AS material_name, mc.unit_of_measure, mc.current_stock FROM production_material_balance pmb LEFT JOIN material_cards mc ON mc.id = pmb.material_card_id ORDER BY pmb.created_at DESC LIMIT 100`);  } catch (_e) {
+  try {
+      // FIX (iter-76): old query referenced pmb.material_card_id (column does not exist on
+      // production_material_balance) → 42703 → "production" tab fully broken (500). The FE
+      // ProductionStock reader expects a material STOCK list (materialId/kod/xomAshyo/currentStock/
+      // minStock/unitOfMeasure/unitPrice/warehouseName) — production raw-material stock, NOT movements.
+      // Return that shape with camelCase aliases the FE reads directly.
+      return exec(sql`
+        SELECT mc.id            AS "materialId",
+               mc.kod           AS "kod",
+               mc.xom_ashyo     AS "xomAshyo",
+               mc.current_stock AS "currentStock",
+               mc.min_stock     AS "minStock",
+               mc.unit_of_measure AS "unitOfMeasure",
+               mc.unit_price    AS "unitPrice",
+               NULL             AS "warehouseName"
+        FROM material_cards mc
+        WHERE mc.is_active = true
+        ORDER BY mc.xom_ashyo`);  } catch (_e) {
     return Err(String(_e));
   }
 
   }
 
   async productionAction(body: Row, actionType: string): Promise<Result<Row>>  {
-  try {  
-      const r = await exec(sql`INSERT INTO production_material_balance (material_card_id, production_order_id, action_type, quantity, unit, notes, created_at) VALUES (${body['materialCardId'] ?? null}, ${body['productionOrderId'] ?? null}, ${actionType}, ${body['quantity'] ?? 0}, ${body['unit'] ?? null}, ${body['notes'] ?? null}, NOW()) RETURNING *`);
+  try {
+      // FIX (iter-76): old INSERT wrote material_card_id/production_order_id/action_type/quantity —
+      // none exist on production_material_balance → 42703, and material_id/material_name (NOT NULL)
+      // were never written → 23502. Rewrite to real cols; material_id/material_name come from a
+      // material_cards lookup (no fabrication); qty routed to the column matching the action.
+      const materialCardId = body['materialCardId'] ?? null;
+      const qty            = body['quantity'] ?? 0;
+      const notes          = body['notes'] ?? body['reason'] ?? null;
+      const papkaOrderId   = body['papkaOrderId'] ?? body['productionOrderId'] ?? null;
+      const operatorId     = body['operatorId'] ?? null;
+      const r = await exec(sql`
+        INSERT INTO production_material_balance
+          (material_id, material_name, unit, action, taken_qty, used_qty, returned_qty, notes, papka_order_id, operator_id, created_at)
+        SELECT mc.id, mc.xom_ashyo, COALESCE(mc.unit_of_measure, 'dona'), ${actionType},
+               CASE WHEN ${actionType} = 'take'   THEN ${qty} ELSE 0 END,
+               CASE WHEN ${actionType} = 'use'    THEN ${qty} ELSE 0 END,
+               CASE WHEN ${actionType} = 'return' THEN ${qty} ELSE 0 END,
+               ${notes}, ${papkaOrderId}, ${operatorId}, NOW()
+        FROM material_cards mc WHERE mc.id = ${materialCardId}
+        RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
