@@ -135,6 +135,9 @@ export default function HRPip() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [createDialog, setCreateDialog] = useState(false);
+  const [progressPipId, setProgressPipId] = useState<number | null>(null);
+  const [progressNotes, setProgressNotes] = useState("");
+  const [progressStatus, setProgressStatus] = useState("");
   const [createForm, setCreateForm] = useState({
     employee_id: "",
     goals: "",
@@ -163,6 +166,18 @@ export default function HRPip() {
   const activeCount    = plans.filter((p) => p.status === "active").length;
   const completedCount = plans.filter((p) => p.status === "completed").length;
   const failedCount    = plans.filter((p) => p.status === "failed").length;
+
+  const addProgressMutation = useMutation({
+    mutationFn: ({ pipId, notes, status }: { pipId: number; notes: string; status?: string }) =>
+      apiRequest("POST", `/api/hr-v2/pip/${pipId}/progress`, { notes, ...(status ? { status } : {}) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/pip"] });
+      setProgressPipId(null);
+      setProgressNotes(""); setProgressStatus("");
+      toast({ title: "Progress qo'shildi" });
+    },
+    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+  });
 
   const createPipMutation = useMutation({
     mutationFn: (data: typeof createForm) =>
@@ -286,6 +301,7 @@ export default function HRPip() {
                       <TableHead>{t("pip.endDate")}</TableHead>
                       <TableHead className="min-w-[180px]">{t("pip.successCriteria")}</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Amal</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -293,7 +309,7 @@ export default function HRPip() {
                       <TableSkeleton />
                     ) : filtered.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-10 text-sm text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-10 text-sm text-muted-foreground">
                           <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />
                           <p>
                             {plans.length === 0
@@ -328,6 +344,17 @@ export default function HRPip() {
                                 {label}
                               </Badge>
                             </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs px-2"
+                                onClick={() => setProgressPipId(Number(plan.id))}
+                                data-testid={`button-pip-progress-${plan.id}`}
+                              >
+                                Progress
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         );
                       })
@@ -339,6 +366,58 @@ export default function HRPip() {
           </Card>
         )}
       </div>
+
+      {/* Progress dialog */}
+      <Dialog open={progressPipId !== null} onOpenChange={v => { if (!v) { setProgressPipId(null); setProgressNotes(""); setProgressStatus(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>PIP #{progressPipId} — Progress qo'shish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Izoh *</Label>
+              <Textarea
+                value={progressNotes}
+                onChange={e => setProgressNotes(e.target.value)}
+                placeholder="Xodim nima qildi? Qanday natija bo'ldi?"
+                rows={3}
+                data-testid="textarea-progress-notes"
+              />
+            </div>
+            <div>
+              <Label>Status (ixtiyoriy)</Label>
+              <Select value={progressStatus} onValueChange={setProgressStatus}>
+                <SelectTrigger data-testid="select-progress-status">
+                  <SelectValue placeholder="Status o'zgartirish (ixtiyoriy)..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Faol</SelectItem>
+                  <SelectItem value="completed">Yakunlangan</SelectItem>
+                  <SelectItem value="failed">Muvaffaqiyatsiz</SelectItem>
+                  <SelectItem value="cancelled">Bekor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProgressPipId(null)}>Bekor</Button>
+            <Button
+              onClick={() => {
+                if (!progressNotes.trim() || progressPipId === null) return;
+                addProgressMutation.mutate({
+                  pipId: progressPipId,
+                  notes: progressNotes.trim(),
+                  ...(progressStatus ? { status: progressStatus } : {}),
+                });
+              }}
+              disabled={addProgressMutation.isPending || !progressNotes.trim()}
+              data-testid="button-save-progress"
+            >
+              Saqlash
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create PIP Dialog */}
       <Dialog open={createDialog} onOpenChange={setCreateDialog}>
