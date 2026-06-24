@@ -133,6 +133,12 @@ export default function CashierHub() {
   const [mvRef, setMvRef] = useState("");
   const [mvDesc, setMvDesc] = useState("");
   const [mvPin, setMvPin] = useState("");
+  const [showIssueAdvance, setShowIssueAdvance] = useState(false);
+  const [advEmployeeId, setAdvEmployeeId] = useState("");
+  const [advAmount, setAdvAmount] = useState("");
+  const [advRef, setAdvRef] = useState("");
+  const [advReason, setAdvReason] = useState("");
+  const [advPin, setAdvPin] = useState("");
 
   // ─── (a) shifts list (open + closed, newest first) ────────────────────────────────────────
   const shiftsQuery = useQuery<ListPage<ShiftRow>>({
@@ -157,6 +163,7 @@ export default function CashierHub() {
   const reports = Array.isArray(reportsQuery.data?.data) ? reportsQuery.data.data : [];
 
   const openShiftCount = useMemo(() => shifts.filter((s) => s.status === "open").length, [shifts]);
+  const openShiftId = useMemo(() => shifts.find((s) => s.status === "open")?.id ?? null, [shifts]);
 
   // ─── mutations (drive the EXISTING POST endpoints) ────────────────────────────────────────
   const approveStageMutation = useMutation({
@@ -189,6 +196,19 @@ export default function CashierHub() {
       toast({ title: t("cashierHub.advanceReportApproved", "Avans hisoboti tasdiqlandi") });
     },
     onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.approveFailed", "Tasdiqlab bo'lmadi"), variant: "destructive" }),
+  });
+
+  const issueAdvanceMutation = useMutation({
+    mutationFn: (vars: { shiftId: number; employeeId: number; amount: number; reference: string; reason?: string; pin: string }) =>
+      apiRequest("POST", "/api/finance/cashier/advances", vars),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/advance-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/shifts"] });
+      setShowIssueAdvance(false);
+      setAdvEmployeeId(""); setAdvAmount(""); setAdvRef(""); setAdvReason(""); setAdvPin("");
+      toast({ title: t("cashierHub.advanceIssued", "Avans berildi") });
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.advanceIssueFailed", "Avans berib bo'lmadi"), variant: "destructive" }),
   });
 
   const openShiftMutation = useMutation({
@@ -422,6 +442,18 @@ export default function CashierHub() {
 
         {/* (c) Advance reports list */}
         <TabsContent value="reports" className="mt-3">
+          <div className="flex justify-end mb-3">
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!openShiftId}
+              onClick={() => setShowIssueAdvance(true)}
+              data-testid="button-issue-advance"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {t("cashierHub.issueAdvanceBtn", "Avans berish")}
+            </Button>
+          </div>
           {reportsQuery.isLoading ? (
             <EPSkeletonTable rows={6} />
           ) : reports.length === 0 ? (
@@ -673,6 +705,53 @@ export default function CashierHub() {
               >
                 <LogOut className="h-4 w-4 mr-1" />
                 {closeShiftMutation.isPending ? t("cashierHub.closing", "Yopilmoqda...") : t("cashierHub.closeShiftBtn", "Yopish")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Issue Advance dialog */}
+      <Dialog open={showIssueAdvance} onOpenChange={(v) => { if (!v) { setShowIssueAdvance(false); setAdvEmployeeId(""); setAdvAmount(""); setAdvRef(""); setAdvReason(""); setAdvPin(""); } }}>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              {t("cashierHub.issueAdvanceTitle", "Avans berish")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.employeeId", "Xodim ID")} <span className="text-destructive">*</span></Label>
+              <Input type="number" min="1" value={advEmployeeId} onChange={e => setAdvEmployeeId(e.target.value)} placeholder="1" data-testid="input-adv-employee-id" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("amount", "Summa (so'm)")} <span className="text-destructive">*</span></Label>
+              <Input type="number" min="1" step="1000" value={advAmount} onChange={e => setAdvAmount(e.target.value)} placeholder="0" data-testid="input-adv-amount" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.reference", "Havola/Izoh")} <span className="text-destructive">*</span></Label>
+              <Input value={advRef} onChange={e => setAdvRef(e.target.value)} placeholder="ADV-2026-..." maxLength={100} data-testid="input-adv-ref" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.advReason", "Sabab (ixtiyoriy)")}</Label>
+              <Textarea value={advReason} onChange={e => setAdvReason(e.target.value)} placeholder={t("cashierHub.advReasonPlaceholder", "Avans sababi...")} className="min-h-[60px]" data-testid="input-adv-reason" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.pin", "PIN (4 raqam)")} <span className="text-destructive">*</span></Label>
+              <Input type="password" inputMode="numeric" maxLength={4} value={advPin} onChange={e => setAdvPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="••••" data-testid="input-adv-pin" />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowIssueAdvance(false)} data-testid="button-cancel-issue-advance">{t("cancel", "Bekor")}</Button>
+              <Button
+                onClick={() => {
+                  if (!openShiftId) return;
+                  issueAdvanceMutation.mutate({ shiftId: openShiftId, employeeId: Number(advEmployeeId), amount: Number(advAmount), reference: advRef.trim(), ...(advReason.trim() && { reason: advReason.trim() }), pin: advPin });
+                }}
+                disabled={!advEmployeeId || Number(advEmployeeId) < 1 || !advAmount || Number(advAmount) <= 0 || !advRef.trim() || advPin.length !== 4 || issueAdvanceMutation.isPending}
+                data-testid="button-confirm-issue-advance"
+              >
+                {issueAdvanceMutation.isPending ? t("cashierHub.issuing", "Berilmoqda...") : t("cashierHub.issueAdvanceBtn", "Avans berish")}
               </Button>
             </div>
           </div>
