@@ -140,6 +140,19 @@ export default function CashierHub() {
   const [advReason, setAdvReason] = useState("");
   const [advPin, setAdvPin] = useState("");
 
+  const [showCreatePayout, setShowCreatePayout] = useState(false);
+  const [payoutEmpId, setPayoutEmpId] = useState("");
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [payoutRef, setPayoutRef] = useState("");
+  const [payoutNotes, setPayoutNotes] = useState("");
+
+  const [showSubmitReport, setShowSubmitReport] = useState(false);
+  const [reportDebtId, setReportDebtId] = useState("");
+  const [reportAmount, setReportAmount] = useState("");
+  const [reportReceiptRef, setReportReceiptRef] = useState("");
+  const [reportRef, setReportRef] = useState("");
+  const [reportNotes, setReportNotes] = useState("");
+
   // ─── (a) shifts list (open + closed, newest first) ────────────────────────────────────────
   const shiftsQuery = useQuery<ListPage<ShiftRow>>({
     queryKey: ["/api/finance/cashier/shifts"],
@@ -209,6 +222,28 @@ export default function CashierHub() {
       toast({ title: t("cashierHub.advanceIssued", "Avans berildi") });
     },
     onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.advanceIssueFailed", "Avans berib bo'lmadi"), variant: "destructive" }),
+  });
+
+  const createPayoutMutation = useMutation({
+    mutationFn: (vars: { employeeId: number; amount: number; reference: string; notes?: string }) =>
+      apiRequest("POST", "/api/finance/cashier/salary-payouts", vars),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/salary-payouts"] });
+      toast({ title: t("cashierHub.payoutRequested", "Maosh so'rovi yaratildi") });
+      setShowCreatePayout(false); setPayoutEmpId(""); setPayoutAmount(""); setPayoutRef(""); setPayoutNotes("");
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
+  });
+
+  const submitReportMutation = useMutation({
+    mutationFn: (vars: { debtId: number; amount: number; receiptRef: string; reference: string; notes?: string }) =>
+      apiRequest("POST", "/api/finance/cashier/advance-reports", vars),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/advance-reports"] });
+      toast({ title: t("cashierHub.reportSubmitted", "Hisobot yuborildi") });
+      setShowSubmitReport(false); setReportDebtId(""); setReportAmount(""); setReportReceiptRef(""); setReportRef(""); setReportNotes("");
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
   });
 
   const openShiftMutation = useMutation({
@@ -303,6 +338,12 @@ export default function CashierHub() {
 
         {/* (b) Salary-payout approval queue */}
         <TabsContent value="approvals" className="mt-3">
+          <div className="flex justify-end mb-3">
+            <Button size="sm" variant="secondary" onClick={() => setShowCreatePayout(true)} data-testid="button-create-payout">
+              <Plus className="h-4 w-4 mr-1" />
+              {t("cashierHub.requestPayoutBtn", "Maosh so'rovi")}
+            </Button>
+          </div>
           {approvalsQuery.isLoading ? (
             <EPSkeletonTable rows={6} />
           ) : approvals.length === 0 ? (
@@ -453,6 +494,10 @@ export default function CashierHub() {
               <Plus className="h-4 w-4 mr-1" />
               {t("cashierHub.issueAdvanceBtn", "Avans berish")}
             </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowSubmitReport(true)} data-testid="button-submit-report">
+              <Plus className="h-4 w-4 mr-1" />
+              {t("cashierHub.submitReportBtn", "Hisobot topshirish")}
+            </Button>
           </div>
           {reportsQuery.isLoading ? (
             <EPSkeletonTable rows={6} />
@@ -554,6 +599,78 @@ export default function CashierHub() {
               >
                 <LogIn className="h-4 w-4 mr-1" />
                 {openShiftMutation.isPending ? t("cashierHub.opening", "Ochilmoqda...") : t("cashierHub.openShiftBtn", "Smena ochish")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create salary-payout request dialog — POST /api/finance/cashier/salary-payouts */}
+      <Dialog open={showCreatePayout} onOpenChange={setShowCreatePayout}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t("cashierHub.requestPayoutTitle", "Maosh to'lovi so'rovi")}</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.employeeId", "Xodim ID")} <span className="text-destructive">*</span></Label>
+              <Input type="number" min="1" value={payoutEmpId} onChange={e => setPayoutEmpId(e.target.value)} placeholder="1" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("amount", "Summa (so'm)")} <span className="text-destructive">*</span></Label>
+              <Input type="number" min="1" step="1000" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} placeholder="0" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.reference", "Havola")} <span className="text-destructive">*</span></Label>
+              <Input value={payoutRef} onChange={e => setPayoutRef(e.target.value)} placeholder="SAL-2026-..." maxLength={120} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.notes", "Izoh")}</Label>
+              <Textarea value={payoutNotes} onChange={e => setPayoutNotes(e.target.value)} className="min-h-[60px]" />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowCreatePayout(false)}>{t("cancel", "Bekor")}</Button>
+              <Button
+                disabled={!payoutEmpId || Number(payoutEmpId) < 1 || !payoutAmount || Number(payoutAmount) <= 0 || !payoutRef.trim() || createPayoutMutation.isPending}
+                onClick={() => createPayoutMutation.mutate({ employeeId: Number(payoutEmpId), amount: Number(payoutAmount), reference: payoutRef.trim(), ...(payoutNotes.trim() && { notes: payoutNotes.trim() }) })}
+              >
+                {createPayoutMutation.isPending ? t("cashierHub.requesting", "Yuborilmoqda...") : t("cashierHub.submitPayoutBtn", "Yuborish")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Submit advance report dialog — POST /api/finance/cashier/advance-reports */}
+      <Dialog open={showSubmitReport} onOpenChange={setShowSubmitReport}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t("cashierHub.submitReportTitle", "Avans hisobotini topshirish")}</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label>Qarz ID <span className="text-destructive">*</span></Label>
+              <Input type="number" min="1" value={reportDebtId} onChange={e => setReportDebtId(e.target.value)} placeholder="1" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("amount", "Summa (so'm)")} <span className="text-destructive">*</span></Label>
+              <Input type="number" min="1" step="1000" value={reportAmount} onChange={e => setReportAmount(e.target.value)} placeholder="0" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Kvitansiya / Hujjat raqami <span className="text-destructive">*</span></Label>
+              <Input value={reportReceiptRef} onChange={e => setReportReceiptRef(e.target.value)} placeholder="RCP-..." maxLength={200} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.reference", "Havola")} <span className="text-destructive">*</span></Label>
+              <Input value={reportRef} onChange={e => setReportRef(e.target.value)} placeholder="RPT-2026-..." maxLength={120} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("cashierHub.notes", "Izoh")}</Label>
+              <Textarea value={reportNotes} onChange={e => setReportNotes(e.target.value)} className="min-h-[60px]" />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowSubmitReport(false)}>{t("cancel", "Bekor")}</Button>
+              <Button
+                disabled={!reportDebtId || Number(reportDebtId) < 1 || !reportAmount || Number(reportAmount) <= 0 || !reportReceiptRef.trim() || !reportRef.trim() || submitReportMutation.isPending}
+                onClick={() => submitReportMutation.mutate({ debtId: Number(reportDebtId), amount: Number(reportAmount), receiptRef: reportReceiptRef.trim(), reference: reportRef.trim(), ...(reportNotes.trim() && { notes: reportNotes.trim() }) })}
+              >
+                {submitReportMutation.isPending ? t("cashierHub.submitting", "Yuborilmoqda...") : t("cashierHub.submitReportBtn", "Topshirish")}
               </Button>
             </div>
           </div>
