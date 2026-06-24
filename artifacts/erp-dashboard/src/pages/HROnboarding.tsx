@@ -18,7 +18,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { UserPlus, Plus, ClipboardList } from "lucide-react";
+import { UserPlus, Plus, ClipboardList, Play } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { OnboardingRoadmapDialog } from "@/components/hr/OnboardingRoadmapDialog";
 import { useTranslation } from "@/lib/i18n";
 
@@ -61,6 +64,13 @@ export default function HROnboarding() {
   const [planName, setPlanName] = useState("");
   const [planProbationDays, setPlanProbationDays] = useState("");
 
+  // Start onboarding (POST /api/hr/onboarding/start)
+  const [showStartDialog, setShowStartDialog] = useState(false);
+  const [startEmployeeId, setStartEmployeeId] = useState("");
+  const [startPlanId, setStartPlanId] = useState("");
+  const [startMentorId, setStartMentorId] = useState("");
+  const [startDate, setStartDate] = useState("");
+
   const { data: checklists = [], isLoading: checkLoading } = useQuery<ChecklistItem[]>({
     queryKey: ["/api/hr/onboarding-checklists"],
   });
@@ -76,6 +86,18 @@ export default function HROnboarding() {
     if (Array.isArray((d as { data?: unknown[] }).data)) return (d as { data: OnboardingPlan[] }).data;
     return [];
   })();
+
+  const startOnboarding = useMutation({
+    mutationFn: (payload: { employeeId: number; planId: number; mentorId?: number; startDate: string }) =>
+      apiRequest("POST", "/api/hr/onboarding/start", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/onboarding/plans"] });
+      setShowStartDialog(false);
+      setStartEmployeeId(""); setStartPlanId(""); setStartMentorId(""); setStartDate("");
+      toast({ title: t("onboardingBoshlandi", "Xodim onboardingi boshlandi") });
+    },
+    onError: () => toast({ title: t("xatolikYuzBerdi", "Xatolik yuz berdi"), variant: "destructive" }),
+  });
 
   const createPlan = useMutation({
     mutationFn: (payload: { name: string; probationDays?: number }) =>
@@ -174,10 +196,16 @@ export default function HROnboarding() {
               <h2 className="font-semibold text-sm">{t("onboardingRejalari", "Onboarding rejalari")}</h2>
               <span className="text-xs text-muted-foreground">({plans.length})</span>
             </div>
-            <Button size="sm" variant="outline" onClick={() => setShowPlanDialog(true)} data-testid="button-add-plan">
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              {t("rejaQoshish", "Reja qo'shish")}
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setShowStartDialog(true)} data-testid="button-start-onboarding">
+                <Play className="h-3.5 w-3.5 mr-1" />
+                {t("onboardingBoshlash", "Boshlash")}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowPlanDialog(true)} data-testid="button-add-plan">
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                {t("rejaQoshish", "Reja qo'shish")}
+              </Button>
+            </div>
           </div>
           {plansLoading ? (
             <div className="space-y-2">
@@ -256,6 +284,91 @@ export default function HROnboarding() {
                 data-testid="button-save-plan"
               >
                 {t("Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Start onboarding dialog */}
+      <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">
+              {t("xodimOnboardingiBoshlash", "Xodim onboardingini boshlash")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("xodim", "Xodim")} *</Label>
+              <Select value={startEmployeeId} onValueChange={setStartEmployeeId}>
+                <SelectTrigger data-testid="select-start-employee">
+                  <SelectValue placeholder={t("xodimTanlang", "Xodim tanlang...")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.slice(0, 50).map(e => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.fullName ?? `#${e.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("onboardingReja", "Onboarding reja")} *</Label>
+              <Select value={startPlanId} onValueChange={setStartPlanId}>
+                <SelectTrigger data-testid="select-start-plan">
+                  <SelectValue placeholder={t("rejaTanlang", "Reja tanlang...")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {plans.map(p => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("nastavnik", "Nastavnik (ixtiyoriy)")}</Label>
+              <Select value={startMentorId} onValueChange={setStartMentorId}>
+                <SelectTrigger data-testid="select-start-mentor">
+                  <SelectValue placeholder={t("nastavnikTanlang", "Nastavnik tanlang...")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.slice(0, 50).map(e => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.fullName ?? `#${e.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("boshlanishSanasi", "Boshlanish sanasi")} *</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                data-testid="input-start-date"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowStartDialog(false)}>{t("cancel")}</Button>
+              <Button
+                onClick={() => {
+                  if (!startEmployeeId || !startPlanId || !startDate) return;
+                  startOnboarding.mutate({
+                    employeeId: Number(startEmployeeId),
+                    planId: Number(startPlanId),
+                    ...(startMentorId ? { mentorId: Number(startMentorId) } : {}),
+                    startDate: new Date(startDate).toISOString(),
+                  });
+                }}
+                disabled={startOnboarding.isPending || !startEmployeeId || !startPlanId || !startDate}
+                data-testid="button-save-start-onboarding"
+              >
+                {t("boshlash", "Boshlash")}
               </Button>
             </div>
           </div>
