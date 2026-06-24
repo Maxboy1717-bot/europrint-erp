@@ -33,6 +33,7 @@ const WorkflowRules = lazy(() => import("@/pages/WorkflowRules"));
 const KpiThresholdConfig       = lazy(() => import("@/pages/KpiThresholdConfig"));
 const KpiScoreWeightsConfig    = lazy(() => import("@/pages/KpiScoreWeightsConfig"));
 const CompanyStateThresholdConfig = lazy(() => import("@/pages/CompanyStateThresholdConfig"));
+const MonthlyPlansPage         = lazy(() => import("@/pages/MonthlyPlansPage"));
 
 export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/coordination',             CoordinationPage],
@@ -68,4 +69,5 @@ export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/director/kpi-thresholds',        KpiThresholdConfig],
   ['/director/company-state-config',  CompanyStateThresholdConfig],
   ['/director/kpi-weights',           KpiScoreWeightsConfig],  // config-mexanizm: STKP vazn
+  ['/director/monthly-plans',         MonthlyPlansPage],
 ];
