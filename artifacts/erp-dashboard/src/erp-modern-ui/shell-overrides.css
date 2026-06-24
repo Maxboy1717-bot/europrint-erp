@@ -12,3 +12,13 @@
   border-color: hsl(var(--sidebar-border)) !important;
   color: hsl(var(--sidebar-foreground)) !important;
 }
+
+/* Top module tab strip: ko'p modul header kengligiga sig'maganda CLIP emas,
+   gorizontal scroll bo'lsin (oxirgi modul ikonkaga kesilib qolmasin). Scrollbar yashirin. */
+.ep-module-tabs {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/legacy Edge */
+}
+.ep-module-tabs::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
