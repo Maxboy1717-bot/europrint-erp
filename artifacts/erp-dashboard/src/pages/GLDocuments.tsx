@@ -100,6 +100,15 @@ export default function GLDocuments() {
     },
   });
 
+  const postDocMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("POST", `/api/fi/gl-documents/${id}/post`, {}),
+    onSuccess: () => {
+      toast({ title: "Hujjat joylashtirildi" });
+      queryClient.invalidateQueries({ queryKey: ["/api/accounting/gl-documents"] });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
   const handleCreateSubmit = () => {
     createMutation.mutate({
       documentDate: form.date,
@@ -358,6 +367,7 @@ export default function GLDocuments() {
                       </div>
                     </TableHead>
                     <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6" data-testid="th-status">{t('status27')}</TableHead>
+                    <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6" data-testid="th-actions">{t('amallar', "Amallar")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -369,12 +379,26 @@ export default function GLDocuments() {
                       <TableCell className="text-right text-primary font-semibold py-3 px-6">{formatCurrency(doc.totalDebit)}</TableCell>
                       <TableCell className="text-right text-[var(--ep-red)] font-semibold py-3 px-6">{formatCurrency(doc.totalCredit)}</TableCell>
                       <TableCell className="py-3 px-6">{getStatusBadge(doc.status, t)}</TableCell>
+                      <TableCell className="py-3 px-6">
+                        {doc.status === "draft" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => postDocMutation.mutate(doc.id)}
+                            disabled={postDocMutation.isPending}
+                            data-testid={`button-post-doc-${doc.id}`}
+                          >
+                            {t('joylashtirish', "Joylashtirish")}
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   <TableRow className="bg-muted/40 font-bold hover:bg-muted/40 transition-colors">
                     <TableCell colSpan={3} className="py-3 px-6">JAMI</TableCell>
                     <TableCell className="text-right text-primary py-3 px-6">{formatCurrency(totalDebit)}</TableCell>
                     <TableCell className="text-right text-[var(--ep-red)] py-3 px-6">{formatCurrency(totalCredit)}</TableCell>
+                    <TableCell className="py-3 px-6"></TableCell>
                     <TableCell className="py-3 px-6"></TableCell>
                   </TableRow>
                 </TableBody>
