@@ -15,9 +15,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Plus, Wrench, Settings2 } from "lucide-react";
+import { Plus, Wrench, Settings2, StopCircle } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { Textarea } from "@/components/ui/textarea";
 
 interface Equipment {
   id: number;
@@ -30,6 +31,15 @@ interface Equipment {
   purchaseDate?: string;
 }
 
+interface MaintenanceOrder {
+  id: string;
+  equipmentName: string;
+  issueDescription: string;
+  status: string;
+  priority: string;
+  createdAt?: string;
+}
+
 export default function EquipmentPage() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -37,6 +47,11 @@ export default function EquipmentPage() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [newStatus, setNewStatus] = useState("active");
+
+  const [isStopOpen, setIsStopOpen] = useState(false);
+  const [stopEquipment, setStopEquipment] = useState<Equipment | null>(null);
+  const [issueDesc, setIssueDesc] = useState("");
+  const [priority, setPriority] = useState<"low" | "medium" | "high" | "critical">("high");
 
   const [invNumber, setInvNumber] = useState("");
   const [name, setName] = useState("");
@@ -46,6 +61,10 @@ export default function EquipmentPage() {
 
   const { data: equipment = [], isLoading } = useQuery<Equipment[]>({
     queryKey: ["/api/mro/equipment"],
+  });
+
+  const { data: maintenanceOrders = [] } = useQuery<MaintenanceOrder[]>({
+    queryKey: ["/api/mro"],
   });
 
   const createMutation = useMutation({
@@ -58,6 +77,21 @@ export default function EquipmentPage() {
     onError: () => {
       toast({ title: "Xatolik yuz berdi", variant: "destructive" });
     },
+  });
+
+  const stopMachineMutation = useMutation({
+    mutationFn: (payload: { equipmentId: string; equipmentName: string; issueDescription: string; priority: string }) =>
+      apiRequest("POST", "/api/mro/stop-machine", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mro"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/mro/equipment"] });
+      toast({ title: "Jihoz to'xtatildi, texnik xizmat buyurtmasi yaratildi" });
+      setIsStopOpen(false);
+      setStopEquipment(null);
+      setIssueDesc("");
+      setPriority("high");
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
   });
 
   const statusMutation = useMutation({
@@ -95,6 +129,27 @@ export default function EquipmentPage() {
     setSelectedId(item.id);
     setNewStatus(item.status);
     setIsStatusOpen(true);
+  };
+
+  const openStopDialog = (item: Equipment) => {
+    setStopEquipment(item);
+    setIssueDesc("");
+    setPriority("high");
+    setIsStopOpen(true);
+  };
+
+  const handleStopMachine = () => {
+    if (!stopEquipment) return;
+    if (issueDesc.length < 10) {
+      toast({ title: "Muammo tavsifini kamida 10 ta belgidan iborat qiling", variant: "destructive" });
+      return;
+    }
+    stopMachineMutation.mutate({
+      equipmentId: crypto.randomUUID(),
+      equipmentName: stopEquipment.name,
+      issueDescription: issueDesc,
+      priority,
+    });
   };
 
   const handleStatusSave = () => {
@@ -163,15 +218,28 @@ export default function EquipmentPage() {
                         : "—"}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openStatusDialog(item)}
-                        className="whitespace-nowrap"
-                      >
-                        <Settings2 className="h-3.5 w-3.5 mr-1.5" />
-                        {t("holatOzgartirish")}
-                      </Button>
+                      <div className="flex gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openStatusDialog(item)}
+                          className="whitespace-nowrap"
+                        >
+                          <Settings2 className="h-3.5 w-3.5 mr-1.5" />
+                          {t("holatOzgartirish")}
+                        </Button>
+                        {item.status === "active" && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => openStopDialog(item)}
+                            className="whitespace-nowrap"
+                          >
+                            <StopCircle className="h-3.5 w-3.5 mr-1.5" />
+                            To'xtatish
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -213,6 +281,75 @@ export default function EquipmentPage() {
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={resetForm}>{t("cancel")}</Button>
               <Button onClick={handleSave} disabled={createMutation.isPending}>{t("Saqlash")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance orders list */}
+      {Array.isArray(maintenanceOrders) && maintenanceOrders.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-base font-semibold mb-3">Texnik xizmat buyurtmalari</h2>
+            <div className="space-y-2">
+              {maintenanceOrders.slice(0, 10).map((order) => (
+                <div key={order.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div>
+                    <p className="text-sm font-medium">{order.equipmentName}</p>
+                    <p className="text-xs text-muted-foreground">{order.issueDescription}</p>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Badge variant="outline" className="text-xs">{order.priority}</Badge>
+                    <EPStatusPill tone={order.status === "completed" ? "success" : order.status === "in_progress" ? "info" : "warning"}>
+                      {order.status}
+                    </EPStatusPill>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stop machine dialog */}
+      <Dialog open={isStopOpen} onOpenChange={setIsStopOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">Jihozni to'xtatish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
+              <span className="font-medium">Jihoz:</span> {stopEquipment?.name}
+            </div>
+            <div>
+              <Label>Muammo tavsifi <span className="text-destructive">*</span></Label>
+              <Textarea
+                value={issueDesc}
+                onChange={(e) => setIssueDesc(e.target.value)}
+                placeholder="Muammoni batafsil tavsiflang (kamida 10 ta belgi)..."
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Ustuvorlik</Label>
+              <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Past</SelectItem>
+                  <SelectItem value="medium">O'rta</SelectItem>
+                  <SelectItem value="high">Yuqori</SelectItem>
+                  <SelectItem value="critical">Kritik</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsStopOpen(false)}>Bekor qilish</Button>
+              <Button variant="destructive" onClick={handleStopMachine} disabled={stopMachineMutation.isPending}>
+                <StopCircle className="h-4 w-4 mr-2" />
+                To'xtatish
+              </Button>
             </div>
           </div>
         </DialogContent>
