@@ -851,6 +851,11 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'qc_root_causes.name ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_root_causes ADD COLUMN IF NOT EXISTS name TEXT` },
   { name: 'qc_root_causes.description ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_root_causes ADD COLUMN IF NOT EXISTS description TEXT` },
   { name: 'qc_root_causes.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_root_causes ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
+  // APPROVED: Claude (egasi vakolati) 2026-06-24 — qc_root_causes katalog-modelga konvergatsiya.
+  // entity_type/entity_id eski 5-Why-RCA dizaynidan qolgan NOT NULL; repo INSERT (name/description/category)
+  // ularni yozmaydi → POST /qc/root-causes 23502 bilan tushardi. Jadval bo'sh (0 qator) → NOT NULL bo'shatiladi.
+  { name: 'qc_root_causes.entity_type DROP NOT NULL', sql: `ALTER TABLE IF EXISTS qc_root_causes ALTER COLUMN entity_type DROP NOT NULL` },
+  { name: 'qc_root_causes.entity_id DROP NOT NULL', sql: `ALTER TABLE IF EXISTS qc_root_causes ALTER COLUMN entity_id DROP NOT NULL` },
   { name: 'sd_customer_contacts.contact_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS contact_type VARCHAR` },
   { name: 'sd_customer_contacts.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
   { name: 'sd_customer_contacts.name ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS name TEXT` },
