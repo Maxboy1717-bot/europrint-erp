@@ -84,6 +84,12 @@ export const CostCenterSchema = z.object({
   budget: z.string().min(1),
 });
 
+export const ProfitCenterSchema = z.object({
+  code: z.string().min(1).max(50),
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+});
+
 export function fmtMoney(val: unknown): string {
   const n = Number(val);
   if (!n) return "0 so'm";

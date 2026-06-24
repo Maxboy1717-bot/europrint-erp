@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { z } from "zod";
-import { CostCenterSchema } from "./FinanceExtendedTypes";
+import { CostCenterSchema, ProfitCenterSchema } from "./FinanceExtendedTypes";
 import { useTranslation } from '@/lib/i18n';
+
+type ProfitCenterFormValues = z.infer<typeof ProfitCenterSchema>;
 
 type CostCenterFormValues = z.infer<typeof CostCenterSchema>;
 
@@ -20,6 +22,47 @@ interface CostCenterDialogProps {
   form: UseFormReturn<CostCenterFormValues>;
   onSubmit: (data: CostCenterFormValues) => void;
   isPending: boolean;
+}
+
+interface ProfitCenterDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  form: UseFormReturn<ProfitCenterFormValues>;
+  onSubmit: (data: ProfitCenterFormValues) => void;
+  isPending: boolean;
+}
+
+export function ProfitCenterDialog({ open, onOpenChange, form, onSubmit, isPending }: ProfitCenterDialogProps) {
+  const { t } = useTranslation("common");
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-[18px] font-semibold">{t("foydaMarkaziQoshish", "Foyda markazi qo'shish")}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>{t("code")}</Label>
+              <Input {...form.register("code")} placeholder="PC-001" data-testid="input-pc-code" />
+            </div>
+            <div className="space-y-1">
+              <Label>{t("name")}</Label>
+              <Input {...form.register("name")} placeholder={t("bosmaSexi")} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label>{t("progress.description")}</Label>
+            <Input {...form.register("description")} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>{t("Bekor")}</Button>
+            <Button type="submit" disabled={isPending}>{t("Saqlash")}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function CostCenterDialog({ open, onOpenChange, form, onSubmit, isPending }: CostCenterDialogProps) {

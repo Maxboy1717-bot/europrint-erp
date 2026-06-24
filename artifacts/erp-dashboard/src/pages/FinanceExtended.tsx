@@ -19,6 +19,7 @@ import {
   URL_TAB_MAP,
   tabMeta,
   CostCenterSchema,
+  ProfitCenterSchema,
   type CostCenter,
   type ProfitCenter,
   type FinPayment,
@@ -32,11 +33,12 @@ import {
   GLDocumentsTab,
 } from "./FinanceExtendedSections";
 import { TaxTab, TaxCalendarTab, RiskAITab } from "./FinanceExtendedTabsExtra";
-import { CostCenterDialog } from "./FinanceExtendedDialogs";
+import { CostCenterDialog, ProfitCenterDialog } from "./FinanceExtendedDialogs";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 type CostCenterFormValues = z.infer<typeof CostCenterSchema>;
+type ProfitCenterFormValues = z.infer<typeof ProfitCenterSchema>;
 
 export default function FinanceExtended() {
   const { t } = useTranslation("common");
@@ -51,10 +53,16 @@ export default function FinanceExtended() {
   const meta = tabMeta[activeTab] || tabMeta["costcenters"];
   const { toast } = useToast();
   const [showCCDialog, setShowCCDialog] = useState(false);
+  const [showPCDialog, setShowPCDialog] = useState(false);
 
   const ccForm = useForm<CostCenterFormValues>({
     resolver: zodResolver(CostCenterSchema),
     defaultValues: { code: "", name: "", description: "", budget: "" },
+  });
+
+  const pcForm = useForm<ProfitCenterFormValues>({
+    resolver: zodResolver(ProfitCenterSchema),
+    defaultValues: { code: "", name: "", description: "" },
   });
 
   const { data: costCenters = [], isLoading: ccLoading, refetch: refetchCC } = useQuery<CostCenter[]>({
@@ -102,6 +110,18 @@ export default function FinanceExtended() {
     onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
   });
 
+  const createPC = useMutation({
+    mutationFn: (data: ProfitCenterFormValues) =>
+      apiRequest("POST", "/api/fi/profit-centers", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/fi/profit-centers"] });
+      setShowPCDialog(false);
+      pcForm.reset();
+      toast({ title: "Foyda markazi qo'shildi" });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
   const totalBudget = (Array.isArray(costCenters) ? costCenters : []).reduce(
     (s: number, c: CostCenter) => s + Number(c.budget || 0),
     0
@@ -139,6 +159,7 @@ export default function FinanceExtended() {
           <ProfitCentersTab
             profitCenters={Array.isArray(profitCenters) ? profitCenters : []}
             pcLoading={pcLoading}
+            onAddClick={() => setShowPCDialog(true)}
           />
 
           <PaymentsTab
@@ -169,6 +190,14 @@ export default function FinanceExtended() {
         form={ccForm}
         onSubmit={(d) => createCC.mutate(d)}
         isPending={createCC.isPending}
+      />
+
+      <ProfitCenterDialog
+        open={showPCDialog}
+        onOpenChange={setShowPCDialog}
+        form={pcForm}
+        onSubmit={(d) => createPC.mutate(d)}
+        isPending={createPC.isPending}
       />
     </div>
   );
