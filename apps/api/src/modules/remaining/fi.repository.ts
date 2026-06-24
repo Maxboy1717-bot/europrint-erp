@@ -136,9 +136,15 @@ export class FiRepository {
 
   async createGlDocument(body: Row): Promise<Result<Row>> {
     return safeCall(async () => {
+      // FIX (iter-77 drift catalog #2): gl_documents.document_date is NOT NULL (no default) but
+      // the INSERT omitted it → every createGlDocument raised 23502. document_date and posting_date
+      // are separate NOT-NULL varchar dates; default document_date to documentDate ?? postingDate ?? today.
+      const today = _time.now().toISOString().split('T')[0];
+      const postingDate  = body['postingDate']  ?? today;
+      const documentDate = body['documentDate'] ?? body['postingDate'] ?? today;
       const rows = await runQuery<Row>(sql`
-        INSERT INTO gl_documents (document_number, document_type, posting_date, reference, description, currency, total_debit, total_credit, status, created_at, updated_at)
-        VALUES (${body['documentNumber'] ?? null}, ${body['documentType'] ?? null}, ${body['postingDate'] ?? _time.now().toISOString().split('T')[0]}, ${body['reference'] ?? null}, ${body['description'] ?? null}, ${body['currency'] ?? 'UZS'}, ${body['totalDebit'] ?? 0}, ${body['totalCredit'] ?? 0}, ${body['status'] ?? 'draft'}, NOW(), NOW())
+        INSERT INTO gl_documents (document_number, document_type, document_date, posting_date, reference, description, currency, total_debit, total_credit, status, created_at, updated_at)
+        VALUES (${body['documentNumber'] ?? null}, ${body['documentType'] ?? null}, ${documentDate}, ${postingDate}, ${body['reference'] ?? null}, ${body['description'] ?? null}, ${body['currency'] ?? 'UZS'}, ${body['totalDebit'] ?? 0}, ${body['totalCredit'] ?? 0}, ${body['status'] ?? 'draft'}, NOW(), NOW())
         RETURNING *
       `);
       return rows.rows[0] as Row;
