@@ -50,7 +50,7 @@ export default function AccountsReceivable() {
 
   const addEntryMutation = useMutation({
     mutationFn: async () =>
-      apiRequest("POST", "/api/finance/ar/entries", {
+      apiRequest("POST", "/api/ar/entries", {
         customerId: arForm.customerId,
         amount: Number(arForm.amount),
         dueDate: arForm.dueDate,

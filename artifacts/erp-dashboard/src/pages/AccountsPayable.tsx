@@ -50,7 +50,7 @@ export default function AccountsPayable() {
 
   const addEntryMutation = useMutation({
     mutationFn: async () =>
-      apiRequest("POST", "/api/finance/ap/entries", {
+      apiRequest("POST", "/api/ap/entries", {
         vendorId: apForm.vendorId,
         amount: Number(apForm.amount),
         dueDate: apForm.dueDate,
