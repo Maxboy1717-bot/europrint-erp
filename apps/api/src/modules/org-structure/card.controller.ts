@@ -142,6 +142,15 @@ export class CardController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Card↔employee fit score (deterministic v1 — vizyon: karta baholaydi)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/fit')
+  async fit(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.computeCardFit(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
   @ApiOperation({ summary: 'Child cards (Farzandlar tab)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get(':id/children')

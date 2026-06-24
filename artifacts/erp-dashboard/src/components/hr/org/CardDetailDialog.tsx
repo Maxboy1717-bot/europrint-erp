@@ -99,6 +99,13 @@ export function CardDetailDialog({
   }>({ queryKey: [`${base}/folder`], enabled });
   const exams     = useQuery<Row[]>({ queryKey: [`/api/ai-exam/by-card/${id}`], enabled });
   const certs     = useQuery<{ items: Row[] }>({ queryKey: [`${base}/certificates`], enabled });
+  // Karta↔xodim moslik (fit) — deterministik skorer (vizyon: "karta baholaydi")
+  const fit       = useQuery<{ items: Row[] }>({ queryKey: [`${base}/fit`], enabled });
+  const fitByEmployee = new Map(
+    listOf(fit.data).map((f) => [Number(f.employee_id), f])
+  );
+  const fitTone = (s: number): "success" | "brand" | "warning" | "neutral" =>
+    s >= 80 ? "success" : s >= 60 ? "brand" : s >= 40 ? "warning" : "neutral";
 
   // Card-level Portret (org_node_portret, card_id-keyed): editable ЦКП/talablar/razryad/kutilmalar
   const portret = useQuery<{ portret: { portret_data?: Record<string, unknown> } | null }>({
@@ -230,6 +237,7 @@ export function CardDetailDialog({
                         <TableRow>
                           <TableHead>{t("ism")}</TableHead>
                           <TableHead>{t("tur")}</TableHead>
+                          <TableHead>{t("moslik", "Moslik")}</TableHead>
                           <TableHead>{t("umumiyOylik")}</TableHead>
                           <TableHead>{t("holati")}</TableHead>
                           <TableHead className="text-right">{t("amallar")}</TableHead>
@@ -245,6 +253,18 @@ export function CardDetailDialog({
                                 : e.is_primary
                                   ? <EPStatusPill tone="brand">{t("asosiy")}</EPStatusPill>
                                   : <EPStatusPill tone="neutral">{t("qoshimcha")}</EPStatusPill>}
+                            </TableCell>
+                            <TableCell>
+                              {(() => {
+                                const f = fitByEmployee.get(Number(e.id));
+                                if (!f) return <span className="text-muted-foreground">—</span>;
+                                const s = Number(f.fit_score ?? 0);
+                                return (
+                                  <EPStatusPill tone={fitTone(s)} title={`biriktirish ${f.assignment_score} · ta'rif ${f.definition_score}`}>
+                                    {s}% · {String(f.fit_label ?? "")}
+                                  </EPStatusPill>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell className="text-muted-foreground">{fmtSom(e.total_salary)}</TableCell>
                             <TableCell className="text-muted-foreground">{String(e.status ?? "")}</TableCell>

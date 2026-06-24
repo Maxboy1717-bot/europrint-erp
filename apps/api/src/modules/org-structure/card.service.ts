@@ -56,6 +56,23 @@ export class CardService {
     return Ok({ canAssign: r.data === 0, activeOccupants: r.data });
   }
 
+  /**
+   * Karta↔xodim moslik (fit) skorer — deterministik v1 (vizyon: "karta baholaydi").
+   * fit = 0.5·biriktirish + 0.5·karta-ta'rif. AI-kalit/imtihon kelganda komponent qo'shiladi.
+   */
+  async computeCardFit(cardId: number): Promise<Result<Row[]>> {
+    const r = await this.repo.computeCardFit(cardId);
+    if (!r.ok) return Err(r.error);
+    const scored = (r.data ?? []).map((row) => {
+      const assignment = Number(row['assignment_score'] ?? 0);
+      const definition = Number(row['definition_score'] ?? 0);
+      const fit = Math.round(0.5 * assignment + 0.5 * definition);
+      const label = fit >= 80 ? "a'lo" : fit >= 60 ? 'yaxshi' : fit >= 40 ? "o'rta" : 'past';
+      return { ...row, fit_score: fit, fit_label: label };
+    });
+    return Ok(scored);
+  }
+
   // ─── Phase 5 card-detail tabs (read-only) ──────────────────────────────────
   listEmployees(cardId: number): Promise<Result<Row[]>> { return this.repo.listEmployees(cardId); }
   listChildren(cardId: number): Promise<Result<Row[]>> { return this.repo.listChildren(cardId); }

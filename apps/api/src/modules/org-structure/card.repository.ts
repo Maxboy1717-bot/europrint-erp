@@ -164,6 +164,31 @@ export class CardRepository {
     `);
   }
 
+  /**
+   * Karta↔xodim moslik (fit) — deterministik v1. Vizyon: "karta xodim↔karta mosligini baholaydi".
+   * Mavjud REAL signallardan hisoblaydi (fabrikatsiyasiz): biriktirish sifati (primary/acting) +
+   * karta-ta'rif to'liqligi (razryad belgilangan + portret-talablar to'ldirilgan). AI-kalit / imtihon
+   * (ai_exam_attempts) kelganda komponent qo'shiladi — score boyitiladi. Hozir 0 imtihon bor.
+   */
+  async computeCardFit(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT e.id AS employee_id,
+             COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
+             ec.is_primary, COALESCE(ec.is_acting,false) AS is_acting,
+             (CASE WHEN COALESCE(ec.is_acting,false) THEN 50 WHEN ec.is_primary THEN 100 ELSE 70 END)::int AS assignment_score,
+             (CASE WHEN f.razryad_level_id IS NOT NULL THEN 50 ELSE 0 END
+              + CASE WHEN COALESCE(NULLIF(TRIM(p.portret_data->>'requirements'),''),'') <> '' THEN 50 ELSE 0 END)::int AS definition_score,
+             (f.razryad_level_id IS NOT NULL) AS razryad_set,
+             (COALESCE(NULLIF(TRIM(p.portret_data->>'requirements'),''),'') <> '') AS requirements_set
+      FROM employee_cards ec
+      JOIN employees e ON e.id = ec.employee_id
+      JOIN org_functions f ON f.id = ec.card_id
+      LEFT JOIN org_node_portret p ON p.card_id = f.id
+      WHERE ec.card_id = ${cardId} AND ec.is_active AND (ec.ended_at IS NULL OR ec.ended_at > now())
+      ORDER BY ec.is_primary DESC, ec.is_acting, e.last_name
+    `);
+  }
+
   /** Farzandlar tab: child cards (manager_id = this card, EP-ORG-021). */
   async listChildren(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
