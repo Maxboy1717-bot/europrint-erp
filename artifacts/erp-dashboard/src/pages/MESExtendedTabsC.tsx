@@ -1,7 +1,7 @@
 /** @module MESExtendedTabsC @description Norms tab and Smena Handover tab for the MES Extended page. */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Clock } from "lucide-react";
+import { Plus, Clock, Star } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { type MESShift } from "./MESExtendedTypes";
 import { useTranslation } from '@/lib/i18n';
 
@@ -113,8 +116,26 @@ interface SmenaTabProps {
 /** Tab content: Smena O'tkazish Protokoli */
 export function SmenaTab({ currentShift, onHandoverToast, onConfirmHandover }: SmenaTabProps) {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [incomingId, setIncomingId] = useState("");
   const [handoverNotes, setHandoverNotes] = useState("");
+  const [evalShiftId, setEvalShiftId] = useState("");
+  const [evalProd, setEvalProd] = useState("");
+  const [evalQual, setEvalQual] = useState("");
+  const [evalSafety, setEvalSafety] = useState("");
+  const [evalNotes, setEvalNotes] = useState("");
+
+  const closeEvalMutation = useMutation({
+    mutationFn: (vars: { shift_id: number; production_score?: number; quality_score?: number; safety_score?: number; notes?: string }) =>
+      apiRequest("POST", "/api/mes/shifts/close-evaluation", vars),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mes/stats"] });
+      setEvalShiftId(""); setEvalProd(""); setEvalQual(""); setEvalSafety(""); setEvalNotes("");
+      toast({ title: "Smena baholandi" });
+    },
+    onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
+  });
 
   const smenaStats = [
     { l: "Joriy smena ishlab chiqarishi", v: currentShift?.producedQty ?? "—", c: "text-primary"   },
@@ -238,6 +259,52 @@ export function SmenaTab({ currentShift, onHandoverToast, onConfirmHandover }: S
           </CardContent>
         </Card>
       </div>
+
+      {/* Smena baholash (Shift Evaluation) */}
+      <Card>
+        <CardHeader>
+          <h3 className="font-semibold text-sm flex items-center gap-2"><Star className="h-4 w-4 text-[var(--ep-yellow)]" /> Smena Baholash</h3>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-sm">Smena raqami (ID) <span className="text-destructive">*</span></Label>
+              <Input type="number" min="1" placeholder="1, 2, 3..." value={evalShiftId} onChange={e => setEvalShiftId(e.target.value)} data-testid="input-eval-shift-id" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Ishlab chiqarish (0-100)</Label>
+              <Input type="number" min="0" max="100" placeholder="85" value={evalProd} onChange={e => setEvalProd(e.target.value)} data-testid="input-eval-prod" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Sifat (0-100)</Label>
+              <Input type="number" min="0" max="100" placeholder="90" value={evalQual} onChange={e => setEvalQual(e.target.value)} data-testid="input-eval-qual" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Xavfsizlik (0-100)</Label>
+              <Input type="number" min="0" max="100" placeholder="95" value={evalSafety} onChange={e => setEvalSafety(e.target.value)} data-testid="input-eval-safety" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm">Izoh (ixtiyoriy)</Label>
+            <Textarea value={evalNotes} onChange={e => setEvalNotes(e.target.value)} placeholder="Smena davomidagi kuzatishlar..." className="min-h-[60px]" data-testid="input-eval-notes" />
+          </div>
+          <Button
+            className="w-full"
+            data-testid="button-submit-evaluation"
+            disabled={!evalShiftId || Number(evalShiftId) < 1 || closeEvalMutation.isPending}
+            onClick={() => closeEvalMutation.mutate({
+              shift_id: Number(evalShiftId),
+              ...(evalProd !== "" && { production_score: Math.min(100, Math.max(0, Number(evalProd))) }),
+              ...(evalQual !== ""  && { quality_score:    Math.min(100, Math.max(0, Number(evalQual))) }),
+              ...(evalSafety !== "" && { safety_score:   Math.min(100, Math.max(0, Number(evalSafety))) }),
+              ...(evalNotes.trim() && { notes: evalNotes.trim() }),
+            })}
+          >
+            <Star className="h-4 w-4 mr-1.5" />
+            {closeEvalMutation.isPending ? "Saqlanmoqda..." : "Smenani baholash"}
+          </Button>
+        </CardContent>
+      </Card>
     </TabsContent>
   );
 }
