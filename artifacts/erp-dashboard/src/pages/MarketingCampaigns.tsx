@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Target, Pencil, Trash2, BarChart2, Users, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Target, Pencil, Trash2, BarChart2, Users, TrendingUp, ChevronDown, ChevronUp, Rocket } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { MarketingCampaign } from "@shared/schema";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
@@ -119,6 +119,7 @@ export default function MarketingCampaigns() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [launchCampaignId, setLaunchCampaignId] = useState<string | null>(null);
   const [expandedStats, setExpandedStats] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", description: "", type: "social", platform: "telegram", status: "draft", budget: "", startDate: "", endDate: "" });
 
@@ -139,6 +140,12 @@ export default function MarketingCampaigns() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/marketing/campaigns/${id}`),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); toast({ title: "Kampaniya o'chirildi" }); },
+  });
+
+  const launchMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("POST", `/api/marketing/campaigns/${id}/launch`, {}),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/marketing/campaigns"] }); queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] }); setLaunchCampaignId(null); toast({ title: "Kampaniya ishga tushirildi" }); },
+    onError: (e: Error) => toast({ title: "Xatolik", description: e.message, variant: "destructive" }),
   });
 
   const resetForm = () => { setForm({ name: "", description: "", type: "social", platform: "telegram", status: "draft", budget: "", startDate: "", endDate: "" }); setEditId(null); };
@@ -233,6 +240,9 @@ export default function MarketingCampaigns() {
                   >
                     {expandedStats.has(c.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
+                  {c.status === 'draft' && (
+                    <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 no-default-hover-elevate" onClick={() => setLaunchCampaignId(c.id)} data-testid={`button-launch-campaign-${c.id}`} title="Ishga tushirish"><Rocket className="h-4 w-4" /></Button>
+                  )}
                   <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted no-default-hover-elevate" onClick={() => handleEdit(c)} data-testid={`button-edit-campaign-${c.id}`}><Pencil className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-red-500 hover:bg-red-50 no-default-hover-elevate" onClick={() => setDeleteId(c.id)} data-testid={`button-delete-campaign-${c.id}`}><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -276,6 +286,15 @@ export default function MarketingCampaigns() {
         confirmText="O'chirish"
         variant="destructive"
         onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null); } }}
+      />
+      <ConfirmDialog
+        open={!!launchCampaignId}
+        onOpenChange={(v) => { if (!v) setLaunchCampaignId(null); }}
+        title="Kampaniyani ishga tushirish"
+        description="Kampaniya faol holatga o'tkaziladi. Davom ettirasizmi?"
+        confirmText="Ishga tushirish"
+        variant="default"
+        onConfirm={() => { if (launchCampaignId) launchMutation.mutate(launchCampaignId); }}
       />
     </div>
   );
