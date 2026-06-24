@@ -53,6 +53,7 @@ const QuestionnaireTemplates = lazy(() => import("@/pages/QuestionnaireTemplates
 const SevenFunctions = lazy(() => import("@/pages/SevenFunctions"));
 const RaciMatrix = lazy(() => import("@/pages/RaciMatrix"));
 const HRMilestones = lazy(() => import("@/pages/HRMilestones"));
+const JobDescriptionsPage = lazy(() => import("@/pages/JobDescriptionsPage"));
 
 export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/employees',                        Employees],
@@ -99,6 +100,7 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/seven-functions',                  SevenFunctions],
   ['/raci-matrix',                      RaciMatrix],
   ['/hr/milestones',                    HRMilestones],
+  ['/hr/job-descriptions',              JobDescriptionsPage],  // HR lavozim tavsiflar CRUD
 ];
 
 export const AI_HR_ROUTES: [string, React.ComponentType][] = [
