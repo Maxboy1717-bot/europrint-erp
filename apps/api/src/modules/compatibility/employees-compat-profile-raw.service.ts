@@ -170,13 +170,22 @@ export class EmployeesCompatProfileRawService {
 
   async createEmergencyContact(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
+      // FIX (iter-77 drift catalog #19): the INSERT wrote nonexistent column `phone` (real col is
+      // phone_number) → 42703, and omitted NOT-NULL user_id + phone_number → 23502. Also the FE
+      // (EmergencyContactCard) sends camelCase phoneNumber/contactName, not `phone`. user_id is the
+      // canonical NOT-NULL FK (users table) — resolve it from the employee via INSERT..SELECT.
+      const contactName = body['contactName'] ?? body['contact_name'] ?? body['name'] ?? '';
+      const relationship = body['relationship'] ?? '';
+      const phoneNumber = body['phoneNumber'] ?? body['phone_number'] ?? body['phone'] ?? '';
+      const altPhone    = body['alternativePhone'] ?? body['alternative_phone'] ?? null;
       const r = await rawSql(sql`
-        INSERT INTO employee_emergency_contacts (employee_id, contact_name, relationship, phone)
-        VALUES (${si(employeeId)}, ${body['contact_name'] ?? body['contactName'] ?? body['name'] ?? ''}, ${body['relationship'] ?? null}, ${body['phone'] ?? null})
-        RETURNING id, employee_id, contact_name, relationship, phone, created_at
+        INSERT INTO employee_emergency_contacts (user_id, employee_id, contact_name, relationship, phone_number, alternative_phone)
+        SELECT u.id, ${si(employeeId)}, ${contactName}, ${relationship}, ${phoneNumber}, ${altPhone}
+        FROM users u WHERE u.employee_id = ${si(employeeId)} LIMIT 1
+        RETURNING id, user_id, employee_id, contact_name, relationship, phone_number, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Emergency contact creation failed');
+      if (!item) throw new InternalServerErrorException('Emergency contact creation failed (no user for employee)');
       return item;
     });
   }
