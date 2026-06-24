@@ -20,9 +20,10 @@ export class DrizzleHrOnboardingRepository implements IHrOnboardingRepository {
     try {
       const d = dto as Record<string, unknown>;
       const row: Omit<typeof hrOnboardingPlans.$inferInsert, 'id'> = {
-        title: (d['title'] as string | undefined) ?? '',
-        tasks: d['tasks'] ? JSON.stringify(d['tasks']) : '[]',
-        durationDays: (d['durationDays'] as number | undefined) ?? 30,
+        // DTO sends `name` (Zod schema); compat column is `title` — map both
+        title: (d['name'] as string | undefined) ?? (d['title'] as string | undefined) ?? '',
+        tasks: d['weeklyPlan'] ? JSON.stringify(d['weeklyPlan']) : (d['tasks'] ? JSON.stringify(d['tasks']) : '[]'),
+        durationDays: (d['probationDays'] as number | undefined) ?? (d['durationDays'] as number | undefined) ?? 90,
         isActive: true,
         departmentId: d['departmentId'] as string | undefined,
         positionId: d['positionId'] as number | undefined,

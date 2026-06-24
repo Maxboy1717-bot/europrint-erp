@@ -12,9 +12,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { UserPlus, Plus } from "lucide-react";
+import { UserPlus, Plus, ClipboardList } from "lucide-react";
 import { OnboardingRoadmapDialog } from "@/components/hr/OnboardingRoadmapDialog";
 import { useTranslation } from "@/lib/i18n";
 
@@ -34,6 +38,16 @@ import {
 } from "./HROnboardingSections";
 import { CreateOnboardingDialog } from "./HROnboardingDialogs";
 
+interface OnboardingPlan {
+  id: number;
+  name: string;
+  name_ru?: string | null;
+  position_id?: number | null;
+  department_id?: number | null;
+  probation_days?: number | null;
+  created_at?: string | null;
+}
+
 export default function HROnboarding() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
@@ -42,8 +56,37 @@ export default function HROnboarding() {
   const [form, setForm] = useState<OnboardingForm>({ userId: "", fullName: "", positionName: "", type: "" });
   const [viewRoadmapEntry, setViewRoadmapEntry] = useState<ViewRoadmapEntry | null>(null);
 
+  // Onboarding plans (POST /api/hr/onboarding/plans)
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [planName, setPlanName] = useState("");
+  const [planProbationDays, setPlanProbationDays] = useState("");
+
   const { data: checklists = [], isLoading: checkLoading } = useQuery<ChecklistItem[]>({
     queryKey: ["/api/hr/onboarding-checklists"],
+  });
+
+  const { data: plansRaw, isLoading: plansLoading } = useQuery({
+    queryKey: ["/api/hr/onboarding/plans"],
+  });
+  const plans: OnboardingPlan[] = (() => {
+    const d = plansRaw as Record<string, unknown> | null;
+    if (!d) return [];
+    if (Array.isArray(d)) return d as OnboardingPlan[];
+    if (Array.isArray((d as { items?: unknown[] }).items)) return (d as { items: OnboardingPlan[] }).items;
+    if (Array.isArray((d as { data?: unknown[] }).data)) return (d as { data: OnboardingPlan[] }).data;
+    return [];
+  })();
+
+  const createPlan = useMutation({
+    mutationFn: (payload: { name: string; probationDays?: number }) =>
+      apiRequest("POST", "/api/hr/onboarding/plans", { ...payload, weeklyPlan: [] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/onboarding/plans"] });
+      setShowPlanDialog(false);
+      setPlanName(""); setPlanProbationDays("");
+      toast({ title: t("onboardingRejaQoshildi", "Onboarding reja qo'shildi") });
+    },
+    onError: () => toast({ title: t("xatolikYuzBerdi", "Xatolik yuz berdi"), variant: "destructive" }),
   });
 
   const { data: roadmapsRaw } = useQuery({ queryKey: ["/api/hr/recruitment/roadmaps"] });
@@ -122,6 +165,42 @@ export default function HROnboarding() {
             isIncrementing={updateChecklist.isPending}
           />
         )}
+
+        {/* Onboarding plans section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-[var(--ep-blue)]" />
+              <h2 className="font-semibold text-sm">{t("onboardingRejalari", "Onboarding rejalari")}</h2>
+              <span className="text-xs text-muted-foreground">({plans.length})</span>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setShowPlanDialog(true)} data-testid="button-add-plan">
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              {t("rejaQoshish", "Reja qo'shish")}
+            </Button>
+          </div>
+          {plansLoading ? (
+            <div className="space-y-2">
+              {[1,2,3].map(i => <Skeleton key={i} className="h-9 w-full" />)}
+            </div>
+          ) : plans.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("rejaYoq", "Rejalari topilmadi")}</p>
+          ) : (
+            <div className="space-y-1.5">
+              {plans.map(plan => (
+                <div key={plan.id} className="flex items-center justify-between px-3 py-2 rounded-md border border-border/50 bg-card/60" data-testid={`row-plan-${plan.id}`}>
+                  <div>
+                    <span className="text-sm font-medium">{plan.name}</span>
+                    {plan.probation_days ? (
+                      <span className="ml-2 text-xs text-muted-foreground">{plan.probation_days} kun</span>
+                    ) : null}
+                  </div>
+                  <span className="text-xs text-muted-foreground">#{plan.id}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <CreateOnboardingDialog
@@ -132,6 +211,56 @@ export default function HROnboarding() {
         onSubmit={() => createChecklist.mutate(form)}
         isPending={createChecklist.isPending}
       />
+
+      {/* Onboarding plans create dialog */}
+      <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">
+              {t("onboardingRejaYaratish", "Yangi onboarding reja")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("rejaNomi", "Reja nomi")} *</Label>
+              <Input
+                value={planName}
+                onChange={e => setPlanName(e.target.value)}
+                placeholder={t("onboardingRejaPlaceholder", "Masalan: Yangi dasturchi uchun reja")}
+                data-testid="input-plan-name"
+              />
+            </div>
+            <div>
+              <Label>{t("sinov muddati", "Sinov muddati (kun)")}</Label>
+              <Input
+                type="number"
+                min="1"
+                max="365"
+                value={planProbationDays}
+                onChange={e => setPlanProbationDays(e.target.value)}
+                placeholder="90"
+                data-testid="input-plan-probation-days"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowPlanDialog(false)}>{t("cancel")}</Button>
+              <Button
+                onClick={() => {
+                  if (!planName.trim()) return;
+                  createPlan.mutate({
+                    name: planName.trim(),
+                    ...(planProbationDays ? { probationDays: Number(planProbationDays) } : {}),
+                  });
+                }}
+                disabled={createPlan.isPending || !planName.trim()}
+                data-testid="button-save-plan"
+              >
+                {t("Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {viewRoadmapEntry && (
         <OnboardingRoadmapDialog
