@@ -8,13 +8,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, XCircle, Clock, ClipboardList } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, ClipboardList, Plus } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -46,11 +55,31 @@ const PRIORITY_COLORS: Record<string, string> = {
   low: "outline",
 };
 
+const HITL_TYPES = [
+  { value: "purchase_order", label: "Xarid buyurtmasi" },
+  { value: "payment", label: "To'lov" },
+  { value: "three_way_match", label: "3-tomonlama muvofiqlik" },
+  { value: "credit_limit_exceed", label: "Kredit limiti oshishi" },
+  { value: "discount_override", label: "Chegirma ustunligi" },
+  { value: "employee_tardiness", label: "Xodim kechikishi" },
+  { value: "qc_fail_critical", label: "QC kritik xato" },
+  { value: "mro_repair_high_value", label: "MRO ta'mirlash (katta)" },
+  { value: "employee_termination", label: "Xodimni ishdan bo'shatish" },
+  { value: "inventory_writeoff", label: "Inventar o'chirish" },
+  { value: "advance_bypass", label: "Avans bypass" },
+] as const;
+
 export default function ApprovalHub() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("pending");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newDocType, setNewDocType] = useState("");
+  const [newDocNumber, setNewDocNumber] = useState("");
+  const [newAmount, setNewAmount] = useState("");
+  const [newCurrency, setNewCurrency] = useState("UZS");
+  const [newNotes, setNewNotes] = useState("");
 
   const { data: approvals = [], isLoading } = useQuery<ApprovalItem[]>({
     queryKey: ["/api/approval-workflow/dashboard"],
@@ -81,6 +110,45 @@ export default function ApprovalHub() {
     onError: () =>
       toast({ title: tLabel('common.errorOccurred', "Xatolik yuz berdi"), variant: "destructive" }),
   });
+
+  const createMutation = useMutation({
+    mutationFn: (payload: {
+      documentType: string;
+      documentId: string;
+      documentNumber?: string;
+      amount: number;
+      currency: string;
+      notes?: string;
+    }) => apiRequest("POST", "/api/director/approvals", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/approval-workflow/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/director/approvals"] });
+      setIsCreateOpen(false);
+      setNewDocType(""); setNewDocNumber(""); setNewAmount(""); setNewCurrency("UZS"); setNewNotes("");
+      toast({ title: "Tasdiqlash so'rovi yuborildi" });
+    },
+    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  function handleCreate() {
+    if (!newDocType || !newAmount) {
+      toast({ title: "Hujjat turi va summani kiriting", variant: "destructive" });
+      return;
+    }
+    const amt = parseFloat(newAmount);
+    if (isNaN(amt) || amt <= 0) {
+      toast({ title: "Summa musbat son bo'lishi kerak", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate({
+      documentType: newDocType,
+      documentId: crypto.randomUUID(),
+      documentNumber: newDocNumber.trim() || undefined,
+      amount: amt,
+      currency: newCurrency || "UZS",
+      notes: newNotes.trim() || undefined,
+    });
+  }
 
   const pending = (approvals as ApprovalItem[]).filter(
     (a) => a.status === "pending"
@@ -234,6 +302,10 @@ export default function ApprovalHub() {
             <EPStatusPill tone="danger">{pending.length} kutmoqda</EPStatusPill>
           )}
         </div>
+        <Button size="sm" onClick={() => setIsCreateOpen(true)} data-testid="button-create-approval">
+          <Plus className="h-3.5 w-3.5 mr-1.5" />
+          Yangi so&apos;rov
+        </Button>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
@@ -300,6 +372,80 @@ export default function ApprovalHub() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">Tasdiqlash so&apos;rovi</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Hujjat turi *</Label>
+              <Select value={newDocType} onValueChange={setNewDocType}>
+                <SelectTrigger data-testid="select-doc-type">
+                  <SelectValue placeholder="Hujjat turini tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {HITL_TYPES.map(dt => (
+                    <SelectItem key={dt.value} value={dt.value}>{dt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Hujjat raqami</Label>
+                <Input
+                  value={newDocNumber}
+                  onChange={e => setNewDocNumber(e.target.value)}
+                  placeholder="Masalan: AP-PO-001"
+                  data-testid="input-doc-number"
+                />
+              </div>
+              <div>
+                <Label>Valyuta</Label>
+                <Input
+                  value={newCurrency}
+                  onChange={e => setNewCurrency(e.target.value)}
+                  placeholder="UZS"
+                  data-testid="input-currency"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Summa (so&apos;m) *</Label>
+              <Input
+                type="number"
+                min="1"
+                value={newAmount}
+                onChange={e => setNewAmount(e.target.value)}
+                placeholder="50000000"
+                data-testid="input-amount"
+              />
+            </div>
+            <div>
+              <Label>Izoh</Label>
+              <Textarea
+                value={newNotes}
+                onChange={e => setNewNotes(e.target.value)}
+                placeholder="Tasdiqlash sababi yoki qo'shimcha ma'lumot..."
+                rows={2}
+                data-testid="input-notes"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Bekor</Button>
+              <Button
+                onClick={handleCreate}
+                disabled={createMutation.isPending || !newDocType || !newAmount}
+                data-testid="button-save-approval"
+              >
+                Yuborish
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
