@@ -74,6 +74,7 @@ const ReclamationsPage = lazy(() => import("@/pages/qc/ReclamationsPage"));
 const QualityCertificatesPage = lazy(() => import("@/pages/qc/QualityCertificatesPage"));
 const QualityTrendPage = lazy(() => import("@/pages/qc/QualityTrendPage"));
 const QcDpmoCalculator = lazy(() => import("@/pages/qc/QcDpmoCalculator"));
+const InProcessQcPage = lazy(() => import("@/pages/qc/InProcessQcPage"));
 
 // ARCHITECTURE.md §40 — TZ-14 MRO dedicated
 const PreventiveMaintenancePage = lazy(() => import("@/pages/mro/PreventiveMaintenancePage"));
@@ -161,6 +162,7 @@ export const QC_ROUTES: [string, React.ComponentType][] = [
   ['/qc/iso',               QCExtended],
   ['/qc/trends',            QualityTrendPage],            // dedicated (TZ-04)
   ['/qc/dpmo-calculator',   QcDpmoCalculator],           // dedicated (TZ-38 DPMO+Six Sigma)
+  ['/qc/in-process',        InProcessQcPage],            // dedicated (inline QC — MES→QC)
   ['/qc/ai-analysis',       QCExtended],
   ['/qc/reports',           QCExtended],
   ['/qc/settings',          QCExtended],
