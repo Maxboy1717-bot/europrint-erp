@@ -4,17 +4,28 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ModulePage } from "@/components/ui/module-page";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ClipboardList, Search, ArrowRight } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ClipboardList, Search, ArrowRight, RefreshCw } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { useToast } from "@/hooks/use-toast";
 interface StatusTransition {
   from: string;
   to:   string[];
@@ -55,13 +66,36 @@ const STATUS_COLORS: Record<string, string> = {
   on_hold:         "bg-yellow-100 text-[var(--ep-yellow)]",
 };
 
+const ALL_STATUSES = [
+  "draft","incomplete","pending_design","pending_sample_lab","pending_manager_completion",
+  "pending_technology","pending_advance","ready_for_planning","planned","released_to_production",
+  "in_production","pending_qc_final","ready_for_fg_warehouse","qc_failed","rework",
+  "in_fg_warehouse","delivery_planned","in_delivery","delivered","partially_paid","fully_paid","cancelled",
+];
+
 type TabType = "chain" | "log";
 
 export default function OrderStatusPage() {
   const { t } = useTranslation("common");
-  const [tab, setTab]         = useState<TabType>("chain");
-  const [orderId, setOrderId] = useState("");
+  const { toast } = useToast();
+  const [tab, setTab]           = useState<TabType>("chain");
+  const [orderId, setOrderId]   = useState("");
   const [searched, setSearched] = useState("");
+  const [isTransitDialog, setIsTransitDialog] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const [transitNotes, setTransitNotes] = useState("");
+
+  const transitionMutation = useMutation({
+    mutationFn: (payload: { status: string; notes?: string }) =>
+      apiRequest("POST", `/api/order-status/${searched}/transition`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/order-status/log", searched] });
+      setIsTransitDialog(false);
+      setNewStatus(""); setTransitNotes("");
+      toast({ title: t("holatOzgartirildi", "Holat o'zgartirildi") });
+    },
+    onError: () => toast({ title: t("xatolikYuzBerdi", "Xatolik yuz berdi"), variant: "destructive" }),
+  });
 
   const { data: chainData, isLoading: loadingChain, isError: isChainError, error: errorChain, refetch: refetchChain } =
     useQuery<StatusChain | string[]>({
@@ -198,8 +232,8 @@ export default function OrderStatusPage() {
           )
         ) : (
           <div className="space-y-4">
-            <div className="flex gap-2 max-w-sm">
-              <div className="relative flex-1">
+            <div className="flex gap-2 flex-wrap">
+              <div className="relative flex-1 min-w-[180px]">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t("buyurtmaId1")}
@@ -213,6 +247,16 @@ export default function OrderStatusPage() {
               <Button onClick={() => setSearched(orderId)} disabled={!orderId}>
                 {t("search")}
               </Button>
+              {searched && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsTransitDialog(true)}
+                  data-testid="button-transition-status"
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  {t("holatOzgartirish", "Holat o'zgartirish")}
+                </Button>
+              )}
             </div>
 
             {loadingLog ? (
@@ -273,6 +317,58 @@ export default function OrderStatusPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={isTransitDialog} onOpenChange={setIsTransitDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">
+              {t("holatOzgartirish", "Holat o'zgartirish")} — #{searched}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("yangiHolat", "Yangi holat")} *</Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger data-testid="select-new-status">
+                  <SelectValue placeholder={t("holatTanlang", "Holat tanlang")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {ALL_STATUSES.map(s => (
+                    <SelectItem key={s} value={s}>
+                      {s.replace(/_/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("Izoh", "Izoh")}</Label>
+              <Textarea
+                value={transitNotes}
+                onChange={e => setTransitNotes(e.target.value)}
+                placeholder={t("ixtiyoriyIzoh", "Ixtiyoriy izoh...")}
+                rows={3}
+                data-testid="textarea-transit-notes"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsTransitDialog(false)}>
+                {t("cancel")}
+              </Button>
+              <Button
+                onClick={() => transitionMutation.mutate({
+                  status: newStatus,
+                  notes: transitNotes.trim() || undefined,
+                })}
+                disabled={transitionMutation.isPending || !newStatus}
+                data-testid="button-confirm-transition"
+              >
+                {t("saqlash", "Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </ModulePage>
   );
 }
