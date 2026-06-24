@@ -149,6 +149,20 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'org_departments.work_schedule ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS work_schedule TEXT` },
   { name: 'org_departments.current_state ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS current_state TEXT` },
   { name: 'org_departments.bonus_config ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS bonus_config TEXT` },
+  // VISION (egasi 2026-06-24): lavozim-karta portreti = "kerakli jihozlar" (position_equipment).
+  // Har node-kartaga biriktirilgan jihoz; xodim biriktirilganda auto-so'rov → Uskuna 360 (asset_items).
+  { name: 'position_equipment CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS position_equipment (
+    id SERIAL PRIMARY KEY,
+    org_department_id INTEGER NOT NULL,
+    equipment_name TEXT NOT NULL,
+    equipment_type VARCHAR,
+    quantity INTEGER DEFAULT 1,
+    is_required BOOLEAN DEFAULT true,
+    auto_request BOOLEAN DEFAULT false,
+    asset_item_id INTEGER,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT now()
+  )` },
   { name: 'crm_leads.title ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS title TEXT` },
   { name: 'crm_leads.second_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS second_name TEXT` },
   { name: 'crm_leads.last_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS last_name TEXT` },

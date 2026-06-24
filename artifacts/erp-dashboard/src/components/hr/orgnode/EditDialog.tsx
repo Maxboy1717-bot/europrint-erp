@@ -41,6 +41,16 @@ export function EditDialog({
     nodeType: node.nodeType,
     headUserId: node.headUserId ?? null,
     razryadLevelId: node.razryadLevelId ?? null,
+    // VISION node=karta — to'liq karta-maydonlari
+    salaryType: node.salaryType ?? "",
+    minSalary: node.minSalary ?? "",
+    maxSalary: node.maxSalary ?? "",
+    rbacTier: node.rbacTier ?? "",
+    tskpTarget: node.tskpTarget ?? "",
+    tskpMeasurementUnit: node.tskpMeasurementUnit ?? "",
+    workSchedule: node.workSchedule ?? "",
+    currentState: node.currentState ?? "",
+    bonusConfig: node.bonusConfig ?? "",
   });
 
   // VISION: har node razryadga ega — razryad darajalari ro'yxati
@@ -67,7 +77,23 @@ export function EditDialog({
   }
 
   const mutation = useMutation({
-    mutationFn: () => apiRequest("PATCH", `/api/org-structure/nodes/${node.id}`, form),
+    mutationFn: () => {
+      // VISION node=karta: bo'sh string'larni olib tashlab, raqamlarni number qilib yuboramiz (.strict() Zod)
+      const numOrNull = (v: unknown) => { const n = Number(v); return v === "" || v == null || Number.isNaN(n) ? null : n; };
+      const payload: Record<string, unknown> = {
+        name: form.name, nameRu: form.nameRu, color: form.color, tskp: form.tskp, tskpRu: form.tskpRu,
+        description: form.description, nodeType: form.nodeType, headUserId: form.headUserId,
+        razryadLevelId: form.razryadLevelId,
+        salaryType: form.salaryType || null,
+        minSalary: numOrNull(form.minSalary), maxSalary: numOrNull(form.maxSalary),
+        rbacTier: form.rbacTier || null,
+        tskpTarget: numOrNull(form.tskpTarget),
+        tskpMeasurementUnit: form.tskpMeasurementUnit || null,
+        workSchedule: form.workSchedule || null, currentState: form.currentState || null,
+        bonusConfig: form.bonusConfig || null,
+      };
+      return apiRequest("PATCH", `/api/org-structure/nodes/${node.id}`, payload);
+    },
     onSuccess: () => {
       toast({ title: "Saqlandi" });
       onSuccess();
@@ -157,6 +183,63 @@ export function EditDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* VISION node=karta — to'liq karta-maydonlari (HR 0 dan kiritadi) */}
+          <div className="col-span-2 border-t border-border/50 mt-1 pt-2">
+            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide">{t("kartaMaydonlari", "Karta maydonlari")}</p>
+          </div>
+          <div>
+            <Label>{t("oylikTuri", "Oylik turi")}</Label>
+            <Select value={form.salaryType || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, salaryType: v === "__none__" ? "" : v }))}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">—</SelectItem>
+                <SelectItem value="oylik">Oylik</SelectItem>
+                <SelectItem value="soatbay">Soatbay</SelectItem>
+                <SelectItem value="ishbay">Ishbay</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>{t("rbacDaraja", "RBAC / ruxsat darajasi")}</Label>
+            <Input value={form.rbacTier} onChange={(e) => setForm((f) => ({ ...f, rbacTier: e.target.value }))} placeholder="operator / manager / director" />
+          </div>
+          <div>
+            <Label>{t("minOylik", "Min oylik")}</Label>
+            <Input type="number" value={String(form.minSalary)} onChange={(e) => setForm((f) => ({ ...f, minSalary: e.target.value }))} />
+          </div>
+          <div>
+            <Label>{t("maxOylik", "Max oylik")}</Label>
+            <Input type="number" value={String(form.maxSalary)} onChange={(e) => setForm((f) => ({ ...f, maxSalary: e.target.value }))} />
+          </div>
+          <div>
+            <Label>{t("tskpMaqsadSon", "ЦКП maqsad (son)")}</Label>
+            <Input type="number" value={String(form.tskpTarget)} onChange={(e) => setForm((f) => ({ ...f, tskpTarget: e.target.value }))} />
+          </div>
+          <div>
+            <Label>{t("olchovBirligi", "ЦКП o'lchov")}</Label>
+            <Select value={form.tskpMeasurementUnit || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, tskpMeasurementUnit: v === "__none__" ? "" : v }))}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">—</SelectItem>
+                <SelectItem value="SON">SON</SelectItem>
+                <SelectItem value="FOIZ">FOIZ (%)</SelectItem>
+                <SelectItem value="VAQT">VAQT</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>{t("ishVaqti", "Ish vaqti / smena")}</Label>
+            <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
+          </div>
+          <div>
+            <Label>{t("joriyHolat", "Joriy holat")}</Label>
+            <Input value={form.currentState} onChange={(e) => setForm((f) => ({ ...f, currentState: e.target.value }))} />
+          </div>
+          <div className="col-span-2">
+            <Label>{t("bonus", "Bonus (konfiguratsiya)")}</Label>
+            <Input value={form.bonusConfig} onChange={(e) => setForm((f) => ({ ...f, bonusConfig: e.target.value }))} placeholder="masalan: reja oshsa 5%" />
           </div>
         </div>
         <DialogFooter>

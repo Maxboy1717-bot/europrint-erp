@@ -64,6 +64,18 @@ export class OrgMutationsRepo {
     if (dto.cameraZoneId !== undefined)    sets.push(sql`camera_zone_id = ${(dto.cameraZoneId as string) ?? null}`);
     if (dto.telegramGroupId !== undefined) sets.push(sql`telegram_group_id = ${(dto.telegramGroupId as string) ?? null}`);
     if (dto.razryadLevelId !== undefined)  sets.push(sql`razryad_level_id = ${(dto.razryadLevelId as number) ?? null}`);
+    // VISION (egasi 2026-06-24): node=karta — to'liq karta-maydonlari
+    if (dto.salaryType !== undefined)        sets.push(sql`salary_type = ${(dto.salaryType as string) ?? null}`);
+    if (dto.minSalary !== undefined)         sets.push(sql`min_salary = ${(dto.minSalary as number) ?? null}`);
+    if (dto.maxSalary !== undefined)         sets.push(sql`max_salary = ${(dto.maxSalary as number) ?? null}`);
+    if (dto.rbacTier !== undefined)          sets.push(sql`rbac_tier = ${(dto.rbacTier as string) ?? null}`);
+    if (dto.tskpTarget !== undefined)        sets.push(sql`tskp_target = ${(dto.tskpTarget as number) ?? null}`);
+    if (dto.tskpMeasurementUnit !== undefined) sets.push(sql`tskp_measurement_unit = ${(dto.tskpMeasurementUnit as string) ?? null}`);
+    if (dto.workSchedule !== undefined)      sets.push(sql`work_schedule = ${(dto.workSchedule as string) ?? null}`);
+    if (dto.currentState !== undefined)      sets.push(sql`current_state = ${(dto.currentState as string) ?? null}`);
+    if (dto.bonusConfig !== undefined)       sets.push(sql`bonus_config = ${(dto.bonusConfig as string) ?? null}`);
+    if (dto.aiExamEnabled !== undefined)     sets.push(sql`ai_exam_enabled = ${(dto.aiExamEnabled as boolean) ?? null}`);
+    if (dto.statisticsType !== undefined)    sets.push(sql`statistics_type = ${(dto.statisticsType as string) ?? null}`);
     if (sets.length === 0) return null;
     const rows = await runQuery<Row>(sql`
       UPDATE org_departments SET ${sql.join(sets, sql`, `)}

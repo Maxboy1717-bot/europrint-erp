@@ -40,6 +40,16 @@ export interface NodeDetail {
   headUserName?: string | null;
   headUserEmployeeId?: string | null;
   razryadLevelId?: number | null;
+  // VISION node=karta — to'liq karta-maydonlari
+  salaryType?: string | null;
+  minSalary?: number | string | null;
+  maxSalary?: number | string | null;
+  rbacTier?: string | null;
+  tskpTarget?: number | string | null;
+  tskpMeasurementUnit?: string | null;
+  workSchedule?: string | null;
+  currentState?: string | null;
+  bonusConfig?: string | null;
   employeeCount: number;
   childCount: number;
   vacantChildCount?: number;

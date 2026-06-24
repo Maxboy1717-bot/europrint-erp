@@ -116,6 +116,18 @@ export class OrgQueriesRepo {
           headUserId: orgDepartments.head_user_id, headUserName: fullName,
           // VISION: har node razryadga ega (raw column — Drizzle schema'da yo'q)
           razryadLevelId: sql<number | null>`razryad_level_id`,
+          // VISION (node=karta): to'liq karta-maydonlari (raw — Drizzle schema'da yo'q)
+          salaryType: sql<string | null>`salary_type`,
+          minSalary: sql<number | null>`min_salary`,
+          maxSalary: sql<number | null>`max_salary`,
+          rbacTier: sql<string | null>`rbac_tier`,
+          tskpTarget: sql<number | null>`tskp_target`,
+          tskpMeasurementUnit: sql<string | null>`tskp_measurement_unit`,
+          workSchedule: sql<string | null>`work_schedule`,
+          currentState: sql<string | null>`current_state`,
+          bonusConfig: sql<string | null>`bonus_config`,
+          aiExamEnabled: sql<boolean | null>`ai_exam_enabled`,
+          statisticsType: sql<string | null>`statistics_type`,
           employeeCount: sql<number>`(
             SELECT COUNT(*)::int FROM employee_org_departments eod
             JOIN users eu ON eu.id = eod.user_id AND eu.is_active = TRUE

@@ -57,6 +57,18 @@ const OrgNodeSchema = z.object({
   telegramGroupId:   z.string().max(200).optional(),
   // VISION (egasi 2026-06-24): har node (bo'lim VA lavozim) razryadga ega. null = tozalash.
   razryadLevelId:    z.union([z.number().int().positive(), z.null()]).optional(),
+  // VISION (egasi 2026-06-24): node=karta — to'liq karta-maydonlari (HR 0 dan kiritadi).
+  salaryType:        z.union([z.enum(['ishbay', 'soatbay', 'oylik']), z.null()]).optional(),
+  minSalary:         z.union([z.number(), z.null()]).optional(),
+  maxSalary:         z.union([z.number(), z.null()]).optional(),
+  rbacTier:          z.union([z.string().max(50), z.null()]).optional(),
+  tskpTarget:        z.union([z.number().int(), z.null()]).optional(),
+  tskpMeasurementUnit: z.union([z.enum(['SON', 'FOIZ', 'VAQT']), z.null()]).optional(),
+  workSchedule:      z.union([z.string().max(2000), z.null()]).optional(),
+  currentState:      z.union([z.string().max(2000), z.null()]).optional(),
+  bonusConfig:       z.union([z.string().max(2000), z.null()]).optional(),
+  aiExamEnabled:     z.union([z.boolean(), z.null()]).optional(),
+  statisticsType:    z.union([z.string().max(50), z.null()]).optional(),
 }).strict();
 
 const MoveNodeSchema = z.object({
