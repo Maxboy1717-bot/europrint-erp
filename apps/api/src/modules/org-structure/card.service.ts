@@ -56,6 +56,17 @@ export class CardService {
     return Ok({ canAssign: r.data === 0, activeOccupants: r.data });
   }
 
+  /** Vizyon (Vysotskiy 7 vertikal): kartaning boshqaruvchisini belgilash + nomzodlar. */
+  async setCardManager(cardId: number, managerId: number | null): Promise<Result<Row>> {
+    const r = await this.repo.setCardManager(cardId, managerId);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+    return Ok(r.data);
+  }
+  listManagerCandidates(cardId: number): Promise<Result<Row[]>> {
+    return this.repo.listManagerCandidates(cardId);
+  }
+
   /**
    * Karta↔xodim moslik (fit) skorer — deterministik v1 (vizyon: "karta baholaydi").
    * fit = 0.5·biriktirish + 0.5·karta-ta'rif. AI-kalit/imtihon kelganda komponent qo'shiladi.

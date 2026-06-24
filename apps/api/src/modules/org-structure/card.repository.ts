@@ -65,6 +65,48 @@ export class CardRepository {
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
+  /**
+   * Vizyon (Vysotskiy 7 vertikal): kartaning boshqaruvchisini (manager_id = keyingi yuqori karta)
+   * belgilash. manager_id ustuni o'qilardi (Farzandlar tab) lekin hech qayerda SET qilinmasdi.
+   * Sikl-himoya: boshqaruvchi o'zi YOKI quyi (farzand) karta bo'la olmaydi (rekursiv tekshiruv).
+   */
+  async setCardManager(cardId: number, managerId: number | null): Promise<Result<Row | null>> {
+    if (managerId !== null) {
+      if (managerId === cardId) return Err("Karta o'zini boshqara olmaydi");
+      const sub = await this.exec(sql`
+        WITH RECURSIVE descendants AS (
+          SELECT id FROM org_functions WHERE id = ${cardId}
+          UNION ALL
+          SELECT f.id FROM org_functions f JOIN descendants dd ON f.manager_id = dd.id
+        )
+        SELECT 1 AS hit FROM descendants WHERE id = ${managerId} LIMIT 1
+      `);
+      if (!sub.ok) return Err(sub.error);
+      if (sub.data.length > 0) return Err("Sikl: boshqaruvchi quyi (farzand) karta bo'la olmaydi");
+    }
+    const r = await this.exec(sql`
+      UPDATE org_functions SET manager_id = ${managerId}, updated_at = now()
+      WHERE id = ${cardId} AND deleted_at IS NULL
+      RETURNING id, position_name, manager_id
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /** Boshqaruvchi-nomzodlar: o'zidan va quyi (farzand) kartalardan tashqari barcha faol kartalar. */
+  async listManagerCandidates(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      WITH RECURSIVE descendants AS (
+        SELECT id FROM org_functions WHERE id = ${cardId}
+        UNION ALL
+        SELECT f.id FROM org_functions f JOIN descendants dd ON f.manager_id = dd.id
+      )
+      SELECT f.id, f.position_name, f.code, f.level
+      FROM org_functions f
+      WHERE f.deleted_at IS NULL AND f.id NOT IN (SELECT id FROM descendants)
+      ORDER BY f.level NULLS LAST, f.position_name
+    `);
+  }
+
   async create(dto: CardInput): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
       INSERT INTO org_functions

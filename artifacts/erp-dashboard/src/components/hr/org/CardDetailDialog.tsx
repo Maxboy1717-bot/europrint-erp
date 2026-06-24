@@ -16,6 +16,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { EPLoader, EPErrorState, EPEmptyState, EPStatusPill } from "@/components/ep";
@@ -106,6 +109,21 @@ export function CardDetailDialog({
   );
   const fitTone = (s: number): "success" | "brand" | "warning" | "neutral" =>
     s >= 80 ? "success" : s >= 60 ? "brand" : s >= 40 ? "warning" : "neutral";
+
+  // Vertikal ierarxiya (Vysotskiy 7): kartaning boshqaruvchisini belgilash
+  const managerCands = useQuery<{ items: { id: number; position_name: string; code?: string | null }[] }>({
+    queryKey: [`${base}/manager-candidates`], enabled,
+  });
+  const managerOptions = Array.isArray(managerCands.data?.items) ? managerCands.data!.items : [];
+  const setManagerMutation = useMutation({
+    mutationFn: (managerId: number | null) => apiRequest("PATCH", `${base}/manager`, { managerId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [base] });
+      queryClient.invalidateQueries({ queryKey: [`${base}/children`] });
+      toast({ title: t("boshqaruvchiBelgilandi", "Boshqaruvchi belgilandi") });
+    },
+    onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
+  });
 
   // Card-level Portret (org_node_portret, card_id-keyed): editable ЦКП/talablar/razryad/kutilmalar
   const portret = useQuery<{ portret: { portret_data?: Record<string, unknown> } | null }>({
@@ -218,6 +236,31 @@ export function CardDetailDialog({
                   <Field label={t("minOylik")} value={card.min_salary} />
                   <Field label={t("maxOylik")} value={card.max_salary} />
                   <Field label={t("tskpMaqsad")} value={card.tskp} />
+                </div>
+
+                {/* Vertikal ierarxiya (Vysotskiy 7): boshqaruvchi karta */}
+                <div className="mt-4 rounded-md border border-border p-3">
+                  <Label className="text-[12px] text-muted-foreground">{t("boshqaruvchiKarta", "Boshqaruvchi (vertikal ierarxiya)")}</Label>
+                  <Select
+                    value={card.manager_id != null ? String(card.manager_id) : "none"}
+                    onValueChange={(v) => setManagerMutation.mutate(v === "none" ? null : Number(v))}
+                    disabled={setManagerMutation.isPending || managerCands.isLoading}
+                  >
+                    <SelectTrigger className="mt-1.5" data-testid="select-card-manager">
+                      <SelectValue placeholder={t("boshqaruvchiTanlang", "Boshqaruvchini tanlang")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t("boshqaruvchiYoq", "— Boshqaruvchi yo'q (eng yuqori)")}</SelectItem>
+                      {managerOptions.map((m) => (
+                        <SelectItem key={m.id} value={String(m.id)}>
+                          {m.position_name}{m.code ? ` (${m.code})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    {t("boshqaruvchiYordam", "Kartaning yuqori bo'g'ini — vertikal zanjir (Operator→Smena→Bo'lim→...→Egasi). Sikl bloklanadi.")}
+                  </p>
                 </div>
               </TabsContent>
 

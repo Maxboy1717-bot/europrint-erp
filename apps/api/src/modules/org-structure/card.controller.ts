@@ -151,6 +151,24 @@ export class CardController {
     return { items, total: items.length };
   }
 
+  @ApiOperation({ summary: 'Manager candidates (vertical hierarchy — excludes self + descendants)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/manager-candidates')
+  async managerCandidates(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.listManagerCandidates(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: "Set the card's manager (Vysotskiy 7 vertical chain; cycle-guarded)" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Self/cycle rejected' })
+  @Patch(':id/manager')
+  async setManager(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = z.object({ managerId: z.number().int().positive().nullable() }).parse(body);
+    return unwrapOrThrow(await this.service.setCardManager(id, dto.managerId));
+  }
+
   @ApiOperation({ summary: 'Child cards (Farzandlar tab)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get(':id/children')
