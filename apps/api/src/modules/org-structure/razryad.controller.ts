@@ -19,14 +19,20 @@ import { RazryadService } from './razryad.service';
 import type { RazryadInput } from './razryad.repository';
 
 const RazryadCreateSchema = z.object({
-  level:          z.number().int(),
-  name:           z.string().min(1).max(200),
-  minRequirement: z.string().max(2000).optional(),
-  salaryMin:      z.number().optional(),
-  salaryMax:      z.number().optional(),
-  examType:       z.string().max(100).optional(),
-  certificate:    z.string().max(500).optional(),
-  description:    z.string().max(2000).optional(),
+  level:              z.number().int(),
+  name:               z.string().min(1).max(200),
+  minRequirement:     z.string().max(2000).optional(),
+  salaryMin:          z.number().optional(),
+  salaryMax:          z.number().optional(),
+  examType:           z.string().max(100).optional(),
+  certificate:        z.string().max(500).optional(),
+  description:        z.string().max(2000).optional(),
+  /** EP-ORG-055: imtihon o'tish chegarasi (foizda). EGASI QIYMATI KERAK — global default yo'q. */
+  examPassThreshold:  z.number().min(0).max(100).optional(),
+  /** EP-ORG-056: qayta topshirish maksimal soni. EGASI QIYMATI KERAK — global default yo'q. */
+  maxRetakes:         z.number().int().min(0).max(10).optional(),
+  /** Razryad oylik-koeffitsiyenti (base × coefficient = oylik). Egasi sozlaydi. */
+  coefficient:        z.number().positive().max(20).optional(),
 }).strict();
 
 const RazryadUpdateSchema = RazryadCreateSchema.partial();

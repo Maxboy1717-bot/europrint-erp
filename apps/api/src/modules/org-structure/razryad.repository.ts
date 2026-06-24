@@ -21,6 +21,12 @@ export interface RazryadInput {
   examType?: string | null;
   certificate?: string | null;
   description?: string | null;
+  /** EP-ORG-055: per-card-type configurable exam pass threshold (%). NULL = egasi belgilaydi (EGASI QIYMATI KERAK). */
+  examPassThreshold?: number | null;
+  /** EP-ORG-056: per-card-type configurable max retake count. NULL = egasi belgilaydi (EGASI QIYMATI KERAK). */
+  maxRetakes?: number | null;
+  /** Razryad oylik-koeffitsiyenti (base × coefficient = oylik). Egasi sozlaydi (1.00→...). */
+  coefficient?: number | null;
 }
 
 /** Detect the razryad_levels UNIQUE(level) violation (constraint razryad_levels_level_key / SQLSTATE 23505). */
@@ -54,10 +60,12 @@ export class RazryadRepository {
     try {
       const rows = await runQuery<Row>(sql`
         INSERT INTO razryad_levels
-          (level, name, min_requirement, salary_min, salary_max, exam_type, certificate, description, is_active, created_at, updated_at)
+          (level, name, min_requirement, salary_min, salary_max, exam_type, certificate, description,
+           exam_pass_threshold, max_retakes, coefficient, is_active, created_at, updated_at)
         VALUES
           (${dto.level}, ${dto.name ?? ''}, ${dto.minRequirement ?? null}, ${dto.salaryMin ?? null},
            ${dto.salaryMax ?? null}, ${dto.examType ?? null}, ${dto.certificate ?? null}, ${dto.description ?? null},
+           ${dto.examPassThreshold ?? null}, ${dto.maxRetakes ?? null}, ${dto.coefficient ?? 1.0},
            true, NOW(), NOW())
         RETURNING *
       `);
@@ -73,15 +81,18 @@ export class RazryadRepository {
     try {
       const rows = await runQuery<Row>(sql`
         UPDATE razryad_levels SET
-          level           = COALESCE(${dto.level ?? null}, level),
-          name            = COALESCE(${dto.name ?? null}, name),
-          min_requirement = COALESCE(${dto.minRequirement ?? null}, min_requirement),
-          salary_min      = COALESCE(${dto.salaryMin ?? null}, salary_min),
-          salary_max      = COALESCE(${dto.salaryMax ?? null}, salary_max),
-          exam_type       = COALESCE(${dto.examType ?? null}, exam_type),
-          certificate     = COALESCE(${dto.certificate ?? null}, certificate),
-          description     = COALESCE(${dto.description ?? null}, description),
-          updated_at      = NOW()
+          level                = COALESCE(${dto.level ?? null}, level),
+          name                 = COALESCE(${dto.name ?? null}, name),
+          min_requirement      = COALESCE(${dto.minRequirement ?? null}, min_requirement),
+          salary_min           = COALESCE(${dto.salaryMin ?? null}, salary_min),
+          salary_max           = COALESCE(${dto.salaryMax ?? null}, salary_max),
+          exam_type            = COALESCE(${dto.examType ?? null}, exam_type),
+          certificate          = COALESCE(${dto.certificate ?? null}, certificate),
+          description          = COALESCE(${dto.description ?? null}, description),
+          exam_pass_threshold  = COALESCE(${dto.examPassThreshold ?? null}, exam_pass_threshold),
+          max_retakes          = COALESCE(${dto.maxRetakes ?? null}, max_retakes),
+          coefficient          = COALESCE(${dto.coefficient ?? null}, coefficient),
+          updated_at           = NOW()
         WHERE id = ${id} AND is_active = true
         RETURNING *
       `);

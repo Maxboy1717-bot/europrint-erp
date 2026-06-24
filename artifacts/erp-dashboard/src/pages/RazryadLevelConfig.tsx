@@ -37,6 +37,7 @@ interface RazryadPatch {
   maxRetakes?: number;
   salaryMin?: number;
   salaryMax?: number;
+  coefficient?: number;
 }
 
 function fmtN(v: string | number | null, suffix = ""): string {
@@ -60,6 +61,7 @@ function LevelRow({
   const [retakes, setRetakes]     = useState(row.max_retakes != null ? String(row.max_retakes) : "");
   const [sMin, setSMin]           = useState(row.salary_min != null ? String(Number(row.salary_min)) : "");
   const [sMax, setSMax]           = useState(row.salary_max != null ? String(Number(row.salary_max)) : "");
+  const [coeff, setCoeff]         = useState(row.coefficient != null ? String(Number(row.coefficient)) : "");
   const [busy, setBusy]           = useState(false);
 
   function startEdit() {
@@ -67,6 +69,7 @@ function LevelRow({
     setRetakes(row.max_retakes != null ? String(row.max_retakes) : "");
     setSMin(row.salary_min != null ? String(Number(row.salary_min)) : "");
     setSMax(row.salary_max != null ? String(Number(row.salary_max)) : "");
+    setCoeff(row.coefficient != null ? String(Number(row.coefficient)) : "");
     setEditing(true);
   }
 
@@ -89,11 +92,18 @@ function LevelRow({
       return;
     }
 
+    const cf = parseFloat(coeff);
+    if (coeff !== "" && (isNaN(cf) || cf <= 0 || cf > 20)) {
+      toast({ title: "Koeffitsiyent 0 dan katta va 20 dan kichik bo'lishi kerak", variant: "destructive" });
+      return;
+    }
+
     const patch: RazryadPatch = {};
     if (threshold !== "" && !isNaN(th)) patch.examPassThreshold = th;
     if (retakes !== ""   && !isNaN(rt)) patch.maxRetakes = rt;
     if (sMin !== ""      && !isNaN(mn)) patch.salaryMin = mn;
     if (sMax !== ""      && !isNaN(mx)) patch.salaryMax = mx;
+    if (coeff !== ""     && !isNaN(cf)) patch.coefficient = cf;
 
     if (Object.keys(patch).length === 0) {
       setEditing(false);
@@ -116,7 +126,12 @@ function LevelRow({
       </TableCell>
       <TableCell className="w-32 text-sm text-muted-foreground">{row.name}</TableCell>
       <TableCell className="w-24 tabular-nums text-center text-sm font-mono">
-        ×{fmtN(row.coefficient)}
+        {editing ? (
+          <Input type="number" min="0.01" max="20" step="0.05" className="h-7 w-20 text-sm"
+            value={coeff} placeholder="×1.00" onChange={(e) => setCoeff(e.target.value)} />
+        ) : (
+          <>×{fmtN(row.coefficient)}</>
+        )}
       </TableCell>
       {editing ? (
         <>
