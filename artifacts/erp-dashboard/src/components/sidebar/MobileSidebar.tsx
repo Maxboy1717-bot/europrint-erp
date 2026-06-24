@@ -101,7 +101,7 @@ export function MobileSidebar({ open, onClose, activeModule, onModuleChange }: M
         </div>
 
         {/* Active module nav items */}
-        <ScrollArea className="flex-1 bg-card">
+        <ScrollArea className="flex-1 min-h-0 bg-card">
           {group && (
             <nav className="py-2 px-2">
               <div className="flex items-center gap-2 px-3 py-2 mb-1">

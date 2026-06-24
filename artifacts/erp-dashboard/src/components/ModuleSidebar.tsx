@@ -162,7 +162,7 @@ export function ModuleSidebar({ activeModule, onModuleChange }: ModuleSidebarPro
       />
       <AvatarBlock />
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <NavGroup
           items={allItems}
           currentPath={currentPath}
