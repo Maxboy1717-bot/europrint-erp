@@ -17,6 +17,7 @@ export type ExceptionInsert = {
   relatedRecordId?: unknown;
   documentNumber?: unknown;
   description?: unknown;
+  reason?: unknown;
   requestedBy: number;
   meta?: unknown;
 };
@@ -88,7 +89,8 @@ export class ExceptionLogRepository {
 
   async insert(p: ExceptionInsert): Promise<Result<Row>>  {
   try {  
-      const r = await exec(sql`INSERT INTO exception_logs (module, exception_type, status, related_record_id, document_number, description, requested_by, meta, created_at) VALUES (${p.module}, ${p.exceptionType}, ${p.status}, ${p.relatedRecordId ?? null}, ${p.documentNumber ?? null}, ${p.description ?? null}, ${p.requestedBy}, ${p.meta ? JSON.stringify(p.meta) : null}::jsonb, NOW()) RETURNING *`);
+      const reason = p.reason ?? p.description ?? '';
+      const r = await exec(sql`INSERT INTO exception_logs (module, exception_type, status, related_record_id, document_number, description, reason, requested_by, meta, created_at) VALUES (${p.module}, ${p.exceptionType}, ${p.status}, ${p.relatedRecordId ?? null}, ${p.documentNumber ?? null}, ${p.description ?? null}, ${reason}, ${p.requestedBy}, ${p.meta ? JSON.stringify(p.meta) : null}::jsonb, NOW()) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

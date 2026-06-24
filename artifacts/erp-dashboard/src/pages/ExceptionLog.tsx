@@ -4,13 +4,16 @@
  */
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertOctagon,
   RefreshCw,
@@ -18,10 +21,12 @@ import {
   Activity,
   TrendingUp,
   FileWarning,
+  Plus,
 } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { useToast } from "@/hooks/use-toast";
 
 interface ExceptionStats {
   total: number;
@@ -99,10 +104,45 @@ function StatCard({
   );
 }
 
+const MODULES = ["SD","PP","MES","QC","WMS","FIN","HR","MRO","TIZIM"];
+
 export default function ExceptionLog() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
   const [typeFilter, setTypeFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createExType, setCreateExType] = useState("");
+  const [createModule, setCreateModule] = useState("");
+  const [createDescription, setCreateDescription] = useState("");
+  const [createSeverity, setCreateSeverity] = useState("");
+
+  const createMutation = useMutation({
+    mutationFn: (payload: { exceptionType: string; module: string; description: string; reason: string; severity?: string }) =>
+      apiRequest("POST", "/api/exceptions", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/exceptions/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/exceptions"] });
+      toast({ title: "Istisno holat qayd etildi" });
+      setIsCreateOpen(false);
+      setCreateExType(""); setCreateModule(""); setCreateDescription(""); setCreateSeverity("");
+    },
+    onError: () => toast({ title: t("xatolik", "Xatolik"), variant: "destructive" }),
+  });
+
+  const handleCreate = () => {
+    if (!createExType || !createModule || createDescription.trim().length < 5) {
+      toast({ title: "Tur, modul va tavsif (min 5 belgi) kiritilishi shart", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate({
+      exceptionType: createExType,
+      module: createModule,
+      description: createDescription.trim(),
+      reason: createDescription.trim(),
+      ...(createSeverity ? { severity: createSeverity } : {}),
+    });
+  };
 
   const params = new URLSearchParams();
   if (typeFilter !== "all") params.set("type", typeFilter);
@@ -147,17 +187,19 @@ export default function ExceptionLog() {
             {t("tizimdaRoyBerganBarchaIstisno")}
           </p>
         </div>
-        <Button
-          variant="outline"
-          data-testid="button-refresh"
-          onClick={() => {
+        <div className="flex gap-2">
+          <Button variant="outline" data-testid="button-refresh" onClick={() => {
             queryClient.invalidateQueries({ queryKey: ["/api/exceptions/stats"] });
             queryClient.invalidateQueries({ queryKey: [`/api/exceptions`] });
-          }}
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          {t("refresh")}
-        </Button>
+          }}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            {t("refresh")}
+          </Button>
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Istisno qayd etish
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-4">
@@ -293,6 +335,62 @@ export default function ExceptionLog() {
           )}
         </CardContent>
       </Card>
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Istisno holat qayd etish</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="grid gap-1.5">
+              <Label>Istisno turi *</Label>
+              <Select value={createExType} onValueChange={setCreateExType}>
+                <SelectTrigger><SelectValue placeholder="Turni tanlang" /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(EXCEPTION_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Modul *</Label>
+              <Select value={createModule} onValueChange={setCreateModule}>
+                <SelectTrigger><SelectValue placeholder="Modul tanlang" /></SelectTrigger>
+                <SelectContent>
+                  {MODULES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Tavsif (sabab) *</Label>
+              <Textarea
+                value={createDescription}
+                onChange={(e) => setCreateDescription(e.target.value)}
+                placeholder="Istisno holat tavsifi va sababi..."
+                rows={3}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Daraja</Label>
+              <Select value={createSeverity} onValueChange={setCreateSeverity}>
+                <SelectTrigger><SelectValue placeholder="Darajani tanlang (ixtiyoriy)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Past</SelectItem>
+                  <SelectItem value="medium">O'rta</SelectItem>
+                  <SelectItem value="high">Yuqori</SelectItem>
+                  <SelectItem value="critical">Kritik</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Bekor</Button>
+            <Button onClick={handleCreate} disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

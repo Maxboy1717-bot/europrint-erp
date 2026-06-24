@@ -76,6 +76,7 @@ export class ExceptionLogService {
       relatedRecordId: body['relatedRecordId'],
       documentNumber:  body['documentNumber'],
       description:     body['description'],
+      reason:          body['reason'] ?? body['description'],
       requestedBy:     userId,
       meta:            body['meta'],
     });
