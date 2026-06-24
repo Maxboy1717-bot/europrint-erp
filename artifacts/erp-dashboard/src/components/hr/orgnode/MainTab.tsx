@@ -4,6 +4,7 @@
  */
 
 import { Users, User, CheckCircle, UserX, Building2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
@@ -16,6 +17,15 @@ interface MainTabProps {
 export function MainTab({ node }: MainTabProps) {
   const { t } = useTranslation("common");
   const isVacant = !node.headUserName;
+
+  // VISION: har node razryadga ega — razryad nomini ko'rsatish uchun darajalarni o'qiymiz
+  const { data: razryadData } = useQuery<{ items: { id: number; name: string }[] }>({
+    queryKey: ["/api/org-structure/razryad-levels"],
+    staleTime: 60_000,
+  });
+  const razryadName = node.razryadLevelId != null
+    ? (Array.isArray(razryadData?.items) ? razryadData.items.find((r) => r.id === node.razryadLevelId)?.name : undefined) ?? `#${node.razryadLevelId}`
+    : "—";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -32,6 +42,7 @@ export function MainTab({ node }: MainTabProps) {
             { label: "Nom (RU)", value: node.nameRu || "—" },
             { label: "Turi", value: NODE_TYPE_LABELS[node.nodeType] || node.nodeType },
             { label: "Daraja", value: node.hierarchyLevel },
+            { label: "Razryad", value: razryadName },
             { label: "Ota node", value: node.parentId ? `#${node.parentId}` : "Ildiz" },
             { label: "Holat", value: node.isActive ? "Faol" : "Nofaol" },
           ]).map((row) => (

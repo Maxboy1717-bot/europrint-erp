@@ -40,7 +40,15 @@ export function EditDialog({
     description: node.description || "",
     nodeType: node.nodeType,
     headUserId: node.headUserId ?? null,
+    razryadLevelId: node.razryadLevelId ?? null,
   });
+
+  // VISION: har node razryadga ega — razryad darajalari ro'yxati
+  const { data: razryadData } = useQuery<{ items: { id: number; level: number; name: string }[] }>({
+    queryKey: ["/api/org-structure/razryad-levels"],
+    staleTime: 60_000,
+  });
+  const razryadOptions = Array.isArray(razryadData?.items) ? razryadData.items : [];
 
   // Fetch all active users for the department-head picker.
   // 87% of org nodes have zero members → member-based list leaves headOptions=[].
@@ -131,6 +139,21 @@ export function EditDialog({
                 <SelectItem value="__none__">— Yo'q (bo'sh) —</SelectItem>
                 {headOptions.map((o) => (
                   <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <Label>{t("razryad", "Razryad")}</Label>
+            <Select
+              value={form.razryadLevelId == null ? "__none__" : String(form.razryadLevelId)}
+              onValueChange={(v) => setForm((f) => ({ ...f, razryadLevelId: v === "__none__" ? null : Number(v) }))}
+            >
+              <SelectTrigger data-testid="select-node-razryad"><SelectValue placeholder={t("razryadTanlang", "Razryad tanlang")} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— {t("yoq", "Yo'q")} —</SelectItem>
+                {razryadOptions.map((r) => (
+                  <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

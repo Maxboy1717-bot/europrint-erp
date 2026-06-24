@@ -24,7 +24,6 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@common/types/user.types';
 import { assertOk, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };
@@ -49,6 +48,15 @@ const OrgNodeSchema = z.object({
   // STEP C: department head ("the boss") — references users.id. nullable = clear the head.
   // Repo updateFromDto maps dto.headUserId -> head_user_id (org-mutations.repo :59).
   headUserId:  z.union([z.number(), z.null()]).optional(),
+  // Unit fields (org-unit-fields-2026-06-19 migration — EP-ORG Phase 1 CHAT-TARIXI
+  // Bo'lim→Sex→Uskuna→Ishchi). .strict() preserved — allow-list widened, no passthrough.
+  code:              z.string().max(50).optional(),
+  qymUz:             z.string().max(2000).optional(),
+  qymRu:             z.string().max(2000).optional(),
+  cameraZoneId:      z.string().max(200).optional(),
+  telegramGroupId:   z.string().max(200).optional(),
+  // VISION (egasi 2026-06-24): har node (bo'lim VA lavozim) razryadga ega. null = tozalash.
+  razryadLevelId:    z.union([z.number().int().positive(), z.null()]).optional(),
 }).strict();
 
 const MoveNodeSchema = z.object({

@@ -40,9 +40,37 @@ export class OrgMutationsRepo {
         })
         .returning();
 
-      await syncToCoreTable(row as Row, 'create');
-      return castTo<Record<string, unknown>>(row);
+      // Unit fields (org-unit-fields-2026-06-19 migration — CHAT-TARIXI Bo'lim→Sex→Uskuna→Ishchi).
+      // RULE4_EXCEPTION: the backend `orgDepartments` Drizzle definition (schema-misc-app-a.ts —
+      // NOT an owned file) does not declare these columns, so they are written via parametrized
+      // sql template after the insert. ARCHITECTURE_RULES.md Rule 4: raw SQL permitted + documented.
+      const withUnit = await this.applyUnitFields(Number((row as Row).id), dto);
+
+      await syncToCoreTable((withUnit ?? row) as Row, 'create');
+      return castTo<Record<string, unknown>>(withUnit ?? row);
     }, 'DB_ERROR');
+  }
+
+  /**
+   * Writes org-unit fields (code/qym_uz/qym_ru/camera_zone_id/telegram_group_id) to a row.
+   * Only updates the keys present in `dto`. Returns the refreshed row, or null when no unit
+   * key was supplied (caller keeps the original row). Parametrized sql — no injection.
+   */
+  private async applyUnitFields(id: number, dto: Record<string, unknown>): Promise<Row | null> {
+    const sets: ReturnType<typeof sql>[] = [];
+    if (dto.code !== undefined)            sets.push(sql`code = ${(dto.code as string) ?? null}`);
+    if (dto.qymUz !== undefined)           sets.push(sql`qym_uz = ${(dto.qymUz as string) ?? null}`);
+    if (dto.qymRu !== undefined)           sets.push(sql`qym_ru = ${(dto.qymRu as string) ?? null}`);
+    if (dto.cameraZoneId !== undefined)    sets.push(sql`camera_zone_id = ${(dto.cameraZoneId as string) ?? null}`);
+    if (dto.telegramGroupId !== undefined) sets.push(sql`telegram_group_id = ${(dto.telegramGroupId as string) ?? null}`);
+    if (dto.razryadLevelId !== undefined)  sets.push(sql`razryad_level_id = ${(dto.razryadLevelId as number) ?? null}`);
+    if (sets.length === 0) return null;
+    const rows = await runQuery<Row>(sql`
+      UPDATE org_departments SET ${sql.join(sets, sql`, `)}
+      WHERE id = ${id}
+      RETURNING *
+    `);
+    return (rows.rows[0] as Row) ?? null;
   }
 
   async updateFromDto(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
@@ -60,11 +88,19 @@ export class OrgMutationsRepo {
       if (dto.nodeType !== undefined)      patch.node_type = dto.nodeType as string;
       if (dto.sortOrder !== undefined)     patch.sort_order = dto.sortOrder as number;
       if (dto.isActive !== undefined)      patch.is_active = dto.isActive as boolean;
-      if (Object.keys(patch).length === 0) return { id };
 
-      const [row] = await db.update(orgDepartments).set(patch).where(eq(orgDepartments.id, id)).returning();
-      await syncToCoreTable(row as Row, 'update');
-      return castTo<Record<string, unknown>>(row);
+      let row: Row | undefined;
+      if (Object.keys(patch).length > 0) {
+        [row] = (await db.update(orgDepartments).set(patch).where(eq(orgDepartments.id, id)).returning()) as Row[];
+      }
+
+      // Unit fields (org-unit-fields-2026-06-19) via parametrized sql — see applyUnitFields note.
+      const withUnit = await this.applyUnitFields(id, dto);
+      const finalRow = withUnit ?? row;
+      if (!finalRow) return { id };
+
+      await syncToCoreTable(finalRow as Row, 'update');
+      return castTo<Record<string, unknown>>(finalRow);
     }, 'DB_ERROR');
   }
 

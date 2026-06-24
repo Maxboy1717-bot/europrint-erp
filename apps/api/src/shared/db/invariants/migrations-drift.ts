@@ -133,6 +133,9 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'employee_org_departments.department_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS employee_org_departments ADD COLUMN IF NOT EXISTS department_id INTEGER` },
   { name: 'employee_org_departments.role ADD COLUMN', sql: `ALTER TABLE IF EXISTS employee_org_departments ADD COLUMN IF NOT EXISTS "role" TEXT` },
   { name: 'employee_org_departments.created_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS employee_org_departments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP` },
+  // VISION (egasi 2026-06-24): har org-node (bo'lim VA lavozim/xodim) razryadga ega bo'lishi kerak.
+  // org_departments YAGONA daraxt (143 node, shundan 92 'position'); razryad ustuni yo'q edi.
+  { name: 'org_departments.razryad_level_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS razryad_level_id INTEGER` },
   { name: 'crm_leads.title ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS title TEXT` },
   { name: 'crm_leads.second_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS second_name TEXT` },
   { name: 'crm_leads.last_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS last_name TEXT` },

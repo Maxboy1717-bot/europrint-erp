@@ -39,6 +39,7 @@ export interface NodeDetail {
   headUserId?: number | null;
   headUserName?: string | null;
   headUserEmployeeId?: string | null;
+  razryadLevelId?: number | null;
   employeeCount: number;
   childCount: number;
   vacantChildCount?: number;

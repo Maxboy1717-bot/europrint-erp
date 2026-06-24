@@ -114,6 +114,8 @@ export class OrgQueriesRepo {
           parentId: orgDepartments.parent_id, hierarchyLevel: orgDepartments.level,
           nodeType: orgDepartments.node_type, isActive: orgDepartments.is_active,
           headUserId: orgDepartments.head_user_id, headUserName: fullName,
+          // VISION: har node razryadga ega (raw column — Drizzle schema'da yo'q)
+          razryadLevelId: sql<number | null>`razryad_level_id`,
           employeeCount: sql<number>`(
             SELECT COUNT(*)::int FROM employee_org_departments eod
             JOIN users eu ON eu.id = eod.user_id AND eu.is_active = TRUE
