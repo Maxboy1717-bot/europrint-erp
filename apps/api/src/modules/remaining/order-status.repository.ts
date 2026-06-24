@@ -29,10 +29,13 @@ export class OrderStatusRepository {
   }
 
   async insertTransitionLog(orderId: string, newStatus: string, userId: number, notes: unknown): Promise<Result<Row>>  {
-  try {  
+  try {
+      // FIX (iter-77): order_status_logs.sales_order_id is NOT NULL (no default) but the INSERT
+      // only wrote the legacy nullable order_id → every transition log raised 23502 (silently
+      // breaking OrderStatusPage logging). Write sales_order_id = order_id = sales_orders.id.
       const rows = await runQuery<Row>(sql`
-        INSERT INTO order_status_logs (order_id, from_status, to_status, changed_by, notes, created_at)
-        SELECT id, status, ${newStatus}, ${userId}, ${notes ?? null}, NOW()
+        INSERT INTO order_status_logs (sales_order_id, order_id, from_status, to_status, changed_by, notes, created_at)
+        SELECT id, id, status, ${newStatus}, ${userId}, ${notes ?? null}, NOW()
         FROM sales_orders WHERE id::text = ${orderId}
         RETURNING *
       `);
