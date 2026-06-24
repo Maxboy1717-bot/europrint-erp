@@ -11,17 +11,20 @@ import { formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { 
+import {
   Calendar,
   Lock,
   Unlock,
   RefreshCw,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  Plus
 } from "lucide-react";
 import { EPErrorState } from "@/components/ep";
 interface AccountingPeriod {
@@ -62,9 +65,33 @@ export default function PeriodClosing() {
   const { toast } = useToast();
   const [closePeriodDialogOpen, setClosePeriodDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<AccountingPeriod | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newPeriodCode, setNewPeriodCode] = useState("");
+  const [newStartDate, setNewStartDate] = useState("");
+  const [newEndDate, setNewEndDate] = useState("");
 
   const { data: periods = [], isLoading, refetch, isError, error} = useQuery<AccountingPeriod[]>({
     queryKey: ["/api/accounting/periods"],
+  });
+
+  const createPeriodMutation = useMutation({
+    mutationFn: async () => {
+      const [year, month] = newPeriodCode.split("-").map(Number);
+      return apiRequest("POST", "/api/fi/accounting-periods", {
+        periodCode: newPeriodCode,
+        fiscalYear: year,
+        month,
+        startDate: newStartDate,
+        endDate: newEndDate,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/accounting/periods"] });
+      setCreateDialogOpen(false);
+      setNewPeriodCode(""); setNewStartDate(""); setNewEndDate("");
+      toast({ title: tCommon('success'), description: "Davr yaratildi" });
+    },
+    onError: () => toast({ title: tCommon('error'), description: tCommon('operationFailed'), variant: "destructive" }),
   });
 
   const closePeriodMutation = useMutation({
@@ -113,8 +140,17 @@ export default function PeriodClosing() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
+                className="bg-card/10 border-white/30 text-white hover:bg-card/20"
+                onClick={() => setCreateDialogOpen(true)}
+                data-testid="button-create-period"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {tCommon('qoshish', "Yangi davr")}
+              </Button>
+              <Button
+                variant="outline"
                 className="bg-card/10 border-white/30 text-white hover:bg-card/20"
                 onClick={() => refetch()}
                 data-testid="button-refresh"
@@ -241,6 +277,45 @@ export default function PeriodClosing() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">Yangi hisob davri qo'shish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label>Davr kodi (YYYY-MM)</Label>
+              <Input
+                value={newPeriodCode}
+                onChange={(e) => setNewPeriodCode(e.target.value)}
+                placeholder="2026-06"
+                data-testid="input-period-code"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{tCommon('startDate', "Boshlanish")}</Label>
+                <Input type="date" value={newStartDate} onChange={(e) => setNewStartDate(e.target.value)} data-testid="input-period-start" />
+              </div>
+              <div className="space-y-1">
+                <Label>{tCommon('endDate', "Tugash")}</Label>
+                <Input type="date" value={newEndDate} onChange={(e) => setNewEndDate(e.target.value)} data-testid="input-period-end" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>{tCommon('cancel')}</Button>
+            <Button
+              onClick={() => createPeriodMutation.mutate()}
+              disabled={createPeriodMutation.isPending || !newPeriodCode || !newStartDate || !newEndDate}
+              data-testid="button-confirm-create-period"
+            >
+              {tCommon('Saqlash', "Saqlash")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={closePeriodDialogOpen} onOpenChange={setClosePeriodDialogOpen}>
         <DialogContent>
