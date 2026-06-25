@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, UserX, Settings2, Users, ChevronUp, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { OrgNode, CARD_W, CARD_H, LEVEL_LABELS, HRC_INDICATORS } from "./types";
@@ -31,6 +32,15 @@ export function TreeNodeCard({
   const empCount = node.employeeCount ?? 0;
   const tskpShort = node.tskp ? node.tskp.substring(0, 32) + (node.tskp.length > 32 ? "…" : "") : null;
   const hasHrc = !!node.hrcLatest && Object.keys(node.hrcLatest).length > 0;
+
+  // VISION (egasi EP-ORG: "kartada razryad badge ko'rinadi") — razryad raqamini katalogdan yechamiz
+  const { data: razryadData } = useQuery<{ items: { id: number; level: number }[] }>({
+    queryKey: ["/api/org-structure/razryad-levels"],
+    staleTime: 300_000,
+  });
+  const razryadLevel = node.razryadLevelId != null && Array.isArray(razryadData?.items)
+    ? razryadData.items.find((r) => r.id === node.razryadLevelId)?.level
+    : undefined;
 
   return (
     <div className="relative" style={{ width: CARD_W }}>
@@ -85,6 +95,11 @@ export function TreeNodeCard({
             <span className="text-[9px] font-bold bg-white/25 rounded px-1.5 py-0.5 uppercase tracking-wide">
               {LEVEL_LABELS[level] || `D${level}`}
             </span>
+            {razryadLevel != null && (
+              <span className="text-[9px] font-bold bg-amber-300/40 rounded px-1.5 py-0.5" title="Razryad">
+                {razryadLevel}-razr
+              </span>
+            )}
             <span className="text-[9px] text-white/50">#{node.id}</span>
           </div>
 

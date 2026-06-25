@@ -19,6 +19,7 @@ export interface OrgNode {
   employeeCount?: number;
   hierarchyLevel: number;
   nodeType: string;
+  razryadLevelId?: number | null;
   children: OrgNode[];
   hrcLatest?: Record<string, number> | null;
   iqLevel?: string | null;

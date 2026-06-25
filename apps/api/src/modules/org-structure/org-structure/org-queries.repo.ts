@@ -37,6 +37,8 @@ export class OrgQueriesRepo {
           sortOrder: orgDepartments.sort_order,
           headUserId: orgDepartments.head_user_id,
           headUserName: fullName,
+          // VISION (egasi EP-ORG: "kartada razryad badge ko'rinadi") — daraxt kartasiga razryad
+          razryadLevelId: sql<number | null>`razryad_level_id`,
           employeeCount: sql<number>`(
             SELECT COUNT(*)::int
             FROM employee_org_departments eod
