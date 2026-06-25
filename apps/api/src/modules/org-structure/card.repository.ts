@@ -1,9 +1,13 @@
 /**
  * @module card.repository
- * @description Data-access for the canonical ORG CARD (`org_functions`). Parametrized SQL
- *   (the org_functions Drizzle schema does not yet carry the Phase-1 card columns; the
- *   org-structure module already mixes raw SQL). All reads filter `deleted_at IS NULL`.
- *   Returns Result<T>.
+ * @description Data-access for the canonical ORG CARD (`org_departments`). Parametrized SQL.
+ *   PHASE-00 (MASSIV-100): re-pointed from the retired `org_functions` world to the single
+ *   canonical card table `org_departments` (node=karta). Column map: position_name→name,
+ *   function_description→description, manager_id→parent_id, deleted_at IS NULL→is_active=true,
+ *   status→current_state, department_id filter→parent_id; a card = node_type='position'.
+ *   Output aliases (name AS position_name, current_state AS status, parent_id AS manager_id)
+ *   preserve the API contract so the FE (CardDetailDialog, EmployeeCardsSummary) is not broken.
+ *   org_departments has no updated_at column. Returns Result<T>.
  */
 
 import { Ok, Err, Result, safeCall } from '@common/result';
@@ -45,29 +49,31 @@ export class CardRepository {
 
   async list(departmentId: number | null, status: string | null): Promise<Result<Row[]>> {
     return this.exec(sql`
-      SELECT f.*, d.name AS department_name, ${this.staleExpr} AS is_stale
-      FROM org_functions f
-      LEFT JOIN org_departments d ON d.id = f.department_id
-      WHERE f.deleted_at IS NULL
-        AND (${departmentId}::int IS NULL OR f.department_id = ${departmentId})
-        AND (${status}::text IS NULL OR f.status = ${status})
-      ORDER BY f.department_id, f.position_name
+      SELECT f.*, f.name AS position_name, f.current_state AS status, f.parent_id AS manager_id,
+             p.name AS department_name, ${this.staleExpr} AS is_stale
+      FROM org_departments f
+      LEFT JOIN org_departments p ON p.id = f.parent_id
+      WHERE f.is_active = true AND f.node_type = 'position'
+        AND (${departmentId}::int IS NULL OR f.parent_id = ${departmentId})
+        AND (${status}::text IS NULL OR f.current_state = ${status})
+      ORDER BY f.parent_id, f.name
     `);
   }
 
   async findById(id: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      SELECT f.*, d.name AS department_name, ${this.staleExpr} AS is_stale
-      FROM org_functions f
-      LEFT JOIN org_departments d ON d.id = f.department_id
-      WHERE f.id = ${id} AND f.deleted_at IS NULL
+      SELECT f.*, f.name AS position_name, f.current_state AS status, f.parent_id AS manager_id,
+             p.name AS department_name, ${this.staleExpr} AS is_stale
+      FROM org_departments f
+      LEFT JOIN org_departments p ON p.id = f.parent_id
+      WHERE f.id = ${id} AND f.is_active = true
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
   /**
-   * Vizyon (Vysotskiy 7 vertikal): kartaning boshqaruvchisini (manager_id = keyingi yuqori karta)
-   * belgilash. manager_id ustuni o'qilardi (Farzandlar tab) lekin hech qayerda SET qilinmasdi.
+   * Vizyon (Vysotskiy 7 vertikal): kartaning boshqaruvchisini (ota-karta = parent_id) belgilash.
+   * PHASE-00: boshqaruvchi = daraxt-ota (org_departments.parent_id) — move() bilan bir xil ustun.
    * Sikl-himoya: boshqaruvchi o'zi YOKI quyi (farzand) karta bo'la olmaydi (rekursiv tekshiruv).
    */
   async setCardManager(cardId: number, managerId: number | null): Promise<Result<Row | null>> {
@@ -75,9 +81,9 @@ export class CardRepository {
       if (managerId === cardId) return Err("Karta o'zini boshqara olmaydi");
       const sub = await this.exec(sql`
         WITH RECURSIVE descendants AS (
-          SELECT id FROM org_functions WHERE id = ${cardId}
+          SELECT id FROM org_departments WHERE id = ${cardId}
           UNION ALL
-          SELECT f.id FROM org_functions f JOIN descendants dd ON f.manager_id = dd.id
+          SELECT f.id FROM org_departments f JOIN descendants dd ON f.parent_id = dd.id
         )
         SELECT 1 AS hit FROM descendants WHERE id = ${managerId} LIMIT 1
       `);
@@ -85,9 +91,9 @@ export class CardRepository {
       if (sub.data.length > 0) return Err("Sikl: boshqaruvchi quyi (farzand) karta bo'la olmaydi");
     }
     const r = await this.exec(sql`
-      UPDATE org_functions SET manager_id = ${managerId}, updated_at = now()
-      WHERE id = ${cardId} AND deleted_at IS NULL
-      RETURNING id, position_name, manager_id
+      UPDATE org_departments SET parent_id = ${managerId}
+      WHERE id = ${cardId} AND is_active = true
+      RETURNING id, name AS position_name, parent_id AS manager_id
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
@@ -96,25 +102,24 @@ export class CardRepository {
   async listManagerCandidates(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
       WITH RECURSIVE descendants AS (
-        SELECT id FROM org_functions WHERE id = ${cardId}
+        SELECT id FROM org_departments WHERE id = ${cardId}
         UNION ALL
-        SELECT f.id FROM org_functions f JOIN descendants dd ON f.manager_id = dd.id
+        SELECT f.id FROM org_departments f JOIN descendants dd ON f.parent_id = dd.id
       )
-      SELECT f.id, f.position_name, f.code, f.level
-      FROM org_functions f
-      WHERE f.deleted_at IS NULL AND f.id NOT IN (SELECT id FROM descendants)
-      ORDER BY f.level NULLS LAST, f.position_name
+      SELECT f.id, f.name AS position_name, f.code, f.level
+      FROM org_departments f
+      WHERE f.is_active = true AND f.id NOT IN (SELECT id FROM descendants)
+      ORDER BY f.level NULLS LAST, f.name
     `);
   }
 
   async create(dto: CardInput): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      INSERT INTO org_functions
-        (position_name, position_name_ru, department_id, code, level, razryad_level_id,
-         salary_type, min_salary, max_salary, rbac_tier, status, tskp, tskp_target,
+      INSERT INTO org_departments
+        (name, name_ru, parent_id, code, level, razryad_level_id,
+         salary_type, min_salary, max_salary, rbac_tier, current_state, tskp, tskp_target,
          tskp_measurement_unit, statistics_type, ai_exam_enabled,
-         function_description, function_description_ru,
-         is_active, created_at, updated_at)
+         description, description_ru, node_type, is_active, created_at)
       VALUES
         (${dto.positionName ?? ''}, ${dto.positionNameRu ?? null}, ${dto.departmentId ?? null},
          ${dto.code ?? null}, ${dto.level ?? null}, ${dto.razryadLevelId ?? null},
@@ -123,18 +128,18 @@ export class CardRepository {
          ${dto.tskpTarget ?? null}, ${dto.tskpMeasurementUnit ?? null}, ${dto.statisticsType ?? null},
          ${dto.aiExamEnabled ?? false},
          ${dto.functionDescription ?? null}, ${dto.functionDescriptionRu ?? null},
-         true, NOW(), NOW())
-      RETURNING *
+         'position', true, NOW())
+      RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
   async update(id: number, dto: CardInput): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      UPDATE org_functions SET
-        position_name         = COALESCE(${dto.positionName ?? null}, position_name),
-        position_name_ru      = COALESCE(${dto.positionNameRu ?? null}, position_name_ru),
-        department_id         = COALESCE(${dto.departmentId ?? null}, department_id),
+      UPDATE org_departments SET
+        name                  = COALESCE(${dto.positionName ?? null}, name),
+        name_ru               = COALESCE(${dto.positionNameRu ?? null}, name_ru),
+        parent_id             = COALESCE(${dto.departmentId ?? null}, parent_id),
         code                  = COALESCE(${dto.code ?? null}, code),
         level                 = COALESCE(${dto.level ?? null}, level),
         razryad_level_id      = COALESCE(${dto.razryadLevelId ?? null}, razryad_level_id),
@@ -142,36 +147,34 @@ export class CardRepository {
         min_salary            = COALESCE(${dto.minSalary ?? null}, min_salary),
         max_salary            = COALESCE(${dto.maxSalary ?? null}, max_salary),
         rbac_tier             = COALESCE(${dto.rbacTier ?? null}, rbac_tier),
-        status                = COALESCE(${dto.status ?? null}, status),
+        current_state         = COALESCE(${dto.status ?? null}, current_state),
         tskp                  = COALESCE(${dto.tskp ?? null}, tskp),
         tskp_target           = COALESCE(${dto.tskpTarget ?? null}, tskp_target),
         tskp_measurement_unit = COALESCE(${dto.tskpMeasurementUnit ?? null}, tskp_measurement_unit),
         statistics_type       = COALESCE(${dto.statisticsType ?? null}, statistics_type),
         ai_exam_enabled       = COALESCE(${dto.aiExamEnabled ?? null}, ai_exam_enabled),
-        function_description    = COALESCE(${dto.functionDescription ?? null}, function_description),
-        function_description_ru = COALESCE(${dto.functionDescriptionRu ?? null}, function_description_ru),
-        updated_at            = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING *
+        description           = COALESCE(${dto.functionDescription ?? null}, description),
+        description_ru        = COALESCE(${dto.functionDescriptionRu ?? null}, description_ru)
+      WHERE id = ${id} AND is_active = true
+      RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
-  /** Soft-delete (EP-ORG-005): set deleted_at + status='archived'. Never hard-DELETE — preserves the 29 FK refs. */
+  /** Soft-delete (EP-ORG-005): is_active=false + current_state='archived'. Never hard-DELETE. */
   async softDelete(id: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      UPDATE org_functions SET deleted_at = NOW(), status = 'archived', updated_at = NOW()
-      WHERE id = ${id} AND deleted_at IS NULL
-      RETURNING id, status, deleted_at
+      UPDATE org_departments SET is_active = false, current_state = 'archived'
+      WHERE id = ${id} AND is_active = true
+      RETURNING id, current_state AS status
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
   /**
    * EP-ORG-002 atomic guard input: how many SUBSTANTIVE active employees occupy this card.
-   * Phase 6: counts via the canonical M:N link `employee_cards` (not the org_function_id mirror).
-   * Phase 7 (D2): EXCLUDES i.o./acting occupants (an i.o. does not consume the single substantive
-   * seat) + on-read revert guard (an expired acting/dated link no longer counts).
+   * Phase 6: counts via the canonical M:N link `employee_cards` (card_id → org_departments, PHASE-00).
+   * Phase 7: EXCLUDES i.o./acting occupants + on-read revert guard (expired dated link no longer counts).
    */
   async activeOccupantCount(cardId: number): Promise<Result<number>> {
     const r = await this.exec(sql`
@@ -186,7 +189,7 @@ export class CardRepository {
   // ─── Phase 5 card-detail tabs (read-only related data) ─────────────────────
 
   /**
-   * Xodimlar tab: a card's active occupants (Phase 6 — via the canonical `employee_cards` M:N link)
+   * Xodimlar tab: a card's active occupants (canonical `employee_cards` M:N link, card_id → org_departments)
    * plus each occupant's FORMULA-A total salary (SUM of all their active cards' max_salary, EP-ORG-142).
    */
   async listEmployees(cardId: number): Promise<Result<Row[]>> {
@@ -196,9 +199,9 @@ export class CardRepository {
              COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
              (SELECT COALESCE(SUM(CASE WHEN COALESCE(ec2.is_acting,false) THEN 0 ELSE COALESCE(f2.max_salary,0) END),0)
                    + COALESCE(SUM(CASE WHEN ec2.is_acting THEN COALESCE(ec2.acting_supplement,0) ELSE 0 END),0)
-                FROM employee_cards ec2 JOIN org_functions f2 ON f2.id = ec2.card_id
+                FROM employee_cards ec2 JOIN org_departments f2 ON f2.id = ec2.card_id
                WHERE ec2.employee_id = e.id AND ec2.is_active
-                 AND (ec2.ended_at IS NULL OR ec2.ended_at > now()) AND f2.deleted_at IS NULL) AS total_salary
+                 AND (ec2.ended_at IS NULL OR ec2.ended_at > now()) AND f2.is_active = true) AS total_salary
       FROM employee_cards ec
       JOIN employees e ON e.id = ec.employee_id
       WHERE ec.card_id = ${cardId} AND ec.is_active AND (ec.ended_at IS NULL OR ec.ended_at > now())
@@ -207,10 +210,9 @@ export class CardRepository {
   }
 
   /**
-   * Karta↔xodim moslik (fit) — deterministik v1. Vizyon: "karta xodim↔karta mosligini baholaydi".
-   * Mavjud REAL signallardan hisoblaydi (fabrikatsiyasiz): biriktirish sifati (primary/acting) +
-   * karta-ta'rif to'liqligi (razryad belgilangan + portret-talablar to'ldirilgan). AI-kalit / imtihon
-   * (ai_exam_attempts) kelganda komponent qo'shiladi — score boyitiladi. Hozir 0 imtihon bor.
+   * Karta↔xodim moslik (fit) — deterministik v1. Mavjud REAL signallardan (fabrikatsiyasiz):
+   * biriktirish sifati (primary/acting) + karta-ta'rif to'liqligi (razryad + portret-talab).
+   * PHASE-00: kanonik karta = org_departments.
    */
   async computeCardFit(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
@@ -224,24 +226,25 @@ export class CardRepository {
              (COALESCE(NULLIF(TRIM(p.portret_data->>'requirements'),''),'') <> '') AS requirements_set
       FROM employee_cards ec
       JOIN employees e ON e.id = ec.employee_id
-      JOIN org_functions f ON f.id = ec.card_id
+      JOIN org_departments f ON f.id = ec.card_id
       LEFT JOIN org_node_portret p ON p.card_id = f.id
       WHERE ec.card_id = ${cardId} AND ec.is_active AND (ec.ended_at IS NULL OR ec.ended_at > now())
       ORDER BY ec.is_primary DESC, ec.is_acting, e.last_name
     `);
   }
 
-  /** Farzandlar tab: child cards (manager_id = this card, EP-ORG-021). */
+  /** Farzandlar tab: child cards (parent_id = this card, EP-ORG-021). */
   async listChildren(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
-      SELECT id, position_name, code, level, status
-      FROM org_functions WHERE manager_id = ${cardId} AND deleted_at IS NULL
-      ORDER BY level NULLS LAST, position_name
+      SELECT id, name AS position_name, code, level, current_state AS status
+      FROM org_departments WHERE parent_id = ${cardId} AND is_active = true
+      ORDER BY level NULLS LAST, name
     `);
   }
 
   /** Vakant tab: vacancies opened for this card + priority + aging bucket (EP-ORG-072/073). */
   async listVacancies(cardId: number): Promise<Result<Row[]>> {
+    // PHASE-00: vacancies.org_function_id re-point deferred to FAZA 9; 0 rows live, no regress.
     return this.exec(sql`
       SELECT id, title, status, priority, number_of_positions, open_positions, closing_date, created_at,
              (now()::date - created_at::date) AS aging_days,
@@ -267,7 +270,7 @@ export class CardRepository {
   /**
    * Assign an employee to a card (M:N). Service guards substantive assigns with canAssignEmployee.
    * Phase 7: an acting (i.o.) assignment carries isActing + acting_supplement + ended_at (revert date).
-   * Idempotent on the active (employee_id, card_id) pair.
+   * Idempotent on the active (employee_id, card_id) pair. card_id → org_departments (PHASE-00).
    */
   async assignEmployee(
     cardId: number, employeeId: number, isPrimary: boolean,
@@ -317,44 +320,41 @@ export class CardRepository {
 
   /**
    * An employee's active cards + each card's max_salary (the FORMULA-A components).
-   * Phase 7: includes the acting flag + supplement per link; an acting card's effective contribution
-   * = its acting_supplement (own salary is its substantive card). On-read revert guard excludes expired links.
+   * card_id → org_departments (PHASE-00). Acting card's effective contribution = its acting_supplement.
+   * On-read revert guard excludes expired links.
    */
   async listEmployeeCards(employeeId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
       SELECT ec.card_id, ec.is_primary, COALESCE(ec.is_acting, false) AS is_acting,
-             ec.acting_supplement, ec.ended_at, f.position_name, f.code, f.max_salary,
-             -- effective contribution to FORMULA A: acting card → supplement only; substantive → max_salary
+             ec.acting_supplement, ec.ended_at, f.name AS position_name, f.code, f.max_salary,
              (CASE WHEN COALESCE(ec.is_acting,false) THEN COALESCE(ec.acting_supplement,0) ELSE COALESCE(f.max_salary,0) END) AS card_salary
       FROM employee_cards ec
-      JOIN org_functions f ON f.id = ec.card_id
+      JOIN org_departments f ON f.id = ec.card_id
       WHERE ec.employee_id = ${employeeId} AND ec.is_active
-        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.deleted_at IS NULL
-      ORDER BY ec.is_primary DESC, ec.is_acting, f.position_name
+        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.is_active = true
+      ORDER BY ec.is_primary DESC, ec.is_acting, f.name
     `);
   }
 
   /**
    * FORMULA A (EP-ORG-142/061): employee profile total = "own + supplement", no cap.
-   *   own        = SUM of the employee's SUBSTANTIVE (non-acting) cards' max_salary;
-   *   supplement = SUM of acting_supplement for i.o./acting links (the i.o. earns the SUPPLEMENT only,
-   *                NOT the acting card's full salary — that seat belongs to its substantive holder).
-   * On-read revert guard (EP-ORG-060): expired dated links drop out automatically. COALESCE NULL→0.
+   * own = SUM of substantive (non-acting) cards' max_salary; supplement = SUM of acting_supplement.
+   * On-read revert guard (EP-ORG-060): expired dated links drop out. COALESCE NULL→0. card → org_departments.
    */
   async employeeSalaryTotal(employeeId: number): Promise<Result<number>> {
     const r = await this.exec(sql`
       SELECT ( COALESCE(SUM(CASE WHEN COALESCE(ec.is_acting,false) THEN 0 ELSE COALESCE(f.max_salary,0) END), 0)
              + COALESCE(SUM(CASE WHEN ec.is_acting THEN COALESCE(ec.acting_supplement,0) ELSE 0 END), 0) )::numeric AS total
-      FROM employee_cards ec JOIN org_functions f ON f.id = ec.card_id
+      FROM employee_cards ec JOIN org_departments f ON f.id = ec.card_id
       WHERE ec.employee_id = ${employeeId} AND ec.is_active
-        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.deleted_at IS NULL
+        AND (ec.ended_at IS NULL OR ec.ended_at > now()) AND f.is_active = true
     `);
     return r.ok ? Ok(Number(r.data[0]?.total ?? 0)) : Err(r.error);
   }
 
   /**
    * EP-ORG-047 cert-in-card: certificates earned by the card's active occupants + a 30-day expiry flag.
-   * Reuses the canonical `certificates` table (no new cert table, C6). Occupants via employee_cards (M:N).
+   * Reuses the canonical `certificates` table. Occupants via employee_cards (M:N, card_id → org_departments).
    */
   async listCertificates(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`
@@ -375,8 +375,8 @@ export class CardRepository {
   /** EP-ORG-137: stamp last_reviewed_at = NOW() (resets the 1-year staleness clock). 404 if the card is gone. */
   async markReviewed(cardId: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      UPDATE org_functions SET last_reviewed_at = NOW(), updated_at = NOW()
-      WHERE id = ${cardId} AND deleted_at IS NULL
+      UPDATE org_departments SET last_reviewed_at = NOW()
+      WHERE id = ${cardId} AND is_active = true
       RETURNING id, last_reviewed_at
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
@@ -384,8 +384,7 @@ export class CardRepository {
 
   /**
    * EP-ORG-060 acting auto-revert (cron housekeeping mirror): physically deactivate acting links whose
-   * end date has passed. The on-read guard already excludes them from sums/occupancy; this keeps rows tidy.
-   * Returns the number of links reverted.
+   * end date has passed. The on-read guard already excludes them; this keeps rows tidy.
    */
   async revertExpiredActing(): Promise<Result<number>> {
     const r = await this.exec(sql`
@@ -396,12 +395,9 @@ export class CardRepository {
     return r.ok ? Ok(r.data.length) : Err(r.error);
   }
 
-  // ─── Card-level Portret (org_node_portret, card_id-keyed) ────────────────────
+  // ─── Card-level Portret (org_node_portret, card_id-keyed → org_departments) ───
 
-  /**
-   * Read a card's portret row (org_node_portret keyed by card_id; node_id is NULL for card rows).
-   * Returns null when the card has no portret yet.
-   */
+  /** Read a card's portret row (org_node_portret keyed by card_id). Returns null when no portret yet. */
   async getCardPortret(cardId: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
       SELECT * FROM org_node_portret WHERE card_id = ${cardId} LIMIT 1
@@ -410,8 +406,7 @@ export class CardRepository {
   }
 
   /**
-   * Manual upsert of a card's portret (SELECT-then-write — does NOT rely on ON CONFLICT predicate
-   * inference over the partial unique index). A card row = node_id NULL + card_id set + portret_data jsonb.
+   * Manual upsert of a card's portret (SELECT-then-write). A card row = node_id NULL + card_id set + portret_data jsonb.
    */
   async saveCardPortret(
     cardId: number,
@@ -443,21 +438,21 @@ export class CardRepository {
   // ─── EP-ORG-003 card-gate (RBAC + salary from the card) ─────────────────────
 
   /**
-   * The card-gate for a user: their card (org_functions via users.org_function_id), the card-derived
+   * The card-gate for a user: their card (org_departments via users.org_function_id), the card-derived
    * RBAC tier, and salary eligibility (an active employee_cards link). Read-only, non-blocking — the
-   * card-LESS case is FLAGGED (principle 1: AI flags → human decides), NOT a login block (login is
-   * never gated here, so the admin/owner can never be locked out).
+   * card-LESS case is FLAGGED (principle 1), NOT a login block. FAZA 2 wires the full login-gate.
+   * PHASE-00: canonical card join = org_departments.
    */
   async resolveGate(userId: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
       SELECT u.id AS user_id, u.username, u.role,
-             u.org_function_id AS card_id, ofn.position_name AS card_name, ofn.rbac_tier AS rbac_tier,
+             u.org_function_id AS card_id, ofn.name AS card_name, ofn.rbac_tier AS rbac_tier,
              (u.org_function_id IS NOT NULL AND ofn.id IS NOT NULL) AS has_card,
              EXISTS (SELECT 1 FROM employees e JOIN employee_cards ec ON ec.employee_id = e.id
                      WHERE e.user_id = u.id AND ec.is_active
                        AND (ec.ended_at IS NULL OR ec.ended_at > now())) AS salary_eligible
       FROM users u
-      LEFT JOIN org_functions ofn ON ofn.id = u.org_function_id AND ofn.deleted_at IS NULL
+      LEFT JOIN org_departments ofn ON ofn.id = u.org_function_id AND ofn.is_active = true
       WHERE u.id = ${userId}
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);

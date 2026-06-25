@@ -45,7 +45,8 @@ export class OrgQueriesRepo {
             JOIN users eu ON eu.id = eod.user_id AND eu.is_active = TRUE
             WHERE eod.org_department_id = ${orgDepartments.id}
           )`,
-          vacantCardCount: sql<number>`(SELECT COUNT(*)::int FROM org_functions f WHERE f.department_id = ${orgDepartments.id} AND f.deleted_at IS NULL AND f.is_active = true AND f.status = 'vacant')`,
+          // PHASE-00 (MASSIV-100): vacant-count endi kanonik jadval ICHIDA (org_functions cross-ref tugadi).
+          vacantCardCount: sql<number>`(SELECT COUNT(*)::int FROM org_departments f WHERE f.parent_id = ${orgDepartments.id} AND f.is_active = true AND f.node_type = 'position' AND f.current_state = 'vacant')`,
         })
         .from(orgDepartments)
         .leftJoin(appUsers, and(eq(appUsers.id, orgDepartments.head_user_id), eq(appUsers.is_active, true)))

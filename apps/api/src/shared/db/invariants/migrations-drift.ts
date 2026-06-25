@@ -3669,4 +3669,19 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   // FK re-point UPDATE (FAZA-00 keyingi bosqich) shu VIEW orqali — bir manba, takrorlanmas.
   { name: 'PHASE00 of->od crosswalk VIEW', sql: `CREATE OR REPLACE VIEW _of_to_od_crosswalk AS SELECT DISTINCT ON (f.id) f.id AS org_function_id, d.id AS org_department_id, f.position_name FROM org_functions f JOIN org_departments d ON lower(trim(d.name)) = lower(trim(f.position_name)) WHERE f.deleted_at IS NULL AND d.is_active = true ORDER BY f.id, d.id ASC` },
 
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-00, qaror A "0 dan"): employee_cards + card_folders
+  // card_id FK org_functions -> org_departments (yagona kanonik karta). GUARDED+IDEMPOTENT: faqat FK
+  // hali org_functions'ga bo'lsa ishlaydi (test-binding tozalanadi, FK qaratiladi); qayta-bootda skip.
+  // Jonli DB allaqachon _audit/apply-phase00-fk-repoint.cjs bilan qo'llandi; bu fresh DB uchun.
+  { name: 'PHASE00 employee_cards+card_folders card_id FK -> org_departments', sql: `DO $$ BEGIN
+    IF (SELECT confrelid::regclass::text FROM pg_constraint WHERE conname='employee_cards_card_id_fkey') = 'org_functions' THEN
+      DELETE FROM card_folders;
+      DELETE FROM employee_cards;
+      ALTER TABLE employee_cards DROP CONSTRAINT IF EXISTS employee_cards_card_id_fkey;
+      ALTER TABLE employee_cards ADD CONSTRAINT employee_cards_card_id_fkey FOREIGN KEY (card_id) REFERENCES org_departments(id);
+      ALTER TABLE card_folders DROP CONSTRAINT IF EXISTS card_folders_card_id_fkey;
+      ALTER TABLE card_folders ADD CONSTRAINT card_folders_card_id_fkey FOREIGN KEY (card_id) REFERENCES org_departments(id);
+    END IF;
+  END $$` },
+
 ];
