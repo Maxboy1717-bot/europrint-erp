@@ -213,6 +213,16 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.assignUserToNode(userId, nodeId));
   }
 
+  @ApiOperation({ summary: 'Remove user from node (kartadan olib tashlash)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Delete('users/:userId/node/:nodeId')
+  async removeUserFromNode(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('nodeId', ParseIntPipe) nodeId: number,
+  ) {
+    return unwrapOrInternal(await this.service.removeUserFromNode(userId, nodeId));
+  }
+
   // --- Export ---------------------------------------------------------------
 
   @ApiOperation({ summary: 'Export excel' })

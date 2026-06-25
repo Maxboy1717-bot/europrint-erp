@@ -217,8 +217,17 @@ export class OrgStructureService implements OnModuleInit {
 
   async assignUserToNode(userId: number, nodeId: number) {
     return safeCall(async () => {
-      await this.repo.assignUser(userId, nodeId);
-      return { message: "Xodim bo'limga biriktirildi" };
+      const r = await this.repo.assignUser(userId, nodeId);
+      return r.assigned
+        ? { assigned: true, message: 'Xodim kartaga biriktirildi' }
+        : { assigned: false, message: r.reason ?? "Biriktirib bo'lmadi" };
+    });
+  }
+
+  async removeUserFromNode(userId: number, nodeId: number) {
+    return safeCall(async () => {
+      await this.repo.removeUser(userId, nodeId);
+      return { removed: true, message: 'Xodim kartadan olib tashlandi' };
     });
   }
 

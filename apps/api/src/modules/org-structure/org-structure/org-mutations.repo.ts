@@ -12,7 +12,7 @@
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and, ne } from 'drizzle-orm';
 import { orgDepartments, employeeOrgDepartments } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import { syncToCoreTable } from './sync-helper';
@@ -136,20 +136,48 @@ export class OrgMutationsRepo {
     }, 'DB_ERROR');
   }
 
-  async assignUser(userId: number, nodeId: number): Promise<void> {
-    await db
-      .insert(employeeOrgDepartments)
-      .values({ user_id: userId, org_department_id: nodeId, is_primary: false })
-      .onConflictDoNothing();
-
+  /**
+   * VISION (egasi): 1 xodim = 1 KARTA. Xodimni kartaga biriktirish ikki tomonni majburlaydi:
+   *   - KARTA-tomon (1 o'rin = 1 xodim): position (o'rindiq) karta band bo'lsa — boshqa faol xodim
+   *     bilan — biriktirib bo'lmaydi (rad). department/section guruh-kartalari ko'p tuta oladi.
+   *   - XODIM-tomon (1 xodim = 1 karta): xodim avval boshqa kartada bo'lsa, eski bog'lanishi o'chadi
+   *     (ko'chish semantikasi) — har xodim aynan bitta kartada qoladi.
+   */
+  async assignUser(userId: number, nodeId: number): Promise<{ assigned: boolean; reason?: string }> {
     const [node] = await db
       .select({ id: orgDepartments.id, node_type: orgDepartments.node_type })
       .from(orgDepartments)
       .where(eq(orgDepartments.id, nodeId))
       .limit(1);
-    if (node && (node.node_type === 'department' || node.node_type === null)) {
+    if (!node) return { assigned: false, reason: 'Karta topilmadi' };
+
+    if (node.node_type === 'position') {
+      const occupants = await db
+        .select({ user_id: employeeOrgDepartments.user_id })
+        .from(employeeOrgDepartments)
+        .where(and(eq(employeeOrgDepartments.org_department_id, nodeId), ne(employeeOrgDepartments.user_id, userId)));
+      if (occupants.length > 0) return { assigned: false, reason: "Karta band — 1 o'rin = 1 xodim" };
+    }
+
+    // 1 xodim = 1 karta — xodimning oldingi bog'lanishi(lari) o'chadi (ko'chish).
+    await db.delete(employeeOrgDepartments).where(eq(employeeOrgDepartments.user_id, userId));
+    await db
+      .insert(employeeOrgDepartments)
+      .values({ user_id: userId, org_department_id: nodeId, is_primary: true });
+
+    if (node.node_type === 'department' || node.node_type === null) {
       await runQuery(sql`UPDATE users SET department_id = ${nodeId} WHERE id = ${userId}`);
     }
+    return { assigned: true };
+  }
+
+  /** Xodimni kartadan olib tashlash (bog'lanishni uzish). */
+  async removeUser(userId: number, nodeId: number): Promise<{ removed: boolean }> {
+    await db
+      .delete(employeeOrgDepartments)
+      .where(and(eq(employeeOrgDepartments.user_id, userId), eq(employeeOrgDepartments.org_department_id, nodeId)));
+    await runQuery(sql`UPDATE users SET department_id = NULL WHERE id = ${userId} AND department_id = ${nodeId}`);
+    return { removed: true };
   }
 
   /**
