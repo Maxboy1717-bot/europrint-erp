@@ -409,13 +409,18 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   getAttendanceByPeriod(empId: number, start: Date, end: Date) { return this.leaveRepo.getAttendanceByPeriod(empId, start, end); }
 
   async getRazryadCoefficient(employeeId: number): Promise<number> {
+    // PHASE-04 (MASSIV-100): oylik razryad-koeffi KANONIK kartadan (org_departments) keladi —
+    // employee -> user_id -> employee_org_departments (aktiv, birlamchi) -> org_departments.razryad_level_id
+    // -> razryad_levels.coefficient. org_functions (de-routed) YO'Q (FAZA-00). Data yo'q -> 1.0 (graceful, egasi-data).
     try {
       const rows = await runQuery<{ coefficient: string | null }>(sql`
         SELECT COALESCE(rl.coefficient, 1.0)::numeric AS coefficient
         FROM employees e
-        LEFT JOIN org_functions ofn ON ofn.id = e.org_function_id
-        LEFT JOIN razryad_levels rl ON rl.id = ofn.razryad_level_id
+        LEFT JOIN employee_org_departments eod ON eod.user_id = e.user_id AND eod.is_active = true
+        LEFT JOIN org_departments od ON od.id = eod.org_department_id
+        LEFT JOIN razryad_levels rl ON rl.id = od.razryad_level_id
         WHERE e.id = ${employeeId}
+        ORDER BY eod.is_primary DESC NULLS LAST
         LIMIT 1
       `);
       const coeff = parseFloat(String(rows.rows[0]?.coefficient ?? '1'));
