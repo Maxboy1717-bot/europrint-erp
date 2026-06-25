@@ -3711,4 +3711,10 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'razryad_requests.card_status idx', sql: `CREATE INDEX IF NOT EXISTS idx_razryad_requests_card ON razryad_requests (card_id, status)` },
   { name: 'org_departments.next_attestation_date ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS next_attestation_date DATE` },
 
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-04, 2026-06-25): oylik-audit ustunlari.
+  // Oylik kartadan hisoblanganda: qaysi razryad-koeff, ko'p-karta ulush-yig'indisi, pro-rata kun.
+  { name: 'salary_history.razryad_coefficient ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS razryad_coefficient NUMERIC(5,2)` },
+  { name: 'salary_history.stake_total ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS stake_total NUMERIC(4,3)` },
+  { name: 'salary_history.proration_days ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS proration_days INTEGER` },
+
 ];
