@@ -3726,4 +3726,9 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'ckp_fact_values unique idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_ckp_fact_card_day ON ckp_fact_values (card_id, fact_date, COALESCE(employee_id,0), COALESCE(product_id,0))` },
   { name: 'ckp_fact_values card_date idx', sql: `CREATE INDEX IF NOT EXISTS idx_ckp_fact_card_date ON ckp_fact_values (card_id, fact_date DESC)` },
 
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-07, 2026-06-25): darslik kartaga — cross-card-credit (Q562).
+  // Universal kurs bir kartada tugatilsa boshqa kartaga kredit. courses.card_id (FK yo'q) bind ishlaydi.
+  { name: 'lms_cross_card_credits CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS lms_cross_card_credits (id SERIAL PRIMARY KEY, course_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, source_card_id INTEGER, target_card_id INTEGER NOT NULL, credited_by INTEGER, credited_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'lms_cross_card_credits uniq idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_lms_credit ON lms_cross_card_credits (course_id, employee_id, target_card_id)` },
+
 ];
