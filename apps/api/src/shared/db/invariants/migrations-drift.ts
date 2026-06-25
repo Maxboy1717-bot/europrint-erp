@@ -3702,4 +3702,13 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   // Backfill (fabrikatsiya emas): YAGONA aktiv linkli xodim -> 1.0 (mantiqiy haqiqat); ko'p-linkli NULL (egasi taqsimlaydi). Guarded (faqat NULL).
   { name: 'PHASE01 eod stake backfill solo=1.0', sql: `UPDATE employee_org_departments eod SET stake_fraction = 1.0 WHERE stake_fraction IS NULL AND is_active = true AND (SELECT COUNT(*) FROM employee_org_departments x WHERE x.user_id = eod.user_id AND x.is_active = true) = 1` },
 
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-03, 2026-06-25): razryad o'sish/pasayish EXECUTION audit.
+  // razryad_history (immutable tarix, EP-ORG-010..013/067/070) + razryad_requests (2-imzo workflow).
+  { name: 'razryad_history CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS razryad_history (id SERIAL PRIMARY KEY, card_id INTEGER NOT NULL, employee_id INTEGER, old_razryad_id INTEGER, new_razryad_id INTEGER NOT NULL, change_type TEXT NOT NULL, reason TEXT, exam_score NUMERIC(5,2), certificate_number TEXT, requested_by INTEGER, hr_approved_by INTEGER, manager_approved_by INTEGER, ai_suggested BOOLEAN NOT NULL DEFAULT false, effective_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'razryad_history.card_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_razryad_history_card ON razryad_history (card_id, effective_at DESC)` },
+  { name: 'razryad_history.employee_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_razryad_history_emp ON razryad_history (employee_id)` },
+  { name: 'razryad_requests CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS razryad_requests (id SERIAL PRIMARY KEY, card_id INTEGER NOT NULL, employee_id INTEGER, target_razryad_id INTEGER NOT NULL, current_razryad_id INTEGER, request_type TEXT NOT NULL, exam_score NUMERIC(5,2), reason TEXT, status TEXT NOT NULL DEFAULT 'pending', hr_approved_by INTEGER, hr_approved_at TIMESTAMP, manager_approved_by INTEGER, manager_approved_at TIMESTAMP, rejected_by INTEGER, reject_reason TEXT, requested_by INTEGER, ai_suggested BOOLEAN NOT NULL DEFAULT false, created_at TIMESTAMP NOT NULL DEFAULT NOW(), updated_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'razryad_requests.card_status idx', sql: `CREATE INDEX IF NOT EXISTS idx_razryad_requests_card ON razryad_requests (card_id, status)` },
+  { name: 'org_departments.next_attestation_date ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS next_attestation_date DATE` },
+
 ];
