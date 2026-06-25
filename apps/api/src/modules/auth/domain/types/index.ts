@@ -42,5 +42,6 @@ export enum AuthErrorCode {
   USER_NOT_FOUND = 'USER_NOT_FOUND',
   PASSWORD_INVALID = 'PASSWORD_INVALID',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
+  NO_ACTIVE_CARD = 'NO_ACTIVE_CARD',   // EP-ORG-003: lavozim-kartasiga biriktirilmagan
   UNAUTHORIZED = 'UNAUTHORIZED',
 }

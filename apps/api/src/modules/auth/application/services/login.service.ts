@@ -25,7 +25,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
-import { IAuthRepo } from '../../domain/repositories/i-auth.repo';
+import { IAuthRepo, CardGate } from '../../domain/repositories/i-auth.repo';
 import { AUTH_REPO } from '../../auth.tokens';
 import { IPasswordHasher, PASSWORD_HASHER } from '../../domain/ports/i-password-hasher.port';
 import { AuthResult, AuthErrorCode } from '../../domain/types';
@@ -118,8 +118,27 @@ export class LoginService {
       return Err(AppErr('UNAUTHORIZED', msg));
     }
 
+    // EP-ORG-003 card-gate (env-flagged, default OFF — login buzilmasligi uchun): parol to'g'ri, lekin
+    // aktiv lavozim-kartasi yo'q → kira olmaydi. super_admin/admin/director BYPASS (admin kartasiz —
+    // regress-himoya). Gate faqat CARD_LOGIN_GATE_ENABLED='true' bo'lganda BLOKLAYDI (productionda HR
+    // binding qurgach yoqiladi). Gate har doim hisoblanadi — JWT'ga karta-claim qo'shish uchun.
+    const gate = await this.authRepo.resolveCardGate(user.getId());
+    const cardGateEnabled = this.configService.get<string>('CARD_LOGIN_GATE_ENABLED') === 'true';
+    if (cardGateEnabled && !this.isCardExemptRole(user.getRole()) && gate.activeCardCount === 0) {
+      this.logger.warn({ userId: user.getId() }, "Login bloklandi: aktiv karta yo'q (EP-ORG-003)");
+      await this.auditFailure(user.getId(), command, AuthErrorCode.NO_ACTIVE_CARD);
+      const msg = await this.resolveAuthErrorMessage(AuthErrorCode.NO_ACTIVE_CARD);
+      return Err(AppErr('UNAUTHORIZED', msg));
+    }
+
     await this.recordSuccessfulLogin(user, command);
-    return { ok: true, data: this.buildAuthResult(user) };
+    return { ok: true, data: this.buildAuthResult(user, gate) };
+  }
+
+  /** super_admin/admin/director — tizim-darajasi rollar, kartasiz ham kiradi (regress: admin id=1). */
+  private isCardExemptRole(role: string | undefined): boolean {
+    const r = String(role ?? '').toLowerCase();
+    return r === 'super_admin' || r === 'admin' || r === 'director';
   }
 
   /**
@@ -137,6 +156,8 @@ export class LoginService {
         return this.i18n.t('auth.accountLocked');
       case AuthErrorCode.ACCOUNT_INACTIVE:
         return this.i18n.t('auth.accountInactive');
+      case AuthErrorCode.NO_ACTIVE_CARD:
+        return this.i18n.t('auth.noActiveCard');
       default:
         return this.i18n.t('errors.unauthorized');
     }
@@ -179,13 +200,16 @@ export class LoginService {
     this.logger.log(`User logged in: ${user.getUsername()} from ${command.ipAddress}`);
   }
 
-  private buildAuthResult(user: NonNullable<Awaited<ReturnType<IAuthRepo['findByUsername']>>>): AuthResult {
-    // SEC-3: jti (JWT ID) qo'shildi — logout blacklist JwtAuthGuard da ishlashi uchun
+  private buildAuthResult(user: NonNullable<Awaited<ReturnType<IAuthRepo['findByUsername']>>>, gate?: CardGate): AuthResult {
+    // SEC-3: jti (JWT ID). EP-ORG-023: cardId/rbacTier/positionId tokenda — guard kartadan ruxsat o'qiydi.
     const payload = {
       sub: user.getId(),
       username: user.getUsername(),
       email: user.getEmail(),
       role: user.getRole(),
+      cardId: gate?.primaryCardId ?? null,
+      rbacTier: gate?.rbacTier ?? null,
+      positionId: gate?.positionId ?? null,
       jti: randomUUID(),
     };
     // AUTH-1: JWT TTL = cookie maxAge (24h access, 7d refresh) — no more drift
