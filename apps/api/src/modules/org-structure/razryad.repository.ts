@@ -27,6 +27,8 @@ export interface RazryadInput {
   maxRetakes?: number | null;
   /** Razryad oylik-koeffitsiyenti (base × coefficient = oylik). Egasi sozlaydi (1.00→...). */
   coefficient?: number | null;
+  /** EP-ORG-011: keyingi razryadga o'tishdan oldin minimal oylar (≥3). NULL = egasi belgilaydi. */
+  minMonths?: number | null;
 }
 
 /** Detect the razryad_levels UNIQUE(level) violation (constraint razryad_levels_level_key / SQLSTATE 23505). */
@@ -61,11 +63,11 @@ export class RazryadRepository {
       const rows = await runQuery<Row>(sql`
         INSERT INTO razryad_levels
           (level, name, min_requirement, salary_min, salary_max, exam_type, certificate, description,
-           exam_pass_threshold, max_retakes, coefficient, is_active, created_at, updated_at)
+           exam_pass_threshold, max_retakes, coefficient, min_months, is_active, created_at, updated_at)
         VALUES
           (${dto.level}, ${dto.name ?? ''}, ${dto.minRequirement ?? null}, ${dto.salaryMin ?? null},
            ${dto.salaryMax ?? null}, ${dto.examType ?? null}, ${dto.certificate ?? null}, ${dto.description ?? null},
-           ${dto.examPassThreshold ?? null}, ${dto.maxRetakes ?? null}, ${dto.coefficient ?? 1.0},
+           ${dto.examPassThreshold ?? null}, ${dto.maxRetakes ?? null}, ${dto.coefficient ?? 1.0}, ${dto.minMonths ?? null},
            true, NOW(), NOW())
         RETURNING *
       `);
@@ -92,6 +94,7 @@ export class RazryadRepository {
           exam_pass_threshold  = COALESCE(${dto.examPassThreshold ?? null}, exam_pass_threshold),
           max_retakes          = COALESCE(${dto.maxRetakes ?? null}, max_retakes),
           coefficient          = COALESCE(${dto.coefficient ?? null}, coefficient),
+          min_months           = COALESCE(${dto.minMonths ?? null}, min_months),
           updated_at           = NOW()
         WHERE id = ${id} AND is_active = true
         RETURNING *

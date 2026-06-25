@@ -33,6 +33,8 @@ const RazryadCreateSchema = z.object({
   maxRetakes:         z.number().int().min(0).max(10).optional(),
   /** Razryad oylik-koeffitsiyenti (base × coefficient = oylik). Egasi sozlaydi. */
   coefficient:        z.number().positive().max(20).optional(),
+  /** EP-ORG-011: keyingi razryadga o'tishdan oldin minimal oylar (≥3 oy oraliq). Egasi belgilaydi. */
+  minMonths:          z.number().int().min(0).max(120).optional(),
 }).strict();
 
 const RazryadUpdateSchema = RazryadCreateSchema.partial();

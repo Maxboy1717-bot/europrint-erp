@@ -6,15 +6,20 @@
  *   (EP-ORG-008..013): razryad -> talab -> o'sish -> oylik. Razryad qiymatlari egasi-data (fabrikatsiya yo'q).
  */
 
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Award } from "lucide-react";
+import { Award, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { EPLoader } from "@/components/ep";
+import { RazryadLevelsPanel } from "@/components/hr/org/RazryadLevelsPanel";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NodeDetail } from "./types";
@@ -52,6 +57,7 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [cfgOpen, setCfgOpen] = useState(false);
 
   const { data, isLoading } = useQuery<{ items: RazryadLevel[] }>({
     queryKey: ["/api/org-structure/razryad-levels"],
@@ -76,8 +82,11 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
           <CardTitle className="text-sm flex items-center gap-2"><Award className="h-4 w-4" />{t("kartaRazryadi", "Karta razryadi")}</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => setCfgOpen(true)} data-testid="button-razryad-config">
+            <Settings2 className="h-3.5 w-3.5 mr-1.5" />{t("darajalarniSozlash", "Darajalarni sozlash")}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-3 flex-wrap">
@@ -150,6 +159,18 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
           </p>
         </CardContent>
       </Card>
+
+      {/* Razryad darajalari — umumiy sozlama (master-data; egasi/HR konfiguratsiya qiladi, Q9) */}
+      <Dialog open={cfgOpen} onOpenChange={setCfgOpen}>
+        <DialogContent className="max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold flex items-center gap-2">
+              <Settings2 className="h-4 w-4" />{t("razryadDarajalariSozlama", "Razryad darajalari — umumiy sozlama")}
+            </DialogTitle>
+          </DialogHeader>
+          <RazryadLevelsPanel />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -28,6 +28,9 @@ export interface RazryadLevel {
   certificate?: string | null;
   description?: string | null;
   coefficient?: string | number | null;
+  exam_pass_threshold?: string | number | null;
+  max_retakes?: string | number | null;
+  min_months?: string | number | null;
   is_active?: boolean;
 }
 
@@ -43,6 +46,9 @@ type FormState = {
   certificate: string;
   description: string;
   coefficient: string;
+  examPassThreshold: string;
+  maxRetakes: string;
+  minMonths: string;
 };
 
 function toForm(r?: RazryadLevel | null): FormState {
@@ -56,6 +62,9 @@ function toForm(r?: RazryadLevel | null): FormState {
     certificate: r?.certificate ?? "",
     description: r?.description ?? "",
     coefficient: r?.coefficient != null ? String(r.coefficient) : "",
+    examPassThreshold: r?.exam_pass_threshold != null ? String(r.exam_pass_threshold) : "",
+    maxRetakes: r?.max_retakes != null ? String(r.max_retakes) : "",
+    minMonths: r?.min_months != null ? String(r.min_months) : "",
   };
 }
 
@@ -101,6 +110,9 @@ export function RazryadFormDialog({
         certificate: form.certificate || undefined,
         description: form.description || undefined,
         coefficient: numOrUndef(form.coefficient),
+        examPassThreshold: numOrUndef(form.examPassThreshold),
+        maxRetakes: numOrUndef(form.maxRetakes),
+        minMonths: numOrUndef(form.minMonths),
       };
       return isEdit
         ? apiRequest("PATCH", `${RAZRYAD_KEY}/${razryad!.id}`, payload)
@@ -157,6 +169,26 @@ export function RazryadFormDialog({
           <div>
             <Label>{t("sertifikat")}</Label>
             <Input value={form.certificate} onChange={(e) => set("certificate", e.target.value)} />
+          </div>
+          <div className="sm:col-span-2 border-t border-border/50 pt-2 mt-1">
+            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide">
+              {t("osishShartlari", "O'sish shartlari (nima qilsa razryad oshadi)")}
+            </p>
+          </div>
+          <div>
+            <Label>{t("imtihonOtishBali", "Imtihon o'tish bali (%)")}</Label>
+            <Input type="number" min="0" max="100" value={form.examPassThreshold}
+              onChange={(e) => set("examPassThreshold", e.target.value)} placeholder={t("masalan70", "masalan 70")} />
+          </div>
+          <div>
+            <Label>{t("maxQaytaTopshirish", "Maks. qayta topshirish")}</Label>
+            <Input type="number" min="0" max="10" value={form.maxRetakes}
+              onChange={(e) => set("maxRetakes", e.target.value)} placeholder="masalan 2" />
+          </div>
+          <div>
+            <Label>{t("keyingiRazryadgachaOy", "Keyingi razryadgacha (oy)")}</Label>
+            <Input type="number" min="0" max="120" value={form.minMonths}
+              onChange={(e) => set("minMonths", e.target.value)} placeholder="≥3" />
           </div>
           <div className="sm:col-span-2">
             <Label>{t("minimalTalab")}</Label>
