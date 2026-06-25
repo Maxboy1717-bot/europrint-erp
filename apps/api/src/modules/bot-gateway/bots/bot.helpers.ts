@@ -132,3 +132,133 @@ export function hasPermission(role: string | undefined, allowed: readonly string
 export function hasBotPermission(slug: BotSlug, role: string | undefined): boolean {
   return hasPermission(role, BOT_PERMISSIONS[slug]);
 }
+
+// ============================================================
+// EP-FIN-028: ShVB Telegram bot komandalar (Finance) — helper funksiyalar.
+// fin.bot.ts ulardan foydalanadi (bu fayl boshqa paket — bu yerda faqat eksport).
+// execSqlResult<T> ishlatiladi (deprecated execSql EMAS — Q-40). Barcha so'rovlar
+// JONLI sxemaga moslangan: zvs / cash_registers / cash_transactions / purchase_invoices.
+// ============================================================
+
+// type (interface emas) — execSqlResult<T> ning Row (Record<string, unknown>) constraint'ini qondiradi.
+export type ZvsStatusRow = {
+  status: string;
+  count: string;
+  total_amount: string;
+};
+
+/**
+ * /zvs_status — joriy oy ZVS so'rovlari: status bo'yicha soni + umumiy summa.
+ * `zvs` jadvali (status, amount, created_at). DB xatosida graceful dbErrorReply.
+ */
+export async function buildZvsStatusReply(): Promise<BotReply> {
+  const r = await execSqlResult<ZvsStatusRow>(drizzleSql`
+    SELECT
+      status,
+      COUNT(*)::text                 AS count,
+      COALESCE(SUM(amount), 0)::text AS total_amount
+    FROM zvs
+    WHERE created_at >= date_trunc('month', NOW())
+    GROUP BY status
+    ORDER BY status
+  `, '/zvs_status');
+
+  if (!r.ok) return dbErrorReply(r.error);
+  if (!r.rows.length) {
+    return helpReply('📋 <b>ZVS holati</b>\nBu oyda hech qanday so\'rov yo\'q.');
+  }
+
+  const lines = (Array.isArray(r.rows) ? r.rows : []).map((row) =>
+    `  • <b>${row.status}</b>: ${row.count} ta — ${Number(row.total_amount).toLocaleString('uz')} UZS`
+  );
+  return helpReply(`📋 <b>Bu Oy ZVS Holati</b>\n\n${lines.join('\n')}`);
+}
+
+/**
+ * /company_state — kassa balansi (cash_registers), 30-kunlik kirim/chiqim
+ * (cash_transactions), muddati o'tgan qarzlar soni (purchase_invoices).
+ */
+export async function buildCompanyStateReply(): Promise<BotReply> {
+  const regR = await execSqlResult<{ name: string; current_balance: string }>(drizzleSql`
+    SELECT name, current_balance::text FROM cash_registers
+    WHERE is_active = true ORDER BY name LIMIT 5
+  `, '/company_state:registers');
+
+  const flowR = await execSqlResult<{ total_in: string; total_out: string }>(drizzleSql`
+    SELECT
+      COALESCE(SUM(CASE WHEN transaction_type='inflow'  THEN amount ELSE 0 END), 0)::text AS total_in,
+      COALESCE(SUM(CASE WHEN transaction_type='outflow' THEN amount ELSE 0 END), 0)::text AS total_out
+    FROM cash_transactions
+    WHERE created_at >= NOW() - INTERVAL '30 days'
+  `, '/company_state:flow');
+
+  const overdueR = await execSqlResult<{ cnt: string }>(drizzleSql`
+    SELECT COUNT(*)::text AS cnt FROM purchase_invoices
+    WHERE payment_status != 'paid' AND due_date < CURRENT_DATE::text
+  `, '/company_state:overdue');
+
+  if (!regR.ok || !flowR.ok || !overdueR.ok) {
+    return dbErrorReply('Bir yoki bir nechta so\'rov muvaffaqiyatsiz');
+  }
+
+  const kassaLines = (Array.isArray(regR.rows) ? regR.rows : []).map((row) =>
+    `  💵 ${row.name}: <b>${Number(row.current_balance).toLocaleString('uz')} UZS</b>`
+  ).join('\n') || '  (kassalar topilmadi)';
+
+  const flow = flowR.rows[0] ?? { total_in: '0', total_out: '0' };
+  const sof = Number(flow.total_in) - Number(flow.total_out);
+  const overdue = overdueR.rows[0]?.cnt ?? '0';
+
+  return helpReply(
+    `🏢 <b>Kompaniya Holati</b>\n\n` +
+    `<b>Kassalar:</b>\n${kassaLines}\n\n` +
+    `<b>30-kunlik pul oqimi:</b>\n` +
+    `  📥 Kirim: <b>${Number(flow.total_in).toLocaleString('uz')} UZS</b>\n` +
+    `  📤 Chiqim: <b>${Number(flow.total_out).toLocaleString('uz')} UZS</b>\n` +
+    `  💵 Sof: <b>${sof.toLocaleString('uz')} UZS</b>\n\n` +
+    `⚠️ Muddati o'tgan qarzlar: <b>${overdue} ta faktura</b>`
+  );
+}
+
+/**
+ * /weekly_digest — 7 kunlik moliyaviy xulosa: kirim, chiqim, sof, top-3 xarajat kategoriyasi.
+ */
+export async function buildWeeklyDigestReply(): Promise<BotReply> {
+  const summaryR = await execSqlResult<{ total_in: string; total_out: string }>(drizzleSql`
+    SELECT
+      COALESCE(SUM(CASE WHEN transaction_type='inflow'  THEN amount ELSE 0 END), 0)::text AS total_in,
+      COALESCE(SUM(CASE WHEN transaction_type='outflow' THEN amount ELSE 0 END), 0)::text AS total_out
+    FROM cash_transactions
+    WHERE created_at >= NOW() - INTERVAL '7 days'
+  `, '/weekly_digest:summary');
+
+  const catR = await execSqlResult<{ category_id: string; total: string }>(drizzleSql`
+    SELECT category_id::text AS category_id, SUM(amount)::text AS total
+    FROM cash_transactions
+    WHERE created_at >= NOW() - INTERVAL '7 days'
+      AND transaction_type = 'outflow'
+      AND category_id IS NOT NULL
+    GROUP BY category_id
+    ORDER BY SUM(amount) DESC
+    LIMIT 3
+  `, '/weekly_digest:categories');
+
+  if (!summaryR.ok) return dbErrorReply(summaryR.error);
+
+  const s = summaryR.rows[0] ?? { total_in: '0', total_out: '0' };
+  const sof = Number(s.total_in) - Number(s.total_out);
+
+  const catLines = catR.ok && Array.isArray(catR.rows) && catR.rows.length
+    ? catR.rows.map((cRow, i) =>
+        `  ${i + 1}. Kategoriya #${cRow.category_id ?? 'Boshqa'}: <b>${Number(cRow.total).toLocaleString('uz')} UZS</b>`
+      ).join('\n')
+    : '  (ma\'lumot yo\'q)';
+
+  return helpReply(
+    `📊 <b>7-Kunlik Moliyaviy Xulosa</b>\n\n` +
+    `  📥 Kirim: <b>${Number(s.total_in).toLocaleString('uz')} UZS</b>\n` +
+    `  📤 Chiqim: <b>${Number(s.total_out).toLocaleString('uz')} UZS</b>\n` +
+    `  💵 Sof: <b>${sof.toLocaleString('uz')} UZS</b>\n\n` +
+    `<b>Top-3 Xarajat Kategoriyasi:</b>\n${catLines}`
+  );
+}

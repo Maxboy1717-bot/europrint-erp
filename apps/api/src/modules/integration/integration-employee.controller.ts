@@ -226,7 +226,11 @@ export class IntegrationEmployeeController {
   @HttpCode(HttpStatus.CREATED)
   async createInvoice(@Body() body: unknown) {
     const dto = InvoiceSchema.parse(body);
-    const invoiceNumber = `INV-${Date.now()}`;
+    // MUHIM-4 fix: Date.now() race condition → atomic PostgreSQL sequence
+    const seqR = await db.execute(sql`SELECT nextval('invoice_number_seq') AS seq`);
+    const seqRow = ((seqR as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
+    const seqNum = String(seqRow?.['seq'] ?? Date.now()).padStart(6, '0');
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${seqNum}`;
     const total = dto.amount ? Number(dto.amount) : 0;
     const customerId = dto.customerId ? Number(dto.customerId) : null;
     const r = await db.execute(sql`

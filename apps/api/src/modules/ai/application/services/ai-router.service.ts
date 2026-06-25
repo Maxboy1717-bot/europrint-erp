@@ -31,6 +31,26 @@ import { AI_ROUTER_REPO, type IAiRouterRepo } from '../../domain/repositories/i-
 import { MAX_NAME_LENGTH, AI_DEFAULT_MAX_TOKENS, AI_TOKENS_PER_UNIT } from '@common/constants/app.constants';
 export type { UsageStats };
 
+// ─── PII Masking ──────────────────────────────────────────────────────────
+// Q-40: real promptlarda PII (telefon, passport, email, PINFL) bo'lishi mumkin.
+// ai_usage_logs ga yozishdan OLDIN mask qilinadi.
+const PII_PATTERNS: RegExp[] = [
+  /\+998\d{9}/g,                  // O'zbekiston telefon
+  /[A-Z]{2}\d{7}/g,               // Passport (AA1234567)
+  /[\w.-]+@[\w.-]+\.\w{2,}/g,     // Email
+  /\b\d{14}\b/g,                  // PINFL (14 raqam)
+];
+
+function maskPii(text: string): string {
+  if (!text) return text;
+  let masked = text;
+  for (const pattern of PII_PATTERNS) {
+    masked = masked.replace(pattern, '[MASKED]');
+  }
+  return masked;
+}
+// ─────────────────────────────────────────────────────────────────────────
+
 @Injectable()
 export class AiRouterService {
   private readonly logger = new Logger(AiRouterService.name);
@@ -274,10 +294,10 @@ export class AiRouterService {
       outputTokens: result.outputTokens,
       totalTokens: result.inputTokens + result.outputTokens,
       estimatedCost: result.estimatedCostUsd.toFixed(6),
-      userId: req.userId != null ? String(req.userId) : undefined,
+      userId: req.userId != null ? String(req.userId) : undefined,  // ai_usage_logs.user_id = text ustun (Number emas)
       sessionId: req.sessionId != null ? String(req.sessionId) : undefined,
-      requestSummary: req.prompt.substring(0, MAX_NAME_LENGTH),
-      responseSummary: result.text.substring(0, MAX_NAME_LENGTH),
+      requestSummary: maskPii(req.prompt).substring(0, MAX_NAME_LENGTH),
+      responseSummary: maskPii(result.text).substring(0, MAX_NAME_LENGTH),
       latencyMs: result.latencyMs,
       status: 'success' as const,
     };
