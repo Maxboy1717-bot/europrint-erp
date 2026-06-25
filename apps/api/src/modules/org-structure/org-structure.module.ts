@@ -22,6 +22,9 @@ import { RazryadRepository } from './razryad.repository';
 import { RazryadHistoryController } from './razryad-history.controller';
 import { RazryadHistoryService } from './razryad-history.service';
 import { RazryadHistoryRepository } from './razryad-history.repository';
+import { CkpController } from './ckp.controller';
+import { CkpFactService } from './ckp-fact.service';
+import { CkpFactRepository } from './ckp-fact.repository';
 import { CardFolderController } from './card-folder.controller';
 import { CardFolderService } from './card-folder.service';
 import { CardFolderRepository } from './card-folder.repository';
@@ -30,8 +33,8 @@ import { OrgCascadeListener } from './cascade/org-cascade.listener';
 import { OrgCascadeRepository } from './cascade/org-cascade.repository';
 
 @Module({
-  controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CardFolderController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository],
+  controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository],
   exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService],
 })
 export class OrgStructureModule {}

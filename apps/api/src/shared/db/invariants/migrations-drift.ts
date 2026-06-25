@@ -3717,4 +3717,13 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'salary_history.stake_total ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS stake_total NUMERIC(4,3)` },
   { name: 'salary_history.proration_days ADD COLUMN', sql: `ALTER TABLE IF EXISTS salary_history ADD COLUMN IF NOT EXISTS proration_days INTEGER` },
 
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-05, 2026-06-25): ЦКП fakt-tizimi.
+  // ckp meta (formula-turi/chastota/deadline-soat per-karta) + ckp_fact_values (kunlik FAKT-qiymat — hozir umuman yo'q).
+  { name: 'org_departments.ckp_formula_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ckp_formula_type TEXT` },
+  { name: 'org_departments.ckp_frequency ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ckp_frequency TEXT` },
+  { name: 'org_departments.ckp_report_deadline_hours ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS ckp_report_deadline_hours INTEGER` },
+  { name: 'ckp_fact_values CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS ckp_fact_values (id SERIAL PRIMARY KEY, card_id INTEGER NOT NULL, employee_id INTEGER, product_id INTEGER, fact_date DATE NOT NULL, target_value NUMERIC(14,3), actual_value NUMERIC(14,3), achievement_pct NUMERIC(6,2), source TEXT NOT NULL DEFAULT 'MANUAL', formula_type TEXT, status TEXT NOT NULL DEFAULT 'submitted', submitted_at TIMESTAMP, notes TEXT, recorded_by INTEGER, created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'ckp_fact_values unique idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_ckp_fact_card_day ON ckp_fact_values (card_id, fact_date, COALESCE(employee_id,0), COALESCE(product_id,0))` },
+  { name: 'ckp_fact_values card_date idx', sql: `CREATE INDEX IF NOT EXISTS idx_ckp_fact_card_date ON ckp_fact_values (card_id, fact_date DESC)` },
+
 ];
