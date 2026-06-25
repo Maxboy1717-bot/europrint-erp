@@ -16,7 +16,7 @@
 
 import { createHash } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { IAuthRepo } from '../../domain/repositories/i-auth.repo';
+import { IAuthRepo, CardGate } from '../../domain/repositories/i-auth.repo';
 import { AuthUserAggregate, AuthUserData } from '../../domain/aggregates/auth-user.aggregate';
 import { runQuery } from '@shared/db';
 import { sql, type SQL } from 'drizzle-orm';
@@ -56,6 +56,20 @@ export class DrizzleAuthRepo implements IAuthRepo {
   /** SHA-256 token hash used for blacklist storage (avoids storing raw JWTs in DB) */
   private hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
+  }
+
+  /**
+   * JWT payload'ini verify qilmasdan decode qiladi (imzo allaqachon JwtService tomonidan
+   * tekshirilgan). jti va sub (user UUID) ni chiqarib olish uchun ishlatiladi.
+   */
+  private extractPayload(token: string): Record<string, unknown> | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2 || !parts[1]) return null;
+      return JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 
   private async findOneUser(where: SQL): Promise<AuthUserAggregate | null> {
@@ -110,14 +124,39 @@ export class DrizzleAuthRepo implements IAuthRepo {
     }
   }
 
+  /**
+   * BLOCKER-2 fix: Access token logout qora ro'yxatga qo'shish.
+   *
+   * Muammo: logout token HASH saqlar edi, lekin JwtAuthGuard jti orqali
+   * tekshirar edi → mismatch → logout hech nima qilmasdi.
+   *
+   * Yechim: JWT payload'ini decode qilib, jti (UUID) va sub (user UUID) ni
+   * chiqarib olamiz. refresh_tokens ga (token_hash, jti, user_id) bilan
+   * INSERT qilamiz. ON CONFLICT (jti) — unikal constraint mavjud.
+   * Guard `WHERE jti = $jti AND is_revoked = true` → endi topiladi.
+   */
   async blacklistToken(token: string, _expiresAt: Date): Promise<void> {
     try {
       const hash = this.hashToken(token);
+      const payload = this.extractPayload(token);
+      const jti    = typeof payload?.['jti'] === 'string' ? payload['jti'] : null;
+      const userId = typeof payload?.['sub'] === 'string' ? payload['sub'] : null;
+
+      if (!jti || !userId) {
+        // Payload noto'g'ri — token allaqachon buzilgan yoki eskiroq formatda
+        this.logger.warn(`blacklistToken: payload noto'g'ri (jti=${jti}, sub=${userId}) — o'tkazildi`);
+        return;
+      }
+
+      // Guard jti orqali tekshiradi:
+      //   SELECT is_revoked FROM refresh_tokens WHERE jti = $jti
+      // ON CONFLICT (jti) — refresh_tokens.jti ustunida UNIQUE index bor (schema-core.ts)
       await runQuery(sql`
-        INSERT INTO refresh_tokens (token, is_revoked, expires_at, created_at)
-        VALUES (${hash}, true, NOW() + INTERVAL '25 hours', NOW())
-        ON CONFLICT (token) DO UPDATE SET is_revoked = true
+        INSERT INTO refresh_tokens (token, jti, user_id, is_revoked, expires_at, created_at)
+        VALUES (${hash}, ${jti}, ${userId}, true, NOW() + INTERVAL '25 hours', NOW())
+        ON CONFLICT (jti) DO UPDATE SET is_revoked = true
       `);
+      this.logger.log(`blacklistToken: jti=${jti} qora ro'yxatga qo'shildi`);
     } catch (error: unknown) {
       this.logger.error(`blacklistToken failed: ${error}`);
     }
@@ -173,6 +212,44 @@ export class DrizzleAuthRepo implements IAuthRepo {
       `);
     } catch (error: unknown) {
       this.logger.error(`resetFailedAttempts failed: ${error}`);
+    }
+  }
+
+  /**
+   * EP-ORG-003 card-gate manbai: user'ning aktiv lavozim-kartalari soni + birlamchi karta + rbac-tier + position.
+   * Yo'l: users.employee_id → employee_cards (is_active, NOT ended) → org_departments (FAZA-00 kanonik).
+   * Xato → empty (0 karta); login.service admin/super_admin'ni undan oldin bypass qiladi (fail-closed oddiy user).
+   */
+  async resolveCardGate(userId: number): Promise<CardGate> {
+    const empty: CardGate = { activeCardCount: 0, primaryCardId: null, rbacTier: null, positionId: null };
+    try {
+      const r = await runQuery<{ active_card_count: number; primary_card_id: number | null; rbac_tier: string | null; position_id: number | null }>(sql`
+        SELECT
+          COUNT(ec.id) FILTER (WHERE ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW()))::int AS active_card_count,
+          (SELECT od.id FROM employee_cards ec2 JOIN org_departments od ON od.id = ec2.card_id
+            WHERE ec2.employee_id = u.employee_id AND ec2.is_active = true AND (ec2.ended_at IS NULL OR ec2.ended_at > NOW())
+            ORDER BY ec2.is_primary DESC, ec2.assigned_at DESC NULLS LAST LIMIT 1) AS primary_card_id,
+          (SELECT od.rbac_tier FROM employee_cards ec3 JOIN org_departments od ON od.id = ec3.card_id
+            WHERE ec3.employee_id = u.employee_id AND ec3.is_active = true AND (ec3.ended_at IS NULL OR ec3.ended_at > NOW())
+            ORDER BY ec3.is_primary DESC, ec3.assigned_at DESC NULLS LAST LIMIT 1) AS rbac_tier,
+          u.position_id AS position_id
+        FROM users u
+        LEFT JOIN employee_cards ec ON ec.employee_id = u.employee_id
+        WHERE u.id = ${userId}
+        GROUP BY u.id, u.employee_id, u.position_id
+        LIMIT 1
+      `);
+      const row = r.rows[0];
+      if (!row) return empty;
+      return {
+        activeCardCount: Number(row.active_card_count ?? 0),
+        primaryCardId: row.primary_card_id ?? null,
+        rbacTier: row.rbac_tier ?? null,
+        positionId: row.position_id ?? null,
+      };
+    } catch (error: unknown) {
+      this.logger.error(`resolveCardGate failed: ${error}`);
+      return empty;
     }
   }
 }
