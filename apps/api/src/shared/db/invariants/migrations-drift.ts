@@ -3731,4 +3731,9 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'lms_cross_card_credits CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS lms_cross_card_credits (id SERIAL PRIMARY KEY, course_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, source_card_id INTEGER, target_card_id INTEGER NOT NULL, credited_by INTEGER, credited_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
   { name: 'lms_cross_card_credits uniq idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_lms_credit ON lms_cross_card_credits (course_id, employee_id, target_card_id)` },
 
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-08, 2026-06-25): otdeleniye raqami (1-7 Vysotskiy).
+  // Vertikal/gorizontal: workflow_rules jadval BOR; otdeleniye_no = qaysi 7 departamentdan biri (egasi-DATA qiymat).
+  { name: 'org_departments.otdeleniye_no ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS otdeleniye_no INTEGER` },
+  { name: 'org_departments.otdeleniye_no CHECK 1-7', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_otdeleniye_no_range') THEN ALTER TABLE org_departments ADD CONSTRAINT chk_otdeleniye_no_range CHECK (otdeleniye_no IS NULL OR (otdeleniye_no >= 1 AND otdeleniye_no <= 7)); END IF; END $$` },
+
 ];
