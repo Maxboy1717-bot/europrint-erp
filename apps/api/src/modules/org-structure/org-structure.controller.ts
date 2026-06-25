@@ -208,9 +208,17 @@ export class OrgStructureController {
   @Patch('users/:userId/node')
   async assignUser(
     @Param('userId', ParseIntPipe) userId: number,
-    @Body('nodeId') nodeId: number,
+    @Body() body: unknown,
   ) {
-    return unwrapOrInternal(await this.service.assignUserToNode(userId, nodeId));
+    // VISION (egasi): KO'P-KARTA — ulush (stakeFraction) + owner-override (allowOverload) ixtiyoriy.
+    const dto = z.object({
+      nodeId: z.number().int().positive(),
+      stakeFraction: z.union([z.number().min(0).max(1), z.null()]).optional(),
+      allowOverload: z.boolean().optional(),
+    }).parse(body);
+    return unwrapOrInternal(
+      await this.service.assignUserToNode(userId, dto.nodeId, dto.stakeFraction ?? null, dto.allowOverload ?? false),
+    );
   }
 
   @ApiOperation({ summary: 'Remove user from node (kartadan olib tashlash)' })

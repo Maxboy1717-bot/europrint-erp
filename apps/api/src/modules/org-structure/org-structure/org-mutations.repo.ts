@@ -12,7 +12,7 @@
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
-import { eq, sql, and, ne } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { orgDepartments, employeeOrgDepartments } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import { syncToCoreTable } from './sync-helper';
@@ -137,13 +137,20 @@ export class OrgMutationsRepo {
   }
 
   /**
-   * VISION (egasi): 1 xodim = 1 KARTA. Xodimni kartaga biriktirish ikki tomonni majburlaydi:
-   *   - KARTA-tomon (1 o'rin = 1 xodim): position (o'rindiq) karta band bo'lsa — boshqa faol xodim
-   *     bilan — biriktirib bo'lmaydi (rad). department/section guruh-kartalari ko'p tuta oladi.
-   *   - XODIM-tomon (1 xodim = 1 karta): xodim avval boshqa kartada bo'lsa, eski bog'lanishi o'chadi
-   *     (ko'chish semantikasi) — har xodim aynan bitta kartada qoladi.
+   * VISION (egasi 2026-06-25): KO'P-KARTA. Bitta xodim bir nechta kartaga ulanadi (EP-ORG-004).
+   *   - KARTA-tomon (EP-ORG-002): position (o'rindiq) band bo'lsa — boshqa faol xodim bilan — RAD.
+   *     department/section guruh-kartalari ko'p tutadi.
+   *   - XODIM-tomon (EP-ORG-066/142): har bog'lanishda ulush (stake_fraction); aktiv ulushlar
+   *     yig'indisi >1.0 → RAD, owner-override (allowOverload) bilan ruxsat.
+   *   - Eski link SAQLANADI (1:1 "delete-previous" OLIB TASHLANDI). Idempotent: shu karta-shu xodim
+   *     aktiv link bo'lsa — qayta INSERT yo'q, faqat ulush yangilanadi.
    */
-  async assignUser(userId: number, nodeId: number): Promise<{ assigned: boolean; reason?: string }> {
+  async assignUser(
+    userId: number,
+    nodeId: number,
+    stakeFraction: number | null = null,
+    allowOverload = false,
+  ): Promise<{ assigned: boolean; reason?: string }> {
     const [node] = await db
       .select({ id: orgDepartments.id, node_type: orgDepartments.node_type })
       .from(orgDepartments)
@@ -151,22 +158,52 @@ export class OrgMutationsRepo {
       .limit(1);
     if (!node) return { assigned: false, reason: 'Karta topilmadi' };
 
+    // KARTA-tomon 1-seat guard (position) — SAQLANADI (EP-ORG-002). is_active yangi ustun (Drizzle
+    // schema'da yo'q) → raw SQL.
     if (node.node_type === 'position') {
-      const occupants = await db
-        .select({ user_id: employeeOrgDepartments.user_id })
-        .from(employeeOrgDepartments)
-        .where(and(eq(employeeOrgDepartments.org_department_id, nodeId), ne(employeeOrgDepartments.user_id, userId)));
+      const occupants = (await runQuery<{ user_id: number }>(sql`
+        SELECT user_id FROM employee_org_departments
+        WHERE org_department_id = ${nodeId} AND is_active = true AND user_id <> ${userId}
+      `)).rows;
       if (occupants.length > 0) return { assigned: false, reason: "Karta band — 1 o'rin = 1 xodim" };
     }
 
-    // 1 xodim = 1 karta — xodimning oldingi bog'lanishi(lari) o'chadi (ko'chish).
-    await db.delete(employeeOrgDepartments).where(eq(employeeOrgDepartments.user_id, userId));
-    await db
-      .insert(employeeOrgDepartments)
-      .values({ user_id: userId, org_department_id: nodeId, is_primary: true });
+    // XODIM-tomon ulush-cap guard (EP-ORG-066/142). Jami >1.0 → owner-override (allowOverload) talab.
+    if (stakeFraction != null) {
+      const existing = (await runQuery<{ total: string }>(sql`
+        SELECT COALESCE(SUM(stake_fraction), 0)::numeric AS total
+        FROM   employee_org_departments
+        WHERE  user_id = ${userId} AND is_active = true AND org_department_id <> ${nodeId}
+      `)).rows;
+      const newTotal = Number(existing[0]?.total ?? 0) + stakeFraction;
+      if (newTotal > 1.0 && !allowOverload) {
+        return { assigned: false, reason: `Ulush yig'indisi ${newTotal.toFixed(2)} > 1.0. Owner ruxsati kerak.` };
+      }
+    }
 
+    // KO'P-KARTA: eski link SAQLANADI. Shu karta-shu xodim aktiv link bo'lsa → ulushni yangila (idempotent).
+    const dup = (await runQuery<{ id: number }>(sql`
+      SELECT id FROM employee_org_departments
+      WHERE user_id = ${userId} AND org_department_id = ${nodeId} AND is_active = true LIMIT 1
+    `)).rows;
+
+    if (dup[0]) {
+      await runQuery(sql`UPDATE employee_org_departments SET stake_fraction = ${stakeFraction} WHERE id = ${dup[0].id}`);
+    } else {
+      const hasPrimary = (await runQuery<{ cnt: number }>(sql`
+        SELECT COUNT(*)::int AS cnt FROM employee_org_departments
+        WHERE user_id = ${userId} AND is_active = true AND is_primary = true
+      `)).rows;
+      const isPrimary = Number(hasPrimary[0]?.cnt ?? 0) === 0;
+      await runQuery(sql`
+        INSERT INTO employee_org_departments (user_id, org_department_id, is_primary, is_active, stake_fraction, assigned_at, created_at)
+        VALUES (${userId}, ${nodeId}, ${isPrimary}, true, ${stakeFraction}, NOW(), NOW())
+      `);
+    }
+
+    // department mirror (users.department_id) faqat birlamchi (back-compat).
     if (node.node_type === 'department' || node.node_type === null) {
-      await runQuery(sql`UPDATE users SET department_id = ${nodeId} WHERE id = ${userId}`);
+      await runQuery(sql`UPDATE users SET department_id = ${nodeId} WHERE id = ${userId} AND department_id IS NULL`);
     }
     return { assigned: true };
   }

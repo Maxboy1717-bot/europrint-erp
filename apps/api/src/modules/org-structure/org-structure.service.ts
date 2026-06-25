@@ -215,9 +215,9 @@ export class OrgStructureService implements OnModuleInit {
     });
   }
 
-  async assignUserToNode(userId: number, nodeId: number) {
+  async assignUserToNode(userId: number, nodeId: number, stakeFraction: number | null = null, allowOverload = false) {
     return safeCall(async () => {
-      const r = await this.repo.assignUser(userId, nodeId);
+      const r = await this.repo.assignUser(userId, nodeId, stakeFraction, allowOverload);
       return r.assigned
         ? { assigned: true, message: 'Xodim kartaga biriktirildi' }
         : { assigned: false, message: r.reason ?? "Biriktirib bo'lmadi" };

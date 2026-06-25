@@ -36,7 +36,8 @@ export class OrgStructureRepository {
   updateFromDto = (id: number, dto: Record<string, unknown>) => this.mutations.updateFromDto(id, dto);
   deactivate = (id: number) => this.mutations.deactivate(id);
   move = (id: number, parent: number | null, lvl: number) => this.mutations.move(id, parent, lvl);
-  assignUser = (uid: number, nid: number) => this.mutations.assignUser(uid, nid);
+  assignUser = (uid: number, nid: number, stake: number | null = null, overload = false) =>
+    this.mutations.assignUser(uid, nid, stake, overload);
   removeUser = (uid: number, nid: number) => this.mutations.removeUser(uid, nid);
   // P51 — backfill manager_id from the org tree (DATA-gated, idempotent)
   backfillManagerIds = (dryRun: boolean) => this.mutations.backfillManagerIds(dryRun);

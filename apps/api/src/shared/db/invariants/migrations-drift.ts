@@ -3693,4 +3693,13 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
     END IF;
   END $$` },
 
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-01): xodim↔karta KO'P-KARTA + ulush + freeze.
+  // employee_org_departments = node-detal aktiv binding (assignUser yozadi). Faqat ALTER — yangi jadval YO'Q.
+  { name: 'PHASE01 eod stake/is_active/freeze cols', sql: `ALTER TABLE employee_org_departments ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true, ADD COLUMN IF NOT EXISTS stake_fraction numeric(4,3), ADD COLUMN IF NOT EXISTS frozen_at timestamptz, ADD COLUMN IF NOT EXISTS freeze_reason text, ADD COLUMN IF NOT EXISTS freeze_until timestamptz, ADD COLUMN IF NOT EXISTS ended_at timestamptz` },
+  { name: 'PHASE01 eod stake-range CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_eod_stake_range') THEN ALTER TABLE employee_org_departments ADD CONSTRAINT chk_eod_stake_range CHECK (stake_fraction IS NULL OR (stake_fraction >= 0 AND stake_fraction <= 1)); END IF; END $$` },
+  { name: 'PHASE01 eod ix_eod_user_active', sql: `CREATE INDEX IF NOT EXISTS ix_eod_user_active ON employee_org_departments (user_id) WHERE is_active = true` },
+  { name: 'PHASE01 eod ix_eod_node_active', sql: `CREATE INDEX IF NOT EXISTS ix_eod_node_active ON employee_org_departments (org_department_id) WHERE is_active = true` },
+  // Backfill (fabrikatsiya emas): YAGONA aktiv linkli xodim -> 1.0 (mantiqiy haqiqat); ko'p-linkli NULL (egasi taqsimlaydi). Guarded (faqat NULL).
+  { name: 'PHASE01 eod stake backfill solo=1.0', sql: `UPDATE employee_org_departments eod SET stake_fraction = 1.0 WHERE stake_fraction IS NULL AND is_active = true AND (SELECT COUNT(*) FROM employee_org_departments x WHERE x.user_id = eod.user_id AND x.is_active = true) = 1` },
+
 ];
