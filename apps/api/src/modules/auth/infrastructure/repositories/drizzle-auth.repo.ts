@@ -20,6 +20,7 @@ import { IAuthRepo, CardGate } from '../../domain/repositories/i-auth.repo';
 import { AuthUserAggregate, AuthUserData } from '../../domain/aggregates/auth-user.aggregate';
 import { runQuery } from '@shared/db';
 import { sql, type SQL } from 'drizzle-orm';
+import { resolveEffectiveRbacTier } from '@common/constants/rbac-tier.policy';
 
 type RawUserRow = {
   id: number;
@@ -223,7 +224,9 @@ export class DrizzleAuthRepo implements IAuthRepo {
   async resolveCardGate(userId: number): Promise<CardGate> {
     const empty: CardGate = { activeCardCount: 0, primaryCardId: null, rbacTier: null, positionId: null };
     try {
-      const r = await runQuery<{ active_card_count: number; primary_card_id: number | null; rbac_tier: string | null; position_id: number | null }>(sql`
+      // Birlamchi karta: rbac_tier (qo'lda override) + razryad-daraja (egasi razryad→tier qoidasi manbai).
+      // Samarali tier JS'da resolveEffectiveRbacTier orqali (yagona qoida — @common/constants/rbac-tier.policy).
+      const r = await runQuery<{ active_card_count: number; primary_card_id: number | null; rbac_tier: string | null; primary_razryad_level: number | null; position_id: number | null }>(sql`
         SELECT
           COUNT(ec.id) FILTER (WHERE ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW()))::int AS active_card_count,
           (SELECT od.id FROM employee_cards ec2 JOIN org_departments od ON od.id = ec2.card_id
@@ -232,6 +235,10 @@ export class DrizzleAuthRepo implements IAuthRepo {
           (SELECT od.rbac_tier FROM employee_cards ec3 JOIN org_departments od ON od.id = ec3.card_id
             WHERE ec3.employee_id = u.employee_id AND ec3.is_active = true AND (ec3.ended_at IS NULL OR ec3.ended_at > NOW())
             ORDER BY ec3.is_primary DESC, ec3.assigned_at DESC NULLS LAST LIMIT 1) AS rbac_tier,
+          (SELECT rl.level FROM employee_cards ec4 JOIN org_departments od ON od.id = ec4.card_id
+            LEFT JOIN razryad_levels rl ON rl.id = od.razryad_level_id
+            WHERE ec4.employee_id = u.employee_id AND ec4.is_active = true AND (ec4.ended_at IS NULL OR ec4.ended_at > NOW())
+            ORDER BY ec4.is_primary DESC, ec4.assigned_at DESC NULLS LAST LIMIT 1) AS primary_razryad_level,
           u.position_id AS position_id
         FROM users u
         LEFT JOIN employee_cards ec ON ec.employee_id = u.employee_id
@@ -244,7 +251,7 @@ export class DrizzleAuthRepo implements IAuthRepo {
       return {
         activeCardCount: Number(row.active_card_count ?? 0),
         primaryCardId: row.primary_card_id ?? null,
-        rbacTier: row.rbac_tier ?? null,
+        rbacTier: resolveEffectiveRbacTier(row.rbac_tier ?? null, row.primary_razryad_level == null ? null : Number(row.primary_razryad_level)),
         positionId: row.position_id ?? null,
       };
     } catch (error: unknown) {
