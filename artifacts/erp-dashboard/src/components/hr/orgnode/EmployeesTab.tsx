@@ -12,6 +12,7 @@ import { Users, Clock, UserPlus, UserX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -36,6 +37,7 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
   const queryClient = useQueryClient();
   const [assignOpen, setAssignOpen] = useState(false);
   const [pickUserId, setPickUserId] = useState<string>("");
+  const [stake, setStake] = useState<string>("");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: [`/api/org-structure/nodes/${node.id}`] });
@@ -52,8 +54,8 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
   const candidates = (Array.isArray(usersData?.users) ? usersData!.users : []).filter((u) => !presentIds.has(u.id));
 
   const assignMutation = useMutation({
-    mutationFn: (userId: number) =>
-      apiRequest<{ assigned?: boolean; message?: string }>("PATCH", `/api/org-structure/users/${userId}/node`, { nodeId: node.id }),
+    mutationFn: (vars: { userId: number; stake: number | null }) =>
+      apiRequest<{ assigned?: boolean; message?: string }>("PATCH", `/api/org-structure/users/${vars.userId}/node`, { nodeId: node.id, stakeFraction: vars.stake }),
     onSuccess: (res) => {
       if (res && res.assigned === false) {
         toast({ title: res.message ?? t("Xatolik"), variant: "destructive" });
@@ -62,6 +64,7 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
       invalidate();
       setAssignOpen(false);
       setPickUserId("");
+      setStake("");
       toast({ title: t("xodimBiriktirildi", "Xodim kartaga biriktirildi") });
     },
     onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
@@ -169,14 +172,17 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
                 ))}
               </SelectContent>
             </Select>
+            <Label>{t("ulushStavka", "Ulush / stavka (0–1, ixtiyoriy)")}</Label>
+            <Input type="number" min="0" max="1" step="0.05" value={stake}
+              onChange={(e) => setStake(e.target.value)} placeholder="masalan 0.5 (yarim stavka)" />
             <p className="text-[11px] text-muted-foreground">
-              {t("birXodimBirKarta", "1 xodim = 1 karta — biriktirilsa, xodim oldingi kartasidan ko'chadi.")}
+              {t("kopKartaIzoh", "Ko'p-karta: xodim bir nechta kartaga ulanadi (oldingi karta SAQLANADI). Ulushlar yig'indisi 1.0 dan oshsa owner ruxsati kerak.")}
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignOpen(false)}>{t("Bekor")}</Button>
             <Button
-              onClick={() => pickUserId && assignMutation.mutate(Number(pickUserId))}
+              onClick={() => pickUserId && assignMutation.mutate({ userId: Number(pickUserId), stake: stake.trim() === "" ? null : Number(stake) })}
               disabled={!pickUserId || assignMutation.isPending}
               data-testid="button-confirm-assign"
             >
