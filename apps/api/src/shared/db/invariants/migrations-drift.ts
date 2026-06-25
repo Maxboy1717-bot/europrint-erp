@@ -3684,4 +3684,13 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
     END IF;
   END $$` },
 
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-00 D6): org_node_portret.card_id FK -> org_departments.
+  // GUARDED idempotent (0 qator -> trivial). Jonli _audit/apply-phase00-portret-fk.cjs bilan qo'llandi.
+  { name: 'PHASE00 org_node_portret card_id FK -> org_departments', sql: `DO $$ BEGIN
+    IF (SELECT confrelid::regclass::text FROM pg_constraint WHERE conname='org_node_portret_card_id_fkey') = 'org_functions' THEN
+      ALTER TABLE org_node_portret DROP CONSTRAINT IF EXISTS org_node_portret_card_id_fkey;
+      ALTER TABLE org_node_portret ADD CONSTRAINT org_node_portret_card_id_fkey FOREIGN KEY (card_id) REFERENCES org_departments(id);
+    END IF;
+  END $$` },
+
 ];
