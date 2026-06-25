@@ -3736,4 +3736,11 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'org_departments.otdeleniye_no ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS otdeleniye_no INTEGER` },
   { name: 'org_departments.otdeleniye_no CHECK 1-7', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_otdeleniye_no_range') THEN ALTER TABLE org_departments ADD CONSTRAINT chk_otdeleniye_no_range CHECK (otdeleniye_no IS NULL OR (otdeleniye_no >= 1 AND otdeleniye_no <= 7)); END IF; END $$` },
 
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-09, 2026-06-25): karta 5-holat lifecycle (muzlatish).
+  // current_state (BOR, FAZA-00) = active/vacant/io/frozen/archived. Freeze: sabab+muddat (EP-ORG-084/086).
+  { name: 'org_departments.frozen_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP` },
+  { name: 'org_departments.freeze_reason ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS freeze_reason TEXT` },
+  { name: 'org_departments.freeze_until ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS freeze_until TIMESTAMP` },
+  { name: 'org_departments.archived_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP` },
+
 ];
