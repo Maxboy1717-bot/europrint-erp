@@ -11,9 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Building2, Users, Network, ChevronRight,
   UserX, Pencil, Trash2, CheckCircle, AlertCircle,
-  MoveRight, History, FolderOpen, ClipboardList
+  MoveRight, History, FolderOpen, ClipboardList, Award
 } from "lucide-react";
 import { OrgNodePortretTab } from "./OrgNodePortretTab";
+import { RazryadTab } from "@/components/hr/orgnode/RazryadTab";
 
 // Sub-components
 import { EditDialog } from "@/components/hr/orgnode/EditDialog";
@@ -117,6 +118,7 @@ export default function OrgNodeDetail() {
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4 flex-wrap h-auto gap-1">
             <TabsTrigger value="main">{t("primary")}</TabsTrigger>
+            <TabsTrigger value="razryad" className="flex items-center gap-1"><Award className="h-3.5 w-3.5" />{t("razryad")}</TabsTrigger>
             <TabsTrigger value="employees">Xodimlar ({node.employeeCount})</TabsTrigger>
             <TabsTrigger value="children">Farzandlar ({node.childCount})</TabsTrigger>
             <TabsTrigger value="vacant">{t("vakant")}</TabsTrigger>
@@ -127,6 +129,7 @@ export default function OrgNodeDetail() {
           </TabsList>
 
           <TabsContent value="main"><MainTab node={node} /></TabsContent>
+          <TabsContent value="razryad"><RazryadTab node={node} /></TabsContent>
           <TabsContent value="employees"><EmployeesTab node={node} /></TabsContent>
           <TabsContent value="children"><ChildrenTab node={node} /></TabsContent>
           <TabsContent value="vacant"><VacantTab node={node} /></TabsContent>

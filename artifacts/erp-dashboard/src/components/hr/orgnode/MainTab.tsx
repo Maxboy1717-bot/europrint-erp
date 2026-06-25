@@ -1,13 +1,11 @@
 /**
  * @module MainTab
- * @description Karta-detal "Asosiy" tab — KARTA TA'RIFI to'liq ko'rsatiladi (egasi 2026-06-25 talabi:
- *   "razryad va hamma maydon kartada ko'rinsin"). Razryad prominent: nomi + koeffitsiyent + oylik-diapazon
- *   + talab + keyingi razryadgacha oy (intervyu modeli: razryad → talab → o'sish → oylik). +oylik/ЦКП/rbac/
- *   ish-vaqti/bonus/holat — node-detal javobidan (org-queries.repo).
+ * @description Karta-detal "Asosiy" tab — KARTA TA'RIFI: oylik/ЦКП/rbac/ish-vaqti/bonus/holat (node-detal
+ *   javobidan, org-queries.repo) + asosiy ma'lumot + rahbar. RAZRYAD endi alohida "Razryad" tabda
+ *   (egasi 2026-06-25: "razryad mana shu tabda bo'lsin") — bu yerda takrorlanmaydi.
  */
 
 import { User, CheckCircle, UserX, Building2, Award, Wallet } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
@@ -15,17 +13,6 @@ import { useTranslation } from '@/lib/i18n';
 
 interface MainTabProps {
   node: NodeDetail;
-}
-
-interface RazryadLevel {
-  id: number;
-  level: number;
-  name: string;
-  coefficient?: number | string | null;
-  salary_min?: number | string | null;
-  salary_max?: number | string | null;
-  min_requirement?: string | null;
-  min_months?: number | null;
 }
 
 const SALARY_TYPE_LABEL: Record<string, string> = { oylik: "Oylik", soatbay: "Soatbay", ishbay: "Ishbay" };
@@ -48,21 +35,13 @@ function DefRow({ label, value }: { label: string; value: React.ReactNode }) {
 export function MainTab({ node }: MainTabProps) {
   const { t } = useTranslation("common");
 
-  const { data: razryadData } = useQuery<{ items: RazryadLevel[] }>({
-    queryKey: ["/api/org-structure/razryad-levels"],
-    staleTime: 60_000,
-  });
-  const razryad = node.razryadLevelId != null && Array.isArray(razryadData?.items)
-    ? razryadData.items.find((r) => r.id === node.razryadLevelId)
-    : undefined;
-
   const cardSalary = (() => {
     const lo = fmtSom(node.minSalary), hi = fmtSom(node.maxSalary);
     if (lo && hi) return `${lo} – ${hi}`;
     return lo ?? hi ?? null;
   })();
 
-  const hasCardFields = !!(razryad || node.razryadLevelId != null || node.salaryType || cardSalary ||
+  const hasCardFields = !!(node.salaryType || cardSalary ||
     node.tskpTarget != null || node.rbacTier || node.workSchedule || node.bonusConfig || node.currentState);
 
   return (
@@ -119,30 +98,7 @@ export function MainTab({ node }: MainTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          {/* Razryad bloki */}
-          <div className="rounded-lg border border-border bg-muted/40 p-3">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-muted-foreground flex items-center gap-1.5"><Award className="h-4 w-4" />Razryad</span>
-              {razryad ? (
-                <Badge className="text-[13px] px-2 py-0.5">
-                  {razryad.name}{razryad.coefficient != null ? ` · koeff ×${razryad.coefficient}` : ""}
-                </Badge>
-              ) : (
-                <span className="text-muted-foreground text-[13px]">Tayinlanmagan — “Tahrirlash” orqali tanlang</span>
-              )}
-            </div>
-            {razryad && (
-              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                {(fmtSom(razryad.salary_min) || fmtSom(razryad.salary_max)) && (
-                  <DefRow label="Razryad oylik-diapazoni" value={`${fmtSom(razryad.salary_min) ?? "—"} – ${fmtSom(razryad.salary_max) ?? "—"}`} />
-                )}
-                {razryad.min_requirement && <DefRow label="Talab" value={razryad.min_requirement} />}
-                {razryad.min_months != null && <DefRow label="Keyingi razryadgacha" value={`${razryad.min_months} oy`} />}
-              </div>
-            )}
-          </div>
-
-          {/* Boshqa karta-maydonlari */}
+          {/* Karta-maydonlari (razryad endi alohida "Razryad" tabda) */}
           {hasCardFields ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
               {node.salaryType && <DefRow label="Oylik turi" value={SALARY_TYPE_LABEL[node.salaryType] ?? node.salaryType} />}
