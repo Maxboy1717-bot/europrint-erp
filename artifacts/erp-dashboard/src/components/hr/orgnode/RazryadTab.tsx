@@ -11,6 +11,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Award, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -75,6 +77,29 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
       toast({ title: t("razryadSaqlandi", "Razryad saqlandi") });
     },
     onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
+  });
+
+  // VISION (EP-ORG-010..013): razryad o'sish so'rovi (imtihon -> HR+rahbar 2-imzo -> o'zgaradi) + tarix.
+  const [reqTarget, setReqTarget] = useState<string>("");
+  const [reqScore, setReqScore] = useState<string>("");
+  const { data: histData } = useQuery<{ items: Record<string, unknown>[] }>({
+    queryKey: [`/api/org-structure/cards/${node.id}/razryad-history`],
+    staleTime: 30_000,
+  });
+  const history = Array.isArray(histData?.items) ? histData!.items : [];
+
+  const createRequest = useMutation({
+    mutationFn: () => apiRequest<{ message?: string }>("POST", `/api/org-structure/cards/${node.id}/razryad-requests`, {
+      targetRazryadId: Number(reqTarget),
+      requestType: "increase",
+      examScore: reqScore.trim() === "" ? undefined : Number(reqScore),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/org-structure/cards/${node.id}/razryad-history`] });
+      setReqTarget(""); setReqScore("");
+      toast({ title: t("osishSorovYuborildi", "O'sish so'rovi yuborildi (HR + rahbar tasdig'i kutilmoqda)") });
+    },
+    onError: (e: unknown) => toast({ title: e instanceof Error ? e.message : t("Xatolik"), variant: "destructive" }),
   });
 
   if (isLoading) return <EPLoader />;
@@ -157,6 +182,50 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
           <p className="text-[11px] text-muted-foreground pt-1">
             {t("razryadOsishIzoh", "O'sish: imtihon → HR + rahbar tasdig'i → razryad o'zgaradi (≥3 oy oraliq). Tasdiq-zanjir keyingi bosqichda.")}
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Razryad o'sish so'rovi (EP-ORG-010..013) + tarix */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><Award className="h-4 w-4" />{t("razryadOsishSorovi", "Razryad o'sish so'rovi")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-end gap-2 flex-wrap">
+            <div>
+              <Label className="text-xs">{t("targetRazryad", "Yangi razryad")}</Label>
+              <Select value={reqTarget} onValueChange={setReqTarget}>
+                <SelectTrigger className="w-44" data-testid="select-razryad-target"><SelectValue placeholder={t("razryadTanlang", "Razryad tanlang")} /></SelectTrigger>
+                <SelectContent>
+                  {levels.filter((r) => current == null || r.level > current.level).map((r) => (
+                    <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">{t("imtihonBali", "Imtihon bali (%)")}</Label>
+              <Input type="number" min="0" max="100" className="w-28" value={reqScore} onChange={(e) => setReqScore(e.target.value)} placeholder="80" />
+            </div>
+            <Button size="sm" disabled={!reqTarget || createRequest.isPending}
+              onClick={() => createRequest.mutate()} data-testid="button-razryad-request">
+              {createRequest.isPending ? t("yuborilmoqda", "Yuborilmoqda...") : t("sorovYuborish", "So'rov yuborish")}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {t("osishIzoh", "Imtihon → HR imzosi → bevosita rahbar imzosi → razryad o'zgaradi (≥3 oy oraliq). Egasi imtihon-chegara/oy sozlamasa rad etiladi.")}
+          </p>
+          {history.length > 0 && (
+            <div className="border-t border-border/60 pt-2 space-y-1">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase">{t("razryadTarixi", "Razryad tarixi")}</p>
+              {history.slice(0, 8).map((h, i) => (
+                <div key={i} className="flex items-center justify-between text-xs rounded border border-border px-2 py-1">
+                  <span>{String(h.old_name ?? "—")} → <b>{String(h.new_name ?? "")}</b> · {String(h.change_type ?? "")}</span>
+                  <span className="text-muted-foreground">{h.certificate_number ? String(h.certificate_number) : ""}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
