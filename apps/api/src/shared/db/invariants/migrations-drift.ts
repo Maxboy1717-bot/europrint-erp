@@ -3664,4 +3664,9 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   // P1.6.5: employees.base_salary text → NUMERIC(15,2) type fix
   { name: 'employees.base_salary TYPE numeric', sql: `ALTER TABLE IF EXISTS employees ALTER COLUMN base_salary TYPE NUMERIC(15,2) USING NULLIF(base_salary, '')::NUMERIC` },
 
+  // APPROVED (egasi 2026-06-25, MASSIV-100 FAZA-00): org_functions → org_departments crosswalk VIEW.
+  // Read-only yordamchi; name-match (lower/trim), dublikatda eng kichik org_departments.id (DISTINCT ON, deterministik).
+  // FK re-point UPDATE (FAZA-00 keyingi bosqich) shu VIEW orqali — bir manba, takrorlanmas.
+  { name: 'PHASE00 of->od crosswalk VIEW', sql: `CREATE OR REPLACE VIEW _of_to_od_crosswalk AS SELECT DISTINCT ON (f.id) f.id AS org_function_id, d.id AS org_department_id, f.position_name FROM org_functions f JOIN org_departments d ON lower(trim(d.name)) = lower(trim(f.position_name)) WHERE f.deleted_at IS NULL AND d.is_active = true ORDER BY f.id, d.id ASC` },
+
 ];
