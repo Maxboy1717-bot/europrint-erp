@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Plus, UserX, Settings2, Users, ChevronUp, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { OrgNode, CARD_W, CARD_H, LEVEL_LABELS, HRC_INDICATORS } from "./types";
-import { getCardColor, getInitials } from "./helpers";
+import { getLevelColor, getInitials } from "./helpers";
 import { useTranslation } from '@/lib/i18n';
 
 export function TreeNodeCard({
@@ -27,7 +27,7 @@ export function TreeNodeCard({
   const [hrcExpanded, setHrcExpanded] = useState(false);
   const isVacant = !node.headUserName;
   const level = node.hierarchyLevel ?? 0;
-  const baseColor = getCardColor(node.nodeType);
+  const baseColor = getLevelColor(level);
   const empCount = node.employeeCount ?? 0;
   const tskpShort = node.tskp ? node.tskp.substring(0, 32) + (node.tskp.length > 32 ? "…" : "") : null;
   const hasHrc = !!node.hrcLatest && Object.keys(node.hrcLatest).length > 0;

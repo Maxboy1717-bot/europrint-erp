@@ -61,10 +61,12 @@ export const HRC_COLORS: Record<string, string> = {
 
 export const LEVEL_COLORS: Record<number, string> = {
   0: "#7c3aed", // Binafsha — Egasi
-  1: "#1d4ed8", // Ko'k    — Boshqarma
-  2: "#16a34a", // Yashil  — Bo'lim
-  3: "#b45309", // Sariq   — Sektor
-  4: "#dc2626", // Qizil   — Lavozim
+  1: "#1d4ed8", // Ko'k     — Boshqarma
+  2: "#16a34a", // Yashil   — Bo'lim
+  3: "#b45309", // Sariq    — Sektor
+  4: "#dc2626", // Qizil    — Lavozim
+  5: "#0d9488", // Teal     — 5-daraja
+  6: "#be185d", // Pushti   — 6-daraja
 };
 
 export const LEVEL_LABELS: Record<number, string> = {
