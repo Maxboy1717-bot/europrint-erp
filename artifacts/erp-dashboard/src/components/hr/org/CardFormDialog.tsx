@@ -34,6 +34,7 @@ export interface OrgCard {
   max_salary?: string | number | null;
   rbac_tier?: string | null;
   status?: string | null;
+  manager_id?: number | null;
   tskp?: string | null;
   tskp_target?: string | null;
   tskp_measurement_unit?: string | null;

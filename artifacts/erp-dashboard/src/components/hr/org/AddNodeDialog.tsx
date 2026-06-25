@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,6 +38,17 @@ export function AddNodeDialog({
     nodeType: "department",
     tskp: "",
     parentId: initialParentId || "",
+    // VISION node=karta — to'liq karta-maydonlari (HR 0 dan quradi)
+    razryadLevelId: null as number | null,
+    salaryType: "",
+    minSalary: "",
+    maxSalary: "",
+    rbacTier: "",
+    tskpTarget: "",
+    tskpMeasurementUnit: "",
+    workSchedule: "",
+    currentState: "",
+    bonusConfig: "",
   });
 
   // Update parentId if initialParentId changes
@@ -47,10 +58,18 @@ export function AddNodeDialog({
     setForm((f) => ({ ...f, parentId: initialParentId || "" }));
   }
 
+  // VISION: razryad darajalari ro'yxati
+  const { data: razryadData } = useQuery<{ items: { id: number; level: number; name: string }[] }>({
+    queryKey: ["/api/org-structure/razryad-levels"],
+    staleTime: 60_000,
+  });
+  const razryadOptions = Array.isArray(razryadData?.items) ? razryadData.items : [];
+
   const mutation = useMutation({
     mutationFn: () => {
       const parentId = form.parentId ? Number(form.parentId) : null;
       const level = parentId ? undefined : 0;
+      const numOrNull = (v: unknown) => { const n = Number(v); return v === "" || v == null || Number.isNaN(n) ? null : n; };
       return apiRequest("POST", "/api/org-structure/nodes", {
         name: form.name,
         nameRu: form.nameRu,
@@ -58,20 +77,35 @@ export function AddNodeDialog({
         tskp: form.tskp,
         parentId,
         level,
+        // VISION node=karta — to'liq karta-maydonlari
+        razryadLevelId: form.razryadLevelId,
+        salaryType: form.salaryType || null,
+        minSalary: numOrNull(form.minSalary),
+        maxSalary: numOrNull(form.maxSalary),
+        rbacTier: form.rbacTier || null,
+        tskpTarget: numOrNull(form.tskpTarget),
+        tskpMeasurementUnit: form.tskpMeasurementUnit || null,
+        workSchedule: form.workSchedule || null,
+        currentState: form.currentState || null,
+        bonusConfig: form.bonusConfig || null,
       });
     },
     onSuccess: () => {
       toast({ title: "Bo'lim qo'shildi" });
       onSuccess();
       onClose();
-      setForm({ name: "", nameRu: "", nodeType: "department", tskp: "", parentId: "" });
+      setForm({
+        name: "", nameRu: "", nodeType: "department", tskp: "", parentId: "",
+        razryadLevelId: null, salaryType: "", minSalary: "", maxSalary: "", rbacTier: "",
+        tskpTarget: "", tskpMeasurementUnit: "", workSchedule: "", currentState: "", bonusConfig: "",
+      });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-6">
+      <DialogContent className="max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[18px] font-semibold">{t("yangiBolimQoshish")}</DialogTitle>
         </DialogHeader>
@@ -122,6 +156,72 @@ export function AddNodeDialog({
               placeholder={t("masalan2BoShQoldirsaIldiz")}
               type="number"
             />
+          </div>
+
+          {/* VISION node=karta — to'liq karta-maydonlari (HR 0 dan quradi) */}
+          <div className="border-t border-border/50 pt-2">
+            <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide">{t("kartaMaydonlari", "Karta maydonlari")}</p>
+          </div>
+          <div>
+            <Label>{t("razryad", "Razryad")}</Label>
+            <Select value={form.razryadLevelId == null ? "__none__" : String(form.razryadLevelId)}
+              onValueChange={(v) => setForm((f) => ({ ...f, razryadLevelId: v === "__none__" ? null : Number(v) }))}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">—</SelectItem>
+                {razryadOptions.map((r) => (<SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label>{t("oylikTuri", "Oylik turi")}</Label>
+              <Select value={form.salaryType || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, salaryType: v === "__none__" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">—</SelectItem>
+                  <SelectItem value="oylik">Oylik</SelectItem>
+                  <SelectItem value="soatbay">Soatbay</SelectItem>
+                  <SelectItem value="ishbay">Ishbay</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("rbacDaraja", "RBAC/ruxsat")}</Label>
+              <Input value={form.rbacTier} onChange={(e) => setForm((f) => ({ ...f, rbacTier: e.target.value }))} placeholder="operator/manager" />
+            </div>
+            <div>
+              <Label>{t("minOylik", "Min oylik")}</Label>
+              <Input type="number" value={form.minSalary} onChange={(e) => setForm((f) => ({ ...f, minSalary: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t("maxOylik", "Max oylik")}</Label>
+              <Input type="number" value={form.maxSalary} onChange={(e) => setForm((f) => ({ ...f, maxSalary: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t("tskpMaqsadSon", "ЦКП maqsad")}</Label>
+              <Input type="number" value={form.tskpTarget} onChange={(e) => setForm((f) => ({ ...f, tskpTarget: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t("olchovBirligi", "ЦКП o'lchov")}</Label>
+              <Select value={form.tskpMeasurementUnit || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, tskpMeasurementUnit: v === "__none__" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">—</SelectItem>
+                  <SelectItem value="SON">SON</SelectItem>
+                  <SelectItem value="FOIZ">FOIZ</SelectItem>
+                  <SelectItem value="VAQT">VAQT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>{t("ishVaqti", "Ish vaqti / smena")}</Label>
+            <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
+          </div>
+          <div>
+            <Label>{t("bonus", "Bonus")}</Label>
+            <Input value={form.bonusConfig} onChange={(e) => setForm((f) => ({ ...f, bonusConfig: e.target.value }))} placeholder="reja oshsa 5%" />
           </div>
         </div>
         <DialogFooter>

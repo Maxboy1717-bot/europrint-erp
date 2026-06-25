@@ -19,7 +19,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { OrgCardsPanel } from "@/components/hr/org/OrgCardsPanel";
 import { RazryadLevelsPanel } from "@/components/hr/org/RazryadLevelsPanel";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -48,10 +47,12 @@ export default function OrgStructureHierarchy() {
   const [filterLevels, setFilterLevels] = useState<Set<number>>(new Set());
   const [addOpen, setAddOpen] = useState(false);
   const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
-  // Org Tuzilma is tabbed (owner 2026-06-17): Tuzilma (chart) | Kartalar | Razryadlar — razryad lives
-  // INSIDE here, not as separate sidebar pages. Controlled so the chart's wheel-zoom listener re-attaches
-  // when the chart tab is re-entered (inactive tabs unmount).
-  const [tab, setTab] = useState<"tuzilma" | "kartalar" | "razryadlar">("tuzilma");
+  // VISION (egasi 2026-06-25): node=karta — alohida "Kartalar" tab (org_functions ikki-dunyo) OLIB
+  // TASHLANDI. Daraxt node'ining O'ZI karta: node bosilsa → /org-structure/hierarchy/node/:id =
+  // karta-detali (razryad/oylik/ЦКП/rbac barchasi shu yerda). Qolgan: Tuzilma (chart) | Razryadlar
+  // (daraja-katalogi, node.razryad_level_id manbai). Controlled so the chart's wheel-zoom listener
+  // re-attaches when the chart tab is re-entered (inactive tabs unmount).
+  const [tab, setTab] = useState<"tuzilma" | "razryadlar">("tuzilma");
 
   const { data: stats } = useQuery<OrgStats>({ queryKey: ["/api/org-structure/stats"] });
   const { data: hierarchyData, isLoading, isError, error, refetch } = useQuery<{ nodes: OrgNode[] }>({
@@ -178,7 +179,6 @@ export default function OrgStructureHierarchy() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="flex-1 flex flex-col min-h-0">
         <TabsList className="shrink-0 w-fit mx-6 mt-2">
           <TabsTrigger value="tuzilma">{t("tuzilma")}</TabsTrigger>
-          <TabsTrigger value="kartalar">{t("kartalar")}</TabsTrigger>
           <TabsTrigger value="razryadlar">{t("razryadlar")}</TabsTrigger>
         </TabsList>
 
@@ -294,10 +294,6 @@ export default function OrgStructureHierarchy() {
           </div>
         ))}
       </div>
-        </TabsContent>
-
-        <TabsContent value="kartalar" className="flex-1 overflow-y-auto p-4 sm:p-6 mt-2">
-          <OrgCardsPanel />
         </TabsContent>
 
         <TabsContent value="razryadlar" className="flex-1 overflow-y-auto p-4 sm:p-6 mt-2">
