@@ -28,6 +28,7 @@ import { SdQuotationsService } from './application/sd-quotations.service';
 import { SdQuotationsRepository } from './infrastructure/repositories/sd-quotations.repository';
 import { SD_QUOTATIONS_REPO } from './domain/repositories/i-sd-quotations.repo';
 import { CreateOrderHandler } from './application/commands/create-order.handler';
+import { CreateTestOrderHandler } from './application/commands/create-test-order.handler';
 import { UpdateOrderStatusHandler } from './application/commands/update-order-status.handler';
 import { ApproveAdvanceBypassHandler } from './application/commands/approve-advance-bypass.handler';
 import { ApproveTechCheckpointHandler } from './application/commands/approve-tech-checkpoint.handler';
@@ -71,6 +72,7 @@ import { SalesRepository } from './sales/sales.repository';
 
 const commandHandlers = [
   CreateOrderHandler,
+  CreateTestOrderHandler,
   UpdateOrderStatusHandler,
   ApproveAdvanceBypassHandler,
   ApproveTechCheckpointHandler,

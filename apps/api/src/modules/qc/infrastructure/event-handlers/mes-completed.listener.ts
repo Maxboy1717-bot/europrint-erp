@@ -29,12 +29,29 @@ export class MesCompletedListener implements IEventHandler<MesCompletedEvent> {
       // order_id=sessionId + reference_type='mes_session', so MES-originated inspections were created but
       // were INVISIBLE to every QC query — the chain broke silently here. inspector_id stays NULL
       // (assigned later by a QC operator).
-      await db.execute(sql`
+      //
+      // IDEMPOTENCY FIX (A17, 2026-06-26): the previous unconditional INSERT created a NEW pending
+      // inspection on every fire. MesCompletedEvent can fire more than once for the same production
+      // order — eventBus.publish + EventBridge re-emit to legacy @OnEvent listeners, a session
+      // re-completed, or an at-least-once delivery retry — each producing a DUPLICATE pending QC row
+      // for the same order. Guard the INSERT with NOT EXISTS so a second fire is a no-op while the
+      // first still reliably opens the inspection. Proven idempotent via rollback-tx DB-proof
+      // (1st fire → 1 row, 2nd fire → 0 rows).
+      const result = await db.execute(sql`
         INSERT INTO qc_inspections (order_id, reference_type, status, items_checked, items_passed, items_failed, created_at, updated_at)
-        VALUES (${event.ppId}, 'production_order', 'pending', 0, 0, 0, NOW(), NOW())`);
+        SELECT ${event.ppId}, 'production_order', 'pending', 0, 0, 0, NOW(), NOW()
+        WHERE NOT EXISTS (
+          SELECT 1 FROM qc_inspections
+          WHERE order_id = ${event.ppId}
+            AND reference_type = 'production_order'
+            AND status = 'pending'
+        )`);
+      const inserted = (result as { rowCount?: number } | undefined)?.rowCount ?? 0;
       this.logger.log(
-        { sessionId: event.sessionId, ppId: event.ppId, timestamp: event.timestamp },
-        'MES completed - Trigger 10: PENDING QC inspection opened (linked to production order)',
+        { sessionId: event.sessionId, ppId: event.ppId, timestamp: event.timestamp, inserted },
+        inserted > 0
+          ? 'MES completed - Trigger 10: PENDING QC inspection opened (linked to production order)'
+          : 'MES completed - Trigger 10: PENDING QC inspection already open for this order (idempotent skip)',
       );
     } catch (error: unknown) {
       // Q-40: never swallow silently — a failed insert breaks the golden thread invisibly.

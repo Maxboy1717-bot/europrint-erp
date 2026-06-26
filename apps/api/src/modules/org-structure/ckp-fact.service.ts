@@ -21,6 +21,20 @@ export interface RecordFactInput {
   recordedBy?: number | null;
 }
 
+/**
+ * Deadline-belgisi (gate uchun). Kunlik ЦКП hisoboti `factDate` kuni tugagach
+ * `deadlineHours` soat ichida topshirilishi shart (ya'ni ertangi kun 00:00 + N soat).
+ * `deadlineHours` NULL -> deadline qoidasi yo'q (FABRIKATSIYA YO'Q): passed=false, at=null.
+ */
+export interface DeadlineFlag {
+  /** Karta ckp_report_deadline_hours qiymati (NULL bo'lsa null — qoida yo'q). */
+  deadlineHours: number | null;
+  /** Hisoblangan deadline momenti (ISO). NULL-soat bo'lsa null. */
+  deadlineAt: string | null;
+  /** Topshirish (now) deadlinedan o'tdimi. Soat NULL -> false (gate yopilmaydi). */
+  deadlinePassed: boolean;
+}
+
 @Injectable()
 export class CkpFactService {
   constructor(private readonly repo: CkpFactRepository) {}
@@ -34,6 +48,30 @@ export class CkpFactService {
     return Math.round((a / t) * 10000) / 100;
   }
 
+  /**
+   * Deadline-belgisi (gate uchun, Egasi-qaror 6: deadline o'tib hisobot yo'q -> o'sha kun oyligi 0).
+   * deadline = (factDate ertangi kun 00:00 UTC) + deadlineHours soat; submittedAt (NOW) shundan o'tdimi.
+   * deadlineHours NULL/<=0 -> qoida yo'q (FABRIKATSIYA YO'Q): {hours:null, at:null, passed:false}.
+   */
+  private calcDeadline(deadlineHours: number | null, factDate: string, submittedAt: Date): DeadlineFlag {
+    const h = deadlineHours == null ? null : Number(deadlineHours);
+    if (h == null || !Number.isFinite(h) || h <= 0) {
+      return { deadlineHours: null, deadlineAt: null, deadlinePassed: false };
+    }
+    const dayStart = new Date(`${factDate}T00:00:00.000Z`);
+    if (Number.isNaN(dayStart.getTime())) {
+      return { deadlineHours: h, deadlineAt: null, deadlinePassed: false };
+    }
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const MS_PER_HOUR = 60 * 60 * 1000;
+    const deadline = new Date(dayStart.getTime() + MS_PER_DAY + h * MS_PER_HOUR);
+    return {
+      deadlineHours: h,
+      deadlineAt: deadline.toISOString(),
+      deadlinePassed: submittedAt.getTime() > deadline.getTime(),
+    };
+  }
+
   async recordFact(input: RecordFactInput): Promise<Result<Row>> {
     const metaR = await this.repo.cardCkpMeta(input.cardId);
     if (!metaR.ok) return Err(metaR.error);
@@ -42,6 +80,8 @@ export class CkpFactService {
     const formulaType = (meta.ckp_formula_type as string | null) ?? 'quantity_pct';
     const target = meta.tskp_target == null ? null : Number(meta.tskp_target);
     const achievement = this.calcAchievement(formulaType, target, input.actualValue ?? null);
+    const deadlineHours = meta.ckp_report_deadline_hours == null ? null : Number(meta.ckp_report_deadline_hours);
+    const deadline = this.calcDeadline(deadlineHours, input.factDate, new Date());
 
     const fact: CkpFactInput = {
       cardId: input.cardId,
@@ -59,7 +99,13 @@ export class CkpFactService {
     const r = await this.repo.upsertFact(fact);
     if (!r.ok) return Err(r.error);
     if (!r.data) return Err(AppErr('INTERNAL', 'ЦКП fakt saqlanmadi'));
-    return Ok(r.data);
+    // Deadline-belgisi (gate uchun) — saqlangan faktga qo'shib qaytariladi (DB-ustun emas, hisoblangan).
+    return Ok({
+      ...r.data,
+      deadline_hours: deadline.deadlineHours,
+      deadline_at: deadline.deadlineAt,
+      deadline_passed: deadline.deadlinePassed,
+    });
   }
 
   listByCard(cardId: number, from: string | null, to: string | null): Promise<Result<Row[]>> {

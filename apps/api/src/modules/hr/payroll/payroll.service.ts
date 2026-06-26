@@ -13,6 +13,51 @@ import type { DomainEvent } from '@shared/domain/domain-event';
 
 type Row = Record<string, unknown>;
 
+/**
+ * Karta-markazli oylik FORMULA konstantalari (egasi 8-qaror #5):
+ *   oylik = baza × razryad-koeff × ЦКП-bajarish% × stake-ulush
+ *
+ * NOTE (izolyatsiya, A7): bu konstantalar uzoq muddatda
+ * `@common/constants/business.constants.ts` ga ko'chiriladi (PAYROLL_RAZRYAD_*
+ * / PAYROLL_STAKE_* nomlari bilan). Hozir A7 faqat O'Z faylini o'zgartiradi
+ * (fayl-izolyatsiya), shuning uchun lokal e'lon qilinadi; bosh agent keyin
+ * markazlashtiradi. Qoida 12 (magic-number taqiq) shu yo'l bilan bajariladi.
+ */
+
+/** Razryad biriktirilmagan / coeff yo'q karta uchun neytral koeffitsient (1.0 = baza). */
+const PAYROLL_RAZRYAD_COEFF_DEFAULT = 1.0;
+
+/**
+ * Stake-ulush (ko'p-karta oylik taqsimoti) neytral qiymati. Hozir `employee_cards`
+ * da REAL stake ustuni YO'Q (faqat is_primary/is_active) — bu egasi-DATA, hali
+ * materializatsiya qilinmagan (Q-40 fabrikatsiya-taqiq). Stake berilmaganida 1.0
+ * = to'liq ulush (yagona faol karta) deb olinadi; SOXTA bo'linish yozilmaydi.
+ */
+const PAYROLL_STAKE_SHARE_DEFAULT = 1.0;
+
+/** ЦКП-bajarish foizini (0..N %) ko'paytuvchi ulushga aylantiruvchi bo'luvchi. */
+const PAYROLL_CKP_PCT_DIVISOR = 100;
+
+/**
+ * Bitta faol karta uchun oylik FORMULA komponentlari (egasi 8-qaror #5):
+ *   gross = baseSalary × razryadCoeff × (ckpAchievementPct / 100) × stakeShare
+ *
+ * ⭐ FABRIKATSIYA YO'Q (Q-40): real qiymat yo'q joyda SOXTA son yozilmaydi —
+ *   - razryadCoeff NULL/≤0  → 1.0 (neytral; getRazryadCoefficient bilan bir xil graceful xulq)
+ *   - stakeShare  NULL/≤0   → 1.0 (stake egasi-data, hali ustun yo'q)
+ *   - ckpAchievementPct NULL → `ckpMissing: true` qaytadi, gross HISOBLANMAYDI
+ *     (ЦКП-gate QATTIQ 0 — egasi 8-qaror #6 — alohida A11 oqimida qo'llanadi;
+ *      bu yerda faqat "ma'lumot yo'q" signal beriladi, 100% ga TO'LDIRILMAYDI).
+ */
+export interface CardPayComponents {
+  baseSalary: number;
+  razryadCoeff: number;
+  ckpFactor: number | null;   // (ckpAchievementPct / 100); ЦКП fakti yo'q bo'lsa null
+  stakeShare: number;
+  gross: number | null;       // ckpFactor null bo'lsa null (gate A11 hal qiladi)
+  ckpMissing: boolean;
+}
+
 @Injectable()
 export class PayrollService {
   private readonly logger = new Logger(PayrollService.name);
@@ -142,6 +187,53 @@ export class PayrollService {
     if (typeof v === 'string') return v;
     if (v instanceof Date) return v.toISOString().split('T')[0];
     return String(v);
+  }
+
+  /**
+   * Karta-markazli oylik FORMULA (egasi 8-qaror #5):
+   *   gross = baseSalary × razryadCoeff × (ckpAchievementPct / 100) × stakeShare
+   *
+   * Sof (DB'siz) funksiya — komponentlar chaqiruvchi tomonidan kanonik manbalardan
+   * o'qiladi (razryadCoeff = razryad_levels.coefficient; ckpAchievementPct =
+   * ckp_fact_values.achievement_pct; stakeShare = ko'p-karta ulushi). Bu yerda
+   * faqat FORMULA va NULL/fabrikatsiya-darvozalar bor.
+   *
+   * @param baseSalary         baza oylik (so'm) — manfiy bo'lsa 0 ga qisiladi
+   * @param razryadCoeff       razryad koeffitsienti; null/≤0 → 1.0 (neytral)
+   * @param ckpAchievementPct  ЦКП-bajarish foizi (0..N %); **null = fakt yo'q** → gross null
+   * @param stakeShare         karta ulushi (0..1); null/≤0 → 1.0 (yagona faol karta)
+   */
+  computeCardPay(
+    baseSalary: number,
+    razryadCoeff: number | null,
+    ckpAchievementPct: number | null,
+    stakeShare: number | null,
+  ): CardPayComponents {
+    const base = Number.isFinite(baseSalary) && baseSalary > 0 ? baseSalary : 0;
+
+    const coeff =
+      typeof razryadCoeff === 'number' && Number.isFinite(razryadCoeff) && razryadCoeff > 0
+        ? razryadCoeff
+        : PAYROLL_RAZRYAD_COEFF_DEFAULT;
+
+    const stake =
+      typeof stakeShare === 'number' && Number.isFinite(stakeShare) && stakeShare > 0
+        ? stakeShare
+        : PAYROLL_STAKE_SHARE_DEFAULT;
+
+    // ЦКП fakti yo'q (null) → fabrikatsiya YO'Q: gross hisoblanmaydi, gate (A11) hal qiladi.
+    const ckpMissing =
+      ckpAchievementPct === null ||
+      ckpAchievementPct === undefined ||
+      !Number.isFinite(ckpAchievementPct);
+
+    const ckpFactor = ckpMissing
+      ? null
+      : Math.max(0, ckpAchievementPct as number) / PAYROLL_CKP_PCT_DIVISOR;
+
+    const gross = ckpFactor === null ? null : base * coeff * ckpFactor * stake;
+
+    return { baseSalary: base, razryadCoeff: coeff, ckpFactor, stakeShare: stake, gross, ckpMissing };
   }
 
   /**

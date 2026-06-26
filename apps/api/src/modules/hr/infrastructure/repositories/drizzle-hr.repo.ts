@@ -430,6 +430,36 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
     }
   }
 
+  async getRazryadBand(employeeId: number): Promise<{ salaryMin: number | null; salaryMax: number | null }> {
+    // PHASE-04 (MASSIV-100, A8): razryad salary-band (salary_min/salary_max) KANONIK kartadan keladi —
+    // employee -> user_id -> employee_org_departments (aktiv, birlamchi) -> org_departments.razryad_level_id
+    // -> razryad_levels.salary_min/salary_max. Bu getRazryadCoefficient bilan bir xil kanonik zanjir.
+    // FABRIKATSIYA YO'Q (Q-40): band egasi-data — qiymat o'rnatilmagan bo'lsa NULL qaytadi (soxta 0/default EMAS).
+    // NULL => band yo'q (chaqiruvchi o'zi hal qiladi); razryad biriktirilmagan kartada ham NULL.
+    try {
+      const rows = await runQuery<{ salary_min: string | null; salary_max: string | null }>(sql`
+        SELECT rl.salary_min::text AS salary_min, rl.salary_max::text AS salary_max
+        FROM employees e
+        LEFT JOIN employee_org_departments eod ON eod.user_id = e.user_id AND eod.is_active = true
+        LEFT JOIN org_departments od ON od.id = eod.org_department_id
+        LEFT JOIN razryad_levels rl ON rl.id = od.razryad_level_id
+        WHERE e.id = ${employeeId}
+        ORDER BY eod.is_primary DESC NULLS LAST
+        LIMIT 1
+      `);
+      const row = rows.rows[0];
+      const toNum = (v: string | null | undefined): number | null => {
+        if (v == null) return null;
+        const n = parseFloat(String(v));
+        return isNaN(n) ? null : n;
+      };
+      return { salaryMin: toNum(row?.salary_min), salaryMax: toNum(row?.salary_max) };
+    } catch {
+      // graceful: band yo'q (fabrikatsiya yo'q)
+      return { salaryMin: null, salaryMax: null };
+    }
+  }
+
   async getMonthlyLateCount(employeeId: number, year: number, month: number): Promise<number> {
     try {
       const rows = await runQuery<{ cnt: string }>(sql`

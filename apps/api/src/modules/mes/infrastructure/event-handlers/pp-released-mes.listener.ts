@@ -5,8 +5,11 @@
  *   automatically (was manual-only, no trigger). Mirrors the MM PpReleasedListener (Trigger 8) CQRS form.
  *   Canonical session table = `production_sessions` (mes_production_sessions is an auto-updatable VIEW over
  *   it — verified live). equipment_id/worker_id are NOT NULL with no FK, so a freshly-released PO opens a
- *   PENDING session with equipment_id=0/worker_id=0 (= "unassigned"); the operator sets real values +
- *   status 'in_progress' when they start on the IoT tablet. Idempotent: skips if an open session exists.
+ *   `pending` session with equipment_id=0/worker_id=0 (= "unassigned"); the operator sets real values +
+ *   status 'in_progress' when they start on the IoT tablet. `pending` is the CANONICAL open-session status
+ *   (matches the manual create path in mes-production-sessions.repo.ts + the GetSessionsDto enum + the
+ *   production_sessions.status DB default) — so a PP-released session is identical to a manually-opened one
+ *   and shows up in the standard MES session list. Idempotent: skips if an open session exists.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -27,13 +30,14 @@ export class PpReleasedMesListener implements IEventHandler<PpReleasedEvent> {
       await db.execute(sql`
         INSERT INTO production_sessions
           (session_number, production_order_id, order_id, equipment_id, worker_id, status, target_quantity, started_at, created_at)
-        SELECT ${`MES-PO${event.poId}`}, po.id, po.sales_order_id, 0, 0, 'created',
+        SELECT ${`MES-PO${event.poId}`}, po.id, po.sales_order_id, 0, 0, 'pending',
                COALESCE(po.planned_quantity, 0)::int, NOW(), NOW()
         FROM production_orders po
         WHERE po.id = ${event.poId}
           AND NOT EXISTS (
             SELECT 1 FROM production_sessions s
-            WHERE s.production_order_id = ${event.poId} AND s.status IN ('created', 'in_progress')
+            WHERE s.production_order_id = ${event.poId}
+              AND s.status IN ('pending', 'in_progress', 'running', 'paused')
           )
       `);
       this.logger.log({ poId: event.poId }, 'HOP-2 ✅ PP released → MES session opened (mes_production_sessions)');
