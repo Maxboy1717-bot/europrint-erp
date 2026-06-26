@@ -35,7 +35,7 @@ export function ElapsedBadge({ createdAt }: { createdAt: string }) {
         alignItems: "center",
         gap: 3,
         background: urgent ? "rgba(220,38,38,0.25)" : warn ? "rgba(245,158,11,0.25)" : "rgba(0,0,0,0.2)",
-        color: "#FFF",
+        color: "var(--pos-card)",
         borderRadius: 20,
         padding: "2px 8px",
         fontSize: 11,
@@ -70,7 +70,7 @@ export function MovementCard({
   return (
     <div
       style={{
-        background: "#FFF",
+        background: "var(--pos-card)",
         borderRadius: 12,
         overflow: "hidden",
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
@@ -78,7 +78,7 @@ export function MovementCard({
         flexDirection: "column",
         opacity: isDone ? 0.75 : 1,
         transition: "box-shadow 0.2s",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--pos-border)",
       }}
     >
       <div
@@ -132,24 +132,24 @@ export function MovementCard({
               fontSize: 13,
               fontWeight: 600,
               textDecoration: isDone && mov.status === "cancelled" ? "line-through" : "none",
-              color: isDone && mov.status === "cancelled" ? "#9CA3AF" : "#1F2937",
+              color: isDone && mov.status === "cancelled" ? "var(--pos-text-muted)" : "var(--pos-text)",
             }}
           >
             {TYPE_LABEL[mov.movementType] ?? mov.movementType}
           </span>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 12, color: "#6B7280" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 12, color: "var(--pos-text-muted)" }}>
           {mov.fromWarehouseId && (
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span>{t("kimdan")}</span>
-              <span style={{ color: "#374151", fontWeight: 500 }}>{mov.fromWarehouseId}</span>
+              <span style={{ color: "var(--pos-text-muted)", fontWeight: 500 }}>{mov.fromWarehouseId}</span>
             </div>
           )}
           {mov.toWarehouseId && (
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span>{t("qayerga")}</span>
-              <span style={{ color: "#374151", fontWeight: 500 }}>{mov.toWarehouseId}</span>
+              <span style={{ color: "var(--pos-text-muted)", fontWeight: 500 }}>{mov.toWarehouseId}</span>
             </div>
           )}
           {mov.supplierName && (
@@ -157,7 +157,7 @@ export function MovementCard({
               <span>{t("taminotchi")}</span>
               <span
                 style={{
-                  color: "#374151",
+                  color: "var(--pos-text-muted)",
                   fontWeight: 500,
                   maxWidth: 120,
                   overflow: "hidden",
@@ -171,14 +171,14 @@ export function MovementCard({
           )}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
             <span>{t("date")}</span>
-            <span style={{ color: "#374151", fontFamily: "monospace" }}>
+            <span style={{ color: "var(--pos-text-muted)", fontFamily: "monospace" }}>
               {new Date(mov.createdAt).toLocaleDateString("uz-UZ")}
             </span>
           </div>
           {(mov.totalAmount ?? 0) > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span>{t("summa")}</span>
-              <span style={{ color: "#059669", fontWeight: 700, fontFamily: "monospace" }}>
+              <span style={{ color: "var(--pos-success)", fontWeight: 700, fontFamily: "monospace" }}>
                 {(mov.totalAmount ?? 0).toLocaleString("uz-UZ")}
               </span>
             </div>
@@ -189,7 +189,7 @@ export function MovementCard({
       <div
         style={{
           padding: "10px 12px",
-          borderTop: "1px solid #F3F4F6",
+          borderTop: "1px solid var(--pos-bg)",
           display: "flex",
           alignItems: "center",
           gap: 8,
@@ -198,12 +198,12 @@ export function MovementCard({
         <button
           style={{
             background: "none",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--pos-border)",
             borderRadius: 8,
             padding: "6px 10px",
             cursor: "pointer",
             fontSize: 16,
-            color: "#6B7280",
+            color: "var(--pos-text-muted)",
           }}
           onClick={() => onPrint(mov.id)}
           title={t("print1")}
@@ -218,7 +218,7 @@ export function MovementCard({
             style={{
               flex: 1,
               background: action.bg,
-              color: "#FFF",
+              color: "var(--pos-card)",
               border: "none",
               borderRadius: 8,
               padding: "8px 0",
@@ -235,7 +235,7 @@ export function MovementCard({
             style={{
               flex: 1,
               textAlign: "center",
-              color: mov.status === "completed" ? "#059669" : "#9CA3AF",
+              color: mov.status === "completed" ? "var(--pos-success)" : "var(--pos-text-muted)",
               fontSize: 13,
               fontWeight: 700,
             }}
@@ -247,9 +247,9 @@ export function MovementCard({
             onClick={() => window.location.assign(`/pos-monitor/movements/${mov.id}`)}
             style={{
               flex: 1,
-              background: "#F3F4F6",
-              color: "#374151",
-              border: "1px solid #E5E7EB",
+              background: "var(--pos-bg)",
+              color: "var(--pos-text-muted)",
+              border: "1px solid var(--pos-border)",
               borderRadius: 8,
               padding: "8px 0",
               fontWeight: 600,

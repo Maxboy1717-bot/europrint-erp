@@ -45,7 +45,7 @@ export function TopBar({ stageColor, source, entityId, onAddTask }: TopBarProps)
       ) : (
         <button
           className="absolute top-2.5 right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg"
-          style={{ background: "rgba(163,177,198,0.14)", color: "#A0AEC0" }}
+          style={{ background: "color-mix(in srgb, var(--ep-muted) 14%, transparent)", color: "var(--ep-muted)" }}
           onClick={(e) => { e.stopPropagation(); onAddTask?.(entityId); }}
           data-testid={`button-menu-${entityId}`}
         >
@@ -108,14 +108,14 @@ export function ContactRow({ phone, email }: { phone: string | null; email: stri
     <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
       {phone && (
         <span className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: "rgba(163,177,198,0.12)" }}>
-          <Phone className="h-2.5 w-2.5 shrink-0" style={{ color: "#A0AEC0" }} />
-          <span className="text-[10px] truncate max-w-[90px]" style={{ color: "#718096" }}>{phone}</span>
+          <Phone className="h-2.5 w-2.5 shrink-0" style={{ color: "var(--ep-muted)" }} />
+          <span className="text-[10px] truncate max-w-[90px]" style={{ color: "var(--ep-muted)" }}>{phone}</span>
         </span>
       )}
       {email && (
         <span className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: "rgba(163,177,198,0.12)" }}>
-          <Mail className="h-2.5 w-2.5 shrink-0" style={{ color: "#A0AEC0" }} />
-          <span className="text-[10px] truncate max-w-[80px]" style={{ color: "#718096" }}>{email}</span>
+          <Mail className="h-2.5 w-2.5 shrink-0" style={{ color: "var(--ep-muted)" }} />
+          <span className="text-[10px] truncate max-w-[80px]" style={{ color: "var(--ep-muted)" }}>{email}</span>
         </span>
       )}
     </div>
@@ -129,7 +129,7 @@ export function ProgressBar({ progressPct, stageColor }: { progressPct: number; 
   return (
     <div className="mb-2.5">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[9px] font-medium uppercase tracking-wide" style={{ color: "#A0AEC0" }}>
+        <span className="text-[9px] font-medium uppercase tracking-wide" style={{ color: "var(--ep-muted)" }}>
           {t("jarayon")}
         </span>
         <span className="text-[10px] font-bold tabular-nums" style={{ color: stageColor }}>
@@ -193,7 +193,7 @@ export function AvatarFooter({ initials, personName, dateStr, avatarBg, stageCol
     <div className="flex items-center gap-2">
       <Avatar
         className="h-[26px] w-[26px] shrink-0"
-        style={{ boxShadow: "0 0 0 2px #fff, 2px 2px 6px rgba(163,177,198,0.35)" }}
+        style={{ boxShadow: "0 0 0 2px white, 2px 2px 6px color-mix(in srgb, var(--ep-muted) 35%, transparent)" }}
       >
         <AvatarFallback
           className="text-[10px] font-semibold"
@@ -204,14 +204,14 @@ export function AvatarFooter({ initials, personName, dateStr, avatarBg, stageCol
       </Avatar>
       <p
         className="text-[11px] font-medium truncate flex-1"
-        style={{ color: "#718096" }}
+        style={{ color: "var(--ep-muted)" }}
         title={personName}
       >
         {personName}
       </p>
       <div className="flex items-center gap-1 shrink-0">
-        <Calendar className="h-2.5 w-2.5" style={{ color: "#A0AEC0" }} />
-        <span className="text-[10px] tabular-nums" style={{ color: "#A0AEC0" }}>{dateStr}</span>
+        <Calendar className="h-2.5 w-2.5" style={{ color: "var(--ep-muted)" }} />
+        <span className="text-[10px] tabular-nums" style={{ color: "var(--ep-muted)" }}>{dateStr}</span>
       </div>
     </div>
   );
@@ -223,8 +223,8 @@ export function CompanyRow({ company }: { company: string | null }) {
   if (!company) return null;
   return (
     <div className="flex items-center gap-1 mb-2">
-      <Building2 className="h-3 w-3 shrink-0" style={{ color: "#A0AEC0" }} />
-      <span className="text-[11px] truncate" style={{ color: "#718096" }}>{company}</span>
+      <Building2 className="h-3 w-3 shrink-0" style={{ color: "var(--ep-muted)" }} />
+      <span className="text-[11px] truncate" style={{ color: "var(--ep-muted)" }}>{company}</span>
     </div>
   );
 }

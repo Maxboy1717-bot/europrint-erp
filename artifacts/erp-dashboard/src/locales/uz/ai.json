@@ -237,5 +237,20 @@
   "aiFit.cardId": "Karta ID",
   "aiFit.employeeProfile": "Xodim profili (JSON)",
   "aiFit.cardRequirements": "Karta talablari (JSON)",
-  "aiFit.reportTitle": "Hisobot (fit_report)"
+  "aiFit.reportTitle": "Hisobot (fit_report)",
+  "providerConfig.title": "AI Provayder sozlamalari",
+  "providerConfig.subtitle": "AI provayderlarni yoqing, model va kunlik byudjetni belgilang",
+  "providerConfig.dailyBudget": "Kunlik byudjet",
+  "providerConfig.apiKey": "API kalit",
+  "providerConfig.model": "Model",
+  "providerConfig.active": "Faol",
+  "providerConfig.inactive": "Nofaol",
+  "providerConfig.save": "Saqlash",
+  "providerConfig.cancel": "Bekor qilish",
+  "providerConfig.edit": "Tahrirlash",
+  "providerConfig.updated": "Yangilandi",
+  "providerConfig.updateFailed": "Yangilashda xatolik",
+  "providerConfig.budgetSaved": "Byudjet saqlandi",
+  "providerConfig.loadError": "Ma'lumotlarni yuklashda xatolik",
+  "unitTa": "ta"
 }

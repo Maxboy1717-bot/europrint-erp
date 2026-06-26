@@ -7,6 +7,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "@/lib/i18n";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Truck } from "lucide-react";
 
@@ -18,6 +19,7 @@ import { Step1, Step2, Step3, Step4, Step5 } from "./WarehouseKirimWizardSteps";
 import { WizardHeader, StepIndicator, NavigationBar } from "./WarehouseKirimWizardSections";
 
 export default function WarehouseKirimWizard() {
+  const { t } = useTranslation("wms");
   const [location, navigate] = useLocation();
   const [step, setStep] = useState(1);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -138,7 +140,7 @@ export default function WarehouseKirimWizard() {
       setCreated({ id: result.id, movementNumber: result.movementNumber ?? `#${result.id}` });
       setStep(5);
     } catch (e) {
-      alert("Xato: " + String((e as Error).message));
+      alert(t("errorPrefix") + ": " + String((e as Error).message));
     } finally { setSaving(false); }
   }
 
@@ -149,7 +151,7 @@ export default function WarehouseKirimWizard() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Bosqich {step}: {STEPS[step-1].label}</CardTitle>
+          <CardTitle className="text-base">{t("kirimStep", { step })}: {STEPS[step-1].label}</CardTitle>
         </CardHeader>
         <CardContent>
           {step === 1 && (

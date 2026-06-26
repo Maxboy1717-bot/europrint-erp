@@ -54,13 +54,13 @@ interface Material360 {
 }
 
 const MOVEMENT_COLOR: Record<string, { bg: string; text: string; label: string }> = {
-  EXTERNAL_IN:       { bg: "#ECFDF5", text: "#065F46", label: "Tashqi Kirim" },
+  EXTERNAL_IN:       { bg: "#ECFDF5", text: "var(--pos-success)", label: "Tashqi Kirim" },
   EXTERNAL_OUT:      { bg: "#FEF3C7", text: "#92400E", label: "Tashqi Chiqim" },
-  INTERNAL_ISSUE:    { bg: "#EFF6FF", text: "#1E40AF", label: "Bo'limga Berish" },
+  INTERNAL_ISSUE:    { bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", label: "Bo'limga Berish" },
   INTERNAL_RETURN:   { bg: "#F0FDF4", text: "#14532D", label: "Qaytarish" },
   INTERNAL_TRANSFER: { bg: "#F5F3FF", text: "#4C1D95", label: "Ko'chirish" },
-  DAMAGE:            { bg: "#FEF2F2", text: "#991B1B", label: "Zarar" },
-  INVENTORY_ADJUST:  { bg: "#F1F5F9", text: "#1E293B", label: "Tuzatish" },
+  DAMAGE:            { bg: "#FEF2F2", text: "var(--pos-danger)", label: "Zarar" },
+  INVENTORY_ADJUST:  { bg: "#F1F5F9", text: "var(--pos-text)", label: "Tuzatish" },
 };
 
 function fmt(n: number, unit?: string): string {
@@ -112,10 +112,10 @@ export default function PosMaterial360() {
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
         <div style={{ fontSize: 48 }}>⚠️</div>
-        <div style={{ marginTop: 12, color: "#DC2626" }}>{error || "Material topilmadi"}</div>
+        <div style={{ marginTop: 12, color: "var(--pos-danger)" }}>{error || "Material topilmadi"}</div>
         <button
           onClick={() => navigate("/pos-monitor/materials")}
-          style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, background: "#F59E0B", color: "#FFF", border: "none", cursor: "pointer" }}
+          style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, background: "var(--pos-warning)", color: "var(--pos-card)", border: "none", cursor: "pointer" }}
         >
           {t("materiallarRoyxatigaQaytish")}
         </button>
@@ -126,30 +126,30 @@ export default function PosMaterial360() {
   const { material, stockByWarehouse, recentMovements, priceHistory, suppliers, barcodes, totals } = data;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       {/* Sarlavha */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
         <button
           onClick={() => navigate("/pos-monitor/materials")}
-          style={{ padding: "6px 12px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}
+          style={{ padding: "6px 12px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)", borderRadius: 8, cursor: "pointer", fontSize: 13 }}
         >
           {t("orqaga")}
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>MATERIAL 360°</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>MATERIAL 360°</div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--pos-text)" }}>
             {material.name}
           </h1>
-          <div style={{ fontSize: 12, color: "#6B7280", fontFamily: "monospace", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--pos-text-muted)", fontFamily: "monospace", marginTop: 2 }}>
             {material.code} {material.nameRu ? `· ${material.nameRu}` : ""}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>{t("joriyStok")}</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: material.currentStock < material.minStock ? "#DC2626" : "#059669" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("joriyStok")}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: material.currentStock < material.minStock ? "var(--pos-danger)" : "var(--pos-success)" }}>
             {fmt(material.currentStock, material.unit)}
           </div>
-          <div style={{ fontSize: 10, color: "#9CA3AF" }}>min: {material.minStock} · max: {material.maxStock ?? "—"}</div>
+          <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>min: {material.minStock} · max: {material.maxStock ?? "—"}</div>
         </div>
       </div>
 
@@ -158,14 +158,14 @@ export default function PosMaterial360() {
         <KpiCard icon="📦" label={t("category")} value={material.category ?? "—"} />
         <KpiCard icon="🏷️" label={t("tur")} value={material.materialType ?? "—"} />
         <KpiCard icon="💰" label={t("birlikNarxi")} value={fmtMoney(material.unitPrice, material.currency)} />
-        <KpiCard icon="⬇️" label={t("jamiKirim")} value={fmt(totals.totalInflow, material.unit)} color="#059669" />
-        <KpiCard icon="⬆️" label={t("jamiChiqim")} value={fmt(totals.totalOutflow, material.unit)} color="#DC2626" />
+        <KpiCard icon="⬇️" label={t("jamiKirim")} value={fmt(totals.totalInflow, material.unit)} color="var(--pos-success)" />
+        <KpiCard icon="⬆️" label={t("jamiChiqim")} value={fmt(totals.totalOutflow, material.unit)} color="var(--pos-danger)" />
         <KpiCard icon="🏭" label={t("omborlarSoni")} value={String(totals.distinctWarehouses)} />
         <KpiCard icon="🔄" label={t("actions")} value={String(totals.movementCount)} />
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, borderBottom: "2px solid #E5E7EB", marginBottom: 16, overflowX: "auto" }}>
+      <div style={{ display: "flex", gap: 4, borderBottom: "2px solid var(--pos-border)", marginBottom: 16, overflowX: "auto" }}>
         {[
           { k: "stock",      l: `📍 Stok (${stockByWarehouse.length})` },
           { k: "movements",  l: `🔄 Harakatlar (${recentMovements.length})` },
@@ -179,8 +179,8 @@ export default function PosMaterial360() {
             style={{
               padding: "10px 16px", border: "none", background: "none", cursor: "pointer",
               fontSize: 13, fontWeight: tab === t.k ? 700 : 500,
-              color: tab === t.k ? "#1F2937" : "#9CA3AF",
-              borderBottom: tab === t.k ? "2px solid #F59E0B" : "2px solid transparent",
+              color: tab === t.k ? "var(--pos-text)" : "var(--pos-text-muted)",
+              borderBottom: tab === t.k ? "2px solid var(--pos-warning)" : "2px solid transparent",
               marginBottom: -2, whiteSpace: "nowrap",
             }}
           >
@@ -201,20 +201,20 @@ export default function PosMaterial360() {
           </thead>
           <tbody>
             {stockByWarehouse.map(s => (
-              <tr key={s.warehouseId} style={{ borderTop: "1px solid #F3F4F6" }}>
+              <tr key={s.warehouseId} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                 <Td>{s.warehouseName}</Td>
                 <Td mono>{s.warehouseCode}</Td>
-                <Td><Pill color="#EFF6FF" text="#1E40AF">{s.warehouseType}</Pill></Td>
-                <Td align="right" mono color={s.available > 0 ? "#059669" : "#9CA3AF"}>
+                <Td><Pill color="var(--pos-accent-soft)" text="var(--pos-accent)">{s.warehouseType}</Pill></Td>
+                <Td align="right" mono color={s.available > 0 ? "var(--pos-success)" : "var(--pos-text-muted)"}>
                   {fmt(s.available, material.unit)}
                 </Td>
-                <Td align="right" mono color="#9CA3AF">{fmt(s.reserved, material.unit)}</Td>
+                <Td align="right" mono color="var(--pos-text-muted)">{fmt(s.reserved, material.unit)}</Td>
                 <Td align="right" mono><b>{fmt(s.total, material.unit)}</b></Td>
                 <Td>{fmtDate(s.lastUpdated)}</Td>
               </tr>
             ))}
             {stockByWarehouse.length === 0 && (
-              <tr><Td colSpan={7} center color="#9CA3AF">{t("hechQaysiOmbordaStokYoq")}</Td></tr>
+              <tr><Td colSpan={7} center color="var(--pos-text-muted)">{t("hechQaysiOmbordaStokYoq")}</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -230,13 +230,13 @@ export default function PosMaterial360() {
           </thead>
           <tbody>
             {recentMovements.map(m => {
-              const cfg = MOVEMENT_COLOR[m.movementType] ?? { bg: "#F3F4F6", text: "#374151", label: m.movementType };
+              const cfg = MOVEMENT_COLOR[m.movementType] ?? { bg: "var(--pos-bg)", text: "var(--pos-text-muted)", label: m.movementType };
               return (
-                <tr key={m.movementId} style={{ borderTop: "1px solid #F3F4F6" }}>
+                <tr key={m.movementId} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                   <Td mono>{m.movementNumber}</Td>
                   <Td>{fmtDate(m.createdAt)}</Td>
                   <Td><Pill color={cfg.bg} text={cfg.text}>{cfg.label}</Pill></Td>
-                  <Td><Pill color="#F3F4F6" text="#374151">{m.status}</Pill></Td>
+                  <Td><Pill color="var(--pos-bg)" text="var(--pos-text-muted)">{m.status}</Pill></Td>
                   <Td align="right" mono>{fmt(m.quantity, m.unit)}</Td>
                   <Td align="right" mono>{fmtMoney(m.unitPrice)}</Td>
                   <Td>{m.createdByName.trim() || "—"}</Td>
@@ -244,7 +244,7 @@ export default function PosMaterial360() {
               );
             })}
             {recentMovements.length === 0 && (
-              <tr><Td colSpan={7} center color="#9CA3AF">{t("harakatlarYoq")}</Td></tr>
+              <tr><Td colSpan={7} center color="var(--pos-text-muted)">{t("harakatlarYoq")}</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -260,7 +260,7 @@ export default function PosMaterial360() {
           </thead>
           <tbody>
             {priceHistory.map(p => (
-              <tr key={p.id} style={{ borderTop: "1px solid #F3F4F6" }}>
+              <tr key={p.id} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                 <Td>{fmtDate(p.purchaseDate ?? p.createdAt)}</Td>
                 <Td align="right" mono><b>{fmtMoney(p.unitPrice, p.currency)}</b></Td>
                 <Td mono>{p.currency}</Td>
@@ -268,7 +268,7 @@ export default function PosMaterial360() {
               </tr>
             ))}
             {priceHistory.length === 0 && (
-              <tr><Td colSpan={4} center color="#9CA3AF">Narx tarixi yo'q (yangi material)</Td></tr>
+              <tr><Td colSpan={4} center color="var(--pos-text-muted)">Narx tarixi yo'q (yangi material)</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -284,7 +284,7 @@ export default function PosMaterial360() {
           </thead>
           <tbody>
             {suppliers.map(s => (
-              <tr key={s.name} style={{ borderTop: "1px solid #F3F4F6" }}>
+              <tr key={s.name} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                 <Td><b>{s.name}</b></Td>
                 <Td align="right" mono>{fmtMoney(s.lastPrice)}</Td>
                 <Td>{fmtDate(s.lastDate)}</Td>
@@ -292,7 +292,7 @@ export default function PosMaterial360() {
               </tr>
             ))}
             {suppliers.length === 0 && (
-              <tr><Td colSpan={4} center color="#9CA3AF">{t("taminotchilarYoq")}</Td></tr>
+              <tr><Td colSpan={4} center color="var(--pos-text-muted)">{t("taminotchilarYoq")}</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -308,13 +308,13 @@ export default function PosMaterial360() {
           </thead>
           <tbody>
             {barcodes.map(b => (
-              <tr key={b.id} style={{ borderTop: "1px solid #F3F4F6" }}>
+              <tr key={b.id} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                 <Td mono><b>{b.barcode}</b></Td>
-                <Td><Pill color="#EFF6FF" text="#1E40AF">{b.barcodeType}</Pill></Td>
+                <Td><Pill color="var(--pos-accent-soft)" text="var(--pos-accent)">{b.barcodeType}</Pill></Td>
                 <Td mono>{b.batchNumber ?? "—"}</Td>
                 <Td align="right" mono>{b.quantity != null ? fmt(b.quantity, material.unit) : "—"}</Td>
                 <Td>
-                  <Pill color={b.status === "PRINTED" ? "#ECFDF5" : "#FEF3C7"} text={b.status === "PRINTED" ? "#065F46" : "#92400E"}>
+                  <Pill color={b.status === "PRINTED" ? "#ECFDF5" : "#FEF3C7"} text={b.status === "PRINTED" ? "var(--pos-success)" : "#92400E"}>
                     {b.status}
                   </Pill>
                 </Td>
@@ -322,7 +322,7 @@ export default function PosMaterial360() {
               </tr>
             ))}
             {barcodes.length === 0 && (
-              <tr><Td colSpan={6} center color="#9CA3AF">{t("barkodlarHaliYaratilmagan")}</Td></tr>
+              <tr><Td colSpan={6} center color="var(--pos-text-muted)">{t("barkodlarHaliYaratilmagan")}</Td></tr>
             )}
           </tbody>
         </TableCard>
@@ -335,17 +335,17 @@ export default function PosMaterial360() {
 
 function KpiCard({ icon, label, value, color }: { icon: string; label: string; value: string; color?: string }) {
   return (
-    <div style={{ background: "#FFF", borderRadius: 12, padding: "12px 14px", border: "1px solid #E5E7EB" }}>
+    <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: "12px 14px", border: "1px solid var(--pos-border)" }}>
       <div style={{ fontSize: 18 }}>{icon}</div>
-      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4, textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: color ?? "#1F2937", marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 10, color: "var(--pos-text-muted)", marginTop: 4, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: color ?? "var(--pos-text)", marginTop: 2 }}>{value}</div>
     </div>
   );
 }
 
 function TableCard({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+    <div style={{ background: "var(--pos-card)", borderRadius: 12, border: "1px solid var(--pos-border)", overflow: "hidden" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         {children}
       </table>
@@ -357,8 +357,8 @@ function Th({ children, align }: { children: React.ReactNode; align?: "left" | "
   return (
     <th style={{
       padding: "10px 14px", textAlign: align ?? "left", fontSize: 11,
-      color: "#9CA3AF", fontWeight: 600, background: "#F9FAFB",
-      borderBottom: "1px solid #E5E7EB", textTransform: "uppercase",
+      color: "var(--pos-text-muted)", fontWeight: 600, background: "var(--pos-bg)",
+      borderBottom: "1px solid var(--pos-border)", textTransform: "uppercase",
     }}>
       {children}
     </th>
@@ -374,7 +374,7 @@ function Td({ children, align, mono, color, center, colSpan }: {
       padding: "10px 14px",
       textAlign: align ?? (center ? "center" : "left"),
       fontFamily: mono ? "monospace" : "inherit",
-      color: color ?? "#1F2937",
+      color: color ?? "var(--pos-text)",
       fontSize: 13,
     }}>
       {children}

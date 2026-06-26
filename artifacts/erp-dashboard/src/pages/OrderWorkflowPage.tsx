@@ -246,7 +246,7 @@ export default function OrderWorkflowPage() {
                           className="text-[10px] rounded px-1.5 py-px font-bold"
                           style={{
                             background: STATUS_COLOR[o.status] ?? 'hsl(var(--muted))',
-                            color: '#0f172a',
+                            color: 'var(--ep-dark)',
                           }}
                         >
                           {o.status}
@@ -286,7 +286,7 @@ export default function OrderWorkflowPage() {
                     className="text-[12px] rounded px-2 py-0.5 font-bold"
                     style={{
                       background: STATUS_COLOR[selected.status] ?? 'hsl(var(--muted))',
-                      color: '#0f172a',
+                      color: 'var(--ep-dark)',
                     }}
                   >
                     {selected.status}
@@ -314,7 +314,7 @@ export default function OrderWorkflowPage() {
                             className="text-[10px] rounded px-1.5 py-px font-bold"
                             style={{
                               background: PAY_STATUS_COLOR[p.status] ?? 'hsl(var(--muted))',
-                              color: '#0f172a',
+                              color: 'var(--ep-dark)',
                             }}
                           >
                             {p.status}

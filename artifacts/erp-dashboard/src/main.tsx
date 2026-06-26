@@ -70,14 +70,14 @@ function SentryFallback({ error, resetError }: { error: unknown; resetError: () 
       <h1 style={{ fontSize: "24px", marginBottom: "12px" }}>
         Kutilmagan xatolik yuz berdi
       </h1>
-      <p style={{ color: "#666", marginBottom: "20px" }}>{message}</p>
+      <p style={{ color: "var(--ep-muted)", marginBottom: "20px" }}>{message}</p>
       <button
         type="button"
         onClick={resetError}
         style={{
           padding: "10px 20px",
-          background: "#2563eb",
-          color: "#fff",
+          background: "var(--ep-blue)",
+          color: "white",
           border: "none",
           borderRadius: "6px",
           cursor: "pointer",

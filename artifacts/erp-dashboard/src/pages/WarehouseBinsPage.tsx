@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Grid3X3, Warehouse, Layers, Plus } from "lucide-react";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -98,6 +99,7 @@ interface CreateBinDialogProps {
 
 function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogProps) {
   const { toast } = useToast();
+  const { t } = useTranslation("wms");
   const qc = useQueryClient();
   const [warehouseId, setWarehouseId] = useState("");
   const [zoneId, setZoneId] = useState("");
@@ -122,27 +124,27 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/warehouse/bins"] });
-      toast({ title: "Bin yaratildi" });
+      toast({ title: t("binsCreated") });
       onClose();
       setWarehouseId(""); setZoneId(""); setBinCode("");
       setBinType("storage"); setMaxWeight("500"); setMaxVolume("2.0");
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: t("errorOccurred"), variant: "destructive" }),
   });
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent style={{ maxWidth: 440 }}>
         <DialogHeader>
-          <DialogTitle>Yangi Bin (yacheyka) qo'shish</DialogTitle>
+          <DialogTitle>{t("binsAddBin")}</DialogTitle>
         </DialogHeader>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <Label htmlFor="bin-warehouse">Ombor</Label>
+            <Label htmlFor="bin-warehouse">{t("warehouse")}</Label>
             <Select value={warehouseId} onValueChange={v => { setWarehouseId(v); setZoneId(""); }}>
               <SelectTrigger id="bin-warehouse" data-testid="select-warehouse">
-                <SelectValue placeholder="Omborni tanlang" />
+                <SelectValue placeholder={t("selectWarehouse")} />
               </SelectTrigger>
               <SelectContent>
                 {warehouses.map(w => (
@@ -153,10 +155,10 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
           </div>
 
           <div>
-            <Label htmlFor="bin-zone">Zona</Label>
+            <Label htmlFor="bin-zone">{t("binsZone")}</Label>
             <Select value={zoneId} onValueChange={setZoneId}>
               <SelectTrigger id="bin-zone" data-testid="select-zone">
-                <SelectValue placeholder="Zonani tanlang" />
+                <SelectValue placeholder={t("binsSelectZone")} />
               </SelectTrigger>
               <SelectContent>
                 {(warehouseId
@@ -172,7 +174,7 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
           </div>
 
           <div>
-            <Label htmlFor="bin-code">Bin kodi (ixtiyoriy)</Label>
+            <Label htmlFor="bin-code">{t("binsCode")}</Label>
             <Input
               id="bin-code"
               data-testid="input-bin-code"
@@ -183,7 +185,7 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
           </div>
 
           <div>
-            <Label htmlFor="bin-type">Tur</Label>
+            <Label htmlFor="bin-type">{t("type")}</Label>
             <Select value={binType} onValueChange={setBinType}>
               <SelectTrigger id="bin-type" data-testid="select-bin-type">
                 <SelectValue />
@@ -198,7 +200,7 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <div>
-              <Label htmlFor="max-weight">Max og'irlik (kg)</Label>
+              <Label htmlFor="max-weight">{t("binsMaxWeight")}</Label>
               <Input
                 id="max-weight"
                 data-testid="input-max-weight"
@@ -210,7 +212,7 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
               />
             </div>
             <div>
-              <Label htmlFor="max-volume">Max hajm (m³)</Label>
+              <Label htmlFor="max-volume">{t("binsMaxVolume")}</Label>
               <Input
                 id="max-volume"
                 data-testid="input-max-volume"
@@ -225,13 +227,13 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
         </div>
 
         <DialogFooter style={{ marginTop: 8 }}>
-          <Button variant="outline" onClick={onClose}>Bekor qilish</Button>
+          <Button variant="outline" onClick={onClose}>{t("cancel")}</Button>
           <Button
             data-testid="btn-create-bin"
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
           >
-            {mutation.isPending ? "Saqlanmoqda..." : "Yaratish"}
+            {mutation.isPending ? t("saving") : t("create")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -242,6 +244,7 @@ function CreateBinDialog({ open, onClose, warehouses, zones }: CreateBinDialogPr
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function WarehouseBinsPage() {
+  const { t } = useTranslation("wms");
   const [filterWarehouse, setFilterWarehouse] = useState("");
   const [filterZone, setFilterZone] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -287,10 +290,10 @@ export default function WarehouseBinsPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", margin: 0 }}>
-            Ombor Binlari (Yacheykalar)
+            {t("binsPageTitle")}
           </h1>
           <p style={{ fontSize: 13, color: "var(--ep-muted)", margin: "4px 0 0" }}>
-            Ombor joylashuv tuzilmasi — zonalar va binlar
+            {t("binsPageSubtitle")}
           </p>
         </div>
         <Button
@@ -298,25 +301,25 @@ export default function WarehouseBinsPage() {
           onClick={() => setCreateOpen(true)}
           style={{ display: "flex", alignItems: "center", gap: 6 }}
         >
-          <Plus size={15} /> Yangi bin
+          <Plus size={15} /> {t("binsNewBin")}
         </Button>
       </div>
 
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
-        <KpiCard icon={<Grid3X3 size={18} color="var(--ep-blue)" />} label="Jami binlar" value={bins.length} color="var(--ep-blue-soft)" />
-        <KpiCard icon={<Warehouse size={18} color="var(--ep-green)" />} label="Faol binlar" value={activeBins} color="var(--ep-green-soft)" />
-        <KpiCard icon={<Layers size={18} color="var(--ep-yellow)" />} label="80%+ band" value={highOccupancy} color="var(--ep-yellow-soft)" />
+        <KpiCard icon={<Grid3X3 size={18} color="var(--ep-blue)" />} label={t("binsTotal")} value={bins.length} color="var(--ep-blue-soft)" />
+        <KpiCard icon={<Warehouse size={18} color="var(--ep-green)" />} label={t("binsActive")} value={activeBins} color="var(--ep-green-soft)" />
+        <KpiCard icon={<Layers size={18} color="var(--ep-yellow)" />} label={t("binsHighOccupancy")} value={highOccupancy} color="var(--ep-yellow-soft)" />
       </div>
 
       {/* Filters */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
         <Select value={filterWarehouse || "__all__"} onValueChange={v => { setFilterWarehouse(v === "__all__" ? "" : v); setFilterZone(""); }}>
           <SelectTrigger style={{ width: 220 }} data-testid="filter-warehouse">
-            <SelectValue placeholder="Barcha omborlar" />
+            <SelectValue placeholder={t("allWarehouses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">Barcha omborlar</SelectItem>
+            <SelectItem value="__all__">{t("allWarehouses")}</SelectItem>
             {warehouses.map(w => (
               <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
             ))}
@@ -325,10 +328,10 @@ export default function WarehouseBinsPage() {
 
         <Select value={filterZone || "__all__"} onValueChange={v => setFilterZone(v === "__all__" ? "" : v)}>
           <SelectTrigger style={{ width: 200 }} data-testid="filter-zone">
-            <SelectValue placeholder="Barcha zonalar" />
+            <SelectValue placeholder={t("binsAllZones")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">Barcha zonalar</SelectItem>
+            <SelectItem value="__all__">{t("binsAllZones")}</SelectItem>
             {filteredZones.map(z => (
               <SelectItem key={z.id} value={z.id}>{z.code} — {z.name}</SelectItem>
             ))}
@@ -342,26 +345,26 @@ export default function WarehouseBinsPage() {
             onClick={() => { setFilterWarehouse(""); setFilterZone(""); }}
             data-testid="btn-clear-filters"
           >
-            Tozalash
+            {t("clear")}
           </Button>
         )}
       </div>
 
       {/* Table */}
       {binsQ.isLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Yuklanmoqda...</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>{t("loading")}</div>
       ) : binsQ.isError ? (
         <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>
           <div style={{ color: "var(--ep-red)", fontWeight: 600, marginBottom: 8 }}>
-            Binlarni yuklashda xatolik
+            {t("binsLoadError")}
           </div>
           <Button variant="outline" size="sm" onClick={() => binsQ.refetch()} data-testid="btn-retry-bins">
-            Qayta urinib ko'rish
+            {t("retry")}
           </Button>
         </div>
       ) : bins.length === 0 ? (
         <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>
-          Binlar topilmadi
+          {t("binsNotFound")}
         </div>
       ) : (
         <div style={{
@@ -372,7 +375,7 @@ export default function WarehouseBinsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--ep-bg)", borderBottom: "1px solid var(--ep-border)" }}>
-                {["Bin kodi", "Ombor", "Zona", "Tur", "Qator/Shelf/Daraja", "Band (%)", "Holat"].map(h => (
+                {[t("binsColCode"), t("warehouse"), t("binsZone"), t("type"), t("binsColRowShelf"), t("binsColOccupied"), t("binsColStatus")].map(h => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "var(--ep-muted)" }}>
                     {h}
                   </th>
@@ -412,7 +415,7 @@ export default function WarehouseBinsPage() {
                   </td>
                   <td style={{ padding: "10px 14px" }}>
                     <Badge variant={b.isActive ? "default" : "secondary"} style={{ fontSize: 11 }}>
-                      {b.isActive ? "Faol" : "Nofaol"}
+                      {b.isActive ? t("active") : t("inactive")}
                     </Badge>
                   </td>
                 </tr>

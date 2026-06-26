@@ -20,8 +20,8 @@ let _toastId = 0;
 function newToastId() { return ++_toastId; }
 
 const MOV_TYPE_COLORS: Record<string, string> = {
-  EXTERNAL_IN: "#10B981", EXTERNAL_OUT: "#EF4444", INTERNAL_ISSUE: "#F59E0B",
-  INTERNAL_RETURN: "#3B82F6", INTERNAL_TRANSFER: "#8B5CF6", DAMAGE: "#DC2626",
+  EXTERNAL_IN: "var(--pos-success)", EXTERNAL_OUT: "var(--pos-danger)", INTERNAL_ISSUE: "var(--pos-warning)",
+  INTERNAL_RETURN: "var(--pos-accent)", INTERNAL_TRANSFER: "#8B5CF6", DAMAGE: "var(--pos-danger)",
 };
 
 function StatCard({ label, value, icon, color = "var(--pos-accent)" }: { label: string; value: string | number; icon: string; color?: string }) {
@@ -143,7 +143,7 @@ export default function PosDashboard() {
       {toasts.length > 0 && (
         <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, display: "flex", flexDirection: "column", gap: 8, pointerEvents: "none" }}>
           {toasts.map(toast => (
-            <div key={toast.id} className="pos-slide-in" style={{ background: "var(--pos-danger)", color: "#fff", padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.3)", maxWidth: 340 }}>
+            <div key={toast.id} className="pos-slide-in" style={{ background: "var(--pos-danger)", color: "var(--pos-card)", padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 12px color-mix(in srgb, black 30%, transparent)", maxWidth: 340 }}>
               {toast.msg}
             </div>
           ))}

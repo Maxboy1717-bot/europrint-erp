@@ -59,7 +59,7 @@ export function ProfileHeader({
         <div className="flex flex-col sm:flex-row">
           <div
             className="relative flex-shrink-0 sm:w-52 flex flex-col items-center justify-center"
-            style={{ background: "linear-gradient(160deg, #1e40af 0%, #4f46e5 60%, #7c3aed 100%)" }}
+            style={{ background: "linear-gradient(160deg, var(--ep-blue) 0%, var(--ep-purple) 60%, var(--ep-purple) 100%)" }}
           >
             <div className="absolute inset-0 overflow-hidden opacity-10 pointer-events-none">
               <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full border-2 border-white" />

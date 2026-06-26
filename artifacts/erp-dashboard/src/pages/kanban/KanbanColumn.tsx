@@ -126,7 +126,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: isOver ? "#F0F6FF" : "#FFFFFF",
+        background: isOver ? "color-mix(in srgb, var(--ep-blue) 8%, var(--ep-surface))" : "var(--ep-surface)",
         borderRadius: 18,
         boxShadow: isOver ? shadowOver : shadowIdle,
         transition: "box-shadow 0.2s, background 0.2s",
@@ -156,21 +156,21 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
               onBlur={commitRename}
               onKeyDown={e => { if (e.key === "Enter") commitRename(); else if (e.key === "Escape") setRenaming(false); }}
               className="truncate font-semibold bg-transparent border-b border-primary outline-none"
-              style={{ fontSize: 13, color: "#2D3748", width: "100%", minWidth: 60 }}
+              style={{ fontSize: 13, color: "var(--ep-text)", width: "100%", minWidth: 60 }}
               data-testid={`input-rename-column-${column.id}`}
             />
           ) : (
             <h3
               className="truncate font-semibold cursor-pointer hover:text-primary transition-colors"
-              style={{ fontSize: 13, color: "#2D3748", letterSpacing: "0.01em" }}
+              style={{ fontSize: 13, color: "var(--ep-text)", letterSpacing: "0.01em" }}
               onDoubleClick={() => { setRenameVal(column.name ?? ""); setRenaming(true); }}
               data-testid={`heading-column-name-${column.id}`}
             >
               {column.name}
             </h3>
           )}
-          {isOverWip && <AlertTriangle style={{ width: 12, height: 12, color: "#F59E0B", flexShrink: 0 }} />}
-          {isInboxCol && overdueCount > 0 && <Clock style={{ width: 11, height: 11, color: "#EF4444", flexShrink: 0 }} />}
+          {isOverWip && <AlertTriangle style={{ width: 12, height: 12, color: "var(--ep-yellow)", flexShrink: 0 }} />}
+          {isInboxCol && overdueCount > 0 && <Clock style={{ width: 11, height: 11, color: "var(--ep-red)", flexShrink: 0 }} />}
         </div>
 
         <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -198,7 +198,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.20)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.10)"; }}
           >
-            <Pencil style={{ width: 11, height: 11, color: "#718096" }} />
+            <Pencil style={{ width: 11, height: 11, color: "var(--ep-muted)" }} />
           </button>
 
           <button
@@ -218,7 +218,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
             onMouseEnter={e => { if (!isOverWip) (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.20)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.10)"; }}
           >
-            <Plus style={{ width: 13, height: 13, color: "#718096" }} />
+            <Plus style={{ width: 13, height: 13, color: "var(--ep-muted)" }} />
           </button>
 
           <button
@@ -239,7 +239,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.14)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(163,177,198,0.06)"; }}
           >
-            <Trash2 style={{ width: 11, height: 11, color: "#94A3B8" }} />
+            <Trash2 style={{ width: 11, height: 11, color: "var(--ep-muted)" }} />
           </button>
         </div>
       </div>
@@ -257,9 +257,9 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
           }}
         >
           {isOverWip
-            ? <AlertTriangle style={{ width: 11, height: 11, color: "#EF4444" }} />
-            : <Clock         style={{ width: 11, height: 11, color: "#EF4444" }} />}
-          <span style={{ fontSize: 10.5, color: "#DC2626", fontWeight: 500 }}>
+            ? <AlertTriangle style={{ width: 11, height: 11, color: "var(--ep-red)" }} />
+            : <Clock         style={{ width: 11, height: 11, color: "var(--ep-red)" }} />}
+          <span style={{ fontSize: 10.5, color: "var(--ep-red)", fontWeight: 500 }}>
             {isOverWip
               ? `WIP chegarasi (${wipLimit}) oshdi!`
               : `${overdueCount} ta karta 24 soatdan o'tdi!`}

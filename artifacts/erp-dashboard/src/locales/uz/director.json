@@ -121,6 +121,14 @@
   "ogohlantirishlar": "Ogohlantirishlar ro'yxati",
   "oylikBuyurtmalar": "Oylik buyurtmalar",
   "refresh": "Yangilash",
+  "kpiSavdoHajmi": "Savdo hajmi",
+  "kpiBuyurtmaBajarish": "Buyurtma bajarish",
+  "kpiOeeOrtacha": "OEE o'rtacha",
+  "kpiKechikkan": "Kechikkan buyurtmalar",
+  "kpiDavomad": "Davomad",
+  "kpiIotSignallar": "IoT signallar",
+  "malumotYoq": "Ma'lumot yo'q",
+  "kritikBadge": "kritik",
   "titlePrefix": "Direktor",
   "titleSuffix": "paneli"
 }

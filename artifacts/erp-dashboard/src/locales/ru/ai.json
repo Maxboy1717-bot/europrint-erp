@@ -237,5 +237,20 @@
   "aiFit.cardId": "ID карточки",
   "aiFit.employeeProfile": "Профиль сотрудника (JSON)",
   "aiFit.cardRequirements": "Требования карточки (JSON)",
-  "aiFit.reportTitle": "Отчёт (fit_report)"
+  "aiFit.reportTitle": "Отчёт (fit_report)",
+  "providerConfig.title": "Настройки AI-провайдера",
+  "providerConfig.subtitle": "Включайте AI-провайдеров, задавайте модель и дневной бюджет",
+  "providerConfig.dailyBudget": "Дневной бюджет",
+  "providerConfig.apiKey": "API-ключ",
+  "providerConfig.model": "Модель",
+  "providerConfig.active": "Активен",
+  "providerConfig.inactive": "Неактивен",
+  "providerConfig.save": "Сохранить",
+  "providerConfig.cancel": "Отмена",
+  "providerConfig.edit": "Изменить",
+  "providerConfig.updated": "Обновлено",
+  "providerConfig.updateFailed": "Ошибка обновления",
+  "providerConfig.budgetSaved": "Бюджет сохранён",
+  "providerConfig.loadError": "Ошибка загрузки данных",
+  "unitTa": "шт."
 }

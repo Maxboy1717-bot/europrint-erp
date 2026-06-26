@@ -237,5 +237,20 @@
   "aiFit.cardId": "Карта ID",
   "aiFit.employeeProfile": "Ходим профили (JSON)",
   "aiFit.cardRequirements": "Карта талаблари (JSON)",
-  "aiFit.reportTitle": "Ҳисобот (fit_report)"
+  "aiFit.reportTitle": "Ҳисобот (fit_report)",
+  "providerConfig.title": "AI Провайдер созламалари",
+  "providerConfig.subtitle": "AI провайдерларни ёқинг, модел ва кунлик бюджетни белгиланг",
+  "providerConfig.dailyBudget": "Кунлик бюджет",
+  "providerConfig.apiKey": "API калит",
+  "providerConfig.model": "Модел",
+  "providerConfig.active": "Фаол",
+  "providerConfig.inactive": "Нофаол",
+  "providerConfig.save": "Сақлаш",
+  "providerConfig.cancel": "Бекор қилиш",
+  "providerConfig.edit": "Таҳрирлаш",
+  "providerConfig.updated": "Янгиланди",
+  "providerConfig.updateFailed": "Янгилашда хатолик",
+  "providerConfig.budgetSaved": "Бюджет сақланди",
+  "providerConfig.loadError": "Маълумотларни юклашда хатолик",
+  "unitTa": "та"
 }

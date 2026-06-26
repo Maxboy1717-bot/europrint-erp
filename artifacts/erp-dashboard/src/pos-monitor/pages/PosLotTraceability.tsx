@@ -110,28 +110,28 @@ export default function PosLotTraceability() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>LOT TRACEABILITY</div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1F2937" }}>{t("partiyalarTarixi")}</h1>
-          <p style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>LOT TRACEABILITY</div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--pos-text)" }}>{t("partiyalarTarixi")}</h1>
+          <p style={{ fontSize: 13, color: "var(--pos-text-muted)", marginTop: 4 }}>
             Har bir partiya raqami uchun barcha barkodlar va kirim/chiqim tarixi
           </p>
         </div>
-        <button onClick={load} style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
+        <button onClick={load} style={{ padding: "8px 16px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
           {t("yangilash")}
         </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 16 }}>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 14, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>JAMI PARTIYALAR</div>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 14, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>JAMI PARTIYALAR</div>
           <div style={{ fontSize: 24, fontWeight: 800 }}>{lots.length}</div>
         </div>
-        <div style={{ background: "#FFF", borderRadius: 12, padding: 14, border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>JAMI BARKODLAR</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: "#3B82F6" }}>
+        <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 14, border: "1px solid var(--pos-border)" }}>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>JAMI BARKODLAR</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "var(--pos-accent)" }}>
             {lots.reduce((s, l) => s + l.barcodeCount, 0)}
           </div>
         </div>
@@ -142,21 +142,21 @@ export default function PosLotTraceability() {
           placeholder={t("partiyaRaqamiQidirish")}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ width: "100%", padding: "10px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13 }}
+          style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--pos-border)", borderRadius: 8, fontSize: 13 }}
         />
       </div>
 
-      <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+      <div style={{ background: "var(--pos-card)", borderRadius: 12, border: "1px solid var(--pos-border)", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>{t("yuklanmoqda")}</div>
+          <div style={{ padding: 40, textAlign: "center", color: "var(--pos-text-muted)" }}>{t("yuklanmoqda")}</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: 60, textAlign: "center", color: "#9CA3AF" }}>
+          <div style={{ padding: 60, textAlign: "center", color: "var(--pos-text-muted)" }}>
             <div style={{ fontSize: 48 }}>📦</div>
             <div style={{ marginTop: 8 }}>{t("partiyalarYoq")}</div>
           </div>
         ) : (
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
-            <thead style={{ background: "#F9FAFB" }}>
+            <thead style={{ background: "var(--pos-bg)" }}>
               <tr>
                 <th style={th}>{t("partiya")}</th>
                 <th style={th}>{t('Material')}</th>
@@ -170,24 +170,24 @@ export default function PosLotTraceability() {
             </thead>
             <tbody>
               {filtered.map(l => (
-                <tr key={l.batchNumber} style={{ borderTop: "1px solid #F3F4F6" }}>
+                <tr key={l.batchNumber} style={{ borderTop: "1px solid var(--pos-bg)" }}>
                   <td style={{ ...td, fontFamily: "monospace", fontWeight: 700 }}>{l.batchNumber}</td>
                   <td style={td}>
                     <button onClick={() => l.materialCardId && navigate(`/pos-monitor/materials/360/${l.materialCardId}`)}
-                            style={{ background: "none", border: "none", color: "#1E40AF", cursor: "pointer", fontSize: 13 }}>
+                            style={{ background: "none", border: "none", color: "var(--pos-accent)", cursor: "pointer", fontSize: 13 }}>
                       #{l.materialCardId ?? "—"}
                     </button>
                   </td>
                   <td style={{ ...td, textAlign: "right", fontFamily: "monospace" }}>{fmt(l.quantity)}</td>
                   <td style={td}>{l.unit ?? "—"}</td>
-                  <td style={{ ...td, textAlign: "right", fontWeight: 700, color: "#3B82F6" }}>{l.barcodeCount}</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 700, color: "var(--pos-accent)" }}>{l.barcodeCount}</td>
                   <td style={td}>{fmtDate(l.firstSeen)}</td>
                   <td style={td}>{fmtDate(l.lastSeen)}</td>
                   <td style={td}>
                     <span style={{
                       padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700,
                       background: l.status === "PRINTED" ? "#ECFDF5" : "#FEF3C7",
-                      color: l.status === "PRINTED" ? "#065F46" : "#92400E",
+                      color: l.status === "PRINTED" ? "var(--pos-success)" : "#92400E",
                     }}>
                       {l.status}
                     </span>
@@ -202,5 +202,5 @@ export default function PosLotTraceability() {
   );
 }
 
-const th: React.CSSProperties = { padding: "10px 14px", textAlign: "left", fontSize: 11, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" };
+const th: React.CSSProperties = { padding: "10px 14px", textAlign: "left", fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, textTransform: "uppercase" };
 const td: React.CSSProperties = { padding: "10px 14px", fontSize: 13 };

@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layers, Warehouse, Grid3X3, Plus } from "lucide-react";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -65,6 +66,7 @@ interface CreateZoneDialogProps {
 
 function CreateZoneDialog({ open, onClose, warehouses }: CreateZoneDialogProps) {
   const { toast } = useToast();
+  const { t } = useTranslation("wms");
   const qc = useQueryClient();
   const [warehouseId, setWarehouseId] = useState("");
   const [code, setCode] = useState("");
@@ -83,26 +85,26 @@ function CreateZoneDialog({ open, onClose, warehouses }: CreateZoneDialogProps) 
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/warehouse/zones"] });
-      toast({ title: "Zona yaratildi" });
+      toast({ title: t("zonesCreated") });
       onClose();
       setWarehouseId(""); setCode(""); setName(""); setZoneType("storage"); setCapacity("500");
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: t("errorOccurred"), variant: "destructive" }),
   });
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent style={{ maxWidth: 420 }}>
         <DialogHeader>
-          <DialogTitle>Yangi Zona qo'shish</DialogTitle>
+          <DialogTitle>{t("zonesAddZone")}</DialogTitle>
         </DialogHeader>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <Label htmlFor="zone-warehouse">Ombor</Label>
+            <Label htmlFor="zone-warehouse">{t("warehouse")}</Label>
             <Select value={warehouseId} onValueChange={setWarehouseId}>
               <SelectTrigger id="zone-warehouse" data-testid="select-zone-warehouse">
-                <SelectValue placeholder="Omborni tanlang" />
+                <SelectValue placeholder={t("selectWarehouse")} />
               </SelectTrigger>
               <SelectContent>
                 {warehouses.map(w => (
@@ -114,7 +116,7 @@ function CreateZoneDialog({ open, onClose, warehouses }: CreateZoneDialogProps) 
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
             <div>
-              <Label htmlFor="zone-code">Kod</Label>
+              <Label htmlFor="zone-code">{t("code")}</Label>
               <Input
                 id="zone-code"
                 data-testid="input-zone-code"
@@ -125,20 +127,20 @@ function CreateZoneDialog({ open, onClose, warehouses }: CreateZoneDialogProps) 
               />
             </div>
             <div>
-              <Label htmlFor="zone-name">Nomi *</Label>
+              <Label htmlFor="zone-name">{t("nameRequired")}</Label>
               <Input
                 id="zone-name"
                 data-testid="input-zone-name"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="A-Zona (Kirish)"
+                placeholder={t("zonesNamePlaceholder")}
                 maxLength={200}
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="zone-type">Zona turi</Label>
+            <Label htmlFor="zone-type">{t("zonesType")}</Label>
             <Select value={zoneType} onValueChange={setZoneType}>
               <SelectTrigger id="zone-type" data-testid="select-zone-type">
                 <SelectValue />
@@ -152,7 +154,7 @@ function CreateZoneDialog({ open, onClose, warehouses }: CreateZoneDialogProps) 
           </div>
 
           <div>
-            <Label htmlFor="zone-capacity">Sig'im (m³)</Label>
+            <Label htmlFor="zone-capacity">{t("zonesCapacity")}</Label>
             <Input
               id="zone-capacity"
               data-testid="input-zone-capacity"
@@ -166,13 +168,13 @@ function CreateZoneDialog({ open, onClose, warehouses }: CreateZoneDialogProps) 
         </div>
 
         <DialogFooter style={{ marginTop: 8 }}>
-          <Button variant="outline" onClick={onClose}>Bekor qilish</Button>
+          <Button variant="outline" onClick={onClose}>{t("cancel")}</Button>
           <Button
             data-testid="btn-create-zone"
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending || !name.trim()}
           >
-            {mutation.isPending ? "Saqlanmoqda..." : "Yaratish"}
+            {mutation.isPending ? t("saving") : t("create")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -183,6 +185,7 @@ function CreateZoneDialog({ open, onClose, warehouses }: CreateZoneDialogProps) 
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function WarehouseZonesPage() {
+  const { t } = useTranslation("wms");
   const [filterWarehouse, setFilterWarehouse] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -215,10 +218,10 @@ export default function WarehouseZonesPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", margin: 0 }}>
-            Ombor Zonalari
+            {t("zonesPageTitle")}
           </h1>
           <p style={{ fontSize: 13, color: "var(--ep-muted)", margin: "4px 0 0" }}>
-            Receiving · Storage · Shipping · Quarantine zonalari
+            {t("zonesPageSubtitle")}
           </p>
         </div>
         <Button
@@ -226,25 +229,25 @@ export default function WarehouseZonesPage() {
           onClick={() => setCreateOpen(true)}
           style={{ display: "flex", alignItems: "center", gap: 6 }}
         >
-          <Plus size={15} /> Yangi zona
+          <Plus size={15} /> {t("zonesNewZone")}
         </Button>
       </div>
 
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
-        <ZoneKpiCard icon={<Layers size={18} color="var(--ep-purple)" />} label="Jami zonalar" value={zones.length} color="var(--ep-purple-soft)" />
-        <ZoneKpiCard icon={<Warehouse size={18} color="var(--ep-green)" />} label="Faol zonalar" value={activeZones} color="var(--ep-green-soft)" />
-        <ZoneKpiCard icon={<Grid3X3 size={18} color="var(--ep-blue)" />} label="Jami binlar" value={totalBins} color="var(--ep-blue-soft)" />
+        <ZoneKpiCard icon={<Layers size={18} color="var(--ep-purple)" />} label={t("zonesTotal")} value={zones.length} color="var(--ep-purple-soft)" />
+        <ZoneKpiCard icon={<Warehouse size={18} color="var(--ep-green)" />} label={t("zonesActive")} value={activeZones} color="var(--ep-green-soft)" />
+        <ZoneKpiCard icon={<Grid3X3 size={18} color="var(--ep-blue)" />} label={t("zonesTotalBins")} value={totalBins} color="var(--ep-blue-soft)" />
       </div>
 
       {/* Filter */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "center" }}>
         <Select value={filterWarehouse || "__all__"} onValueChange={v => setFilterWarehouse(v === "__all__" ? "" : v)}>
           <SelectTrigger style={{ width: 220 }} data-testid="filter-zone-warehouse">
-            <SelectValue placeholder="Barcha omborlar" />
+            <SelectValue placeholder={t("allWarehouses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">Barcha omborlar</SelectItem>
+            <SelectItem value="__all__">{t("allWarehouses")}</SelectItem>
             {warehouses.map(w => (
               <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
             ))}
@@ -253,25 +256,25 @@ export default function WarehouseZonesPage() {
 
         {filterWarehouse && (
           <Button variant="ghost" size="sm" onClick={() => setFilterWarehouse("")} data-testid="btn-clear-zone-filter">
-            Tozalash
+            {t("clear")}
           </Button>
         )}
       </div>
 
       {/* Zones grid */}
       {zonesQ.isLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Yuklanmoqda...</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>{t("loading")}</div>
       ) : zonesQ.isError ? (
         <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>
           <div style={{ color: "var(--ep-red)", fontWeight: 600, marginBottom: 8 }}>
-            Zonalarni yuklashda xatolik
+            {t("zonesLoadError")}
           </div>
           <Button variant="outline" size="sm" onClick={() => zonesQ.refetch()} data-testid="btn-retry-zones">
-            Qayta urinib ko'rish
+            {t("retry")}
           </Button>
         </div>
       ) : zones.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Zonalar topilmadi</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>{t("zonesNotFound")}</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {zones.map(z => {
@@ -293,14 +296,14 @@ export default function WarehouseZonesPage() {
                       {z.code ? `${z.code} — ` : ""}{z.name}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--ep-muted)", marginTop: 2 }}>
-                      {z.warehouseName ?? "Ombor ko'rsatilmagan"}
+                      {z.warehouseName ?? t("warehouseNotSet")}
                     </div>
                   </div>
                   <Badge
                     variant={z.isActive ? "default" : "secondary"}
                     style={{ fontSize: 10, flexShrink: 0 }}
                   >
-                    {z.isActive ? "Faol" : "Nofaol"}
+                    {z.isActive ? t("active") : t("inactive")}
                   </Badge>
                 </div>
 
@@ -312,14 +315,14 @@ export default function WarehouseZonesPage() {
                     {z.zoneType}
                   </span>
                   <span style={{ fontSize: 11, color: "var(--ep-muted)", padding: "3px 8px", background: "var(--ep-bg)", borderRadius: 6 }}>
-                    Sig'im: {z.capacity} m³
+                    {t("zonesCapacityLabel")}: {z.capacity} m³
                   </span>
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <Grid3X3 size={12} color="var(--ep-subtle)" />
                   <span style={{ fontSize: 12, color: "var(--ep-muted)" }}>
-                    {z.binCount} ta bin
+                    {z.binCount} {t("zonesBinCount")}
                   </span>
                 </div>
               </div>

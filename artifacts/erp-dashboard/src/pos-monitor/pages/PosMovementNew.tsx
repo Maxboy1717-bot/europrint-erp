@@ -137,7 +137,7 @@ export default function PosMovementNew() {
         }}>
           <span style={{ fontSize: 20 }}>📥</span>
           <div>
-            <div style={{ fontWeight: 700, color: "#065F46", marginBottom: 2 }}>{t("tashqiKirimQolda")}</div>
+            <div style={{ fontWeight: 700, color: "var(--pos-success)", marginBottom: 2 }}>{t("tashqiKirimQolda")}</div>
             <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
               {t("operatorBarchaMaydonlarniQoldaToldiradi")}
             </div>
@@ -149,7 +149,7 @@ export default function PosMovementNew() {
         }}>
           <span style={{ fontSize: 20 }}>📤</span>
           <div>
-            <div style={{ fontWeight: 700, color: "#1E40AF", marginBottom: 2 }}>{t("chiqimTurlarBarcode")}</div>
+            <div style={{ fontWeight: 700, color: "var(--pos-accent)", marginBottom: 2 }}>{t("chiqimTurlarBarcode")}</div>
             <div style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>
               {t("barcodeSkanerOrqaliAmalgaOshiriladi")}
             </div>
@@ -222,7 +222,7 @@ export default function PosMovementNew() {
             <div style={{
               marginTop: 4,
               fontSize: 12, fontWeight: 600,
-              color: mt.variant === "kirim" ? "#059669" : "var(--pos-accent)",
+              color: mt.variant === "kirim" ? "var(--pos-success)" : "var(--pos-accent)",
               display: "flex", alignItems: "center", gap: 4,
             }}>
               {mt.variant === "kirim" ? "Qo'lda to'ldirish →" : "Barcode skan →"}

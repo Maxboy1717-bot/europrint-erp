@@ -184,7 +184,7 @@ export function Step3Passport({ header, lines, totalQty, totalWeight, totalValue
     <div className="pos-fade-in">
       <div className="pos-card" style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--pos-accent)", marginBottom: 18 }}>{t("bosqich3InventarPasporti")}</div>
-        <div style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#1E40AF", display: "flex", gap: 10, alignItems: "flex-start" }}>
+        <div style={{ background: "var(--pos-accent-soft)", border: "1px solid color-mix(in srgb, var(--pos-accent) 20%, transparent)", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "var(--pos-accent)", display: "flex", gap: 10, alignItems: "flex-start" }}>
           <span style={{ fontSize: 18, flexShrink: 0 }}>ℹ️</span>
           <span>{t("barchaTashqiKirimlarAvval")}<strong>karantinga</strong> {t("tushadiQcBolimiTekshirgandanSong")}</span>
         </div>
@@ -335,7 +335,7 @@ export function Step5Submit({ created, saving, header, lines, totalValue, handle
               <SumItem label={t("Materiallar")}  value={`${lines.length} ta qator`} />
               <SumItem label={t("jamiSumma")}   value={fmt(totalValue, header.currency)} mono />
             </div>
-            <div style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "#92400E", display: "flex", gap: 10 }}>
+            <div style={{ background: "color-mix(in srgb, var(--pos-warning) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--pos-warning) 28%, transparent)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "var(--pos-warning)", display: "flex", gap: 10 }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
               <span>{t("barchaTashqiKirimlarAvvalKarantinga")}</span>
             </div>

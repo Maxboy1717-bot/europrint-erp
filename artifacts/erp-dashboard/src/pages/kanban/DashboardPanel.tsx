@@ -182,7 +182,7 @@ export function DashboardPanel({ t }: { t: (key: string) => string }) {
 
       {/* ── 24h rule overdue inbox detail ────────────────────────── */}
       {overdueInbox && overdueInbox.count > 0 && (
-        <Card className="p-4 border-red-200 dark:border-red-800" style={{ borderColor: "#ef4444" }}>
+        <Card className="p-4 border-red-200 dark:border-red-800" style={{ borderColor: "var(--ep-red)" }}>
           <h3 className="font-semibold mb-3 flex items-center gap-2 text-[var(--ep-red)] dark:text-red-400">
             <Clock className="h-4 w-4" />
             24-Soat Qoida Buzilganlari ({overdueInbox.count} ta)

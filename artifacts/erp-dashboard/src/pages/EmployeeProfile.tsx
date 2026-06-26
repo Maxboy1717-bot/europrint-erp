@@ -348,7 +348,7 @@ export default function EmployeeProfile() {
 
   return (
     <div className="space-y-5" style={{ background: "var(--ep-bg)", minHeight: "100%", margin: "-16px -24px", padding: "16px 24px" }}>
-      <div className="flex items-center gap-4"><Button variant="ghost" size="icon" asChild className="rounded-full" style={{ background: "#fff", boxShadow: "2px 2px 8px rgba(163,177,198,0.35)" }}><Link href="/employees"><ArrowLeft className="h-4 w-4" /></Link></Button><EPPageHeader
+      <div className="flex items-center gap-4"><Button variant="ghost" size="icon" asChild className="rounded-full" style={{ background: "var(--ep-surface)", boxShadow: "2px 2px 8px rgba(163,177,198,0.35)" }}><Link href="/employees"><ArrowLeft className="h-4 w-4" /></Link></Button><EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimProfili")}</b></>}
         title={t("xodimProfili")}
       /></div>

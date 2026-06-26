@@ -39,7 +39,7 @@ export function AppLayout({
           alignItems: "center",
           gap: 8,
           padding: "12px 16px",
-          borderBottom: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+          borderBottom: `1px solid var(--ep-border)`,
           position: "sticky",
           top: 0,
           background: colors.bg,
@@ -64,7 +64,7 @@ export function AppLayout({
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 17 }}>{title}</div>
           {user && (
-            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>
+            <div style={{ fontSize: 11, color: "var(--ep-muted)", marginTop: 1 }}>
               {user.firstName} {user.lastName} · {user.departmentName || user.departmentCode}
             </div>
           )}
@@ -101,7 +101,7 @@ export function EmptyState({ icon, text }: { icon: string; text: string }) {
   return (
     <div style={{ textAlign: "center", padding: "40px 0" }}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>{icon}</div>
-      <div style={{ color: "#6b7280", fontSize: 15 }}>{text}</div>
+      <div style={{ color: "var(--ep-muted)", fontSize: 15 }}>{text}</div>
     </div>
   );
 }

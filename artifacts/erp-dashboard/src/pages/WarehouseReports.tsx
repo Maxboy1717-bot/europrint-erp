@@ -90,7 +90,7 @@ export default function WarehouseReports() {
         <ReportsHeader t={t} lang={lang} setLang={setLang} onExport={handleExport} />
         <Button variant="outline" size="sm" onClick={() => refetchStock()} className="shrink-0">
           <RefreshCw className="h-4 w-4 mr-2" />
-          {"Yangilash"}
+          {tLabel('wms.refresh', 'Yangilash')}
         </Button>
       </div>
 

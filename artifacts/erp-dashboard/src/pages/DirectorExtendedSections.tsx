@@ -93,10 +93,10 @@ export function ProductionTab({ prodData, prodLoading }: { prodData: ProdData | 
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {([
-                { l: "O'rtacha OEE", v: prodData.oeeToday.avg ?? "—" },
-                { l: "Minimum", v: prodData.oeeToday.min ?? "—" },
-                { l: "Maksimum", v: prodData.oeeToday.max ?? "—" },
-                { l: "Snapshot soni", v: prodData.oeeToday.snapshots?.length ?? 0 },
+                { l: t("ortachaOee"), v: prodData.oeeToday.avg ?? "—" },
+                { l: t("oeeMinimum"), v: prodData.oeeToday.min ?? "—" },
+                { l: t("oeeMaksimum"), v: prodData.oeeToday.max ?? "—" },
+                { l: t("oeeSnapshotSoni"), v: prodData.oeeToday.snapshots?.length ?? 0 },
               ]).map(s => (
                 <div key={s.l} className="text-center p-3 bg-muted/30 rounded-md">
                   <div className="text-xl font-bold">{s.v}{typeof s.v === "string" && s.v !== "—" ? "%" : ""}</div>

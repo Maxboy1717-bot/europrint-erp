@@ -54,15 +54,15 @@ export default function DirectorDashboard() {
 
   function refreshAll() {
     refetchDash(); refetchSum();
-    toast({ title: "Ma'lumotlar yangilandi" });
+    toast({ title: t("malumotlarYangilandi") });
   }
 
   const vipMutation = useMutation({
     mutationFn: async (orderId: number) => {
       return apiRequest("POST", `/api/director/orders/${orderId}/vip`, {});
     },
-    onSuccess: () => { toast({ title: "VIP so'rovi yuborildi", description: "Menejer xabardor qilindi" }); },
-    onError: () => { toast({ title: "Xatolik", variant: "destructive" }); },
+    onSuccess: () => { toast({ title: t("vipSorovYuborildi"), description: t("menejerXabardorQilindi") }); },
+    onError: () => { toast({ title: t("xatolik"), variant: "destructive" }); },
   });
 
   const runningMachines = prod?.sessionsToday?.filter(s => s.status === "running" || s.status === "active").length ?? 0;
@@ -96,7 +96,7 @@ export default function DirectorDashboard() {
             warning={(prod?.delayedOrders ?? 0) > 10}
           />
           <MetricCard
-            label="24h SLA buzilgan"
+            label={t("slaBuzilgan24h")}
             value={ai?.cc?.inboxOverdue ?? 0}
             unit="ta"
             tone={(ai?.cc?.inboxOverdue ?? 0) > 0 ? 'red' : 'green'}
@@ -113,7 +113,7 @@ export default function DirectorDashboard() {
           <MetricCard
             label={t("bugungiDavomatsiz")}
             value={hr?.absentToday ?? 0}
-            unit="xodim"
+            unit={t("unitXodim")}
             tone={(hr?.absentToday ?? 0) > 5 ? 'red' : 'slate'}
             icon={<Activity className="h-4 w-4" />}
           />
@@ -181,7 +181,7 @@ export default function DirectorDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <SalesSummaryCard dirSum={dirSum} dirSumLoad={dirSumLoad} />
-        <QuickActionsCard onAction={(label) => toast({ title: label, description: "Funksiya tez kunda qo'shiladi" })} />
+        <QuickActionsCard onAction={(label) => toast({ title: label, description: t("funksiyaTezKundaQoshiladi") })} />
       </div>
 
       <CompanyStateWidget />
@@ -210,7 +210,7 @@ export default function DirectorDashboard() {
       <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
         <Clock className="w-3.5 h-3.5" />
         <span>
-          So'nggi yangilanish: {dirSum?.generatedAt
+          {t("songgiYangilanish")}: {dirSum?.generatedAt
             ? new Date(dirSum.generatedAt).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
             : "—"}
         </span>

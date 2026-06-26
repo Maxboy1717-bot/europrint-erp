@@ -31,7 +31,7 @@ export function MovementTypeSelector({ selectedType, onSelect }: MovementTypeSel
               background: selectedType === t.code
                 ? `linear-gradient(135deg, ${t.color}, ${t.color}cc)`
                 : "rgba(163,177,198,0.10)",
-              color: selectedType === t.code ? "#fff" : "var(--pos-text-muted)",
+              color: selectedType === t.code ? "var(--pos-card)" : "var(--pos-text-muted)",
               boxShadow: selectedType === t.code ? `0 2px 8px ${t.color}40` : "none",
             }}
           >
@@ -70,7 +70,7 @@ export function ScanZone({ fromWarehouseId, scanFlash, scanning, onCameraOpen }:
     <div className="pos-card" style={{ padding: 0, overflow: "hidden", border: borderColor, transition: "border-color 0.15s", boxShadow }}>
       {/* Scanner visual */}
       <div style={{
-        background: fromWarehouseId ? "linear-gradient(180deg, #0F172A 0%, #1E293B 100%)" : "#1E293B",
+        background: fromWarehouseId ? "linear-gradient(180deg, color-mix(in srgb, var(--pos-text) 70%, black) 0%, var(--pos-text) 100%)" : "var(--pos-text)",
         minHeight: 220, position: "relative",
         display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12,
       }}>
@@ -181,7 +181,7 @@ export function ContextFields({
                   <img src={URL.createObjectURL(f)} alt="" style={{ width: 72, height: 72, objectFit: "cover", display: "block" }} />
                   <button
                     onClick={() => onDamagePhotosChange(damagePhotos.filter((_, idx) => idx !== i))}
-                    style={{ position: "absolute", top: 2, right: 2, background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", borderRadius: 4, width: 18, height: 18, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    style={{ position: "absolute", top: 2, right: 2, background: "color-mix(in srgb, black 60%, transparent)", color: "var(--pos-card)", border: "none", borderRadius: 4, width: 18, height: 18, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                   >✕</button>
                 </div>
               ))}

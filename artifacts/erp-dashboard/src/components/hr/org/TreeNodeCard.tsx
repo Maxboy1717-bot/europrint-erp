@@ -114,7 +114,7 @@ export function TreeNodeCard({
               {isVacant ? (
                 <div
                   className="rounded-full flex items-center justify-center shrink-0"
-                  style={{ width: 20, height: 20, background: "#ef444460", border: "1px solid rgba(255,255,255,0.35)" }}
+                  style={{ width: 20, height: 20, background: "color-mix(in srgb, var(--ep-red) 38%, transparent)", border: "1px solid color-mix(in srgb, white 35%, transparent)" }}
                 >
                   <UserX className="h-2.5 w-2.5" />
                 </div>

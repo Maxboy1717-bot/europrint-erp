@@ -21,6 +21,7 @@
   "status.muted": "Ovozsiz rejim",
   "status.error": "Xatolik yuz berdi",
   "status.offline": "Internet ulanmagan",
+  "immersiveHint": "Gapiring yoki pastdagi oynaga yozing — \"Aisha\" deb chaqiring",
   "panel.history": "Buyruqlar tarixi",
   "panel.noHistory": "Hozircha buyruq yo'q",
   "panel.expand": "Yoyish",

@@ -123,7 +123,7 @@ export function SortableTaskCard({
         data-testid={`card-${card.id}`}
         onClick={onClick}
         style={{
-          background:    "#FFFFFF",
+          background:    "var(--ep-surface)",
           borderRadius:  10,
           border:        isOverdue
             ? "1px solid rgba(239,68,68,0.40)"
@@ -176,11 +176,11 @@ export function SortableTaskCard({
             </span>
             <div className="flex items-center gap-1.5">
               {hasActiveTimer && (
-                <span title={t("vaqtKuzatilmoqda")} style={{ color: "#10B981", display: "flex", alignItems: "center" }}>
+                <span title={t("vaqtKuzatilmoqda")} style={{ color: "var(--ep-green)", display: "flex", alignItems: "center" }}>
                   <Clock style={{ width: 10, height: 10 }} />
                 </span>
               )}
-              <span style={{ fontSize: 9.5, color: "#94A3B8", fontFamily: "monospace", letterSpacing: "0.03em" }}>
+              <span style={{ fontSize: 9.5, color: "var(--ep-muted)", fontFamily: "monospace", letterSpacing: "0.03em" }}>
                 #{String(card.id ?? "").slice(-6)}
               </span>
             </div>
@@ -189,7 +189,7 @@ export function SortableTaskCard({
           {/* Title */}
           <p
             className="font-semibold leading-snug line-clamp-2"
-            style={{ fontSize: 13, color: "#1E293B", marginBottom: 8 }}
+            style={{ fontSize: 13, color: "var(--ep-text)", marginBottom: 8 }}
           >
             {card.title}
           </p>
@@ -217,11 +217,11 @@ export function SortableTaskCard({
           {hasChecklist && (
             <div style={{ marginBottom: 8 }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 3 }}>
-                <span style={{ fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 3 }}>
+                <span style={{ fontSize: 10, color: "var(--ep-muted)", display: "flex", alignItems: "center", gap: 3 }}>
                   <CheckSquare style={{ width: 10, height: 10 }} />
                   {subtasksCompleted}/{subtasksCount}
                 </span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: checkPct === 100 ? "#10B981" : "#94A3B8" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: checkPct === 100 ? "var(--ep-green)" : "var(--ep-muted)" }}>
                   {checkPct}%
                 </span>
               </div>
@@ -229,7 +229,7 @@ export function SortableTaskCard({
                 <div style={{
                   height:     "100%",
                   width:      `${checkPct}%`,
-                  background: checkPct === 100 ? "#10B981" : p.accent,
+                  background: checkPct === 100 ? "var(--ep-green)" : p.accent,
                   borderRadius: 3,
                   transition: "width 0.4s ease-out",
                 }} />
@@ -256,7 +256,7 @@ export function SortableTaskCard({
 
               {commentsCount > 0 && (
                 <span style={{
-                  fontSize: 10, color: "#94A3B8",
+                  fontSize: 10, color: "var(--ep-muted)",
                   display: "flex", alignItems: "center", gap: 2,
                 }}>
                   <MessageSquare style={{ width: 10, height: 10 }} />
@@ -265,7 +265,7 @@ export function SortableTaskCard({
               )}
               {filesCount > 0 && (
                 <span style={{
-                  fontSize: 10, color: "#94A3B8",
+                  fontSize: 10, color: "var(--ep-muted)",
                   display: "flex", alignItems: "center", gap: 2,
                 }}>
                   <Paperclip style={{ width: 10, height: 10 }} />
@@ -291,7 +291,7 @@ export function SortableTaskCard({
                 </div>
                 <span style={{
                   fontSize: 10.5, fontWeight: 500,
-                  color: "#64748B",
+                  color: "var(--ep-muted)",
                   maxWidth: 72,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
@@ -301,7 +301,7 @@ export function SortableTaskCard({
             ) : (
               <div
                 className="flex items-center gap-1 shrink-0"
-                style={{ color: "#CBD5E1", fontSize: 10 }}
+                style={{ color: "var(--ep-muted)", fontSize: 10 }}
                 title={t("tayinlanmagan")}
               >
                 <User style={{ width: 12, height: 12 }} />
@@ -322,7 +322,7 @@ export function CardOverlay({ card }: { card: CardWithOwner }) {
   const p = PRIORITY[(card.priority ?? "normal")] ?? PRIORITY.normal;
   return (
     <div style={{
-      background:   "#FFFFFF",
+      background:   "var(--ep-surface)",
       borderRadius: 10,
       border:       "1px solid rgba(148,163,184,0.60)",
       boxShadow:    "0 12px 32px rgba(0,0,0,0.18)",
@@ -341,11 +341,11 @@ export function CardOverlay({ card }: { card: CardWithOwner }) {
           }}>
             {p.label}
           </span>
-          <span style={{ fontSize: 9.5, color: "#94A3B8", fontFamily: "monospace" }}>
+          <span style={{ fontSize: 9.5, color: "var(--ep-muted)", fontFamily: "monospace" }}>
             #{String(card.id ?? "").slice(-6)}
           </span>
         </div>
-        <p className="font-semibold line-clamp-2" style={{ fontSize: 13, color: "#1E293B", marginBottom: 6 }}>
+        <p className="font-semibold line-clamp-2" style={{ fontSize: 13, color: "var(--ep-text)", marginBottom: 6 }}>
           {card.title}
         </p>
         {card.owner && (
@@ -354,11 +354,11 @@ export function CardOverlay({ card }: { card: CardWithOwner }) {
               width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
               background: avatarGrad(card.owner.fullName),
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 8, fontWeight: 700, color: "#fff",
+              fontSize: 8, fontWeight: 700, color: "white",
             }}>
               {initials(card.owner.fullName)}
             </div>
-            <span style={{ fontSize: 10.5, color: "#64748B" }}>
+            <span style={{ fontSize: 10.5, color: "var(--ep-muted)" }}>
               {card.owner.fullName.split(" ")[0]}
             </span>
           </div>

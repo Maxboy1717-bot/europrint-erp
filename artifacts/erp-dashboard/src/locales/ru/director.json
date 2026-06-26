@@ -121,6 +121,14 @@
   "ogohlantirishlar": "Уведомления",
   "oylikBuyurtmalar": "Ежемесячные заказы",
   "refresh": "Обновить",
+  "kpiSavdoHajmi": "Объём продаж",
+  "kpiBuyurtmaBajarish": "Выполнение заказов",
+  "kpiOeeOrtacha": "Среднее OEE",
+  "kpiKechikkan": "Опоздавшие заказы",
+  "kpiDavomad": "Посещаемость",
+  "kpiIotSignallar": "IoT сигналы",
+  "malumotYoq": "Нет данных",
+  "kritikBadge": "критический",
   "titlePrefix": "Direktor",
   "titleSuffix": "paneli"
 }

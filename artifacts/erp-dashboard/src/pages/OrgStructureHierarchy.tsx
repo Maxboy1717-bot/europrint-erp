@@ -251,7 +251,7 @@ export default function OrgStructureHierarchy() {
       <div
         ref={containerRef}
         className="flex-1 overflow-hidden bg-muted/10 cursor-grab active:cursor-grabbing"
-        style={{ backgroundImage: "radial-gradient(circle, #33333315 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+        style={{ backgroundImage: "radial-gradient(circle, color-mix(in srgb, var(--ep-text) 8%, transparent) 1px, transparent 1px)", backgroundSize: "24px 24px" }}
         onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
       >
         {isLoading && <div className="flex items-center justify-center h-full"><div className="text-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3" /><p className="text-sm text-muted-foreground">{t("Yuklanmoqda...")}</p></div></div>}

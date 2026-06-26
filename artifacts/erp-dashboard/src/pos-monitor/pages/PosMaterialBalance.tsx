@@ -81,27 +81,27 @@ export default function PosMaterialBalance() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", padding: "20px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>{t('materialBalans')}</div>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>{t('materialBalans')}</div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{t("aggregatBalans")}</h1>
-          <p style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>
+          <p style={{ fontSize: 13, color: "var(--pos-text-muted)", marginTop: 4 }}>
             Material qiymati bo'yicha guruhlangan — ABC tahlil (A: 80%, B: 15%, C: 5%)
           </p>
         </div>
-        <button onClick={load} style={{ padding: "8px 16px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
+        <button onClick={load} style={{ padding: "8px 16px", background: "var(--pos-bg)", border: "1px solid var(--pos-border)", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>
           🔄
         </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 16 }}>
-        <Kpi label={t('jamiMaterial1')} value={String(enriched.length)} color="#1F2937" />
-        <Kpi label={tLabel('common.PosMaterialBalance.jamiQiymat', "JAMI QIYMAT")} value={fmtMoney(totalValue) + " UZS"} color="#10B981" />
-        <Kpi label={tLabel('common.PosMaterialBalance.jamiMiqdor', "JAMI MIQDOR")} value={fmt(totalQty, 0)} color="#3B82F6" />
-        <Kpi label="A-GURUH (80%)" value={String(abcItems.filter(i => i.abc === "A").length)} color="#EF4444" />
-        <Kpi label="B-GURUH (15%)" value={String(abcItems.filter(i => i.abc === "B").length)} color="#F59E0B" />
-        <Kpi label="C-GURUH (5%)" value={String(abcItems.filter(i => i.abc === "C").length)} color="#10B981" />
+        <Kpi label={t('jamiMaterial1')} value={String(enriched.length)} color="var(--pos-text)" />
+        <Kpi label={tLabel('common.PosMaterialBalance.jamiQiymat', "JAMI QIYMAT")} value={fmtMoney(totalValue) + " UZS"} color="var(--pos-success)" />
+        <Kpi label={tLabel('common.PosMaterialBalance.jamiMiqdor', "JAMI MIQDOR")} value={fmt(totalQty, 0)} color="var(--pos-accent)" />
+        <Kpi label="A-GURUH (80%)" value={String(abcItems.filter(i => i.abc === "A").length)} color="var(--pos-danger)" />
+        <Kpi label="B-GURUH (15%)" value={String(abcItems.filter(i => i.abc === "B").length)} color="var(--pos-warning)" />
+        <Kpi label="C-GURUH (5%)" value={String(abcItems.filter(i => i.abc === "C").length)} color="var(--pos-success)" />
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
@@ -109,24 +109,24 @@ export default function PosMaterialBalance() {
           placeholder={t('materialQidirish')}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 250, padding: "8px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13 }}
+          style={{ flex: 1, minWidth: 250, padding: "8px 12px", border: "1px solid var(--pos-border)", borderRadius: 8, fontSize: 13 }}
         />
         <select
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value)}
-          style={{ padding: "8px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13 }}
+          style={{ padding: "8px 12px", border: "1px solid var(--pos-border)", borderRadius: 8, fontSize: 13 }}
         >
           <option value="all">{t("barchaKategoriyalar")}</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
-      <div style={{ background: "#FFF", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+      <div style={{ background: "var(--pos-card)", borderRadius: 12, border: "1px solid var(--pos-border)", overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>{t("yuklanmoqda")}</div>
+          <div style={{ padding: 40, textAlign: "center", color: "var(--pos-text-muted)" }}>{t("yuklanmoqda")}</div>
         ) : (
           <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
-            <thead style={{ background: "#F9FAFB" }}>
+            <thead style={{ background: "var(--pos-bg)" }}>
               <tr>
                 <th style={th}>ABC</th>
                 <th style={th}>{t('Material')}</th>
@@ -141,27 +141,27 @@ export default function PosMaterialBalance() {
             </thead>
             <tbody>
               {abcItems.slice(0, 200).map(m => (
-                <tr key={m.id} style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
+                <tr key={m.id} style={{ borderTop: "1px solid var(--pos-bg)", cursor: "pointer" }}
                     onClick={() => navigate(`/pos-monitor/materials/360/${m.id}`)}>
                   <td style={td}>
                     <span style={{
                       padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 800,
                       background: m.abc === "A" ? "#FEE2E2" : m.abc === "B" ? "#FEF3C7" : "#D1FAE5",
-                      color: m.abc === "A" ? "#991B1B" : m.abc === "B" ? "#92400E" : "#065F46",
+                      color: m.abc === "A" ? "var(--pos-danger)" : m.abc === "B" ? "#92400E" : "var(--pos-success)",
                     }}>
                       {m.abc}
                     </span>
                   </td>
                   <td style={td}>{m.name ?? `#${m.id}`}</td>
-                  <td style={{ ...td, fontFamily: "monospace", fontSize: 11, color: "#9CA3AF" }}>{m.code ?? "—"}</td>
+                  <td style={{ ...td, fontFamily: "monospace", fontSize: 11, color: "var(--pos-text-muted)" }}>{m.code ?? "—"}</td>
                   <td style={td}>{m.category ?? "—"}</td>
                   <td style={{ ...td, textAlign: "right", fontFamily: "monospace" }}>{fmt(m.qty)}</td>
                   <td style={td}>{m.unit ?? "—"}</td>
                   <td style={{ ...td, textAlign: "right", fontFamily: "monospace" }}>{fmtMoney(m.price)}</td>
-                  <td style={{ ...td, textAlign: "right", fontFamily: "monospace", fontWeight: 700, color: "#059669" }}>
+                  <td style={{ ...td, textAlign: "right", fontFamily: "monospace", fontWeight: 700, color: "var(--pos-success)" }}>
                     {fmtMoney(m.value)}
                   </td>
-                  <td style={{ ...td, textAlign: "right", fontFamily: "monospace", fontSize: 11, color: "#6B7280" }}>
+                  <td style={{ ...td, textAlign: "right", fontFamily: "monospace", fontSize: 11, color: "var(--pos-text-muted)" }}>
                     {m.cumulativePct.toFixed(1)}%
                   </td>
                 </tr>
@@ -176,12 +176,12 @@ export default function PosMaterialBalance() {
 
 function Kpi({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div style={{ background: "#FFF", borderRadius: 12, padding: 14, border: "1px solid #E5E7EB" }}>
-      <div style={{ fontSize: 11, color: "#9CA3AF" }}>{label}</div>
+    <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 14, border: "1px solid var(--pos-border)" }}>
+      <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 800, color, marginTop: 4 }}>{value}</div>
     </div>
   );
 }
 
-const th: React.CSSProperties = { padding: "10px 14px", textAlign: "left", fontSize: 11, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" };
+const th: React.CSSProperties = { padding: "10px 14px", textAlign: "left", fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, textTransform: "uppercase" };
 const td: React.CSSProperties = { padding: "10px 14px", fontSize: 13 };

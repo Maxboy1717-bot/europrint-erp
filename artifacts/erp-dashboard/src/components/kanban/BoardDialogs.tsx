@@ -264,7 +264,7 @@ export function BoardDialogs({
             </div>
 
             {columns.length === 0 && (
-              <p style={{ fontSize: 12, color: "#EF4444", margin: 0 }}>
+              <p style={{ fontSize: 12, color: "var(--ep-red)", margin: 0 }}>
                 {t("avvalUstunQoshishOrqaliKamida")}
               </p>
             )}
