@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Wrench, Zap, Droplet, Flame, Calendar, Package } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface UtilityRes { electricity: number; gas: number; water: number; deltaPct: number }
 interface MaintenanceItem { machineId: string; nextMaintenanceAt: string; daysLeft: number }
@@ -31,13 +31,10 @@ export default function FacilitiesDashboard() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <header className="flex items-center gap-3">
-        <Wrench className="h-7 w-7 text-[var(--ep-green)]" />
-        <div>
-          <h1 className="text-2xl font-bold">{t("xojalikAi")}</h1>
-          <p className="text-sm text-muted-foreground">{t("kommunalTexnikXizmatOfisMateriallar")}</p>
-        </div>
-      </header>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><Wrench className="h-7 w-7 text-[var(--ep-green)]" />{t("xojalikAi")}</span>}
+        subtitle={t("kommunalTexnikXizmatOfisMateriallar")}
+      />
 
       {/* Kommunal */}
       <div>

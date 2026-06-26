@@ -8,7 +8,7 @@ import { Factory, AlertTriangle, Activity, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface MonitorRes { delayed: number; atRisk: number }
 interface OeeRes { availability: number; performance: number; quality: number; oee: number }
@@ -34,18 +34,15 @@ export default function ProductionDashboard() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Factory className="h-7 w-7 text-[var(--ep-yellow)]" />
-          <div>
-            <h1 className="text-2xl font-bold">{t("ishlabChiqarishAi")}</h1>
-            <p className="text-sm text-muted-foreground">{t("buyurtmalarRealTimeOeeBottleneck")}</p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => { monitor.refetch(); oee.refetch(); bottleneck.refetch(); }}>
-          <RefreshCw className="h-4 w-4 mr-1.5" /> {t("refresh")}
-        </Button>
-      </header>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><Factory className="h-7 w-7 text-[var(--ep-yellow)]" />{t("ishlabChiqarishAi")}</span>}
+        subtitle={t("buyurtmalarRealTimeOeeBottleneck")}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => { monitor.refetch(); oee.refetch(); bottleneck.refetch(); }}>
+            <RefreshCw className="h-4 w-4 mr-1.5" /> {t("refresh")}
+          </Button>
+        }
+      />
 
       {/* Asosiy KPI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -41,27 +41,27 @@ export function GlobalInboxBadge() {
         justifyContent: "center",
         width: 36, height: 36,
         borderRadius: 10,
-        background: overdue ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)",
-        border:    `1px solid ${overdue ? "rgba(239,68,68,0.30)" : "rgba(255,255,255,0.10)"}`,
+        background: overdue ? "var(--ep-red-soft)" : "var(--ep-surface)",
+        border:    `1px solid ${overdue ? "var(--ep-red)" : "var(--ep-border)"}`,
         cursor: "pointer",
         transition: "background 0.15s",
       }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = overdue ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.10)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = overdue ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)"; }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = overdue ? "var(--ep-red-soft)" : "var(--ep-border)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = overdue ? "var(--ep-red-soft)" : "var(--ep-surface)"; }}
     >
-      <Inbox style={{ width: 16, height: 16, color: overdue ? "#FCA5A5" : "rgba(226,232,240,0.85)" }} />
+      <Inbox style={{ width: 16, height: 16, color: overdue ? "var(--ep-red)" : "var(--ep-muted)" }} />
       {s.inbox > 0 && (
         <span
           style={{
             position: "absolute", top: -3, right: -3,
             minWidth: 18, height: 18,
-            background: overdue ? "#EF4444" : "#3B82F6",
-            color: "#fff",
+            background: overdue ? "var(--ep-red)" : "var(--ep-blue)",
+            color: "hsl(var(--primary-foreground))",
             borderRadius: 10,
             fontSize: 10, fontWeight: 700,
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             padding: "0 5px",
-            border: "2px solid #0D1117",
+            border: "2px solid var(--ep-surface)",
           }}
         >
           {s.inbox > 99 ? '99+' : s.inbox}
@@ -71,7 +71,7 @@ export function GlobalInboxBadge() {
         <AlertTriangle
           style={{
             position: "absolute", bottom: -3, right: -3,
-            width: 12, height: 12, color: "#FCA5A5",
+            width: 12, height: 12, color: "var(--ep-red)",
           }}
         />
       )}

@@ -7,7 +7,7 @@ import { ShoppingCart, AlertTriangle, Award } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 import { useTranslation } from '@/lib/i18n';
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPPageHeader } from "@/components/ep";
 interface SupplierScore { supplierId: number; score: number; tier: 'A' | 'B' | 'C' }
 interface DeliveryRisk { orderId: string; risk: 'high' | 'medium' | 'low' }
 
@@ -28,13 +28,10 @@ export default function ProcurementDashboard() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <header className="flex items-center gap-3">
-        <ShoppingCart className="h-7 w-7 text-[var(--ep-cyan)]" />
-        <div>
-          <h1 className="text-2xl font-bold">{t("taminotAi")}</h1>
-          <p className="text-sm text-muted-foreground">{t("yetkazibBeruvchilarReytingiYetkazibBerish")}</p>
-        </div>
-      </header>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><ShoppingCart className="h-7 w-7 text-[var(--ep-cyan)]" />{t("taminotAi")}</span>}
+        subtitle={t("yetkazibBeruvchilarReytingiYetkazibBerish")}
+      />
 
       {/* Supplier scoring */}
       <Card className="p-5">

@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, RefreshCw, AlertTriangle, Brain, Send } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { EPPageHeader } from "@/components/ep";
 
 import { useTranslation } from '@/lib/i18n';
 interface ModuleHealth {
@@ -85,23 +86,20 @@ export default function AgentsHub() {
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Sarlavha */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Sparkles className="h-7 w-7 text-[var(--ep-blue)]" />
-          <div>
-            <h1 className="text-2xl font-bold">{t("aiAgentlar")}</h1>
-            <p className="text-sm text-muted-foreground">{t("k14TaAvtonomAiAgent")}</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { briefingQ.refetch(); healthQ.refetch(); }}>
-            <RefreshCw className="h-4 w-4 mr-1.5" /> {t("refresh")}
-          </Button>
-          <Button onClick={() => setAskOpen(true)}>
-            <Brain className="h-4 w-4 mr-1.5" /> AI ga savol
-          </Button>
-        </div>
-      </div>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><Sparkles className="h-7 w-7 text-[var(--ep-blue)]" />{t("aiAgentlar")}</span>}
+        subtitle={t("k14TaAvtonomAiAgent")}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => { briefingQ.refetch(); healthQ.refetch(); }}>
+              <RefreshCw className="h-4 w-4 mr-1.5" /> {t("refresh")}
+            </Button>
+            <Button onClick={() => setAskOpen(true)}>
+              <Brain className="h-4 w-4 mr-1.5" /> AI ga savol
+            </Button>
+          </>
+        }
+      />
 
       {/* Direktor brifing kartasi */}
       <Card className="p-5 border-2 border-blue-200 from-blue-50 to-white">

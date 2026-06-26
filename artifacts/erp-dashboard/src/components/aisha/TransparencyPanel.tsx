@@ -28,9 +28,9 @@ export function TransparencyPanel() {
         position: 'fixed', top: 16, right: 360,
         width: open ? 320 : 36,
         maxHeight: 'calc(100vh - 32px)', overflowY: 'auto',
-        background: 'white', borderRadius: 16,
+        background: 'var(--ep-surface)', borderRadius: 16,
         boxShadow: '0 8px 32px rgba(15, 23, 42, .08)',
-        border: '1px solid rgba(99,102,241,.12)',
+        border: '1px solid var(--ep-border)',
         padding: open ? 16 : 8, zIndex: 49,
         transition: 'width .2s ease',
         fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -38,16 +38,16 @@ export function TransparencyPanel() {
     >
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ background: 'transparent', border: 0, cursor: 'pointer', fontSize: 14, color: '#64748b' }}
+        style={{ background: 'transparent', border: 0, cursor: 'pointer', fontSize: 14, color: 'var(--ep-muted)' }}
       >
         {open ? '▸' : '◂'}
       </button>
       {open && (
         <>
-          <h3 style={{ margin: '8px 0', fontSize: 14, color: '#1e293b', fontWeight: 600 }}>
+          <h3 style={{ margin: '8px 0', fontSize: 14, color: 'var(--ep-text)', fontWeight: 600 }}>
             {t('transparency.title') as string}
           </h3>
-          <div data-testid="aisha-confidence" style={{ marginBottom: 12, fontSize: 12, color: '#64748b' }}>
+          <div data-testid="aisha-confidence" style={{ marginBottom: 12, fontSize: 12, color: 'var(--ep-muted)' }}>
             {t('transparency.confidence') as string}: {Math.round(provenance.confidence * 100)}%
           </div>
           <SectionTitle label={t('transparency.sources') as string} count={sources.length} />
@@ -65,9 +65,9 @@ export function TransparencyPanel() {
               <SectionTitle label={t('transparency.citations') as string} count={citations.length} />
               <ul style={{ marginTop: 4, padding: 0, listStyle: 'none' }}>
                 {citations.map((c, i) => (
-                  <li key={i} style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    {c.url ? <a href={c.url} style={{ color: '#4f46e5' }}>{c.label}</a> : c.label}
-                    {c.snippet && <div style={{ color: '#94a3b8', marginTop: 2 }}>{c.snippet}</div>}
+                  <li key={i} style={{ fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--ep-border)' }}>
+                    {c.url ? <a href={c.url} style={{ color: 'var(--ep-blue)' }}>{c.label}</a> : c.label}
+                    {c.snippet && <div style={{ color: 'var(--ep-subtle)', marginTop: 2 }}>{c.snippet}</div>}
                   </li>
                 ))}
               </ul>
@@ -81,20 +81,20 @@ export function TransparencyPanel() {
 
 function SectionTitle({ label, count }: { label: string; count: number }) {
   return (
-    <div style={{ marginTop: 12, fontSize: 11, fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>
-      {label} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({count})</span>
+    <div style={{ marginTop: 12, fontSize: 11, fontWeight: 600, color: 'var(--ep-text)', textTransform: 'uppercase' }}>
+      {label} <span style={{ color: 'var(--ep-subtle)', fontWeight: 400 }}>({count})</span>
     </div>
   );
 }
 
 function SourceRow({ s, freshnessLabel }: { s: ProvenanceSourceUI; freshnessLabel: string }) {
   return (
-    <li style={{ fontSize: 12, padding: '6px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <li style={{ fontSize: 12, padding: '6px 0', borderBottom: '1px solid var(--ep-border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 500, color: '#1e293b' }}>{s.identifier}</span>
-        <span style={{ color: '#64748b' }}>{s.latencyMs}ms</span>
+        <span style={{ fontWeight: 500, color: 'var(--ep-text)' }}>{s.identifier}</span>
+        <span style={{ color: 'var(--ep-muted)' }}>{s.latencyMs}ms</span>
       </div>
-      <div style={{ color: '#94a3b8' }}>
+      <div style={{ color: 'var(--ep-subtle)' }}>
         {s.type} · {freshnessLabel}{typeof s.rowCount === 'number' ? ` · ${s.rowCount} qator` : ''}
       </div>
     </li>
@@ -105,7 +105,7 @@ function CameraGrid({ snapshots }: { snapshots: CameraSnapshotUI[] }) {
   return (
     <div data-testid="aisha-cameras" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
       {snapshots.map(c => (
-        <a key={c.cameraId} href={`/iot/cameras/${c.cameraId}`} style={{ textDecoration: 'none', color: '#1e293b' }}>
+        <a key={c.cameraId} href={`/iot/cameras/${c.cameraId}`} style={{ textDecoration: 'none', color: 'var(--ep-text)' }}>
           <img src={c.snapshotUrl} alt={c.cameraName} style={{ width: '100%', borderRadius: 8 }} />
           <div style={{ fontSize: 11, marginTop: 4 }}>{c.cameraName}</div>
         </a>

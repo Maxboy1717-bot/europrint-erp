@@ -7,7 +7,7 @@ import { CheckCircle, AlertTriangle, TrendingUp, TrendingDown, Minus } from "luc
 import { apiRequest } from "@/lib/queryClient";
 
 import { useTranslation } from '@/lib/i18n';
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPPageHeader } from "@/components/ep";
 interface TrendRes { pct7d: number; pct30d: number; trend: 'rising' | 'stable' | 'falling' }
 interface QuarantineItem { batchId: string; daysInQuarantine: number }
 
@@ -27,13 +27,10 @@ export default function QualityDashboard() {
 
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <header className="flex items-center gap-3">
-        <CheckCircle className="h-7 w-7 text-[var(--ep-green)]" />
-        <div>
-          <h1 className="text-2xl font-bold">{t("sifatAiVision")}</h1>
-          <p className="text-sm text-muted-foreground">{t("brakTrendKarantinAiDefekt")}</p>
-        </div>
-      </header>
+      <EPPageHeader
+        title={<span className="flex items-center gap-3"><CheckCircle className="h-7 w-7 text-[var(--ep-green)]" />{t("sifatAiVision")}</span>}
+        subtitle={t("brakTrendKarantinAiDefekt")}
+      />
 
       {/* Brak trend */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

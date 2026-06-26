@@ -19,9 +19,11 @@ import {
   ToolsTab,
   LibraryTab,
 } from "./DesignExtendedSections";
-import { EPComingSoon } from "@/components/ep";
+import { EPComingSoon, EPSpinnerBlock } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 export default function DesignExtended() {
+  const { t } = useTranslation("common");
   const [location, setLocation] = useLocation();
   const defaultTab = routeTabMap[location] || "ai";
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -31,13 +33,17 @@ export default function DesignExtended() {
     if (tab) setActiveTab(tab);
   }, [location]);
 
-  const { data: designOrders = [] } = useQuery<DesignOrder[]>({ queryKey: ["/api/design/orders"] });
-  const { data: toolsData = [] } = useQuery<DesignTool[]>({
+  const { data: designOrders = [], isLoading: ordersLoading } = useQuery<DesignOrder[]>({ queryKey: ["/api/design/orders"] });
+  const { data: toolsData = [], isLoading: toolsLoading } = useQuery<DesignTool[]>({
     queryKey: ["/api/integration/mro/equipment"],
   });
-  const { data: templatesData = [] } = useQuery<DesignTemplate[]>({
+  const { data: templatesData = [], isLoading: templatesLoading } = useQuery<DesignTemplate[]>({
     queryKey: ["/api/design/templates"],
   });
+
+  // F1: useQuery loading holati — ma'lumotlar yuklanayotganda spinner ko'rsatamiz
+  // (aks holda bo'sh holat noto'g'ri "ma'lumot yo'q" deb chiqadi).
+  const isLoading = ordersLoading || toolsLoading || templatesLoading;
 
   const pendingReview = (Array.isArray(designOrders) ? designOrders : []).filter(
     (o) => ["submitted", "in_review"].includes(o.status ?? ""),
@@ -55,6 +61,9 @@ export default function DesignExtended() {
         icon={meta.icon}
       />
 
+      {isLoading ? (
+        <EPSpinnerBlock caption={t("yuklanmoqda")} />
+      ) : (
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsContent value="ai" className="space-y-4 mt-0">
           <AiReviewTab
@@ -91,6 +100,7 @@ export default function DesignExtended() {
           <LibraryTab />
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 }
