@@ -72,7 +72,19 @@ export class OrgMutationsRepo {
     if (dto.tskpTarget !== undefined)        sets.push(sql`tskp_target = ${(dto.tskpTarget as number) ?? null}`);
     if (dto.tskpMeasurementUnit !== undefined) sets.push(sql`tskp_measurement_unit = ${(dto.tskpMeasurementUnit as string) ?? null}`);
     if (dto.workSchedule !== undefined)      sets.push(sql`work_schedule = ${(dto.workSchedule as string) ?? null}`);
+    // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga (1-7); DB CHECK chk_otdeleniye_no_range 1-7|NULL'ni majburlaydi.
+    if (dto.otdeleniyeNo !== undefined)      sets.push(sql`otdeleniye_no = ${(dto.otdeleniyeNo as number) ?? null}`);
     if (dto.currentState !== undefined)      sets.push(sql`current_state = ${(dto.currentState as string) ?? null}`);
+    // VISION 5-holat lifecycle (A32): muzlatish meta + frozen_at/archived_at avto-boshqaruv.
+    if (dto.freezeReason !== undefined)      sets.push(sql`freeze_reason = ${(dto.freezeReason as string) ?? null}`);
+    if (dto.freezeUntil !== undefined)       sets.push(sql`freeze_until = ${(dto.freezeUntil as string) ?? null}`);
+    if (dto.currentState !== undefined) {
+      const state = (dto.currentState as string) ?? null;
+      // frozen → frozen_at=now (agar hali yo'q bo'lsa); boshqa holatga o'tsa frozen_at tozalanadi.
+      sets.push(sql`frozen_at = ${state === 'frozen' ? sql`COALESCE(frozen_at, now())` : sql`NULL`}`);
+      // archived → archived_at=now (agar hali yo'q bo'lsa); boshqa holatga o'tsa tozalanadi.
+      sets.push(sql`archived_at = ${state === 'archived' ? sql`COALESCE(archived_at, now())` : sql`NULL`}`);
+    }
     if (dto.bonusConfig !== undefined)       sets.push(sql`bonus_config = ${(dto.bonusConfig as string) ?? null}`);
     if (dto.aiExamEnabled !== undefined)     sets.push(sql`ai_exam_enabled = ${(dto.aiExamEnabled as boolean) ?? null}`);
     if (dto.statisticsType !== undefined)    sets.push(sql`statistics_type = ${(dto.statisticsType as string) ?? null}`);
@@ -159,13 +171,18 @@ export class OrgMutationsRepo {
     if (!node) return { assigned: false, reason: 'Karta topilmadi' };
 
     // KARTA-tomon 1-seat guard (position) — SAQLANADI (EP-ORG-002). is_active yangi ustun (Drizzle
-    // schema'da yo'q) → raw SQL.
+    // schema'da yo'q) → raw SQL. ⭐ A23: bu APP-qatlam; DB-qatlam = trg_one_seat_per_position_card
+    // triggeri (migrations-drift, 23505). Faqat node_type='position' kartaga 1 aktiv egasi; guruh-kartalar
+    // (owner/ceo/director/section/department) ko'p egasi TUTADI — shuning uchun bu shart faqat 'position'da.
+    // Ikkala qatlam bir xil invariant (defence-in-depth): boshqa user aktiv egasi bo'lsa → RAD.
     if (node.node_type === 'position') {
       const occupants = (await runQuery<{ user_id: number }>(sql`
         SELECT user_id FROM employee_org_departments
         WHERE org_department_id = ${nodeId} AND is_active = true AND user_id <> ${userId}
       `)).rows;
-      if (occupants.length > 0) return { assigned: false, reason: "Karta band — 1 o'rin = 1 xodim" };
+      if (occupants.length > 0) {
+        return { assigned: false, reason: "EP_ORG_002: Karta band — 1 o'rin = 1 xodim" };
+      }
     }
 
     // XODIM-tomon ulush-cap guard (EP-ORG-066/142). Jami >1.0 → owner-override (allowOverload) talab.
@@ -182,23 +199,29 @@ export class OrgMutationsRepo {
     }
 
     // KO'P-KARTA: eski link SAQLANADI. Shu karta-shu xodim aktiv link bo'lsa → ulushni yangila (idempotent).
-    const dup = (await runQuery<{ id: number }>(sql`
-      SELECT id FROM employee_org_departments
+    const dup = (await runQuery<{ id: number; stake_fraction: string | null }>(sql`
+      SELECT id, stake_fraction FROM employee_org_departments
       WHERE user_id = ${userId} AND org_department_id = ${nodeId} AND is_active = true LIMIT 1
     `)).rows;
 
     if (dup[0]) {
+      const oldStake = dup[0].stake_fraction == null ? null : Number(dup[0].stake_fraction);
       await runQuery(sql`UPDATE employee_org_departments SET stake_fraction = ${stakeFraction} WHERE id = ${dup[0].id}`);
+      // A39: ULUSH TARIXI — faqat ulush HAQIQATAN o'zgargan bo'lsa append (idempotent qayta-assign log bermaydi).
+      await this.recordStakeChange(dup[0].id, userId, nodeId, oldStake, stakeFraction, 'reassign', allowOverload);
     } else {
       const hasPrimary = (await runQuery<{ cnt: number }>(sql`
         SELECT COUNT(*)::int AS cnt FROM employee_org_departments
         WHERE user_id = ${userId} AND is_active = true AND is_primary = true
       `)).rows;
       const isPrimary = Number(hasPrimary[0]?.cnt ?? 0) === 0;
-      await runQuery(sql`
+      const [ins] = (await runQuery<{ id: number }>(sql`
         INSERT INTO employee_org_departments (user_id, org_department_id, is_primary, is_active, stake_fraction, assigned_at, created_at)
         VALUES (${userId}, ${nodeId}, ${isPrimary}, true, ${stakeFraction}, NOW(), NOW())
-      `);
+        RETURNING id
+      `)).rows;
+      // A39: ULUSH TARIXI — yangi bog'lanish (old=NULL → new=stakeFraction). eod_id INSERT id'dan.
+      await this.recordStakeChange(ins?.id ?? null, userId, nodeId, null, stakeFraction, 'assign', allowOverload);
     }
 
     // department mirror (users.department_id) faqat birlamchi (back-compat).
@@ -210,11 +233,54 @@ export class OrgMutationsRepo {
 
   /** Xodimni kartadan olib tashlash (bog'lanishni uzish). */
   async removeUser(userId: number, nodeId: number): Promise<{ removed: boolean }> {
+    // A39: olib tashlashdan OLDIN eski ulushni o'qib, tarixga 'remove' (old→NULL) yoz.
+    const prior = (await runQuery<{ id: number; stake_fraction: string | null }>(sql`
+      SELECT id, stake_fraction FROM employee_org_departments
+      WHERE user_id = ${userId} AND org_department_id = ${nodeId} AND is_active = true LIMIT 1
+    `)).rows;
     await db
       .delete(employeeOrgDepartments)
       .where(and(eq(employeeOrgDepartments.user_id, userId), eq(employeeOrgDepartments.org_department_id, nodeId)));
     await runQuery(sql`UPDATE users SET department_id = NULL WHERE id = ${userId} AND department_id = ${nodeId}`);
+    if (prior[0]) {
+      const oldStake = prior[0].stake_fraction == null ? null : Number(prior[0].stake_fraction);
+      await this.recordStakeChange(prior[0].id, userId, nodeId, oldStake, null, 'remove', false);
+    }
     return { removed: true };
+  }
+
+  /**
+   * A39 — ULUSH (stake) TARIX MEXANIZMI. Xodim↔karta bog'lanishida `stake_fraction` o'zgarganda
+   * `stake_history` jadvaliga 1 IMMUTABLE (append-only) qator yozadi (razryad_history bilan bir naqsh).
+   *
+   * Faqat HAQIQIY o'zgarishda yoziladi: eski === yangi bo'lsa (idempotent qayta-assign) — yozuv YO'Q.
+   * old/new NULL (taqsimlanmagan ulush) farqlanadi: NULL↔qiymat = o'zgarish; NULL↔NULL = o'zgarish emas.
+   *
+   * NON-FATAL: tarix yozuvi assign/remove asosiy oqimini BUZMAYDI — agar stake_history hali migratsiya
+   * qilinmagan bo'lsa (drift bootda yaratadi), xato yutiladi va biriktirish davom etadi (Q-46: ishlovchi
+   * funksiyani buzma). Parametrlangan SQL — injection yo'q. changed_by hozir NULL (egasi-DATA: aktor
+   * userId controller/JWT'dan keladi; mexanizm tayyor, sim ulanganda to'ldiriladi — Q-40 fabrikatsiya yo'q).
+   */
+  private async recordStakeChange(
+    eodId: number | null,
+    userId: number,
+    cardId: number,
+    oldStake: number | null,
+    newStake: number | null,
+    changeType: 'assign' | 'reassign' | 'remove',
+    allowOverload: boolean,
+  ): Promise<void> {
+    // HAQIQIY o'zgarish tekshiruvi (NULL-xavfsiz): bir xil bo'lsa append qilma.
+    if (oldStake === newStake) return;
+    if (oldStake != null && newStake != null && Math.abs(oldStake - newStake) < 1e-9) return;
+    try {
+      await runQuery(sql`
+        INSERT INTO stake_history (eod_id, user_id, card_id, old_stake, new_stake, change_type, changed_by, allow_overload, effective_at, created_at)
+        VALUES (${eodId}, ${userId}, ${cardId}, ${oldStake}, ${newStake}, ${changeType}, ${null}, ${allowOverload}, NOW(), NOW())
+      `);
+    } catch {
+      // NON-FATAL (Q-46): tarix yozuvi biriktirishni buzmaydi. Drift bootda jadvalni yaratadi.
+    }
   }
 
   /**

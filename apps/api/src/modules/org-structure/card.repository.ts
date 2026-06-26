@@ -186,6 +186,73 @@ export class CardRepository {
     return r.ok ? Ok(Number(r.data[0]?.c ?? 0)) : Err(r.error);
   }
 
+  /**
+   * A24 EP-ORG-066/142 stake-cap input: the SUM of an employee's EXISTING active stake fractions,
+   * read from the canonical stake table `employee_org_departments` (the only table that carries
+   * `stake_fraction`; `employee_cards` has no stake column). The employee→user bridge is
+   * `users.employee_id`. The candidate card (`excludeCardId`) is excluded so a re-assign that only
+   * updates the same card's stake does not double-count. COALESCE NULL→0 (acting/unstaked links
+   * contribute nothing). Returns 0 when the employee has no linked user or no active stakes.
+   *
+   * Vizyon (egasi 2026-06-25, Q5/Q7): oylik = barcha FAOL kartalar ulush yig'indisi; ulushlar
+   * yig'indisi 1.0 dan oshmasligi kerak (owner-override bilan istisno) — bu metod cap-tekshiruvining
+   * DB-tomonini beradi, qaror service qatlamida (allowOverload) qabul qilinadi.
+   */
+  async employeeActiveStakeSum(employeeId: number, excludeCardId: number | null): Promise<Result<number>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(SUM(eod.stake_fraction), 0)::numeric AS total
+      FROM   employee_org_departments eod
+      JOIN   users u ON u.id = eod.user_id
+      WHERE  u.employee_id = ${employeeId}
+        AND  eod.is_active = true
+        AND  (${excludeCardId}::int IS NULL OR eod.org_department_id <> ${excludeCardId})
+    `);
+    return r.ok ? Ok(Number(r.data[0]?.total ?? 0)) : Err(r.error);
+  }
+
+  /**
+   * A24 stake-cap verdict (EP-ORG-066/142). Given an employee, a candidate card and the stake the
+   * caller wants to attach to it, decide whether the new TOTAL active stake stays within 1.0.
+   *   newTotal = (employee's existing active stake, candidate card excluded) + addedStake
+   * Rules:
+   *   - addedStake NULL/≤0 → not a stake-bearing assign; the cap is N/A → allowed (existing<=1.0 holds).
+   *   - newTotal ≤ 1.0          → allowed.
+   *   - newTotal > 1.0 + allowOverload=false → REJECTED with an exact message.
+   *   - newTotal > 1.0 + allowOverload=true  → allowed (owner-override, egasi qarori Q7).
+   * EPSILON 1e-6 absorbs numeric(4,3) rounding so an exact 1.000 sum is never falsely rejected.
+   * Pure-read (no writes) — safe to call before the assign and inside a rollback-tx DB-proof.
+   */
+  async checkStakeCap(
+    employeeId: number,
+    candidateCardId: number,
+    addedStake: number | null,
+    allowOverload = false,
+  ): Promise<Result<{ allowed: boolean; existingTotal: number; newTotal: number; reason: string | null }>> {
+    const added = typeof addedStake === 'number' && Number.isFinite(addedStake) ? addedStake : 0;
+    const sum = await this.employeeActiveStakeSum(employeeId, candidateCardId);
+    if (!sum.ok) return Err(sum.error);
+    const existingTotal = sum.data;
+
+    if (added <= 0) {
+      return Ok({ allowed: true, existingTotal, newTotal: existingTotal, reason: null });
+    }
+
+    const newTotal = existingTotal + added;
+    const EPSILON = 1e-6;
+    if (newTotal > 1.0 + EPSILON && !allowOverload) {
+      return Ok({
+        allowed: false,
+        existingTotal,
+        newTotal,
+        reason:
+          `Ulush yig'indisi ${newTotal.toFixed(3)} > 1.0 (mavjud ${existingTotal.toFixed(3)} + ` +
+          `yangi ${added.toFixed(3)}). Bir xodimning barcha faol kartalar ulushi 1.0 dan oshmasligi ` +
+          `kerak. Owner ruxsati (allowOverload) bilan istisno.`,
+      });
+    }
+    return Ok({ allowed: true, existingTotal, newTotal, reason: null });
+  }
+
   // ─── Phase 5 card-detail tabs (read-only related data) ─────────────────────
 
   /**

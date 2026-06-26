@@ -128,6 +128,13 @@ export class OrgQueriesRepo {
           tskpMeasurementUnit: sql<string | null>`tskp_measurement_unit`,
           workSchedule: sql<string | null>`work_schedule`,
           currentState: sql<string | null>`current_state`,
+          // VISION (A35 — Vysotskiy 7-otdeleniye): bu karta qaysi 7 bo'limdan biriga tegishli (1-7, NULL=belgilanmagan).
+          otdeleniyeNo: sql<number | null>`otdeleniye_no`,
+          // VISION 5-holat lifecycle (A32): muzlatish/arxiv meta (raw — Drizzle schema'da yo'q)
+          freezeReason: sql<string | null>`freeze_reason`,
+          freezeUntil: sql<string | null>`freeze_until`,
+          frozenAt: sql<string | null>`frozen_at`,
+          archivedAt: sql<string | null>`archived_at`,
           bonusConfig: sql<string | null>`bonus_config`,
           aiExamEnabled: sql<boolean | null>`ai_exam_enabled`,
           statisticsType: sql<string | null>`statistics_type`,

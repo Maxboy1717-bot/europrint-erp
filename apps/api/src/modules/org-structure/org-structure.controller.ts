@@ -65,7 +65,12 @@ const OrgNodeSchema = z.object({
   tskpTarget:        z.union([z.number().int(), z.null()]).optional(),
   tskpMeasurementUnit: z.union([z.enum(['SON', 'FOIZ', 'VAQT']), z.null()]).optional(),
   workSchedule:      z.union([z.string().max(2000), z.null()]).optional(),
+  // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga tegishli (1-7). DB CHECK chk_otdeleniye_no_range bilan mos.
+  otdeleniyeNo:      z.union([z.number().int().min(1).max(7), z.null()]).optional(),
   currentState:      z.union([z.string().max(2000), z.null()]).optional(),
+  // VISION 5-holat lifecycle (A32): muzlatish meta. freezeUntil = ISO sana (YYYY-MM-DD) yoki null.
+  freezeReason:      z.union([z.string().max(2000), z.null()]).optional(),
+  freezeUntil:       z.union([z.string().max(40), z.null()]).optional(),
   bonusConfig:       z.union([z.string().max(2000), z.null()]).optional(),
   aiExamEnabled:     z.union([z.boolean(), z.null()]).optional(),
   statisticsType:    z.union([z.string().max(50), z.null()]).optional(),

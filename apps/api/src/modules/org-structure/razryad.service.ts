@@ -6,7 +6,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result, AppErr } from '@common/result';
-import { RazryadRepository, RazryadInput } from './razryad.repository';
+import { RazryadRepository, RazryadInput, RazryadSettingsInput } from './razryad.repository';
 
 type Row = Record<string, unknown>;
 
@@ -33,6 +33,17 @@ export class RazryadService {
     const r = await this.repo.update(id, dto);
     if (!r.ok) return Err(r.error);
     if (!r.data) return Err(AppErr('NOT_FOUND', `Razryad #${id} topilmadi`));
+    return Ok(r.data);
+  }
+
+  /**
+   * EP-ORG-055/056/011 — o'sish-siyosati sozlamasi (exam_pass_threshold/min_months/max_retakes).
+   * Razryad-history (2-imzo o'sish) shu qiymatlarni o'qiydi; NULL bo'lsa o'sish RAD bo'ladi.
+   */
+  async updateSettings(id: number, s: RazryadSettingsInput): Promise<Result<Row>> {
+    const r = await this.repo.updateSettings(id, s);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Razryad #${id} topilmadi yoki arxivlangan`));
     return Ok(r.data);
   }
 

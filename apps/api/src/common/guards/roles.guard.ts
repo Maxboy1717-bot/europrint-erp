@@ -14,7 +14,12 @@ import { PermissionSet } from '../cache/permission-set.interface';
  *
  * Special cases:
  *  - Routes without `@Roles()` are allowed (true) — auth checked elsewhere by JwtAuthGuard
- *  - Roles `admin` and `super_admin` (case-insensitive) bypass the allow-list
+ *  - System-level roles `super_admin`, `admin`, `director` (case-insensitive) bypass
+ *    the allow-list. This is the SAME exempt set used by the rest of the card-RBAC
+ *    chain — `PermissionGuard.isAdminRole` (permission.guard.ts) and
+ *    `LoginService.isCardExemptRole` (login.service.ts). These roles are card-less by
+ *    design (card-gate exempt), so their JWT carries a null `rbacTier`; without the
+ *    role bypass a card-less `director` could not be authorized by the tier path either.
  *  - Comparison is case-insensitive on both sides
  *  - EP-ORG (A5): in addition to `user.role`, the authenticated user's primary-card
  *    `rbacTier` claim (operator/specialist/manager/executive — see rbac-tier.policy.ts,
@@ -59,8 +64,12 @@ export class RolesGuard implements CanActivate {
 
     const userRoleLower = userRole ? userRole.toLowerCase() : null;
 
-    // admin / super_admin bypass — unchanged.
-    if (userRoleLower === 'admin' || userRoleLower === 'super_admin') {
+    // System-level role bypass — same exempt set as PermissionGuard.isAdminRole and
+    // LoginService.isCardExemptRole (super_admin / admin / director). Additive: only ever
+    // GRANTS access. director is card-less by design, so it cannot be authorized via the
+    // rbacTier path below — the role bypass is what authorizes it, consistently with the
+    // other card-RBAC consumers.
+    if (userRoleLower === 'admin' || userRoleLower === 'super_admin' || userRoleLower === 'director') {
       return true;
     }
 

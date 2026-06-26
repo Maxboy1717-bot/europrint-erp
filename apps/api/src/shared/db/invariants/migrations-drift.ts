@@ -3702,6 +3702,45 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   // Backfill (fabrikatsiya emas): YAGONA aktiv linkli xodim -> 1.0 (mantiqiy haqiqat); ko'p-linkli NULL (egasi taqsimlaydi). Guarded (faqat NULL).
   { name: 'PHASE01 eod stake backfill solo=1.0', sql: `UPDATE employee_org_departments eod SET stake_fraction = 1.0 WHERE stake_fraction IS NULL AND is_active = true AND (SELECT COUNT(*) FROM employee_org_departments x WHERE x.user_id = eod.user_id AND x.is_active = true) = 1` },
 
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-2/A23, 2026-06-26): 1-KARTA = 1-SEAT DB darvozasi (EP-ORG-002).
+  // ⭐ NEGA partial-unique-index EMAS, TRIGGER: 1-o'rin invarianti FAQAT node_type='position' kartalarga tegishli —
+  //   guruh-kartalari (owner/ceo/director/section/department/otdeleniye) bir nechta xodim TUTADI (jonli: director=18,
+  //   section=8, ceo/owner=2 aktiv binding; 12 ta guruh-karta 2 ta aktiv+is_primary egasi bilan — bu QONUNIY).
+  //   PARTIAL UNIQUE index org_departments.node_type'ga murojaat qila olmaydi (cross-table) → blanket index
+  //   (org_department_id) WHERE is_active AND is_primary jonli 12 guruh-karta dublikatida YIQILADI + semantik XATO.
+  //   Shuning uchun position-scoped BEFORE-trigger: position kartaga 2-aktiv (boshqa user) egasi → 23505 RAD.
+  //   App-guard (org-mutations.repo.assignUser) bilan IKKI qatlam (defence-in-depth). Idempotent (CREATE OR REPLACE +
+  //   DROP IF EXISTS). Jonli data BUZMAYDI (faqat YANGI 2-egasi RAD; mavjud guruh-kartalar tegilmaydi).
+  //   Rollback-tx proof (A23, 5/5 PASS): position 173 2-egasi RAD(23505) · guruh 19 qo'shimcha egasi OK ·
+  //   shu user re-row OK · inactive 2-egasi OK · bo'sh position 1-egasi OK.
+  { name: 'A23 one-seat-per-position fn', sql: `CREATE OR REPLACE FUNCTION enforce_one_seat_per_position_card() RETURNS trigger AS $fn$
+DECLARE
+  v_node_type text;
+  v_existing  int;
+BEGIN
+  IF NEW.is_active IS DISTINCT FROM true THEN RETURN NEW; END IF;
+  SELECT node_type INTO v_node_type FROM org_departments WHERE id = NEW.org_department_id;
+  IF v_node_type IS DISTINCT FROM 'position' THEN RETURN NEW; END IF;
+  SELECT COUNT(*) INTO v_existing
+  FROM   employee_org_departments
+  WHERE  org_department_id = NEW.org_department_id
+    AND  is_active = true
+    AND  user_id <> NEW.user_id
+    AND  id <> COALESCE(NEW.id, -1);
+  IF v_existing > 0 THEN
+    RAISE EXCEPTION 'EP_ORG_002: 1 karta = 1 orin — position karta % band', NEW.org_department_id
+      USING ERRCODE = '23505';
+  END IF;
+  RETURN NEW;
+END;
+$fn$ LANGUAGE plpgsql` },
+  { name: 'A23 one-seat-per-position trigger', sql: `DO $$ BEGIN
+    DROP TRIGGER IF EXISTS trg_one_seat_per_position_card ON employee_org_departments;
+    CREATE TRIGGER trg_one_seat_per_position_card
+      BEFORE INSERT OR UPDATE OF is_active, user_id, org_department_id ON employee_org_departments
+      FOR EACH ROW EXECUTE FUNCTION enforce_one_seat_per_position_card();
+  END $$` },
+
   // APPROVED (egasi vakolati, MASSIV-100 FAZA-03, 2026-06-25): razryad o'sish/pasayish EXECUTION audit.
   // razryad_history (immutable tarix, EP-ORG-010..013/067/070) + razryad_requests (2-imzo workflow).
   { name: 'razryad_history CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS razryad_history (id SERIAL PRIMARY KEY, card_id INTEGER NOT NULL, employee_id INTEGER, old_razryad_id INTEGER, new_razryad_id INTEGER NOT NULL, change_type TEXT NOT NULL, reason TEXT, exam_score NUMERIC(5,2), certificate_number TEXT, requested_by INTEGER, hr_approved_by INTEGER, manager_approved_by INTEGER, ai_suggested BOOLEAN NOT NULL DEFAULT false, effective_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
@@ -3750,5 +3789,16 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'users.card_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_users_card_id') THEN ALTER TABLE users ADD CONSTRAINT fk_users_card_id FOREIGN KEY (card_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
   // Backfill: birlamchi (is_primary) faol kartadan users.card_id (employee_id orqali). Faqat NULL bo'lganda.
   { name: 'users.card_id backfill from employee_cards', sql: `UPDATE users u SET card_id = (SELECT ec.card_id FROM employee_cards ec WHERE ec.employee_id = u.employee_id AND ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW()) ORDER BY ec.is_primary DESC NULLS LAST, ec.assigned_at DESC NULLS LAST LIMIT 1) WHERE u.card_id IS NULL AND u.employee_id IS NOT NULL` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-2/A39, 2026-06-26): ULUSH (stake) TARIX MEXANIZMI.
+  // ⭐ NEGA alohida immutable jadval (salary_history EMAS): stake_fraction xodim↔karta bog'lanishida
+  //   o'zgaradi (assignUser UPDATE/INSERT), salary_history esa oylik-davr yopilganda yoziladi —
+  //   ular boshqa hayot-davri. razryad_history bilan bir xil naqsh (FAZA-03 EXECUTION audit):
+  //   immutable, append-only, kim-qachon-eskidan-yangiga. NULL stake (taqsimlanmagan) ham yoziladi.
+  // org-mutations.repo.assignUser HAR stake o'zgarishida (eski<>yangi) 1 qator append qiladi.
+  { name: 'stake_history CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS stake_history (id SERIAL PRIMARY KEY, eod_id INTEGER, user_id INTEGER NOT NULL, card_id INTEGER NOT NULL, old_stake NUMERIC(4,3), new_stake NUMERIC(4,3), change_type TEXT NOT NULL, reason TEXT, changed_by INTEGER, allow_overload BOOLEAN NOT NULL DEFAULT false, effective_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'stake_history stake-range CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_stake_history_range') THEN ALTER TABLE stake_history ADD CONSTRAINT chk_stake_history_range CHECK ((old_stake IS NULL OR (old_stake >= 0 AND old_stake <= 1)) AND (new_stake IS NULL OR (new_stake >= 0 AND new_stake <= 1))); END IF; END $$` },
+  { name: 'stake_history.user_card idx', sql: `CREATE INDEX IF NOT EXISTS idx_stake_history_user_card ON stake_history (user_id, card_id, effective_at DESC)` },
+  { name: 'stake_history.card idx', sql: `CREATE INDEX IF NOT EXISTS idx_stake_history_card ON stake_history (card_id, effective_at DESC)` },
 
 ];

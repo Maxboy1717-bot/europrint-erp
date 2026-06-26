@@ -39,6 +39,17 @@ const PAYROLL_STAKE_SHARE_DEFAULT = 1.0;
 const PAYROLL_CKP_PCT_DIVISOR = 100;
 
 /**
+ * Ish-kunlari proratsiyasi neytral koeffitsienti (to'liq davr ishlangan = 1.0).
+ *
+ * ⭐ FABRIKATSIYA YO'Q (Q-40): davr ish-kuni soni noma'lum/≤0 bo'lsa proratsiya
+ * QO'LLANMAYDI (1.0 = to'liq davr) — SOXTA "yarim oy" yozilmaydi. Ishlangan kun
+ * (`workedDays`) noma'lum (null) bo'lsa ham 1.0 (to'liq davr deb olinadi; 0 deb
+ * olish = ishchini "umuman kelmagan" deb FABRIKATSIYA qilish bo'lardi). Faqat
+ * `workedDays` JONLI berilganida (≥0) ulush hisoblanadi va [0..1] ga qisiladi.
+ */
+const PAYROLL_PRORATION_FACTOR_DEFAULT = 1.0;
+
+/**
  * Bitta faol karta uchun oylik FORMULA komponentlari (egasi 8-qaror #5):
  *   gross = baseSalary × razryadCoeff × (ckpAchievementPct / 100) × stakeShare
  *
@@ -56,6 +67,29 @@ export interface CardPayComponents {
   stakeShare: number;
   gross: number | null;       // ckpFactor null bo'lsa null (gate A11 hal qiladi)
   ckpMissing: boolean;
+}
+
+/**
+ * Ish-kunlari proratsiyasi natijasi (egasi 8-qaror: oylik = baza × razryad-koeff ×
+ * ЦКП% × stake-ulush — bu yerga ish-kunlari proratsiyasi qo'shiladi).
+ *
+ * Audit ustunlari `salary_history` jadvalida JONLI mavjud (prior-ish, additiv DDL):
+ *   - proration_days       ← `prorationDays`     (ishlangan kun)
+ *   - stake_total          ← `stakeShare`        (karta ulushi)
+ *   - razryad_coefficient  ← `razryadCoeff`      (razryad koeffitsienti)
+ *
+ * `CardPayComponents` ni kengaytiradi (qo'shimcha — mavjud maydonlar buzilmaydi):
+ *   prorated = gross × prorationFactor;  prorationFactor = workedDays / periodWorkingDays.
+ */
+export interface ProratedCardPay extends CardPayComponents {
+  /** Davrdagi ish-kunlari (bo'luvchi); noma'lum/≤0 → proratsiya yo'q (factor 1.0). */
+  periodWorkingDays: number | null;
+  /** Ishlangan kun (`salary_history.proration_days` ga yoziladi); null → to'liq davr deb olinadi. */
+  prorationDays: number | null;
+  /** Ish-kunlari ulushi [0..1]; gross shu bilan ko'paytiriladi. */
+  prorationFactor: number;
+  /** Proratsiya qo'llangan yakuniy summa; gross null (ЦКП fakti yo'q) bo'lsa null. */
+  proratedGross: number | null;
 }
 
 @Injectable()
@@ -234,6 +268,78 @@ export class PayrollService {
     const gross = ckpFactor === null ? null : base * coeff * ckpFactor * stake;
 
     return { baseSalary: base, razryadCoeff: coeff, ckpFactor, stakeShare: stake, gross, ckpMissing };
+  }
+
+  /**
+   * Ish-kunlari proratsiyasi koeffitsienti (sof, DB'siz) — [0..1] ga qisilgan.
+   *
+   * ⭐ FABRIKATSIYA YO'Q (Q-40):
+   *   - `periodWorkingDays` null/≤0/noto'g'ri  → 1.0 (proratsiya yo'q; bo'luvchi noma'lum)
+   *   - `workedDays`        null               → 1.0 (to'liq davr; "kelmagan" deb yozish FABRIKATSIYA bo'lardi)
+   *   - `workedDays`        ≥0                 → workedDays / periodWorkingDays, [0..1] ga qisiladi
+   *
+   * @param workedDays         ishlangan kun (JONLI; null = to'liq davr)
+   * @param periodWorkingDays  davr ish-kuni soni (bo'luvchi; null/≤0 = proratsiya yo'q)
+   */
+  computeProrationFactor(workedDays: number | null, periodWorkingDays: number | null): number {
+    if (
+      typeof periodWorkingDays !== 'number' ||
+      !Number.isFinite(periodWorkingDays) ||
+      periodWorkingDays <= 0
+    ) {
+      return PAYROLL_PRORATION_FACTOR_DEFAULT;
+    }
+    if (workedDays === null || workedDays === undefined || !Number.isFinite(workedDays)) {
+      return PAYROLL_PRORATION_FACTOR_DEFAULT;
+    }
+    const worked = Math.max(0, workedDays);
+    const factor = worked / periodWorkingDays;
+    // [0..1] — ortiqcha kun (overtime) proratsiyada to'liq davrdan oshmaydi (overtime alohida modul).
+    return Math.min(1, Math.max(0, factor));
+  }
+
+  /**
+   * To'liq karta oyligi — stake-ulush + ish-kunlari proratsiyasi (egasi 8-qaror #5 kengaytmasi).
+   *
+   *   prorated = (baseSalary × razryadCoeff × ЦКП% × stakeShare) × (workedDays / periodWorkingDays)
+   *
+   * `computeCardPay` ustiga ADDITIV qatlam — stake-ulush u yerda allaqachon hisoblanadi (gross),
+   * bu yerda faqat ish-kunlari proratsiyasi qo'shiladi va `salary_history` audit ustunlari
+   * (proration_days / stake_total / razryad_coefficient) uchun maydonlar qaytariladi.
+   *
+   * ЦКП fakti yo'q (gross null) → proratedGross ham null (ЦКП-gate A11 hal qiladi; FABRIKATSIYA yo'q).
+   *
+   * @param baseSalary         baza oylik (so'm)
+   * @param razryadCoeff       razryad koeffitsienti; null/≤0 → 1.0
+   * @param ckpAchievementPct  ЦКП-bajarish foizi; null = fakt yo'q → proratedGross null
+   * @param stakeShare         karta ulushi (0..1); null/≤0 → 1.0
+   * @param workedDays         davrda ishlangan kun (`salary_history.proration_days`); null → to'liq davr
+   * @param periodWorkingDays  davr ish-kuni soni (bo'luvchi); null/≤0 → proratsiya yo'q
+   */
+  prorateCardPay(
+    baseSalary: number,
+    razryadCoeff: number | null,
+    ckpAchievementPct: number | null,
+    stakeShare: number | null,
+    workedDays: number | null,
+    periodWorkingDays: number | null,
+  ): ProratedCardPay {
+    const components = this.computeCardPay(baseSalary, razryadCoeff, ckpAchievementPct, stakeShare);
+    const prorationFactor = this.computeProrationFactor(workedDays, periodWorkingDays);
+    const proratedGross = components.gross === null ? null : components.gross * prorationFactor;
+    return {
+      ...components,
+      periodWorkingDays:
+        typeof periodWorkingDays === 'number' && Number.isFinite(periodWorkingDays)
+          ? periodWorkingDays
+          : null,
+      prorationDays:
+        workedDays === null || workedDays === undefined || !Number.isFinite(workedDays)
+          ? null
+          : Math.max(0, workedDays),
+      prorationFactor,
+      proratedGross,
+    };
   }
 
   /**

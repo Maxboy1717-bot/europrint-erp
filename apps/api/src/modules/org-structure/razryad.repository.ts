@@ -12,6 +12,21 @@ import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
 
+/**
+ * EP-ORG-055/056/011 — razryad o'sish-siyosati sozlamalari (faqat 3 ustun).
+ * `undefined` = tegilmaydi (COALESCE-mas, SET'ga umuman kirmaydi);
+ * `null` = ataylab tozalanadi (egasi qiymatni olib tashlaydi).
+ * Bu PATCH .../settings uchun — generic update'dan ajratilgan (Q-40: intention-revealing).
+ */
+export interface RazryadSettingsInput {
+  /** Imtihon o'tish-chegarasi (foiz, 0..100). NULL = sozlanmagan (o'sish RAD bo'ladi). */
+  examPassThreshold?: number | null;
+  /** Keyingi razryadga o'tishdan oldin minimal oylar (≥0). DB'da NOT NULL — null kelmaydi. */
+  minMonths?: number | null;
+  /** Imtihonni qayta topshirish maksimal soni (0..10). NULL = sozlanmagan. */
+  maxRetakes?: number | null;
+}
+
 export interface RazryadInput {
   level?: number;
   name?: string;
@@ -105,6 +120,36 @@ export class RazryadRepository {
         ? Err(AppErr('CONFLICT', `${dto.level}-razryad allaqachon mavjud`))
         : Err(AppErr('INTERNAL', String((e as Error)?.message ?? e)));
     }
+  }
+
+  /**
+   * EP-ORG-055/056/011 — faqat o'sish-siyosati sozlamalarini yangilash (3 ustun).
+   * Generic `update`'dan farqi: faqat berilgan kalitlar SET'ga kiradi; `undefined` tegilmaydi,
+   * `null` ataylab tozalaydi. min_months DB'da NOT NULL — null kelsa updateSettings'ga kirmaydi
+   * (controller Zod `.nullable()` qo'ymaydi). Razryad topilmasa/arxivlangan -> Ok(null) (servis 404).
+   */
+  async updateSettings(id: number, s: RazryadSettingsInput): Promise<Result<Row | null>> {
+    const sets: SQL[] = [];
+    if (s.examPassThreshold !== undefined) {
+      sets.push(sql`exam_pass_threshold = ${s.examPassThreshold}`);
+    }
+    if (s.minMonths !== undefined && s.minMonths !== null) {
+      sets.push(sql`min_months = ${s.minMonths}`);
+    }
+    if (s.maxRetakes !== undefined) {
+      sets.push(sql`max_retakes = ${s.maxRetakes}`);
+    }
+    if (sets.length === 0) {
+      return Err(AppErr('VALIDATION', `Kamida bitta sozlama (examPassThreshold/minMonths/maxRetakes) kerak`));
+    }
+    sets.push(sql`updated_at = NOW()`);
+    const r = await this.exec(sql`
+      UPDATE razryad_levels
+      SET ${sql.join(sets, sql`, `)}
+      WHERE id = ${id} AND is_active = true
+      RETURNING id, level, name, exam_pass_threshold, min_months, max_retakes, coefficient
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
   /** Soft-delete via is_active=false (EP-ORG-005 style; table uses is_active, not deleted_at). */

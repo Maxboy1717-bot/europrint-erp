@@ -16,7 +16,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
 import { RazryadService } from './razryad.service';
-import type { RazryadInput } from './razryad.repository';
+import type { RazryadInput, RazryadSettingsInput } from './razryad.repository';
 
 const RazryadCreateSchema = z.object({
   level:              z.number().int(),
@@ -38,6 +38,26 @@ const RazryadCreateSchema = z.object({
 }).strict();
 
 const RazryadUpdateSchema = RazryadCreateSchema.partial();
+
+/**
+ * EP-ORG-055/056/011 — razryad o'sish-siyosati sozlamasi (PATCH .../:id/settings).
+ * Generic update'dan ajratilgan: faqat 3 sozlama, intention-revealing (Q-40).
+ * - examPassThreshold/maxRetakes `.nullable()` — egasi ataylab tozalashi mumkin.
+ * - minMonths `.nullable()` EMAS — DB'da NOT NULL (null yuborilsa 400).
+ * - `.refine` — bo'sh PATCH (hech bir kalit yo'q) → 400 (no-op so'rovni rad et).
+ * QIYMATLAR EGASIDAN: default yozilmaydi (FABRIKATSIYA TAQIQ, Q-40).
+ */
+const RazryadSettingsSchema = z
+  .object({
+    examPassThreshold: z.number().min(0).max(100).nullable().optional(),
+    minMonths:         z.number().int().min(0).max(120).optional(),
+    maxRetakes:        z.number().int().min(0).max(10).nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (o) => o.examPassThreshold !== undefined || o.minMonths !== undefined || o.maxRetakes !== undefined,
+    { message: 'Kamida bitta sozlama (examPassThreshold/minMonths/maxRetakes) kerak' },
+  );
 
 @Roles('admin', 'manager', 'hr_manager', 'director', 'super_admin')
 @ApiThrottle()
@@ -88,6 +108,22 @@ export class RazryadController {
   async update(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const dto = RazryadUpdateSchema.parse(body) as RazryadInput;
     return unwrapOrThrow(await this.service.update(id, dto));
+  }
+
+  @ApiOperation({
+    summary: 'Update razryad growth-policy settings (exam_pass_threshold / min_months / max_retakes)',
+    description:
+      'EP-ORG-055/056/011: razryad o\'sish-siyosati sozlamasi. Razryad-history (2-imzo o\'sish) ' +
+      'shu qiymatlarni o\'qiydi; NULL bo\'lsa o\'sish RAD bo\'ladi. Qiymatlar egasidan — default yo\'q.',
+  })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request (bo\'sh PATCH yoki noto\'g\'ri qiymat)' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/settings')
+  async updateSettings(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = RazryadSettingsSchema.parse(body) as RazryadSettingsInput;
+    this.logger.log(`Updating razryad #${id} growth-policy settings`);
+    return unwrapOrThrow(await this.service.updateSettings(id, dto));
   }
 
   @ApiOperation({ summary: 'Soft-delete (archive) razryad level' })

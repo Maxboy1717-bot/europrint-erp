@@ -12,7 +12,9 @@ import type { SignOptions } from 'jsonwebtoken';
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { AuthController, AuthAccountController } from './presentation/auth.controller';
 import { MePermissionsController } from './presentation/me-permissions.controller';
+import { CardGatePrecheckController } from './presentation/card-gate-precheck.controller';
 import { LoginService } from './application/services/login.service';
+import { CardGatePrecheckService } from './application/services/card-gate-precheck.service';
 import { LogoutService } from './application/services/logout.service';
 import { ChangePasswordService } from './application/services/change-password.service';
 import { VerifyOtpService } from './application/services/verify-otp.service';
@@ -46,9 +48,10 @@ export { AUTH_REPO } from './auth.tokens';
     }),
     DatabaseModule,
   ],
-  controllers: [AuthController, AuthAccountController, MePermissionsController],
+  controllers: [AuthController, AuthAccountController, MePermissionsController, CardGatePrecheckController],
   providers: [
     LoginService,
+    CardGatePrecheckService,
     LogoutService,
     ChangePasswordService,
     VerifyOtpService,
