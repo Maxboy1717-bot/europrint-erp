@@ -3,12 +3,23 @@
  * @description Source module. See exports for details.
  */
 
+/**
+ * QC inspector's verdict. The third option `rework` (Qayta ishlash) sends the
+ * batch back to production instead of accepting (pass) or scrapping (fail).
+ */
+export type QcDecision = 'pass' | 'fail' | 'rework';
+
 export class SubmitInspectionCommand {
   constructor(readonly inspectionId: string,
     readonly orderId: number,
     readonly passed: boolean,
     readonly reason: string,
-    readonly supplierId?: number) {}
+    readonly supplierId?: number,
+    /**
+     * Explicit 3-way decision. When omitted, falls back to `passed`
+     * (true → 'pass', false → 'fail') so existing callers keep working.
+     */
+    readonly decision?: QcDecision) {}
 }
 
 export class CreateInspectionCommand {

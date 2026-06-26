@@ -50,9 +50,28 @@ export class OrderStatusChangedDeliveryListener
       return;
     }
 
-    // TODO PA2-18: see order-created-delivery.listener.ts — same payload gap.
-    this.logger.warn(
-      `OrderStatusChangedDeliveryListener: customerName/deliveryAddress not in OrderStatusChangedEvent — delivery auto-create deferred for sales order ${salesOrderId}`,
-    );
+    // PA2-18 resolved (see order-created-delivery.listener.ts): the repo
+    // resolves customerName/deliveryAddress from the sales order itself. On the
+    // confirmed transition we auto-create the logistics delivery record.
+    const created = await this.deliveryRepo.createFromSalesOrder(event.orderId);
+    if (!created.ok) {
+      this.logger.error(
+        `OrderStatusChangedDeliveryListener: failed to auto-create delivery for sales order ${salesOrderId}: ${created.error.message}`,
+      );
+      return;
+    }
+    if (!created.data) {
+      this.logger.warn(
+        `OrderStatusChangedDeliveryListener: sales order ${salesOrderId} not found — no delivery created`,
+      );
+      return;
+    }
+    this.logger.log({
+      msg: 'Delivery auto-created on order confirmation',
+      salesOrderId,
+      deliveryId: created.data.id,
+      deliveryNumber: created.data.deliveryNumber,
+      customerName: created.data.customerName,
+    });
   }
 }

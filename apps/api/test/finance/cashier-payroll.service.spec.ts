@@ -55,6 +55,8 @@ const APPROVED_CHAIN = chain({
 
 function makeRepo(overrides: Partial<ICashierPayrollRepository> = {}): ICashierPayrollRepository {
   const base: ICashierPayrollRepository = {
+    // T7-11: card-derived salary total. Default 0 = card-salary not materialized (TEST/Q-40 state).
+    getEmployeeCardSalaryTotal: jest.fn(async () => Ok(0)),
     findApprovalByReference: jest.fn(async () => Ok(null)),
     findApprovalById: jest.fn(async () => Ok(null)),
     createApproval: jest.fn(async (dto) => Ok(chain({ reference: dto.reference, employeeId: dto.employeeId, amount: dto.amount }) as never)),
@@ -143,6 +145,36 @@ describe('CashierPayrollService (KAS-2 salary-payout gate)', () => {
     expect(res.ok).toBe(true);
     expect(res.ok && (res.data as { alreadyPaid: boolean }).alreadyPaid).toBe(true);
     expect(hub.recordMovement).not.toHaveBeenCalled();
+  });
+
+  it('A5) requestSalaryPayout ties the amount to the card-salary — over-pay is rejected when card-salary is known', async () => {
+    const repo = makeRepo({
+      getEmployeeCardSalaryTotal: jest.fn(async () => Ok(1_200_000)), // card-salary materialized
+    });
+    const svc = new CashierPayrollService(repo, makeHub() as never);
+
+    // requested amount exceeds the card-salary → rejected (pay FROM the card-salary, owner #5)
+    const over = await svc.requestSalaryPayout({ employeeId: 7, amount: 2_000_000, reference: 'PAY-OVER' });
+    expect(over.ok).toBe(false);
+    expect(!over.ok && over.error.code).toBe('VALIDATION');
+    expect(repo.createApproval).not.toHaveBeenCalled();
+
+    // requested amount within the card-salary → accepted + card-salary basis recorded on the response
+    const within = await svc.requestSalaryPayout({ employeeId: 7, amount: 1_000_000, reference: 'PAY-OK' });
+    expect(within.ok).toBe(true);
+    expect(within.ok && (within.data as { cardSalaryTotal: number }).cardSalaryTotal).toBe(1_200_000);
+    expect(within.ok && (within.data as { cardSalaryTied: boolean }).cardSalaryTied).toBe(true);
+  });
+
+  it('A6) requestSalaryPayout flags (does NOT forge) when no card-salary is materialized yet (Q-40)', async () => {
+    const repo = makeRepo(); // getEmployeeCardSalaryTotal defaults to Ok(0)
+    const svc = new CashierPayrollService(repo, makeHub() as never);
+
+    const res = await svc.requestSalaryPayout({ employeeId: 7, amount: 1_000_000, reference: 'PAY-NOCARD' });
+    expect(res.ok).toBe(true);
+    expect(res.ok && (res.data as { cardSalaryTied: boolean }).cardSalaryTied).toBe(false);
+    expect(res.ok && (res.data as { cardSalaryTotal: number }).cardSalaryTotal).toBe(0);
+    expect(repo.createApproval).toHaveBeenCalled(); // amount stands, no fabricated cap
   });
 
   it('A4) stages must be approved in order (cannot skip ahead)', async () => {

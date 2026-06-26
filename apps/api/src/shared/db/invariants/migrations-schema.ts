@@ -328,4 +328,23 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'marketing_calendar_events.start_date index',
     sql: `CREATE INDEX IF NOT EXISTS idx_marketing_calendar_events_start_date ON marketing_calendar_events (start_date)`,
   },
+  // T7-05 (reconcile BRAK 1 — "operator = KARTA"): direct, ADDITIVE card link on the
+  // canonical MES session table. The A67 ckp-mes-feed listener already resolves the
+  // ЦКП card from real links (users.card_id → employee_cards → pp_work_centers.
+  // org_department_id), but those are all owner-DATA today (0 work-center cards,
+  // workers without card_id) so every completed session currently skips. This column
+  // lets MES record the responsible card (org_departments.id) directly at session
+  // time — the vision's canonical operator=KARTA link — which the listener prefers
+  // (priority-0) over the resolve-via paths. Nullable + ON DELETE SET NULL: existing
+  // 8 rows stay valid (NULL), no fabrication (Q-40); the value is owner/MES DATA.
+  // Idempotent ADD COLUMN IF NOT EXISTS — same proven additive pattern as
+  // standard_cost.product_id above; applied at boot via ensureSchemaAdditions().
+  {
+    name: 'T7-05 production_sessions.operator_card_id (operator=KARTA link)',
+    sql: `ALTER TABLE IF EXISTS production_sessions ADD COLUMN IF NOT EXISTS operator_card_id INTEGER REFERENCES org_departments(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'T7-05 production_sessions.operator_card_id index',
+    sql: `CREATE INDEX IF NOT EXISTS idx_production_sessions_operator_card_id ON production_sessions (operator_card_id)`,
+  },
 ];

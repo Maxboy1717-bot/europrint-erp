@@ -10,6 +10,8 @@ import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { PayrollRecord } from '../domain/aggregates/payroll-record.aggregate';
 import { GlPostingService, type JournalLine } from '../../finance/domain/services/gl-posting.service';
 import { CkpGateService, type CkpGateDecision } from './ckp-gate';
+import { LmsCardGateService } from '../../lms/application/services/lms-card-gate.service';
+import { HR_REPO, type IHrRepo } from '../domain/repositories/i-hr.repo';
 import type { DomainEvent } from '@shared/domain/domain-event';
 
 type Row = Record<string, unknown>;
@@ -102,6 +104,8 @@ export class PayrollService {
     private readonly closure: PayrollClosureService,
     private readonly gl: GlPostingService,
     private readonly ckpGate: CkpGateService,
+    private readonly lmsGate: LmsCardGateService,
+    @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -363,9 +367,21 @@ export class PayrollService {
    * Natija: ЦКП fakti BOR kunlar to'lanadi, fakt YO'Q / deadline o'tgan kunlar 0.
    * ckp fakti umuman yo'q karta (TEST hozir) → hamma kun 0 → oylik 0 (egasi #6).
    *
-   * FABRIKATSIYA YO'Q (Q-40): darvoza faqat jonli `ckp_fact_values` o'qiydi;
-   * fakt yo'q kun HALOL 0 (soxta to'lov yozilmaydi). proratedGross null
-   * (ЦКП% berilmagan) bo'lsa → gated null (gate baribir 0 bergan bo'lardi).
+   * ⭐ T7-10 — LMS-DARVOZA (EP-ORG-027 / EP-LMS-070): ЦКП-darvozadan OLDIN
+   *   `LmsCardGateService.isCardTrainingComplete` chaqiriladi. Vizyon (egasi):
+   *   "Karta darsligi tugamaguncha o'sha karta oyligi to'xtaydi." Kartaga
+   *   biriktirilgan MAJBURIY darslik to'liq tugamagan bo'lsa → o'sha kartaning
+   *   butun oyligi 0 (kun-darvozaga o'tmasdan, butun davr bloklanadi). LMS-darvoza
+   *   FAIL-CLOSED: o'qish xatosi ham bloklaydi (o'qib bo'lmagan = ochilmaydi).
+   *   Majburiy darslik biriktirilmagan karta (courses.card_id=NULL, hozir 0/5) →
+   *   `allComplete=true` → bloklamaydi (HALOL ochiq, FABRIKATSIYA emas — Q-40).
+   *   employeeId berilmasa (≤0) → LMS-darvoza O'TKAZIB yuboriladi (eski A69 xulqi
+   *   saqlanadi; karta-darslik xodimga bog'liq, xodimsiz baholab bo'lmaydi).
+   *
+   * FABRIKATSIYA YO'Q (Q-40): darvoza faqat jonli `ckp_fact_values` /
+   * `courses`/`enrollments`/`course_progress` o'qiydi; fakt/progress yo'q →
+   * HALOL 0 (soxta to'lov yozilmaydi). proratedGross null (ЦКП% berilmagan) →
+   * gated null (gate baribir 0 bergan bo'lardi).
    *
    * @param cardId             birlamchi karta id (`org_departments.id`)
    * @param from               davr boshi (ISO 'YYYY-MM-DD')
@@ -376,6 +392,7 @@ export class PayrollService {
    * @param stakeShare         karta ulushi (0..1); null/≤0 → 1.0
    * @param workedDays         davrda ishlangan kun (proratsiya); null → to'liq davr
    * @param periodWorkingDays  davr ish-kuni soni (proratsiya bo'luvchisi); null/≤0 → yo'q
+   * @param employeeId         kartani egallagan xodim (`employees.id`); ≤0/undefined → LMS-darvoza skip
    */
   async computeGatedMonthlySalary(
     cardId: number,
@@ -387,6 +404,7 @@ export class PayrollService {
     stakeShare: number | null,
     workedDays: number | null,
     periodWorkingDays: number | null,
+    employeeId?: number,
   ): Promise<
     Result<{
       proratedGross: number | null;
@@ -394,6 +412,8 @@ export class PayrollService {
       gatedDays: number;
       blockedDays: number;
       totalDays: number;
+      lmsBlocked: boolean;
+      lmsReasons: string[];
       days: Array<{ factDate: string; decision: CkpGateDecision; dayBase: number; dayPaid: number }>;
     }>
   > {
@@ -406,20 +426,43 @@ export class PayrollService {
       periodWorkingDays,
     );
 
+    // ⭐ T7-10 LMS-DARVOZA — ЦКП-darvozadan OLDIN: kartaga biriktirilgan majburiy
+    // darslik tugamagan bo'lsa, o'sha karta oyligi to'liq bloklanadi (egasi vizyoni).
+    // FAIL-CLOSED: isCardTrainingComplete xato bersa ham bloklanadi (ochilmaydi).
+    // employeeId berilmagan/≤0 → skip (xodimsiz karta-darslikni baholab bo'lmaydi).
+    let lmsBlocked = false;
+    let lmsReasons: string[] = [];
+    if (typeof employeeId === 'number' && Number.isInteger(employeeId) && employeeId > 0) {
+      const lmsR = await this.lmsGate.isCardTrainingComplete(cardId, employeeId);
+      if (!lmsR.ok) {
+        // O'qish xatosi = fail-closed: darslik holatini bilolmasak, oylik ochilmaydi.
+        lmsBlocked = true;
+        lmsReasons = [`LMS-darvoza o'qib bo'lmadi (fail-closed): ${lmsR.error.message}`];
+      } else if (!lmsR.data.allComplete) {
+        lmsBlocked = true;
+        lmsReasons = lmsR.data.reasons.length > 0
+          ? lmsR.data.reasons
+          : [`Karta #${cardId}: majburiy darslik tugamagan (oylik to'xtatildi)`];
+      }
+    }
+
     // A11 DARVOZA CHAQIRUVI — jonli ckp_fact_values; har kun qarori.
     const gateR = await this.ckpGate.evaluatePeriod(cardId, from, to);
     if (!gateR.ok) return Err(gateR.error);
     const decisions = gateR.data;
     const totalDays = decisions.length;
 
+    // LMS-darvoza yopiq → butun karta oyligi 0 (darslik tugamasa oylik yo'q — egasi).
     // proratedGross null (ЦКП% yo'q) → darvoza baribir 0 berardi; gated ham null.
-    if (prorated.proratedGross === null || totalDays === 0) {
+    if (lmsBlocked || prorated.proratedGross === null || totalDays === 0) {
       return Ok({
         proratedGross: prorated.proratedGross,
         gatedGross: prorated.proratedGross === null ? null : 0,
         gatedDays: 0,
         blockedDays: totalDays,
         totalDays,
+        lmsBlocked,
+        lmsReasons,
         days: decisions.map((d) => ({ factDate: d.factDate, decision: d.decision, dayBase: 0, dayPaid: 0 })),
       });
     }
@@ -443,7 +486,112 @@ export class PayrollService {
       gatedDays,
       blockedDays,
       totalDays,
+      lmsBlocked,
+      lmsReasons,
       days,
+    });
+  }
+
+  /**
+   * ⭐ T7-09 — KARTA-OYLIK FORMULASI JONLI ULANISHI (egasi 8-qaror #5).
+   *
+   * VERIFY topgan bo'shliq: A7 formula metodlari (`computeCardPay` →
+   * `prorateCardPay` → `computeGatedMonthlySalary`) TO'LIQ qurilgan-u, lekin
+   * hech qaysi endpoint/servisdan CHAQIRILMASdi (orphan). Jonli `calculatePayroll`
+   * yo'li faqat razryad-koeffni qo'llaydi (ЦКП-gate + stake yo'q), `closePeriod`
+   * esa xom `base_salary` ni yig'adi. Bu metod orphan formulani JONLI manbalarga
+   * ulaydi — endi karta-oylik HAQIQATDA hisoblanadi (egasi formulasi to'liq).
+   *
+   * Razryad-koeff JONLI kanonik kartadan keladi (A8/MASSIV-100): employee →
+   * employee_org_departments(aktiv,birlamchi) → org_departments.razryad_level_id →
+   * razryad_levels.coefficient (`hrRepo.getRazryadCoefficient`). Chaqiruvchi
+   * `razryadCoeff` bersa, u ustun (override); aks holda jonli koeff o'qiladi.
+   *
+   * Qolgan komponentlar `computeGatedMonthlySalary` ga o'tadi: ЦКП-gate jonli
+   * `ckp_fact_values` (A11), LMS-gate jonli darslik (T7-10), stake (egasi-data →
+   * default 1.0), ish-kun proratsiyasi. FABRIKATSIYA YO'Q (Q-40): qiymat yo'q
+   * joyda neytral/gate-0 — soxta son yozilmaydi.
+   *
+   * @param cardId             birlamchi karta id (`org_departments.id`)
+   * @param employeeId         kartani egallagan xodim (`employees.id`) — razryad+LMS jonli o'qish uchun
+   * @param from               davr boshi (ISO 'YYYY-MM-DD')
+   * @param to                 davr oxiri (ISO 'YYYY-MM-DD', inklyuziv)
+   * @param baseSalary         baza oylik (so'm)
+   * @param ckpAchievementPct  ЦКП-bajarish foizi; null = fakt yo'q → gated 0
+   * @param stakeShare         karta ulushi (0..1); null/≤0 → 1.0 (egasi-data)
+   * @param workedDays         davrda ishlangan kun (proratsiya); null → to'liq davr
+   * @param periodWorkingDays  davr ish-kuni soni (proratsiya bo'luvchisi); null/≤0 → yo'q
+   * @param razryadCoeffOverride chaqiruvchi bergan koeff (test/maxsus holat); berilmasa jonli o'qiladi
+   */
+  async previewCardSalary(
+    cardId: number,
+    employeeId: number,
+    from: string,
+    to: string,
+    baseSalary: number,
+    ckpAchievementPct: number | null,
+    stakeShare: number | null,
+    workedDays: number | null,
+    periodWorkingDays: number | null,
+    razryadCoeffOverride?: number | null,
+  ): Promise<
+    Result<{
+      cardId: number;
+      employeeId: number;
+      from: string;
+      to: string;
+      baseSalary: number;
+      razryadCoeff: number;
+      razryadSource: 'override' | 'live-card';
+      proratedGross: number | null;
+      gatedGross: number | null;
+      gatedDays: number;
+      blockedDays: number;
+      totalDays: number;
+      lmsBlocked: boolean;
+      lmsReasons: string[];
+      days: Array<{ factDate: string; decision: CkpGateDecision; dayBase: number; dayPaid: number }>;
+    }>
+  > {
+    // Razryad-koeff: chaqiruvchi override bersa o'sha; aks holda JONLI kanonik karta-zanjiridan.
+    let razryadCoeff: number;
+    let razryadSource: 'override' | 'live-card';
+    if (
+      typeof razryadCoeffOverride === 'number' &&
+      Number.isFinite(razryadCoeffOverride) &&
+      razryadCoeffOverride > 0
+    ) {
+      razryadCoeff = razryadCoeffOverride;
+      razryadSource = 'override';
+    } else {
+      // getRazryadCoefficient graceful: data yo'q → 1.0 (fabrikatsiya yo'q).
+      razryadCoeff = await this.hrRepo.getRazryadCoefficient(employeeId);
+      razryadSource = 'live-card';
+    }
+
+    const gatedR = await this.computeGatedMonthlySalary(
+      cardId,
+      from,
+      to,
+      baseSalary,
+      razryadCoeff,
+      ckpAchievementPct,
+      stakeShare,
+      workedDays,
+      periodWorkingDays,
+      employeeId,
+    );
+    if (!gatedR.ok) return Err(gatedR.error);
+
+    return Ok({
+      cardId,
+      employeeId,
+      from,
+      to,
+      baseSalary,
+      razryadCoeff,
+      razryadSource,
+      ...gatedR.data,
     });
   }
 

@@ -20,6 +20,7 @@ import type {
   ListShiftsFilters,
   ShiftListPage,
   ShiftListRow,
+  CashierMovementType,
 } from './i-cashier-hub.repo';
 import type { CashierShift, CashierMovement } from '@workspace/db';
 
@@ -147,10 +148,29 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
         .from(cashierMovements)
         .where(eq(cashierMovements.shiftId, shiftId));
       const agg = rows[0] ?? { cashIn: '0', cashOut: '0', count: 0 };
+
+      // Itemised per-type tally for the X/Z reconciliation breakdown — one grouped SQL (no N+1).
+      const breakdown = await db
+        .select({
+          type: cashierMovements.type,
+          count: sql<number>`COUNT(*)`,
+          total: sql<string>`COALESCE(SUM(${cashierMovements.amount}), 0)`,
+        })
+        .from(cashierMovements)
+        .where(eq(cashierMovements.shiftId, shiftId))
+        .groupBy(cashierMovements.type)
+        .orderBy(cashierMovements.type);
+      const byType = (Array.isArray(breakdown) ? breakdown : []).map((r) => ({
+        type: r.type as CashierMovementType,
+        count: Number(r.count),
+        total: Number(r.total),
+      }));
+
       return Ok({
         cashIn: Number(agg.cashIn),
         cashOut: Number(agg.cashOut),
         movementCount: Number(agg.count),
+        byType,
       });
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `CASHIER_TOTALS_FAILED: ${String(e)}`));

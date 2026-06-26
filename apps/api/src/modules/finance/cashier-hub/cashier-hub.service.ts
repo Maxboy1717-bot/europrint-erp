@@ -117,13 +117,17 @@ export class CashierHubService {
     });
     if (!closed.ok) return closed as Result<never, AppError>;
 
-    // Z-report: the final reconciled summary of the now-closed shift.
+    // Z-report: the final reconciled summary of the now-closed shift, including the
+    // counted drawer (closedAmount), the variance (over/short), and a per-type breakdown.
     return Ok({
       shift: closed.data,
       cashIn: totals.cashIn,
       cashOut: totals.cashOut,
       movementCount: totals.movementCount,
       expectedAmount,
+      closedAmount: dto.closedAmount,
+      variance,
+      byType: totals.byType,
     });
   }
 
@@ -159,12 +163,21 @@ export class CashierHubService {
     const totals = totalsRes.data;
     const expectedAmount = Number(shiftRes.data.openedAmount) + totals.cashIn - totals.cashOut;
 
+    // For an OPEN shift (X-report) nothing has been counted/closed yet → closedAmount/variance null.
+    // For an already-closed shift, echo the persisted reconciliation (counted drawer + variance).
+    const closedAmountRaw = shiftRes.data.closedAmount;
+    const closedAmount = closedAmountRaw === null || closedAmountRaw === undefined ? null : Number(closedAmountRaw);
+    const variance = closedAmount === null ? null : closedAmount - expectedAmount;
+
     return Ok({
       shift: shiftRes.data,
       cashIn: totals.cashIn,
       cashOut: totals.cashOut,
       movementCount: totals.movementCount,
       expectedAmount,
+      closedAmount,
+      variance,
+      byType: totals.byType,
     });
   }
 

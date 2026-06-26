@@ -71,17 +71,45 @@ export class CashierPayrollService {
   /**
    * Open a salary-payout approval chain for an employee+amount. Idempotent by reference —
    * a re-request with the same reference returns the existing chain (no duplicate row).
+   *
+   * ⭐ T7-11 — CARD-OYLIK TIE (egasi 8-qaror: oylik kartadan keladi). The cashier pays a
+   * salary FROM the employee's card-derived monthly salary — the FORMULA-A multi-card SUM
+   * shown on the employee profile (`getEmployeeCardSalaryTotal` = SUM of active cards'
+   * max_salary + acting supplements). So the requested payout amount is TIED to that figure:
+   *   - card-salary KNOWN (>0)  → the requested amount may NOT EXCEED it (over-pay rejected).
+   *   - card-salary 0/unknown   → owner has not materialized card max_salary yet (Q-40, TEST
+   *     state); the requested amount stands and the response FLAGS that it is not yet tied to
+   *     a card-salary (no forge — we never fabricate a card-salary to validate against).
+   * The card-salary total is recorded on the response so the approval queue / cashier sees
+   * the salary basis the payout is drawn from.
    */
   async requestSalaryPayout(raw: unknown): Promise<Result<unknown, AppError>> {
     const validated = safeParse(RequestSalaryPayoutSchema, raw);
     if (!validated.ok) return Err(validated.error);
     const dto = validated.data;
 
+    // Card-oylik tie — the salary basis the cashier pays out FROM (multi-card SUM, profile figure).
+    const salaryR = await this.repo.getEmployeeCardSalaryTotal(dto.employeeId);
+    if (!salaryR.ok) return salaryR as Result<never, AppError>;
+    const cardSalaryTotal = salaryR.data;
+    const cardSalaryTied = cardSalaryTotal > 0;
+
+    // When the card-salary is materialized, the payout may not exceed it (pay FROM the card-salary).
+    if (cardSalaryTied && dto.amount > cardSalaryTotal) {
+      return Err(
+        AppErr(
+          'VALIDATION',
+          `KAS-2: to'lov summasi (${dto.amount}) xodimning karta-oyligidan (${cardSalaryTotal}) oshib ketdi — ` +
+            `ish haqi karta-oylikdan to'lanadi (egasi 8-qaror)`,
+        ),
+      );
+    }
+
     const existing = await this.repo.findApprovalByReference(dto.reference);
     if (!existing.ok) return existing as Result<never, AppError>;
     if (existing.data) {
       this.logger.debug(`Approval chain already exists for ref ${dto.reference} (idempotent) — id=${existing.data.id}`);
-      return Ok(existing.data);
+      return Ok({ ...existing.data, cardSalaryTotal, cardSalaryTied });
     }
 
     const created = await this.repo.createApproval({
@@ -91,7 +119,7 @@ export class CashierPayrollService {
       notes: dto.notes ?? null,
     });
     if (!created.ok) return created as Result<never, AppError>;
-    return Ok(created.data);
+    return Ok({ ...created.data, cardSalaryTotal, cardSalaryTied });
   }
 
   /**

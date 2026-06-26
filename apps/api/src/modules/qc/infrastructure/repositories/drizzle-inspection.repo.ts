@@ -40,12 +40,22 @@ export class DrizzleQcInspectionRepository implements IQcRepository {
     const checked = Number(inspection.sampleSize) || 0;
     const failed = Number(inspection.defectsFoundCount) || 0;
     const passed = Math.max(0, checked - failed);
-    const validStatus = ['pending', 'in_progress', 'on_hold', 'passed', 'failed'].includes(inspection.status)
+    // 'rework' is the inspector's third QC decision (Qabul/Rad/REWORK). The
+    // live qc_inspections.status is varchar(50) with no CHECK constraint, so it
+    // persists verbatim — see DB-proof. Mirror the decision into `result` so
+    // downstream readers (dashboard, golden-thread) can distinguish rework.
+    const validStatus = ['pending', 'in_progress', 'on_hold', 'passed', 'failed', 'rework'].includes(inspection.status)
       ? inspection.status
       : 'pending';
+    const resultValue =
+      validStatus === 'passed' ? 'pass' :
+      validStatus === 'failed' ? 'fail' :
+      validStatus === 'rework' ? 'rework' :
+      null;
     const q = sql`
       UPDATE qc_inspections
-      SET status = ${validStatus}, items_checked = ${checked}, items_passed = ${passed},
+      SET status = ${validStatus}, result = COALESCE(${resultValue}, result),
+          items_checked = ${checked}, items_passed = ${passed},
           items_failed = ${failed}, updated_at = NOW()
       WHERE id = ${Number(inspection.id)}`;
     if (tx) {

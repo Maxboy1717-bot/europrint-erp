@@ -105,3 +105,36 @@ export function useCreateInspection() {
       queryClient.invalidateQueries({ queryKey: ["/api/qc/inspections"] }),
   });
 }
+
+/**
+ * QC inspector's 3-way verdict on an inspection: Qabul (pass) / Rad (fail) /
+ * REWORK (qayta ishlash). `decision` drives the backend; `passed` is kept for
+ * legacy callers. REWORK returns the batch to production instead of accepting
+ * or scrapping it.
+ */
+export function useSubmitInspection() {
+  return useMutation({
+    mutationFn: ({ id, ...data }: {
+      id: string | number;
+      orderId: number;
+      decision: "pass" | "fail" | "rework";
+      reason?: string;
+      supplierId?: number;
+    }) => apiRequest("POST", `/api/qc/inspections/${id}/submit`, data),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/inspections"] }),
+  });
+}
+
+/** Dedicated REWORK decision — sends the inspected batch back to production. */
+export function useReworkInspection() {
+  return useMutation({
+    mutationFn: ({ id, orderId, reason }: {
+      id: string | number;
+      orderId: number;
+      reason?: string;
+    }) => apiRequest("POST", `/api/qc/inspections/${id}/rework`, { orderId, reason }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["/api/qc/inspections"] }),
+  });
+}

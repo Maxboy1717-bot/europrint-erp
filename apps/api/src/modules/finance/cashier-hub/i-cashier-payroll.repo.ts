@@ -101,6 +101,15 @@ export interface PayrollListPage<T> {
 
 export interface ICashierPayrollRepository {
   // --- FEATURE A: salary-payout approval chain ---
+  /**
+   * SHARED READ (T7-11) — the employee's card-derived monthly salary total: the FORMULA-A
+   * SUM of all active cards' max_salary + acting supplements (mirrors org-structure
+   * CardRepository.employeeSalaryTotal — `employee_cards` JOIN `org_departments`, on-read
+   * revert guard, COALESCE NULL→0). Ties the cashier salary-payout to the multi-card salary
+   * shown on the employee profile. 0 = no card-salary materialized yet (owner-DATA — Q-40);
+   * never a forged figure. Read-only join, no service→service import (module contract).
+   */
+  getEmployeeCardSalaryTotal(employeeId: number): Promise<Result<number>>;
   /** The approval chain for a business reference, or null (idempotency + payout gate lookup). */
   findApprovalByReference(reference: string): Promise<Result<SalaryPayoutApproval | null>>;
   findApprovalById(id: number): Promise<Result<SalaryPayoutApproval | null>>;

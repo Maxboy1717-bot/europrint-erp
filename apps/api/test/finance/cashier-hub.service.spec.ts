@@ -53,7 +53,7 @@ function makeRepo(overrides: Partial<ICashierHubRepository> = {}): ICashierHubRe
         variance: f.variance,
       } as never),
     ),
-    getShiftMovementTotals: jest.fn(async () => Ok({ cashIn: 0, cashOut: 0, movementCount: 0 })),
+    getShiftMovementTotals: jest.fn(async () => Ok({ cashIn: 0, cashOut: 0, movementCount: 0, byType: [] })),
     findMovementByReference: jest.fn(async () => Ok(null)),
     insertMovement: jest.fn(async (dto) =>
       Ok({ id: 99, ...dto, glEntryId: dto.glEntryId ?? null } as never),
@@ -91,11 +91,20 @@ describe('CashierHubService (KAS-1)', () => {
 
     // close: totals show 250 in, 0 out → expected = 100 + 250 − 0 = 350; variance = 360 − 350 = 10
     (repo.getShiftMovementTotals as jest.Mock).mockResolvedValue(
-      Ok({ cashIn: 250, cashOut: 0, movementCount: 1 }),
+      Ok({
+        cashIn: 250,
+        cashOut: 0,
+        movementCount: 1,
+        byType: [{ type: 'cash_in', count: 1, total: 250 }],
+      }),
     );
     const closed = await svc.closeShift(1, { closedAmount: 360 });
     expect(closed.ok).toBe(true);
     expect(closed.ok && closed.data.expectedAmount).toBe(350);
+    // Z-report reconciliation: counted drawer + variance (over/short) + per-type breakdown.
+    expect(closed.ok && closed.data.closedAmount).toBe(360);
+    expect(closed.ok && closed.data.variance).toBe(10);
+    expect(closed.ok && closed.data.byType).toEqual([{ type: 'cash_in', count: 1, total: 250 }]);
     expect(repo.closeShift).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ closedAmount: 360, expectedAmount: 350, variance: 10 }),

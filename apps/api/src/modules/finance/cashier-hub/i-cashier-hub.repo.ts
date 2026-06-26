@@ -33,10 +33,19 @@ export interface RecordMovementDto {
   pinVerified: boolean;
 }
 
+/** Per-movement-type tally for the X/Z reconciliation breakdown (count + summed amount). */
+export interface MovementTypeTally {
+  type: CashierMovementType;
+  count: number;
+  total: number;
+}
+
 export interface ShiftMovementTotals {
   cashIn: number;
   cashOut: number;
   movementCount: number;
+  /** Itemised breakdown per movement type (cash_in / cash_out / salary_payout / advance / expense). */
+  byType: MovementTypeTally[];
 }
 
 /** Filters for the paginated shift list (GET shifts). */
@@ -75,6 +84,12 @@ export interface ShiftSummary {
   cashOut: number;
   movementCount: number;
   expectedAmount: number; // openedAmount + Σcash_in − Σcash_out
+  /** Counted drawer cash declared at close (null while the shift is still open / X-report). */
+  closedAmount: number | null;
+  /** closedAmount − expectedAmount (null while open). >0 = over, <0 = short. */
+  variance: number | null;
+  /** Itemised per-type reconciliation breakdown (cash_in / cash_out / salary_payout / advance / expense). */
+  byType: MovementTypeTally[];
 }
 
 export interface ICashierHubRepository {

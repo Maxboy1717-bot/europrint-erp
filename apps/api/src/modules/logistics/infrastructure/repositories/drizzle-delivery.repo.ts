@@ -100,6 +100,63 @@ export class DrizzleDeliveryRepository implements IDeliveryRepo {
       });
   }
 
+  /**
+   * Auto-create a delivery for a sales order. Resolves customer_name +
+   * delivery_address from the sales order (and its linked CRM company) and
+   * inserts a `deliveries` row keyed by the integer sales_order_id.
+   *
+   * NOTE: the live `deliveries` table uses a SERIAL integer `id` and an integer
+   * `sales_order_id` FK → sales_orders(id). We let the serial default the id
+   * (rather than the aggregate's uuid) and parameterise the cross-table lookup
+   * in raw SQL — Drizzle's stub schema types `id`/`sales_order_id` as uuid,
+   * which does not match the live integer columns. Proven by
+   * _audit/bproof-t704-order-delivery.cjs (13/13, rollback-tx).
+   */
+  async createFromSalesOrder(salesOrderId: number): Promise<Result<Delivery | null>> {
+    try {
+      const lookup = await db.execute(sql`
+        SELECT so.id            AS sales_order_id,
+               so.order_number  AS order_number,
+               so.customer_name AS customer_name,
+               so.customer_id   AS customer_id,
+               c.title          AS company_name,
+               c.address        AS company_address
+          FROM sales_orders so
+          LEFT JOIN crm_companies c ON c.id = so.customer_id
+         WHERE so.id = ${salesOrderId}
+         LIMIT 1
+      `);
+      const rows = (lookup as unknown as { rows?: Record<string, unknown>[] }).rows ?? [];
+      const order = rows[0];
+      if (!order) {
+        this.logger.warn(`createFromSalesOrder: sales order ${salesOrderId} not found`);
+        return Ok(null);
+      }
+
+      const customerName =
+        String(order.customer_name ?? order.company_name ?? `Order ${order.order_number ?? salesOrderId}`);
+      const deliveryAddress = String(order.company_address ?? 'Manzil kiritilmagan');
+      const deliveryNumber = `DEL-${String(order.order_number ?? salesOrderId)}-${Date.now()}`;
+      const customerId = order.customer_id ?? null;
+
+      const inserted = await db.execute(sql`
+        INSERT INTO deliveries
+          (sales_order_id, delivery_number, customer_name, delivery_address, status, customer_id)
+        VALUES
+          (${salesOrderId}, ${deliveryNumber}, ${customerName}, ${deliveryAddress}, 'pending', ${customerId})
+        RETURNING id, sales_order_id, delivery_number, customer_name, delivery_address, status, driver_id, vehicle_number, created_at, updated_at
+      `);
+      const insRows = (inserted as unknown as { rows?: Record<string, unknown>[] }).rows ?? [];
+      if (insRows.length === 0) {
+        return Err('Failed to create delivery for sales order');
+      }
+      return Ok(this.toDomain(insRows[0]));
+    } catch (error) {
+      this.logger.error('Error creating delivery from sales order');
+      return Err((error as Error).message);
+    }
+  }
+
   async save(delivery: Delivery): Promise<Result<Delivery>> {
     return db
       .insert(deliveries)

@@ -143,6 +143,9 @@ export const productionSessions = pgTable('production_sessions', {
   startedAt: ts('started_at'),
   endedAt: ts('ended_at'),
   createdAt: ts('created_at').defaultNow(),
+  // T7-05: direct operator=KARTA link → org_departments(id). Additive, nullable
+  // (owner/MES DATA). A67 ckp-mes-feed listener prefers this over resolve-via paths.
+  operatorCardId: integer('operator_card_id'),
 });
 
 // NOTE: convergence deferred (tier-1) — lib/db aiUsageLogs.userId is numeric but

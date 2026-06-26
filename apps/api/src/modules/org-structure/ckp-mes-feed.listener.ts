@@ -16,10 +16,12 @@
  *
  * CARD RESOLUTION (Q-40 — FABRIKATSIYA TAQIQ): the ЦКП card (org_departments.id)
  *   is resolved from REAL links only, in priority order:
+ *     0. session DIRECT card → production_sessions.operator_card_id (operator=KARTA,
+ *        set by MES at session time — the canonical vision link, T7-05);
  *     1. session operator/worker → users.card_id (primary card), else
  *        employee_cards (is_primary, is_active) → card_id;
  *     2. production order → pp_work_centers.org_department_id (work-center card).
- *   If NEITHER resolves (owner has not yet linked the work-center/operator to a
+ *   If NONE resolve (owner has not yet linked the session/work-center/operator to a
  *   card), the fact is SKIPPED + logged — NO fabricated card, NO soxta fact.
  *
  * FACT VALUE: actualValue = GOOD units = actual_quantity − defect_quantity
@@ -56,7 +58,7 @@ interface SessionFeed {
   factDate: string | null;
   /** Good units = actual − defect (never negative). */
   goodQty: number;
-  resolvedVia: 'operator_card' | 'worker_card' | 'work_center_card' | null;
+  resolvedVia: 'session_card' | 'operator_card' | 'worker_card' | 'work_center_card' | null;
 }
 
 @Injectable()
@@ -161,6 +163,7 @@ export class CkpMesFeedListener {
           ps.production_order_id,
           ps.operator_id,
           ps.worker_id,
+          ps.operator_card_id,
           COALESCE(ps.session_date, ps.started_at::date, ps.ended_at::date) AS fact_date,
           GREATEST(
             COALESCE(ps.actual_quantity, ps.produced_qty::int, 0) - COALESCE(ps.defect_quantity, ps.defect_qty::int, 0),
@@ -174,6 +177,8 @@ export class CkpMesFeedListener {
         s.id,
         s.fact_date,
         s.good_qty,
+        -- direct session→KARTA link (operator=KARTA, set by MES at session time)
+        s.operator_card_id      AS session_card,
         -- operator (users) primary card
         uo.card_id              AS operator_user_card,
         s.operator_id           AS operator_id,
@@ -210,6 +215,17 @@ export class CkpMesFeedListener {
 
     const factDate = this.toDateString(row.fact_date);
     const goodQty = num(row.good_qty) ?? 0;
+
+    // Priority 0: the session's DIRECT card link (operator=KARTA). When MES records
+    // the responsible card at session time (production_sessions.operator_card_id →
+    // org_departments.id, T7-05), it is the canonical truth — used ahead of the
+    // resolve-via-operator/work-center fallbacks. employeeId stays the operator/worker
+    // (audit trail) when present.
+    const sessionCard = num(row.session_card);
+    if (sessionCard != null) {
+      const empId = num(row.operator_id) ?? num(row.worker_id);
+      return { sessionId, cardId: sessionCard, employeeId: empId, factDate, goodQty, resolvedVia: 'session_card' };
+    }
 
     // Priority 1a: operator's user primary card.
     const operatorUserCard = num(row.operator_user_card);

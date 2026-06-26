@@ -30,6 +30,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { SubmitInspectionCommand, CreateInspectionCommand } from '../application/commands';
+import { QcDecision } from '../application/commands/submit-inspection.command';
 import { QcNewService } from '../application/qc-new.service';
 
 const QC_INSPECTION_ROLES = ['qc_specialist', 'super_admin', 'director', 'qc_manager', 'qc_inspector'];
@@ -100,17 +101,41 @@ export class QcInspectionsController {
     return { statusCode: HttpStatus.CREATED, data: result };
   }
 
-  @ApiOperation({ summary: 'Submit inspection' })
+  @ApiOperation({ summary: 'Submit inspection (3-way: pass / fail / rework)' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post(':id/submit')
   async submitInspection(
     @Param('id') inspectionId: string,
-    @Body() dto: { orderId: number; passed: boolean; reason?: string; supplierId?: number },
+    @Body() dto: { orderId: number; passed?: boolean; decision?: QcDecision; reason?: string; supplierId?: number },
   ) {
-    const cmd = new SubmitInspectionCommand(inspectionId, dto.orderId, dto.passed, dto.reason ?? '', dto.supplierId);
+    // 3-way QC verdict: explicit `decision` (pass/fail/rework) wins; legacy
+    // callers may still send `passed` (true→pass, false→fail).
+    const decision: QcDecision | undefined =
+      dto.decision ?? (typeof dto.passed === 'boolean' ? (dto.passed ? 'pass' : 'fail') : undefined);
+    const passed = decision ? decision === 'pass' : Boolean(dto.passed);
+    const cmd = new SubmitInspectionCommand(
+      inspectionId, dto.orderId, passed, dto.reason ?? '', dto.supplierId, decision,
+    );
     const result = await this.commandBus.execute(cmd);
-    this.logger.log('Inspection submitted');
+    this.logger.log(`Inspection submitted (decision=${decision ?? (passed ? 'pass' : 'fail')})`);
+    return { statusCode: HttpStatus.OK, data: result };
+  }
+
+  @ApiOperation({ summary: 'QC rework decision — return batch to production (Qayta ishlash)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post(':id/rework')
+  @HttpCode(HttpStatus.OK)
+  async reworkInspection(
+    @Param('id') inspectionId: string,
+    @Body() dto: { orderId: number; reason?: string },
+  ) {
+    const cmd = new SubmitInspectionCommand(
+      inspectionId, dto.orderId, false, dto.reason ?? '', undefined, 'rework',
+    );
+    const result = await this.commandBus.execute(cmd);
+    this.logger.log(`Inspection ${inspectionId} sent to rework`);
     return { statusCode: HttpStatus.OK, data: result };
   }
 

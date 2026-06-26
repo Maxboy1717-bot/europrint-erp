@@ -56,14 +56,29 @@ export class OrderCreatedDeliveryListener
       return;
     }
 
-    // TODO PA2-18: enrich OrderCreatedEvent with customerName + deliveryAddress
-    // (or look them up via SalesOrderRepository + CustomerRepository) and call
-    // Delivery.createForSalesOrder(customerName, deliveryAddress) here. Until
-    // then this handler is a no-op for the auto-create path. The legacy
-    // ERP_EVENTS.ORDER_CREATED string emit (with rich payload from the
-    // outbox) is still consumed by any non-migrated listener via EventBridge.
-    this.logger.warn(
-      `OrderCreatedDeliveryListener: customerName/deliveryAddress not in OrderCreatedEvent — delivery auto-create deferred for sales order ${salesOrderId}`,
-    );
+    // PA2-18 resolved: the canonical OrderCreatedEvent does not carry
+    // customerName/deliveryAddress, so the repo resolves them from the sales
+    // order (and its linked CRM company) itself. This auto-creates the
+    // logistics delivery record — closing the SD → Logistics golden-thread hop.
+    const created = await this.deliveryRepo.createFromSalesOrder(event.orderId);
+    if (!created.ok) {
+      this.logger.error(
+        `OrderCreatedDeliveryListener: failed to auto-create delivery for sales order ${salesOrderId}: ${created.error.message}`,
+      );
+      return;
+    }
+    if (!created.data) {
+      this.logger.warn(
+        `OrderCreatedDeliveryListener: sales order ${salesOrderId} not found — no delivery created`,
+      );
+      return;
+    }
+    this.logger.log({
+      msg: 'Delivery auto-created for sales order',
+      salesOrderId,
+      deliveryId: created.data.id,
+      deliveryNumber: created.data.deliveryNumber,
+      customerName: created.data.customerName,
+    });
   }
 }

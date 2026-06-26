@@ -78,13 +78,38 @@ export async function execSdSalesOrderInsert(
   // Normal path: the INSERT returns the new serial id. On conflict (duplicate
   // order_number) returning is empty — fall back to looking up the existing row
   // so the caller still gets the real id (idempotent create) instead of 0.
-  if (rows[0]?.id != null) return Number(rows[0].id);
-  const existing = await conn
-    .select({ id: sd_sales_orders.id })
-    .from(sd_sales_orders)
-    .where(eq(sd_sales_orders.order_number, orderNumber))
-    .limit(1);
-  return existing[0]?.id != null ? Number(existing[0].id) : 0;
+  const newId = rows[0]?.id != null
+    ? Number(rows[0].id)
+    : await (async () => {
+        const existing = await conn
+          .select({ id: sd_sales_orders.id })
+          .from(sd_sales_orders)
+          .where(eq(sd_sales_orders.order_number, orderNumber))
+          .limit(1);
+        return existing[0]?.id != null ? Number(existing[0].id) : 0;
+      })();
+
+  // T7-01 (Golden): backfill the SAP-style document_number + overall_status on
+  // the freshly-created row. The `sd_sales_orders` Drizzle stub does not map
+  // these two columns, but they exist on the underlying `sales_orders` base
+  // table (the auto-updatable view forwards the write), and create handlers were
+  // never setting them → every API order landed with document_number/overall_status NULL.
+  //   • document_number = the generated SO-YYYY-NNNNNN (already UNIQUE via the
+  //     order_number constraint — 1:1 with order_number), satisfying the
+  //     "SO-YYYY-NNNNNN unique" contract without a second sequence.
+  //   • overall_status = 'IN_PROCESS' — the schema default + golden-thread entry state.
+  // Runs on `conn` so it is atomic with the order INSERT (and, when a tx is passed,
+  // with the sibling outbox write). Only fills NULLs so a re-run / idempotent
+  // create never clobbers an existing value.
+  if (newId > 0) {
+    await conn.execute(sql`
+      UPDATE sales_orders
+         SET document_number = COALESCE(document_number, ${orderNumber}),
+             overall_status  = COALESCE(overall_status, 'IN_PROCESS')
+       WHERE id = ${newId}
+    `);
+  }
+  return newId;
 }
 
 export async function execSdSalesOrderUpdate(

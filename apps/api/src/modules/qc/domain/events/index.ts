@@ -16,6 +16,21 @@ export class QcFailedEvent {
   ) {}
 }
 
+/**
+ * Emitted when an inspector's third QC decision is REWORK (Qayta ishlash) —
+ * the batch is neither accepted (pass) nor scrapped (fail) but sent back to
+ * production for rework. Carries the optional inspector reason so downstream
+ * MES/PP listeners can re-open the job. Mirrors the WMS quarantine REWORK
+ * decision but on the qc_inspections aggregate path.
+ */
+export class QcReworkEvent {
+  constructor(
+    readonly inspectionId: string,
+    readonly orderId: number,
+    readonly reason: string,
+  ) {}
+}
+
 export class SupplierQualityFailEvent {
   constructor(
     readonly supplierId: number,

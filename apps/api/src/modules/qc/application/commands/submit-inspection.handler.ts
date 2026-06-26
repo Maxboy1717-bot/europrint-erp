@@ -6,8 +6,8 @@
 import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
-import { SubmitInspectionCommand } from './submit-inspection.command';
-import { QcPassedEvent, QcFailedEvent, SupplierQualityFailEvent } from '../../domain/events';
+import { SubmitInspectionCommand, QcDecision } from './submit-inspection.command';
+import { QcPassedEvent, QcFailedEvent, QcReworkEvent, SupplierQualityFailEvent } from '../../domain/events';
 import { IQcRepository, QC_REPOSITORY_PROVIDER } from '../repositories/qc.repository';
 
 @Injectable()
@@ -21,6 +21,11 @@ export class SubmitInspectionHandler implements ICommandHandler<SubmitInspection
   ) {}
 
   async execute(command: SubmitInspectionCommand): Promise<Result<string>> {
+    // Resolve the 3-way decision: explicit `decision` wins; otherwise derive
+    // from the legacy `passed` boolean so existing callers keep their behaviour.
+    const decision: QcDecision =
+      command.decision ?? (command.passed ? 'pass' : 'fail');
+
     // Inspection read + state transition + save atomically — partial failures roll back.
     const outcome = await this.qcRepository.withTransaction(async (tx) => {
       const inspection = await this.qcRepository.findById(command.inspectionId, tx);
@@ -28,8 +33,10 @@ export class SubmitInspectionHandler implements ICommandHandler<SubmitInspection
         return Err(AppErr('NOT_FOUND', 'Inspection not found'));
       }
 
-      if (command.passed) {
+      if (decision === 'pass') {
         inspection.pass();
+      } else if (decision === 'rework') {
+        inspection.rework(command.reason);
       } else {
         inspection.fail(command.reason);
       }
@@ -47,9 +54,14 @@ export class SubmitInspectionHandler implements ICommandHandler<SubmitInspection
     }
 
     // Publish events only after the tx committed.
-    if (command.passed) {
+    if (decision === 'pass') {
       this.eventBus.publish(new QcPassedEvent(inspectionId, command.orderId));
       this.logger.log('QC passed - Trigger 11');
+    } else if (decision === 'rework') {
+      // Third QC decision (Qayta ishlash): batch returns to production rather
+      // than being accepted or scrapped. No supplier-fail event is raised.
+      this.eventBus.publish(new QcReworkEvent(inspectionId, command.orderId, command.reason));
+      this.logger.log({ inspectionId, orderId: command.orderId }, 'QC rework - batch returned to production');
     } else {
       this.eventBus.publish(new QcFailedEvent(inspectionId, command.orderId, command.reason));
 

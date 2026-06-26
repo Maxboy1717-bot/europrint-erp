@@ -37,6 +37,33 @@ const STAGE_COLUMNS: Record<ApprovalStage, { byCol: keyof typeof salaryPayoutApp
 
 @Injectable()
 export class DrizzleCashierPayrollRepository implements ICashierPayrollRepository {
+  /**
+   * SHARED READ (T7-11) — card-derived monthly salary total for an employee (FORMULA-A).
+   * Identical SUM to org-structure CardRepository.employeeSalaryTotal:
+   *   own       = SUM of substantive (non-acting) cards' max_salary
+   *   supplement= SUM of acting cards' acting_supplement
+   * On-read revert guard drops expired dated links; COALESCE NULL→0 (no forge — 0 means the
+   * owner has not set card max_salary yet, Q-40). Parametrised (Qoida B); read-only join.
+   */
+  async getEmployeeCardSalaryTotal(employeeId: number): Promise<Result<number>> {
+    try {
+      const rows = await typedExecute<{ total: string | number }>(sql`
+        SELECT ( COALESCE(SUM(CASE WHEN COALESCE(ec.is_acting, false) THEN 0 ELSE COALESCE(f.max_salary, 0) END), 0)
+               + COALESCE(SUM(CASE WHEN ec.is_acting THEN COALESCE(ec.acting_supplement, 0) ELSE 0 END), 0) )::numeric AS total
+          FROM employee_cards ec
+          JOIN org_departments f ON f.id = ec.card_id
+         WHERE ec.employee_id = ${employeeId}
+           AND ec.is_active
+           AND (ec.ended_at IS NULL OR ec.ended_at > now())
+           AND f.is_active = true
+      `);
+      const total = Array.isArray(rows) ? Number(rows[0]?.total ?? 0) : 0;
+      return Ok(Number.isFinite(total) ? total : 0);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `EMPLOYEE_CARD_SALARY_TOTAL_FAILED: ${String(e)}`));
+    }
+  }
+
   // ---------- FEATURE A: salary-payout approval chain ----------
   async findApprovalByReference(reference: string): Promise<Result<SalaryPayoutApproval | null>> {
     try {
