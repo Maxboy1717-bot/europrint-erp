@@ -83,7 +83,7 @@ export function NormsTab() {
                   <TableHead>{t("normativTezlik") ?? "Soatlik unumdorlik"}</TableHead>
                   <TableHead>{t("tayyorlovVaqti") ?? "Ish soat/kun"}</TableHead>
                   <TableHead>{t("oeeMaqsad") ?? "OEE maqsad"}</TableHead>
-                  <TableHead>Uskuna soni</TableHead>
+                  <TableHead>{t("uskunaSoni")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -132,22 +132,22 @@ export function SmenaTab({ currentShift, onHandoverToast, onConfirmHandover }: S
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mes/stats"] });
       setEvalShiftId(""); setEvalProd(""); setEvalQual(""); setEvalSafety(""); setEvalNotes("");
-      toast({ title: "Smena baholandi" });
+      toast({ title: t("smenaBaholandi") });
     },
     onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
   });
 
   const smenaStats = [
-    { l: "Joriy smena ishlab chiqarishi", v: currentShift?.producedQty ?? "—", c: "text-primary"   },
-    { l: "Brak miqdori",                  v: currentShift?.brakQty    ?? "—", c: "text-[var(--ep-red)]"   },
+    { l: t("joriySmenaIshlabChiqarishi"), v: currentShift?.producedQty ?? "—", c: "text-primary"   },
+    { l: t("brakMiqdori"),                  v: currentShift?.brakQty    ?? "—", c: "text-[var(--ep-red)]"   },
     { l: "OEE",                           v: currentShift?.oee ? `${currentShift.oee}%` : "—", c: "text-[var(--ep-green)]" },
   ];
 
   const outgoingInfo = [
-    { label: "Chiquvchi operator", value: currentShift?.operatorName || "—" },
-    { label: "Smena boshlanishi",  value: currentShift?.startTime ? new Date(currentShift.startTime).toLocaleTimeString("uz-UZ") : "—" },
-    { label: "Stanoq holati",      value: currentShift?.machineStatus || "Ishlamoqda" },
-    { label: "Eslatmalar",         value: currentShift?.notes || "Yo'q" },
+    { label: t("chiquvchiOperator"), value: currentShift?.operatorName || "—" },
+    { label: t("smenaBoshlanishi"),  value: currentShift?.startTime ? new Date(currentShift.startTime).toLocaleTimeString("uz-UZ") : "—" },
+    { label: t("stanoqHolatiLabel"),      value: currentShift?.machineStatus || t("ishlamoqdaHolat") },
+    { label: t("eslatmalarLabel"),         value: currentShift?.notes || t("yoq") },
   ];
 
 
@@ -159,8 +159,8 @@ export function SmenaTab({ currentShift, onHandoverToast, onConfirmHandover }: S
           <Badge variant="outline" data-testid="badge-current-shift">
             <Clock className="h-3 w-3 mr-1" />
             {currentShift
-              ? `${currentShift.shiftName || "Joriy smena"} — ${currentShift.operatorName || "Operator"}`
-              : "Faol smena yo'q"}
+              ? `${currentShift.shiftName || t("joriySmenaLabel")} — ${currentShift.operatorName || t("operatorRol")}`
+              : t("faolSmenaYoq")}
           </Badge>
           <Button
             size="sm"
@@ -263,30 +263,30 @@ export function SmenaTab({ currentShift, onHandoverToast, onConfirmHandover }: S
       {/* Smena baholash (Shift Evaluation) */}
       <Card>
         <CardHeader>
-          <h3 className="font-semibold text-sm flex items-center gap-2"><Star className="h-4 w-4 text-[var(--ep-yellow)]" /> Smena Baholash</h3>
+          <h3 className="font-semibold text-sm flex items-center gap-2"><Star className="h-4 w-4 text-[var(--ep-yellow)]" /> {t("smenaBaholash")}</h3>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-sm">Smena raqami (ID) <span className="text-destructive">*</span></Label>
+              <Label className="text-sm">{t("smenaRaqamiId")} <span className="text-destructive">*</span></Label>
               <Input type="number" min="1" placeholder="1, 2, 3..." value={evalShiftId} onChange={e => setEvalShiftId(e.target.value)} data-testid="input-eval-shift-id" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm">Ishlab chiqarish (0-100)</Label>
+              <Label className="text-sm">{t("ishlabChiqarish0100")}</Label>
               <Input type="number" min="0" max="100" placeholder="85" value={evalProd} onChange={e => setEvalProd(e.target.value)} data-testid="input-eval-prod" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm">Sifat (0-100)</Label>
+              <Label className="text-sm">{t("sifat0100")}</Label>
               <Input type="number" min="0" max="100" placeholder="90" value={evalQual} onChange={e => setEvalQual(e.target.value)} data-testid="input-eval-qual" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm">Xavfsizlik (0-100)</Label>
+              <Label className="text-sm">{t("xavfsizlik0100")}</Label>
               <Input type="number" min="0" max="100" placeholder="95" value={evalSafety} onChange={e => setEvalSafety(e.target.value)} data-testid="input-eval-safety" />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Izoh (ixtiyoriy)</Label>
-            <Textarea value={evalNotes} onChange={e => setEvalNotes(e.target.value)} placeholder="Smena davomidagi kuzatishlar..." className="min-h-[60px]" data-testid="input-eval-notes" />
+            <Label className="text-sm">{t("izohIxtiyoriy")}</Label>
+            <Textarea value={evalNotes} onChange={e => setEvalNotes(e.target.value)} placeholder={t("smenaDavomidagiKuzatishlar")} className="min-h-[60px]" data-testid="input-eval-notes" />
           </div>
           <Button
             className="w-full"
@@ -301,7 +301,7 @@ export function SmenaTab({ currentShift, onHandoverToast, onConfirmHandover }: S
             })}
           >
             <Star className="h-4 w-4 mr-1.5" />
-            {closeEvalMutation.isPending ? "Saqlanmoqda..." : "Smenani baholash"}
+            {closeEvalMutation.isPending ? t("saqlanmoqda") : t("smenaniBaholash")}
           </Button>
         </CardContent>
       </Card>

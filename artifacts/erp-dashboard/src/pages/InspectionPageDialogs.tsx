@@ -58,7 +58,7 @@ export function RoomDetailModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-[var(--ep-blue)]" />
-            {roomMeta?.name ?? roomCode} — Batafsil
+            {roomMeta?.name ?? roomCode} — {t("qcBatafsil")}
             {hasAnomaly && <EPStatusPill tone="danger" className="ml-2">{t("anomaliya")}</EPStatusPill>}
           </DialogTitle>
         </DialogHeader>

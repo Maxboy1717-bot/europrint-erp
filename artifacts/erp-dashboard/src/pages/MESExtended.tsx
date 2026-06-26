@@ -146,10 +146,10 @@ export default function MESExtended() {
   const worldClass = machines.filter(m => Number(m.oee || 0) >= 85).length;
 
   const kpiItems = [
-    { label: "O'rtacha OEE",      value: `${avgOee || (mesStats?.avgOee as number) || 0}%`,    desc: "Uskunalar samaradorligi", Icon: Activity, accent: "text-[var(--ep-blue)]"   },
-    { label: "World Class (≥85%)", value: worldClass || (mesStats?.worldClassCount as number) || 0, desc: "Stanoq",               Icon: Trophy,   accent: "text-[var(--ep-green)]"  },
-    { label: "Ta'mirlashda",       value: machines.filter(m => m.status?.includes("Ta'mir") || m.status === "maintenance").length, desc: "Hozir nosoz", Icon: Wrench, accent: "text-[var(--ep-red)]"    },
-    { label: "Jami Stanoqlar",     value: machines.length,                                       desc: "Monitoring ostida",      Icon: Cpu,      accent: "text-[var(--ep-purple)]" },
+    { label: t("ortachaOee"),      value: `${avgOee || (mesStats?.avgOee as number) || 0}%`,    desc: t("uskunalarSamaradorligi"), Icon: Activity, accent: "text-[var(--ep-blue)]"   },
+    { label: "World Class (≥85%)", value: worldClass || (mesStats?.worldClassCount as number) || 0, desc: t("stanoqDesc"),               Icon: Trophy,   accent: "text-[var(--ep-green)]"  },
+    { label: t("tamirlashda"),       value: machines.filter(m => m.status?.includes("Ta'mir") || m.status === "maintenance").length, desc: t("hozirNosoz"), Icon: Wrench, accent: "text-[var(--ep-red)]"    },
+    { label: t("jamiStanoqlar"),     value: machines.length,                                       desc: t("monitoringOstida"),      Icon: Cpu,      accent: "text-[var(--ep-purple)]" },
   ];
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -159,12 +159,12 @@ export default function MESExtended() {
       <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("mesSexBoshqaruvi")}</b></>}
         title={t("mesSexBoshqaruvi")}
-        subtitle="OEE monitoring, smena boshqaruvi, texnik xizmat"
+        subtitle={t("oeeMonitoringSmenaBoshqaruvi")}
       >
         {currentShift && (
           <Badge variant="secondary" className="flex items-center gap-1.5">
             <Clock className="h-3 w-3" />
-            {currentShift.shiftName || "Aktiv smena"}
+            {currentShift.shiftName || t("aktivSmena")}
           </Badge>
         )}
         <Button variant="outline" size="sm" onClick={() => refetchOee()}>

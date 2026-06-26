@@ -75,12 +75,12 @@ export default function ProductionFactsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/production-facts"] });
-      toast({ title: "Ishlab chiqarish fakti qo'shildi" });
+      toast({ title: t("ishlabChiqarishFaktiQoshildi") });
       setShowCreate(false);
       setForm({ product_name: "", order_number: "", planned_qty: "", actual_qty: "", defect_qty: "0", shift: "", operator: "", notes: "" });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Fakt qo'shishda xatolik", variant: "destructive" });
+      toast({ title: t("xatolik"), description: t("faktQoshishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -136,7 +136,7 @@ export default function ProductionFactsPage() {
             <CardContent className="py-12 text-center">
               <Factory className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                {search ? "Qidiruv natijasi topilmadi" : "Ishlab chiqarish faktlari yo'q"}
+                {search ? t("qidiruvNatijasiTopilmadi") : t("ishlabChiqarishFaktlariYoq")}
               </p>
             </CardContent>
           </Card>
@@ -160,11 +160,11 @@ export default function ProductionFactsPage() {
                       <p className="font-medium text-sm truncate">{name}</p>
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5 text-xs text-muted-foreground">
                         {orderNo && <span>#{orderNo}</span>}
-                        <span>Reja: {planned}</span>
-                        <span>Haqiqat: {actual}</span>
-                        {defects > 0 && <span className="text-destructive">Brak: {defects}</span>}
-                        {f.operator && <span>Operator: {f.operator}</span>}
-                        {f.shift && <span>Smena: {f.shift}</span>}
+                        <span>{t("rejaLabel")}: {planned}</span>
+                        <span>{t("haqiqatLabel")}: {actual}</span>
+                        {defects > 0 && <span className="text-destructive">{t("brakLabel")}: {defects}</span>}
+                        {f.operator && <span>{t("operatorLabel")}: {f.operator}</span>}
+                        {f.shift && <span>{t("smenaLabel")}: {f.shift}</span>}
                         {date && <span>{new Date(date).toLocaleDateString("uz-UZ")}</span>}
                       </div>
                     </div>
@@ -280,7 +280,7 @@ export default function ProductionFactsPage() {
               disabled={!form.product_name.trim() || createMutation.isPending}
               data-testid="button-confirm-create-fact"
             >
-              {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+              {createMutation.isPending ? t("saqlanmoqda") : t("saqlash")}
             </Button>
           </DialogFooter>
         </DialogContent>

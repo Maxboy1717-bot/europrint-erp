@@ -44,9 +44,9 @@ export default function MarketingSettings() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/settings"] });
       setOpen(false);
       resetForm();
-      toast({ title: "Sozlama yaratildi" });
+      toast({ title: t("sozlamaYaratildi") });
     },
-    onError: (e: unknown) => toast({ title: "Xatolik", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("xatolik"), description: (e as Error).message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -55,7 +55,7 @@ export default function MarketingSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/settings"] });
       setEditId(null);
-      toast({ title: "Sozlama saqlandi" });
+      toast({ title: t("sozlamaSaqlandi") });
     },
   });
 
@@ -65,9 +65,9 @@ export default function MarketingSettings() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/settings/social-api"] });
       setApiOpen(false);
       resetApiForm();
-      toast({ title: "API sozlama saqlandi" });
+      toast({ title: t("apiSozlamaSaqlandi") });
     },
-    onError: (e: unknown) => toast({ title: "Xatolik", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("xatolik"), description: (e as Error).message, variant: "destructive" }),
   });
 
   const apiUpdateMutation = useMutation({
@@ -77,7 +77,7 @@ export default function MarketingSettings() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/settings/social-api"] });
       setApiOpen(false);
       resetApiForm();
-      toast({ title: "API sozlama yangilandi" });
+      toast({ title: t("apiSozlamaYangilandi") });
     },
   });
 

@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { warehousesApi } from "../api/pos-monitor.api";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface Warehouse {
   id: string;
@@ -21,20 +22,20 @@ interface Warehouse {
 
 const TYPE_CFG: Record<string, { icon: string; bg: string; text: string; badge: string; label: string }> = {
   // ERP standart 9 ta ombor turi (warehouse-9-types-seed.sql ga muvofiq)
-  RAW_MATERIAL:  { icon: "📦", bg: "#FEF3C7", text: "#92400E", badge: "var(--pos-warning)", label: "Xom ashyo" },
-  FINISHED_GOODS:{ icon: "✅",  bg: "#ECFDF5", text: "#064E3B", badge: "var(--pos-success)", label: "Tayyor mahsulot" },
-  WIP:           { icon: "⚙️",  bg: "#F5F3FF", text: "#4C1D95", badge: "#8B5CF6", label: "Yarim tayyor" },
-  SCRAP:         { icon: "⚠️",  bg: "#FFF1F2", text: "#881337", badge: "#F43F5E", label: "Brak" },
-  QUARANTINE:    { icon: "🔒", bg: "#FEF3C7", text: "#92400E", badge: "#D97706", label: "Karantin" },
-  TOOLS:         { icon: "🔧", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", badge: "var(--pos-accent)", label: "Asbob-uskuna" },
-  HOUSEHOLD:     { icon: "🏠", bg: "#FFF7ED", text: "#7C2D12", badge: "#F97316", label: "Xo'jalik" },
+  RAW_MATERIAL:  { icon: "📦", bg: "#FEF3C7", text: "#92400E", badge: "var(--pos-warning)", label: tLabel('common.PosWarehouses.typeRawMaterial', "Xom ashyo") },
+  FINISHED_GOODS:{ icon: "✅",  bg: "#ECFDF5", text: "#064E3B", badge: "var(--pos-success)", label: tLabel('common.PosWarehouses.typeFinishedGoods', "Tayyor mahsulot") },
+  WIP:           { icon: "⚙️",  bg: "#F5F3FF", text: "#4C1D95", badge: "#8B5CF6", label: tLabel('common.PosWarehouses.typeWip', "Yarim tayyor") },
+  SCRAP:         { icon: "⚠️",  bg: "#FFF1F2", text: "#881337", badge: "#F43F5E", label: tLabel('common.PosWarehouses.typeScrap', "Brak") },
+  QUARANTINE:    { icon: "🔒", bg: "#FEF3C7", text: "#92400E", badge: "#D97706", label: tLabel('common.PosWarehouses.typeQuarantine', "Karantin") },
+  TOOLS:         { icon: "🔧", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", badge: "var(--pos-accent)", label: tLabel('common.PosWarehouses.typeTools', "Asbob-uskuna") },
+  HOUSEHOLD:     { icon: "🏠", bg: "#FFF7ED", text: "#7C2D12", badge: "#F97316", label: tLabel('common.PosWarehouses.typeHousehold', "Xo'jalik") },
   MRO:           { icon: "🛠️", bg: "#F0F9FF", text: "#0C4A6E", badge: "#0EA5E9", label: "MRO" },
 
   // Eski turlar uchun fallback (legacy WH-* omborlar — endi nofaol)
-  MAIN:          { icon: "🏭", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", badge: "var(--pos-accent)", label: "Asosiy" },
-  PRODUCTION:    { icon: "⚙️",  bg: "#F5F3FF", text: "#4C1D95", badge: "#8B5CF6", label: "Ishlab chiqarish" },
-  DEPARTMENT:    { icon: "🏢", bg: "#FFF7ED", text: "#7C2D12", badge: "#F97316", label: "Bo'lim" },
-  DEFECTIVE:     { icon: "⚠️",  bg: "#FFF1F2", text: "#881337", badge: "#F43F5E", label: "Nuqsonli" },
+  MAIN:          { icon: "🏭", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", badge: "var(--pos-accent)", label: tLabel('common.PosWarehouses.typeMain', "Asosiy") },
+  PRODUCTION:    { icon: "⚙️",  bg: "#F5F3FF", text: "#4C1D95", badge: "#8B5CF6", label: tLabel('common.PosWarehouses.typeProduction', "Ishlab chiqarish") },
+  DEPARTMENT:    { icon: "🏢", bg: "#FFF7ED", text: "#7C2D12", badge: "#F97316", label: tLabel('common.PosWarehouses.typeDepartment', "Bo'lim") },
+  DEFECTIVE:     { icon: "⚠️",  bg: "#FFF1F2", text: "#881337", badge: "#F43F5E", label: tLabel('common.PosWarehouses.typeDefective', "Nuqsonli") },
   QC:            { icon: "🔬", bg: "#F0FDF4", text: "#14532D", badge: "#22C55E", label: "QC" },
 };
 
@@ -101,7 +102,7 @@ function WarehouseCard({ wh }: { wh: Warehouse }) {
           <div style={{ fontSize: 20, fontWeight: 800, color: "var(--pos-text)" }}>
             {wh.totalMaterials}
           </div>
-          <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{"Common.material Tur"}</div>
+          <div style={{ fontSize: 10, color: "var(--pos-text-muted)" }}>{t("materialTur")}</div>
         </div>
         <div style={{
           background: "var(--pos-bg)", borderRadius: 8, padding: "10px 12px", textAlign: "center",
@@ -165,7 +166,7 @@ export default function PosWarehouses() {
       const rows = (Array.isArray(data) ? data : []) as Warehouse[];
       setWarehouses(rows);
     } catch (e: unknown) {
-      setError((e as Error).message ?? "Omborlarni yuklashda xato");
+      setError((e as Error).message ?? tLabel('common.PosWarehouses.loadError', "Omborlarni yuklashda xato"));
     } finally {
       setLoading(false);
     }
@@ -230,9 +231,9 @@ export default function PosWarehouses() {
           padding: "10px 20px", display: "flex", gap: 20,
         }}>
           {[
-            { label: "Jami ombor", value: stats.total, color: "var(--pos-accent)" },
-            { label: "Faol ombor", value: stats.active, color: "var(--pos-success)" },
-            { label: "Material tur", value: stats.materials, color: "var(--pos-warning)" },
+            { label: tLabel('common.PosWarehouses.statTotal', "Jami ombor"), value: stats.total, color: "var(--pos-accent)" },
+            { label: tLabel('common.PosWarehouses.statActive', "Faol ombor"), value: stats.active, color: "var(--pos-success)" },
+            { label: tLabel('common.PosWarehouses.statMaterialTypes', "Material tur"), value: stats.materials, color: "var(--pos-warning)" },
           ].map(s => (
             <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</span>
@@ -248,7 +249,7 @@ export default function PosWarehouses() {
           background: "var(--pos-card)", borderBottom: "1px solid var(--pos-border)",
           padding: "0 20px", display: "flex", gap: 4, overflowX: "auto",
         }}>
-          {[{ key: "all", label: "Barchasi" }, ...typeKeys.map(k => ({ key: k, label: getTypeCfg(k).label }))].map(t => (
+          {[{ key: "all", label: tLabel('common.PosWarehouses.filterAll', "Barchasi") }, ...typeKeys.map(k => ({ key: k, label: getTypeCfg(k).label }))].map(t => (
             <button
               key={t.key}
               onClick={() => setFilterType(t.key)}
@@ -318,7 +319,9 @@ export default function PosWarehouses() {
               {t("omborTopilmadi")}
             </div>
             <div style={{ fontSize: 13 }}>
-              {search ? `"${search}" bo'yicha ombor yo'q` : "Hali ombor qo'shilmagan"}
+              {search
+                ? `"${search}" ${tLabel('common.PosWarehouses.noResultSuffix', "bo'yicha ombor yo'q")}`
+                : tLabel('common.PosWarehouses.noWarehousesYet', "Hali ombor qo'shilmagan")}
             </div>
           </div>
         )}

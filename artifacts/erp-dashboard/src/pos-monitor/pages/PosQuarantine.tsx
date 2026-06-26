@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
 import { quarantineApi } from "../api/pos-monitor.api";
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface QuarantineItem {
   id: number;
@@ -50,7 +51,7 @@ export default function PosQuarantine() {
       setQcNote("");
       void load();
     } catch (e: unknown) {
-      setError((e as Error).message ?? "Xato yuz berdi");
+      setError((e as Error).message ?? tLabel('common.PosQuarantine.genericError', "Xato yuz berdi"));
     } finally { setSubmitting(false); }
   }
 
@@ -85,13 +86,13 @@ export default function PosQuarantine() {
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 15 }}>
-                      {urgent ? "🔴" : "🟡"} Harakat #{item.movementId}
+                      {urgent ? "🔴" : "🟡"} {tLabel('common.PosQuarantine.movement', "Harakat")} #{item.movementId}
                       {item.materialCode && <span style={{ fontSize: 12, color: "var(--pos-text-muted)", marginLeft: 8 }}>({item.materialCode})</span>}
                     </div>
                     <div style={{ display: "flex", gap: 24, marginTop: 8, fontSize: 13, color: "var(--pos-text-muted)", flexWrap: "wrap" }}>
                       {item.supplierName && <span>🏭 {item.supplierName}</span>}
                       {item.waybillNumber && <span>📄 {item.waybillNumber}</span>}
-                      <span>📦 {item.quantity} birlik</span>
+                      <span>📦 {item.quantity} {tLabel('common.PosQuarantine.unit', "birlik")}</span>
                       <span style={{ color: urgent ? "var(--pos-danger)" : "var(--pos-warning)", fontWeight: 600 }}>
                         ⏱ {hours} {t("quarantine.hoursInQuarantine")}
                       </span>
@@ -116,7 +117,7 @@ export default function PosQuarantine() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div className="pos-card" style={{ width: 480, maxWidth: "90vw" }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>
-              🔬 {t("quarantine.qcDecision")} — Harakat #{selected.movementId}
+              🔬 {t("quarantine.qcDecision")} — {tLabel('common.PosQuarantine.movement', "Harakat")} #{selected.movementId}
             </div>
 
             <div style={{ marginBottom: 12 }}>

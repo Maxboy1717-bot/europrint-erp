@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { apiRequest } from "@/lib/api-request";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -29,20 +30,20 @@ interface Threshold {
   weight: string | number;
 }
 
-const LEVEL_LABELS: Record<string, { label: string; color: string }> = {
-  OSISH:   { label: "O'sish",    color: "text-green-600" },
-  NORMAL:  { label: "Normal",    color: "text-blue-600" },
-  EHTIYOT: { label: "Ehtiyot",   color: "text-yellow-600" },
-  XAVF:    { label: "Xavf",      color: "text-orange-600" },
-  INQIROZ: { label: "Inqiroz",   color: "text-red-600" },
+const LEVEL_LABELS: Record<string, { labelKey: string; color: string }> = {
+  OSISH:   { labelKey: "cscLevelOsish",   color: "text-green-600" },
+  NORMAL:  { labelKey: "cscLevelNormal",  color: "text-blue-600" },
+  EHTIYOT: { labelKey: "cscLevelEhtiyot", color: "text-yellow-600" },
+  XAVF:    { labelKey: "cscLevelXavf",    color: "text-orange-600" },
+  INQIROZ: { labelKey: "cscLevelInqiroz", color: "text-red-600" },
 };
 
-const METRIC_LABELS: Record<string, string> = {
-  cash_flow:       "Pul oqimi",
-  orders:          "Buyurtmalar",
-  production_plan: "Ishlab chiqarish rejasi",
-  quality:         "Sifat",
-  hr:              "HR",
+const METRIC_LABEL_KEYS: Record<string, string> = {
+  cash_flow:       "cscMetricCashFlow",
+  orders:          "cscMetricOrders",
+  production_plan: "cscMetricProductionPlan",
+  quality:         "cscMetricQuality",
+  hr:              "cscMetricHr",
 };
 
 function fmt(v: string | number | null): string {
@@ -61,6 +62,7 @@ function ThresholdRow({
   onSave: (id: number, patch: { min_value?: number; max_value?: number; weight?: number }) => Promise<unknown>;
 }) {
   const { toast } = useToast();
+  const { t } = useTranslation("director");
   const [editing, setEditing] = useState(false);
   const [minVal, setMinVal]   = useState(row.min_value ?? "");
   const [maxVal, setMaxVal]   = useState(row.max_value ?? "");
@@ -77,7 +79,7 @@ function ThresholdRow({
   async function handleSave() {
     const w = parseFloat(weight);
     if (isNaN(w) || w <= 0 || w > 1) {
-      toast({ title: "Vazn 0 dan 1 gacha bo'lishi kerak (masalan 0.25)", variant: "destructive" });
+      toast({ title: t("cscWeightRange"), variant: "destructive" });
       return;
     }
     setBusy(true);
@@ -94,25 +96,28 @@ function ThresholdRow({
     }
   }
 
-  const levelInfo = LEVEL_LABELS[row.level_code] ?? { label: row.level_code, color: "" };
+  const levelInfo = LEVEL_LABELS[row.level_code];
+  const levelLabel = levelInfo ? t(levelInfo.labelKey) : row.level_code;
+  const levelColor = levelInfo?.color ?? "";
+  const metricKey = METRIC_LABEL_KEYS[row.metric_key];
 
   return (
     <TableRow>
       <TableCell className="text-sm font-medium w-40">
-        {METRIC_LABELS[row.metric_key] ?? row.metric_key}
+        {metricKey ? t(metricKey) : row.metric_key}
       </TableCell>
-      <TableCell className={`w-28 text-sm font-semibold ${levelInfo.color}`}>
-        {levelInfo.label}
+      <TableCell className={`w-28 text-sm font-semibold ${levelColor}`}>
+        {levelLabel}
       </TableCell>
       {editing ? (
         <>
           <TableCell className="w-32">
             <Input type="number" className="h-7 w-28 text-sm" value={minVal}
-              placeholder="null = cheksiz" onChange={(e) => setMinVal(e.target.value)} />
+              placeholder={t("cscNullPlaceholder")} onChange={(e) => setMinVal(e.target.value)} />
           </TableCell>
           <TableCell className="w-32">
             <Input type="number" className="h-7 w-28 text-sm" value={maxVal}
-              placeholder="null = cheksiz" onChange={(e) => setMaxVal(e.target.value)} />
+              placeholder={t("cscNullPlaceholder")} onChange={(e) => setMaxVal(e.target.value)} />
           </TableCell>
           <TableCell className="w-24">
             <Input type="number" step="0.01" min="0.01" max="1"
@@ -155,6 +160,7 @@ function ThresholdRow({
 
 export default function CompanyStateThresholdConfig() {
   const { toast } = useToast();
+  const { t } = useTranslation("director");
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<Threshold[]>({
@@ -170,9 +176,9 @@ export default function CompanyStateThresholdConfig() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-state/thresholds"] });
       queryClient.invalidateQueries({ queryKey: ["/api/company-state/current"] });
-      toast({ title: "Chegara saqlandi" });
+      toast({ title: t("cscThresholdSaved") });
     },
-    onError: () => toast({ title: "Saqlash xatoligi", variant: "destructive" }),
+    onError: () => toast({ title: t("cscSaveError"), variant: "destructive" }),
   });
 
   const thresholds: Threshold[] = Array.isArray(data) ? data : [];
@@ -192,10 +198,9 @@ export default function CompanyStateThresholdConfig() {
           <Building2 className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="font-semibold text-base">Kompaniya Holat Chegaralari</h1>
+          <h1 className="font-semibold text-base">{t("cscThresholdTitle")}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            5 metrika × 5 daraja = 25 chegara. Har metrikaning vazni (weight) jami 1.0 ga teng bo'lishi kerak.
-            O'sish/Normal/Ehtiyot/Xavf/Inqiroz — Director dashboard'da kompaniya holati shu chegaralar bo'yicha baholanadi.
+            {t("cscThresholdDesc")}
           </p>
         </div>
       </div>
@@ -205,12 +210,12 @@ export default function CompanyStateThresholdConfig() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-40">Metrika</TableHead>
-              <TableHead className="w-28">Daraja</TableHead>
-              <TableHead className="w-32 text-right">Min qiymat</TableHead>
-              <TableHead className="w-32 text-right">Max qiymat</TableHead>
-              <TableHead className="w-24 text-right">Vazn</TableHead>
-              <TableHead className="w-20 text-right">Amal</TableHead>
+              <TableHead className="w-40">{t("cscMetric")}</TableHead>
+              <TableHead className="w-28">{t("cscLevel")}</TableHead>
+              <TableHead className="w-32 text-right">{t("cscMinValue")}</TableHead>
+              <TableHead className="w-32 text-right">{t("cscMaxValue")}</TableHead>
+              <TableHead className="w-24 text-right">{t("cscWeight")}</TableHead>
+              <TableHead className="w-20 text-right">{t("cscAction")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -225,7 +230,7 @@ export default function CompanyStateThresholdConfig() {
             ) : thresholds.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  Chegaralar topilmadi
+                  {t("cscNoThresholds")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -238,8 +243,7 @@ export default function CompanyStateThresholdConfig() {
       </div>
 
       <p className="text-xs text-muted-foreground max-w-2xl">
-        Min=null: chegarasiz quyi; Max=null: chegarasiz yuqori. Vazn yig'indisi 1.0 bo'lmasa tizim standart baholarga qaytadi.
-        Pul oqimi = so'mda (UZS), qolganlar %= 0..100.
+        {t("cscFooter")}
       </p>
     </div>
   );

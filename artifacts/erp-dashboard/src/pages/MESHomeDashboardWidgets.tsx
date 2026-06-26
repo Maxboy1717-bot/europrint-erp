@@ -109,8 +109,8 @@ export function MesOrdersAndDowntimes({
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-foreground truncate">{d.reasonDescription || d.reasonCode}</p>
                         <p className="text-[10px] text-muted-foreground">
-                          {d.isPlanned ? "Rejalashtirilgan" : "Rejalashmagan"}
-                          {mins !== null && ` · ${mins} daq`}
+                          {d.isPlanned ? t("rejalashtirilganHolat") : t("rejalashmaganHolat")}
+                          {mins !== null && ` · ${mins} ${t("daqQisqa")}`}
                         </p>
                       </div>
                     </div>
@@ -135,7 +135,7 @@ export function MesActiveSessionsTable({ activeSessions, sessLoad }: { activeSes
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <SectionTitle icon={Activity} title={t("faolSessiyalar")} sub="Ishlayotgan xodimlar" />
+        <SectionTitle icon={Activity} title={t("faolSessiyalar")} sub={t("ishlayotganXodimlar")} />
         <Button variant="ghost" size="sm" asChild>
           <Link href="/mes/workers">{t("tayinlashlar")}<ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
         </Button>
@@ -200,13 +200,13 @@ export function MesActiveSessionsTable({ activeSessions, sessLoad }: { activeSes
 export function MesQuickLinks() {
   const { t } = useTranslation("common");
   const links = [
-    { label: "Ish markazlari", icon: Factory,      href: "/mes/work-centers",  color: "text-[var(--ep-blue)]" },
-    { label: "Mahsulotlar",    icon: Package,       href: "/mes/products",       color: "text-[var(--ep-purple)]" },
-    { label: "Buyurtmalar",   icon: BarChart3,      href: "/production/orders",  color: "text-[var(--ep-green)]" },
-    { label: "To'xtashlar",   icon: AlertTriangle,  href: "/mes/downtimes",      color: "text-[var(--ep-yellow)]" },
-    { label: "Xodimlar",      icon: Users,          href: "/mes/workers",        color: "text-pink-500" },
-    { label: "OEE Monitor",   icon: TrendingUp,     href: "/mes/oee-monitor",    color: "text-primary" },
-  ] as const;
+    { label: t("ishMarkazlari"), icon: Factory,      href: "/mes/work-centers",  color: "text-[var(--ep-blue)]" },
+    { label: t("qbMahsulotlar"), icon: Package,       href: "/mes/products",       color: "text-[var(--ep-purple)]" },
+    { label: t("qbBuyurtmalar"), icon: BarChart3,      href: "/production/orders",  color: "text-[var(--ep-green)]" },
+    { label: t("toxtashlar"),    icon: AlertTriangle,  href: "/mes/downtimes",      color: "text-[var(--ep-yellow)]" },
+    { label: t("qbXodimlar"),    icon: Users,          href: "/mes/workers",        color: "text-pink-500" },
+    { label: t("oeeMonitor"),    icon: TrendingUp,     href: "/mes/oee-monitor",    color: "text-primary" },
+  ];
 
   return (
     <section>

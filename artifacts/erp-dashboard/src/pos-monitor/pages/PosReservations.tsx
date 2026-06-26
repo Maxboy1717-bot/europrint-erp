@@ -71,7 +71,7 @@ export default function PosReservations() {
     <div style={{ minHeight: "100vh", background: "var(--pos-bg)", padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>BRON QILINGAN STOK</div>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600 }}>{t("bronQilinganStokUpper")}</div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{t('reservationPanel')}</h1>
           <p style={{ fontSize: 13, color: "var(--pos-text-muted)", marginTop: 4 }}>
             {t("buyurtmaYokiIshlabChiqarishUchun")}
@@ -84,11 +84,11 @@ export default function PosReservations() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12, marginBottom: 16 }}>
         <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 14, border: "1px solid var(--pos-border)" }}>
-          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>JAMI BRON</div>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("jamiBron")}</div>
           <div style={{ fontSize: 24, fontWeight: 800 }}>{items.length}</div>
         </div>
         <div style={{ background: "var(--pos-card)", borderRadius: 12, padding: 14, border: "1px solid var(--pos-border)" }}>
-          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>JAMI MIQDOR</div>
+          <div style={{ fontSize: 11, color: "var(--pos-text-muted)" }}>{t("jamiMiqdor")}</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: "var(--pos-warning)" }}>{fmt(totalReserved)}</div>
         </div>
       </div>

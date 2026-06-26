@@ -44,7 +44,7 @@ export function SettingsTabTax({ loading, form, onChange, onSave, isSaving }: Pr
                 onChange={(e) => onChange({ qqsRate: parseFloat(e.target.value) || 12 })}
                 data-testid="input-qqs-rate"
               />
-              <p className="text-xs text-muted-foreground">Joriy qiymat: {form.qqsRate}%</p>
+              <p className="text-xs text-muted-foreground">{t("joriyQiymat")}: {form.qqsRate}%</p>
             </div>
             <Button onClick={onSave} disabled={isSaving} data-testid="button-save-tax">
               {isSaving ? tCommon('loading') : tCommon('save')}

@@ -88,9 +88,9 @@ export default function MarketingLeads() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] });
       setOpen(false);
       resetForm();
-      toast({ title: "Lid qo'shildi" });
+      toast({ title: t("lidQoshildi") });
     },
-    onError: (e: Error) => toast({ title: "Xatolik", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: t("xatolik"), description: e.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -100,7 +100,7 @@ export default function MarketingLeads() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
       setOpen(false);
       resetForm();
-      toast({ title: "Lid yangilandi" });
+      toast({ title: t("lidYangilandi") });
     },
   });
 
@@ -109,7 +109,7 @@ export default function MarketingLeads() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] });
-      toast({ title: "Lid o'chirildi" });
+      toast({ title: t("lidOchirildi") });
     },
   });
 
@@ -118,17 +118,17 @@ export default function MarketingLeads() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/dashboard/stats"] });
-      toast({ title: "CRM ga yuborildi" });
+      toast({ title: t("crmGaYuborildi") });
     },
     onError: (e: Error) =>
-      toast({ title: "Xatolik", description: e.message || "CRM ga o'tkazishda xatolik", variant: "destructive" }),
+      toast({ title: t("xatolik"), description: e.message || t("crmGaOtkazishdaXatolik"), variant: "destructive" }),
   });
 
   const recalcScoreMutation = useMutation({
     mutationFn: () => apiRequest<{ updated: number }>("POST", "/api/marketing/leads/recalculate-scores", {}),
     onSuccess: (d) => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads"] });
-      toast({ title: `${d.updated} ta lid bali yangilandi` });
+      toast({ title: t("lidBaliYangilandi", { count: d.updated }) });
     },
   });
 
@@ -141,7 +141,7 @@ export default function MarketingLeads() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/leads", contactLeadId, "contacts"] });
       setContactForm({ type: "call", summary: "", outcome: "interested", nextFollowUp: "" });
-      toast({ title: "Aloqa qayd etildi" });
+      toast({ title: t("aloqaQaydEtildi") });
     },
   });
 

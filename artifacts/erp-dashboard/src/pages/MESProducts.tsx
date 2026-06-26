@@ -68,9 +68,9 @@ export default function MESProducts() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       setCreateOpen(false);
       setForm({ code: "", name: "", nameRu: "", category: "other", unit: "dona", standardCost: "" });
-      toast({ title: "Mahsulot yaratildi" });
+      toast({ title: t("mahsulotYaratildi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("xatolik"), variant: "destructive" }),
   });
 
   const toggleActiveMutation = useMutation({
@@ -78,9 +78,9 @@ export default function MESProducts() {
       ecommerceApi.updateProduct(id, { isActive: !isActive }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      toast({ title: "Mahsulot holati o'zgartirildi" });
+      toast({ title: t("mahsulotHolatiOzgartirildi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("xatolik"), variant: "destructive" }),
   });
 
   const filtered = (Array.isArray(products) ? products : []).filter(p =>
@@ -100,10 +100,10 @@ export default function MESProducts() {
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <Badge variant="outline" className="gap-1.5">
-            <CheckCircle className="w-3 h-3 text-[var(--ep-green)]" /> {active} faol
+            <CheckCircle className="w-3 h-3 text-[var(--ep-green)]" /> {active} {t("faolBadge")}
           </Badge>
           <Badge variant="outline" className="gap-1.5">
-            <Package className="w-3 h-3 text-muted-foreground" /> {products.length} jami
+            <Package className="w-3 h-3 text-muted-foreground" /> {products.length} {t("jamiBadge")}
           </Badge>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> {t("mahsulotQoshish")}
@@ -129,7 +129,7 @@ export default function MESProducts() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-[13px] text-muted-foreground">
           <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>{search ? "Qidiruv bo'yicha topilmadi" : "Mahsulot topilmadi"}</p>
+          <p>{search ? t("qidiruvBoyichaTopilmadi") : t("mahsulotTopilmadi")}</p>
           <Button className="mt-4" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-2" /> {t("mahsulotQoshish")}
           </Button>

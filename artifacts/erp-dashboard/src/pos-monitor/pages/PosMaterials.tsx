@@ -28,35 +28,35 @@ interface MaterialRow {
 // INK, PAPER, PLATE, FILM, ASSET, OFFICE, va boshqalar
 const CAT_CONFIG: Record<string, { icon: string; bg: string; text: string; label: string }> = {
   // EuroPrint asosiy kategoriyalar (chop etish ishlab chiqarishi)
-  "INK":         { icon: "🖋️", bg: "#FAF5FF", text: "#581C87", label: "Bo'yoq" },
-  "PAPER":       { icon: "📄", bg: "#FEF3C7", text: "#92400E", label: "Qog'oz" },
-  "PLATE":       { icon: "🟫", bg: "#FFFBEB", text: "#78350F", label: "Plastina" },
-  "FILM":        { icon: "🎞️", bg: "#EDE9FE", text: "#4C1D95", label: "Plyonka" },
-  "ASSET":       { icon: "🧰", bg: "#F0FDF4", text: "#14532D", label: "Aktiv" },
-  "OFFICE":      { icon: "📎", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", label: "Ofis" },
-  "CARDBOARD":   { icon: "📦", bg: "#FEF3C7", text: "#92400E", label: "Karton" },
-  "CARTON":      { icon: "📦", bg: "#FEF3C7", text: "#92400E", label: "Karton" },
-  "GLUE":        { icon: "🧴", bg: "#FDF4FF", text: "#701A75", label: "Yelim" },
-  "CHEMICAL":    { icon: "⚗️", bg: "#ECFDF5", text: "#064E3B", label: "Kimyo" },
-  "SOLVENT":     { icon: "🧪", bg: "#ECFDF5", text: "#064E3B", label: "Erituvchi" },
-  "PACKAGING":   { icon: "📮", bg: "#FFF7ED", text: "#7C2D12", label: "Qadoqlash" },
-  "TOOL":        { icon: "🔧", bg: "#F1F5F9", text: "var(--pos-text)", label: "Asbob" },
-  "SPARE":       { icon: "⚙️", bg: "#F1F5F9", text: "var(--pos-text)", label: "Ehtiyot qism" },
-  "CONSUMABLE":  { icon: "🧴", bg: "#FFFBEB", text: "#78350F", label: "Iste'mol" },
+  "INK":         { icon: "🖋️", bg: "#FAF5FF", text: "#581C87", label: tLabel('common.PosMaterials.catInk', "Bo'yoq") },
+  "PAPER":       { icon: "📄", bg: "#FEF3C7", text: "#92400E", label: tLabel('common.PosMaterials.catPaper', "Qog'oz") },
+  "PLATE":       { icon: "🟫", bg: "#FFFBEB", text: "#78350F", label: tLabel('common.PosMaterials.catPlate', "Plastina") },
+  "FILM":        { icon: "🎞️", bg: "#EDE9FE", text: "#4C1D95", label: tLabel('common.PosMaterials.catFilm', "Plyonka") },
+  "ASSET":       { icon: "🧰", bg: "#F0FDF4", text: "#14532D", label: tLabel('common.PosMaterials.catAsset', "Aktiv") },
+  "OFFICE":      { icon: "📎", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", label: tLabel('common.PosMaterials.catOffice', "Ofis") },
+  "CARDBOARD":   { icon: "📦", bg: "#FEF3C7", text: "#92400E", label: tLabel('common.PosMaterials.catCardboard', "Karton") },
+  "CARTON":      { icon: "📦", bg: "#FEF3C7", text: "#92400E", label: tLabel('common.PosMaterials.catCardboard', "Karton") },
+  "GLUE":        { icon: "🧴", bg: "#FDF4FF", text: "#701A75", label: tLabel('common.PosMaterials.catGlue', "Yelim") },
+  "CHEMICAL":    { icon: "⚗️", bg: "#ECFDF5", text: "#064E3B", label: tLabel('common.PosMaterials.catChemical', "Kimyo") },
+  "SOLVENT":     { icon: "🧪", bg: "#ECFDF5", text: "#064E3B", label: tLabel('common.PosMaterials.catSolvent', "Erituvchi") },
+  "PACKAGING":   { icon: "📮", bg: "#FFF7ED", text: "#7C2D12", label: tLabel('common.PosMaterials.catPackaging', "Qadoqlash") },
+  "TOOL":        { icon: "🔧", bg: "#F1F5F9", text: "var(--pos-text)", label: tLabel('common.PosMaterials.catTool', "Asbob") },
+  "SPARE":       { icon: "⚙️", bg: "#F1F5F9", text: "var(--pos-text)", label: tLabel('common.PosMaterials.catSpare', "Ehtiyot qism") },
+  "CONSUMABLE":  { icon: "🧴", bg: "#FFFBEB", text: "#78350F", label: tLabel('common.PosMaterials.catConsumable', "Iste'mol") },
 
   // Eski o'zbekcha nomlar (mavjud bo'lsa)
-  "QOGOZ":       { icon: "📄", bg: "#FEF3C7", text: "#92400E", label: "Qog'oz" },
-  "KARTON":      { icon: "📦", bg: "#FEF3C7", text: "#92400E", label: "Karton" },
-  "PLASTIK":     { icon: "🔷", bg: "#EDE9FE", text: "#4C1D95", label: "Plastik" },
-  "METAL":       { icon: "⚙️", bg: "#F1F5F9", text: "var(--pos-text)", label: "Metal" },
-  "HIMIYA":      { icon: "⚗️", bg: "#ECFDF5", text: "#064E3B", label: "Kimyo" },
-  "YOQILGI":     { icon: "⛽", bg: "#FFF7ED", text: "#7C2D12", label: "Yoqilg'i" },
-  "ELEKTR":      { icon: "🔌", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", label: "Elektr" },
-  "ASBOB":       { icon: "🔧", bg: "#F0FDF4", text: "#14532D", label: "Asboblar" },
-  "OFIS":        { icon: "📎", bg: "#FAF5FF", text: "#581C87", label: "Ofis" },
+  "QOGOZ":       { icon: "📄", bg: "#FEF3C7", text: "#92400E", label: tLabel('common.PosMaterials.catPaper', "Qog'oz") },
+  "KARTON":      { icon: "📦", bg: "#FEF3C7", text: "#92400E", label: tLabel('common.PosMaterials.catCardboard', "Karton") },
+  "PLASTIK":     { icon: "🔷", bg: "#EDE9FE", text: "#4C1D95", label: tLabel('common.PosMaterials.catPlastic', "Plastik") },
+  "METAL":       { icon: "⚙️", bg: "#F1F5F9", text: "var(--pos-text)", label: tLabel('common.PosMaterials.catMetal', "Metal") },
+  "HIMIYA":      { icon: "⚗️", bg: "#ECFDF5", text: "#064E3B", label: tLabel('common.PosMaterials.catChemical', "Kimyo") },
+  "YOQILGI":     { icon: "⛽", bg: "#FFF7ED", text: "#7C2D12", label: tLabel('common.PosMaterials.catFuel', "Yoqilg'i") },
+  "ELEKTR":      { icon: "🔌", bg: "var(--pos-accent-soft)", text: "var(--pos-accent)", label: tLabel('common.PosMaterials.catElectric', "Elektr") },
+  "ASBOB":       { icon: "🔧", bg: "#F0FDF4", text: "#14532D", label: tLabel('common.PosMaterials.catTools', "Asboblar") },
+  "OFIS":        { icon: "📎", bg: "#FAF5FF", text: "#581C87", label: tLabel('common.PosMaterials.catOffice', "Ofis") },
 
   // Default
-  "default":     { icon: "📋", bg: "var(--pos-bg)", text: "var(--pos-text-muted)", label: "Boshqa" },
+  "default":     { icon: "📋", bg: "var(--pos-bg)", text: "var(--pos-text-muted)", label: tLabel('common.PosMaterials.catOther', "Boshqa") },
 };
 
 function getCatCfg(cat: string | null): typeof CAT_CONFIG["default"] {
@@ -125,7 +125,7 @@ function MaterialCard({ mat, onClick, on360 }: { mat: MaterialRow; onClick: () =
             background: "var(--pos-danger)", color: "var(--pos-card)", borderRadius: 4,
             fontSize: 9, fontWeight: 700, padding: "1px 5px",
           }}>
-            TUGAGAN
+            {tLabel('common.PosMaterials.outOfStock', "TUGAGAN")}
           </div>
         )}
       </div>
@@ -226,7 +226,7 @@ export default function PosMaterials() {
   }
 
   const catTabList = [
-    { key: "all", label: "Barchasi", icon: "🗂️" },
+    { key: "all", label: tLabel('common.PosMaterials.filterAll', "Barchasi"), icon: "🗂️" },
     ...categories.map(c => ({ key: c, label: getCatCfg(c).label, icon: getCatCfg(c).icon })),
   ];
 
@@ -242,7 +242,7 @@ export default function PosMaterials() {
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--pos-text)" }}>
           {t("Materiallar")}
         </h2>
-        <span style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>{materials.length} ta</span>
+        <span style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>{materials.length} {tLabel('common.PosMaterials.countSuffix', "ta")}</span>
         <div style={{ flex: 1 }} />
 
         {/* Search */}
@@ -342,7 +342,9 @@ export default function PosMaterials() {
               {t("materialTopilmadi")}
             </div>
             <div style={{ fontSize: 13, marginBottom: 24 }}>
-              {search ? `"${search}" bo'yicha natija yo'q` : "Hali material qo'shilmagan"}
+              {search
+                ? `"${search}" ${tLabel('common.PosMaterials.noResultSuffix', "bo'yicha natija yo'q")}`
+                : tLabel('common.PosMaterials.noMaterialsYet', "Hali material qo'shilmagan")}
             </div>
             {search && (
               <button

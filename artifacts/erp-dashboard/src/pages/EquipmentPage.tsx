@@ -71,11 +71,11 @@ export default function EquipmentPage() {
     mutationFn: (data: object) => apiRequest("POST", "/api/mro/equipment", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mro/equipment"] });
-      toast({ title: "Jihoz muvaffaqiyatli qo'shildi" });
+      toast({ title: t("jihozMuvaffaqiyatliQoshildi") });
       resetForm();
     },
     onError: () => {
-      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+      toast({ title: t("xatolikYuzBerdi"), variant: "destructive" });
     },
   });
 
@@ -85,13 +85,13 @@ export default function EquipmentPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mro"] });
       queryClient.invalidateQueries({ queryKey: ["/api/mro/equipment"] });
-      toast({ title: "Jihoz to'xtatildi, texnik xizmat buyurtmasi yaratildi" });
+      toast({ title: t("jihozToxtatildiTexnikXizmat") });
       setIsStopOpen(false);
       setStopEquipment(null);
       setIssueDesc("");
       setPriority("high");
     },
-    onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+    onError: () => toast({ title: t("xatolikYuzBerdi"), variant: "destructive" }),
   });
 
   const statusMutation = useMutation({
@@ -99,12 +99,12 @@ export default function EquipmentPage() {
       apiRequest("PATCH", `/api/mro/equipment/${id}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mro/equipment"] });
-      toast({ title: "Holat yangilandi" });
+      toast({ title: t("holatYangilandi") });
       setIsStatusOpen(false);
       setSelectedId(null);
     },
     onError: () => {
-      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+      toast({ title: t("xatolikYuzBerdi"), variant: "destructive" });
     },
   });
 
@@ -119,7 +119,7 @@ export default function EquipmentPage() {
 
   const handleSave = () => {
     if (!invNumber.trim() || !name.trim()) {
-      toast({ title: "Inventar raqami va nomni kiriting", variant: "destructive" });
+      toast({ title: t("inventarRaqamiVaNomniKiriting"), variant: "destructive" });
       return;
     }
     createMutation.mutate({ inventoryNumber: invNumber, name, type, location, purchaseDate });
@@ -141,7 +141,7 @@ export default function EquipmentPage() {
   const handleStopMachine = () => {
     if (!stopEquipment) return;
     if (issueDesc.length < 10) {
-      toast({ title: "Muammo tavsifini kamida 10 ta belgidan iborat qiling", variant: "destructive" });
+      toast({ title: t("muammoTavsifiniKamida10"), variant: "destructive" });
       return;
     }
     stopMachineMutation.mutate({
@@ -236,7 +236,7 @@ export default function EquipmentPage() {
                             className="whitespace-nowrap"
                           >
                             <StopCircle className="h-3.5 w-3.5 mr-1.5" />
-                            To'xtatish
+                            {t("toxtatishAmali")}
                           </Button>
                         )}
                       </div>
@@ -290,7 +290,7 @@ export default function EquipmentPage() {
       {Array.isArray(maintenanceOrders) && maintenanceOrders.length > 0 && (
         <Card>
           <CardContent className="p-4">
-            <h2 className="text-base font-semibold mb-3">Texnik xizmat buyurtmalari</h2>
+            <h2 className="text-base font-semibold mb-3">{t("texnikXizmatBuyurtmalari")}</h2>
             <div className="space-y-2">
               {maintenanceOrders.slice(0, 10).map((order) => (
                 <div key={order.id} className="flex items-center justify-between py-2 border-b last:border-0">
@@ -315,40 +315,40 @@ export default function EquipmentPage() {
       <Dialog open={isStopOpen} onOpenChange={setIsStopOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">Jihozni to'xtatish</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">{t("jihozniToxtatishDialog")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
-              <span className="font-medium">Jihoz:</span> {stopEquipment?.name}
+              <span className="font-medium">{t("jihozLabel")}:</span> {stopEquipment?.name}
             </div>
             <div>
-              <Label>Muammo tavsifi <span className="text-destructive">*</span></Label>
+              <Label>{t("muammoTavsifiLabel")} <span className="text-destructive">*</span></Label>
               <Textarea
                 value={issueDesc}
                 onChange={(e) => setIssueDesc(e.target.value)}
-                placeholder="Muammoni batafsil tavsiflang (kamida 10 ta belgi)..."
+                placeholder={t("muammoniBatafsilTavsiflang")}
                 rows={3}
               />
             </div>
             <div>
-              <Label>Ustuvorlik</Label>
+              <Label>{t("ustuvorlikLabel")}</Label>
               <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Past</SelectItem>
-                  <SelectItem value="medium">O'rta</SelectItem>
-                  <SelectItem value="high">Yuqori</SelectItem>
-                  <SelectItem value="critical">Kritik</SelectItem>
+                  <SelectItem value="low">{t("darajaPast")}</SelectItem>
+                  <SelectItem value="medium">{t("darajaOrta")}</SelectItem>
+                  <SelectItem value="high">{t("darajaYuqori")}</SelectItem>
+                  <SelectItem value="critical">{t("darajaKritik")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setIsStopOpen(false)}>Bekor qilish</Button>
+              <Button variant="outline" onClick={() => setIsStopOpen(false)}>{t("bekorQilish")}</Button>
               <Button variant="destructive" onClick={handleStopMachine} disabled={stopMachineMutation.isPending}>
                 <StopCircle className="h-4 w-4 mr-2" />
-                To'xtatish
+                {t("toxtatishAmali")}
               </Button>
             </div>
           </div>
