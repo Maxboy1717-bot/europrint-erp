@@ -66,9 +66,12 @@ export const refresh_tokens = pgTable(
   'refresh_tokens',
   {
     id: uuid('id').primaryKey().$defaultFn(() => createId()),
-    user_id: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    // T8-03 (2026-06-26): user_id UUID — jonli users.id INTEGER bo'lgani uchun bu FK hech qachon
+    // DB'da materijallashmagan (tur ziddiyati); blacklist faqat jti/token orqali izlanadi, shuning
+    // uchun user_id NULLABLE qilindi (.references olib tashlandi — DB'da yo'q edi). Auth user.id
+    // (INTEGER) audit qiymati user_id_text'ga yoziladi (fabrikatsiya yo'q — haqiqiy id matn ko'rinishi).
+    user_id: uuid('user_id'),
+    user_id_text: text('user_id_text'),
     token: text('token').notNull(),
     // jti (JWT ID) — unique claim from the JWT payload. Enables O(1) blacklist
     // lookups by jti instead of scanning the full token column.

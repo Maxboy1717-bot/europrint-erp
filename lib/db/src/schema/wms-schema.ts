@@ -192,9 +192,12 @@ export const warehouseBins = pgTable("warehouse_bins", {
   name: text("name"), // Bin nomi
   zoneId: varchar("zone_id"), // Zone ID (varchar, FK to warehouse_zones.id stored as string)
   binCode: varchar("bin_code", { length: 50 }), // Alias for code
-  row: varchar("row", { length: 10 }), // Qator
-  shelf: varchar("shelf", { length: 10 }), // Tokcha
+  row: varchar("row", { length: 10 }), // Qator (legacy free-text — T8-06 dan keyin rowId FK ishlatilsin)
+  shelf: varchar("shelf", { length: 10 }), // Tokcha (legacy free-text — T8-06 dan keyin shelfId FK ishlatilsin)
   level: varchar("level", { length: 10 }), // Daraja
+  // --- T8-06: manzil FK-zanjiri Zona→Qator→Javon→Yacheyka (leaf=bin). NULL-able (mavjud qatorlar buzilmaydi). ---
+  rowId: integer("row_id"),     // → warehouse_rows.id (Qator), ON DELETE SET NULL
+  shelfId: integer("shelf_id"), // → warehouse_shelves.id (Javon), ON DELETE SET NULL
   binType: varchar("bin_type", { length: 30 }).default("standard"), // standard, bulk, cold, hazardous
   maxWeight: numericMoney("max_weight"), // Max og'irlik (kg)
   maxVolume: numericMoney("max_volume"), // Max hajm (litr)
@@ -222,6 +225,67 @@ export const insertWarehouseBinSchema = createInsertSchema(warehouseBins, {
 export type WarehouseBin = typeof warehouseBins.$inferSelect;
 
 export type InsertWarehouseBin = z.infer<typeof insertWarehouseBinSchema>;
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// T8-06: WMS manzil FK-zanjiri — Qator (warehouse_rows) va Javon (warehouse_shelves).
+// To'liq zanjir: warehouses → warehouse_zones (Zona) → warehouse_rows (Qator) →
+//   warehouse_shelves (Javon) → warehouse_bins (Yacheyka, leaf; row_id/shelf_id FK).
+// Yangi lug'at-jadvallar (bo'sh tug'iladi → FK toza). Egasi/WMS UI to'ldiradi (fabrikatsiya yo'q).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Warehouse Rows (Qator) — Zona ichidagi qatorlar
+export const warehouseRows = pgTable("warehouse_rows", {
+  id: serial("id").primaryKey(),
+  zoneId: integer("zone_id").notNull().references(() => warehouseZones.id, { onDelete: "cascade" }),
+  warehouseId: integer("warehouse_id"),
+  code: varchar("code", { length: 50 }).notNull(),
+  name: text("name"),
+  nameRu: text("name_ru"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  capacity: numericMoney("capacity"),
+  isActive: boolean("is_active").notNull().default(true),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  unique("uq_warehouse_rows_zone_code").on(t.zoneId, t.code),
+  index("idx_warehouse_rows_zone").on(t.zoneId),
+]);
+
+export const insertWarehouseRowSchema = createInsertSchema(warehouseRows, {
+  code: z.string().min(1, "Qator kodi talab qilinadi"),
+}).omit({ id: true, createdAt: true } as never);
+
+export type WarehouseRow = typeof warehouseRows.$inferSelect;
+export type InsertWarehouseRow = z.infer<typeof insertWarehouseRowSchema>;
+
+
+// Warehouse Shelves (Javon) — Qator ichidagi javonlar
+export const warehouseShelves = pgTable("warehouse_shelves", {
+  id: serial("id").primaryKey(),
+  rowId: integer("row_id").notNull().references(() => warehouseRows.id, { onDelete: "cascade" }),
+  zoneId: integer("zone_id"),
+  warehouseId: integer("warehouse_id"),
+  code: varchar("code", { length: 50 }).notNull(),
+  name: text("name"),
+  nameRu: text("name_ru"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  maxWeight: numericMoney("max_weight"),
+  maxVolume: numericMoney("max_volume"),
+  isActive: boolean("is_active").notNull().default(true),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  unique("uq_warehouse_shelves_row_code").on(t.rowId, t.code),
+  index("idx_warehouse_shelves_row").on(t.rowId),
+]);
+
+export const insertWarehouseShelfSchema = createInsertSchema(warehouseShelves, {
+  code: z.string().min(1, "Javon kodi talab qilinadi"),
+}).omit({ id: true, createdAt: true } as never);
+
+export type WarehouseShelf = typeof warehouseShelves.$inferSelect;
+export type InsertWarehouseShelf = z.infer<typeof insertWarehouseShelfSchema>;
 
 
 // Stock Transfers (ombor o'rtasida ko'chirish)

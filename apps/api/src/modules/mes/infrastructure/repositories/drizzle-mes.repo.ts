@@ -157,16 +157,76 @@ export class DrizzleMesRepository implements IMesRepository {
     }
   }
 
+  /**
+   * §8.3 LMS sertifikat HARD BLOCK — real tekshiruv (T8-05, stub o'rniga).
+   *
+   * Vizyon (master-reja P1): operator mashinada ish boshlash uchun darslik
+   * sertifikatiga ega bo'lishi shart — bu "kim qo'lda qator yozgan" emas, balki
+   * HAQIQIY dalil bilan tasdiqlanadi:
+   *   1) ANIQ LEDGER  — operator_certifications da active + muddati o'tmagan
+   *      (deleted_at IS NULL) qator (HR/rahbar tomonidan berilgan sertifikat); YOKI
+   *   2) HAQIQIY DALIL — operator kurs testidan o'tgan
+   *      (lms_test_attempts.passed = true va eng yaxshi ball >= courses.passing_score)
+   *      VA kursning barcha mavzularini tugatgan (course_progress: >=1 mavzu,
+   *      hammasi completed) — bu LMS getCompletionSnapshot/LmsCompletionService
+   *      bilan bir xil dalil-modeli (C1 theory + C3 topics).
+   *
+   * Bo'sh jadval = HALOL YOPIQ (valid=false) — soxta o'tkazish yo'q (Q-40).
+   * lms_test_attempts.user_id/course_id jonli DBda TEXT — join uchun cast qilinadi.
+   */
   async checkOperatorCertification(operatorId: number, courseId: number): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`SELECT * FROM operator_certifications WHERE operator_id = ${operatorId} AND course_id = ${courseId} LIMIT 1`);
-      const cert = r[0];
-      if (!cert) {
+      const now = _time.now();
+
+      // ── 1) Aniq ledger: operator_certifications (HR/rahbar bergan sertifikat) ──
+      const certR = await exec(sql`
+        SELECT course_name, expires_at, status
+        FROM operator_certifications
+        WHERE operator_id = ${operatorId}
+          AND course_id = ${courseId}
+          AND deleted_at IS NULL
+        LIMIT 1`);
+      const cert = certR[0];
+      if (cert) {
+        const notExpired = cert.expires_at ? new Date(String(cert.expires_at)) > now : false;
+        const active = String(cert.status ?? '') === 'active';
+        if (active && notExpired) {
+          return { ok: true as const, data: { valid: true, courseName: cert.course_name, expiresAt: cert.expires_at } };
+        }
+        // Ledger qatori bor lekin yaroqsiz (revoked/expired) — dalilga o'tmaymiz,
+        // aniq sabab bilan bloklaymiz (qat'iy hard block).
+        return { ok: true as const, data: { valid: false, courseName: cert.course_name, expiresAt: cert.expires_at } };
+      }
+
+      // ── 2) Haqiqiy dalil: kurs testi o'tgan + barcha mavzular tugatilgan ──
+      // courses.passing_score — kurs bo'yicha o'tish chegarasi (EP-LMS-009).
+      const courseR = await exec(sql`SELECT title, passing_score FROM courses WHERE id = ${courseId} LIMIT 1`);
+      const courseRow = courseR[0];
+      if (!courseRow) {
         return { ok: true as const, data: { valid: false, courseName: 'Unknown Course', expiresAt: null } };
       }
-      const now = _time.now();
-      const valid = cert.expires_at ? new Date(String(cert.expires_at)) > now : false;
-      return { ok: true as const, data: { valid, courseName: cert.course_name, expiresAt: cert.expires_at } };
+      const courseName = courseRow.title ?? 'Unknown Course';
+      const passThresholdPct = Number(courseRow.passing_score ?? 70);
+
+      // C1 — nazariy test: eng yaxshi O'TGAN urinish bali (lms_test_attempts TEXT id).
+      const attemptR = await exec(sql`
+        SELECT COALESCE(MAX(score), 0) AS best
+        FROM lms_test_attempts
+        WHERE user_id = ${String(operatorId)} AND course_id = ${String(courseId)} AND passed = true`);
+      const bestScorePct = Number(attemptR[0]?.best ?? 0);
+      const theoryPassed = bestScorePct >= passThresholdPct;
+
+      // C3 — kurs mavzulari: >=1 mavzu mavjud VA hammasi completed (course_progress INTEGER id).
+      const topicR = await exec(sql`
+        SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE completed = true) AS done
+        FROM course_progress
+        WHERE user_id = ${operatorId} AND course_id = ${courseId}`);
+      const totalTopics = Number(topicR[0]?.total ?? 0);
+      const doneTopics = Number(topicR[0]?.done ?? 0);
+      const topicsCompleted = totalTopics > 0 && doneTopics >= totalTopics;
+
+      const valid = theoryPassed && topicsCompleted;
+      return { ok: true as const, data: { valid, courseName, expiresAt: null } };
     } catch {
       this.logger.error('Failed to check certification');
       return Err('Sertifikat tekshirishda xatolik');

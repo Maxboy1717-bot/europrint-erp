@@ -23,7 +23,7 @@ import { Ok, Err, AppErr, isOk, Result } from '@common/result';
 import { z } from 'zod';
 import { AiRouterService } from './ai-router.service';
 import type { AiRequest, AiTaskType } from '../../domain/types/ai.types';
-import { AiDailyReportRepository, type PrimaryCardCkpMeta } from '../../infrastructure/repositories/ai-daily-report.repository';
+import { AiDailyReportRepository, type PrimaryCardCkpMeta, type CkpChatTurn } from '../../infrastructure/repositories/ai-daily-report.repository';
 
 // Kunlik ЦКП-hisoboti = xodim ish-natijasi tahlili → mavjud
 // 'hr.performance_review' task-turidan o'tkaziladi (analiz-sinfi). Yangi
@@ -102,8 +102,13 @@ export class AiDailyReportService {
       return Err(AppErr('NOT_FOUND', `Foydalanuvchi #${userId} uchun birlamchi karta topilmadi — kunlik ЦКП-hisobot kartaga bog'lanadi`));
     }
 
+    // Har kunlik-hisobot = bitta chat-sessiya (karta + sana bo'yicha tartibli).
+    const sessionId = `ckp-${meta.cardId}-${dto.factDate}`;
+
     // Xodim qiymatni qo'lda bersa — AI'siz ham tarkib to'liq.
     if (dto.manualActualValue != null) {
+      // T8-12: faqat xodim navbati loglanadi (AI chaqirilmadi → assistant navbati YO'Q).
+      await this.persistChat(meta, sessionId, dto.message, null);
       return Ok(this.buildResult(meta, dto.factDate, false, null, {
         actualValue: dto.manualActualValue,
         summary: dto.message.slice(0, 500),
@@ -116,6 +121,8 @@ export class AiDailyReportService {
     if (!isOk(aiResult)) {
       // FABRIKATSIYA YO'Q: AI-kalit yo'q yoki xato — soxta son qaytarilmaydi.
       this.logger.warn(`[A75] Kunlik hisobot: AI ishlamadi (user=${userId}, card=${meta.cardId}) — qo'lda qiymat so'raladi: ${aiResult.error}`);
+      // T8-12: AI ishlamadi → faqat xodim navbati loglanadi (soxta assistant navbati YO'Q).
+      await this.persistChat(meta, sessionId, dto.message, null);
       return Ok(this.buildResult(meta, dto.factDate, false, null, {
         actualValue: null,
         summary: dto.message.slice(0, 500),
@@ -124,7 +131,35 @@ export class AiDailyReportService {
     }
 
     const extracted = this.parseAiResponse(aiResult.data.text, dto.message);
+    // T8-12: AI ishladi → xodim navbati + AI xulosasi (haqiqiy javob) loglanadi.
+    await this.persistChat(meta, sessionId, dto.message, aiResult.data.text);
     return Ok(this.buildResult(meta, dto.factDate, true, aiResult.data.provider, extracted));
+  }
+
+  /**
+   * T8-12 — Kunlik AI-chat suhbatini `ai_ckp_chat_logs` ga BEST-EFFORT yozadi.
+   * Hisobotni HECH QACHON bloklamaydi (log-yozish xatosi → ogohlantirish, davom).
+   * aiText null bo'lsa (AI yo'q/qo'lda) — assistant navbati YOZILMAYDI (fabrikatsiya yo'q).
+   */
+  private async persistChat(
+    meta: CardCkpMeta,
+    sessionId: string,
+    userMessage: string,
+    aiText: string | null,
+  ): Promise<void> {
+    if (meta.employeeId == null) {
+      // Chat-log employee_id NOT NULL kutadi; yo'q bo'lsa log o'tkazib yuboriladi.
+      this.logger.debug(`[A75/T8-12] Chat-log o'tkazildi: card=${meta.cardId} uchun employee_id yo'q`);
+      return;
+    }
+    const turns: CkpChatTurn[] = [{ role: 'user', content: userMessage }];
+    if (aiText != null && aiText.trim().length > 0) {
+      turns.push({ role: 'assistant', content: aiText });
+    }
+    const r = await this.repo.logChatTurns(meta.employeeId, sessionId, turns);
+    if (!r.ok) {
+      this.logger.warn(`[A75/T8-12] Chat-log yozilmadi (session=${sessionId}): ${r.error.message}`);
+    }
   }
 
   private buildResult(

@@ -148,3 +148,28 @@ export const razryadLevels = pgTable('razryad_levels', {
   createdAt:      timestamp('created_at').defaultNow(),
   updatedAt:      timestamp('updated_at').defaultNow(),
 });
+
+/**
+ * ЦКП kunlik FAKT-qiymat (FAZA-05). Jadval JONLI yaratilgan (apply-phase05-ckp.cjs)
+ * lekin Drizzle-da deklaratsiyasiz edi — bu def jonli `information_schema.columns`
+ * ga AYNAN mos (15 ustun; numeric→decimal precision/scale; notNull+default jonlidek).
+ * ADDITIV: faqat tip-deklaratsiya, yozuv/migration o'zgartirilmagan (raw SQL upsert
+ * org-structure/ckp-fact.repository.ts da qoladi).
+ */
+export const ckpFactValues = pgTable('ckp_fact_values', {
+  id:             serial('id').primaryKey(),
+  cardId:         integer('card_id').notNull(),
+  employeeId:     integer('employee_id'),
+  productId:      integer('product_id'),
+  factDate:       date('fact_date').notNull(),
+  targetValue:    decimal('target_value', { precision: 14, scale: 3 }),
+  actualValue:    decimal('actual_value', { precision: 14, scale: 3 }),
+  achievementPct: decimal('achievement_pct', { precision: 6, scale: 2 }),
+  source:         text('source').notNull().default('MANUAL'),
+  formulaType:    text('formula_type'),
+  status:         text('status').notNull().default('submitted'),
+  submittedAt:    timestamp('submitted_at'),
+  notes:          text('notes'),
+  recordedBy:     integer('recorded_by'),
+  createdAt:      timestamp('created_at').notNull().defaultNow(),
+});

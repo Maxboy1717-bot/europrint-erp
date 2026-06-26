@@ -125,7 +125,10 @@ export class AuthController {
     const authHeader = req.headers['authorization'] as string | undefined;
     const headerToken = authHeader?.replace(/^Bearer\s+/i, '') || '';
     const token = cookieToken || headerToken;
-    const command: LogoutCommand = { token, userId: user.id };
+    // T8-03 xavfsizlik: refresh-token ham revoke qilinadi — aks holda chiqib ketgandan keyin
+    // ham eski refresh-token /auth/refresh orqali yangi access-token mint qilaverardi.
+    const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME];
+    const command: LogoutCommand = { token, userId: user.id, refreshToken };
     const result = await this.logoutHandler.execute(command);
     assertOk(result);
 

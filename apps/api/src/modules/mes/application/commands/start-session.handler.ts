@@ -44,8 +44,9 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
         'Checking LMS certification',
       );
 
-      // In real implementation, fetch workCenter and check certification
-      // For now, we assume certification is required for certain work centers
+      // Real LMS sertifikat dalili (T8-05): mesRepo.checkOperatorCertification
+      // operator_certifications ledgerini YOKI haqiqiy dalilni (lms_test_attempts
+      // testdan o'tgan + course_progress mavzular tugagan) tekshiradi. Bo'sh = bloklanadi.
       const certResult = await this.mesRepo.checkOperatorCertification(
         command.operatorId,
         command.courseId,

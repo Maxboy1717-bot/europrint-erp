@@ -4036,4 +4036,164 @@ $fn$ LANGUAGE plpgsql` },
     ` },
   { name: 'A97 company_state_log detected_at INDEX', sql: `CREATE INDEX IF NOT EXISTS company_state_log_detected_at_idx ON company_state_log (detected_at DESC)` },
 
+  // APPROVED (egasi vakolati, IJRO-REJA T8-01, 2026-06-26): sales_orders kim-yaratdi karta-bog'lanishi.
+  // ⭐ MUAMMO: jonli sales_orders.created_by = UUID (Drizzle sxema varchar deydi, repo Number() ga cast
+  //   qiladi — uch tomonlama drift) va users(id)=INTEGER ga FK qo'yib bo'lmaydi (tur ziddiyati). Bu ustun
+  //   uzilgan: golden-thread auditda buyurtmani qaysi xodim (login=birlamchi karta) yaratgani bog'lanmagan.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): yangi created_by_user_id INTEGER FK -> users(id) ON DELETE SET NULL.
+  //   Eski created_by (UUID) ustuni TEGILMAYDI (DROP yo'q — destruktiv emas). Jonli DB'da created_by 100% NULL
+  //   (13 satr, 0 non-null) => backfill mumkin emas/kerak emas; FABRIKATSIYA YO'Q (Q-40) — yangi ustun NULL
+  //   bilan tug'iladi, kelgusi yozuvchilar (drizzle-sales-order.repo) auth user.id dan to'ldiradi.
+  //   FK NO ACTION emas SET NULL — users o'chsa buyurtma qolsin (audit-bog'lanish yumshoq).
+  { name: 'T8-01 sales_orders.created_by_user_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sales_orders ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER` },
+  { name: 'T8-01 sales_orders.created_by_user_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_sales_orders_created_by_user_id ON sales_orders (created_by_user_id) WHERE created_by_user_id IS NOT NULL` },
+  { name: 'T8-01 sales_orders.created_by_user_id FK -> users', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_sales_orders_created_by_user_id') THEN ALTER TABLE sales_orders ADD CONSTRAINT fk_sales_orders_created_by_user_id FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL; END IF; END $$` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA T8-03, 2026-06-26): logout token-blacklist tuzatish.
+  // ⭐ MUAMMO: logout `blacklistToken` jonli `refresh_tokens` jadvaliga YOZMASDI (jim no-op) — 3 sabab:
+  //   (1) `sub` JWT-da NUMBER (JwtPayload.sub:number), eski kod faqat string qabul qilardi → null → early-return;
+  //   (2) `user_id` ustuni UUID NOT NULL, lekin auth user.id INTEGER → insert tur-ziddiyatda yiqilardi;
+  //   (3) `ON CONFLICT (jti)` PARTIAL unique index'ga (idx_refresh_tokens_jti WHERE jti IS NOT NULL) mos
+  //       predikatsiz → arbiter inference XATO → insert otib, catch jim yutib yuborardi.
+  //   Natija: logout'dan keyin access-token HAMON yaroqli edi (blacklist bo'sh), refresh-token revoke yo'q edi.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): kod ON CONFLICT predikatini to'g'rilaydi + `sub` number qabul qiladi.
+  //   DB: user_id UUID NOT NULL → NULLABLE (FK YO'Q, default YO'Q, jadval bo'sh; lookup jti/token orqali —
+  //   user_id baribir o'qilmaydi). Yangi user_id_text (INTEGER user.id matn ko'rinishi) audit uchun —
+  //   FABRIKATSIYA YO'Q (Q-40): haqiqiy user.id yoziladi, soxta UUID O'YLAB topilmaydi.
+  { name: 'T8-03 refresh_tokens.user_id DROP NOT NULL', sql: `ALTER TABLE IF EXISTS refresh_tokens ALTER COLUMN user_id DROP NOT NULL` },
+  { name: 'T8-03 refresh_tokens.user_id_text ADD COLUMN', sql: `ALTER TABLE IF EXISTS refresh_tokens ADD COLUMN IF NOT EXISTS user_id_text TEXT` },
+  // id UUID NOT NULL, DB-default YO'Q edi (Drizzle $defaultFn faqat app-code) → blacklist insert
+  // har doim "id NOT NULL" da yiqilardi. DB-default qo'shamiz (defense-in-depth; kod ham beradi).
+  { name: 'T8-03 refresh_tokens.id SET DEFAULT gen_random_uuid', sql: `ALTER TABLE IF EXISTS refresh_tokens ALTER COLUMN id SET DEFAULT gen_random_uuid()` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA T8-06, 2026-06-26): WMS manzil-struktura FK-zanjiri Zona→Qator→Javon→Yacheyka.
+  // ⭐ MUAMMO (JONLI): ombor manzili FK-zanjir EMAS. Bor: warehouse_zones (Zona, 9 qator, int PK) → warehouse_bins
+  //   (Yacheyka-leaf, 126 qator, int PK). Oraliq pog'onalar (Qator/Javon) warehouse_bins ichida `row`/`shelf`/`level`
+  //   bo'sh varchar matn (FK YO'Q, lug'at YO'Q, izchillik YO'Q). Zanjir struktura sifatida mavjud emas.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): 2 ta yangi lug'at-jadval (Qator=warehouse_rows, Javon=warehouse_shelves)
+  //   + warehouse_bins ga 2 ta yangi FK ustun (row_id, shelf_id). Yangi jadvallar BO'SH → FK toza. Mavjud bin
+  //   qatorlari row_id/shelf_id = NULL bilan tug'iladi (FK NULL'ga ruxsat) → 1 ham qator BUZILMAYDI, FABRIKATSIYA
+  //   YO'Q (Q-40): qiymat o'ylab topilmaydi, kelgusi yozuvchi (WMS UI/import) to'ldiradi.
+  //   To'liq zanjir: warehouse_zones(Zona) → warehouse_rows(Qator).zone_id → warehouse_shelves(Javon).row_id
+  //   → warehouse_bins(Yacheyka).shelf_id. Eski `row`/`shelf`/`level` varchar ustunlar TEGILMAYDI (DROP yo'q).
+  //   ⚠️ DESTRUKTIV EMAS: legacy ustunlar (warehouse_zones.warehouse_id, warehouse_bins.warehouse_id/zone_id) ga
+  //   hard-FK qo'shish JONLI iflos data sababli BLOK (zones 1/9, bins.warehouse_id 60/126, bins.zone_id 54/126
+  //   orphan) — bu egasi-DATA tozalash qarori, alohida gated .sql (wms-address-legacy-fk.sql) bilan USHLANGAN.
+  { name: 'T8-06 warehouse_rows CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS warehouse_rows (id SERIAL PRIMARY KEY, zone_id INTEGER NOT NULL REFERENCES warehouse_zones(id) ON DELETE CASCADE, warehouse_id INTEGER, code VARCHAR(50) NOT NULL, name TEXT, name_ru TEXT, sort_order INTEGER NOT NULL DEFAULT 0, capacity NUMERIC, is_active BOOLEAN NOT NULL DEFAULT true, deleted_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'T8-06 warehouse_rows zone_code unique idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_warehouse_rows_zone_code ON warehouse_rows (zone_id, code) WHERE deleted_at IS NULL` },
+  { name: 'T8-06 warehouse_rows zone_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_rows_zone ON warehouse_rows (zone_id)` },
+
+  { name: 'T8-06 warehouse_shelves CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS warehouse_shelves (id SERIAL PRIMARY KEY, row_id INTEGER NOT NULL REFERENCES warehouse_rows(id) ON DELETE CASCADE, zone_id INTEGER, warehouse_id INTEGER, code VARCHAR(50) NOT NULL, name TEXT, name_ru TEXT, sort_order INTEGER NOT NULL DEFAULT 0, max_weight NUMERIC, max_volume NUMERIC, is_active BOOLEAN NOT NULL DEFAULT true, deleted_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
+  { name: 'T8-06 warehouse_shelves row_code unique idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_warehouse_shelves_row_code ON warehouse_shelves (row_id, code) WHERE deleted_at IS NULL` },
+  { name: 'T8-06 warehouse_shelves row_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_shelves_row ON warehouse_shelves (row_id)` },
+
+  // warehouse_bins (Yacheyka = leaf) ga FK ustunlar — mavjud qatorlar NULL (FK toza), kelgusi yozuvchi to'ldiradi.
+  { name: 'T8-06 warehouse_bins.row_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_bins ADD COLUMN IF NOT EXISTS row_id INTEGER` },
+  { name: 'T8-06 warehouse_bins.shelf_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_bins ADD COLUMN IF NOT EXISTS shelf_id INTEGER` },
+  { name: 'T8-06 warehouse_bins.row_id FK -> warehouse_rows', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_warehouse_bins_row_id') THEN ALTER TABLE warehouse_bins ADD CONSTRAINT fk_warehouse_bins_row_id FOREIGN KEY (row_id) REFERENCES warehouse_rows(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'T8-06 warehouse_bins.shelf_id FK -> warehouse_shelves', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_warehouse_bins_shelf_id') THEN ALTER TABLE warehouse_bins ADD CONSTRAINT fk_warehouse_bins_shelf_id FOREIGN KEY (shelf_id) REFERENCES warehouse_shelves(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'T8-06 warehouse_bins.row_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_bins_row_id ON warehouse_bins (row_id) WHERE row_id IS NOT NULL` },
+  { name: 'T8-06 warehouse_bins.shelf_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_bins_shelf_id ON warehouse_bins (shelf_id) WHERE shelf_id IS NOT NULL` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // APPROVED (egasi vakolati, IJRO-REJA T8-09, 2026-06-26): QC master-data STRUKTURA.
+  // ⭐ MAQSAD: sifat-nazorati uchun 4 ta konfiguratsiya jadvali — har biri STRUKTURA
+  //   (ustun + CHECK + unique), QIYMAT esa EGASI-DATA. Q-40 FABRIKATSIYA TAQIQ: SOXTA
+  //   koeffitsient/og'irlik/narx/AQL O'YLAB topilmaydi — jadvallar BO'SH yaratiladi,
+  //   egasi master-data UI orqali to'ldiradi. Hech bir SEED (default qiymat) yo'q.
+  // ⭐ NEGA STRUKTURA: kod-tarafda mexanizm bor (GradePricingService koeffitsientni
+  //   chaqiruvchidan kutadi, qc-aql.constants ISO-jadvalni beradi) lekin DB-da master
+  //   jadval yo'q edi => egasi qiymatni biror joyda saqlay olmasdi. Bu jadvallar shu
+  //   bo'shliqni yopadi: STRUKTURA tayyor, qiymat kelganda hisob ishlaydi.
+  // Idempotent: CREATE TABLE IF NOT EXISTS + CREATE INDEX IF NOT EXISTS. SEED YO'Q.
+  // Drizzle ta'rif: apps/api/src/shared/db/schema-misc-qc.ts (4 yangi pgTable).
+
+  // (1) qc_defect_severity_weights — defekt-og'irligi: CRITICAL/MAJOR/MINOR → og'irlik
+  //     koeffitsienti (sifat-ball / DPMO og'irlashtirilgan hisob uchun). Og'irlik QIYMATI
+  //     egasi-data (masalan CRITICAL=10, MAJOR=3, MINOR=1 — lekin BU YERDA SOXTA YOZILMAYDI).
+  { name: 'T8-09 qc_defect_severity_weights CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_defect_severity_weights (
+        id          SERIAL PRIMARY KEY,
+        severity    TEXT NOT NULL UNIQUE
+          CHECK (severity IN ('CRITICAL','MAJOR','MINOR')),
+        weight      NUMERIC(8,3) NOT NULL
+          CHECK (weight >= 0),
+        auto_reject BOOLEAN NOT NULL DEFAULT FALSE,
+        label_uz    TEXT,
+        label_ru    TEXT,
+        is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+
+  // (2) qc_grade_price_coefficients — sort/nav → narx koeffitsienti. GradePricingService
+  //     (graded_price = base_price × coefficient) shu jadvaldan koeffitsient o'qiydi.
+  //     QualityGrade taksonomiyasi (first/second/third/scrap) = STRUKTURA; koeffitsient =
+  //     egasi-data (1-sort=1.0, 2-sort=0.8 ... — SOXTA YOZILMAYDI).
+  { name: 'T8-09 qc_grade_price_coefficients CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_grade_price_coefficients (
+        id          SERIAL PRIMARY KEY,
+        grade       TEXT NOT NULL UNIQUE
+          CHECK (grade IN ('first','second','third','scrap')),
+        coefficient NUMERIC(6,4) NOT NULL
+          CHECK (coefficient >= 0),
+        label_uz    TEXT,
+        label_ru    TEXT,
+        is_sellable BOOLEAN NOT NULL DEFAULT TRUE,
+        is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+
+  // (3) qc_certificate_templates — sifat sertifikati shabloni (sertifikat-template).
+  //     STRUKTURA: shablon meta + body matni (Mustache-uslub {{placeholder}}). Egasi
+  //     sertifikat matni/maydonlarini kiritadi; bu yerda SOXTA shablon yozilmaydi.
+  //     code unique = biznes-kalit; direction = qaysi yo'nalish uchun (universal/gofra/...).
+  { name: 'T8-09 qc_certificate_templates CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_certificate_templates (
+        id            SERIAL PRIMARY KEY,
+        code          TEXT NOT NULL UNIQUE,
+        name_uz       TEXT NOT NULL,
+        name_ru       TEXT,
+        direction     TEXT NOT NULL DEFAULT 'universal'
+          CHECK (direction IN ('universal','gofra','offset','silkscreen','flexi')),
+        body_template TEXT,
+        fields        JSONB NOT NULL DEFAULT '[]'::jsonb,
+        validity_days INTEGER,
+        is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+  { name: 'T8-09 qc_certificate_templates direction idx', sql: `CREATE INDEX IF NOT EXISTS idx_qc_certificate_templates_direction ON qc_certificate_templates (direction)` },
+
+  // (4) qc_aql_config — AQL konfiguratsiya: material/yo'nalish bo'yicha AQL darajasi +
+  //     tekshiruv darajasini override qilish. qc-aql.constants.ts ISO 2859-1 jadvalini
+  //     (STRUKTURA) beradi; bu jadval egasiga "qaysi mahsulot/yo'nalish uchun qaysi AQL"
+  //     ni TANLASH imkonini beradi. AQL standart qiymatlari (2.5 default EP-QC-003) =
+  //     egasi-qarori; bu yerda majburiy SOXTA satr yozilmaydi (jadval bo'sh tug'iladi).
+  //     aql_value CHECK = ISO 2859-1 da mavjud AQL darajalari (struktura cheklovi).
+  { name: 'T8-09 qc_aql_config CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS qc_aql_config (
+        id               SERIAL PRIMARY KEY,
+        scope            TEXT NOT NULL DEFAULT 'global'
+          CHECK (scope IN ('global','direction','material','product')),
+        scope_ref        TEXT,
+        direction        TEXT
+          CHECK (direction IS NULL OR direction IN ('universal','gofra','offset','silkscreen','flexi')),
+        aql_value        NUMERIC(4,2) NOT NULL
+          CHECK (aql_value IN (0.65, 1.0, 1.5, 2.5, 4.0, 6.5)),
+        inspection_level TEXT NOT NULL DEFAULT 'II'
+          CHECK (inspection_level IN ('I','II','III')),
+        notes            TEXT,
+        is_active        BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ` },
+  { name: 'T8-09 qc_aql_config scope idx', sql: `CREATE INDEX IF NOT EXISTS idx_qc_aql_config_scope ON qc_aql_config (scope, scope_ref)` },
+  { name: 'T8-09 qc_aql_config active-global unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_qc_aql_config_global ON qc_aql_config (scope) WHERE scope = 'global' AND is_active = TRUE` },
+
 ];

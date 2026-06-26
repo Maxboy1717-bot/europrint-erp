@@ -190,6 +190,18 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Material requirement yaratishda xatolik'); }
   }
 
+  /** Count the order's material requirements (ow_material_requirements rows). Used by the
+   *  SD→MM material-waiting signal (T8-07): the warehouse fan-out publishes
+   *  OrderMaterialWaitingEvent carrying this count so MM can raise the procurement signal. */
+  async countMaterialRequirements(orderId: number): Promise<Result<number>> {
+    try {
+      const r = await runQuery<{ n: string }>(sql`
+        SELECT COUNT(*)::int AS n FROM ow_material_requirements WHERE order_id = ${orderId}
+      `);
+      return Ok(Number(r.rows[0]?.n ?? 0));
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Material requirement sanashda xatolik'); }
+  }
+
   /** Production fan-out (Phase 4 final dept, unblocked by order line-items): create one production order
    *  per product line-item the order carries (sales_order_items.product_id = finished goods).
    *  planned_quantity = order_quantity; sales_order_id links back. bom_id/routing_id are left NULL until

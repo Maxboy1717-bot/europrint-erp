@@ -10,6 +10,24 @@ import { CkpFactRepository, CkpFactInput } from './ckp-fact.repository';
 
 type Row = Record<string, unknown>;
 
+/**
+ * ЦКП formula-turi (achievement% hisoblash usuli). Manba — `org_departments.ckp_formula_type`
+ * (per-karta, EGASI-DATA). Ushbu ro'yxat `calcAchievement` ajratadigan kanonik turlar:
+ *   - 'boolean'      — ha/yo'q -> 100/0 (HOLAT).
+ *   - 'quantity_pct' — bajarilgan/norma nisbati (MIQDOR%); norma yo'q -> 0 (FABRIKATSIYA YO'Q).
+ * Boshqa har qanday tur 'quantity_pct' singari nisbat sifatida hisoblanadi (default tarmoq).
+ */
+export const CKP_FORMULA_BOOLEAN = 'boolean';
+export const CKP_FORMULA_QUANTITY_PCT = 'quantity_pct';
+
+/**
+ * org_departments.ckp_formula_type NULL bo'lganda (egasi per-karta turni belgilamagan)
+ * qo'llaniladigan ANIQ default formula-turi. Bu SOXTA qiymat EMAS — fakt baholash usuli;
+ * norma (tskp_target) baribir NULL bo'lsa achievement 0 qaytaradi (FABRIKATSIYA YO'Q, Q-40).
+ * Faqat shu konstanta orqali — service ichida magic-string takror yo'q (Qoida 12).
+ */
+export const CKP_DEFAULT_FORMULA_TYPE = CKP_FORMULA_QUANTITY_PCT;
+
 export interface RecordFactInput {
   cardId: number;
   employeeId?: number | null;
@@ -43,7 +61,7 @@ export class CkpFactService {
   private calcAchievement(formulaType: string | null, target: number | null, actual: number | null): number {
     const a = Number(actual ?? 0);
     const t = Number(target ?? 0);
-    if (formulaType === 'boolean') return a > 0 ? 100 : 0;
+    if (formulaType === CKP_FORMULA_BOOLEAN) return a > 0 ? 100 : 0;
     if (t <= 0) return 0; // norma yo'q -> 0 (FABRIKATSIYA YO'Q; egasi norma bersa hisoblanadi)
     return Math.round((a / t) * 10000) / 100;
   }
@@ -77,7 +95,13 @@ export class CkpFactService {
     if (!metaR.ok) return Err(metaR.error);
     if (!metaR.data) return Err(AppErr('NOT_FOUND', `Karta #${input.cardId} topilmadi`));
     const meta = metaR.data;
-    const formulaType = (meta.ckp_formula_type as string | null) ?? 'quantity_pct';
+    // Formula-turi org_departments.ckp_formula_type'dan o'qiladi (per-karta, EGASI-DATA).
+    // NULL/bo'sh -> ANIQ default (CKP_DEFAULT_FORMULA_TYPE) — magic-string emas, fabrikatsiya emas.
+    const rawFormulaType = meta.ckp_formula_type as string | null;
+    const formulaType =
+      typeof rawFormulaType === 'string' && rawFormulaType.trim().length > 0
+        ? rawFormulaType.trim()
+        : CKP_DEFAULT_FORMULA_TYPE;
     const target = meta.tskp_target == null ? null : Number(meta.tskp_target);
     const achievement = this.calcAchievement(formulaType, target, input.actualValue ?? null);
     const deadlineHours = meta.ckp_report_deadline_hours == null ? null : Number(meta.ckp_report_deadline_hours);

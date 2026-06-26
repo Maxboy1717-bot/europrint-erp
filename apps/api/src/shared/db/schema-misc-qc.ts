@@ -186,3 +186,73 @@ export const defect_catalog = pgTable('defect_catalog', {
 
 export type DefectCatalogRow = typeof defect_catalog.$inferSelect;
 export type InsertDefectCatalog = typeof defect_catalog.$inferInsert;
+
+// ──────────────────────────────────────────────────────────────────────────
+// T8-09 — QC master-data STRUKTURA (4 jadval). APPROVED owner 2026-06-26.
+// Hammasi STRUKTURA: ustun + CHECK; QIYMAT egasi-data (Q-40 FABRIKATSIYA TAQIQ).
+// CREATE TABLE (boot auto-apply): migrations-drift.ts → T8-09 bloki. SEED YO'Q.
+// ──────────────────────────────────────────────────────────────────────────
+
+// (1) Defekt-og'irligi: CRITICAL/MAJOR/MINOR → og'irlik koeffitsienti (sifat-ball).
+export const qc_defect_severity_weights = pgTable('qc_defect_severity_weights', {
+  id: serial('id').primaryKey(),
+  severity: text('severity').notNull().unique(),       // CRITICAL | MAJOR | MINOR
+  weight: decimal('weight', { precision: 8, scale: 3 }).notNull(), // egasi-data
+  autoReject: boolean('auto_reject').notNull().default(false),
+  labelUz: text('label_uz'),
+  labelRu: text('label_ru'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// (2) Sort/nav → narx koeffitsienti (GradePricingService o'qiydi).
+export const qc_grade_price_coefficients = pgTable('qc_grade_price_coefficients', {
+  id: serial('id').primaryKey(),
+  grade: text('grade').notNull().unique(),             // first | second | third | scrap
+  coefficient: decimal('coefficient', { precision: 6, scale: 4 }).notNull(), // egasi-data
+  labelUz: text('label_uz'),
+  labelRu: text('label_ru'),
+  isSellable: boolean('is_sellable').notNull().default(true),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// (3) Sifat sertifikati shabloni (sertifikat-template).
+export const qc_certificate_templates = pgTable('qc_certificate_templates', {
+  id: serial('id').primaryKey(),
+  code: text('code').notNull().unique(),
+  nameUz: text('name_uz').notNull(),
+  nameRu: text('name_ru'),
+  direction: text('direction').notNull().default('universal'), // universal|gofra|offset|silkscreen|flexi
+  bodyTemplate: text('body_template'),                 // {{placeholder}} shablon — egasi-data
+  fields: jsonb('fields').$type<unknown[]>().notNull().default([]),
+  validityDays: integer('validity_days'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  byDirection: index('idx_qc_certificate_templates_direction').on(t.direction),
+}));
+
+// (4) AQL konfiguratsiya: material/yo'nalish bo'yicha AQL + tekshiruv darajasi override.
+export const qc_aql_config = pgTable('qc_aql_config', {
+  id: serial('id').primaryKey(),
+  scope: text('scope').notNull().default('global'),    // global|direction|material|product
+  scopeRef: text('scope_ref'),
+  direction: text('direction'),                        // universal|gofra|offset|silkscreen|flexi (nullable)
+  aqlValue: decimal('aql_value', { precision: 4, scale: 2 }).notNull(), // egasi-tanlov (0.65..6.5)
+  inspectionLevel: text('inspection_level').notNull().default('II'),    // I | II | III
+  notes: text('notes'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  byScope: index('idx_qc_aql_config_scope').on(t.scope, t.scopeRef),
+}));
+
+export type QcDefectSeverityWeightRow = typeof qc_defect_severity_weights.$inferSelect;
+export type QcGradePriceCoefficientRow = typeof qc_grade_price_coefficients.$inferSelect;
+export type QcCertificateTemplateRow = typeof qc_certificate_templates.$inferSelect;
+export type QcAqlConfigRow = typeof qc_aql_config.$inferSelect;

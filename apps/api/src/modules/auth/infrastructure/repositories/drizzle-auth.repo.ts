@@ -140,24 +140,32 @@ export class DrizzleAuthRepo implements IAuthRepo {
     try {
       const hash = this.hashToken(token);
       const payload = this.extractPayload(token);
-      const jti    = typeof payload?.['jti'] === 'string' ? payload['jti'] : null;
-      const userId = typeof payload?.['sub'] === 'string' ? payload['sub'] : null;
+      // T8-03 fix: `sub` JWT-da NUMBER (JwtPayload.sub: number, login `sub: user.getId()`),
+      // eski kod faqat `typeof === 'string'` qabul qilardi → har doim null → blacklist YOZMASDI
+      // (jim no-op). Endi number/string ikkalasini ham qabul qilamiz.
+      const jti      = typeof payload?.['jti'] === 'string' ? payload['jti'] : null;
+      const subRaw   = payload?.['sub'];
+      const userIdTx = (typeof subRaw === 'number' || typeof subRaw === 'string') ? String(subRaw) : null;
 
-      if (!jti || !userId) {
-        // Payload noto'g'ri — token allaqachon buzilgan yoki eskiroq formatda
-        this.logger.warn(`blacklistToken: payload noto'g'ri (jti=${jti}, sub=${userId}) — o'tkazildi`);
-        return;
+      if (!jti) {
+        // Payload noto'g'ri / jti yo'q — token eskiroq formatda. token-hash bilan baribir yozamiz.
+        this.logger.warn(`blacklistToken: jti yo'q — token-hash bilan yoziladi`);
       }
 
-      // Guard jti orqali tekshiradi:
-      //   SELECT is_revoked FROM refresh_tokens WHERE jti = $jti
-      // ON CONFLICT (jti) — refresh_tokens.jti ustunida UNIQUE index bor (schema-core.ts)
+      // Guard jti orqali tekshiradi: SELECT is_revoked FROM refresh_tokens WHERE jti = $jti.
+      // ON CONFLICT (jti) WHERE jti IS NOT NULL — refresh_tokens.jti partial UNIQUE index
+      // (idx_refresh_tokens_jti, WHERE jti IS NOT NULL) — predikat MOS bo'lishi shart, aks holda
+      // "no unique or exclusion constraint matching" xatosi. user_id endi NULLABLE (migrations-drift
+      // T8-03): auth user.id INTEGER, ustun UUID — fabrikatsiya YO'Q, NULL yoziladi (FK yo'q, lookup
+      // jti/token orqali). user_id_text = audit uchun (kim chiqdi).
+      // `id` UUID NOT NULL, DB-default YO'Q (Drizzle $defaultFn faqat app-code'da ishlaydi) →
+      // gen_random_uuid() bilan beriladi, aks holda insert "id NOT NULL" da yiqiladi.
       await runQuery(sql`
-        INSERT INTO refresh_tokens (token, jti, user_id, is_revoked, expires_at, created_at)
-        VALUES (${hash}, ${jti}, ${userId}, true, NOW() + INTERVAL '25 hours', NOW())
-        ON CONFLICT (jti) DO UPDATE SET is_revoked = true
+        INSERT INTO refresh_tokens (id, token, jti, user_id_text, is_revoked, expires_at, created_at)
+        VALUES (gen_random_uuid(), ${hash}, ${jti}, ${userIdTx}, true, NOW() + INTERVAL '25 hours', NOW())
+        ON CONFLICT (jti) WHERE jti IS NOT NULL DO UPDATE SET is_revoked = true
       `);
-      this.logger.log(`blacklistToken: jti=${jti} qora ro'yxatga qo'shildi`);
+      this.logger.log(`blacklistToken: jti=${jti ?? '(yo\'q)'} qora ro'yxatga qo'shildi`);
     } catch (error: unknown) {
       this.logger.error(`blacklistToken failed: ${error}`);
     }
@@ -166,9 +174,17 @@ export class DrizzleAuthRepo implements IAuthRepo {
   async isTokenBlacklisted(token: string): Promise<boolean> {
     try {
       const hash = this.hashToken(token);
+      // T8-03: token-HASH yoki jti bo'yicha tekshir. Logout access-token'ni jti bilan blacklist
+      // qiladi; access va refresh AYNI jti'ni saqlaydi (login bitta payload imzolaydi) → refresh
+      // endpoint shu jti orqali ham revoke'ni ko'radi (faqat token-hash emas).
+      const payload = this.extractPayload(token);
+      const jti = typeof payload?.['jti'] === 'string' ? payload['jti'] : null;
       const r = await runQuery<{ is_revoked: boolean }>(sql`
         SELECT is_revoked FROM refresh_tokens
-        WHERE token = ${hash} AND expires_at > NOW() LIMIT 1
+        WHERE expires_at > NOW()
+          AND (token = ${hash} OR (${jti}::text IS NOT NULL AND jti = ${jti}))
+          AND is_revoked = true
+        LIMIT 1
       `);
       return r.rows[0]?.is_revoked === true;
     } catch (error: unknown) {

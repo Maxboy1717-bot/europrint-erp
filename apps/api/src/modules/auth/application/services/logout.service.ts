@@ -17,6 +17,8 @@ import { MS_PER_SECOND } from '@common/constants/app.constants';
 export interface LogoutCommand {
   token: string;
   userId: number;
+  /** T8-03: refresh-token (cookie'dan) — logout'da u ham revoke qilinadi (xavfsizlik). */
+  refreshToken?: string;
 }
 
 export type LogoutCommandResult =
@@ -46,6 +48,18 @@ export class LogoutService {
 
       const expiresAt = new Date(decoded.exp * MS_PER_SECOND);
       await this.authRepo.blacklistToken(command.token, expiresAt);
+
+      // T8-03: refresh-token ham revoke qilinadi (xavfsizlik). Access va refresh AYNI jti'ni
+      // saqlaydi (login bitta payload imzolaydi), shuning uchun ko'p hollarda access-blacklist
+      // refresh'ni ham qoplaydi; lekin refresh-token AYRIM token-string (boshqa hash) bo'lgani
+      // uchun uni alohida blacklist qilamiz — /auth/refresh token-hash ham, jti ham tekshiradi.
+      if (command.refreshToken && command.refreshToken !== command.token) {
+        const rDecoded = this.jwtService.decode(command.refreshToken);
+        const rExp = rDecoded && typeof rDecoded !== 'string' && rDecoded.exp
+          ? new Date(rDecoded.exp * MS_PER_SECOND)
+          : expiresAt;
+        await this.authRepo.blacklistToken(command.refreshToken, rExp);
+      }
 
       this.logger.log('User logged out: ' + command.userId);
 
