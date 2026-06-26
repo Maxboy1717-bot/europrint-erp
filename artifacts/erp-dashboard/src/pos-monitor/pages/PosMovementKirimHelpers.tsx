@@ -9,11 +9,11 @@ import { useTranslation } from '@/lib/i18n';
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 const STEPS = [
-  { n: 1, label: "Asosiy ma'lumotlar" },
-  { n: 2, label: "Materiallar" },
-  { n: 3, label: "Inventar pasporti" },
-  { n: 4, label: "Ko'rib chiqish" },
-  { n: 5, label: "Tasdiqlash" },
+  { n: 1, labelKey: "stepAsosiyMalumotlar" },
+  { n: 2, labelKey: "stepMateriallar" },
+  { n: 3, labelKey: "stepInventarPasporti" },
+  { n: 4, labelKey: "stepKoribChiqish" },
+  { n: 5, labelKey: "stepTasdiqlash" },
 ];
 
 export function StepIndicator({ current }: { current: number }) {
@@ -43,7 +43,7 @@ export function StepIndicator({ current }: { current: number }) {
               color: current === s.n ? "var(--pos-accent)" : "var(--pos-text-muted)",
               whiteSpace: "nowrap", letterSpacing: 0.2,
             }}>
-              {s.label}
+              {t(s.labelKey)}
             </span>
           </div>
           {i < STEPS.length - 1 && (

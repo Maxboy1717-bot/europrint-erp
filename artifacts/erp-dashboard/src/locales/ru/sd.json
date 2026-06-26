@@ -396,5 +396,12 @@
   "orders.payPartial": "Частично",
   "orders.dueLabel": "Срок",
   "orders.currencySom": "сум",
-  "orders.saving": "Сохранение..."
+  "orders.saving": "Сохранение...",
+  "leadImportResult": "Импортировано {{imported}} лидов, пропущено {{skipped}}",
+  "importMinRows": "Нужны заголовок и хотя бы одна строка",
+  "csvImportTitle": "Импорт лидов через CSV",
+  "csvFirstRowHint": "Первая строка — заголовки:",
+  "cancelBtn": "Отмена",
+  "importingBtn": "Загрузка...",
+  "importBtn": "Импортировать"
 }

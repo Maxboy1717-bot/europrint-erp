@@ -106,8 +106,8 @@ export function ScanZone({ fromWarehouseId, scanFlash, scanning, onCameraOpen }:
         ) : (
           <div style={{ textAlign: "center", color: "rgba(255,255,255,0.8)", zIndex: 1 }}>
             <div style={{ fontSize: 48, marginBottom: 8 }}>{scanning ? "⏳" : "📷"}</div>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>{scanning ? "Skanerlanyapti..." : "Barcode skanerlang"}</div>
-            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>USB/Bluetooth skaner yoki kamera</div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>{scanning ? t("skanerlanyaptiDots") : t("barcodeSkanerlang")}</div>
+            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>{t("usbBluetoothSkanerYokiKamera")}</div>
           </div>
         )}
       </div>
@@ -116,7 +116,7 @@ export function ScanZone({ fromWarehouseId, scanFlash, scanning, onCameraOpen }:
         <div style={{ flex: 1, fontSize: 12, color: "var(--pos-text-muted)" }}>
           {fromWarehouseId
             ? <span className="pos-live" style={{ color: "var(--pos-success)", fontWeight: 600 }}>{t("skanerKutmoqda")}</span>
-            : "Ombor tanlanmagan"}
+            : t("omborTanlanmagan")}
         </div>
         <button className="pos-btn pos-btn-primary" style={{ fontSize: 12 }} disabled={!fromWarehouseId} onClick={onCameraOpen}>
           {t("kamera")}
@@ -159,7 +159,7 @@ export function ContextFields({
       {needsReturnReason && (
         <>
           <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.3 }}>
-            Qaytarish sababi (majburiy)
+            {t("qaytarishSababiMajburiy")}
           </label>
           <textarea className="pos-input" rows={3} value={returnReason} onChange={e => onReturnReasonChange(e.target.value)} placeholder={t("nimaUchunQaytarilmoqda")} style={{ resize: "vertical" }} />
         </>
@@ -167,11 +167,11 @@ export function ContextFields({
       {needsDamageDesc && (
         <>
           <label style={{ fontSize: 11, color: "var(--pos-text-muted)", fontWeight: 600, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.3 }}>
-            Zarar tavsifi (majburiy)
+            {t("zararTavsifiMajburiy")}
           </label>
           <textarea className="pos-input" rows={3} value={notes} onChange={e => onNotesChange(e.target.value)} placeholder={t("zararTuriVaSababi")} style={{ resize: "vertical", marginBottom: 10 }} />
           <button className="pos-btn pos-btn-ghost" style={{ fontSize: 12 }} onClick={() => photoInputRef.current?.click()}>
-            📎 Foto biriktirish {damagePhotos.length > 0 && `(${damagePhotos.length} ta)`}
+            📎 {t("fotoBiriktirish")} {damagePhotos.length > 0 && t("nTa", { count: damagePhotos.length })}
           </button>
           <input ref={photoInputRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={handlePhotoChange} />
           {damagePhotos.length > 0 && (
@@ -252,10 +252,10 @@ export function BottomBar({
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 18, justifyContent: "flex-end" }}>
         <button className="pos-btn pos-btn-ghost" style={{ minWidth: 140, justifyContent: "center", padding: "10px 20px" }} disabled={submitting || linesCount === 0} onClick={onSaveDraft}>
-          {submitting ? "⏳..." : "💾 Qoralama"}
+          {submitting ? "⏳..." : `💾 ${t("qoralama")}`}
         </button>
         <button className="pos-btn pos-btn-danger" style={{ minWidth: 160, justifyContent: "center", padding: "10px 24px", fontSize: 14 }} disabled={submitting || linesCount === 0} onClick={onSubmit}>
-          {submitting ? "⏳ Yuborilmoqda..." : "🚀 Yuborish"}
+          {submitting ? `⏳ ${t("yuborilmoqda")}` : t("yuborish")}
         </button>
       </div>
     </div>

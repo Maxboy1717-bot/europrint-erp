@@ -64,7 +64,7 @@ export default function PosMovementChiqim() {
 
   const handleScan = useCallback(async (barcode: string) => {
     if (!barcode.trim()) return;
-    if (!fromWarehouseId.trim()) { addToast("Avval manba omborini tanlang", "error"); return; }
+    if (!fromWarehouseId.trim()) { addToast(t("avvalManbaOmboriniTanlang"), "error"); return; }
     if (scanning) return;
 
     setScanning(true);
@@ -82,13 +82,13 @@ export default function PosMovementChiqim() {
 
       if (!result || (!result.id && !result.materialCardId)) {
         playBeep(false); setScanFlash("error"); setTimeout(() => setScanFlash(null), 600);
-        addToast(`Barcode topilmadi: ${barcode}`, "error");
+        addToast(t("barcodeTopilmadi", { barcode }), "error");
         void notificationsApi.getAll().catch(() => { /* noop */ });
         return;
       }
 
       const matId    = result.materialCardId ?? result.id ?? 0;
-      const matName  = result.nameUz ?? result.name ?? "Noma'lum material";
+      const matName  = result.nameUz ?? result.name ?? t("nomalumMaterial");
       const matCode  = result.code ?? result.sku ?? "";
       const avail    = result.availableQty ?? result.currentQty ?? 0;
       const matType  = (result.materialType?.toLowerCase() ?? "consumable") as "asset" | "consumable";
@@ -98,13 +98,13 @@ export default function PosMovementChiqim() {
         playBeep(false); setScanFlash("error"); setTimeout(() => setScanFlash(null), 600);
         setNoStockModal(matName); return;
       }
-      if (avail <= 0) addToast(`Qoldiq yo'q: ${matName}`, "warning");
+      if (avail <= 0) addToast(t("qoldiqYoqMaterial", { material: matName }), "warning");
 
       const existing = lines.find(l => l.materialCardId === matId);
       if (existing) {
         setLines(prev => prev.map(l => l.materialCardId === matId ? { ...l, quantity: l.quantity + 1 } : l));
         playBeep(true); setScanFlash("success"); setTimeout(() => setScanFlash(null), 600);
-        addToast(`${matName} miqdori oshirildi`, "success"); return;
+        addToast(t("materialMiqdoriOshirildi", { material: matName }), "success"); return;
       }
 
       const newLine: ScannedLine = {
@@ -114,16 +114,16 @@ export default function PosMovementChiqim() {
       };
       setLines(prev => [...prev, newLine]);
       playBeep(true); setScanFlash("success"); setTimeout(() => setScanFlash(null), 600);
-      addToast(`${matName} qo'shildi`, "success");
+      addToast(t("materialQoshildi", { material: matName }), "success");
       setTimeout(() => { const ref = qtyInputRefs.current[newLine._key]; if (ref) { ref.focus(); ref.select(); } }, 80);
 
     } catch {
       playBeep(false); setScanFlash("error"); setTimeout(() => setScanFlash(null), 600);
-      addToast(`Barcode topilmadi: ${barcode}`, "error");
+      addToast(t("barcodeTopilmadi", { barcode }), "error");
     } finally {
       setScanning(false);
     }
-  }, [fromWarehouseId, scanning, lines, addToast]);
+  }, [fromWarehouseId, scanning, lines, addToast, t]);
 
   useBarcode(async (m) => { await handleScan(m.barcode ?? m.code ?? ""); });
 
@@ -147,14 +147,14 @@ export default function PosMovementChiqim() {
   // ── Validation ─────────────────────────────────────────────────────────────
 
   function validate(): string | null {
-    if (lines.length === 0) return "Kamida bitta mahsulot skanerlangan bo'lishi shart";
-    if (!fromWarehouseId.trim()) return "Manba omborini tanlang";
+    if (lines.length === 0) return t("kamidaBittaMahsulotSkanerlangan");
+    if (!fromWarehouseId.trim()) return t("manbaOmboriniTanlang");
     if ((selectedType === "INTERNAL_ISSUE" || selectedType === "INTERNAL_TRANSFER") && !toWarehouseId.trim())
-      return "Manzil omborini tanlang";
-    if (selectedType === "INTERNAL_RETURN" && !returnReason.trim()) return "Qaytarish sababi kiritilishi shart";
-    if (selectedType === "DAMAGE" && !notes.trim()) return "Zarar tavsifi kiritilishi shart";
+      return t("manzilOmboriniTanlang");
+    if (selectedType === "INTERNAL_RETURN" && !returnReason.trim()) return t("qaytarishSababiKiritilishiShart");
+    if (selectedType === "DAMAGE" && !notes.trim()) return t("zararTavsifiKiritilishiShart");
     const assetNoStock = lines.find(l => l.materialType === "asset" && l.availableQty <= 0);
-    if (assetNoStock) return `"${assetNoStock.materialName}" — qoldiq yo'q, harakatni olib tashlab yuboring`;
+    if (assetNoStock) return t("qoldiqYoqHarakatniOlibTashlang", { material: assetNoStock.materialName });
     return null;
   }
 
@@ -178,7 +178,7 @@ export default function PosMovementChiqim() {
       const result = await movementsApi.create(payload) as { id: number; documentNumber?: string };
       setSubmitted(result ?? { id: 0 });
     } catch (e) {
-      setGlobalError(e instanceof Error ? e.message : "Xatolik yuz berdi");
+      setGlobalError(e instanceof Error ? e.message : t("xatolikYuzBerdi"));
     } finally {
       setSubmitting(false);
     }
@@ -207,12 +207,12 @@ export default function PosMovementChiqim() {
 
   const selectedTypeInfo = { label: "", color: "" };
   const found = [
-    { code: "EXTERNAL_OUT", label: "Tashqi chiqim", color: "#EF4444" },
-    { code: "INTERNAL_ISSUE", label: "Ichki berish", color: "#F59E0B" },
-    { code: "INTERNAL_RETURN", label: "Ichki qaytarish", color: "#06B6D4" },
-    { code: "INTERNAL_TRANSFER", label: "Ichki ko'chirish", color: "#8B5CF6" },
-    { code: "DAMAGE", label: "Zarar", color: "#DC2626" },
-  ].find(t => t.code === selectedType);
+    { code: "EXTERNAL_OUT", label: t("PosMovementChiqim.tashqiChiqim"), color: "#EF4444" },
+    { code: "INTERNAL_ISSUE", label: t("PosMovementChiqim.ichkiBerish"), color: "#F59E0B" },
+    { code: "INTERNAL_RETURN", label: t("PosMovementChiqim.ichkiQaytarish"), color: "#06B6D4" },
+    { code: "INTERNAL_TRANSFER", label: t("PosMovementChiqim.ichkiKochirish"), color: "#8B5CF6" },
+    { code: "DAMAGE", label: t("PosMovementChiqim.zarar"), color: "#DC2626" },
+  ].find(ti => ti.code === selectedType);
   if (found) { selectedTypeInfo.label = found.label; selectedTypeInfo.color = found.color; }
 
   return (

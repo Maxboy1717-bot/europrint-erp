@@ -29,8 +29,10 @@ import { VacancyFilterPanel } from "@/components/recruiting/VacancyFilterPanel";
 import { useKanbanDragDrop } from "@/hooks/use-kanban-dnd";
 import { useKanbanRealtime } from "@/hooks/use-kanban-realtime";
 import { tLabel } from "@/lib/i18n/tLabel";
+import { useTranslation } from "@/lib/i18n";
 
 export default function RecruitingKanban() {
+  const { t } = useTranslation("hr");
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -96,7 +98,7 @@ export default function RecruitingKanban() {
       const newTitle = row?.title || form.title;
       if (newId) setPortretVacancy({ id: newId, title: newTitle, status: "open", is_urgent: false });
     },
-    onError: () => toast({ title: "Vakansiya yaratishda xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("recruitingKanban.vacancyCreateError"), variant: "destructive" }),
   });
 
   const { data: pipelineData, isLoading } = useQuery<{ data: PipelineEntry[] }>({ queryKey: ["/api/hr/recruitment/pipeline"], staleTime: 30_000 });
@@ -117,14 +119,14 @@ export default function RecruitingKanban() {
   const updateMutation = useMutation({
     mutationFn: ({ id, funnel_stage }: { id: number; funnel_stage: FunnelStage }) =>
       apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/stage`, { stage: funnel_stage }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "Bosqich yangilandi" }); },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: t("recruitingKanban.stageUpdated") }); },
+    onError: () => toast({ title: t("recruitingKanban.error"), variant: "destructive" }),
   });
 
   const rejectMutation = useMutation({
     mutationFn: (id: number) => apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/stage`, { stage: "REJECTED", notes: "Kanban orqali rad etildi" }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "Nomzod rad etildi" }); },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: t("recruitingKanban.candidateRejected") }); },
+    onError: () => toast({ title: t("recruitingKanban.error"), variant: "destructive" }),
   });
 
   const ndaRequestMutation = useMutation({
@@ -137,8 +139,8 @@ export default function RecruitingKanban() {
   const offerMutation = useMutation({
     mutationFn: ({ id, salary, start_date }: { id: number; salary?: number; start_date?: string }) =>
       apiRequest("POST", `/api/hr/recruitment/pipeline/${id}/offer`, { salary, start_date }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: "Taklif yuborildi" }); },
-    onError: () => toast({ title: "Taklifda xatolik", variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/hr/recruitment/pipeline"] }); toast({ title: t("recruitingKanban.offerSent") }); },
+    onError: () => toast({ title: t("recruitingKanban.offerError"), variant: "destructive" }),
   });
 
   const createMutation = useMutation({
@@ -165,7 +167,7 @@ export default function RecruitingKanban() {
       setNewForm({ fullName: "", phone: "", email: "", source: "OTHER", notes: "", vacancyId: "none" });
       toast({ title: tLabel("recruiting.toast.candidate_added", "Nomzod qo'shildi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("recruitingKanban.error"), variant: "destructive" }),
   });
 
   const filtered = (Array.isArray(entries) ? entries : []).filter(e => {
@@ -192,8 +194,8 @@ export default function RecruitingKanban() {
     <div className="flex-1 overflow-auto bg-surface p-6 flex flex-col h-full">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-on-surface">Yollash <span className="font-bold text-primary">Kanban</span></h1>
-          <p className="text-on-surface-variant -mt-1">HR Capital 7-bosqich metodologiyasi · Vakansiya muddatiga asoslangan</p>
+          <h1 className="text-4xl font-light tracking-tight text-on-surface">{t("recruitingKanban.titlePrefix")} <span className="font-bold text-primary">Kanban</span></h1>
+          <p className="text-on-surface-variant -mt-1">{t("recruitingKanban.subtitle")}</p>
         </div>
         <RecruitingHeaderActions
           urgentVacancyCount={urgentVacancies.length}
@@ -229,9 +231,9 @@ export default function RecruitingKanban() {
 
       <div className="flex items-center gap-2 mb-3">
         <Button size="sm" variant={showProbationOnly ? "default" : "outline"} onClick={() => setShowProbationOnly(p => !p)} className={showProbationOnly ? "bg-emerald-600 hover:bg-emerald-700 border-emerald-600" : "border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"} data-testid="button-filter-probation">
-          <CalendarDays className="w-3.5 h-3.5 mr-1" />Sinov Davri ({(counts.PROBATION ?? 0) + (counts.SINOV_COMPLETE ?? 0)})
+          <CalendarDays className="w-3.5 h-3.5 mr-1" />{t("recruitingKanban.probationPeriod")} ({(counts.PROBATION ?? 0) + (counts.SINOV_COMPLETE ?? 0)})
         </Button>
-        {showProbationOnly && <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2 py-0.5">Faqat sinov davrida</span>}
+        {showProbationOnly && <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2 py-0.5">{t("recruitingKanban.probationOnly")}</span>}
       </div>
 
       <VacancyFilterPanel

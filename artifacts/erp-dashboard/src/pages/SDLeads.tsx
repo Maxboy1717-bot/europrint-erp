@@ -277,7 +277,7 @@ export default function SDLeads() {
       apiRequest<{ imported: number; skipped: number; errors: string[] }>("POST", "/api/sd/leads/import", { rows }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/leads"] });
-      toast({ title: `${result.imported} ta lead import qilindi, ${result.skipped} ta o'tkazib yuborildi` });
+      toast({ title: t("leadImportResult", { imported: result.imported, skipped: result.skipped }) });
       setIsImportOpen(false);
       setCsvText("");
     },
@@ -319,7 +319,7 @@ export default function SDLeads() {
   const handleImport = () => {
     const lines = csvText.trim().split("\n").filter(Boolean);
     if (lines.length < 2) {
-      toast({ title: "Kamida sarlavha va bitta qator kerak", variant: "destructive" });
+      toast({ title: t("importMinRows"), variant: "destructive" });
       return;
     }
     const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
@@ -633,11 +633,11 @@ export default function SDLeads() {
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>CSV orqali lead import qilish</DialogTitle>
+            <DialogTitle>{t("csvImportTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Birinchi qator — sarlavhalar: <code className="bg-muted px-1 rounded text-xs">title,source,amount,notes</code>
+              {t("csvFirstRowHint")} <code className="bg-muted px-1 rounded text-xs">title,source,amount,notes</code>
             </p>
             <Textarea
               value={csvText}
@@ -648,9 +648,9 @@ export default function SDLeads() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportOpen(false)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setIsImportOpen(false)}>{t("cancelBtn")}</Button>
             <Button onClick={handleImport} disabled={importMutation.isPending}>
-              {importMutation.isPending ? "Yuklanmoqda..." : "Import qilish"}
+              {importMutation.isPending ? t("importingBtn") : t("importBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

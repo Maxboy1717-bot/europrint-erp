@@ -28,6 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 
 interface EnpsSurvey {
@@ -58,12 +59,13 @@ interface EnpsResult {
 
 
 const PERIOD_LABELS: Record<string, string> = {
-  monthly:   "Oylik",
-  quarterly: "Choraklik",
-  annual:    "Yillik",
+  monthly:   tLabel("hr.enps.periodMonthly", "Oylik"),
+  quarterly: tLabel("hr.enps.periodQuarterly", "Choraklik"),
+  annual:    tLabel("hr.enps.periodAnnual", "Yillik"),
 };
 
 function CreateEnpsSurveyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation("hr");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [title, setTitle]         = useState("");
@@ -77,16 +79,16 @@ function CreateEnpsSurveyDialog({ open, onClose }: { open: boolean; onClose: () 
       apiRequest<{ id: number }>("POST", "/api/hr-v2/enps", dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/enps/surveys"] });
-      toast({ title: "eNPS so'rov yaratildi" });
+      toast({ title: t("enps.surveyCreated") });
       setTitle(""); setDesc(""); setPeriod("quarterly"); setStartDate(""); setEndDate("");
       onClose();
     },
-    onError: () => toast({ title: "Saqlash xatoligi", variant: "destructive" }),
+    onError: () => toast({ title: t("enps.saveError"), variant: "destructive" }),
   });
 
   function handleSubmit() {
     if (!title.trim()) {
-      toast({ title: "Sarlavha majburiy", variant: "destructive" });
+      toast({ title: t("enps.titleRequired"), variant: "destructive" });
       return;
     }
     const dto: Record<string, unknown> = { title: title.trim(), period };
@@ -100,21 +102,21 @@ function CreateEnpsSurveyDialog({ open, onClose }: { open: boolean; onClose: () 
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Yangi eNPS so'rov</DialogTitle>
+          <DialogTitle>{t("enps.newSurveyTitle")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-3 py-2">
           <div className="grid gap-1.5">
-            <Label>Sarlavha *</Label>
-            <Input placeholder="Masalan: Q3 2026 eNPS So'rovi" value={title}
+            <Label>{t("enps.titleLabel")}</Label>
+            <Input placeholder={t("enps.titlePlaceholder")} value={title}
               onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="grid gap-1.5">
-            <Label>Tavsif</Label>
-            <Input placeholder="So'rov maqsadi..." value={description}
+            <Label>{t("enps.descriptionLabel")}</Label>
+            <Input placeholder={t("enps.descriptionPlaceholder")} value={description}
               onChange={(e) => setDesc(e.target.value)} />
           </div>
           <div className="grid gap-1.5">
-            <Label>Davr turi</Label>
+            <Label>{t("enps.periodTypeLabel")}</Label>
             <Select value={period} onValueChange={setPeriod}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -126,22 +128,22 @@ function CreateEnpsSurveyDialog({ open, onClose }: { open: boolean; onClose: () 
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label>Boshlanish sanasi</Label>
+              <Label>{t("enps.startDateLabel")}</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </div>
             <div className="grid gap-1.5">
-              <Label>Tugash sanasi</Label>
+              <Label>{t("enps.endDateLabel")}</Label>
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
-            Bekor qilish
+            {t("enps.cancel")}
           </Button>
           <Button onClick={handleSubmit}
             disabled={mutation.isPending || !title.trim()}>
-            {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+            {mutation.isPending ? t("enps.saving") : t("enps.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -157,10 +159,10 @@ function statusVariant(status: string): "success" | "warning" | "neutral" {
 
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
-    active: "Faol",
-    draft: "Qoralama",
-    completed: "Tugallangan",
-    archived: "Arxivlangan",
+    active: tLabel("hr.enps.statusActive", "Faol"),
+    draft: tLabel("hr.enps.statusDraft", "Qoralama"),
+    completed: tLabel("hr.enps.statusCompleted", "Tugallangan"),
+    archived: tLabel("hr.enps.statusArchived", "Arxivlangan"),
   };
   return map[status] ?? status;
 }
@@ -172,9 +174,9 @@ function npsColor(score: number): string {
 }
 
 function npsLabel(score: number): string {
-  if (score > 50) return "A'lo";
-  if (score >= 0) return "Qoniqarli";
-  return "Yomon";
+  if (score > 50) return tLabel("hr.enps.npsExcellent", "A'lo");
+  if (score >= 0) return tLabel("hr.enps.npsSatisfactory", "Qoniqarli");
+  return tLabel("hr.enps.npsPoor", "Yomon");
 }
 
 function fmtDate(d: string | undefined): string {
@@ -187,7 +189,7 @@ function NpsScoreCard({ result }: { result: EnpsResult }) {
     <Card className="border">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">
-          Davr: {result.period}
+          {tLabel("hr.enps.periodColon", "Davr:")} {result.period}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -210,7 +212,7 @@ function NpsScoreCard({ result }: { result: EnpsResult }) {
               {npsLabel(result.nps_score)}
             </Badge>
             <p className="mt-1 text-xs text-muted-foreground">
-              NPS Ball (−100 dan +100 gacha)
+              {tLabel("hr.enps.npsBallRange", "NPS Ball (−100 dan +100 gacha)")}
             </p>
           </div>
         </div>
@@ -253,6 +255,7 @@ function NpsScoreCard({ result }: { result: EnpsResult }) {
 
 
 export default function HREnps() {
+  const { t } = useTranslation("hr");
   const [activeTab, setActiveTab] = useState("surveys");
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -281,9 +284,9 @@ export default function HREnps() {
           <BarChart3 className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold">eNPS So'rov</h1>
+          <h1 className="text-xl font-semibold">{t("enps.pageTitle")}</h1>
           <p className="text-sm text-muted-foreground">
-            Xodimlar sodiqligini o'lchash tizimi
+            {t("enps.pageSubtitle")}
           </p>
         </div>
       </div>
@@ -292,13 +295,12 @@ export default function HREnps() {
       <Card className="bg-muted/40">
         <CardContent className="pt-4 pb-3">
           <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">NPS ball </span>
-            ishchi tavsiyasi indeksini ko'rsatadi:&nbsp;
-            <span className="text-green-600 font-medium">+50 dan yuqori</span> —
-            a'lo;&nbsp;
-            <span className="text-yellow-600 font-medium">0–50</span> — qoniqarli;&nbsp;
-            <span className="text-red-600 font-medium">0 dan past</span> — tahlil
-            talab qiladi.
+            <span className="font-medium text-foreground">{t("enps.explainNpsBall")} </span>
+            {t("enps.explainIndex")}&nbsp;
+            <span className="text-green-600 font-medium">{t("enps.explainAbove50")}</span> —
+            {t("enps.explainExcellent")};&nbsp;
+            <span className="text-yellow-600 font-medium">{t("enps.explain0to50")}</span> — {t("enps.explainSatisfactory")};&nbsp;
+            <span className="text-red-600 font-medium">{t("enps.explainBelow0")}</span> — {t("enps.explainNeedsAnalysis")}
           </p>
         </CardContent>
       </Card>
@@ -311,8 +313,8 @@ export default function HREnps() {
           : (
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="surveys">So'rovlar</TabsTrigger>
-          <TabsTrigger value="results">Natijalar</TabsTrigger>
+          <TabsTrigger value="surveys">{t("enps.tabSurveys")}</TabsTrigger>
+          <TabsTrigger value="results">{t("enps.tabResults")}</TabsTrigger>
         </TabsList>
 
         {/* ── Tab 1: Surveys ── */}
@@ -320,7 +322,7 @@ export default function HREnps() {
           {errSurveys && (
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                Ma'lumotlarni yuklashda xatolik yuz berdi.
+                {t("enps.loadError")}
               </CardContent>
             </Card>
           )}
@@ -329,18 +331,18 @@ export default function HREnps() {
               <div className="flex justify-end px-4 pt-3">
                 <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
                   <Plus className="h-3.5 w-3.5" />
-                  Yangi so'rov
+                  {t("enps.newSurveyBtn")}
                 </Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Sarlavha</TableHead>
-                    <TableHead>Tavsif</TableHead>
-                    <TableHead>Boshlanish</TableHead>
-                    <TableHead>Tugash</TableHead>
-                    <TableHead>Holat</TableHead>
-                    <TableHead className="text-right">Javoblar</TableHead>
+                    <TableHead>{t("enps.colTitle")}</TableHead>
+                    <TableHead>{t("enps.colDescription")}</TableHead>
+                    <TableHead>{t("enps.colStart")}</TableHead>
+                    <TableHead>{t("enps.colEnd")}</TableHead>
+                    <TableHead>{t("enps.colStatus")}</TableHead>
+                    <TableHead className="text-right">{t("enps.colResponses")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -351,7 +353,7 @@ export default function HREnps() {
                         colSpan={6}
                         className="text-center py-10 text-muted-foreground"
                       >
-                        Hozircha so'rovlar yo'q.
+                        {t("enps.noSurveys")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -385,7 +387,7 @@ export default function HREnps() {
           {errResults && (
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                Ma'lumotlarni yuklashda xatolik yuz berdi.
+                {t("enps.loadError")}
               </CardContent>
             </Card>
           )}
@@ -406,7 +408,7 @@ export default function HREnps() {
           {!loadingResults && !errResults && results.length === 0 && (
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                Natijalar hali mavjud emas.
+                {t("enps.noResults")}
               </CardContent>
             </Card>
           )}

@@ -126,7 +126,7 @@ export default function HRPip() {
   };
 
   const TABS: { value: StatusFilter; label: string }[] = [
-    { value: "all",       label: "Barchasi" },
+    { value: "all",       label: t("pip.tabAll") },
     { value: "draft",     label: t("pip.statusDraft") },
     { value: "active",    label: t("pip.statusActive") },
     { value: "completed", label: t("pip.statusCompleted") },
@@ -174,9 +174,9 @@ export default function HRPip() {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/pip"] });
       setProgressPipId(null);
       setProgressNotes(""); setProgressStatus("");
-      toast({ title: "Progress qo'shildi" });
+      toast({ title: t("pip.progressAdded") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("pip.error"), variant: "destructive" }),
   });
 
   const createPipMutation = useMutation({
@@ -200,7 +200,7 @@ export default function HRPip() {
       });
       toast({ title: t("pip.createSuccess") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("pip.error"), variant: "destructive" }),
   });
 
   return (
@@ -208,7 +208,7 @@ export default function HRPip() {
       {/* Header */}
       <div className="border-b border-border/50 px-1 pb-4 flex items-center gap-3">
         <TrendingUp className="h-5 w-5 text-[var(--ep-blue)]" />
-        <h1 className="font-semibold text-base">PIP Rejalar</h1>
+        <h1 className="font-semibold text-base">{t("pip.pageTitle")}</h1>
         <span className="text-xs text-muted-foreground ml-1">Performance Improvement Plans</span>
         <div className="ml-auto">
           <Button onClick={() => setCreateDialog(true)} className="gap-1.5" size="sm">
@@ -228,7 +228,7 @@ export default function HRPip() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-[var(--ep-purple)]">{totalCount}</div>
-                <div className="text-xs text-muted-foreground">Jami</div>
+                <div className="text-xs text-muted-foreground">{t("pip.total")}</div>
               </div>
             </CardContent>
           </Card>
@@ -282,7 +282,7 @@ export default function HRPip() {
         {plansError && (
           <Card>
             <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              Ma&apos;lumotlarni yuklashda xatolik yuz berdi.
+              {t("pip.loadError")}
             </CardContent>
           </Card>
         )}
@@ -295,13 +295,13 @@ export default function HRPip() {
                 <Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead>Xodim</TableHead>
+                      <TableHead>{t("pip.employee")}</TableHead>
                       <TableHead>{t("pip.goals")}</TableHead>
                       <TableHead>{t("pip.startDate")}</TableHead>
                       <TableHead>{t("pip.endDate")}</TableHead>
                       <TableHead className="min-w-[180px]">{t("pip.successCriteria")}</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Amal</TableHead>
+                      <TableHead>{t("pip.statusCol")}</TableHead>
+                      <TableHead>{t("pip.actionCol")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -313,8 +313,8 @@ export default function HRPip() {
                           <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />
                           <p>
                             {plans.length === 0
-                              ? "PIP rejalari mavjud emas"
-                              : "Tanlangan filtrlarga mos reja topilmadi"}
+                              ? t("pip.empty")
+                              : t("pip.emptyFiltered")}
                           </p>
                         </TableCell>
                       </TableRow>
@@ -352,7 +352,7 @@ export default function HRPip() {
                                 onClick={() => setProgressPipId(Number(plan.id))}
                                 data-testid={`button-pip-progress-${plan.id}`}
                               >
-                                Progress
+                                {t("pip.progressBtn")}
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -371,36 +371,36 @@ export default function HRPip() {
       <Dialog open={progressPipId !== null} onOpenChange={v => { if (!v) { setProgressPipId(null); setProgressNotes(""); setProgressStatus(""); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>PIP #{progressPipId} — Progress qo'shish</DialogTitle>
+            <DialogTitle>{t("pip.progressDialogTitle", { id: progressPipId ?? "" })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Izoh *</Label>
+              <Label>{t("pip.notesLabel")}</Label>
               <Textarea
                 value={progressNotes}
                 onChange={e => setProgressNotes(e.target.value)}
-                placeholder="Xodim nima qildi? Qanday natija bo'ldi?"
+                placeholder={t("pip.notesPlaceholder")}
                 rows={3}
                 data-testid="textarea-progress-notes"
               />
             </div>
             <div>
-              <Label>Status (ixtiyoriy)</Label>
+              <Label>{t("pip.statusOptional")}</Label>
               <Select value={progressStatus} onValueChange={setProgressStatus}>
                 <SelectTrigger data-testid="select-progress-status">
-                  <SelectValue placeholder="Status o'zgartirish (ixtiyoriy)..." />
+                  <SelectValue placeholder={t("pip.statusChangePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Faol</SelectItem>
-                  <SelectItem value="completed">Yakunlangan</SelectItem>
-                  <SelectItem value="failed">Muvaffaqiyatsiz</SelectItem>
-                  <SelectItem value="cancelled">Bekor</SelectItem>
+                  <SelectItem value="active">{t("pip.statusActive")}</SelectItem>
+                  <SelectItem value="completed">{t("pip.statusCompleted")}</SelectItem>
+                  <SelectItem value="failed">{t("pip.statusFailed")}</SelectItem>
+                  <SelectItem value="cancelled">{t("pip.cancel")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setProgressPipId(null)}>Bekor</Button>
+            <Button variant="outline" onClick={() => setProgressPipId(null)}>{t("pip.cancel")}</Button>
             <Button
               onClick={() => {
                 if (!progressNotes.trim() || progressPipId === null) return;
@@ -413,7 +413,7 @@ export default function HRPip() {
               disabled={addProgressMutation.isPending || !progressNotes.trim()}
               data-testid="button-save-progress"
             >
-              Saqlash
+              {t("pip.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -427,13 +427,13 @@ export default function HRPip() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>Xodim</Label>
+              <Label>{t("pip.employee")}</Label>
               <Select
                 value={createForm.employee_id}
                 onValueChange={(v) => setCreateForm((f) => ({ ...f, employee_id: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Xodimni tanlang..." />
+                  <SelectValue placeholder={t("pip.selectEmployee")} />
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((e) => (
@@ -450,7 +450,7 @@ export default function HRPip() {
                 value={createForm.goals}
                 onChange={(e) => setCreateForm((f) => ({ ...f, goals: e.target.value }))}
                 rows={3}
-                placeholder="Maqsadlarni kiriting..."
+                placeholder={t("pip.goalsPlaceholder")}
               />
             </div>
             <div className="space-y-1.5">
@@ -459,7 +459,7 @@ export default function HRPip() {
                 value={createForm.success_criteria}
                 onChange={(e) => setCreateForm((f) => ({ ...f, success_criteria: e.target.value }))}
                 rows={3}
-                placeholder="Muvaffaqiyat mezonini kiriting..."
+                placeholder={t("pip.successCriteriaPlaceholder")}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -483,7 +483,7 @@ export default function HRPip() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialog(false)}>
-              Bekor qilish
+              {t("pip.cancelFull")}
             </Button>
             <Button
               onClick={() => createPipMutation.mutate(createForm)}

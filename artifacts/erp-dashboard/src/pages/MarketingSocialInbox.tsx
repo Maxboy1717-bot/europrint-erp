@@ -71,7 +71,7 @@ export default function MarketingSocialInbox() {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/inbox/conversations"] });
       setReplyText("");
     },
-    onError: (e: Error) => toast({ title: "Xatolik", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: t("xatolikTitle"), description: e.message, variant: "destructive" }),
   });
 
   const aiReplyMutation = useMutation({
@@ -79,9 +79,9 @@ export default function MarketingSocialInbox() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/inbox/conversations", selectedId, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/inbox/conversations"] });
-      toast({ title: "AI javob yuborildi" });
+      toast({ title: t("aiJavobYuborildi") });
     },
-    onError: (e: Error) => toast({ title: "AI xatolik", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: t("aiXatolik"), description: e.message, variant: "destructive" }),
   });
 
   const statusMutation = useMutation({
@@ -89,7 +89,7 @@ export default function MarketingSocialInbox() {
       apiRequest("PATCH", `/api/marketing/inbox/conversations/${selectedId}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/marketing/inbox/conversations"] });
-      toast({ title: "Holat yangilandi" });
+      toast({ title: t("holatYangilandi") });
     },
   });
 
@@ -130,12 +130,12 @@ export default function MarketingSocialInbox() {
               <div className="flex items-center gap-1.5" data-testid="stat-total">
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">{stats.totalConversations}</span>
-                <span className="text-xs text-muted-foreground">jami</span>
+                <span className="text-xs text-muted-foreground">{t("jamiBadge")}</span>
               </div>
               <div className="flex items-center gap-1.5" data-testid="stat-open">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
                 <span className="text-sm font-medium">{stats.openConversations}</span>
-                <span className="text-xs text-muted-foreground">ochiq</span>
+                <span className="text-xs text-muted-foreground">{t("ochiqBadge")}</span>
               </div>
               <div className="flex items-center gap-1.5" data-testid="stat-unread">
                 <span className="h-2 w-2 rounded-full bg-orange-500" />

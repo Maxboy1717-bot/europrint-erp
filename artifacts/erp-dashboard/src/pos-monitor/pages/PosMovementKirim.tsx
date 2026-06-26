@@ -116,7 +116,7 @@ export default function PosMovementKirim() {
       const result = lineSchema.safeParse({ materialCardId: l.materialCardId, quantity: l.quantity, unitPrice: l.unitPrice || "0", batchNumber: l.batchNumber || undefined, expiryDate: l.expiryDate || undefined, weightKg: l.weightKg || undefined, certificateNumber: l.certificateNumber || undefined, notes: l.notes || undefined });
       if (!result.success) { ok = false; errs[i] = {}; result.error.errors.forEach(e => { errs[i][e.path[0] as string] = e.message; }); }
     });
-    if (lines.length === 0) { ok = false; setGlobalError("Kamida bitta material qatori kiritilishi shart"); }
+    if (lines.length === 0) { ok = false; setGlobalError(t("kamidaBittaMaterialQatori")); }
     setLineErrors(errs);
     return ok;
   }
@@ -155,10 +155,10 @@ export default function PosMovementKirim() {
       const isNetworkError = !navigator.onLine || (e instanceof TypeError && e.message.toLowerCase().includes("fetch")) || (e instanceof Error && (e.message.includes("NetworkError") || e.message.includes("Failed to fetch")));
       if (isNetworkError) {
         try { await idbEnqueue({ id: crypto.randomUUID(), data: payload, ts: Date.now() }); setOfflineQueued(true); setTimeout(() => navigate("/pos-monitor/movements"), 2500); }
-        catch { setGlobalError("Oflayn saqlashda xatolik. Qaytadan urinib ko'ring."); }
-      } else { setGlobalError(e instanceof Error ? e.message : "Xatolik yuz berdi"); }
+        catch { setGlobalError(t("oflaynSaqlashdaXatolik")); }
+      } else { setGlobalError(e instanceof Error ? e.message : t("xatolikYuzBerdi")); }
     } finally { setSaving(false); }
-  }, [header, lines, totalQty, totalWeight, navigate]);
+  }, [header, lines, totalQty, totalWeight, navigate, t]);
 
   function downloadPdf() { if (created?.id) window.open(movementsApi.getPdf(created.id), "_blank"); }
 
@@ -171,7 +171,7 @@ export default function PosMovementKirim() {
         <div>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{kirimCfg.icon} {kirimCfg.title}</h2>
           <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>
-            {activeWarehouse ? `${activeWarehouse.code} — ${activeWarehouse.name ?? ""}` : "EXTERNAL_IN — barcha maydonlar qo'lda to'ldiriladi"}
+            {activeWarehouse ? `${activeWarehouse.code} — ${activeWarehouse.name ?? ""}` : t("externalInBarchaMaydonlar")}
           </div>
         </div>
         <div style={{ marginLeft: "auto" }}>

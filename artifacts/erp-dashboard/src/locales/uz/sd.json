@@ -404,5 +404,12 @@
   "orders.payPartial": "Qisman",
   "orders.dueLabel": "Muddat",
   "orders.currencySom": "so'm",
-  "orders.saving": "Saqlanmoqda..."
+  "orders.saving": "Saqlanmoqda...",
+  "leadImportResult": "{{imported}} ta lead import qilindi, {{skipped}} ta o'tkazib yuborildi",
+  "importMinRows": "Kamida sarlavha va bitta qator kerak",
+  "csvImportTitle": "CSV orqali lead import qilish",
+  "csvFirstRowHint": "Birinchi qator — sarlavhalar:",
+  "cancelBtn": "Bekor",
+  "importingBtn": "Yuklanmoqda...",
+  "importBtn": "Import qilish"
 }

@@ -38,10 +38,10 @@ export function LeadFilterBar({ leads, overdueCount, filter, onFilterChange }: F
   const { t } = useTranslation("common");
   const arr = Array.isArray(leads) ? leads : [];
   const filters: { key: FilterKey; label: string }[] = [
-    { key: "all", label: `Hammasi (${arr.length})` },
-    { key: "hot", label: `Issiq (${arr.filter(l => (l.score || 0) >= 60).length})` },
-    { key: "overdue", label: `Muddati o'tgan (${overdueCount})` },
-    { key: "lost", label: `Yo'qolgan (${arr.filter(l => l.status === "lost").length})` },
+    { key: "all", label: t("leadFilterAll", { count: arr.length }) },
+    { key: "hot", label: t("leadFilterHot", { count: arr.filter(l => (l.score || 0) >= 60).length }) },
+    { key: "overdue", label: t("leadFilterOverdue", { count: overdueCount }) },
+    { key: "lost", label: t("leadFilterLost", { count: arr.filter(l => l.status === "lost").length }) },
   ];
   return (
     <div className="flex items-center gap-3 flex-wrap mb-4">
@@ -173,17 +173,17 @@ export function LeadList({
                 )}
                 {(l as MarketingLead & { lostReason?: string }).lostReason && (
                   <span className="text-[var(--ep-red)] text-xs">
-                    Sabab: {(l as MarketingLead & { lostReason?: string }).lostReason}
+                    {t("leadSababLabel")}: {(l as MarketingLead & { lostReason?: string }).lostReason}
                   </span>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="text-xs no-default-hover-elevate">
-                {statusLabels[l.status || "new"]}
+                {t(statusLabels[l.status || "new"])}
               </Badge>
               <Badge className="bg-primary/10 text-primary text-xs no-default-hover-elevate">
-                {sourceLabels[l.source || "website"] || l.source}
+                {sourceLabels[l.source || "website"] ? t(sourceLabels[l.source || "website"]) : l.source}
               </Badge>
               <Button
                 size="icon"
@@ -271,7 +271,7 @@ export function ContactLogPanel({
               <div className="flex items-center gap-2 mb-1">
                 <PhoneCall className="h-3.5 w-3.5 text-primary" />
                 <span className="text-sm font-medium text-foreground">
-                  {contactTypeLabels[c.type] || c.type}
+                  {contactTypeLabels[c.type] ? t(contactTypeLabels[c.type]) : c.type}
                 </span>
                 <span className="text-xs text-muted-foreground ml-auto">
                   {new Date(c.contactedAt).toLocaleDateString("uz-UZ")}
@@ -280,7 +280,7 @@ export function ContactLogPanel({
               {c.summary && <p className="text-sm text-muted-foreground">{c.summary}</p>}
               {c.outcome && (
                 <Badge className="text-xs mt-1 no-default-hover-elevate">
-                  {outcomeLabels[c.outcome] || c.outcome}
+                  {outcomeLabels[c.outcome] ? t(outcomeLabels[c.outcome]) : c.outcome}
                 </Badge>
               )}
             </div>
@@ -299,7 +299,7 @@ export function ContactLogPanel({
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             {Object.entries(contactTypeLabels).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
+              <SelectItem key={k} value={k}>{t(v)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -316,7 +316,7 @@ export function ContactLogPanel({
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             {Object.entries(outcomeLabels).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
+              <SelectItem key={k} value={k}>{t(v)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

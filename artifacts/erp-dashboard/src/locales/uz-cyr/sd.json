@@ -404,5 +404,12 @@
   "orders.payPartial": "Қисман",
   "orders.dueLabel": "Муддат",
   "orders.currencySom": "сўм",
-  "orders.saving": "Сақланмоқда..."
+  "orders.saving": "Сақланмоқда...",
+  "leadImportResult": "{{imported}} та лид импорт қилинди, {{skipped}} та ўтказиб юборилди",
+  "importMinRows": "Камида сарлавҳа ва битта қатор керак",
+  "csvImportTitle": "CSV орқали лид импорт қилиш",
+  "csvFirstRowHint": "Биринчи қатор — сарлавҳалар:",
+  "cancelBtn": "Бекор",
+  "importingBtn": "Юкланмоқда...",
+  "importBtn": "Импорт қилиш"
 }

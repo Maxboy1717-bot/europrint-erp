@@ -27,7 +27,7 @@ export function LinesPanel({
           {t("skanerlanganMahsulotlar")}
         </span>
         <span className="pos-badge pos-badge-blue" style={{ fontSize: 11 }}>
-          {lines.length} ta
+          {t("nTa", { count: lines.length })}
         </span>
       </div>
 
@@ -71,7 +71,7 @@ export function LinesPanel({
                     </div>
                     <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
                       <span className={`pos-badge ${stockOk ? "pos-badge-green" : "pos-badge-red"}`} style={{ fontSize: 10 }}>
-                        Qoldiq: {line.availableQty}
+                        {t("qoldiqLabel")}: {line.availableQty}
                       </span>
                       {qtyExceedsStock && (
                         <span className="pos-badge pos-badge-yellow" style={{ fontSize: 9 }}>{t("kam1")}</span>
