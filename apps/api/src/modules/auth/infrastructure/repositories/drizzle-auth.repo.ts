@@ -224,27 +224,27 @@ export class DrizzleAuthRepo implements IAuthRepo {
   async resolveCardGate(userId: number): Promise<CardGate> {
     const empty: CardGate = { activeCardCount: 0, primaryCardId: null, rbacTier: null, positionId: null };
     try {
-      // Birlamchi karta: rbac_tier (qo'lda override) + razryad-daraja (egasi razryad→tier qoidasi manbai).
-      // Samarali tier JS'da resolveEffectiveRbacTier orqali (yagona qoida — @common/constants/rbac-tier.policy).
+      // T1/A3: birlamchi karta = users.card_id (kanonik link), fallback employee_cards is_primary.
+      // rbac_tier (qo'lda override) + razryad-daraja o'sha birlamchi kartadan; samarali tier JS'da
+      // resolveEffectiveRbacTier orqali (yagona qoida — @common/constants/rbac-tier.policy).
       const r = await runQuery<{ active_card_count: number; primary_card_id: number | null; rbac_tier: string | null; primary_razryad_level: number | null; position_id: number | null }>(sql`
+        WITH usr AS (SELECT id, employee_id, position_id, card_id FROM users WHERE id = ${userId}),
+        prim AS (
+          SELECT COALESCE(
+            (SELECT card_id FROM usr),
+            (SELECT ec.card_id FROM employee_cards ec
+              WHERE ec.employee_id = (SELECT employee_id FROM usr) AND ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW())
+              ORDER BY ec.is_primary DESC, ec.assigned_at DESC NULLS LAST LIMIT 1)
+          ) AS card_id
+        )
         SELECT
-          COUNT(ec.id) FILTER (WHERE ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW()))::int AS active_card_count,
-          (SELECT od.id FROM employee_cards ec2 JOIN org_departments od ON od.id = ec2.card_id
-            WHERE ec2.employee_id = u.employee_id AND ec2.is_active = true AND (ec2.ended_at IS NULL OR ec2.ended_at > NOW())
-            ORDER BY ec2.is_primary DESC, ec2.assigned_at DESC NULLS LAST LIMIT 1) AS primary_card_id,
-          (SELECT od.rbac_tier FROM employee_cards ec3 JOIN org_departments od ON od.id = ec3.card_id
-            WHERE ec3.employee_id = u.employee_id AND ec3.is_active = true AND (ec3.ended_at IS NULL OR ec3.ended_at > NOW())
-            ORDER BY ec3.is_primary DESC, ec3.assigned_at DESC NULLS LAST LIMIT 1) AS rbac_tier,
-          (SELECT rl.level FROM employee_cards ec4 JOIN org_departments od ON od.id = ec4.card_id
-            LEFT JOIN razryad_levels rl ON rl.id = od.razryad_level_id
-            WHERE ec4.employee_id = u.employee_id AND ec4.is_active = true AND (ec4.ended_at IS NULL OR ec4.ended_at > NOW())
-            ORDER BY ec4.is_primary DESC, ec4.assigned_at DESC NULLS LAST LIMIT 1) AS primary_razryad_level,
-          u.position_id AS position_id
-        FROM users u
-        LEFT JOIN employee_cards ec ON ec.employee_id = u.employee_id
-        WHERE u.id = ${userId}
-        GROUP BY u.id, u.employee_id, u.position_id
-        LIMIT 1
+          (SELECT COUNT(*) FROM employee_cards ec WHERE ec.employee_id = (SELECT employee_id FROM usr)
+            AND ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW()))::int AS active_card_count,
+          (SELECT card_id FROM prim) AS primary_card_id,
+          (SELECT od.rbac_tier FROM org_departments od WHERE od.id = (SELECT card_id FROM prim)) AS rbac_tier,
+          (SELECT rl.level FROM org_departments od LEFT JOIN razryad_levels rl ON rl.id = od.razryad_level_id
+            WHERE od.id = (SELECT card_id FROM prim)) AS primary_razryad_level,
+          (SELECT position_id FROM usr) AS position_id
       `);
       const row = r.rows[0];
       if (!row) return empty;
