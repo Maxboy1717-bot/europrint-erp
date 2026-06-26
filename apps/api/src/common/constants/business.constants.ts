@@ -188,6 +188,18 @@ export const BULK_DISCOUNT_SMALL = { minQty: 50,  rate: 0.05 } as const;
 export const CHURN_HIGH_DAYS = 180;
 export const CHURN_MED_DAYS  = 90;
 
+/**
+ * T21-B1 #28 owner-summary 5-raqam thresholds (director daily digest).
+ *  - OWNER_NEW_CUSTOMER_WINDOW_DAYS: "yangi mijoz" = created_at oxirgi shu kun ichida.
+ *  - OWNER_LOST_CUSTOMER_DAYS: "yo'qolgan mijoz" = last_order_date shu kundan eski (CHURN_HIGH bilan mos).
+ *  - OWNER_SMALL_CUSTOMER_REVENUE_UZS: "kichik mijoz" = total_revenue shu chegaradan past.
+ *  - OWNER_SALES_TREND_WINDOW_DAYS: savdo-trend taqqoslash oynasi (joriy ╳ oldingi).
+ */
+export const OWNER_NEW_CUSTOMER_WINDOW_DAYS  = 30;
+export const OWNER_LOST_CUSTOMER_DAYS        = CHURN_HIGH_DAYS;
+export const OWNER_SMALL_CUSTOMER_REVENUE_UZS = 5_000_000;
+export const OWNER_SALES_TREND_WINDOW_DAYS   = 30;
+
 /** RFM customer segmentation (marketing-agent.segmentCustomers): VIP = lifetime deal
  *  value above the threshold AND last order within the active window; at-risk reuses CHURN_MED_DAYS. */
 export const VIP_REVENUE_THRESHOLD_UZS = 100_000_000;

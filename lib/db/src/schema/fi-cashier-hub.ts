@@ -30,6 +30,8 @@ export const cashierShifts = pgTable("cashier_shifts", {
   closedAmount: numericMoney("closed_amount"),
   expectedAmount: numericMoney("expected_amount"),
   variance: numericMoney("variance"), // closedAmount − expectedAmount
+  /** Optional per-shift daily cash ceiling (UZS). NULL = no limit; the X/Z ledger warns when drawer > limit. */
+  dailyCashLimit: numericMoney("daily_cash_limit"),
   status: varchar("status", { length: 10 }).notNull().default("open"), // open | closed
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

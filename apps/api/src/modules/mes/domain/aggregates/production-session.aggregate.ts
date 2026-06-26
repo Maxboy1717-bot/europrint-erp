@@ -73,6 +73,23 @@ export class Downtime {
   constructor(public reason: string, public duration: number, public timestamp: Date = _time.now()) {}
 }
 
+/**
+ * GSD (Genel Standart Dakika / standart-vaqt) 3-bosqich vaqt-o'lchovi. Har ishlab-chiqarish
+ * sessiyasi uchun vaqt 3 ne-bir-xil bosqichga bo'linadi:
+ *  - SETUP    — sozlash / changeover (ne-produktiv; OEE Availability'dan ayriladi)
+ *  - MAIN     — sof ishlab-chiqarish (produktiv runTime)
+ *  - TEARDOWN — tozalash / yig'ishtirish (ne-produktiv; OEE Availability'dan ayriladi)
+ * DONE = barcha bosqich tugadi. advanceStage() oldingi bosqich vaqtini yig'ib keyingisiga o'tadi.
+ */
+export enum GsdStage {
+  SETUP = 'setup',
+  MAIN = 'main',
+  TEARDOWN = 'teardown',
+  DONE = 'done',
+}
+
+const STAGE_ORDER: GsdStage[] = [GsdStage.SETUP, GsdStage.MAIN, GsdStage.TEARDOWN, GsdStage.DONE];
+
 export class ProductionSession extends AggregateRoot {
   private id: number;
   private ppId: number;
@@ -84,6 +101,12 @@ export class ProductionSession extends AggregateRoot {
   private completedAt: Date | null = null;
   private downtimes: Downtime[] = [];
   private totalDowntimeDuration: number = 0;
+  // GSD 3-bosqich vaqt-akkumulyatori (sekund) + joriy bosqich holati
+  private setupSeconds: number = 0;
+  private mainSeconds: number = 0;
+  private teardownSeconds: number = 0;
+  private currentStage: GsdStage | null = null;
+  private stageStartedAt: Date | null = null;
 
   constructor(
     id: number,
@@ -220,6 +243,122 @@ export class ProductionSession extends AggregateRoot {
 
   getTotalDowntime(): number {
     return this.totalDowntimeDuration;
+  }
+
+  // ── GSD 3-bosqich vaqt-o'lchovi (#9) ──────────────────────────────────────────
+
+  getCurrentStage(): GsdStage | null {
+    return this.currentStage;
+  }
+
+  getSetupSeconds(): number {
+    return this.setupSeconds;
+  }
+
+  getMainSeconds(): number {
+    return this.mainSeconds;
+  }
+
+  getTeardownSeconds(): number {
+    return this.teardownSeconds;
+  }
+
+  /** Bosqich start markeri — repo persist uchun (NULL=bosqich ichida emas). */
+  getStageStartedAt(): Date | null {
+    return this.stageStartedAt;
+  }
+
+  /**
+   * Rehydrate uchun: persist qilingan GSD bosqich holatini aggregat'ga qaytaradi
+   * (state-o'zgarish emas, shuning uchun domain-event YO'Q). Repo DB qatoridan chaqiradi.
+   */
+  restoreStageState(
+    setupSeconds: number,
+    mainSeconds: number,
+    teardownSeconds: number,
+    currentStage: GsdStage | null,
+    stageStartedAt: Date | null,
+  ): void {
+    this.setupSeconds = Math.max(0, setupSeconds || 0);
+    this.mainSeconds = Math.max(0, mainSeconds || 0);
+    this.teardownSeconds = Math.max(0, teardownSeconds || 0);
+    this.currentStage = currentStage;
+    this.stageStartedAt = stageStartedAt;
+  }
+
+  /**
+   * GSD birinchi bosqichni (SETUP) boshlaydi. Faqat ishchi sessiyada (RUNNING),
+   * va faqat GSD hali boshlanmaganida (currentStage === null) ruxsat. stage_started_at
+   * markerini qo'yadi — advanceStage() shu markerdan o'tgan vaqtni hisoblaydi.
+   */
+  beginStages(now: Date = _time.now()): Result<void> {
+    if (this.status !== MesStatus.RUNNING) {
+      return Err('GSD bosqichlarini faqat ishchi (running) sessiyada boshlash mumkin');
+    }
+    if (this.currentStage !== null) {
+      return Err('GSD bosqichlari allaqachon boshlangan');
+    }
+    this.currentStage = GsdStage.SETUP;
+    this.stageStartedAt = now;
+    this.addDomainEvent({
+      type: 'MES_STAGE_STARTED',
+      data: { sessionId: this.id, stage: GsdStage.SETUP },
+    });
+    return { ok: true, data: undefined };
+  }
+
+  /**
+   * Joriy bosqichda o'tgan vaqtni (stage_started_at..now) tegishli akkumulyatorga
+   * (setup/main/teardown) qo'shadi va keyingi bosqichga o'tadi: SETUP→MAIN→TEARDOWN→DONE.
+   * DONE bosqichida boshqa o'tish yo'q. Faqat RUNNING/PAUSED sessiyada.
+   *
+   * @param now — joriy vaqt (test-inject uchun parametr; default = Tashkent now)
+   */
+  advanceStage(now: Date = _time.now()): Result<void> {
+    if (this.status !== MesStatus.RUNNING && this.status !== MesStatus.PAUSED) {
+      return Err('GSD bosqichni faqat ishchi sessiyada o\'zgartirish mumkin');
+    }
+    if (this.currentStage === null) {
+      return Err('GSD bosqichlari boshlanmagan — avval beginStages() chaqiring');
+    }
+    if (this.currentStage === GsdStage.DONE) {
+      return Err('Barcha GSD bosqichlari allaqachon tugagan');
+    }
+
+    const elapsedSeconds = this.stageStartedAt
+      ? Math.max(0, Math.floor((now.getTime() - this.stageStartedAt.getTime()) / 1000))
+      : 0;
+
+    switch (this.currentStage) {
+      case GsdStage.SETUP:
+        this.setupSeconds += elapsedSeconds;
+        break;
+      case GsdStage.MAIN:
+        this.mainSeconds += elapsedSeconds;
+        break;
+      case GsdStage.TEARDOWN:
+        this.teardownSeconds += elapsedSeconds;
+        break;
+      default:
+        break;
+    }
+
+    const currentIndex = STAGE_ORDER.indexOf(this.currentStage);
+    const nextStage = STAGE_ORDER[currentIndex + 1] ?? GsdStage.DONE;
+    const completedStage = this.currentStage;
+    this.currentStage = nextStage;
+    this.stageStartedAt = nextStage === GsdStage.DONE ? null : now;
+
+    this.addDomainEvent({
+      type: 'MES_STAGE_ADVANCED',
+      data: {
+        sessionId: this.id,
+        completedStage,
+        completedSeconds: elapsedSeconds,
+        nextStage,
+      },
+    });
+    return { ok: true, data: undefined };
   }
 
   moveToQc(): Result<void> {

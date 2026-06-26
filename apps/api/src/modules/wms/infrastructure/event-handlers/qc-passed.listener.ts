@@ -11,15 +11,23 @@ import { Result } from '@common/result';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
-/** Passed quantity + warehouse resolved from the QC inspection row itself. */
+/** Passed quantity + warehouse + sort grade resolved from the QC inspection row itself. */
 interface InspectionLookupRow {
   pass_count: number;
   warehouse_id: number;
+  /** T21-A2: sifat-saralash navi (first|second|third|scrap) yoki NULL. */
+  sort_grade: string | null;
 }
 
-/** One finished-goods line item of the sales order. */
+/** One finished-goods line item of the sales order. T21-A2: net_price = base unit price. */
 interface FgLineRow {
   material_id: number;
+  net_price: string | number | null;
+}
+
+/** T21-A2: nav → narx koeffitsienti (qc_grade_price_coefficients). */
+interface GradeCoefficientRow {
+  coefficient: string | number;
 }
 
 @Injectable()
@@ -62,7 +70,8 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
     const inspectionRows = await runQuery<InspectionLookupRow>(sql`
       SELECT
         COALESCE(qi.pass_count, qi.items_passed, 0) AS pass_count,
-        COALESCE(w.id, 1)                           AS warehouse_id
+        COALESCE(w.id, 1)                           AS warehouse_id,
+        qi.sort_grade                               AS sort_grade
       FROM qc_inspections qi
       LEFT JOIN warehouses w ON w.type = 'finished_goods' OR w.name ILIKE '%finished%'
       WHERE qi.id = ${Number(event.inspectionId)}
@@ -80,6 +89,11 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
     const passQty = Number(inspection.pass_count) || 0;
     const warehouseId = Number(inspection.warehouse_id) || 1;
 
+    // T21-A2: nav (sort_grade) bo'lsa, narx koeffitsientini config'dan o'qish. SOXTA fallback
+    // YO'Q (Q-40): nav uchun koeffitsient master-data'da yo'q bo'lsa koeffitsient qo'llanmaydi
+    // (graded value NULL) — qabul bekor qilinmaydi, faqat baholanmagan kirim bo'ladi.
+    const gradeCoefficient = await this._resolveGradeCoefficient(inspection.sort_grade);
+
     // Nothing actually passed inspection → nothing to receive into stock. A 0-qty
     // receipt would only create/touch an empty warehouse_stock row (no-op kirim) and
     // spawn a meaningless WmsFgReceivedEvent + rental timer. Real orders with a zero
@@ -95,7 +109,9 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
     // Finished-goods material(s) come from the real line-item table. product_id is the
     // FG material; it is nullable in live data, so fall back to material_id.
     const lineRows = await runQuery<FgLineRow>(sql`
-      SELECT COALESCE(soi.product_id, soi.material_id) AS material_id
+      SELECT
+        COALESCE(soi.product_id, soi.material_id) AS material_id,
+        soi.net_price                             AS net_price
       FROM sales_order_items soi
       WHERE soi.sales_order_id = ${event.orderId}
         AND COALESCE(soi.product_id, soi.material_id) IS NOT NULL
@@ -119,6 +135,15 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
       const materialId = Number(line.material_id) || 0;
       if (!materialId) continue;
 
+      // T21-A2: graded FG unit cost = base (net_price) × sort coefficient. When either the
+      // base price is missing OR no coefficient is configured for the nav, gradedUnitCost
+      // stays null — the receipt still lands (no blocking), just unpriced.
+      const basePrice = line.net_price != null ? Number(line.net_price) : null;
+      const gradedUnitCost =
+        basePrice != null && Number.isFinite(basePrice) && gradeCoefficient != null
+          ? Math.round(basePrice * gradeCoefficient * 100) / 100
+          : null;
+
       const result = await this.commandBus.execute<ReceiveFgCommand, Result<void>>(
         new ReceiveFgCommand(
           materialId,
@@ -127,6 +152,8 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
           `QC-${event.inspectionId}`, // batchNumber — traceable to the inspection
           null, // expiryDate — FG has no expiry by default
           event.orderId, // orderId — attributes the FG + enables Trigger 12 rental timer
+          undefined, // areaM2 — not derived here
+          gradedUnitCost, // T21-A2: nav-koeffitsienti bilan saralangan birlik narxi
         ),
       );
 
@@ -137,10 +164,29 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
         );
       } else {
         this.logger.log(
-          { orderId: event.orderId, materialId, qty: passQty },
-          'Trigger 11 -> 12: FG receipt UPSERTed to warehouse_stock, rental timer will start',
+          { orderId: event.orderId, materialId, qty: passQty, grade: inspection.sort_grade, gradedUnitCost },
+          'Trigger 11 -> 12: FG receipt UPSERTed to warehouse_stock (grade-priced), rental timer will start',
         );
       }
     }
+  }
+
+  /**
+   * T21-A2 — nav (sort_grade) uchun narx koeffitsientini qc_grade_price_coefficients dan o'qiydi.
+   * Q-40: SOXTA fallback YO'Q — nav NULL yoki koeffitsient master-data'da topilmasa null qaytaradi
+   * (kirim baholanmagan holda o'tadi, blok bo'lmaydi). is_active=TRUE koeffitsient tanlanadi.
+   */
+  private async _resolveGradeCoefficient(sortGrade: string | null): Promise<number | null> {
+    if (!sortGrade) return null;
+    const rows = await runQuery<GradeCoefficientRow>(sql`
+      SELECT coefficient
+      FROM qc_grade_price_coefficients
+      WHERE grade = ${sortGrade} AND is_active = TRUE
+      LIMIT 1
+    `);
+    const raw = rows.rows[0]?.coefficient;
+    if (raw == null) return null;
+    const coef = Number(raw);
+    return Number.isFinite(coef) && coef >= 0 ? coef : null;
   }
 }

@@ -7,6 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { nextDocNumber } from '@common/database/doc-sequences.helper';
+import { ProductionSession, GsdStage } from '../../domain/aggregates/production-session.aggregate';
 
 type Row = Record<string, unknown>;
 
@@ -132,6 +133,76 @@ export class MesProductionSessionsRepository {
     }
   }
 
+  /**
+   * GSD 3-bosqich vaqt-o'lchovi (#9) — joriy bosqichni yopib keyingisiga o'tadi.
+   * Aggregat (ProductionSession.advanceStage) DB qatoridan rehydrate qilinadi, bosqich
+   * o'tkaziladi va yangilangan setup/main/teardown_seconds + current_stage atomik UPDATE qilinadi.
+   * Birinchi chaqiruvda (current_stage NULL) avtomatik SETUP'dan boshlaydi (beginStages).
+   */
+  async advanceSessionStage(sessionId: number): Promise<Row | null> {
+    try {
+      const before = await runQuery<Row>(sql`
+        SELECT id, status, started_at, ended_at, worker_id, production_order_id, equipment_id,
+               setup_seconds, main_seconds, teardown_seconds, current_stage, stage_started_at
+        FROM production_sessions
+        WHERE id = ${sessionId} AND deleted_at IS NULL
+      `);
+      const row = before.rows[0] as Row | undefined;
+      if (!row) return null;
+
+      const session = ProductionSession.rehydrate(
+        Number(row.id),
+        Number(row.production_order_id ?? 0),
+        Number(row.equipment_id ?? 0),
+        Number(row.worker_id ?? 0),
+        false,
+        String(row.status ?? ''),
+        row.started_at ? new Date(row.started_at as string) : null,
+        row.ended_at ? new Date(row.ended_at as string) : null,
+      );
+      session.restoreStageState(
+        Number(row.setup_seconds ?? 0),
+        Number(row.main_seconds ?? 0),
+        Number(row.teardown_seconds ?? 0),
+        (row.current_stage as GsdStage | null) ?? null,
+        row.stage_started_at ? new Date(row.stage_started_at as string) : null,
+      );
+
+      // current_stage NULL → GSD hali boshlanmagan: avval SETUP'ni boshlaymiz.
+      if (session.getCurrentStage() === null) {
+        const begin = session.beginStages();
+        if (!begin.ok) {
+          this.logger.warn(`advanceSessionStage begin: ${begin.error.message}`);
+          return null;
+        }
+      } else {
+        const adv = session.advanceStage();
+        if (!adv.ok) {
+          this.logger.warn(`advanceSessionStage: ${adv.error.message}`);
+          return null;
+        }
+      }
+
+      const stage = session.getCurrentStage();
+      const stageStartedAt = session.getStageStartedAt();
+      const updated = await runQuery<Row>(sql`
+        UPDATE production_sessions
+        SET setup_seconds    = ${session.getSetupSeconds()},
+            main_seconds     = ${session.getMainSeconds()},
+            teardown_seconds = ${session.getTeardownSeconds()},
+            current_stage    = ${stage},
+            stage_started_at = ${stageStartedAt ? stageStartedAt.toISOString() : null},
+            updated_at       = NOW()
+        WHERE id = ${sessionId}
+        RETURNING id, setup_seconds, main_seconds, teardown_seconds, current_stage, stage_started_at
+      `);
+      return (updated.rows[0] ?? null) as Row | null;
+    } catch (err) {
+      this.logger.error(`advanceSessionStage: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   async recordDowntimeForSession(sessionId: number, body: Row): Promise<Row | null> {
     try {
       const rows = await runQuery<Row>(sql`
@@ -143,6 +214,43 @@ export class MesProductionSessionsRepository {
     } catch (err) {
       this.logger.error(`recordDowntimeForSession: ${(err as Error).message}`);
       return null;
+    }
+  }
+
+  /**
+   * Bosqich-asosli OEE Availability (#9). GSD vaqt-o'lchovidan haqiqiy availability:
+   *   Availability = main_seconds / (setup_seconds + main_seconds + teardown_seconds)
+   * setup (changeover) + teardown (tozalash) = ne-produktiv → ayriladi, faqat main = produktiv.
+   * Bo'luvchi 0 bo'lsa availability = 0 (NaN emas). Sessiya-bo'yicha va work-center-bo'yicha agregat.
+   */
+  async getStageBasedAvailability(sessionId?: number): Promise<Row[]> {
+    try {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          ps.id                AS session_id,
+          ps.equipment_id      AS work_center_id,
+          ps.setup_seconds,
+          ps.main_seconds,
+          ps.teardown_seconds,
+          (ps.setup_seconds + ps.main_seconds + ps.teardown_seconds) AS total_seconds,
+          CASE
+            WHEN (ps.setup_seconds + ps.main_seconds + ps.teardown_seconds) > 0
+            THEN ROUND(
+              100.0 * ps.main_seconds
+              / (ps.setup_seconds + ps.main_seconds + ps.teardown_seconds)
+            )
+            ELSE 0
+          END AS availability_pct,
+          ps.current_stage
+        FROM production_sessions ps
+        WHERE ps.deleted_at IS NULL
+          AND (${sessionId ?? null}::int IS NULL OR ps.id = ${sessionId ?? null})
+        ORDER BY ps.id DESC
+      `);
+      return rows.rows as Row[];
+    } catch (err) {
+      this.logger.error(`getStageBasedAvailability: ${(err as Error).message}`);
+      return [];
     }
   }
 

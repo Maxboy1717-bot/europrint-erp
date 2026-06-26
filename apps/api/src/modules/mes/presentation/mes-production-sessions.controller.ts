@@ -71,6 +71,14 @@ export class MesProductionSessionsController {
     return unwrapOrThrow(await this.svc.getSession(safeInt(sessionId, 0)));
   }
 
+  @ApiOperation({ summary: 'Advance GSD stage (setup→main→teardown→done)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post(':sessionId/advance-stage')
+  async advanceStage(@Param('sessionId') sessionId: string) {
+    return unwrapOrThrow(await this.svc.advanceSessionStage(safeInt(sessionId, 0)));
+  }
+
   @ApiOperation({ summary: 'Record downtime' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -81,6 +89,13 @@ export class MesProductionSessionsController {
     @Body() body: MesRecordDowntimeDto,
   ) {
     return unwrapOrThrow(await this.svc.recordDowntimeForSession(safeInt(sessionId, 0), body));
+  }
+
+  @ApiOperation({ summary: 'Stage-based OEE availability (main / setup+main+teardown)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':sessionId/stage-availability')
+  async stageAvailability(@Param('sessionId') sessionId: string) {
+    return unwrapOrThrow(await this.svc.getStageBasedAvailability(safeInt(sessionId, 0)));
   }
 
   @ApiOperation({ summary: 'List downtime events' })

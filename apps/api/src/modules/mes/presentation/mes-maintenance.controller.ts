@@ -113,6 +113,14 @@ export class MesMaintenanceController {
     return unwrapOrThrow(await this.svc.getSosHistory(safeInt(limit, 50)));
   }
 
+  @ApiOperation({ summary: 'Resolve sos (stops org-chain escalation)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Post('sos/:sosId/resolve')
+  @Roles(...MES_FLOOR_ROLES)
+  async resolveSos(@Param('sosId') sosId: string, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.resolveSos(safeInt(sosId, 0), user?.id ?? null));
+  }
+
   @ApiOperation({ summary: 'Get downtime reasons' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime-reasons')

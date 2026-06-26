@@ -34,6 +34,7 @@ import { CreateBudgetHandler } from './application/commands/create-budget.handle
 import { ApproveBudgetHandler } from './application/commands/approve-budget.handler';
 import { SubmitBudgetForApprovalHandler } from './application/commands/submit-budget-for-approval.handler';
 import { ArAgingHandler } from './application/queries/ar-aging.handler';
+import { ApAgingHandler } from './application/queries/ap-aging.handler';
 import { CashFlowHandler } from './application/queries/cash-flow.handler';
 import { GetInvoicesHandler } from './application/queries/get-invoices.handler';
 import { GetPaymentsHandler } from './application/queries/get-payments.handler';
@@ -148,7 +149,7 @@ const commandHandlers = [
 ];
 
 const queryHandlers = [
-  ArAgingHandler, CashFlowHandler, GetInvoicesHandler, GetPaymentsHandler,
+  ArAgingHandler, ApAgingHandler, CashFlowHandler, GetInvoicesHandler, GetPaymentsHandler,
   GetGlEntriesHandler, GetBudgetsHandler, GetBudgetByIdHandler, GetBudgetVarianceHandler, GetBudgetStatsHandler,
 ];
 

@@ -36,6 +36,9 @@ import { VacancyDeadlineCron } from './vacancy-deadline.cron'
 import { RetentionCron } from './retention.cron'
 import { KanbanRecurringCron } from './kanban-recurring.cron'
 import { ActingRevertCron } from './acting-revert.cron'
+import { MesSosEscalationCron } from './mes-sos-escalation.cron'
+import { MesSosEscalationService } from '../modules/mes/application/mes-sos-escalation.service'
+import { MesSosEscalationRepository } from '../modules/mes/infrastructure/repositories/mes-sos-escalation.repo'
 import { CkpDailyAggregateCron } from './ckp-daily-aggregate.cron'
 import { CardRepository } from '../modules/org-structure/card.repository'
 import { CkpFactRepository } from '../modules/org-structure/ckp-fact.repository'
@@ -80,6 +83,10 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     // ORG Phase 7 — i.o./acting auto-revert (EP-ORG-060); CardRepository = standalone (runQuery, no deps)
     ActingRevertCron,
     CardRepository,
+    // #11 — SOS/downtime org-zanjir timeout eskalatsiya (har 2 daqiqa); repo+service standalone (runQuery)
+    MesSosEscalationCron,
+    MesSosEscalationService,
+    MesSosEscalationRepository,
     // A68 (ЦКП) — kunlik kaskad-agregat (har root-karta subtree avg, 01:00); CkpFactRepository = standalone (runQuery)
     CkpDailyAggregateCron,
     CkpFactRepository,

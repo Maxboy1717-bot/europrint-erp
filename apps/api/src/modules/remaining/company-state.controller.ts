@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -45,6 +45,27 @@ export class CompanyStateController {
   }
 
   /**
+   * T21-B1 #23: 30-kun holat trendi — kunlik snapshot'lardan (company_state_log)
+   * oxirgi N kun (default 30) score_total + state_code qatori, oldindan (ASC)
+   * tartiblangan — FE trend-grafik uchun tayyor. `days` 1..365 oralig'ida.
+   */
+  @Get('trend')
+  async getTrend(@Query('days') daysParam?: string) {
+    const days = CompanyStateController.TrendDaysSchema.parse(daysParam ?? '30');
+    const rows = await rawSql(sql`
+      SELECT
+        date_trunc('day', detected_at)::date AS day,
+        state_code,
+        score_total,
+        detected_at
+      FROM company_state_log
+      WHERE detected_at >= NOW() - (${days}::int * INTERVAL '1 day')
+      ORDER BY detected_at ASC
+    `);
+    return { days, points: rows.rows };
+  }
+
+  /**
    * EP-DIR-001: trigger a daily holat snapshot on demand (the @Cron writes the same
    * row automatically at 06:00). Idempotent per calendar day. director/admin only.
    */
@@ -55,6 +76,9 @@ export class CompanyStateController {
   }
 
   // ─── state_thresholds config (owner-configurable bands + weights) ────────────
+
+  // T21-B1 #23: trend `days` query — coerced int, 1..365 (default handled at call site).
+  private static readonly TrendDaysSchema = z.coerce.number().int().min(1).max(365);
 
   private static readonly UpdateThresholdSchema = z.object({
     min_value: z.number().optional(),

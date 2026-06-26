@@ -22,6 +22,12 @@ export class ReceiveFgCommand {
     /** orderId enables the rental-timer trigger in WmsFgReceivedListener (Trigger 12). */
     public orderId?: number,
     public areaM2?: number,
+    /**
+     * T21-A2: grade-adjusted FG unit price (base × sort coefficient). When the QC inspection
+     * carried a sort_grade, the QcPassedListener resolves the coefficient and passes the
+     * graded value here so the IN-ledger row stores the saralangan (graded) cost.
+     */
+    public unitCost?: number | null,
   ) {}
 }
 
@@ -55,6 +61,7 @@ export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
         referenceId: command.orderId ?? null,
         createdBy: null,
         notes: command.batchNumber ? `FG receipt ${command.batchNumber}` : null,
+        unitCost: command.unitCost ?? null,
       },
     );
     if (!saveResult.ok) {

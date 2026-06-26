@@ -99,6 +99,8 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
         .values({
           cashierUserId: dto.cashierUserId,
           openedAmount: dto.openingAmount,
+          // Optional per-shift cash ceiling. null/undefined = no per-shift limit (global default applies).
+          dailyCashLimit: dto.dailyCashLimit ?? null,
           status: 'open',
           openedAt: new Date(),
         })
@@ -223,6 +225,21 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
       return Ok(rows as CashierMovement[]);
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `CASHIER_MOVEMENT_LIST_FAILED: ${String(e)}`));
+    }
+  }
+
+  async findGlobalDailyCashLimit(): Promise<Result<number | null>> {
+    try {
+      // Read the global default from cfo_config. 0 (or absent) → null (no limit), so the
+      // ledger only warns when a positive ceiling is actually configured (no fabricated cap).
+      const rows = await runQuery<{ config_value: string | null }>(
+        sql`SELECT config_value FROM cfo_config WHERE config_key = 'cashier_daily_cash_limit_uzs' LIMIT 1`,
+      );
+      const raw = Array.isArray(rows.rows) ? rows.rows[0]?.config_value : null;
+      const val = raw === null || raw === undefined ? 0 : Number(raw);
+      return Ok(Number.isFinite(val) && val > 0 ? val : null);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_GLOBAL_LIMIT_LOOKUP_FAILED: ${String(e)}`));
     }
   }
 

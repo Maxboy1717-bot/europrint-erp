@@ -10,6 +10,11 @@
  *        runTime     = plannedTime − downtime. Setup / changeover / stoppage
  *                      are recorded in `downtime_events` and are subtracted,
  *                      so they do NOT count as productive time.
+ *        NOTE (#9): this handler aggregates the `mes_sessions` world (downtime_events).
+ *                   The GSD 3-stage availability (main / setup+main+teardown) lives on the
+ *                   canonical `production_sessions` table and is exposed separately via
+ *                   MesProductionSessionsRepository.getStageBasedAvailability — same
+ *                   "exclude setup/teardown" principle, sourced from real per-stage seconds.
  *     Performance  = completedSessions / totalSessions
  *        PROXY. The canonical Performance is (idealCycleTime × producedQty) /
  *        runTime, but `mes_sessions` has neither an ideal-cycle-time column nor

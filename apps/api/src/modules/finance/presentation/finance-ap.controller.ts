@@ -5,12 +5,15 @@
 
 import { Body, Controller, Get, Post, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { assertOk, unwrapOrInternal } from '@common/http-result';
+import { QueryBus } from '@nestjs/cqrs';
+import { assertOk, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FinanceApService } from '../application/finance-ap.service';
+import type { Result } from '@common/result';
+import { ApAgingQuery, type ApAgingResult } from '../application/queries/ap-aging.handler';
 import { z } from 'zod';
 
 const CreateApEntrySchema = z.object({
@@ -30,7 +33,22 @@ const CreateApEntrySchema = z.object({
 export class FinanceApController {
   private readonly logger = new Logger(FinanceApController.name);
 
-  constructor(private readonly svc: FinanceApService) {}
+  constructor(
+    private readonly svc: FinanceApService,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  /**
+   * GET /api/ap/ecl-aging — creditor aging by due-date bucket (0-30 / 31-60 / 61-90 / 90+).
+   * Payables carry no ECL (no expected-credit-loss on money you owe) — amount/percentage only.
+   * Drives the consolidated kreditor view of the ArApAging FE page. Real fi_invoices data only.
+   */
+  @ApiOperation({ summary: 'AP aging (0-30/31-60/61-90/90+)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('ecl-aging')
+  async getEclAging() {
+    return unwrapOrThrow(await this.queryBus.execute<ApAgingQuery, Result<ApAgingResult>>(new ApAgingQuery()));
+  }
 
   @ApiOperation({ summary: 'Get aging buckets' })
   @ApiResponse({ status: 200, description: 'OK' })

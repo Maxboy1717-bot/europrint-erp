@@ -4424,4 +4424,45 @@ $fn$ LANGUAGE plpgsql` },
   { name: 'T11-06 qc_final_inspections.rework_cost ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_final_inspections ADD COLUMN IF NOT EXISTS rework_cost NUMERIC(14,2)` },
   { name: 'T11-06 qc_final_inspections.parent_order_id FK -> papka_orders', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_qc_final_inspections_parent_order_id') THEN ALTER TABLE qc_final_inspections ADD CONSTRAINT fk_qc_final_inspections_parent_order_id FOREIGN KEY (parent_order_id) REFERENCES papka_orders(id) ON DELETE SET NULL; END IF; END $$` },
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // T21-A2-QC — Gap #18 (sort/nav narx-koeffitsienti) + Gap #19 (sertifikat PDF raqami).
+  //   APPROVED: egasi "hamma vizyon" 2026-06-26. Hammasi ADDITIV + idempotent.
+  // ───────────────────────────────────────────────────────────────────────────
+  // (A) qc_inspections / qc_final_inspections → sort_grade ustun (mahsulot navi).
+  //   NAV taksonomiyasi = STRUKTURA (GradePricingService.QualityGrade bilan bir xil):
+  //     first | second | third | scrap.  NULLABLE: faqat sifat-saralash bo'lganda
+  //     to'ldiriladi (eski qatorlar NULL = saralanmagan). CHECK = struktura cheklovi.
+  //   ⭐ Bu yerda SOXTA nav-qiymat yozilmaydi (Q-40): faqat ustun + CHECK qo'shiladi.
+  { name: 'T21-A2 qc_inspections.sort_grade ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS sort_grade TEXT` },
+  { name: 'T21-A2 qc_inspections.sort_grade CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_qc_inspections_sort_grade') THEN ALTER TABLE qc_inspections ADD CONSTRAINT chk_qc_inspections_sort_grade CHECK (sort_grade IS NULL OR sort_grade IN ('first','second','third','scrap')); END IF; END $$` },
+  { name: 'T21-A2 qc_final_inspections.sort_grade ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_final_inspections ADD COLUMN IF NOT EXISTS sort_grade TEXT` },
+  { name: 'T21-A2 qc_final_inspections.sort_grade CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_qc_final_inspections_sort_grade') THEN ALTER TABLE qc_final_inspections ADD CONSTRAINT chk_qc_final_inspections_sort_grade CHECK (sort_grade IS NULL OR sort_grade IN ('first','second','third','scrap')); END IF; END $$` },
+
+  // (B) qc_sort_price_config — task-named "nav → narx koeffitsienti" konfiguratsiyasi.
+  //   ⭐ KANONIK manba = qc_grade_price_coefficients (T8-09, allaqachon mavjud: GradePricingService
+  //   shundan o'qiydi). DUPLIKAT JADVAL YO'Q (Q-46): qc_sort_price_config = shu jadval ustidan
+  //   nomli VIEW (grade, coefficient, is_sellable, ...). Shunday qilib ikkala nom ham bitta
+  //   data-manbaga ishora qiladi — saqlash bir joyda, o'qish ikkala nom bilan.
+  { name: 'T21-A2 qc_sort_price_config VIEW (over qc_grade_price_coefficients)', sql: `CREATE OR REPLACE VIEW qc_sort_price_config AS
+    SELECT id, grade, coefficient, label_uz, label_ru, is_sellable, is_active, created_at, updated_at
+    FROM qc_grade_price_coefficients` },
+
+  // (C) Default nav-koeffitsient SEED (egasi-override). Task talab: 1-sort=1.0, 2-sort=0.75,
+  //   3-sort=0.5, brak=0.0. ON CONFLICT DO NOTHING => egasi UI'da o'zgartirgan qiymatni
+  //   HECH QACHON ustiga yozmaydi (faqat jadval BO'SH bo'lsa default o'rnatadi). Bu Q-40 bilan
+  //   mos: default = sanoat-standart boshlang'ich qiymat (1-sort=to'liq narx), egasi istalgan
+  //   vaqtda master-data UI orqali override qiladi (ON CONFLICT yangilanishni bloklaydi).
+  { name: 'T21-A2 qc_grade_price_coefficients default seed', sql: `INSERT INTO qc_grade_price_coefficients (grade, coefficient, label_uz, label_ru, is_sellable, is_active)
+    VALUES
+      ('first',  1.0000, '1-sort (oliy nav)',  '1-sort', TRUE,  TRUE),
+      ('second', 0.7500, '2-sort',             '2-sort', TRUE,  TRUE),
+      ('third',  0.5000, '3-sort',             '3-sort', TRUE,  TRUE),
+      ('scrap',  0.0000, 'Brak',               'Брак',   FALSE, TRUE)
+    ON CONFLICT (grade) DO NOTHING` },
+
+  // (D) qc_certificate_seq — sertifikat raqami SF-2026-NNNNN uchun ketma-ket sekvensiya.
+  //   PostgreSQL SEQUENCE = atomar+konkurent-xavfsiz raqam manbai (NNNNN = 5-xona, nextval).
+  //   Yil prefiks (SF-<YYYY>-) servis tomonidan qo'shiladi; sekvens butun yil davom etadi.
+  { name: 'T21-A2 qc_certificate_seq CREATE SEQUENCE', sql: `CREATE SEQUENCE IF NOT EXISTS qc_certificate_seq START WITH 1 INCREMENT BY 1 MINVALUE 1 NO MAXVALUE CACHE 1` },
+
 ];

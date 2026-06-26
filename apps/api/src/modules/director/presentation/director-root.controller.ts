@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, InternalServerErrorException, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, InternalServerErrorException, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -15,6 +15,7 @@ import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { GetDashboardKpisQuery } from '../application/queries/get-dashboard-kpis.query';
 import { DirectorDataService } from '../application/director-data.service';
+import { OwnerSummaryService } from '../application/owner-summary.service';
 
 @ApiTags('Director — Root Aliases')
 @ApiBearerAuth()
@@ -26,6 +27,7 @@ export class DirectorRootController {
   constructor(
     private readonly queryBus: QueryBus,
     private readonly directorData: DirectorDataService,
+    private readonly ownerSummary: OwnerSummaryService,
   ) {}
 
   @Get('kpi')
@@ -84,5 +86,22 @@ export class DirectorRootController {
   @ApiOperation({ summary: 'Director AI summary' })
   async getAiSummary() {
     return unwrapOrInternal(await this.directorData.getAiSummary());
+  }
+
+  // T21-B1 #27/#28: owner daily digest — holat + 5 owner numbers (new/lost/small
+  // customers + sales-trend + top-risk), computed from live SD/CRM. GET = compute only.
+  @Get('owner-summary')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Owner daily digest — holat + 5 owner numbers (compute only)' })
+  async getOwnerSummary() {
+    return unwrapOrInternal(await this.ownerSummary.buildSummary(false));
+  }
+
+  // POST = compute + config-gated Telegram push (graceful when not configured).
+  @Post('owner-summary/send')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Owner daily digest — compute + Telegram send (config-gated)' })
+  async sendOwnerSummary() {
+    return unwrapOrInternal(await this.ownerSummary.buildSummary(true));
   }
 }

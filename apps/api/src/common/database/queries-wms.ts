@@ -198,16 +198,21 @@ export async function execInsertWmsTransaction(
     referenceId?: number | null;
     createdBy?: number | null;
     notes?: string | null;
+    /**
+     * T21-A2: per-unit cost recorded on the ledger row. For QC-passed FG receipts this is
+     * the GRADE-ADJUSTED unit price (base × sort coefficient). NULL = unknown/unpriced.
+     */
+    unitCost?: number | null;
   },
   exec?: ExecuteLike,
 ): Promise<void> {
   await execRows(
     sql`
     INSERT INTO wms_transactions
-      (warehouse_id, material_id, type, quantity, reference_id, created_by, notes, created_at)
+      (warehouse_id, material_id, type, quantity, unit_cost, reference_id, created_by, notes, created_at)
     VALUES
       (${input.warehouseId}, ${input.materialId}, ${input.type}, ${input.quantity},
-       ${input.referenceId ?? null}, ${input.createdBy ?? null}, ${input.notes ?? null}, NOW())
+       ${input.unitCost ?? null}, ${input.referenceId ?? null}, ${input.createdBy ?? null}, ${input.notes ?? null}, NOW())
   `,
     exec,
   );

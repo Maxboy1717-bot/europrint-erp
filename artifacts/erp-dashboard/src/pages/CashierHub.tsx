@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api-request";
-import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw, LogIn, LogOut, Plus } from "lucide-react";
+import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw, LogIn, LogOut, Plus, Wallet, AlertTriangle, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -86,6 +86,38 @@ interface ListPage<T> {
   data: T[];
   total: number;
 }
+
+// ─── Naqd-ledger (X/Z cash ledger) shape — mirrors CashierLedger from the BE getShiftLedger ──
+interface LedgerLine {
+  id: number;
+  type: string;
+  amount: number;
+  signedAmount: number;
+  runningBalance: number;
+  reference: string;
+  description: string | null;
+  pinVerified: boolean;
+  createdAt: string | null;
+}
+interface CashierLedger {
+  shiftId: number;
+  status: string;
+  openingAmount: number;
+  cashIn: number;
+  cashOut: number;
+  balance: number;
+  dailyCashLimit: number | null;
+  limitExceeded: boolean;
+  lines: LedgerLine[];
+}
+
+const MV_TYPE_LABEL: Record<string, string> = {
+  cash_in: tLabel("finance.cashierHub.mvCashIn", "Kirim"),
+  cash_out: tLabel("finance.cashierHub.mvCashOut", "Chiqim"),
+  salary_payout: tLabel("finance.cashierHub.mvSalary", "Ish haqi"),
+  advance: tLabel("finance.cashierHub.mvAdvance", "Avans"),
+  expense: tLabel("finance.cashierHub.mvExpense", "Xarajat"),
+};
 
 // The ordered approval chain — the next un-stamped stage is the one to approve next.
 const STAGE_ORDER = ["ai_checked", "hr_approved", "finance_approved", "director_approved"] as const;
@@ -178,6 +210,15 @@ export default function CashierHub() {
 
   const openShiftCount = useMemo(() => shifts.filter((s) => s.status === "open").length, [shifts]);
   const openShiftId = useMemo(() => shifts.find((s) => s.status === "open")?.id ?? null, [shifts]);
+
+  // ─── (d) naqd-ledger of the currently-open shift (kirim/chiqim + running saldo + limit) ───
+  const ledgerQuery = useQuery<CashierLedger>({
+    queryKey: ["/api/finance/cashier/shifts", openShiftId, "ledger"],
+    queryFn: () => apiRequest("GET", `/api/finance/cashier/shifts/${openShiftId}/ledger`),
+    enabled: openShiftId !== null,
+  });
+  const ledger = ledgerQuery.data ?? null;
+  const ledgerLines = Array.isArray(ledger?.lines) ? ledger.lines : [];
 
   // ─── mutations (drive the EXISTING POST endpoints) ────────────────────────────────────────
   const approveStageMutation = useMutation({
@@ -299,6 +340,7 @@ export default function CashierHub() {
     void shiftsQuery.refetch();
     void approvalsQuery.refetch();
     void reportsQuery.refetch();
+    if (openShiftId !== null) void ledgerQuery.refetch();
   };
 
   if (shiftsQuery.isError && approvalsQuery.isError && reportsQuery.isError) {
@@ -334,6 +376,9 @@ export default function CashierHub() {
           </TabsTrigger>
           <TabsTrigger value="reports" data-testid="tab-reports">
             <ReceiptText className="h-4 w-4 mr-1" /> {t("cashierHub.tabReports", "Avans hisobotlari")} ({reports.length})
+          </TabsTrigger>
+          <TabsTrigger value="ledger" data-testid="tab-ledger">
+            <Wallet className="h-4 w-4 mr-1" /> {t("cashierHub.tabLedger", "Naqd ledger")} ({ledgerLines.length})
           </TabsTrigger>
         </TabsList>
 
@@ -544,6 +589,96 @@ export default function CashierHub() {
                 ))}
               </TableBody>
             </Table>
+          )}
+        </TabsContent>
+
+        {/* (d) Naqd ledger — kirim/chiqim ro'yxat + running saldo + limit-warning */}
+        <TabsContent value="ledger" className="mt-3 space-y-3">
+          {openShiftId === null ? (
+            <EPEmptyState
+              icon={Wallet}
+              title={t("cashierHub.ledgerNoShiftTitle", "Ochiq smena yo'q")}
+              description={t("cashierHub.ledgerNoShiftDesc", "Naqd ledgerni ko'rish uchun avval kassir smenasini oching.")}
+            />
+          ) : ledgerQuery.isLoading ? (
+            <EPSkeletonTable rows={6} />
+          ) : (
+            <>
+              {/* Saldo summary strip — opening / kirim / chiqim / current balance */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="rounded-lg border p-3" data-testid="ledger-opening">
+                  <div className="text-[12px] text-muted-foreground">{t("cashierHub.ledgerOpening", "Boshlang'ich")}</div>
+                  <div className="text-base font-semibold">{formatCurrency(Number(ledger?.openingAmount ?? 0))}</div>
+                </div>
+                <div className="rounded-lg border p-3" data-testid="ledger-cash-in">
+                  <div className="text-[12px] text-muted-foreground flex items-center gap-1"><ArrowDownCircle className="h-3.5 w-3.5" /> {t("cashierHub.ledgerCashIn", "Kirim")}</div>
+                  <div className="text-base font-semibold">{formatCurrency(Number(ledger?.cashIn ?? 0))}</div>
+                </div>
+                <div className="rounded-lg border p-3" data-testid="ledger-cash-out">
+                  <div className="text-[12px] text-muted-foreground flex items-center gap-1"><ArrowUpCircle className="h-3.5 w-3.5" /> {t("cashierHub.ledgerCashOut", "Chiqim")}</div>
+                  <div className="text-base font-semibold">{formatCurrency(Number(ledger?.cashOut ?? 0))}</div>
+                </div>
+                <div className="rounded-lg border p-3" data-testid="ledger-balance">
+                  <div className="text-[12px] text-muted-foreground">{t("cashierHub.ledgerBalance", "Saldo")}</div>
+                  <div className="text-base font-semibold">{formatCurrency(Number(ledger?.balance ?? 0))}</div>
+                </div>
+              </div>
+
+              {/* Limit warning — shown only when a positive ceiling is set and the drawer exceeds it */}
+              {ledger?.limitExceeded && (
+                <div
+                  className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+                  data-testid="ledger-limit-warning"
+                >
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>
+                    {t("cashierHub.ledgerLimitExceeded", "Kassadagi naqd kunlik limitdan oshdi")}
+                    {ledger.dailyCashLimit != null && ` — ${t("cashierHub.ledgerLimit", "Limit")}: ${formatCurrency(Number(ledger.dailyCashLimit))}`}
+                  </span>
+                </div>
+              )}
+
+              {ledgerLines.length === 0 ? (
+                <EPEmptyState
+                  icon={Wallet}
+                  title={t("cashierHub.ledgerEmptyTitle", "Harakatlar yo'q")}
+                  description={t("cashierHub.ledgerEmptyDesc", "Bu smenada hali naqd kirim/chiqim qayd etilmagan.")}
+                />
+              ) : (
+                <Table data-testid="table-ledger">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("cashierHub.colMvType", "Tur")}</TableHead>
+                      <TableHead>{t("cashierHub.colReference", "Mos yozuv")}</TableHead>
+                      <TableHead className="text-right">{t("cashierHub.colSigned", "Summa (±)")}</TableHead>
+                      <TableHead className="text-right">{t("cashierHub.colRunning", "Saldo")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ledgerLines.map((line) => {
+                      const inflow = line.signedAmount >= 0;
+                      return (
+                        <TableRow key={line.id} data-testid={`row-ledger-${line.id}`}>
+                          <TableCell>
+                            <EPStatusPill tone={inflow ? "success" : "warning"}>
+                              {MV_TYPE_LABEL[line.type] ?? line.type}
+                            </EPStatusPill>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-[13px]">{line.reference}</div>
+                            {line.description && <div className="text-[12px] text-muted-foreground">{line.description}</div>}
+                          </TableCell>
+                          <TableCell className={`text-right font-medium ${inflow ? "text-emerald-600" : "text-destructive"}`}>
+                            {inflow ? "+" : "−"}{formatCurrency(Math.abs(Number(line.amount)))}
+                          </TableCell>
+                          <TableCell className="text-right">{formatCurrency(Number(line.runningBalance))}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>

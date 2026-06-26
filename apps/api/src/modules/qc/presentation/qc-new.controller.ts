@@ -3,7 +3,8 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, Post, Query, Param, Body, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, Body, Res, UseGuards, UseInterceptors, NotFoundException } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -16,6 +17,7 @@ import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { QcNewService } from '../application/qc-new.service';
+import { QcCertificatePdfService } from '../application/qc-certificate-pdf.service';
 import { SpcService } from '../domain/services/spc.service';
 import { QcAqlService } from '../domain/services/qc-aql.service';
 import type { AqlInspectionLevel, AqlLevel } from '../constants/qc-aql.constants';
@@ -51,6 +53,14 @@ const CertificateDto = z.object({
   issuedBy: z.string().optional(),
 });
 
+/** T21-A2 (Gap #19): sertifikat PDF generatsiya kirish parametrlari (raqam serverda beriladi). */
+const GenerateCertPdfDto = z.object({
+  orderId: z.number().int().optional(),
+  productName: z.string().max(300).optional(),
+  issuedBy: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
+});
+
 const LabTestDto = z.object({
   order_id: z.number().optional(),
   parameter_name: z.string().min(1),
@@ -75,6 +85,7 @@ export class QcNewController {
     private readonly svc: QcNewService,
     private readonly spcSvc: SpcService,
     private readonly aqlSvc: QcAqlService,
+    private readonly certPdfSvc: QcCertificatePdfService,
   ) {}
 
   @Get('dashboard')
@@ -119,6 +130,47 @@ export class QcNewController {
   async createCertificate(@Body() body: unknown) {
     const dto = CertificateDto.parse(body);
     return unwrapOrInternal(await this.svc.createCertificate(dto));
+  }
+
+  /**
+   * POST /qc/certificates/generate-pdf
+   * T21-A2 (Gap #19): SF-<YYYY>-NNNNN raqam ketma-ket + sertifikat yozuvi + PDF.
+   * PDF binar javob (application/pdf) sifatida qaytariladi (yuklab olish/ko'rish).
+   */
+  @Post('certificates/generate-pdf')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'T21-A2: Sertifikat PDF (SF-YYYY-NNNNN) generatsiya + saqlash + yuklash' })
+  async generateCertificatePdf(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<Buffer> {
+    const dto = GenerateCertPdfDto.parse(body);
+    const result = await this.certPdfSvc.generate({
+      orderId: dto.orderId ?? null,
+      productName: dto.productName ?? null,
+      issuedBy: dto.issuedBy ?? null,
+      notes: dto.notes ?? null,
+    });
+    if (!result.ok) throwFromError(result.error);
+    const { certNumber, pdf } = result.data;
+    void res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="${certNumber}.pdf"`)
+      .header('X-Certificate-Number', certNumber);
+    return pdf;
+  }
+
+  /**
+   * GET /qc/certificates/next-number
+   * Keyingi sertifikat raqamini ko'rsatish (NEXTVAL — raqamni sarflaydi/oldindan ajratadi).
+   */
+  @Get('certificates/next-number')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'T21-A2: Keyingi sertifikat raqami (SF-YYYY-NNNNN) — sekvens nextval' })
+  async getNextCertificateNumber() {
+    const r = await this.certPdfSvc.nextCertificateNumber();
+    if (!r.ok) throwFromError(r.error);
+    return { certNumber: r.data };
   }
 
   @Get('lab-tests')

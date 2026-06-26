@@ -20,6 +20,39 @@ export type CashierMovementType =
 export interface OpenShiftDto {
   cashierUserId: number;
   openingAmount: number;
+  /** Optional per-shift daily cash ceiling (UZS). NULL/undefined = no limit. */
+  dailyCashLimit?: number | null;
+}
+
+/** One ledger line: a movement enriched with the running drawer balance after it (chronological). */
+export interface CashierLedgerLine {
+  id: number;
+  type: CashierMovementType;
+  amount: number;
+  /** Signed effect on the drawer: +amount for cash_in, −amount otherwise. */
+  signedAmount: number;
+  /** Running drawer balance AFTER this movement (opening + Σ signed up to and including this line). */
+  runningBalance: number;
+  reference: string;
+  description: string | null;
+  pinVerified: boolean;
+  createdAt: Date | string | null;
+}
+
+/** The X/Z naqd-ledger for a shift: opening + chronological lines + saldo + (optional) limit warning. */
+export interface CashierLedger {
+  shiftId: number;
+  status: string;
+  openingAmount: number;
+  cashIn: number;
+  cashOut: number;
+  /** Current drawer balance = opening + Σ(cash_in) − Σ(cash_out). */
+  balance: number;
+  /** Effective daily cash ceiling (per-shift override → global cfo_config default → null). */
+  dailyCashLimit: number | null;
+  /** True when a positive limit is set and balance exceeds it (drawer over the ceiling). */
+  limitExceeded: boolean;
+  lines: CashierLedgerLine[];
 }
 
 export interface RecordMovementDto {
@@ -112,4 +145,6 @@ export interface ICashierHubRepository {
   listMovements(shiftId: number): Promise<Result<CashierMovement[]>>;
   /** Read a cashier's 4-digit PIN hash (users.pin_hash), or null if no PIN store/value. */
   findCashierPinHash(cashierUserId: number): Promise<Result<string | null>>;
+  /** Global default cashier daily cash limit (cfo_config.cashier_daily_cash_limit_uzs), or null when unset/0. */
+  findGlobalDailyCashLimit(): Promise<Result<number | null>>;
 }

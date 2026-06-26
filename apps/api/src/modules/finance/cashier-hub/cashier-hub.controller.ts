@@ -77,6 +77,16 @@ export class CashierHubController {
     return unwrapOrThrow(await this.service.getCurrentShift(cashierUserId as number | undefined));
   }
 
+  // GET /api/finance/cashier/shifts/:id/ledger — X/Z naqd-ledger: chronological cash
+  // in/out lines with running drawer balance + saldo + optional daily-limit warning.
+  // Declared BEFORE shifts/:id so the literal `ledger` segment is not captured by :id.
+  @ApiOperation({ summary: "Cashier shift cash ledger (kirim/chiqim + running saldo + limit warning)" })
+  @ApiResponse({ status: 200, description: 'OK — { openingAmount, balance, dailyCashLimit, limitExceeded, lines[] }' })
+  @Get('shifts/:id/ledger')
+  async getShiftLedger(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.service.getShiftLedger(id));
+  }
+
   // GET /api/finance/cashier/shifts/:id — shift + running X summary.
   @ApiOperation({ summary: 'Get a cashier shift with its X summary' })
   @ApiResponse({ status: 200, description: 'OK' })

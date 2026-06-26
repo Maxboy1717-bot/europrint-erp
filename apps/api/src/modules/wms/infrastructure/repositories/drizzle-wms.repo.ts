@@ -218,11 +218,13 @@ export class DrizzleWmsRepository implements IWmsRepository {
     materialId: number,
     warehouseId: number,
     amount: number,
-    context?: { referenceId?: number | null; createdBy?: number | null; notes?: string | null },
+    context?: { referenceId?: number | null; createdBy?: number | null; notes?: string | null; unitCost?: number | null },
   ): Promise<Result<void>> {
     // A60: the warehouse_stock upsert and the 'IN' wms_transactions ledger row run in ONE
     // transaction — a receipt can NEVER bump the canonical stock without also leaving an
     // auditable movement (and vice-versa). If the ledger INSERT fails, the stock bump rolls back.
+    // T21-A2: unitCost (grade-adjusted FG unit price = base × sort coefficient) is recorded on
+    // the IN-ledger row so downstream stock-valuation reads the saralangan (graded) value.
     return this.withTransaction(async (tx) => {
       try {
         const exec = asTxExec(tx);
@@ -233,6 +235,7 @@ export class DrizzleWmsRepository implements IWmsRepository {
             materialId,
             type: 'IN',
             quantity: amount,
+            unitCost: context?.unitCost ?? null,
             referenceId: context?.referenceId ?? null,
             createdBy: context?.createdBy ?? null,
             notes: context?.notes ?? null,

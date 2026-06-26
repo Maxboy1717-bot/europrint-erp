@@ -7,6 +7,7 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuthModule } from '../auth/auth.module';
+import { TelegramModule } from '../../telegram/telegram.module';
 
 import { APPROVAL_REPO } from './domain/repositories/i-approval.repo';
 import { DrizzleApprovalRepo } from './infrastructure/repositories/drizzle-approval.repo';
@@ -28,6 +29,8 @@ import { ApprovalsController } from './presentation/approvals.controller';
 import { DashboardController } from './presentation/dashboard.controller';
 import { DirectorRootController } from './presentation/director-root.controller';
 import { DirectorExtendedController } from './presentation/director-extended.controller';
+import { OwnerSummaryService } from './application/owner-summary.service';
+import { OwnerSummaryRepository } from './infrastructure/repositories/owner-summary.repository';
 import { DashboardQueryService } from './application/dashboard-query.service';
 import { DashboardQueryRepository } from './infrastructure/repositories/dashboard-query.repository';
 import { DirectorDataService } from './application/director-data.service';
@@ -109,7 +112,7 @@ const Repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule, TelegramModule],
   controllers: [
     ApprovalsController,
     DashboardController,
@@ -179,6 +182,9 @@ const Repositories = [
     MonthlyPlanRepository,
     { provide: MONTHLY_PLAN_REPO, useClass: MonthlyPlanRepository },
     MonthlyPlanService,
+    // T21-B1 #27/#28: owner daily digest (5 owner numbers + Telegram, config-gated)
+    OwnerSummaryRepository,
+    OwnerSummaryService,
   ],
   exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService, DirectorHolatService],
 })

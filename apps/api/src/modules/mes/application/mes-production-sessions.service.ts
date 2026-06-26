@@ -23,11 +23,21 @@ export class MesProductionSessionsService {
     return safeCall(async () => this.repo.getSession(id));
   }
 
+  /** GSD 3-bosqich (#9): joriy bosqichni yopib keyingisiga o'tadi (setup→main→teardown→done). */
+  async advanceSessionStage(sessionId: number) {
+    return safeCall(async () => this.repo.advanceSessionStage(sessionId));
+  }
+
   async recordDowntimeForSession(sessionId: number, body: Record<string, unknown>) {
     return safeCall(async () => this.repo.recordDowntimeForSession(sessionId, body));
   }
 
   async listDowntimeEvents(sessionId: number) {
     return safeCall(async () => this.repo.listDowntimeEvents(sessionId));
+  }
+
+  /** Bosqich-asosli OEE Availability (#9): main / (setup+main+teardown). */
+  async getStageBasedAvailability(sessionId?: number) {
+    return safeCall(async () => this.repo.getStageBasedAvailability(sessionId));
   }
 }

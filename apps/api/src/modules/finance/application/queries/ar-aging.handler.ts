@@ -63,9 +63,9 @@ export class ArAgingHandler implements IQueryHandler<ArAgingQuery> {
     const result = await runQuery<Record<string, unknown>>(sql`
       SELECT
         CASE
-          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date) <= 30 THEN '0-30'
-          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date) <= 60 THEN '31-60'
-          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date) <= 90 THEN '61-90'
+          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date::date) <= 30 THEN '0-30'
+          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date::date) <= 60 THEN '31-60'
+          WHEN ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - due_date::date) <= 90 THEN '61-90'
           ELSE '90+'
         END                              AS bucket,
         COUNT(*)::int                    AS invoice_count,

@@ -90,7 +90,7 @@ export interface IWmsRepository {
     materialId: number,
     warehouseId: number,
     amount: number,
-    context?: { referenceId?: number | null; createdBy?: number | null; notes?: string | null },
+    context?: { referenceId?: number | null; createdBy?: number | null; notes?: string | null; unitCost?: number | null },
   ): Promise<Result<void>>;
 
   /**

@@ -168,6 +168,9 @@ export const qc_inspections = pgTable(
     items_failed: integer('items_failed').notNull(),
     notes: text('notes'),
     attachments: text('attachments').default('[]'),
+    // T21-A2 — sifat-saralash navi (first|second|third|scrap); NULL = saralanmagan.
+    // Narx-koeffitsienti qc_sort_price_config / qc_grade_price_coefficients dan keladi.
+    sort_grade: text('sort_grade'),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },

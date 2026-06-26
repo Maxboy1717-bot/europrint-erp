@@ -31,6 +31,8 @@ import { WORK_ORDERS_REPO } from './work-orders/i-work-orders.repo';
 import { MesMaintenanceRepository } from './infrastructure/repositories/mes-maintenance.repo';
 import { MesShiftsStatsRepository } from './infrastructure/repositories/mes-shifts-stats.repo';
 import { MesProductionSessionsRepository } from './infrastructure/repositories/mes-production-sessions.repo';
+import { MesSosEscalationRepository } from './infrastructure/repositories/mes-sos-escalation.repo';
+import { MesSosEscalationService } from './application/mes-sos-escalation.service';
 // Wave 4 round-2 (PA2-18): LmsCertExpiredListener split into two
 // canonical @EventsHandler listeners + a shared block service.
 import { LmsCertExpiredMesListener } from './infrastructure/event-handlers/lms-cert-expired-mes.listener';
@@ -72,7 +74,10 @@ const handlers = [
     MesMaintenanceRepository,
     MesShiftsStatsRepository,
     MesProductionSessionsRepository,
+    // #11 — SOS/downtime org-zanjir eskalatsiya
+    MesSosEscalationRepository,
+    MesSosEscalationService,
   ],
-  exports: [MES_REPO, DOWNTIME_REPO, WORK_ORDERS_REPO, WorkOrdersService],
+  exports: [MES_REPO, DOWNTIME_REPO, WORK_ORDERS_REPO, WorkOrdersService, MesSosEscalationService],
 })
 export class MesModule {}

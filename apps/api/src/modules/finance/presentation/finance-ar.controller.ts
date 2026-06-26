@@ -5,12 +5,15 @@
 
 import { Controller, Get, Post, Body, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { assertOk, unwrapOrInternal } from '@common/http-result';
+import { QueryBus } from '@nestjs/cqrs';
+import { assertOk, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FinanceArService } from '../application/finance-ar.service';
+import type { Result } from '@common/result';
+import { ArAgingQuery, type ArAgingResult } from '../application/queries/ar-aging.handler';
 import { z } from 'zod';
 
 const CreateArEntrySchema = z.object({
@@ -30,7 +33,22 @@ const CreateArEntrySchema = z.object({
 export class FinanceArController {
   private readonly logger = new Logger(FinanceArController.name);
 
-  constructor(private readonly svc: FinanceArService) {}
+  constructor(
+    private readonly svc: FinanceArService,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  /**
+   * GET /api/ar/ecl-aging — IFRS-9 ECL aging by due-date bucket (0-30 / 31-60 / 61-90 / 90+),
+   * with per-bucket expected-credit-loss (ECL) using owner-configurable rates from cfo_config.
+   * Drives the consolidated debitor view of the ArApAging FE page. Real fi_invoices data only.
+   */
+  @ApiOperation({ summary: 'AR ECL aging (0-30/31-60/61-90/90+ + ECL)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('ecl-aging')
+  async getEclAging() {
+    return unwrapOrThrow(await this.queryBus.execute<ArAgingQuery, Result<ArAgingResult>>(new ArAgingQuery()));
+  }
 
   @ApiOperation({ summary: 'Get aging buckets' })
   @ApiResponse({ status: 200, description: 'OK' })

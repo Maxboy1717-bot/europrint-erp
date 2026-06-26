@@ -48,6 +48,7 @@ import { QcExtendedInProcessRepository } from './infrastructure/repositories/qc-
 import { QcExtendedRootCausesRepository } from './infrastructure/repositories/qc-extended-root-causes.repository';
 import { QC_EXTENDED_REPO } from './domain/repositories/i-qc-extended.repo';
 import { QcNewService } from './application/qc-new.service';
+import { QcCertificatePdfService } from './application/qc-certificate-pdf.service';
 import { QcParametersService } from './application/qc-parameters.service';
 import { QcNewRepository } from './infrastructure/repositories/qc-new.repository';
 import { QcParametersRepository } from './infrastructure/repositories/qc-parameters.repository';
@@ -131,6 +132,7 @@ const repositories = [
     { provide: QC_EXTENDED_REPO, useClass: QcExtendedRepository },
     QcExtendedService,
     QcNewService,
+    QcCertificatePdfService,
     QcParametersService,
     // TZ-D11/30/31/32/33/34/35/36/37/38
     DefectDetectorService,

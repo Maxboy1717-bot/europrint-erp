@@ -20,6 +20,8 @@ import {
   type CashierMovementType,
   type ShiftSummary,
   type ShiftListPage,
+  type CashierLedger,
+  type CashierLedgerLine,
 } from './i-cashier-hub.repo';
 import type { CashierShift } from '@workspace/db';
 
@@ -34,7 +36,12 @@ const PIN_REQUIRED_TYPES: ReadonlySet<CashierMovementType> = new Set([
 const OpenShiftSchema = z.object({
   cashierUserId: z.number().int().positive(),
   openingAmount: z.number().nonnegative(),
+  // Optional per-shift daily cash ceiling (UZS). Omitted/null → no per-shift limit.
+  dailyCashLimit: z.number().nonnegative().optional().nullable(),
 });
+
+/** cash_in is the only inflow; everything else reduces the drawer. */
+const INFLOW_TYPE: CashierMovementType = 'cash_in';
 
 const CloseShiftSchema = z.object({
   closedAmount: z.number().nonnegative(),
@@ -79,6 +86,7 @@ export class CashierHubService {
       const opened = await this.repo.openShift({
         cashierUserId: dto.cashierUserId,
         openingAmount: dto.openingAmount,
+        dailyCashLimit: dto.dailyCashLimit ?? null,
       });
       if (!opened.ok) throw new Error(opened.error.message);
       return opened.data;
@@ -178,6 +186,69 @@ export class CashierHubService {
       closedAmount,
       variance,
       byType: totals.byType,
+    });
+  }
+
+  /**
+   * X/Z naqd-ledger for a shift: the opening drawer + every movement in chronological order,
+   * each carrying its signed effect and the RUNNING drawer balance after it, plus the current
+   * saldo and an optional daily-limit warning (per-shift ceiling → global cfo_config default).
+   * Real data only — no echo: lines come from cashier_movements (DB), saldo is summed here.
+   */
+  async getShiftLedger(shiftId: number): Promise<Result<CashierLedger, AppError>> {
+    const shiftRes = await this.repo.findShiftById(shiftId);
+    if (!shiftRes.ok) return shiftRes as Result<never, AppError>;
+    if (!shiftRes.data) return Err(AppErr('NOT_FOUND', `Smena #${shiftId} topilmadi`));
+
+    const movesRes = await this.repo.listMovements(shiftId);
+    if (!movesRes.ok) return movesRes as Result<never, AppError>;
+
+    const opening = Number(shiftRes.data.openedAmount);
+    let running = opening;
+    let cashIn = 0;
+    let cashOut = 0;
+    const lines: CashierLedgerLine[] = (Array.isArray(movesRes.data) ? movesRes.data : []).map((m) => {
+      const amount = Number(m.amount);
+      const isInflow = m.type === INFLOW_TYPE;
+      const signed = isInflow ? amount : -amount;
+      if (isInflow) cashIn += amount;
+      else cashOut += amount;
+      running += signed;
+      return {
+        id: m.id,
+        type: m.type as CashierMovementType,
+        amount,
+        signedAmount: signed,
+        runningBalance: running,
+        reference: m.reference,
+        description: m.description ?? null,
+        pinVerified: Boolean(m.pinVerified),
+        createdAt: m.createdAt ?? null,
+      };
+    });
+
+    const balance = opening + cashIn - cashOut;
+
+    // Effective ceiling: per-shift override wins; otherwise the global cfo_config default.
+    const perShiftRaw = shiftRes.data.dailyCashLimit;
+    const perShift = perShiftRaw === null || perShiftRaw === undefined ? null : Number(perShiftRaw);
+    let dailyCashLimit: number | null = perShift !== null && perShift > 0 ? perShift : null;
+    if (dailyCashLimit === null) {
+      const globalRes = await this.repo.findGlobalDailyCashLimit();
+      if (globalRes.ok) dailyCashLimit = globalRes.data;
+    }
+    const limitExceeded = dailyCashLimit !== null && balance > dailyCashLimit;
+
+    return Ok({
+      shiftId,
+      status: shiftRes.data.status,
+      openingAmount: opening,
+      cashIn,
+      cashOut,
+      balance,
+      dailyCashLimit,
+      limitExceeded,
+      lines,
     });
   }
 

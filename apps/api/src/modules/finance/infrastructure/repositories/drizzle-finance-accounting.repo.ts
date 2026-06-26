@@ -106,12 +106,17 @@ export class DrizzleFinanceAccountingRepo {
 
   async getInventoryValuation(): Promise<{ materials: Row[]; summary: Row }> {
     const [matsResult, summaryResult] = await Promise.all([
+      // T21-B1 #24 master-data converge: raw_materials valuation kept as-is (canonical
+      // stock/price source); ADDITIV int-link mc.kod AS canonical_card_kod surfaces the
+      // material_cards (kanonik) tie without changing valuation numbers (Q-39/Q-40).
       runQuery<Row>(sql`
         SELECT rm.id, rm.code, rm.name, rm.category, rm.unit, rm.current_stock, rm.unit_price,
                (rm.current_stock * rm.unit_price) AS total_value,
-               COALESCE(w.name, '') AS warehouse_name
+               COALESCE(w.name, '') AS warehouse_name,
+               mc.kod AS canonical_card_kod
         FROM raw_materials rm
         LEFT JOIN warehouses w ON w.id = rm.warehouse_id
+        LEFT JOIN material_cards mc ON mc.id = rm.material_card_id
         WHERE rm.is_active = true ORDER BY (rm.current_stock * rm.unit_price) DESC
       `),
       runQuery<Row>(sql`SELECT COUNT(*) AS total_items, COALESCE(SUM(current_stock),0) AS total_stock, COALESCE(SUM(current_stock * unit_price),0) AS total_value FROM raw_materials WHERE is_active = true`),
