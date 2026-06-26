@@ -23,6 +23,8 @@ export const warehouse_transfers = pgTable('warehouse_transfers', {
   quantity:          numeric('quantity', { precision: 15, scale: 4 }),
   status:            text('status').default('pending'),
   created_at:        timestamp('created_at').defaultNow(),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenant_id:         integer('tenant_id').notNull().default(1),
 });
 
 // [2026-05-22 dedup] internal_requests: re-exported from canonical definition in

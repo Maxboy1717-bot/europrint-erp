@@ -90,6 +90,59 @@ export class AutoGlPostingRepository {
     }, 'DB_ERROR');
   }
 
+  /**
+   * A86 — ATOMIC POS→GL posting. All legs of ONE movement are written inside a SINGLE
+   * db.transaction so the subledger is never left half-written / unbalanced: either every
+   * leg lands or none does (Q-40 — a partial write would be a "green but wrong" ledger).
+   *
+   * Guarantees:
+   *  - Idempotency re-checked INSIDE the tx (countExistingPostings race window between the
+   *    service's pre-check and the write is closed here) → at most one set of legs per movement.
+   *  - Balanced-pair invariant: each posted leg is a balanced Dr/Cr pair (one `amount`, both accounts
+   *    set & distinct), so ΣDr == ΣCr == Σamount by construction. Legs that carry NO GL value —
+   *    amount<=0, or a same-account wash (debit==credit, e.g. INTERNAL_TRANSFER 1010↔1010) — are
+   *    SKIPPED, never written (Q-40: a wash/zero row would be "green but wrong"). A skipped leg is a
+   *    legitimate no-op (no error), matching the canonical-ledger A65 rule and the GL_ACCOUNTS seed intent.
+   *
+   * Returns the number of legs actually inserted (0 = skipped: already posted / nothing balanced).
+   */
+  async insertPostingsAtomic(entries: GlPostingInsert[]): Promise<Result<number>> {
+    return safeCall(async () => {
+      if (entries.length === 0) return 0;
+      const movementId = entries[0].movementId;
+
+      // Keep only GL-meaningful legs: positive amount AND distinct debit/credit accounts.
+      const balanced = entries.filter(
+        (e) => Number.isFinite(e.amount) && e.amount > 0 && e.debitAccount !== e.creditAccount,
+      );
+      if (balanced.length === 0) return 0;
+
+      return db.transaction(async (tx) => {
+        // Idempotency re-check inside the tx (closes the race vs. the service-level pre-check).
+        const existing = await tx.execute(sql`
+          SELECT COUNT(*)::int AS cnt FROM pos_gl_postings WHERE movement_id = ${movementId}
+        `);
+        const cnt = Number((existing.rows?.[0] as { cnt?: number } | undefined)?.cnt ?? 0);
+        if (cnt > 0) return 0;
+
+        let posted = 0;
+        for (const e of balanced) {
+          await tx.execute(sql`
+            INSERT INTO pos_gl_postings
+              (movement_id, debit_account, credit_account, amount, currency,
+               exchange_rate, amount_base, description, posted_by, posting_date, created_at)
+            VALUES
+              (${e.movementId}, ${e.debitAccount}, ${e.creditAccount}, ${e.amount},
+               ${e.currency}, ${e.exchangeRate}, ${e.amountBase},
+               ${e.description}, 'AI', CURRENT_DATE, NOW())
+          `);
+          posted++;
+        }
+        return posted;
+      });
+    }, 'DB_ERROR');
+  }
+
   async listForMovement(movementId: number): Promise<Result<unknown[]>> {
     return safeCall(async () => typedExecute<unknown>(sql`
       SELECT id, debit_account, credit_account, amount, currency,

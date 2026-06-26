@@ -105,10 +105,12 @@ export class AutoGlPostingService {
         return Ok({ posted: 0, entries: [] });
       }
 
-      let posted = 0;
+      // A86 — ATOMIK yozish: harakatning BARCHA GL oyoqlari bitta tranzaksiyada (hammasi yoki hech biri).
+      // Eski har-oyoq alohida `insertPosting` loop balanssiz yarim-yozuv qoldirar edi (masalan EXTERNAL_OUT
+      // ning 2 oyog'idan biri yozilib, ikkinchisi xato bersa). Endi balansli juftlik atomik kafolatlanadi.
       const exchangeRate = Number(mov.exchange_rate) || 1;
-      for (const e of entries) {
-        await this.repo.insertPosting({
+      const postingR = await this.repo.insertPostingsAtomic(
+        entries.map((e) => ({
           movementId:   e.movementId,
           debitAccount: e.debitAccount,
           creditAccount: e.creditAccount,
@@ -117,11 +119,12 @@ export class AutoGlPostingService {
           exchangeRate,
           amountBase:   e.amount * exchangeRate,
           description:  e.description,
-        });
-        posted++;
-      }
+        })),
+      );
+      if (!postingR.ok) return Err(postingR.error);
+      const posted = postingR.data;
 
-      this.logger.log(`[AutoGL] ✅ ${mov.movement_number}: ${posted} ta GL yozuvi yaratildi (jami: ${totalAmount} ${mov.currency})`);
+      this.logger.log(`[AutoGL] ✅ ${mov.movement_number}: ${posted} ta GL yozuvi atomik yaratildi (jami: ${totalAmount} ${mov.currency})`);
       return Ok({ posted, entries });
     } catch (e) {
       this.logger.error(`[AutoGL] Xato: ${String(e)}`);

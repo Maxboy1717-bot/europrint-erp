@@ -3832,4 +3832,208 @@ $fn$ LANGUAGE plpgsql` },
   { name: 'A72 enrollments emp_course UNIQUE idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_enrollments_emp_course ON enrollments (employee_id, course_id)` },
   { name: 'A72 enrollments.card_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_enrollments_card_id ON enrollments (card_id) WHERE card_id IS NOT NULL` },
 
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-5/A89, 2026-06-26): SOFT-DELETE AUDIT USTUNLAR.
+  // Manba: docs/MASTER_DATA_STANDARTLARI.md §3 Qoida M-2 (soft delete MAJBURIY) + M-3 (deleted_at/deleted_by audit).
+  // ⭐ NEGA: master data HECH QACHON hard-DELETE qilinmaydi — boshqa transaksiyalar unga FK bilan havola
+  //   qiladi (M-2). O'chirish = deleted_at = NOW() + deleted_by = user_id. Faol satr = deleted_at IS NULL
+  //   (mavjud _of_to_od_crosswalk VIEW shu naqshni allaqachon ishlatadi: org_functions WHERE deleted_at IS NULL).
+  // Additiv, IF NOT EXISTS — allaqachon ustun bor jadval (accounts/org_functions/technology_cards/work_centers
+  //   deleted_at; technology_cards deleted_by) SKIP bo'ladi (tur ziddiyatsiz). DATA yozilmaydi (NULL = faol).
+  // deleted_at = TIMESTAMP (drift-fayl ustun naqshiga mos), deleted_by = INTEGER (technology_cards.deleted_by bilan bir xil; FK yo'q — boot-tartib bog'lanmasligi uchun, created_by/updated_by additiv naqshi kabi).
+  // ALTER TABLE IF EXISTS — hozir jonli DB'da yo'q master jadvallar (hr_employees/roles/defect_catalog/
+  //   crm_pipeline_stages/price_lists) uchun xavfsiz no-op; jadval yaratilgach keyingi boot'da qo'llanadi.
+  // Guruh A (Org/HR):
+  { name: 'A89 razryad_levels.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS razryad_levels ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 razryad_levels.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS razryad_levels ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 org_functions.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_functions ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 org_functions.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_functions ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 org_departments.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 org_departments.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 hr_employees.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_employees ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 hr_employees.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS hr_employees ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 roles.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS roles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 roles.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS roles ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 unit_of_measures.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS unit_of_measures ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 unit_of_measures.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS unit_of_measures ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Guruh B (Mahsulot/Material):
+  { name: 'A89 material_cards.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS material_cards ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 material_cards.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS material_cards ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 technology_cards.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS technology_cards ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 technology_cards.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS technology_cards ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 work_centers.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 work_centers.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS work_centers ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 defect_catalog.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS defect_catalog ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 defect_catalog.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS defect_catalog ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Guruh C (Moliya):
+  { name: 'A89 accounts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 accounts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS accounts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 budget_lines.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS budget_lines ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 budget_lines.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS budget_lines ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Guruh D (CRM/Savdo):
+  { name: 'A89 sd_customers.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customers ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 sd_customers.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customers ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 crm_pipeline_stages.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_pipeline_stages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 crm_pipeline_stages.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_pipeline_stages ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A89 price_lists.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS price_lists ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A89 price_lists.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS price_lists ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+
+  // A91 — tenant_id rollout (PP / production_orders.*). Additive, idempotent.
+  // Type = INTEGER NOT NULL DEFAULT 1 to match the dominant live convention
+  // (17 existing integer tenant_id columns + drift-fix-01-tenant-id.sql; no `tenants` table,
+  //  tenant-1 backfill per the multi-tenancy Phase-2 mandate).
+  { name: 'A91 production_orders.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_orders ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A91 production_order_operations.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_order_operations ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A91 production_order_components.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_order_components ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A91 production_orders.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_production_orders_tenant_id ON production_orders(tenant_id)` },
+
+  // A92 (TENANT) — APPROVED: additive multi-tenant isolation column rollout for
+  // WMS (warehouse_*) + Finance (entries). Same canonical convention as A91:
+  // INTEGER NOT NULL DEFAULT 1 (matches the 17 live integer tenant_id columns on
+  // employees/sales_orders/purchase_orders/crm_*/departments; no `tenants` table yet,
+  // tenant-1 backfill per the multi-tenancy Phase-2 mandate). Idempotent / safe to re-run.
+  // DB-proof (rollback-tx): warehouse_stock=37, warehouse_bins=126, entries=6 rows → 0 nulls.
+  // Guruh WMS (warehouse_*):
+  { name: 'A92 warehouse_stock.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_stock ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_transactions.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_transactions ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_transfers.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_transfers ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_batches.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_batches ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_bins.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_bins ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_access_grants.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_access_grants ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_rental_settings.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_rental_settings ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A92 warehouse_rental_records.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS warehouse_rental_records ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // Guruh Finance (entries — kanonik GL ledger):
+  { name: 'A92 entries.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS entries ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // Indexes on the data-bearing canonical tables (tenant-scoped filtering):
+  { name: 'A92 warehouse_stock.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_stock_tenant_id ON warehouse_stock(tenant_id)` },
+  { name: 'A92 warehouse_transactions.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_warehouse_transactions_tenant_id ON warehouse_transactions(tenant_id)` },
+  { name: 'A92 entries.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_entries_tenant_id ON entries(tenant_id)` },
+
+  // A90 (TENANT) — APPROVED: additive multi-tenant isolation column rollout for
+  // the SD module (sd_* base tables). Same canonical convention as A91/A92:
+  // INTEGER NOT NULL DEFAULT 1 (matches the 17 live integer tenant_id columns,
+  // incl. sales_orders/sales_invoices which already carry it; no `tenants` table
+  // yet, tenant-1 backfill per the multi-tenancy Phase-2 mandate). ADD COLUMN with
+  // NOT NULL DEFAULT 1 atomically backfills every existing row → no null-violation.
+  // Idempotent (ADD COLUMN IF NOT EXISTS / CREATE INDEX IF NOT EXISTS) — safe to re-run.
+  // sales_orders + sales_invoices already have tenant_id (Drizzle + live) — not re-added.
+  // EXCLUDED: 7 sd_* VIEWs over non-sd base tables (sd_sales_orders, sd_quotations,
+  //   sd_payments, sd_invoices, sd_customer_documents, sd_customer_complaints,
+  //   sd_customer_competitors) — ALTER TABLE on a view fails; their backing base
+  //   tables belong to CRM/FIN modules, out of A90 scope.
+  // DB-proof (rollback-tx): 14 sd_* base tables → tenant_id absent → present, 0 nulls.
+  // SD base tables WITH a Drizzle pgTable def (schema also updated to match):
+  { name: 'A90 sd_customers.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customers ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_contacts.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contacts ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_lead_activities.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_lead_activities ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_price_formulas.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_price_formulas ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_quotation_items.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_quotation_items ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_order_timeline.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_timeline ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_storage_fees.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_storage_fees ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_contracts.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contracts ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_manager_quotas.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_manager_quotas ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_customer_contacts.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_customer_interactions.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_interactions ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // SD base tables that are live-only (no Drizzle pgTable def) — column added for tenant uniformity:
+  { name: 'A90 sd_order_departments.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_departments ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_rentals.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_rentals ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  { name: 'A90 sd_advance_idempotency_keys.tenant_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_advance_idempotency_keys ADD COLUMN IF NOT EXISTS tenant_id INTEGER NOT NULL DEFAULT 1` },
+  // Indexes on the data-bearing SD tables (tenant-scoped filtering):
+  { name: 'A90 sd_customers.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customers_tenant_id ON sd_customers(tenant_id)` },
+  { name: 'A90 sd_contacts.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contacts_tenant_id ON sd_contacts(tenant_id)` },
+  { name: 'A90 sd_quotation_items.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_quotation_items_tenant_id ON sd_quotation_items(tenant_id)` },
+  { name: 'A90 sd_order_timeline.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_order_timeline_tenant_id ON sd_order_timeline(tenant_id)` },
+  { name: 'A90 sd_storage_fees.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_storage_fees_tenant_id ON sd_storage_fees(tenant_id)` },
+  { name: 'A90 sd_contracts.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contracts_tenant_id ON sd_contracts(tenant_id)` },
+  { name: 'A90 sd_customer_contacts.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customer_contacts_tenant_id ON sd_customer_contacts(tenant_id)` },
+  { name: 'A90 sd_customer_interactions.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customer_interactions_tenant_id ON sd_customer_interactions(tenant_id)` },
+  { name: 'A90 sd_order_departments.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_order_departments_tenant_id ON sd_order_departments(tenant_id)` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // A97 — Director 5-metric company-state ("holat") formula data layer.
+  // APPROVED: Claude (egasi vakolati) 2026-06-25. Boot auto-apply of the P29
+  // state-engine master-data that backs CompanyStateService.getCurrent() and
+  // GET /api/company-state/{current,thresholds}. Previously these tables lived
+  // ONLY as a standalone .sql (p29-state-engine-tables.sql) applied by hand —
+  // a fresh boot left the formula's data layer absent → 500/empty. Registering
+  // them here (idempotent CREATE TABLE IF NOT EXISTS + ON CONFLICT DO NOTHING)
+  // makes the 5-metric holat formula self-sufficient on every boot.
+  // The 25 state_thresholds bands (weights sum to 1.000) + 5 levels are
+  // configurable master-data (owner-tunable via PATCH /company-state/thresholds);
+  // band VALUES (cash_flow so'm cut-offs etc.) are owner-data, not fabricated math.
+  // Mirrors apps/api/src/shared/db/migrations/p29-state-engine-tables.sql exactly.
+  { name: 'A97 company_state_levels CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS company_state_levels (
+        id        SERIAL PRIMARY KEY,
+        code      VARCHAR(20) UNIQUE NOT NULL,
+        label_uz  TEXT NOT NULL,
+        label_ru  TEXT NOT NULL,
+        color_hex VARCHAR(7) NOT NULL,
+        rank      INTEGER NOT NULL
+      )
+    ` },
+  { name: 'A97 company_state_levels SEED', sql: `
+      INSERT INTO company_state_levels (code, label_uz, label_ru, color_hex, rank)
+      VALUES
+        ('OSISH',   'O''SISH',  'РОСТ',       '#10B981', 5),
+        ('NORMAL',  'NORMAL',   'НОРМА',      '#3B82F6', 4),
+        ('EHTIYOT', 'EHTIYOT',  'ОСТОРОЖНО',  '#F59E0B', 3),
+        ('XAVF',    'XAVF',     'РИСК',       '#F97316', 2),
+        ('INQIROZ', 'INQIROZ',  'КРИЗИС',     '#EF4444', 1)
+      ON CONFLICT (code) DO NOTHING
+    ` },
+  { name: 'A97 state_thresholds CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS state_thresholds (
+        id         SERIAL PRIMARY KEY,
+        metric_key VARCHAR(50) NOT NULL,
+        level_code VARCHAR(20) NOT NULL REFERENCES company_state_levels(code) ON DELETE CASCADE,
+        min_value  NUMERIC(14,4),
+        max_value  NUMERIC(14,4),
+        weight     NUMERIC(4,3) NOT NULL DEFAULT 0.2,
+        CONSTRAINT state_thresholds_metric_chk
+          CHECK (metric_key IN ('cash_flow','production_plan','orders','hr','quality')),
+        CONSTRAINT state_thresholds_metric_level_uq UNIQUE (metric_key, level_code)
+      )
+    ` },
+  { name: 'A97 state_thresholds SEED', sql: `
+      INSERT INTO state_thresholds (metric_key, level_code, min_value, max_value, weight)
+      VALUES
+        ('cash_flow','OSISH',   180000000, NULL,      0.25),
+        ('cash_flow','NORMAL',  130000000, 179999999, 0.25),
+        ('cash_flow','EHTIYOT',  80000000, 129999999, 0.25),
+        ('cash_flow','XAVF',     30000000,  79999999, 0.25),
+        ('cash_flow','INQIROZ',       NULL,  29999999, 0.25),
+        ('production_plan','OSISH',   90, 100, 0.25),
+        ('production_plan','NORMAL',  75,  89, 0.25),
+        ('production_plan','EHTIYOT', 55,  74, 0.25),
+        ('production_plan','XAVF',    35,  54, 0.25),
+        ('production_plan','INQIROZ', NULL, 34, 0.25),
+        ('orders','OSISH',   90, 100, 0.20),
+        ('orders','NORMAL',  75,  89, 0.20),
+        ('orders','EHTIYOT', 55,  74, 0.20),
+        ('orders','XAVF',    35,  54, 0.20),
+        ('orders','INQIROZ', NULL, 34, 0.20),
+        ('hr','OSISH',   95, 100, 0.15),
+        ('hr','NORMAL',  87,  94, 0.15),
+        ('hr','EHTIYOT', 75,  86, 0.15),
+        ('hr','XAVF',    60,  74, 0.15),
+        ('hr','INQIROZ', NULL, 59, 0.15),
+        ('quality','OSISH',   95, 100, 0.15),
+        ('quality','NORMAL',  87,  94, 0.15),
+        ('quality','EHTIYOT', 75,  86, 0.15),
+        ('quality','XAVF',    60,  74, 0.15),
+        ('quality','INQIROZ', NULL, 59, 0.15)
+      ON CONFLICT (metric_key, level_code) DO NOTHING
+    ` },
+  { name: 'A97 company_state_log CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS company_state_log (
+        id          SERIAL PRIMARY KEY,
+        state_code  VARCHAR(20) NOT NULL,
+        kpis        JSONB NOT NULL,
+        score_total NUMERIC(5,2),
+        detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      )
+    ` },
+  { name: 'A97 company_state_log detected_at INDEX', sql: `CREATE INDEX IF NOT EXISTS company_state_log_detected_at_idx ON company_state_log (detected_at DESC)` },
+
 ];

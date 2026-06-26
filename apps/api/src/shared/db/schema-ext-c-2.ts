@@ -234,6 +234,8 @@ export const warehouse_access_grants = pgTable('warehouse_access_grants', {
   employee_id:  integer('employee_id'),
   access_level: text('access_level').default('read'),
   created_at:   timestamp('created_at').defaultNow(),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenant_id:    integer('tenant_id').notNull().default(1),
 });
 
 // [2026-05-22 dedup] warehouse_stock: re-exported from canonical definition in
@@ -250,4 +252,6 @@ export const warehouse_batches = pgTable('warehouse_batches', {
   quantity:     numeric('quantity', { precision: 15, scale: 4 }),
   received_at:  timestamp('received_at'),
   created_at:   timestamp('created_at').defaultNow(),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenant_id:    integer('tenant_id').notNull().default(1),
 });

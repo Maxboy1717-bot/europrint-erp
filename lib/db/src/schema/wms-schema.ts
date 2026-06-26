@@ -202,6 +202,8 @@ export const warehouseBins = pgTable("warehouse_bins", {
   isActive: boolean("is_active").notNull().default(true),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 }, (t) => [
   index("idx_warehouse_bins_warehouse_id").on(t.warehouseId),
   index("idx_warehouse_bins_is_active").on(t.isActive),
@@ -370,9 +372,12 @@ export const warehouseTransactions = pgTable("warehouse_transactions", {
   itemId: varchar("item_id"),
   type: varchar("type", { length: 20 }),
   referenceId: varchar("reference_id"),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 }, (t) => [
   check("warehouse_transactions_type_chk", sql`${t.transactionType} IN ('kirim','chiqim','return','adjustment')`),
   check("warehouse_transactions_qty_chk", sql`${t.quantity} > 0`),
+  index("idx_warehouse_transactions_tenant_id").on(t.tenantId),
 ]);
 
 
@@ -406,7 +411,11 @@ export const warehouseStock = pgTable("warehouse_stock", {
   itemId: varchar("item_id"),
   updatedAt: timestamp("updated_at"),
   unit: varchar("unit", { length: 20 }),
-});
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
+}, (t) => [
+  index("idx_warehouse_stock_tenant_id").on(t.tenantId),
+]);
 
 
 export const insertWarehouseStockSchema = createInsertSchema(warehouseStock, {
@@ -779,6 +788,8 @@ export const warehouseRentalSettings = pgTable("warehouse_rental_settings", {
   customRates: jsonb("custom_rates").default("[]"), // [{managerId, managerName, dailyRate, freeDays}]
   updatedAt: timestamp("updated_at").defaultNow(),
   updatedBy: varchar("updated_by").references(() => users.id, { onDelete: "set null" }),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 });
 
 export const insertWarehouseRentalSettingsSchema = createInsertSchema(warehouseRentalSettings, {
@@ -819,6 +830,8 @@ export const warehouseRentalRecords = pgTable("warehouse_rental_records", {
   notes: text("notes"),
   lastCalculatedAt: timestamp("last_calculated_at").defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 }, (t) => [
   check("warehouse_rental_records_status_chk", sql`${t.status} IN ('active','closed','paid')`),
   check("warehouse_rental_records_area_chk", sql`${t.areaM2} > 0`),

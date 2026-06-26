@@ -68,8 +68,11 @@ export const entries = pgTable("entries", {
   postedBy: integer("posted_by"),
   postedAt: timestamp("posted_at"),
   currency: varchar("currency", { length: 10 }).notNull().default('UZS'),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
 }, (t) => [
   check("entries_amount_chk", sql`${t.amount} > 0`),
+  index("idx_entries_tenant_id").on(t.tenantId),
 ]);
 
 

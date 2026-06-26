@@ -129,15 +129,23 @@ export async function queryBalanceSheet(date?: string): Promise<Result<BalanceSh
       total: sql<number>`COALESCE(SUM(${entries.amount}::numeric), 0)`,
     })
       .from(accounts)
+      // NOTE: both accounts.id and entries.debit_account_id are INTEGER in the live DB
+      // (the Drizzle schema types debit_account_id as varchar — historical drift). The
+      // prior `${accounts.id}::varchar` cast threw `operator does not exist:
+      // integer = character varying` at runtime, so this query always errored and
+      // rpt_balans was never fed. Compare the columns natively (integer = integer) via
+      // raw SQL — this both typechecks and runs against the real integer columns.
       .leftJoin(entries, and(
-        eq(entries.debitAccountId, sql`${accounts.id}::varchar`),
+        sql`${entries.debitAccountId} = ${accounts.id}`,
         sql`DATE(${entries.createdAt}) <= ${targetDate}`,
       ))
       .where(eq(accounts.isActive, true))
       .groupBy(accounts.accountType);
 
+    // account_type is stored UPPERCASE (ASSET/LIABILITY/EQUITY/REVENUE/EXPENSE);
+    // normalise to lowercase so the lookups below match.
     const byType: Record<string, number> = {};
-    for (const row of rows) byType[row.type ?? ''] = Number(row.total ?? 0);
+    for (const row of rows) byType[(row.type ?? '').toLowerCase()] = Number(row.total ?? 0);
 
     const currentAssets = byType['asset'] ?? 0;
     const totalLiabilities = byType['liability'] ?? 0;

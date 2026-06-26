@@ -5,7 +5,7 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, bigint, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, bigint, jsonb, check, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { employees } from "./employees";
@@ -19,6 +19,9 @@ import { employees } from "./employees";
 // 1. MIJOZLAR (Customers)
 export const sdCustomers = pgTable("sd_customers", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1;
+  // future writers MUST set this from TenantContext.
+  tenantId: integer("tenant_id").notNull().default(1),
   name: text("name").notNull(),
   stir: varchar("stir", { length: 20 }),
   /** INN — same registry number, kept as alias column for legacy INSERT compatibility */
@@ -70,6 +73,8 @@ export type InsertSdCustomer = z.infer<typeof insertSdCustomerSchema>;
 // 2. KONTAKT SHAXSLAR
 export const sdContacts = pgTable("sd_contacts", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   customerId: varchar("customer_id").notNull().references(() => sdCustomers.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   position: varchar("position", { length: 100 }),
@@ -131,6 +136,8 @@ export type InsertSdLead = z.infer<typeof insertSdLeadSchema>;
 // 4. LEED AKTIVLIGI (muloqot tarixi)
 export const sdLeadActivities = pgTable("sd_lead_activities", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   leadId: varchar("lead_id").notNull().references(() => sdLeads.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 30 }).notNull(), // call, message, meeting, note, status_change
   note: text("note"),
@@ -150,6 +157,8 @@ export type InsertSdLeadActivity = z.infer<typeof insertSdLeadActivitySchema>;
 // 5. NARX FORMULALARI (super admin — structured, replaces key-value sdPriceSettings)
 export const sdPriceFormulas = pgTable("sd_price_formulas", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
 
   // Qog'oz narxlari (so'm/m²) — gofrokarton turi bo'yicha
   paperBPrice: numericMoney("paper_b_price").notNull().default(4200),   // B flute
@@ -218,11 +227,42 @@ export const sdQuotations = pgTable("sd_quotations", {
   notes: text("notes"),
   sentAt: timestamp("sent_at"),
   approvedAt: timestamp("approved_at"),
+  // A44 — revizion versiya: har o'zgarish bu sonni oshiradi, oldingi holat sd_quotation_revisions ga snapshot bo'ladi.
+  version: integer("version").notNull().default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
   check("sd_quotations_status_chk", sql`${t.status} IN ('draft','sent','viewed','approved','rejected','expired')`),
 ]);
+
+// 6b. TAKLIFNOMA REVIZIYALARI (Quotation revision history — A44)
+// Har edit'dan OLDINGI holat shu yerga immutable snapshot bo'lib yoziladi.
+export const sdQuotationRevisions = pgTable("sd_quotation_revisions", {
+  id: serial("id").primaryKey(),
+  quotationId: integer("quotation_id").notNull(),
+  version: integer("version").notNull(),
+  quotationNumber: varchar("quotation_number", { length: 30 }),
+  customerId: integer("customer_id"),
+  customerName: text("customer_name"),
+  status: varchar("status", { length: 20 }),
+  validUntil: varchar("valid_until", { length: 10 }),
+  paymentTerms: varchar("payment_terms"),
+  notes: text("notes"),
+  totalPrice: numericMoney("total_price"),
+  totalAmount: numericMoney("total_amount"),
+  totalValue: numericMoney("total_value"),
+  markupPercent: numericMoney("markup_percent"),
+  vatRate: numericMoney("vat_rate"),
+  snapshot: jsonb("snapshot"),
+  changedBy: integer("changed_by"),
+  changeReason: text("change_reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("sd_quotation_revisions_q_ver_uq").on(t.quotationId, t.version),
+  index("sd_quotation_revisions_q_idx").on(t.quotationId),
+]);
+
+export type SdQuotationRevision = typeof sdQuotationRevisions.$inferSelect;
 
 export const insertSdQuotationSchema = createInsertSchema(sdQuotations, {
   quotationNumber: z.string().min(1),
@@ -235,6 +275,8 @@ export type InsertSdQuotation = z.infer<typeof insertSdQuotationSchema>;
 // 7. TAKLIFNOMA SATRLARI
 export const sdQuotationItems = pgTable("sd_quotation_items", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   quotationId: varchar("quotation_id").notNull().references(() => sdQuotations.id, { onDelete: "cascade" }),
   productType: varchar("product_type", { length: 50 }).notNull().default("box"),
   // box, lid, tray, cup, other
@@ -342,6 +384,8 @@ export type InsertSdOrder = z.infer<typeof insertSdOrderSchema>;
 // 9. BUYURTMA HOLAT TARIXI
 export const sdOrderTimeline = pgTable("sd_order_timeline", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   orderId: varchar("order_id").notNull(),
   status: varchar("status", { length: 30 }).notNull(),
   note: text("note"),
@@ -385,6 +429,8 @@ export type InsertSdPayment = z.infer<typeof insertSdPaymentSchema>;
 // 11. OMBOR IJARA (Storage Fees)
 export const sdStorageFees = pgTable("sd_storage_fees", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   orderId: varchar("order_id").notNull().references(() => sdOrders.id, { onDelete: "cascade" }),
   startDate: varchar("start_date", { length: 10 }).notNull(),
   endDate: varchar("end_date", { length: 10 }),
@@ -403,6 +449,8 @@ export type SdStorageFee = typeof sdStorageFees.$inferSelect;
 // 12. SHARTNOMALAR
 export const sdContracts = pgTable("sd_contracts", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   // Nullable: contracts can be created standalone (quote→contract flow) before an order exists.
   // When created via quote-approve, order_id will be set. Phase 3 wires auto-population.
   orderId: integer("order_id").references(() => sdOrders.id, { onDelete: "set null" }),
@@ -431,6 +479,8 @@ export type SdContract = typeof sdContracts.$inferSelect;
 // 13. MENEJER KVOTA (KPI)
 export const sdManagerQuotas = pgTable("sd_manager_quotas", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   managerId: varchar("manager_id").notNull(),
   year: integer("year").notNull(),
   month: integer("month").notNull(),

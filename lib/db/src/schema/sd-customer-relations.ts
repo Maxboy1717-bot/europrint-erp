@@ -35,6 +35,8 @@ import { sdCustomers } from "./sd-europrint-schema";
 
 export const sdCustomerContacts = pgTable("sd_customer_contacts", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   customerId: integer("customer_id")
     .notNull()
     .references(() => sdCustomers.id, { onDelete: "cascade" }),
@@ -82,6 +84,8 @@ export type InsertSdCustomerContact = z.infer<typeof insertSdCustomerContactSche
 
 export const sdCustomerInteractions = pgTable("sd_customer_interactions", {
   id: serial("id").primaryKey(),
+  // Multi-tenancy column (A90). DEFAULT 1 backfills existing rows to tenant 1.
+  tenantId: integer("tenant_id").notNull().default(1),
   customerId: integer("customer_id")
     .notNull()
     .references(() => sdCustomers.id, { onDelete: "cascade" }),
