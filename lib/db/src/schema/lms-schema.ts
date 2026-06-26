@@ -86,9 +86,16 @@ export const courses = pgTable("courses", {
   status: varchar("status", { length: 20 }),
   instructorId: integer("instructor_id"),
   coverUrl: text("cover_url"),
+  // T11-04: 3-bosqich kurs-tasdiq workflow (draft->review->approved). 2-imzo: submit + approve.
+  approvalStatus: varchar("approval_status", { length: 20 }).notNull().default("draft"),
+  submittedBy: integer("submitted_by"),
+  submittedAt: timestamp("submitted_at"),
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
 }, (t) => [
   check("courses_level_chk", sql`${t.level} IN ('beginner','intermediate','advanced')`),
   check("courses_duration_chk", sql`${t.duration} IS NULL OR ${t.duration} > 0`),
+  check("chk_courses_approval_status", sql`${t.approvalStatus} IN ('draft','review','approved')`),
   index("idx_courses_department_id").on(t.departmentId),
   index("idx_courses_is_required").on(t.isRequired),
   index("idx_courses_level").on(t.level),

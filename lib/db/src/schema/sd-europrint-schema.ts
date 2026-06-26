@@ -82,6 +82,9 @@ export const sdContacts = pgTable("sd_contacts", {
   email: varchar("email", { length: 100 }),
   telegram: varchar("telegram", { length: 100 }),
   isPrimary: boolean("is_primary").default(false),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -142,6 +145,9 @@ export const sdLeadActivities = pgTable("sd_lead_activities", {
   type: varchar("type", { length: 30 }).notNull(), // call, message, meeting, note, status_change
   note: text("note"),
   managerId: varchar("manager_id"),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   check("sd_lead_activities_type_chk", sql`${t.type} IN ('call','message','meeting','note','status_change')`),
@@ -195,6 +201,9 @@ export const sdPriceFormulas = pgTable("sd_price_formulas", {
 
   // Meta
   updatedBy: varchar("updated_by"),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
@@ -299,6 +308,9 @@ export const sdQuotationItems = pgTable("sd_quotation_items", {
   deliveryCost: numericMoney("delivery_cost").default(0),
   dieCost: numericMoney("die_cost").default(0),
   setupTimeMinutes: integer("setup_time_minutes").default(15),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   check("sd_quotation_items_product_type_chk", sql`${t.productType} IN ('box','lid','tray','cup','other')`),
@@ -390,6 +402,9 @@ export const sdOrderTimeline = pgTable("sd_order_timeline", {
   status: varchar("status", { length: 30 }).notNull(),
   note: text("note"),
   changedBy: varchar("changed_by"),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -440,6 +455,9 @@ export const sdStorageFees = pgTable("sd_storage_fees", {
   dailyRate: numericMoney("daily_rate").notNull().default(0),
   totalAmount: numericMoney("total_amount").notNull().default(0),
   billed: boolean("billed").default(false),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -470,6 +488,9 @@ export const sdContracts = pgTable("sd_contracts", {
   endDate: varchar("end_date", { length: 10 }),
   totalAmount: numericMoney("total_amount").default(0),
   paymentTerms: varchar("payment_terms", { length: 200 }),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -486,6 +507,9 @@ export const sdManagerQuotas = pgTable("sd_manager_quotas", {
   month: integer("month").notNull(),
   quotaAmount: numericMoney("quota_amount").notNull().default(0),
   achievedAmount: numericMoney("achieved_amount").notNull().default(0),
+  // Soft-delete audit (A93/T11-08). O'chirish = deletedAt=NOW()+deletedBy=user; faol=deletedAt IS NULL.
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: integer("deleted_by"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

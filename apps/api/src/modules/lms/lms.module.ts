@@ -51,6 +51,9 @@ import {
 import { KnowledgeBaseController } from './presentation/knowledge-base.controller';
 import { KnowledgeBaseService } from './application/services/knowledge-base.service';
 import { KnowledgeBaseRepository } from './infrastructure/repositories/drizzle-knowledge-base.repo';
+import { CardRequiredKnowledgeController } from './presentation/card-required-knowledge.controller';
+import { CardRequiredKnowledgeService } from './application/services/card-required-knowledge.service';
+import { CardRequiredKnowledgeRepository } from './infrastructure/repositories/drizzle-card-required-knowledge.repo';
 import { LMS_REPO } from './domain/repositories/i-lms.repo';
 import { LMS_COURSES_REPO } from './courses/i-lms-courses.repo';
 import { DrizzleLmsCoursesRepository } from './courses/drizzle-lms-courses.repo';
@@ -83,6 +86,7 @@ const appControllers = [
   LmsMentorsController,
   LmsProgressCompatController,
   KnowledgeBaseController,
+  CardRequiredKnowledgeController,
 ];
 
 const appServices = [
@@ -96,6 +100,7 @@ const appServices = [
   CoursesService,
   EnrollmentsService,
   KnowledgeBaseService,
+  CardRequiredKnowledgeService,
   // EP-ORG-027 LMS oylik/razryad gate (A73): PURE 3-condition evaluator + DB-wrapper.
   LmsCompletionService,
   LmsCardGateService,
@@ -109,6 +114,7 @@ const appRepos = [
   LmsCoursesExtendedRepository,
   LmsRepository,
   KnowledgeBaseRepository,
+  CardRequiredKnowledgeRepository,
   { provide: LMS_REPO, useClass: LmsRepository },
   { provide: LMS_COURSES_REPO, useClass: DrizzleLmsCoursesRepository },
   { provide: LMS_ENROLLMENTS_REPO, useClass: DrizzleLmsEnrollmentsRepository },

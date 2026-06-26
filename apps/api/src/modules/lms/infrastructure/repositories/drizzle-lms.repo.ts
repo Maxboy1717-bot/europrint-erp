@@ -7,8 +7,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql, eq, count } from 'drizzle-orm';
 import { courses_table } from '@shared/db';
-import { Result, Err, Ok } from '@common/types/result.type';
-import { ILmsRepo, Course, Enrollment } from '../../domain/repositories/i-lms.repo';
+import { Result, Err, Ok, AppErr } from '@common/types/result.type';
+import { ILmsRepo, Course, Enrollment, CourseApproval } from '../../domain/repositories/i-lms.repo';
 import { LmsCertRepo } from './drizzle-lms-cert.repo';
 
 type Row = Record<string, unknown>;
@@ -27,6 +27,17 @@ function mapCourse(row: Row): Course {
     created_by: String(row.author_id ?? row.created_by ?? ''),
     created_at: row.created_at instanceof Date ? row.created_at : new Date(String(row.created_at)),
     card_id: row.card_id != null ? Number(row.card_id) : null,
+  };
+}
+
+function mapApproval(row: Row): CourseApproval {
+  return {
+    id: String(row.id),
+    approval_status: (String(row.approval_status ?? 'draft') as CourseApproval['approval_status']),
+    submitted_by: row.submitted_by != null ? Number(row.submitted_by) : null,
+    submitted_at: row.submitted_at ? new Date(String(row.submitted_at)) : null,
+    approved_by: row.approved_by != null ? Number(row.approved_by) : null,
+    approved_at: row.approved_at ? new Date(String(row.approved_at)) : null,
   };
 }
 
@@ -133,6 +144,74 @@ export class LmsRepository implements ILmsRepo {
       return Ok(mapCourse(r[0]));
     } catch (error: unknown) {
       this.logger.error(`setCourseCard: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  // ===========================================================================
+  // T11-04 — 3-bosqich kurs-tasdiq workflow (draft -> review -> approved), 2-imzo.
+  // submitCourseForReview = 1-imzo (yuboruvchi): draft -> review (atomik WHERE-guard).
+  // approveCourse         = 2-imzo (boshqa tasdiqlovchi): review -> approved.
+  //   2-IMZO SHARTI: approver != submitter (bir kishi o'zi yuborib o'zi tasdiqlay olmaydi).
+  // Status-o'tish guard SQL WHERE'da (race-safe): noto'g'ri holatdan o'tish 0 qator qaytaradi.
+  // FABRIKATSIYA YO'Q: o'tish bo'lmasa Err qaytadi, soxta "muvaffaqiyat" emas.
+  // ===========================================================================
+
+  /**
+   * T11-04 1-imzo: kurslarni ko'rib chiqishga yuborish (draft -> review).
+   * Faqat `approval_status = 'draft'` kursdan o'tadi (atomik WHERE). submitted_by/at yoziladi.
+   */
+  async submitCourseForReview(id: string, submittedBy: number): Promise<Result<CourseApproval>> {
+    try {
+      const courseId = parseInt(id, 10);
+      if (!Number.isInteger(courseId) || courseId <= 0) return Err(AppErr('VALIDATION', 'course id must be a positive integer'));
+      if (!Number.isInteger(submittedBy) || submittedBy <= 0) return Err(AppErr('VALIDATION', 'submittedBy must be a positive integer'));
+      const exists = await exec(sql`SELECT approval_status FROM courses WHERE id = ${courseId} LIMIT 1`);
+      if (!exists[0]) return Err(AppErr('NOT_FOUND', `Kurs #${courseId} topilmadi`));
+      if (String(exists[0].approval_status) !== 'draft') {
+        return Err(AppErr('INVALID_TRANSITION', `Faqat 'draft' kursni ko'rib chiqishga yuborish mumkin (joriy: ${exists[0].approval_status})`));
+      }
+      const r = await exec(sql`
+        UPDATE courses
+        SET approval_status = 'review', submitted_by = ${submittedBy}, submitted_at = NOW(), updated_at = NOW()
+        WHERE id = ${courseId} AND approval_status = 'draft'
+        RETURNING id, approval_status, submitted_by, submitted_at, approved_by, approved_at`);
+      if (!r[0]) return Err(AppErr('INVALID_TRANSITION', 'Kurs holati o\'zgartirilmadi (draft emas yoki topilmadi)'));
+      return Ok(mapApproval(r[0]));
+    } catch (error: unknown) {
+      this.logger.error(`submitCourseForReview: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * T11-04 2-imzo: kursni tasdiqlash (review -> approved).
+   * Faqat `approval_status = 'review'` kursdan o'tadi. 2-IMZO: approvedBy != submitted_by.
+   * Bir kishi o'zi yuborib o'zi tasdiqlasa RAD (Err) — ikki alohida imzo majburiy.
+   */
+  async approveCourse(id: string, approvedBy: number): Promise<Result<CourseApproval>> {
+    try {
+      const courseId = parseInt(id, 10);
+      if (!Number.isInteger(courseId) || courseId <= 0) return Err(AppErr('VALIDATION', 'course id must be a positive integer'));
+      if (!Number.isInteger(approvedBy) || approvedBy <= 0) return Err(AppErr('VALIDATION', 'approvedBy must be a positive integer'));
+      const cur = await exec(sql`SELECT approval_status, submitted_by FROM courses WHERE id = ${courseId} LIMIT 1`);
+      if (!cur[0]) return Err(AppErr('NOT_FOUND', `Kurs #${courseId} topilmadi`));
+      if (String(cur[0].approval_status) !== 'review') {
+        return Err(AppErr('INVALID_TRANSITION', `Faqat 'review' holatdagi kursni tasdiqlash mumkin (joriy: ${cur[0].approval_status})`));
+      }
+      // 2-imzo qoidasi: tasdiqlovchi yuboruvchidan boshqa shaxs bo'lishi shart.
+      if (cur[0].submitted_by != null && Number(cur[0].submitted_by) === approvedBy) {
+        return Err(AppErr('VALIDATION', '2-imzo sharti: tasdiqlovchi yuboruvchidan boshqa shaxs bo\'lishi kerak'));
+      }
+      const r = await exec(sql`
+        UPDATE courses
+        SET approval_status = 'approved', approved_by = ${approvedBy}, approved_at = NOW(), updated_at = NOW()
+        WHERE id = ${courseId} AND approval_status = 'review'
+        RETURNING id, approval_status, submitted_by, submitted_at, approved_by, approved_at`);
+      if (!r[0]) return Err(AppErr('INVALID_TRANSITION', 'Kurs holati o\'zgartirilmadi (review emas yoki topilmadi)'));
+      return Ok(mapApproval(r[0]));
+    } catch (error: unknown) {
+      this.logger.error(`approveCourse: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

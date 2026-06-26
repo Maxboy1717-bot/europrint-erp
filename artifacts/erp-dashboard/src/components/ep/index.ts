@@ -27,3 +27,4 @@ export { useCountUp } from "./useCountUp";
 export { EPLoader, EPSpinnerBlock } from "./EPLoader";
 export { EPComingSoon } from "./EPComingSoon";
 export { EPNumberedSection } from "./EPNumberedSection";
+export { DefectDropdown, type DefectCatalogItem } from "./DefectDropdown";

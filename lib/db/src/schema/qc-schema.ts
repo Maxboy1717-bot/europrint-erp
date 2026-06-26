@@ -164,6 +164,10 @@ export const qcFinalInspections = pgTable("qc_final_inspections", {
   parameters: jsonb("parameters"),  // { moisture, thickness, printColor, ... }
   // Natija: passed | failed | rework
   result: varchar("result", { length: 20 }).notNull().default("pending"), // pending, passed, failed, rework
+  // T11-06: rework holatida qaysi papka_orders qayta ishlanmoqda (parent link) + qayta ishlash narxi.
+  // Faqat result='rework'/'rework_required' uchun to'ldiriladi (boshqa holatlarda NULL).
+  parentOrderId: varchar("parent_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
+  reworkCost: numericMoney("rework_cost"),  // Qayta ishlash narxi (so'm)
   notes: text("notes"),
   photos: jsonb("photos"),  // URL massivi
   createdAt: timestamp("created_at").notNull().defaultNow(),

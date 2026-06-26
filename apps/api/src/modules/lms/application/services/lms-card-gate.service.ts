@@ -66,6 +66,40 @@ export interface CardGateResult {
   reasons: string[];
 }
 
+/**
+ * Card-level training STATUS AGGREGATE (T11-13).
+ *
+ * A thin, gate-derived summary the oylik-gate / razryad consumers (and a card-status
+ * widget) can read without re-deriving counts from {@link CardGateResult.courses}. It is
+ * a pure roll-up of the SAME verdict {@link LmsCardGateService.isCardTrainingComplete}
+ * already computes — NO extra DB read, NO fabrication: `completedPct` is honest
+ * complete/total ratio over the card's mandatory courses.
+ *
+ * salaryGateOpen mirrors `allComplete` (the field payroll actually gates on) and is
+ * surfaced explicitly so a consumer reads intent ("is this card's salary open?"),
+ * not just a training flag.
+ */
+export interface CardCourseStatusAggregate {
+  cardId: number;
+  employeeId: number;
+  /** total mandatory courses bound to the card (0 => nothing gates the salary) */
+  totalMandatory: number;
+  /** mandatory courses satisfied (direct completion OR Q562 cross-card credit) */
+  completedCount: number;
+  /** mandatory courses still unfinished (= totalMandatory - completedCount) */
+  incompleteCount: number;
+  /** how many of the satisfied courses passed via Q562 cross-card credit */
+  creditedCount: number;
+  /** completed/total as an integer percent (0..100); 100 when no mandatory course (honest open) */
+  completedPct: number;
+  /** true => this card's salary/razryad path is OPEN (mirrors allComplete) */
+  salaryGateOpen: boolean;
+  /** courses.id of every unfinished mandatory course (gate-blocking) */
+  incompleteCourseIds: number[];
+  /** flat human-readable failing reasons across all incomplete courses */
+  reasons: string[];
+}
+
 @Injectable()
 export class LmsCardGateService {
   private readonly logger = new Logger(LmsCardGateService.name);
@@ -147,6 +181,49 @@ export class LmsCardGateService {
   async isCardTrainingCompleteBool(cardId: number, employeeId: number): Promise<boolean> {
     const r = await this.isCardTrainingComplete(cardId, employeeId);
     return r.ok ? r.data.allComplete : false;
+  }
+
+  /**
+   * T11-13: card course-status AGGREGATE for the oylik/razryad gate.
+   *
+   * Rolls the per-course verdict from {@link isCardTrainingComplete} into one summary
+   * (completed/incomplete/credited counts + completedPct + salaryGateOpen) so a salary-gate
+   * consumer or card-status widget reads the card's training standing in a single shape,
+   * without re-deriving counts from the per-course array.
+   *
+   * No extra DB read and no fabrication: every field is computed from the SAME honest verdict.
+   * Propagates Err on bad input / hard DB failure (the boolean salaryGateOpen here is NOT a
+   * silent fail-open — callers needing fail-closed should branch on `!r.ok`).
+   */
+  async getCardCourseStatusAggregate(
+    cardId: number,
+    employeeId: number,
+  ): Promise<Result<CardCourseStatusAggregate>> {
+    const r = await this.isCardTrainingComplete(cardId, employeeId);
+    if (!r.ok) return Err(r.error);
+    const v = r.data;
+
+    const completedCount = v.courses.filter((c) => c.complete).length;
+    const creditedCount = v.courses.filter((c) => c.complete && c.viaCrossCardCredit).length;
+    const incompleteCount = v.incompleteCourseIds.length;
+    // 100% when no mandatory course bound (honest open, mirrors allComplete=true), else complete/total.
+    const completedPct =
+      v.mandatoryCourseCount === 0
+        ? 100
+        : Math.round((completedCount / v.mandatoryCourseCount) * 100);
+
+    return Ok({
+      cardId: v.cardId,
+      employeeId: v.employeeId,
+      totalMandatory: v.mandatoryCourseCount,
+      completedCount,
+      incompleteCount,
+      creditedCount,
+      completedPct,
+      salaryGateOpen: v.allComplete,
+      incompleteCourseIds: v.incompleteCourseIds,
+      reasons: v.reasons,
+    });
   }
 
   /**

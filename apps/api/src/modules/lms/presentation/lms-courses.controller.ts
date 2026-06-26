@@ -171,6 +171,40 @@ export class LmsCoursesController {
     return { message: 'Kurs o\'chirildi', data: result.data };
   }
 
+  // ===========================================================================
+  // T11-04: 3-bosqich kurs-tasdiq workflow (draft -> review -> approved), 2-imzo.
+  //   POST :id/submit  = 1-imzo (yuboruvchi): draft -> review.
+  //   POST :id/approve = 2-imzo (boshqa tasdiqlovchi): review -> approved (approver != submitter).
+  // ===========================================================================
+
+  @ApiOperation({ summary: "Kursni ko'rib chiqishga yuborish (draft -> review)" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post(':id/submit')
+  @HttpCode(HttpStatus.OK)
+  @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
+  async submitCourse(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const submittedBy = Number(user?.sub ?? user?.id ?? 0);
+    const result = await this.lmsRepo.submitCourseForReview(id, submittedBy);
+    if (!result.ok) throwFromError(result.error);
+    return { message: "Kurs ko'rib chiqishga yuborildi", data: result.data };
+  }
+
+  @ApiOperation({ summary: 'Kursni tasdiqlash (review -> approved, 2-imzo)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post(':id/approve')
+  @HttpCode(HttpStatus.OK)
+  @Roles('HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
+  async approveCourse(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const approvedBy = Number(user?.sub ?? user?.id ?? 0);
+    const result = await this.lmsRepo.approveCourse(id, approvedBy);
+    if (!result.ok) throwFromError(result.error);
+    return { message: 'Kurs tasdiqlandi', data: result.data };
+  }
+
   @ApiOperation({ summary: 'Enroll employee' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

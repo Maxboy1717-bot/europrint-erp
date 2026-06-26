@@ -186,6 +186,26 @@ export const lms_card_mentors = pgTable('lms_card_mentors', {
   updated_at:     timestamp('updated_at').notNull().defaultNow(),
 });
 
+// EP-ORG-122 (T11-03): KARTAga kerakli domen-bilim ro'yxati (gofra-turlari, qog'oz-turlari, ...).
+// Karta-markazli: card_id -> org_departments (kanonik KARTA). Kurs mavzulari shu talablardan kelib chiqadi.
+// Migration: invariants/migrations-drift.ts 'card_required_knowledge CREATE TABLE' (APPROVED T11-03).
+export const card_required_knowledge = pgTable('card_required_knowledge', {
+  id:                serial('id').primaryKey(),
+  card_id:           integer('card_id').notNull(),
+  knowledge_name:    text('knowledge_name').notNull(),
+  knowledge_name_ru: text('knowledge_name_ru'),
+  description:       text('description'),
+  category:          varchar('category', { length: 100 }),
+  importance:        varchar('importance', { length: 20 }).notNull().default('required'),
+  course_id:         integer('course_id'),
+  sort_order:        integer('sort_order').notNull().default(0),
+  is_active:         boolean('is_active').notNull().default(true),
+  created_by:        integer('created_by'),
+  created_at:        timestamp('created_at').notNull().defaultNow(),
+  updated_at:        timestamp('updated_at').notNull().defaultNow(),
+  deleted_at:        timestamp('deleted_at'),
+});
+
 export const lms_tests_ext = pgTable('lms_tests_ext', {
   id:          text('id').primaryKey(),
   course_id:   text('course_id'),

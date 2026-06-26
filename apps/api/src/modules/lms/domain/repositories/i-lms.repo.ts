@@ -23,6 +23,16 @@ export interface Course {
   avg_progress?: number;
 }
 
+// T11-04: kurs-tasdiq workflow snapshot (draft->review->approved + 2-imzo audit trail).
+export interface CourseApproval {
+  id: string;
+  approval_status: 'draft' | 'review' | 'approved';
+  submitted_by: number | null;
+  submitted_at: Date | null;
+  approved_by: number | null;
+  approved_at: Date | null;
+}
+
 export interface Enrollment {
   id: string;
   course_id: string;
@@ -53,6 +63,9 @@ export interface ILmsRepo {
   findCoursesByCard(cardId: number): Promise<Result<{ items: Course[]; total: number }>>;
   saveCourse(course: Course): Promise<Result<Course>>;
   setCourseCard(id: string, cardId: number | null): Promise<Result<Course>>;
+  // T11-04: 3-bosqich kurs-tasdiq workflow (draft->review->approved), 2-imzo.
+  submitCourseForReview(id: string, submittedBy: number): Promise<Result<CourseApproval>>;
+  approveCourse(id: string, approvedBy: number): Promise<Result<CourseApproval>>;
   saveEnrollment(enrollment: Enrollment): Promise<Result<Enrollment>>;
   updateEnrollment(id: string, data: Partial<Enrollment>): Promise<Result<Enrollment>>;
 }

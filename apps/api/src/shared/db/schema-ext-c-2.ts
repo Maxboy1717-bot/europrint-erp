@@ -159,6 +159,9 @@ export const sd_rentals = pgTable('sd_rentals', {
   end_date:     date('end_date'),
   daily_rate:   numeric('daily_rate', { precision: 15, scale: 2 }),
   status:       text('status').default('active'),
+  // Soft-delete audit (A93/T11-08). O'chirish = deleted_at=NOW()+deleted_by=user; faol=deleted_at IS NULL.
+  deleted_at:   timestamp('deleted_at'),
+  deleted_by:   integer('deleted_by'),
   created_at:   timestamp('created_at').defaultNow(),
   updated_at:   timestamp('updated_at').defaultNow(),
 });

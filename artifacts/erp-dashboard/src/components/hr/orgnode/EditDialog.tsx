@@ -48,6 +48,8 @@ export function EditDialog({
     rbacTier: node.rbacTier ?? "",
     tskpTarget: node.tskpTarget ?? "",
     tskpMeasurementUnit: node.tskpMeasurementUnit ?? "",
+    // T11-02: ЦКП formula-turi (achievement% hisoblash usuli) — per-karta, EGASI/HR belgilaydi.
+    ckpFormulaType: node.ckpFormulaType ?? "",
     workSchedule: node.workSchedule ?? "",
     currentState: node.currentState ?? "",
     // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga (1-7); null = belgilanmagan.
@@ -91,6 +93,7 @@ export function EditDialog({
         rbacTier: form.rbacTier || null,
         tskpTarget: numOrNull(form.tskpTarget),
         tskpMeasurementUnit: form.tskpMeasurementUnit || null,
+        ckpFormulaType: form.ckpFormulaType || null,
         workSchedule: form.workSchedule || null, currentState: form.currentState || null,
         otdeleniyeNo: form.otdeleniyeNo,
         bonusConfig: form.bonusConfig || null,
@@ -229,6 +232,20 @@ export function EditDialog({
                 <SelectItem value="SON">SON</SelectItem>
                 <SelectItem value="FOIZ">FOIZ (%)</SelectItem>
                 <SelectItem value="VAQT">VAQT</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>{t("ckpFormulaTuri", "ЦКП formula-turi")}</Label>
+            <Select
+              value={form.ckpFormulaType || "__none__"}
+              onValueChange={(v) => setForm((f) => ({ ...f, ckpFormulaType: v === "__none__" ? "" : v }))}
+            >
+              <SelectTrigger data-testid="select-node-ckp-formula"><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">{t("ckpFormulaDefault", "Default (miqdor %)")}</SelectItem>
+                <SelectItem value="quantity_pct">{t("ckpFormulaQuantity", "Miqdor % (fakt / norma)")}</SelectItem>
+                <SelectItem value="boolean">{t("ckpFormulaBoolean", "Ha/Yo'q (100 / 0)")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

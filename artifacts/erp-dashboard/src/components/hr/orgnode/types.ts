@@ -47,6 +47,12 @@ export interface NodeDetail {
   rbacTier?: string | null;
   tskpTarget?: number | string | null;
   tskpMeasurementUnit?: string | null;
+  // T11-02: ЦКП achievement% formula-turi (org_departments.ckp_formula_type).
+  // 'quantity_pct' (fakt/norma) | 'boolean' (ha/yo'q→100/0) | null (default=quantity_pct).
+  ckpFormulaType?: string | null;
+  // T11-05: kunlik ЦКП-hisobot deadline soat (org_departments.ckp_report_deadline_hours).
+  // NULL=deadline qoidasi yo'q. FE OVERDUE-badge shu + fakt submitted_at orqali hisoblaydi (fabrikatsiya yo'q).
+  ckpReportDeadlineHours?: number | null;
   workSchedule?: string | null;
   currentState?: string | null;
   // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga tegishli (1-7, NULL=belgilanmagan).

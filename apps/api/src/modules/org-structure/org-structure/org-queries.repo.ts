@@ -126,6 +126,11 @@ export class OrgQueriesRepo {
           rbacTier: sql<string | null>`rbac_tier`,
           tskpTarget: sql<number | null>`tskp_target`,
           tskpMeasurementUnit: sql<string | null>`tskp_measurement_unit`,
+          // T11-02: ЦКП formula-turi (round-trip — EditDialog selectori shu qiymat bilan to'ldiriladi)
+          ckpFormulaType: sql<string | null>`ckp_formula_type`,
+          // T11-05 (Egasi 6-qaror — kunlik deadline-enforcement): hisobot muddati soat (NULL=qoida yo'q).
+          // FE OVERDUE-badge shu real qiymat + fakt submitted_at orqali hisoblaydi (FABRIKATSIYA YO'Q).
+          ckpReportDeadlineHours: sql<number | null>`ckp_report_deadline_hours`,
           workSchedule: sql<string | null>`work_schedule`,
           currentState: sql<string | null>`current_state`,
           // VISION (A35 — Vysotskiy 7-otdeleniye): bu karta qaysi 7 bo'limdan biriga tegishli (1-7, NULL=belgilanmagan).

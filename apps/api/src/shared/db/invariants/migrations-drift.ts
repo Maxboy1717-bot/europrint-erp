@@ -180,6 +180,33 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
     updated_at TIMESTAMP NOT NULL DEFAULT now()
   )` },
   { name: 'lms_card_mentors uq idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_lms_card_mentor_active ON lms_card_mentors (card_id, mentor_user_id) WHERE is_active = true` },
+  // APPROVED (T11-03, egasi-vakolati 2026-06-26; MASSIV-100 FAZA-07 / EP-ORG-122): KARTAga kerakli domen-bilim ro'yxati.
+  //   ⭐ MUAMMO: VIZYON-MASTER-REJA "jadval MAVJUD" deb da'vo qilgan edi, lekin JONLI DB tekshiruvi
+  //     (to_regclass('public.card_required_knowledge') = NULL) jadval YO'Q ekanini isbotladi (over-claim).
+  //     Service/controller/endpoint/UI ham yo'q edi → domen-bilim talablari kiritib bo'lmas edi.
+  //   ⭐ YECHIM (ADDITIV, SOXTA DATA YO'Q — Q-40): faqat STRUKTURA + CRUD endpoint. Domen-bilim qiymatlari
+  //     (gofra-turlari, qog'oz-turlari va h.k.) EGASI/HR tomonidan UI orqali kiritiladi — agent fabrikatsiya QILMAYDI.
+  //   Karta-markazli (xodimga emas): card_id -> org_departments (kanonik KARTA, integer). Vizyon: har karta uchun
+  //     domen-bilim ro'yxati → kurs mavzulari shu talablardan kelib chiqadi (lms_card_mentors T10-09 bilan bir naqsh).
+  //   Idempotent IF NOT EXISTS; aktiv (knowledge_name) takror oldini olish uchun partial unique idx.
+  { name: 'card_required_knowledge CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS card_required_knowledge (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL,
+    knowledge_name TEXT NOT NULL,
+    knowledge_name_ru TEXT,
+    description TEXT,
+    category VARCHAR(100),
+    importance VARCHAR(20) NOT NULL DEFAULT 'required',
+    course_id INTEGER,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_by INTEGER,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMP
+  )` },
+  { name: 'card_required_knowledge card idx', sql: `CREATE INDEX IF NOT EXISTS idx_card_required_knowledge_card ON card_required_knowledge (card_id) WHERE deleted_at IS NULL` },
+  { name: 'card_required_knowledge uq active idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_card_required_knowledge_active ON card_required_knowledge (card_id, knowledge_name) WHERE is_active = true AND deleted_at IS NULL` },
   { name: 'crm_leads.title ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS title TEXT` },
   { name: 'crm_leads.second_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS second_name TEXT` },
   { name: 'crm_leads.last_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS last_name TEXT` },
@@ -3809,6 +3836,16 @@ $fn$ LANGUAGE plpgsql` },
   // CourseCompletedCreditHandler (lms.course.completed listener) shu ustunga tayanadi.
   { name: 'courses.is_universal ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS is_universal BOOLEAN DEFAULT false` },
 
+  // APPROVED (egasi vakolati, IJRO T11-04, 2026-06-26): 3-bosqich kurs-tasdiq workflow (draft->review->approved).
+  // 2-imzo: submit (yuboruvchi imzosi) -> approve (boshqa tasdiqlovchi imzosi). approve != submit (DB-guard kod ichida).
+  // Additiv, DEFAULT 'draft' (mavjud 5 kurs draft bo'ladi — fabrikatsiya yo'q). CHECK 3-holatni qotiradi.
+  { name: 'courses.approval_status ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) NOT NULL DEFAULT 'draft'` },
+  { name: 'courses.submitted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS submitted_by INTEGER` },
+  { name: 'courses.submitted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP` },
+  { name: 'courses.approved_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS approved_by INTEGER` },
+  { name: 'courses.approved_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP` },
+  { name: 'courses.approval_status CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_courses_approval_status') THEN ALTER TABLE courses ADD CONSTRAINT chk_courses_approval_status CHECK (approval_status IN ('draft','review','approved')); END IF; END $$` },
+
   // APPROVED (egasi vakolati, MASSIV-100 FAZA-08, 2026-06-25): otdeleniye raqami (1-7 Vysotskiy).
   // Vertikal/gorizontal: workflow_rules jadval BOR; otdeleniye_no = qaysi 7 departamentdan biri (egasi-DATA qiymat).
   { name: 'org_departments.otdeleniye_no ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS otdeleniye_no INTEGER` },
@@ -3968,6 +4005,52 @@ $fn$ LANGUAGE plpgsql` },
   { name: 'A90 sd_customer_contacts.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customer_contacts_tenant_id ON sd_customer_contacts(tenant_id)` },
   { name: 'A90 sd_customer_interactions.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_customer_interactions_tenant_id ON sd_customer_interactions(tenant_id)` },
   { name: 'A90 sd_order_departments.tenant_id INDEX', sql: `CREATE INDEX IF NOT EXISTS idx_sd_order_departments_tenant_id ON sd_order_departments(tenant_id)` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA T11-08, 2026-06-26): SD soft-delete audit ustunlar.
+  // Manba: docs/MASTER_DATA_STANDARTLARI.md §3 Qoida M-2 (soft delete MAJBURIY) + M-3 (deleted_at/deleted_by audit).
+  // ⭐ NEGA: SD master/transaksiya data (mijoz aloqalari, shartnomalar, kotirovka satrlari,
+  //   buyurtma tarixi) HECH QACHON hard-DELETE qilinmaydi — boshqa satrlar/transaksiyalar unga
+  //   FK bilan havola qiladi (M-2). O'chirish = deleted_at = NOW() + deleted_by = user_id;
+  //   faol satr = deleted_at IS NULL. A89 master-data soft-delete naqshining SD-moduliga davomi
+  //   (sd_customers A89'da; material_cards allaqachon ikkala ustunga ega).
+  // SCOPE = A90 tenant_id rollout'ida isbotlangan view-xavfsiz SD BASE jadval ro'yxati, minus
+  //   sd_customers (A89'da bajarilgan) va sd_advance_idempotency_keys (idempotentlik-kalit ombori,
+  //   biznes-data emas → soft-delete semantik mos emas). 7 sd_* VIEW (sd_sales_orders/sd_quotations/
+  //   sd_payments/sd_invoices/sd_customer_documents/sd_customer_complaints/sd_customer_competitors)
+  //   AVTOMATIK CHIQARILGAN — ALTER TABLE viewda ishlamaydi.
+  // Tip = TIMESTAMP (drift-fayl deleted_at naqshiga mos: A89/sales_orders/crm_*) + INTEGER (deleted_by,
+  //   A89 naqshi — FK YO'Q, boot-tartib bog'lanmasligi uchun, created_by/updated_by additiv naqshi kabi).
+  // Additiv, IF NOT EXISTS — DATA yozilmaydi (NULL = faol). ALTER TABLE IF EXISTS — xavfsiz.
+  // DB-proof (T11-08): 12 sd_* base jadval × 2 ustun → yo'qdan bor → 0 ta data o'zgarmadi.
+  { name: 'A93 sd_contacts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contacts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_contacts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contacts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_contracts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contracts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_contracts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_contracts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_customer_contacts.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_customer_contacts.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_contacts ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_customer_interactions.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_interactions ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_customer_interactions.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_customer_interactions ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_lead_activities.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_lead_activities ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_lead_activities.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_lead_activities ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_manager_quotas.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_manager_quotas ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_manager_quotas.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_manager_quotas ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_order_departments.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_departments ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_order_departments.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_departments ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_order_timeline.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_timeline ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_order_timeline.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_order_timeline ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_price_formulas.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_price_formulas ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_price_formulas.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_price_formulas ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_quotation_items.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_quotation_items ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_quotation_items.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_quotation_items ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_rentals.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_rentals ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_rentals.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_rentals ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  { name: 'A93 sd_storage_fees.deleted_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_storage_fees ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP` },
+  { name: 'A93 sd_storage_fees.deleted_by ADD COLUMN', sql: `ALTER TABLE IF EXISTS sd_storage_fees ADD COLUMN IF NOT EXISTS deleted_by INTEGER` },
+  // Faol-satr partial indekslar (soft-delete filtri WHERE deleted_at IS NULL — yuqori-kardinallik jadvallar):
+  { name: 'A93 sd_contacts active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contacts_active ON sd_contacts (id) WHERE deleted_at IS NULL` },
+  { name: 'A93 sd_contracts active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_contracts_active ON sd_contracts (id) WHERE deleted_at IS NULL` },
+  { name: 'A93 sd_quotation_items active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_quotation_items_active ON sd_quotation_items (id) WHERE deleted_at IS NULL` },
+  { name: 'A93 sd_order_timeline active idx', sql: `CREATE INDEX IF NOT EXISTS idx_sd_order_timeline_active ON sd_order_timeline (id) WHERE deleted_at IS NULL` },
 
   // ───────────────────────────────────────────────────────────────────────────
   // A97 — Director 5-metric company-state ("holat") formula data layer.
@@ -4331,5 +4414,14 @@ $fn$ LANGUAGE plpgsql` },
       BEFORE INSERT OR UPDATE OF parent_id ON org_departments
       FOR EACH ROW EXECUTE FUNCTION enforce_org_departments_no_cycle();
   END $$` },
+
+  // ===== T11-06: QC REWORK link + cost tracking (APPROVED — additive) =====
+  // qc_final_inspections.result='rework' uchun: parent_order_id (qaysi papka_orders qayta ishlanmoqda)
+  // + rework_cost (qayta ishlash narxi). Ikkalasi NULLABLE — faqat rework holatida to'ldiriladi.
+  // papka_orders.id JONLI=integer (Drizzle varchar drift), shuning uchun parent_order_id=INTEGER
+  // (mavjud papka_order_id ham integer). Bo'sh jadval (0/0 qator) → FK toza qo'shiladi.
+  { name: 'T11-06 qc_final_inspections.parent_order_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_final_inspections ADD COLUMN IF NOT EXISTS parent_order_id INTEGER` },
+  { name: 'T11-06 qc_final_inspections.rework_cost ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_final_inspections ADD COLUMN IF NOT EXISTS rework_cost NUMERIC(14,2)` },
+  { name: 'T11-06 qc_final_inspections.parent_order_id FK -> papka_orders', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_qc_final_inspections_parent_order_id') THEN ALTER TABLE qc_final_inspections ADD CONSTRAINT fk_qc_final_inspections_parent_order_id FOREIGN KEY (parent_order_id) REFERENCES papka_orders(id) ON DELETE SET NULL; END IF; END $$` },
 
 ];

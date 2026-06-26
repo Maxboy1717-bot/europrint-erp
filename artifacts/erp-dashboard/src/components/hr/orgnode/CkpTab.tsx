@@ -23,7 +23,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Target, CalendarDays, TrendingUp, Layers, Save, Gauge, AlertTriangle,
+  Target, CalendarDays, TrendingUp, Layers, Save, Gauge, AlertTriangle, Plus, X, Package, Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,32 @@ interface CkpAggregate {
   avg_achievement?: number | string | null;
 }
 
+/** Mahsulot (ЦКП fakt biriktirilishi mumkin bo'lgan natija/mahsulot) — /api/products. */
+interface ProductOption {
+  id: number;
+  name: string;
+}
+
+/**
+ * Kunlik ЦКП fakt SLOT (multi-product): bir karta bir kunda BIR NECHA mahsulot/natija
+ * uchun alohida fakt yozishi mumkin (DB: ckp_fact_values uniq = card+date+employee+product;
+ * API productId qabul qiladi). Har slot = bitta POST /ckp/fact (productId bilan).
+ */
+interface CkpSlot {
+  /** Vaqtinchalik UI kaliti (DB id emas). */
+  key: string;
+  /** Mahsulot id — "" = umumiy (productId yo'q, eski xatti-harakat). */
+  productId: string;
+  /** Haqiqiy qiymat (bo'sh = yubormaydi). */
+  actual: string;
+}
+
+let slotKeySeq = 0;
+function newSlot(): CkpSlot {
+  slotKeySeq += 1;
+  return { key: `slot-${slotKeySeq}`, productId: "", actual: "" };
+}
+
 /** Bugungi sana — YYYY-MM-DD (lokal, fakt-kiritish standart sanasi). */
 function todayIso(): string {
   const d = new Date();
@@ -93,6 +119,34 @@ function achievementTone(pct: number): { tone: "success" | "warning" | "danger" 
   if (pct >= 80) return { tone: "info", label: "Yaxshi" };
   if (pct >= 50) return { tone: "warning", label: "O'rtacha" };
   return { tone: "danger", label: "Past" };
+}
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const MS_PER_HOUR = 60 * 60 * 1000;
+
+/**
+ * KUNLIK DEADLINE-ENFORCEMENT (T11-05, Egasi 6-qaror) — fakt deadline'dan o'tgan-o'tmaganini hisoblaydi.
+ * ⭐ FABRIKATSIYA YO'Q (Q-40): faqat REAL qiymatlar — `deadlineHours` (karta
+ *   org_departments.ckp_report_deadline_hours, EGASI-DATA) va fakt `submitted_at` (DB). Bittasi yo'q
+ *   bo'lsa null (badge ko'rsatilmaydi). Mantiq backend `ckp-fact.service.calcDeadline` bilan AYNAN bir xil:
+ *   deadline = (fact_date ertangi kun 00:00 UTC) + deadlineHours soat; submitted shundan o'tdimi.
+ * @returns null = qoida/data yo'q yoki muddatda; aks holda { overdueHours } (musbat butun, kechikish soati).
+ */
+function computeOverdue(
+  deadlineHours: number | null | undefined,
+  factDate: string | null | undefined,
+  submittedAt: string | null | undefined,
+): { overdueHours: number } | null {
+  const h = deadlineHours == null ? null : Number(deadlineHours);
+  if (h == null || !Number.isFinite(h) || h <= 0) return null; // deadline qoidasi yo'q
+  if (!factDate || !submittedAt) return null;
+  const dayStart = new Date(`${String(factDate).slice(0, 10)}T00:00:00.000Z`);
+  const submitted = new Date(submittedAt);
+  if (Number.isNaN(dayStart.getTime()) || Number.isNaN(submitted.getTime())) return null;
+  const deadline = dayStart.getTime() + MS_PER_DAY + h * MS_PER_HOUR;
+  const diffMs = submitted.getTime() - deadline;
+  if (diffMs <= 0) return null; // muddatda topshirilgan
+  return { overdueHours: Math.max(1, Math.ceil(diffMs / MS_PER_HOUR)) };
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -137,27 +191,86 @@ export function CkpTab({ node }: { node: NodeDetail }) {
   const aggCount = toNum(aggData?.fact_count) ?? 0;
   const aggAvg = toNum(aggData?.avg_achievement);
 
-  // ── Fakt-kiritish formasi (kunlik) ──
+  // ── Mahsulot ro'yxati (multi-product slot tanlovi uchun) — ixtiyoriy. ──
+  // FABRIKATSIYA YO'Q: faqat REAL /api/products qatorlari; bo'sh bo'lsa slot productId'siz qoladi.
+  const { data: productData } = useQuery<ProductOption[]>({
+    queryKey: ["/api/products"],
+    staleTime: 5 * 60_000,
+    enabled: canRecord,
+  });
+  const products: ProductOption[] = useMemo(() => {
+    const raw = Array.isArray(productData) ? productData : [];
+    return raw
+      .map((p) => {
+        const r = p as unknown as Record<string, unknown>;
+        const id = toNum(r.id as number | string | null | undefined);
+        if (id == null) return null;
+        return { id, name: String(r.name ?? r.name_ru ?? `#${id}`) };
+      })
+      .filter((p): p is ProductOption => p != null);
+  }, [productData]);
+  // Mahsulot id → nom (tarix jadvalida mahsulot ustunini ko'rsatish uchun).
+  const productNameById = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const p of products) m.set(p.id, p.name);
+    return m;
+  }, [products]);
+
+  // ── Fakt-kiritish formasi (kunlik, multi-product slot) ──
   const [factDate, setFactDate] = useState<string>(today);
-  const [actual, setActual] = useState<string>("");
   const [source, setSource] = useState<string>("MANUAL");
   const [notes, setNotes] = useState<string>("");
+  // Kamida bitta slot doim bor (eski bir-fakt xatti-harakatiga teng: productId="").
+  const [slots, setSlots] = useState<CkpSlot[]>(() => [newSlot()]);
+
+  const addSlot = () => setSlots((prev) => [...prev, newSlot()]);
+  const removeSlot = (key: string) =>
+    setSlots((prev) => (prev.length <= 1 ? prev : prev.filter((s) => s.key !== key)));
+  const updateSlot = (key: string, patch: Partial<CkpSlot>) =>
+    setSlots((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
+
+  // Yuboriladigan slotlar: haqiqiy qiymat kiritilgan (bo'sh slot tashlanadi).
+  const fillableSlots = useMemo(() => slots.filter((s) => s.actual.trim() !== ""), [slots]);
+  // Bir kunda bir mahsulot bir marta (DB uniq) — dublikat productId oldini olish (UI ogohlantirish).
+  const duplicateProduct = useMemo(() => {
+    const seen = new Set<string>();
+    for (const s of fillableSlots) {
+      if (seen.has(s.productId)) return true;
+      seen.add(s.productId);
+    }
+    return false;
+  }, [fillableSlots]);
 
   const recordFact = useMutation({
-    mutationFn: () =>
-      apiRequest("POST", "/api/org-structure/ckp/fact", {
-        cardId: node.id,
-        factDate,
-        actualValue: actual.trim() === "" ? undefined : Number(actual),
-        source,
-        notes: notes.trim() === "" ? undefined : notes.trim(),
-      }),
-    onSuccess: () => {
+    // Har slot = alohida POST (productId bilan) — ketma-ket (DB upsert idempotent: card+date+product).
+    mutationFn: async (): Promise<number> => {
+      const trimmedNotes = notes.trim() === "" ? undefined : notes.trim();
+      const toSave = fillableSlots;
+      for (const s of toSave) {
+        const pid = s.productId === "" ? undefined : Number(s.productId);
+        await apiRequest("POST", "/api/org-structure/ckp/fact", {
+          cardId: node.id,
+          factDate,
+          productId: pid,
+          actualValue: Number(s.actual),
+          source,
+          notes: trimmedNotes,
+        });
+      }
+      return toSave.length;
+    },
+    onSuccess: (savedCount: number) => {
       queryClient.invalidateQueries({ queryKey: ["/api/org-structure/ckp/fact"] });
       queryClient.invalidateQueries({ queryKey: ["/api/org-structure/ckp/aggregate"] });
-      setActual("");
+      setSlots([newSlot()]);
       setNotes("");
-      toast({ title: t("ckpFaktSaqlandi", "ЦКП fakt saqlandi") });
+      toast({
+        title: t("ckpFaktSaqlandi", "ЦКП fakt saqlandi"),
+        description:
+          savedCount > 1
+            ? `${savedCount} ${t("ckpNatijaSaqlandiSuffix", "ta natija saqlandi")}`
+            : undefined,
+      });
     },
     onError: (e: unknown) =>
       toast({ title: e instanceof Error ? e.message : t("Xatolik", "Xatolik"), variant: "destructive" }),
@@ -167,6 +280,11 @@ export function CkpTab({ node }: { node: NodeDetail }) {
 
   const latest = facts.length > 0 ? facts[0] : null;
   const latestPct = latest ? toNum(latest.achievement_pct) : null;
+  // T11-05 — kunlik deadline-enforcement: so'nggi fakt deadline'dan o'tib topshirilganmi (REAL data).
+  // node.ckpReportDeadlineHours (EGASI-DATA) + latest.submitted_at (DB) yo'q bo'lsa null → badge yo'q.
+  const latestOverdue = latest
+    ? computeOverdue(node.ckpReportDeadlineHours, latest.fact_date, latest.submitted_at)
+    : null;
 
   return (
     <div className="space-y-4">
@@ -249,7 +367,8 @@ export function CkpTab({ node }: { node: NodeDetail }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            {/* Umumiy maydonlar (sana + manba) — barcha slotlarga tegishli. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">{t("sana", "Sana")}</Label>
                 <Input
@@ -258,19 +377,6 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                   max={today}
                   onChange={(e) => setFactDate(e.target.value)}
                   data-testid="input-ckp-date"
-                />
-              </div>
-              <div>
-                <Label className="text-xs">
-                  {t("haqiqiyQiymat", "Haqiqiy qiymat")}{ckpUnit ? ` (${ckpUnit})` : ""}
-                </Label>
-                <Input
-                  type="number"
-                  step="any"
-                  value={actual}
-                  onChange={(e) => setActual(e.target.value)}
-                  placeholder={hasNorma ? String(ckpTarget) : "0"}
-                  data-testid="input-ckp-actual"
                 />
               </div>
               <div>
@@ -286,18 +392,102 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                   ))}
                 </select>
               </div>
-              <div className="flex items-end">
+            </div>
+
+            {/* ── Multi-product ЦКП slotlar (bir kunda bir necha mahsulot/natija) ── ADDITIV (T11-01). ── */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs inline-flex items-center gap-1.5">
+                  <Package className="h-3.5 w-3.5" />
+                  {t("ckpNatijalar", "Natijalar (mahsulot bo'yicha)")}
+                </Label>
                 <Button
-                  className="w-full"
-                  disabled={recordFact.isPending || !factDate}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-[11px]"
+                  onClick={addSlot}
+                  data-testid="button-ckp-add-slot"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  {t("natijaQoshish", "Natija qo'shish")}
+                </Button>
+              </div>
+
+              {slots.map((slot, i) => (
+                <div
+                  key={slot.key}
+                  className="grid grid-cols-1 sm:grid-cols-[1fr,auto,auto] gap-2 items-end rounded-md border border-border/60 bg-muted/20 p-2"
+                  data-testid={`ckp-slot-${i}`}
+                >
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground">{t("mahsulot", "Mahsulot / natija")}</Label>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                      value={slot.productId}
+                      onChange={(e) => updateSlot(slot.key, { productId: e.target.value })}
+                      data-testid={`select-ckp-product-${i}`}
+                    >
+                      <option value="">{t("ckpUmumiy", "Umumiy (mahsulotsiz)")}</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={String(p.id)}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="w-full sm:w-32">
+                    <Label className="text-[11px] text-muted-foreground">
+                      {t("haqiqiyQiymat", "Haqiqiy qiymat")}{ckpUnit ? ` (${ckpUnit})` : ""}
+                    </Label>
+                    <Input
+                      type="number"
+                      step="any"
+                      value={slot.actual}
+                      onChange={(e) => updateSlot(slot.key, { actual: e.target.value })}
+                      placeholder={hasNorma ? String(ckpTarget) : "0"}
+                      data-testid={`input-ckp-actual-${i}`}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-muted-foreground hover:text-[var(--ep-red)]"
+                    disabled={slots.length <= 1}
+                    onClick={() => removeSlot(slot.key)}
+                    data-testid={`button-ckp-remove-slot-${i}`}
+                    aria-label={t("olibTashlash", "Olib tashlash")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+
+              {duplicateProduct && (
+                <p className="text-[11px] text-[var(--ep-red)] flex items-start gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  {t(
+                    "ckpDublikatMahsulot",
+                    "Bir kunda bir mahsulot faqat bir marta — takror mahsulot oxirgi qiymat bilan yangilanadi."
+                  )}
+                </p>
+              )}
+
+              <div className="flex justify-end">
+                <Button
+                  disabled={recordFact.isPending || !factDate || fillableSlots.length === 0}
                   onClick={() => recordFact.mutate()}
                   data-testid="button-ckp-save"
                 >
                   <Save className="h-3.5 w-3.5 mr-1.5" />
-                  {recordFact.isPending ? t("saqlanmoqda", "Saqlanmoqda...") : t("saqlash", "Saqlash")}
+                  {recordFact.isPending
+                    ? t("saqlanmoqda", "Saqlanmoqda...")
+                    : fillableSlots.length > 1
+                      ? t("ckpHammaSaqlash", "Hammasini saqlash")
+                      : t("saqlash", "Saqlash")}
                 </Button>
               </div>
             </div>
+
             <div>
               <Label className="text-xs">{t("izoh", "Izoh (ixtiyoriy)")}</Label>
               <Textarea
@@ -311,7 +501,7 @@ export function CkpTab({ node }: { node: NodeDetail }) {
             <p className="text-[11px] text-muted-foreground">
               {t(
                 "ckpFaktIzoh",
-                "Bajarish% backend tomonidan formula-turiga qarab hisoblanadi (norma/fakt). Bir kun bitta fakt (idempotent — qayta kiritish yangilaydi). Deadline o'tib hisobot berilmasa o'sha kun oyligi 0 (qattiq gate)."
+                "Bajarish% backend tomonidan formula-turiga qarab hisoblanadi (norma/fakt). Bir kunda bir necha mahsulot/natija — har biri uchun alohida slot qo'shing (mahsulot + qiymat). Bir mahsulot bir kunda bir marta (idempotent — qayta kiritish yangilaydi). Deadline o'tib hisobot berilmasa o'sha kun oyligi 0 (qattiq gate)."
               )}
             </p>
           </CardContent>
@@ -321,9 +511,25 @@ export function CkpTab({ node }: { node: NodeDetail }) {
       {/* ── Fakt tarixi ── */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
             <TrendingUp className="h-4 w-4" />{t("ckpFaktTarixi", "ЦКП fakt tarixi")}
             {facts.length > 0 && <Badge variant="outline" className="text-[11px]">{facts.length}</Badge>}
+            {/* T11-05 — kunlik deadline-enforcement: so'nggi fakt muddatdan kech topshirilgan bo'lsa OVERDUE badge.
+                FABRIKATSIYA YO'Q: faqat karta deadline-soat + fakt submitted_at real bo'lganda ko'rinadi. */}
+            {latestOverdue && (
+              <Badge
+                variant="destructive"
+                className="text-[11px] inline-flex items-center gap-1"
+                data-testid="badge-ckp-overdue"
+                title={t(
+                  "ckpOverdueIzoh",
+                  "So'nggi hisobot deadline'dan kech topshirilgan — o'sha kun oylik-gate yopiq (Egasi 6-qaror)."
+                )}
+              >
+                <Clock className="h-3 w-3" />
+                {t("ckpOverdue", "OVERDUE")} -{latestOverdue.overdueHours}h
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -343,6 +549,7 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-muted-foreground">
                     <th className="py-2 pr-3 font-medium">{t("sana", "Sana")}</th>
+                    <th className="py-2 pr-3 font-medium">{t("mahsulot", "Mahsulot")}</th>
                     <th className="py-2 pr-3 font-medium text-right">{t("maqsad", "Maqsad")}</th>
                     <th className="py-2 pr-3 font-medium text-right">{t("haqiqiy", "Haqiqiy")}</th>
                     <th className="py-2 pr-3 font-medium text-right">{t("bajarish", "Bajarish%")}</th>
@@ -353,9 +560,20 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                 <tbody>
                   {facts.map((f) => {
                     const pct = toNum(f.achievement_pct);
+                    const pid = toNum(f.product_id);
+                    const productName = pid != null ? productNameById.get(pid) ?? `#${pid}` : null;
                     return (
                       <tr key={f.id} className="border-b border-border/50" data-testid={`ckp-fact-row-${f.id}`}>
                         <td className="py-2 pr-3 whitespace-nowrap">{fmtDate(f.fact_date)}</td>
+                        <td className="py-2 pr-3 text-xs">
+                          {productName != null ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Package className="h-3 w-3 text-muted-foreground" />{productName}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">{t("ckpUmumiy", "Umumiy")}</span>
+                          )}
+                        </td>
                         <td className="py-2 pr-3 text-right text-muted-foreground">{toNum(f.target_value) ?? "—"}</td>
                         <td className="py-2 pr-3 text-right font-medium">{toNum(f.actual_value) ?? "—"}</td>
                         <td className="py-2 pr-3 text-right">
