@@ -4,8 +4,22 @@
  */
 
 import { Button } from "@/components/ui/button";
-import { Moon, Timer, Target, Clock, Barcode, User, XCircle, AlertTriangle } from "lucide-react";
+import { Moon, Timer, Target, Clock, Barcode, User, XCircle, AlertTriangle, Activity, Gauge, Wifi, WifiOff } from "lucide-react";
 import { IotLang, ProductionSession } from "./iot-types";
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+/** Coerce a numeric/text/null OEE-factor column to a finite number, or null. */
+function toNum(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Format an OEE-factor percent (0..100) for display, or em-dash when absent. */
+function pct(v: number | string | null | undefined): string {
+  const n = toNum(v);
+  return n === null ? "—" : `${n.toFixed(1)}%`;
+}
 
 // ─── Energy Saving Overlay ────────────────────────────────────────────────────
 export function EnergySavingOverlay({
@@ -259,6 +273,94 @@ export function QcReminderBanner({
       >
         {t("QC SHAKLI", "QC ФОРМА")}
       </Button>
+    </div>
+  );
+}
+
+// ─── Machine Status / Sensor Panel ─────────────────────────────────────────────
+/**
+ * Operator-facing live machine status + sensor panel (A82).
+ *
+ * Surfaces REAL signal data already carried by the active production session:
+ *   - live signal status (running / stopped, derived from last_signal_at)
+ *   - OEE factor breakdown (availability / performance / quality) + composite OEE
+ *   - last-signal timestamp ("seconds since")
+ *
+ * Per-channel sensor telemetry (temperature / speed / vibration ...) is NOT
+ * fabricated: the device-feed tables (iot_sensors / sensor_readings) carry no
+ * data for the tablet token, so an honest empty-state is shown instead of fake
+ * numbers (Q-40). When a feed is wired, the empty-state is replaced by readings.
+ */
+export function MachineStatusPanel({
+  lang, activeSession, sessionEquipmentName, effectiveStatus, isAutoStopped, secondsSinceLastSignal,
+}: {
+  lang: IotLang;
+  activeSession: ProductionSession | null;
+  sessionEquipmentName: string | undefined;
+  effectiveStatus: string | undefined;
+  isAutoStopped: boolean;
+  secondsSinceLastSignal: number | null;
+}) {
+  const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
+  const online = !isAutoStopped && effectiveStatus === "running";
+  const hasSignal = secondsSinceLastSignal !== null;
+
+  const factors = [
+    { key: "avail", icon: Wifi, labelUz: "Tayyorlik", labelRu: "Готовность", value: activeSession?.availability, color: "var(--ep-green)" },
+    { key: "perf", icon: Gauge, labelUz: "Unumdorlik", labelRu: "Производительность", value: activeSession?.performance, color: "var(--mod-primary, var(--ep-blue))" },
+    { key: "qual", icon: Target, labelUz: "Sifat", labelRu: "Качество", value: activeSession?.quality, color: "var(--ep-yellow)" },
+    { key: "oee", icon: Activity, labelUz: "OEE", labelRu: "OEE", value: activeSession?.oee, color: "var(--ep-purple, var(--mod-primary))" },
+  ] as const;
+
+  const anyFactor = factors.some(f => toNum(f.value) !== null);
+
+  return (
+    <div className="bg-card rounded-xl p-6 border border-border shadow-sm" data-testid="iot-machine-status-panel">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <Activity className="h-6 w-6 text-primary" />
+          <div className="space-y-0.5">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("Uskuna holati", "Состояние оборудования")}</p>
+            <h3 className="text-xl font-black text-foreground tracking-tight">{sessionEquipmentName || t("Uskuna", "Оборудование")}</h3>
+          </div>
+        </div>
+        <div
+          className={`px-4 py-2 rounded-xl text-base font-black flex items-center gap-2 border ${online ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-[var(--ep-red)]/15 text-[var(--ep-red)] border-[var(--ep-red)]/30"}`}
+          data-testid="iot-machine-signal-status"
+        >
+          {online ? <Wifi className="h-5 w-5" /> : <WifiOff className="h-5 w-5" />}
+          {online ? t("ULANGAN", "ON-LINE") : t("SIGNAL YO'Q", "НЕТ СИГНАЛА")}
+        </div>
+      </div>
+
+      {/* OEE factor breakdown — real columns; em-dash when a factor is not yet computed */}
+      {anyFactor ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" data-testid="iot-machine-factors">
+          {factors.map(f => (
+            <div key={f.key} className="bg-background rounded-xl p-4 border border-border/40 text-center space-y-1.5" data-testid={`iot-factor-${f.key}`}>
+              <f.icon className="h-6 w-6 mx-auto" style={{ color: f.color }} />
+              <p className="text-2xl font-black tracking-tighter text-foreground">{pct(f.value)}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{lang === "uz" ? f.labelUz : f.labelRu}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-border bg-muted/30 px-5 py-6 text-center" data-testid="iot-machine-factors-empty">
+          <Gauge className="h-8 w-8 mx-auto text-muted-foreground/60 mb-2" />
+          <p className="text-sm font-bold text-muted-foreground">{t("Sensor ko'rsatkichlari hali ulanmagan", "Показания датчиков ещё не подключены")}</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">{t("Sessiya yakunlangach OEE ko'rsatkichlari hisoblanadi", "Показатели OEE рассчитываются после завершения сессии")}</p>
+        </div>
+      )}
+
+      {/* Last-signal line */}
+      <div className="mt-4 flex items-center justify-between text-sm border-t border-border/30 pt-4">
+        <span className="font-bold uppercase tracking-wider text-muted-foreground">{t("Oxirgi signal", "Последний сигнал")}</span>
+        <span className={`font-black font-mono ${online ? "text-green-600" : "text-muted-foreground"}`} data-testid="iot-machine-last-signal">
+          {hasSignal
+            ? t(`${secondsSinceLastSignal} soniya oldin`, `${secondsSinceLastSignal} сек назад`)
+            : t("Ma'lumot yo'q", "Нет данных")}
+        </span>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { PayrollRecord } from '../domain/aggregates/payroll-record.aggregate';
 import { GlPostingService, type JournalLine } from '../../finance/domain/services/gl-posting.service';
+import { CkpGateService, type CkpGateDecision } from './ckp-gate';
 import type { DomainEvent } from '@shared/domain/domain-event';
 
 type Row = Record<string, unknown>;
@@ -100,6 +101,7 @@ export class PayrollService {
     @Inject(HR_PAYROLL_REPO) private readonly hrPayrollRepo: IHrPayrollRepository,
     private readonly closure: PayrollClosureService,
     private readonly gl: GlPostingService,
+    private readonly ckpGate: CkpGateService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -340,6 +342,109 @@ export class PayrollService {
       prorationFactor,
       proratedGross,
     };
+  }
+
+  /**
+   * ⭐ A69 — OYLIK ↔ ЦКП-GATE TO'LIQ ULASH (egasi 8-qaror #6: ЦКП-gate QATTIQ 0).
+   *
+   * Bu metod A7 oylik-FORMULA (`prorateCardPay`) bilan A11 ЦКП-DARVOZA
+   * (`CkpGateService.evaluatePeriod`) ni HAQIQATDA bog'laydi — ya'ni oylik
+   * hisoblanганда darvoza CHAQIRILADI. Avval bu ikkisi alohida edi (gate hech
+   * qayerdan chaqirilmasdi); endi oylik kun-bazasi darvozadan o'tadi:
+   *
+   *   1. To'liq davr oyligi (proratedGross) `prorateCardPay` bilan hisoblanadi
+   *      (baza × razryad × ЦКП% × stake × ish-kun-proratsiyasi).
+   *   2. Davrning HAR kuni uchun `CkpGateService.evaluatePeriod` jonli
+   *      `ckp_fact_values` ni o'qib darvoza qarorini beradi (fakt yo'q yoki
+   *      deadline o'tgan kun → factor 0; aks holda 1).
+   *   3. Kun-bazasi = proratedGross / davr-kun-soni; har kun darvoza-factori
+   *      bilan ko'paytiriladi va yig'iladi → DARVOZALANGAN oylik.
+   *
+   * Natija: ЦКП fakti BOR kunlar to'lanadi, fakt YO'Q / deadline o'tgan kunlar 0.
+   * ckp fakti umuman yo'q karta (TEST hozir) → hamma kun 0 → oylik 0 (egasi #6).
+   *
+   * FABRIKATSIYA YO'Q (Q-40): darvoza faqat jonli `ckp_fact_values` o'qiydi;
+   * fakt yo'q kun HALOL 0 (soxta to'lov yozilmaydi). proratedGross null
+   * (ЦКП% berilmagan) bo'lsa → gated null (gate baribir 0 bergan bo'lardi).
+   *
+   * @param cardId             birlamchi karta id (`org_departments.id`)
+   * @param from               davr boshi (ISO 'YYYY-MM-DD')
+   * @param to                 davr oxiri (ISO 'YYYY-MM-DD', inklyuziv)
+   * @param baseSalary         baza oylik (so'm)
+   * @param razryadCoeff       razryad koeffitsienti; null/≤0 → 1.0
+   * @param ckpAchievementPct  ЦКП-bajarish foizi (davr o'rtacha/yakuni); null → gated 0
+   * @param stakeShare         karta ulushi (0..1); null/≤0 → 1.0
+   * @param workedDays         davrda ishlangan kun (proratsiya); null → to'liq davr
+   * @param periodWorkingDays  davr ish-kuni soni (proratsiya bo'luvchisi); null/≤0 → yo'q
+   */
+  async computeGatedMonthlySalary(
+    cardId: number,
+    from: string,
+    to: string,
+    baseSalary: number,
+    razryadCoeff: number | null,
+    ckpAchievementPct: number | null,
+    stakeShare: number | null,
+    workedDays: number | null,
+    periodWorkingDays: number | null,
+  ): Promise<
+    Result<{
+      proratedGross: number | null;
+      gatedGross: number | null;
+      gatedDays: number;
+      blockedDays: number;
+      totalDays: number;
+      days: Array<{ factDate: string; decision: CkpGateDecision; dayBase: number; dayPaid: number }>;
+    }>
+  > {
+    const prorated = this.prorateCardPay(
+      baseSalary,
+      razryadCoeff,
+      ckpAchievementPct,
+      stakeShare,
+      workedDays,
+      periodWorkingDays,
+    );
+
+    // A11 DARVOZA CHAQIRUVI — jonli ckp_fact_values; har kun qarori.
+    const gateR = await this.ckpGate.evaluatePeriod(cardId, from, to);
+    if (!gateR.ok) return Err(gateR.error);
+    const decisions = gateR.data;
+    const totalDays = decisions.length;
+
+    // proratedGross null (ЦКП% yo'q) → darvoza baribir 0 berardi; gated ham null.
+    if (prorated.proratedGross === null || totalDays === 0) {
+      return Ok({
+        proratedGross: prorated.proratedGross,
+        gatedGross: prorated.proratedGross === null ? null : 0,
+        gatedDays: 0,
+        blockedDays: totalDays,
+        totalDays,
+        days: decisions.map((d) => ({ factDate: d.factDate, decision: d.decision, dayBase: 0, dayPaid: 0 })),
+      });
+    }
+
+    // Kun-bazasi = oylik / davr-kun-soni; har kun darvoza-factori (0/1) bilan o'tadi.
+    const dayBase = prorated.proratedGross / totalDays;
+    let gatedGross = 0;
+    let gatedDays = 0;
+    let blockedDays = 0;
+    const days = decisions.map(({ factDate, decision }) => {
+      const dayPaid = dayBase * decision.factor;
+      gatedGross += dayPaid;
+      if (decision.factor === 1) gatedDays++;
+      else blockedDays++;
+      return { factDate, decision, dayBase, dayPaid };
+    });
+
+    return Ok({
+      proratedGross: prorated.proratedGross,
+      gatedGross,
+      gatedDays,
+      blockedDays,
+      totalDays,
+      days,
+    });
   }
 
   /**

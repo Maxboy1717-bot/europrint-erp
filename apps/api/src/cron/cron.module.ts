@@ -36,7 +36,9 @@ import { VacancyDeadlineCron } from './vacancy-deadline.cron'
 import { RetentionCron } from './retention.cron'
 import { KanbanRecurringCron } from './kanban-recurring.cron'
 import { ActingRevertCron } from './acting-revert.cron'
+import { CkpDailyAggregateCron } from './ckp-daily-aggregate.cron'
 import { CardRepository } from '../modules/org-structure/card.repository'
+import { CkpFactRepository } from '../modules/org-structure/ckp-fact.repository'
 import { CronStatusService } from './cron-status.service'
 import { AbsenceBlockRepository } from './repositories/absence-block.repository'
 import { EnpsCronRepository } from './repositories/enps-cron.repository'
@@ -78,6 +80,9 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     // ORG Phase 7 — i.o./acting auto-revert (EP-ORG-060); CardRepository = standalone (runQuery, no deps)
     ActingRevertCron,
     CardRepository,
+    // A68 (ЦКП) — kunlik kaskad-agregat (har root-karta subtree avg, 01:00); CkpFactRepository = standalone (runQuery)
+    CkpDailyAggregateCron,
+    CkpFactRepository,
     // Data retention cron (Task #180)
     RetentionCron,
     // Kanban — takrorlanuvchi kartalar yaratish (har kuni 07:00)

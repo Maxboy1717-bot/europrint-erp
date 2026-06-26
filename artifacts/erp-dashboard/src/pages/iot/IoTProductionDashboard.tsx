@@ -15,6 +15,7 @@ import {
   DashboardHeader,
   OrderCard,
   MetricsCards,
+  MachineStatusPanel,
   ProgressSection,
   QcReminderBanner,
 } from "./IoTProductionDashboardSections";
@@ -171,6 +172,10 @@ export function IoTProductionDashboard(props: IoTProductionDashboardProps) {
         <MetricsCards
           lang={lang} elapsedTime={elapsedTime} activeSession={activeSession}
           estimatedTimeSeconds={estimatedTimeSeconds} formatTime={formatTime} formatEstimatedTime={formatEstimatedTime}
+        />
+        <MachineStatusPanel
+          lang={lang} activeSession={activeSession} sessionEquipmentName={sessionEquipmentName}
+          effectiveStatus={effectiveStatus} isAutoStopped={isAutoStopped} secondsSinceLastSignal={secondsSinceLastSignal}
         />
         {qcReminderVisible && (
           <QcReminderBanner lang={lang} activeSession={activeSession} onOpen={() => setShowQcFormDialog(true)} />

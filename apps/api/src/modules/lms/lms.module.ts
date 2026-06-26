@@ -20,6 +20,8 @@ import { LmsCoursesExtendedService } from './application/services/lms-courses-ex
 import { LmsTestsService } from './application/services/lms-tests.service';
 import { LmsCertificatesStandaloneService } from './application/services/lms-certificates-standalone.service';
 import { LmsMiscService } from './application/services/lms-misc.service';
+import { LmsCompletionService } from './application/services/lms-completion.service';
+import { LmsCardGateService } from './application/services/lms-card-gate.service';
 import { CertificationService } from './domain/services/certification.service';
 import { IssueCertificateHandler } from './application/commands/issue-certificate.handler';
 import { EnrollCourseHandler } from './application/commands/enroll-course.handler';
@@ -27,6 +29,7 @@ import { OperatorCertificationsHandler } from './application/queries/operator-ce
 import { GetCoursesHandler } from './application/queries/get-courses.handler';
 import { GetMyEnrollmentsHandler } from './application/queries/get-my-enrollments.handler';
 import { CertExpiryHandler } from './infrastructure/event-handlers/cert-expiry.handler';
+import { CardEmployeeAssignedHandler } from './infrastructure/event-handlers/card-employee-assigned.handler';
 import { LmsCoursesController } from './presentation/lms-courses.controller';
 import { LmsCertificatesController } from './presentation/lms-certificates.controller';
 import { LmsEnrollmentsController } from './presentation/lms-enrollments.controller';
@@ -57,7 +60,7 @@ import { EnrollmentsService } from './enrollments/enrollments.service';
 
 const commandHandlers = [IssueCertificateHandler, EnrollCourseHandler];
 const queryHandlers = [OperatorCertificationsHandler, GetCoursesHandler, GetMyEnrollmentsHandler];
-const eventListeners = [CertExpiryHandler];
+const eventListeners = [CertExpiryHandler, CardEmployeeAssignedHandler];
 
 const appControllers = [
   LmsCoursesController,
@@ -92,6 +95,9 @@ const appServices = [
   CoursesService,
   EnrollmentsService,
   KnowledgeBaseService,
+  // EP-ORG-027 LMS oylik/razryad gate (A73): PURE 3-condition evaluator + DB-wrapper.
+  LmsCompletionService,
+  LmsCardGateService,
 ];
 
 const appRepos = [
@@ -111,6 +117,8 @@ const appRepos = [
   imports: [AuthModule, CqrsModule, EventEmitterModule.forRoot(), ScheduleModule.forRoot()],
   controllers: appControllers,
   providers: [...appRepos, ...appServices, ...commandHandlers, ...queryHandlers, ...eventListeners],
-  exports: [LmsRepository, CertificationService, LMS_REPO],
+  // LmsCardGateService exported so HR payroll (FAZA 04) + org-structure razryad (FAZA 03)
+  // can consult the LMS oylik/razryad gate via DI (EP-ORG-027, A73).
+  exports: [LmsRepository, CertificationService, LMS_REPO, LmsCardGateService],
 })
 export class LmsModule {}

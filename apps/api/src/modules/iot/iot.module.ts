@@ -59,6 +59,7 @@ import { IotSensorsExtendedService } from './application/iot-sensors-extended.se
 import { IotTabletService } from './application/iot-tablet.service';
 import { DrizzleIotTabletRepo } from './infrastructure/repositories/drizzle-iot-tablet.repo';
 import { OeeCalculatorService } from './oee/oee-calculator.service';
+import { PredictiveMaintenanceService } from './oee/predictive-maintenance.service';
 
 const commandHandlers = [RecordSensorReadingHandler, RegisterDeviceHandler, UpdateDeviceThresholdsHandler];
 const eventHandlers = [AnomalyDetectedHandler];
@@ -123,6 +124,7 @@ const newRepositories = [
     IotSensorsExtendedService,
     IotTabletService,
     OeeCalculatorService,
+    PredictiveMaintenanceService,
   ],
   exports: [SENSOR_REPO],
 })

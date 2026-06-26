@@ -31,10 +31,12 @@ import { CardFolderRepository } from './card-folder.repository';
 // EP-ORG-041 (ORG-CASCADE, owner decision #13)
 import { OrgCascadeListener } from './cascade/org-cascade.listener';
 import { OrgCascadeRepository } from './cascade/org-cascade.repository';
+// A67 (To'lqin 4 — ЦКП): MES completed → daily ЦКП fact feed (@OnEvent, via EventBridge)
+import { CkpMesFeedListener } from './ckp-mes-feed.listener';
 
 @Module({
   controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener],
   exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService],
 })
 export class OrgStructureModule {}

@@ -82,4 +82,28 @@ export class CkpFactRepository {
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
+
+  /**
+   * Kunlik kaskad-agregat — HAR root-karta (parent_id NULL) uchun subtree o'rtacha achievement,
+   * bitta so'rovda (N+1 yo'q — Performance qoidasi). Kunlik cron shu metodni chaqiradi.
+   * Faqat o'sha kuni fakti bor root'lar qaytariladi (HAVING fact_count>0 — FABRIKATSIYA YO'Q:
+   * fakt yo'q root soxta 0% bermaydi). Har qator: card_id (root), fact_count, avg_achievement.
+   */
+  async aggregateAllRoots(date: string): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      WITH RECURSIVE tree AS (
+        SELECT id AS root_id, id FROM org_departments WHERE parent_id IS NULL
+        UNION ALL
+        SELECT t.root_id, d.id FROM org_departments d JOIN tree t ON d.parent_id = t.id
+      )
+      SELECT t.root_id AS card_id,
+             COUNT(f.id)::int AS fact_count,
+             ROUND(AVG(f.achievement_pct), 2) AS avg_achievement
+      FROM tree t
+      LEFT JOIN ckp_fact_values f ON f.card_id = t.id AND f.fact_date = ${date}::date
+      GROUP BY t.root_id
+      HAVING COUNT(f.id) > 0
+      ORDER BY t.root_id
+    `);
+  }
 }

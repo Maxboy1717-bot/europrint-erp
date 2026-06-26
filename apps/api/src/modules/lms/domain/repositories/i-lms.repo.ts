@@ -16,6 +16,11 @@ export interface Course {
   created_at: Date;
   // Card-centric LMS (EP-LMS-001): logical ref to the org-CARD (org_functions.id) the darslik binds to.
   card_id?: number | null;
+  // A74 (card<->course view): real enrollment progress aggregate for this course.
+  // Populated only by findCoursesByCard (LEFT JOIN enrollments); undefined elsewhere.
+  enrolled_count?: number;
+  completed_count?: number;
+  avg_progress?: number;
 }
 
 export interface Enrollment {

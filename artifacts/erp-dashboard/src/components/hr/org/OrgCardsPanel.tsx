@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Pencil, LayoutGrid, FolderOpen, GraduationCap, Eye } from "lucide-react";
+import { Plus, Pencil, LayoutGrid, FolderOpen, GraduationCap, Eye, BookOpen } from "lucide-react";
 import type { EPStatusTone } from "@/components/ep";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { CardFormDialog, type OrgCard } from "@/components/hr/org/CardFormDialog";
 import { CardFolderDialog } from "@/components/hr/org/CardFolderDialog";
 import { CardExamsDialog } from "@/components/hr/org/CardExamsDialog";
+import { CardCoursesDialog } from "@/components/hr/org/CardCoursesDialog";
 import { CardDetailDialog } from "@/components/hr/org/CardDetailDialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +46,7 @@ export function OrgCardsPanel() {
   const [editing, setEditing] = useState<OrgCard | null>(null);
   const [folderCard, setFolderCard] = useState<OrgCard | null>(null);
   const [examsCard, setExamsCard] = useState<OrgCard | null>(null);
+  const [coursesCard, setCoursesCard] = useState<OrgCard | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery<{ items: OrgCard[]; total: number }>({
@@ -139,6 +141,9 @@ export function OrgCardsPanel() {
                       <Button size="icon" variant="ghost" onClick={() => setExamsCard(c)} title={t("kartaImtihonlari")} data-testid={`button-card-exams-${c.id}`}>
                         <GraduationCap className="h-4 w-4" />
                       </Button>
+                      <Button size="icon" variant="ghost" onClick={() => setCoursesCard(c)} title={t("kartaKurslari", "Karta kurslari")} data-testid={`button-card-courses-${c.id}`}>
+                        <BookOpen className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => openEdit(c)} data-testid={`button-card-edit-${c.id}`}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -160,6 +165,7 @@ export function OrgCardsPanel() {
       <CardFormDialog open={formOpen} onClose={() => setFormOpen(false)} card={editing} />
       <CardFolderDialog open={!!folderCard} onClose={() => setFolderCard(null)} card={folderCard} />
       <CardExamsDialog open={!!examsCard} onClose={() => setExamsCard(null)} card={examsCard} />
+      <CardCoursesDialog open={!!coursesCard} onClose={() => setCoursesCard(null)} card={coursesCard} />
       <CardDetailDialog open={detailId != null} cardId={detailId ?? 0} onClose={() => setDetailId(null)} />
     </div>
   );

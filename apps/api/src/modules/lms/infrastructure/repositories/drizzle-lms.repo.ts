@@ -95,13 +95,30 @@ export class LmsRepository implements ILmsRepo {
   }
 
   // EP-LMS-001 (card-centric): list active courses (darsliklar) bound to a given org-CARD (org_functions.id).
+  // A74 (card<->course view): each course carries a REAL enrollment-progress aggregate
+  // (enrolled/completed counts + avg progress_percent) via LEFT JOIN enrollments — no fabricated values.
   async findCoursesByCard(cardId: number): Promise<Result<{ items: Course[]; total: number }>> {
     try {
       const [rows, countRows] = await Promise.all([
-        exec(sql`SELECT * FROM courses WHERE card_id = ${cardId} AND (is_active IS NULL OR is_active = true) ORDER BY created_at DESC`),
+        exec(sql`
+          SELECT c.*,
+                 COUNT(e.id)::int                                       AS enrolled_count,
+                 COUNT(*) FILTER (WHERE e.status = 'completed')::int    AS completed_count,
+                 COALESCE(ROUND(AVG(e.progress_percent)), 0)::int       AS avg_progress
+          FROM courses c
+          LEFT JOIN enrollments e ON e.course_id = c.id
+          WHERE c.card_id = ${cardId} AND (c.is_active IS NULL OR c.is_active = true)
+          GROUP BY c.id
+          ORDER BY c.created_at DESC`),
         runQuery<{ cnt: number }>(sql`SELECT COUNT(*) AS cnt FROM courses WHERE card_id = ${cardId} AND (is_active IS NULL OR is_active = true)`),
       ]);
-      return Ok({ items: (Array.isArray(rows) ? rows : []).map(mapCourse), total: Number(countRows.rows[0]?.cnt ?? 0) });
+      const items = (Array.isArray(rows) ? rows : []).map((row) => ({
+        ...mapCourse(row),
+        enrolled_count: Number(row.enrolled_count ?? 0),
+        completed_count: Number(row.completed_count ?? 0),
+        avg_progress: Number(row.avg_progress ?? 0),
+      }));
+      return Ok({ items, total: Number(countRows.rows[0]?.cnt ?? 0) });
     } catch (error: unknown) {
       this.logger.error(`findCoursesByCard: ${(error as Error).message}`);
       return Err((error as Error).message);
@@ -116,6 +133,169 @@ export class LmsRepository implements ILmsRepo {
       return Ok(mapCourse(r[0]));
     } catch (error: unknown) {
       this.logger.error(`setCourseCard: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  // ===========================================================================
+  // A72 (To'lqin-4 / EP-ORG-028/088) — LMS avto-enroll read+write paths.
+  // Xodim KARTAGA (employee_cards) ulanganda CardEmployeeAssignedHandler shu ikki
+  // metodni chaqiradi: kartaning faol kurslarini o'qib (findActiveCoursesByCard),
+  // har biriga idempotent yozadi (autoEnroll). FABRIKATSIYA YO'Q.
+  // NB: A73 ning findMandatoryCoursesByCard'i = oylik-GATE manbasi (faqat majburiy);
+  //   avto-enroll esa kartaning BARCHA faol kurslarini ko'rsatadi (EP-ORG-088), shu
+  //   bois alohida (majburiy-filtr emas) reader.
+  // ===========================================================================
+
+  /**
+   * A72: a card's active courses (id + passing_score) — the auto-enroll source.
+   * Light shape (no full mapCourse): the listener only iterates ids to enroll.
+   * Empty result when no course is bound to the card (card_id NULL=0/5 hozir) — honest, NOT fabricated.
+   */
+  async findActiveCoursesByCard(cardId: number): Promise<Result<{ id: number; passing_score: number }[]>> {
+    try {
+      if (!Number.isInteger(cardId) || cardId <= 0) return Err('cardId must be a positive integer');
+      const rows = await exec(sql`
+        SELECT id, passing_score
+        FROM courses
+        WHERE card_id = ${cardId} AND (is_active IS NULL OR is_active = true)`);
+      return Ok((Array.isArray(rows) ? rows : []).map((r) => ({ id: Number(r.id), passing_score: Number(r.passing_score ?? 70) })));
+    } catch (error: unknown) {
+      this.logger.error(`findActiveCoursesByCard: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * A72 (EP-ORG-028/088): idempotent auto-enroll when an employee is assigned to a card.
+   * card_id = which card drove it; auto_enrolled = true. ON CONFLICT (employee_id, course_id)
+   * (uq_enrollments_emp_course) — a re-fired assignment never duplicates. A pre-existing
+   * (manual) enrollment is preserved: status is NOT touched (progress kept), only the card
+   * trail is backfilled when it was NULL. `enabled` flags a fresh insert (xmax=0) vs no-op update.
+   */
+  async autoEnroll(employeeId: number, courseId: number, cardId: number): Promise<Result<{ enrolled: boolean }>> {
+    try {
+      if (!Number.isInteger(employeeId) || employeeId <= 0) return Err('employeeId must be a positive integer');
+      if (!Number.isInteger(courseId) || courseId <= 0) return Err('courseId must be a positive integer');
+      if (!Number.isInteger(cardId) || cardId <= 0) return Err('cardId must be a positive integer');
+      const r = await exec(sql`
+        INSERT INTO enrollments (employee_id, course_id, card_id, auto_enrolled, status, enrolled_at, created_at, updated_at)
+        VALUES (${employeeId}, ${courseId}, ${cardId}, true, 'enrolled', NOW(), NOW(), NOW())
+        ON CONFLICT (employee_id, course_id)
+        DO UPDATE SET card_id = COALESCE(enrollments.card_id, EXCLUDED.card_id), updated_at = NOW()
+        RETURNING (xmax = 0) AS inserted`);
+      return Ok({ enrolled: Boolean(r[0]?.inserted) });
+    } catch (error: unknown) {
+      this.logger.error(`autoEnroll: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  // ===========================================================================
+  // EP-ORG-027 / EP-LMS-070 — LMS oylik-gate read paths (A73, additive).
+  // Read-only snapshots that feed LmsCardGateService. Real columns only — when a
+  // signal is absent the value is the honest "not done" (0 / false), NEVER fabricated.
+  // ===========================================================================
+
+  /**
+   * EP-ORG-027/028: mandatory, active courses bound to a given org-CARD.
+   * These are the courses whose completion gates the card's salary/razryad growth.
+   * Empty result (no course bound to the card) => no block — this is correct, not
+   * a fabricated "pass". courses.card_id stays NULL until owner binds courses to cards.
+   */
+  async findMandatoryCoursesByCard(
+    cardId: number,
+  ): Promise<Result<{ id: number; passing_score: number }[]>> {
+    try {
+      if (!Number.isInteger(cardId) || cardId <= 0) return Err('cardId must be a positive integer');
+      const rows = await exec(sql`
+        SELECT id, passing_score
+        FROM courses
+        WHERE card_id = ${cardId}
+          AND (is_active IS NULL OR is_active = true)
+          AND is_mandatory = true`);
+      const list = (Array.isArray(rows) ? rows : []).map((r) => ({
+        id: Number(r.id),
+        passing_score: Number(r.passing_score ?? 70),
+      }));
+      return Ok(list);
+    } catch (error: unknown) {
+      this.logger.error(`findMandatoryCoursesByCard: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * EP-LMS-070: per-enrollment 3-condition snapshot consumed by the PURE
+   * LmsCompletionService.evaluate(). Sources (live columns only):
+   *   C1 theory  = MAX(lms_test_attempts.score WHERE passed) for (user, course) — 0 when no attempt.
+   *   C2 practical = enrollments.status = 'completed' (authoritative completion / mentor sign-off).
+   *   C3 topics  = course_progress completed/total — when no progress rows exist the
+   *                varaqa is treated as a single unconfirmed topic (1 total / 0 done),
+   *                so the gate stays HONESTLY closed (not a fabricated pass).
+   * passThresholdPct comes from courses.passing_score (per-course, EP-LMS-009).
+   * lms_test_attempts.user_id / course_id are TEXT in live DB — cast for the join.
+   */
+  async getCompletionSnapshot(
+    employeeId: number,
+    courseId: number,
+  ): Promise<Result<{
+    theoryScorePct: number;
+    passThresholdPct: number;
+    practicalPassed: boolean;
+    totalTopics: number;
+    confirmedTopics: number;
+  }>> {
+    try {
+      if (!Number.isInteger(employeeId) || employeeId <= 0) return Err('employeeId must be a positive integer');
+      if (!Number.isInteger(courseId) || courseId <= 0) return Err('courseId must be a positive integer');
+
+      const courseR = await exec(sql`SELECT passing_score FROM courses WHERE id = ${courseId} LIMIT 1`);
+      if (!courseR[0]) return Err('Course not found');
+      const passThresholdPct = Number(courseR[0].passing_score ?? 70);
+
+      const bestR = await exec(sql`
+        SELECT COALESCE(MAX(score), 0) AS best
+        FROM lms_test_attempts
+        WHERE user_id = ${String(employeeId)} AND course_id = ${String(courseId)} AND passed = true`);
+      const theoryScorePct = Number(bestR[0]?.best ?? 0);
+
+      const enrR = await exec(sql`
+        SELECT status FROM enrollments
+        WHERE employee_id = ${employeeId} AND course_id = ${courseId}
+        ORDER BY updated_at DESC NULLS LAST LIMIT 1`);
+      const practicalPassed = String(enrR[0]?.status ?? '') === 'completed';
+
+      const topicsR = await exec(sql`
+        SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE completed = true) AS done
+        FROM course_progress
+        WHERE user_id = ${employeeId} AND course_id = ${courseId}`);
+      const rawTotal = Number(topicsR[0]?.total ?? 0);
+      const totalTopics = rawTotal > 0 ? rawTotal : 1;
+      const confirmedTopics = rawTotal > 0 ? Number(topicsR[0]?.done ?? 0) : 0;
+
+      return Ok({ theoryScorePct, passThresholdPct, practicalPassed, totalTopics, confirmedTopics });
+    } catch (error: unknown) {
+      this.logger.error(`getCompletionSnapshot: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * Q562: a universal course completed on ANOTHER card credits this employee.
+   * lms_cross_card_credits is the canonical credit ledger (built MASSIV-100 FAZA-07).
+   * A credit row means the course counts as passed for gate purposes.
+   */
+  async hasCrossCardCredit(employeeId: number, courseId: number): Promise<Result<boolean>> {
+    try {
+      if (!Number.isInteger(employeeId) || employeeId <= 0) return Err('employeeId must be a positive integer');
+      if (!Number.isInteger(courseId) || courseId <= 0) return Err('courseId must be a positive integer');
+      const r = await exec(sql`
+        SELECT 1 FROM lms_cross_card_credits
+        WHERE employee_id = ${employeeId} AND course_id = ${courseId} LIMIT 1`);
+      return Ok((Array.isArray(r) ? r : []).length > 0);
+    } catch (error: unknown) {
+      this.logger.error(`hasCrossCardCredit: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

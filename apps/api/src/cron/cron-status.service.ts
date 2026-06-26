@@ -125,6 +125,7 @@ export class CronStatusService {
       { name: 'BudgetAlertCron',                 description: "Byudjet alert (Dushanba 09:00)",                     schedule: '0 9 * * 1'        },
       { name: 'StockAlertCron',                  description: "Ombor qoldig'i alert (08:00)",                        schedule: '0 8 * * *'        },
       { name: 'AdvanceReminderCron',             description: "Avans eslatmasi (10:00)",                             schedule: '0 10 * * *'       },
+      { name: 'CkpDailyAggregateCron',           description: "ЦКП kunlik kaskad-agregat: root-karta subtree o'rtacha achievement (01:00)", schedule: '0 1 * * *' },
       // ── HR-v2 module crons (managed by their own services) ────────────────
       { name: 'DailyReport.sendReminder',        description: "Kunlik hisobot eslatmasi (15:30 Dush-Shan)",         schedule: '30 15 * * 1-6'    },
       { name: 'DailyReport.markAbsent',          description: "Hisobot topshirmaganlarni auto-absent (16:00)",      schedule: '0 16 * * 1-6'     },

@@ -57,6 +57,24 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MS_PER_HOUR = 60 * 60 * 1000;
 
 /**
+ * `date`-ustun kalit-stringi (TZ-xavfsiz). node-postgres `date` ustunni LOKAL
+ * yarim-tun `Date` qilib qaytaradi (masalan GMT+5 da '2026-06-01' → local 00:00).
+ * `.toISOString()` ni ishlatib bo'lmaydi — u UTC ga surib, kunni 1 ga ORQAGA
+ * siljitadi ('2026-05-31') → fakt-kun davr-kalitiga mos kelmaydi (gate noto'g'ri
+ * NO_FACT beradi). Shuning uchun LOKAL kalendar komponentlaridan tuziladi —
+ * bu saqlangan 'YYYY-MM-DD' kalendar sanasini aynan tiklaydi.
+ */
+function dateKey(v: unknown): string {
+  if (v instanceof Date) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  return String(v).split('T')[0];
+}
+
+/**
  * QATTIQ-0 darvoza koeffitsienti. Egasi-qaror Q6: deadline o'tib hisobot yo'q →
  * o'sha kun oyligi YO'Q. Bu darvoza ikkilik (0 yoki 1) — qisman to'lov yo'q.
  * Lokal konstanta (fayl-izolyatsiya: `business.constants.ts` ga tegmaymiz).
@@ -206,7 +224,7 @@ export class CkpGateService {
     for (const r of factsR.data) {
       const fd = r['fact_date'];
       if (fd == null) continue;
-      const key = fd instanceof Date ? fd.toISOString().split('T')[0] : String(fd).split('T')[0];
+      const key = dateKey(fd);
       const subRaw = r['submitted_at'];
       const sub =
         subRaw == null ? null : subRaw instanceof Date ? subRaw : new Date(String(subRaw));

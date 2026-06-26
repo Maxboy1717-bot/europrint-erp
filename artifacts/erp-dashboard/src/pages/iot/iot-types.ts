@@ -37,7 +37,11 @@ export interface ProductionSession {
   lastSignalAt?: string;
   setupStartedAt?: string;
   setupEndedAt?: string;
-  oee?: number;
+  /** OEE factor breakdown (real columns on production_sessions). */
+  availability?: number | string | null;
+  performance?: number | string | null;
+  quality?: number | string | null;
+  oee?: number | string | null;
   orderNumber?: string;
   productName?: string;
   productNameRu?: string;

@@ -65,7 +65,35 @@ export class AiRouterService {
     const budgetErr = await this.checkBudget();
     if (budgetErr) return budgetErr;
     const providers = this.buildProviderOrder(req);
+    if (providers.length === 0) {
+      // Q-40: hech qaysi provayder kaliti yo'q — soxta javob qaytarmaymiz, aniq xato beramiz.
+      const msg = 'Hech qaysi AI provayder kaliti sozlanmagan (ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY|GOOGLE_API_KEY)';
+      this.logger.warn(`[AI] ${msg}`);
+      return Err(msg);
+    }
     return this.tryProviders(providers, req, startTime);
+  }
+
+  /**
+   * Provayder uchun API kalit sozlanganmi? Faqat kalit MAVJUDLIGINI tekshiradi —
+   * qiymatni HECH QACHON qaytarmaydi/loglmaydi (Q-30). Gemini uchun ham
+   * `GEMINI_API_KEY`, ham `GOOGLE_API_KEY` (jonli .env nomi) qabul qilinadi.
+   */
+  private resolveProviderKey(provider: AiProvider): string | undefined {
+    switch (provider) {
+      case 'openai':
+        return this.configService.get<string>('OPENAI_API_KEY');
+      case 'gemini':
+        return this.configService.get<string>('GEMINI_API_KEY')
+          ?? this.configService.get<string>('GOOGLE_API_KEY');
+      case 'claude':
+        return this.configService.get<string>('ANTHROPIC_API_KEY');
+    }
+  }
+
+  private isProviderConfigured(provider: AiProvider): boolean {
+    const key = this.resolveProviderKey(provider);
+    return typeof key === 'string' && key.length > 0;
   }
 
   private async checkBudget(): Promise<Result<AiResponse> | null> {
@@ -81,7 +109,12 @@ export class AiRouterService {
 
   private buildProviderOrder(req: AiRequest): AiProvider[] {
     const preferred = req.provider ?? TASK_PROVIDER_MAP[req.taskType] ?? 'gemini';
-    return [preferred, ...PROVIDER_FALLBACK.filter((p) => p !== preferred)];
+    const ordered = [preferred, ...PROVIDER_FALLBACK.filter((p) => p !== preferred)];
+    // Graceful fallback: faqat KALITI sozlangan provayderlar qoladi (afzallik
+    // tartibi saqlanadi). Sozlanmagan provayderni urinib log to'ldirmaymiz va
+    // kechikish qo'shmaymiz. Agar afzal provayder kalitsiz bo'lsa — keyingi
+    // sozlangan provayderga (masalan, faqat ANTHROPIC bo'lsa, claude'ga) tushadi.
+    return ordered.filter((p) => this.isProviderConfigured(p));
   }
 
   private async tryProviders(providers: AiProvider[], req: AiRequest, startTime: number): Promise<Result<AiResponse>> {
@@ -180,7 +213,7 @@ export class AiRouterService {
   }
 
   private async callOpenAi(req: AiRequest): Promise<Result<AiResponse>> {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const apiKey = this.resolveProviderKey('openai');
     if (!apiKey) return Err('OPENAI_API_KEY konfiguratsiyasi yo`q');
 
     return safeCall(async () => {
@@ -227,8 +260,8 @@ export class AiRouterService {
   }
 
   private async callGemini(req: AiRequest): Promise<Result<AiResponse>> {
-    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-    if (!apiKey) return Err('GEMINI_API_KEY konfiguratsiyasi yo`q');
+    const apiKey = this.resolveProviderKey('gemini');
+    if (!apiKey) return Err('GEMINI_API_KEY / GOOGLE_API_KEY konfiguratsiyasi yo`q');
     return safeCall(async () => {
       const { response, model } = await this.invokeGemini(apiKey, req);
       if (!response.response?.text()) throw new InternalServerErrorException('Gemini javob bo`sh');
@@ -242,7 +275,7 @@ export class AiRouterService {
   }
 
   private async callClaude(req: AiRequest): Promise<Result<AiResponse>> {
-    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
+    const apiKey = this.resolveProviderKey('claude');
     if (!apiKey) return Err('ANTHROPIC_API_KEY konfiguratsiyasi yo`q');
 
     return safeCall(async () => {

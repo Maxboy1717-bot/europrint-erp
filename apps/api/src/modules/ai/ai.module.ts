@@ -11,8 +11,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
 import { AiRouterService }          from './application/services/ai-router.service';
 import { AiRouterCallService }       from './application/services/ai-router-call.service';
+import { CentralAiService }          from './application/services/central-ai.service';
 import { AiRouterRepository }       from './infrastructure/repositories/ai-router.repository';
 import { AI_ROUTER_REPO }            from './domain/repositories/i-ai-router.repo';
+import { DrizzleAiProviderConfigRepo } from './infrastructure/repositories/drizzle-ai-provider-config.repo';
+import { AI_PROVIDER_CONFIG_REPO }   from './domain/repositories/i-ai-provider-config.repo';
+import { AiProviderConfigController } from './presentation/ai-provider-config.controller';
 import { AiExamService }             from './application/services/ai-exam.service';
 import { AiHrNewService }            from './application/services/ai-hr-new.service';
 import { AiPlanningService }         from './application/services/ai-planning.service';
@@ -68,6 +72,10 @@ import { CrostonService }            from './forecast/croston.service';
 import { NelderMeadService }         from './forecast/nelder-mead.service';
 import { EnsembleForecastService }   from './forecast/ensemble-forecast.service';
 import { ForecastExtController }     from './presentation/forecast-ext.controller';
+// A75 — Kunlik AI-chatbot (mashinasiz xodim ЦКП-hisoboti)
+import { AiDailyReportService }      from './application/services/ai-daily-report.service';
+import { AiDailyReportRepository }   from './infrastructure/repositories/ai-daily-report.repository';
+import { AiDailyReportController }   from './presentation/ai-daily-report.controller';
 
 @Module({
   imports: [
@@ -82,6 +90,9 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     { provide: AI_ROUTER_REPO, useClass: AiRouterRepository },
     AiRouterService,
     AiRouterCallService,
+    CentralAiService,
+    DrizzleAiProviderConfigRepo,
+    { provide: AI_PROVIDER_CONFIG_REPO, useClass: DrizzleAiProviderConfigRepo },
     DrizzleService,
     HrAiRepository,
     HrAiService,
@@ -123,9 +134,13 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     CrostonService,
     NelderMeadService,
     EnsembleForecastService,
+    // A75 — Kunlik AI-chatbot
+    AiDailyReportService,
+    AiDailyReportRepository,
   ],
   controllers: [
     AiController,
+    AiProviderConfigController,
     AiHrController,
     AiCrmController,
     AiFinanceController,
@@ -140,10 +155,13 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
     InsightsController,
     GptController,
     ForecastExtController,
+    // A75 — Kunlik AI-chatbot
+    AiDailyReportController,
   ],
   exports: [
     AiRouterService,
     AiRouterCallService,
+    CentralAiService,
     HrAiService,
     HrAiExtService,
     CrmAiService,

@@ -617,6 +617,11 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'courses.is_active ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS is_active BOOLEAN` },
   { name: 'courses.published_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS published_at TIMESTAMP` },
   { name: 'courses.updated_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP` },
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-4/A71, 2026-06-26): karta-markazli LMS (EP-LMS-001).
+  // courses.card_id = darslik KARTAGA bog'lanadi (xodimga emas, org_departments.id). FK yo'q (cross-module ADR,
+  // schema-compat-4.ts courses.cardId bilan mos). Additiv, NULL ruxsat. lms_cross_card_credits (FAZA-07) shu bind'ga tayanadi.
+  { name: 'courses.card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS card_id INTEGER` },
+  { name: 'courses.card_id index', sql: `CREATE INDEX IF NOT EXISTS idx_courses_card_id ON courses(card_id)` },
   { name: 'lessons.lesson_number ADD COLUMN', sql: `ALTER TABLE IF EXISTS lessons ADD COLUMN IF NOT EXISTS lesson_number INTEGER` },
   { name: 'lessons.title_uz ADD COLUMN', sql: `ALTER TABLE IF EXISTS lessons ADD COLUMN IF NOT EXISTS title_uz VARCHAR` },
   { name: 'lessons.content_type ADD COLUMN', sql: `ALTER TABLE IF EXISTS lessons ADD COLUMN IF NOT EXISTS content_type VARCHAR` },
@@ -3813,5 +3818,18 @@ $fn$ LANGUAGE plpgsql` },
   { name: 'stake_history stake-range CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='chk_stake_history_range') THEN ALTER TABLE stake_history ADD CONSTRAINT chk_stake_history_range CHECK ((old_stake IS NULL OR (old_stake >= 0 AND old_stake <= 1)) AND (new_stake IS NULL OR (new_stake >= 0 AND new_stake <= 1))); END IF; END $$` },
   { name: 'stake_history.user_card idx', sql: `CREATE INDEX IF NOT EXISTS idx_stake_history_user_card ON stake_history (user_id, card_id, effective_at DESC)` },
   { name: 'stake_history.card idx', sql: `CREATE INDEX IF NOT EXISTS idx_stake_history_card ON stake_history (card_id, effective_at DESC)` },
+
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-4/A72, MASSIV-100 FAZA-07, 2026-06-26): LMS avto-enroll.
+  // EP-ORG-028/088: darslik KARTAGA biriktiriladi; xodim kartaga (employee_cards) ulanganda o'sha
+  //   kartaning faol kurslariga AVTO yoziladi (card-employee-assigned.handler.ts listener).
+  // enrollments.card_id       = avto-enroll qaysi karta orqali bo'lgani (Q599 tarix; qo'lda enroll => NULL).
+  // enrollments.auto_enrolled = avto (listener) vs qo'lda (EnrollCourseCommand) ajratish bayrog'i.
+  // uq_enrollments_emp_course = (employee_id, course_id) UNIQUE — autoEnroll/saveEnrollment ON CONFLICT
+  //   idempotentligi uchun MAJBURIY (jadval'da hozir faqat pkey(id) bor; dublikat juftlik DB'da 0 — xavfsiz).
+  // Additiv (FK yo'q, DATA yozilmaydi). courses.card_id allaqachon BOR (EP-LMS-001); FK Faza-0 da.
+  { name: 'A72 enrollments.card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS enrollments ADD COLUMN IF NOT EXISTS card_id INTEGER` },
+  { name: 'A72 enrollments.auto_enrolled ADD COLUMN', sql: `ALTER TABLE IF EXISTS enrollments ADD COLUMN IF NOT EXISTS auto_enrolled BOOLEAN NOT NULL DEFAULT false` },
+  { name: 'A72 enrollments emp_course UNIQUE idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_enrollments_emp_course ON enrollments (employee_id, course_id)` },
+  { name: 'A72 enrollments.card_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_enrollments_card_id ON enrollments (card_id) WHERE card_id IS NOT NULL` },
 
 ];
