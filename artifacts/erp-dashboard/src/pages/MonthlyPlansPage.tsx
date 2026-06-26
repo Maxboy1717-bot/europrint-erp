@@ -24,6 +24,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, RefreshCw, Calendar } from "lucide-react";
+import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 
 interface MonthlyPlan {
@@ -85,17 +86,17 @@ export default function MonthlyPlansPage() {
   };
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">{t("oylikRejalar", "Oylik rejalar")}</h1>
-        </div>
-        <Button onClick={() => setIsDialogOpen(true)} data-testid="button-create-monthly-plan">
-          <Plus className="h-4 w-4 mr-2" />
-          {t("qoshish", "Qo'shish")}
-        </Button>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        icon={<Calendar className="h-5 w-5" />}
+        title={t("oylikRejalar", "Oylik rejalar")}
+        actions={
+          <Button onClick={() => setIsDialogOpen(true)} data-testid="button-create-monthly-plan">
+            <Plus className="h-4 w-4 mr-2" />
+            {t("qoshish", "Qo'shish")}
+          </Button>
+        }
+      />
 
       <Card>
         <CardContent className="p-0">

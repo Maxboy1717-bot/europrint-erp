@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Wrench, Settings2, StopCircle } from "lucide-react";
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 import { Textarea } from "@/components/ui/textarea";
 
@@ -173,14 +173,17 @@ export default function EquipmentPage() {
   const list = Array.isArray(equipment) ? equipment : [];
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("jihozlar")}</h1>
-        <Button onClick={() => setIsAddOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t("yangiJihoz")}
-        </Button>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        icon={<Wrench className="h-5 w-5" />}
+        title={t("jihozlar")}
+        actions={
+          <Button onClick={() => setIsAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t("yangiJihoz")}
+          </Button>
+        }
+      />
 
       <Card>
         <CardContent className="p-0">
