@@ -162,6 +162,10 @@ export class OrgQueriesRepo {
         .select({
           id: appUsers.id, firstName: appUsers.first_name, lastName: appUsers.last_name,
           fullName, phone: appUsers.phone,
+          // VISION (ko'p-karta): xodimning shu kartadagi ulushi + birlamchimi (FE Xodimlar tab stake-display).
+          // raw column — employee_org_departments.stake_fraction/is_primary (Drizzle schema'da yo'q).
+          stakeFraction: sql<number | null>`stake_fraction`,
+          isPrimary: sql<boolean | null>`is_primary`,
         })
         .from(employeeOrgDepartments)
         .innerJoin(appUsers, and(eq(appUsers.id, employeeOrgDepartments.user_id), eq(appUsers.is_active, true)))
