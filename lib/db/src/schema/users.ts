@@ -64,10 +64,14 @@ export const users = pgTable("users", {
   orgDepartmentId: integer("org_department_id"),
   orgFunctionId: integer("org_function_id"),
   department: varchar("department", { length: 100 }),
+  // KARTA-MARKAZ (IJRO-REJA T1/A1): birlamchi karta to'g'ridan link (org_departments.id).
+  // card_id NULL => login/oylik YO'Q (admin/super_admin/director istisno). FK DB-darajada migration'da.
+  cardId: integer("card_id"),
 }, (t) => [
   index("idx_users_position_id").on(t.positionId),
   index("idx_users_department_id").on(t.departmentId),
   index("idx_users_is_active").on(t.isActive),
+  index("idx_users_card_id").on(t.cardId),
   check("users_language_chk", sql`${t.language} IS NULL OR ${t.language} IN ('uz','ru','en')`),
 ]);
 

@@ -3743,4 +3743,12 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'org_departments.freeze_until ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS freeze_until TIMESTAMP` },
   { name: 'org_departments.archived_at ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP` },
 
+  // APPROVED (egasi vakolati, IJRO-REJA TO'LQIN-1/A2, 2026-06-25): karta-markazli login/oylik poydevori.
+  // users.card_id = birlamchi karta (org_departments.id). NULL => login/oylik YO'Q (gate). Additiv, FK NO ACTION.
+  { name: 'users.card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS card_id INTEGER` },
+  { name: 'users.card_id index', sql: `CREATE INDEX IF NOT EXISTS idx_users_card_id ON users(card_id)` },
+  { name: 'users.card_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_users_card_id') THEN ALTER TABLE users ADD CONSTRAINT fk_users_card_id FOREIGN KEY (card_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  // Backfill: birlamchi (is_primary) faol kartadan users.card_id (employee_id orqali). Faqat NULL bo'lganda.
+  { name: 'users.card_id backfill from employee_cards', sql: `UPDATE users u SET card_id = (SELECT ec.card_id FROM employee_cards ec WHERE ec.employee_id = u.employee_id AND ec.is_active = true AND (ec.ended_at IS NULL OR ec.ended_at > NOW()) ORDER BY ec.is_primary DESC NULLS LAST, ec.assigned_at DESC NULLS LAST LIMIT 1) WHERE u.card_id IS NULL AND u.employee_id IS NOT NULL` },
+
 ];
