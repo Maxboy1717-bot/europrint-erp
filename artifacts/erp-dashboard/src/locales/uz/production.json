@@ -483,5 +483,13 @@
   "TechPPExtended.smenaBoshqaruvi": "Smena Boshqaruvi",
   "TechPPExtended.parallelJarayonlar": "Parallel Jarayonlar",
   "TechPPExtended.yetkazishKalk": "Yetkazish Kalk.",
-  "TechPPExtended.kpiOgish": "KPI Og'ish"
+  "TechPPExtended.kpiOgish": "KPI Og'ish",
+  "faolBuyurtmalar": "Faol Buyurtmalar",
+  "bajarilganKpi": "Bajarilgan",
+  "stanoqVazifalariKpi": "Stanoq Vazifalari",
+  "rejalashtirishKpi": "Rejalashtirish",
+  "taJamiBuyurtma": "{count} ta jami buyurtma",
+  "buHaftaTayyorBolgan": "Bu hafta tayyor bo'lgan",
+  "taKutmoqda": "{count} ta kutmoqda",
+  "bajarilganJamiBuyurtmalar": "Bajarilgan/jami buyurtmalar"
 }

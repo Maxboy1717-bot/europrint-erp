@@ -18,6 +18,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { MessageSquare, AlertCircle, Clock, CheckCircle2, Plus } from "lucide-react";
+import { EPErrorState } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 import { apiRequest } from "@/lib/api-request";
 import { useToast } from "@/hooks/use-toast";
@@ -163,7 +164,7 @@ export default function HRConflict() {
     });
   }
 
-  const { data: rawReports, isLoading } =
+  const { data: rawReports, isLoading, isError, error, refetch } =
     useQuery<ConflictReport[]>({ queryKey: ["/api/hr/conflict-reports"] });
 
   const reports: ConflictReport[] =
@@ -245,6 +246,12 @@ export default function HRConflict() {
                 <TableBody>
                   {isLoading ? (
                     <TableSkeleton cols={6} />
+                  ) : isError ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="p-0">
+                        <EPErrorState variant="inline" error={error} onRetry={() => refetch()} />
+                      </TableCell>
+                    </TableRow>
                   ) : filtered.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground py-8">

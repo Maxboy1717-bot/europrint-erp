@@ -17,7 +17,8 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 export class PpPlanningRepository implements IPpPlanningRepo {
   async getSchedule(start: string, end: string): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT po.id, po.order_number, po.product_id, po.quantity, po.planned_start_date, po.planned_end_date, po.status, wc.name AS work_center_name, mc.xom_ashyo AS product_name FROM production_orders po LEFT JOIN work_centers wc ON wc.id = po.work_center_id LEFT JOIN material_cards mc ON mc.id = po.product_id WHERE po.planned_start_date BETWEEN ${start} AND ${end} ORDER BY po.planned_start_date`);  } catch (_e) {
+      // Soft-delete: production_orders has deleted_at — exclude logically-deleted orders from the schedule.
+      return exec(sql`SELECT po.id, po.order_number, po.product_id, po.quantity, po.planned_start_date, po.planned_end_date, po.status, wc.name AS work_center_name, mc.xom_ashyo AS product_name FROM production_orders po LEFT JOIN work_centers wc ON wc.id = po.work_center_id LEFT JOIN material_cards mc ON mc.id = po.product_id WHERE po.planned_start_date BETWEEN ${start} AND ${end} AND po.deleted_at IS NULL ORDER BY po.planned_start_date`);  } catch (_e) {
     return Err(String(_e));
   }
 

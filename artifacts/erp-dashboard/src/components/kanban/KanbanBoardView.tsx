@@ -60,10 +60,10 @@ export function KanbanBoardView({
           {safeColumns.length === 0 ? (
             <div
               className="flex flex-col items-center justify-center w-full py-24 gap-4"
-              style={{ color: "#A0AEC0" }}
+              style={{ color: "var(--ep-muted)" }}
             >
               <FolderKanban style={{ width: 48, height: 48, opacity: 0.4 }} />
-              <p style={{ fontSize: 14, fontWeight: 500, color: "#718096" }}>{t("ustunlarYoq")}</p>
+              <p style={{ fontSize: 14, fontWeight: 500, color: "var(--ep-muted)" }}>{t("ustunlarYoq")}</p>
               <button
                 onClick={() => setShowAddColumn(true)}
                 style={{

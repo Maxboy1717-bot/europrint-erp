@@ -4,9 +4,11 @@
  */
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/api-request";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingCart, ScanBarcode, CreditCard, Banknote, Building2, Shuffle, Package, BarChart3, History, RefreshCw } from "lucide-react";
+import { ShoppingCart, ScanBarcode, CreditCard, Banknote, Building2, Shuffle, Package, BarChart3, History, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -49,6 +51,15 @@ export default function CashRegister() {
   const { t } = useTranslation('finance');
   const cr = useCashRegister();
 
+  // KAS-1 FE: factory cashier-hub smena holati — JONLI endpoint GET /api/finance/cashier/shifts/:id
+  // (cashier-hub slice). retry:false → ochiq smena yo'q bo'lsa ham sahifa buzilmaydi (graceful).
+  const { data: shiftSummary, isLoading: shiftLoading } = useQuery<Record<string, unknown>>({
+    queryKey: ['/api/finance/cashier/shifts/1'],
+    queryFn: () => apiRequest('GET', '/api/finance/cashier/shifts/1'),
+    retry: false,
+  });
+  const shift = (shiftSummary?.shift ?? null) as Record<string, unknown> | null;
+
   const escHtml = (s: unknown): string =>
     String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -58,7 +69,7 @@ export default function CashRegister() {
     const itemsHtml = cr.receiptData.items?.map((item: TransactionItem) =>
       `<tr><td>${escHtml(item.name)}</td><td style="text-align:center">${escHtml(item.quantity)}</td><td style="text-align:right">${formatCurrency(item.unitPrice)}</td><td style="text-align:right">${formatCurrency(item.total)}</td></tr>`
     ).join("");
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>{t("chek1")}</title><style>body{font-family:monospace;font-size:12px;width:300px;margin:0 auto;padding:10px}.center{text-align:center}.right{text-align:right}.line{border-top:1px dashed #000;margin:5px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}h2,h3{margin:5px 0}</style></head><body><div class="center"><h2>${escHtml(cr.receiptData.companyName)}</h2><p>${escHtml(cr.receiptData.companyAddress)}</p><p>Tel: ${escHtml(cr.receiptData.companyPhone)}</p><p>INN: ${escHtml(cr.receiptData.companyInn)}</p></div><div class="line"></div><p>Chek: ${escHtml(cr.receiptData.receiptNumber)}</p><p>Tranzaksiya: ${escHtml(cr.receiptData.transactionNumber)}</p><p>Sana: ${formatDateTime(cr.receiptData.createdAt)}</p>${cr.receiptData.customerName ? `<p>Mijoz: ${escHtml(cr.receiptData.customerName)}</p>` : ""}<div class="line"></div><table><tr><th>{t("Mahsulot")}</th><th>{t("count")}</th><th>{t("price")}</th><th>{t("total")}</th></tr>${itemsHtml}</table><div class="line"></div><div class="right"><p>Jami: ${formatCurrency(cr.receiptData.subtotal)}</p>${cr.receiptData.discountAmount ? `<p>Chegirma: -${formatCurrency(cr.receiptData.discountAmount)}</p>` : ""}<p>QQS (${escHtml(cr.receiptData.taxRate)}%): ${formatCurrency(cr.receiptData.taxAmount)}</p><p><strong>UMUMIY: ${formatCurrency(cr.receiptData.totalAmount)}</strong></p><p>To'lov: ${escHtml(paymentMethodLabels[cr.receiptData.paymentMethod]?.uz || cr.receiptData.paymentMethod)}</p>${cr.receiptData.paymentDetails?.changeAmount ? `<p>Qaytim: ${formatCurrency(cr.receiptData.paymentDetails.changeAmount)}</p>` : ""}</div><div class="line"></div><div class="center"><p>{t("xaridingizUchunRahmat")}</p></div></body></html>`);
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>${escHtml(t("chek1", "Chek"))}</title><style>body{font-family:monospace;font-size:12px;width:300px;margin:0 auto;padding:10px}.center{text-align:center}.right{text-align:right}.line{border-top:1px dashed #000;margin:5px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}h2,h3{margin:5px 0}</style></head><body><div class="center"><h2>${escHtml(cr.receiptData.companyName)}</h2><p>${escHtml(cr.receiptData.companyAddress)}</p><p>${escHtml(t("receiptPhone", "Tel"))}: ${escHtml(cr.receiptData.companyPhone)}</p><p>INN: ${escHtml(cr.receiptData.companyInn)}</p></div><div class="line"></div><p>${escHtml(t("receiptCheck", "Chek"))}: ${escHtml(cr.receiptData.receiptNumber)}</p><p>${escHtml(t("receiptTransaction", "Tranzaksiya"))}: ${escHtml(cr.receiptData.transactionNumber)}</p><p>${escHtml(t("receiptDate", "Sana"))}: ${formatDateTime(cr.receiptData.createdAt)}</p>${cr.receiptData.customerName ? `<p>${escHtml(t("receiptCustomer", "Mijoz"))}: ${escHtml(cr.receiptData.customerName)}</p>` : ""}<div class="line"></div><table><tr><th>${escHtml(t("Mahsulot", "Mahsulot"))}</th><th>${escHtml(t("count", "Soni"))}</th><th>${escHtml(t("price", "Narx"))}</th><th>${escHtml(t("total", "Jami"))}</th></tr>${itemsHtml}</table><div class="line"></div><div class="right"><p>${escHtml(t("receiptSubtotal", "Jami"))}: ${formatCurrency(cr.receiptData.subtotal)}</p>${cr.receiptData.discountAmount ? `<p>${escHtml(t("receiptDiscount", "Chegirma"))}: -${formatCurrency(cr.receiptData.discountAmount)}</p>` : ""}<p>${escHtml(t("receiptVat", "QQS"))} (${escHtml(cr.receiptData.taxRate)}%): ${formatCurrency(cr.receiptData.taxAmount)}</p><p><strong>${escHtml(t("receiptTotal", "UMUMIY"))}: ${formatCurrency(cr.receiptData.totalAmount)}</strong></p><p>${escHtml(t("receiptPayment", "To'lov"))}: ${escHtml(paymentMethodLabels[cr.receiptData.paymentMethod]?.uz || cr.receiptData.paymentMethod)}</p>${cr.receiptData.paymentDetails?.changeAmount ? `<p>${escHtml(t("receiptChange", "Qaytim"))}: ${formatCurrency(cr.receiptData.paymentDetails.changeAmount)}</p>` : ""}</div><div class="line"></div><div class="center"><p>${escHtml(t("xaridingizUchunRahmat", "Xaridingiz uchun rahmat!"))}</p></div></body></html>`);
     printWindow.document.close(); printWindow.print();
   };
 
@@ -79,7 +90,7 @@ export default function CashRegister() {
           <div className="flex items-center gap-2 flex-wrap">
             {cr.dashboard && (
               <EPStatusPill tone="neutral" data-testid="badge-sales-today">
-                Bugun: {formatCurrency(cr.dashboard.salesToday)} ({cr.dashboard.transactionsToday} ta)
+                {t("salesToday", "Bugun")}: {formatCurrency(cr.dashboard.salesToday)} ({cr.dashboard.transactionsToday} {t("countShort", "ta")})
               </EPStatusPill>
             )}
             <Button variant="ghost" size="sm" onClick={() => cr.refetch()} title={t("refresh")}>
@@ -95,6 +106,7 @@ export default function CashRegister() {
           <TabsTrigger value="products" data-testid="tab-products"><Package className="h-4 w-4 mr-1" /> {t('products')}</TabsTrigger>
           <TabsTrigger value="history" data-testid="tab-history"><History className="h-4 w-4 mr-1" /> {t('transactions')}</TabsTrigger>
           <TabsTrigger value="dashboard" data-testid="tab-dashboard"><BarChart3 className="h-4 w-4 mr-1" /> {t("dashboard10")}</TabsTrigger>
+          <TabsTrigger value="smena" data-testid="tab-smena"><AlertCircle className="h-4 w-4 mr-1" /> {t("cashRegister.shiftTab", "Smena")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pos" className="flex-1 mt-2">
@@ -119,6 +131,29 @@ export default function CashRegister() {
 
         <TabsContent value="dashboard" className="mt-2">
           {cr.dashboard && <PosReports dashboard={cr.dashboard} />}
+        </TabsContent>
+
+        <TabsContent value="smena" className="mt-2">
+          <div className="rounded-lg border p-4 space-y-3">
+            <h3 className="font-semibold text-base">{t("cashRegister.currentShiftStatus", "Joriy Kassir Smena Holati")}</h3>
+            {shiftLoading && <p className="text-sm text-muted-foreground">{t("cashRegister.loading", "Yuklanmoqda...")}</p>}
+            {!shiftLoading && !shift && (
+              <p className="text-sm text-muted-foreground">{t("cashRegister.noOpenShift", "Hozircha ochiq smena yo'q.")}</p>
+            )}
+            {shift && (
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">{t("cashRegister.shiftNum", "Smena #:")}</span> <b>{String(shift.id ?? '—')}</b></div>
+                <div><span className="text-muted-foreground">{t("cashRegister.openingAmount", "Ochilish summasi")}:</span> <b>{formatCurrency(Number(shift.openedAmount ?? 0))}</b></div>
+                <div><span className="text-muted-foreground">{t("cashRegister.cashIn", "Kirim")}:</span> <b>{formatCurrency(Number(shiftSummary?.cashIn ?? 0))}</b></div>
+                <div><span className="text-muted-foreground">{t("cashRegister.cashOut", "Chiqim")}:</span> <b>{formatCurrency(Number(shiftSummary?.cashOut ?? 0))}</b></div>
+                <div><span className="text-muted-foreground">{t("cashRegister.expectedBalance", "Kutilgan balans")}:</span> <b>{formatCurrency(Number(shiftSummary?.expectedAmount ?? 0))}</b></div>
+                <div><span className="text-muted-foreground">{t("cashRegister.status", "Status")}:</span> <b>{String(shift.status ?? '—')}</b></div>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-2">
+              {t("cashRegister.shiftOpenCloseHint", "Smena ochish/yopish")}: <code>POST /api/finance/cashier/shifts/open</code> ({t("cashRegister.beReady", "BE tayyor — cashier-hub")})
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 

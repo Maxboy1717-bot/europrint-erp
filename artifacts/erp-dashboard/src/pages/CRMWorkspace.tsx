@@ -67,7 +67,7 @@ export default function CRMWorkspace() {
   const showKpi = !isLoading && !leadsError && ["kanban", "list"].includes(viewMode) && activeEntity !== "robots";
 
   return (
-    <div className="flex flex-col h-full -m-4 lg:-m-6" style={{ background: "#EEF2F7" }}>
+    <div className="flex flex-col h-full -m-4 lg:-m-6" style={{ background: "var(--ep-bg)" }}>
       <CRMHeader
         activeEntity={activeEntity}
         onEntityChange={setActiveEntity}

@@ -18,9 +18,10 @@ const rowsOf = (r: Result<Row[]>): Row[] => (r.ok && Array.isArray(r.data) ? r.d
 export class PpEquipmentRepository implements IPpEquipmentRepo {
   async listEquipment(status: string | null, limit: number): Promise<Result<Row[]>>  {
   try {
+      // Soft-delete: equipment has deleted_at — exclude logically-deleted machines from the list.
       return status
-        ? exec(sql`SELECT e.*, wc.name AS work_center_name FROM equipment e LEFT JOIN work_centers wc ON wc.id = e.work_center_id WHERE e.status = ${status} ORDER BY e.name LIMIT ${limit}`)
-        : exec(sql`SELECT e.*, wc.name AS work_center_name FROM equipment e LEFT JOIN work_centers wc ON wc.id = e.work_center_id ORDER BY e.name LIMIT ${limit}`);  } catch (_e) {
+        ? exec(sql`SELECT e.*, wc.name AS work_center_name FROM equipment e LEFT JOIN work_centers wc ON wc.id = e.work_center_id WHERE e.status = ${status} AND e.deleted_at IS NULL ORDER BY e.name LIMIT ${limit}`)
+        : exec(sql`SELECT e.*, wc.name AS work_center_name FROM equipment e LEFT JOIN work_centers wc ON wc.id = e.work_center_id WHERE e.deleted_at IS NULL ORDER BY e.name LIMIT ${limit}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -36,7 +37,7 @@ export class PpEquipmentRepository implements IPpEquipmentRepo {
 
   async findById(id: number): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`SELECT e.*, wc.name AS work_center_name FROM equipment e LEFT JOIN work_centers wc ON wc.id = e.work_center_id WHERE e.id = ${id}`);
+      const r = await exec(sql`SELECT e.*, wc.name AS work_center_name FROM equipment e LEFT JOIN work_centers wc ON wc.id = e.work_center_id WHERE e.id = ${id} AND e.deleted_at IS NULL`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -68,7 +69,7 @@ export class PpEquipmentRepository implements IPpEquipmentRepo {
         SELECT e.*, wc.name AS work_center_name, wc.code AS work_center_code
         FROM equipment e
         LEFT JOIN work_centers wc ON wc.id = e.work_center_id
-        WHERE e.id = ${id}`);
+        WHERE e.id = ${id} AND e.deleted_at IS NULL`);
       const equipment = rowsOf(eqRes)[0] ?? null;
       if (!equipment) return null;
 

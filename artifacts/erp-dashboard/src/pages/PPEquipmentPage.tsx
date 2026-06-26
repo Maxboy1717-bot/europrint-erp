@@ -39,9 +39,9 @@ const EQUIPMENT_TYPES = ["press", "laminator", "cutter", "binder", "folder", "pr
 const EQUIPMENT_STATUSES = ["active", "maintenance", "inactive"] as const;
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  active:      { label: "Faol",        color: "#10B981", icon: <CheckCircle2 size={12} /> },
-  maintenance: { label: "Ta'mirda",    color: "#F59E0B", icon: <AlertTriangle size={12} /> },
-  inactive:    { label: "Nofaol",      color: "#94A3B8", icon: <Wrench size={12} /> },
+  active:      { label: "Faol",        color: "var(--ep-green)",  icon: <CheckCircle2 size={12} /> },
+  maintenance: { label: "Ta'mirda",    color: "var(--ep-yellow)", icon: <AlertTriangle size={12} /> },
+  inactive:    { label: "Nofaol",      color: "var(--ep-subtle)", icon: <Wrench size={12} /> },
 };
 
 // ── CreateEquipmentDialog ────────────────────────────────────────────────────
@@ -226,10 +226,10 @@ export default function PPEquipmentPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1A202C", margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", margin: 0 }}>
             PP Uskunalar katalogi
           </h1>
-          <p style={{ fontSize: 13, color: "#718096", margin: "4px 0 0" }}>
+          <p style={{ fontSize: 13, color: "var(--ep-muted)", margin: "4px 0 0" }}>
             Ishlab chiqarish uskunalari ro'yxati
           </p>
         </div>
@@ -244,9 +244,9 @@ export default function PPEquipmentPage() {
 
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
-        <EqKpiCard color="#EFF6FF" iconColor="#3B82F6" label="Jami uskunalar" value={items.length} />
-        <EqKpiCard color="#F0FDF4" iconColor="#10B981" label="Faol" value={activeCount} />
-        <EqKpiCard color="#FFFBEB" iconColor="#F59E0B" label="Ta'mirda" value={maintCount} />
+        <EqKpiCard color="var(--ep-blue-soft)" iconColor="var(--ep-blue)" label="Jami uskunalar" value={items.length} />
+        <EqKpiCard color="var(--ep-green-soft)" iconColor="var(--ep-green)" label="Faol" value={activeCount} />
+        <EqKpiCard color="var(--ep-yellow-soft)" iconColor="var(--ep-yellow)" label="Ta'mirda" value={maintCount} />
       </div>
 
       {/* Filter */}
@@ -271,19 +271,19 @@ export default function PPEquipmentPage() {
 
       {/* Table */}
       {equipQ.isLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Yuklanmoqda...</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Yuklanmoqda...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Uskunalar topilmadi</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Uskunalar topilmadi</div>
       ) : (
         <div style={{
-          background: "#fff", borderRadius: 14,
+          background: "var(--ep-surface)", borderRadius: 14,
           boxShadow: "0 1px 4px rgba(0,0,0,0.08)", overflow: "hidden",
         }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+              <tr style={{ background: "var(--ep-bg)", borderBottom: "1px solid var(--ep-border)" }}>
                 {["Nomi", "Tur", "Ishlab chiqaruvchi / Model", "Joylashuv", "Holat"].map(h => (
-                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "#64748B" }}>
+                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "var(--ep-muted)" }}>
                     {h}
                   </th>
                 ))}
@@ -297,22 +297,22 @@ export default function PPEquipmentPage() {
                     key={e.id}
                     data-testid={`equipment-row-${e.id}`}
                     style={{
-                      borderBottom: "1px solid #F1F5F9",
-                      background: i % 2 === 0 ? "#fff" : "#FAFAFA",
+                      borderBottom: "1px solid var(--ep-border)",
+                      background: i % 2 === 0 ? "var(--ep-surface)" : "var(--ep-bg)",
                     }}
                   >
-                    <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, color: "#1E293B" }}>
+                    <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, color: "var(--ep-text)" }}>
                       {e.name}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       {e.type ? (
                         <Badge variant="secondary" style={{ fontSize: 11 }}>{e.type}</Badge>
-                      ) : <span style={{ color: "#CBD5E1" }}>—</span>}
+                      ) : <span style={{ color: "var(--ep-subtle)" }}>—</span>}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "#475569" }}>
+                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--ep-muted)" }}>
                       {[e.manufacturer, e.model].filter(Boolean).join(" / ") || "—"}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "#64748B" }}>
+                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--ep-muted)" }}>
                       {e.location || "—"}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
@@ -346,15 +346,15 @@ function EqKpiCard({ color, iconColor, label, value }: {
       display: "flex", alignItems: "center", gap: 14,
     }}>
       <div style={{
-        width: 38, height: 38, borderRadius: 10, background: "#fff",
+        width: 38, height: 38, borderRadius: 10, background: "var(--ep-surface)",
         display: "flex", alignItems: "center", justifyContent: "center",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
       }}>
         <Wrench size={18} color={iconColor} />
       </div>
       <div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: "#1A202C", lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>{label}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 12, color: "var(--ep-muted)", marginTop: 2 }}>{label}</div>
       </div>
     </div>
   );

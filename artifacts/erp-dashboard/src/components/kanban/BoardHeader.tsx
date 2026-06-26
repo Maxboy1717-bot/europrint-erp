@@ -171,7 +171,7 @@ export function BoardHeader({
         {/* Sarlavha */}
         <h1
           className="mr-2"
-          style={{ fontSize: 22, fontWeight: 700, color: "#2D3748", letterSpacing: "-0.01em" }}
+          style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", letterSpacing: "-0.01em" }}
         >
           {t("kanbanDoskasi")}
         </h1>
@@ -383,7 +383,7 @@ export function BoardHeader({
         {/* Qidiruv */}
         <div className="relative" style={{ width: 280 }}>
           <Search
-            style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#A0AEC0" }}
+            style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "var(--ep-muted)" }}
           />
           <input
             value={filters.search}

@@ -55,7 +55,7 @@ export function KanbanColumnHeader({
           {/* Nom — UPPERCASE */}
           <h3
             className="font-bold text-[12px] uppercase tracking-[0.05em] truncate"
-            style={{ color: "#2D3748" }}
+            style={{ color: "var(--ep-text)" }}
           >
             {stageName}
           </h3>

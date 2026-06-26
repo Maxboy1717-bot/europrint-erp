@@ -63,9 +63,9 @@ interface ZoneItem {
 const BIN_TYPES = ["storage", "receiving", "shipping", "quarantine", "return"];
 
 function occupancyColor(pct: number): string {
-  if (pct >= 90) return "#EF4444";
-  if (pct >= 70) return "#F59E0B";
-  return "#10B981";
+  if (pct >= 90) return "var(--ep-red)";
+  if (pct >= 70) return "var(--ep-yellow)";
+  return "var(--ep-green)";
 }
 
 function OccupancyBar({ pct }: { pct: number }) {
@@ -73,7 +73,7 @@ function OccupancyBar({ pct }: { pct: number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <div style={{
-        flex: 1, height: 6, background: "#E5E7EB", borderRadius: 99, overflow: "hidden",
+        flex: 1, height: 6, background: "var(--ep-border)", borderRadius: 99, overflow: "hidden",
       }}>
         <div style={{
           width: `${Math.min(pct, 100)}%`, height: "100%",
@@ -286,10 +286,10 @@ export default function WarehouseBinsPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1A202C", margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", margin: 0 }}>
             Ombor Binlari (Yacheykalar)
           </h1>
-          <p style={{ fontSize: 13, color: "#718096", margin: "4px 0 0" }}>
+          <p style={{ fontSize: 13, color: "var(--ep-muted)", margin: "4px 0 0" }}>
             Ombor joylashuv tuzilmasi — zonalar va binlar
           </p>
         </div>
@@ -304,9 +304,9 @@ export default function WarehouseBinsPage() {
 
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
-        <KpiCard icon={<Grid3X3 size={18} color="#3B82F6" />} label="Jami binlar" value={bins.length} color="#EFF6FF" />
-        <KpiCard icon={<Warehouse size={18} color="#10B981" />} label="Faol binlar" value={activeBins} color="#F0FDF4" />
-        <KpiCard icon={<Layers size={18} color="#F59E0B" />} label="80%+ band" value={highOccupancy} color="#FFFBEB" />
+        <KpiCard icon={<Grid3X3 size={18} color="var(--ep-blue)" />} label="Jami binlar" value={bins.length} color="var(--ep-blue-soft)" />
+        <KpiCard icon={<Warehouse size={18} color="var(--ep-green)" />} label="Faol binlar" value={activeBins} color="var(--ep-green-soft)" />
+        <KpiCard icon={<Layers size={18} color="var(--ep-yellow)" />} label="80%+ band" value={highOccupancy} color="var(--ep-yellow-soft)" />
       </div>
 
       {/* Filters */}
@@ -349,22 +349,31 @@ export default function WarehouseBinsPage() {
 
       {/* Table */}
       {binsQ.isLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Yuklanmoqda...</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Yuklanmoqda...</div>
+      ) : binsQ.isError ? (
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>
+          <div style={{ color: "var(--ep-red)", fontWeight: 600, marginBottom: 8 }}>
+            Binlarni yuklashda xatolik
+          </div>
+          <Button variant="outline" size="sm" onClick={() => binsQ.refetch()} data-testid="btn-retry-bins">
+            Qayta urinib ko'rish
+          </Button>
+        </div>
       ) : bins.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>
           Binlar topilmadi
         </div>
       ) : (
         <div style={{
-          background: "#fff", borderRadius: 14,
+          background: "var(--ep-surface)", borderRadius: 14,
           boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
           overflow: "hidden",
         }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+              <tr style={{ background: "var(--ep-bg)", borderBottom: "1px solid var(--ep-border)" }}>
                 {["Bin kodi", "Ombor", "Zona", "Tur", "Qator/Shelf/Daraja", "Band (%)", "Holat"].map(h => (
-                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "#64748B" }}>
+                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "var(--ep-muted)" }}>
                     {h}
                   </th>
                 ))}
@@ -376,18 +385,18 @@ export default function WarehouseBinsPage() {
                   key={b.id}
                   data-testid={`bin-row-${b.id}`}
                   style={{
-                    borderBottom: "1px solid #F1F5F9",
-                    background: i % 2 === 0 ? "#fff" : "#FAFAFA",
+                    borderBottom: "1px solid var(--ep-border)",
+                    background: i % 2 === 0 ? "var(--ep-surface)" : "var(--ep-bg)",
                     transition: "background 0.15s",
                   }}
                 >
-                  <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, color: "#1E293B" }}>
+                  <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, color: "var(--ep-text)" }}>
                     {b.binCode || "—"}
                   </td>
-                  <td style={{ padding: "10px 14px", fontSize: 13, color: "#475569" }}>
+                  <td style={{ padding: "10px 14px", fontSize: 13, color: "var(--ep-muted)" }}>
                     {b.warehouseName || "—"}
                   </td>
-                  <td style={{ padding: "10px 14px", fontSize: 13, color: "#475569" }}>
+                  <td style={{ padding: "10px 14px", fontSize: 13, color: "var(--ep-muted)" }}>
                     {b.zoneName || "—"}
                   </td>
                   <td style={{ padding: "10px 14px" }}>
@@ -395,7 +404,7 @@ export default function WarehouseBinsPage() {
                       {b.binType}
                     </Badge>
                   </td>
-                  <td style={{ padding: "10px 14px", fontSize: 12, color: "#64748B" }}>
+                  <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--ep-muted)" }}>
                     {[b.row, b.shelf, b.level].filter(Boolean).join(" / ") || "—"}
                   </td>
                   <td style={{ padding: "10px 14px", minWidth: 120 }}>
@@ -438,15 +447,15 @@ function KpiCard({ icon, label, value, color }: {
       display: "flex", alignItems: "center", gap: 14,
     }}>
       <div style={{
-        width: 38, height: 38, borderRadius: 10, background: "#fff",
+        width: 38, height: 38, borderRadius: 10, background: "var(--ep-surface)",
         display: "flex", alignItems: "center", justifyContent: "center",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
       }}>
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: "#1A202C", lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>{label}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 12, color: "var(--ep-muted)", marginTop: 2 }}>{label}</div>
       </div>
     </div>
   );

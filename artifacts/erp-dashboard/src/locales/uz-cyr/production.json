@@ -522,5 +522,13 @@
   "TechPPExtended.smenaBoshqaruvi": "Смена Бошқаруви",
   "TechPPExtended.parallelJarayonlar": "Параллел Жараёнлар",
   "TechPPExtended.yetkazishKalk": "Йетказиш Калк.",
-  "TechPPExtended.kpiOgish": "KPI Оғиш"
+  "TechPPExtended.kpiOgish": "KPI Оғиш",
+  "faolBuyurtmalar": "Фаол Буюртмалар",
+  "bajarilganKpi": "Бажарилган",
+  "stanoqVazifalariKpi": "Станоқ Вазифалари",
+  "rejalashtirishKpi": "Режалаштириш",
+  "taJamiBuyurtma": "{count} та жами буюртма",
+  "buHaftaTayyorBolgan": "Бу ҳафта тайёр бўлган",
+  "taKutmoqda": "{count} та кутмоқда",
+  "bajarilganJamiBuyurtmalar": "Бажарилган/жами буюртмалар"
 }

@@ -98,7 +98,7 @@ function isThisYear(dateStr: string): boolean {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function HRAlumni() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("hr");
   const [search, setSearch] = useState("");
 
   const { data: rawResponse, isLoading, isError, error, refetch } =
@@ -134,8 +134,8 @@ export default function HRAlumni() {
       {/* Header */}
       <div className="border-b border-border/50 pb-3 flex items-center gap-3">
         <UserPlus className="h-5 w-5 text-[var(--ep-blue)]" />
-        <h1 className="font-semibold text-base">Alumni</h1>
-        <span className="text-sm text-muted-foreground">(Sobiq xodimlar)</span>
+        <h1 className="font-semibold text-base">{t("alumni.title")}</h1>
+        <span className="text-sm text-muted-foreground">{t("alumni.subtitle")}</span>
       </div>
 
       {isError && isNotImplementedError(error)
@@ -148,19 +148,19 @@ export default function HRAlumni() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
           icon={Users}
-          label="Jami alumni"
+          label={t("alumni.totalAlumni")}
           value={total}
           color="bg-[var(--ep-primary-soft)] text-[var(--ep-primary)]"
         />
         <StatCard
           icon={RefreshCw}
-          label="Boomerang mumkin"
+          label={t("alumni.boomerangEligible")}
           value={boomerangCount}
           color="bg-[rgba(46,138,90,.12)] text-[var(--ep-green)]"
         />
         <StatCard
           icon={CalendarX}
-          label="Bu yil ketganlar"
+          label={t("alumni.leftThisYear")}
           value={thisYearCount}
           color="bg-[rgba(181,137,28,.14)] text-[var(--ep-yellow)]"
         />
@@ -171,7 +171,7 @@ export default function HRAlumni() {
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-8"
-          placeholder="Ism bo'yicha qidirish..."
+          placeholder={t("alumni.searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -182,13 +182,13 @@ export default function HRAlumni() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Xodim</TableHead>
-              <TableHead>Bo'lim</TableHead>
-              <TableHead>Lavozim</TableHead>
-              <TableHead>Ishga kirgan</TableHead>
-              <TableHead>Ishdan chiqqan</TableHead>
-              <TableHead>Ketish sababi</TableHead>
-              <TableHead>Boomerang</TableHead>
+              <TableHead>{t("employee")}</TableHead>
+              <TableHead>{t("department")}</TableHead>
+              <TableHead>{t("position")}</TableHead>
+              <TableHead>{t("alumni.hireDate")}</TableHead>
+              <TableHead>{t("alumni.terminationDate")}</TableHead>
+              <TableHead>{t("alumni.reasonLeaving")}</TableHead>
+              <TableHead>{t("alumni.boomerang")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,7 +197,7 @@ export default function HRAlumni() {
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  Alumni topilmadi
+                  {t("alumni.notFound")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -216,9 +216,9 @@ export default function HRAlumni() {
                   </TableCell>
                   <TableCell>
                     {a.boomerang_eligible ? (
-                      <Badge variant="success">Ha</Badge>
+                      <Badge variant="success">{t("common.yes")}</Badge>
                     ) : (
-                      <Badge variant="neutral">Yo'q</Badge>
+                      <Badge variant="neutral">{t("common.no")}</Badge>
                     )}
                   </TableCell>
                 </TableRow>

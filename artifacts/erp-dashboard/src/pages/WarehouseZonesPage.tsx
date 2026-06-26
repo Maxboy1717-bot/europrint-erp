@@ -47,12 +47,12 @@ interface WarehouseItem {
 const ZONE_TYPES = ["storage", "receiving", "shipping", "quarantine", "return", "production"];
 
 const ZONE_TYPE_COLOR: Record<string, string> = {
-  storage:    "#3B82F6",
-  receiving:  "#10B981",
-  shipping:   "#8B5CF6",
-  quarantine: "#EF4444",
-  return:     "#F59E0B",
-  production: "#06B6D4",
+  storage:    "var(--ep-blue)",
+  receiving:  "var(--ep-green)",
+  shipping:   "var(--ep-purple)",
+  quarantine: "var(--ep-red)",
+  return:     "var(--ep-yellow)",
+  production: "var(--ep-cyan)",
 };
 
 // ── CreateZoneDialog ─────────────────────────────────────────────────────────
@@ -214,10 +214,10 @@ export default function WarehouseZonesPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1A202C", margin: 0 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", margin: 0 }}>
             Ombor Zonalari
           </h1>
-          <p style={{ fontSize: 13, color: "#718096", margin: "4px 0 0" }}>
+          <p style={{ fontSize: 13, color: "var(--ep-muted)", margin: "4px 0 0" }}>
             Receiving · Storage · Shipping · Quarantine zonalari
           </p>
         </div>
@@ -232,9 +232,9 @@ export default function WarehouseZonesPage() {
 
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
-        <ZoneKpiCard icon={<Layers size={18} color="#8B5CF6" />} label="Jami zonalar" value={zones.length} color="#F5F3FF" />
-        <ZoneKpiCard icon={<Warehouse size={18} color="#10B981" />} label="Faol zonalar" value={activeZones} color="#F0FDF4" />
-        <ZoneKpiCard icon={<Grid3X3 size={18} color="#3B82F6" />} label="Jami binlar" value={totalBins} color="#EFF6FF" />
+        <ZoneKpiCard icon={<Layers size={18} color="var(--ep-purple)" />} label="Jami zonalar" value={zones.length} color="var(--ep-purple-soft)" />
+        <ZoneKpiCard icon={<Warehouse size={18} color="var(--ep-green)" />} label="Faol zonalar" value={activeZones} color="var(--ep-green-soft)" />
+        <ZoneKpiCard icon={<Grid3X3 size={18} color="var(--ep-blue)" />} label="Jami binlar" value={totalBins} color="var(--ep-blue-soft)" />
       </div>
 
       {/* Filter */}
@@ -260,19 +260,28 @@ export default function WarehouseZonesPage() {
 
       {/* Zones grid */}
       {zonesQ.isLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Yuklanmoqda...</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Yuklanmoqda...</div>
+      ) : zonesQ.isError ? (
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>
+          <div style={{ color: "var(--ep-red)", fontWeight: 600, marginBottom: 8 }}>
+            Zonalarni yuklashda xatolik
+          </div>
+          <Button variant="outline" size="sm" onClick={() => zonesQ.refetch()} data-testid="btn-retry-zones">
+            Qayta urinib ko'rish
+          </Button>
+        </div>
       ) : zones.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Zonalar topilmadi</div>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--ep-subtle)" }}>Zonalar topilmadi</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {zones.map(z => {
-            const accent = ZONE_TYPE_COLOR[z.zoneType] ?? "#6B7280";
+            const accent = ZONE_TYPE_COLOR[z.zoneType] ?? "var(--ep-muted)";
             return (
               <div
                 key={z.id}
                 data-testid={`zone-card-${z.id}`}
                 style={{
-                  background: "#fff", borderRadius: 14, padding: "18px 20px",
+                  background: "var(--ep-surface)", borderRadius: 14, padding: "18px 20px",
                   boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
                   borderLeft: `4px solid ${accent}`,
                   display: "flex", flexDirection: "column", gap: 10,
@@ -280,10 +289,10 @@ export default function WarehouseZonesPage() {
               >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1A202C" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ep-text)" }}>
                       {z.code ? `${z.code} — ` : ""}{z.name}
                     </div>
-                    <div style={{ fontSize: 12, color: "#718096", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--ep-muted)", marginTop: 2 }}>
                       {z.warehouseName ?? "Ombor ko'rsatilmagan"}
                     </div>
                   </div>
@@ -298,18 +307,18 @@ export default function WarehouseZonesPage() {
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <span style={{
                     fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6,
-                    background: `${accent}18`, color: accent,
+                    background: `color-mix(in srgb, ${accent} 12%, transparent)`, color: accent,
                   }}>
                     {z.zoneType}
                   </span>
-                  <span style={{ fontSize: 11, color: "#64748B", padding: "3px 8px", background: "#F1F5F9", borderRadius: 6 }}>
+                  <span style={{ fontSize: 11, color: "var(--ep-muted)", padding: "3px 8px", background: "var(--ep-bg)", borderRadius: 6 }}>
                     Sig'im: {z.capacity} m³
                   </span>
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <Grid3X3 size={12} color="#94A3B8" />
-                  <span style={{ fontSize: 12, color: "#64748B" }}>
+                  <Grid3X3 size={12} color="var(--ep-subtle)" />
+                  <span style={{ fontSize: 12, color: "var(--ep-muted)" }}>
                     {z.binCount} ta bin
                   </span>
                 </div>
@@ -343,15 +352,15 @@ function ZoneKpiCard({ icon, label, value, color }: {
       display: "flex", alignItems: "center", gap: 14,
     }}>
       <div style={{
-        width: 38, height: 38, borderRadius: 10, background: "#fff",
+        width: 38, height: 38, borderRadius: 10, background: "var(--ep-surface)",
         display: "flex", alignItems: "center", justifyContent: "center",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
       }}>
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: "#1A202C", lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>{label}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "var(--ep-text)", lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 12, color: "var(--ep-muted)", marginTop: 2 }}>{label}</div>
       </div>
     </div>
   );

@@ -166,7 +166,7 @@ export function CRMFilterBar({
       >
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none"
-          style={{ color: "#94a3b8" }}
+          style={{ color: "var(--ep-muted)" }}
         />
         <Input
           placeholder={t("Qidirish...")}
@@ -223,9 +223,9 @@ export function CRMFilterBar({
 
       {/* ── Count + sort ────────────────────────────────────────── */}
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-[12px] font-medium" style={{ color: "#94a3b8" }}>
+        <span className="text-[12px] font-medium" style={{ color: "var(--ep-muted)" }}>
           Jami:{" "}
-          <strong className="font-bold" style={{ color: "#334155" }}>
+          <strong className="font-bold" style={{ color: "var(--ep-text)" }}>
             {filteredItemsCount}
           </strong>{" "}
           ta

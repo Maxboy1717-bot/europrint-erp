@@ -19,7 +19,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Calendar, Plus, RefreshCw } from "lucide-react";
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 interface LeaveRequest {
@@ -66,7 +66,7 @@ export default function HRVacationSick() {
     defaultValues: { type: "annual", startDate: "", endDate: "", reason: "", employeeId: "" },
   });
 
-  const { data: leaveRequests = [], isLoading, refetch } = useQuery<LeaveRequest[]>({
+  const { data: leaveRequests = [], isLoading, isError, error, refetch } = useQuery<LeaveRequest[]>({
     queryKey: ["/api/hr/leave-requests"],
   });
 
@@ -139,6 +139,8 @@ export default function HRVacationSick() {
               <TableBody>
                 {isLoading ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
+                ) : isError ? (
+                  <TableRow><TableCell colSpan={6} className="p-0"><EPErrorState variant="inline" error={error} onRetry={() => refetch()} /></TableCell></TableRow>
                 ) : (leaveRequests as LeaveRequest[]).length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground">{t("tatilSorovlariYoq")}</TableCell></TableRow>
                 ) : (leaveRequests as LeaveRequest[]).slice(0, 30).map((v) => (

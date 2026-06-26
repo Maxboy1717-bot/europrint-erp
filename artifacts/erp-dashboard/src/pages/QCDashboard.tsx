@@ -98,11 +98,11 @@ export default function QCDashboard() {
             passRate >= 85 ? "bg-amber-50 text-[var(--ep-yellow)]" :
                              "bg-red-50 text-[var(--ep-red)]"
           )}>
-            O'tish darajasi: {sLoad ? "..." : `${passRate}%`}
+            {t("QCDashboard.otishDarajasi")}: {sLoad ? "..." : `${passRate}%`}
           </Badge>
           {(stats?.openRca || 0) > 0 && (
             <Badge className="bg-orange-50 text-[var(--ep-primary)] text-sm px-3">
-              {stats?.openRca} ochiq RCA
+              {stats?.openRca} {t("QCDashboard.ochiqRca")}
             </Badge>
           )}
         </div>

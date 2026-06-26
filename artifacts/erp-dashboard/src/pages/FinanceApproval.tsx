@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest, fetchWithAuth } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { CheckCircle, XCircle, Clock, DollarSign, Eye, AlertTriangle, CreditCard, Receipt } from "lucide-react";
+import { EPErrorState } from "@/components/ep";
 
 interface PapkaOrderData {
   id: string;
@@ -37,7 +38,7 @@ export default function FinanceApproval() {
   const [rejectDialog, setRejectDialog] = useState(false);
   const [comments, setComments] = useState("");
 
-  const { data: orders = [], isLoading } = useQuery<PapkaOrderData[]>({
+  const { data: orders = [], isLoading, isError, error, refetch } = useQuery<PapkaOrderData[]>({
     queryKey: ["/api/papka-orders", "approved"],
     enabled: isAuthenticated,
     queryFn: async () => {
@@ -81,6 +82,14 @@ export default function FinanceApproval() {
 
   if (isLoading) {
     return <div className="p-6">{t("Yuklanmoqda...")}</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <EPErrorState onRetry={() => refetch()} error={error} />
+      </div>
+    );
   }
 
   return (

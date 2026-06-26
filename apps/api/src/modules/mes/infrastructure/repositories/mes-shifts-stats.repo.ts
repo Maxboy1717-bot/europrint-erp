@@ -163,7 +163,7 @@ export class MesShiftsStatsRepository {
                   ELSE 0 END::numeric(5,2)                            AS quality
       FROM equipment e
       LEFT JOIN sess s ON s.equipment_id = e.id
-      WHERE e.is_active = true
+      WHERE e.is_active = true AND e.deleted_at IS NULL
       GROUP BY e.id, e.name, e.status, s.session_count, s.run_s, s.stop_s, s.downtime_s, s.target_qty, s.actual_qty, s.defect_qty
       ORDER BY e.name
     `);

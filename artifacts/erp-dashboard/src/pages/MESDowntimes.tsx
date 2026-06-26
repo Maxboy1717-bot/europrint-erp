@@ -20,6 +20,7 @@ import { AlertTriangle, Clock, CheckCircle, Calendar, Timer, Plus, StopCircle } 
 import { cn } from "@/lib/utils";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface Downtime {
   id: string;
@@ -38,16 +39,26 @@ interface Downtime {
 function fmtSecs(secs: number) {
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
-  return h > 0 ? `${h} soat ${m} daq` : `${m} daqiqa`;
+  const soat = tLabel("common.MESDowntimes.soat", "soat");
+  const daq = tLabel("common.MESDowntimes.daq", "daq");
+  const daqiqa = tLabel("common.MESDowntimes.daqiqa", "daqiqa");
+  return h > 0 ? `${h} ${soat} ${m} ${daq}` : `${m} ${daqiqa}`;
 }
 
 const REASON_LABELS: Record<string, string> = {
-  unknown: "Noma'lum", material_shortage: "Material yetishmovchiligi",
-  tool_change: "Asbob almashtirish", machine_breakdown: "Mashina nosozligi",
-  maintenance: "Texnik xizmat", quality_issue: "Sifat muammosi",
-  operator_break: "Operator tanaffusi", shift_end: "Smena tugashi",
-  setup: "Sozlash", lunch: "Tushlik", quality: "Sifat sozlash",
-  planned_maintenance: "Rejalashtirilgan TA", unplanned_stop: "Rejalanmagan to'xtash",
+  unknown: tLabel("common.MESDowntimes.reason.unknown", "Noma'lum"),
+  material_shortage: tLabel("common.MESDowntimes.reason.material_shortage", "Material yetishmovchiligi"),
+  tool_change: tLabel("common.MESDowntimes.reason.tool_change", "Asbob almashtirish"),
+  machine_breakdown: tLabel("common.MESDowntimes.reason.machine_breakdown", "Mashina nosozligi"),
+  maintenance: tLabel("common.MESDowntimes.reason.maintenance", "Texnik xizmat"),
+  quality_issue: tLabel("common.MESDowntimes.reason.quality_issue", "Sifat muammosi"),
+  operator_break: tLabel("common.MESDowntimes.reason.operator_break", "Operator tanaffusi"),
+  shift_end: tLabel("common.MESDowntimes.reason.shift_end", "Smena tugashi"),
+  setup: tLabel("common.MESDowntimes.reason.setup", "Sozlash"),
+  lunch: tLabel("common.MESDowntimes.reason.lunch", "Tushlik"),
+  quality: tLabel("common.MESDowntimes.reason.quality", "Sifat sozlash"),
+  planned_maintenance: tLabel("common.MESDowntimes.reason.planned_maintenance", "Rejalashtirilgan TA"),
+  unplanned_stop: tLabel("common.MESDowntimes.reason.unplanned_stop", "Rejalanmagan to'xtash"),
 };
 
 export default function MESDowntimes() {
@@ -77,9 +88,9 @@ export default function MESDowntimes() {
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
       setCreateOpen(false);
       setForm({ sessionId: "", reasonCode: "unknown", notes: "", isPlanned: false });
-      toast({ title: "To'xtash boshlandi", description: "Downtime hodisasi qayd qilindi" });
+      toast({ title: t("MESDowntimes.toxtashBoshlandi"), description: t("MESDowntimes.downtimeQaydQilindi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("MESDowntimes.xatolik"), variant: "destructive" }),
   });
 
   const endDowntimeMutation = useMutation({
@@ -87,9 +98,9 @@ export default function MESDowntimes() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/iot/downtime-events"] });
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
-      toast({ title: "To'xtash yakunlandi" });
+      toast({ title: t("MESDowntimes.toxtashYakunlandi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("MESDowntimes.xatolik"), variant: "destructive" }),
   });
 
   const filtered = (Array.isArray(downtimes) ? downtimes : []).filter(d => {
@@ -119,7 +130,7 @@ export default function MESDowntimes() {
           {activeDowntimes.length > 0 && (
             <Badge variant="destructive" className="gap-1">
               <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              {activeDowntimes.length} aktiv to'xtash
+              {t("MESDowntimes.aktivToxtash", { count: activeDowntimes.length })}
             </Badge>
           )}
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -132,10 +143,10 @@ export default function MESDowntimes() {
       {/* KPI kartalar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {([
-          { label: "Jami to'xtash", value: downtimes.length, icon: AlertTriangle, color: "text-[var(--ep-yellow)]" },
-          { label: "Jami vaqt", value: `${totalMins} daq`, icon: Timer, color: "text-foreground" },
-          { label: "Rejalanmagan", value: unplanned.length, icon: AlertTriangle, color: "text-[var(--ep-red)]" },
-          { label: "Rejalanmagan vaqt", value: `${unplannedMins} daq`, icon: Clock, color: "text-[var(--ep-red)]" },
+          { label: t("MESDowntimes.jamiToxtash"), value: downtimes.length, icon: AlertTriangle, color: "text-[var(--ep-yellow)]" },
+          { label: t("MESDowntimes.jamiVaqt"), value: `${totalMins} ${t("MESDowntimes.daq")}`, icon: Timer, color: "text-foreground" },
+          { label: t("MESDowntimes.rejalanmaganKpi"), value: unplanned.length, icon: AlertTriangle, color: "text-[var(--ep-red)]" },
+          { label: t("MESDowntimes.rejalanmaganVaqt"), value: `${unplannedMins} ${t("MESDowntimes.daq")}`, icon: Clock, color: "text-[var(--ep-red)]" },
         ]).map(kpi => (
           <Card key={kpi.label}>
             <CardContent className="p-4">
@@ -179,7 +190,7 @@ export default function MESDowntimes() {
                 <SelectItem value="unplanned">{t("rejalanmagan")}</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-xs text-muted-foreground">{filtered.length} ta hodisa</span>
+            <span className="text-xs text-muted-foreground">{t("MESDowntimes.taHodisa", { count: filtered.length })}</span>
           </div>
 
           {isLoading ? (
@@ -219,7 +230,7 @@ export default function MESDowntimes() {
                             isActive ? "text-[var(--ep-red)] font-bold" :
                             d.isPlanned ? "text-[var(--ep-blue)]" : "text-[var(--ep-red)]"
                           )}>
-                            {isActive ? "⚡ Aktiv" : d.isPlanned ? "Rejalashtirilgan" : "Rejalanmagan"}
+                            {isActive ? `⚡ ${t("MESDowntimes.aktiv")}` : d.isPlanned ? t("MESDowntimes.rejalashtirilganStatus") : t("MESDowntimes.rejalanmaganStatus")}
                           </span>
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                             <Calendar className="w-2.5 h-2.5" />
@@ -248,7 +259,7 @@ export default function MESDowntimes() {
                         </Button>
                       ) : (
                         <Badge variant="outline" className="text-[10px]">
-                          {d.eventType === "planned_stop" ? "Rejalashtirilgan" : "Muammo"}
+                          {d.eventType === "planned_stop" ? t("MESDowntimes.rejalashtirilganStatus") : t("MESDowntimes.muammo")}
                         </Badge>
                       )}
                     </div>

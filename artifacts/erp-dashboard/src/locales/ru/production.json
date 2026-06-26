@@ -469,5 +469,13 @@
   "CandidateChecklist.30KunBaholashSuhbatiOtkazildi": "Проведено оценочное интервью 30-го дня",
   "AIProductionPlanning.avtoTasdiqlangan": "Авто-подтверждено",
   "AIProductionPlanning.tasdiqlangan": "Подтверждено",
-  "AIProductionPlanning.bajarilmoqda": "Выполняется"
+  "AIProductionPlanning.bajarilmoqda": "Выполняется",
+  "faolBuyurtmalar": "Активные заказы",
+  "bajarilganKpi": "Выполнено",
+  "stanoqVazifalariKpi": "Задачи станков",
+  "rejalashtirishKpi": "Планирование",
+  "taJamiBuyurtma": "Всего заказов: {count}",
+  "buHaftaTayyorBolgan": "Готово на этой неделе",
+  "taKutmoqda": "Ожидает: {count}",
+  "bajarilganJamiBuyurtmalar": "Выполнено/всего заказов"
 }

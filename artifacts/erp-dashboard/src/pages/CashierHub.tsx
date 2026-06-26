@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
+import { tLabel } from "@/lib/i18n/tLabel";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import {
   EPPageHeader,
@@ -91,10 +92,10 @@ const STAGE_ORDER = ["ai_checked", "hr_approved", "finance_approved", "director_
 type Stage = (typeof STAGE_ORDER)[number];
 
 const STAGE_LABEL: Record<Stage, string> = {
-  ai_checked: "AI tekshiruvi",
-  hr_approved: "HR tasdig'i",
-  finance_approved: "Moliya tasdig'i",
-  director_approved: "Direktor tasdig'i",
+  ai_checked: tLabel("finance.cashierHub.stageAiChecked", "AI tekshiruvi"),
+  hr_approved: tLabel("finance.cashierHub.stageHrApproved", "HR tasdig'i"),
+  finance_approved: tLabel("finance.cashierHub.stageFinanceApproved", "Moliya tasdig'i"),
+  director_approved: tLabel("finance.cashierHub.stageDirectorApproved", "Direktor tasdig'i"),
 };
 
 /** The next stage to stamp for a chain (or null when the chain is complete / dead). */
@@ -192,7 +193,7 @@ export default function CashierHub() {
   const rejectMutation = useMutation({
     mutationFn: (id: number) =>
       apiRequest("POST", `/api/finance/cashier/salary-payouts/${id}/reject`, {
-        reason: "Menejer tomonidan rad etildi",
+        reason: t("cashierHub.rejectReason", "Menejer tomonidan rad etildi"),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/salary-payouts"] });
@@ -326,13 +327,13 @@ export default function CashierHub() {
       <Tabs defaultValue="approvals" className="flex-1 flex flex-col">
         <TabsList data-testid="tabs-cashier-hub">
           <TabsTrigger value="approvals" data-testid="tab-approvals">
-            <CheckCircle className="h-4 w-4 mr-1" /> Tasdiq navbati ({approvals.length})
+            <CheckCircle className="h-4 w-4 mr-1" /> {t("cashierHub.tabApprovals", "Tasdiq navbati")} ({approvals.length})
           </TabsTrigger>
           <TabsTrigger value="shifts" data-testid="tab-shifts">
-            <Banknote className="h-4 w-4 mr-1" /> Smenalar ({shifts.length})
+            <Banknote className="h-4 w-4 mr-1" /> {t("cashierHub.tabShifts", "Smenalar")} ({shifts.length})
           </TabsTrigger>
           <TabsTrigger value="reports" data-testid="tab-reports">
-            <ReceiptText className="h-4 w-4 mr-1" /> Avans hisobotlari ({reports.length})
+            <ReceiptText className="h-4 w-4 mr-1" /> {t("cashierHub.tabReports", "Avans hisobotlari")} ({reports.length})
           </TabsTrigger>
         </TabsList>
 
@@ -645,7 +646,7 @@ export default function CashierHub() {
           <DialogHeader><DialogTitle>{t("cashierHub.submitReportTitle", "Avans hisobotini topshirish")}</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5">
-              <Label>Qarz ID <span className="text-destructive">*</span></Label>
+              <Label>{t("cashierHub.debtId", "Qarz ID")} <span className="text-destructive">*</span></Label>
               <Input type="number" min="1" value={reportDebtId} onChange={e => setReportDebtId(e.target.value)} placeholder="1" />
             </div>
             <div className="space-y-1.5">
@@ -653,7 +654,7 @@ export default function CashierHub() {
               <Input type="number" min="1" step="1000" value={reportAmount} onChange={e => setReportAmount(e.target.value)} placeholder="0" />
             </div>
             <div className="space-y-1.5">
-              <Label>Kvitansiya / Hujjat raqami <span className="text-destructive">*</span></Label>
+              <Label>{t("cashierHub.receiptDocNum", "Kvitansiya / Hujjat raqami")} <span className="text-destructive">*</span></Label>
               <Input value={reportReceiptRef} onChange={e => setReportReceiptRef(e.target.value)} placeholder="RCP-..." maxLength={200} />
             </div>
             <div className="space-y-1.5">
@@ -696,11 +697,11 @@ export default function CashierHub() {
                 className="w-full border rounded-md px-3 py-2 text-sm bg-background"
                 data-testid="select-mv-type"
               >
-                <option value="cash_in">Kirim (cash_in)</option>
-                <option value="cash_out">Chiqim (cash_out) — PIN</option>
-                <option value="salary_payout">Ish haqi (salary_payout) — PIN</option>
-                <option value="advance">Avans (advance) — PIN</option>
-                <option value="expense">Xarajat (expense) — PIN</option>
+                <option value="cash_in">{t("cashierHub.mvCashIn", "Kirim")} (cash_in)</option>
+                <option value="cash_out">{t("cashierHub.mvCashOut", "Chiqim")} (cash_out) — PIN</option>
+                <option value="salary_payout">{t("cashierHub.mvSalary", "Ish haqi")} (salary_payout) — PIN</option>
+                <option value="advance">{t("cashierHub.mvAdvance", "Avans")} (advance) — PIN</option>
+                <option value="expense">{t("cashierHub.mvExpense", "Xarajat")} (expense) — PIN</option>
               </select>
             </div>
             <div className="space-y-1.5">

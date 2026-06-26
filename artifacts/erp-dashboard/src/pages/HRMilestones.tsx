@@ -14,6 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Trophy, Calendar, CheckCircle2, Star, Filter } from "lucide-react";
+import { EPErrorState } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 
 type MilestoneType = "anniversary" | "promotion" | "certification" | "achievement";
@@ -30,19 +31,19 @@ interface Milestone {
   points_awarded?: number | null;
 }
 
-const TYPE_CONFIG: Record<MilestoneType, { label: string; variant: string; colorClass: string }> = {
-  anniversary:   { label: "Yillik",         variant: "info",    colorClass: "bg-blue-50 text-blue-700 border-blue-200" },
-  promotion:     { label: "Lavozim oshishi", variant: "purple",  colorClass: "bg-purple-50 text-purple-700 border-purple-200" },
-  certification: { label: "Sertifikat",      variant: "success", colorClass: "bg-green-50 text-green-700 border-green-200" },
-  achievement:   { label: "Yutuq",           variant: "warning", colorClass: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+const TYPE_CONFIG: Record<MilestoneType, { labelKey: string; variant: string; colorClass: string }> = {
+  anniversary:   { labelKey: "milestones.typeAnniversary",   variant: "info",    colorClass: "bg-blue-50 text-blue-700 border-blue-200" },
+  promotion:     { labelKey: "milestones.typePromotion",     variant: "purple",  colorClass: "bg-purple-50 text-purple-700 border-purple-200" },
+  certification: { labelKey: "milestones.typeCertification", variant: "success", colorClass: "bg-green-50 text-green-700 border-green-200" },
+  achievement:   { labelKey: "milestones.typeAchievement",   variant: "warning", colorClass: "bg-yellow-50 text-yellow-700 border-yellow-200" },
 };
 
 const TYPE_FILTER_OPTIONS = [
-  { value: "all",           label: "Barchasi" },
-  { value: "anniversary",   label: "Yillik" },
-  { value: "promotion",     label: "Lavozim oshishi" },
-  { value: "certification", label: "Sertifikat" },
-  { value: "achievement",   label: "Yutuq" },
+  { value: "all",           labelKey: "common.all" },
+  { value: "anniversary",   labelKey: "milestones.typeAnniversary" },
+  { value: "promotion",     labelKey: "milestones.typePromotion" },
+  { value: "certification", labelKey: "milestones.typeCertification" },
+  { value: "achievement",   labelKey: "milestones.typeAchievement" },
 ];
 
 function formatDate(dateStr: string): string {
@@ -56,28 +57,29 @@ function formatDate(dateStr: string): string {
   }
 }
 
-function TypeBadge({ type }: { type: MilestoneType }) {
+function TypeBadge({ type, t }: { type: MilestoneType; t: (key: string) => string }) {
   const cfg = TYPE_CONFIG[type] ?? TYPE_CONFIG.achievement;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.colorClass}`}>
-      {cfg.label}
+      {t(cfg.labelKey)}
     </span>
   );
 }
 
-function CompletedBadge({ done }: { done: boolean }) {
+function CompletedBadge({ done, t }: { done: boolean; t: (key: string) => string }) {
   return done ? (
-    <Badge variant="success">Ha</Badge>
+    <Badge variant="success">{t("common.yes")}</Badge>
   ) : (
-    <Badge variant="neutral">Yo'q</Badge>
+    <Badge variant="neutral">{t("common.no")}</Badge>
   );
 }
 
 interface StatsCardsProps {
   all: Milestone[];
+  t: (key: string) => string;
 }
 
-function StatsCards({ all }: StatsCardsProps) {
+function StatsCards({ all, t }: StatsCardsProps) {
   const safeAll = Array.isArray(all) ? all : [];
 
   const now = new Date();
@@ -91,9 +93,9 @@ function StatsCards({ all }: StatsCardsProps) {
   const totalPoints = safeAll.reduce((acc, m) => acc + (m.points_awarded ?? 0), 0);
 
   const stats: Array<{ label: string; value: number; icon: React.ReactNode; bg: string }> = [
-    { label: "Bu oyda", value: thisMonth, icon: <Calendar className="w-5 h-5 text-blue-500" />, bg: "bg-blue-50" },
-    { label: "Bajarilgan", value: totalCompleted, icon: <CheckCircle2 className="w-5 h-5 text-green-500" />, bg: "bg-green-50" },
-    { label: "Jami ball", value: totalPoints, icon: <Star className="w-5 h-5 text-yellow-500" />, bg: "bg-yellow-50" },
+    { label: t("milestones.thisMonth"), value: thisMonth, icon: <Calendar className="w-5 h-5 text-blue-500" />, bg: "bg-blue-50" },
+    { label: t("milestones.completed"), value: totalCompleted, icon: <CheckCircle2 className="w-5 h-5 text-green-500" />, bg: "bg-green-50" },
+    { label: t("milestones.totalPoints"), value: totalPoints, icon: <Star className="w-5 h-5 text-yellow-500" />, bg: "bg-yellow-50" },
   ];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -117,11 +119,15 @@ function StatsCards({ all }: StatsCardsProps) {
 interface MilestoneTableProps {
   milestones: Milestone[];
   isLoading: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   typeFilter: string;
   onTypeFilter: (v: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-function MilestoneTable({ milestones, isLoading, typeFilter, onTypeFilter }: MilestoneTableProps) {
+function MilestoneTable({ milestones, isLoading, isError, error, onRetry, typeFilter, onTypeFilter, t }: MilestoneTableProps) {
   const safe = Array.isArray(milestones) ? milestones : [];
   const filtered = typeFilter === "all"
     ? safe
@@ -137,6 +143,10 @@ function MilestoneTable({ milestones, isLoading, typeFilter, onTypeFilter }: Mil
     );
   }
 
+  if (isError) {
+    return <EPErrorState variant="inline" error={error} onRetry={onRetry} />;
+  }
+
   return (
     <>
       {/* Filter row */}
@@ -144,35 +154,35 @@ function MilestoneTable({ milestones, isLoading, typeFilter, onTypeFilter }: Mil
         <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         <Select value={typeFilter} onValueChange={onTypeFilter}>
           <SelectTrigger className="w-48 h-8 text-xs">
-            <SelectValue placeholder="Tur bo'yicha filter" />
+            <SelectValue placeholder={t("milestones.filterByType")} />
           </SelectTrigger>
           <SelectContent>
             {TYPE_FILTER_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                {opt.label}
+                {t(opt.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <span className="text-xs text-muted-foreground ml-auto">{filtered.length} ta</span>
+        <span className="text-xs text-muted-foreground ml-auto">{t("common.countItems", { n: filtered.length })}</span>
       </div>
 
       {filtered.length === 0 ? (
         <div className="py-12 text-center text-muted-foreground text-sm">
           <Trophy className="w-8 h-8 mx-auto mb-2 opacity-30" />
-          Ma'lumot topilmadi
+          {t("milestones.notFound")}
         </div>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="pl-4">Xodim</TableHead>
-              <TableHead>Bo'lim</TableHead>
-              <TableHead>Tur</TableHead>
-              <TableHead>Sana</TableHead>
-              <TableHead className="max-w-[200px]">Tavsif</TableHead>
-              <TableHead className="text-center">Bajarildi</TableHead>
-              <TableHead className="text-center">Ball</TableHead>
+              <TableHead className="pl-4">{t("employee")}</TableHead>
+              <TableHead>{t("department")}</TableHead>
+              <TableHead>{t("milestones.colType")}</TableHead>
+              <TableHead>{t("milestones.colDate")}</TableHead>
+              <TableHead className="max-w-[200px]">{t("milestones.colDescription")}</TableHead>
+              <TableHead className="text-center">{t("milestones.colDone")}</TableHead>
+              <TableHead className="text-center">{t("milestones.colPoints")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -181,7 +191,7 @@ function MilestoneTable({ milestones, isLoading, typeFilter, onTypeFilter }: Mil
                 <TableCell className="pl-4 font-medium text-sm">{m.full_name}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{m.department}</TableCell>
                 <TableCell>
-                  <TypeBadge type={m.milestone_type} />
+                  <TypeBadge type={m.milestone_type} t={t} />
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                   {formatDate(m.milestone_date)}
@@ -190,7 +200,7 @@ function MilestoneTable({ milestones, isLoading, typeFilter, onTypeFilter }: Mil
                   {m.description}
                 </TableCell>
                 <TableCell className="text-center">
-                  <CompletedBadge done={m.is_completed} />
+                  <CompletedBadge done={m.is_completed} t={t} />
                 </TableCell>
                 <TableCell className="text-center text-sm font-medium">
                   {m.points_awarded != null ? (
@@ -209,14 +219,14 @@ function MilestoneTable({ milestones, isLoading, typeFilter, onTypeFilter }: Mil
 }
 
 export default function HRMilestones() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("hr");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  const { data: allData, isLoading: isLoadingAll } = useQuery<Milestone[]>({
+  const { data: allData, isLoading: isLoadingAll, isError: isErrorAll, error: errorAll, refetch: refetchAll } = useQuery<Milestone[]>({
     queryKey: ["/api/hr/milestones"],
   });
 
-  const { data: upcomingData, isLoading: isLoadingUpcoming } = useQuery<Milestone[]>({
+  const { data: upcomingData, isLoading: isLoadingUpcoming, isError: isErrorUpcoming, error: errorUpcoming, refetch: refetchUpcoming } = useQuery<Milestone[]>({
     queryKey: ["/api/hr/milestones/upcoming?days=30"],
   });
 
@@ -227,20 +237,20 @@ export default function HRMilestones() {
     <ResponsiveContainer>
       {/* Header */}
       <PageHeader
-        title="Milestone Tracker"
-        description="Xodimlarning muhim yutuqlari va hodisalarini kuzatish"
+        title={t("milestones.tracker")}
+        description={t("milestones.trackerDesc")}
         icon={<Trophy className="w-6 h-6 text-primary" />}
       />
 
       {/* Stats */}
-      <StatsCards all={allMilestones} />
+      <StatsCards all={allMilestones} t={t} />
 
       {/* Tabs */}
       <Tabs defaultValue="upcoming" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="upcoming" className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
-            Kelayotgan
+            {t("milestones.tabUpcoming")}
             {!isLoadingUpcoming && (
               <span className="ml-1 bg-primary/15 text-primary text-[10px] font-bold px-1.5 rounded-full">
                 {upcomingMilestones.length}
@@ -249,7 +259,7 @@ export default function HRMilestones() {
           </TabsTrigger>
           <TabsTrigger value="all" className="flex items-center gap-1.5">
             <Trophy className="w-3.5 h-3.5" />
-            Barchasi
+            {t("milestones.tabAll")}
             {!isLoadingAll && (
               <span className="ml-1 bg-muted text-muted-foreground text-[10px] font-bold px-1.5 rounded-full">
                 {allMilestones.length}
@@ -263,15 +273,19 @@ export default function HRMilestones() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
-                Kelgusi 30 kun ichidagi milestonelar
+                {t("milestones.upcoming30Title")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <MilestoneTable
                 milestones={upcomingMilestones}
                 isLoading={isLoadingUpcoming}
+                isError={isErrorUpcoming}
+                error={errorUpcoming}
+                onRetry={() => refetchUpcoming()}
                 typeFilter={typeFilter}
                 onTypeFilter={setTypeFilter}
+                t={t}
               />
             </CardContent>
           </Card>
@@ -282,15 +296,19 @@ export default function HRMilestones() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Trophy className="w-4 h-4 text-muted-foreground" />
-                Barcha milestonelar
+                {t("milestones.allTitle")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <MilestoneTable
                 milestones={allMilestones}
                 isLoading={isLoadingAll}
+                isError={isErrorAll}
+                error={errorAll}
+                onRetry={() => refetchAll()}
                 typeFilter={typeFilter}
                 onTypeFilter={setTypeFilter}
+                t={t}
               />
             </CardContent>
           </Card>

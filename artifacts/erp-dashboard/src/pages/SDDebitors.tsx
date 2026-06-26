@@ -51,16 +51,16 @@ export default function SDDebitors() {
     mutationFn: (d: Debitor) =>
       sdApi.addCustomerInteraction(Number(d.customerId ?? d.id ?? 0), {
         type: "payment_reminder",
-        note: reminderNote || `To'lov eslatmasi — Jami: ${fmt(d.total ?? 0)} so'm`,
+        note: reminderNote || `${t("tolovEslatmasi")} — ${t("jamiLabel")}: ${fmt(d.total ?? 0)} ${t("som")}`,
         debtAmount: d.total,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sd/debitors"] });
       setReminderOpen(null);
       setReminderNote("");
-      toast({ title: "Eslatma yuborildi", description: "Mijozga to'lov eslatmasi yuborildi" });
+      toast({ title: t("eslatmaYuborildi"), description: t("mijozgaEslatmaYuborildi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("error"), variant: "destructive" }),
   });
 
   const createInvoiceMutation = useMutation({
@@ -69,12 +69,12 @@ export default function SDDebitors() {
         customerId: d.customerId ?? d.id,
         amount: d.total,
         type: "debt_invoice",
-        note: "Qarzdorlik fakturasi",
+        note: t("qarzdorlikFakturasi"),
       }),
     onSuccess: () => {
-      toast({ title: "Faktura yaratildi" });
+      toast({ title: t("fakturaYaratildi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: t("error"), variant: "destructive" }),
   });
 
   const filtered = (Array.isArray(debitors) ? debitors : []).filter(d => {
@@ -98,18 +98,18 @@ export default function SDDebitors() {
             <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("debitorlarNazorati")}</b></>}
         title={t("debitorlarNazorati")}
-        subtitle="Muddati o'tgan to'lovlar va qarzdorlik tahlili (Aging Report)"
+        subtitle={t("debitorlarSubtitle")}
       />
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="bg-card rounded-lg p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("jamiQarzdorlik")}</p>
-            <p className="text-3xl font-bold tracking-tight text-foreground mt-1">{fmt(totalDebts)} so'm</p>
+            <p className="text-3xl font-bold tracking-tight text-foreground mt-1">{fmt(totalDebts)} {t("som")}</p>
           </div>
           <div className="bg-red-50 rounded-lg p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--ep-red)]">{t("kritik90Kun")}</p>
-            <p className="text-3xl font-bold tracking-tight text-[var(--ep-red)] mt-1">{criticalCount} ta</p>
+            <p className="text-3xl font-bold tracking-tight text-[var(--ep-red)] mt-1">{criticalCount} {t("ta")}</p>
           </div>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function SDDebitors() {
           const rows = (Array.isArray(filtered) ? filtered : []).map(d =>
             `${d.customerName || d.company || ""},${d.total || 0},${d["90+"] || 0}`
           ).join("\n");
-          const blob = new Blob([`Mijoz,Jami,90+ kun\n${rows}`], { type: "text/csv" });
+          const blob = new Blob([`${t("mijoz1")},${t("jamiLabel")},${t("k90Kun")}\n${rows}`], { type: "text/csv" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a"); a.href = url; a.download = "debitorlar.csv"; a.click();
           URL.revokeObjectURL(url);
@@ -175,7 +175,7 @@ export default function SDDebitors() {
                 (Array.isArray(filtered) ? filtered : []).map((d, i) => (
                   <TableRow key={d.customerId ?? i} className="hover:bg-muted/40 transition-colors border-none">
                     <TableCell className="py-3 px-4 font-medium border-none">
-                      <div className="text-foreground">{d.customerName || d.company || `Mijoz #${String(d.customerId ?? i).slice(0, 8)}`}</div>
+                      <div className="text-foreground">{d.customerName || d.company || `${t("mijoz1")} #${String(d.customerId ?? i).slice(0, 8)}`}</div>
                       {d.segment && d.segment !== "new" && (
                         <div className="text-xs text-muted-foreground capitalize mt-0.5">{d.segment}</div>
                       )}
@@ -192,7 +192,7 @@ export default function SDDebitors() {
                         (d["31-60"] ?? 0) > 0 ? "bg-amber-100 text-amber-800" :
                         "bg-green-100 text-green-800"
                       )}>
-                        {(d["90+"] ?? 0) > 0 ? "Kritik" : (d["31-60"] ?? 0) > 0 ? "Xatarli" : "Normal"}
+                        {(d["90+"] ?? 0) > 0 ? t("segmentKritik") : (d["31-60"] ?? 0) > 0 ? t("segmentXatarli") : t("segmentNormal")}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-3 px-4 text-center border-none">
@@ -237,9 +237,9 @@ export default function SDDebitors() {
               <Card>
                 <CardContent className="pt-4 pb-3">
                   <p className="font-medium">{reminderOpen.customerName || reminderOpen.company}</p>
-                  <p className="text-sm text-muted-foreground">{t("jamiQarzdorlik1")}<span className="font-semibold text-[var(--ep-red)]">{fmt(reminderOpen.total ?? 0)} so'm</span></p>
+                  <p className="text-sm text-muted-foreground">{t("jamiQarzdorlik1")}<span className="font-semibold text-[var(--ep-red)]">{fmt(reminderOpen.total ?? 0)} {t("som")}</span></p>
                   {(reminderOpen["90+"] ?? 0) > 0 && (
-                    <p className="text-xs text-[var(--ep-red)] mt-1">⚠ 90+ kunlik qarzdorlik: {fmt(reminderOpen["90+"] ?? 0)} so'm</p>
+                    <p className="text-xs text-[var(--ep-red)] mt-1">⚠ {t("debtOver90")}: {fmt(reminderOpen["90+"] ?? 0)} {t("som")}</p>
                   )}
                 </CardContent>
               </Card>

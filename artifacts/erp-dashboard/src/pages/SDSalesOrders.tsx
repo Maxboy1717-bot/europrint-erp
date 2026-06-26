@@ -89,17 +89,17 @@ const NEXT_STATUS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  sales: "Sotuv",
-  design: "Dizayn",
-  tech: "Texnolog",
-  pp: "Rejalashtirish",
-  production: "Ishlab chiqarish",
-  qc: "Sifat nazorati",
-  warehouse: "Tayyor mahsulot",
-  delivery: "Yetkazib berish",
-  finance: "To'lov/Yopish",
-  closed: "Yopilgan",
-  cancelled: "Bekor qilingan"
+  sales: tLabel("sd.orders.statusSales", "Sotuv"),
+  design: tLabel("sd.orders.statusDesign", "Dizayn"),
+  tech: tLabel("sd.orders.statusTech", "Texnolog"),
+  pp: tLabel("sd.orders.statusPp", "Rejalashtirish"),
+  production: tLabel("sd.orders.statusProduction", "Ishlab chiqarish"),
+  qc: tLabel("sd.orders.statusQc", "Sifat nazorati"),
+  warehouse: tLabel("sd.orders.statusWarehouse", "Tayyor mahsulot"),
+  delivery: tLabel("sd.orders.statusDelivery", "Yetkazib berish"),
+  finance: tLabel("sd.orders.statusFinance", "To'lov/Yopish"),
+  closed: tLabel("sd.orders.statusClosed", "Yopilgan"),
+  cancelled: tLabel("sd.orders.statusCancelled", "Bekor qilingan")
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -178,16 +178,16 @@ export default function SDSalesOrders() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       if (selected?.id) qc.invalidateQueries({ queryKey: ["/api/sd/orders", selected.id] });
-      toast({ title: "Holat yangilandi" });
+      toast({ title: tLabel("sd.orders.statusUpdated", "Holat yangilandi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: tLabel("sd.orders.error", "Xatolik"), variant: "destructive" }),
   });
 
   const cancelMut = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       apiRequest("PATCH", `/api/sd/orders/${id}/cancel`, { reason }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/orders"] }); toast({ title: "Bekor qilindi" }); },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/orders"] }); toast({ title: tLabel("sd.orders.cancelled", "Bekor qilindi") }); },
+    onError: () => toast({ title: tLabel("sd.orders.error", "Xatolik"), variant: "destructive" }),
   });
 
   const createMut = useMutation({
@@ -215,9 +215,9 @@ export default function SDSalesOrders() {
       qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
       setCreateDialog(false);
       setOrderForm({ ...EMPTY_ORDER_FORM });
-      toast({ title: "Buyurtma yaratildi" });
+      toast({ title: tLabel("sd.orders.created", "Buyurtma yaratildi") });
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: () => toast({ title: tLabel("sd.orders.error", "Xatolik"), variant: "destructive" }),
   });
 
   const orders = Array.isArray(data?.data) ? data.data : [];
@@ -358,7 +358,7 @@ export default function SDSalesOrders() {
                     <Button size="sm" variant="outline" className="text-[var(--ep-red)]"
                       data-testid={`button-cancel-order-${detail?.id}`}
                       onClick={() => {
-                        const reason = prompt("Bekor qilish sababi:");
+                        const reason = prompt(tLabel("sd.orders.cancelReasonPrompt", "Bekor qilish sababi:"));
                         if (reason && detail) cancelMut.mutate({ id: detail.id, reason });
                       }}>
                       {t("cancel")}
@@ -398,11 +398,11 @@ export default function SDSalesOrders() {
                             "rounded-full px-2.5 py-0.5 text-xs font-semibold mr-2",
                             p.status === "paid" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
                           )}>
-                            {p.type === "advance" ? "Avans" : p.type === "balance" ? "Qoldiq" : "Qisman"}
+                            {p.type === "advance" ? tLabel("sd.orders.payAdvance", "Avans") : p.type === "balance" ? tLabel("sd.orders.payBalance", "Qoldiq") : tLabel("sd.orders.payPartial", "Qisman")}
                           </span>
-                          {p.dueDate && <span className="text-muted-foreground text-xs">Muddat: {p.dueDate}</span>}
+                          {p.dueDate && <span className="text-muted-foreground text-xs">{tLabel("sd.orders.dueLabel", "Muddat")}: {p.dueDate}</span>}
                         </div>
-                        <div className="font-semibold">{fmt(p.amount)} so'm</div>
+                        <div className="font-semibold">{fmt(p.amount)} {tLabel("sd.orders.currencySom", "so'm")}</div>
                       </div>
                     ))}
                   </div>
@@ -552,7 +552,7 @@ export default function SDSalesOrders() {
                 disabled={!orderForm.companyId || createMut.isPending}
                 data-testid="btn-save-order"
               >
-                {createMut.isPending ? "Saqlanmoqda..." : tLabel("sd.orders.saqlash", "Saqlash")}
+                {createMut.isPending ? tLabel("sd.orders.saving", "Saqlanmoqda...") : tLabel("sd.orders.saqlash", "Saqlash")}
               </Button>
             </div>
           </div>

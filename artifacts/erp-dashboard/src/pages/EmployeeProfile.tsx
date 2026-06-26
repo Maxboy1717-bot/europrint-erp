@@ -347,7 +347,7 @@ export default function EmployeeProfile() {
   if (isError || !employee) return <div className="h-screen flex items-center justify-center"><Card className="p-6">{t('employeeNotFound')}</Card></div>;
 
   return (
-    <div className="space-y-5" style={{ background: "#F0F4F8", minHeight: "100%", margin: "-16px -24px", padding: "16px 24px" }}>
+    <div className="space-y-5" style={{ background: "var(--ep-bg)", minHeight: "100%", margin: "-16px -24px", padding: "16px 24px" }}>
       <div className="flex items-center gap-4"><Button variant="ghost" size="icon" asChild className="rounded-full" style={{ background: "#fff", boxShadow: "2px 2px 8px rgba(163,177,198,0.35)" }}><Link href="/employees"><ArrowLeft className="h-4 w-4" /></Link></Button><EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("xodimProfili")}</b></>}
         title={t("xodimProfili")}

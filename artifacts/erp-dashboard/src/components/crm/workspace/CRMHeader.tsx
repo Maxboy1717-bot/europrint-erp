@@ -72,11 +72,11 @@ export function CRMHeader({ activeEntity, onEntityChange, onQuickCreate }: CRMHe
           <div>
             <h1
               className="font-black text-base tracking-tight leading-tight"
-              style={{ color: "#0f172a" }}
+              style={{ color: "var(--ep-text)" }}
             >
               CRM
             </h1>
-            <p className="text-[11px] font-medium leading-tight" style={{ color: "#94a3b8" }}>
+            <p className="text-[11px] font-medium leading-tight" style={{ color: "var(--ep-muted)" }}>
               {t("mijozlarBilanIshlash")}
             </p>
           </div>

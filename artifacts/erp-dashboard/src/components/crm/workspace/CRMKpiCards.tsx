@@ -191,7 +191,7 @@ export function CRMKpiCards({
           <div className="flex items-start justify-between mb-3">
             <p
               className="text-[11px] font-600 uppercase tracking-[0.05em]"
-              style={{ color: "#A0AEC0", fontWeight: 600 }}
+              style={{ color: "var(--ep-muted)", fontWeight: 600 }}
             >
               {kpi.label}
             </p>
@@ -220,7 +220,7 @@ export function CRMKpiCards({
             style={{
               fontSize: 28,
               fontWeight: 800,
-              color: "#2D3748",
+              color: "var(--ep-text)",
             }}
           >
             {kpi.value}
@@ -229,7 +229,7 @@ export function CRMKpiCards({
           {/* ── Kichik tavsif ────────────────────────────────── */}
           <p
             className="leading-tight mb-4"
-            style={{ fontSize: 11, color: "#718096" }}
+            style={{ fontSize: 11, color: "var(--ep-muted)" }}
           >
             {kpi.sub}
           </p>
