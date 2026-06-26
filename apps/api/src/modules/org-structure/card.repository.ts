@@ -492,6 +492,63 @@ export class CardRepository {
     return Ok(row ? { status: String(row.status) } : null);
   }
 
+  /**
+   * State-machine o'tishi uchun ARXIVLANGAN kartaning holatini ham o'qiydi (is_active=false ham qamrab).
+   * currentState() faqat faol kartani ko'radi → arxivlangan kartani restore qilishdan oldin uni topish uchun.
+   * Yo'q karta → null; topilsa { status } qaytadi (arxivlangan = 'archived').
+   */
+  async anyState(cardId: number): Promise<Result<{ status: string } | null>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(current_state, CASE WHEN is_active THEN 'active' ELSE 'archived' END) AS status
+      FROM org_departments
+      WHERE id = ${cardId} AND node_type = 'position'
+    `);
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    return Ok(row ? { status: String(row.status) } : null);
+  }
+
+  /**
+   * FAZA-09 5-holat lifecycle: kartani VAKANT qilish (active/frozen/io → vacant). State-machine:
+   * faqat 'archived' BO'LMAGAN faol karta vakant bo'ladi. Egasi ketganda karta vakant — yangi xodim
+   * qidiriladi. frozen meta tozalanadi (frozen→vacant o'tsa muzlash bekor). Mos kelmasa → null.
+   */
+  async setVacant(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET current_state = 'vacant',
+             frozen_at     = NULL,
+             freeze_reason = NULL,
+             freeze_until  = NULL
+       WHERE id = ${cardId} AND is_active = true
+         AND node_type = 'position'
+         AND COALESCE(current_state, 'active') <> 'archived'
+      RETURNING id, current_state AS status
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * FAZA-09 5-holat lifecycle: ARXIVLANGAN kartani TIKLASH (archived → active). softDelete()'ning
+   * teskarisi: is_active=true + current_state='active' + freeze meta tozalanadi. State-machine:
+   * faqat HOZIR arxivlangan (is_active=false / current_state='archived') karta tiklanadi.
+   * Mos kelmaydigan o'tish (yo'q yoki allaqachon faol karta) → null (service 404/409).
+   */
+  async restore(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET is_active     = true,
+             current_state = 'active',
+             frozen_at     = NULL,
+             freeze_reason = NULL,
+             freeze_until  = NULL
+       WHERE id = ${cardId} AND node_type = 'position'
+         AND (is_active = false OR current_state = 'archived')
+      RETURNING id, current_state AS status, is_active
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
   // ─── Phase 7: card staleness (EP-ORG-137) + acting auto-revert (EP-ORG-060) ──
 
   /** EP-ORG-137: stamp last_reviewed_at = NOW() (resets the 1-year staleness clock). 404 if the card is gone. */

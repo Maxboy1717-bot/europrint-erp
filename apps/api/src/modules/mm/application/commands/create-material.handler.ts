@@ -7,10 +7,11 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { Result } from '@common/result';
+import { Result, Err } from '@common/result';
 import { CreateMaterialCommand } from './create-material.command';
 import { Material } from '../../domain/aggregates/material.aggregate';
 import { IMmMaterialRepository, MM_MATERIAL_REPO } from '../../infrastructure/repositories/drizzle-material.repo';
+import { validateMaterialCode } from '../../domain/constants/material-code.constants';
 
 @Injectable()
 @CommandHandler(CreateMaterialCommand)
@@ -22,6 +23,15 @@ export class CreateMaterialHandler implements ICommandHandler<CreateMaterialComm
   ) {}
 
   async execute(command: CreateMaterialCommand): Promise<Result<Material>> {
+      // T18-C4 master-data: enforce canonical material code format
+      // ([YO'NALISH]-[KAT]-[XUS]-[N]). Graceful — an empty code is allowed; a
+      // non-empty code that violates the standard is rejected (VALIDATION → 400).
+      const codeCheck = validateMaterialCode(command.materialCode);
+      if (!codeCheck.ok) {
+        this.logger.warn(`Rejected material code "${command.materialCode}": ${codeCheck.error.message}`);
+        return Err(codeCheck.error);
+      }
+
       const material = new Material(
         this.generateId(),
         command.materialCode,

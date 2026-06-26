@@ -14,6 +14,10 @@ export class DealWonEvent extends DomainEvent {
     public readonly totalAmount: number,
     public readonly assignedTo: number,
     public readonly currency: string = 'UZS',
+    // T18-C3: live crm_deals.id is a uuid (numeric dealId is a degraded cast).
+    // dealUuid carries the real key so the SD listener can write the SO link
+    // back (crm_deals.sales_order_id). Optional → legacy publishers unaffected.
+    public readonly dealUuid?: string,
   ) {
     super(dealId, 'DealWon');
   }

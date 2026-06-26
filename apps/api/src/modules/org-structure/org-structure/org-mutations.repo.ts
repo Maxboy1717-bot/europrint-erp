@@ -10,17 +10,27 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
 import { eq, sql, and } from 'drizzle-orm';
 import { orgDepartments, employeeOrgDepartments } from '@shared/db';
 import { safeCall, Result } from '@common/result';
+import { resolveSeatGuardMode, type SeatGuardMode } from '@common/constants/seat-guard.policy';
 import { syncToCoreTable } from './sync-helper';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class OrgMutationsRepo {
+  // T18-C1 #3: ConfigService optional (Q-39 back-compat — single-arg tests keep new OrgMutationsRepo()).
+  // At runtime Nest injects the global ConfigService (ConfigModule.forRoot isGlobal). Absent → 'warn'.
+  constructor(private readonly config?: ConfigService) {}
+
+  /** EP-ORG-002 seat-guard rejimi (env CARD_SEAT_GUARD_MODE) — default 'warn' (NON-BREAKING). */
+  private seatGuardMode(): SeatGuardMode {
+    return resolveSeatGuardMode(this.config?.get<string>('CARD_SEAT_GUARD_MODE') ?? null);
+  }
   async create(dto: Record<string, unknown>, level: number): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db
@@ -164,7 +174,7 @@ export class OrgMutationsRepo {
     nodeId: number,
     stakeFraction: number | null = null,
     allowOverload = false,
-  ): Promise<{ assigned: boolean; reason?: string }> {
+  ): Promise<{ assigned: boolean; reason?: string; warning?: string }> {
     const [node] = await db
       .select({ id: orgDepartments.id, node_type: orgDepartments.node_type, head_user_id: orgDepartments.head_user_id })
       .from(orgDepartments)
@@ -172,18 +182,27 @@ export class OrgMutationsRepo {
       .limit(1);
     if (!node) return { assigned: false, reason: 'Karta topilmadi' };
 
-    // KARTA-tomon 1-seat guard (position) — SAQLANADI (EP-ORG-002). is_active yangi ustun (Drizzle
-    // schema'da yo'q) → raw SQL. ⭐ A23: bu APP-qatlam; DB-qatlam = trg_one_seat_per_position_card
-    // triggeri (migrations-drift, 23505). Faqat node_type='position' kartaga 1 aktiv egasi; guruh-kartalar
-    // (owner/ceo/director/section/department) ko'p egasi TUTADI — shuning uchun bu shart faqat 'position'da.
-    // Ikkala qatlam bir xil invariant (defence-in-depth): boshqa user aktiv egasi bo'lsa → RAD.
-    if (node.node_type === 'position') {
+    // EP-ORG-002 KARTA-tomon 1-o'rin guard (position) — KONFIGURATSIYALANADIGAN, default NON-BREAKING.
+    // ⚠️ T18-C1 #3 (egasi 2026-06-26): jonli data ko'p-xodim/karta stake modelida → DESTRUCTIVE
+    // UNIQUE/DB-trigger QO'SHILMAYDI; bu faqat APP-qatlam, va rejim env'dan keladi (seat-guard.policy):
+    //   - 'warn' (DEFAULT): band bo'lsa ham QABUL qilinadi, faqat warning qaytariladi → jonli buzilmaydi.
+    //   - 'stake': seat soni emas, ulush-cap (stake-sum ≤ 1.0) boshqaradi (quyida).
+    //   - 'enforce': qat'iy 1-seat (band → RAD) — faqat egasi yoqsa (seat-split tugagach).
+    // Faqat node_type='position' kartaga taalluqli; guruh-kartalar (owner/ceo/director/section/department)
+    // doim ko'p egasi tutadi (guard YO'Q). allowOverload (owner-override) qat'iy rejimda ham yo'l beradi.
+    let seatWarning: string | undefined;
+    const seatMode = this.seatGuardMode();
+    if (node.node_type === 'position' && seatMode !== 'stake') {
       const occupants = (await runQuery<{ user_id: number }>(sql`
         SELECT user_id FROM employee_org_departments
         WHERE org_department_id = ${nodeId} AND is_active = true AND user_id <> ${userId}
       `)).rows;
       if (occupants.length > 0) {
-        return { assigned: false, reason: "EP_ORG_002: Karta band — 1 o'rin = 1 xodim" };
+        if (seatMode === 'enforce' && !allowOverload) {
+          return { assigned: false, reason: "EP_ORG_002: Karta band — 1 o'rin = 1 xodim" };
+        }
+        // 'warn' (yoki enforce+owner-override): assign davom etadi, ogohlantirish bilan.
+        seatWarning = `EP_ORG_002: Karta band (${occupants.length} faol egasi) — 1 o'rin = 1 xodim vizyoniga zid, lekin seat-guard '${seatMode}' rejimida ruxsat berildi.`;
       }
     }
 
@@ -250,7 +269,8 @@ export class OrgMutationsRepo {
     if (node.node_type === 'department' || node.node_type === null) {
       await runQuery(sql`UPDATE users SET department_id = ${nodeId} WHERE id = ${userId} AND department_id IS NULL`);
     }
-    return { assigned: true };
+    // seatWarning (warn/override rejimi) — assign muvaffaqiyatli, lekin 1-o'rin vizyoniga zid edi.
+    return seatWarning ? { assigned: true, warning: seatWarning } : { assigned: true };
   }
 
   /** Xodimni kartadan olib tashlash (bog'lanishni uzish). */

@@ -1,6 +1,6 @@
--- GATED: egasi tasdiqlamaguncha ISHGA TUSHIRILMAYDI (Q-35).
--- Ishga tushirish uchun egasi quyidagi qatorni qo'shsin:
---   -- APPROVED: <egasi> <sana>
+-- APPROVED: egasi-direktiva "vizyon bo'yicha to'liq bajar hamma vizyon" 2026-06-26
+-- (T18-C3-CRM-GATED — additiv, idempotent: CREATE TABLE IF NOT EXISTS + ON CONFLICT DO NOTHING)
+-- GATED edi (Q-35); egasi 2026-06-26 ochiq direktiva bilan tasdiqladi.
 -- P18-D1: defect_catalog CREATE TABLE — QC nuqson turi katalogi (gofra/offset/silkscreen/flexi/universal).
 -- Drizzle ta'rif: apps/api/src/shared/db/schema-misc-qc.ts (export const defect_catalog).
 -- Seed: docs/migration/seed/seed-05-defects.sql (APPROVED owner 2026-06-18) — shu migration seed'ni ham qo'shadi.

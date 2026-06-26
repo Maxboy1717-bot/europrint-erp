@@ -55,4 +55,23 @@ export class AiDailyReportController {
     this.logger.log(`[A75] Kunlik hisobot: user=${user.id} date=${dto.factDate}`);
     return unwrapOrBadRequest(await this.service.submit(user.id, dto));
   }
+
+  @Post('ai-answer')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AuditInterceptor)
+  @ApiOperation({
+    summary: 'Kunlik ЦКП-hisobotni AI-chat orqali yuborish + DARHOL yozish (bir-qadam)',
+    description:
+      'Xodim kunlik natijasini erkin matnda yozadi; AI tarkibiy faktni ajratadi VA ' +
+      'aniq son topilsa kanonik ckp_fact_values ga source=AI_CHAT bilan DARHOL yozadi ' +
+      '(formula + deadline + VERTIKAL kaskad). Son topilmasa recorded=false, ' +
+      'needsManualValue=true (soxta son YO\'Q — Q-40); xodim manualActualValue bilan qayta yuboradi.',
+  })
+  @ApiResponse({ status: 200, description: 'Fakt yozildi (recorded=true) yoki qiymat kutilmoqda (recorded=false)' })
+  @ApiResponse({ status: 400, description: 'Birlamchi karta topilmadi yoki noto\'g\'ri so\'rov' })
+  async aiAnswer(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = DailyReportSubmitSchema.parse(body);
+    this.logger.log(`[T18-C2] AI-answer: user=${user.id} date=${dto.factDate}`);
+    return unwrapOrBadRequest(await this.service.submitAndRecord(user.id, dto));
+  }
 }

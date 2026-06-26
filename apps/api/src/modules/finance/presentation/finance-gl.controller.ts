@@ -14,6 +14,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GlPostingService } from '../domain/services/gl-posting.service';
 import { GlService } from '../gl/gl.service';
 import { FinanceAccountingService } from '../application/finance-accounting.service';
+import { IncomeSplitService } from '../application/income-split.service';
+import { z } from 'zod';
 import { GetGlEntriesQuery } from '../application/queries/get-gl-entries.query';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
@@ -40,7 +42,8 @@ export class FinanceGlController {
     private queryBus: QueryBus,
     private glPostingService: GlPostingService,
     private glService: GlService,
-    private financeAccountingService: FinanceAccountingService) {}
+    private financeAccountingService: FinanceAccountingService,
+    private incomeSplitService: IncomeSplitService) {}
 
   @ApiOperation({ summary: 'List gl entries' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -119,5 +122,39 @@ export class FinanceGlController {
     // canonical `accounts` + `entries` tables. No new table; logic lives in the service.
     const result = await this.financeAccountingService.getAccountGroups();
     return unwrapOrThrow(result);
+  }
+
+  @ApiOperation({ summary: '4-hisob guruhlari (alias of accounts-grouped) (EP-FIN-004)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('account-groups')
+  @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
+  async getAccountGroups() {
+    // Task-requested URL; same 9xxx/8xxx/6xxx/1-5xxx range grouping as accounts-grouped.
+    return unwrapOrThrow(await this.financeAccountingService.getAccountGroups());
+  }
+
+  @ApiOperation({ summary: 'Tushum 4-fond auto-split — preview (no posting) (EP-FIN-004)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('income-split/preview')
+  @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
+  async previewIncomeSplit(@Query('amount') amount?: string) {
+    const amt = Number(amount ?? 0);
+    return unwrapOrThrow(await this.incomeSplitService.computeSplit(amt));
+  }
+
+  @ApiOperation({ summary: 'Tushum 4-fond auto-split — post balanced journal (EP-FIN-004)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('income-split')
+  @Roles(Role.ACCOUNTANT, Role.SUPER_ADMIN)
+  async postIncomeSplit(@Body() body: unknown) {
+    const dto = z.object({
+      amount: z.number().positive(),
+      reference: z.string().min(1).max(120).optional(),
+    }).parse(body);
+    const reference = dto.reference ?? `INC-${Date.now()}`;
+    const result = await this.incomeSplitService.splitAndPost(dto.amount, reference);
+    assertOk(result);
+    return result.data;
   }
 }

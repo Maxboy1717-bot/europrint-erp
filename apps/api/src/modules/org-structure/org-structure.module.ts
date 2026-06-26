@@ -41,10 +41,12 @@ import { OrgCascadeListener } from './cascade/org-cascade.listener';
 import { OrgCascadeRepository } from './cascade/org-cascade.repository';
 // A67 (To'lqin 4 — ЦКП): MES completed → daily ЦКП fact feed (@OnEvent, via EventBridge)
 import { CkpMesFeedListener } from './ckp-mes-feed.listener';
+// T18-C2 (ЦКП KASKAD-AGREGAT): CkpReportedEvent → ota-zanjir SUM/AVG roll-up (@OnEvent)
+import { CkpCascadeListener } from './cascade/ckp-cascade.listener';
 
 @Module({
   controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController, CardTemplateController, ErrorCatalogController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository],
-  exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService, CardTemplateService],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository],
+  exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService, CardTemplateService, CkpFactService],
 })
 export class OrgStructureModule {}

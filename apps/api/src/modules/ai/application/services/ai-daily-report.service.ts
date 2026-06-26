@@ -24,12 +24,20 @@ import { z } from 'zod';
 import { AiRouterService } from './ai-router.service';
 import type { AiRequest, AiTaskType } from '../../domain/types/ai.types';
 import { AiDailyReportRepository, type PrimaryCardCkpMeta, type CkpChatTurn, type MachinelessCkpCard } from '../../infrastructure/repositories/ai-daily-report.repository';
+import { CkpFactService } from '../../../org-structure/ckp-fact.service';
 
 // Kunlik ЦКП-hisoboti = xodim ish-natijasi tahlili → mavjud
 // 'hr.performance_review' task-turidan o'tkaziladi (analiz-sinfi). Yangi
 // AiTaskType qo'shilmaydi (additiv, mavjud yo'nalish).
 const DAILY_REPORT_TASK_TYPE: AiTaskType = 'hr.performance_review';
 const DAILY_REPORT_MAX_TOKENS = 500;
+
+/**
+ * T18-C2 — AI-answer bilan yozilgan ЦКП-fakt `source` tegi. CkpController
+ * FactSchema.source enum'idagi 'AI_CHAT' bilan AYNAN bir xil (magic-string emas,
+ * Qoida 12) — shu manba AI-chatdan kelgan kunlik hisobotni belgilaydi.
+ */
+const CKP_AI_CHAT_SOURCE = 'AI_CHAT';
 
 /** Foydalanuvchi chatda yuboradigan kunlik hisobot matni. */
 export const DailyReportSubmitSchema = z.object({
@@ -80,6 +88,18 @@ export interface DailyReportResult {
   recordEndpoint: '/api/org-structure/ckp/fact';
 }
 
+/**
+ * T18-C2 — AI-answer (bir-qadam) natijasi. `submit` ajratadi-yu yozmaydi; bu yo'l
+ * AI/qo'lda topilgan qiymat BOR bo'lsa kanonik `CkpFactService.recordFact` orqali
+ * ЦКП-faktni source='AI_CHAT' bilan DARHOL yozadi (FE qayta-POST shart emas).
+ */
+export interface DailyReportAnswerResult extends DailyReportResult {
+  /** ЦКП-fakt yozildimi (true = ckp_fact_values ga source=AI_CHAT yozildi). */
+  recorded: boolean;
+  /** Yozilgan fakt (CkpFactService qaytargan qator) yoki null (qiymat yo'q → yozilmadi). */
+  fact: Record<string, unknown> | null;
+}
+
 /** T12-08 — kunlik AI-savol cron yakuni (telemetriya/log uchun). */
 export interface DailyQuestionPushResult {
   factDate: string;
@@ -98,6 +118,9 @@ export class AiDailyReportService {
   constructor(
     private readonly aiRouter: AiRouterService,
     private readonly repo: AiDailyReportRepository,
+    // T18-C2 — kanonik ЦКП-fakt yozish (formula + deadline + VERTIKAL kaskad).
+    // Bu servis faktni O'ZI yozmaydi (modul chegarasi); CkpFactService orqali yozadi.
+    private readonly ckpFact: CkpFactService,
   ) {}
 
   /**
@@ -145,6 +168,50 @@ export class AiDailyReportService {
     // T8-12: AI ishladi → xodim navbati + AI xulosasi (haqiqiy javob) loglanadi.
     await this.persistChat(meta, sessionId, dto.message, aiResult.data.text);
     return Ok(this.buildResult(meta, dto.factDate, true, aiResult.data.provider, extracted));
+  }
+
+  /**
+   * ⭐ T18-C2 — AI-ANSWER (bir-qadam): xodimning kunlik ЦКП-hisobotini chatdan
+   * qabul qiladi, AI tarkibiy faktni ajratadi VA qiymat BOR bo'lsa kanonik
+   * `CkpFactService.recordFact` orqali ЦКП-faktni source='AI_CHAT' bilan DARHOL
+   * yozadi. Bu `submit`'dan farqi: submit faqat ajratadi (FE qayta-POST qiladi);
+   * bu yo'l golden-thread'ni bir chaqiruvda yopadi → ckp_fact_values + cascade.
+   *
+   * FABRIKATSIYA YO'Q (Q-40): AI-kalit yo'q/aniq son topilmasa (extracted.actualValue
+   * == null) — fakt YOZILMAYDI (recorded=false, needsManualValue=true). Soxta son
+   * hech qachon yozilmaydi; xodim qo'lda qiymat berib qayta yuboradi (manualActualValue).
+   * recordFact ichida formula (achievement%) + deadline + VERTIKAL kaskad ishlaydi.
+   */
+  async submitAndRecord(userId: number, dto: DailyReportSubmitDto): Promise<Result<DailyReportAnswerResult>> {
+    const baseR = await this.submit(userId, dto);
+    if (!baseR.ok) return Err(baseR.error);
+    const base = baseR.data;
+
+    // Qiymat yo'q (AI-kalit yo'q / aniq son topilmadi) → fakt yozilmaydi (fabrikatsiya yo'q).
+    if (base.extracted.actualValue == null) {
+      return Ok({ ...base, recorded: false, fact: null });
+    }
+
+    // Kartani egallagan xodim (audit izi) — meta.employeeId orqali (chat-log kaliti bilan bir xil).
+    const cardR = await this.repo.resolvePrimaryCard(userId);
+    const employeeId = cardR.ok && cardR.data ? cardR.data.employeeId : null;
+
+    const recR = await this.ckpFact.recordFact({
+      cardId: base.cardId,
+      employeeId,
+      productId: null,
+      factDate: base.factDate,
+      actualValue: base.extracted.actualValue,
+      source: CKP_AI_CHAT_SOURCE,
+      notes: base.extracted.summary,
+      recordedBy: userId,
+    });
+    if (!recR.ok) {
+      // Fakt yozilmadi (DB xato) — ajratilgan tarkibni baribir qaytaramiz (recorded=false).
+      this.logger.warn(`[T18-C2] AI-answer fakt yozilmadi (user=${userId}, card=${base.cardId}): ${recR.error.message}`);
+      return Ok({ ...base, recorded: false, fact: null });
+    }
+    return Ok({ ...base, recorded: true, fact: recR.data });
   }
 
   /**

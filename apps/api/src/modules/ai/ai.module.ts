@@ -9,6 +9,8 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
+// T18-C2 — kanonik ЦКП-fakt yozish uchun (AI-answer → ckp_fact_values source=AI_CHAT)
+import { OrgStructureModule } from '../org-structure/org-structure.module';
 import { AiRouterService }          from './application/services/ai-router.service';
 import { AiRouterCallService }       from './application/services/ai-router-call.service';
 import { CentralAiService }          from './application/services/central-ai.service';
@@ -86,6 +88,8 @@ import { AiDailyReportCron }         from './application/services/ai-daily-repor
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     AuthModule,
+    // T18-C2 — exports CkpFactService (kanonik ЦКП-fakt yozish: formula + deadline + cascade).
+    OrgStructureModule,
   ],
   providers: [
     AiRouterRepository,

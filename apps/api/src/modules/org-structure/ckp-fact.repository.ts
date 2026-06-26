@@ -9,6 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+import { CKP_ROLLUP_SOURCE } from './cascade/ckp-cascade.constants';
 
 type Row = Record<string, unknown>;
 
@@ -105,5 +106,90 @@ export class CkpFactRepository {
       HAVING COUNT(f.id) > 0
       ORDER BY t.root_id
     `);
+  }
+
+  /**
+   * Karta uchun ANCESTOR-zanjirni qaytaradi (o'zidan tashqari — eng yaqin ota →
+   * root). VERTIKAL kaskad shu zanjir bo'ylab har bir ota-karta agregatini qayta
+   * yozadi (bola → ota → otdeleniye → CEO). Faqat O'QISH (parametrlangan sql).
+   * @returns ota-karta id massivi (eng yaqindan eng uzoq parent tomon).
+   */
+  async ancestorChain(cardId: number): Promise<Result<number[]>> {
+    const r = await this.exec(sql`
+      WITH RECURSIVE up AS (
+        SELECT id, parent_id, 0 AS depth FROM org_departments WHERE id = ${cardId}
+        UNION ALL
+        SELECT d.id, d.parent_id, up.depth + 1
+        FROM org_departments d JOIN up ON d.id = up.parent_id
+      )
+      SELECT id FROM up WHERE depth > 0 ORDER BY depth ASC
+    `);
+    if (!r.ok) return Err(r.error);
+    const ids = r.data
+      .map((row) => (row['id'] == null ? null : Number(row['id'])))
+      .filter((v): v is number => v != null && Number.isFinite(v));
+    return Ok(ids);
+  }
+
+  /**
+   * VERTIKAL KASKAD-AGREGAT (T18-C2): bitta ota-karta uchun, bir kun, uning BUTUN
+   * subtree'sidagi LEAF (ROLLUP bo'lmagan) faktlardan agregat hisoblab, o'sha
+   * ota-kartaning kunlik ROLLUP-yozuvini UPSERT qiladi.
+   *
+   *   achievement_pct = subtree leaf-faktlar o'rtacha achievement% (vizyon: o'rtacha bajarish)
+   *   actual_value    = subtree leaf actual yig'indisi (umumiy chiqim)
+   *   target_value    = subtree leaf target yig'indisi (umumiy norma)
+   *
+   * Faqat o'sha kun leaf-fakti BOR bo'lsa yoziladi (FABRIKATSIYA YO'Q — fakt yo'q
+   * kunda ota agregati yozilmaydi/o'chirilmaydi). ROLLUP-yozuvlar agregatdan
+   * CHIQARILADI (double-count yo'q — faqat haqiqiy yer-faktlar yig'iladi).
+   *
+   * Idempotent: ota-yozuv (parent_card, fact_date, employee=NULL, product=NULL)
+   * kaliti bo'yicha uq_ckp_fact_card_day orqali upsert — qayta-feed takror yaratmaydi.
+   *
+   * @returns yozilgan/yangilangan ota-yozuv (null = o'sha kun subtree leaf-fakti yo'q → yozilmadi).
+   */
+  async rollupParentDay(parentCardId: number, date: string): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        WITH RECURSIVE subtree AS (
+          SELECT id FROM org_departments WHERE id = ${parentCardId}
+          UNION ALL
+          SELECT d.id FROM org_departments d JOIN subtree s ON d.parent_id = s.id
+        ),
+        agg AS (
+          SELECT
+            COUNT(f.id)::int                   AS leaf_count,
+            ROUND(AVG(f.achievement_pct), 2)   AS avg_achievement,
+            SUM(f.actual_value)                AS sum_actual,
+            SUM(f.target_value)                AS sum_target
+          FROM ckp_fact_values f
+          WHERE f.card_id IN (SELECT id FROM subtree)
+            AND f.card_id <> ${parentCardId}      -- ota o'z ROLLUP-yozuviga qo'shilmaydi
+            AND f.fact_date = ${date}::date
+            AND f.source <> ${CKP_ROLLUP_SOURCE}  -- faqat LEAF faktlar (ROLLUP double-count yo'q)
+        )
+        INSERT INTO ckp_fact_values
+          (card_id, employee_id, product_id, fact_date, target_value, actual_value,
+           achievement_pct, source, formula_type, status, submitted_at, notes, recorded_by, created_at)
+        SELECT
+          ${parentCardId}, NULL, NULL, ${date}::date, agg.sum_target, agg.sum_actual,
+          COALESCE(agg.avg_achievement, 0), ${CKP_ROLLUP_SOURCE}, NULL, 'submitted', NOW(),
+          'Avtomatik kaskad-agregat (' || agg.leaf_count || ' subtree leaf-fakt)', NULL, NOW()
+        FROM agg
+        WHERE agg.leaf_count > 0
+        ON CONFLICT (card_id, fact_date, COALESCE(employee_id,0), COALESCE(product_id,0))
+        DO UPDATE SET
+          target_value = EXCLUDED.target_value,
+          actual_value = EXCLUDED.actual_value,
+          achievement_pct = EXCLUDED.achievement_pct,
+          source = EXCLUDED.source,
+          status = 'submitted',
+          submitted_at = NOW(),
+          notes = EXCLUDED.notes
+        RETURNING *
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
   }
 }

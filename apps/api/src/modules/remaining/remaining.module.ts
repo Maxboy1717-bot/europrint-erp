@@ -30,6 +30,7 @@ import { MaterialBalanceService } from './material-balance.service';
 import { MaterialBalanceRepository } from './material-balance.repository';
 import { CompanyStateService } from './company-state.service';
 import { CompanyStateRepository } from './company-state.repository';
+import { CompanyStateSnapshotCron } from './company-state-snapshot.cron';
 // EP-DIR-001: pure 5-metric holat formula service (stateless, no ctor deps) —
 // provided directly so /api/company-state/current delegates to the vision-correct calc.
 import { DirectorHolatService } from '../director/application/director-holat.service';
@@ -80,6 +81,7 @@ import { ReportsHubRepository } from './reports-hub.repository';
     MaterialBalanceService,
     CompanyStateRepository,
     CompanyStateService,
+    CompanyStateSnapshotCron,
     DirectorHolatService,
     FiService,
     IdealRasmRepository,

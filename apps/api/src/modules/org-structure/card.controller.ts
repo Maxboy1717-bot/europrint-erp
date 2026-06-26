@@ -271,6 +271,24 @@ export class CardController {
     return unwrapOrThrow(await this.service.thawCard(id));
   }
 
+  @ApiOperation({ summary: 'Make card vacant (active/frozen/io → vacant) — owner left (EP-ORG-085)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Card is archived' })
+  @Patch(':id/vacant')
+  async vacant(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.service.setVacantCard(id));
+  }
+
+  @ApiOperation({ summary: 'Restore archived card (archived → active) — undo soft-delete (EP-ORG-087)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Card is not archived' })
+  @Patch(':id/restore')
+  async restore(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.service.restoreCard(id));
+  }
+
   @ApiOperation({ summary: "User's card-gate: card-derived RBAC tier + salary eligibility (EP-ORG-003)" })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })

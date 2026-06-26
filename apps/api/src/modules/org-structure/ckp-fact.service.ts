@@ -4,9 +4,12 @@
  *   (Qoida 6 — controller emas). FABRIKATSIYA TAQIQ: norma (tskp_target) NULL -> 0 (egasi norma bersa hisoblanadi).
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Ok, Err, Result, AppErr } from '@common/result';
 import { CkpFactRepository, CkpFactInput } from './ckp-fact.repository';
+import { CkpReportedEvent } from './cascade/ckp-reported.event';
+import { CKP_REPORTED_EVENT, CKP_ROLLUP_SOURCE } from './cascade/ckp-cascade.constants';
 
 type Row = Record<string, unknown>;
 
@@ -55,7 +58,15 @@ export interface DeadlineFlag {
 
 @Injectable()
 export class CkpFactService {
-  constructor(private readonly repo: CkpFactRepository) {}
+  private readonly logger = new Logger(CkpFactService.name);
+
+  constructor(
+    private readonly repo: CkpFactRepository,
+    // Optional (Q-39 back-compat): single-arg unit tests keep constructing
+    // CkpFactService(repo); at runtime Nest injects the global EventEmitter2
+    // (app.module EventEmitterModule.forRoot()).
+    private readonly eventEmitter?: EventEmitter2,
+  ) {}
 
   /** Formula-turiga qarab achievement% (boolean = ha/yo'q -> 100/0; quantity_pct = bajarilgan/norma). */
   private calcAchievement(formulaType: string | null, target: number | null, actual: number | null): number {
@@ -123,6 +134,16 @@ export class CkpFactService {
     const r = await this.repo.upsertFact(fact);
     if (!r.ok) return Err(r.error);
     if (!r.data) return Err(AppErr('INTERNAL', 'ЦКП fakt saqlanmadi'));
+
+    // ⭐ T18-C2 VERTIKAL KASKAD: leaf-fakt commit bo'lgach CkpReportedEvent emit
+    // qilinadi → CkpCascadeListener ota-zanjirni (parent→otdeleniye→CEO) qayta
+    // agregatlaydi. ROLLUP-manbali yozuv uchun emit QILINMAYDI (rekursiya/double
+    // cascade yo'q — ota agregatlari leaf-faktdan qayta hisoblanadi). Emit
+    // best-effort: emit xatosi faktni bloklamaydi (fakt allaqachon saqlangan).
+    if (fact.source !== CKP_ROLLUP_SOURCE) {
+      this.emitReported(fact.cardId, input.factDate, achievement, fact.source);
+    }
+
     // Deadline-belgisi (gate uchun) — saqlangan faktga qo'shib qaytariladi (DB-ustun emas, hisoblangan).
     return Ok({
       ...r.data,
@@ -130,6 +151,20 @@ export class CkpFactService {
       deadline_at: deadline.deadlineAt,
       deadline_passed: deadline.deadlinePassed,
     });
+  }
+
+  /**
+   * CkpReportedEvent emit (best-effort). EventEmitter2 yo'q bo'lsa (unit-test
+   * single-arg konstruktor) — sokin skip. Emit xatosi hech qachon faktni
+   * bloklamaydi (fakt allaqachon saqlangan; kaskad ikkilamchi).
+   */
+  private emitReported(cardId: number, factDate: string, achievementPct: number | null, source: string): void {
+    if (!this.eventEmitter) return;
+    try {
+      this.eventEmitter.emit(CKP_REPORTED_EVENT, new CkpReportedEvent(cardId, factDate, achievementPct, source));
+    } catch (e: unknown) {
+      this.logger.warn(`CkpReportedEvent emit xatolik (karta #${cardId}, ${factDate}): ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   listByCard(cardId: number, from: string | null, to: string | null): Promise<Result<Row[]>> {

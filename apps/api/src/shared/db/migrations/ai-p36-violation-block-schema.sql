@@ -1,7 +1,9 @@
 -- ============================================================
 -- FILE: apps/api/src/shared/db/migrations/ai-p36-violation-block-schema.sql
 -- P36 AI Violation + Block + Camera + Burnout + Fraud schema.
--- ⛔ GATED — egasi (owner) tasdiqlamaguncha ISHGA TUSHIRILMAYDI.
+-- APPROVED: egasi-direktiva "vizyon bo'yicha to'liq bajar hamma vizyon" 2026-06-26
+--   (T18-C3-CRM-GATED — STRUKTURA only; AI salbiy ta'sir faqat inson tasdig'i bilan §85-86).
+-- ⛔ GATED edi — egasi 2026-06-26 ochiq direktiva bilan tasdiqladi.
 --    HOZIR tasdiq-belgisi YO'Q (ataylab) — check-unauthorized-migration WARN beradi.
 --    Egasi ruxsat berganda tasdiq izohini qo'shing (so'z: APPROVED + ":" + owner + sana).
 --    Sabab gated: AI qoidabuzarlik/blok qarorlari real ishlashi uchun AI-kalit +

@@ -60,6 +60,9 @@ import { DeliveriesService } from './deliveries/deliveries.service';
 import { SdDashboardService } from './application/sd-dashboard.service';
 import { SdCustomersService } from './application/sd-customers.service';
 import { DrizzleSdCustomersRepository } from './infrastructure/repositories/drizzle-sd-customers.repo';
+import { CustomerAbcService } from './application/customer-abc.service';
+import { SD_CUSTOMER_ABC_REPO } from './infrastructure/repositories/i-sd-customer-abc.repo';
+import { DrizzleSdCustomerAbcRepository } from './infrastructure/repositories/drizzle-sd-customer-abc.repo';
 import { SdLeadsService } from './application/sd-leads.service';
 import { SdLeadsRepository } from './infrastructure/repositories/sd-leads.repository';
 import { SD_LEADS_REPO } from './domain/repositories/i-sd-leads.repo';
@@ -123,6 +126,8 @@ const repositories = [
     SdDashboardService,
     SdCustomersService,
     DrizzleSdCustomersRepository,
+    CustomerAbcService,
+    { provide: SD_CUSTOMER_ABC_REPO, useClass: DrizzleSdCustomerAbcRepository },
     { provide: SD_LEADS_REPO, useClass: SdLeadsRepository },
     SdLeadsService,
     { provide: SD_PAYMENTS_REPO, useClass: SdPaymentsRepository },

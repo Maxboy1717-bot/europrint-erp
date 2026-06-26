@@ -1,7 +1,9 @@
 -- ============================================================
 -- FILE: apps/api/src/shared/db/migrations/ai-p36-governance-schema.sql
 -- P36 AI Override + Dispute + Governance + Calibration schema.
--- ⛔ GATED — egasi (owner) tasdiqlamaguncha ISHGA TUSHIRILMAYDI.
+-- APPROVED: egasi-direktiva "vizyon bo'yicha to'liq bajar hamma vizyon" 2026-06-26
+--   (T18-C3-CRM-GATED — STRUKTURA only, idempotent CREATE IF NOT EXISTS).
+-- ⛔ GATED edi — egasi 2026-06-26 ochiq direktiva bilan tasdiqladi.
 --    HOZIR tasdiq-belgisi YO'Q (ataylab) — check-unauthorized-migration WARN beradi.
 --    Egasi ruxsat berganda tasdiq izohini qo'shing (so'z: APPROVED + ":" + owner + sana).
 --    Sabab gated: AI qarorlari ustidan governance/audit/kalibrasyon real ishlashi

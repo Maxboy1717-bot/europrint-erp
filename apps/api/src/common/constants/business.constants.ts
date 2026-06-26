@@ -47,6 +47,41 @@ export const COST_SPLIT_LABOR = 0.25;
 /** CFO COGS analysis: default material share of cost-of-goods when raw material data missing */
 export const COGS_MATERIAL_RATIO = 0.6;
 
+// ---------------------------------------------------------------------------
+// T18-C4 — Tushum 4-hisob (income) auto-split default shares (EP-FIN-004)
+// ---------------------------------------------------------------------------
+/**
+ * Default percentage split of incoming revenue (tushum) into the 4 funds.
+ * MAIN    = asosiy fond (operatsion / P&L) — biggest share
+ * TAX     = soliq zaxirasi (QQS/foyda solig'i ehtiyoti)
+ * HEAD    = bosh fond (kapital / rivojlanish zaxirasi)
+ * WORKING = aylanma kapital (kassa/bank operatsion likvidlik)
+ *
+ * ⚠️ DATA-QIYMAT egasidan keladi (Q-40). Bu KOD-DEFAULT (graceful) — egasi
+ *  `income_split_config` jadval/PATCH orqali override qiladi. Yig'indi = 1.0.
+ *  Qiymat yo'q joyda mexanizm shu defaultni ishlatadi (soxta emas — ko'rsatilgan default).
+ */
+export const INCOME_SPLIT_DEFAULT = {
+  MAIN:    0.50,
+  TAX:     0.20,
+  HEAD:    0.15,
+  WORKING: 0.15,
+} as const;
+
+// ---------------------------------------------------------------------------
+// T18-C4 — Customer ABC segmentation thresholds (cumulative-revenue Pareto)
+// ---------------------------------------------------------------------------
+/**
+ * ABC class boundaries by cumulative share of total annual purchase revenue
+ * (Pareto 80/15/5). A = top customers up to 80% cumulative, B = next up to 95%,
+ * C = the rest. Owner-tunable later via master-data; kept as named constants
+ * (Qoida 12) so the compute never hardcodes the numbers inline.
+ */
+export const CUSTOMER_ABC_CUMULATIVE = {
+  A: 0.80,
+  B: 0.95,
+} as const;
+
 /** Sales forecast model default confidence score */
 export const FORECAST_CONFIDENCE_DEFAULT = 0.72;
 

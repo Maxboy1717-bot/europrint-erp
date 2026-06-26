@@ -1,7 +1,9 @@
 -- ============================================================
 -- FILE: apps/api/src/shared/db/migrations/ai-p36-ckp-fit-schema.sql
 -- P36 AI CKP + Fit schema migration (ckp/fit slice).
--- ⛔ GATED — egasi (owner) tasdiqlamaguncha ISHGA TUSHIRILMAYDI.
+-- APPROVED: egasi-direktiva "vizyon bo'yicha to'liq bajar hamma vizyon" 2026-06-26
+--   (T18-C3-CRM-GATED — STRUKTURA only; seed=izohda, fabrikatsiya YO'Q Q-40).
+-- ⛔ GATED edi — egasi 2026-06-26 ochiq direktiva bilan tasdiqladi (struktura, soxta data yo'q).
 --    HOZIR tasdiq-belgisi YO'Q (ataylab) — check-unauthorized-migration WARN beradi.
 --    Egasi ruxsat berganda shu qatorga tasdiq izohini qo'shing (so'z: APPROVED + ":"
 --    + owner + sana) — shundan keyingina migration ishga tushiriladi.

@@ -5,16 +5,17 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { Injectable, Logger } from '@nestjs/common';
+import { db, runQuery } from '@shared/db';
 import { productionOrders } from '@europrint/schemas';
-import { eq, isNull, count } from 'drizzle-orm';
+import { eq, isNull, count, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IPpProductionOrdersRepository } from './i-pp-production-orders.repo';
 
 type Row = Record<string, unknown>;
 @Injectable()
 export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersRepository {
+  private readonly logger = new Logger(DrizzlePpProductionOrdersRepository.name);
   async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
     try {
       const [countResult, data] = await Promise.all([
@@ -75,11 +76,44 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
   }
 
-  async updateStatus(id: number, status: string): Promise<Result<Record<string, unknown>>> {
+  async updateStatus(id: number, status: string, changedBy?: number): Promise<Result<Record<string, unknown>>> {
     try {
+      // T18-C3: capture old status BEFORE the write so the audit log records the
+      // real old→new transition (kim/qachon/eski→yangi).
+      const before = await db.select({ status: productionOrders.status })
+        .from(productionOrders).where(eq(productionOrders.id, id)).limit(1);
+      const oldStatus = (before[0]?.status ?? null) as string | null;
+
       const result = await db.update(productionOrders).set({ status }).where(eq(productionOrders.id, id)).returning();
+
+      // Only log a genuine change (no-op writes are not status transitions).
+      if (oldStatus !== status) {
+        await this._logStatusChange(id, oldStatus, status, changedBy);
+      }
       return Ok(result[0]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Holat yangilashda xatolik'); }
+  }
+
+  /**
+   * Append a row to production_order_status_log. Non-fatal: a failed log write is
+   * recorded but does NOT roll back the status change (audit is best-effort, the
+   * status transition is the source of truth).
+   */
+  private async _logStatusChange(
+    orderId: number,
+    oldStatus: string | null,
+    newStatus: string,
+    changedBy?: number,
+  ): Promise<void> {
+    try {
+      await runQuery(sql`
+        INSERT INTO production_order_status_log
+          (production_order_id, old_status, new_status, changed_by)
+        VALUES (${orderId}, ${oldStatus}, ${newStatus}, ${changedBy ?? null})
+      `);
+    } catch (e: unknown) {
+      this.logger.error({ msg: 'production_order_status_log insert failed', orderId, error: (e as Error)?.message });
+    }
   }
 
   async softDelete(id: number): Promise<Result<void>> {

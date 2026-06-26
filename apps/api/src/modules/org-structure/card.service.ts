@@ -184,6 +184,40 @@ export class CardService {
     return Err(AppErr('CONFLICT', `Karta #${cardId} holati '${cur.data.status}' — faqat 'frozen' kartani eritish mumkin`));
   }
 
+  /**
+   * FAZA-09 5-holat lifecycle: karta VAKANT (active/frozen/io → vacant). Egasi ketganda karta vakant
+   * qoladi (yangi xodim qidiriladi). State-machine:
+   *   - karta yo'q → NOT_FOUND.
+   *   - karta 'archived' (arxivlangan) → CONFLICT (arxivlangan kartani vakant qilib bo'lmaydi).
+   *   - aks holda current_state='vacant'.
+   */
+  async setVacantCard(cardId: number): Promise<Result<Row>> {
+    const r = await this.repo.setVacant(cardId);
+    if (!r.ok) return Err(r.error);
+    if (r.data) return Ok(r.data);
+    const cur = await this.repo.anyState(cardId);
+    if (!cur.ok) return Err(cur.error);
+    if (!cur.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+    return Err(AppErr('CONFLICT', `Karta #${cardId} holati '${cur.data.status}' — arxivlangan kartani vakant qilib bo'lmaydi`));
+  }
+
+  /**
+   * FAZA-09 5-holat lifecycle: ARXIVLANGAN kartani TIKLASH (archived → active) — softDelete teskarisi.
+   * State-machine:
+   *   - karta umuman yo'q → NOT_FOUND.
+   *   - karta allaqachon faol (arxivlanmagan) → CONFLICT (faqat arxivlangan karta tiklanadi).
+   *   - aks holda is_active=true + current_state='active'.
+   */
+  async restoreCard(cardId: number): Promise<Result<Row>> {
+    const r = await this.repo.restore(cardId);
+    if (!r.ok) return Err(r.error);
+    if (r.data) return Ok(r.data);
+    const cur = await this.repo.anyState(cardId);
+    if (!cur.ok) return Err(cur.error);
+    if (!cur.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+    return Err(AppErr('CONFLICT', `Karta #${cardId} holati '${cur.data.status}' — faqat arxivlangan kartani tiklash mumkin`));
+  }
+
   /** EP-ORG-137: mark a card as reviewed now (resets the 1-year staleness clock). */
   async markReviewed(cardId: number): Promise<Result<Row>> {
     const r = await this.repo.markReviewed(cardId);

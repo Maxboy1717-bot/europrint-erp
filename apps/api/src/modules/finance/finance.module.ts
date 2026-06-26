@@ -24,6 +24,7 @@ import { FinancePlanningRepo } from './infrastructure/repositories/drizzle-finan
 import { FinanceCostingRepo } from './infrastructure/repositories/drizzle-finance-costing.repo';
 import { FinanceVarianceRepo } from './infrastructure/repositories/drizzle-finance-variance.repo';
 import { GlPostingService } from './domain/services/gl-posting.service';
+import { IncomeSplitService } from './application/income-split.service';
 import { GL_POSTING_REPO } from './domain/repositories/i-gl-posting.repo';
 import { DrizzleGlPostingRepository } from './infrastructure/repositories/drizzle-gl-posting.repo';
 import { CheckAdvanceHandler } from './application/commands/check-advance.handler';
@@ -185,6 +186,7 @@ const eventListeners = [
     { provide: FINANCE_REPO, useClass: FinanceRepository },
     { provide: GL_POSTING_REPO, useClass: DrizzleGlPostingRepository },
     GlPostingService,
+    IncomeSplitService,
     ...commandHandlers, ...queryHandlers, ...eventListeners,
     FpCycleCronRepository,
     { provide: FP_CYCLE_CRON_REPO, useClass: FpCycleCronRepository },

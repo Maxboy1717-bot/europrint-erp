@@ -80,6 +80,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdCustomersService } from '../application/sd-customers.service';
+import { CustomerAbcService } from '../application/customer-abc.service';
 import {
   SdUpdateCustomerSchema, SdUpdateCustomerDto,
   SdAddContactSchema, SdAddContactDto,
@@ -101,8 +102,25 @@ export class SdCustomersController {
 
   constructor(
     private readonly svc: SdCustomersService,
+    private readonly abc: CustomerAbcService,
     private readonly i18n: I18nService,
   ) {}
+
+  @ApiOperation({ summary: 'ABC segment preview (compute, no persist) (EP-SD master-data)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('abc/preview')
+  @Roles(...SD_WRITE_ROLES)
+  async abcPreview() {
+    return unwrapOrThrow(await this.abc.preview());
+  }
+
+  @ApiOperation({ summary: 'ABC segment recompute + persist (annual purchase Pareto)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @Post('abc/recompute')
+  @Roles(...SD_WRITE_ROLES)
+  async abcRecompute() {
+    return unwrapOrThrow(await this.abc.recompute());
+  }
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })

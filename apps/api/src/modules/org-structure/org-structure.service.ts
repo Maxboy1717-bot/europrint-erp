@@ -295,8 +295,9 @@ export class OrgStructureService implements OnModuleInit {
   async assignUserToNode(userId: number, nodeId: number, stakeFraction: number | null = null, allowOverload = false) {
     return safeCall(async () => {
       const r = await this.repo.assignUser(userId, nodeId, stakeFraction, allowOverload);
+      // T18-C1 #3: seat-guard 'warn'/override rejimida assign o'tadi, lekin warning surilib chiqadi.
       return r.assigned
-        ? { assigned: true, message: 'Xodim kartaga biriktirildi' }
+        ? { assigned: true, message: 'Xodim kartaga biriktirildi', ...(r.warning ? { warning: r.warning } : {}) }
         : { assigned: false, message: r.reason ?? "Biriktirib bo'lmadi" };
     });
   }

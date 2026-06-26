@@ -135,7 +135,9 @@ export class CrmDealsController {
  async markWon(@Param('id') id: string) {
   this.logger.log('Marking deal as won');
 
-  const command = new MarkDealWonCommand(Number(id));
+  // T18-C3: live crm_deals.id is a uuid — pass the string id through (Number(id)
+  // produced NaN and never matched, leaving DealWonEvent unfired).
+  const command = new MarkDealWonCommand(String(id));
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
