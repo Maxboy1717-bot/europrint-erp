@@ -49,6 +49,13 @@ export interface NodeDetail {
   tskpMeasurementUnit?: string | null;
   workSchedule?: string | null;
   currentState?: string | null;
+  // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga tegishli (1-7, NULL=belgilanmagan).
+  otdeleniyeNo?: number | null;
+  // VISION 5-holat lifecycle (A32): muzlatish meta — org_departments.freeze_*/archived_at/frozen_at
+  freezeReason?: string | null;
+  freezeUntil?: string | null;
+  frozenAt?: string | null;
+  archivedAt?: string | null;
   bonusConfig?: string | null;
   employeeCount: number;
   childCount: number;
@@ -91,3 +98,40 @@ export const LEVEL_COLORS: Record<number, string> = {
   3: "#b45309",
   4: "#dc2626",
 };
+
+/**
+ * KARTA 5-HOLAT LIFECYCLE (A32 — VISION EP-ORG-084/086).
+ *   active   — kartada faol xodim, normal ish.
+ *   vacant   — karta ochiq (xodim/rahbar yo'q) — ishga olish kerak.
+ *   io       — i.o. (ispolnyayushchiy obyazannosti) — vaqtincha o'rinbosar.
+ *   frozen   — muzlatilgan (sabab + muddat) — vaqtincha to'xtatilgan.
+ *   archived — arxivlangan — endi ishlatilmaydi (yumshoq o'chirish).
+ * Holat `org_departments.current_state` ustunida saqlanadi (kanonik enum).
+ * `tone` — EPStatusPill rang ohangi.
+ */
+export type CardState = "active" | "vacant" | "io" | "frozen" | "archived";
+
+export interface CardStateMeta {
+  value: CardState;
+  label: string;
+  /** EPStatusPill tone. */
+  tone: "success" | "warning" | "danger" | "info" | "neutral";
+}
+
+export const CARD_STATES: Record<CardState, CardStateMeta> = {
+  active:   { value: "active",   label: "Faol",        tone: "success" },
+  vacant:   { value: "vacant",   label: "Vakant",      tone: "warning" },
+  io:       { value: "io",       label: "I.o.",        tone: "info" },
+  frozen:   { value: "frozen",   label: "Muzlatilgan", tone: "info" },
+  archived: { value: "archived", label: "Arxivlangan", tone: "neutral" },
+};
+
+export const CARD_STATE_ORDER: CardState[] = ["active", "vacant", "io", "frozen", "archived"];
+
+/** Joriy holatni aniqlash: current_state bo'lsa o'sha; aks holda rahbar yo'q → vacant, bor → active. */
+export function resolveCardState(node: Pick<NodeDetail, "currentState" | "headUserName" | "isActive">): CardState {
+  const raw = (node.currentState ?? "").trim().toLowerCase();
+  if (raw && raw in CARD_STATES) return raw as CardState;
+  if (node.isActive === false) return "archived";
+  return node.headUserName ? "active" : "vacant";
+}

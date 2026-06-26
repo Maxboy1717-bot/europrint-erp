@@ -23,7 +23,7 @@ import {
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { NodeDetail } from "./types";
+import { NodeDetail, NodeEmployee } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
 interface EmployeesTabProps {
@@ -52,6 +52,19 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
   const employees = Array.isArray(node.employees) ? node.employees : [];
   const presentIds = new Set(employees.map((e) => e.id));
   const candidates = (Array.isArray(usersData?.users) ? usersData!.users : []).filter((u) => !presentIds.has(u.id));
+
+  // KO'P-KARTA ulush (stake): BE empRows `stake`/`stakeFraction` qaytarsa ko'rsatamiz.
+  // Q-40: soxta qiymat YOZILMAYDI — faqat real kelgan ulushlar yig'iladi (kelmasa null/yashirin).
+  const stakeOf = (emp: NodeEmployee): number | null => {
+    const raw = (emp as unknown as { stake?: unknown; stakeFraction?: unknown });
+    const v = raw.stake ?? raw.stakeFraction;
+    if (v == null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const stakeValues = employees.map(stakeOf).filter((v): v is number => v != null);
+  const stakeSum = stakeValues.reduce((s, v) => s + v, 0);
+  const hasStakeData = stakeValues.length > 0;
 
   const assignMutation = useMutation({
     mutationFn: (vars: { userId: number; stake: number | null }) =>
@@ -82,9 +95,21 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-          <Users className="h-4 w-4" />
-          {employees.length} {t("xodim", "xodim")}
+        <p className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+          <span className="flex items-center gap-1.5">
+            <Users className="h-4 w-4" />
+            {employees.length} {t("xodim", "xodim")}
+          </span>
+          {hasStakeData && (
+            <Badge
+              variant={stakeSum > 1 ? "destructive" : "secondary"}
+              className="text-[10px] px-1.5 py-0 h-4"
+              data-testid="badge-stake-sum"
+              title={t("ulushYigindisiIzoh", "Bu kartadagi xodimlar ulushlari yig'indisi")}
+            >
+              {t("ulushYigindisi", "Ulush yig'indisi")}: {stakeSum.toFixed(2)}
+            </Badge>
+          )}
         </p>
         <Button size="sm" onClick={() => setAssignOpen(true)} data-testid="button-assign-employee">
           <UserPlus className="h-4 w-4 mr-2" />{t("xodimBiriktirish", "Xodim biriktirish")}
@@ -100,6 +125,7 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
         <div className="space-y-2">
           {employees.map((emp) => {
             const isActive = !emp.status || emp.status === "active";
+            const empStake = stakeOf(emp);
             return (
               <Card key={emp.id} className="hover:shadow transition-shadow">
                 <CardContent className="py-3 px-4 flex items-center gap-3">
@@ -121,6 +147,16 @@ export function EmployeesTab({ node }: EmployeesTabProps) {
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       {emp.employeeId && <span className="text-xs text-muted-foreground">#{emp.employeeId}</span>}
                       {emp.role && <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">{emp.role}</Badge>}
+                      {empStake != null && (
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] px-1.5 py-0 h-4"
+                          data-testid={`badge-emp-stake-${emp.id}`}
+                          title={t("ulushStavka", "Ulush / stavka")}
+                        >
+                          {t("ulush", "Ulush")}: {empStake.toFixed(2)}
+                        </Badge>
+                      )}
                       {emp.salary != null && (
                         <span className="text-xs text-[var(--ep-green)] font-medium">
                           {Number(emp.salary).toLocaleString("uz-UZ")} so'm

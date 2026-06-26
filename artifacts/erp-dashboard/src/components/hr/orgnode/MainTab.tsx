@@ -5,10 +5,17 @@
  *   (egasi 2026-06-25: "razryad mana shu tabda bo'lsin") — bu yerda takrorlanmaydi.
  */
 
-import { User, CheckCircle, UserX, Building2, Award, Wallet, Calculator } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { User, CheckCircle, UserX, Building2, Award, Wallet, Calculator, Save } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
@@ -178,6 +185,135 @@ function OylikFormulaCard({ node, t }: { node: NodeDetail; t: ReturnType<typeof 
   );
 }
 
+/**
+ * RAHBAR (kim-kimni-boshqaradi) — joriy holatni ko'rsatish + INLINE tayinlash (A34).
+ *
+ * ⭐ MEXANIZM (Q-40 fabrikatsiya-taqiq): bu komponent FAQAT mexanizmni quradi —
+ *   rahbar(user) tanlash + saqlash (PATCH nodes/:id { headUserId }). Aniq KIM rahbar
+ *   ekani — EGASI-DATA (126 node head_user_id = NULL; egasi kim-kimni-boshqaradi qarorini
+ *   beradi). Kod hech qanday soxta rahbar yozmaydi; ro'yxat real `available-users`'dan keladi.
+ *
+ * Backend: GET /api/org-structure/available-users → { users:[{id,name}] };
+ *          PATCH /api/org-structure/nodes/:id { headUserId:number|null }
+ *          (org-mutations.repo :109 → head_user_id). null = rahbarni tozalash.
+ */
+function RahbarCard({ node, t }: { node: NodeDetail; t: ReturnType<typeof useTranslation>["t"] }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [selected, setSelected] = useState<number | null>(node.headUserId ?? null);
+
+  // Barcha faol foydalanuvchilar (rahbar-tanlash uchun) — EditDialog bilan bir xil manba/cache.
+  const { data: usersData } = useQuery<{ users: { id: number; name: string }[] }>({
+    queryKey: ["/api/org-structure/available-users"],
+    staleTime: 60_000,
+    enabled: editing,
+  });
+  const headOptions: { id: number; name: string }[] = Array.isArray(usersData?.users)
+    ? [...usersData!.users]
+    : [];
+  // Joriy rahbar ro'yxatda bo'lmasa (yuklanayotgan/nofaol) — boshiga qo'shamiz.
+  if (node.headUserId != null && !headOptions.some((o) => o.id === node.headUserId)) {
+    headOptions.unshift({ id: node.headUserId, name: node.headUserName || `#${node.headUserId}` });
+  }
+
+  const mutation = useMutation({
+    // FAQAT headUserId yuboriladi (fokuslangan PATCH) — boshqa karta-maydonlariga tegmaydi.
+    mutationFn: (headUserId: number | null) =>
+      apiRequest("PATCH", `/api/org-structure/nodes/${node.id}`, { headUserId }),
+    onSuccess: () => {
+      toast({ title: t("saqlandi", "Saqlandi") });
+      // Node-detal + ierarxiyani yangilab, yangi rahbar darhol ko'rinadi (real saqlangan).
+      queryClient.invalidateQueries({ queryKey: [`/api/org-structure/nodes/${node.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/org-structure/nodes/${node.id}/history`] });
+      setEditing(false);
+    },
+    onError: () => toast({ title: t("xatolik", "Xatolik"), variant: "destructive" }),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2 space-y-0">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <User className="h-4 w-4" />{t("rahbar")}
+        </CardTitle>
+        {!editing && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 px-2 text-xs"
+            data-testid="button-assign-head"
+            onClick={() => { setSelected(node.headUserId ?? null); setEditing(true); }}
+          >
+            {node.headUserName ? t("ozgartirish", "O'zgartirish") : t("tayinlash", "Tayinlash")}
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="text-sm">
+        {editing ? (
+          <div className="space-y-3">
+            <Select
+              value={selected == null ? "__none__" : String(selected)}
+              onValueChange={(v) => setSelected(v === "__none__" ? null : Number(v))}
+            >
+              <SelectTrigger data-testid="select-head-user">
+                <SelectValue placeholder={t("boshliqTanlang", "Rahbar tanlang")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— {t("yoqBosh", "Yo'q (bo'sh)")} —</SelectItem>
+                {headOptions.map((o) => (
+                  <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="h-8"
+                data-testid="button-save-head"
+                disabled={mutation.isPending || selected === (node.headUserId ?? null)}
+                onClick={() => mutation.mutate(selected)}
+              >
+                <Save className="h-3.5 w-3.5 mr-1" />
+                {mutation.isPending ? t("saqlanmoqda", "Saqlanmoqda...") : t("saqlash", "Saqlash")}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8"
+                disabled={mutation.isPending}
+                onClick={() => setEditing(false)}
+              >
+                {t("Bekor", "Bekor")}
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {t("rahbarMexanizmIzoh", "Kim-kimni-boshqaradi — rahbar tayinlash. Aniq rahbar egasi tomonidan belgilanadi.")}
+            </p>
+          </div>
+        ) : node.headUserName ? (
+          <div className="space-y-2">
+            <p className="font-semibold text-base">{node.headUserName}</p>
+            {node.headUserEmployeeId && <p className="text-muted-foreground">ID: {node.headUserEmployeeId}</p>}
+            <Badge className="bg-green-500/20 text-[var(--ep-green)] border-none">
+              <CheckCircle className="h-3 w-3 mr-1" />{t("tayinlangan")}
+            </Badge>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <UserX className="h-4 w-4 text-[var(--ep-red)]" />
+              <span>{t("rahbarTayinlanmaganVakant")}</span>
+            </div>
+            <Badge variant="destructive" className="w-fit">{t("vakantLavozim")}</Badge>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function MainTab({ node }: MainTabProps) {
   const { t } = useTranslation("common");
 
@@ -209,32 +345,8 @@ export function MainTab({ node }: MainTabProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <User className="h-4 w-4" />{t("rahbar")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm">
-          {node.headUserName ? (
-            <div className="space-y-2">
-              <p className="font-semibold text-base">{node.headUserName}</p>
-              {node.headUserEmployeeId && <p className="text-muted-foreground">ID: {node.headUserEmployeeId}</p>}
-              <Badge className="bg-green-500/20 text-[var(--ep-green)] border-none">
-                <CheckCircle className="h-3 w-3 mr-1" />{t("tayinlangan")}
-              </Badge>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <UserX className="h-4 w-4 text-[var(--ep-red)]" />
-                <span>{t("rahbarTayinlanmaganVakant")}</span>
-              </div>
-              <Badge variant="destructive" className="w-fit">{t("vakantLavozim")}</Badge>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* A34 — Rahbar (kim-kimni-boshqaradi): joriy holat + INLINE tayinlash (PATCH headUserId) */}
+      <RahbarCard node={node} t={t} />
 
       {/* KARTA TA'RIFI — razryad prominent + oylik/ЦКП/rbac/smena/bonus/holat */}
       <Card className="md:col-span-2">

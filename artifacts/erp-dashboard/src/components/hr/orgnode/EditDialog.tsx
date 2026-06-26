@@ -50,6 +50,8 @@ export function EditDialog({
     tskpMeasurementUnit: node.tskpMeasurementUnit ?? "",
     workSchedule: node.workSchedule ?? "",
     currentState: node.currentState ?? "",
+    // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga (1-7); null = belgilanmagan.
+    otdeleniyeNo: node.otdeleniyeNo ?? null,
     bonusConfig: node.bonusConfig ?? "",
   });
 
@@ -90,6 +92,7 @@ export function EditDialog({
         tskpTarget: numOrNull(form.tskpTarget),
         tskpMeasurementUnit: form.tskpMeasurementUnit || null,
         workSchedule: form.workSchedule || null, currentState: form.currentState || null,
+        otdeleniyeNo: form.otdeleniyeNo,
         bonusConfig: form.bonusConfig || null,
       };
       return apiRequest("PATCH", `/api/org-structure/nodes/${node.id}`, payload);
@@ -232,6 +235,21 @@ export function EditDialog({
           <div>
             <Label>{t("ishVaqti", "Ish vaqti / smena")}</Label>
             <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
+          </div>
+          <div>
+            <Label>{t("otdeleniye", "Otdeleniye (1-7)")}</Label>
+            <Select
+              value={form.otdeleniyeNo == null ? "__none__" : String(form.otdeleniyeNo)}
+              onValueChange={(v) => setForm((f) => ({ ...f, otdeleniyeNo: v === "__none__" ? null : Number(v) }))}
+            >
+              <SelectTrigger data-testid="select-node-otdeleniye"><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— {t("yoq", "Yo'q")} —</SelectItem>
+                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n}-{t("otdeleniyeShort", "otdeleniye")}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>{t("joriyHolat", "Joriy holat")}</Label>

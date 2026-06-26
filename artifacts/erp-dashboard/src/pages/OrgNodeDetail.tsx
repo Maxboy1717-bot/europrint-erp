@@ -11,10 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Building2, Users, Network, ChevronRight,
   UserX, Pencil, Trash2, CheckCircle, AlertCircle,
-  MoveRight, History, FolderOpen, ClipboardList, Award
+  MoveRight, History, FolderOpen, ClipboardList, Award, Activity, Sparkles
 } from "lucide-react";
 import { OrgNodePortretTab } from "./OrgNodePortretTab";
 import { RazryadTab } from "@/components/hr/orgnode/RazryadTab";
+import { FitTab } from "@/components/hr/orgnode/FitTab";
 
 // Sub-components
 import { EditDialog } from "@/components/hr/orgnode/EditDialog";
@@ -25,8 +26,9 @@ import { ChildrenTab } from "@/components/hr/orgnode/ChildrenTab";
 import { FolderTab } from "@/components/hr/orgnode/FolderTab";
 import { HistoryTab } from "@/components/hr/orgnode/HistoryTab";
 import { StatsTab, VacantTab } from "@/components/hr/orgnode/ExtraTabs";
+import { LifecycleTab } from "@/components/hr/orgnode/LifecycleTab";
 import { useOrgNodeData } from "@/components/hr/orgnode/useOrgNodeData";
-import { NODE_TYPE_LABELS, LEVEL_COLORS } from "@/components/hr/orgnode/types";
+import { NODE_TYPE_LABELS, LEVEL_COLORS, CARD_STATES, resolveCardState } from "@/components/hr/orgnode/types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -61,6 +63,8 @@ export default function OrgNodeDetail() {
 
   const headerBg = node.color || LEVEL_COLORS[node.hierarchyLevel] || "#1d4ed8";
   const isVacant = !node.headUserName;
+  const cardState = resolveCardState(node);
+  const cardStateMeta = CARD_STATES[cardState];
 
   return (
     <div className="h-full flex flex-col">
@@ -87,7 +91,8 @@ export default function OrgNodeDetail() {
               <Badge style={{ background: "rgba(255,255,255,0.25)", color: "white", border: "none" }}>{NODE_TYPE_LABELS[node.nodeType] || node.nodeType}</Badge>
               <span className="text-white/60 text-xs">#{node.id} · Daraja {node.hierarchyLevel}</span>
               {!node.isActive && <EPStatusPill tone="danger" className="text-xs">{t("inactive")}</EPStatusPill>}
-              {isVacant && <Badge className="text-xs bg-[var(--ep-red)]/30 text-white border-none flex items-center gap-1"><UserX className="h-3 w-3" />{t("vakant")}</Badge>}
+              <EPStatusPill tone={cardStateMeta.tone} className="text-xs" data-testid="header-card-state">{t(`cardState_${cardState}`, cardStateMeta.label)}</EPStatusPill>
+              {isVacant && cardState !== "vacant" && <Badge className="text-xs bg-[var(--ep-red)]/30 text-white border-none flex items-center gap-1"><UserX className="h-3 w-3" />{t("vakant")}</Badge>}
             </div>
             <h1 className="text-2xl font-bold">{node.name}</h1>
             {node.nameRu && <p className="text-white/70 text-sm mt-0.5">{node.nameRu}</p>}
@@ -119,6 +124,8 @@ export default function OrgNodeDetail() {
           <TabsList className="mb-4 flex-wrap h-auto gap-1">
             <TabsTrigger value="main">{t("primary")}</TabsTrigger>
             <TabsTrigger value="razryad" className="flex items-center gap-1"><Award className="h-3.5 w-3.5" />{t("razryad")}</TabsTrigger>
+            <TabsTrigger value="fit" className="flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" />{t("aiMoslik", "AI moslik")}</TabsTrigger>
+            <TabsTrigger value="lifecycle" className="flex items-center gap-1"><Activity className="h-3.5 w-3.5" />{t("holat", "Holat")}</TabsTrigger>
             <TabsTrigger value="employees">Xodimlar ({node.employeeCount})</TabsTrigger>
             <TabsTrigger value="children">Farzandlar ({node.childCount})</TabsTrigger>
             <TabsTrigger value="vacant">{t("vakant")}</TabsTrigger>
@@ -130,6 +137,8 @@ export default function OrgNodeDetail() {
 
           <TabsContent value="main"><MainTab node={node} /></TabsContent>
           <TabsContent value="razryad"><RazryadTab node={node} /></TabsContent>
+          <TabsContent value="fit"><FitTab node={node} /></TabsContent>
+          <TabsContent value="lifecycle"><LifecycleTab node={node} /></TabsContent>
           <TabsContent value="employees"><EmployeesTab node={node} /></TabsContent>
           <TabsContent value="children"><ChildrenTab node={node} /></TabsContent>
           <TabsContent value="vacant"><VacantTab node={node} /></TabsContent>

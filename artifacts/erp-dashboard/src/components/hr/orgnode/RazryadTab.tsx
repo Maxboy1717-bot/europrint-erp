@@ -8,7 +8,7 @@
 
 import { type ReactNode, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Award, Settings2 } from "lucide-react";
+import { Award, Settings2, Check, X, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import { EPLoader } from "@/components/ep";
 import { RazryadLevelsPanel } from "@/components/hr/org/RazryadLevelsPanel";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { NodeDetail } from "./types";
 import { useTranslation } from "@/lib/i18n";
 
@@ -55,11 +56,35 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+const STATUS_STYLE: Record<string, string> = {
+  pending: "bg-amber-300/15 text-amber-600 border-amber-400/40",
+  hr_approved: "bg-blue-300/15 text-blue-600 border-blue-400/40",
+  approved: "bg-emerald-300/15 text-emerald-600 border-emerald-400/40",
+  rejected: "bg-red-300/15 text-red-600 border-red-400/40",
+};
+
+interface RazryadRequest {
+  id: number;
+  card_id?: number;
+  target_razryad_id?: number | null;
+  current_razryad_id?: number | null;
+  request_type?: string | null;
+  exam_score?: number | string | null;
+  reason?: string | null;
+  status?: string | null;
+  reject_reason?: string | null;
+  created_at?: string | null;
+}
+
 export function RazryadTab({ node }: { node: NodeDetail }) {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { hasRole } = useAuth();
   const [cfgOpen, setCfgOpen] = useState(false);
+  // RBAC (egasi 8-qaror): HR imzosi=hr_manager, rahbar imzosi=manager/director; super_admin barchasi.
+  const canHrApprove = hasRole("hr_manager", "super_admin");
+  const canManagerApprove = hasRole("manager", "director", "super_admin");
 
   const { data, isLoading } = useQuery<{ items: RazryadLevel[] }>({
     queryKey: ["/api/org-structure/razryad-levels"],
@@ -88,6 +113,20 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
   });
   const history = Array.isArray(histData?.items) ? histData!.items : [];
 
+  // Karta razryad so'rovlari (pending/hr_approved/approved/rejected) — imzo-zanjir uchun.
+  const { data: reqData } = useQuery<{ items: RazryadRequest[] }>({
+    queryKey: [`/api/org-structure/cards/${node.id}/razryad-requests`],
+    staleTime: 30_000,
+  });
+  const requests = Array.isArray(reqData?.items) ? reqData!.items : [];
+
+  const invalidateRazryad = () => {
+    queryClient.invalidateQueries({ queryKey: [`/api/org-structure/cards/${node.id}/razryad-history`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/org-structure/cards/${node.id}/razryad-requests`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/org-structure/nodes/${node.id}`] });
+    queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
+  };
+
   const createRequest = useMutation({
     mutationFn: () => apiRequest<{ message?: string }>("POST", `/api/org-structure/cards/${node.id}/razryad-requests`, {
       targetRazryadId: Number(reqTarget),
@@ -95,12 +134,48 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
       examScore: reqScore.trim() === "" ? undefined : Number(reqScore),
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/org-structure/cards/${node.id}/razryad-history`] });
+      invalidateRazryad();
       setReqTarget(""); setReqScore("");
       toast({ title: t("osishSorovYuborildi", "O'sish so'rovi yuborildi (HR + rahbar tasdig'i kutilmoqda)") });
     },
     onError: (e: unknown) => toast({ title: e instanceof Error ? e.message : t("Xatolik"), variant: "destructive" }),
   });
+
+  // 1-imzo: HR tasdig'i (pending -> hr_approved).
+  const hrApprove = useMutation({
+    mutationFn: (id: number) => apiRequest("POST", `/api/org-structure/razryad-requests/${id}/hr-approve`),
+    onSuccess: () => { invalidateRazryad(); toast({ title: t("hrImzolandi", "HR imzosi qo'yildi (rahbar tasdig'i kutilmoqda)") }); },
+    onError: (e: unknown) => toast({ title: e instanceof Error ? e.message : t("Xatolik"), variant: "destructive" }),
+  });
+
+  // 2-imzo: bevosita rahbar tasdig'i (hr_approved -> approved; razryad amalda o'zgaradi).
+  const managerApprove = useMutation({
+    mutationFn: (id: number) => apiRequest("POST", `/api/org-structure/razryad-requests/${id}/manager-approve`),
+    onSuccess: () => { invalidateRazryad(); toast({ title: t("razryadTasdiqlandi", "Tasdiqlandi — razryad o'zgardi") }); },
+    onError: (e: unknown) => toast({ title: e instanceof Error ? e.message : t("Xatolik"), variant: "destructive" }),
+  });
+
+  const rejectRequest = useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      apiRequest("POST", `/api/org-structure/razryad-requests/${id}/reject`, { reason }),
+    onSuccess: () => { invalidateRazryad(); toast({ title: t("sorovRadEtildi", "So'rov rad etildi") }); },
+    onError: (e: unknown) => toast({ title: e instanceof Error ? e.message : t("Xatolik"), variant: "destructive" }),
+  });
+
+  const onReject = (id: number) => {
+    const reason = window.prompt(t("radSababi", "Rad etish sababi (majburiy):") ?? "");
+    if (reason == null) return;
+    if (reason.trim() === "") {
+      toast({ title: t("radSababiKerak", "Rad sababi majburiy"), variant: "destructive" });
+      return;
+    }
+    rejectRequest.mutate({ id, reason: reason.trim() });
+  };
+
+  const razryadName = (id: number | null | undefined): string => {
+    if (id == null) return "—";
+    return levels.find((r) => r.id === id)?.name ?? `#${id}`;
+  };
 
   if (isLoading) return <EPLoader />;
 
@@ -226,6 +301,65 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* So'rovlar + 2-imzo zanjiri (HR -> rahbar). Imzo-tugmalar rol bilan darvozalangan. */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><ShieldCheck className="h-4 w-4" />{t("razryadSorovlariImzo", "So'rovlar va imzolar")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {requests.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("razryadSorovYoq", "Ushbu karta uchun razryad so'rovi yo'q.")}</p>
+          ) : (
+            requests.map((rq) => {
+              const status = String(rq.status ?? "pending");
+              const isPending = status === "pending";
+              const isHrApproved = status === "hr_approved";
+              const open = isPending || isHrApproved;
+              return (
+                <div key={rq.id} className="rounded-md border border-border px-3 py-2 text-sm space-y-1.5" data-testid={`razryad-request-${rq.id}`}>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-medium">
+                      {razryadName(rq.current_razryad_id)} → <b>{razryadName(rq.target_razryad_id)}</b>
+                      <span className="text-muted-foreground"> · {String(rq.request_type ?? "increase")}</span>
+                      {rq.exam_score != null && <span className="text-muted-foreground"> · {String(rq.exam_score)}%</span>}
+                    </span>
+                    <Badge variant="outline" className={`text-[11px] ${STATUS_STYLE[status] ?? ""}`}>
+                      {t(`razryadStatus_${status}`, status === "pending" ? "Kutilmoqda" : status === "hr_approved" ? "HR imzoladi" : status === "approved" ? "Tasdiqlangan" : "Rad etilgan")}
+                    </Badge>
+                  </div>
+                  {rq.reject_reason && <p className="text-xs text-red-500">{t("radSababiLabel", "Rad sababi")}: {String(rq.reject_reason)}</p>}
+                  {open && (canHrApprove || canManagerApprove) && (
+                    <div className="flex items-center gap-2 pt-1">
+                      {isPending && canHrApprove && (
+                        <Button size="sm" variant="outline" disabled={hrApprove.isPending}
+                          onClick={() => hrApprove.mutate(rq.id)} data-testid={`button-hr-approve-${rq.id}`}>
+                          <Check className="h-3.5 w-3.5 mr-1" />{t("hrImzosi", "HR imzosi")}
+                        </Button>
+                      )}
+                      {isHrApproved && canManagerApprove && (
+                        <Button size="sm" disabled={managerApprove.isPending}
+                          onClick={() => managerApprove.mutate(rq.id)} data-testid={`button-manager-approve-${rq.id}`}>
+                          <Check className="h-3.5 w-3.5 mr-1" />{t("rahbarImzosi", "Rahbar imzosi (tasdiqlash)")}
+                        </Button>
+                      )}
+                      {(canHrApprove || canManagerApprove) && (
+                        <Button size="sm" variant="ghost" className="text-red-500" disabled={rejectRequest.isPending}
+                          onClick={() => onReject(rq.id)} data-testid={`button-reject-${rq.id}`}>
+                          <X className="h-3.5 w-3.5 mr-1" />{t("radEtish", "Rad etish")}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+          <p className="text-[11px] text-muted-foreground pt-1">
+            {t("imzoZanjirIzoh", "2-imzo: HR imzosi → bevosita rahbar imzosi → razryad o'zgaradi. Imzo huquqi rolga bog'liq.")}
+          </p>
         </CardContent>
       </Card>
 

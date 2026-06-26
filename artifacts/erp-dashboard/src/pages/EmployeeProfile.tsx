@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Shield, ShieldCheck, ShieldAlert, CreditCard, Check } from "lucide-react";
 
 import { GsdGraph } from "@/components/GsdGraph";
 
@@ -102,6 +102,10 @@ export default function EmployeeProfile() {
   const { t: tCommon } = useTranslation('common');
   const { hasRole } = useAuth();
   const isAdminOrHrManager = hasRole('admin', 'super_admin', 'hr_manager', 'hr');
+  // Birlamchi-karta (users.card_id) tahrirlash = org-card assign endpoint ruxsati bilan bir xil
+  // rol to'plami (admin/super_admin/hr_manager/director). Oddiy `hr` assign-da 403 oladi → tahrir
+  // tugmasi faqat shu tier'ga ko'rsatiladi (display hammaga, edit faqat admin-tier).
+  const canEditPrimaryCard = hasRole('admin', 'super_admin', 'hr_manager', 'director');
 
   useEffect(() => { const tab = parseTabFromSearch(searchStr); if (tab !== activeTab) setActiveTab(tab); }, [searchStr]);
   const handleTabChange = (tab: string) => { const nt = tab as TabValue; setActiveTab(nt); const p = new URLSearchParams(window.location.search); p.set("tab", nt); window.history.pushState(null, "", `${window.location.pathname}?${p.toString()}`); };
@@ -119,6 +123,9 @@ export default function EmployeeProfile() {
   const [sickLeaveDialogOpen, setSickLeaveDialogOpen] = useState(false);
   const [businessTripDialogOpen, setBusinessTripDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  // Birlamchi karta tahrirlash: tanlangan karta id + tahrir rejimi (faqat admin-tier).
+  const [editingPrimaryCard, setEditingPrimaryCard] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState<string>("");
 
   const [passportForm, setPassportForm] = useState({ passportNumber: "", passportSeries: "", issuedBy: "", issuedDate: "", expiryDate: "", birthPlace: "", citizenship: "Uzbekistan" });
   const [bankForm, setBankForm] = useState({ bankName: "", accountNumber: "", cardNumber: "", cardHolderName: "", mfo: "", inn: "", isPrimary: true });
@@ -277,6 +284,39 @@ export default function EmployeeProfile() {
     enabled: !!id 
   });
 
+  // ── Birlamchi karta (users.card_id, kanonik M:N employee_cards is_primary) ──────────────
+  // READ: xodimning faol kartalari + FORMULA-A jami. is_primary=true bo'lgan karta = birlamchi.
+  // Bu real backend endpoint (org-structure/cards/by-employee/:id), EmployeeCardsSummary ham shu manbani ishlatadi.
+  interface EmpCardRow { card_id: number; is_primary: boolean; is_acting?: boolean; position_name: string; code: string | null; }
+  const { data: empCardsData } = useQuery<{ cards: EmpCardRow[]; totalSalary: number }>({
+    queryKey: [`/api/org-structure/cards/by-employee/${id}`],
+    enabled: !!id,
+  });
+  const primaryCard = Array.isArray(empCardsData?.cards)
+    ? empCardsData!.cards.find((c) => c.is_primary && !c.is_acting) ?? null
+    : null;
+  // Tahrir uchun mavjud kartalar ro'yxati — faqat admin-tier tahrir rejimini ochganda yuklanadi.
+  interface OrgCardOption { id: number; name?: string; position_name?: string; code?: string | null }
+  const { data: availableCardsData } = useQuery<{ items: OrgCardOption[]; total: number }>({
+    queryKey: ['/api/org-structure/cards'],
+    enabled: !!id && canEditPrimaryCard && editingPrimaryCard,
+  });
+  const availableCards = Array.isArray(availableCardsData?.items) ? availableCardsData!.items : [];
+  // WRITE: birlamchi kartani belgilash = org-card assign (isPrimary:true). Bu employee_cards M:N ga
+  // yozadi + employees.org_function_id mirror'ini yangilaydi; users.card_id backfill orqali sinxron.
+  const setPrimaryCardMutation = useMutation({
+    mutationFn: async (cardId: number) =>
+      apiRequest("POST", `/api/org-structure/cards/${cardId}/assign`, { employeeId: Number(id), isPrimary: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/org-structure/cards/by-employee/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/org-structure/cards/gate/by-user/${id}`] });
+      setEditingPrimaryCard(false);
+      setSelectedCardId("");
+      toast({ title: t("birlamchiKartaYangilandi", "Birlamchi karta yangilandi") });
+    },
+    onError: () => toast({ title: tCommon("error", "Xatolik"), variant: "destructive" }),
+  });
+
   const isMachineOperator = corpInfoForMachine?.is_machine_operator === true;
   const savePassportMutation = useMutation({ mutationFn: async (d: typeof passportForm) => apiRequest("POST", `/api/employees/${id}/passport`, { ...d, userId: id }), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/employees', id, 'passport'] }); setPassportDialogOpen(false); toast({ title: tCommon('savedSuccessfully') }); } });
   const saveBankMutation = useMutation({ mutationFn: async (d: typeof bankForm) => apiRequest("POST", `/api/employees/${id}/bank-accounts`, { ...d, userId: id }), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/employees', id, 'bank-accounts'] }); setBankDialogOpen(false); setBankForm({ bankName: "", accountNumber: "", cardNumber: "", cardHolderName: "", mfo: "", inn: "", isPrimary: true }); toast({ title: tCommon('savedSuccessfully') }); } });
@@ -314,7 +354,28 @@ export default function EmployeeProfile() {
       /></div>
       <ProfileHeader employee={employee} abcData={abcData} contracts={contracts} certificatesData={certificatesData} payrollSummary={payrollSummary ?? undefined} salaryHistory={salaryHistory} expiredCerts={expiredCerts} expiringSoonCerts={expiringSoonCerts} getInitials={getInitials} onEdit={() => setEditDialogOpen(true)} attendanceStats={attStats} attendanceData={attendanceData} />
       {isAdminOrHrManager && (
-        <Card className="border border-border shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> {t("kirishHuquqlari")}</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-9 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> {t("ornatilgan")}</Badge> : <Badge className="bg-red-50 text-[var(--ep-red)] text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> {t("ornatilmagan")}</Badge>}</div></CardContent></Card>
+        <Card className="border border-border shadow-none"><CardContent className="p-4 flex flex-wrap items-center gap-6"><div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><Shield className="h-3.5 w-3.5" /> {t("kirishHuquqlari")}</div><Select value={employee.role || "employee"} onValueChange={(val) => updateRoleMutation.mutate(val)} disabled={updateRoleMutation.isPending}><SelectTrigger className="h-9 text-xs w-44"><SelectValue /></SelectTrigger><SelectContent>{(Array.isArray(ROLE_OPTIONS) ? ROLE_OPTIONS : []).map(r => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}</SelectContent></Select><div className="flex items-center gap-2">{employee.hasPassword ? <Badge className="bg-green-100 text-green-800 text-xs"><ShieldCheck className="h-3 w-3 mr-1" /> {t("ornatilgan")}</Badge> : <Badge className="bg-red-50 text-[var(--ep-red)] text-xs"><ShieldAlert className="h-3 w-3 mr-1" /> {t("ornatilmagan")}</Badge>}</div>
+          {/* Birlamchi karta (users.card_id) — ko'rsatish + (admin) tahrirlash. Additiv: rol-Select buzilmaydi. */}
+          <div className="flex items-center gap-2 flex-wrap" data-testid="primary-card-field">
+            <div className="flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground"><CreditCard className="h-3.5 w-3.5" /> {t("birlamchiKarta", "Birlamchi karta")}</div>
+            {editingPrimaryCard && canEditPrimaryCard ? (
+              <>
+                <Select value={selectedCardId} onValueChange={setSelectedCardId}>
+                  <SelectTrigger className="h-9 text-xs w-56" data-testid="select-primary-card"><SelectValue placeholder={t("kartaTanlang", "Karta tanlang")} /></SelectTrigger>
+                  <SelectContent>{availableCards.map(c => <SelectItem key={c.id} value={String(c.id)} className="text-xs">{c.position_name || c.name || `#${c.id}`}{c.code ? ` (${c.code})` : ""}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button size="sm" className="h-9 text-xs" disabled={!selectedCardId || setPrimaryCardMutation.isPending} onClick={() => { if (selectedCardId) setPrimaryCardMutation.mutate(Number(selectedCardId)); }} data-testid="button-save-primary-card"><Check className="h-3.5 w-3.5 mr-1" /> {tCommon("save", "Saqlash")}</Button>
+                <Button size="sm" variant="ghost" className="h-9 text-xs" onClick={() => { setEditingPrimaryCard(false); setSelectedCardId(""); }}>{tCommon("cancel", "Bekor")}</Button>
+              </>
+            ) : (
+              <>
+                <span className="text-[13px] font-medium" data-testid="text-primary-card">{primaryCard?.position_name ?? "—"}{primaryCard?.code ? ` (${primaryCard.code})` : ""}</span>
+                {canEditPrimaryCard && (
+                  <Button size="sm" variant="outline" className="h-9 text-xs" onClick={() => { setSelectedCardId(primaryCard ? String(primaryCard.card_id) : ""); setEditingPrimaryCard(true); }} data-testid="button-edit-primary-card">{tCommon("edit", "Tahrirlash")}</Button>
+                )}
+              </>
+            )}
+          </div></CardContent></Card>
       )}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabNavigation isAdminOrHrManager={isAdminOrHrManager} isMachineOperator={isMachineOperator} status={employee.status} />
