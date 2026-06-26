@@ -76,6 +76,8 @@ import { ForecastExtController }     from './presentation/forecast-ext.controlle
 import { AiDailyReportService }      from './application/services/ai-daily-report.service';
 import { AiDailyReportRepository }   from './infrastructure/repositories/ai-daily-report.repository';
 import { AiDailyReportController }   from './presentation/ai-daily-report.controller';
+// T12-08 — Kunlik ЦКП AI-chatbot cron (mashinasiz xodimga savol)
+import { AiDailyReportCron }         from './application/services/ai-daily-report.cron';
 
 @Module({
   imports: [
@@ -137,6 +139,8 @@ import { AiDailyReportController }   from './presentation/ai-daily-report.contro
     // A75 — Kunlik AI-chatbot
     AiDailyReportService,
     AiDailyReportRepository,
+    // T12-08 — Kunlik ЦКП AI-chatbot cron (08:00 Du-Sha, mashinasiz xodimga savol)
+    AiDailyReportCron,
   ],
   controllers: [
     AiController,

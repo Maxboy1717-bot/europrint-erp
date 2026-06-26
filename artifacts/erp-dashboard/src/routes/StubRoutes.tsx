@@ -5,7 +5,7 @@
 
 import { lazy } from "react";
 
-const Stub = lazy(() => import("@/pages/StubPage"));
+const Stub = lazy(() => import("@/pages/ComingSoonPage"));
 
 // ── Stub → real (session 2026-05-12) ─────────────────────────────────────────
 const AgentsHubPage            = lazy(() => import("@/pages/agents/AgentsHub"));
@@ -20,6 +20,7 @@ const LessonPlayerPage         = lazy(() => import("@/pages/LessonPlayer"));
 const MESWorkerAssignmentsPage = lazy(() => import("@/pages/MESWorkerAssignments"));
 const Customer360Page          = lazy(() => import("@/pages/Customer360Page"));
 const AnalyticsPage            = lazy(() => import("@/pages/Analytics"));
+const WmsAnalyticsPage         = lazy(() => import("@/pages/WmsAnalyticsPage"));
 
 // ── Real pages (prior sessions) ───────────────────────────────────────────────
 const HRVacationPage      = lazy(() => import("@/pages/HRVacationSick"));
@@ -69,14 +70,14 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/ai/hr',                     HRAIDashboardPage],        // HR AI dashboard
   ['/ai/marketing',              AiCrmPageComponent],       // AI CRM / marketing
   ['/ai-planning',               AIProductionPlanningPage], // AI production planning
-  ['/ai/wms',                    Stub],                     // WmsAnalytics o'chirildi (stub)
+  ['/ai/wms',                    WmsAnalyticsPage],         // Ombor tahlili (turnover/dead-stock/ROP) — real BE
   ['/assignments',               MESWorkerAssignmentsPage], // MES worker assignments
   ['/insights',                  AnalyticsPage],            // BI analytics / insights
   ['/integration/requests',      IntegrationMgmtPage],      // Integration management
   ['/iot-enhanced',              IoTExtendedPage],          // Extended IoT dashboard
   ['/video-progress',            LessonPlayerPage],         // Video lesson player
 
-  // ── Still Stub (no real backend/page built yet) ───────────────────────────
+  // ── Coming-soon (EPComingSoon — no real backend/page built yet) ───────────
   ['/export',                    Stub],   // export module not yet built
   ['/micro-modules',             Stub],   // LMS micro-modules, deferred
   ['/modules',                   Stub],   // module manager, deferred

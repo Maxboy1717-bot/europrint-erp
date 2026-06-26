@@ -55,6 +55,15 @@ export const UpdateWorkCenterNormsDtoSchema = z
 
 export type UpdateWorkCenterNormsDto = z.infer<typeof UpdateWorkCenterNormsDtoSchema>;
 
+// T12-04: KARTA (org-tuzilma) bog'lash DTO. orgDepartmentId = org_departments.id (qaysi KARTA);
+// null = bog'lanishni bekor qilish. Qiymat egasi-DATA — bu yozish-shakli (Q-40).
+export const LinkWorkCenterCardDtoSchema = z.object({
+  orgDepartmentId: z.number().int().positive().nullable(),
+  reason: z.string().min(5), // §8.6 — PP o'zgartirishda sabab majburiy
+});
+
+export type LinkWorkCenterCardDto = z.infer<typeof LinkWorkCenterCardDtoSchema>;
+
 export const GetWorkCentersDtoSchema = z.object({
   type: z.nativeEnum(WorkCenterType).optional(),
   isActive: z.boolean().optional(),

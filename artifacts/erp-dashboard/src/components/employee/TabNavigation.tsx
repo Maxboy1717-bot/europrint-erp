@@ -21,7 +21,7 @@ export function TabNavigation({
   const { t } = useTranslation("common");
   return (
     <ScrollArea className="w-full">
-      <TabsList style={{ background: "#fff", boxShadow: "4px 4px 14px rgba(163,177,198,0.35), -2px -2px 8px rgba(255,255,255,0.8)", borderRadius: 14, padding: "4px 6px", display: "flex", width: "max-content", minWidth: "100%", gap: 2, border: "none" }}>
+      <TabsList className="ep-tabbar-soft">
         <TabsTrigger value="personal" data-testid="tab-personal" className="rounded-[10px] px-3 py-1.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md font-medium text-xs whitespace-nowrap text-gray-500 transition-all">{t("shaxsiy")}</TabsTrigger>
         <TabsTrigger value="work" data-testid="tab-work" className="rounded-[10px] px-3 py-1.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md font-medium text-xs whitespace-nowrap text-gray-500 transition-all">{t("ishTarixi")}</TabsTrigger>
         <TabsTrigger value="documents" data-testid="tab-documents" className="rounded-[10px] px-3 py-1.5 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md font-medium text-xs whitespace-nowrap text-gray-500 transition-all">{t("hujjatlar")}</TabsTrigger>

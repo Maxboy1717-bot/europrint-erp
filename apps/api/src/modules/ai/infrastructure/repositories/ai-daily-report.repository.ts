@@ -40,6 +40,21 @@ export interface CkpChatTurn {
   content: string;
 }
 
+/**
+ * T12-08 — Kunlik AI-savol cron uchun: mashinasiz (MES'siz) xodimga biriktirilgan,
+ * ЦКП-meta'si bor karta. Cron har biriga "Bugun qancha bajardingiz?" degan ЦКП-savolni
+ * yo'llaydi (AI bo'lsa AI-generatsiya, bo'lmasa statik savol — savol FAKT EMAS, Q-40).
+ */
+export interface MachinelessCkpCard {
+  cardId: number;
+  cardName: string | null;
+  ckp: string | null;
+  tskpTarget: number | null;
+  measurementUnit: string | null;
+  /** ai_ckp_chat_logs.employee_id (NOT NULL) — kartaga biriktirilgan xodim. */
+  employeeId: number;
+}
+
 interface MetaRow {
   card_id: number | null;
   card_name: string | null;
@@ -131,5 +146,76 @@ export class AiDailyReportRepository {
       }
       return written;
     }, 'DB_ERROR');
+  }
+
+  /**
+   * T12-08 — Kunlik AI-savol cron MANBAI: o'sha kun (factDate) hali ЦКП-savol
+   * yo'llanmagan, mashinasiz xodimga biriktirilgan, ЦКП-meta'si bor kartalar.
+   *
+   * "Mashinasiz" = xodim mashina-operatori EMAS (employees.is_machine_operator IS NOT TRUE).
+   * Mashina-operatorlari ЦКП'ni IoT/MES avto-feed orqali oladi (operator-hourly-invoice.cron) —
+   * ularga kunlik AI-savol yo'llanmaydi (takror yo'q).
+   *
+   * Karta→xodim yo'li: avval karta head_user_id (kanonik), keyin employee_cards
+   * (is_primary, is_active, NOT ended) birlamchi biriktirma. employee_id NULL bo'lsa
+   * karta tashlanadi (chat-log employee_id NOT NULL kutadi).
+   *
+   * Idempotent: o'sha kun session_id (`ckp-<cardId>-<factDate>`) uchun ai_ckp_chat_logs'da
+   * yozuv bo'lsa karta tashlanadi — cron qayta yurganda takror savol YO'Q.
+   *
+   * Faqat O'QISH (yon-ta'sir yo'q), parametrlangan sql (Qoida B).
+   */
+  async findMachinelessCardsNeedingQuestion(factDate: string): Promise<Result<MachinelessCkpCard[]>> {
+    const r = await safeCall(async () => {
+      const rows = await runQuery<MetaRow>(sql`
+        SELECT
+          od.id                       AS card_id,
+          od.name                     AS card_name,
+          od.tskp                     AS ckp,
+          od.tskp_target              AS tskp_target,
+          od.tskp_measurement_unit    AS measurement_unit,
+          od.ckp_formula_type         AS formula_type,
+          emp.id                      AS employee_id
+        FROM org_departments od
+        -- Kartaga biriktirilgan xodim: head_user_id (kanonik) yoki birlamchi employee_cards
+        JOIN LATERAL (
+          SELECT COALESCE(
+            (SELECT u.employee_id FROM users u WHERE u.id = od.head_user_id),
+            (SELECT ec.employee_id FROM employee_cards ec
+              WHERE ec.card_id = od.id
+                AND ec.is_active = true
+                AND (ec.ended_at IS NULL OR ec.ended_at > NOW())
+              ORDER BY ec.is_primary DESC, ec.assigned_at DESC NULLS LAST
+              LIMIT 1)
+          ) AS employee_id
+        ) link ON TRUE
+        JOIN employees emp ON emp.id = link.employee_id
+        WHERE od.tskp IS NOT NULL
+          AND COALESCE(emp.is_machine_operator, false) = false
+          AND emp.deleted_at IS NULL
+          -- O'sha kun savol yo'llanmagan (idempotent)
+          AND NOT EXISTS (
+            SELECT 1 FROM ai_ckp_chat_logs l
+            WHERE l.session_id = 'ckp-' || od.id::text || '-' || ${factDate}
+          )
+        ORDER BY od.id
+      `);
+      return Array.isArray(rows.rows) ? rows.rows : [];
+    }, 'DB_ERROR');
+
+    if (!r.ok) return Err(r.error);
+    const mapped: MachinelessCkpCard[] = [];
+    for (const row of r.data) {
+      if (row.card_id == null || row.employee_id == null) continue;
+      mapped.push({
+        cardId: Number(row.card_id),
+        cardName: row.card_name ?? null,
+        ckp: row.ckp ?? null,
+        tskpTarget: row.tskp_target == null ? null : Number(row.tskp_target),
+        measurementUnit: row.measurement_unit ?? null,
+        employeeId: Number(row.employee_id),
+      });
+    }
+    return Ok(mapped);
   }
 }

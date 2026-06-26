@@ -10,7 +10,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
-import { sql, eq, and } from 'drizzle-orm';
+import { sql, eq, and, isNull } from 'drizzle-orm';
 import { crm_activities, crm_lead_stages, crmLeads } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import type { CrmActivityRow } from '../../domain/repositories/i-crm-extras.repo';
@@ -24,10 +24,13 @@ export class CrmExtrasDashboardRepository {
   async getDashboardLeads(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       try {
+        // Soft-delete filter: exclude rows the user has deleted (deleted_at set),
+        // mirroring getDashboardDeals()/getPipeline() in this same file. Without it the
+        // dashboard status breakdown counts soft-deleted leads and overstates each stage.
         return db.select({
           status: crmLeads.status_description,
           count:  sql<number>`COUNT(*)::int`,
-        }).from(crmLeads).groupBy(crmLeads.status_description).then(r => castTo<Row[]>(r));
+        }).from(crmLeads).where(isNull(crmLeads.deleted_at)).groupBy(crmLeads.status_description).then(r => castTo<Row[]>(r));
       } catch (err) {
         this.logger.warn(`getDashboardLeads: ${(err as Error).message}`);
         return [];
@@ -36,26 +39,24 @@ export class CrmExtrasDashboardRepository {
   }
 
   async getDashboardDeals(): Promise<Result<Row>> {
+    // MUHIM-5 fix: ichki try/catch `return {}` xatoni yashirar edi.
+    // safeCall o'zi xatoni ushlab Err(AppErr('DB_ERROR', ...)) qaytaradi.
+    // Chaqiruvchi (controller/handler) Err ni ko'rib loglash/qayta urinish qilsin.
     return safeCall(async () => {
-      try {
-        // Live crm_deals real columns: `status` (lowercase business status —
-        // proposal/negotiation/won/lost), `opportunity` (Bitrix canonical deal value),
-        // `deleted_at`. Raw SQL with the real column names: the @shared/db compat def
-        // aliases the `status` field to the `stage_id` column and names the soft-delete
-        // field `deleted_at` (not `deletedAt`), so the ORM path produced invalid SQL
-        // (undefined column → threw → empty result). runQuery mirrors getPipeline below.
-        const r = await runQuery<Row>(sql`
-          SELECT COUNT(*)::int AS total,
-                 COALESCE(SUM(opportunity), 0)::float8 AS pipeline
-          FROM crm_deals
-          WHERE deleted_at IS NULL
-            AND (status IS NULL OR status NOT IN ('won', 'lost'))
-        `);
-        return (r.rows[0] ?? {}) as Row;
-      } catch (err) {
-        this.logger.warn(`getDashboardDeals: ${(err as Error).message}`);
-        return {};
-      }
+      // Live crm_deals real columns: `status` (lowercase business status —
+      // proposal/negotiation/won/lost), `opportunity` (Bitrix canonical deal value),
+      // `deleted_at`. Raw SQL with the real column names: the @shared/db compat def
+      // aliases the `status` field to the `stage_id` column and names the soft-delete
+      // field `deleted_at` (not `deletedAt`), so the ORM path produced invalid SQL
+      // (undefined column → threw → empty result). runQuery mirrors getPipeline below.
+      const r = await runQuery<Row>(sql`
+        SELECT COUNT(*)::int AS total,
+               COALESCE(SUM(opportunity), 0)::float8 AS pipeline
+        FROM crm_deals
+        WHERE deleted_at IS NULL
+          AND (status IS NULL OR status NOT IN ('won', 'lost'))
+      `);
+      return (r.rows[0] ?? { total: 0, pipeline: 0 }) as Row;
       }, 'DB_ERROR');
   }
 

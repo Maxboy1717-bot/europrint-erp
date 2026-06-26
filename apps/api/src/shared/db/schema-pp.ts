@@ -24,6 +24,10 @@ export const ppWorkCenters = pgTable(
     capacity:                  integer('capacity').notNull().default(8),
     certificationLmsCourseId:  integer('certification_lms_course_id'),
     departmentId:              integer('department_id'),
+    // T12-04: KARTA (org-tuzilma) bog'lanishi — ish markazi qaysi org_departments KARTA-siga
+    // tegishli (FK fk_work_centers_org_dept -> org_departments.id). Qiymat egasi-DATA (qaysi karta),
+    // bu Drizzle binding faqat YOZUV-YO'LINI ochadi (struktura; Q-40). Hozir 12 work_center'da NULL.
+    orgDepartmentId:           integer('org_department_id'),
     isActive:                  boolean('is_active').default(true),
     nameRu:                    varchar('name_ru', { length: 255 }),
     nameUz:                    varchar('name_uz', { length: 255 }),

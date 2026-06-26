@@ -47,6 +47,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // TenantContextInterceptor can pick it up. Optional; falls back
       // to DEFAULT_TENANT_ID downstream when missing.
       tenantId: payload.tenantId,
+      // EP-ORG-023 (T12-07) — KARTA-claim'larni JWT'dan request.user'ga ko'chiramiz.
+      // login.service ularni imzolaydi (resolveCardGate'dan), lekin shu yergacha
+      // ko'chirilmasa guard'lardagi tier-derive yo'li (RolesGuard A5 / PermissionGuard
+      // A6) hech qachon ishlamasdi. Additiv: kartasiz user/eski tokenda undefined →
+      // guard'lar eski role/position yo'liga toza fallback qiladi (regress yo'q, Q-39).
+      cardId: payload.cardId ?? null,
+      rbacTier: payload.rbacTier ?? null,
+      positionId: payload.positionId ?? null,
     };
   }
 }

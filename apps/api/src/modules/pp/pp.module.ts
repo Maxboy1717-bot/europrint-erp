@@ -26,6 +26,7 @@ import { ApproveRoutingHandler } from './application/commands/approve-routing.ha
 import { CreateWorkCenterHandler } from './application/commands/create-work-center.command';
 import { UpdateWorkCenterHandler } from './application/commands/update-work-center.command';
 import { UpdateWorkCenterNormsHandler } from './application/commands/update-work-center-norms.command';
+import { LinkWorkCenterCardHandler } from './application/commands/link-work-center-card.command';
 import { ProductionPlanHandler } from './application/queries/production-plan.handler';
 import { MachineLoadHandler } from './application/queries/machine-load.handler';
 import { GetProductionOrdersHandler } from './application/queries/get-production-orders.handler';
@@ -108,6 +109,7 @@ const handlers = [
   CreateWorkCenterHandler,
   UpdateWorkCenterHandler,
   UpdateWorkCenterNormsHandler,
+  LinkWorkCenterCardHandler,
   GetWorkCentersHandler,
   GetWorkCentersStatsHandler,
   GetProductionQueueHandler,

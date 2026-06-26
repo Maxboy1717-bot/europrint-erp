@@ -15,6 +15,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CreateWorkCenterCommand } from '../application/commands/create-work-center.command';
 import { UpdateWorkCenterCommand } from '../application/commands/update-work-center.command';
 import { UpdateWorkCenterNormsCommand } from '../application/commands/update-work-center-norms.command';
+import { LinkWorkCenterCardCommand } from '../application/commands/link-work-center-card.command';
 import { GetWorkCentersQuery } from '../application/queries/get-work-centers.query';
 import { GetWorkCentersStatsQuery } from '../application/queries/get-work-centers-stats.query';
 import {
@@ -24,6 +25,8 @@ import {
   UpdateWorkCenterDtoSchema,
   UpdateWorkCenterNormsDto,
   UpdateWorkCenterNormsDtoSchema,
+  LinkWorkCenterCardDto,
+  LinkWorkCenterCardDtoSchema,
   GetWorkCentersDto,
   GetWorkCentersDtoSchema,
 } from './dto/work-center.dto';
@@ -140,6 +143,21 @@ export class PpWorkCentersController {
       maxCrewSize: v.maxCrewSize,
       unitPreference: v.unitPreference,
     });
+    return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+
+  @ApiOperation({ summary: 'Link work-center to org-tuzilma KARTA (org_department_id)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put(':id/card')
+  @Roles(Role.SUPER_ADMIN, Role.PRODUCTION_MANAGER)
+  async linkCard(@Param('id') id: string, @Body() dto: LinkWorkCenterCardDto) {
+    // T12-04: ish markazini org-tuzilma KARTA-siga bog'lash yozuv-yo'li. Qiymat (qaysi KARTA)
+    // egasi tomonidan kiritiladi (struktura, Q-40). null = bog'lanishni bekor.
+    const v = LinkWorkCenterCardDtoSchema.parse(dto);
+    this.logger.log('Linking work center to KARTA');
+    const command = new LinkWorkCenterCardCommand(id, v.orgDepartmentId);
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 

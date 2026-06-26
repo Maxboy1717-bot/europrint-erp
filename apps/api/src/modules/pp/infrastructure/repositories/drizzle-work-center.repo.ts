@@ -148,6 +148,26 @@ export class DrizzleWorkCenterRepository {
     }
   }
 
+  // T12-04: KARTA bog'lanish yozuv-yo'li — ish markazini org_departments KARTA-siga bog'laydi
+  // (work_centers.org_department_id, FK fk_work_centers_org_dept). Qiymat egasi-DATA (qaysi karta);
+  // bu metod faqat MAVJUD orgDepartmentId qiymatini yozadi — soxta YOZMAYDI (Q-40). NULL = bog'lashni bekor.
+  async updateOrgDepartment(id: string, orgDepartmentId: number | null): Promise<Result<Record<string, unknown>>> {
+    try {
+      const numId = parseInt(id, 10);
+      const rows = await db
+        .update(workCenters)
+        .set({ orgDepartmentId })
+        .where(eq(workCenters.id, numId))
+        .returning();
+      const row = (rows as Record<string, unknown>[])[0];
+      if (!row) return Err('Work center topilmadi');
+      return Ok(row);
+    } catch (error: unknown) {
+      this.logger.error(`Failed to link work center to org department: ${(error as Error).message}`);
+      return Err('Work center KARTA bog\'lashda xatolik');
+    }
+  }
+
   async toggleActive(id: string, isActive: boolean): Promise<Result<WorkCenter>> {
     try {
       const numId = parseInt(id, 10);

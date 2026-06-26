@@ -37,19 +37,38 @@ export class DrizzleMesRepository implements IMesRepository {
    * existing row via getSession first, so this UPDATEs by id — the old code INSERTed into columns that
    * don't exist (pp_id/certification_required/completed_at), so it crashed AND would have duplicated the
    * row. Canonical columns: status / started_at / ended_at (mes_production_sessions is a VIEW over this).
+   *
+   * T12-02 — operator_card_id WRITER-wire (xodim↔KARTA, EGASI 8-qaror: karta-markaz):
+   * the T7-05 FK column `operator_card_id` → org_departments(id) was added but no write-path filled it.
+   * On every state save we resolve the operating employee's KARTA from the EXISTING card-link sources
+   * (no fabrication — Q-40) using the SAME canonical chain as getSession/listSessions read paths:
+   *   1) users.card_id            (birlamchi karta pointer — login/RBAC manbasi, EGASI 8-qaror)
+   *   2) employee_cards.card_id   (M:N kanonik, is_primary+is_active, PHASE-00)
+   *   3) users.org_department_id  (legacy single-dept fallback)
+   * COALESCE(<resolved>, operator_card_id) keeps any already-set value and never overwrites a real card
+   * with NULL; when the worker has NO card link the column stays NULL (no oylik/login per vizyon). The
+   * subquery is scoped to THIS session's worker_id, so it fills the card of the actual operator.
    */
   async saveSession(session: ProductionSession, tx?: DrizzleExecutor): Promise<Result<number>> {
     try {
       const startedAt = session.getStartedAt();
       const endedAt = session.getCompletedAt();
       const r = await exec(sql`
-        UPDATE production_sessions
+        UPDATE production_sessions ps
         SET status = ${session.getStatus()},
             started_at = COALESCE(${startedAt}, started_at),
             ended_at = COALESCE(${endedAt}, ended_at),
+            operator_card_id = COALESCE(
+              (SELECT COALESCE(u.card_id, ec.card_id, u.org_department_id)
+                 FROM users u
+                 LEFT JOIN employees emp ON emp.user_id = u.id
+                 LEFT JOIN employee_cards ec ON ec.employee_id = emp.id
+                   AND ec.is_active = true AND ec.is_primary = true
+                WHERE u.id = ps.worker_id),
+              ps.operator_card_id),
             updated_at = NOW()
-        WHERE id = ${session.getId()}
-        RETURNING id`, tx);
+        WHERE ps.id = ${session.getId()}
+        RETURNING ps.id`, tx);
       if (!r[0]) return Err('Sessiya topilmadi');
       return Ok(Number(r[0].id ?? 0));
     } catch {

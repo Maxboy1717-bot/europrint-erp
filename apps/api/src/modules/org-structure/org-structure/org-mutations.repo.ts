@@ -166,7 +166,7 @@ export class OrgMutationsRepo {
     allowOverload = false,
   ): Promise<{ assigned: boolean; reason?: string }> {
     const [node] = await db
-      .select({ id: orgDepartments.id, node_type: orgDepartments.node_type })
+      .select({ id: orgDepartments.id, node_type: orgDepartments.node_type, head_user_id: orgDepartments.head_user_id })
       .from(orgDepartments)
       .where(eq(orgDepartments.id, nodeId))
       .limit(1);
@@ -224,6 +224,26 @@ export class OrgMutationsRepo {
       `)).rows;
       // A39: ULUSH TARIXI — yangi bog'lanish (old=NULL → new=stakeFraction). eod_id INSERT id'dan.
       await this.recordStakeChange(ins?.id ?? null, userId, nodeId, null, stakeFraction, 'assign', allowOverload);
+    }
+
+    // T12-05: head_user_id WRITER-WIRE. Rahbarlik-kartasiga (owner/ceo/director/section)
+    // xodim biriktirilganda — bu xodim AYNAN shu kartaning rahbari → org_departments.head_user_id
+    // ni biriktirilgan user'dan to'ldir. Manba = MAVJUD user (biriktirilayotgan userId), soxta emas
+    // (Q-40 fabrikatsiya yo'q). KO'P-KARTA semantikasiga mos: leadership-kartada head=egasi.
+    //
+    // Q-46 (ishlayotgan data buzilmaydi): faqat head_user_id NULL bo'lsa yoziladi — egasi/HR qo'lda
+    // EditDialog'dan tayinlagan rahbarni (updateFromDto → head_user_id) HECH QACHON ustiga yozmaydi.
+    // Idempotent: head allaqachon bu user bo'lsa qayta yozish yo'q (WHERE shartlari buni ta'minlaydi).
+    //
+    // KANONIK rahbar-kartalar = jonli data'da head_user_id to'ldirilgan node_type'lar (DB-proof:
+    // owner/ceo/director/section = 18/18 to'liq; position/department/otdeleniye = 0/122, ularning
+    // rahbari daraxt bo'ylab leadership-kartadan keladi — backfillManagerIds parent-chain).
+    const HEAD_BEARING_TYPES = ['owner', 'ceo', 'director', 'section'];
+    if (node.node_type != null && HEAD_BEARING_TYPES.includes(node.node_type) && node.head_user_id == null) {
+      await runQuery(sql`
+        UPDATE org_departments SET head_user_id = ${userId}
+        WHERE id = ${nodeId} AND head_user_id IS NULL
+      `);
     }
 
     // department mirror (users.department_id) faqat birlamchi (back-compat).

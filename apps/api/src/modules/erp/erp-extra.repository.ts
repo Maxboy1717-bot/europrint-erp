@@ -141,7 +141,11 @@ export class ErpExtraRepository {
     // do not exist on production_orders (customer comes via sales_order, due → planned_end_date).
     const qty = Number(body.quantity ?? body.plannedQuantity ?? 1);
     const priorityNum = Number.isFinite(Number(body.priority)) ? Number(body.priority) : 3;
-    const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_end_date, priority, status, notes) VALUES (${orderNumber}, ${body.productId ?? null}, ${qty}, ${qty}, ${body.dueDate ?? null}, ${priorityNum}, ${body.status ?? 'pending'}, ${body.notes ?? null}) RETURNING *`);
+    // T12-04: work_center_id YOZUV-YO'LI — agar so'rovda ish markazi berilgan bo'lsa to'ldiriladi
+    // (body.workCenterId — ERP modulida kanonik kalit). Berilmasa NULL (planner keyinroq belgilaydi).
+    // Soxta YOZMAYDI: faqat MAVJUD qiymatdan to'ldiradi (Q-40). FK -> work_centers(id).
+    const workCenterId = body.workCenterId ?? null;
+    const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_end_date, priority, status, notes, work_center_id) VALUES (${orderNumber}, ${body.productId ?? null}, ${qty}, ${qty}, ${body.dueDate ?? null}, ${priorityNum}, ${body.status ?? 'pending'}, ${body.notes ?? null}, ${workCenterId}) RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }

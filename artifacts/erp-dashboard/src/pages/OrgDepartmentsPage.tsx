@@ -56,13 +56,13 @@ export default function OrgDepartmentsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/core/departments"] });
-      toast({ title: "Bo'lim yaratildi" });
+      toast({ title: t("bolimYaratildi") });
       setShowCreate(false);
       setNewName("");
       setNewCode("");
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Bo'lim yaratishda xatolik", variant: "destructive" });
+      toast({ title: t("xatolikTitle"), description: t("bolimYaratishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -72,11 +72,11 @@ export default function OrgDepartmentsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/core/departments"] });
-      toast({ title: "Bo'lim o'chirildi" });
+      toast({ title: t("bolimOchirildi") });
       setDeleteId(null);
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Bo'limni o'chirishda xatolik", variant: "destructive" });
+      toast({ title: t("xatolikTitle"), description: t("bolimniOchirishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -127,7 +127,7 @@ export default function OrgDepartmentsPage() {
             <CardContent className="py-12 text-center">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                {search ? "Qidiruv natijasi topilmadi" : "Bo'limlar mavjud emas"}
+                {search ? t("qidiruvNatijasiTopilmadi") : t("bolimlarMavjudEmas")}
               </p>
             </CardContent>
           </Card>
@@ -167,11 +167,11 @@ export default function OrgDepartmentsPage() {
                   {dept.employeeCount !== undefined && (
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                       <Users className="h-3.5 w-3.5" />
-                      <span>{dept.employeeCount} xodim</span>
+                      <span>{t("xodimSoni", { count: dept.employeeCount })}</span>
                     </div>
                   )}
                   {dept.head && (
-                    <p className="text-xs text-muted-foreground mt-1">Rahbar: {dept.head}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("rahbarLabel", { name: dept.head })}</p>
                   )}
                 </CardContent>
               </Card>
@@ -218,7 +218,7 @@ export default function OrgDepartmentsPage() {
               disabled={!newName.trim() || createMutation.isPending}
               data-testid="button-confirm-create-department"
             >
-              {createMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
+              {createMutation.isPending ? t("saqlanmoqda") : t("saqlash")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -52,11 +52,24 @@ export class DrizzleQcInspectionRepository implements IQcRepository {
       validStatus === 'failed' ? 'fail' :
       validStatus === 'rework' ? 'rework' :
       null;
+    // A56/T12-03 (2026-06-26) QC card-linkage WRITER-WIRE: on submit, stamp WHO inspected
+    // (inspector's card) onto the inspection. inspector_card_id (FK -> org_departments) is
+    // resolved from the row's EXISTING inspector_id via users.card_id — the inspector's primary
+    // card. NO fabrication (Q-40): only fill it when it is still NULL and the inspector actually
+    // has a card; otherwise COALESCE leaves it untouched / NULL (inspector has no card = owner
+    // data). Self-contained scalar sub-select keeps the same raw-UPDATE-by-id pattern this repo
+    // already uses (qc_inspections.id is INTEGER drift). Idempotent: a re-submit re-resolves the
+    // same card and COALESCE never overwrites an already-stamped value.
     const q = sql`
       UPDATE qc_inspections
       SET status = ${validStatus}, result = COALESCE(${resultValue}, result),
           items_checked = ${checked}, items_passed = ${passed},
-          items_failed = ${failed}, updated_at = NOW()
+          items_failed = ${failed},
+          inspector_card_id = COALESCE(
+            inspector_card_id,
+            (SELECT u.card_id FROM users u WHERE u.id = qc_inspections.inspector_id)
+          ),
+          updated_at = NOW()
       WHERE id = ${Number(inspection.id)}`;
     if (tx) {
       await (tx as unknown as { execute: (q: SQL) => Promise<unknown> }).execute(q);

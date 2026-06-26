@@ -23,7 +23,7 @@ import { Ok, Err, AppErr, isOk, Result } from '@common/result';
 import { z } from 'zod';
 import { AiRouterService } from './ai-router.service';
 import type { AiRequest, AiTaskType } from '../../domain/types/ai.types';
-import { AiDailyReportRepository, type PrimaryCardCkpMeta, type CkpChatTurn } from '../../infrastructure/repositories/ai-daily-report.repository';
+import { AiDailyReportRepository, type PrimaryCardCkpMeta, type CkpChatTurn, type MachinelessCkpCard } from '../../infrastructure/repositories/ai-daily-report.repository';
 
 // Kunlik ЦКП-hisoboti = xodim ish-natijasi tahlili → mavjud
 // 'hr.performance_review' task-turidan o'tkaziladi (analiz-sinfi). Yangi
@@ -80,6 +80,17 @@ export interface DailyReportResult {
   recordEndpoint: '/api/org-structure/ckp/fact';
 }
 
+/** T12-08 — kunlik AI-savol cron yakuni (telemetriya/log uchun). */
+export interface DailyQuestionPushResult {
+  factDate: string;
+  /** Mashinasiz, savol kutayotgan kartalar soni. */
+  candidates: number;
+  /** ai_ckp_chat_logs'ga yozilgan savol (assistant navbati) soni. */
+  questionsLogged: number;
+  /** AI-kalit bor edimi (false → statik savol ishlatildi, fabrikatsiya YO'Q). */
+  aiAvailable: boolean;
+}
+
 @Injectable()
 export class AiDailyReportService {
   private readonly logger = new Logger(AiDailyReportService.name);
@@ -134,6 +145,96 @@ export class AiDailyReportService {
     // T8-12: AI ishladi → xodim navbati + AI xulosasi (haqiqiy javob) loglanadi.
     await this.persistChat(meta, sessionId, dto.message, aiResult.data.text);
     return Ok(this.buildResult(meta, dto.factDate, true, aiResult.data.provider, extracted));
+  }
+
+  /**
+   * T12-08 — Kunlik AI-savol cron DVIGATELI: o'sha kun (factDate) hali savol
+   * yo'llanmagan, mashinasiz xodimga biriktirilgan ЦКП-kartalarga "Bugun qancha
+   * bajardingiz?" degan ЦКП-savolni yo'llaydi va `ai_ckp_chat_logs`'ga 'assistant'
+   * navbati sifatida yozadi. Xodim keyin shu sessiyada javob beradi (submit()).
+   *
+   * GRACEFUL (Q-40): AI-kalit yo'q bo'lsa — SOXTA fakt EMAS, faqat STATIK ЦКП-savol
+   * ishlatiladi (savol matni fabrikatsiya emas; hech qanday actualValue to'qilmaydi).
+   * Shu sababli AI-kalit yo'q bo'lsa ham cron skip QILMAYDI — savol baribir yo'llanadi.
+   *
+   * Idempotent: repository o'sha kun session_id'i bor kartalarni chiqarib tashlaydi.
+   */
+  async runDailyQuestionPush(factDate: string): Promise<Result<DailyQuestionPushResult>> {
+    const cardsR = await this.repo.findMachinelessCardsNeedingQuestion(factDate);
+    if (!cardsR.ok) return Err(cardsR.error);
+    const cards = Array.isArray(cardsR.data) ? cardsR.data : [];
+
+    let questionsLogged = 0;
+    let aiAvailable = false;
+
+    for (const card of cards) {
+      const gen = await this.generateQuestion(card);
+      if (gen.aiUsed) aiAvailable = true;
+      const sessionId = `ckp-${card.cardId}-${factDate}`;
+      // Savol = 'assistant' navbati (AI/bot xodimga savol berdi). Fakt EMAS.
+      const r = await this.repo.logChatTurns(card.employeeId, sessionId, [
+        { role: 'assistant', content: gen.question },
+      ]);
+      if (r.ok && r.data > 0) {
+        questionsLogged += 1;
+      } else if (!r.ok) {
+        this.logger.warn(`[T12-08] ЦКП-savol yozilmadi (card=${card.cardId}): ${r.error.message}`);
+      }
+    }
+
+    return Ok({ factDate, candidates: cards.length, questionsLogged, aiAvailable });
+  }
+
+  /**
+   * Bitta karta uchun ЦКП-savol matnini tayyorlaydi. AI-kalit bor bo'lsa AI
+   * tabiiy/kontekstli savol yozadi; yo'q (yoki xato) bo'lsa — statik shablon savol.
+   * Savol matni — FAKT EMAS, hech qanday son to'qilmaydi (Q-40).
+   */
+  private async generateQuestion(card: MachinelessCkpCard): Promise<{ question: string; aiUsed: boolean }> {
+    const fallback = this.staticQuestion(card);
+    const aiResult = await this.aiRouter.call(this.buildQuestionRequest(card));
+    if (!isOk(aiResult)) {
+      // AI yo'q/xato → statik savol (graceful, fabrikatsiya yo'q).
+      return { question: fallback, aiUsed: false };
+    }
+    const text = (aiResult.data.text ?? '').trim();
+    return { question: text.length > 0 ? text.slice(0, 1000) : fallback, aiUsed: true };
+  }
+
+  /** AI yo'q bo'lganda ishlatiladigan statik ЦКП-savol (kontekstli, lekin son-to'qima yo'q). */
+  private staticQuestion(card: MachinelessCkpCard): string {
+    const ckpLine = card.ckp ? ` ЦКП: "${card.ckp}".` : '';
+    const normaLine = card.tskpTarget != null
+      ? ` Kunlik norma: ${card.tskpTarget} ${card.measurementUnit ?? ''}`.trimEnd() + '.'
+      : '';
+    return `Assalomu alaykum! Bugungi ish natijangizni yozing.${ckpLine}${normaLine} ` +
+      'Bugun qancha bajardingiz va qanday muammolar (brak/kechikish) bo\'ldi?';
+  }
+
+  private buildQuestionRequest(card: MachinelessCkpCard): AiRequest {
+    const normaLine = card.tskpTarget != null
+      ? `Kunlik norma: ${card.tskpTarget} ${card.measurementUnit ?? ''}`.trim()
+      : 'Kunlik norma: belgilanmagan';
+    const prompt = [
+      'Sen ishlab chiqarish ЦКП-yordamchisisan. Mashinasiz (qo\'l mehnati) xodimdan',
+      'kunlik natijasini so\'rab, qisqa, samimiy SAVOL yoz (1-2 gap, o\'zbekcha).',
+      'Savol bugun qancha bajardi va qanday muammo (brak/kechikish) bo\'lganini so\'rasin.',
+      'Son TO\'QIMA QILMA — faqat savol matnini qaytar (markdown yo\'q).',
+      '',
+      `Karta (lavozim): ${card.cardName ?? '—'}`,
+      `ЦКП (kutilgan natija): ${card.ckp ?? '—'}`,
+      `O'lchov birligi: ${card.measurementUnit ?? '—'}`,
+      normaLine,
+    ].join('\n');
+
+    return {
+      taskType: DAILY_REPORT_TASK_TYPE,
+      prompt,
+      systemPrompt: 'Sen samimiy ЦКП-yordamchisan. Faqat qisqa savol matnini chiqar. Son to\'qima qilma.',
+      maxTokens: 200,
+      temperature: 0.4,
+      metadata: { feature: 'ai-daily-report-question', cardId: card.cardId },
+    } as AiRequest;
   }
 
   /**

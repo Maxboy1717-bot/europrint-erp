@@ -69,10 +69,10 @@ export async function execSdSalesOrderInsert(
     advance_status: 'pending',
     design_flag: false,
     sample_flag: false,
-    // ⚠️ Pre-existing schema drift: live sales_orders.created_by is UUID but app user ids are integer
-    // (no integer creator column exists). Sending the integer user.id threw "uuid vs integer" — which is
-    // WHY no order ever flowed the API path (all 12 live orders are seed, created_by NULL). Insert NULL to
-    // unblock the golden thread (matches seed); integer-creator tracking = a later schema-drift cleanup.
+    // ⚠️ Pre-existing schema drift: live sales_orders.created_by is UUID but app user ids are integer.
+    // The integer creator now lands in sales_orders.created_by_user_id (T8-01 column, FK→users) via the
+    // post-insert UPDATE below — the `sd_sales_orders` view does not expose that column, so it cannot be
+    // set on this Drizzle INSERT. `created_by` (uuid) stays NULL (matches the seed rows).
     created_by: null,
   }).onConflictDoNothing().returning({ id: sd_sales_orders.id });
   // Normal path: the INSERT returns the new serial id. On conflict (duplicate
@@ -102,10 +102,20 @@ export async function execSdSalesOrderInsert(
   // with the sibling outbox write). Only fills NULLs so a re-run / idempotent
   // create never clobbers an existing value.
   if (newId > 0) {
+    // T12-01 (writer-wire): the integer creator (user.id from the controller's
+    // @CurrentUser, threaded through CreateOrderCommand.createdBy) is written to
+    // sales_orders.created_by_user_id (T8-01 column, FK→users ON DELETE SET NULL).
+    // The `sd_sales_orders` view does not expose this column, so it is set here on
+    // the base table in the same `conn` (atomic with the INSERT / outbox tx).
+    // Only a real positive integer is written; COALESCE never clobbers an existing
+    // value, so an idempotent re-run is safe. No fabrication — NULL when no creator.
+    const creatorId = Number(createdBy);
+    const createdByUserId = Number.isInteger(creatorId) && creatorId > 0 ? creatorId : null;
     await conn.execute(sql`
       UPDATE sales_orders
-         SET document_number = COALESCE(document_number, ${orderNumber}),
-             overall_status  = COALESCE(overall_status, 'IN_PROCESS')
+         SET document_number    = COALESCE(document_number, ${orderNumber}),
+             overall_status     = COALESCE(overall_status, 'IN_PROCESS'),
+             created_by_user_id = COALESCE(created_by_user_id, ${createdByUserId})
        WHERE id = ${newId}
     `);
   }
