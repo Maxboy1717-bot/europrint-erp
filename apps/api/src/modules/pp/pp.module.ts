@@ -73,6 +73,7 @@ import { BomExplosionService } from './domain/services/bom-explosion.service';
 import { PpIntelligenceService } from './application/services/pp-intelligence.service';
 import { PpMpsService } from './application/services/pp-mps.service';
 import { PpCrpService } from './application/services/pp-crp.service';
+import { PpAiPlanningService } from './application/services/pp-ai-planning.service';
 import { PpIntelligenceController } from './presentation/pp-intelligence.controller';
 // PA3-17 Wave 5: merged from former modules/technology/ (route prefix '/technology' preserved)
 import { TechnologyController } from './technology/technology.controller';
@@ -165,6 +166,7 @@ const listeners = [
     PpIntelligenceService,
     PpMpsService,
     PpCrpService,
+    PpAiPlanningService,            // A50: 7-step AI-planning skeleton (AI-key gated)
     // PA3-17 Wave 5: merged from modules/technology/
     TechnologyService,
     TechnologyRepository,

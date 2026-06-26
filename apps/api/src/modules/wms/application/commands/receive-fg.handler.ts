@@ -44,10 +44,18 @@ export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
     // saveStock() targeted the non-canonical `stocks` table, so QC-passed
     // finished goods never became visible to downstream WMS/POS Monitor readers
     // (golden-thread break #8). receiveFg() lands the FG in warehouse_stock.
+    // A60: receiveFg() now also records an 'IN' wms_transactions ledger row in the
+    // SAME transaction (atomic stock + movement). orderId is the ledger reference;
+    // batchNumber (e.g. "QC-<inspectionId>") traces the receipt back to QC.
     const saveResult = await this.wmsRepo.receiveFg(
       command.materialId,
       command.warehouseId,
       command.amount,
+      {
+        referenceId: command.orderId ?? null,
+        createdBy: null,
+        notes: command.batchNumber ? `FG receipt ${command.batchNumber}` : null,
+      },
     );
     if (!saveResult.ok) {
       return Err(saveResult.error);

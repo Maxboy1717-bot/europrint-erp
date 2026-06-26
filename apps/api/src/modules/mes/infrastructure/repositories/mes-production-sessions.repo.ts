@@ -37,9 +37,20 @@ export class MesProductionSessionsRepository {
           mps.availability,
           mps.performance,
           mps.quality,
-          eq.name AS equipment_name
+          eq.name AS equipment_name,
+          -- A53 — xodim↔KARTA: surface the working operator's primary card in the list too
+          -- (same resolution chain as getSession: users.card_id → employee_cards → org_department_id).
+          COALESCE(u.card_id, ec.card_id, u.org_department_id) AS operator_card_id,
+          card.name             AS operator_card_name,
+          card.razryad_level_id AS operator_card_razryad_level_id
         FROM mes_production_sessions mps
         LEFT JOIN equipment eq ON eq.id = mps.equipment_id
+        LEFT JOIN users u ON u.id = mps.worker_id
+        LEFT JOIN employees emp ON emp.user_id = u.id
+        LEFT JOIN employee_cards ec ON ec.employee_id = emp.id
+          AND ec.is_active = true AND ec.is_primary = true
+        LEFT JOIN org_departments card
+          ON card.id = COALESCE(u.card_id, ec.card_id, u.org_department_id)
         WHERE mps.deleted_at IS NULL
           AND (${status ?? null}::text IS NULL OR mps.status = ${status ?? null})
         ORDER BY mps.started_at DESC
@@ -87,11 +98,31 @@ export class MesProductionSessionsRepository {
     try {
       // Read the canonical table (same as createSession + listSessions VIEW) so freshly-created rows are
       // visible. equipment_id → equipment.name (work center); worker_id → users (operator).
+      //
+      // A53 — xodim↔KARTA bog'lanishi: the working employee's KARTA (card = org_departments, kanonik
+      // KARTA-markaz). Session.worker_id is a users.id, so resolve the operator's primary card via:
+      //   1) users.card_id (birlamchi karta pointer — direct, fastest)   — see EGASI 8-qaror (login/RBAC=birlamchi karta)
+      //   2) employee_cards (M:N canonical, PHASE-00) joined through employees.user_id, is_primary+is_active
+      //   3) users.org_department_id (legacy single-dept fallback)
+      // COALESCE picks the first non-NULL. card_id NULL → operator has no card (no oylik/login per vizyon);
+      // we surface NULLs rather than fabricating (Q-40). razryad_level_id rides along for the card's grade.
       const rows = await runQuery<Row>(sql`
-        SELECT ps.*, eq.name AS work_center_name, (u.first_name || ' ' || u.last_name) AS operator_name
+        SELECT ps.*,
+               eq.name AS work_center_name,
+               (u.first_name || ' ' || u.last_name) AS operator_name,
+               COALESCE(u.card_id, ec.card_id, u.org_department_id) AS operator_card_id,
+               card.name                AS operator_card_name,
+               card.code                AS operator_card_code,
+               card.razryad_level_id    AS operator_card_razryad_level_id,
+               card.node_type           AS operator_card_node_type
         FROM production_sessions ps
         LEFT JOIN equipment eq ON eq.id = ps.equipment_id
         LEFT JOIN users u ON u.id = ps.worker_id
+        LEFT JOIN employees emp ON emp.user_id = u.id
+        LEFT JOIN employee_cards ec ON ec.employee_id = emp.id
+          AND ec.is_active = true AND ec.is_primary = true
+        LEFT JOIN org_departments card
+          ON card.id = COALESCE(u.card_id, ec.card_id, u.org_department_id)
         WHERE ps.id = ${id} AND ps.deleted_at IS NULL
       `);
       return (rows.rows[0] ?? null) as Row | null;

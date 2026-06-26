@@ -153,11 +153,19 @@ export async function execUpdateStockIssued(id: unknown, newQty: number, newRese
   `);
 }
 
-export async function execReceiveFg(warehouseId: number, materialId: number, amount: number): Promise<void> {
+export async function execReceiveFg(
+  warehouseId: number,
+  materialId: number,
+  amount: number,
+  exec?: ExecuteLike,
+): Promise<void> {
   // #03 HOP-4: QC-passed finished goods land in the CANONICAL warehouse_stock (was non-canonical `stocks`,
   // conflict #8 — invisible to every downstream WMS/POS reader). Idempotent upsert on (warehouse_id, material_id);
   // the unique index warehouse_stock_wh_mat_uniq backs the ON CONFLICT. Same proven pattern as pos-wms-sync.helpers.
-  await runQuery(sql`
+  // A60: an optional `exec` (tx) lets the FG-receipt upsert run in the SAME transaction as the
+  // wms_transactions IN-ledger row (execInsertWmsTransaction below), so stock + movement stay atomic.
+  await execRows(
+    sql`
     INSERT INTO warehouse_stock
       (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
     VALUES
@@ -168,7 +176,41 @@ export async function execReceiveFg(warehouseId: number, materialId: number, amo
       available_quantity = warehouse_stock.available_quantity + ${amount},
       last_movement_at   = NOW(),
       last_updated_at    = NOW()
-  `);
+  `,
+    exec,
+  );
+}
+
+/**
+ * A60 — canonical WMS movement ledger row. Every stock change recorded here keeps the
+ * `wms_transactions` ledger (read by the dashboard "today_movements" KPI, material
+ * recent-transactions, and the extended transactions list) in sync with warehouse_stock.
+ * `type` is the movement direction ('IN' for receipts, 'OUT' for issues); `reference_id`
+ * links the movement back to its source (e.g. the sales order for a QC-passed FG receipt).
+ * Accepts an optional `exec` (tx) so the ledger INSERT is atomic with the stock write.
+ */
+export async function execInsertWmsTransaction(
+  input: {
+    warehouseId: number;
+    materialId: number;
+    type: string;
+    quantity: number;
+    referenceId?: number | null;
+    createdBy?: number | null;
+    notes?: string | null;
+  },
+  exec?: ExecuteLike,
+): Promise<void> {
+  await execRows(
+    sql`
+    INSERT INTO wms_transactions
+      (warehouse_id, material_id, type, quantity, reference_id, created_by, notes, created_at)
+    VALUES
+      (${input.warehouseId}, ${input.materialId}, ${input.type}, ${input.quantity},
+       ${input.referenceId ?? null}, ${input.createdBy ?? null}, ${input.notes ?? null}, NOW())
+  `,
+    exec,
+  );
 }
 
 /**

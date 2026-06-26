@@ -20,7 +20,7 @@ import { IssuableBatchLot } from '../../domain/services/batch-selection.service'
 import {
   execSaveStock, queryStock, queryStockByMaterialAndWarehouse, queryFefoStock, queryFefoBatchLots,
   execUpdateStockReserved, execUpdateStockIssued, execReceiveFg, execIssueFromWarehouseStock, queryAllStockByWarehouse,
-  queryIssuableBatchLots, queryHasAnyBatchLots, execDecrementBatchLot, BatchLotRow,
+  queryIssuableBatchLots, queryHasAnyBatchLots, execDecrementBatchLot, execInsertWmsTransaction, BatchLotRow,
 } from '@common/database/queries-wms';
 
 type StockRow = Record<string, unknown>;
@@ -214,14 +214,37 @@ export class DrizzleWmsRepository implements IWmsRepository {
     }
   }
 
-  async receiveFg(materialId: number, warehouseId: number, amount: number): Promise<Result<void>> {
-    try {
-      await execReceiveFg(warehouseId, materialId, amount);
-      return Ok(undefined);
-    } catch {
-      this.logger.error('Failed to receive FG');
-      return Err('FG qabul qilishda xatolik');
-    }
+  async receiveFg(
+    materialId: number,
+    warehouseId: number,
+    amount: number,
+    context?: { referenceId?: number | null; createdBy?: number | null; notes?: string | null },
+  ): Promise<Result<void>> {
+    // A60: the warehouse_stock upsert and the 'IN' wms_transactions ledger row run in ONE
+    // transaction — a receipt can NEVER bump the canonical stock without also leaving an
+    // auditable movement (and vice-versa). If the ledger INSERT fails, the stock bump rolls back.
+    return this.withTransaction(async (tx) => {
+      try {
+        const exec = asTxExec(tx);
+        await execReceiveFg(warehouseId, materialId, amount, exec);
+        await execInsertWmsTransaction(
+          {
+            warehouseId,
+            materialId,
+            type: 'IN',
+            quantity: amount,
+            referenceId: context?.referenceId ?? null,
+            createdBy: context?.createdBy ?? null,
+            notes: context?.notes ?? null,
+          },
+          exec,
+        );
+        return Ok(undefined);
+      } catch {
+        this.logger.error('Failed to receive FG');
+        return Err('FG qabul qilishda xatolik');
+      }
+    });
   }
 
   async insertGoodsIssue(

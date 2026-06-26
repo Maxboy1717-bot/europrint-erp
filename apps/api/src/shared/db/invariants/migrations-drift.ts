@@ -1077,6 +1077,19 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
   { name: 'qc_inspections.items_passed ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS items_passed INTEGER` },
   { name: 'qc_inspections.items_failed ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS items_failed INTEGER` },
   { name: 'qc_inspections.attachments ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS attachments TEXT` },
+  // A56 (2026-06-26) QC card-linkage: every inspection records the inspector's CARD
+  // (org_departments — resolved from users.card_id) and the PRODUCTION CARD (org_departments —
+  // resolved from production_orders.work_center_id -> pp_work_centers.org_department_id). Both
+  // nullable (an inspection can be opened by MES before an inspector is assigned, and the
+  // production-card path is NULL until work-centers are tied to org cards = owner data). INTEGER to
+  // match the live qc_inspections integer surface + org_departments integer id (NOT the drifted uuid
+  // Drizzle decl). FK ON DELETE SET NULL so deleting a card never erases inspection history.
+  { name: 'qc_inspections.inspector_card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS inspector_card_id INTEGER` },
+  { name: 'qc_inspections.production_card_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS qc_inspections ADD COLUMN IF NOT EXISTS production_card_id INTEGER` },
+  { name: 'qc_inspections.inspector_card_id FK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'qc_inspections_inspector_card_id_fkey') THEN ALTER TABLE qc_inspections ADD CONSTRAINT qc_inspections_inspector_card_id_fkey FOREIGN KEY (inspector_card_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$;` },
+  { name: 'qc_inspections.production_card_id FK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'qc_inspections_production_card_id_fkey') THEN ALTER TABLE qc_inspections ADD CONSTRAINT qc_inspections_production_card_id_fkey FOREIGN KEY (production_card_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$;` },
+  { name: 'qc_inspections.inspector_card_id idx', sql: `CREATE INDEX IF NOT EXISTS qc_inspections_inspector_card_id_idx ON qc_inspections(inspector_card_id)` },
+  { name: 'qc_inspections.production_card_id idx', sql: `CREATE INDEX IF NOT EXISTS qc_inspections_production_card_id_idx ON qc_inspections(production_card_id)` },
   { name: 'asset_maintenance CREATE TABLE', sql: `
       CREATE TABLE IF NOT EXISTS asset_maintenance (
         id UUID PRIMARY KEY,

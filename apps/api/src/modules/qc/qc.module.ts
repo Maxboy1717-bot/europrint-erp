@@ -63,6 +63,7 @@ import { PrintController } from './presentation/print.controller';
 import { QcDpmoController } from './presentation/qc-dpmo.controller';
 import { DpmoService } from './domain/services/dpmo.service';
 import { QcAqlService } from './domain/services/qc-aql.service';
+import { GradePricingService } from './domain/services/grade-pricing.service';
 
 const commandHandlers = [
   SubmitInspectionHandler,
@@ -141,6 +142,7 @@ const repositories = [
     DeltaEService,
     DpmoService,
     QcAqlService,
+    GradePricingService,
   ],
   exports: [
     QC_DEFECT_REPO, QC_REPOSITORY_PROVIDER, DEFECTS_REPO, DefectsService,
@@ -148,6 +150,7 @@ const repositories = [
     InkConsumptionService, ImpositionService, SpoilageService, DeltaEService,
     DpmoService,
     QcAqlService,
+    GradePricingService,
   ],
 })
 export class QcModule {}

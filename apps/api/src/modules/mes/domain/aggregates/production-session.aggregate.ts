@@ -32,6 +32,43 @@ export enum MesStatus {
   SENT_TO_QC = 'sent_to_qc',
 }
 
+/**
+ * Maps the persisted `production_sessions.status` vocabulary (which has DB-only
+ * synonyms) onto the canonical {@link MesStatus} the aggregate enforces, so a
+ * session loaded from the DB is rehydrated in its REAL stage — not a hardcoded
+ * READY. Without this, every running/in_progress/paused session was rebuilt as
+ * READY and `complete()` always failed with "Sessiya ish jarayonida emas",
+ * breaking the golden-thread MES→QC hop for every real order (only the contrived
+ * TEST session passed by state coincidence).
+ *
+ * Synonyms:
+ *  - 'pending'      → READY (freshly-opened session, before the start gate)
+ *  - 'in_progress'  → RUNNING (IoT-tablet / seed vocabulary for "running")
+ *  - unknown / null → READY (fail-safe: an unrecognized status must still pass
+ *                     the start gate before it can run, never silently "run")
+ */
+export function mapDbStatusToMesStatus(dbStatus: string | null | undefined): MesStatus {
+  switch ((dbStatus ?? '').toLowerCase()) {
+    case 'pending':
+      return MesStatus.READY;
+    case 'ready':
+      return MesStatus.READY;
+    case 'checklist_pending':
+      return MesStatus.CHECKLIST_PENDING;
+    case 'running':
+    case 'in_progress':
+      return MesStatus.RUNNING;
+    case 'paused':
+      return MesStatus.PAUSED;
+    case 'completed':
+      return MesStatus.COMPLETED;
+    case 'sent_to_qc':
+      return MesStatus.SENT_TO_QC;
+    default:
+      return MesStatus.READY;
+  }
+}
+
 export class Downtime {
   constructor(public reason: string, public duration: number, public timestamp: Date = _time.now()) {}
 }
@@ -62,6 +99,36 @@ export class ProductionSession extends AggregateRoot {
     this.operatorId = operatorId;
     this.certificationRequired = certificationRequired;
     this.status = MesStatus.READY;
+  }
+
+  /**
+   * Rebuilds an aggregate from a persisted row in its REAL stage — used by the
+   * repository so loaded sessions reflect their DB status instead of a hardcoded
+   * READY. Restores status + started/completed timestamps WITHOUT firing any
+   * transition domain event (rehydration is not a state change). Enforce-on-load:
+   * the staged guards (start/complete/moveToQc) then operate from the true stage,
+   * so the golden-thread complete→QC hop works for every real order, not only the
+   * TEST session.
+   *
+   * @param dbStatus    raw `production_sessions.status` (mapped via {@link mapDbStatusToMesStatus})
+   * @param startedAt   persisted started_at (null when never started)
+   * @param completedAt persisted ended_at (null when not finished)
+   */
+  static rehydrate(
+    id: number,
+    ppId: number,
+    workCenterId: number,
+    operatorId: number,
+    certificationRequired: boolean,
+    dbStatus: string | null | undefined,
+    startedAt: Date | null = null,
+    completedAt: Date | null = null,
+  ): ProductionSession {
+    const session = new ProductionSession(id, ppId, workCenterId, operatorId, certificationRequired);
+    session.status = mapDbStatusToMesStatus(dbStatus);
+    session.startedAt = startedAt;
+    session.completedAt = completedAt;
+    return session;
   }
 
   getId(): number {

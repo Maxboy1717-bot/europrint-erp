@@ -158,3 +158,31 @@ export const qc_supplier_quality = pgTable('qc_supplier_quality', {
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// defect_catalog — QC nuqson turi katalogi (gofra/offset/silkscreen/flexi/universal).
+// Ustunlar AYNAN docs/migration/seed/seed-05-defects.sql (APPROVED owner 2026-06-18)
+// dagi INSERT ustunlariga mos. Seed shu jadvalga 25 nuqson yozadi
+// (DEF-U-001..004, DEF-G-001..006, DEF-O-001..007, DEF-S-001..003, DEF-F-001..003).
+// CREATE TABLE: migrations/p18-d1-defect-catalog.sql (GATED — egasi -- APPROVED: kerak).
+// ──────────────────────────────────────────────────────────────────────────
+export const defect_catalog = pgTable('defect_catalog', {
+  id: serial('id').primaryKey(),
+  code: text('code').notNull().unique(),                 // DEF-U-001, DEF-G-002 ...
+  nameUz: text('name_uz').notNull(),
+  nameRu: text('name_ru'),
+  direction: text('direction').notNull(),                // universal | gofra | offset | silkscreen | flexi
+  severity: text('severity').notNull().default('MINOR'), // CRITICAL | MAJOR | MINOR
+  autoReject: boolean('auto_reject').notNull().default(false),
+  descriptionUz: text('description_uz'),
+  correctiveActionUz: text('corrective_action_uz'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  byDirection: index('idx_defect_catalog_direction').on(t.direction),
+  bySeverity: index('idx_defect_catalog_severity').on(t.severity),
+}));
+
+export type DefectCatalogRow = typeof defect_catalog.$inferSelect;
+export type InsertDefectCatalog = typeof defect_catalog.$inferInsert;

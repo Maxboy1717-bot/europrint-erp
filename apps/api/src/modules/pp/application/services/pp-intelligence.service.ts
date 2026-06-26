@@ -120,17 +120,31 @@ export class PpIntelligenceService implements OnModuleInit {
   }
 
   private async insertRun(method: string, horizon: number): Promise<number> {
+    // `pp_mrp_runs` is an auto-updatable VIEW over the base table `mrp_runs`, whose
+    // `run_number` (varchar(50)) and `run_date` (varchar(10), ISO date) columns are
+    // NOT NULL with no default. The view INSERT must supply both or the rewrite to the
+    // base table fails the NOT NULL constraint (verified live: header insert was 100%
+    // failing → 0 persisted runs). run_number is unique; concurrent 'running' rows are
+    // additionally blocked by the partial unique index `mrp_single_running_idx`.
+    const runNumber = `MRP-${Date.now()}`;
+    const runDate = new Date().toISOString().slice(0, 10);
     try {
       const r = await runQuery<{ id: number }>(sql`
-        INSERT INTO pp_mrp_runs (lot_sizing_method, status, horizon_periods, run_at)
-        VALUES (${method}, 'running', ${horizon}, NOW())
+        INSERT INTO pp_mrp_runs (run_number, run_date, lot_sizing_method, status, horizon_periods, run_at)
+        VALUES (${runNumber}, ${runDate}, ${method}, 'running', ${horizon}, NOW())
         RETURNING id
       `);
       const row = r.rows[0];
       if (!row) throw Object.assign(new Error('MRP run yaratilmadi'), { code: 'INTERNAL' });
       return row['id'];
-    } catch {
-      throw Object.assign(new Error('MRP hisoblash allaqachon bajarilmoqda'), { code: 'CONFLICT' });
+    } catch (e) {
+      // Only a unique-violation on the single-running index means a concurrent run; any
+      // other failure is a real error and must not be masked as CONFLICT (Q-40).
+      const msg = String((e as { message?: string })?.message ?? e);
+      if (/duplicate key|unique|mrp_single_running_idx/i.test(msg)) {
+        throw Object.assign(new Error('MRP hisoblash allaqachon bajarilmoqda'), { code: 'CONFLICT' });
+      }
+      throw Object.assign(new Error(`MRP run yaratilmadi: ${msg}`), { code: 'INTERNAL' });
     }
   }
 
@@ -223,18 +237,28 @@ export class PpIntelligenceService implements OnModuleInit {
 
   private async persistRunLines(runId: number, data: MrpRunResult, onHand: Record<string, number>): Promise<void> {
     if (!data.netRequirements.length) return;
+    // Aggregate planned-order qty AND the earliest release period per (material, demand-period).
+    // releaseByPeriod is a 0-based period index from the handler → store as 'W{n+1}' to match `period`.
     const poByPeriod = new Map<string, number>();
+    const releaseByPeriod = new Map<string, number>();
     for (const po of data.plannedOrders) {
       const key = `${po.materialId}:${po.periodIndex}`;
       poByPeriod.set(key, (poByPeriod.get(key) ?? 0) + po.qty);
+      const prev = releaseByPeriod.get(key);
+      releaseByPeriod.set(key, prev === undefined ? po.releaseByPeriod : Math.min(prev, po.releaseByPeriod));
     }
-    // Pattern 2: each ON CONFLICT DO NOTHING insert is independent — fire in parallel to remove N+1 latency
+    // Lines are unique per (run_id) snapshot — a fresh run_id has no existing rows, so no
+    // ON CONFLICT clause is needed (the table has no unique key on (run_id, material, period)
+    // to infer against, which made the previous ON CONFLICT DO NOTHING throw). Pattern 2:
+    // each insert is independent — fire in parallel to remove N+1 latency.
     await Promise.all(data.netRequirements.map((nr) => {
-      const poQty = poByPeriod.get(`${nr.materialId}:${nr.period}`) ?? 0;
+      const key = `${nr.materialId}:${nr.period}`;
+      const poQty = poByPeriod.get(key) ?? 0;
+      const releaseIdx = releaseByPeriod.get(key);
+      const releaseLabel = releaseIdx === undefined ? null : `W${releaseIdx + 1}`;
       return runQuery(sql`
-        INSERT INTO pp_mrp_run_lines (run_id, material_id, period, gross_req, on_hand, net_req, planned_order)
-        VALUES (${runId}, ${nr.materialId}, ${`W${nr.period + 1}`}, ${nr.gr}, ${onHand[nr.materialId] ?? 0}, ${nr.nr}, ${poQty})
-        ON CONFLICT DO NOTHING
+        INSERT INTO pp_mrp_run_lines (run_id, material_id, period, gross_req, on_hand, scheduled_receipts, net_req, planned_order, release_date)
+        VALUES (${runId}, ${nr.materialId}, ${`W${nr.period + 1}`}, ${nr.gr}, ${onHand[nr.materialId] ?? 0}, ${nr.sr}, ${nr.nr}, ${poQty}, ${releaseLabel})
       `).catch((e: Error) => this.logger.warn(`MRP line insert failed: ${e.message}`));
     }));
   }

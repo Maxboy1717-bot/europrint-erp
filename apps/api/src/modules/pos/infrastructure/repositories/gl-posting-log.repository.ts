@@ -142,6 +142,20 @@ export class GlPostingLogRepository {
         return Ok({ posted: false, reason: `account code(s) not in CoA: ${map.debitAccount}/${map.creditAccount}` });
       }
 
+      // A65 — balanced-GL guard. The ledger row is a BALANCED PAIR (one amount, debit+credit both set),
+      // so ΣDr == ΣCr == amount by construction; but a zero/negative amount or a same-account pair
+      // produces NO real GL value. Skip both rather than write a meaningless wash row (Q-40):
+      //   - amount <= 0  → nothing happened (empty/zero-priced movement) — no ledger entry.
+      //   - debitId === creditId (e.g. INTERNAL_TRANSFER 1010↔1010, same-class warehouse move) →
+      //     Dr X / Cr X nets to zero, no GL impact — no ledger entry (the seed comment's own intent).
+      const amount = Number(mov.total);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return Ok({ posted: false, reason: `amount <= 0 (${mov.total}) — no GL value to post` });
+      }
+      if (debitId === creditId) {
+        return Ok({ posted: false, reason: `same debit/credit account ${map.debitAccount} — zero net GL impact (wash), skipped` });
+      }
+
       const entryDate = new Date().toISOString().slice(0, 10);
       await db.execute(sql`
         INSERT INTO entries
@@ -149,7 +163,7 @@ export class GlPostingLogRepository {
            debit_account, credit_account, amount, description, created_by, created_at)
         VALUES
           (${`POS-GL-${movementId}`}, ${entryDate}, 'pos_movement', ${movementId}, ${debitId}, ${creditId},
-           ${map.debitAccount}, ${map.creditAccount}, ${mov.total},
+           ${map.debitAccount}, ${map.creditAccount}, ${amount},
            ${`POS harakat #${movementId} (${mov.movementType})`}, ${postedBy ?? null}, NOW())`);
       return Ok({ posted: true });
     } catch (e) {

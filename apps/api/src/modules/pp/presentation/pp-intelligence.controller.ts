@@ -19,6 +19,7 @@ import { PpIntelligenceService } from '../application/services/pp-intelligence.s
 import type { EnrichedMrpResult } from '../application/services/pp-intelligence.service';
 import { PpMpsService } from '../application/services/pp-mps.service';
 import { PpCrpService } from '../application/services/pp-crp.service';
+import { PpAiPlanningService } from '../application/services/pp-ai-planning.service';
 
 const MrpRunSchema = z.object({
   lotSizingMethod: z.enum(['L4L', 'EOQ', 'POQ', 'WAGNER_WHITIN']).optional(),
@@ -41,7 +42,16 @@ export class PpIntelligenceController {
     private readonly svc: PpIntelligenceService,
     private readonly mpsSvc: PpMpsService,
     private readonly crpSvc: PpCrpService,
+    private readonly aiPlanSvc: PpAiPlanningService,
   ) {}
+
+  @ApiOperation({ summary: 'AI-planning 7-step skeleton (key-gated step 7)' })
+  @ApiResponse({ status: 200, description: 'OK — partial when no AI key configured' })
+  @Get('ai-plan/skeleton')
+  @RequirePermission('pp:READ')
+  async getAiPlanSkeleton(@Query('planDate') planDate?: string) {
+    return unwrapOrThrow(await this.aiPlanSvc.buildSkeleton(planDate));
+  }
 
   @ApiOperation({ summary: 'Run mrp' })
   @ApiResponse({ status: 201, description: 'OK' })

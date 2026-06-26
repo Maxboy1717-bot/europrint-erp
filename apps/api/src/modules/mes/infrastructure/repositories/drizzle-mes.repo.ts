@@ -62,14 +62,26 @@ export class DrizzleMesRepository implements IMesRepository {
    * Rebuild the aggregate from a production_sessions row using the canonical columns
    * (production_order_id / equipment_id / worker_id). certification_required has no column on this
    * table, so it defaults to false — the start-handler cert gate stays opt-in via LMS, not this flag.
+   *
+   * Rehydrates the REAL persisted stage (status + started_at/ended_at) via
+   * ProductionSession.rehydrate, NOT a hardcoded READY: the previous `new ProductionSession(...)`
+   * always rebuilt sessions in READY, so the staged guard `complete()` (requires RUNNING/PAUSED)
+   * failed for every running/in_progress/paused session — silently blocking the golden-thread
+   * MES→QC hop for all real orders. The DB-status→MesStatus map normalizes synonyms
+   * ('pending'→READY, 'in_progress'→RUNNING).
    */
   private toSession(row: Row): ProductionSession {
-    return new ProductionSession(
+    const startedAt = row.started_at ? new Date(String(row.started_at)) : null;
+    const endedAt = row.ended_at ? new Date(String(row.ended_at)) : null;
+    return ProductionSession.rehydrate(
       Number(row.id),
       Number(row.production_order_id),
       Number(row.equipment_id),
       Number(row.worker_id),
       false,
+      row.status as string | null,
+      startedAt,
+      endedAt,
     );
   }
 

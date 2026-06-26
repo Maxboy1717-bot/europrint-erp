@@ -34,7 +34,12 @@ export interface ISalesOrderRepository {
   findByStatus(status: string, limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   findAll(limit: number, offset: number): Promise<Result<SalesOrder[]>>;
   findPendingAdvanceOrders(limit: number, offset: number): Promise<Result<SalesOrder[]>>;
-  update(order: SalesOrder): Promise<Result<void>>;
+  /**
+   * Persist the order's mutated state (status + advance status). Pass `tx` to run
+   * inside an existing transaction so a status change and its golden-thread outbox
+   * event commit atomically (PA0-6, mirrors `save`).
+   */
+  update(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<void>>;
   updateAdvancePaidWithLock(
     id: number,
     newAdvancePaid: number,

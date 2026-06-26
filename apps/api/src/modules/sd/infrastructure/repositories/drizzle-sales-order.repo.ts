@@ -119,9 +119,11 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 
-  async update(order: SalesOrder): Promise<Result<void>> {
+  async update(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<void>> {
     try {
-      await execSdSalesOrderUpdate(order.getStatus(), order.getAdvanceStatus(), order.getId());
+      // tx (when present) keeps the status write atomic with the sibling outbox
+      // insert so the golden-thread OrderStatusChanged event can never be lost.
+      await execSdSalesOrderUpdate(order.getStatus(), order.getAdvanceStatus(), order.getId(), tx);
       return { ok: true as const, data: undefined };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }

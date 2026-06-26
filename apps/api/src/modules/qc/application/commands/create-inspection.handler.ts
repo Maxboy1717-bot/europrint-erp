@@ -29,16 +29,29 @@ export class CreateInspectionHandler implements ICommandHandler<CreateInspection
       // RULE4_EXCEPTION: qc_inspections schema drift (id=integer in DB, uuid in Drizzle).
       // Raw SQL INSERT lets the DB sequence generate the integer id.
       const referenceType = command.batchId ? 'batch' : 'order';
+      // A56 (2026-06-26) QC card-linkage: resolve BOTH cards from real master data inline so the
+      // inspection records WHO inspected (inspector's card = users.card_id -> org_departments) and
+      // WHAT production it covers (production card = production_orders.work_center_id ->
+      // pp_work_centers.org_department_id). Each is a scalar sub-select returning the integer card id
+      // or NULL — NO fabrication: when the inspector has no card, or the work-center is not yet tied to
+      // an org card (owner data), the column stays NULL. orderId is the production order id.
       const r = await db.execute(sql`
         INSERT INTO qc_inspections
-          (status, inspector_id, items_checked, items_passed, items_failed, reference_type)
+          (status, inspector_id, items_checked, items_passed, items_failed, reference_type,
+           inspector_card_id, production_card_id)
         VALUES
           ('pending',
            ${command.inspectorId},
            ${command.sampleSize},
            ${command.sampleSize},
            0,
-           ${referenceType})
+           ${referenceType},
+           (SELECT u.card_id FROM users u WHERE u.id = ${command.inspectorId}),
+           (SELECT wc.org_department_id
+              FROM production_orders po
+              JOIN pp_work_centers wc ON wc.id = po.work_center_id
+             WHERE po.id = ${command.orderId}
+             LIMIT 1))
         RETURNING id
       `);
       const rows = ((r as { rows?: Row[] }).rows) ?? [];

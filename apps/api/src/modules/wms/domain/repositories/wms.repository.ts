@@ -80,7 +80,18 @@ export interface IWmsRepository {
     qty: number,
     tx?: DrizzleExecutor,
   ): Promise<Result<void>>;
-  receiveFg(materialId: number, warehouseId: number, amount: number): Promise<Result<void>>;
+  /**
+   * Canonical FG receipt: upserts warehouse_stock AND records an 'IN' wms_transactions
+   * ledger row in ONE transaction (A60 — stock + movement stay atomic). Optional receipt
+   * context (`referenceId` = source order/inspection, `createdBy`, `notes`) is recorded on
+   * the ledger row so the receipt is auditable and visible to the "today_movements" KPI.
+   */
+  receiveFg(
+    materialId: number,
+    warehouseId: number,
+    amount: number,
+    context?: { referenceId?: number | null; createdBy?: number | null; notes?: string | null },
+  ): Promise<Result<void>>;
 
   /**
    * Inserts one `wms_goods_issues` row. Called from inside the goods-issue

@@ -13,6 +13,7 @@ import { eq, sql } from 'drizzle-orm';
 import { crmLeads, crm_lead_stages, crm_activities, crmDeals } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import type { ICrmLeadsOpsRepo } from '../../domain/repositories/i-crm-leads-ops.repo';
+import { toBitrixStatusId } from '../../leads/lead-status-id.util';
 
 type Row = Record<string, unknown>;
 
@@ -45,13 +46,39 @@ export class CrmLeadsOpsRepository implements ICrmLeadsOpsRepo {
       }, 'DB_ERROR');
   }
 
-  async updateLeadStage(lid: number, _stageId: number): Promise<Result<Row[]>> {
+  async updateLeadStage(lid: number, stageId: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
-      // crm_leads has no stage_id column; touch updated_at until column is added
-      const rows = await db.update(crmLeads).set({
-        updated_at: _time.now(),
-      }).where(eq(crmLeads.id, lid)).returning();
-      return castTo<Row[]>(rows);
+      // Live crm_leads HAS a stage_id integer column (FK → crm_lead_stages.id) plus the
+      // Bitrix-coarse status_id CHECK domain (NEW/IN_PROCESS/CONVERTED/JUNK) and a free-form
+      // status_description that carries the precise funnel-stage code. Moving a lead through
+      // the funnel must persist ALL THREE so the board, the status filter, and the funnel
+      // analytics stay in sync — touching updated_at alone left the lead in its old stage
+      // (200 OK but no real transition → Q-40 "works but wrong").
+      //
+      // Raw parametrized SQL is used (not db.update(crmLeads)) because the @shared/db compat
+      // crmLeads def does NOT expose the live stage_id column — and crm_lead_stages.stage_id/
+      // semantic_id are absent from its stub. This mirrors convertLead() in this same repo.
+      //
+      // Read the target stage's canonical code first so status_description/status_id stay
+      // consistent with the integer stage_id that the board writes.
+      const stageRes = await db.execute(sql`
+        SELECT stage_id, semantic_id FROM crm_lead_stages WHERE id = ${stageId} LIMIT 1
+      `);
+      const stage = (stageRes.rows?.[0] ?? null) as { stage_id?: string; semantic_id?: string } | null;
+      const stageCode = stage?.stage_id ?? null;            // e.g. NEW / IN_PROCESS / ANALYSIS / CONVERTED / LOST
+      const coarseStatusId = toBitrixStatusId(stageCode);   // map to the status_id CHECK domain
+
+      const res = await db.execute(sql`
+        UPDATE crm_leads SET
+          stage_id           = ${stageId},
+          status_description = COALESCE(${stageCode}, status_description),
+          status_id          = ${coarseStatusId},
+          updated_at         = NOW(),
+          date_modify        = NOW()
+        WHERE id = ${lid}
+        RETURNING *
+      `);
+      return castTo<Row[]>(res.rows ?? []);
       }, 'DB_ERROR');
   }
 

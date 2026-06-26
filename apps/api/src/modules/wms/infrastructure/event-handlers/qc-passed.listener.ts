@@ -60,6 +60,18 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
     const passQty = Number(inspection.pass_count) || 0;
     const warehouseId = Number(inspection.warehouse_id) || 1;
 
+    // Nothing actually passed inspection → nothing to receive into stock. A 0-qty
+    // receipt would only create/touch an empty warehouse_stock row (no-op kirim) and
+    // spawn a meaningless WmsFgReceivedEvent + rental timer. Real orders with a zero
+    // or missing pass_count must skip the FG receipt entirely.
+    if (passQty <= 0) {
+      this.logger.warn(
+        { inspectionId: event.inspectionId, orderId: event.orderId },
+        'QcPassedListener: pass_count <= 0, skipping FG receipt (nothing to stock)',
+      );
+      return;
+    }
+
     // Finished-goods material(s) come from the real line-item table. product_id is the
     // FG material; it is nullable in live data, so fall back to material_id.
     const lineRows = await runQuery<FgLineRow>(sql`

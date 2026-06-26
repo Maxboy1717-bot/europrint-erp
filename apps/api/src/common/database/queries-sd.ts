@@ -87,8 +87,21 @@ export async function execSdSalesOrderInsert(
   return existing[0]?.id != null ? Number(existing[0].id) : 0;
 }
 
-export async function execSdSalesOrderUpdate(status: string, advanceStatus: string, id: unknown): Promise<void> {
-  await db.update(sd_sales_orders)
+export async function execSdSalesOrderUpdate(
+  status: string,
+  advanceStatus: string,
+  id: unknown,
+  /**
+   * Optional Drizzle transaction executor. When provided the status UPDATE runs
+   * on the transaction so it shares atomicity with the sibling outbox insert —
+   * the golden-thread `OrderStatusChanged` event is persisted in the SAME tx as
+   * the status write (PA0-6 pattern, mirrors execSdSalesOrderInsert). Typed as
+   * `unknown` to keep this shared helper agnostic of Drizzle internals.
+   */
+  tx?: unknown,
+): Promise<void> {
+  const conn = (tx as typeof db | undefined) ?? db;
+  await conn.update(sd_sales_orders)
     .set({ status, advance_status: advanceStatus, updated_at: sql`NOW()` })
     .where(eq(sd_sales_orders.id, id as number));
 }
