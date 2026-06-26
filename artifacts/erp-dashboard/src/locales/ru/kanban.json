@@ -107,5 +107,7 @@
   "xabarlarYoq": "Xabarlar yo'q",
   "birinchiDoskangizniYaratingYokiEuroprint": "Birinchi doskangizni yarating yoki EuroPrint shabloni ishlatib boshlang.",
   "tezkorBoshlashKiruvchiRejadaJarayonda": "Tezkor boshlash: Kiruvchi, Rejada, Jarayonda, Yakunlangan ustunlari avtomatik yaratiladi.",
-  "buKorinishHaliTayyorEmas": "Bu ko'rinish hali tayyor emas"
+  "buKorinishHaliTayyorEmas": "Bu ko'rinish hali tayyor emas",
+  "yaratilmoqda": "Создаётся...",
+  "europrintTezkorBoshlash": "⚡ Быстрый старт EuroPrint"
 }

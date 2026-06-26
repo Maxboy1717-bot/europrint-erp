@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 
 interface MaterialCard {
   id: number | string;
@@ -27,6 +28,7 @@ interface MaterialCard {
 }
 
 export default function MaterialUnitPriceConfig() {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editValues, setEditValues] = useState<Record<string, string>>({});
@@ -47,12 +49,12 @@ export default function MaterialUnitPriceConfig() {
       ),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["/api/material-cards"] });
-      toast({ title: "Narx saqlandi" });
+      toast({ title: t("mupPriceSaved") });
       setEditValues((prev) => { const next = { ...prev }; delete next[vars.id]; return next; });
       setSavingId(null);
     },
     onError: (err: Error) => {
-      toast({ title: "Xatolik", description: err.message, variant: "destructive" });
+      toast({ title: t("xatolik"), description: err.message, variant: "destructive" });
       setSavingId(null);
     },
   });
@@ -63,7 +65,7 @@ export default function MaterialUnitPriceConfig() {
     if (raw === undefined || raw.trim() === "") return;
     const price = Number(raw.replace(",", "."));
     if (!Number.isFinite(price) || price < 0) {
-      toast({ title: "Noto'g'ri narx", variant: "destructive" });
+      toast({ title: t("mupInvalidPrice"), variant: "destructive" });
       return;
     }
     setSavingId(key);
@@ -85,9 +87,9 @@ export default function MaterialUnitPriceConfig() {
           <Package className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold">Material Narxlari</h1>
+          <h1 className="text-xl font-semibold">{t("mupTitle")}</h1>
           <p className="text-sm text-muted-foreground">
-            Har bir material uchun birlik narxini belgilash (WMS → GL hisoblash uchun)
+            {t("mupSubtitle")}
           </p>
         </div>
       </div>
@@ -95,19 +97,19 @@ export default function MaterialUnitPriceConfig() {
       <div className="flex gap-4">
         <Card className="flex-1">
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Jami materiallar</p>
+            <p className="text-xs text-muted-foreground">{t("mupTotalMaterials")}</p>
             <p className="text-2xl font-bold">{isLoading ? "—" : materials.length}</p>
           </CardContent>
         </Card>
         <Card className="flex-1">
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Narxi bor</p>
+            <p className="text-xs text-muted-foreground">{t("mupWithPrice")}</p>
             <p className="text-2xl font-bold text-[var(--ep-green)]">{isLoading ? "—" : withPrice}</p>
           </CardContent>
         </Card>
         <Card className="flex-1">
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-muted-foreground">Narxsiz</p>
+            <p className="text-xs text-muted-foreground">{t("mupWithoutPrice")}</p>
             <p className="text-2xl font-bold text-[var(--ep-red)]">{isLoading ? "—" : withoutPrice}</p>
           </CardContent>
         </Card>
@@ -115,9 +117,9 @@ export default function MaterialUnitPriceConfig() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Narxlarni Tahrirlash</CardTitle>
+          <CardTitle className="text-base">{t("mupEditPrices")}</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Narx maydonini bosing, qiymat kiriting va Enter yoki "Saqlash" tugmasini bosing.
+            {t("mupEditHint")}
           </p>
         </CardHeader>
         <CardContent className="p-0">
@@ -126,10 +128,10 @@ export default function MaterialUnitPriceConfig() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="pl-4 w-8">#</TableHead>
-                  <TableHead>Material nomi</TableHead>
+                  <TableHead>{t("mupMaterialName")}</TableHead>
                   <TableHead>SKU</TableHead>
-                  <TableHead>O'lchov</TableHead>
-                  <TableHead className="w-40">Narx (so'm)</TableHead>
+                  <TableHead>{t("olchov1")}</TableHead>
+                  <TableHead className="w-40">{t("mupPriceSom")}</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
@@ -144,7 +146,7 @@ export default function MaterialUnitPriceConfig() {
                 {!isLoading && materials.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                      Materiallar topilmadi
+                      {t("mupNoMaterials")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -181,10 +183,10 @@ export default function MaterialUnitPriceConfig() {
                           >
                             {m.unitPrice != null ? (
                               <span className="font-medium">
-                                {Number(m.unitPrice).toLocaleString("uz-UZ")} so'm
+                                {Number(m.unitPrice).toLocaleString("uz-UZ")} {t("som")}
                               </span>
                             ) : (
-                              <Badge variant="warning" className="text-xs">Belgilanmagan</Badge>
+                              <Badge variant="warning" className="text-xs">{t("belgilanmagan1")}</Badge>
                             )}
                           </button>
                         )}
@@ -198,7 +200,7 @@ export default function MaterialUnitPriceConfig() {
                             onClick={() => handleSave(m.id)}
                           >
                             <Save className="h-3 w-3" />
-                            {isSaving ? "..." : "Saqlash"}
+                            {isSaving ? "..." : t("save")}
                           </Button>
                         )}
                       </TableCell>

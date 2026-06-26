@@ -104,14 +104,14 @@ export default function Courses() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
       toast({
-        title: "Muvaffaqiyat",
-        description: "Kurs muvaffaqiyatli o'chirildi",
+        title: tCommon("muvaffaqiyatToast"),
+        description: tCommon("kursMuvaffaqiyatliOchirildiToast"),
       });
     },
     onError: () => {
       toast({
-        title: "Xatolik",
-        description: "Kurs o'chirishda xatolik yuz berdi",
+        title: tCommon("xatolikTitle"),
+        description: tCommon("kursOchirishdaXatolikToast"),
         variant: "destructive",
       });
     },
@@ -250,8 +250,8 @@ export default function Courses() {
                       setShowAddDialog(true);
                     } catch (error) {
                       toast({
-                        title: "Xatolik",
-                        description: "Kurs ma'lumotini yuklashda xatolik yuz berdi",
+                        title: tCommon("xatolikTitle"),
+                        description: tCommon("kursMalumotiniYuklashdaXatolik"),
                         variant: "destructive",
                       });
                     }
@@ -308,7 +308,7 @@ export default function Courses() {
         onOpenChange={(v) => { if (!v) setDeleteCourseId(null); }}
         title={t("kursniOchirish")}
         description={t("ushbuKursniOchirishniTasdiqlaysizmiBu")}
-        confirmText="O'chirish"
+        confirmText={tCommon("delete")}
         variant="destructive"
         onConfirm={() => { if (deleteCourseId) { deleteMutation.mutate(deleteCourseId); setDeleteCourseId(null); } }}
       />

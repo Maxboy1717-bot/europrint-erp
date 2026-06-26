@@ -48,7 +48,7 @@ export function ChecklistSheetBody({
   const steps = [4, 5, 6, 7];
   const groupedItems = (Array.isArray(steps) ? steps : []).map(step => ({
     step,
-    label: CHECKLIST_ITEMS.find(i => i.step === step)?.stepLabel ?? `Bosqich ${step}`,
+    label: CHECKLIST_ITEMS.find(i => i.step === step)?.stepLabel ?? `${t("bosqichLabel")} ${step}`,
     items: CHECKLIST_ITEMS.filter(i => i.step === step),
   }));
 
@@ -170,7 +170,7 @@ export function ChecklistSheetBody({
                                     data-testid={`button-probation-review-${item.key}`}
                                   >
                                     <FileText className="w-2.5 h-2.5" />
-                                    {existingReview ? "Forma ✓" : "Forma to'ldirish"}
+                                    {existingReview ? t("formaTayyor") : t("formaToldirish")}
                                   </Button>
                                 )}
                               </div>
@@ -195,7 +195,7 @@ export function ChecklistSheetBody({
                                 )}
                                 {existingReview && (
                                   <span className="text-[10px] text-[var(--ep-green)]">
-                                    Baholash: {existingReview.decision === "continue" ? "Davom ettirish" : existingReview.decision === "extended_trial" ? "Qo'shimcha sinov" : "Tugatish"}
+                                    {t("baholashLabel")}: {existingReview.decision === "continue" ? t("davomEttirish") : existingReview.decision === "extended_trial" ? t("qoshimchaSinov") : t("tugatishDecision")}
                                   </span>
                                 )}
                               </div>

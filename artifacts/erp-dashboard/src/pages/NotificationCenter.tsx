@@ -23,27 +23,27 @@ interface Notification {
   createdAt: string;
 }
 
-const TYPE_CONFIG: Record<string, { icon: string; color: string; label: string }> = {
-  MOVEMENT_CREATED:  { icon: "🔄", color: "bg-blue-100 text-blue-800",      label: "Yangi harakat" },
-  MOVEMENT_PENDING:  { icon: "⏳", color: "bg-amber-100 text-amber-800",    label: "Tasdiqlash kerak" },
-  MOVEMENT_APPROVED: { icon: "✅", color: "bg-emerald-100 text-emerald-800", label: "Tasdiqlangan" },
-  MOVEMENT_REJECTED: { icon: "❌", color: "bg-red-100 text-red-800",        label: "Rad etilgan" },
-  QC_PENDING:        { icon: "🔬", color: "bg-violet-100 text-violet-800",  label: "QC kerak" },
-  QUARANTINE_EXPIRED:{ icon: "⏰", color: "bg-amber-100 text-amber-800",    label: "Karantin 48+ soat" },
-  LOW_STOCK:         { icon: "⚠️", color: "bg-red-100 text-red-800",        label: "Past stok" },
-  GL_POSTED:         { icon: "📒", color: "bg-emerald-100 text-emerald-800", label: "GL yozuv" },
-  DAMAGE_ACT:        { icon: "⚡", color: "bg-red-100 text-red-800",        label: "Zarar akti" },
-  REQUEST_APPROVED:  { icon: "📋", color: "bg-emerald-100 text-emerald-800", label: "So'rov tasdiqlangan" },
+const TYPE_CONFIG: Record<string, { icon: string; color: string; labelKey: string }> = {
+  MOVEMENT_CREATED:  { icon: "🔄", color: "bg-blue-100 text-blue-800",      labelKey: "ncMovementCreated" },
+  MOVEMENT_PENDING:  { icon: "⏳", color: "bg-amber-100 text-amber-800",    labelKey: "ncMovementPending" },
+  MOVEMENT_APPROVED: { icon: "✅", color: "bg-emerald-100 text-emerald-800", labelKey: "ncMovementApproved" },
+  MOVEMENT_REJECTED: { icon: "❌", color: "bg-red-100 text-red-800",        labelKey: "ncMovementRejected" },
+  QC_PENDING:        { icon: "🔬", color: "bg-violet-100 text-violet-800",  labelKey: "ncQcPending" },
+  QUARANTINE_EXPIRED:{ icon: "⏰", color: "bg-amber-100 text-amber-800",    labelKey: "ncQuarantineExpired" },
+  LOW_STOCK:         { icon: "⚠️", color: "bg-red-100 text-red-800",        labelKey: "ncLowStock" },
+  GL_POSTED:         { icon: "📒", color: "bg-emerald-100 text-emerald-800", labelKey: "ncGlPosted" },
+  DAMAGE_ACT:        { icon: "⚡", color: "bg-red-100 text-red-800",        labelKey: "ncDamageAct" },
+  REQUEST_APPROVED:  { icon: "📋", color: "bg-emerald-100 text-emerald-800", labelKey: "ncRequestApproved" },
 };
 
-function fmtDate(iso: string): string {
+function fmtDate(iso: string, t: (key: string) => string): string {
   try {
     const d = new Date(iso);
     const now = new Date();
     const diff = now.getTime() - d.getTime();
-    if (diff < 60_000) return "hozir";
-    if (diff < 3600_000) return `${Math.floor(diff / 60_000)} daqiqa oldin`;
-    if (diff < 86400_000) return `${Math.floor(diff / 3600_000)} soat oldin`;
+    if (diff < 60_000) return t("relHozir");
+    if (diff < 3600_000) return `${Math.floor(diff / 60_000)} ${t("relDaqiqaOldin")}`;
+    if (diff < 86400_000) return `${Math.floor(diff / 3600_000)} ${t("relSoatOldin")}`;
     return d.toLocaleString("uz-UZ", { dateStyle: "short", timeStyle: "short" });
   } catch { return iso; }
 }
@@ -106,7 +106,7 @@ export default function NotificationCenter() {
           <div className="text-xs text-gray-500 font-semibold">{t("xabarnomalarMarkazi")}</div>
           <h1 className="text-2xl font-bold">{t("notifications")}</h1>
           <p className="text-sm text-gray-500">
-            {stats.total} ta jami · <b className="text-[var(--ep-yellow)]">{stats.unread} ta o'qilmagan</b>
+            {stats.total} {t("taJami")} · <b className="text-[var(--ep-yellow)]">{stats.unread} {t("taOqilmaganBold")}</b>
           </p>
         </div>
         <Button onClick={load} variant="outline">🔄</Button>
@@ -128,7 +128,7 @@ export default function NotificationCenter() {
                 filter === f ? "bg-[var(--ep-blue)] text-white" : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              {f === "all" ? "Barchasi" : f === "unread" ? `O'qilmagan (${stats.unread})` : "O'qilgan"}
+              {f === "all" ? t("filterBarchasi") : f === "unread" ? `${t("oqilmagan")} (${stats.unread})` : t("filterOqilgan")}
             </button>
           ))}
         </div>
@@ -136,7 +136,7 @@ export default function NotificationCenter() {
           <Filter className="h-4 w-4 text-gray-400" />
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-1.5 border rounded text-sm">
             <option value="all">{t("barchaTurlar")}</option>
-            {types.map(t => <option key={t} value={t}>{TYPE_CONFIG[t]?.label ?? t}</option>)}
+            {types.map(typeKey => <option key={typeKey} value={typeKey}>{TYPE_CONFIG[typeKey]?.labelKey ? t(TYPE_CONFIG[typeKey].labelKey) : typeKey}</option>)}
           </select>
         </div>
       </div>
@@ -155,7 +155,10 @@ export default function NotificationCenter() {
           {!loading && filtered.length > 0 && (
             <div className="divide-y divide-gray-100">
               {filtered.map(n => {
-                const cfg = TYPE_CONFIG[n.type] ?? { icon: "📬", color: "bg-gray-100 text-gray-700", label: n.type };
+                const cfgBase = TYPE_CONFIG[n.type];
+                const cfg = cfgBase
+                  ? { icon: cfgBase.icon, color: cfgBase.color, label: t(cfgBase.labelKey) }
+                  : { icon: "📬", color: "bg-gray-100 text-gray-700", label: n.type };
                 return (
                   <div
                     key={n.id}
@@ -171,7 +174,7 @@ export default function NotificationCenter() {
                           <Badge variant="outline" className={`text-xs ${cfg.color}`}>{cfg.label}</Badge>
                         </div>
                         <div className="text-sm text-gray-600">{n.body}</div>
-                        <div className="text-xs text-gray-400 mt-1">{fmtDate(n.createdAt)}</div>
+                        <div className="text-xs text-gray-400 mt-1">{fmtDate(n.createdAt, t)}</div>
                       </div>
                       {!n.isRead && (
                         <Button onClick={(e) => { e.stopPropagation(); void markRead(n.id); }} size="sm" variant="ghost">

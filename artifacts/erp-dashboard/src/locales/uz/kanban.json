@@ -137,5 +137,7 @@
   "useTaskDetailMutations.natijaQoshildi": "Natija qo'shildi",
   "useTaskDetailMutations.faylOchirildi": "Fayl o'chirildi",
   "useTaskDetailMutations.vaqtKuzatuviToxtatildi": "Vaqt kuzatuvi to'xtatildi",
-  "useTaskDetailMutations.toxtatishdaXatolik": "To'xtatishda xatolik"
+  "useTaskDetailMutations.toxtatishdaXatolik": "To'xtatishda xatolik",
+  "yaratilmoqda": "Yaratilmoqda...",
+  "europrintTezkorBoshlash": "⚡ Europrint tezkor boshlash"
 }

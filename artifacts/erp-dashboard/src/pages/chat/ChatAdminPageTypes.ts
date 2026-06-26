@@ -43,12 +43,13 @@ export interface AuditLog {
 
 export type Tab = "rooms" | "audit";
 
-export const ACTION_LABELS: Record<string, string> = {
-  MEMBER_ADDED: "A'zo qo'shildi",
-  MEMBER_REMOVED: "A'zo chiqarildi",
-  ROLE_CHANGED: "Rol o'zgartirildi",
-  MESSAGE_DELETED: "Xabar o'chirildi",
-  MESSAGE_PINNED: "Xabar pinlandi",
-  MESSAGE_UNPINNED: "Pin olib tashlandi",
-  ROOM_ARCHIVED: "Xona arxivlandi",
+/** Maps audit action codes to i18n keys (resolved with t() at render time). */
+export const ACTION_LABEL_KEYS: Record<string, string> = {
+  MEMBER_ADDED: "actMemberAdded",
+  MEMBER_REMOVED: "actMemberRemoved",
+  ROLE_CHANGED: "actRoleChanged",
+  MESSAGE_DELETED: "actMessageDeleted",
+  MESSAGE_PINNED: "actMessagePinned",
+  MESSAGE_UNPINNED: "actMessageUnpinned",
+  ROOM_ARCHIVED: "actRoomArchived",
 };

@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { UseMutationResult } from "@tanstack/react-query";
-import { AdminRoom, AuditLog, ACTION_LABELS } from "./ChatAdminPageTypes";
+import { AdminRoom, AuditLog, ACTION_LABEL_KEYS } from "./ChatAdminPageTypes";
 import { useTranslation } from '@/lib/i18n';
 
 // ─── Rooms Tab ────────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ export function RoomsSection({
                   <div>
                     <p className="font-medium text-sm">{room.name || "—"}</p>
                     {room.created_by_name && (
-                      <p className="text-xs text-muted-foreground">Yaratgan: {room.created_by_name}</p>
+                      <p className="text-xs text-muted-foreground">{t("yaratganLabel")}: {room.created_by_name}</p>
                     )}
                   </div>
                 </TableCell>
@@ -187,7 +187,7 @@ export function AuditSection({
                   <TableCell className="text-sm font-medium">{log.actor_name || log.actor_id}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-xs">
-                      {ACTION_LABELS[log.action] || log.action}
+                      {ACTION_LABEL_KEYS[log.action] ? t(ACTION_LABEL_KEYS[log.action]) : log.action}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{log.room_name || log.room_id}</TableCell>

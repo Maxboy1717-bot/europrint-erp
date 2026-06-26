@@ -39,7 +39,7 @@ export function RoomMembersSheet({selectedRoom, onClose, membersLoading, roomMem
         <SheetHeader className="mb-4">
           <SheetTitle className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            {selectedRoom?.name || "Xona"} — A'zolar
+            {selectedRoom?.name || t("xonaFallback")} — {t("azolarSuffix")}
           </SheetTitle>
         </SheetHeader>
         {membersLoading ? (
@@ -59,7 +59,7 @@ export function RoomMembersSheet({selectedRoom, onClose, membersLoading, roomMem
                   <p className="text-xs text-muted-foreground">{m.employeeId}</p>
                   {m.leftAt && (
                     <p className="text-xs text-[var(--ep-red)]">
-                      Chiqgan: {format(new Date(m.leftAt), "dd.MM.yyyy")}
+                      {t("chiqganLabel")}: {format(new Date(m.leftAt), "dd.MM.yyyy")}
                     </p>
                   )}
                 </div>
@@ -119,9 +119,9 @@ export function RemoveMemberConfirm({ confirmRemove, onClose, onConfirm }: Remov
       open={confirmRemove !== null}
       onOpenChange={(open) => { if (!open) onClose(); }}
       title={t("azoniChiqarish")}
-      description={`${confirmRemove?.name ?? ''} ni chatdan chiqarishni tasdiqlaysizmi?`}
-      confirmText="Chiqarish"
-      cancelText="Bekor qilish"
+      description={`${confirmRemove?.name ?? ''} ${t("azoniChiqarishTasdiq")}`}
+      confirmText={t("chiqarishBtn")}
+      cancelText={t("bekorQilish")}
       variant="destructive"
       onConfirm={onConfirm}
     />

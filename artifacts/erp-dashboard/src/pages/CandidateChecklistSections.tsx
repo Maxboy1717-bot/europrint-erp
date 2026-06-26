@@ -6,6 +6,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 import {
   ChecklistData,
   ProbationReviewsResponse,
@@ -20,13 +21,14 @@ export function ChecklistProgressBadge({
   pipelineEntryId: number;
   checklistData?: ChecklistData;
 }) {
+  const { t } = useTranslation("common");
   const fallback = checklistData ?? {};
   const { done, total, pct } = getProgressInfo(fallback);
   const isComplete = done === total;
 
   return (
     <span
-      title={`Cheklist: ${done}/${total} bajarildi`}
+      title={`${t("cheklistTitle")}: ${done}/${total} ${t("bajarildiLabel")}`}
       className={cn(
         "inline-flex items-center gap-1 text-xs rounded-full px-1.5 py-0.5 font-medium border",
         isComplete
@@ -48,6 +50,7 @@ export function ChecklistProgressBadge({
 
 // ─── Probation Review Badge (karta ichida, kanban uchun) ──────────────────────
 export function ProbationReviewBadges({ pipelineEntryId }: { pipelineEntryId: number }) {
+  const { t } = useTranslation("common");
   const { data } = useQuery<ProbationReviewsResponse>({
     queryKey: [`/api/hr/recruitment/pipeline/${pipelineEntryId}/probation-review`],
     staleTime: 60_000,
@@ -68,9 +71,9 @@ export function ProbationReviewBadges({ pipelineEntryId }: { pipelineEntryId: nu
         <span
           key={r.review_type}
           className="inline-flex items-center gap-0.5 text-[10px] rounded-full px-1.5 py-0.5 font-medium bg-green-50 text-[var(--ep-green)] border border-green-200"
-          title={`${r.review_type}-kun baholash: ${r.decision}`}
+          title={`${r.review_type}-${t("kunBaholashLabel")}: ${r.decision}`}
         >
-          {decisionIcons[r.decision] ?? "✅"} {r.review_type}-kun ✓
+          {decisionIcons[r.decision] ?? "✅"} {r.review_type}-{t("kunSuffix").trim()} ✓
         </span>
       ))}
     </div>

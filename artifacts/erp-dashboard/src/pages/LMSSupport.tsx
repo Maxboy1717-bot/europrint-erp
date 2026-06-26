@@ -31,53 +31,33 @@ import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 const FAQ_ITEMS = [
-  {
-    question: "Yangi kursga qanday yozilaman?",
-    answer:
-      "LMS bosh sahifasiga o'ting, kerakli kursni toping va 'Yozilish' tugmasini bosing. Kurs menejer tomonidan tasdiqlangach, siz avtomatik ravishda xabar olasiz.",
-  },
-  {
-    question: "Sertifikat qachon beriladi?",
-    answer:
-      "Kursning barcha modullarini va yakuniy testni muvaffaqiyatli topshirgandan so'ng sertifikat avtomatik tarzda hisobingizga qo'shiladi.",
-  },
-  {
-    question: "Test natijasini qayta topshirish mumkinmi?",
-    answer:
-      "Ha, har bir test 3 marta topshirilishi mumkin. Barcha urinishlar tugagandan so'ng kuratorga murojaat qiling.",
-  },
-  {
-    question: "Kurs materyallarini yuklab olish mumkinmi?",
-    answer:
-      "Ba'zi kurslar PDF va video fayllarni yuklab olish imkonini beradi. Buning uchun kurs sahifasidagi yuklab olish tugmasidan foydalaning.",
-  },
-  {
-    question: "Parolni unutsam nima qilaman?",
-    answer:
-      "Kirish sahifasidagi 'Parolni unutdim' havolasini bosing yoki IT bo'limiga murojaat qiling.",
-  },
+  { questionKey: "faqQ1", answerKey: "faqA1" },
+  { questionKey: "faqQ2", answerKey: "faqA2" },
+  { questionKey: "faqQ3", answerKey: "faqA3" },
+  { questionKey: "faqQ4", answerKey: "faqA4" },
+  { questionKey: "faqQ5", answerKey: "faqA5" },
 ];
 
 const CONTACT_CHANNELS = [
   {
     icon: Phone,
-    label: "Telefon",
+    labelKey: "telefonLabel",
     value: "+998 71 123-45-67",
-    badge: "Ish kunlari 09:00–18:00",
+    badgeKey: "contactPhoneBadge",
     color: "text-[var(--ep-green)] dark:text-green-400",
   },
   {
     icon: Mail,
-    label: "E-mail",
+    labelKey: "contactEmailLabel",
     value: "support@europrint.uz",
-    badge: "24 soat ichida javob",
+    badgeKey: "contactEmailBadge",
     color: "text-[var(--ep-blue)] dark:text-blue-400",
   },
   {
     icon: MessageSquare,
-    label: "Telegram",
+    labelKey: "telegram",
     value: "@europrint_support",
-    badge: "Tezkor yordam",
+    badgeKey: "tezkorYordamBadge",
     color: "text-[var(--ep-blue)] dark:text-sky-400",
   },
 ];
@@ -96,12 +76,12 @@ export default function LMSSupport() {
         priority: ticketForm.priority,
       }),
     onSuccess: () => {
-      toast({ title: "Muvaffaqiyatli", description: "Murojaat muvaffaqiyatli yuborildi." });
+      toast({ title: t("muvaffaqiyatToast"), description: t("murojaatMuvaffaqiyatliYuborildi") });
       setTicketDialogOpen(false);
       setTicketForm({ subject: "", message: "", priority: "medium" });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Murojaat yuborishda xatolik yuz berdi.", variant: "destructive" });
+      toast({ title: t("xatolikTitle"), description: t("murojaatYuborishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -176,7 +156,7 @@ export default function LMSSupport() {
                   disabled={createTicketMutation.isPending || !ticketForm.subject || !ticketForm.message}
                   data-testid="button-submit-ticket"
                 >
-                  {createTicketMutation.isPending ? "Yuborilmoqda..." : "Yuborish"}
+                  {createTicketMutation.isPending ? t("yuborilmoqdaLoading") : t("yuborishBtn")}
                 </Button>
               </div>
             </DialogContent>
@@ -186,17 +166,18 @@ export default function LMSSupport() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {(Array.isArray(CONTACT_CHANNELS) ? CONTACT_CHANNELS : []).map((ch) => {
             const Icon = ch.icon;
+            const label = t(ch.labelKey);
             return (
-              <Card key={ch.label} data-testid={`card-contact-${ch.label.toLowerCase()}`}>
+              <Card key={ch.labelKey} data-testid={`card-contact-${ch.labelKey.toLowerCase()}`}>
                 <CardContent className="flex flex-col items-center text-center gap-3 p-6">
                   <div className={`${ch.color} bg-card rounded-full p-3`}>
                     <Icon className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">{ch.label}</p>
+                    <p className="font-medium text-foreground">{label}</p>
                     <p className="text-sm text-muted-foreground mt-0.5">{ch.value}</p>
                   </div>
-                  <EPStatusPill tone="neutral">{ch.badge}</EPStatusPill>
+                  <EPStatusPill tone="neutral">{t(ch.badgeKey)}</EPStatusPill>
                 </CardContent>
               </Card>
             );
@@ -207,7 +188,7 @@ export default function LMSSupport() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <HelpCircle className="h-4 w-4 text-primary" />
-              Ko'p so'raladigan savollar (FAQ)
+              {t("faqTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent className="divide-y divide-border">
@@ -218,10 +199,10 @@ export default function LMSSupport() {
                 data-testid={`faq-item-${idx}`}
               >
                 <p className="font-medium text-sm text-foreground mb-1">
-                  {item.question}
+                  {t(item.questionKey)}
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {item.answer}
+                  {t(item.answerKey)}
                 </p>
               </div>
             ))}
@@ -238,8 +219,7 @@ export default function LMSSupport() {
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                LMS platformasidan foydalanish bo'yicha to'liq qo'llanma
-                IT bo'limi tomonidan tayyorlangan.
+                {t("foydalanuvchiQollanmasiMatn")}
               </p>
               <Link href="/lms/knowledge-base">
                 <Button variant="outline" size="sm" className="mt-2" data-testid="button-knowledge-base">
@@ -258,8 +238,7 @@ export default function LMSSupport() {
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Texnik muammo yoki takliflaringizni quyidagi e-mail orqali
-                yuboring — 24 soat ichida javob beramiz.
+                {t("muammoniBildirishMatn")}
               </p>
               <Button
                 variant="outline"

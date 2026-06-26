@@ -106,7 +106,9 @@ export function EmptyBoardState({
           }}
         >
           <FolderKanban style={{ width: 16, height: 16 }} />
-          {isQuickStartPending ? "Yaratilmoqda..." : "⚡ Europrint tezkor boshlash"}
+          {isQuickStartPending
+            ? tLabel("kanban.yaratilmoqda", "Yaratilmoqda...")
+            : tLabel("kanban.europrintTezkorBoshlash", "⚡ Europrint tezkor boshlash")}
         </button>
 
         <button

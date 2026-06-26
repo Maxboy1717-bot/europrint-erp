@@ -42,13 +42,13 @@ interface Candidate {
   source?: string;
 }
 
-const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  new:        { label: "Yangi",         variant: "secondary" },
-  screening:  { label: "Ko'rib chiqish", variant: "default" },
-  interview:  { label: "Suhbat",        variant: "default" },
-  offer:      { label: "Taklif",        variant: "default" },
-  hired:      { label: "Qabul qilindi", variant: "default" },
-  rejected:   { label: "Rad etildi",    variant: "destructive" },
+const STATUS_MAP: Record<string, { labelKey: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+  new:        { labelKey: "yangiStatus",   variant: "secondary" },
+  screening:  { labelKey: "koribChiqish",  variant: "default" },
+  interview:  { labelKey: "suhbatStatus",  variant: "default" },
+  offer:      { labelKey: "taklifStatus",  variant: "default" },
+  hired:      { labelKey: "qabulQilindi",  variant: "default" },
+  rejected:   { labelKey: "radEtildi",     variant: "destructive" },
 };
 
 export default function CandidatesPage() {
@@ -75,12 +75,12 @@ export default function CandidatesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/candidates"] });
-      toast({ title: "Nomzod qo'shildi" });
+      toast({ title: t("nomzodQoshildi") });
       setShowCreate(false);
       setForm({ fullName: "", email: "", phone: "", position: "", status: "new" });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Nomzod qo'shishda xatolik", variant: "destructive" });
+      toast({ title: t("xatolik"), description: t("nomzodQoshishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -90,11 +90,11 @@ export default function CandidatesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/candidates"] });
-      toast({ title: "Nomzod o'chirildi" });
+      toast({ title: t("nomzodOchirildi") });
       setDeleteId(null);
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Nomzodni o'chirishda xatolik", variant: "destructive" });
+      toast({ title: t("xatolik"), description: t("nomzodniOchirishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -150,7 +150,7 @@ export default function CandidatesPage() {
             <CardContent className="py-12 text-center">
               <UserPlus className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                {search ? "Qidiruv natijasi topilmadi" : "Nomzodlar mavjud emas"}
+                {search ? t("qidiruvNatijasiTopilmadi") : t("nomzodlarMavjudEmas")}
               </p>
             </CardContent>
           </Card>
@@ -187,7 +187,7 @@ export default function CandidatesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant={sc.variant} className="text-xs">{sc.label}</Badge>
+                      <Badge variant={sc.variant} className="text-xs">{t(sc.labelKey)}</Badge>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -238,8 +238,8 @@ export default function CandidatesPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(STATUS_MAP).map(([key, { label }]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  {Object.entries(STATUS_MAP).map(([key, { labelKey }]) => (
+                    <SelectItem key={key} value={key}>{t(labelKey)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -252,7 +252,7 @@ export default function CandidatesPage() {
               disabled={!form.fullName.trim() || createMutation.isPending}
               data-testid="button-confirm-add-candidate"
             >
-              {createMutation.isPending ? "Saqlanmoqda..." : "Qo'shish"}
+              {createMutation.isPending ? t("saqlanmoqda") : t("nomzodQoshish")}
             </Button>
           </DialogFooter>
         </DialogContent>

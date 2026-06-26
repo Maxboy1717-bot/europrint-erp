@@ -19,9 +19,9 @@ interface ConversionChainProps {
 export function ConversionChain({ applications, phone, interview, hired }: ConversionChainProps) {
   const { t } = useTranslation("common");
   const stages = [
-    { label: "Ariza",   value: applications,    target: null },
-    { label: "Telefon", value: phone ?? null,   target: Math.round(applications * 0.5) },
-    { label: "Suhbat",  value: interview ?? null, target: Math.round(applications * 0.1) },
+    { label: t("arizaStage"),   value: applications,    target: null },
+    { label: t("telefonStage"), value: phone ?? null,   target: Math.round(applications * 0.5) },
+    { label: t("suhbatStage"),  value: interview ?? null, target: Math.round(applications * 0.1) },
   ];
   const convRate =
     applications > 0 && hired != null
@@ -73,14 +73,15 @@ interface SummaryKPICardsProps {
 
 /** Renders the top row of 6–7 KPI metric cards. */
 export function SummaryKPICards({ summary: s }: SummaryKPICardsProps) {
+  const { t } = useTranslation("common");
   const metrics = [
-    { label: "Jami nomzodlar",               value: fmt(s.total_candidates),                       icon: Users,      color: "text-[var(--ep-blue)]"    },
-    { label: "Qabul qilinganlar",             value: fmt(s.hired),                                  icon: UserCheck,  color: "text-[var(--ep-green)]"   },
-    { label: "Referral orqali",               value: fmt(s.via_referral),                           icon: Award,      color: "text-[var(--ep-purple)]"  },
-    { label: "O'rtacha to'ldirish (ish kun)", value: fmt(s.avg_time_to_fill_working_days, " kun"),  icon: Clock,      color: "text-[var(--ep-primary)]"  },
-    { label: "AI o'tish darajasi",            value: fmt(s.ai_pass_rate, "%"),                      icon: TrendingUp, color: "text-[var(--ep-green)]" },
-    { label: "Taklif qabul darajasi",         value: fmt(s.offer_acceptance_rate, "%"),             icon: Percent,    color: "text-[var(--ep-blue)]"     },
-    { label: "Ishga muvofiqlik sifati",       value: fmt(s.quality_of_hire, "%"),                   icon: Target,     color: "text-[var(--ep-blue)]"  },
+    { label: t("jamiNomzodlar"),              value: fmt(s.total_candidates),                       icon: Users,      color: "text-[var(--ep-blue)]"    },
+    { label: t("qabulQilinganlar"),           value: fmt(s.hired),                                  icon: UserCheck,  color: "text-[var(--ep-green)]"   },
+    { label: t("referralOrqali"),             value: fmt(s.via_referral),                           icon: Award,      color: "text-[var(--ep-purple)]"  },
+    { label: t("ortachaToldirishIshKun"),     value: fmt(s.avg_time_to_fill_working_days, t("kunSuffix")),  icon: Clock,      color: "text-[var(--ep-primary)]"  },
+    { label: t("aiOtishDarajasi"),            value: fmt(s.ai_pass_rate, "%"),                      icon: TrendingUp, color: "text-[var(--ep-green)]" },
+    { label: t("taklifQabulDarajasi"),        value: fmt(s.offer_acceptance_rate, "%"),             icon: Percent,    color: "text-[var(--ep-blue)]"     },
+    { label: t("ishgaMuvofiqlikSifati"),      value: fmt(s.quality_of_hire, "%"),                   icon: Target,     color: "text-[var(--ep-blue)]"  },
   ];
 
   return (

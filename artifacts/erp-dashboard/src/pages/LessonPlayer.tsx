@@ -84,17 +84,17 @@ export default function LessonPlayer() {
       qc.invalidateQueries({ queryKey: ["/api/lms/progress/my", id] });
       if (data.certificateIssued) {
         toast({
-          title: "🎉 Tabriklaymiz!",
-          description: "Kurs muvaffaqiyatli yakunlandi! Sertifikat berildi.",
+          title: t("tabriklaymizEmoji"),
+          description: t("kursMuvaffaqiyatliYakunlandiSertifikat"),
         });
       } else {
-        toast({ title: "Dars bajarildi", description: "Progress saqlandi" });
+        toast({ title: t("darsBajarildiToast"), description: t("progressSaqlandi") });
       }
     },
     onError: () => {
       toast({
-        title: "Xatolik",
-        description: "Progressni saqlashda xatolik",
+        title: t("xatolikTitle"),
+        description: t("progressniSaqlashdaXatolik"),
         variant: "destructive",
       });
     },

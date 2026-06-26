@@ -71,10 +71,10 @@ export default function CourseDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses", id] });
-      toast({ title: "Modul o'chirildi" });
+      toast({ title: t("modulOchirildiToast") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Modulni o'chirishda xatolik yuz berdi", variant: "destructive" });
+      toast({ title: t("xatolikTitle"), description: t("modulniOchirishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -84,10 +84,10 @@ export default function CourseDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses", id] });
-      toast({ title: "Dars o'chirildi" });
+      toast({ title: t("darsOchirildiToast") });
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Darsni o'chirishda xatolik yuz berdi", variant: "destructive" });
+      toast({ title: t("xatolikTitle"), description: t("darsniOchirishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -97,11 +97,11 @@ export default function CourseDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-      toast({ title: "Kurs o'chirildi", description: "Kurs muvaffaqiyatli o'chirildi" });
+      toast({ title: t("kursOchirildiToast"), description: t("kursMuvaffaqiyatliOchirildiToast") });
       navigate("/courses");
     },
     onError: () => {
-      toast({ title: "Xatolik", description: "Kursni o'chirishda xatolik yuz berdi", variant: "destructive" });
+      toast({ title: t("xatolikTitle"), description: t("kursniOchirishdaXatolik"), variant: "destructive" });
     },
   });
 
@@ -215,7 +215,7 @@ export default function CourseDetail() {
             className="bg-red-100 text-red-800 hover:bg-red-200 border-none shadow-none rounded-lg px-4 py-2"
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            {deleteCourseMutation.isPending ? "O'chirilmoqda..." : "Kursni o'chirish"}
+            {deleteCourseMutation.isPending ? t("ochirilmoqdaLoading") : t("kursniOchirishLoading")}
           </Button>
           <Button
             onClick={() => navigate(`/courses/${id}/lessons`)}
@@ -250,9 +250,9 @@ export default function CourseDetail() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("daraja")}</p>
               <p className="text-xl font-bold tracking-tight text-foreground">
-                {course.level === "beginner" ? "Boshlang'ich"
-                  : course.level === "intermediate" ? "O'rta"
-                  : "Ilg'or"}
+                {course.level === "beginner" ? t("levelBeginner")
+                  : course.level === "intermediate" ? t("levelIntermediate")
+                  : t("levelAdvanced")}
               </p>
             </div>
           </div>
