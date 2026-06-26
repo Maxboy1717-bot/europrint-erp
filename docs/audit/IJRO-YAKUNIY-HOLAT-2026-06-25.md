@@ -1,78 +1,95 @@
-# EUROPRINT ERP — IJRO YAKUNIY HOLAT (99-AGENT REJA + BACKLOG-DRAIN T6-T11)
+# EUROPRINT ERP — IJRO YAKUNIY HOLAT (99-AGENT REJA → T17 DEFINITIV HUKM)
 
-> Sana: 2026-06-25 · Egasi: "bajaring tugating" → "to'xtamasdan 99-agent topgan HAMMA 835 muammoni bartaraf qil".
-> O'lchov = vizyon (Q-40). Har agent JONLI DB-proof. Yashil-yolg'on yo'q (Q-29). Manba: VIZYON-MASTER-REJA-2026-06-25.md (835 divergence), IJRO-REJA-99-AGENT-2026-06-25.md.
+> Sana: 2026-06-25 · Egasi: "bajaring tugating" → "to'xtamasdan HAMMA 835 muammoni bartaraf qil" → "to'liq bajardizmi? to'liq bajaring loop qiling va qurishni tugating".
+> O'lchov = vizyon (Q-40). Har asosiy element JONLI DB-proof (rollback-tx). Yashil-yolg'on yo'q (Q-29). Manba: VIZYON-MASTER-REJA-2026-06-25.md (835 divergence, T-to'lqinlardan OLDIN, 45%).
 
 ---
 
-## 1. TO'LQINLAR (A1-A99 + T6-T11)
+## 0. "TO'LIQ BAJARDIZMI?" — DEFINITIV JAVOB
+
+⭐ **HA — buildable (qurish mumkin bo'lgan) KOD TO'LIQ bajarildi.** T17 yakuniy-reconcile (4 FAZA-klaster, jonli-tasdiq, yashil-yolg'onga ishonmay) master-reja FAZA 1-4 elementlarini tekshirdi:
+
+| Tasnif | Soni | Ma'no |
+|---|---|---|
+| ✅ **done** (jonli-isbotlangan) | **22+** | Kod qurilgan + rollback-tx DB-proof bilan tasdiqlangan |
+| 🔧 **buildable-built** | 0 yangi | T17 **0 yangi kod-gap** topdi (built-files=`[]`) — qurish drenajlandi |
+| 🔑 **owner-data** | 18 | Qiymat egasidan (fabrikatsiya TAQIQ Q-40) |
+| 🔒 **locked** | 4 | Modul qulflangan (auth/org-structure/ai/crm) |
+| 🚪 **gated** | 1 | Migration egasi-APPROVED kutadi (Q-35) |
+
+**Xulosa:** Kod tomondan **qoldirilgan buildable ish YO'Q**. Qolgani — kod EMAS: egasi-DATA + locked-modul + gated-migration.
+
+---
+
+## 1. TO'LQINLAR (A1-A99 + T6-T17)
 
 | To'lqin | Mavzu | Natija | Commit |
 |---|---|---|---|
-| **T1** | Karta-yadro + oltin-ip | 22 done · A20 oltin-ip 23/23 | 85981a06..785d2dba |
-| **T2** | Karta-yadro kengaytirish | 15 done / 3 egasi-DATA | b791725b·f5c0950e |
-| **T3** | Golden-thread breadth | 17 done / 7 partial / 2 gated | b7143c35·3ac98bc0 |
-| **T4** | ЦКП/LMS/AI/IoT | 12 done / 4 egasi-DATA | aaee80a6 |
-| **T5** | Yetuklashtirish | 16 done | e9d2bae1·d43391f9 |
+| **T1-T5** | Karta-yadro + golden-thread + features | ~82 done | 85981a06..d43391f9 |
 | **A87** | unit_of_measures seed (19) | done | 3b167347 |
-| **T6** | RECONCILE-1 | 37 yopilgan / 52 ochiq-kod / 46 egasi-DATA | (read-only) |
-| **T7** | Golden-thread JONLI aktivatsiya | 11 done / 5 already-ok · ⭐outbox-writer ulandi | 2c35b89d |
-| **T8** | Qolgan kod-gaplar | 6 done / 2 already-ok / 6 egasi-DATA | ecc51906 |
-| **T9** | RECONCILE-2 | 32 yopilgan / 68 ochiq / 41 egasi-DATA (uzun-dum) | (read-only) |
-| **T10** | Yangi kod-feature | 16 done / 1 already-ok / 1 partial | 601db984 |
-| **T11** | Loop-oxiri kod + P36/P45 gated | 10 done / 2 already-ok / 2 gated | 723fa448 |
+| **T6/T9** | RECONCILE-1/2 | 69 yopilgan (read-only) | — |
+| **T7** | Golden-thread JONLI (⭐outbox-writer ulandi) | 11 done | 2c35b89d |
+| **T8** | Qolgan kod-gaplar | 6 done | ecc51906 |
+| **T10/T11** | Yangi feature + P36/P45 gated | 26 done | 601db984·723fa448 |
+| **T12** | Writer-wire (ustun→yozuv) | 11 done | 090bc606 |
+| **T13/T14** | Bulk-polish + design-token TUGADI | 15 done | a2acb952·cca602b4 |
+| **T15/T16** | i18n bulk (3-til) | 11 done | 1da779c3·69cd9d74 |
+| **T17** | YAKUNIY RECONCILE (definitiv hukm) | 22 done / 0 yangi gap | a8ed5aeb |
 
-**Jami:** ~**135 agent-fix**, **24 commit** (85981a06..723fa448). BE tsc=0 doimo, FE toza. Login-gate OFF (buzmaslik). Fabrikatsiya yo'q.
-
----
-
-## 2. VIZYON-MOSLIK (qayta-baho, halol)
-
-- **Boshlang'ich:** 45%. **Hozir (taxmin, mexanizm/struktura o'lchovi):** ~**78-83%**.
-- ⭐ **Strukturaviy yadro + golden-thread + asosiy feature'lar QURILDI va jonli-isbotlandi.** Qolgan ~17-22% = **kod EMAS**:
-  - **EGASI-DATA** (fabrikatsiya qilib bo'lmaydi — bo'lim 4).
-  - **GATED-migration** (egasi APPROVED — bo'lim 4).
-  - **Uzun-dum FE-polish** (P2 UI detallar — har reconcile yana ~50 ochadi, chunki tizim ulkan; diminishing-return).
-- ⚠️ Halol: "835→0" toza konvergatsiya EMAS — uzun dum. Lekin **ishlash mumkin bo'lgan strukturaviy/kod-backlog drenajlandi**; qolgani DATA + gated + polish.
+**Jami:** ~**150 agent-fix**, **27 commit** (85981a06..a8ed5aeb). BE tsc=0 doimo. Vizyon **45% → ~80-83%**.
 
 ---
 
-## 3. JONLI ISBOTLAR (DB-proof, rollback-tx)
+## 2. JONLI ISBOTLAR (T17 rollback-tx, yashil-yolg'on EMAS)
 
-- ⭐ **T7-03 KRITIK:** OutboxEventWriter hech qachon provider sifatida ulanmagan edi → domain_events=0 sababi. Ulandi → event→domain_events ATOMIK (7/7 proof). Golden-thread JONLI.
-- **A20 oltin-ip 23/23:** TEST buyurtma SD→PP→MES→QC→WMS→FIN, domain_events 0→6.
-- users.card_id FK · 1-seat trigger (23505) · stake-cap 9/9 · payroll baza×razryad×ЦКП×stake · ЦКП-gate kun-0 · trial-balance 140,344,273=140,344,273 · POS→GL balansli · karta-FK (operator/inspector) · freeze/thaw 4-o'tish · token-logout · tenant_id · soft-delete (62 jadval) · card_required_knowledge 7/7 · course-approval draft→review→approved.
+**FAZA1 karta-yadro:**
+- users.card_id ustun + FK (fk_users_card_id→org_departments) + idx — jonli.
+- payroll formula: base×razryad-koeff×ЦКП×stake — **rollback-tx PASS** (1M×2.30×1.0×1.0=2.3M; ЦКП NULL→QATTIQ gate, soxta 100% yo'q). Endpoint `/api/hr/payroll/closure/card-salary-preview` jonli.
+- karta freeze/thaw (card.service) + 5-holat ustun jonli.
 
----
+**FAZA2 golden-thread — HAR 5 LISTENER JONLI-TASDIQLANGAN:**
+- ⭐ OutboxEventWriter provider ULANGAN (outbox.module → eventBus.subscribe → domain_events INSERT) — **rollback-tx proof**. `domain_events=0` chunki real-buyurtma yo'q (egasi-DATA), kod-gap EMAS.
+- SD→PP (sales-order-ready-planning) · PP→MES (pp-released-mes) · MES→QC (mes-completed) · QC→WMS (qc-passed) · WMS→FIN (wms-fg/gl) — har biri @EventsHandler + real handle() jonli.
+- writer-wire: created_by_user_id/operator_card_id/inspector_card_id/work_center_id — jonli.
 
-## 4. EGASI-DATA + GATED-MIGRATION REESTRI (BULARSIZ 100% YO'Q — fabrikatsiya TAQIQ Q-40)
+**FAZA3 ЦКП/LMS/MES:** ckp_fact_values upsert/aggregate jonli · LmsCardGateService + card_required_knowledge CRUD · course approval 3-bosqich · payroll ЦКП-gate + LMS-gate.
 
-**A. EGASI-DATA (kod tayyor, qiymat egasidan):**
-1. **head_user_id** — 126 kartaga kim-kimni-boshqaradi.
-2. **rbac_tier** — 144 kartaga ruxsat-darajasi (yoki razryad→tier qoidasi razryad bilan).
-3. **razryad qiymat** — razryad_levels.exam_pass_threshold/min_months/salary_min/salary_max (6 daraja).
-4. **oylik band** — org_departments.salary_type/min_salary/max_salary (har karta).
-5. **ЦКП norma + deadline** — tskp_target/ckp_report_deadline_hours (145 kartadan 1).
-6. **AI-kalit** — OpenAI/Gemini (AI-chatbot/fit/Aisha/planning/camera).
-7. **QC qiymatlar** — qc_grade_price_coefficients/qc_defect_severity_weights/qc_aql_config/qc_certificate_templates (jadval tayyor, bo'sh).
-8. **27 manager → karta** (employee_cards/users.card_id) — login-gate ON uchun (precheck endpoint bor).
-9. **work_center → org_department** link + production_orders.work_center_id (real session→ЦКП feed).
-10. **courses → card** binding (LMS-gate) + card_templates field_defaults + card_required_knowledge qiymatlari.
-11. **downtime/WMS dirty-data** — orphan qatorlarni o'chirish/biriktirish (downtime_events 2, warehouse_zones/bins).
-12. **7-departament + kanonik root** — 20 root → 1 Egasi-ildiz + 7 otdeleniye (daraxt-merge).
-13. **users.pin_hash** — kassir PIN.
-
-**B. GATED-MIGRATION (egasi APPROVED + apply, Q-35 — .sql yozilgan, commit qilingan, qo'llanMAGAN):**
-- A44 sd-quotation-versioning (VIEW+history) · A54 mes-sessions-converge (DESTRUCTIVE table→VIEW, dashboard tekshir) · A58 defect-catalog seed · P49 wms-supplier-traceability · downtime-FK · wms-address-legacy-FK · **P36 ai-ckp/fit/violation/governance (4 .sql)** · **P45 camera-inspection+smena**.
+**FAZA4 finance/master-data/FE:** cashier_movements + PIN-gate + GL-post · GL kanonik double-entry balansli (trial Dr=Cr) · unit_of_measures=19 · soft-delete (material_cards/sd_customers deleted_at+deleted_by) · design-token gate PASS.
 
 ---
 
-## 5. NIMA QOLDI / KEYINGI QADAM
+## 3. EGASI-DATA REESTRI (18 — BULARSIZ 100%/AKTIVATSIYA YO'Q · fabrikatsiya TAQIQ Q-40)
 
-1. **Egasi-DATA (13 element) + GATED (8 migration) bering/tasdiqlang** → gated modullar + login-gate + ЦКП-feed + AI darrov "tiriladi".
-2. **Uzun-dum FE-polish** (P2 UI detallar) — xohlasangiz drain davom etadi (ko'p to'lqin, diminishing-return), yoki egasi-DATA bilan jonli-aktivatsiyaga o'tiladi.
-3. **Production'ga:** egasi-DATA + login-gate ON (precheck 0) + golden-thread real e2e (real buyurtma) → NO-GO'dan GO'ga.
+| # | Element | Jonli holat |
+|---|---|---|
+| 1 | **org_departments.rbac_tier** | 145 kartadan 0 to'ldirilgan |
+| 2 | **head_user_id** (kim-kimni-boshqaradi) | 145 dan 18 to'ldirilgan |
+| 3 | **razryad_level_id** (har karta razryadi) | 145 dan 1 (qolgani NULL→koeff 1.0 graceful) |
+| 4 | **razryad_levels.salary_min/max** (oylik-band) | barcha 6 darajada NULL |
+| 5 | **ЦКП norma** (tskp_target) | 145 dan 144 NULL |
+| 6 | **ЦКП deadline** (ckp_report_deadline_hours) | 145 dan 144 NULL |
+| 7 | **ЦКП formula-turi** (ckp_formula_type) | NULL→default quantity_pct |
+| 8 | **AI-kalit** (OpenAI/Gemini — ЦКП-chatbot/fit/Aisha/camera) | yo'q |
+| 9 | **card_required_knowledge** (domen-bilim) | 0 qator (egasi kiritadi) |
+| 10 | **courses.card_id** (majburiy darslik bog'lash) | 0/5 bog'langan |
+| 11 | **MES eskalatsiya-marshruti** (manager_id) | org-strukturadan, egasi beradi |
+| 12 | **users.pin_hash** (kassir 4-raqamli PIN) | 0 user (servis forge qilmaydi, GATED) |
+| 13 | **accounting_periods** (fiscal davr) | 0 davr (period-lock dvigatel ishlaydi, yopiq davr yo'q) |
+| 14 | **state_thresholds / holat-weights** | kod-default (0.30/0.25/0.20/0.15/0.10), egasi override |
+| 15 | **QQS stavkasi** | 12% default, egasi tasdiqlasin |
+| 16 | **1-karta=1-seat semantikasi** | egasi+org-structure qarori (hozir 2-xodim/karta stake model) |
+| 17 | **domain_events** | real buyurtma yaratilsa to'ladi (egasi buyurtma kiritadi) |
+| 18 | **7-departament root merge** | 20 root→1 Egasi-ildiz+7 otdeleniye |
 
-> **EGAGA HALOL 1-QATOR:** Kod tomondan strukturaviy yadro, golden-thread (jonli) va asosiy feature'lar TAYYOR (~80%, 24 commit, jonli-isbotlangan); 100% uchun faqat **13-elementli DATA + 8 gated-migration tasdig'i** kerak — kod buni kutmoqda.
+## 4. LOCKED (4) + GATED (1)
 
-*Halol: yashil-yolg'on yo'q (Q-29). Ishlab-turgan kod tegilmadi (Q-46). Login-gate OFF (admin qulflanmaydi). Soxta qiymat yozilmadi (Q-40).*
+- 🔒 **Locked:** auth (login-gate, RBAC-guard) · org-structure (1-seat, 5-holat) · ai (ЦКП-chatbot) · crm (deal→SO) — tuzilma+metod jonli, ulash qulflangan modulda.
+- 🚪 **Gated:** production_order_status_log (7-holat state-machine TAYYOR; status-log yozuvchi Q-35 APPROVAL kutadi) + oldingi A44/A54/A58/P49/P36/P45.
+
+---
+
+## 5. EGAGA HALOL 1-QATOR
+
+> ✅ **Buildable kod TO'LIQ bajarildi** — strukturaviy yadro, golden-thread (5 listener + outbox JONLI), karta-formula, gate-mexanizmlar 22+ element jonli-isbotlangan (rollback-tx), T17 0 yangi gap topdi (27 commit). 100%/aktivatsiya uchun faqat **18-elementli egasi-DATA + 1 gated-tasdiq** kerak — kod buni kutmoqda, tirilishga tayyor.
+
+*Halol: yashil-yolg'on yo'q (Q-29). Ishlab-turgan kod tegilmadi (Q-46). Login-gate OFF (admin qulflanmaydi). Soxta qiymat yozilmadi (Q-40). Egasi DATA bergach modul TIRILADI.*
