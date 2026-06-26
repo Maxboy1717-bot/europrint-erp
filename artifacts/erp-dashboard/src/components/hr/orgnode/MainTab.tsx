@@ -5,7 +5,8 @@
  *   (egasi 2026-06-25: "razryad mana shu tabda bo'lsin") — bu yerda takrorlanmaydi.
  */
 
-import { User, CheckCircle, UserX, Building2, Award, Wallet } from "lucide-react";
+import { User, CheckCircle, UserX, Building2, Award, Wallet, Calculator } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
@@ -13,6 +14,14 @@ import { useTranslation } from '@/lib/i18n';
 
 interface MainTabProps {
   node: NodeDetail;
+}
+
+/** Razryad daraja (master-data) — koeffitsient FAQAT shu kanonik jadvaldan o'qiladi (fabrikatsiya yo'q). */
+interface RazryadLevel {
+  id: number;
+  level: number;
+  name: string;
+  coefficient?: number | string | null;
 }
 
 const SALARY_TYPE_LABEL: Record<string, string> = { oylik: "Oylik", soatbay: "Soatbay", ishbay: "Ishbay" };
@@ -23,12 +32,149 @@ function fmtSom(v: number | string | null | undefined): string | null {
   return Number.isNaN(n) ? null : `${n.toLocaleString("uz-UZ")} so'm`;
 }
 
+function toNum(v: number | string | null | undefined): number | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 function DefRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-2">
       <span className="text-muted-foreground shrink-0">{label}</span>
       <span className="font-medium text-right">{value}</span>
     </div>
+  );
+}
+
+/** Formula komponenti kartochkasi: nomi · qiymati (yoki "belgilanmagan"). */
+function FormulaTerm({
+  label, value, set, hint,
+}: { label: string; value: React.ReactNode; set: boolean; hint?: string }) {
+  return (
+    <div
+      className={`rounded-md border px-3 py-2 flex flex-col gap-0.5 ${
+        set ? "border-border bg-muted/30" : "border-dashed border-border"
+      }`}
+    >
+      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      {set ? (
+        <span className="text-sm font-semibold">{value}</span>
+      ) : (
+        <span className="text-sm font-medium text-muted-foreground italic">belgilanmagan</span>
+      )}
+      {hint && <span className="text-[10px] text-muted-foreground">{hint}</span>}
+    </div>
+  );
+}
+
+/**
+ * Oylik FORMULA breakdown (egasi 8-qaror #5):
+ *   oylik = baza × razryad-koeff × ЦКП-bajarish% × stake-ulush
+ *
+ * ⭐ FABRIKATSIYA YO'Q (Q-40): faqat REAL qiymatlar ko'rsatiladi —
+ *   - baza        = node.min/max salary (karta-data); yo'q bo'lsa "belgilanmagan"
+ *   - razryad-koeff = razryad_levels.coefficient (kanonik master-data, razryadLevelId orqali)
+ *   - ЦКП-bajarish% = fakt qiymat (hali node-detalda materializatsiya qilinmagan = egasi-data) → "belgilanmagan"
+ *   - stake-ulush  = ko'p-karta ulushi (employee_cards'da stake ustuni hali YO'Q = egasi-data) → "belgilanmagan"
+ *  Backend formula manbasi: payroll.service.ts → computeCardPay (bir xil model + NULL/gate-darvozalari).
+ */
+function OylikFormulaCard({ node, t }: { node: NodeDetail; t: ReturnType<typeof useTranslation>["t"] }) {
+  // Razryad koeffitsienti — RazryadTab bilan bir xil kanonik manba (master-data, cache reuse).
+  const { data: rzData } = useQuery<{ items: RazryadLevel[] }>({
+    queryKey: ["/api/org-structure/razryad-levels"],
+    staleTime: 300_000,
+  });
+  const levels = Array.isArray(rzData?.items) ? rzData!.items : [];
+  const razryad = node.razryadLevelId != null ? levels.find((r) => r.id === node.razryadLevelId) : undefined;
+  const coeff = toNum(razryad?.coefficient);
+
+  // Baza = oylik diapazonining pastki chegarasi (yo'q bo'lsa yuqori chegara). Egasi-data.
+  const base = toNum(node.minSalary) ?? toNum(node.maxSalary);
+  const baseLabel = (() => {
+    const lo = fmtSom(node.minSalary), hi = fmtSom(node.maxSalary);
+    if (lo && hi) return `${lo} – ${hi}`;
+    return lo ?? hi ?? null;
+  })();
+
+  // ЦКП-bajarish% (fakt) va stake-ulush hali node-detalda materializatsiya qilinmagan = egasi-data
+  // (Q-40 fabrikatsiya-taqiq). node.tskpTarget = MAQSAD (bajarish emas) — formulaga kiritilmaydi.
+  const ckpPct: number | null = null;
+  const stakeShare: number | null = null;
+
+  // Gross FAQAT barcha real komponentlar mavjud bo'lganda hisoblanadi (ЦКП-gate QATTIQ — egasi 8-qaror #6).
+  // ckpPct/stakeShare hozir doim null (egasi-data materializatsiya qilinmagan) → gross null = "hisoblab bo'lmaydi".
+  const gross: number | null =
+    base != null && coeff != null && ckpPct != null && stakeShare != null
+      ? base * coeff * (ckpPct / 100) * stakeShare
+      : null;
+
+  return (
+    <Card className="md:col-span-2">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Calculator className="h-4 w-4" />{t("oylikFormulasi", "Oylik formulasi")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-muted-foreground">
+          <span className="font-medium text-foreground">{t("oylik", "Oylik")}</span>
+          <span>=</span>
+          <span className="rounded bg-muted px-1.5 py-0.5">{t("baza", "baza")}</span>
+          <span>×</span>
+          <span className="rounded bg-muted px-1.5 py-0.5">{t("razryadKoeff", "razryad-koeff")}</span>
+          <span>×</span>
+          <span className="rounded bg-muted px-1.5 py-0.5">{t("ckpBajarish", "ЦКП-bajarish%")}</span>
+          <span>×</span>
+          <span className="rounded bg-muted px-1.5 py-0.5">{t("stakeUlush", "stake-ulush")}</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <FormulaTerm
+            label={t("baza", "Baza")}
+            value={baseLabel}
+            set={base != null}
+            hint={t("bazaHint", "Oylik diapazon (karta-data)")}
+          />
+          <FormulaTerm
+            label={t("razryadKoeff", "Razryad-koeff")}
+            value={coeff != null ? `×${coeff}` : null}
+            set={coeff != null}
+            hint={razryad ? razryad.name : t("razryadKoeffHint", "Razryad tayinlanmagan")}
+          />
+          <FormulaTerm
+            label={t("ckpBajarish", "ЦКП-bajarish%")}
+            value={ckpPct != null ? `${ckpPct}%` : null}
+            set={ckpPct != null}
+            hint={t("ckpFaktHint", "Fakt hali kiritilmagan")}
+          />
+          <FormulaTerm
+            label={t("stakeUlush", "Stake-ulush")}
+            value={stakeShare != null ? `${Math.round(stakeShare * 100)}%` : null}
+            set={stakeShare != null}
+            hint={t("stakeHint", "Ko'p-karta ulushi (egasi-data)")}
+          />
+        </div>
+
+        <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 px-3 py-2">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <Wallet className="h-3.5 w-3.5" />{t("hisoblanganOylik", "Hisoblangan oylik")}
+          </span>
+          {gross != null ? (
+            <span className="font-semibold text-[var(--ep-green)]">{fmtSom(gross)}</span>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">{t("hisoblabBolmaydi", "Hisoblab bo'lmaydi — yetishmovchi qiymatlar")}</span>
+          )}
+        </div>
+
+        <p className="text-[11px] text-muted-foreground">
+          {t(
+            "oylikFormulaIzoh",
+            "Oylik faqat barcha komponentlar real bo'lganda hisoblanadi. ЦКП-bajarish fakti yo'q bo'lsa oylik berilmaydi (qattiq darvoza). Stake — ko'p-karta ulushi (egasi-data, hali materializatsiya qilinmagan)."
+          )}
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -118,6 +264,9 @@ export function MainTab({ node }: MainTabProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* A22 — Oylik formulasi breakdown (ADDITIV): baza × razryad-koeff × ЦКП-bajarish% × stake-ulush */}
+      <OylikFormulaCard node={node} t={t} />
 
       {(node.tskp || node.tskpRu) && (
         <Card className="md:col-span-2">
