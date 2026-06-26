@@ -41,7 +41,7 @@ import {
   RequestsSection,
   ProductionSection,
 } from "./MaterialBalanceTables";
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 
 const INITIAL_MOVEMENT_FORM: MovementForm = {
   material: "",
@@ -176,47 +176,40 @@ export default function MaterialBalance() {
   // -------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1
-            className="text-2xl font-bold"
-            data-testid="text-page-title"
-          >
-            {t("materialBalans1")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("xomAshyoZaxirasiVaIchki")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="default"
-            data-testid="button-add-movement"
-            onClick={() => setMovementDialogOpen(true)}
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            {t("harakatQoshish")}
-          </Button>
-          <Button
-            variant="outline"
-            size="default"
-            data-testid="button-refresh"
-            onClick={() => {
-              queryClient.invalidateQueries({
-                queryKey: ["/api/material-balance/overview"],
-              });
-              queryClient.invalidateQueries({
-                queryKey: ["/api/material-balance/alerts"],
-              });
-            }}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            {t("refresh")}
-          </Button>
-        </div>
-      </div>
+      <EPPageHeader
+        title={t("materialBalans1")}
+        subtitle={t("xomAshyoZaxirasiVaIchki")}
+        actions={
+          <>
+            <Button
+              size="default"
+              data-testid="button-add-movement"
+              onClick={() => setMovementDialogOpen(true)}
+            >
+              <PlusCircle className="w-4 h-4 mr-2" />
+              {t("harakatQoshish")}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              data-testid="button-refresh"
+              onClick={() => {
+                queryClient.invalidateQueries({
+                  queryKey: ["/api/material-balance/overview"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["/api/material-balance/alerts"],
+                });
+              }}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              {t("refresh")}
+            </Button>
+          </>
+        }
+      />
 
       {/* Movement dialog */}
       <AddMovementDialog

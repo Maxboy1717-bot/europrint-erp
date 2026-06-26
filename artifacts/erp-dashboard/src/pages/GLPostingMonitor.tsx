@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useTranslation } from '@/lib/i18n';
 import { BookOpen, CheckCircle, XCircle, Clock, DollarSign, FileText, ArrowUpDown } from "lucide-react";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { apiRequest } from "@/lib/api-request";
 import { useToast } from "@/hooks/use-toast";
 
@@ -130,20 +130,16 @@ export default function GLPostingMonitor() {
   }
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-gl-posting-monitor">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">
-            {t("omborMoliyaGlPosting") || 'GL Posting Monitor'}
-          </h1>
-          <p className="text-muted-foreground">
-            {t("avtomatikBuxgalteriyaYozuvlariMonitoring") || 'Avtomatik buxgalteriya yozuvlari monitoring'}
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => { refetch(); }}>
-          {t("refresh") || 'Yangilash'}
-        </Button>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6" data-testid="page-gl-posting-monitor">
+      <EPPageHeader
+        title={t("omborMoliyaGlPosting") || 'GL Posting Monitor'}
+        subtitle={t("avtomatikBuxgalteriyaYozuvlariMonitoring") || 'Avtomatik buxgalteriya yozuvlari monitoring'}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => { refetch(); }}>
+            {t("refresh") || 'Yangilash'}
+          </Button>
+        }
+      />
 
       {/* Statistika kartalar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

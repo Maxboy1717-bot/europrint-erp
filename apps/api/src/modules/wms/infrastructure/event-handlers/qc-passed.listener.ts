@@ -152,8 +152,9 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
           `QC-${event.inspectionId}`, // batchNumber — traceable to the inspection
           null, // expiryDate — FG has no expiry by default
           event.orderId, // orderId — attributes the FG + enables Trigger 12 rental timer
-          undefined, // areaM2 — not derived here
+          undefined, // areaM2 — resolved inside the handler from material_cards
           gradedUnitCost, // T21-A2: nav-koeffitsienti bilan saralangan birlik narxi
+          true, // T23-A1: cross-listener dedup — skip if MES already received FG for this order+material
         ),
       );
 

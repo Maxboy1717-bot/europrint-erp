@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { BookOpen, Send, Save } from "lucide-react";
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 
 interface DiaryEntry {
@@ -73,23 +73,23 @@ export default function DirectorDiaryPage() {
   const isSubmitted = data?.status === "submitted";
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <BookOpen className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">{t("kunlikKundalik", "Kunlik kundalik")}</h1>
-        </div>
-        {data && (
-          <div className="flex items-center gap-3">
-            <Badge variant="outline">{data.date}</Badge>
-            {isSubmitted ? (
-              <EPStatusPill tone="success">{t("topshirildi", "Topshirildi")}</EPStatusPill>
-            ) : (
-              <EPStatusPill tone="neutral">{t("qoralama", "Qoralama")}</EPStatusPill>
-            )}
-          </div>
-        )}
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        icon={<BookOpen className="h-5 w-5 text-primary" />}
+        title={t("kunlikKundalik", "Kunlik kundalik")}
+        status={
+          data ? (
+            <div className="flex items-center gap-3">
+              <Badge variant="outline">{data.date}</Badge>
+              {isSubmitted ? (
+                <EPStatusPill tone="success">{t("topshirildi", "Topshirildi")}</EPStatusPill>
+              ) : (
+                <EPStatusPill tone="neutral">{t("qoralama", "Qoralama")}</EPStatusPill>
+              )}
+            </div>
+          ) : null
+        }
+      />
 
       {isLoading ? (
         <div className="space-y-4">

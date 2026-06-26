@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Target } from "lucide-react";
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 interface Objective {
@@ -123,20 +123,23 @@ export default function OkrPage() {
   const list = Array.isArray(objectives) ? objectives : [];
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("okrMaqsadlarVaAsosiyNatijalar")}</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsKRDialogOpen(true)} data-testid="button-add-key-result">
-            <Plus className="h-4 w-4 mr-2" />
-            {t("asosiyNatija", "Asosiy natija")}
-          </Button>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            {t("yangiMaqsad")}
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        title={t("okrMaqsadlarVaAsosiyNatijalar")}
+        subtitle={`${list.length} ta maqsad`}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setIsKRDialogOpen(true)} data-testid="button-add-key-result">
+              <Plus className="h-4 w-4 mr-2" />
+              {t("asosiyNatija", "Asosiy natija")}
+            </Button>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {t("yangiMaqsad")}
+            </Button>
+          </>
+        }
+      />
 
       <Card>
         <CardContent className="p-0">

@@ -34,7 +34,7 @@ import {
 } from "./FinanceExtendedSections";
 import { TaxTab, TaxCalendarTab, RiskAITab } from "./FinanceExtendedTabsExtra";
 import { CostCenterDialog, ProfitCenterDialog } from "./FinanceExtendedDialogs";
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -155,12 +155,12 @@ export default function FinanceExtended() {
   );
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="border-b border-border/50 px-6 py-3 flex items-center gap-3">
-        <DollarSign className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold text-base">{t("moliyaKengaytirilgan")}</h1>
-        {fiStats && <EPStatusPill tone="neutral" className="ml-2">{t("active")}</EPStatusPill>}
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        icon={<DollarSign className="h-5 w-5 text-primary" />}
+        title={t("moliyaKengaytirilgan")}
+        status={fiStats ? <EPStatusPill tone="neutral">{t("active")}</EPStatusPill> : undefined}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         <div className="border-b border-border/50 px-4 overflow-x-auto" />

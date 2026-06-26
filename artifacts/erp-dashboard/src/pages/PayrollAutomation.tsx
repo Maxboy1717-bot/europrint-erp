@@ -15,7 +15,7 @@ import { CalculatePayrollDialog } from "./payroll/CalculatePayrollDialog";
 import { PayrollStatsCards } from "./payroll/PayrollStatsCards";
 import { ContractsTab } from "./payroll/ContractsTab";
 import { CalculationsTab } from "./payroll/CalculationsTab";
-import { EPErrorState } from "@/components/ep";
+import { EPErrorState, EPPageHeader } from "@/components/ep";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -91,56 +91,49 @@ export default function PayrollAutomation() {
   }
 
   return (
-    <div data-testid="payroll-automation-page">
-      <div className="-mx-4 -mt-4 lg:-mx-6 lg:-mt-6 border-b from-primary to-amber-500 text-white">
-        <div className="px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <Calculator className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">{tFinance('payrollCalculation')}</h1>
-                <p className="text-white/75 text-sm">{tFinance('payrollAutomation')}</p>
-              </div>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant="secondary"
-                className="bg-green-600 hover:bg-green-700 text-white border-0 gap-2"
-                onClick={() => setIsRunPayrollOpen(true)}
-                data-testid="button-run-payroll"
-              >
-                <Play className="h-4 w-4" />
-                {tLabel('payroll.runPayroll.button', "Maosh hisoblash")}
-              </Button>
-              <AIPayrollDialog
-                contracts={contracts}
-                employeeMap={employeeMap}
-                trigger={
-                  <Button variant="secondary" className="bg-[var(--ep-purple)] hover:from-purple-600 hover:to-pink-600 text-white border-0 gap-2" data-testid="button-ai-calculation">
-                    <Sparkles className="h-4 w-4" />
-                    {tFinance('aiCalculation')}
-                  </Button>
-                }
-              />
-              <CalculatePayrollDialog
-                contracts={contracts}
-                employeeMap={employeeMap}
-                contractsByEmployee={contractsByEmployee}
-                open={isCalculateDialogOpen}
-                onOpenChange={setIsCalculateDialogOpen}
-                trigger={
-                  <Button variant="secondary" className="bg-card/10 hover:bg-card/20 text-white border-white/30 gap-2" data-testid="button-new-calculation">
-                    <Plus className="h-4 w-4" />
-                    {tFinance('newCalculation')}
-                  </Button>
-                }
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6" data-testid="payroll-automation-page">
+      <EPPageHeader
+        icon={<Calculator className="h-8 w-8 text-primary" />}
+        title={tFinance('payrollCalculation')}
+        subtitle={tFinance('payrollAutomation')}
+        actions={
+          <>
+            <Button
+              className="gap-2"
+              onClick={() => setIsRunPayrollOpen(true)}
+              data-testid="button-run-payroll"
+            >
+              <Play className="h-4 w-4" />
+              {tLabel('payroll.runPayroll.button', "Maosh hisoblash")}
+            </Button>
+            <AIPayrollDialog
+              contracts={contracts}
+              employeeMap={employeeMap}
+              trigger={
+                <Button variant="outline" className="gap-2" data-testid="button-ai-calculation">
+                  <Sparkles className="h-4 w-4" />
+                  {tFinance('aiCalculation')}
+                </Button>
+              }
+            />
+            <CalculatePayrollDialog
+              contracts={contracts}
+              employeeMap={employeeMap}
+              contractsByEmployee={contractsByEmployee}
+              open={isCalculateDialogOpen}
+              onOpenChange={setIsCalculateDialogOpen}
+              trigger={
+                <Button variant="outline" className="gap-2" data-testid="button-new-calculation">
+                  <Plus className="h-4 w-4" />
+                  {tFinance('newCalculation')}
+                </Button>
+              }
+            />
+          </>
+        }
+      />
 
-      <div className="space-y-6 pt-6">
+      <div className="space-y-6">
         <PayrollStatsCards
           activeContracts={kpiStats.activeContracts}
           pendingCalcs={kpiStats.pendingCalcs}

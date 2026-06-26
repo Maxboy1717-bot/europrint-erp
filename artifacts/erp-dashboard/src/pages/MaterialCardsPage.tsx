@@ -18,7 +18,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Search, Package } from "lucide-react";
 
 import { useTranslation } from '@/lib/i18n';
-import { EPStatusPill } from "@/components/ep";
+import { EPStatusPill, EPPageHeader } from "@/components/ep";
 interface Material {
   id: number;
   materialCode: string;
@@ -88,14 +88,17 @@ export default function MaterialCardsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('materialKartalar')}</h1>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t("yangiMaterial")}
-        </Button>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        title={t('materialKartalar')}
+        subtitle={`${list.length} ta material`}
+        actions={
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t("yangiMaterial")}
+          </Button>
+        }
+      />
 
       <div className="relative w-72">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

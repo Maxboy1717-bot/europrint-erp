@@ -36,6 +36,7 @@ export interface IOkrRepo {
     title: string | null,
     status: string | null,
     description: string | null,
+    updatedBy?: number | null,
   ): Promise<Result<Row>>;
   deleteObjective(id: number): Promise<void>;
   listKeyResults(objectiveId: number | null): Promise<Result<Row[]>>;
@@ -52,6 +53,7 @@ export interface IOkrRepo {
     currentValue: number | null,
     status: string | null,
     title: string | null,
+    updatedBy?: number | null,
   ): Promise<Result<Row>>;
   deleteKeyResult(id: number): Promise<void>;
   getDashboardObjectives(): Promise<Result<unknown[]>>;

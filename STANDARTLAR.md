@@ -124,7 +124,7 @@ grep -r "function [Nom]Page\|export.*[Nom]Page\|export.*[Nom]Component" artifact
 | `pp_routing` | KANONIK | Routing |
 | `pp_routing_operations` | KANONIK | Operatsiyalar |
 | `tech_cards` | ❌ ORDER-BOUND | Order-bog'liq, master emas |
-| `pp_work_centers` | ❌ DEPRECATED | `work_centers` ishlat |
+| `pp_work_centers` | 🔵 VIEW | `work_centers` ustida (subset ustun) — `id`/`org_department_id` AYNAN bir xil. MES/QC listener bunga JOIN qiladi = SOS-listener `work_centers`'ga JOIN qiladi = BIR XIL KARTA (org_department_id). Yangi kod `work_centers` ishlatsin; mavjud `pp_work_centers` o'quvchilar BUZILMAYDI (Q-46). Tasdiq T23-A2: 12/12 qator `same=true`. |
 
 ### 1.8 MES
 

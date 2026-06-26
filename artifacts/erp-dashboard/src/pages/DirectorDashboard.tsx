@@ -6,13 +6,14 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Users, RefreshCw } from "lucide-react";
+import { Clock, Users, RefreshCw, Bell, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EPPageHeader, EPStatusPill } from "@/components/ep";
+import { tLabel } from "@/lib/i18n/tLabel";
 import { CompanyStateWidget } from "@/components/director/CompanyStateWidget";
 import { IdealVsActualPanel } from "@/components/director/IdealVsActualPanel";
-import { DirectorHeader } from "@/components/director/DirectorHeader";
 import { AISummaryCard } from "@/components/director/AISummaryCard";
 import { KpiSummaryCards } from "@/components/director/KpiSummaryCards";
 import { OverdueOrdersCard } from "@/components/director/OverdueOrdersCard";
@@ -70,14 +71,35 @@ export default function DirectorDashboard() {
   const criticalAlerts = alertsData?.alerts?.filter(a => a.severity === "critical") ?? [];
 
   return (
-    <div className="flex-1 overflow-auto bg-background p-5 space-y-5 pb-12">
+    <div className="flex-1 overflow-auto bg-background p-5 space-y-6 pb-12">
 
-      <div className="flex items-center justify-between gap-2">
-        <DirectorHeader criticalAlerts={criticalAlerts} onRefresh={refreshAll} />
-        <Button variant="outline" size="sm" onClick={refreshAll}>
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
+      <EPPageHeader
+        title={
+          <>
+            {tLabel("director.titlePrefix", "Direktor")}{" "}
+            <span className="text-primary">{tLabel("director.titleSuffix", "paneli")}</span>
+          </>
+        }
+        subtitle={t("realVaqtKorsatkichlarBarcha6")}
+        status={
+          criticalAlerts.length > 0 ? (
+            <EPStatusPill tone="danger">
+              <Bell className="w-3.5 h-3.5 mr-1 animate-pulse" />
+              {criticalAlerts.length} {t("kritik", "kritik ogohlantirish")}
+            </EPStatusPill>
+          ) : undefined
+        }
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={refreshAll} data-testid="button-refresh-director">
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> {t("refresh")}
+            </Button>
+            <Button size="sm" data-testid="button-export-director">
+              <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> {t("report")}
+            </Button>
+          </>
+        }
+      />
 
       <AISummaryCard ai={ai} aiLoad={aiLoad} />
 

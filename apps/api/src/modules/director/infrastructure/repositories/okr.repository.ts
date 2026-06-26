@@ -4,8 +4,6 @@
  * @layer Infrastructure (Director)
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { sql, eq, desc } from 'drizzle-orm';
@@ -177,27 +175,35 @@ export class OkrRepository implements IOkrRepo {
   // typedExecute — yangi ustunlar gated P30 migration bilan qo'shiladi.
   async createObjective(title: string, type: string, year: number, quarter: string, description: string | null, ownerId: number, parentGoalId?: number | null, ownerCardId?: number | null): Promise<Result<Row>> {
     return safeCall(async () => {
+      // created_by/updated_by — config-o'zgarish auditi (T23-B1, gated migration ustunlari).
       const rows = await typedExecute<Row>(sql`
         INSERT INTO okr_objectives
           (title, type, year, quarter, description, owner_id, status,
-           parent_goal_id, owner_card_id)
+           parent_goal_id, owner_card_id, created_by, updated_by)
         VALUES
           (${title}, ${type}, ${year}, ${quarter}, ${description}, ${ownerId},
-           'active', ${parentGoalId ?? null}, ${ownerCardId ?? null})
+           'active', ${parentGoalId ?? null}, ${ownerCardId ?? null},
+           ${ownerId ?? null}, ${ownerId ?? null})
         RETURNING *
       `);
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
   }
 
-  async updateObjective(id: number, title: string | null, status: string | null, description: string | null): Promise<Result<Row>> {
+  // updated_by — config-o'zgarish auditi (T23-B1). updated_by ustuni gated migration
+  // bilan qo'shilgan (Drizzle pgTable'da yo'q) → typedExecute raw UPDATE ishlatamiz.
+  async updateObjective(id: number, title: string | null, status: string | null, description: string | null, updatedBy?: number | null): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.update(okr_objectives).set({
-        title:       sql`COALESCE(${title}, ${okr_objectives.title})`,
-        status:      sql`COALESCE(${status}, ${okr_objectives.status})`,
-        description: sql`COALESCE(${description}, ${okr_objectives.description})`,
-        updatedAt:   _time.now(),
-      }).where(eq(okr_objectives.id, id)).returning();
+      const rows = await typedExecute<Row>(sql`
+        UPDATE okr_objectives SET
+          title       = COALESCE(${title}, title),
+          status      = COALESCE(${status}, status),
+          description = COALESCE(${description}, description),
+          updated_by  = COALESCE(${updatedBy ?? null}::int, updated_by),
+          updated_at  = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
       return (rows[0] ?? { message: 'Yangilandi' }) as Row;
       }, 'DB_ERROR');
   }
@@ -227,23 +233,34 @@ export class OkrRepository implements IOkrRepo {
       }, 'DB_ERROR');
   }
 
+  // created_by/updated_by — config-o'zgarish auditi (T23-B1, gated migration ustunlari).
   async createKeyResult(objectiveId: number, title: string, targetValue: number, currentValue: number, unit: string, ownerId: number): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.insert(okr_key_results).values({
-        objectiveId, title, targetValue: String(targetValue), currentValue: String(currentValue), unit,
-      }).returning();
+      const rows = await typedExecute<Row>(sql`
+        INSERT INTO okr_key_results
+          (objective_id, title, target_value, current_value, unit, created_by, updated_by)
+        VALUES
+          (${objectiveId}, ${title}, ${String(targetValue)}, ${String(currentValue)}, ${unit},
+           ${ownerId ?? null}, ${ownerId ?? null})
+        RETURNING *
+      `);
       return (rows[0] ?? {}) as Row;
       }, 'DB_ERROR');
   }
 
-  async updateKeyResult(id: number, currentValue: number | null, status: string | null, title: string | null): Promise<Result<Row>> {
+  // updated_by — config-o'zgarish auditi (T23-B1, gated migration ustuni).
+  async updateKeyResult(id: number, currentValue: number | null, status: string | null, title: string | null, updatedBy?: number | null): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await db.update(okr_key_results).set({
-        currentValue: sql`COALESCE(${currentValue}::numeric, ${okr_key_results.currentValue})`,
-        status:       sql`COALESCE(${status}, ${okr_key_results.status})`,
-        title:        sql`COALESCE(${title}, ${okr_key_results.title})`,
-        updatedAt:    _time.now(),
-      }).where(eq(okr_key_results.id, id)).returning();
+      const rows = await typedExecute<Row>(sql`
+        UPDATE okr_key_results SET
+          current_value = COALESCE(${currentValue ?? null}::numeric, current_value),
+          status        = COALESCE(${status}, status),
+          title         = COALESCE(${title}, title),
+          updated_by    = COALESCE(${updatedBy ?? null}::int, updated_by),
+          updated_at    = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
       return (rows[0] ?? { message: 'Yangilandi' }) as Row;
       }, 'DB_ERROR');
   }

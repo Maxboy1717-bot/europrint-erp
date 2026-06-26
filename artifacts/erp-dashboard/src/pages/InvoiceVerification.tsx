@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CheckCircle, XCircle, AlertTriangle, FileCheck, Search, Scale, TrendingUp } from "lucide-react";
-import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { EPErrorState, EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface VendorInvoice {
   id: string;
@@ -118,11 +118,11 @@ export default function InvoiceVerification() {
   }
 
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5" data-testid="page-invoice-verification">
-      <div>
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">{t("k3WayMatchFakturaTekshirish")}</h1>
-        <p className="text-muted-foreground">{t("poQabulHujjatiFakturaAvtomatik")}</p>
-      </div>
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6" data-testid="page-invoice-verification">
+      <EPPageHeader
+        title={t("k3WayMatchFakturaTekshirish")}
+        subtitle={t("poQabulHujjatiFakturaAvtomatik")}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card data-testid="card-stat-total">

@@ -102,9 +102,9 @@ export class OkrController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('objectives/:id')
   @UsePipes(new ZodValidationPipe(OkrUpdateObjectiveSchema))
-  async updateObjective(@Param('id') id: string, @Body() body: OkrUpdateObjectiveDto) {
+  async updateObjective(@Param('id') id: string, @Body() body: OkrUpdateObjectiveDto, @CurrentUser() user: { id: number }) {
     const { title, status, description } = body;
-    return unwrapOrInternal(await this.svc.updateObjective(parseInt(id, 10), title ?? null, status ?? null, description ?? null));
+    return unwrapOrInternal(await this.svc.updateObjective(parseInt(id, 10), title ?? null, status ?? null, description ?? null, user?.id ?? null));
   }
 
   @ApiOperation({ summary: 'Delete objective' })
@@ -151,13 +151,14 @@ export class OkrController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('key-results/:id')
   @UsePipes(new ZodValidationPipe(OkrUpdateKeyResultSchema))
-  async updateKeyResult(@Param('id') id: string, @Body() body: OkrUpdateKeyResultDto) {
+  async updateKeyResult(@Param('id') id: string, @Body() body: OkrUpdateKeyResultDto, @CurrentUser() user: { id: number }) {
     const { current_value, status, title } = body;
     return unwrapOrInternal(await this.svc.updateKeyResult(
       parseInt(id, 10),
       current_value != null ? Number(current_value) : null,
       (status as string) ?? null,
       (title as string) ?? null,
+      user?.id ?? null,
     ));
   }
 

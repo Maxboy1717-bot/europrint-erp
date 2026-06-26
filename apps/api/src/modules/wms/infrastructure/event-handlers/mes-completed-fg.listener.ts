@@ -154,6 +154,9 @@ export class MesCompletedFgListener implements IEventHandler<MesCompletedEvent> 
         batchNumber,
         null, // expiryDate — FG has no expiry by default
         orderId, // attributes the FG to the sales order + enables Trigger-12 rental timer
+        undefined, // areaM2 — resolved inside the handler from material_cards
+        null, // unitCost — MES path does not grade-price
+        true, // T23-A1: cross-listener dedup — skip if QC already received FG for this order+material
       ),
     );
 

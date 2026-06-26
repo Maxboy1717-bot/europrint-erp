@@ -8,11 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ModulePage } from "@/components/ui/module-page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layers, Search } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { EPErrorState, EPStatusPill } from "@/components/ep";
+import { EPErrorState, EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface RawMaterial {
   id: string | number;
@@ -58,11 +57,12 @@ export default function RawMaterialsPage() {
   if (isError) return <EPErrorState onRetry={refetch}  error={error} />;
 
   return (
-    <ModulePage
-      module="mm"
-      title={t("xomAshyolar")}
-      icon={<Layers className="h-5 w-5" />}
-    >
+    <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
+      <EPPageHeader
+        icon={<Layers className="h-5 w-5" />}
+        title={t("xomAshyolar")}
+        subtitle={`${materials.length} ta xom ashyo`}
+      />
       <div className="space-y-4">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -140,6 +140,6 @@ export default function RawMaterialsPage() {
           </div>
         )}
       </div>
-    </ModulePage>
+    </div>
   );
 }
