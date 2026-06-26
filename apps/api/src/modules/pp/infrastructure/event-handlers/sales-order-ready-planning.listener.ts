@@ -56,17 +56,28 @@ export class SalesOrderReadyPlanningListener
       previousStatus: event.previousStatus,
     });
 
-    const result = await this.ppRepo.createPlanFromSalesOrder(salesOrderId);
-    if (!result.ok) {
-      this.logger.error(
-        { salesOrderId, error: result.error },
-        'SD→PP: failed to create production plan from sales order',
-      );
-      return;
-    }
+    // #22 listener resilience: best-effort. The SD status change already committed
+    // upstream; a thrown error from the repo (before it can return a Result) must not
+    // propagate to the event bus and abort sibling OrderStatusChanged consumers. Catch
+    // + structured-log so the golden-thread step is observable without crashing the bus.
+    try {
+      const result = await this.ppRepo.createPlanFromSalesOrder(salesOrderId);
+      if (!result.ok) {
+        this.logger.error(
+          { salesOrderId, error: result.error },
+          'SD→PP: failed to create production plan from sales order',
+        );
+        return;
+      }
 
-    this.logger.log(
-      `SD→PP: production plan ready for sales order ${salesOrderId} (${result.data} order(s) opened)`,
-    );
+      this.logger.log(
+        `SD→PP: production plan ready for sales order ${salesOrderId} (${result.data} order(s) opened)`,
+      );
+    } catch (error: unknown) {
+      this.logger.error(
+        { salesOrderId, error: (error as Error)?.message ?? String(error) },
+        'SD→PP: exception opening production plan (golden-thread step SD→PP)',
+      );
+    }
   }
 }

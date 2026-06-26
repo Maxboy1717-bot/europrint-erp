@@ -43,10 +43,12 @@ import { OrgCascadeRepository } from './cascade/org-cascade.repository';
 import { CkpMesFeedListener } from './ckp-mes-feed.listener';
 // T18-C2 (ЦКП KASKAD-AGREGAT): CkpReportedEvent → ota-zanjir SUM/AVG roll-up (@OnEvent)
 import { CkpCascadeListener } from './cascade/ckp-cascade.listener';
+// Gap #2 (T20-A1): lms.exam.passed → razryad-so'rov avto-zanjir (@OnEvent)
+import { ExamPassedRazryadListener } from './exam-passed-razryad.listener';
 
 @Module({
   controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController, CardTemplateController, ErrorCatalogController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository, ExamPassedRazryadListener],
   exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService, CardTemplateService, CkpFactService],
 })
 export class OrgStructureModule {}

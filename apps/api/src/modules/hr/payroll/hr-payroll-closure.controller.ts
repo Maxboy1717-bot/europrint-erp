@@ -39,6 +39,17 @@ const CardSalaryPreviewSchema = z.object({
 export class HrPayrollClosureController {
   constructor(private readonly svc: PayrollService) {}
 
+  /**
+   * ⭐ Gap #1 (T20-A1) — KARTA-OYLIK QATORLARINI GENERATSIYA (egasi 8-qaror #5).
+   * Har aktiv-kartali xodim uchun razryad-koeff + stake + baza yig'ib, ЦКП/LMS-darvozadan
+   * o'tkazib payroll_rows ga upsert qiladi (idempotent). closePeriod'dan OLDIN chaqiriladi.
+   */
+  @Post('periods/:id/generate')
+  async generatePeriodRows(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.generatePeriodRows(id);
+    return { data: unwrapOrInternal(r) };
+  }
+
   @Post('periods/:id/close')
   async closePeriod(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.closePeriod(id);

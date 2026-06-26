@@ -112,6 +112,74 @@ export class RazryadHistoryRepository {
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
+  /**
+   * Gap #2 (T20-A1) — IMTIHON→RAZRYAD avto-zanjir uchun KARTA resolveri.
+   * Imtihon → kurs (lms_exams.course_id) → karta (courses.card_id). NULL = karta biriktirilmagan
+   * imtihon (FABRIKATSIYA yo'q: chaqiruvchi xodimning birlamchi kartasiga tushadi).
+   */
+  async cardIdForExam(examId: number): Promise<Result<number | null>> {
+    const r = await this.exec(sql`
+      SELECT c.card_id FROM lms_exams e
+      LEFT JOIN courses c ON c.id = e.course_id
+      WHERE e.id = ${examId} LIMIT 1
+    `);
+    if (!r.ok) return Err(r.error);
+    const v = r.data[0]?.card_id;
+    return Ok(v == null ? null : Number(v));
+  }
+
+  /**
+   * users.id → xodimning birlamchi AKTIV kartasi (org_departments.id) + employees.id.
+   * employee_org_departments (aktiv, ended_at IS NULL) — birlamchi tartibda. NULL = karta yo'q.
+   */
+  async primaryCardForUser(userId: number): Promise<Result<{ cardId: number; employeeId: number | null } | null>> {
+    const r = await this.exec(sql`
+      SELECT eod.org_department_id AS card_id, e.id AS employee_id
+      FROM employee_org_departments eod
+      LEFT JOIN employees e ON e.user_id = eod.user_id OR e.id = eod.employee_id
+      WHERE (eod.user_id = ${userId})
+        AND eod.is_active = true AND eod.ended_at IS NULL AND eod.org_department_id IS NOT NULL
+      ORDER BY eod.is_primary DESC NULLS LAST, eod.id ASC
+      LIMIT 1
+    `);
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    if (!row || row.card_id == null) return Ok(null);
+    return Ok({ cardId: Number(row.card_id), employeeId: row.employee_id == null ? null : Number(row.employee_id) });
+  }
+
+  /**
+   * Kartaning JORIY razryadidan navbatdagi (level+1) razryad_levels.id ni qaytaradi.
+   * Karta razryadsiz (NULL) → eng past faol razryad (boshlang'ich o'sish nishoni).
+   * Eng yuqori razryadda (keyingisi yo'q) → NULL (o'sish nishoni yo'q; chaqiruvchi skip qiladi).
+   */
+  async nextRazryadIdForCard(cardId: number): Promise<Result<number | null>> {
+    const cur = await this.exec(sql`SELECT razryad_level_id FROM org_departments WHERE id = ${cardId} LIMIT 1`);
+    if (!cur.ok) return Err(cur.error);
+    if (cur.data.length === 0) return Ok(null);
+    const curRlId = cur.data[0]?.razryad_level_id;
+
+    if (curRlId == null) {
+      // razryadsiz karta → eng past faol razryad (boshlang'ich nishon).
+      const lo = await this.exec(sql`
+        SELECT id FROM razryad_levels WHERE COALESCE(is_active, true) = true ORDER BY level ASC LIMIT 1
+      `);
+      if (!lo.ok) return Err(lo.error);
+      const v = lo.data[0]?.id;
+      return Ok(v == null ? null : Number(v));
+    }
+
+    const next = await this.exec(sql`
+      SELECT nl.id FROM razryad_levels cl
+      JOIN razryad_levels nl ON nl.level > cl.level AND COALESCE(nl.is_active, true) = true
+      WHERE cl.id = ${Number(curRlId)}
+      ORDER BY nl.level ASC LIMIT 1
+    `);
+    if (!next.ok) return Err(next.error);
+    const v = next.data[0]?.id;
+    return Ok(v == null ? null : Number(v));
+  }
+
   async listRequestsByCard(cardId: number): Promise<Result<Row[]>> {
     return this.exec(sql`SELECT * FROM razryad_requests WHERE card_id = ${cardId} ORDER BY created_at DESC, id DESC`);
   }

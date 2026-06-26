@@ -23,6 +23,8 @@ export interface CkpFactInput {
   achievementPct: number;
   source: string;
   formulaType?: string | null;
+  /** Nuqson/xato sababi — error_catalog.code'ga soft-link (NULL = sabab ko'rsatilmagan). */
+  errorCode?: string | null;
   notes?: string | null;
   recordedBy?: number | null;
 }
@@ -36,8 +38,47 @@ export class CkpFactRepository {
   /** Karta ЦКП-meta (formula-turi/norma/o'lchov) — fakt baholash uchun. */
   async cardCkpMeta(cardId: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
-      SELECT id, name, tskp, tskp_target, tskp_measurement_unit, ckp_formula_type, ckp_frequency, ckp_report_deadline_hours
+      SELECT id, name, tskp, tskp_target, tskp_measurement_unit,
+             tskp_formula_type, ckp_formula_type, ckp_frequency, ckp_report_deadline_hours
       FROM org_departments WHERE id = ${cardId} LIMIT 1
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * GAP #10 — multi-product slot lookup. Karta+mahsulot bo'yicha norma+formula
+   * (ckp_card_products). Topilmasa null (karta-global fallback service'da). is_active=true.
+   */
+  async cardProductTarget(cardId: number, productId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      SELECT target_value, formula_type, measurement_unit
+      FROM ckp_card_products
+      WHERE card_id = ${cardId} AND product_id = ${productId} AND is_active = true
+      LIMIT 1
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * GAP #14 — per-employee norma override (ckp_personal_targets). Aniq xodim+karta
+   * uchun (ixtiyoriy product+period) shaxsiy norma. Eng aniq mosni qaytaradi:
+   * product+period mos kelganlar ustun (NULL=joker, lekin aniqligi past).
+   * Topilmasa null (karta-global/product fallback service'da).
+   */
+  async personalTarget(
+    cardId: number,
+    employeeId: number,
+    productId: number | null,
+    period: string | null,
+  ): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      SELECT target_value, formula_type
+      FROM ckp_personal_targets
+      WHERE card_id = ${cardId} AND employee_id = ${employeeId}
+        AND (product_id IS NULL OR product_id = ${productId})
+        AND (period IS NULL OR period = ${period})
+      ORDER BY (product_id IS NOT NULL)::int DESC, (period IS NOT NULL)::int DESC, id DESC
+      LIMIT 1
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
@@ -47,12 +88,13 @@ export class CkpFactRepository {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
         INSERT INTO ckp_fact_values
-          (card_id, employee_id, product_id, fact_date, target_value, actual_value, achievement_pct, source, formula_type, status, submitted_at, notes, recorded_by, created_at)
+          (card_id, employee_id, product_id, fact_date, target_value, actual_value, achievement_pct, source, formula_type, error_code, status, submitted_at, notes, recorded_by, created_at)
         VALUES
-          (${i.cardId}, ${i.employeeId ?? null}, ${i.productId ?? null}, ${i.factDate}, ${i.targetValue ?? null}, ${i.actualValue ?? null}, ${i.achievementPct}, ${i.source}, ${i.formulaType ?? null}, 'submitted', NOW(), ${i.notes ?? null}, ${i.recordedBy ?? null}, NOW())
+          (${i.cardId}, ${i.employeeId ?? null}, ${i.productId ?? null}, ${i.factDate}, ${i.targetValue ?? null}, ${i.actualValue ?? null}, ${i.achievementPct}, ${i.source}, ${i.formulaType ?? null}, ${i.errorCode ?? null}, 'submitted', NOW(), ${i.notes ?? null}, ${i.recordedBy ?? null}, NOW())
         ON CONFLICT (card_id, fact_date, COALESCE(employee_id,0), COALESCE(product_id,0))
         DO UPDATE SET actual_value = EXCLUDED.actual_value, target_value = EXCLUDED.target_value,
           achievement_pct = EXCLUDED.achievement_pct, source = EXCLUDED.source, status = 'submitted',
+          error_code = EXCLUDED.error_code,
           submitted_at = NOW(), notes = EXCLUDED.notes, recorded_by = EXCLUDED.recorded_by
         RETURNING *
       `);

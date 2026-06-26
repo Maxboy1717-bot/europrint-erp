@@ -23,6 +23,7 @@ const FactSchema = z.object({
   factDate: z.string().min(8).max(10),
   actualValue: z.number().optional(),
   source: z.enum(['MANUAL', 'AI_CHAT', 'MES_AUTO', 'IOT']).optional(),
+  errorCode: z.string().max(64).optional(),
   notes: z.string().max(2000).optional(),
 }).strict();
 
@@ -48,6 +49,7 @@ export class CkpController {
       factDate: dto.factDate,
       actualValue: dto.actualValue ?? null,
       source: dto.source,
+      errorCode: dto.errorCode ?? null,
       notes: dto.notes ?? null,
       recordedBy: uid == null ? null : Number(uid),
     }));

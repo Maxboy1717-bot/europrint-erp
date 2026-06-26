@@ -14,14 +14,18 @@ import { CKP_REPORTED_EVENT, CKP_ROLLUP_SOURCE } from './cascade/ckp-cascade.con
 type Row = Record<string, unknown>;
 
 /**
- * ЦКП formula-turi (achievement% hisoblash usuli). Manba — `org_departments.ckp_formula_type`
- * (per-karta, EGASI-DATA). Ushbu ro'yxat `calcAchievement` ajratadigan kanonik turlar:
- *   - 'boolean'      — ha/yo'q -> 100/0 (HOLAT).
+ * ЦКП formula-turi (achievement% hisoblash usuli). Manba — `org_departments.tskp_formula_type`
+ * (per-karta, EGASI-DATA; eski `ckp_formula_type` fallback). 4 kanonik tur (calcAchievement):
  *   - 'quantity_pct' — bajarilgan/norma nisbati (MIQDOR%); norma yo'q -> 0 (FABRIKATSIYA YO'Q).
- * Boshqa har qanday tur 'quantity_pct' singari nisbat sifatida hisoblanadi (default tarmoq).
+ *   - 'foiz'         — actual qiymatning O'ZI foiz (masalan sifat%/OEE%); norma kerak emas, 0..100 ga clamp.
+ *   - 'vaqt'         — vaqt-norma (TESKARI): norma/actual (reja-vaqt ≤ haqiqiy-vaqt = 100%); actual yo'q -> 0.
+ *   - 'boolean'      — ha/yo'q -> 100/0 (HOLAT).
+ * Noma'lum tur -> 'quantity_pct' singari nisbat sifatida hisoblanadi (default tarmoq).
  */
 export const CKP_FORMULA_BOOLEAN = 'boolean';
 export const CKP_FORMULA_QUANTITY_PCT = 'quantity_pct';
+export const CKP_FORMULA_FOIZ = 'foiz';
+export const CKP_FORMULA_VAQT = 'vaqt';
 
 /**
  * org_departments.ckp_formula_type NULL bo'lganda (egasi per-karta turni belgilamagan)
@@ -38,6 +42,8 @@ export interface RecordFactInput {
   factDate: string;
   actualValue?: number | null;
   source?: string;
+  /** Nuqson/xato sababi (error_catalog.code). Ixtiyoriy — past achievement sababini ЦКП-faktga bog'laydi. */
+  errorCode?: string | null;
   notes?: string | null;
   recordedBy?: number | null;
 }
@@ -68,13 +74,48 @@ export class CkpFactService {
     private readonly eventEmitter?: EventEmitter2,
   ) {}
 
-  /** Formula-turiga qarab achievement% (boolean = ha/yo'q -> 100/0; quantity_pct = bajarilgan/norma). */
+  /**
+   * Formula-turini normallashtirish: trim + bo'sh-string -> fallback (default null).
+   * Magic-string takror yo'q (Qoida 12) — barcha darajalar (global/product/personal) shu orqali.
+   */
+  private pickFormula(raw: string | null | undefined, fallback: string | null = CKP_DEFAULT_FORMULA_TYPE): string | null {
+    if (typeof raw === 'string' && raw.trim().length > 0) return raw.trim();
+    return fallback;
+  }
+
+  /** factDate ('YYYY-MM-DD') -> shaxsiy-norma davri 'YYYY-MM' (#14 period lookup). */
+  private periodOf(factDate: string): string | null {
+    if (typeof factDate !== 'string' || factDate.length < 7) return null;
+    const m = /^(\d{4})-(\d{2})/.exec(factDate);
+    return m ? `${m[1]}-${m[2]}` : null;
+  }
+
+  /**
+   * Formula-turiga qarab achievement% (4-variant). FABRIKATSIYA YO'Q: norma/actual NULL ->
+   * 0 (soxta % berilmaydi; egasi norma bersa hisoblanadi). Yaxlitlik 2 kasr.
+   *   - boolean      : actual>0 -> 100, aks holda 0.
+   *   - foiz         : actual O'ZI foiz (norma kerakmas), 0..100 clamp.
+   *   - vaqt         : norma/actual (reja-vaqt ≤ haqiqiy = 100%); norma yoki actual yo'q -> 0.
+   *   - quantity_pct : actual/norma (default tarmoq, noma'lum tur ham shu yerga tushadi).
+   */
   private calcAchievement(formulaType: string | null, target: number | null, actual: number | null): number {
     const a = Number(actual ?? 0);
     const t = Number(target ?? 0);
+    const round2 = (n: number): number => Math.round(n * 100) / 100;
     if (formulaType === CKP_FORMULA_BOOLEAN) return a > 0 ? 100 : 0;
-    if (t <= 0) return 0; // norma yo'q -> 0 (FABRIKATSIYA YO'Q; egasi norma bersa hisoblanadi)
-    return Math.round((a / t) * 10000) / 100;
+    if (formulaType === CKP_FORMULA_FOIZ) {
+      // actual o'zi foiz qiymati — norma talab qilinmaydi; 0..100 oralig'iga qisiladi.
+      if (!Number.isFinite(a) || a <= 0) return 0;
+      return round2(Math.min(a, 100));
+    }
+    if (formulaType === CKP_FORMULA_VAQT) {
+      // vaqt-norma teskari: norma (reja-vaqt) / actual (haqiqiy-vaqt). actual<=0 -> 0 (fabrikatsiya yo'q).
+      if (t <= 0 || a <= 0) return 0;
+      return round2((t / a) * 100);
+    }
+    // quantity_pct (default): bajarilgan/norma. norma yo'q -> 0 (FABRIKATSIYA YO'Q).
+    if (t <= 0) return 0;
+    return round2((a / t) * 100);
   }
 
   /**
@@ -106,14 +147,41 @@ export class CkpFactService {
     if (!metaR.ok) return Err(metaR.error);
     if (!metaR.data) return Err(AppErr('NOT_FOUND', `Karta #${input.cardId} topilmadi`));
     const meta = metaR.data;
-    // Formula-turi org_departments.ckp_formula_type'dan o'qiladi (per-karta, EGASI-DATA).
-    // NULL/bo'sh -> ANIQ default (CKP_DEFAULT_FORMULA_TYPE) — magic-string emas, fabrikatsiya emas.
-    const rawFormulaType = meta.ckp_formula_type as string | null;
-    const formulaType =
-      typeof rawFormulaType === 'string' && rawFormulaType.trim().length > 0
-        ? rawFormulaType.trim()
-        : CKP_DEFAULT_FORMULA_TYPE;
-    const target = meta.tskp_target == null ? null : Number(meta.tskp_target);
+    // ─── NORMA + FORMULA HAL QILISH (ustun -> past): shaxsiy-norma (#14) ->
+    //     karta-mahsulot (#10) -> karta-global. FABRIKATSIYA YO'Q: hech qaysi
+    //     darajada norma yo'q bo'lsa target NULL qoladi (soxta norma yozilmaydi).
+    const productId = input.productId ?? null;
+    const period = this.periodOf(input.factDate); // 'YYYY-MM' (shaxsiy-norma davri)
+
+    // Karta-global norma + formula (eng past daraja, default).
+    let target = meta.tskp_target == null ? null : Number(meta.tskp_target);
+    // GAP #12: formula-turi tskp_formula_type (yangi) -> ckp_formula_type (eski fallback) -> default.
+    let resolvedFormula = this.pickFormula(
+      (meta.tskp_formula_type as string | null) ?? (meta.ckp_formula_type as string | null),
+    );
+
+    // GAP #10: karta-mahsulot slot (productId bo'lsa) — global ustidan ustun.
+    if (productId != null) {
+      const cpR = await this.repo.cardProductTarget(input.cardId, productId);
+      if (cpR.ok && cpR.data) {
+        if (cpR.data['target_value'] != null) target = Number(cpR.data['target_value']);
+        const cpFormula = this.pickFormula(cpR.data['formula_type'] as string | null, null);
+        if (cpFormula != null) resolvedFormula = cpFormula;
+      }
+    }
+
+    // GAP #14: shaxsiy norma override (employeeId bo'lsa) — eng ustun.
+    if (input.employeeId != null) {
+      const ptR = await this.repo.personalTarget(input.cardId, input.employeeId, productId, period);
+      if (ptR.ok && ptR.data) {
+        if (ptR.data['target_value'] != null) target = Number(ptR.data['target_value']);
+        const ptFormula = this.pickFormula(ptR.data['formula_type'] as string | null, null);
+        if (ptFormula != null) resolvedFormula = ptFormula;
+      }
+    }
+
+    // NULL/bo'sh formula -> ANIQ default (magic-string emas, fabrikatsiya emas).
+    const formulaType = resolvedFormula ?? CKP_DEFAULT_FORMULA_TYPE;
     const achievement = this.calcAchievement(formulaType, target, input.actualValue ?? null);
     const deadlineHours = meta.ckp_report_deadline_hours == null ? null : Number(meta.ckp_report_deadline_hours);
     const deadline = this.calcDeadline(deadlineHours, input.factDate, new Date());
@@ -128,6 +196,8 @@ export class CkpFactService {
       achievementPct: achievement,
       source: input.source ?? 'MANUAL',
       formulaType,
+      // Gap #15: nuqson/xato sababi error_catalog.code'ga bog'lanadi (NULL = sabab yo'q).
+      errorCode: input.errorCode ?? null,
       notes: input.notes ?? null,
       recordedBy: input.recordedBy ?? null,
     };

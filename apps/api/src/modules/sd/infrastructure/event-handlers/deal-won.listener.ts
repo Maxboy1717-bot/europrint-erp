@@ -32,6 +32,23 @@ export class DealWonListener implements IEventHandler<DealWonEvent> {
     });
 
     try {
+      // BUG #17 idempotency (this is now the SINGLE canonical DealWonEvent→SO creator):
+      // never create a second sales order for a deal that already has one. A re-published
+      // or retried DealWonEvent must be a no-op. Keyed on the real deal uuid we write back
+      // (deal_id uuid / crm_deal_id varchar). Skip the guard only when we have no uuid.
+      if (event.dealUuid) {
+        const existing = await this._findExistingOrder(event.dealUuid);
+        if (existing != null) {
+          this.logger.log({
+            msg: 'Sales order already exists for deal — skipping (idempotent)',
+            dealId: event.dealId,
+            dealUuid: event.dealUuid,
+            orderId: existing,
+          });
+          return;
+        }
+      }
+
       // Avtomatik SO yaratish
       const command = new CreateOrderCommand(
         event.companyId,
@@ -71,6 +88,34 @@ export class DealWonListener implements IEventHandler<DealWonEvent> {
         dealId: event.dealId,
         error: (error as Error).message,
       });
+    }
+  }
+
+  /**
+   * Idempotency guard (BUG #17): returns the id of an existing sales order already
+   * linked to this deal, or null. Matches on either deal-link column. Tolerant of a
+   * malformed/non-uuid dealUuid — a query error is swallowed and treated as "no match"
+   * so a lookup failure never blocks legitimate first-time creation.
+   */
+  private async _findExistingOrder(dealUuid: string): Promise<number | null> {
+    try {
+      const res = await runQuery<{ id: number }>(sql`
+        SELECT id FROM sales_orders
+        WHERE (deal_id = ${dealUuid}::uuid OR crm_deal_id = ${dealUuid})
+          AND deleted_at IS NULL
+        LIMIT 1
+      `);
+      const row = Array.isArray(res.rows) ? res.rows[0] : undefined;
+      if (!row) return null;
+      const id = Number(row.id);
+      return Number.isFinite(id) && id > 0 ? id : null;
+    } catch (error: unknown) {
+      this.logger.warn({
+        msg: 'Idempotency lookup failed (treating as no existing order)',
+        dealUuid,
+        error: (error as Error).message,
+      });
+      return null;
     }
   }
 

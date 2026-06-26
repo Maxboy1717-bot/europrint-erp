@@ -48,25 +48,28 @@ export class DrizzleMyPermissionsRepository {
    */
   async findUserWithPosition(userId: number): Promise<Result<UserPositionRow | null>> {
     try {
-      // EP-ORG-003 card-gate: RBAC tier resolves FROM THE CARD (canonical org_functions via
-      // users.org_function_id) first, falling back to positions.rbac_tier for card-less users
-      // (e.g. the admin account). COALESCE → card-first, never breaks (post-login path, degrades).
+      // EP-ORG-003 card-gate: RBAC tier resolves CARD-FIRST. Same canonical path as
+      // drizzle-auth.repo.resolveCardGate: users.card_id → org_departments (FAZA-00 kanonik
+      // karta jadvali). Priority: primary card (od.rbac_tier) → org_functions (ofn.rbac_tier)
+      // → positions (p.rbac_tier) for card-less users (e.g. the admin account).
+      // COALESCE → card-first, fallback eski; never breaks (post-login path, degrades gracefully).
       const rows = await rawSql(sql`
         SELECT
-          u.id                                   AS "userId",
-          u.username                             AS username,
-          u.role                                 AS role,
-          p.id                                   AS "positionId",
-          p.code                                 AS "positionCode",
-          p.name_uz                              AS "positionNameUz",
-          p.name_ru                              AS "positionNameRu",
-          COALESCE(ofn.rbac_tier, p.rbac_tier)   AS "rbacTier",
-          d.code                                 AS "departmentCode",
-          d.name_uz                              AS "departmentNameUz"
+          u.id                                          AS "userId",
+          u.username                                    AS username,
+          u.role                                        AS role,
+          p.id                                          AS "positionId",
+          p.code                                        AS "positionCode",
+          p.name_uz                                     AS "positionNameUz",
+          p.name_ru                                     AS "positionNameRu",
+          COALESCE(od.rbac_tier, ofn.rbac_tier, p.rbac_tier) AS "rbacTier",
+          d.code                                        AS "departmentCode",
+          d.name_uz                                     AS "departmentNameUz"
         FROM users u
-        LEFT JOIN positions p      ON p.id = u.position_id
+        LEFT JOIN positions p       ON p.id = u.position_id
         LEFT JOIN org_functions ofn ON ofn.id = u.org_function_id AND ofn.deleted_at IS NULL
-        LEFT JOIN departments d    ON d.id = u.department_id
+        LEFT JOIN org_departments od ON od.id = u.card_id
+        LEFT JOIN departments d     ON d.id = u.department_id
         WHERE u.id = ${userId}
         LIMIT 1
       `);

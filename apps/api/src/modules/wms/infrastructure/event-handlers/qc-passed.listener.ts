@@ -35,6 +35,26 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
       'Trigger 11: QC passed - Creating FG receipt',
     );
 
+    // #22 listener resilience: the whole FG-receipt flow is best-effort. The QC
+    // inspection already committed upstream; a failure to spin up the FG receipt
+    // must NOT throw back to the event bus (which would abort sibling listeners and
+    // surface an unhandled rejection). All failures are caught + structured-logged
+    // here; the inner command result is already checked per-line below.
+    try {
+      await this._receiveFgFromInspection(event);
+    } catch (error: unknown) {
+      this.logger.error(
+        {
+          inspectionId: event.inspectionId,
+          orderId: event.orderId,
+          error: (error as Error)?.message ?? String(error),
+        },
+        'QcPassedListener: FG receipt flow failed (golden-thread step QC→WMS)',
+      );
+    }
+  }
+
+  private async _receiveFgFromInspection(event: QcPassedEvent): Promise<void> {
     // The passed quantity lives on the QC inspection row (qc_inspections.pass_count —
     // the canonical inspection table this listener's event id refers to; fall back to
     // items_passed which save() also writes). sales_orders has NO product_id/quantity

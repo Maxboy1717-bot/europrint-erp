@@ -204,8 +204,10 @@ export class PayrollService {
     return {
       id:               Number(raw['id'] ?? 0),
       status:           String(raw['status'] ?? 'open'),
-      periodStartDate:  this.toIsoDateString(raw['periodStartDate'] ?? raw['period_start_date']),
-      periodEndDate:    this.toIsoDateString(raw['periodEndDate']   ?? raw['period_end_date']),
+      // period_start_date/period_end_date kanonik; ba'zi davrlar faqat start_date/end_date bilan
+      // urug'langan (FI-GL sxema ikkala ustunni saqlaydi) — shuning uchun fallback.
+      periodStartDate:  this.toIsoDateString(raw['periodStartDate'] ?? raw['period_start_date'] ?? raw['startDate'] ?? raw['start_date']),
+      periodEndDate:    this.toIsoDateString(raw['periodEndDate']   ?? raw['period_end_date']   ?? raw['endDate']   ?? raw['end_date']),
       periodName:       (raw['periodName'] ?? raw['period_name']) as string | undefined,
     };
   }
@@ -592,6 +594,147 @@ export class PayrollService {
       razryadCoeff,
       razryadSource,
       ...gatedR.data,
+    });
+  }
+
+  /**
+   * ⭐ Gap #1 (T20-A1) — KARTA-OYLIK QATORLARINI GENERATSIYA QILISH (egasi 8-qaror #5).
+   *
+   * VERIFY topgan bo'shliq: A7 formula + A69 ЦКП/LMS-gate + T7-09 previewCardSalary JONLI
+   * qurilgan-u, lekin payroll_rows ga HECH NARSA YOZMASDi — closePeriod xom qatorlarni
+   * yig'ardi (generatsiya yo'q edi). Bu metod uzilishni yopadi: har aktiv-kartali xodim
+   * uchun KANONIK manbalardan (razryad-koeff + stake + baza) karta-oylikni hisoblab,
+   * ЦКП/LMS-darvozadan o'tkazib, payroll_rows ga upsert qiladi (idempotent). closePeriod
+   * bundan KEYIN chaqirilsa, real karta-oylik qatorlarini yig'adi.
+   *
+   * Oqim (har xodim):
+   *   1. listActiveCardPayInputs → employee + birlamchi karta + baza + razryad-koeff + stake.
+   *   2. computeGatedMonthlySalary(cardId, from, to, base, coeff, ckpPct, stake, workedDays,
+   *      periodWorkingDays, employeeId) → darvozalangan oylik (ЦКП jonli ckp_fact_values + LMS).
+   *   3. upsertPayrollRow → payroll_rows (net_pay = gatedGross; status 'draft').
+   *
+   * FABRIKATSIYA YO'Q (Q-40):
+   *   - ckpAchievementPct chaqiruvchidan kelmaydi → null → ЦКП-gate jonli faktlardan har kunni
+   *     hal qiladi (fakt yo'q kun = 0). Bu egasi 8-qaror #6 (ЦКП-gate QATTIQ 0) ga mos.
+   *   - baseSalary NULL (egasi-data) → 0 (soxta baza O'YLAB TOPILMAYDI).
+   *   - razryadCoeff/stake NULL → 1.0 (neytral, computeCardPay ichida).
+   *   - workedDays/periodWorkingDays berilmasa → proratsiya yo'q (to'liq davr).
+   *
+   * NEVER-THROW-ALL: bitta xodim xatosi (DB/gate) butun generatsiyani to'xtatmaydi —
+   *   loglanadi va `skipped` ga qo'shiladi (boshqa xodimlar yoziladi).
+   *
+   * @param periodId  payroll_periods.id (davr; OPEN bo'lishi kerak — closePeriod'dan oldin)
+   */
+  async generatePeriodRows(
+    periodId: number,
+  ): Promise<
+    Result<{
+      periodId: number;
+      from: string;
+      to: string;
+      candidates: number;
+      generated: number;
+      inserted: number;
+      updated: number;
+      skipped: number;
+      rows: Array<{ employeeId: number; cardId: number; gatedGross: number | null; lmsBlocked: boolean; inserted: boolean }>;
+    }>
+  > {
+    const periodR = await this.hrPayrollRepo.findPeriodById(periodId);
+    if (!periodR.ok) return periodR as unknown as Result<never>;
+    if (!periodR.data) return Err(AppErr('NOT_FOUND', `Payroll davri #${periodId} topilmadi`));
+
+    const period = this.normalizePeriod(periodR.data);
+    const datesR = this.closure.validatePeriodDates(period);
+    if (!datesR.ok) return datesR as unknown as Result<never>;
+    const from = period.periodStartDate;
+    const to = period.periodEndDate;
+    if (!from || !to) {
+      return Err(AppErr('VALIDATION', `Davr #${periodId} sanasi to'liq emas (boshlanish/tugash yo'q)`));
+    }
+
+    // Yopiq davrga generatsiya YO'Q (regress himoyasi — yopilgan oylik qayta yozilmaydi).
+    if (period.status === 'closed') {
+      return Err(AppErr('VALIDATION', `Davr #${periodId} yopilgan — karta-oylik qayta generatsiya qilinmaydi`));
+    }
+
+    const inputsR = await this.hrPayrollRepo.listActiveCardPayInputs();
+    if (!inputsR.ok) return inputsR as unknown as Result<never>;
+    const inputs = inputsR.data;
+
+    let generated = 0;
+    let inserted = 0;
+    let updated = 0;
+    let skipped = 0;
+    const rows: Array<{ employeeId: number; cardId: number; gatedGross: number | null; lmsBlocked: boolean; inserted: boolean }> = [];
+
+    for (const inp of inputs) {
+      // ckpAchievementPct = null → ЦКП-gate jonli ckp_fact_values dan har kunni hal qiladi (egasi #6).
+      // workedDays/periodWorkingDays = null → proratsiya yo'q (to'liq davr; FABRIKATSIYA yo'q).
+      const gatedR = await this.computeGatedMonthlySalary(
+        inp.cardId,
+        from,
+        to,
+        inp.baseSalary ?? 0,
+        inp.razryadCoeff,
+        null,            // ckpAchievementPct: jonli darvoza hal qiladi
+        inp.stakeShare,
+        null,            // workedDays
+        null,            // periodWorkingDays
+        inp.employeeId,
+      );
+      if (!gatedR.ok) {
+        this.logger.warn(`generatePeriodRows: emp #${inp.employeeId} gate xato — skip: ${gatedR.error.message}`);
+        skipped += 1;
+        continue;
+      }
+      const gatedGross = gatedR.data.gatedGross ?? 0;
+      const note = gatedR.data.lmsBlocked
+        ? `karta-oylik: LMS-darvoza yopiq (darslik tugamagan)`
+        : `karta-oylik: ЦКП-gate kun ${gatedR.data.gatedDays}/${gatedR.data.totalDays}`;
+
+      const upsertR = await this.hrPayrollRepo.upsertPayrollRow({
+        periodId,
+        employeeId: inp.employeeId,
+        baseSalary: inp.baseSalary ?? 0,
+        bonus: 0,
+        deductions: 0,
+        netPay: gatedGross,
+        workDays: gatedR.data.totalDays > 0 ? gatedR.data.gatedDays : null,
+        status: 'draft',
+        notes: note,
+      });
+      if (!upsertR.ok) {
+        this.logger.warn(`generatePeriodRows: emp #${inp.employeeId} upsert xato — skip: ${upsertR.error.message}`);
+        skipped += 1;
+        continue;
+      }
+      generated += 1;
+      if (upsertR.data.inserted) inserted += 1;
+      else updated += 1;
+      rows.push({
+        employeeId: inp.employeeId,
+        cardId: inp.cardId,
+        gatedGross: gatedR.data.gatedGross,
+        lmsBlocked: gatedR.data.lmsBlocked,
+        inserted: upsertR.data.inserted,
+      });
+    }
+
+    this.logger.log(
+      `generatePeriodRows davr #${periodId}: ${generated}/${inputs.length} qator (yangi ${inserted}, yangilangan ${updated}, skip ${skipped})`,
+    );
+
+    return Ok({
+      periodId,
+      from,
+      to,
+      candidates: inputs.length,
+      generated,
+      inserted,
+      updated,
+      skipped,
+      rows,
     });
   }
 

@@ -34,7 +34,11 @@ import { DrizzleLeadRepository } from './infrastructure/repositories/drizzle-lea
 import { DrizzleDealRepository } from './infrastructure/repositories/drizzle-deal.repo';
 import { LEAD_REPO } from './domain/repositories/i-lead.repo';
 import { DEAL_REPO } from './domain/repositories/i-deal.repo';
-import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
+// BUG #17 (T20-A2): the CRM-side DealWonListener was a SECOND @EventsHandler(DealWonEvent)
+// that ALSO created a sales_orders row — so a single won deal produced TWO sales orders.
+// Canonical SO-creation lives in sd/infrastructure/event-handlers/deal-won.listener.ts
+// (idempotency-guarded). The duplicate CRM listener is removed; the notification fan-out
+// (DealWonNotificationListener) and SD listener remain the only DealWonEvent consumers.
 import { WebsiteOrderLeadListener } from './listeners/website-order-lead.listener';
 import { WebsiteContactLeadListener } from './listeners/website-contact-lead.listener';
 import { LeadConvertedCustomerListener } from './listeners/lead-converted-customer.listener';
@@ -123,7 +127,8 @@ const commandHandlers = [
 ];
 const queryHandlers = [ListLeadsHandler, GetLeadByIdHandler, CrmPipelineHandler];
 const eventListeners = [
-  DealWonListener,
+  // DealWonListener REMOVED (BUG #17): duplicate sales-order creator — canonical
+  // creation is in the SD module's deal-won.listener (single, idempotent).
   WebsiteOrderLeadListener,    // Trigger 21
   WebsiteContactLeadListener,  // Trigger 22
   LeadConvertedCustomerListener,  // lead won → sd_customers
