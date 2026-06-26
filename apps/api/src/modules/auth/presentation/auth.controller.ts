@@ -12,6 +12,7 @@ import { AuthThrottle } from '@common/decorators/throttle-profiles';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import type { SignOptions } from 'jsonwebtoken';
 import { I18nService } from 'nestjs-i18n';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { LoginService, LoginCommand } from '../application/services/login.service';
@@ -28,7 +29,7 @@ import { assertOk } from '@common/http-result';
 export { AuthAccountController } from './auth-account.controller';
 
 // ─── Cookie configuration ───────────────────────────────────────────────────
-// Access token cookie: short-lived (24h), sent to every /api/* request.
+// Access token cookie: short-lived (15m, vizyon), sent to every /api/* request.
 // Refresh token cookie: longer-lived (7d), restricted to /api/auth path
 // (defense in depth — refresh token never leaves the auth surface).
 // Both cookies are httpOnly so JavaScript on the page cannot read them; this
@@ -37,7 +38,10 @@ export { AuthAccountController } from './auth-account.controller';
 // the cookie — sufficient CSRF mitigation for MVP without a separate token.
 const ACCESS_COOKIE_NAME = 'access_token';
 const REFRESH_COOKIE_NAME = 'refresh_token';
-const ACCESS_COOKIE_MAX_AGE_SEC = 24 * 60 * 60; // 24 hours
+// T10-17: access cookie umri = access-token TTL (vizyon 15 daqiqa) — token o'lib, cookie
+// 24h yashab qolishi (drift) oldini oladi. Refresh cookie uzun (7d) → refresh oqimi yangi
+// access mint qiladi, foydalanuvchi qayta login qilmaydi.
+const ACCESS_COOKIE_MAX_AGE_SEC = 15 * 60; // 15 minutes
 const REFRESH_COOKIE_MAX_AGE_SEC = 7 * 24 * 60 * 60; // 7 days
 
 /**
@@ -171,9 +175,10 @@ export class AuthController {
       if (isBlacklisted) throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
 
       // Issue NEW access token (same lifetime / claims as login).
+      // T10-17: 15-daqiqalik access TTL — login.service bilan bir manba (JWT_ACCESS_TOKEN_TTL).
       const accessToken = this.jwtService.sign(
         { sub: payload.sub, username: payload.username, role: payload.role },
-        { expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '24h' },
+        { expiresIn: (this.configService.get<string>('JWT_ACCESS_TOKEN_TTL') ?? '15m') as SignOptions['expiresIn'] },
       );
 
       // Issue NEW refresh token — signed with JWT_REFRESH_SECRET, longer lifetime.

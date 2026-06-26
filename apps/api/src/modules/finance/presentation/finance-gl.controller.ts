@@ -13,6 +13,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GlPostingService } from '../domain/services/gl-posting.service';
 import { GlService } from '../gl/gl.service';
+import { FinanceAccountingService } from '../application/finance-accounting.service';
 import { GetGlEntriesQuery } from '../application/queries/get-gl-entries.query';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
@@ -38,7 +39,8 @@ export class FinanceGlController {
   constructor(private commandBus: CommandBus,
     private queryBus: QueryBus,
     private glPostingService: GlPostingService,
-    private glService: GlService) {}
+    private glService: GlService,
+    private financeAccountingService: FinanceAccountingService) {}
 
   @ApiOperation({ summary: 'List gl entries' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -105,6 +107,17 @@ export class FinanceGlController {
     const p = Math.max(1, Number.isFinite(Number(page))  ? Number(page)  : 1);
     const l = Math.min(200, Math.max(1, Number.isFinite(Number(limit)) ? Number(limit) : 50));
     const result = await this.glService.getLedger(accountCode, p, l);
+    return unwrapOrThrow(result);
+  }
+
+  @ApiOperation({ summary: '4-hisob account groups with live GL balances (EP-FIN-004)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('accounts-grouped')
+  @Roles(Role.ACCOUNTANT, Role.DIRECTOR, Role.SUPER_ADMIN)
+  async getAccountsGrouped() {
+    // EP-FIN-004: 4-hisob (WORKING/TAX/HEAD/MAIN) — range-based grouping over the
+    // canonical `accounts` + `entries` tables. No new table; logic lives in the service.
+    const result = await this.financeAccountingService.getAccountGroups();
     return unwrapOrThrow(result);
   }
 }

@@ -21,6 +21,19 @@ const SENSITIVE_KEYS = new Set([
   'password', 'oldPassword', 'newPassword', 'secret',
 ]);
 
+// WHY: salary/razryad/reject DTO'lari sabab-matnini turli kalitlarda yuboradi.
+// Audit-log uchun shu kalitlardan birinchi topilgani 'reason' ustuniga yoziladi
+// (placeholder 'success • PATCH undefined' o'rniga real foydalanuvchi sababi).
+const REASON_KEYS = ['reason', 'justification', 'comment', 'note', 'description'] as const;
+
+function extractReason(body: Record<string, unknown>): string | null {
+  for (const k of REASON_KEYS) {
+    const v = body[k];
+    if (typeof v === 'string' && v.trim().length > 0) return v.trim().slice(0, 2000);
+  }
+  return null;
+}
+
 const METHOD_TO_ACTION: Record<string, string> = {
   POST:   'CREATE',
   PUT:    'UPDATE',
@@ -50,11 +63,16 @@ export class AuditInterceptor implements NestInterceptor {
     const userId      = user?.id ?? user?.sub;
     const httpMethod  = request.method as string;
     const action      = METHOD_TO_ACTION[httpMethod] ?? httpMethod;
-    const endpoint    = httpMethod + ' ' + (request.path as string);
+    const rawPath     = (request.path as string | undefined)
+                        ?? (request.originalUrl as string | undefined)
+                        ?? (request.url as string | undefined)
+                        ?? 'unknown';
+    const endpoint    = httpMethod + ' ' + rawPath;
     const deviceInfo  = (request.headers?.['user-agent'] as string | undefined) ?? 'unknown';
     const ipAddress   = ((request.headers?.['x-forwarded-for'] as string | undefined) ?? request.ip as string | undefined ?? 'unknown').split(',')[0].trim();
     const timestamp   = Date.now();
     const requestBody = redact(request.body);
+    const userReason  = extractReason(requestBody);
 
     const controllerClass = context.getClass();
     const module: string =
@@ -85,7 +103,9 @@ export class AuditInterceptor implements NestInterceptor {
             `module:${module}`,
             `ua:${deviceInfo.slice(0, 80)}`,
           ],
-          reason:        `${result} • ${endpoint}`,
+          // WHY: real DTO sababi bo'lsa shu yoziladi; bo'lmasa eski placeholder
+          // (audit-log hech qachon bo'sh qolmasin, lekin sabab bor bo'lsa = haqiqiy).
+          reason:        userReason ?? `${result} • ${endpoint}`,
           ipAddress,
         });
       } catch (e) {

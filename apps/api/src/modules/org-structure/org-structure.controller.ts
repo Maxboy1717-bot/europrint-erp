@@ -74,6 +74,28 @@ const OrgNodeSchema = z.object({
   bonusConfig:       z.union([z.string().max(2000), z.null()]).optional(),
   aiExamEnabled:     z.union([z.boolean(), z.null()]).optional(),
   statisticsType:    z.union([z.string().max(50), z.null()]).optional(),
+  // T10-01: snake_case lifecycle aliases. A round-tripped node object (GET → edit → PATCH)
+  // carries the DB column names (snake_case), which .strict() would reject with an
+  // `unrecognized_keys` 400 even though the value is harmless. Allow-list them so PATCH
+  // tolerates them. SERVER-MANAGED keys (frozen_at/archived_at) are allowed-but-IGNORED —
+  // org-mutations.repo derives them from currentState; a client value is never written
+  // (same allow-but-ignore contract as `level`). freeze_reason/freeze_until/otdeleniye_no
+  // are snake_case twins of freezeReason/freezeUntil/otdeleniyeNo (repo reads the camelCase
+  // key); `reason` is a generic lifecycle note, allowed-but-ignored. .strict() preserved.
+  otdeleniye_no:     z.union([z.number().int().min(1).max(7), z.null()]).optional(),
+  frozen_at:         z.union([z.string().max(40), z.null()]).optional(),
+  archived_at:       z.union([z.string().max(40), z.null()]).optional(),
+  freeze_reason:     z.union([z.string().max(2000), z.null()]).optional(),
+  freeze_until:      z.union([z.string().max(40), z.null()]).optional(),
+  reason:            z.union([z.string().max(2000), z.null()]).optional(),
+}).strict();
+
+// T10-04 — bulk Excel import. Body = { rows: OrgNode[] }. Each row reuses the
+// same .strict() OrgNodeSchema (mass-assignment guard) so an import row can set
+// exactly the columns a single Create can. Max 1000 rows per request (one Excel
+// sheet) keeps the partial-commit loop bounded.
+const ImportNodesSchema = z.object({
+  rows: z.array(OrgNodeSchema).max(1000),
 }).strict();
 
 const MoveNodeSchema = z.object({
@@ -176,6 +198,20 @@ export class OrgStructureController {
   async create(@Body() body: unknown) {
     const dto = OrgNodeSchema.parse(body);
     return unwrapOrInternal(await this.service.create(dto as Record<string, unknown>));
+  }
+
+  // T10-04 — Excel bulk import. Per-row validation with a partial commit: every
+  // valid row is created, every invalid row is returned in `errors[]` with its
+  // 1-based row number + reason (a single bad row never aborts the batch). The
+  // static `nodes/import` POST is distinct from `POST nodes` (create), so no
+  // route collision. Admin/HR-style write op — same class @Roles apply.
+  @ApiOperation({ summary: 'Import org nodes from Excel (qator-validatsiya, partial-commit)' })
+  @ApiResponse({ status: 201, description: 'OK — { imported, failed, total, created, errors }' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('nodes/import')
+  async importNodes(@Body() body: unknown) {
+    const dto = ImportNodesSchema.parse(body);
+    return unwrapOrInternal(await this.service.importNodes(dto.rows as Record<string, unknown>[]));
   }
 
   @ApiOperation({ summary: 'Update' })

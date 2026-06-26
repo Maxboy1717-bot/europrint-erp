@@ -123,6 +123,9 @@ export const courses = pgTable('courses', {
   // Card-centric LMS (EP-LMS-001): a darslik is bound to an org-CARD (org_functions.id),
   // not a department/employee. Logical ref only (no hard FK — cross-module ADR). Keeps department_id.
   cardId: integer('card_id'),
+  // Q562 (cross-card credit): a universal course (e.g. TX instruktaj) completed on one card
+  // credits the same course on the employee's OTHER cards. CourseCompletedCreditHandler gates on this.
+  isUniversal: boolean('is_universal').default(false),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   deletedAt: ts('deleted_at'),

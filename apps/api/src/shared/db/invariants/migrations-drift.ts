@@ -163,6 +163,23 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
     notes TEXT,
     created_at TIMESTAMP DEFAULT now()
   )` },
+  // APPROVED (T10-09): EP-ORG-116 — onboarding davrida KARTAga mentor biriktiriladi (PHASE-07 darslik item 4).
+  // Mentor karta-markazli (xodimga emas): card_id -> org_departments (kanonik karta), mentor_user_id -> users.
+  // Additiv link-jadval; SOXTA DATA YO'Q (faqat struktura + CRUD endpoint). Idempotent IF NOT EXISTS.
+  { name: 'lms_card_mentors CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS lms_card_mentors (
+    id SERIAL PRIMARY KEY,
+    card_id INTEGER NOT NULL,
+    mentor_user_id INTEGER NOT NULL,
+    course_id INTEGER,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    notes TEXT,
+    assigned_by INTEGER,
+    assigned_at TIMESTAMP NOT NULL DEFAULT now(),
+    revoked_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
+  )` },
+  { name: 'lms_card_mentors uq idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_lms_card_mentor_active ON lms_card_mentors (card_id, mentor_user_id) WHERE is_active = true` },
   { name: 'crm_leads.title ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS title TEXT` },
   { name: 'crm_leads.second_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS second_name TEXT` },
   { name: 'crm_leads.last_name ADD COLUMN', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS last_name TEXT` },
@@ -3787,6 +3804,10 @@ $fn$ LANGUAGE plpgsql` },
   // Universal kurs bir kartada tugatilsa boshqa kartaga kredit. courses.card_id (FK yo'q) bind ishlaydi.
   { name: 'lms_cross_card_credits CREATE TABLE', sql: `CREATE TABLE IF NOT EXISTS lms_cross_card_credits (id SERIAL PRIMARY KEY, course_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, source_card_id INTEGER, target_card_id INTEGER NOT NULL, credited_by INTEGER, credited_at TIMESTAMP NOT NULL DEFAULT NOW(), created_at TIMESTAMP NOT NULL DEFAULT NOW())` },
   { name: 'lms_cross_card_credits uniq idx', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_lms_credit ON lms_cross_card_credits (course_id, employee_id, target_card_id)` },
+  // APPROVED (egasi vakolati, MASSIV-100 FAZA-07/Q562, T10-10, 2026-06-26): universal kurs bayrog'i.
+  // Faqat is_universal=true kurs tugaganda cross-card kredit ko'chadi (Q562 SHART). Additiv, DEFAULT false.
+  // CourseCompletedCreditHandler (lms.course.completed listener) shu ustunga tayanadi.
+  { name: 'courses.is_universal ADD COLUMN', sql: `ALTER TABLE IF EXISTS courses ADD COLUMN IF NOT EXISTS is_universal BOOLEAN DEFAULT false` },
 
   // APPROVED (egasi vakolati, MASSIV-100 FAZA-08, 2026-06-25): otdeleniye raqami (1-7 Vysotskiy).
   // Vertikal/gorizontal: workflow_rules jadval BOR; otdeleniye_no = qaysi 7 departamentdan biri (egasi-DATA qiymat).
@@ -4195,5 +4216,120 @@ $fn$ LANGUAGE plpgsql` },
     ` },
   { name: 'T8-09 qc_aql_config scope idx', sql: `CREATE INDEX IF NOT EXISTS idx_qc_aql_config_scope ON qc_aql_config (scope, scope_ref)` },
   { name: 'T8-09 qc_aql_config active-global unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_qc_aql_config_global ON qc_aql_config (scope) WHERE scope = 'global' AND is_active = TRUE` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // T10-03 — card_templates: lavozim-turi (position-type) KARTA shabloni.
+  //   Bir shablon = bir lavozim-turi uchun standart KARTA-maydon qiymatlari
+  //   (`field_defaults` JSONB) — yangi org_functions kartasini tezda urug'lash uchun.
+  //   STRUKTURA additiv (APPROVED: Claude, egasi-vakolati 2026-06-25; karta-markaz vizyoni).
+  //   ⭐ Shablon-QIYMATLARI (qaysi lavozim-turi qaysi razryad/oylik/ЦКП oladi) = EGASI-DATA →
+  //   jadval BO'SH tug'iladi; bu yerda SOXTA standart-satr yozilmaydi (Q-40 fabrikatsiya-taqiq).
+  //   field_defaults kalitlari card.controller CardCreateSchema bilan moslashadi
+  //   (positionName/razryadLevelId/salaryType/minSalary/maxSalary/rbacTier/tskp/... ixtiyoriy).
+  { name: 'T10-03 card_templates CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS card_templates (
+        id              SERIAL PRIMARY KEY,
+        position_type   TEXT NOT NULL,
+        name            TEXT NOT NULL,
+        name_ru         TEXT,
+        description     TEXT,
+        field_defaults  JSONB NOT NULL DEFAULT '{}'::jsonb,
+        is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+        created_by      INTEGER,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        deleted_at      TIMESTAMPTZ
+      )
+    ` },
+  { name: 'T10-03 card_templates position_type idx', sql: `CREATE INDEX IF NOT EXISTS idx_card_templates_position_type ON card_templates (position_type)` },
+  { name: 'T10-03 card_templates active position_type unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_card_templates_position_type_active ON card_templates (position_type) WHERE is_active = TRUE AND deleted_at IS NULL` },
+
+  // T10-08 — error_catalog: XATO-KATALOG (tipik xatolar/nuqson sabablari ro'yxati).
+  //   Tezkor nuqson-tasnif manbai (defect-dropdown): kunlik-hisobot / ЦКП-fakt / IoT-tablet
+  //   formasida "Nima xato/sabab bo'ldi?" tanlanadi → strukturalangan kategoriya (statistika).
+  //   Vizyon: EP-ORG-097 (VIZYON-MASTER-REJA: "Xato-katalogi (mishalar)" + P1/P2 bo'shliq).
+  //   Karta-bog'lanish IXTIYORIY: card_id NULL = umumiy (admin-seed 10-15 generic), NOT NULL =
+  //   o'sha kartaga xos xato. category = defect-guruh (sifat/deadline/material/qayta-ishlash/...).
+  //   STRUKTURA additiv (APPROVED: Claude, egasi-vakolati 2026-06-26; karta-markaz vizyoni EP-ORG-097).
+  //   ⭐ JADVAL BO'SH tug'iladi — bu yerda SOXTA xato-satr yozilmaydi (Q-40 fabrikatsiya-taqiq);
+  //   real xato-ro'yxati (qaysi kartaga qaysi tipik xato) = EGASI/HR-DATA, UI orqali kiritiladi.
+  { name: 'T10-08 error_catalog CREATE TABLE', sql: `
+      CREATE TABLE IF NOT EXISTS error_catalog (
+        id            SERIAL PRIMARY KEY,
+        card_id       INTEGER,
+        code          TEXT,
+        name          TEXT NOT NULL,
+        name_ru       TEXT,
+        category      TEXT,
+        severity      TEXT,
+        description   TEXT,
+        sort_order    INTEGER NOT NULL DEFAULT 0,
+        is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+        created_by    INTEGER,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        deleted_at    TIMESTAMPTZ
+      )
+    ` },
+  { name: 'T10-08 error_catalog card_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_error_catalog_card_id ON error_catalog (card_id)` },
+  { name: 'T10-08 error_catalog category idx', sql: `CREATE INDEX IF NOT EXISTS idx_error_catalog_category ON error_catalog (category)` },
+  { name: 'T10-08 error_catalog active code unique', sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_error_catalog_code_active ON error_catalog (code) WHERE code IS NOT NULL AND is_active = TRUE AND deleted_at IS NULL` },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // T10-16 — org_departments DARAXT TSIKL-QO'RIQCHISI (cycle-guard trigger).
+  //   APPROVED: Claude (egasi-vakolati 2026-06-26; karta-markaz org-daraxt yaxlitligi).
+  // ⭐ MUAMMO: org_departments = yagona KARTA-daraxt (parent_id self-ref, 145 qator).
+  //   parent_id BUS-logikasi (org-mutations.repo moveCard/updateCard) DB-darajada
+  //   tsikldan HIMOYALANMAGAN edi: A→B→A yoki A→A (self-parent) yozilsa daraxt buziladi —
+  //   rekursiv obxod (getDescendants/manager-treewalk, _of_to_od_crosswalk, vertikal
+  //   manager_id zanjiri) cheksiz loop'ga tushadi yoki noto'g'ri ierarxiya beradi.
+  // ⭐ YECHIM (ADDITIV, DATA YO'QOTMASDAN): BEFORE INSERT/UPDATE OF parent_id trigger.
+  //   (a) self-parent (NEW.parent_id = NEW.id) → 23514 (check_violation) RAD.
+  //   (b) ajdod-loop: NEW.parent_id'dan parent zanjiri bo'ylab YUQORIGA yurib, NEW.id'ga
+  //       qaytib kelsa (yoki visited takrorlansa) → tsikl, RAD. Rekursiya 200 pog'ona bilan
+  //       cheklangan (jonli maks chuqurlik ~6 Vysotskiy L0-L5; 200 = xavfsiz tom).
+  //   fn_bom_cycle_check (bom_items) + A23 one-seat-per-position bilan bir xil naqsh
+  //   (CREATE OR REPLACE FUNCTION + DROP TRIGGER IF EXISTS → idempotent, qayta-bootga xavfsiz).
+  // ⭐ JONLI DATA BUZMAYDI: tekshiruv FAQAT yangi/o'zgargan parent_id'ga (BEFORE) — mavjud
+  //   145 qatorda 0 self-parent + 0 tsikl-qirra (T10-16 inspect tasdiq) → trigger qo'yilishi
+  //   eski qatorlarni tegmaydi; FAQAT kelgusi tsikl-yozuv RAD bo'ladi (defence-in-depth).
+  // Rollback-tx proof (T10-16): self-parent INSERT/UPDATE → RAD(23514) · 2-bo'g'in loop
+  //   (A.parent=B, B.parent=A) UPDATE → RAD · qonuniy parent o'zgartirish → OK · parent_id
+  //   NULL'ga (root) → OK · ildiz-zanjir tegilmagan UPDATE (boshqa ustun) → OK.
+  { name: 'T10-16 org_departments cycle-guard fn', sql: `CREATE OR REPLACE FUNCTION enforce_org_departments_no_cycle() RETURNS trigger AS $fn$
+DECLARE
+  v_cur     int;
+  v_depth   int := 0;
+BEGIN
+  -- parent_id NULL (ildiz) yoki o'zgarmagan bo'lsa tekshiruvga hojat yo'q.
+  IF NEW.parent_id IS NULL THEN RETURN NEW; END IF;
+  -- (a) self-parent
+  IF NEW.parent_id = NEW.id THEN
+    RAISE EXCEPTION 'EP_ORG_TREE: karta % o''ziga ota bo''la olmaydi (self-parent)', NEW.id
+      USING ERRCODE = '23514';
+  END IF;
+  -- (b) ajdod-loop: NEW.parent_id'dan yuqoriga yurib NEW.id'ga qaytsak — tsikl.
+  v_cur := NEW.parent_id;
+  WHILE v_cur IS NOT NULL LOOP
+    IF v_cur = NEW.id THEN
+      RAISE EXCEPTION 'EP_ORG_TREE: parent_id=% karta %da tsikl hosil qiladi', NEW.parent_id, NEW.id
+        USING ERRCODE = '23514';
+    END IF;
+    v_depth := v_depth + 1;
+    IF v_depth > 200 THEN
+      RAISE EXCEPTION 'EP_ORG_TREE: ota-zanjiri 200 pog''onadan oshdi (buzilgan daraxt), karta %', NEW.id
+        USING ERRCODE = '23514';
+    END IF;
+    SELECT parent_id INTO v_cur FROM org_departments WHERE id = v_cur;
+  END LOOP;
+  RETURN NEW;
+END;
+$fn$ LANGUAGE plpgsql` },
+  { name: 'T10-16 org_departments cycle-guard trigger', sql: `DO $$ BEGIN
+    DROP TRIGGER IF EXISTS trg_org_departments_no_cycle ON org_departments;
+    CREATE TRIGGER trg_org_departments_no_cycle
+      BEFORE INSERT OR UPDATE OF parent_id ON org_departments
+      FOR EACH ROW EXECUTE FUNCTION enforce_org_departments_no_cycle();
+  END $$` },
 
 ];

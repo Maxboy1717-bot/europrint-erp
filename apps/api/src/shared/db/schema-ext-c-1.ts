@@ -170,6 +170,22 @@ export const lms_user_achievements = pgTable('lms_user_achievements', {
   created_at:     timestamp('created_at').defaultNow(),
 });
 
+// EP-ORG-116 (T10-09): KARTAga mentor (PHASE-07 darslik item 4). Karta-markazli link-jadval:
+// card_id -> org_departments (kanonik karta), mentor_user_id -> users. Onboarding mentorligi.
+export const lms_card_mentors = pgTable('lms_card_mentors', {
+  id:             serial('id').primaryKey(),
+  card_id:        integer('card_id').notNull(),
+  mentor_user_id: integer('mentor_user_id').notNull(),
+  course_id:      integer('course_id'),
+  is_active:      boolean('is_active').notNull().default(true),
+  notes:          text('notes'),
+  assigned_by:    integer('assigned_by'),
+  assigned_at:    timestamp('assigned_at').notNull().defaultNow(),
+  revoked_at:     timestamp('revoked_at'),
+  created_at:     timestamp('created_at').notNull().defaultNow(),
+  updated_at:     timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const lms_tests_ext = pgTable('lms_tests_ext', {
   id:          text('id').primaryKey(),
   course_id:   text('course_id'),

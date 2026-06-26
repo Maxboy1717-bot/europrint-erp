@@ -154,10 +154,16 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
   }
 
   /**
-   * Persists WMS's own `wms_goods_issues` record inside the issue transaction
-   * (atomic with the stock decrement — if the INSERT fails the whole issue
-   * rolls back). The event published after commit is the cross-module trigger;
-   * this row is WMS's own audit/record of the issue (orthogonal concerns).
+   * Persists WMS's own `wms_goods_issues` record AND the canonical 'OUT'
+   * `wms_transactions` ledger row inside the issue transaction (both atomic with
+   * the stock decrement — if either INSERT fails the whole issue rolls back).
+   *
+   * A60 (OUT side): receiveFg() already writes the matching 'IN' ledger row, so the
+   * stock<->wms_transactions ledger now stays symmetric — every issue is visible to
+   * the dashboard "today_movements" KPI and the per-material recent-transactions
+   * readers (previously goods-issue decremented warehouse_stock but left NO OUT row,
+   * undercounting the ledger). The event published after commit is the cross-module
+   * trigger; these two rows are WMS's own audit/record of the issue.
    */
   private async recordIssue(
     command: GoodsIssueCommand,
@@ -174,6 +180,21 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
       tx,
     );
     if (!inserted.ok) return Err(inserted.error);
+
+    // Canonical OUT movement — same tx as the stock decrement (symmetric with receiveFg's IN row).
+    const ledger = await this.wmsRepo.recordWmsTransaction(
+      {
+        warehouseId: command.warehouseId,
+        materialId: command.materialId,
+        type: 'OUT',
+        quantity: command.amount,
+        referenceId: command.ppId ?? null,
+        createdBy: command.issuedBy ?? null,
+        notes: 'Goods issue',
+      },
+      tx,
+    );
+    if (!ledger.ok) return Err(ledger.error);
     return Ok(undefined);
   }
 }

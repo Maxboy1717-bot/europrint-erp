@@ -52,3 +52,18 @@ export const VideoProgressSchema = z.object({
   completed: z.boolean().optional(),
 });
 export type VideoProgressDto = z.infer<typeof VideoProgressSchema>;
+
+// EP-ORG-116 (T10-09): KARTAga mentor biriktirish. cardId -> org_departments, mentorUserId -> users.
+export const AssignCardMentorSchema = z.object({
+  cardId: z.number().int().positive(),
+  mentorUserId: z.number().int().positive(),
+  courseId: z.number().int().positive().optional(),
+  notes: z.string().max(2000).optional(),
+});
+export type AssignCardMentorDto = z.infer<typeof AssignCardMentorSchema>;
+
+export const UpdateCardMentorSchema = z.object({
+  courseId: z.number().int().positive().optional(),
+  notes: z.string().max(2000).optional(),
+});
+export type UpdateCardMentorDto = z.infer<typeof UpdateCardMentorSchema>;

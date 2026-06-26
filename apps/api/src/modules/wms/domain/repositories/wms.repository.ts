@@ -102,6 +102,27 @@ export interface IWmsRepository {
     input: InsertGoodsIssueInput,
     tx?: DrizzleExecutor,
   ): Promise<Result<number>>;
+
+  /**
+   * A60 (OUT side) — records ONE `wms_transactions` ledger row for a stock movement.
+   * receiveFg() already writes the matching 'IN' row inside its own tx; the goods-issue
+   * path calls this with type 'OUT' inside the SAME `tx` as the warehouse_stock decrement,
+   * so every issue is auditable and visible to the "today_movements" KPI / per-material
+   * recent-transactions readers (symmetric stock<->ledger sync). Atomic with the decrement:
+   * if the ledger INSERT fails the whole issue rolls back.
+   */
+  recordWmsTransaction(
+    input: {
+      warehouseId: number;
+      materialId: number;
+      type: string;
+      quantity: number;
+      referenceId?: number | null;
+      createdBy?: number | null;
+      notes?: string | null;
+    },
+    tx?: DrizzleExecutor,
+  ): Promise<Result<void>>;
   getAllStockByStatus(warehouseId: number): Promise<Result<Stock[]>>;
   softDeleteStock(id: number, deletedBy: number | null, deletedAt?: Date): Promise<Result<void>>;
 

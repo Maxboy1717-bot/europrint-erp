@@ -172,4 +172,65 @@ export class LmsMiscRepository {
       return Ok(rows);
     } catch (error) { this.logger.error(`findAllModules: ${(error as Error).message}`); return Err((error as Error).message); }
   }
+
+  // ─── Card Mentors (lms_card_mentors) — EP-ORG-116 karta-markazli mentor ───────────
+  // KARTAga mentor biriktirish (onboarding). card_id -> org_departments, mentor_user_id -> users.
+
+  // Bitta kartaning faol mentorlari (yoki hammasi). JOIN org_departments (karta nomi) + users (mentor ismi).
+  async findCardMentors(cardId?: string): Promise<Result<object[]>> {
+    try {
+      const rows = cardId
+        ? await exec(sql`SELECT cm.*, od.name AS card_title, u.full_name AS mentor_name, c.title_uz AS course_title FROM lms_card_mentors cm LEFT JOIN org_departments od ON od.id = cm.card_id LEFT JOIN users u ON u.id = cm.mentor_user_id LEFT JOIN courses c ON c.id = cm.course_id WHERE cm.card_id = ${parseInt(cardId, 10)} ORDER BY cm.is_active DESC, cm.assigned_at DESC`)
+        : await exec(sql`SELECT cm.*, od.name AS card_title, u.full_name AS mentor_name, c.title_uz AS course_title FROM lms_card_mentors cm LEFT JOIN org_departments od ON od.id = cm.card_id LEFT JOIN users u ON u.id = cm.mentor_user_id LEFT JOIN courses c ON c.id = cm.course_id WHERE cm.is_active = true ORDER BY cm.assigned_at DESC LIMIT 200`);
+      return Ok(rows);
+    } catch (error) { this.logger.error(`findCardMentors: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  async findCardMentorById(id: string): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`SELECT cm.*, od.name AS card_title, u.full_name AS mentor_name, c.title_uz AS course_title FROM lms_card_mentors cm LEFT JOIN org_departments od ON od.id = cm.card_id LEFT JOIN users u ON u.id = cm.mentor_user_id LEFT JOIN courses c ON c.id = cm.course_id WHERE cm.id = ${parseInt(id, 10)} LIMIT 1`);
+      if (!r.length) return Err('Mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) { this.logger.error(`findCardMentorById: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  // Mentor biriktirish (assign). Faol dublikat bo'lsa qaytariladi (uq idx 23505 ushlanadi).
+  async assignCardMentor(data: {
+    cardId: number; mentorUserId: number; courseId?: number | null; notes?: string | null; assignedBy?: number | null;
+  }): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`
+        INSERT INTO lms_card_mentors (card_id, mentor_user_id, course_id, notes, assigned_by, is_active, assigned_at, created_at, updated_at)
+        VALUES (${data.cardId}, ${data.mentorUserId}, ${data.courseId ?? null}, ${data.notes ?? null}, ${data.assignedBy ?? null}, true, NOW(), NOW(), NOW())
+        RETURNING *`);
+      return Ok((r[0] ?? {}) as Row);
+    } catch (error) {
+      const msg = (error as Error).message;
+      if (/uq_lms_card_mentor_active|duplicate key/.test(msg)) return Err('Bu karta uchun mentor allaqachon biriktirilgan');
+      this.logger.error(`assignCardMentor: ${msg}`); return Err(msg);
+    }
+  }
+
+  async updateCardMentor(id: string, data: { courseId?: number | null; notes?: string | null }): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`
+        UPDATE lms_card_mentors
+        SET course_id = COALESCE(${data.courseId ?? null}, course_id),
+            notes     = COALESCE(${data.notes ?? null}, notes),
+            updated_at = NOW()
+        WHERE id = ${parseInt(id, 10)} AND is_active = true
+        RETURNING *`);
+      if (!r.length) return Err('Faol mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) { this.logger.error(`updateCardMentor: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
+
+  // Revoke (soft): is_active=false + revoked_at — uq idx faqat is_active=true ni qamrab oladi, qayta-biriktirish mumkin.
+  async revokeCardMentor(id: string): Promise<Result<Row>> {
+    try {
+      const r = await exec(sql`UPDATE lms_card_mentors SET is_active = false, revoked_at = NOW(), updated_at = NOW() WHERE id = ${parseInt(id, 10)} AND is_active = true RETURNING *`);
+      if (!r.length) return Err('Faol mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) { this.logger.error(`revokeCardMentor: ${(error as Error).message}`); return Err((error as Error).message); }
+  }
 }

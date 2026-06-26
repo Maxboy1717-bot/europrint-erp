@@ -24,6 +24,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -38,6 +39,10 @@ import {
   LmsUpdateProgressSchema, LmsUpdateProgressDto,
   LmsCompleteEnrollmentSchema, LmsCompleteEnrollmentDto,
 } from '../dto/lms.dto';
+import {
+  COURSE_COMPLETED_EVENT,
+  CourseCompletedPayload,
+} from '../infrastructure/event-handlers/course-completed-credit.handler';
 
 @ApiThrottle()
 @ApiTags('Lms Enrollments')
@@ -52,7 +57,33 @@ export class LmsEnrollmentsController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly lmsRepo: LmsRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /**
+   * T10-10 (Q562): emit `lms.course.completed` so CourseCompletedCreditHandler can replicate a
+   * universal-course completion onto the employee's other cards. Resolves the enrollment's
+   * (employee, course, sourceCard) tuple first; emit is best-effort — a resolve/emit failure is
+   * logged and swallowed so it never fails the completion HTTP response (the enrollment is committed).
+   */
+  private async emitCourseCompleted(enrollmentId: string, completedBy?: number): Promise<void> {
+    try {
+      const ctxR = await this.lmsRepo.getEnrollmentCardContext(enrollmentId);
+      if (!ctxR.ok) {
+        this.logger.warn(`emitCourseCompleted: context o'qib bo'lmadi (${enrollmentId}): ${ctxR.error.message}`);
+        return;
+      }
+      const payload: CourseCompletedPayload = {
+        employeeId: ctxR.data.employeeId,
+        courseId: ctxR.data.courseId,
+        sourceCardId: ctxR.data.cardId ?? undefined,
+        completedBy,
+      };
+      this.eventEmitter.emit(COURSE_COMPLETED_EVENT, payload);
+    } catch (error: unknown) {
+      this.logger.error(`emitCourseCompleted xato (${enrollmentId}): ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 
   @ApiOperation({ summary: 'Get enrollments' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -113,7 +144,7 @@ export class LmsEnrollmentsController {
   @Patch(':id/progress')
   @UsePipes(new ZodValidationPipe(LmsUpdateProgressSchema))
   @Roles('EMPLOYEE', 'TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN')
-  async updateProgress(@Param('id') id: string, @Body() body: LmsUpdateProgressDto) {
+  async updateProgress(@Param('id') id: string, @Body() body: LmsUpdateProgressDto, @CurrentUser() user?: AuthenticatedUser) {
     const newStatus = body.progressPercent >= 100 ? 'completed' : (body.status ?? 'in_progress');
     const result = await this.lmsRepo.updateEnrollment(id, {
       status: newStatus,
@@ -121,6 +152,10 @@ export class LmsEnrollmentsController {
       completed_at: body.progressPercent >= 100 ? _time.now() : undefined,
     });
     assertOk(result);
+    // T10-10 (Q562): a completed universal course credits the employee's other cards (cross-card credit).
+    if (newStatus === 'completed') {
+      await this.emitCourseCompleted(id, Number(user?.employeeId ?? user?.sub ?? user?.id) || undefined);
+    }
     return result.data;
   }
 
@@ -131,7 +166,7 @@ export class LmsEnrollmentsController {
   @Patch(':id/complete')
   @UsePipes(new ZodValidationPipe(LmsCompleteEnrollmentSchema))
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN')
-  async completeEnrollment(@Param('id') id: string, @Body() body: LmsCompleteEnrollmentDto) {
+  async completeEnrollment(@Param('id') id: string, @Body() body: LmsCompleteEnrollmentDto, @CurrentUser() user?: AuthenticatedUser) {
     this.logger.log(`Completing enrollment ${id} with score ${body.score}`);
     const result = await this.lmsRepo.updateEnrollment(id, {
       status: 'completed',
@@ -139,6 +174,8 @@ export class LmsEnrollmentsController {
       completed_at: _time.now(),
     });
     assertOk(result);
+    // T10-10 (Q562): a completed universal course credits the employee's other cards (cross-card credit).
+    await this.emitCourseCompleted(id, Number(user?.employeeId ?? user?.sub ?? user?.id) || undefined);
     return { message: `Kurs yakunlandi. Ball: ${body.score}`, data: result.data };
   }
 

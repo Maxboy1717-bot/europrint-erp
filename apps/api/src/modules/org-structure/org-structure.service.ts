@@ -133,6 +133,83 @@ export class OrgStructureService implements OnModuleInit {
     });
   }
 
+  /**
+   * T10-04 — Excel/bulk import of org nodes (kartalar). Row-by-row validation
+   * with an error-list + PARTIAL COMMIT: every valid row is created (reusing the
+   * canonical `create` flow → same cascade/level-derivation), every invalid row
+   * is reported in `errors[]` with its 1-based row number and reason. A single
+   * bad row never aborts the whole import.
+   *
+   * Validation (STRUKTURA — no fabricated data, Q-40):
+   *   - name: required, non-empty (org_departments.name is NOT NULL)
+   *   - parentId: if supplied, the referenced node must already exist
+   *   - otdeleniyeNo: if supplied, must be 1..7 (DB CHECK chk_otdeleniye_no_range)
+   * Rows are processed in order so a parent created earlier in the same batch can
+   * be referenced by a later row only if its DB id is supplied (Excel carries ids).
+   */
+  async importNodes(rows: Record<string, unknown>[]) {
+    return safeCall(async () => {
+      const list = Array.isArray(rows) ? rows : [];
+      const errors: { row: number; field?: string; message: string }[] = [];
+      const created: { row: number; id: number; name: string }[] = [];
+      let imported = 0;
+
+      for (let i = 0; i < list.length; i++) {
+        const rowNo = i + 1; // 1-based for human-facing report
+        const dto = (list[i] ?? {}) as Record<string, unknown>;
+
+        // --- name (required) ---
+        const name = typeof dto.name === 'string' ? dto.name.trim() : '';
+        if (!name) {
+          errors.push({ row: rowNo, field: 'name', message: 'Nom (name) bo\'sh bo\'lishi mumkin emas' });
+          continue;
+        }
+
+        // --- parentId existence (when supplied) ---
+        if (dto.parentId !== undefined && dto.parentId !== null && dto.parentId !== '') {
+          const parentId = Number(dto.parentId);
+          if (!Number.isFinite(parentId) || parentId <= 0) {
+            errors.push({ row: rowNo, field: 'parentId', message: `parentId noto'g'ri: ${String(dto.parentId)}` });
+            continue;
+          }
+          const existsR = await this.repo.existsById(parentId);
+          if (!existsR.ok || !existsR.data) {
+            errors.push({ row: rowNo, field: 'parentId', message: `Ota karta topilmadi: #${parentId}` });
+            continue;
+          }
+        }
+
+        // --- otdeleniyeNo range (when supplied) — mirrors DB CHECK 1..7 ---
+        if (dto.otdeleniyeNo !== undefined && dto.otdeleniyeNo !== null && dto.otdeleniyeNo !== '') {
+          const ono = Number(dto.otdeleniyeNo);
+          if (!Number.isInteger(ono) || ono < 1 || ono > 7) {
+            errors.push({ row: rowNo, field: 'otdeleniyeNo', message: `otdeleniyeNo 1..7 oralig'ida bo'lishi kerak: ${String(dto.otdeleniyeNo)}` });
+            continue;
+          }
+        }
+
+        // --- partial commit: create via the canonical flow (cascade + level) ---
+        const createR = await this.create({ ...dto, name });
+        if (!createR.ok) {
+          errors.push({ row: rowNo, message: createR.error.message });
+          continue;
+        }
+        const createdRow = createR.data as Record<string, unknown>;
+        const newId = Number(createdRow?.id);
+        imported++;
+        created.push({ row: rowNo, id: Number.isFinite(newId) ? newId : 0, name });
+      }
+
+      return {
+        imported,
+        failed: errors.length,
+        total: list.length,
+        created,
+        errors,
+      };
+    });
+  }
+
   async update(id: number, dto: Record<string, unknown>) {
     this.logger.log(`org structure: yangilanmoqda`);
     const existsR = await this.repo.existsById(id);

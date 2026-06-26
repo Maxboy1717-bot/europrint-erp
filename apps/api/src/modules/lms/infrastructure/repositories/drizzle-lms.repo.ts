@@ -300,6 +300,76 @@ export class LmsRepository implements ILmsRepo {
     }
   }
 
+  /**
+   * Q562 WRITE side (T10-10): a UNIVERSAL course completed on `sourceCardId` credits the SAME
+   * course on the employee's OTHER active cards. This is the data-path the
+   * {@link CourseCompletedCreditHandler} (`lms.course.completed` listener) drives.
+   *
+   * Gate (Q562 SHART): only courses flagged `courses.is_universal = true` replicate. A non-universal
+   * course returns `{ universal: false, credited: 0 }` — NO credit, NO fabrication (Q-40). The flag
+   * itself is owner-data; until the owner marks a course universal nothing replicates (honest open).
+   *
+   * Target cards = the employee's OTHER active cards from `employee_cards` (is_active, card_id <> source).
+   * One credit row per target card, idempotent via `ON CONFLICT (course_id, employee_id, target_card_id)
+   * DO NOTHING` (uq_lms_credit) — re-fired completion never duplicates. When the employee holds only the
+   * one (source) card, there is nothing to credit → `{ credited: 0 }` (honest, not a fabricated row).
+   *
+   * NEVER touches enrollment/payroll; pure credit-ledger INSERT. `credited` counts freshly inserted rows.
+   */
+  async recordCrossCardCredits(
+    employeeId: number,
+    courseId: number,
+    sourceCardId: number,
+    creditedBy?: number,
+  ): Promise<Result<{ universal: boolean; credited: number; targetCardIds: number[] }>> {
+    try {
+      if (!Number.isInteger(employeeId) || employeeId <= 0) return Err('employeeId must be a positive integer');
+      if (!Number.isInteger(courseId) || courseId <= 0) return Err('courseId must be a positive integer');
+      if (!Number.isInteger(sourceCardId) || sourceCardId <= 0) return Err('sourceCardId must be a positive integer');
+
+      // Q562 SHART: only a universal course replicates its completion across cards.
+      const courseR = await exec(sql`SELECT is_universal FROM courses WHERE id = ${courseId} LIMIT 1`);
+      if (!courseR[0]) return Err('Course not found');
+      if (courseR[0].is_universal !== true) {
+        return Ok({ universal: false, credited: 0, targetCardIds: [] });
+      }
+
+      // The employee's OTHER active cards = credit targets (source card is where it was actually completed).
+      const targets = await exec(sql`
+        SELECT DISTINCT card_id
+        FROM employee_cards
+        WHERE employee_id = ${employeeId}
+          AND (is_active IS NULL OR is_active = true)
+          AND card_id IS NOT NULL
+          AND card_id <> ${sourceCardId}`);
+      const targetCardIds = (Array.isArray(targets) ? targets : [])
+        .map((t) => Number(t.card_id))
+        .filter((id) => Number.isInteger(id) && id > 0);
+
+      if (targetCardIds.length === 0) {
+        // Employee holds only the source card — nothing to replicate to (honest, not fabricated).
+        return Ok({ universal: true, credited: 0, targetCardIds: [] });
+      }
+
+      const creditedByVal = Number.isInteger(creditedBy) && (creditedBy as number) > 0 ? creditedBy : null;
+      let credited = 0;
+      for (const targetCardId of targetCardIds) {
+        const r = await exec(sql`
+          INSERT INTO lms_cross_card_credits
+            (course_id, employee_id, source_card_id, target_card_id, credited_by, credited_at, created_at)
+          VALUES (${courseId}, ${employeeId}, ${sourceCardId}, ${targetCardId}, ${creditedByVal}, NOW(), NOW())
+          ON CONFLICT (course_id, employee_id, target_card_id) DO NOTHING
+          RETURNING id`);
+        if ((Array.isArray(r) ? r : []).length > 0) credited += 1;
+      }
+
+      return Ok({ universal: true, credited, targetCardIds });
+    } catch (error: unknown) {
+      this.logger.error(`recordCrossCardCredits: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   async findEnrollmentByUserAndCourse(userId: string, courseId: string): Promise<Result<Enrollment>> {
     try {
       const r = await exec(sql`SELECT e.*, c.title_uz AS course_title FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE e.employee_id = ${parseInt(userId, 10)} AND e.course_id = ${parseInt(courseId, 10)} LIMIT 1`);
@@ -346,6 +416,34 @@ export class LmsRepository implements ILmsRepo {
       return Ok(mapEnrollment(r[0]));
     } catch (error: unknown) {
       this.logger.error(`updateEnrollment: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * T10-10: resolve the (employeeId, courseId, cardId) tuple of one enrollment — the payload the
+   * `lms.course.completed` emitter needs to drive cross-card credit. `cardId` is the source card
+   * (enrollments.card_id) the universal course was completed on; null when the enrollment carries
+   * no card trail (legacy/manual enrollment) — the listener then honestly no-ops.
+   */
+  async getEnrollmentCardContext(
+    id: string,
+  ): Promise<Result<{ employeeId: number; courseId: number; cardId: number | null }>> {
+    try {
+      const enrollmentId = parseInt(id, 10);
+      if (!Number.isInteger(enrollmentId) || enrollmentId <= 0) return Err('enrollment id must be a positive integer');
+      const r = await exec(sql`
+        SELECT employee_id, course_id, card_id
+        FROM enrollments
+        WHERE id = ${enrollmentId} LIMIT 1`);
+      if (!r[0]) return Err('Enrollment not found');
+      return Ok({
+        employeeId: Number(r[0].employee_id),
+        courseId: Number(r[0].course_id),
+        cardId: r[0].card_id != null ? Number(r[0].card_id) : null,
+      });
+    } catch (error: unknown) {
+      this.logger.error(`getEnrollmentCardContext: ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

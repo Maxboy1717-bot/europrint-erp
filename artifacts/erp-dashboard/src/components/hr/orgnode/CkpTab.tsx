@@ -37,6 +37,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { NodeDetail } from "./types";
+import { CkpCascadeDashboard } from "./CkpCascadeDashboard";
 import { useTranslation } from "@/lib/i18n";
 
 /** ckp_fact_values qatori (transport shakli — ckp-fact.repository bilan bir xil). */
@@ -169,6 +170,9 @@ export function CkpTab({ node }: { node: NodeDetail }) {
 
   return (
     <div className="space-y-4">
+      {/* ── ЦКП KASKAD dashboard (vertikal zanjir: Sen | Bo'lim | Otdeleniye) ── ADDITIV (T10-12). ── */}
+      <CkpCascadeDashboard cardId={node.id} />
+
       {/* ── ЦКП norma + bugungi holat ── */}
       <Card>
         <CardHeader className="pb-2">

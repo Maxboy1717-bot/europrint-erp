@@ -5,15 +5,27 @@
  *   index is deferred until the seat-split, EP-ORG-037). Returns Result<T>.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Ok, Err, Result, AppErr } from '@common/result';
 import { CardRepository, CardInput } from './card.repository';
+import {
+  CARD_EMPLOYEE_ASSIGNED_EVENT,
+  type CardEmployeeAssignedPayload,
+} from '../lms/infrastructure/event-handlers/card-employee-assigned.handler';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class CardService {
-  constructor(private readonly repo: CardRepository) {}
+  private readonly logger = new Logger(CardService.name);
+
+  constructor(
+    private readonly repo: CardRepository,
+    // Optional (Q-39 back-compat): single-arg unit tests keep constructing CardService(repo);
+    // at runtime Nest injects the global EventEmitter2 (app.module EventEmitterModule.forRoot()).
+    private readonly eventEmitter?: EventEmitter2,
+  ) {}
 
   list(departmentId: number | null, status: string | null): Promise<Result<Row[]>> {
     return this.repo.list(departmentId, status);
@@ -123,7 +135,53 @@ export class CardService {
       const m = await this.repo.setPrimaryCard(employeeId, cardId);
       if (!m.ok) return Err(m.error);
     }
+
+    // T10-06 (EP-ORG-028/088, golden-thread WIRE): publish AFTER the assignment commit so the
+    // LMS CardEmployeeAssignedHandler (@OnEvent) auto-enrolls the employee in the card's active
+    // courses (idempotent, FABRIKATSIYA YO'Q — no-op when the card has no bound course). Emitted
+    // on the canonical EventEmitter2 channel; the listener shares this literal + payload contract
+    // (imported from the handler). Non-blocking: an emit failure must NOT roll back the (already
+    // committed) assignment — mirrors OrgStructureService.create() cascade emit.
+    if (this.eventEmitter) {
+      try {
+        const payload: CardEmployeeAssignedPayload = { employeeId, cardId, assignedAt: new Date().toISOString() };
+        this.eventEmitter.emit(CARD_EMPLOYEE_ASSIGNED_EVENT, payload);
+      } catch (e) {
+        this.logger.warn(`org.card.employee.assigned emit skipped (card=${cardId}, emp=${employeeId}): ${String(e)}`);
+      }
+    }
+
     return Ok({ assigned: true, cardId, employeeId, isPrimary: primary, isActing });
+  }
+
+  /**
+   * FAZA-09 5-holat lifecycle: karta muzlatish (active/io/vacant → frozen). State-machine:
+   *   - karta yo'q (yoki arxivlangan/o'chirilgan) → NOT_FOUND.
+   *   - aks holda current_state='frozen', sabab+muddat saqlanadi (active→frozen OK; idempotent re-freeze).
+   * `until` ixtiyoriy ISO sana (YYYY-MM-DD yoki to'liq timestamp) yoki null.
+   */
+  async freezeCard(cardId: number, reason: string | null, until: string | null): Promise<Result<Row>> {
+    const r = await this.repo.freeze(cardId, reason, until);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi yoki arxivlangan (muzlatib bo'lmaydi)`));
+    return Ok(r.data);
+  }
+
+  /**
+   * FAZA-09 5-holat lifecycle: karta eritish (frozen → active). State-machine:
+   *   - karta yo'q → NOT_FOUND.
+   *   - karta 'frozen' EMAS → CONFLICT (faqat muzlatilgan kartani eritish mumkin).
+   *   - aks holda current_state='active', freeze meta tozalanadi.
+   */
+  async thawCard(cardId: number): Promise<Result<Row>> {
+    const r = await this.repo.thaw(cardId);
+    if (!r.ok) return Err(r.error);
+    if (r.data) return Ok(r.data);
+    // No row updated — distinguish 404 (no card) from 409 (not frozen).
+    const cur = await this.repo.currentState(cardId);
+    if (!cur.ok) return Err(cur.error);
+    if (!cur.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+    return Err(AppErr('CONFLICT', `Karta #${cardId} holati '${cur.data.status}' — faqat 'frozen' kartani eritish mumkin`));
   }
 
   /** EP-ORG-137: mark a card as reviewed now (resets the 1-year staleness clock). */

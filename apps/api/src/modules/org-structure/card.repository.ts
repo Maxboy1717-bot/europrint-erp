@@ -437,6 +437,61 @@ export class CardRepository {
     `);
   }
 
+  // ─── FAZA-09 karta 5-holat lifecycle: muzlatish/eritish (EP-ORG-084/086) ─────
+
+  /**
+   * Karta muzlatish (active/io/vacant → frozen). State-machine: faqat 'archived' BO'LMAGAN faol karta
+   * muzlatiladi (arxivlangan/o'chirilgan karta muzlatilmaydi). frozen_at=NOW() (idempotent COALESCE),
+   * freeze_reason + freeze_until (ixtiyoriy ISO sana → NULL). Allaqachon 'frozen' bo'lsa sabab/muddat
+   * yangilanadi. Mos kelmaydigan o'tish (arxivlangan yoki yo'q karta) → null (service 404/409 qaytaradi).
+   * `freeze_*` ustunlar + current_state JONLI (FAZA-09, migrations-drift APPROVED).
+   */
+  async freeze(cardId: number, reason: string | null, until: string | null): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET current_state = 'frozen',
+             frozen_at     = COALESCE(frozen_at, now()),
+             freeze_reason = ${reason},
+             freeze_until  = ${until}::timestamp
+       WHERE id = ${cardId} AND is_active = true
+         AND node_type = 'position'
+         AND COALESCE(current_state, 'active') <> 'archived'
+      RETURNING id, current_state AS status, frozen_at, freeze_reason, freeze_until
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * Karta eritish (frozen → active). State-machine: faqat HOZIR 'frozen' karta eritiladi (boshqa
+   * holatdan eritish ma'nosiz → null, service 409 qaytaradi). frozen_at/freeze_reason/freeze_until tozalanadi.
+   */
+  async thaw(cardId: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET current_state = 'active',
+             frozen_at     = NULL,
+             freeze_reason = NULL,
+             freeze_until  = NULL
+       WHERE id = ${cardId} AND is_active = true
+         AND node_type = 'position'
+         AND current_state = 'frozen'
+      RETURNING id, current_state AS status
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /** Karta hozirgi holati (state-machine o'tishini farqlash uchun: yo'q / archived / frozen / active...). */
+  async currentState(cardId: number): Promise<Result<{ status: string } | null>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(current_state, 'active') AS status
+      FROM org_departments
+      WHERE id = ${cardId} AND is_active = true AND node_type = 'position'
+    `);
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0];
+    return Ok(row ? { status: String(row.status) } : null);
+  }
+
   // ─── Phase 7: card staleness (EP-ORG-137) + acting auto-revert (EP-ORG-060) ──
 
   /** EP-ORG-137: stamp last_reviewed_at = NOW() (resets the 1-year staleness clock). 404 if the card is gone. */

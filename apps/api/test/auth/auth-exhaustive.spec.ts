@@ -46,6 +46,8 @@ function makeRepo(user: ReturnType<typeof makeUser> | null) {
     incrementFailedAttempts: jest.fn().mockResolvedValue(undefined),
     resetFailedAttempts: jest.fn().mockResolvedValue(undefined),
     updateLastLogin: jest.fn().mockResolvedValue(undefined),
+    // EP-ORG card-gate: flag OFF (egasi qarori) → gate hisoblanadi lekin login bloklamaydi.
+    resolveCardGate: jest.fn().mockResolvedValue({ activeCardCount: 1, primaryCardId: null, rbacTier: null, positionId: null }),
   };
 }
 
@@ -163,11 +165,11 @@ describe('LoginService — token issuance details', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('access token expires in 24h', async () => {
+  it('access token expires in 15m', async () => {
     const jwt = makeJwt();
     const handler = new LoginService(makeRepo(makeUser()) as never, makePasswordHasher() as never, jwt, makeConfig(), makeI18n());
     await handler.execute({ username: 'u', password: 'p', ipAddress: '1', userAgent: 'j' });
-    expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '24h' });
+    expect((jwt.sign as jest.Mock).mock.calls[0][1]).toEqual({ expiresIn: '15m' });
   });
 
   it('refresh token expires in 7d with separate secret', async () => {

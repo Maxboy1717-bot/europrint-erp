@@ -62,6 +62,12 @@ const CardPortretSchema = z.union([
   z.record(z.unknown()),
 ]);
 
+/** FAZA-09 muzlatish: sabab (ixtiyoriy) + muddat (ISO sana/timestamp yoki null). */
+const CardFreezeSchema = z.object({
+  reason: z.union([z.string().max(2000), z.null()]).optional(),
+  until:  z.union([z.string().max(40), z.null()]).optional(),
+}).strict();
+
 @Roles('admin', 'manager', 'hr_manager', 'director', 'super_admin')
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -243,6 +249,26 @@ export class CardController {
   @Patch(':id/review')
   async review(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.service.markReviewed(id));
+  }
+
+  // ─── FAZA-09 karta 5-holat lifecycle: muzlatish / eritish (EP-ORG-084/086) ───
+
+  @ApiOperation({ summary: 'Freeze card (active/io/vacant → frozen) — reason + until (EP-ORG-084)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found or archived' })
+  @Patch(':id/freeze')
+  async freeze(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = CardFreezeSchema.parse(body);
+    return unwrapOrThrow(await this.service.freezeCard(id, dto.reason ?? null, dto.until ?? null));
+  }
+
+  @ApiOperation({ summary: 'Thaw card (frozen → active) — clears freeze meta (EP-ORG-086)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Card is not frozen' })
+  @Patch(':id/thaw')
+  async thaw(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrThrow(await this.service.thawCard(id));
   }
 
   @ApiOperation({ summary: "User's card-gate: card-derived RBAC tier + salary eligibility (EP-ORG-003)" })

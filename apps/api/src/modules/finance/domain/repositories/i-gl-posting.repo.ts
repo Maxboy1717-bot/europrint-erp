@@ -37,6 +37,13 @@ export interface IGlPostingRepository {
    * prefix `${reference}-%`), or null if none. Lets the engine skip a duplicate post for the same event.
    */
   findEntryIdByReference(reference: string): Promise<Result<number | null>>;
+
+  /**
+   * EP-FIN-064 period lock: return the CLOSED accounting period whose [start_date, end_date]
+   * range contains the given entry date (YYYY-MM-DD), or null if the date is in an open period
+   * (or no period covers it at all). The engine rejects a journal post when this returns a period.
+   */
+  findClosedPeriodForDate(entryDate: string): Promise<Result<{ id: number; periodCode: string } | null>>;
 }
 
 export const GL_POSTING_REPO = Symbol('IGlPostingRepository');

@@ -11,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Building2, Users, Network, ChevronRight,
   UserX, Pencil, Trash2, CheckCircle, AlertCircle,
-  MoveRight, History, FolderOpen, ClipboardList, Award, Activity, Sparkles, Target
+  MoveRight, History, FolderOpen, ClipboardList, Award, Activity, Sparkles, Target, GraduationCap
 } from "lucide-react";
 import { OrgNodePortretTab } from "./OrgNodePortretTab";
 import { RazryadTab } from "@/components/hr/orgnode/RazryadTab";
 import { FitTab } from "@/components/hr/orgnode/FitTab";
 import { CkpTab } from "@/components/hr/orgnode/CkpTab";
+import { DarslikTab } from "@/components/hr/orgnode/DarslikTab";
 
 // Sub-components
 import { EditDialog } from "@/components/hr/orgnode/EditDialog";
@@ -127,6 +128,7 @@ export default function OrgNodeDetail() {
             <TabsTrigger value="razryad" className="flex items-center gap-1"><Award className="h-3.5 w-3.5" />{t("razryad")}</TabsTrigger>
             <TabsTrigger value="ckp" className="flex items-center gap-1"><Target className="h-3.5 w-3.5" />{t("ckp", "ЦКП")}</TabsTrigger>
             <TabsTrigger value="fit" className="flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" />{t("aiMoslik", "AI moslik")}</TabsTrigger>
+            <TabsTrigger value="darslik" className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" />{t("darslik", "Darslik")}</TabsTrigger>
             <TabsTrigger value="lifecycle" className="flex items-center gap-1"><Activity className="h-3.5 w-3.5" />{t("holat", "Holat")}</TabsTrigger>
             <TabsTrigger value="employees">Xodimlar ({node.employeeCount})</TabsTrigger>
             <TabsTrigger value="children">Farzandlar ({node.childCount})</TabsTrigger>
@@ -141,6 +143,7 @@ export default function OrgNodeDetail() {
           <TabsContent value="razryad"><RazryadTab node={node} /></TabsContent>
           <TabsContent value="ckp"><CkpTab node={node} /></TabsContent>
           <TabsContent value="fit"><FitTab node={node} /></TabsContent>
+          <TabsContent value="darslik"><DarslikTab node={node} /></TabsContent>
           <TabsContent value="lifecycle"><LifecycleTab node={node} /></TabsContent>
           <TabsContent value="employees"><EmployeesTab node={node} /></TabsContent>
           <TabsContent value="children"><ChildrenTab node={node} /></TabsContent>

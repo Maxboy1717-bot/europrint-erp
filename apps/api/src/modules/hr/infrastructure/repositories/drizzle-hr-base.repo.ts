@@ -8,6 +8,7 @@ const _time = new TashkentTimeService();
 import { Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db , runQuery } from '@shared/db';
+import { getTenantId } from '@shared/db/tenant-context';
 import { eq, sql, ilike, and, isNull, or } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { IHrRepo, HrRow } from '../../domain/repositories/i-hr.repo';
@@ -26,6 +27,9 @@ export class HrBaseRepository {
     const numId = parseInt(id, 10);
     if (isNaN(numId)) return Ok(null);
     try {
+      // A93 tenant-filter wiring: scope read to the request tenant
+      // (TenantContextInterceptor resolves it from JWT; single-tenant default = 1).
+      const tenantId = getTenantId();
       const rows = await db.select({
         id:              hrEmployees.id,
         employee_code:   hrEmployees.employee_code,
@@ -49,7 +53,7 @@ export class HrBaseRepository {
         .from(hrEmployees)
         .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
         .leftJoin(hrPositions, eq(hrPositions.id, hrEmployees.position_id))
-        .where(eq(hrEmployees.id, numId))
+        .where(and(eq(hrEmployees.id, numId), eq(hrEmployees.tenant_id, tenantId)))
         .limit(1);
       return Ok(castTo<HrRow | null>((rows[0] ?? null)));
     } catch (error: unknown) {
@@ -68,8 +72,13 @@ export class HrBaseRepository {
       const deptFilter = filters.department ?? filters.departmentId;
       const dPat = deptFilter ? `%${deptFilter}%` : null;
 
+      // A93 tenant-filter wiring: scope the list to the request tenant
+      // (TenantContextInterceptor resolves it from JWT; single-tenant default = 1).
+      const tenantId = getTenantId();
+
       const where = sql`
         ${hrEmployees.deleted_at} IS NULL AND
+        ${hrEmployees.tenant_id} = ${tenantId} AND
         (${filters.status ?? null}::text IS NULL OR ${hrEmployees.status} = ${filters.status ?? null}) AND
         (${dPat}::text IS NULL OR ${hrDepartments.name} ILIKE ${dPat}) AND
         (${pat}::text IS NULL OR ${hrEmployees.first_name} ILIKE ${pat} OR ${hrEmployees.last_name} ILIKE ${pat} OR ${hrEmployees.employee_code} ILIKE ${pat})

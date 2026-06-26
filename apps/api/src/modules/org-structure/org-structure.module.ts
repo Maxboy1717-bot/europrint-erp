@@ -28,6 +28,14 @@ import { CkpFactRepository } from './ckp-fact.repository';
 import { CardFolderController } from './card-folder.controller';
 import { CardFolderService } from './card-folder.service';
 import { CardFolderRepository } from './card-folder.repository';
+// T10-03 — card_templates (lavozim-turi shablon + apply-template → yangi karta urug'lash)
+import { CardTemplateController } from './card-template.controller';
+import { CardTemplateService } from './card-template.service';
+import { CardTemplateRepository } from './card-template.repository';
+// T10-08 — error_catalog (XATO-KATALOG: tipik xatolar/nuqson-sabablari, defect-dropdown manbai)
+import { ErrorCatalogController } from './error-catalog.controller';
+import { ErrorCatalogService } from './error-catalog.service';
+import { ErrorCatalogRepository } from './error-catalog.repository';
 // EP-ORG-041 (ORG-CASCADE, owner decision #13)
 import { OrgCascadeListener } from './cascade/org-cascade.listener';
 import { OrgCascadeRepository } from './cascade/org-cascade.repository';
@@ -35,8 +43,8 @@ import { OrgCascadeRepository } from './cascade/org-cascade.repository';
 import { CkpMesFeedListener } from './ckp-mes-feed.listener';
 
 @Module({
-  controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener],
-  exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService],
+  controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController, CardTemplateController, ErrorCatalogController],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository],
+  exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService, CardTemplateService],
 })
 export class OrgStructureModule {}

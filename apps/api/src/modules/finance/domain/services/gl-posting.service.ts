@@ -157,6 +157,22 @@ export class GlPostingService {
 
     const entryDate = new Date().toISOString().slice(0, 10);
 
+    // EP-FIN-064 PERIOD LOCK: a new GL post whose entry_date falls inside a CLOSED accounting period
+    // is rejected here at the ONE engine — so every caller (invoice/payroll/GR/VP/MC + the finance-gl
+    // admin endpoints) is covered at the source. The period must be open (or no period defined) to post.
+    // (The idempotency short-circuit above means an already-posted reference is unaffected — only a
+    // genuinely-new entry into a locked period is blocked.) FinanceAccountingService surfaces this Err
+    // as a 400 BadRequest. An open/absent period → posting proceeds normally.
+    const lock = await this.glPostingRepo.findClosedPeriodForDate(entryDate);
+    if (!lock.ok) return Err(lock.error);
+    if (lock.data) {
+      this.logger.warn(`Period lock: ${reference} rejected — entry date ${entryDate} is in closed period ${lock.data.periodCode}`);
+      return Err(
+        `Davr yopilgan (EP-FIN-064): ${entryDate} sanasi yopilgan hisob davriga (${lock.data.periodCode}) ` +
+          `tegishli — yangi GL yozuvi taqiqlanadi. Yozuvni ochiq davrga kiriting yoki davrni qayta oching.`,
+      );
+    }
+
     // #04 fix: the live `entries` row is a BALANCED PAIR (debit_account_id + credit_account_id both set
     // to a real account) — like postMovementToLedger. The old code wrote one row per leg with 'OFFSET'
     // for the missing side, which crashed against the integer account columns. Decompose the multi-leg

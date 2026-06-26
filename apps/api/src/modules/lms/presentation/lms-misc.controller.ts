@@ -11,9 +11,11 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
   UseInterceptors,
@@ -34,7 +36,7 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { LmsMiscService } from '../application/services/lms-misc.service';
-import { VideoProgressSchema, VideoProgressDto } from './dto/courses.dto';
+import { VideoProgressSchema, VideoProgressDto, AssignCardMentorSchema, UpdateCardMentorSchema } from './dto/courses.dto';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiThrottle()
@@ -189,6 +191,74 @@ export class LmsMentorsController {
   async listMentors(@Query('specialization') specialization?: string) {
     const result = await this.svc.listMentors(specialization);
     return unwrapOrInternal(result);
+  }
+
+  // ─── Card Mentors (lms_card_mentors) — EP-ORG-116 karta-markazli mentor CRUD ──────
+  // Onboarding davrida KARTAga mentor biriktiriladi (xodimga emas). PHASE-07 darslik item 4.
+  // Sub-route `mentors/cards/*` — eski `GET /mentors` (master mentors jadval) buzilmaydi.
+
+  @ApiOperation({ summary: 'List card mentors (optional ?cardId=)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('cards')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async listCardMentors(@Query('cardId') cardId?: string) {
+    const result = await this.svc.listCardMentors(cardId);
+    return unwrapOrInternal(result);
+  }
+
+  @ApiOperation({ summary: 'Get one card-mentor assignment' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get('cards/:id')
+  @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async getCardMentor(@Param('id') id: string) {
+    const result = await this.svc.getCardMentor(id);
+    if (!result.ok) throw new NotFoundException(result.error.message);
+    return result.data;
+  }
+
+  @ApiOperation({ summary: 'Assign a mentor to a card' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('cards')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles('HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  @UsePipes(new ZodValidationPipe(AssignCardMentorSchema))
+  async assignCardMentor(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = body as { cardId: number; mentorUserId: number; courseId?: number; notes?: string };
+    const result = await this.svc.assignCardMentor({
+      cardId: dto.cardId,
+      mentorUserId: dto.mentorUserId,
+      courseId: dto.courseId ?? null,
+      notes: dto.notes ?? null,
+      assignedBy: Number(user?.id ?? 0) || null,
+    });
+    if (!result.ok) throw new HttpException(result.error.message, HttpStatus.BAD_REQUEST);
+    return { message: 'Mentor kartaga biriktirildi', data: result.data };
+  }
+
+  @ApiOperation({ summary: 'Update a card-mentor assignment' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Put('cards/:id')
+  @Roles('HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  @UsePipes(new ZodValidationPipe(UpdateCardMentorSchema))
+  async updateCardMentor(@Param('id') id: string, @Body() body: unknown) {
+    const dto = body as { courseId?: number; notes?: string };
+    const result = await this.svc.updateCardMentor(id, { courseId: dto.courseId ?? null, notes: dto.notes ?? null });
+    if (!result.ok) throw new NotFoundException(result.error.message);
+    return { message: 'Mentor biriktiruvi yangilandi', data: result.data };
+  }
+
+  @ApiOperation({ summary: 'Revoke (soft-delete) a card-mentor assignment' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete('cards/:id')
+  @Roles('HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
+  async revokeCardMentor(@Param('id') id: string) {
+    const result = await this.svc.revokeCardMentor(id);
+    if (!result.ok) throw new NotFoundException(result.error.message);
+    return { message: 'Mentor biriktiruvi bekor qilindi', data: result.data };
   }
 }
 

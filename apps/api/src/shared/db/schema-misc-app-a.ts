@@ -4,7 +4,7 @@
  */
 
 import {
-  pgTable, integer, text, boolean, timestamp, varchar, date, serial, customType, decimal,
+  pgTable, integer, text, boolean, timestamp, varchar, date, serial, customType, decimal, jsonb, index,
 } from 'drizzle-orm/pg-core';
 import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
 
@@ -37,6 +37,10 @@ export const appUsers = pgTable('users', {
 export const hrEmployees = pgTable('employees', {
   id:                integer('id').primaryKey(),
   user_id:           integer('user_id'),
+  // Multi-tenant scope column (migration drift-fix-01-tenant-id.sql; live DB:
+  // integer NOT NULL DEFAULT 1). Declared here so repository queries can
+  // filter `WHERE tenant_id = <request tenant>` via getTenantId() (A93 wiring).
+  tenant_id:         integer('tenant_id').notNull().default(1),
   employee_code:     varchar('employee_code'),
   first_name:        varchar('first_name'),
   last_name:         varchar('last_name'),
@@ -150,6 +154,30 @@ export const razryadLevels = pgTable('razryad_levels', {
 });
 
 /**
+ * T10-03 — card_templates: lavozim-turi (position-type) KARTA shabloni.
+ * Bir shablon = bir lavozim-turi uchun standart KARTA-maydon qiymatlari (`fieldDefaults` JSONB),
+ * yangi org_functions kartasini urug'lash uchun. Def jonli `card_templates` (migrations-drift T10-03)
+ * ga AYNAN mos. ⭐ Shablon-qiymatlari egasi-data → jadval bo'sh tug'iladi (soxta satr yo'q).
+ */
+export const cardTemplates = pgTable('card_templates', {
+  id:            serial('id').primaryKey(),
+  positionType:  text('position_type').notNull(),
+  name:          text('name').notNull(),
+  nameRu:        text('name_ru'),
+  description:   text('description'),
+  fieldDefaults: jsonb('field_defaults').$type<Record<string, unknown>>().notNull().default({}),
+  isActive:      boolean('is_active').notNull().default(true),
+  createdBy:     integer('created_by'),
+  createdAt:     timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt:     timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt:     timestamp('deleted_at', { withTimezone: true }),
+}, (t) => ({
+  byPositionType: index('idx_card_templates_position_type').on(t.positionType),
+}));
+
+export type CardTemplateRow = typeof cardTemplates.$inferSelect;
+
+/**
  * ЦКП kunlik FAKT-qiymat (FAZA-05). Jadval JONLI yaratilgan (apply-phase05-ckp.cjs)
  * lekin Drizzle-da deklaratsiyasiz edi — bu def jonli `information_schema.columns`
  * ga AYNAN mos (15 ustun; numeric→decimal precision/scale; notNull+default jonlidek).
@@ -172,4 +200,30 @@ export const ckpFactValues = pgTable('ckp_fact_values', {
   notes:          text('notes'),
   recordedBy:     integer('recorded_by'),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
+});
+
+/**
+ * XATO-KATALOG (T10-08, EP-ORG-097). Tipik xatolar / nuqson-sabablari ro'yxati —
+ * kunlik-hisobot / ЦКП-fakt / IoT-tablet formasidagi "Nima xato/sabab bo'ldi?" defect-dropdown
+ * manbai. Jadval JONLI yaratilgan (migrations-drift T10-08 + apply-t10-08-error-catalog.cjs),
+ * bu def jonli `information_schema.columns` ga AYNAN mos (additiv tip-deklaratsiya).
+ *   - cardId NULL  = umumiy xato (hamma kartaga), NOT NULL = o'sha kartaga xos.
+ *   - category     = defect-guruh (sifat / deadline / material / qayta-ishlash / ...).
+ * Yozuv/CRUD org-structure/error-catalog.repository.ts da (raw parametrlangan SQL).
+ */
+export const errorCatalog = pgTable('error_catalog', {
+  id:          serial('id').primaryKey(),
+  cardId:      integer('card_id'),
+  code:        text('code'),
+  name:        text('name').notNull(),
+  nameRu:      text('name_ru'),
+  category:    text('category'),
+  severity:    text('severity'),
+  description: text('description'),
+  sortOrder:   integer('sort_order').notNull().default(0),
+  isActive:    boolean('is_active').notNull().default(true),
+  createdBy:   integer('created_by'),
+  createdAt:   timestamp('created_at').notNull().defaultNow(),
+  updatedAt:   timestamp('updated_at').notNull().defaultNow(),
+  deletedAt:   timestamp('deleted_at'),
 });

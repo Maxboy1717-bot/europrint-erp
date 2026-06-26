@@ -275,6 +275,29 @@ export class DrizzleWmsRepository implements IWmsRepository {
     }
   }
 
+  async recordWmsTransaction(
+    input: {
+      warehouseId: number;
+      materialId: number;
+      type: string;
+      quantity: number;
+      referenceId?: number | null;
+      createdBy?: number | null;
+      notes?: string | null;
+    },
+    tx?: DrizzleExecutor,
+  ): Promise<Result<void>> {
+    try {
+      // Same helper receiveFg uses for the 'IN' row; here the goods-issue path supplies
+      // type 'OUT' and the SAME tx as the warehouse_stock decrement (atomic stock<->ledger).
+      await execInsertWmsTransaction(input, asTxExec(tx));
+      return Ok(undefined);
+    } catch (e) {
+      this.logger.error({ method: 'recordWmsTransaction', error: e }, 'Failed to record WMS transaction');
+      return Err(AppErr('DB_ERROR', `WMS harakat yozuvini saqlashda xato: ${(e as Error)?.message ?? String(e)}`));
+    }
+  }
+
   async issueFromWarehouseStock(materialId: number, warehouseId: number, amount: number, tx?: DrizzleExecutor): Promise<Result<void>> {
     try {
       const id = await execIssueFromWarehouseStock(warehouseId, materialId, amount, asTxExec(tx));

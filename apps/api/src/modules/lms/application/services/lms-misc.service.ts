@@ -50,4 +50,30 @@ export class LmsMiscService {
   async listModules(courseId?: string): Promise<Result<object[]>> {
     return this.repo.findAllModules(courseId);
   }
+
+  // ─── Card Mentors (EP-ORG-116) — karta-markazli mentor CRUD ───────────────────────
+  async listCardMentors(cardId?: string): Promise<Result<object[]>> {
+    return this.repo.findCardMentors(cardId);
+  }
+
+  async getCardMentor(id: string): Promise<Result<Record<string, unknown>>> {
+    return this.repo.findCardMentorById(id);
+  }
+
+  async assignCardMentor(data: {
+    cardId: number; mentorUserId: number; courseId?: number | null; notes?: string | null; assignedBy?: number | null;
+  }): Promise<Result<Record<string, unknown>>> {
+    return this.repo.assignCardMentor(data);
+  }
+
+  async updateCardMentor(
+    id: string,
+    data: { courseId?: number | null; notes?: string | null },
+  ): Promise<Result<Record<string, unknown>>> {
+    return this.repo.updateCardMentor(id, data);
+  }
+
+  async revokeCardMentor(id: string): Promise<Result<Record<string, unknown>>> {
+    return this.repo.revokeCardMentor(id);
+  }
 }

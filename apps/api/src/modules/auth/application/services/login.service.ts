@@ -23,6 +23,7 @@ const _time = new TashkentTimeService();
 import { AppError, AppErr, Err } from '@common/result';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { SignOptions } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
 import { IAuthRepo, CardGate } from '../../domain/repositories/i-auth.repo';
@@ -212,10 +213,14 @@ export class LoginService {
       positionId: gate?.positionId ?? null,
       jti: randomUUID(),
     };
-    // AUTH-1: JWT TTL = cookie maxAge (24h access, 7d refresh) — no more drift
-    const accessToken  = this.jwtService.sign(payload, { expiresIn: '24h' });
+    // T10-17: access-token TTL vizyon = 15 daqiqa (qisqa umr → o'g'irlangan token tez eskiradi).
+    // Config-driven: JWT_ACCESS_TOKEN_TTL (default 15m) — login.service + auth.controller(refresh)
+    // + cookie maxAge bir manbadan o'qiydi (drift yo'q). Refresh-token uzun (7d) → seans uzilmaydi.
+    const accessTtl  = (this.configService.get<string>('JWT_ACCESS_TOKEN_TTL') ?? '15m') as SignOptions['expiresIn'];
+    const refreshTtl = (this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d') as SignOptions['expiresIn'];
+    const accessToken  = this.jwtService.sign(payload, { expiresIn: accessTtl });
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
+      expiresIn: refreshTtl,
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
     });
     return {

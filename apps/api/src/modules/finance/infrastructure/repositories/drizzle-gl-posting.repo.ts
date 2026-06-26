@@ -134,4 +134,26 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
       return Err(AppErr('DB_ERROR', `GL_REF_LOOKUP_FAILED: ${String(e)}`));
     }
   }
+
+  async findClosedPeriodForDate(entryDate: string): Promise<Result<{ id: number; periodCode: string } | null>> {
+    try {
+      // EP-FIN-064 period lock. accounting_periods.start_date/end_date and entries.entry_date are all
+      // varchar ISO dates (YYYY-MM-DD) → lexicographic BETWEEN is the correct calendar order for ISO.
+      // A period is locked when status='closed' OR is_closed=true (both columns track the same fact).
+      // We pick the first locked period that contains the entry date; an open/absent period → null (allowed).
+      const res = await runQuery<{ id: number; period_code: string }>(
+        sql`SELECT id, period_code
+              FROM accounting_periods
+             WHERE (status = 'closed' OR is_closed = true)
+               AND ${entryDate} >= start_date
+               AND ${entryDate} <= end_date
+             ORDER BY id
+             LIMIT 1`,
+      );
+      const row = Array.isArray(res.rows) ? res.rows[0] : undefined;
+      return Ok(row ? { id: Number(row.id), periodCode: String(row.period_code) } : null);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `GL_PERIOD_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
 }
