@@ -85,7 +85,45 @@ export const stockApi = {
   adjust:          (b: Record<string, unknown>)     => posReq("POST", "/stock/adjust", b),
   getLowAlerts:    ()                               => posReq("GET",  "/stock/low-alerts"),
   getExpiryAlerts: (days?: number)                  => posReq("GET",  `/stock/expiry-alerts${days ? `?days=${days}` : ""}`),
+  /**
+   * GET /api/pos/stock/issuable/:barcode — CHIQIM oqimi (spec 2026-06-27, FAQAT SKANER):
+   * skanlangan barkod → material + jami qoldiq + bron → bo'sh qoldiq; bron>0 → blocked
+   * (faqat super_admin/direktor override). BE: PosStockIssuableService.getIssuable.
+   */
+  getIssuable:     (barcode: string, warehouseId?: string) =>
+    posReq<IssuableResult>(
+      "GET",
+      `/stock/issuable/${encodeURIComponent(barcode)}${warehouseId ? `?warehouseId=${encodeURIComponent(warehouseId)}` : ""}`,
+    ),
 };
+
+/** CHIQIM bron-blok javobi — BE IssuableResult bilan bir xil (stock-issuable.service.ts). */
+export interface IssuableResult {
+  found:          boolean;
+  barcode:        string;
+  materialCardId?: number;
+  materialCode?:  string | null;
+  materialName?:  string;
+  unit?:          string;
+  warehouseId?:   number;
+  warehouseCode?: string | null;
+  warehouseName?: string | null;
+  onHand:         number;
+  reserved:       number;
+  freeStock:      number;
+  /** Bron > 0 → CHIQIM blok (faqat override roli buzadi). */
+  blocked:        boolean;
+  /** Ushbu user blokni buza oladimi (super_admin / direktor). */
+  canOverride:    boolean;
+  reservations:   Array<{
+    reservationId:     number;
+    reservationNumber: string | null;
+    reservedQuantity:  number;
+    reservedByAi:      boolean;
+    orderId:           number | null;
+    orderType:         string | null;
+  }>;
+}
 
 // ─── GL ────────────────────────────────────────────────────────────────────
 
@@ -173,6 +211,31 @@ export interface ScanBarcodeResult {
   };
 }
 
+/** Etiket fizik o'lchami — ombor turi label-config'iga moslashadi (KIRIM spec). */
+export interface InboundLabelDimensions {
+  template: string;
+  widthMm:  number;
+  heightMm: number;
+  dpi:      number;
+}
+
+/** POST /api/pos/barcode/generate javobi — BE InboundBarcodeResult bilan bir xil. */
+export interface InboundBarcodeResult {
+  barcode:        string;
+  queueId:        number;
+  materialCardId: number;
+  warehouseId:    number;
+  label: {
+    materialCode:  string | null;
+    materialName:  string;
+    unit:          string;
+    quantity:      number | null;
+    warehouseCode: string;
+    barcodeType:   "CODE128";
+    dimensions:    InboundLabelDimensions;
+  };
+}
+
 export const barcodeApi = {
   scan:       (b: { barcode: string; warehouseId?: string }) =>
     posReq<ScanBarcodeResult>("POST", "/barcode/scan", b),
@@ -180,6 +243,13 @@ export const barcodeApi = {
     posReq("POST", "/barcode/print", b),
   lookup:     (barcode: string) =>
     posReq("GET", `/barcode/lookup?barcode=${encodeURIComponent(barcode)}`),
+  /**
+   * POST /api/pos/barcode/generate — KIRIM uchun noyob barkod "tug'iladi" (POS Monitor
+   * printeridan, ERP'dan EMAS). Ombor-prefiks + seq, etiket o'lchami ombor turiga moslashadi.
+   * Barkod MAJBURIY: bu chaqirilmasa KIRIM saqlanmaydi (spec 2026-06-27).
+   */
+  generate:   (b: { materialCardId: number; warehouseId: number; quantity?: number; unit?: string }) =>
+    posReq<InboundBarcodeResult>("POST", "/barcode/generate", b),
 };
 
 // ─── Materials ─────────────────────────────────────────────────────────────

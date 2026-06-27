@@ -59,6 +59,10 @@ export interface LineItem {
   weightKg:          string;
   certificateNumber: string;
   notes:             string;
+  /** KIRIM spec: barkod MAJBURIY. POS Monitor printeridan "tug'iladi" (ERP'dan emas). */
+  barcode:           string;
+  /** Etiket chop etilgan vaqt (ISO). Bo'sh = hali chop etilmagan → saqlash BLOK. */
+  barcodePrintedAt:  string;
 }
 
 // ─── Warehouse-type config ────────────────────────────────────────────────────
@@ -241,6 +245,7 @@ export function mkLine(): LineItem {
     materialCardId: "", materialName: "", quantity: "",
     unitPrice: "", batchNumber: "", expiryDate: "",
     weightKg: "", certificateNumber: "", notes: "",
+    barcode: "", barcodePrintedAt: "",
   };
 }
 

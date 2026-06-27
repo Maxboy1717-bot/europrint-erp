@@ -152,6 +152,16 @@ export { QueueService }                 from './application/services/queue.servi
 export { WarehouseFeaturesController }  from './presentation/warehouse-features.controller';
 export { PosOperationsController }      from './presentation/pos-operations.controller';
 
+// POS Terminal — kirgach ombor AUTO-OPEN + per-warehouse-type etiket config (BE-T1-WAREHOUSE-OPEN)
+export { WarehouseOpenController }      from './presentation/warehouse-open.controller';
+export { WarehouseOpenService }         from './application/services/warehouse-open.service';
+export { WarehouseOpenRepository }      from './infrastructure/repositories/warehouse-open.repository';
+
+// BE-T2-BARCODE-RESERV — KIRIM barkod-gen + CHIQIM bron-blok (Ombor terminal spec 2026-06-27)
+export { StockIssuableController }       from './presentation/stock-issuable.controller';
+export { PosStockIssuableService }       from './application/services/pos-stock-issuable.service';
+export { PosStockIssuableRepository }    from './infrastructure/repositories/pos-stock-issuable.repository';
+
 // Sprint B: new repositories for warehouse feature services
 export { WarehouseEmployeesRepository }  from './infrastructure/repositories/warehouse-employees.repository';
 export { GoodsReceiptRepository }        from './infrastructure/repositories/goods-receipt.repository';

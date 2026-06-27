@@ -10,6 +10,7 @@ import { initTelegramWebApp, isTelegramWebApp } from "./lib/telegram";
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from "@/hooks/useAuth";
 
+const PosHome          = lazy(() => import("./pages/PosHome"));
 const PosDashboard     = lazy(() => import("./pages/PosDashboard"));
 const PosMonitorMain   = lazy(() => import("@/pages/PosMonitorPage"));
 const PosWarehouses    = lazy(() => import("./pages/PosWarehouses"));
@@ -116,8 +117,17 @@ export default function PosMonitorApp() {
           <Redirect to="/pos-monitor" />
         </Route>
 
-        {/* Dashboard — PosMonitorPage: tabs+kirim/chiqim+barcode+P2P qabul */}
+        {/* BOSH EKRAN — market-POS uslubi: ombor + katta rangli amal-tugmalari (spec 2026-06-27) */}
         <Route path="/pos-monitor">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosHome /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
+        {/* Eski tab-ko'rinishli boshqaruv sahifasi (PosMonitorPage) — saqlanadi, deep-link */}
+        <Route path="/pos-monitor/legacy-main">
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosMonitorMain /></Suspense>

@@ -20,6 +20,9 @@ import {
   PrinterConfigController, StockController, GlController, SyncController,
   PosNotificationsController, PosAnomaliesController, PosAuthController, InventoryPassportController,
   PosWmsController, WarehouseFeaturesController, PosOperationsController,
+  WarehouseOpenController, WarehouseOpenService, WarehouseOpenRepository,
+  // BE-T2-BARCODE-RESERV — KIRIM barkod-gen + CHIQIM bron-blok
+  StockIssuableController, PosStockIssuableService, PosStockIssuableRepository,
   // Repos & services
   PosInventoryPassportRepository, PosInventoryPassportService, PosFifoService,
   PosLowStockJob, PosQuarantineCheckJob, PosFifoRecalculateJob, PosInactiveMaterialsJob,
@@ -91,6 +94,8 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosWmsController,
     WarehouseFeaturesController,
     PosOperationsController,
+    WarehouseOpenController,
+    StockIssuableController,
   ],
   providers: [
     { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },
@@ -200,6 +205,12 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     ThreeWayMatchRepository,
     AutoGlPostingRepository,
     PosEmployeeBalanceRepository,
+    // POS Terminal — kirgach ombor AUTO-OPEN + etiket config (BE-T1-WAREHOUSE-OPEN)
+    WarehouseOpenRepository,
+    WarehouseOpenService,
+    // POS Terminal — KIRIM barkod-gen + CHIQIM bron-blok (BE-T2-BARCODE-RESERV)
+    PosStockIssuableRepository,
+    PosStockIssuableService,
     // Warehouse features — services
     WarehouseEmployeesService,
     AutoBarcodeService,
