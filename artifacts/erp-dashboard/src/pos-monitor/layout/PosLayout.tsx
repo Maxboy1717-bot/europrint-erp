@@ -55,6 +55,10 @@ const NAV_ITEMS: NavItem[] = [
   { icon: "📦", key: "nav.materials",     path: "/pos-monitor/materials" },
   { icon: "🔬", key: "nav.qcreview",      path: "/pos-monitor/qc-review" },
   { icon: "🎒", key: "nav.myInventory",   path: "/pos-monitor/my-inventory" },
+
+  // ── Topshirish / Import ──
+  { icon: "🤝", key: "nav.handovers",     path: "/pos-monitor/handovers" },
+  { icon: "🚢", key: "nav.inTransit",     path: "/pos-monitor/in-transit" },
 ];
 
 interface PosLayoutProps { children: ReactNode; }

@@ -18,7 +18,7 @@ import {
   PosShiftHandoverService, PosShiftHandoverRepository,
   EmployeeController, ReportsController, MiniAppController, MiniAppHistoryController,
   PrinterConfigController, StockController, GlController, SyncController,
-  PosNotificationsController, PosAuthController, InventoryPassportController,
+  PosNotificationsController, PosAnomaliesController, PosAuthController, InventoryPassportController,
   PosWmsController, WarehouseFeaturesController, PosOperationsController,
   // Repos & services
   PosInventoryPassportRepository, PosInventoryPassportService, PosFifoService,
@@ -85,6 +85,7 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     GlController,
     SyncController,
     PosNotificationsController,
+    PosAnomaliesController,
     PosAuthController,
     InventoryPassportController,
     PosWmsController,

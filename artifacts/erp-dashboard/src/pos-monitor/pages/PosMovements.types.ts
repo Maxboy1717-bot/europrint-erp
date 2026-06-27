@@ -48,6 +48,11 @@ export const TYPE_ICON: Record<string, string> = {
   INVENTORY_ADJUST: "📊",
   INVENTORY_ADJ_PLUS: "➕",
   INVENTORY_ADJ_MINUS: "➖",
+  // ── 4 yangi tur (POS Monitor 1-to'lqin taksonomiyasi) ──
+  WASTE_IN: "♻️",
+  LAB_SAMPLE_OUT: "🧪",
+  PARTIAL_RECEIPT: "📦",
+  CUSTOMER_MATERIAL: "🤝",
 };
 
 export const TYPE_LABEL: Record<string, string> = {
@@ -60,6 +65,29 @@ export const TYPE_LABEL: Record<string, string> = {
   INVENTORY_ADJUST: "Inventarizatsiya",
   INVENTORY_ADJ_PLUS: "Qo'shish",
   INVENTORY_ADJ_MINUS: "Ayirish",
+  // ── 4 yangi tur ──
+  WASTE_IN: "Chiqindi Kirim",
+  LAB_SAMPLE_OUT: "Lab Namuna Chiqim",
+  PARTIAL_RECEIPT: "Qisman Qabul",
+  CUSTOMER_MATERIAL: "Mijoz Materiali",
+};
+
+/** Badge rang klassi (pos-theme) — harakat turi bo'yicha. */
+export const TYPE_BADGE: Record<string, string> = {
+  EXTERNAL_IN: "pos-badge-green",
+  EXTERNAL_OUT: "pos-badge-red",
+  INTERNAL_ISSUE: "pos-badge-yellow",
+  INTERNAL_RETURN: "pos-badge-blue",
+  INTERNAL_TRANSFER: "pos-badge-blue",
+  DAMAGE: "pos-badge-red",
+  INVENTORY_ADJUST: "pos-badge-gray",
+  INVENTORY_ADJ_PLUS: "pos-badge-green",
+  INVENTORY_ADJ_MINUS: "pos-badge-red",
+  // ── 4 yangi tur ──
+  WASTE_IN: "pos-badge-green",
+  LAB_SAMPLE_OUT: "pos-badge-yellow",
+  PARTIAL_RECEIPT: "pos-badge-blue",
+  CUSTOMER_MATERIAL: "pos-badge-blue",
 };
 
 export const TYPE_LIST = [
@@ -69,6 +97,11 @@ export const TYPE_LIST = [
   "INTERNAL_RETURN",
   "INTERNAL_TRANSFER",
   "DAMAGE",
+  // ── 4 yangi tur ──
+  "WASTE_IN",
+  "LAB_SAMPLE_OUT",
+  "PARTIAL_RECEIPT",
+  "CUSTOMER_MATERIAL",
 ];
 
 export function getMovementAction(status: string): { label: string; newStatus: string; bg: string } | null {

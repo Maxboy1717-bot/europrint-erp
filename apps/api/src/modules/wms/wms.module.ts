@@ -115,6 +115,7 @@ import { SupplierRatingService } from './application/supplier-rating.service';
 import { SupplierRatingRepository } from './infrastructure/repositories/supplier-rating.repository';
 import { SUPPLIER_RATING_REPO } from './domain/repositories/i-supplier-rating.repo';
 import { SupplierRatingListener } from './infrastructure/event-handlers/supplier-rating.listener';
+import { WmsSupplierRatingController } from './presentation/wms-supplier-rating.controller';
 // W4-MATERIAL-LIFE — material hayot-tsikli atributlari + analog (EP-WMS-101/123/125/126/128/130/086).
 import { MaterialLifeController } from './presentation/material-life.controller';
 import { MaterialLifeService } from './application/material-life.service';
@@ -170,6 +171,7 @@ const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler, 
     WmsOverflowController,
     WmsInTransitController,
     MaterialLifeController,
+    WmsSupplierRatingController,
   ],
   providers: [
     ...handlers,

@@ -27,6 +27,8 @@ import {
   ISupplierRatingRepo,
   SUPPLIER_RATING_REPO,
   SupplierRatingPersist,
+  SupplierRatingRow,
+  SupplierRatingDetail,
 } from '../domain/repositories/i-supplier-rating.repo';
 import {
   SUPPLIER_RATING_DEFAULT_WEIGHTS,
@@ -129,6 +131,40 @@ export class SupplierRatingService {
     }
 
     return Ok({ vendorId, rating: persist.rating, lowFlag, factors, source });
+  }
+
+  // ---------------------------------------------------------------------------
+  // O'QISH (FE ko'rsatishi uchun — ADDITIVE READ, Q-46)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Ta'minotchilar reyting ro'yxati (FE jadval). `lowOnly` → faqat past-reyting
+   * (PO-ogohlantirish). Limit 1..100 ga qisiladi. Data yo'q → bo'sh ro'yxat (Q-40).
+   */
+  async listRatings(
+    lowOnly = false,
+    limit = 50,
+    offset = 0,
+  ): Promise<Result<SupplierRatingRow[], AppError>> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit) || 50, 1), 100);
+    const safeOffset = Math.max(Math.trunc(offset) || 0, 0);
+    return this.repo.listRatings(Boolean(lowOnly), safeLimit, safeOffset);
+  }
+
+  /**
+   * Bitta ta'minotchi reytingi + oxirgi oylik breakdown (FE detal). Topilmasa
+   * NOT_FOUND. Reyting null bo'lishi mumkin (hali hisoblanmagan — Q-40).
+   */
+  async getRating(vendorId: number): Promise<Result<SupplierRatingDetail, AppError>> {
+    if (!Number.isInteger(vendorId) || vendorId <= 0) {
+      return Err({ code: 'VALIDATION', message: `Noto'g'ri vendorId: ${vendorId}` });
+    }
+    const r = await this.repo.getRating(vendorId);
+    if (!r.ok) return r as Result<SupplierRatingDetail, AppError>;
+    if (r.data == null) {
+      return Err({ code: 'NOT_FOUND', message: `Ta'minotchi topilmadi: ${vendorId}` });
+    }
+    return Ok(r.data);
   }
 
   // ---------------------------------------------------------------------------

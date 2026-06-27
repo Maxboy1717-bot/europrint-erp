@@ -1,4 +1,10 @@
 {
+  "anomaliya": "Аномалия",
+  "texkartaTekshiruvi": "Проверка техкарты",
+  "texkartaQaytaTekshir": "Перепроверить техкарту",
+  "texkartaRuxsat": "Разрешено по техкарте",
+  "texkartaBloklangan": "Заблокировано техкартой",
+  "texkarta": "Техкарта",
   "nav": {
     "dashboard": "Главная",
     "newKirim": "📥 Новый Приход",
@@ -6,7 +12,9 @@
     "newMaterial": "➕ Новый Материал",
     "materials": "Материалы",
     "qcreview": "Проверка QC",
-    "myInventory": "Мой инвентарь"
+    "myInventory": "Мой инвентарь",
+    "handovers": "🤝 Передача смены",
+    "inTransit": "🚢 Импорт в пути"
   },
   "common": {
     "search": "Поиск...",

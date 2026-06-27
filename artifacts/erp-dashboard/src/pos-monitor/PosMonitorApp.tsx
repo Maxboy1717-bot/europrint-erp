@@ -37,6 +37,8 @@ const PosReports       = lazy(() => import("./pages/PosReports"));
 const PosAdmin         = lazy(() => import("./pages/PosAdmin"));
 const PosQuarantine    = lazy(() => import("./pages/PosQuarantine"));
 const PosQCReview      = lazy(() => import("./pages/PosQCReview"));
+const PosHandovers     = lazy(() => import("./pages/PosHandovers"));
+const PosInTransit     = lazy(() => import("./pages/PosInTransit"));
 const PosLayout        = lazy(() => import("./layout/PosLayout"));
 
 function PosLoader() {
@@ -312,6 +314,24 @@ export default function PosMonitorApp() {
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosQuarantine /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
+        {/* Smena topshirish (2-imzo) */}
+        <Route path="/pos-monitor/handovers">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosHandovers /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
+        {/* Import — yo'ldagi jo'natmalar */}
+        <Route path="/pos-monitor/in-transit">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosInTransit /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>

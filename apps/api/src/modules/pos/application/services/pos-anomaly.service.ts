@@ -277,4 +277,34 @@ export class PosAnomalyService {
     if (!r.ok) return Err(r.error);
     return Ok(r.data);
   }
+
+  /**
+   * POS Monitor dashboard — anomaliyalar ro'yxati (status/severity filtri ixtiyoriy).
+   * ADDITIVE READ; data yo'q → bo'sh ro'yxat (Q-40).
+   */
+  async listAnomalies(
+    status: string | null = null,
+    severity: string | null = null,
+    limit = 50,
+    offset = 0,
+  ): Promise<Result<Record<string, unknown>[], AppError>> {
+    const safeLimit = Math.min(Math.max(Math.trunc(limit) || 50, 1), 100);
+    const safeOffset = Math.max(Math.trunc(offset) || 0, 0);
+    const r = await this.repo.listAnomalies(status, severity, safeLimit, safeOffset);
+    if (!r.ok) return Err(r.error);
+    return Ok(r.data);
+  }
+
+  /** Bitta anomaliya (detal). Topilmasa NOT_FOUND. ADDITIVE READ. */
+  async getById(id: number): Promise<Result<Record<string, unknown>, AppError>> {
+    if (!Number.isInteger(id) || id <= 0) {
+      return Err({ code: 'VALIDATION', message: `Noto'g'ri anomaliya id: ${id}` });
+    }
+    const r = await this.repo.getById(id);
+    if (!r.ok) return Err(r.error);
+    if (r.data == null) {
+      return Err({ code: 'NOT_FOUND', message: `Anomaliya topilmadi: ${id}` });
+    }
+    return Ok(r.data);
+  }
 }

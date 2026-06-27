@@ -9,7 +9,10 @@ export type MovementTypeCode =
   | "INTERNAL_ISSUE"
   | "INTERNAL_RETURN"
   | "INTERNAL_TRANSFER"
-  | "DAMAGE";
+  | "DAMAGE"
+  // ── 4 yangi taksonomiya turi (chiqim yo'nalishidagilar) ──
+  | "LAB_SAMPLE_OUT"
+  | "CUSTOMER_MATERIAL";
 
 // ─── Domain shapes ────────────────────────────────────────────────────────────
 
@@ -64,6 +67,9 @@ export const MOVEMENT_TYPES: { code: MovementTypeCode; label: string; color: str
   { code: "INTERNAL_RETURN",   label: tLabel('common.PosMovementChiqim.ichkiQaytarish', "Ichki qaytarish"),  color: "#06B6D4" },
   { code: "INTERNAL_TRANSFER", label: tLabel('common.PosMovementChiqim.ichkiKochirish', "Ichki ko'chirish"), color: "#8B5CF6" },
   { code: "DAMAGE",            label: tLabel('common.PosMovementChiqim.zarar', "Zarar"),            color: "#DC2626" },
+  // ── 4 yangi taksonomiya turi (chiqim) ──
+  { code: "LAB_SAMPLE_OUT",    label: tLabel('common.PosMovementChiqim.labNamuna', "Lab namuna chiqim"), color: "#F59E0B" },
+  { code: "CUSTOMER_MATERIAL", label: tLabel('common.PosMovementChiqim.mijozMateriali', "Mijoz materiali"), color: "#3B82F6" },
 ];
 
 // ─── Pure utilities ───────────────────────────────────────────────────────────

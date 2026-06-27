@@ -1,4 +1,10 @@
 {
+  "anomaliya": "Аномалия",
+  "texkartaTekshiruvi": "Техкарта текшируви",
+  "texkartaQaytaTekshir": "Техкартани қайта текшир",
+  "texkartaRuxsat": "Техкарта бўйича рухсат берилган",
+  "texkartaBloklangan": "Техкарта блоклаган",
+  "texkarta": "Техкарта",
   "nav": {
     "dashboard": "Бош саҳифа",
     "newKirim": "📥 Янги Кирим",
@@ -6,7 +12,9 @@
     "newMaterial": "➕ Янги Материал",
     "materials": "Материаллар",
     "qcreview": "QC Кўриб чиқиш",
-    "myInventory": "Менинг инвертарим"
+    "myInventory": "Менинг инвертарим",
+    "handovers": "🤝 Смена топшириш",
+    "inTransit": "🚢 Йўлдаги импорт"
   },
   "common": {
     "search": "Қидириш...",

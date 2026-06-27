@@ -164,4 +164,43 @@ export class PosAnomalyRepository {
       return Array.isArray(rows) ? rows : [];
     }, 'DB_ERROR');
   }
+
+  /**
+   * Anomaly flags with optional filters (POS Monitor dashboard READ — ADDITIVE).
+   * `status`/`severity` null → no filter. Newest first, paginated.
+   * Data yo'q → bo'sh ro'yxat (Q-40).
+   */
+  async listAnomalies(
+    status: string | null,
+    severity: string | null,
+    limit: number,
+    offset: number,
+  ): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<Record<string, unknown>>(sql`
+        SELECT id, movement_id, movement_number, rule_code, severity, title,
+               detail, metrics, status, created_by, created_at
+        FROM pos_anomaly_flags
+        WHERE (${status}::text   IS NULL OR status   = ${status})
+          AND (${severity}::text IS NULL OR severity = ${severity})
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `);
+      return Array.isArray(rows) ? rows : [];
+    }, 'DB_ERROR');
+  }
+
+  /** Single anomaly flag by id (POS Monitor detail READ — ADDITIVE). Yo'q → null. */
+  async getById(id: number): Promise<Result<Record<string, unknown> | null>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<Record<string, unknown>>(sql`
+        SELECT id, movement_id, movement_number, rule_code, severity, title,
+               detail, metrics, status, created_by, created_at
+        FROM pos_anomaly_flags
+        WHERE id = ${id}
+        LIMIT 1
+      `);
+      return rows[0] ?? null;
+    }, 'DB_ERROR');
+  }
 }

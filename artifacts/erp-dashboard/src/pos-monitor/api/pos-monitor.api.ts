@@ -395,3 +395,177 @@ export const warehouseFeaturesApi = {
   approveGrn: (id: number) =>
     posReq(`POST`, `/wh-features/grn/${id}/approve`),
 };
+
+// ─── Handovers / Smena topshirig'i (POS Monitor 1-to'lqin) ────────────────────
+// BE: /api/pos/handovers + /api/pos/handovers/pallets — smena/pallet topshirig'i,
+// imzolash (2-imzo), bekor qilish, pallet balansi.
+
+export const handoversApi = {
+  /** GET /api/pos/handovers — barcha smena topshiriqlari (filtrlanadi). */
+  getAll: (params?: { status?: string; warehouseId?: string; shiftId?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.status)      p.set("status", params.status);
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.shiftId)     p.set("shiftId", String(params.shiftId));
+    if (params?.limit)       p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `/handovers${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/pos/handovers/:id — bitta topshiriq tafsiloti. */
+  getOne:  (id: number)                      => posReq("GET",  `/handovers/${id}`),
+  /** POST /api/pos/handovers — yangi smena topshirig'i (Q-43 real saqlash). */
+  create:  (b: Record<string, unknown>)      => posReq("POST", "/handovers", b),
+  /** POST /api/pos/handovers/:id/sign — topshiriqni imzolash (qabul/topshiruvchi 2-imzo). */
+  sign:    (id: number, b?: Record<string, unknown>) => posReq("POST", `/handovers/${id}/sign`, b ?? {}),
+  /** POST /api/pos/handovers/:id/cancel — topshiriqni bekor qilish. */
+  cancel:  (id: number, reason?: string)     => posReq("POST", `/handovers/${id}/cancel`, { reason }),
+  /** GET /api/pos/handovers/pallets — pallet ro'yxati (smena bo'yicha). */
+  getPallets:       (params?: { warehouseId?: string; status?: string }) => {
+    const p = new URLSearchParams();
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.status)      p.set("status", params.status);
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `/handovers/pallets${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/pos/handovers/pallets/balance — pallet balansi (kirim/chiqim farqi). */
+  getPalletBalance: (params?: { warehouseId?: string }) => {
+    const p = new URLSearchParams();
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    const qs = p.toString();
+    return posReq("GET", `/handovers/pallets/balance${qs ? "?" + qs : ""}`);
+  },
+};
+
+// ─── In-Transit / Yo'ldagi yuk (WMS) ──────────────────────────────────────────
+// BE: /api/wms/in-transit/* — omborlararo ko'chirishda yo'lda turgan yuk holati.
+
+export const inTransitApi = {
+  /** GET /api/wms/in-transit — yo'ldagi yuklar ro'yxati. */
+  getAll: (params?: { fromWarehouseId?: string; toWarehouseId?: string; status?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.fromWarehouseId) p.set("fromWarehouseId", params.fromWarehouseId);
+    if (params?.toWarehouseId)   p.set("toWarehouseId", params.toWarehouseId);
+    if (params?.status)          p.set("status", params.status);
+    if (params?.limit)           p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `${_base}/api/wms/in-transit${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/wms/in-transit/:id — bitta yo'ldagi yuk tafsiloti. */
+  getOne:   (id: number) => posReq("GET",  `${_base}/api/wms/in-transit/${id}`),
+  /** POST /api/wms/in-transit/:id/receive — yo'ldagi yukni manzil omborida qabul qilish. */
+  receive:  (id: number, b?: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/${id}/receive`, b ?? {}),
+  /** POST /api/wms/in-transit/:id/report-loss — yo'lda yo'qotish/kamomad qayd qilish. */
+  reportLoss: (id: number, b: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/${id}/report-loss`, b),
+};
+
+// ─── In-Transit Shipments / Yo'ldagi import jo'natmalari (WMS) ─────────────────
+// BE: /api/wms/in-transit/shipments/* — import xom-ashyo YO'LDA kuzatuvi +
+// holat o'tishi (shipped→customs→arrived) + import hujjatlari (GTD/invoys/sertifikat).
+// (inTransitApi yuqorida — eski yo'l; bu kanonik BE controller yo'liga mos.)
+
+export const inTransitShipmentsApi = {
+  /** GET /api/wms/in-transit/shipments — yo'ldagi import jo'natmalari → { items, total }. */
+  list: (status?: string) =>
+    posReq<{ items: unknown[]; total: number }>(
+      "GET",
+      `${_base}/api/wms/in-transit/shipments${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+    ),
+  /** GET /api/wms/in-transit/shipments/:id — bitta jo'natma tafsiloti. */
+  getOne: (id: number) =>
+    posReq("GET", `${_base}/api/wms/in-transit/shipments/${id}`),
+  /** POST /api/wms/in-transit/shipments — yangi import jo'natmasi (status=shipped). */
+  create: (b: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/shipments`, b),
+  /** POST /api/wms/in-transit/shipments/:id/customs — shipped→customs (bojxonaga yetdi). */
+  markCustoms: (id: number, b?: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/customs`, b ?? {}),
+  /** POST /api/wms/in-transit/shipments/:id/arrived — customs→arrived (keldi; karantin kirim ochiladi). */
+  markArrived: (id: number, b?: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/arrived`, b ?? {}),
+  /** POST /api/wms/in-transit/shipments/:id/cancel — jo'natmani bekor qilish. */
+  cancel: (id: number) =>
+    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/cancel`),
+  /** GET /api/wms/in-transit/shipments/:id/documents — jo'natma hujjatlari → { items, total }. */
+  listDocuments: (id: number) =>
+    posReq<{ items: unknown[]; total: number }>(
+      "GET",
+      `${_base}/api/wms/in-transit/shipments/${id}/documents`,
+    ),
+  /** POST /api/wms/in-transit/shipments/:id/documents — hujjat biriktirish (GTD/invoys/sertifikat). */
+  addDocument: (id: number, b: Record<string, unknown>) =>
+    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/documents`, b),
+};
+
+// ─── Material Life / Material umri (WMS) ──────────────────────────────────────
+// BE: /api/wms/material-life/* — material yaroqlilik muddati, qoldiq umri, eskirish.
+
+export const materialLifeApi = {
+  /** GET /api/wms/material-life — material umri ro'yxati (muddat bo'yicha). */
+  getAll: (params?: { warehouseId?: string; status?: string; daysLeft?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.status)      p.set("status", params.status);
+    if (params?.daysLeft)    p.set("daysLeft", String(params.daysLeft));
+    if (params?.limit)       p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `${_base}/api/wms/material-life${qs ? "?" + qs : ""}`);
+  },
+  /** GET /api/wms/material-life/:materialId — bitta material umri tafsiloti. */
+  getOne:    (materialId: number) =>
+    posReq("GET", `${_base}/api/wms/material-life/${materialId}`),
+  /** GET /api/wms/material-life/expiring — muddati tugayotgan materiallar. */
+  getExpiring: (days = 30) =>
+    posReq<unknown[]>("GET", `${_base}/api/wms/material-life/expiring?days=${days}`),
+};
+
+// ─── Variance / Inventarizatsiya og'ishi (POS) ────────────────────────────────
+// BE: /api/pos/inventory-count/* — og'ish konfiguratsiyasi, qarori, sabab kataloglari, muzlatilgan zonalar.
+
+export const varianceApi = {
+  /** GET /api/pos/inventory-count/variance-config — og'ish chegaralari konfiguratsiyasi. */
+  getVarianceConfig: () =>
+    posReq("GET", "/inventory-count/variance-config"),
+  /** POST /api/pos/inventory-count/variance-config — og'ish chegarasini saqlash (Q-43). */
+  saveVarianceConfig: (b: Record<string, unknown>) =>
+    posReq("POST", "/inventory-count/variance-config", b),
+  /** POST /api/pos/inventory-count/variance-decision — og'ish bo'yicha qaror (qabul/rad/tekshir). */
+  recordVarianceDecision: (b: Record<string, unknown>) =>
+    posReq("POST", "/inventory-count/variance-decision", b),
+  /** GET /api/pos/inventory-count/count-deviation-reasons — og'ish sabab katalogi. */
+  getDeviationReasons: () =>
+    posReq<unknown[]>("GET", "/inventory-count/count-deviation-reasons"),
+  /** GET /api/pos/inventory-count/freeze-zones — muzlatilgan (sanash) zonalar. */
+  getFreezeZones: () =>
+    posReq<unknown[]>("GET", "/inventory-count/freeze-zones"),
+  /** POST /api/pos/inventory-count/freeze-zones — zonani muzlatish/muzdan chiqarish. */
+  setFreezeZone: (b: Record<string, unknown>) =>
+    posReq("POST", "/inventory-count/freeze-zones", b),
+};
+
+// ─── Movement Extra / Harakat qo'shimcha (POS) ────────────────────────────────
+// BE: /api/pos/movements/:id/recheck-techcard + /confirmations + /api/pos/anomalies.
+
+export const movementExtraApi = {
+  /** POST /api/pos/movements/:id/recheck-techcard — texkartani qayta tekshirish (ruxsat/bloklar). */
+  recheckTechcard: (id: number) =>
+    posReq<{
+      allowed: boolean;
+      blocks?: { code: string; message: string }[];
+      techCardId?: number;
+      checkedAt?: string;
+    }>("POST", `/movements/${id}/recheck-techcard`),
+  /** GET /api/pos/movements/:id/confirmations — harakat tasdiqlari (kim imzolagan). */
+  getConfirmations: (id: number) =>
+    posReq<unknown[]>("GET", `/movements/${id}/confirmations`),
+  /** GET /api/pos/anomalies — anomaliya-flag qo'yilgan harakatlar ro'yxati. */
+  getAnomalies: (params?: { status?: string; warehouseId?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (params?.status)      p.set("status", params.status);
+    if (params?.warehouseId) p.set("warehouseId", params.warehouseId);
+    if (params?.limit)       p.set("limit", String(params.limit));
+    const qs = p.toString();
+    return posReq<unknown[]>("GET", `/anomalies${qs ? "?" + qs : ""}`);
+  },
+};

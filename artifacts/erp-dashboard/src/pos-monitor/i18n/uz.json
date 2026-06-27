@@ -1,4 +1,10 @@
 {
+  "anomaliya": "Anomaliya",
+  "texkartaTekshiruvi": "Texkarta tekshiruvi",
+  "texkartaQaytaTekshir": "Texkartani qayta tekshir",
+  "texkartaRuxsat": "Texkarta bo'yicha ruxsat berilgan",
+  "texkartaBloklangan": "Texkarta bloklagan",
+  "texkarta": "Texkarta",
   "nav": {
     "dashboard": "Bosh sahifa",
     "newKirim": "📥 Yangi Kirim",
@@ -6,7 +12,9 @@
     "newMaterial": "➕ Yangi Material",
     "materials": "Materiallar",
     "qcreview": "QC Ko'rib chiqish",
-    "myInventory": "Mening invertarim"
+    "myInventory": "Mening invertarim",
+    "handovers": "🤝 Smena topshirish",
+    "inTransit": "🚢 Yo'ldagi import"
   },
   "common": {
     "search": "Qidirish...",

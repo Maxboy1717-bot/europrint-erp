@@ -26,6 +26,7 @@ export { StockController }          from './presentation/stock.controller';
 export { GlController }             from './presentation/gl.controller';
 export { SyncController }           from './presentation/sync.controller';
 export { PosNotificationsController } from './presentation/pos-notifications.controller';
+export { PosAnomaliesController } from './presentation/pos-anomalies.controller';
 export { PosAuthController } from './presentation/pos-auth.controller';
 export { InventoryPassportController }    from './presentation/inventory-passport.controller';
 export { PosInventoryPassportRepository } from './infrastructure/repositories/pos-inventory-passport.repository';

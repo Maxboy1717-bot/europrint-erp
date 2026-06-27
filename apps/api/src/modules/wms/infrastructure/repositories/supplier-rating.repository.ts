@@ -19,6 +19,8 @@ import { runQuery } from '@shared/db';
 import {
   ISupplierRatingRepo,
   SupplierRatingPersist,
+  SupplierRatingRow,
+  SupplierRatingDetail,
 } from '../../domain/repositories/i-supplier-rating.repo';
 import { SupplierWindowAggregate } from '../../domain/constants/supplier-rating.constants';
 
@@ -50,6 +52,135 @@ const num = (v: string | number | null | undefined): number => {
 @Injectable()
 export class SupplierRatingRepository implements ISupplierRatingRepo {
   private readonly logger = new Logger(SupplierRatingRepository.name);
+
+  /**
+   * Ta'minotchilar reyting ro'yxati (ADDITIVE READ — vendors master jadvalidan).
+   * `lowOnly` → faqat past-reyting bayrog'i bor (PO-ogohlantirish). Reyting null
+   * bo'lganlar oxirida (hali hisoblanmagan). Data yo'q → bo'sh ro'yxat (Q-40).
+   */
+  async listRatings(
+    lowOnly: boolean,
+    limit: number,
+    offset: number,
+  ): Promise<Result<SupplierRatingRow[], AppError>> {
+    try {
+      const rows = await runQuery<{
+        vendor_id: number;
+        vendor_name: string | null;
+        rating: string | number | null;
+        rating_low_flag: boolean | null;
+        rating_updated_at: string | Date | null;
+      }>(sql`
+        SELECT
+          v.id                AS vendor_id,
+          v.name              AS vendor_name,
+          v.rating            AS rating,
+          COALESCE(v.rating_low_flag, FALSE) AS rating_low_flag,
+          v.rating_updated_at AS rating_updated_at
+        FROM vendors v
+        WHERE v.deleted_at IS NULL
+          ${lowOnly ? sql`AND COALESCE(v.rating_low_flag, FALSE) = TRUE` : sql``}
+        ORDER BY (v.rating IS NULL), v.rating ASC NULLS LAST, v.name ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `);
+      const list = Array.isArray(rows.rows) ? rows.rows : [];
+      return Ok(
+        list.map((r) => ({
+          vendorId: Number(r.vendor_id),
+          vendorName: r.vendor_name ?? null,
+          rating: r.rating == null ? null : Number(r.rating),
+          ratingLowFlag: Boolean(r.rating_low_flag),
+          ratingUpdatedAt: r.rating_updated_at == null ? null : new Date(r.rating_updated_at).toISOString(),
+        })),
+      );
+    } catch (e) {
+      return Err({ code: 'DB_ERROR', message: `listRatings: ${String(e)}` });
+    }
+  }
+
+  /**
+   * Bitta ta'minotchi reytingi + oxirgi oylik breakdown (ADDITIVE READ).
+   * vendors (kanonik reyting) LEFT JOIN vendor_performance_metrics (oxirgi davr).
+   * Vendor topilmasa null → controller NOT_FOUND qaytaradi.
+   */
+  async getRating(vendorId: number): Promise<Result<SupplierRatingDetail | null, AppError>> {
+    try {
+      const rows = await runQuery<{
+        vendor_id: number;
+        vendor_name: string | null;
+        rating: string | number | null;
+        rating_low_flag: boolean | null;
+        rating_updated_at: string | Date | null;
+        on_time_rate: string | number | null;
+        quality_score: string | number | null;
+        price_competitiveness: string | number | null;
+        document_compliance: string | number | null;
+        total_orders: string | number | null;
+        on_time_deliveries: string | number | null;
+        late_deliveries: string | number | null;
+        total_spend: string | number | null;
+        period_year: number | null;
+        period_month: number | null;
+        source: string | null;
+      }>(sql`
+        SELECT
+          v.id                AS vendor_id,
+          v.name              AS vendor_name,
+          v.rating            AS rating,
+          COALESCE(v.rating_low_flag, FALSE) AS rating_low_flag,
+          v.rating_updated_at AS rating_updated_at,
+          m.on_time_rate          AS on_time_rate,
+          m.quality_score         AS quality_score,
+          m.price_competitiveness AS price_competitiveness,
+          m.document_compliance   AS document_compliance,
+          m.total_orders          AS total_orders,
+          m.on_time_deliveries    AS on_time_deliveries,
+          m.late_deliveries       AS late_deliveries,
+          m.total_spend           AS total_spend,
+          m.period_year           AS period_year,
+          m.period_month          AS period_month,
+          m.source                AS source
+        FROM vendors v
+        LEFT JOIN LATERAL (
+          SELECT *
+          FROM vendor_performance_metrics vpm
+          WHERE vpm.vendor_id = v.id
+          ORDER BY vpm.period_year DESC, vpm.period_month DESC
+          LIMIT 1
+        ) m ON TRUE
+        WHERE v.id = ${vendorId}
+          AND v.deleted_at IS NULL
+        LIMIT 1
+      `);
+      const r = rows.rows[0];
+      if (!r) return Ok(null);
+
+      const n = (v: string | number | null): number | null =>
+        v == null ? null : (Number.isFinite(Number(v)) ? Number(v) : null);
+
+      const detail: SupplierRatingDetail = {
+        vendorId: Number(r.vendor_id),
+        vendorName: r.vendor_name ?? null,
+        rating: n(r.rating),
+        ratingLowFlag: Boolean(r.rating_low_flag),
+        ratingUpdatedAt: r.rating_updated_at == null ? null : new Date(r.rating_updated_at).toISOString(),
+        onTimeRate: n(r.on_time_rate),
+        qualityScore: n(r.quality_score),
+        priceCompetitiveness: n(r.price_competitiveness),
+        documentCompliance: n(r.document_compliance),
+        totalOrders: n(r.total_orders),
+        onTimeDeliveries: n(r.on_time_deliveries),
+        lateDeliveries: n(r.late_deliveries),
+        totalSpend: n(r.total_spend),
+        periodYear: r.period_year ?? null,
+        periodMonth: r.period_month ?? null,
+        source: r.source ?? null,
+      };
+      return Ok(detail);
+    } catch (e) {
+      return Err({ code: 'DB_ERROR', message: `getRating: ${String(e)}` });
+    }
+  }
 
   async vendorExists(vendorId: number): Promise<Result<boolean, AppError>> {
     try {

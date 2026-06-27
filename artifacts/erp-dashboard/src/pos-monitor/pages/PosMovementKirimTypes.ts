@@ -160,6 +160,34 @@ export const KIRIM_CONFIG: Record<string, KirimConfig> = {
     showWaybill: true, showCurrency: true,
     step2Hint: "MRO: ehtiyot qismlar uchun seriya raqamini sertifikat maydoniga kiriting.",
   },
+  // ── 4 yangi taksonomiya turi (kirim yo'nalishidagilar) ──
+  "WASTE_IN": {
+    icon: "♻️", title: tLabel('common.PosMovementKirim.chiqindiKirim', "Chiqindi / Qoldiq Kirim"),
+    bannerBg: "rgba(16,185,129,0.08)", bannerBorder: "rgba(16,185,129,0.4)", bannerTextColor: "#064E3B",
+    bannerText: "Ishlab chiqarish chiqindisi yoki qayta ishlanadigan qoldiq materiallar qabul qilish.",
+    supplierLabel: "Qayd qiluvchi bo'lim / Mas'ul", supplierRequired: true,
+    contractLabel: "Chiqindi akti raqami (ixtiyoriy)", contractRequired: false,
+    showWaybill: false, showCurrency: false,
+    step2Hint: "Har qator uchun chiqindi turini va og'irligini (kg) ko'rsating.",
+  },
+  "PARTIAL_RECEIPT": {
+    icon: "📦", title: tLabel('common.PosMovementKirim.qismanQabul', "Qisman Qabul"),
+    bannerBg: "rgba(59,130,246,0.08)", bannerBorder: "rgba(59,130,246,0.4)", bannerTextColor: "#1E3A5F",
+    bannerText: "Buyurtmaning bir qismi yetkazildi. Qolgan qism keyingi yetkazishda qabul qilinadi.",
+    supplierLabel: "Ta'minotchi nomi", supplierRequired: true,
+    contractLabel: "Shartnoma / Buyurtma raqami", contractRequired: true,
+    showWaybill: true, showCurrency: true,
+    step2Hint: "Faqat yetkazilgan miqdorni kiriting; qolgani ochiq buyurtma sifatida qoladi.",
+  },
+  "CUSTOMER_MATERIAL": {
+    icon: "🤝", title: tLabel('common.PosMovementKirim.mijozMateriali', "Mijoz Materiali — Davolanishga Qabul"),
+    bannerBg: "rgba(59,130,246,0.08)", bannerBorder: "rgba(59,130,246,0.4)", bannerTextColor: "#1E3A5F",
+    bannerText: "Mijoz tomonidan berilgan (davolanishga / ishlov berishga) material qabul. Mulk mijozniki — alohida hisob.",
+    supplierLabel: "Mijoz nomi", supplierRequired: true,
+    contractLabel: "Mijoz shartnomasi / Buyurtma", contractRequired: true,
+    showWaybill: true, showCurrency: false,
+    step2Hint: "Mijoz materiali: miqdor va sifat holatini aniq qayd qiling (mulk mijozniki).",
+  },
 };
 
 export const DEFAULT_KIRIM_CONFIG: KirimConfig = {
