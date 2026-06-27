@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeInt } from '../../../hr/common/db-rows';
-import type { IWmsCountsRepo } from '../../domain/repositories/i-wms-counts.repo';
+import type { IWmsCountsRepo, CountLineInput } from '../../domain/repositories/i-wms-counts.repo';
 
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
@@ -110,5 +110,38 @@ export class WmsCountsRepository implements IWmsCountsRepo {
     return Err(String(_e));
   }
 
+  }
+
+  async recordCountLine(input: CountLineInput): Promise<Result<Row>> {
+    // book_quantity = tizim miqdori (snapshot); counted_quantity = sanoqchi kiritgani.
+    // variance = counted - book. deviation_reason_code = majburiy kod (system≠counted bo'lsa).
+    const variance = input.countedQty - input.systemQty;
+    const variancePercent = input.systemQty !== 0 ? (variance / input.systemQty) * 100 : null;
+    // item_type / unit_cost / book_value — jadval NOT NULL (default yo'q). Bu count-line
+    // oqimida material birlik-narxi manbasi yo'q → 0 (neytral; Q-40 fabrikatsiya emas,
+    // baholash count tasdiqlash bosqichida alohida hisoblanadi).
+    const r = await exec(sql`
+      INSERT INTO inventory_count_lines
+        (count_id, material_id, item_type, book_quantity, counted_quantity, system_quantity,
+         variance, variance_percent, unit_cost, book_value,
+         deviation_reason_code, reason, counted_by, counted_at)
+      VALUES (
+        ${input.countId},
+        ${input.materialId},
+        'material',
+        ${input.systemQty},
+        ${input.countedQty},
+        ${input.systemQty},
+        ${variance},
+        ${variancePercent},
+        0,
+        0,
+        ${input.deviationReasonCode},
+        ${input.notes},
+        ${input.countedBy},
+        NOW()
+      )
+      RETURNING *`);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 }

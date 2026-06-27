@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { MovementTypeCode, MovementStatus, QcDecision } from './movement-enums';
+import { MovementContextSchema } from './movement-extra.dto';
 
 import { MAX_NOTES_LENGTH, MAX_SHORT_TEXT, MAX_NAME_LENGTH } from '@common/constants/app.constants';
 const isoDate = z.string().refine((s) => !isNaN(Date.parse(s)), { message: 'ISO date string expected' });
@@ -56,6 +57,9 @@ export const CreateMovementSchema = z.object({
   lines:                z.array(AddMovementLineSchema).optional(),
   notes:                z.string().max(MAX_NOTES_LENGTH).optional(),
   submit:               z.boolean().optional(),
+  // ADDITIVE (2026-06-27): yangi harakat turlari uchun ixtiyoriy kontekst
+  // (WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT / CUSTOMER_MATERIAL).
+  context:              MovementContextSchema.optional(),
 }).refine(d => d.movementTypeId != null || (d.movementTypeCode != null && d.movementTypeCode.length > 0), {
   message: 'movementTypeId yoki movementTypeCode majburiy',
   path: ['movementTypeId'],
@@ -83,4 +87,6 @@ export {
   CreateDamageActSchema,
   CreateInventoryAdjustmentDto,
   CreateInventoryAdjustmentSchema,
+  MovementContextDto,
+  MovementContextSchema,
 } from './movement-extra.dto';

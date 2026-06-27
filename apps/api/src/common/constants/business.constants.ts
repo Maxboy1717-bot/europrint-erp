@@ -322,3 +322,32 @@ export const HOLAT_SCORE_MAX = 100;
 
 /** Allowed relative spread (fraction of PO total) for a passing 3-way match */
 export const MM_THREE_WAY_MATCH_TOLERANCE = 0.02;
+
+// ---------------------------------------------------------------------------
+// POS Monitor — Anomaliya aniqlash (qoida-asosli) chegaralari
+// AI-kalit yo'q → quyidagi qoidalar ishlaydi (graceful). Egasi real qiymat
+// bersa (norma/og'irlik) bu chegaralar moslashtiriladi — fabrikatsiya yo'q (Q-40).
+// ---------------------------------------------------------------------------
+
+/** Tungi smena oynasi: [boshlanish soati, tugash soati) — yarim tunni o'rab oladi (22:00–06:00). */
+export const POS_NIGHT_SHIFT_START_HOUR = 22;
+export const POS_NIGHT_SHIFT_END_HOUR   = 6;
+
+/** Tungi smenada "katta miqdor" deb hisoblanadigan bir harakat jami miqdori (dona/birlik). */
+export const POS_NIGHT_LARGE_QTY_THRESHOLD = 1000;
+
+/** Tungi smenada "katta qiymat" deb hisoblanadigan bir harakat jami summasi (baza valyuta). */
+export const POS_NIGHT_LARGE_VALUE_THRESHOLD = 50_000_000;
+
+/**
+ * Topshir↔qabul nomuvofiqligi: e'lon qilingan miqdor bilan stock-ledgerga
+ * yozilgan haqiqiy miqdor orasidagi ruxsat etilgan nisbiy farq (0.001 = 0.1%).
+ * Suzuvchi nuqta yaxlitlash xatosidan kattaroq farq = anomaliya.
+ */
+export const POS_SEND_RECEIVE_TOLERANCE = 0.001;
+
+/**
+ * Norma-fakt ortiqcha-sarf: haqiqiy sarf normadan necha barobar oshsa
+ * ogohlantirish (1.10 = +10%). material_norms bo'sh bo'lsa qoida skip (Q-40).
+ */
+export const POS_OVER_NORM_FACTOR = 1.10;

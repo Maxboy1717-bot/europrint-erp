@@ -38,6 +38,21 @@ export interface IWmsCountsRepo {
     expiring?: string,
   ): Promise<Result<Row[]>>;
   getProductionSupply(sessionId?: string): Promise<Result<Row[]>>;
+  /**
+   * W3-COUNT — count-line yozish. system≠counted bo'lganda deviationReasonCode
+   * MAJBURIY (validatsiya service'da). book/system miqdori va og'ish hisoblanadi.
+   */
+  recordCountLine(input: CountLineInput): Promise<Result<Row>>;
+}
+
+export interface CountLineInput {
+  countId: number;
+  materialId: number;
+  systemQty: number;
+  countedQty: number;
+  deviationReasonCode: string | null;
+  notes: string | null;
+  countedBy: number | null;
 }
 
 export const WMS_COUNTS_REPO = Symbol('WMS_COUNTS_REPO');

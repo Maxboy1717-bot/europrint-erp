@@ -5,13 +5,14 @@
 
 import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
-import { posMovements, posMovementLines, posMovementTypes, warehouses, db, eq, sql } from '@workspace/db';
+import { posMovements, posMovementLines, posMovementTypes, posMovementContext, warehouses, db, eq, sql } from '@workspace/db';
 import { execPosDamageQcLinkInsert } from '@common/database/queries-remaining';
-import type { IPosMovementRepository } from '../../domain/repositories/i-pos-movement.repo';
+import type { IPosMovementRepository, PosMovementContextInsert } from '../../domain/repositories/i-pos-movement.repo';
 
-type PosMovement     = typeof posMovements.$inferSelect;
-type PosMovementLine = typeof posMovementLines.$inferSelect;
-type PosMovementType = typeof posMovementTypes.$inferSelect;
+type PosMovement       = typeof posMovements.$inferSelect;
+type PosMovementLine   = typeof posMovementLines.$inferSelect;
+type PosMovementType   = typeof posMovementTypes.$inferSelect;
+type PosMovementCtxRow = typeof posMovementContext.$inferSelect;
 type WarehouseTypeRow = { type: string | null };
 type WarehouseIds = { fromWarehouseId: string | null; toWarehouseId: string | null };
 
@@ -102,6 +103,26 @@ export class PosMovementRepository implements IPosMovementRepository {
     try {
       await execPosDamageQcLinkInsert(damageMovementId, originalMovementId, materialCardId, damagedQty, damageDescription);
       return Ok();
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
+  /**
+   * ADDITIVE (2026-06-27): yangi harakat turlari uchun kontekst upsert.
+   * movement_id UNIQUE — mavjud bo'lsa yangilaydi (idempotent).
+   */
+  async upsertMovementContext(row: PosMovementContextInsert): Promise<Result<PosMovementCtxRow>> {
+    try {
+      const [saved] = await db
+        .insert(posMovementContext)
+        .values(row)
+        .onConflictDoUpdate({
+          target: posMovementContext.movementId,
+          set: { ...row, updatedAt: new Date() },
+        })
+        .returning();
+      return Ok(saved);
     } catch (_e) {
       return Err(String(_e));
     }

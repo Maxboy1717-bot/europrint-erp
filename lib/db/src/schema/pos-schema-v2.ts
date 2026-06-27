@@ -28,6 +28,11 @@ export const movementTypeEnum = pgEnum('pos_movement_type_enum', [
   'INTERNAL_TRANSFER',
   'INVENTORY_ADJ_PLUS',
   'INVENTORY_ADJ_MINUS',
+  // POS Monitor vizyon-kengaytirish (ADDITIVE, 2026-06-27)
+  'WASTE_IN',          // chiqindi/qoldiq (makulatura) kirim
+  'LAB_SAMPLE_OUT',    // laboratoriya namuna olish (chiqim)
+  'PARTIAL_RECEIPT',   // kam/buzuq material qisman qabul
+  'CUSTOMER_MATERIAL', // mijoz-mol (davalcheskoe) kirim
 ]);
 
 export const movementStatusEnum = pgEnum('pos_movement_status_enum', [
@@ -173,6 +178,35 @@ export const posMovementLines = pgTable('pos_movement_lines', {
   index('idx_pos_mv_lines_movement').on(t.movementId),
   index('idx_pos_mv_lines_material').on(t.materialCardId),
   index('idx_pos_mv_lines_batch').on(t.batchId),
+]);
+
+// ─── 2b. POS_MOVEMENT_CONTEXT — Yangi harakat turlari uchun qo'shimcha kontekst ─
+//
+// ADDITIVE (2026-06-27): WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT /
+// CUSTOMER_MATERIAL harakatlarining maxsus kontekstini saqlaydi. pos_movements
+// (dvigatel jadvali) tegilmaydi — 1:1 bog'lanish movement_id orqali. Hech bir
+// mavjud oqim bu jadvalga bog'liq emas (Q-46 regress yo'q).
+export const posMovementContext = pgTable('pos_movement_context', {
+  id:               serial('id').primaryKey(),
+  movementId:       integer('movement_id').notNull().unique(),
+  // LAB_SAMPLE_OUT
+  labSampleReason:  text('lab_sample_reason'),
+  labTestRef:       varchar('lab_test_ref', { length: 100 }),
+  // PARTIAL_RECEIPT (kam/buzuq qabul) — qatorlar bo'yicha jami
+  orderedQty:       numericMoney('ordered_qty'),
+  acceptedQty:      numericMoney('accepted_qty'),
+  rejectedQty:      numericMoney('rejected_qty'),
+  partialReason:    text('partial_reason'),
+  // CUSTOMER_MATERIAL (davalcheskoe) — mol egasi
+  customerId:       varchar('customer_id', { length: 50 }),
+  customerName:     text('customer_name'),
+  isCustomerOwned:  boolean('is_customer_owned').notNull().default(false),
+  // WASTE_IN (makulatura/chiqindi)
+  wasteSource:      varchar('waste_source', { length: 100 }),
+  createdAt:        timestamp('created_at').notNull().defaultNow(),
+  updatedAt:        timestamp('updated_at').notNull().defaultNow(),
+}, (t) => [
+  index('idx_pos_movement_context_movement').on(t.movementId),
 ]);
 
 // ─── 3. POS_MATERIAL_REQUESTS — Bo'lim ombor so'rovi ─────────────────────────

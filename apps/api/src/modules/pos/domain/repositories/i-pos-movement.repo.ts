@@ -7,11 +7,13 @@
  */
 
 import type { Result } from '@common/result';
-import type { posMovements, posMovementLines, posMovementTypes } from '@workspace/db';
+import type { posMovements, posMovementLines, posMovementTypes, posMovementContext } from '@workspace/db';
 
-type PosMovement      = typeof posMovements.$inferSelect;
-type PosMovementLine  = typeof posMovementLines.$inferSelect;
-type PosMovementType  = typeof posMovementTypes.$inferSelect;
+type PosMovement       = typeof posMovements.$inferSelect;
+type PosMovementLine   = typeof posMovementLines.$inferSelect;
+type PosMovementType   = typeof posMovementTypes.$inferSelect;
+type PosMovementCtxRow = typeof posMovementContext.$inferSelect;
+export type PosMovementContextInsert = Omit<typeof posMovementContext.$inferInsert, 'id'>;
 type WarehouseTypeRow = { type: string | null };
 type WarehouseIds     = { fromWarehouseId: string | null; toWarehouseId: string | null };
 
@@ -34,4 +36,10 @@ export interface IPosMovementRepository {
     damagedQty: number,
     damageDescription: string,
   ): Promise<Result<void>>;
+  /**
+   * ADDITIVE (2026-06-27): yangi harakat turlari (WASTE_IN / LAB_SAMPLE_OUT /
+   * PARTIAL_RECEIPT / CUSTOMER_MATERIAL) uchun qo'shimcha kontekst saqlash.
+   * movement_id UNIQUE — qayta yozishda upsert.
+   */
+  upsertMovementContext(row: PosMovementContextInsert): Promise<Result<PosMovementCtxRow>>;
 }

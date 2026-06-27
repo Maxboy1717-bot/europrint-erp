@@ -45,6 +45,7 @@ import {
   PosService, DrizzlePosSvcRepository, POS_SVC_REPO,
   PosEventHandler, PosSecondaryEventsHandler, PosEventRepository, PosDepartmentGuard,
   PosWmsSyncCreatedListener,
+  PosAnomalyService, PosAnomalyRepository, PosAnomalyListener,
   PosRequisitionWorkflowService, PosEmployeeBalanceService,
   PosWmsSyncService, PosWmsQueryService,
   WarehouseEmployeesService, AutoBarcodeService, Material360Service, AutoGlPostingService,
@@ -171,6 +172,10 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosWmsQueryService,
     // Wave 4 round-4 — completed listener removed 2026-06-06 (dead duplicate of inline path)
     PosWmsSyncCreatedListener,
+    // P2-ANOMALY — qoida-asosli anomaliya aniqlash
+    PosAnomalyRepository,
+    PosAnomalyService,
+    PosAnomalyListener,
     PosInactiveMaterialsJob,
     // Warehouse features — repositories (Sprint B)
     WarehouseEmployeesRepository,

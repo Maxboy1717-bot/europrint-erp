@@ -100,7 +100,26 @@ import { RULON_CARD_REPO } from './domain/repositories/i-rulon-card.repo';
 import { WmsRollCalcService } from './domain/services/wms-roll-calc.service';
 import { WmsOverflowService } from './application/wms-overflow.service';
 import { OutboundEnforcementService } from './application/outbound-enforcement.service';
+// W3-COUNT — inventarizatsiya kuchaytirish (ko'r-sanoq, og'ish-sabab, zona-muzlatish).
+import { InventoryFreezeService } from './application/inventory-freeze.service';
+import { InventoryFreezeRepository } from './infrastructure/repositories/inventory-freeze.repository';
+import { INVENTORY_FREEZE_REPO } from './domain/repositories/i-inventory-freeze.repo';
 import { WmsOverflowController } from './presentation/wms-overflow.controller';
+// W1-INTRANSIT — import xom-ashyo YO'LDA kuzatuvi + bojxona/import hujjatlari.
+import { WmsInTransitController } from './presentation/wms-in-transit.controller';
+import { WmsInTransitService } from './application/wms-in-transit.service';
+import { WmsInTransitRepository } from './infrastructure/repositories/wms-in-transit.repository';
+import { WMS_IN_TRANSIT_REPO } from './domain/repositories/i-wms-in-transit.repo';
+// W2-SUPPLIER-RATING — ta'minotchi ishonchlilik reytingi (EP-WMS-094/022).
+import { SupplierRatingService } from './application/supplier-rating.service';
+import { SupplierRatingRepository } from './infrastructure/repositories/supplier-rating.repository';
+import { SUPPLIER_RATING_REPO } from './domain/repositories/i-supplier-rating.repo';
+import { SupplierRatingListener } from './infrastructure/event-handlers/supplier-rating.listener';
+// W4-MATERIAL-LIFE — material hayot-tsikli atributlari + analog (EP-WMS-101/123/125/126/128/130/086).
+import { MaterialLifeController } from './presentation/material-life.controller';
+import { MaterialLifeService } from './application/material-life.service';
+import { MaterialLifeRepository } from './infrastructure/repositories/material-life.repository';
+import { MATERIAL_LIFE_REPO } from './domain/repositories/i-material-life.repo';
 
 const handlers = [
   GoodsIssueHandler,
@@ -115,7 +134,7 @@ const handlers = [
   DeleteRentalHandler,
 ];
 
-const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler];
+const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler, SupplierRatingListener];
 
 @Module({
   imports: [
@@ -149,6 +168,8 @@ const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler];
     WmsAnalyticsController,
     RulonCardController,
     WmsOverflowController,
+    WmsInTransitController,
+    MaterialLifeController,
   ],
   providers: [
     ...handlers,
@@ -204,6 +225,22 @@ const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler];
     // WMS overflow (idish-yaxlitlash, OMBOR-INTERVYU §2) + chiqim hard-gate'lar (EP-WMS-084/085).
     WmsOverflowService,
     OutboundEnforcementService,
+    // W3-COUNT — inventarizatsiya muzlatish + og'ish-sabab; chiqim-gate (GoodsIssueHandler) tekshiradi.
+    InventoryFreezeRepository,
+    { provide: INVENTORY_FREEZE_REPO, useClass: InventoryFreezeRepository },
+    InventoryFreezeService,
+    // W1-INTRANSIT — import yo'lda kuzatuvi (arrived → mavjud karantin darvozasi).
+    WmsInTransitRepository,
+    { provide: WMS_IN_TRANSIT_REPO, useClass: WmsInTransitRepository },
+    WmsInTransitService,
+    // W2-SUPPLIER-RATING — 4-faktor reyting (oxirgi oyna) + QC-fail tetiklagich.
+    SupplierRatingRepository,
+    { provide: SUPPLIER_RATING_REPO, useClass: SupplierRatingRepository },
+    SupplierRatingService,
+    // W4-MATERIAL-LIFE — material hayot-tsikli atributlari + analog (substitute).
+    MaterialLifeRepository,
+    { provide: MATERIAL_LIFE_REPO, useClass: MaterialLifeRepository },
+    MaterialLifeService,
   ],
   exports: [WMS_REPO],
 })

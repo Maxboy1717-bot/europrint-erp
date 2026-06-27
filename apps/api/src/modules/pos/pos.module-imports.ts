@@ -118,6 +118,10 @@ export { PosEventRepository }      from './infrastructure/repositories/pos-event
 export { PosDepartmentGuard }      from './presentation/guards/pos-department.guard';
 // Wave 4 round-4 — canonical CQRS event handler (completed listener removed 2026-06-06: dead duplicate)
 export { PosWmsSyncCreatedListener }   from './application/event-handlers/pos-wms-sync-created.listener';
+// P2-ANOMALY — qoida-asosli anomaliya aniqlash (movement-completed/cancelled listener)
+export { PosAnomalyService }    from './application/services/pos-anomaly.service';
+export { PosAnomalyRepository } from './infrastructure/repositories/pos-anomaly.repository';
+export { PosAnomalyListener }   from './application/event-handlers/pos-anomaly.listener';
 
 // New workflow & balance services
 export { PosRequisitionWorkflowService } from './application/services/pos-requisition-workflow.service';

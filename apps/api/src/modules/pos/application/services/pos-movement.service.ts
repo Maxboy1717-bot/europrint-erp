@@ -37,6 +37,9 @@ const OUTBOUND_TYPES = new Set([
   'INTERNAL_RETURN',
   'INTERNAL_TRANSFER',
   'DAMAGE',
+  // ADDITIVE (2026-06-27): laboratoriya namuna olish ombordan chiqim —
+  // mavjud chiqim-discipline (balans-gate) bilan bir xil ishlov.
+  'LAB_SAMPLE_OUT',
 ]);
 
 @Injectable()
@@ -158,6 +161,12 @@ export class PosMovementService {
 
       if (dto.lines?.length) await this.addLines(movement.id, dto.lines, dto.fromWarehouseId);
 
+      // ADDITIVE (2026-06-27): yangi harakat turlari uchun kontekst saqlash.
+      // WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT / CUSTOMER_MATERIAL.
+      // Q-40: fabrikatsiya yo'q — faqat dto'da kelgan qiymatlar saqlanadi
+      // (kelmasa NULL/graceful). Mavjud oqim bu bilan o'zgarmaydi.
+      await this.persistMovementContext(movement.id, movType.code, dto);
+
       await this.auditService.log({
         userId: createdById, action: 'pos.movement.created', entityType: 'pos_movements',
         entityId: movement.id, newValue: { movementNumber, type: movType.code, status: 'draft' }, ipAddress,
@@ -178,6 +187,42 @@ export class PosMovementService {
 
       return movement;
     });
+  }
+
+  /**
+   * ADDITIVE (2026-06-27): yangi harakat turlari uchun kontekst yozish.
+   * Faqat 4 yangi tur uchun va faqat dto.context kelganda yoziladi.
+   * Boshqa (mavjud) turlar uchun no-op — eski oqim o'zgarmaydi (Q-46).
+   */
+  private async persistMovementContext(
+    movementId: number,
+    typeCode: string,
+    dto: CreateMovementDto,
+  ): Promise<void> {
+    const CONTEXT_TYPES = new Set(['WASTE_IN', 'LAB_SAMPLE_OUT', 'PARTIAL_RECEIPT', 'CUSTOMER_MATERIAL']);
+    if (!CONTEXT_TYPES.has(typeCode)) return;
+
+    const ctx = dto.context;
+    // Kontekst yo'q bo'lsa ham — tur yangi bo'lgani uchun bo'sh qator yozamiz
+    // (keyinchalik to'ldirilishi mumkin). Fabrikatsiya yo'q: faqat kelgan
+    // qiymatlar; kelmaganlari NULL.
+    const result = await this.repo.upsertMovementContext({
+      movementId,
+      labSampleReason: ctx?.labSampleReason,
+      labTestRef:      ctx?.labTestRef,
+      orderedQty:      ctx?.orderedQty,
+      acceptedQty:     ctx?.acceptedQty,
+      rejectedQty:     ctx?.rejectedQty,
+      partialReason:   ctx?.partialReason,
+      customerId:      ctx?.customerId,
+      customerName:    ctx?.customerName,
+      // CUSTOMER_MATERIAL turi avtomatik mijoz-mol deb belgilanadi
+      isCustomerOwned: ctx?.isCustomerOwned ?? (typeCode === 'CUSTOMER_MATERIAL'),
+      wasteSource:     ctx?.wasteSource,
+    });
+    if (!result.ok) {
+      this.logger.warn(`[POS] Kontekst saqlash xatosi (movement=${movementId}, type=${typeCode}): ${result.error.message}`);
+    }
   }
 
   async addLines(movementId: number, lines: AddMovementLineDto[], fromWarehouseId?: string) {

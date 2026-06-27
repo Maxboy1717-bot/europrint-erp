@@ -12,6 +12,11 @@ export enum MovementTypeCode {
   INTERNAL_TRANSFER   = 'INTERNAL_TRANSFER',
   INVENTORY_ADJ_PLUS  = 'INVENTORY_ADJ_PLUS',
   INVENTORY_ADJ_MINUS = 'INVENTORY_ADJ_MINUS',
+  // ─── POS Monitor vizyon-kengaytirish (ADDITIVE, 2026-06-27) ──────────────
+  WASTE_IN            = 'WASTE_IN',            // chiqindi/qoldiq (makulatura) kirim
+  LAB_SAMPLE_OUT      = 'LAB_SAMPLE_OUT',      // laboratoriya namuna olish (chiqim)
+  PARTIAL_RECEIPT     = 'PARTIAL_RECEIPT',     // kam/buzuq material qisman qabul
+  CUSTOMER_MATERIAL   = 'CUSTOMER_MATERIAL',   // mijoz-mol (davalcheskoe) kirim
 }
 
 export enum MovementStatus {
@@ -84,6 +89,10 @@ export const MOVEMENT_CATEGORY_META: Readonly<Record<MovementCategory, MovementC
     codes: [
       MovementTypeCode.EXTERNAL_IN,
       MovementTypeCode.INTERNAL_RETURN,
+      // Vizyon-kengaytirish: barchasi ombor ichiga kirim (stockSign +1)
+      MovementTypeCode.WASTE_IN,          // makulatura/chiqindi ikkilamchi ombor
+      MovementTypeCode.PARTIAL_RECEIPT,   // qabul qilingan qism omborga kiradi
+      MovementTypeCode.CUSTOMER_MATERIAL, // mijoz-mol (davalcheskoe) kirim
     ],
   },
   [MovementCategory.CHIQIM]: {
@@ -95,6 +104,8 @@ export const MOVEMENT_CATEGORY_META: Readonly<Record<MovementCategory, MovementC
     codes: [
       MovementTypeCode.EXTERNAL_OUT,
       MovementTypeCode.INTERNAL_ISSUE,
+      // Vizyon-kengaytirish: laboratoriya namuna ombordan chiqim (stockSign -1)
+      MovementTypeCode.LAB_SAMPLE_OUT,
     ],
   },
   [MovementCategory.KOCHIRISH]: {

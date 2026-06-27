@@ -20,6 +20,7 @@ import { IWmsRepository, WMS_REPO, DrizzleExecutor } from '../../domain/reposito
 import { BatchSelectionService } from '../../domain/services/batch-selection.service';
 import { BatchIssueStrategy } from '../../domain/constants/wms-batch-issue.constants';
 import { OutboundEnforcementService } from '../outbound-enforcement.service';
+import { InventoryFreezeService } from '../inventory-freeze.service';
 
 export class GoodsIssueCommand {
   constructor(public materialId: number,
@@ -50,6 +51,7 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
     @Inject(WMS_REPO) private wmsRepo: IWmsRepository,
     private eventBus: EventBus,
     private readonly enforcement: OutboundEnforcementService,
+    private readonly freeze: InventoryFreezeService,
   ) {}
 
   async execute(command: GoodsIssueCommand): Promise<Result<void>> {
@@ -72,6 +74,20 @@ export class GoodsIssueHandler implements ICommandHandler<GoodsIssueCommand> {
           'BUSINESS_RULE_VIOLATION',
           gate.data.message ?? 'Chiqim bloklandi (texkarta/gofra mos kelmadi)',
           { blockCode: gate.data.blockCode },
+        ),
+      );
+    }
+
+    // W3-COUNT inventarizatsiya-muzlatish hard-gate: ombor-zona (yoki ayrim material)
+    // muzlatilgan bo'lsa chiqim BLOKLANADI. Muzlatish yo'q → fail-open (no-op, regress YO'Q).
+    const freezeGate = await this.freeze.checkExitAllowed(command.warehouseId, command.materialId);
+    if (!freezeGate.ok) return Err(freezeGate.error);
+    if (!freezeGate.data.allowed) {
+      return Err(
+        AppErr(
+          'BUSINESS_RULE_VIOLATION',
+          freezeGate.data.message ?? 'Chiqim bloklandi (zona muzlatilgan — inventarizatsiya)',
+          { blockCode: freezeGate.data.blockCode },
         ),
       );
     }
