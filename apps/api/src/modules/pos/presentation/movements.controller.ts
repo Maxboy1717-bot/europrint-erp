@@ -30,6 +30,8 @@ import { PosMovementQueryService }   from '../application/services/pos-movement-
 import { PosAuditService }           from '../application/services/pos-audit.service';
 import { PosPdfService }             from '../application/services/pos-pdf.service';
 import { StockLedgerService }        from '../application/services/stock-ledger.service';
+import { PosTechCardGateService }    from '../application/services/pos-techcard-gate.service';
+import { z } from 'zod';
 
 import {
   CreateMovementDto,
@@ -41,6 +43,11 @@ import {
   CreateInventoryAdjustmentDto,
 } from '../dto/movement.dto';
 import { unwrapOrInternal } from '@common/http-result';
+
+// P4: buyurtma o'zgarishi — chiqarilgan materialni YANGI texkartaga qayta-tekshirish.
+const RecheckOrderChangeSchema = z.object({
+  newTechnologyCardId: z.number().int().positive(),
+});
 
 @ApiTags('POS — Harakatlar')
 @ApiBearerAuth()
@@ -57,6 +64,7 @@ export class MovementsController {
     private readonly auditService:          PosAuditService,
     private readonly pdfService:            PosPdfService,
     private readonly stockLedgerService:    StockLedgerService,
+    private readonly techCardGate:          PosTechCardGateService,
   ) {}
 
   // ─── Ro'yxat ─────────────────────────────────────────────────────────────
@@ -148,6 +156,19 @@ export class MovementsController {
   @ApiOperation({ summary: 'Harakat tasdiqlash yozuvlari (imzo, qaror, IP)' })
   async getConfirmations(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.stockLedgerService.getConfirmations(id));
+  }
+
+  // ─── P4: Buyurtma O'zgarishi — Texkarta Qayta-Tekshiruvi ───────────────────
+
+  @Post(':id/recheck-techcard')
+  @RequirePermission('pos.movements.update')
+  @ApiOperation({ summary: 'Buyurtma o\'zgardi — chiqarilgan materialni yangi texkartaga qayta-tekshirish (EP-WMS-084/085)' })
+  async recheckTechCard(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    const dto = RecheckOrderChangeSchema.parse(body);
+    return unwrapOrInternal(await this.techCardGate.recheckOnOrderChange(id, dto.newTechnologyCardId));
   }
 
   // ─── Audit Log ────────────────────────────────────────────────────────────

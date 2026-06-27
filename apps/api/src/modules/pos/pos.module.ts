@@ -14,7 +14,8 @@ import {
   PosGateway,
   // Controllers
   PosStubController, CashRegisterController, PosPrinterConfigV2Controller,
-  MovementsController, BarcodeController, RequestsController, InventoryCountController,
+  MovementsController, ShiftHandoverController, BarcodeController, RequestsController, InventoryCountController,
+  PosShiftHandoverService, PosShiftHandoverRepository,
   EmployeeController, ReportsController, MiniAppController, MiniAppHistoryController,
   PrinterConfigController, StockController, GlController, SyncController,
   PosNotificationsController, PosAuthController, InventoryPassportController,
@@ -54,6 +55,10 @@ import {
   WarehouseEmployeesRepository, GoodsReceiptRepository, AutoBarcodeRepository, WarehouseKpiRepository,
   QuarantineWorkflowRepository, ThreeWayMatchRepository, AutoGlPostingRepository, PosEmployeeBalanceRepository,
 } from './pos.module-imports';
+// P4-TECHCARD-VARIANCE — texkarta-gate (WMS solishtirish mantig'i REUSE) + variance config.
+import { PosTechCardGateService } from './application/services/pos-techcard-gate.service';
+import { PosVarianceConfigService } from './application/services/pos-variance-config.service';
+import { OutboundEnforcementService } from '../wms/application/outbound-enforcement.service';
 import { CASH_REGISTER_REPO } from './domain/repositories/i-cash-register.repo';
 import { POS_MOVEMENT_REPO } from './domain/repositories/i-pos-movement.repo';
 import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notifications.repo';
@@ -67,6 +72,7 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     CashRegisterController,
     PosPrinterConfigV2Controller,
     MovementsController,
+    ShiftHandoverController,
     BarcodeController,
     RequestsController,
     InventoryCountController,
@@ -93,10 +99,17 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosService,
     PosMovementRepository,
     { provide: POS_MOVEMENT_REPO, useExisting: PosMovementRepository },
+    // P4-TECHCARD-VARIANCE: WMS solishtirish servisini POS DI'ga REUSE qilamiz
+    // (klass konstruktor-bog'liqliksiz; dublikat mantiq YO'Q) + POS wrapper + config.
+    OutboundEnforcementService,
+    PosTechCardGateService,
+    PosVarianceConfigService,
     PosMovementService,
     PosMovementStatusRepository,
     PosMovementStatusService,
     PosMovementQueryService,
+    PosShiftHandoverRepository,
+    PosShiftHandoverService,
     ProcurementApprovalChainService,
     ProcurementRequestService,
     WarehouseConfigService,

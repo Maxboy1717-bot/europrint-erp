@@ -22,6 +22,7 @@ import { StockReservationService } from './stock-reservation.service';
 import { EmployeeLedgerService }   from './employee-ledger.service';
 import { PosAuditService }         from './pos-audit.service';
 import { PosBalanceGuardService }  from './pos-balance-guard.service';
+import { PosTechCardGateService }  from './pos-techcard-gate.service';
 import { CreateMovementDto, AddMovementLineDto, CreateDamageActDto } from '../../dto/movement.dto';
 import { PosMovementRepository } from '../../infrastructure/repositories/pos-movement.repository';
 import { movementTypeEnum, posMovements, posMovementLines } from '@workspace/db';
@@ -52,6 +53,7 @@ export class PosMovementService {
     private readonly employeeLedger:   EmployeeLedgerService,
     private readonly auditService:     PosAuditService,
     private readonly balanceGuard:     PosBalanceGuardService,
+    private readonly techCardGate:     PosTechCardGateService,
     private readonly eventEmitter:     EventEmitter2,
     private readonly eventBus:         EventBus,
     private readonly repo:             PosMovementRepository,
@@ -136,6 +138,26 @@ export class PosMovementService {
         }
       }
 
+      // P4-TECHCARD-VARIANCE: texkarta-material mosligi CHIQIMDAN OLDIN blok
+      // (EP-WMS-084/085). Faqat chiqim turlari + context.technologyCardId
+      // berilganda ishlaydi; aks holda no-op (mavjud oqim o'zgarmaydi, Q-46).
+      // DUBLIKAT YO'Q: WMS OutboundEnforcementService qayta-ishlatiladi.
+      const techCardId = dto.context?.technologyCardId ?? null;
+      if (OUTBOUND_TYPES.has(movType.code) && techCardId && dto.lines?.length) {
+        const gateLines = dto.lines.map((l) => ({
+          materialCardId: l.materialCardId,
+          issuedLayer:    dto.context?.issuedLayer ?? null,
+        }));
+        const gateR = await this.techCardGate.checkLines(techCardId, gateLines);
+        if (!gateR.ok) throw new InternalServerErrorException(gateR.error.message);
+        if (!gateR.data.allowed) {
+          const lines = gateR.data.blocks.map((b) => `Material #${b.materialCardId}: ${b.message}`);
+          throw new BadRequestException(
+            `Texkarta-material mos kelmadi (chiqim bloklandi):\n${lines.join('\n')}`,
+          );
+        }
+      }
+
       const countR = await this.repo.countMovements();
       const count = countR.ok ? (countR.data as number) : 0;
       const movementNumber = `POS-${_time.now().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
@@ -166,6 +188,17 @@ export class PosMovementService {
       // Q-40: fabrikatsiya yo'q — faqat dto'da kelgan qiymatlar saqlanadi
       // (kelmasa NULL/graceful). Mavjud oqim bu bilan o'zgarmaydi.
       await this.persistMovementContext(movement.id, movType.code, dto);
+
+      // P4: chiqim ↔ texkarta bog'lanishini saqlash (buyurtma-o'zgarish
+      // qayta-tekshiruvi uchun). Texkarta yo'q → no-op.
+      if (techCardId) {
+        await this.techCardGate.recordLink(
+          movement.id,
+          techCardId,
+          dto.context?.issuedLayer ?? null,
+          { allowed: true, blocks: [] },
+        );
+      }
 
       await this.auditService.log({
         userId: createdById, action: 'pos.movement.created', entityType: 'pos_movements',

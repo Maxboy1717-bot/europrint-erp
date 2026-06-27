@@ -26,6 +26,7 @@ import { PosInventoryCountRepository } from '../../infrastructure/repositories/p
 import { PosMovementService } from './pos-movement.service';
 import { PosAuditService }    from './pos-audit.service';
 import { PosInventoryCountQueryService } from './pos-inventory-count-query.service';
+import { PosVarianceConfigService } from './pos-variance-config.service';
 
 import {
   CreateInventoryCountDto,
@@ -47,7 +48,47 @@ export class PosInventoryCountService {
     private readonly eventEmitter:    EventEmitter2,
     private readonly queryService:    PosInventoryCountQueryService,
     private readonly inventoryRepo:   PosInventoryCountRepository,
+    private readonly varianceConfig:  PosVarianceConfigService,
   ) {}
+
+  // ─── P4: Farq avto-tasdiq / eskalatsiya qarori ────────────────────────────
+  //
+  // ADDITIVE (Q-46): mavjud `approveCount` o'zgarmaydi. Bu metod farqlarni
+  // chegaraga solishtirib AUTO_APPROVE (chegara ichida) yoki ESCALATE (oshdi —
+  // menejer-tasdiq) qaroriga keladi. FE/controller bu qarorga qarab avto-tasdiq
+  // tugmasini ko'rsatadi yoki menejer-tasdiqqa yo'naltiradi.
+
+  async evaluateVarianceDecision(countId: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const invCountR = await this.inventoryRepo.findById(countId);
+      if (!invCountR.ok || !invCountR.data) throw new NotFoundException(`Inventarizatsiya topilmadi: ${countId}`);
+      const invCount = invCountR.data as Record<string, unknown>;
+
+      const warehouseRaw = invCount['warehouseId'] ?? invCount['warehouse_id'];
+      const warehouseId = warehouseRaw != null && Number.isFinite(Number(warehouseRaw))
+        ? Number(warehouseRaw)
+        : null;
+
+      const varLinesR = await this.inventoryRepo.getVarianceLines(countId);
+      const varLines = varLinesR.ok && Array.isArray(varLinesR.data) ? varLinesR.data : [];
+
+      const lines = varLines.map((l) => ({
+        systemQty:     Number(l['system_qty'] ?? l['system_quantity'] ?? 0),
+        varianceQty:   Number(l['variance_qty'] ?? l['variance'] ?? 0),
+        varianceValue: Number(l['variance_value'] ?? l['value_variance'] ?? 0),
+      }));
+
+      const decisionR = await this.varianceConfig.decideForCount(warehouseId, lines);
+      if (!decisionR.ok) throw new BadRequestException(decisionR.error.message);
+
+      return {
+        countId,
+        warehouseId,
+        varianceLineCount: lines.length,
+        ...decisionR.data,
+      };
+    });
+  }
 
   // ─── Inventarizatsiya Yaratish ────────────────────────────────────────────
 

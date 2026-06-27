@@ -100,5 +100,11 @@ export const MovementContextSchema = z.object({
   isCustomerOwned: z.boolean().optional(),
   // WASTE_IN (makulatura/chiqindi)
   wasteSource:     z.string().max(100).optional(),
+  // P4-TECHCARD-VARIANCE (2026-06-27): chiqim qaysi texkartaga xizmat qiladi.
+  // Berilsa → CHIQIMDAN OLDIN texkarta-material gate (EP-WMS-084/085) ishlaydi.
+  // Berilmasa → gate no-op (mavjud chiqim oqimi o'zgarmaydi, regress YO'Q).
+  technologyCardId: z.number().int().positive().optional(),
+  // Chiqarilayotgan material gofra qavati (EP-WMS-085) — ixtiyoriy.
+  issuedLayer:      z.number().int().positive().optional(),
 });
 export class MovementContextDto extends createZodDto(MovementContextSchema) {}
