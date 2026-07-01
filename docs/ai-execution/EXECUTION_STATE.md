@@ -80,6 +80,13 @@ GENUINE-PENDING ro'yxatidan 2 ta qurildi (file-izolyatsiya, additive, Q-46 regre
 2. **SD lost-orders+reklamatsiya** (commit 0fd27e02) — yangi jadval(APPROVED)+DDD to'liq+jonli rollback-tx-proof. BE tsc=0.
 Qolgan GENUINE-PENDING (keyingi tiklar uchun): LMS 3-bosqich-tasdiq+mentor, MES norma-versiya+OEE-kaskad, IoT-gateway-wire, AI-fit-scheduler+CKP-chatbot, CRM inbound-ingest+churn-cron, Master-data 3-jadval-unify, QC sertifikat-avto, MES shift-accept-gate, Org 2-imzo-card-activation+field-projection, Auth acting-scoped-RBAC.
 
+## ⭐⭐ EGASI-YO'NALTIRGAN: Savdo-sity POS-referens chuqur o'rganish (2026-07-01, foreground)
+Egasi "Ombor/POS terminal xohlagan xolatda emas" dedi + real POS-loyiha ko'rsatdi (`Downloads/Savdo-sity`, ishlab-chiqarilgan market-POS, 4034-qator POS.tsx). Workflow bilan chuqur o'rganildi (kod+dizayn-token). **XULOSA: muammo VIZUAL emas** — ranglar/layout (KIRIM=yashil/CHIQIM=qizil/market-POS uslub) allaqachon to'g'ri edi. Farq — **ishonchlilik-naqshlar**. 3 haqiqiy bo'shliq topildi va TUZATILDI:
+1. **Idempotency-key** (commit adbc7603) — SD modul mavjud naqshiga mos (sd_advance_idempotency_keys), pos_movements.idempotency_key UNIQUE + FE crypto.randomUUID(). Double-tap endi xavfsiz.
+2. **Hidden-iframe print** (commit 7e49e3bb) — Savdo-sity naqshi porti (lib/pos-print.ts), popup-blocker himoyasi.
+3. **Skaner-konsolidatsiya** (commit 941d3c04) — `useBarcode` IKKI MARTA lookup qilardi (real xato, Q-29 verify bilan tasdiqlandi); orfan `useHardwareScanner` ulandi, `useBarcode.ts` to'liq o'chirildi (Q-46).
+Barchasi tsc=0, DB-proof/verify bilan. Ko'chirilmadi (do'kon-sotuv, Ombor emas): mijoz-combobox, to'lov-split, qarz, cashback — bular EuroPrint Ombor operatsiyasiga mos emas.
+
 ## LOOP JURNALI (oxirgi 20)
 | Vaqt | prompt_id | Holat | Izoh |
 |---|---|---|---|
