@@ -123,7 +123,7 @@ export class CronStatusService {
       { name: 'IotDataCleanupCron',              description: "IoT ma'lumotlarini tozalash (Shanba 02:00)",          schedule: '0 2 * * 6'        },
       { name: 'CertExpiryCron',                  description: "Sertifikat muddati eslatmasi (08:00)",                schedule: '0 8 * * *'        },
       { name: 'BudgetAlertCron',                 description: "Byudjet alert (Dushanba 09:00)",                     schedule: '0 9 * * 1'        },
-      { name: 'StockAlertCron',                  description: "Ombor qoldig'i alert (08:00)",                        schedule: '0 8 * * *'        },
+      { name: 'StockAlertCron',                  description: "Ombor lot/partiya muddati tugashi alert (08:00)",     schedule: '0 8 * * *'        },
       { name: 'AdvanceReminderCron',             description: "Avans eslatmasi (10:00)",                             schedule: '0 10 * * *'       },
       { name: 'CkpDailyAggregateCron',           description: "ЦКП kunlik kaskad-agregat: root-karta subtree o'rtacha achievement (01:00)", schedule: '0 1 * * *' },
       // ── HR-v2 module crons (managed by their own services) ────────────────

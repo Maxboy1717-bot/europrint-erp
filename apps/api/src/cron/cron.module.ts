@@ -22,6 +22,8 @@ import { IotDataCleanupCron } from './iot-data-cleanup.cron'
 import { CertExpiryCron } from './cert-expiry.cron'
 import { BudgetAlertCron } from './budget-alert.cron'
 import { StockAlertCron } from './stock-alert.cron'
+import { WmsCatalogAbcAgingExpiryService } from '../modules/wms/application/wms-catalog/abc-aging-expiry.service'
+import { NotificationRoutingRepository } from '../modules/notifications/infrastructure/notification-routing.repository'
 import { AdvanceReminderCron } from './advance-reminder.cron'
 import { FpCycleCron } from './fp-cycle.cron'
 import { DisciplineCron } from './discipline.cron'
@@ -67,6 +69,10 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     IotDataCleanupCron,
     CertExpiryCron,
     BudgetAlertCron,
+    // wms.lot_expiring (FAZA Bildirishnoma 2026-07-01) — StockAlertCron qayta qurildi,
+    // qarang stock-alert.cron.ts JSDoc. Standalone deps (runQuery/rawSql, boshqa modul provideri kerak emas).
+    WmsCatalogAbcAgingExpiryService,
+    NotificationRoutingRepository,
     StockAlertCron,
     AdvanceReminderCron,
     // New HR, Finance & Recruitment crons (Task #161)

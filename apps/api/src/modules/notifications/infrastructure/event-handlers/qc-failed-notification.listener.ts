@@ -17,11 +17,15 @@
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { sql } from 'drizzle-orm';
-import { runQuery } from '@shared/db';
 import { Notification } from '../../domain/aggregates/notification.aggregate';
 import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
+import { NotificationRoutingRepository } from '../notification-routing.repository';
 import { QcFailedEvent } from '@modules/qc/domain/events';
+
+/** notification_routing_rules.event_type — config-driven qilib qo'yiladi (FAZA Bildirishnoma, 2026-07-01). */
+const QC_FAILED_EVENT_TYPE = 'qc.failed';
+/** Jadvalda qator bo'lmasa qaytiladigan avvalgi hardcoded rol (regressiya yo'q, Q-39). */
+const QC_FAILED_FALLBACK_ROLE = 'production_manager';
 
 @Injectable()
 @EventsHandler(QcFailedEvent)
@@ -30,23 +34,22 @@ export class QcFailedNotificationListener implements IEventHandler<QcFailedEvent
 
   constructor(
     @Inject(NOTIFICATION_REPO) private readonly notificationRepo: INotificationRepo,
+    private readonly routing: NotificationRoutingRepository,
   ) {}
 
   async handle(event: QcFailedEvent): Promise<void> {
-    this.logger.log('QC failed event received - creating notification for production manager');
+    this.logger.log('QC failed event received - resolving notification targets via routing rules');
 
     try {
-      const result = await runQuery<{ id: number }>(
-        sql`SELECT id FROM users WHERE role = ${'production_manager'} AND is_active = true LIMIT 50`,
-      );
-      if (result.rows.length === 50) {
-        this.logger.warn('QcFailedNotificationListener: result capped at 50 production managers — some may not be notified');
+      const userIds = await this.routing.resolveUserIds(QC_FAILED_EVENT_TYPE, QC_FAILED_FALLBACK_ROLE);
+      if (userIds.length === 0) {
+        this.logger.warn('QcFailedNotificationListener: no active targets resolved (routing rule + fallback both empty)');
       }
 
       await Promise.all(
-        result.rows.map((u) => {
+        userIds.map((id) => {
           const notification = Notification.createForUser(
-            String(u.id),
+            String(id),
             'Quality Control Failed',
             `Inspection #${event.inspectionId} on order ${event.orderId} failed. Reason: ${event.reason}`,
             'qc_failed',

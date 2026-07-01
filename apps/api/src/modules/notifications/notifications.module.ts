@@ -24,6 +24,11 @@ import { OrphanEventsListener } from './infrastructure/event-handlers/orphan-eve
 import { NotificationsController } from './presentation/notifications.controller';
 import { NOTIFICATION_REPO } from './domain/repositories/i-notification.repo';
 import { DrizzleNotificationRepository } from './infrastructure/repositories/drizzle-notification.repo';
+import { NotificationScheduleCron } from './infrastructure/notification-schedule.cron';
+import { NotificationSchedulesRepository } from './infrastructure/notification-schedules.repository';
+import { NotificationSchedulesController } from './presentation/notification-schedules.controller';
+import { NotificationRoutingRepository } from './infrastructure/notification-routing.repository';
+import { NotificationRoutingController } from './presentation/notification-routing.controller';
 import { TelegramSvc } from './telegram/telegram.service';
 import { DrizzleTelegramSvcRepository } from './telegram/drizzle-telegram-svc.repo';
 import { TELEGRAM_SVC_REPO } from './telegram/i-telegram-svc.repo';
@@ -68,8 +73,8 @@ const repositories = [
 
 @Module({
   imports: [CqrsModule, HttpModule],
-  controllers: [NotificationsController],
-  providers: [...commandHandlers, ...eventHandlers, ...queryHandlers, ...senders, ...repositories, TelegramSvc, NotificationPreferencesRepository, NotificationPreferencesService, NotificationSchemaRepository, NotificationSchemaService],
+  controllers: [NotificationsController, NotificationSchedulesController, NotificationRoutingController],
+  providers: [...commandHandlers, ...eventHandlers, ...queryHandlers, ...senders, ...repositories, TelegramSvc, NotificationPreferencesRepository, NotificationPreferencesService, NotificationSchemaRepository, NotificationSchemaService, NotificationScheduleCron, NotificationSchedulesRepository, NotificationRoutingRepository],
   exports: [
     EskizSmsAdapter,
     SmtpEmailAdapter,
@@ -81,6 +86,7 @@ const repositories = [
     TELEGRAM_SVC_REPO,
     TelegramSvc,
     NotificationPreferencesService,
+    NotificationRoutingRepository,
   ],
 })
 export class NotificationsModule {}

@@ -10,6 +10,7 @@ import { ProcurementController } from './presentation/procurement.controller';
 import { WarehouseConfigController } from './presentation/warehouse-config.controller';
 import { ProcurementRequestService } from './application/services/procurement-request.service';
 import { WarehouseConfigService } from './application/services/warehouse-config.service';
+import { NotificationRoutingRepository } from '../notifications/infrastructure/notification-routing.repository';
 import {
   PosGateway,
   // Controllers
@@ -177,6 +178,8 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosInventoryPassportRepository,
     PosInventoryPassportService,
     PosFifoService,
+    // Standalone (runQuery, no other-module deps) — config-driven event->target routing (FAZA Bildirishnoma)
+    NotificationRoutingRepository,
     PosLowStockJob,
     PosQuarantineCheckJob,
     PosFifoRecalculateJob,
