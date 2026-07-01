@@ -34,7 +34,7 @@ export interface LabelDimensions {
  * (jonli DB): standard / finished / roll. Etiket o'lchami har ombor turiga moslashadi.
  * Noma'lum template → standard (graceful, Q-40 fabrikatsiya yo'q).
  */
-const LABEL_DIMENSIONS: Record<string, LabelDimensions> = {
+export const LABEL_DIMENSIONS: Record<string, LabelDimensions> = {
   standard: { template: 'standard', widthMm: 58, heightMm: 40, dpi: 203 },
   finished: { template: 'finished', widthMm: 100, heightMm: 70, dpi: 203 },
   roll:     { template: 'roll',     widthMm: 80, heightMm: 50, dpi: 203 },

@@ -136,6 +136,15 @@ export const MAX_USERS_DEFAULT = 400;       // standart foydalanuvchilar soni li
 
 // ─── Kanban standartlari ─────────────────────────────────────────────────────
 export const KANBAN_BATCH_FETCH = 1_000; // status bo'yicha kanban kartalar limiti
+
+// ─── Etiket / Termal printer (ZPL/EPL/QR) ────────────────────────────────────
+export const THERMAL_PRINTER_DPI = 203;        // standart termal printer dot-per-inch
+export const MM_PER_INCH = 25.4;               // millimetr → dyuym konversiya
+export const QR_QUIET_ZONE_MODULES = 4;        // QR atrofidagi "jim zona" modul soni (ISO/IEC 18004 §5.3.2)
+export const QR_EPL_MODULE_SCALE = 4;          // EPL GW bitmap: modul → piksel (katta etiket, masalan tayyor-mahsulot/rulon)
+export const QR_EPL_MODULE_SCALE_COMPACT = 2;  // EPL GW bitmap: modul → piksel (standart kichik etiket)
+export const QR_ZPL_MAGNIFICATION = 3;         // ZPL ^BQ magnifikatsiya darajasi (1-10)
+export const LABEL_QR_MODULE_PT = 1.6;         // PDF: QR modul o'lchami (pt), vektor to'rtburchak
 export const KANBAN_FLOWS_LIMIT = 100;   // oqimlar ro'yxati sahifalash limiti
 
 // ─── Rekrutment standartlari ─────────────────────────────────────────────────
