@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { movementsApi, quarantineApi, warehousesApi, barcodeApi, type InboundBarcodeResult } from "../api/pos-monitor.api";
 import { idbEnqueue } from "../components/PosOfflineBanner";
+import { printHtml } from "../lib/pos-print";
 import {
   headerSchema, lineSchema,
   type HeaderForm, type LineItem, type WarehouseOption, type CreatedMovement,
@@ -157,22 +158,18 @@ export default function PosMovementKirim() {
     if (barcodeLineIdx === null || !barcodeResult) return;
     const idx = barcodeLineIdx;
     setLines(prev => prev.map((l, i) => i === idx ? { ...l, barcode: barcodeResult.barcode, barcodePrintedAt: new Date().toISOString() } : l));
-    // Brauzer print dialogi orqali POS Monitor printeriga yuborish.
+    // Ko'zga-ko'rinmas iframe orqali chop etish (Savdo-sity referens naqshi) — popup-blocker
+    // window.open()'ni jim o'chirib qo'yishi mumkin edi, iframe hech qachon bloklanmaydi.
     try {
-      const w = window.open("", "_blank", "width=420,height=320");
-      if (w) {
-        const lbl = barcodeResult.label;
-        w.document.write(`<html><head><title>${barcodeResult.barcode}</title></head><body style="font-family:monospace;text-align:center;padding:16px">
-          <div style="font-size:11px">${lbl.warehouseCode} · ${lbl.barcodeType}</div>
-          <div style="font-size:16px;font-weight:700">${lbl.materialName}</div>
-          <div style="font-size:11px">${lbl.materialCode ?? ""}${lbl.quantity != null ? " · " + lbl.quantity + " " + lbl.unit : ""}</div>
-          <div style="font-size:22px;letter-spacing:3px;margin:12px 0">${barcodeResult.barcode}</div>
-          <div style="font-size:10px">${lbl.dimensions.widthMm}×${lbl.dimensions.heightMm} mm</div>
-          </body></html>`);
-        w.document.close();
-        w.focus();
-        w.print();
-      }
+      const lbl = barcodeResult.label;
+      const bodyHtml = `<div style="font-family:monospace;text-align:center;padding:16px">
+        <div style="font-size:11px">${lbl.warehouseCode} · ${lbl.barcodeType}</div>
+        <div style="font-size:16px;font-weight:700">${lbl.materialName}</div>
+        <div style="font-size:11px">${lbl.materialCode ?? ""}${lbl.quantity != null ? " · " + lbl.quantity + " " + lbl.unit : ""}</div>
+        <div style="font-size:22px;letter-spacing:3px;margin:12px 0">${barcodeResult.barcode}</div>
+        <div style="font-size:10px">${lbl.dimensions.widthMm}×${lbl.dimensions.heightMm} mm</div>
+        </div>`;
+      printHtml(bodyHtml, `size:${lbl.dimensions.widthMm}mm ${lbl.dimensions.heightMm}mm;margin:0;`);
     } catch { /* print best-effort */ }
     setBarcodeLineIdx(null);
     setBarcodeResult(null);
