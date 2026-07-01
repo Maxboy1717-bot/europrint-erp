@@ -73,6 +73,13 @@ two-world MES unify (1417/1669) · outbox universal-wiring (1137/1929) · Andon 
 
 **⭐ YAKUNIY XULOSA (P0+P1 to'liq katalog, P2 pattern-bo'yicha inferred-past-qiymat):** 3340-prompt korpus asosan **P0/P1/P2 uch tomondan ~835 noyob muammoni** qamraydi; bu ~T26/2146-tasdiq bilan BIR XIL hudud (bir xil 20 modul, bir xil "eski audit-snapshot" manba). Avtonom-buildable yuqori-qiymatli ish (T7-T27, ~40+ commit) DEYARLI TUGADI. Qolgan GENUINE-PENDING ro'yxati (~15-20 element, yuqorida) — bular haqiqiy kod-gap, lekin past-o'rta ustuvorlik (asosiy vizyon-yadro emas). Qolgan qism = (A) egasi-DATA (B1-B8, BLOCKERS_OWNER_DATA.md) yoki (B) katta-arxitektura (owner/team qarori). **P2 (1200, UI/optimizatsiya) — pattern P0/P1 bilan bir xil bo'lishi kutiladi (FE-polish/dup), alohida exhaustive skan past-qiymat — o'tkazib yuborildi (established pattern asosida, resource-effektiv qaror).**
 
+## ⭐ TICK: 2 GENUINE-PENDING QURILDI (shu tik, 2026-06-27)
+Xavfsizlik-eslatma tekshirildi: admin.seed.ts/schema.ts/invariants.ts/auth.controller.ts — **hammasi allaqachon PA-S4a/b/c + JWT_REFRESH_SECRET bilan tuzatilgan** (CLAUDE.md stale edi, harakat kerak emas).
+GENUINE-PENDING ro'yxatidan 2 ta qurildi (file-izolyatsiya, additive, Q-46 regress-yo'q):
+1. **Razryad FE-decrease** (commit d6c1678c) — RazryadTab.tsx increase/decrease radio+sabab-majburiy. FE tsc=0.
+2. **SD lost-orders+reklamatsiya** (commit 0fd27e02) — yangi jadval(APPROVED)+DDD to'liq+jonli rollback-tx-proof. BE tsc=0.
+Qolgan GENUINE-PENDING (keyingi tiklar uchun): LMS 3-bosqich-tasdiq+mentor, MES norma-versiya+OEE-kaskad, IoT-gateway-wire, AI-fit-scheduler+CKP-chatbot, CRM inbound-ingest+churn-cron, Master-data 3-jadval-unify, QC sertifikat-avto, MES shift-accept-gate, Org 2-imzo-card-activation+field-projection, Auth acting-scoped-RBAC.
+
 ## LOOP JURNALI (oxirgi 20)
 | Vaqt | prompt_id | Holat | Izoh |
 |---|---|---|---|
