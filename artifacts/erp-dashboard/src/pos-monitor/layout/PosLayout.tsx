@@ -67,7 +67,7 @@ export default function PosLayout({ children }: PosLayoutProps) {
         </Link>
 
         <a
-          href="/accounting/cash-register"
+          href="/"
           style={{ fontSize: 11, color: "var(--pos-text-muted)", textDecoration: "none", opacity: 0.7 }}
           onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
           onMouseLeave={e => (e.currentTarget.style.opacity = "0.7")}

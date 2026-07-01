@@ -8,7 +8,6 @@ export { PosGateway } from './presentation/pos.gateway';
 
 // Controllers
 export { PosStubController }        from './presentation/pos-stub.controller';
-export { CashRegisterController }   from './presentation/cash-register.controller';
 export { PosPrinterConfigV2Controller } from './presentation/pos-printer-config-v2.controller';
 export { MovementsController }      from './presentation/movements.controller';
 export { ShiftHandoverController }   from './presentation/shift-handover.controller';
@@ -38,8 +37,6 @@ export { PosFifoRecalculateJob }          from './application/jobs/pos-fifo-reca
 export { PosInactiveMaterialsJob }        from './application/jobs/pos-inactive-materials.job';
 
 // Retail POS
-export { CashRegisterService }      from './application/services/cash-register.service';
-export { CashRegisterRepository }   from './infrastructure/repositories/cash-register.repository';
 export { PosAuthService }           from './application/services/pos-auth.service';
 export { PosAuthRepository }        from './infrastructure/repositories/pos-auth.repository';
 

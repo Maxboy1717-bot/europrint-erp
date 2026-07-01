@@ -13,7 +13,7 @@ import { WarehouseConfigService } from './application/services/warehouse-config.
 import {
   PosGateway,
   // Controllers
-  PosStubController, CashRegisterController, PosPrinterConfigV2Controller,
+  PosStubController, PosPrinterConfigV2Controller,
   MovementsController, ShiftHandoverController, BarcodeController, RequestsController, InventoryCountController,
   PosShiftHandoverService, PosShiftHandoverRepository,
   EmployeeController, ReportsController, MiniAppController, MiniAppHistoryController,
@@ -26,7 +26,7 @@ import {
   // Repos & services
   PosInventoryPassportRepository, PosInventoryPassportService, PosFifoService,
   PosLowStockJob, PosQuarantineCheckJob, PosFifoRecalculateJob, PosInactiveMaterialsJob,
-  CashRegisterService, CashRegisterRepository, PosAuthService, PosAuthRepository,
+  PosAuthService, PosAuthRepository,
   PosMovementService, PosMovementRepository, PosMovementStatusService, PosMovementStatusRepository,
   PosMovementQueryService, PosBarcodeService, PosBarcodeRepository, PosBarcodeExtService, PosBarcodeExtRepository,
   PosInventoryCountQueryService, PosInventoryCountQueryRepository,
@@ -62,7 +62,6 @@ import {
 import { PosTechCardGateService } from './application/services/pos-techcard-gate.service';
 import { PosVarianceConfigService } from './application/services/pos-variance-config.service';
 import { OutboundEnforcementService } from '../wms/application/outbound-enforcement.service';
-import { CASH_REGISTER_REPO } from './domain/repositories/i-cash-register.repo';
 import { POS_MOVEMENT_REPO } from './domain/repositories/i-pos-movement.repo';
 import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notifications.repo';
 
@@ -72,7 +71,6 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     ProcurementController,
     WarehouseConfigController,
     PosStubController,
-    CashRegisterController,
     PosPrinterConfigV2Controller,
     MovementsController,
     ShiftHandoverController,
@@ -99,9 +97,6 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
   ],
   providers: [
     { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },
-    CashRegisterRepository,
-    { provide: CASH_REGISTER_REPO, useExisting: CashRegisterRepository },
-    CashRegisterService,
     PosService,
     PosMovementRepository,
     { provide: POS_MOVEMENT_REPO, useExisting: PosMovementRepository },

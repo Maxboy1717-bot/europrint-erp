@@ -118,7 +118,7 @@ export default function DailyKPIDashboard() {
               {([
                 { href: "/accounting/income-expense", icon: TrendingUp, label: "Yangi kirim qo'shish", variant: "default" as const, testId: "button-new-income" },
                 { href: "/accounting/income-expense", icon: TrendingDown, label: "Yangi chiqim qo'shish", variant: "outline" as const, testId: "button-new-expense" },
-                { href: "/accounting/cash-register", icon: Receipt, label: "Kassa operatsiyalari", variant: "outline" as const, testId: "button-cash-register" },
+                { href: "/accounting/cashier-hub", icon: Receipt, label: "Kassa operatsiyalari", variant: "outline" as const, testId: "button-cash-register" },
                 { href: "/finance/reports", icon: FileText, label: "Moliya hisobotlari", variant: "outline" as const, testId: "button-finance-reports" },
                 { href: "/accounting/payroll", icon: Calculator, label: "Oylik hisoblash", variant: "outline" as const, testId: "button-payroll" },
               ]).map((action) => (

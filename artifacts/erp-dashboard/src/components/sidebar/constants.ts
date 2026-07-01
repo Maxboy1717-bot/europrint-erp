@@ -375,11 +375,12 @@ import { LayoutDashboard, X,
       { title: "Aging (Debitor/Kreditor)", url: "accounting/ar-ap-aging", icon: TrendingDown },
       { title: "Moliya Tasdiqlash", url: "finance/approval", icon: CheckCircle },
       { title: "AVANS VA KASSA", url: "", icon: Banknote, separator: true },
-      { title: "Kassa", url: "accounting/cash-register", icon: DollarSign },
       { title: "Kassir markazi", url: "accounting/cashier-hub", icon: Banknote },
       { title: "Kirim/Chiqim", url: "accounting/income-expense", icon: TrendingUp },
       // POS Monitor (pos-monitor) = yagona kanonik POS (zavod ombori tablet ilovasi).
-      // Eski /pos/* klasteri /pos-monitor'ni takrorlardi; "POS Kassa" → Kassa (yuqorida).
+      // Eski /pos/* klasteri /pos-monitor'ni takrorlardi. Eski chakana-do'kon "Kassa"
+      // (/accounting/cash-register, CashRegisterService) 2026-07-01 da retiring qilindi —
+      // naqd-nazorat-hub ("Kassir markazi", yuqorida) bilan almashtirildi (egasi qarori).
       // 2026-05-21 kanon. Qarang: Qoida 22 + scripts/check-sidebar-regress.mjs.
       { title: "POS TIZIMI", url: "", icon: ShoppingCart, separator: true },
       { title: "POS Monitor", url: "pos-monitor", icon: MonitorDot },
