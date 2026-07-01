@@ -115,6 +115,9 @@ export const posMovements = pgTable('pos_movements', {
   // Standart maydonlar
   referenceDoc:          varchar('reference_doc', { length: 100 }),
   notes:                 text('notes'),
+  // Idempotency (2026-07-01, Savdo-sity referens H-8 naqshi): double-tap/retry bir xil
+  // harakatni ikki marta yaratmasligi uchun — FE crypto.randomUUID() yuboradi.
+  idempotencyKey:        varchar('idempotency_key', { length: 100 }),
   createdBy:             integer('created_by').notNull(),
   approvedBy:            integer('approved_by'),
   approvedAt:            timestamp('approved_at'),

@@ -198,6 +198,8 @@ export default function PosMovementChiqim() {
       notes: buildNotes(),
       lines: lines.map(l => ({ materialCardId: l.materialCardId, quantity: l.quantity })),
       submit: true,
+      // Savdo-sity referens H-8 naqshi: double-tap "Tasdiqlash" bir xil chiqimni ikki marta yaratmasin.
+      idempotencyKey: crypto.randomUUID(),
     };
 
     try {

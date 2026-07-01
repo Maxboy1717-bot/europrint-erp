@@ -63,6 +63,20 @@ export class PosMovementRepository implements IPosMovementRepository {
     }
   }
 
+  /**
+   * Idempotency (2026-07-01, Savdo-sity referens H-8 naqshi): kalit bo'yicha
+   * mavjud harakatni topadi — double-tap/retry bir xil harakatni ikki marta
+   * yaratmasin (createMovement shu metoddan avval SELECT qiladi).
+   */
+  async findMovementByIdempotencyKey(idempotencyKey: string): Promise<Result<PosMovement | null>> {
+    try {
+      const [movement] = await db.select().from(posMovements).where(eq(posMovements.idempotencyKey, idempotencyKey));
+      return Ok(movement ?? null);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async getMaxLineSequence(movementId: number): Promise<Result<number>> {
     try {
       const [{ maxSeq }] = await db.select({ maxSeq: sql<number>`COALESCE(MAX(fifo_sequence), 0)` }).from(posMovementLines).where(eq(posMovementLines.movementId, movementId));

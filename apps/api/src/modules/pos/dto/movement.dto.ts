@@ -60,6 +60,9 @@ export const CreateMovementSchema = z.object({
   // ADDITIVE (2026-06-27): yangi harakat turlari uchun ixtiyoriy kontekst
   // (WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT / CUSTOMER_MATERIAL).
   context:              MovementContextSchema.optional(),
+  // ADDITIVE (2026-07-01, Savdo-sity referens H-8 naqshi): double-tap/retry himoyasi —
+  // FE crypto.randomUUID() yuboradi, BE bir xil kalit bilan qayta so'rovda mavjud harakatni qaytaradi.
+  idempotencyKey:       z.string().max(100).optional(),
 }).refine(d => d.movementTypeId != null || (d.movementTypeCode != null && d.movementTypeCode.length > 0), {
   message: 'movementTypeId yoki movementTypeCode majburiy',
   path: ['movementTypeId'],

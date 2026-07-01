@@ -233,6 +233,8 @@ export default function PosMovementKirim() {
       documentDate: header.arrivalDate, notes: header.notes || undefined,
       lines: lines.map(l => ({ materialCardId: parseInt(l.materialCardId, 10), quantity: parseFloat(l.quantity), unitPrice: parseFloat(l.unitPrice) || 0, batchNumber: l.batchNumber || undefined, barcode: l.barcode || undefined, expiryDate: l.expiryDate || undefined, notes: l.notes || undefined })).filter(l => l.materialCardId > 0 && l.quantity > 0),
       submit: submitToKarantin,
+      // Savdo-sity referens H-8 naqshi: double-tap "Saqlash" bir xil kirim-hujjatni ikki marta yaratmasin.
+      idempotencyKey: crypto.randomUUID(),
     };
     try {
       const result = await movementsApi.create(payload as Record<string, unknown>) as CreatedMovement;

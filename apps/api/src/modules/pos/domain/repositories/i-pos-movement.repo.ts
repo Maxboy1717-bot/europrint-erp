@@ -25,6 +25,8 @@ export interface IPosMovementRepository {
   findWarehouseType(id: string): Promise<Result<WarehouseTypeRow | null>>;
   countMovements(): Promise<Result<number>>;
   insertMovement(movRow: Omit<typeof posMovements.$inferInsert, 'id'>): Promise<Result<PosMovement>>;
+  /** Idempotency (2026-07-01): double-tap/retry himoyasi uchun kalit bo'yicha izlash. */
+  findMovementByIdempotencyKey(idempotencyKey: string): Promise<Result<PosMovement | null>>;
   getMaxLineSequence(movementId: number): Promise<Result<number>>;
   insertLines(values: Omit<typeof posMovementLines.$inferInsert, 'id'>[]): Promise<Result<PosMovementLine[]>>;
   findMovementWarehouseIds(movementId: number): Promise<Result<WarehouseIds | null>>;

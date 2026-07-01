@@ -61,6 +61,13 @@ export class PosMovementService {
 
   async createMovement(dto: CreateMovementDto, createdById: number, ipAddress?: string): Promise<Result<PosMovementRow, AppError>> {
     return safeCall(async () => {
+      // Idempotency (2026-07-01, Savdo-sity referens H-8 naqshi): double-tap/retry bir xil
+      // kalit bilan qayta kelsa — mavjud harakatni qaytar, qayta-yaratma/qayta-tekshirma.
+      if (dto.idempotencyKey) {
+        const existingR = await this.repo.findMovementByIdempotencyKey(dto.idempotencyKey);
+        if (existingR.ok && existingR.data) return existingR.data;
+      }
+
       let movTypeR;
       if (dto.movementTypeId != null) {
         movTypeR = await this.repo.findMovementType(dto.movementTypeId);
@@ -177,8 +184,17 @@ export class PosMovementService {
         currency:             dto.baseCurrency ?? 'UZS',
         exchangeRate:         dto.exchangeRate ?? 1,
         notes:                dto.notes,
+        idempotencyKey:       dto.idempotencyKey ?? null,
       });
-      if (!movementR.ok) throw new InternalServerErrorException(movementR.error.message);
+      if (!movementR.ok) {
+        // Race-condition: ikkita bir-vaqtli so'rov bir xil kalit bilan — UNIQUE-buzilish
+        // bo'lsa mavjud harakatni qaytar (Ok), boshqa xato bo'lsa haqiqiy xatoni qaytar.
+        if (dto.idempotencyKey && /idempotency_key|unique/i.test(movementR.error.message)) {
+          const raceR = await this.repo.findMovementByIdempotencyKey(dto.idempotencyKey);
+          if (raceR.ok && raceR.data) return raceR.data;
+        }
+        throw new InternalServerErrorException(movementR.error.message);
+      }
       const movement = movementR.data;
 
       if (dto.lines?.length) await this.addLines(movement.id, dto.lines, dto.fromWarehouseId);
