@@ -136,6 +136,17 @@ export class AutoGlPostingService {
     return this.repo.listForMovement(movementId);
   }
 
+  /**
+   * FAZA Auto-GL (I) — Finance tasdig'i: movement bo'yicha barcha pos_gl_postings
+   * yozuvlarini is_approved=true qiladi (dead-end edi — approve endpoint yo'q edi).
+   */
+  async approveForMovement(movementId: number, approvedBy: number): Promise<Result<{ approved: number }, AppError>> {
+    const r = await this.repo.approveByMovement(movementId, approvedBy);
+    if (!r.ok) return Err(r.error);
+    if (r.data > 0) this.logger.log(`[AutoGL] Movement ${movementId}: ${r.data} ta pos_gl_postings tasdiqlandi (approvedBy=${approvedBy})`);
+    return Ok({ approved: r.data });
+  }
+
   async getJournal(filters?: {
     dateFrom?: string; dateTo?: string;
     debitAccount?: string; creditAccount?: string;

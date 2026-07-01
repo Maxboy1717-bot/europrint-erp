@@ -16,7 +16,6 @@ import { PosNotificationsService } from '../services/pos-notifications.service';
 import { PosEventRepository }      from '../../infrastructure/repositories/pos-event.repository';
 import { AutoBarcodeService }      from '../services/auto-barcode.service';
 import { AutoGlPostingService }    from '../services/auto-gl-posting.service';
-import { GlPostingLogService }     from '../services/gl-posting-log.service';
 import { QuarantineWorkflowService } from '../services/quarantine-workflow.service';
 import { ThreeWayMatchService }    from '../services/three-way-match.service';
 import { broadcastPosEvent }       from '../../presentation/pos.gateway';
@@ -46,7 +45,6 @@ export class PosEventHandler {
     private readonly eventRepo:       PosEventRepository,
     private readonly autoBarcode:     AutoBarcodeService,
     private readonly autoGl:          AutoGlPostingService,
-    private readonly glLedger:        GlPostingLogService,
     private readonly quarantine:      QuarantineWorkflowService,
     private readonly threeWay:        ThreeWayMatchService,
   ) {}
@@ -174,14 +172,14 @@ export class PosEventHandler {
     const finUsers = await this.eventRepo.findByRoles(['finance_head']);
     for (const u of finUsers) { this.n(u.id, 'MOVEMENT_COMPLETED', 'Harakat yakunlandi', `${payload.movementNumber} stock ledgerga yozildi`, payload.movementId); }
 
-    // #03 HOP-5: auto-post the completed movement to the canonical `entries` ledger (idempotent,
-    // mapping-driven). Best-effort: a missing gl_account_mapping just logs, never fails the movement (Q-40).
-    try {
-      await this.glLedger.postMovementToCanonicalLedger(payload.movementId, payload.updatedById ?? 0);
-      broadcastPosEvent('gl.posted', { movementId: payload.movementId, movementNumber: payload.movementNumber, ledger: 'entries' });
-    } catch (e) {
-      this.logger.warn(`[GL→entries] completed-post xato (${payload.movementNumber}): ${String(e)}`);
-    }
+    // FAZA Auto-GL (I): the AWAITING_REVIEW gl_posting_log row for this movement is already created
+    // synchronously in PosMovementStatusService._processCompletedMovement (pos-movement-status.service.ts),
+    // BEFORE this event fires. Posting to the canonical `entries` ledger must wait for a human to approve
+    // it via GET /api/pos/gl/pending → POST /api/pos/gl/entry/:id/approve (GlPostingLogService.approveEntry
+    // → gl-posting-log.repository.ts postMovementToLedger, mapping-driven from gl_account_mappings).
+    // A direct auto-post call used to live here (glLedger.postMovementToCanonicalLedger) — it bypassed the
+    // review gate and wrote straight to `entries` on every 'completed' event, defeating AWAITING_REVIEW.
+    // Removed per spec (Q-46: reuse the already-built approve flow, don't race it with an auto-bypass).
   }
 
   @OnEvent('pos.movement.data.cancelled')

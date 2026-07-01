@@ -143,6 +143,24 @@ export class AutoGlPostingRepository {
     }, 'DB_ERROR');
   }
 
+  /**
+   * FAZA Auto-GL (I) — Finance tasdig'i: pos_gl_postings.is_approved=false → true.
+   * Bu subledger `entries` kanonik ledgeridan MUSTAQIL (Material360/warehouse-features
+   * `/gl-post` orqali yaratilgan preview-yozuvlar); tasdiqlash faqat belgini o'zgartiradi,
+   * qayta yozuv yaratmaydi (idempotent — allaqachon tasdiqlangan bo'lsa 0 qaytaradi).
+   */
+  async approveByMovement(movementId: number, approvedBy: number): Promise<Result<number>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<{ id: number }>(sql`
+        UPDATE pos_gl_postings
+        SET is_approved = true, approved_by = ${approvedBy}, approved_at = NOW()
+        WHERE movement_id = ${movementId} AND is_approved = false
+        RETURNING id
+      `);
+      return rows.length;
+    }, 'DB_ERROR');
+  }
+
   async listForMovement(movementId: number): Promise<Result<unknown[]>> {
     return safeCall(async () => typedExecute<unknown>(sql`
       SELECT id, debit_account, credit_account, amount, currency,
