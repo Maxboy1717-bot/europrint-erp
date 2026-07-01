@@ -72,6 +72,11 @@ import { DrizzleQuotationRepo } from './infrastructure/repositories/drizzle-quot
 import { SalesController } from './sales/sales.controller';
 import { SalesService } from './sales/sales.service';
 import { SalesRepository } from './sales/sales.repository';
+// T26-4-QC-WMS-SD genuine-gap: lost-orders sabab-katalogi + reklamatsiya SLA-timer
+import { SdLostOrdersReclamationsController } from './presentation/sd-lost-orders-reclamations.controller';
+import { SdLostOrdersReclamationsService } from './application/sd-lost-orders-reclamations.service';
+import { DrizzleSdLostOrdersReclamationsRepo } from './infrastructure/repositories/drizzle-sd-lost-orders-reclamations.repo';
+import { SD_LOST_ORDERS_RECLAMATIONS_REPO } from './domain/repositories/i-sd-lost-orders-reclamations.repo';
 
 const commandHandlers = [
   CreateOrderHandler,
@@ -108,6 +113,7 @@ const repositories = [
     SdDashboardController, SdCustomersController, SdLeadsController,
     SdPaymentsController, SdQuotationsController, SdContractsController,
     SalesController, SdOrderDepartmentsController,
+    SdLostOrdersReclamationsController,
   ],
   providers: [
     loggerProvider,
@@ -142,6 +148,9 @@ const repositories = [
     // Phase 4: per-order department selection (fan-out source)
     SdOrderDepartmentsService,
     SdOrderDepartmentsRepository,
+    // T26-4-QC-WMS-SD genuine-gap: lost-orders + reklamatsiya
+    SdLostOrdersReclamationsService,
+    { provide: SD_LOST_ORDERS_RECLAMATIONS_REPO, useClass: DrizzleSdLostOrdersReclamationsRepo },
   ],
   exports: [SALES_ORDER_REPO, SalesService],
 })
