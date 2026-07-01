@@ -104,9 +104,11 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
     onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
   });
 
-  // VISION (EP-ORG-010..013): razryad o'sish so'rovi (imtihon -> HR+rahbar 2-imzo -> o'zgaradi) + tarix.
+  // VISION (EP-ORG-010..013): razryad o'sish/pasayish so'rovi (imtihon -> HR+rahbar 2-imzo -> o'zgaradi) + tarix.
+  const [reqType, setReqType] = useState<"increase" | "decrease">("increase");
   const [reqTarget, setReqTarget] = useState<string>("");
   const [reqScore, setReqScore] = useState<string>("");
+  const [reqReason, setReqReason] = useState<string>("");
   const { data: histData } = useQuery<{ items: Record<string, unknown>[] }>({
     queryKey: [`/api/org-structure/cards/${node.id}/razryad-history`],
     staleTime: 30_000,
@@ -130,13 +132,19 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
   const createRequest = useMutation({
     mutationFn: () => apiRequest<{ message?: string }>("POST", `/api/org-structure/cards/${node.id}/razryad-requests`, {
       targetRazryadId: Number(reqTarget),
-      requestType: "increase",
+      requestType: reqType,
       examScore: reqScore.trim() === "" ? undefined : Number(reqScore),
+      // BE (razryad-history.service.ts:70) pasayishda reason'ni MAJBURIY talab qiladi.
+      reason: reqReason.trim() === "" ? undefined : reqReason.trim(),
     }),
     onSuccess: () => {
       invalidateRazryad();
-      setReqTarget(""); setReqScore("");
-      toast({ title: t("osishSorovYuborildi", "O'sish so'rovi yuborildi (HR + rahbar tasdig'i kutilmoqda)") });
+      setReqTarget(""); setReqScore(""); setReqReason(""); setReqType("increase");
+      toast({
+        title: reqType === "decrease"
+          ? t("pasayishSorovYuborildi", "Pasayish so'rovi yuborildi (HR + rahbar tasdig'i kutilmoqda)")
+          : t("osishSorovYuborildi", "O'sish so'rovi yuborildi (HR + rahbar tasdig'i kutilmoqda)"),
+      });
     },
     onError: (e: unknown) => toast({ title: e instanceof Error ? e.message : t("Xatolik"), variant: "destructive" }),
   });
@@ -266,29 +274,62 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
           <CardTitle className="text-sm flex items-center gap-2"><Award className="h-4 w-4" />{t("razryadOsishSorovi", "Razryad o'sish so'rovi")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          <div className="flex items-center gap-4 text-sm">
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio" name="razryad-req-type" className="accent-emerald-600"
+                checked={reqType === "increase"}
+                onChange={() => { setReqType("increase"); setReqTarget(""); }}
+                data-testid="radio-razryad-increase"
+              />
+              {t("osish", "O'sish")}
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio" name="razryad-req-type" className="accent-red-600"
+                checked={reqType === "decrease"}
+                onChange={() => { setReqType("decrease"); setReqTarget(""); }}
+                data-testid="radio-razryad-decrease"
+              />
+              {t("pasayish", "Pasayish")}
+            </label>
+          </div>
           <div className="flex items-end gap-2 flex-wrap">
             <div>
               <Label className="text-xs">{t("targetRazryad", "Yangi razryad")}</Label>
               <Select value={reqTarget} onValueChange={setReqTarget}>
                 <SelectTrigger className="w-44" data-testid="select-razryad-target"><SelectValue placeholder={t("razryadTanlang", "Razryad tanlang")} /></SelectTrigger>
                 <SelectContent>
-                  {levels.filter((r) => current == null || r.level > current.level).map((r) => (
-                    <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
-                  ))}
+                  {levels
+                    .filter((r) => current == null || (reqType === "increase" ? r.level > current.level : r.level < current.level))
+                    .map((r) => (
+                      <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs">{t("imtihonBali", "Imtihon bali (%)")}</Label>
-              <Input type="number" min="0" max="100" className="w-28" value={reqScore} onChange={(e) => setReqScore(e.target.value)} placeholder="80" />
-            </div>
-            <Button size="sm" disabled={!reqTarget || createRequest.isPending}
+            {reqType === "increase" ? (
+              <div>
+                <Label className="text-xs">{t("imtihonBali", "Imtihon bali (%)")}</Label>
+                <Input type="number" min="0" max="100" className="w-28" value={reqScore} onChange={(e) => setReqScore(e.target.value)} placeholder="80" />
+              </div>
+            ) : (
+              <div className="flex-1 min-w-48">
+                <Label className="text-xs">{t("pasayishSababi", "Pasayish sababi (majburiy)")}</Label>
+                <Input className="w-full" value={reqReason} onChange={(e) => setReqReason(e.target.value)} placeholder={t("pasayishSababiPlaceholder", "Masalan: intizom buzilishi, malaka pasayishi")} data-testid="input-razryad-decrease-reason" />
+              </div>
+            )}
+            <Button size="sm"
+              variant={reqType === "decrease" ? "destructive" : "default"}
+              disabled={!reqTarget || createRequest.isPending || (reqType === "decrease" && reqReason.trim() === "")}
               onClick={() => createRequest.mutate()} data-testid="button-razryad-request">
               {createRequest.isPending ? t("yuborilmoqda", "Yuborilmoqda...") : t("sorovYuborish", "So'rov yuborish")}
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            {t("osishIzoh", "Imtihon → HR imzosi → bevosita rahbar imzosi → razryad o'zgaradi (≥3 oy oraliq). Egasi imtihon-chegara/oy sozlamasa rad etiladi.")}
+            {reqType === "decrease"
+              ? t("pasayishIzoh", "Pasayish sababi majburiy → HR imzosi → bevosita rahbar imzosi → razryad o'zgaradi.")
+              : t("osishIzoh", "Imtihon → HR imzosi → bevosita rahbar imzosi → razryad o'zgaradi (≥3 oy oraliq). Egasi imtihon-chegara/oy sozlamasa rad etiladi.")}
           </p>
           {history.length > 0 && (
             <div className="border-t border-border/60 pt-2 space-y-1">
@@ -323,8 +364,11 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="font-medium">
                       {razryadName(rq.current_razryad_id)} → <b>{razryadName(rq.target_razryad_id)}</b>
-                      <span className="text-muted-foreground"> · {String(rq.request_type ?? "increase")}</span>
+                      <span className={rq.request_type === "decrease" ? "text-red-500" : "text-emerald-600"}>
+                        {" · "}{rq.request_type === "decrease" ? t("pasayish", "Pasayish") : t("osish", "O'sish")}
+                      </span>
                       {rq.exam_score != null && <span className="text-muted-foreground"> · {String(rq.exam_score)}%</span>}
+                      {rq.reason && <span className="text-muted-foreground"> · {String(rq.reason)}</span>}
                     </span>
                     <Badge variant="outline" className={`text-[11px] ${STATUS_STYLE[status] ?? ""}`}>
                       {t(`razryadStatus_${status}`, status === "pending" ? "Kutilmoqda" : status === "hr_approved" ? "HR imzoladi" : status === "approved" ? "Tasdiqlangan" : "Rad etilgan")}
