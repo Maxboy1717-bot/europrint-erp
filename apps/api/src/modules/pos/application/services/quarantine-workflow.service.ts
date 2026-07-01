@@ -5,8 +5,10 @@
  *   DRAFT → KARANTIN → QC_REVIEW → APPROVED → COMPLETED
  */
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, Ok, Err, AppError } from '@common/result';
 import { QuarantineWorkflowRepository } from '../../infrastructure/repositories/quarantine-workflow.repository';
+import { StockLedgerService } from './stock-ledger.service';
 
 export type MovementStatus =
   | 'draft' | 'pending' | 'karantin' | 'qc_review'
@@ -27,7 +29,11 @@ export const STATUS_FLOW: Record<string, MovementStatus[]> = {
 export class QuarantineWorkflowService {
   private readonly logger = new Logger(QuarantineWorkflowService.name);
 
-  constructor(private readonly repo: QuarantineWorkflowRepository) {}
+  constructor(
+    private readonly repo: QuarantineWorkflowRepository,
+    private readonly stockLedger: StockLedgerService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async moveToQuarantine(movementId: number): Promise<Result<void, AppError>> {
     try {
@@ -88,6 +94,8 @@ export class QuarantineWorkflowService {
         decision === 'REWORK' ? 'approved' :
         'rejected';
 
+      const movBefore = await this.repo.findMovementBasic(movementId);
+
       await this.repo.updateInventoryPassport(movementId, decision, qcNote ?? null);
       await this.repo.updateMovementStatus(movementId, targetStatus, {
         qcStatus: decision, qcCompletedAt: true, qcCompletedBy: inspectorId,
@@ -124,6 +132,28 @@ export class QuarantineWorkflowService {
           }
           this.logger.log(`[QC] Movement ${movementId}: CHIQARISH — QC-HOLD dan stok qaytarildi`);
         }
+      }
+
+      // Audit-trail: 'karantin'/'qc_review' bosqichida qilingan QC qarorini ham
+      // "Tasdiqlash Bosqichlari" (movement_confirmations) jadvaliga yozamiz — avval
+      // faqat rasmiy qc_pending yo'li orqali kelgan qarorlar yozilardi (World-1),
+      // karantin-QC (World-2) qarori umuman ro'yxatga olinmasdi.
+      const confirmDecision = decision === 'CHIQARISH' ? 'REJECTED' : decision === 'REWORK' ? 'REWORK' : 'APPROVED';
+      await this.stockLedger.recordConfirmation(movementId, 'QC', inspectorId, confirmDecision, qcNote);
+
+      // KARANTIN→QC qabul qilingan kirimni OMBOR_MENEJER + AI_GL bosqichlariga ulash:
+      // bu ikki bosqich allaqachon 'pos.movement.data.approved' hodisa-tinglovchisi orqali
+      // qurilgan (AutoGL posting, 3-way match, MES signali, ai_processing belgisi) — lekin
+      // karantin oqimi (bu servis) hech qachon shu hodisani chiqarmagani uchun ular hech qachon
+      // ishga tushmagan edi. Faqat qo'shildi — mavjud QC qarori (targetStatus) o'zgarmadi (Q-39).
+      if (targetStatus === 'approved' && movBefore) {
+        this.eventEmitter.emit('pos.movement.data.approved', {
+          movementId,
+          movementNumber: movBefore.movement_number,
+          oldStatus: movBefore.status,
+          newStatus: targetStatus,
+          updatedById: inspectorId,
+        });
       }
 
       return Ok(undefined);

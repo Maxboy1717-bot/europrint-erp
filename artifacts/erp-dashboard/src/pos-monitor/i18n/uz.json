@@ -5,6 +5,9 @@
   "texkartaRuxsat": "Texkarta bo'yicha ruxsat berilgan",
   "texkartaBloklangan": "Texkarta bloklagan",
   "texkarta": "Texkarta",
+  "qcQabul": "Qabul qilish",
+  "qaytaIshlash": "Qayta ishlash",
+  "qcChiqarish": "Ta'minotchiga qaytarish",
   "nav": {
     "dashboard": "Bosh sahifa",
     "newKirim": "📥 Yangi Kirim",
@@ -82,6 +85,7 @@
     "completed": "Bajarildi",
     "cancelled": "Bekor qilindi",
     "karantin": "Karantinda",
+    "qc_review": "QC ko'rib chiqilmoqda",
     "DRAFT": "Qoralama",
     "SUBMITTED": "Yuborildi",
     "APPROVED": "Tasdiqlandi",

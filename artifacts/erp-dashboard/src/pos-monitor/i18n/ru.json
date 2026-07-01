@@ -5,6 +5,9 @@
   "texkartaRuxsat": "Разрешено по техкарте",
   "texkartaBloklangan": "Заблокировано техкартой",
   "texkarta": "Техкарта",
+  "qcQabul": "Принять",
+  "qaytaIshlash": "На доработку",
+  "qcChiqarish": "Вернуть поставщику",
   "nav": {
     "dashboard": "Главная",
     "newKirim": "📥 Новый Приход",
@@ -82,6 +85,7 @@
     "completed": "Завершено",
     "cancelled": "Отменено",
     "karantin": "На карантине",
+    "qc_review": "QC на рассмотрении",
     "DRAFT": "Черновик",
     "SUBMITTED": "Отправлено",
     "APPROVED": "Одобрено",

@@ -26,6 +26,20 @@ export class QuarantineWorkflowRepository {
     `);
   }
 
+  /** KARANTIN→QC bosqichini OMBOR_MENEJER/AI_GL hodisalariga ulash uchun minimal movement ma'lumoti. */
+  async findMovementBasic(movementId: number): Promise<{
+    id: number; movement_number: string; movement_type: string; status: string; created_by: number | null;
+  } | null> {
+    const rows = await typedExecute<{
+      id: number; movement_number: string; movement_type: string; status: string; created_by: number | null;
+    }>(sql`
+      SELECT id, movement_number, movement_type, status, created_by
+      FROM pos_movements
+      WHERE id = ${movementId}
+    `);
+    return rows[0] ?? null;
+  }
+
   async updateMovementStatus(
     movementId: number,
     status: MovementStatus,

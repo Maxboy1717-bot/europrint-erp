@@ -5,6 +5,9 @@
   "texkartaRuxsat": "Техкарта бўйича рухсат берилган",
   "texkartaBloklangan": "Техкарта блоклаган",
   "texkarta": "Техкарта",
+  "qcQabul": "Қабул қилиш",
+  "qaytaIshlash": "Қайта ишлаш",
+  "qcChiqarish": "Таъминотчига қайтариш",
   "nav": {
     "dashboard": "Бош саҳифа",
     "newKirim": "📥 Янги Кирим",
@@ -82,6 +85,7 @@
     "completed": "Бажарилди",
     "cancelled": "Бекор қилинди",
     "karantin": "Карантинда",
+    "qc_review": "QC кўриб чиқилмоқда",
     "DRAFT": "Қоралама",
     "SUBMITTED": "Юборилди",
     "APPROVED": "Тасдиқланди",

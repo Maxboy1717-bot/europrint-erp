@@ -423,6 +423,11 @@ export const warehouseFeaturesApi = {
   getMaterialProfile: (materialId: number) =>
     posReq(`GET`, `/wh-features/material/${materialId}/profile`),
 
+  // Karantin QC qarori (QABUL/REWORK/CHIQARISH) — 'karantin'/'qc_review' holatidagi
+  // harakatlar uchun; jonli/ulangan QuarantineWorkflowService orqali ishlaydi.
+  qcDecision: (movementId: number, decision: "QABUL" | "REWORK" | "CHIQARISH", qcNote?: string) =>
+    posReq(`POST`, `/wh-features/movement/${movementId}/qc-decision`, { decision, qcNote }),
+
   // GL Posting (avtomatik)
   postGl:           (movementId: number) =>
     posReq(`POST`, `/wh-features/movement/${movementId}/gl-post`),

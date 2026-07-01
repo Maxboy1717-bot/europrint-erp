@@ -32,7 +32,9 @@ export class PosReportsRepository {
             AS "pendingApprovalCount",
           (SELECT COUNT(*) FROM pos_stock_alerts WHERE alert_type = 'LOW_STOCK' AND resolved = false)
             AS "lowStockCount",
-          (SELECT COUNT(*) FROM pos_movements WHERE status = 'qc_pending')
+          -- 'karantin'/'qc_review' — jonli/ulangan karantin-QC oqimi statuslari; 'qc_pending'ga
+          -- qo'shib hisoblanmasa, karantindagi kirimlar "QC kutmoqda" KPI'da ko'rinmay qoladi.
+          (SELECT COUNT(*) FROM pos_movements WHERE status IN ('qc_pending','karantin','qc_review'))
             AS qc_pending,
           (SELECT COUNT(*) FROM pos_material_requests WHERE status = 'pending')
             AS pending_requests,

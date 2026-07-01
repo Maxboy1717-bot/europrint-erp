@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { usePosI18n } from "../i18n/usePosI18n";
-import { movementsApi, movementExtraApi } from "../api/pos-monitor.api";
+import { movementsApi, movementExtraApi, warehouseFeaturesApi } from "../api/pos-monitor.api";
 import { GlTab } from "../components/GlTab";
 import { StepsTab } from "../components/StepsTab";
 
@@ -33,8 +33,13 @@ interface TechcardCheck {
   checkedAt?: string;
 }
 
+// EXTERNAL_IN (tashqi kirim) — real oqim: draft yaratilganda avtomatik 'karantin'ga
+// o'tadi (pos.events.ts onMovementCreated → QuarantineWorkflowService.moveToQuarantine),
+// so'ng QC qarori (qcDecision) bilan 'approved'/'rejected'ga o'tadi. 'qc_pending'/'qc_approved'
+// — qo'lda (karantinsiz) yuborilgan eski/muqobil yo'l uchun ham qoldirilgan (Q-39: mavjud
+// yo'l o'chirilmaydi, faqat qo'shiladi).
 const STATUS_STEPS: Record<string, string[]> = {
-  EXTERNAL_IN:   ["draft", "qc_pending", "qc_approved", "pending", "approved", "completed"],
+  EXTERNAL_IN:   ["draft", "karantin", "qc_review", "qc_pending", "qc_approved", "pending", "approved", "completed"],
   EXTERNAL_OUT:  ["draft", "pending", "approved", "completed"],
   INTERNAL_ISSUE:["draft", "pending", "approved", "completed"],
 };
@@ -43,6 +48,7 @@ const STATUS_BADGE: Record<string, string> = {
   draft: "pos-badge-gray", pending: "pos-badge-yellow", approved: "pos-badge-green",
   completed: "pos-badge-green", cancelled: "pos-badge-red",
   qc_pending: "pos-badge-yellow", qc_approved: "pos-badge-green",
+  karantin: "pos-badge-yellow", qc_review: "pos-badge-yellow", rejected: "pos-badge-red",
 };
 
 export default function PosMovementDetail() {
@@ -78,6 +84,18 @@ export default function PosMovementDetail() {
     setActing(true);
     try {
       await movementsApi.updateStatus(id, status, rejectReason || undefined);
+      await loadData();
+      setRejectReason("");
+    } catch { /* noop */ } finally { setActing(false); }
+  }
+
+  /** Karantin/QC ko'rib-chiqish navbatidagi kirim uchun QC qarori (QABUL/REWORK/CHIQARISH).
+   *  Jonli/ulangan QuarantineWorkflowService orqali — real stok ko'chirish (QC-HOLD → RM-MAIN)
+   *  va keyingi OMBOR_MENEJER/AI_GL bosqichlarini ('pos.movement.data.approved' hodisasi orqali) ishga tushiradi. */
+  async function doQcDecision(decision: "QABUL" | "REWORK" | "CHIQARISH") {
+    setActing(true);
+    try {
+      await warehouseFeaturesApi.qcDecision(id, decision, rejectReason || undefined);
       await loadData();
       setRejectReason("");
     } catch { /* noop */ } finally { setActing(false); }
@@ -129,6 +147,13 @@ export default function PosMovementDetail() {
             <>
               <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doAction("qc_approved")}>{t("qcQabul")}</button>
               <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doAction("qc_rework")}>{t("qaytaIshlash")}</button>
+            </>
+          )}
+          {(movement.status === "karantin" || movement.status === "qc_review") && (
+            <>
+              <button className="pos-btn pos-btn-success" disabled={acting} onClick={() => void doQcDecision("QABUL")}>{t("qcQabul")}</button>
+              <button className="pos-btn pos-btn-ghost"   disabled={acting} onClick={() => void doQcDecision("REWORK")}>{t("qaytaIshlash")}</button>
+              <button className="pos-btn pos-btn-danger"  disabled={acting} onClick={() => void doQcDecision("CHIQARISH")}>{t("qcChiqarish")}</button>
             </>
           )}
           <a className="pos-btn pos-btn-ghost" href={movementsApi.getPdf(movement.id)} target="_blank" rel="noreferrer" style={{ fontSize: 12, padding: "6px 12px" }}>
