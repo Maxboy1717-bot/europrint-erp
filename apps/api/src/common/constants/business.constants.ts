@@ -381,5 +381,12 @@ export const POS_AI_NORM_LOOKBACK_LIMIT = 200;
 /** Ombor chiqish darvozasida yuz-tanish moslik chegarasi (HR face-recognition bilan bir xil). */
 export const WAREHOUSE_EXIT_FACE_MATCH_THRESHOLD = 0.85;
 
-/** ai_camera_cross_check.match_score ustunida saqlanadigan aniqlik (0 raqamdan keyin). */
-export const WAREHOUSE_EXIT_MATCH_SCORE_DECIMALS = 4;
+/**
+ * ai_camera_cross_check.match_score ustunida saqlanadigan aniqlik (0 raqamdan keyin).
+ * ⭐ Ustun DB'da `NUMERIC(5,2)` (faqat 2 xona) — shuning uchun 2 qilib qo'yilgan
+ * (avval 4 edi: JS 4 xonagacha yaxlitlagan bo'lsa ham, Postgres baribir 2 xonaga
+ * kesib tashlar edi — soxta aniqlik, live-tekshiruv bilan tasdiqlandi: 0.9123 →
+ * saqlanganda "0.91"). Ustun kengaytirilsa (migratsiya, egasi ruxsati bilan) —
+ * shu konstanta ham yangilanadi.
+ */
+export const WAREHOUSE_EXIT_MATCH_SCORE_DECIMALS = 2;

@@ -88,7 +88,7 @@ async function bootstrap(): Promise<void> {
   configureAppMiddleware(app);
   const fastify = app.getHttpAdapter().getInstance() as RawFastify;
   configureSwagger(app, fastify, port, logger);
-  configureHealthRoutes(fastify);
+  configureHealthRoutes(fastify, app);
 
   // TZ-D06: SD schema additions (version column, idempotency table)
   try {
