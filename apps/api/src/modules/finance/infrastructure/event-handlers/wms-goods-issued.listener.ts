@@ -14,12 +14,16 @@
  *         Dr Inventory (1000)   +value
  *           Cr Accounts Payable (6000) -value   (mirrors GlPostingService.postGoodsReceipt)
  *
- *   value = issuedQty × unit cost. The WMS events carry QUANTITY only (payload.amount /
- *   event.amount), never a money value, so the unit cost is read at runtime from the
- *   canonical `material_cards` row (unit_price, falling back to last_purchase_price).
- *   If no positive unit cost exists for the material the GL post is SKIPPED and a warning
- *   is logged — the value is never invented (Q-40 "ishlaydi ≠ to'g'ri"; mirrors the
- *   EP_COST_RATIO guard in delivery-completed.listener).
+ *   value = issuedQty × unit cost. FAZA K (Kassa+Moliya FIFO tannarx): WmsGoodsIssuedEvent
+ *   MAY carry a pre-computed `fifoValue` — the REAL cost basis of the specific `batch_lots`
+ *   rows FIFO/FEFO-picked for that issue (GoodsIssueHandler.computeFifoValue), present ONLY
+ *   when every picked batch has a known positive `cost_per_unit`. When present it is used
+ *   AS-IS (true per-batch FIFO cost — no material_cards lookup). Otherwise (no batch data,
+ *   or batches exist but their cost_per_unit was never recorded) the unit cost falls back to
+ *   the canonical `material_cards` row (unit_price, falling back to last_purchase_price) — the
+ *   pre-FAZA-K behavior, unchanged (Q-39 no regression). If neither is available the GL post
+ *   is SKIPPED and a warning is logged — the value is never invented (Q-40 "ishlaydi ≠ to'g'ri";
+ *   mirrors the EP_COST_RATIO guard in delivery-completed.listener).
  *
  *   Idempotent: reference `WGI-<ppId>-<materialId>-<ymd>` / `WFR-<warehouseId>-<materialId>-<ymd>`
  *   — GlPostingService.createJournalEntry de-dupes a re-fired event for the same day.
@@ -66,7 +70,14 @@ export class WmsGoodsIssuedListener implements IEventHandler<WmsGoodsIssuedEvent
         return;
       }
 
-      const valued = await this.resolveValue(materialId, quantity);
+      // FAZA K: prefer the REAL FIFO cost basis (specific batch_lots.cost_per_unit picked
+      // for this issue) when the goods-issue path attached one; it is only ever present
+      // when fully known (GoodsIssueHandler.computeFifoValue), never a guessed/partial figure.
+      const fifoValue = Number(payload['fifoValue']);
+      const hasFifoValue = Number.isFinite(fifoValue) && fifoValue > 0;
+      const valued = hasFifoValue
+        ? { materialId, quantity, value: fifoValue, source: 'FIFO' as const }
+        : { ...(await this.resolveValue(materialId, quantity)), source: 'CURRENT' as const };
       if (valued.value == null || valued.value <= 0) {
         this.logger.warn(
           `WmsGoodsIssuedListener: no positive unit cost for material ${materialId} ` +
@@ -93,7 +104,7 @@ export class WmsGoodsIssuedListener implements IEventHandler<WmsGoodsIssuedEvent
       }
       this.logger.log(
         `HOP 5 WMS→FIN: goods-issue GL posted to entries — material=${materialId}, qty=${quantity}, ` +
-          `value=${valued.value}, entryId=${result.data}, ref=${reference}`,
+          `value=${valued.value} (cost-source=${valued.source}), entryId=${result.data}, ref=${reference}`,
       );
     } catch (error: unknown) {
       this.logger.error(`Error processing WmsGoodsIssuedEvent: ${(error as Error).message}`);

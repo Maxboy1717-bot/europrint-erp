@@ -29,6 +29,11 @@ export interface IssuableBatchLot {
   remaining: number;
   expiryDate: Date | null;
   receivedAt: Date | null;
+  /**
+   * FAZA K — partiyaning o'z narxi (batch_lots.cost_per_unit). null = narx qayd
+   * etilmagan (o'sha qism uchun finance material_cards fallback ishlatadi).
+   */
+  costPerUnit: number | null;
 }
 
 /**
@@ -38,6 +43,8 @@ export interface IssuableBatchLot {
 export interface BatchPick {
   lotId: number;
   qty: number;
+  /** FAZA K — tanlangan partiyaning narxi (null = noma'lum). */
+  costPerUnit: number | null;
 }
 
 /** Tanlash natijasi: nechta partiyadan qancha olinadi + qaysi strategiya. */
@@ -142,7 +149,7 @@ export class BatchSelectionService {
       if (remaining <= 0) break;
       const take = Math.min(lot.remaining, remaining);
       if (take > 0) {
-        picks.push({ lotId: lot.id, qty: take });
+        picks.push({ lotId: lot.id, qty: take, costPerUnit: lot.costPerUnit });
         remaining -= take;
       }
     }

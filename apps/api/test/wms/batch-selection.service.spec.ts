@@ -20,12 +20,14 @@ function lot(
   remaining: number,
   expiryDays: number | null,
   receivedDaysAgo: number,
+  costPerUnit: number | null = null,
 ): IssuableBatchLot {
   return {
     id,
     remaining,
     expiryDate: expiryDays === null ? null : days(expiryDays),
     receivedAt: days(-receivedDaysAgo),
+    costPerUnit,
   };
 }
 
@@ -59,7 +61,7 @@ describe('BatchSelectionService.buildPlan', () => {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.data.strategy).toBe(BatchIssueStrategy.FIFO);
-      expect(r.data.picks).toEqual([{ lotId: 1, qty: 40 }]);
+      expect(r.data.picks).toEqual([{ lotId: 1, qty: 40, costPerUnit: null }]);
     }
   });
 
@@ -68,7 +70,7 @@ describe('BatchSelectionService.buildPlan', () => {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.data.strategy).toBe(BatchIssueStrategy.FEFO);
-      expect(r.data.picks).toEqual([{ lotId: 2, qty: 30 }]);
+      expect(r.data.picks).toEqual([{ lotId: 2, qty: 30, costPerUnit: null }]);
     }
   });
 
@@ -77,8 +79,8 @@ describe('BatchSelectionService.buildPlan', () => {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.data.picks).toEqual([
-        { lotId: 1, qty: 50 },
-        { lotId: 2, qty: 70 },
+        { lotId: 1, qty: 50, costPerUnit: null },
+        { lotId: 2, qty: 70, costPerUnit: null },
       ]);
     }
   });
@@ -104,6 +106,21 @@ describe('BatchSelectionService.buildPlan', () => {
   it('ignores zero-qoldiq batches when planning', () => {
     const r = svc.buildPlan([lot(1, 0, null, 30), lot(2, 25, null, 10)], 25, NOW);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.data.picks).toEqual([{ lotId: 2, qty: 25 }]);
+    if (r.ok) expect(r.data.picks).toEqual([{ lotId: 2, qty: 25, costPerUnit: null }]);
+  });
+
+  it('FAZA K — carries each pick\'s own batch cost_per_unit through the plan (per-batch FIFO cost)', () => {
+    const r = svc.buildPlan(
+      [lot(1, 50, null, 30, 1200), lot(2, 100, null, 10, 1500)],
+      120,
+      NOW,
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.picks).toEqual([
+        { lotId: 1, qty: 50, costPerUnit: 1200 },
+        { lotId: 2, qty: 70, costPerUnit: 1500 },
+      ]);
+    }
   });
 });

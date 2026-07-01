@@ -287,6 +287,7 @@ export class DrizzleWmsRepository implements IWmsRepository {
       referenceId?: number | null;
       createdBy?: number | null;
       notes?: string | null;
+      unitCost?: number | null;
     },
     tx?: DrizzleExecutor,
   ): Promise<Result<void>> {
@@ -325,6 +326,10 @@ export class DrizzleWmsRepository implements IWmsRepository {
           remaining: Number(r.remaining_quantity ?? 0),
           expiryDate: r.expiry_date ? new Date(String(r.expiry_date)) : null,
           receivedAt: r.received_date ? new Date(String(r.received_date)) : null,
+          costPerUnit:
+            r.cost_per_unit != null && Number.isFinite(Number(r.cost_per_unit)) && Number(r.cost_per_unit) > 0
+              ? Number(r.cost_per_unit)
+              : null,
         }),
       );
       return Ok(lots);

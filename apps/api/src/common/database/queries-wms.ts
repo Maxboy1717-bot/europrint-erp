@@ -14,6 +14,12 @@ export interface BatchLotRow {
   remaining_quantity: string | number | null;
   expiry_date: string | Date | null;
   received_date: string | Date | null;
+  /**
+   * FAZA K (Kassa+Moliya FIFO tannarx) — per-batch acquisition cost (batch_lots.cost_per_unit).
+   * NULL when the batch was created without a recorded cost (goods-issue then falls back to
+   * material_cards.unit_price for that portion — never invents a FIFO value, Q-40).
+   */
+  cost_per_unit: string | number | null;
 }
 
 /** Minimal executor surface (db or a Drizzle tx) for raw-SQL helpers below. */
@@ -271,6 +277,7 @@ export async function queryIssuableBatchLots(
       SELECT id,
              remaining_quantity,
              expiry_date,
+             cost_per_unit,
              COALESCE(received_date, created_at) AS received_date
       FROM batch_lots
       WHERE material_id = ${materialId}

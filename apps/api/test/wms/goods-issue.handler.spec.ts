@@ -48,12 +48,14 @@ function lot(
   remaining: number,
   expiryDays: number | null,
   receivedDaysAgo: number,
+  costPerUnit: number | null = null,
 ): IssuableBatchLot {
   return {
     id,
     remaining,
     expiryDate: expiryDays === null ? null : days(expiryDays),
     receivedAt: days(-receivedDaysAgo),
+    costPerUnit,
   };
 }
 

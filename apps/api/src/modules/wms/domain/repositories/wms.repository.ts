@@ -120,6 +120,8 @@ export interface IWmsRepository {
       referenceId?: number | null;
       createdBy?: number | null;
       notes?: string | null;
+      /** FAZA K — per-unit FIFO/acquisition cost recorded on the ledger row (null = unknown). */
+      unitCost?: number | null;
     },
     tx?: DrizzleExecutor,
   ): Promise<Result<void>>;
