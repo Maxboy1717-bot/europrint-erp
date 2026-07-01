@@ -10,9 +10,9 @@
  *   `resolveUserIds` / `resolveRoles` — qator topilmasa avvalgi hardcoded rolga qaytadi
  *   (regressiya yo'q, Q-39): jadval sozlanmagan hodisa uchun eski xatti-harakat saqlanadi.
  *
- * NOTE: Raw SQL — COALESCE bilan qisman UPDATE + `= ANY(${arr}::text[]/::int[])` (aniq cast bilan;
- *   cast'siz JS massiv ANY() satr-kortej sifatida noto'g'ri bind bo'ladi — bu loyihada allaqachon
- *   bilingan xato, qarang drizzle-gl-posting.repo.ts:25-26 izohi). ARCHITECTURE_RULES.md Rule 4.
+ * NOTE: Raw SQL — COALESCE bilan qisman UPDATE. Ko'p-qiymatli filtr uchun `IN (${sql.join(...)})`
+ *   ishlatiladi (`= ANY(${arr}::text[])` EMAS — bu loyihada bilingan xato, JS massivni satr-kortej
+ *   sifatida noto'g'ri bind qiladi, qarang drizzle-gl-posting.repo.ts:25-26). ARCHITECTURE_RULES.md Rule 4.
  * @layer Repository (Notifications)
  */
 import { Injectable, Logger } from '@nestjs/common';
@@ -140,9 +140,12 @@ export class NotificationRoutingRepository {
       }
 
       if (roles.size > 0) {
-        const roleArr = Array.from(roles);
+        // `role = ANY(${arr}::text[])` mis-binds a JS array as a row tuple "ANY(($1,$2))",
+        // which Postgres rejects (bilingan xato, drizzle-gl-posting.repo.ts:25-26 bilan bir xil).
+        // Parametrli IN(...) ro'yxati bilan almashtirildi — bir xonali holatda ham to'g'ri ishlaydi.
+        const roleConds = sql.join(Array.from(roles).map(r => sql`${r}`), sql`, `);
         const roleRows = await runQuery<{ id: number }>(sql`
-          SELECT id FROM users WHERE role = ANY(${roleArr}::text[]) AND is_active = TRUE LIMIT 200
+          SELECT id FROM users WHERE role IN (${roleConds}) AND is_active = TRUE LIMIT 200
         `);
         for (const row of roleRows.rows) userIds.add(row.id);
       }

@@ -44,8 +44,10 @@ export class ProcurementController {
   @Post('requests')
   @RequirePermission('pos.reports.read')
   @ApiOperation({ summary: "Xarid so'rovi yaratish (P2P) + org-sxema tasdiq zanjiri" })
-  async createRequest(@Body() body: CreateProcurementRequestInput) {
-    return unwrapOrThrow(await this.requestService.createRequest(body));
+  async createRequest(@Body() body: CreateProcurementRequestInput, @CurrentUser() user: AuthenticatedUser) {
+    // createdBy -> CC/Kanban signal (CcSpawnRequestedEvent) uchun ccSenderUserId manbai
+    // (procurement-request.service.ts:125). Avval berilmagan edi -> signal doim o'chirilgan holatda edi.
+    return unwrapOrThrow(await this.requestService.createRequest(body, user.id));
   }
 
   /** So'rovlar ro'yxati — ?status= / ?requesterEmployeeId= / ?pendingApproverUserId= (rahbar worklist). */
