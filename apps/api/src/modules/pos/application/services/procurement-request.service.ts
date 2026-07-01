@@ -5,12 +5,14 @@
  *   ga pending bosqichlar sifatida biriktiriladi. Returns Result<T>; never throws raw Errors.
  */
 import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { TashkentTimeService } from '@common/time';
 import { dbRows } from '../../../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
 import { ProcurementApprovalChainService } from './procurement-approval-chain.service';
+import { CcSpawnRequestedEvent } from '../../../communication-center/domain/events/cc-spawn-requested.event';
 
 const _time = new TashkentTimeService();
 
@@ -37,7 +39,10 @@ export interface CreateProcurementRequestInput {
 @Injectable()
 export class ProcurementRequestService {
   private readonly logger = new Logger(ProcurementRequestService.name);
-  constructor(private readonly approvalChain: ProcurementApprovalChainService) {}
+  constructor(
+    private readonly approvalChain: ProcurementApprovalChainService,
+    private readonly eventBus: EventBus,
+  ) {}
 
   /**
    * Xarid so'rovi yaratadi: header + qatorlar + org-sxema tasdiq zanjiri (pending bosqichlar).
@@ -111,6 +116,26 @@ export class ProcurementRequestService {
       }
       if (chain.length === 0) {
         this.logger.warn(`[P2P] So'rov ${requestNumber}: tasdiq zanjiri bo'sh (org-bo'lim/head topilmadi)`);
+      }
+
+      // 7. Communication Center'da ko'rinish (N0 SUB-2): informational broadcast, HAQIQIY
+      //    tasdiq qarori shu yerda emas — procurement_approvals zanjirida davom etadi
+      //    (Q-39: mavjud approval-mexanizm o'zgarmaydi). CC'ning mavjud cc-event.listener
+      //    ko'prigi bu draft'dan avtomatik Kanban karta yaratadi (related_type='cc_document').
+      const ccSenderUserId = input.requesterUserId ?? createdBy;
+      if (ccSenderUserId != null) {
+        try {
+          this.eventBus.publish(new CcSpawnRequestedEvent({
+            templateCode: 'PROCUREMENT',
+            senderUserId: ccSenderUserId,
+            subject: `P2P xarid so'rovi: ${requestNumber} — ${input.title}`,
+            body: input.description ?? `${lines.length} qator, jami ${totalAmount} ${input.currency ?? 'UZS'}`,
+            priority: 'normal',
+            metadata: { procurementRequestId: requestId, requestNumber, totalAmount },
+          }));
+        } catch (e) {
+          this.logger.warn(`[P2P] So'rov ${requestNumber}: CC'ga chiqarish xatosi (ignore) — ${String(e)}`);
+        }
       }
 
       return {
@@ -204,8 +229,47 @@ export class ProcurementRequestService {
       RETURNING id, amount, currency, status, settlement_status
     `));
     const adv = ins[0] ?? null;
-    if (adv) this.logger.log(`[P2P] So'rov ${requestId} → avans/podotchet #${adv['id']} (${adv['amount']} ${adv['currency']}) ochildi`);
+    if (adv) {
+      this.logger.log(`[P2P] So'rov ${requestId} → avans/podotchet #${adv['id']} (${adv['amount']} ${adv['currency']}) ochildi`);
+      await this.notifyCashierForDisbursement(requestId, String(r['request_number']), adv);
+    }
     return adv;
+  }
+
+  /**
+   * Increment N0 (Kanban tasdiq → cashier-hub ko'prigi, FAZA N0 SUB-3): so'rov to'liq
+   * tasdiqlanib avans/podotchet ochilganda kassir/moliya menejerlariga bildirishnoma
+   * yuboriladi — jismoniy pulni finance/cashier-hub.recordMovement orqali ochish uchun
+   * (PIN + ochiq smena talab qiladi, shuning uchun bu yerdan avtomatik chaqirib
+   * bo'lmaydi — owner #8 xavfsizlik qoidasi). Kassir bildirishnomani ko'rib, Cashier
+   * Hub'ni ochib, shu so'rov raqamiga (reference) `advance` harakatini PIN bilan yozadi.
+   */
+  private async notifyCashierForDisbursement(
+    requestId: number,
+    requestNumber: string,
+    adv: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      const cashiers = dbRows(await rawSql(sql`
+        SELECT id FROM users WHERE role IN ('cashier', 'finance_manager') AND is_active = true
+      `));
+      for (const c of cashiers) {
+        await rawSql(sql`
+          INSERT INTO notifications (user_id, type, title, body, is_read, created_at, reference_id, reference_type)
+          VALUES (
+            ${Number(c['id'])}, 'procurement_advance_ready',
+            ${`Podotchet tayyor: ${requestNumber}`},
+            ${`Xarid so'rovi ${requestNumber} tasdiqlandi — avans #${adv['id']} (${adv['amount']} ${adv['currency']}). Cashier Hub'da PIN bilan to'lovni yozing.`},
+            false, NOW(), ${requestId}, 'procurement_request'
+          )
+        `);
+      }
+      if (cashiers.length === 0) {
+        this.logger.warn(`[P2P] So'rov ${requestId}: kassir/moliya menejeri topilmadi — bildirishnoma yuborilmadi`);
+      }
+    } catch (e) {
+      this.logger.warn(`[P2P] So'rov ${requestId}: kassirga bildirishnoma xatosi (ignore) — ${String(e)}`);
+    }
   }
 
   /**
