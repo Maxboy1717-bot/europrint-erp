@@ -9,6 +9,28 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 
+// APPROVED: egasi vizyon-qurish 2026-07-01, FAZA Q — jadval allaqachon DB'da mavjud
+// (apps/api/src/shared/db/migrations/ai-p36-violation-block-schema.sql:67-78, CREATE
+// TABLE IF NOT EXISTS). Bu yerda faqat Drizzle mapping qo'shilmoqda — YANGI CREATE
+// TABLE migratsiyasi EMAS, faqat mavjud jadvalga typed ORM kirish (ustunlar live
+// information_schema bilan tekshirildi: id/employee_id/shift_id/expected_location/
+// detected_location/match_score/anomaly_detected/camera_source/checked_at/created_at).
+export const ai_camera_cross_check = pgTable('ai_camera_cross_check', {
+  id: serial('id').primaryKey(),
+  employee_id: integer('employee_id').notNull(),
+  shift_id: integer('shift_id'),
+  expected_location: text('expected_location'),
+  detected_location: text('detected_location'),
+  match_score: decimal('match_score', { precision: 5, scale: 2 }),
+  anomaly_detected: boolean('anomaly_detected').notNull().default(false),
+  camera_source: text('camera_source'),
+  checked_at: timestamp('checked_at', { withTimezone: true }).defaultNow().notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('ai_camera_cross_check_employee_id_idx').on(table.employee_id),
+  index('ai_camera_cross_check_anomaly_idx').on(table.anomaly_detected),
+]);
+
 export const sensor_devices = pgTable('sensor_devices', {
   id: uuid('id').primaryKey().$defaultFn(() => createId()),
   device_code: text('device_code').notNull().unique(),

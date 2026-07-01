@@ -16,4 +16,11 @@ export enum IncidentType {
   SUSPICIOUS_ACTIVITY = 'suspicious_activity',
   SYSTEM_VULNERABILITY = 'system_vulnerability',
   INCIDENT_RESPONSE = 'incident_response',
+  /**
+   * FAZA Q — ombor AI-kamera nazorati: chiqish darvozasida yuz-tanish orqali
+   * tasdiqlanmagan xodim tomonidan tovar chiqarilishi (noqonuniy olib chiqish
+   * yoki ruxsatsiz kirish shubhasi). Avtomatik yaratiladi
+   * (WarehouseExitGuardService.verifyExit → anomaly_detected=true).
+   */
+  UNAUTHORIZED_WAREHOUSE_EXIT = 'unauthorized_warehouse_exit',
 }

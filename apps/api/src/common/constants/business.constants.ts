@@ -370,3 +370,16 @@ export const POS_AI_NORM_MIN_SAMPLE_SIZE = 3;
 
 /** AI-norma hisoblashda ko'riladigan so'nggi tugallangan harakatlar soni chegarasi. */
 export const POS_AI_NORM_LOOKBACK_LIMIT = 200;
+
+// ---------------------------------------------------------------------------
+// FAZA Q — Ombor AI-kamera nazorati (noqonuniy olib chiqish / ruxsatsiz kirish).
+// APPROVED: egasi vizyon-qurish 2026-07-01, FAZA Q.
+// Mavjud HR yuz-tanish (FaceRecognitionService, cosine 0.85) reuse qilinadi —
+// bu chegara o'sha servisning threshold'i bilan bir xil (Q-46 dublikat emas).
+// ---------------------------------------------------------------------------
+
+/** Ombor chiqish darvozasida yuz-tanish moslik chegarasi (HR face-recognition bilan bir xil). */
+export const WAREHOUSE_EXIT_FACE_MATCH_THRESHOLD = 0.85;
+
+/** ai_camera_cross_check.match_score ustunida saqlanadigan aniqlik (0 raqamdan keyin). */
+export const WAREHOUSE_EXIT_MATCH_SCORE_DECIMALS = 4;

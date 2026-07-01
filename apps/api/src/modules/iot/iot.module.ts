@@ -60,6 +60,12 @@ import { IotTabletService } from './application/iot-tablet.service';
 import { DrizzleIotTabletRepo } from './infrastructure/repositories/drizzle-iot-tablet.repo';
 import { OeeCalculatorService } from './oee/oee-calculator.service';
 import { PredictiveMaintenanceService } from './oee/predictive-maintenance.service';
+// FAZA Q — Ombor AI-kamera nazorati (noqonuniy olib chiqish / ruxsatsiz kirish).
+import { HrModule } from '../hr/hr.module';
+import { WarehouseExitGuardController } from './presentation/warehouse-exit-guard.controller';
+import { WarehouseExitGuardService } from './application/warehouse-exit-guard.service';
+import { DrizzleWarehouseExitGuardRepo } from './infrastructure/repositories/drizzle-warehouse-exit-guard.repo';
+import { WAREHOUSE_EXIT_GUARD_REPO } from './domain/repositories/i-warehouse-exit-guard.repo';
 
 const commandHandlers = [RecordSensorReadingHandler, RegisterDeviceHandler, UpdateDeviceThresholdsHandler];
 const eventHandlers = [AnomalyDetectedHandler];
@@ -97,12 +103,13 @@ const newRepositories = [
 ];
 
 @Module({
-  imports: [AuthModule, CqrsModule, NotificationsModule],
+  imports: [AuthModule, CqrsModule, NotificationsModule, HrModule],
   controllers: [
     IotSensorsController,
     IotCameraController,
     IotCameraEventsController,
     CameraAiController,
+    WarehouseExitGuardController,
     ...newControllers,
   ],
   providers: [
@@ -125,6 +132,9 @@ const newRepositories = [
     IotTabletService,
     OeeCalculatorService,
     PredictiveMaintenanceService,
+    // FAZA Q
+    { provide: WAREHOUSE_EXIT_GUARD_REPO, useClass: DrizzleWarehouseExitGuardRepo },
+    WarehouseExitGuardService,
   ],
   exports: [SENSOR_REPO],
 })

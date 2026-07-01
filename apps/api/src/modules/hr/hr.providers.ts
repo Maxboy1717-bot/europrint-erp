@@ -287,4 +287,8 @@ export const hrExports = [
   HR_REPO, Record360FeedbackHandler, LeaveRepository,
   AttritionService, UtilizationService, OvertimeCalculatorService,
   Feedback360Service, ApplicationsService,
+  // FAZA Q (Ombor AI-kamera nazorati): IoT modulidagi WarehouseExitGuardService
+  // xodim identifikatsiyasi uchun HR yuz-tanish infratuzilmasini reuse qiladi
+  // (Q-46 — dublikat kod yozilmadi, mavjud servis eksport qilindi).
+  FaceRecognitionService,
 ];
