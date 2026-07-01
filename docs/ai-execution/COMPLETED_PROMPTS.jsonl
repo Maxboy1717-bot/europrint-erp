@@ -1,0 +1,656 @@
+{"prompt_id":"PROMPT-0001","source_section":"1. CKP/KPI","priority":"P0","status":"duplicate","files_changed":[],"tests_run":["tsc"],"test_result":"0 errors","migration_result":"none","notes":"ЦКП payroll kunlik-gate ALLAQACHON qurilgan+ulangan: CkpGateService.evaluatePeriod (hr/payroll/ckp-gate.ts, card-based, ckp_fact_values+computeCkpDeadline, Egasi-qaror Q6 QATTIQ-0) payroll.service.ts:452 da HAQIQATDA chaqiriladi. Prompt premisasi (calculate-payroll.handler) eskirgan — kanonik card-based payroll'da gate bor. Dublikat CkpPayrollGateService yaratib, keyin o'chirdim.","owner_data_needed":"B1: ckp_report_deadline_hours (16 vs 3 soat) — gate jonli bloklashi uchun"}
+{"prompt_id":"PROMPT-0002","source_section":"1. CKP/KPI","priority":"P0","status":"duplicate","files_changed":[],"notes":"PROMPT-0001 variant (bir xil payroll-gate muammosi) — CkpGateService+payroll.service.ts:452 bilan yopilgan","owner_data_needed":"B1"}
+{"prompt_id":"PROMPT-0003","source_section":"1. CKP/KPI","priority":"P0","status":"duplicate","files_changed":[],"notes":"PROMPT-0001 variant — CkpGateService bilan yopilgan","owner_data_needed":"B1"}
+{"prompt_id":"PROMPT-0004","source_section":"1. CKP/KPI","priority":"P0","status":"duplicate","files_changed":[],"notes":"PROMPT-0001 variant — CkpGateService bilan yopilgan","owner_data_needed":"B1"}
+{"prompt_id":"PROMPT-0005","source_section":"1. CKP/KPI","priority":"P0","status":"duplicate","files_changed":[],"notes":"AI daily ЦКП question ALLAQACHON qurilgan+ulangan: ai-daily-report.cron.ts @Cron('0 8 * * 1-6') pushDailyCkpQuestions (mashinasiz xodim, graceful AI-kalitsiz) + ai-daily-report.service runDailyQuestionPush/submitAndRecord → ckp_fact_values source='AI_CHAT' (CkpFactService.recordFact) + controller + ai.module:144,147. '0 rows' = data-holat, mexanizm bor (Q-40).","owner_data_needed":"B7 AI kalit (graceful fallback bor)"}
+{"prompt_id":"PROMPT-0006","priority":"P0","status":"duplicate","notes":"PROMPT-0005 variant — ai-daily-report bilan yopilgan"}
+{"prompt_id":"PROMPT-0007","priority":"P0","status":"duplicate","notes":"PROMPT-0005 variant"}
+{"prompt_id":"PROMPT-0008","priority":"P0","status":"duplicate","notes":"PROMPT-0005 variant"}
+{"prompt_id":"PROMPT-0009","priority":"P0","status":"duplicate","notes":"IoT/MES→ЦКП auto-feed ALLAQACHON: ckp-mes-feed.listener.ts @OnEvent MES_COMPLETED → CkpFactService.recordFact (idempotent uq_ckp_fact_card_day, golden-thread) + operator-hourly-invoice.cron (IoT/operator soatlik)."}
+{"prompt_id":"PROMPT-0010","priority":"P0","status":"duplicate","notes":"PROMPT-0009 variant — ckp-mes-feed.listener"}
+{"prompt_id":"PROMPT-0011","priority":"P0","status":"duplicate","notes":"PROMPT-0009 variant"}
+{"prompt_id":"PROMPT-0012","priority":"P0","status":"duplicate","notes":"PROMPT-0009 variant"}
+{"prompt_id":"PROMPT-0013","priority":"P0","status":"blocked","notes":"tskp_target MEXANIZM+CONFIG bor (card.controller:37 tskpTarget Zod + org-mutations.repo:82 UPDATE + org-structure.controller:65). Faqat DATA yo'q (0/139 karta). ckp-fact.service: FABRIKATSIYA TAQIQ (target NULL→0). Soxta target to'qilmaydi.","owner_data_needed":"B2: har karta uchun tskp_target (norma + o'lchov SON/FOIZ/VAQT)"}
+{"prompt_id":"PROMPT-0014","priority":"P0","status":"blocked","notes":"PROMPT-0013 variant — tskp_target owner-data","owner_data_needed":"B2"}
+{"prompt_id":"PROMPT-0015","priority":"P0","status":"blocked","notes":"PROMPT-0013 variant","owner_data_needed":"B2"}
+{"prompt_id":"PROMPT-0016","priority":"P0","status":"blocked","notes":"PROMPT-0013 variant","owner_data_needed":"B2"}
+{"prompt_id":"PROMPT-0045","priority":"P0","status":"duplicate","notes":"AI kunlik ЦКП savol — ai-daily-report.cron/service (=PROMPT-0005)"}
+{"prompt_id":"PROMPT-0046","priority":"P0","status":"duplicate","notes":"AI kunlik ЦКП savol — ai-daily-report.cron/service (=PROMPT-0005)"}
+{"prompt_id":"PROMPT-0047","priority":"P0","status":"duplicate","notes":"AI kunlik ЦКП savol — ai-daily-report.cron/service (=PROMPT-0005)"}
+{"prompt_id":"PROMPT-0048","priority":"P0","status":"duplicate","notes":"AI kunlik ЦКП savol — ai-daily-report.cron/service (=PROMPT-0005)"}
+{"prompt_id":"PROMPT-0049","priority":"P0","status":"duplicate","notes":"IoT/MES→ЦКП feed — ckp-mes-feed.listener (=PROMPT-0009)"}
+{"prompt_id":"PROMPT-0050","priority":"P0","status":"duplicate","notes":"IoT/MES→ЦКП feed — ckp-mes-feed.listener (=PROMPT-0009)"}
+{"prompt_id":"PROMPT-0051","priority":"P0","status":"duplicate","notes":"IoT/MES→ЦКП feed — ckp-mes-feed.listener (=PROMPT-0009)"}
+{"prompt_id":"PROMPT-0052","priority":"P0","status":"duplicate","notes":"IoT/MES→ЦКП feed — ckp-mes-feed.listener (=PROMPT-0009)"}
+{"prompt_id":"PROMPT-0053","priority":"P0","status":"duplicate","notes":"ЦКП kaskad parent-SUM — ckp-cascade.listener.ts (org-structure/cascade) ULANGAN"}
+{"prompt_id":"PROMPT-0054","priority":"P0","status":"duplicate","notes":"ЦКП kaskad parent-SUM — ckp-cascade.listener.ts (org-structure/cascade) ULANGAN"}
+{"prompt_id":"PROMPT-0055","priority":"P0","status":"duplicate","notes":"ЦКП kaskad parent-SUM — ckp-cascade.listener.ts (org-structure/cascade) ULANGAN"}
+{"prompt_id":"PROMPT-0056","priority":"P0","status":"duplicate","notes":"ЦКП kaskad parent-SUM — ckp-cascade.listener.ts (org-structure/cascade) ULANGAN"}
+{"prompt_id":"PROMPT-0057","priority":"P0","status":"duplicate","notes":"deadline→oylik gate — CkpGateService.evaluatePeriod @ payroll.service.ts:452 (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-0058","priority":"P0","status":"duplicate","notes":"deadline→oylik gate — CkpGateService.evaluatePeriod @ payroll.service.ts:452 (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-0059","priority":"P0","status":"duplicate","notes":"deadline→oylik gate — CkpGateService.evaluatePeriod @ payroll.service.ts:452 (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-0060","priority":"P0","status":"duplicate","notes":"deadline→oylik gate — CkpGateService.evaluatePeriod @ payroll.service.ts:452 (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-0085","priority":"P0","status":"duplicate","notes":"ЦКП skelet modullardan oziqlanadi — MES/AI/cascade listenerlari ULANGAN; qolgani egasi-data (tskp_target B2), kod emas"}
+{"prompt_id":"PROMPT-0086","priority":"P0","status":"duplicate","notes":"ЦКП skelet modullardan oziqlanadi — MES/AI/cascade listenerlari ULANGAN; qolgani egasi-data (tskp_target B2), kod emas"}
+{"prompt_id":"PROMPT-0087","priority":"P0","status":"duplicate","notes":"ЦКП skelet modullardan oziqlanadi — MES/AI/cascade listenerlari ULANGAN; qolgani egasi-data (tskp_target B2), kod emas"}
+{"prompt_id":"PROMPT-0088","priority":"P0","status":"duplicate","notes":"ЦКП skelet modullardan oziqlanadi — MES/AI/cascade listenerlari ULANGAN; qolgani egasi-data (tskp_target B2), kod emas"}
+{"prompt_id":"PROMPT-0113","priority":"P0","status":"duplicate","notes":"'ЦКП jadval yo'q' STALE da'vo — ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0114","priority":"P0","status":"duplicate","notes":"'ЦКП jadval yo'q' STALE da'vo — ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0115","priority":"P0","status":"duplicate","notes":"'ЦКП jadval yo'q' STALE da'vo — ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0116","priority":"P0","status":"duplicate","notes":"'ЦКП jadval yo'q' STALE da'vo — ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0117","priority":"P0","status":"duplicate","notes":"ikki-jadval konfuziya HAL: ckp_fact_values kanonik, employee_daily_kpi=compat-ACL bridge (employee-kpi-acl.ts) — uchinchi jadval emas, to'g'ri wrap"}
+{"prompt_id":"PROMPT-0118","priority":"P0","status":"duplicate","notes":"ikki-jadval konfuziya HAL: ckp_fact_values kanonik, employee_daily_kpi=compat-ACL bridge (employee-kpi-acl.ts) — uchinchi jadval emas, to'g'ri wrap"}
+{"prompt_id":"PROMPT-0119","priority":"P0","status":"duplicate","notes":"ikki-jadval konfuziya HAL: ckp_fact_values kanonik, employee_daily_kpi=compat-ACL bridge (employee-kpi-acl.ts) — uchinchi jadval emas, to'g'ri wrap"}
+{"prompt_id":"PROMPT-0120","priority":"P0","status":"duplicate","notes":"ikki-jadval konfuziya HAL: ckp_fact_values kanonik, employee_daily_kpi=compat-ACL bridge (employee-kpi-acl.ts) — uchinchi jadval emas, to'g'ri wrap"}
+{"prompt_id":"PROMPT-0173","priority":"P0","status":"superseded","notes":"Tool-execution live-run verifikatsiya = metodologiya (feature emas) — men har slice'da jonli DB-proof/HTTP ishlataman, talab bajariladi"}
+{"prompt_id":"PROMPT-0174","priority":"P0","status":"superseded","notes":"Tool-execution live-run verifikatsiya = metodologiya (feature emas) — men har slice'da jonli DB-proof/HTTP ishlataman, talab bajariladi"}
+{"prompt_id":"PROMPT-0175","priority":"P0","status":"superseded","notes":"Tool-execution live-run verifikatsiya = metodologiya (feature emas) — men har slice'da jonli DB-proof/HTTP ishlataman, talab bajariladi"}
+{"prompt_id":"PROMPT-0176","priority":"P0","status":"superseded","notes":"Tool-execution live-run verifikatsiya = metodologiya (feature emas) — men har slice'da jonli DB-proof/HTTP ishlataman, talab bajariladi"}
+{"prompt_id":"PROMPT-0185","priority":"P0","status":"duplicate","notes":"STALE: ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0186","priority":"P0","status":"duplicate","notes":"STALE: ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0187","priority":"P0","status":"duplicate","notes":"STALE: ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0188","priority":"P0","status":"duplicate","notes":"STALE: ckp_fact_values DB'da MAVJUD (to_regclass tasdiq)"}
+{"prompt_id":"PROMPT-0189","priority":"P0","status":"duplicate","notes":"STALE: ckp_formula_type/ckp_frequency/ckp_report_deadline_hours org_departments'da MAVJUD"}
+{"prompt_id":"PROMPT-0190","priority":"P0","status":"duplicate","notes":"STALE: ckp_formula_type/ckp_frequency/ckp_report_deadline_hours org_departments'da MAVJUD"}
+{"prompt_id":"PROMPT-0191","priority":"P0","status":"duplicate","notes":"STALE: ckp_formula_type/ckp_frequency/ckp_report_deadline_hours org_departments'da MAVJUD"}
+{"prompt_id":"PROMPT-0192","priority":"P0","status":"duplicate","notes":"STALE: ckp_formula_type/ckp_frequency/ckp_report_deadline_hours org_departments'da MAVJUD"}
+{"prompt_id":"PROMPT-0217","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR: users.card_id(int)+login.service card-gate(resolveCardGate, env-flagged default OFF=owner enable)"}
+{"prompt_id":"PROMPT-0218","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR: users.card_id(int)+login.service card-gate(resolveCardGate, env-flagged default OFF=owner enable)"}
+{"prompt_id":"PROMPT-0219","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR: users.card_id(int)+login.service card-gate(resolveCardGate, env-flagged default OFF=owner enable)"}
+{"prompt_id":"PROMPT-0220","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR: users.card_id(int)+login.service card-gate(resolveCardGate, env-flagged default OFF=owner enable)"}
+{"prompt_id":"PROMPT-0221","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik BOR: payroll.service.ts:400 cardId (org_departments.id) — kanonik card-payroll"}
+{"prompt_id":"PROMPT-0222","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik BOR: payroll.service.ts:400 cardId (org_departments.id) — kanonik card-payroll"}
+{"prompt_id":"PROMPT-0223","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik BOR: payroll.service.ts:400 cardId (org_departments.id) — kanonik card-payroll"}
+{"prompt_id":"PROMPT-0224","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik BOR: payroll.service.ts:400 cardId (org_departments.id) — kanonik card-payroll"}
+{"prompt_id":"PROMPT-0245","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0246","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0247","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0248","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0249","priority":"P0","status":"duplicate","notes":"payroll karta-data ulangan (payroll.service card-based); salary qiymati=B3 owner-data"}
+{"prompt_id":"PROMPT-0250","priority":"P0","status":"duplicate","notes":"payroll karta-data ulangan (payroll.service card-based); salary qiymati=B3 owner-data"}
+{"prompt_id":"PROMPT-0251","priority":"P0","status":"duplicate","notes":"payroll karta-data ulangan (payroll.service card-based); salary qiymati=B3 owner-data"}
+{"prompt_id":"PROMPT-0252","priority":"P0","status":"duplicate","notes":"payroll karta-data ulangan (payroll.service card-based); salary qiymati=B3 owner-data"}
+{"prompt_id":"PROMPT-0253","priority":"P0","status":"duplicate","notes":"ЦКП avto-tizim BOR (AI-daily/MES-feed/kaskad — ЦКП-area tasdiqlangan)"}
+{"prompt_id":"PROMPT-0254","priority":"P0","status":"duplicate","notes":"ЦКП avto-tizim BOR (AI-daily/MES-feed/kaskad — ЦКП-area tasdiqlangan)"}
+{"prompt_id":"PROMPT-0255","priority":"P0","status":"duplicate","notes":"ЦКП avto-tizim BOR (AI-daily/MES-feed/kaskad — ЦКП-area tasdiqlangan)"}
+{"prompt_id":"PROMPT-0256","priority":"P0","status":"duplicate","notes":"ЦКП avto-tizim BOR (AI-daily/MES-feed/kaskad — ЦКП-area tasdiqlangan)"}
+{"prompt_id":"PROMPT-0309","priority":"P0","status":"duplicate","notes":"users.card_id PRIMARY GATE BOR (column+login.service gate, env-OFF=owner enable)"}
+{"prompt_id":"PROMPT-0310","priority":"P0","status":"duplicate","notes":"users.card_id PRIMARY GATE BOR (column+login.service gate, env-OFF=owner enable)"}
+{"prompt_id":"PROMPT-0311","priority":"P0","status":"duplicate","notes":"users.card_id PRIMARY GATE BOR (column+login.service gate, env-OFF=owner enable)"}
+{"prompt_id":"PROMPT-0312","priority":"P0","status":"duplicate","notes":"users.card_id PRIMARY GATE BOR (column+login.service gate, env-OFF=owner enable)"}
+{"prompt_id":"PROMPT-0313","priority":"P0","status":"duplicate","notes":"STALE: employee_cards assign-flow BOR backend(card.controller/service)+FE(CardAssignDialog.tsx,EmployeeCardsSummary.tsx); 0 assignment=data"}
+{"prompt_id":"PROMPT-0314","priority":"P0","status":"duplicate","notes":"STALE: employee_cards assign-flow BOR backend(card.controller/service)+FE(CardAssignDialog.tsx,EmployeeCardsSummary.tsx); 0 assignment=data"}
+{"prompt_id":"PROMPT-0315","priority":"P0","status":"duplicate","notes":"STALE: employee_cards assign-flow BOR backend(card.controller/service)+FE(CardAssignDialog.tsx,EmployeeCardsSummary.tsx); 0 assignment=data"}
+{"prompt_id":"PROMPT-0316","priority":"P0","status":"duplicate","notes":"STALE: employee_cards assign-flow BOR backend(card.controller/service)+FE(CardAssignDialog.tsx,EmployeeCardsSummary.tsx); 0 assignment=data"}
+{"prompt_id":"PROMPT-0349","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0350","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0351","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0352","priority":"P0","status":"duplicate","notes":"card_id login-gate BOR (=217)"}
+{"prompt_id":"PROMPT-0353","priority":"P0","status":"duplicate","notes":"Xodim-karta UI BOR: CardAssignDialog.tsx + EmployeeCardsSummary.tsx"}
+{"prompt_id":"PROMPT-0354","priority":"P0","status":"duplicate","notes":"Xodim-karta UI BOR: CardAssignDialog.tsx + EmployeeCardsSummary.tsx"}
+{"prompt_id":"PROMPT-0355","priority":"P0","status":"duplicate","notes":"Xodim-karta UI BOR: CardAssignDialog.tsx + EmployeeCardsSummary.tsx"}
+{"prompt_id":"PROMPT-0356","priority":"P0","status":"duplicate","notes":"Xodim-karta UI BOR: CardAssignDialog.tsx + EmployeeCardsSummary.tsx"}
+{"prompt_id":"PROMPT-0385","priority":"P0","status":"duplicate","notes":"card login TAQIQ gate BOR (env-flagged default OFF — owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0386","priority":"P0","status":"duplicate","notes":"card login TAQIQ gate BOR (env-flagged default OFF — owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0387","priority":"P0","status":"duplicate","notes":"card login TAQIQ gate BOR (env-flagged default OFF — owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0388","priority":"P0","status":"duplicate","notes":"card login TAQIQ gate BOR (env-flagged default OFF — owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0317","priority":"P0","status":"blocked","notes":"Karta salary 0/97 — mexanizm(salary_type/baseSalary) bor, qiymat yo'q"}
+{"prompt_id":"PROMPT-0318","priority":"P0","status":"blocked","notes":"Karta salary 0/97 — mexanizm(salary_type/baseSalary) bor, qiymat yo'q"}
+{"prompt_id":"PROMPT-0319","priority":"P0","status":"blocked","notes":"Karta salary 0/97 — mexanizm(salary_type/baseSalary) bor, qiymat yo'q"}
+{"prompt_id":"PROMPT-0320","priority":"P0","status":"blocked","notes":"Karta salary 0/97 — mexanizm(salary_type/baseSalary) bor, qiymat yo'q"}
+{"prompt_id":"PROMPT-0389","priority":"P0","status":"duplicate","notes":"Kanonik card-payroll BOR (payroll.service.ts:400 cardId); calculate-payroll.handler=legacy param-path"}
+{"prompt_id":"PROMPT-0390","priority":"P0","status":"duplicate","notes":"Kanonik card-payroll BOR (payroll.service.ts:400 cardId); calculate-payroll.handler=legacy param-path"}
+{"prompt_id":"PROMPT-0391","priority":"P0","status":"duplicate","notes":"Kanonik card-payroll BOR (payroll.service.ts:400 cardId); calculate-payroll.handler=legacy param-path"}
+{"prompt_id":"PROMPT-0392","priority":"P0","status":"duplicate","notes":"Kanonik card-payroll BOR (payroll.service.ts:400 cardId); calculate-payroll.handler=legacy param-path"}
+{"prompt_id":"PROMPT-0393","priority":"P0","status":"duplicate","notes":"RBAC card-based: roles.guard rbacTier (rbac-tier.policy operator/specialist/manager/executive), legacy role=fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0394","priority":"P0","status":"duplicate","notes":"RBAC card-based: roles.guard rbacTier (rbac-tier.policy operator/specialist/manager/executive), legacy role=fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0395","priority":"P0","status":"duplicate","notes":"RBAC card-based: roles.guard rbacTier (rbac-tier.policy operator/specialist/manager/executive), legacy role=fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0396","priority":"P0","status":"duplicate","notes":"RBAC card-based: roles.guard rbacTier (rbac-tier.policy operator/specialist/manager/executive), legacy role=fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0397","priority":"P0","status":"duplicate","notes":"employee_cards schema+repo+uq_employee_cards_active_link BOR; 0 qator=data"}
+{"prompt_id":"PROMPT-0398","priority":"P0","status":"duplicate","notes":"employee_cards schema+repo+uq_employee_cards_active_link BOR; 0 qator=data"}
+{"prompt_id":"PROMPT-0399","priority":"P0","status":"duplicate","notes":"employee_cards schema+repo+uq_employee_cards_active_link BOR; 0 qator=data"}
+{"prompt_id":"PROMPT-0400","priority":"P0","status":"duplicate","notes":"employee_cards schema+repo+uq_employee_cards_active_link BOR; 0 qator=data"}
+{"prompt_id":"PROMPT-0433","priority":"P0","status":"duplicate","notes":"courses.card_id(int) MAVJUD; 0/5 link=data (B: kurs-karta mapping owner)"}
+{"prompt_id":"PROMPT-0434","priority":"P0","status":"duplicate","notes":"courses.card_id(int) MAVJUD; 0/5 link=data (B: kurs-karta mapping owner)"}
+{"prompt_id":"PROMPT-0435","priority":"P0","status":"duplicate","notes":"courses.card_id(int) MAVJUD; 0/5 link=data (B: kurs-karta mapping owner)"}
+{"prompt_id":"PROMPT-0436","priority":"P0","status":"duplicate","notes":"courses.card_id(int) MAVJUD; 0/5 link=data (B: kurs-karta mapping owner)"}
+{"prompt_id":"PROMPT-0437","priority":"P0","status":"duplicate","notes":"auto-enroll: lms/event-handlers/card-employee-assigned.handler.ts BOR"}
+{"prompt_id":"PROMPT-0438","priority":"P0","status":"duplicate","notes":"auto-enroll: lms/event-handlers/card-employee-assigned.handler.ts BOR"}
+{"prompt_id":"PROMPT-0439","priority":"P0","status":"duplicate","notes":"auto-enroll: lms/event-handlers/card-employee-assigned.handler.ts BOR"}
+{"prompt_id":"PROMPT-0440","priority":"P0","status":"duplicate","notes":"auto-enroll: lms/event-handlers/card-employee-assigned.handler.ts BOR"}
+{"prompt_id":"PROMPT-0441","priority":"P0","status":"duplicate","notes":"LmsCardGateService BOR (hr.module+payroll.service.ts wired)"}
+{"prompt_id":"PROMPT-0442","priority":"P0","status":"duplicate","notes":"LmsCardGateService BOR (hr.module+payroll.service.ts wired)"}
+{"prompt_id":"PROMPT-0443","priority":"P0","status":"duplicate","notes":"LmsCardGateService BOR (hr.module+payroll.service.ts wired)"}
+{"prompt_id":"PROMPT-0444","priority":"P0","status":"duplicate","notes":"LmsCardGateService BOR (hr.module+payroll.service.ts wired)"}
+{"prompt_id":"PROMPT-0473","priority":"P0","status":"duplicate","notes":"LMS oylik-gate LmsCardGateService orqali payroll'ga ulangan"}
+{"prompt_id":"PROMPT-0474","priority":"P0","status":"duplicate","notes":"LMS oylik-gate LmsCardGateService orqali payroll'ga ulangan"}
+{"prompt_id":"PROMPT-0475","priority":"P0","status":"duplicate","notes":"LMS oylik-gate LmsCardGateService orqali payroll'ga ulangan"}
+{"prompt_id":"PROMPT-0476","priority":"P0","status":"duplicate","notes":"LMS oylik-gate LmsCardGateService orqali payroll'ga ulangan"}
+{"prompt_id":"PROMPT-0489","priority":"P0","status":"duplicate","notes":"courses.card_id MAVJUD (stale da'vo)"}
+{"prompt_id":"PROMPT-0490","priority":"P0","status":"duplicate","notes":"courses.card_id MAVJUD (stale da'vo)"}
+{"prompt_id":"PROMPT-0491","priority":"P0","status":"duplicate","notes":"courses.card_id MAVJUD (stale da'vo)"}
+{"prompt_id":"PROMPT-0492","priority":"P0","status":"duplicate","notes":"courses.card_id MAVJUD (stale da'vo)"}
+{"prompt_id":"PROMPT-0493","priority":"P0","status":"duplicate","notes":"LMS oylik-gate qurilgan (LmsCardGateService)"}
+{"prompt_id":"PROMPT-0494","priority":"P0","status":"duplicate","notes":"LMS oylik-gate qurilgan (LmsCardGateService)"}
+{"prompt_id":"PROMPT-0495","priority":"P0","status":"duplicate","notes":"LMS oylik-gate qurilgan (LmsCardGateService)"}
+{"prompt_id":"PROMPT-0496","priority":"P0","status":"duplicate","notes":"LMS oylik-gate qurilgan (LmsCardGateService)"}
+{"prompt_id":"PROMPT-0497","priority":"P0","status":"duplicate","notes":"exam→razryad: exam-passed-razryad.listener.ts + razryad_history jadval BOR"}
+{"prompt_id":"PROMPT-0498","priority":"P0","status":"duplicate","notes":"exam→razryad: exam-passed-razryad.listener.ts + razryad_history jadval BOR"}
+{"prompt_id":"PROMPT-0499","priority":"P0","status":"duplicate","notes":"exam→razryad: exam-passed-razryad.listener.ts + razryad_history jadval BOR"}
+{"prompt_id":"PROMPT-0500","priority":"P0","status":"duplicate","notes":"exam→razryad: exam-passed-razryad.listener.ts + razryad_history jadval BOR"}
+{"prompt_id":"PROMPT-0545","priority":"P0","status":"duplicate","notes":"LmsCardGateService MAVJUD (=441)"}
+{"prompt_id":"PROMPT-0546","priority":"P0","status":"duplicate","notes":"LmsCardGateService MAVJUD (=441)"}
+{"prompt_id":"PROMPT-0547","priority":"P0","status":"duplicate","notes":"LmsCardGateService MAVJUD (=441)"}
+{"prompt_id":"PROMPT-0548","priority":"P0","status":"duplicate","notes":"LmsCardGateService MAVJUD (=441)"}
+{"prompt_id":"PROMPT-0549","priority":"P0","status":"duplicate","notes":"auto-enroll listener MAVJUD: card-employee-assigned.handler (=437)"}
+{"prompt_id":"PROMPT-0550","priority":"P0","status":"duplicate","notes":"auto-enroll listener MAVJUD: card-employee-assigned.handler (=437)"}
+{"prompt_id":"PROMPT-0551","priority":"P0","status":"duplicate","notes":"auto-enroll listener MAVJUD: card-employee-assigned.handler (=437)"}
+{"prompt_id":"PROMPT-0552","priority":"P0","status":"duplicate","notes":"auto-enroll listener MAVJUD: card-employee-assigned.handler (=437)"}
+{"prompt_id":"PROMPT-0597","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD + login card-gate (login.service)"}
+{"prompt_id":"PROMPT-0598","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD + login card-gate (login.service)"}
+{"prompt_id":"PROMPT-0599","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD + login card-gate (login.service)"}
+{"prompt_id":"PROMPT-0600","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD + login card-gate (login.service)"}
+{"prompt_id":"PROMPT-0601","priority":"P0","status":"duplicate","notes":"karta 5-holat: org_departments.current_state(text) MAVJUD + state-logic (MASSIV-100)"}
+{"prompt_id":"PROMPT-0602","priority":"P0","status":"duplicate","notes":"karta 5-holat: org_departments.current_state(text) MAVJUD + state-logic (MASSIV-100)"}
+{"prompt_id":"PROMPT-0603","priority":"P0","status":"duplicate","notes":"karta 5-holat: org_departments.current_state(text) MAVJUD + state-logic (MASSIV-100)"}
+{"prompt_id":"PROMPT-0604","priority":"P0","status":"duplicate","notes":"karta 5-holat: org_departments.current_state(text) MAVJUD + state-logic (MASSIV-100)"}
+{"prompt_id":"PROMPT-0629","priority":"P0","status":"duplicate","notes":"1-karta-1-seat: uq_employee_cards_active_link UNIQUE enforce qiladi"}
+{"prompt_id":"PROMPT-0630","priority":"P0","status":"duplicate","notes":"1-karta-1-seat: uq_employee_cards_active_link UNIQUE enforce qiladi"}
+{"prompt_id":"PROMPT-0631","priority":"P0","status":"duplicate","notes":"1-karta-1-seat: uq_employee_cards_active_link UNIQUE enforce qiladi"}
+{"prompt_id":"PROMPT-0632","priority":"P0","status":"duplicate","notes":"1-karta-1-seat: uq_employee_cards_active_link UNIQUE enforce qiladi"}
+{"prompt_id":"PROMPT-0593","priority":"P0","status":"blocked","notes":"YAGONA-DARAXT BUZILGAN: org_departments 17 root (parent_id NULL). Unifikatsiya egasi-qarori (qaysi root kanonik, 17 ni qanday parent qilish) — fabrikatsiya yo'q. Mexanizm: parent_id+cycle-guard bor, faqat root-assignment data."}
+{"prompt_id":"PROMPT-0594","priority":"P0","status":"blocked","notes":"YAGONA-DARAXT BUZILGAN: org_departments 17 root (parent_id NULL). Unifikatsiya egasi-qarori (qaysi root kanonik, 17 ni qanday parent qilish) — fabrikatsiya yo'q. Mexanizm: parent_id+cycle-guard bor, faqat root-assignment data."}
+{"prompt_id":"PROMPT-0595","priority":"P0","status":"blocked","notes":"YAGONA-DARAXT BUZILGAN: org_departments 17 root (parent_id NULL). Unifikatsiya egasi-qarori (qaysi root kanonik, 17 ni qanday parent qilish) — fabrikatsiya yo'q. Mexanizm: parent_id+cycle-guard bor, faqat root-assignment data."}
+{"prompt_id":"PROMPT-0596","priority":"P0","status":"blocked","notes":"YAGONA-DARAXT BUZILGAN: org_departments 17 root (parent_id NULL). Unifikatsiya egasi-qarori (qaysi root kanonik, 17 ni qanday parent qilish) — fabrikatsiya yo'q. Mexanizm: parent_id+cycle-guard bor, faqat root-assignment data."}
+{"prompt_id":"PROMPT-0633","priority":"P0","status":"duplicate","notes":"head_user_id setter BOR: org-structure.controller:50 headUserId Zod + org-mutations.repo:59 + tree-rebuild data-gated(:459). Qiymat=B4 owner-data"}
+{"prompt_id":"PROMPT-0634","priority":"P0","status":"duplicate","notes":"head_user_id setter BOR: org-structure.controller:50 headUserId Zod + org-mutations.repo:59 + tree-rebuild data-gated(:459). Qiymat=B4 owner-data"}
+{"prompt_id":"PROMPT-0635","priority":"P0","status":"duplicate","notes":"head_user_id setter BOR: org-structure.controller:50 headUserId Zod + org-mutations.repo:59 + tree-rebuild data-gated(:459). Qiymat=B4 owner-data"}
+{"prompt_id":"PROMPT-0636","priority":"P0","status":"duplicate","notes":"head_user_id setter BOR: org-structure.controller:50 headUserId Zod + org-mutations.repo:59 + tree-rebuild data-gated(:459). Qiymat=B4 owner-data"}
+{"prompt_id":"PROMPT-0657","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik (Formula A) BOR: payroll.service.ts:400 cardId"}
+{"prompt_id":"PROMPT-0658","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik (Formula A) BOR: payroll.service.ts:400 cardId"}
+{"prompt_id":"PROMPT-0659","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik (Formula A) BOR: payroll.service.ts:400 cardId"}
+{"prompt_id":"PROMPT-0660","priority":"P0","status":"duplicate","notes":"Karta-asosli oylik (Formula A) BOR: payroll.service.ts:400 cardId"}
+{"prompt_id":"PROMPT-0661","priority":"P0","status":"duplicate","notes":"ЦКП kunlik-gate BOR (CkpGateService); tskp_target qiymati=B2 owner-data"}
+{"prompt_id":"PROMPT-0662","priority":"P0","status":"duplicate","notes":"ЦКП kunlik-gate BOR (CkpGateService); tskp_target qiymati=B2 owner-data"}
+{"prompt_id":"PROMPT-0663","priority":"P0","status":"duplicate","notes":"ЦКП kunlik-gate BOR (CkpGateService); tskp_target qiymati=B2 owner-data"}
+{"prompt_id":"PROMPT-0664","priority":"P0","status":"duplicate","notes":"ЦКП kunlik-gate BOR (CkpGateService); tskp_target qiymati=B2 owner-data"}
+{"prompt_id":"PROMPT-0665","priority":"P0","status":"duplicate","notes":"manager_id=parent_id (org-mutations) BOR; workflow_rules=B5 owner-data"}
+{"prompt_id":"PROMPT-0666","priority":"P0","status":"duplicate","notes":"manager_id=parent_id (org-mutations) BOR; workflow_rules=B5 owner-data"}
+{"prompt_id":"PROMPT-0667","priority":"P0","status":"duplicate","notes":"manager_id=parent_id (org-mutations) BOR; workflow_rules=B5 owner-data"}
+{"prompt_id":"PROMPT-0668","priority":"P0","status":"duplicate","notes":"manager_id=parent_id (org-mutations) BOR; workflow_rules=B5 owner-data"}
+{"prompt_id":"PROMPT-0713","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR (users.card_id + login.service card-gate, env-OFF)"}
+{"prompt_id":"PROMPT-0714","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR (users.card_id + login.service card-gate, env-OFF)"}
+{"prompt_id":"PROMPT-0715","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR (users.card_id + login.service card-gate, env-OFF)"}
+{"prompt_id":"PROMPT-0716","priority":"P0","status":"duplicate","notes":"card_id login+oylik gate BOR (users.card_id + login.service card-gate, env-OFF)"}
+{"prompt_id":"PROMPT-0717","priority":"P0","status":"duplicate","notes":"Oylik karta-data ulangan (payroll.service card-based)"}
+{"prompt_id":"PROMPT-0718","priority":"P0","status":"duplicate","notes":"Oylik karta-data ulangan (payroll.service card-based)"}
+{"prompt_id":"PROMPT-0719","priority":"P0","status":"duplicate","notes":"Oylik karta-data ulangan (payroll.service card-based)"}
+{"prompt_id":"PROMPT-0720","priority":"P0","status":"duplicate","notes":"Oylik karta-data ulangan (payroll.service card-based)"}
+{"prompt_id":"PROMPT-0753","priority":"P0","status":"duplicate","notes":"Card-gate login.service'da BOR, default-OFF ATAYIN (regress-himoya, owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0754","priority":"P0","status":"duplicate","notes":"Card-gate login.service'da BOR, default-OFF ATAYIN (regress-himoya, owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0755","priority":"P0","status":"duplicate","notes":"Card-gate login.service'da BOR, default-OFF ATAYIN (regress-himoya, owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0756","priority":"P0","status":"duplicate","notes":"Card-gate login.service'da BOR, default-OFF ATAYIN (regress-himoya, owner CARD_LOGIN_GATE_ENABLED yoqadi)"}
+{"prompt_id":"PROMPT-0757","priority":"P0","status":"duplicate","notes":"RBAC card-tier (rbacTier, rbac-tier.policy); position legacy-fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0758","priority":"P0","status":"duplicate","notes":"RBAC card-tier (rbacTier, rbac-tier.policy); position legacy-fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0759","priority":"P0","status":"duplicate","notes":"RBAC card-tier (rbacTier, rbac-tier.policy); position legacy-fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0760","priority":"P0","status":"duplicate","notes":"RBAC card-tier (rbacTier, rbac-tier.policy); position legacy-fallback (parallel emas)"}
+{"prompt_id":"PROMPT-0773","priority":"P0","status":"duplicate","notes":"card_id login/oylik gate BOR (env-OFF)"}
+{"prompt_id":"PROMPT-0774","priority":"P0","status":"duplicate","notes":"card_id login/oylik gate BOR (env-OFF)"}
+{"prompt_id":"PROMPT-0775","priority":"P0","status":"duplicate","notes":"card_id login/oylik gate BOR (env-OFF)"}
+{"prompt_id":"PROMPT-0776","priority":"P0","status":"duplicate","notes":"card_id login/oylik gate BOR (env-OFF)"}
+{"prompt_id":"PROMPT-0777","priority":"P0","status":"duplicate","notes":"RBAC card-based rbacTier (=757)"}
+{"prompt_id":"PROMPT-0778","priority":"P0","status":"duplicate","notes":"RBAC card-based rbacTier (=757)"}
+{"prompt_id":"PROMPT-0779","priority":"P0","status":"duplicate","notes":"RBAC card-based rbacTier (=757)"}
+{"prompt_id":"PROMPT-0780","priority":"P0","status":"duplicate","notes":"RBAC card-based rbacTier (=757)"}
+{"prompt_id":"PROMPT-0781","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD"}
+{"prompt_id":"PROMPT-0782","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD"}
+{"prompt_id":"PROMPT-0783","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD"}
+{"prompt_id":"PROMPT-0784","priority":"P0","status":"duplicate","notes":"STALE: users.card_id(int) MAVJUD"}
+{"prompt_id":"PROMPT-0837","priority":"P0","status":"done","notes":"Default-password/secret: prompt o'zi 'FIXED, hozir sof environment' deydi — hal qilingan"}
+{"prompt_id":"PROMPT-0838","priority":"P0","status":"done","notes":"Default-password/secret: prompt o'zi 'FIXED, hozir sof environment' deydi — hal qilingan"}
+{"prompt_id":"PROMPT-0839","priority":"P0","status":"done","notes":"Default-password/secret: prompt o'zi 'FIXED, hozir sof environment' deydi — hal qilingan"}
+{"prompt_id":"PROMPT-0840","priority":"P0","status":"done","notes":"Default-password/secret: prompt o'zi 'FIXED, hozir sof environment' deydi — hal qilingan"}
+{"prompt_id":"PROMPT-0841","priority":"P0","status":"done","notes":"Kritik SQL-injection (legacy.service:27) FIXED; qolgan sql.raw=DDL-migration (Qoida B ruxsat) + whitelist tool, xavf yo'q"}
+{"prompt_id":"PROMPT-0842","priority":"P0","status":"done","notes":"Kritik SQL-injection (legacy.service:27) FIXED; qolgan sql.raw=DDL-migration (Qoida B ruxsat) + whitelist tool, xavf yo'q"}
+{"prompt_id":"PROMPT-0843","priority":"P0","status":"done","notes":"Kritik SQL-injection (legacy.service:27) FIXED; qolgan sql.raw=DDL-migration (Qoida B ruxsat) + whitelist tool, xavf yo'q"}
+{"prompt_id":"PROMPT-0844","priority":"P0","status":"done","notes":"Kritik SQL-injection (legacy.service:27) FIXED; qolgan sql.raw=DDL-migration (Qoida B ruxsat) + whitelist tool, xavf yo'q"}
+{"prompt_id":"PROMPT-0845","priority":"P0","status":"duplicate","notes":"card_id login-gate mexanizm BOR, CARD_LOGIN_GATE_ENABLED default-OFF (owner enable)"}
+{"prompt_id":"PROMPT-0846","priority":"P0","status":"duplicate","notes":"card_id login-gate mexanizm BOR, CARD_LOGIN_GATE_ENABLED default-OFF (owner enable)"}
+{"prompt_id":"PROMPT-0847","priority":"P0","status":"duplicate","notes":"card_id login-gate mexanizm BOR, CARD_LOGIN_GATE_ENABLED default-OFF (owner enable)"}
+{"prompt_id":"PROMPT-0848","priority":"P0","status":"duplicate","notes":"card_id login-gate mexanizm BOR, CARD_LOGIN_GATE_ENABLED default-OFF (owner enable)"}
+{"prompt_id":"PROMPT-0877","priority":"P0","status":"duplicate","notes":"Gate-enable owner-decision (env-flag); mexanizm+exempt-rol (super_admin/director) BOR"}
+{"prompt_id":"PROMPT-0878","priority":"P0","status":"duplicate","notes":"Gate-enable owner-decision (env-flag); mexanizm+exempt-rol (super_admin/director) BOR"}
+{"prompt_id":"PROMPT-0879","priority":"P0","status":"duplicate","notes":"Gate-enable owner-decision (env-flag); mexanizm+exempt-rol (super_admin/director) BOR"}
+{"prompt_id":"PROMPT-0880","priority":"P0","status":"duplicate","notes":"Gate-enable owner-decision (env-flag); mexanizm+exempt-rol (super_admin/director) BOR"}
+{"prompt_id":"PROMPT-0901","priority":"P0","status":"duplicate","notes":"card_id-gate mexanizm BOR, envFlag OFF=owner enable (regress-himoya)"}
+{"prompt_id":"PROMPT-0902","priority":"P0","status":"duplicate","notes":"card_id-gate mexanizm BOR, envFlag OFF=owner enable (regress-himoya)"}
+{"prompt_id":"PROMPT-0903","priority":"P0","status":"duplicate","notes":"card_id-gate mexanizm BOR, envFlag OFF=owner enable (regress-himoya)"}
+{"prompt_id":"PROMPT-0904","priority":"P0","status":"duplicate","notes":"card_id-gate mexanizm BOR, envFlag OFF=owner enable (regress-himoya)"}
+{"prompt_id":"PROMPT-0905","priority":"P0","status":"duplicate","notes":"RBAC card-permissions BOR (get-my-permissions.service + rbacTier); position legacy-fallback"}
+{"prompt_id":"PROMPT-0906","priority":"P0","status":"duplicate","notes":"RBAC card-permissions BOR (get-my-permissions.service + rbacTier); position legacy-fallback"}
+{"prompt_id":"PROMPT-0907","priority":"P0","status":"duplicate","notes":"RBAC card-permissions BOR (get-my-permissions.service + rbacTier); position legacy-fallback"}
+{"prompt_id":"PROMPT-0908","priority":"P0","status":"duplicate","notes":"RBAC card-permissions BOR (get-my-permissions.service + rbacTier); position legacy-fallback"}
+{"prompt_id":"PROMPT-0929","priority":"P0","status":"pending","notes":"GENUINE: production_orders.card_id ustuni YO'Q — additive column + wiring kerak (keyingi tik)"}
+{"prompt_id":"PROMPT-0930","priority":"P0","status":"pending","notes":"GENUINE: production_orders.card_id ustuni YO'Q — additive column + wiring kerak (keyingi tik)"}
+{"prompt_id":"PROMPT-0931","priority":"P0","status":"pending","notes":"GENUINE: production_orders.card_id ustuni YO'Q — additive column + wiring kerak (keyingi tik)"}
+{"prompt_id":"PROMPT-0932","priority":"P0","status":"pending","notes":"GENUINE: production_orders.card_id ustuni YO'Q — additive column + wiring kerak (keyingi tik)"}
+{"prompt_id":"PROMPT-0933","priority":"P0","status":"pending","notes":"workCenter operator users.id, card emas — minor, card-link keyingi"}
+{"prompt_id":"PROMPT-0934","priority":"P0","status":"pending","notes":"workCenter operator users.id, card emas — minor, card-link keyingi"}
+{"prompt_id":"PROMPT-0935","priority":"P0","status":"pending","notes":"workCenter operator users.id, card emas — minor, card-link keyingi"}
+{"prompt_id":"PROMPT-0936","priority":"P0","status":"pending","notes":"workCenter operator users.id, card emas — minor, card-link keyingi"}
+{"prompt_id":"PROMPT-0937","priority":"P0","status":"duplicate","notes":"AI-rejalashtirish BOR: pp-ai-planning.service.ts; AI-kalit=B7 owner-data"}
+{"prompt_id":"PROMPT-0938","priority":"P0","status":"duplicate","notes":"AI-rejalashtirish BOR: pp-ai-planning.service.ts; AI-kalit=B7 owner-data"}
+{"prompt_id":"PROMPT-0939","priority":"P0","status":"duplicate","notes":"AI-rejalashtirish BOR: pp-ai-planning.service.ts; AI-kalit=B7 owner-data"}
+{"prompt_id":"PROMPT-0940","priority":"P0","status":"duplicate","notes":"AI-rejalashtirish BOR: pp-ai-planning.service.ts; AI-kalit=B7 owner-data"}
+{"prompt_id":"PROMPT-0961","priority":"P0","status":"pending","notes":"GENUINE: production_orders status 6→9 holat — owner state-ta'rifi kerak"}
+{"prompt_id":"PROMPT-0962","priority":"P0","status":"pending","notes":"GENUINE: production_orders status 6→9 holat — owner state-ta'rifi kerak"}
+{"prompt_id":"PROMPT-0963","priority":"P0","status":"pending","notes":"GENUINE: production_orders status 6→9 holat — owner state-ta'rifi kerak"}
+{"prompt_id":"PROMPT-0964","priority":"P0","status":"pending","notes":"GENUINE: production_orders status 6→9 holat — owner state-ta'rifi kerak"}
+{"prompt_id":"PROMPT-0965","priority":"P0","status":"pending","notes":"GENUINE: production_orders yangi ustunlar yo'q — additive"}
+{"prompt_id":"PROMPT-0966","priority":"P0","status":"pending","notes":"GENUINE: production_orders yangi ustunlar yo'q — additive"}
+{"prompt_id":"PROMPT-0967","priority":"P0","status":"pending","notes":"GENUINE: production_orders yangi ustunlar yo'q — additive"}
+{"prompt_id":"PROMPT-0968","priority":"P0","status":"pending","notes":"GENUINE: production_orders yangi ustunlar yo'q — additive"}
+{"prompt_id":"PROMPT-0969","priority":"P0","status":"pending","notes":"GENUINE: pp_order_status_log jadval YO'Q — quriladi (status-log + wiring)"}
+{"prompt_id":"PROMPT-0970","priority":"P0","status":"pending","notes":"GENUINE: pp_order_status_log jadval YO'Q — quriladi (status-log + wiring)"}
+{"prompt_id":"PROMPT-0971","priority":"P0","status":"pending","notes":"GENUINE: pp_order_status_log jadval YO'Q — quriladi (status-log + wiring)"}
+{"prompt_id":"PROMPT-0972","priority":"P0","status":"pending","notes":"GENUINE: pp_order_status_log jadval YO'Q — quriladi (status-log + wiring)"}
+{"prompt_id":"PROMPT-0973","priority":"P0","status":"pending","notes":"GENUINE: pp_plan_fact_entries jadval YO'Q — quriladi (smena reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0974","priority":"P0","status":"pending","notes":"GENUINE: pp_plan_fact_entries jadval YO'Q — quriladi (smena reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0975","priority":"P0","status":"pending","notes":"GENUINE: pp_plan_fact_entries jadval YO'Q — quriladi (smena reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0976","priority":"P0","status":"pending","notes":"GENUINE: pp_plan_fact_entries jadval YO'Q — quriladi (smena reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0977","priority":"P0","status":"done","notes":"QURILDI: pp_reason_codes jadval+6 standart guruh seed + repo + controller CRUD. Jonli HTTP PASS (GET6/POST/PATCH/DELETE). tsc0."}
+{"prompt_id":"PROMPT-0978","priority":"P0","status":"done","notes":"QURILDI: pp_reason_codes jadval+6 standart guruh seed + repo + controller CRUD. Jonli HTTP PASS (GET6/POST/PATCH/DELETE). tsc0."}
+{"prompt_id":"PROMPT-0979","priority":"P0","status":"done","notes":"QURILDI: pp_reason_codes jadval+6 standart guruh seed + repo + controller CRUD. Jonli HTTP PASS (GET6/POST/PATCH/DELETE). tsc0."}
+{"prompt_id":"PROMPT-0980","priority":"P0","status":"done","notes":"QURILDI: pp_reason_codes jadval+6 standart guruh seed + repo + controller CRUD. Jonli HTTP PASS (GET6/POST/PATCH/DELETE). tsc0."}
+{"prompt_id":"PROMPT-1025","priority":"P0","status":"duplicate","notes":"SD→PP listener BOR: sales-order-ready-planning.listener.ts + advance-approved.listener; PP→MES qisman"}
+{"prompt_id":"PROMPT-1026","priority":"P0","status":"duplicate","notes":"SD→PP listener BOR: sales-order-ready-planning.listener.ts + advance-approved.listener; PP→MES qisman"}
+{"prompt_id":"PROMPT-1027","priority":"P0","status":"duplicate","notes":"SD→PP listener BOR: sales-order-ready-planning.listener.ts + advance-approved.listener; PP→MES qisman"}
+{"prompt_id":"PROMPT-1028","priority":"P0","status":"duplicate","notes":"SD→PP listener BOR: sales-order-ready-planning.listener.ts + advance-approved.listener; PP→MES qisman"}
+{"prompt_id":"PROMPT-1081","priority":"P0","status":"pending","notes":"GENUINE: 7-status state-machine — owner holat-ta'rifi (961 bilan bog'liq)"}
+{"prompt_id":"PROMPT-1082","priority":"P0","status":"pending","notes":"GENUINE: 7-status state-machine — owner holat-ta'rifi (961 bilan bog'liq)"}
+{"prompt_id":"PROMPT-1083","priority":"P0","status":"pending","notes":"GENUINE: 7-status state-machine — owner holat-ta'rifi (961 bilan bog'liq)"}
+{"prompt_id":"PROMPT-1084","priority":"P0","status":"pending","notes":"GENUINE: 7-status state-machine — owner holat-ta'rifi (961 bilan bog'liq)"}
+{"prompt_id":"PROMPT-1085","priority":"P0","status":"pending","notes":"GENUINE: MRP natija persist — mm_mrp_results bor, PP-MRP persist tekshirish kerak"}
+{"prompt_id":"PROMPT-1086","priority":"P0","status":"pending","notes":"GENUINE: MRP natija persist — mm_mrp_results bor, PP-MRP persist tekshirish kerak"}
+{"prompt_id":"PROMPT-1087","priority":"P0","status":"pending","notes":"GENUINE: MRP natija persist — mm_mrp_results bor, PP-MRP persist tekshirish kerak"}
+{"prompt_id":"PROMPT-1088","priority":"P0","status":"pending","notes":"GENUINE: MRP natija persist — mm_mrp_results bor, PP-MRP persist tekshirish kerak"}
+{"prompt_id":"PROMPT-1089","priority":"P0","status":"duplicate","notes":"Approval/tasdiq: advance-approved.listener + approval handlerlar BOR; AI-taklif+odam-tasdiq qisman"}
+{"prompt_id":"PROMPT-1090","priority":"P0","status":"duplicate","notes":"Approval/tasdiq: advance-approved.listener + approval handlerlar BOR; AI-taklif+odam-tasdiq qisman"}
+{"prompt_id":"PROMPT-1091","priority":"P0","status":"duplicate","notes":"Approval/tasdiq: advance-approved.listener + approval handlerlar BOR; AI-taklif+odam-tasdiq qisman"}
+{"prompt_id":"PROMPT-1092","priority":"P0","status":"duplicate","notes":"Approval/tasdiq: advance-approved.listener + approval handlerlar BOR; AI-taklif+odam-tasdiq qisman"}
+{"prompt_id":"PROMPT-1137","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox-infra BOR (outbox-event-writer/publisher/repo) lekin biznes-tranzaksiyalarga universal ulanmagan; domain_events=0. Katta golden-thread ishi."}
+{"prompt_id":"PROMPT-1138","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox-infra BOR (outbox-event-writer/publisher/repo) lekin biznes-tranzaksiyalarga universal ulanmagan; domain_events=0. Katta golden-thread ishi."}
+{"prompt_id":"PROMPT-1139","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox-infra BOR (outbox-event-writer/publisher/repo) lekin biznes-tranzaksiyalarga universal ulanmagan; domain_events=0. Katta golden-thread ishi."}
+{"prompt_id":"PROMPT-1140","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox-infra BOR (outbox-event-writer/publisher/repo) lekin biznes-tranzaksiyalarga universal ulanmagan; domain_events=0. Katta golden-thread ishi."}
+{"prompt_id":"PROMPT-1141","priority":"P0","status":"pending","notes":"GENUINE: MES→QC persist (production_qc_checks=0) — golden-thread hop tekshirish/wiring"}
+{"prompt_id":"PROMPT-1142","priority":"P0","status":"pending","notes":"GENUINE: MES→QC persist (production_qc_checks=0) — golden-thread hop tekshirish/wiring"}
+{"prompt_id":"PROMPT-1143","priority":"P0","status":"pending","notes":"GENUINE: MES→QC persist (production_qc_checks=0) — golden-thread hop tekshirish/wiring"}
+{"prompt_id":"PROMPT-1144","priority":"P0","status":"pending","notes":"GENUINE: MES→QC persist (production_qc_checks=0) — golden-thread hop tekshirish/wiring"}
+{"prompt_id":"PROMPT-1145","priority":"P0","status":"pending","notes":"GENUINE: PP→MES persist — golden-thread hop"}
+{"prompt_id":"PROMPT-1146","priority":"P0","status":"pending","notes":"GENUINE: PP→MES persist — golden-thread hop"}
+{"prompt_id":"PROMPT-1147","priority":"P0","status":"pending","notes":"GENUINE: PP→MES persist — golden-thread hop"}
+{"prompt_id":"PROMPT-1148","priority":"P0","status":"pending","notes":"GENUINE: PP→MES persist — golden-thread hop"}
+{"prompt_id":"PROMPT-1149","priority":"P0","status":"duplicate","notes":"SD→PP: sales-order-ready-planning.listener BOR; link/persist qisman (pending-data)"}
+{"prompt_id":"PROMPT-1150","priority":"P0","status":"duplicate","notes":"SD→PP: sales-order-ready-planning.listener BOR; link/persist qisman (pending-data)"}
+{"prompt_id":"PROMPT-1151","priority":"P0","status":"duplicate","notes":"SD→PP: sales-order-ready-planning.listener BOR; link/persist qisman (pending-data)"}
+{"prompt_id":"PROMPT-1152","priority":"P0","status":"duplicate","notes":"SD→PP: sales-order-ready-planning.listener BOR; link/persist qisman (pending-data)"}
+{"prompt_id":"PROMPT-1161","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox atomik DB-tranzaksiya universal emas (=1137)"}
+{"prompt_id":"PROMPT-1162","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox atomik DB-tranzaksiya universal emas (=1137)"}
+{"prompt_id":"PROMPT-1163","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox atomik DB-tranzaksiya universal emas (=1137)"}
+{"prompt_id":"PROMPT-1164","priority":"P0","status":"pending","notes":"ARXITEKTURA: outbox atomik DB-tranzaksiya universal emas (=1137)"}
+{"prompt_id":"PROMPT-0929","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_orders.responsible_manager_id+work_center_id BOR (mas'ul-link). card_id=ixtiyoriy enhancement (P2)"}
+{"prompt_id":"PROMPT-0930","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_orders.responsible_manager_id+work_center_id BOR (mas'ul-link). card_id=ixtiyoriy enhancement (P2)"}
+{"prompt_id":"PROMPT-0931","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_orders.responsible_manager_id+work_center_id BOR (mas'ul-link). card_id=ixtiyoriy enhancement (P2)"}
+{"prompt_id":"PROMPT-0932","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_orders.responsible_manager_id+work_center_id BOR (mas'ul-link). card_id=ixtiyoriy enhancement (P2)"}
+{"prompt_id":"PROMPT-0969","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (semantik dedup): production_order_status_log jadval ALLAQACHON bor (2026-06-26 migration + UpdateOrderStatusHandler yozadi). Prompt nomi pp_order_status_log boshqacha edi"}
+{"prompt_id":"PROMPT-0970","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (semantik dedup): production_order_status_log jadval ALLAQACHON bor (2026-06-26 migration + UpdateOrderStatusHandler yozadi). Prompt nomi pp_order_status_log boshqacha edi"}
+{"prompt_id":"PROMPT-0971","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (semantik dedup): production_order_status_log jadval ALLAQACHON bor (2026-06-26 migration + UpdateOrderStatusHandler yozadi). Prompt nomi pp_order_status_log boshqacha edi"}
+{"prompt_id":"PROMPT-0972","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (semantik dedup): production_order_status_log jadval ALLAQACHON bor (2026-06-26 migration + UpdateOrderStatusHandler yozadi). Prompt nomi pp_order_status_log boshqacha edi"}
+{"prompt_id":"PROMPT-0973","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_facts jadval ALLAQACHON bor (plan_quantity/bajarilgan_list_soni/brak/variance = reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0974","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_facts jadval ALLAQACHON bor (plan_quantity/bajarilgan_list_soni/brak/variance = reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0975","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_facts jadval ALLAQACHON bor (plan_quantity/bajarilgan_list_soni/brak/variance = reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0976","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: production_facts jadval ALLAQACHON bor (plan_quantity/bajarilgan_list_soni/brak/variance = reja/fakt/qoldiq/brak)"}
+{"prompt_id":"PROMPT-0977","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (DUBLIKATIM QAYTARILDI): mes_downtime_reasons (7 qator, MES-wired) + downtime_reason_codes KANONIK. Men pp_reason_codes qurib, semantik-dedup topgach DROP+o'chirdim (uchinchi parallel jadval=taqiq)"}
+{"prompt_id":"PROMPT-0978","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (DUBLIKATIM QAYTARILDI): mes_downtime_reasons (7 qator, MES-wired) + downtime_reason_codes KANONIK. Men pp_reason_codes qurib, semantik-dedup topgach DROP+o'chirdim (uchinchi parallel jadval=taqiq)"}
+{"prompt_id":"PROMPT-0979","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (DUBLIKATIM QAYTARILDI): mes_downtime_reasons (7 qator, MES-wired) + downtime_reason_codes KANONIK. Men pp_reason_codes qurib, semantik-dedup topgach DROP+o'chirdim (uchinchi parallel jadval=taqiq)"}
+{"prompt_id":"PROMPT-0980","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH (DUBLIKATIM QAYTARILDI): mes_downtime_reasons (7 qator, MES-wired) + downtime_reason_codes KANONIK. Men pp_reason_codes qurib, semantik-dedup topgach DROP+o'chirdim (uchinchi parallel jadval=taqiq)"}
+{"prompt_id":"PROMPT-1165","priority":"P0","status":"duplicate","notes":"MES→QC listener BOR: qc/event-handlers/mes-completed.listener.ts (qc.module)"}
+{"prompt_id":"PROMPT-1166","priority":"P0","status":"duplicate","notes":"MES→QC listener BOR: qc/event-handlers/mes-completed.listener.ts (qc.module)"}
+{"prompt_id":"PROMPT-1167","priority":"P0","status":"duplicate","notes":"MES→QC listener BOR: qc/event-handlers/mes-completed.listener.ts (qc.module)"}
+{"prompt_id":"PROMPT-1168","priority":"P0","status":"duplicate","notes":"MES→QC listener BOR: qc/event-handlers/mes-completed.listener.ts (qc.module)"}
+{"prompt_id":"PROMPT-1193","priority":"P0","status":"duplicate","notes":"workerId=users.id; karta-link ckp-mes-feed orqali (minor)"}
+{"prompt_id":"PROMPT-1194","priority":"P0","status":"duplicate","notes":"workerId=users.id; karta-link ckp-mes-feed orqali (minor)"}
+{"prompt_id":"PROMPT-1195","priority":"P0","status":"duplicate","notes":"workerId=users.id; karta-link ckp-mes-feed orqali (minor)"}
+{"prompt_id":"PROMPT-1196","priority":"P0","status":"duplicate","notes":"workerId=users.id; karta-link ckp-mes-feed orqali (minor)"}
+{"prompt_id":"PROMPT-1197","priority":"P0","status":"duplicate","notes":"karta-GSD: ckp-mes-feed.listener MES natija→ckp_fact_values"}
+{"prompt_id":"PROMPT-1198","priority":"P0","status":"duplicate","notes":"karta-GSD: ckp-mes-feed.listener MES natija→ckp_fact_values"}
+{"prompt_id":"PROMPT-1199","priority":"P0","status":"duplicate","notes":"karta-GSD: ckp-mes-feed.listener MES natija→ckp_fact_values"}
+{"prompt_id":"PROMPT-1200","priority":"P0","status":"duplicate","notes":"karta-GSD: ckp-mes-feed.listener MES natija→ckp_fact_values"}
+{"prompt_id":"PROMPT-1245","priority":"P0","status":"duplicate","notes":"operator login: users+employee.user_id(31/31) + card; 0 operator-role=data(owner)"}
+{"prompt_id":"PROMPT-1246","priority":"P0","status":"duplicate","notes":"operator login: users+employee.user_id(31/31) + card; 0 operator-role=data(owner)"}
+{"prompt_id":"PROMPT-1247","priority":"P0","status":"duplicate","notes":"operator login: users+employee.user_id(31/31) + card; 0 operator-role=data(owner)"}
+{"prompt_id":"PROMPT-1248","priority":"P0","status":"duplicate","notes":"operator login: users+employee.user_id(31/31) + card; 0 operator-role=data(owner)"}
+{"prompt_id":"PROMPT-1281","priority":"P0","status":"duplicate","notes":"3-stage GsdStage(setup/main/teardown) BOR: production-session.aggregate"}
+{"prompt_id":"PROMPT-1282","priority":"P0","status":"duplicate","notes":"3-stage GsdStage(setup/main/teardown) BOR: production-session.aggregate"}
+{"prompt_id":"PROMPT-1283","priority":"P0","status":"duplicate","notes":"3-stage GsdStage(setup/main/teardown) BOR: production-session.aggregate"}
+{"prompt_id":"PROMPT-1284","priority":"P0","status":"duplicate","notes":"3-stage GsdStage(setup/main/teardown) BOR: production-session.aggregate"}
+{"prompt_id":"PROMPT-1285","priority":"P0","status":"duplicate","notes":"OEE setup-time: iot/oee/oee-calculator.service mavjud"}
+{"prompt_id":"PROMPT-1286","priority":"P0","status":"duplicate","notes":"OEE setup-time: iot/oee/oee-calculator.service mavjud"}
+{"prompt_id":"PROMPT-1287","priority":"P0","status":"duplicate","notes":"OEE setup-time: iot/oee/oee-calculator.service mavjud"}
+{"prompt_id":"PROMPT-1288","priority":"P0","status":"duplicate","notes":"OEE setup-time: iot/oee/oee-calculator.service mavjud"}
+{"prompt_id":"PROMPT-1289","priority":"P0","status":"pending","notes":"3-tier downtime escalation + SOS org-routing — head_user_id(B4) ga bog'liq"}
+{"prompt_id":"PROMPT-1290","priority":"P0","status":"pending","notes":"3-tier downtime escalation + SOS org-routing — head_user_id(B4) ga bog'liq"}
+{"prompt_id":"PROMPT-1291","priority":"P0","status":"pending","notes":"3-tier downtime escalation + SOS org-routing — head_user_id(B4) ga bog'liq"}
+{"prompt_id":"PROMPT-1292","priority":"P0","status":"pending","notes":"3-tier downtime escalation + SOS org-routing — head_user_id(B4) ga bog'liq"}
+{"prompt_id":"PROMPT-1317","priority":"P0","status":"pending","notes":"GENUINE: Andon (katta tablo) jadval/FE yo'q — display feature (FE-oriented)"}
+{"prompt_id":"PROMPT-1318","priority":"P0","status":"pending","notes":"GENUINE: Andon (katta tablo) jadval/FE yo'q — display feature (FE-oriented)"}
+{"prompt_id":"PROMPT-1319","priority":"P0","status":"pending","notes":"GENUINE: Andon (katta tablo) jadval/FE yo'q — display feature (FE-oriented)"}
+{"prompt_id":"PROMPT-1320","priority":"P0","status":"pending","notes":"GENUINE: Andon (katta tablo) jadval/FE yo'q — display feature (FE-oriented)"}
+{"prompt_id":"PROMPT-1321","priority":"P0","status":"blocked","notes":"Sensor master data — demo-seed o'chirilgan; egasi real sensorlarni kiritadi (owner-data)"}
+{"prompt_id":"PROMPT-1322","priority":"P0","status":"blocked","notes":"Sensor master data — demo-seed o'chirilgan; egasi real sensorlarni kiritadi (owner-data)"}
+{"prompt_id":"PROMPT-1323","priority":"P0","status":"blocked","notes":"Sensor master data — demo-seed o'chirilgan; egasi real sensorlarni kiritadi (owner-data)"}
+{"prompt_id":"PROMPT-1324","priority":"P0","status":"blocked","notes":"Sensor master data — demo-seed o'chirilgan; egasi real sensorlarni kiritadi (owner-data)"}
+{"prompt_id":"PROMPT-1353","priority":"P0","status":"duplicate","notes":"MES→karta ЦКП listener = ckp-mes-feed.listener (=1197)"}
+{"prompt_id":"PROMPT-1354","priority":"P0","status":"duplicate","notes":"MES→karta ЦКП listener = ckp-mes-feed.listener (=1197)"}
+{"prompt_id":"PROMPT-1355","priority":"P0","status":"duplicate","notes":"MES→karta ЦКП listener = ckp-mes-feed.listener (=1197)"}
+{"prompt_id":"PROMPT-1356","priority":"P0","status":"duplicate","notes":"MES→karta ЦКП listener = ckp-mes-feed.listener (=1197)"}
+{"prompt_id":"PROMPT-1357","priority":"P0","status":"pending","notes":"A-System/card_activity_logs deferred integration"}
+{"prompt_id":"PROMPT-1358","priority":"P0","status":"pending","notes":"A-System/card_activity_logs deferred integration"}
+{"prompt_id":"PROMPT-1359","priority":"P0","status":"pending","notes":"A-System/card_activity_logs deferred integration"}
+{"prompt_id":"PROMPT-1360","priority":"P0","status":"pending","notes":"A-System/card_activity_logs deferred integration"}
+{"prompt_id":"PROMPT-1417","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world: production_sessions vs mes_production_sessions parallel — unifikatsiya owner/arch qaror"}
+{"prompt_id":"PROMPT-1418","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world: production_sessions vs mes_production_sessions parallel — unifikatsiya owner/arch qaror"}
+{"prompt_id":"PROMPT-1419","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world: production_sessions vs mes_production_sessions parallel — unifikatsiya owner/arch qaror"}
+{"prompt_id":"PROMPT-1420","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world: production_sessions vs mes_production_sessions parallel — unifikatsiya owner/arch qaror"}
+{"prompt_id":"PROMPT-1421","priority":"P0","status":"blocked","notes":"Operator tablet TB-checklist DDL-gated — owner-spec"}
+{"prompt_id":"PROMPT-1422","priority":"P0","status":"blocked","notes":"Operator tablet TB-checklist DDL-gated — owner-spec"}
+{"prompt_id":"PROMPT-1423","priority":"P0","status":"blocked","notes":"Operator tablet TB-checklist DDL-gated — owner-spec"}
+{"prompt_id":"PROMPT-1424","priority":"P0","status":"blocked","notes":"Operator tablet TB-checklist DDL-gated — owner-spec"}
+{"prompt_id":"PROMPT-1469","priority":"P0","status":"duplicate","notes":"holat-formula 5-ko'rsatkich: director-holat.service.ts + constants BOR"}
+{"prompt_id":"PROMPT-1470","priority":"P0","status":"duplicate","notes":"holat-formula 5-ko'rsatkich: director-holat.service.ts + constants BOR"}
+{"prompt_id":"PROMPT-1471","priority":"P0","status":"duplicate","notes":"holat-formula 5-ko'rsatkich: director-holat.service.ts + constants BOR"}
+{"prompt_id":"PROMPT-1472","priority":"P0","status":"duplicate","notes":"holat-formula 5-ko'rsatkich: director-holat.service.ts + constants BOR"}
+{"prompt_id":"PROMPT-1473","priority":"P0","status":"blocked","notes":"ideal_rasm_targets jadval BOR, 0 qator — owner ideal-qiymatlar (B: ideal-rasm)"}
+{"prompt_id":"PROMPT-1474","priority":"P0","status":"blocked","notes":"ideal_rasm_targets jadval BOR, 0 qator — owner ideal-qiymatlar (B: ideal-rasm)"}
+{"prompt_id":"PROMPT-1475","priority":"P0","status":"blocked","notes":"ideal_rasm_targets jadval BOR, 0 qator — owner ideal-qiymatlar (B: ideal-rasm)"}
+{"prompt_id":"PROMPT-1476","priority":"P0","status":"blocked","notes":"ideal_rasm_targets jadval BOR, 0 qator — owner ideal-qiymatlar (B: ideal-rasm)"}
+{"prompt_id":"PROMPT-1517","priority":"P0","status":"duplicate","notes":"5-holat daraja: director-holat.service (=1469)"}
+{"prompt_id":"PROMPT-1518","priority":"P0","status":"duplicate","notes":"5-holat daraja: director-holat.service (=1469)"}
+{"prompt_id":"PROMPT-1519","priority":"P0","status":"duplicate","notes":"5-holat daraja: director-holat.service (=1469)"}
+{"prompt_id":"PROMPT-1520","priority":"P0","status":"duplicate","notes":"5-holat daraja: director-holat.service (=1469)"}
+{"prompt_id":"PROMPT-1521","priority":"P0","status":"duplicate","notes":"deviation reason kategoriya: downtime_reason_codes + count_deviation_reasons MAVJUD"}
+{"prompt_id":"PROMPT-1522","priority":"P0","status":"duplicate","notes":"deviation reason kategoriya: downtime_reason_codes + count_deviation_reasons MAVJUD"}
+{"prompt_id":"PROMPT-1523","priority":"P0","status":"duplicate","notes":"deviation reason kategoriya: downtime_reason_codes + count_deviation_reasons MAVJUD"}
+{"prompt_id":"PROMPT-1524","priority":"P0","status":"duplicate","notes":"deviation reason kategoriya: downtime_reason_codes + count_deviation_reasons MAVJUD"}
+{"prompt_id":"PROMPT-1525","priority":"P0","status":"duplicate","notes":"OKR ierarxiya: okr.service.ts + okr.repository.ts BOR (director)"}
+{"prompt_id":"PROMPT-1526","priority":"P0","status":"duplicate","notes":"OKR ierarxiya: okr.service.ts + okr.repository.ts BOR (director)"}
+{"prompt_id":"PROMPT-1527","priority":"P0","status":"duplicate","notes":"OKR ierarxiya: okr.service.ts + okr.repository.ts BOR (director)"}
+{"prompt_id":"PROMPT-1528","priority":"P0","status":"duplicate","notes":"OKR ierarxiya: okr.service.ts + okr.repository.ts BOR (director)"}
+{"prompt_id":"PROMPT-1669","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world MES (=1417)"}
+{"prompt_id":"PROMPT-1670","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world MES (=1417)"}
+{"prompt_id":"PROMPT-1671","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world MES (=1417)"}
+{"prompt_id":"PROMPT-1672","priority":"P0","status":"pending","notes":"ARXITEKTURA two-world MES (=1417)"}
+{"prompt_id":"PROMPT-1673","priority":"P0","status":"blocked","notes":"A-смена План forma (55-yillik zavod formasi) — owner-spec + FE"}
+{"prompt_id":"PROMPT-1674","priority":"P0","status":"blocked","notes":"A-смена План forma (55-yillik zavod formasi) — owner-spec + FE"}
+{"prompt_id":"PROMPT-1675","priority":"P0","status":"blocked","notes":"A-смена План forma (55-yillik zavod formasi) — owner-spec + FE"}
+{"prompt_id":"PROMPT-1676","priority":"P0","status":"blocked","notes":"A-смена План forma (55-yillik zavod formasi) — owner-spec + FE"}
+{"prompt_id":"PROMPT-1677","priority":"P0","status":"blocked","notes":"MES TB-checklist UI — owner-spec + FE"}
+{"prompt_id":"PROMPT-1678","priority":"P0","status":"blocked","notes":"MES TB-checklist UI — owner-spec + FE"}
+{"prompt_id":"PROMPT-1679","priority":"P0","status":"blocked","notes":"MES TB-checklist UI — owner-spec + FE"}
+{"prompt_id":"PROMPT-1680","priority":"P0","status":"blocked","notes":"MES TB-checklist UI — owner-spec + FE"}
+{"prompt_id":"PROMPT-1681","priority":"P0","status":"blocked","notes":"Norma versiya + РД tasdiq master-data — owner-data"}
+{"prompt_id":"PROMPT-1682","priority":"P0","status":"blocked","notes":"Norma versiya + РД tasdiq master-data — owner-data"}
+{"prompt_id":"PROMPT-1683","priority":"P0","status":"blocked","notes":"Norma versiya + РД tasdiq master-data — owner-data"}
+{"prompt_id":"PROMPT-1684","priority":"P0","status":"blocked","notes":"Norma versiya + РД tasdiq master-data — owner-data"}
+{"prompt_id":"PROMPT-1769","priority":"P0","status":"duplicate","notes":"QC karta-link: org-structure card-model qc-rolllariga ham; razryad/oylik/GSD karta-tizimi BOR (=AREA2)"}
+{"prompt_id":"PROMPT-1770","priority":"P0","status":"duplicate","notes":"QC karta-link: org-structure card-model qc-rolllariga ham; razryad/oylik/GSD karta-tizimi BOR (=AREA2)"}
+{"prompt_id":"PROMPT-1771","priority":"P0","status":"duplicate","notes":"QC karta-link: org-structure card-model qc-rolllariga ham; razryad/oylik/GSD karta-tizimi BOR (=AREA2)"}
+{"prompt_id":"PROMPT-1772","priority":"P0","status":"duplicate","notes":"QC karta-link: org-structure card-model qc-rolllariga ham; razryad/oylik/GSD karta-tizimi BOR (=AREA2)"}
+{"prompt_id":"PROMPT-1773","priority":"P0","status":"duplicate","notes":"Operator o'z-nazorat: pos-anomaly + qc_braks BOR; MES-IoT integratsiya=ckp-mes-feed"}
+{"prompt_id":"PROMPT-1774","priority":"P0","status":"duplicate","notes":"Operator o'z-nazorat: pos-anomaly + qc_braks BOR; MES-IoT integratsiya=ckp-mes-feed"}
+{"prompt_id":"PROMPT-1775","priority":"P0","status":"duplicate","notes":"Operator o'z-nazorat: pos-anomaly + qc_braks BOR; MES-IoT integratsiya=ckp-mes-feed"}
+{"prompt_id":"PROMPT-1776","priority":"P0","status":"duplicate","notes":"Operator o'z-nazorat: pos-anomaly + qc_braks BOR; MES-IoT integratsiya=ckp-mes-feed"}
+{"prompt_id":"PROMPT-1821","priority":"P0","status":"duplicate","notes":"QC AQL/final/reclamation: qc_inspections(4row)+qc_reclamations(1row)+CQRS BOR (audit 09)"}
+{"prompt_id":"PROMPT-1822","priority":"P0","status":"duplicate","notes":"QC AQL/final/reclamation: qc_inspections(4row)+qc_reclamations(1row)+CQRS BOR (audit 09)"}
+{"prompt_id":"PROMPT-1823","priority":"P0","status":"duplicate","notes":"QC AQL/final/reclamation: qc_inspections(4row)+qc_reclamations(1row)+CQRS BOR (audit 09)"}
+{"prompt_id":"PROMPT-1824","priority":"P0","status":"duplicate","notes":"QC AQL/final/reclamation: qc_inspections(4row)+qc_reclamations(1row)+CQRS BOR (audit 09)"}
+{"prompt_id":"PROMPT-1925","priority":"P0","status":"duplicate","notes":"work_orders=production_orders (semantik — production order=work order)"}
+{"prompt_id":"PROMPT-1926","priority":"P0","status":"duplicate","notes":"work_orders=production_orders (semantik — production order=work order)"}
+{"prompt_id":"PROMPT-1927","priority":"P0","status":"duplicate","notes":"work_orders=production_orders (semantik — production order=work order)"}
+{"prompt_id":"PROMPT-1928","priority":"P0","status":"duplicate","notes":"work_orders=production_orders (semantik — production order=work order)"}
+{"prompt_id":"PROMPT-1929","priority":"P0","status":"pending","notes":"ARXITEKTURA outbox: domain_events schema bor, relay 0 (=1137)"}
+{"prompt_id":"PROMPT-1930","priority":"P0","status":"pending","notes":"ARXITEKTURA outbox: domain_events schema bor, relay 0 (=1137)"}
+{"prompt_id":"PROMPT-1931","priority":"P0","status":"pending","notes":"ARXITEKTURA outbox: domain_events schema bor, relay 0 (=1137)"}
+{"prompt_id":"PROMPT-1932","priority":"P0","status":"pending","notes":"ARXITEKTURA outbox: domain_events schema bor, relay 0 (=1137)"}
+{"prompt_id":"PROMPT-1965","priority":"P0","status":"blocked","notes":"Sort/grading narx koeffitsienti — owner-data (narx-jadval)"}
+{"prompt_id":"PROMPT-1966","priority":"P0","status":"blocked","notes":"Sort/grading narx koeffitsienti — owner-data (narx-jadval)"}
+{"prompt_id":"PROMPT-1967","priority":"P0","status":"blocked","notes":"Sort/grading narx koeffitsienti — owner-data (narx-jadval)"}
+{"prompt_id":"PROMPT-1968","priority":"P0","status":"blocked","notes":"Sort/grading narx koeffitsienti — owner-data (narx-jadval)"}
+{"prompt_id":"PROMPT-1985","priority":"P0","status":"duplicate","notes":"AI-FIT BOR (ai-fit service); auto-scheduling minor + AI-kalit B7"}
+{"prompt_id":"PROMPT-1986","priority":"P0","status":"duplicate","notes":"AI-FIT BOR (ai-fit service); auto-scheduling minor + AI-kalit B7"}
+{"prompt_id":"PROMPT-1987","priority":"P0","status":"duplicate","notes":"AI-FIT BOR (ai-fit service); auto-scheduling minor + AI-kalit B7"}
+{"prompt_id":"PROMPT-1988","priority":"P0","status":"duplicate","notes":"AI-FIT BOR (ai-fit service); auto-scheduling minor + AI-kalit B7"}
+{"prompt_id":"PROMPT-2021","priority":"P0","status":"duplicate","notes":"Layer A tool-exec BOR (aisha/application/tools); jonli test=AI-kalit B7"}
+{"prompt_id":"PROMPT-2022","priority":"P0","status":"duplicate","notes":"Layer A tool-exec BOR (aisha/application/tools); jonli test=AI-kalit B7"}
+{"prompt_id":"PROMPT-2023","priority":"P0","status":"duplicate","notes":"Layer A tool-exec BOR (aisha/application/tools); jonli test=AI-kalit B7"}
+{"prompt_id":"PROMPT-2024","priority":"P0","status":"duplicate","notes":"Layer A tool-exec BOR (aisha/application/tools); jonli test=AI-kalit B7"}
+{"prompt_id":"PROMPT-2025","priority":"P0","status":"superseded","notes":"Layer B Desktop Python JARVIS = ALOHIDA MAHSULOT (desktop client) — backend ERP ko'lamidan tashqari"}
+{"prompt_id":"PROMPT-2026","priority":"P0","status":"superseded","notes":"Layer B Desktop Python JARVIS = ALOHIDA MAHSULOT (desktop client) — backend ERP ko'lamidan tashqari"}
+{"prompt_id":"PROMPT-2027","priority":"P0","status":"superseded","notes":"Layer B Desktop Python JARVIS = ALOHIDA MAHSULOT (desktop client) — backend ERP ko'lamidan tashqari"}
+{"prompt_id":"PROMPT-2028","priority":"P0","status":"superseded","notes":"Layer B Desktop Python JARVIS = ALOHIDA MAHSULOT (desktop client) — backend ERP ko'lamidan tashqari"}
+{"prompt_id":"PROMPT-2053","priority":"P0","status":"duplicate","notes":"AI-oylik gate: CkpGateService + LmsCardGateService payroll'ga ulangan"}
+{"prompt_id":"PROMPT-2054","priority":"P0","status":"duplicate","notes":"AI-oylik gate: CkpGateService + LmsCardGateService payroll'ga ulangan"}
+{"prompt_id":"PROMPT-2055","priority":"P0","status":"duplicate","notes":"AI-oylik gate: CkpGateService + LmsCardGateService payroll'ga ulangan"}
+{"prompt_id":"PROMPT-2056","priority":"P0","status":"duplicate","notes":"AI-oylik gate: CkpGateService + LmsCardGateService payroll'ga ulangan"}
+{"prompt_id":"PROMPT-2089","priority":"P0","status":"duplicate","notes":"AISHA modul BOR: aisha.module.ts (application/domain/infrastructure)"}
+{"prompt_id":"PROMPT-2090","priority":"P0","status":"duplicate","notes":"AISHA modul BOR: aisha.module.ts (application/domain/infrastructure)"}
+{"prompt_id":"PROMPT-2091","priority":"P0","status":"duplicate","notes":"AISHA modul BOR: aisha.module.ts (application/domain/infrastructure)"}
+{"prompt_id":"PROMPT-2092","priority":"P0","status":"duplicate","notes":"AISHA modul BOR: aisha.module.ts (application/domain/infrastructure)"}
+{"prompt_id":"PROMPT-2157","priority":"P0","status":"duplicate","notes":"POS movement taksonomiya: pos_movement_types=11 qator (audit undercount, STALE)"}
+{"prompt_id":"PROMPT-2158","priority":"P0","status":"duplicate","notes":"POS movement taksonomiya: pos_movement_types=11 qator (audit undercount, STALE)"}
+{"prompt_id":"PROMPT-2159","priority":"P0","status":"duplicate","notes":"POS movement taksonomiya: pos_movement_types=11 qator (audit undercount, STALE)"}
+{"prompt_id":"PROMPT-2160","priority":"P0","status":"duplicate","notes":"POS movement taksonomiya: pos_movement_types=11 qator (audit undercount, STALE)"}
+{"prompt_id":"PROMPT-2161","priority":"P0","status":"duplicate","notes":"supplier_tin vendors/mm_vendors'da (tax_id/tin) — to'g'ri normalizatsiya; warehouse_stock'da emas (denorm shart emas)"}
+{"prompt_id":"PROMPT-2162","priority":"P0","status":"duplicate","notes":"supplier_tin vendors/mm_vendors'da (tax_id/tin) — to'g'ri normalizatsiya; warehouse_stock'da emas (denorm shart emas)"}
+{"prompt_id":"PROMPT-2163","priority":"P0","status":"duplicate","notes":"supplier_tin vendors/mm_vendors'da (tax_id/tin) — to'g'ri normalizatsiya; warehouse_stock'da emas (denorm shart emas)"}
+{"prompt_id":"PROMPT-2164","priority":"P0","status":"duplicate","notes":"supplier_tin vendors/mm_vendors'da (tax_id/tin) — to'g'ri normalizatsiya; warehouse_stock'da emas (denorm shart emas)"}
+{"prompt_id":"PROMPT-2165","priority":"P0","status":"duplicate","notes":"golden-thread WMS: outbound-enforcement + receiveFg BOR; SD→FG→WMS qisman"}
+{"prompt_id":"PROMPT-2166","priority":"P0","status":"duplicate","notes":"golden-thread WMS: outbound-enforcement + receiveFg BOR; SD→FG→WMS qisman"}
+{"prompt_id":"PROMPT-2167","priority":"P0","status":"duplicate","notes":"golden-thread WMS: outbound-enforcement + receiveFg BOR; SD→FG→WMS qisman"}
+{"prompt_id":"PROMPT-2168","priority":"P0","status":"duplicate","notes":"golden-thread WMS: outbound-enforcement + receiveFg BOR; SD→FG→WMS qisman"}
+{"prompt_id":"PROMPT-2169","priority":"P0","status":"pending","notes":"Minus-saldo blok — outbound-enforcement BLOCK bor, 'aktiv blok vs warning' rejim tekshirish"}
+{"prompt_id":"PROMPT-2170","priority":"P0","status":"pending","notes":"Minus-saldo blok — outbound-enforcement BLOCK bor, 'aktiv blok vs warning' rejim tekshirish"}
+{"prompt_id":"PROMPT-2171","priority":"P0","status":"pending","notes":"Minus-saldo blok — outbound-enforcement BLOCK bor, 'aktiv blok vs warning' rejim tekshirish"}
+{"prompt_id":"PROMPT-2172","priority":"P0","status":"pending","notes":"Minus-saldo blok — outbound-enforcement BLOCK bor, 'aktiv blok vs warning' rejim tekshirish"}
+{"prompt_id":"PROMPT-2173","priority":"P0","status":"pending","notes":"Margin tolerance ±2% validatsiya — count_deviation_reasons bor, tolerance-gate tekshirish"}
+{"prompt_id":"PROMPT-2174","priority":"P0","status":"pending","notes":"Margin tolerance ±2% validatsiya — count_deviation_reasons bor, tolerance-gate tekshirish"}
+{"prompt_id":"PROMPT-2175","priority":"P0","status":"pending","notes":"Margin tolerance ±2% validatsiya — count_deviation_reasons bor, tolerance-gate tekshirish"}
+{"prompt_id":"PROMPT-2176","priority":"P0","status":"pending","notes":"Margin tolerance ±2% validatsiya — count_deviation_reasons bor, tolerance-gate tekshirish"}
+{"prompt_id":"PROMPT-2269","priority":"P0","status":"duplicate","notes":"warehouse_stock owner_type/owner_customer_id BOR; supplier_tin vendors'da (=2161)"}
+{"prompt_id":"PROMPT-2270","priority":"P0","status":"duplicate","notes":"warehouse_stock owner_type/owner_customer_id BOR; supplier_tin vendors'da (=2161)"}
+{"prompt_id":"PROMPT-2271","priority":"P0","status":"duplicate","notes":"warehouse_stock owner_type/owner_customer_id BOR; supplier_tin vendors'da (=2161)"}
+{"prompt_id":"PROMPT-2272","priority":"P0","status":"duplicate","notes":"warehouse_stock owner_type/owner_customer_id BOR; supplier_tin vendors'da (=2161)"}
+{"prompt_id":"PROMPT-2273","priority":"P0","status":"pending","notes":"MES→POS FG_FROM_MES auto-movement — listener tekshirish (pos handlers bor)"}
+{"prompt_id":"PROMPT-2274","priority":"P0","status":"pending","notes":"MES→POS FG_FROM_MES auto-movement — listener tekshirish (pos handlers bor)"}
+{"prompt_id":"PROMPT-2275","priority":"P0","status":"pending","notes":"MES→POS FG_FROM_MES auto-movement — listener tekshirish (pos handlers bor)"}
+{"prompt_id":"PROMPT-2276","priority":"P0","status":"pending","notes":"MES→POS FG_FROM_MES auto-movement — listener tekshirish (pos handlers bor)"}
+{"prompt_id":"PROMPT-2277","priority":"P0","status":"pending","notes":"Pres-kirim fast-path (kg→barcode→INTERNAL_IN) — POS feature tekshirish"}
+{"prompt_id":"PROMPT-2278","priority":"P0","status":"pending","notes":"Pres-kirim fast-path (kg→barcode→INTERNAL_IN) — POS feature tekshirish"}
+{"prompt_id":"PROMPT-2279","priority":"P0","status":"pending","notes":"Pres-kirim fast-path (kg→barcode→INTERNAL_IN) — POS feature tekshirish"}
+{"prompt_id":"PROMPT-2280","priority":"P0","status":"pending","notes":"Pres-kirim fast-path (kg→barcode→INTERNAL_IN) — POS feature tekshirish"}
+{"prompt_id":"PROMPT-2333","priority":"P0","status":"duplicate","notes":"SD order CREATE BOR: sd/create-order.handler.ts (kanonik)"}
+{"prompt_id":"PROMPT-2334","priority":"P0","status":"duplicate","notes":"SD order CREATE BOR: sd/create-order.handler.ts (kanonik)"}
+{"prompt_id":"PROMPT-2335","priority":"P0","status":"duplicate","notes":"SD order CREATE BOR: sd/create-order.handler.ts (kanonik)"}
+{"prompt_id":"PROMPT-2336","priority":"P0","status":"duplicate","notes":"SD order CREATE BOR: sd/create-order.handler.ts (kanonik)"}
+{"prompt_id":"PROMPT-2337","priority":"P0","status":"duplicate","notes":"Kotirovka КП: sd-quotations.service BOR (audit 06); versioning/imzo qisman"}
+{"prompt_id":"PROMPT-2338","priority":"P0","status":"duplicate","notes":"Kotirovka КП: sd-quotations.service BOR (audit 06); versioning/imzo qisman"}
+{"prompt_id":"PROMPT-2339","priority":"P0","status":"duplicate","notes":"Kotirovka КП: sd-quotations.service BOR (audit 06); versioning/imzo qisman"}
+{"prompt_id":"PROMPT-2340","priority":"P0","status":"duplicate","notes":"Kotirovka КП: sd-quotations.service BOR (audit 06); versioning/imzo qisman"}
+{"prompt_id":"PROMPT-2341","priority":"P0","status":"duplicate","notes":"Avans 70% gate: checkAdvanceAndBlock BOR (update-order-status.handler, audit 06.25)"}
+{"prompt_id":"PROMPT-2342","priority":"P0","status":"duplicate","notes":"Avans 70% gate: checkAdvanceAndBlock BOR (update-order-status.handler, audit 06.25)"}
+{"prompt_id":"PROMPT-2343","priority":"P0","status":"duplicate","notes":"Avans 70% gate: checkAdvanceAndBlock BOR (update-order-status.handler, audit 06.25)"}
+{"prompt_id":"PROMPT-2344","priority":"P0","status":"duplicate","notes":"Avans 70% gate: checkAdvanceAndBlock BOR (update-order-status.handler, audit 06.25)"}
+{"prompt_id":"PROMPT-2425","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2426","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2427","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2428","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2429","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2430","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2431","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2432","priority":"P0","status":"blocked","notes":"SDOrderDetail 4-tab / SDLostOrders — FE sahifa (owner-FE)"}
+{"prompt_id":"PROMPT-2549","priority":"P0","status":"blocked","notes":"Voronka bosqich nomlari OCHIQ — owner-data"}
+{"prompt_id":"PROMPT-2550","priority":"P0","status":"blocked","notes":"Voronka bosqich nomlari OCHIQ — owner-data"}
+{"prompt_id":"PROMPT-2551","priority":"P0","status":"blocked","notes":"Voronka bosqich nomlari OCHIQ — owner-data"}
+{"prompt_id":"PROMPT-2552","priority":"P0","status":"blocked","notes":"Voronka bosqich nomlari OCHIQ — owner-data"}
+{"prompt_id":"PROMPT-2589","priority":"P0","status":"duplicate","notes":"CRM funnel: crm_funnel + getFunnel BOR; bosqich-nomlari owner"}
+{"prompt_id":"PROMPT-2590","priority":"P0","status":"duplicate","notes":"CRM funnel: crm_funnel + getFunnel BOR; bosqich-nomlari owner"}
+{"prompt_id":"PROMPT-2591","priority":"P0","status":"duplicate","notes":"CRM funnel: crm_funnel + getFunnel BOR; bosqich-nomlari owner"}
+{"prompt_id":"PROMPT-2592","priority":"P0","status":"duplicate","notes":"CRM funnel: crm_funnel + getFunnel BOR; bosqich-nomlari owner"}
+{"prompt_id":"PROMPT-2593","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2594","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2595","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2596","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2597","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2598","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2599","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2600","priority":"P0","status":"pending","notes":"Proposal/pricing voronka step integratsiya — qisman, recheck"}
+{"prompt_id":"PROMPT-2601","priority":"P0","status":"pending","notes":"GENUINE: kanal (TG/WA/SMS/Email) auto-ingest — qisman (crm-comms bor)"}
+{"prompt_id":"PROMPT-2602","priority":"P0","status":"pending","notes":"GENUINE: kanal (TG/WA/SMS/Email) auto-ingest — qisman (crm-comms bor)"}
+{"prompt_id":"PROMPT-2603","priority":"P0","status":"pending","notes":"GENUINE: kanal (TG/WA/SMS/Email) auto-ingest — qisman (crm-comms bor)"}
+{"prompt_id":"PROMPT-2604","priority":"P0","status":"pending","notes":"GENUINE: kanal (TG/WA/SMS/Email) auto-ingest — qisman (crm-comms bor)"}
+{"prompt_id":"PROMPT-2633","priority":"P0","status":"pending","notes":"Deal-won→sales_order link — mark-deal-won.handler bor, oqim recheck"}
+{"prompt_id":"PROMPT-2634","priority":"P0","status":"pending","notes":"Deal-won→sales_order link — mark-deal-won.handler bor, oqim recheck"}
+{"prompt_id":"PROMPT-2635","priority":"P0","status":"pending","notes":"Deal-won→sales_order link — mark-deal-won.handler bor, oqim recheck"}
+{"prompt_id":"PROMPT-2636","priority":"P0","status":"pending","notes":"Deal-won→sales_order link — mark-deal-won.handler bor, oqim recheck"}
+{"prompt_id":"PROMPT-2665","priority":"P0","status":"duplicate","notes":"lead→deal→order: crm_deals.lead_id FK BOR"}
+{"prompt_id":"PROMPT-2666","priority":"P0","status":"duplicate","notes":"lead→deal→order: crm_deals.lead_id FK BOR"}
+{"prompt_id":"PROMPT-2667","priority":"P0","status":"duplicate","notes":"lead→deal→order: crm_deals.lead_id FK BOR"}
+{"prompt_id":"PROMPT-2668","priority":"P0","status":"duplicate","notes":"lead→deal→order: crm_deals.lead_id FK BOR"}
+{"prompt_id":"PROMPT-2761","priority":"P0","status":"duplicate","notes":"Design-token --mod-org/--ep-org: erp-modern-ui CSS + check-design-tokens guard BOR"}
+{"prompt_id":"PROMPT-2762","priority":"P0","status":"duplicate","notes":"Design-token --mod-org/--ep-org: erp-modern-ui CSS + check-design-tokens guard BOR"}
+{"prompt_id":"PROMPT-2763","priority":"P0","status":"duplicate","notes":"Design-token --mod-org/--ep-org: erp-modern-ui CSS + check-design-tokens guard BOR"}
+{"prompt_id":"PROMPT-2764","priority":"P0","status":"duplicate","notes":"Design-token --mod-org/--ep-org: erp-modern-ui CSS + check-design-tokens guard BOR"}
+{"prompt_id":"PROMPT-2789","priority":"P0","status":"blocked","notes":"Xom-rang inline cleanup — FE refactor (check-design-tokens guard bor, davomli)"}
+{"prompt_id":"PROMPT-2790","priority":"P0","status":"blocked","notes":"Xom-rang inline cleanup — FE refactor (check-design-tokens guard bor, davomli)"}
+{"prompt_id":"PROMPT-2791","priority":"P0","status":"blocked","notes":"Xom-rang inline cleanup — FE refactor (check-design-tokens guard bor, davomli)"}
+{"prompt_id":"PROMPT-2792","priority":"P0","status":"blocked","notes":"Xom-rang inline cleanup — FE refactor (check-design-tokens guard bor, davomli)"}
+{"prompt_id":"PROMPT-2793","priority":"P0","status":"blocked","notes":"EPPageHeader 820+ sahifaga tatbiq — FE refactor"}
+{"prompt_id":"PROMPT-2794","priority":"P0","status":"blocked","notes":"EPPageHeader 820+ sahifaga tatbiq — FE refactor"}
+{"prompt_id":"PROMPT-2795","priority":"P0","status":"blocked","notes":"EPPageHeader 820+ sahifaga tatbiq — FE refactor"}
+{"prompt_id":"PROMPT-2796","priority":"P0","status":"blocked","notes":"EPPageHeader 820+ sahifaga tatbiq — FE refactor"}
+{"prompt_id":"PROMPT-2825","priority":"P0","status":"duplicate","notes":"card-gate login.service env-OFF (=AREA5)"}
+{"prompt_id":"PROMPT-2826","priority":"P0","status":"duplicate","notes":"card-gate login.service env-OFF (=AREA5)"}
+{"prompt_id":"PROMPT-2827","priority":"P0","status":"duplicate","notes":"card-gate login.service env-OFF (=AREA5)"}
+{"prompt_id":"PROMPT-2828","priority":"P0","status":"duplicate","notes":"card-gate login.service env-OFF (=AREA5)"}
+{"prompt_id":"PROMPT-2829","priority":"P0","status":"duplicate","notes":"RBAC rbacTier card-based (=AREA5)"}
+{"prompt_id":"PROMPT-2830","priority":"P0","status":"duplicate","notes":"RBAC rbacTier card-based (=AREA5)"}
+{"prompt_id":"PROMPT-2831","priority":"P0","status":"duplicate","notes":"RBAC rbacTier card-based (=AREA5)"}
+{"prompt_id":"PROMPT-2832","priority":"P0","status":"duplicate","notes":"RBAC rbacTier card-based (=AREA5)"}
+{"prompt_id":"PROMPT-2833","priority":"P0","status":"duplicate","notes":"Payroll oylik-gate CkpGateService (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-2834","priority":"P0","status":"duplicate","notes":"Payroll oylik-gate CkpGateService (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-2835","priority":"P0","status":"duplicate","notes":"Payroll oylik-gate CkpGateService (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-2836","priority":"P0","status":"duplicate","notes":"Payroll oylik-gate CkpGateService (=PROMPT-0001)"}
+{"prompt_id":"PROMPT-2845","priority":"P0","status":"pending","notes":"GENUINE-partial: multi-tenancy TenantMiddleware bor lekin 0 amaliyot — wiring tekshirish"}
+{"prompt_id":"PROMPT-2846","priority":"P0","status":"pending","notes":"GENUINE-partial: multi-tenancy TenantMiddleware bor lekin 0 amaliyot — wiring tekshirish"}
+{"prompt_id":"PROMPT-2847","priority":"P0","status":"pending","notes":"GENUINE-partial: multi-tenancy TenantMiddleware bor lekin 0 amaliyot — wiring tekshirish"}
+{"prompt_id":"PROMPT-2848","priority":"P0","status":"pending","notes":"GENUINE-partial: multi-tenancy TenantMiddleware bor lekin 0 amaliyot — wiring tekshirish"}
+{"prompt_id":"PROMPT-2877","priority":"P0","status":"duplicate","notes":"Multi-tenancy scaffolding (TenantMiddleware/Context) BOR"}
+{"prompt_id":"PROMPT-2878","priority":"P0","status":"duplicate","notes":"Multi-tenancy scaffolding (TenantMiddleware/Context) BOR"}
+{"prompt_id":"PROMPT-2879","priority":"P0","status":"duplicate","notes":"Multi-tenancy scaffolding (TenantMiddleware/Context) BOR"}
+{"prompt_id":"PROMPT-2880","priority":"P0","status":"duplicate","notes":"Multi-tenancy scaffolding (TenantMiddleware/Context) BOR"}
+{"prompt_id":"PROMPT-2905","priority":"P0","status":"duplicate","notes":"card-centric login gate users.card_id+login.service (=AREA2)"}
+{"prompt_id":"PROMPT-2906","priority":"P0","status":"duplicate","notes":"card-centric login gate users.card_id+login.service (=AREA2)"}
+{"prompt_id":"PROMPT-2907","priority":"P0","status":"duplicate","notes":"card-centric login gate users.card_id+login.service (=AREA2)"}
+{"prompt_id":"PROMPT-2908","priority":"P0","status":"duplicate","notes":"card-centric login gate users.card_id+login.service (=AREA2)"}
+{"prompt_id":"PROMPT-2925","priority":"P0","status":"pending","notes":"Soft-delete audit ustunlari material_cards/sd_customers — deleted_at tekshirish"}
+{"prompt_id":"PROMPT-2926","priority":"P0","status":"pending","notes":"Soft-delete audit ustunlari material_cards/sd_customers — deleted_at tekshirish"}
+{"prompt_id":"PROMPT-2927","priority":"P0","status":"pending","notes":"Soft-delete audit ustunlari material_cards/sd_customers — deleted_at tekshirish"}
+{"prompt_id":"PROMPT-2928","priority":"P0","status":"pending","notes":"Soft-delete audit ustunlari material_cards/sd_customers — deleted_at tekshirish"}
+{"prompt_id":"PROMPT-2929","priority":"P0","status":"duplicate","notes":"material_cards KANONIK; raw_materials=bog'liq lug'at (known, parallel emas)"}
+{"prompt_id":"PROMPT-2930","priority":"P0","status":"duplicate","notes":"material_cards KANONIK; raw_materials=bog'liq lug'at (known, parallel emas)"}
+{"prompt_id":"PROMPT-2931","priority":"P0","status":"duplicate","notes":"material_cards KANONIK; raw_materials=bog'liq lug'at (known, parallel emas)"}
+{"prompt_id":"PROMPT-2932","priority":"P0","status":"duplicate","notes":"material_cards KANONIK; raw_materials=bog'liq lug'at (known, parallel emas)"}
+{"prompt_id":"PROMPT-2981","priority":"P0","status":"duplicate","notes":"PP-Master: customer_id NULL 6/13=data(owner); link mexanizmi bor"}
+{"prompt_id":"PROMPT-2982","priority":"P0","status":"duplicate","notes":"PP-Master: customer_id NULL 6/13=data(owner); link mexanizmi bor"}
+{"prompt_id":"PROMPT-2983","priority":"P0","status":"duplicate","notes":"PP-Master: customer_id NULL 6/13=data(owner); link mexanizmi bor"}
+{"prompt_id":"PROMPT-2984","priority":"P0","status":"duplicate","notes":"PP-Master: customer_id NULL 6/13=data(owner); link mexanizmi bor"}
+{"prompt_id":"PROMPT-2985","priority":"P0","status":"duplicate","notes":"mm_materials=test-only; material_cards kanonik (known two-world, faol emas)"}
+{"prompt_id":"PROMPT-2986","priority":"P0","status":"duplicate","notes":"mm_materials=test-only; material_cards kanonik (known two-world, faol emas)"}
+{"prompt_id":"PROMPT-2987","priority":"P0","status":"duplicate","notes":"mm_materials=test-only; material_cards kanonik (known two-world, faol emas)"}
+{"prompt_id":"PROMPT-2988","priority":"P0","status":"duplicate","notes":"mm_materials=test-only; material_cards kanonik (known two-world, faol emas)"}
+{"prompt_id":"PROMPT-3049","priority":"P0","status":"blocked","notes":"razryad_levels qiymatlari — B3 owner-data"}
+{"prompt_id":"PROMPT-3050","priority":"P0","status":"blocked","notes":"razryad_levels qiymatlari — B3 owner-data"}
+{"prompt_id":"PROMPT-3051","priority":"P0","status":"blocked","notes":"razryad_levels qiymatlari — B3 owner-data"}
+{"prompt_id":"PROMPT-3052","priority":"P0","status":"blocked","notes":"razryad_levels qiymatlari — B3 owner-data"}
+{"prompt_id":"PROMPT-3101","priority":"P0","status":"blocked","notes":"razryad_level_id NULL 0/139 — data (owner razryad-tayinlash)"}
+{"prompt_id":"PROMPT-3102","priority":"P0","status":"blocked","notes":"razryad_level_id NULL 0/139 — data (owner razryad-tayinlash)"}
+{"prompt_id":"PROMPT-3103","priority":"P0","status":"blocked","notes":"razryad_level_id NULL 0/139 — data (owner razryad-tayinlash)"}
+{"prompt_id":"PROMPT-3104","priority":"P0","status":"blocked","notes":"razryad_level_id NULL 0/139 — data (owner razryad-tayinlash)"}
+{"prompt_id":"PROMPT-3125","priority":"P0","status":"blocked","notes":"O'sish execution 0 — data (razryad o'zgarishi=imtihon+HR+rahbar, mexanizm bor)"}
+{"prompt_id":"PROMPT-3126","priority":"P0","status":"blocked","notes":"O'sish execution 0 — data (razryad o'zgarishi=imtihon+HR+rahbar, mexanizm bor)"}
+{"prompt_id":"PROMPT-3127","priority":"P0","status":"blocked","notes":"O'sish execution 0 — data (razryad o'zgarishi=imtihon+HR+rahbar, mexanizm bor)"}
+{"prompt_id":"PROMPT-3128","priority":"P0","status":"blocked","notes":"O'sish execution 0 — data (razryad o'zgarishi=imtihon+HR+rahbar, mexanizm bor)"}
+{"prompt_id":"PROMPT-3129","priority":"P0","status":"blocked","notes":"razryad_history 0 qator — data (jadval bor, mexanizm exam-passed-razryad.listener)"}
+{"prompt_id":"PROMPT-3130","priority":"P0","status":"blocked","notes":"razryad_history 0 qator — data (jadval bor, mexanizm exam-passed-razryad.listener)"}
+{"prompt_id":"PROMPT-3131","priority":"P0","status":"blocked","notes":"razryad_history 0 qator — data (jadval bor, mexanizm exam-passed-razryad.listener)"}
+{"prompt_id":"PROMPT-3132","priority":"P0","status":"blocked","notes":"razryad_history 0 qator — data (jadval bor, mexanizm exam-passed-razryad.listener)"}
+{"prompt_id":"PROMPT-3133","priority":"P0","status":"blocked","notes":"2-step tasdiq 0 — data (mexanizm bor)"}
+{"prompt_id":"PROMPT-3134","priority":"P0","status":"blocked","notes":"2-step tasdiq 0 — data (mexanizm bor)"}
+{"prompt_id":"PROMPT-3135","priority":"P0","status":"blocked","notes":"2-step tasdiq 0 — data (mexanizm bor)"}
+{"prompt_id":"PROMPT-3136","priority":"P0","status":"blocked","notes":"2-step tasdiq 0 — data (mexanizm bor)"}
+{"prompt_id":"PROMPT-3181","priority":"P0","status":"duplicate","notes":"Karta-markazli oylik payroll.service.ts:400 cardId (=PROMPT-0221)"}
+{"prompt_id":"PROMPT-3182","priority":"P0","status":"duplicate","notes":"Karta-markazli oylik payroll.service.ts:400 cardId (=PROMPT-0221)"}
+{"prompt_id":"PROMPT-3183","priority":"P0","status":"duplicate","notes":"Karta-markazli oylik payroll.service.ts:400 cardId (=PROMPT-0221)"}
+{"prompt_id":"PROMPT-3184","priority":"P0","status":"duplicate","notes":"Karta-markazli oylik payroll.service.ts:400 cardId (=PROMPT-0221)"}
+{"prompt_id":"PROMPT-3185","priority":"P0","status":"duplicate","notes":"Payroll→kassir: PayrollClosureService + GL-posting BOR"}
+{"prompt_id":"PROMPT-3186","priority":"P0","status":"duplicate","notes":"Payroll→kassir: PayrollClosureService + GL-posting BOR"}
+{"prompt_id":"PROMPT-3187","priority":"P0","status":"duplicate","notes":"Payroll→kassir: PayrollClosureService + GL-posting BOR"}
+{"prompt_id":"PROMPT-3188","priority":"P0","status":"duplicate","notes":"Payroll→kassir: PayrollClosureService + GL-posting BOR"}
+{"prompt_id":"PROMPT-3189","priority":"P0","status":"blocked","notes":"RBAC tier 0/144 NULL — owner-data (razryad/tier qiymat); fabrikatsiya taqiq"}
+{"prompt_id":"PROMPT-3190","priority":"P0","status":"blocked","notes":"RBAC tier 0/144 NULL — owner-data (razryad/tier qiymat); fabrikatsiya taqiq"}
+{"prompt_id":"PROMPT-3191","priority":"P0","status":"blocked","notes":"RBAC tier 0/144 NULL — owner-data (razryad/tier qiymat); fabrikatsiya taqiq"}
+{"prompt_id":"PROMPT-3192","priority":"P0","status":"blocked","notes":"RBAC tier 0/144 NULL — owner-data (razryad/tier qiymat); fabrikatsiya taqiq"}
+{"prompt_id":"PROMPT-3193","priority":"P0","status":"pending","notes":"GENUINE: tushum 4-hisobga taqsim (EP-FIN-005) — GL split tekshirish/qurish"}
+{"prompt_id":"PROMPT-3194","priority":"P0","status":"pending","notes":"GENUINE: tushum 4-hisobga taqsim (EP-FIN-005) — GL split tekshirish/qurish"}
+{"prompt_id":"PROMPT-3195","priority":"P0","status":"pending","notes":"GENUINE: tushum 4-hisobga taqsim (EP-FIN-005) — GL split tekshirish/qurish"}
+{"prompt_id":"PROMPT-3196","priority":"P0","status":"pending","notes":"GENUINE: tushum 4-hisobga taqsim (EP-FIN-005) — GL split tekshirish/qurish"}
+{"prompt_id":"PROMPT-3265","priority":"P0","status":"pending","notes":"GENUINE-recheck: POS GL posting canonical entries'gami yoki local — golden-thread"}
+{"prompt_id":"PROMPT-3266","priority":"P0","status":"pending","notes":"GENUINE-recheck: POS GL posting canonical entries'gami yoki local — golden-thread"}
+{"prompt_id":"PROMPT-3267","priority":"P0","status":"pending","notes":"GENUINE-recheck: POS GL posting canonical entries'gami yoki local — golden-thread"}
+{"prompt_id":"PROMPT-3268","priority":"P0","status":"pending","notes":"GENUINE-recheck: POS GL posting canonical entries'gami yoki local — golden-thread"}
+{"prompt_id":"PROMPT-3269","priority":"P0","status":"duplicate","notes":"Cashier movements 0=data; schema+service ready (call-path tekshirish)"}
+{"prompt_id":"PROMPT-3270","priority":"P0","status":"duplicate","notes":"Cashier movements 0=data; schema+service ready (call-path tekshirish)"}
+{"prompt_id":"PROMPT-3271","priority":"P0","status":"duplicate","notes":"Cashier movements 0=data; schema+service ready (call-path tekshirish)"}
+{"prompt_id":"PROMPT-3272","priority":"P0","status":"duplicate","notes":"Cashier movements 0=data; schema+service ready (call-path tekshirish)"}
+{"prompt_id":"PROMPT-3193","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: income-split BOR — income-split.service.ts + income_split_config jadval; 4-hisob %lari=owner-data"}
+{"prompt_id":"PROMPT-3194","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: income-split BOR — income-split.service.ts + income_split_config jadval; 4-hisob %lari=owner-data"}
+{"prompt_id":"PROMPT-3195","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: income-split BOR — income-split.service.ts + income_split_config jadval; 4-hisob %lari=owner-data"}
+{"prompt_id":"PROMPT-3196","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: income-split BOR — income-split.service.ts + income_split_config jadval; 4-hisob %lari=owner-data"}
+{"prompt_id":"PROMPT-2925","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: material_cards.deleted_at + sd_customers.deleted_at MAVJUD (soft-delete bor)"}
+{"prompt_id":"PROMPT-2926","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: material_cards.deleted_at + sd_customers.deleted_at MAVJUD (soft-delete bor)"}
+{"prompt_id":"PROMPT-2927","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: material_cards.deleted_at + sd_customers.deleted_at MAVJUD (soft-delete bor)"}
+{"prompt_id":"PROMPT-2928","priority":"P0","status":"duplicate","notes":"TO'G'IRLASH: material_cards.deleted_at + sd_customers.deleted_at MAVJUD (soft-delete bor)"}
+{"prompt_id":"PROMPT-3265","priority":"P0","status":"pending","notes":"ARXITEKTURA (confirmed): POS auto-gl-posting pos_gl_postings SUBLEDGER'ga yozadi (ataylab, izoh:20), kanonik entries emas. Subledger→entries rollup accounting-qarori — katta, owner/arch"}
+{"prompt_id":"PROMPT-3266","priority":"P0","status":"pending","notes":"ARXITEKTURA (confirmed): POS auto-gl-posting pos_gl_postings SUBLEDGER'ga yozadi (ataylab, izoh:20), kanonik entries emas. Subledger→entries rollup accounting-qarori — katta, owner/arch"}
+{"prompt_id":"PROMPT-3267","priority":"P0","status":"pending","notes":"ARXITEKTURA (confirmed): POS auto-gl-posting pos_gl_postings SUBLEDGER'ga yozadi (ataylab, izoh:20), kanonik entries emas. Subledger→entries rollup accounting-qarori — katta, owner/arch"}
+{"prompt_id":"PROMPT-3268","priority":"P0","status":"pending","notes":"ARXITEKTURA (confirmed): POS auto-gl-posting pos_gl_postings SUBLEDGER'ga yozadi (ataylab, izoh:20), kanonik entries emas. Subledger→entries rollup accounting-qarori — katta, owner/arch"}
+{"prompt_id":"P1-CKP-AREA","priority":"P1","status":"duplicate","notes":"P1 ЦКП-area (88 prompt) = P0 bilan bir xil naqsh: ckp_card_products(multi-product), ai_ckp_scores, ckp_formula_type(org_departments), error_catalog jadval — HAMMASI MAVJUD. ЦКП meta/fakt data=0=owner-data(B2). deadline 16vs3=owner-data(B1). Per-employee override + multi-product UI=FE/owner. P1 BARCHA area shu naqshda — dup/owner-data/FE-polish."}
+{"prompt_id":"P1-HR-AREA","priority":"P1","status":"duplicate","notes":"P1 HR-area (24 prompt, band 0057-0102) cross-ref T26/2146-tasdiq (bu sessiya, jonli): razryad-execution 2-imzo=BOR(T20 5af42e29), 5-holat=BOR(T18), employee_cards M:N BE=BOR FE-yig'indi-UI=qisman. Payroll-GL listener=BOR(T27 today, 663ec3c4 emas—T27-A4). Genuine: onboarding->card-activation(EP-HR gap, hali qurilmagan), karta-DATA=owner-data(B1-B8 to'liq)."}
+{"prompt_id":"P1-LMS-AREA","priority":"P1","status":"mixed","notes":"P1 LMS-area (18 prompt, band 0112-0144) cross-ref T26 (VIZYON-TASDIQ-2146 12-modul): course_type/threshold=minor-gap. GENUINE (T26 buildable-gap, hali QURILMAGAN): 3-bosqichli tasdiq workflow (o'quv->HR->rahbar, hozir 2-bosqich), lms_card_mentors mentor-assign+2-tomonlama-reyting, FE Darslik-tab OrgNodeDetail'da yo'q. enrollments.card_id/auto_enroll=BOR (T7/T18 avval)."}
+{"prompt_id":"P1-ORG-AREA","priority":"P1","status":"mixed","notes":"P1 Org-area (19 prompt, band 0152-0188) cross-ref T26-2-ORG-AUTH-SEC (bugun). Dup: razryad-CRUD/5-holat/manager_id-mexanizm=BOR. GENUINE (T26 confirmed, hali qurilmagan): card 2-imzo-faollashtirish (approved_by/acknowledged_by/signed_at yo'q), field-level RBAC projection (oylik/AI-baho hammaga ko'rinadi), workflow_rules=owner-data(B5), karta-DATA=owner-data(B1-B8)."}
+{"prompt_id":"P1-AUTH-AREA","priority":"P1","status":"mixed","notes":"P1 Auth/RBAC-area (16 prompt, band 0191-0229) cross-ref T26-2 + memory (T23 e39e9c31). DUP: RBAC card-first(org_function_id-FIRST)=BOR(T23). GENUINE (T26 confirmed, hali qurilmagan): field-level-projection, i.o.-acting-scoped-RBAC(deny-list pul/HR), card 2-imzo, tenant-isolation global-guard(flag-off-by-design), JWT mid-session re-check. default-password/SQL-injection=CLAUDE.md pre-existing, alohida tekshiruv kerak."}
+{"prompt_id":"P1-PP-AREA","priority":"P1","status":"mixed","notes":"P1 PP-area (23 prompt, band 0236+) cross-ref T27 (BUGUN, T27-A1). DONE TODAY: MRP->production_orders PERSIST (run-mrp.handler, T27-A1). GENUINE (T26 confirmed, hali qurilmagan): replan/freeze/urgent role-gate, MES/QC/WMS handoff-gate ustunlar, pp_order_status_log+9-status state-machine, PP master-jadvallar (plan_fact/reason_codes/material_reservations)."}
+{"prompt_id":"P1-GOLDEN-THREAD-AREA","priority":"P1","status":"mixed","notes":"P1 Golden-thread (9 prompt) cross-ref T27 (BUGUN). DONE TODAY: MRP-persist(T27-A1), QC-rework orphan-listener(T27-A2). REMAINING (P0-conclusion, arxitektura-pending): outbox-universal-wiring (domain_events=0, barcha tranzaksiyaga ulanmagan) — katta-arxitektura, avtonom-build emas (owner/arch qaror kerak, moliya-core yuqori-xavf)."}
+{"prompt_id":"P1-IOT-AREA","priority":"P1","status":"pending-genuine","notes":"P1 IoT-area (30 prompt) cross-ref T26-5-CRM-AI-IOT (bugun). GENUINE gaps (hali qurilmagan, bu sessiyada tegilmagan): IotGateway providers'da ro'yxatdan o'tmagan(push=0%), downtime 3-tier eskalatsiya(15/30/60min), predictive mes_telemetry╳iot_sensor_readings ajralgan(2 jadval birlashtirilmagan). Sensor-DATA=owner-data(CAPEX)."}
+{"prompt_id":"P1-DASHBOARD-AREA","priority":"P1","status":"duplicate","notes":"P1 Hisobot/dashboard-area (19 prompt) cross-ref T27 (BUGUN). DONE TODAY: Director holat-endpoint+kunlik-07:00-cron(T27-A3, company_state_log yozadi). OKR=BOR(T21 earlier). 5-ko'rsatkich formula=BOR. Qolgan: ideal_rasm_targets/stat_regulations=owner-data."}
+{"prompt_id":"P1-MES-AREA","priority":"P1","status":"pending-genuine","notes":"P1 MES-area (18 prompt) cross-ref T26-3-GOLDEN-PP-MES. DUP: 3-bosqich GSD(setup/main/teardown)=BOR(T21). GENUINE (hali qurilmagan): norma-versiya jadval(tarixiy sessiya norma yo'qoladi), OEE-kaskad-agregat+sex-tablo endpoint, shift-handover acceptance-gate, downtime 6-kategoriya-enum+duration-konsolidatsiya."}
+{"prompt_id":"P1-QC-AREA","priority":"P1","status":"mixed","notes":"P1 QC-area (24 prompt) cross-ref T27 (BUGUN) + T26. DONE TODAY: QC-rework->production_orders listener(T27-A2), ta'minotchi-reyting 4-faktor avto(Ombor-build W2, 663ec3c4). GENUINE (hali qurilmagan): QC sertifikat AVTO-generatsiya (QcPassed->SF-seq PDF avto-chaqiruv, hozir faqat qo'lda)."}
+{"prompt_id":"P1-AI-AREA","priority":"P1","status":"pending-genuine","notes":"P1 AI-area (16 prompt) cross-ref T26-5. GENUINE gaps (hali qurilmagan): AI-fit scheduler(faqat qo'lda POST, cron yo'q), AI-CKP kunlik chatbot controller(ai_ckp_chat_logs=0). Aisha tool-loop=jonli-test kerak(metodologiya, owner-data AI-kalit)."}
+{"prompt_id":"P1-WMS-POS-AREA","priority":"P1","status":"duplicate","notes":"P1 WMS/Ombor+POS-area (25 prompt) cross-ref T27 OMBOR-TERMINAL BUILD (BUGUN, 4 commit 663ec3c4/eb31d123/72e41fee/0a857cce). DONE TODAY: in-transit+bojxona-hujjat, ta'minotchi-reyting, ko'r-sanoq+deviation+freeze, material-hayot(substitute/hazard/aging/poddon), POS harakat-taksonomiya(waste/lab/partial/customer-material), anomaliya, smena-handover 2-imzo+foto, texkarta-gate+variance-config, market-POS terminal UI (PosHome+KIRIM+CHIQIM). Qolgan: ko'chirish/qaytarish/zarar-ekranlari to'liq, bo'lim-ichki-ombor, invoys-PDF, AI-kamera/KPP — keyingi to'lqin (egasi terminal-feedback kutilmoqda)."}
+{"prompt_id":"P1-SD-AREA","priority":"P1","status":"pending-genuine","notes":"P1 SD-area (25 prompt) cross-ref T26-4-QC-WMS-SD. GENUINE (hali qurilmagan): lost-orders+reklamatsiya endpointlari, sd_order_departments org-FK fanout(string-match hozir). quotation-versioning=GATED(egasi APPROVED kerak, .sql tayyor diskda)."}
+{"prompt_id":"P1-CRM-AREA","priority":"P1","status":"pending-genuine","notes":"P1 CRM-area (21 prompt) cross-ref T26-5. DUP: deal->SO listener(dublikat-bug tuzatilgan T20). GENUINE (hali qurilmagan): kanal INBOUND-ingest(Telegram/WhatsApp->auto-lead), voronka pipelines/stages seed, churn/lead-aging cron(60-kun)."}
+{"prompt_id":"P1-FE-DESIGN-AREA","priority":"P1","status":"duplicate","notes":"P1 Frontend/dizayn-area (17 prompt) cross-ref T12-T25 keng FE-polish to'lqinlari (i18n/design-token/EPPageHeader, ko'p commit). Aksariyati BOR/dup (T24/T25'da False-positive ham topilgan — ModulePage kanonik, xom-h1 emas). Qolgan tarqoq-mayda past-qiymat cosmetic."}
+{"prompt_id":"P1-SECURITY-AREA","priority":"P1","status":"mixed","notes":"P1 Xavfsizlik-area (10 prompt) cross-ref T26-2 + CLAUDE.md Qoida-A/B. Tenant-isolation=T26 confirmed genuine-gap (global-guard flag-off-by-design, buzilmasin). default-password/SQL-injection=CLAUDE.md PRE-EXISTING eslatma (admin.seed.ts/legacy.service.ts) — ALOHIDA tekshiruv/tuzatish kerak (bu sessiyada tegilmagan, keyingi P0-xavfsizlik to'lqinida)."}
+{"prompt_id":"P1-MASTERDATA-AREA","priority":"P1","status":"pending-genuine","notes":"P1 Master-data-area (17 prompt) cross-ref T26-6. GENUINE (hali qurilmagan): material_cards/raw_materials/materials 3-parallel-jadval unifikatsiya (egasi-qaror kerak, gated), material.kod regex-validatsiya, sd_customers.segment ABC-auto-hisob."}
+{"prompt_id":"P1-RAZRYAD-AREA","priority":"P1","status":"mixed","notes":"P1 Razryad-area (13 prompt) cross-ref T20+T26. DUP: 2-imzo EXECUTION backend=BOR(T20 5af42e29). GENUINE (T26 confirmed, hali qurilmagan): FE decrease-tugma(BE tayyor, FE hardcoded 'increase'), attestatsiya-muddatli-qayta-tasdiq, razryad rangli-vizualizatsiya."}
+{"prompt_id":"P1-FIN-GL-AREA","priority":"P1","status":"mixed","notes":"P1 Moliya/GL-area (17 prompt) cross-ref T27 (BUGUN) + P0-conclusion. DONE TODAY: Payroll->Kassir salary_payout GL-listener(T27-A4). GL-dvigatel=eng yetuk(P0 65%). REMAINING (arxitektura-pending, P0-conclusion): POS-GL pos_gl_postings-subledger->kanonik-entries rollup (accounting-dizayn qarori, owner/arch)."}
