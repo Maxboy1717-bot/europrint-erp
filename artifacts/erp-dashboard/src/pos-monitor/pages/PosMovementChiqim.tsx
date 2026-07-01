@@ -15,7 +15,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { stockApi, movementsApi, type IssuableResult } from "../api/pos-monitor.api";
-import { useBarcode } from "../hooks/useBarcode";
+import { useHardwareScanner } from "../hooks/useHardwareScanner";
 import PosBarcodeScanner from "../components/PosBarcodeScanner";
 
 import {
@@ -137,8 +137,11 @@ export default function PosMovementChiqim() {
     }
   }, [fromWarehouseId, lines, addToast, flash, t]);
 
-  // USB/Bluetooth skaner (window keydown buffer)
-  useBarcode(async (m) => { await handleScan(m.barcode ?? m.code ?? ""); });
+  // USB/Bluetooth skaner (wedge+HID+Serial) — avval useBarcode ikki marta lookup qilardi
+  // (o'zining barcodeApi.scan() + shu yerdagi stockApi.getIssuable(), natija tashlanardi).
+  // useHardwareScanner sof input-detektor — bitta lookup, kamroq kechikish (Q-46: handleScan
+  // biznes-mantig'i o'zgarmadi, faqat wedge-input mexanizmi almashtirildi).
+  useHardwareScanner({ onScan: (e) => { void handleScan(e.barcode); } });
 
   // ── Line ops ───────────────────────────────────────────────────────────────
   function openKeypad(key: string) {
