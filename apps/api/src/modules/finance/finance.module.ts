@@ -135,6 +135,7 @@ import { GeneralTaxService } from './application/general-tax.service';
 import { CASHIER_HUB_REPO } from './cashier-hub/i-cashier-hub.repo';
 import { DrizzleCashierHubRepository } from './cashier-hub/drizzle-cashier-hub.repo';
 import { CashierHubService } from './cashier-hub/cashier-hub.service';
+import { CashierHubPdfService } from './cashier-hub/cashier-hub-pdf.service';
 import { CashierHubController } from './cashier-hub/cashier-hub.controller';
 // CASHIER-HUB Phase 2: KAS-2 salary-payout approval gate + podotchet (advance/debt) cycle.
 import { CASHIER_PAYROLL_REPO } from './cashier-hub/i-cashier-payroll.repo';
@@ -236,6 +237,7 @@ const eventListeners = [
     // CASHIER-HUB KAS-1 (reuses GlPostingService already provided above)
     { provide: CASHIER_HUB_REPO, useClass: DrizzleCashierHubRepository },
     CashierHubService,
+    CashierHubPdfService,
     // CASHIER-HUB Phase 2 — KAS-2 approval gate + podotchet (reuse CashierHubService for cash-out + GL)
     { provide: CASHIER_PAYROLL_REPO, useClass: DrizzleCashierPayrollRepository },
     CashierPayrollService,

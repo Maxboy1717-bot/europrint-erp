@@ -92,6 +92,32 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
     }
   }
 
+  /** One shift joined to the cashier's display name (kunlik PDF header) — reuses the listShifts join. */
+  async getShiftForPdf(shiftId: number): Promise<Result<ShiftListRow | null>> {
+    try {
+      const rows = await typedExecute<ShiftListRow>(sql`
+        SELECT s.id,
+               s.cashier_user_id        AS "cashierUserId",
+               COALESCE(NULLIF(TRIM(u.full_name), ''), u.username) AS "cashierName",
+               s.opened_at              AS "openedAt",
+               s.opened_amount          AS "openedAmount",
+               s.closed_at              AS "closedAt",
+               s.closed_amount          AS "closedAmount",
+               s.expected_amount        AS "expectedAmount",
+               s.variance               AS "variance",
+               s.status,
+               s.notes
+          FROM cashier_shifts s
+          LEFT JOIN users u ON u.id = s.cashier_user_id
+         WHERE s.id = ${shiftId}
+         LIMIT 1
+      `);
+      return Ok((Array.isArray(rows) ? rows[0] : undefined) ?? null);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_SHIFT_PDF_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
+
   async openShift(dto: OpenShiftDto): Promise<Result<CashierShift>> {
     try {
       const inserted = await db

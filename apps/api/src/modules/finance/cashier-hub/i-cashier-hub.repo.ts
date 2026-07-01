@@ -147,4 +147,6 @@ export interface ICashierHubRepository {
   findCashierPinHash(cashierUserId: number): Promise<Result<string | null>>;
   /** Global default cashier daily cash limit (cfo_config.cashier_daily_cash_limit_uzs), or null when unset/0. */
   findGlobalDailyCashLimit(): Promise<Result<number | null>>;
+  /** A single shift joined to the cashier's display name (kunlik PDF header) — null if not found. */
+  getShiftForPdf(shiftId: number): Promise<Result<ShiftListRow | null>>;
 }

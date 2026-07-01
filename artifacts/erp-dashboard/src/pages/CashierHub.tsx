@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api-request";
-import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw, LogIn, LogOut, Plus, Wallet, AlertTriangle, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { Banknote, CheckCircle, XCircle, ReceiptText, RefreshCw, LogIn, LogOut, Plus, Wallet, AlertTriangle, ArrowDownCircle, ArrowUpCircle, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -336,6 +336,10 @@ export default function CashierHub() {
     onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
   });
 
+  const downloadDailyReport = (shiftId: number) => {
+    window.open(`/api/finance/cashier/shifts/${shiftId}/pdf`, "_blank");
+  };
+
   const refreshAll = () => {
     void shiftsQuery.refetch();
     void approvalsQuery.refetch();
@@ -496,29 +500,41 @@ export default function CashierHub() {
                       <EPStatusPill tone={shiftTone(row.status)}>{row.status}</EPStatusPill>
                     </TableCell>
                     <TableCell className="text-right">
-                      {row.status === "open" && (
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => { setRecordMoveShiftId(row.id); setMvType("cash_in"); setMvAmount(""); setMvRef(""); setMvDesc(""); setMvPin(""); }}
-                            data-testid={`button-record-move-${row.id}`}
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            {t("cashierHub.recordMoveBtn", "Harakat")}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={closeShiftMutation.isPending}
-                            onClick={() => { setCloseShiftId(row.id); setClosedAmount(""); setCloseNotes(""); }}
-                            data-testid={`button-close-shift-${row.id}`}
-                          >
-                            <LogOut className="h-4 w-4 mr-1" />
-                            {t("cashierHub.closeShiftBtn", "Yopish")}
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        {row.status === "open" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => { setRecordMoveShiftId(row.id); setMvType("cash_in"); setMvAmount(""); setMvRef(""); setMvDesc(""); setMvPin(""); }}
+                              data-testid={`button-record-move-${row.id}`}
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              {t("cashierHub.recordMoveBtn", "Harakat")}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={closeShiftMutation.isPending}
+                              onClick={() => { setCloseShiftId(row.id); setClosedAmount(""); setCloseNotes(""); }}
+                              data-testid={`button-close-shift-${row.id}`}
+                            >
+                              <LogOut className="h-4 w-4 mr-1" />
+                              {t("cashierHub.closeShiftBtn", "Yopish")}
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => downloadDailyReport(row.id)}
+                          title={t("cashierHub.dailyReportPdf", "Kunlik hisobot (PDF)")}
+                          data-testid={`button-daily-pdf-${row.id}`}
+                        >
+                          <FileDown className="h-4 w-4 mr-1" />
+                          {t("cashierHub.pdfBtn", "PDF")}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

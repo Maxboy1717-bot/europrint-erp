@@ -253,6 +253,50 @@ export class CashierHubService {
   }
 
   /**
+   * Assemble the kunlik PDF (daily Z-report) payload for a shift: the X/Z summary
+   * (getShiftSummary) plus the cashier's display name (joined, kunlik PDF header).
+   */
+  async getDailyReportPayload(shiftId: number): Promise<Result<{
+    shiftId: number;
+    cashierName: string;
+    status: string;
+    openedAt: Date | string | null;
+    closedAt: Date | string | null;
+    openingAmount: number;
+    cashIn: number;
+    cashOut: number;
+    closedAmount: number | null;
+    expectedAmount: number;
+    variance: number | null;
+    movementCount: number;
+    byType: ShiftSummary['byType'];
+  }, AppError>> {
+    const summaryRes = await this.getShiftSummary(shiftId);
+    if (!summaryRes.ok) return summaryRes as Result<never, AppError>;
+    const s = summaryRes.data;
+
+    const namedRes = await this.repo.getShiftForPdf(shiftId);
+    if (!namedRes.ok) return namedRes as Result<never, AppError>;
+    const cashierName = namedRes.data?.cashierName ?? `Kassir #${s.shift.cashierUserId}`;
+
+    return Ok({
+      shiftId,
+      cashierName,
+      status: s.shift.status,
+      openedAt: s.shift.openedAt,
+      closedAt: s.shift.closedAt,
+      openingAmount: Number(s.shift.openedAmount),
+      cashIn: s.cashIn,
+      cashOut: s.cashOut,
+      closedAmount: s.closedAmount,
+      expectedAmount: s.expectedAmount,
+      variance: s.variance,
+      movementCount: s.movementCount,
+      byType: s.byType,
+    });
+  }
+
+  /**
    * Record a cash movement against an open shift:
    *  1) validate + PIN-gate (cash_out/salary/advance/expense need a verified 4-digit PIN — owner #8),
    *  2) post a REAL balanced GL journal via GlPostingService (→ canonical `entries`),
