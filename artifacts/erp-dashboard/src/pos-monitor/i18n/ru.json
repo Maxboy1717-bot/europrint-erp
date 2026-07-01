@@ -312,8 +312,15 @@
     "returnButton": "Вернуть",
     "returnModal": "Запрос возврата",
     "hrWarning": "Верните всё перед уходом",
+    "hrWarningDetail": "Вы ещё не вернули {count} видов материалов. Верните всё перед уходом.",
     "noItems": "Вам не выдавались материалы",
-    "checklist": "Чеклист возврата"
+    "checklist": "Чеклист возврата",
+    "downloadReport": "Скачать отчёт",
+    "givenCount": "Количество выданных материалов",
+    "currentBalance": "Текущий баланс",
+    "returnedCount": "Возвращённые материалы",
+    "itemsList": "Список материалов",
+    "optionalNote": "Необязательный комментарий"
   },
   "glPosting": {
     "title": "Статус GL Posting",

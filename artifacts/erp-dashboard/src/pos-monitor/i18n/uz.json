@@ -324,8 +324,15 @@
     "returnButton": "Qaytarish",
     "returnModal": "Qaytarish so'rovi",
     "hrWarning": "Ishdan ketishdan oldin qaytaring",
+    "hrWarningDetail": "Siz hali {count} turdagi material qaytarmagansiz. Ishdan ketishdan oldin hammasini qaytaring.",
     "noItems": "Sizga hech qanday material berilmagan",
-    "checklist": "Qaytarish cheklisti"
+    "checklist": "Qaytarish cheklisti",
+    "downloadReport": "Hisobotni yuklab olish",
+    "givenCount": "Berilgan materiallar soni",
+    "currentBalance": "Hozirgi balans",
+    "returnedCount": "Qaytarilgan materiallar",
+    "itemsList": "Materiallar ro'yxati",
+    "optionalNote": "Ixtiyoriy izoh"
   },
   "glPosting": {
     "title": "GL Posting holati",

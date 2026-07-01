@@ -9,9 +9,10 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
  * Xodim inventar javobgarligi endpointlari
  */
 
-import {Controller, Get, Post, Patch, Param, Body, Query,
+import {Controller, Get, Post, Patch, Param, Body, Query, Res,
   UseGuards, ParseIntPipe, Logger, UseInterceptors , UsePipes,} from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
+import { FastifyReply } from 'fastify';
 
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -24,6 +25,7 @@ import { RequirePermission } from '@common/decorators/require-permission.decorat
 import { EmployeeLedgerService } from '../application/services/employee-ledger.service';
 import { EmployeeWriteOffService } from '../application/services/employee-write-off.service';
 import { PosEmployeeBalanceService } from '../application/services/pos-employee-balance.service';
+import { PosPdfService } from '../application/services/pos-pdf.service';
 
 import {
   CreateWriteOffActDto,
@@ -47,6 +49,7 @@ export class EmployeeController {
     private readonly ledgerService:         EmployeeLedgerService,
     private readonly writeOffService:       EmployeeWriteOffService,
     private readonly employeeBalanceSvc:    PosEmployeeBalanceService,
+    private readonly pdfService:            PosPdfService,
   ) {}
 
   // ─── Xodim Balansi ────────────────────────────────────────────────────────
@@ -191,6 +194,25 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Mening joriy inventarim (qo\'ldagi materiallar)' })
   async getMyInventory(@CurrentUser() user: AuthenticatedUser) {
     return unwrapOrInternal(await this.employeeBalanceSvc.getMyInventory(user.id));
+  }
+
+  // ─── Mening inventarim — PDF hisobot ─────────────────────────────────────
+  // APPROVED: egasi vizyon-qurish 2026-07-01, FAZA H (xodim inventari to'liqlash)
+
+  @Get('me/inventory/pdf')
+  @RequirePermission('pos.employee.read_own')
+  @ApiOperation({ summary: 'Mening joriy inventarim — PDF hisobot' })
+  async downloadMyInventoryPdf(
+    @CurrentUser() user: AuthenticatedUser,
+    @Res() res: FastifyReply,
+  ) {
+    const bufferR = await this.pdfService.generateEmployeeInventoryPdf(user.id);
+    const buffer = bufferR.ok ? (bufferR.data as Buffer) : Buffer.alloc(0);
+    res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="mening-inventarim-${user.id}.pdf"`)
+      .header('Content-Length', buffer.length)
+      .send(buffer);
   }
 
   // ─── Chiqish cheklovi ro'yxati (HR Exit Checklist) ───────────────────────

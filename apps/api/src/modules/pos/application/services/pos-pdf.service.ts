@@ -12,6 +12,8 @@ import { PDFDocument, StandardFonts, rgb, PageSizes, PDFPage, PDFFont } from 'pd
 import { posMovements, db, eq } from '@workspace/db';
 import { PosPdfInventoryService } from './pos-pdf-inventory.service';
 import { PosPdfRepository } from '../../infrastructure/repositories/pos-pdf.repository';
+import { PosEmployeeBalanceRepository } from '../../infrastructure/repositories/pos-employee-balance.repository';
+import type { EmployeeInventoryItem } from '../../infrastructure/repositories/pos-employee-balance.repository';
 import type { PdfMovementData } from './pos-pdf.types';
 
 const PDF_MARGIN = 40;
@@ -46,6 +48,7 @@ export class PosPdfService {
   constructor(
     private readonly inventorySvc: PosPdfInventoryService,
     private readonly pdfRepo: PosPdfRepository,
+    private readonly employeeBalanceRepo: PosEmployeeBalanceRepository,
   ) {}
 
   // ─── Harakat Akti ─────────────────────────────────────────────────────────
@@ -88,6 +91,91 @@ export class PosPdfService {
 
       return this._buildPdf(data);
     });
+  }
+
+  // ─── Xodim Inventar Hisoboti (Mening inventarim → PDF) ────────────────────
+  // APPROVED: egasi vizyon-qurish 2026-07-01, FAZA H (xodim inventari to'liqlash)
+
+  async generateEmployeeInventoryPdf(userId: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      this.logger.log(`POS xodim inventar PDF generatsiya boshlanmoqda: userId=${userId}`);
+
+      const itemsR = await this.employeeBalanceRepo.getInventory(userId);
+      if (!itemsR.ok) throw new InternalServerErrorException(itemsR.error.message);
+      const items = itemsR.data;
+
+      const nameR = await this.pdfRepo.getCreatorFullName(userId);
+      const employeeName = (nameR.ok ? nameR.data : null) ?? `Xodim #${userId}`;
+
+      return this._buildEmployeeInventoryPdf(employeeName, items);
+    });
+  }
+
+  private async _buildEmployeeInventoryPdf(
+    employeeName: string,
+    items: EmployeeInventoryItem[],
+  ): Promise<Buffer> {
+    const pdfDoc = await PDFDocument.create();
+    let page = pdfDoc.addPage(PageSizes.A4);
+    const { width, height } = page.getSize();
+    const fontBold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const margin = PDF_MARGIN;
+    let y = height - PDF_TOP_OFFSET;
+
+    const title = 'XODIM INVENTAR HISOBOTI / ОТЧЁТ ПО ИНВЕНТАРЮ';
+    const titleWidth = fontBold.widthOfTextAtSize(title, PDF_TITLE_FONT_SIZE);
+    page.drawText(title, { x: (width - titleWidth) / 2, y, size: PDF_TITLE_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) });
+    y -= PDF_LINE_HEIGHT_MD;
+
+    page.drawText(`Xodim / Сотрудник: ${employeeName}`, { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
+    y -= PDF_LINE_HEIGHT_XS;
+    page.drawText(`Sana / Дата: ${this._formatDate(_time.now())}`, { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+    y -= PDF_LINE_HEIGHT_MD;
+
+    const cols = ['Kod', 'Material', "O'lch.", 'Berilgan', 'Qaytarilgan', 'Balans', 'Qiymat'];
+    const colWidth = (width - margin * 2) / cols.length;
+
+    page.drawRectangle({ x: margin, y: y - PDF_LINE_HEIGHT_XS, width: width - margin * 2, height: PDF_TABLE_ROW_HEIGHT, color: rgb(0.9, 0.9, 0.9) });
+    for (let i = 0; i < cols.length; i++) {
+      page.drawText(cols[i], { x: margin + i * colWidth + PDF_CELL_OFFSET_X, y: y - PDF_CELL_TEXT_Y_OFFSET_HD, size: PDF_SMALL_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) });
+    }
+    y -= PDF_LINE_HEIGHT_MD;
+
+    let totalValue = 0;
+    for (const item of items) {
+      if (y < PDF_MIN_Y_BEFORE_NEW_PAGE) {
+        page = pdfDoc.addPage(PageSizes.A4);
+        y = page.getSize().height - PDF_TOP_OFFSET;
+      }
+      const cells = [
+        item.materialCode ?? '—',
+        this._truncate(item.materialName ?? '—', PDF_TRUNCATE_MAX_CHARS),
+        item.unitOfMeasure ?? '—',
+        item.given.toFixed(2),
+        item.returned.toFixed(2),
+        item.balance.toFixed(2),
+        this._formatMoney(item.totalValue),
+      ];
+      for (let i = 0; i < cells.length; i++) {
+        page.drawText(cells[i], { x: margin + i * colWidth + PDF_CELL_OFFSET_X, y: y - PDF_CELL_TEXT_Y_OFFSET_BD, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
+      }
+      page.drawLine({ start: { x: margin, y: y - PDF_SEPARATOR_Y_OFFSET }, end: { x: width - margin, y: y - PDF_SEPARATOR_Y_OFFSET }, thickness: PDF_SEPARATOR_THICKNESS, color: rgb(0.8, 0.8, 0.8) });
+      totalValue += item.totalValue;
+      y -= PDF_LINE_HEIGHT_SM;
+    }
+
+    y -= PDF_ROW_SKIP;
+    page.drawText(`Jami qiymat: ${this._formatMoney(totalValue)} UZS`, { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) });
+
+    const pages = pdfDoc.getPages();
+    const lastPage = pages[pages.length - 1] ?? page;
+    lastPage.drawText(`EuroPrint ERP | POS | ${_time.now().toLocaleDateString('uz-UZ')}`, {
+      x: margin, y: 20, size: PDF_FOOTER_FONT_SIZE, font: fontRegular, color: rgb(0.5, 0.5, 0.5),
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
   }
 
   // ─── PDF Qurishqalish ─────────────────────────────────────────────────────

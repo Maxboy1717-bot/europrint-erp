@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
-import { ledgerApi } from "../api/pos-monitor.api";
+import { ledgerApi, employeeApi } from "../api/pos-monitor.api";
 
 interface InventoryItem {
   materialCardId: number;
@@ -40,12 +40,10 @@ function ReturnModal({ item, onClose, onDone, t }: ReturnModalProps) {
     setSaving(true);
     setError("");
     try {
-      await ledgerApi.returnItem({
-        movementTypeCode: "INTERNAL_RETURN",
-        fromWarehouseId: "employee",
-        returnReason: reason || undefined,
-        lines: [{ materialCardId: item.materialCardId, quantity: q }],
-        submit: true,
+      await employeeApi.requestReturn({
+        materialCardId: item.materialCardId,
+        quantity: q,
+        reason: reason || undefined,
       });
       onDone();
     } catch (e) {
@@ -109,7 +107,7 @@ function ReturnModal({ item, onClose, onDone, t }: ReturnModalProps) {
             <textarea
               className="pos-input"
               rows={3}
-              placeholder={t("ixtiyoriyIzoh")}
+              placeholder={t("myInventory.optionalNote")}
               value={reason}
               onChange={e => setReason(e.target.value)}
               style={{ resize: "vertical" }}
@@ -252,7 +250,7 @@ export default function PosMyInventory() {
             window.open(url, "_blank");
           }}
         >
-          {t("hisobotYuklabOlish1")}
+          {t("myInventory.downloadReport")}
         </button>
       </div>
 
@@ -265,16 +263,16 @@ export default function PosMyInventory() {
           marginBottom: 24,
         }}
       >
-        <KpiCard label={t("berilganMateriallarSoni")} value={fmtNum(totalGiven)} color="var(--pos-accent)" />
-        <KpiCard label={t("hozirgiBalans")} value={fmtNum(totalBalance)} color={totalBalance > 0 ? "var(--pos-warning)" : "var(--pos-success)"} />
-        <KpiCard label={t("qaytarilganMateriallar")} value={fmtNum(totalReturned)} color="var(--pos-success)" />
-        <KpiCard label={t("umumiyQiymat")} value={`${fmtCurrency(totalValue)} UZS`} />
+        <KpiCard label={t("myInventory.givenCount")} value={fmtNum(totalGiven)} color="var(--pos-accent)" />
+        <KpiCard label={t("myInventory.currentBalance")} value={fmtNum(totalBalance)} color={totalBalance > 0 ? "var(--pos-warning)" : "var(--pos-success)"} />
+        <KpiCard label={t("myInventory.returnedCount")} value={fmtNum(totalReturned)} color="var(--pos-success)" />
+        <KpiCard label={t("myInventory.totalValue")} value={`${fmtCurrency(totalValue)} UZS`} />
       </div>
 
       {/* ── Materials table ─────────────────────────────────────────────────── */}
       <div className="pos-card" style={{ marginBottom: 20, overflow: "hidden" }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>
-          {t("materiallarRoyxati1")}
+          {t("myInventory.itemsList")}
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="pos-table">
@@ -370,11 +368,7 @@ export default function PosMyInventory() {
           >
             <span style={{ fontSize: 18 }}>⚠️</span>
             <span>
-              {t("myInventory.hrWarning") ? t("myInventory.hrWarning") : `Siz hali `}
-              {!t("myInventory.hrWarning").includes("{") &&
-                `Siz hali `}
-              <strong>{pendingItems.length} turdagi</strong> material qaytarmagansiz.
-              Ishdan ketishdan oldin hammasini qaytaring.
+              {t("myInventory.hrWarningDetail", { count: pendingItems.length })}
             </span>
             <div style={{ flex: 1 }} />
             <button
