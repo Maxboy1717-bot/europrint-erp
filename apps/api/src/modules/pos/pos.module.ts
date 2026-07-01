@@ -19,7 +19,7 @@ import {
   PosShiftHandoverService, PosShiftHandoverRepository,
   EmployeeController, ReportsController, MiniAppController, MiniAppHistoryController,
   PrinterConfigController, StockController, GlController, SyncController,
-  PosNotificationsController, PosAnomaliesController, PosAuthController, InventoryPassportController,
+  PosNotificationsController, PosAnomaliesController, MaterialNormsController, PosAuthController, InventoryPassportController,
   PosWmsController, WarehouseFeaturesController, PosOperationsController,
   WarehouseOpenController, WarehouseOpenService, WarehouseOpenRepository,
   // BE-T2-BARCODE-RESERV — KIRIM barkod-gen + CHIQIM bron-blok
@@ -51,6 +51,7 @@ import {
   PosEventHandler, PosSecondaryEventsHandler, PosEventRepository, PosDepartmentGuard,
   PosWmsSyncCreatedListener,
   PosAnomalyService, PosAnomalyRepository, PosAnomalyListener,
+  MaterialNormsService, MaterialNormsRepository,
   PosRequisitionWorkflowService, PosEmployeeBalanceService,
   PosWmsSyncService, PosWmsQueryService,
   WarehouseEmployeesService, AutoBarcodeService, Material360Service, AutoGlPostingService,
@@ -88,6 +89,7 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     SyncController,
     PosNotificationsController,
     PosAnomaliesController,
+    MaterialNormsController,
     PosAuthController,
     InventoryPassportController,
     PosWmsController,
@@ -193,6 +195,9 @@ import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notification
     PosAnomalyRepository,
     PosAnomalyService,
     PosAnomalyListener,
+    // FAZA J — material_norms CRUD + AI-norma (bo'lim ombori iste'mol-nazorati)
+    MaterialNormsRepository,
+    MaterialNormsService,
     PosInactiveMaterialsJob,
     // Warehouse features — repositories (Sprint B)
     WarehouseEmployeesRepository,

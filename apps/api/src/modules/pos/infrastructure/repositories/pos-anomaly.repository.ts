@@ -40,6 +40,8 @@ export interface AnomalyNormRow {
   declared_qty:      string | number;
   norm_per_1000:     string | number | null;
   unit:              string | null;
+  /** FAZA J — qaysi bo'lim normasi ishlatilgani (null = global norma). */
+  department_code:   string | null;
 }
 
 export interface AnomalyFlagInsert {
@@ -102,25 +104,43 @@ export class PosAnomalyRepository {
    * Per-material declared quantity joined to its active norma (material_norms).
    * material_norms bo'sh bo'lsa (hozir 0 qator) — bo'sh ro'yxat qaytadi → norma
    * qoidasi avtomatik skip bo'ladi (graceful, fabrikatsiya yo'q).
+   *
+   * FAZA J — bo'lim-darajasidagi norma ustunligi: harakatning `bulim` maydoni
+   * material_norms.department_code'ga mos kelsa o'sha bo'lim-normasi ishlatiladi,
+   * aks holda global (department_code IS NULL) normaga tushadi (LATERAL, bir
+   * material uchun bitta eng mos norma — dublikat hit yo'q).
    */
   async getNormComparison(movementId: number): Promise<Result<AnomalyNormRow[]>> {
     return safeCall(async () => {
       const rows = await typedExecute<AnomalyNormRow>(sql`
+        WITH declared AS (
+          SELECT pml.material_id, SUM(pml.quantity) AS declared_qty
+          FROM pos_movement_lines pml
+          WHERE pml.movement_id = ${movementId}
+          GROUP BY pml.material_id
+        ), movement_dept AS (
+          SELECT bulim FROM pos_movements WHERE id = ${movementId}
+        )
         SELECT
-          pml.material_id,
-          mn.material_name,
-          COALESCE(SUM(pml.quantity), 0)::numeric AS declared_qty,
-          mn.norm_quantity_per_1000               AS norm_per_1000,
-          mn.unit
-        FROM pos_movement_lines pml
-        JOIN material_norms mn
-          ON mn.material_id = pml.material_id
-         AND mn.is_active = true
-         AND mn.deleted_at IS NULL
-        WHERE pml.movement_id = ${movementId}
-          AND mn.norm_quantity_per_1000 IS NOT NULL
-          AND mn.norm_quantity_per_1000 > 0
-        GROUP BY pml.material_id, mn.material_name, mn.norm_quantity_per_1000, mn.unit
+          d.material_id,
+          norm.material_name,
+          d.declared_qty::numeric        AS declared_qty,
+          norm.norm_quantity_per_1000     AS norm_per_1000,
+          norm.unit,
+          norm.department_code
+        FROM declared d
+        JOIN LATERAL (
+          SELECT mn.material_name, mn.norm_quantity_per_1000, mn.unit, mn.department_code
+          FROM material_norms mn, movement_dept md
+          WHERE mn.material_id = d.material_id
+            AND mn.is_active = true
+            AND mn.deleted_at IS NULL
+            AND mn.norm_quantity_per_1000 IS NOT NULL
+            AND mn.norm_quantity_per_1000 > 0
+            AND (mn.department_code = md.bulim OR mn.department_code IS NULL)
+          ORDER BY (mn.department_code IS NOT NULL) DESC
+          LIMIT 1
+        ) norm ON true
       `);
       return Array.isArray(rows) ? rows : [];
     }, 'DB_ERROR');

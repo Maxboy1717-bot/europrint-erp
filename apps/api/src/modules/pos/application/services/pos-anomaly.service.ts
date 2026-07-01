@@ -175,12 +175,13 @@ export class PosAnomalyService {
       if (declared <= limit) continue;
 
       const overPct = ((declared - norm) / norm) * 100;
+      const deptLabel = r.department_code ? ` [bo'lim: ${r.department_code}]` : '';
       hits.push({
         ruleCode: 'OVER_NORM_CONSUMPTION',
         severity: 'warning',
         title:    'Normadan ortiqcha sarf',
-        detail:   `${r.material_name ?? `material #${r.material_id}`}: fakt ${declared} ${r.unit ?? ''} > norma ${norm} (+${overPct.toFixed(1)}%)`,
-        metrics:  { materialId: r.material_id, declaredQty: declared, norm, limit, overPct, factor: POS_OVER_NORM_FACTOR },
+        detail:   `${r.material_name ?? `material #${r.material_id}`}${deptLabel}: fakt ${declared} ${r.unit ?? ''} > norma ${norm} (+${overPct.toFixed(1)}%)`,
+        metrics:  { materialId: r.material_id, departmentCode: r.department_code, declaredQty: declared, norm, limit, overPct, factor: POS_OVER_NORM_FACTOR },
       });
     }
     return hits;

@@ -26,6 +26,7 @@ export { GlController }             from './presentation/gl.controller';
 export { SyncController }           from './presentation/sync.controller';
 export { PosNotificationsController } from './presentation/pos-notifications.controller';
 export { PosAnomaliesController } from './presentation/pos-anomalies.controller';
+export { MaterialNormsController } from './presentation/material-norms.controller';
 export { PosAuthController } from './presentation/pos-auth.controller';
 export { InventoryPassportController }    from './presentation/inventory-passport.controller';
 export { PosInventoryPassportRepository } from './infrastructure/repositories/pos-inventory-passport.repository';
@@ -123,6 +124,8 @@ export { PosWmsSyncCreatedListener }   from './application/event-handlers/pos-wm
 export { PosAnomalyService }    from './application/services/pos-anomaly.service';
 export { PosAnomalyRepository } from './infrastructure/repositories/pos-anomaly.repository';
 export { PosAnomalyListener }   from './application/event-handlers/pos-anomaly.listener';
+export { MaterialNormsService }    from './application/services/material-norms.service';
+export { MaterialNormsRepository } from './infrastructure/repositories/material-norms.repository';
 
 // New workflow & balance services
 export { PosRequisitionWorkflowService } from './application/services/pos-requisition-workflow.service';

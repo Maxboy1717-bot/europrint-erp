@@ -184,6 +184,10 @@ export const materialNorms = pgTable("material_norms", {
   averageActualConsumption: numericMoney("average_actual_consumption"),
   calculatedByAI: boolean("calculated_by_ai").default(true),
   formula: text("formula"),
+  // APPROVED: egasi vizyon-qurish 2026-07-01, FAZA J (Bo'lim ombori + AI norma).
+  // Bo'lim-darajasidagi norma override (NULL = global/barcha bo'lim uchun norma).
+  // Qiymat-fazosi pos_movements.bulim bilan bir xil (erkin matn, FK yo'q).
+  departmentCode: varchar("department_code", { length: 50 }),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

@@ -360,3 +360,13 @@ export const POS_SEND_RECEIVE_TOLERANCE = 0.001;
  * ogohlantirish (1.10 = +10%). material_norms bo'sh bo'lsa qoida skip (Q-40).
  */
 export const POS_OVER_NORM_FACTOR = 1.10;
+
+/**
+ * AI-norma hisoblash (material_norms.calculatedByAI) — haqiqiy tarixiy
+ * INTERNAL_ISSUE harakatlardan hisoblanadi (FAZA J, 2026-07-01).
+ * Minimal namuna soni — bundan kam bo'lsa AI hisoblamaydi (fabrikatsiya yo'q, Q-40).
+ */
+export const POS_AI_NORM_MIN_SAMPLE_SIZE = 3;
+
+/** AI-norma hisoblashda ko'riladigan so'nggi tugallangan harakatlar soni chegarasi. */
+export const POS_AI_NORM_LOOKBACK_LIMIT = 200;
