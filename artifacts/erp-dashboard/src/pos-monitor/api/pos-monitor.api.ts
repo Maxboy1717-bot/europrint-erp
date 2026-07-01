@@ -530,44 +530,6 @@ export const inTransitApi = {
     posReq("POST", `${_base}/api/wms/in-transit/${id}/report-loss`, b),
 };
 
-// ─── In-Transit Shipments / Yo'ldagi import jo'natmalari (WMS) ─────────────────
-// BE: /api/wms/in-transit/shipments/* — import xom-ashyo YO'LDA kuzatuvi +
-// holat o'tishi (shipped→customs→arrived) + import hujjatlari (GTD/invoys/sertifikat).
-// (inTransitApi yuqorida — eski yo'l; bu kanonik BE controller yo'liga mos.)
-
-export const inTransitShipmentsApi = {
-  /** GET /api/wms/in-transit/shipments — yo'ldagi import jo'natmalari → { items, total }. */
-  list: (status?: string) =>
-    posReq<{ items: unknown[]; total: number }>(
-      "GET",
-      `${_base}/api/wms/in-transit/shipments${status ? `?status=${encodeURIComponent(status)}` : ""}`,
-    ),
-  /** GET /api/wms/in-transit/shipments/:id — bitta jo'natma tafsiloti. */
-  getOne: (id: number) =>
-    posReq("GET", `${_base}/api/wms/in-transit/shipments/${id}`),
-  /** POST /api/wms/in-transit/shipments — yangi import jo'natmasi (status=shipped). */
-  create: (b: Record<string, unknown>) =>
-    posReq("POST", `${_base}/api/wms/in-transit/shipments`, b),
-  /** POST /api/wms/in-transit/shipments/:id/customs — shipped→customs (bojxonaga yetdi). */
-  markCustoms: (id: number, b?: Record<string, unknown>) =>
-    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/customs`, b ?? {}),
-  /** POST /api/wms/in-transit/shipments/:id/arrived — customs→arrived (keldi; karantin kirim ochiladi). */
-  markArrived: (id: number, b?: Record<string, unknown>) =>
-    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/arrived`, b ?? {}),
-  /** POST /api/wms/in-transit/shipments/:id/cancel — jo'natmani bekor qilish. */
-  cancel: (id: number) =>
-    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/cancel`),
-  /** GET /api/wms/in-transit/shipments/:id/documents — jo'natma hujjatlari → { items, total }. */
-  listDocuments: (id: number) =>
-    posReq<{ items: unknown[]; total: number }>(
-      "GET",
-      `${_base}/api/wms/in-transit/shipments/${id}/documents`,
-    ),
-  /** POST /api/wms/in-transit/shipments/:id/documents — hujjat biriktirish (GTD/invoys/sertifikat). */
-  addDocument: (id: number, b: Record<string, unknown>) =>
-    posReq("POST", `${_base}/api/wms/in-transit/shipments/${id}/documents`, b),
-};
-
 // ─── Material Life / Material umri (WMS) ──────────────────────────────────────
 // BE: /api/wms/material-life/* — material yaroqlilik muddati, qoldiq umri, eskirish.
 

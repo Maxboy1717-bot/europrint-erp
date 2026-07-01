@@ -11,7 +11,6 @@ import { useTranslation } from '@/lib/i18n';
 import { useAuth } from "@/hooks/useAuth";
 
 const PosHome          = lazy(() => import("./pages/PosHome"));
-const PosDashboard     = lazy(() => import("./pages/PosDashboard"));
 const PosMonitorMain   = lazy(() => import("@/pages/PosMonitorPage"));
 const PosWarehouses    = lazy(() => import("./pages/PosWarehouses"));
 const PosWarehouseDetail = lazy(() => import("./pages/PosWarehouseDetail"));
@@ -29,7 +28,6 @@ const PosMovementNew    = lazy(() => import("./pages/PosMovementNew"));
 const PosMovementKirim  = lazy(() => import("./pages/PosMovementKirim"));
 const PosMovementChiqim = lazy(() => import("./pages/PosMovementChiqim"));
 const PosMovementDetail = lazy(() => import("./pages/PosMovementDetail"));
-const PosLedger        = lazy(() => import("./pages/PosLedger"));
 const PosMyInventory   = lazy(() => import("./pages/PosMyInventory"));
 const PosRequests      = lazy(() => import("./pages/PosRequests"));
 const RequisitionDetail = lazy(() => import("./pages/RequisitionDetail"));
@@ -39,7 +37,6 @@ const PosAdmin         = lazy(() => import("./pages/PosAdmin"));
 const PosQuarantine    = lazy(() => import("./pages/PosQuarantine"));
 const PosQCReview      = lazy(() => import("./pages/PosQCReview"));
 const PosHandovers     = lazy(() => import("./pages/PosHandovers"));
-const PosInTransit     = lazy(() => import("./pages/PosInTransit"));
 const PosLayout        = lazy(() => import("./layout/PosLayout"));
 
 function PosLoader() {
@@ -131,15 +128,6 @@ export default function PosMonitorApp() {
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosMonitorMain /></Suspense>
-            </WithLayout>
-          </AuthGuard>
-        </Route>
-
-        {/* Legacy dashboard (eski boshqaruv ko'rinishi) */}
-        <Route path="/pos-monitor/dashboard-legacy">
-          <AuthGuard>
-            <WithLayout>
-              <Suspense fallback={<PosLoader />}><PosDashboard /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>
@@ -274,15 +262,6 @@ export default function PosMonitorApp() {
           </AuthGuard>
         </Route>
 
-        {/* Ledger */}
-        <Route path="/pos-monitor/ledger">
-          <AuthGuard>
-            <WithLayout>
-              <Suspense fallback={<PosLoader />}><PosLedger /></Suspense>
-            </WithLayout>
-          </AuthGuard>
-        </Route>
-
         {/* My Inventory */}
         <Route path="/pos-monitor/my-inventory">
           <AuthGuard>
@@ -333,15 +312,6 @@ export default function PosMonitorApp() {
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosHandovers /></Suspense>
-            </WithLayout>
-          </AuthGuard>
-        </Route>
-
-        {/* Import — yo'ldagi jo'natmalar */}
-        <Route path="/pos-monitor/in-transit">
-          <AuthGuard>
-            <WithLayout>
-              <Suspense fallback={<PosLoader />}><PosInTransit /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>

@@ -92,6 +92,25 @@ interface ActionDef {
   to:       string;
 }
 
+// ─── Ikkinchi-daraja tugmalar (sidebar o'rniga — 2026-06-27 kesish, egasi tasdiqi) ──
+// Bular "amal" emas — ko'rib chiqish/hisobot/topshirish sahifalari, kichikroq tugma bilan.
+interface QuickLinkDef {
+  key:      string;
+  icon:     string;
+  nameKey:  string;
+  nameFallback: string;
+  to:       string;
+}
+
+const QUICK_LINKS: QuickLinkDef[] = [
+  { key: "materials",  icon: "📦", nameKey: "nav.materials",   nameFallback: "Materiallar",       to: "/pos-monitor/materials" },
+  { key: "qcreview",   icon: "🔬", nameKey: "nav.qcreview",    nameFallback: "QC ko'rib chiqish",  to: "/pos-monitor/qc-review" },
+  { key: "myInventory",icon: "🎒", nameKey: "nav.myInventory", nameFallback: "Mening inventarim",  to: "/pos-monitor/my-inventory" },
+  { key: "handovers",  icon: "🤝", nameKey: "nav.handovers",   nameFallback: "Smena topshirish",   to: "/pos-monitor/handovers" },
+  { key: "kpi",        icon: "📊", nameKey: "posHome.kpi",     nameFallback: "KPI / Tahlil",       to: "/pos-monitor/kpi" },
+  { key: "materialBalance", icon: "📈", nameKey: "posHome.materialBalance", nameFallback: "Material balans", to: "/pos-monitor/material-balance" },
+];
+
 const ACTIONS: ActionDef[] = [
   {
     key: "kirim", icon: "📥", variant: "kirim",
@@ -314,6 +333,23 @@ export default function PosHome() {
             <span className="pos-action-icon" aria-hidden="true">{a.icon}</span>
             <span className="pos-action-name">{tt(a.nameKey, a.nameFallback)}</span>
             <span className="pos-action-sub">{tt(a.subKey, a.subFallback)}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── PASTDA: ikkinchi-daraja sahifalar (ko'rib chiqish/hisobot/topshirish) ── */}
+      <div className="pos-quicklink-title">{tt("posHome.otherPages", "Boshqa sahifalar")}</div>
+      <div className="pos-quicklink-grid">
+        {QUICK_LINKS.map(q => (
+          <button
+            key={q.key}
+            type="button"
+            className="pos-quicklink-btn"
+            onClick={() => navigate(q.to)}
+            aria-label={tt(q.nameKey, q.nameFallback)}
+          >
+            <span className="pos-quicklink-icon" aria-hidden="true">{q.icon}</span>
+            <span className="pos-quicklink-name">{tt(q.nameKey, q.nameFallback)}</span>
           </button>
         ))}
       </div>
