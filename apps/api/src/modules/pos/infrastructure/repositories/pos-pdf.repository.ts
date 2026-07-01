@@ -22,8 +22,16 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
 @Injectable()
 export class PosPdfRepository {
   async getMovementLines(movementId: number): Promise<Result<PdfMovementLine[]>>  {
-  try {  
-      return Ok(castTo<PdfMovementLine[]>(exec(sql`SELECT ml.quantity, ml.unit_price, ml.total_price, ml.currency, ml.batch_id, ml.expiry_date, mc.xom_ashyo, mc.unit_of_measure FROM pos_movement_lines ml JOIN material_cards mc ON mc.id = ml.material_id WHERE ml.movement_id = ${movementId}`)));  } catch (_e) {
+  try {
+      // FAZA D bag-fix (2026-07-01): avval `exec(...)` (Promise<Result<Row[]>>) hech qachon
+      // await qilinmasdan to'g'ridan `castTo` + `Ok(...)` ichiga o'ralardi — natijada bu metod
+      // qatorlar o'rniga Result-o'ramning o'zini qaytarardi ("...castTo(...).map is not a
+      // function" chaqiruvchida). Endi to'g'ri await + unwrap qilinadi (Q-46: buzuq kod
+      // to'liq tuzatildi, Q-40: ishlaydi(200) lekin noto'g'ri holatining yana bir isboti).
+      const r = await exec(sql`SELECT ml.quantity, ml.unit_price, ml.total_price, ml.currency, ml.batch_id, ml.expiry_date, mc.xom_ashyo, mc.unit_of_measure FROM pos_movement_lines ml JOIN material_cards mc ON mc.id = ml.material_id WHERE ml.movement_id = ${movementId}`);
+      if (!r.ok) return Err(r.error);
+      return Ok(castTo<PdfMovementLine[]>(r.data));
+  } catch (_e) {
     return Err(String(_e));
   }
 

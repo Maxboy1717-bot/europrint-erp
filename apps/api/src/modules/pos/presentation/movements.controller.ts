@@ -10,7 +10,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
  */
 
 import {Controller, Get, Post, Patch, Param, Body, Query,
-  UseGuards, Ip, Res, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors , UsePipes,} from '@nestjs/common';
+  UseGuards, Ip, Res, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors , UsePipes,
+  InternalServerErrorException,} from '@nestjs/common';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 
 import {
@@ -141,7 +142,13 @@ export class MovementsController {
     @Res() res: FastifyReply,
   ) {
     const bufferR = await this.pdfService.generateMovementAct(id);
-    const buffer = bufferR.ok ? (bufferR.data as Buffer) : Buffer.alloc(0);
+    // FAZA D bag-fix (Q-40): avval xatolik jimgina 0-baytli "200 OK" qaytarardi
+    // (fake-success). Endi xatolik ochiq loglanadi + haqiqiy xato javobi beriladi.
+    if (!bufferR.ok) {
+      this.logger.error(`Harakat akti PDF generatsiya xatoligi (id=${id}): ${bufferR.error.message}`);
+      throw new InternalServerErrorException(bufferR.error.message);
+    }
+    const buffer = bufferR.data as Buffer;
     res
       .header('Content-Type', 'application/pdf')
       .header('Content-Disposition', `attachment; filename="movement-${id}.pdf"`)

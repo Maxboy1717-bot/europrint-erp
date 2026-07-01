@@ -20,6 +20,13 @@ import { sql } from 'drizzle-orm';
 const SEQ_BY_PREFIX: Record<string, string> = {
   PO: 'doc_seq_po',
   MES: 'doc_seq_mes',
+  // FAZA D (Hujjat/PDF akt, 2026-07-01): POS Monitor kategoriya-bo'yicha akt raqamlari.
+  // APPROVED: egasi vizyon-qurish 2026-07-01, FAZA D.
+  'KIRIM-AKT':     'doc_seq_kirim_akt',
+  'CHIQIM-AKT':    'doc_seq_chiqim_akt',
+  'KOCHIRISH-AKT': 'doc_seq_kochirish_akt',
+  'INV-AKT':       'doc_seq_inv_akt',
+  'ZARAR-AKT':     'doc_seq_zarar_akt',
 };
 
 /**

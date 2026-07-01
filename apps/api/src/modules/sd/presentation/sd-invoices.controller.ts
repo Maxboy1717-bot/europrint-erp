@@ -13,10 +13,12 @@ import {
   Param,
   Post,
   Query,
+  Res,
   UseGuards,
-  UseInterceptors, BadRequestException, NotFoundException} from '@nestjs/common';
+  UseInterceptors, BadRequestException, NotFoundException, InternalServerErrorException} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { FastifyReply } from 'fastify';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -27,6 +29,7 @@ import { AuthenticatedUser } from '@auth/types';
 import { CreateInvoiceCommand } from '../application/commands/create-invoice.command';
 import { GetInvoicesQuery } from '../application/queries/get-invoices.query';
 import { GetInvoiceQuery } from '../application/queries/get-invoice.query';
+import { SdInvoicePdfService, InvoicePdfLine } from '../invoices/sd-invoice-pdf.service';
 import {
   CreateInvoiceDtoSchema,
   GetInvoicesDtoSchema,
@@ -51,6 +54,7 @@ export class SdInvoicesController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly invoicePdfService: SdInvoicePdfService,
   ) {}
 
   @ApiOperation({ summary: 'Get invoices' })
@@ -88,7 +92,64 @@ export class SdInvoicesController {
 
       assertOk(result);
       return (result).data;
-    
+
+  }
+
+  @ApiOperation({ summary: 'Hisob-faktura PDF' })
+  @ApiResponse({ status: 200, description: 'PDF fayl' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get(':id/pdf')
+  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+  async downloadInvoicePdf(@Param('id') id: string, @Res() res: FastifyReply) {
+    const query = new GetInvoiceQuery(id);
+    const result = await this.queryBus.execute(query);
+    assertOk(result);
+    const inv = result.data as Record<string, unknown>;
+
+    const pdfR = await this.invoicePdfService.generateInvoicePdf({
+      invoiceNumber: String(inv.invoice_number ?? id),
+      customerName:  String(inv.customer_name ?? ''),
+      status:        String(inv.status ?? 'draft'),
+      createdAt:     (inv.created_at as string | null) ?? null,
+      dueDate:       (inv.due_date as string | null) ?? null,
+      subtotal:      Number(inv.subtotal ?? 0),
+      taxAmount:     Number(inv.tax_amount ?? 0),
+      totalAmount:   Number(inv.total_amount ?? 0),
+      paidAmount:    Number(inv.paid_amount ?? 0),
+      notes:         (inv.notes as string | null) ?? null,
+      lines:         this.parseInvoiceItems(inv.items),
+    });
+
+    if (!pdfR.ok) {
+      this.logger.error(`Invoice PDF generatsiya xatoligi (id=${id}): ${pdfR.error.message}`);
+      throw new InternalServerErrorException(pdfR.error.message);
+    }
+    const buffer = pdfR.data;
+    res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="invoice-${id}.pdf"`)
+      .header('Content-Length', buffer.length)
+      .send(buffer);
+  }
+
+  /** `invoices.items` — JSON-serialized text column; graceful parse (Q-46, no crash). */
+  private parseInvoiceItems(raw: unknown): InvoicePdfLine[] {
+    if (typeof raw !== 'string' || !raw) return [];
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((it) => {
+        const item = it as Record<string, unknown>;
+        return {
+          name:      String(item.name ?? '—'),
+          quantity:  Number(item.quantity ?? 0),
+          unitPrice: Number(item.unitPrice ?? 0),
+          taxRate:   Number(item.taxRate ?? 0),
+        };
+      });
+    } catch {
+      return [];
+    }
   }
 
   @ApiOperation({ summary: 'Create invoice' })

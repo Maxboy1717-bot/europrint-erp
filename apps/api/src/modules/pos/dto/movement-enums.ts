@@ -170,3 +170,45 @@ export const MOVEMENT_CATEGORY_ORDER: readonly MovementCategory[] = [
   MovementCategory.INVENTARIZATSIYA,
   MovementCategory.ZARAR,
 ];
+
+// ─── Akt-turi-bo'yicha raqamlash + PDF sarlavha (FAZA D, 2026-07-01) ────────
+//
+// Bo'shliq: avval BARCHA harakat turlari uchun bitta generic "POS-YYYY-NNNNN"
+// raqam va bitta generic "HARAKAT AKTI" PDF sarlavhasi ishlatilardi (kategoriya
+// raqamda/sarlavhada aks etmasdi). Endi har kategoriya o'zining prefiksi
+// (masalan KIRIM-AKT-2026-000001, spec misoli) + o'z PDF sarlavhasi bilan
+// ajratiladi — doc-sequences.helper.ts'dagi atomik SEQ_BY_PREFIX pattern
+// qayta ishlatiladi (Q-46, takror qurilmadi).
+
+/** Kategoriya → hujjat-raqam prefiksi (nextDocNumber() SEQ_BY_PREFIX bilan mos). */
+export const MOVEMENT_CATEGORY_TO_AKT_PREFIX: Readonly<Record<MovementCategory, string>> = {
+  [MovementCategory.KIRIM]:            'KIRIM-AKT',
+  [MovementCategory.CHIQIM]:           'CHIQIM-AKT',
+  [MovementCategory.KOCHIRISH]:        'KOCHIRISH-AKT',
+  [MovementCategory.INVENTARIZATSIYA]: 'INV-AKT',
+  [MovementCategory.ZARAR]:            'ZARAR-AKT',
+};
+
+/** Kategoriya → PDF akt sarlavhasi (uz/ru), har turi o'z nomi bilan chiqadi. */
+export const MOVEMENT_CATEGORY_TO_ACT_TITLE: Readonly<Record<MovementCategory, string>> = {
+  [MovementCategory.KIRIM]:            'KIRISH AKTI / АКТ ПРИХОДА',
+  [MovementCategory.CHIQIM]:           'CHIQISH AKTI / АКТ РАСХОДА',
+  [MovementCategory.KOCHIRISH]:        "KO'CHIRISH AKTI / АКТ ПЕРЕМЕЩЕНИЯ",
+  [MovementCategory.INVENTARIZATSIYA]: 'INVENTARIZATSIYA AKTI / АКТ ИНВЕНТАРИЗАЦИИ',
+  [MovementCategory.ZARAR]:            'ZARAR AKTI / АКТ СПИСАНИЯ',
+};
+
+/** Generic fallback (kategoriya aniqlanmagan noma'lum kod uchun, crash emas). */
+export const DEFAULT_ACT_TITLE = 'HARAKAT AKTI / АКТ ДВИЖЕНИЯ';
+
+/** Harakat-kodidan PDF akt sarlavhasini aniqlaydi (noma'lum kod → generic fallback). */
+export function resolveActTitle(code: string | null | undefined): string {
+  const category = resolveMovementCategory(code);
+  return category ? MOVEMENT_CATEGORY_TO_ACT_TITLE[category] : DEFAULT_ACT_TITLE;
+}
+
+/** Harakat-kodidan hujjat-raqam prefiksini aniqlaydi (noma'lum kod → null, chaqiruvchi fallback ishlatadi). */
+export function resolveActNumberPrefix(code: string | null | undefined): string | null {
+  const category = resolveMovementCategory(code);
+  return category ? MOVEMENT_CATEGORY_TO_AKT_PREFIX[category] : null;
+}

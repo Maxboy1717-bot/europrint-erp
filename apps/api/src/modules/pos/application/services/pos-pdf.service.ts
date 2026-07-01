@@ -10,6 +10,8 @@ import { castTo } from '@common/db-rows';
 import { Result, AppError, safeCall } from '@common/result';
 import { PDFDocument, StandardFonts, rgb, PageSizes, PDFPage, PDFFont } from 'pdf-lib';
 import { posMovements, db, eq } from '@workspace/db';
+import { resolveActTitle } from '../../dto/movement-enums';
+import { toPdfSafeText } from '@common/pdf/pdf-safe-text.helper';
 import { PosPdfInventoryService } from './pos-pdf-inventory.service';
 import { PosPdfRepository } from '../../infrastructure/repositories/pos-pdf.repository';
 import { PosEmployeeBalanceRepository } from '../../infrastructure/repositories/pos-employee-balance.repository';
@@ -64,7 +66,12 @@ export class PosPdfService {
 
       if (!movement) throw new NotFoundException(`Harakat topilmadi: ${movementId}`);
 
-      const linesRows = await this.pdfRepo.getMovementLines(movementId);
+      // FAZA D bag-fix (2026-07-01): `linesRows` — `Result<PdfMovementLine[]>`, array emas.
+      // Avval to'g'ridan `castTo(linesRows).map(...)` chaqirilardi — Result-obyektning
+      // o'zida `.map` yo'q ("castTo(...).map is not a function", Q-46/Q-40 bag-fix).
+      const linesResultR = await this.pdfRepo.getMovementLines(movementId);
+      if (!linesResultR.ok) throw new InternalServerErrorException(linesResultR.error.message);
+      const linesRows = linesResultR.data;
       const createdByName = await this.pdfRepo.getCreatorFullName(movement.createdBy as number);
 
       const data: PdfMovementData = {
@@ -123,14 +130,16 @@ export class PosPdfService {
     const margin = PDF_MARGIN;
     let y = height - PDF_TOP_OFFSET;
 
-    const title = 'XODIM INVENTAR HISOBOTI / ОТЧЁТ ПО ИНВЕНТАРЮ';
+    // toPdfSafeText: sarlavha + xodim ismi (kirill kiritilgan bo'lishi mumkin) —
+    // WinAnsi-crash oldini oladi (Q-40, FAZA D bag-fix).
+    const title = toPdfSafeText('XODIM INVENTAR HISOBOTI / ОТЧЁТ ПО ИНВЕНТАРЮ');
     const titleWidth = fontBold.widthOfTextAtSize(title, PDF_TITLE_FONT_SIZE);
     page.drawText(title, { x: (width - titleWidth) / 2, y, size: PDF_TITLE_FONT_SIZE, font: fontBold, color: rgb(0, 0, 0) });
     y -= PDF_LINE_HEIGHT_MD;
 
-    page.drawText(`Xodim / Сотрудник: ${employeeName}`, { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
+    page.drawText(toPdfSafeText(`Xodim / Сотрудник: ${employeeName}`), { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
     y -= PDF_LINE_HEIGHT_XS;
-    page.drawText(`Sana / Дата: ${this._formatDate(_time.now())}`, { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(toPdfSafeText(`Sana / Дата: ${this._formatDate(_time.now())}`), { x: margin, y, size: PDF_BODY_FONT_SIZE, font: fontRegular, color: rgb(0.3, 0.3, 0.3) });
     y -= PDF_LINE_HEIGHT_MD;
 
     const cols = ['Kod', 'Material', "O'lch.", 'Berilgan', 'Qaytarilgan', 'Balans', 'Qiymat'];
@@ -158,7 +167,8 @@ export class PosPdfService {
         this._formatMoney(item.totalValue),
       ];
       for (let i = 0; i < cells.length; i++) {
-        page.drawText(cells[i], { x: margin + i * colWidth + PDF_CELL_OFFSET_X, y: y - PDF_CELL_TEXT_Y_OFFSET_BD, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
+        // toPdfSafeText: materialName kirill bilan kiritilgan bo'lishi mumkin.
+        page.drawText(toPdfSafeText(cells[i]), { x: margin + i * colWidth + PDF_CELL_OFFSET_X, y: y - PDF_CELL_TEXT_Y_OFFSET_BD, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
       }
       page.drawLine({ start: { x: margin, y: y - PDF_SEPARATOR_Y_OFFSET }, end: { x: width - margin, y: y - PDF_SEPARATOR_Y_OFFSET }, thickness: PDF_SEPARATOR_THICKNESS, color: rgb(0.8, 0.8, 0.8) });
       totalValue += item.totalValue;
@@ -221,7 +231,10 @@ export class PosPdfService {
     startY: number,
   ): number {
     let y = startY;
-    const title = `HARAKAT AKTI / АКТ ДВИЖЕНИЯ`;
+    // FAZA D (2026-07-01): kategoriya-bo'yicha akt sarlavhasi — har turi (KIRIM/
+    // CHIQIM/KOCHIRISH/INVENTARIZATSIYA/ZARAR) o'z nomi bilan chiqadi (bo'shliq
+    // yopildi: avval hammasi bitta generic "HARAKAT AKTI" edi).
+    const title = toPdfSafeText(resolveActTitle(data.typeCode));
     const titleWidth = fontBold.widthOfTextAtSize(title, PDF_TITLE_FONT_SIZE);
     page.drawText(title, {
       x: (width - titleWidth) / 2,
@@ -232,8 +245,9 @@ export class PosPdfService {
     });
     y -= PDF_LINE_HEIGHT_MD;
 
-    page.drawText(`№ ${data.movementNumber}`, {
-      x: (width - fontBold.widthOfTextAtSize(`№ ${data.movementNumber}`, PDF_HEADER_FONT_SIZE)) / 2,
+    const numLine = toPdfSafeText(`№ ${data.movementNumber}`);
+    page.drawText(numLine, {
+      x: (width - fontBold.widthOfTextAtSize(numLine, PDF_HEADER_FONT_SIZE)) / 2,
       y,
       size: PDF_HEADER_FONT_SIZE,
       font: fontBold,
@@ -260,7 +274,10 @@ export class PosPdfService {
     ];
 
     for (const [label, value] of meta) {
-      page.drawText(`${label}  ${value}`, {
+      // toPdfSafeText: `label` — static uz/ru yorliq (kirill bo'lishi mumkin);
+      // `value` — dinamik DB-qiymat (createdByName/supplierName kirill bilan
+      // kiritilgan bo'lsa ham) — ikkalasi ham WinAnsi-xavfsiz qilinadi (Q-40).
+      page.drawText(toPdfSafeText(`${label}  ${value}`), {
         x: margin,
         y,
         size: PDF_BODY_FONT_SIZE,
@@ -329,7 +346,9 @@ export class PosPdfService {
       ];
 
       for (let i = 0; i < cells.length; i++) {
-        activePage.drawText(cells[i], {
+        // toPdfSafeText: material nomi (xomAshyo) kirill bilan kiritilgan bo'lishi
+        // mumkin bo'lgan dinamik DB-qiymat — WinAnsi-crash oldini oladi (Q-40).
+        activePage.drawText(toPdfSafeText(cells[i]), {
           x: margin + i * colWidth + PDF_CELL_OFFSET_X,
           y: y - PDF_CELL_TEXT_Y_OFFSET_BD,
           size: PDF_SMALL_FONT_SIZE,
@@ -362,7 +381,7 @@ export class PosPdfService {
     y -= PDF_SIGNATURE_Y_GAP;
     const sigLabels = ['Berdi / Отпустил:', 'Qabul qildi / Принял:', 'Tekshirdi / Проверил:'];
     for (const label of sigLabels) {
-      activePage.drawText(label, { x: margin, y, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
+      activePage.drawText(toPdfSafeText(label), { x: margin, y, size: PDF_SMALL_FONT_SIZE, font: fontRegular, color: rgb(0, 0, 0) });
       activePage.drawLine({
         start: { x: margin + PDF_SIGNATURE_LINE_X_START, y },
         end:   { x: margin + PDF_SIGNATURE_LINE_X_END, y },

@@ -24,6 +24,8 @@ import { PosAuditService }         from './pos-audit.service';
 import { PosBalanceGuardService }  from './pos-balance-guard.service';
 import { PosTechCardGateService }  from './pos-techcard-gate.service';
 import { CreateMovementDto, AddMovementLineDto, CreateDamageActDto } from '../../dto/movement.dto';
+import { resolveActNumberPrefix } from '../../dto/movement-enums';
+import { nextDocNumber } from '@common/database/doc-sequences.helper';
 import { PosMovementRepository } from '../../infrastructure/repositories/pos-movement.repository';
 import { movementTypeEnum, posMovements, posMovementLines } from '@workspace/db';
 
@@ -165,9 +167,19 @@ export class PosMovementService {
         }
       }
 
-      const countR = await this.repo.countMovements();
-      const count = countR.ok ? (countR.data as number) : 0;
-      const movementNumber = `POS-${_time.now().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+      // FAZA D (Hujjat/PDF akt, 2026-07-01): akt-turi-bo'yicha prefiks — har
+      // MovementCategory (KIRIM/CHIQIM/...) o'z atomik sequence'idan raqam oladi
+      // (masalan KIRIM-AKT-2026-000001). Noma'lum kod → eski generic POS-YYYY-NNNNN
+      // fallback (mavjud oqim buzilmaydi, Q-39).
+      const aktPrefix = resolveActNumberPrefix(movType.code);
+      let movementNumber: string;
+      if (aktPrefix) {
+        movementNumber = await nextDocNumber(aktPrefix);
+      } else {
+        const countR = await this.repo.countMovements();
+        const count = countR.ok ? (countR.data as number) : 0;
+        movementNumber = `POS-${_time.now().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+      }
 
       const movementR = await this.repo.insertMovement({
         movementNumber,

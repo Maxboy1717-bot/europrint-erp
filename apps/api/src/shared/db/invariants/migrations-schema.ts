@@ -347,4 +347,17 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'T7-05 production_sessions.operator_card_id index',
     sql: `CREATE INDEX IF NOT EXISTS idx_production_sessions_operator_card_id ON production_sessions (operator_card_id)`,
   },
+  // FAZA D (Hujjat/PDF akt, 2026-07-01): kategoriya-bo'yicha akt raqamlash sequences.
+  // APPROVED: egasi vizyon-qurish 2026-07-01, FAZA D.
+  // Bo'shliq: pos_movements.movement_number avval bitta generic 'POS-YYYY-NNNNN'
+  // hisoblagichdan foydalanardi (harakat turi raqamda aks etmasdi). Endi har
+  // MovementCategory (KIRIM/CHIQIM/KOCHIRISH/INVENTARIZATSIYA/ZARAR) o'zining
+  // atomik PostgreSQL SEQUENCE'iga ega — nextDocNumber() (doc-sequences.helper.ts)
+  // orqali "PREFIX-YYYY-NNNNNN" formatda (masalan KIRIM-AKT-2026-000001). Xuddi
+  // shu proven pattern — doc_seq_po / doc_seq_mes bilan bir xil (A4 yuqorida).
+  { name: 'doc_seq_kirim_akt sequence (FAZA D)',     sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_kirim_akt START 1 INCREMENT 1 NO CYCLE` },
+  { name: 'doc_seq_chiqim_akt sequence (FAZA D)',    sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_chiqim_akt START 1 INCREMENT 1 NO CYCLE` },
+  { name: 'doc_seq_kochirish_akt sequence (FAZA D)', sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_kochirish_akt START 1 INCREMENT 1 NO CYCLE` },
+  { name: 'doc_seq_inv_akt sequence (FAZA D)',       sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_inv_akt START 1 INCREMENT 1 NO CYCLE` },
+  { name: 'doc_seq_zarar_akt sequence (FAZA D)',     sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_zarar_akt START 1 INCREMENT 1 NO CYCLE` },
 ];

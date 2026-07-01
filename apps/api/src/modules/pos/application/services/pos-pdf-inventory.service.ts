@@ -6,6 +6,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Result, AppError, safeCall } from '@common/result';
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { toPdfSafeText } from '@common/pdf/pdf-safe-text.helper';
 import { PosPdfInventoryRepository } from '../../infrastructure/repositories/pos-pdf-inventory.repository';
 
 @Injectable()
@@ -32,7 +33,8 @@ export class PosPdfInventoryService {
       const margin = 40;
       let y = height - 50;
   
-      page.drawText(`INVENTARIZATSIYA NATIJASI — №${header['count_number']}`, {
+      // toPdfSafeText: "№" (U+2116) pdf-lib WinAnsi (StandardFonts) da yo'q — bag-fix (FAZA D).
+      page.drawText(toPdfSafeText(`INVENTARIZATSIYA NATIJASI — №${header['count_number']}`), {
         x: margin, y, size: 12, font: fontBold, color: rgb(0, 0, 0),
       });
       y -= 20;
@@ -61,7 +63,8 @@ export class PosPdfInventoryService {
         ];
         const varColor = variance < 0 ? rgb(0.8, 0, 0) : variance > 0 ? rgb(0, 0.6, 0) : rgb(0, 0, 0);
         for (let i = 0; i < cells.length; i++) {
-          page.drawText(cells[i], {
+          // toPdfSafeText: xom_ashyo (material nomi) kirill bilan kiritilgan bo'lishi mumkin.
+          page.drawText(toPdfSafeText(cells[i]), {
             x: margin + i * colW + 3,
             y: y - 9,
             size: 8,

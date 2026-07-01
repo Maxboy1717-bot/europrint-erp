@@ -54,6 +54,7 @@ import { OrdersService } from './orders/orders.service';
 import { SD_INVOICES_REPO } from './invoices/i-sd-invoices.repo';
 import { DrizzleSdInvoicesRepository } from './invoices/drizzle-sd-invoices.repo';
 import { InvoicesService } from './invoices/invoices.service';
+import { SdInvoicePdfService } from './invoices/sd-invoice-pdf.service';
 import { SD_DELIVERIES_REPO } from './deliveries/i-sd-deliveries.repo';
 import { DrizzleSdDeliveriesRepository } from './deliveries/drizzle-sd-deliveries.repo';
 import { DeliveriesService } from './deliveries/deliveries.service';
@@ -127,6 +128,7 @@ const repositories = [
     OrdersService,
     { provide: SD_INVOICES_REPO, useClass: DrizzleSdInvoicesRepository },
     InvoicesService,
+    SdInvoicePdfService,
     { provide: SD_DELIVERIES_REPO, useClass: DrizzleSdDeliveriesRepository },
     DeliveriesService,
     SdDashboardService,

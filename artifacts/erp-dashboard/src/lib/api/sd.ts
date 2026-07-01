@@ -17,6 +17,8 @@ export const sdApi = {
 
   createInvoice: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/sd/invoices", data),
+  /** Hisob-faktura PDF URL — <a href> orqali (httpOnly cookie auth, pos-monitor pattern). */
+  getInvoicePdfUrl: (id: string) => `/api/sd/invoices/${id}/pdf`,
 
   createCustomer: (data: Record<string, unknown>) =>
     apiRequest("POST", "/api/sd/customers", data),
