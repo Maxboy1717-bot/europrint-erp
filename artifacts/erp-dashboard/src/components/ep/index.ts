@@ -28,3 +28,4 @@ export { EPLoader, EPSpinnerBlock } from "./EPLoader";
 export { EPComingSoon } from "./EPComingSoon";
 export { EPNumberedSection } from "./EPNumberedSection";
 export { DefectDropdown, type DefectCatalogItem } from "./DefectDropdown";
+export { EPDocumentPreview, type EPDocumentPreviewProps } from "./EPDocumentPreview";

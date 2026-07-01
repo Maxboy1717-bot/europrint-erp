@@ -2,14 +2,18 @@
  * Hujjat tafsilotlari modali — light theme.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loader2, FileText, Printer, FileDown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
-import { EPLoader } from "@/components/ep";
+import { EPLoader, EPDocumentPreview } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 interface DocumentDetail {
   id: string;
@@ -50,6 +54,11 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const [printReason, setPrintReason] = useState("");
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   const docQ = useQuery<DocumentDetail>({
     queryKey: [`/api/cc/baskets/${documentId}`],
     queryFn: () => apiRequest<DocumentDetail>("GET", `/api/cc/baskets/${documentId}`),
@@ -63,6 +72,38 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
   });
 
   const doc = docQ.data;
+
+  // Real backend already logs a reason (min 3 chars) to cc_print_log/cc_audit_trail —
+  // it just had zero FE callers until now (see cc-workflow.service.ts logPrint()).
+  const printMutation = useMutation({
+    mutationFn: () => apiRequest("POST", `/api/cc/documents/${documentId}/print`, { reason: printReason.trim() }),
+    onSuccess: () => {
+      toast({ title: t("submitBtn") ?? "OK", description: "Chop etish jurnalga yozildi" });
+      setPrintReason("");
+    },
+    onError: () => toast({ title: "Xatolik", description: "Jurnalga yozib bo'lmadi", variant: "destructive" }),
+  });
+
+  // Office-style inline PDF preview: fetch the already-built PDF generator (GET
+  // /cc/documents/:id/pdf) as a blob so it renders inline via EPDocumentPreview's
+  // <iframe> instead of forcing a raw download (the endpoint sets Content-Disposition:
+  // attachment, which a direct <a>/window.open would just save to disk).
+  const handleViewPdf = async () => {
+    setPdfLoading(true);
+    try {
+      const res = await fetch(`/api/cc/documents/${documentId}/pdf`, { credentials: "include" });
+      if (!res.ok) {
+        toast({ title: "Xatolik", description: "PDF yaratib bo'lmadi", variant: "destructive" });
+        return;
+      }
+      const blob = await res.blob();
+      setPdfPreviewUrl(URL.createObjectURL(blob));
+    } catch {
+      toast({ title: "Xatolik", description: "PDF yaratib bo'lmadi", variant: "destructive" });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -119,7 +160,52 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
             </div>
           )}
         </ScrollArea>
+
+        {/* Office-style PDF preview + "print with reason" — backend already built
+            (cc-documents.controller.ts GET :id/pdf, POST :id/print), only the FE
+            wiring was missing until now. */}
+        <div className="p-3 border-t flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void handleViewPdf()}
+            disabled={pdfLoading}
+          >
+            {pdfLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <FileDown className="w-3.5 h-3.5 mr-1.5" />}
+            PDF ko'rish
+          </Button>
+
+          <div className="flex items-center gap-1.5 flex-1 min-w-[220px]">
+            <Input
+              value={printReason}
+              onChange={(e) => setPrintReason(e.target.value)}
+              placeholder="Chop etish sababi (kamida 3 belgi)"
+              className="h-8 text-xs"
+              maxLength={2000}
+            />
+            <Button
+              size="sm"
+              onClick={() => printMutation.mutate()}
+              disabled={printReason.trim().length < 3 || printMutation.isPending}
+            >
+              {printMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Printer className="w-3.5 h-3.5 mr-1.5" />}
+              Chop etish
+            </Button>
+          </div>
+        </div>
       </DialogContent>
+
+      {pdfPreviewUrl && (
+        <EPDocumentPreview
+          fileUrl={pdfPreviewUrl}
+          fileName={`${doc?.documentNumber ?? documentId}.pdf`}
+          fileType="application/pdf"
+          onClose={() => {
+            URL.revokeObjectURL(pdfPreviewUrl);
+            setPdfPreviewUrl(null);
+          }}
+        />
+      )}
     </Dialog>
   );
 }
