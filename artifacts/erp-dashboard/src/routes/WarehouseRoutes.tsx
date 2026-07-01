@@ -46,6 +46,7 @@ const WarehouseZonesPage = lazy(() => import("@/pages/WarehouseZonesPage"));
 const WmsGoodsIssuePage = lazy(() => import("@/pages/WmsGoodsIssuePage"));
 const WmsEoqPage = lazy(() => import("@/pages/WmsEoqPage"));
 const WmsInTransitPage = lazy(() => import("@/pages/WmsInTransitPage"));
+const WMSSettings = lazy(() => import("@/pages/WMSSettings"));
 
 export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   // YANGI toza ombor (ERP nazorat)
@@ -82,6 +83,7 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/scanner',                BarcodeScanner],
   ['/inventory/materials',        WMSMaterials],
   ['/inventory/materials/:id',    WMSMaterials],
+  ['/wms/settings',                WMSSettings],               // Ombor sozlama-hub (SD/Marketing/QC pattern)
   ['/wms/material-unit-price',     MaterialUnitPriceConfig],  // config-mexanizm: birlik narx
   ['/wms/rulon-cards',             RulonCards],               // WMS rulon qog'oz karta CRUD
   ['/wms/bins',                    WarehouseBinsPage],         // WMS ombor binlari (yacheykalar) CRUD

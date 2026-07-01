@@ -84,6 +84,8 @@ const UtilityReadingsPage = lazy(() => import("@/pages/mro/UtilityReadingsPage")
 const CleaningSchedulePage = lazy(() => import("@/pages/mro/CleaningSchedulePage"));
 const FacilityInventoryPage = lazy(() => import("@/pages/mro/FacilityInventoryPage"));
 const CanteenManagementPage = lazy(() => import("@/pages/mro/CanteenManagementPage"));
+// FAZA "Sozlama har bo'limda" (2026-07-01) — MRO sozlama-hub (SD/Marketing/QC pattern reuse).
+const MROSettings = lazy(() => import("@/pages/MROSettings"));
 
 export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/erp-production',             ERPProduction],
@@ -198,6 +200,7 @@ export const MRO_ROUTES: [string, React.ComponentType][] = [
   ['/mro/cleaning',           CleaningSchedulePage],        // dedicated (TZ-14)
   ['/mro/sanitation',         MROExtended],
   ['/mro/building-inventory', FacilityInventoryPage],       // dedicated (TZ-14)
+  ['/mro/settings',           MROSettings],                 // MRO sozlama-hub (SD/Marketing/QC pattern)
 ];
 
 export const IOT_ROUTES: [string, React.ComponentType][] = [

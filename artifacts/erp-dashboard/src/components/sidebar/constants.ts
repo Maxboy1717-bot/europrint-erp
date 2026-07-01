@@ -323,6 +323,8 @@ import { LayoutDashboard, X,
       { title: "Reservation Panel", url: "wms/reservation", icon: Lock },
       { title: "Material 360°", url: "inventory/materials", icon: Package },
       { title: "Tayyor Mahsulot Ijara", url: "wms/rental", icon: DollarSign },
+      { title: "SOZLAMALAR", url: "", icon: Settings, separator: true },
+      { title: "Ombor sozlamalari", url: "wms/settings", icon: Settings },
     ]
   },
   tz09: {
@@ -526,6 +528,8 @@ import { LayoutDashboard, X,
       { title: "Chiqindi Nazorati", url: "europrint/waste-tracking", icon: Recycle },
       { title: "Sanitariya", url: "mro/sanitation", icon: ShieldCheck },
       { title: "Bino Inventari", url: "mro/building-inventory", icon: Building2 },
+      { title: "SOZLAMALAR", url: "", icon: Settings, separator: true },
+      { title: "MRO sozlamalari", url: "mro/settings", icon: Settings },
     ]
   },
   tz15: {

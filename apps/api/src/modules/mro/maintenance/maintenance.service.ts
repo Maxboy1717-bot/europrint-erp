@@ -169,4 +169,29 @@ export class MaintenanceService {
       return { items: result.data };
     });
   }
+
+  // ─── FAZA "Sozlama har bo'limda" (2026-07-01) — MRO sozlama-hub ───────────
+  async getSettings(): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.getSettings();
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return { items: result.data };
+    });
+  }
+
+  async saveSettings(entries: Record<string, string>): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.saveSettings(entries);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
+  async patchSetting(id: string, value: string): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const result = await this.maintenanceSvcRepo.patchSetting(id, value);
+      if (!result.ok) throw new NotFoundException(String(result.error));
+      return result.data;
+    });
+  }
 }

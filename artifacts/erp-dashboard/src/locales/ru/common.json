@@ -9422,5 +9422,11 @@
   "leadFilterOverdue": "Просрочено ({{count}})",
   "leadFilterLost": "Потеряно ({{count}})",
   "lidniTahrirlash": "Редактировать лид",
-  "marketingVoronkasi": "Маркетинговая воронка"
+  "marketingVoronkasi": "Маркетинговая воронка",
+  "omborBoshqaruv": "Склад",
+  "omborSozlamalari": "Настройки склада",
+  "wmsRentalSettingsLink": "Настройки аренды склада",
+  "wmsRentalSettingsLinkDesc": "Стандартная ставка, бесплатные дни и индивидуальные ставки по менеджерам",
+  "mroBoshqaruv": "МРО",
+  "mroSozlamalari": "Настройки МРО"
 }

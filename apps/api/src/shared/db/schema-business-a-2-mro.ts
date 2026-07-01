@@ -81,3 +81,6 @@ export const mro_canteen_logs = pgTable('mro_canteen_logs', {
   created_at:      timestamp('created_at').defaultNow(),
   updated_at:      timestamp('updated_at').defaultNow(),
 });
+
+// mroSettings → lib/db (mm-mro.ts) — FAZA "Sozlama har bo'limda" 2026-07-01
+export { mroSettings as mro_settings } from '@workspace/db';

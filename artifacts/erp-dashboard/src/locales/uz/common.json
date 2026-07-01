@@ -9773,5 +9773,11 @@
   "leadFilterOverdue": "Muddati o'tgan ({{count}})",
   "leadFilterLost": "Yo'qolgan ({{count}})",
   "lidniTahrirlash": "Lidni tahrirlash",
-  "marketingVoronkasi": "Marketing voronkasi"
+  "marketingVoronkasi": "Marketing voronkasi",
+  "omborBoshqaruv": "Ombor",
+  "omborSozlamalari": "Ombor sozlamalari",
+  "wmsRentalSettingsLink": "Ombor ijarasi sozlamalari",
+  "wmsRentalSettingsLinkDesc": "Standart stavka, bepul kunlar va menejer bo'yicha maxsus stavkalar",
+  "mroBoshqaruv": "MRO",
+  "mroSozlamalari": "MRO sozlamalari"
 }

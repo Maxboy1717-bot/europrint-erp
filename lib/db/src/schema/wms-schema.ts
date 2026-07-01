@@ -866,6 +866,28 @@ export type WarehouseRentalSettings = typeof warehouseRentalSettings.$inferSelec
 export type InsertWarehouseRentalSettings = z.infer<typeof insertWarehouseRentalSettingsSchema>;
 
 
+// ============================================================================
+// WMS Sozlamalari (Ombor sozlama-hub) — generic key-value, marketing_settings
+// patterniga ko'ra (lib/db/src/schema/marketing-schema.ts:552).
+// APPROVED: egasi vizyon-qurish 2026-07-01, FAZA "Sozlama har bo'limda"
+// ============================================================================
+export const wmsSettings = pgTable("wms_settings", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  category: varchar("category", { length: 100 }).default("general"),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWmsSettingSchema = createInsertSchema(wmsSettings, {
+  key: z.string().min(2),
+}).omit({ id: true, updatedAt: true } as never);
+
+export type WmsSetting = typeof wmsSettings.$inferSelect;
+export type InsertWmsSetting = z.infer<typeof insertWmsSettingSchema>;
+
+
 // Ijara yozuvlari — tayyor mahsulot omborda saqlanayotgan har bir buyurtma
 export const warehouseRentalRecords = pgTable("warehouse_rental_records", {
   id: serial("id").primaryKey(),

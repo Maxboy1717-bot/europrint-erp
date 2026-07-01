@@ -22,6 +22,10 @@ export interface IMaintenanceSvcRepository {
   createCanteenLog(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   updateCanteenLog(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   findSpareParts(search?: string): Promise<Result<Record<string, unknown>[]>>;
+  // FAZA "Sozlama har bo'limda" (2026-07-01) — MRO sozlama-hub (SD/Marketing/QC pattern reuse).
+  getSettings(): Promise<Result<Record<string, unknown>[]>>;
+  saveSettings(entries: Record<string, string>): Promise<Result<{ updated: number }>>;
+  patchSetting(id: string, value: string): Promise<Result<{ id: string; updated: boolean }>>;
 }
 
 export const MAINTENANCE_SVC_REPO = 'IMaintenanceSvcRepository';

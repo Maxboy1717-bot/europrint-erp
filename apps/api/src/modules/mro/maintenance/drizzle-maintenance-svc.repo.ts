@@ -8,9 +8,9 @@ import { db } from '@shared/db';
 import {
   equipmentMaintenance, mro_equipment, mro_items,
   mro_facilities, mro_cleaning_schedules, mro_pm_schedules,
-  mro_utility_readings, mro_canteen_logs,
+  mro_utility_readings, mro_canteen_logs, mro_settings,
 } from '@shared/db';
-import { eq, isNull, desc, count, ilike, sql, sum } from 'drizzle-orm';
+import { eq, isNull, desc, count, ilike, sql, sum, asc } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IMaintenanceSvcRepository } from './i-maintenance-svc.repo';
 
@@ -283,5 +283,42 @@ export class DrizzleMaintenanceSvcRepository implements IMaintenanceSvcRepositor
         };
       }));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Ehtiyot qismlar topilmadi'); }
+  }
+
+  // ─── FAZA "Sozlama har bo'limda" (2026-07-01) — MRO sozlama-hub ───────────
+  async getSettings(): Promise<Result<Record<string, unknown>[]>> {
+    try {
+      const rows = await db
+        .select()
+        .from(mro_settings)
+        .orderBy(asc(mro_settings.category), asc(mro_settings.key));
+      return Ok(rows as Record<string, unknown>[]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'MRO sozlamalari topilmadi'); }
+  }
+
+  async saveSettings(entries: Record<string, string>): Promise<Result<{ updated: number }>> {
+    try {
+      const keys = Object.entries(entries);
+      for (const [key, value] of keys) {
+        await db
+          .insert(mro_settings)
+          .values({ key, value })
+          .onConflictDoUpdate({
+            target: mro_settings.key,
+            set: { value, updatedAt: new Date() },
+          });
+      }
+      return Ok({ updated: keys.length });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'MRO sozlamalarini saqlashda xatolik'); }
+  }
+
+  async patchSetting(id: string, value: string): Promise<Result<{ id: string; updated: boolean }>> {
+    try {
+      await db
+        .update(mro_settings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(mro_settings.id, id));
+      return Ok({ id, updated: true });
+    } catch (e: unknown) { return Err((e as Error)?.message || `MRO sozlamasi #${id} yangilanmadi`); }
   }
 }

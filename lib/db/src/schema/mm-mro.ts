@@ -235,3 +235,25 @@ export const mroBudgets = pgTable("mro_budgets", {
   check("mro_budgets_status_chk", sql`${t.status} IN ('active','exceeded','closed')`),
 ]);
 
+
+// ============================================================================
+// MRO Sozlamalari (MRO sozlama-hub) — generic key-value, marketing_settings
+// patterniga ko'ra (lib/db/src/schema/marketing-schema.ts:552).
+// APPROVED: egasi vizyon-qurish 2026-07-01, FAZA "Sozlama har bo'limda"
+// ============================================================================
+export const mroSettings = pgTable("mro_settings", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  category: varchar("category", { length: 100 }).default("general"),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMroSettingSchema = createInsertSchema(mroSettings, {
+  key: z.string().min(2),
+}).omit({ id: true, updatedAt: true } as never);
+
+export type MroSetting = typeof mroSettings.$inferSelect;
+export type InsertMroSetting = z.infer<typeof insertMroSettingSchema>;
+

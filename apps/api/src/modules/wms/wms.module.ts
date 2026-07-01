@@ -123,6 +123,11 @@ import { MaterialLifeRepository } from './infrastructure/repositories/material-l
 import { MATERIAL_LIFE_REPO } from './domain/repositories/i-material-life.repo';
 // FAZA E (Inventarizatsiya, 2026-07-01) — "Davriy (rejalashtirilgan)" cycle-count avto-generatsiya.
 import { WmsCycleCountGeneratorCron } from './infrastructure/cron/wms-cycle-count-generator.cron';
+// FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub (SD/Marketing/QC pattern reuse).
+import { WmsSettingsController } from './presentation/wms-settings.controller';
+import { WmsSettingsService } from './application/wms-settings.service';
+import { WmsSettingsRepository } from './infrastructure/repositories/wms-settings.repository';
+import { WMS_SETTINGS_REPO } from './domain/repositories/i-wms-settings.repo';
 
 const handlers = [
   GoodsIssueHandler,
@@ -174,6 +179,7 @@ const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler, 
     WmsInTransitController,
     MaterialLifeController,
     WmsSupplierRatingController,
+    WmsSettingsController,
   ],
   providers: [
     ...handlers,
@@ -247,6 +253,9 @@ const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler, 
     MaterialLifeService,
     // FAZA E (Inventarizatsiya, 2026-07-01) — davriy (rejalashtirilgan) cycle-count avto-generatsiya.
     WmsCycleCountGeneratorCron,
+    // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub.
+    { provide: WMS_SETTINGS_REPO, useClass: WmsSettingsRepository },
+    WmsSettingsService,
   ],
   exports: [WMS_REPO],
 })

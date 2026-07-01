@@ -21,6 +21,7 @@ export {
   mro_pm_schedules,
   mro_utility_readings,
   mro_canteen_logs,
+  mro_settings,
 } from './schema-business-a-2-mro';
 
 // ─── Director: Strategic, OKR ─────────────────────────────────────────────────

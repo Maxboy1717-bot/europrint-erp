@@ -11185,5 +11185,11 @@
   "leadFilterOverdue": "Муддати ўтган ({{count}})",
   "leadFilterLost": "Йўқолган ({{count}})",
   "lidniTahrirlash": "Лидни таҳрирлаш",
-  "marketingVoronkasi": "Маркетинг воронкаси"
+  "marketingVoronkasi": "Маркетинг воронкаси",
+  "omborBoshqaruv": "Омбор",
+  "omborSozlamalari": "Омбор созламалари",
+  "wmsRentalSettingsLink": "Омбор ижараси созламалари",
+  "wmsRentalSettingsLinkDesc": "Стандарт ставка, бепул кунлар ва менежер бўйича махсус ставкалар",
+  "mroBoshqaruv": "МРО",
+  "mroSozlamalari": "МРО созламалари"
 }
