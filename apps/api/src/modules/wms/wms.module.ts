@@ -121,6 +121,8 @@ import { MaterialLifeController } from './presentation/material-life.controller'
 import { MaterialLifeService } from './application/material-life.service';
 import { MaterialLifeRepository } from './infrastructure/repositories/material-life.repository';
 import { MATERIAL_LIFE_REPO } from './domain/repositories/i-material-life.repo';
+// FAZA E (Inventarizatsiya, 2026-07-01) — "Davriy (rejalashtirilgan)" cycle-count avto-generatsiya.
+import { WmsCycleCountGeneratorCron } from './infrastructure/cron/wms-cycle-count-generator.cron';
 
 const handlers = [
   GoodsIssueHandler,
@@ -243,6 +245,8 @@ const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler, 
     MaterialLifeRepository,
     { provide: MATERIAL_LIFE_REPO, useClass: MaterialLifeRepository },
     MaterialLifeService,
+    // FAZA E (Inventarizatsiya, 2026-07-01) — davriy (rejalashtirilgan) cycle-count avto-generatsiya.
+    WmsCycleCountGeneratorCron,
   ],
   exports: [WMS_REPO],
 })

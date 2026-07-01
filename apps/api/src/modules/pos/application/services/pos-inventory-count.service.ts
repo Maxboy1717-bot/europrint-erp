@@ -121,12 +121,19 @@ export class PosInventoryCountService {
       const inventoryCountR = await this.inventoryRepo.createCount({
         countNumber,
         warehouseId:       dto.warehouseId,
+        // FAZA E (Inventarizatsiya, 2026-07-01) — kanonik ustun NOT NULL; avval Drizzle
+        // sxemasida umuman yo'q edi → INSERT doim `count_type` NOT NULL xatosi bilan
+        // yiqilardi (pre-existing bug, shu funksiya ichida — Q-46 bo'yicha to'g'irlandi).
+        countType:         'cycle',
         status:            'DRAFT',
         countDate:         dto.countDate ? new Date(dto.countDate) : _time.now(),
         categoryFilter:    dto.categoryFilter,
         binLocationFilter: dto.binLocationFilter,
         conductedBy:       createdById,
         notes:             dto.notes,
+        // "Davriy (rejalashtirilgan)" sana endi saqlanadi (ilgari FE "New Plan" formasidagi
+        // scheduledFor DTO'da yo'q edi — jim tashlab yuborilardi).
+        scheduledFor:      dto.scheduledFor ?? null,
       } as Parameters<typeof this.inventoryRepo.createCount>[0]);
       const inventoryCount = inventoryCountR.ok ? (inventoryCountR.data as { id: number }) : { id: 0 };
   

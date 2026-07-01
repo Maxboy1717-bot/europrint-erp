@@ -112,6 +112,15 @@ export const CI_UPPER = 0.975;
 export const ABC_A_THRESHOLD = 0.80;
 export const ABC_B_THRESHOLD = 0.95;
 
+/**
+ * Davriy (rejalashtirilgan) cycle-count chastotasi — ABC segment bo'yicha (kun).
+ * A (yuqori qiymat) tez-tez, C (past qiymat) kamroq sanaladi — standart ABC
+ * cycle-counting nazariyasi. wms-cycle-count-generator.cron.ts ishlatadi.
+ */
+export const CYCLE_COUNT_FREQUENCY_DAYS_A = 7;
+export const CYCLE_COUNT_FREQUENCY_DAYS_B = 30;
+export const CYCLE_COUNT_FREQUENCY_DAYS_C = 90;
+
 // ---------------------------------------------------------------------------
 // Agent confidence thresholds
 // ---------------------------------------------------------------------------
