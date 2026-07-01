@@ -20,10 +20,12 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { unwrapOrBadRequest } from '@common/http-result';
 import { db, runQuery } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { sql, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
+import { AuthenticatedUser } from '@common/types/user.types';
+import { hasFullKanbanVisibility, kanbanCardVisibilityPredicate } from '../infrastructure/kanban-visibility.helper';
 
 type Rows = { rows?: unknown[] };
 const ChatFileSchema = z.object({
@@ -86,14 +88,26 @@ export class KanbanCardsController {
 
   // --- Cards extended -------------------------------------------------------
 
+  // Org-sxema bo'yicha karta ko'rinishi (M0) — super_admin/director butun
+  // tizimni ko'radi; qolganlar faqat "o'zi + boshqargan bo'lim + hamkasb
+  // bo'limi" doirasida (kanbanCardVisibilityPredicate, EP-KAN-084).
+  private cardVisibilityClause(user: AuthenticatedUser): SQL {
+    if (hasFullKanbanVisibility(user?.role)) return sql`TRUE`;
+    return kanbanCardVisibilityPredicate(Number(user?.id ?? 0));
+  }
+
   @Get('boards/:boardId/cards')
-  @ApiOperation({ summary: 'Board kartalarini qaytarish (allCards uchun)' })
-  async getBoardCards(@Param('boardId') boardId: string) {
+  @ApiOperation({ summary: 'Board kartalarini qaytarish (allCards uchun, org-sxema bo\'yicha ko\'rinish)' })
+  async getBoardCards(
+    @Param('boardId') boardId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     try {
+      const visible = this.cardVisibilityClause(user);
       const { rows } = await runQuery<Record<string, unknown>>(sql`
-        SELECT * FROM kanban_cards
-        WHERE board_id = ${boardId} AND deleted_at IS NULL
-        ORDER BY sort_order ASC
+        SELECT kc.* FROM kanban_cards kc
+        WHERE kc.board_id = ${boardId} AND kc.deleted_at IS NULL AND ${visible}
+        ORDER BY kc.sort_order ASC
       `);
       return { items: rows, total: rows.length };
     } catch {
@@ -102,14 +116,18 @@ export class KanbanCardsController {
   }
 
   @Get('cards')
-  @ApiOperation({ summary: 'Barcha kartalar (filtrlangan)' })
-  async getAllCards(@Query('boardId') boardId?: string) {
+  @ApiOperation({ summary: 'Barcha kartalar (filtrlangan, org-sxema bo\'yicha ko\'rinish)' })
+  async getAllCards(
+    @Query('boardId') boardId: string | undefined,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const visible = this.cardVisibilityClause(user);
     if (boardId) {
       try {
         const { rows } = await runQuery<Record<string, unknown>>(sql`
-          SELECT * FROM kanban_cards
-          WHERE board_id = ${boardId} AND deleted_at IS NULL
-          ORDER BY sort_order ASC
+          SELECT kc.* FROM kanban_cards kc
+          WHERE kc.board_id = ${boardId} AND kc.deleted_at IS NULL AND ${visible}
+          ORDER BY kc.sort_order ASC
         `);
         return { items: rows, total: rows.length };
       } catch {
@@ -122,7 +140,7 @@ export class KanbanCardsController {
         FROM kanban_cards kc
         LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         LEFT JOIN kanban_columns kcol ON kcol.id = kc.column_id
-        WHERE kc.deleted_at IS NULL
+        WHERE kc.deleted_at IS NULL AND ${visible}
         ORDER BY kc.sort_order ASC, kc.created_at DESC
         LIMIT 500
       `);

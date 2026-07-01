@@ -18,6 +18,7 @@ import {
   KanbanBoardDetail,
   KanbanCard,
   KanbanColumn,
+  KanbanViewerContext,
   CreateBoardInput,
   CreateCardInput,
   CreateColumnInput,
@@ -29,6 +30,7 @@ import {
 import { kanbanBoards } from '../kanban-tables';
 import { KanbanColumnsRepository } from './kanban-columns.repo';
 import { KanbanCardsRepository } from './kanban-cards.repo';
+import { hasFullKanbanVisibility, kanbanCardVisibilityPredicate } from '../kanban-visibility.helper';
 
 @Injectable()
 export class KanbanBoardsRepository implements IKanbanBoardsRepo {
@@ -60,7 +62,7 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
     }
   }
 
-  async getBoardById(boardId: string): Promise<Result<KanbanBoardDetail>> {
+  async getBoardById(boardId: string, viewer?: KanbanViewerContext): Promise<Result<KanbanBoardDetail>> {
     try {
       const boardRows = await runQuery<Record<string, unknown>>(sql`
         SELECT id, name, type, description, created_at, updated_at
@@ -69,38 +71,46 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
       const board = boardRows.rows[0];
       if (!board) return Err({ message: `Board ${boardId} topilmadi`, code: 'NOT_FOUND' });
 
+      // Org-sxema bo'yicha karta ko'rinishi (M0) — super_admin/director butun
+      // boardni ko'radi; qolganlar faqat kanbanCardVisibilityPredicate doirasida.
+      const visible = viewer && !hasFullKanbanVisibility(viewer.role)
+        ? kanbanCardVisibilityPredicate(Number(viewer.id))
+        : sql`TRUE`;
+
       const [columnsRows, cardsRows] = await Promise.all([
         db.execute<Record<string, unknown>>(sql`
           SELECT id, board_id, name, sort_order, color, created_at
           FROM kanban_columns WHERE board_id = ${boardId} AND deleted_at IS NULL ORDER BY sort_order ASC
         `),
         db.execute<Record<string, unknown>>(sql`
-          SELECT id, board_id, column_id, title, description, priority, due_date,
-                 sort_order, owner_user_id, related_type, related_id, source,
-                 start_date, estimated_time, accepted_at, completed_at,
-                 rating, completion_report,
-                 created_at, updated_at,
+          SELECT kc.id, kc.board_id, kc.column_id, kc.title, kc.description, kc.priority, kc.due_date,
+                 kc.sort_order, kc.owner_user_id, kc.related_type, kc.related_id, kc.source,
+                 kc.start_date, kc.estimated_time, kc.accepted_at, kc.completed_at,
+                 kc.rating, kc.completion_report,
+                 kc.created_at, kc.updated_at,
                  (SELECT row_to_json(t) FROM kanban_time_tracks t
-                  WHERE t.card_id = kanban_cards.id::text AND t.is_running = true
+                  WHERE t.card_id = kc.id::text AND t.is_running = true
                   LIMIT 1) AS active_time_track,
                  (SELECT COALESCE(SUM(t.duration_minutes), 0)
                   FROM kanban_time_tracks t
-                  WHERE t.card_id = kanban_cards.id::text AND t.is_running = false
+                  WHERE t.card_id = kc.id::text AND t.is_running = false
                  ) AS total_tracked_time,
                  (SELECT COUNT(*)::int FROM kanban_checklists cl
-                  WHERE cl.card_id = kanban_cards.id::text
+                  WHERE cl.card_id = kc.id::text
                  ) AS subtasks_count,
                  (SELECT COUNT(*)::int FROM kanban_checklists cl
                   JOIN kanban_checklist_items ci ON ci.checklist_id = cl.id::text
-                  WHERE cl.card_id = kanban_cards.id::text AND ci.is_completed = true
+                  WHERE cl.card_id = kc.id::text AND ci.is_completed = true
                  ) AS subtasks_completed,
                  (SELECT COUNT(*)::int FROM kanban_card_comments cc
-                  WHERE cc.card_id = kanban_cards.id::text
+                  WHERE cc.card_id = kc.id::text
                  ) AS comments_count,
                  (SELECT COUNT(*)::int FROM kanban_files kf
-                  WHERE kf.card_id = kanban_cards.id::text AND kf.deleted_at IS NULL
+                  WHERE kf.card_id = kc.id::text AND kf.deleted_at IS NULL
                  ) AS files_count
-          FROM kanban_cards WHERE board_id = ${boardId} AND deleted_at IS NULL ORDER BY sort_order ASC
+          FROM kanban_cards kc
+          WHERE kc.board_id = ${boardId} AND kc.deleted_at IS NULL AND ${visible}
+          ORDER BY kc.sort_order ASC
         `),
       ]);
 

@@ -13,6 +13,7 @@ import {
   KanbanBoardDetail,
   KanbanCard,
   KanbanColumn,
+  KanbanViewerContext,
 } from '../domain/repositories/i-kanban-boards.repo';
 import { KanbanRobotService } from './kanban-robot.service';
 import { runQuery } from '@shared/db';
@@ -32,8 +33,8 @@ export class KanbanBoardsService {
     return this.boardsRepo.getBoards();
   }
 
-  getBoardById(boardId: string): Promise<Result<KanbanBoardDetail>> {
-    return this.boardsRepo.getBoardById(boardId);
+  getBoardById(boardId: string, viewer?: KanbanViewerContext): Promise<Result<KanbanBoardDetail>> {
+    return this.boardsRepo.getBoardById(boardId, viewer);
   }
 
   createBoard(body: Record<string, unknown>): Promise<Result<KanbanBoard>> {

@@ -5,6 +5,12 @@
 
 import { Result } from '@common/result';
 
+/** Kanban karta ko'rinishini hisoblash uchun kerakli minimal viewer konteksti (M0). */
+export interface KanbanViewerContext {
+  id: number;
+  role?: string;
+}
+
 export interface KanbanBoard {
   id: string;
   name: string;
@@ -115,7 +121,7 @@ export const KANBAN_BOARDS_REPO = Symbol('KANBAN_BOARDS_REPO');
 
 export interface IKanbanBoardsRepo {
   getBoards(): Promise<Result<KanbanBoard[]>>;
-  getBoardById(boardId: string): Promise<Result<KanbanBoardDetail>>;
+  getBoardById(boardId: string, viewer?: KanbanViewerContext): Promise<Result<KanbanBoardDetail>>;
   createBoard(input: CreateBoardInput): Promise<Result<KanbanBoard>>;
   deleteBoard(boardId: string): Promise<Result<void>>;
   getMaxColumnOrder(boardId: string): Promise<Result<number>>;

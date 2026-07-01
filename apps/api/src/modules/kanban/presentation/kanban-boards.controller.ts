@@ -49,21 +49,25 @@ export class KanbanBoardsController {
   // ─── Boards ───────────────────────────────────────────────────────────────
 
   @Get('boards')
-  @ApiOperation({ summary: 'Barcha boardlar (departmentId bo\'yicha filtrlash ixtiyoriy)' })
-  async getBoards(@Query('departmentId') departmentId?: string) {
-    const result = await this.boardsSvc.getBoards();
-    if (!result.ok) return unwrapOrThrow(result);
-    if (!departmentId) return result.data;
-    // departmentId filtrini qo'llash — null departmentId ham qabul qilinadi
-    return (result.data as unknown as Record<string, unknown>[]).filter(
-      (b: Record<string, unknown>) => b.department_id === departmentId || b.departmentId === departmentId,
-    );
+  @ApiOperation({ summary: 'Barcha boardlar' })
+  async getBoards() {
+    // NOTE (M0): `departmentId` JS-filtri bu yerda ilgari mavjud edi, lekin
+    // kanban_boards jadvalida department_id ustuni umuman yo'q — filtr HAR
+    // DOIM bo'sh natija qaytarardi (o'lik/buzuq kod, FE hech qachon
+    // chaqirmagan — Q-46: to'g'ri ishlamaydigan kod olib tashlanadi). Board
+    // ro'yxati umumiy qoladi; kartalar darajasidagi org-sxema ko'rinishi
+    // getBoardById/getBoardCards/getAllCards'da haqiqiy SQL predicate bilan
+    // amalga oshirilgan (kanban-visibility.helper.ts).
+    return unwrapOrThrow(await this.boardsSvc.getBoards());
   }
 
   @Get('boards/:boardId')
-  @ApiOperation({ summary: 'Board tafsiloti (ustunlar + kartalar)' })
-  async getBoardById(@Param('boardId') boardId: string) {
-    return unwrapOrThrow(await this.boardsSvc.getBoardById(boardId));
+  @ApiOperation({ summary: 'Board tafsiloti (ustunlar + kartalar, org-sxema bo\'yicha ko\'rinish)' })
+  async getBoardById(
+    @Param('boardId') boardId: string,
+    @CurrentUser() user: { id: number; role?: string },
+  ) {
+    return unwrapOrThrow(await this.boardsSvc.getBoardById(boardId, user && { id: Number(user.id), role: user.role }));
   }
 
   @Post('boards')
