@@ -51,15 +51,37 @@ export class DrizzleAttendanceRepository implements IAttendanceRepository {
 
   async checkIn(userId: number, dto: Row): Promise<Result<Row>> {
     try {
-      const result = await db.insert(attendance).values({ id: sql`DEFAULT`, employeeId: String(userId), userId, date: String(dto.date ?? _time.now().toISOString().slice(0, 10)), status: 'present', checkIn: _time.now() }).returning();
-      return Ok(result[0] as Row);
+      const dateStr = String(dto.date ?? _time.now().toISOString().slice(0, 10));
+      const now = _time.now();
+      const inserted = await db.transaction(async (tx) => {
+        const result = await tx.insert(attendance).values({ id: sql`DEFAULT`, employeeId: String(userId), userId, date: dateStr, status: 'present', checkIn: now }).returning();
+        const row = result[0] as (Row & { id: number }) | undefined;
+        if (!row) return row;
+        // Drizzle schema (schema-compat-2.ts) does not model `attendance_date`/`check_in_time` —
+        // these DB-only mirror columns are read by HR-rating/PIP/director-dashboard (see
+        // hr-rating.reader.ts, hr-dashboard.repository.ts, finance-extended-payroll.service.ts).
+        // Keep both column sets in sync so downstream readers see live check-in data.
+        await tx.execute(sql`UPDATE attendance SET attendance_date = ${dateStr}, check_in_time = ${now} WHERE id = ${row.id}`);
+        return { ...row, attendance_date: dateStr, check_in_time: now };
+      });
+      return Ok(inserted as Row);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Kirishda xatolik'); }
   }
 
   async checkOut(userId: number, dto: Row): Promise<Result<Row>> {
     try {
-      const result = await db.update(attendance).set({ checkOut: _time.now() }).where(and(eq(attendance.userId, userId), eq(attendance.date, String(dto.date)))).returning();
-      return Ok(result[0] as Row);
+      const dateStr = String(dto.date);
+      const now = _time.now();
+      const updated = await db.transaction(async (tx) => {
+        const result = await tx.update(attendance).set({ checkOut: now }).where(and(eq(attendance.userId, userId), eq(attendance.date, dateStr))).returning();
+        const row = result[0] as (Row & { id: number }) | undefined;
+        if (!row) return row;
+        // Mirror into the DB-only `attendance_date`/`check_out_time` columns (see checkIn note
+        // above) so HR-rating/PIP/director-dashboard reads reflect the actual check-out.
+        await tx.execute(sql`UPDATE attendance SET attendance_date = COALESCE(attendance_date, ${dateStr}), check_out_time = ${now} WHERE id = ${row.id}`);
+        return { ...row, attendance_date: dateStr, check_out_time: now };
+      });
+      return Ok(updated as Row);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Chiqishda xatolik'); }
   }
 
