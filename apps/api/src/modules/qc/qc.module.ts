@@ -10,6 +10,7 @@ import { SubmitInspectionHandler } from './application/commands/submit-inspectio
 import { ReportDefectHandler } from './application/commands/report-defect.handler';
 import { ResolveDefectHandler } from './application/commands/resolve-defect.handler';
 import { CreateReclamationHandler } from './application/commands/create-reclamation.handler';
+import { ResolveReclamationHandler } from './application/commands/resolve-reclamation.handler';
 import { CreateInspectionHandler } from './application/commands/create-inspection.handler';
 import { GetInspectionsHandler } from './application/queries/get-inspections.handler';
 import { GetInspectionStatsHandler } from './application/queries/get-inspection-stats.handler';
@@ -71,6 +72,7 @@ const commandHandlers = [
   ReportDefectHandler,
   ResolveDefectHandler,
   CreateReclamationHandler,
+  ResolveReclamationHandler,
   CreateInspectionHandler,
 ];
 

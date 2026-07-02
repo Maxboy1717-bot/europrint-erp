@@ -49,12 +49,10 @@ export interface IQcDefectsExtendedRepo {
     notes: string | null,
   ): Promise<Result<Row>>;
   updateApproval(id: number, status: string, notes: string | null): Promise<Result<Row[]>>;
-  updateReclamation(
-    id: number,
-    status: string | null,
-    resolution: string | null,
-    root_cause_id: number | null,
-  ): Promise<Result<Row[]>>;
+  // NOTE: reclamation status/resolution updates moved to the CQRS command path
+  // (ResolveReclamationCommand, application/commands/resolve-reclamation.*) —
+  // the raw-SQL PATCH that used to live here wrote a `root_cause_id` column
+  // that does not exist on qc_reclamations and crashed on every call.
 }
 
 export const QC_DEFECTS_EXTENDED_REPO = Symbol('QC_DEFECTS_EXTENDED_REPO');

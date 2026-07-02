@@ -19,6 +19,7 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { safeInt } from '../../hr/common/db-rows';
 import { CreateReclamationCommand } from '../application/commands/create-reclamation.command';
 import { GetReclamationsQuery } from '../application/queries/get-reclamations.query';
 import { GetReclamationByIdQuery } from '../application/queries/get-reclamation-by-id.query';
@@ -66,9 +67,9 @@ export class QcReclamationsController {
     const result = await runQuery(sql`
       SELECT
         COUNT(*) FILTER (WHERE status = 'new') AS new_count,
-        COUNT(*) FILTER (WHERE status = 'in_progress') AS in_progress_count,
+        COUNT(*) FILTER (WHERE status = 'investigating') AS in_progress_count,
         COUNT(*) FILTER (WHERE status = 'resolved') AS resolved_count,
-        COUNT(*) FILTER (WHERE status = 'closed') AS closed_count,
+        COUNT(*) FILTER (WHERE status = 'rejected') AS closed_count,
         COUNT(*) AS total,
         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') AS last_30_days,
         ROUND(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/86400) FILTER (WHERE resolved_at IS NOT NULL), 1) AS avg_resolution_days
@@ -83,9 +84,9 @@ export class QcReclamationsController {
   @Get('reclamations/:id')
   async getReclamationById(@Param('id') id: string) {
 
-      const result = await this.queryBus.execute(new GetReclamationByIdQuery(id));
+      const result = await this.queryBus.execute(new GetReclamationByIdQuery(safeInt(id, 0)));
       return unwrapOrNotFoundDefined(result, 'Reclamation not found');
-    
+
   }
 
   @ApiOperation({ summary: 'Create reclamation' })

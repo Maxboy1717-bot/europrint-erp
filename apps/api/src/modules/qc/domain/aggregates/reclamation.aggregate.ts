@@ -7,17 +7,19 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { DefectSeverity } from './defect.aggregate';
 
+// Values match the canonical qc_reclamations.status CHECK (lib/db qc-schema.ts) —
+// the live DB column has no CHECK constraint but only these values are ever written.
 export enum ReclamationStatus {
-  OPEN = 'open',
+  NEW = 'new',
   INVESTIGATING = 'investigating',
   RESOLVED = 'resolved',
-  CLOSED = 'closed',
+  REJECTED = 'rejected',
 }
 
 export class Reclamation {
-  constructor(public readonly id: string,
+  constructor(public readonly id: number,
     public readonly customerName: string,
-    public readonly customerId: string | null,
+    public readonly customerId: number | null,
     public readonly orderId: string | null,
     public readonly description: string,
     public readonly severity: DefectSeverity,

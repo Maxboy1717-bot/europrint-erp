@@ -94,7 +94,6 @@ export type QcUpdateApprovalDto = z.infer<typeof QcUpdateApprovalSchema>;
 export const QcUpdateReclamationSchema = z.object({
   status:       z.string().optional(),
   resolution:   z.string().optional(),
-  root_cause_id: z.number().int().positive().optional(),
 });
 export type QcUpdateReclamationDto = z.infer<typeof QcUpdateReclamationSchema>;
 

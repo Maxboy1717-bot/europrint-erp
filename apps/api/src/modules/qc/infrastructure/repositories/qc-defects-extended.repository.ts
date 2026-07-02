@@ -266,11 +266,4 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
 
   }
 
-  async updateReclamation(id: number, status: string | null, resolution: string | null, root_cause_id: number | null): Promise<Result<Row[]>>  {
-  try {
-      return exec(sql`UPDATE qc_reclamations SET status = COALESCE(${status ?? null}, status), resolution = COALESCE(${resolution ?? null}, resolution), root_cause_id = COALESCE(${root_cause_id ?? null}, root_cause_id), updated_at = NOW() WHERE id = ${id} RETURNING *`);  } catch (_e) {
-    return Err(String(_e));
-  }
-
-  }
 }

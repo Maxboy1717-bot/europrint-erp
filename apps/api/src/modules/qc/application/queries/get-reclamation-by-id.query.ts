@@ -4,5 +4,5 @@
  */
 
 export class GetReclamationByIdQuery {
-  constructor(public readonly id: string) {}
+  constructor(public readonly id: number) {}
 }

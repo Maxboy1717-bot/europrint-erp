@@ -55,7 +55,4 @@ export class QcDefectsExtendedService {
     return this.repo.updateApproval(id, status, notes);
   }
 
-  async updateReclamation(id: number, status: string | null, resolution: string | null, root_cause_id: number | null) {
-    return this.repo.updateReclamation(id, status, resolution, root_cause_id);
-  }
 }

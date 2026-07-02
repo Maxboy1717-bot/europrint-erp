@@ -25,7 +25,7 @@ export interface IQcDefectRepository {
   saveDefect(defect: Defect): Promise<Result<Defect>>;
   updateDefect(defect: Defect): Promise<Result<Defect>>;
   getDefectStats(): Promise<Result<{ byStatus: Record<string, number>; bySeverity: Record<string, number>; totalQuantity: number; resolvedThisMonth: number }>>;
-  findReclamationById(id: string): Promise<Result<Reclamation | null>>;
+  findReclamationById(id: number): Promise<Result<Reclamation | null>>;
   findReclamations(filters: { status?: ReclamationStatus; severity?: DefectSeverity; from?: Date; to?: Date; page?: number; limit?: number }): Promise<Result<{ data: Reclamation[]; total: number }>>;
   saveReclamation(reclamation: Reclamation): Promise<Result<Reclamation>>;
   updateReclamation(reclamation: Reclamation): Promise<Result<Reclamation>>;
@@ -125,7 +125,7 @@ export class DrizzleDefectRepository implements IQcDefectRepository {
   }
 
   // ── Reclamation delegates ──────────────────────────────────────────────────
-  findReclamationById(id: string) { return this.reclamationRepo.findReclamationById(id); }
+  findReclamationById(id: number) { return this.reclamationRepo.findReclamationById(id); }
   findReclamations(filters: Record<string, unknown>) { return this.reclamationRepo.findReclamations(filters); }
   saveReclamation(r: Reclamation) { return this.reclamationRepo.saveReclamation(r); }
   updateReclamation(r: Reclamation) { return this.reclamationRepo.updateReclamation(r); }

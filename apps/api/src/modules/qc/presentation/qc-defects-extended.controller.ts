@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Query, UseGuards, Logger, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CommandBus } from '@nestjs/cqrs';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { QcDefectsExtendedService } from '../application/qc-defects-extended.service';
+import { ResolveReclamationCommand } from '../application/commands/resolve-reclamation.command';
 import {
   QcCreateBrakSchema, QcCreateBrakDto,
   QcCreateSupplierQualitySchema, QcCreateSupplierQualityDto,
@@ -37,7 +39,7 @@ const QC_FLOOR_ROLES = ['qc_inspector', 'operator', 'worker', 'QC_MANAGER', 'pro
 export class QcDefectsExtendedController {
   private readonly logger = new Logger(QcDefectsExtendedController.name);
 
-  constructor(private readonly svc: QcDefectsExtendedService) {}
+  constructor(private readonly svc: QcDefectsExtendedService, private readonly commandBus: CommandBus) {}
 
   @ApiOperation({ summary: 'List braks' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -183,15 +185,13 @@ export class QcDefectsExtendedController {
   @UsePipes(new ZodValidationPipe(QcUpdateReclamationSchema))
   @Roles(...QC_WRITE_ROLES)
   async updateReclamation(@Param('id') id: string, @Body() body: QcUpdateReclamationDto) {
-    const _rR = await this.svc.updateReclamation(
+    const cmd = new ResolveReclamationCommand(
       safeInt(id, 0),
       body.status != null ? String(body.status) : null,
       body.resolution != null ? String(body.resolution) : null,
-      body.root_cause_id != null ? safeInt(body.root_cause_id, 0) : null,
     );
+    const _rR = await this.commandBus.execute(cmd);
     assertOk(_rR);
-    const r = _rR.data;
-    assertFound(r, 'Reclamation not found');
-    return r[0];
+    return _rR.data;
   }
 }

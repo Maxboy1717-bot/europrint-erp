@@ -22,14 +22,16 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
       ) {}
 
   async execute(command: CreateReclamationCommand): Promise<Result<Reclamation>> {
+      // id=0 is a placeholder — the repository assigns the real serial id
+      // (qc_reclamations_id_seq) and returns the persisted entity below.
       const reclamation = new Reclamation(
-        this.generateId(),
+        0,
         command.customerName,
         command.customerId,
         command.orderId,
         command.description,
         command.severity,
-        ReclamationStatus.OPEN,
+        ReclamationStatus.NEW,
         _time.now(),
         null,
         null,
@@ -46,10 +48,6 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
       }
 
       this.logger.log('Reclamation created');
-      return Ok(reclamation);
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      return Ok(saveResult.data);
   }
 }
