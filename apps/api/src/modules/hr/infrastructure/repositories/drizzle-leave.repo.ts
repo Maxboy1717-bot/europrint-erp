@@ -30,9 +30,9 @@ export class LeaveRepository {
     }
   }
 
-  // NOTE: Raw SQL retained — dynamic WHERE with multi-filter conditionals (employeeId × status × leaveType ⇒ 8 branches),
-  // plus the Drizzle `leaveRequests` stub in schema-compat-2 omits real columns (manager_status, hr_status, director_status,
-  // manager_notes, hr_notes, director_notes) that `lr.*` returns. Converting would silently drop those fields.
+  // NOTE: Raw SQL retained — dynamic WHERE with multi-filter conditionals (employeeId × status × leaveType ⇒ 8 branches).
+  // (`leaveRequests` in schema-compat-2 is now the full canonical column set — see lib/db schema/leave.ts —
+  // this raw-SQL path stays for the dynamic-branch query shape, not for missing columns.)
   async findLeaves(filters: { employeeId?: string; status?: string; leaveType?: string; page?: number; limit?: number }): Promise<Result<{ items: unknown[]; total: number }>> {
     try {
       const page = filters.page ?? 1;

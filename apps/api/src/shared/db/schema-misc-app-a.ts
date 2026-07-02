@@ -84,28 +84,13 @@ export const hrDepartments = canonicalDepartments;
 
 export { shiftSchedules } from '@workspace/db';
 
-export const leaveRequestsApp = pgTable('leave_requests', {
-  id:               integer('id').primaryKey(),
-  employee_id:      integer('employee_id'),
-  leave_type:       varchar('leave_type'),
-  start_date:       date('start_date'),
-  end_date:         date('end_date'),
-  duration_days:    integer('duration_days'),
-  status:           varchar('status'),
-  reason:           text('reason'),
-  user_id:          integer('user_id'),
-  submitted_by:     integer('submitted_by'),
-  submitted_date:   timestamp('submitted_date'),
-  manager_status:   varchar('manager_status'),
-  manager_notes:    text('manager_notes'),
-  hr_status:        varchar('hr_status'),
-  hr_notes:         text('hr_notes'),
-  director_status:  varchar('director_status'),
-  director_notes:   text('director_notes'),
-  created_at:       timestamp('created_at'),
-  updated_at:       timestamp('updated_at'),
-  deleted_at:       timestamp('deleted_at'),
-});
+// leaveRequestsApp: re-exported from the same canonical `leave_requests` Drizzle
+// object as `leaveRequests` in schema-compat-2.ts (lib/db schema/leave.ts).
+// Previously a second, independent pgTable('leave_requests', ...) stub with a
+// snake_case field convention — two Drizzle objects for one physical table.
+// Consumers keep the `leaveRequestsApp` import name but now reference the
+// canonical camelCase columns (employeeId, leaveType, startDate, ... ).
+export { leaveRequests as leaveRequestsApp } from '@workspace/db';
 
 export const orgDepartments = pgTable('org_departments', {
   id: serial('id').primaryKey(),

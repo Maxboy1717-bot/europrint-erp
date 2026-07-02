@@ -82,9 +82,9 @@ export class ShiftRepository {
         .from(leaveRequestsApp)
         .where(
           and(
-            eq(leaveRequestsApp.employee_id, employeeId),
+            eq(leaveRequestsApp.employeeId, employeeId),
             eq(leaveRequestsApp.status, 'approved'),
-            sql`${shiftDate}::date BETWEEN ${leaveRequestsApp.start_date}::date AND ${leaveRequestsApp.end_date}::date`,
+            sql`${shiftDate}::date BETWEEN ${leaveRequestsApp.startDate}::date AND ${leaveRequestsApp.endDate}::date`,
           ),
         )
         .limit(1);

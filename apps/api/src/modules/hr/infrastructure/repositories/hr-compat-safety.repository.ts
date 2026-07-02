@@ -242,24 +242,24 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
     return safeCall(async () => {
       const rows = await db.select({
         id:           leaveRequestsApp.id,
-        employee_id:  leaveRequestsApp.employee_id,
-        leave_type:   leaveRequestsApp.leave_type,
-        start_date:   leaveRequestsApp.start_date,
-        end_date:     leaveRequestsApp.end_date,
+        employee_id:  leaveRequestsApp.employeeId,
+        leave_type:   leaveRequestsApp.leaveType,
+        start_date:   leaveRequestsApp.startDate,
+        end_date:     leaveRequestsApp.endDate,
         reason:       leaveRequestsApp.reason,
         status:       leaveRequestsApp.status,
-        created_at:   leaveRequestsApp.created_at,
-        updated_at:   leaveRequestsApp.updated_at,
+        created_at:   leaveRequestsApp.createdAt,
+        updated_at:   leaveRequestsApp.updatedAt,
         employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
       })
         .from(leaveRequestsApp)
-        .leftJoin(hrEmployees, eq(hrEmployees.id, leaveRequestsApp.employee_id))
+        .leftJoin(hrEmployees, eq(hrEmployees.id, leaveRequestsApp.employeeId))
         .where(sql`
-          (${employeeId ?? null}::int IS NULL OR ${leaveRequestsApp.employee_id} = ${employeeId ?? null}) AND
+          (${employeeId ?? null}::int IS NULL OR ${leaveRequestsApp.employeeId} = ${employeeId ?? null}) AND
           (${status ?? null}::text IS NULL OR ${leaveRequestsApp.status} = ${status ?? null}) AND
-          ${leaveRequestsApp.deleted_at} IS NULL
+          ${leaveRequestsApp.deletedAt} IS NULL
         `)
-        .orderBy(sql`${leaveRequestsApp.created_at} DESC`)
+        .orderBy(sql`${leaveRequestsApp.createdAt} DESC`)
         .limit(100);
       return castTo<Row[]>(rows);
       }, 'DB_ERROR');

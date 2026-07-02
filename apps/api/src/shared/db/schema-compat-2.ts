@@ -11,6 +11,7 @@ import { sales_invoices as canonicalSalesInvoices } from './schema-business-c-2-
 import { sd_leads as canonicalSdLeads } from './schema-ext-b-2';
 import { payroll_periods_hr as canonicalPayrollPeriods } from './schema-business-c-2-hr-payroll';
 import { purchase_orders as canonicalPurchaseOrders } from './schema-wms';
+import { leaveRequests as canonicalLeaveRequests } from '@workspace/db';
 
 // payroll_periods: re-exported from canonical definition in schema-business-c-2-hr-payroll.ts
 export const payrollPeriods = canonicalPayrollPeriods;
@@ -39,21 +40,13 @@ export const attendance = pgTable('attendance', {
   createdAt: ts('created_at').defaultNow(),
 });
 
-export const leaveRequests = pgTable('leave_requests', {
-  id: integer('id').primaryKey(),
-  userId: integer('user_id'),
-  employeeId: text('employee_id').notNull(),
-  leaveType: text('leave_type').notNull(),
-  startDate: text('start_date').notNull(),
-  endDate: text('end_date').notNull(),
-  status: text('status').notNull().default('pending'),
-  reason: text('reason'),
-  approvedBy: text('approved_by'),
-  approvedAt: ts('approved_at'),
-  createdAt: ts('created_at').defaultNow(),
-  updatedAt: ts('updated_at').defaultNow(),
-  deletedAt: ts('deleted_at'),
-});
+// leaveRequests: re-exported from canonical definition in lib/db (schema/leave.ts).
+// Previously a hand-rolled stub with wrong types (employeeId/approvedBy as text
+// instead of integer) that also omitted real DB columns (manager_status, hr_status,
+// director_status, manager_notes, hr_notes, director_notes, totalDays, tenantId, ...)
+// — the same physical `leave_requests` table had TWO divergent Drizzle objects
+// (this one + leaveRequestsApp in schema-misc-app-a.ts). Unified into one object.
+export const leaveRequests = canonicalLeaveRequests;
 
 // departments / positions: re-exported from canonical schema-hr-lms.ts
 export const departments = canonicalDepartments;

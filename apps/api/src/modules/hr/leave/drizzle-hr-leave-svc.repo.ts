@@ -47,7 +47,7 @@ export class DrizzleHrLeaveSvcRepository implements IHrLeaveSvcRepository {
   async create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
       const row: Omit<typeof leaveRequests.$inferInsert, 'id'> = {
-        employeeId: (dto.employeeId as string | undefined) ?? '',
+        employeeId: Number(dto.employeeId ?? dto.userId ?? 0),
         leaveType: (dto.leaveType as string | undefined) ?? 'annual',
         startDate: (dto.startDate as string | undefined) ?? '',
         endDate: (dto.endDate as string | undefined) ?? '',
