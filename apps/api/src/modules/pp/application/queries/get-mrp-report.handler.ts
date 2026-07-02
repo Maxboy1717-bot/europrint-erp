@@ -6,7 +6,7 @@
 import { safeNum } from '@common/math';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { db, production_orders, boms, stock_items } from '@shared/db';
+import { db, production_orders_int, boms_int, stock_items } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 import { Result } from '@common/types/result.type';
 import { GetMrpReportQuery } from './get-mrp-report.query';
@@ -20,12 +20,14 @@ export class GetMrpReportHandler implements IQueryHandler<GetMrpReportQuery> {
       let orders: unknown[] = [];
 
       if (query.filters.productionOrderId) {
-        const [order] = await db.select().from(production_orders).where(eq(production_orders.id, query.filters.productionOrderId)).limit(1);
+        // production_orders.id is INTEGER in the live DB (not UUID) — coerce the
+        // string filter to a number so the comparison matches the real PK type.
+        const [order] = await db.select().from(production_orders_int).where(eq(production_orders_int.id, Number(query.filters.productionOrderId))).limit(1);
         if (order) {
           orders = [order];
         }
       } else {
-        orders = await db.select().from(production_orders).where(sql`${production_orders.status} != 'completed' AND ${production_orders.status} != 'cancelled'`);
+        orders = await db.select().from(production_orders_int).where(sql`${production_orders_int.status} != 'completed' AND ${production_orders_int.status} != 'cancelled'`);
       }
 
       const shortage = [];
@@ -34,8 +36,8 @@ export class GetMrpReportHandler implements IQueryHandler<GetMrpReportQuery> {
         const order = _order as Record<string, unknown>;
         let bom: Record<string, unknown> | null = null;
 
-        if (order.bom_id) {
-          const [bomRow] = await db.select().from(boms).where(eq(boms.id, String(order.bom_id))).limit(1);
+        if (order.bomId) {
+          const [bomRow] = await db.select().from(boms_int).where(eq(boms_int.id, Number(order.bomId))).limit(1);
           bom = bomRow ? (bomRow as Record<string, unknown>) : null;
         }
 
@@ -54,7 +56,7 @@ export class GetMrpReportHandler implements IQueryHandler<GetMrpReportQuery> {
           if (shortfall > 0) {
             shortage.push({
               productionOrderId: order.id,
-              productionOrderNumber: order.order_number,
+              productionOrderNumber: order.orderNumber,
               bom: bom.product_name,
               bomItem: bomItem.sku || bomItem.name,
               itemName: stockRow?.name || bomItem.name,

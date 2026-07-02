@@ -5,7 +5,7 @@
 
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { db, production_orders } from '@shared/db';
+import { db, production_orders_int } from '@shared/db';
 import { eq, and, gte, lte, sql, desc } from 'drizzle-orm';
 import { Result, PaginatedResult } from '@common/types/result.type';
 import { GetProductionOrdersQuery } from './get-production-orders.query';
@@ -23,29 +23,29 @@ export class GetProductionOrdersHandler implements IQueryHandler<GetProductionOr
       const conditions: import('drizzle-orm').SQL<unknown>[] = [];
 
       if (query.filters.status) {
-        conditions.push(sql`${production_orders.status} = ${String(query.filters.status)}`);
+        conditions.push(sql`${production_orders_int.status} = ${String(query.filters.status)}`);
       }
 
       if (query.filters.salesOrderId) {
-        conditions.push(sql`${production_orders.sales_order_id} = ${query.filters.salesOrderId}`);
+        conditions.push(sql`${production_orders_int.salesOrderId} = ${query.filters.salesOrderId}`);
       }
 
       if (query.filters.from) {
-        conditions.push(sql`${production_orders.scheduled_start} >= ${query.filters.from}`);
+        conditions.push(sql`${production_orders_int.scheduledStart} >= ${query.filters.from}`);
       }
 
       if (query.filters.to) {
-        conditions.push(sql`${production_orders.scheduled_end} <= ${query.filters.to}`);
+        conditions.push(sql`${production_orders_int.scheduledEnd} <= ${query.filters.to}`);
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;
 
       const total = await db
         .select({ count: sql<number>`count(*)` })
-        .from(production_orders)
+        .from(production_orders_int)
         .where(where);
 
-      const items = await db.select().from(production_orders).where(where).orderBy(desc(production_orders.created_at)).limit(limit).offset(offset);
+      const items = await db.select().from(production_orders_int).where(where).orderBy(desc(production_orders_int.createdAt)).limit(limit).offset(offset);
 
       const paginatedResult: PaginatedResult<Record<string, unknown>> = {
         items,

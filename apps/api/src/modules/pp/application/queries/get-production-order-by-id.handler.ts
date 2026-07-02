@@ -5,7 +5,7 @@
 
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { db, production_orders } from '@shared/db';
+import { db, production_orders_int } from '@shared/db';
 import { eq } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/types/result.type';
 import { GetProductionOrderByIdQuery } from './get-production-order-by-id.query';
@@ -19,10 +19,12 @@ export class GetProductionOrderByIdHandler
 
   async execute(query: GetProductionOrderByIdQuery): Promise<Result<Record<string, unknown>>> {
     try {
+      // production_orders.id is INTEGER in the live DB (not UUID) — compare directly
+      // against the numeric query.id instead of coercing to a string.
       const rows = await db
         .select()
-        .from(production_orders)
-        .where(eq(production_orders.id, String(query.id)))
+        .from(production_orders_int)
+        .where(eq(production_orders_int.id, query.id))
         .limit(1);
 
       const row = rows[0];
