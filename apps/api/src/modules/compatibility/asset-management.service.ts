@@ -86,8 +86,10 @@ export class AssetManagementService {
     const byStatus: Record<string, number>   = {};
     const byCategory: Record<string, number> = {};
     for (const a of all) {
-      byStatus[a.status]     = (byStatus[a.status] ?? 0) + 1;
-      byCategory[a.category] = (byCategory[a.category] ?? 0) + 1;
+      const status   = a.status ?? 'unknown';
+      const category = a.category ?? 'unknown';
+      byStatus[status]     = (byStatus[status] ?? 0) + 1;
+      byCategory[category] = (byCategory[category] ?? 0) + 1;
     }
     return Ok({ total: all.length, byStatus, byCategory, updatedAt: _time.now().toISOString() });
   }
