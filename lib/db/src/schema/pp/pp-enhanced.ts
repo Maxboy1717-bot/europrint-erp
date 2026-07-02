@@ -10,7 +10,6 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, unitOfMeasures, users } from "../core-schema";
 import { materialCategories, materialKits, rawMaterials } from "../mm-schema";
-import { qcMaterialTests } from "../qc-schema";
 import { warehouses } from "../wms-schema";
 import { equipment, products } from "./pp-production";
 import { papkaOrders } from "./pp-papka";
@@ -319,42 +318,8 @@ export type ProductMaster = typeof productMasters.$inferSelect;
 export const insertProductMasterSchema = createInsertSchema(productMasters).omit({ id: true, createdAt: true, updatedAt: true } as never);
 export type InsertProductMaster = z.infer<typeof insertProductMasterSchema>;
 
-// Order Approvals (Buyurtma tasdiqlash tarixi)
-export const orderApprovals = pgTable("order_approvals", {
-  id: serial("id").primaryKey(),
-  orderId: varchar("order_id").notNull().references(() => papkaOrders.id, { onDelete: "cascade" }),
-  stage: varchar("stage", { length: 30 }).notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("pending"),
-  approvedBy: integer("approved_by"),
-  approvedAt: timestamp("approved_at"),
-  stageData: jsonb("stage_data"),
-  designFileUrl: text("design_file_url"),
-  designVersion: varchar("design_version", { length: 20 }),
-  bomApproved: boolean("bom_approved"),
-  routingApproved: boolean("routing_approved"),
-  techCardApproved: boolean("tech_card_approved"),
-  qcTestId: varchar("qc_test_id").references(() => qcMaterialTests.id, { onDelete: "set null" }),
-  materialApproved: boolean("material_approved"),
-  advancePercentage: numericMoney("advance_percentage"),
-  advanceAmount: numericMoney("advance_amount"),
-  creditLimitOk: boolean("credit_limit_ok"),
-  debtStatusOk: boolean("debt_status_ok"),
-  comments: text("comments"),
-  rejectionReason: text("rejection_reason"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-}, (t) => [
-  check("order_approvals_stage_chk", sql`${t.stage} IN ('design','technical','qc','finance')`),
-  check("order_approvals_status_chk", sql`${t.status} IN ('pending','approved','rejected','revision_requested')`),
-]);
-
-export const insertOrderApprovalSchema = createInsertSchema(orderApprovals, {
-  stage: z.enum(["design", "technical", "qc", "finance"]),
-  status: z.enum(["pending", "approved", "rejected", "revision_requested"]),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type OrderApproval = typeof orderApprovals.$inferSelect;
-export type InsertOrderApproval = z.infer<typeof insertOrderApprovalSchema>;
+// NOTE: order_approvals jadvali kod-darajasida ulanmagan (dead) — Drizzle e'loni
+// olib tashlandi (2026-07-02). Jadvalning o'zi DB'da qoladi (Q-39: DROP TABLE yo'q).
 
 // Waste Records
 export const wasteRecords = pgTable("waste_records", {
