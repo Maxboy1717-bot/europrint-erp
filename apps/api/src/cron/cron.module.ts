@@ -45,6 +45,9 @@ import { CkpDailyAggregateCron } from './ckp-daily-aggregate.cron'
 import { CardRepository } from '../modules/org-structure/card.repository'
 import { CkpFactRepository } from '../modules/org-structure/ckp-fact.repository'
 import { CronStatusService } from './cron-status.service'
+// A4 (vizyon) — har xodim kunlik ishlagan-pul PDF (19:00); HrPdfGeneratorService = standalone (pdf-lib, deps yo'q)
+import { EmployeeDailyInvoiceCron } from './employee-daily-invoice.cron'
+import { HrPdfGeneratorService } from '../common/pdf/hr-pdf-generator.service'
 import { AbsenceBlockRepository } from './repositories/absence-block.repository'
 import { EnpsCronRepository } from './repositories/enps-cron.repository'
 import { DataRetentionRepository } from './repositories/data-retention.repository'
@@ -100,6 +103,10 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     RetentionCron,
     // Kanban — takrorlanuvchi kartalar yaratish (har kuni 07:00)
     KanbanRecurringCron,
+    // A4 (vizyon) — har xodim kunlik ishlagan-pul PDF (har kuni 19:00 Toshkent):
+    // uskunachi = production_fact real data, boshqa xodim = base_salary/oy-ish-kunlari
+    EmployeeDailyInvoiceCron,
+    HrPdfGeneratorService,
     // Cron repositories (Drizzle ORM)
     AbsenceBlockRepository,
     EnpsCronRepository,

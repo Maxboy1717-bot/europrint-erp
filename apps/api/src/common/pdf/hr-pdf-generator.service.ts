@@ -21,6 +21,19 @@ interface OperatorInvoicePayload {
   posDebtUzs: number;
 }
 
+/**
+ * Vizyon A4: uskunada ishlamaydigan xodim (ofis/farrosh/dizayner) uchun kunlik
+ * "ishlagan pul" = oylik (base_salary) / oy ish kunlari — kunlik ulush.
+ */
+interface DailyEarningsPayload {
+  fullName: string;
+  positionName: string | null;
+  date: Date;
+  baseSalaryUzs: number;
+  workDaysPerMonth: number;
+  dailyEarnedUzs: number;
+}
+
 interface MonthlyCardPayload {
   fullName: string;
   positionName: string | null;
@@ -41,6 +54,12 @@ interface MonthlyCardPayload {
 export class HrPdfGeneratorService {
   private readonly logger = new Logger(HrPdfGeneratorService.name);
 
+  /**
+   * Vizyon A4 — uskunachi kunlik "ishlagan pul" PDF: REAL ishlab chiqarish natijasi
+   * (production_fact) + soatlik tarif. Kunlik jami summa formulasi (dona x tarif yoki
+   * soat x tarif) EGASI-DATA — tasdiqlangunga qadar jami summa FABRIKATSIYA QILINMAYDI,
+   * faqat real natija va tarif ko'rsatiladi.
+   */
   async generateOperatorInvoice(payload: OperatorInvoicePayload): Promise<Buffer> {
     const pdf = await PDFDocument.create();
     const page = pdf.addPage([595, 842]);  // A4
@@ -60,9 +79,9 @@ export class HrPdfGeneratorService {
       y -= (opts?.size ?? 11) + 6;
     };
 
-    draw('EuroPrint — Operator Hourly Invoice', { bold: true, size: 18 });
+    draw('EuroPrint — Kunlik Ishlagan-Pul Hisoboti (uskunachi)', { bold: true, size: 18 });
     y -= 6;
-    draw(`${this.fmtDate(payload.periodEnd)} ${payload.periodEnd.getHours()}:00`, { size: 10, color: rgb(0.4, 0.4, 0.4) });
+    draw(this.fmtDate(payload.periodEnd), { size: 10, color: rgb(0.4, 0.4, 0.4) });
     y -= 10;
     draw(`Xodim:    ${payload.fullName}`, { bold: true });
     draw(`Lavozim:  ${payload.positionName ?? '-'}`);
@@ -76,6 +95,48 @@ export class HrPdfGeneratorService {
     if (payload.posDebtUzs < 0) {
       draw(`  POS qarz:           ${Math.abs(payload.posDebtUzs).toLocaleString('en-US')} UZS`, { color: rgb(0.8, 0, 0) });
     }
+    y -= 20;
+    draw(`Hisobot: ${this.fmtDateTime(new Date())}`, { size: 9, color: rgb(0.5, 0.5, 0.5) });
+
+    const bytes = await pdf.save();
+    return Buffer.from(bytes);
+  }
+
+  /**
+   * Vizyon A4 — uskunada ishlamaydigan xodim kunlik "ishlagan pul" PDF:
+   * kunlik ulush = oylik (base_salary) / oy ish kunlari (egasi formulasi, §17 A4).
+   */
+  async generateDailyEarnings(payload: DailyEarningsPayload): Promise<Buffer> {
+    const pdf = await PDFDocument.create();
+    const page = pdf.addPage([595, 842]);  // A4
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+    let y = 800;
+    const draw = (text: string, opts?: { x?: number; bold?: boolean; size?: number; color?: ReturnType<typeof rgb> }) => {
+      page.drawText(text, {
+        x: opts?.x ?? 50, y,
+        size: opts?.size ?? 11,
+        font: opts?.bold ? bold : font,
+        color: opts?.color ?? rgb(0, 0, 0),
+      });
+      y -= (opts?.size ?? 11) + 6;
+    };
+
+    draw('EuroPrint — Kunlik Ishlagan-Pul Hisoboti', { bold: true, size: 18 });
+    y -= 6;
+    draw(this.fmtDate(payload.date), { size: 10, color: rgb(0.4, 0.4, 0.4) });
+    y -= 10;
+    draw(`Xodim:    ${payload.fullName}`, { bold: true });
+    draw(`Lavozim:  ${payload.positionName ?? '-'}`);
+    y -= 10;
+    draw('Hisob-kitob (oylik / oy ish kunlari):', { bold: true, size: 13 });
+    draw(`  Oylik (baza):       ${payload.baseSalaryUzs.toLocaleString('en-US')} UZS`);
+    draw(`  Oy ish kunlari:     ${payload.workDaysPerMonth} kun`);
+    y -= 6;
+    draw(`  KUNLIK ULUSH:       ${Math.round(payload.dailyEarnedUzs).toLocaleString('en-US')} UZS`, {
+      bold: true, size: 13, color: rgb(0, 0.4, 0),
+    });
     y -= 20;
     draw(`Hisobot: ${this.fmtDateTime(new Date())}`, { size: 9, color: rgb(0.5, 0.5, 0.5) });
 
