@@ -7,9 +7,8 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { createId } from '@paralleldrive/cuid2';
 import { Result } from '@common/result';
-import { IWmsRepository, WMS_REPO } from '../../domain/repositories/wms.repository';
+import { IWmsRepository, WMS_REPO, CreateWarehouseInput } from '../../domain/repositories/wms.repository';
 import { CreateWarehouseCommand } from './create-warehouse.command';
 
 @Injectable()
@@ -19,9 +18,8 @@ export class CreateWarehouseHandler implements ICommandHandler<CreateWarehouseCo
 
   constructor(@Inject(WMS_REPO) private readonly repo: IWmsRepository) {}
 
-  async execute(command: CreateWarehouseCommand): Promise<Result<Record<string, unknown>>> {
-      const warehouse = {
-        id: createId(),
+  async execute(command: CreateWarehouseCommand): Promise<Result<CreateWarehouseInput & { id: number }>> {
+      const warehouse: CreateWarehouseInput = {
         name: command.name,
         address: command.address,
         is_free_storage: command.isFreeStorage || false,
@@ -32,10 +30,11 @@ export class CreateWarehouseHandler implements ICommandHandler<CreateWarehouseCo
         created_at: _time.now(),
       };
 
+      // `id` is DB-generated (integer serial) — the repo returns it via RETURNING.
       const result = await this.repo.createWarehouse(warehouse);
       if (!result.ok) return { ok: false, error: result.error };
 
-      this.logger.log(`Warehouse created: ${warehouse.id}`);
-      return { ok: true, data: warehouse };
+      this.logger.log(`Warehouse created: ${result.data.id}`);
+      return { ok: true, data: result.data };
   }
 }

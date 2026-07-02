@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
+import { pgTable, uuid, varchar, text, boolean, decimal, integer, createId, ts, serial } from './schema-compat-helpers';
 import { budgets as canonicalBudgets } from './schema-finance-budgets';
 import { accounts as canonicalAccounts } from './schema-ext-b-1';
 import { departments as canonicalDepartments, positions as canonicalPositions } from './schema-hr-lms';
@@ -152,16 +152,35 @@ export const vendors = pgTable('vendors', {
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
+  // APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — additive columns, live
+  // DB already has these (information_schema-verified); previously unmapped
+  // so MM readers (get-vendors.handler.ts, drizzle-mm.repo.ts) couldn't
+  // select/update them via this table.
+  tin: text('tin'),
+  paymentTerms: varchar('payment_terms', { length: 50 }),
+  rating: decimal('rating', { precision: 3, scale: 2 }),
 });
 
 export const warehouses = pgTable('warehouses', {
-  id: integer('id').primaryKey(),
+  // `serial()` (not plain `integer()`) so `id` is optional on INSERT,
+  // matching the live DB's `nextval('warehouses_id_seq')` default.
+  id: serial('id').primaryKey(),
   name: text('name').notNull(),
   code: text('code').unique(),
   location: text('location'),
   type: text('type').default('main'),
   isActive: boolean('is_active').default(true),
   createdAt: ts('created_at').defaultNow(),
+  // APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — additive columns, live
+  // DB already has these (information_schema-verified); previously unmapped
+  // so WMS readers/writers (get-warehouses.handler.ts, drizzle-wms.repo.ts,
+  // create-warehouse.handler.ts) couldn't select/insert them via this table.
+  address: text('address'),
+  isFreeStorage: boolean('is_free_storage').default(false),
+  freeStorageDays: integer('free_storage_days').default(30),
+  monthlyRate: decimal('monthly_rate', { precision: 15, scale: 2 }),
+  deletedAt: ts('deleted_at'),
+  deletedBy: integer('deleted_by'),
 });
 
 export const warehouseZones = pgTable('warehouse_zones', {

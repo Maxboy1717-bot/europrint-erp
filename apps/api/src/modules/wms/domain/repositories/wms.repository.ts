@@ -9,8 +9,10 @@ import type { DrizzleExecutor } from '../../../../common/types/drizzle.types';
 import type { IssuableBatchLot } from '../services/batch-selection.service';
 export type { DrizzleExecutor };
 
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `warehouses`.id is an
+// INTEGER serial (nextval sequence), not a client-generated uuid/cuid. The
+// caller no longer supplies `id`; the DB assigns it and the repo returns it.
 export interface CreateWarehouseInput {
-  id: string;
   name: string;
   address: string | null;
   is_free_storage: boolean;
@@ -137,9 +139,10 @@ export interface IWmsRepository {
   ): Promise<Result<T>>;
 
   /**
-   * Inserts a warehouse row. Handler stays SQL-free (PA1-10).
+   * Inserts a warehouse row. Handler stays SQL-free (PA1-10). Returns the
+   * input plus the DB-generated integer `id` (RETURNING id).
    */
-  createWarehouse(input: CreateWarehouseInput): Promise<Result<CreateWarehouseInput>>;
+  createWarehouse(input: CreateWarehouseInput): Promise<Result<CreateWarehouseInput & { id: number }>>;
 }
 
 /**

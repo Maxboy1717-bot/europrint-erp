@@ -11,10 +11,13 @@
  */
 
 import { date } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, boolean, decimal, integer, varchar, jsonb, createId, ts } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, varchar, jsonb, createId, ts, serial } from './schema-compat-helpers';
 
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — `id` uses `serial()` (not
+// plain `integer()`) so Drizzle marks it optional on INSERT, matching the
+// live DB's `nextval('users_id_seq')` default (no app-side id generation).
 export const users = pgTable('users', {
-  id: integer('id').primaryKey(),
+  id: serial('id').primaryKey(),
   email: text('email').notNull(),
   username: text('username').notNull(),
   passwordHash: text('password_hash').notNull(),

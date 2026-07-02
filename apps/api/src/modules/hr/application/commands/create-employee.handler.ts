@@ -29,7 +29,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
-import { db, hrEmployees, users } from '@shared/db';
+import { db, hrEmployees } from '@shared/db';
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `users`.id is INTEGER
+// (serial), not the uuid PK schema-core.ts declares (see schema-compat-1a.ts).
+import { users } from '@shared/db/schema-compat-1a';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { TashkentTimeService } from '@common/time';
 import { CreateEmployeeCommand } from './create-employee.command';
@@ -41,8 +44,8 @@ interface CreatedEmployee {
   employeeCode: string;
   firstName: string;
   lastName: string;
-  /** UUID of the linked auth user; null when no account was requested. */
-  userId: string | null;
+  /** Integer id of the linked auth user (users.id); null when no account was requested. */
+  userId: number | null;
 }
 
 /**
@@ -73,16 +76,17 @@ export class CreateEmployeeHandler
       outcome = await db.transaction(async (tx): Promise<TxOutcome> => {
         // 1) Optional user account — must come first so the FK from
         //    employees.user_id can be set on the employee INSERT.
-        let userId: string | null = null;
+        let userId: number | null = null;
         if (cmd.createUserAccount) {
           const userInsert = await tx
             .insert(users)
             .values({
-              email:         cmd.emailWork ?? `${cmd.createUserAccount.username}@local`,
-              password_hash: cmd.createUserAccount.passwordHash,
-              full_name:     `${cmd.firstName} ${cmd.lastName}`.trim(),
-              role:          cmd.createUserAccount.role as never,
-              is_active:     true,
+              email:        cmd.emailWork ?? `${cmd.createUserAccount.username}@local`,
+              username:     cmd.createUserAccount.username,
+              passwordHash: cmd.createUserAccount.passwordHash,
+              fullName:     `${cmd.firstName} ${cmd.lastName}`.trim(),
+              role:         cmd.createUserAccount.role as never,
+              isActive:     true,
             } as typeof users.$inferInsert)
             .returning({ id: users.id });
           const u = userInsert[0];
@@ -91,7 +95,7 @@ export class CreateEmployeeHandler
             // Return err so the tx auto-rolls-back without an exception stack.
             return { kind: 'err' as const, message: 'CreateEmployee: user INSERT returned no row' };
           }
-          userId = u.id as string;
+          userId = u.id;
         }
 
         // 2) Employee row.

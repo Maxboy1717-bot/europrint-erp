@@ -6,7 +6,10 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
-import { db, purchase_orders, vendors } from '@shared/db';
+import { db } from '@shared/db';
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `purchase_orders`.id/vendor_id
+// are INTEGER, not the uuid PK schema-wms.ts declares (see schema-compat-mm-po-intpk.ts).
+import { purchase_orders } from '@shared/db/schema-compat-mm-po-intpk';
 import { and, count, sql } from 'drizzle-orm';
 import { GetPurchaseOrdersQuery } from './get-purchase-orders.query';
 

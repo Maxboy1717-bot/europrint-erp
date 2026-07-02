@@ -14,7 +14,13 @@ import { Material } from '../../domain/aggregates/material.aggregate';
 import { PurchaseOrder } from '../../domain/aggregates/purchase-order.aggregate';
 import { IMmRepository, DrizzleExecutor } from '../../domain/repositories/mm.repository';
 import { db , runQuery } from '@shared/db';
-import { materials, purchase_orders, purchase_orders_legacy, vendors } from '@shared/db';
+import { materials, purchase_orders_legacy } from '@shared/db';
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `purchase_orders`.id is
+// INTEGER, not the uuid PK schema-wms.ts declares (see schema-compat-mm-po-intpk.ts).
+import { purchase_orders } from '@shared/db/schema-compat-mm-po-intpk';
+// live `vendors`.id is also INTEGER — schema-compat-2.ts's `vendors` already has
+// the correct integer id (plus the `rating` column updateVendorRating() needs).
+import { vendors } from '@shared/db/schema-compat-2';
 import { execMmMaterialInsert } from '@common/database/queries-remaining';
 import { MM_THREE_WAY_MATCH_TOLERANCE } from '@common/constants/business.constants';
 
@@ -118,7 +124,7 @@ export class DrizzleMmRepository implements IMmRepository {
   async getPurchaseOrder(id: number, tx?: DrizzleExecutor): Promise<Result<PurchaseOrder>> {
     try {
       const exec = asExec(tx);
-      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, String(id))).limit(1);
+      const rows = await exec.select().from(purchase_orders).where(eq(purchase_orders.id, id)).limit(1);
       const row = rows[0] as DbRow | undefined;
       if (!row) return Err('PO topilmadi');
       return Ok(new PurchaseOrder(row['id'] as number, String(row['po_number'] ?? ''), row['vendor_id'] as number, Number(row['created_by'] ?? 0)));
@@ -154,9 +160,9 @@ export class DrizzleMmRepository implements IMmRepository {
 
   async recordGoodsReceipt(poId: number, _quantity: number): Promise<Result<void>> {
     try {
-      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
+      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, poId)).limit(1);
       if (!rows[0]) return Err('PO topilmadi');
-      await db.update(purchase_orders).set({ goods_received_at: _time.now() }).where(eq(purchase_orders.id, String(poId)));
+      await db.update(purchase_orders).set({ goods_received_at: _time.now() }).where(eq(purchase_orders.id, poId));
       return Ok(undefined);
     } catch (error: unknown) {
       this.logger.error('Failed to record goods receipt');
@@ -166,9 +172,9 @@ export class DrizzleMmRepository implements IMmRepository {
 
   async recordInvoice(poId: number, _quantity: number): Promise<Result<void>> {
     try {
-      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, String(poId))).limit(1);
+      const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, poId)).limit(1);
       if (!rows[0]) return Err('PO topilmadi');
-      await db.update(purchase_orders).set({ invoice_matched: true }).where(eq(purchase_orders.id, String(poId)));
+      await db.update(purchase_orders).set({ invoice_matched: true }).where(eq(purchase_orders.id, poId));
       return Ok(undefined);
     } catch (error: unknown) {
       this.logger.error('Failed to record invoice');
@@ -266,7 +272,7 @@ export class DrizzleMmRepository implements IMmRepository {
 
   async updateVendorRating(supplierId: number, newRating: number): Promise<Result<void>> {
     try {
-      await db.update(vendors).set({ rating: String(newRating) }).where(eq(vendors.id, String(supplierId)));
+      await db.update(vendors).set({ rating: String(newRating) }).where(eq(vendors.id, supplierId));
       return Ok(undefined);
     } catch (error: unknown) {
       this.logger.error('Failed to update vendor rating');

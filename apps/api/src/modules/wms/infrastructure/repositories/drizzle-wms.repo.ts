@@ -10,7 +10,12 @@ import { castTo } from '@common/db-rows';
 import { AppErr, Err, Ok } from '@common/result';
 import { Database } from '@/infrastructure/database/database';
 import { Result } from '@common/result';
-import { db, warehouses } from '@shared/db';
+import { db } from '@shared/db';
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — live `warehouses`.id is
+// INTEGER (serial), not the uuid PK schema-wms.ts declares. schema-compat-2.ts's
+// `warehouses` already has the correct integer id + the address/isFreeStorage/
+// freeStorageDays/monthlyRate columns createWarehouse() below needs.
+import { warehouses } from '@shared/db/schema-compat-2';
 import { sql, eq, isNull, and } from 'drizzle-orm';
 import { wms_stock } from '@shared/db/schema-compat-5';
 import { BATCH_ISSUABLE_QUALITY_STATUSES } from '../../domain/constants/wms-batch-issue.constants';
@@ -378,18 +383,20 @@ export class DrizzleWmsRepository implements IWmsRepository {
     }
   }
 
-  async createWarehouse(input: CreateWarehouseInput): Promise<Result<CreateWarehouseInput>> {
+  async createWarehouse(input: CreateWarehouseInput): Promise<Result<CreateWarehouseInput & { id: number }>> {
     try {
-      await db.insert(warehouses).values({
-        id: input.id,
+      // `id` is a DB-generated serial (nextval) — never supplied on insert.
+      const inserted = await db.insert(warehouses).values({
         name: input.name,
         address: input.address,
-        is_free_storage: input.is_free_storage,
-        free_storage_days: input.free_storage_days,
-        monthly_rate: input.monthly_rate,
-        created_at: input.created_at,
-      });
-      return Ok(input);
+        isFreeStorage: input.is_free_storage,
+        freeStorageDays: input.free_storage_days,
+        monthlyRate: input.monthly_rate,
+        createdAt: input.created_at,
+      }).returning({ id: warehouses.id });
+      const id = inserted[0]?.id;
+      if (id == null) return Err(AppErr('DB_ERROR', 'Warehouse yaratishda xato: id qaytarilmadi'));
+      return Ok({ ...input, id });
     } catch (e) {
       this.logger.error({ method: 'createWarehouse', error: e }, 'Failed to insert warehouse');
       return Err(AppErr('DB_ERROR', `Warehouse yaratishda xato: ${(e as Error)?.message ?? String(e)}`));
