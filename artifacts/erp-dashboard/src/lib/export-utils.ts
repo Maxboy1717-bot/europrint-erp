@@ -1,9 +1,79 @@
 /**
  * @module export-utils
- * @description Frontend utility / library module.
+ * @description Frontend utility / library module. Client-side export helpers
+ *   (CSV/JSON/Excel/PDF) used by list/report pages. Every export is role-gated
+ *   (hujjat-eksport-cheklash, egasi 2026-07-02): only
+ *   super_admin/admin/director/manager may export — the single gate here covers
+ *   every page that calls these helpers.
  */
 
+import { queryClient } from "@/lib/queryClient";
+import { toast } from "@/hooks/use-toast";
+
+/** BE storage.controller.ts DOWNLOAD_ALLOWED_ROLES bilan bir xil to'plam. */
+const EXPORT_ALLOWED_ROLES = new Set(["super_admin", "admin", "director", "manager"]);
+
+/** Fallback-kesh: react-query keshida user bo'lmasa /api/auth/me dan bir marta olinadi. */
+let fetchedRole: string | null = null;
+let roleFetchInFlight = false;
+
+/**
+ * Joriy foydalanuvchi rolini KOMPONENT TASHQARISIDA o'qish.
+ *
+ * Manba 1 (kanonik): react-query keshi `["/api/auth/me"]` — bu queryKey'ni
+ * ModuleSidebar/AppSidebar'dagi `useRoleMenus()` doimiy faol ushlab turadi
+ * (auth httpOnly cookie'da, localStorage'da user YO'Q — tekshirilgan 2026-07-02).
+ * Manba 2 (fallback): modul-darajali kesh, fon-so'rov bilan to'ldiriladi.
+ */
+function currentUserRole(): string | null {
+  try {
+    const me = queryClient.getQueryData<{ role?: string } | null>(["/api/auth/me"]);
+    if (me && typeof me.role === "string" && me.role) return me.role;
+  } catch { /* kesh mavjud bo'lmasa fallback'ga o'tamiz */ }
+  return fetchedRole;
+}
+
+/** Fon-so'rov: rol keshda bo'lmasa keyingi urinishlar uchun to'ldirib qo'yadi. */
+function prefetchRole(): void {
+  if (roleFetchInFlight || fetchedRole !== null) return;
+  roleFetchInFlight = true;
+  try {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => (r.ok ? (r.json() as Promise<{ role?: string }>) : null))
+      .then((me) => {
+        if (me && typeof me.role === "string" && me.role) fetchedRole = me.role;
+        roleFetchInFlight = false;
+      })
+      .catch(() => { roleFetchInFlight = false; });
+  } catch { roleFetchInFlight = false; }
+}
+
+/**
+ * Eksport rol-darvozasi. `false` = taqiqlangan (toast ko'rsatilgan), chaqiruvchi return qilsin.
+ *
+ * Rol NOMA'LUM bo'lsa (kesh hali bo'sh — masalan sahifa endigina ochildi) eksportga
+ * RUXSAT beriladi (fail-open): bu UX-darvoza, haqiqiy himoya BE rol-gate'larda —
+ * rol-o'qish buzilgani uchun HAMMA eksportni bloklash mumkin emas (Q-39).
+ * Amalda `useRoleMenus` keshi sahifa yuklanishida darhol to'ladi, shuning uchun
+ * taqiqlangan rol deyarli har doim to'g'ri ushlanadi.
+ */
+function ensureExportAllowed(): boolean {
+  const role = currentUserRole();
+  if (role === null) {
+    prefetchRole();
+    return true;
+  }
+  if (EXPORT_ALLOWED_ROLES.has(role.toLowerCase())) return true;
+  toast({
+    title: "Eksport taqiqlangan",
+    description: `Sizning rolingiz ("${role}") ma'lumot eksport qilishga ruxsat etilmagan`,
+    variant: "destructive",
+  });
+  return false;
+}
+
 export function exportToCSV(data: Record<string, unknown>[], filename: string, columns?: { key: string; label: string }[]) {
+  if (!ensureExportAllowed()) return;
   if (!data || data.length === 0) return;
 
   const keys = columns ? (Array.isArray(columns) ? columns : []).map(c => c.key) : Object.keys(data[0]);
@@ -36,6 +106,7 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string, c
 }
 
 export function exportToJSON(data: unknown, filename: string) {
+  if (!ensureExportAllowed()) return;
   const jsonContent = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonContent], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -58,6 +129,7 @@ export async function exportToExcel(
   filename: string,
   columns?: ColumnDef[]
 ) {
+  if (!ensureExportAllowed()) return;
   if (!data || data.length === 0) return;
 
   const XLSX = await import("@e965/xlsx");
@@ -81,6 +153,7 @@ export async function exportToPDF(
   data: Record<string, unknown>[],
   columns: ColumnDef[]
 ) {
+  if (!ensureExportAllowed()) return;
   if (!data || data.length === 0) return;
   const { jsPDF } = await import("jspdf");
   const { default: autoTable } = await import("jspdf-autotable");
