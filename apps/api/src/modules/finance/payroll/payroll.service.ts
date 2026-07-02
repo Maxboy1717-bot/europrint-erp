@@ -3,14 +3,25 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, forwardRef } from '@nestjs/common';
 import { IFinancePayrollRepository, FINANCE_PAYROLL_REPO } from './i-finance-payroll.repo';
 import { safeCall, Result, AppError } from '@common/result';
+// Moliya-GL-Kassa (2026-07-02, APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02): HR's
+// PayrollService.closePeriod is the ONE real payroll-closure implementation (validates
+// dates/rows, builds+posts the balanced GL journal via GlPostingService, marks the period
+// closed only after the GL succeeds, emits payroll.period.closed + per-record events).
+// Finance's own close() used to just flip payroll_periods.status='closed' with no
+// validation/GL/event — a second, unguarded door onto the SAME payroll_periods /
+// payroll_rows tables. It now proxies to HR's closePeriod() instead of duplicating it.
+import { PayrollService as HrPayrollService } from '../../hr/payroll/payroll.service';
 
 @Injectable()
 export class PayrollService {
 
-  constructor(@Inject(FINANCE_PAYROLL_REPO) private readonly financePayrollRepo: IFinancePayrollRepository) {}
+  constructor(
+    @Inject(FINANCE_PAYROLL_REPO) private readonly financePayrollRepo: IFinancePayrollRepository,
+    @Inject(forwardRef(() => HrPayrollService)) private readonly hrPayrollService: HrPayrollService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -41,14 +52,15 @@ export class PayrollService {
   
     });}
 
-  async close(id: number){
-    return safeCall(async () => {
-    await this.findOne(id);
-    const result = await this.financePayrollRepo.updateStatus(id, 'closed');
-    if (!result.ok) throw new InternalServerErrorException(result.error);
-    return result.data;
-  
-    });}
+  /**
+   * Proxy to HR's `PayrollService.closePeriod` — the ONE real payroll-closure path
+   * (row aggregation + GL journal posting + ЦКП/LMS gate side-effects + domain event).
+   * Finance no longer flips `payroll_periods.status` directly (Moliya-GL-Kassa fix,
+   * 2026-07-02) — that left the GL unposted and skipped every closure invariant.
+   */
+  async close(id: number): Promise<Result<unknown, AppError>> {
+    return this.hrPayrollService.closePeriod(id);
+  }
 
   async calculatePeriod(id: number){
     return safeCall(async () => {

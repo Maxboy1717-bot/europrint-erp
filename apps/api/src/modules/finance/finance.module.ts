@@ -3,7 +3,7 @@
  * @description NestJS @Module() definition. Providers, controllers, and imports for this feature slice.
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CfoConfigService } from './domain/services/cfo-config.service';
@@ -78,6 +78,11 @@ import { BudgetsService } from './budgets/budgets.service';
 import { FINANCE_PAYROLL_REPO } from './payroll/i-finance-payroll.repo';
 import { DrizzleFinancePayrollRepository } from './payroll/drizzle-finance-payroll.repo';
 import { PayrollService } from './payroll/payroll.service';
+// Moliya-GL-Kassa (2026-07-02): HR's PayrollService.closePeriod is the ONE real
+// payroll-closure implementation (GL journal + ЦКП/LMS gate + domain event).
+// Finance's own PayrollService.close() proxies to it instead of duplicating a
+// bare status flip (forwardRef — HrModule already imports FinanceModule).
+import { HrModule } from '../hr/hr.module';
 // --- New modules ---
 import { FINANCE_EXTENDED_REPO } from './finance-extended/i-finance-extended.repo';
 import { DrizzleFinanceExtendedRepository } from './finance-extended/drizzle-finance-extended.repo';
@@ -163,7 +168,12 @@ const eventListeners = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot(), FinancialReportsModule],
+  imports: [
+    CqrsModule, EventEmitterModule.forRoot(), FinancialReportsModule,
+    // forwardRef: HrModule already imports FinanceModule (GlPostingService) —
+    // Finance's payroll.service.ts proxies close() to HR's real closePeriod().
+    forwardRef(() => HrModule),
+  ],
   controllers: [
     FinanceInvoicesController, FinancePaymentsController, FinanceGlController,
     FinanceAdvanceController, FinanceBudgetsController, FinanceAccountingController,

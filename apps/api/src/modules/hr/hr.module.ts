@@ -5,7 +5,7 @@
  * No DI tokens or route paths changed — consumers see the same exported HrModule.
  */
 
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { HttpModule } from '@nestjs/axios';
 import { HrV2CommonModule } from './common/hr-v2-common.module';
@@ -42,7 +42,10 @@ import { hrControllers, hrProviders, hrExports } from './hr.providers';
     InspectionModule,
     EnpsModule,
     PipModule,
-    FinanceModule, // exports GlPostingService — payroll closure posts the GL journal through the ONE engine
+    // forwardRef: FinanceModule (Moliya-GL-Kassa 2026-07-02) now also imports HrModule
+    // (to proxy its payroll-close route through HR's PayrollService.closePeriod) — the
+    // two modules depend on each other, so both sides must use forwardRef().
+    forwardRef(() => FinanceModule), // exports GlPostingService — payroll closure posts the GL journal through the ONE engine
     LmsModule, // T7-10: exports LmsCardGateService — payroll consults the LMS oylik-gate (EP-ORG-027/EP-LMS-070)
   ],
   controllers: hrControllers,

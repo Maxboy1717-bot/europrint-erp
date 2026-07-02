@@ -291,4 +291,8 @@ export const hrExports = [
   // xodim identifikatsiyasi uchun HR yuz-tanish infratuzilmasini reuse qiladi
   // (Q-46 — dublikat kod yozilmadi, mavjud servis eksport qilindi).
   FaceRecognitionService,
+  // Moliya-GL-Kassa (2026-07-02): HR PayrollService.closePeriod (GL+gate+event) —
+  // Finance ning yalang'och PayrollService.close() shunga proxy qiladi (dublikat
+  // yopish yo'li yo'q qilindi, Q-46).
+  PayrollService,
 ];
