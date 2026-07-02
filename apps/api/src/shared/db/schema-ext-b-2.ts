@@ -106,6 +106,11 @@ export const budgets = canonicalBudgets;
 // budget_lines: flows through schema-finance-budgets → schema-finance → schema (canonical path).
 // No local definition or re-export here.
 
+// DEPRECATED (2026-07-02): no writer in the codebase — `payroll_advances`
+// (schema-business-b-1.ts) is the real advance-request table, written by
+// finance/advances flow (check-advance.handler → FinanceOpsRepo.recordAdvance)
+// and read by finance-actions.repository.ts. Kept only so the pre-existing
+// seed rows keep resolving; do not add new readers/writers against `advances`.
 export const advances = pgTable('advances', {
   id:          serial('id').primaryKey(),
   employee_id: integer('employee_id'),

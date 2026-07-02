@@ -57,7 +57,10 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
 
   async getAdvancePending(): Promise<Result<number>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COUNT(*) AS count FROM advances WHERE status = 'pending'`);
+      // NOTE: `advances` table is deprecated (no writer in codebase — seed-only rows).
+      // `payroll_advances` is the real writer (finance/advances flow: check-advance.handler
+      // → FinanceOpsRepo.recordAdvance / FinanceActionsRepository.listAdvances).
+      const r = await exec(sql`SELECT COUNT(*) AS count FROM payroll_advances WHERE status = 'pending'`);
       return Number(r[0]?.count ?? 0);
       }, 'DB_ERROR');
   }
