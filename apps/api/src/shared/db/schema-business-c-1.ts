@@ -213,6 +213,11 @@ export const ai_report_subscriptions = pgTable('ai_report_subscriptions', {
 // (serial_number, purchase_date, department_id etc.) — kept as local stub to avoid breakage.
 // asset_code/purchase_value/current_value/notes added (serial/integer PK, matches live DB —
 // see asset-management.repo.ts, which was previously wired to the uuid-PK admin-assets.ts stub).
+// NOTE: asset_items is a VIEW over asset_inventory (not a base table) — `ALTER TABLE ADD COLUMN`
+// cannot add columns to it, so `updated_at` (declared here pre-commit-9e9cbd72 but never present
+// on the view or on asset_inventory) is intentionally omitted: the DRIFT_MIGRATIONS entry for it
+// fails silently on every boot (see invariants/migrations-drift.ts) and actively querying it
+// (asset-management.repo.ts assetColumns) raised `column "updated_at" does not exist`.
 
 export const asset_items = pgTable('asset_items', {
   id:              serial('id').primaryKey(),
@@ -231,7 +236,6 @@ export const asset_items = pgTable('asset_items', {
   location:        text('location'),
   is_active:       boolean('is_active').default(true),
   created_at:      timestamp('created_at').defaultNow(),
-  updated_at:      timestamp('updated_at').defaultNow(),
 });
 
 // ─── Questionnaires ───────────────────────────────────────────────────────────

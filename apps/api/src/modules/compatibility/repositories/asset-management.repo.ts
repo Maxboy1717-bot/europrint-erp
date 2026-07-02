@@ -48,7 +48,6 @@ const assetColumns = {
   currentValue:  assetItems.current_value,
   notes:         assetItems.notes,
   createdAt:     assetItems.created_at,
-  updatedAt:     assetItems.updated_at,
 };
 
 function toAssetId(id: string): number {
@@ -118,7 +117,8 @@ export class AssetManagementRepo {
       purchase_value: data.purchaseValue,
       current_value:  data.currentValue,
       notes:          data.notes,
-      updated_at:     data.updatedAt,
+      // NOTE: asset_items has no updated_at column (VIEW over asset_inventory, which lacks it
+      // too — see schema-business-c-1.ts comment) — data.updatedAt is intentionally not persisted.
     }).where(eq(assetItems.id, assetId)).returning(assetColumns), 'DB_ERROR');
   }
 
