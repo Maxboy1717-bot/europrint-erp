@@ -72,8 +72,12 @@ export class KanbanBoardsController {
 
   @Post('boards')
   @HttpCode(HttpStatus.CREATED)
+  // G4 governance (vizyon, egasi #16603): "doskalari standart, faqat super admin" —
+  // board yaratish faqat super_admin/director. Metod-darajali @Roles klass-darajalini
+  // OVERRIDE qiladi (RolesGuard getAllAndOverride); o'qish routelari keng qoladi (Q-39).
+  @Roles('super_admin', 'director')
   @UsePipes(new ZodValidationPipe(KanbanCreateBoardSchema))
-  @ApiOperation({ summary: 'Yangi board yaratish' })
+  @ApiOperation({ summary: 'Yangi board yaratish (faqat super_admin/director)' })
   async createBoard(@Body() body: KanbanCreateBoardDto) {
     return unwrapOrThrow(await this.boardsSvc.createBoard(body));
   }
@@ -82,8 +86,11 @@ export class KanbanBoardsController {
 
   @Post('boards/:boardId/columns')
   @HttpCode(HttpStatus.CREATED)
+  // G4 governance: ustun qo'shish ham standart doska tuzilmasini o'zgartiradi —
+  // faqat super_admin/director (vizyon, egasi #16603).
+  @Roles('super_admin', 'director')
   @UsePipes(new ZodValidationPipe(KanbanAddColumnSchema))
-  @ApiOperation({ summary: 'Boardga ustun qo\'shish' })
+  @ApiOperation({ summary: 'Boardga ustun qo\'shish (faqat super_admin/director)' })
   async addColumn(@Param('boardId') boardId: string, @Body() body: KanbanAddColumnDto) {
     return unwrapOrThrow(await this.boardsSvc.addColumn(boardId, body));
   }
@@ -247,7 +254,10 @@ export class KanbanBoardsController {
   }
 
   @Post('templates/:templateId/apply')
-  @ApiOperation({ summary: 'Shablonni boardga qo\'llash' })
+  // G4 governance: shablon qo'llash boardga ustunlar YARATADI (addColumn yo'li) —
+  // aks holda column-yaratish cheklovi chetlab o'tilardi. Faqat super_admin/director.
+  @Roles('super_admin', 'director')
+  @ApiOperation({ summary: 'Shablonni boardga qo\'llash (faqat super_admin/director)' })
   async applyTemplate(
     @Param('templateId') templateId: string,
     @Body() body: unknown,
