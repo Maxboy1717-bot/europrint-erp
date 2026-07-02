@@ -17,7 +17,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { db, runQuery, settings } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
-import { Result } from '@common/types/result.type';
 
 @Injectable()
 export class FinanceOpsRepo {
@@ -66,16 +65,6 @@ export class FinanceOpsRepo {
     } catch (error: unknown) {
       this.logger.error(`Error recording advance: ${(error as Error).message}`);
       throw error;
-    }
-  }
-
-  async findInvoiceById(invoiceId: string): Promise<Result<Record<string, unknown> | null>> {
-    try {
-      const r = await runQuery<Record<string, unknown>>(sql`SELECT * FROM fi_invoices WHERE id = ${invoiceId} LIMIT 1`);
-      return { ok: true, data: r.rows[0] || null };
-    } catch (error: unknown) {
-      this.logger.error(`Error finding invoice: ${(error as Error).message}`);
-      return { ok: false, error: { code: 'DB_ERROR', message: (error as Error).message } };
     }
   }
 
