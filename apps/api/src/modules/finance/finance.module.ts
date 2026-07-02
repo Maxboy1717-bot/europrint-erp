@@ -141,6 +141,8 @@ import { DrizzleCashierHubRepository } from './cashier-hub/drizzle-cashier-hub.r
 import { CashierHubService } from './cashier-hub/cashier-hub.service';
 import { CashierHubPdfService } from './cashier-hub/cashier-hub-pdf.service';
 import { CashierHubController } from './cashier-hub/cashier-hub.controller';
+// CASHIER-HUB A7: kun-oxiri (20:00) avto Z-report PDF + kassir/CFO notification cron.
+import { CashierDailyZReportCron } from './cashier-hub/cashier-daily-zreport.cron';
 // CASHIER-HUB Phase 2: KAS-2 salary-payout approval gate + podotchet (advance/debt) cycle.
 import { CASHIER_PAYROLL_REPO } from './cashier-hub/i-cashier-payroll.repo';
 import { DrizzleCashierPayrollRepository } from './cashier-hub/drizzle-cashier-payroll.repo';
@@ -251,6 +253,8 @@ const eventListeners = [
     { provide: CASHIER_HUB_REPO, useClass: DrizzleCashierHubRepository },
     CashierHubService,
     CashierHubPdfService,
+    // A7 — kunlik Z-report avto-PDF cron (20:00 Asia/Tashkent), notification-infra orqali yuboradi
+    CashierDailyZReportCron,
     // CASHIER-HUB Phase 2 — KAS-2 approval gate + podotchet (reuse CashierHubService for cash-out + GL)
     { provide: CASHIER_PAYROLL_REPO, useClass: DrizzleCashierPayrollRepository },
     CashierPayrollService,

@@ -21,6 +21,7 @@ import type {
   ShiftListPage,
   ShiftListRow,
   CashierMovementType,
+  ZReportShiftRef,
 } from './i-cashier-hub.repo';
 import type { CashierShift, CashierMovement } from '@workspace/db';
 
@@ -266,6 +267,59 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
       return Ok(Number.isFinite(val) && val > 0 ? val : null);
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `CASHIER_GLOBAL_LIMIT_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
+
+  /**
+   * A7 kun-oxiri Z-report cron: today's shifts (opened_at >= dayStart) that have NOT yet
+   * received today's auto-PDF (pdf_generated_at guard → idempotent re-runs, no double notify).
+   * NOTE: raw SQL — pdf_generated_at/pdf_data live-DB additive columns (migration
+   * cashier-shifts-pdf-data-2026-07-02.sql) are not in the @workspace/db Drizzle table yet.
+   */
+  async listShiftsForZReport(dayStart: Date): Promise<Result<ZReportShiftRef[]>> {
+    try {
+      const rows = await typedExecute<ZReportShiftRef>(sql`
+        SELECT s.id,
+               s.cashier_user_id AS "cashierUserId"
+          FROM cashier_shifts s
+         WHERE s.opened_at >= ${dayStart}
+           AND (s.pdf_generated_at IS NULL OR s.pdf_generated_at < ${dayStart})
+         ORDER BY s.id
+      `);
+      return Ok(Array.isArray(rows) ? rows : []);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_ZREPORT_SHIFT_LIST_FAILED: ${String(e)}`));
+    }
+  }
+
+  /** Persist the kunlik Z-report PDF bytes (employee_monthly_cards.pdf_data naqshi — BYTEA on the row). */
+  async saveShiftPdf(shiftId: number, pdf: Buffer): Promise<Result<boolean>> {
+    try {
+      // NOTE: raw SQL — pdf_data column is a live-DB additive column (not in the Drizzle table).
+      const res = await runQuery<{ id: number }>(sql`
+        UPDATE cashier_shifts
+           SET pdf_data = ${pdf}, pdf_generated_at = NOW(), updated_at = NOW()
+         WHERE id = ${shiftId}
+        RETURNING id
+      `);
+      return Ok(Array.isArray(res.rows) && res.rows.length > 0);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_SHIFT_PDF_SAVE_FAILED: ${String(e)}`));
+    }
+  }
+
+  /** Active users holding any of the given roles — Z-report notification fan-out (kassir + CFO). */
+  async findUserIdsByRoles(roles: string[]): Promise<Result<number[]>> {
+    try {
+      const rows = await runQuery<{ id: number }>(sql`
+        SELECT id FROM users
+         WHERE role = ANY(${roles}::text[])
+           AND is_active = TRUE AND deleted_at IS NULL
+         LIMIT 200
+      `);
+      return Ok((Array.isArray(rows.rows) ? rows.rows : []).map((r) => Number(r.id)).filter(Boolean));
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_ROLE_USERS_LOOKUP_FAILED: ${String(e)}`));
     }
   }
 

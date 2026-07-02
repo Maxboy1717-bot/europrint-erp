@@ -11,7 +11,7 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { pgTable, integer, varchar, text, boolean, timestamp, serial, index, check } from "drizzle-orm/pg-core";
+import { pgTable, integer, varchar, text, boolean, timestamp, serial, index, check, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -169,6 +169,10 @@ export const employeeDebt = pgTable("employee_debt", {
   status: varchar("status", { length: 10 }).notNull().default("open"), // open | cleared
   reference: varchar("reference", { length: 120 }).notNull().unique(),
   movementId: integer("movement_id"), // the cashier_movements.id that opened this debt
+  /** Expense category (finance_categories.id, categoryType=expense) — DB-level FK ON DELETE SET NULL
+   *  (podotchet-ocr-categories-2026-07-02.sql). NULL = no category chosen. GL posting stays on the
+   *  cashier-hub account (category→BHMS account mapping = EGASI-DATA); the category splits data only. */
+  categoryId: integer("category_id"),
   clearedAt: timestamp("cleared_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
@@ -199,6 +203,14 @@ export const advanceReports = pgTable("advance_reports", {
   debtId: integer("debt_id").notNull().references(() => employeeDebt.id, { onDelete: "restrict" }),
   amount: numericMoney("amount").notNull(),
   receiptRef: varchar("receipt_ref", { length: 200 }),
+  /** Storage key of the uploaded receipt image/PDF (served at /api/storage/<key>) — uploaded via
+   *  the EXISTING /api/storage/upload endpoint (no new upload infra). Optional. */
+  receiptFilePath: text("receipt_file_path"),
+  /** AI-OCR extraction result ({amount,currency,note,provider,model}); NULL = AI unavailable /
+   *  could not read — the flow NEVER blocks on this (human approval is final, owner E1). */
+  ocrExtracted: jsonb("ocr_extracted"),
+  /** AI-extracted amount == reported amount; NULL when the AI produced no numeric amount. */
+  ocrMatch: boolean("ocr_match"),
   approved: boolean("approved").notNull().default(false),
   approvedBy: integer("approved_by").references(() => users.id, { onDelete: "set null" }),
   approvedAt: timestamp("approved_at"),

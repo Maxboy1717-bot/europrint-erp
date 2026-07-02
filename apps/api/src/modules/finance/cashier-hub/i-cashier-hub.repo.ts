@@ -110,6 +110,12 @@ export interface ShiftListPage {
   total: number;
 }
 
+/** Minimal projection for the kun-oxiri (A7) Z-report cron: shift id + its cashier. */
+export interface ZReportShiftRef {
+  id: number;
+  cashierUserId: number;
+}
+
 /** X/Z reconciliation summary for a shift. */
 export interface ShiftSummary {
   shift: CashierShift;
@@ -149,4 +155,13 @@ export interface ICashierHubRepository {
   findGlobalDailyCashLimit(): Promise<Result<number | null>>;
   /** A single shift joined to the cashier's display name (kunlik PDF header) — null if not found. */
   getShiftForPdf(shiftId: number): Promise<Result<ShiftListRow | null>>;
+  /**
+   * A7 kun-oxiri cron: bugungi (dayStart dan keyin ochilgan) smenalar, bugun allaqachon
+   * avto-PDF olinganlari chiqarib tashlangan (pdf_generated_at guard — idempotent cron).
+   */
+  listShiftsForZReport(dayStart: Date): Promise<Result<ZReportShiftRef[]>>;
+  /** Persist the generated kunlik Z-report PDF bytes onto the shift row (+ pdf_generated_at). */
+  saveShiftPdf(shiftId: number, pdf: Buffer): Promise<Result<boolean>>;
+  /** Active user ids holding any of the given roles (notification fan-out targets). */
+  findUserIdsByRoles(roles: string[]): Promise<Result<number[]>>;
 }
