@@ -5,9 +5,10 @@
 
 import {
   Controller, Put, Get, Query, Param, Req, Res, HttpCode,
-  StreamableFile, Logger, NotFoundException, ForbiddenException,
+  StreamableFile, Logger, NotFoundException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
@@ -31,9 +32,20 @@ const ALLOWED_UPLOAD_EXT = new Set([
 // Roles allowed to force-download (Content-Disposition: attachment) a stored file.
 // Mirrors the system-level bypass set already used by RolesGuard/PermissionGuard
 // (super_admin/admin/director always pass) + 'manager'. 'employee' and any other
-// role is DENIED — they can still view files inline (GET /storage/*, unrestricted,
-// used for office-style preview) but cannot force a save-to-disk download.
+// role is DENIED — they can still view IMAGE/media files inline (GET /storage/*)
+// but cannot force a save-to-disk download; DOCUMENT types (see
+// GATED_DOC_EXTENSIONS) are role-gated even for inline viewing.
 const DOWNLOAD_ALLOWED_ROLES = new Set(['super_admin', 'admin', 'director', 'manager']);
+
+// Hujjat-eksport-cheklash (G7, egasi 2026-07-02): document types are role-gated on
+// BOTH routes (inline serve + force-download with a mandatory user reason).
+// image/* stays open on the inline route so <img>/preview UI keeps working (Q-39);
+// chat image force-download (ImageLightbox) also stays reason-free for the same
+// reason — only DOCUMENTS require a typed justification.
+const GATED_DOC_EXTENSIONS = new Set(['.pdf', '.docx', '.xlsx', '.csv']);
+
+// Foydalanuvchi yuklab-olish sababi: kamida 5 belgi (bo'sh joylardan tashqari).
+const DownloadReasonSchema = z.string().trim().min(5).max(500);
 
 const MIME_MAP: Record<string, string> = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
@@ -50,14 +62,16 @@ async function logDownloadAttempt(params: {
   allowed: boolean;
   reason: string;
   user?: AuthenticatedUser;
+  /** Default DOWNLOAD_*; inline-view denials pass their own action label. */
+  action?: string;
 }): Promise<void> {
-  const { filePath, allowed, reason, user } = params;
+  const { filePath, allowed, reason, user, action } = params;
   try {
     await db.insert(auditLogsTable).values({
       id: randomUUID(),
       tableName: 'storage_download',
       recordId: filePath,
-      action: allowed ? 'DOWNLOAD_ALLOWED' : 'DOWNLOAD_DENIED',
+      action: action ?? (allowed ? 'DOWNLOAD_ALLOWED' : 'DOWNLOAD_DENIED'),
       reason,
       userId: user?.id != null ? String(user.id) : undefined,
       userFullName: user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || undefined : undefined,
@@ -161,26 +175,31 @@ export class StorageController {
   }
 
   /**
-   * GET /storage/download/chat/1/file/xxx.pdf — restricted force-download.
+   * GET /storage/download/chat/1/file/xxx.pdf?reason=... — restricted force-download.
    *
-   * Unlike `serveFile` below (inline, unrestricted — used for office-style preview
-   * in an <iframe>/<img>), this endpoint sets `Content-Disposition: attachment` and
-   * gates access to `DOWNLOAD_ALLOWED_ROLES`. Every attempt (allowed or denied) is
-   * written to `audit_logs` with a human-readable reason — the guard-based approach
-   * (`@Roles` + `RolesGuard`) throws before any handler code runs, so it cannot log a
-   * per-file reason; this manual check runs the log write on both outcomes first.
+   * Sets `Content-Disposition: attachment` and gates access to
+   * `DOWNLOAD_ALLOWED_ROLES`. DOCUMENT types (GATED_DOC_EXTENSIONS) additionally
+   * REQUIRE a user-typed `?reason=` (min 5 chars → 400 otherwise); images/media stay
+   * reason-free so chat ImageLightbox keeps working (Q-39). Every attempt (allowed
+   * or denied) is written to `audit_logs` with the USER-TYPED reason + role (falls
+   * back to a server-generated text when no reason was supplied for non-documents)
+   * — the guard-based approach (`@Roles` + `RolesGuard`) throws before any handler
+   * code runs, so it cannot log a per-file reason; this manual check runs the log
+   * write on both outcomes first.
    *
    * NOTE: registered BEFORE the `@Get('*')` wildcard below so `download/*` is matched
    * here and not swallowed by the catch-all inline route.
    */
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Download file — role-gated, reason logged (authenticated)' })
+  @ApiOperation({ summary: 'Download file — role-gated, user reason required for documents, logged (authenticated)' })
   @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request — document download requires ?reason= (min 5 chars)' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — role not allowed to download' })
   @Get('download/*')
   async downloadFile(
     @Param('*') filePath: string,
+    @Query('reason') reasonRaw: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
     @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
@@ -189,11 +208,29 @@ export class StorageController {
       throw new NotFoundException('File not found');
     }
 
+    const ext = path.extname(filePath).toLowerCase();
+    const isGatedDoc = GATED_DOC_EXTENSIONS.has(ext);
+
+    // Foydalanuvchi-sabab: hujjat tiplari uchun MAJBURIY (min 5 belgi), boshqa
+    // tiplar (rasm/media — chat ImageLightbox) uchun ixtiyoriy, bo'lsa loglanadi.
+    const parsedReason = DownloadReasonSchema.safeParse(reasonRaw ?? '');
+    if (isGatedDoc && !parsedReason.success) {
+      throw new BadRequestException(
+        "Hujjatni yuklab olish uchun sabab kiritilishi shart (?reason=, kamida 5 belgi)",
+      );
+    }
+    const userReason = parsedReason.success ? parsedReason.data : null;
+
     const roleLower = (user?.role ?? '').toLowerCase();
     const allowed = DOWNLOAD_ALLOWED_ROLES.has(roleLower);
+    const roleLabel = user?.role ?? 'noma\'lum';
     const reason = allowed
-      ? `Ruxsat berildi: rol "${user?.role ?? 'noma\'lum'}" fayl yuklab olishga huquqli`
-      : `Rad etildi: rol "${user?.role ?? 'noma\'lum'}" fayl yuklab olish huquqiga ega emas (faqat ${[...DOWNLOAD_ALLOWED_ROLES].join(', ')})`;
+      ? (userReason
+          ? `Foydalanuvchi sababi: "${userReason}" — rol "${roleLabel}" (ruxsat berildi)`
+          : `Ruxsat berildi: rol "${roleLabel}" fayl yuklab olishga huquqli`)
+      : (userReason
+          ? `Rad etildi: rol "${roleLabel}" huquqsiz (faqat ${[...DOWNLOAD_ALLOWED_ROLES].join(', ')}). Foydalanuvchi sababi: "${userReason}"`
+          : `Rad etildi: rol "${roleLabel}" fayl yuklab olish huquqiga ega emas (faqat ${[...DOWNLOAD_ALLOWED_ROLES].join(', ')})`);
 
     await logDownloadAttempt({ filePath, allowed, reason, user });
 
@@ -201,7 +238,6 @@ export class StorageController {
       throw new ForbiddenException(reason);
     }
 
-    const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
     const fastifyRes = res as unknown as { header: (k: string, v: string) => void };
     fastifyRes.header('Content-Type', contentType);
@@ -211,16 +247,20 @@ export class StorageController {
 
   /** GET /storage/chat/1/file/xxx.png — authenticated (browser sends the access_token cookie
    *  automatically on same-origin <img>/fetch, so logged-in users still load chat/wms files;
-   *  anonymous callers now get 401 from the global JwtAuthGuard). This inline route stays
-   *  UNRESTRICTED (no role gate) — it backs office-style preview (<img>/<iframe> rendering);
-   *  only the explicit force-download above (`/storage/download/*`) is role-gated. */
+   *  anonymous callers now get 401 from the global JwtAuthGuard). Inline serving of
+   *  image/media types stays role-UNRESTRICTED — it backs office-style preview
+   *  (<img> rendering, Q-39). DOCUMENT types (GATED_DOC_EXTENSIONS: pdf/docx/xlsx/csv)
+   *  are gated to DOWNLOAD_ALLOWED_ROLES (hujjat-eksport-cheklash, egasi 2026-07-02);
+   *  denied document attempts are audit-logged. */
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Serve file (authenticated)' })
+  @ApiOperation({ summary: 'Serve file inline — documents role-gated, images open (authenticated)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — role not allowed to view documents' })
   @Get('*')
   async serveFile(
     @Param('*') filePath: string,
+    @CurrentUser() user: AuthenticatedUser,
     @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
     const safePath = resolveWithinUploads(filePath);
@@ -228,6 +268,17 @@ export class StorageController {
       throw new NotFoundException('File not found');
     }
     const ext = path.extname(filePath).toLowerCase();
+
+    // Hujjat tiplari (pdf/docx/xlsx/csv) inline ko'rishda ham rol-gate ostida;
+    // image/* va media OCHIQ qoladi (UI preview buzilmasin — Q-39).
+    if (GATED_DOC_EXTENSIONS.has(ext)) {
+      const roleLower = (user?.role ?? '').toLowerCase();
+      if (!DOWNLOAD_ALLOWED_ROLES.has(roleLower)) {
+        const reason = `Rad etildi (inline hujjat): rol "${user?.role ?? 'noma\'lum'}" hujjat ko'rish/yuklab olish huquqiga ega emas (faqat ${[...DOWNLOAD_ALLOWED_ROLES].join(', ')})`;
+        await logDownloadAttempt({ filePath, allowed: false, reason, user, action: 'INLINE_VIEW_DENIED' });
+        throw new ForbiddenException(reason);
+      }
+    }
     const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
     (res as unknown as { header: (k: string, v: string) => void }).header('Content-Type', contentType);
     (res as unknown as { header: (k: string, v: string) => void }).header('Cache-Control', 'public, max-age=86400');
