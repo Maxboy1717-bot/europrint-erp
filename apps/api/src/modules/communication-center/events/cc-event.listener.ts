@@ -104,19 +104,24 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
         if (!board) {
           this.logger.warn(`cc.spawn: kanban board "EUROPRINT" topilmadi — karta yaratilmadi`);
         } else {
+          // FIX (G4): jonli kanban_columns'da ustun nomi sort_order (position EMAS —
+          // 42703 xato jimgina yutilardi, ko'prik hech qachon karta yaratmasdi).
           const colR = await runQuery<{ id: number }>(sql`
             SELECT id FROM kanban_columns
-            WHERE board_id = ${board.id}
-            ORDER BY position ASC
+            WHERE board_id = ${board.id} AND deleted_at IS NULL
+            ORDER BY sort_order ASC
             LIMIT 1
           `);
           const col = colR.rows[0];
           if (!col) {
             this.logger.warn(`cc.spawn: board ${board.id} uchun ustun topilmadi — karta yaratilmadi`);
           } else {
+            // FIX (G4): kanban_cards.related_id INTEGER — cc_documents.id UUID
+            // String(uuid) 22P02 bilan yiqilardi. UUID endi related_ref (text)
+            // ustuniga yoziladi (additive migration g4-cc-kanban-kassir-2026-07-02.sql).
             await db.execute(sql`
               INSERT INTO kanban_cards
-                (board_id, column_id, title, description, related_type, related_id,
+                (board_id, column_id, title, description, related_type, related_ref,
                  owner_user_id, priority, created_at, updated_at)
               VALUES (
                 ${board.id}, ${col.id},
@@ -133,7 +138,8 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
           }
         }
       } catch (kanbanErr) {
-        this.logger.warn(`cc.spawn: kanban karta yaratilmadi (ignore): ${String(kanbanErr)}`);
+        // FIX (G4): silent-catch warn edi — golden-thread uzilishi ko'rinmasdi.
+        this.logger.error(`cc.spawn: kanban karta yaratilmadi: ${String(kanbanErr)}`);
       }
 
       // 3) autoSend bo'lsa — workflow ishga tushadi (PIN talab qilinmasligi uchun

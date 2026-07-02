@@ -84,7 +84,7 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
         `),
         db.execute<Record<string, unknown>>(sql`
           SELECT kc.id, kc.board_id, kc.column_id, kc.title, kc.description, kc.priority, kc.due_date,
-                 kc.sort_order, kc.owner_user_id, kc.related_type, kc.related_id, kc.source,
+                 kc.sort_order, kc.owner_user_id, kc.related_type, kc.related_id, kc.related_ref, kc.source,
                  kc.start_date, kc.estimated_time, kc.accepted_at, kc.completed_at,
                  kc.rating, kc.completion_report,
                  kc.created_at, kc.updated_at,

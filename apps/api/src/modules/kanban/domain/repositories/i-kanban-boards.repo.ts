@@ -41,6 +41,8 @@ export interface KanbanCard {
   owner_user_id: string | null;
   related_type: string | null;
   related_id: string | null;
+  /** G4: UUID manbalar (masalan cc_document) uchun — related_id INTEGER, UUID sig'maydi. */
+  related_ref: string | null;
   source: string | null;
   start_date: Date | null;
   estimated_time: number | null;

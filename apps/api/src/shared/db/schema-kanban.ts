@@ -38,6 +38,8 @@ export const kanbanCards = pgTable('kanban_cards', {
   priority:         varchar('priority', { length: 20 }).notNull().default('normal'),
   related_type:     varchar('related_type', { length: 20 }),
   related_id:       varchar('related_id', { length: 100 }),
+  // G4: UUID manbalar (cc_documents) uchun — related_id INTEGER (jonli DB), UUID sig'maydi.
+  related_ref:      text('related_ref'),
   owner_user_id:    integer('owner_user_id'),       // assignee (bajaruvchi)
   assigner_user_id: integer('assigner_user_id'),    // EP-KAN-027: topshiruvchi (assigner)
   sort_order:       integer('sort_order').notNull().default(0),
