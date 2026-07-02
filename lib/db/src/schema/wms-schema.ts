@@ -9,7 +9,7 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, uni
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
-import { costCenters, glDocuments, profitCenters } from "./fi-schema";
+import { glDocuments } from "./fi-schema";
 import { materialBarcodes, materialCards } from "./mm-schema";
 import { excelImportRows, papkaOrders, productionFacts, products } from "./pp-schema";
 
@@ -151,39 +151,6 @@ export type ProcurementRequestItem = typeof procurementRequestItems.$inferSelect
 export type ProcurementApproval = typeof procurementApprovals.$inferSelect;
 
 
-// Warehouse Zones (ombor zonalari)
-export const warehouseZones = pgTable("warehouse_zones", {
-  id: serial("id").primaryKey(),
-  warehouseId: varchar("warehouse_id").notNull().references(() => warehouses.id, { onDelete: "cascade" }),
-  code: varchar("code", { length: 50 }).notNull(),
-  name: text("name").notNull(),
-  nameRu: text("name_ru"),
-  zoneType: varchar("zone_type", { length: 30 }).default("storage"), // storage, receiving, shipping, staging, quarantine
-  capacity: numericMoney("capacity"), // Sig'im (kv.metr yoki boshqa birlik)
-  isActive: boolean("is_active").notNull().default(true),
-  deletedAt: timestamp("deleted_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  // --- A7 superset: live-DB columns ---
-  type: varchar("type", { length: 30 }),
-}, (t) => [
-  index("idx_warehouse_zones_warehouse_id").on(t.warehouseId),
-  index("idx_warehouse_zones_zone_type").on(t.zoneType),
-  check("warehouse_zones_type_chk", sql`${t.zoneType} IS NULL OR ${t.zoneType} IN ('storage','receiving','shipping','staging','quarantine')`),
-]);
-
-
-export const insertWarehouseZoneSchema = createInsertSchema(warehouseZones, {
-  code: z.string().min(1, "Kod talab qilinadi"),
-  name: z.string().min(2, "Nom kamida 2 ta belgidan iborat bo'lishi kerak"),
-  zoneType: z.enum(["storage", "receiving", "shipping", "staging", "quarantine"]).default("storage"),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type WarehouseZone = typeof warehouseZones.$inferSelect;
-
-export type InsertWarehouseZone = z.infer<typeof insertWarehouseZoneSchema>;
-
-
 // Warehouse Bins (ombor joylar - tokcha/qator/yacheyka)
 export const warehouseBins = pgTable("warehouse_bins", {
   id: varchar("id", { length: 50 }).primaryKey().default(sql`gen_random_uuid()::varchar`),
@@ -237,7 +204,8 @@ export type InsertWarehouseBin = z.infer<typeof insertWarehouseBinSchema>;
 // Warehouse Rows (Qator) — Zona ichidagi qatorlar
 export const warehouseRows = pgTable("warehouse_rows", {
   id: serial("id").primaryKey(),
-  zoneId: integer("zone_id").notNull().references(() => warehouseZones.id, { onDelete: "cascade" }),
+  // NOTE: FK to warehouseZones removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  zoneId: integer("zone_id").notNull(),
   warehouseId: integer("warehouse_id"),
   code: varchar("code", { length: 50 }).notNull(),
   name: text("name"),
@@ -457,40 +425,6 @@ export type WarehouseTransaction = typeof warehouseTransactions.$inferSelect;
 export type InsertWarehouseTransaction = z.infer<typeof insertWarehouseTransactionSchema>;
 
 
-export const warehouseStock = pgTable("warehouse_stock", {
-  id: serial("id").primaryKey(),
-  warehouseId: varchar("warehouse_id").notNull().references(() => warehouses.id, { onDelete: "cascade" }),
-  materialCardId: varchar("material_id").notNull().references(() => materialCards.id, { onDelete: "cascade" }),
-  quantity: numericMoney("quantity").notNull().default(0),
-  reservedQuantity: numericMoney("reserved_quantity").notNull().default(0),
-  availableQuantity: numericMoney("available_quantity").notNull().default(0),
-  unitOfMeasure: varchar("unit_of_measure", { length: 20 }),
-  lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  // --- A7 superset: live-DB columns ---
-  reorderPoint: numericMoney("reorder_point"),
-  maxStock: numericMoney("max_stock"),
-  binLocationId: varchar("bin_location_id"),
-  lastMovementAt: timestamp("last_movement_at"),
-  itemId: varchar("item_id"),
-  updatedAt: timestamp("updated_at"),
-  unit: varchar("unit", { length: 20 }),
-  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
-  tenantId: integer("tenant_id").notNull().default(1),
-}, (t) => [
-  index("idx_warehouse_stock_tenant_id").on(t.tenantId),
-]);
-
-
-export const insertWarehouseStockSchema = createInsertSchema(warehouseStock, {
-  quantity: z.number().min(0, "Miqdor 0 dan kam bo'lmasligi kerak"),
-  reservedQuantity: z.number().min(0, "Zaxiralangan miqdor 0 dan kam bo'lmasligi kerak"),
-}).omit({ id: true, createdAt: true, lastUpdatedAt: true } as never);
-
-
-export type WarehouseStock = typeof warehouseStock.$inferSelect;
-
-export type InsertWarehouseStock = z.infer<typeof insertWarehouseStockSchema>;
 
 
 // Daily Warehouse Plans - Ombor kunlik rejasi
@@ -724,8 +658,10 @@ export const stockMovementGLPostings = pgTable("stock_movement_gl_postings", {
   glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }),
   glPostingStatus: varchar("gl_posting_status", { length: 20 }).notNull().default("pending"),
   errorMessage: text("error_message"),
-  costCenterId: varchar("cost_center_id").references(() => costCenters.id, { onDelete: "set null" }),
-  profitCenterId: varchar("profit_center_id").references(() => profitCenters.id, { onDelete: "set null" }),
+  // NOTE: cost_centers/profit_centers pgTables removed (orphan, lib/db-only — see
+  // chore(schema) cleanup 2026-07-02). Columns kept plain (no cross-table FK type).
+  costCenterId: varchar("cost_center_id"),
+  profitCenterId: varchar("profit_center_id"),
   postedBy: varchar("posted_by").references(() => users.id, { onDelete: "set null" }),
   postedAt: timestamp("posted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

@@ -12,7 +12,7 @@ import { users } from "./core-schema";
 import { glDocuments } from "./fi-schema";
 import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, productionSessions, products } from "./pp-schema";
 import { warehouseBins, warehouseTransactions, warehouses } from "./wms-schema";
-import { rawMaterials, vendors, purchaseOrders, goodsReceipts } from "./mm-procurement";
+import { rawMaterials, vendors } from "./mm-procurement";
 import { materialCards, materialBatches, batches } from "./mm-materials";
 
 export const aiMaterialInsights = pgTable("ai_material_insights", {
@@ -122,44 +122,6 @@ export type InventoryCount = typeof inventoryCounts.$inferSelect;
 export type InsertInventoryCount = z.infer<typeof insertInventoryCountSchema>;
 
 
-// Inventory Count Lines (Inventarizatsiya qatorlari)
-export const inventoryCountLines = pgTable("inventory_count_lines", {
-  id: serial("id").primaryKey(),
-  countId: integer("count_id").notNull().references(() => inventoryCounts.id, { onDelete: "cascade" }),
-  materialId: integer("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
-  productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
-  itemType: varchar("item_type", { length: 20 }).notNull(), // material, product
-  bookQuantity: numericMoney("book_quantity").notNull(),
-  countedQuantity: numericMoney("counted_quantity"),
-  variance: numericMoney("variance"),
-  variancePercent: numericMoney("variance_percent"),
-  unitCost: numericMoney("unit_cost").notNull(),
-  bookValue: numericMoney("book_value").notNull(),
-  countedValue: numericMoney("counted_value"),
-  valueVariance: numericMoney("value_variance"),
-  reason: text("reason"), // Farq sababi
-  countedBy: integer("counted_by").references(() => users.id, { onDelete: "set null" }),
-  countedAt: timestamp("counted_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  index("idx_inventory_count_lines_count_id").on(t.countId),
-  index("idx_inventory_count_lines_material_id").on(t.materialId),
-  index("idx_inventory_count_lines_product_id").on(t.productId),
-  index("idx_inventory_count_lines_created_at").on(t.createdAt),
-]);
-
-
-export const insertInventoryCountLineSchema = createInsertSchema(inventoryCountLines, {
-  itemType: z.enum(["material", "product"]),
-  bookQuantity: z.number().nonnegative(),
-  unitCost: z.number().nonnegative(),
-  bookValue: z.number().nonnegative(),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type InventoryCountLine = typeof inventoryCountLines.$inferSelect;
-
-export type InsertInventoryCountLine = z.infer<typeof insertInventoryCountLineSchema>;
 
 
 // ========== AI MATERIAL RESERVATION ==========
