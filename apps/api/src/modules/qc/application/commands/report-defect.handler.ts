@@ -24,6 +24,7 @@ export class ReportDefectHandler implements ICommandHandler<ReportDefectCommand>
       ) {}
 
   async execute(command: ReportDefectCommand): Promise<Result<Defect>> {
+      const extras = command.brakExtras;
       const defect = new Defect(
         this.generateId(),
         command.inspectionId,
@@ -41,6 +42,12 @@ export class ReportDefectHandler implements ICommandHandler<ReportDefectCommand>
         null,
         _time.now(),
         _time.now(),
+        extras?.papkaOrderId ?? null,
+        extras?.stage ?? null,
+        extras?.costImpact ?? null,
+        extras?.isReworkable ?? null,
+        extras?.reworked ?? null,
+        extras?.brakDate ?? null,
       );
 
       const saveResult = await this.qcRepository.saveDefect(defect);

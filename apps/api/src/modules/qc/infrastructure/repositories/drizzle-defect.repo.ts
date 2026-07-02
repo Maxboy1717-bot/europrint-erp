@@ -39,7 +39,14 @@ export class DrizzleDefectRepository implements IQcDefectRepository {
   constructor(private readonly reclamationRepo: DrizzleQcReclamationRepo) {}
 
   private mapRowToDefect(row: Record<string, unknown>): Defect {
-    return new Defect(String(row.id), String(row.inspectionId ?? ''), String(row.productionOrderId ?? ''), String(row.workCenterId ?? ''), String(row.defectCode ?? ''), String(row.description ?? ''), row.severity as DefectSeverity, row.status as DefectStatus, Number(row.quantity), String(row.unit ?? ''), String(row.reportedBy ?? ''), row.resolvedBy ? String(row.resolvedBy) : null, row.resolvedAt as Date | null, row.resolution ? String(row.resolution) : null, row.createdAt as Date, row.updatedAt as Date);
+    return new Defect(String(row.id), String(row.inspectionId ?? ''), String(row.productionOrderId ?? ''), String(row.workCenterId ?? ''), String(row.defectCode ?? ''), String(row.description ?? ''), row.severity as DefectSeverity, row.status as DefectStatus, Number(row.quantity), String(row.unit ?? ''), String(row.reportedBy ?? ''), row.resolvedBy ? String(row.resolvedBy) : null, row.resolvedAt as Date | null, row.resolution ? String(row.resolution) : null, row.createdAt as Date, row.updatedAt as Date,
+      row.papkaOrderId != null ? Number(row.papkaOrderId) : null,
+      row.stage != null ? String(row.stage) : null,
+      row.costImpact != null ? Number(row.costImpact) : null,
+      row.isReworkable != null ? Boolean(row.isReworkable) : null,
+      row.reworked != null ? Boolean(row.reworked) : null,
+      row.brakDate != null ? String(row.brakDate) : null,
+    );
   }
 
   async findDefectById(id: string): Promise<Result<Defect | null>> {
@@ -81,9 +88,11 @@ export class DrizzleDefectRepository implements IQcDefectRepository {
       // production_order_id / work_center_id are uuid columns but the system's PO/WC ids are integers,
       // so they can't be stored here -- the defect links via inspection_id (integer). Raw SQL, no cast.
       const inspectionId = defect.inspectionId != null && String(defect.inspectionId) !== '' ? Number(defect.inspectionId) : null;
+      // QC-birlashtirish (2026-07-02): brak-maxsus ustunlar (qc_braks-dan ko'chirilgan) --
+      // faqat createBrak oqimida to'ldiriladi, oddiy defect report'da NULL qoladi.
       await db.execute(sql`
-        INSERT INTO qc_defects (inspection_id, defect_code, description, severity, status, quantity, unit, reported_by, created_at, updated_at)
-        VALUES (${inspectionId}, ${defect.defectCode}, ${defect.description}, ${defect.severity}, ${defect.status}, ${defect.quantity}, ${defect.unit}, ${defect.reportedBy}, NOW(), NOW())`);
+        INSERT INTO qc_defects (inspection_id, defect_code, description, severity, status, quantity, unit, reported_by, created_at, updated_at, papka_order_id, stage, cost_impact, is_reworkable, reworked, brak_date)
+        VALUES (${inspectionId}, ${defect.defectCode}, ${defect.description}, ${defect.severity}, ${defect.status}, ${defect.quantity}, ${defect.unit}, ${defect.reportedBy}, NOW(), NOW(), ${defect.papkaOrderId}, ${defect.stage}, ${defect.costImpact}, ${defect.isReworkable}, ${defect.reworked}, ${defect.brakDate})`);
       return { ok: true as const, data: defect };
     } catch (error: unknown) {
       this.logger.error('Failed to save defect');

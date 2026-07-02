@@ -35,7 +35,15 @@ export class Defect {
     public resolvedAt: Date | null,
     public resolution: string | null,
     public readonly createdAt: Date,
-    public updatedAt: Date) {}
+    public updatedAt: Date,
+    // QC-birlashtirish (2026-07-02): qc_braks-dan ko'chirilgan maydonlar -- faqat
+    // brak-yozuvlarda to'ldiriladi (ReportDefectCommand.brakExtras orqali).
+    public readonly papkaOrderId: number | null = null,
+    public readonly stage: string | null = null,
+    public costImpact: number | null = null,
+    public isReworkable: boolean | null = null,
+    public reworked: boolean | null = null,
+    public readonly brakDate: string | null = null) {}
 
   resolve(userId: string, resolution: string): void {
     this.status = DefectStatus.RESOLVED;

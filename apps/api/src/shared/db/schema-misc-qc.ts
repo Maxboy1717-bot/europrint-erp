@@ -5,7 +5,7 @@
 
 import {
   pgTable, uuid, text, boolean, timestamp, decimal, integer,
-  serial, jsonb, index,
+  serial, jsonb, index, date, numeric,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -26,6 +26,14 @@ export const qc_defects = pgTable('qc_defects', {
   resolution: text('resolution'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  // QC-birlashtirish (2026-07-02, APPROVED egasi): qc_braks-dan ko'chirilgan brak-maxsus
+  // ustunlar -- POST /qc/braks endi ReportDefectCommand CQRS oqimi orqali shu jadvalga yozadi.
+  papkaOrderId: integer('papka_order_id'),
+  stage: text('stage'),
+  costImpact: numeric('cost_impact', { precision: 14, scale: 2 }),
+  isReworkable: boolean('is_reworkable'),
+  reworked: boolean('reworked'),
+  brakDate: date('brak_date'),
 });
 
 export const qc_reclamations = pgTable('qc_reclamations', {

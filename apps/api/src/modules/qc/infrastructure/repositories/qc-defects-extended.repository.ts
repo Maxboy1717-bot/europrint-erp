@@ -13,13 +13,34 @@ import type { IQcDefectsExtendedRepo } from '../../domain/repositories/i-qc-defe
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
+/**
+ * QC-birlashtirish (2026-07-02, APPROVED egasi): POST /qc/braks endi ReportDefectCommand
+ * CQRS oqimi orqali qc_defects jadvaliga yozadi (createBrak bu faylda o'chirildi — pastga
+ * qarang). Legacy qc_braks yozuvlari saqlanadi (Q-39/Q-46 — DROP TABLE yo'q), shuning uchun
+ * barcha o'quvchi so'rovlar ikkala manbani ham UNION ALL bilan birlashtiradi, aks holda yangi
+ * braklar (endi qc_defects'ga yoziladigan) dashboard/ro'yxatlarda ko'rinmay qoladi.
+ */
+const BRAK_UNION_SQL = sql`(
+  SELECT id, papka_order_id, brak_date, stage, quantity::numeric AS quantity, unit, reason, description,
+         equipment_id, operator_id, cost_impact, is_reworkable, reworked, created_by, created_at::timestamptz AS created_at,
+         production_order_id, material_id, status
+  FROM qc_braks
+  UNION ALL
+  SELECT id, papka_order_id, brak_date, stage, quantity::numeric AS quantity, unit, defect_code AS reason, description,
+         NULL::integer AS equipment_id, NULL::integer AS operator_id, cost_impact, is_reworkable, reworked,
+         CASE WHEN reported_by ~ '^[0-9]+$' THEN reported_by::integer ELSE NULL END AS created_by,
+         created_at::timestamptz AS created_at, NULL::integer AS production_order_id, NULL::integer AS material_id, status
+  FROM qc_defects
+  WHERE papka_order_id IS NOT NULL OR brak_date IS NOT NULL OR stage IS NOT NULL
+)`;
+
 @Injectable()
 export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
   async listBraks(sid: number | null, lim: number, off: number): Promise<Result<Row[]>>  {
   try {
       return sid !== null
-        ? exec(sql`SELECT b.*, u.username AS reported_by_name FROM qc_braks b LEFT JOIN users u ON u.id = b.created_by WHERE b.papka_order_id = ${String(sid)} ORDER BY b.created_at DESC LIMIT ${lim} OFFSET ${off}`)
-        : exec(sql`SELECT b.*, u.username AS reported_by_name FROM qc_braks b LEFT JOIN users u ON u.id = b.created_by ORDER BY b.created_at DESC LIMIT ${lim} OFFSET ${off}`);  } catch (_e) {
+        ? exec(sql`SELECT b.*, u.username AS reported_by_name FROM ${BRAK_UNION_SQL} b LEFT JOIN users u ON u.id = b.created_by WHERE b.papka_order_id = ${String(sid)} ORDER BY b.created_at DESC LIMIT ${lim} OFFSET ${off}`)
+        : exec(sql`SELECT b.*, u.username AS reported_by_name FROM ${BRAK_UNION_SQL} b LEFT JOIN users u ON u.id = b.created_by ORDER BY b.created_at DESC LIMIT ${lim} OFFSET ${off}`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -27,7 +48,7 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
 
   async getBrakStats(from?: string, to?: string): Promise<Result<Row>>  {
   try {
-      const rows = await exec(sql`SELECT COUNT(*)::int AS total_braks, COALESCE(SUM(quantity), 0)::int AS total_quantity, COUNT(*) FILTER (WHERE reworked = true)::int AS reworked, COUNT(*) FILTER (WHERE is_reworkable = false)::int AS scrapped FROM qc_braks WHERE (${from ?? null}::date IS NULL OR created_at::date >= ${from ?? null}::date) AND (${to ?? null}::date IS NULL OR created_at::date <= ${to ?? null}::date)`);
+      const rows = await exec(sql`SELECT COUNT(*)::int AS total_braks, COALESCE(SUM(quantity), 0)::int AS total_quantity, COUNT(*) FILTER (WHERE reworked = true)::int AS reworked, COUNT(*) FILTER (WHERE is_reworkable = false)::int AS scrapped FROM ${BRAK_UNION_SQL} b WHERE (${from ?? null}::date IS NULL OR b.created_at::date >= ${from ?? null}::date) AND (${to ?? null}::date IS NULL OR b.created_at::date <= ${to ?? null}::date)`);
       return rows.ok ? Ok(rows.data[0] ?? {}) : Err(rows.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -36,18 +57,7 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
 
   async getBrakCostImpact(papkaOrderId: number): Promise<Result<Row[]>>  {
   try {
-      return exec(sql`SELECT b.*, b.cost_impact FROM qc_braks b WHERE b.papka_order_id = ${String(papkaOrderId)} ORDER BY b.created_at DESC`);  } catch (_e) {
-    return Err(String(_e));
-  }
-
-  }
-
-  async createBrak(_session_id: number | null, _material_id: number | null, quantity: number, reason: string | null, _root_cause_id: number | null, reported_by: number | null, papka_order_id: number | null, brak_date: string | null, stage: string | null, description: string | null): Promise<Result<Row>>  {
-  try {
-      const effectiveBrakDate = brak_date ?? new Date().toISOString().slice(0, 10);
-      const effectiveStage = stage ?? 'production';
-      const r = await exec(sql`INSERT INTO qc_braks (papka_order_id, quantity, reason, created_by, brak_date, stage, description) VALUES (${papka_order_id !== null ? String(papka_order_id) : null}, ${quantity}, ${reason ?? 'other'}, ${reported_by ?? null}, ${effectiveBrakDate}, ${effectiveStage}, ${description ?? null}) RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+      return exec(sql`SELECT b.*, b.cost_impact FROM ${BRAK_UNION_SQL} b WHERE b.papka_order_id = ${String(papkaOrderId)} ORDER BY b.created_at DESC`);  } catch (_e) {
     return Err(String(_e));
   }
 
@@ -87,14 +97,14 @@ export class QcDefectsExtendedRepository implements IQcDefectsExtendedRepo {
       if (!rTests.ok) return Err(rTests.error);
       const tests = rTests.data[0] ?? {};
 
-      // qc_braks → braks KPI
+      // qc_braks ∪ qc_defects(brak) → braks KPI
       const rBraks = await exec(sql`SELECT
         COUNT(*)::int                              AS count,
-        COALESCE(SUM(quantity), 0)::int            AS total_qty,
-        COALESCE(SUM(cost_impact), 0)::numeric     AS total_cost_impact
-      FROM qc_braks
-      WHERE (${from ?? null}::date IS NULL OR created_at::date >= ${from ?? null}::date)
-        AND (${to   ?? null}::date IS NULL OR created_at::date <= ${to   ?? null}::date)`);
+        COALESCE(SUM(b.quantity), 0)::int          AS total_qty,
+        COALESCE(SUM(b.cost_impact), 0)::numeric   AS total_cost_impact
+      FROM ${BRAK_UNION_SQL} b
+      WHERE (${from ?? null}::date IS NULL OR b.created_at::date >= ${from ?? null}::date)
+        AND (${to   ?? null}::date IS NULL OR b.created_at::date <= ${to   ?? null}::date)`);
       if (!rBraks.ok) return Err(rBraks.error);
       const braksRow = rBraks.data[0] ?? {};
 

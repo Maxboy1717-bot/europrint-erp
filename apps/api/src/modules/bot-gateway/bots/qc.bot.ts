@@ -25,11 +25,20 @@ export class QcBotService {
   }
 
   private async getBraks(): Promise<BotReply> {
+    // qc_braks columns are `reason`/`created_at` (not `defect_type`/`recorded_at` — those
+    // don't exist and crashed every call). QC-birlashtirish (2026-07-02): new brak records
+    // now also land in qc_defects (via ReportDefectCommand) — union both sources.
     const rows = await execSql<{ defect_type: string; cnt: string; qty: string }>(sql`
-      SELECT defect_type, COUNT(*) AS cnt, SUM(quantity) AS qty
-      FROM qc_braks
-      WHERE recorded_at >= date_trunc('day', NOW())
-      GROUP BY defect_type
+      SELECT b.reason AS defect_type, COUNT(*) AS cnt, SUM(b.quantity) AS qty
+      FROM (
+        SELECT reason, quantity::numeric AS quantity, created_at::timestamptz AS created_at FROM qc_braks
+        UNION ALL
+        SELECT defect_code AS reason, quantity::numeric AS quantity, created_at::timestamptz AS created_at
+        FROM qc_defects
+        WHERE papka_order_id IS NOT NULL OR brak_date IS NOT NULL OR stage IS NOT NULL
+      ) b
+      WHERE b.created_at >= date_trunc('day', NOW())
+      GROUP BY b.reason
       ORDER BY qty DESC
       LIMIT 5
     `);

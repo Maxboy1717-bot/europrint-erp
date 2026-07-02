@@ -10,9 +10,23 @@ import {
   db, qc_checkpoints, qc_certificates, qc_lab_tests, qc_spc_data, qc_parameters,
   qc_defects, qc_inspections, qc_supplier_quality, mm_vendors,
 } from '@shared/db';
-import { qcBraks } from '@shared/db/schema-compat-3';
 import { eq, ne, desc, gte, isNull, or, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
+
+/**
+ * QC-birlashtirish (2026-07-02, APPROVED egasi): POST /qc/braks endi ReportDefectCommand
+ * CQRS oqimi orqali qc_defects jadvaliga yozadi (qc_braks emas). Legacy qc_braks yozuvlari
+ * saqlanadi (Q-39/Q-46 — DROP TABLE yo'q), shuning uchun brak-statistika o'quvchilari
+ * ikkala manbani ham UNION ALL bilan birlashtiradi.
+ */
+const BRAK_UNION_SQL = sql`(
+  SELECT quantity::numeric AS quantity, reason, stage, created_at::timestamptz AS created_at
+  FROM qc_braks
+  UNION ALL
+  SELECT quantity::numeric AS quantity, defect_code AS reason, stage, created_at::timestamptz AS created_at
+  FROM qc_defects
+  WHERE papka_order_id IS NOT NULL OR brak_date IS NOT NULL OR stage IS NOT NULL
+)`;
 
 import { MAX_QUERY_LIMIT, MS_PER_DAY } from '@common/constants/app.constants';
 type Row = Record<string, unknown>;
@@ -107,9 +121,11 @@ export class QcNewRepository {
           active: sql<number>`count(*) filter (where ${qc_checkpoints.isActive})::int`,
         }).from(qc_checkpoints).groupBy(qc_checkpoints.stage).orderBy(qc_checkpoints.stage),
 
-        db.select({ qty: sql<number>`coalesce(sum(${qcBraks.quantity}), 0)::int` })
-          .from(qcBraks)
-          .where(gte(qcBraks.createdAt, sevenDaysAgo)),
+        db.execute(sql`
+          SELECT COALESCE(SUM(b.quantity), 0)::int AS qty
+          FROM ${BRAK_UNION_SQL} b
+          WHERE b.created_at >= ${sevenDaysAgo}
+        `),
 
         // items_passed / items_failed columns exist in live DB but are not in Drizzle schema —
         // use raw SQL (columns confirmed via information_schema).
@@ -123,13 +139,14 @@ export class QcNewRepository {
       ]);
 
       const todayRow = (((todayResult as { rows?: Row[] }).rows) ?? [])[0] ?? {};
+      const scrapRow = (((scrapResult as { rows?: Row[] }).rows) ?? [])[0] ?? {};
 
       return {
         stats: {
           open_defects: openDefectsResult[0]?.count ?? 0,
           passed_today: Number(todayRow['passed_today'] ?? 0),
           failed_today: Number(todayRow['failed_today'] ?? 0),
-          scrap_7days: scrapResult[0]?.qty ?? 0,
+          scrap_7days: Number(scrapRow['qty'] ?? 0),
         },
         recentDefects,
         checkpointStatus,
@@ -164,7 +181,7 @@ export class QcNewRepository {
       const thirtyDaysAgo = new Date(Date.now() - 30 * MS_PER_DAY);
       const twelveWeeksAgo = new Date(Date.now() - 84 * MS_PER_DAY);
 
-      const [trend, topDefects, brakTrend] = await Promise.all([
+      const [trend, topDefects, brakTrendResult] = await Promise.all([
         db.select({
           day: sql<string>`DATE_TRUNC('day', ${qc_defects.createdAt})::date::text`,
           total: sql<number>`count(*)::int`,
@@ -185,15 +202,19 @@ export class QcNewRepository {
           .orderBy(sql`count(*) desc`)
           .limit(10),
 
-        db.select({
-          week: sql<string>`DATE_TRUNC('week', ${qcBraks.createdAt})::date::text`,
-          brakCount: sql<number>`count(*)::int`,
-          brakQty: sql<number>`coalesce(sum(${qcBraks.quantity}), 0)::int`,
-        }).from(qcBraks)
-          .where(gte(qcBraks.createdAt, twelveWeeksAgo))
-          .groupBy(sql`1`)
-          .orderBy(sql`1`),
+        db.execute(sql`
+          SELECT
+            DATE_TRUNC('week', b.created_at)::date::text AS week,
+            count(*)::int                                AS "brakCount",
+            coalesce(sum(b.quantity), 0)::int             AS "brakQty"
+          FROM ${BRAK_UNION_SQL} b
+          WHERE b.created_at >= ${twelveWeeksAgo}
+          GROUP BY 1
+          ORDER BY 1
+        `),
       ]);
+
+      const brakTrend = (((brakTrendResult as { rows?: Row[] }).rows) ?? []) as Row[];
 
       return { defectTrend: trend, topDefectCodes: topDefects, brakTrend };
     }, 'DB_ERROR');
@@ -208,7 +229,7 @@ export class QcNewRepository {
           passedTests: sql<number>`count(*) filter (where ${qc_lab_tests.result} = 'pass')::int`,
         }).from(qc_lab_tests),
 
-        db.execute(sql`SELECT COUNT(*)::int AS total_braks FROM qc_braks`),
+        db.execute(sql`SELECT COUNT(*)::int AS total_braks FROM ${BRAK_UNION_SQL} b`),
       ]);
 
       const totalTests  = labSummaryResult[0]?.totalTests  ?? 0;
@@ -223,10 +244,10 @@ export class QcNewRepository {
       // b) weeklyTrend — braks per week with pass_rate derived from lab_tests
       const weeklyBrakResult = await db.execute(sql`
         SELECT
-          DATE_TRUNC('week', created_at)::date::text AS week,
-          COUNT(*)::int                              AS total,
-          COUNT(*)::int                              AS failed
-        FROM qc_braks
+          DATE_TRUNC('week', b.created_at)::date::text AS week,
+          COUNT(*)::int                                AS total,
+          COUNT(*)::int                                AS failed
+        FROM ${BRAK_UNION_SQL} b
         GROUP BY 1
         ORDER BY 1 DESC
         LIMIT 12
@@ -264,8 +285,8 @@ export class QcNewRepository {
 
       // c) byReason — top 10 brak reasons
       const byReasonResult = await db.execute(sql`
-        SELECT COALESCE(reason, 'other') AS reason, COUNT(*)::int AS count
-        FROM qc_braks
+        SELECT COALESCE(b.reason, 'other') AS reason, COUNT(*)::int AS count
+        FROM ${BRAK_UNION_SQL} b
         GROUP BY 1
         ORDER BY 2 DESC
         LIMIT 10
@@ -277,8 +298,8 @@ export class QcNewRepository {
 
       // d) byStage — brak count per stage
       const byStageResult = await db.execute(sql`
-        SELECT COALESCE(stage, 'unknown') AS stage, COUNT(*)::int AS count
-        FROM qc_braks
+        SELECT COALESCE(b.stage, 'unknown') AS stage, COUNT(*)::int AS count
+        FROM ${BRAK_UNION_SQL} b
         GROUP BY 1
         ORDER BY 2 DESC
       `);

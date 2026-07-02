@@ -14,18 +14,9 @@ export interface IQcDefectsExtendedRepo {
   listBraks(sid: number | null, lim: number, off: number): Promise<Result<Row[]>>;
   getBrakStats(from?: string, to?: string): Promise<Result<Row>>;
   getBrakCostImpact(papkaOrderId: number): Promise<Result<Row[]>>;
-  createBrak(
-    session_id: number | null,
-    material_id: number | null,
-    quantity: number,
-    reason: string | null,
-    root_cause_id: number | null,
-    reported_by: number | null,
-    papka_order_id: number | null,
-    brak_date: string | null,
-    stage: string | null,
-    description: string | null,
-  ): Promise<Result<Row>>;
+  // NOTE: brak creation moved off this repo — QC-birlashtirish (2026-07-02) routes
+  // POST /qc/braks through ReportDefectCommand (CQRS), writing to qc_defects directly
+  // (see qc-defects-extended.controller.ts createBrak + report-defect.handler.ts).
   listSupplierQuality(vid: number | null, lim: number): Promise<Result<Row[]>>;
   createSupplierQuality(
     vendor_id: number | null,

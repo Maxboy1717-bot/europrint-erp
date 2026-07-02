@@ -138,11 +138,19 @@ export class QcDefectsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('braks/cost-impact')
   async getBraksCostImpact() {
+    // QC-birlashtirish (2026-07-02): brak yozuvlari endi ham qc_braks (legacy) ham
+    // qc_defects (ReportDefectCommand orqali yozilgan yangi braklar) jadvallarida
+    // bo'lishi mumkin — ikkalasi ham UNION ALL bilan birlashtiriladi.
     const r = await db.execute(sql`
-      SELECT stage, COUNT(*)::int AS count, SUM(quantity)::int AS total_quantity,
-        SUM(COALESCE(cost_impact, 0))::numeric AS total_cost
-      FROM qc_braks
-      GROUP BY stage ORDER BY total_cost DESC
+      SELECT b.stage, COUNT(*)::int AS count, SUM(b.quantity)::int AS total_quantity,
+        SUM(COALESCE(b.cost_impact, 0))::numeric AS total_cost
+      FROM (
+        SELECT stage, quantity::numeric AS quantity, cost_impact FROM qc_braks
+        UNION ALL
+        SELECT stage, quantity::numeric AS quantity, cost_impact FROM qc_defects
+        WHERE papka_order_id IS NOT NULL OR brak_date IS NOT NULL OR stage IS NOT NULL
+      ) b
+      GROUP BY b.stage ORDER BY total_cost DESC
     `);
     const items = ((r as { rows?: unknown[] }).rows) ?? [];
     return { items, total: items.length };

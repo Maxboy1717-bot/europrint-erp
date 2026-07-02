@@ -19,6 +19,8 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { QcDefectsExtendedService } from '../application/qc-defects-extended.service';
 import { ResolveReclamationCommand } from '../application/commands/resolve-reclamation.command';
+import { ReportDefectCommand } from '../application/commands/report-defect.command';
+import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
 import {
   QcCreateBrakSchema, QcCreateBrakDto,
   QcCreateSupplierQualitySchema, QcCreateSupplierQualityDto,
@@ -81,17 +83,38 @@ export class QcDefectsExtendedController {
   @Roles(...QC_FLOOR_ROLES)
   async createBrak(@Body() body: QcCreateBrakDto) {
     assertRequired((body as Record<string, unknown>).quantity, 'quantity required');
-    const _rCreateBrak = await this.svc.createBrak(
-      body.session_id != null ? safeInt(body.session_id, 0) : null,
-      body.material_id != null ? safeInt(body.material_id, 0) : null,
+    // QC-birlashtirish (2026-07-02, APPROVED egasi): brak yozuvi endi qc_braks-ga to'g'ridan
+    // INSERT o'rniga ReportDefectCommand CQRS oqimi orqali qc_defects jadvaliga yoziladi
+    // (6 ta yangi ustun: papka_order_id/stage/cost_impact/is_reworkable/reworked/brak_date).
+    // material_id/session_id/root_cause_id qc_defects'da ustun sifatida yo'q — description
+    // ichida saqlanadi, shuning uchun ma'lumot yo'qolmaydi.
+    const contextNotes: string[] = [];
+    if (body.material_id != null) contextNotes.push(`material_id=${safeInt(body.material_id, 0)}`);
+    if (body.session_id != null) contextNotes.push(`session_id=${safeInt(body.session_id, 0)}`);
+    if (body.root_cause_id != null) contextNotes.push(`root_cause_id=${safeInt(body.root_cause_id, 0)}`);
+    const baseDescription = body.description != null ? String(body.description) : (body.reason != null ? String(body.reason) : 'Brak');
+    const description = contextNotes.length > 0 ? `${baseDescription} [${contextNotes.join(', ')}]` : baseDescription;
+
+    const cmd = new ReportDefectCommand(
+      null,
+      null,
+      null,
+      body.reason != null ? String(body.reason) : 'other',
+      description,
+      DefectSeverity.MINOR,
       safeInt(body.quantity, 0),
-      body.reason != null ? String(body.reason) : null,
-      body.root_cause_id != null ? safeInt(body.root_cause_id, 0) : null,
-      body.reported_by != null ? safeInt(body.reported_by, 0) : null,
-      body.papka_order_id != null ? safeInt(body.papka_order_id, 0) : null,
-      body.brak_date != null ? String(body.brak_date) : null,
-      body.stage != null ? String(body.stage) : null,
-      body.description != null ? String(body.description) : null);
+      'pcs',
+      body.reported_by != null ? String(safeInt(body.reported_by, 0)) : 'system-user',
+      {
+        papkaOrderId: body.papka_order_id != null ? safeInt(body.papka_order_id, 0) : null,
+        stage: body.stage != null ? String(body.stage) : null,
+        costImpact: null,
+        isReworkable: null,
+        reworked: null,
+        brakDate: body.brak_date != null ? String(body.brak_date) : null,
+      },
+    );
+    const _rCreateBrak = await this.commandBus.execute(cmd);
     assertOk(_rCreateBrak);
     return _rCreateBrak.data;
   }
