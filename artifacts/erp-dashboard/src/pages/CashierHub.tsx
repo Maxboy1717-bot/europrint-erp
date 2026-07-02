@@ -77,9 +77,22 @@ interface AdvanceReportRow {
   debtId: number;
   amount: string | number | null;
   receiptRef: string | null;
+  /** Storage key of the uploaded receipt (viewed at /api/storage/<key>) or null. */
+  receiptFilePath: string | null;
+  /** AI-OCR summa mosligi: true/false; null = AI hukmi yo'q (ODAM baribir yakuniy tasdiqlaydi). */
+  ocrMatch: boolean | null;
   approved: boolean;
   reference: string;
   createdAt: string | null;
+}
+
+/** Expense category row from GET /api/finance-extended/finance-categories. */
+interface FinanceCategoryRow {
+  id: number;
+  code: string;
+  name: string;
+  categoryType: string;
+  isActive: boolean;
 }
 
 interface ListPage<T> {
@@ -171,6 +184,7 @@ export default function CashierHub() {
   const [advAmount, setAdvAmount] = useState("");
   const [advRef, setAdvRef] = useState("");
   const [advReason, setAdvReason] = useState("");
+  const [advCategoryId, setAdvCategoryId] = useState("");
   const [advPin, setAdvPin] = useState("");
 
   const [showCreatePayout, setShowCreatePayout] = useState(false);
@@ -185,6 +199,7 @@ export default function CashierHub() {
   const [reportReceiptRef, setReportReceiptRef] = useState("");
   const [reportRef, setReportRef] = useState("");
   const [reportNotes, setReportNotes] = useState("");
+  const [reportFile, setReportFile] = useState<File | null>(null);
 
   // ─── (a) shifts list (open + closed, newest first) ────────────────────────────────────────
   const shiftsQuery = useQuery<ListPage<ShiftRow>>({
@@ -203,6 +218,16 @@ export default function CashierHub() {
     queryKey: ["/api/finance/cashier/advance-reports", { status: "pending" }],
     queryFn: () => apiRequest("GET", "/api/finance/cashier/advance-reports?status=pending"),
   });
+
+  // ─── expense categories (avans kategoriyasi select uchun — EXISTING endpoint) ─────────────
+  const categoriesQuery = useQuery<{ data: FinanceCategoryRow[] }>({
+    queryKey: ["/api/finance-extended/finance-categories", { limit: 100 }],
+    queryFn: () => apiRequest("GET", "/api/finance-extended/finance-categories?limit=100"),
+    retry: false, // finance-extended rollari 'cashier'ni o'z ichiga olmaydi — 403 da qayta urinmaymiz (select bo'sh qoladi, kategoriya ixtiyoriy)
+  });
+  const expenseCategories = Array.isArray(categoriesQuery.data?.data)
+    ? categoriesQuery.data.data.filter((c) => c.categoryType === "expense" && c.isActive !== false)
+    : [];
 
   const shifts = Array.isArray(shiftsQuery.data?.data) ? shiftsQuery.data.data : [];
   const approvals = Array.isArray(approvalsQuery.data?.data) ? approvalsQuery.data.data : [];
@@ -254,13 +279,13 @@ export default function CashierHub() {
   });
 
   const issueAdvanceMutation = useMutation({
-    mutationFn: (vars: { shiftId: number; employeeId: number; amount: number; reference: string; reason?: string; pin: string }) =>
+    mutationFn: (vars: { shiftId: number; employeeId: number; amount: number; reference: string; reason?: string; categoryId?: number; pin: string }) =>
       apiRequest("POST", "/api/finance/cashier/advances", vars),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/advance-reports"] });
       queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/shifts"] });
       setShowIssueAdvance(false);
-      setAdvEmployeeId(""); setAdvAmount(""); setAdvRef(""); setAdvReason(""); setAdvPin("");
+      setAdvEmployeeId(""); setAdvAmount(""); setAdvRef(""); setAdvReason(""); setAdvCategoryId(""); setAdvPin("");
       toast({ title: t("cashierHub.advanceIssued", "Avans berildi") });
     },
     onError: () => toast({ title: t("error", "Xatolik"), description: t("cashierHub.advanceIssueFailed", "Avans berib bo'lmadi"), variant: "destructive" }),
@@ -278,12 +303,31 @@ export default function CashierHub() {
   });
 
   const submitReportMutation = useMutation({
-    mutationFn: (vars: { debtId: number; amount: number; receiptRef: string; reference: string; notes?: string }) =>
-      apiRequest("POST", "/api/finance/cashier/advance-reports", vars),
+    mutationFn: async (vars: { debtId: number; amount: number; receiptRef: string; reference: string; notes?: string }) => {
+      // Chek faylini MAVJUD storage-upload orqali yuklaymiz (PUT /api/storage/upload — chat/kanban
+      // bilan bir xil FormData naqshi), keyin storage kalitini receiptFilePath sifatida beramiz.
+      let receiptFilePath: string | undefined;
+      if (reportFile) {
+        const safeName = reportFile.name.replace(/[^\w.\-]+/g, "_");
+        const key = `podotchet/${Date.now()}-${safeName}`;
+        const fd = new FormData();
+        fd.append("file", reportFile, reportFile.name);
+        await apiRequest(
+          "PUT",
+          `/api/storage/upload?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(reportFile.type || "application/octet-stream")}`,
+          fd,
+        );
+        receiptFilePath = key;
+      }
+      return apiRequest("POST", "/api/finance/cashier/advance-reports", {
+        ...vars,
+        ...(receiptFilePath && { receiptFilePath }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/finance/cashier/advance-reports"] });
       toast({ title: t("cashierHub.reportSubmitted", "Hisobot yuborildi") });
-      setShowSubmitReport(false); setReportDebtId(""); setReportAmount(""); setReportReceiptRef(""); setReportRef(""); setReportNotes("");
+      setShowSubmitReport(false); setReportDebtId(""); setReportAmount(""); setReportReceiptRef(""); setReportRef(""); setReportNotes(""); setReportFile(null);
     },
     onError: () => toast({ title: t("error", "Xatolik"), variant: "destructive" }),
   });
@@ -584,7 +628,27 @@ export default function CashierHub() {
                       <div className="text-[12px] text-muted-foreground">{row.reference}</div>
                     </TableCell>
                     <TableCell>{formatCurrency(Number(row.amount ?? 0))}</TableCell>
-                    <TableCell className="text-[13px] text-muted-foreground">{row.receiptRef ?? "—"}</TableCell>
+                    <TableCell className="text-[13px] text-muted-foreground">
+                      <div>{row.receiptRef ?? "—"}</div>
+                      {row.receiptFilePath && (
+                        <a
+                          href={`/api/storage/${row.receiptFilePath}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[12px] underline text-primary"
+                          data-testid={`link-receipt-file-${row.id}`}
+                        >
+                          {t("cashierHub.receiptFileLink", "Chek faylini ko'rish")}
+                        </a>
+                      )}
+                      {/* AI-OCR signal (vizyon: AI o'qiydi + solishtiradi, ODAM yakuniy tasdiqlaydi) */}
+                      {row.ocrMatch === true && (
+                        <div className="mt-1"><EPStatusPill tone="success">{t("cashierHub.ocrMatch", "AI: summa mos")}</EPStatusPill></div>
+                      )}
+                      {row.ocrMatch === false && (
+                        <div className="mt-1"><EPStatusPill tone="danger">{t("cashierHub.ocrMismatch", "AI: summa mos emas")}</EPStatusPill></div>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <EPStatusPill tone={row.approved ? "success" : "warning"}>
                         {row.approved ? t("cashierHub.statusApproved", "Tasdiqlangan") : t("cashierHub.statusPending", "Kutilmoqda")}
@@ -792,7 +856,7 @@ export default function CashierHub() {
       </Dialog>
 
       {/* Submit advance report dialog — POST /api/finance/cashier/advance-reports */}
-      <Dialog open={showSubmitReport} onOpenChange={setShowSubmitReport}>
+      <Dialog open={showSubmitReport} onOpenChange={(v) => { setShowSubmitReport(v); if (!v) setReportFile(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("cashierHub.submitReportTitle", "Avans hisobotini topshirish")}</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
@@ -809,6 +873,21 @@ export default function CashierHub() {
               <Input value={reportReceiptRef} onChange={e => setReportReceiptRef(e.target.value)} placeholder="RCP-..." maxLength={200} />
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="report-file">{t("cashierHub.receiptFile", "Chek fayli (rasm/PDF — AI tekshiradi, ixtiyoriy)")}</Label>
+              <Input
+                id="report-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,.pdf"
+                onChange={e => setReportFile(e.target.files?.[0] ?? null)}
+                data-testid="input-report-file"
+              />
+              {reportFile && (
+                <p className="text-[12px] text-muted-foreground">
+                  {reportFile.name} — {Math.ceil(reportFile.size / 1024)} KB
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
               <Label>{t("cashierHub.reference", "Havola")} <span className="text-destructive">*</span></Label>
               <Input value={reportRef} onChange={e => setReportRef(e.target.value)} placeholder="RPT-2026-..." maxLength={120} />
             </div>
@@ -817,7 +896,7 @@ export default function CashierHub() {
               <Textarea value={reportNotes} onChange={e => setReportNotes(e.target.value)} className="min-h-[60px]" />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowSubmitReport(false)}>{t("cancel", "Bekor")}</Button>
+              <Button variant="outline" onClick={() => { setShowSubmitReport(false); setReportFile(null); }}>{t("cancel", "Bekor")}</Button>
               <Button
                 disabled={!reportDebtId || Number(reportDebtId) < 1 || !reportAmount || Number(reportAmount) <= 0 || !reportReceiptRef.trim() || !reportRef.trim() || submitReportMutation.isPending}
                 onClick={() => submitReportMutation.mutate({ debtId: Number(reportDebtId), amount: Number(reportAmount), receiptRef: reportReceiptRef.trim(), reference: reportRef.trim(), ...(reportNotes.trim() && { notes: reportNotes.trim() }) })}
@@ -981,7 +1060,7 @@ export default function CashierHub() {
       </Dialog>
 
       {/* Issue Advance dialog */}
-      <Dialog open={showIssueAdvance} onOpenChange={(v) => { if (!v) { setShowIssueAdvance(false); setAdvEmployeeId(""); setAdvAmount(""); setAdvRef(""); setAdvReason(""); setAdvPin(""); } }}>
+      <Dialog open={showIssueAdvance} onOpenChange={(v) => { if (!v) { setShowIssueAdvance(false); setAdvEmployeeId(""); setAdvAmount(""); setAdvRef(""); setAdvReason(""); setAdvCategoryId(""); setAdvPin(""); } }}>
         <DialogContent className="max-w-sm p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1003,6 +1082,21 @@ export default function CashierHub() {
               <Input value={advRef} onChange={e => setAdvRef(e.target.value)} placeholder="ADV-2026-..." maxLength={100} data-testid="input-adv-ref" />
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="adv-category">{t("cashierHub.advCategory", "Xarajat kategoriyasi (ixtiyoriy)")}</Label>
+              <select
+                id="adv-category"
+                value={advCategoryId}
+                onChange={e => setAdvCategoryId(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                data-testid="select-adv-category"
+              >
+                <option value="">{t("cashierHub.advCategoryNone", "Tanlanmagan")}</option>
+                {expenseCategories.map((c) => (
+                  <option key={c.id} value={String(c.id)}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
               <Label>{t("cashierHub.advReason", "Sabab (ixtiyoriy)")}</Label>
               <Textarea value={advReason} onChange={e => setAdvReason(e.target.value)} placeholder={t("cashierHub.advReasonPlaceholder", "Avans sababi...")} className="min-h-[60px]" data-testid="input-adv-reason" />
             </div>
@@ -1015,7 +1109,7 @@ export default function CashierHub() {
               <Button
                 onClick={() => {
                   if (!openShiftId) return;
-                  issueAdvanceMutation.mutate({ shiftId: openShiftId, employeeId: Number(advEmployeeId), amount: Number(advAmount), reference: advRef.trim(), ...(advReason.trim() && { reason: advReason.trim() }), pin: advPin });
+                  issueAdvanceMutation.mutate({ shiftId: openShiftId, employeeId: Number(advEmployeeId), amount: Number(advAmount), reference: advRef.trim(), ...(advReason.trim() && { reason: advReason.trim() }), ...(advCategoryId && { categoryId: Number(advCategoryId) }), pin: advPin });
                 }}
                 disabled={!advEmployeeId || Number(advEmployeeId) < 1 || !advAmount || Number(advAmount) <= 0 || !advRef.trim() || advPin.length !== 4 || issueAdvanceMutation.isPending}
                 data-testid="button-confirm-issue-advance"

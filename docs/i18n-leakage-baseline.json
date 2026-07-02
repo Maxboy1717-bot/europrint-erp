@@ -1,14 +1,14 @@
 {
   "summary": {
-    "totalLeaks": 258,
-    "filesWithLeaks": 47,
+    "totalLeaks": 260,
+    "filesWithLeaks": 48,
     "byKind": {
-      "JSX_TEXT": 129,
+      "JSX_TEXT": 131,
       "PROP": 77,
       "OBJECT_LABEL": 52
     },
     "byLocale": {
-      "uz": 256,
+      "uz": 258,
       "ru": 2
     },
     "topFiles": [
@@ -364,6 +364,20 @@
       "line": 293,
       "text": "Masalan: Yangi partiya boshlash...",
       "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\ObligationsTab.tsx",
+      "line": 253,
+      "text": "Ochiq podotchet qarzi yo'q",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\employee-profile\\ObligationsTab.tsx",
+      "line": 269,
+      "text": "Ochiq",
+      "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
