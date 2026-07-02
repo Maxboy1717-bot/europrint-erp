@@ -53,85 +53,11 @@ export type CrmWatcher = typeof crmWatchers.$inferSelect;
 export type InsertCrmWatcher = z.infer<typeof insertCrmWatcherSchema>;
 
 
-// CRM Custom Fields (Custom field definitions - Maxsus maydonlar)
-export const crmCustomFields = pgTable("crm_custom_fields", {
-  id: serial("id").primaryKey(),
-  entityType: varchar("entity_type", { length: 50 }).notNull(), // lead, deal, contact, company
-  fieldName: varchar("field_name", { length: 100 }).notNull(),
-  fieldLabel: varchar("field_label", { length: 255 }).notNull(),
-  fieldLabelRu: varchar("field_label_ru", { length: 255 }),
-  fieldType: varchar("field_type", { length: 50 }).notNull(), // text, number, date, select, multiselect, checkbox, phone, email
-  options: jsonb("options"), // For select/multiselect: [{value: "opt1", label: "Option 1"}]
-  isRequired: boolean("is_required").default(false),
-  isVisible: boolean("is_visible").default(true),
-  sort: integer("sort").default(500),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  check("crm_custom_fields_entity_chk", sql`${t.entityType} IN ('lead','deal','contact','company')`),
-  check("crm_custom_fields_type_chk", sql`${t.fieldType} IN ('text','number','date','select','multiselect','checkbox','phone','email')`),
-]);
+// ORFAN CLEANUP (2026-07-02): crm_custom_fields, crm_robots pgTable
+// declarations removed from here (dead lib/db duplicates — live CRM app code
+// uses apps/api/src/shared/db via @europrint/schemas / @shared/db, never
+// @workspace/db). Q-29 verified: no @workspace/db consumer anywhere.
 
-
-export const insertCrmCustomFieldSchema = createInsertSchema(crmCustomFields, {
-  entityType: z.enum(["lead", "deal", "contact", "company"]),
-  fieldName: z.string().min(1, "Field name kerak"),
-  fieldLabel: z.string().min(1, "Field label kerak"),
-  fieldType: z.enum(["text", "number", "date", "select", "multiselect", "checkbox", "phone", "email"]),
-  isRequired: z.boolean().default(false),
-  isVisible: z.boolean().default(true),
-  sort: z.number().int().default(500),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type CrmCustomField = typeof crmCustomFields.$inferSelect;
-
-export type InsertCrmCustomField = z.infer<typeof insertCrmCustomFieldSchema>;
-
-
-// CRM Robots (Automation robots - Avtomatlashtirish robotlari)
-export const crmRobots = pgTable("crm_robots", {
-  id: serial("id").primaryKey(),
-  entityType: varchar("entity_type", { length: 50 }).notNull(), // leads, deals, contacts, companies
-  stageId: varchar("stage_id", { length: 50 }), // Which stage triggers the robot
-  name: varchar("name", { length: 255 }).notNull(),
-  nameRu: varchar("name_ru", { length: 255 }),
-  description: text("description"), // Robot description
-  triggerType: varchar("trigger_type", { length: 50 }).notNull(), // STAGE_CHANGED, CREATED, FIELD_CHANGED, TIME_ELAPSED
-  triggerConditions: jsonb("trigger_conditions"), // Trigger-specific conditions
-  delayMinutes: integer("delay_minutes"), // Delay in minutes (for TIME_ELAPSED)
-  actionType: varchar("action_type", { length: 50 }).notNull(), // SEND_NOTIFICATION, CREATE_TASK, CHANGE_STAGE, CHANGE_FIELD, SEND_EMAIL, SEND_TELEGRAM, AI_ANALYZE
-  actionConfig: jsonb("action_config"), // Action-specific configuration
-  targetType: varchar("target_type", { length: 50 }), // responsible, manager, specific_user
-  targetUserId: varchar("target_user_id").references(() => users.id, { onDelete: 'set null' }),
-  isActive: boolean("is_active").default(true),
-  sort: integer("sort").default(500),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-}, (t) => [
-  check("crm_robots_entity_chk", sql`${t.entityType} IN ('leads','deals','contacts','companies')`),
-  check("crm_robots_trigger_chk", sql`${t.triggerType} IN ('STAGE_CHANGED','CREATED','FIELD_CHANGED','TIME_ELAPSED')`),
-  check("crm_robots_action_chk", sql`${t.actionType} IN ('SEND_NOTIFICATION','CREATE_TASK','CHANGE_STAGE','CHANGE_FIELD','SEND_EMAIL','SEND_TELEGRAM','AI_ANALYZE')`),
-  check("crm_robots_target_chk", sql`${t.targetType} IS NULL OR ${t.targetType} IN ('responsible','manager','specific_user')`),
-]);
-
-
-export const insertCrmRobotSchema = createInsertSchema(crmRobots, {
-  entityType: z.enum(["leads", "deals", "contacts", "companies"]),
-  name: z.string().min(1, "Robot nomi kerak"),
-  description: z.string().optional(),
-  triggerType: z.enum(["STAGE_CHANGED", "CREATED", "FIELD_CHANGED", "TIME_ELAPSED"]),
-  triggerConditions: z.unknown().optional(),
-  actionType: z.enum(["SEND_NOTIFICATION", "CREATE_TASK", "CHANGE_STAGE", "CHANGE_FIELD", "SEND_EMAIL", "SEND_TELEGRAM", "AI_ANALYZE"]),
-  targetType: z.enum(["responsible", "manager", "specific_user"]).optional(),
-  isActive: z.boolean().default(true),
-  sort: z.number().int().default(500),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type CrmRobot = typeof crmRobots.$inferSelect;
-
-export type InsertCrmRobot = z.infer<typeof insertCrmRobotSchema>;
 // CRM Documents (Hujjatlar va shablonlar)
 export const crmDocuments = pgTable("crm_documents", {
   id: serial("id").primaryKey(),

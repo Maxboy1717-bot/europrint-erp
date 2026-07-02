@@ -11,12 +11,22 @@ import { z } from "zod";
 import { users } from "./core-schema";
 import { Assignment } from "./lms-schema";
 import { Design, Order, Product, designOrders } from "./pp-schema";
-import { crmContacts, crmCompanies, crmLeads } from "./crm-contacts";
 import { customerContacts } from "./crm-contacts";
+
+// ============================================================================
+// ORFAN CLEANUP (2026-07-02): crm_pipelines, crm_stages pgTable declarations
+// removed from here (dead lib/db duplicates — no consumer anywhere, Q-29
+// verified). insertCrmCompanySchema/CrmCompany type also removed — depended
+// on crmCompanies, which was deleted from ./crm-contacts (also dead, Q-29).
+// crmDeals (below) IS live/canonical — re-exported as crm_deals from
+// apps/api/src/shared/db/schema-ext-b-2.ts via `@workspace/db`. Its FKs to
+// the now-removed crmPipelines/crmCompanies were converted to plain columns.
+// ============================================================================
 
 export const customerInteractions = pgTable("customer_interactions", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").notNull().references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id").notNull(),
   type: varchar("type", { length: 20 }).notNull(), // call, email, meeting, note, chat
   direction: varchar("direction", { length: 10 }).default("out"), // in, out
   contactId: integer("contact_id").references(() => customerContacts.id, { onDelete: "set null" }),
@@ -46,7 +56,8 @@ export type InsertCustomerInteraction = z.infer<typeof insertCustomerInteraction
 // Mijoz hujjatlari
 export const customerDocuments = pgTable("customer_documents", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").notNull().references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   type: varchar("type", { length: 30 }).notNull(), // contract, certificate, nda, invoice, act, other
   fileUrl: varchar("file_url", { length: 500 }).notNull(),
@@ -66,7 +77,8 @@ export type InsertCustomerDocument = z.infer<typeof insertCustomerDocumentSchema
 // Mijoz shikoyatlari
 export const customerComplaints = pgTable("customer_complaints", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").notNull().references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id").notNull(),
   orderId: varchar("order_id", { length: 50 }),
   complaintNumber: varchar("complaint_number", { length: 20 }),
   type: varchar("type", { length: 30 }).notNull().default("other"), // quality, deadline, delivery, price, other
@@ -98,7 +110,8 @@ export type InsertCustomerComplaint = z.infer<typeof insertCustomerComplaintSche
 // Mijoz raqobatchilari (Tab 8)
 export const customerCompetitors = pgTable("customer_competitors", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").notNull().references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id").notNull(),
   competitorName: varchar("competitor_name", { length: 255 }).notNull(),
   productType: varchar("product_type", { length: 100 }),
   estimatedSharePercent: numeric("estimated_share_percent", { precision: 5, scale: 2 }),
@@ -118,83 +131,6 @@ export type CustomerCompetitor = typeof customerCompetitors.$inferSelect;
 export type InsertCustomerCompetitor = z.infer<typeof insertCustomerCompetitorSchema>;
 
 
-export const insertCrmCompanySchema = createInsertSchema(crmCompanies, {
-  title: z.string().min(1, "Kompaniya nomi kerak"),
-  phones: z.array(z.object({
-    value: z.string().min(1),
-    type: z.string().default("WORK"),
-  })).default([]),
-  emails: z.array(z.object({
-    value: z.string().email(),
-    type: z.string().default("WORK"),
-  })).default([]),
-}).omit({ id: true, dateCreate: true, dateModify: true } as never);
-
-
-export type CrmCompany = typeof crmCompanies.$inferSelect;
-
-export type InsertCrmCompany = z.infer<typeof insertCrmCompanySchema>;
-
-
-// CRM Pipelines (Voronkalar - b_crm_deal_category)
-export const crmPipelines = pgTable("crm_pipelines", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  nameRu: text("name_ru"),
-  sort: integer("sort").default(500),
-  isDefault: boolean("is_default").default(false),
-  createdDate: timestamp("created_date").notNull().defaultNow(),
-
-  // Legacy / live-DB superset column (ADD-ONLY convergence 2026-05-27)
-  isActive: boolean("is_active").default(true),
-});
-
-
-export const insertCrmPipelineSchema = createInsertSchema(crmPipelines, {
-  name: z.string().min(1, "Voronka nomi kerak"),
-}).omit({ id: true, createdDate: true } as never);
-
-
-export type CrmPipeline = typeof crmPipelines.$inferSelect;
-
-export type InsertCrmPipeline = z.infer<typeof insertCrmPipelineSchema>;
-
-
-// CRM Stages (Bosqichlar - b_crm_status)
-export const crmStages = pgTable("crm_stages", {
-  id: serial("id").primaryKey(),
-  statusId: varchar("status_id", { length: 50 }).notNull().unique(), // C0:NEW, C0:PREPARATION
-  entityId: varchar("entity_id", { length: 50 }).notNull().default("DEAL_STAGE"), // DEAL_STAGE, LEAD_STATUS
-  categoryId: integer("category_id").default(0).references(() => crmPipelines.id, { onDelete: "set null" }), // pipeline reference
-  
-  name: text("name").notNull(),
-  nameRu: text("name_ru"),
-  sort: integer("sort").default(500),
-  color: varchar("color", { length: 20 }),
-  semantics: varchar("semantics", { length: 20 }), // process, success, fail
-
-  // Legacy / live-DB superset column (ADD-ONLY convergence 2026-05-27)
-  probability: integer("probability").default(0),
-}, (t) => [
-  check("crm_stages_semantics_chk", sql`${t.semantics} IS NULL OR ${t.semantics} IN ('process','success','fail')`),
-  index("idx_crm_stages_category_id").on(t.categoryId),
-  index("idx_crm_stages_entity_id").on(t.entityId),
-]);
-
-
-export const insertCrmStageSchema = createInsertSchema(crmStages, {
-  statusId: z.string().min(1, "Status ID kerak"),
-  name: z.string().min(1, "Bosqich nomi kerak"),
-  entityId: z.string().default("DEAL_STAGE"),
-  semantics: z.enum(["process", "success", "fail"]).optional(),
-}).omit({ id: true } as never);
-
-
-export type CrmStage = typeof crmStages.$inferSelect;
-
-export type InsertCrmStage = z.infer<typeof insertCrmStageSchema>;
-
-
 // CRM Deals (Kelishuvlar - b_crm_deal) - MARKAZIY ENTITY
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
@@ -202,38 +138,40 @@ export const crmDeals = pgTable("crm_deals", {
   // tenant 1 on migration; future writers MUST set this from TenantContext.
   tenantId: integer("tenant_id").notNull().default(1),
   title: text("title").notNull(),
-  
+
   // Pipeline & Stage
-  categoryId: integer("category_id").default(0).references(() => crmPipelines.id, { onDelete: "set null" }), // voronka
+  // FK to crmPipelines removed 2026-07-02 (orphan table deleted, see note above)
+  categoryId: integer("category_id").default(0), // voronka
   stageId: varchar("stage_id", { length: 50 }).notNull().default("C0:NEW"), // NEW, PREPARATION, etc.
   stageSemanticId: varchar("stage_semantic_id", { length: 20 }), // process, success, fail
-  
+
   // Flags
   isNew: boolean("is_new").default(true),
   isRecurring: boolean("is_recurring").default(false),
   isReturnCustomer: boolean("is_return_customer").default(false),
   isRepeatedApproach: boolean("is_repeated_approach").default(false),
-  
+
   // Financial
   probability: integer("probability").default(0), // 0-100
   currencyId: varchar("currency_id", { length: 3 }).default("UZS"),
   opportunity: numericMoney("opportunity").notNull(), // summa
   isManualOpportunity: boolean("is_manual_opportunity").default(false),
   taxValue: numericMoney("tax_value"),
-  
+
   // Relations
-  companyId: integer("company_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  companyId: integer("company_id"),
   contactIds: jsonb("contact_ids").$type<number[]>().default(sql`'[]'::jsonb`), // multiple contacts
-  
+
   // Dates
   beginDate: varchar("begin_date", { length: 10 }), // YYYY-MM-DD
   closeDate: varchar("close_date", { length: 10 }), // YYYY-MM-DD
-  
+
   // Assignment
   assignedById: integer("assigned_by_id").references(() => users.id, { onDelete: 'restrict' }).notNull(),
   createdById: integer("created_by_id").references(() => users.id, { onDelete: 'set null' }),
   modifyById: integer("modify_by_id").references(() => users.id, { onDelete: 'set null' }),
-  
+
   // Metadata
   dateCreate: timestamp("date_create").notNull().defaultNow(),
   dateModify: timestamp("date_modify").notNull().defaultNow(),
@@ -241,14 +179,14 @@ export const crmDeals = pgTable("crm_deals", {
   closed: boolean("closed").default(false),
   comments: text("comments"),
   additionalInfo: text("additional_info"),
-  
+
   // External source
   originatorId: varchar("originator_id", { length: 50 }),
   originId: varchar("origin_id", { length: 255 }),
-  
+
   // Sales Order link (for idempotency - one deal = one sales order)
   salesOrderId: varchar("sales_order_id"),
-  
+
   // Bitrix24-style extended fields
   forecastAmount: numeric("forecast_amount"), // Weighted forecast
   slaDeadline: timestamp("sla_deadline"), // Service level deadline
@@ -302,6 +240,3 @@ export const insertCrmDealSchema = createInsertSchema(crmDeals, {
 export type CrmDeal = typeof crmDeals.$inferSelect;
 
 export type InsertCrmDeal = z.infer<typeof insertCrmDealSchema>;
-
-
-// CRM Product Categories

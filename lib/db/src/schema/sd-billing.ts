@@ -9,7 +9,9 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, uni
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
-import { crmCompanies } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): import of crmCompanies from "./crm-schema"
+// removed — that pgTable declaration was deleted (dead lib/db duplicate,
+// Q-29 verified). The 2 customerId FKs below converted to plain columns.
 import { glDocuments } from "./fi-schema";
 import { Module } from "./lms-schema";
 import { Order, Product, orders, productionOrders, products } from "./pp-schema";
@@ -35,7 +37,8 @@ export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
 
 export const customerCreditLimits = pgTable("customer_credit_limits", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }).unique(),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id").unique(),
   creditLimit: numericMoney("credit_limit").notNull(),
   temporaryCreditLimit: numericMoney("temporary_credit_limit"),
   temporaryLimitValidUntil: varchar("temporary_limit_valid_until", { length: 10 }),
@@ -65,7 +68,8 @@ export type CustomerCreditLimit = typeof customerCreditLimits.$inferSelect;
 
 export const creditCheckLogs = pgTable("credit_check_logs", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   salesOrderId: varchar("sales_order_id").references(() => salesOrders.id, { onDelete: "set null" }),
   orderAmount: numericMoney("order_amount").notNull(),
   currentBalance: numericMoney("current_balance"),

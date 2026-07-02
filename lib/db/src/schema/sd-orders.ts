@@ -9,7 +9,9 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, uni
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
-import { crmCompanies } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): import of crmCompanies from "./crm-schema"
+// removed — that pgTable declaration was deleted (dead lib/db duplicate,
+// Q-29 verified). The 2 customerId FKs below converted to plain columns.
 import { glDocuments } from "./fi-schema";
 import { Module } from "./lms-schema";
 import { Order, Product, orders, productionOrders, products } from "./pp-schema";
@@ -24,7 +26,8 @@ export const salesInvoices = pgTable("sales_invoices", {
   invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
   invoiceDate: varchar("invoice_date", { length: 10 }).notNull(), // YYYY-MM-DD
   customerName: text("customer_name").notNull(),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: "set null" }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   orderId: varchar("order_id").references(() => orders.id, { onDelete: "set null" }),
   // Live DB superset (ADD-ONLY): link to a sales_orders row + invoice currency
   salesOrderId: integer("sales_order_id"),
@@ -103,7 +106,8 @@ export const salesOrders = pgTable("sales_orders", {
   division: varchar("division", { length: 10 }).notNull().default("00"),
   
   // Customer references
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   soldToParty: varchar("sold_to_party", { length: 50 }),
   shipToParty: varchar("ship_to_party", { length: 50 }),
   billToParty: varchar("bill_to_party", { length: 50 }),

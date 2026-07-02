@@ -8,8 +8,13 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, unique, uuid, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { crmCompanies, crmDeals, crmLeads } from "./crm-schema";
 import { orders, productCategories, products } from "./pp-schema";
+// NOTE (2026-07-02): crmLeads/crmDeals are live/canonical (see
+// ./crm-contacts.ts and ./crm-pipelines.ts notes) — kept as real FK targets
+// below. crmCompanies was a dead lib/db duplicate (deleted, Q-29 verified) —
+// its FK converted to a plain column.
+import { crmDeals } from "./crm-pipelines";
+import { crmLeads } from "./crm-contacts";
 
 
 // Public Products (Ommaviy mahsulotlar)
@@ -59,7 +64,8 @@ export const customerAccounts = pgTable("customer_accounts", {
   passwordHash: text("password_hash"),
   fullName: text("full_name").notNull(),
   companyName: text("company_name"),
-  crmCompanyId: integer("crm_company_id").references(() => crmCompanies.id, { onDelete: "set null" }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  crmCompanyId: integer("crm_company_id"),
   inn: varchar("inn", { length: 20 }),
   address: text("address"),
   isVerified: boolean("is_verified").default(false),
