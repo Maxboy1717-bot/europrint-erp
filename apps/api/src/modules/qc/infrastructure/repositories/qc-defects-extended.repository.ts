@@ -26,7 +26,7 @@ const BRAK_UNION_SQL = sql`(
          production_order_id, material_id, status
   FROM qc_braks
   UNION ALL
-  SELECT id, papka_order_id, brak_date, stage, quantity::numeric AS quantity, unit, defect_code AS reason, description,
+  SELECT id, papka_order_id, brak_date::text AS brak_date, stage, quantity::numeric AS quantity, unit, defect_code AS reason, description,
          NULL::integer AS equipment_id, NULL::integer AS operator_id, cost_impact, is_reworkable, reworked,
          CASE WHEN reported_by ~ '^[0-9]+$' THEN reported_by::integer ELSE NULL END AS created_by,
          created_at::timestamptz AS created_at, NULL::integer AS production_order_id, NULL::integer AS material_id, status

@@ -94,6 +94,13 @@ export class QcDefectsExtendedController {
     if (body.root_cause_id != null) contextNotes.push(`root_cause_id=${safeInt(body.root_cause_id, 0)}`);
     const baseDescription = body.description != null ? String(body.description) : (body.reason != null ? String(body.reason) : 'Brak');
     const description = contextNotes.length > 0 ? `${baseDescription} [${contextNotes.join(', ')}]` : baseDescription;
+    // stage/brak_date are optional in QcCreateBrakSchema but the brak UNION readers (qc-new /
+    // qc-defects-extended repos, qc.bot) only recognize a qc_defects row as a "brak" when at
+    // least one of papka_order_id/stage/brak_date is non-null. The pre-CQRS repo.createBrak
+    // always defaulted these two (stage ?? 'production', brak_date ?? today) -- replicate that
+    // here so a minimal-payload POST /qc/braks still lands as a visible brak, not a hidden row.
+    const effectiveStage = body.stage != null ? String(body.stage) : 'production';
+    const effectiveBrakDate = body.brak_date != null ? String(body.brak_date) : new Date().toISOString().slice(0, 10);
 
     const cmd = new ReportDefectCommand(
       null,
@@ -107,11 +114,11 @@ export class QcDefectsExtendedController {
       body.reported_by != null ? String(safeInt(body.reported_by, 0)) : 'system-user',
       {
         papkaOrderId: body.papka_order_id != null ? safeInt(body.papka_order_id, 0) : null,
-        stage: body.stage != null ? String(body.stage) : null,
+        stage: effectiveStage,
         costImpact: null,
         isReworkable: null,
         reworked: null,
-        brakDate: body.brak_date != null ? String(body.brak_date) : null,
+        brakDate: effectiveBrakDate,
       },
     );
     const _rCreateBrak = await this.commandBus.execute(cmd);
