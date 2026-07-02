@@ -3,10 +3,12 @@
  * @description Office-style inline document preview (Google-Docs-like): images and
  *   PDFs render inline in the modal (native browser PDF viewer via <iframe>, no extra
  *   dependency needed); other file types fall back to a "preview unavailable, download
- *   instead" panel. The Download action always targets the role-gated
- *   `/storage/download/*` backend route (see storage.controller.ts) — a denied attempt
- *   surfaces the backend's system-generated reason (not a user-typed one) via toast,
- *   which is itself written to `audit_logs` server-side for every attempt (allow/deny).
+ *   instead" panel. The Download action first asks the user for a short justification
+ *   (min 5 chars — hujjat-eksport-cheklash, egasi 2026-07-02) and passes it as
+ *   `?reason=` to the role-gated `/storage/download/*` backend route (see
+ *   storage.controller.ts) — the USER-TYPED reason + role is written to `audit_logs`
+ *   server-side for every attempt (allow/deny); a denied attempt surfaces the
+ *   backend's message via toast.
  *
  *   Canonical way to preview any stored file (chat attachment, CC document, HR/SD
  *   document, etc.) — pass the existing `/api/storage/...` fileUrl straight through.
@@ -25,11 +27,17 @@ export interface EPDocumentPreviewProps {
   onClose: () => void;
 }
 
-/** `/api/storage/foo` → `/api/storage/download/foo` — same controller, role-gated route. */
-function toDownloadUrl(fileUrl: string): string {
-  return fileUrl.includes("/storage/")
+/** Kamida shu belgi soni — storage.controller.ts DownloadReasonSchema bilan bir xil. */
+const MIN_REASON_LENGTH = 5;
+
+/** `/api/storage/foo` → `/api/storage/download/foo?reason=...` — same controller,
+ *  role-gated route; the user-typed reason is required server-side for documents. */
+function toDownloadUrl(fileUrl: string, reason: string): string {
+  const base = fileUrl.includes("/storage/")
     ? fileUrl.replace("/storage/", "/storage/download/")
     : fileUrl;
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}reason=${encodeURIComponent(reason)}`;
 }
 
 function isPdf(fileUrl: string, fileType?: string): boolean {
@@ -44,13 +52,16 @@ export function EPDocumentPreview({ fileUrl, fileName, fileType, onClose }: EPDo
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const [downloading, setDownloading] = useState(false);
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [reason, setReason] = useState("");
   const pdf = isPdf(fileUrl, fileType);
   const image = isImage(fileUrl, fileType);
+  const reasonValid = reason.trim().length >= MIN_REASON_LENGTH;
 
-  const handleDownload = async () => {
+  const handleDownload = async (userReason: string) => {
     setDownloading(true);
     try {
-      const res = await fetch(toDownloadUrl(fileUrl), { credentials: "include" });
+      const res = await fetch(toDownloadUrl(fileUrl, userReason), { credentials: "include" });
       if (res.status === 403) {
         const body = await res.json().catch(() => null) as { message?: string } | null;
         toast({
@@ -96,7 +107,7 @@ export function EPDocumentPreview({ fileUrl, fileName, fileType, onClose }: EPDo
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
-              onClick={handleDownload}
+              onClick={() => { setReason(""); setReasonOpen(true); }}
               disabled={downloading}
               className={cn(
                 "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-white transition-opacity",
@@ -114,6 +125,59 @@ export function EPDocumentPreview({ fileUrl, fileName, fileType, onClose }: EPDo
             </button>
           </div>
         </div>
+
+        {reasonOpen && (
+          <div
+            className="absolute inset-0 z-10 bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setReasonOpen(false)}
+          >
+            <div
+              className="bg-[var(--ep-surface)] border border-[var(--ep-border)] rounded-lg shadow-xl w-full max-w-sm p-4 flex flex-col gap-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-sm font-medium">
+                {t("docPreviewReasonTitle", "Yuklab olish sababi")}
+              </p>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+                autoFocus
+                maxLength={500}
+                placeholder={t("docPreviewReasonPlaceholder", "Bu faylni nima uchun yuklab olyapsiz? (kamida 5 belgi)")}
+                className="w-full rounded-md border border-[var(--ep-border)] bg-transparent px-2.5 py-1.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-[var(--ep-blue)]"
+              />
+              {!reasonValid && reason.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t("docPreviewReasonTooShort", "Sabab kamida 5 belgidan iborat bo'lishi kerak")}
+                </p>
+              )}
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => setReasonOpen(false)}
+                  className="px-2.5 py-1.5 rounded-md text-xs font-medium hover:bg-muted text-muted-foreground"
+                >
+                  {t("bekorQilish", "Bekor qilish")}
+                </button>
+                <button
+                  onClick={() => {
+                    if (!reasonValid) return;
+                    setReasonOpen(false);
+                    void handleDownload(reason.trim());
+                  }}
+                  disabled={!reasonValid || downloading}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-white transition-opacity",
+                    "bg-[var(--ep-blue)] hover:opacity-90 disabled:opacity-50",
+                  )}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {t("docPreviewDownloadConfirm", "Yuklab olish")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 min-h-0 bg-muted/20">
           {pdf ? (
