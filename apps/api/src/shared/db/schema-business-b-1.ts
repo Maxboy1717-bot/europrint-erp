@@ -132,18 +132,10 @@ export const gl_account_mappings = pgTable('gl_account_mappings', {
   updated_at:       timestamp('updated_at').defaultNow(),
 });
 
-export const gl_journal_entries = pgTable('gl_journal_entries', {
-  id:              serial('id').primaryKey(),
-  document_id:     integer('document_id'),
-  document_type:   text('document_type'),
-  debit_account:   text('debit_account'),
-  credit_account:  text('credit_account'),
-  amount:          numeric('amount', { precision: 15, scale: 2 }),
-  currency:        text('currency').default('UZS'),
-  description:     text('description'),
-  posted_at:       timestamp('posted_at').defaultNow(),
-  created_at:      timestamp('created_at').defaultNow(),
-});
+// NOTE: gl_journal_entries pgTable declaration removed 2026-07-02 — orphan
+// (0 rows, never queried/inserted anywhere in code). Canonical GL ledger is
+// `entries` (ADR-003). DB table itself is left untouched (no DROP, per rule);
+// only the unused Drizzle-level declaration was removed. See gl-posting.service.ts.
 
 export const accounting_periods = pgTable('accounting_periods', {
   id:         serial('id').primaryKey(),
