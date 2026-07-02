@@ -76,7 +76,7 @@ export class EmployeesCompatFinancialsService {
       const r = await rawSql(sql`
         SELECT sh.id, sh.employee_id, sh.salary_period_start AS period,
                sh.total_bonuses AS amount, sh.other_bonuses, sh.created_at
-        FROM salary_history sh
+        FROM payroll_period_record sh
         WHERE sh.employee_id = ${si(id)}
           AND (sh.total_bonuses::numeric > 0 OR sh.other_bonuses::numeric > 0)
         ORDER BY sh.salary_period_start DESC LIMIT 50
@@ -140,7 +140,7 @@ export class EmployeesCompatFinancialsService {
   async createBonus(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const r = await rawSql(sql`
-        INSERT INTO salary_history (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, total_bonuses, other_bonuses)
+        INSERT INTO payroll_period_record (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, total_bonuses, other_bonuses)
         VALUES (${si(employeeId)}, ${body['period'] ?? body['salary_period_start'] ?? new Date().toISOString().slice(0,7) + '-01'}, ${body['period_end'] ?? body['salary_period_end'] ?? null}, ${body['base_salary'] ?? 0}, ${body['salary_earned'] ?? 0}, ${body['amount'] ?? body['total_bonuses'] ?? 0}, ${body['other_bonuses'] ?? 0})
         RETURNING id, employee_id, salary_period_start AS period, total_bonuses AS amount, created_at
       `);

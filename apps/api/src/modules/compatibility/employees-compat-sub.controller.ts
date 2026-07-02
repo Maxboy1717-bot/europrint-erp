@@ -276,7 +276,7 @@ export class EmployeesCompatSubController {
 
   /**
    * GET /api/employees/:id/payroll-summary
-   * So'nggi 12 oy salary_history agregati. Frontend `EmployeeProfile.tsx`
+   * So'nggi 12 oy payroll_period_record agregati. Frontend `EmployeeProfile.tsx`
    * `payrollSummary` queryda ishlatadi va `!res.ok ? null` orqali defensiv ko'rinish.
    */
   @Get(':id/payroll-summary')

@@ -120,7 +120,7 @@ export class EmployeesCompatProfileRawService {
       const r = await rawSql(sql`
         SELECT sh.id, sh.employee_id, sh.salary_period_start, sh.salary_period_end,
                sh.base_salary, sh.salary_earned, sh.total_bonuses, sh.other_bonuses, sh.created_at
-        FROM salary_history sh
+        FROM payroll_period_record sh
         WHERE sh.employee_id = ${si(id)}
         ORDER BY sh.salary_period_start DESC LIMIT 50
       `);
@@ -204,7 +204,7 @@ export class EmployeesCompatProfileRawService {
   }
 
   /**
-   * Payroll summary — salary_history dan agregat (so'nggi 12 oy).
+   * Payroll summary — payroll_period_record dan agregat (so'nggi 12 oy).
    * Frontend payroll-summary'ni xodim profilida ko'rsatadi.
    */
   async getPayrollSummary(id: string): Promise<Result<Row | null, AppError>> {
@@ -238,7 +238,7 @@ export class EmployeesCompatProfileRawService {
         COALESCE(AVG(salary_earned), 0)::numeric(15,2) AS avg_earned,
         MIN(salary_period_start)                     AS first_period,
         MAX(salary_period_end)                       AS last_period
-      FROM salary_history
+      FROM payroll_period_record
       WHERE employee_id = ${si(id)}
         AND salary_period_start >= NOW() - INTERVAL '12 months'
     `);
@@ -248,7 +248,7 @@ export class EmployeesCompatProfileRawService {
     return rawSql(sql`
       SELECT id, employee_id, salary_period_start, salary_period_end,
              base_salary, salary_earned, total_bonuses, other_bonuses
-      FROM salary_history
+      FROM payroll_period_record
       WHERE employee_id = ${si(id)}
       ORDER BY salary_period_start DESC NULLS LAST, created_at DESC
       LIMIT 1
@@ -258,7 +258,7 @@ export class EmployeesCompatProfileRawService {
   async createSalaryHistory(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
       const r = await rawSql(sql`
-        INSERT INTO salary_history (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, total_bonuses, other_bonuses)
+        INSERT INTO payroll_period_record (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, total_bonuses, other_bonuses)
         VALUES (${si(employeeId)}, ${body['salary_period_start'] ?? body['salaryPeriodStart'] ?? body['period'] ?? new Date().toISOString().slice(0,7) + '-01'}, ${body['salary_period_end'] ?? body['salaryPeriodEnd'] ?? null}, ${body['base_salary'] ?? body['baseSalary'] ?? 0}, ${body['salary_earned'] ?? body['salaryEarned'] ?? 0}, ${body['total_bonuses'] ?? body['totalBonuses'] ?? 0}, ${body['other_bonuses'] ?? body['otherBonuses'] ?? 0})
         RETURNING id, employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, created_at
       `);

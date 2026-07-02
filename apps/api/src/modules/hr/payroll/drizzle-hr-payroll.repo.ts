@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
-import { salaryHistory, payrollPeriods, payrollRows } from '@europrint/schemas';
+import { salary_change_log } from '@shared/db/schema-business-c-2-hr-payroll';
+import { payrollPeriods, payrollRows } from '@europrint/schemas';
 import { sql, eq, and, count, desc, gte, lte } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IHrPayrollRepository, ActiveCardPayInput } from './i-hr-payroll.repo';
@@ -15,16 +16,16 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
     try {
       const { limit, offset, userId, changeType, fromDate, toDate } = opts;
       const conditions = [];
-      if (userId) conditions.push(eq(salaryHistory.userId, userId));
-      if (changeType) conditions.push(eq(salaryHistory.changeType, changeType));
-      if (fromDate) conditions.push(gte(salaryHistory.effectiveDate, new Date(String(fromDate))));
-      if (toDate) conditions.push(lte(salaryHistory.effectiveDate, new Date(String(toDate))));
+      if (userId) conditions.push(eq(salary_change_log.user_id, userId));
+      if (changeType) conditions.push(eq(salary_change_log.change_type, changeType));
+      if (fromDate) conditions.push(gte(salary_change_log.effective_date, new Date(String(fromDate))));
+      if (toDate) conditions.push(lte(salary_change_log.effective_date, new Date(String(toDate))));
       const wh = conditions.length > 0 ? and(...conditions) : undefined;
       const [data, countResult] = await Promise.all([
-        wh ? db.select().from(salaryHistory).where(wh).orderBy(desc(salaryHistory.createdAt)).limit(limit).offset(offset)
-           : db.select().from(salaryHistory).orderBy(desc(salaryHistory.createdAt)).limit(limit).offset(offset),
-        wh ? db.select({ count: count() }).from(salaryHistory).where(wh).limit(1).offset(0)
-           : db.select({ count: count() }).from(salaryHistory).limit(1).offset(0),
+        wh ? db.select().from(salary_change_log).where(wh).orderBy(desc(salary_change_log.created_at)).limit(limit).offset(offset)
+           : db.select().from(salary_change_log).orderBy(desc(salary_change_log.created_at)).limit(limit).offset(offset),
+        wh ? db.select({ count: count() }).from(salary_change_log).where(wh).limit(1).offset(0)
+           : db.select({ count: count() }).from(salary_change_log).limit(1).offset(0),
       ]);
       return Ok({ data, count: Number(countResult[0]?.count || 0) });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Maosh tarixi topilmadi'); }
@@ -32,7 +33,7 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
 
   async create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
-      const result = await db.insert(salaryHistory).values({ ...dto } as typeof salaryHistory.$inferInsert).returning();
+      const result = await db.insert(salary_change_log).values({ ...dto } as typeof salary_change_log.$inferInsert).returning();
       return Ok((result[0] as Record<string, unknown>));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }

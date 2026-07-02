@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql, eq, isNotNull, desc } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
-import { salary_history } from '@shared/db/schema-business-c-2';
+import { payroll_period_record } from '@shared/db/schema-business-c-2';
 import { payroll_advances } from '@shared/db/schema-business-b-1';
 import { hrEmployees } from '@shared/db/schema-misc-app-a';
 import { customer_payments } from '@shared/db/schema-compat-5';
@@ -25,12 +25,12 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
   async getSalaryBenchmark(): Promise<Result<Row>> {
     try {
       const rows = await db.select({
-        market_min:    sql<number>`MIN(${salary_history.base_salary}::numeric)`,
-        market_median: sql<number>`PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ${salary_history.base_salary}::numeric)`,
-        market_max:    sql<number>`MAX(${salary_history.base_salary}::numeric)`,
-        market_avg:    sql<number>`AVG(${salary_history.base_salary}::numeric)`,
+        market_min:    sql<number>`MIN(${payroll_period_record.base_salary}::numeric)`,
+        market_median: sql<number>`PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ${payroll_period_record.base_salary}::numeric)`,
+        market_max:    sql<number>`MAX(${payroll_period_record.base_salary}::numeric)`,
+        market_avg:    sql<number>`AVG(${payroll_period_record.base_salary}::numeric)`,
         sample_size:   sql<number>`COUNT(*)`,
-      }).from(salary_history).where(isNotNull(salary_history.base_salary));
+      }).from(payroll_period_record).where(isNotNull(payroll_period_record.base_salary));
       return Ok((rows[0] ?? {}) as Row);
     } catch (e) {
       return Err(String(e));

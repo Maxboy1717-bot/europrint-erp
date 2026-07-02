@@ -278,7 +278,7 @@ export class HrEmployeesController {
     const newSalary      = currentSalary + body.proposedIncrease;
     const today          = _time.now().toISOString().split('T')[0];
 
-    // P1.6.3: wrap UPDATE employees + INSERT salary_history in a single transaction
+    // P1.6.3: wrap UPDATE employees + INSERT salary_change_log in a single transaction
     const txResult = await this.hrRepo.reviewSalaryTransactional(parseInt(employeeId, 10), newSalary, today);
     assertOk(txResult);
 

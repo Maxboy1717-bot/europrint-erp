@@ -16,7 +16,7 @@ import { HrLeaveRepo } from './drizzle-hr-leave.repo';
 import { overtime_policy } from '@shared/db/schema-hr-overtime';
 import {
   hrEmployees, hrDepartments, hrPositions,
-  salary_history, payroll_periods_hr,
+  payroll_period_record, salary_change_log, payroll_periods_hr,
   candidates, discipline_records, hr_health_checkups,
   accounts,
 } from '@shared/db';
@@ -32,27 +32,27 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
     try {
       const eid = filters.employeeId ? parseInt(filters.employeeId, 10) : null;
       const rows = await db.select({
-        id:              salary_history.id,
-        employee_id:     salary_history.employee_id,
+        id:              payroll_period_record.id,
+        employee_id:     payroll_period_record.employee_id,
         employee_name:   sql<string>`CONCAT(${hrEmployees.first_name}, ' ', ${hrEmployees.last_name})`,
         employee_code:   hrEmployees.employee_code,
-        salary_period_start: salary_history.salary_period_start,
-        salary_period_end:   salary_history.salary_period_end,
-        base_salary:         salary_history.base_salary,
-        salary_earned:       salary_history.salary_earned,
-        total_bonuses:       salary_history.total_bonuses,
-        status:              salary_history.status,
-        approved_by:         salary_history.approved_by,
-        paid_by:             salary_history.paid_by,
-        paid_date:           salary_history.paid_date,
+        salary_period_start: payroll_period_record.salary_period_start,
+        salary_period_end:   payroll_period_record.salary_period_end,
+        base_salary:         payroll_period_record.base_salary,
+        salary_earned:       payroll_period_record.salary_earned,
+        total_bonuses:       payroll_period_record.total_bonuses,
+        status:              payroll_period_record.status,
+        approved_by:         payroll_period_record.approved_by,
+        paid_by:             payroll_period_record.paid_by,
+        paid_date:           payroll_period_record.paid_date,
       })
-        .from(salary_history)
-        .innerJoin(hrEmployees, eq(hrEmployees.id, salary_history.employee_id))
+        .from(payroll_period_record)
+        .innerJoin(hrEmployees, eq(hrEmployees.id, payroll_period_record.employee_id))
         .where(sql`
-          (${eid}::int IS NULL OR ${salary_history.employee_id} = ${eid}) AND
-          (${filters.period ?? null}::text IS NULL OR TO_CHAR(${salary_history.salary_period_start}::date, 'YYYY-MM') = ${filters.period ?? null})
+          (${eid}::int IS NULL OR ${payroll_period_record.employee_id} = ${eid}) AND
+          (${filters.period ?? null}::text IS NULL OR TO_CHAR(${payroll_period_record.salary_period_start}::date, 'YYYY-MM') = ${filters.period ?? null})
         `)
-        .orderBy(sql`${salary_history.salary_period_start} DESC`)
+        .orderBy(sql`${payroll_period_record.salary_period_start} DESC`)
         .limit(100);
       return Ok(castTo<HrRow[]>(rows));
     } catch (error: unknown) {
@@ -74,18 +74,15 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       const earned  = String(payrollRecord.netSalary ?? payrollRecord.net ?? 0);
       const bonuses = String(payrollRecord.bonus ?? 0);
       const otherB  = String(payrollRecord.otherBonuses ?? payrollRecord.other_bonuses ?? 0);
-      // salary_history is dual-purpose: fill the payroll-period columns AND the legacy
-      // NOT-NULL change-history columns (user_id/effective_date/change_type/new_salary)
-      // via raw SQL (those columns are not in the Drizzle insert type). user_id is the
-      // employee's user (controller already guarantees it exists).
+      // payroll_period_record (Concept B, split from salary_history 2026-07-02) — clean payroll-
+      // period-only insert. No more legacy audit-column hack (user_id/effective_date/change_type/
+      // new_salary) — those now live in salary_change_log (Concept A: reviewSalaryTransactional).
       const r = await runQuery<HrRow>(sql`
-        INSERT INTO salary_history
-          (user_id, employee_id, effective_date, change_type, new_salary,
-           salary_period_start, salary_period_end, base_salary, salary_earned,
+        INSERT INTO payroll_period_record
+          (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned,
            total_bonuses, other_bonuses)
         VALUES
-          ((SELECT user_id FROM employees WHERE id = ${empId}), ${empId}, ${pStart},
-           'payroll', ${earned}::numeric, ${pStart}::date, ${pEnd}::date,
+          (${empId}, ${pStart}::date, ${pEnd}::date,
            ${baseSal}::numeric, ${earned}::numeric, ${bonuses}::numeric, ${otherB}::numeric)
         RETURNING *
       `);
@@ -97,28 +94,32 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   }
 
   // P1.6.3: wrap salary review in a single DB transaction
+  // Concept A (salary_change_log, split from salary_history 2026-07-02): a salary "review"/raise
+  // is a CHANGE-EVENT, not a payroll-period calculation — it belongs to the audit-log table, not
+  // payroll_period_record.
   async reviewSalaryTransactional(employeeId: number, newSalary: number, today: string): Promise<Result<HrRow>> {
     try {
       let historyRow: HrRow = {};
       await db.transaction(async (tx) => {
-        // 1. UPDATE employees.base_salary
+        // 1. Read current base_salary (previous_salary for the audit row) + linked user_id
+        const empRows = await tx.select({ base_salary: hrEmployees.base_salary, user_id: hrEmployees.user_id })
+          .from(hrEmployees).where(eq(hrEmployees.id, employeeId)).limit(1);
+        const prevSalary = empRows[0]?.base_salary ?? null;
+        const userId     = empRows[0]?.user_id ?? null;
+        // 2. UPDATE employees.base_salary
         await tx.update(hrEmployees)
           .set({ base_salary: String(newSalary) })
           .where(eq(hrEmployees.id, employeeId));
-        // 2. INSERT salary_history row (raw SQL — fills legacy NOT-NULL change-history
-        //    columns user_id/effective_date/change_type/new_salary alongside the period cols)
-        const res = await tx.execute(sql`
-          INSERT INTO salary_history
-            (user_id, employee_id, effective_date, change_type, new_salary,
-             salary_period_start, salary_period_end, base_salary, salary_earned,
-             total_bonuses, other_bonuses)
-          VALUES
-            ((SELECT user_id FROM employees WHERE id = ${employeeId}), ${employeeId}, ${today},
-             'review', ${String(newSalary)}::numeric, ${today}::date, ${today}::date,
-             ${String(newSalary)}::numeric, ${String(newSalary)}::numeric, '0'::numeric, '0'::numeric)
-          RETURNING *
-        `);
-        historyRow = castTo<HrRow>(((res as unknown as { rows?: HrRow[] }).rows ?? [])[0] ?? {});
+        // 3. INSERT salary_change_log row (audit event — not tied to a payroll period)
+        const inserted = await tx.insert(salary_change_log).values({
+          employee_id:     employeeId,
+          user_id:         userId,
+          effective_date:  new Date(today),
+          change_type:     'review',
+          previous_salary: prevSalary != null ? String(prevSalary) : null,
+          new_salary:      String(newSalary),
+        }).returning();
+        historyRow = castTo<HrRow>(inserted[0] ?? {});
       });
       return Ok(historyRow);
     } catch (error: unknown) {
@@ -129,7 +130,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
 
   async updatePayroll(id: string, data: HrRow): Promise<Result<HrRow>> {
     try {
-      const rows = await db.update(salary_history).set({
+      const rows = await db.update(payroll_period_record).set({
         base_salary:       data.baseSalary    != null ? String(data.baseSalary)   : undefined,
         salary_earned:     data.netSalary     != null ? String(data.netSalary)    : undefined,
         total_bonuses:     data.totalBonuses  != null ? String(data.totalBonuses) : (data.bonus != null ? String(data.bonus) : undefined),
@@ -141,7 +142,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         paid_by:           data.postedBy      != null ? Number(data.postedBy)      : (data.paidBy != null ? Number(data.paidBy) : undefined),
         paid_date:         data.paidDate      != null ? String(data.paidDate)      : undefined,
         updated_at:        _time.now(),
-      }).where(eq(salary_history.id, parseInt(id, 10))).returning();
+      }).where(eq(payroll_period_record.id, parseInt(id, 10))).returning();
       return { ok: true, data: castTo<HrRow>((rows[0] ?? {}))};
     } catch (error: unknown) {
       this.logger.error(`updatePayroll: ${(error as Error).message}`);
@@ -151,19 +152,19 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
 
   async postPayrollToGL(payrollId: number, postedBy: number): Promise<Result<HrRow>> {
     try {
-      // 1. Load salary_history row — need employee_id + salary_earned
+      // 1. Load payroll_period_record row — need employee_id + salary_earned
       const shRows = await db.select({
-        id:           salary_history.id,
-        employee_id:  salary_history.employee_id,
-        salary_earned: salary_history.salary_earned,
-        status:       salary_history.status,
+        id:           payroll_period_record.id,
+        employee_id:  payroll_period_record.employee_id,
+        salary_earned: payroll_period_record.salary_earned,
+        status:       payroll_period_record.status,
       })
-        .from(salary_history)
-        .where(eq(salary_history.id, payrollId))
+        .from(payroll_period_record)
+        .where(eq(payroll_period_record.id, payrollId))
         .limit(1);
 
       const sh = shRows[0];
-      if (!sh) return Err(`salary_history id=${payrollId} topilmadi`);
+      if (!sh) return Err(`payroll_period_record id=${payrollId} topilmadi`);
       if (sh.status === 'paid') return Err(`Oylik ID=${payrollId} allaqachon buxgalteriyaga o'tkazilgan`);
 
       const amount = Number(sh.salary_earned ?? 0);
@@ -185,7 +186,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       let glEntryId: number | null = null;
       let updatedRow: HrRow = {};
 
-      // 3. Atomic transaction: INSERT entry + UPDATE salary_history
+      // 3. Atomic transaction: INSERT entry + UPDATE payroll_period_record
       await db.transaction(async (tx) => {
         // INSERT INTO entries using canonical @workspace/db schema
         // entryNumber is required by schema; generate as PAYROLL-{id}-{ts}
@@ -206,13 +207,13 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         if (!insertedEntry[0]) throw new Error('GL entries INSERT returned no rows');
         glEntryId = insertedEntry[0].id;
 
-        // UPDATE salary_history SET status='paid', paid_by, paid_date
-        const updated = await tx.update(salary_history).set({
+        // UPDATE payroll_period_record SET status='paid', paid_by, paid_date
+        const updated = await tx.update(payroll_period_record).set({
           status:   'paid',
           paid_by:  postedBy,
           paid_date: today,
           updated_at: _time.now(),
-        }).where(eq(salary_history.id, payrollId)).returning();
+        }).where(eq(payroll_period_record.id, payrollId)).returning();
         updatedRow = castTo<HrRow>(updated[0] ?? {});
       });
 
@@ -226,12 +227,12 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   async getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; employeeCount: number }>> {
     try {
       const rows = await db.select({
-        totalGross:     sql<string>`COALESCE(SUM(${salary_history.base_salary}::numeric), 0)`,
-        totalNet:       sql<string>`COALESCE(SUM(${salary_history.salary_earned}::numeric), 0)`,
-        employeeCount:  sql<string>`COUNT(DISTINCT ${salary_history.employee_id})`,
+        totalGross:     sql<string>`COALESCE(SUM(${payroll_period_record.base_salary}::numeric), 0)`,
+        totalNet:       sql<string>`COALESCE(SUM(${payroll_period_record.salary_earned}::numeric), 0)`,
+        employeeCount:  sql<string>`COUNT(DISTINCT ${payroll_period_record.employee_id})`,
       })
-        .from(salary_history)
-        .where(sql`TO_CHAR(${salary_history.salary_period_start}::date, 'YYYY-MM') = ${period}`);
+        .from(payroll_period_record)
+        .where(sql`TO_CHAR(${payroll_period_record.salary_period_start}::date, 'YYYY-MM') = ${period}`);
       const row = rows[0] ?? {};
       // ERP gross-only: tax (INPS/JSHD) totals are computed in 1C, not here.
       return { ok: true, data: { totalGross: Number(row.totalGross ?? 0), totalNet: Number(row.totalNet ?? 0), employeeCount: Number(row.employeeCount ?? 0) } };

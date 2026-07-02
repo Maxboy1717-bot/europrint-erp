@@ -5,7 +5,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { employees, employee_skills, adaptation_milestones, salary_history, hr_referrals, hr_mentorship_pairings } from '@shared/db';
+import { employees, employee_skills, adaptation_milestones, payroll_period_record, hr_referrals, hr_mentorship_pairings } from '@shared/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 
@@ -39,16 +39,16 @@ export class HrGsdRepository {
     try {
       const rows = await db
         .select({
-          id: salary_history.id,
-          employee_id: salary_history.employee_id,
-          salary_period_start: salary_history.salary_period_start,
-          salary_period_end: salary_history.salary_period_end,
-          base_salary: salary_history.base_salary,
-          salary_earned: salary_history.salary_earned,
+          id: payroll_period_record.id,
+          employee_id: payroll_period_record.employee_id,
+          salary_period_start: payroll_period_record.salary_period_start,
+          salary_period_end: payroll_period_record.salary_period_end,
+          base_salary: payroll_period_record.base_salary,
+          salary_earned: payroll_period_record.salary_earned,
         })
-        .from(salary_history)
-        .where(eq(salary_history.employee_id, id))
-        .orderBy(desc(salary_history.salary_period_start))
+        .from(payroll_period_record)
+        .where(eq(payroll_period_record.employee_id, id))
+        .orderBy(desc(payroll_period_record.salary_period_start))
         .limit(50);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok(rows as Row[]);
