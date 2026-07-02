@@ -6,14 +6,16 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
-import { ar_aging_buckets, sales_invoices } from '@shared/db';
+import { and, eq, ne, lt, sql } from 'drizzle-orm';
+import { ar_aging_buckets, finance_invoices } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import type { IFinanceArRepo, ArBucket, CreateArEntryDto } from '../../domain/repositories/i-finance-ar.repo';
 
-// NOTE: fi_invoices live DB columns (uuid id, total_amount, paid_amount, customer_name,
-// status, due_date timestamptz, deleted_at) differ from the Drizzle stub schema.
-// We query fi_invoices via sql`` template (raw SQL, parameterised) — not Drizzle column refs.
+// OWNER QARORI 2026-07-02 (Moliya-GL-Kassa): finance_invoices = kanonik invoice-manba.
+// sales_invoices / fi_invoices (view over legacy `invoices`) o'rniga finance_invoices
+// (invoice_type='sales') ishlatiladi — sales_invoices'ning yagona yozuvchisi shu fayl edi
+// (0 satr, boshqa consumer yo'q); fi_invoices o'qish esa createArEntry yozuvi bilan
+// mos kelmas edi (o'qish ≠ yozish jadvali — endi ikkalasi ham finance_invoices).
 
 type Row = Record<string, unknown>;
 
@@ -43,32 +45,40 @@ export class FinanceArRepository implements IFinanceArRepo {
   }
 
   async getOverdueInvoices(today: string): Promise<Result<Row[]>> {
-    // Read from fi_invoices (canonical, 5 live rows) — NOT sales_invoices (0 rows).
-    // fi_invoices live columns: status (text), due_date (timestamptz), deleted_at.
+    // Read from finance_invoices (kanonik, 2026-07-02) — invoice_type='sales'.
     return safeCall(async () => {
-      const result = await db.execute(
-        sql`SELECT id, due_date, total_amount, paid_amount, customer_name, status
-            FROM fi_invoices
-            WHERE status != 'paid'
-              AND deleted_at IS NULL
-              AND due_date < ${today}::timestamptz
-            ORDER BY due_date ASC`,
-      );
-      return (result.rows ?? []) as Row[];
+      const rows = await db.select({
+        id:            finance_invoices.id,
+        due_date:      finance_invoices.due_date,
+        total_amount:  finance_invoices.total_amount,
+        paid_amount:   finance_invoices.paid_amount,
+        customer_name: finance_invoices.customer_name,
+        status:        finance_invoices.payment_status,
+      }).from(finance_invoices)
+        .where(and(
+          eq(finance_invoices.invoice_type, 'sales'),
+          ne(finance_invoices.payment_status, 'paid'),
+          lt(finance_invoices.due_date, today),
+        ));
+      return rows as Row[];
     }, 'DB_ERROR');
   }
 
   async getUnpaidInvoices(): Promise<Result<Row[]>> {
-    // Read from fi_invoices (canonical, 5 live rows) — NOT sales_invoices (0 rows).
-    // fi_invoices live columns: status (text), deleted_at — no payment_status field.
+    // Read from finance_invoices (kanonik, 2026-07-02) — invoice_type='sales'.
     return safeCall(async () => {
-      const result = await db.execute(
-        sql`SELECT id, due_date, total_amount, paid_amount, customer_name
-            FROM fi_invoices
-            WHERE status != 'paid'
-              AND deleted_at IS NULL`,
-      );
-      return (result.rows ?? []) as Row[];
+      const rows = await db.select({
+        id:            finance_invoices.id,
+        due_date:      finance_invoices.due_date,
+        total_amount:  finance_invoices.total_amount,
+        paid_amount:   finance_invoices.paid_amount,
+        customer_name: finance_invoices.customer_name,
+      }).from(finance_invoices)
+        .where(and(
+          eq(finance_invoices.invoice_type, 'sales'),
+          ne(finance_invoices.payment_status, 'paid'),
+        ));
+      return rows as Row[];
     }, 'DB_ERROR');
   }
 
@@ -112,18 +122,15 @@ export class FinanceArRepository implements IFinanceArRepo {
   async createArEntry(dto: CreateArEntryDto): Promise<Result<Row>> {
     return safeCall(async () => {
       const invoiceNumber = `AR-${Date.now()}`;
-      const rows = await db.insert(sales_invoices).values({
-        customer_id:    dto.customerId != null ? String(dto.customerId) : null,
-        customer_name:  null,
+      const rows = await db.insert(finance_invoices).values({
         invoice_number: invoiceNumber,
-        sales_order_id: null,
+        invoice_type:   'sales',
+        customer_id:    dto.customerId != null ? Number(dto.customerId) : null,
         total_amount:   String(dto.amount),
         paid_amount:    '0',
-        currency:       'UZS',
-        status:         'draft',
         payment_status: 'unpaid',
         due_date:       dto.dueDate ?? null,
-      } as typeof sales_invoices.$inferInsert).returning();
+      } as typeof finance_invoices.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
     }, 'DB_ERROR');
   }

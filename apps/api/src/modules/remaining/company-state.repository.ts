@@ -102,14 +102,16 @@ export class CompanyStateRepository {
    */
   async getRawMetrics(): Promise<Result<RawMetricValues>> {
     return safeCall(async () => {
+      // cash CTE reads finance_invoices (kanonik invoice-manba, OWNER QARORI 2026-07-02) —
+      // oldin sales_invoices/purchase_invoices (doim 0 satr, yozuvchisi yo'q edi) o'qirdi.
       const r = await exec(sql`
         WITH cash AS (
           SELECT
-            COALESCE((SELECT SUM(total_amount) FROM sales_invoices
-                      WHERE payment_status = 'paid'
+            COALESCE((SELECT SUM(total_amount) FROM finance_invoices
+                      WHERE invoice_type = 'sales' AND payment_status = 'paid'
                         AND created_at >= date_trunc('month', CURRENT_DATE)), 0) AS revenue,
-            COALESCE((SELECT SUM(total_amount) FROM purchase_invoices
-                      WHERE payment_status IN ('paid','partial')
+            COALESCE((SELECT SUM(total_amount) FROM finance_invoices
+                      WHERE invoice_type = 'purchase' AND payment_status IN ('paid','partial')
                         AND created_at >= date_trunc('month', CURRENT_DATE)), 0) AS expenses
         ),
         emp AS (

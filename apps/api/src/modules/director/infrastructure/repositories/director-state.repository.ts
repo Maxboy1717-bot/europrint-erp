@@ -65,7 +65,9 @@ export class DirectorStateRepository implements IDirectorStateRepo {
   async queryCompanyStateHistory(): Promise<Result<CompanyStateHistoryData>> {
 
     return safeCall(async () => {
-      const r = await castTo<WR[]>(exec(sql`SELECT TO_CHAR(DATE_TRUNC('week', si.created_at), 'DD.MM') AS week_label, DATE_TRUNC('week', si.created_at)::date::text AS week_start, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) AS revenue, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) - COALESCE((SELECT SUM(pi.total_amount) FROM purchase_invoices pi WHERE DATE_TRUNC('week', pi.created_at) = DATE_TRUNC('week', si.created_at) AND pi.payment_status IN ('paid','partial')), 0) AS profit FROM sales_invoices si WHERE si.created_at >= NOW() - INTERVAL '8 weeks' GROUP BY DATE_TRUNC('week', si.created_at) ORDER BY week_start ASC`));
+      // si/pi endi finance_invoices (invoice_type='sales'/'purchase') — kanonik invoice-manba,
+      // OWNER QARORI 2026-07-02. Oldin sales_invoices/purchase_invoices (doim 0 satr) o'qirdi.
+      const r = await castTo<WR[]>(exec(sql`SELECT TO_CHAR(DATE_TRUNC('week', si.created_at), 'DD.MM') AS week_label, DATE_TRUNC('week', si.created_at)::date::text AS week_start, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) AS revenue, COALESCE(SUM(si.total_amount) FILTER (WHERE si.payment_status = 'paid'), 0) - COALESCE((SELECT SUM(pi.total_amount) FROM finance_invoices pi WHERE pi.invoice_type = 'purchase' AND DATE_TRUNC('week', pi.created_at) = DATE_TRUNC('week', si.created_at) AND pi.payment_status IN ('paid','partial')), 0) AS profit FROM finance_invoices si WHERE si.invoice_type = 'sales' AND si.created_at >= NOW() - INTERVAL '8 weeks' GROUP BY DATE_TRUNC('week', si.created_at) ORDER BY week_start ASC`));
       const history = (Array.isArray(r) ? r : []).map(row => {
         const revenue = parseFloat(row.revenue)||0; const profit = parseFloat(row.profit)||0;
         const perfRatio = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
@@ -87,7 +89,8 @@ export class DirectorStateRepository implements IDirectorStateRepo {
       weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
       weekStart.setHours(0, 0, 0, 0);
       const [revRows, ordRows] = await Promise.all([
-        castTo<RR[]>(exec(sql`SELECT COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) AS revenue, COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) - COALESCE((SELECT SUM(total_amount) FROM purchase_invoices WHERE created_at >= ${weekStart} AND payment_status IN ('paid','partial')), 0) AS profit FROM sales_invoices WHERE created_at >= ${weekStart}`)),
+        // finance_invoices (invoice_type='sales'/'purchase') — kanonik invoice-manba, OWNER QARORI 2026-07-02.
+        castTo<RR[]>(exec(sql`SELECT COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) AS revenue, COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) - COALESCE((SELECT SUM(total_amount) FROM finance_invoices WHERE invoice_type = 'purchase' AND created_at >= ${weekStart} AND payment_status IN ('paid','partial')), 0) AS profit FROM finance_invoices WHERE invoice_type = 'sales' AND created_at >= ${weekStart}`)),
         castTo<RR[]>(exec(sql`SELECT COUNT(*) FILTER (WHERE status='completed') AS completed, COUNT(*) AS total FROM sales_orders WHERE created_at >= ${weekStart}`)),
       ]);
       const rv = (revRows[0]??{}) as RR; const ov = (ordRows[0]??{}) as RR;

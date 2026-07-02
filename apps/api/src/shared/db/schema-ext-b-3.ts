@@ -52,6 +52,9 @@ export const payroll_entries = pgTable('payroll_entries', {
 
 // ─── Finance Invoice Extended ──────────────────────────────────────────────────
 
+// finance_invoices = KANONIK invoice-manba (OWNER QARORI, Moliya-GL-Kassa, 2026-07-02).
+// customer_name/supplier_name/notes — 2026-07-02 additiv migratsiyada qo'shildi
+// (finance-invoices-canonical-backfill-2026-07-02.sql) AP/AR repository'lar uchun.
 export const finance_invoices = pgTable('finance_invoices', {
   id:             serial('id').primaryKey(),
   invoice_number: text('invoice_number'),
@@ -62,6 +65,9 @@ export const finance_invoices = pgTable('finance_invoices', {
   paid_amount:    numeric('paid_amount', { precision: 15, scale: 2 }).default('0'),
   payment_status: text('payment_status').default('unpaid'),
   due_date:       date('due_date'),
+  customer_name:  text('customer_name'),
+  supplier_name:  text('supplier_name'),
+  notes:          text('notes'),
   created_at:     timestamp('created_at').defaultNow(),
   updated_at:     timestamp('updated_at').defaultNow(),
 });
