@@ -181,7 +181,13 @@ export class ErpOrdersController {
     return unwrapOrThrow(await this.svc.getWorkCenterStats(safeInt(id, 0), dateRange ?? ''));
   }
 
-  @ApiOperation({ summary: 'List mrp runs' })
+  @ApiOperation({
+    deprecated: true,
+    summary: 'DEPRECATED — legacy ERP MRP runs (read-only, no real calc)',
+    description:
+      "erp_mrp_runs hech qachon haqiqiy hisob-kitob olmagan (faqat status-flip, soxta). " +
+      'Real MRP hisoblash uchun PP moduli ishlating: POST /api/pp/mrp/run.',
+  })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('mrp-runs')
   async listMrpRuns(
@@ -191,9 +197,14 @@ export class ErpOrdersController {
     return unwrapOrThrow(await this.svc.listMrpRuns(safeInt(page, 1), safeInt(limit, 20)));
   }
 
-  @ApiOperation({ summary: 'Create mrp run' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiOperation({
+    deprecated: true,
+    summary: 'DEPRECATED — blocked, use PP MRP instead',
+    description:
+      'Bu endpoint hech qachon haqiqiy MRP hisoblamagan (soxta) — endi bloklangan (501). ' +
+      'Real MRP uchun: POST /api/pp/mrp/run.',
+  })
+  @ApiResponse({ status: 501, description: 'Deprecated — always returns Not Implemented' })
   @Post('mrp-runs')
   @Roles(...ERP_WRITE)
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
@@ -201,17 +212,28 @@ export class ErpOrdersController {
     return unwrapOrThrow(await this.svc.createMrpRun(body));
   }
 
-  @ApiOperation({ summary: 'Calculate mrp run' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiOperation({
+    deprecated: true,
+    summary: 'DEPRECATED — blocked, use PP MRP instead',
+    description:
+      'Bu endpoint faqat status ni "running" ga o\'zgartirar edi, hech qachon natija ' +
+      "hisoblamagan (erp_mrp_results ga yozuvchi kod umuman yo'q — soxta). Endi bloklangan " +
+      '(501). Real MRP uchun: POST /api/pp/mrp/run.',
+  })
+  @ApiResponse({ status: 501, description: 'Deprecated — always returns Not Implemented' })
   @Post('mrp-runs/:runId/calculate')
   @Roles(...ERP_WRITE)
   async calculateMrpRun(@Param('runId') runId: string) {
     return unwrapOrThrow(await this.svc.calculateMrpRun(safeInt(runId, 0)));
   }
 
-  @ApiOperation({ summary: 'List mrp results' })
+  @ApiOperation({
+    deprecated: true,
+    summary: 'DEPRECATED — legacy ERP MRP results (read-only, always empty)',
+    description:
+      "erp_mrp_results jadvaliga hech qachon yozuvchi kod bo'lmagan — doim bo'sh. " +
+      'Real MRP natijalari uchun PP moduli ishlating: POST /api/pp/mrp/run.',
+  })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('mrp-results')
   async listMrpResults(@Query('runId') runId?: string) {

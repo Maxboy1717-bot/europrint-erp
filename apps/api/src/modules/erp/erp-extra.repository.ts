@@ -3,9 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
-import { Ok, Err, Result, safeCall } from '@common/result';
+import { Ok, Err, Result, safeCall, AppErr } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
@@ -89,22 +87,34 @@ export class ErpExtraRepository {
 
   }
 
-  async createMrpRun(body: Row): Promise<Result<Row>>  {
-  try {  
-      const r = await exec(sql`INSERT INTO erp_mrp_runs (run_date, status, notes, created_by) VALUES (NOW(), 'pending', ${body.notes ?? null}, ${body.createdBy ?? null}) RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? { id: 0, status: 'pending', createdAt: _time.now() }) : Err(r.error);  } catch (_e) {
-    return Err(String(_e));
+  /**
+   * DEPRECATED (Q-46): `erp_mrp_runs`/`erp_mrp_results` never receive a real
+   * calculation — {@link calculateMrpRun} only flipped status to 'running' and
+   * nothing ever wrote to `erp_mrp_results` (verified: zero INSERT sites,
+   * table always empty in prod). Creating a run here is now blocked so the
+   * UI cannot enter a state that looks "in progress" forever. Real MRP with
+   * an actual netting/lot-sizing algorithm lives in the PP module:
+   * POST /api/pp/mrp/run (see pp-intelligence.controller.ts + run-mrp.handler.ts).
+   */
+  async createMrpRun(_body: Row): Promise<Result<Row>>  {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy MRP eskirgan (DEPRECATED): haqiqiy hisob-kitob bermaydi. Real MRP uchun PP moduli — POST /api/pp/mrp/run ishlating.",
+    ));
   }
 
-  }
-
-  async calculateMrpRun(runId: number): Promise<Result<Row | null>>  {
-  try {  
-      const r = await exec(sql`UPDATE erp_mrp_runs SET status = 'running', started_at = NOW() WHERE id = ${runId} RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
-    return Err(String(_e));
-  }
-
+  /**
+   * DEPRECATED (Q-46): see {@link createMrpRun}. This previously flipped
+   * `erp_mrp_runs.status` to 'running' with no real computation ever
+   * following it (no writer to `erp_mrp_results` exists in the codebase) —
+   * a fake "in progress" state that misleads users. Blocked; use PP's
+   * POST /api/pp/mrp/run for a real MRP calculation.
+   */
+  async calculateMrpRun(_runId: number): Promise<Result<Row | null>>  {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy MRP eskirgan (DEPRECATED): haqiqiy hisob-kitob bermaydi (faqat status-flip, soxta). Real MRP uchun PP moduli — POST /api/pp/mrp/run ishlating.",
+    ));
   }
 
   async listMrpResults(runId?: number): Promise<Result<Row[]>>  {
