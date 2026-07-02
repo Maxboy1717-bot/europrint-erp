@@ -158,8 +158,9 @@ export {
   raci_matrix,
   // CRM Extended (new tables, different from existing crm_ tables)
   crm_leads, crm_deals, crm_contacts,
-  // POS Extended
-  pos_categories, pos_products, pos_orders, pos_order_items, pos_movements, pos_printer_configs,
+  // POS Extended (pos_printer_configs olib tashlandi 2026-07-02 — G9-4/Q-46 dublikat pgTable;
+  // kanonik = posPrinterConfig 'pos_printer_config', lib/db pos-schema-v2.ts)
+  pos_categories, pos_products, pos_orders, pos_order_items, pos_movements,
   // KPI & Goals
   kpi_definitions, kpi_values, goals,
   // Gamification Extended

@@ -4,7 +4,7 @@
  */
 
 import {
-  Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post,
+  Body, Controller, Delete, Get, HttpStatus, NotFoundException, Param, Patch, Post,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -14,14 +14,23 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
-import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { db, posPrinterConfig } from '@shared/db';
+import { sql, eq, desc } from 'drizzle-orm';
 
+// G9-4: kanonik jadval = pos_printer_config (POS label-print pipeline shu jadvaldan
+// getActiveConfig o'qiydi; FE test tugmasi ham /v2/pos/printer-config/:id/test ga boradi).
+// Avval bu controller DUBLIKAT pos_printer_configs (ko'plik) jadvaliga yozardi — FE
+// yaratgan config test qilinganda singular jadvalda topilmasdi (ikki-dunyo bug).
 const PrinterConfigSchema = z.object({
   name: z.string().max(200).optional(),
-  ipAddress: z.string().max(50).optional(),
+  printerIp: z.string().max(100).optional(),
+  printerPort: z.number().int().min(1).max(65535).optional(),
+  printFormat: z.string().max(10).optional(),
+  notes: z.string().max(2000).optional(),
+  isActive: z.boolean().optional(),
+  // legacy maydon nomlari (eski chaqiruvchilar mosligi uchun)
+  ipAddress: z.string().max(100).optional(),
   port: z.number().int().min(1).max(65535).optional(),
-  paperSize: z.string().max(50).optional(),
   active: z.boolean().optional(),
 }).passthrough();
 
@@ -51,7 +60,7 @@ const rows = (r: unknown): Row[] => ((r as { rows?: Row[] }).rows) ?? [];
 /**
  * WmsBarcodeController
  * Routes: /warehouse/printer-config, /warehouse/material-kits
- * Wired to pos_printer_configs and material_kits tables (were notImplemented stubs).
+ * Wired to pos_printer_config (kanonik, G9-4) and material_kits tables.
  */
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,14 +70,20 @@ const rows = (r: unknown): Row[] => ((r as { rows?: Row[] }).rows) ?? [];
 export class WmsBarcodeController {
   constructor(private readonly svc: WmsWarehouseGatewayService) {}
 
-  // -- PRINTER CONFIG (pos_printer_configs) ------------------------------------
+  // -- PRINTER CONFIG (kanonik: pos_printer_config, G9-4) ----------------------
 
   @ApiOperation({ summary: 'Get printer configs' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('printer-config')
   @Roles(...WH_READ)
   async getPrinterConfigs() {
-    return rows(await db.execute(sql`SELECT * FROM pos_printer_configs ORDER BY is_default DESC, id DESC`));
+    const list = await db
+      .select()
+      .from(posPrinterConfig)
+      .orderBy(desc(posPrinterConfig.isActive), desc(posPrinterConfig.id));
+    const configs = Array.isArray(list) ? list : [];
+    // FE (PrinterSettingsTab) shakli: { configs, active }
+    return { configs, active: configs.find((c) => c.isActive) ?? null };
   }
 
   @ApiOperation({ summary: 'Create printer config' })
@@ -78,37 +93,44 @@ export class WmsBarcodeController {
   @Roles(...WH_WRITE)
   async createPrinterConfig(@Body() body: unknown) {
     const dto = PrinterConfigSchema.parse(body);
-    const r = await db.execute(sql`
-      INSERT INTO pos_printer_configs (name, ip_address, port, is_active, settings, created_at, updated_at)
-      VALUES (
-        ${dto.name ?? ''},
-        ${dto.ipAddress ?? ''},
-        ${dto.port ?? 9100},
-        ${dto.active ?? true},
-        ${JSON.stringify({ paperSize: dto.paperSize ?? 'A4' })}::jsonb,
-        NOW(), NOW()
-      ) RETURNING *
-    `);
-    return rows(r)[0] ?? {};
+    const [row] = await db
+      .insert(posPrinterConfig)
+      .values({
+        name:        dto.name ?? 'Printer',
+        printerIp:   dto.printerIp ?? dto.ipAddress ?? '',
+        printerPort: dto.printerPort ?? dto.port ?? 9100,
+        printFormat: dto.printFormat ?? 'ZPL',
+        isActive:    dto.isActive ?? dto.active ?? true,
+        notes:       dto.notes,
+      })
+      .returning();
+    return row ?? {};
   }
 
   @ApiOperation({ summary: 'Update printer config' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('printer-config/:id')
   @Roles(...WH_WRITE)
   async updatePrinterConfig(@Param('id') id: string, @Body() body: unknown) {
-    const dto = PrinterConfigSchema.partial().parse(body);
-    await db.execute(sql`
-      UPDATE pos_printer_configs SET
-        name       = COALESCE(${dto.name       ?? null}, name),
-        ip_address = COALESCE(${dto.ipAddress  ?? null}, ip_address),
-        port       = COALESCE(${dto.port       ?? null}, port),
-        is_active  = COALESCE(${dto.active     ?? null}, is_active),
-        updated_at = NOW()
-      WHERE id = ${parseInt(id, 10)}
-    `);
-    return { id: parseInt(id, 10), updated: true };
+    const dto = PrinterConfigSchema.parse(body);
+    const patch: Partial<typeof posPrinterConfig.$inferInsert> = { updatedAt: new Date() };
+    if (dto.name !== undefined) patch.name = dto.name;
+    const printerIp = dto.printerIp ?? dto.ipAddress;
+    if (printerIp !== undefined) patch.printerIp = printerIp;
+    const printerPort = dto.printerPort ?? dto.port;
+    if (printerPort !== undefined) patch.printerPort = printerPort;
+    if (dto.printFormat !== undefined) patch.printFormat = dto.printFormat;
+    const isActive = dto.isActive ?? dto.active;
+    if (isActive !== undefined) patch.isActive = isActive;
+    if (dto.notes !== undefined) patch.notes = dto.notes;
+    const [row] = await db
+      .update(posPrinterConfig)
+      .set(patch)
+      .where(eq(posPrinterConfig.id, parseInt(id, 10)))
+      .returning();
+    if (!row) throw new NotFoundException('Printer config topilmadi');
+    return row;
   }
 
   @ApiOperation({ summary: 'Delete printer config' })
@@ -117,8 +139,12 @@ export class WmsBarcodeController {
   @Delete('printer-config/:id')
   @Roles(...WH_WRITE)
   async deletePrinterConfig(@Param('id') id: string) {
-    await db.execute(sql`DELETE FROM pos_printer_configs WHERE id=${parseInt(id, 10)}`);
-    return { id: parseInt(id, 10), deleted: true };
+    const [row] = await db
+      .delete(posPrinterConfig)
+      .where(eq(posPrinterConfig.id, parseInt(id, 10)))
+      .returning({ id: posPrinterConfig.id });
+    if (!row) throw new NotFoundException('Printer config topilmadi');
+    return { id: row.id, deleted: true };
   }
 
   // -- MATERIAL KITS (material_kits + material_kit_items) ----------------------
