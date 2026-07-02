@@ -14,6 +14,9 @@ import { MmGoodsController }    from './presentation/mm-goods.controller';
 import { MmRawMaterialsController } from './presentation/mm-raw-materials.controller';
 import { MmMaterialCardsController } from './presentation/mm-material-cards.controller';
 import { MmDashboardController } from './presentation/mm-dashboard.controller';
+import { HitlApprovalsController } from './presentation/hitl-approvals.controller';
+import { HitlApprovalsRepository } from './infrastructure/repositories/hitl-approvals.repository';
+import { HITL_APPROVALS_REPO } from './domain/repositories/i-hitl-approvals.repo';
 import { MmMaterialsExtrasService } from './application/mm-materials-extras.service';
 import { LayerFormulaService } from './application/layer-formula.service';
 import { MmMaterialsExtrasRepository } from './infrastructure/repositories/mm-materials-extras.repository';
@@ -67,11 +70,12 @@ const repositories = [
   { provide: MM_MATERIAL_REPO, useClass: DrizzleMaterialRepository },
   { provide: PURCHASE_SVC_REPO, useClass: DrizzlePurchaseSvcRepository },
   { provide: MATERIALS_SVC_REPO, useClass: DrizzleMaterialsSvcRepository },
+  { provide: HITL_APPROVALS_REPO, useClass: HitlApprovalsRepository },
 ];
 
 @Module({
   imports: [AuthModule, CqrsModule, EventEmitterModule.forRoot()],
-  controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController],
+  controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController, HitlApprovalsController],
   providers: [...commandHandlers, ...queryHandlers, ...listeners, ...repositories, PurchaseService, MaterialsService, DrizzleMmGoodsRepository, MmGoodsService,
     MmVendorsPrRepository,
     { provide: MM_VENDORS_PR_REPO, useClass: MmVendorsPrRepository },
