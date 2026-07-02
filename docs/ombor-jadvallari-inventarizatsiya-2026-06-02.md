@@ -6,6 +6,58 @@ writer/reader **grep bilan tasdiqlangan** (taxmin emas).
 
 ---
 
+## 2026-07-02 YANGILANISH (jonli qayta-o'lchov)
+
+> Barcha sonlar 2026-07-02 kuni `node _audit/q.cjs` bilan jonli `count(*)` qilib olindi;
+> writer/reader `grep` bilan qayta tasdiqlandi. Quyidagi 4 blok 2026-06-02 holatga NISBATAN o'zgarishlar.
+
+### A. Kanonik-jonli ro'yxat (data o'sdi / tirildi)
+
+| Jadval | 2026-06-02 | 2026-07-02 | Izoh |
+|---|---|---|---|
+| **warehouse_stock** | 23 | **37** | CANONICAL stok — o'sishda |
+| **material_cards** | 21 | **31** | CANONICAL material lug'ati |
+| **pos_movements** / pos_movement_lines | 1 / 1 | **3 / 3** | CANONICAL harakat |
+| **pos_movement_confirmations** | 0 (DEAD deb belgilangan edi) | **3** | ⭐ **DEAD→JONLI**: writer `pos/application/services/stock-ledger.service.ts` (imzolangan tasdiq, real `signature_hash`). §4 va "O'CHIRISH MUMKIN" ro'yxatidagi DEAD bahosi BEKOR — endi KEEP |
+| **pos_gl_posting_log** | (ro'yxatda yo'q edi) | **2** | JONLI: `gl-posting-log.service/.repository` + `gl.controller` yozadi; POSTED holatida real Debit/Credit gl_entries (2110/6010/1410) |
+| **wms_goods_issues** | 0 | **1** | JONLI: `wms/application/commands/goods-issue.handler.ts` + IoT `warehouse-exit-guard` o'qiydi |
+| inventory_counts | 6 | **17** | CANONICAL sanoq — o'sishda |
+| stock_ledger | 0 | **1** | canonical jurnal — birinchi yozuv tushdi |
+| batch_lots | 21 | 21 | o'zgarishsiz |
+| warehouses | 12 | 12 | o'zgarishsiz |
+
+### B. Tozalash-nomzodlar (data bor, lekin sifatsiz)
+
+| Jadval | Qator | Muammo |
+|---|---|---|
+| pos_stock_alerts | **1078** | ⚠️ **FLOOD**: hammasi 1 dona materialga, 2026-06-20 13:00 → 2026-07-01 14:00 oralig'ida soatlik cron takror yozgan (dedup yo'q). Kod jonli (KEEP), lekin data tozalanishi + cron'ga dedup-guard kerak |
+| stock_items | **7** | hammasi "(DEMO)" nomli seed-qatorlar ("Karton quti A4 (DEMO)"...). 2026-06-02'da DEAD (0 qator + kod yo'q) edi — demo data DEAD jadvalga tushgan; jadval baho DEAD'ligicha qoladi, data ham tozalash-nomzod |
+| pos_printer_config (birlik) | 0 | **DUBLIKAT**: faqat `migrations-drift.ts`da tilga olinadi (runtime kod YO'Q). Kanonik = `pos_printer_configs` (ko'plik; `wms-barcode.controller.ts` + `schema-ext-b-2.ts` ishlatadi, 0 qator=jonli-bo'sh) |
+
+### C. Yangi DEAD-nomzodlar (0 qator + runtime kod YO'Q — grep tasdiqlangan)
+
+| Jadval | Qator | Kod-iste'molchi |
+|---|---|---|
+| pos_serial_number_items | 0 | 0 fayl |
+| pos_offline_queue | 0 | 0 fayl |
+| operator_material_balance | 0 | 0 fayl |
+| excel_import_batches | 0 | 0 fayl |
+| ai_material_insights | 0 | 0 fayl |
+| warehouse_rows | 0 | faqat `migrations-drift.ts` (DDL-invariant, runtime emas) |
+| warehouse_shelves | 0 | faqat `migrations-drift.ts` (DDL-invariant, runtime emas) |
+
+> O'chirish Q-46 tartibida: avval 0-iste'molchi isboti (yuqoridagi grep), keyin egasi ruxsati bilan DROP.
+
+### D. mm_materials VIEW nishoni ALMASHGAN
+
+2026-06-02: `mm_materials` VIEW → `materials` o'qirdi (§ "VIEW→baza" jadvali va §2).
+**2026-07-02 jonli `pg_views` tekshiruvi: `mm_materials` endi `material_cards`ni o'qiydi**
+(`SELECT id, xom_ashyo AS name, kod AS code, ... FROM material_cards`) — ya'ni § "BIRLASHTIRISH"
+bo'limidagi 1-tavsiya (materials→material_cards) VIEW darajasida BAJARILGAN. `materials` jadvali
+hanuz 0 qator — endi VIEW ham unga qaramaydi, birlashtirish-nomzodligi kuchaydi.
+
+---
+
 ## ⚠️ ENG MUHIM KASHFIYOT: bu "dublikat to'plami" emas — **canonical baza + compat-VIEW** arxitekturasi
 
 Ko'p "dublikat" ko'ringan jadval aslida **VIEW** (jonli baza ustidan oyna), alohida jadval EMAS.
