@@ -233,6 +233,7 @@ export class DrizzleCashierPayrollRepository implements ICashierPayrollRepositor
           status: 'open',
           reference: dto.reference,
           movementId: dto.movementId ?? null,
+          categoryId: dto.categoryId ?? null,
         })
         .returning();
       if (!inserted[0]) return Err(AppErr('DB_ERROR', 'Qarz yaratilmadi — INSERT qaytarmadi'));
@@ -282,6 +283,33 @@ export class DrizzleCashierPayrollRepository implements ICashierPayrollRepositor
     }
   }
 
+  /** Profile "jami olingan" — SUM over ALL debt rows (open + cleared), vizyon 16571. */
+  async getDebtTotalAll(employeeId: number): Promise<Result<number>> {
+    try {
+      const rows = await db
+        .select({ total: sql<string>`COALESCE(SUM(${employeeDebt.amount}), 0)` })
+        .from(employeeDebt)
+        .where(eq(employeeDebt.employeeId, employeeId));
+      return Ok(Number(rows[0]?.total ?? 0));
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `EMPLOYEE_DEBT_TOTAL_ALL_FAILED: ${String(e)}`));
+    }
+  }
+
+  /** Profile "tasdiqda" — the employee's pending (approved=false) advance reports. */
+  async listPendingReportsByEmployee(employeeId: number): Promise<Result<AdvanceReport[]>> {
+    try {
+      const rows = await db
+        .select()
+        .from(advanceReports)
+        .where(and(eq(advanceReports.employeeId, employeeId), eq(advanceReports.approved, false)))
+        .orderBy(advanceReports.id);
+      return Ok(rows as AdvanceReport[]);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `ADVANCE_REPORTS_PENDING_LIST_FAILED: ${String(e)}`));
+    }
+  }
+
   async findAdvanceReportByReference(reference: string): Promise<Result<AdvanceReport | null>> {
     try {
       const rows = await db.select().from(advanceReports).where(eq(advanceReports.reference, reference)).limit(1);
@@ -308,6 +336,8 @@ export class DrizzleCashierPayrollRepository implements ICashierPayrollRepositor
                r.debt_id                AS "debtId",
                r.amount,
                r.receipt_ref            AS "receiptRef",
+               r.receipt_file_path      AS "receiptFilePath",
+               r.ocr_match              AS "ocrMatch",
                r.approved,
                r.approved_at            AS "approvedAt",
                r.reference,
@@ -342,6 +372,9 @@ export class DrizzleCashierPayrollRepository implements ICashierPayrollRepositor
           debtId: dto.debtId,
           amount: dto.amount,
           receiptRef: dto.receiptRef ?? null,
+          receiptFilePath: dto.receiptFilePath ?? null,
+          ocrExtracted: dto.ocrExtracted ?? null,
+          ocrMatch: dto.ocrMatch ?? null,
           approved: false,
           reference: dto.reference,
           notes: dto.notes ?? null,

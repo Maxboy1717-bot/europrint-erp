@@ -2,19 +2,29 @@
  * @module cashier-podotchet.service
  * @description CASHIER-HUB Phase 2 — FEATURE B (podotchet: avans / qarz cycle).
  *   issueAdvance: cash given to an employee → KAS-1 cash-out (type='advance', Dr 4000 AR /
- *     Cr 5010 Cash via canonical `entries`) AND opens an employee_debt row ("har som hisobli").
+ *     Cr 5010 Cash via canonical `entries`) AND opens an employee_debt row ("har som hisobli")
+ *     with an optional expense category (finance_categories, categoryType=expense).
  *   submitAdvanceReport: employee submits a receipt → an advance_reports row (pending).
+ *     Optional receipt FILE (existing /api/storage upload key) triggers AI-OCR (vizyon 16586 /
+ *     "chek-AI": AI reads + compares the amount, the HUMAN gives the final approval) —
+ *     GRACEFUL: no AI provider / unreadable receipt → ocr_extracted=null, flow continues.
  *   approveAdvanceReport: human approval (owner E1) → CLEARS the matching employee_debt (cleared).
- *   getEmployeeDebt: profile debt = SUM(open employee_debt.amount) + the open rows.
+ *   getEmployeeDebt: profile podotchet (vizyon 16571) = jami olingan (all debt) + ochiq qarz
+ *     (open) + tasdiqda (pending reports) + sabab/kategoriya rows — separate from oylik/avans.
  *   Idempotent throughout (advance reference, report reference). No forge: cash-out reuses the
  *   KAS-1 PIN gate (owner #8); debt clears only when its report is approved.
  * @layer Application (Finance)
  */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { Result, AppError, AppErr, Ok, Err } from '@common/result';
 import { z } from 'zod';
 import { CashierHubService } from './cashier-hub.service';
+// SHARED READ of the app-level AI router (registered by AiModule in app.module) — resolved
+// LAZILY via ModuleRef{strict:false} so FinanceModule needs no AiModule import and the
+// podotchet flow keeps working when AI is absent (graceful, Q-40 — no forged OCR).
+import { AiRouterService } from '../../ai/application/services/ai-router.service';
 import {
   CASHIER_PAYROLL_REPO,
   type ICashierPayrollRepository,
@@ -28,6 +38,9 @@ const IssueAdvanceSchema = z.object({
   amount: z.number().positive(),
   reference: z.string().min(1).max(100), // base business ref; debt + movement derive from it
   reason: z.string().max(2000).optional(),
+  /** Expense category (finance_categories.id, categoryType=expense) — optional; splits the
+   *  podotchet data by ODDIY_XARID/OQISH/SAFAR/ONLAYN_XARID (GL account mapping = EGASI-DATA). */
+  categoryId: z.number().int().positive().optional(),
   pin: z.string().regex(/^\d{4}$/, "PIN 4 raqamdan iborat bo'lishi kerak"),
 });
 
@@ -35,9 +48,17 @@ const SubmitAdvanceReportSchema = z.object({
   debtId: z.number().int().positive(),
   amount: z.number().positive(),
   receiptRef: z.string().min(1).max(200), // a receipt is mandatory (EP-FIN-026/048 — no doc, no clear)
+  /** Storage key of the uploaded receipt image/PDF (PUT /api/storage/upload — existing infra). */
+  receiptFilePath: z.string().min(1).max(500).optional(),
   reference: z.string().min(1).max(120),
   notes: z.string().max(2000).optional(),
 });
+
+/** AI-OCR extraction stored into advance_reports.ocr_extracted (null = no AI verdict). */
+interface ReceiptOcrOutcome {
+  extracted: Record<string, unknown> | null;
+  match: boolean | null;
+}
 
 /** GET advance-reports query — optional approved-status filter ('pending'|'approved') + pagination. */
 const ListAdvanceReportsQuerySchema = z.object({
@@ -53,6 +74,7 @@ export class CashierPodotchetService {
   constructor(
     @Inject(CASHIER_PAYROLL_REPO) private readonly repo: ICashierPayrollRepository,
     private readonly hub: CashierHubService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   /**
@@ -98,6 +120,7 @@ export class CashierPodotchetService {
       reason: dto.reason ?? null,
       reference: debtRef,
       movementId: movement.id,
+      categoryId: dto.categoryId ?? null,
     });
     if (!debt.ok) return debt as Result<never, AppError>;
     return Ok({ debt: debt.data, movement });
@@ -127,16 +150,79 @@ export class CashierPodotchetService {
       return Err(AppErr('INVALID_STATUS', `Qarz #${dto.debtId} ochiq emas (holat: ${debtRes.data.status})`));
     }
 
+    // AI-OCR (vizyon 16586 "chek-AI"): AI reads the receipt + compares the amount; the result
+    // is a SIGNAL for the human approver only — approveAdvanceReport stays the final gate.
+    // GRACEFUL: no AI key / no verdict → {extracted:null, match:null}, the flow never blocks.
+    const ocr = dto.receiptFilePath
+      ? await this.runReceiptOcr(dto.receiptFilePath, dto.amount)
+      : { extracted: null, match: null };
+
     const created = await this.repo.createAdvanceReport({
       employeeId: debtRes.data.employeeId,
       debtId: dto.debtId,
       amount: dto.amount,
       receiptRef: dto.receiptRef,
+      receiptFilePath: dto.receiptFilePath ?? null,
+      ocrExtracted: ocr.extracted,
+      ocrMatch: ocr.match,
       reference: dto.reference,
       notes: dto.notes ?? null,
     });
     if (!created.ok) return created as Result<never, AppError>;
     return Ok(created.data);
+  }
+
+  /**
+   * Receipt AI-OCR — extracts the total amount from the uploaded receipt via the shared
+   * AiRouterService (same prompt-based pattern as ai-agents vision-qc) and compares it to
+   * the reported amount. NEVER throws and NEVER blocks the flow:
+   *   - AI provider absent / router unavailable / call fails → {extracted:null, match:null};
+   *   - AI answers but yields no numeric amount → extracted stored (audit), match=null;
+   *   - only a real numeric amount produces match=true/false (no forged verdicts — Q-40).
+   */
+  private async runReceiptOcr(receiptFilePath: string, claimedAmount: number): Promise<ReceiptOcrOutcome> {
+    let ai: AiRouterService;
+    try {
+      // strict:false → resolves from the root container (AiModule is app-level); FinanceModule
+      // does not import AiModule. Throws when the provider is absent → graceful null path.
+      ai = this.moduleRef.get(AiRouterService, { strict: false });
+    } catch {
+      this.logger.debug('AI-OCR o\'tkazib yuborildi — AiRouterService mavjud emas (graceful)');
+      return { extracted: null, match: null };
+    }
+
+    const prompt = [
+      'EuroPrint podotchet chek tekshiruvi (AI-OCR).',
+      `Chek fayli (ichki storage): /api/storage/${receiptFilePath}`,
+      `Xodim hisobotda ko'rsatgan summa: ${claimedAmount} UZS.`,
+      'Chekdan JAMI to\'langan summani ajrating va FAQAT quyidagi JSON qaytaring:',
+      '{"amount": number|null, "currency": string|null, "note": string}',
+      'Agar chek mazmunini o\'qiy olmasangiz {"amount": null} qaytaring — TAXMIN QILMANG.',
+    ].join('\n');
+
+    try {
+      const res = await ai.call({ taskType: 'finance.invoice_classify', prompt, temperature: 0, maxTokens: 300 });
+      if (!res.ok) {
+        this.logger.debug(`AI-OCR muvaffaqiyatsiz (graceful davom): ${String(res.error)}`);
+        return { extracted: null, match: null };
+      }
+      const jsonMatch = res.data.text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return { extracted: null, match: null };
+      const parsed = JSON.parse(jsonMatch[0]) as { amount?: unknown; currency?: unknown; note?: unknown };
+      const amount = typeof parsed.amount === 'number' && Number.isFinite(parsed.amount) ? parsed.amount : null;
+      const extracted: Record<string, unknown> = {
+        amount,
+        currency: typeof parsed.currency === 'string' ? parsed.currency : null,
+        note: typeof parsed.note === 'string' ? parsed.note : null,
+        provider: res.data.provider,
+        model: res.data.model,
+      };
+      const match = amount === null ? null : Math.abs(amount - claimedAmount) < 0.01;
+      return { extracted, match };
+    } catch (e: unknown) {
+      this.logger.debug(`AI-OCR xato (graceful davom): ${String(e)}`);
+      return { extracted: null, match: null };
+    }
   }
 
   /**
@@ -173,13 +259,33 @@ export class CashierPodotchetService {
     return this.repo.listAdvanceReports({ status: q.status, limit: q.limit ?? 50, offset: q.offset ?? 0 });
   }
 
-  /** Employee profile debt: jami (SUM of open debt) + the list of open debt rows. */
+  /**
+   * Employee profile podotchet (vizyon 16571 — jami-olgan / nimaga / tasdiqda / qarz,
+   * oylik/avansdan ALOHIDA blok):
+   *   openDebtTotal / openDebts  — mavjud maydonlar o'zgarishsiz (Q-39);
+   *   totalIssued                — jami olingan (barcha debt: open + cleared);
+   *   pendingReportTotal/-Reports— tasdiqda turgan (approved=false) hisobotlar;
+   *   openDebts[].categoryId/reason — nimaga (kategoriya + sabab).
+   */
   async getEmployeeDebt(employeeId: number): Promise<Result<unknown, AppError>> {
     const totalRes = await this.repo.getOpenDebtTotal(employeeId);
     if (!totalRes.ok) return totalRes as Result<never, AppError>;
     const listRes = await this.repo.listOpenDebts(employeeId);
     if (!listRes.ok) return listRes as Result<never, AppError>;
-    return Ok({ employeeId, openDebtTotal: totalRes.data, openDebts: listRes.data });
+    const allTotalRes = await this.repo.getDebtTotalAll(employeeId);
+    if (!allTotalRes.ok) return allTotalRes as Result<never, AppError>;
+    const pendingRes = await this.repo.listPendingReportsByEmployee(employeeId);
+    if (!pendingRes.ok) return pendingRes as Result<never, AppError>;
+    const pendingReports = Array.isArray(pendingRes.data) ? pendingRes.data : [];
+    const pendingReportTotal = pendingReports.reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
+    return Ok({
+      employeeId,
+      openDebtTotal: totalRes.data,
+      openDebts: listRes.data,
+      totalIssued: allTotalRes.data,
+      pendingReportTotal,
+      pendingReports,
+    });
   }
 }
 

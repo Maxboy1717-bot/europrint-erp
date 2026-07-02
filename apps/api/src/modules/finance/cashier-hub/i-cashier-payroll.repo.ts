@@ -33,6 +33,8 @@ export interface CreateDebtDto {
   reason?: string | null;
   reference: string;
   movementId?: number | null;
+  /** Expense category (finance_categories.id, categoryType=expense); NULL = not chosen. */
+  categoryId?: number | null;
 }
 
 export interface CreateAdvanceReportDto {
@@ -42,6 +44,12 @@ export interface CreateAdvanceReportDto {
   receiptRef?: string | null;
   reference: string;
   notes?: string | null;
+  /** Storage key of the uploaded receipt (served at /api/storage/<key>). Optional. */
+  receiptFilePath?: string | null;
+  /** AI-OCR extraction JSON; null = AI unavailable / unreadable (flow never blocks). */
+  ocrExtracted?: unknown | null;
+  /** AI amount == reported amount; null when the AI produced no numeric amount. */
+  ocrMatch?: boolean | null;
 }
 
 /** Filters for the salary-payout approval queue list (GET salary-payouts). */
@@ -86,6 +94,10 @@ export interface AdvanceReportListRow {
   debtId: number;
   amount: string | number | null;
   receiptRef: string | null;
+  /** Uploaded receipt storage key (view at /api/storage/<key>) or null. */
+  receiptFilePath: string | null;
+  /** AI-OCR amount match signal for the human approver: true/false/null (null = no AI verdict). */
+  ocrMatch: boolean | null;
   approved: boolean;
   approvedAt: Date | string | null;
   reference: string;
@@ -136,6 +148,10 @@ export interface ICashierPayrollRepository {
   /** SUM(amount) of OPEN employee_debt for an employee (profile debt). */
   getOpenDebtTotal(employeeId: number): Promise<Result<number>>;
   listOpenDebts(employeeId: number): Promise<Result<EmployeeDebt[]>>;
+  /** SUM(amount) of ALL employee_debt rows (open + cleared) — profile "jami olingan" (vizyon 16571). */
+  getDebtTotalAll(employeeId: number): Promise<Result<number>>;
+  /** Pending (approved=false) advance reports of an employee — profile "tasdiqda" block. */
+  listPendingReportsByEmployee(employeeId: number): Promise<Result<AdvanceReport[]>>;
 
   findAdvanceReportByReference(reference: string): Promise<Result<AdvanceReport | null>>;
   /** Paginated advance-report list (newest first), optionally filtered by approved status; joined to employee name. */

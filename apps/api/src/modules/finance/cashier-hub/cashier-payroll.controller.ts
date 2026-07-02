@@ -86,8 +86,9 @@ export class CashierPayrollController {
 
   // ---------------- FEATURE B: podotchet (advance / debt) ----------------
 
-  // POST /api/finance/cashier/advances — issue a cash advance (opens employee debt).
-  @ApiOperation({ summary: 'Podotchet: issue a cash advance (cash-out + opens employee debt)' })
+  // POST /api/finance/cashier/advances — issue a cash advance (opens employee debt;
+  // optional categoryId = finance_categories expense category).
+  @ApiOperation({ summary: 'Podotchet: issue a cash advance (cash-out + opens employee debt; optional expense categoryId)' })
   @ApiResponse({ status: 201, description: 'Advance issued + GL posted (Dr 4000 / Cr 5010) + debt opened' })
   @ApiResponse({ status: 403, description: 'PIN required / invalid for the advance cash-out' })
   @Post('advances')
@@ -105,7 +106,9 @@ export class CashierPayrollController {
   }
 
   // POST /api/finance/cashier/advance-reports — submit an advance report (receipt, pending).
-  @ApiOperation({ summary: 'Podotchet: submit an advance report (receipt) — pending approval' })
+  // Optional receiptFilePath (existing /api/storage upload key) → AI-OCR amount check
+  // (ocr_extracted/ocr_match) — a SIGNAL only; the human approve below stays the final gate.
+  @ApiOperation({ summary: 'Podotchet: submit an advance report (receipt + optional file → AI-OCR) — pending human approval' })
   @ApiResponse({ status: 201, description: 'Advance report submitted (pending)' })
   @Post('advance-reports')
   async submitAdvanceReport(@Body() body: unknown) {
@@ -121,8 +124,10 @@ export class CashierPayrollController {
     return unwrapOrThrow(await this.podotchet.approveAdvanceReport(id, approverUserId as number));
   }
 
-  // GET /api/finance/cashier/employees/:id/debt — profile debt (SUM open + open rows).
-  @ApiOperation({ summary: 'Podotchet: get an employee profile debt (sum of open debt)' })
+  // GET /api/finance/cashier/employees/:id/debt — profile podotchet (vizyon 16571):
+  // jami olingan (totalIssued) + ochiq qarz (openDebtTotal/openDebts, kategoriya bilan)
+  // + tasdiqda (pendingReportTotal/pendingReports).
+  @ApiOperation({ summary: 'Podotchet: employee profile podotchet (jami olingan / ochiq qarz / tasdiqda / kategoriya)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('employees/:id/debt')
   async getEmployeeDebt(@Param('id', ParseIntPipe) id: number) {
