@@ -5,7 +5,7 @@
 
 import { db } from '@shared/db';
 import { typedExecute } from '@shared/db/typed-execute';
-import { papka_orders_tech, technology_approvals, tech_cards, clients } from '@shared/db';
+import { papka_orders_tech, technology_approvals, tech_cards } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
@@ -39,7 +39,7 @@ export async function queryTechOrders(status?: string): Promise<Row[]> {
     ORDER BY po.created_at DESC
     LIMIT 100
   `);
-  void clients; void eq;
+  void eq;
   return rows;
 }
 

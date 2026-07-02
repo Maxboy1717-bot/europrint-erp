@@ -107,7 +107,7 @@ export {
   mm_goods_receipt_items, mm_goods_issue_items,
   mm_goods_issues_ext, mm_goods_receipts_ext,
   mm_purchase_order_items, mm_materials_ext, mm_vendors_ext,
-  tech_cards, clients, papka_orders_tech,
+  tech_cards, papka_orders_tech,
   boms_int, routings_int, production_orders_int, routing_operations_int,
   pos_movements_legacy, hr_documents_legacy,
   wms_alerts, gamification_totals, hr_brand_settings,
