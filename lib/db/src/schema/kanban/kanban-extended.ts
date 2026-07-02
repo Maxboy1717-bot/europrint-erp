@@ -9,7 +9,7 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, check, ind
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "../core-schema";
-import { kanbanCards, kanbanBoards, kanbanColumns } from "./kanban-core";
+import { kanbanCards } from "./kanban-core";
 
 // ============================================
 // KANBAN KENGAYTIRILGAN FUNKSIYALAR
@@ -97,7 +97,7 @@ export const taskTags = pgTable("task_tags", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   color: varchar("color", { length: 20 }).notNull().default("#3b82f6"),
-  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: 'cascade' }),
+  boardId: varchar("board_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -216,7 +216,7 @@ export const taskTemplates = pgTable("task_templates", {
   description: text("description"),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"),
   checklistItems: text("checklist_items").array(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "set null" }),
+  boardId: varchar("board_id"),
   createdById: integer("created_by_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
@@ -274,8 +274,8 @@ export type InsertTaskFile = z.infer<typeof insertTaskFileSchema>;
 export const taskStatusHistory = pgTable("task_status_history", {
   id: serial("id").primaryKey(),
   cardId: varchar("card_id").references(() => kanbanCards.id, { onDelete: 'cascade' }).notNull(),
-  fromColumnId: varchar("from_column_id").references(() => kanbanColumns.id, { onDelete: "set null" }),
-  toColumnId: varchar("to_column_id").references(() => kanbanColumns.id, { onDelete: "set null" }),
+  fromColumnId: varchar("from_column_id"),
+  toColumnId: varchar("to_column_id"),
   fromStatus: varchar("from_status", { length: 50 }),
   toStatus: varchar("to_status", { length: 50 }),
   changedById: varchar("changed_by_id").references(() => users.id, { onDelete: "set null" }),
@@ -514,11 +514,11 @@ export type InsertTaskProjectMember = z.infer<typeof insertTaskProjectMemberSche
 // Avtomatlashtirish robotlari - Vazifalar uchun avtomatik harakatlar va triggerlar
 export const automationRobots = pgTable("automation_robots", {
   id: serial("id").primaryKey(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: 'cascade' }).notNull(),
+  boardId: varchar("board_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
   triggerType: varchar("trigger_type", { length: 50 }).notNull(), // on_create, on_move, on_complete, on_deadline
-  triggerColumnId: varchar("trigger_column_id").references(() => kanbanColumns.id, { onDelete: "set null" }),
+  triggerColumnId: varchar("trigger_column_id"),
   actionType: varchar("action_type", { length: 50 }).notNull(), // move_to_column, send_notification, assign_user, add_tag
   actionConfig: text("action_config"), // JSON config
   isActive: boolean("is_active").notNull().default(true),
@@ -551,7 +551,7 @@ export type InsertAutomationRobot = z.infer<typeof insertAutomationRobotSchema>;
 export const taskFlows = pgTable("task_flows", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "set null" }),
+  boardId: varchar("board_id"),
   assignmentType: varchar("assignment_type", { length: 20 }).notNull(), // 'round_robin', 'least_busy', 'random'
   userIds: text("user_ids").array(), // Array of user IDs in the flow
   lastAssignedIndex: integer("last_assigned_index").notNull().default(0), // For round-robin tracking
@@ -606,7 +606,7 @@ export type InsertTaskNotification = z.infer<typeof insertTaskNotificationSchema
 export const taskViewPreferences = pgTable("task_view_preferences", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  boardId: varchar("board_id").references(() => kanbanBoards.id, { onDelete: "set null" }),
+  boardId: varchar("board_id"),
   viewType: varchar("view_type", { length: 20 }).notNull().default("kanban"), // kanban, list, calendar, gantt, my_plan
   filters: text("filters"), // JSON filters
   sortBy: varchar("sort_by", { length: 50 }),

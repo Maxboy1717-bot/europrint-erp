@@ -82,55 +82,9 @@ export type CameraZone = typeof cameraZones.$inferSelect;
 export type InsertCameraZone = z.infer<typeof insertCameraZoneSchema>;
 
 
-// Camera Events (kamera hodisalari - xodim intizom va xavfsizlik monitoring)
-export const cameraEvents = pgTable("camera_events", {
-  id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "set null" }),
-  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }), // Xodim ID (nullable - aniqlangan xodim)
-  zoneId: varchar("zone_id").references(() => cameraZones.id, { onDelete: "set null" }),
-  eventType: varchar("event_type", { length: 50 }).notNull(), 
-  // Intizom: telefon_ishlatish, uyqu, loqaydlik, himoya_kiyimi_yoq, bosh_turish
-  // Xavfsizlik: unknown_face, near_miss, yiqilish, toqnashish, kamera_yopilishi
-  // Legacy: safety_violation, quality_issue, downtime, other
-  eventDate: varchar("event_date", { length: 10 }).notNull(), // YYYY-MM-DD
-  eventTime: varchar("event_time", { length: 8 }).notNull(), // HH:MM:SS
-  description: text("description").notNull(),
-  severity: varchar("severity", { length: 20 }).notNull().default("medium"), // low, medium, high, critical
-  screenshotUrl: text("screenshot_url"),
-  videoUrl: text("video_url"),
-  aiConfidence: numericMoney("ai_confidence"), // AI ishonch darajasi (0-1)
-  status: varchar("status", { length: 20 }).notNull().default("new"), // new, reviewing, resolved, false_positive
-  assignedTo: integer("assigned_to").references(() => users.id, { onDelete: "set null" }),
-  notes: text("notes"),
-  telegramSent: boolean("telegram_sent").notNull().default(false),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  resolvedAt: timestamp("resolved_at"),
-}, (t) => [
-  check("camera_events_severity_chk", sql`${t.severity} IN ('low','medium','high','critical')`),
-  check("camera_events_status_chk", sql`${t.status} IN ('new','reviewing','resolved','false_positive')`),
-]);
-
-
-export const insertCameraEventSchema = createInsertSchema(cameraEvents, {
-  eventType: z.enum([
-    // Intizom buzilishlari
-    "telefon_ishlatish", "uyqu", "loqaydlik", "himoya_kiyimi_yoq", "bosh_turish",
-    // Xavfsizlik
-    "unknown_face", "near_miss", "yiqilish", "toqnashish", "kamera_yopilishi",
-    // Legacy
-    "safety_violation", "quality_issue", "downtime", "other"
-  ]),
-  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD formatida bo'lishi kerak"),
-  description: z.string().min(3, "Tavsif kamida 3 ta belgidan iborat bo'lishi kerak"),
-  severity: z.enum(["low", "medium", "high", "critical"]),
-  status: z.enum(["new", "reviewing", "resolved", "false_positive"]),
-}).omit({ id: true, createdAt: true, resolvedAt: true } as never);
-
-
-export type CameraEvent = typeof cameraEvents.$inferSelect;
-
-export type InsertCameraEvent = z.infer<typeof insertCameraEventSchema>;
-
+// NOTE: `cameraEvents` (camera_events) pgTable removed 2026-07-02 — orphan in lib/db
+// (no consumer via @workspace/db or @europrint/schemas). Dependent tables below keep
+// their camera_event_id column but no longer hold a Drizzle-level FK to it.
 
 // Camera Detections (Kamera orqali aniqlangan xodimlar)
 export const cameraDetections = pgTable("camera_detections", {
@@ -192,7 +146,7 @@ export type InsertEmployeeZoneTracking = z.infer<typeof insertEmployeeZoneTracki
 // Safety Violations (Xavfsizlik buzilishlari - batafsil)
 export const safetyViolations = pgTable("safety_violations", {
   id: serial("id").primaryKey(),
-  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id, { onDelete: "set null" }),
+  cameraEventId: varchar("camera_event_id"),
   cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "cascade" }).notNull(),
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }), // Buzilish qilgan xodim
   violationType: varchar("violation_type", { length: 50 }).notNull(), // no_helmet, no_gloves, no_glasses, danger_zone, unsafe_behavior
@@ -225,7 +179,7 @@ export type InsertSafetyViolation = z.infer<typeof insertSafetyViolationSchema>;
 // Quality Defects Camera (Kamera orqali aniqlangan sifat nuqsonlari)
 export const qualityDefectsCamera = pgTable("quality_defects_camera", {
   id: serial("id").primaryKey(),
-  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id, { onDelete: "set null" }),
+  cameraEventId: varchar("camera_event_id"),
   cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "cascade" }).notNull(),
   workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   productionOrderId: varchar("production_order_id").references(() => productionOrders.id, { onDelete: "set null" }),
@@ -295,48 +249,8 @@ export type MachineStatusLog = typeof machineStatusLogs.$inferSelect;
 export type InsertMachineStatusLog = z.infer<typeof insertMachineStatusLogSchema>;
 
 
-// Camera Alerts (Kamera ogohlantirishlari)
-export const cameraAlerts = pgTable("camera_alerts", {
-  id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id").references(() => cameras.id, { onDelete: "cascade" }).notNull(),
-  cameraEventId: varchar("camera_event_id").references(() => cameraEvents.id, { onDelete: "set null" }),
-  alertType: varchar("alert_type", { length: 30 }).notNull(), // safety, quality, productivity, machine, system
-  severity: varchar("severity", { length: 20 }).notNull().default("medium"), // low, medium, high, critical
-  title: text("title").notNull(),
-  titleRu: text("title_ru"),
-  message: text("message"),
-  messageRu: text("message_ru"),
-  // Yetkazish
-  telegramSent: boolean("telegram_sent").notNull().default(false),
-  telegramSentAt: timestamp("telegram_sent_at"),
-  telegramRecipients: jsonb("telegram_recipients"), // [{userId, chatId, sentAt}]
-  // Holat
-  isAcknowledged: boolean("is_acknowledged").notNull().default(false),
-  acknowledgedById: varchar("acknowledged_by_id").references(() => users.id, { onDelete: "set null" }),
-  acknowledgedAt: timestamp("acknowledged_at"),
-  isResolved: boolean("is_resolved").notNull().default(false),
-  resolvedById: varchar("resolved_by_id").references(() => users.id, { onDelete: "set null" }),
-  resolvedAt: timestamp("resolved_at"),
-  resolutionNotes: text("resolution_notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("camera_alerts_type_chk", sql`${t.alertType} IN ('safety','quality','productivity','machine','system')`),
-  check("camera_alerts_severity_chk", sql`${t.severity} IN ('low','medium','high','critical')`),
-]);
-
-
-export const insertCameraAlertSchema = createInsertSchema(cameraAlerts, {
-  cameraId: z.string().min(1, "Kamera kerak"),
-  alertType: z.enum(["safety", "quality", "productivity", "machine", "system"]),
-  severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
-  title: z.string().min(1, "Sarlavha kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-
-export type CameraAlert = typeof cameraAlerts.$inferSelect;
-
-export type InsertCameraAlert = z.infer<typeof insertCameraAlertSchema>;
-
+// NOTE: `cameraAlerts` (camera_alerts) pgTable removed 2026-07-02 — orphan in lib/db
+// (no consumer via @workspace/db or @europrint/schemas).
 
 // Camera Dashboard Stats (Real-time statistika uchun cache)
 export const cameraDashboardStats = pgTable("camera_dashboard_stats", {
@@ -390,6 +304,9 @@ export type InsertCameraDashboardStats = z.infer<typeof insertCameraDashboardSta
 
 
 // ========== IOT SENSOR MONITORING ==========
+// NOTE (Q-29 re-verify 2026-07-02): `iotSensors` kept — re-exported live via
+// apps/api/src/shared/db/schema-ext-b-2.ts (`iotSensors as iot_sensors` from
+// '@workspace/db'). NOT orphan.
 export const iotSensors = pgTable("iot_sensors", {
   id: serial("id").primaryKey(),
   sensorCode: varchar("sensor_code", { length: 50 }).notNull().unique(),
@@ -459,25 +376,8 @@ export type IotAlert = typeof iotAlerts.$inferSelect;
 
 export type InsertIotAlert = z.infer<typeof insertIotAlertSchema>;
 
-// ======== TZ_15 (15-01): Camera AI configs ========
-export const cameraAiConfigs = pgTable("camera_ai_configs", {
-  id: serial("id").primaryKey(),
-  cameraId: varchar("camera_id", { length: 50 }).notNull().unique(),
-  cameraName: varchar("camera_name", { length: 100 }),
-  zone: varchar("zone", { length: 100 }).notNull(),
-  location: varchar("location", { length: 200 }),
-  aiPrompt: text("ai_prompt").notNull(),
-  detectionTypes: jsonb("detection_types").default([]), // ["ppe", "quality", "safety", "waste"]
-  alertThreshold: numericMoney("alert_threshold").default(0.8),
-  isActive: boolean("is_active").notNull().default(true),
-  lastAnalyzedAt: timestamp("last_analyzed_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertCameraAiConfigSchema = createInsertSchema(cameraAiConfigs).omit({ id: true, createdAt: true, updatedAt: true, lastAnalyzedAt: true } as never);
-export type CameraAiConfig = typeof cameraAiConfigs.$inferSelect;
-export type InsertCameraAiConfig = z.infer<typeof insertCameraAiConfigSchema>;
+// NOTE: `cameraAiConfigs` (camera_ai_configs) pgTable removed 2026-07-02 — orphan in
+// lib/db (no consumer via @workspace/db or @europrint/schemas).
 
 
 // ======== TZ_10 (10-02): Operator smena natijasi — performance summary ========

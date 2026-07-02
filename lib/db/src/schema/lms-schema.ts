@@ -11,26 +11,6 @@ import { Admin, User, departments, goals, positions, users } from "./core-schema
 import { attendance } from "./hr-schema";
 
 
-// Guidelines (lavozim yo'riqnomalari)
-export const guidelines = pgTable("guidelines", {
-  id: serial("id").primaryKey(),
-  positionId: integer("position_id").references(() => positions.id, { onDelete: 'set null' }),
-  filePath: text("file_path").notNull(),
-  version: varchar("version", { length: 20 }).notNull().default("1.0"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-  // ── Live-DB superset columns (ADD-ONLY convergence) ──
-  orgFunctionId: integer("org_function_id"),
-  title: text("title"),
-  content: text("content"),
-  category: varchar("category", { length: 100 }),
-  isActive: boolean("is_active").default(true),
-  createdBy: integer("created_by"),
-});
-
-
 // Mentors (kurs mentorlari)
 export const mentors = pgTable("mentors", {
   id: serial("id").primaryKey(),

@@ -13,36 +13,13 @@ import { materialCategories, materialKits, rawMaterials } from "../mm-schema";
 import { qcMaterialTests } from "../qc-schema";
 import { warehouses } from "../wms-schema";
 import { equipment, products } from "./pp-production";
-import { productionSessions } from "./pp-iot";
 import { papkaOrders } from "./pp-papka";
-
-// Machine Crews (Mashina jamoalari)
-export const machineCrews = pgTable("machine_crews", {
-  id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
-  masterId: integer("master_id").notNull(),
-  polmasterId: integer("polmaster_id"),
-  shogirdId: integer("shogird_id"),
-  roklerId: integer("rokler_id"),
-  // ── ADD-ONLY: live DB superset columns ──
-  workCenterId: integer("work_center_id"),
-  employeeId: integer("employee_id"),
-  productionOrderId: integer("production_order_id"),
-  role: varchar("role", { length: 30 }),
-  startDate: varchar("start_date", { length: 10 }),
-  endDate: varchar("end_date", { length: 10 }),
-  isActive: boolean("is_active"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertMachineCrewSchema = createInsertSchema(machineCrews).omit({ id: true, createdAt: true } as never);
-export type MachineCrew = typeof machineCrews.$inferSelect;
-export type InsertMachineCrew = z.infer<typeof insertMachineCrewSchema>;
 
 // Setup Checklists (Sozlash oldi cheklistlari)
 export const setupChecklists = pgTable("setup_checklists", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
@@ -85,7 +62,8 @@ export type InsertChecklistItem = z.infer<typeof insertChecklistItemSchema>;
 // Material Consumption (Sarflangan materiallar hisobi)
 export const materialConsumption = pgTable("material_consumption", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
   kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
   materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),
@@ -108,7 +86,8 @@ export type InsertMaterialConsumption = z.infer<typeof insertMaterialConsumption
 // Defect Reports (Brak hisobotlari)
 export const defectReports = pgTable("defect_reports", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   quantity: integer("quantity").notNull(),
   defectType: varchar("defect_type", { length: 50 }).notNull(),
@@ -203,7 +182,8 @@ export type InsertMaterialNorm = z.infer<typeof insertMaterialNormSchema>;
 export const orderProductionHistory = pgTable("order_production_history", {
   id: serial("id").primaryKey(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "cascade" }).notNull(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "set null" }),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id"),
   equipmentId: varchar("equipment_id").references(() => equipment.id, { onDelete: "set null" }),
   equipmentName: text("equipment_name"),
   masterId: integer("master_id"),
@@ -497,41 +477,6 @@ export type AiProductionPlan = typeof aiProductionPlans.$inferSelect;
 export type InsertAiProductionPlan = z.infer<typeof insertAiProductionPlanSchema>;
 export type AiPlanningDecision = typeof aiPlanningDecisions.$inferSelect;
 export type InsertAiPlanningDecision = z.infer<typeof insertAiPlanningDecisionSchema>;
-
-// Equipment Maintenance
-export const equipmentMaintenance = pgTable("equipment_maintenance", {
-  id: serial("id").primaryKey(),
-  equipmentName: varchar("equipment_name", { length: 255 }).notNull(),
-  equipmentCode: varchar("equipment_code", { length: 50 }),
-  location: varchar("location", { length: 200 }),
-  maintenanceType: varchar("maintenance_type", { length: 30 }).notNull(),
-  scheduledDate: varchar("scheduled_date", { length: 20 }),
-  completedDate: varchar("completed_date", { length: 20 }),
-  frequency: varchar("frequency", { length: 30 }),
-  lastMaintenanceDate: varchar("last_maintenance_date", { length: 20 }),
-  nextMaintenanceDate: varchar("next_maintenance_date", { length: 20 }),
-  assignedTo: varchar("assigned_to"),
-  status: varchar("status", { length: 20 }).notNull().default("scheduled"),
-  cost: numericMoney("cost").default(0),
-  notes: text("notes"),
-  // ── ADD-ONLY: live DB superset columns ──
-  workCenterId: integer("work_center_id"),
-  type: varchar("type", { length: 30 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("equip_maint_type_chk", sql`${t.maintenanceType} IN ('PREVENTIVE','CORRECTIVE','PREDICTIVE','EMERGENCY')`),
-  check("equip_maint_freq_chk", sql`${t.frequency} IS NULL OR ${t.frequency} IN ('DAILY','WEEKLY','MONTHLY','QUARTERLY','SEMI_ANNUAL','ANNUAL')`),
-  check("equip_maint_status_chk", sql`${t.status} IN ('scheduled','in_progress','completed','overdue','cancelled')`),
-]);
-
-export const insertEquipmentMaintenanceSchema = createInsertSchema(equipmentMaintenance, {
-  maintenanceType: z.enum(["PREVENTIVE", "CORRECTIVE", "PREDICTIVE", "EMERGENCY"]),
-  frequency: z.enum(["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMI_ANNUAL", "ANNUAL"]).optional(),
-  status: z.enum(["scheduled", "in_progress", "completed", "overdue", "cancelled"]).default("scheduled"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type EquipmentMaintenance = typeof equipmentMaintenance.$inferSelect;
-export type InsertEquipmentMaintenance = z.infer<typeof insertEquipmentMaintenanceSchema>;
 
 // SOS Alerts
 export const sosAlerts = pgTable("sos_alerts", {
