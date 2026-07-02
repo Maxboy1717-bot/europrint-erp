@@ -16,7 +16,7 @@ import {
   hrEmployees, hrAttendance, hrDepartments, productionOrders,
   invoicesTable, accountsTable, systemAlerts, iotAlerts,
 } from '@shared/db';
-import { stock_items } from '@shared/db';
+import { warehouseStock } from '@shared/db';
 import type {
   IDirectorDataRepo,
   DashboardData,
@@ -61,7 +61,15 @@ export class DirectorDataRepository implements IDirectorDataRepo {
           late: sql<string>`COUNT(DISTINCT ${hrAttendance.employee_id}) FILTER (WHERE ${hrAttendance.status} = 'late')`,
           active: sql<string>`COUNT(DISTINCT ${hrAttendance.employee_id}) FILTER (WHERE ${hrAttendance.status} = 'active')`,
         }).from(hrAttendance).where(sql`DATE(${hrAttendance.check_in}) = CURRENT_DATE`),
-        db.select({ cnt: sql<string>`COUNT(*)` }).from(stock_items).where(sql`quantity IS NOT NULL AND quantity <= 0`),
+        // G9-3: kanonik warehouse_stock + material_cards.min_stock (avval 7-qatorli DEMO
+        // stock_items jadvalidan o'qir edi) — get-dashboard-kpis.handler bilan bir xillashtirildi.
+        db.select({ cnt: sql<string>`COUNT(*)` }).from(warehouseStock).where(sql`EXISTS (
+          SELECT 1 FROM material_cards mc
+          WHERE mc.id = warehouse_stock.material_id
+            AND COALESCE(mc.min_stock, 0) > 0
+            AND mc.is_active = true
+            AND COALESCE(warehouse_stock.available_quantity, 0) < COALESCE(mc.min_stock, 0)
+        )`),
         db.select({ cnt: sql<string>`COUNT(*)` }).from(iotAlerts).where(sql`${iotAlerts.created_at} >= NOW() - INTERVAL '8 hours' AND ${iotAlerts.resolved_at} IS NULL`),
       ]);
       const o = ordRow as Row | undefined;
@@ -261,7 +269,14 @@ export class DirectorDataRepository implements IDirectorDataRepo {
           cnt: sql<string>`COUNT(*)`,
           amt: sql<string>`COALESCE(SUM(CAST(amount AS DECIMAL)),0)`,
         }).from(invoicesTable).where(sql`status IN ('overdue','unpaid') AND due_date < CURRENT_DATE`),
-        db.select({ cnt: sql<string>`COUNT(*)` }).from(stock_items).where(sql`quantity IS NOT NULL AND quantity <= 0`),
+        // G9-3: kanonik warehouse_stock low-stock hisobi (avval DEMO stock_items dan o'qir edi).
+        db.select({ cnt: sql<string>`COUNT(*)` }).from(warehouseStock).where(sql`EXISTS (
+          SELECT 1 FROM material_cards mc
+          WHERE mc.id = warehouse_stock.material_id
+            AND COALESCE(mc.min_stock, 0) > 0
+            AND mc.is_active = true
+            AND COALESCE(warehouse_stock.available_quantity, 0) < COALESCE(mc.min_stock, 0)
+        )`),
         db.execute(sql`SELECT COUNT(*) AS cnt FROM rasporyazhenie WHERE status != 'done' AND deadline IS NOT NULL AND deadline < CURRENT_DATE`),
       ]);
       const o = (ordRow as Row | undefined) ?? {};

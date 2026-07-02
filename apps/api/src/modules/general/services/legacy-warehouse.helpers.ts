@@ -5,7 +5,7 @@
  *
  * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
  *   - Legacy tables (papka_orders, machine_tasks, planning_operations,
- *     erp_employees, work_centers, warehouse_stock, stock_items, stock_transfers,
+ *     erp_employees, work_centers, warehouse_stock, stock_transfers,
  *     material_lots, internal_requests, warehouse_transactions) without Drizzle schemas
  *   - COALESCE(${updates.x ?? null}, x) inline conditional UPDATE pattern for
  *     partial-update semantics with NULL-as-skip
@@ -185,14 +185,17 @@ export async function getWarehouseListRaw(): Promise<Record<string, unknown>[]> 
 
 export async function getWarehouseStockRaw(warehouseId?: string): Promise<Record<string, unknown>[]> {
   try {
-    const whFilter = warehouseId ? sql`AND s.warehouse_id = ${warehouseId}` : sql``;
+    // G9-3: kanonik warehouse_stock + material_cards (avval 7-qatorli DEMO stock_items dan
+    // o'qir edi). Legacy maydon nomlari (product_name, warehouse_name, name, sku) saqlangan.
+    const whFilter = warehouseId ? sql`AND ws.warehouse_id = ${Number(warehouseId)}` : sql``;
     const r = await db.execute(sql`
-      SELECT s.*, p.name AS product_name, w.name AS warehouse_name
-      FROM stock_items s
-      LEFT JOIN products p ON s.product_id = p.id
-      LEFT JOIN warehouses w ON s.warehouse_id = w.id
+      SELECT ws.*, mc.kod AS sku, mc.xom_ashyo AS name, mc.category AS category,
+             mc.xom_ashyo AS product_name, w.name AS warehouse_name
+      FROM warehouse_stock ws
+      LEFT JOIN material_cards mc ON mc.id = ws.material_id
+      LEFT JOIN warehouses w ON ws.warehouse_id = w.id
       WHERE 1=1 ${whFilter}
-      ORDER BY p.name LIMIT 200
+      ORDER BY mc.xom_ashyo LIMIT 200
     `);
     return r.rows as Record<string, unknown>[];
   } catch { return []; }
@@ -236,7 +239,8 @@ export async function getWarehouseInternalRequestsRaw(): Promise<Record<string, 
 export async function getWarehouseDashboardKpisRaw(): Promise<Record<string, unknown>> {
   const [whR, stockR, pendingR] = await Promise.allSettled([
     db.execute(sql`SELECT COUNT(*) AS total FROM warehouses`),
-    db.execute(sql`SELECT COUNT(*) AS items FROM stock_items WHERE quantity > 0`),
+    // G9-3: kanonik warehouse_stock (avval DEMO stock_items dan o'qir edi).
+    db.execute(sql`SELECT COUNT(*) AS items FROM warehouse_stock WHERE quantity > 0`),
     db.execute(sql`SELECT COUNT(*) AS cnt FROM warehouse_transfers WHERE status = 'pending'`),
   ]);
   const wh      = whR.status      === 'fulfilled' ? (whR.value.rows[0]      as Record<string, unknown>) : { total: 0 };
@@ -254,10 +258,10 @@ export async function getWarehouseOccupancyRaw(): Promise<Record<string, unknown
   try {
     const r = await db.execute(sql`
       SELECT w.id, w.name, w.capacity,
-             COUNT(s.id) AS item_count,
-             COALESCE(SUM(s.quantity), 0) AS total_qty
+             COUNT(ws.id) AS item_count,
+             COALESCE(SUM(ws.quantity), 0) AS total_qty
       FROM warehouses w
-      LEFT JOIN stock_items s ON s.warehouse_id = w.id
+      LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
       GROUP BY w.id, w.name, w.capacity
       ORDER BY w.name
     `);

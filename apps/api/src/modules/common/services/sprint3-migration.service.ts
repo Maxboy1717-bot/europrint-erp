@@ -125,13 +125,14 @@ export class Sprint3MigrationService implements OnModuleInit {
       FROM sales_orders
       GROUP BY 1
     `);
+    // G9-3: kanonik warehouse_stock (avval DEMO stock_items dan o'qir edi).
     await ddlRun(sql`
       CREATE MATERIALIZED VIEW IF NOT EXISTS mv_inventory_daily AS
       SELECT
         CURRENT_DATE AS day,
         COUNT(*)     AS item_count,
         COALESCE(SUM(quantity), 0) AS total_qty
-      FROM stock_items
+      FROM warehouse_stock
     `);
     await ddlRun(sql`
       CREATE MATERIALIZED VIEW IF NOT EXISTS mv_kpi_daily AS

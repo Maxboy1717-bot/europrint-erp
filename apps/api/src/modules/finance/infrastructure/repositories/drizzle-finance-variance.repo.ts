@@ -1,8 +1,8 @@
 /**
  * NOTE: Raw SQL retained intentionally — multi-table compatibility selects
- * (production_orders, boms, routings, mes_sessions, standard_cost, stock_movements,
- * stock_items, kaizen_suggestions) whose Drizzle schemas are not fully unified.
- * See ARCHITECTURE_RULES.md Rule 4.
+ * (production_orders, boms, routings, mes_sessions, standard_cost,
+ * warehouse_transactions, material_cards, kaizen_suggestions) whose Drizzle schemas
+ * are not fully unified. See ARCHITECTURE_RULES.md Rule 4.
  */
 
 /**
@@ -93,13 +93,17 @@ export class FinanceVarianceRepo {
             WHERE product_name = ${order.productName}
             ORDER BY period DESC LIMIT 1
           `).catch(() => ({ rows: [] as RawRow[] })),
+      // G9-3: kanonik warehouse_transactions + material_cards.unit_price (avval DEMO-dunyo
+      // stock_movements(uuid) JOIN stock_items(int id) — tur nomuvofiqligi tufayli HAR DOIM
+      // xato berib .catch orqali 0 qaytarardi). Ishlab chiqarish rasxodi: chiqim tranzaksiyalari
+      // papka_order_id yoki reference_id orqali buyurtmaga bog'lanadi.
       runQuery<RawRow>(sql`
-        SELECT COALESCE(SUM(ABS(sm.quantity)), 0) AS actual_material_qty,
-               COALESCE(AVG(si.cost_price::numeric), 0) AS actual_unit_price
-        FROM stock_movements sm
-        JOIN stock_items si ON si.id = sm.stock_item_id
-        WHERE sm.reference_id::text = ${String(orderId)}
-          AND sm.movement_type::text IN ('OUT', 'CONSUMPTION')
+        SELECT COALESCE(SUM(ABS(wt.quantity)), 0) AS actual_material_qty,
+               COALESCE(AVG(mc.unit_price::numeric), 0) AS actual_unit_price
+        FROM warehouse_transactions wt
+        JOIN material_cards mc ON mc.id = wt.material_id
+        WHERE (wt.papka_order_id = ${orderId} OR wt.reference_id = ${orderId})
+          AND wt.transaction_type IN ('chiqim', 'OUT', 'CONSUMPTION')
       `).catch(() => ({ rows: [] as RawRow[] })),
     ]);
 
