@@ -3,13 +3,12 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
-import { Ok, Err, Result, safeCall } from '@common/result';
+import { Ok, Err, Result, safeCall, AppErr } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
-import { safeInt } from '../hr/common/db-rows';
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
 
@@ -119,15 +118,6 @@ export class ErpRepository {
 
   }
 
-  async updateRoutingOperation(id: number, body: Row): Promise<Result<Row | null>>  {
-  try {
-      const r = await exec(sql`UPDATE routing_operations SET work_center_id = COALESCE(${body.workCenterId != null ? safeInt(body.workCenterId, 0) : null}, work_center_id), operation_description = COALESCE(${body.operationName ?? null}, operation_description), setup_time = COALESCE(${body.setupTime ?? null}, setup_time), machine_time = COALESCE(${body.machineTime ?? null}, machine_time), labor_time = COALESCE(${body.laborTime ?? null}, labor_time), sequence = COALESCE(${body.sequence != null ? safeInt(body.sequence, 0) : null}, sequence) WHERE id = ${id} RETURNING *`);
-      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
-    return Err(String(_e));
-  }
-
-  }
-
   async createProduct(body: Row): Promise<Result<Row | null>> {
   try {
     const code = body.code ?? `MC-${Date.now()}`;
@@ -165,32 +155,53 @@ export class ErpRepository {
   } catch (_e) { return Err(String(_e)); }
   }
 
-  async createRouting(body: Row): Promise<Result<Row | null>> {
-  try {
-    const routingNumber = body.routingNumber ?? body.code ?? `RT-${Date.now()}`;
-    const r = await exec(sql`INSERT INTO routings (routing_number, product_id, version) VALUES (${routingNumber}, ${safeInt(body.productId, 0) || null}, ${body.version ?? '1.0'}) RETURNING *`);
-    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
-  } catch (_e) { return Err(String(_e)); }
+  /**
+   * DEPRECATED (Q-46): ERP legacy write path duplicated the PP canonical
+   * `routings`/`routing_operations` tables with raw SQL and no awareness of
+   * PP's approval workflow (draft → approved, technologist/director RBAC —
+   * see PpRoutingController / RoutingsService @ apps/api/src/modules/pp).
+   * Writing here let callers create/mutate routings that PP never saw and
+   * that skipped approval entirely — a two-world write hazard. Blocked;
+   * real routing CRUD lives at POST/PATCH/DELETE /api/pp/routing.
+   * GET /erp/routings + /erp/routing-operations stay live (read-only,
+   * same canonical tables, still consumed by the SD order wizard).
+   */
+  async createRouting(_body: Row): Promise<Result<Row | null>> {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy routing eskirgan (DEPRECATED): PP tasdiqlash jarayonidan bexabar yozadi. Real routing CRUD uchun PP moduli — POST /api/pp/routing ishlating.",
+    ));
   }
 
-  async deleteRouting(id: number): Promise<Result<Row | null>> {
-  try {
-    const r = await exec(sql`DELETE FROM routings WHERE id = ${id} RETURNING *`);
-    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
-  } catch (_e) { return Err(String(_e)); }
+  /** DEPRECATED (Q-46): see {@link createRouting}. */
+  async deleteRouting(_id: number): Promise<Result<Row | null>> {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy routing eskirgan (DEPRECATED): PP tasdiqlash jarayonidan bexabar o'chiradi. Real routing CRUD uchun PP moduli — DELETE /api/pp/routing/:id ishlating.",
+    ));
   }
 
-  async createRoutingOperation(body: Row): Promise<Result<Row | null>> {
-  try {
-    const r = await exec(sql`INSERT INTO routing_operations (routing_id, operation_number, operation_description, work_center_id, setup_time, machine_time, labor_time, sequence, notes) VALUES (${safeInt(body.routingId, 0)}, ${safeInt(body.operationNumber, 1)}, ${body.operationName ?? null}, ${safeInt(body.workCenterId, 0)}, ${body.setupTime ?? 0}, ${body.machineTime ?? 0}, ${body.laborTime ?? 0}, ${safeInt(body.sequence, 10)}, ${body.description ?? null}) RETURNING *`);
-    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
-  } catch (_e) { return Err(String(_e)); }
+  /** DEPRECATED (Q-46): see {@link createRouting}. */
+  async createRoutingOperation(_body: Row): Promise<Result<Row | null>> {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy routing operatsiyasi eskirgan (DEPRECATED): PP tasdiqlash jarayonidan bexabar yozadi. Real operatsiya CRUD uchun PP moduli — POST /api/pp/routing/:routingId/operations ishlating.",
+    ));
   }
 
-  async deleteRoutingOperation(id: number): Promise<Result<Row | null>> {
-  try {
-    const r = await exec(sql`DELETE FROM routing_operations WHERE id = ${id} RETURNING *`);
-    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
-  } catch (_e) { return Err(String(_e)); }
+  /** DEPRECATED (Q-46): see {@link createRouting}. */
+  async updateRoutingOperation(_id: number, _body: Row): Promise<Result<Row | null>> {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy routing operatsiyasi eskirgan (DEPRECATED): PP tasdiqlash jarayonidan bexabar yozadi. Real operatsiya CRUD uchun PP moduli — POST /api/pp/routing ishlating.",
+    ));
+  }
+
+  /** DEPRECATED (Q-46): see {@link createRouting}. */
+  async deleteRoutingOperation(_id: number): Promise<Result<Row | null>> {
+    return Err(AppErr(
+      'NOT_IMPLEMENTED',
+      "ERP legacy routing operatsiyasi eskirgan (DEPRECATED): PP tasdiqlash jarayonidan bexabar o'chiradi. Real operatsiya CRUD uchun PP moduli — DELETE /api/pp/routing/:routingId/operations/:opId ishlating.",
+    ));
   }
 }

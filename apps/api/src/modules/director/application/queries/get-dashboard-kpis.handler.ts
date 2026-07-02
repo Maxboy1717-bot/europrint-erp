@@ -86,7 +86,17 @@ export class GetDashboardKpisHandler implements IQueryHandler<GetDashboardKpisQu
 
   private async getLowStockCount(): Promise<Result<number>> {
     return safeCall(async () => {
-      const r = await exec(sql`SELECT COUNT(*) AS count FROM stock_items WHERE quantity < 10`);
+      // Kanonik manba: warehouse_stock + material_cards.min_stock (avval 7-qatorli
+      // DEMO `stock_items` jadvalidan, qattiq-kodlangan `quantity < 10` bilan o'qir edi).
+      // PosLowStockJob bilan bir xillashtirildi (pos-fifo.service.ts getLowStockMaterials()).
+      const r = await exec(sql`
+        SELECT COUNT(*) AS count
+        FROM warehouse_stock ws
+        JOIN material_cards mc ON mc.id = ws.material_id
+        WHERE COALESCE(ws.available_quantity, 0) < COALESCE(mc.min_stock, 0)
+          AND COALESCE(mc.min_stock, 0) > 0
+          AND mc.is_active = true
+      `);
       return parseInt(String(r[0]?.count ?? '0'), 10);
     }, 'INTERNAL');
   }
