@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { MM_VENDORS_PR_REPO, type IMmVendorsPrRepo } from '../domain/repositories/i-mm-vendors-pr.repo';
 
@@ -47,14 +47,34 @@ export class MmVendorsPrService {
     });
   }
 
+  /**
+   * Q-46 (2026-07-02): `mm_purchase_requisitions` is a VIEW over the strict
+   * `purchase_requisitions` table (NOT NULL material_id/required_quantity/
+   * required_date/requisition_number) — the header row needs a real material_id +
+   * quantity, so at least one item is now required. This is real validation (Q-40
+   * forbids inventing a material_id out of nothing), not a design change: the
+   * previous "items optional" path always crashed with 23502 on the header INSERT
+   * anyway, so nothing that used to work is being taken away.
+   */
   async createRequisition(title: unknown, requested_by: number | null, needed_by: unknown, notes: unknown, items: Array<Record<string, unknown>>) {
-    const req = await this.repo.createRequisition(title, requested_by, needed_by, notes);
-    if (!req.ok) return req;
     return safeCall(async () => {
+      if (!Array.isArray(items) || items.length === 0) {
+        throw new BadRequestException("Xarid so'rovi uchun kamida 1 material (item) kerak");
+      }
+      const first = items[0];
+      const materialId = Number(first?.material_id);
+      const quantity = Number(first?.quantity);
+      if (!Number.isFinite(materialId) || materialId <= 0 || !Number.isFinite(quantity) || quantity <= 0) {
+        throw new BadRequestException("Birinchi item uchun material_id va quantity majburiy");
+      }
+
+      const req = await this.repo.createRequisition(title, requested_by, needed_by, notes, materialId, quantity);
+      if (!req.ok) throw new BadRequestException(String(req.error));
+
       for (const item of items) {
         await this.repo.createRequisitionItem(req.data.id, item.material_id, item.quantity, item.unit_price);
       }
-      return req;
+      return req.data;
     });
   }
 

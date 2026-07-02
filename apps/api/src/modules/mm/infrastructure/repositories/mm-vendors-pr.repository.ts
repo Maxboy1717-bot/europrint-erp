@@ -121,11 +121,39 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
 
   }
 
-  async createRequisition(title: unknown, requested_by: number | null, needed_by: unknown, notes: unknown): Promise<Result<Row>>  {
+  /**
+   * Q-46 (2026-07-02): `mm_purchase_requisitions` is a plain updatable VIEW —
+   * `SELECT * FROM purchase_requisitions` (pg_get_viewdef-verified) — so an INSERT
+   * through it is transparently rewritten by Postgres into an INSERT on the base
+   * table `purchase_requisitions`, which enforces NOT NULL on requisition_number,
+   * material_id, required_quantity and required_date. The previous 4-column INSERT
+   * (title, requested_by, needed_by, notes) always violated those and threw 23502
+   * — silently swallowed by the try/catch here, surfaced only as a generic 400/500
+   * to the caller. Fix: supply requisition_number (generated from the
+   * `purchase_requisition_seq` sequence, same one the canonical schema declares),
+   * material_id + required_quantity (the requisition's first real item — passed in
+   * by the service, never fabricated), and required_date (needed_by if given, else
+   * today — required_date is `varchar(10)` 'YYYY-MM-DD', not a real date column).
+   */
+  async createRequisition(
+    title: unknown,
+    requested_by: number | null,
+    needed_by: unknown,
+    notes: unknown,
+    material_id: number,
+    required_quantity: number,
+  ): Promise<Result<Row>>  {
   try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO mm_purchase_requisitions (title, requested_by, needed_by, notes, status)
-        VALUES (${title}, ${requested_by}, ${needed_by ?? null}, ${notes ?? null}, 'pending')
+        INSERT INTO mm_purchase_requisitions
+          (requisition_number, material_id, required_quantity, required_date,
+           title, requested_by, needed_by, notes, status)
+        VALUES (
+          'PR-' || to_char(NOW(), 'YYYY') || '-' || lpad(nextval('purchase_requisition_seq')::text, 6, '0'),
+          ${material_id}, ${required_quantity},
+          COALESCE(${needed_by ?? null}::text, to_char(NOW(), 'YYYY-MM-DD')),
+          ${title}, ${requested_by}, ${needed_by ?? null}::date, ${notes ?? null}, 'pending'
+        )
         RETURNING *
       `);
       return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {

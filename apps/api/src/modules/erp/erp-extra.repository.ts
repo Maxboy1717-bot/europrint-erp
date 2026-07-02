@@ -127,9 +127,31 @@ export class ErpExtraRepository {
 
   }
 
+  /**
+   * Q-46 (2026-07-02): redirected off the orphan `erp_purchase_requisitions` table —
+   * that table has zero writers anywhere in the codebase (grep-verified), so it was
+   * permanently empty (silent, never surfaced any real requisition). The REAL,
+   * actively-written requisition data lives in `mm_purchase_requisitions` /
+   * `mm_purchase_requisition_items` (populated by the WMS ROP-trigger and the MM
+   * purchase-requisition CRUD — see rop-trigger.handler.ts + mm-vendors-pr.repository.ts).
+   * `procurement_requests` was considered but is a different domain (P2P vendor
+   * advance/reimbursement with an org approval chain) — not a valid stand-in for
+   * material stock-replenishment requisitions (Q-40: no fabricated cross-domain data).
+   */
   async listPurchaseRequisitions(limit: number, offset: number): Promise<Result<Row[]>>  {
-  try {  
-      return exec(sql`SELECT pr.*, mc.xom_ashyo AS material_name FROM erp_purchase_requisitions pr LEFT JOIN material_cards mc ON mc.id = pr.material_id ORDER BY pr.created_at DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+  try {
+      return exec(sql`
+        SELECT pr.id, pr.title, pr.requested_by, pr.needed_by, pr.notes, pr.status,
+               pr.created_at, pr.updated_at,
+               pri.material_id, pri.quantity, mc.xom_ashyo AS material_name
+        FROM mm_purchase_requisitions pr
+        LEFT JOIN LATERAL (
+          SELECT material_id, quantity FROM mm_purchase_requisition_items
+          WHERE requisition_id = pr.id ORDER BY id LIMIT 1
+        ) pri ON true
+        LEFT JOIN material_cards mc ON mc.id = pri.material_id
+        ORDER BY pr.created_at DESC LIMIT ${limit} OFFSET ${offset}
+      `);  } catch (_e) {
     return Err(String(_e));
   }
 

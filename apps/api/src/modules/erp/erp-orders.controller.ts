@@ -240,7 +240,13 @@ export class ErpOrdersController {
     return unwrapOrThrow(await this.svc.listMrpResults(runId ? safeInt(runId, 0) : undefined));
   }
 
-  @ApiOperation({ summary: 'List purchase requisitions' })
+  @ApiOperation({
+    summary: 'List purchase requisitions (backed by mm_purchase_requisitions)',
+    description:
+      "Q-46 (2026-07-02): endi eskirgan bo'sh `erp_purchase_requisitions` emas, real " +
+      'yozuvchisi bor `mm_purchase_requisitions`/`mm_purchase_requisition_items` dan ' +
+      "o'qiydi (WMS ROP-trigger + MM xarid-so'rovi CRUD shu yerga yozadi).",
+  })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('purchase-requisitions')
   async listPurchaseRequisitions(
