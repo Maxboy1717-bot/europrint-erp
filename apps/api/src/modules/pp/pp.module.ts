@@ -58,9 +58,6 @@ import { BomService } from './bom/bom.service';
 import { PP_ROUTINGS_REPO } from './routings/i-pp-routings.repo';
 import { DrizzlePpRoutingsRepository } from './routings/drizzle-pp-routings.repo';
 import { RoutingsService } from './routings/routings.service';
-import { PP_WORK_CENTERS_REPO } from './work-centers/i-pp-work-centers.repo';
-import { DrizzlePpWorkCentersRepository } from './work-centers/drizzle-pp-work-centers.repo';
-import { WorkCentersService } from './work-centers/work-centers.service';
 import { SchedulingJohnsonService } from './domain/services/scheduling-johnson.service';
 import { SchedulingNetworkService } from './domain/services/scheduling-network.service';
 import { SchedulingCapacityService } from './domain/services/scheduling-capacity.service';
@@ -147,8 +144,6 @@ const listeners = [
     BomService,
     { provide: PP_ROUTINGS_REPO, useClass: DrizzlePpRoutingsRepository },
     RoutingsService,
-    { provide: PP_WORK_CENTERS_REPO, useClass: DrizzlePpWorkCentersRepository },
-    WorkCentersService,
     PpPlanningRepository,
     { provide: PP_PLANNING_REPO, useClass: PpPlanningRepository },
     PpPlanningService,
