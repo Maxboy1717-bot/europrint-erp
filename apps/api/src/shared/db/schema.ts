@@ -21,7 +21,6 @@ export * from './schema-misc';
 export * from './schema-misc-iot';
 export * from './schema-misc-qc';
 export * from './schema-pos-ext';
-export * from './schema-pos-retail';
 export * from './schema-rbac';
 export * from './schema-misc-app';
 export * from './schema-forecast';

@@ -1571,29 +1571,6 @@ export const DRIFT_MIGRATIONS: Array<MigrationDef> = [
         changed_at TIMESTAMP
       )
     ` },
-  { name: 'retail_pos_transactions CREATE TABLE', sql: `
-      CREATE TABLE IF NOT EXISTS retail_pos_transactions (
-        id UUID PRIMARY KEY,
-        transaction_number TEXT NOT NULL,
-        receipt_number TEXT,
-        cashier_id TEXT,
-        customer_name TEXT,
-        customer_id TEXT,
-        items JSONB NOT NULL,
-        subtotal NUMERIC NOT NULL,
-        discount_amount NUMERIC,
-        tax_rate NUMERIC,
-        tax_amount NUMERIC,
-        total_amount NUMERIC NOT NULL,
-        payment_method TEXT NOT NULL,
-        payment_details JSONB,
-        status TEXT NOT NULL,
-        notes TEXT,
-        refunded_at TIMESTAMP,
-        refunded_by TEXT,
-        created_at TIMESTAMP
-      )
-    ` },
   { name: 'pos_material_request_lines CREATE TABLE', sql: `
       CREATE TABLE IF NOT EXISTS pos_material_request_lines (
         id SERIAL PRIMARY KEY,

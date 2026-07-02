@@ -64,7 +64,6 @@ export {
   // (aiCvScreenings, jobTemplates, questionnaireQuestions, questionnaireTemplates
   //  are defined elsewhere — they're the authoritative copies).
 } from "./hr-architecture-additions";
-export * from "./pos-retail";
 export {
   // Re-export ONLY symbols unique to admin-assets; AssetDisposal/AssetTransfer
   // etc. are the authoritative copies in pp/pp-enhanced.

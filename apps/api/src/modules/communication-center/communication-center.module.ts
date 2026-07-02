@@ -48,6 +48,7 @@ import { CcGateway }                      from './presentation/cc.gateway';
 import { CcSlaCron }       from './cron/cc-sla.cron';
 import { CcBotService }    from './telegram/cc-bot.service';
 import { CcEventListener } from './events/cc-event.listener';
+import { CcApprovedKassirListener } from './events/cc-approved-kassir.listener';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { CcEventListener } from './events/cc-event.listener';
     CcSlaCron,
     CcBotService,
     CcEventListener,
+    CcApprovedKassirListener,   // G4: approve→kassir bildirishnoma ko'prigi
   ],
   exports: [
     CcBasketsService,

@@ -6,8 +6,10 @@
  */
 
 import { Injectable, BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import { CcDocumentsRepository, type DocumentRow } from '../infrastructure/repositories/cc-documents.repo';
+import { CcDocumentFullyApprovedEvent } from '../domain/events/cc-document-fully-approved.event';
 import type { WorkflowStepRow } from '../infrastructure/repositories/cc-documents/types';
 import { CcOrgResolverService } from './cc-org-resolver.service';
 import { CcPinService } from './cc-pin.service';
@@ -40,6 +42,7 @@ export class CcWorkflowService {
     private readonly pin:     CcPinService,
     private readonly numbers: CcDocumentNumberService,
     private readonly i18n:    I18nService,
+    private readonly eventBus: EventBus,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────
@@ -161,10 +164,44 @@ export class CcWorkflowService {
 
     const sigHash = await this.pin.verifyAndSign(approverUserId, dto.pin, `approve:${doc.id}:${mine.id}`);
 
-    return executeApproveTransaction(
+    const result = await executeApproveTransaction(
       { doc, approverUserId, approvalId: mine.id, signatureHash: sigHash, comment: dto.comment ?? null },
       this.docs, this.org, this.logger,
     );
+
+    // G4: hujjat TO'LIQ tasdiqlandi (oxirgi bosqich) — moliyaviy shablon bo'lsa
+    // kassir-ko'prik event'i chiqadi (to'lov AVTO yaratilmaydi — faqat bildirishnoma).
+    if (result.status === 'finalized') {
+      await this.emitFullyApprovedIfFinancial(doc);
+    }
+    return result;
+  }
+
+  /**
+   * G4 approve→kassir ko'prigi: to'liq tasdiqlangan hujjat shabloni
+   * ADVANCE/FINANCIAL_AID bo'lsa CcDocumentFullyApprovedEvent chiqaradi.
+   * Xato approve javobini buzmasligi kerak — shuning uchun try/catch + logger.error.
+   */
+  private async emitFullyApprovedIfFinancial(doc: DocumentRow): Promise<void> {
+    try {
+      const tmplR = await this.docs.getTemplate(doc.templateId);
+      if (!isOk(tmplR) || !tmplR.data) {
+        this.logger.error(`emitFullyApprovedIfFinancial(${doc.id}): shablon topilmadi`);
+        return;
+      }
+      const code = tmplR.data.code;
+      if (code !== 'ADVANCE' && code !== 'FINANCIAL_AID') return;
+      this.eventBus.publish(new CcDocumentFullyApprovedEvent({
+        documentId:     doc.id,
+        documentNumber: doc.documentNumber,
+        templateCode:   code,
+        senderUserId:   doc.senderUserId,
+        subject:        doc.subject,
+      }));
+      this.logger.log(`CcDocumentFullyApprovedEvent chiqarildi: ${doc.documentNumber} (${code})`);
+    } catch (e) {
+      this.logger.error(`emitFullyApprovedIfFinancial(${doc.id}): ${String(e)}`);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────

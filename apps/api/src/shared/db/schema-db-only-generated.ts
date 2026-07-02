@@ -49,7 +49,7 @@
  *   lib/db/src/schema/master-config.ts        ← master_categories, units
  *   lib/db/src/schema/mes-schema.ts           ← mes_operations, mes_telemetry
  *   lib/db/src/schema/mm-logistics.ts         ← mm_driver_expenses, mm_drivers
- *   lib/db/src/schema/pp-schema.ts            ← operator_hourly_invoices, pp_orders,
+ *   lib/db/src/schema/pp-schema.ts            ← operator_hourly_invoices,
  *                                                pp_routing, pp_work_centers
  *   lib/db/src/schema/pos-schema-v2.ts        ← pos_gl_postings, pos_inventory_passport,
  *                                                pos_movements_legacy_view, pos_shift_audit,
@@ -703,56 +703,8 @@ export const positionFolderContent = pgTable('position_folder_content', {
   updatedAt: timestamp('updated_at').notNull(),
 });
 
-export const ppOrders = pgTable('pp_orders', {
-  id: integer('id').primaryKey(),
-  orderNumber: varchar('order_number', { length: 50 }),
-  productId: integer('product_id'),
-  quantity: integer('quantity'),
-  customerName: text('customer_name'),
-  customerId: integer('customer_id'),
-  dueDate: varchar('due_date', { length: 10 }),
-  priority: varchar('priority', { length: 20 }),
-  status: varchar('status', { length: 20 }),
-  notes: text('notes'),
-  createdAt: timestamp('created_at'),
-  updatedAt: timestamp('updated_at'),
-  customerTier: text('customer_tier'),
-  stateVersion: integer('state_version'),
-  totalAmount: numeric('total_amount'),
-  currency: text('currency'),
-  assignedSalesManager: integer('assigned_sales_manager'),
-  tenantId: uuid('tenant_id'),
-  estimatedDeliveryAt: timestamp('estimated_delivery_at', { withTimezone: true }),
-  actualDeliveryAt: timestamp('actual_delivery_at', { withTimezone: true }),
-  customerApproved: boolean('customer_approved'),
-  techCardConfirmedAt: timestamp('tech_card_confirmed_at', { withTimezone: true }),
-  customerSignatureUrl: text('customer_signature_url'),
-  cashierId: integer('cashier_id'),
-  paymentMethod: text('payment_method'),
-  startDate: date('start_date'),
-  endDate: date('end_date'),
-  quotationId: integer('quotation_id'),
-  managerId: integer('manager_id'),
-  advancePercent: numeric('advance_percent'),
-  advancePaid: numeric('advance_paid'),
-  balanceDue: numeric('balance_due'),
-  deliveryDate: varchar('delivery_date'),
-  deliveryAddress: text('delivery_address'),
-  deliveryType: varchar('delivery_type'),
-  receiverName: text('receiver_name'),
-  receiverPhone: varchar('receiver_phone'),
-  specialInstructions: text('special_instructions'),
-  cancelReason: text('cancel_reason'),
-  cancelledAt: timestamp('cancelled_at'),
-  deliveredAt: timestamp('delivered_at'),
-  warehouseEntryDate: timestamp('warehouse_entry_date'),
-  productionOrderId: integer('production_order_id'),
-  version: bigint('version', { mode: 'number' }),
-  advanceStatus: varchar('advance_status'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  companyId: integer('company_id'),
-});
-
+// NOTE: `ppOrders` (pp_orders) phantom pgTable o'chirildi 2026-07-02 — jadval
+// jonli DB'da MAVJUD EMAS (pg_tables tekshirildi) va 0 kod-o'quvchi isbotlangan.
 export const ppRouting = pgTable('pp_routing', {
   id: integer('id').primaryKey(),
   productId: integer('product_id'),

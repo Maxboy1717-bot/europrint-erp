@@ -231,37 +231,9 @@ export type InsertBudgetControl = z.infer<typeof insertBudgetControlSchema>;
 
 
 // ========== POS SYSTEM ==========
-export const posTransactions = pgTable("pos_transactions", {
-  id: serial("id").primaryKey(),
-  transactionNumber: varchar("transaction_number", { length: 30 }).notNull().unique(),
-  customerId: varchar("customer_id"),
-  customerName: text("customer_name"),
-  cashierId: integer("cashier_id").references(() => users.id, { onDelete: "set null" }),
-  items: jsonb("items").notNull(),
-  subtotal: numericMoney("subtotal").notNull(),
-  taxAmount: numericMoney("tax_amount").notNull().default(0),
-  taxRate: numericMoney("tax_rate").default(12),
-  discountAmount: numericMoney("discount_amount").default(0),
-  totalAmount: numericMoney("total_amount").notNull(),
-  paymentMethod: varchar("payment_method", { length: 20 }).notNull(),
-  paymentDetails: jsonb("payment_details"),
-  status: varchar("status", { length: 20 }).notNull().default("completed"),
-  receiptNumber: varchar("receipt_number", { length: 30 }),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  index("idx_pos_transactions_cashier_id").on(t.cashierId),
-  index("idx_pos_transactions_customer_id").on(t.customerId),
-  index("idx_pos_transactions_payment_method").on(t.paymentMethod),
-  index("idx_pos_transactions_status").on(t.status),
-  index("idx_pos_transactions_created_at").on(t.createdAt),
-  check("pos_transactions_payment_method_chk", sql`${t.paymentMethod} IN ('cash','card','transfer','mixed')`),
-  check("pos_transactions_status_chk", sql`${t.status} IN ('completed','refunded','pending','cancelled')`),
-  check("pos_transactions_subtotal_chk", sql`${t.subtotal} >= 0`),
-  check("pos_transactions_total_amount_chk", sql`${t.totalAmount} >= 0`),
-]);
-
-
+// NOTE: retail `posTransactions` pgTable (pos_transactions) o'chirildi 2026-07-02 —
+// retail-do'kon kontsepti retiring qilindi (naqd-nazorat = fi-cashier-hub.ts),
+// 0 runtime o'quvchi isbotlangan. DB jadvali DROP qilinmadi (egasi-bosqich).
 export const posProducts = pgTable("pos_products", {
   id: serial("id").primaryKey(),
   barcode: varchar("barcode", { length: 50 }).notNull().unique(),
@@ -281,14 +253,8 @@ export const posProducts = pgTable("pos_products", {
 ]);
 
 
-export const insertPosTransactionSchema = createInsertSchema(posTransactions).omit({ id: true, createdAt: true } as never);
-
 export const insertPosProductSchema = createInsertSchema(posProducts).omit({ id: true, createdAt: true } as never);
 
-
-export type PosTransaction = typeof posTransactions.$inferSelect;
-
-export type InsertPosTransaction = z.infer<typeof insertPosTransactionSchema>;
 
 export type PosProduct = typeof posProducts.$inferSelect;
 
