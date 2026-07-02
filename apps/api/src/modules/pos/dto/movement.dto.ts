@@ -31,6 +31,11 @@ export const AddMovementLineSchema = z.object({
   binLocation:    z.string().max(100).optional(),
   serialNumber:   z.string().max(MAX_NAME_LENGTH).optional(),
   lotNumber:      z.string().max(MAX_SHORT_TEXT).optional(),
+  // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN uchun MAJBURIY (egasi:
+  // "barcode bo'lmasa qabul qilmaydi", kitob 18400-18402) — sxemada optional,
+  // tur-bog'liq majburiylik CreateMovementSchema.superRefine + PosMovementService
+  // (movementTypeId yo'li DB-lookup talab qiladi) darajasida tekshiriladi.
+  barcode:        z.string().min(1).max(100).optional(),
   notes:          z.string().max(MAX_SHORT_TEXT).optional(),
 });
 export class AddMovementLineDto extends createZodDto(AddMovementLineSchema) {}
@@ -66,6 +71,22 @@ export const CreateMovementSchema = z.object({
 }).refine(d => d.movementTypeId != null || (d.movementTypeCode != null && d.movementTypeCode.length > 0), {
   message: 'movementTypeId yoki movementTypeCode majburiy',
   path: ['movementTypeId'],
+}).superRefine((d, ctx) => {
+  // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN kirimda har qatorda barkod
+  // MAJBURIY (egasi: "barcode bo'lmasa qabul qilmaydi", kitob 18400-18402).
+  // Bu yerda faqat movementTypeCode yo'li ushlanadi; movementTypeId yo'li
+  // PosMovementService.createMovement ichida (DB-lookup dan keyin) tekshiriladi.
+  if (d.movementTypeCode === MovementTypeCode.EXTERNAL_IN && Array.isArray(d.lines)) {
+    d.lines.forEach((line, i) => {
+      if (!line.barcode) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'EXTERNAL_IN kirim qatorida barkod majburiy (barkodsiz qabul taqiqlangan)',
+          path: ['lines', i, 'barcode'],
+        });
+      }
+    });
+  }
 });
 export class CreateMovementDto extends createZodDto(CreateMovementSchema) {}
 

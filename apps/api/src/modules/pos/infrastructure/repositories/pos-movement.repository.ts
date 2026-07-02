@@ -45,6 +45,19 @@ export class PosMovementRepository implements IPosMovementRepository {
     }
   }
 
+  /**
+   * G1-3 OMBOR-PREFIKSLI raqamlash (2026-07-02): hujjat raqami uchun ombor kodi
+   * (masalan RM-MAIN) — vizyon formati <OMBOR>-<TUR>-<YIL>-<SEQ>.
+   */
+  async findWarehouseCode(id: string): Promise<Result<string | null>> {
+    try {
+      const [wh] = await db.select({ code: warehouses.code }).from(warehouses).where(eq(warehouses.id, id));
+      return Ok(wh?.code ?? null);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async countMovements(): Promise<Result<number>> {
     try {
       const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(posMovements);

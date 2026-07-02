@@ -174,6 +174,10 @@ export const posMovementLines = pgTable('pos_movement_lines', {
   expiryDate:          timestamp('expiry_date'),
   // Bron bilan bog'lanish
   reservationId:       integer('reservation_id'),
+  // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN qatorlarida majburiy barkod
+  // (egasi: "barcode bo'lmasa qabul qilmaydi", kitob 18400-18402). Migration:
+  // pos-movement-lines-barcode-2026-07-02.sql (ADD COLUMN IF NOT EXISTS, additive).
+  barcode:             text('barcode'),
   sortOrder:           integer('sort_order').notNull().default(0),
   notes:               text('notes'),
   createdAt:           timestamp('created_at').notNull().defaultNow(),

@@ -12,7 +12,7 @@ const _time = new TashkentTimeService();
  * (Boshqa servislar faqat createMovement ni ishlatadi)
  */
 import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
-import { Result, AppError, safeCall } from '@common/result';
+import { Result, AppError, Err, safeCall } from '@common/result';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventBus } from '@nestjs/cqrs';
 
@@ -24,8 +24,9 @@ import { PosAuditService }         from './pos-audit.service';
 import { PosBalanceGuardService }  from './pos-balance-guard.service';
 import { PosTechCardGateService }  from './pos-techcard-gate.service';
 import { CreateMovementDto, AddMovementLineDto, CreateDamageActDto } from '../../dto/movement.dto';
-import { resolveActNumberPrefix } from '../../dto/movement-enums';
-import { nextDocNumber } from '@common/database/doc-sequences.helper';
+import { resolveActNumberPrefix, resolveMovementCategory, MovementCategory } from '../../dto/movement-enums';
+import { nextDocNumber, nextWarehouseDocNumber } from '@common/database/doc-sequences.helper';
+import { Role } from '@common/constants/roles.constants';
 import { PosMovementRepository } from '../../infrastructure/repositories/pos-movement.repository';
 import { movementTypeEnum, posMovements, posMovementLines } from '@workspace/db';
 
@@ -61,7 +62,12 @@ export class PosMovementService {
     private readonly repo:             PosMovementRepository,
   ) {}
 
-  async createMovement(dto: CreateMovementDto, createdById: number, ipAddress?: string): Promise<Result<PosMovementRow, AppError>> {
+  /**
+   * @param requesterRole — so'rovchi roli (G1-2 bron-blok override uchun):
+   *   faqat super_admin/direktor ACTIVE bronli materialni chiqara oladi.
+   *   Ichki chaqiruvchilar (requisition/sync/balance) rol bermaydi → blok amal qiladi.
+   */
+  async createMovement(dto: CreateMovementDto, createdById: number, ipAddress?: string, requesterRole?: string): Promise<Result<PosMovementRow, AppError>> {
     return safeCall(async () => {
       // Idempotency (2026-07-01, Savdo-sity referens H-8 naqshi): double-tap/retry bir xil
       // kalit bilan qayta kelsa — mavjud harakatni qaytar, qayta-yaratma/qayta-tekshirma.
@@ -83,6 +89,47 @@ export class PosMovementService {
 
       if (movType.code === 'INTERNAL_RETURN' && !dto.returnReason) {
         throw new BadRequestException('INTERNAL_RETURN uchun qaytarish sababi majburiy');
+      }
+
+      // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN kirimda har qatorda
+      // barkod MAJBURIY (egasi: "barcode bo'lmasa qabul qilmaydi", kitob
+      // 18400-18402). DTO superRefine faqat movementTypeCode yo'lini ushlaydi —
+      // bu yerda movementTypeId yo'li ham qamrab olinadi (server = yagona darvoza).
+      if (movType.code === 'EXTERNAL_IN' && dto.lines?.length) {
+        const missingRows = dto.lines
+          .map((l, i) => (l.barcode ? null : i + 1))
+          .filter((i): i is number => i !== null);
+        if (missingRows.length > 0) {
+          throw new BadRequestException(
+            `EXTERNAL_IN kirimda barkodsiz qator qabul qilinmaydi (qator: ${missingRows.join(', ')})`,
+          );
+        }
+      }
+
+      // G1-2 BRON-BLOK POST-GATE (2026-07-02): EXTERNAL_OUT/INTERNAL_ISSUE
+      // yaratishda har qator materiali uchun ACTIVE bron tekshiriladi — GET
+      // issuable (pos-stock-issuable.service.ts:182-239) bilan BIR XIL semantika:
+      // bron > 0 → blok; faqat super_admin/direktor override qila oladi.
+      if ((movType.code === 'EXTERNAL_OUT' || movType.code === 'INTERNAL_ISSUE') && dto.lines?.length && dto.fromWarehouseId) {
+        const canOverride = requesterRole === Role.SUPER_ADMIN || requesterRole === Role.DIRECTOR;
+        const whIdNum = Number(dto.fromWarehouseId);
+        // stock_reservations.warehouse_id = integer; raqam bo'lmagan (legacy UUID)
+        // ombor id'siga bron bog'lanolmaydi → tekshirish shart emas.
+        if (!canOverride && Number.isFinite(whIdNum)) {
+          const reservedBlocks: string[] = [];
+          for (const line of dto.lines) {
+            const resR = await this.stockReservation.getActiveReservedTotal(line.materialCardId, whIdNum);
+            if (!resR.ok) throw new InternalServerErrorException(resR.error.message);
+            if (resR.data > 0) {
+              reservedBlocks.push(`Material #${line.materialCardId}: ${resR.data} birlik ACTIVE bronda`);
+            }
+          }
+          if (reservedBlocks.length > 0) {
+            throw new ForbiddenException(
+              `Bronlangan material chiqimi bloklandi (faqat super_admin/direktor ochishi mumkin):\n${reservedBlocks.join('\n')}`,
+            );
+          }
+        }
       }
 
       if (movType.code === 'EXTERNAL_OUT' && dto.fromWarehouseId) {
@@ -167,18 +214,31 @@ export class PosMovementService {
         }
       }
 
-      // FAZA D (Hujjat/PDF akt, 2026-07-01): akt-turi-bo'yicha prefiks — har
-      // MovementCategory (KIRIM/CHIQIM/...) o'z atomik sequence'idan raqam oladi
-      // (masalan KIRIM-AKT-2026-000001). Noma'lum kod → eski generic POS-YYYY-NNNNN
-      // fallback (mavjud oqim buzilmaydi, Q-39).
-      const aktPrefix = resolveActNumberPrefix(movType.code);
-      let movementNumber: string;
-      if (aktPrefix) {
-        movementNumber = await nextDocNumber(aktPrefix);
-      } else {
-        const countR = await this.repo.countMovements();
-        const count = countR.ok ? (countR.data as number) : 0;
-        movementNumber = `POS-${_time.now().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+      // G1-3 OMBOR-PREFIKSLI raqamlash (2026-07-02, vizyon OMBOR-KASSIR-INTERVYU
+      // §13/29-savol): raqam = <OMBOR-KOD>-<TUR>-<YIL>-<SEQ> (mas.
+      // RMMAIN-KIRIM-2026-00001) — kirimda to_warehouse, chiqim/qolganida
+      // from_warehouse kodidan prefiks; sequence har prefiks uchun atomik.
+      // Ombor/kod topilmasa → FAZA D akt-prefiks fallback (KIRIM-AKT-...), u ham
+      // bo'lmasa eski generic POS-YYYY-NNNNN. ESKI raqamlar o'zgarmaydi (Q-39).
+      const category = resolveMovementCategory(movType.code);
+      const prefixWarehouseId = category === MovementCategory.KIRIM
+        ? (dto.toWarehouseId ?? dto.fromWarehouseId)
+        : (dto.fromWarehouseId ?? dto.toWarehouseId);
+      let movementNumber: string | null = null;
+      if (category && prefixWarehouseId) {
+        const whCodeR = await this.repo.findWarehouseCode(prefixWarehouseId);
+        const whCode = whCodeR.ok ? whCodeR.data : null;
+        if (whCode) movementNumber = await nextWarehouseDocNumber(whCode, category);
+      }
+      if (!movementNumber) {
+        const aktPrefix = resolveActNumberPrefix(movType.code);
+        if (aktPrefix) {
+          movementNumber = await nextDocNumber(aktPrefix);
+        } else {
+          const countR = await this.repo.countMovements();
+          const count = countR.ok ? (countR.data as number) : 0;
+          movementNumber = `POS-${_time.now().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+        }
       }
 
       const movementR = await this.repo.insertMovement({
@@ -209,7 +269,10 @@ export class PosMovementService {
       }
       const movement = movementR.data;
 
-      if (dto.lines?.length) await this.addLines(movement.id, dto.lines, dto.fromWarehouseId);
+      if (dto.lines?.length) {
+        const linesR = await this.addLines(movement.id, dto.lines, dto.fromWarehouseId, movType.code);
+        if (!linesR.ok) throw new InternalServerErrorException(linesR.error.message);
+      }
 
       // ADDITIVE (2026-06-27): yangi harakat turlari uchun kontekst saqlash.
       // WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT / CUSTOMER_MATERIAL.
@@ -286,11 +349,25 @@ export class PosMovementService {
     }
   }
 
-  async addLines(movementId: number, lines: AddMovementLineDto[], fromWarehouseId?: string) {
+  async addLines(movementId: number, lines: AddMovementLineDto[], fromWarehouseId?: string, movementTypeCode?: string) {
+    // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN qatorlariga barkodsiz
+    // qo'shish TAQIQ (egasi: "barcode bo'lmasa qabul qilmaydi").
+    const safeLines = Array.isArray(lines) ? lines : [];
+    if (movementTypeCode === 'EXTERNAL_IN') {
+      const missingRows = safeLines
+        .map((l, i) => (l.barcode ? null : i + 1))
+        .filter((i): i is number => i !== null);
+      if (missingRows.length > 0) {
+        return Err({
+          code: 'BAD_REQUEST',
+          message: `EXTERNAL_IN kirimda barkodsiz qator qabul qilinmaydi (qator: ${missingRows.join(', ')})`,
+        });
+      }
+    }
     const maxSeqR = await this.repo.getMaxLineSequence(movementId);
     const maxSeq = maxSeqR.ok ? (maxSeqR.data as number) : 0;
     let seq = maxSeq + 1;
-    const values: LineInsert[] = (Array.isArray(lines) ? lines : []).map((line) => ({
+    const values: LineInsert[] = safeLines.map((line) => ({
       movementId,
       materialCardId:  line.materialCardId,
       batchId:         line.batchId ?? undefined,
@@ -304,6 +381,8 @@ export class PosMovementService {
       expiryDate:      line.expiryDate ? new Date(line.expiryDate) : undefined,
       binId:           line.binLocation ?? undefined,
       fifoSequence:    seq++,
+      // G1-1 (2026-07-02): FE yuborgan barkod endi saqlanadi (avval tashlanardi).
+      barcode:         line.barcode ?? undefined,
       notes:           line.notes ?? undefined,
     }));
     return this.repo.insertLines(values);

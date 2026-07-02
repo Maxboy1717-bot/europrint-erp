@@ -97,7 +97,8 @@ export class MovementsController {
     @CurrentUser() user: AuthenticatedUser,
     @Ip() ip: string,
   ) {
-    return unwrapOrInternal(await this.movementService.createMovement(dto, user.id, ip));
+    // G1-2 (2026-07-02): rol uzatiladi — bron-blok override faqat super_admin/direktor.
+    return unwrapOrInternal(await this.movementService.createMovement(dto, user.id, ip, user.role));
   }
 
   // ─── Status O'zgartirish ──────────────────────────────────────────────────

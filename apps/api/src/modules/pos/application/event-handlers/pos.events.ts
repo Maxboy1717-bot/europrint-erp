@@ -9,6 +9,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { execPosMovementMarkAiProcessing } from '@common/database/queries-remaining';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 
 import { PosTelegramService }      from '../services/pos-telegram.service';
 import { LabelService }            from '../services/label.service';
@@ -18,6 +20,7 @@ import { AutoBarcodeService }      from '../services/auto-barcode.service';
 import { AutoGlPostingService }    from '../services/auto-gl-posting.service';
 import { QuarantineWorkflowService } from '../services/quarantine-workflow.service';
 import { ThreeWayMatchService }    from '../services/three-way-match.service';
+import { PosPdfService }           from '../services/pos-pdf.service';
 import { broadcastPosEvent }       from '../../presentation/pos.gateway';
 import type {
   MovementCreatedEvent,
@@ -47,6 +50,7 @@ export class PosEventHandler {
     private readonly autoGl:          AutoGlPostingService,
     private readonly quarantine:      QuarantineWorkflowService,
     private readonly threeWay:        ThreeWayMatchService,
+    private readonly pdfService:      PosPdfService,
   ) {}
 
   private n(userId: number, type: string, title: string, body: string, entityId?: number): void {
@@ -172,6 +176,13 @@ export class PosEventHandler {
     const finUsers = await this.eventRepo.findByRoles(['finance_head']);
     for (const u of finUsers) { this.n(u.id, 'MOVEMENT_COMPLETED', 'Harakat yakunlandi', `${payload.movementNumber} stock ledgerga yozildi`, payload.movementId); }
 
+    // G1-4 AVTO-PDF (2026-07-02, vizyon OMBOR-KASSIR-INTERVYU §13): COMPLETED
+    // bo'lganda harakat akti PDF avtomatik yaratiladi, uploads/pos-acts/ ga
+    // saqlanadi va pos_movements.act_pdf_path ga yoziladi (ustun bor edi, hech
+    // qachon to'ldirilmagan). Xato YUTILMAYDI — logger.warn bilan ochiq loglanadi;
+    // PDF xatosi harakat-yakunlash oqimini bloklamaydi (harakat allaqachon completed).
+    await this._saveCompletedActPdf(payload.movementId, String(payload.movementNumber ?? payload.movementId), mv?.telegramId ?? null);
+
     // FAZA Auto-GL (I): the AWAITING_REVIEW gl_posting_log row for this movement is already created
     // synchronously in PosMovementStatusService._processCompletedMovement (pos-movement-status.service.ts),
     // BEFORE this event fires. Posting to the canonical `entries` ledger must wait for a human to approve
@@ -180,6 +191,51 @@ export class PosEventHandler {
     // A direct auto-post call used to live here (glLedger.postMovementToCanonicalLedger) — it bypassed the
     // review gate and wrote straight to `entries` on every 'completed' event, defeating AWAITING_REVIEW.
     // Removed per spec (Q-46: reuse the already-built approve flow, don't race it with an auto-bypass).
+  }
+
+  /**
+   * G1-4 AVTO-PDF (2026-07-02): akt PDF'ni diskka yozadi + act_pdf_path yangilaydi
+   * + yaratuvchiga Telegram matn-bildirishnoma yuboradi. Yo'l `uploads/pos-acts/`
+   * (kanban-fayllar bilan bir xil `uploads/` ildiz-naqshi). Har bosqich xatosi
+   * logger.warn bilan OCHIQ loglanadi (yutilmaydi), lekin completed-oqimni buzmaydi.
+   */
+  private async _saveCompletedActPdf(movementId: number, movementNumber: string, telegramId: bigint | null): Promise<void> {
+    try {
+      const pdfR = await this.pdfService.generateMovementAct(movementId);
+      if (!pdfR.ok) {
+        this.logger.warn(`[AktPDF] generatsiya xatosi (${movementNumber}): ${pdfR.error.message}`);
+        return;
+      }
+      const actsDir = path.join(process.cwd(), 'uploads', 'pos-acts');
+      await fs.mkdir(actsDir, { recursive: true });
+      const safeNum = movementNumber.replace(/[^A-Za-z0-9_-]/g, '_');
+      const fileName = `movement-${movementId}-${safeNum}.pdf`;
+      await fs.writeFile(path.join(actsDir, fileName), pdfR.data as Buffer);
+      const relPath = `uploads/pos-acts/${fileName}`;
+
+      const upR = await this.eventRepo.setActPdfPath(movementId, relPath);
+      if (!upR.ok) {
+        this.logger.warn(`[AktPDF] act_pdf_path yozilmadi (${movementNumber}): ${upR.error.message}`);
+        return;
+      }
+      this.logger.log(`[AktPDF] saqlandi: ${relPath} (movement=${movementId})`);
+
+      // Telegram: yaratuvchiga oddiy matn-bildirishnoma (mavjud bot-infra orqali).
+      // TELEGRAM-KEYIN: PDF faylni hujjat sifatida yuborish (sendDocument) mavjud
+      // botda yo'q — yangi bot-infra qurilmadi, matn-xabar bilan cheklandik.
+      if (telegramId) {
+        try {
+          await this.telegramService.sendNotification(
+            BigInt(String(telegramId)),
+            `<b>Akt PDF tayyor</b>\n\nHarakat: <code>${movementNumber}</code>\nAkt PDF yaratildi — ERP'dan yuklab olish mumkin.`,
+          );
+        } catch (e) {
+          this.logger.warn(`[AktPDF] Telegram xabar xatosi (${movementNumber}): ${String(e)}`);
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`[AktPDF] kutilmagan xato (${movementNumber}): ${String(e)}`);
+    }
   }
 
   @OnEvent('pos.movement.data.cancelled')

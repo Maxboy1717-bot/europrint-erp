@@ -82,6 +82,17 @@ export class StockReservationService {
   }
 
   /**
+   * G1-2 BRON-BLOK (2026-07-02): material+ombor uchun ACTIVE bron yig'indisi.
+   * PosMovementService chiqim-gate'i (EXTERNAL_OUT/INTERNAL_ISSUE) shu orqali
+   * bron bor-yo'qligini tekshiradi — GET issuable (pos-stock-issuable.service
+   * :182-239) bilan BIR XIL semantika: bron > 0 → blok, faqat
+   * super_admin/direktor override qila oladi.
+   */
+  async getActiveReservedTotal(materialCardId: number, warehouseId: number): Promise<Result<number, AppError>> {
+    return this.stockReservationRepo.sumActiveReservations(materialCardId, warehouseId);
+  }
+
+  /**
    * Bronni bekor qilish (CANCELLED).
    */
   async cancel(reservationId: number, cancelledById: number) {

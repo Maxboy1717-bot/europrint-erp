@@ -6,6 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import { db, eq, and, sql, inArray, posMovements } from '@workspace/db';
 import { users } from '@europrint/schemas';
+import { Result, Ok, Err } from '@common/result';
 
 export type EventUserRow = { id: number; telegramId: bigint | null };
 export type EventMovRow  = { createdBy: number | null; telegramId: bigint | null; movementNumber: string; movementType: string | null };
@@ -41,6 +42,19 @@ export class PosEventRepository {
       .where(eq(posMovements.id, movementId))
       .limit(1);
     return (row as EventMovRow) ?? null;
+  }
+
+  /**
+   * G1-4 AVTO-PDF (2026-07-02): COMPLETED harakatning akt PDF yo'lini yozadi
+   * (pos_movements.act_pdf_path — avval hech qachon to'ldirilmagan ustun).
+   */
+  async setActPdfPath(movementId: number, actPdfPath: string): Promise<Result<void>> {
+    try {
+      await db.update(posMovements).set({ actPdfPath }).where(eq(posMovements.id, movementId));
+      return Ok(undefined);
+    } catch (e) {
+      return Err(String(e));
+    }
   }
 
   async findUserTelegramId(userId: number): Promise<bigint | null> {
