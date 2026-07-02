@@ -51,7 +51,7 @@ import {
   CoreModule, OrgStructureModule, ChatModule, StorageModule,
   EcommerceModule, LegacyModule, CompatibilityModule,
   CronModule, TelegramModule, RemainingModule, IntegrationModule,
-  ErpModule, ExportModule, OrderWorkflowModule,
+  ErpModule, ExportModule,
   SharedEventsModule, OutboxModule,
 } from './feature-modules';
 
@@ -178,8 +178,10 @@ import {
     // ── Analytics & Export ────────────────────────────────────────────────────
     ExportModule,
 
-    // ── Sprint 4 — Order-to-Cash Workflow ─────────────────────────────────────
-    OrderWorkflowModule,
+    // NOTE: OrderWorkflowModule deregistered 2026-07-02 — DB table `ow_orders`
+    // does not exist; every route under /order-workflow/* returned 500 (Q-46
+    // dead/broken code). Module + files left in place under
+    // modules/order-workflow/ (rebuild scope not yet defined by vizyon).
 
     // ── PA0 event bridge (CQRS → EventEmitter2, Triggers 2/7/14/15/20) ────────
     SharedEventsModule,

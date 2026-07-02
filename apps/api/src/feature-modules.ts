@@ -73,8 +73,10 @@ export { ErpModule } from './modules/erp/erp.module';
 // PA3-17 Wave 6: AnalyticsModule merged into DirectorModule
 export { ExportModule } from './modules/export/export.module';
 
-// ── Sprint 4 — Order-to-Cash Workflow ───────────────────────────────────────
-export { OrderWorkflowModule } from './modules/order-workflow/order-workflow.module';
+// NOTE: OrderWorkflowModule deregistered 2026-07-02 — DB table `ow_orders`
+// does not exist; every route under /order-workflow/* returned 500 (Q-46
+// dead/broken code). Not exported/imported anywhere. Files left in place
+// under modules/order-workflow/ (rebuild scope not yet defined by vizyon).
 
 // ── PA0 event bridge (CQRS → EventEmitter2) ─────────────────────────────────
 export { SharedEventsModule } from './modules/shared/events/shared-events.module';
