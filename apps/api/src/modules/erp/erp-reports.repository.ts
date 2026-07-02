@@ -10,6 +10,14 @@ import { db , runQuery } from '@shared/db';
 
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
+// APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — production plan CRUD ni PP MPS
+// jadvaliga (production_plan_header) bog'lash uchun helper: bo'sh string/undefined
+// ID larni NULL ga aylantiradi (Postgres integer ustuniga "" yuborilsa xato beradi).
+const toIntOrNull = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
 @Injectable()
 export class ErpReportsRepository {
@@ -38,17 +46,46 @@ export class ErpReportsRepository {
 
   }
 
+  // APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02 — legacy `erp_production_plans`
+  // (order_id/product_id/planned_qty, `status` ustuni umuman yo'q — INSERT/UPDATE
+  // crash bergan) o'rniga PP MPS kanonik jadvali `production_plan_header` ga
+  // bog'landi. FE (PlanningBoard.tsx) allaqachon shu shakl bilan ishlaydi:
+  // planNumber/planDate/planType/workCenterId/shift/status/notes
+  // (InsertProductionPlanHeader, @shared/schema → lib/db pp-production.ts).
   async listProductionPlans(limit: number, offset: number): Promise<Result<Row[]>>  {
-  try {  
-      return exec(sql`SELECT pp.*, mc.xom_ashyo AS product_name FROM erp_production_plans pp LEFT JOIN material_cards mc ON mc.id = pp.product_id ORDER BY pp.plan_date DESC LIMIT ${limit} OFFSET ${offset}`);  } catch (_e) {
+  try {
+      return exec(sql`
+        SELECT pp.id, pp.plan_number AS "planNumber", pp.plan_date AS "planDate", pp.plan_type AS "planType",
+          pp.work_center_id AS "workCenterId", wc.name AS "workCenterName", pp.shift, pp.status, pp.notes,
+          pp.approved_by AS "approvedBy", pp.approved_at AS "approvedAt",
+          pp.created_at AS "createdAt", pp.updated_at AS "updatedAt"
+        FROM production_plan_header pp
+        LEFT JOIN work_centers wc ON wc.id = pp.work_center_id
+        ORDER BY pp.plan_date DESC LIMIT ${limit} OFFSET ${offset}
+      `);  } catch (_e) {
     return Err(String(_e));
   }
 
   }
 
   async updateProductionPlan(id: number, body: Row): Promise<Result<Row | null>>  {
-  try {  
-      const r = await exec(sql`UPDATE erp_production_plans SET planned_qty = COALESCE(${body.plannedQty ?? null}, planned_qty), status = COALESCE(${body.status ?? null}, status), updated_at = NOW() WHERE id = ${id} RETURNING *`);
+  try {
+      const r = await exec(sql`
+        UPDATE production_plan_header SET
+          plan_number = COALESCE(${(body.planNumber as string) || null}, plan_number),
+          plan_date = COALESCE(${(body.planDate as string) || null}, plan_date),
+          plan_type = COALESCE(${(body.planType as string) || null}, plan_type),
+          work_center_id = COALESCE(${toIntOrNull(body.workCenterId)}, work_center_id),
+          shift = COALESCE(${(body.shift as string) || null}, shift),
+          status = COALESCE(${(body.status as string) || null}, status),
+          notes = COALESCE(${(body.notes as string) || null}, notes),
+          updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING id, plan_number AS "planNumber", plan_date AS "planDate", plan_type AS "planType",
+          work_center_id AS "workCenterId", shift, status, notes,
+          approved_by AS "approvedBy", approved_at AS "approvedAt",
+          created_at AS "createdAt", updated_at AS "updatedAt"
+      `);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
@@ -173,7 +210,23 @@ export class ErpReportsRepository {
 
   async createProductionPlan(body: Row): Promise<Result<Row | null>> {
   try {
-    const r = await exec(sql`INSERT INTO erp_production_plans (product_id, plan_date, planned_qty, status) VALUES (${body.productId ?? null}, ${body.planDate ?? body.date ?? new Date().toISOString().slice(0,10)}, ${body.plannedQty ?? 0}, ${body.status ?? 'draft'}) RETURNING *`);
+    const planNumber = (body.planNumber as string) || `PP-${Date.now()}`;
+    const r = await exec(sql`
+      INSERT INTO production_plan_header (plan_number, plan_date, plan_type, work_center_id, shift, status, notes)
+      VALUES (
+        ${planNumber},
+        ${(body.planDate as string) || (body.date as string) || new Date().toISOString().slice(0,10)},
+        ${(body.planType as string) || 'daily'},
+        ${toIntOrNull(body.workCenterId)},
+        ${(body.shift as string) || null},
+        ${(body.status as string) || 'draft'},
+        ${(body.notes as string) || null}
+      )
+      RETURNING id, plan_number AS "planNumber", plan_date AS "planDate", plan_type AS "planType",
+        work_center_id AS "workCenterId", shift, status, notes,
+        approved_by AS "approvedBy", approved_at AS "approvedAt",
+        created_at AS "createdAt", updated_at AS "updatedAt"
+    `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) { return Err(String(_e)); }
   }
