@@ -38,11 +38,11 @@ writer/reader **grep bilan tasdiqlangan** (taxmin emas).
 
 | Jadval | Qator | Kod-iste'molchi |
 |---|---|---|
-| pos_serial_number_items | 0 | 0 fayl |
+| pos_serial_number_items | 0 | 0 runtime fayl (faqat `drift-fix-03b-missing-tables.sql` DDL `CREATE TABLE IF NOT EXISTS` — DROP'dan keyin qayta qo'llansa jadvalni TIKLAYDI) |
 | pos_offline_queue | 0 | 0 fayl |
 | operator_material_balance | 0 | 0 fayl |
 | excel_import_batches | 0 | 0 fayl |
-| ai_material_insights | 0 | 0 fayl |
+| ai_material_insights | 0 | 0 runtime fayl (faqat `drift-fix-03b-missing-tables.sql` DDL `CREATE TABLE IF NOT EXISTS` — DROP'dan keyin qayta qo'llansa jadvalni TIKLAYDI) |
 | warehouse_rows | 0 | faqat `migrations-drift.ts` (DDL-invariant, runtime emas) |
 | warehouse_shelves | 0 | faqat `migrations-drift.ts` (DDL-invariant, runtime emas) |
 
