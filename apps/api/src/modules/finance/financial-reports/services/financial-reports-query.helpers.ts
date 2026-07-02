@@ -10,9 +10,10 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { db } from '@shared/db';
 import {
-  cashTransactions, warehouseTransactions, invoicePayments,
+  warehouseTransactions, invoicePayments,
   accounts, entries,
 } from '@europrint/schemas';
+import { cashierMovements } from '@workspace/db';
 import { customer_payments as customerPayments } from '@shared/db/schema-compat-5';
 import { sql, count, and, eq } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
@@ -22,19 +23,21 @@ import type { CashSummary, WarehouseBalance, AgingBucket, BalanceSheet, Producti
 export async function queryCashSummary(date?: string): Promise<Result<CashSummary>> {
   try {
     const targetDate = date ?? _time.now().toISOString().slice(0, 10);
+    // Retired cash_transactions o'rniga cashier_movements (fi-cashier-hub kanonik):
+    // kirim = type='cash_in'; chiqim = cash_out/salary_payout/advance/expense.
     const rows = await db.select({
-      type: cashTransactions.transactionType,
-      total: sql<number>`COALESCE(SUM(${cashTransactions.amount}::numeric), 0)`,
+      type: cashierMovements.type,
+      total: sql<number>`COALESCE(SUM(${cashierMovements.amount}::numeric), 0)`,
     })
-      .from(cashTransactions)
-      .where(sql`DATE(${cashTransactions.transactionDate}) = ${targetDate}`)
-      .groupBy(cashTransactions.transactionType);
+      .from(cashierMovements)
+      .where(sql`DATE(${cashierMovements.createdAt}) = ${targetDate}`)
+      .groupBy(cashierMovements.type);
 
     let inflow = 0;
     let outflow = 0;
     for (const row of rows) {
-      if (row.type === 'inflow') inflow = Number(row.total);
-      else if (row.type === 'outflow') outflow = Number(row.total);
+      if (row.type === 'cash_in') inflow += Number(row.total);
+      else outflow += Number(row.total);
     }
 
     return Ok({

@@ -137,7 +137,7 @@ export function hasBotPermission(slug: BotSlug, role: string | undefined): boole
 // EP-FIN-028: ShVB Telegram bot komandalar (Finance) — helper funksiyalar.
 // fin.bot.ts ulardan foydalanadi (bu fayl boshqa paket — bu yerda faqat eksport).
 // execSqlResult<T> ishlatiladi (deprecated execSql EMAS — Q-40). Barcha so'rovlar
-// JONLI sxemaga moslangan: zvs / cash_registers / cash_transactions / purchase_invoices.
+// JONLI sxemaga moslangan: zvs / cashier_shifts / cashier_movements / finance_invoices.
 // ============================================================
 
 // type (interface emas) — execSqlResult<T> ning Row (Record<string, unknown>) constraint'ini qondiradi.
@@ -175,20 +175,33 @@ export async function buildZvsStatusReply(): Promise<BotReply> {
 }
 
 /**
- * /company_state — kassa balansi (cash_registers), 30-kunlik kirim/chiqim
- * (cash_transactions), muddati o'tgan qarzlar soni (purchase_invoices).
+ * /company_state — ochiq kassir smenalari balansi (cashier_shifts + cashier_movements,
+ * fi-cashier-hub kanonik), 30-kunlik kirim/chiqim (cashier_movements), muddati
+ * o'tgan qarzlar soni (finance_invoices). Retired cash_registers/cash_transactions
+ * o'rniga cashier-hub'dan o'qiydi (retail-kassa retiring, egasi 2026-07-01).
  */
 export async function buildCompanyStateReply(): Promise<BotReply> {
+  // Ochiq smena kassasi = opened_amount + Σ(cash_in) − Σ(cash_out/salary_payout/advance/expense).
   const regR = await execSqlResult<{ name: string; current_balance: string }>(drizzleSql`
-    SELECT name, current_balance::text FROM cash_registers
-    WHERE is_active = true ORDER BY name LIMIT 5
-  `, '/company_state:registers');
+    SELECT
+      COALESCE(u.full_name, u.username) AS name,
+      (cs.opened_amount
+        + COALESCE(SUM(CASE WHEN cm.type = 'cash_in' THEN cm.amount ELSE -cm.amount END), 0)
+      )::text AS current_balance
+    FROM cashier_shifts cs
+    JOIN users u ON u.id = cs.cashier_user_id
+    LEFT JOIN cashier_movements cm ON cm.shift_id = cs.id
+    WHERE cs.status = 'open'
+    GROUP BY cs.id, u.full_name, u.username, cs.opened_amount
+    ORDER BY name
+    LIMIT 5
+  `, '/company_state:shifts');
 
   const flowR = await execSqlResult<{ total_in: string; total_out: string }>(drizzleSql`
     SELECT
-      COALESCE(SUM(CASE WHEN transaction_type='inflow'  THEN amount ELSE 0 END), 0)::text AS total_in,
-      COALESCE(SUM(CASE WHEN transaction_type='outflow' THEN amount ELSE 0 END), 0)::text AS total_out
-    FROM cash_transactions
+      COALESCE(SUM(CASE WHEN type = 'cash_in' THEN amount ELSE 0 END), 0)::text AS total_in,
+      COALESCE(SUM(CASE WHEN type <> 'cash_in' THEN amount ELSE 0 END), 0)::text AS total_out
+    FROM cashier_movements
     WHERE created_at >= NOW() - INTERVAL '30 days'
   `, '/company_state:flow');
 
@@ -205,7 +218,7 @@ export async function buildCompanyStateReply(): Promise<BotReply> {
 
   const kassaLines = (Array.isArray(regR.rows) ? regR.rows : []).map((row) =>
     `  💵 ${row.name}: <b>${Number(row.current_balance).toLocaleString('uz')} UZS</b>`
-  ).join('\n') || '  (kassalar topilmadi)';
+  ).join('\n') || '  (ochiq kassir smenasi yo\'q)';
 
   const flow = flowR.rows[0] ?? { total_in: '0', total_out: '0' };
   const sof = Number(flow.total_in) - Number(flow.total_out);
@@ -213,7 +226,7 @@ export async function buildCompanyStateReply(): Promise<BotReply> {
 
   return helpReply(
     `🏢 <b>Kompaniya Holati</b>\n\n` +
-    `<b>Kassalar:</b>\n${kassaLines}\n\n` +
+    `<b>Ochiq kassir smenalari:</b>\n${kassaLines}\n\n` +
     `<b>30-kunlik pul oqimi:</b>\n` +
     `  📥 Kirim: <b>${Number(flow.total_in).toLocaleString('uz')} UZS</b>\n` +
     `  📤 Chiqim: <b>${Number(flow.total_out).toLocaleString('uz')} UZS</b>\n` +
@@ -222,25 +235,33 @@ export async function buildCompanyStateReply(): Promise<BotReply> {
   );
 }
 
+/** Kassir harakat turi → o'zbekcha yorliq (weekly digest top-xarajat qatorlari). */
+const CASHIER_MOVEMENT_LABELS: Record<string, string> = {
+  cash_out:      'Naqd chiqim',
+  salary_payout: 'Ish haqi to\'lovi',
+  advance:       'Avans',
+  expense:       'Xarajat',
+};
+
 /**
- * /weekly_digest — 7 kunlik moliyaviy xulosa: kirim, chiqim, sof, top-3 xarajat kategoriyasi.
+ * /weekly_digest — 7 kunlik moliyaviy xulosa: kirim, chiqim, sof, top-3 xarajat turi.
+ * Retired cash_transactions o'rniga cashier_movements (fi-cashier-hub kanonik)dan o'qiydi.
  */
 export async function buildWeeklyDigestReply(): Promise<BotReply> {
   const summaryR = await execSqlResult<{ total_in: string; total_out: string }>(drizzleSql`
     SELECT
-      COALESCE(SUM(CASE WHEN transaction_type='inflow'  THEN amount ELSE 0 END), 0)::text AS total_in,
-      COALESCE(SUM(CASE WHEN transaction_type='outflow' THEN amount ELSE 0 END), 0)::text AS total_out
-    FROM cash_transactions
+      COALESCE(SUM(CASE WHEN type = 'cash_in' THEN amount ELSE 0 END), 0)::text AS total_in,
+      COALESCE(SUM(CASE WHEN type <> 'cash_in' THEN amount ELSE 0 END), 0)::text AS total_out
+    FROM cashier_movements
     WHERE created_at >= NOW() - INTERVAL '7 days'
   `, '/weekly_digest:summary');
 
-  const catR = await execSqlResult<{ category_id: string; total: string }>(drizzleSql`
-    SELECT category_id::text AS category_id, SUM(amount)::text AS total
-    FROM cash_transactions
+  const catR = await execSqlResult<{ category: string; total: string }>(drizzleSql`
+    SELECT type AS category, SUM(amount)::text AS total
+    FROM cashier_movements
     WHERE created_at >= NOW() - INTERVAL '7 days'
-      AND transaction_type = 'outflow'
-      AND category_id IS NOT NULL
-    GROUP BY category_id
+      AND type <> 'cash_in'
+    GROUP BY type
     ORDER BY SUM(amount) DESC
     LIMIT 3
   `, '/weekly_digest:categories');
@@ -252,7 +273,7 @@ export async function buildWeeklyDigestReply(): Promise<BotReply> {
 
   const catLines = catR.ok && Array.isArray(catR.rows) && catR.rows.length
     ? catR.rows.map((cRow, i) =>
-        `  ${i + 1}. Kategoriya #${cRow.category_id ?? 'Boshqa'}: <b>${Number(cRow.total).toLocaleString('uz')} UZS</b>`
+        `  ${i + 1}. ${CASHIER_MOVEMENT_LABELS[cRow.category] ?? cRow.category ?? 'Boshqa'}: <b>${Number(cRow.total).toLocaleString('uz')} UZS</b>`
       ).join('\n')
     : '  (ma\'lumot yo\'q)';
 
@@ -261,6 +282,6 @@ export async function buildWeeklyDigestReply(): Promise<BotReply> {
     `  📥 Kirim: <b>${Number(s.total_in).toLocaleString('uz')} UZS</b>\n` +
     `  📤 Chiqim: <b>${Number(s.total_out).toLocaleString('uz')} UZS</b>\n` +
     `  💵 Sof: <b>${sof.toLocaleString('uz')} UZS</b>\n\n` +
-    `<b>Top-3 Xarajat Kategoriyasi:</b>\n${catLines}`
+    `<b>Top-3 Xarajat Turi:</b>\n${catLines}`
   );
 }

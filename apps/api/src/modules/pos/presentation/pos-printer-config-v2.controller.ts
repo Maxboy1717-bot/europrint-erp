@@ -17,7 +17,7 @@ import { LabelService } from '../application/services/label.service';
 
 @ApiTags('POS — Printer Config v2')
 @ApiBearerAuth()
-@Roles('admin', 'manager', 'warehouse', 'cashier', 'pos_manager')
+@Roles('admin', 'manager', 'warehouse', 'pos_manager')
 @UseGuards(RolesGuard)
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

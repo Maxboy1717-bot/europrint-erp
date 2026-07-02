@@ -34,7 +34,7 @@ const AdjustInventorySchema = z.object({
 
 @ApiTags('POS - Inventar (Stub)')
 @ApiBearerAuth()
-@Roles('cashier', 'pos_manager', 'admin', 'super_admin', 'manager', 'director')
+@Roles('pos_manager', 'admin', 'super_admin', 'manager', 'director')
 @UseGuards(RolesGuard)
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

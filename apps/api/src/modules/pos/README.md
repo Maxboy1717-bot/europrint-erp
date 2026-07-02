@@ -5,8 +5,8 @@
 > (issues), and reconcile against POs. NOT retail POS — this is industrial
 > "physical movement recording" software.
 >
-> See also: `pos-v2/` (newer rewrite, parallel) and the frontend POS
-> sub-app at `artifacts/erp-dashboard/src/pos-monitor/`.
+> See also: the frontend POS sub-app at
+> `artifacts/erp-dashboard/src/pos-monitor/`.
 
 ## Subfolder map
 
