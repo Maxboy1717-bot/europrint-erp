@@ -5,7 +5,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { users, salesOrders, hitlApprovals } from '@europrint/schemas';
+import { users, salesOrders, hitlApprovals, approvalRequests } from '@europrint/schemas';
 import { eq, count } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { IDashboardSvcRepository } from './i-dashboard-svc.repo';
@@ -33,8 +33,15 @@ export class DrizzleDashboardSvcRepository implements IDashboardSvcRepository {
 
   async countPendingApprovals(): Promise<Result<number>> {
     try {
-      const result = await db.select({ count: count() }).from(hitlApprovals).where(eq(hitlApprovals.status, 'pending'));
-      return Ok(Number(result[0]?.count || 0));
+      // Widget aggregates BOTH the legacy hitl_approvals table AND the CQRS
+      // approval_requests table (director module) so pending counts from either
+      // approval flow are reflected in the director dashboard.
+      const [hitlResult, cqrsResult] = await Promise.all([
+        db.select({ count: count() }).from(hitlApprovals).where(eq(hitlApprovals.status, 'pending')),
+        db.select({ count: count() }).from(approvalRequests).where(eq(approvalRequests.status, 'pending')),
+      ]);
+      const total = Number(hitlResult[0]?.count || 0) + Number(cqrsResult[0]?.count || 0);
+      return Ok(total);
     } catch (e: unknown) {
       return Err((e as Error)?.message || 'Tasdiqlashlarni sanashda xatolik');
     }
