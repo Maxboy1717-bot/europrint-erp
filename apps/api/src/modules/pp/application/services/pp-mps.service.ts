@@ -79,10 +79,20 @@ export class PpMpsService {
   }
 
   private async loadOnHand(): Promise<Record<string, number>> {
+    // ADR-004: warehouse_stock is the canonical on-hand source (material_cards.current_stock
+    // drifts out of sync with real warehouse movements — verified live e.g. OFFICE-PEN
+    // current_stock=202 vs warehouse_stock SUM(quantity)=15345). Sum across warehouses per
+    // material; is_active filter preserved via join to material_cards master data.
     const rows = await runQuery(sql`
-      SELECT id::text AS product_id,
-             GREATEST(current_stock, 0)::numeric AS on_hand
-      FROM material_cards WHERE is_active = true
+      SELECT mc.id::text AS product_id,
+             GREATEST(COALESCE(ws.total_qty, 0), 0)::numeric AS on_hand
+      FROM material_cards mc
+      LEFT JOIN (
+        SELECT material_id, SUM(quantity) AS total_qty
+        FROM warehouse_stock
+        GROUP BY material_id
+      ) ws ON ws.material_id = mc.id
+      WHERE mc.is_active = true
     `);
     const map: Record<string, number> = {};
     for (const r of rows.rows ?? []) map[String(r['product_id'])] = safeNum(r['on_hand']);

@@ -4,9 +4,8 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db, invoices as legacyInvoices, sales_orders as legacySalesOrders } from '@shared/db';
-import { salesInvoices } from '@europrint/schemas';
-import { eq, isNull, count, desc } from 'drizzle-orm';
+import { db, invoices as canonicalInvoices, sales_orders as legacySalesOrders } from '@shared/db';
+import { eq } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import {
   ISdInvoicesRepository,
@@ -15,8 +14,6 @@ import {
   OrderForInvoice,
   DrizzleExecutor,
 } from './i-sd-invoices.repo';
-
-type Row = Record<string, unknown>;
 
 /**
  * Narrow shape we need from a Drizzle executor (db or tx). Restricted to
@@ -31,38 +28,6 @@ const asExec = (tx?: DrizzleExecutor): ExecLike => (tx ?? db) as unknown as Exec
 
 @Injectable()
 export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
-  // Canonical sales_invoices has snake_case columns and no deletedAt column.
-  async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
-    try {
-      const [countResult, data] = await Promise.all([
-        db.select({ count: count() }).from(salesInvoices).limit(1).offset(0),
-        db.select().from(salesInvoices).orderBy(desc(salesInvoices.created_at)).limit(limit).offset(offset),
-      ]);
-      return Ok({ data, count: Number(countResult[0]?.count || 0) });
-    } catch (e: unknown) { return Err((e as Error)?.message || 'Hisob-fakturalar topilmadi'); }
-  }
-
-  async findById(id: number): Promise<Result<any | null>> {
-    try {
-      const rows = await db.select().from(salesInvoices).where(eq(salesInvoices.id, id)).limit(1).offset(0);
-      return Ok((rows)[0] || null);
-    } catch (e: unknown) { return Err((e as Error)?.message || `Hisob-faktura #${id} topilmadi`); }
-  }
-
-  async findByInvoiceNumber(invoiceNumber: string): Promise<Result<any | null>> {
-    try {
-      const rows = await db.select().from(salesInvoices).where(eq(salesInvoices.invoice_number, invoiceNumber)).limit(1).offset(0);
-      return Ok((rows)[0] || null);
-    } catch (e: unknown) { return Err((e as Error)?.message || 'Hisob-faktura topilmadi'); }
-  }
-
-  async create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>> {
-    try {
-      const result = await db.insert(salesInvoices).values({ ...dto, status: 'draft', ...(createdBy ? { createdBy } : {} as typeof salesInvoices.$inferInsert) } as typeof salesInvoices.$inferInsert).returning();
-      return Ok((result[0] as Record<string, unknown>));
-    } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
-  }
-
   async findOrderForInvoicing(
     orderId: string,
     tx?: DrizzleExecutor,
@@ -101,7 +66,7 @@ export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
   async createInvoice(input: CreateInvoiceInput, tx?: DrizzleExecutor): Promise<Result<InvoiceRow>> {
     try {
       const exec = asExec(tx);
-      await exec.insert(legacyInvoices).values({
+      await exec.insert(canonicalInvoices).values({
         invoice_number: input.invoiceNumber,
         sales_order_id: input.salesOrderId ?? undefined,
         customer_name: input.customerName,

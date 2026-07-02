@@ -6,7 +6,6 @@
 import { Result } from '@common/result';
 import type { DrizzleExecutor } from '../../../common/types/drizzle.types';
 export type { DrizzleExecutor };
-type Row = Record<string, unknown>;
 
 export interface OrderForInvoice {
   id: string;
@@ -40,11 +39,6 @@ export interface InvoiceRow {
 }
 
 export interface ISdInvoicesRepository {
-  findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
-  findById(id: number): Promise<Result<any | null>>;
-  findByInvoiceNumber(invoiceNumber: string): Promise<Result<any | null>>;
-  create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
-
   /**
    * Loads only the fields needed for invoice-creation guards (status, soft-delete).
    * Pass `tx` to participate in an outer transaction.
@@ -55,7 +49,7 @@ export interface ISdInvoicesRepository {
   ): Promise<Result<OrderForInvoice | null>>;
 
   /**
-   * Inserts a row into the legacy `invoices` table and returns the projected summary.
+   * Inserts a row into the canonical `invoices` table and returns the projected summary.
    * Pass `tx` to participate in an outer transaction.
    */
   createInvoice(input: CreateInvoiceInput, tx?: DrizzleExecutor): Promise<Result<InvoiceRow>>;

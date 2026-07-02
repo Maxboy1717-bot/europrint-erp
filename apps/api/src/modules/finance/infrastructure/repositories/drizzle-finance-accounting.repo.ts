@@ -27,6 +27,9 @@ export class DrizzleFinanceAccountingRepo {
   }
 
   async getDashboard(): Promise<Row> {
+    // OWNER QARORI 2026-07-02 (Moliya-GL-Kassa): finance_invoices = kanonik invoice-manba.
+    // sales_invoices/purchase_invoices endi yozuvchisiz (0 satr) — AR/AP shu yerdan emas,
+    // finance_invoices'dan (invoice_type='sales'/'purchase') olinadi.
     const rows = await runQuery<Row>(sql`
       SELECT
         (SELECT COUNT(*) FROM gl_documents) AS gl_total,
@@ -34,10 +37,10 @@ export class DrizzleFinanceAccountingRepo {
         (SELECT COUNT(*) FROM gl_lines) AS gl_entries,
         (SELECT COUNT(*) FROM accounting_periods WHERE status = 'open') AS periods_open,
         (SELECT COUNT(*) FROM accounting_periods WHERE status = 'closed') AS periods_closed,
-        (SELECT COALESCE(SUM(total_amount),0) FROM sales_invoices) AS ar_total,
-        (SELECT COALESCE(SUM(total_amount),0) FROM sales_invoices WHERE payment_status = 'unpaid') AS ar_unpaid,
-        (SELECT COALESCE(SUM(total_amount),0) FROM purchase_invoices) AS ap_total,
-        (SELECT COALESCE(SUM(total_amount),0) FROM purchase_invoices WHERE payment_status = 'unpaid') AS ap_unpaid
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'sales') AS ar_total,
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'sales' AND payment_status = 'unpaid') AS ar_unpaid,
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'purchase') AS ap_total,
+        (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'purchase' AND payment_status = 'unpaid') AS ap_unpaid
     `);
     return (rows.rows[0] ?? {}) as Row;
   }

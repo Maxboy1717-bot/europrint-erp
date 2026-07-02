@@ -162,7 +162,21 @@ export class PpIntelligenceService implements OnModuleInit {
         WHERE bh.is_active = true AND bh.deleted_at IS NULL LIMIT 1000
       `),
       mpsInput?.length ? Promise.resolve(mpsInput) : this.loadMpsFromDb(horizon),
-      runQuery(sql`SELECT id::text AS material_id, GREATEST(current_stock, 0)::numeric AS qty_on_hand FROM material_cards WHERE is_active = true`),
+      // ADR-004: warehouse_stock is the canonical on-hand source (material_cards.current_stock
+      // drifts out of sync with real warehouse movements — verified live e.g. OFFICE-PEN
+      // current_stock=202 vs warehouse_stock SUM(quantity)=15345). Sum across warehouses per
+      // material; is_active filter preserved via join to material_cards master data.
+      runQuery(sql`
+        SELECT mc.id::text AS material_id,
+               GREATEST(COALESCE(ws.total_qty, 0), 0)::numeric AS qty_on_hand
+        FROM material_cards mc
+        LEFT JOIN (
+          SELECT material_id, SUM(quantity) AS total_qty
+          FROM warehouse_stock
+          GROUP BY material_id
+        ) ws ON ws.material_id = mc.id
+        WHERE mc.is_active = true
+      `),
       runQuery(sql`
         SELECT mc.id::text AS material_id, COALESCE(ip.safety_stock, 0)::numeric AS safety_stock,
                COALESCE(ip.lead_time_days, 1)::integer AS lead_time_days, COALESCE(ip.eoq, 0)::numeric AS eoq_qty
