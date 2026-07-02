@@ -280,8 +280,11 @@ export class MarketingAnalyticsStubsController {
   @Post('leads/:id/convert-to-crm') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
   @HttpCode(HttpStatus.CREATED)
   async convertLeadToCrm(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    // NOTE: marketing_leads.id is varchar(36) (UUID-style / seed slugs like "demo-lead-003"),
+    // NOT an integer — parseInt(id) always produced NaN/garbage here, so the SELECT below
+    // never matched a row and crm_lead_id could never be backfilled (bug fixed 2026-07-02).
     const ml = first(await db.execute(sql`
-      SELECT * FROM marketing_leads WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
+      SELECT * FROM marketing_leads WHERE id=${id} AND deleted_at IS NULL LIMIT 1
     `));
     if (!ml) throw new NotFoundException(`Marketing lead #${id} topilmadi`);
     if (ml['crm_lead_id']) return { message: 'Allaqachon CRM ga aylantirilgan', crm_lead_id: ml['crm_lead_id'] };
@@ -303,7 +306,7 @@ export class MarketingAnalyticsStubsController {
     await db.execute(sql`
       UPDATE marketing_leads
          SET crm_lead_id=${crmId}, converted_at=NOW(), status=${'converted'}, updated_at=NOW()
-       WHERE id=${parseInt(id, 10)}
+       WHERE id=${id}
     `);
     return { crm_lead_id: crmId, message: 'Marketing lid CRM ga aylantirildi', converted: true };
   }
