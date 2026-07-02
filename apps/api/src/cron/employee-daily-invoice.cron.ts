@@ -180,6 +180,9 @@ export class EmployeeDailyInvoiceCron {
     }
 
     // PDF saqlash — operator_hourly_invoices.pdf_data (BYTEA, mavjud jadval).
+    // ON CONFLICT (UNIQUE employee_id+period_start indeks) — jarayonlararo poyga guard:
+    // parallel jarayon (Q-44 zombie yoki ko'p-instans) bir vaqtda yozsa faqat BITTASI yutadi,
+    // yutqazgani notification ham yubormaydi (2026-07-02 jonli 7x dublikat isbotidan keyin).
     const inserted = await runQuery<{ id: number }>(sql`
       INSERT INTO operator_hourly_invoices
         (employee_id, period_start, period_end, units_produced, units_defective,
@@ -187,9 +190,15 @@ export class EmployeeDailyInvoiceCron {
       VALUES
         (${emp.employee_id}, ${dayStart}, ${now}, ${emp.units_produced},
          ${emp.units_defective}, ${emp.hourly_rate}, ${summary}, ${pdfBuf}, NOW())
+      ON CONFLICT (employee_id, period_start) DO NOTHING
       RETURNING id
     `);
     const invoiceId = Array.isArray(inserted.rows) ? inserted.rows[0]?.id ?? null : null;
+    if (invoiceId === null) {
+      // Boshqa jarayon shu kun uchun allaqachon yozgan — dublikat notification yubormaymiz.
+      this.logger.debug(`Xodim #${emp.employee_id}: bugungi invoice allaqachon mavjud (parallel jarayon) — skip`);
+      return 'skipped';
+    }
 
     // ERP notification (mavjud notifications jadvali; is_read = xodim qabul-belgisi).
     if (emp.user_id) {
