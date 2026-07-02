@@ -17,9 +17,9 @@ import {
   mm_goods_receipts_ext, mm_goods_receipt_items,
   mm_goods_issues_ext, mm_goods_issue_items,
   mm_purchase_orders, mm_purchase_order_items,
-  mm_vendors_ext, mm_materials_ext, purchase_invoices, currencies,
+  mm_vendors_ext, mm_materials_ext, finance_invoices, currencies,
 } from '@shared/db';
-import { eq, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
 
@@ -263,8 +263,13 @@ export async function queryThreeWayMatch(pid: number): Promise<{ purchase_order:
   const [poRow] = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, pid)).limit(1);
   const receiptsRaw = await typedExecute<Row>(sql`SELECT * FROM mm_goods_receipts WHERE purchase_order_id = ${pid}`);
   const receipts = receiptsRaw;
+  // finance_invoices (invoice_type='purchase') = kanonik AP invoice-manba, OWNER QARORI
+  // 2026-07-02 (purchase_invoices endi yozuvchisiz — commit d6286993).
   const invoices = poRow?.vendor_id
-    ? await db.select().from(purchase_invoices).where(eq(purchase_invoices.vendor_id, poRow.vendor_id))
+    ? await db.select().from(finance_invoices).where(and(
+        eq(finance_invoices.invoice_type, 'purchase'),
+        eq(finance_invoices.vendor_id, poRow.vendor_id),
+      ))
     : [];
   return { purchase_order: poRow ?? null, goods_receipts: receipts, purchase_invoices: invoices as Row[] };
 }

@@ -192,9 +192,11 @@ export class DrizzleMmRepository implements IMmRepository {
       //  2. Goods receipt  → mm_goods_receipts.total_value (linked by purchase_order_id).
       //                      When total_value is missing/zero we recompute it as
       //                      Σ(received_qty × PO line unit_price) from the receipt items.
-      //  3. Invoice        → purchase_invoices.total_amount (fallback: amount),
+      //  3. Invoice        → finance_invoices.total_amount (invoice_type='purchase'),
       //                      linked by vendor_id — same linkage the read endpoint uses,
-      //                      since purchase_invoices has no purchase_order_id column.
+      //                      since finance_invoices has no purchase_order_id column.
+      //                      finance_invoices = kanonik AP invoice-manba, OWNER QARORI
+      //                      2026-07-02 (purchase_invoices endi yozuvchisiz — commit d6286993).
       // The match passes only when the largest pairwise spread stays within
       // MM_THREE_WAY_MATCH_TOLERANCE of the PO total. `difference` is the real
       // numeric spread (UZS), not a boolean flag.
@@ -233,9 +235,9 @@ export class DrizzleMmRepository implements IMmRepository {
             WHERE g2.purchase_order_id = po.id
           ) gri ON TRUE
           LEFT JOIN LATERAL (
-            SELECT SUM(COALESCE(pi.total_amount, pi.amount, 0)) AS invoice_total
-            FROM purchase_invoices pi
-            WHERE pi.vendor_id = po.vendor_id
+            SELECT SUM(COALESCE(pi.total_amount, 0)) AS invoice_total
+            FROM finance_invoices pi
+            WHERE pi.invoice_type = 'purchase' AND pi.vendor_id = po.vendor_id
           ) inv ON TRUE
           WHERE po.id = ${poId}
           LIMIT 1

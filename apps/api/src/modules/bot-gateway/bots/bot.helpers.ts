@@ -192,9 +192,11 @@ export async function buildCompanyStateReply(): Promise<BotReply> {
     WHERE created_at >= NOW() - INTERVAL '30 days'
   `, '/company_state:flow');
 
+  // finance_invoices (invoice_type='purchase') = kanonik AP invoice-manba, OWNER QARORI
+  // 2026-07-02 (purchase_invoices endi yozuvchisiz — commit d6286993).
   const overdueR = await execSqlResult<{ cnt: string }>(drizzleSql`
-    SELECT COUNT(*)::text AS cnt FROM purchase_invoices
-    WHERE payment_status != 'paid' AND due_date < CURRENT_DATE::text
+    SELECT COUNT(*)::text AS cnt FROM finance_invoices
+    WHERE invoice_type = 'purchase' AND payment_status != 'paid' AND due_date < CURRENT_DATE
   `, '/company_state:overdue');
 
   if (!regR.ok || !flowR.ok || !overdueR.ok) {
