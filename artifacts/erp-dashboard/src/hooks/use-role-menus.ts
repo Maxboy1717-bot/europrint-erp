@@ -20,8 +20,8 @@ interface RoleMenu {
 // Har bir rol qaysi URL prefikslarini ko'ra olishi mumkin
 const ROLE_MODULE_MAP: Record<string, string[]> = {
   // TZ-01: Savdo va CRM
-  sales:      ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka", "order-workflow"],
-  crm:        ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka", "order-workflow"],
+  sales:      ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka"],
+  crm:        ["sd-", "sd/", "crm", "customers", "orders", "quotations", "contracts", "debitors", "papka"],
 
   // TZ-02: Marketing
   marketing:  ["marketing", "social", "campaign", "seo", "ab-test"],

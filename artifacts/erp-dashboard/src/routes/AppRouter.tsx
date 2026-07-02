@@ -36,7 +36,6 @@ import {
 } from "@/routes/roleConstants";
 
 const DirectorDashboard = lazy(() => import("@/pages/DirectorDashboard"));
-const OrderWorkflowPage = lazy(() => import("@/pages/OrderWorkflowPage"));
 const AishaPage = lazy(() => import("@/pages/AishaPage"));
 
 const ALL_MODULE_ROUTES = [
@@ -68,7 +67,7 @@ const REDIRECT_PATHS = [
   '/qc/parameters', '/qc/tests', '/succession-planning',
   '/hr/succession-planning', '/hr/leave',
   '/feedback', '/logout',
-  '/order-workflow', '/sales', '/aisha',
+  '/sales', '/aisha',
   // Dead sidebar links → canonical redirects
   '/assets', '/hr/documents', '/cfo', '/org-chart',
 ];
@@ -180,13 +179,6 @@ export function AppRouter() {
       <Route path="/hr/documents"><RoleRoute roles={HR_ROLES}><Redirect to="/employee-files" /></RoleRoute></Route>
       <Route path="/cfo"><RoleRoute roles={FINANCE_ROLES}><Redirect to="/cfo/dashboard" /></RoleRoute></Route>
       <Route path="/org-chart"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
-
-      {/* ── Order Workflow (Sprint 4) ── */}
-      <Route path="/order-workflow">
-        <RoleRoute roles={['SUPER_ADMIN', 'DIRECTOR', 'SALES_MANAGER', 'FINANCE', 'PRODUCTION_MANAGER']}>
-          <ErrorBoundary><Suspense fallback={<PageLoader />}><OrderWorkflowPage /></Suspense></ErrorBoundary>
-        </RoleRoute>
-      </Route>
 
       {/* ── Chat ── */}
       <Route path="/chat">

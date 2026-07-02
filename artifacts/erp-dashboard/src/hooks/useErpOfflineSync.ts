@@ -7,14 +7,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   getPendingSyncCount,
-  syncOrderDrafts,
   syncQcRecheckQueue,
   syncPosMovements,
 } from "@/lib/erp-offline-db";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SyncStatus {
-  orderDrafts:  number;
   qcRechecks:   number;
   posMovements: number;
   conflicts:    number;
@@ -25,7 +23,6 @@ interface SyncStatus {
 export function useErpOfflineSync() {
   const { toast } = useToast();
   const [status, setStatus] = useState<SyncStatus>({
-    orderDrafts:  0,
     qcRechecks:   0,
     posMovements: 0,
     conflicts:    0,
@@ -35,7 +32,7 @@ export function useErpOfflineSync() {
 
   const refreshCounts = useCallback(async () => {
     const counts = await getPendingSyncCount().catch(() => ({
-      orderDrafts: 0, qcRechecks: 0, posMovements: 0, conflicts: 0,
+      qcRechecks: 0, posMovements: 0, conflicts: 0,
     }));
     setStatus((prev) => ({ ...prev, ...counts }));
   }, []);
@@ -47,14 +44,13 @@ export function useErpOfflineSync() {
     }
     setStatus((prev) => ({ ...prev, syncing: true }));
     try {
-      const [ordRes, qcRes, posRes] = await Promise.all([
-        syncOrderDrafts((path, body) => apiRequest('POST', `/api${path}`, body)),
+      const [qcRes, posRes] = await Promise.all([
         syncQcRecheckQueue((path, body) => apiRequest('POST', `/api${path}`, body)),
         syncPosMovements((path, body) => apiRequest('POST', `/api${path}`, body)),
       ]);
 
-      const total     = ordRes.success + qcRes.success + posRes.success;
-      const failed    = ordRes.failed  + qcRes.failed  + posRes.failed;
+      const total     = qcRes.success + posRes.success;
+      const failed    = qcRes.failed  + posRes.failed;
       const conflicts = posRes.conflicts;
 
       if (total > 0 || failed > 0 || conflicts > 0) {
@@ -94,7 +90,7 @@ export function useErpOfflineSync() {
     };
   }, [refreshCounts, syncAll, toast]);
 
-  const totalPending = status.orderDrafts + status.qcRechecks + status.posMovements;
+  const totalPending = status.qcRechecks + status.posMovements;
 
   return { status, totalPending, syncAll, refreshCounts };
 }

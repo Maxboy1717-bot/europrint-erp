@@ -6,24 +6,6 @@
 import Dexie, { type Table } from "dexie";
 
 /* ════════════════════════════════════════════════════════════════
-   FLOW 1 — Order Draft (oflayn buyurtma qoralamasi)
-   ════════════════════════════════════════════════════════════════ */
-export interface OrderDraft {
-  id?:             number;
-  localId:         string;
-  customerName:    string;
-  customerId?:     number;
-  items:           Array<{ productName: string; qty: number; unitPrice: number }>;
-  totalAmount:     number;
-  note?:           string;
-  formStep:        number;
-  lastSavedAt:     number;
-  synced:          boolean;
-  syncedOrderId?:  number;
-  syncError?:      string;
-}
-
-/* ════════════════════════════════════════════════════════════════
    FLOW 2 — QC Golden-Sample Cache + Deferred Vision Recheck
    ════════════════════════════════════════════════════════════════ */
 export interface QcGoldenSample {
@@ -84,7 +66,6 @@ export interface PosMovement {
    Dexie database
    ════════════════════════════════════════════════════════════════ */
 export class ErpOfflineDatabase extends Dexie {
-  orderDrafts!:      Table<OrderDraft,          number>;
   qcGoldenSamples!:  Table<QcGoldenSample,      string>;
   qcRecheckQueue!:   Table<QcDeferredRecheck,   number>;
   posMovements!:     Table<PosMovement,          number>;
@@ -92,7 +73,6 @@ export class ErpOfflineDatabase extends Dexie {
   constructor() {
     super("erp_offline_v2");
     this.version(1).stores({
-      orderDrafts:     "++id, localId, synced, lastSavedAt",
       qcGoldenSamples: "id, productCode, schemaVersion, cachedAt",
       qcRecheckQueue:  "++id, localId, workOrderId, synced, capturedAt",
       posMovements:    "++id, localId, deviceId, synced, conflicted, wallClock",
@@ -136,41 +116,6 @@ export function happensBefore(a: VectorClock[], b: VectorClock[]): boolean {
 export function detectConflict(a: PosMovement, b: PosMovement): boolean {
   return !happensBefore(a.clockVector, b.clockVector) &&
          !happensBefore(b.clockVector, a.clockVector);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Flow 1 helpers — Order Drafts
-   ════════════════════════════════════════════════════════════════ */
-export async function saveOrderDraft(draft: Omit<OrderDraft, "id" | "synced" | "lastSavedAt">): Promise<number> {
-  const existing = await erpDb.orderDrafts.where("localId").equals(draft.localId).first();
-  const data = { ...draft, synced: false, lastSavedAt: Date.now() };
-  if (existing?.id) {
-    await erpDb.orderDrafts.update(existing.id, data);
-    return existing.id;
-  }
-  return erpDb.orderDrafts.add(data as OrderDraft);
-}
-
-export async function syncOrderDrafts(
-  apiPost: (path: string, body: unknown) => Promise<{ id?: number }>,
-): Promise<{ success: number; failed: number }> {
-  const pending = await erpDb.orderDrafts.where("synced").equals(0).toArray();
-  let success = 0; let failed = 0;
-  for (const draft of pending) {
-    try {
-      const res = await apiPost("/order-workflow/orders", {
-        customerId:   draft.customerId ?? null,
-        totalAmount:  draft.totalAmount,
-        currency:     "UZS",
-      });
-      await erpDb.orderDrafts.update(draft.id!, { synced: true, syncedOrderId: res?.id });
-      success++;
-    } catch (err) {
-      await erpDb.orderDrafts.update(draft.id!, { syncError: err instanceof Error ? err.message : String(err) });
-      failed++;
-    }
-  }
-  return { success, failed };
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -318,16 +263,14 @@ export async function syncPosMovements(
    Summary counts
    ════════════════════════════════════════════════════════════════ */
 export async function getPendingSyncCount(): Promise<{
-  orderDrafts: number;
   qcRechecks:  number;
   posMovements: number;
   conflicts:   number;
 }> {
-  const [orderDrafts, qcRechecks, posMovements, conflicts] = await Promise.all([
-    erpDb.orderDrafts.where("synced").equals(0).count(),
+  const [qcRechecks, posMovements, conflicts] = await Promise.all([
     erpDb.qcRecheckQueue.where("synced").equals(0).count(),
     erpDb.posMovements.where("synced").equals(0).count(),
     erpDb.posMovements.where("conflicted").equals(1).count(),
   ]);
-  return { orderDrafts, qcRechecks, posMovements, conflicts };
+  return { qcRechecks, posMovements, conflicts };
 }

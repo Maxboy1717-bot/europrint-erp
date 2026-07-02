@@ -124,7 +124,6 @@ import { LayoutDashboard, X,
       { title: "Papka Buyurtmalari", url: "papka-orders", icon: FileText },
       { title: "Shartnomalar", url: "sd/contracts", icon: FileCheck },
       { title: "Buyurtma Yaratish", url: "order-create", icon: Plus },
-      { title: "Buyurtma Workflow", url: "order-workflow", icon: FolderKanban },
       // Konsolidatsiya: "Menejer Paneli" + "Kvota Dashboard" asosiy SD Dashboardga
       // yig'ildi (dashboard quick-link'lari orqali ochiladi) — 4 ta emas, 1 ta dashboard.
       { title: "QO'SHIMCHA", url: "", icon: Package, separator: true },
