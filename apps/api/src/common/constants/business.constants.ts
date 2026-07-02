@@ -113,6 +113,13 @@ export const ABC_A_THRESHOLD = 0.80;
 export const ABC_B_THRESHOLD = 0.95;
 
 /**
+ * Sprint8 inventory_policy seed — simple stock-fill-ratio ABC heuristic
+ * (current_stock vs max_stock), distinct from the cumulative-value ABC_A/B
+ * thresholds above. sprint8-migration.service.ts uses this at seed time only.
+ */
+export const STOCK_FILL_RATIO_A_THRESHOLD = 0.5;
+
+/**
  * Davriy (rejalashtirilgan) cycle-count chastotasi — ABC segment bo'yicha (kun).
  * A (yuqori qiymat) tez-tez, C (past qiymat) kamroq sanaladi — standart ABC
  * cycle-counting nazariyasi. wms-cycle-count-generator.cron.ts ishlatadi.

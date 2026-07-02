@@ -65,10 +65,7 @@ export function AssignAIExamDialog({ open, onOpenChange }: AssignAIExamDialogPro
           positionId: user.positionId,
         });
       });
-      return Promise.all(promises).catch((err: unknown) => {
-        console.error('AI imtixon tayinlash xatosi:', err);
-        return Promise.reject(err);
-      });
+      return Promise.all(promises);
     },
     onSuccess: () => {
       toast({

@@ -12,6 +12,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { STOCK_FILL_RATIO_A_THRESHOLD } from '@common/constants/business.constants';
 
 /** 12 work centres for EuroPrint offset/digital/flexo printing factory */
 const WORK_CENTRES = [
@@ -114,7 +115,7 @@ export class Sprint8MigrationService implements OnApplicationBootstrap {
           COALESCE(mc.min_stock, 0),
           GREATEST(COALESCE(mc.min_stock, 0) * 3, 1),
           CASE
-            WHEN mc.current_stock > COALESCE(mc.max_stock, 0) * 0.5 THEN 'A'
+            WHEN mc.current_stock > COALESCE(mc.max_stock, 0) * ${STOCK_FILL_RATIO_A_THRESHOLD} THEN 'A'
             WHEN mc.current_stock > 0 THEN 'B'
             ELSE 'C'
           END,

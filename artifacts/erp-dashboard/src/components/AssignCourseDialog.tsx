@@ -76,10 +76,7 @@ export function AssignCourseDialog({ open, onOpenChange, courseId, courseTitle }
           courseId: parsedCourseId,
         })
       );
-      return Promise.all(promises).catch((err: unknown) => {
-        console.error('Kurs tayinlash xatosi:', err);
-        return Promise.reject(err);
-      });
+      return Promise.all(promises);
     },
     onSuccess: () => {
       toast({
