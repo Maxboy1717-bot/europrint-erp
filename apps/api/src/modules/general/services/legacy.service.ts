@@ -87,7 +87,7 @@ export class LegacyService {
   async getKanbanEmployees()                                             { return getKanbanEmployeesRaw(); }
 
   // ─── Warehouse ──────────────────────────────────────────────────────────────
-  // NOTE: orders-by-date route removed — handled by WmsCatalogController (wms module, papka_orders JOIN material_kits)
+  // NOTE: orders-by-date route removed — handled by WmsCatalogController (wms module, production_orders JOIN material_kits)
   async getWarehouseList()                      { return getWarehouseListRaw(); }
   async getWarehouseStock(warehouseId?: string) { return getWarehouseStockRaw(warehouseId); }
   async getWarehouseTransfers()                 { return getWarehouseTransfersRaw(); }

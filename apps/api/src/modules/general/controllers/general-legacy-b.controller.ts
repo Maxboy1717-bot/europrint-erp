@@ -52,7 +52,7 @@ export class GeneralLegacyBController {
   ) {}
 
   // ─── Warehouse ─────────────────────────────────────────────────────────
-  // NOTE: GET warehouse/orders-by-date/:date handled by WmsCatalogController (real papka_orders JOIN material_kits query)
+  // NOTE: GET warehouse/orders-by-date/:date handled by WmsCatalogController (real production_orders JOIN material_kits query)
   // Route warehouse/warehouses moved to WmsWarehouseGatewayController (real DB implementation)
 
   @Get('warehouse/stock')

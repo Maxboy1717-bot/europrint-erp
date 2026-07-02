@@ -162,22 +162,30 @@ export class WmsCatalogController {
     return { items, total: items.length };
   }
 
-  @ApiOperation({ summary: 'Get papka orders with material kits by plan date' })
+  @ApiOperation({ summary: 'Get production orders with material kits by plan date' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('orders-by-date/:date')
   @Roles(...WH_READ)
   async getOrdersByDate(@Param('date') date: string) {
-    // NOTE: complex LEFT JOIN + json_agg — Drizzle does not support json_agg natively
+    // NOTE: complex LEFT JOIN + json_agg — Drizzle does not support json_agg natively.
+    // Migrated off the legacy `papka_orders` side-table (0 live rows, outside the
+    // canonical golden-thread event chain) onto `production_orders` (canonical PP
+    // table, populated by SD->PP listener / POST /pp/orders). `products`/`sales_orders`
+    // are joined for display fields production_orders itself doesn't carry
+    // (product name/category, customer name). material_kits.order_id has no live FK
+    // (verified via pg_constraint) and is a plain integer column, so it now keys off
+    // production_orders.id instead of the dead papka_orders.id — no data migration
+    // needed since both source tables are currently empty in production.
     const r = await db.execute(sql`
       SELECT
         po.id,
-        po.papka_no        AS "papkaNo",
-        po.mijoz_nomi      AS "mijozNomi",
-        po.mahsulot_nomi   AS "mahsulotNomi",
-        po.tiraj,
-        po.format_a        AS "formatA",
-        po.format_b        AS "formatB",
-        po.mahsulot_turi   AS "mahsulotTuri",
+        po.order_number                            AS "papkaNo",
+        so.customer_name                           AS "mijozNomi",
+        COALESCE(po.product_name, pr.name)         AS "mahsulotNomi",
+        COALESCE(po.quantity, po.planned_quantity) AS "tiraj",
+        NULL::numeric                              AS "formatA",
+        NULL::numeric                              AS "formatB",
+        pr.category                                AS "mahsulotTuri",
         po.status,
         COALESCE(
           json_agg(
@@ -198,13 +206,17 @@ export class WmsCatalogController {
           ) FILTER (WHERE mk.id IS NOT NULL),
           '[]'::json
         ) AS kits
-      FROM papka_orders po
+      FROM production_orders po
+      LEFT JOIN products pr
+        ON pr.id = po.product_id
+      LEFT JOIN sales_orders so
+        ON so.id = po.sales_order_id
       LEFT JOIN material_kits mk
         ON mk.order_id = po.id
         AND mk.deleted_at IS NULL
       WHERE po.deleted_at IS NULL
-        AND po.plan_sana_ich = ${date}
-      GROUP BY po.id
+        AND po.planned_start_date = ${date}
+      GROUP BY po.id, so.customer_name, pr.name, pr.category
       ORDER BY po.id
     `);
     const rows = ((r as { rows?: unknown[] }).rows) ?? [];
