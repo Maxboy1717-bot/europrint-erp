@@ -11,7 +11,6 @@ import { createId } from '@paralleldrive/cuid2';
 import {
   deliveryStatusEnum,
   maintenanceStatusEnum, maintenancePriorityEnum,
-  kanbanTaskStatusEnum, kanbanPriorityEnum,
   campaignStatusEnum, campaignTypeEnum,
   securityIncidentSeverityEnum, securityIncidentStatusEnum,
 } from './schema-enums';
@@ -85,25 +84,6 @@ export const maintenance_orders = pgTable('maintenance_orders', {
   index('maintenance_orders_status_idx').on(table.status),
   index('maintenance_orders_priority_idx').on(table.priority),
   index('maintenance_orders_assigned_to_idx').on(table.assigned_to),
-]);
-
-export const kanban_tasks = pgTable('kanban_tasks', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  title: text('title').notNull(),
-  description: text('description'),
-  status: kanbanTaskStatusEnum('status').notNull().default('todo'),
-  priority: kanbanPriorityEnum('priority').notNull().default('medium'),
-  assigned_to: uuid('assigned_to').references(() => users.id, { onDelete: 'set null' }),
-  due_date: timestamp('due_date', { withTimezone: true }),
-  tags: text('tags').default('[]'),
-  created_by: uuid('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-  deleted_at: timestamp('deleted_at', { withTimezone: true }),
-}, (table) => [
-  index('kanban_tasks_status_idx').on(table.status),
-  index('kanban_tasks_assigned_to_idx').on(table.assigned_to),
-  index('kanban_tasks_priority_idx').on(table.priority),
 ]);
 
 export const campaigns = pgTable('campaigns', {

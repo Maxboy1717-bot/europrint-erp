@@ -6,8 +6,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { AuthModule } from '../auth/auth.module';
-import { GetTasksHandler } from './application/queries/get-tasks.handler';
-import { GetTaskHandler } from './application/queries/get-task.handler';
 import { KanbanBoardsService } from './application/kanban-boards.service';
 import { KanbanExtService } from './application/kanban-ext.service';
 import { KanbanExtFlowService } from './application/kanban-ext-flow.service';
@@ -31,16 +29,12 @@ import { KanbanCoreController } from './presentation/kanban-core.controller';
 import { KanbanReportsController } from './presentation/kanban-reports.controller';
 import { KanbanCardsController, KanbanCardFilesController } from './presentation/kanban-cards.controller';
 import { KanbanChecklistController } from './presentation/kanban-checklist.controller';
-import { KANBAN_REPO } from './domain/repositories/i-kanban.repo';
 import { KANBAN_BOARDS_REPO } from './domain/repositories/i-kanban-boards.repo';
-import { DrizzleKanbanRepository } from './infrastructure/repositories/drizzle-kanban.repo';
 import { KanbanRepository } from './infrastructure/kanban.repository';
 
-const queryHandlers   = [GetTasksHandler, GetTaskHandler];
 const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler];
 
 const repositories = [
-  { provide: KANBAN_REPO,        useClass: DrizzleKanbanRepository  },
   { provide: KANBAN_BOARDS_REPO, useClass: KanbanBoardsRepository   },
 ];
 
@@ -55,7 +49,6 @@ const repositories = [
     KanbanChecklistController,
   ],
   providers: [
-    ...queryHandlers,
     ...eventHandlers,
     ...repositories,
     KanbanBoardsService,
@@ -75,6 +68,6 @@ const repositories = [
     KanbanColumnsRepository,
     KanbanCardsRepository,
   ],
-  exports: [KANBAN_REPO, KanbanExtService],
+  exports: [KanbanExtService],
 })
 export class KanbanModule {}
