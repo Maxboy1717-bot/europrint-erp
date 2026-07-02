@@ -7,15 +7,11 @@ import {
   pgTable, serial, text, integer, boolean, timestamp, numeric, jsonb, date,
 } from 'drizzle-orm/pg-core';
 
-export const vendor_performance = pgTable('vendor_performance', {
-  id:          serial('id').primaryKey(),
-  vendor_id:   integer('vendor_id'),
-  score:       numeric('score', { precision: 5, scale: 2 }),
-  on_time_rate: numeric('on_time_rate', { precision: 5, scale: 2 }),
-  quality_rate: numeric('quality_rate', { precision: 5, scale: 2 }),
-  period:      text('period'),
-  created_at:  timestamp('created_at').defaultNow(),
-});
+// vendor_performance pgTable export OLIB TASHLANDI (2026-07-02, Q-46 — dead/orfan kod):
+// hech qanday repository/servis o'qimaydi/yozmaydi. DB jadvali DROP QILINMAGAN
+// (loyiha qoidasi), faqat kod-darajasida uzildi. O'rniga: vendor_rating_unified VIEW
+// (migrations/vendor-rating-unified-view-2026-07-02.sql) — mm_vendor_ratings +
+// vendor_performance_metrics birlashtiradi (faol yozuvchiga ega ikkala jadval).
 
 export const erp_purchase_requisitions = pgTable('erp_purchase_requisitions', {
   id:          serial('id').primaryKey(),

@@ -510,26 +510,12 @@ export const materialPriceHistory = pgTable('material_price_history', {
   createdAt: timestamp('created_at').notNull(),
 });
 
-export const materialSupplierRatings = pgTable('material_supplier_ratings', {
-  id: integer('id').primaryKey(),
-  supplierName: text('supplier_name').notNull(),
-  materialId: integer('material_id'),
-  totalOrders: integer('total_orders').notNull(),
-  totalQuantity: numeric('total_quantity', { precision: 15, scale: 4
- }).notNull(),
-  totalAmount: numeric('total_amount', { precision: 15, scale: 2
- }).notNull(),
-  onTimeDeliveries: integer('on_time_deliveries').notNull(),
-  lateDeliveries: integer('late_deliveries').notNull(),
-  qcApproved: integer('qc_approved').notNull(),
-  qcRejected: integer('qc_rejected').notNull(),
-  avgPrice: numeric('avg_price', { precision: 15, scale: 2
- }),
-  rating: numeric('rating', { precision: 3, scale: 2
- }),
-  lastOrderAt: timestamp('last_order_at'),
-  updatedAt: timestamp('updated_at').notNull(),
-});
+// materialSupplierRatings pgTable export OLIB TASHLANDI (2026-07-02, Q-46 — dead/orfan kod):
+// material_supplier_ratings jadvali 0 qator, hech qanday repository/servis o'qimaydi/
+// yozmaydi (faqat bir martalik setup-full-warehouse-system.mjs skriptida CREATE TABLE).
+// DB jadvali DROP QILINMAGAN (loyiha qoidasi), faqat kod-darajasida uzildi. O'rniga:
+// vendor_rating_unified VIEW (migrations/vendor-rating-unified-view-2026-07-02.sql) —
+// mm_vendor_ratings + vendor_performance_metrics birlashtiradi (faol jadvallar).
 
 export const mesOperations = pgTable('mes_operations', {
   id: integer('id').primaryKey(),

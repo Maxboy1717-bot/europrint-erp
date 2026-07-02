@@ -164,8 +164,9 @@ export {
   kpi_definitions, kpi_values, goals,
   // Gamification Extended
   assessment_skips, enps_survey_responses_ext,
-  // Vendor Performance
-  vendor_performance, erp_purchase_requisitions,
+  // Vendor Performance (vendor_performance olib tashlandi 2026-07-02 — dead/orfan, Q-46;
+  // qarang schema-ext-b-3.ts izohi va vendor-rating-unified-view-2026-07-02.sql)
+  erp_purchase_requisitions,
   // Warehouse Rental
   warehouse_rental_records, warehouse_rental_settings, warehouse_access_grants,
   warehouse_stock, warehouse_batches, warehouse_transactions, warehouse_transfers,
