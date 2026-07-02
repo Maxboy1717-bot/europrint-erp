@@ -18,28 +18,6 @@ import { papkaOrders } from "./pp-schema";
 // QUALITY CONTROL (QC) MODULE - SIFAT NAZORATI
 // ============================================
 
-// QC Standards (Normalar bazasi - ISO, GOST, O'zDSt, ichki normalar)
-export const qcStandards = pgTable("qc_standards", {
-  id: serial("id").primaryKey(),
-  code: varchar("code", { length: 50 }).notNull().unique(), // ISO 3037, GOST 7376, UzDSt 1234
-  name: text("name").notNull(),
-  nameRu: text("name_ru"),
-  type: varchar("type", { length: 30 }).notNull(), // iso, gost, uzst, internal
-  category: varchar("category", { length: 50 }).notNull(), // physical, mechanical, printability, chemical, environmental, logistics, visual
-  description: text("description"),
-  descriptionRu: text("description_ru"),
-  validFrom: varchar("valid_from", { length: 10 }), // YYYY-MM-DD
-  validTo: varchar("valid_to", { length: 10 }), // YYYY-MM-DD (null = hozirgi)
-  isActive: boolean("is_active").notNull().default(true),
-  documentUrl: text("document_url"), // Litsenziya hujjati
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-}, (t) => [
-  check("qc_standards_type_chk", sql`${t.type} IN ('iso','gost','uzst','internal')`),
-  check("qc_standards_category_chk", sql`${t.category} IN ('physical','mechanical','printability','chemical','environmental','logistics','visual','documentation','ai_analysis')`),
-]);
-
-
 // QC Parameter Definitions (Parametr ta'riflari)
 export const qcParameterDefinitions = pgTable("qc_parameter_definitions", {
   id: serial("id").primaryKey(),
@@ -54,7 +32,8 @@ export const qcParameterDefinitions = pgTable("qc_parameter_definitions", {
   warningMinValue: numericMoney("warning_min_value"), // Warning threshold (lower)
   warningMaxValue: numericMoney("warning_max_value"), // Warning threshold (upper)
   defaultValue: numericMoney("default_value"), // Standart qiymat
-  standardId: integer("standard_id").references(() => qcStandards.id, { onDelete: "set null" }), // Bog'langan standart
+  // NOTE: FK to qcStandards removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  standardId: integer("standard_id"), // Bog'langan standart
   testMethod: text("test_method"), // Test usuli tavsifi
   testMethodRu: text("test_method_ru"),
   equipmentRequired: text("equipment_required"), // Kerakli uskuna
@@ -103,19 +82,6 @@ export const qcMaterialTests = pgTable("qc_material_tests", {
 
 
 // Insert schemas for QC module
-export const insertQcStandardSchema = createInsertSchema(qcStandards, {
-  code: z.string().min(1, "Kod kerak"),
-  name: z.string().min(1, "Nom kerak"),
-  type: z.enum(["iso", "gost", "uzst", "internal"]),
-  category: z.enum(["physical", "mechanical", "printability", "chemical", "environmental", "logistics", "visual", "documentation", "ai_analysis"]),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-
-export type QcStandard = typeof qcStandards.$inferSelect;
-
-export type InsertQcStandard = z.infer<typeof insertQcStandardSchema>;
-
-
 export const insertQcParameterDefinitionSchema = createInsertSchema(qcParameterDefinitions, {
   code: z.string().min(1, "Kod kerak"),
   name: z.string().min(1, "Nom kerak"),
@@ -256,68 +222,6 @@ export const insertQcReclamationSchema = createInsertSchema(qcReclamations, {
 export type QcReclamation = typeof qcReclamations.$inferSelect;
 export type InsertQcReclamation = z.infer<typeof insertQcReclamationSchema>;
 
-
-// ========== TZ_04: Brak boshqaruvi ==========
-export const qcBraks = pgTable("qc_braks", {
-  id: serial("id").primaryKey(),
-  papkaOrderId: varchar("papka_order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
-  brakDate: varchar("brak_date", { length: 10 }).notNull(),
-  stage: varchar("stage", { length: 50 }).notNull(), // incoming, production, final, warehouse
-  quantity: integer("quantity").notNull().default(0),
-  unit: varchar("unit", { length: 20 }).default("dona"),
-  reason: varchar("reason", { length: 100 }).notNull(), // misprint, size, damage, moisture, equipment, operator_error, material
-  description: text("description"),
-  equipmentId: varchar("equipment_id"),
-  operatorId: varchar("operator_id").references(() => users.id, { onDelete: "set null" }),
-  costImpact: numericMoney("cost_impact").default(0),
-  isReworkable: boolean("is_reworkable").default(false),
-  reworked: boolean("reworked").default(false),
-  // ── ADD-ONLY: live DB superset columns ──
-  productionOrderId: varchar("production_order_id"),
-  materialId: varchar("material_id"),
-  status: varchar("status", { length: 30 }),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => [
-  check("qc_braks_stage_chk", sql`${t.stage} IN ('incoming','production','final','warehouse')`),
-]);
-
-export const insertQcBrakSchema = createInsertSchema(qcBraks, {
-  brakDate: z.string().min(10, "Sana kerak"),
-  stage: z.enum(["incoming", "production", "final", "warehouse"]),
-  quantity: z.number().int().min(1, "Miqdor kerak"),
-  reason: z.string().min(1, "Sabab kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type QcBrak = typeof qcBraks.$inferSelect;
-export type InsertQcBrak = z.infer<typeof insertQcBrakSchema>;
-
-
-// ========== TZ_04: Supplier Quality reytingi ==========
-export const qcSupplierQuality = pgTable("qc_supplier_quality", {
-  id: serial("id").primaryKey(),
-  supplierId: varchar("supplier_id"),
-  supplierName: text("supplier_name").notNull(),
-  materialCardId: varchar("material_id").references(() => materialCards.id, { onDelete: "set null" }),
-  deliveryDate: varchar("delivery_date", { length: 10 }).notNull(),
-  totalQuantity: integer("total_quantity").notNull().default(0),
-  rejectedQuantity: integer("rejected_quantity").default(0),
-  passRate: numericMoney("pass_rate").default(100),
-  qualityScore: integer("quality_score").default(100), // 0-100
-  testId: varchar("test_id").references(() => qcMaterialTests.id, { onDelete: "set null" }),
-  issues: jsonb("issues"), // [{parameter, value, expected}]
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const insertQcSupplierQualitySchema = createInsertSchema(qcSupplierQuality, {
-  supplierName: z.string().min(1, "Yetkazuvchi nomi kerak"),
-  deliveryDate: z.string().min(10, "Sana kerak"),
-  totalQuantity: z.number().int().min(0),
-}).omit({ id: true, createdAt: true } as never);
-
-export type QcSupplierQuality = typeof qcSupplierQuality.$inferSelect;
-export type InsertQcSupplierQuality = z.infer<typeof insertQcSupplierQualitySchema>;
 
 // Inline QC checks — recorded by tablet operators during production
 export const inlineQcChecks = pgTable("inline_qc_checks", {
