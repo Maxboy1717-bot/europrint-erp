@@ -14,8 +14,10 @@ import { eq, and, sql } from 'drizzle-orm';
 type Row = Record<string, unknown>;
 
 export async function execSdCustomerSoftDelete(cid: number): Promise<void> {
+  // sd_customers is now the canonical `sdCustomers` (@workspace/db) re-export — TS field
+  // names are camelCase (updatedAt), unlike the removed local snake_case declaration.
   await db.update(sd_customers)
-    .set({ status: 'deleted', updated_at: sql`NOW()` })
+    .set({ status: 'deleted', updatedAt: sql`NOW()` })
     .where(eq(sd_customers.id, cid));
 }
 

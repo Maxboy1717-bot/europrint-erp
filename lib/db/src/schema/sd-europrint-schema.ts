@@ -53,6 +53,14 @@ export const sdCustomers = pgTable("sd_customers", {
   notes: text("notes"),
   // Link to CRM company (application-level FK — avoids circular import)
   crmCompanyId: integer("crm_company_id"),
+  /**
+   * @deprecated Legacy duplicate of `name` (2026-07-02 two-world fix). `name` is the
+   * canonical, actively-written/read column across ~20 SD/CRM/Director repositories
+   * (raw-SQL `c.name AS customer_name` joins) and is 100% populated. `full_name` was
+   * added by an old drift migration but is never written by any repository — kept
+   * here (read-only, additive) for backward compat only; do NOT write to it.
+   */
+  fullName: text("full_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
