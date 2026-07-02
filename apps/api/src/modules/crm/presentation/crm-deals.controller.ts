@@ -30,13 +30,21 @@ const PatchDealSchema = z.object({
   expected_closure_date: z.string().optional(),
 });
 
+// CRM-FK-01: a deal must be traceable to its master-data owner. `company_id` is the
+// only FK column the create path actually persists (drizzle-crm-deals.repo.ts), so it
+// is required here — an ad-hoc deal with no company/customer link breaks the SD/CRM
+// pipeline (crm_deals rows with company_id/lead_id NULL cannot be attributed to a
+// customer downstream). `leadId` stays optional: a quick deal legitimately may not
+// originate from a lead (e.g. direct company deal), but if supplied it must be a valid
+// positive id — it is threaded through to `metadata.lead_id` (see repo comment).
 const QuickDealSchema = z.object({
   customerName: z.string().optional(),
   title: z.string().optional(),
   amount: z.union([z.string(), z.number()]).optional(),
   opportunity: z.union([z.string(), z.number()]).optional(),
   status: z.string().optional(),
-  companyId: z.union([z.string(), z.number()]).nullable().optional(),
+  companyId: z.coerce.number().int().positive('companyId majburiy va musbat bo\'lishi kerak'),
+  leadId: z.coerce.number().int().positive().optional(),
   assignedTo: z.union([z.string(), z.number()]).nullable().optional(),
 }).passthrough();
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -192,12 +200,15 @@ export class CrmDealsController {
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
  async createQuickDeal(@Body() body: unknown) {
   const parsed = QuickDealSchema.parse(body);
-  // Minimal quick-create: customerName → title, amount, status (defaults to 'new')
+  // Minimal quick-create: customerName → title, amount, status (defaults to 'new').
+  // companyId is enforced non-null by QuickDealSchema (CRM-FK-01); leadId is optional
+  // but, when present, is forwarded so the repo can persist it into metadata.lead_id.
   const dto: Record<string, unknown> = {
    title:       parsed.customerName ?? parsed.title ?? 'Yangi bitim',
    opportunity: parsed.amount ?? parsed.opportunity ?? '0',
    stage_id:    parsed.status === 'new' || !parsed.status ? 'C0:NEW' : String(parsed.status),
-   companyId:   parsed.companyId ?? null,
+   companyId:   parsed.companyId,
+   leadId:      parsed.leadId ?? null,
    assignedTo:  parsed.assignedTo ?? null,
   };
   this.logger.log('Creating quick deal');
