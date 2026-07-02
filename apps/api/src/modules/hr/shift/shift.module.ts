@@ -11,6 +11,8 @@ import { ShiftRepository } from './shift.repository';
 @Module({
   controllers: [ShiftController],
   providers: [ShiftService, ShiftRepository],
-  exports: [ShiftService],
+  // ShiftRepository exported so hr-employees-ext.repository.ts can proxy its
+  // swap-request query to the canonical repo instead of a duplicate pgTable.
+  exports: [ShiftService, ShiftRepository],
 })
 export class ShiftModule {}

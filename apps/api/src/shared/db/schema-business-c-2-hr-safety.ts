@@ -87,19 +87,11 @@ export const hr_leave_requests = pgTable('hr_leave_requests', {
   notes:        text('notes'),
 });
 
-// shift_schedules: used with snake_case columns in hr-employees-ext.repository.ts
-// Canonical shiftSchedules uses camelCase — kept as local stub.
-export const shift_schedules = pgTable('shift_schedules', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id').notNull(),
-  shift_date:  date('shift_date'),
-  shift_type:  text('shift_type'),
-  start_time:  text('start_time'),
-  end_time:    text('end_time'),
-  status:      text('status').default('scheduled'),
-  created_at:  timestamp('created_at').defaultNow(),
-  updated_at:  timestamp('updated_at').defaultNow(),
-});
+// shift_schedules compat stub REMOVED (2026-07-02): its only consumer,
+// hr-employees-ext.repository.ts, now proxies to the canonical
+// ShiftRepository (modules/hr/shift/shift.repository.ts, table =
+// lib/db hr-v2-schema.ts `shiftSchedules`) instead of duplicating the query
+// against a second Drizzle object for the same physical table.
 
 // document_templates: NOT in lib/db barrel (cc_document_templates is a different table) — kept as local stub.
 export const document_templates = pgTable('document_templates', {

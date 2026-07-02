@@ -276,4 +276,40 @@ export class ShiftRepository {
       return Err(String(_e));
     }
   }
+
+  /**
+   * @description Shift-swap requests for one employee (optionally filtered by status).
+   * Proxied here from hr-employees-ext.repository.ts's former `shift_schedules` compat
+   * stub (schema-business-c-2-hr-safety.ts) — both pointed at the same physical
+   * `shift_schedules` table; this repository is the canonical owner.
+   */
+  async getEmployeeSwapRequests(employeeId: number, status?: string): Promise<Result<Record<string, unknown>[]>> {
+    try {
+      const rows = await db
+        .select({
+          id: shiftSchedules.id,
+          employee_id: shiftSchedules.employeeId,
+          shift_date: shiftSchedules.shiftDate,
+          shift_type: shiftSchedules.shiftType,
+          start_time: shiftSchedules.startTime,
+          end_time: shiftSchedules.endTime,
+          status: shiftSchedules.status,
+          created_at: shiftSchedules.createdAt,
+          employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+        })
+        .from(shiftSchedules)
+        .innerJoin(hrEmployees, eq(hrEmployees.id, shiftSchedules.employeeId))
+        .where(
+          and(
+            eq(shiftSchedules.employeeId, employeeId),
+            status ? eq(shiftSchedules.status, status) : undefined,
+          ),
+        )
+        .orderBy(sql`${shiftSchedules.shiftDate} DESC`)
+        .limit(50);
+      return Ok(castTo<Record<string, unknown>[]>(rows));
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
 }

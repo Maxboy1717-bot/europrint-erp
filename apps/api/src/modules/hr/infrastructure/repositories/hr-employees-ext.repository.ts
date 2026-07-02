@@ -13,16 +13,18 @@ import { sql, eq } from 'drizzle-orm';
 import { execHrEmployeeImport } from '@common/database/queries-remaining';
 import { safeCall, Result, Ok, Err } from '@common/result';
 import {
-  hrEmployees, hrDepartments, shift_schedules,
+  hrEmployees, hrDepartments,
   hr_conflict_reports, employee_360_assessments,
   hr_documents,
 } from '@shared/db';
+import { ShiftRepository } from '../../shift/shift.repository';
 import type { IHrEmployeesExtRepo } from '../../domain/repositories/i-hr-employees-ext.repo';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class HrEmployeesExtRepository implements IHrEmployeesExtRepo {
+  constructor(private readonly shiftRepo: ShiftRepository) {}
   async updateProfileImage(id: number, imageUrl: string): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.update(hrEmployees)
@@ -72,29 +74,14 @@ export class HrEmployeesExtRepository implements IHrEmployeesExtRepo {
     }, 'DB_ERROR');
   }
 
+  /**
+   * @description Proxied to the canonical ShiftRepository (shift/shift.repository.ts,
+   * table = lib/db hr-v2-schema.ts `shiftSchedules`). The old local
+   * `shift_schedules` compat pgTable (schema-business-c-2-hr-safety.ts) targeted the
+   * SAME physical table with duplicate query logic — removed in favor of this proxy.
+   */
   async getEmployeeSwapRequests(employeeId: number, status?: string): Promise<Result<Row[]>> {
-    return safeCall(async () => {
-      const rows = await db.select({
-        id:           shift_schedules.id,
-        employee_id:  shift_schedules.employee_id,
-        shift_date:   shift_schedules.shift_date,
-        shift_type:   shift_schedules.shift_type,
-        start_time:   shift_schedules.start_time,
-        end_time:     shift_schedules.end_time,
-        status:       shift_schedules.status,
-        created_at:   shift_schedules.created_at,
-        employee_name: sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
-      })
-        .from(shift_schedules)
-        .innerJoin(hrEmployees, eq(hrEmployees.id, shift_schedules.employee_id))
-        .where(sql`
-          ${shift_schedules.employee_id} = ${employeeId} AND
-          (${status ?? null}::text IS NULL OR ${shift_schedules.status} = ${status ?? null})
-        `)
-        .orderBy(sql`${shift_schedules.shift_date} DESC`)
-        .limit(50);
-      return castTo<Row[]>(rows);
-    }, 'DB_ERROR');
+    return this.shiftRepo.getEmployeeSwapRequests(employeeId, status);
   }
 
   async getEmployeeComplaints(employeeId: string): Promise<Result<Row[]>> {
