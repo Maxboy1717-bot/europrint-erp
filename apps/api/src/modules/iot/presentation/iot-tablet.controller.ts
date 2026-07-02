@@ -14,6 +14,7 @@ import {
   Body,
   Controller,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -68,6 +69,7 @@ type Rows = { rows?: unknown[] };
 @Controller('iot')
 export class IotTabletController {
   private readonly time = new TashkentTimeService();
+  private readonly logger = new Logger(IotTabletController.name);
 
   constructor(
     private readonly tabletSvc: IotTabletService,
@@ -550,7 +552,66 @@ export class IotTabletController {
       ) RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? {};
+
+    // Canonical WMS chain (mirrors WarehouseConfigService.receiveStock, pos-wms-sync
+    // 'in' direction): a production material RETURN is a stock receipt back into the
+    // material's home warehouse. Previously this endpoint only wrote the
+    // material_movements audit row — warehouse_stock/material_cards.current_stock never
+    // moved, so returned material was invisible on WMS balance/aging reports (Q-46).
+    if (dto.materialId && dto.quantity > 0) {
+      await this.creditReturnedMaterialToStock(dto.materialId, dto.quantity, sessionId);
+    }
+
     return { data: row };
+  }
+
+  /**
+   * Credits a returned-from-production quantity back onto the material's home
+   * warehouse (`material_cards.warehouse_id`) — canonical `warehouse_stock` upsert +
+   * `material_cards.current_stock` mirror, same two writes `WarehouseConfigService
+   * .receiveStock` performs for a manual kirim. If the material has no home warehouse
+   * configured, the stock write is skipped (logged) — the audit row above is still kept.
+   */
+  private async creditReturnedMaterialToStock(materialId: number, quantity: number, sessionId: number): Promise<void> {
+    try {
+      const matRows = ((await db.execute(sql`
+        SELECT warehouse_id FROM material_cards WHERE id = ${materialId}
+      `)) as Rows).rows ?? [];
+      const warehouseId = matRows[0] ? Number((matRows[0] as Record<string, unknown>).warehouse_id) : null;
+      if (!warehouseId) {
+        this.logger.warn(
+          `[IoT] Material return: materialId=${materialId} sessionId=${sessionId} — warehouse_id yo'q, warehouse_stock yozilmadi`,
+        );
+        return;
+      }
+
+      const updated = (((await db.execute(sql`
+        UPDATE warehouse_stock
+        SET quantity = quantity + ${quantity},
+            available_quantity = available_quantity + ${quantity},
+            last_movement_at = NOW(), last_updated_at = NOW()
+        WHERE warehouse_id = ${warehouseId} AND material_id = ${materialId}
+        RETURNING id
+      `)) as Rows).rows ?? [])[0];
+      if (!updated) {
+        await db.execute(sql`
+          INSERT INTO warehouse_stock
+            (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+          VALUES
+            (${warehouseId}, ${materialId}, ${quantity}, 0, ${quantity}, NOW(), NOW(), NOW())
+        `);
+      }
+
+      await db.execute(sql`
+        UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${quantity} WHERE id = ${materialId}
+      `);
+
+      this.logger.log(
+        `[IoT] Material return: sessionId=${sessionId} materialId=${materialId} +${quantity} → warehouse #${warehouseId} (warehouse_stock+material_cards.current_stock)`,
+      );
+    } catch (err) {
+      this.logger.error(`[IoT] creditReturnedMaterialToStock failed (sessionId=${sessionId} materialId=${materialId}): ${String(err)}`);
+    }
   }
 
   @ApiOperation({ summary: 'Submit inline QC check' })
