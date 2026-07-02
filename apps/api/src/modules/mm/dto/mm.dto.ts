@@ -98,6 +98,7 @@ export const MmCreateRequisitionSchema = z.object({
     material_id:  z.number().int().positive(),
     quantity:     z.number().positive(),
     unit_of_measure: z.string().optional(),
+    unit_price:   z.number().nonnegative().optional(),
   })).optional(),
 });
 export type MmCreateRequisitionDto = z.infer<typeof MmCreateRequisitionSchema>;
