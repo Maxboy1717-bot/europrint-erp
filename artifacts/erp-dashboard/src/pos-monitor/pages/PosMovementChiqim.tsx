@@ -13,14 +13,15 @@
  */
 
 import { useState, useCallback, useRef } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { stockApi, movementsApi, type IssuableResult } from "../api/pos-monitor.api";
 import { useHardwareScanner } from "../hooks/useHardwareScanner";
 import PosBarcodeScanner from "../components/PosBarcodeScanner";
 
 import {
   type ScannedLine, type Toast,
-  CHIQIM_REASONS, mkKey, playBeep, exceedsAllowed,
+  CHIQIM_REASONS, CHIQIM_TYPE_META, resolveChiqimType,
+  mkKey, playBeep, exceedsAllowed,
 } from "./PosMovementChiqimTypes";
 import {
   ToastContainer, ScanNotFoundModal, NumericKeypad,
@@ -33,6 +34,12 @@ import { useTranslation } from '@/lib/i18n';
 export default function PosMovementChiqim() {
   const { t } = useTranslation("common");
   const [, navigate] = useLocation();
+
+  // PosHome tugmalari ?type= bilan keladi (KOCHIRISH=INTERNAL_TRANSFER, QAYTARISH=
+  // INTERNAL_RETURN, ZARAR=DAMAGE); ruxsat-ro'yxatdan tashqari qiymat → EXTERNAL_OUT.
+  const search = useSearch();
+  const movementType = resolveChiqimType(new URLSearchParams(search).get("type"));
+  const typeMeta = CHIQIM_TYPE_META[movementType];
 
   const [fromWarehouseId, setFromWarehouseId] = useState("");
   const [lines, setLines] = useState<ScannedLine[]>([]);
@@ -196,9 +203,12 @@ export default function PosMovementChiqim() {
     setGlobalError(""); setSubmitting(true);
 
     const payload: Record<string, unknown> = {
-      movementTypeCode: "EXTERNAL_OUT",
+      movementTypeCode: movementType,
       fromWarehouseId,
       notes: buildNotes(),
+      // BE (pos-movement.service): INTERNAL_RETURN uchun returnReason MAJBURIY —
+      // sabab-katalog matni (buildNotes) qaytarish sababi sifatida yoziladi.
+      ...(movementType === "INTERNAL_RETURN" ? { returnReason: buildNotes() } : {}),
       lines: lines.map(l => ({ materialCardId: l.materialCardId, quantity: l.quantity })),
       submit: true,
       // Savdo-sity referens H-8 naqshi: double-tap "Tasdiqlash" bir xil chiqimni ikki marta yaratmasin.
@@ -214,7 +224,7 @@ export default function PosMovementChiqim() {
       setSubmitting(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromWarehouseId, lines, reason]);
+  }, [fromWarehouseId, lines, reason, movementType]);
 
   function resetForm() {
     setLines([]); setSubmitted(null); setReason(initialReason()); setScanValue("");
@@ -225,6 +235,8 @@ export default function PosMovementChiqim() {
     return (
       <SuccessScreen
         documentNumber={submitted.documentNumber}
+        successTitle={t(typeMeta.successKey, typeMeta.successFallback)}
+        typeBadge={t(typeMeta.badgeKey, typeMeta.badgeFallback)}
         onNewChiqim={resetForm}
         onGoToList={() => navigate("/pos-monitor/movements")}
       />
@@ -262,13 +274,13 @@ export default function PosMovementChiqim() {
           {t("orqaga", "Orqaga")}
         </button>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("chiqimSkaner", "Chiqim — skaner")}</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t(typeMeta.titleKey, typeMeta.titleFallback)}</h2>
           <div style={{ fontSize: 12, color: "var(--pos-text-muted)", marginTop: 2 }}>
             {t("faqatSkanerChiqim", "Chiqim faqat skaner orqali — qo'lda material tanlash yo'q")}
           </div>
         </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-          <span className="pos-badge pos-badge-red" style={{ fontSize: 11 }}>{t("PosMovementChiqim.tashqiChiqim", "Tashqi chiqim")}</span>
+          <span className="pos-badge pos-badge-red" style={{ fontSize: 11 }}>{t(typeMeta.badgeKey, typeMeta.badgeFallback)}</span>
           {scanning && <span className="pos-badge pos-badge-blue pos-live" style={{ fontSize: 11 }}>{t("skanerlanyapti", "Skanerlanyapti")}</span>}
         </div>
       </div>
@@ -305,6 +317,7 @@ export default function PosMovementChiqim() {
             onOverride={overrideLine}
             onRemove={removeLine}
             submitting={submitting}
+            confirmLabel={t(typeMeta.confirmKey, typeMeta.confirmFallback)}
             onSubmit={() => void handleSubmit()}
           />
         </div>

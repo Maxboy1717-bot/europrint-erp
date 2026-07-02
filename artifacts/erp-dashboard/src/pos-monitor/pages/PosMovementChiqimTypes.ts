@@ -11,9 +11,10 @@ import { tLabel } from '@/lib/i18n/tLabel';
  */
 
 // ─── Movement type ────────────────────────────────────────────────────────────
-// CHIQIM ekrani EXTERNAL_OUT (tashqi chiqim) bilan ishlaydi — terminal bosh-ekran
-// CHIQIM=qizil tugmasidan keladi. Boshqa chiqim-yo'nalish turlari (ichki berish/qaytarish/
-// ko'chirish/zarar) o'z ekranlariga ega; bu ekran sof material-chiqimga qaratilgan.
+// CHIQIM ekrani ?type= query-param bilan bir nechta chiqim-yo'nalish turini boshqaradi:
+// PosHome tugmalari CHIQIM (default EXTERNAL_OUT) / KO'CHIRISH (INTERNAL_TRANSFER) /
+// QAYTARISH (INTERNAL_RETURN) / ZARAR (DAMAGE) shu ekranga ?type= bilan keladi.
+// Ruxsat-ro'yxatdan tashqari/notog'ri qiymat → EXTERNAL_OUT (xavfsiz default).
 
 export type MovementTypeCode =
   | "EXTERNAL_OUT"
@@ -23,6 +24,65 @@ export type MovementTypeCode =
   | "DAMAGE"
   | "LAB_SAMPLE_OUT"
   | "CUSTOMER_MATERIAL";
+
+/** CHIQIM ekrani qabul qiladigan turlar (?type= ruxsat-ro'yxati). */
+export const CHIQIM_ALLOWED_TYPES = [
+  "EXTERNAL_OUT",
+  "INTERNAL_ISSUE",
+  "INTERNAL_RETURN",
+  "INTERNAL_TRANSFER",
+  "DAMAGE",
+] as const;
+
+export type ChiqimTypeCode = typeof CHIQIM_ALLOWED_TYPES[number];
+
+/** ?type= qiymatini validate qiladi — ro'yxatda bo'lmasa EXTERNAL_OUT default. */
+export function resolveChiqimType(raw: string | null | undefined): ChiqimTypeCode {
+  return (CHIQIM_ALLOWED_TYPES as readonly string[]).includes(raw ?? "")
+    ? (raw as ChiqimTypeCode)
+    : "EXTERNAL_OUT";
+}
+
+/** Tur-ga mos UI matnlari (sarlavha / badge / tasdiq-tugma / success sarlavha) — i18n kalit+fallback. */
+export interface ChiqimTypeMeta {
+  titleKey: string;   titleFallback: string;
+  badgeKey: string;   badgeFallback: string;
+  confirmKey: string; confirmFallback: string;
+  successKey: string; successFallback: string;
+}
+
+export const CHIQIM_TYPE_META: Readonly<Record<ChiqimTypeCode, ChiqimTypeMeta>> = {
+  EXTERNAL_OUT: {
+    titleKey: "chiqimSkaner",           titleFallback: "Chiqim — skaner",
+    badgeKey: "PosMovementChiqim.tashqiChiqim", badgeFallback: "Tashqi chiqim",
+    confirmKey: "chiqimniTasdiqlash",   confirmFallback: "Chiqimni tasdiqlash",
+    successKey: "chiqimHujjatiYaratildi", successFallback: "Chiqim hujjati yaratildi",
+  },
+  INTERNAL_ISSUE: {
+    titleKey: "PosMovementChiqim.ichkiBerishSkaner",     titleFallback: "Ichki berish — skaner",
+    badgeKey: "PosMovementChiqim.ichkiBerish",           badgeFallback: "Ichki berish",
+    confirmKey: "PosMovementChiqim.ichkiBerishTasdiqlash", confirmFallback: "Ichki berishni tasdiqlash",
+    successKey: "PosMovementChiqim.ichkiBerishYaratildi",  successFallback: "Ichki berish hujjati yaratildi",
+  },
+  INTERNAL_RETURN: {
+    titleKey: "PosMovementChiqim.qaytarishSkaner",     titleFallback: "Qaytarish — skaner",
+    badgeKey: "PosMovementChiqim.qaytarish",           badgeFallback: "Qaytarish",
+    confirmKey: "PosMovementChiqim.qaytarishTasdiqlash", confirmFallback: "Qaytarishni tasdiqlash",
+    successKey: "PosMovementChiqim.qaytarishYaratildi",  successFallback: "Qaytarish hujjati yaratildi",
+  },
+  INTERNAL_TRANSFER: {
+    titleKey: "PosMovementChiqim.kochirishSkaner",     titleFallback: "Ko'chirish — skaner",
+    badgeKey: "PosMovementChiqim.kochirish",           badgeFallback: "Ombor → ombor ko'chirish",
+    confirmKey: "PosMovementChiqim.kochirishTasdiqlash", confirmFallback: "Ko'chirishni tasdiqlash",
+    successKey: "PosMovementChiqim.kochirishYaratildi",  successFallback: "Ko'chirish hujjati yaratildi",
+  },
+  DAMAGE: {
+    titleKey: "PosMovementChiqim.zararSkaner",     titleFallback: "Zarar — skaner",
+    badgeKey: "PosMovementChiqim.zarar",           badgeFallback: "Zarar akti",
+    confirmKey: "PosMovementChiqim.zararTasdiqlash", confirmFallback: "Zararni tasdiqlash",
+    successKey: "PosMovementChiqim.zararYaratildi",  successFallback: "Zarar akti yaratildi",
+  },
+};
 
 // ─── Domain shapes ────────────────────────────────────────────────────────────
 

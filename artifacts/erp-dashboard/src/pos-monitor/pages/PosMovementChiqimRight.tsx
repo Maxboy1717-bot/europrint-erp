@@ -126,12 +126,14 @@ interface LinesPanelProps {
   onOverride: (key: string) => void;
   onRemove: (key: string) => void;
   submitting: boolean;
+  /** Tur-ga mos tasdiq-tugma matni (?type= — masalan "Ko'chirishni tasdiqlash"). */
+  confirmLabel: string;
   onSubmit: () => void;
 }
 
 export function LinesPanel({
   lines, reason, onReasonChange, reasons,
-  onOpenQty, onOverride, onRemove, submitting, onSubmit,
+  onOpenQty, onOverride, onRemove, submitting, confirmLabel, onSubmit,
 }: LinesPanelProps) {
   const { t } = useTranslation("common");
   const totalItems = lines.reduce((s, l) => s + l.quantity, 0);
@@ -188,7 +190,7 @@ export function LinesPanel({
             disabled={submitting}
             onClick={onSubmit}
           >
-            {submitting ? `⏳ ${t("yuborilmoqda", "Yuborilmoqda...")}` : `✓ ${t("chiqimniTasdiqlash", "Chiqimni tasdiqlash")}`}
+            {submitting ? `⏳ ${t("yuborilmoqda", "Yuborilmoqda...")}` : `✓ ${confirmLabel}`}
           </button>
         </div>
       )}
@@ -200,18 +202,22 @@ export function LinesPanel({
 
 interface SuccessScreenProps {
   documentNumber?: string;
+  /** Tur-ga mos success sarlavha (masalan "Ko'chirish hujjati yaratildi"). */
+  successTitle: string;
+  /** Tur-ga mos badge matni (masalan "Ombor → ombor ko'chirish"). */
+  typeBadge: string;
   onNewChiqim: () => void;
   onGoToList: () => void;
 }
 
-export function SuccessScreen({ documentNumber, onNewChiqim, onGoToList }: SuccessScreenProps) {
+export function SuccessScreen({ documentNumber, successTitle, typeBadge, onNewChiqim, onGoToList }: SuccessScreenProps) {
   const { t } = useTranslation("common");
   return (
     <div className="pos-fade-in" style={{ maxWidth: 560, margin: "60px auto", textAlign: "center" }}>
       <div className="pos-card">
         <div style={{ fontSize: 60, marginBottom: 12 }}>✅</div>
         <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "var(--pos-success)" }}>
-          {t("chiqimHujjatiYaratildi", "Chiqim hujjati yaratildi")}
+          {successTitle}
         </h3>
         {documentNumber && (
           <div className="pos-mono" style={{ fontSize: 16, color: "var(--pos-text-muted)", marginBottom: 16 }}>
@@ -219,7 +225,7 @@ export function SuccessScreen({ documentNumber, onNewChiqim, onGoToList }: Succe
           </div>
         )}
         <div className="pos-badge pos-badge-red" style={{ fontSize: 13, padding: "6px 16px", marginBottom: 20 }}>
-          {t("PosMovementChiqim.tashqiChiqim", "Tashqi chiqim")}
+          {typeBadge}
         </div>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <button className="pos-btn pos-btn-ghost" onClick={onNewChiqim}>
