@@ -10,6 +10,8 @@ import {
   boolean,
   timestamp,
   decimal,
+  integer,
+  serial,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -40,13 +42,20 @@ export const pos_warehouse_access = pgTable('pos_warehouse_access', {
 // POS v2 — Inventory Counts
 // ============================================================================
 
+// NOTE: id/warehouseId/countId corrected 2026-07-02 — this table was declared
+// uuid here but the live DB column (`information_schema.columns`, verified via
+// _audit/q.cjs) is `integer` (id = serial, warehouse_id/count_id = integer).
+// This pgTable is not used as a Drizzle query builder anywhere (all real reads/
+// writes go through parameterised raw SQL — see wms-gateway-inventory.controller.ts,
+// wms-cycle-count-generator.cron.ts, inventory-advanced.repo.ts); it only feeds
+// the `schema` barrel object, so this is a type-correctness fix, not a migration.
 export const inventory_counts = pgTable('inventory_counts', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  warehouseId: uuid('warehouse_id').notNull(),
+  id: serial('id').primaryKey(),
+  warehouseId: integer('warehouse_id'),
   countNumber: text('count_number').unique().notNull(),
   status: text('status').notNull().default('draft'),
-  startedBy: text('started_by').notNull(),
-  approvedBy: text('approved_by'),
+  startedBy: text('started_by'),
+  approvedBy: integer('approved_by'),
   approvedAt: timestamp('approved_at', { withTimezone: true }),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -54,9 +63,9 @@ export const inventory_counts = pgTable('inventory_counts', {
 });
 
 export const inventory_count_lines = pgTable('inventory_count_lines', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  countId: uuid('count_id').references(() => inventory_counts.id),
-  stockItemId: uuid('stock_item_id').notNull(),
+  id: serial('id').primaryKey(),
+  countId: integer('count_id').notNull().references(() => inventory_counts.id),
+  stockItemId: uuid('stock_item_id'),
   sku: text('sku').notNull(),
   itemName: text('item_name').notNull(),
   systemQuantity: decimal('system_quantity', { precision: 12, scale: 3 }).notNull().default('0'),
