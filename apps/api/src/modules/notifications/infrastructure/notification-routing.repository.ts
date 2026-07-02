@@ -124,7 +124,7 @@ export class NotificationRoutingRepository {
    * Hodisa-turi bo'yicha nishon xodim ID'larini hal qiladi (per-user bildirishnoma listenerlari uchun).
    * Jadvalda qator bo'lmasa — `fallbackRole` bilan avvalgi hardcoded xatti-harakatga qaytadi.
    */
-  async resolveUserIds(eventType: string, fallbackRole: string): Promise<number[]> {
+  async resolveUserIds(eventType: string, fallbackRole: string): Promise<Result<number[]>> {
     try {
       const rules = await this.findActiveRules(eventType);
       const roles = new Set<string>();
@@ -150,16 +150,16 @@ export class NotificationRoutingRepository {
         for (const row of roleRows.rows) userIds.add(row.id);
       }
 
-      return Array.from(userIds);
+      return Ok(Array.from(userIds));
     } catch (e) {
       this.logger.warn(`resolveUserIds(${eventType}) failed, fallback to hardcoded role query: ${(e as Error).message}`);
       try {
         const fallback = await runQuery<{ id: number }>(sql`
           SELECT id FROM users WHERE role = ${fallbackRole} AND is_active = TRUE LIMIT 200
         `);
-        return fallback.rows.map(r => r.id);
-      } catch {
-        return [];
+        return Ok(fallback.rows.map(r => r.id));
+      } catch (e2) {
+        return Err({ message: (e2 as Error).message, code: 'DB_ERROR' });
       }
     }
   }
@@ -168,7 +168,7 @@ export class NotificationRoutingRepository {
    * Hodisa-turi bo'yicha nishon rol(lar)ni hal qiladi (rol-broadcast uslubidagi joblar uchun,
    * masalan pos-low-stock.job.ts). Jadvalda qator bo'lmasa — `[fallbackRole]` qaytaradi.
    */
-  async resolveRoles(eventType: string, fallbackRole: string): Promise<string[]> {
+  async resolveRoles(eventType: string, fallbackRole: string): Promise<Result<string[]>> {
     try {
       const rules = await this.findActiveRules(eventType);
       const roles = new Set<string>();
@@ -176,10 +176,10 @@ export class NotificationRoutingRepository {
         if (rule.target_role) roles.add(rule.target_role);
       }
       if (roles.size === 0) roles.add(fallbackRole);
-      return Array.from(roles);
+      return Ok(Array.from(roles));
     } catch (e) {
       this.logger.warn(`resolveRoles(${eventType}) failed, fallback to hardcoded role: ${(e as Error).message}`);
-      return [fallbackRole];
+      return Ok([fallbackRole]);
     }
   }
 }

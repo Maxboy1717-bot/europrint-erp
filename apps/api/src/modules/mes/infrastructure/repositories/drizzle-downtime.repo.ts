@@ -103,7 +103,10 @@ export class DrizzleDowntimeRepository {
 
   async save(event: DowntimeEvent): Promise<Result<DowntimeEvent>> {
     try {
-       
+      if (!event.workCenterId) {
+        return Err('Downtime event uchun workCenterId majburiy');
+      }
+
       await db.insert(downtimeEvents).values({
         sessionId: event.sessionId,
         workCenterId: event.workCenterId,
@@ -115,7 +118,7 @@ export class DrizzleDowntimeRepository {
         reportedBy: event.reportedBy,
         notes: event.notes,
         createdAt: event.createdAt,
-      } as any);  
+      });
 
       return Ok(event);
     } catch (error: unknown) {

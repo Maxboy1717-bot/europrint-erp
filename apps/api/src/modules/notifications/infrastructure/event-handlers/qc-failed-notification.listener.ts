@@ -41,7 +41,8 @@ export class QcFailedNotificationListener implements IEventHandler<QcFailedEvent
     this.logger.log('QC failed event received - resolving notification targets via routing rules');
 
     try {
-      const userIds = await this.routing.resolveUserIds(QC_FAILED_EVENT_TYPE, QC_FAILED_FALLBACK_ROLE);
+      const userIdsResult = await this.routing.resolveUserIds(QC_FAILED_EVENT_TYPE, QC_FAILED_FALLBACK_ROLE);
+      const userIds = userIdsResult.ok ? userIdsResult.data : [];
       if (userIds.length === 0) {
         this.logger.warn('QcFailedNotificationListener: no active targets resolved (routing rule + fallback both empty)');
       }

@@ -40,7 +40,8 @@ export class PosLowStockJob {
 
       // egasi/admin sozlagan nishon rol(lar) — notification_routing_rules (event_type='wms.low_stock');
       // sozlanmagan bo'lsa avvalgi hardcoded 'pos_manager'ga qaytadi (regressiya yo'q).
-      const targetRoles = await this.routing.resolveRoles(LOW_STOCK_EVENT_TYPE, LOW_STOCK_FALLBACK_ROLE);
+      const targetRolesResult = await this.routing.resolveRoles(LOW_STOCK_EVENT_TYPE, LOW_STOCK_FALLBACK_ROLE);
+      const targetRoles = targetRolesResult.ok ? targetRolesResult.data : [LOW_STOCK_FALLBACK_ROLE];
 
       for (const item of r.data.slice(0, 20)) {
         for (const targetRole of targetRoles) {

@@ -21,6 +21,7 @@ violations_raw=$(grep -rnE ':\s*any(\b|\[)|<any>|as any\b|Array<any>' \
   2>/dev/null \
   | grep -vE '\.spec\.ts:|\.test\.ts:|/spec/|/test/' \
   | grep -vE ':[0-9]+:\s*//' \
+  | grep -vE ':[0-9]+:\s*\*' \
   | grep -vE '//.*any' \
   || true)
 

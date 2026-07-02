@@ -37,7 +37,8 @@ export class MroMachineStoppedNotificationListener
       // TODO PA2-18: event only carries {maintenanceId, machineId}; equipmentName /
       // issueDescription / priority should be looked up from the maintenance record
       // once StopMachineCommand carries that context.
-      const userIds = await this.routing.resolveUserIds(MRO_STOPPED_EVENT_TYPE, MRO_STOPPED_FALLBACK_ROLE);
+      const userIdsResult = await this.routing.resolveUserIds(MRO_STOPPED_EVENT_TYPE, MRO_STOPPED_FALLBACK_ROLE);
+      const userIds = userIdsResult.ok ? userIdsResult.data : [];
 
       await Promise.all(
         userIds.map((id) => {

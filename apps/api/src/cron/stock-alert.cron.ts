@@ -53,7 +53,8 @@ export class StockAlertCron {
         return
       }
 
-      const userIds = await this.routing.resolveUserIds(LOT_EXPIRING_EVENT_TYPE, LOT_EXPIRING_FALLBACK_ROLE)
+      const userIdsResult = await this.routing.resolveUserIds(LOT_EXPIRING_EVENT_TYPE, LOT_EXPIRING_FALLBACK_ROLE)
+      const userIds = userIdsResult.ok ? userIdsResult.data : []
       let processed = 0
 
       for (const item of urgent.slice(0, 100)) {
