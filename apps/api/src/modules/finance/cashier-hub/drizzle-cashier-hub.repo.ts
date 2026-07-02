@@ -292,14 +292,20 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
     }
   }
 
-  /** Persist the kunlik Z-report PDF bytes (employee_monthly_cards.pdf_data naqshi — BYTEA on the row). */
-  async saveShiftPdf(shiftId: number, pdf: Buffer): Promise<Result<boolean>> {
+  /**
+   * Persist the kunlik Z-report PDF bytes (employee_monthly_cards.pdf_data naqshi — BYTEA on the row).
+   * ATOMIC CLAIM (verify-fix 2026-07-02): WHERE'dagi pdf_generated_at guard UPDATE bilan bir
+   * atomda — parallel jarayonlar (Q-44 zombie / ko'p-instans) bir kunda bir smenani ikki marta
+   * "yutib" ololmaydi. false = boshqa jarayon allaqachon saqlagan (cron notification yubormaydi).
+   */
+  async saveShiftPdf(shiftId: number, pdf: Buffer, dayStart: Date): Promise<Result<boolean>> {
     try {
       // NOTE: raw SQL — pdf_data column is a live-DB additive column (not in the Drizzle table).
       const res = await runQuery<{ id: number }>(sql`
         UPDATE cashier_shifts
            SET pdf_data = ${pdf}, pdf_generated_at = NOW(), updated_at = NOW()
          WHERE id = ${shiftId}
+           AND (pdf_generated_at IS NULL OR pdf_generated_at < ${dayStart})
         RETURNING id
       `);
       return Ok(Array.isArray(res.rows) && res.rows.length > 0);

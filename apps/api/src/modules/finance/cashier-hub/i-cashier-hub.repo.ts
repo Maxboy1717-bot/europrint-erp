@@ -160,8 +160,12 @@ export interface ICashierHubRepository {
    * avto-PDF olinganlari chiqarib tashlangan (pdf_generated_at guard — idempotent cron).
    */
   listShiftsForZReport(dayStart: Date): Promise<Result<ZReportShiftRef[]>>;
-  /** Persist the generated kunlik Z-report PDF bytes onto the shift row (+ pdf_generated_at). */
-  saveShiftPdf(shiftId: number, pdf: Buffer): Promise<Result<boolean>>;
+  /**
+   * Persist the generated kunlik Z-report PDF bytes onto the shift row (+ pdf_generated_at).
+   * Atomic claim: WHERE pdf_generated_at guard (dayStart) UPDATE bilan bir atomda —
+   * false = boshqa jarayon bugun allaqachon saqlagan (chaqiruvchi notification yubormaydi).
+   */
+  saveShiftPdf(shiftId: number, pdf: Buffer, dayStart: Date): Promise<Result<boolean>>;
   /** Active user ids holding any of the given roles (notification fan-out targets). */
   findUserIdsByRoles(roles: string[]): Promise<Result<number[]>>;
 }

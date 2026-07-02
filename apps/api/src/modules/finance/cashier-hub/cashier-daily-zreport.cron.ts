@@ -62,6 +62,7 @@ export class CashierDailyZReportCron {
 
     let ok = 0;
     let failed = 0;
+    let skipped = 0;
     for (const shift of shifts) {
       try {
         const payloadRes = await this.hub.getDailyReportPayload(shift.id);
@@ -73,10 +74,18 @@ export class CashierDailyZReportCron {
         const payload = payloadRes.data;
         const pdfBuf = await this.pdf.generateDailyCashReport(payload);
 
-        const saved = await this.repo.saveShiftPdf(shift.id, pdfBuf);
+        // Atomic claim (verify-fix 2026-07-02): saveShiftPdf WHERE-guard bilan bugungi PDF'ni
+        // faqat BITTA jarayon "yutadi" — parallel jarayon (Q-44 zombie / ko'p-instans) yutqazsa
+        // notification yubormaydi (A4 cronda jonli isbotlangan 7x dublikat poygasi bu yerda yopiq).
+        const saved = await this.repo.saveShiftPdf(shift.id, pdfBuf, dayStart);
         if (!saved.ok) {
           this.logger.warn(`Z-report: smena #${shift.id} PDF saqlanmadi — ${saved.error.message}`);
           failed++;
+          continue;
+        }
+        if (!saved.data) {
+          this.logger.debug(`Z-report: smena #${shift.id} bugun allaqachon PDF olgan (parallel jarayon) — skip`);
+          skipped++;
           continue;
         }
 
@@ -107,6 +116,8 @@ export class CashierDailyZReportCron {
         failed++;
       }
     }
-    this.logger.log(`Z-report cron (${dateStr}): ${ok} PDF yaratildi/yuborildi, ${failed} xato`);
+    this.logger.log(
+      `Z-report cron (${dateStr}): ${ok} PDF yaratildi/yuborildi, ${skipped} skip (allaqachon olgan), ${failed} xato`,
+    );
   }
 }
