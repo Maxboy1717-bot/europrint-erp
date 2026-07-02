@@ -116,10 +116,43 @@ export class StockLedgerRepository {
     }
   }
 
-  async insertStockAlert(data: typeof stockAlerts.$inferInsert): Promise<Result<AlertRow>> {
+  /**
+   * Dedup-aware alert yozish (G9-2 flood-fix): bitta (material, ombor, tur) uchun faqat
+   * BITTA ochiq (resolved=false) alert bo'ladi. Ochiq alert bor bo'lsa — yangi qator
+   * YOZILMAYDI, mavjudining current_value/updated_at yangilanadi (`created=false`).
+   * DB darajasida ham UNIQUE partial index (uq_pos_stock_alerts_open) himoya qiladi
+   * (migration: pos-stock-alerts-dedup-2026-07-02.sql).
+   */
+  async insertStockAlert(
+    data: typeof stockAlerts.$inferInsert,
+  ): Promise<Result<{ row: AlertRow; created: boolean }>> {
     try {
+      const [existing] = await db
+        .select()
+        .from(stockAlerts)
+        .where(and(
+          eq(stockAlerts.materialCardId, data.materialCardId),
+          eq(stockAlerts.warehouseId, data.warehouseId),
+          eq(stockAlerts.alertType, data.alertType),
+          eq(stockAlerts.resolved, false),
+        ))
+        .limit(1);
+
+      if (existing) {
+        const patch: Partial<typeof stockAlerts.$inferInsert> = { updatedAt: new Date() };
+        if (data.currentValue !== undefined) patch.currentValue = data.currentValue;
+        if (data.thresholdValue !== undefined) patch.thresholdValue = data.thresholdValue;
+        if (data.severity !== undefined) patch.severity = data.severity;
+        const [row] = await db
+          .update(stockAlerts)
+          .set(patch)
+          .where(eq(stockAlerts.id, existing.id))
+          .returning();
+        return Ok({ row, created: false });
+      }
+
       const [row] = await db.insert(stockAlerts).values(data).returning();
-      return Ok(row);
+      return Ok({ row, created: true });
     } catch (e) {
       return Err(String(e));
     }

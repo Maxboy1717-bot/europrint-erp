@@ -164,12 +164,14 @@ export class StockLedgerService {
       const summaryR = await this.repo.getAllStockSummary();
       if (!summaryR.ok) { this.logger.warn('[STOCK-CRON] getAllStockSummary failed'); return; }
       for (const item of summaryR.data ?? []) {
+        // G9-2 flood-fix: insertStockAlert dedup-aware — ochiq alert bor bo'lsa yangi qator
+        // yozilmaydi (updated_at yangilanadi); event faqat YANGI alert yaratilganda emit qilinadi.
         if (item.balance <= 0) {
           const r = await this.repo.insertStockAlert({ materialCardId: item.materialCardId, warehouseId: item.warehouseId, alertType: 'OUT_OF_STOCK', currentValue: item.balance, thresholdValue: 0 });
-          if (r.ok) { this.emitter.emit('pos.stock.low_alert', { materialCardId: item.materialCardId, warehouseId: item.warehouseId, balance: item.balance }); }
+          if (r.ok && r.data.created) { this.emitter.emit('pos.stock.low_alert', { materialCardId: item.materialCardId, warehouseId: item.warehouseId, balance: item.balance }); }
         } else if (item.balance <= MIN_LOW_STOCK_THRESHOLD) {
           const r = await this.repo.insertStockAlert({ materialCardId: item.materialCardId, warehouseId: item.warehouseId, alertType: 'LOW_STOCK', currentValue: item.balance, thresholdValue: MIN_LOW_STOCK_THRESHOLD });
-          if (r.ok) { this.emitter.emit('pos.stock.low_alert', { materialCardId: item.materialCardId, warehouseId: item.warehouseId, balance: item.balance }); }
+          if (r.ok && r.data.created) { this.emitter.emit('pos.stock.low_alert', { materialCardId: item.materialCardId, warehouseId: item.warehouseId, balance: item.balance }); }
         }
       }
       this.logger.log(`[STOCK-CRON] Stock alert evaluation complete — ${(summaryR.data ?? []).length} items checked`);
