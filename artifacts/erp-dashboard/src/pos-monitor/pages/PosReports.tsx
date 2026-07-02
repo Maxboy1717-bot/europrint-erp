@@ -21,12 +21,15 @@ function exportCsv(data: unknown, filename: string) {
 
 interface KpiRow { label: string; value: string | number; color: string; }
 
+// "cash_register_log" olib tashlandi (2026-07-02): yorliq "Kassa logi" edi, lekin aslida
+// pos_kpi bilan bir xil reportsApi.getKpi() ni chaqirardi (duplicate). Kassa — Finance
+// modulida; POS Monitor zavod-ombor terminali (kassa logi bu yerda mavjud emas, Q-46).
 const REPORT_TYPES = [
   "stock_balance","movement_journal","abc_analysis","three_way_mismatch",
   "fifo_aging","low_stock","expiry_alerts","gl_journal","gl_report",
   "confirmation_audit","qc_report","damage_report","inventory_variance",
   "request_fulfillment","employee_balance","inventory_act","supplier_rating",
-  "turnover","cash_register_log","sync_status","label_history","pos_kpi",
+  "turnover","sync_status","label_history","pos_kpi",
 ] as const;
 
 type ReportType = typeof REPORT_TYPES[number];
@@ -41,7 +44,7 @@ const REPORT_LABELS: Record<string, string> = {
   inventory_variance: "Inventarizatsiya farqlari", request_fulfillment: "So'rov bajarish",
   employee_balance: "Xodim balansi",   inventory_act: "Inventarizatsiya akti",
   supplier_rating: "Ta'minotchi reytingi", turnover: "Aylanma",
-  cash_register_log: "Kassa logi",     sync_status: "Sinxronizatsiya holati",
+  sync_status: "Sinxronizatsiya holati",
   label_history: "Label tarixi",       pos_kpi: "POS KPI",
 };
 
@@ -50,7 +53,7 @@ const REPORT_ICON: Record<string, string> = {
   fifo_aging: "⏳", low_stock: "⚠️", expiry_alerts: "🗓️", gl_journal: "📒", gl_report: "📋",
   confirmation_audit: "✅", qc_report: "🔬", damage_report: "⚡", inventory_variance: "🔍",
   request_fulfillment: "📬", employee_balance: "👤", inventory_act: "📝", supplier_rating: "⭐",
-  turnover: "🔁", cash_register_log: "💰", sync_status: "🔗", label_history: "🏷️", pos_kpi: "📈",
+  turnover: "🔁", sync_status: "🔗", label_history: "🏷️", pos_kpi: "📈",
 };
 
 async function fetchReport(selected: ReportType, warehouseId: string, dateFrom: string, dateTo: string): Promise<unknown> {
@@ -77,7 +80,6 @@ async function fetchReport(selected: ReportType, warehouseId: string, dateFrom: 
     case "inventory_act":         return inventoryApi.getAll().catch(() => []);
     case "supplier_rating":       return reportsApi.getTopMaterials();
     case "turnover":              return reportsApi.getMovementStats("month");
-    case "cash_register_log":     return reportsApi.getKpi();
     case "sync_status":           return syncApi.getStatus();
     case "label_history":         return reportsApi.getTopMaterials();
     case "pos_kpi":               return reportsApi.getKpi();
@@ -110,7 +112,7 @@ export default function PosReports() {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("reports.title")}</h2>
-        <span className="pos-badge pos-badge-blue" style={{ fontSize: 10 }}>22 tur</span>
+        <span className="pos-badge pos-badge-blue" style={{ fontSize: 10 }}>{REPORT_TYPES.length} tur</span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 16 }}>
