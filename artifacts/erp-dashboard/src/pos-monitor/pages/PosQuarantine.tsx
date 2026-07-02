@@ -1,23 +1,32 @@
 /**
  * @module PosQuarantine
- * @description React page component. Route-level UI.
+ * @description Karantin sahifasi — HAQIQIY oqimga ulangan (2026-07-02, IKKI QC-DUNYO tuzatildi):
+ *   ro'yxat: GET /pos/wh-features/quarantine ('karantin'/'qc_review' holatidagi harakatlar),
+ *   qaror:   POST /pos/wh-features/movement/:id/qc-decision (QuarantineWorkflowService —
+ *            status o'zgaradi + stok QC-HOLD→RM-MAIN ko'chadi + passport yangilanadi).
+ *   Avvalgi passport-only endpoint (inventory-passport qc-decision) stok ko'chirmasdi va
+ *   harakat holatini o'zgartirmasdi — o'sha ulanish olib tashlandi (Q-40/Q-46).
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { usePosI18n } from "../i18n/usePosI18n";
-import { quarantineApi } from "../api/pos-monitor.api";
+import { warehouseFeaturesApi } from "../api/pos-monitor.api";
 import { tLabel } from '@/lib/i18n/tLabel';
 
+/** GET /pos/wh-features/quarantine qator shakli (quarantine-workflow.repository.listQuarantine). */
 interface QuarantineItem {
+  /** pos_movements.id — QC qarori shu id bilan yuboriladi. */
   id: number;
-  movementId: number;
+  movementNumber?: string;
+  movementType?: string;
+  status?: string;
+  createdAt?: string;
+  /** BE hisoblaydi: NOW() - created_at (soat). pg numeric → string bo'lishi mumkin. */
+  hoursInQuarantine?: number | string;
   supplierName?: string;
-  materialCode?: string;
-  quantity: number;
-  quarantineStartedAt?: string;
-  qcResult?: string;
-  certificateNumber?: string;
-  waybillNumber?: string;
+  contractNumber?: string;
+  quantity?: number | string;
+  qcResult?: string | null;
 }
 
 export default function PosQuarantine() {
@@ -33,7 +42,7 @@ export default function PosQuarantine() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await quarantineApi.getList();
+      const data = await warehouseFeaturesApi.listQuarantine();
       setItems(Array.isArray(data) ? (data as QuarantineItem[]) : []);
     } catch { setItems([]); } finally { setLoading(false); }
   }, []);
@@ -45,7 +54,8 @@ export default function PosQuarantine() {
     setSubmitting(true);
     setError("");
     try {
-      await quarantineApi.recordQcDecision(selected.movementId, qcDecision, qcNote || undefined);
+      // Haqiqiy oqim: QuarantineWorkflowService — status + stok + passport birga.
+      await warehouseFeaturesApi.qcDecision(selected.id, qcDecision, qcNote || undefined);
       setSelected(null);
       setQcDecision("");
       setQcNote("");
@@ -55,9 +65,9 @@ export default function PosQuarantine() {
     } finally { setSubmitting(false); }
   }
 
-  function hoursInQuarantine(startedAt?: string): number {
-    if (!startedAt) return 0;
-    return Math.round((Date.now() - new Date(startedAt).getTime()) / 36e5);
+  function hoursOf(item: QuarantineItem): number {
+    const h = Number(item.hoursInQuarantine ?? 0);
+    return Number.isFinite(h) ? Math.round(h) : 0;
   }
 
   return (
@@ -79,20 +89,24 @@ export default function PosQuarantine() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {items.map(item => {
-            const hours = hoursInQuarantine(item.quarantineStartedAt);
+            const hours = hoursOf(item);
             const urgent = hours >= 48;
             return (
               <div key={item.id} className="pos-card pos-fade-in" style={{ borderLeft: `3px solid ${urgent ? "var(--pos-danger)" : "var(--pos-warning)"}` }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 15 }}>
-                      {urgent ? "🔴" : "🟡"} {tLabel('common.PosQuarantine.movement', "Harakat")} #{item.movementId}
-                      {item.materialCode && <span style={{ fontSize: 12, color: "var(--pos-text-muted)", marginLeft: 8 }}>({item.materialCode})</span>}
+                      {urgent ? "🔴" : "🟡"} {item.movementNumber ?? `${tLabel('common.PosQuarantine.movement', "Harakat")} #${item.id}`}
+                      {item.status && (
+                        <span className="pos-badge pos-badge-yellow" style={{ fontSize: 10, marginLeft: 8 }}>
+                          {t(`status.${item.status}`)}
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: "flex", gap: 24, marginTop: 8, fontSize: 13, color: "var(--pos-text-muted)", flexWrap: "wrap" }}>
                       {item.supplierName && <span>🏭 {item.supplierName}</span>}
-                      {item.waybillNumber && <span>📄 {item.waybillNumber}</span>}
-                      <span>📦 {item.quantity} {tLabel('common.PosQuarantine.unit', "birlik")}</span>
+                      {item.contractNumber && <span>📄 {item.contractNumber}</span>}
+                      {item.quantity != null && <span>📦 {Number(item.quantity)} {tLabel('common.PosQuarantine.unit', "birlik")}</span>}
                       <span style={{ color: urgent ? "var(--pos-danger)" : "var(--pos-warning)", fontWeight: 600 }}>
                         ⏱ {hours} {t("quarantine.hoursInQuarantine")}
                       </span>
@@ -117,7 +131,7 @@ export default function PosQuarantine() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div className="pos-card" style={{ width: 480, maxWidth: "90vw" }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>
-              🔬 {t("quarantine.qcDecision")} — {tLabel('common.PosQuarantine.movement', "Harakat")} #{selected.movementId}
+              🔬 {t("quarantine.qcDecision")} — {selected.movementNumber ?? `${tLabel('common.PosQuarantine.movement', "Harakat")} #${selected.id}`}
             </div>
 
             <div style={{ marginBottom: 12 }}>

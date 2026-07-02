@@ -19,7 +19,10 @@ interface Movement {
   toWarehouseName?: string;
 }
 
-const QC_STATUS_ORDER = ["qc_pending", "karantin"];
+// Karantin-oqim holatlari ham ko'rinadi: 'karantin' (yangi tashqi kirim) va 'qc_review'
+// (48 soatdan keyin cron eskalatsiyasi). Qaror harakat-detal sahifasida haqiqiy oqim
+// (/wh-features/movement/:id/qc-decision — QuarantineWorkflowService) orqali qabul qilinadi.
+const QC_STATUS_ORDER = ["qc_pending", "karantin", "qc_review"];
 
 export default function PosQCReview() {
   const [, navigate] = useLocation();
@@ -41,6 +44,7 @@ export default function PosQCReview() {
   const DECISION_COLORS: Record<string, string> = {
     qc_pending:  "var(--pos-warning)",
     karantin:    "#9B59B6",
+    qc_review:   "#9B59B6",
     qc_approved: "var(--pos-success)",
     qc_rework:   "var(--pos-warning)",
     qc_rejected: "var(--pos-danger)",

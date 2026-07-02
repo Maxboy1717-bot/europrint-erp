@@ -343,13 +343,12 @@ export const printerApi = {
 };
 
 // ─── Quarantine & Inventory Passport API ─────────────────────────────────────
+// DIQQAT (IKKI QC-DUNYO tuzatildi, 2026-07-02): karantin ro'yxati + QC qarori endi
+// FAQAT haqiqiy oqim — warehouseFeaturesApi.listQuarantine/qcDecision
+// (/wh-features/... → QuarantineWorkflowService: status o'zgaradi + stok QC-HOLD→RM-MAIN
+// ko'chadi + passport ham yangilanadi). Eski passport-only getList/recordQcDecision
+// (/inventory-passport/... — stok ko'chirmaydi, status o'zgartirmaydi) o'chirildi (Q-46).
 export const quarantineApi = {
-  getList: () =>
-    posReq<unknown[]>("GET", "/inventory-passport/quarantine"),
-
-  recordQcDecision: (movementId: number, qcResult: "QABUL" | "REWORK" | "CHIQARISH", qcNote?: string) =>
-    posReq("POST", `/inventory-passport/${movementId}/qc-decision`, { qcResult, qcNote }),
-
   createPassport: (dto: {
     movementId: number;
     supplierName?: string;
@@ -427,6 +426,11 @@ export const warehouseFeaturesApi = {
   // harakatlar uchun; jonli/ulangan QuarantineWorkflowService orqali ishlaydi.
   qcDecision: (movementId: number, decision: "QABUL" | "REWORK" | "CHIQARISH", qcNote?: string) =>
     posReq(`POST`, `/wh-features/movement/${movementId}/qc-decision`, { decision, qcNote }),
+
+  // Karantin ro'yxati (haqiqiy oqim) — 'karantin'/'qc_review' holatidagi harakatlar
+  // (pos_movements + passport LEFT JOIN). BE: QuarantineWorkflowService.listQuarantine.
+  listQuarantine: () =>
+    posReq<unknown[]>(`GET`, `/wh-features/quarantine`),
 
   // GL Posting (avtomatik)
   postGl:           (movementId: number) =>
