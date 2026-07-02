@@ -8,10 +8,10 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { HrRow } from '../../domain/repositories/i-hr.repo';
-import { leaveRequestsApp, hrEmployees, hr_360_feedback, hr_attendance } from '@shared/db';
+import { leaveRequestsApp, hrEmployees, hr_360_feedback, hr_attendance, hr_leave_balances } from '@shared/db';
 
 type LtRow = { leave_type: string; used_days?: string };
 
@@ -137,12 +137,14 @@ export class HrLeaveRepo {
       // and summed leave_requests — ignoring the real per-employee allocation.
       const currentYear = _time.now().getFullYear();
       const eid = parseInt(employeeId, 10);
-      const res = await db.execute(sql`
-        SELECT leave_type, total_days, used_days, remaining_days
-        FROM hr_leave_balances
-        WHERE employee_id = ${eid} AND year = ${currentYear}
-      `);
-      const rows = (Array.isArray(res) ? res : (res as { rows?: unknown[] }).rows ?? []) as Array<Record<string, unknown>>;
+      const rows = await db.select({
+        leave_type:     hr_leave_balances.leaveType,
+        total_days:     hr_leave_balances.totalDays,
+        used_days:      hr_leave_balances.usedDays,
+        remaining_days: hr_leave_balances.remainingDays,
+      })
+        .from(hr_leave_balances)
+        .where(and(eq(hr_leave_balances.employeeId, eid), eq(hr_leave_balances.year, currentYear)));
       const byType: Record<string, { total: number; used: number; remaining: number }> = {};
       for (const r of rows) {
         byType[String(r.leave_type ?? '')] = {

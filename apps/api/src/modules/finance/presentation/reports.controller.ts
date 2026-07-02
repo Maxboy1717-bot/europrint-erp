@@ -75,6 +75,14 @@ export class ReportsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('production-efficiency')
   async getProductionEfficiency(@Query('from') from?: string, @Query('to') to?: string) {
+    // NOTE: raw SQL kept for two reasons — (1) GROUP BY machine_id with multiple
+    // AVG/SUM aggregates + ORDER BY avg_oee DESC NULLS LAST is a multi-aggregate
+    // report query, not a single-row CRUD lookup; (2) `oee_records` has a Drizzle
+    // definition (lib/db/src/schema/pp/pp-enhanced.ts → oeeRecords) but it is only
+    // exported from the separate `@workspace/db` package, which is NOT re-exported
+    // through the `@shared/db` barrel this controller imports (`import { db } from
+    // '@shared/db'`) — so there is no reachable schema object here to build against
+    // without introducing a new cross-package import. Left as documented raw SQL.
     const r = await db.execute(sql`
       SELECT
         machine_id,
@@ -112,6 +120,18 @@ export class ReportsController {
     type Row = Record<string, unknown>;
     try {
       const payload = (body ?? {}) as { from?: string; to?: string };
+      // NOTE: no reachable Drizzle schema for `order_costings` at this import path —
+      // two conflicting pgTable definitions exist in the monorepo
+      // (apps/api/src/shared/db/schema-finance-extended.ts and
+      // lib/db/src/schema/fi-budgets.ts) but NEITHER is re-exported through the
+      // `@shared/db` barrel this controller imports (`import { db } from
+      // '@shared/db'`), and the two definitions disagree on `id` (integer PK vs
+      // serial) and on the column set (only fi-budgets.ts has energy_cost/
+      // waste_cost/gross_profit/profit_margin, which this query selects). Forcing
+      // a conversion would require picking one of two divergent schemas and adding
+      // a new cross-file import — left as documented raw SQL until the duplicate
+      // `order_costings` schema definitions are reconciled (see schema-finance-extended.ts:68
+      // comment "needs reconciliation first").
       const r = await db.execute(sql`
         SELECT id, sales_order_id, production_order_id,
                material_cost, labor_cost, overhead_cost, energy_cost, waste_cost,

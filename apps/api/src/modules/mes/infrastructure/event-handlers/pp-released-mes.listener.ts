@@ -25,8 +25,21 @@ export class PpReleasedMesListener implements IEventHandler<PpReleasedEvent> {
 
   async handle(event: PpReleasedEvent): Promise<void> {
     try {
-      // Open a session keyed to the production order; carry the sales order id (order_id) + planned qty
-      // from production_orders. NOT EXISTS guard = idempotent (no duplicate open session per PO, Trigger 9).
+      // RULE4_EXCEPTION (Qoida 4): kept as raw SQL, not converted to Drizzle ORM. Two independent reasons:
+      // 1) GENUINE COMPLEXITY — this is an atomic INSERT ... SELECT ... WHERE NOT EXISTS: it reads
+      //    order_id (sales_order_id) + planned_quantity from production_orders AND, in the SAME statement,
+      //    guards against a duplicate open session via a correlated NOT EXISTS subquery against
+      //    production_sessions itself. Splitting this into two ORM calls (SELECT-check then INSERT) would
+      //    reopen the TOCTOU race this NOT EXISTS guard exists to close (two concurrent PpReleasedEvent
+      //    deliveries could both pass the check and both insert) — the exact idempotency property Trigger 9
+      //    depends on (see module JSDoc). This mirrors the MM PpReleasedListener's documented Rule 4
+      //    exemption for the same class of conditional-idempotent-insert problem.
+      // 2) NO CLEAN SCHEMA MAPPING — the only Drizzle definition for this table
+      //    (`productionSessions` in apps/api/src/shared/db/schema-compat-4.ts:140) is a stale/partial stub:
+      //    it declares only id/productionOrderId(text)/sessionId/workCenterId/status/startedAt/endedAt/
+      //    createdAt/operatorCardId and has NO `session_number`, `order_id`, `equipment_id`, `worker_id`, or
+      //    `target_quantity` columns at all (the 5 fields this INSERT writes). Forcing an ORM rewrite would
+      //    require inventing schema fields not declared anywhere — explicitly avoided per instructions.
       await db.execute(sql`
         INSERT INTO production_sessions
           (session_number, production_order_id, order_id, equipment_id, worker_id, status, target_quantity, started_at, created_at)

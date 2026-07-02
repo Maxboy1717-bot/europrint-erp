@@ -23,6 +23,12 @@ import {
 } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+// NOTE: `courseProgress` is only defined in lib/db/src/schema/lms-schema.ts
+// (canonical) — the local `@shared/db`/`@europrint/schemas` compat barrel
+// (apps/api/src/shared/db/europrint-compat.ts) does not re-export it, so it
+// is imported from `@workspace/db` directly. Same Postgres pool/dialect as
+// `db` from `@shared/db`, so the table object is safe to use with either.
+import { courseProgress } from '@workspace/db';
 type Rows = { rows?: unknown[] };
 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -90,6 +96,10 @@ export class LmsMicroModulesController {
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async createMicroModule(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = (body ?? {}) as Record<string, unknown>;
+    // NOTE: no Drizzle schema exists for `micro_modules` anywhere in the codebase
+    // (lib/db/src/schema/*.ts and apps/api/src/shared/db/*.ts both lack a pgTable
+    // definition for it — drizzle-lms-misc.repo.ts also reads it via raw SQL) —
+    // raw SQL until a schema is added.
     const r = await db.execute(sql`
       INSERT INTO micro_modules (title, title_ru, course_id, description, sort_order, is_active, created_by, created_at, updated_at)
       VALUES (
@@ -290,14 +300,12 @@ export class LmsProgressCompatController {
   @Get('summary')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getProgressSummary() {
-    const r = await db.execute(sql`
-      SELECT
-        COUNT(*)::int                                                 AS total,
-        SUM(CASE WHEN completed = true  THEN 1 ELSE 0 END)::int     AS completed,
-        SUM(CASE WHEN completed = false THEN 1 ELSE 0 END)::int     AS in_progress
-      FROM course_progress
-    `);
-    const row = ((r as Rows).rows ?? [])[0] ?? { total: 0, completed: 0, in_progress: 0 };
+    const rows = await db.select({
+      total:       sql<number>`COUNT(*)::int`,
+      completed:   sql<number>`SUM(CASE WHEN ${courseProgress.completed} = true  THEN 1 ELSE 0 END)::int`,
+      in_progress: sql<number>`SUM(CASE WHEN ${courseProgress.completed} = false THEN 1 ELSE 0 END)::int`,
+    }).from(courseProgress);
+    const row = rows[0] ?? { total: 0, completed: 0, in_progress: 0 };
     return { summary: row };
   }
 }

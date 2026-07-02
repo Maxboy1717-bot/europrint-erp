@@ -33,7 +33,11 @@ import { GetReadingsQuery } from '../application/queries/get-readings.query';
 import { GetAnomaliesQuery } from '../application/queries/get-anomalies.query';
 import { RegisterDeviceDtoSchema, RecordReadingDtoSchema, UpdateThresholdsDtoSchema } from '../presentation/dto/iot.dto';
 import { db } from '@shared/db';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
+// NOTE: iot_devices has no barrel export in @shared/db (schema-compat-* index) —
+// it exists only as a local pgTable definition in schema-db-only-generated.ts.
+// Imported directly from that file (same pattern used in iot-main.controller.ts).
+import { iotDevices } from '@shared/db/schema-db-only-generated';
 
 enum Role {
   OPERATOR = 'operator',
@@ -75,8 +79,7 @@ export class IotSensorsController {
   @Roles(Role.OPERATOR, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
   async getDevice(@Param('id') deviceId: string) {
     this.logger.log('Get device');
-    const r = await db.execute(sql`SELECT * FROM iot_devices WHERE id=${parseInt(deviceId, 10)} LIMIT 1`);
-    const rows = (r as unknown as { rows: unknown[] }).rows ?? [];
+    const rows = await db.select().from(iotDevices).where(eq(iotDevices.id, parseInt(deviceId, 10))).limit(1);
     if (!rows[0]) throw new NotFoundException(`Device #${deviceId} topilmadi`);
     return { statusCode: HttpStatus.OK, data: rows[0] };
   }
