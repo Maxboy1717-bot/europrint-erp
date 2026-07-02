@@ -12,20 +12,18 @@ import { Admin, Position, admins, departments, positions, users } from "./core-s
 import { cameraZones, cameras } from "./iot-schema";
 import { Mentor, courses, progress, skills } from "./lms-schema";
 import { workCenters } from "./pp-schema";
-// adaptationRecords — canonical: adaptation.ts
-import { adaptationRecords as newEmployees } from "./adaptation";
-export { adaptationRecords, insertAdaptationRecordSchema } from "./adaptation";
-export type { AdaptationRecord, InsertAdaptationRecord } from "./adaptation";
-
-// newEmployees alias kept for backward compatibility
-export { adaptationRecords as newEmployees } from "./adaptation";
-export { insertAdaptationRecordSchema as insertNewEmployeeSchema } from "./adaptation";
-
+// ORFAN CLEANUP (2026-07-02): adaptationRecords/adaptationPrograms pgTables
+// (and their newEmployees/insertNewEmployeeSchema aliases) removed from
+// adaptation.ts — dead lib/db duplicates, Q-29 verified (canonical live version
+// is apps/api/src/shared/db/schema-business-c-2-hr-safety.ts adaptation_records).
+// newEmployeeId kept as a plain column (no typed FK) to preserve the DB column
+// without a dangling cross-table reference — mirrors the costCenterId/
+// profitCenterId precedent in fi-gl.ts glLines.
 
 // Adaptatsiya bo'yicha feedbacklar (1 hafta, 1 oy, 3 oy suhbatlari)
 export const adaptationFeedback = pgTable("adaptation_feedback", {
   id: serial("id").primaryKey(),
-  newEmployeeId: varchar("new_employee_id").notNull().references(() => newEmployees.id, { onDelete: "cascade" }),
+  newEmployeeId: varchar("new_employee_id").notNull(),
   feedbackType: varchar("feedback_type", { length: 20 }).notNull(), // week1, month1, month3, final
   scheduledDate: varchar("scheduled_date", { length: 10 }).notNull(), // YYYY-MM-DD
   completedDate: varchar("completed_date", { length: 10 }), // YYYY-MM-DD

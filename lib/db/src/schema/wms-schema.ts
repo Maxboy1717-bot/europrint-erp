@@ -425,6 +425,44 @@ export type WarehouseTransaction = typeof warehouseTransactions.$inferSelect;
 export type InsertWarehouseTransaction = z.infer<typeof insertWarehouseTransactionSchema>;
 
 
+// RESTORED (2026-07-02): warehouseStock is actually re-exported live by
+// apps/api/src/shared/db/schema-ext-c-2.ts:247 (`export { warehouseStock as
+// warehouse_stock } from '@workspace/db'`) — NOT orphan, Q-29 verification
+// caught this after initial (incorrect) deletion. Do not delete again.
+export const warehouseStock = pgTable("warehouse_stock", {
+  id: serial("id").primaryKey(),
+  warehouseId: varchar("warehouse_id").notNull().references(() => warehouses.id, { onDelete: "cascade" }),
+  materialCardId: varchar("material_id").notNull().references(() => materialCards.id, { onDelete: "cascade" }),
+  quantity: numericMoney("quantity").notNull().default(0),
+  reservedQuantity: numericMoney("reserved_quantity").notNull().default(0),
+  availableQuantity: numericMoney("available_quantity").notNull().default(0),
+  unitOfMeasure: varchar("unit_of_measure", { length: 20 }),
+  lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  // --- A7 superset: live-DB columns ---
+  reorderPoint: numericMoney("reorder_point"),
+  maxStock: numericMoney("max_stock"),
+  binLocationId: varchar("bin_location_id"),
+  lastMovementAt: timestamp("last_movement_at"),
+  itemId: varchar("item_id"),
+  updatedAt: timestamp("updated_at"),
+  unit: varchar("unit", { length: 20 }),
+  // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
+  tenantId: integer("tenant_id").notNull().default(1),
+}, (t) => [
+  index("idx_warehouse_stock_tenant_id").on(t.tenantId),
+]);
+
+
+export const insertWarehouseStockSchema = createInsertSchema(warehouseStock, {
+  quantity: z.number().min(0, "Miqdor 0 dan kam bo'lmasligi kerak"),
+  reservedQuantity: z.number().min(0, "Zaxiralangan miqdor 0 dan kam bo'lmasligi kerak"),
+}).omit({ id: true, createdAt: true, lastUpdatedAt: true } as never);
+
+
+export type WarehouseStock = typeof warehouseStock.$inferSelect;
+
+export type InsertWarehouseStock = z.infer<typeof insertWarehouseStockSchema>;
 
 
 // Daily Warehouse Plans - Ombor kunlik rejasi

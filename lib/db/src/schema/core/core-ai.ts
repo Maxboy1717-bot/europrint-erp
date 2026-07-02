@@ -7,7 +7,6 @@ import { sql } from "drizzle-orm";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import type { AdaptationRecord, InsertAdaptationRecord } from "../hr-schema";
 import { admins } from "./core-users";
 import { users } from "../users";
 
@@ -106,5 +105,7 @@ export const insertAiInsightSchema = createInsertSchema(aiInsights, {
 export type AiInsight = typeof aiInsights.$inferSelect;
 export type InsertAiInsight = z.infer<typeof insertAiInsightSchema>;
 
-export type NewEmployee = AdaptationRecord;
-export type InsertNewEmployee = InsertAdaptationRecord;
+// ORFAN CLEANUP (2026-07-02): NewEmployee/InsertNewEmployee type aliases
+// removed — they aliased AdaptationRecord/InsertAdaptationRecord which were
+// deleted from adaptation.ts (dead lib/db duplicate, Q-29 verified: never
+// imported via @workspace/db anywhere in apps/).

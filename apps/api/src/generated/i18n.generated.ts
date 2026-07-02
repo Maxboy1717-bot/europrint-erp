@@ -25,6 +25,7 @@ export type I18nTranslations = {
         "currentPasswordIncorrect": string;
         "accountLocked": string;
         "accountInactive": string;
+        "noActiveCard": string;
         "accountSuspended": string;
         "tooManyAttempts": string;
         "sessionExpired": string;

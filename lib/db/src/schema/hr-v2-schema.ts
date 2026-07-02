@@ -81,36 +81,9 @@ export const badgeCatalog = pgTable("badge_catalog", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// ─── Employee Badges ─────────────────────────────────────────────────────────
-export const employeeBadges = pgTable("employee_badges", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
-  badgeCode: varchar("badge_code", { length: 50 }).notNull(),
-  awardedBy: integer("awarded_by"),
-  awardedAt: timestamp("awarded_at").defaultNow().notNull(),
-  reason: text("reason"),
-});
-
-// ─── Gamification Points ─────────────────────────────────────────────────────
-export const gamificationPoints = pgTable("gamification_points", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
-  points: integer("points").default(0),
-  eventType: varchar("event_type", { length: 50 }),
-  description: text("description"),
-  referenceId: integer("reference_id"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// ─── Gamification Totals ─────────────────────────────────────────────────────
-export const gamificationTotals = pgTable("gamification_totals", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull().unique(),
-  totalPoints: integer("total_points").default(0),
-  monthlyPoints: integer("monthly_points").default(0),
-  quarterlyPoints: integer("quarterly_points").default(0),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+// ORFAN CLEANUP (2026-07-02): employeeBadges/gamificationPoints/gamificationTotals
+// pgTables removed — dead lib/db duplicates, Q-29 verified: never imported via
+// @workspace/db anywhere in apps/.
 
 // ─── HR Daily Reports ─────────────────────────────────────────────────────────
 export const hrDailyReports = pgTable("hr_daily_reports", {
@@ -176,17 +149,10 @@ export const careerPathSteps = pgTable("career_path_steps", {
   completedAt: timestamp("completed_at"),
 });
 
-// ─── Skill Catalog ───────────────────────────────────────────────────────────
-export const skillCatalog = pgTable("skill_catalog", {
-  id: serial("id").primaryKey(),
-  code: varchar("code", { length: 50 }).notNull().unique(),
-  name: varchar("name", { length: 200 }).notNull(),
-  nameRu: varchar("name_ru", { length: 200 }),
-  category: varchar("category", { length: 50 }),
-  description: text("description"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// ORFAN CLEANUP (2026-07-02): skillCatalog pgTable removed — dead lib/db
+// duplicate, Q-29 verified: never imported via @workspace/db anywhere in apps/.
+// Canonical live snake_case stub is
+// apps/api/src/shared/db/schema-business-c-2-misc.ts.
 
 // ─── Employee Skill Scores ────────────────────────────────────────────────────
 export const employeeSkillScores = pgTable(
@@ -262,37 +228,11 @@ export const pipProgressUpdates = pgTable("pip_progress_updates", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// ─── Visitor Log ─────────────────────────────────────────────────────────────
-export const visitorLog = pgTable("visitor_log", {
-  id: serial("id").primaryKey(),
-  visitorName: varchar("visitor_name", { length: 200 }).notNull(),
-  visitorPhone: varchar("visitor_phone", { length: 20 }),
-  visitorCompany: varchar("visitor_company", { length: 200 }),
-  purpose: varchar("purpose", { length: 200 }),
-  hostEmployeeId: integer("host_employee_id").references(() => employees.id, { onDelete: "set null" }),
-  checkInAt: timestamp("check_in_at").defaultNow().notNull(),
-  checkOutAt: timestamp("check_out_at"),
-  badgeNumber: varchar("badge_number", { length: 20 }),
-  idDocument: varchar("id_document", { length: 50 }),
-  idDocumentType: varchar("id_document_type", { length: 30 }).default("passport"),
-  notes: text("notes"),
-  registeredBy: integer("registered_by"),
-  status: varchar("status", { length: 20 }).default("inside"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [
-  check("visitor_log_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('inside','left','denied')`),
-  check("visitor_log_doc_type_chk", sql`${t.idDocumentType} IS NULL OR ${t.idDocumentType} IN ('passport','id_card','driver_license')`),
-]);
-
-// ─── Document Workflow Tables ─────────────────────────────────────────────────
-export const documentWorkflowRoutes = pgTable("workflow_route_configs", {
-  id: serial("id").primaryKey(),
-  documentType: varchar("document_type", { length: 50 }).notNull().unique(),
-  name: varchar("name", { length: 200 }),
-  steps: jsonb("steps"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// ORFAN CLEANUP (2026-07-02): visitorLog/documentWorkflowRoutes pgTables
+// removed — dead lib/db duplicates, Q-29 verified: never imported via
+// @workspace/db anywhere in apps/. Canonical live snake_case stubs are in
+// apps/api/src/shared/db/schema-business-c-2-misc.ts /
+// schema-business-c-2-hr-safety.ts.
 
 export const hrDocuments = pgTable("hr_documents", {
   id: serial("id").primaryKey(),
@@ -330,35 +270,9 @@ export const documentSignatures = pgTable("document_signatures", {
   ipAddress: varchar("ip_address", { length: 45 }),
 });
 
-// ─── HR Interview Sessions ────────────────────────────────────────────────────
-export const hrInterviewSessions = pgTable("hr_interview_sessions", {
-  id: serial("id").primaryKey(),
-  token: varchar("token", { length: 64 }).notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
-  candidateName: varchar("candidate_name", { length: 200 }),
-  candidateLanguage: varchar("candidate_language", { length: 10 }).default("uz"),
-  candidateId: integer("candidate_id"),
-  vacancyId: integer("vacancy_id"),
-  status: varchar("status", { length: 20 }).default("pending"),
-  startedAt: timestamp("started_at"),
-  completedAt: timestamp("completed_at"),
-  communicationScore: decimal("communication_score", { precision: 5, scale: 2 }),
-  confidenceScore: decimal("confidence_score", { precision: 5, scale: 2 }),
-  problemSolvingScore: decimal("problem_solving_score", { precision: 5, scale: 2 }),
-  bodyLanguageScore: decimal("body_language_score", { precision: 5, scale: 2 }),
-  emotionalStateScore: decimal("emotional_state_score", { precision: 5, scale: 2 }),
-  professionalAppearanceScore: decimal("professional_appearance_score", { precision: 5, scale: 2 }),
-  overallScore: decimal("overall_score", { precision: 5, scale: 2 }),
-  recommendation: varchar("recommendation", { length: 50 }),
-  aiSummary: text("ai_summary"),
-  transcript: text("transcript"),
-  cameraRejections: integer("camera_rejections").default(0),
-  createdBy: integer("created_by"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [
-  check("hr_interview_sessions_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('pending','in_progress','completed','failed','cancelled')`),
-  check("hr_interview_sessions_lang_chk", sql`${t.candidateLanguage} IS NULL OR ${t.candidateLanguage} IN ('uz','ru','en')`),
-]);
+// ORFAN CLEANUP (2026-07-02): hrInterviewSessions pgTable removed — dead
+// lib/db duplicate, Q-29 verified: never imported via @workspace/db anywhere
+// in apps/.
 
 // ─── AI Interview Question Bank ──────────────────────────────────────────────
 export const hrInterviewQuestions = pgTable("hr_interview_questions", {
@@ -379,44 +293,9 @@ export const hrInterviewQuestions = pgTable("hr_interview_questions", {
   check("hr_interview_questions_difficulty_chk", sql`${t.difficulty} IS NULL OR ${t.difficulty} IN ('easy','medium','hard')`),
 ]);
 
-// ─── Offboarding Cases ───────────────────────────────────────────────────────
-export const offboardingCases = pgTable("offboarding_cases", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id").notNull(),
-  initiatedBy: integer("initiated_by"),
-  dismissalType: varchar("dismissal_type", { length: 30 }).default("resignation"),
-  lastWorkingDay: date("last_working_day"),
-  dismissOrderDocId: integer("dismiss_order_doc_id"),
-  status: varchar("status", { length: 20 }).default("active"), // active, completed, cancelled
-  exitInterviewDone: boolean("exit_interview_done").default(false),
-  exitInterviewNotes: text("exit_interview_notes"),
-  blocksSettlement: boolean("blocks_settlement").default(false),
-  settlementDone: boolean("settlement_done").default(false),
-  equipmentReturned: boolean("equipment_returned").default(false),
-  ndaSigned: boolean("nda_signed").default(false),
-  accessRevoked: boolean("access_revoked").default(false),
-  completedItems: integer("completed_items").default(0),
-  totalItems: integer("total_items").default(8),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (t) => [
-  check("offboarding_cases_dismissal_chk", sql`${t.dismissalType} IS NULL OR ${t.dismissalType} IN ('resignation','termination','retirement','contract_end','death')`),
-  check("offboarding_cases_status_chk", sql`${t.status} IS NULL OR ${t.status} IN ('active','completed','cancelled')`),
-]);
-
-export const offboardingChecklistItems = pgTable("offboarding_checklist_items", {
-  id: serial("id").primaryKey(),
-  caseId: integer("case_id").notNull(),
-  itemKey: varchar("item_key", { length: 60 }).notNull(),
-  label: text("label").notNull(),
-  done: boolean("done").default(false),
-  doneBy: integer("done_by"),
-  doneAt: timestamp("done_at"),
-  notes: text("notes"),
-  returnStatus: varchar("return_status", { length: 20 }).default("pending"),
-  orderNum: integer("order_num").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// ORFAN CLEANUP (2026-07-02): offboardingCases/offboardingChecklistItems
+// pgTables removed — dead lib/db duplicates, Q-29 verified: never imported
+// via @workspace/db anywhere in apps/.
 
 // ─── Shift Schedule ──────────────────────────────────────────────────────────
 export const shiftSchedules = pgTable("shift_schedules", {

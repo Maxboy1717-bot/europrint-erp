@@ -9,13 +9,15 @@ import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, num
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
-import { crmCompanies, crmContacts } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): unused import of crmCompanies/crmContacts from
+// "./crm-schema" removed — those pgTable declarations were deleted (dead
+// lib/db duplicates, Q-29 verified: never used in this file).
 import { Attendance } from "./hr-schema";
-import { materialCards, purchaseInvoices, purchaseOrders, vendors } from "./mm-schema";
+import { materialCards, vendors } from "./mm-schema";
 import { Order, orders, productMasters, productionOrders } from "./pp-schema";
 import { salesInvoices, salesOrders } from "./sd-schema";
 import { warehouses } from "./wms-schema";
-import { accounts, glDocuments, glLines, accountingPeriods, costCenters, profitCenters, payrollPeriods } from "./fi-gl";
+import { accounts, glDocuments, glLines, accountingPeriods, payrollPeriods } from "./fi-gl";
 import { customerPayments, invoicePayments } from "./fi-ap-ar";
 import { cashRegisters, insertAiFinanceInsightSchema, aiFinanceInsights } from "./fi-banking";
 import { cfoBotSettings, cfoBotConversations } from "./fi-payroll-ext";
@@ -118,53 +120,11 @@ export type CfoBotReminder = typeof cfoBotReminders.$inferSelect;
 // FAZA 1D: KASSA NAZORAT — EXPENSE & ADVANCE PAYMENT TIZIMI
 // ============================================================================
 
-export const expenseRequests = pgTable("expense_requests", {
-  id: serial("id").primaryKey(),
-  requestNumber: varchar("request_number", { length: 30 }).notNull(),
-  requestedBy: varchar("requested_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
-  department: varchar("department", { length: 100 }),
-  category: varchar("category", { length: 50 }).notNull(),
-  purpose: text("purpose").notNull(),
-  amount: numericMoney("amount").notNull(),
-  currency: varchar("currency", { length: 5 }).notNull().default("UZS"),
-  budgetLineId: varchar("budget_line_id"),
-  status: varchar("status", { length: 20 }).notNull().default("draft"),
-  approvalRequestId: varchar("approval_request_id").references(() => approvalRequests.id, { onDelete: "set null" }),
-  cashRegisterId: varchar("cash_register_id").references(() => cashRegisters.id, { onDelete: "set null" }),
-  disbursedAmount: numericMoney("disbursed_amount"),
-  disbursedAt: timestamp("disbursed_at"),
-  disbursedBy: varchar("disbursed_by").references(() => users.id, { onDelete: "set null" }),
-  settlementStatus: varchar("settlement_status", { length: 20 }).default("not_settled"),
-  settledAmount: numericMoney("settled_amount"),
-  settledAt: timestamp("settled_at"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (t) => [
-  index("idx_expense_requests_requested_by").on(t.requestedBy),
-  index("idx_expense_requests_status").on(t.status),
-  index("idx_expense_requests_category").on(t.category),
-  index("idx_expense_requests_created_at").on(t.createdAt),
-  check("expense_requests_status_chk", sql`${t.status} IN ('draft','submitted','approved','disbursed','settled','rejected','cancelled')`),
-  check("expense_requests_settlement_chk", sql`${t.settlementStatus} IS NULL OR ${t.settlementStatus} IN ('not_settled','partial','settled','overspent')`),
-  check("expense_requests_category_chk", sql`${t.category} IN ('MATERIAL','MRO','TRAVEL','UTILITIES','OFFICE','TRANSPORT','FOOD','OTHER')`),
-]);
-
-
-export const insertExpenseRequestSchema = createInsertSchema(expenseRequests, {
-  category: z.enum(["MATERIAL", "MRO", "TRAVEL", "UTILITIES", "OFFICE", "TRANSPORT", "FOOD", "OTHER"]),
-  status: z.enum(["draft", "submitted", "approved", "disbursed", "settled", "rejected", "cancelled"]).default("draft"),
-  settlementStatus: z.enum(["not_settled", "partial", "settled", "overspent"]).default("not_settled"),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type ExpenseRequest = typeof expenseRequests.$inferSelect;
-
-export type InsertExpenseRequest = z.infer<typeof insertExpenseRequestSchema>;
-
-
 export const expenseReports = pgTable("expense_reports", {
   id: serial("id").primaryKey(),
-  expenseRequestId: varchar("expense_request_id").references(() => expenseRequests.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: expense_requests pgTable removed (orphan, lib/db-only — see chore(schema)
+  // cleanup 2026-07-02). Column kept plain (no cross-table FK type), still NOT NULL.
+  expenseRequestId: varchar("expense_request_id").notNull(),
   reportNumber: varchar("report_number", { length: 30 }).notNull(),
   totalSpent: numericMoney("total_spent").notNull(),
   totalReceipts: integer("total_receipts").notNull().default(0),
@@ -215,48 +175,6 @@ export const insertExpenseAttachmentSchema = createInsertSchema(expenseAttachmen
 export type ExpenseAttachment = typeof expenseAttachments.$inferSelect;
 
 export type InsertExpenseAttachment = z.infer<typeof insertExpenseAttachmentSchema>;
-
-
-export const advancePayments = pgTable("advance_payments", {
-  id: serial("id").primaryKey(),
-  requestNumber: varchar("request_number", { length: 30 }).notNull(),
-  vendorId: varchar("vendor_id").references(() => vendors.id, { onDelete: "set null" }),
-  employeeId: varchar("employee_id").references(() => users.id, { onDelete: "set null" }),
-  paymentType: varchar("payment_type", { length: 30 }).notNull(),
-  amount: numericMoney("amount").notNull(),
-  currency: varchar("currency", { length: 5 }).notNull().default("UZS"),
-  purpose: text("purpose").notNull(),
-  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: "set null" }),
-  status: varchar("status", { length: 20 }).notNull().default("requested"),
-  approvalRequestId: varchar("approval_request_id").references(() => approvalRequests.id, { onDelete: "set null" }),
-  disbursedAt: timestamp("disbursed_at"),
-  settledAmount: numericMoney("settled_amount").default(0),
-  settlementStatus: varchar("settlement_status", { length: 20 }).default("unsettled"),
-  glDocumentId: varchar("gl_document_id").references(() => glDocuments.id, { onDelete: "set null" }),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "restrict" }).notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (t) => [
-  index("idx_advance_payments_vendor_id").on(t.vendorId),
-  index("idx_advance_payments_employee_id").on(t.employeeId),
-  index("idx_advance_payments_status").on(t.status),
-  index("idx_advance_payments_created_at").on(t.createdAt),
-  check("advance_payments_type_chk", sql`${t.paymentType} IN ('VENDOR_ADVANCE','EMPLOYEE_ADVANCE','TRAVEL_ADVANCE')`),
-  check("advance_payments_status_chk", sql`${t.status} IN ('requested','approved','disbursed','partially_settled','settled','rejected')`),
-  check("advance_payments_settlement_chk", sql`${t.settlementStatus} IS NULL OR ${t.settlementStatus} IN ('unsettled','partial','settled')`),
-  check("advance_payments_amount_chk", sql`${t.amount} > 0`),
-]);
-
-
-export const insertAdvancePaymentSchema = createInsertSchema(advancePayments, {
-  paymentType: z.enum(["VENDOR_ADVANCE", "EMPLOYEE_ADVANCE", "TRAVEL_ADVANCE"]),
-  status: z.enum(["requested", "approved", "disbursed", "partially_settled", "settled", "rejected"]).default("requested"),
-  settlementStatus: z.enum(["unsettled", "partial", "settled"]).default("unsettled"),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type AdvancePayment = typeof advancePayments.$inferSelect;
-
-export type InsertAdvancePayment = z.infer<typeof insertAdvancePaymentSchema>;
 
 
 // ========== CRM & SALES: PAYMENT MATCHING ==========

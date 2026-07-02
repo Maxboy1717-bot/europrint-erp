@@ -10,7 +10,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "../core-schema";
 import { salesOrders } from "../sd-schema";
-import { bomHeaders, equipment, products, routingOperations, routings, workCenters } from "./pp-production";
+import { equipment, products, routingOperations, routings, workCenters } from "./pp-production";
 
 // Papka Orders (Buyurtmalar - Markaziy Master Data)
 export const papkaOrders = pgTable("papka_orders", {
@@ -35,7 +35,8 @@ export const papkaOrders = pgTable("papka_orders", {
   materialTaminot: text("material_taminot"),
   dizayner: text("dizayner"),
   marketolog: text("marketolog"),
-  bomId: varchar("bom_id").references(() => bomHeaders.id, { onDelete: "set null" }),
+  // NOTE: FK to bomHeaders removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  bomId: varchar("bom_id"),
   productId: varchar("product_id").references(() => products.id, { onDelete: "set null" }),
   routingId: varchar("routing_id").references(() => routings.id, { onDelete: "set null" }),
   materialRequirements: jsonb("material_requirements"),

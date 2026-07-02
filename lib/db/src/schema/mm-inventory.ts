@@ -10,7 +10,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { glDocuments } from "./fi-schema";
-import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, productionSessions, products } from "./pp-schema";
+import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, products } from "./pp-schema";
 import { warehouseBins, warehouseTransactions, warehouses } from "./wms-schema";
 import { rawMaterials, vendors } from "./mm-procurement";
 import { materialCards, materialBatches, batches } from "./mm-materials";

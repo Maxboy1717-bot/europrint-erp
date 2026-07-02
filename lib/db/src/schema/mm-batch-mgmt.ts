@@ -10,9 +10,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { glDocuments } from "./fi-schema";
-import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, productionSessions, products } from "./pp-schema";
+import { Order, equipment, formulaDefinitions, machineTasks, mrpResults, mrpRuns, papkaOrders, productionOrders, products } from "./pp-schema";
 import { warehouseBins, warehouseTransactions, warehouses } from "./wms-schema";
-import { vendors, rawMaterials, goodsReceipts } from "./mm-procurement";
+import { vendors, rawMaterials } from "./mm-procurement";
 import { materialBatches, materialCards } from "./mm-material-cards";
 
 export const insertMaterialBatchSchema = createInsertSchema(materialBatches, {
@@ -160,7 +160,8 @@ export type InsertMaterialKitItem = z.infer<typeof insertMaterialKitItemSchema>;
 // Material Movements - Ishlab chiqarish paytida real-time material harakatlari
 export const materialMovements = pgTable("material_movements", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id").references(() => productionSessions.id, { onDelete: "cascade" }).notNull(),
+  // NOTE: FK to productionSessions removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  sessionId: varchar("session_id").notNull(),
   orderId: varchar("order_id").references(() => papkaOrders.id, { onDelete: "set null" }),
   kitId: varchar("kit_id").references(() => materialKits.id, { onDelete: "set null" }),
   materialId: varchar("material_id").references(() => rawMaterials.id, { onDelete: "set null" }),

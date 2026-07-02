@@ -9,7 +9,9 @@ import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, ind
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, users } from "../core-schema";
-import { crmCompanies } from "../crm-schema";
+// ORFAN CLEANUP (2026-07-02): import of crmCompanies from "../crm-schema"
+// removed — that pgTable declaration was deleted (dead lib/db duplicate,
+// Q-29 verified). orders.customerId FK below converted to a plain column.
 // rawMaterials import removed: production_order_components.rawMaterialId FK
 // now references material_cards via DB migration (avoiding circular import cycle)
 import { salesOrders } from "../sd-schema";
@@ -138,7 +140,8 @@ export const orders = pgTable("orders", {
   productId: varchar("product_id").references(() => products.id, { onDelete: 'set null' }),
   quantity: integer("quantity").notNull(),
   customerName: text("customer_name"),
-  customerId: integer("customer_id").references(() => crmCompanies.id, { onDelete: 'set null' }),
+  // FK to crmCompanies removed 2026-07-02 (orphan table deleted, see note above)
+  customerId: integer("customer_id"),
   dueDate: varchar("due_date", { length: 10 }),
   priority: varchar("priority", { length: 20 }).notNull().default("normal"),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
@@ -292,85 +295,6 @@ export const insertDowntimeLogSchema = createInsertSchema(downtimeLogs, {
 export type DowntimeLog = typeof downtimeLogs.$inferSelect;
 export type InsertDowntimeLog = z.infer<typeof insertDowntimeLogSchema>;
 
-// BOM Headers (BOM bosh)
-export const bomHeaders = pgTable("bom_headers", {
-  id: serial("id").primaryKey(),
-  bomNumber: varchar("bom_number", { length: 50 }).notNull().unique(),
-  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
-  version: varchar("version", { length: 20 }).notNull().default("1.0"),
-  status: varchar("status", { length: 20 }).notNull().default("draft"),
-  baseQuantity: numericMoney("base_quantity").notNull().default(1),
-  baseUnit: varchar("base_unit", { length: 20 }).notNull().default("dona"),
-  validFrom: varchar("valid_from", { length: 10 }),
-  validTo: varchar("valid_to", { length: 10 }),
-  description: text("description"),
-  // ── ADD-ONLY: live DB superset columns ──
-  isActive: boolean("is_active").notNull().default(true),
-  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-}, (t) => [
-  index("idx_bom_headers_product_id").on(t.productId),
-  index("idx_bom_headers_status").on(t.status),
-  index("idx_bom_headers_created_at").on(t.createdAt),
-  check("bom_headers_status_chk", sql`${t.status} IN ('draft','active','inactive','archived')`),
-]);
-
-export const insertBomHeaderSchema = createInsertSchema(bomHeaders, {
-  bomNumber: z.string().min(1, "BOM raqami talab qilinadi"),
-  productId: z.string().min(1, "Mahsulot tanlash kerak"),
-  version: z.string().min(1, "Versiya talab qilinadi"),
-  status: z.enum(["draft", "active", "inactive", "archived"]),
-  baseQuantity: z.number().positive("Asosiy miqdor musbat bo'lishi kerak"),
-}).omit({ id: true, createdAt: true, updatedAt: true } as never);
-
-export type BomHeader = typeof bomHeaders.$inferSelect;
-export type InsertBomHeader = z.infer<typeof insertBomHeaderSchema>;
-
-// BOM Items (BOM komponentlari)
-export const bomItems = pgTable("bom_items", {
-  id: serial("id").primaryKey(),
-  bomId: varchar("bom_id").notNull().references(() => bomHeaders.id, { onDelete: "cascade" }),
-  itemNumber: varchar("item_number", { length: 10 }).notNull(),
-  componentType: varchar("component_type", { length: 20 }).notNull().default("material"),
-  // FK type fix: should reference material_cards.id (integer), not products.id.
-  // Cannot use .references() here without creating a circular import
-  // (pp-production → mm-material-cards → pp-schema → pp-production).
-  // DB-level FK is applied via migrations-drift.ts entry below.
-  componentId: integer("component_id").notNull(),
-  quantity: numericMoney("quantity").notNull(),
-  unit: varchar("unit", { length: 20 }).notNull().default("dona"),
-  scrapPercentage: numericMoney("scrap_percentage").notNull().default(0),
-  position: integer("position").notNull().default(0),
-  notes: text("notes"),
-  // ── ADD-ONLY: live DB superset columns ──
-  materialId: integer("material_id"),
-  scrapPercent: numericMoney("scrap_percent"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
-  deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by"),
-}, (t) => [
-  index("idx_bom_items_bom_id").on(t.bomId),
-  index("idx_bom_items_component_id").on(t.componentId),
-  index("idx_bom_items_created_at").on(t.createdAt),
-  check("bom_items_component_type_chk", sql`${t.componentType} IN ('material','sub_assembly')`),
-]);
-
-export const insertBomItemSchema = createInsertSchema(bomItems, {
-  bomId: z.string().min(1, "BOM ID talab qilinadi"),
-  itemNumber: z.string().min(1, "Item raqami talab qilinadi"),
-  componentType: z.enum(["material", "sub_assembly"]),
-  componentId: z.string().min(1, "Komponent tanlash kerak"),
-  quantity: z.number().positive("Miqdor musbat bo'lishi kerak"),
-  scrapPercentage: z.number().min(0).max(100, "Brak foizi 0-100 oralig'ida bo'lishi kerak"),
-}).omit({ id: true, createdAt: true } as never);
-
-export type BomItem = typeof bomItems.$inferSelect;
-export type InsertBomItem = z.infer<typeof insertBomItemSchema>;
-
 // Routings (Texnologik jarayon bosh)
 export const routings = pgTable("routings", {
   id: serial("id").primaryKey(),
@@ -462,7 +386,8 @@ export const productionOrders = pgTable("production_orders", {
   id: serial("id").primaryKey(),
   orderNumber: varchar("order_number", { length: 50 }).notNull().unique(),
   productId: integer("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
-  bomId: varchar("bom_id").references(() => bomHeaders.id, { onDelete: "set null" }),
+  // NOTE: FK to bomHeaders removed (orphan pgTable deleted 2026-07-02) — plain column retained.
+  bomId: varchar("bom_id"),
   routingId: varchar("routing_id").references(() => routings.id, { onDelete: "set null" }),
   // Golden-thread SD->PP link (A1). NULLABLE BY DESIGN — internal/sample production
   // runs legitimately have no originating sales order. The two canonical create paths

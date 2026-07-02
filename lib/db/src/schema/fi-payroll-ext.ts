@@ -9,13 +9,15 @@ import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, serial, num
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { Position, approvalRequests, departments, users } from "./core-schema";
-import { crmCompanies, crmContacts } from "./crm-schema";
+// ORFAN CLEANUP (2026-07-02): unused import of crmCompanies/crmContacts from
+// "./crm-schema" removed — those pgTable declarations were deleted (dead
+// lib/db duplicates, Q-29 verified: never used in this file).
 import { Attendance } from "./hr-schema";
-import { materialCards, purchaseInvoices, purchaseOrders, vendors } from "./mm-schema";
+import { materialCards, vendors } from "./mm-schema";
 import { Order, orders, productMasters, productionOrders } from "./pp-schema";
 import { salesInvoices, salesOrders } from "./sd-schema";
 import { warehouses } from "./wms-schema";
-import { accounts, glDocuments, glLines, accountingPeriods, costCenters, profitCenters, payrollPeriods } from "./fi-gl";
+import { accounts, glDocuments, glLines, accountingPeriods, payrollPeriods } from "./fi-gl";
 import { customerPayments, invoicePayments } from "./fi-ap-ar";
 import { cashRegisters, insertAiFinanceInsightSchema, aiFinanceInsights } from "./fi-banking";
 

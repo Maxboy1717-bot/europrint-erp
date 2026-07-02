@@ -56,26 +56,6 @@ export const documentSequences = pgTable("document_sequences", {
 
 export type DocumentSequence = typeof documentSequences.$inferSelect;
 
-export const auditLogs = pgTable("audit_logs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  tableName: varchar("table_name", { length: 100 }).notNull(),
-  recordId: varchar("record_id", { length: 100 }).notNull(),
-  action: varchar("action", { length: 255 }).notNull(),
-  oldValues: jsonb("old_values"),
-  newValues: jsonb("new_values"),
-  changedFields: text("changed_fields").array(),
-  reason: text("reason"),
-  transactionId: varchar("transaction_id", { length: 100 }),
-  userId: varchar("user_id"),
-  userFullName: text("user_full_name"),
-  userRole: varchar("user_role", { length: 50 }),
-  ipAddress: varchar("ip_address", { length: 50 }),
-  userAgent: text("user_agent"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export type AuditLog = typeof auditLogs.$inferSelect;
-
 export const currencies = pgTable("currencies", {
   id: serial("id").primaryKey(),
   code: varchar("code", { length: 3 }).notNull().unique(),
@@ -113,9 +93,6 @@ export const approvalRequests = pgTable("approval_requests", {
 });
 
 export type ApprovalRequest = typeof approvalRequests.$inferSelect;
-
-export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, createdAt: true } as never);
-export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 export const insertCurrencySchema = createInsertSchema(currencies).omit({ id: true, createdAt: true } as never);
 export type InsertCurrency = z.infer<typeof insertCurrencySchema>;
