@@ -84,14 +84,20 @@ export const inventoryCounts = pgTable("inventory_counts", {
   // --- live-DB superset columns (schema-convergence A5; ADD-ONLY) ---
   countedBy: integer("counted_by").references(() => users.id, { onDelete: "set null" }),
   updatedAt: timestamp("updated_at"),
-  materialId: integer("material_id"), // single-material count (alongside line-level detail)
+  // NOTE: materialId/startedBy/glDocumentId corrected 2026-07-02 — verified via
+  // information_schema.columns (_audit/q.cjs) + migrations-drift.ts DDL history:
+  // material_id/started_by are TEXT (not integer) and gl_document_id is INTEGER
+  // (not varchar) in the live DB. No .references() on these columns, so this is
+  // an isolated type-correctness fix (see also schema-pos-ext.ts inventory_counts,
+  // fixed same day for the uuid->integer id/warehouse_id/count_id drift).
+  materialId: text("material_id"), // single-material count (alongside line-level detail)
   countedQty: numericMoney("counted_qty"),
   systemQty: numericMoney("system_qty"),
-  startedBy: integer("started_by"),
+  startedBy: text("started_by"),
   isWarehouseLocked: boolean("is_warehouse_locked").default(false),
   systemSnapshotAt: timestamp("system_snapshot_at"),
   totalVarianceValue: numericMoney("total_variance_value"),
-  glDocumentId: varchar("gl_document_id"),
+  glDocumentId: integer("gl_document_id"),
   pdfPath: text("pdf_path"),
   conductedBy: integer("conducted_by"),
 }, (t) => [
