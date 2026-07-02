@@ -29,18 +29,21 @@ interface Reclamation {
   customerName: string;
   productName: string | null;
   category: string;
-  status: "new" | "in_progress" | "resolved" | "rejected";
+  status: "new" | "investigating" | "resolved" | "rejected";
   priority: "low" | "medium" | "high" | "critical";
   resolutionDays: number | null;
   receivedAt: string;
   resolvedAt: string | null;
 }
 
+// Keys match the canonical qc_reclamations.status values (apps/api/src/modules/qc/
+// domain/aggregates/reclamation.aggregate.ts ReclamationStatus) — "investigating",
+// not "in_progress".
 const STATUS_CONFIG: Record<Reclamation["status"], { label: string; className: string }> = {
-  new:         { label: "Yangi",        className: "bg-blue-100 text-[var(--ep-blue)]" },
-  in_progress: { label: "Jarayonda",    className: "bg-yellow-100 text-[var(--ep-yellow)]" },
-  resolved:    { label: "Hal qilingan", className: "bg-emerald-100 text-[var(--ep-green)]" },
-  rejected:    { label: "Rad etilgan",  className: "bg-rose-100 text-[var(--ep-red)]" },
+  new:           { label: "Yangi",        className: "bg-blue-100 text-[var(--ep-blue)]" },
+  investigating: { label: "Jarayonda",    className: "bg-yellow-100 text-[var(--ep-yellow)]" },
+  resolved:      { label: "Hal qilingan", className: "bg-emerald-100 text-[var(--ep-green)]" },
+  rejected:      { label: "Rad etilgan",  className: "bg-rose-100 text-[var(--ep-red)]" },
 };
 
 const PRIORITY_CONFIG: Record<Reclamation["priority"], string> = {
@@ -149,7 +152,7 @@ export default function ReclamationsPage() {
 
   const items = selectArray<Reclamation>(data, "items");
   const newCount = items.filter((r) => r.status === "new").length;
-  const inProgress = items.filter((r) => r.status === "in_progress").length;
+  const inProgress = items.filter((r) => r.status === "investigating").length;
   const resolved = items.filter((r) => r.status === "resolved").length;
   const overSla = items.filter(
     (r) => r.resolutionDays !== null && r.resolutionDays > SLA_RESOLUTION_DAYS,
@@ -181,7 +184,7 @@ export default function ReclamationsPage() {
         ) : (
           <div className="space-y-2">
             {items.map((r) => {
-              const sCfg = STATUS_CONFIG[r.status];
+              const sCfg = STATUS_CONFIG[r.status] ?? { label: r.status, className: "bg-slate-100 text-slate-700" };
               const pCfg = PRIORITY_CONFIG[r.priority];
               const overdue = r.resolutionDays !== null && r.resolutionDays > SLA_RESOLUTION_DAYS;
               return (

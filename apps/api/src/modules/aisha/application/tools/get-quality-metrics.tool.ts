@@ -39,8 +39,11 @@ export class GetQualityMetricsTool implements IAishaTool {
         SELECT (SUM(CASE WHEN result='reject' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*),0) * 100) AS p
         FROM qc_inspections WHERE inspected_at::date = CURRENT_DATE
       `))[0]?.p ?? 0;
+      // qc_reclamations.status is new/investigating/resolved/rejected (canonical
+      // enum — see modules/qc/domain/aggregates/reclamation.aggregate.ts); there is
+      // no literal 'open' value, so "open" here means not yet resolved/rejected.
       const recl = rowsOf<{ c: number }>(await db.execute(sql`
-        SELECT COUNT(*)::int AS c FROM qc_reclamations WHERE status='open'
+        SELECT COUNT(*)::int AS c FROM qc_reclamations WHERE status NOT IN ('resolved','rejected')
       `))[0]?.c ?? 0;
       const def = rowsOf<{ c: number }>(await db.execute(sql`
         SELECT COUNT(*)::int AS c FROM qc_inspections WHERE result='reject' AND inspected_at::date = CURRENT_DATE
