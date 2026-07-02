@@ -5,7 +5,7 @@
  *                • Ops/payroll/cash         → {@link FinanceOpsRepo}
  *                • Invoices/Payments/GL     → {@link FinanceInvoiceRepo}
  *                • Reports (AR aging, etc.) → {@link FinanceReportRepo}
- *                • Budgets                  → {@link FinanceBudgetRepo}
+ *                • Budgets                  → {@link DrizzleFinanceBudgetsRepository}
  *                • CFO Config (P0-1)        → {@link FinanceCfoRepo}
  *                • Planning (P0-2)          → {@link FinancePlanningRepo}
  *                • Costing/Pricing (P0-2)   → {@link FinanceCostingRepo}
@@ -28,7 +28,7 @@ import {
 } from '../../domain/repositories/i-finance.repo';
 import { FinanceInvoiceRepo } from './drizzle-finance-invoice.repo';
 import { FinanceReportRepo } from './drizzle-finance-report.repo';
-import { FinanceBudgetRepo } from './drizzle-finance-budget.repo';
+import { DrizzleFinanceBudgetsRepository } from '../../budgets/drizzle-finance-budgets.repo';
 import { FinanceOpsRepo } from './drizzle-finance-ops.repo';
 import { FinanceCfoRepo } from './drizzle-finance-cfo.repo';
 import { FinancePlanningRepo } from './drizzle-finance-planning.repo';
@@ -40,7 +40,7 @@ export class FinanceRepository implements IFinanceRepo {
   constructor(
     private readonly invoiceRepo:  FinanceInvoiceRepo,
     private readonly reportRepo:   FinanceReportRepo,
-    private readonly budgetRepo:   FinanceBudgetRepo,
+    private readonly budgetRepo:   DrizzleFinanceBudgetsRepository,
     private readonly opsRepo:      FinanceOpsRepo,
     private readonly cfoRepo:      FinanceCfoRepo,
     private readonly planningRepo: FinancePlanningRepo,
@@ -82,7 +82,7 @@ export class FinanceRepository implements IFinanceRepo {
 
   // ── Budgets ─────────────────────────────────────────────────────────────────
   async findBudgetById(id: string): Promise<Result<FinanceRow>> { return this.budgetRepo.findBudgetById(id); }
-  async findBudgets(f: Parameters<FinanceBudgetRepo['findBudgets']>[0]): Promise<Result<{ items: FinanceRow[]; total: number }>> { return this.budgetRepo.findBudgets(f); }
+  async findBudgets(f: Parameters<DrizzleFinanceBudgetsRepository['findBudgets']>[0]): Promise<Result<{ items: FinanceRow[]; total: number }>> { return this.budgetRepo.findBudgets(f); }
   async saveBudget(budget: FinanceRow, lines: FinanceRow[]): Promise<Result<FinanceRow>> { return this.budgetRepo.saveBudget(budget, lines); }
   async updateBudgetStatus(id: string, status: string): Promise<Result<FinanceRow>> { return this.budgetRepo.updateBudgetStatus(id, status); }
   async updateActuals(budgetId: string): Promise<Result<FinanceRow>> { return this.budgetRepo.updateActuals(budgetId); }

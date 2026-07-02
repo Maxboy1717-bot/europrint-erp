@@ -17,7 +17,6 @@ import { FINANCE_PAYROLL_APP_REPO } from './domain/repositories/i-finance-payrol
 import { FinanceRepository } from './infrastructure/repositories/drizzle-finance.repo';
 import { FinanceInvoiceRepo } from './infrastructure/repositories/drizzle-finance-invoice.repo';
 import { FinanceReportRepo } from './infrastructure/repositories/drizzle-finance-report.repo';
-import { FinanceBudgetRepo } from './infrastructure/repositories/drizzle-finance-budget.repo';
 import { FinanceOpsRepo } from './infrastructure/repositories/drizzle-finance-ops.repo';
 import { FinanceCfoRepo } from './infrastructure/repositories/drizzle-finance-cfo.repo';
 import { FinancePlanningRepo } from './infrastructure/repositories/drizzle-finance-planning.repo';
@@ -193,7 +192,7 @@ const eventListeners = [
     CashierPayrollController,
   ],
   providers: [
-    FinanceInvoiceRepo, FinanceReportRepo, FinanceBudgetRepo,
+    FinanceInvoiceRepo, FinanceReportRepo,
     FinanceOpsRepo, FinanceCfoRepo, FinancePlanningRepo, FinanceCostingRepo, FinanceVarianceRepo,
     { provide: FINANCE_REPO, useClass: FinanceRepository },
     { provide: GL_POSTING_REPO, useClass: DrizzleGlPostingRepository },
@@ -205,7 +204,11 @@ const eventListeners = [
     FpCycleCronService,
     { provide: FINANCE_GL_REPO, useClass: DrizzleFinanceGlRepository },
     GlService,
-    { provide: FINANCE_BUDGETS_REPO, useClass: DrizzleFinanceBudgetsRepository },
+    // Bare class provider so DrizzleFinanceBudgetsRepository can also be injected
+    // directly (by class token) from the FinanceRepository CQRS facade, sharing
+    // the same singleton instance as the FINANCE_BUDGETS_REPO token below.
+    DrizzleFinanceBudgetsRepository,
+    { provide: FINANCE_BUDGETS_REPO, useExisting: DrizzleFinanceBudgetsRepository },
     BudgetsService,
     { provide: FINANCE_PAYROLL_REPO, useClass: DrizzleFinancePayrollRepository },
     PayrollService,
