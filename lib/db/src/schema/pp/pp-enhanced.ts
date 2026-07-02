@@ -490,31 +490,13 @@ export const aiPlanningDecisions = pgTable("ai_planning_decisions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const aiPlanningConfig = pgTable("ai_planning_config", {
-  id: serial("id").primaryKey(),
-  configKey: varchar("config_key", { length: 50 }).notNull().unique(),
-  configValue: text("config_value").notNull(),
-  description: text("description"),
-  // ── ADD-ONLY: live DB superset columns ──
-  autoApprovalThreshold: numericMoney("auto_approval_threshold"),
-  maxShiftHours: numericMoney("max_shift_hours"),
-  batchGroupingEnabled: boolean("batch_grouping_enabled"),
-  energyOptimizationWeight: numericMoney("energy_optimization_weight"),
-  changeoverMinutes: integer("changeover_minutes"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-});
-
 export const insertAiProductionPlanSchema = createInsertSchema(aiProductionPlans).omit({ id: true, createdAt: true, updatedAt: true, approvedAt: true } as never);
 export const insertAiPlanningDecisionSchema = createInsertSchema(aiPlanningDecisions).omit({ id: true, createdAt: true, executedAt: true } as never);
-export const insertAiPlanningConfigSchema = createInsertSchema(aiPlanningConfig).omit({ id: true, createdAt: true, updatedAt: true } as never);
 
 export type AiProductionPlan = typeof aiProductionPlans.$inferSelect;
 export type InsertAiProductionPlan = z.infer<typeof insertAiProductionPlanSchema>;
 export type AiPlanningDecision = typeof aiPlanningDecisions.$inferSelect;
 export type InsertAiPlanningDecision = z.infer<typeof insertAiPlanningDecisionSchema>;
-export type AiPlanningConfig = typeof aiPlanningConfig.$inferSelect;
-export type InsertAiPlanningConfig = z.infer<typeof insertAiPlanningConfigSchema>;
 
 // Equipment Maintenance
 export const equipmentMaintenance = pgTable("equipment_maintenance", {
