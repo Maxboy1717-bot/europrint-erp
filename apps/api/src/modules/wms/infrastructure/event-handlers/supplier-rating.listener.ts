@@ -4,11 +4,11 @@
  *   QC-fail (SupplierQualityFailEvent) signalida ta'minotchining oxirgi N-oy
  *   oynasi bo'yicha 4-faktor reytingini AVTO qayta hisoblaydi (window recompute).
  *
- *   ⚠️ Bu listener mavjud MM `SupplierQualityFailListener` (placeholder -1)
- *   bilan PARALLEL ishlaydi — NestJS CQRS bir event klassiga bir nechta
- *   @EventsHandler ni qo'llab-quvvatlaydi (MesCompletedEvent kabi). Bu listener
- *   xom -1 o'rniga oxirgi-oyna bo'yicha HAQIQIY reytingni yozadi (Q-40: soxta
- *   guess emas, jonli agregat). Q-46: faqat ADDITIVE — mavjud yo'lga tegmaydi.
+ *   2026-07-02: MM modulidagi hardcoded placeholder listener
+ *   (`SupplierQualityFailListener`, currentRating=5→4 xom qiymat) olib
+ *   tashlandi — race condition (2 mustaqil listener bitta eventga javob
+ *   berardi). Endi SHU listener yagona javobgar: oxirgi-oyna bo'yicha
+ *   HAQIQIY reytingni yozadi (Q-40: soxta guess emas, jonli agregat).
  *
  *   #22 listener-resilience: butun oqim best-effort — QC qarori allaqachon
  *   commit bo'lgan; reyting hisobidagi xato event bus'ga qaytarib otilmaydi
