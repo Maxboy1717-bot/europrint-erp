@@ -67,6 +67,9 @@ import { WarehouseExitGuardController } from './presentation/warehouse-exit-guar
 import { WarehouseExitGuardService } from './application/warehouse-exit-guard.service';
 import { DrizzleWarehouseExitGuardRepo } from './infrastructure/repositories/drizzle-warehouse-exit-guard.repo';
 import { WAREHOUSE_EXIT_GUARD_REPO } from './domain/repositories/i-warehouse-exit-guard.repo';
+// 3.2-brak-ushlanma-zanjiri — IotTabletController.reportProductionDefect gate (MesModule kanonik egasi,
+// bu yerda faqat DI uchun to'g'ridan provide qilinadi — IotModule MesModule'ni import qilmaydi).
+import { MesBrakLimitRepository } from '@modules/mes/infrastructure/repositories/mes-brak-limit.repo';
 
 const commandHandlers = [RecordSensorReadingHandler, RegisterDeviceHandler, UpdateDeviceThresholdsHandler];
 const eventHandlers = [AnomalyDetectedHandler];
@@ -136,6 +139,8 @@ const newRepositories = [
     // FAZA Q
     { provide: WAREHOUSE_EXIT_GUARD_REPO, useClass: DrizzleWarehouseExitGuardRepo },
     WarehouseExitGuardService,
+    // 3.2-brak-ushlanma-zanjiri
+    MesBrakLimitRepository,
   ],
   exports: [SENSOR_REPO],
 })

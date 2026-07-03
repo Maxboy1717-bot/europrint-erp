@@ -92,6 +92,8 @@ import {
   FinanceExtendedIncomeController,
   FinanceExtendedPayrollController,
 } from './presentation/finance-extended.controller';
+// 3.2-brak-ushlanma-zanjiri — payroll_calculations.other_deductions'ga brak-jarima qo'shish uchun
+import { MesBrakLimitRepository } from '@modules/mes/infrastructure/repositories/mes-brak-limit.repo';
 import { CASHFLOW_REPO } from './cashflow/i-cashflow.repo';
 import { DrizzleCashflowRepository } from './cashflow/drizzle-cashflow.repo';
 import { CashflowService } from './cashflow/cashflow.service';
@@ -231,6 +233,7 @@ const eventListeners = [
     { provide: FINANCE_EXTENDED_REPO, useClass: DrizzleFinanceExtendedRepository },
     FinanceExtendedService,
     FinanceExtendedPayrollService,
+    MesBrakLimitRepository,
     { provide: CASHFLOW_REPO, useClass: DrizzleCashflowRepository },
     CashflowService,
     { provide: FINANCE_REPORTS_REPO, useClass: DrizzleFinanceReportsRepository },

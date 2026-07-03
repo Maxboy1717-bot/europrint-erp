@@ -37,6 +37,7 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { IotTabletService } from '../application/iot-tablet.service';
 import { OeeCalculatorService } from '../oee/oee-calculator.service';
+import { MesBrakLimitRepository } from '@modules/mes/infrastructure/repositories/mes-brak-limit.repo';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   IotPassthroughSchema,
@@ -75,6 +76,7 @@ export class IotTabletController {
     private readonly tabletSvc: IotTabletService,
     private readonly oeeSvc: OeeCalculatorService,
     private readonly eventBus: EventBus,
+    private readonly brakLimitRepo: MesBrakLimitRepository,
   ) {}
 
   // -- Tablet PWA endpoints ----------------------------------------------------
@@ -527,7 +529,12 @@ export class IotTabletController {
         false, ${dto.notes ?? null}, NOW()
       )
     `);
-    return { sessionId, defectCount: dto.defectCount, reported: true };
+    // 3.2-brak-ushlanma-zanjiri (Master-reja §5.3): work_centers.brak_limit_pct konfiguratsiya
+    // qilingan bo'lsa (egasi-data — C14 hali OCHIQ, shu sabab % FABRIKATSIYA QILINMAYDI, faqat
+    // MAVJUD ustun o'qiladi), limit oshganda signal + (agar HR fine_rules siyosati mavjud bo'lsa)
+    // discipline_records ushlanma yozuvi yaratiladi. Limit NULL bo'lsa — fail-safe, hech narsa.
+    const brakCheck = await this.brakLimitRepo.checkBrakLimit(sessionId);
+    return { sessionId, defectCount: dto.defectCount, reported: true, brakLimitCheck: brakCheck };
   }
 
   @ApiOperation({ summary: 'Submit production evaluation' })
