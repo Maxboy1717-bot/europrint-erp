@@ -166,12 +166,15 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
 
   async getShiftMovementTotals(shiftId: number): Promise<Result<ShiftMovementTotals>> {
     try {
-      // Aggregate inflow vs outflow. cash_in is the only inflow type; everything else
-      // (cash_out / salary_payout / advance / expense) reduces the drawer.
+      // Aggregate inflow vs outflow in UZS-EQUIVALENT (vizyon 2.14 — kassir so'm+dollar): the
+      // physical drawer holds UZS, so a USD movement must contribute amount×exchange_rate, not
+      // its raw native amount, or the X/Z reconciliation (expectedAmount/variance) is corrupted.
+      // currency='UZS' rows have exchange_rate=NULL → COALESCE keeps them as amount×1.
+      const uzsEquivalent = sql`(${cashierMovements.amount} * COALESCE(${cashierMovements.exchangeRate}, 1))`;
       const rows = await db
         .select({
-          cashIn: sql<string>`COALESCE(SUM(CASE WHEN ${cashierMovements.type} = 'cash_in' THEN ${cashierMovements.amount} ELSE 0 END), 0)`,
-          cashOut: sql<string>`COALESCE(SUM(CASE WHEN ${cashierMovements.type} <> 'cash_in' THEN ${cashierMovements.amount} ELSE 0 END), 0)`,
+          cashIn: sql<string>`COALESCE(SUM(CASE WHEN ${cashierMovements.type} = 'cash_in' THEN ${uzsEquivalent} ELSE 0 END), 0)`,
+          cashOut: sql<string>`COALESCE(SUM(CASE WHEN ${cashierMovements.type} <> 'cash_in' THEN ${uzsEquivalent} ELSE 0 END), 0)`,
           count: sql<number>`COUNT(*)`,
         })
         .from(cashierMovements)
@@ -179,11 +182,12 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
       const agg = rows[0] ?? { cashIn: '0', cashOut: '0', count: 0 };
 
       // Itemised per-type tally for the X/Z reconciliation breakdown — one grouped SQL (no N+1).
+      // `total` is also UZS-equivalent so the breakdown sums match cashIn/cashOut above.
       const breakdown = await db
         .select({
           type: cashierMovements.type,
           count: sql<number>`COUNT(*)`,
-          total: sql<string>`COALESCE(SUM(${cashierMovements.amount}), 0)`,
+          total: sql<string>`COALESCE(SUM(${uzsEquivalent}), 0)`,
         })
         .from(cashierMovements)
         .where(eq(cashierMovements.shiftId, shiftId))

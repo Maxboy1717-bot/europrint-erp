@@ -212,11 +212,18 @@ export class CashierHubService {
     let cashIn = 0;
     let cashOut = 0;
     const lines: CashierLedgerLine[] = (Array.isArray(movesRes.data) ? movesRes.data : []).map((m) => {
+      // vizyon 2.14 — kassir so'm+dollar: the physical drawer holds UZS, so the running balance
+      // and cashIn/cashOut totals must use the UZS-equivalent (amount × exchangeRate), never the
+      // raw native amount — otherwise a USD movement corrupts the X/Z reconciliation (drawer math).
+      // `amount` on the line stays the movement's NATIVE amount (what the cashier actually
+      // handled) for display; `exchangeRate`/`currency` are exposed alongside it (already set below).
       const amount = Number(m.amount);
+      const exchangeRate = m.exchangeRate === null || m.exchangeRate === undefined ? null : Number(m.exchangeRate);
+      const uzsAmount = exchangeRate && exchangeRate > 0 ? amount * exchangeRate : amount;
       const isInflow = m.type === INFLOW_TYPE;
-      const signed = isInflow ? amount : -amount;
-      if (isInflow) cashIn += amount;
-      else cashOut += amount;
+      const signed = isInflow ? uzsAmount : -uzsAmount;
+      if (isInflow) cashIn += uzsAmount;
+      else cashOut += uzsAmount;
       running += signed;
       return {
         id: m.id,
@@ -229,7 +236,7 @@ export class CashierHubService {
         pinVerified: Boolean(m.pinVerified),
         createdAt: m.createdAt ?? null,
         currency: m.currency ?? 'UZS',
-        exchangeRate: m.exchangeRate === null || m.exchangeRate === undefined ? null : Number(m.exchangeRate),
+        exchangeRate,
       };
     });
 
