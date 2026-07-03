@@ -94,6 +94,9 @@ import { PayrollService } from './payroll/payroll.service';
 import { PayrollClosureService } from './payroll/payroll-closure.service';
 import { CkpGateService } from './payroll/ckp-gate';
 import { HrPayrollClosureController } from './payroll/hr-payroll-closure.controller';
+import { BonusRepository } from './payroll/bonus.repository';
+import { BonusService } from './payroll/bonus.service';
+import { HrBonusController } from './payroll/hr-bonus.controller';
 import { HR_LEAVE_SVC_REPO } from './leave/i-hr-leave-svc.repo';
 import { DrizzleHrLeaveSvcRepository } from './leave/drizzle-hr-leave-svc.repo';
 import { LeaveService } from './leave/leave.service';
@@ -190,6 +193,7 @@ export const hrControllers = [
   HrSafetyController,
   HrOffboardingController,
   HrPayrollClosureController,
+  HrBonusController,
   HrLeaveAccrualController,
   HrGsdController,
   EmployeesForFaceController,
@@ -215,6 +219,8 @@ export const hrProviders = [
   { provide: HR_PAYROLL_REPO, useClass: DrizzleHrPayrollRepository },
   PayrollClosureService,
   CkpGateService,
+  BonusRepository,
+  BonusService,
   PayrollService,
   { provide: HR_LEAVE_SVC_REPO, useClass: DrizzleHrLeaveSvcRepository },
   LeaveService,

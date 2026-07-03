@@ -11,6 +11,7 @@ import { PayrollRecord } from '../domain/aggregates/payroll-record.aggregate';
 import { GlPostingService, type JournalLine } from '../../finance/domain/services/gl-posting.service';
 import { CkpGateService, type CkpGateDecision } from './ckp-gate';
 import { LmsCardGateService } from '../../lms/application/services/lms-card-gate.service';
+import { BonusService } from './bonus.service';
 import { HR_REPO, type IHrRepo } from '../domain/repositories/i-hr.repo';
 import type { DomainEvent } from '@shared/domain/domain-event';
 
@@ -105,6 +106,7 @@ export class PayrollService {
     private readonly gl: GlPostingService,
     private readonly ckpGate: CkpGateService,
     private readonly lmsGate: LmsCardGateService,
+    private readonly bonusSvc: BonusService,
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -662,6 +664,16 @@ export class PayrollService {
     if (!inputsR.ok) return inputsR as unknown as Result<never>;
     const inputs = inputsR.data;
 
+    // ⭐ 3.15-mukofot-mexanizm: davr ichida HR/DIRECTOR tasdiqlagan ('approved')
+    // mukofotlar (bonus_payments) — jarima (discipline_records.fine_amount) bilan
+    // bir xil naqsh, faqat manba jadval bonus. Bitta so'rov (N+1 yo'q), xodim
+    // bo'yicha xarita; topilmagan xodim uchun 0 (FABRIKATSIYA yo'q — Q-40).
+    const bonusMapR = await this.bonusSvc.sumApprovedGroupedByEmployee(from, to);
+    const bonusByEmployee = bonusMapR.ok ? bonusMapR.data : new Map<number, number>();
+    if (!bonusMapR.ok) {
+      this.logger.warn(`generatePeriodRows: mukofot yig'indisini o'qishda xato — 0 deb olinadi: ${bonusMapR.error.message}`);
+    }
+
     let generated = 0;
     let inserted = 0;
     let updated = 0;
@@ -689,17 +701,22 @@ export class PayrollService {
         continue;
       }
       const gatedGross = gatedR.data.gatedGross ?? 0;
+      // 3.15: HR/DIRECTOR tasdiqlagan mukofot (davr ichida) gross'ga qo'shiladi —
+      // topilmasa 0 (Map.get undefined → soxta son yozilmaydi).
+      const bonus = bonusByEmployee.get(inp.employeeId) ?? 0;
+      const netPay = gatedGross + bonus;
       const note = gatedR.data.lmsBlocked
         ? `karta-oylik: LMS-darvoza yopiq (darslik tugamagan)`
-        : `karta-oylik: ЦКП-gate kun ${gatedR.data.gatedDays}/${gatedR.data.totalDays}`;
+        : `karta-oylik: ЦКП-gate kun ${gatedR.data.gatedDays}/${gatedR.data.totalDays}` +
+          (bonus > 0 ? ` + mukofot ${bonus.toLocaleString('uz-UZ')}` : '');
 
       const upsertR = await this.hrPayrollRepo.upsertPayrollRow({
         periodId,
         employeeId: inp.employeeId,
         baseSalary: inp.baseSalary ?? 0,
-        bonus: 0,
+        bonus,
         deductions: 0,
-        netPay: gatedGross,
+        netPay,
         workDays: gatedR.data.totalDays > 0 ? gatedR.data.gatedDays : null,
         status: 'draft',
         notes: note,
