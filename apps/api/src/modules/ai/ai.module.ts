@@ -11,6 +11,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '../auth/auth.module';
 // T18-C2 — kanonik ЦКП-fakt yozish uchun (AI-answer → ckp_fact_values source=AI_CHAT)
 import { OrgStructureModule } from '../org-structure/org-structure.module';
+// 2.8 — AI-reservation → warehouse_stock.reserved_quantity wiring (WMS_REPO.reserveMaterial)
+import { WmsModule } from '../wms/wms.module';
 import { AiRouterService }          from './application/services/ai-router.service';
 import { AiRouterCallService }       from './application/services/ai-router-call.service';
 import { CentralAiService }          from './application/services/central-ai.service';
@@ -90,6 +92,8 @@ import { AiDailyReportCron }         from './application/services/ai-daily-repor
     AuthModule,
     // T18-C2 — exports CkpFactService (kanonik ЦКП-fakt yozish: formula + deadline + cascade).
     OrgStructureModule,
+    // 2.8 — exports WMS_REPO (IWmsRepository.reserveMaterial) for AiReservationService.
+    WmsModule,
   ],
   providers: [
     AiRouterRepository,
