@@ -45,6 +45,16 @@ export class ProductionFactsController {
   }
 
   /**
+   * 3.3-norma-reja-fakt: kunlik reja-fakt % dashboard.
+   * Ish-markazi (work_centers.norma_m2_per_shift / norma_kg_per_shift) normasini
+   * o'sha kundagi production_fact.good_quantity yig'indisi bilan solishtiradi.
+   */
+  @Get('plan-fact-dashboard')
+  async getPlanFactDashboard(@Query() q: Record<string, string>) {
+    return unwrapOrInternal(await this.svc.getPlanFactDashboard(q));
+  }
+
+  /**
    * PA2-14 ACL-translated variant of `operators`. New BC-2 (MES)
    * consumers should target `/v2`; the legacy endpoint stays for
    * backwards-compat.

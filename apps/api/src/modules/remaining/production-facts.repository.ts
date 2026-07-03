@@ -138,6 +138,57 @@ export class ProductionFactsRepository {
   }
   }
 
+  // ── DASHBOARD: kunlik reja-fakt % — production_fact (fakt) vs work_centers norma (reja) ──
+  // 3.3-norma-reja-fakt: har ish-markazi uchun kunlik smena-normasi (norma_m2_per_shift,
+  // yoki norma_kg_per_shift agar unit_preference='kg') bilan o'sha kundagi good_quantity
+  // yig'indisi solishtiriladi. Ma'lumot yo'q joyda 0/null qaytariladi (Q-40, fabrikatsiya yo'q).
+  async getPlanFactDashboard(startDate: string | null, endDate: string | null, workCenterId: string | null): Promise<Result<Row[]>>  {
+  try {
+      // production_fact.work_center_id ba'zi eski qatorlarda NULL bo'lishi mumkin (bitta
+      // qadimgi test-yozuv) — bunday qatorlar work_centers bilan bog'lanmagani uchun
+      // dashboard'da hisobga olinmaydi (reja-fakt % faqat ish-markaziga bog'langan faktlar
+      // uchun mazmunli).
+      return exec(sql`
+        WITH daily_fact AS (
+          SELECT
+            pf.work_center_id,
+            pf.fact_date,
+            SUM(pf.good_quantity)  AS actual_qty,
+            SUM(pf.fact_quantity)  AS planned_qty_input,
+            SUM(pf.scrap_quantity) AS defect_qty,
+            COUNT(*)               AS fact_rows
+          FROM production_fact pf
+          WHERE pf.work_center_id IS NOT NULL
+            AND (${startDate}::date IS NULL OR pf.fact_date::date >= ${startDate}::date)
+            AND (${endDate}::date   IS NULL OR pf.fact_date::date <= ${endDate}::date)
+            AND (${workCenterId}::int IS NULL OR pf.work_center_id = ${workCenterId}::int)
+          GROUP BY pf.work_center_id, pf.fact_date
+        )
+        SELECT
+          df.fact_date,
+          wc.id                    AS work_center_id,
+          wc.code                  AS work_center_code,
+          wc.name                  AS work_center_name,
+          wc.unit_preference,
+          CASE WHEN wc.unit_preference = 'kg' THEN wc.norma_kg_per_shift ELSE wc.norma_m2_per_shift END
+                                    AS norma_per_shift,
+          df.actual_qty,
+          df.defect_qty,
+          df.fact_rows,
+          CASE
+            WHEN COALESCE(CASE WHEN wc.unit_preference = 'kg' THEN wc.norma_kg_per_shift ELSE wc.norma_m2_per_shift END, 0) > 0
+              THEN ROUND((df.actual_qty::numeric / (CASE WHEN wc.unit_preference = 'kg' THEN wc.norma_kg_per_shift ELSE wc.norma_m2_per_shift END)) * 100, 2)
+            ELSE NULL
+          END AS plan_fact_percent
+        FROM daily_fact df
+        JOIN work_centers wc ON wc.id = df.work_center_id
+        ORDER BY df.fact_date DESC, wc.code
+      `);
+  } catch (_e) {
+    return Err(String(_e));
+  }
+  }
+
   // ── CREATE: write to production_fact (canonical table with shift + product_id) ──
   async create(body: Row): Promise<Result<Row | null>>  {
   try {

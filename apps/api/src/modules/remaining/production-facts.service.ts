@@ -34,6 +34,15 @@ export class ProductionFactsService {
     return r.data;
   }
 
+  /** 3.3-norma-reja-fakt: kunlik reja-fakt % — production_fact vs work_centers norma. */
+  async getPlanFactDashboard(q: Record<string, string>): Promise<Result<object, AppError>> {
+    const r = await safeCall(() => this.repo.getPlanFactDashboard(
+      q['startDate'] ?? null, q['endDate'] ?? null, q['workCenterId'] ?? null,
+    ));
+    if (!r.ok) { this.logger.warn(`getPlanFactDashboard: ${r.error}`); return Ok([]); }
+    return Ok(r.data);
+  }
+
   async create(body: Record<string, unknown>) {
     const r = await safeCall(() => this.repo.create(body));
     if (!r.ok) { this.logger.error(`create: ${r.error}`); throw new InternalServerErrorException('Ishlab chiqarish fakti yaratishda xatolik'); }
