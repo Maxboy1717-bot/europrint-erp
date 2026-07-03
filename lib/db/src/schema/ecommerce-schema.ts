@@ -20,7 +20,13 @@ import { crmLeads } from "./crm-contacts";
 // Public Products (Ommaviy mahsulotlar)
 export const publicProducts = pgTable("public_products", {
   id: serial("id").primaryKey(),
-  categoryId: varchar("category_id").references(() => productCategories.id, { onDelete: "set null" }),
+  // NOTE (2026-07-03, public-products-category-id-int migration): was varchar,
+  // but productCategories.id is `serial` (integer) — corrected to match.
+  // NOTE: portfolioItems.categoryId below has the SAME varchar/integer schema
+  // mismatch (live DB column is integer) — tracked separately, not fixed here
+  // (out of scope for the public_products/web-catalog fix). 0 rows affected
+  // here either way (verified live, 2026-07-03).
+  categoryId: integer("category_id").references(() => productCategories.id, { onDelete: "set null" }),
   name: text("name").notNull(),
   nameRu: text("name_ru"),
   slug: varchar("slug", { length: 100 }).notNull().unique(),

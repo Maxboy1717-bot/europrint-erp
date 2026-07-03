@@ -41,7 +41,7 @@ export async function ecommerceUpdateCategory(id: string, body: Record<string, u
 
 export async function ecommerceCheckCategoryEmpty(id: string) {
   return safeCall(async () => {
-  const [productCount] = await db.select({ count: count() }).from(publicProducts).where(eq(publicProducts.categoryId, id));
+  const [productCount] = await db.select({ count: count() }).from(publicProducts).where(eq(publicProducts.categoryId, parseInt(id)));
   if (productCount && Number(productCount.count) > 0) {
     // I18N_LEAK: bare helper function — no I18nService DI. Caller may translate via 'errors.categoryHasProducts'.
     throw new BadRequestException("Bu kategoriyada mahsulotlar mavjud. Avval mahsulotlarni boshqa kategoriyaga o'tkazing.");
@@ -70,11 +70,11 @@ export async function ecommerceListProducts(query: Record<string, unknown>) {
   const page = parseInt(String(query.page)) || 1;
   const limit = parseInt(String(query.limit)) || 20;
   const offset = (page - 1) * limit;
-  const categoryId = query.categoryId ? String(query.categoryId) : undefined;
+  const categoryId = query.categoryId ? parseInt(String(query.categoryId)) : undefined;
   const search = query.search as string | undefined;
   const inStock = query.inStock !== undefined && query.inStock !== '' ? query.inStock === 'true' : undefined;
   const conditions = [];
-  if (categoryId) conditions.push(eq(publicProducts.categoryId, categoryId));
+  if (categoryId !== undefined && !Number.isNaN(categoryId)) conditions.push(eq(publicProducts.categoryId, categoryId));
   if (search) conditions.push(sql`(${publicProducts.name} ILIKE ${`%${search}%`} OR ${publicProducts.slug} ILIKE ${`%${search}%`})`);
   if (inStock !== undefined) conditions.push(eq(publicProducts.inStock, inStock));
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

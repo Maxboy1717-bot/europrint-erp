@@ -16,10 +16,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Globe, Pencil, Trash2, Eye, Sparkles, Send, Newspaper } from "lucide-react";
+import { Plus, Globe, Pencil, Trash2, Eye, Sparkles, Send, Newspaper, Package } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { NewsItem } from "./MarketingWebsiteCMSTypes";
+import { MarketingWebsiteCMSCatalog } from "./MarketingWebsiteCMSCatalog";
 import { EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
@@ -190,6 +191,7 @@ export default function MarketingWebsiteCMS() {
         <TabsList>
           <TabsTrigger value="blog">{t("blogMaqolalar")}</TabsTrigger>
           <TabsTrigger value="news"><Newspaper className="h-4 w-4 mr-1" />{t("yangiliklar")}</TabsTrigger>
+          <TabsTrigger value="catalog"><Package className="h-4 w-4 mr-1" />{t("katalog", "Katalog")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="blog" className="space-y-4 mt-4">
@@ -279,6 +281,10 @@ export default function MarketingWebsiteCMS() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="catalog" className="mt-4">
+          <MarketingWebsiteCMSCatalog />
         </TabsContent>
       </Tabs>
       <ConfirmDialog
