@@ -466,5 +466,7 @@
   "RobotsView.emailYuborish": "Отправить email",
   "RobotsView.telegramYuborish": "Отправить Telegram",
   "EntityCard.qongiroq": "Звонок",
-  "EntityCard.orta": "→ Средний"
+  "EntityCard.orta": "→ Средний",
+  "ExtendedAIPanelSections.slaBuzilishlar": "Нарушения SLA",
+  "ExtendedAIPanelSections.faoliyatsizBitimlar3Kun": "Неактивные сделки (3+ дней)"
 }

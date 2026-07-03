@@ -1,1 +1,20 @@
-{}
+{
+  "title": "Аналитика",
+  "loading": "Загрузка...",
+  "error": "Произошла ошибка",
+  "EngagementTab.faolFoydalanuvchilar": "Активные пользователи",
+  "LeaderboardTab.tugatish": "Завершение %",
+  "LeaderboardTab.ortachaBall": "Средний балл",
+  "OutcomesTab.faolOquvchilar": "Активные учащиеся",
+  "OutcomesTab.tugatish": "Завершение %",
+  "OutcomesTab.ortachaBall": "Средний балл",
+  "OutcomesTab.ortachaDaraja": "Средний уровень",
+  "OutcomesTab.tasdiqlangan": "Подтверждено (%)",
+  "RemainingTabsA.yangiTayinlanganlar": "Новые назначения",
+  "RemainingTabsB.ortachaBall": "Средний балл %",
+  "RemainingTabsB.ortachaVaqtS": "Среднее время (с)",
+  "RemainingTabsB.xodimlarSoni": "Количество сотрудников",
+  "RemainingTabsB.otishFoizi": "Процент прохождения %",
+  "RemainingTabsUsers.aktivXodimlar": "Активные сотрудники",
+  "RemainingTabsUsers.xodimlarSoni": "Количество сотрудников"
+}

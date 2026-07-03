@@ -1,1 +1,8 @@
-{}
+{
+  "title": "Система ERP",
+  "loading": "Загрузка...",
+  "error": "Произошла ошибка",
+  "ERPDowntimeTab.1Smena": "1-я смена",
+  "ERPDowntimeTab.2Smena": "2-я смена",
+  "ERPDowntimeTab.3Smena": "3-я смена"
+}

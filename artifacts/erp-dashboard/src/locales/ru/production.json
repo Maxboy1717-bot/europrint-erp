@@ -477,5 +477,19 @@
   "taJamiBuyurtma": "Всего заказов: {count}",
   "buHaftaTayyorBolgan": "Готово на этой неделе",
   "taKutmoqda": "Ожидает: {count}",
-  "bajarilganJamiBuyurtmalar": "Выполнено/всего заказов"
+  "bajarilganJamiBuyurtmalar": "Выполнено/всего заказов",
+  "helpers.jarayonda": "В процессе",
+  "helpers.qcToxtatdi": "QC остановил",
+  "helpers.rejalashtirilganTexnikKorik": "Плановый технический осмотр",
+  "ProductionOrder360.jarayonda": "В процессе",
+  "ProductionOrder360.qcToxtatdi": "QC остановил",
+  "TechPPExtended.stanoqTanlash": "Выбор станка",
+  "TechPPExtended.xarajatOptimizatsiya": "Оптимизация затрат",
+  "TechPPExtended.mijozTalablari": "Требования клиента",
+  "TechPPExtended.ozgarishlarTarixi": "История изменений",
+  "TechPPExtended.parallelBuyurtmalar": "Параллельные заказы",
+  "TechPPExtended.smenaBoshqaruvi": "Управление сменами",
+  "TechPPExtended.parallelJarayonlar": "Параллельные процессы",
+  "TechPPExtended.yetkazishKalk": "Расчёт доставки",
+  "TechPPExtended.kpiOgish": "Отклонение KPI"
 }

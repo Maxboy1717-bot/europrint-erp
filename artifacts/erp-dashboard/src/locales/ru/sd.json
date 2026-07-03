@@ -403,5 +403,13 @@
   "csvFirstRowHint": "Первая строка — заголовки:",
   "cancelBtn": "Отмена",
   "importingBtn": "Загрузка...",
-  "importBtn": "Импортировать"
+  "importBtn": "Импортировать",
+  "orders.qatorlar": "Позиции заказа (товары)",
+  "orders.qator": "Позиция",
+  "orders.mahsulotYoq": "Каталог продукции пуст — сначала добавьте продукцию.",
+  "orders.mahsulot": "Продукция",
+  "orders.soni": "Количество",
+  "orders.birlik": "Единица измерения",
+  "orders.narx": "Цена",
+  "orders.qatorlarJami": "Итого по позициям"
 }
