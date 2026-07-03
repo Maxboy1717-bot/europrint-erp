@@ -70,6 +70,25 @@ export class HrDashboardExtraService {
     return this.repo.getContractsExpiring(days);
   }
 
+  async getContractsProjected(page: number, limit: number): Promise<Result<{
+    id: unknown; fullName: string; contractNumber: string; contractType: string;
+    startDate: string; endDate: string; status: string; daysLeft: number;
+  }[], AppError>> {
+    const r = await this.repo.getContracts(page, limit);
+    if (!r.ok) return r as Result<never, AppError>;
+    const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
+    return Ok(rows.map(row => ({
+      id:             row.id,
+      fullName:       String(row.full_name ?? ''),
+      contractNumber: String(row.contract_number ?? ''),
+      contractType:   String(row.contract_type ?? ''),
+      startDate:      String(row.start_date ?? ''),
+      endDate:        String(row.end_date ?? ''),
+      status:         String(row.status ?? ''),
+      daysLeft:       Number(row.days_left ?? 0),
+    })));
+  }
+
   async getContractsExpiringProjected(days: number): Promise<Result<{
     id: unknown; fullName: string; contractNumber: string;
     endDate: string; daysLeft: number; urgency: 'critical' | 'warning' | 'info';

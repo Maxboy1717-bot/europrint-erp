@@ -132,7 +132,6 @@ export class LmsModulesController {
 
   @ApiOperation({ summary: 'List modules' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async listModules(@Query('courseId') courseId?: string) {

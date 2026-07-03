@@ -83,10 +83,13 @@ export class HrDashboardExtraController {
   }
 
   @ApiOperation({ summary: 'Get contracts' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-9 (use /contracts/expiring)' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('contracts')
-  async getContracts(@Query() _query: Record<string, unknown>) {
-    return notImplemented('GET /hr/contracts');
+  async getContracts(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(parseInt(page ?? '1', 10) || 1, 1);
+    const l = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
+    const r = await this.svc.getContractsProjected(p, l);
+    return { data: r.ok && Array.isArray(r.data) ? r.data : [] };
   }
 
   @ApiOperation({ summary: 'Get contracts expiring' })

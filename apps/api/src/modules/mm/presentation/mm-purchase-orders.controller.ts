@@ -241,7 +241,9 @@ export class MmPurchaseOrdersController {
   }
 
   @ApiOperation({ summary: 'Delete po' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-10' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: "Faqat draft holatdagi buyurtma o'chiriladi" })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
@@ -256,7 +258,9 @@ export class MmPurchaseOrdersController {
   }
 
   @ApiOperation({ summary: 'Update po' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-10' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: "Faqat draft holatdagi buyurtma tahrirlanadi" })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id')
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async updatePo(

@@ -164,14 +164,22 @@ export class MmDashboardController {
   }
 
   @ApiOperation({ summary: 'Get vendor invoices' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('vendor-invoices') @Roles(...MM_READ)
-  async getVendorInvoices() { return notImplemented('GET /mm/vendor-invoices'); }
+  async getVendorInvoices() {
+    this.logger.log('GET vendor invoices');
+    return unwrapOrThrow(await this.svc.getVendorInvoices());
+  }
 
   @ApiOperation({ summary: 'Get vendor invoice by id' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('vendor-invoices/:id') @Roles(...MM_READ)
-  async getVendorInvoiceById(@Param('id') _id: string) { return notImplemented('GET /mm/vendor-invoices/:id'); }
+  async getVendorInvoiceById(@Param('id') id: string) {
+    const row = unwrapOrThrow(await this.svc.getVendorInvoiceById(safeInt(id, 0)));
+    if (!row) throw new HttpException(`Vendor invoice #${id} topilmadi`, HttpStatus.NOT_FOUND);
+    return row;
+  }
 
   @ApiOperation({ summary: 'Approve vendor invoice' })
   @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
@@ -195,21 +203,30 @@ export class MmDashboardController {
   }
 
   @ApiOperation({ summary: 'Get three way match' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('three-way-match') @Roles(...MM_READ)
-  async getThreeWayMatch() { return notImplemented('GET /mm/three-way-match'); }
+  async getThreeWayMatch() {
+    this.logger.log('GET three-way match');
+    return unwrapOrThrow(await this.svc.getThreeWayMatch());
+  }
 
   @ApiOperation({ summary: 'Get 3-way match by invoice id' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
   @Get('3way-match/:invoiceId') @Roles(...MM_READ)
-  async get3wayMatch(@Param('invoiceId') _invoiceId: string) {
-    return notImplemented('GET /mm/3way-match/:invoiceId');
+  async get3wayMatch(@Param('invoiceId') invoiceId: string) {
+    const row = unwrapOrThrow(await this.svc.getVendorInvoiceById(safeInt(invoiceId, 0)));
+    if (!row) throw new HttpException(`Vendor invoice #${invoiceId} topilmadi`, HttpStatus.NOT_FOUND);
+    return row;
   }
 
   @ApiOperation({ summary: 'Get fleet maintenance' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('fleet/maintenance') @Roles(...MM_READ)
-  async getFleetMaintenance() { return notImplemented('GET /mm/fleet/maintenance'); }
+  async getFleetMaintenance() {
+    this.logger.log('GET fleet maintenance');
+    return unwrapOrThrow(await this.svc.getFleetMaintenance());
+  }
 
   @ApiOperation({ summary: 'Get fleet deliveries' })
   @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
@@ -224,14 +241,20 @@ export class MmDashboardController {
   }
 
   @ApiOperation({ summary: 'Get vehicle locations' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('vehicles/locations') @Roles(...MM_READ)
-  async getVehicleLocations() { return notImplemented('GET /mm/vehicles/locations'); }
+  async getVehicleLocations() {
+    this.logger.log('GET vehicle locations');
+    return unwrapOrThrow(await this.svc.getVehicleLocations());
+  }
 
   @ApiOperation({ summary: 'Get driver expenses' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('driver/expenses') @Roles(...MM_READ)
-  async getDriverExpenses() { return notImplemented('GET /mm/driver/expenses'); }
+  async getDriverExpenses() {
+    this.logger.log('GET driver expenses');
+    return unwrapOrThrow(await this.svc.getDriverExpenses());
+  }
 
   @ApiOperation({ summary: 'Get material suppliers' })
   @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })

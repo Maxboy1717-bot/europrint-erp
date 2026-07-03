@@ -114,6 +114,24 @@ export class HrDashboardExtraRepository implements IHrDashboardExtraRepo {
       }, 'DB_ERROR');
   }
 
+  async getContracts(page: number, limit: number): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const offset = (page - 1) * limit;
+      const rows = await runQuery<Row>(sql`
+        SELECT ec.id, ec.employee_id,
+               COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name,
+               COALESCE(ec.contract_number, 'KON-' || ec.id::text) AS contract_number,
+               ec.contract_type, ec.start_date, ec.end_date, ec.status,
+               (ec.end_date::date - CURRENT_DATE) AS days_left
+        FROM employee_contracts ec
+        JOIN employees e ON e.id = ec.employee_id
+        ORDER BY ec.end_date DESC NULLS LAST
+        LIMIT ${limit} OFFSET ${offset}
+      `);
+      return rows.rows as Row[];
+      }, 'DB_ERROR');
+  }
+
   async getSafetyKpis(): Promise<Result<SafetyKpis>> {
     return safeCall(async () => {
       const [ppeResult, trainingResult] = await Promise.all([

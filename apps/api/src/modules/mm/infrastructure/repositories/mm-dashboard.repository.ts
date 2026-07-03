@@ -105,4 +105,53 @@ export class MmDashboardRepository implements IMmDashboardRepo {
   }
 
   }
+
+  async getFleetMaintenance(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT vm.*, fv.plate_number AS vehicle_plate_number FROM mm_vehicle_maintenance vm LEFT JOIN mm_vehicles fv ON fv.id = vm.vehicle_id ORDER BY vm.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getVehicleLocations(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT DISTINCT ON (vl.vehicle_id) vl.*, fv.plate_number AS vehicle_plate_number FROM vehicle_locations vl LEFT JOIN mm_vehicles fv ON fv.id = vl.vehicle_id ORDER BY vl.vehicle_id, vl.recorded_at DESC`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getDriverExpenses(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT de.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS driver_name FROM mm_driver_expenses de LEFT JOIN mm_drivers d ON d.id = de.driver_id LEFT JOIN employees e ON e.id = d.employee_id ORDER BY de.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getVendorInvoices(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT vi.*, v.name AS vendor_name FROM vendor_invoices vi LEFT JOIN mm_vendors v ON v.id = vi.vendor_id ORDER BY vi.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getVendorInvoiceById(id: number): Promise<Result<Row | null>>  {
+  try {
+      const r = await exec(sql`SELECT vi.*, v.name AS vendor_name FROM vendor_invoices vi LEFT JOIN mm_vendors v ON v.id = vi.vendor_id WHERE vi.id = ${id}`);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async getThreeWayMatch(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT vi.id AS invoice_id, vi.invoice_number, vi.invoice_no, vi.vendor_id, v.name AS vendor_name, vi.purchase_order_id, vi.goods_receipt_id, vi.total_amount, vi.amount, vi.match_status, vi.match_score, vi.price_variance, vi.quantity_variance FROM vendor_invoices vi LEFT JOIN mm_vendors v ON v.id = vi.vendor_id ORDER BY vi.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
 }

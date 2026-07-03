@@ -4,7 +4,6 @@
  */
 
 import { Controller, Get, Post, Body, Param, Query, UseGuards, UseInterceptors, HttpCode, HttpStatus } from '@nestjs/common';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -114,7 +113,6 @@ export class IntegrationEmployeeController {
 
   @ApiOperation({ summary: 'Get employee complaints list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-complaints')
   async getEmployeeComplaintsList() {
     const r = await this.svc.getAllComplaints();
@@ -123,7 +121,6 @@ export class IntegrationEmployeeController {
 
   @ApiOperation({ summary: 'Get employee assessment skips list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-assessment-skips')
   async getEmployeeAssessmentSkipsList() {
     const r = await this.svc.getAllAssessmentSkips();
@@ -132,7 +129,6 @@ export class IntegrationEmployeeController {
 
   @ApiOperation({ summary: 'Get skill gap list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('skill-gap')
   async getSkillGapList() {
     const r = await db.execute(sql`
@@ -147,7 +143,6 @@ export class IntegrationEmployeeController {
 
   @ApiOperation({ summary: 'Get employee mentorships list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-mentorships')
   async getEmployeeMentorshipsList() {
     const r = await this.svc.getAllMentorships();
@@ -156,7 +151,6 @@ export class IntegrationEmployeeController {
 
   @ApiOperation({ summary: 'Get employee mes summary list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-mes-summary')
   async getEmployeeMesSummaryList() {
     const r = await this.svc.getAllMesSummary();
@@ -165,7 +159,6 @@ export class IntegrationEmployeeController {
 
   @ApiOperation({ summary: 'Get employee wms summary list' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get('employee-wms-summary')
   async getEmployeeWmsSummaryList() {
     const r = await this.svc.getAllWmsSummary();

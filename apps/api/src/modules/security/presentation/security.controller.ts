@@ -217,10 +217,24 @@ export class SecurityController {
  }
 
  @ApiOperation({ summary: 'Get daily summary' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('daily-summary')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getDailySummary() { return notImplemented('GET /security/daily-summary'); }
+ async getDailySummary() {
+   const r = await db.execute(sql`
+     SELECT
+       (SELECT COUNT(*)::int FROM security_incidents WHERE created_at::date = CURRENT_DATE) AS incidents_today,
+       (SELECT COUNT(*)::int FROM security_visitors WHERE entered_at::date = CURRENT_DATE) AS visitors_today,
+       (SELECT COUNT(*)::int FROM security_visitors WHERE status = 'active') AS visitors_on_site,
+       (SELECT COUNT(*)::int FROM security_ppe_checks WHERE created_at::date = CURRENT_DATE) AS ppe_checks_today,
+       (SELECT COUNT(*)::int FROM security_ppe_checks WHERE created_at::date = CURRENT_DATE
+          AND NOT (helmet_ok AND vest_ok AND gloves_ok AND boots_ok)) AS ppe_violations_today
+   `);
+   return ((r as Rows).rows ?? [])[0] ?? {
+     incidents_today: 0, visitors_today: 0, visitors_on_site: 0,
+     ppe_checks_today: 0, ppe_violations_today: 0,
+   };
+ }
 
  @ApiOperation({ summary: 'Get fire sensors' })
  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
@@ -229,22 +243,59 @@ export class SecurityController {
  getFireSensors() { return notImplemented('GET /security/fire-sensors'); }
 
  @ApiOperation({ summary: 'Get ppe checks' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('ppe-checks')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeChecks() { return notImplemented('GET /security/ppe-checks'); }
+ async getPpeChecks(@Query('limit') limit?: string) {
+   const lim = Math.min(parseInt(limit ?? '50', 10) || 50, 200);
+   const r = await db.execute(sql`
+     SELECT id, employee_name, department, helmet_ok, vest_ok, gloves_ok, boots_ok, notes, checked_by, created_at
+     FROM security_ppe_checks ORDER BY created_at DESC LIMIT ${lim}
+   `);
+   return (r as Rows).rows ?? [];
+ }
 
  @ApiOperation({ summary: 'Get ppe stats' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('ppe-stats')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeStats() { return notImplemented('GET /security/ppe-stats'); }
+ async getPpeStats() {
+   const r = await db.execute(sql`
+     SELECT
+       COUNT(*)::int AS total_checks,
+       COUNT(*) FILTER (WHERE helmet_ok AND vest_ok AND gloves_ok AND boots_ok)::int AS compliant_count,
+       COUNT(*) FILTER (WHERE NOT (helmet_ok AND vest_ok AND gloves_ok AND boots_ok))::int AS violation_count,
+       COUNT(*) FILTER (WHERE NOT helmet_ok)::int AS helmet_violations,
+       COUNT(*) FILTER (WHERE NOT vest_ok)::int AS vest_violations,
+       COUNT(*) FILTER (WHERE NOT gloves_ok)::int AS gloves_violations,
+       COUNT(*) FILTER (WHERE NOT boots_ok)::int AS boots_violations,
+       ROUND(
+         COUNT(*) FILTER (WHERE helmet_ok AND vest_ok AND gloves_ok AND boots_ok)::numeric
+         / NULLIF(COUNT(*), 0) * 100, 1
+       ) AS compliance_percent
+     FROM security_ppe_checks
+   `);
+   return ((r as Rows).rows ?? [])[0] ?? {
+     total_checks: 0, compliant_count: 0, violation_count: 0,
+     helmet_violations: 0, vest_violations: 0, gloves_violations: 0, boots_violations: 0,
+     compliance_percent: 0,
+   };
+ }
 
  @ApiOperation({ summary: 'Get ppe violations' })
- @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-6' })
+ @ApiResponse({ status: 200, description: 'OK' })
  @Get('ppe-violations')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SECURITY)
- getPpeViolations() { return notImplemented('GET /security/ppe-violations'); }
+ async getPpeViolations(@Query('limit') limit?: string) {
+   const lim = Math.min(parseInt(limit ?? '50', 10) || 50, 200);
+   const r = await db.execute(sql`
+     SELECT id, employee_name, department, helmet_ok, vest_ok, gloves_ok, boots_ok, notes, checked_by, created_at
+     FROM security_ppe_checks
+     WHERE NOT (helmet_ok AND vest_ok AND gloves_ok AND boots_ok)
+     ORDER BY created_at DESC LIMIT ${lim}
+   `);
+   return (r as Rows).rows ?? [];
+ }
 
  @ApiOperation({ summary: 'Patch visitor exit' })
  @ApiResponse({ status: 200, description: 'OK' })

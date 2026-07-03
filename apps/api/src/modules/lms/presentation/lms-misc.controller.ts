@@ -145,7 +145,6 @@ export class LmsVideoProgressController {
 
   @ApiOperation({ summary: 'List video progress' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @ApiResponse({ status: 501, description: 'Not implemented' })
   @Get()
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   async listVideoProgress(@CurrentUser() user: AuthenticatedUser) {
