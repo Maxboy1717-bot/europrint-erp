@@ -85,6 +85,9 @@ export class CreateInvoiceHandler implements ICommandHandler<CreateInvoiceComman
           createdBy: command.userId,
           createdAt: now,
           updatedAt: now,
+          deliveryTerm: command.deliveryTerm,
+          incotermCode: command.incotermCode,
+          currency: command.currency,
         },
         tx,
       );

@@ -40,6 +40,12 @@ export const invoices = pgTable(
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
     deleted_at: timestamp('deleted_at', { withTimezone: true }),
+    // Master-reja 3.5 "eksport-invoys (Incoterms)" — additive, ixtiyoriy (Q-35/Q-40).
+    // EP-SD-070 JAVOBLANGAN: "variant tanlanadi (samovyvoz / zavod yetkazadi)" — erkin
+    // matn, to'liq Incoterms-2020 kod-ro'yxati uchun qaror OCHIQ (fabrikatsiya qilinmadi).
+    delivery_term: text('delivery_term'),
+    incoterm_code: text('incoterm_code'),
+    currency: text('currency'),
   },
   (table) => [
     uniqueIndex('invoices_invoice_number_idx').on(table.invoice_number),

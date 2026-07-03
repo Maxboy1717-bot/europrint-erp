@@ -33,6 +33,18 @@ export interface InvoicePdfData {
   lines:         InvoicePdfLine[];
 }
 
+/**
+ * 3-tur: eksport-invoys (Incoterms). Master-reja 3.5 + EP-SD-070 (JAVOBLANGAN —
+ * "variant tanlanadi: samovyvoz / zavod yetkazadi"). `deliveryTerm`/`incotermCode`/
+ * `currency` — ixtiyoriy (EGASI-DATA fabrikatsiya qilinmagan, Q-40 fail-safe):
+ * bo'sh bo'lsa PDF blok "—" ko'rsatadi, generatsiya rad etilmaydi.
+ */
+export interface ExportInvoicePdfData extends InvoicePdfData {
+  deliveryTerm: string | null;
+  incotermCode: string | null;
+  currency:     string | null;
+}
+
 const STATUS_LABEL: Record<string, string> = {
   draft:     'Qoralama',
   sent:      'Yuborilgan',
@@ -51,7 +63,15 @@ export class SdInvoicePdfService {
     return safeCall(async () => this._buildPdf(data));
   }
 
-  private async _buildPdf(data: InvoicePdfData): Promise<Buffer> {
+  /**
+   * 3-tur: eksport-invoys (Incoterms) — Master-reja 3.5. Xuddi shu draw()-pattern,
+   * qo'shimcha "Yetkazib berish sharti" bloki bilan (EP-SD-070 javobiga mos).
+   */
+  async generateExportInvoicePdf(data: ExportInvoicePdfData): Promise<Result<Buffer, AppError>> {
+    return safeCall(async () => this._buildPdf(data, { exportMode: true }));
+  }
+
+  private async _buildPdf(data: InvoicePdfData, opts?: { exportMode: boolean }): Promise<Buffer> {
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage(PageSizes.A4);
     const { width, height } = page.getSize();
@@ -59,10 +79,14 @@ export class SdInvoicePdfService {
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     let y = height - 50;
-    y = this._drawHeader(page, data, fontBold, width, y);
+    y = this._drawHeader(page, data, fontBold, width, y, opts?.exportMode ?? false);
     y = this._drawMeta(page, data, fontRegular, fontBold, y);
+    if (opts?.exportMode) {
+      y = this._drawExportTerms(page, data as ExportInvoicePdfData, fontRegular, fontBold, y);
+    }
     const { activePage, y: afterTable } = this._drawItemsTable(page, pdfDoc, data, fontRegular, fontBold, width, y);
-    this._drawTotalsAndSignatures(activePage, data, fontRegular, fontBold, afterTable);
+    const currencyLabel = opts?.exportMode ? ((data as ExportInvoicePdfData).currency ?? 'UZS') : 'UZS';
+    this._drawTotalsAndSignatures(activePage, data, fontRegular, fontBold, afterTable, currencyLabel);
 
     const pages = pdfDoc.getPages();
     const lastPage = pages[pages.length - 1] ?? page;
@@ -74,11 +98,41 @@ export class SdInvoicePdfService {
     return Buffer.from(pdfBytes);
   }
 
-  private _drawHeader(page: PDFPage, data: InvoicePdfData, fontBold: PDFFont, width: number, startY: number): number {
+  /**
+   * Eksport-invoys "Yetkazib berish sharti" bloki (EP-SD-070). Maydonlar ixtiyoriy —
+   * DB'da yo'q bo'lsa "—" ko'rsatiladi, hech qanday qiymat fabrikatsiya qilinmaydi.
+   */
+  private _drawExportTerms(
+    page: PDFPage, data: ExportInvoicePdfData, fontRegular: PDFFont, fontBold: PDFFont, startY: number,
+  ): number {
+    let y = startY;
+    page.drawText(toPdfSafeText("Yetkazib berish sharti / Условия поставки:"), {
+      x: MARGIN, y, size: 9, font: fontBold, color: rgb(0, 0, 0),
+    });
+    y -= 14;
+    const rows: Array<[string, string]> = [
+      ['Shart (Incoterms):', data.deliveryTerm ?? '—'],
+      ['Incoterms kod:',     data.incotermCode ?? '—'],
+      ['Valyuta / Валюта:',  data.currency ?? 'UZS'],
+    ];
+    for (const [label, value] of rows) {
+      page.drawText(toPdfSafeText(`${label}  ${value}`), { x: MARGIN, y, size: 9, font: fontRegular, color: rgb(0.1, 0.1, 0.1) });
+      y -= 14;
+    }
+    y -= 6;
+    return y;
+  }
+
+  private _drawHeader(
+    page: PDFPage, data: InvoicePdfData, fontBold: PDFFont, width: number, startY: number,
+    exportMode = false,
+  ): number {
     let y = startY;
     // toPdfSafeText: pdf-lib StandardFonts (WinAnsi) kirill harflarni qo'llab-
     // quvvatlamaydi — lotin transliteratsiyasiga o'giriladi (Q-40 bag-fix, FAZA D).
-    const title = toPdfSafeText('HISOB-FAKTURA / СЧЁТ-ФАКТУРА');
+    const title = toPdfSafeText(
+      exportMode ? 'EKSPORT INVOYS / EXPORT INVOICE' : 'HISOB-FAKTURA / СЧЁТ-ФАКТУРА',
+    );
     const titleWidth = fontBold.widthOfTextAtSize(title, 16);
     page.drawText(title, { x: (width - titleWidth) / 2, y, size: 16, font: fontBold, color: rgb(0, 0, 0) });
     y -= 22;
@@ -154,16 +208,19 @@ export class SdInvoicePdfService {
     return { activePage, y };
   }
 
-  private _drawTotalsAndSignatures(page: PDFPage, data: InvoicePdfData, fontRegular: PDFFont, fontBold: PDFFont, startY: number): void {
+  private _drawTotalsAndSignatures(
+    page: PDFPage, data: InvoicePdfData, fontRegular: PDFFont, fontBold: PDFFont, startY: number,
+    currencyLabel = 'UZS',
+  ): void {
     let y = startY - 8;
-    page.drawText(toPdfSafeText(`Oraliq summa / Подытог: ${this._fmtMoney(data.subtotal)} UZS`), { x: MARGIN, y, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+    page.drawText(toPdfSafeText(`Oraliq summa / Подытог: ${this._fmtMoney(data.subtotal)} ${currencyLabel}`), { x: MARGIN, y, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
     y -= 14;
-    page.drawText(toPdfSafeText(`Soliq / Налог: ${this._fmtMoney(data.taxAmount)} UZS`), { x: MARGIN, y, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+    page.drawText(toPdfSafeText(`Soliq / Налог: ${this._fmtMoney(data.taxAmount)} ${currencyLabel}`), { x: MARGIN, y, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
     y -= 14;
-    page.drawText(toPdfSafeText(`JAMI / ИТОГО: ${this._fmtMoney(data.totalAmount)} UZS`), { x: MARGIN, y, size: 11, font: fontBold, color: rgb(0, 0, 0) });
+    page.drawText(toPdfSafeText(`JAMI / ИТОГО: ${this._fmtMoney(data.totalAmount)} ${currencyLabel}`), { x: MARGIN, y, size: 11, font: fontBold, color: rgb(0, 0, 0) });
     y -= 14;
     const paidColor = data.paidAmount >= data.totalAmount ? rgb(0, 0.5, 0) : rgb(0.8, 0, 0);
-    page.drawText(toPdfSafeText(`To'langan / Оплачено: ${this._fmtMoney(data.paidAmount)} UZS`), { x: MARGIN, y, size: 9, font: fontRegular, color: paidColor });
+    page.drawText(toPdfSafeText(`To'langan / Оплачено: ${this._fmtMoney(data.paidAmount)} ${currencyLabel}`), { x: MARGIN, y, size: 9, font: fontRegular, color: paidColor });
     y -= 26;
 
     if (data.notes) {

@@ -81,6 +81,9 @@ export class DrizzleSdInvoicesRepository implements ISdInvoicesRepository {
         created_by: input.createdBy,
         created_at: input.createdAt,
         updated_at: input.updatedAt,
+        delivery_term: input.deliveryTerm ?? undefined,
+        incoterm_code: input.incotermCode ?? undefined,
+        currency: input.currency ?? undefined,
       });
       return Ok({
         invoiceNumber: input.invoiceNumber,

@@ -16,5 +16,9 @@ export class CreateInvoiceCommand {
     public readonly items: InvoiceItem[],
     public readonly dueDate: Date,
     public readonly notes: string | null,
-    public readonly userId: string) {}
+    public readonly userId: string,
+    // Master-reja 3.5 "eksport-invoys (Incoterms)" — ixtiyoriy (EP-SD-070).
+    public readonly deliveryTerm: string | null = null,
+    public readonly incotermCode: string | null = null,
+    public readonly currency: string | null = null) {}
 }

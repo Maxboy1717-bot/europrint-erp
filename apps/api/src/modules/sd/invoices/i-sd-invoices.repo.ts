@@ -28,6 +28,10 @@ export interface CreateInvoiceInput {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Master-reja 3.5 "eksport-invoys (Incoterms)" — ixtiyoriy (EP-SD-070). */
+  deliveryTerm?: string | null;
+  incotermCode?: string | null;
+  currency?: string | null;
 }
 
 export interface InvoiceRow {
