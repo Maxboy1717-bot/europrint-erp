@@ -39,11 +39,13 @@ import { LmsCertExpiredMesListener } from './infrastructure/event-handlers/lms-c
 import { LmsCertExpiredLiveMesListener } from './infrastructure/event-handlers/lms-cert-expired-live-mes.listener';
 import { LmsCertExpiredBlockService } from './infrastructure/event-handlers/lms-cert-expired-block.service';
 import { PpReleasedMesListener } from './infrastructure/event-handlers/pp-released-mes.listener';
+import { SosAlertRaisedMesListener } from './infrastructure/event-handlers/sos-alert-raised-mes.listener';
 
 const listeners = [
   LmsCertExpiredMesListener,       // Trigger 17 — daily-sweep variant (Wave 4 round-2)
   LmsCertExpiredLiveMesListener,   // Trigger 17 — realtime variant   (Wave 4 round-2)
   PpReleasedMesListener,           // #03 HOP-2 — PP released → open MES production session
+  SosAlertRaisedMesListener,       // 2.3 — tablet sos_alerts → mes_sos_events eskalatsiya-ko'prigi
 ];
 
 const handlers = [

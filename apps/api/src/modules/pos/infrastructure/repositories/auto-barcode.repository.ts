@@ -25,7 +25,9 @@ export interface MovementLineForBarcode {
   materialCardId:   number;
   materialCode:     string | null;
   batchNumber:      string | null;
-  quantity:         number;
+  // NOTE: pos_movement_lines.quantity NUMERIC — pg drayveri string qaytaradi
+  // ("1.0000"), shuning uchun turi number bilan cheklanmaydi (§2.7 fix).
+  quantity:         number | string;
   unit:             string | null;
 }
 
@@ -73,20 +75,29 @@ export class AutoBarcodeRepository {
     materialCardId: number;
     warehouseId:    number | null;
     batchNumber:    string | null;
-    quantity:       number;
+    quantity:       number | string;
     unit:           string | null;
     barcode:        string;
   }): Promise<Result<void, AppError>> {
     try {
       // MUHIM: barcode_print_queue.barcode_data NOT NULL — barcode_data/barcode_value ham yoziladi,
       // aks holda kirimda barkod generatsiya jonli NOT NULL xatosi bilan yiqiladi (jonli tasdiqlandi).
+      //
+      // MUHIM 2 (2026-07-03, §2.7): pos_barcode_print_queue.quantity ustuni INTEGER,
+      // lekin manba pos_movement_lines.quantity NUMERIC — pg drayveri buni STRING
+      // ("1.0000") qaytaradi va to'g'ridan-to'g'ri integer ustunga bog'lansa
+      // "invalid input syntax for type integer" bilan yiqiladi (jonli tasdiqlandi:
+      // shuning uchun pos_barcode_print_queue doim bo'sh qolgan edi). Yaqin butun
+      // songa yaxlitlab, xavfsiz butun songa aylantiriladi.
+      const rawQty = Number(dto.quantity);
+      const safeQty = Number.isFinite(rawQty) ? Math.round(rawQty) : 0;
       await db.execute(sql`
         INSERT INTO pos_barcode_print_queue
           (movement_id, movement_line_id, material_id, warehouse_id,
            batch_number, quantity, unit, barcode, barcode_data, barcode_value, barcode_type, status, created_at)
         VALUES
           (${dto.movementId}, ${dto.movementLineId}, ${dto.materialCardId}, ${dto.warehouseId},
-           ${dto.batchNumber}, ${dto.quantity}, ${dto.unit ?? null},
+           ${dto.batchNumber}, ${safeQty}, ${dto.unit ?? null},
            ${dto.barcode}, ${dto.barcode}, ${dto.barcode}, 'CODE128', 'QUEUED', NOW())
       `);
       return Ok(undefined);
