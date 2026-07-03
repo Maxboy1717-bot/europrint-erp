@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   Users, Sparkles, UserCheck, BarChart3, TrendingUp,
-  Pencil, Trash2,
+  Pencil, Trash2, RefreshCw,
 } from "lucide-react";
 import { tLabel } from "@/lib/i18n/tLabel";
 import { Button } from "@/components/ui/button";
@@ -226,6 +226,33 @@ export default function SDCustomers() {
     onError: () => toast({ title: tLabel("sd.error.delete", "O'chirishda xatolik"), variant: "destructive" }),
   });
 
+  // 2.5-abc-avto-hisob: manual trigger for the live Pareto ABC recompute
+  // (customer-abc.service.ts) — daily cron already runs this at 02:00; this
+  // button lets a user apply it on demand right after new orders land.
+  const abcRecomputeMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("POST", "/api/sd/customers/abc/recompute") as Promise<{
+        updated: number;
+        summary: Record<"A" | "B" | "C", number>;
+      }>,
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/customers"] });
+      const s = data?.summary;
+      toast({
+        title: tLabel("sd.customers.abcRecomputed", "ABC qayta hisoblandi"),
+        description: s
+          ? `A: ${s.A ?? 0}, B: ${s.B ?? 0}, C: ${s.C ?? 0} (${data.updated} ta mijoz)`
+          : undefined,
+      });
+    },
+    onError: () =>
+      toast({
+        title: tLabel("sd.error", "Xatolik"),
+        description: tLabel("sd.customers.abcRecomputeFailed", "ABC hisoblab bo'lmadi"),
+        variant: "destructive",
+      }),
+  });
+
   const openEdit = (c: CustomerRow) => {
     setEditForm({ title: c.name, phone: c.phone, email: c.email, address: c.address, status: c.status });
     setEditDialog({ open: true, customer: c });
@@ -240,13 +267,25 @@ export default function SDCustomers() {
         title={t("mijozlarBazasi")}
         subtitle={`${stats.total} ta mijoz · ${stats.activeCount} ta faol`}
         actions={
-          <AddCustomerDialog
-            open={showAdd}
-            onOpenChange={setShowAdd}
-            form={addForm}
-            onSubmit={(d) => addMutation.mutate(d)}
-            isPending={addMutation.isPending}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => abcRecomputeMutation.mutate()}
+              disabled={abcRecomputeMutation.isPending}
+              data-testid="btn-abc-recompute"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${abcRecomputeMutation.isPending ? "animate-spin" : ""}`} />
+              {tLabel("sd.customers.abcRecompute", "ABC qayta hisoblash")}
+            </Button>
+            <AddCustomerDialog
+              open={showAdd}
+              onOpenChange={setShowAdd}
+              form={addForm}
+              onSubmit={(d) => addMutation.mutate(d)}
+              isPending={addMutation.isPending}
+            />
+          </div>
         }
       />
 
