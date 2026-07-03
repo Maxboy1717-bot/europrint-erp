@@ -18,6 +18,10 @@ export const CreateOrderDtoSchema = z.object({
   companyId: z.number().int().positive('Company ID must be positive'),
   // #03 golden-thread HOP-0: the customer link (was dropped → orders had customer_id=NULL).
   customerId: z.number().int().positive('Customer ID must be positive').optional(),
+  // 2.6 golden-thread: the originating CRM lead (crm_leads.id), when the manual
+  // order-entry form is opened from a CRM lead context. Optional — undefined for
+  // orders created without a lead origin (no fabrication).
+  crmLeadId: z.number().int().positive('CRM lead ID must be positive').optional(),
   totalAmount: z.number().positive('Total amount must be positive'),
   currency: z.string().length(3).toUpperCase().default('USD'),
   designFlag: z.boolean().default(false),

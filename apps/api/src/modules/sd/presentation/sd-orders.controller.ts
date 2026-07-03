@@ -137,6 +137,7 @@ export class SdOrdersController {
    undefined, // dealId
    validated.customerId, // #03 HOP-0: customer link (was hardcoded undefined → customer_id NULL)
    validated.items,
+   validated.crmLeadId, // 2.6 golden-thread: originating CRM lead, when the form carries one
   );
 
   const res = await this.commandBus.execute(command);
