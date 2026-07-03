@@ -376,8 +376,18 @@
 
 ## 8.5 Hali HAQIQIY OCHIQ qolgan (bu sessiyada tegilmagan yoki hal qilinmagan)
 2-bosqich: **2.5** (mexanizm tayyor, faqat ishga tushishi kerak — yuqoriga qarang; qolganlarining barchasi §8.3'da yopilgan).
-3-bosqich: 3.1, 3.2, 3.5, 3.9, 3.10, 3.11, 3.12, 3.16(defer) — hali tegilmagan (3.14/3.15 avvalroq bajarilgan — `a3be1bd4`/`025c356a`).
+3-bosqich: 3.1, 3.9, 3.11, 3.12, 3.16(defer) — hali tegilmagan. **3.2/3.5/3.10 BAJARILDI** (Guruh-5, quyida §8.7), 3.14/3.15 avvalroq bajarilgan (`a3be1bd4`/`025c356a`).
 **A9 (org-daraxt dublikat)** — hamon eng katta blokировщик (A11'ni to'g'ridan bloklaydi, boshqa ko'p narsaga bilvosita ta'sir qiladi); tayyor savol-hujjat: `docs/audit/MASSIV-100/PHASE-08-daraxt-yagona-manager.md`.
+
+## 8.7 Guruh-5 (3.2, 3.5, 3.10) va 3.17 (UZ-kirill 3-til)
+
+- **3.2** (brak→ushlanma) ✅ TUZATILDI (`b37d2ea5`) — work_centers.brak_limit_pct fail-safe darvoza orqali: limit to'ldirilgan ish-markazlarda brak% oshsa signal+discipline_records ushlanma (mavjud TECH_QUALITY_DEFECT qoidasiga bog'lab); C14 (aniq %) hali OCHIQ bo'lgani uchun fabrikatsiya qilinmadi. Verify-agent haqiqiy Q-31 buzilishini (9 begona SD-invoice fayli aralashib ketgan) topib, tozalab qayta commit qildi.
+- **3.5** (invoys 3-tur) ✅ BAJARILDI (`3aeaaa34`) — eksport-invoys (Incoterms, ixtiyoriy maydon) qo'shildi.
+- **3.10** (web-katalog CMS) ✅ BAJARILDI (`250c65ba`) — admin CRUD tab + public_products'dagi 2 ta jonli crash (category_id varchar/integer nomosligi, updated_at/deleted_at ustunlari yoq edi) tuzatildi.
+- **3.17** (UZ-kirill 3-til, egasi 2026-07-03 buyrug'i) ✅ **ASOSIY QISM BAJARILDI**:
+  - UZ-kirill infratuzilmasi (BE+FE) allaqachon mavjud ekan (56/56 FE modul, 6/6 BE modul) — lekin 6 FE modulda 64 kalit sinxrondan chiqib qolgan edi (yangi qo'shilgan title/loading/error + common.json'dagi 49 komponent-satri). Barchasi to'ldirildi va tasdiqlandi (`a760262b`, 0 qolgan bo'shliq).
+  - Alohida, kutilmagan katta bo'shliq topildi: UZ→RU tomonda 522 kalit yetishmas edi (13 modul, ba'zilari butunlay bo'sh `{}`) — bularning barchasi professional rus-tiliga tarjima qilindi va tasdiqlandi (`a15b985c`, 0 qolgan bo'shliq).
+  - **Ochiq qoldi**: (a) backend'dagi ~95 ta oldindan-aniqlangan hardcoded-satr (2026-05-16 audit, operator/Telegram/AI-agent qatlamlarida, ataylab kechiktirilgan); (b) 3 ta buzuq kalit (kod-parcha qiymatlar, masalan "isout") — alohida vazifa sifatida belgilandi (task_ed6fc680); (c) `ru/sd.json`da 181 ta "tarjima qilinmagan nusxa" (RU qiymati UZ bilan bir xil) — eski, boshqa muammo, bu safargi ish-doirasidan tashqarida qoldi.
 
 ## 8.6 EGASI-DATA 3-tur klassifikatsiya + Tier-1 ijro (2026-07-03, 4-guruh qazish + Tier-1 qo'llash)
 
