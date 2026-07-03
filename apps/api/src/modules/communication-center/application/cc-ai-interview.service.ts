@@ -33,6 +33,7 @@ import { AiRouterCallService } from '../../ai/application/services/ai-router-cal
 import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
 import type { TemplateRow } from '../infrastructure/repositories/cc-documents/types';
 import { CcDocumentNumberService } from './cc-document-number.service';
+import { CcKanbanBridgeService } from './cc-kanban-bridge.service';
 import type { Language } from '../domain/types';
 import { AiQuestion, SessionRow, buildFinalizePrompts, extractSubject } from './cc-ai-interview.types';
 import { validateAnswer } from './cc-ai-interview.helpers';
@@ -49,6 +50,7 @@ export class CcAiInterviewService {
     private readonly docs:    CcDocumentsRepository,
     private readonly numbers: CcDocumentNumberService,
     private readonly i18n:    I18nService,
+    private readonly kanban:  CcKanbanBridgeService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────
@@ -250,6 +252,20 @@ export class CcAiInterviewService {
       SET draft_document_id = ${draftRes.data.id}, completed_at = NOW()
       WHERE id = ${sess.id}
     `);
+
+    // VAZIFA (2.9-cc-kanban-e2e): asosiy foydalanuvchi UI oqimi (NewDocumentModal →
+    // AI-intervyu → finalize) oldin CC→Kanban ko'prigini chaqirmasdi — faqat
+    // CcSpawnRequestedEvent orqali (boshqa modullardan) yaratilgan hujjatlar karta olardi.
+    // Xato bo'lsa ignore — kanban qo'shimcha funksiya (task management), hujjat yaratish
+    // bloklanmaydi (mantiq CcKanbanBridgeService ichida try/catch bilan himoyalangan).
+    await this.kanban.createCardForDocument({
+      documentId:   draftRes.data.id,
+      subject,
+      body,
+      senderUserId: sess.user_id,
+      priority:     tmpl.defaultPriority,
+    });
+
     return draftRes.data.id;
   }
 

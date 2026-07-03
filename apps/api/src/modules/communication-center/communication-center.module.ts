@@ -34,6 +34,7 @@ import { CcOrgResolverService }    from './application/cc-org-resolver.service';
 import { CcAiInterviewService }    from './application/cc-ai-interview.service';
 import { CcPdfService }            from './application/cc-pdf.service';
 import { CcStatsService }          from './application/cc-stats.service';
+import { CcKanbanBridgeService }   from './application/cc-kanban-bridge.service';
 
 // Presentation
 import { CcBasketsController }            from './presentation/cc-baskets.controller';
@@ -87,6 +88,7 @@ import { CcApprovedKassirListener } from './events/cc-approved-kassir.listener';
     CcAiInterviewService,
     CcPdfService,
     CcStatsService,
+    CcKanbanBridgeService,
     // realtime + cron + telegram + events
     CcGateway,
     CcSlaCron,
