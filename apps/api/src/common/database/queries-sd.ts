@@ -58,6 +58,13 @@ export async function execSdSalesOrderInsert(
   tx?: unknown,
   /** #03 golden-thread HOP-0: the customer link — previously dropped, leaving every API order customer_id=NULL. */
   customerId?: number | null,
+  /**
+   * 2.6 golden-thread: the originating CRM lead (crm_leads.id), when the order was
+   * created via a Deal that itself originated from a Lead (Lead→Deal→Won→Order chain).
+   * The `sd_sales_orders` view does not expose crm_lead_id, so — like created_by_user_id
+   * above — it is written on the base `sales_orders` table in the post-insert UPDATE.
+   */
+  crmLeadId?: number | null,
 ): Promise<number> {
   const conn = (tx as typeof db | undefined) ?? db;
   const rows = await conn.insert(sd_sales_orders).values({
@@ -113,11 +120,16 @@ export async function execSdSalesOrderInsert(
     // value, so an idempotent re-run is safe. No fabrication — NULL when no creator.
     const creatorId = Number(createdBy);
     const createdByUserId = Number.isInteger(creatorId) && creatorId > 0 ? creatorId : null;
+    // 2.6: only a real positive integer is written; COALESCE never clobbers an
+    // existing value. No fabrication — NULL when the order has no lead origin.
+    const leadIdNum = Number(crmLeadId);
+    const crmLeadIdVal = Number.isInteger(leadIdNum) && leadIdNum > 0 ? leadIdNum : null;
     await conn.execute(sql`
       UPDATE sales_orders
          SET document_number    = COALESCE(document_number, ${orderNumber}),
              overall_status     = COALESCE(overall_status, 'IN_PROCESS'),
-             created_by_user_id = COALESCE(created_by_user_id, ${createdByUserId})
+             created_by_user_id = COALESCE(created_by_user_id, ${createdByUserId}),
+             crm_lead_id        = COALESCE(crm_lead_id, ${crmLeadIdVal})
        WHERE id = ${newId}
     `);
   }

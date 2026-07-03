@@ -32,7 +32,7 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
-  async save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>> {
+  async save(order: SalesOrder, tx?: DrizzleTxExecutor, crmLeadId?: number | null): Promise<Result<SalesOrder>> {
     try {
       // PA0-6: pass the optional Drizzle `tx` executor through to the helper
       // so the INSERT participates in the same transaction as the outbox write.
@@ -41,6 +41,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         order.getTotalAmount(), (castTo<Row>(order))['createdBy'],
         tx,
         order.getCustomerId() ?? null, // #03 HOP-0: carry the customer link into sales_orders
+        crmLeadId ?? null, // 2.6: carry the originating CRM lead link into sales_orders
       );
       // Carry the DB-generated serial id back onto the aggregate so the command
       // handler (and the outbox entries it builds) reference the real order id

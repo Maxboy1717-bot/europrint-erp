@@ -49,7 +49,9 @@ export class DealWonListener implements IEventHandler<DealWonEvent> {
         }
       }
 
-      // Avtomatik SO yaratish
+      // Avtomatik SO yaratish. 2.6 golden-thread: forward the originating CRM
+      // lead (crm_leads.id), when the deal itself came from a lead, so the
+      // created order records crm_lead_id instead of leaving it NULL.
       const command = new CreateOrderCommand(
         event.companyId,
         event.totalAmount,
@@ -58,6 +60,9 @@ export class DealWonListener implements IEventHandler<DealWonEvent> {
         false,
         event.assignedTo,
         event.dealId,
+        undefined,
+        [],
+        event.leadId,
       );
 
       const result = await this.commandBus.execute(command);

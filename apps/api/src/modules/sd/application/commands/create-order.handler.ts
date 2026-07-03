@@ -27,7 +27,9 @@ export class CreateOrderCommand {
     public readonly createdBy: number = 1,
     public readonly dealId?: number,
     public readonly customerId?: number,
-    public readonly items: SalesOrderLineInput[] = []) {}
+    public readonly items: SalesOrderLineInput[] = [],
+    /** 2.6 golden-thread: originating CRM lead (crm_leads.id), when the deal/order came from a lead. */
+    public readonly crmLeadId?: number) {}
 }
 
 type OutboxRow = {
@@ -91,7 +93,7 @@ export class CreateOrderHandler implements ICommandHandler<CreateOrderCommand> {
     let txOutcome: TxResult;
     try {
       txOutcome = await db.transaction(async (tx): Promise<TxResult> => {
-        const saveResult = await this.orderRepo.save(order, tx);
+        const saveResult = await this.orderRepo.save(order, tx, command.crmLeadId ?? null);
         if (!saveResult.ok) {
           // Throw to roll back the transaction. The outer try/catch converts
           // this into a domain Result<Err>; no half-state can leak.

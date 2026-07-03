@@ -25,7 +25,13 @@ export interface SalesOrderLineInput {
 }
 
 export interface ISalesOrderRepository {
-  save(order: SalesOrder, tx?: DrizzleTxExecutor): Promise<Result<SalesOrder>>;
+  /**
+   * @param crmLeadId 2.6 golden-thread: originating CRM lead id (crm_leads.id), when
+   * known (e.g. Deal that came from a Lead). Not part of the SalesOrder aggregate —
+   * passed through like `customerId` since it is a cross-module provenance link, not
+   * order-domain state.
+   */
+  save(order: SalesOrder, tx?: DrizzleTxExecutor, crmLeadId?: number | null): Promise<Result<SalesOrder>>;
   /** Persist order line-items into sales_order_items (product_id-bound). Runs in the create tx. */
   saveItems(orderId: number, items: SalesOrderLineInput[], tx?: DrizzleTxExecutor): Promise<Result<number>>;
   findById(id: number): Promise<Result<SalesOrder | null>>;

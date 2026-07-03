@@ -74,6 +74,13 @@ export class MarkDealWonHandler implements ICommandHandler<MarkDealWonCommand> {
     const assignedTo = Number(row['assigned_by_id'] ?? deal['assigned_by_id'] ?? deal['assigned_to'] ?? 0);
     const currency = String(row['currency_id'] ?? deal['currency_id'] ?? deal['currency'] ?? 'UZS');
 
+    // 2.6 golden-thread: the lead link lives in metadata.lead_id (jsonb, set by
+    // ConvertLeadToDealHandler); crm_deals.lead_id (base column) is a separate,
+    // currently-unpopulated uuid column — read metadata only, no fabrication.
+    const meta = (row['metadata'] ?? deal['metadata'] ?? {}) as Record<string, unknown>;
+    const leadIdRaw = Number(meta['lead_id']);
+    const leadId = Number.isInteger(leadIdRaw) && leadIdRaw > 0 ? leadIdRaw : undefined;
+
     // dealId (numeric) is best-effort for the DomainEvent base; dealUuid is the
     // authoritative key the SD listener uses to write the SO link back.
     const numericId = Number(deal['id']);
@@ -84,6 +91,7 @@ export class MarkDealWonHandler implements ICommandHandler<MarkDealWonCommand> {
       assignedTo,
       currency,
       command.dealId,
+      leadId,
     ));
 
     this.logger.log({ msg: 'Deal marked as won', dealId: command.dealId, amount });

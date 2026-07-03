@@ -51,6 +51,11 @@ import { HrPdfGeneratorService } from '../common/pdf/hr-pdf-generator.service'
 import { AbsenceBlockRepository } from './repositories/absence-block.repository'
 import { EnpsCronRepository } from './repositories/enps-cron.repository'
 import { DataRetentionRepository } from './repositories/data-retention.repository'
+// 2.5 (MASTER-REJA-VIZYON) — mijoz ABC segmentatsiya kunlik avto-hisob (sd_customers.abc_class)
+import { CustomerAbcRecomputeCron } from './customer-abc-recompute.cron'
+import { CustomerAbcService } from '../modules/sd/application/customer-abc.service'
+import { SD_CUSTOMER_ABC_REPO } from '../modules/sd/infrastructure/repositories/i-sd-customer-abc.repo'
+import { DrizzleSdCustomerAbcRepository } from '../modules/sd/infrastructure/repositories/drizzle-sd-customer-abc.repo'
 
 @Module({
   imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule],
@@ -111,6 +116,10 @@ import { DataRetentionRepository } from './repositories/data-retention.repositor
     AbsenceBlockRepository,
     EnpsCronRepository,
     DataRetentionRepository,
+    // 2.5 (MASTER-REJA-VIZYON) — mijoz ABC segmentatsiya kunlik avto-hisob (har kuni 02:00)
+    CustomerAbcRecomputeCron,
+    CustomerAbcService,
+    { provide: SD_CUSTOMER_ABC_REPO, useClass: DrizzleSdCustomerAbcRepository },
   ],
   exports: [CronStatusService],
 })
