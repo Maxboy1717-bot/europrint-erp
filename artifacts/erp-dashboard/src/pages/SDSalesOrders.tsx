@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ShoppingCart, ArrowRight, Clock, MapPin, Plus } from "lucide-react";
+import { ShoppingCart, ArrowRight, Clock, MapPin, Plus, CheckCircle2, AlertTriangle } from "lucide-react";
 import {
   fmt, PAYMENT_STATUS_COLORS,
 } from "@/lib/sd-helpers";
@@ -74,6 +74,49 @@ interface CustomerItem {
   id: number;
   name?: string;
   title?: string;
+}
+
+/** EP-PP-066 ATP check — see apps/api/src/modules/sd/application/queries/atp-check.handler.ts */
+type AtpLineStatus = "in_stock" | "short" | "unknown_product";
+
+interface AtpLineResult {
+  productId: number;
+  productName: string | null;
+  unit: string | null;
+  demand: number;
+  available: number;
+  shortage: number;
+  leadTimeDays: number;
+  leadTimeIsDefault: boolean;
+  status: AtpLineStatus;
+  availableOn: string;
+}
+
+interface AtpCheckResult {
+  orderId: number | null;
+  overallStatus: AtpLineStatus;
+  estimatedReadyDate: string;
+  estimatedReadyInDays: number;
+  allInStock: boolean;
+  lines: AtpLineResult[];
+}
+
+const ATP_STATUS_LABELS: Record<AtpLineStatus, string> = {
+  in_stock: tLabel("sd.orders.atpInStock", "Omborda bor"),
+  short: tLabel("sd.orders.atpShort", "Yetishmaydi"),
+  unknown_product: tLabel("sd.orders.atpUnknown", "Mahsulot topilmadi"),
+};
+
+const ATP_STATUS_CLASSES: Record<AtpLineStatus, string> = {
+  in_stock: "bg-green-100 text-green-800",
+  short: "bg-amber-100 text-amber-800",
+  unknown_product: "bg-red-100 text-red-800",
+};
+
+function AtpStatusIcon({ status }: { status: AtpLineStatus }) {
+  if (status === "in_stock") return <CheckCircle2 className="w-3.5 h-3.5" />;
+  if (status === "short") return <Clock className="w-3.5 h-3.5" />;
+  return <AlertTriangle className="w-3.5 h-3.5" />;
 }
 
 const NEXT_STATUS: Record<string, string> = {
@@ -234,6 +277,23 @@ export default function SDSalesOrders() {
     : (Array.isArray(productsData) ? (productsData as Array<Record<string, unknown>>) : []);
   const orderLines = orderForm.items;
   const linesTotal = orderLines.reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
+
+  // EP-PP-066 — ATP (Available-To-Promise) preview: as soon as the line-items have a product +
+  // quantity, ask the backend for real stock/estimated-ready-date before the order is saved.
+  const atpItems = (Array.isArray(orderLines) ? orderLines : [])
+    .filter(it => it.productId && Number(it.orderQuantity) > 0)
+    .map(it => ({ productId: Number(it.productId), quantity: Number(it.orderQuantity) }));
+  const atpKey = atpItems.map(it => `${it.productId}:${it.quantity}`).join(",");
+
+  const { data: atpResult, isFetching: atpLoading } = useQuery<AtpCheckResult>({
+    queryKey: ["/api/sd/orders/atp-check", atpKey],
+    queryFn: () => apiRequest("POST", "/api/sd/orders/atp-check", { items: atpItems }),
+    enabled: createDialog && atpItems.length > 0,
+    staleTime: 0,
+  });
+  const atpLineByProduct = new Map<number, AtpLineResult>(
+    (Array.isArray(atpResult?.lines) ? atpResult.lines : []).map(l => [l.productId, l]),
+  );
 
   function addLine() {
     setOrderForm(f => ({ ...f, items: [...f.items, { productId: "", description: "", orderQuantity: "1", unit: "PC", netPrice: "0" }] }));
@@ -486,32 +546,66 @@ export default function SDSalesOrders() {
               )}
               {(Array.isArray(orderLines) ? orderLines : []).map((line, idx) => {
                 const lineTotal = (Number(line.orderQuantity) || 0) * (Number(line.netPrice) || 0);
+                const atpLine = line.productId ? atpLineByProduct.get(Number(line.productId)) : undefined;
                 return (
-                  <div key={idx} className="flex items-end gap-2" data-testid={`order-line-${idx}`}>
-                    <div className="flex-1">
-                      <Select value={line.productId} onValueChange={v => {
-                        const p = products.find(pr => String(pr.id) === v);
-                        updateLine(idx, { productId: v, description: String(p?.name ?? p?.description ?? "") });
-                      }}>
-                        <SelectTrigger className="h-9"><SelectValue placeholder={tLabel("sd.orders.mahsulot", "Mahsulot")} /></SelectTrigger>
-                        <SelectContent>
-                          {products.map(p => (
-                            <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name ?? p.code ?? p.id)}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div key={idx} className="space-y-1" data-testid={`order-line-${idx}`}>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Select value={line.productId} onValueChange={v => {
+                          const p = products.find(pr => String(pr.id) === v);
+                          updateLine(idx, { productId: v, description: String(p?.name ?? p?.description ?? "") });
+                        }}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder={tLabel("sd.orders.mahsulot", "Mahsulot")} /></SelectTrigger>
+                          <SelectContent>
+                            {products.map(p => (
+                              <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name ?? p.code ?? p.id)}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Input className="w-20" type="number" value={line.orderQuantity}
+                        onChange={e => updateLine(idx, { orderQuantity: e.target.value })} placeholder={tLabel("sd.orders.soni", "Soni")} data-testid={`line-qty-${idx}`} />
+                      <Input className="w-16" value={line.unit}
+                        onChange={e => updateLine(idx, { unit: e.target.value })} placeholder={tLabel("sd.orders.birlik", "Birlik")} />
+                      <Input className="w-24" type="number" value={line.netPrice}
+                        onChange={e => updateLine(idx, { netPrice: e.target.value })} placeholder={tLabel("sd.orders.narx", "Narx")} data-testid={`line-price-${idx}`} />
+                      <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">{lineTotal.toLocaleString()}</span>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)} data-testid={`btn-remove-line-${idx}`}>✕</Button>
                     </div>
-                    <Input className="w-20" type="number" value={line.orderQuantity}
-                      onChange={e => updateLine(idx, { orderQuantity: e.target.value })} placeholder={tLabel("sd.orders.soni", "Soni")} data-testid={`line-qty-${idx}`} />
-                    <Input className="w-16" value={line.unit}
-                      onChange={e => updateLine(idx, { unit: e.target.value })} placeholder={tLabel("sd.orders.birlik", "Birlik")} />
-                    <Input className="w-24" type="number" value={line.netPrice}
-                      onChange={e => updateLine(idx, { netPrice: e.target.value })} placeholder={tLabel("sd.orders.narx", "Narx")} data-testid={`line-price-${idx}`} />
-                    <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">{lineTotal.toLocaleString()}</span>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)} data-testid={`btn-remove-line-${idx}`}>✕</Button>
+                    {line.productId && Number(line.orderQuantity) > 0 && (
+                      <div className="pl-1" data-testid={`atp-line-${idx}`}>
+                        {atpLoading && !atpLine ? (
+                          <span className="text-xs text-muted-foreground">{tLabel("sd.orders.atpTekshirilmoqda", "Mavjudlik tekshirilmoqda...")}</span>
+                        ) : atpLine ? (
+                          <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", ATP_STATUS_CLASSES[atpLine.status])}>
+                            <AtpStatusIcon status={atpLine.status} />
+                            {ATP_STATUS_LABELS[atpLine.status]}
+                            {atpLine.status === "short" && (
+                              <span>
+                                {" "}({tLabel("sd.orders.atpYetmaydi", "yetmaydi")}: {atpLine.shortage} {atpLine.unit || ""} —{" "}
+                                {tLabel("sd.orders.atpTayyor", "tayyor")}: {atpLine.availableOn})
+                              </span>
+                            )}
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
                 );
               })}
+              {atpResult && (
+                <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 mt-1" data-testid="atp-order-summary">
+                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", ATP_STATUS_CLASSES[atpResult.overallStatus].replace("bg-", "text-").split(" ")[0])}>
+                    <AtpStatusIcon status={atpResult.overallStatus} />
+                    {ATP_STATUS_LABELS[atpResult.overallStatus]}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {atpResult.allInStock
+                      ? tLabel("sd.orders.atpBugun", "Bugun tayyor")
+                      : `${tLabel("sd.orders.atpTaxminiySana", "Taxminiy tayyor sana")}: ${atpResult.estimatedReadyDate} (${atpResult.estimatedReadyInDays} ${tLabel("sd.orders.kun", "kun")})`}
+                  </span>
+                </div>
+              )}
               {orderLines.length > 0 && (
                 <div className="flex justify-end text-sm font-medium pt-1">
                   {tLabel("sd.orders.qatorlarJami", "Qatorlar jami")}: {linesTotal.toLocaleString()} {orderForm.currency}

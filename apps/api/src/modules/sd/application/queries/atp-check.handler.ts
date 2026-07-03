@@ -3,20 +3,26 @@
  * @description CQRS query handler: SD order-entry ATP (Available-To-Promise) check.
  *
  * Vision: EP-PP-066 / EP-PP-024 / CHAT-TARIXI line 25 — at order entry the salesperson
- * sees, in real time, whether materials are in stock and an estimated availability date
- * ("yetmasa qizil + taxminiy sana"). This is the DETERMINISTIC, NON-AI part of the
- * planning vision: stock + per-material lead time only. No AI key, no owner-gated number.
+ * sees, in real time, whether the ordered finished goods are in stock and an estimated
+ * availability date ("yetmasa qizil + taxminiy sana"). This is the DETERMINISTIC, NON-AI
+ * part of the planning vision: stock only. No AI key, no owner-gated number.
+ *
+ * Orders bind to finished-good products (sales_order_items.product_id — owner 2026-06-05),
+ * not raw materialCards — see i-sales-order.repo.ts SalesOrderLineInput. Finished goods are
+ * made-to-order via production rather than replenished from a supplier, so there is no
+ * per-product lead time master data; every short/unknown line uses the same conservative
+ * ATP_DEFAULT_LEAD_TIME_DAYS default (EP-PP-065) used elsewhere when a lead time is unknown.
  *
  * Logic (per line):
  *   demand     = ordered quantity
- *   available  = SUM(warehouse_stock.available_quantity) for the material (fallback card)
+ *   available  = products.stock_quantity for the product
  *   shortage   = max(0, demand - available)
- *   leadDays   = inventory_policy.lead_time_days, else ATP_DEFAULT_LEAD_TIME_DAYS (EP-PP-065)
- *   status     = in_stock (shortage == 0) | short (shortage > 0) | unknown_material (no card)
+ *   leadDays   = ATP_DEFAULT_LEAD_TIME_DAYS (no per-product lead-time master data)
+ *   status     = in_stock (shortage == 0) | short (shortage > 0) | unknown_product (no card)
  *   availableOn= today                  when in_stock
  *              = today + leadDays (days) when short
  * Order-level:
- *   overallStatus  = unknown_material > short > in_stock (worst line wins)
+ *   overallStatus  = unknown_product > short > in_stock (worst line wins)
  *   estimatedReady = latest availableOn across lines (max)
  */
 
@@ -35,11 +41,11 @@ import {
 } from '../../infrastructure/repositories/drizzle-sd-atp.repo';
 import { AtpLine } from '../../presentation/dto/atp-check.dto';
 
-export type AtpLineStatus = 'in_stock' | 'short' | 'unknown_material';
+export type AtpLineStatus = 'in_stock' | 'short' | 'unknown_product';
 
 export interface AtpLineResult {
-  materialId: number;
-  materialName: string | null;
+  productId: number;
+  productName: string | null;
   unit: string | null;
   demand: number;
   available: number;
@@ -89,52 +95,54 @@ export class AtpCheckHandler implements IQueryHandler<AtpCheckQuery> {
       const linesRes = await this.atpRepo.findOrderDemandLines(query.orderId);
       if (!linesRes.ok) return Err(linesRes.error);
       if (linesRes.data.length === 0) {
-        return Err(AppErr('NOT_FOUND', 'Order has no material-bound lines to check'));
+        return Err(AppErr('NOT_FOUND', 'Order has no product-bound lines to check'));
       }
       demand = linesRes.data;
     } else {
-      demand = (query.items ?? []).map((it) => ({ materialId: it.materialId, quantity: it.quantity }));
+      demand = (query.items ?? []).map((it) => ({ productId: it.productId, quantity: it.quantity }));
       if (demand.length === 0) {
         return Err(AppErr('VALIDATION', 'No lines supplied for ATP check'));
       }
     }
 
-    // 2) Aggregate demand per material (same material may appear on multiple lines).
-    const demandByMaterial = new Map<number, number>();
+    // 2) Aggregate demand per product (same product may appear on multiple lines).
+    const demandByProduct = new Map<number, number>();
     for (const d of demand) {
-      demandByMaterial.set(d.materialId, (demandByMaterial.get(d.materialId) ?? 0) + d.quantity);
+      demandByProduct.set(d.productId, (demandByProduct.get(d.productId) ?? 0) + d.quantity);
     }
 
     // 3) Read real supply facts in one query.
-    const supplyRes = await this.atpRepo.findSupply([...demandByMaterial.keys()]);
+    const supplyRes = await this.atpRepo.findSupply([...demandByProduct.keys()]);
     if (!supplyRes.ok) return Err(supplyRes.error);
-    const supplyByMaterial = new Map<number, AtpSupplyRow>();
-    for (const s of supplyRes.data) supplyByMaterial.set(s.materialId, s);
+    const supplyByProduct = new Map<number, AtpSupplyRow>();
+    for (const s of supplyRes.data) supplyByProduct.set(s.productId, s);
 
     // 4) Compute per-line ATP.
     const today = this.time.today();
     const lines: AtpLineResult[] = [];
-    for (const [materialId, totalDemand] of demandByMaterial.entries()) {
-      const supply = supplyByMaterial.get(materialId);
+    for (const [productId, totalDemand] of demandByProduct.entries()) {
+      const supply = supplyByProduct.get(productId);
       const available = supply?.available ?? 0;
       const shortage = Math.max(0, totalDemand - available);
-      const materialExists = supply?.materialExists ?? false;
+      const productExists = supply?.productExists ?? false;
 
-      const leadTimeIsDefault = supply?.leadTimeDays == null;
-      const leadTimeDays = leadTimeIsDefault ? ATP_DEFAULT_LEAD_TIME_DAYS : Number(supply!.leadTimeDays);
+      // Finished goods have no per-product lead-time master data (made-to-order via
+      // production, not supplier-replenished) — always fall back to the conservative default.
+      const leadTimeIsDefault = true;
+      const leadTimeDays = ATP_DEFAULT_LEAD_TIME_DAYS;
 
       let status: AtpLineStatus;
-      if (!materialExists) status = 'unknown_material';
+      if (!productExists) status = 'unknown_product';
       else if (shortage > 0) status = 'short';
       else status = 'in_stock';
 
-      // In-stock ⇒ today; short or unknown ⇒ today + lead time (must be procured).
+      // In-stock ⇒ today; short or unknown ⇒ today + lead time (must be produced).
       const daysOut = status === 'in_stock' ? ATP_IN_STOCK_DAYS : leadTimeDays;
       const availableOn = this.time.addDays(today, daysOut);
 
       lines.push({
-        materialId,
-        materialName: supply?.materialName ?? null,
+        productId,
+        productName: supply?.productName ?? null,
         unit: supply?.unit ?? null,
         demand: totalDemand,
         available,
@@ -147,9 +155,9 @@ export class AtpCheckHandler implements IQueryHandler<AtpCheckQuery> {
     }
 
     // 5) Order-level rollup: worst status, latest date.
-    const hasUnknown = lines.some((l) => l.status === 'unknown_material');
+    const hasUnknown = lines.some((l) => l.status === 'unknown_product');
     const hasShort = lines.some((l) => l.status === 'short');
-    const overallStatus: AtpLineStatus = hasUnknown ? 'unknown_material' : hasShort ? 'short' : 'in_stock';
+    const overallStatus: AtpLineStatus = hasUnknown ? 'unknown_product' : hasShort ? 'short' : 'in_stock';
 
     let estimatedReady = today;
     for (const l of lines) {

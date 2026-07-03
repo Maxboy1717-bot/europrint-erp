@@ -4,21 +4,23 @@
  *
  * Vision source: EP-PP-066 / EP-PP-024 / CHAT-TARIXI line 25 —
  * "Savdo buyurtma yaratishda taxminiy muddat + bor/yo'q real vaqtda ko'radi" /
- * "Buyurtma kiritishda avtomatik xom-ashyo tekshiruvi (ATP); yetmasa qizil + taxminiy sana".
+ * "Buyurtma kiritishda avtomatik mahsulot tekshiruvi (ATP); yetmasa qizil + taxminiy sana".
  *
  * This is the NON-AI part of the planning vision: a deterministic availability check
- * from real stock + per-material lead time. No AI key, no owner-gated coefficient.
+ * from real finished-good stock. No AI key, no owner-gated coefficient. Orders bind to
+ * finished-good products (sales_order_items.product_id), not raw materialCards — see
+ * i-sales-order.repo.ts SalesOrderLineInput.
  *
  * Two entry modes:
- *   1. Preview at order entry — caller posts `items` (material + quantity) BEFORE saving.
+ *   1. Preview at order entry — caller posts `items` (product + quantity) BEFORE saving.
  *   2. Existing order — caller posts `orderId`; lines are read from sales_order_items.
  */
 
 import { z } from 'zod';
 
-/** One demand line for the ATP check (material card id + quantity). */
+/** One demand line for the ATP check (finished-good product id + quantity). */
 export const AtpLineSchema = z.object({
-  materialId: z.number().int().positive('Material ID must be positive'),
+  productId: z.number().int().positive('Product ID must be positive'),
   quantity: z.number().positive('Quantity must be positive'),
 });
 
