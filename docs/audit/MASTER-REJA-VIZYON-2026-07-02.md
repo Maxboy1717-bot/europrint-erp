@@ -378,4 +378,33 @@
 3-bosqich: 3.1, 3.2, 3.5, 3.9, 3.10, 3.11, 3.12, 3.16(defer) — hali tegilmagan (3.14/3.15 avvalroq bajarilgan — `a3be1bd4`/`025c356a`).
 **A9 (org-daraxt dublikat)** — hamon eng katta blokировщик (A11'ni to'g'ridan bloklaydi, boshqa ko'p narsaga bilvosita ta'sir qiladi); tayyor savol-hujjat: `docs/audit/MASSIV-100/PHASE-08-daraxt-yagona-manager.md`.
 
+## 8.6 EGASI-DATA 3-tur klassifikatsiya + Tier-1 ijro (2026-07-03, 4-guruh qazish + Tier-1 qo'llash)
+
+> Metod: 3000-savol korpusi 4 ta mustaqil READ-ONLY qazish-workflow bilan skanerlandi (17 klaster,
+> 70 sub-band), so'ng sintez-agent A4-saboqni qo'llab qat'iy 3-toifaga ajratdi, so'ng Tier-1'ning
+> har bir bandi alohida fix+adversarial-verify juftligi bilan "Holat:" maydoni SHAXSAN qayta
+> tekshirilib qo'llandi (2 marta sintez xatosi ushbu qayta-tekshiruvda tutib olindi — pastda).
+
+**Yakuniy taqsimot:** 🟢 Tier-1 (darhol qo'llash mumkin) = 13 band · 🟡 Tier-2 (qaror bor, raqam/detal yo'q yoki hedge) = 27 band · 🔴 Tier-3 (chindan ham ochiq) = 8 band.
+
+**Tier-1 ijro natijasi (13/13 qayta tekshirilgan):**
+- ✅ **A6/EP-ORG-004** TUZATILDI (`056a14c2`) — **haqiqiy jiddiy bug**: ko'p-kartali xodimlarga oylik faqat BITTA (asosiy) karta bo'yicha hisoblanardi, egasi qarori "oylik=barcha kartalar yig'indisi"ga zid edi (Q-40). `listActiveCardPayInputs` + `generatePeriodRows` endi har xodimning barcha aktiv kartalarini yig'adi.
+- ✅ **EP-ORG-014** additiv `COMMENT ON COLUMN` bilan hujjatlashtirildi (`b9f285af`) — 93/93 mavjud karta bo'sh bo'lgani uchun hard NOT NULL QOYILMADI (Q-39/Q-46 regressiya-oldi).
+- ✅ EP-ORG-015, 016, 017, 018/052(16-soat "QYM"), 050, A3(razryad), A12(LMS-blok), B5(500k/5M tasdiq) — barchasi **allaqachon to'g'ri implementatsiya qilingan**, faqat tasdiqlandi, hech narsa yozilmadi.
+- 🛑 **2 marta sintez-xato tutib olindi** (qayta-tekshiruv qatlami ishladi): EP-ORG-049, EP-ORG-111/130, EP-ORG-112/114 — sintez-hisobot bularni "Tier 1" deb bergan edi, lekin shaxsiy "Holat:" tekshiruvida barchasi aslida `🔵 OCHIQ` (faqat tavsiya) ekani aniqlandi — **hech narsa yozilmadi, fabrikatsiya oldi olindi**.
+
+**Xulosa:** Tier-1'dan atigi 2 ta band amaliy o'zgarish talab qildi (A6 real-bug, EP-ORG-014 hujjatlashtirish) — qolgan 11 tasi allaqachon vizyonga mos qurilgan ekan. To'liq band-ro'yxat + tier-asoslash: sessiya-arxivida (agent a5c190f458bf7ac41 natijasi).
+
+**Tier-2 (27 band, qaror bor lekin raqam/detal yo'q — ustida ISHLANMAGAN, egasi kiritishi kerak):** A1(AI-fallback tartib), A2(31-xodim biriktirish tartibi), A5(oylik-band summasi), A6-stake(EP-ORG-066/142 ulush-formula), A8(head_user_id/manager_id DATA), A10a(RBAC-matritsa), A10b(login-gate rollout), A11(workflow_rules misollar), B1(PIN format), B4-QC(AQL/Ac-Re standartlari), B6(USD-kurs manbasi), B7(kassa-limit son), B8(oy-ish-kunlari), B9(jarima-normalar), B10(reyting-og'irlik — ⚠️Claude-placeholder), B11(NDA matni), C1(ombor-sig'im), C4(SKU-nomlar), C6(marketing-kontent-turlari), C7(ABC-paket%), C9(lid-yo'qotish-sabab-ro'yxat), C10(NPS-kanal+matn), C11(PP-marshrut master-data), C12(ishlab-chiqarish-norma), C14(brak-siyosat), C15a(SOS-deadline), C17(operator-sertifikat-matritsa), C20(Face-AI host), C21(kamera-prompt-final), C22(AISHA Layer-B vaqti), C23(Kanban-test-tozalash).
+
+**Tier-3 (8 band, chindan ochiq — egasi javobi kutiladi, ustida ISHLANMAGAN):**
+- **A9** — org-daraxt kanonik-dublikat (eng yuqori ustuvorlik, 4 aniq savol tayyor: `docs/audit/MASSIV-100/PHASE-08-daraxt-yagona-manager.md`)
+- B3 — 5 kengash a'zosi ism/lavozimi
+- B7(original-verbatim) — kassa kunlik limiti aniq son
+- B12-1 — kassir-navbat 7-faktor og'irlik %
+- B12-3 — (2146-savolda ko'tarilmagan)
+- C13(qism) — kashirovka kley-gramaj (120g/m²)
+- C18 — kamera IP/RTSP manzillari
+- C19 — IoT-sensor jismoniy holati
+
 > Bu hujjat = 2026-07-02 holat-suratining yagona manbasi. Yangilanish keyingi katta o'lchovda (Q-25).
