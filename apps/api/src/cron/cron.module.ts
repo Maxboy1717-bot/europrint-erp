@@ -56,9 +56,12 @@ import { CustomerAbcRecomputeCron } from './customer-abc-recompute.cron'
 import { CustomerAbcService } from '../modules/sd/application/customer-abc.service'
 import { SD_CUSTOMER_ABC_REPO } from '../modules/sd/infrastructure/repositories/i-sd-customer-abc.repo'
 import { DrizzleSdCustomerAbcRepository } from '../modules/sd/infrastructure/repositories/drizzle-sd-customer-abc.repo'
+// 2.18 (MASTER-REJA-VIZYON) — AI-fit haftalik avto-tsikl (har faol karta+xodim evaluate())
+import { AiFitWeeklyCron } from './ai-fit-weekly.cron'
+import { AiFitModule } from '../modules/ai/ai-fit.module'
 
 @Module({
-  imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule],
+  imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule],
   providers: [
     CronStatusService,
     // Sprint 2 — Haftalik EOQ + Safety Stock yangilash (TZ-02/TZ-04)
@@ -120,6 +123,8 @@ import { DrizzleSdCustomerAbcRepository } from '../modules/sd/infrastructure/rep
     CustomerAbcRecomputeCron,
     CustomerAbcService,
     { provide: SD_CUSTOMER_ABC_REPO, useClass: DrizzleSdCustomerAbcRepository },
+    // 2.18 — AI-fit haftalik avto-tsikl (Dushanba 03:00); AiFitService = AiFitModule'dan (import qilingan, exported)
+    AiFitWeeklyCron,
   ],
   exports: [CronStatusService],
 })

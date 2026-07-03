@@ -126,6 +126,9 @@ export class CronStatusService {
       { name: 'StockAlertCron',                  description: "Ombor lot/partiya muddati tugashi alert (08:00)",     schedule: '0 8 * * *'        },
       { name: 'AdvanceReminderCron',             description: "Avans eslatmasi (10:00)",                             schedule: '0 10 * * *'       },
       { name: 'CkpDailyAggregateCron',           description: "ЦКП kunlik kaskad-agregat: root-karta subtree o'rtacha achievement (01:00)", schedule: '0 1 * * *' },
+      { name: 'AiFitWeeklyCron',                 description: "AI-fit haftalik avto-tsikl: har faol karta+xodim evaluate() (Dushanba 03:00)", schedule: '0 3 * * 1' },
+      // 2.5 (MASTER-REJA-VIZYON) — mijoz ABC segmentatsiya kunlik avto-hisob
+      { name: 'CustomerAbcRecomputeCron',        description: "Mijoz ABC segmentatsiya kunlik avto-hisob: live 12-oylik buyurtma summasidan (02:00)", schedule: '0 2 * * *' },
       // ── HR-v2 module crons (managed by their own services) ────────────────
       { name: 'DailyReport.sendReminder',        description: "Kunlik hisobot eslatmasi (15:30 Dush-Shan)",         schedule: '30 15 * * 1-6'    },
       { name: 'DailyReport.markAbsent',          description: "Hisobot topshirmaganlarni auto-absent (16:00)",      schedule: '0 16 * * 1-6'     },

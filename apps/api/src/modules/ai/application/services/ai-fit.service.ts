@@ -90,6 +90,37 @@ export class AiFitService {
     return this.repo.listScores(filters);
   }
 
+  /**
+   * Haftalik avto-tsikl (2.18, MASTER-REJA-VIZYON): har faol karta (org_functions)
+   * + unga biriktirilgan xodim uchun evaluate() ni ketma-ket chaqiradi. Har chaqiruv
+   * o'zining graceful fallback mexanizmiga ega (evaluate() AI xato bo'lsa ham
+   * FALLBACK_FIT_SCORE bilan yozadi, hech qachon throw qilmaydi) — shuning uchun bu
+   * metod bitta karta muvaffaqiyatsiz bo'lsa ham navbatdagilarni davom ettiradi.
+   */
+  async runWeeklyCycle(): Promise<Result<{ total: number; succeeded: number; failed: number }>> {
+    const assignments = await this.repo.listActiveCardAssignments();
+    if (!isOk(assignments)) return Err(assignments.error);
+
+    const rows = assignments.data;
+    let succeeded = 0;
+    let failed = 0;
+    for (const row of rows) {
+      const r = await this.evaluate({
+        employeeId:       row.employeeId,
+        cardId:           row.cardId,
+        employeeProfile:  row.employeeProfile,
+        cardRequirements: row.cardRequirements,
+      });
+      if (isOk(r)) {
+        succeeded += 1;
+      } else {
+        failed += 1;
+        this.logger.warn(`AI-fit haftalik tsikl: karta=${row.cardId} xodim=${row.employeeId} saqlanmadi — ${r.error}`);
+      }
+    }
+    return Ok({ total: rows.length, succeeded, failed });
+  }
+
   /** Latest AI-fit report for an employee; Ok(null) when none (404 handled in controller). */
   async getReport(employeeId: number): Promise<Result<FitScoreRow | null>> {
     return this.repo.findLatestByEmployee(employeeId);

@@ -40,10 +40,26 @@ export interface ListFitScoreFilters {
   limit?:      number;
 }
 
+/**
+ * A live (karta, xodim) juftligi — faol org_functions kartasi + unga
+ * `users.org_function_id` orqali biriktirilgan xodim. Haftalik avto-tsikl
+ * (2.18) shu ro'yxat bo'yicha evaluate() ni chaqiradi. Barcha maydonlar DB'dan
+ * (fabrikatsiya emas); profile/requirements ichidagi `null` qiymatlar shunchaki
+ * hali to'ldirilmagan master-data'ni bildiradi.
+ */
+export interface ActiveCardAssignmentRow {
+  employeeId:         number;
+  cardId:             number;
+  employeeProfile:    Record<string, unknown>;
+  cardRequirements:   Record<string, unknown>;
+}
+
 export interface IAiFitRepo {
   insertScore(dto: InsertFitScoreDto): Promise<Result<FitScoreRow>>;
   findLatestByEmployee(employeeId: number): Promise<Result<FitScoreRow | null>>;
   listScores(filters: ListFitScoreFilters): Promise<Result<FitScoreRow[]>>;
+  /** Faol karta + biriktirilgan xodim juftliklari (haftalik avto-tsikl uchun). */
+  listActiveCardAssignments(): Promise<Result<ActiveCardAssignmentRow[]>>;
 }
 
 export const AI_FIT_REPO = Symbol('AI_FIT_REPO');

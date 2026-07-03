@@ -44,6 +44,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Result, AppError, AppErr, Ok, Err } from '@common/result';
 import { z } from 'zod';
+import * as fs from 'fs';
+import * as path from 'path';
 import { CashierHubService } from './cashier-hub.service';
 // SHARED READ of the app-level AI router (registered by AiModule in app.module) — resolved
 // LAZILY via ModuleRef{strict:false} so FinanceModule needs no AiModule import and the
@@ -55,6 +57,30 @@ import {
   type AdvanceReportListRow,
   type PayrollListPage,
 } from './i-cashier-payroll.repo';
+
+// Local storage root — mirrors `apps/api/src/modules/storage/storage.controller.ts` UPLOADS_DIR
+// (not exported from that controller; duplicated here as a small read-only path-safety helper
+// so FinanceModule doesn't need to import a presentation-layer controller).
+const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+
+/** Image media types the vision channel can actually analyze (Claude/OpenAI/Gemini). */
+const RECEIPT_IMAGE_MEDIA_TYPES: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+};
+
+/**
+ * Resolve a storage key strictly inside UPLOADS_DIR (same traversal guard as
+ * `resolveWithinUploads` in storage.controller.ts). Returns null on any escape attempt.
+ */
+function resolveReceiptPath(key: string): string | null {
+  const resolved = path.resolve(UPLOADS_DIR, key);
+  if (resolved !== UPLOADS_DIR && !resolved.startsWith(UPLOADS_DIR + path.sep)) return null;
+  return resolved;
+}
 
 const IssueAdvanceSchema = z.object({
   shiftId: z.number().int().positive(),
@@ -198,9 +224,12 @@ export class CashierPodotchetService {
 
   /**
    * Receipt AI-OCR — extracts the total amount from the uploaded receipt via the shared
-   * AiRouterService (same prompt-based pattern as ai-agents vision-qc) and compares it to
-   * the reported amount. NEVER throws and NEVER blocks the flow:
+   * AiRouterService's vision channel (2.10-ai-ocr-rasm-fix: sends the actual image BYTES,
+   * base64-encoded, not a file-path string — the AI now really "sees" the receipt instead
+   * of guessing from a URL it cannot fetch). Compares the extracted amount to the reported
+   * one. NEVER throws and NEVER blocks the flow:
    *   - AI provider absent / router unavailable / call fails → {extracted:null, match:null};
+   *   - receipt file missing on disk / unreadable / not an image → {extracted:null, match:null};
    *   - AI answers but yields no numeric amount → extracted stored (audit), match=null;
    *   - only a real numeric amount produces match=true/false (no forged verdicts — Q-40).
    */
@@ -215,9 +244,15 @@ export class CashierPodotchetService {
       return { extracted: null, match: null };
     }
 
+    const image = this.readReceiptImage(receiptFilePath);
+    if (!image) {
+      // Not an image (e.g. PDF receipt) or unreadable on disk — graceful skip, no forged verdict.
+      this.logger.debug(`AI-OCR o'tkazib yuborildi — rasm fayl o'qilmadi yoki rasm formatida emas: ${receiptFilePath}`);
+      return { extracted: null, match: null };
+    }
+
     const prompt = [
-      'EuroPrint podotchet chek tekshiruvi (AI-OCR).',
-      `Chek fayli (ichki storage): /api/storage/${receiptFilePath}`,
+      'EuroPrint podotchet chek tekshiruvi (AI-OCR). Ilova qilingan rasmni ko\'rib chiqing.',
       `Xodim hisobotda ko'rsatgan summa: ${claimedAmount} UZS.`,
       'Chekdan JAMI to\'langan summani ajrating va FAQAT quyidagi JSON qaytaring:',
       '{"amount": number|null, "currency": string|null, "note": string}',
@@ -225,7 +260,7 @@ export class CashierPodotchetService {
     ].join('\n');
 
     try {
-      const res = await ai.call({ taskType: 'finance.invoice_classify', prompt, temperature: 0, maxTokens: 300 });
+      const res = await ai.call({ taskType: 'finance.invoice_classify', prompt, image, temperature: 0, maxTokens: 300 });
       if (!res.ok) {
         this.logger.debug(`AI-OCR muvaffaqiyatsiz (graceful davom): ${String(res.error)}`);
         return { extracted: null, match: null };
@@ -246,6 +281,31 @@ export class CashierPodotchetService {
     } catch (e: unknown) {
       this.logger.debug(`AI-OCR xato (graceful davom): ${String(e)}`);
       return { extracted: null, match: null };
+    }
+  }
+
+  /**
+   * Reads the receipt file off local disk (same storage root as `/api/storage/upload`) and
+   * base64-encodes it for the AI vision channel. Returns null (graceful) when: the path
+   * escapes UPLOADS_DIR, the file doesn't exist, or its extension isn't a vision-supported
+   * image type (e.g. a `.pdf` receipt — Claude/OpenAI/Gemini image blocks need raster images).
+   */
+  private readReceiptImage(receiptFilePath: string): { base64: string; mediaType: string } | null {
+    const ext = path.extname(receiptFilePath).toLowerCase();
+    const mediaType = RECEIPT_IMAGE_MEDIA_TYPES[ext];
+    if (!mediaType) return null;
+
+    const safePath = resolveReceiptPath(receiptFilePath);
+    if (!safePath) return null;
+
+    try {
+      if (!fs.existsSync(safePath)) return null;
+      const buffer = fs.readFileSync(safePath);
+      if (buffer.length === 0) return null;
+      return { base64: buffer.toString('base64'), mediaType };
+    } catch (e: unknown) {
+      this.logger.debug(`Chek faylni o'qishda xato (graceful davom): ${String(e)}`);
+      return null;
     }
   }
 
