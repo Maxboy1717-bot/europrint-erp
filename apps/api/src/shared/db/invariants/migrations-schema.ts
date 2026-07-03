@@ -360,4 +360,37 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
   { name: 'doc_seq_kochirish_akt sequence (FAZA D)', sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_kochirish_akt START 1 INCREMENT 1 NO CYCLE` },
   { name: 'doc_seq_inv_akt sequence (FAZA D)',       sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_inv_akt START 1 INCREMENT 1 NO CYCLE` },
   { name: 'doc_seq_zarar_akt sequence (FAZA D)',     sql: `CREATE SEQUENCE IF NOT EXISTS doc_seq_zarar_akt START 1 INCREMENT 1 NO CYCLE` },
+  // 2.15-summa-tasdiq-darvoza (MASTER-REJA-VIZYON-2026-07-02): ZVS summa-chegaralari avval
+  // zvs.service.ts'da HARDCODE edi (<=500k lvl1, <=5M lvl2, >5M lvl3). approval_matrix_config
+  // jadvali ALLAQACHON mavjud (bo'sh) — bu yerda document_type='zvs' bilan 3 qator SEED qilinadi
+  // (mavjud hardcode qiymatlarning aynan o'zi — xulq-atvor o'zgarmaydi, faqat manba DB'ga ko'chadi;
+  // egasi keyinchalik screen orqali sozlashi mumkin). approver_role bir nechta rolni vergul bilan
+  // saqlaydi (ZvsService shu formatni vergul bo'yicha split qiladi) — yangi CREATE TABLE emas,
+  // mavjud jadvalga qator qo'shish (Q-35 additive, jadval yaratilmaydi).
+  // APPROVED: egasi 2026-07-02 vizyonni toliq qilish
+  // Ustun kengaytirish (widen, additive — DROP/torайтirish emas): live approver_role
+  // VARCHAR(50) edi — ko'p-rolli vergul-ro'yxat ("admin,super_admin,...,manager" = 76 belgi)
+  // sig'maydi. VARCHAR(255)ga kengaytirish faqat limitni oshiradi, mavjud qiymatlarga
+  // (hozircha 0 qator) ta'sir qilmaydi — Q-39/Q-46 regressiya emas.
+  {
+    name: 'approval_matrix_config.approver_role widen VARCHAR(255) (2.15 — comma-role-list)',
+    sql: `ALTER TABLE IF EXISTS approval_matrix_config ALTER COLUMN approver_role TYPE VARCHAR(255)`,
+  },
+  {
+    name: 'approval_matrix_config seed (zvs) — 2.15 summa-tasdiq-darvoza',
+    sql: `
+      INSERT INTO approval_matrix_config
+        (document_type, min_amount, max_amount, approval_level, approver_role, is_active)
+      SELECT * FROM (VALUES
+        ('zvs'::varchar, 0::numeric,       500000::numeric,  1, 'admin,super_admin,director,ceo,cfo,finance_manager,department_head,manager'::varchar, true),
+        ('zvs'::varchar, 500000::numeric,  5000000::numeric, 2, 'admin,super_admin,director,ceo,cfo,finance_manager'::varchar, true),
+        ('zvs'::varchar, 5000000::numeric, NULL::numeric,    3, 'admin,super_admin,director,ceo'::varchar, true)
+      ) AS seed(document_type, min_amount, max_amount, approval_level, approver_role, is_active)
+      WHERE NOT EXISTS (SELECT 1 FROM approval_matrix_config WHERE document_type = 'zvs')
+    `,
+  },
+  {
+    name: 'approval_matrix_config document_type+active index (2.15)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_approval_matrix_config_doctype_active ON approval_matrix_config (document_type, is_active)`,
+  },
 ];
