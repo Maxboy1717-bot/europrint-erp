@@ -273,6 +273,13 @@ export class ProcurementRequestService {
    * employee_debt_amount_chk (amount > 0) — 0 summali so'rovda qarz ochilmaydi (warn).
    * Ko'prik xatosi asosiy approve oqimini yiqitmaydi (advance_payments kanonik yozuv qoldi) —
    * lekin warn log + null bilan KO'RINADIGAN qilinadi.
+   *
+   * (3.4 HAR-SO'M-HISOBLI tsikl, 2026-07-03): bu — "xodim moddiy-buyum uchun pul oldi → ombor
+   * kirim qilinganda qarz avto-CLEARED" ASOSIY YO'L. Yopilish nuqtasi pastda receiveProcurement()
+   * §4 (employeeDebtClearedId) — reference=so'rov-raqami orqali deterministik moslashadi. KAS-1
+   * to'g'ridan-to'g'ri issueAdvance() (`ADV-<ref>`) qarzlari BU KO'PRIKKA kirmaydi — ular
+   * pos_movements bilan hech qachon bog'lanmaydi (sabab: cashier-podotchet.service.ts modul
+   * izohida yozilgan — deterministik kalit yo'q, taxmin bilan yopish Q-40 xavfi).
    */
   private async openEmployeeDebtBridge(
     requestNumber: string,

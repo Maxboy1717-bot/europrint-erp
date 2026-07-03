@@ -13,6 +13,30 @@
  *     (open) + tasdiqda (pending reports) + sabab/kategoriya rows — separate from oylik/avans.
  *   Idempotent throughout (advance reference, report reference). No forge: cash-out reuses the
  *   KAS-1 PIN gate (owner #8); debt clears only when its report is approved.
+ *
+ *   HAR-SO'M-HISOBLI TSIKL — QARZ↔OMBOR-KIRIM BOG'LASH (3.4, 2026-07-03 audit):
+ *   Ikki mustaqil qarz-ochish yo'li mavjud, ikkalasi ham `employee_debt`ga yozadi:
+ *     (A) shu servis — issueAdvance (`ADV-<ref>`): sof KASSA-CHIQIM (safar/oshxona/mayda
+ *         xarajat kabi materiaLSIZ podotchet) — ombor-kirim bilan HECH QACHON bog'lanmaydi,
+ *         chunki bu yo'lda pos_movements/warehouse yozuvi umuman yaratilmaydi (faqat chek-rasm +
+ *         inson tasdig'i orqali yopiladi — bu TO'G'RI, chunki xarajat moddiy-buyum EMAS).
+ *     (B) `procurement-request.service.ts` (P2P xarid) — createAdvanceIfNeeded (`PR-<raqam>`):
+ *         xodim MATERIAL sotib olish uchun avans oladi → debt ochiladi → tovar kelganda
+ *         receiveProcurement() EXTERNAL_IN pos_movement (karantin/QC-gate) yaratadi VA xuddi
+ *         shu tranzaksiyada mos employee_debt qatorini avto-CLEARED qiladi (bridge allaqachon
+ *         qurilgan — G3 pattern, openEmployeeDebtBridge/clear, DB-tekshirilgan 2026-07-03).
+ *   XULOSA (halol baho, fabrikatsiya emas): "xodim moddiy-buyum uchun pul oldi → ombor-kirim
+ *   qarzni avto-yopadi" ASOSIY YO'L (B) allaqachon QOPLANGAN. Umumiy holat — KAS-1 orqali
+ *   ochilgan (A) qarzni KEYINCHALIK material xaridiga aylantirib, tasodifiy/keyinchalik kelgan
+ *   pos_movements yozuviga bog'lash — bu ikki jadval o'rtasida DETERMINISTIK kalit yo'q
+ *   (na vendor, na material, na summa-shartnoma; employee_debt.movement_id — KAS-1 cashier
+ *   harakat ID, pos_movements bilan aloqasi yo'q). Bunday moslashtirishni summa/xodim bo'yicha
+ *   TAXMIN qilib avto-yopish — noto'g'ri pulni noto'g'ri qarzga yopish xavfi (Q-40 buzilishi).
+ *   Shuning uchun bu general-case KENGAYTMA sifatida KEYINGA QOLDIRILADI — agar kerak bo'lsa,
+ *   yechim: issueAdvance()ga ixtiyoriy targetWarehouseId/expectedMaterialId qo'shib, KAS-1
+ *   avansini ham (B) kabi pos_movement bilan atalgan holda ochish (egasi qarori talab qiladi:
+ *   qaysi avanslar moddiy-buyum uchunligini UI'da ajratish kerak — EGASI-DATA emas, lekin
+ *   UX/vizyon qarori).
  * @layer Application (Finance)
  */
 
