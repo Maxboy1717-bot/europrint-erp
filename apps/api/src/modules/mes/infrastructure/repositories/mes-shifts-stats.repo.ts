@@ -231,25 +231,100 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
-  async pauseSession(sid: number, _reason: string | undefined): Promise<Row[]> {
-    // pause_reason and paused_at columns do not exist in mes_production_sessions;
-    // only status + updated_at are available (information_schema verified 2026-06-20)
+  /**
+   * 3.6 MES stage-tracking — pause a running session.
+   * FIX (Q-46, was dead code): the old WHERE matched status='active', a value
+   * production_sessions never holds (real vocabulary is running/in_progress/
+   * paused/completed — verified via information_schema + live rows 2026-07-03),
+   * so this UPDATE silently affected 0 rows for every real session. Now matches
+   * the real "currently working" statuses.
+   * Also freezes the GSD stage clock: current_stage's elapsed time (since
+   * stage_started_at) is folded into its accumulator (setup/main/teardown_seconds)
+   * and stage_started_at is cleared to NULL — the stage itself is NOT advanced
+   * (pause is not a stage transition), it just stops accruing time while paused.
+   * resumeSession restarts the clock on the SAME current_stage.
+   */
+  async pauseSession(sid: number, reason: string | undefined): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
-      UPDATE mes_production_sessions
-      SET status = 'paused', updated_at = NOW()
-      WHERE id = ${sid} AND status = 'active' RETURNING *
+      WITH before AS (
+        SELECT id, status, current_stage, stage_started_at, setup_seconds, main_seconds, teardown_seconds
+        FROM production_sessions
+        WHERE id = ${sid} AND status IN ('running', 'in_progress') AND deleted_at IS NULL
+        FOR UPDATE
+      )
+      UPDATE production_sessions ps
+      SET status = 'paused',
+          setup_seconds = CASE WHEN b.current_stage = 'setup' AND b.stage_started_at IS NOT NULL
+            THEN b.setup_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - b.stage_started_at))::int)
+            ELSE b.setup_seconds END,
+          main_seconds = CASE WHEN b.current_stage = 'main' AND b.stage_started_at IS NOT NULL
+            THEN b.main_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - b.stage_started_at))::int)
+            ELSE b.main_seconds END,
+          teardown_seconds = CASE WHEN b.current_stage = 'teardown' AND b.stage_started_at IS NOT NULL
+            THEN b.teardown_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - b.stage_started_at))::int)
+            ELSE b.teardown_seconds END,
+          stage_started_at = NULL,
+          updated_at = NOW()
+      FROM before b
+      WHERE ps.id = b.id
+      RETURNING ps.*
     `);
+    const row = rows.rows[0] as Row | undefined;
+    if (row) {
+      await this.logStageTransition(sid, 'PAUSE', String(row.current_stage ?? ''), String(row.current_stage ?? ''), reason ?? null);
+    }
     return rows.rows as Row[];
   }
 
   async resumeSession(sid: number): Promise<Row[]> {
-    // paused_at column does not exist; clear pause by restoring status only
     const rows = await runQuery<Row>(sql`
-      UPDATE mes_production_sessions
-      SET status = 'active', updated_at = NOW()
-      WHERE id = ${sid} AND status = 'paused' RETURNING *
+      UPDATE production_sessions
+      SET status = 'running',
+          stage_started_at = CASE WHEN current_stage IS NOT NULL AND current_stage <> 'done' THEN NOW() ELSE stage_started_at END,
+          updated_at = NOW()
+      WHERE id = ${sid} AND status = 'paused' AND deleted_at IS NULL
+      RETURNING *
     `);
+    const row = rows.rows[0] as Row | undefined;
+    if (row) {
+      await this.logStageTransition(sid, 'RESUME', String(row.current_stage ?? ''), String(row.current_stage ?? ''), null);
+    }
     return rows.rows as Row[];
+  }
+
+  /**
+   * 3.6 MES stage-tracking — appends a stage-transition row to the canonical
+   * `audit_logs` table (same mechanism as HR's create-employee/save-employee
+   * audit envelopes — no new table, Q-35). Records session id, action
+   * (START/PAUSE/RESUME/STOP/ADVANCE_STAGE), from/to stage, and an optional
+   * reason, so a session's setup→main→teardown history is queryable:
+   *   SELECT * FROM audit_logs WHERE table_name = 'production_sessions'
+   *     AND record_id = '<sessionId>' ORDER BY created_at;
+   */
+  private async logStageTransition(
+    sessionId: number,
+    action: string,
+    fromStage: string,
+    toStage: string,
+    reason: string | null,
+  ): Promise<void> {
+    try {
+      await runQuery(sql`
+        INSERT INTO audit_logs (id, table_name, record_id, action, old_values, new_values, reason, created_at)
+        VALUES (
+          gen_random_uuid()::text,
+          'production_sessions',
+          ${String(sessionId)},
+          ${action},
+          ${JSON.stringify({ stage: fromStage || null })}::jsonb,
+          ${JSON.stringify({ stage: toStage || null })}::jsonb,
+          ${reason},
+          NOW()
+        )
+      `);
+    } catch {
+      // Best-effort: a logging failure must not fail the operator's pause/resume action.
+    }
   }
 
   async updateSessionQuantity(sid: number, produced_qty?: number, rejected_qty?: number): Promise<Row[]> {

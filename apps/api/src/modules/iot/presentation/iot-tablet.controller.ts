@@ -349,12 +349,25 @@ export class IotTabletController {
       );
     }
 
-    await db.execute(sql`
+    // 3.6 MES stage-tracking: first start of a session opens the GSD SETUP stage
+    // (current_stage/stage_started_at were NULL until now — mirrors
+    // ProductionSession.beginStages()/advanceSessionStage's "current_stage NULL →
+    // start SETUP" rule). Re-starting an already-staged session (e.g. after a
+    // resume that already restarted the clock) leaves current_stage/stage_started_at
+    // untouched via COALESCE, so this call is idempotent.
+    const started = await db.execute(sql`
       UPDATE production_sessions
-      SET status='running', started_at=COALESCE(started_at, NOW()), updated_at=NOW()
+      SET status='running',
+          started_at=COALESCE(started_at, NOW()),
+          current_stage=COALESCE(current_stage, 'setup'),
+          stage_started_at=COALESCE(stage_started_at, NOW()),
+          updated_at=NOW()
       WHERE id=${sessionId}
+      RETURNING current_stage
     `);
-    return { id: sessionId, status: 'running' };
+    const stage = (((started as Rows).rows ?? [])[0] as Record<string, unknown> | undefined)?.current_stage ?? 'setup';
+    await this.logStageTransition(sessionId, 'START', null, String(stage), null);
+    return { id: sessionId, status: 'running', currentStage: stage };
   }
 
   @ApiOperation({ summary: 'Stop production session and compute OEE' })
@@ -419,8 +432,13 @@ export class IotTabletController {
     const quality      = oeeResult.ok ? oeeResult.data.quality      : 0;
     const oee          = oeeResult.ok ? oeeResult.data.oee          : 0;
 
-    // 3. UPDATE: set status, ended_at, OEE columns
-    await db.execute(sql`
+    // 3. UPDATE: set status, ended_at, OEE columns.
+    //    3.6 MES stage-tracking: stop finalizes the GSD pipeline — whichever
+    //    stage was open (setup/main/teardown) has its elapsed time (since
+    //    stage_started_at) folded into that stage's accumulator, then
+    //    current_stage moves to 'done' and stage_started_at is cleared
+    //    (mirrors ProductionSession.advanceStage's per-stage accumulation).
+    const stoppedRow = await db.execute(sql`
       UPDATE production_sessions
       SET status       = 'stopped',
           ended_at     = COALESCE(ended_at, NOW()),
@@ -428,9 +446,23 @@ export class IotTabletController {
           performance  = ${performance},
           quality      = ${quality},
           oee          = ${oee},
+          setup_seconds = CASE WHEN current_stage = 'setup' AND stage_started_at IS NOT NULL
+            THEN setup_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - stage_started_at))::int)
+            ELSE setup_seconds END,
+          main_seconds = CASE WHEN current_stage = 'main' AND stage_started_at IS NOT NULL
+            THEN main_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - stage_started_at))::int)
+            ELSE main_seconds END,
+          teardown_seconds = CASE WHEN current_stage = 'teardown' AND stage_started_at IS NOT NULL
+            THEN teardown_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - stage_started_at))::int)
+            ELSE teardown_seconds END,
+          current_stage    = CASE WHEN current_stage IS NOT NULL THEN 'done' ELSE current_stage END,
+          stage_started_at = NULL,
           updated_at   = NOW()
       WHERE id = ${sessionId}
+      RETURNING current_stage
     `);
+    const finalStage = (((stoppedRow as Rows).rows ?? [])[0] as Record<string, unknown> | undefined)?.current_stage ?? null;
+    await this.logStageTransition(sessionId, 'STOP', null, finalStage === null ? '' : String(finalStage), null);
 
     // 3b. GOLDEN-THREAD (HOP 3, MES→QC): the floor-operator tablet stop must fire the
     //     SAME event the CQRS complete-session.handler publishes, so QC's
@@ -563,6 +595,43 @@ export class IotTabletController {
     }
 
     return { data: row };
+  }
+
+  /**
+   * 3.6 MES stage-tracking — appends a stage-transition row to the canonical
+   * `audit_logs` table (same append-only mechanism HR's create/save-employee
+   * handlers use — no new table, Q-35). Mirrors
+   * MesShiftsStatsRepository.logStageTransition (pause/resume) so a session's
+   * full START→PAUSE→RESUME→STOP history is queryable from one place:
+   *   SELECT * FROM audit_logs WHERE table_name = 'production_sessions'
+   *     AND record_id = '<sessionId>' ORDER BY created_at;
+   * Best-effort: a logging failure must never fail the floor operator's
+   * start/stop action, so errors are caught and logged, not thrown.
+   */
+  private async logStageTransition(
+    sessionId: number,
+    action: string,
+    fromStage: string | null,
+    toStage: string,
+    reason: string | null,
+  ): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO audit_logs (id, table_name, record_id, action, old_values, new_values, reason, created_at)
+        VALUES (
+          gen_random_uuid()::text,
+          'production_sessions',
+          ${String(sessionId)},
+          ${action},
+          ${JSON.stringify({ stage: fromStage })}::jsonb,
+          ${JSON.stringify({ stage: toStage || null })}::jsonb,
+          ${reason},
+          NOW()
+        )
+      `);
+    } catch (err) {
+      this.logger.error(`[IoT] logStageTransition failed (sessionId=${sessionId} action=${action}): ${String(err)}`);
+    }
   }
 
   /**

@@ -7,6 +7,7 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { I18nService } from 'nestjs-i18n';
 import { PermissionSet } from '../cache/permission-set.interface';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 /**
  * Role-based access guard. Reads `@Roles('director', 'cfo', ...)` metadata
@@ -27,6 +28,14 @@ import { PermissionSet } from '../cache/permission-set.interface';
  *    the allow-list. This is additive: `role` continues to authorize exactly as before;
  *    `rbacTier` only ever GRANTS additional access, never removes it. Card-less users
  *    (rbacTier null) keep the legacy role-only behavior. Login-gate stays OFF (default).
+ *  - `@Public()` routes (method or class metadata, same `IS_PUBLIC_KEY` the global
+ *    `JwtAuthGuard` reads) short-circuit to allowed — mirrors JwtAuthGuard's own
+ *    `@Public()` bypass. Needed because `@UseGuards(RolesGuard)` + class-level
+ *    `@Roles(...)` otherwise applies to EVERY method (including ones later marked
+ *    `@Public()` for external/webhook access), and there is no `request.user` on an
+ *    unauthenticated request for the role check to evaluate. A route that opts into
+ *    `@Public()` must supply its own authentication (e.g. `WebhookSignatureGuard`) —
+ *    RolesGuard has nothing to check there and must not throw Forbidden first.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -41,6 +50,14 @@ export class RolesGuard implements CanActivate {
    * @throws ForbiddenException when the role is missing or not allowed
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+
     const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
       context.getHandler(),
       context.getClass(),
