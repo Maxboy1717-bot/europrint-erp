@@ -334,4 +334,42 @@
 3. **Egasi-DATA: 47 yozuv** (A-daraja 12 / B 12 / C 23) — §3.2 to'liq jadval. A1 (AI-kalit faollashtirish) + A9 (daraxt qarori) + A2-A8 (karta-oylik to'plami) eng katta ochilish.
 4. **Tartib:** 0-bosqich (5 xavf-fix, hammasi S) → 1-bosqich (egasi-sessiya: data) → 2-bosqich (18 uzuq-halqa fix) → 3-bosqich (16 qurilish).
 
+═══════════════════════════════════════════════════════════════════
+# 8. BAJARILDI-LOG (2026-07-03 — egasi-intervyu-qazish + Guruh-1/2/3 ijro)
+═══════════════════════════════════════════════════════════════════
+
+> Metod: har band mustaqil adversarial verify-agent bilan tekshirilgan (Q-29). Raqamlash
+> bu hujjatning §5.2/§5.3 jadvaliga mos (ba'zi ijro-workflow'larda vaqtinchalik boshqa
+> raqam bilan yuritilgan edi — bu yerda TO'G'IRLANGAN, haqiqiy band-raqami ko'rsatilgan).
+
+## 8.1 0-bosqich
+- **0.5** ✅ BAJARILDI — `product_categories.updated_at` qo'shildi, GET /api/public/categories=200.
+
+## 8.2 1-bosqich (EGASI-DATA)
+- **A4** (exam_pass_threshold) ❌→↩️ **QAYTARILDI** — birinchi urinish (`5e40c5ff`) hujjatdagi "🔵 OCHIQ" (tahlilchi-tavsiya) yozuvni "egasi qarori" deb noto'g'ri talqin qildi; adversarial verify-agent fabrikatsiyani topdi; `51f167f1` bilan NULL'ga qaytarildi. **HALI OCHIQ** — egasi EP-ORG-055/056'ni "✅ JAVOBLANGAN" qilib tasdiqlashi kerak.
+- **A11** (workflow_rules) 🔒 **BLOKLANGAN** (tasdiqlangan) — org_departments'da 25 ta dublikat-nomli bo'lim (Sotuvlar×2, Moliya×3) borligi sababli xavfsiz marshrut-juftlik yo'q. A9 (org-daraxt) hal bo'lmaguncha ochilmaydi.
+
+## 8.3 2-bosqich
+- **2.1** ✅ Tasdiqlandi (o'zgarish kerak emas edi) — avto-PDF akt-zanjiri to'g'ri ishlaydi (kod 07-02'da yozilgan, 6/6 NULL — backend o'sha vaqtdan beri jonli bo'lmagani uchun, regressiya emas).
+- **2.6** ✅ TUZATILDI (`6a7909c8`) — POST /api/sd/orders `crmLeadId` endi DTO orqali o'tadi.
+- **2.7** ✅ Tasdiqlandi (allaqachon tuzatilgan, `13adb82b`) — NUMERIC→INTEGER safeQty coercion.
+- **2.8** ✅ Tasdiqlandi (allaqachon qurilgan, `50e69a96` + G1-2 BRON-BLOK POST-GATE 07-02) — bugun jonli rollback-tranzaksiya bilan qayta isbotlandi: bron yaratilganda `pos-movement.service.ts:109-131` ForbiddenException to'g'ri tetiklanadi (super_admin/direktor override bilan).
+- **2.9** ✅ TUZATILDI (`b5aa65ad`) — asosiy foydalanuvchi oqimi (AI-intervyu→farmoyish, `persistDraft()`) kanban-karta yaratmasdi; `CcKanbanBridgeService` bilan bog'landi.
+- **2.12** ✅ Tasdiqlandi (allaqachon to'g'ri, `2cecb84c`) — CAMERA_SNAPSHOT_PROVIDER DI orqali bog'langan.
+- **2.13** ✅ TUZATILDI (`4309a53e`) — `settings.key` uchun unique index yo'q edi (upsert xato berardi).
+- **2.16** ✅ Tasdiqlandi (allaqachon to'g'ri) — 4 ta public lead-ingest endpoint HMAC webhook-signature bilan himoyalangan.
+
+## 8.4 3-bosqich
+- **3.3** (norma-reja-fakt) ✅ Tasdiqlandi — 3 qatlamli mexanizm (shift-norma%, session-OEE, order-completion%) barchasi jonli va to'g'ri; bitta o'lik-kod (`CostingService.calculateVariance`, hech qayerda chaqirilmaydi) topildi va background-task sifatida belgilandi (task_b5b42e5a).
+- **3.4** (podotchet↔ombor-kirim) ✅ Tasdiqlandi — to'liq zanjir (advance→EXTERNAL_IN→QC→warehouse_stock→debt-clear) jonli rollback-proof bilan tasdiqlangan.
+- **3.6** (MES bosqich-tracking) ✅ TUZATILDI (`eb57e38e`) — soat-mintaqa xatosi (Asia/Tashkent UTC+5) sababli har bosqich-o'tishda 5 soatlik notog'ri vaqt yozilardi; SQL-tomonli `EXTRACT(EPOCH...)` hisoblashga o'tkazildi.
+- **3.7** (ZNO/ZVS SLA-cron) ✅ Tasdiqlandi (allaqachon qurilgan, `a9225449`) — 24/48soat eskalatsiya cron jonli, org-daraxt fallback bilan.
+- **3.8** (CC-PDF QR) ✅ Tasdiqlandi (allaqachon to'liq) — `cc-pdf.service.ts` QR-kod + `/cc/verify/:id` ochiq tekshiruv-endpoint jonli HTTP bilan isbotlandi. **Eslatma:** prikaz/protocol (Coordination-modul, alohida tizim) uchun PDF-eksport umuman yo'q — bu YANGI feature (QR-qo'shish emas), alohida egasi-ruxsat kerak.
+- **3.13** (stub-route qarori) ✅ **TO'LIQ BAJARILGAN** — FE `StubRoutes.tsx`dagi asl 5 ta band (boshqa/parallel sessiya orqali) barchasi hal qilingan (`/export`,`/micro-modules`,`/modules`,`/pos/printer-config`→mavjud sahifaga dublikat sifatida o'chirildi; `/sap`→egasi-qaror kutadi, Q-46 bo'yicha saqlandi). **Qo'shimcha bonus** (`afe2bacac`): BE-tarafida 9 ta boshqa 501-stub uchun haqiqiy implementatsiya qo'shildi + 8 ta chalg'ituvchi eskirgan 501-Swagger-belgisi tuzatildi; qolgan ~22 BE-stub EGASI-DATA/dizayn-qaror sabab aniq ro'yxatlangan (fabrikatsiya qilinmagan) — ro'yxat: `security/fire-sensors` (jadval yo'q), `hr-capital/*` (FROZEN dublikat), `finance/reports+loans` (jadval yo'q), `wms-integration/*` (ikki-dunyo PO-jadval noaniqligi), `ai/forecast+rush-orders` (ML-dizayn), `mm-dashboard` yozish-yo'llari (fi_payments yo'q).
+
+## 8.5 Tasdiqlangan HOLI QOLGAN (bu sessiyada tegilmagan)
+2-bosqich: 2.2, 2.3, 2.4, 2.5, 2.11, 2.14 (2.10/2.15/2.17/2.18 avvalroq shu sessiyada bajarilgan — `f21bbb7b`/`b4e76a72`/`3fd3b2ba`/`1fd03968`).
+3-bosqich: 3.1, 3.2, 3.5, 3.9, 3.10, 3.11, 3.12 (3.14/3.15 avvalroq bajarilgan — `a3be1bd4`/`025c356a`).
+**A9 (org-daraxt dublikat)** — hamon eng katta blokировщик (A11'ni to'g'ridan bloklaydi, boshqa ko'p narsaga bilvosita ta'sir qiladi); tayyor savol-hujjat: `docs/audit/MASSIV-100/PHASE-08-daraxt-yagona-manager.md`.
+
 > Bu hujjat = 2026-07-02 holat-suratining yagona manbasi. Yangilanish keyingi katta o'lchovda (Q-25).
