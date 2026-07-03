@@ -1,4 +1,7 @@
 {
+  "title": "Таҳлил",
+  "loading": "Юкланмоқда...",
+  "error": "Хатолик юз берди",
   "EngagementTab.faolFoydalanuvchilar": "Фаол фойдаланувчилар",
   "LeaderboardTab.tugatish": "Тугатиш %",
   "LeaderboardTab.ortachaBall": "Ўртача балл",

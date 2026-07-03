@@ -1,4 +1,7 @@
 {
+  "title": "Режалаштириш",
+  "loading": "Юкланмоқда...",
+  "error": "Хатолик юз берди",
   "PlanningDialogsA.1Smena": "1-смена",
   "PlanningDialogsA.2Smena": "2-смена",
   "PlanningDialogsA.3Smena": "3-смена",
