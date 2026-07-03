@@ -877,4 +877,95 @@ Har sessiya promt boshida ROL oladi:
 
 ---
 
-*Yangilangan: 2026-06-17 (Q-46 ishlab-turgan-kod-o'chmaydi/buzuq-kod-to'liq-o'chiriladi [egasi]; Q-47 direktiva ≥1000 qator [egasi]). 2026-06-03 | Q-44..Q-45 qo'shildi (Q-44 Windows nest-watch crash = muhit, kod emas; Q-45 log fayllar hech qachon commit qilinmaydi — JWT token xavfi, `*.log` rotated loglarni ushlamaydi → `backend.log*`+`*.log.*`). Q-39..Q-43 (kod-qotirish, ishlaydi≠to'g'ri+master-reja, dizayn izchillik, tab ≤2 daraja, forma saqlash + `check-form-has-save`). Q-24..Q-38 (jarayon/boshqaruv). Qoida 23 (parallel sessiya rollari). Qoida 22 (Ombor+POS sidebar). Qoidalar 17-21.*
+## 🧩 Prompt naqshlari (EuroPrint ERP)
+
+> Manba: Claude Code rasmiy prompt-kutubxonasi (code.claude.com/docs/en/prompt-library),
+> loyihaga moslashtirilgan. Bu bo'lim yuqoridagi Q-qoidalardan (nazorat) ALOHIDA — maqsad
+> tezlashtirish/osonlashtirish, nazorat emas.
+
+### Foydali prompt naqshlari
+
+**Modulni tushunish uchun** (ishga tushirishdan oldin doim foydali):
+```
+give me an overview of the {module} module: architecture, key files, and how it
+connects to {other_module}
+```
+Masalan: `give me an overview of the POS/Kassir module: architecture, key files, and how it connects to the warehouse module`
+
+**Xatti-harakat qayerda amalga oshishini topish:**
+```
+where do we {behavior}?
+```
+Masalan: `where do we calculate the sloy formula (m² to kg conversion)?`
+
+**O'zgarish ko'lamini oldindan bilish:**
+```
+which files would I need to touch to {change}?
+```
+
+**Mavjud naqshga ergashib yangi narsa qurish:**
+```
+look at how {existing_module} is implemented, then build {new_module} the same way
+```
+Masalan: `look at how the production routing module is implemented, then build the org approval-chain module the same way`
+
+**Kichik, aniq funksiya qo'shish:**
+```
+add a {endpoint} endpoint that returns {payload}
+```
+
+**Testlar bilan implementatsiya (test-driven):**
+```
+write tests for {feature} first, then implement it until they pass
+```
+
+**Commit qilishdan oldin o'z-o'zini tekshirish:**
+```
+review your uncommitted changes and flag anything that looks risky before committing
+```
+
+**Xatoni ildizidan tuzatish:**
+```
+here is the error/log: @{log_file}. find the root cause and verify the fix, don't
+just patch the symptom
+```
+
+**Subagent bilan xavfsizlik tekshiruvi** (asosiy sessiyani to'ldirmasdan):
+```
+use a subagent to review {path} for security issues and report what it finds
+```
+
+**Tuzatishni qoidaga aylantirish** (agent bir xil xatoni takrorlasa):
+```
+you keep {mistake}. add a rule to CLAUDE.md so this stops happening
+```
+
+**Sessiya oxirida bilim to'plash:**
+```
+summarize what we did this session and suggest what to add to CLAUDE.md
+```
+
+### Promptlarni yozishda 6 tamoyil
+
+1. **Qadamlarni emas, natijani tasvirlang** — Claude fayllarni o'zi topsin.
+2. **O'z ishini tekshirish usulini bering** — "ishga tushir", "sina", "solishtir", "tasdiqla" so'zlarini qo'shing, shunda bir urinishdan keyin ham davom etadi.
+3. **Ma'lumotnomaga ishora qiling** — mos kelishi kerak bo'lgan mavjud fayl/naqshni nomlang (masalan: "production routing modulidagi kabi").
+4. **O'lchanadigan maqsad bering** — samaradorlik/qamrov bo'lsa, aniq metrika va chegara ayting.
+5. **Artefaktni bering** — xato, log, skrinshot, plan natijasini to'g'ridan-to'g'ri promptga joylashtiring yoki `@fayl` bilan ishora qiling.
+6. **Javob formatini ayting** — uzunlik, format, auditoriyani nomlang.
+
+### Naqsh → skill/hook aylantirish
+
+Bir prompt loyihada bir necha marta ishlatilsa:
+```
+create a /{name} skill for this project that {steps}
+```
+yoki takrorlanuvchi avtomatik xatti-harakat uchun:
+```
+write a hook that {action} after every {event}
+```
+Bu keyingi agent sessiyalari uchun `/buyruq` sifatida qayta ishlatiladigan qiladi — har safar qayta yozish shart emas.
+
+---
+
+*Yangilangan: 2026-07-03 (Prompt naqshlari bo'limi qo'shildi — Claude Code rasmiy prompt-kutubxonasidan moslashtirilgan, nazorat-qoidalardan alohida). 2026-06-17 (Q-46 ishlab-turgan-kod-o'chmaydi/buzuq-kod-to'liq-o'chiriladi [egasi]; Q-47 direktiva ≥1000 qator [egasi]). 2026-06-03 | Q-44..Q-45 qo'shildi (Q-44 Windows nest-watch crash = muhit, kod emas; Q-45 log fayllar hech qachon commit qilinmaydi — JWT token xavfi, `*.log` rotated loglarni ushlamaydi → `backend.log*`+`*.log.*`). Q-39..Q-43 (kod-qotirish, ishlaydi≠to'g'ri+master-reja, dizayn izchillik, tab ≤2 daraja, forma saqlash + `check-form-has-save`). Q-24..Q-38 (jarayon/boshqaruv). Qoida 23 (parallel sessiya rollari). Qoida 22 (Ombor+POS sidebar). Qoidalar 17-21.*
