@@ -5,8 +5,6 @@
 
 import { lazy } from "react";
 
-const Stub = lazy(() => import("@/pages/ComingSoonPage"));
-
 // ── Stub → real (session 2026-05-12) ─────────────────────────────────────────
 const AgentsHubPage            = lazy(() => import("@/pages/agents/AgentsHub"));
 const CameraAIAnalyticsPage    = lazy(() => import("@/pages/CameraAIAnalytics"));
@@ -77,12 +75,24 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/iot-enhanced',              IoTExtendedPage],          // Extended IoT dashboard
   ['/video-progress',            LessonPlayerPage],         // Video lesson player
 
-  // ── Coming-soon (EPComingSoon — no real backend/page built yet) ───────────
-  ['/export',                    Stub],   // export module not yet built
-  ['/micro-modules',             Stub],   // LMS micro-modules, deferred
-  ['/modules',                   Stub],   // module manager, deferred
-  ['/pos/printer-config',        Stub],   // printer HW config, deferred
-  ['/sap',                       Stub],   // SAP integration, deferred
+  // ── Removed 2026-07-03 (3.13-stub-routes, Q-46) ────────────────────────────
+  // /export            — real BE (5 CSV/PDF endpoints) already surfaced via
+  //                       RemainingTabsHr.tsx download links (HR analytics).
+  // /micro-modules     — real BE (list/create/view) already live at routed+
+  //                       sidebar page /lms/micro-learning (MicroLearningTab).
+  // /modules           — real BE (LMS module CRUD) already exercised via
+  //                       AddModuleDialog inside routed page /courses/:id;
+  //                       no vision requirement for a separate global module
+  //                       manager page — would be new scope, not wiring.
+  // /pos/printer-config — real BE (list/active/create/patch/test) but fully
+  //                       duplicated by the already-live printer settings tab
+  //                       in BarcodeSystem (uses /api/warehouse/printer-config).
+  // /sap               — BE is an internal alias/shadow of sales_orders
+  //                       (sap.repository.ts falls back to sales_orders table),
+  //                       not a real external SAP integration; functionality
+  //                       already covered by routed page /erp/sales
+  //                       (SalesOrders.tsx). Real SAP integration = egasi-qaror
+  //                       kutadi (CLAUDE.md F4), not built — kept out per Q-46.
 
   // ── Real pages (prior sessions) ───────────────────────────────────────────
   ['/3way-match',                ThreeWayMatchPage],

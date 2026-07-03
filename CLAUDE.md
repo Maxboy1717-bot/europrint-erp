@@ -672,17 +672,24 @@ apiRequest('POST', '/api/orders', { quantity: 5 });
 apiRequest('DELETE', `/api/orders/${id}`);
 ```
 
-### F4 — Stub sahifalar hali mavjud (22 ta route)
+### F4 — Stub sahifalar (ESKIRGAN, 2026-07-03 yangilandi — 3.13-stub-routes)
 
-Quyidagi routelar hali `StubPage.tsx` ko'rsatadi — real sahifaga almashtirilishi kerak:
+⚠️ Bu ro'yxat eskirgan edi (manba: `docs/audit/MASTER-REJA-VIZYON-2026-07-02.md:57`).
+13 route allaqachon REAL sahifaga almashtirilgan (session 2026-05-12), 3 route
+o'chirilgan (`/gpt`, `/inventory/advanced`, `/pos/mini-app` — 404, sidebar'da
+yo'q edi), qolgan **5 tasi 2026-07-03 da StubRoutes.tsx'dan olib tashlandi**
+(Q-46 — BE mavjud edi lekin funksiya boshqa jonli sahifada allaqachon bor edi,
+alohida stub-route ortiqcha):
 
-```
-/360, /ai, /ai-camera, /ai-exam, /ai/hr, /ai/marketing,
-/ai-planning, /ai/wms, /assignments, /export, /gpt, /insights,
-/integration/requests, /inventory/advanced, /iot-enhanced,
-/micro-modules, /modules, /pos/mini-app, /pos/printer-config,
-/sap, /video-progress
-```
+| Route | Qaror | Sabab |
+|---|---|---|
+| `/export` | O'CHIRILDI | BE (5 CSV/PDF endpoint) `RemainingTabsHr.tsx`da (HR analytics) allaqachon jonli |
+| `/micro-modules` | O'CHIRILDI | BE (list/create/view) `/lms/micro-learning`da (sidebar+routed, `MicroLearningTab`) allaqachon jonli |
+| `/modules` | O'CHIRILDI | BE (LMS module CRUD) `/courses/:id` ichida `AddModuleDialog` orqali allaqachon ishlatiladi; alohida global module-manager sahifa vizyonda yo'q |
+| `/pos/printer-config` | O'CHIRILDI | BE bor, lekin `/warehouse/barcodes` ichidagi Printer Settings tab bilan funksional dublikat (u `/api/warehouse/printer-config` ishlatadi) |
+| `/sap` | O'CHIRILDI | BE aslida `sales_orders` ustidan ichki shim (haqiqiy tashqi SAP integratsiya emas); funksiya `/erp/sales` (`SalesOrders.tsx`)da allaqachon bor; haqiqiy SAP integratsiya = egasi-qaror kutadi |
+
+**Stub-route soni endi: 0.** (`ComingSoonPage.tsx` ham endi ishlatilmagani uchun o'chirildi.)
 
 ---
 
