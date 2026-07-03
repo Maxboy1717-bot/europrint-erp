@@ -8,6 +8,7 @@
 import { RolesGuard } from '../../src/common/guards/roles.guard';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { IS_PUBLIC_KEY } from '../../src/common/decorators/public.decorator';
 
 function makeI18n() {
   return {
@@ -25,8 +26,12 @@ function ctx(role: string | undefined, required: string[] | undefined): Executio
 }
 
 function guardWith(required: string[] | undefined): RolesGuard {
+  // Real Reflector differentiates by metadata key — mock must too, since
+  // RolesGuard now checks IS_PUBLIC_KEY before 'roles' (@Public() bypass).
   const reflector = {
-    getAllAndOverride: jest.fn().mockReturnValue(required),
+    getAllAndOverride: jest.fn().mockImplementation((key: string) =>
+      key === IS_PUBLIC_KEY ? undefined : required,
+    ),
   } as unknown as Reflector;
   return new RolesGuard(reflector, makeI18n());
 }

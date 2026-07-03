@@ -16,6 +16,7 @@ import { CrmAiService } from '../src/modules/crm/application/crm-ai.service';
 import { CrmAutoLeadService } from '../src/modules/crm/application/crm-auto-lead.service';
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
+import { WebhookSignatureGuard } from '@common/guards/webhook-signature.guard';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 
@@ -97,6 +98,11 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)
       .overrideGuard(RolesGuard).useValue(mockGuard)
+      // CrmAutoLeadController's public ingest routes are @UseGuards(WebhookSignatureGuard)
+      // (added for the 2.16 public-webhook-ingest work) — this guard needs ConfigService,
+      // which this controller-only test module doesn't provide; override it like the
+      // other guards since this suite tests controller/service behavior, not guard logic.
+      .overrideGuard(WebhookSignatureGuard).useValue(mockGuard)
       .compile();
 
     contactsController = module.get(CrmContactsController);
