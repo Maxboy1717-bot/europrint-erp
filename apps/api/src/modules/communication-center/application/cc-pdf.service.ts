@@ -7,9 +7,10 @@
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFImage, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+import * as QRCode from 'qrcode';
 
 interface DocPdfRow {
   id: string;
@@ -40,9 +41,9 @@ export class CcPdfService {
   constructor(private readonly i18n: I18nService) {}
 
   /**
-   * Hujjatdan A4 PDF yaratadi: kompaniya blanki + matn + imzolar + QR kod URL.
-   * QR kod o'zi rasm sifatida embed qilinmaydi (qrcode kutubxonasi yo'q),
-   * lekin URL matn shaklida ko'rsatiladi va HTML/Telegram preview QR yaratadi.
+   * Hujjatdan A4 PDF yaratadi: kompaniya blanki + matn + imzolar + haqiqiy skanerlanadigan QR-rasm.
+   * QR ichiga hujjat tekshiruv URL'i (`${baseUrl}/cc/verify/${doc.id}`) kodlangan —
+   * `GET /api/cc/verify/:id` (CcPublicController, JWTsiz) shu URL'ni qabul qiladi.
    */
   async generate(documentId: string, baseUrl: string): Promise<Uint8Array> {
     const doc = await this.loadDocument(documentId);
@@ -53,14 +54,28 @@ export class CcPdfService {
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
+    const qrUrl = `${baseUrl}/cc/verify/${doc.id}`;
+    const qrImage = await this.embedQrCode(pdf, qrUrl);
+
     const M = 50;
     let y = 800;
     y = this.drawHeader(page, doc, font, bold, M, y);
     y = this.drawBody(page, doc, font, bold, M, y);
     y = this.drawApprovals(page, approvals, font, bold, M, y);
-    this.drawFooter(page, doc, baseUrl, font, bold, M);
+    this.drawFooter(page, doc, qrUrl, qrImage, font, bold, M);
 
     return await pdf.save();
+  }
+
+  /** QR-kod PNG rasmini generatsiya qilib, PDF hujjatiga embed qiladi (ISO/IEC 18004). */
+  private async embedQrCode(pdf: PDFDocument, data: string): Promise<PDFImage> {
+    const png = await QRCode.toBuffer(data, {
+      type: 'png',
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 160,
+    });
+    return pdf.embedPng(png);
   }
 
   private async loadDocument(documentId: string): Promise<DocPdfRow> {
@@ -172,13 +187,20 @@ export class CcPdfService {
     return y;
   }
 
-  private drawFooter(page: PDFPage, doc: DocPdfRow, baseUrl: string, font: PDFFont, bold: PDFFont, M: number): void {
-    const y = 80;
-    const qrUrl = `${baseUrl}/cc/verify/${doc.id}`;
+  private drawFooter(
+    page: PDFPage, doc: DocPdfRow, qrUrl: string, qrImage: PDFImage,
+    font: PDFFont, bold: PDFFont, M: number,
+  ): void {
+    const qrSize = 70;
+    const qrX = 545 - qrSize;
+    const qrY = 15;
+    const y = qrY + qrSize - 8;
+
     page.drawLine({ start: { x: M, y: y + 18 }, end: { x: 545, y: y + 18 }, thickness: 0.5, color: rgb(0.85, 0.88, 0.92) });
+    page.drawImage(qrImage, { x: qrX, y: qrY, width: qrSize, height: qrSize });
     page.drawText('Hujjat haqiqiyligini tekshirish:', { x: M, y, size: 8, font: bold, color: rgb(0.40, 0.45, 0.55) });
-    page.drawText(qrUrl, { x: M, y: y - 12, size: 7, font, color: rgb(0.20, 0.40, 0.85) });
-    page.drawText(`Status: ${doc.workflow_state.toUpperCase()}`, { x: 400, y, size: 9, font: bold, color: rgb(0.10, 0.15, 0.25) });
+    page.drawText(qrUrl, { x: M, y: y - 12, size: 7, font, color: rgb(0.20, 0.40, 0.85), maxWidth: qrX - M - 10 });
+    page.drawText(`Status: ${doc.workflow_state.toUpperCase()}`, { x: M, y: y - 26, size: 9, font: bold, color: rgb(0.10, 0.15, 0.25) });
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────
