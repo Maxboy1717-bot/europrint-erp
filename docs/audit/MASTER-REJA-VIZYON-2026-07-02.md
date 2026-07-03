@@ -267,6 +267,7 @@
 | 3.14 | Adaptatsiya nazorat-varaqasi obyekti | hr/adaptation | adaptation_records jonli | M |
 | 3.15 | Mukofot mexanizmi (kaizen-bonus, motivation_plans) | hr/payroll | ≥1 jonli mukofot-yozuv | M |
 | 3.16 | Layer B desktop JARVIS (egasi "keyin" — C22 qaror kutadi) | yangi client | — | L (defer) |
+| 3.17 | 3-til interfeys: UZ-kirill qo'shish (butun tizim) + mavjud UZ/RU tarjima bo'shliqlarini to'ldirish (egasi 2026-07-03 buyrug'i) | i18n (BE nestjs-i18n + FE i18next) | UZ-lotin↔UZ-kirill transliteratsiya avtomatik + til-almashtirgichda 3-variant + mavjud ~180-250 hardcoded/bo'sh kalit yopiladi | L |
 
 ═══════════════════════════════════════════════════════════════════
 # 6. MANBA-ISBOTLAR (klaster bo'yicha kalit dalillar)
