@@ -274,4 +274,38 @@ export class DrizzleCameraAiRepo {
       return Ok(true);
     } catch (e) { return Err((e as Error).message); }
   }
+
+  /**
+   * 2.11 — persist one real VLM finding from analyze-by-missions as a
+   * `camera_events` row (Q-35: no new table, existing camera_events fits:
+   * event_type/description/severity/ai_confidence). Called only when the
+   * caller opted in via `persist: true` (CameraAnalysisWorkbench.tsx "Bazaga
+   * yozish" switch).
+   */
+  async createCameraEvent(input: {
+    cameraId: string;
+    eventType: string;
+    description: string;
+    severity: string;
+    aiConfidence: number | null;
+  }): Promise<Result<{ id: number }>> {
+    try {
+      const now = _time.now().toISOString();
+      const [row] = await db.insert(camera_events)
+        .values({
+          camera_id: input.cameraId,
+          event_type: input.eventType,
+          // Live DB: event_date/event_time NOT NULL, no default (drift — see
+          // schema-misc-iot.ts comment above camera_events); derived from `now`.
+          event_date: now.slice(0, 10),
+          event_time: now.slice(11, 19),
+          description: input.description,
+          severity: input.severity,
+          status: 'new',
+          ai_confidence: input.aiConfidence !== null ? String(input.aiConfidence) : null,
+        })
+        .returning({ id: camera_events.id });
+      return Ok({ id: row.id });
+    } catch (e) { return Err((e as Error).message); }
+  }
 }

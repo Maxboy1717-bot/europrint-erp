@@ -399,6 +399,16 @@ export const WAREHOUSE_EXIT_FACE_MATCH_THRESHOLD = 0.85;
 export const WAREHOUSE_EXIT_MATCH_SCORE_DECIMALS = 2;
 
 // ---------------------------------------------------------------------------
+// IoT — Kamera AI vizyon tahlili (2.11-soxta-vlm-endpoint fix)
+// ---------------------------------------------------------------------------
+
+/** analyze-by-missions VLM javobi uchun maksimal token (JSON findings ro'yxati). */
+export const CAMERA_VISION_MAX_TOKENS = 1024;
+
+/** VLM aniqlik darajasi berilmasa ishlatiladigan standart ai_confidence. */
+export const CAMERA_VISION_DEFAULT_CONFIDENCE = 0.6;
+
+// ---------------------------------------------------------------------------
 // HR — Adaptatsiya (moslashuv) checklist bosqichlari (3.14)
 // ---------------------------------------------------------------------------
 

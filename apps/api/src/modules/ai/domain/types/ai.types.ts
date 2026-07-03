@@ -58,7 +58,9 @@ export type AiTaskType =
   | 'prepress.vision_preflight'
   // Communication Center AI (2)
   | 'cc.interview_question'
-  | 'cc.generate_document';
+  | 'cc.generate_document'
+  // IoT Camera AI (1) — 2.11: real VLM mission analysis (safety/quality/productivity)
+  | 'iot.camera_vision_analyze';
 
 /**
  * Optional vision input (2.10-ai-ocr-rasm-fix): raw image bytes (base64) sent ALONGSIDE
@@ -140,6 +142,7 @@ export const TASK_PROVIDER_MAP: Record<AiTaskType, AiProvider> = {
   'prepress.vision_preflight': 'gemini',
   'cc.interview_question': 'claude',
   'cc.generate_document':  'claude',
+  'iot.camera_vision_analyze': 'gemini',
 };
 
 export const PROVIDER_MODELS: Record<AiProvider, string> = {

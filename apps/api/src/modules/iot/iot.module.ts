@@ -62,6 +62,7 @@ import { OeeCalculatorService } from './oee/oee-calculator.service';
 import { PredictiveMaintenanceService } from './oee/predictive-maintenance.service';
 // FAZA Q — Ombor AI-kamera nazorati (noqonuniy olib chiqish / ruxsatsiz kirish).
 import { HrModule } from '../hr/hr.module';
+import { AiModule } from '../ai/ai.module';
 import { WarehouseExitGuardController } from './presentation/warehouse-exit-guard.controller';
 import { WarehouseExitGuardService } from './application/warehouse-exit-guard.service';
 import { DrizzleWarehouseExitGuardRepo } from './infrastructure/repositories/drizzle-warehouse-exit-guard.repo';
@@ -103,7 +104,7 @@ const newRepositories = [
 ];
 
 @Module({
-  imports: [AuthModule, CqrsModule, NotificationsModule, HrModule],
+  imports: [AuthModule, CqrsModule, NotificationsModule, HrModule, AiModule],
   controllers: [
     IotSensorsController,
     IotCameraController,

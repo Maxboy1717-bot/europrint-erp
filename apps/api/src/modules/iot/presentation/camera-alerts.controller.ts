@@ -3,28 +3,24 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
 import {
-  Body, Controller, Delete, Get, InternalServerErrorException,
+  Body, Controller, Delete, Get,
   Param, ParseIntPipe, Patch, Post, Put, Query,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
+import { unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
-
-const AnalyzeMissionsSchema = z.object({
-  missions: z.array(z.union([z.string(), z.record(z.unknown())])).optional(),
-}).passthrough();
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CameraExtendedService } from '../application/camera-extended.service';
 import { IotMainService } from '../application/iot-main.service';
+import { CameraAiService } from '../application/camera-ai.service';
 import {
+  AnalyzeMissionsBodySchema,
   CameraAlertsQuerySchema,
   CameraGlobalSettingsBodySchema,
   CreateCameraManagementBodySchema,
@@ -260,19 +256,29 @@ export class CameraEmployeeRatingsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ai-camera')
 export class AiCameraController {
-  constructor(private readonly svc: IotMainService) {}
+  constructor(private readonly cameraAiSvc: CameraAiService) {}
 
-  @ApiOperation({ summary: 'Analyze by missions' })
+  /**
+   * 2.11 fix: was a fake echo (ignored `imageBase64`, always returned the
+   * unrelated IoT dashboard snapshot — Q-40 violation). Now delegates to a
+   * real VLM (vision-capable LLM via AiRouterService) call over the uploaded
+   * frame, scoped to the camera's configured missions (falls back to the
+   * standard mission catalog when none are configured).
+   */
+  @ApiOperation({ summary: 'Analyze by missions (real VLM)' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('analyze-by-missions')
   @Roles(...CAM_WRITE)
   @UseInterceptors(AuditInterceptor)
   async analyzeByMissions(@Body() body: unknown) {
-    const dto = AnalyzeMissionsSchema.parse(body);
-    const result = await this.svc.getDashboard();
-    assertOk(result);
-    return { analyzed_at: _time.now().toISOString(), missions: dto.missions ?? [], dashboard: result.data };
+    const dto = AnalyzeMissionsBodySchema.parse(body);
+    return unwrapOrThrow(await this.cameraAiSvc.analyzeByMissions({
+      cameraId: String(dto.cameraId),
+      imageBase64: dto.imageBase64,
+      mediaType: dto.mediaType,
+      persist: dto.persist,
+    }));
   }
 }
 

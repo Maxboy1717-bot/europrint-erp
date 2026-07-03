@@ -331,3 +331,19 @@ export const CreateCameraZoneBodySchema = z.object({
   zone_type: z.string().default('monitoring'),
 });
 export type CreateCameraZoneBody = z.infer<typeof CreateCameraZoneBodySchema>;
+
+/**
+ * POST /api/ai-camera/analyze-by-missions (2.11) — CameraAnalysisWorkbench.tsx
+ * "Tahlil laboratoriyasi" sends a single captured frame + the target camera;
+ * the camera's configured missions (`camera_ai_configs.detection_types`) are
+ * resolved server-side (FE does not send `missions` in the body — see
+ * `analyzeByMissions()` in `camera-ai-modern/api.ts`). `imageBase64` has no
+ * `data:` prefix (stripped client-side by `fileToBase64`).
+ */
+export const AnalyzeMissionsBodySchema = z.object({
+  cameraId: z.coerce.number().int().positive(),
+  imageBase64: z.string().min(1),
+  mediaType: z.string().default('image/jpeg'),
+  persist: z.boolean().default(false),
+});
+export type AnalyzeMissionsBody = z.infer<typeof AnalyzeMissionsBodySchema>;
