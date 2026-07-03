@@ -37,6 +37,10 @@ export interface CashierLedgerLine {
   description: string | null;
   pinVerified: boolean;
   createdAt: Date | string | null;
+  /** ISO 3-letter currency of `amount` (vizyon 2.14). */
+  currency: string;
+  /** currency→UZS rate captured at record time; null when currency=UZS. */
+  exchangeRate: number | null;
 }
 
 /** The X/Z naqd-ledger for a shift: opening + chronological lines + saldo + (optional) limit warning. */
@@ -64,6 +68,10 @@ export interface RecordMovementDto {
   glEntryId?: number | null;
   createdBy?: number | null;
   pinVerified: boolean;
+  /** ISO 3-letter currency of `amount` (vizyon 2.14 — kassir so'm+dollar). Default UZS. */
+  currency?: string;
+  /** currency→UZS rate used to convert `amount` for the GL post; NULL/undefined when currency=UZS. */
+  exchangeRate?: number | null;
 }
 
 /** Per-movement-type tally for the X/Z reconciliation breakdown (count + summed amount). */
@@ -168,4 +176,9 @@ export interface ICashierHubRepository {
   saveShiftPdf(shiftId: number, pdf: Buffer, dayStart: Date): Promise<Result<boolean>>;
   /** Active user ids holding any of the given roles (notification fan-out targets). */
   findUserIdsByRoles(roles: string[]): Promise<Result<number[]>>;
+  /**
+   * Latest currency→UZS rate from the canonical `exchange_rates` table (vizyon 2.14), or null
+   * when no rate row exists for this currency (caller then GATES rather than fabricating a rate).
+   */
+  findLatestExchangeRate(currency: string): Promise<Result<number | null>>;
 }

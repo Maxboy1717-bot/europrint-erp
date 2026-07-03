@@ -233,6 +233,8 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
           createdBy: dto.createdBy ?? null,
           pinVerified: dto.pinVerified,
           createdAt: new Date(),
+          currency: dto.currency ?? 'UZS',
+          exchangeRate: dto.exchangeRate ?? null,
         })
         .returning();
       if (!inserted[0]) return Err(AppErr('DB_ERROR', 'Harakat yaratilmadi — INSERT qaytarmadi'));
@@ -326,6 +328,31 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
       return Ok((Array.isArray(rows.rows) ? rows.rows : []).map((r) => Number(r.id)).filter(Boolean));
     } catch (e: unknown) {
       return Err(AppErr('DB_ERROR', `CASHIER_ROLE_USERS_LOOKUP_FAILED: ${String(e)}`));
+    }
+  }
+
+  /**
+   * Latest currency→UZS rate from the canonical `exchange_rates` table (vizyon 2.14 —
+   * kassir so'm+dollar). Reuses the same table the /finance/exchange-rates endpoint reads
+   * (no new table — Q-35). Returns null when no rate row exists for this currency (the
+   * caller then GATES the USD movement rather than fabricating a rate — Q-40/EGASI-DATA).
+   */
+  async findLatestExchangeRate(currency: string): Promise<Result<number | null>> {
+    try {
+      const cur = currency.toUpperCase();
+      if (cur === 'UZS') return Ok(1);
+      const rows = await runQuery<{ rate: string | null }>(sql`
+        SELECT rate::numeric AS rate
+          FROM exchange_rates
+         WHERE UPPER(from_currency) = ${cur} AND UPPER(to_currency) = 'UZS'
+         ORDER BY created_at DESC
+         LIMIT 1
+      `);
+      const raw = Array.isArray(rows.rows) ? rows.rows[0]?.rate ?? null : null;
+      const val = raw === null ? null : Number(raw);
+      return Ok(val !== null && Number.isFinite(val) && val > 0 ? val : null);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_EXCHANGE_RATE_LOOKUP_FAILED: ${String(e)}`));
     }
   }
 

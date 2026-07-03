@@ -63,6 +63,10 @@ const RecordMovementSchema = z.object({
   description: z.string().max(2000).optional(),
   // owner #8 — exactly 4 digits; optional here, the service enforces it for PIN-required types.
   pin: z.string().regex(/^\d{4}$/, 'PIN 4 raqamdan iborat bo\'lishi kerak').optional(),
+  // vizyon 2.14 — kassir so'm+dollar: ISO 3-harf valyuta kodi. Standart UZS.
+  currency: z.string().trim().toUpperCase().length(3, 'Valyuta 3 harfdan iborat bo\'lishi kerak').optional(),
+  // Owner-provided kurs (ixtiyoriy) — berilmasa xizmat exchange_rates jadvalidan eng so'nggisini oladi.
+  exchangeRate: z.number().positive().optional(),
 });
 
 @Injectable()
@@ -224,6 +228,8 @@ export class CashierHubService {
         description: m.description ?? null,
         pinVerified: Boolean(m.pinVerified),
         createdAt: m.createdAt ?? null,
+        currency: m.currency ?? 'UZS',
+        exchangeRate: m.exchangeRate === null || m.exchangeRate === undefined ? null : Number(m.exchangeRate),
       };
     });
 
@@ -349,8 +355,34 @@ export class CashierHubService {
       pinVerified = true;
     }
 
+    // vizyon 2.14 — kassir so'm+dollar: resolve the movement currency + the rate used to convert
+    // it to UZS for the GL post. UZS movements need no rate. Non-UZS movements REQUIRE a resolvable
+    // rate (owner-provided in the request, else the latest `exchange_rates` row) — no rate → GATE
+    // (never fabricate a conversion, Q-40/EGASI-DATA).
+    const currency = (dto.currency ?? 'UZS').toUpperCase();
+    let exchangeRate: number | null = null;
+    if (currency !== 'UZS') {
+      if (dto.exchangeRate && dto.exchangeRate > 0) {
+        exchangeRate = dto.exchangeRate;
+      } else {
+        const rateRes = await this.repo.findLatestExchangeRate(currency);
+        if (!rateRes.ok) return rateRes as Result<never, AppError>;
+        exchangeRate = rateRes.data;
+      }
+      if (!exchangeRate || exchangeRate <= 0) {
+        return Err(
+          AppErr(
+            'VALIDATION',
+            `KAS-1: "${currency}" uchun kurs topilmadi — exchange_rates jadvaliga kurs kiriting yoki so'rovda exchangeRate yuboring`,
+          ),
+        );
+      }
+    }
+    // UZS-equivalent amount posted to the GL (native amount when currency=UZS).
+    const uzsAmount = currency === 'UZS' ? dto.amount : Math.round(dto.amount * exchangeRate! * 100) / 100;
+
     // Post the real GL journal first; only on success do we persist the movement with gl_entry_id.
-    const glRes = await this.postGl(dto.type, dto.amount, dto.reference);
+    const glRes = await this.postGl(dto.type, uzsAmount, dto.reference);
     if (!glRes.ok) return glRes as Result<never, AppError>;
     const glEntryId = glRes.data;
 
@@ -363,6 +395,8 @@ export class CashierHubService {
       glEntryId,
       createdBy: operatorUserId ?? shiftRes.data.cashierUserId,
       pinVerified,
+      currency,
+      exchangeRate,
     });
     if (!inserted.ok) return inserted as Result<never, AppError>;
     return Ok(inserted.data);

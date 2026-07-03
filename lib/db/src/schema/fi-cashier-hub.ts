@@ -57,6 +57,9 @@ export type InsertCashierShift = z.infer<typeof insertCashierShiftSchema>;
  * gl_entry_id = the `entries.id` returned by GlPostingService (real GL journal, never an echo).
  * pin_verified = whether a 4-digit cashier PIN was successfully verified (owner #8).
  * reference = idempotency key (unique) — a re-fired movement with the same reference is a no-op.
+ * currency = ISO 3-letter code the movement's `amount` is denominated in (default UZS — vizyon 2.14).
+ * exchangeRate = currency→UZS rate captured at record time (from `exchange_rates` or owner-entered);
+ *   NULL when currency=UZS (not needed). GL posting converts amount×exchangeRate → UZS-equivalent.
  */
 export const cashierMovements = pgTable("cashier_movements", {
   id: serial("id").primaryKey(),
@@ -69,6 +72,10 @@ export const cashierMovements = pgTable("cashier_movements", {
   createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
   pinVerified: boolean("pin_verified").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  /** ISO 3-letter currency of `amount` (UZS | USD | ...). Default UZS. */
+  currency: varchar("currency", { length: 3 }).notNull().default("UZS"),
+  /** currency→UZS rate captured at record time; NULL when currency=UZS. */
+  exchangeRate: numericMoney("exchange_rate"),
 }, (t) => [
   check("cashier_movements_type_chk", sql`${t.type} IN ('cash_in','cash_out','salary_payout','advance','expense')`),
   check("cashier_movements_amount_chk", sql`${t.amount} > 0`),
@@ -81,6 +88,7 @@ export const insertCashierMovementSchema = createInsertSchema(cashierMovements, 
   type: z.enum(["cash_in", "cash_out", "salary_payout", "advance", "expense"]),
   amount: z.number().positive(),
   reference: z.string().min(1).max(120),
+  currency: z.string().length(3).default("UZS"),
 }).omit({ id: true, createdAt: true } as never);
 
 export type CashierMovement = typeof cashierMovements.$inferSelect;
