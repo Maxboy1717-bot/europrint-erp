@@ -221,11 +221,19 @@ export class AiRouterService {
       const client = new OpenAI({ apiKey });
       const model = PROVIDER_MODELS.openai;
 
+      // Vision (2.10): image present → multi-part user content (text + image_url data URI).
+      const userContent = req.image
+        ? [
+            { type: 'text' as const, text: req.prompt },
+            { type: 'image_url' as const, image_url: { url: `data:${req.image.mediaType};base64,${req.image.base64}` } },
+          ]
+        : req.prompt;
+
       const response = await client.chat.completions.create({
         model,
         messages: [
           ...(req.systemPrompt ? [{ role: 'system' as const, content: req.systemPrompt }] : []),
-          { role: 'user' as const, content: req.prompt },
+          { role: 'user' as const, content: userContent },
         ],
         max_tokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
         temperature: req.temperature ?? 0.7,
@@ -249,8 +257,12 @@ export class AiRouterService {
     const genModel = client.getGenerativeModel({ model });
     const systemPromptPart = req.systemPrompt ? `${req.systemPrompt}\n\n` : '';
     const fullPrompt = systemPromptPart + req.prompt;
+    // Vision (2.10): image present → append an inlineData part alongside the text part.
+    const parts = req.image
+      ? [{ text: fullPrompt }, { inlineData: { mimeType: req.image.mediaType, data: req.image.base64 } }]
+      : [{ text: fullPrompt }];
     const response = await genModel.generateContent({
-      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      contents: [{ role: 'user', parts }],
       generationConfig: {
         maxOutputTokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
         temperature: req.temperature ?? 0.7,
@@ -283,12 +295,24 @@ export class AiRouterService {
       const client = new Anthropic({ apiKey });
       const model = PROVIDER_MODELS.claude;
 
+      // Vision (2.10): image present → multi-part user content (image block + text block),
+      // matching the Anthropic vision message shape used elsewhere (AIsha vision tools).
+      const userContent = req.image
+        ? [
+            {
+              type: 'image' as const,
+              source: { type: 'base64' as const, media_type: req.image.mediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif', data: req.image.base64 },
+            },
+            { type: 'text' as const, text: req.prompt },
+          ]
+        : req.prompt;
+
       const response = await client.messages.create({
         model,
         max_tokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS,
         ...(req.temperature !== undefined && { temperature: req.temperature }),
         system: req.systemPrompt,
-        messages: [{ role: 'user', content: req.prompt }],
+        messages: [{ role: 'user', content: userContent }],
       });
 
       if (!response.content?.[0] || response.content[0].type !== 'text') throw new InternalServerErrorException('Claude javob bo`sh');

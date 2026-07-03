@@ -60,6 +60,20 @@ export type AiTaskType =
   | 'cc.interview_question'
   | 'cc.generate_document';
 
+/**
+ * Optional vision input (2.10-ai-ocr-rasm-fix): raw image bytes (base64) sent ALONGSIDE
+ * `prompt` so providers analyze the actual picture instead of a file-path string. All three
+ * providers support single-image vision calls (Claude image content-block, OpenAI
+ * `image_url` data URI, Gemini `inlineData`) — `AiRouterService` maps this to each SDK's
+ * native shape. Callers that omit `image` keep the pure-text behaviour unchanged.
+ */
+export interface AiImageInput {
+  /** Base64-encoded image bytes (no `data:` prefix). */
+  base64: string;
+  /** e.g. 'image/jpeg' | 'image/png' | 'image/webp'. */
+  mediaType: string;
+}
+
 export interface AiRequest {
   taskType: AiTaskType;
   prompt: string;
@@ -70,6 +84,8 @@ export interface AiRequest {
   userId?: string | number;
   sessionId?: string;
   metadata?: Record<string, unknown>;
+  /** Optional vision input — see `AiImageInput`. */
+  image?: AiImageInput;
 }
 
 export interface AiResponse {

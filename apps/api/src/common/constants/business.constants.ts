@@ -397,3 +397,19 @@ export const WAREHOUSE_EXIT_FACE_MATCH_THRESHOLD = 0.85;
  * shu konstanta ham yangilanadi.
  */
 export const WAREHOUSE_EXIT_MATCH_SCORE_DECIMALS = 2;
+
+// ---------------------------------------------------------------------------
+// HR — Adaptatsiya (moslashuv) checklist bosqichlari (3.14)
+// ---------------------------------------------------------------------------
+
+/**
+ * Yangi xodim adaptatsiya jarayoni checklist bosqichlari: kun1/hafta1/oy1/oy3.
+ * `adaptation_records.start_date` dan boshlab necha kundan keyin muddat kelishi
+ * (`adaptation_milestones.due_date`). Tartib = milestone_number (1..4).
+ */
+export const ADAPTATION_MILESTONE_STEPS = [
+  { number: 1, dayOffset: 1,  title: 'Kun 1',   titleRu: 'День 1' },
+  { number: 2, dayOffset: 7,  title: 'Hafta 1', titleRu: 'Неделя 1' },
+  { number: 3, dayOffset: 30, title: 'Oy 1',    titleRu: 'Месяц 1' },
+  { number: 4, dayOffset: 90, title: 'Oy 3',    titleRu: 'Месяц 3' },
+] as const;
