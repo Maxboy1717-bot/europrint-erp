@@ -96,7 +96,10 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
    *   org_departments.razryad_level_id → razryad_levels.coefficient (razryad-koeff) +
    *   employee_org_departments.stake_fraction (ko'p-karta ulush).
    *
-   * `DISTINCT ON (e.id)` + is_primary tartibi: har xodimga BITTA birlamchi karta (1 qator).
+   * ⭐ A6/EP-ORG-004 (egasi JAVOBLANGAN, 01-org-kartalar.md:36-41 — "Xodim↔karta many;
+   * oylik = kartalar yig'indisi"): xodimning BARCHA aktiv kartalari qaytariladi (1 qator/karta,
+   * `DISTINCT ON` YO'Q — avval faqat birlamchi karta olinar edi, ko'p-karta yig'indisini buzardi).
+   * Xodim bo'yicha yig'indi chaqiruvchida (`PayrollService.generatePeriodRows`) hisoblanadi.
    * FABRIKATSIYA YO'Q (Q-40): qiymat o'rnatilmagan bo'lsa NULL qaytadi (soxta default EMAS);
    * chaqiruvchi (PayrollService) NULL ni neytralga (coeff 1.0 / stake 1.0 / base 0) aylantiradi.
    */
@@ -109,7 +112,7 @@ export class DrizzleHrPayrollRepository implements IHrPayrollRepository {
         razryad_coeff: string | null;
         stake: string | null;
       }>(sql`
-        SELECT DISTINCT ON (e.id)
+        SELECT
           e.id              AS employee_id,
           eod.org_department_id AS card_id,
           e.base_salary     AS base_salary,

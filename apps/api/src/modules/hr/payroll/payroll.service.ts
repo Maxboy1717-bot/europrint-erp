@@ -609,11 +609,20 @@ export class PayrollService {
    * ЦКП/LMS-darvozadan o'tkazib, payroll_rows ga upsert qiladi (idempotent). closePeriod
    * bundan KEYIN chaqirilsa, real karta-oylik qatorlarini yig'adi.
    *
+   * ⭐ A6/EP-ORG-004 (egasi JAVOBLANGAN, 01-org-kartalar.md:36-41 — "Xodim↔karta many;
+   * oylik = kartalar yig'indisi"): `listActiveCardPayInputs` endi xodimning BARCHA aktiv
+   * kartalarini qaytaradi (1 qator/karta). Shu metod xodim bo'yicha guruhlab, har kartaning
+   * darvozalangan oyligini (`computeGatedMonthlySalary`) YIG'ADI — `payroll_rows` da xodimga
+   * BITTA qator (unique period_id+employee_id), qiymati = SUM(karta-oyliklar). Stake-ulush
+   * FOIZI/FORMULASI (EP-ORG-066/142) hali OCHIQ — bu yerda faqat SUM-tamoyil (mavjud
+   * `stakeShare` neytral-default xulqi o'zgarmaydi, faqat ko'p-karta bo'yicha ITERATSIYA qo'shildi).
+   *
    * Oqim (har xodim):
-   *   1. listActiveCardPayInputs → employee + birlamchi karta + baza + razryad-koeff + stake.
-   *   2. computeGatedMonthlySalary(cardId, from, to, base, coeff, ckpPct, stake, workedDays,
-   *      periodWorkingDays, employeeId) → darvozalangan oylik (ЦКП jonli ckp_fact_values + LMS).
-   *   3. upsertPayrollRow → payroll_rows (net_pay = gatedGross; status 'draft').
+   *   1. listActiveCardPayInputs → employee + xodimning HAR BIR aktiv kartasi + baza + razryad-koeff + stake.
+   *   2. Har karta uchun computeGatedMonthlySalary(cardId, from, to, base, coeff, ckpPct, stake,
+   *      workedDays, periodWorkingDays, employeeId) → darvozalangan karta-oylik.
+   *   3. Xodim bo'yicha barcha karta-oyliklar YIG'ILADI (SUM) → upsertPayrollRow → payroll_rows
+   *      (net_pay = SUM(gatedGross) + bonus; status 'draft').
    *
    * FABRIKATSIYA YO'Q (Q-40):
    *   - ckpAchievementPct chaqiruvchidan kelmaydi → null → ЦКП-gate jonli faktlardan har kunni
@@ -680,6 +689,12 @@ export class PayrollService {
     let skipped = 0;
     const rows: Array<{ employeeId: number; cardId: number; gatedGross: number | null; lmsBlocked: boolean; inserted: boolean }> = [];
 
+    // ⭐ A6/EP-ORG-004 SUM-tamoyil: har karta uchun darvozalangan oylik hisoblanadi, so'ng
+    // xodim bo'yicha GURUHLANIB YIG'ILADI (bitta xodim bir nechta aktiv kartaga ega bo'lishi
+    // mumkin — `listActiveCardPayInputs` endi har kartani alohida qator qaytaradi).
+    type CardGate = { cardId: number; gatedGross: number | null; lmsBlocked: boolean; totalDays: number; gatedDays: number };
+    const byEmployee = new Map<number, { baseSalary: number; cards: CardGate[] }>();
+
     for (const inp of inputs) {
       // ckpAchievementPct = null → ЦКП-gate jonli ckp_fact_values dan har kunni hal qiladi (egasi #6).
       // workedDays/periodWorkingDays = null → proratsiya yo'q (to'liq davr; FABRIKATSIYA yo'q).
@@ -696,50 +711,74 @@ export class PayrollService {
         inp.employeeId,
       );
       if (!gatedR.ok) {
-        this.logger.warn(`generatePeriodRows: emp #${inp.employeeId} gate xato — skip: ${gatedR.error.message}`);
+        this.logger.warn(`generatePeriodRows: emp #${inp.employeeId} karta #${inp.cardId} gate xato — skip: ${gatedR.error.message}`);
         skipped += 1;
         continue;
       }
-      const gatedGross = gatedR.data.gatedGross ?? 0;
+      const entry = byEmployee.get(inp.employeeId) ?? { baseSalary: 0, cards: [] };
+      // baseSalary xodim darajasida bitta (employees.base_salary) — har karta qatorida bir xil qiymat
+      // qaytadi (JOIN dan), shu sabab MAX bilan olinadi (qo'shilmaydi — bitta manba, ko'p qator emas).
+      entry.baseSalary = Math.max(entry.baseSalary, inp.baseSalary ?? 0);
+      entry.cards.push({
+        cardId: inp.cardId,
+        gatedGross: gatedR.data.gatedGross,
+        lmsBlocked: gatedR.data.lmsBlocked,
+        totalDays: gatedR.data.totalDays,
+        gatedDays: gatedR.data.gatedDays,
+      });
+      byEmployee.set(inp.employeeId, entry);
+    }
+
+    for (const [employeeId, { baseSalary, cards }] of byEmployee) {
+      // SUM-tamoyil (EP-ORG-004): xodimning BARCHA aktiv kartalari darvozalangan oyliklari yig'iladi.
+      const sumGatedGross = cards.reduce((sum, c) => sum + (c.gatedGross ?? 0), 0);
+      const anyLmsBlocked = cards.some((c) => c.lmsBlocked);
       // 3.15: HR/DIRECTOR tasdiqlagan mukofot (davr ichida) gross'ga qo'shiladi —
       // topilmasa 0 (Map.get undefined → soxta son yozilmaydi).
-      const bonus = bonusByEmployee.get(inp.employeeId) ?? 0;
-      const netPay = gatedGross + bonus;
-      const note = gatedR.data.lmsBlocked
-        ? `karta-oylik: LMS-darvoza yopiq (darslik tugamagan)`
-        : `karta-oylik: ЦКП-gate kun ${gatedR.data.gatedDays}/${gatedR.data.totalDays}` +
+      const bonus = bonusByEmployee.get(employeeId) ?? 0;
+      const netPay = sumGatedGross + bonus;
+      const cardSummary = cards
+        .map((c) => `#${c.cardId}:${c.gatedDays}/${c.totalDays}${c.lmsBlocked ? '(LMS-yopiq)' : ''}`)
+        .join(', ');
+      const note = anyLmsBlocked
+        ? `karta-oylik (${cards.length} karta): ba'zi karta LMS-darvozasi yopiq — ${cardSummary}`
+        : `karta-oylik (${cards.length} karta): ЦКП-gate — ${cardSummary}` +
           (bonus > 0 ? ` + mukofot ${bonus.toLocaleString('uz-UZ')}` : '');
+      const totalGatedDays = cards.reduce((sum, c) => sum + c.gatedDays, 0);
+      const totalDaysAll = cards.reduce((sum, c) => sum + c.totalDays, 0);
 
       const upsertR = await this.hrPayrollRepo.upsertPayrollRow({
         periodId,
-        employeeId: inp.employeeId,
-        baseSalary: inp.baseSalary ?? 0,
+        employeeId,
+        baseSalary,
         bonus,
         deductions: 0,
         netPay,
-        workDays: gatedR.data.totalDays > 0 ? gatedR.data.gatedDays : null,
+        workDays: totalDaysAll > 0 ? totalGatedDays : null,
         status: 'draft',
         notes: note,
       });
       if (!upsertR.ok) {
-        this.logger.warn(`generatePeriodRows: emp #${inp.employeeId} upsert xato — skip: ${upsertR.error.message}`);
+        this.logger.warn(`generatePeriodRows: emp #${employeeId} upsert xato — skip: ${upsertR.error.message}`);
         skipped += 1;
         continue;
       }
       generated += 1;
       if (upsertR.data.inserted) inserted += 1;
       else updated += 1;
-      rows.push({
-        employeeId: inp.employeeId,
-        cardId: inp.cardId,
-        gatedGross: gatedR.data.gatedGross,
-        lmsBlocked: gatedR.data.lmsBlocked,
-        inserted: upsertR.data.inserted,
-      });
+      for (const c of cards) {
+        rows.push({
+          employeeId,
+          cardId: c.cardId,
+          gatedGross: c.gatedGross,
+          lmsBlocked: c.lmsBlocked,
+          inserted: upsertR.data.inserted,
+        });
+      }
     }
 
     this.logger.log(
-      `generatePeriodRows davr #${periodId}: ${generated}/${inputs.length} qator (yangi ${inserted}, yangilangan ${updated}, skip ${skipped})`,
+      `generatePeriodRows davr #${periodId}: ${generated}/${byEmployee.size} xodim (yangi ${inserted}, yangilangan ${updated}, skip ${skipped}; ${inputs.length} karta-qator)`,
     );
 
     return Ok({
