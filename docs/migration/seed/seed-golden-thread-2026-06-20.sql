@@ -129,28 +129,45 @@ BEGIN
 
   -- ─────────────────────────────────────────────────────────────────
   -- 2. SALES ORDER ITEMS — 2 ta pozitsiya
+  --    APPROVED: owner 2026-06-05 (add-sales-order-items-product-id.sql) — order
+  --    line-items bind to PRODUCTS (finished goods), material_id legacy/kept for
+  --    production-consumption side. This seed originally wrote material_id ONLY
+  --    (product_id NULL) — the exact "material/product nomoslik" from
+  --    docs/audit/MASTER-REJA-VIZYON-2026-07-02.md §5.2 band 2.4: ATP's
+  --    findOrderDemandLines() filters `WHERE product_id IS NOT NULL`, so this
+  --    order showed "no lines" to ATP. Now also writes product_id (v_prod_id1/2,
+  --    same FG rows created in step 0a above) — material_id kept unchanged.
   -- ─────────────────────────────────────────────────────────────────
   IF NOT EXISTS (SELECT 1 FROM sales_order_items WHERE sales_order_id = v_so_id) THEN
     INSERT INTO sales_order_items (
-      sales_order_id, item_number, material_id, description,
+      sales_order_id, item_number, material_id, product_id, description,
       order_quantity, net_price, tax_code, tax_amount, total_price,
       unit, plant, storage_location,
       delivered_quantity, open_quantity, confirmed_quantity,
       delivery_status, billing_status, created_at
     ) VALUES
-      (v_so_id, '10', 33, 'Karton quti A4 — Karton Kraft 350g/m²',
+      (v_so_id, '10', 33, v_prod_id1, 'Karton quti A4 — Karton Kraft 350g/m²',
        5000, 10000.00, 'V1', 5000000.00, 55000000.00,
        'PC', 'P001', 'SL02',
        0, 5000, 5000,
        'NOT_DELIVERED', 'NOT_BILLED', now()),
-      (v_so_id, '20', 34, 'Gofrokarton quti B3 — E-flyut 200g/m²',
+      (v_so_id, '20', 34, v_prod_id2, 'Gofrokarton quti B3 — E-flyut 200g/m²',
        2500, 12000.00, 'V1', 2500000.00, 32500000.00,
        'PC', 'P001', 'SL02',
        0, 2500, 2500,
        'NOT_DELIVERED', 'NOT_BILLED', now());
     RAISE NOTICE 'sales_order_items (2 ta) inserted for SO %', v_so_id;
   ELSE
-    RAISE NOTICE 'sales_order_items already exist for SO %', v_so_id;
+    -- Idempotent re-run safety net: if the order already existed (e.g. seeded before
+    -- this fix) but its items are still missing product_id, backfill them here so
+    -- re-running this seed on any environment heals the ATP "no lines" gap too.
+    UPDATE sales_order_items
+       SET product_id = v_prod_id1
+     WHERE sales_order_id = v_so_id AND material_id = 33 AND product_id IS NULL;
+    UPDATE sales_order_items
+       SET product_id = v_prod_id2
+     WHERE sales_order_id = v_so_id AND material_id = 34 AND product_id IS NULL;
+    RAISE NOTICE 'sales_order_items already exist for SO % (product_id backfilled if needed)', v_so_id;
   END IF;
 
   -- ─────────────────────────────────────────────────────────────────
