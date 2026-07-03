@@ -7,7 +7,8 @@
  *   CashierHubPdfService.generateDailyCashReport PDF quriladi (ochiq smena = X-holat,
  *   yopiq smena = to'liq Z), `cashier_shifts.pdf_data` (BYTEA — employee_monthly_cards
  *   naqshi) ga saqlanadi va MAVJUD notification-infra (CreateNotificationCommand →
- *   in_app + telegram kanallari) orqali kassir + CFO rollariga yuboriladi.
+ *   in_app + telegram kanallari) orqali kassir + CFO + direktor rollariga yuboriladi
+ *   (master-reja 2.17 — 2026-07-03: direktor fan-out qo'shildi).
  *   Qabul-belgisi = notifications.is_read (yangi jadval YO'Q — direktiva sharti).
  *
  *   Idempotent: pdf_generated_at guard (repo.listShiftsForZReport) — qayta ishga
@@ -24,8 +25,14 @@ import { CashierHubService } from './cashier-hub.service';
 import { CashierHubPdfService } from './cashier-hub-pdf.service';
 import { CASHIER_HUB_REPO, type ICashierHubRepository } from './i-cashier-hub.repo';
 
-/** Z-report notification fan-out targets besides the shift's own cashier (vizyon: "kassir + CFO"). */
-const ZREPORT_NOTIFY_ROLES = ['cashier', 'cfo', 'finance_manager'];
+/**
+ * Z-report notification fan-out targets besides the shift's own cashier
+ * (vizyon A7 + master-reja 2.17: "kassir + CFO" + direktorga ham).
+ * NOTE: live `users.role` enum today = director/employee/manager/super_admin — 'cashier'/'cfo'/
+ * 'finance_manager' match no current rows (reserved for future role additions, kept per Q-46:
+ * not this task's scope to remove). 'director' is the live role that actually resolves.
+ */
+const ZREPORT_NOTIFY_ROLES = ['cashier', 'cfo', 'finance_manager', 'director'];
 
 @Injectable()
 export class CashierDailyZReportCron {
