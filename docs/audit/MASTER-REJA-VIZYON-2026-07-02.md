@@ -358,6 +358,12 @@
 - **2.12** ✅ Tasdiqlandi (allaqachon to'g'ri, `2cecb84c`) — CAMERA_SNAPSHOT_PROVIDER DI orqali bog'langan.
 - **2.13** ✅ TUZATILDI (`4309a53e`) — `settings.key` uchun unique index yo'q edi (upsert xato berardi).
 - **2.16** ✅ Tasdiqlandi (allaqachon to'g'ri) — 4 ta public lead-ingest endpoint HMAC webhook-signature bilan himoyalangan.
+- **2.2** ✅ Tasdiqlandi (allaqachon shu kuni tuzatilgan, `2cecb84c`) — QC-bypass blok: `pos-movement-status.service.ts:66-70` guard, quarantine_required+qc_status=NULL holatda 'completed'ga o'tish taqiqlangan.
+- **2.3** ✅ Tasdiqlandi (allaqachon tuzatilgan, `13adb82b`) — Tablet SOS→`SosAlertRaisedMesListener`→`mes_sos_events`→eskalatsiya-cron zanjiri jonli HTTP bilan isbotlandi (assigned_user_id/escalation_due_at hali NULL — org_departments.head_user_id egasi-data, alohida masala).
+- **2.4** ✅ TUZATILDI (`b172e741`) — `sales_order_items.product_id` backfill, ATP FE-wiring material/product ID nomosligi bartaraf etildi.
+- **2.5** ❌ **HALI OCHIQ** — cron (`0 2 * * *`) + FE "ABC qayta hisoblash" tugmasi (`a53a07e1`) to'g'ri qurilgan, LEKIN hali birorta ham ishga tushmagan (sd_customers.abc_class 0/15, mezoni 15/15 talab qiladi). Bugun 02:00'da avtomatik ishga tushadi, yoki FE'dan qo'lda bosish mumkin.
+- **2.11** ✅ TUZATILDI (`2a7f22b1`) — `analyze-by-missions` soxta dashboard-echo edi, real VLM-chaqiruvga (AiRouterService) ulandi; yo'l-o'rtasida `camera_events` schema-drift ham tuzatildi.
+- **2.14** ✅ TUZATILDI (`3d76951d`, dastlabki tuzatish `c8fbe2ab`) — kassir USD+UZS asosan to'g'ri qurilgan edi, LEKIN X/Z smena-jamlanmasi (`getShiftMovementTotals`/`getShiftLedger`) valyuta-kursini hisobga olmasdan xom summani qo'shardi (masalan $100→100 o'rniga 1,320,000 UZS bo'lishi kerak edi) — tuzatildi.
 
 ## 8.4 3-bosqich
 - **3.3** (norma-reja-fakt) ✅ Tasdiqlandi — 3 qatlamli mexanizm (shift-norma%, session-OEE, order-completion%) barchasi jonli va to'g'ri; bitta o'lik-kod (`CostingService.calculateVariance`, hech qayerda chaqirilmaydi) topildi va background-task sifatida belgilandi (task_b5b42e5a).
@@ -367,9 +373,9 @@
 - **3.8** (CC-PDF QR) ✅ Tasdiqlandi (allaqachon to'liq) — `cc-pdf.service.ts` QR-kod + `/cc/verify/:id` ochiq tekshiruv-endpoint jonli HTTP bilan isbotlandi. **Eslatma:** prikaz/protocol (Coordination-modul, alohida tizim) uchun PDF-eksport umuman yo'q — bu YANGI feature (QR-qo'shish emas), alohida egasi-ruxsat kerak.
 - **3.13** (stub-route qarori) ✅ **TO'LIQ BAJARILGAN** — FE `StubRoutes.tsx`dagi asl 5 ta band (boshqa/parallel sessiya orqali) barchasi hal qilingan (`/export`,`/micro-modules`,`/modules`,`/pos/printer-config`→mavjud sahifaga dublikat sifatida o'chirildi; `/sap`→egasi-qaror kutadi, Q-46 bo'yicha saqlandi). **Qo'shimcha bonus** (`afe2bacac`): BE-tarafida 9 ta boshqa 501-stub uchun haqiqiy implementatsiya qo'shildi + 8 ta chalg'ituvchi eskirgan 501-Swagger-belgisi tuzatildi; qolgan ~22 BE-stub EGASI-DATA/dizayn-qaror sabab aniq ro'yxatlangan (fabrikatsiya qilinmagan) — ro'yxat: `security/fire-sensors` (jadval yo'q), `hr-capital/*` (FROZEN dublikat), `finance/reports+loans` (jadval yo'q), `wms-integration/*` (ikki-dunyo PO-jadval noaniqligi), `ai/forecast+rush-orders` (ML-dizayn), `mm-dashboard` yozish-yo'llari (fi_payments yo'q).
 
-## 8.5 Tasdiqlangan HOLI QOLGAN (bu sessiyada tegilmagan)
-2-bosqich: 2.2, 2.3, 2.4, 2.5, 2.11, 2.14 (2.10/2.15/2.17/2.18 avvalroq shu sessiyada bajarilgan — `f21bbb7b`/`b4e76a72`/`3fd3b2ba`/`1fd03968`).
-3-bosqich: 3.1, 3.2, 3.5, 3.9, 3.10, 3.11, 3.12 (3.14/3.15 avvalroq bajarilgan — `a3be1bd4`/`025c356a`).
+## 8.5 Hali HAQIQIY OCHIQ qolgan (bu sessiyada tegilmagan yoki hal qilinmagan)
+2-bosqich: **2.5** (mexanizm tayyor, faqat ishga tushishi kerak — yuqoriga qarang; qolganlarining barchasi §8.3'da yopilgan).
+3-bosqich: 3.1, 3.2, 3.5, 3.9, 3.10, 3.11, 3.12, 3.16(defer) — hali tegilmagan (3.14/3.15 avvalroq bajarilgan — `a3be1bd4`/`025c356a`).
 **A9 (org-daraxt dublikat)** — hamon eng katta blokировщик (A11'ni to'g'ridan bloklaydi, boshqa ko'p narsaga bilvosita ta'sir qiladi); tayyor savol-hujjat: `docs/audit/MASSIV-100/PHASE-08-daraxt-yagona-manager.md`.
 
 > Bu hujjat = 2026-07-02 holat-suratining yagona manbasi. Yangilanish keyingi katta o'lchovda (Q-25).
