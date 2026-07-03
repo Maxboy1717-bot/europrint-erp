@@ -7,7 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { nextDocNumber } from '@common/database/doc-sequences.helper';
-import { ProductionSession, GsdStage } from '../../domain/aggregates/production-session.aggregate';
+import { GsdStage, STAGE_ORDER } from '../../domain/aggregates/production-session.aggregate';
 
 type Row = Record<string, unknown>;
 
@@ -135,63 +135,75 @@ export class MesProductionSessionsRepository {
 
   /**
    * GSD 3-bosqich vaqt-o'lchovi (#9) — joriy bosqichni yopib keyingisiga o'tadi.
-   * Aggregat (ProductionSession.advanceStage) DB qatoridan rehydrate qilinadi, bosqich
-   * o'tkaziladi va yangilangan setup/main/teardown_seconds + current_stage atomik UPDATE qilinadi.
    * Birinchi chaqiruvda (current_stage NULL) avtomatik SETUP'dan boshlaydi (beginStages).
+   *
+   * FIX (3.6-mes-stage-tracking, Q-40/Q-46, 2026-07-03): elapsed-time endi SQL ichida
+   * `EXTRACT(EPOCH FROM (NOW() - stage_started_at))` bilan hisoblanadi — xuddi allaqachon
+   * to'g'ri ishlayotgan `pauseSession()`/`resumeSession()` naqshi kabi (bir xil DB-sessiya
+   * ichida NOW() va saqlangan qiymat bir xil konvensiyada, shuning uchun tz-neytral).
+   *
+   * ESKI BUG: avvalgi versiya qatorni o'qib ProductionSession.rehydrate()+restoreStageState()
+   * bilan JS `Date` obyektiga aylantirar, `advanceStage()` esa `now.getTime() - stageStartedAt
+   * .getTime()`ni JS'da hisoblab, natijani `stageStartedAt.toISOString()` (UTC belgili) qilib
+   * `timestamp without time zone` ustuniga yozardi. DB sessiya timezone'i Asia/Tashkent
+   * (UTC+5) bo'lgani uchun Postgres "Z" belgisini e'tiborsiz qoldirib devor-soati raqamlarini
+   * Tashkent vaqti sifatida saqlaydi; keyingi o'qishda pg drayveri shu devor-soatiga yana
+   * Tashkent surunkasini biriktirib qaytaradi — natijada har `advance-stage` chaqiruvi
+   * (birinchisidan keyin) 5 soat (18000 sekund) xato bilan ishlagan (DB-proof bilan
+   * tasdiqlangan: rolled-back tranzaksiyada aniq +18000s drift o'lchandi). Endi bu qator
+   * SQL ichida (bitta atomik UPDATE, `pauseSession` bilan bir xil konvensiya) hisoblanadi —
+   * JS Date round-trip yo'q, drift yo'q.
    */
   async advanceSessionStage(sessionId: number): Promise<Row | null> {
     try {
       const before = await runQuery<Row>(sql`
-        SELECT id, status, started_at, ended_at, worker_id, production_order_id, equipment_id,
-               setup_seconds, main_seconds, teardown_seconds, current_stage, stage_started_at
+        SELECT id, status, setup_seconds, main_seconds, teardown_seconds, current_stage, stage_started_at,
+               GREATEST(0, EXTRACT(EPOCH FROM (NOW() - stage_started_at))::int) AS elapsed_seconds
         FROM production_sessions
         WHERE id = ${sessionId} AND deleted_at IS NULL
+        FOR UPDATE
       `);
       const row = before.rows[0] as Row | undefined;
       if (!row) return null;
 
-      const session = ProductionSession.rehydrate(
-        Number(row.id),
-        Number(row.production_order_id ?? 0),
-        Number(row.equipment_id ?? 0),
-        Number(row.worker_id ?? 0),
-        false,
-        String(row.status ?? ''),
-        row.started_at ? new Date(row.started_at as string) : null,
-        row.ended_at ? new Date(row.ended_at as string) : null,
-      );
-      session.restoreStageState(
-        Number(row.setup_seconds ?? 0),
-        Number(row.main_seconds ?? 0),
-        Number(row.teardown_seconds ?? 0),
-        (row.current_stage as GsdStage | null) ?? null,
-        row.stage_started_at ? new Date(row.stage_started_at as string) : null,
-      );
-
-      // current_stage NULL → GSD hali boshlanmagan: avval SETUP'ni boshlaymiz.
-      if (session.getCurrentStage() === null) {
-        const begin = session.beginStages();
-        if (!begin.ok) {
-          this.logger.warn(`advanceSessionStage begin: ${begin.error.message}`);
-          return null;
-        }
-      } else {
-        const adv = session.advanceStage();
-        if (!adv.ok) {
-          this.logger.warn(`advanceSessionStage: ${adv.error.message}`);
-          return null;
-        }
+      const status = String(row.status ?? '');
+      if (status !== 'running' && status !== 'in_progress' && status !== 'paused') {
+        this.logger.warn(`advanceSessionStage: session ${sessionId} not in a working status (${status})`);
+        return null;
       }
 
-      const stage = session.getCurrentStage();
-      const stageStartedAt = session.getStageStartedAt();
+      const currentStage = (row.current_stage as GsdStage | null) ?? null;
+      let setupSeconds = Number(row.setup_seconds ?? 0);
+      let mainSeconds = Number(row.main_seconds ?? 0);
+      let teardownSeconds = Number(row.teardown_seconds ?? 0);
+      let nextStage: GsdStage;
+
+      if (currentStage === null) {
+        // GSD hali boshlanmagan — beginStages(): SETUP'ni boshlaydi, hech narsa akkumulyatsiya qilinmaydi.
+        nextStage = GsdStage.SETUP;
+      } else if (currentStage === GsdStage.DONE) {
+        this.logger.warn(`advanceSessionStage: session ${sessionId} GSD already done`);
+        return null;
+      } else {
+        // stage_started_at bo'lmasa (masalan pause vaqtida tozalangan bo'lsa) elapsed=0 — SQL GREATEST/EXTRACT
+        // NULL bilan ham xavfsiz (NULL - NOW() = NULL → COALESCE 0 pastda).
+        const elapsedSeconds = row.stage_started_at ? Number(row.elapsed_seconds ?? 0) : 0;
+        if (currentStage === GsdStage.SETUP) setupSeconds += elapsedSeconds;
+        else if (currentStage === GsdStage.MAIN) mainSeconds += elapsedSeconds;
+        else if (currentStage === GsdStage.TEARDOWN) teardownSeconds += elapsedSeconds;
+
+        const currentIndex = STAGE_ORDER.indexOf(currentStage);
+        nextStage = STAGE_ORDER[currentIndex + 1] ?? GsdStage.DONE;
+      }
+
+      const isDone = nextStage === GsdStage.DONE;
       const updated = await runQuery<Row>(sql`
         UPDATE production_sessions
-        SET setup_seconds    = ${session.getSetupSeconds()},
-            main_seconds     = ${session.getMainSeconds()},
-            teardown_seconds = ${session.getTeardownSeconds()},
-            current_stage    = ${stage},
-            stage_started_at = ${stageStartedAt ? stageStartedAt.toISOString() : null},
+        SET setup_seconds    = ${setupSeconds},
+            main_seconds     = ${mainSeconds},
+            teardown_seconds = ${teardownSeconds},
+            current_stage    = ${nextStage},
+            stage_started_at = CASE WHEN ${isDone} THEN NULL ELSE NOW() END,
             updated_at       = NOW()
         WHERE id = ${sessionId}
         RETURNING id, setup_seconds, main_seconds, teardown_seconds, current_stage, stage_started_at

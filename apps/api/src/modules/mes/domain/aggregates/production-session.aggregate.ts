@@ -88,7 +88,10 @@ export enum GsdStage {
   DONE = 'done',
 }
 
-const STAGE_ORDER: GsdStage[] = [GsdStage.SETUP, GsdStage.MAIN, GsdStage.TEARDOWN, GsdStage.DONE];
+/** Exported so infra (repo) callers that need the stage sequence without a full
+ *  aggregate round-trip — e.g. SQL-side elapsed-time computation — share this
+ *  single source of truth instead of duplicating the order (3.6-mes-stage-tracking). */
+export const STAGE_ORDER: GsdStage[] = [GsdStage.SETUP, GsdStage.MAIN, GsdStage.TEARDOWN, GsdStage.DONE];
 
 export class ProductionSession extends AggregateRoot {
   private id: number;
