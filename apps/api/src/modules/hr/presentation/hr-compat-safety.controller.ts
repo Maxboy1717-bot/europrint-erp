@@ -21,6 +21,9 @@ import {
   HrHazardZoneSchema, HrHazardZoneDto,
   HrPpeComplianceSchema, HrPpeComplianceDto,
   HrHealthLeaveSchema, HrHealthLeaveDto,
+  HrAdaptationProgramCreateSchema, HrAdaptationProgramCreateDto,
+  HrAdaptationRecordCreateSchema, HrAdaptationRecordCreateDto,
+  HrAdaptationMilestoneUpdateSchema, HrAdaptationMilestoneUpdateDto,
 } from './dto/hr.dto';
 
 interface AuthenticatedUser { id: number; sub?: number; }
@@ -222,5 +225,62 @@ export class HrCompatSafetyController {
   async putBrandSettings(@Body() body: HrBrandSettingsDto) {
     await this.svc.updateBrandSettings(body);
     return { data: { updated: true } };
+  }
+
+  // ── 3.14: adaptatsiya (moslashuv) checklist — CRUD + status-flow ─────────
+
+  @Get('adaptation/programs')
+  async getAdaptationPrograms() {
+    return unwrapOrInternal(await this.svc.getAdaptationPrograms());
+  }
+
+  @Post('adaptation/programs')
+  @UsePipes(new ZodValidationPipe(HrAdaptationProgramCreateSchema))
+  async createAdaptationProgram(@Body() body: HrAdaptationProgramCreateDto, @CurrentUser() user: AuthenticatedUser) {
+    const data = await this.svc.createAdaptationProgram({ ...body, created_by: user?.id ?? user?.sub ?? null });
+    return { data };
+  }
+
+  @Get('adaptation/records')
+  async getAdaptationRecords(@Query('employeeId') employeeId?: string, @Query('status') status?: string) {
+    return unwrapOrInternal(await this.svc.getAdaptationRecords(employeeId, status));
+  }
+
+  // P3.14: create a new adaptation (moslashuv) checklist process for an employee.
+  // Auto-generates 4 milestone rows (kun1/hafta1/oy1/oy3) via the service.
+  @Post('adaptation/records')
+  @UsePipes(new ZodValidationPipe(HrAdaptationRecordCreateSchema))
+  async createAdaptationRecord(@Body() body: HrAdaptationRecordCreateDto, @CurrentUser() user: AuthenticatedUser) {
+    const createdBy = user?.id ?? user?.sub ?? null;
+    const data = await this.svc.createAdaptationRecord(
+      body.employee_id,
+      body.program_id ?? null,
+      body.mentor_id ?? null,
+      body.start_date ?? null,
+      createdBy,
+    );
+    return { data };
+  }
+
+  @Get('adaptation/records/:id/milestones')
+  async getAdaptationRecordMilestones(@Param('id', ParseIntPipe) id: number) {
+    return unwrapOrInternal(await this.svc.getAdaptationRecordMilestones(id));
+  }
+
+  // P3.14: mark a checklist step (kun1/hafta1/oy1/oy3) completed/skipped — status-flow tracking.
+  @Patch('adaptation/milestones/:id')
+  @UsePipes(new ZodValidationPipe(HrAdaptationMilestoneUpdateSchema))
+  async updateAdaptationMilestone(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: HrAdaptationMilestoneUpdateDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const data = await this.svc.updateAdaptationMilestoneStatus(
+      id,
+      body.status ?? 'completed',
+      body.notes ?? null,
+      body.verified_by ?? user?.id ?? user?.sub ?? null,
+    );
+    return { data };
   }
 }

@@ -115,28 +115,66 @@ export const workflow_route_configs = pgTable('workflow_route_configs', {
 
 // adaptation_programs: used with snake_case columns in hr-compat-safety.repository.ts
 // Canonical adaptationPrograms uses camelCase — kept as local stub.
+// 3.14: title/title_ru/duration/duration_type/tasks/mentor_required added — live columns
+// already exist (NOT NULL on title/title_ru/duration/duration_type/tasks; see
+// migrations/onboarding-adaptation-merge.sql context), this is additive column mapping only.
 export const adaptation_programs = pgTable('adaptation_programs', {
-  id:           serial('id').primaryKey(),
-  program_name: text('program_name').notNull(),
-  description:  text('description'),
+  id:            serial('id').primaryKey(),
+  title:         text('title'),
+  title_ru:      text('title_ru'),
+  program_name:  text('program_name'),
+  description:   text('description'),
+  position_id:   integer('position_id'),
+  department_id: integer('department_id'),
+  duration:      integer('duration'),
+  duration_type: text('duration_type'),
   duration_days: integer('duration_days'),
-  is_active:    boolean('is_active').default(true),
-  created_at:   timestamp('created_at').defaultNow(),
+  tasks:         jsonb('tasks'),
+  mentor_required: boolean('mentor_required').default(true),
+  status:        text('status').default('active'),
+  is_active:     boolean('is_active').default(true),
+  created_by:    integer('created_by'),
+  created_at:    timestamp('created_at').defaultNow(),
+  updated_at:    timestamp('updated_at').defaultNow(),
+  deleted_at:    timestamp('deleted_at'),
 });
 
 // adaptation_records: used with snake_case columns in hr-compat-safety.repository.ts
 // Canonical adaptationRecords uses camelCase — kept as local stub.
+// 3.14: mentor/professional_master/progress columns added (additive, columns already live).
 export const adaptation_records = pgTable('adaptation_records', {
-  id:          serial('id').primaryKey(),
-  employee_id: integer('employee_id').notNull(),
-  program_id:  integer('program_id'),
-  status:      text('status').default('active'),
-  started_at:  timestamp('started_at').defaultNow(),
-  completed_at: timestamp('completed_at'),
-  created_at:  timestamp('created_at').defaultNow(),
+  id:                       serial('id').primaryKey(),
+  employee_id:              integer('employee_id'),
+  user_id:                  integer('user_id'),
+  program_id:               integer('program_id'),
+  mentor_id:                integer('mentor_id'),
+  professional_master_id:   integer('professional_master_id'),
+  start_date:               text('start_date'),
+  end_date:                 text('end_date'),
+  status:                   text('status').default('active'),
+  progress:                 integer('progress').default(0),
+  progress_percent:         integer('progress_percent').default(0),
+  current_milestone:        integer('current_milestone').default(1),
+  total_milestones:         integer('total_milestones'),
+  tasks_completed:          integer('tasks_completed').default(0),
+  current_phase:            text('current_phase'),
+  mentor_feedback:          text('mentor_feedback'),
+  employee_feedback:        text('employee_feedback'),
+  hr_notes:                 text('hr_notes'),
+  notes:                    text('notes'),
+  completed_date:           date('completed_date'),
+  is_extended:              boolean('is_extended').default(false),
+  extension_reason:         text('extension_reason'),
+  created_by:               integer('created_by'),
+  started_at:               timestamp('started_at').defaultNow(),
+  completed_at:             timestamp('completed_at'),
+  created_at:               timestamp('created_at').defaultNow(),
+  updated_at:               timestamp('updated_at').defaultNow(),
+  deleted_at:               timestamp('deleted_at'),
 });
 
 // adaptation_milestones: only in adaptation.ts which is NOT in barrel — kept as local stub.
+// 3.14: completed_date/verified_by/notes added (additive, columns already live).
 export const adaptation_milestones = pgTable('adaptation_milestones', {
   id:               serial('id').primaryKey(),
   record_id:        integer('record_id'),
@@ -145,5 +183,8 @@ export const adaptation_milestones = pgTable('adaptation_milestones', {
   description:      text('description'),
   due_date:         date('due_date'),
   status:           text('status').default('pending'),
+  completed_date:   date('completed_date'),
+  verified_by:      integer('verified_by'),
+  notes:            text('notes'),
   created_at:       timestamp('created_at').defaultNow(),
 });

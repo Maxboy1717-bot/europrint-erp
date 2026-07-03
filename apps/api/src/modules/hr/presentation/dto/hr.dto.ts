@@ -276,3 +276,43 @@ export const HrAssignCardSchema = z.object({
   org_function_id: z.number().int().positive(),
 });
 export type HrAssignCardDto = z.infer<typeof HrAssignCardSchema>;
+
+// ---------------------------------------------------------------------------
+// HR — Adaptatsiya (moslashuv) checklist (3.14)
+// ---------------------------------------------------------------------------
+
+export const HrAdaptationProgramCreateSchema = z.object({
+  title:          z.string().min(1).max(MAX_NAME_LENGTH),
+  title_ru:       z.string().min(1).max(MAX_NAME_LENGTH).optional(),
+  description:    z.string().max(MAX_NOTES_LENGTH).optional(),
+  position_id:    z.number().int().positive().optional(),
+  department_id:  z.number().int().positive().optional(),
+  duration:       z.number().int().positive().max(365).optional(),
+  duration_type:  z.enum(['days', 'weeks', 'months']).optional(),
+  mentor_required: z.boolean().optional(),
+}).passthrough();
+export type HrAdaptationProgramCreateDto = z.infer<typeof HrAdaptationProgramCreateSchema>;
+
+export const HrAdaptationRecordCreateSchema = z.object({
+  employee_id:  z.number().int().positive(),
+  program_id:   z.number().int().positive().optional(),
+  mentor_id:    z.number().int().positive().optional(),
+  start_date:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD format').optional(),
+}).passthrough();
+export type HrAdaptationRecordCreateDto = z.infer<typeof HrAdaptationRecordCreateSchema>;
+
+export const HrAdaptationMilestoneUpdateSchema = z.object({
+  status:         z.enum(['pending', 'completed', 'skipped']).optional(),
+  notes:          z.string().max(MAX_NOTES_LENGTH).optional(),
+  verified_by:    z.number().int().positive().optional(),
+});
+export type HrAdaptationMilestoneUpdateDto = z.infer<typeof HrAdaptationMilestoneUpdateSchema>;
+
+export const HrAdaptationRecordUpdateSchema = z.object({
+  status:              z.enum(['active', 'completed', 'failed', 'paused']).optional(),
+  mentor_id:           z.number().int().positive().optional(),
+  professional_master_id: z.number().int().positive().optional(),
+  current_phase:       z.string().max(50).optional(),
+  notes:               z.string().max(MAX_NOTES_LENGTH).optional(),
+});
+export type HrAdaptationRecordUpdateDto = z.infer<typeof HrAdaptationRecordUpdateSchema>;

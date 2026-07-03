@@ -9,9 +9,11 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
-import { sql, eq } from 'drizzle-orm';
+import { sql, eq, desc, isNull } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { execHrBrandSettingsUpsert } from '@common/database/queries-remaining';
-import { safeCall, Result } from '@common/result';
+import { safeCall, Result, AppErr, Err } from '@common/result';
+import { ADAPTATION_MILESTONE_STEPS } from '@common/constants/business.constants';
 import {
   hr_brand_settings, hr_documents, document_templates,
   safety_incidents, safety_training_records, hazard_zones,
@@ -22,6 +24,10 @@ import {
 import type { IHrCompatSafetyRepo } from '../../domain/repositories/i-hr-compat-safety.repo';
 
 type Row = Record<string, unknown>;
+
+// 3.14: self-joins on employees for mentor / professional-master lookups
+const mentorEmployees = alias(hrEmployees, 'adaptation_mentor');
+const masterEmployees = alias(hrEmployees, 'adaptation_master');
 
 @Injectable()
 export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
@@ -334,6 +340,252 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
         .orderBy(adaptation_milestones.milestone_number)
         .limit(50);
       return castTo<Row[]>(rows);
+      }, 'DB_ERROR');
+  }
+
+  // ── 3.14: adaptatsiya (moslashuv) checklist — CRUD + status-flow ─────────
+
+  async getAdaptationPrograms(): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:              adaptation_programs.id,
+        title:           adaptation_programs.title,
+        title_ru:        adaptation_programs.title_ru,
+        description:     adaptation_programs.description,
+        department_id:   adaptation_programs.department_id,
+        duration:        adaptation_programs.duration,
+        duration_type:   adaptation_programs.duration_type,
+        mentor_required: adaptation_programs.mentor_required,
+        status:          adaptation_programs.status,
+        created_at:      adaptation_programs.created_at,
+      })
+        .from(adaptation_programs)
+        .where(isNull(adaptation_programs.deleted_at))
+        .orderBy(desc(adaptation_programs.created_at))
+        .limit(100);
+      return castTo<Row[]>(rows);
+      }, 'DB_ERROR');
+  }
+
+  async createAdaptationProgram(data: Record<string, unknown>): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const title = String(data['title'] ?? '');
+      const rows = await db.insert(adaptation_programs).values({
+        title,
+        title_ru:        String(data['title_ru'] ?? title),
+        description:     (data['description'] ?? null) as string | null,
+        position_id:     (data['position_id'] ?? null) as number | null,
+        department_id:   (data['department_id'] ?? null) as number | null,
+        duration:        (data['duration'] ?? 90) as number,
+        duration_type:   (data['duration_type'] ?? 'days') as string,
+        duration_days:   (data['duration'] ?? 90) as number,
+        tasks:           [],
+        mentor_required: (data['mentor_required'] ?? true) as boolean,
+        status:          'active',
+        is_active:       true,
+        created_by:      (data['created_by'] ?? null) as number | null,
+      }).returning();
+      return castTo<Row>(rows[0] ?? {});
+      }, 'DB_ERROR');
+  }
+
+  async getAdaptationRecords(employeeId?: number, status?: string): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:                     adaptation_records.id,
+        employee_id:            adaptation_records.employee_id,
+        program_id:             adaptation_records.program_id,
+        mentor_id:              adaptation_records.mentor_id,
+        professional_master_id: adaptation_records.professional_master_id,
+        start_date:             adaptation_records.start_date,
+        end_date:               adaptation_records.end_date,
+        status:                 adaptation_records.status,
+        progress_percent:       adaptation_records.progress_percent,
+        current_milestone:      adaptation_records.current_milestone,
+        current_phase:          adaptation_records.current_phase,
+        hr_notes:               adaptation_records.hr_notes,
+        created_at:             adaptation_records.created_at,
+        employee_name:          sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
+        program_title:          adaptation_programs.title,
+      })
+        .from(adaptation_records)
+        .leftJoin(hrEmployees, eq(hrEmployees.id, adaptation_records.employee_id))
+        .leftJoin(adaptation_programs, eq(adaptation_programs.id, adaptation_records.program_id))
+        .where(sql`
+          ${adaptation_records.deleted_at} IS NULL AND
+          (${employeeId ?? null}::int IS NULL OR ${adaptation_records.employee_id} = ${employeeId ?? null}) AND
+          (${status ?? null}::text IS NULL OR ${adaptation_records.status} = ${status ?? null})
+        `)
+        .orderBy(desc(adaptation_records.created_at))
+        .limit(100);
+      return castTo<Row[]>(rows);
+      }, 'DB_ERROR');
+  }
+
+  async getAdaptationRecordByEmployee(employeeId: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:                     adaptation_records.id,
+        employee_id:            adaptation_records.employee_id,
+        program_id:             adaptation_records.program_id,
+        mentor_id:              adaptation_records.mentor_id,
+        professional_master_id: adaptation_records.professional_master_id,
+        start_date:             adaptation_records.start_date,
+        end_date:               adaptation_records.end_date,
+        status:                 adaptation_records.status,
+        progress_percent:       adaptation_records.progress_percent,
+        current_milestone:      adaptation_records.current_milestone,
+        current_phase:          adaptation_records.current_phase,
+        hr_notes:               adaptation_records.hr_notes,
+        mentor_feedback:        adaptation_records.mentor_feedback,
+        created_at:             adaptation_records.created_at,
+        program_title:          adaptation_programs.title,
+        mentor_first_name:      mentorEmployees.first_name,
+        mentor_last_name:       mentorEmployees.last_name,
+        mentor_email:           mentorEmployees.email_work,
+        mentor_phone:           mentorEmployees.phone_number,
+        master_first_name:      masterEmployees.first_name,
+        master_last_name:       masterEmployees.last_name,
+        master_email:           masterEmployees.email_work,
+        master_phone:           masterEmployees.phone_number,
+      })
+        .from(adaptation_records)
+        .leftJoin(adaptation_programs, eq(adaptation_programs.id, adaptation_records.program_id))
+        .leftJoin(mentorEmployees, eq(mentorEmployees.id, adaptation_records.mentor_id))
+        .leftJoin(masterEmployees, eq(masterEmployees.id, adaptation_records.professional_master_id))
+        .where(sql`${adaptation_records.employee_id} = ${employeeId} AND ${adaptation_records.deleted_at} IS NULL`)
+        .orderBy(desc(adaptation_records.created_at))
+        .limit(1);
+      return castTo<Row | null>(rows[0] ?? null);
+      }, 'DB_ERROR');
+  }
+
+  async createAdaptationRecord(
+    employeeId: number,
+    programId: number | null,
+    mentorId: number | null,
+    startDate: string | null,
+    createdBy: number | null,
+  ): Promise<Result<Row>> {
+    const existing = await this.getAdaptationRecordByEmployee(employeeId);
+    if (existing.ok && existing.data) {
+      return Err(AppErr('VALIDATION', 'Bu xodim uchun adaptatsiya jarayoni allaqachon mavjud'));
+    }
+    // adaptation_records.user_id is NOT NULL live (legacy column) — resolve it
+    // from employees.user_id so inserts don't violate the constraint (3.14 fix).
+    const empRows = await db.select({ user_id: hrEmployees.user_id })
+      .from(hrEmployees)
+      .where(eq(hrEmployees.id, employeeId))
+      .limit(1);
+    const resolvedUserId = empRows[0]?.user_id;
+    if (resolvedUserId == null) {
+      return Err(AppErr('VALIDATION', 'Xodimga tizim foydalanuvchisi (user_id) bog\'lanmagan'));
+    }
+    return safeCall(async () => {
+      const start = startDate ?? _time.now().toISOString().slice(0, 10);
+      const rows = await db.insert(adaptation_records).values({
+        employee_id:      employeeId,
+        user_id:          resolvedUserId,
+        program_id:       programId,
+        mentor_id:        mentorId,
+        start_date:       start,
+        status:           'active',
+        progress:         0,
+        progress_percent: 0,
+        current_milestone: 1,
+        total_milestones: ADAPTATION_MILESTONE_STEPS.length,
+        tasks_completed:  0,
+        created_by:       createdBy,
+      }).returning();
+      return castTo<Row>(rows[0] ?? {});
+      }, 'DB_ERROR');
+  }
+
+  async createAdaptationMilestones(recordId: number, startDate: string): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const base = new Date(startDate);
+      const values = ADAPTATION_MILESTONE_STEPS.map(step => {
+        const due = new Date(base);
+        due.setDate(due.getDate() + step.dayOffset);
+        return {
+          record_id:        recordId,
+          milestone_number: step.number,
+          milestone_title:  step.title,
+          description:      null,
+          due_date:         due.toISOString().slice(0, 10),
+          status:           'pending',
+        };
+      });
+      const rows = await db.insert(adaptation_milestones).values(values).returning();
+      return castTo<Row[]>(rows);
+      }, 'DB_ERROR');
+  }
+
+  async getAdaptationRecordMilestones(recordId: number): Promise<Result<Row[]>> {
+    return safeCall(async () => {
+      const rows = await db.select({
+        id:               adaptation_milestones.id,
+        record_id:        adaptation_milestones.record_id,
+        milestone_number: adaptation_milestones.milestone_number,
+        milestone_title:  adaptation_milestones.milestone_title,
+        description:      adaptation_milestones.description,
+        due_date:         adaptation_milestones.due_date,
+        status:           adaptation_milestones.status,
+        completed_date:   adaptation_milestones.completed_date,
+        verified_by:      adaptation_milestones.verified_by,
+        notes:            adaptation_milestones.notes,
+        created_at:       adaptation_milestones.created_at,
+      })
+        .from(adaptation_milestones)
+        .where(eq(adaptation_milestones.record_id, recordId))
+        .orderBy(adaptation_milestones.milestone_number);
+      return castTo<Row[]>(rows);
+      }, 'DB_ERROR');
+  }
+
+  async updateAdaptationMilestoneStatus(
+    milestoneId: number,
+    status: string,
+    notes: string | null,
+    verifiedBy: number | null,
+  ): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const rows = await db.update(adaptation_milestones)
+        .set({
+          status,
+          notes:          notes ?? undefined,
+          verified_by:    verifiedBy ?? undefined,
+          completed_date: status === 'completed' ? _time.now().toISOString().slice(0, 10) : undefined,
+        })
+        .where(eq(adaptation_milestones.id, milestoneId))
+        .returning();
+      return castTo<Row>(rows[0] ?? {});
+      }, 'DB_ERROR');
+  }
+
+  async recomputeAdaptationProgress(recordId: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const milestoneRows = await db.select({
+        status: adaptation_milestones.status,
+      }).from(adaptation_milestones).where(eq(adaptation_milestones.record_id, recordId));
+      const total = milestoneRows.length;
+      const completed = milestoneRows.filter(m => m.status === 'completed').length;
+      const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const currentMilestone = Math.min(completed + 1, Math.max(total, 1));
+      const allDone = total > 0 && completed === total;
+      const rows = await db.update(adaptation_records)
+        .set({
+          progress:          progressPercent,
+          progress_percent:  progressPercent,
+          tasks_completed:   completed,
+          current_milestone: currentMilestone,
+          status:            allDone ? 'completed' : undefined,
+          completed_at:      allDone ? _time.now() : undefined,
+          completed_date:    allDone ? _time.now().toISOString().slice(0, 10) : undefined,
+        })
+        .where(eq(adaptation_records.id, recordId))
+        .returning();
+      return castTo<Row | null>(rows[0] ?? null);
       }, 'DB_ERROR');
   }
 }

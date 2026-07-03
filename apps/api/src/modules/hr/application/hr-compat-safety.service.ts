@@ -9,6 +9,8 @@ import { safeCall, Result, AppError, Ok } from '@common/result';
 import { HR_COMPAT_SAFETY_REPO, type IHrCompatSafetyRepo } from '../domain/repositories/i-hr-compat-safety.repo';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
+type Row = Record<string, unknown>;
+
 @Injectable()
 export class HrCompatSafetyService {
   private readonly logger = new Logger(HrCompatSafetyService.name);
@@ -119,5 +121,64 @@ export class HrCompatSafetyService {
 
   async getAdaptationMilestones(employeeId?: string) {
     return safeCall(() => this.repo.getAdaptationMilestones(employeeId ? safeInt(employeeId, 0) : undefined));
+  }
+
+  // ── 3.14: adaptatsiya (moslashuv) checklist — CRUD + status-flow ─────────
+
+  async getAdaptationPrograms() {
+    return this.repo.getAdaptationPrograms();
+  }
+
+  async createAdaptationProgram(data: Record<string, unknown>) {
+    return this.repo.createAdaptationProgram(data);
+  }
+
+  async getAdaptationRecords(employeeId?: string, status?: string) {
+    return this.repo.getAdaptationRecords(employeeId ? safeInt(employeeId, 0) : undefined, status);
+  }
+
+  async getAdaptationRecordByEmployee(employeeId: number) {
+    return this.repo.getAdaptationRecordByEmployee(employeeId);
+  }
+
+  /**
+   * Yangi xodim uchun adaptatsiya jarayoni ochish: record + 4 checklist
+   * bosqichi (kun1/hafta1/oy1/oy3) avtomatik yaratiladi (lifecycle naqsh:
+   * onboarding-adaptation-merge.sql'dagi kabi, faqat CRUD orqali).
+   */
+  async createAdaptationRecord(
+    employeeId: number,
+    programId: number | null,
+    mentorId: number | null,
+    startDate: string | null,
+    createdBy: number | null,
+  ): Promise<Result<Row, AppError>> {
+    const recordResult = await this.repo.createAdaptationRecord(employeeId, programId, mentorId, startDate, createdBy);
+    if (!recordResult.ok) return recordResult;
+    const record = recordResult.data;
+    const start = (record['start_date'] as string | null) ?? startDate ?? new Date().toISOString().slice(0, 10);
+    await this.repo.createAdaptationMilestones(Number(record['id']), start);
+    return recordResult;
+  }
+
+  async getAdaptationRecordMilestones(recordId: number) {
+    return this.repo.getAdaptationRecordMilestones(recordId);
+  }
+
+  /**
+   * Checklist bosqichini kuzatish: status o'zgarsa (pending→completed/skipped)
+   * record'ning progress_percent/current_milestone/status avtomatik qayta hisoblanadi.
+   */
+  async updateAdaptationMilestoneStatus(
+    milestoneId: number,
+    status: string,
+    notes: string | null,
+    verifiedBy: number | null,
+  ): Promise<Result<Row, AppError>> {
+    const result = await this.repo.updateAdaptationMilestoneStatus(milestoneId, status, notes, verifiedBy);
+    if (!result.ok) return result;
+    const recordId = result.data['record_id'] as number | null;
+    if (recordId) await this.repo.recomputeAdaptationProgress(recordId);
+    return result;
   }
 }

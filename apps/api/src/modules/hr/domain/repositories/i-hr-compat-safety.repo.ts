@@ -65,6 +65,28 @@ export interface IHrCompatSafetyRepo {
   ): Promise<Result<Row>>;
   getGamLeaderboardMonthly(): Promise<Result<Row[]>>;
   getAdaptationMilestones(employeeId?: number): Promise<Result<Row[]>>;
+
+  // 3.14: adaptatsiya (moslashuv) checklist — CRUD + status-flow
+  getAdaptationPrograms(): Promise<Result<Row[]>>;
+  createAdaptationProgram(data: Record<string, unknown>): Promise<Result<Row>>;
+  getAdaptationRecords(employeeId?: number, status?: string): Promise<Result<Row[]>>;
+  getAdaptationRecordByEmployee(employeeId: number): Promise<Result<Row | null>>;
+  createAdaptationRecord(
+    employeeId: number,
+    programId: number | null,
+    mentorId: number | null,
+    startDate: string | null,
+    createdBy: number | null,
+  ): Promise<Result<Row>>;
+  createAdaptationMilestones(recordId: number, startDate: string): Promise<Result<Row[]>>;
+  getAdaptationRecordMilestones(recordId: number): Promise<Result<Row[]>>;
+  updateAdaptationMilestoneStatus(
+    milestoneId: number,
+    status: string,
+    notes: string | null,
+    verifiedBy: number | null,
+  ): Promise<Result<Row>>;
+  recomputeAdaptationProgress(recordId: number): Promise<Result<Row | null>>;
 }
 
 export const HR_COMPAT_SAFETY_REPO = Symbol('HR_COMPAT_SAFETY_REPO');

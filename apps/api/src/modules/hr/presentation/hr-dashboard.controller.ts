@@ -143,14 +143,40 @@ export class HrDashboardController {
     return unwrapOrDefault(await this.svc.getAdaptationAtRisk(), []);
   }
 
-  @Get('adaptation/:id')
-  async getAdaptationById(@Param('id') id: string) {
+  // P3.14: FE (AdaptationTab.tsx) calls GET /api/hr/adaptation/:employeeId — looks up the
+  // employee's active adaptation_records row (not adaptation_records.id). Was previously
+  // querying by `id`, which meant the employee-profile tab could never find a real record.
+  @Get('adaptation/:employeeId')
+  async getAdaptationById(@Param('employeeId') employeeId: string) {
     const r = await db.execute(sql`
-      SELECT * FROM adaptation_records WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
+      SELECT
+        ar.id AS "recordId",
+        ar.mentor_id AS "mentorId",
+        COALESCE(mentor.first_name || ' ' || mentor.last_name, NULL) AS "mentorName",
+        mentor.email_work AS "mentorEmail",
+        mentor.phone_number AS "mentorPhone",
+        ar.professional_master_id AS "professionalMasterId",
+        COALESCE(master.first_name || ' ' || master.last_name, NULL) AS "professionalMasterName",
+        master.email_work AS "professionalMasterEmail",
+        master.phone_number AS "professionalMasterPhone",
+        ar.start_date AS "assignedDate",
+        ar.current_milestone AS "currentWeek",
+        ar.total_milestones AS "totalWeeks",
+        ar.progress_percent AS "progressPercent",
+        ar.status AS "status",
+        ar.hr_notes AS "hrNotes",
+        ap.title AS "programName"
+      FROM adaptation_records ar
+      LEFT JOIN employees mentor ON mentor.id = ar.mentor_id
+      LEFT JOIN employees master ON master.id = ar.professional_master_id
+      LEFT JOIN adaptation_programs ap ON ap.id = ar.program_id
+      WHERE ar.employee_id = ${parseInt(employeeId, 10)} AND ar.deleted_at IS NULL
+      ORDER BY ar.created_at DESC
+      LIMIT 1
     `);
-    const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
-    return { data: row };
+    const row = ((r as { rows?: Record<string, unknown>[] }).rows ?? [])[0] ?? null;
+    if (!row) return { recordId: null, status: 'not_started', weeklyScores: [] };
+    return { ...row, weeklyScores: [] };
   }
 
   @Get('alumni')
@@ -462,16 +488,20 @@ export class HrDashboardController {
     return { data: row };
   }
 
+  // P3.14: FE MentorCard (AdaptationTab.tsx) also PATCHes `professional_master_id`
+  // (90-day professional master) — was previously silently dropped (no column in COALESCE list).
   @Patch('adaptation/:id')
   async updateAdaptation(@Param('id') id: string, @Body() body: unknown) {
     const dto = (body ?? {}) as Record<string, unknown>;
     const r = await db.execute(sql`
       UPDATE adaptation_records SET
-        mentor_id     = COALESCE(${dto['mentor_id']     ?? null}::int, mentor_id),
-        status        = COALESCE(${dto['status']        ?? null}::text, status),
-        current_phase = COALESCE(${dto['current_phase'] ?? null}::text, current_phase),
-        notes         = COALESCE(${dto['notes']         ?? null}::text, notes),
-        updated_at    = NOW()
+        mentor_id               = COALESCE(${dto['mentor_id']               ?? null}::int, mentor_id),
+        professional_master_id  = COALESCE(${dto['professional_master_id']  ?? null}::int, professional_master_id),
+        status                  = COALESCE(${dto['status']                  ?? null}::text, status),
+        current_phase           = COALESCE(${dto['current_phase']           ?? null}::text, current_phase),
+        hr_notes                = COALESCE(${dto['hr_notes']                ?? null}::text, hr_notes),
+        notes                   = COALESCE(${dto['notes']                   ?? null}::text, notes),
+        updated_at              = NOW()
       WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
       RETURNING id
     `);
