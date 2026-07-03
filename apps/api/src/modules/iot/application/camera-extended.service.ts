@@ -6,6 +6,11 @@
 import { Injectable } from '@nestjs/common';
 import { Ok, Result } from '@common/result';
 import { DrizzleCameraRepo } from '../infrastructure/repositories/drizzle-camera.repo';
+import type {
+  CameraGlobalSettingsBody,
+  CreateCameraManagementBody,
+  UpdateCameraManagementBody,
+} from '../presentation/dto/iot-camera.dto';
 
 type UpdateStatusData = { id: number; name: string | null; is_active: boolean };
 type UpdateSettingsData = UpdateStatusData | { updated: true; settings: Record<string, unknown> };
@@ -78,6 +83,76 @@ export class CameraExtendedService {
 
   getCameraById(id: number): ReturnType<DrizzleCameraRepo['findCameraById']> {
     return this.repo.findCameraById(id);
+  }
+
+  /**
+   * Global camera AI/alert/telegram/penalty settings (Cameras Management →
+   * camera-settings.tsx page). Backed by a singleton row in the generic
+   * `settings` key-value table (Q-35 — no new table). Returns sane defaults
+   * (matching the FE's initial state) when no row has been saved yet.
+   */
+  async getGlobalCameraSettings(): Promise<Result<CameraGlobalSettingsBody>> {
+    const res = await this.repo.findGlobalCameraSettings();
+    if (!res.ok) return res as Result<never>;
+    const defaults: CameraGlobalSettingsBody = {
+      safetyThreshold: 80,
+      qualityThreshold: 75,
+      productivityThreshold: 70,
+      enableSafetyAlerts: true,
+      enableQualityAlerts: true,
+      enableMachineAlerts: true,
+      enableProductivityAlerts: false,
+      telegramEnabled: true,
+      dailyReportTime: '18:00',
+      alertCooldown: 5,
+      autoPenalty: true,
+      penaltyAmount: 50000,
+    };
+    return Ok({ ...defaults, ...(res.data ?? {}) });
+  }
+
+  async saveGlobalCameraSettings(
+    dto: CameraGlobalSettingsBody,
+  ): Promise<Result<CameraGlobalSettingsBody>> {
+    return this.repo.saveGlobalCameraSettings(dto) as Promise<Result<CameraGlobalSettingsBody>>;
+  }
+
+  /** Cameras Management page (cameras-management.tsx) — real CRUD backed by the `cameras` table. */
+  createCameraManagement(
+    dto: CreateCameraManagementBody,
+  ): ReturnType<DrizzleCameraRepo['createCameraManagement']> {
+    return this.repo.createCameraManagement({
+      code: dto.code,
+      name: dto.name,
+      nameRu: dto.nameRu ?? null,
+      rtspUrl: dto.rtspUrl ?? null,
+      ipAddress: dto.ipAddress ?? null,
+      port: dto.port ?? null,
+      workCenterId: dto.workCenterId ?? null,
+      location: dto.location ?? null,
+      isActive: dto.isActive,
+    });
+  }
+
+  updateCameraManagement(
+    id: number,
+    dto: UpdateCameraManagementBody,
+  ): ReturnType<DrizzleCameraRepo['updateCameraManagement']> {
+    return this.repo.updateCameraManagement(id, {
+      code: dto.code,
+      name: dto.name,
+      nameRu: dto.nameRu,
+      rtspUrl: dto.rtspUrl,
+      ipAddress: dto.ipAddress,
+      port: dto.port,
+      workCenterId: dto.workCenterId,
+      location: dto.location,
+      isActive: dto.isActive,
+    });
+  }
+
+  deleteCameraManagement(id: number): ReturnType<DrizzleCameraRepo['deleteCameraManagement']> {
+    return this.repo.deleteCameraManagement(id);
   }
 
   /**

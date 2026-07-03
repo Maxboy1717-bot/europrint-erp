@@ -10,10 +10,14 @@ import { eq, and, desc, count, sql } from 'drizzle-orm';
 import {
   db, cameras, camera_events, camera_alerts,
   camera_zones, camera_quality_defects, camera_safety_violations, employees,
+  settings,
 } from '@shared/db';
 import { Ok, Err, Result } from '@common/result';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
+
+/** Singleton key in the generic `settings` key-value table for camera AI/alert/telegram/penalty config. */
+const CAMERA_GLOBAL_SETTINGS_KEY = 'camera_global_settings';
 @Injectable()
 export class DrizzleCameraRepo {
   async findRecognitionStats() {
@@ -258,6 +262,124 @@ export class DrizzleCameraRepo {
         .orderBy(sql`6 DESC`)
         .limit(limit);
       return Ok(rows);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Global camera AI/alert/telegram/penalty settings — a singleton JSON blob
+   * persisted in the generic `settings` key-value table (Q-35: reuses an
+   * existing table instead of creating a new one). Backs GET /api/camera-settings.
+   */
+  async findGlobalCameraSettings(): Promise<Result<Record<string, unknown> | null>> {
+    try {
+      const rows = await db.select({ value: settings.value })
+        .from(settings)
+        .where(eq(settings.key, CAMERA_GLOBAL_SETTINGS_KEY))
+        .limit(1);
+      const row = rows[0];
+      if (!row) return Ok(null);
+      return Ok(JSON.parse(row.value) as Record<string, unknown>);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Upserts the singleton camera settings JSON blob. Backs POST/PUT /api/camera-settings.
+   * NOTE: `settings.updated_by` is a `uuid` FK live, while this app's authenticated
+   * `req.user.id` is an `integer` (schema drift between the uuid-based Drizzle `users`
+   * pgTable and the live integer `users` table) — left null to avoid a type/FK mismatch.
+   */
+  async saveGlobalCameraSettings(
+    payload: Record<string, unknown>,
+  ): Promise<Result<Record<string, unknown>>> {
+    try {
+      const value = JSON.stringify(payload);
+      await db.insert(settings)
+        .values({ key: CAMERA_GLOBAL_SETTINGS_KEY, value })
+        .onConflictDoUpdate({
+          target: settings.key,
+          set: { value, updated_at: _time.now() },
+        });
+      return Ok(payload);
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /** Creates a camera row for the Cameras Management page (POST /api/cameras). */
+  async createCameraManagement(input: {
+    code: string;
+    name: string;
+    nameRu: string | null;
+    rtspUrl: string | null;
+    ipAddress: string | null;
+    port: number | null;
+    workCenterId: string | null;
+    location: string | null;
+    isActive: boolean;
+  }): Promise<Result<{ id: number }>> {
+    try {
+      const rows = await db.insert(cameras).values({
+        code: input.code,
+        name: input.name,
+        name_ru: input.nameRu,
+        rtsp_url: input.rtspUrl,
+        ip_address: input.ipAddress,
+        port: input.port,
+        work_center_id: input.workCenterId,
+        location: input.location,
+        is_active: input.isActive,
+      }).returning({ id: cameras.id });
+      const row = rows[0];
+      if (!row) return Err('Kamera yaratilmadi');
+      return Ok({ id: row.id });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /** Updates a camera row for the Cameras Management page (PATCH /api/cameras/:id). */
+  async updateCameraManagement(
+    id: number,
+    input: {
+      code?: string;
+      name?: string;
+      nameRu?: string | null;
+      rtspUrl?: string | null;
+      ipAddress?: string | null;
+      port?: number | null;
+      workCenterId?: string | null;
+      location?: string | null;
+      isActive?: boolean;
+    },
+  ): Promise<Result<{ id: number } | null>> {
+    try {
+      const patch: Record<string, unknown> = {};
+      if (input.code !== undefined) patch['code'] = input.code;
+      if (input.name !== undefined) patch['name'] = input.name;
+      if (input.nameRu !== undefined) patch['name_ru'] = input.nameRu;
+      if (input.rtspUrl !== undefined) patch['rtsp_url'] = input.rtspUrl;
+      if (input.ipAddress !== undefined) patch['ip_address'] = input.ipAddress;
+      if (input.port !== undefined) patch['port'] = input.port;
+      if (input.workCenterId !== undefined) patch['work_center_id'] = input.workCenterId;
+      if (input.location !== undefined) patch['location'] = input.location;
+      if (input.isActive !== undefined) patch['is_active'] = input.isActive;
+      if (Object.keys(patch).length === 0) return Ok(null);
+      const rows = await db.update(cameras)
+        .set(patch)
+        .where(eq(cameras.id, id))
+        .returning({ id: cameras.id });
+      const row = rows[0];
+      if (!row) return Ok(null);
+      return Ok({ id: row.id });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /** Soft-deletes a camera row for the Cameras Management page (DELETE /api/cameras/:id). */
+  async deleteCameraManagement(id: number): Promise<Result<{ id: number } | null>> {
+    try {
+      const rows = await db.update(cameras)
+        .set({ deleted_at: _time.now(), is_active: false })
+        .where(eq(cameras.id, id))
+        .returning({ id: cameras.id });
+      const row = rows[0];
+      if (!row) return Ok(null);
+      return Ok({ id: row.id });
     } catch (e) { return Err((e as Error).message); }
   }
 }
