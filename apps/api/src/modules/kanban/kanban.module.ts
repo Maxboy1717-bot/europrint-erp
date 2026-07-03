@@ -31,6 +31,8 @@ import { KanbanCardsController, KanbanCardFilesController } from './presentation
 import { KanbanChecklistController } from './presentation/kanban-checklist.controller';
 import { KANBAN_BOARDS_REPO } from './domain/repositories/i-kanban-boards.repo';
 import { KanbanRepository } from './infrastructure/kanban.repository';
+// 06-30 to'lqin: muddati o'tgan vazifa eskalatsiya cron
+import { KanbanOverdueEscalationCron } from './infrastructure/cron/kanban-overdue-escalation.cron';
 
 const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler];
 
@@ -67,6 +69,8 @@ const repositories = [
     DrizzleKanbanExtRepository,
     KanbanColumnsRepository,
     KanbanCardsRepository,
+    // 06-30 to'lqin: muddati o'tgan vazifa eskalatsiya cron
+    KanbanOverdueEscalationCron,
   ],
   exports: [KanbanExtService],
 })

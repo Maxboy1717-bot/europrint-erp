@@ -61,6 +61,8 @@ import { GetEmployeeInfoTool }          from './application/tools/get-employee-i
 import { GetFinancialSummaryTool }      from './application/tools/get-financial-summary.tool';
 import { GetInventoryLevelsTool }       from './application/tools/get-inventory-levels.tool';
 import { GetMachineStateViaVisionTool } from './application/tools/get-machine-state-via-vision.tool';
+import { CAMERA_SNAPSHOT_PROVIDER }     from './application/tools/get-camera-snapshot.tool';
+import { CameraSnapshotProvider }       from './infrastructure/external/camera-snapshot.provider';
 import { GetMachineStatusTool }         from './application/tools/get-machine-status.tool';
 import { GetOrderStatusTool }           from './application/tools/get-order-status.tool';
 import { GetProductionStatusTool }      from './application/tools/get-production-status.tool';
@@ -94,6 +96,12 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     GeminiAdapter,
     { provide: CLAUDE_PORT, useExisting: ClaudeAdapter },
     { provide: GEMINI_PORT, useExisting: GeminiAdapter },
+    // Camera-snapshot port (item 2.12): real HTTP-snapshot implementation.
+    // Consumed by get-camera-snapshot / analyze-camera-feed /
+    // detect-workers-in-area / detect-safety-violations /
+    // get-machine-state-via-vision tools via @Inject(CAMERA_SNAPSHOT_PROVIDER).
+    CameraSnapshotProvider,
+    { provide: CAMERA_SNAPSHOT_PROVIDER, useExisting: CameraSnapshotProvider },
     ClaudeService,
     GeminiFallbackService,
     BudgetTrackerService,

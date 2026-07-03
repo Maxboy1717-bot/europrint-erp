@@ -58,6 +58,16 @@ export class PosMovementStatusService {
       if (!isTransitionAllowed(movStatus, dto.status)) {
         throw new BadRequestException(`${movStatus} → ${dto.status} o'tish ruxsat etilmagan`);
       }
+      // Completion-guard (2.2-qc-bypass-blok): quarantine_required=true bo'lsa, qc_status
+      // to'ldirilmaguncha 'completed'ga o'tish TAQIQ. pending→approved→completed yo'li
+      // (VALID_TRANSITIONS) avval qc_status'ni tekshirmasdan o'tkazib yuborardi — bu QC
+      // bosqichini butunlay chetlab o'tishga imkon berardi (jonli: 3/4 EXTERNAL_IN
+      // quarantine_required=true, qc_status=NULL, status='completed').
+      if (dto.status === 'completed' && movement.quarantineRequired === true && !movement.qcStatus) {
+        throw new BadRequestException(
+          `Harakat ${movementId}: karantin talab qilinadi, QC qarori (qc_status) hali chiqarilmagan — 'completed'ga o'tish taqiqlangan`,
+        );
+      }
       const oldStatus = movStatus;
       const updated = await this.repo.updateMovementStatus(movementId, {
         status: dto.status,

@@ -89,6 +89,13 @@ import { OKR_REPO } from './domain/repositories/i-okr.repo';
 import { STRATEGIC_REPO } from './domain/repositories/i-strategic.repo';
 import { ZNO_REPO } from './domain/repositories/i-zno.repo';
 import { ZVS_REPO } from './domain/repositories/i-zvs.repo';
+// 06-30 to'lqin: Coordination — prikaz/protokol/kengash a'zoligi + farmoyish eskalatsiya cron
+import { PrikazController, ProtocolController } from './presentation/coordination-docs.controller';
+import { CouncilMembersController } from './presentation/council-members.controller';
+import { PrikazRepository } from './infrastructure/repositories/prikaz.repository';
+import { ProtocolRepository } from './infrastructure/repositories/protocol.repository';
+import { CouncilMembersRepository } from './infrastructure/repositories/council-members.repository';
+import { RasporyazhenieEscalationCron } from './infrastructure/cron/rasporyazhenie-escalation.cron';
 
 const CommandHandlers = [
   CreateApprovalRequestHandler,
@@ -133,6 +140,10 @@ const Repositories = [
     MonthlyPlanController,
     // Vysotskiy-7 GORIZONTAL: cross-department workflow routing config
     WorkflowRulesController,
+    // 06-30 to'lqin: Coordination — prikaz/protokol/kengash a'zoligi
+    PrikazController,
+    ProtocolController,
+    CouncilMembersController,
   ],
   providers: [
     ...CommandHandlers, ...QueryHandlers, ...Repositories,
@@ -185,6 +196,11 @@ const Repositories = [
     // T21-B1 #27/#28: owner daily digest (5 owner numbers + Telegram, config-gated)
     OwnerSummaryRepository,
     OwnerSummaryService,
+    // 06-30 to'lqin: Coordination — prikaz/protokol/kengash a'zoligi + farmoyish eskalatsiya cron
+    PrikazRepository,
+    ProtocolRepository,
+    CouncilMembersRepository,
+    RasporyazhenieEscalationCron,
   ],
   exports: [APPROVAL_REPO, DASHBOARD_SVC_REPO, DashboardService, DirectorHolatService],
 })
