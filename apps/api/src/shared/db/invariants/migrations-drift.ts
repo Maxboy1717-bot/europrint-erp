@@ -4442,4 +4442,31 @@ $fn$ LANGUAGE plpgsql` },
   //   Yil prefiks (SF-<YYYY>-) servis tomonidan qo'shiladi; sekvens butun yil davom etadi.
   { name: 'T21-A2 qc_certificate_seq CREATE SEQUENCE', sql: `CREATE SEQUENCE IF NOT EXISTS qc_certificate_seq START WITH 1 INCREMENT BY 1 MINVALUE 1 NO MAXVALUE CACHE 1` },
 
+  // APPROVED: egasi-intervyu qazish 2026-07-03, manba docs/audit/decisions/01-org-kartalar.md:106-111
+  // (EP-ORG-014, Holat: JAVOBLANGAN — "Har kartada GSD: maqsad + birlik + chastota majburiy").
+  // Kanonik karta = org_departments (node=karta, PHASE-00 re-point). Ustunlar tskp_target/
+  // tskp_measurement_unit/ckp_frequency ALLAQACHON mavjud (ADD COLUMN yuqorida) lekin 93/93
+  // 'position' kartada bo'sh — hozir hard NOT NULL qo'yish Q-39/Q-46 regressiya (mavjud
+  // kartalar buziladi). Shu sabab additiv: faqat COMMENT — ustun "majburiy GSD maydoni"
+  // ekanini hujjatlashtiradi; qat'iy NOT NULL egasi mavjud kartalarni to'ldirgach qo'yiladi.
+  { name: 'org_departments.tskp_target COMMENT EP-ORG-014', sql: `COMMENT ON COLUMN org_departments.tskp_target IS 'EP-ORG-014: GSD/ЦКП MAQSAD (majburiy — norma qiymati). Hozircha nullable: mavjud kartalar to''ldirilmagan (Q-39 regressiya-taqiq), egasi to''ldirgach NOT NULL qotiriladi.'` },
+  { name: 'org_departments.tskp_measurement_unit COMMENT EP-ORG-014', sql: `COMMENT ON COLUMN org_departments.tskp_measurement_unit IS 'EP-ORG-014: GSD/ЦКП BIRLIK (majburiy — masalan m², kg, dona). Hozircha nullable: mavjud kartalar to''ldirilmagan (Q-39 regressiya-taqiq), egasi to''ldirgach NOT NULL qotiriladi.'` },
+  { name: 'org_departments.ckp_frequency COMMENT EP-ORG-014', sql: `COMMENT ON COLUMN org_departments.ckp_frequency IS 'EP-ORG-014: GSD/ЦКП CHASTOTA (majburiy — kunlik/haftalik/oylik hisobot). Hozircha nullable: mavjud kartalar to''ldirilmagan (Q-39 regressiya-taqiq), egasi to''ldirgach NOT NULL qotiriladi.'` },
+
+  // APPROVED: egasi-intervyu qazish 2026-07-03, EP-ORG-018/EP-ORG-052
+  // (docs/audit/decisions/01-org-kartalar.md:134-139,376-381 — Holat: ✅ JAVOBLANGAN;
+  // qayta-tasdiq VIZYON-TASDIQ-2146-TOLIQ-2026-06-27.md:78-80 Q10). Egasi javobi so'zma-so'z:
+  // "16 soat ichida ЦКП yo'q → o'sha kun oylik yozilmaydi". Gate mexanizmi (ckp-gate.ts
+  // applyCkpGate) allaqachon TO'G'RI implementatsiya qilingan va parametrlangan
+  // (org_departments.ckp_report_deadline_hours soat-son sifatida o'qiladi) — bu SLICE
+  // faqat kanonik 16-soat qiymatini DEFAULT + mavjud NULL qatorlarga backfill qiladi.
+  // ⚠️ Buning oldida 144/145 karta NULL edi → applyCkpGate() NULL da deadlineAt=null
+  // qaytarib, darvozani doim OCHIQ qoldirar edi (fakt bo'lsa kifoya, deadline tekshirilmas
+  // edi) — bu vizyonga zid edi (Q-40: "ishlaydi ≠ to'g'ri"). Backfill faqat NULL qatorlarni
+  // to'ldiradi (1 karta allaqachon 24 soat bilan qo'lda sozlangan — egasi override,
+  // ON CONFLICT emas WHERE IS NULL bilan teginilmaydi, chunki bu ustunni UI orqali
+  // o'zgartirish mumkin — Q-46 ishlab turgan sozlamani ustidan yozmaymiz).
+  { name: 'org_departments.ckp_report_deadline_hours SET DEFAULT 16', sql: `ALTER TABLE org_departments ALTER COLUMN ckp_report_deadline_hours SET DEFAULT 16` },
+  { name: 'org_departments.ckp_report_deadline_hours backfill 16 (NULL only)', sql: `UPDATE org_departments SET ckp_report_deadline_hours = 16 WHERE ckp_report_deadline_hours IS NULL` },
+
 ];
