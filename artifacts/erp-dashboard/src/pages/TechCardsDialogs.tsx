@@ -39,6 +39,7 @@ interface ViewCardDialogProps {
   onMaketApprove?: (cardId: string) => void;
   onAddBom?: (cardId: string, item: { materialCode: string; quantity: number; unit: string; layer?: string }) => void;
   onAddRoute?: (cardId: string, route: { opSeq: number; operation: string; normPerHour?: number; minRazryad?: number }) => void;
+  onRestoreVersion?: (cardId: string, versionId: number) => void;
 }
 
 /** Full-detail modal: meta grid, gates, BOM/routes, version history, operations/materials. */
@@ -56,6 +57,7 @@ export function ViewCardDialog({open,
   onMaketApprove,
   onAddBom,
   onAddRoute,
+  onRestoreVersion,
 }: ViewCardDialogProps) {
   const { t } = useTranslation('common');
   return (
@@ -143,7 +145,11 @@ export function ViewCardDialog({open,
                 <p className="text-sm font-medium mb-2">
                   {tLabel("common.TechCardsMaster.versiyaTarixi", "Versiya tarixi")}
                 </p>
-                <VersionHistory versions={versions} />
+                <VersionHistory
+                  versions={versions}
+                  isBusy={isMasterBusy}
+                  onRestore={onRestoreVersion ? (versionId) => onRestoreVersion(card.id, versionId) : undefined}
+                />
               </div>
 
               {/* Notes */}

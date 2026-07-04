@@ -12,7 +12,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, FlaskConical, Image as ImageIcon, Boxes, GitBranch } from "lucide-react";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Plus, FlaskConical, Image as ImageIcon, Boxes, GitBranch, RotateCcw } from "lucide-react";
 import { EPCard, EPStatusPill, EPEmptyState } from "@/components/ep";
 import { tLabel } from "@/lib/i18n/tLabel";
 import type { TechCard, BomRow, RouteRow, VersionRow, CreateCardForm } from "./TechCardsTypes";
@@ -44,7 +45,18 @@ export function GatePills({ card, hasBom }: { card: TechCard; hasBom: boolean })
 }
 
 // ── VersionHistory ───────────────────────────────────────────────────────────
-export function VersionHistory({ versions }: { versions: VersionRow[] }) {
+// SB0741 — rollback: an optional per-row "Restore" action reverts the card to that
+// snapshot (confirmed via ConfirmDialog per project rule; the latest version is
+// already the live state, so it has no restore button).
+interface VersionHistoryProps {
+  versions: VersionRow[];
+  onRestore?: (versionId: number) => void;
+  isBusy?: boolean;
+}
+export function VersionHistory({ versions, onRestore, isBusy = false }: VersionHistoryProps) {
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
+  const [pendingId, setPendingId] = useState<number | null>(null);
+
   if (!versions.length) {
     return (
       <p className="text-sm text-muted-foreground" data-testid="versions-empty">
@@ -52,21 +64,54 @@ export function VersionHistory({ versions }: { versions: VersionRow[] }) {
       </p>
     );
   }
+  const latestId = versions[0]?.id;
+
+  const handleRestoreClick = async (v: VersionRow) => {
+    setPendingId(v.id);
+    const ok = await confirm({
+      title: tLabel("common.TechCardsMaster.versiyaniQaytarish", "Versiyani qaytarish"),
+      description: tLabel(
+        "common.TechCardsMaster.versiyaniQaytarishTasdiq",
+        `Texkarta v${v.version} versiyasiga qaytariladi. Bu amalni bekor qilib bo'lmaydi.`,
+      ),
+      confirmText: tLabel("common.TechCardsMaster.qaytarish", "Qaytarish"),
+      variant: "destructive",
+    });
+    if (ok) onRestore?.(v.id);
+    setPendingId(null);
+  };
+
   return (
-    <ul className="space-y-1.5" data-testid="versions-list">
-      {versions.map((v) => (
-        <li key={v.id} className="flex items-center gap-2 text-sm">
-          <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <span className="font-medium">v{v.version}</span>
-          <span className="text-muted-foreground">
-            {v.changedAt ? new Date(v.changedAt).toLocaleString("uz-UZ") : "-"}
-          </span>
-          {v.changedBy != null && (
-            <span className="text-muted-foreground">· #{v.changedBy}</span>
-          )}
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="space-y-1.5" data-testid="versions-list">
+        {versions.map((v) => (
+          <li key={v.id} className="flex items-center gap-2 text-sm">
+            <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <span className="font-medium">v{v.version}</span>
+            <span className="text-muted-foreground">
+              {v.changedAt ? new Date(v.changedAt).toLocaleString("uz-UZ") : "-"}
+            </span>
+            {v.changedBy != null && (
+              <span className="text-muted-foreground">· #{v.changedBy}</span>
+            )}
+            {onRestore && v.id !== latestId && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 ml-auto"
+                disabled={isBusy}
+                onClick={() => handleRestoreClick(v)}
+                data-testid={`btn-restore-version-${v.id}`}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                {tLabel("common.TechCardsMaster.qaytarish", "Qaytarish")}
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {pendingId != null && <ConfirmDialogComponent />}
+    </>
   );
 }
 

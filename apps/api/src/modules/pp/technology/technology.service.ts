@@ -48,6 +48,7 @@ export class TechnologyService {
   async getRoutes(id: string) { return this.repo.getRoutes(id); }
   async addRoute(id: string, route: AddRouteInput) { return this.repo.addRoute(id, route); }
   async getVersions(id: string) { return this.repo.getVersions(id); }
+  async restoreVersion(id: string, versionId: string, restoredBy?: number) { return this.repo.restoreVersion(id, versionId, restoredBy); }
 
   async approveOrder(orderId: string, data: { bomApproved: boolean; routingApproved: boolean; techCardApproved: boolean; notes?: string; approvedById: string }) {
     return this.repo.approveOrder(orderId, data);

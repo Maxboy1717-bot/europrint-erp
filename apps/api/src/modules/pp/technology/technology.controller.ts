@@ -289,4 +289,18 @@ export class TechnologyController {
   async getVersions(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.getVersions(id));
   }
+
+  // SB0741 — rollback: restore a card to a prior snapshot (additive; bumps version, re-snapshots).
+  @Post('cards/:id/versions/:versionId/restore')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Restore a technology card to a prior version (rollback)' })
+  async restoreVersion(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const r = await this.svc.restoreVersion(id, versionId, Number(user.id));
+    if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
 }

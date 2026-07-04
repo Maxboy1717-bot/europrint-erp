@@ -310,6 +310,54 @@ export class TechnologyRepository {
     } catch (e) { return Err(String(e)); }
   }
 
+  /**
+   * SB0741 — restore a technology card to a prior snapshot (tech_card_versions.snapshot).
+   * Rollback = a new UPDATE that copies the old snapshot's editable fields back onto the
+   * live row and bumps version (never rewrites history — the pre-restore state is itself
+   * snapshotted by the normal updateCard()-style flow, so tech_card_versions stays a
+   * forward-only audit log; "restore" is additive, not destructive).
+   */
+  async restoreVersion(cardId: string, versionId: string, restoredBy?: number): Promise<Result<Row>> {
+    try {
+      const vr = await db.execute(sql`
+        SELECT snapshot FROM tech_card_versions
+        WHERE id = ${parseInt(versionId, 10)} AND technology_card_id = ${parseInt(cardId, 10)}
+        LIMIT 1`);
+      const vrow = ((vr as { rows?: Row[] }).rows ?? [])[0];
+      if (!vrow) return Err('Versiya topilmadi');
+      const snap = vrow.snapshot as Row;
+
+      const r = await db.execute(sql`
+        UPDATE technology_cards SET
+          code = ${snap.code ?? null},
+          name = ${snap.name ?? null},
+          direction = ${snap.direction ?? null},
+          material_type = ${snap.material_type ?? null},
+          product_type = ${snap.product_type ?? null},
+          format_a = ${snap.format_a ?? null},
+          format_b = ${snap.format_b ?? null},
+          format_code = ${snap.format_code ?? null},
+          gofra_profile = ${snap.gofra_profile ?? null},
+          raskroy_per_list = ${snap.raskroy_per_list ?? null},
+          scrap_pct = ${snap.scrap_pct ?? null},
+          qolip_id = ${snap.qolip_id ?? null},
+          print_params = ${jb(snap.print_params)}::jsonb,
+          kesim = ${jb(snap.kesim)}::jsonb,
+          post_press = ${jb(snap.post_press)}::jsonb,
+          ish_tartibi = ${jb(snap.ish_tartibi)}::jsonb,
+          operations = ${snap.operations ?? null},
+          status = ${snap.status ?? null},
+          version = version + 1,
+          updated_at = now()
+        WHERE id = ${parseInt(cardId, 10)} AND deleted_at IS NULL
+        RETURNING *`);
+      const row = ((r as { rows?: Row[] }).rows ?? [])[0];
+      if (!row) return Err('Texkarta topilmadi');
+      await this.snapshot(Number(row.id), Number(row.version), row, restoredBy);
+      return Ok(row);
+    } catch (e) { return Err(uniqueOrRaw(e)); }
+  }
+
   private async snapshot(cardId: number, version: number, row: Row, changedBy?: number): Promise<void> {
     try {
       await db.execute(sql`INSERT INTO tech_card_versions (technology_card_id, version, snapshot, changed_by) VALUES (${cardId}, ${version}, ${JSON.stringify(row)}::jsonb, ${changedBy ?? null})`);

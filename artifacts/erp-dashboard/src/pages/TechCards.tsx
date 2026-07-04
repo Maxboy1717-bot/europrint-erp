@@ -165,7 +165,20 @@ export default function TechCards() {
     onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
   });
 
-  const masterBusy = gateMutation.isPending || addBomMutation.isPending || addRouteMutation.isPending;
+  // SB0741 — rollback: restore a card to a prior version snapshot.
+  const restoreVersionMutation = useMutation({
+    mutationFn: ({ id, versionId }: { id: string; versionId: number }) =>
+      apiRequest('POST', `/api/technology/cards/${id}/versions/${versionId}/restore`),
+    onSuccess: (data, vars) => {
+      const updated = mapBackendCard(data as Record<string, unknown>);
+      setSelectedCard((prev) => (prev && prev.id === vars.id ? updated : prev));
+      invalidateCard(vars.id);
+      toast({ title: "Muvaffaqiyat", description: "Texkarta tanlangan versiyaga qaytarildi" });
+    },
+    onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
+  });
+
+  const masterBusy = gateMutation.isPending || addBomMutation.isPending || addRouteMutation.isPending || restoreVersionMutation.isPending;
 
   // Handlers
   const handleGenerateCard = async (order: PapkaOrder) => {
@@ -277,6 +290,7 @@ export default function TechCards() {
         onMaketApprove={(id) => gateMutation.mutate({ id, gate: "maket" })}
         onAddBom={(id, item) => addBomMutation.mutate({ id, item })}
         onAddRoute={(id, route) => addRouteMutation.mutate({ id, route })}
+        onRestoreVersion={(id, versionId) => restoreVersionMutation.mutate({ id, versionId })}
       />
 
       <GenerateCardDialog
