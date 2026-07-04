@@ -21,6 +21,7 @@ import { GetReclamationsHandler } from './application/queries/get-reclamations.h
 import { GetReclamationByIdHandler } from './application/queries/get-reclamation-by-id.handler';
 import { MesCompletedListener } from './infrastructure/event-handlers/mes-completed.listener';
 import { SoSampleRequestedListener } from './infrastructure/event-handlers/so-sample-requested.listener';
+import { QcPassedCertificateListener } from './infrastructure/event-handlers/qc-passed-certificate.listener';
 import { QcInspectionsController } from './presentation/qc-inspections.controller';
 import { QcDefectsController } from './presentation/qc-defects.controller';
 import { QcReclamationsController } from './presentation/qc-reclamations.controller';
@@ -78,7 +79,7 @@ const commandHandlers = [
   CreateInspectionHandler,
 ];
 
-const eventHandlers = [MesCompletedListener, SoSampleRequestedListener];
+const eventHandlers = [MesCompletedListener, SoSampleRequestedListener, QcPassedCertificateListener];
 
 const queryHandlers = [
   GetInspectionsHandler,
