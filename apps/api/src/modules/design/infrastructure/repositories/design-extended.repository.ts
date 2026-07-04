@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
 import { design_orders } from '@shared/db/schema-misc';
 import { SQL, SQLWrapper, count, eq, sql } from 'drizzle-orm';
-import { safeCall, Ok, Result } from '@common/result';
+import { safeCall, Ok, Err, AppErr, Result } from '@common/result';
 import { execNotificationMarkRead } from '@common/database/queries-remaining';
 import type { IDesignExtendedRepo } from '../../domain/repositories/i-design-extended.repo';
 
@@ -122,16 +122,25 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
   }
 
   async generateMockup(designId: string, productType: string): Promise<Result<{ mockupUrl: string; designId: string; productType: string }>> {
-    return safeCall(async () => {
+    const found = await safeCall(async () => {
       const rows = await exec(sql`
         SELECT id::text AS id, image_url AS "imageUrl" FROM designs WHERE id = ${parseInt(designId, 10)}
       `);
       const r = rows[0];
       if (!r) throw new Error('Design topilmadi');
-      // Use the stored image_url as the mockup source; real 3D rendering deferred.
-      const mockupUrl = r['imageUrl'] ? String(r['imageUrl']) : `/mockups/${designId}-${productType}.png`;
-      return { mockupUrl, designId, productType };
+      return r['imageUrl'] ? String(r['imageUrl']) : null;
     }, 'DB_ERROR');
+    if (!found.ok) return found as Result<never>;
+    // No real 3D-render pipeline exists yet (nothing in the codebase ever
+    // writes designs.image_url). Previously this fabricated a
+    // `/mockups/{id}-{type}.png` URL that pointed at a file that was never
+    // created — the FE showed a "3D Mockup yaratildi!" success toast and
+    // rendered a broken <img>. Be honest instead: only return a mockupUrl
+    // when a real source image exists; otherwise report NOT_IMPLEMENTED.
+    if (!found.data) {
+      return Err(AppErr('NOT_IMPLEMENTED', '3D mockup generatori hali ulanmagan — dizaynda manba tasvir (image_url) mavjud emas'));
+    }
+    return Ok({ mockupUrl: found.data, designId, productType });
   }
 
   async approveDesign(designId: string): Promise<Result<{ id: string; status: string }>> {
