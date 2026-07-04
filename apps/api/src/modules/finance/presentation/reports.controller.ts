@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, InternalServerErrorException, Logger, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -114,6 +114,7 @@ export class ReportsController {
   @ApiOperation({ summary: 'Export profitability' })
   @ApiResponse({ status: 202, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 500, description: 'DB error during export' })
   @Post('profitability/export')
   @HttpCode(HttpStatus.ACCEPTED)
   async exportProfitability(@Body() body: unknown) {
@@ -148,7 +149,10 @@ export class ReportsController {
       return { data: rows, total: rows.length, exportedAt: this._time.now().toISOString() };
     } catch (e) {
       this.logger.error(`exportProfitability: ${(e as Error).message}`);
-      return { data: [], total: 0, error: (e as Error).message };
+      // Q6 (2026-07-04): was silently swallowed into a 202 { data: [], total: 0, error }
+      // body — caller saw "Accepted, zero rows" for a failed DB query, indistinguishable
+      // from "no data in range". Now surfaces as a real 500 (Q-40 catch-swallow fix).
+      throw new InternalServerErrorException((e as Error).message);
     }
   }
 }

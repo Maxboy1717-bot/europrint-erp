@@ -7,7 +7,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Body, Controller, Get, HttpCode, HttpStatus, Logger, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, InternalServerErrorException, Logger, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -154,6 +154,7 @@ export class FinanceMainActionsController {
   @ApiOperation({ summary: 'Recalculate profitability' })
   @ApiResponse({ status: 202, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 500, description: 'DB error during recalculation' })
   @Post('profitability/recalculate')
   @HttpCode(HttpStatus.ACCEPTED)
   async recalculateProfitability(@Body() body: unknown) {
@@ -190,7 +191,10 @@ export class FinanceMainActionsController {
       return { status: 'done', updated: rows.length, orderId: payload.orderId ?? null, recalcAt: _time.now().toISOString() };
     } catch (e) {
       this.logger.error(`recalculateProfitability: ${(e as Error).message}`);
-      return { status: 'error', error: (e as Error).message };
+      // Q6 (2026-07-04): was silently swallowed into a 202 { status: 'error' } body —
+      // caller (and any monitoring) saw "Accepted" for a failed DB write. Now surfaces
+      // as a real 500 so failures are visible as failures (Q-40 catch-swallow-return-success fix).
+      throw new InternalServerErrorException((e as Error).message);
     }
   }
 
