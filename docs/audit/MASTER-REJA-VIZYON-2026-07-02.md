@@ -452,4 +452,52 @@
 - C18 — kamera IP/RTSP manzillari
 - C19 — IoT-sensor jismoniy holati
 
+## 8.9 SAP-Conformance GREEN-LIE/MOCK/404-DEAD fix loop (2026-07-04, Q1-Q34)
+
+> Egasi tomonidan tayyorlangan 34-bandli PLAN-birinchi ketma-ket ro'yxat (soxta-muvaffaqiyat/
+> mock/o'lik-route topilmalari). Q1-Q2 qo'lda (yuqori-xavf, GL/pul), Q3-Q34 (Q31/Q32'dan tashqari,
+> ular o'zlari "owner's call" deb belgilagan) bitta uzun workflow orqali qat'iy KETMA-KET
+> (parallel emas) — har biri PLAN→EXECUTE→mustaqil tekshiruv→alohida commit.
+
+**Natija: 32/32 band ijro etildi (Q31/Q32 ataylab o'tkazib yuborildi), 0 FAIL, hammasi PASS yoki
+PASS-WITH-FIXES.** Eng muhimlari:
+
+- **Q1/Q2 (GL-kanonizatsiya)** — `POST /finance/gl-entries` va `.../reverse` endi haqiqatan
+  kanonik `entries` ledgeriga yozadi (avval faqat `gl_documents` header, SAP#76 taqiqlangan
+  jadval). Endi butunlay o'lik qolgan `GlService.postDocument()` + repo/interfeys qismi
+  to'liq o'chirildi (Q-46).
+- **Q7** ("eng muhim band") — HR xodim↔bo'lim-funksiya biriktirish FE/BE maydon-nomi
+  nomosligi (`orgDepartmentIds` vs `departmentId/positionId`) tuzatildi — bu yopiq zanjir
+  edi (COALESCE null'ga tushib jim UPDATE qilmasdi).
+- **2 ta chuqur "yozish ishlaydi, o'qish eskicha" naqsh topildi va alohida tuzatildi**
+  (workflow o'z ko'lamidan tashqari deb to'g'ri belgilagan, keyin darhol qo'shimcha
+  qo'llanildi): Q9-follow-up (GSD employee GET har doim `position_id/department_id=NULL`
+  qaytarardi, chunki noto'g'ri — hamma vaqt bo'sh — legacy `position/department` ustunlarini
+  o'qirdi) va Q13-follow-up (probation-review POST haqiqiy FE-ma'lumotini `.passthrough()`
+  yo'qligi sabab kesib tashlardi + notes-ni JSON emas oddiy matn qilib yozardi, Q13'ning
+  o'zi to'g'ri qurgan GET-o'qish hech qachon ishlamas edi).
+- **Q34** — 37 ta orfan `/v2` ACL-demonstrator route + 38 ta endi ishlatilmaydigan
+  acl-fayl to'liq o'chirildi (76 fayl, -5141 qator) — har biri FE-chaqiruvchisiz ekanligi
+  alohida-alohida grep bilan ikki marta (fix + mustaqil verify) tasdiqlangan.
+- **Q19, Q22, Q26** — dublikat/o'lik no-op route'lar to'liq o'chirildi (Q-46).
+
+**Ochiq qoldirilgan (workflow o'zi to'g'ri "ko'lamdan tashqari" deb belgilagan, egasi/keyingi
+sessiya qarori kerak):**
+- `employees` jadvali uchun 3 xil parallel Drizzle ta'rifi (canonical + 2 stub) — schema
+  konsolidatsiya kerak.
+- `vacancies` compat-sxema jonli DB'dan juda eskirgan (ko'p ustun yo'q) — schema barrel
+  precedence naqshi yana takrorlanmoqda.
+- Kamera PDF/Excel yuklab-olish FE-tugmasi hali ham buzuq (avval ham buzuq edi — soxta
+  JSON'ni fayl deb yuklardi; endi 404) — haqiqiy PDF/Excel kutubxonasi (pdfkit/exceljs)
+  qo'shish + FE-qayta-ulash kerak, kattaroq alohida ish.
+- `mro_utility_readings`/`mro_equipment` — kod endi to'g'ri ulangan, lekin real
+  operatsion ma'lumot hali yo'q (EGASI-DATA).
+- Q27 (rol-katalog) — past ustuvorlik, o'zgartirilmadi (checklist o'zi shunday dedi).
+
+Barcha commitlar: `87f7e883`, `1462bef9`, `2ec13106`, `662d5468`, `dd8150fc`, `9a144dc2`,
+`65ece107`, `f5e10a3d`, `e247c9ab`, `2cf0a297`, `a5e2cdae`, `04dfc2bc`, `12115f51`, `660a7e2f`,
+`03a1c2eb`, `492ca314`, `50c09771`, `caeab8ee`, `d9e9eb27`, `5c686316`, `2f7c2b24`, `8a0e8bff`,
+`81fbb23e`, `c8b35413`, `39b83eae`, `6d81de62`, `cd7430a7`, `fc0ecf3b`, `13d0ddad`,
+`4b75f8e8`, `44038eb9`, `5c62d378` (Q9-follow-up), `56467085` (Q13-follow-up).
+
 > Bu hujjat = 2026-07-02 holat-suratining yagona manbasi. Yangilanish keyingi katta o'lchovda (Q-25).
