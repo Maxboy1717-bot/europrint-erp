@@ -7,6 +7,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Result, Ok, Err, AppError } from '@common/result';
 import { AutoGlPostingRepository } from '../../infrastructure/repositories/auto-gl-posting.repository';
+// SB0817 fix: POS movements must ALSO reach the canonical `entries` ledger (not only the
+// pos_gl_postings subledger) — GlPostingService.postJournal() is the ONE engine every other
+// module (SD payments, WMS goods-issue/receipt, payroll) uses to write `entries` (see
+// gl-posting.service.ts:85-92). Reused here rather than duplicating account-resolution/
+// balance-check/period-lock/idempotency logic a second time.
+import { GlPostingService, type JournalLine } from '@modules/finance/domain/services/gl-posting.service';
 
 export interface GlEntry {
   movementId:    number;
@@ -16,12 +22,14 @@ export interface GlEntry {
   description:   string;
 }
 
-// #10 GL-unify (P2): corrected to LIVE Uzbek BHMS codes (table `accounts`). This POS auto-posting feeds
-// the `pos_gl_postings` SUBLEDGER (not the canonical `entries`), but it was using codes that don't exist
-// (6010/4010/9110/1020/1030) and 9430 = Amortizatsiya (depreciation) for damage. FLAGGED for owner: the
-// chart has no distinct quarantine-inventory or tools/MRO account → both map to 1010 (Xom ashyo); and
-// INTERNAL_TRANSFER between same-class warehouses has no GL value change (1010↔1010 nets to zero — a
-// harmless wash; ideally it would post no entry at all).
+// #10 GL-unify (P2): corrected to LIVE Uzbek BHMS codes (table `accounts`), so it was using codes
+// that don't exist (6010/4010/9110/1020/1030) and 9430 = Amortizatsiya (depreciation) for damage.
+// SB0817: these SAME codes now ALSO drive the canonical `entries` post (via GlPostingService.postJournal
+// below) — previously this auto-posting fed ONLY the `pos_gl_postings` SUBLEDGER, leaving the real
+// ledger blind to every POS warehouse movement. FLAGGED for owner: the chart has no distinct
+// quarantine-inventory or tools/MRO account → both map to 1010 (Xom ashyo); and INTERNAL_TRANSFER
+// between same-class warehouses has no GL value change (1010↔1010 nets to zero — a harmless wash;
+// ideally it would post no entry at all — see the debit===credit skip in calculateEntries/postForMovement).
 const GL_ACCOUNTS = {
   WAREHOUSE_RM:        '1010', // Xom ashyo va materiallar
   WAREHOUSE_WIP:       '2010', // Asosiy ishlab chiqarish (WIP)
@@ -41,7 +49,10 @@ const GL_ACCOUNTS = {
 export class AutoGlPostingService {
   private readonly logger = new Logger(AutoGlPostingService.name);
 
-  constructor(private readonly repo: AutoGlPostingRepository) {}
+  constructor(
+    private readonly repo: AutoGlPostingRepository,
+    private readonly glPosting: GlPostingService,
+  ) {}
 
   private calculateEntries(movementType: string, amount: number, movementId: number): GlEntry[] {
     const entries: GlEntry[] = [];
@@ -125,6 +136,33 @@ export class AutoGlPostingService {
       const posted = postingR.data;
 
       this.logger.log(`[AutoGL] ✅ ${mov.movement_number}: ${posted} ta GL yozuvi atomik yaratildi (jami: ${totalAmount} ${mov.currency})`);
+
+      // SB0817: mirror the SAME balanced legs into the canonical `entries` ledger via the ONE
+      // posting engine (GlPostingService.postJournal — resolves codes→accounts.id, validates
+      // ΣDr==ΣCr, enforces the EP-FIN-064 period lock, and is idempotent on `reference`). This
+      // runs only for legs actually written to the subledger (`posted > 0`), and only for legs
+      // that are GL-meaningful (skips the same wash filter as insertPostingsAtomic: amount<=0 or
+      // debit===credit, e.g. INTERNAL_TRANSFER 1010↔1010) so `entries` never gets a zero/no-op row.
+      // Best-effort: a canonical-ledger failure is logged but does NOT fail the movement approval
+      // (the subledger write above already succeeded and is the source of truth for POS UI/journal).
+      if (posted > 0) {
+        const canonicalLines: JournalLine[] = entries
+          .filter((e) => Number.isFinite(e.amount) && e.amount > 0 && e.debitAccount !== e.creditAccount)
+          .flatMap((e) => [
+            { accountCode: e.debitAccount,  accountName: e.description, debit: e.amount, credit: 0 } satisfies JournalLine,
+            { accountCode: e.creditAccount, accountName: e.description, debit: 0, credit: e.amount } satisfies JournalLine,
+          ]);
+        if (canonicalLines.length > 0) {
+          const reference = `POS-${mov.movement_number}`;
+          const glR = await this.glPosting.postJournal(canonicalLines, reference);
+          if (!glR.ok) {
+            this.logger.warn(`[AutoGL] Kanonik entries yozuvi muvaffaqiyatsiz (${mov.movement_number}): ${glR.error.message}`);
+          } else {
+            this.logger.log(`[AutoGL] ✅ ${mov.movement_number}: kanonik entries ledgeriga yozildi (entry id=${glR.data})`);
+          }
+        }
+      }
+
       return Ok({ posted, entries });
     } catch (e) {
       this.logger.error(`[AutoGL] Xato: ${String(e)}`);

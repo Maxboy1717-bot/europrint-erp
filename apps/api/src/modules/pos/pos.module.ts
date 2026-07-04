@@ -66,9 +66,12 @@ import { PosVarianceConfigService } from './application/services/pos-variance-co
 import { OutboundEnforcementService } from '../wms/application/outbound-enforcement.service';
 import { POS_MOVEMENT_REPO } from './domain/repositories/i-pos-movement.repo';
 import { POS_NOTIFICATIONS_REPO } from './domain/repositories/i-pos-notifications.repo';
+// SB0817: AutoGlPostingService now also posts to the canonical `entries` ledger via
+// GlPostingService (mirrors sd.module.ts's `FinanceModule` import for the same reason).
+import { FinanceModule } from '@modules/finance/finance.module';
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, FinanceModule],
   controllers: [
     ProcurementController,
     WarehouseConfigController,
