@@ -5,6 +5,8 @@
 
 import { Module } from '@nestjs/common';
 import { CronModule } from '../../cron/cron.module';
+// Q23 fix: SupplyChainController.refresh() endi haqiqiy MV refresh qiladi.
+import { QueueModule } from '../queue/queue.module';
 
 import { WasteController } from './waste.controller';
 import { ExceptionLogController } from './exception-log.controller';
@@ -51,7 +53,7 @@ import { WasteRepository } from './waste.repository';
 import { ReportsHubRepository } from './reports-hub.repository';
 
 @Module({
-  imports: [CronModule],
+  imports: [CronModule, QueueModule],
   controllers: [
     WasteController,
     ExceptionLogController,
