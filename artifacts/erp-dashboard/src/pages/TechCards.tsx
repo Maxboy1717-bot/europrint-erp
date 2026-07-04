@@ -215,7 +215,7 @@ export default function TechCards() {
     setGenDialog(true);
   };
 
-  if (isLoading) return <div className="p-6">{t("Yuklanmoqda...")}</div>;
+  if (isLoading) return <div className="text-center py-12 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</div>;
 
   const safeCards = Array.isArray(cards) ? cards : [];
 
