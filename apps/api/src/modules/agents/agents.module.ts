@@ -3,6 +3,7 @@
  */
 import { Module } from '@nestjs/common';
 import { AiModule } from '../ai/ai.module';
+import { IotModule } from '../iot/iot.module';
 
 import { AgentEventBusService } from './shared/agent-event-bus.service';
 import { AgentAuditService } from './shared/agent-audit.service';
@@ -26,7 +27,7 @@ import { StrategicAgentService } from './strategic-agent.service';
 import { AgentsController } from './agents.controller';
 
 @Module({
-  imports:     [AiModule],
+  imports:     [AiModule, IotModule],
   controllers: [AgentsController],
   providers: [
     AgentEventBusService,
