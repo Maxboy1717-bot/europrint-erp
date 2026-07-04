@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { apiRequest } from "@/lib/api-request";
 import { useToast } from "@/hooks/use-toast";
+import { tLabel } from "@/lib/i18n/tLabel";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ interface RazryadLevel {
   coefficient: string | number | null;
   exam_pass_threshold: string | number | null;
   max_retakes: number | null;
+  min_months: number | null;
   salary_min: string | number | null;
   salary_max: string | number | null;
   is_active: boolean;
@@ -35,6 +37,7 @@ interface RazryadLevel {
 interface RazryadPatch {
   examPassThreshold?: number;
   maxRetakes?: number;
+  minMonths?: number;
   salaryMin?: number;
   salaryMax?: number;
   coefficient?: number;
@@ -59,6 +62,7 @@ function LevelRow({
   const [editing, setEditing] = useState(false);
   const [threshold, setThreshold] = useState(row.exam_pass_threshold != null ? String(Number(row.exam_pass_threshold)) : "");
   const [retakes, setRetakes]     = useState(row.max_retakes != null ? String(row.max_retakes) : "");
+  const [minMonths, setMinMonths] = useState(row.min_months != null ? String(row.min_months) : "");
   const [sMin, setSMin]           = useState(row.salary_min != null ? String(Number(row.salary_min)) : "");
   const [sMax, setSMax]           = useState(row.salary_max != null ? String(Number(row.salary_max)) : "");
   const [coeff, setCoeff]         = useState(row.coefficient != null ? String(Number(row.coefficient)) : "");
@@ -67,6 +71,7 @@ function LevelRow({
   function startEdit() {
     setThreshold(row.exam_pass_threshold != null ? String(Number(row.exam_pass_threshold)) : "");
     setRetakes(row.max_retakes != null ? String(row.max_retakes) : "");
+    setMinMonths(row.min_months != null ? String(row.min_months) : "");
     setSMin(row.salary_min != null ? String(Number(row.salary_min)) : "");
     setSMax(row.salary_max != null ? String(Number(row.salary_max)) : "");
     setCoeff(row.coefficient != null ? String(Number(row.coefficient)) : "");
@@ -76,6 +81,7 @@ function LevelRow({
   async function handleSave() {
     const th = parseFloat(threshold);
     const rt = parseInt(retakes, 10);
+    const mm = parseInt(minMonths, 10);
     const mn = parseFloat(sMin);
     const mx = parseFloat(sMax);
 
@@ -85,6 +91,10 @@ function LevelRow({
     }
     if (retakes !== "" && (isNaN(rt) || rt < 0 || rt > 10)) {
       toast({ title: "Qayta topshirish 0–10 bo'lishi kerak", variant: "destructive" });
+      return;
+    }
+    if (minMonths !== "" && (isNaN(mm) || mm < 0 || mm > 120)) {
+      toast({ title: tLabel('hr.razryadConfig.minMonthsRange', "Minimal oraliq (oy) 0–120 bo'lishi kerak"), variant: "destructive" });
       return;
     }
     if (sMin !== "" && sMax !== "" && !isNaN(mn) && !isNaN(mx) && mn > mx) {
@@ -101,6 +111,7 @@ function LevelRow({
     const patch: RazryadPatch = {};
     if (threshold !== "" && !isNaN(th)) patch.examPassThreshold = th;
     if (retakes !== ""   && !isNaN(rt)) patch.maxRetakes = rt;
+    if (minMonths !== "" && !isNaN(mm)) patch.minMonths = mm;
     if (sMin !== ""      && !isNaN(mn)) patch.salaryMin = mn;
     if (sMax !== ""      && !isNaN(mx)) patch.salaryMax = mx;
     if (coeff !== ""     && !isNaN(cf)) patch.coefficient = cf;
@@ -143,6 +154,10 @@ function LevelRow({
             <Input type="number" min="0" max="10" step="1" className="h-7 w-20 text-sm"
               value={retakes} placeholder="0-10" onChange={(e) => setRetakes(e.target.value)} />
           </TableCell>
+          <TableCell className="w-24">
+            <Input type="number" min="0" max="120" step="1" className="h-7 w-20 text-sm"
+              value={minMonths} placeholder="oy" onChange={(e) => setMinMonths(e.target.value)} />
+          </TableCell>
           <TableCell className="w-36">
             <Input type="number" min="0" step="50000" className="h-7 w-32 text-sm"
               value={sMin} placeholder="UZS" onChange={(e) => setSMin(e.target.value)} />
@@ -159,6 +174,9 @@ function LevelRow({
           </TableCell>
           <TableCell className="w-24 tabular-nums text-center text-sm">
             {row.max_retakes != null ? row.max_retakes : "—"}
+          </TableCell>
+          <TableCell className="w-24 tabular-nums text-center text-sm">
+            {row.min_months != null ? row.min_months : "—"}
           </TableCell>
           <TableCell className="w-36 tabular-nums text-right text-sm">
             {fmtN(row.salary_min, " so'm")}
@@ -243,6 +261,7 @@ export default function RazryadLevelConfig() {
               <TableHead className="w-24 text-center">Koeff.</TableHead>
               <TableHead className="w-28 text-center">Imtihon %</TableHead>
               <TableHead className="w-24 text-center">Qayta top.</TableHead>
+              <TableHead className="w-24 text-center">Min. oraliq (oy)</TableHead>
               <TableHead className="w-36 text-right">Minimal oylik</TableHead>
               <TableHead className="w-36 text-right">Maksimal oylik</TableHead>
               <TableHead className="w-20 text-right">Amal</TableHead>
@@ -252,14 +271,14 @@ export default function RazryadLevelConfig() {
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((__, j) => (
+                  {Array.from({ length: 9 }).map((__, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : levels.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                   Razryad darajalari topilmadi
                 </TableCell>
               </TableRow>
@@ -275,6 +294,7 @@ export default function RazryadLevelConfig() {
       <p className="text-xs text-muted-foreground max-w-2xl">
         Imtihon foizi: razryad imtihonini o'tish uchun minimal ball (masalan 75 = 75%).
         Qayta topshirish: muvaffaqiyatsiz bo'lganda necha marta qayta topshirish mumkin (0-10).
+        Min. oraliq (oy): oxirgi razryad o'zgarishidan keyingi razryadga o'tishgacha kutish muddati (3-oy guard).
         Oylik tarif: razryad egasiga to'lanadigan ish haqi oralig'i (so'mda).
       </p>
     </div>
