@@ -137,6 +137,11 @@ export class DesignExtendedRepository implements IDesignExtendedRepo {
     // created — the FE showed a "3D Mockup yaratildi!" success toast and
     // rendered a broken <img>. Be honest instead: only return a mockupUrl
     // when a real source image exists; otherwise report NOT_IMPLEMENTED.
+    // NOTE: the controller unwraps via unwrapOrInternal(), whose switch has
+    // no NOT_IMPLEMENTED case, so this currently surfaces as HTTP 500 (not
+    // 501) with CRITICAL-severity logging — not the true stub-intent path.
+    // Fixing that requires touching the shared http-result.ts helper used by
+    // 169 other controllers, which is out of scope for this repo-only change.
     if (!found.data) {
       return Err(AppErr('NOT_IMPLEMENTED', '3D mockup generatori hali ulanmagan — dizaynda manba tasvir (image_url) mavjud emas'));
     }
