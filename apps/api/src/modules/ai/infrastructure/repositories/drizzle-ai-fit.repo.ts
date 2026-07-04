@@ -19,6 +19,7 @@ import {
   ListFitScoreFilters,
   ActiveCardAssignmentRow,
 } from '../../domain/repositories/i-ai-fit.repo';
+import { aiFitCardVisibilityPredicate, aiFitSingleCardAccessQuery } from '../ai-fit-visibility.helper';
 
 const DEFAULT_LIST_LIMIT = 100;
 
@@ -39,6 +40,20 @@ interface ActiveCardAssignmentSqlRow {
   emp_department_id:      number | null;
   emp_hire_date:          string | null;
   emp_status:             string | null;
+}
+
+/** Raw row shape for `ai_fit_scores` fetched via parametrized `sql` (snake_case). */
+interface AiFitScoreSqlRow {
+  id:                    number;
+  employee_id:           number;
+  card_id:               number;
+  fit_score:             string | null;
+  fit_report:            unknown;
+  bonus_recommendation:  string | null;
+  succession_candidate:  boolean | null;
+  ai_provider:           string | null;
+  evaluated_at:          string | null;
+  created_at:            string | null;
 }
 
 @Injectable()
@@ -109,6 +124,46 @@ export class DrizzleAiFitRepo implements IAiFitRepo {
   }
 
   /**
+   * SB0505 per-karta RBAC — `listScores` bilan bir xil, lekin natija faqat
+   * viewer boshqargan (org_departments.head_user_id zanjiri) kartalar bilan
+   * cheklanadi. `filters.cardId` allaqachon aniq (single-card yo'l) bo'lsa bu
+   * metod chaqirilmaydi — service darajasida `hasAccessToCard` bilan
+   * tekshiriladi (ai-fit.service.ts:listScores).
+   */
+  async listScoresForManagedCards(filters: ListFitScoreFilters, viewerUserId: number): Promise<Result<FitScoreRow[]>> {
+    return safeCall(async () => {
+      const limit = filters.limit && filters.limit > 0 ? Math.min(filters.limit, DEFAULT_LIST_LIMIT) : DEFAULT_LIST_LIMIT;
+      const visible = aiFitCardVisibilityPredicate(viewerUserId);
+      const employeeCond = filters.employeeId != null
+        ? sql`AND s.employee_id = ${filters.employeeId}`
+        : sql``;
+      const result = await runQuery<AiFitScoreSqlRow>(sql`
+        SELECT s.id, s.employee_id, s.card_id, s.fit_score, s.fit_report,
+               s.bonus_recommendation, s.succession_candidate, s.ai_provider,
+               s.evaluated_at, s.created_at
+        FROM ai_fit_scores s
+        INNER JOIN org_functions f ON f.id = s.card_id
+        WHERE ${visible} ${employeeCond}
+        ORDER BY s.evaluated_at DESC, s.id DESC
+        LIMIT ${limit}
+      `);
+      const rows = Array.isArray(result.rows) ? result.rows : [];
+      return rows.map((r): FitScoreRow => ({
+        id:                  r.id,
+        employeeId:          r.employee_id,
+        cardId:              r.card_id,
+        fitScore:            r.fit_score != null ? Number(r.fit_score) : 0,
+        fitReport:           (r.fit_report as Record<string, unknown> | null) ?? null,
+        bonusRecommendation: r.bonus_recommendation != null ? Number(r.bonus_recommendation) : null,
+        successionCandidate: r.succession_candidate ?? false,
+        aiProvider:          r.ai_provider ?? null,
+        evaluatedAt:         r.evaluated_at ? new Date(r.evaluated_at).toISOString() : '',
+        createdAt:           r.created_at ? new Date(r.created_at).toISOString() : '',
+      }));
+    });
+  }
+
+  /**
    * Faol org_functions kartasi + unga `users.org_function_id` orqali
    * biriktirilgan xodim juftliklari. `employeeProfile`/`cardRequirements`
    * DB'dagi mavjud maydonlardan yig'iladi (fabrikatsiya yo'q) — haftalik
@@ -171,6 +226,34 @@ export class DrizzleAiFitRepo implements IAiFitRepo {
           maxSalary:           r.max_salary,
         },
       }));
+    });
+  }
+
+  /** SB0505 per-karta RBAC — bitta cardId ustidan viewer boshqaruv zanjirida bormi. */
+  async hasAccessToCard(cardId: number, viewerUserId: number): Promise<Result<boolean>> {
+    return safeCall(async () => {
+      const result = await runQuery<{ has_access: boolean }>(
+        aiFitSingleCardAccessQuery(cardId, viewerUserId),
+      );
+      const row = Array.isArray(result.rows) ? result.rows[0] : undefined;
+      return row?.has_access === true;
+    });
+  }
+
+  /** `employeeId` ga biriktirilgan faol kartaning id'si (org_functions.id). */
+  async findCardIdForEmployee(employeeId: number): Promise<Result<number | null>> {
+    return safeCall(async () => {
+      const result = await runQuery<{ card_id: number }>(sql`
+        SELECT f.id AS card_id
+        FROM org_functions f
+        INNER JOIN users u ON u.org_function_id = f.id
+        WHERE u.employee_id = ${employeeId}
+          AND f.is_active = true
+          AND f.deleted_at IS NULL
+        LIMIT 1
+      `);
+      const row = Array.isArray(result.rows) ? result.rows[0] : undefined;
+      return row?.card_id ?? null;
     });
   }
 }

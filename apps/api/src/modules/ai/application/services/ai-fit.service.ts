@@ -10,7 +10,7 @@
  */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Ok, Err, isOk, Result } from '@common/result';
+import { Ok, Err, AppErr, isOk, Result } from '@common/result';
 import { z } from 'zod';
 import { AiRouterService } from './ai-router.service';
 import type { AiRequest, AiTaskType } from '../../domain/types/ai.types';
@@ -20,6 +20,13 @@ import {
   type FitScoreRow,
   type ListFitScoreFilters,
 } from '../../domain/repositories/i-ai-fit.repo';
+import { hasFullAiFitVisibility } from '../../infrastructure/ai-fit-visibility.helper';
+
+/** Kim so'ralayotganini bildiradi — per-karta RBAC (SB0505) uchun. */
+export interface FitViewerContext {
+  userId: number;
+  role:   string | undefined | null;
+}
 
 // AI-fit evaluation = a per-card HR performance analysis → route via the existing
 // 'hr.performance_review' task type (analysis-class). Kept as a const for clarity.
@@ -55,8 +62,21 @@ export class AiFitService {
     @Inject(AI_FIT_REPO) private readonly repo: IAiFitRepo,
   ) {}
 
-  /** Evaluate an employee↔card fit: build prompt → AI → parse → persist (graceful on AI failure). */
-  async evaluate(dto: FitEvaluateDto): Promise<Result<FitScoreRow>> {
+  /**
+   * Evaluate an employee↔card fit: build prompt → AI → parse → persist (graceful
+   * on AI failure). `viewer` optional — omitted only for trusted internal callers
+   * (runWeeklyCycle's own loop); HTTP entrypoint (controller) always passes it so
+   * a scoped role (e.g. a single department's HR_MANAGER) cannot evaluate a card
+   * outside their own managed org-department chain (SB0505 per-karta RBAC).
+   */
+  async evaluate(dto: FitEvaluateDto, viewer?: FitViewerContext): Promise<Result<FitScoreRow>> {
+    if (viewer && !hasFullAiFitVisibility(viewer.role)) {
+      const access = await this.repo.hasAccessToCard(dto.cardId, viewer.userId);
+      if (!isOk(access)) return Err(access.error);
+      if (!access.data) {
+        return Err(AppErr('FORBIDDEN', `Karta #${dto.cardId} ustidan boshqaruv huquqi yo'q`));
+      }
+    }
     const req = this.buildRequest(dto);
     const aiResult = await this.aiRouter.call(req);
 
@@ -85,8 +105,24 @@ export class AiFitService {
     });
   }
 
-  /** List persisted AI-fit scores (optionally filtered by employee/card). */
-  async listScores(filters: ListFitScoreFilters): Promise<Result<FitScoreRow[]>> {
+  /**
+   * List persisted AI-fit scores (optionally filtered by employee/card).
+   * SB0505 per-karta RBAC: a scoped viewer (not super_admin/director) querying
+   * a specific `cardId` must have access to that card; without a `cardId`
+   * filter, scoped viewers are restricted to cards they manage.
+   */
+  async listScores(filters: ListFitScoreFilters, viewer?: FitViewerContext): Promise<Result<FitScoreRow[]>> {
+    if (viewer && !hasFullAiFitVisibility(viewer.role)) {
+      if (filters.cardId != null) {
+        const access = await this.repo.hasAccessToCard(filters.cardId, viewer.userId);
+        if (!isOk(access)) return Err(access.error);
+        if (!access.data) {
+          return Err(AppErr('FORBIDDEN', `Karta #${filters.cardId} ustidan boshqaruv huquqi yo'q`));
+        }
+        return this.repo.listScores(filters);
+      }
+      return this.repo.listScoresForManagedCards(filters, viewer.userId);
+    }
     return this.repo.listScores(filters);
   }
 
@@ -121,8 +157,27 @@ export class AiFitService {
     return Ok({ total: rows.length, succeeded, failed });
   }
 
-  /** Latest AI-fit report for an employee; Ok(null) when none (404 handled in controller). */
-  async getReport(employeeId: number): Promise<Result<FitScoreRow | null>> {
+  /**
+   * Latest AI-fit report for an employee; Ok(null) when none (404 handled in
+   * controller). SB0505 per-karta RBAC: a scoped viewer must manage the card
+   * currently assigned to this employee.
+   */
+  async getReport(employeeId: number, viewer?: FitViewerContext): Promise<Result<FitScoreRow | null>> {
+    if (viewer && !hasFullAiFitVisibility(viewer.role)) {
+      const cardIdResult = await this.repo.findCardIdForEmployee(employeeId);
+      if (!isOk(cardIdResult)) return Err(cardIdResult.error);
+      const cardId = cardIdResult.data;
+      if (cardId == null) {
+        // No active card assignment found for this employee — nothing to scope
+        // against; fall through to NOT_FOUND semantics via Ok(null) below.
+        return Ok(null);
+      }
+      const access = await this.repo.hasAccessToCard(cardId, viewer.userId);
+      if (!isOk(access)) return Err(access.error);
+      if (!access.data) {
+        return Err(AppErr('FORBIDDEN', `Xodim #${employeeId} kartasi ustidan boshqaruv huquqi yo'q`));
+      }
+    }
     return this.repo.findLatestByEmployee(employeeId);
   }
 

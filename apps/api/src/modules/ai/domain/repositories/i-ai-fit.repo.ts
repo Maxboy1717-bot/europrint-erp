@@ -58,8 +58,24 @@ export interface IAiFitRepo {
   insertScore(dto: InsertFitScoreDto): Promise<Result<FitScoreRow>>;
   findLatestByEmployee(employeeId: number): Promise<Result<FitScoreRow | null>>;
   listScores(filters: ListFitScoreFilters): Promise<Result<FitScoreRow[]>>;
+  /**
+   * Like `listScores`, but pre-filtered to only cards (org_functions) the
+   * viewer manages (org_departments.head_user_id chain) — SB0505 per-karta
+   * RBAC for scoped roles browsing without a specific `cardId` filter.
+   */
+  listScoresForManagedCards(filters: ListFitScoreFilters, viewerUserId: number): Promise<Result<FitScoreRow[]>>;
   /** Faol karta + biriktirilgan xodim juftliklari (haftalik avto-tsikl uchun). */
   listActiveCardAssignments(): Promise<Result<ActiveCardAssignmentRow[]>>;
+  /**
+   * SB0505 per-karta RBAC: viewer (org_departments.head_user_id orqali) shu
+   * cardId (org_functions.id) ustidan boshqaruv zanjirida bormi. Full-visibility
+   * rollar (super_admin/director) bu metoddan chetlanadi (controller/service
+   * darajasida oldindan tekshiriladi) — faqat scoped rollar (masalan HR_MANAGER)
+   * uchun chaqiriladi.
+   */
+  hasAccessToCard(cardId: number, viewerUserId: number): Promise<Result<boolean>>;
+  /** `employeeId` ga biriktirilgan faol kartaning id'si (org_functions.id), topilmasa null. */
+  findCardIdForEmployee(employeeId: number): Promise<Result<number | null>>;
 }
 
 export const AI_FIT_REPO = Symbol('AI_FIT_REPO');

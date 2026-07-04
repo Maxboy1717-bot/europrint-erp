@@ -17,8 +17,10 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../auth/types/role';
-import { unwrapOrBadRequest, unwrapOrInternal, unwrapOrNotFoundDefined } from '@common/http-result';
-import { AiFitService, FitEvaluateSchema } from '../application/services/ai-fit.service';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
+import { unwrapOrThrow, unwrapOrNotFoundDefined, throwFromError } from '@common/http-result';
+import { AiFitService, FitEvaluateSchema, type FitViewerContext } from '../application/services/ai-fit.service';
 
 const FitScoresQuerySchema = z.object({
   employeeId: z.coerce.number().int().positive().optional(),
@@ -37,27 +39,36 @@ export class AiFitController {
 
   constructor(private readonly service: AiFitService) {}
 
+  /** SB0505 per-karta RBAC: viewer context passed to the service on every read/write. */
+  private toViewer(user: AuthenticatedUser): FitViewerContext {
+    return { userId: Number(user?.id ?? 0), role: user?.role };
+  }
+
   @Post('evaluate')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Xodim ↔ karta mosligini AI orqali baholash' })
-  async evaluate(@Body() body: unknown) {
+  async evaluate(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = FitEvaluateSchema.parse(body);
-    return unwrapOrBadRequest(await this.service.evaluate(dto));
+    return unwrapOrThrow(await this.service.evaluate(dto, this.toViewer(user)));
   }
 
   @Get('scores')
   @ApiOperation({ summary: 'AI-fit baholar ro`yxati (employeeId/cardId filtri)' })
-  async getScores(@Query() query: unknown) {
+  async getScores(@Query() query: unknown, @CurrentUser() user: AuthenticatedUser) {
     const filters = FitScoresQuerySchema.parse(query);
-    return unwrapOrInternal(await this.service.listScores(filters));
+    return unwrapOrThrow(await this.service.listScores(filters, this.toViewer(user)));
   }
 
   @Get('report/:employeeId')
   @ApiOperation({ summary: 'Xodimning eng so`nggi AI-fit hisoboti' })
-  async getReport(@Param('employeeId', ParseIntPipe) employeeId: number) {
+  async getReport(@Param('employeeId', ParseIntPipe) employeeId: number, @CurrentUser() user: AuthenticatedUser) {
+    const result = await this.service.getReport(employeeId, this.toViewer(user));
+    // SB0505 per-karta RBAC: a scope violation (FORBIDDEN) must surface as 403,
+    // not the blanket 404 that unwrapOrNotFoundDefined maps every Err to.
+    if (!result.ok && result.error?.code === 'FORBIDDEN') throwFromError(result.error);
     return unwrapOrNotFoundDefined(
-      await this.service.getReport(employeeId),
+      result,
       `AI-fit hisoboti topilmadi: xodim ${employeeId}`,
     );
   }
