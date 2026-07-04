@@ -4,19 +4,25 @@
  *   Returns Result<T> from @common/result; never throws raw Errors.
  *
  *   Q-40 honesty policy:
- *   - autofill / analyzeChurn / chatRespond / analyzeVoiceCall / getAiQuickScore
+ *   - autofill / analyzeChurn / chatRespond / analyzeVoiceCall
  *     require an external AI/ML provider that is NOT configured → 501 NOT_IMPLEMENTED
  *   - suggestAutoTasks  → queries crm_tasks from DB for recent entity tasks
  *   - createAutoTask    → real INSERT into crm_tasks
  *   - getAiLeads        → queries crmLeads with activity counts
  *   - getAiNba          → queries crm_activities to derive next-best-action
+ *   - getAiQuickScore(lead) → SB0640/SB0652/SB0673 fix: no ML model is configured, but
+ *     this is NOT the same gap as autofill/churn (which need real ML/NLP). Lead scoring
+ *     has an owner-approved deterministic formula (EP-CRM-012, CrmLeadScoringService) —
+ *     using it here is honest (not a "fake AI" claim) because the UI label is "quick
+ *     score", not "ML prediction". Deals have no equivalent formula yet → still 501.
  */
 
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError, Err, Ok } from '@common/result';
 import { db } from '@shared/db';
 import { crm_tasks, crm_activities, crmLeads } from '@shared/db';
-import { sql, eq, and, isNotNull } from 'drizzle-orm';
+import { sql, eq, and, isNotNull, count } from 'drizzle-orm';
+import { CrmLeadScoringService } from '../domain/services/crm-lead-scoring.service';
 
 type Row = Record<string, unknown>;
 
@@ -25,6 +31,7 @@ const NOT_IMPL = (feature: string): Result<never, AppError> =>
 
 @Injectable()
 export class CrmAiExtendedService {
+  constructor(private readonly leadScoring: CrmLeadScoringService) {}
   /**
    * Autofill — requires external AI/ML inference. No provider configured.
    * Returns 501 NOT_IMPLEMENTED (honest) rather than hardcoded Manufacturing/50-200 echo.
@@ -199,10 +206,79 @@ export class CrmAiExtendedService {
   }
 
   /**
-   * Quick score — requires ML scoring model. No provider configured.
-   * Returns 501 NOT_IMPLEMENTED.
+   * Quick score — leads use the deterministic EP-CRM-012 formula
+   * (CrmLeadScoringService, same one that powers CrmLeadsController /
+   * DrizzleCrmLeadsRepository.ai_score). Deals have no equivalent formula
+   * yet → honest 501 NOT_IMPLEMENTED (no fake number).
    */
-  async getAiQuickScore(_entityType: string, _entityId: number): Promise<Result<never, AppError>> {
-    return NOT_IMPL('getAiQuickScore');
+  async getAiQuickScore(entityType: string, entityId: number): Promise<Result<object, AppError>> {
+    if (entityType !== 'lead') {
+      return NOT_IMPL('getAiQuickScore (deal)');
+    }
+    return safeCall(async () => {
+      // Raw SQL (not the Drizzle `crmLeads` def): both @shared/db and @europrint/schemas
+      // resolve `crmLeads` to a narrow compat shim (schema-compat-1a.ts) that only has
+      // the columns older DDD repos needed. budget/opportunity_amount/estimated_volume/
+      // source_id/last_activity_at/company_title/websites exist on the live table (see
+      // apps/api/src/modules/crm/leads/drizzle-crm-leads.repo.ts which reads them via
+      // raw row access from @europrint/schemas' `crmLeads` for the same reason) but are
+      // not typed on any in-repo pgTable def reachable from this module.
+      const leadResult = await db.execute(sql`
+        SELECT budget, opportunity_amount, estimated_volume, source_id, source_description,
+               last_activity_at, company_title, contact_email, contact_phone, websites
+        FROM crm_leads
+        WHERE id = ${entityId} AND deleted_at IS NULL
+        LIMIT 1
+      `);
+      const lead = ((leadResult as { rows?: Row[] }).rows ?? [])[0] as Row | undefined;
+      if (!lead) {
+        throw Object.assign(new Error(`Lead #${entityId} topilmadi`), { code: 'NOT_FOUND' });
+      }
+
+      const activityRows = await db
+        .select({ cnt: count() })
+        .from(crm_activities)
+        .where(eq(crm_activities.lead_id, entityId));
+      const activityCount = Number(activityRows[0]?.cnt ?? 0);
+
+      const lastActivityAt = lead['last_activity_at'] as string | Date | null;
+      const daysSinceLastActivity = lastActivityAt
+        ? Math.max(0, Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 86_400_000))
+        : null;
+      const budgetUzs = Number(lead['budget'] ?? lead['opportunity_amount'] ?? lead['estimated_volume'] ?? 0) || null;
+      const sourceId = (lead['source_description'] ?? lead['source_id'] ?? null) as string | null;
+
+      const scoreResult = this.leadScoring.score({
+        budgetUzs,
+        activityCount,
+        daysSinceLastActivity,
+        source: sourceId,
+        hasCompany: Boolean(lead['company_title']),
+        hasEmail: Boolean(lead['contact_email']),
+        hasPhone: Boolean(lead['contact_phone']),
+        hasWebsite: Boolean(lead['websites']),
+        employeeCount: null,
+      });
+      if (!scoreResult.ok) {
+        throw Object.assign(new Error(scoreResult.error.message), { code: 'VALIDATION' });
+      }
+
+      // churnRisk derived from the same recency signal the formula already used —
+      // no separate fabricated model, just a readable label over daysSinceLastActivity.
+      const churnRisk: 'low' | 'medium' | 'high' =
+        daysSinceLastActivity == null ? 'medium'
+        : daysSinceLastActivity >= 60 ? 'high'
+        : daysSinceLastActivity >= 30 ? 'medium'
+        : 'low';
+
+      return {
+        score:      scoreResult.data.score,
+        tier:       scoreResult.data.tier,
+        churnRisk,
+        hasIssues:  activityCount === 0,
+        breakdown:  scoreResult.data.breakdown,
+        source:     'crm-lead-scoring-formula',
+      };
+    }, 'DB_ERROR');
   }
 }

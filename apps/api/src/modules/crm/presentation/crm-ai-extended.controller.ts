@@ -167,8 +167,9 @@ export class CrmAiExtendedController {
     return unwrapOrThrow(await this.svc.analyzeChurn(entityType, safeInt(id, 0)));
   }
 
-  @ApiOperation({ summary: 'Quick score — requires ML scoring model (not configured)' })
-  @ApiResponse({ status: 501, description: 'Not implemented — no ML model configured' })
+  @ApiOperation({ summary: 'Quick score — lead uses EP-CRM-012 deterministic formula; deal not implemented' })
+  @ApiResponse({ status: 200, description: 'OK (entityType=lead)' })
+  @ApiResponse({ status: 501, description: 'Not implemented for entityType=deal — no scoring formula configured' })
   @Get('quick-score/:entityType/:id')
   async getAiQuickScore(@Param('entityType') entityType: string, @Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getAiQuickScore(entityType, safeInt(id, 0)));
