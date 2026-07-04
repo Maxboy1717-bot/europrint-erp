@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -80,11 +80,5 @@ export class AdminExtraController {
   @ApiOperation({ summary: 'Tizim ogohlantirishi' })
   async getAlert(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrInternal(await this.svc.getAlertById(id));
-  }
-
-  @Post('login')
-  @ApiOperation({ summary: 'Admin login (compatibility stub)' })
-  async adminLogin(@Body() _body: unknown) {
-    return { message: 'Use /api/auth/login for authentication', data: null };
   }
 }
