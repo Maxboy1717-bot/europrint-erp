@@ -101,12 +101,15 @@ export class MesMaintenanceRepository {
     return rows.rows as Row[];
   }
 
-  async getDowntimeEvents(sid: number): Promise<Row[]> {
-    // Wire to canonical downtime_events; session_id is INTEGER — no cast needed
+  async getDowntimeEvents(sid: number | null, lim: number): Promise<Row[]> {
+    // Wire to canonical downtime_events; session_id is INTEGER — no cast needed.
+    // sid === null => list across all sessions (bounded by lim), matching the
+    // GET /mes/downtime-events list endpoint's contract.
     const rows = await runQuery<Row>(sql`
       SELECT de.*
       FROM downtime_events de
-      WHERE de.session_id = ${sid} ORDER BY de.started_at DESC
+      WHERE (${sid}::int IS NULL OR de.session_id = ${sid})
+      ORDER BY de.started_at DESC LIMIT ${lim}
     `);
     return rows.rows as Row[];
   }

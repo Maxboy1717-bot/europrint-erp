@@ -73,7 +73,7 @@ export class MesMaintenanceService {
     return safeCall(async () => this.repo.createDowntimeEvent(session_id, reason_id, notes));
   }
 
-  async getDowntimeEvents(sid: number) {
-    return safeCall(async () => this.repo.getDowntimeEvents(sid));
+  async getDowntimeEvents(sid: number | null, lim: number) {
+    return safeCall(async () => this.repo.getDowntimeEvents(sid, lim));
   }
 }

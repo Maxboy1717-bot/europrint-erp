@@ -131,8 +131,8 @@ export class MesMaintenanceController {
   @ApiOperation({ summary: 'List downtime events' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime-events')
-  async listDowntimeEvents(@Query('limit') limit?: string) {
-    return unwrapOrThrow(await this.svc.getDowntimeEvents(0));
+  async listDowntimeEvents(@Query('sessionId') sessionId?: string, @Query('limit') limit?: string) {
+    return unwrapOrThrow(await this.svc.getDowntimeEvents(sessionId ? safeInt(sessionId, 0) : null, safeInt(limit, 50)));
   }
 
   @ApiOperation({ summary: 'Create downtime event' })
@@ -152,6 +152,6 @@ export class MesMaintenanceController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('downtime-events/:sessionId')
   async getDowntimeEvents(@Param('sessionId') sessionId: string) {
-    return unwrapOrThrow(await this.svc.getDowntimeEvents(safeInt(sessionId, 0)));
+    return unwrapOrThrow(await this.svc.getDowntimeEvents(safeInt(sessionId, 0), 500));
   }
 }
