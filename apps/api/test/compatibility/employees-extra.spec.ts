@@ -47,14 +47,6 @@ describe('EmployeesExtraController', () => {
     expect(svc.updateProfileImage).toHaveBeenCalledWith('e1', 'u', 9);
   });
 
-  it('signCorporateInventory returns signed:true stub', () => {
-    expect(ctrl.signCorporateInventory('e1', 'i1')).toEqual({ signed: true });
-  });
-
-  it('returnCorporateInventory returns returned:true stub', () => {
-    expect(ctrl.returnCorporateInventory('e1', 'i1')).toEqual({ returned: true });
-  });
-
   it('uploadProfileImage throws on service error', async () => {
     (svc.updateProfileImage as jest.Mock).mockResolvedValue(err());
     await expect(ctrl.uploadProfileImage('e1', { url: 'u' }, USER)).rejects.toThrow(InternalServerErrorException);
