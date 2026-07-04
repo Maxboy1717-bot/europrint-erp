@@ -203,6 +203,10 @@ export class DrizzleHrVacanciesRepository {
     return this.funnel.findProbationDates(pipelineId);
   }
 
+  findProbationReviews(pipelineId: number): Promise<Result<Row[]>> {
+    return this.funnel.findProbationReviews(pipelineId);
+  }
+
   findMarketAnalysisByVacancy(vacancyId: number): Promise<Result<Row | null>> {
     return this.funnel.findMarketAnalysisByVacancy(vacancyId);
   }

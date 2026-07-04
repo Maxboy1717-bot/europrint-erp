@@ -125,6 +125,12 @@ export class HrVacanciesProbationController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('pipeline/:id/probation-review')
   async getProbationReview(@Param('id', ParseIntPipe) id: number) {
-    return { data: { pipeline_id: id, review: null } };
+    // Q13 fix: was hardcoded { review: null } — reviews submitted via
+    // POST .../probation-review (recorded as hr_funnel_history stage=
+    // 'probation_reviewed') were never read back. FE (ProbationReviewBadges,
+    // ProbationReviewDialog) expects { data: ProbationReview[] }.
+    const r = await this.svc.findProbationReviews(id);
+    const data = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { data };
   }
 }

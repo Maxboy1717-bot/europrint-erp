@@ -9,7 +9,7 @@
 import { Injectable } from '@nestjs/common';
 import { db, rawSql } from '@shared/db';
 import { vacancies, candidates, hrCandidateFunnels, hrFunnelHistory } from '@europrint/schemas';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, and } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { dbRows } from '../../common/db-rows';
 
@@ -318,6 +318,52 @@ export class DrizzleHrVacanciesFunnelRepository {
       `);
       const row = dbRows(r)[0];
       return Ok((row ?? {}) as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // Q13 fix: GET .../probation-review previously hardcoded { review: null } —
+  // reviews recorded via recordFunnelHistory(stage='probation_reviewed') were
+  // never read back. Mirrors the findLatestRoadmapData JSON-in-notes pattern,
+  // but returns every matching entry (FE expects an array: ProbationReview[]).
+  async findProbationReviews(pipelineId: number): Promise<Result<Row[]>> {
+    try {
+      const rows = await db
+        .select({
+          id:         hrFunnelHistory.id,
+          funnel_id:  hrFunnelHistory.funnelId,
+          notes:      hrFunnelHistory.notes,
+          changed_by: hrFunnelHistory.changedBy,
+          created_at: hrFunnelHistory.createdAt,
+        })
+        .from(hrFunnelHistory)
+        .where(and(
+          eq(hrFunnelHistory.funnelId, String(pipelineId)),
+          eq(hrFunnelHistory.stage, 'probation_reviewed'),
+        ))
+        .orderBy(desc(hrFunnelHistory.createdAt));
+      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
+
+      const reviews = rows
+        .map(r => {
+          let parsed: Record<string, unknown> | null = null;
+          try {
+            const candidate = JSON.parse(String(r.notes ?? ''));
+            if (candidate && typeof candidate === 'object') parsed = candidate as Record<string, unknown>;
+          } catch { /* legacy plain-text notes (e.g. "probation_review rating=...") — not JSON */ }
+          if (!parsed) return null;
+          return {
+            id: r.id,
+            pipeline_entry_id: Number(r.funnel_id),
+            reviewed_by: r.changed_by,
+            created_at: r.created_at,
+            ...parsed,
+          } as Row;
+        })
+        .filter((r): r is Row => r !== null);
+
+      return Ok(reviews);
     } catch (e) {
       return Err(String(e));
     }

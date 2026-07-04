@@ -106,6 +106,10 @@ export class HrVacanciesService {
     return this.repo.findProbationDates(pipelineId);
   }
 
+  findProbationReviews(pipelineId: number): Promise<Result<Row[]>> {
+    return this.repo.findProbationReviews(pipelineId);
+  }
+
   findMarketAnalysisByVacancy(vacancyId: number): Promise<Result<Row | null>> {
     return this.repo.findMarketAnalysisByVacancy(vacancyId);
   }
