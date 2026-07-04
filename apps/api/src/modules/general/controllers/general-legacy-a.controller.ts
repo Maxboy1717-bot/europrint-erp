@@ -223,8 +223,18 @@ export class GeneralLegacyAController {
 
   @Public()
   @Post('client-errors')
+  @HttpCode(200)
   @UsePipes(new ZodValidationPipe(LegacyClientErrorSchema))
-  async logClientError(@Body() _body: LegacyClientErrorDto) {
+  async logClientError(@Body() body: LegacyClientErrorDto) {
+    // Q25: was a black hole — validated the body then discarded it, returning
+    // {received:true} regardless. Now actually persists to system_error_logs so
+    // browser-side error telemetry is queryable (see insertClientErrorRaw for why
+    // raw SQL). Best-effort: a broken telemetry beacon must never surface as a
+    // browser-visible failure, so a DB error is logged server-side and swallowed.
+    const result = await this.svc.logClientError(body);
+    if (!result.ok) {
+      this.logger.error(`Failed to persist client error report: ${JSON.stringify(result.error)}`);
+    }
     return { received: true };
   }
 }

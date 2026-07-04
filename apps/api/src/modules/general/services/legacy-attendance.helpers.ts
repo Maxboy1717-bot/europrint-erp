@@ -176,3 +176,33 @@ export async function getCertificatesUserRaw(empId?: string): Promise<Record<str
     return r.rows as Record<string, unknown>[];
   } catch { return []; }
 }
+
+/**
+ * Q25: real INSERT for the @Public POST /api/client-errors browser error beacon — this
+ * previously discarded the body and returned `{ received: true }` with nothing persisted.
+ * Writes system_error_logs (the same table the server-side GlobalExceptionFilter targets),
+ * so client-side JS errors are now queryable alongside backend errors. No Drizzle pgTable
+ * exists for system_error_logs in apps/api's local schema tree (@shared/db) — parametrized
+ * raw SQL per this file's established pattern (see insertAttendanceRecordRaw above).
+ * `path`/`method`/`status_code` are NOT NULL on the table but absent from the client-error
+ * DTO (it's a JS error, not an HTTP request) — filled with sentinel values that distinguish
+ * these rows from server-side entries.
+ */
+export async function insertClientErrorRaw(body: {
+  message?: string; stack?: string; url?: string; userAgent?: string;
+}): Promise<Record<string, unknown>> {
+  const path = body.url && body.url.trim() !== '' ? body.url.slice(0, 500) : '(client)';
+  const message = body.message && body.message.trim() !== '' ? body.message : '(no message)';
+  const stack = body.stack ?? null;
+  // user_id is varchar(100) and there is no authenticated user on this @Public route —
+  // store the (truncated) userAgent there so the report isn't silently dropped.
+  const userAgent = body.userAgent ? body.userAgent.slice(0, 100) : null;
+  const r = await db.execute(sql`
+    INSERT INTO system_error_logs (path, method, message, status_code, stack, user_id)
+    VALUES (${path}, 'CLIENT', ${message}, 0, ${stack}, ${userAgent})
+    RETURNING *
+  `);
+  const row = r.rows[0] as Record<string, unknown> | undefined;
+  if (!row) throw new Error('system_error_logs insert returned no row');
+  return row;
+}

@@ -40,7 +40,7 @@ import {
   findAdminByUsernameRaw, findAdminByIdRaw,
   getFaceEmbeddingsRaw, deleteFaceEmbeddingRaw,
   getAttendanceRaw, getMyAttendanceRaw, getZoneLogsRaw, getAttendanceStatsRaw,
-  insertAttendanceRecordRaw,
+  insertAttendanceRecordRaw, insertClientErrorRaw,
   getSafetyViolationsUserRaw, getDisciplineUserRaw, getCertificatesUserRaw,
 } from './legacy-attendance.helpers';
 import {
@@ -74,6 +74,13 @@ export class LegacyService {
   async getAttendanceStats()                  { return getAttendanceStatsRaw(); }
   async createAttendance(body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     return safeCall(() => insertAttendanceRecordRaw(body), 'DB_ERROR');
+  }
+
+  // ─── Client error telemetry (Q25) ───────────────────────────────────────────
+  async logClientError(
+    body: { message?: string; stack?: string; url?: string; userAgent?: string },
+  ): Promise<Result<Record<string, unknown>>> {
+    return safeCall(() => insertClientErrorRaw(body), 'DB_ERROR');
   }
 
   // ─── Papka Orders / Machine Tasks ───────────────────────────────────────────
