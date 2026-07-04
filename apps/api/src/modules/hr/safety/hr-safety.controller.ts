@@ -5,7 +5,7 @@
 
 import {
 Controller, Get, Patch, Post, Delete, Body, Param, ParseIntPipe,
-  UseGuards, UseInterceptors, UsePipes,
+  UseGuards, UseInterceptors, UsePipes, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -52,14 +52,19 @@ export class HrSafetyController {
     return { data: row };
   }
 
-  @ApiOperation({ summary: 'Delete incident' })
+  // NOTE: safety_incidents jadvalida soft-delete ustuni (deleted_at) yo'q —
+  // jismoniy DELETE audit-trailni yo'q qiladi, shu sabab bu endpoint incidentni
+  // "closed" holatiga o'tkazadi (yopish), jismoniy o'chirish EMAS. Mavjud
+  // bo'lmagan id uchun endi 404 qaytaradi (avval soxta {deleted:true} edi).
+  @ApiOperation({ summary: 'Close incident (soft-close, not a physical delete)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('incidents/:id')
   async deleteIncident(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.updateIncident(id, { status: 'closed' } as HrSafetyUpdateIncidentDto);
-    return { data: r.ok ? { deleted: true, id } : { deleted: false, id } };
+    if (!r.ok) throw new NotFoundException(`Incident ${id} topilmadi`);
+    return { data: { closed: true, id, incident: r.data } };
   }
 
   @ApiOperation({ summary: 'Update incident' })

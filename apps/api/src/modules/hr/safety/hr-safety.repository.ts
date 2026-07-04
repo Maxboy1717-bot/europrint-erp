@@ -60,7 +60,9 @@ export class HrSafetyRepository {
         .where(eq(safety_incidents.id, id))
         .returning();
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
-      return Ok((rows[0] ?? {}) as Row);
+      // Q8 fix: mavjud bo'lmagan/o'zgarmagan id uchun soxta muvaffaqiyat (Ok({})) qaytarilmasin.
+      if (rows.length === 0) return Err('NOT_FOUND');
+      return Ok(rows[0] as Row);
     } catch (e) {
       return Err(String(e));
     }
