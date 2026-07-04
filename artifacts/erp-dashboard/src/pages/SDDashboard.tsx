@@ -69,6 +69,9 @@ interface ActionRow {
 }
 interface ManagerActionsResp { pending_advance?: ActionRow[]; tech_checkpoints?: ActionRow[]; total?: number; }
 interface QuotaRow { manager_id?: number | string; manager_name?: string; achieved?: string | number; order_count?: number; }
+// SB0592/SB0606/SB0612/SB0626 — manager KPI leaderboard (GET /api/sd/dashboard/leaderboard,
+// ranked by revenue via RANK() window fn) had zero FE consumer until this widget.
+interface LeaderboardRow { manager_id?: number | string; manager_name?: string; total_revenue?: string | number; order_count?: number; rank?: number; }
 
 const UZ_MONTHS = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
 
@@ -252,6 +255,12 @@ export default function SDDashboard() {
     enabled: isAuthenticated === true,
   });
 
+  const { data: leaderboardData } = useQuery<{ leaderboard?: LeaderboardRow[]; period?: string }>({
+    queryKey: ["/api/sd/dashboard/leaderboard"],
+    queryFn: () => apiRequest("GET", "/api/sd/dashboard/leaderboard?limit=6"),
+    enabled: isAuthenticated === true,
+  });
+
   const stats: SdStats = overview?.stats ?? {};
   const topCustomers: TopCustomer[] = Array.isArray(overview?.top_customers) ? overview!.top_customers! : [];
   const trendRows: TrendRow[] = Array.isArray(trend) ? trend : [];
@@ -263,6 +272,7 @@ export default function SDDashboard() {
     : Array.isArray((quotaData as { managers?: QuotaRow[] })?.managers)
       ? (quotaData as { managers: QuotaRow[] }).managers
       : [];
+  const leaderboardRows: LeaderboardRow[] = Array.isArray(leaderboardData?.leaderboard) ? leaderboardData!.leaderboard! : [];
   const actionTotal = pendingAdvance.length + techCheckpoints.length;
 
   // Greeting (time-of-day) + first name
@@ -434,6 +444,42 @@ export default function SDDashboard() {
             </table>
           )}
         </div>
+      </div>
+
+      {/* Manager leaderboard — ranked by revenue (SB0592/SB0612/SB0626) */}
+      <div className="card">
+        <div className="card-head">
+          <div className="card-ttl">{tLabel("sd.leaderboard", "Menejerlar reytingi")}</div>
+        </div>
+        {leaderboardRows.length === 0 ? (
+          <div style={{ padding: "28px 22px", textAlign: "center", color: "var(--fg2)", fontSize: 13 }}>{tLabel("sd.noQuota", "Ma'lumot yo'q")}</div>
+        ) : (
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th style={{ width: 40 }}>#</th>
+                <th>{tLabel("sd.menejer", "Menejer")}</th>
+                <th style={{ textAlign: "right" }}>{tLabel("sd.buyurtmalarSoni", "Buyurtmalar")}</th>
+                <th style={{ textAlign: "right" }}>{tLabel("sd.daromad", "Daromad")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboardRows.map((r, i) => (
+                <tr key={`lb-${r.manager_id ?? i}`}>
+                  <td style={{ fontWeight: 800, color: "var(--fg2)" }}>{r.rank ?? i + 1}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <Avatar name={r.manager_name} />
+                      <b>{r.manager_name?.trim() || "—"}</b>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: "right", fontWeight: 600 }}>{Number(r.order_count ?? 0)}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, color: "var(--ep-green)" }}>{fmtMoney(Number(r.total_revenue ?? 0))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Manager panel — action items (advance pending + tech checkpoints) */}
