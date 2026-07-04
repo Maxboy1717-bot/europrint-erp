@@ -1,9 +1,11 @@
 /**
  * @module CardDetailDialog
- * @description Card 8-tab detail as a DIALOG (Q-42: 8 flat tabs inside a modal). Opened from the
- *   "Kartalar" tab inside Org Tuzilma — the card detail lives INSIDE the Org Tuzilma flow, not a
- *   standalone /org-structure/cards/:id route (owner 2026-06-17). Folded from pages/CardDetail.tsx.
- *   Tabs: Asosiy/Xodimlar/Farzandlar/Vakant/Papka/Statistika/Portret/Tarix — all REAL data.
+ * @description Card 9-tab detail as a DIALOG (Q-42: flat tabs inside a modal, no nested tabs).
+ *   Opened from the "Kartalar" tab inside Org Tuzilma — the card detail lives INSIDE the Org
+ *   Tuzilma flow, not a standalone /org-structure/cards/:id route (owner 2026-06-17). Folded
+ *   from pages/CardDetail.tsx.
+ *   Tabs: Asosiy/Xodimlar/Farzandlar/Vakant/Papka/Statistika/Darslik/Portret/Tarix — all REAL data.
+ *   Darslik: karta-markazli LMS (SB0133 fix) — same by-card endpoint as OrgNodeDetail's DarslikTab.
  *   Portret: Bo'lim 1 = Lavozim ta'rifi (card fields); Bo'lim 2 = Ishlar papkasi (folder 6 sections).
  */
 
@@ -26,6 +28,8 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { CardFormDialog, type OrgCard } from "@/components/hr/org/CardFormDialog";
 import { CardFolderDialog } from "@/components/hr/org/CardFolderDialog";
 import { CardAssignDialog } from "@/components/hr/org/CardAssignDialog";
+import { DarslikTab } from "@/components/hr/orgnode/DarslikTab";
+import type { NodeDetail } from "@/components/hr/orgnode/types";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
@@ -219,6 +223,7 @@ export function CardDetailDialog({
                 <TabsTrigger value="vakant">{t("vakant")}</TabsTrigger>
                 <TabsTrigger value="papka">{t("papka")}</TabsTrigger>
                 <TabsTrigger value="statistika">{t("statistika")}</TabsTrigger>
+                <TabsTrigger value="darslik">{t("darslik", "Darslik")}</TabsTrigger>
                 <TabsTrigger value="portret">{t("portret")}</TabsTrigger>
                 <TabsTrigger value="tarix">{t("tarixJurnali")}</TabsTrigger>
               </TabsList>
@@ -400,7 +405,12 @@ export function CardDetailDialog({
                 </div>
               </TabsContent>
 
-              {/* 7. Portret — tahrirlanadigan portret + karta tavsifi + ishlar papkasi */}
+              {/* 7. Darslik — karta-markazli LMS ko'rinishi (kartaga biriktirilgan kurslar + progress) */}
+              <TabsContent value="darslik" className="mt-4">
+                <DarslikTab node={{ id: card.id } as NodeDetail} />
+              </TabsContent>
+
+              {/* 8. Portret — tahrirlanadigan portret + karta tavsifi + ishlar papkasi */}
               <TabsContent value="portret" className="mt-4 space-y-6">
                 {/* Bo'lim 0: Tahrirlanadigan Portret (org_node_portret.portret_data) */}
                 <div>
@@ -543,7 +553,7 @@ export function CardDetailDialog({
                 </div>
               </TabsContent>
 
-              {/* 8. Tarix-jurnali */}
+              {/* 9. Tarix-jurnali */}
               <TabsContent value="tarix" className="mt-4">
                 {history.isLoading ? <EPLoader /> : listOf(history.data).length === 0 ? (
                   <EPEmptyState icon={Inbox} title={t("tarixYoq")} description={t("tarixYoqMatn")} />
