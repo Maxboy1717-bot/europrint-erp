@@ -12,7 +12,7 @@
 
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
-import { runQuery } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
@@ -165,31 +165,84 @@ export class CardRepository {
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
+  /**
+   * SB0777 — manual PATCH (bypasses the 2-signature razryad-history request flow) MUST still
+   * leave an audit trail. When `dto.razryadLevelId` differs from the card's current value, the
+   * old value + card's active occupant (employee_cards) are read BEFORE the UPDATE, and a
+   * `razryad_history` row (change_type='manual', no signatures — this is a direct admin edit,
+   * not the guarded increase/decrease workflow) is inserted in the SAME transaction (Q-40: no
+   * half-state). Guards (min_months/exam_pass_threshold) intentionally do NOT apply here — those
+   * belong to the request-flow (`razryad-history.service.ts`); this only records WHAT happened.
+   */
   async update(id: number, dto: CardInput): Promise<Result<Row | null>> {
-    const r = await this.exec(sql`
-      UPDATE org_departments SET
-        name                  = COALESCE(${dto.positionName ?? null}, name),
-        name_ru               = COALESCE(${dto.positionNameRu ?? null}, name_ru),
-        parent_id             = COALESCE(${dto.departmentId ?? null}, parent_id),
-        code                  = COALESCE(${dto.code ?? null}, code),
-        level                 = COALESCE(${dto.level ?? null}, level),
-        razryad_level_id      = COALESCE(${dto.razryadLevelId ?? null}, razryad_level_id),
-        salary_type           = COALESCE(${dto.salaryType ?? null}, salary_type),
-        min_salary            = COALESCE(${dto.minSalary ?? null}, min_salary),
-        max_salary            = COALESCE(${dto.maxSalary ?? null}, max_salary),
-        rbac_tier             = COALESCE(${dto.rbacTier ?? null}, rbac_tier),
-        current_state         = COALESCE(${dto.status ?? null}, current_state),
-        tskp                  = COALESCE(${dto.tskp ?? null}, tskp),
-        tskp_target           = COALESCE(${dto.tskpTarget ?? null}, tskp_target),
-        tskp_measurement_unit = COALESCE(${dto.tskpMeasurementUnit ?? null}, tskp_measurement_unit),
-        statistics_type       = COALESCE(${dto.statisticsType ?? null}, statistics_type),
-        ai_exam_enabled       = COALESCE(${dto.aiExamEnabled ?? null}, ai_exam_enabled),
-        description           = COALESCE(${dto.functionDescription ?? null}, description),
-        description_ru        = COALESCE(${dto.functionDescriptionRu ?? null}, description_ru)
-      WHERE id = ${id} AND is_active = true
-      RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
-    `);
-    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        let oldRazryadId: number | null = null;
+        let employeeId: number | null = null;
+        const razryadChanging = dto.razryadLevelId != null;
+        if (razryadChanging) {
+          const cur = await tx.execute(sql`SELECT razryad_level_id FROM org_departments WHERE id = ${id}`);
+          const curRow = (cur as unknown as { rows: Row[] }).rows?.[0];
+          oldRazryadId = curRow?.razryad_level_id == null ? null : Number(curRow.razryad_level_id);
+          const occ = await tx.execute(sql`
+            SELECT employee_id FROM employee_cards
+            WHERE card_id = ${id} AND is_active = true AND COALESCE(is_acting, false) = false
+            ORDER BY is_primary DESC NULLS LAST, id ASC LIMIT 1
+          `);
+          const occRow = (occ as unknown as { rows: Row[] }).rows?.[0];
+          employeeId = occRow?.employee_id == null ? null : Number(occRow.employee_id);
+        }
+
+        const upd = await tx.execute(sql`
+          UPDATE org_departments SET
+            name                  = COALESCE(${dto.positionName ?? null}, name),
+            name_ru               = COALESCE(${dto.positionNameRu ?? null}, name_ru),
+            parent_id             = COALESCE(${dto.departmentId ?? null}, parent_id),
+            code                  = COALESCE(${dto.code ?? null}, code),
+            level                 = COALESCE(${dto.level ?? null}, level),
+            razryad_level_id      = COALESCE(${dto.razryadLevelId ?? null}, razryad_level_id),
+            salary_type           = COALESCE(${dto.salaryType ?? null}, salary_type),
+            min_salary            = COALESCE(${dto.minSalary ?? null}, min_salary),
+            max_salary            = COALESCE(${dto.maxSalary ?? null}, max_salary),
+            rbac_tier             = COALESCE(${dto.rbacTier ?? null}, rbac_tier),
+            current_state         = COALESCE(${dto.status ?? null}, current_state),
+            tskp                  = COALESCE(${dto.tskp ?? null}, tskp),
+            tskp_target           = COALESCE(${dto.tskpTarget ?? null}, tskp_target),
+            tskp_measurement_unit = COALESCE(${dto.tskpMeasurementUnit ?? null}, tskp_measurement_unit),
+            statistics_type       = COALESCE(${dto.statisticsType ?? null}, statistics_type),
+            ai_exam_enabled       = COALESCE(${dto.aiExamEnabled ?? null}, ai_exam_enabled),
+            description           = COALESCE(${dto.functionDescription ?? null}, description),
+            description_ru        = COALESCE(${dto.functionDescriptionRu ?? null}, description_ru)
+          WHERE id = ${id} AND is_active = true
+          RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
+        `);
+        const updRow = (upd as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        if (razryadChanging && updRow && dto.razryadLevelId !== oldRazryadId) {
+          let changeType: 'increase' | 'decrease' = 'increase';
+          if (oldRazryadId != null) {
+            const lvls = await tx.execute(sql`
+              SELECT
+                (SELECT level FROM razryad_levels WHERE id = ${oldRazryadId}) AS old_level,
+                (SELECT level FROM razryad_levels WHERE id = ${dto.razryadLevelId}) AS new_level
+            `);
+            const lvlRow = (lvls as unknown as { rows: Row[] }).rows?.[0];
+            const oldLevel = lvlRow?.old_level == null ? null : Number(lvlRow.old_level);
+            const newLevel = lvlRow?.new_level == null ? null : Number(lvlRow.new_level);
+            if (oldLevel != null && newLevel != null && newLevel < oldLevel) changeType = 'decrease';
+          }
+          await tx.execute(sql`
+            INSERT INTO razryad_history
+              (card_id, employee_id, old_razryad_id, new_razryad_id, change_type, reason, ai_suggested, effective_at, created_at)
+            VALUES
+              (${id}, ${employeeId}, ${oldRazryadId}, ${dto.razryadLevelId}, ${changeType},
+               'Karta to\'g\'ridan tahrirlash (manual PATCH, 2-imzo oqimidan tashqari)', false, NOW(), NOW())
+          `);
+        }
+
+        return updRow as Row | null;
+      });
+    }, 'DB_ERROR');
   }
 
   /** Soft-delete (EP-ORG-005): is_active=false + current_state='archived'. Never hard-DELETE. */
