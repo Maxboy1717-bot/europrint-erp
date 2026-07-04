@@ -26,6 +26,7 @@ const SDContracts = lazy(() => import("@/pages/SDContracts"));
 const SDSettings = lazy(() => import("@/pages/SDSettings"));
 const SDLeads = lazy(() => import("@/pages/SDLeads"));
 const SDDeliveries = lazy(() => import("@/pages/SDDeliveries"));
+const SDLostOrders = lazy(() => import("@/pages/SDLostOrders"));
 const SDDebitors = lazy(() => import("@/pages/SDDebitors"));
 const SDOverviewDashboard = lazy(() => import("@/pages/SDOverviewDashboard"));
 const SDQuotaDashboard = lazy(() => import("@/pages/SDQuotaDashboard"));
@@ -80,6 +81,7 @@ export const SALES_ROUTES: [string, React.ComponentType][] = [
   ['/sd/advance-control',      SDExtended],
   ['/sd/leads',                SDLeads],
   ['/sd/deliveries',           SDDeliveries],
+  ['/sd/lost-orders',          SDLostOrders],
 ];
 
 export const MARKETING_ROUTES: [string, React.ComponentType][] = [

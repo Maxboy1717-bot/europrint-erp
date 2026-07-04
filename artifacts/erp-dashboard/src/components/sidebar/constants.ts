@@ -128,6 +128,7 @@ import { LayoutDashboard, X,
       // yig'ildi (dashboard quick-link'lari orqali ochiladi) — 4 ta emas, 1 ta dashboard.
       { title: "QO'SHIMCHA", url: "", icon: Package, separator: true },
       { title: "Ombor Ijara", url: "sd/warehouse-rental", icon: Package },
+      { title: "Yo'qotilgan/Reklamatsiya", url: "sd/lost-orders", icon: TrendingDown },
       { title: "TO'LOV", url: "", icon: CreditCard, separator: true },
       { title: "To'lovlar", url: "sd/sales-payments", icon: CreditCard },
       { title: "70% Avans Nazorat", url: "sd/advance-control", icon: Banknote },
