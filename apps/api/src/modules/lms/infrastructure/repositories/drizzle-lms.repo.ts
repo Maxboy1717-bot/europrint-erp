@@ -51,6 +51,8 @@ function mapEnrollment(row: Row): Enrollment {
     completed_at: row.completed_at ? new Date(String(row.completed_at)) : undefined,
     certificate_expires_at: row.certificate_expires_at ? new Date(String(row.certificate_expires_at)) : undefined,
     created_at: row.created_at instanceof Date ? row.created_at : new Date(String(row.created_at)),
+    // SB0144: card_id present on the row when selected (saveEnrollment RETURNING * includes it).
+    card_id: row.card_id !== null && row.card_id !== undefined ? Number(row.card_id) : null,
   };
 }
 
@@ -480,7 +482,13 @@ export class LmsRepository implements ILmsRepo {
 
   async saveEnrollment(enrollment: Enrollment): Promise<Result<Enrollment>> {
     try {
-      const r = await exec(sql`INSERT INTO enrollments (employee_id, course_id, status, enrolled_at, created_at, updated_at) VALUES (${parseInt(enrollment.user_id, 10)}, ${parseInt(enrollment.course_id, 10)}, ${enrollment.status ?? 'enrolled'}, NOW(), NOW(), NOW()) ON CONFLICT (employee_id, course_id) DO UPDATE SET status = EXCLUDED.status, updated_at = NOW() RETURNING *`);
+      // SB0144 (03-lms-darslik): enrollments.card_id was never populated (100% NULL) — backfill it
+      // from the course's card_id at enroll-time (the source-card trail cross-card credit needs,
+      // see resolveEnrollmentCardTuple below). Courses with no card (universal kurs) -> stays NULL,
+      // honestly (no fabricated card assignment, Q-40).
+      const courseCardR = await exec(sql`SELECT card_id FROM courses WHERE id = ${parseInt(enrollment.course_id, 10)} LIMIT 1`);
+      const courseCardId = courseCardR[0]?.card_id != null ? Number(courseCardR[0].card_id) : null;
+      const r = await exec(sql`INSERT INTO enrollments (employee_id, course_id, status, card_id, enrolled_at, created_at, updated_at) VALUES (${parseInt(enrollment.user_id, 10)}, ${parseInt(enrollment.course_id, 10)}, ${enrollment.status ?? 'enrolled'}, ${courseCardId}, NOW(), NOW(), NOW()) ON CONFLICT (employee_id, course_id) DO UPDATE SET status = EXCLUDED.status, updated_at = NOW() RETURNING *`);
       return Ok(mapEnrollment(r[0]));
     } catch (error: unknown) {
       this.logger.error(`saveEnrollment: ${(error as Error).message}`);

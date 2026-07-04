@@ -43,6 +43,10 @@ export interface Enrollment {
   certificate_expires_at?: Date;
   created_at: Date;
   course_title?: string;
+  // SB0144 (03-lms-darslik): source card the enrollment was taken on (backfilled from
+  // courses.card_id at enroll-time). Null when the course itself carries no card (universal
+  // kurs) — cross-card credit logic then honestly has nothing to route (Q-40, no fabrication).
+  card_id?: number | null;
 }
 
 export interface ILmsRepo {
