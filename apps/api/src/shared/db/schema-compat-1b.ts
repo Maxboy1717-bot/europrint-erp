@@ -41,9 +41,14 @@ export const hrEmployeeOnboardings = pgTable('hr_employee_onboardings', {
   employeeId: integer('employee_id').notNull(),
   planId: text('plan_id'),
   status: text('status').notNull().default('in_progress'),
-  progress: integer('progress').default(0),
+  // FIX 2026-07-04 (found while live-verifying SB0072/SB0101): `progress` (integer) and `endDate`
+  // (`end_date`) do NOT exist on the live table (confirmed via information_schema.columns) and are
+  // never read/written by any onboarding code (which uses expectedEndDate/actualEndDate/
+  // weeklyProgress instead) — a phantom-column drift that made every `startOnboarding()` INSERT
+  // throw ("column end_date does not exist"), so this endpoint had 0 successful inserts ever
+  // (DRIFT-NN class bug, same as the hr-card-links-2026-07-04.sql created_at/updated_at fix in
+  // this same file's sibling table). Removed rather than added to DB — dead fields, not a design gap.
   startDate: ts('start_date'),
-  endDate: ts('end_date'),
   createdAt: ts('created_at').defaultNow(),
   updatedAt: ts('updated_at').defaultNow(),
   mentorId: integer('mentor_id'),
@@ -53,6 +58,9 @@ export const hrEmployeeOnboardings = pgTable('hr_employee_onboardings', {
   probationScore: decimal('probation_score', { precision: 5, scale: 2 }),
   probationNotes: text('probation_notes'),
   isProbationPassed: boolean('is_probation_passed'),
+  // SB0072/SB0101 (hr-card-links-2026-07-04.sql): onboarding nishon-kartasi (org_departments.id) —
+  // probation o'tgach shu karta employee_cards'ga faollashtiriladi (CardService.assignEmployeeToCard).
+  cardId: integer('card_id'),
 });
 
 // Converged to single source (lib/db canonical) — see docs/schema-merge-plan.md

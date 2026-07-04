@@ -7,7 +7,7 @@ import { sql } from "drizzle-orm";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { Admin, User, departments, goals, positions, users } from "./core-schema";
+import { Admin, User, departments, goals, orgDepartments, positions, users } from "./core-schema";
 import { attendance } from "./hr-schema";
 
 
@@ -21,6 +21,9 @@ export const mentors = pgTable("mentors", {
   experience: text("experience"), // Tajriba (yillar, loyihalar)
   expertise: text("expertise"), // Mutaxassislik sohalari
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }), // Agar bizning xodimimiz bo'lsa
+  // SB0071 (hr-card-links-2026-07-04.sql): karta bog'lanishi — mentor qaysi KARTA bo'yicha
+  // xodimni yo'naltiradi (org_departments = kanonik karta jadvali, card.repository.ts).
+  cardId: integer("card_id").references(() => orgDepartments.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").$defaultFn(() => new Date()),
   deletedAt: timestamp("deleted_at"),
