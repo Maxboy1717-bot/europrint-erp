@@ -20,9 +20,13 @@
 import { Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError, Err, Ok } from '@common/result';
 import { db } from '@shared/db';
-import { crm_tasks, crm_activities, crmLeads } from '@shared/db';
+import { crm_tasks, crm_activities, crmLeads, crmDeals, crmCompanies } from '@shared/db';
 import { sql, eq, and, isNotNull, count } from 'drizzle-orm';
 import { CrmLeadScoringService } from '../domain/services/crm-lead-scoring.service';
+
+/** Recency thresholds shared with getAiQuickScore's churnRisk derivation (EP-CRM-063). */
+const CHURN_HIGH_RISK_DAYS = 60;
+const CHURN_MEDIUM_RISK_DAYS = 30;
 
 type Row = Record<string, unknown>;
 
@@ -244,6 +248,60 @@ export class CrmAiExtendedService {
   }
 
   /**
+   * Portfolio-wide churn summary — SB0641/mismatch fix: ExtendedAIPanel.tsx's
+   * ChurnPanel calls GET .../churn/analyze expecting {summary, atRiskCustomers},
+   * a different shape from the per-entity churn-rescue plan. No ML model is
+   * configured, so this is a real DB query (open deals, days since last update)
+   * classified with the same recency thresholds getAiQuickScore's churnRisk
+   * uses — honest rule-based risk, not a fabricated ML score.
+   */
+  async getChurnAnalysisSummary(limit: number): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id:                crmDeals.id,
+          title:              crmDeals.title,
+          companyTitle:       crmCompanies.title,
+          daysSinceActivity: sql<number>`GREATEST(0, EXTRACT(DAY FROM NOW() - ${crmDeals.updated_at})::int)`,
+        })
+        .from(crmDeals)
+        .leftJoin(crmCompanies, eq(crmDeals.company_id, crmCompanies.id))
+        .where(and(sql`${crmDeals.status} NOT IN ('won', 'lost')`, isNotNull(crmDeals.updated_at)))
+        .orderBy(sql`${crmDeals.updated_at} ASC`)
+        .limit(Math.max(limit, 200)); // classify a wide pool, then trim the returned list below
+
+      let highRisk = 0;
+      let mediumRisk = 0;
+      let lowRisk = 0;
+      const atRiskCustomers = rows.map((r) => {
+        const days = Number(r.daysSinceActivity ?? 0);
+        const churnRisk = days >= CHURN_HIGH_RISK_DAYS ? 'high' : days >= CHURN_MEDIUM_RISK_DAYS ? 'medium' : 'low';
+        if (churnRisk === 'high') highRisk++;
+        else if (churnRisk === 'medium') mediumRisk++;
+        else lowRisk++;
+        return {
+          id:                r.id,
+          title:             r.title ?? '',
+          companyTitle:      r.companyTitle ?? null,
+          daysSinceActivity: days,
+          churnRisk,
+          // Deterministic proxy — not a fabricated probability: capped linear
+          // ramp against the same 60-day "fully cold" threshold used elsewhere.
+          churnProbability:  Math.min(100, Math.round((days / CHURN_HIGH_RISK_DAYS) * 100)),
+        };
+      });
+
+      return {
+        summary: { highRisk, mediumRisk, lowRisk },
+        atRiskCustomers: atRiskCustomers
+          .filter((c) => c.churnRisk !== 'low')
+          .sort((a, b) => b.daysSinceActivity - a.daysSinceActivity)
+          .slice(0, limit),
+      };
+    }, 'DB_ERROR');
+  }
+
+  /**
    * Quick score — leads use the deterministic EP-CRM-012 formula
    * (CrmLeadScoringService, same one that powers CrmLeadsController /
    * DrizzleCrmLeadsRepository.ai_score). Deals have no equivalent formula
@@ -305,8 +363,8 @@ export class CrmAiExtendedService {
       // no separate fabricated model, just a readable label over daysSinceLastActivity.
       const churnRisk: 'low' | 'medium' | 'high' =
         daysSinceLastActivity == null ? 'medium'
-        : daysSinceLastActivity >= 60 ? 'high'
-        : daysSinceLastActivity >= 30 ? 'medium'
+        : daysSinceLastActivity >= CHURN_HIGH_RISK_DAYS ? 'high'
+        : daysSinceLastActivity >= CHURN_MEDIUM_RISK_DAYS ? 'medium'
         : 'low';
 
       return {

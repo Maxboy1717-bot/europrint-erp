@@ -140,6 +140,13 @@ export class CrmAiExtendedController {
     return unwrapOrThrow(await this.svc.getAiNba(entityType ?? null, safeInt(limit, 10)));
   }
 
+  @ApiOperation({ summary: 'Portfolio-wide churn summary — real DB query (open deals × days since activity), not ML' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('extended/churn/analyze')
+  async getChurnAnalysis(@Query('limit') limit?: string) {
+    return unwrapOrThrow(await this.svc.getChurnAnalysisSummary(safeInt(limit, 20)));
+  }
+
   @ApiOperation({ summary: 'Create NBA task — real INSERT into crm_tasks' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
