@@ -104,4 +104,33 @@ export class SdDashboardRepository implements ISdDashboardRepo {
       return r.ok ? (r.data[0] ?? {}) : {};
     });
   }
+
+  async getManagerLeaderboard(period: string | null, lim: number): Promise<Result<Row[]>> {
+    try {
+      // SB0592: manager KPI leaderboard for the SD dashboard. Reuses the same
+      // employees -> crm_leads.manager_id -> sales_orders join used by getQuotaStats
+      // (the sales.repository.getLeaderboard variant filters on employees.department='Sales',
+      // which is empty/stale here — crm_leads.manager_id is the live linkage in this DB).
+      const interval = period === 'quarterly' ? '3 months' : period === 'yearly' ? '12 months' : '1 month';
+      return exec(sql`
+        SELECT
+          e.id AS manager_id,
+          CONCAT(e.first_name, ' ', e.last_name) AS manager_name,
+          COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS total_revenue,
+          COUNT(o.id)::int AS order_count,
+          RANK() OVER (ORDER BY COALESCE(SUM(o.total_value), 0) DESC)::int AS rank
+        FROM employees e
+        LEFT JOIN crm_leads l ON l.manager_id = e.id
+        LEFT JOIN sales_orders o
+          ON o.customer_id = l.customer_id
+          AND o.created_at >= NOW() - ${interval}::interval
+          AND o.deleted_at IS NULL
+        GROUP BY e.id, e.first_name, e.last_name
+        ORDER BY total_revenue DESC
+        LIMIT ${lim}
+      `);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
 }

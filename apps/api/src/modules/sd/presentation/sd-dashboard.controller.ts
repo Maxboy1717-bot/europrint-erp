@@ -53,4 +53,11 @@ export class SdDashboardController {
   async getQuotaStats(@Query('managerId') managerId?: string, @Query('period') _period?: string) {
     return unwrapOrThrow(await this.svc.getQuotaStats(managerId ? safeInt(managerId, 0) : null));
   }
+
+  @ApiOperation({ summary: 'Get manager KPI leaderboard' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('leaderboard')
+  async getLeaderboard(@Query('period') period?: string, @Query('limit') limit?: string) {
+    return unwrapOrThrow(await this.svc.getLeaderboard(period ?? null, safeInt(limit, 20)));
+  }
 }
