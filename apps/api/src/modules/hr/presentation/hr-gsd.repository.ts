@@ -20,8 +20,12 @@ export class HrGsdRepository {
         .select({
           id: employees.id,
           full_name: sql<string>`COALESCE("employees"."full_name", '')`,
-          position_id: sql<string>`"employees"."position"`,
-          department_id: sql<string>`"employees"."department"`,
+          // Q9-follow-up (2026-07-04): was reading the legacy `position`/`department` text
+          // columns (always NULL) under a misleading position_id/department_id alias — the
+          // real FK columns (written by updateEmployee() above) were never read here, so a
+          // GSD employee updated via Q9's fix would still show null in every GET/list call.
+          position_id: sql<string>`"employees"."position_id"`,
+          department_id: sql<string>`"employees"."department_id"`,
           status: employees.status,
           hire_date: employees.hire_date,
           created_at: employees.created_at,
@@ -154,8 +158,12 @@ export class HrGsdRepository {
         .select({
           id: employees.id,
           full_name: sql<string>`COALESCE("employees"."full_name", '')`,
-          position_id: sql<string>`"employees"."position"`,
-          department_id: sql<string>`"employees"."department"`,
+          // Q9-follow-up (2026-07-04): was reading the legacy `position`/`department` text
+          // columns (always NULL) under a misleading position_id/department_id alias — the
+          // real FK columns (written by updateEmployee() above) were never read here, so a
+          // GSD employee updated via Q9's fix would still show null in every GET/list call.
+          position_id: sql<string>`"employees"."position_id"`,
+          department_id: sql<string>`"employees"."department_id"`,
           hire_date: employees.hire_date,
         })
         .from(employees)
@@ -331,8 +339,12 @@ export class HrGsdRepository {
         .select({
           id: employees.id,
           full_name: sql<string>`COALESCE("employees"."full_name", '')`,
-          position_id: sql<string>`"employees"."position"`,
-          department_id: sql<string>`"employees"."department"`,
+          // Q9-follow-up (2026-07-04): was reading the legacy `position`/`department` text
+          // columns (always NULL) under a misleading position_id/department_id alias — the
+          // real FK columns (written by updateEmployee() above) were never read here, so a
+          // GSD employee updated via Q9's fix would still show null in every GET/list call.
+          position_id: sql<string>`"employees"."position_id"`,
+          department_id: sql<string>`"employees"."department_id"`,
           status: employees.status,
           hire_date: employees.hire_date,
         })
