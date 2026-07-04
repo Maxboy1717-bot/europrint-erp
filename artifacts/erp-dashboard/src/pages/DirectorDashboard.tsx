@@ -22,6 +22,7 @@ import { ProductionStatusCard } from "@/components/director/ProductionStatusCard
 import { WarehouseStatusCard } from "@/components/director/WarehouseStatusCard";
 import { FinanceCard } from "@/components/director/FinanceCard";
 import { AlertsCard } from "@/components/director/AlertsCard";
+import { PendingApprovalsCard } from "@/components/director/PendingApprovalsCard";
 import { KpiScorecard } from "@/components/director/KpiScorecard";
 import { SalesSummaryCard } from "@/components/director/SalesSummaryCard";
 import { QuickActionsCard } from "@/components/director/QuickActionsCard";
@@ -196,6 +197,7 @@ export default function DirectorDashboard() {
         <div className="space-y-5">
           <FinanceCard fin={fin} finLoad={finLoad} />
           <AlertsCard alerts={alertsData?.alerts} alertCount={alertsData?.count ?? 0} />
+          <PendingApprovalsCard />
         </div>
       </div>
 
