@@ -11,6 +11,14 @@
  *   If the setting is absent/invalid the COGS legs are skipped (revenue legs still post),
  *   and a warning is logged so the owner can populate it; the GL never invents a ratio.
  *
+ *   ⭐ SB0808 fix (2026-07-04): EP_VAT_RATE was previously a hardcoded 0.12 constant.
+ *   O'zbekiston QQS stavkasi tarixda bir necha marta o'zgargan (12% → 15% → 12%), shuning
+ *   uchun endi `settings` jadvalidan (EP_VAT_RATE key) o'qiladi — xuddi EP_COST_RATIO bilan
+ *   bir xil naqsh (Q-35: yangi CREATE TABLE emas, mavjud key/value jadvaldan foydalaniladi).
+ *   Setting yo'q/noto'g'ri bo'lsa → EP_VAT_RATE_STATUTORY_DEFAULT (0.12, joriy Soliq Kodeksi
+ *   stavkasi) qo'llaniladi — fabrikatsiya yo'q, faqat qonuniy joriy stavka nomlangan default
+ *   sifatida saqlanadi. Egasi keyinchalik stavka o'zgarganda `settings` orqali yangilaydi.
+ *
  *   ⚠️ Canonical ledger is `entries` only. gl_journal_entries / gl_lines are NEVER touched
  *   (SAP#76 forbidden).
  */
@@ -24,13 +32,14 @@ import { FinanceRepository } from '../repositories/drizzle-finance.repo';
 import { DeliveryCompletedEvent } from '@modules/logistics/domain/events';
 import { GlPostingService } from '../../domain/services/gl-posting.service';
 
-// O'zbekiston QQS 12% — Soliq Kodeksi bo'yicha qonuniy belgilangan (qonun o'zgarmaguncha
-// o'zgarmaydi), shuning uchun kod-konstanta sifatida qolishi maqbul (P08 §2.4).
-const EP_VAT_RATE = 0.12;
+// Joriy Soliq Kodeksi bo'yicha QQS stavkasi (2026-07-04 holatiga) — `settings` jadvalida
+// EP_VAT_RATE topilmasa shu nomlangan default qo'llaniladi (fabrikatsiya emas, qonuniy joriy qiymat).
+const EP_VAT_RATE_STATUTORY_DEFAULT = 0.12;
 
-// Master-data setting kaliti — canonical `settings` jadvali (key/value), getSettingValue
-// o'qiydigan o'sha jadval. Egasi qiymatni ekrandan/seeddan o'zgartiradi.
+// Master-data setting kalitlari — canonical `settings` jadvali (key/value). Egasi qiymatni
+// ekrandan/seeddan o'zgartiradi (soliq qonuni o'zgarganda kod-deploy shart emas).
 const EP_COST_RATIO_KEY = 'EP_COST_RATIO';
+const EP_VAT_RATE_KEY = 'EP_VAT_RATE';
 
 @Injectable()
 @EventsHandler(DeliveryCompletedEvent)
@@ -67,6 +76,31 @@ export class DeliveryCompletedListener implements IEventHandler<DeliveryComplete
     }
   }
 
+  /**
+   * Read EP_VAT_RATE from the canonical `settings` table (same key/value pattern as
+   * EP_COST_RATIO). Falls back to EP_VAT_RATE_STATUTORY_DEFAULT when the setting is
+   * absent/out-of-range — never fabricates a rate, just uses the current statutory
+   * default until the owner configures an override (SB0808 — no more hardcode-only path).
+   */
+  private async readVatRate(): Promise<number> {
+    try {
+      const rows = await runQuery<{ value: string | null }>(sql`
+        SELECT value FROM settings WHERE key = ${EP_VAT_RATE_KEY} LIMIT 1
+      `);
+      const list = Array.isArray(rows) ? rows : [];
+      const raw = list[0]?.value ?? null;
+      if (raw == null) return EP_VAT_RATE_STATUTORY_DEFAULT;
+      const rate = Number(raw);
+      if (!Number.isFinite(rate) || rate < 0 || rate >= 1) return EP_VAT_RATE_STATUTORY_DEFAULT;
+      return rate;
+    } catch (error: unknown) {
+      this.logger.error(
+        `Failed reading ${EP_VAT_RATE_KEY} from settings: ${(error as Error).message}`,
+      );
+      return EP_VAT_RATE_STATUTORY_DEFAULT;
+    }
+  }
+
   async handle(event: DeliveryCompletedEvent): Promise<void> {
     try {
       this.logger.log(
@@ -99,8 +133,9 @@ export class DeliveryCompletedListener implements IEventHandler<DeliveryComplete
         return;
       }
 
-      // Step 2: tax = 12% VAT (statutory constant). COGS = totalAmount * EP_COST_RATIO (configurable).
-      const tax = Math.round(totalAmount * EP_VAT_RATE * 100) / 100;
+      // Step 2: tax = VAT (settings.EP_VAT_RATE, statutory default 0.12). COGS = totalAmount * EP_COST_RATIO (configurable).
+      const vatRate = await this.readVatRate();
+      const tax = Math.round(totalAmount * vatRate * 100) / 100;
 
       const epCostRatio = await this.readCostRatio();
       let costOfGoods = 0;
@@ -133,7 +168,7 @@ export class DeliveryCompletedListener implements IEventHandler<DeliveryComplete
 
       this.logger.log(
         `EP-FIN-005 GL posted to entries — order=${event.orderId}, entryId=${glResult.data}, ` +
-          `total=${totalAmount}, tax=${tax}, cogs=${costOfGoods}, epCostRatio=${epCostRatio ?? 'unset'}`,
+          `total=${totalAmount}, tax=${tax} (vatRate=${vatRate}), cogs=${costOfGoods}, epCostRatio=${epCostRatio ?? 'unset'}`,
       );
     } catch (error: unknown) {
       this.logger.error(`Error processing DeliveryCompletedEvent: ${(error as Error).message}`);
