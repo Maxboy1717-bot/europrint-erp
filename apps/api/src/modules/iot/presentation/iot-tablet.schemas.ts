@@ -88,6 +88,13 @@ export const HandoverSchema = z.object({
   materialStatus: z.string().max(1000).optional(),
   handedOverBy: z.coerce.number().int().min(0).default(0),
   receivedBy: z.coerce.number().int().optional(),
+  // SB0304/SB0324: outgoing operator's digital signature — FE (useIoTTablet.ts
+  // submitHandover) has always sent this field; the BE previously dropped it
+  // (Zod stripped it via `.passthrough()` not covering INSERT, and the INSERT
+  // itself omitted the column) so shift_handovers.signature_data stayed NULL
+  // even though the tablet UI required signing before submit. Required here
+  // because the FE already treats an empty signature as a client error.
+  signatureData: z.string().min(1).max(2000),
   status: z.string().max(50).default('pending'),
 }).passthrough();
 
@@ -125,6 +132,14 @@ export const DowntimeEventSchema = z.object({
   durationMinutes: z.coerce.number().int().min(1).max(480),
   reasonCode:      z.string().max(100),
   notes:           z.string().max(2000).optional(),
+});
+
+// SB0304/SB0324/SB0349: receiving operator's 2nd signature that flips a
+// shift_handovers row from 'pending' to 'completed' (see
+// IotTabletController.acceptTabletHandover).
+export const AcceptHandoverSchema = z.object({
+  receivedBy: z.coerce.number().int().min(1),
+  signatureData: z.string().min(1).max(2000),
 });
 
 export const CrewSchema = z.object({
