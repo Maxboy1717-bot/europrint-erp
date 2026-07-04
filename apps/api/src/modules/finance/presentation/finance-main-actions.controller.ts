@@ -15,7 +15,6 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import { GlService } from '../gl/gl.service';
 import { FinanceActionsService } from '../application/finance-actions.service';
 import { FinanceAccountingService } from '../application/finance-accounting.service';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
@@ -61,7 +60,6 @@ const ArEntrySchema = z.object({
 export class FinanceMainActionsController {
   private readonly logger = new Logger(FinanceMainActionsController.name);
   constructor(
-    private readonly glSvc: GlService,
     private readonly actionsSvc: FinanceActionsService,
     private readonly accountingSvc: FinanceAccountingService,
   ) {}
@@ -82,47 +80,48 @@ export class FinanceMainActionsController {
     return this.accountingSvc.createGlDocument(dto as Record<string, unknown>);
   }
 
+  // Q2 (SAP-conformance fix, 2026-07-04): "reversed" status now checked against the canonical
+  // `entries` ledger (entry_number LIKE 'REV-{id}-%', matching GlPostingService's own reference
+  // convention) instead of a gl_documents [REVERSAL]-tagged header, since POST .../reverse below
+  // no longer writes gl_documents at all.
   @ApiOperation({ summary: 'Get gl entry reverse' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('gl-entries/:id/reverse')
   async getGlEntryReverse(@Param('id') id: string) {
     type Row = Record<string, unknown>;
-    // Fetch the original entry from the canonical GL table
     const entryR = await db.execute(sql`
       SELECT id, entry_number, entry_date, document_type, debit_account, credit_account,
              amount, description, currency, created_at
       FROM entries WHERE id::text = ${id} LIMIT 1
     `);
     const entry = (((entryR as { rows?: Row[] }).rows) ?? [])[0] ?? null;
-    // Search gl_documents for any [REVERSAL] document — no FK exists so we can
-    // only find reversals created by this app (POST /gl-entries/:id/reverse).
     const revR = await db.execute(sql`
-      SELECT id, document_number, description, total_debit, total_credit, status, created_at
-      FROM gl_documents
-      WHERE description ILIKE '[REVERSAL]%'
+      SELECT id, entry_number, amount, description, created_at
+      FROM entries
+      WHERE entry_number LIKE ${'REV-' + id + '-%'}
       ORDER BY created_at DESC LIMIT 20
     `);
     const reversals = (((revR as { rows?: Row[] }).rows) ?? []);
     return { entryId: id, entry, reversed: reversals.length > 0, reversals };
   }
 
+  // Q2 (SAP-conformance fix, 2026-07-04): previously inserted a `[REVERSAL]`-tagged `gl_documents`
+  // header only (via glSvc.postDocument) — no mirrored entry ever reached the canonical `entries`
+  // ledger, so the trial balance never reflected the reversal. Now delegates to
+  // FinanceAccountingService.reverseEntry(), which fetches the ORIGINAL entry's real debit/credit
+  // accounts + amount and posts a genuinely mirrored (swapped) balanced entry via the same ONE
+  // engine (GlPostingService.postJournal). No request body needed — the reversal amount/accounts
+  // are derived from the original entry, not caller-supplied (this is more correct than the old
+  // design, which let the caller pass arbitrary disconnected lines).
   @ApiOperation({ summary: 'Post gl entry reverse' })
   @ApiResponse({ status: 202, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('gl-entries/:id/reverse')
   @HttpCode(HttpStatus.ACCEPTED)
-  async postGlEntryReverse(@Param('id') id: string, @Body() body: unknown) {
-    const dto = CreateGlEntrySchema.parse(body);
-    // Full reversal requires fetching the original entry and posting a mirrored document.
-    // Wire to glSvc.reverseDocument once that method is implemented in Sprint 3.
-    const reversal = await this.glSvc.postDocument({
-      ...(dto as Record<string, unknown>),
-      description: `[REVERSAL] ${String(dto.description ?? '')}`.trim(),
-      reversalOf: id,
-    });
-    return unwrapOrThrow(reversal);
+  async postGlEntryReverse(@Param('id') id: string) {
+    return this.accountingSvc.reverseEntry(Number(id));
   }
 
   @ApiOperation({ summary: 'Get salary benchmark' })

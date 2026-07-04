@@ -224,6 +224,50 @@ export class FinanceAccountingService {
     };
   }
 
+  /**
+   * Q2 (SAP-conformance fix, 2026-07-04): reverses a canonical `entries` row by posting a NEW
+   * balanced journal entry with debit/credit swapped, via the same ONE engine as createGlDocument
+   * (GlPostingService.postJournal). Previously this "reversal" only inserted a `[REVERSAL]`-tagged
+   * `gl_documents` header — no mirrored entry ever reached the ledger, so the trial balance never
+   * actually reflected the reversal.
+   *
+   * Joins on `debit_account_id`/`credit_account_id` (integer FKs), NOT the `debit_account`/
+   * `credit_account` drift text columns (NULL for some rows — see getAccountGroups comment above).
+   * Idempotent via GlPostingService's own reference-based dedup (`REV-{id}` is looked up before
+   * inserting), so calling reverse twice on the same id returns the same reversal entry, not a
+   * second one.
+   */
+  async reverseEntry(id: number) {
+    const rows = await runQuery<{
+      id: number; amount: string; debit_code: string; credit_code: string;
+    }>(sql`
+      SELECT e.id, e.amount, da.account_code AS debit_code, ca.account_code AS credit_code
+      FROM entries e
+      JOIN accounts da ON da.id = e.debit_account_id
+      JOIN accounts ca ON ca.id = e.credit_account_id
+      WHERE e.id = ${id}
+      LIMIT 1
+    `);
+    const original = Array.isArray(rows) ? rows[0] : undefined;
+    if (!original) {
+      throw new NotFoundException(`Entries qatori topilmadi: id=${id}`);
+    }
+
+    const reference = `REV-${id}`;
+    const amount = Number(original.amount);
+    const reversalLines: JournalLine[] = [
+      { accountCode: original.credit_code, accountName: original.credit_code, debit: amount, credit: 0 },
+      { accountCode: original.debit_code, accountName: original.debit_code, debit: 0, credit: amount },
+    ];
+    const posted = await this.glPosting.postJournal(reversalLines, reference);
+    if (!posted.ok) {
+      throw new InternalServerErrorException(
+        typeof posted.error === 'string' ? posted.error : posted.error.message,
+      );
+    }
+    return { entryId: posted.data, reference, reversedEntryId: id, ledger: 'entries' };
+  }
+
   async getPeriods() {
     return this.accountingRepo.getPeriods();
   }
