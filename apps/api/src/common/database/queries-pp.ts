@@ -15,6 +15,9 @@ export async function execSavePo(
   routingId: number | null, plannedStart: unknown, plannedEnd: unknown,
   productId: number | null = null,
   createdBy: string | null = null,
+  // SB0233 (06-PP audit): optional org-karta (org_departments.id). NULL = hali
+  // tayinlanmagan (egasi-DATA — avtomatik karta-tayinlash qoidasi hozircha yo'q).
+  orgDepartmentId: number | null = null,
 ): Promise<number> {
   type PoInsert = typeof production_orders_int.$inferInsert;
   // FIX: product_id is NOT NULL (FK products) and sales_order_id used to be dropped — both supplied
@@ -30,6 +33,7 @@ export async function execSavePo(
     orderNumber: await nextDocNumber('PO'),
     plannedQuantity: 1,
     createdBy: createdBy != null ? Number(createdBy) : undefined,
+    orgDepartmentId: orgDepartmentId ?? undefined,
   } as PoInsert).returning({ id: production_orders_int.id });
   return rows[0]?.id ?? 0;
 }

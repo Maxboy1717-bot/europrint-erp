@@ -16,7 +16,10 @@ export class CreateProductionOrderCommand {
     public routingId: number,
     public plannedStart: Date,
     public plannedEnd: Date,
-    public checkpointValidated: boolean) {}
+    public checkpointValidated: boolean,
+    // SB0233 (06-PP audit): optional org-karta (org_departments.id) tayinlash.
+    // Undefined/null = hali tayinlanmagan (egasi-DATA, avtomatik qoida yo'q).
+    public orgDepartmentId?: number | null) {}
 }
 
 @CommandHandler(CreateProductionOrderCommand)
@@ -54,6 +57,9 @@ export class CreateProductionOrderHandler implements ICommandHandler<CreateProdu
     po.setCheckpointValidated(true);
     // product_id is NOT NULL on production_orders — the finished good is the BOM's product.
     po.setProductId(bomResult.data.getProductId());
+    if (command.orgDepartmentId != null) {
+      po.setOrgDepartmentId(command.orgDepartmentId);
+    }
 
     // Calculate MRP: Add material requirements from BOM
     bomResult.data.getItems().forEach((item) => {

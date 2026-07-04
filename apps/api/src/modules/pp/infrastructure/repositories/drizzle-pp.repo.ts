@@ -38,7 +38,7 @@ export class DrizzlePpRepository implements IPpRepository {
         const id = await execUpdatePoStatus(po.getId(), po.getStatus());
         return Ok(id);
       }
-      const id = await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd(), po.getProductId());
+      const id = await execSavePo(po.getSoId(), po.getStatus(), po.getBomId(), po.getRoutingId(), po.getPlannedStart(), po.getPlannedEnd(), po.getProductId(), null, po.getOrgDepartmentId());
       return Ok(id);
     } catch {
       this.logger.error('Failed to save production order');

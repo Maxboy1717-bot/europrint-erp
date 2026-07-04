@@ -91,6 +91,10 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
   private _productId: number = 0; // finished-good id (NOT NULL in production_orders); set from the BOM
   private _materialList: MaterialRequirement[] = [];
   private _checkpointValidated: boolean = false;
+  // SB0233 (06-PP audit): karta-markazli ERP-ORG — buyurtma qaysi org-karta
+  // (sex/bo'lim, org_departments.id)ga tegishli ekani. NULL = hali tayinlanmagan
+  // (egasi-DATA: avtomatik karta-tayinlash qoidasi hozircha yo'q, Q-40).
+  private _orgDepartmentId: number | null = null;
   // NOTE PA2-16: orderNumber / createdAt / updatedAt / createdBy are placeholder
   // header fields added to satisfy the cross-context IOrderHeader contract. The
   // PP context does not yet meaningfully track them — they default to empty /
@@ -126,6 +130,8 @@ export class ProductionOrder extends AggregateRoot implements IOrderHeader {
   getRoutingId(): number { return this._routingId; }
   getProductId(): number { return this._productId; }
   setProductId(productId: number): void { this._productId = productId; }
+  getOrgDepartmentId(): number | null { return this._orgDepartmentId; }
+  setOrgDepartmentId(orgDepartmentId: number | null): void { this._orgDepartmentId = orgDepartmentId; }
   getPlannedStart(): Date { return this._plannedStart; }
   getPlannedEnd(): Date { return this._plannedEnd; }
 
