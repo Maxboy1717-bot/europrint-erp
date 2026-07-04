@@ -103,6 +103,10 @@ export class PosBarcodeExtService {
     return this.barcodeExtRepo.getStockInfo(materialCardId, warehouseId);
   }
 
+  async getPendingSuggestions(): Promise<Result<Record<string, unknown>[]>> {
+    return this.barcodeExtRepo.findPendingSuggestions();
+  }
+
   async requestAiSuggestion(barcode: string, _userId: number) {
     const existing = await this.barcodeExtRepo.findPendingAiSuggestion(barcode);
     if (existing) return existing;

@@ -106,8 +106,8 @@ export class BarcodeController {
   @Get('ai-suggestion/pending')
   @RequirePermission('pos.material_card.create')
   @ApiOperation({ summary: 'Ko\'rib chiqilmagan AI takliflar ro\'yxati' })
-  getPendingSuggestions() {
+  async getPendingSuggestions() {
     // materialCardSuggestions da PENDING statusdagilar
-    return { message: 'GET /pos/barcode/ai-suggestion/pending' };
+    return unwrapOrInternal(await this.barcodeService.getPendingSuggestions());
   }
 }

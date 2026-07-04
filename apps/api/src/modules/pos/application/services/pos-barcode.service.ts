@@ -295,6 +295,12 @@ export class PosBarcodeService implements OnModuleInit, OnModuleDestroy {
     return this.extSvc.reviewAiSuggestion(dto, reviewerId);
   }
 
+  // ─── Kutilayotgan AI Takliflar (delegate) ─────────────────────────────────
+
+  async getPendingSuggestions() {
+    return this.extSvc.getPendingSuggestions();
+  }
+
   // ─── EAN-13 Generatsiya (delegate) ───────────────────────────────────────
 
   generateEan13(dto: GenerateEan13Dto): string {
