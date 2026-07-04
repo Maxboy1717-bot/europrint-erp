@@ -737,12 +737,20 @@ export class PayrollService {
       // topilmasa 0 (Map.get undefined → soxta son yozilmaydi).
       const bonus = bonusByEmployee.get(employeeId) ?? 0;
       const netPay = sumGatedGross + bonus;
+      // ⭐ FIX (SB0056/SB0098 qoldiq): `payroll_rows.base_salary` GL "maosh xarajati"
+      // (buildJournal totalBase) va PayrollRecord.gross (emitPayrollRecordCompletions:
+      // row.baseSalary + row.bonus) manbasi — shuning uchun bu yerga XOM `employees.base_salary`
+      // emas, DARVOZALANGAN summa (sumGatedGross) yoziladi. Xom baza (raw `baseSalary` — yuqoridagi
+      // MAX bilan yig'ilgan) faqat izoh (`note`) uchun saqlanadi (audit-ko'rinish, ledger emas).
+      // Buning sababi: aks holda GL debit (totalBase=xom) va credit (totalNet=gated+bonus) mos
+      // kelmay, ЦКП/LMS-gate haqiqatda oylikni kamaytirgan har qanday davrda buildJournal
+      // "balansda emas" xatosi bilan closePeriod'ni butunlay bloklardi.
       const cardSummary = cards
         .map((c) => `#${c.cardId}:${c.gatedDays}/${c.totalDays}${c.lmsBlocked ? '(LMS-yopiq)' : ''}`)
         .join(', ');
       const note = anyLmsBlocked
-        ? `karta-oylik (${cards.length} karta): ba'zi karta LMS-darvozasi yopiq — ${cardSummary}`
-        : `karta-oylik (${cards.length} karta): ЦКП-gate — ${cardSummary}` +
+        ? `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ba'zi karta LMS-darvozasi yopiq — ${cardSummary}`
+        : `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ЦКП-gate — ${cardSummary}` +
           (bonus > 0 ? ` + mukofot ${bonus.toLocaleString('uz-UZ')}` : '');
       const totalGatedDays = cards.reduce((sum, c) => sum + c.gatedDays, 0);
       const totalDaysAll = cards.reduce((sum, c) => sum + c.totalDays, 0);
@@ -750,7 +758,7 @@ export class PayrollService {
       const upsertR = await this.hrPayrollRepo.upsertPayrollRow({
         periodId,
         employeeId,
-        baseSalary,
+        baseSalary: sumGatedGross,
         bonus,
         deductions: 0,
         netPay,
