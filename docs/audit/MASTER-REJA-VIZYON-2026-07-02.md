@@ -389,6 +389,40 @@
   - Alohida, kutilmagan katta bo'shliq topildi: UZ→RU tomonda 522 kalit yetishmas edi (13 modul, ba'zilari butunlay bo'sh `{}`) — bularning barchasi professional rus-tiliga tarjima qilindi va tasdiqlandi (`a15b985c`, 0 qolgan bo'shliq).
   - **Ochiq qoldi**: (a) backend'dagi ~95 ta oldindan-aniqlangan hardcoded-satr (2026-05-16 audit, operator/Telegram/AI-agent qatlamlarida, ataylab kechiktirilgan); (b) 3 ta buzuq kalit (kod-parcha qiymatlar, masalan "isout") — alohida vazifa sifatida belgilandi (task_ed6fc680); (c) `ru/sd.json`da 181 ta "tarjima qilinmagan nusxa" (RU qiymati UZ bilan bir xil) — eski, boshqa muammo, bu safargi ish-doirasidan tashqarida qoldi.
 
+## 8.8 TO'LIQ QAYTA-O'LCHOV (2026-07-04, 46 commit keyin, 10 mustaqil agent, bazaviy metodologiya bilan)
+
+> Metod 2026-07-02 audit bilan AYNAN BIR XIL: har talab jonli kod+DB+(imkon bo'lsa)HTTP bilan tekshirilgan, BOR=1.0/QISMAN=0.5/YO'Q=0, har da'vo fayl:satr yoki DB-qator bilan isbotlangan. Bu — "vizyon to'liqmi?" degan egasi savoliga ANIQ, taxminsiz javob.
+
+**Yakuniy raqam: 8-klaster o'rtacha 65% → 68% (+3). Sahifalar 85%→88% (+3). Data-jonlilik 57%→58% (+1). 10-o'lchov umumiy o'rtacha ≈ 69%.**
+
+⚠️ **XULOSA: VIZYON TO'LIQ EMAS.** Ko'p ish qilingan bo'lsa-da (46 commit), umumiy % atigi +3 punkt ko'tarildi — sababi pastda tushuntirilgan.
+
+| # | Klaster | 07-02 | 07-04 | Δ | Qisqa sabab |
+|---|---|---|---|---|---|
+| 1 | WMS/POS | 81% | 79% | -2 | QC-bypass tuzatildi (+), lekin avto-PDF hamon TO'LIQ BUZUQ (jonli-legitim yo'l bilan qayta isbotlandi) |
+| 2 | Finance | 70% | 64% | -6 | Metodologik aniqlashtirish: kassir-valyuta BE to'g'ri, lekin FE forma umuman currency yubormaydi (foydalanuvchi hech qachon ishlata olmaydi); summa-tasdiq-darvoza faqat ZVS-hujjat, kassir-hub'ning o'z chiqimlariga bog'lanmagan |
+| 3 | SD/CRM/Marketing | 64% | 77% | **+13** | Haqiqiy yaxshilanish (ATP, order-items, ABC-mexanizm, web-katalog) |
+| 4 | PP/MES/QC | 61% | 75% | **+14** | Haqiqiy yaxshilanish (MES tz-bug, brak-ushlanma, norma-reja-fakt tasdiqlandi) |
+| 5 | HR/LMS | 75% | 70% | -5 | Metodologik aniqlashtirish: mukofot **3-dunyo bo'linishi** topildi (FE→payroll_period_record ╳ yangi-controller→bonus_payments ╳ payroll faqat bonus_payments'ni o'qiydi — foydalanuvchi UI-bonus payroll'ga HECH QACHON qo'shilmaydi); A6-SUM tuzatish kodda to'g'ri lekin 31/31 xodimda hali ko'p-karta yo'q (isbotlanmagan); 3.14 FE-yaratish-oqimi hech qayerda import qilinmagan (o'lik) |
+| 6 | Org KARTA-markaz | 59% | 58% | -1 | Amalda o'zgarmagan — **A9 hamon eng katta blokировщик** (2 yangi ЦКП-mexanizm qurildi, lekin data yo'qligi ularni inert qiladi) |
+| 7 | CC+Kanban+Coordination | 70% | 78% | **+8** | Haqiqiy yaxshilanish + oldingi audit XATOSI tuzatildi (prikaz/protocol/council-members aslida to'g'ri ulangan ekan, "regressiya" da'vosi noto'g'ri edi) |
+| 8 | AI+IoT | 40% | 42% | +2 | Kod-daraja yaxshilandi (2.3/2.10/2.11), lekin hardware-blok (kamera=0 qator) o'zgarmadi; YANGI topilma: AI-fit avto-tsikl haqiqatda FALLBACK-XATO bilan ishlaydi (0 real baho) |
+| K1 | Sahifalar (467 route) | 85% | 88% | +3 | 3.13 stub-qarorlar (5/5 FE + 9 BE) |
+| K2 | Data-jonlilik (22 domen) | 57% | 58% | +1 | EGASI-DATA Tier-1 ijro (asosan tasdiqlash, 2 haqiqiy tuzatish) |
+
+**Nega umumiy % kam o'sdi (ko'p ish qilingan bo'lsa ham)?**
+1. **Ko'p ish = tasdiqlash, yangi qurilish emas.** Tier-1 EGASI-DATA (13 band), 2.1-2.18 dan aksariyati — allaqachon to'g'ri kodni QAYTA tekshirish edi, % ni oshirmaydi (allaqachon hisobga olingan edi).
+2. **Chuqurroq tekshiruv 3 ta klasterda oldingi "BOR" baholarni "QISMAN"ga tushirdi** (Finance, HR, qisman WMS) — bu YANGI BUZILISH emas, balki oldingi audit "kod bor" darajasida to'xtagan joyda bu safar "FE-orqali-foydalanuvchi-ishlata-oladimi + DB-qatorda real-isbot bormi" darajasigacha borilgan. Eng katta misol: **kassir-valyuta va HR-mukofot — ikkalasi ham backend to'g'ri qurilgan, lekin FRONTEND ulanmagan yoki noto'g'ri jadvalga yozadi** — foydalanuvchi amalda ishlata olmaydi.
+3. **A9 (org-daraxt) hamon hal qilinmagan** — bu yagona eng katta struktura-blokeri, Org-klasterni to'xtatib turibdi va A11/A8/A1 kabi bir nechta boshqa bandga zanjir bilan ta'sir qiladi.
+4. **AI/IoT hamon jismoniy hardware'ga bog'liq** (kamera=0, sensor=0) — bu kod bilan hal qilib bo'lmaydi, egasi qaroriga/investitsiyaga bog'liq.
+5. **4 ta katta (L-hajm) band hali umuman qurilmagan**: 3.1 (marshrut-per-sex), 3.9 (motion-gate+YOLO), 3.11 (kredit-model), 3.12 (123-sahifa audit).
+
+**Yangi aniq harakat-nuqtalari (bu o'lchov orqali topilgan, hali tuzatilmagan):**
+- Kassir-valyuta FE-forma currency/exchangeRate yubormaydi (`CashierHub.tsx`) — backend tayyor, FE-ulash kerak.
+- HR-mukofot 3-dunyo bo'linishi — `EmployeeProfile.tsx` ni yangi `hr_bonus.controller.ts` zanjiriga qayta yo'naltirish kerak.
+- Avto-PDF akt pipeline (2.1) — qo'lda-chaqiruv ishlaydi, avto-trigger jim xato yutadi (event-handler try/catch debug kerak).
+- Barkod-chop (2.7) — PRINTED-holatga o'tkazuvchi consumer/worker yo'q (faqat QUEUED bilan to'xtaydi).
+
 ## 8.6 EGASI-DATA 3-tur klassifikatsiya + Tier-1 ijro (2026-07-03, 4-guruh qazish + Tier-1 qo'llash)
 
 > Metod: 3000-savol korpusi 4 ta mustaqil READ-ONLY qazish-workflow bilan skanerlandi (17 klaster,
