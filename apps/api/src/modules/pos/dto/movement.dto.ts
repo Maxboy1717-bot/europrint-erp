@@ -87,6 +87,26 @@ export const CreateMovementSchema = z.object({
       }
     });
   }
+  // SB0551 NARX-DARVOZASI (2026-07-04): EXTERNAL_IN (real tashqi xarid qabuli)
+  // qatorida unitPrice 0/manfiy/yo'q bo'lsa GL'ga 0-summa yozib, ombor
+  // bahosini (valuation) buzadi — auto-gl-posting.repository.ts sumLines()
+  // to'g'ridan shu ustunni yig'adi (SUM(quantity*unit_price)). Boshqa turlar
+  // (WASTE_IN/CUSTOMER_MATERIAL/INTERNAL_RETURN va h.k.) uchun 0-narx qonuniy
+  // (topilgan material/mijoz-mol/ichki qaytarish) — faqat EXTERNAL_IN uchun
+  // musbat narx talab qilinadi. Bu yerda faqat movementTypeCode yo'li
+  // ushlanadi; movementTypeId yo'li PosMovementService.createMovement ichida
+  // (DB-lookup dan keyin) tekshirilishi kerak bo'lsa alohida qo'shiladi.
+  if (d.movementTypeCode === MovementTypeCode.EXTERNAL_IN && Array.isArray(d.lines)) {
+    d.lines.forEach((line, i) => {
+      if (!(typeof line.unitPrice === 'number' && line.unitPrice > 0)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "EXTERNAL_IN kirim qatorida musbat unitPrice majburiy (0/manfiy/yo'q narx qabul qilinmaydi)",
+          path: ['lines', i, 'unitPrice'],
+        });
+      }
+    });
+  }
 });
 export class CreateMovementDto extends createZodDto(CreateMovementSchema) {}
 

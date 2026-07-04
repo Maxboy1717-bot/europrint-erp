@@ -108,6 +108,24 @@ export class PosMovementService {
         }
       }
 
+      // SB0551 NARX-DARVOZASI (2026-07-04): EXTERNAL_IN (real tashqi xarid
+      // qabuli) qatorida unitPrice 0/manfiy/yo'q bo'lsa GL'ga 0-summa yozib,
+      // ombor bahosini (valuation) buzadi — auto-gl-posting.repository.ts
+      // sumLines() to'g'ridan SUM(quantity*unit_price) yig'adi. DTO
+      // superRefine faqat movementTypeCode yo'lini ushlaydi — bu yerda
+      // movementTypeId yo'li ham qamrab olinadi (server = yagona darvoza,
+      // G1-1 barkod-darvozasi bilan bir xil naqsh).
+      if (movType.code === 'EXTERNAL_IN' && dto.lines?.length) {
+        const badPriceRows = dto.lines
+          .map((l, i) => (typeof l.unitPrice === 'number' && l.unitPrice > 0 ? null : i + 1))
+          .filter((i): i is number => i !== null);
+        if (badPriceRows.length > 0) {
+          throw new BadRequestException(
+            `EXTERNAL_IN kirimda musbat unitPrice majburiy (0/manfiy/yo'q narx qabul qilinmaydi, qator: ${badPriceRows.join(', ')})`,
+          );
+        }
+      }
+
       // G2-1 QABUL-TOLERANS (2026-07-04, SB0544/EP-WMS-047 vizyon: "receipt
       // ±2% auto-accept, above -> manager approval + mandatory reason").
       // EXTERNAL_IN + purchaseOrderId berilganda har qator PO buyurtma
