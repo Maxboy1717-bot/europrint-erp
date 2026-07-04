@@ -20,16 +20,14 @@
  *   Secret: process.env.CC_WEBHOOK_SECRET (yoki CC_WEBHOOK_SECRET_<SOURCE> per-source)
  */
 
-import { Body, Controller, Headers, HttpCode, Param, Post, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Headers, HttpCode, Param, Post, BadRequestException, UnauthorizedException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import * as crypto from 'crypto';
-import { sql } from 'drizzle-orm';
-import { runQuery } from '@shared/db';
 import { z } from 'zod';
-import type { CcSpawnRequestedEventProps as CcSpawnPayload } from '../domain/events/cc-spawn-requested.event';
+import { CcSpawnRequestedEvent, type CcSpawnRequestedEventProps as CcSpawnPayload } from '../domain/events/cc-spawn-requested.event';
 
 const CcWebhookSchema = z.object({
   templateCode: z.string().min(1),
@@ -47,10 +45,12 @@ const IDEMPOTENCY_TTL_MS = 60 * 60 * 1000;
 @Throttle({ default: { limit: 60, ttl: 60_000 } })
 @Controller('cc/webhooks')
 export class CcWebhookController {
+  private readonly logger = new Logger(CcWebhookController.name);
+
   constructor(
-    private readonly events: EventEmitter2,
-    private readonly cfg:    ConfigService,
-    private readonly i18n:   I18nService,
+    private readonly eventBus: EventBus,
+    private readonly cfg:      ConfigService,
+    private readonly i18n:     I18nService,
   ) {}
 
   @Post(':source')
@@ -88,15 +88,21 @@ export class CcWebhookController {
     if (!ok) throw new UnauthorizedException(await this.i18n.t('errors.hmacInvalid'));
 
     // ── 3. Payload validatsiya (Zod schema validated above) ──────────
-    const payload = parsedBody as Partial<CcSpawnPayload>;
+    const payload = parsedBody as CcSpawnPayload;
 
-    // ── 4. Audit yozuvi (cc_audit_trail emas — tashqi voqea uchun alohida)
-    await runQuery(sql`
-      SELECT 1   -- placeholder; webhook log jadvali keyingi versiyada
-    `);
+    // ── 4. Audit yozuvi: cc_audit_trail bu yerga mos emas (document_id talab
+    //    qiladi, u hali mavjud emas — draft keyingi qadamda listener ichida
+    //    yaratiladi). Alohida webhook-log jadvali hali YO'Q (Q-35: yangi jadval
+    //    yaratish egasi ruxsatini talab qiladi — shu band doirasidan tashqarida).
+    //    Hozircha structured log bilan qayd etamiz; DB audit — kelgusi vazifa.
+    this.logger.log(`webhook qabul qilindi: source=${source} templateCode=${payload.templateCode} idempKey=${idempKey}`);
 
-    // ── 5. Event emit qilamiz — listener qabul qiladi va draft yaratadi
-    this.events.emit('cc.spawn', payload as CcSpawnPayload);
+    // ── 5. CQRS EventBus orqali publish qilamiz — CcEventListener
+    //    (@EventsHandler(CcSpawnRequestedEvent)) qabul qiladi va draft yaratadi.
+    //    Eslatma: legacy EventEmitter2 'cc.spawn' string-topic ENDI hech kim
+    //    tinglamaydi (listener CQRS'ga ko'chirilgan) — shuning uchun aynan
+    //    shu class orqali publish qilish shart.
+    this.eventBus.publish(new CcSpawnRequestedEvent(payload));
 
     return { ok: true, queued: true };
   }
