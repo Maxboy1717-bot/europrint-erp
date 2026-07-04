@@ -5,7 +5,7 @@
  *   warehouse-catalog module endpoints (see docs/B5-compat-endpoints.md). Existing routes
  *   remain functional but receive no new features. Removal target: post-PA3 cutover.
  */
-import { Controller, UseGuards, Get, Post, Patch, Body, Query, Param, HttpCode, HttpException, HttpStatus , UseInterceptors} from '@nestjs/common';
+import { Controller, UseGuards, Get, Post, Put, Patch, Body, Query, Param, HttpCode, HttpException, HttpStatus , UseInterceptors} from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -24,6 +24,13 @@ import { z } from 'zod';
 const CreateWarehouseMaterialSchema = z.object({
   materialCode: z.string().trim().min(1).max(100),
   name: z.string().trim().min(1).max(500),
+  unit: z.string().trim().min(1).max(50).optional(),
+  category: z.string().trim().max(100).optional(),
+  minStock: z.number().nonnegative().optional(),
+});
+
+const UpdateWarehouseMaterialSchema = z.object({
+  name: z.string().trim().min(1).max(500).optional(),
   unit: z.string().trim().min(1).max(50).optional(),
   category: z.string().trim().max(100).optional(),
   minStock: z.number().nonnegative().optional(),
@@ -53,6 +60,16 @@ export class WarehouseCatalogController {
   async createMaterial(@Body() body: unknown) {
     const dto = CreateWarehouseMaterialSchema.parse(body);
     return unwrapOrInternal(await this.svc.createMaterial(dto));
+  }
+
+  /**
+   * PUT /api/warehouse/materials/:id — SB0756/SB0757: edit path for the routed
+   * MaterialCardsPage (create-only until now). Real UPDATE into material_cards.
+   */
+  @Put('materials/:id')
+  async updateMaterial(@Param('id') id: string, @Body() body: unknown) {
+    const dto = UpdateWarehouseMaterialSchema.parse(body);
+    return unwrapOrInternal(await this.svc.updateMaterial(id, dto));
   }
 
   // C1 retire (2026-06-05): GET /api/warehouse/movements was a 501 alias for the canonical

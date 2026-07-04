@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Plus, Search, Package } from "lucide-react";
+import { Plus, Search, Package, Pencil } from "lucide-react";
 
 import { useTranslation } from '@/lib/i18n';
 import { EPStatusPill, EPPageHeader } from "@/components/ep";
@@ -40,6 +40,13 @@ export default function MaterialCardsPage() {
   const [unit, setUnit] = useState("kg");
   const [category, setCategory] = useState("");
   const [minStock, setMinStock] = useState("");
+
+  // SB0756/SB0757 — edit path (create existed, edit did not).
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editUnit, setEditUnit] = useState("kg");
+  const [editCategory, setEditCategory] = useState("");
+  const [editMinStock, setEditMinStock] = useState("");
 
   const { data: materials = [], isLoading } = useQuery<Material[]>({
     queryKey: ["/api/warehouse/materials"],
@@ -72,6 +79,39 @@ export default function MaterialCardsPage() {
       return;
     }
     createMutation.mutate({ materialCode: code, name, unit, category, minStock: Number(minStock) || 0 });
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: object }) =>
+      apiRequest("PUT", `/api/warehouse/materials/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/warehouse/materials"] });
+      toast({ title: "Material yangilandi" });
+      setEditingMaterial(null);
+    },
+    onError: () => {
+      toast({ title: "Xatolik yuz berdi", variant: "destructive" });
+    },
+  });
+
+  const openEditDialog = (m: Material) => {
+    setEditingMaterial(m);
+    setEditName(m.name ?? "");
+    setEditUnit(m.unit ?? "kg");
+    setEditCategory(m.category ?? "");
+    setEditMinStock(String(m.minStock ?? ""));
+  };
+
+  const handleUpdate = () => {
+    if (!editingMaterial) return;
+    if (!editName.trim()) {
+      toast({ title: "Nomni kiriting", variant: "destructive" });
+      return;
+    }
+    updateMutation.mutate({
+      id: editingMaterial.id,
+      data: { name: editName, unit: editUnit, category: editCategory, minStock: Number(editMinStock) || 0 },
+    });
   };
 
   const list = (Array.isArray(materials) ? materials : []).filter((m) => {
@@ -130,6 +170,7 @@ export default function MaterialCardsPage() {
                   <TableHead className="text-right">{t("currentBalance")}</TableHead>
                   <TableHead className="text-right">{t("minQoldiq")}</TableHead>
                   <TableHead>{t("status28")}</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -146,6 +187,11 @@ export default function MaterialCardsPage() {
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">{m.minStock?.toLocaleString()}</TableCell>
                     <TableCell>{getStatusBadge(m.status, m.currentStock, m.minStock)}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(m)} data-testid={`btn-edit-material-${m.id}`}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -193,6 +239,50 @@ export default function MaterialCardsPage() {
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={resetForm}>{t("cancel")}</Button>
               <Button onClick={handleSave} disabled={createMutation.isPending}>{t("Saqlash")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingMaterial} onOpenChange={(open) => { if (!open) setEditingMaterial(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[18px] font-semibold">{t("materialniTahrirlash", "Materialni tahrirlash")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>{t('materialKodi')}</Label>
+                <Input value={editingMaterial?.materialCode ?? ""} disabled />
+              </div>
+              <div>
+                <Label>{t("olchovBirligi")}</Label>
+                <Select value={editUnit} onValueChange={setEditUnit}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="pcs">dona</SelectItem>
+                    <SelectItem value="m">metr</SelectItem>
+                    <SelectItem value="L">litr</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>{t("name")}</Label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t("materialNomi")} />
+            </div>
+            <div>
+              <Label>{t("category")}</Label>
+              <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} placeholder={t("masalanQogoz")} />
+            </div>
+            <div>
+              <Label>{t("minimalQoldiq")}</Label>
+              <Input type="number" value={editMinStock} onChange={(e) => setEditMinStock(e.target.value)} placeholder="0" />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setEditingMaterial(null)}>{t("cancel")}</Button>
+              <Button onClick={handleUpdate} disabled={updateMutation.isPending} data-testid="btn-save-edit-material">{t("Saqlash")}</Button>
             </div>
           </div>
         </DialogContent>
