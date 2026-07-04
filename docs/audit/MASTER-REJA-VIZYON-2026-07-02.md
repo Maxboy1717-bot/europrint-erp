@@ -514,4 +514,28 @@ yana tasdiq kerak. Tartib: G1(xavfsizlik)→G2(golden-thread green-lie)→R1→R
 G3(indeks)→R7(faqat ma'lumot-ro'yxati, kod yo'q)→R8(faqat qaror-so'rov, kod yo'q)→G4. G2'dan
 keyin va R6'dan keyin qisqa holat-jadvali talab qilinadi.
 
+## 8.11 IoT Kiosk-Screen — Sex-Ekrani to'liq vizyoni (2026-07-04, QUEUED — navbatda so'nggi)
+
+> To'liq matn: `docs/audit/IOT-KIOSK-SCREEN-VISION-2026-07-04.md`. Manba: 20 tasdiqlangan
+> vizyon-talab (egasi) + `docs/vision/IOT-SCREEN-30-SUGGESTIONS-2026-07-04.md` (30 qo'shimcha
+> taklif, brainstorm-only, kod yozilmagan).
+
+**Status: QUEUED — HALI BOSHLANMAYDI.** Navbat oxirida: barcha faol/navbatdagi ishlar
+(VISION-3340 Phase-1/2, Residual Fix Loop §8.10 G1-G4/R1-R8) 100% tugagandan KEYIN boshlanadi.
+Bu band hech narsani to'xtatmaydi yoki qayta-ustuvorlashtirmaydi — faqat navbat oxiriga
+qo'shildi. Ijro modeli boshlanganda ham §8.10 kabi ketma-ket/plan-birinchi (davomiy loop emas).
+
+**Prerekvizit blokировщик:** kiosk/tablet auth-nomosligi — yozuv-marshrutlar
+(`production-sessions`, `defect`, `downtime-events`, `tablet/*`) `@Roles(...IOT_READ)` bilan
+yopilgan, kiosk esa faqat `x-tablet-token` yuboradi → hozir 401. ⚠️ **Iqtibos-tuzatish:** bu
+band manba-hujjatda "Residual Fix Loop R1" deb noto'g'ri ko'rsatilgan edi — haqiqiy manba
+`docs/audit/IOT-TABLET-PAGE-DEEP-DIVE-2026-07-04.md` ("0-band", Residual Fix Loop'dan
+mustaqil) ekanligi tekshirilib to'g'irlandi (batafsil: yuqoridagi fayl).
+
+**Tarkib:** 20 ta vizyon-talab (login→smena-almashinuv→AI-order-tayinlash→dual-scan→
+parent-child barkod→brak/to'xtash hisobot→PPE-checklist→2-imzo topshirish→SOS→inline
+QC→pauza/uptime→UZ+RU) + 30 qo'shimcha taklif 4-tierga guruhlangan (T3/AI2/W1 fundament →
+M1/S2/W2/D1/AI1 yuqori-qiymat → W3-5/D2-3-5/M2-4/AI3-5 chuqurlik → S1-5/T1-2-4-5/M5
+xavfsizlik-infratuzilma).
+
 > Bu hujjat = 2026-07-02 holat-suratining yagona manbasi. Yangilanish keyingi katta o'lchovda (Q-25).
