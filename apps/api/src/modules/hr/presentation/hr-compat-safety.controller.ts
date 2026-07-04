@@ -28,10 +28,6 @@ import {
 
 interface AuthenticatedUser { id: number; sub?: number; }
 
-const GenerateMilestonesSchema = z.object({
-  employeeId: z.union([z.string(), z.number()]).optional(),
-}).passthrough();
-
 // P1.12.2: EMPLOYEE added so leave-requests endpoints are accessible to regular employees
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER', 'EMPLOYEE'] as const;
 
@@ -207,16 +203,16 @@ export class HrCompatSafetyController {
     return { data: { period: 'monthly', entries } };
   }
 
-  @Get('milestones/generate')
-  async generateMilestones(@Query('employeeId') employeeId?: string) {
+  // Q10 fix: this route only ever read existing adaptation_milestones rows —
+  // it never generated/inserted anything, so the old "generate" name (and the
+  // POST variant that implied a write) was misleading (Q-40). Real milestone
+  // generation happens in createAdaptationRecord() → repo.createAdaptationMilestones()
+  // (triggered by POST /api/hr/adaptation/records). No FE caller references
+  // "milestones/generate" (grep confirmed) — renamed to reflect read-only intent
+  // and dropped the no-op POST variant instead of leaving it half-fake.
+  @Get('milestones/list')
+  async listMilestones(@Query('employeeId') employeeId?: string) {
     const data = await this.svc.getAdaptationMilestones(employeeId);
-    return { data };
-  }
-
-  @Post('milestones/generate')
-  async postGenerateMilestones(@Body() body: unknown) {
-    const dto = GenerateMilestonesSchema.parse(body ?? {});
-    const data = await this.svc.getAdaptationMilestones(dto.employeeId ? String(dto.employeeId) : undefined);
     return { data };
   }
 
