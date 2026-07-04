@@ -541,3 +541,59 @@ export const insertAssetInsuranceSchema = createInsertSchema(assetInsurance, {
 
 export type AssetInsurance = typeof assetInsurance.$inferSelect;
 export type InsertAssetInsurance = z.infer<typeof insertAssetInsuranceSchema>;
+
+// ============================================================
+// TECH CARD MASTER — child tables (docs/migration/06-pp-tech-card-master.sql)
+// APPROVED: owner (2026-06-18) — tables already live in DB (created by that migration);
+// this is the Drizzle mirror only (additive, no DDL). FK -> technologyCards.id (integer PK).
+// ============================================================
+
+// BOM (EP-PP-089) — MRP reads this.
+export const techCardBom = pgTable("tech_card_bom", {
+  id: serial("id").primaryKey(),
+  technologyCardId: integer("technology_card_id").notNull().references(() => technologyCards.id),
+  materialCode: varchar("material_code", { length: 50 }).notNull(),
+  quantity: numericMoney("quantity").notNull(),
+  unit: varchar("unit", { length: 10 }).notNull().default("kg"),
+  layer: varchar("layer", { length: 20 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTechCardBomSchema = createInsertSchema(techCardBom).omit({ id: true, createdAt: true } as never);
+export type TechCardBom = typeof techCardBom.$inferSelect;
+export type InsertTechCardBom = z.infer<typeof insertTechCardBomSchema>;
+
+// Marshrut (EP-PP-032..036) — 10/20/30 ops; machine bind + alt + norm + setup + scrap + min razryad.
+export const techCardRoutes = pgTable("tech_card_routes", {
+  id: serial("id").primaryKey(),
+  technologyCardId: integer("technology_card_id").notNull().references(() => technologyCards.id),
+  opSeq: integer("op_seq").notNull(),
+  operation: varchar("operation", { length: 100 }).notNull(),
+  machineId: integer("machine_id"),
+  altMachineId: integer("alt_machine_id"),
+  normPerHour: numericMoney("norm_per_hour"),
+  setupMinutes: integer("setup_minutes"),
+  scrapFixed: integer("scrap_fixed"),
+  scrapPct: numericMoney("scrap_pct"),
+  minRazryad: integer("min_razryad"),
+  isCore: boolean("is_core").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTechCardRouteSchema = createInsertSchema(techCardRoutes).omit({ id: true, createdAt: true } as never);
+export type TechCardRoute = typeof techCardRoutes.$inferSelect;
+export type InsertTechCardRoute = z.infer<typeof insertTechCardRouteSchema>;
+
+// Versiyalash (EP-PP-014/037) — every change = a new version snapshot.
+export const techCardVersions = pgTable("tech_card_versions", {
+  id: serial("id").primaryKey(),
+  technologyCardId: integer("technology_card_id").notNull().references(() => technologyCards.id),
+  version: integer("version").notNull(),
+  snapshot: jsonb("snapshot").notNull(),
+  changedBy: integer("changed_by"),
+  changedAt: timestamp("changed_at").defaultNow(),
+});
+
+export const insertTechCardVersionSchema = createInsertSchema(techCardVersions).omit({ id: true, changedAt: true } as never);
+export type TechCardVersion = typeof techCardVersions.$inferSelect;
+export type InsertTechCardVersion = z.infer<typeof insertTechCardVersionSchema>;
