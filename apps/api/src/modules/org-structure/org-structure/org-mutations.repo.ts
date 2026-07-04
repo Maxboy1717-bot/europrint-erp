@@ -125,6 +125,26 @@ export class OrgMutationsRepo {
       if (dto.sortOrder !== undefined)     patch.sort_order = dto.sortOrder as number;
       if (dto.isActive !== undefined)      patch.is_active = dto.isActive as boolean;
 
+      // SB0777 — this is the PRIMARY razryad-write path used by the FE (RazryadTab.tsx PATCHes
+      // /api/org-structure/nodes/:id, which routes here). Capture the pre-change razryad_level_id
+      // + active occupant BEFORE mutating so a razryad_history audit row can be inserted after
+      // (manual PATCH bypasses the 2-signature request flow in razryad-history.service.ts — see
+      // the identical fix in card.repository.ts:update). Only when the caller actually sent
+      // razryadLevelId (dto key present) do we bother reading the "before" state.
+      const razryadChanging = Object.prototype.hasOwnProperty.call(dto, 'razryadLevelId');
+      let oldRazryadId: number | null = null;
+      let employeeId: number | null = null;
+      if (razryadChanging) {
+        const cur = await runQuery<Row>(sql`SELECT razryad_level_id FROM org_departments WHERE id = ${id}`);
+        oldRazryadId = cur.rows[0]?.razryad_level_id == null ? null : Number(cur.rows[0].razryad_level_id);
+        const occ = await runQuery<Row>(sql`
+          SELECT employee_id FROM employee_cards
+          WHERE card_id = ${id} AND is_active = true AND COALESCE(is_acting, false) = false
+          ORDER BY is_primary DESC NULLS LAST, id ASC LIMIT 1
+        `);
+        employeeId = occ.rows[0]?.employee_id == null ? null : Number(occ.rows[0].employee_id);
+      }
+
       let row: Row | undefined;
       if (Object.keys(patch).length > 0) {
         [row] = (await db.update(orgDepartments).set(patch).where(eq(orgDepartments.id, id)).returning()) as Row[];
@@ -135,9 +155,52 @@ export class OrgMutationsRepo {
       const finalRow = withUnit ?? row;
       if (!finalRow) return { id };
 
+      const newRazryadId = dto.razryadLevelId === undefined ? undefined : ((dto.razryadLevelId as number) ?? null);
+      if (razryadChanging && newRazryadId !== undefined && newRazryadId !== oldRazryadId) {
+        await this.recordManualRazryadChange(id, employeeId, oldRazryadId, newRazryadId);
+      }
+
       await syncToCoreTable(finalRow as Row, 'update');
       return castTo<Record<string, unknown>>(finalRow);
     }, 'DB_ERROR');
+  }
+
+  /**
+   * SB0777 audit trail — inserts a razryad_history row for a manual (non-request-flow) razryad
+   * change. change_type derived from actual `razryad_levels.level` comparison (not id order).
+   * ai_suggested=false; reason flags it as a direct/manual edit, distinct from the guarded
+   * increase/decrease request flow in razryad-history.service.ts. Never throws (Q-40: never-throw
+   * best-effort side-effect — a failed history-insert must not roll back the actual razryad save).
+   */
+  private async recordManualRazryadChange(
+    cardId: number,
+    employeeId: number | null,
+    oldRazryadId: number | null,
+    newRazryadId: number | null,
+  ): Promise<void> {
+    if (newRazryadId == null) return; // clearing razryad — nothing to record as a "change to" X
+    try {
+      let changeType: 'increase' | 'decrease' = 'increase';
+      if (oldRazryadId != null) {
+        const lvls = await runQuery<Row>(sql`
+          SELECT
+            (SELECT level FROM razryad_levels WHERE id = ${oldRazryadId}) AS old_level,
+            (SELECT level FROM razryad_levels WHERE id = ${newRazryadId}) AS new_level
+        `);
+        const oldLevel = lvls.rows[0]?.old_level == null ? null : Number(lvls.rows[0].old_level);
+        const newLevel = lvls.rows[0]?.new_level == null ? null : Number(lvls.rows[0].new_level);
+        if (oldLevel != null && newLevel != null && newLevel < oldLevel) changeType = 'decrease';
+      }
+      await runQuery(sql`
+        INSERT INTO razryad_history
+          (card_id, employee_id, old_razryad_id, new_razryad_id, change_type, reason, ai_suggested, effective_at, created_at)
+        VALUES
+          (${cardId}, ${employeeId}, ${oldRazryadId}, ${newRazryadId}, ${changeType},
+           'Karta to''g''ridan tahrirlash (manual PATCH, 2-imzo oqimidan tashqari)', false, NOW(), NOW())
+      `);
+    } catch {
+      // best-effort audit trail — never block the actual razryad save on a logging failure.
+    }
   }
 
   async deactivate(id: number): Promise<void> {
