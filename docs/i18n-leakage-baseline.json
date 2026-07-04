@@ -1,14 +1,14 @@
 {
   "summary": {
-    "totalLeaks": 260,
-    "filesWithLeaks": 48,
+    "totalLeaks": 262,
+    "filesWithLeaks": 49,
     "byKind": {
-      "JSX_TEXT": 131,
+      "JSX_TEXT": 133,
       "PROP": 77,
       "OBJECT_LABEL": 52
     },
     "byLocale": {
-      "uz": 258,
+      "uz": 260,
       "ru": 2
     },
     "topFiles": [
@@ -675,6 +675,20 @@
       "locale": "uz"
     },
     {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\LMSExtended.tsx",
+      "line": 178,
+      "text": "Yuborish",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\LMSExtended.tsx",
+      "line": 187,
+      "text": "Tasdiqlash",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\MESExtendedTabsSos.tsx",
       "line": 72,
       "text": "Hozircha SOS signal yo'q",
@@ -1152,42 +1166,42 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RazryadLevelConfig.tsx",
-      "line": 242,
+      "line": 260,
       "text": "Nomi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RazryadLevelConfig.tsx",
-      "line": 83,
+      "line": 89,
       "text": "Imtihon foizi 0–100 oralig'ida bo'lishi kerak",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RazryadLevelConfig.tsx",
-      "line": 87,
+      "line": 93,
       "text": "Qayta topshirish 0–10 bo'lishi kerak",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RazryadLevelConfig.tsx",
-      "line": 91,
+      "line": 101,
       "text": "Minimal oylik maksimaldan kichik bo'lishi kerak",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RazryadLevelConfig.tsx",
-      "line": 97,
+      "line": 107,
       "text": "Koeffitsiyent 0 dan katta va 20 dan kichik bo'lishi kerak",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RazryadLevelConfig.tsx",
-      "line": 211,
+      "line": 229,
       "text": "Saqlash xatoligi",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
@@ -1761,7 +1775,7 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\types.ts",
-      "line": 128,
+      "line": 130,
       "text": "Faol",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
