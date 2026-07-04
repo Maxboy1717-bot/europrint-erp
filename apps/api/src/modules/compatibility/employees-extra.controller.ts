@@ -102,17 +102,4 @@ export class EmployeesExtraController {
   ) {
     return unwrapOrInternal(await this.svc.updateProfileImage(id, body.url, user.id));
   }
-
-  /** Corporate inventory stub'lar — ko'chirildi audit qoidasi 1 (300+ qator) tufayli */
-  @Post(':id/corporate-inventory/:itemId/sign')
-  @HttpCode(HttpStatus.OK)
-  signCorporateInventory(@Param('id') _id: string, @Param('itemId') _itemId: string) {
-    return { signed: true };
-  }
-
-  @Post(':id/corporate-inventory/:itemId/return')
-  @HttpCode(HttpStatus.OK)
-  returnCorporateInventory(@Param('id') _id: string, @Param('itemId') _itemId: string) {
-    return { returned: true };
-  }
 }
