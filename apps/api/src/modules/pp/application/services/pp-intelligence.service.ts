@@ -101,10 +101,16 @@ export class PpIntelligenceService implements OnModuleInit {
   async runMrp(input: MrpRunInput): Promise<Result<EnrichedMrpResult, AppError>> {
     let runId: number | undefined;
     try {
+      // SB0278 fix: `input.lotSizingMethod` is an explicit planner OPT-IN override
+      // (per the module doc above — "switching to EOQ/POQ/W-W requires the planner
+      // to opt in"). When the caller omits it, fall back to L4L only for the run-log
+      // label; per-material method now comes from `inventory_policy.lot_sizing_method`
+      // (loadRunInputs), so materials with a DB-configured non-L4L policy are honoured
+      // even when the run itself doesn't specify a global override.
       const method = input.lotSizingMethod ?? 'L4L';
       const horizon = input.horizonPeriods ?? MRP_DEFAULT_HORIZON;
       runId = await this.insertRun(method, horizon);
-      const inputs = await this.loadRunInputs(method, horizon, input.mpsRows);
+      const inputs = await this.loadRunInputs(method, horizon, input.mpsRows, input.lotSizingMethod);
       const result = await this.mrpHandler.runMrp({ ...inputs, horizonPeriods: horizon });
       if (!result.ok) {
         await this.setRunStatus(runId, 'failed');
@@ -153,7 +159,7 @@ export class PpIntelligenceService implements OnModuleInit {
       .catch((e: Error) => this.logger.warn(`Failed to set run ${runId} status=${status}: ${e.message}`));
   }
 
-  private async loadRunInputs(method: string, horizon: number, mpsInput?: MpsRow[]) {
+  private async loadRunInputs(method: string, horizon: number, mpsInput?: MpsRow[], explicitMethodOverride?: LotSizingMethod) {
     const [bomRows, mpsRows, onHandRows, policyRows] = await Promise.all([
       runQuery<BomEdge>(sql`
         SELECT bh.product_id::text AS "parentId", bi.material_id::text AS "childId",
@@ -177,9 +183,14 @@ export class PpIntelligenceService implements OnModuleInit {
         ) ws ON ws.material_id = mc.id
         WHERE mc.is_active = true
       `),
+      // SB0278: lot_sizing_method + review_period_days are DB-persisted per-material
+      // MRP config (inventory_policy) — previously loaded but discarded, forcing every
+      // material onto the run-level `method` regardless of its own policy row.
       runQuery(sql`
         SELECT mc.id::text AS material_id, COALESCE(ip.safety_stock, 0)::numeric AS safety_stock,
-               COALESCE(ip.lead_time_days, 1)::integer AS lead_time_days, COALESCE(ip.eoq, 0)::numeric AS eoq_qty
+               COALESCE(ip.lead_time_days, 1)::integer AS lead_time_days, COALESCE(ip.eoq, 0)::numeric AS eoq_qty,
+               ip.lot_sizing_method AS lot_sizing_method,
+               COALESCE(ip.review_period_days, 0)::integer AS review_period_days
         FROM material_cards mc LEFT JOIN inventory_policy ip ON ip.material_id = mc.id
         WHERE mc.is_active = true LIMIT 500
       `),
@@ -188,13 +199,27 @@ export class PpIntelligenceService implements OnModuleInit {
     const onHand: Record<string, number> = {};
     for (const r of onHandRows.rows ?? []) onHand[String(r['material_id'])] = safeNum(r['qty_on_hand']);
 
-    const policies: MaterialPolicy[] = (Array.isArray(policyRows.rows) ? policyRows.rows : []).map((r) => ({
-      materialId: String(r['material_id']),
-      lotSizingMethod: method as LotSizingMethod,
-      leadTimeDays: safeNum(r['lead_time_days']),
-      safetyStock: safeNum(r['safety_stock']),
-      eoq: safeNum(r['eoq_qty']),
-    }));
+    const validMethods = new Set<LotSizingMethod>(['L4L', 'EOQ', 'POQ', 'WAGNER_WHITIN']);
+    const policies: MaterialPolicy[] = (Array.isArray(policyRows.rows) ? policyRows.rows : []).map((r) => {
+      const dbMethod = String(r['lot_sizing_method'] ?? '');
+      // Explicit run-level override wins (planner opt-in); otherwise use the
+      // material's own DB policy when it's a recognised method; otherwise the
+      // run's default `method` (L4L unless the caller specified one).
+      const resolvedMethod = explicitMethodOverride
+        ?? (validMethods.has(dbMethod as LotSizingMethod) ? (dbMethod as LotSizingMethod) : (method as LotSizingMethod));
+      const reviewPeriodDays = safeNum(r['review_period_days']);
+      return {
+        materialId: String(r['material_id']),
+        lotSizingMethod: resolvedMethod,
+        leadTimeDays: safeNum(r['lead_time_days']),
+        safetyStock: safeNum(r['safety_stock']),
+        eoq: safeNum(r['eoq_qty']),
+        // POQ bucket size: review_period_days is the closest DB analog (periodic-review
+        // interval) to POQ's "n periods per order" — convert days→weekly-period buckets
+        // to match the handler's period unit (see leadTimePeriodOffset ÷7 convention).
+        poqPeriods: reviewPeriodDays > 0 ? Math.max(1, Math.round(reviewPeriodDays / 7)) : undefined,
+      };
+    });
 
     const srRows = await runQuery(sql`
       SELECT poi.material_id::text AS material_id, COALESCE(poi.quantity, 0)::numeric AS qty,
