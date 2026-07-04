@@ -7,7 +7,7 @@
  */
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, HttpCode, HttpException, Param, Post, Query, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -103,13 +103,6 @@ export class EuroprintControlDirectorController {
   async getAccountantDashboard() {
     const r = await this.svc.getAccountantDashboard();
     return r.ok ? r.data : { summary: {}, alerts: [], lastUpdated: _time.now() };
-  }
-
-  @Post('deleted-records/:id/restore')
-  @HttpCode(HttpStatus.OK)
-  @Roles('admin', 'manager', 'director', 'super_admin')
-  async restoreDeletedRecord(@Param('id') id: string) {
-    return unwrapOrInternal(await this.svc.restoreDeletedRecord(id));
   }
 
   /**

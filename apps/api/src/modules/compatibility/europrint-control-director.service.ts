@@ -168,7 +168,4 @@ export class EuroprintControlDirectorService {
     });
   }
 
-  restoreDeletedRecord(id: string) {
-    return { id, restoredAt: _time.now().toISOString(), status: 'restored' };
-  }
 }
