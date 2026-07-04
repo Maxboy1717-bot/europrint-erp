@@ -147,9 +147,10 @@ export class DrizzleNotificationRepository implements INotificationRepo {
       .update(notifications)
       .set({ isRead: true })
       .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)))
+      .returning({ id: notifications.id })
       .execute()
-      .then(() => {
-        return Ok(0); // Return number updated if available from DB
+      .then((rows) => {
+        return Ok(rows.length);
       })
       .catch((error) => {
         this.logger.error('Error marking all notifications as read');
