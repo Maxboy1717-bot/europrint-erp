@@ -101,6 +101,16 @@ export class MarketingAnalyticsController {
     return unwrapOrThrow(await this.leadsSvc.create(dto as Record<string, unknown>));
   }
 
+  @Get('leads/loss-analysis')
+  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager', 'manager')
+  @ApiOperation({ summary: 'Lead yo`qotish sabablari analitikasi' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  async getLeadsLossAnalysis() {
+    const r = await this.leadsSvc.getLossAnalysis();
+    if (!r.ok) return { total: 0, breakdown: [] };
+    return r.data;
+  }
+
   @Get('leads/:id')
   @ApiOperation({ summary: 'Lead tafsiloti' })
   async getLead(@Param('id') id: string) {
@@ -217,13 +227,4 @@ export class MarketingAnalyticsController {
     return unwrapOrBadRequest(await this.svc.getCampaignStats(Number(id)));
   }
 
-  @Get('leads/loss-analysis')
-  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager', 'manager')
-  @ApiOperation({ summary: 'Lead yo`qotish sabablari analitikasi' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  async getLeadsLossAnalysis() {
-    const r = await this.leadsSvc.getLossAnalysis();
-    if (!r.ok) return { total: 0, breakdown: [] };
-    return r.data;
-  }
 }
