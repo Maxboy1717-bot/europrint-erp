@@ -38,11 +38,15 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
       // pending payments' due_date age (varchar date → ::date). FE renders these columns.
       // Column aliases match SDDebitors.tsx Debitor interface exactly.
       // NOTE: sd_customers and sd_payments have no deleted_at columns — soft-delete not used here.
+      // SB0596 — "collection responsibility": surface who owns collecting this debt
+      // (sd_customers.manager_id -> employees, same join pattern as sd-dashboard.repository.ts).
       const r = await exec(sql`
         SELECT
           c.id          AS "customerId",
           c.name        AS "customerName",
           c.segment,
+          c.manager_id  AS "managerId",
+          TRIM(COALESCE(m.first_name,'') || ' ' || COALESCE(m.last_name,'')) AS "managerName",
           COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0)::numeric(15,2) AS total,
           COUNT(DISTINCT CASE WHEN p.status = 'pending' THEN p.id END)::int AS pending_payments,
           MIN(CASE WHEN p.status = 'pending' THEN p.due_date END) AS earliest_due,
@@ -52,7 +56,8 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
           COALESCE(SUM(CASE WHEN p.status='pending' AND (now()::date - p.due_date::date) > 90              THEN p.amount ELSE 0 END),0)::numeric(15,2) AS "90+"
         FROM sd_customers c
         LEFT JOIN sd_payments p ON p.customer_id = c.id
-        GROUP BY c.id, c.name, c.segment
+        LEFT JOIN employees m ON m.id = c.manager_id
+        GROUP BY c.id, c.name, c.segment, c.manager_id, m.first_name, m.last_name
         HAVING COALESCE(SUM(CASE WHEN p.status = 'pending' THEN p.amount ELSE 0 END), 0) > 0
         ORDER BY total DESC LIMIT ${lim} OFFSET ${off}`);
       return r.ok ? r : Err(String(r.error));

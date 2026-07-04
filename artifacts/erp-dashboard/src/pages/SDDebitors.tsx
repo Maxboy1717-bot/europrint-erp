@@ -29,6 +29,9 @@ interface Debitor {
   total?: number;
   overdueDays?: number;
   segment?: string;
+  // SB0596 — collection responsibility: who owns collecting this customer's debt.
+  managerId?: string | number | null;
+  managerName?: string | null;
   "0-30"?: number;
   "31-60"?: number;
   "61-90"?: number;
@@ -149,6 +152,7 @@ export default function SDDebitors() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-none">
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("mijoz1")}</TableHead>
+                <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4">{t("masulMenejer", "Mas'ul menejer")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("total")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("k030Kun")}</TableHead>
                 <TableHead className="bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-4 text-right">{t("k3160Kun")}</TableHead>
@@ -161,13 +165,13 @@ export default function SDDebitors() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground bg-transparent">
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground bg-transparent">
                     {t("Yuklanmoqda...")}
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground bg-transparent">
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground bg-transparent">
                     {t("debitorlarTopilmadi")}
                   </TableCell>
                 </TableRow>
@@ -179,6 +183,9 @@ export default function SDDebitors() {
                       {d.segment && d.segment !== "new" && (
                         <div className="text-xs text-muted-foreground capitalize mt-0.5">{d.segment}</div>
                       )}
+                    </TableCell>
+                    <TableCell className="py-3 px-4 text-sm text-muted-foreground border-none">
+                      {d.managerName?.trim() || "—"}
                     </TableCell>
                     <TableCell className="py-3 px-4 text-right font-bold text-foreground border-none">{fmt(d.total ?? 0)}</TableCell>
                     <TableCell className="py-3 px-4 text-right text-muted-foreground border-none">{fmt(d["0-30"] ?? 0)}</TableCell>
