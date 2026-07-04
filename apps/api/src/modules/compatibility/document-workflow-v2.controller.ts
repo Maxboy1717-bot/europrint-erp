@@ -18,11 +18,6 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { DocumentWorkflowV2Service } from './document-workflow-v2.service';
-import {
-  WorkflowRouteAclTranslator,
-  type LegacyWorkflowRouteRow,
-  type WorkflowRouteDto,
-} from './acl/workflow-route-acl';
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -33,9 +28,6 @@ import {
 )
 @Controller('hr-v2/workflow')
 export class DocumentWorkflowV2Controller {
-  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
-  private readonly routeAcl = new WorkflowRouteAclTranslator();
-
   constructor(
     private readonly svc: DocumentWorkflowV2Service,
     private readonly i18n: I18nService,
@@ -48,20 +40,6 @@ export class DocumentWorkflowV2Controller {
   @Get('routes')
   async listRoutes() {
     return unwrapOrInternal(await this.svc.listRoutes());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of the workflow route list. New BC-3
-   * consumers should target this route; `/routes` stays for backwards-compat.
-   */
-  @Get('routes/v2')
-  async listRoutesV2(): Promise<WorkflowRouteDto[]> {
-    const rows = unwrapOrInternal(await this.svc.listRoutes()) as unknown as LegacyWorkflowRouteRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.routeAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: WorkflowRouteDto } => r.ok)
-      .map((r) => r.data);
   }
 
   /**

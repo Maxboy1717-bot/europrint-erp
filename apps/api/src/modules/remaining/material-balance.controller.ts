@@ -16,37 +16,17 @@ import { unwrapOrInternal } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { notImplemented } from '@common/exceptions/not-implemented';
-import {
-  MaterialBalanceOverviewAclTranslator,
-  type LegacyMaterialBalanceOverviewRow,
-  type MaterialBalanceOverviewDto,
-} from './acl/material-balance-overview-acl';
 
 @ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('material-balance')
 export class MaterialBalanceController {
-  /** PA2-14 ACL demonstrator. Stateless - direct instantiation is fine. */
-  private readonly overviewAcl = new MaterialBalanceOverviewAclTranslator();
-
   constructor(private readonly svc: MaterialBalanceService) {}
 
   @Get('overview')
   async getOverview() {
     return unwrapOrInternal(await this.svc.getOverview());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-5 (Warehouse / WMS) consumers
-   * should target this endpoint; the legacy `/overview` route stays for
-   * backwards-compat.
-   */
-  @Get('overview/v2')
-  async getOverviewV2(): Promise<MaterialBalanceOverviewDto | null> {
-    const raw = unwrapOrInternal(await this.svc.getOverview()) as unknown as LegacyMaterialBalanceOverviewRow;
-    const r = this.overviewAcl.toDomain(raw);
-    return r.ok ? r.data : null;
   }
 
   @Get('alerts')

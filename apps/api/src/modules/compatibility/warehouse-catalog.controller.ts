@@ -20,11 +20,6 @@ import { CompatBodyDto } from './dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
-import {
-  WarehouseMaterialAclTranslator,
-  type LegacyWarehouseMaterialRow,
-  type WarehouseMaterialDto,
-} from './acl/warehouse-material-acl';
 
 const CreateWarehouseMaterialSchema = z.object({
   materialCode: z.string().trim().min(1).max(100),
@@ -42,29 +37,11 @@ const CreateWarehouseMaterialSchema = z.object({
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')
 export class WarehouseCatalogController {
-  /** PA2-14 ACL translator. Stateless - direct instantiation is fine. */
-  private readonly materialAcl = new WarehouseMaterialAclTranslator();
-
   constructor(private readonly svc: WarehouseCatalogService) {}
 
   @Get('materials')
   async getMaterials(@Query('search') search?: string) {
     return unwrapOrInternal(await this.svc.getMaterials(search));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of materials. New BC-5 (Warehouse)
-   * consumers should target this route; `/materials` stays for
-   * backwards-compat.
-   */
-  @Get('materials/v2')
-  async getMaterialsV2(@Query('search') search?: string): Promise<WarehouseMaterialDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getMaterials(search)) as unknown as LegacyWarehouseMaterialRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.materialAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: WarehouseMaterialDto } => r.ok)
-      .map((r) => r.data);
   }
 
   /**

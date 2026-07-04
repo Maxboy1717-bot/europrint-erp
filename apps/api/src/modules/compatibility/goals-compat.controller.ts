@@ -13,11 +13,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GoalsCompatService } from './goals-compat.service';
 import { unwrapOrInternal } from '@common/http-result';
 import { z } from 'zod';
-import {
-  GoalAclTranslator,
-  type LegacyGoalRow,
-  type GoalDto,
-} from './acl/goal-acl';
 
 // P1.8.2: proper Zod DTOs for goal mutations (replaces passthrough CompatBodyDto)
 const CreateGoalSchema = z.object({
@@ -50,9 +45,6 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @Roles(...HR_ROLES, 'OPERATOR')
 @Controller('goals')
 export class GoalsCompatController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly acl = new GoalAclTranslator();
-
   constructor(private readonly svc: GoalsCompatService) {}
 
   @Get()
@@ -63,28 +55,6 @@ export class GoalsCompatController {
     @Query('limit') limit?: string,
   ) {
     return unwrapOrInternal(await this.svc.getGoals(status, category, targetType, limit));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-3 (HR / Performance) consumers
-   * should target this endpoint; the legacy `GET /goals` stays for
-   * backwards-compat.
-   */
-  @Get('v2')
-  async getGoalsV2(
-    @Query('status') status?: string,
-    @Query('category') category?: string,
-    @Query('targetType') targetType?: string,
-    @Query('limit') limit?: string,
-  ): Promise<GoalDto[]> {
-    const rows = unwrapOrInternal(
-      await this.svc.getGoals(status, category, targetType, limit),
-    ) as unknown as LegacyGoalRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.acl.toDomain(row))
-      .filter((r): r is { ok: true; data: GoalDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Post()

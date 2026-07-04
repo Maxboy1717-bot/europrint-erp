@@ -17,11 +17,6 @@ import { BoolBodyDto, CompatBodyDto } from './dto/compat-body.dto';
 import { CycleCountSubmitDto, PickTaskDto, ProductionCompleteDto, ProductionReceiveDto, ReceiveBodyDto, ResolveBalanceDto } from './dto/warehouse.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
-import {
-  BarcodeAclTranslator,
-  type LegacyBarcodeRow,
-  type BarcodeDto,
-} from './acl/barcode-acl';
 
 @ApiTags('Barcode Warehouse (Compat)')
 @ApiBearerAuth()
@@ -31,9 +26,6 @@ import {
 @UseInterceptors(AuditInterceptor)
 @Controller('barcode-warehouse')
 export class BarcodeWarehouseCompatController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly barcodeAcl = new BarcodeAclTranslator();
-
   constructor(
     private readonly svc: BarcodeWarehouseCompatService,
     private readonly debtSvc: BarcodeWarehouseDebtService,
@@ -47,20 +39,6 @@ export class BarcodeWarehouseCompatController {
   @Get('barcodes')
   async getBarcodes(@Query('status') status?: string) {
     return unwrapOrInternal(await this.svc.getBarcodes(status));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New consumers should target `/v2`;
-   * the legacy endpoint stays for backwards-compat.
-   */
-  @Get('barcodes/v2')
-  async getBarcodesV2(@Query('status') status?: string): Promise<BarcodeDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getBarcodes(status)) as unknown as LegacyBarcodeRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.barcodeAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: BarcodeDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Post('barcodes/:id/qc-decision')

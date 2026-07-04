@@ -14,11 +14,6 @@ import { WarehouseLabelCompatService } from './warehouse-label.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { LabelStatusDto, PrintJobDto, PrintLabelDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
-import {
-  LabelBatchAclTranslator,
-  type LegacyLabelBatchRow,
-  type LabelBatchDto,
-} from './acl/label-batch-acl';
 
 @ApiTags('Warehouse Label (ERP)')
 @ApiBearerAuth()
@@ -28,9 +23,6 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')
 export class WarehouseLabelController {
-  /** PA2-14 ACL translator. Stateless — direct instantiation is fine. */
-  private readonly batchAcl = new LabelBatchAclTranslator();
-
   constructor(private readonly svc: WarehouseLabelCompatService) {}
 
   @Post('label/print')
@@ -45,24 +37,6 @@ export class WarehouseLabelController {
     @Query('status') status?: string,
   ) {
     return unwrapOrInternal(await this.svc.getLabelBatches(warehouseId, status));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant of label batches. New BC-5 (Warehouse)
-   * consumers should target this route; `/label/batches` stays for
-   * backwards-compat.
-   */
-  @Get('label/batches/v2')
-  async getLabelBatchesV2(
-    @Query('warehouseId') warehouseId?: string,
-    @Query('status') status?: string,
-  ): Promise<LabelBatchDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getLabelBatches(warehouseId, status)) as unknown as LegacyLabelBatchRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.batchAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: LabelBatchDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Get('label/history')

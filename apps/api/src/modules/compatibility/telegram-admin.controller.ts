@@ -16,11 +16,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrBadRequest } from '@common/http-result';
 import { z } from 'zod';
 import { TelegramAdminService } from './telegram-admin.service';
-import {
-  TelegramUserAclTranslator,
-  type LegacyTelegramUserRow,
-  type TelegramUserDto,
-} from './acl/telegram-user-acl';
 
 const BroadcastSchema = z.object({
   message: z.string().min(1),
@@ -35,9 +30,6 @@ const BroadcastSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Controller('telegram/admin')
 export class TelegramAdminController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly userAcl = new TelegramUserAclTranslator();
-
   constructor(private readonly svc: TelegramAdminService) {}
 
   @Get('stats')
@@ -48,22 +40,6 @@ export class TelegramAdminController {
   @Get('users')
   async getUsers() {
     return unwrapOrBadRequest(await this.svc.getUsers());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-10 (Platform / Notifications)
-   * consumers should target this endpoint; the legacy `/users` route stays
-   * for backwards-compat.
-   */
-  @Get('users/v2')
-  async getUsersV2(): Promise<{ items: TelegramUserDto[]; total: number }> {
-    const raw = unwrapOrBadRequest(await this.svc.getUsers()) as unknown as { users?: unknown; total?: unknown };
-    const rows = raw && Array.isArray(raw.users) ? raw.users : [];
-    const items = rows
-      .map((row) => this.userAcl.toDomain(row as unknown as LegacyTelegramUserRow))
-      .filter((r): r is { ok: true; data: TelegramUserDto } => r.ok)
-      .map((r) => r.data);
-    return { items, total: items.length };
   }
 
   @Post('broadcast')

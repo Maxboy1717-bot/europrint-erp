@@ -13,11 +13,6 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { WeeklyPlanService } from './weekly-plan.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
-import {
-  WeeklyPlanAclTranslator,
-  type LegacyWeeklyPlanRow,
-  type WeeklyPlanDto,
-} from './acl/weekly-plan-acl';
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -25,9 +20,6 @@ import {
 @Controller('weekly-plans')
 @Roles('admin', 'super_admin', 'director', 'manager', 'department_head', 'employee', 'operator')
 export class WeeklyPlanController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly planAcl = new WeeklyPlanAclTranslator();
-
   constructor(private readonly svc: WeeklyPlanService) {}
 
   @Get('stats/summary')
@@ -44,30 +36,6 @@ export class WeeklyPlanController {
     @Query('employee_id') employee_id?: string,
   ) {
     return unwrapOrThrow(await this.svc.getAll(user, week, employeeId ?? employee_id));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-3 / BC-9 consumers should
-   * target `/v2`; the legacy `/` endpoint stays for backwards-compat.
-   *
-   * The legacy service returns `{ plans, weekStart }`; this endpoint
-   * preserves the envelope while translating only the `plans` array.
-   */
-  @Get('v2')
-  async getAllV2(
-    @CurrentUser() user: { id: number; role: string },
-    @Query('week') week?: string,
-    @Query('employeeId') employeeId?: string,
-  ): Promise<{ plans: WeeklyPlanDto[]; weekStart: string }> {
-    const wrapped = unwrapOrThrow(await this.svc.getAll(user, week, employeeId)) as unknown as {
-      plans: LegacyWeeklyPlanRow[]; weekStart: string;
-    };
-    const list = Array.isArray(wrapped?.plans) ? wrapped.plans : [];
-    const plans = list
-      .map((row) => this.planAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: WeeklyPlanDto } => r.ok)
-      .map((r) => r.data);
-    return { plans, weekStart: wrapped?.weekStart ?? '' };
   }
 
   @Post()

@@ -11,20 +11,12 @@ import { IdealRasmService } from './ideal-rasm.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
-import {
-  IdealTargetAclTranslator,
-  type LegacyIdealTargetRow,
-  type IdealTargetDto,
-} from './acl/ideal-target-acl';
 
 @ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
 @UseInterceptors(AuditInterceptor)
 @Controller('ideal-rasm')
 export class IdealRasmController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly targetAcl = new IdealTargetAclTranslator();
-
   constructor(private readonly svc: IdealRasmService) {}
 
   // A9/green-lie retire (2026-06-05): `POST /api/ideal-rasm` create() returned {success:true}
@@ -34,22 +26,6 @@ export class IdealRasmController {
   @Get()
   async getAll() {
     return unwrapOrInternal(await this.svc.getAll());
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-9 (Director / Strategy) consumers
-   * should target this endpoint; the legacy `GET /ideal-rasm` route stays
-   * for backwards-compat.
-   */
-  @Get('v2')
-  async getAllV2(): Promise<{ targets: IdealTargetDto[]; total: number }> {
-    const raw = unwrapOrInternal(await this.svc.getAll()) as unknown as { targets?: unknown };
-    const rows = raw && Array.isArray(raw.targets) ? raw.targets : [];
-    const targets = rows
-      .map((row) => this.targetAcl.toDomain(row as unknown as LegacyIdealTargetRow))
-      .filter((r): r is { ok: true; data: IdealTargetDto } => r.ok)
-      .map((r) => r.data);
-    return { targets, total: targets.length };
   }
 
   @Put()

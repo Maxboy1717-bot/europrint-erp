@@ -14,11 +14,6 @@ import { WarehouseBarcodeOpsService } from './warehouse-barcode-ops.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { BulkGenerateBarcodeDto, GenerateBarcodeDto, ScanBarcodeDto } from './dto/compat-body.dto';
 import { unwrapOrInternal } from '@common/http-result';
-import {
-  BarcodeScanResultAclTranslator,
-  type LegacyBarcodeScanResultRow,
-  type BarcodeScanResultDto,
-} from './acl/warehouse-barcode-scan-acl';
 
 @ApiTags('Warehouse Barcode Ops (ERP)')
 @ApiBearerAuth()
@@ -28,9 +23,6 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('warehouse')
 export class WarehouseBarcodeOpsController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly scanAcl = new BarcodeScanResultAclTranslator();
-
   constructor(private readonly svc: WarehouseBarcodeOpsService) {}
 
   @Post('barcode/generate')
@@ -43,19 +35,6 @@ export class WarehouseBarcodeOpsController {
   @HttpCode(HttpStatus.OK)
   async scanBarcode(@Body() body: ScanBarcodeDto) {
     return unwrapOrInternal(await this.svc.scanBarcode(body.barcode));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-5 (Warehouse / WMS) consumers
-   * should target this endpoint; the legacy `barcode/scan` route stays for
-   * backwards-compat.
-   */
-  @Post('barcode/scan/v2')
-  @HttpCode(HttpStatus.OK)
-  async scanBarcodeV2(@Body() body: ScanBarcodeDto): Promise<BarcodeScanResultDto | null> {
-    const raw = unwrapOrInternal(await this.svc.scanBarcode(body.barcode)) as unknown as LegacyBarcodeScanResultRow;
-    const r = this.scanAcl.toDomain(raw);
-    return r.ok ? r.data : null;
   }
 
   @Post('barcode/bulk-generate')

@@ -17,11 +17,6 @@ import { CompatBodyDto } from './dto/compat-body.dto';
 import { WarehouseCreateDto, WarehouseUpdateDto } from './dto/warehouse.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
-import {
-  MaterialCardAclTranslator,
-  type LegacyMaterialCardRow,
-  type MaterialCardDto,
-} from './acl/material-card-acl';
 
 @ApiTags('Warehouses (Compat)')
 @ApiBearerAuth()
@@ -74,32 +69,11 @@ export class WarehousesCompatController {
 @UseInterceptors(AuditInterceptor)
 @Controller('material-cards')
 export class MaterialCardsCompatController {
-  /** PA2-14 ACL demonstrator. Stateless — direct instantiation is fine. */
-  private readonly materialCardAcl = new MaterialCardAclTranslator();
-
   constructor(private readonly svc: ResourcesCompatService) {}
 
   @Get()
   async getAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('search') search?: string) {
     return unwrapOrInternal(await this.svc.getMaterialCards(page, limit, search));
-  }
-
-  /**
-   * PA2-14 ACL-translated variant. New BC-4 / BC-6 consumers should
-   * target `/v2`; the legacy `/` endpoint stays for backwards-compat.
-   */
-  @Get('v2')
-  async getAllV2(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-  ): Promise<MaterialCardDto[]> {
-    const rows = unwrapOrInternal(await this.svc.getMaterialCards(page, limit, search)) as unknown as LegacyMaterialCardRow[];
-    const list = Array.isArray(rows) ? rows : [];
-    return list
-      .map((row) => this.materialCardAcl.toDomain(row))
-      .filter((r): r is { ok: true; data: MaterialCardDto } => r.ok)
-      .map((r) => r.data);
   }
 
   @Get(':id')
