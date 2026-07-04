@@ -112,9 +112,9 @@ export function FolderTab({nodeId }: FolderTabProps) {
             const items = (folderItems as FolderItem[]).filter((i) => i.itemType === type);
             if (items.length === 0) return null;
             const typeConfig = {
-              document: { icon: <FileText className="h-4 w-4" />, label: "Hujjatlar", color: "#1d4ed8" },
-              video: { icon: <Video className="h-4 w-4" />, label: "Videolar", color: "#7c3aed" },
-              test: { icon: <ClipboardList className="h-4 w-4" />, label: "Testlar", color: "#16a34a" },
+              document: { icon: <FileText className="h-4 w-4" />, label: "Hujjatlar", color: "var(--ep-blue)" },
+              video: { icon: <Video className="h-4 w-4" />, label: "Videolar", color: "var(--mod-org)" },
+              test: { icon: <ClipboardList className="h-4 w-4" />, label: "Testlar", color: "var(--ep-green)" },
             }[type];
             return (
               <div key={type}>

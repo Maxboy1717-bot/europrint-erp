@@ -78,7 +78,7 @@ function todayIso(): string {
 function pctColor(pct: number): string {
   if (pct >= 100) return "var(--ep-green)";
   if (pct >= 80) return "var(--ep-blue)";
-  if (pct >= 50) return "var(--ep-amber, #b45309)";
+  if (pct >= 50) return "var(--ep-yellow)";
   return "var(--ep-red)";
 }
 

@@ -50,10 +50,10 @@ export function TreeNodeCard({
           width: CARD_W,
           minHeight: CARD_H,
           background: `linear-gradient(135deg, ${baseColor}f0, ${baseColor}bb)`,
-          border: isDragTarget ? "2px solid #22c55e" : isVacant ? "2px dashed #ef4444" : `2px solid ${baseColor}44`,
-          boxShadow: isDragTarget ? "0 0 0 4px #22c55e55" : `0 4px 16px ${baseColor}44`,
+          border: isDragTarget ? "2px solid var(--ep-green)" : isVacant ? "2px dashed var(--ep-red)" : `2px solid ${baseColor}44`,
+          boxShadow: isDragTarget ? "0 0 0 4px var(--ep-green-soft)" : `0 4px 16px ${baseColor}44`,
           opacity: isDragging ? 0.5 : 1,
-          outline: isDragTarget ? "2px solid #22c55e" : undefined,
+          outline: isDragTarget ? "2px solid var(--ep-green)" : undefined,
         }}
         onClick={() => onClick(node.id)}
         data-testid={`node-${node.id}`}
@@ -181,7 +181,7 @@ export function TreeNodeCard({
                 {(Array.isArray(HRC_INDICATORS) ? HRC_INDICATORS : []).map(key => {
                   const score = node.hrcLatest?.[key] ?? 0;
                   const pct = Math.max(4, (score + 100) / 2);
-                  const colorBar = score >= 30 ? "#22c55e" : score >= -30 ? "#f59e0b" : "#ef4444";
+                  const colorBar = score >= 30 ? "var(--ep-green)" : score >= -30 ? "var(--ep-yellow)" : "var(--ep-red)";
                   const label = score > 0 ? `+${score}` : String(score);
                   return (
                     <div key={key} className="flex flex-col items-center gap-0.5">

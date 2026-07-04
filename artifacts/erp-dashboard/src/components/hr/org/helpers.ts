@@ -10,7 +10,7 @@ import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP, LEVEL_COLORS } from 
 // pastdagi legend va karta-yorlig'i (LEVEL_LABELS) bilan to'liq mos. Ilgari rang node_type'dan
 // kelardi → bir xil darajadagi kartalar har xil rangda chiqardi (egasi 2026-06-25 e'tirozi).
 export function getLevelColor(level: number): string {
-  return LEVEL_COLORS[level] ?? "#4b5563"; // aniqlanmagan daraja → kulrang fallback
+  return LEVEL_COLORS[level] ?? "hsl(var(--muted-foreground))"; // aniqlanmagan daraja → kulrang fallback
 }
 
 export function computeSubtreeWidth(node: OrgNode): number {

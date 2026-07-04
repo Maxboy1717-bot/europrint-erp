@@ -25,37 +25,37 @@ export function StatsTab({ node }: StatsTabProps) {
           icon={<Users className="h-4 w-4" />}
           label={t("togridanXodimlar")}
           value={node.employeeCount}
-          color="#0f766e"
+          color="var(--ep-org-l5)"
         />
         <StatCard
           icon={<Building2 className="h-4 w-4" />}
           label={tLabel('common.ExtraTabs.jamiBolimlarFarzand', "Jami bo'limlar (farzand)")}
           value={node.childCount}
-          color="#1d4ed8"
+          color="var(--ep-org-l1)"
         />
         <StatCard
           icon={<UserX className="h-4 w-4" />}
           label={t("vakantFarzandlar")}
           value={node.vacantChildCount ?? 0}
-          color={(node.vacantChildCount ?? 0) > 0 ? "#dc2626" : "#6b7280"}
+          color={(node.vacantChildCount ?? 0) > 0 ? "var(--ep-red)" : "hsl(var(--muted-foreground))"}
         />
         <StatCard
           icon={<Layers className="h-4 w-4" />}
           label={t("ierarxiyaDarajasi")}
           value={`${node.hierarchyLevel} — ${NODE_TYPE_LABELS[node.nodeType] || node.nodeType}`}
-          color="#7c3aed"
+          color="var(--ep-org-l0)"
         />
         <StatCard
           icon={isVacant ? <UserX className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
           label={t("rahbarHolati")}
           value={isVacant ? "Vakant" : "Tayinlangan"}
-          color={isVacant ? "#dc2626" : "#16a34a"}
+          color={isVacant ? "var(--ep-red)" : "var(--ep-green)"}
         />
         <StatCard
           icon={<TrendingUp className="h-4 w-4" />}
           label={t("faollik")}
           value={node.isActive ? "Faol ✓" : "Nofaol ✗"}
-          color={node.isActive ? "#059669" : "#6b7280"}
+          color={node.isActive ? "var(--ep-green)" : "hsl(var(--muted-foreground))"}
         />
       </div>
       <div className="mt-4">
