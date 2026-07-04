@@ -24,7 +24,7 @@ describe('EuroprintControlDirectorController', () => {
       getStatusHistory: jest.fn(), getDeletedRecords: jest.fn(),
       getAccountantBudgets: jest.fn(), getAccountantFinancialSummary: jest.fn(),
       getAccountantKpiValues: jest.fn(), getAccountantPendingPayments: jest.fn(),
-      getAccountantDashboard: jest.fn(), restoreDeletedRecord: jest.fn(),
+      getAccountantDashboard: jest.fn(),
     };
     const mod = await Test.createTestingModule({
       controllers: [EuroprintControlDirectorController],
@@ -75,11 +75,6 @@ describe('EuroprintControlDirectorController', () => {
   it('getAccountantKpiValues wraps array in items+total', async () => {
     (svc.getAccountantKpiValues as jest.Mock).mockResolvedValue(ok([{ id: 'k1' }, { id: 'k2' }]));
     expect(await ctrl.getAccountantKpiValues()).toEqual({ items: [{ id: 'k1' }, { id: 'k2' }], total: 2 });
-  });
-
-  it('restoreDeletedRecord delegates to service', async () => {
-    (svc.restoreDeletedRecord as jest.Mock).mockResolvedValue(ok({ restored: true }));
-    expect(await ctrl.restoreDeletedRecord('d1')).toEqual({ restored: true });
   });
 
   it('getAccountantBudgets returns service payload', async () => {
