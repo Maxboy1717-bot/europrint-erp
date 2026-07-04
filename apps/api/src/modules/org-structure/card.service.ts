@@ -38,7 +38,15 @@ export class CardService {
     return Ok(r.data);
   }
 
-  create(dto: CardInput): Promise<Result<Row | null>> {
+  /** SB0107: `dto.code` berilmasa, positionName'dan avto-raqamlangan kod ("Operator-01") generatsiya qilinadi. */
+  async create(dto: CardInput): Promise<Result<Row | null>> {
+    if (!dto.code && dto.positionName) {
+      const codeR = await this.repo.nextCodeForName(dto.positionName);
+      if (codeR.ok) {
+        return this.repo.create({ ...dto, code: codeR.data });
+      }
+      this.logger.warn(`create karta: avto-kod generatsiya qilinmadi ("${dto.positionName}") — code NULL qoladi: ${codeR.error.message}`);
+    }
     return this.repo.create(dto);
   }
 

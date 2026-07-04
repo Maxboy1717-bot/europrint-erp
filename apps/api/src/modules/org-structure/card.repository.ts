@@ -113,6 +113,37 @@ export class CardRepository {
     `);
   }
 
+  /**
+   * SB0107 — karta-kod avto-raqamlash (masalan "Operator-01", "Operator-02"). Slug = lotin
+   * harf/raqamga tushirilgan `positionName` (bo'sh joy → '-'). Mavjud kodlar orasidan shu slug
+   * bilan boshlanganlarning eng katta suffiksi topiladi (2 xonali, 99 dan keyin 3 xonaga o'sadi —
+   * cheklov yo'q). Bo'sh positionName → 'karta' fallback (fabrikatsiya emas, neytral slug).
+   * Race-safe emas (oddiy SELECT MAX — bir vaqtda 2 ta bir xil nomli karta yaratilsa duplikat kod
+   * chiqishi mumkin, lekin `code` UNIQUE emas — faqat displey-yorliq, funksional konflikt yo'q).
+   */
+  async nextCodeForName(positionName: string): Promise<Result<string>> {
+    const slug = (positionName || 'karta')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/gi, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'karta';
+    const prefix = slug.charAt(0).toUpperCase() + slug.slice(1);
+    const r = await this.exec(sql`
+      SELECT code FROM org_departments
+      WHERE code ~* ('^' || ${prefix} || '-[0-9]+$')
+      ORDER BY (regexp_match(code, '-([0-9]+)$'))[1]::int DESC
+      LIMIT 1
+    `);
+    if (!r.ok) return Err(r.error);
+    const lastCode = r.data[0]?.['code'] as string | undefined;
+    const lastNum = lastCode ? parseInt(lastCode.slice(lastCode.lastIndexOf('-') + 1), 10) : 0;
+    const nextNum = (Number.isFinite(lastNum) ? lastNum : 0) + 1;
+    const padded = String(nextNum).padStart(2, '0');
+    return Ok(`${prefix}-${padded}`);
+  }
+
   async create(dto: CardInput): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
       INSERT INTO org_departments
