@@ -60,6 +60,7 @@ const iconBgFor = (v: EPKpiCardProps["iconBg"]): string => {
     hr:        "var(--mod-hr)",
     warehouse: "var(--mod-warehouse)",
     fi:        "var(--mod-fi)",
+    org:       "var(--mod-org)",
     primary:   "var(--ep-primary)",
   };
   return map[v] ?? v;

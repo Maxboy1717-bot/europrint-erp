@@ -5,7 +5,7 @@
  * The neighbouring europrint-mockup-theme.css already defines the brand colours
  * and maps them to shadcn HSL tokens. THIS file adds the missing pieces:
  *
- *   1. Module hue tokens (--mod-sd, --mod-pp, --mod-hr, --mod-warehouse, --mod-fi)
+ *   1. Module hue tokens (--mod-sd, --mod-pp, --mod-hr, --mod-warehouse, --mod-fi, --mod-org)
  *   2. Status soft-tint helpers (--ep-green-soft, --ep-yellow-soft, …)
  *   3. The full 4px spacing scale (--space-1 … --space-20)
  *   4. The radius scale (--r-xs … --r-3xl, --r-pill)
@@ -32,6 +32,20 @@
   --mod-warehouse-light: #F8F1DD;
   --mod-fi:              #1A8FAF;
   --mod-fi-light:        #DDEFF4;
+  --mod-org:             #7c3aed;
+  --mod-org-light:       #F1EBFC;
+
+  /* ─── Org hierarchy level tokens (Vysotskiy 7-Otdeleniye, L0=Egasi..L6) ─
+     Used by Org-sxema (OrgStructureHierarchy/OrgNodeDetail) for karta level
+     accents. L0-L4 mirror the previously-hardcoded LEVEL_COLORS in
+     src/components/hr/org/types.ts; L5/L6 extend the same ramp. ──────────── */
+  --ep-org-l0: #7c3aed; /* Egasi     — Binafsha */
+  --ep-org-l1: #1d4ed8; /* Boshqarma — Ko'k */
+  --ep-org-l2: #16a34a; /* Bo'lim    — Yashil */
+  --ep-org-l3: #b45309; /* Sektor    — Sariq */
+  --ep-org-l4: #dc2626; /* Lavozim   — Qizil */
+  --ep-org-l5: #0d9488; /* 5-daraja  — Teal */
+  --ep-org-l6: #be185d; /* 6-daraja  — Pushti */
 
   /* ─── Status soft tints ────────────────────────────────────────────────── */
   --ep-green-soft:  rgba(46, 138, 90, 0.12);

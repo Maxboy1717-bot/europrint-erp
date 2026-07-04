@@ -60,14 +60,17 @@ export const HRC_COLORS: Record<string, string> = {
   J: "#ec4899",
 };
 
+// Org hierarchy level accents — sourced from --ep-org-l0..l6 design tokens
+// (src/erp-modern-ui/ep-motion-helpers.css) so the Org-sxema karta ramp stays
+// centrally themeable instead of hardcoded per-component hex.
 export const LEVEL_COLORS: Record<number, string> = {
-  0: "#7c3aed", // Binafsha — Egasi
-  1: "#1d4ed8", // Ko'k     — Boshqarma
-  2: "#16a34a", // Yashil   — Bo'lim
-  3: "#b45309", // Sariq    — Sektor
-  4: "#dc2626", // Qizil    — Lavozim
-  5: "#0d9488", // Teal     — 5-daraja
-  6: "#be185d", // Pushti   — 6-daraja
+  0: "var(--ep-org-l0)", // Egasi
+  1: "var(--ep-org-l1)", // Boshqarma
+  2: "var(--ep-org-l2)", // Bo'lim
+  3: "var(--ep-org-l3)", // Sektor
+  4: "var(--ep-org-l4)", // Lavozim
+  5: "var(--ep-org-l5)", // 5-daraja
+  6: "var(--ep-org-l6)", // 6-daraja
 };
 
 export const LEVEL_LABELS: Record<number, string> = {

@@ -97,12 +97,14 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   section: "Sektor",
 };
 
+// Sourced from --ep-org-l0..l6 design tokens (src/erp-modern-ui/ep-motion-helpers.css) —
+// keep in sync with the sibling LEVEL_COLORS in components/hr/org/types.ts.
 export const LEVEL_COLORS: Record<number, string> = {
-  0: "#7c3aed",
-  1: "#1d4ed8",
-  2: "#16a34a",
-  3: "#b45309",
-  4: "#dc2626",
+  0: "var(--ep-org-l0)",
+  1: "var(--ep-org-l1)",
+  2: "var(--ep-org-l2)",
+  3: "var(--ep-org-l3)",
+  4: "var(--ep-org-l4)",
 };
 
 /**
