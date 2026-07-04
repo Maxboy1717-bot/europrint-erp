@@ -187,6 +187,27 @@ export class CrmAiExtendedController {
     return unwrapOrThrow(await this.svc.autofill(entityType, safeInt(entityId, 0)));
   }
 
+  // SB0641 fix: ExtendedAIPanel.tsx (real live component) calls these two exact paths —
+  // they didn't exist on the backend (404, wrong error surfaced instead of the honest
+  // 501 chatRespond()/analyzeVoiceCall() already return). Pure routing fix, no new
+  // capability — voice/chat still need a real provider (Q-40 honesty policy).
+  @ApiOperation({ summary: 'Voice call analysis — requires speech-to-text/NLP (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no AI provider configured' })
+  @Post('extended/voice/analyze-call')
+  @UsePipes(new ZodValidationPipe(AutofillDtoSchema))
+  async postAnalyzeVoiceCall(@Body() body: AutofillDto) {
+    return unwrapOrThrow(await this.svc.analyzeVoiceCall(body));
+  }
+
+  @ApiOperation({ summary: 'Chat respond — requires conversational AI backend (not configured)' })
+  @ApiResponse({ status: 501, description: 'Not implemented — no AI provider configured' })
+  @Post('extended/chat/respond')
+  @UsePipes(new ZodValidationPipe(AutofillDtoSchema))
+  async postChatRespond(@Body() body: AutofillDto) {
+    const message = typeof body['message'] === 'string' ? body['message'] : '';
+    return unwrapOrThrow(await this.svc.chatRespond(message, body));
+  }
+
   @ApiOperation({ summary: 'Score lead v2' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
