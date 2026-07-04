@@ -60,7 +60,9 @@ export class PosSyncService {
       const parsed = CreateMovementSchema.safeParse(mv);
       if (!parsed.success) {
         conflicts++;
+        const reason = `Invalid payload: ${parsed.error.message}`;
         this.logger.warn(`[SYNC] Invalid movement payload for clientUuid=${payload.clientUuid}: ${parsed.error.message}`);
+        await this.repo.markConflict(entry.id, reason).catch(() => null);
         continue;
       }
       const result = await this.movementService.createMovement(
@@ -72,7 +74,12 @@ export class PosSyncService {
         synced++;
       } else {
         conflicts++;
-        this.logger.warn(`[SYNC] Conflict for clientUuid=${payload.clientUuid}`);
+        // G2-5 (2026-07-04, SB0558): avval hech narsa yozilmasdi — entry
+        // abadiy PENDING'da qolib ketardi. Endi CONFLICT + sabab saqlanadi
+        // (admin/omborchi "tekshirilsin" ro'yxatida qayta ko'rib chiqadi).
+        const reason = result.error.message ?? 'Movement yaratilmadi';
+        this.logger.warn(`[SYNC] Conflict for clientUuid=${payload.clientUuid}: ${reason}`);
+        await this.repo.markConflict(entry.id, reason).catch(() => null);
       }
     }
     return Ok({ synced, conflicts });
