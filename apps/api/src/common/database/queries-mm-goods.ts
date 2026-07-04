@@ -20,6 +20,7 @@ import {
   mm_vendors_ext, mm_materials_ext, finance_invoices, currencies,
 } from '@shared/db';
 import { eq, and, sql, desc } from 'drizzle-orm';
+import { MM_THREE_WAY_MATCH_TOLERANCE } from '@common/constants/business.constants';
 
 type Row = Record<string, unknown>;
 
@@ -259,7 +260,22 @@ export async function execDeleteGoodsIssue(gid: number): Promise<void> {
   await db.delete(mm_goods_issues_ext).where(eq(mm_goods_issues_ext.id, gid));
 }
 
-export async function queryThreeWayMatch(pid: number): Promise<{ purchase_order: unknown; goods_receipts: Row[]; purchase_invoices: Row[] }> {
+/**
+ * SB0547 3-way match: PO <-> Receipt <-> Invoice.
+ * Beyond returning the three raw documents, this now actually COMPUTES the match —
+ * PO total vs. goods-receipt total (real received value, from receipt items x PO
+ * line unit_price when the receipt itself carries no total) vs. invoice total —
+ * using the same tolerance/variance logic already proven in
+ * drizzle-mm.repo.ts#validateThreeWayMatch (called from GoodsReceiptHandler at
+ * receipt time). That method only returns {matched, difference} for the write path;
+ * this read endpoint mirrors the computation so `GET /mm/three-way-match/:poId`
+ * (used for manual review / HITL) shows real matched/variance state instead of only
+ * raw joined rows the caller had to diff by hand.
+ */
+export async function queryThreeWayMatch(pid: number): Promise<{
+  purchase_order: unknown; goods_receipts: Row[]; purchase_invoices: Row[];
+  match: { matched: boolean; difference: number; tolerance_pct: number; po_total: number; goods_receipt_total: number; invoice_total: number; documents_present: boolean } | null;
+}> {
   const [poRow] = await db.select().from(mm_purchase_orders).where(eq(mm_purchase_orders.id, pid)).limit(1);
   const receiptsRaw = await typedExecute<Row>(sql`SELECT * FROM mm_goods_receipts WHERE purchase_order_id = ${pid}`);
   const receipts = receiptsRaw;
@@ -271,7 +287,61 @@ export async function queryThreeWayMatch(pid: number): Promise<{ purchase_order:
         eq(finance_invoices.vendor_id, poRow.vendor_id),
       ))
     : [];
-  return { purchase_order: poRow ?? null, goods_receipts: receipts, purchase_invoices: invoices as Row[] };
+
+  let match: { matched: boolean; difference: number; tolerance_pct: number; po_total: number; goods_receipt_total: number; invoice_total: number; documents_present: boolean } | null = null;
+  if (poRow) {
+    const amtRows = await typedExecute<{ po_total: number | string | null; gr_total: number | string | null; invoice_total: number | string | null }>(sql`
+      SELECT
+        po.total_amount AS po_total,
+        COALESCE(gr.total_value, gri.computed_value, 0) AS gr_total,
+        COALESCE(inv.invoice_total, 0) AS invoice_total
+      FROM purchase_orders po
+      LEFT JOIN LATERAL (
+        SELECT g.id, g.total_value
+        FROM mm_goods_receipts g
+        WHERE g.purchase_order_id = po.id
+        ORDER BY g.id DESC
+        LIMIT 1
+      ) gr ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT SUM(it.received_qty * COALESCE(poi.unit_price, 0)) AS computed_value
+        FROM mm_goods_receipts g2
+        JOIN mm_goods_receipt_items it ON it.gr_id = g2.id
+        LEFT JOIN purchase_order_items poi
+          ON poi.purchase_order_id = po.id
+         AND poi.raw_material_id = it.raw_material_id
+        WHERE g2.purchase_order_id = po.id
+      ) gri ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT SUM(COALESCE(pi.total_amount, 0)) AS invoice_total
+        FROM finance_invoices pi
+        WHERE pi.invoice_type = 'purchase' AND pi.vendor_id = po.vendor_id
+      ) inv ON TRUE
+      WHERE po.id = ${pid}
+      LIMIT 1
+    `);
+    const amtRow = amtRows[0];
+    if (amtRow) {
+      const poTotal = Number(amtRow.po_total ?? 0);
+      const grTotal = Number(amtRow.gr_total ?? 0);
+      const invoiceTotal = Number(amtRow.invoice_total ?? 0);
+      const amounts = [poTotal, grTotal, invoiceTotal];
+      const difference = Math.max(...amounts) - Math.min(...amounts);
+      const toleranceAbs = Math.max(Math.abs(poTotal) * MM_THREE_WAY_MATCH_TOLERANCE, 1);
+      const documentsPresent = grTotal > 0 && invoiceTotal > 0;
+      match = {
+        matched: documentsPresent && difference <= toleranceAbs,
+        difference: Math.round(difference),
+        tolerance_pct: MM_THREE_WAY_MATCH_TOLERANCE,
+        po_total: poTotal,
+        goods_receipt_total: grTotal,
+        invoice_total: invoiceTotal,
+        documents_present: documentsPresent,
+      };
+    }
+  }
+
+  return { purchase_order: poRow ?? null, goods_receipts: receipts, purchase_invoices: invoices as Row[], match };
 }
 
 export async function queryCurrencies(): Promise<Row[]> {

@@ -77,7 +77,10 @@ export class DrizzleMmGoodsRepository {
     return execDeleteGoodsIssue(gid);
   }
 
-  async threeWayMatch(pid: number): Promise<{ purchase_order: unknown; goods_receipts: Row[]; purchase_invoices: Row[] }> {
+  async threeWayMatch(pid: number): Promise<{
+    purchase_order: unknown; goods_receipts: Row[]; purchase_invoices: Row[];
+    match: { matched: boolean; difference: number; tolerance_pct: number; po_total: number; goods_receipt_total: number; invoice_total: number; documents_present: boolean } | null;
+  }> {
     return queryThreeWayMatch(pid);
   }
 
