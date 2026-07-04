@@ -64,6 +64,48 @@ export class MesProductionSessionsRepository {
     }
   }
 
+  /**
+   * SB0420 — TB-xavfsizlik / smena-tayyorlik chek-list shabloni.
+   * ProductionSession.passChecklist (domain aggregate) session START'ni BLOKLAYDI
+   * agar setup_checklists/checklist_items bo'sh bo'lsa (fail-safe: "xavfsizlik
+   * tekshirilmagan" holati). Shu shablon HAR bir yangi sessiya uchun avtomatik
+   * checklist qatorini yaratadi — shunda operator chek-listni to'ldirib, sessiyani
+   * boshlashi mumkin (aks holda gate hech qachon o'tib bo'lmaydigan holatda qolardi).
+   * Nomlar umumiy TPM/OT&B standartiga asoslangan (fabrikatsiya emas — Q-40), egasi
+   * keyinchalik o'z ro'yxatini kiritishi mumkin (checklist_items jadvali orqali).
+   */
+  private static readonly DEFAULT_CHECKLIST_ITEMS: Array<{ category: string; title: string; description: string; sortOrder: number }> = [
+    { category: 'safety', title: 'Himoya kiyim-kechak (SIZ) kiyilgan', description: "Kaska, qo'lqop, ko'zoynak, maxsus poyabzal", sortOrder: 1 },
+    { category: 'safety', title: "Favqulodda to'xtatish tugmasi tekshirilgan", description: 'E-STOP ishlayotganiga ishonch hosil qilindi', sortOrder: 2 },
+    { category: 'safety', title: 'Mashina atrofi begona narsalardan tozalangan', description: "Yo'l-yo'lakay xavf yo'q", sortOrder: 3 },
+    { category: 'setup', title: 'Barcha materiallar skanerlangan', description: 'Kit-barcode orqali tasdiqlangan', sortOrder: 4 },
+    { category: 'setup', title: 'Jamoa (master) tayinlangan', description: 'Smena uchun mas\'ul operator biriktirilgan', sortOrder: 5 },
+  ];
+
+  private async createDefaultChecklist(sessionId: number): Promise<void> {
+    try {
+      const checklistRows = await runQuery<Row>(sql`
+        INSERT INTO setup_checklists (session_id, status, all_materials_scanned, all_settings_confirmed, all_crew_assigned, test_piece_approved, created_at)
+        VALUES (${sessionId}, 'pending', false, false, false, false, NOW())
+        RETURNING id
+      `);
+      const checklistId = Number((checklistRows.rows[0] as Row | undefined)?.id ?? 0);
+      if (!checklistId) return;
+
+      for (const item of MesProductionSessionsRepository.DEFAULT_CHECKLIST_ITEMS) {
+        await runQuery<Row>(sql`
+          INSERT INTO checklist_items (checklist_id, category, item_type, title, description, is_required, is_completed, sort_order, created_at)
+          VALUES (${checklistId}, ${item.category}, 'boolean', ${item.title}, ${item.description}, true, false, ${item.sortOrder}, NOW())
+        `);
+      }
+    } catch (err) {
+      // Checklist creation is best-effort: a failure here must not block session
+      // creation itself — the START gate will simply stay BLOCKED (fail-safe) and
+      // surface a clear error, which is the same behavior as "not configured yet".
+      this.logger.error(`createDefaultChecklist(session=${sessionId}): ${(err as Error).message}`);
+    }
+  }
+
   async createSession(body: Row): Promise<Row | null> {
     try {
       // Canonical session table = `production_sessions` (mes_production_sessions is a VIEW over it; the
@@ -88,7 +130,11 @@ export class MesProductionSessionsRepository {
           ${workCenterId}, ${operatorId}, ${targetQuantity}, ${notes}, 'pending', NOW(), NOW(), NOW())
         RETURNING *
       `);
-      return (rows.rows[0] ?? null) as Row | null;
+      const created = (rows.rows[0] ?? null) as Row | null;
+      if (created?.id) {
+        await this.createDefaultChecklist(Number(created.id));
+      }
+      return created;
     } catch (err) {
       this.logger.error(`createSession: ${(err as Error).message}`);
       return null;
