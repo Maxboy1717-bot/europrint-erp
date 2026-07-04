@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { EPLoader, EPEmptyState, EPStatusPill } from "@/components/ep";
+import { DefectDropdown } from "@/components/ep/DefectDropdown";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -55,6 +56,8 @@ interface CkpFactRow {
   status?: string | null;
   submitted_at?: string | null;
   notes?: string | null;
+  /** Nuqson/xato sababi — error_catalog.code soft-link (SB0006/SB0024). */
+  error_code?: string | null;
 }
 
 /** Kaskad-agregat javobi (aggregateByDate). */
@@ -81,12 +84,14 @@ interface CkpSlot {
   productId: string;
   /** Haqiqiy qiymat (bo'sh = yubormaydi). */
   actual: string;
+  /** Nuqson/xato sababi — error_catalog.code (SB0006/SB0024). null = sabab ko'rsatilmagan. */
+  errorCode: string | null;
 }
 
 let slotKeySeq = 0;
 function newSlot(): CkpSlot {
   slotKeySeq += 1;
-  return { key: `slot-${slotKeySeq}`, productId: "", actual: "" };
+  return { key: `slot-${slotKeySeq}`, productId: "", actual: "", errorCode: null };
 }
 
 /** Bugungi sana — YYYY-MM-DD (lokal, fakt-kiritish standart sanasi). */
@@ -222,6 +227,9 @@ export function CkpTab({ node }: { node: NodeDetail }) {
   const [notes, setNotes] = useState<string>("");
   // Kamida bitta slot doim bor (eski bir-fakt xatti-harakatiga teng: productId="").
   const [slots, setSlots] = useState<CkpSlot[]>(() => [newSlot()]);
+  // DefectDropdown controlled-id xaritasi (slot.key -> tanlangan error_catalog.id) — UI ko'rsatish uchun
+  // (yuboriladigan qiymat slot.errorCode = tanlangan item.code, id emas).
+  const [slotDefectId, setSlotDefectId] = useState<Record<string, number | null>>({});
 
   const addSlot = () => setSlots((prev) => [...prev, newSlot()]);
   const removeSlot = (key: string) =>
@@ -254,6 +262,7 @@ export function CkpTab({ node }: { node: NodeDetail }) {
           productId: pid,
           actualValue: Number(s.actual),
           source,
+          errorCode: s.errorCode ?? undefined,
           notes: trimmedNotes,
         });
       }
@@ -263,6 +272,7 @@ export function CkpTab({ node }: { node: NodeDetail }) {
       queryClient.invalidateQueries({ queryKey: ["/api/org-structure/ckp/fact"] });
       queryClient.invalidateQueries({ queryKey: ["/api/org-structure/ckp/aggregate"] });
       setSlots([newSlot()]);
+      setSlotDefectId({});
       setNotes("");
       toast({
         title: t("ckpFaktSaqlandi", "ЦКП fakt saqlandi"),
@@ -286,6 +296,24 @@ export function CkpTab({ node }: { node: NodeDetail }) {
     ? computeOverdue(node.ckpReportDeadlineHours, latest.fact_date, latest.submitted_at)
     : null;
 
+  // ── SB0008 — "ЦКП status today" badge: bugun hisobot topshirilganmi/muddat o'tganmi/kutilmoqda. ──
+  // FABRIKATSIYA YO'Q: faqat REAL fact_date=bugun qatorlar + deadlineHours (EGASI-DATA) asosida.
+  const todayFacts = useMemo(() => facts.filter((f) => String(f.fact_date).slice(0, 10) === today), [facts, today]);
+  const todayStatus = useMemo((): { tone: "success" | "warning" | "danger" | "info"; label: string } => {
+    if (todayFacts.length > 0) return { tone: "success", label: t("ckpBugunTopshirildi", "Bugun topshirildi") };
+    const h = node.ckpReportDeadlineHours == null ? null : Number(node.ckpReportDeadlineHours);
+    if (h == null || !Number.isFinite(h) || h <= 0) {
+      return { tone: "info", label: t("ckpBugunKutilmoqda", "Kutilmoqda (deadline qoidasi yo'q)") };
+    }
+    // Kechagi kun deadline'i bugun soat H da tugaydi — o'sha vaqt o'tganmi tekshiramiz.
+    const yesterday = new Date(`${today}T00:00:00.000Z`);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const yFactDate = yesterday.toISOString().slice(0, 10);
+    const overdueYesterday = computeOverdue(h, yFactDate, new Date().toISOString());
+    if (overdueYesterday) return { tone: "danger", label: t("ckpBugunMuddatOtdi", "Muddat o'tdi — hisobot yo'q") };
+    return { tone: "warning", label: t("ckpBugunKutilmoqda2", "Bugungi hisobot kutilmoqda") };
+  }, [todayFacts, node.ckpReportDeadlineHours, today, t]);
+
   return (
     <div className="space-y-4">
       {/* ── ЦКП KASKAD dashboard (vertikal zanjir: Sen | Bo'lim | Otdeleniye) ── ADDITIV (T10-12). ── */}
@@ -294,9 +322,13 @@ export function CkpTab({ node }: { node: NodeDetail }) {
       {/* ── ЦКП norma + bugungi holat ── */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
             <Target className="h-4 w-4 text-[var(--ep-blue)]" />
             {t("ckpNorma", "ЦКП norma va bugungi holat")}
+            {/* SB0008 — bugungi topshirish holati (submitted/kutilmoqda/muddat o'tdi). */}
+            <EPStatusPill tone={todayStatus.tone} className="text-[11px]" data-testid="badge-ckp-today-status">
+              {todayStatus.label}
+            </EPStatusPill>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -459,6 +491,21 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                   >
                     <X className="h-4 w-4" />
                   </Button>
+                  {/* Nuqson/xato sababi (ixtiyoriy) — XATO-KATALOG (SB0006/SB0024). Past bajarish% sababini bog'laydi. */}
+                  <div className="sm:col-span-3">
+                    <Label className="text-[11px] text-muted-foreground">
+                      {t("nuqsonSababi", "Nuqson / sabab (ixtiyoriy)")}
+                    </Label>
+                    <DefectDropdown
+                      cardId={node.id}
+                      value={slotDefectId[slot.key] ?? null}
+                      onSelect={(id, item) => {
+                        setSlotDefectId((prev) => ({ ...prev, [slot.key]: id }));
+                        updateSlot(slot.key, { errorCode: item?.code ?? null });
+                      }}
+                      placeholder={t("nuqsonTanlang", "Nuqson / sabab tanlang")}
+                    />
+                  </div>
                 </div>
               ))}
 
@@ -554,6 +601,7 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                     <th className="py-2 pr-3 font-medium text-right">{t("haqiqiy", "Haqiqiy")}</th>
                     <th className="py-2 pr-3 font-medium text-right">{t("bajarish", "Bajarish%")}</th>
                     <th className="py-2 pr-3 font-medium">{t("manba", "Manba")}</th>
+                    <th className="py-2 pr-3 font-medium">{t("nuqsonSababi", "Nuqson / sabab")}</th>
                     <th className="py-2 font-medium">{t("izoh", "Izoh")}</th>
                   </tr>
                 </thead>
@@ -585,6 +633,15 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                         </td>
                         <td className="py-2 pr-3 text-muted-foreground text-xs">
                           {SOURCE_LABEL[String(f.source ?? "MANUAL")] ?? String(f.source ?? "—")}
+                        </td>
+                        <td className="py-2 pr-3 text-xs">
+                          {f.error_code ? (
+                            <EPStatusPill tone="danger" hideDot className="text-[10px]">
+                              {f.error_code}
+                            </EPStatusPill>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="py-2 text-muted-foreground text-xs max-w-[220px] truncate" title={f.notes ?? undefined}>
                           {f.notes ?? "—"}
