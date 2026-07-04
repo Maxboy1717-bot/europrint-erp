@@ -25,8 +25,13 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
-const PROFIT_TARGET_WEEKLY = 25_000_000;
-const REVENUE_TARGET_WEEKLY = 200_000_000;
+// SB0369 (Hisobot/analitika audit, 2026-07-04): oldin bu 2 target hardcoded edi —
+// endi `kpi_definitions` (owner-configurable, PATCH /director/dashboard/kpi-definitions
+// orqali) dan o'qiladi; kod=PROFIT_WEEKLY/REVENUE_WEEKLY qatorlar hali seed qilinmagan
+// bo'lsa shu default qiymatlarga fallback qiladi (xatti-harakat o'zgarmaydi, faqat
+// endi owner DB orqali sozlashi mumkin — CompanyStateService bilan bir xil naqsh).
+const PROFIT_TARGET_WEEKLY_DEFAULT = 25_000_000;
+const REVENUE_TARGET_WEEKLY_DEFAULT = 200_000_000;
 
 function fmt(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
@@ -100,19 +105,30 @@ export class DirectorStateRepository implements IDirectorStateRepo {
       const weekStart = _time.now();
       weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
       weekStart.setHours(0, 0, 0, 0);
-      const [revRows, ordRows] = await Promise.all([
+      const [revRows, ordRows, targetRows] = await Promise.all([
         // finance_invoices (invoice_type='sales'/'purchase') — kanonik invoice-manba, OWNER QARORI 2026-07-02.
         castTo<RR[]>(exec(sql`SELECT COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) AS revenue, COALESCE(SUM(total_amount) FILTER (WHERE payment_status='paid'), 0) - COALESCE((SELECT SUM(total_amount) FROM finance_invoices WHERE invoice_type = 'purchase' AND created_at >= ${weekStart} AND payment_status IN ('paid','partial')), 0) AS profit FROM finance_invoices WHERE invoice_type = 'sales' AND created_at >= ${weekStart}`)),
         castTo<RR[]>(exec(sql`SELECT COUNT(*) FILTER (WHERE status='completed') AS completed, COUNT(*) AS total FROM sales_orders WHERE created_at >= ${weekStart}`)),
+        // SB0369: owner-configurable weekly targets (kpi_definitions.target_value),
+        // gracefully falls back to the historical defaults when not seeded yet.
+        castTo<RR[]>(exec(sql`SELECT kpi_code, target_value FROM kpi_definitions WHERE kpi_code IN ('PROFIT_WEEKLY', 'REVENUE_WEEKLY') AND is_active = TRUE`)),
       ]);
       const rv = (revRows[0]??{}) as RR; const ov = (ordRows[0]??{}) as RR;
+      const targetByCode = new Map<string, number>();
+      for (const row of targetRows) {
+        const code = String((row as RR).kpi_code ?? '');
+        const val = safeNum((row as RR).target_value ?? '0') || 0;
+        if (code && val > 0) targetByCode.set(code, val);
+      }
+      const profitTarget = targetByCode.get('PROFIT_WEEKLY') ?? PROFIT_TARGET_WEEKLY_DEFAULT;
+      const revenueTarget = targetByCode.get('REVENUE_WEEKLY') ?? REVENUE_TARGET_WEEKLY_DEFAULT;
       const profitActual = safeNum(rv.profit??'0')||0;
       const revenueActual = safeNum(rv.revenue??'0')||0;
-      const profitPct = Math.round((profitActual / PROFIT_TARGET_WEEKLY) * 100);
-      const revenuePct = Math.round((revenueActual / REVENUE_TARGET_WEEKLY) * 100);
+      const profitPct = Math.round((profitActual / profitTarget) * 100);
+      const revenuePct = Math.round((revenueActual / revenueTarget) * 100);
       const completed = parseInt(String(ov.completed??'0'),10)||0;
       const total = parseInt(String(ov.total??'0'),10)||0;
-      return { week_start: weekStart.toISOString().slice(0,10), profit: { actual: profitActual, target: PROFIT_TARGET_WEEKLY, pct: profitPct, deviation_pct: profitPct-100, formatted_actual: fmt(profitActual), formatted_target: fmt(PROFIT_TARGET_WEEKLY) }, revenue: { actual: revenueActual, target: REVENUE_TARGET_WEEKLY, pct: revenuePct, deviation_pct: revenuePct-100, formatted_actual: fmt(revenueActual), formatted_target: fmt(REVENUE_TARGET_WEEKLY) }, orders: { completed, total, completion_pct: total>0?Math.round((completed/total)*100):0 } };
+      return { week_start: weekStart.toISOString().slice(0,10), profit: { actual: profitActual, target: profitTarget, pct: profitPct, deviation_pct: profitPct-100, formatted_actual: fmt(profitActual), formatted_target: fmt(profitTarget) }, revenue: { actual: revenueActual, target: revenueTarget, pct: revenuePct, deviation_pct: revenuePct-100, formatted_actual: fmt(revenueActual), formatted_target: fmt(revenueTarget) }, orders: { completed, total, completion_pct: total>0?Math.round((completed/total)*100):0 } };
     }, 'DB_ERROR');
   }
 
