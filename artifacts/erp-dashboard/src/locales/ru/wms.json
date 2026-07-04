@@ -142,6 +142,7 @@
   "binsZone": "Зона",
   "binsSelectZone": "Выберите зону",
   "binsAllZones": "Все зоны",
+  "binsSearchPlaceholder": "Поиск по коду, ряду, полке...",
   "binsCode": "Код ячейки (необязательно)",
   "binsMaxWeight": "Макс. вес (кг)",
   "binsMaxVolume": "Макс. объём (м³)",

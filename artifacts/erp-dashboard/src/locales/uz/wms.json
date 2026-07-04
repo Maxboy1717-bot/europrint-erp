@@ -142,6 +142,7 @@
   "binsZone": "Zona",
   "binsSelectZone": "Zonani tanlang",
   "binsAllZones": "Barcha zonalar",
+  "binsSearchPlaceholder": "Bin kodi, qator, shelf qidirish...",
   "binsCode": "Bin kodi (ixtiyoriy)",
   "binsMaxWeight": "Max og'irlik (kg)",
   "binsMaxVolume": "Max hajm (m³)",

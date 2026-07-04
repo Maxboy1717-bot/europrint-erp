@@ -142,6 +142,7 @@
   "binsZone": "Зона",
   "binsSelectZone": "Зонани танланг",
   "binsAllZones": "Барча зоналар",
+  "binsSearchPlaceholder": "Бин коди, қатор, шелф қидириш...",
   "binsCode": "Бин коди (ихтиёрий)",
   "binsMaxWeight": "Макс оғирлик (кг)",
   "binsMaxVolume": "Макс ҳажм (м³)",

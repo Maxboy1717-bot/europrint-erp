@@ -88,8 +88,15 @@ export class WmsGatewayBinZoneController {
   async getBins(
     @Query('warehouse_id') warehouseId?: string,
     @Query('zone_id') zoneId?: string,
+    // G2-3 BIN-QIDIRUV (2026-07-04, SB0531/546): to'liq 4-tier ierarxiya
+    // (warehouse->zone->bin row/shelf/level) mavjud edi, lekin erkin-matn
+    // qidiruv YO'Q edi (faqat dropdown filter). bin_code/row/shelf bo'yicha
+    // ILIKE qidiruv qo'shildi — mavjud filter'lar (warehouse_id/zone_id)
+    // bilan BIRGA ishlaydi (Q-46, mavjud oqim o'zgarmaydi).
+    @Query('search') search?: string,
   ) {
     try {
+      const searchTerm = search?.trim() || null;
       const r = await rawSql(sql`
         SELECT b.id::text AS id, b.bin_code AS "binCode", b.row, b.shelf, b.level,
                b.bin_type AS "binType", b.max_weight AS "maxWeight", b.max_volume AS "maxVolume",
@@ -104,6 +111,11 @@ export class WmsGatewayBinZoneController {
         WHERE b.deleted_at IS NULL AND b.is_active = true
           AND (${warehouseId ?? null}::int IS NULL OR b.warehouse_id = ${warehouseId ? parseInt(warehouseId, 10) : null}::int)
           AND (${zoneId ?? null}::int IS NULL OR b.zone_id = ${zoneId ? parseInt(zoneId, 10) : null}::int)
+          AND (${searchTerm}::text IS NULL OR
+               b.bin_code ILIKE '%' || ${searchTerm} || '%' OR
+               b.row      ILIKE '%' || ${searchTerm} || '%' OR
+               b.shelf    ILIKE '%' || ${searchTerm} || '%' OR
+               b.level    ILIKE '%' || ${searchTerm} || '%')
         ORDER BY b.warehouse_id, z.code, b.bin_code LIMIT 500
       `);
       return (r as { rows?: Record<string, unknown>[] }).rows ?? [];

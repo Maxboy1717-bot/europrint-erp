@@ -6,10 +6,11 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Grid3X3, Warehouse, Layers, Plus } from "lucide-react";
+import { Grid3X3, Warehouse, Layers, Plus, Search } from "lucide-react";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -248,13 +249,18 @@ export default function WarehouseBinsPage() {
   const [filterWarehouse, setFilterWarehouse] = useState("");
   const [filterZone, setFilterZone] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  // G2-3 BIN-QIDIRUV (2026-07-04, SB0531/546): bin_code/row/shelf/level bo'yicha
+  // erkin-matn qidiruv — dropdown filter'lar bilan BIRGA ishlaydi.
+  const [searchInput, setSearchInput] = useState("");
+  const search = useDebounce(searchInput, 300);
 
   const binsQ = useQuery<WarehouseBin[]>({
-    queryKey: ["/api/warehouse/bins", filterWarehouse, filterZone],
+    queryKey: ["/api/warehouse/bins", filterWarehouse, filterZone, search],
     queryFn: () => {
       const params = new URLSearchParams();
       if (filterWarehouse) params.set("warehouse_id", filterWarehouse);
       if (filterZone)      params.set("zone_id", filterZone);
+      if (search.trim())   params.set("search", search.trim());
       const qs = params.toString();
       return apiRequest("GET", `/api/warehouse/bins${qs ? "?" + qs : ""}`);
     },
@@ -314,6 +320,17 @@ export default function WarehouseBinsPage() {
 
       {/* Filters */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ position: "relative", width: 240 }}>
+          <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--ep-subtle)" }} />
+          <Input
+            data-testid="input-bin-search"
+            placeholder={t("binsSearchPlaceholder")}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            style={{ paddingLeft: 30 }}
+          />
+        </div>
+
         <Select value={filterWarehouse || "__all__"} onValueChange={v => { setFilterWarehouse(v === "__all__" ? "" : v); setFilterZone(""); }}>
           <SelectTrigger style={{ width: 220 }} data-testid="filter-warehouse">
             <SelectValue placeholder={t("allWarehouses")} />
@@ -338,11 +355,11 @@ export default function WarehouseBinsPage() {
           </SelectContent>
         </Select>
 
-        {(filterWarehouse || filterZone) && (
+        {(filterWarehouse || filterZone || searchInput) && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setFilterWarehouse(""); setFilterZone(""); }}
+            onClick={() => { setFilterWarehouse(""); setFilterZone(""); setSearchInput(""); }}
             data-testid="btn-clear-filters"
           >
             {t("clear")}
