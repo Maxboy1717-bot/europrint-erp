@@ -11,6 +11,7 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Roles } from '@common/decorators/roles.decorator';
 import { OrderStatusService, STATUS_TRANSITIONS } from './order-status.service';
+import { ExceptionLogService } from './exception-log.service';
 import { CompatBodyDto } from '../compatibility/dto/compat-body.dto';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
@@ -31,7 +32,10 @@ export class OrderStatusController {
    */
   private readonly statusLogAcl = new OrderStatusLogAclTranslator();
 
-  constructor(private readonly svc: OrderStatusService) {}
+  constructor(
+    private readonly svc: OrderStatusService,
+    private readonly exceptionLogSvc: ExceptionLogService,
+  ) {}
 
   @Get('chain')
   getStatusChain() {
@@ -117,7 +121,7 @@ export class OrderStatusController {
   }
 
   @Get(':orderId/machine-breakdown')
-  getMachineBreakdown(@Param('orderId') orderId: string) {
-    return { orderId, breakdown: null, machineId: null };
+  async getMachineBreakdown(@Param('orderId') orderId: string) {
+    return this.exceptionLogSvc.getMachineBreakdown(orderId);
   }
 }

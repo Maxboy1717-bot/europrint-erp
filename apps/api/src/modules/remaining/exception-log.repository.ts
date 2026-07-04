@@ -79,9 +79,32 @@ export class ExceptionLogRepository {
   }
 
   async getOne(id: string): Promise<Result<Row | null>>  {
-  try {  
+  try {
       const r = await exec(sql`SELECT * FROM exception_logs WHERE id = ${id} LIMIT 1`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  /**
+   * Q24 fix: latest MES machine_breakdown exception_logs row for a given order.
+   * related_record_id is compared as text since callers pass the sales-order id
+   * as a route-param string (avoids 22P02 on non-numeric orderId values).
+   */
+  async getMachineBreakdown(orderId: string): Promise<Result<Row | null>>  {
+  try {
+      const r = await exec(sql`
+        SELECT *
+        FROM exception_logs
+        WHERE module = 'MES'
+          AND exception_type = 'machine_breakdown'
+          AND related_record_id::text = ${orderId}
+        ORDER BY created_at DESC
+        LIMIT 1
+      `);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  } catch (_e) {
     return Err(String(_e));
   }
 

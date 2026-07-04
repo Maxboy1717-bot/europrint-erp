@@ -122,6 +122,23 @@ export class ExceptionLogService {
     return this.insertLog({ module: 'WMS', exceptionType: 'material_not_returned', status: 'pending', relatedRecordId: body['orderId'], description: body['description'], requestedBy: userId });
   }
 
+  /**
+   * Q24 fix: was a static `{ breakdown: null, machineId: null }` payload
+   * regardless of orderId. Now looks up the latest MES machine_breakdown
+   * exception_logs row actually tied to this order.
+   *
+   * NOTE: the write path (machineBreakdown() above) never captures a
+   * distinct machine identifier (no machineId field is persisted anywhere
+   * in exception_logs — related_record_id holds the orderId itself), so
+   * machineId stays null here rather than fabricating a value from an
+   * unrelated column.
+   */
+  async getMachineBreakdown(orderId: string) {
+    const row = await this.repo.getMachineBreakdown(orderId);
+    if (!row.ok || !row.data) return { orderId, breakdown: null, machineId: null };
+    return { orderId, breakdown: row.data, machineId: null };
+  }
+
   async certExpiryCheck() {
     try {
       const expiring = await this.repo.getExpiringCerts();
