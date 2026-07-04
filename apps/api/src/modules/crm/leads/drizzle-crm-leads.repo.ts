@@ -12,6 +12,7 @@ import { eq, and, isNull, count, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { toBitrixStatusId } from './lead-status-id.util';
 import { ICrmLeadsRepository } from './i-crm-leads.repo';
+import { CrmLeadScoringService } from '../domain/services/crm-lead-scoring.service';
 
 type Row = Record<string, unknown>;
 
@@ -19,16 +20,39 @@ type Row = Record<string, unknown>;
  * Map actual crm_leads DB columns → Bitrix24-style camelCase expected by the frontend.
  * Actual DB columns: contact_name, contact_phone, contact_email, status, source,
  *   customer_id, manager_id, created_at, deleted_at, notes
+ *
+ * SB0640/SB0652/SB0673 fix: `ai_score` used to be hardcoded `null` (LeadScoreBar.tsx
+ * had no data to render). Now computed live via CrmLeadScoringService (EP-CRM-012
+ * 5-criterion formula: budget/engagement/recency/source/fit) from real columns —
+ * no fabricated data, score is 0 on any dimension where the underlying field is null.
  */
-function mapLeadRow(r: Row): Row {
+function mapLeadRow(r: Row, scoringService: CrmLeadScoringService): Row {
   const contactName = String(r['contact_name'] ?? '');
   const title = contactName || 'Nomsiz lid';
+  const sourceId = (r['source_description'] ?? r['source_id'] ?? null) as string | null;
+  const budgetUzs = Number(r['budget'] ?? r['opportunity_amount'] ?? r['estimated_volume'] ?? 0) || null;
+  const lastActivityAt = (r['last_activity_at'] ?? null) as string | Date | null;
+  const daysSinceLastActivity = lastActivityAt
+    ? Math.max(0, Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 86_400_000))
+    : null;
+  const scoreResult = scoringService.score({
+    budgetUzs,
+    activityCount: null, // activity-count join not available at this call site (sd_lead_activities is currently empty for all leads)
+    daysSinceLastActivity,
+    source: sourceId,
+    hasCompany: Boolean(r['company_title']),
+    hasEmail: Boolean(r['contact_email']),
+    hasPhone: Boolean(r['contact_phone']),
+    hasWebsite: Boolean(r['websites']),
+    employeeCount: null,
+  });
+  const aiScore = scoreResult.ok ? scoreResult.data.score : null;
   return {
     id:           r['id'],
     title,
     name:         contactName || null,
     lastName:     null,
-    companyTitle: null,
+    companyTitle: r['company_title'] ?? null,
     // Live crm_leads columns: status_id/status_description, source_id, assigned_to,
     // date_create, comments (NOT status/source/manager_id/created_at/notes/customer_id).
     // statusId is what the kanban board groups cards by → expose the FINE stage from
@@ -42,25 +66,27 @@ function mapLeadRow(r: Row): Row {
     status:       r['status_description'] ? String(r['status_description']) : (r['status_id'] ? String(r['status_id']).toLowerCase() : 'new'),
     phones:       r['contact_phone'] ? [{ value: r['contact_phone'], type: 'WORK' }] : [],
     emails:       r['contact_email'] ? [{ value: r['contact_email'], type: 'WORK' }] : [],
-    sourceId:     r['source_description'] ?? r['source_id'] ?? null,
+    sourceId,
     assignedById: r['assigned_to'] ? String(r['assigned_to']) : null,
     dateCreate:   r['date_create'] ?? new Date().toISOString(),
-    opportunity:  0,
+    opportunity:  budgetUzs ?? 0,
     notes:        r['comments'] ?? null,
-    ai_score:     null,
+    ai_score:     aiScore,
     companyId:    null,
   };
 }
 
 @Injectable()
 export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
+  constructor(private readonly scoringService: CrmLeadScoringService) {}
+
   async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
     try {
       const [countResult, rows] = await Promise.all([
         db.select({ count: count() }).from(crmLeads).where(isNull(crmLeads.deleted_at)).limit(1).offset(0),
         db.select().from(crmLeads).where(isNull(crmLeads.deleted_at)).orderBy(desc(crmLeads.created_at)).limit(limit).offset(offset),
       ]);
-      return Ok({ data: (rows as Row[]).map(mapLeadRow), count: Number(countResult[0]?.count || 0) });
+      return Ok({ data: (rows as Row[]).map(r => mapLeadRow(r, this.scoringService)), count: Number(countResult[0]?.count || 0) });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Lidlar topilmadi'); }
   }
 
@@ -68,7 +94,7 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
     try {
       const rows = await db.select().from(crmLeads).where(and(eq(crmLeads.id, id), isNull(crmLeads.deleted_at))).limit(1).offset(0);
       const row = (rows as Row[])[0] || null;
-      return Ok(row ? mapLeadRow(row) : null);
+      return Ok(row ? mapLeadRow(row, this.scoringService) : null);
     } catch (e: unknown) { return Err((e as Error)?.message || `Lid #${id} topilmadi`); }
   }
 
@@ -112,7 +138,7 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
         manager_id:         Number(dto.assignedById ?? dto.assignedTo ?? createdBy) || null,                    // → assigned_to
       };
       const result = await db.insert(crmLeads).values(row as unknown as typeof crmLeads.$inferInsert).returning();
-      return Ok(mapLeadRow(result[0] as Row));
+      return Ok(mapLeadRow(result[0] as Row, this.scoringService));
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }
 
@@ -146,7 +172,7 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       if (dto.assignedById != null || dto.assignedTo != null) setObj.manager_id = Number(dto.assignedById ?? dto.assignedTo) || null;
       setObj.updated_at = _time.now();
       const result = await db.update(crmLeads).set(setObj as Partial<typeof crmLeads.$inferInsert>).where(eq(crmLeads.id, id)).returning();
-      return Ok(result[0] ? mapLeadRow(result[0] as Row) : {} as Row);
+      return Ok(result[0] ? mapLeadRow(result[0] as Row, this.scoringService) : {} as Row);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
   }
 
