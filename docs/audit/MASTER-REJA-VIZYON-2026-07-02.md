@@ -500,4 +500,18 @@ Barcha commitlar: `87f7e883`, `1462bef9`, `2ec13106`, `662d5468`, `dd8150fc`, `9
 `81fbb23e`, `c8b35413`, `39b83eae`, `6d81de62`, `cd7430a7`, `fc0ecf3b`, `13d0ddad`,
 `4b75f8e8`, `44038eb9`, `5c62d378` (Q9-follow-up), `56467085` (Q13-follow-up).
 
+## 8.10 Full Residual Fix Loop — Governance-Audit + Q1-Q34 verification (2026-07-04, QUEUED)
+
+> Egasi tomonidan qo'shilgan navbat: `docs/audit/RESIDUAL-FIX-LOOP-2026-07-04.md`. 16-tamoyilli
+> Extended Governance Check'ning eng o'tkir topilmalari + Q1-Q34 loopining ikkita mustaqil
+> tekshiruvida topilgan qoldiq nuqsonlar (jumladan Q18/Q2 o'chirishlarining o'zi keltirib
+> chiqargan 2 ta jonli regressiya — R1/R2) birlashtirilgan.
+
+**Status: QUEUED, hali BOSHLANMAGAN.** Ijro modeli §8.9/§8.7-8.8'dagi uzluksiz (to'xtamasdan)
+loopdan ATAYLAB FARQ QILADI — bu yerda HAR BAND alohida: PLAN (tahrirsiz) → egasi tasdig'i →
+EXECUTE → tekshiruv → alohida commit → o'zbek hisobot → TO'XTA, keyingi bandga o'tish uchun
+yana tasdiq kerak. Tartib: G1(xavfsizlik)→G2(golden-thread green-lie)→R1→R2→R3→R4→R5→R6→
+G3(indeks)→R7(faqat ma'lumot-ro'yxati, kod yo'q)→R8(faqat qaror-so'rov, kod yo'q)→G4. G2'dan
+keyin va R6'dan keyin qisqa holat-jadvali talab qilinadi.
+
 > Bu hujjat = 2026-07-02 holat-suratining yagona manbasi. Yangilanish keyingi katta o'lchovda (Q-25).
