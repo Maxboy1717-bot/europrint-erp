@@ -413,6 +413,11 @@ export const productionOrders = pgTable("production_orders", {
   isFrozen: boolean("is_frozen").notNull().default(false),
   frozenUntil: timestamp("frozen_until"),
   workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
+  // SB0233/SB0234/SB0258 (06-PP audit): karta-markazli ERP-ORG — buyurtma qaysi
+  // org-karta (sex/bo'lim)ga tegishli ekanini bildiradi. Naqsh work_centers.orgDepartmentId
+  // bilan bir xil (org_departments = kanonik KARTA jadvali). NULLABLE: create-vaqtida
+  // card hali tanlanmasligi mumkin (egasi-DATA — avtomatik karta-tayinlash qoidasi yo'q hali).
+  orgDepartmentId: integer("org_department_id"),
   productionType: varchar("production_type", { length: 30 }).default("other"),
   defectiveQty: numericMoney("defective_qty").notNull().default(0),
   plannedCost: numericMoney("planned_cost"),
@@ -436,6 +441,7 @@ export const productionOrders = pgTable("production_orders", {
 }, (t) => [
   index("idx_production_orders_product_id").on(t.productId),
   index("idx_production_orders_work_center_id").on(t.workCenterId),
+  index("idx_production_orders_org_department_id").on(t.orgDepartmentId),
   index("idx_production_orders_status").on(t.status),
   index("idx_production_orders_priority").on(t.priority),
   index("idx_production_orders_urgent").on(t.isUrgent),

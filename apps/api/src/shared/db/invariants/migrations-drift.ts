@@ -4469,4 +4469,28 @@ $fn$ LANGUAGE plpgsql` },
   { name: 'org_departments.ckp_report_deadline_hours SET DEFAULT 16', sql: `ALTER TABLE org_departments ALTER COLUMN ckp_report_deadline_hours SET DEFAULT 16` },
   { name: 'org_departments.ckp_report_deadline_hours backfill 16 (NULL only)', sql: `UPDATE org_departments SET ckp_report_deadline_hours = 16 WHERE ckp_report_deadline_hours IS NULL` },
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 06-PP audit (SB0233/SB0234/SB0258, 2026-07-04) — production_orders karta-markazli
+  // ERP-ORG bilan bog'lanishi. APPROVED: additiv, egasi-vakolat (Q-34 toza-fix — jadval
+  // aniq/naqsh mavjud: work_centers.org_department_id bilan BIR XIL naqsh, faqat naqsh
+  // takrorlanmoqda). NULLABLE: hozircha avtomatik karta-tayinlash qoidasi yo'q
+  // (egasi-DATA) — create-vaqtida qiymat berilmasa NULL qoladi, hech narsa
+  // fabrikatsiya qilinmaydi (Q-40). Dry-run (rollback-tx) tasdiqlandi: valid FK insert OK,
+  // bad FK (999999) → 23503 RAD.
+  { name: 'SB0233 production_orders.org_department_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS production_orders ADD COLUMN IF NOT EXISTS org_department_id INTEGER` },
+  { name: 'SB0233 production_orders.org_department_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_production_orders_org_dept') THEN ALTER TABLE production_orders ADD CONSTRAINT fk_production_orders_org_dept FOREIGN KEY (org_department_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'SB0233 production_orders.org_department_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_production_orders_org_department_id ON production_orders (org_department_id)` },
+
+  // SB0241/SB0271/SB0261/SB0262 (06-PP audit) — production_orders_status_chk CHECK
+  // constraint ALLAQACHON Drizzle sxemasida e'lon qilingan (lib/db/src/schema/pp/pp-production.ts,
+  // EP-PP-082 9-status FSM) va aggregate/servis darajasida to'liq amalga oshirilgan
+  // (ProductionOrder aggregate PO_STATUS_TRANSITIONS + ProductionOrdersService.updateStatus
+  // choke-point) — LEKIN jonli DB'da constraint hech qachon qo'llanilmagan edi (drift).
+  // Bu yopiq FSM'ni DB darajasida ham qotiradi (defence-in-depth), aggregate bilan bir xil
+  // superset-qiymatlar. Jonli 7/7 qator (created/pending/planned/confirmed/released/
+  // released_to_production/in_progress/in_qc/qc_hold/completed/closed/cancelled/paused
+  // supersetiga) TEKSHIRILDI — barchasi mos (0 regressiya). Dry-run (rollback-tx): bogus
+  // status → 23514 RAD, live qatorlar hammasi OK.
+  { name: 'SB0241 production_orders_status_chk CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='production_orders_status_chk') THEN ALTER TABLE production_orders ADD CONSTRAINT production_orders_status_chk CHECK (status IN ('created','pending','planned','confirmed','released','released_to_production','in_progress','in_qc','qc_hold','completed','closed','cancelled','paused')); END IF; END $$` },
+
 ];
