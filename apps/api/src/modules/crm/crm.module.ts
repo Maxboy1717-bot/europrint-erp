@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TelegramModule } from '../../telegram/telegram.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { CrmLeadsController } from './presentation/crm-leads.controller';
 import { CrmLeadsOpsController } from './presentation/crm-leads-ops.controller';
 import { CrmDealsController } from './presentation/crm-deals.controller';
@@ -140,7 +141,7 @@ const repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot(), ConfigModule, TelegramModule],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), ConfigModule, TelegramModule, NotificationsModule],
   controllers: [
     CrmLeadsController,
     CrmLeadsOpsController,
