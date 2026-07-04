@@ -69,11 +69,18 @@ export class LmsMiscRepository {
     } catch (error) { this.logger.error(`findAchievements: ${(error as Error).message}`); return Err((error as Error).message); }
   }
 
+  // SB0122/SB0139 (T11-03): findMentors previously referenced m.is_active / m.specialization / m.rating —
+  // NONE of these columns exist on `mentors` (real cols: id,name,bio,source,achievements,experience,
+  // expertise,user_id,created_at,updated_at,deleted_at,deleted_by,card_id) -> live 42703 crash on every
+  // call (GET /mentors used by AddCourseDialog/CourseDetail/MentorsPage). Fixed to real schema: soft-delete
+  // filter via deleted_at IS NULL, `expertise` used as the closest existing analogue to "specialization"
+  // (ILIKE match, no dedicated column), and ORDER BY name (no rating column — genuine gap, tracked
+  // separately; fabricating a rating column/value is prohibited, Q-40).
   async findMentors(specialization?: string): Promise<Result<object[]>> {
     try {
       const rows = specialization
-        ? await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.is_active = true AND m.specialization = ${specialization} ORDER BY m.rating DESC NULLS LAST`)
-        : await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.is_active = true ORDER BY m.rating DESC NULLS LAST`);
+        ? await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.deleted_at IS NULL AND m.expertise ILIKE ${'%' + specialization + '%'} ORDER BY m.name ASC NULLS LAST`)
+        : await exec(sql`SELECT m.*, COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS full_name FROM mentors m LEFT JOIN employees e ON e.id = m.user_id WHERE m.deleted_at IS NULL ORDER BY m.name ASC NULLS LAST`);
       return Ok(rows);
     } catch (error) { this.logger.error(`findMentors: ${(error as Error).message}`); return Err((error as Error).message); }
   }
