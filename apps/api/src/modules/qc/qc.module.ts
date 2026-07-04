@@ -66,6 +66,8 @@ import { QcDpmoController } from './presentation/qc-dpmo.controller';
 import { DpmoService } from './domain/services/dpmo.service';
 import { QcAqlService } from './domain/services/qc-aql.service';
 import { GradePricingService } from './domain/services/grade-pricing.service';
+import { InstrumentCalibrationController } from './presentation/instrument-calibration.controller';
+import { InstrumentCalibrationRepository } from './infrastructure/repositories/instrument-calibration.repository';
 
 const commandHandlers = [
   SubmitInspectionHandler,
@@ -112,6 +114,7 @@ const repositories = [
     QcParametersController,
     PrintController,
     QcDpmoController,
+    InstrumentCalibrationController,
   ],
   providers: [
     ...commandHandlers,
@@ -147,6 +150,7 @@ const repositories = [
     DpmoService,
     QcAqlService,
     GradePricingService,
+    InstrumentCalibrationRepository,
   ],
   exports: [
     QC_DEFECT_REPO, QC_REPOSITORY_PROVIDER, DEFECTS_REPO, DefectsService,
