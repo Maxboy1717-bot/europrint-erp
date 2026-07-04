@@ -19,11 +19,33 @@ export class FacilitiesAgentService {
     private readonly audit: AgentAuditService,
   ) {}
 
-  /** Kommunal to'lovlar trend */
+  /** Kommunal to'lovlar trend — real ma'lumot mro_utility_readings jadvalidan */
   async trackUtilityBills(month: string): Promise<{ electricity: number; gas: number; water: number; deltaPct: number }> {
     return this.audit.wrap({ agentName: this.AGENT, action: 'utility_bills' }, async () => {
-      // Placeholder — real schema'da fi_utility_bills jadval bo'lishi mumkin
-      return { electricity: 12_000_000, gas: 4_500_000, water: 1_200_000, deltaPct: 8.5 };
+      const r = await runQuery<{ utility_type: string; month_total: string; trend_percent: string }>(sql`
+        SELECT utility_type, month_total::text, trend_percent::text
+        FROM mro_utility_readings
+        WHERE ${month ? sql`reading_date LIKE ${month + '%'}` : sql`TRUE`}
+        ORDER BY reading_date DESC
+      `).catch(() => ({ rows: [] }));
+
+      const byType = new Map<string, { total: number; trend: number }>();
+      for (const row of r.rows) {
+        const type = row.utility_type?.toLowerCase() ?? '';
+        if (!byType.has(type)) {
+          byType.set(type, { total: Number(row.month_total ?? 0), trend: Number(row.trend_percent ?? 0) });
+        }
+      }
+
+      const trends = Array.from(byType.values()).map(v => v.trend);
+      const deltaPct = trends.length > 0 ? trends.reduce((a, b) => a + b, 0) / trends.length : 0;
+
+      return {
+        electricity: byType.get('electricity')?.total ?? 0,
+        gas: byType.get('gas')?.total ?? 0,
+        water: byType.get('water')?.total ?? 0,
+        deltaPct,
+      };
     });
   }
 
@@ -36,9 +58,15 @@ export class FacilitiesAgentService {
     return r.rows.map(x => ({ machineId: x.id, nextMaintenanceAt: x.next_at, daysLeft: Math.floor(Number(x.days)) }));
   }
 
-  /** Ofis materiallar holati (placeholder) */
+  /** Ofis materiallar holati — real ma'lumot mro_items jadvalidan */
   async monitorOfficeSupplies(): Promise<{ low: number; out: number }> {
-    return { low: 3, out: 1 };
+    const r = await runQuery<{ low: string; out: string }>(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE current_stock > 0 AND current_stock <= min_stock) AS low,
+        COUNT(*) FILTER (WHERE current_stock <= 0) AS out
+      FROM mro_items
+    `).catch(() => ({ rows: [{ low: '0', out: '0' }] }));
+    return { low: Number(r.rows[0]?.low ?? 0), out: Number(r.rows[0]?.out ?? 0) };
   }
 
   @Cron('0 7 * * 1', { timeZone: 'Asia/Tashkent' })   // Dushanba 07:00
