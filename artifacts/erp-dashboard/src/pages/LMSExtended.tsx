@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { BookOpen, Award, Plus, Play, RefreshCw, ClipboardList, Zap } from "lucide-react";
+import { BookOpen, Award, Plus, Play, RefreshCw, ClipboardList, Zap, Send, CheckCircle2 } from "lucide-react";
 import type { LMSCourse, LMSTest } from "./lms-extended/types";
 import { URL_TAB_MAP, tabMeta } from "./lms-extended/types";
 import { MicroLearningTab } from "./lms-extended/MicroLearningTab";
@@ -29,6 +29,7 @@ import { KnowledgeBaseTab } from "./lms-extended/KnowledgeBaseTab";
 import { GamificationTab } from "./lms-extended/GamificationTab";
 import { EPPageHeader } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
+import { useAuth } from "@/hooks/useAuth";
 
 const CourseSchema = z.object({
   title: z.string().min(1),
@@ -47,6 +48,9 @@ const TestSchema = z.object({
 
 export default function LMSExtended() {
   const { t } = useTranslation("common");
+  const { hasRole } = useAuth();
+  const canSubmitCourse = hasRole('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN');
+  const canApproveCourse = hasRole('HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN');
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(URL_TAB_MAP[location] || "author");
   useEffect(() => { const tab = URL_TAB_MAP[location]; if (tab) setActiveTab(tab); }, [location]);
@@ -71,6 +75,18 @@ export default function LMSExtended() {
     mutationFn: (data: Record<string, unknown>) => apiRequest("POST", "/api/tests", { ...data, passingScore: Number(data.passingScore), timeLimit: Number(data.timeLimit) }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/tests"] }); setShowTestDialog(false); testForm.reset(); toast({ title: "Test yaratildi" }); },
     onError: () => toast({ title: "Xatolik yuz berdi", variant: "destructive" }),
+  });
+
+  const submitCourseForReview = useMutation({
+    mutationFn: (courseId: number | string) => apiRequest("POST", `/api/lms/courses/${courseId}/submit`, {}),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/courses"] }); toast({ title: "Kurs ko'rib chiqishga yuborildi" }); },
+    onError: (e: Error) => toast({ title: "Xatolik", description: e?.message, variant: "destructive" }),
+  });
+
+  const approveCourseMutation = useMutation({
+    mutationFn: (courseId: number | string) => apiRequest("POST", `/api/lms/courses/${courseId}/approve`, {}),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/courses"] }); toast({ title: "Kurs tasdiqlandi" }); },
+    onError: (e: Error) => toast({ title: "Xatolik", description: e?.message, variant: "destructive" }),
   });
 
   const publishedCourses = (Array.isArray(courses) ? courses : []).filter((c) => c.status === "published" || c.isPublished);
@@ -128,20 +144,54 @@ export default function LMSExtended() {
               <CardContent className="p-0">
                 <div className="ep-table-scroll"><Table>
                   <TableHeader className="sticky top-0 z-10 bg-card"><TableRow className="border-none hover:bg-transparent">
-                    {(["Kurs nomi","Daraja","Davomiylik","Holati","Amallar"]).map((h,i) => <TableHead key={h} className={`bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 ${i===0?"rounded-l-lg":""} ${i===4?"text-right rounded-r-lg":""}`}>{h}</TableHead>)}
+                    {(["Kurs nomi","Daraja","Davomiylik","Holati","Tasdiq","Amallar"]).map((h,i) => <TableHead key={h} className={`bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 ${i===0?"rounded-l-lg":""} ${i===5?"text-right rounded-r-lg":""}`}>{h}</TableHead>)}
                   </TableRow></TableHeader>
                   <TableBody>
-                    {coursesLoading ? <TableRow className="border-none"><TableCell colSpan={5} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
-                    : courses.length === 0 ? <TableRow className="border-none"><TableCell colSpan={5} className="text-center py-8 text-[13px] text-muted-foreground"><BookOpen className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("kurslarYoq")}</TableCell></TableRow>
-                    : (Array.isArray(courses) ? courses : []).slice(0, 15).map((c) => (
+                    {coursesLoading ? <TableRow className="border-none"><TableCell colSpan={6} className="text-center py-6 text-[13px] text-muted-foreground">{t("Yuklanmoqda...")}</TableCell></TableRow>
+                    : courses.length === 0 ? <TableRow className="border-none"><TableCell colSpan={6} className="text-center py-8 text-[13px] text-muted-foreground"><BookOpen className="h-8 w-8 mx-auto mb-2 opacity-30" />{t("kurslarYoq")}</TableCell></TableRow>
+                    : (Array.isArray(courses) ? courses : []).slice(0, 15).map((c) => {
+                      const approvalStatus = c.approval_status ?? 'draft';
+                      return (
                       <TableRow key={c.id} data-testid={`row-course-${c.id}`} className="border-none hover:bg-muted/40 transition-colors">
                         <TableCell className="font-medium px-6 text-foreground">{c.title || c.name}</TableCell>
                         <TableCell className="px-6"><Badge variant="outline" className="border-border text-foreground bg-muted/60 rounded-full px-2 py-0.5 text-xs font-medium">{c.level === "beginner" ? "Boshlang'ich" : c.level === "intermediate" ? "O'rta" : c.level === "advanced" ? "Yuqori" : c.level || "—"}</Badge></TableCell>
                         <TableCell className="text-muted-foreground px-6">{c.duration ? `${c.duration} soat` : "—"}</TableCell>
                         <TableCell className="px-6"><Badge className={c.status === "published" || c.isPublished ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none" : "bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"}>{c.status === "published" || c.isPublished ? "Nashr" : "Qoralama"}</Badge></TableCell>
-                        <TableCell className="text-right px-6"><Button size="icon" variant="ghost" data-testid={`button-play-${c.id}`} className="hover:bg-muted text-foreground"><Play className="h-3.5 w-3.5" /></Button></TableCell>
+                        <TableCell className="px-6" data-testid={`badge-approval-${c.id}`}>
+                          <Badge className={
+                            approvalStatus === "approved" ? "bg-green-100 text-green-800 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"
+                            : approvalStatus === "review" ? "bg-yellow-100 text-yellow-800 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"
+                            : "bg-muted/60 text-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-none border-none"
+                          }>
+                            {approvalStatus === "approved" ? "Tasdiqlangan" : approvalStatus === "review" ? "Ko'rib chiqilmoqda" : "Qoralama"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right px-6">
+                          <div className="flex items-center justify-end gap-1">
+                            {approvalStatus === "draft" && canSubmitCourse && (
+                              <Button
+                                size="sm" variant="outline"
+                                data-testid={`button-submit-course-${c.id}`}
+                                disabled={submitCourseForReview.isPending}
+                                onClick={() => submitCourseForReview.mutate(c.id)}
+                                className="bg-muted/60 text-foreground hover:bg-muted border-none rounded-lg px-3 text-xs font-medium"
+                              ><Send className="h-3.5 w-3.5 mr-1.5" />Yuborish</Button>
+                            )}
+                            {approvalStatus === "review" && canApproveCourse && (
+                              <Button
+                                size="sm"
+                                data-testid={`button-approve-course-${c.id}`}
+                                disabled={approveCourseMutation.isPending}
+                                onClick={() => approveCourseMutation.mutate(c.id)}
+                                className="bg-primary text-white rounded-lg px-3 text-xs font-semibold shadow-none"
+                              ><CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />Tasdiqlash</Button>
+                            )}
+                            <Button size="icon" variant="ghost" data-testid={`button-play-${c.id}`} className="hover:bg-muted text-foreground"><Play className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table></div>
               </CardContent>
