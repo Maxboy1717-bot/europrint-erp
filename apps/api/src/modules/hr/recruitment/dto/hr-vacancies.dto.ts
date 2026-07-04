@@ -24,11 +24,16 @@ export const HrUpdatePipelineStageSchema = z.object({
 });
 export type HrUpdatePipelineStageDto = z.infer<typeof HrUpdatePipelineStageSchema>;
 
+// Q13-follow-up (2026-07-04): .passthrough() added -- the real FE caller
+// (ProbationReviewDialog.tsx) sends review_type/scores/observations/decision/
+// reviewer_name/employee_name/position_name/mentor_name/review_date, none of
+// which existed on this schema, so every real submission was silently
+// stripped down to {} before reaching the controller.
 export const HrProbationReviewSchema = z.object({
   result:  z.enum(['pass', 'fail', 'extend']).optional(),
   rating:  z.number().int().min(1).max(10).optional(),
   notes:   z.string().optional(),
-});
+}).passthrough();
 export type HrProbationReviewDto = z.infer<typeof HrProbationReviewSchema>;
 
 export const HrNdaRequestSchema = z.object({
