@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { Ok, Err, isOk, Result } from '@common/result';
+import { Ok, Err, isOk, Result, AppErr } from '@common/result';
 import { z } from 'zod';
 import {
   GeneratePlanDtoSchema,
@@ -100,6 +100,16 @@ export class AiPlanningService {
     const check = await this.repo.findById(id);
     if (!isOk(check)) return Err(check.error);
     if (!check.data) return Err(`Reja topilmadi: ${id}`);
+    // SB0273: approval chain gate — a plan may only move to `executing` once a
+    // human has approved it (approvePlan sets 'approved'/'override_approved').
+    // Without this check, POST /plans/:id/execute could bypass approve/reject
+    // entirely and run a 'draft' or even a 'rejected' plan.
+    if (check.data.status !== 'approved' && check.data.status !== 'override_approved') {
+      return Err(AppErr(
+        'INVALID_TRANSITION',
+        `Reja bajarilishi uchun avval tasdiqlanishi kerak (joriy holat: ${check.data.status})`,
+      ));
+    }
     const result = await this.repo.updateStatus(id, 'executing');
     if (!isOk(result)) return Err(result.error);
     this.logger.log(`Plan executing: ${id}`);
