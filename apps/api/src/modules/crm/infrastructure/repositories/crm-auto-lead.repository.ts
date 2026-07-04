@@ -131,6 +131,40 @@ export class CrmAutoLeadRepository implements ICrmAutoLeadRepo {
       }, 'DB_ERROR');
   }
 
+  // SB0651/SB0671 fix: same webhook-ingest shape as ingestTelegramLead — EP-CRM-007's
+  // channel list also names whatsapp/sms, which had no ingest endpoint at all.
+  async ingestWhatsappLead(phone: unknown, first_name: unknown, last_name: unknown, message: unknown): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const contactName = [(first_name as string) ?? 'WhatsApp User', last_name as string].filter(Boolean).join(' ');
+      const payload: LeadInsert = {
+        title:         contactName || 'Yangi lid',
+        contact_phone: (phone as string) || null,
+        contact_name:  contactName,
+        source:        'whatsapp',
+        notes:         (message as string) || null,
+        status_description:        'new',
+      };
+      const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
+      return (rows[0] ?? {}) as Row;
+      }, 'DB_ERROR');
+  }
+
+  async ingestSmsLead(phone: unknown, first_name: unknown, last_name: unknown, message: unknown): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const contactName = [(first_name as string) ?? 'SMS User', last_name as string].filter(Boolean).join(' ');
+      const payload: LeadInsert = {
+        title:         contactName || 'Yangi lid',
+        contact_phone: (phone as string) || null,
+        contact_name:  contactName,
+        source:        'sms',
+        notes:         (message as string) || null,
+        status_description:        'new',
+      };
+      const rows = await db.insert(crmLeads).values(payload as typeof crmLeads.$inferInsert).returning();
+      return (rows[0] ?? {}) as Row;
+      }, 'DB_ERROR');
+  }
+
   async getChurnRisk(entityType: string, eid: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       if (entityType === 'lead') {

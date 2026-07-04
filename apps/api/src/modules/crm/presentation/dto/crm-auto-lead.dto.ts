@@ -45,5 +45,24 @@ export const IngestWebsiteLeadDtoSchema = z.object({
 }).passthrough();
 export type IngestWebsiteLeadDto = z.infer<typeof IngestWebsiteLeadDtoSchema>;
 
+// SB0651/SB0671 fix: EP-CRM-007 channel list (referral/visit/direct/telegram/whatsapp/
+// email/sms/social/web) had telegram + website (form/call) wired but whatsapp/sms
+// missing entirely — same webhook-ingest pattern as telegram, different source label.
+export const IngestWhatsappLeadDtoSchema = z.object({
+  phone: z.string().min(7).max(20).optional(),
+  first_name: z.string().min(1).max(100).optional(),
+  last_name: z.string().min(1).max(100).optional(),
+  message: z.string().max(MAX_SHORT_TEXT).optional(),
+}).passthrough();
+export type IngestWhatsappLeadDto = z.infer<typeof IngestWhatsappLeadDtoSchema>;
+
+export const IngestSmsLeadDtoSchema = z.object({
+  phone: z.string().min(7).max(20).optional(),
+  first_name: z.string().min(1).max(100).optional(),
+  last_name: z.string().min(1).max(100).optional(),
+  message: z.string().max(MAX_SHORT_TEXT).optional(),
+}).passthrough();
+export type IngestSmsLeadDto = z.infer<typeof IngestSmsLeadDtoSchema>;
+
 export const ChurnRescueDtoSchema = z.record(z.string(), z.unknown());
 export type ChurnRescueDto = z.infer<typeof ChurnRescueDtoSchema>;

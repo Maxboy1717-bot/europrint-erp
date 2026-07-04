@@ -21,5 +21,7 @@ export interface ICrmAutoLeadRepo {
   ingestFormLead(email: unknown, phone: unknown, first_name: unknown, last_name: unknown, form_name: unknown, notes: unknown): Promise<Result<Row>>;
   ingestTelegramLead(first_name: unknown, last_name: unknown, username: unknown, message: unknown): Promise<Result<Row>>;
   ingestWebsiteLead(email: unknown, phone: unknown, first_name: unknown, last_name: unknown, page_url: unknown, message: unknown): Promise<Result<Row>>;
+  ingestWhatsappLead(phone: unknown, first_name: unknown, last_name: unknown, message: unknown): Promise<Result<Row>>;
+  ingestSmsLead(phone: unknown, first_name: unknown, last_name: unknown, message: unknown): Promise<Result<Row>>;
   getChurnRisk(entityType: string, eid: number): Promise<Result<Row | null>>;
 }

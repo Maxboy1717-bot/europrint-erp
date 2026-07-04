@@ -22,6 +22,8 @@ import {
   IngestFormLeadDtoSchema, IngestFormLeadDto,
   IngestTelegramLeadDtoSchema, IngestTelegramLeadDto,
   IngestWebsiteLeadDtoSchema, IngestWebsiteLeadDto,
+  IngestWhatsappLeadDtoSchema, IngestWhatsappLeadDto,
+  IngestSmsLeadDtoSchema, IngestSmsLeadDto,
   ChurnRescueDtoSchema, ChurnRescueDto,
 } from './dto/crm-auto-lead.dto';
 
@@ -132,5 +134,33 @@ export class CrmAutoLeadController {
   async ingestWebsiteLead(@Body() body: IngestWebsiteLeadDto) {
     assertAnyRequired([body.email, body.phone], 'email or phone required');
     return unwrapOrThrow(await this.svc.ingestWebsiteLead(body.email, body.phone, body.first_name, body.last_name, body.page_url, body.message));
+  }
+
+  // SB0651/SB0671 fix: EP-CRM-007 names whatsapp/sms as channels alongside
+  // telegram/website/call/form; those four were wired, whatsapp/sms were not.
+  @ApiOperation({ summary: 'Ingest WhatsApp lead (webhook — HMAC signed)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Missing/invalid X-Webhook-Signature' })
+  @Public()
+  @UseGuards(WebhookSignatureGuard)
+  @Post('auto-lead/whatsapp')
+  @UsePipes(new ZodValidationPipe(IngestWhatsappLeadDtoSchema))
+  async ingestWhatsappLead(@Body() body: IngestWhatsappLeadDto) {
+    assertRequired(body.phone, 'phone required');
+    return unwrapOrThrow(await this.svc.ingestWhatsappLead(body.phone, body.first_name, body.last_name, body.message));
+  }
+
+  @ApiOperation({ summary: 'Ingest SMS lead (webhook — HMAC signed)' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Missing/invalid X-Webhook-Signature' })
+  @Public()
+  @UseGuards(WebhookSignatureGuard)
+  @Post('auto-lead/sms')
+  @UsePipes(new ZodValidationPipe(IngestSmsLeadDtoSchema))
+  async ingestSmsLead(@Body() body: IngestSmsLeadDto) {
+    assertRequired(body.phone, 'phone required');
+    return unwrapOrThrow(await this.svc.ingestSmsLead(body.phone, body.first_name, body.last_name, body.message));
   }
 }
