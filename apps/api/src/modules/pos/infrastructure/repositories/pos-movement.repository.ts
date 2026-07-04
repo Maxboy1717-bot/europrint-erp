@@ -107,6 +107,28 @@ export class PosMovementRepository implements IPosMovementRepository {
     }
   }
 
+  /**
+   * G2-1 QABUL-TOLERANS (2026-07-04, SB0544/EP-WMS-047): EXTERNAL_IN
+   * (kirim) qatorini PO (purchase_order_items) buyurtma miqdoriga
+   * solishtirish uchun buyurtma miqdorini o'qiydi. `purchase_order_items`
+   * MM moduliga tegishli (Q-31 — jadval faqat READ qilinadi, o'zgartirilmaydi).
+   * PO/material topilmasa null (tekshiruv "no-op" bo'ladi — mavjud oqim
+   * o'zgarmaydi, Q-46).
+   */
+  async findPoLineQty(poId: number, materialCardId: number): Promise<Result<number | null>> {
+    try {
+      const rows = await db.execute(sql`
+        SELECT quantity FROM purchase_order_items
+        WHERE purchase_order_id = ${poId} AND material_id = ${materialCardId}
+        LIMIT 1
+      `);
+      const row = (rows as unknown as { rows: Array<{ quantity: string | number | null }> }).rows?.[0];
+      return Ok(row?.quantity != null ? Number(row.quantity) : null);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async findMovementWarehouseIds(movementId: number): Promise<Result<WarehouseIds | null>> {
     try {
       const [movement] = await db.select({ fromWarehouseId: posMovements.fromWarehouseId, toWarehouseId: posMovements.toWarehouseId }).from(posMovements).where(eq(posMovements.id, movementId));

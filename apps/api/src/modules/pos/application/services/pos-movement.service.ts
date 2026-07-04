@@ -23,6 +23,7 @@ import { EmployeeLedgerService }   from './employee-ledger.service';
 import { PosAuditService }         from './pos-audit.service';
 import { PosBalanceGuardService }  from './pos-balance-guard.service';
 import { PosTechCardGateService }  from './pos-techcard-gate.service';
+import { PosVarianceConfigService } from './pos-variance-config.service';
 import { CreateMovementDto, AddMovementLineDto, CreateDamageActDto } from '../../dto/movement.dto';
 import { resolveActNumberPrefix, resolveMovementCategory, MovementCategory } from '../../dto/movement-enums';
 import { nextDocNumber, nextWarehouseDocNumber } from '@common/database/doc-sequences.helper';
@@ -57,6 +58,7 @@ export class PosMovementService {
     private readonly auditService:     PosAuditService,
     private readonly balanceGuard:     PosBalanceGuardService,
     private readonly techCardGate:     PosTechCardGateService,
+    private readonly varianceConfig:   PosVarianceConfigService,
     private readonly eventEmitter:     EventEmitter2,
     private readonly eventBus:         EventBus,
     private readonly repo:             PosMovementRepository,
@@ -103,6 +105,58 @@ export class PosMovementService {
           throw new BadRequestException(
             `EXTERNAL_IN kirimda barkodsiz qator qabul qilinmaydi (qator: ${missingRows.join(', ')})`,
           );
+        }
+      }
+
+      // G2-1 QABUL-TOLERANS (2026-07-04, SB0544/EP-WMS-047 vizyon: "receipt
+      // ±2% auto-accept, above -> manager approval + mandatory reason").
+      // EXTERNAL_IN + purchaseOrderId berilganda har qator PO buyurtma
+      // miqdoriga solishtiriladi. Mavjud PosVarianceConfigService (P4,
+      // inventarizatsiya uchun qurilgan) qayta ishlatiladi — yangi jadval
+      // YO'Q (Q-35). PO/material topilmasa (eski oqim, PO'siz kirim) —
+      // tekshiruv no-op (Q-46, mavjud oqim buzilmaydi).
+      if (movType.code === 'EXTERNAL_IN' && dto.purchaseOrderId && dto.lines?.length) {
+        const poIdNum = Number(dto.purchaseOrderId);
+        const whIdForConfig = dto.toWarehouseId && Number.isFinite(Number(dto.toWarehouseId))
+          ? Number(dto.toWarehouseId)
+          : null;
+        if (Number.isFinite(poIdNum)) {
+          const receiptEscalations: string[] = [];
+          for (const line of dto.lines) {
+            const poQtyR = await this.repo.findPoLineQty(poIdNum, line.materialCardId);
+            const poQty = poQtyR.ok ? poQtyR.data : null;
+            if (poQty == null || poQty <= 0) continue; // PO qatori topilmadi — tekshirilmaydi
+            const decisionR = await this.varianceConfig.decideForLine(whIdForConfig, {
+              systemQty:   poQty,
+              varianceQty: Math.abs(line.quantity - poQty),
+            });
+            if (decisionR.ok && decisionR.data.decision === 'ESCALATE') {
+              receiptEscalations.push(
+                `Material #${line.materialCardId}: PO=${poQty}, kelgan=${line.quantity} ` +
+                `(${decisionR.data.qtyPct.toFixed(2)}% farq) — ${decisionR.data.reason}`,
+              );
+            }
+          }
+          if (receiptEscalations.length > 0 && !(dto as Record<string, unknown>).overrideReason) {
+            throw new HttpException(
+              {
+                statusCode: HttpStatus.CONFLICT,
+                message:    "Qabul miqdori PO'dan tolerans chegarasidan tashqarida — rahbar tasdig'i kerak (overrideReason yuboring)",
+                warnings:   receiptEscalations,
+              },
+              HttpStatus.CONFLICT,
+            );
+          }
+          if (receiptEscalations.length > 0) {
+            await this.auditService.log({
+              userId:     createdById,
+              action:     'pos.movement.receipt_tolerance_override',
+              entityType: 'pos_movements',
+              entityId:   0,
+              newValue:   { purchaseOrderId: dto.purchaseOrderId, escalations: receiptEscalations, overrideReason: (dto as Record<string, unknown>).overrideReason },
+              ipAddress,
+            });
+          }
         }
       }
 

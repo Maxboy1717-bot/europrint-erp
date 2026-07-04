@@ -44,4 +44,9 @@ export interface IPosMovementRepository {
    * movement_id UNIQUE — qayta yozishda upsert.
    */
   upsertMovementContext(row: PosMovementContextInsert): Promise<Result<PosMovementCtxRow>>;
+  /**
+   * G2-1 QABUL-TOLERANS (2026-07-04, SB0544): PO qatoridagi buyurtma
+   * miqdorini o'qiydi (EXTERNAL_IN qabul-toleransini hisoblash uchun).
+   */
+  findPoLineQty(poId: number, materialCardId: number): Promise<Result<number | null>>;
 }
