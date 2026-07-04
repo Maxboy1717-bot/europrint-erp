@@ -98,6 +98,8 @@ import { CouncilMembersRepository } from './infrastructure/repositories/council-
 import { RasporyazhenieEscalationCron } from './infrastructure/cron/rasporyazhenie-escalation.cron';
 // 07-03 to'lqin: ZNO/ZVS SLA eskalatsiya cron (vizyon 3.7)
 import { ZnoZvsSlaEscalationCron } from './infrastructure/cron/zno-zvs-sla-escalation.cron';
+// 07-04 to'lqin: egasi kunlik hisoboti — avtomatik Telegram digest (SB0379)
+import { OwnerSummaryDailyCron } from './infrastructure/cron/owner-summary-daily.cron';
 
 const CommandHandlers = [
   CreateApprovalRequestHandler,
@@ -198,6 +200,8 @@ const Repositories = [
     // T21-B1 #27/#28: owner daily digest (5 owner numbers + Telegram, config-gated)
     OwnerSummaryRepository,
     OwnerSummaryService,
+    // 07-04 to'lqin: egasi kunlik hisoboti — avtomatik Telegram digest (SB0379)
+    OwnerSummaryDailyCron,
     // 06-30 to'lqin: Coordination — prikaz/protokol/kengash a'zoligi + farmoyish eskalatsiya cron
     PrikazRepository,
     ProtocolRepository,
