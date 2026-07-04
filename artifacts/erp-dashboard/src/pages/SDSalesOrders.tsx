@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -180,6 +181,8 @@ export default function SDSalesOrders() {
   const [selected, setSelected] = useState<SalesOrderListItem | null>(null);
   const [createDialog, setCreateDialog] = useState(false);
   const [orderForm, setOrderForm] = useState({ ...EMPTY_ORDER_FORM });
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -229,7 +232,12 @@ export default function SDSalesOrders() {
   const cancelMut = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       apiRequest("PATCH", `/api/sd/orders/${id}/cancel`, { reason }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/sd/orders"] }); toast({ title: tLabel("sd.orders.cancelled", "Bekor qilindi") }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
+      toast({ title: tLabel("sd.orders.cancelled", "Bekor qilindi") });
+      setCancelDialogOpen(false);
+      setCancelReason("");
+    },
     onError: () => toast({ title: tLabel("sd.orders.error", "Xatolik"), variant: "destructive" }),
   });
 
@@ -418,8 +426,8 @@ export default function SDSalesOrders() {
                     <Button size="sm" variant="outline" className="text-[var(--ep-red)]"
                       data-testid={`button-cancel-order-${detail?.id}`}
                       onClick={() => {
-                        const reason = prompt(tLabel("sd.orders.cancelReasonPrompt", "Bekor qilish sababi:"));
-                        if (reason && detail) cancelMut.mutate({ id: detail.id, reason });
+                        setCancelReason("");
+                        setCancelDialogOpen(true);
                       }}>
                       {t("cancel")}
                     </Button>
@@ -647,6 +655,40 @@ export default function SDSalesOrders() {
                 data-testid="btn-save-order"
               >
                 {createMut.isPending ? tLabel("sd.orders.saving", "Saqlanmoqda...") : tLabel("sd.orders.saqlash", "Saqlash")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={cancelDialogOpen} onOpenChange={(open) => { setCancelDialogOpen(open); if (!open) setCancelReason(""); }}>
+        <DialogContent data-testid="dialog-cancel-order">
+          <DialogHeader>
+            <DialogTitle>{tLabel("sd.orders.cancelReasonPrompt", "Bekor qilish sababi")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cancel-reason">{tLabel("sd.orders.cancelReasonPrompt", "Bekor qilish sababi:")}</Label>
+              <Textarea
+                id="cancel-reason"
+                data-testid="input-cancel-reason"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setCancelDialogOpen(false)}>
+                {t("cancel")}
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                data-testid="button-confirm-cancel-order"
+                disabled={!cancelReason.trim() || cancelMut.isPending || !detail}
+                onClick={() => { if (detail && cancelReason.trim()) cancelMut.mutate({ id: detail.id, reason: cancelReason.trim() }); }}
+              >
+                {cancelMut.isPending ? tLabel("sd.orders.saving", "Saqlanmoqda...") : tLabel("sd.orders.confirm", "Tasdiqlash")}
               </Button>
             </div>
           </div>
