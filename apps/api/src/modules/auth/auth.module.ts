@@ -42,7 +42,8 @@ export { AUTH_REPO } from './auth.tokens';
       useFactory: (cfg: ConfigService) => ({
         secret: cfg.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: (cfg.get<string>('JWT_ACCESS_TOKEN_TTL') ?? cfg.get<string>('JWT_EXPIRES_IN') ?? '24h') as SignOptions['expiresIn'],
+          // T10-17: access-token TTL vizyon = 15 daqiqa — bir manba bilan (jwt.config.ts, login.service.ts, auth.controller.ts)
+          expiresIn: (cfg.get<string>('JWT_ACCESS_TOKEN_TTL') ?? cfg.get<string>('JWT_EXPIRES_IN') ?? '15m') as SignOptions['expiresIn'],
         },
       }),
     }),
