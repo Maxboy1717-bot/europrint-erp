@@ -22,6 +22,7 @@ import { DrizzleCameraAiRepo } from './infrastructure/repositories/drizzle-camer
 import { SENSOR_REPO } from './domain/repositories/i-sensor.repo';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { IotGateway } from './presentation/iot.gateway';
 import { IotSensorsController } from './presentation/iot-sensors.controller';
 import { IotCameraController } from './presentation/iot-camera.controller';
 import { IotCameraEventsController } from './presentation/iot-camera-events.controller';
@@ -141,7 +142,10 @@ const newRepositories = [
     WarehouseExitGuardService,
     // 3.2-brak-ushlanma-zanjiri
     MesBrakLimitRepository,
+    // SB0315 — IotGateway (/iot WS namespace) registered so live sensor/equipment
+    // push (pushSensorUpdate/pushEquipmentAlert) is DI-injectable by cron/handlers.
+    IotGateway,
   ],
-  exports: [SENSOR_REPO],
+  exports: [SENSOR_REPO, IotGateway],
 })
 export class IotModule {}
