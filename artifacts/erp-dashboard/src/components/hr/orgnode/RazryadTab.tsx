@@ -8,7 +8,7 @@
 
 import { type ReactNode, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Award, Settings2, Check, X, ShieldCheck } from "lucide-react";
+import { Award, Settings2, Check, X, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +74,7 @@ interface RazryadRequest {
   status?: string | null;
   reject_reason?: string | null;
   created_at?: string | null;
+  ai_suggested?: boolean | null;
 }
 
 export function RazryadTab({ node }: { node: NodeDetail }) {
@@ -336,7 +337,17 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
               <p className="text-[12px] font-semibold text-muted-foreground uppercase">{t("razryadTarixi", "Razryad tarixi")}</p>
               {history.slice(0, 8).map((h, i) => (
                 <div key={i} className="flex items-center justify-between text-xs rounded border border-border px-2 py-1">
-                  <span>{String(h.old_name ?? "—")} → <b>{String(h.new_name ?? "")}</b> · {String(h.change_type ?? "")}</span>
+                  <span className="flex items-center gap-1.5">
+                    {String(h.old_name ?? "—")} → <b>{String(h.new_name ?? "")}</b> · {String(h.change_type ?? "")}
+                    {h.ai_suggested === true && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] py-0 px-1.5 bg-violet-300/15 text-violet-600 border-violet-400/40 flex items-center gap-0.5"
+                      >
+                        <Sparkles className="h-2.5 w-2.5" />{t("ai", "AI")}
+                      </Badge>
+                    )}
+                  </span>
                   <span className="text-muted-foreground">{h.certificate_number ? String(h.certificate_number) : ""}</span>
                 </div>
               ))}
@@ -370,9 +381,20 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
                       {rq.exam_score != null && <span className="text-muted-foreground"> · {String(rq.exam_score)}%</span>}
                       {rq.reason && <span className="text-muted-foreground"> · {String(rq.reason)}</span>}
                     </span>
-                    <Badge variant="outline" className={`text-[11px] ${STATUS_STYLE[status] ?? ""}`}>
-                      {t(`razryadStatus_${status}`, status === "pending" ? "Kutilmoqda" : status === "hr_approved" ? "HR imzoladi" : status === "approved" ? "Tasdiqlangan" : "Rad etilgan")}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      {rq.ai_suggested && (
+                        <Badge
+                          variant="outline"
+                          className="text-[11px] bg-violet-300/15 text-violet-600 border-violet-400/40 flex items-center gap-1"
+                          data-testid={`badge-ai-suggested-${rq.id}`}
+                        >
+                          <Sparkles className="h-3 w-3" />{t("aiTavsiyaQildi", "AI tavsiya qildi")}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className={`text-[11px] ${STATUS_STYLE[status] ?? ""}`}>
+                        {t(`razryadStatus_${status}`, status === "pending" ? "Kutilmoqda" : status === "hr_approved" ? "HR imzoladi" : status === "approved" ? "Tasdiqlangan" : "Rad etilgan")}
+                      </Badge>
+                    </div>
                   </div>
                   {rq.reject_reason && <p className="text-xs text-red-500">{t("radSababiLabel", "Rad sababi")}: {String(rq.reject_reason)}</p>}
                   {open && (canHrApprove || canManagerApprove) && (
