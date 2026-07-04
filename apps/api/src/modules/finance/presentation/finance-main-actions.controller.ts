@@ -17,6 +17,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GlService } from '../gl/gl.service';
 import { FinanceActionsService } from '../application/finance-actions.service';
+import { FinanceAccountingService } from '../application/finance-accounting.service';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -62,8 +63,15 @@ export class FinanceMainActionsController {
   constructor(
     private readonly glSvc: GlService,
     private readonly actionsSvc: FinanceActionsService,
+    private readonly accountingSvc: FinanceAccountingService,
   ) {}
 
+  // Q1 (SAP-conformance fix, 2026-07-04): previously delegated to GlService.postDocument(),
+  // which only inserted a `gl_documents` header row and never posted to the canonical `entries`
+  // ledger (SAP#76: entries is the ONE money ledger). Now delegates to the same honest engine
+  // already used by POST /api/accounting/gl-documents (FinanceAccountingService.createGlDocument
+  // -> GlPostingService.postJournal -> entries). No FE caller existed for this route (grep-verified),
+  // so this is a pure correctness fix with zero behavioral risk to existing consumers.
   @ApiOperation({ summary: 'Create gl entry' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -71,7 +79,7 @@ export class FinanceMainActionsController {
   @HttpCode(HttpStatus.CREATED)
   async createGlEntry(@Body() body: unknown) {
     const dto = CreateGlEntrySchema.parse(body);
-    return unwrapOrThrow(await this.glSvc.postDocument(dto as Record<string, unknown>));
+    return this.accountingSvc.createGlDocument(dto as Record<string, unknown>);
   }
 
   @ApiOperation({ summary: 'Get gl entry reverse' })
