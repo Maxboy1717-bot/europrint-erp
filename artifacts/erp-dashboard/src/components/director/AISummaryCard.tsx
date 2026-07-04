@@ -4,10 +4,11 @@
  */
 
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Sparkles } from "lucide-react";
+import { Brain, Sparkles, MessageCircle } from "lucide-react";
 import type { AISummary } from "@/components/director/types";
 import { useTranslation } from '@/lib/i18n';
 
@@ -19,6 +20,7 @@ interface AISummaryCardProps {
 export function AISummaryCard({ ai, aiLoad }: AISummaryCardProps) {
   const { t } = useTranslation("common");
   const [aiExpanded, setAiExpanded] = useState(false);
+  const [, setLocation] = useLocation();
 
   return (
     <div className="rounded-xl border from-primary/5 to-primary/10 border-primary/20 p-5" data-testid="card-ai-summary">
@@ -64,15 +66,28 @@ export function AISummaryCard({ ai, aiLoad }: AISummaryCardProps) {
           </div>
         )}
       </div>
-      <Button
-        size="sm" variant="outline"
-        onClick={() => setAiExpanded(!aiExpanded)}
-        className="mt-3 border-primary/20 text-primary"
-        data-testid="button-ai-expand"
-      >
-        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-        {aiExpanded ? "Yopish" : "Batafsil ko'rsatish"}
-      </Button>
+      <div className="flex items-center gap-2 mt-3 flex-wrap">
+        <Button
+          size="sm" variant="outline"
+          onClick={() => setAiExpanded(!aiExpanded)}
+          className="border-primary/20 text-primary"
+          data-testid="button-ai-expand"
+        >
+          <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+          {aiExpanded ? "Yopish" : "Batafsil ko'rsatish"}
+        </Button>
+        {/* SB0374/SB0383 (Hisobot/analitika audit, 2026-07-04): kunlik AI xulosadan
+            to'g'ridan Aisha chatga o'tish — strategik savol-javob shu yerdan davom etadi. */}
+        <Button
+          size="sm" variant="ghost"
+          onClick={() => setLocation("/aisha")}
+          className="text-primary hover:bg-primary/10"
+          data-testid="button-ai-open-aisha"
+        >
+          <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+          {t("aishaBilanGaplashish", "Aisha bilan gaplashish")}
+        </Button>
+      </div>
     </div>
   );
 }
