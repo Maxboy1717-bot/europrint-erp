@@ -173,7 +173,17 @@ export class PpWorkCentersController {
     assertOk(result);
     const existing = result.data?.find((wc: Record<string, unknown>) => String(wc.id) === id);
     assertRequired(existing, 'Work center topilmadi');
-    const command = new UpdateWorkCenterCommand(id);
+    const command = new UpdateWorkCenterCommand(
+      id,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      dto.isActive,
+    );
     return unwrapOrThrow(await this.commandBus.execute(command));
   }
 }
