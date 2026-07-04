@@ -3,15 +3,21 @@
  * @description Serves the Porcupine bootstrap config (access key + ppn URL)
  * and lets the Director adjust wake-word sensitivity. The .ppn file must be
  * served by the frontend's static assets — we only emit the URL.
+ *
+ * Sensitivity is persisted via `WakeConfigRepository` (existing `settings`
+ * table, key `aisha_wake_sensitivity`) — it survives process restarts.
+ * `AishaConfig.wakeSensitivity` (env var) is only the fallback default when
+ * no row has been saved yet.
  */
 
-import { Controller, Get, Patch, Body, UseGuards, ForbiddenException, Req } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards, ForbiddenException, InternalServerErrorException, Req } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import type { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { AishaConfig } from '../../config/aisha.config';
+import { WakeConfigRepository } from '../../infrastructure/persistence/wake-config.repo';
 
 const SensitivitySchema = z.object({
   sensitivity: z.number().min(0).max(1),
@@ -26,23 +32,22 @@ interface AuthedReq extends FastifyRequest {
 @Controller('aisha/wake')
 @UseGuards(JwtAuthGuard)
 export class WakeConfigController {
-  private currentSensitivity: number;
-
   constructor(
     private readonly cfg: AishaConfig,
     private readonly i18n: I18nService,
-  ) {
-    this.currentSensitivity = cfg.wakeSensitivity;
-  }
+    private readonly wakeConfigRepo: WakeConfigRepository,
+  ) {}
 
   @ApiOperation({ summary: 'Config' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('config')
-  config(): { accessKey: string; ppnUrl: string; sensitivity: number; voiceId: string } {
+  async config(): Promise<{ accessKey: string; ppnUrl: string; sensitivity: number; voiceId: string }> {
+    const result = await this.wakeConfigRepo.getSensitivity();
+    const persisted = result.ok ? result.data : null;
     return {
       accessKey:   this.cfg.picovoiceKey,
       ppnUrl:      '/aisha/assets/aisha.ppn',
-      sensitivity: this.currentSensitivity,
+      sensitivity: persisted ?? this.cfg.wakeSensitivity,
       voiceId:     this.cfg.elevenLabsVoiceId,
     };
   }
@@ -57,7 +62,10 @@ export class WakeConfigController {
       throw new ForbiddenException(await this.i18n.t('errors.onlyDirectorCanChangeSensitivity'));
     }
     const dto = SensitivitySchema.parse(body);
-    this.currentSensitivity = dto.sensitivity;
+    const result = await this.wakeConfigRepo.setSensitivity(dto.sensitivity, userId ?? null);
+    if (!result.ok) {
+      throw new InternalServerErrorException(result.error.message);
+    }
     return { sensitivity: dto.sensitivity };
   }
 }

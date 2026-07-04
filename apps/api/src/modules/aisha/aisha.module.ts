@@ -44,6 +44,7 @@ import { ToolRegistry } from './application/tools/tool.registry';
 import { AishaConversationService } from './application/conversation/aisha-conversation.service';
 import { AishaHistoryService } from './application/conversation/aisha-history.service';
 import { AishaHistoryRepository } from './infrastructure/persistence/aisha-history.repo';
+import { WakeConfigRepository } from './infrastructure/persistence/wake-config.repo';
 import { AishaToolBootstrap } from './application/tools/tool-bootstrap.service';
 // 25 tools — each is @Injectable() and registered in providers below
 import { AnalyzeCameraFeedTool }       from './application/tools/analyze-camera-feed.tool';
@@ -107,6 +108,7 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     BudgetTrackerService,
     ToolRegistry,
     AishaHistoryRepository,      // persistence + read adapter for the 4 aisha_* tables
+    WakeConfigRepository,        // persists Director wake-word sensitivity (settings table)
     AishaHistoryService,         // read/governance surface (history + HITL queue + resume-after-approve via ToolRegistry)
     AishaConversationService,   // #15 P0 tool-execution loop (now persists turns)
     // 25 AIsha tools — each @Injectable, registered with ToolRegistry on
