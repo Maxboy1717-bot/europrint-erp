@@ -320,6 +320,23 @@ export class DrizzleCashierHubRepository implements ICashierHubRepository {
     }
   }
 
+  /** EP-FIN-072 naqd-limit eslatma CRON idempotency claim (atomic WHERE-guard — saveShiftPdf bilan bir xil naqsh). */
+  async claimCashLimitAlert(shiftId: number, dayStart: Date): Promise<Result<boolean>> {
+    try {
+      // NOTE: raw SQL — limit_alert_sent_at column is a live-DB additive column (not in the Drizzle table).
+      const res = await runQuery<{ id: number }>(sql`
+        UPDATE cashier_shifts
+           SET limit_alert_sent_at = NOW(), updated_at = NOW()
+         WHERE id = ${shiftId}
+           AND (limit_alert_sent_at IS NULL OR limit_alert_sent_at < ${dayStart})
+        RETURNING id
+      `);
+      return Ok(Array.isArray(res.rows) && res.rows.length > 0);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `CASHIER_SHIFT_LIMIT_ALERT_CLAIM_FAILED: ${String(e)}`));
+    }
+  }
+
   /** Active users holding any of the given roles — Z-report notification fan-out (kassir + CFO). */
   async findUserIdsByRoles(roles: string[]): Promise<Result<number[]>> {
     try {

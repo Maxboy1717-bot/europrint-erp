@@ -177,6 +177,13 @@ export interface ICashierHubRepository {
   /** Active user ids holding any of the given roles (notification fan-out targets). */
   findUserIdsByRoles(roles: string[]): Promise<Result<number[]>>;
   /**
+   * EP-FIN-072 naqd-limit eslatma CRON idempotency claim: atomic WHERE-guard UPDATE — bugun
+   * (dayStart dan keyin) bu smena uchun eslatma hali yuborilmagan bo'lsa `limit_alert_sent_at`ni
+   * yozib true qaytaradi (chaqiruvchi notification yuboradi); allaqachon yuborilgan bo'lsa false
+   * (chaqiruvchi jim o'tadi — ikkilamchi xabar yo'q). Xuddi saveShiftPdf bilan bir xil naqsh.
+   */
+  claimCashLimitAlert(shiftId: number, dayStart: Date): Promise<Result<boolean>>;
+  /**
    * Latest currency→UZS rate from the canonical `exchange_rates` table (vizyon 2.14), or null
    * when no rate row exists for this currency (caller then GATES rather than fabricating a rate).
    */
