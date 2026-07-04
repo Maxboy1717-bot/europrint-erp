@@ -161,6 +161,7 @@ export const downtime_events = pgTable('downtime_events', {
   durationMin: decimal('duration_min', { precision: 8, scale: 2 }),        // DB: duration_min numeric
   durationMinutes: integer('duration_minutes'),                            // drift-added column
   reportedBy: text('reported_by'),                                         // used by drizzle-downtime.repo
+  isPlanned: boolean('is_planned'),                                        // DB: is_planned boolean — SB0430 planned/unplanned OEE split (get-oee.handler)
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

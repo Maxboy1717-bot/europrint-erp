@@ -5,11 +5,21 @@
  *
  *   OEE = Availability × Performance × Quality, each factor in [0, 1].
  *
- *     Availability = runTime / plannedTime
- *        plannedTime = scheduled session span (started_at..completed_at).
- *        runTime     = plannedTime − downtime. Setup / changeover / stoppage
- *                      are recorded in `downtime_events` and are subtracted,
- *                      so they do NOT count as productive time.
+ *     Availability = runTime / plannedProductionTime          (SB0430)
+ *        totalTime             = scheduled session span (started_at..completed_at).
+ *        plannedDowntime       = downtime_events with is_planned = true
+ *                                 (changeover / scheduled maintenance / shift-end —
+ *                                 EXCLUDED from the denominator, world-standard OEE:
+ *                                 planned stoppages are not a productivity loss).
+ *        plannedProductionTime = totalTime − plannedDowntime.
+ *        unplannedDowntime     = downtime_events with is_planned = false/NULL
+ *                                 (breakdown / material shortage / unplanned stop —
+ *                                 the real availability loss).
+ *        runTime               = plannedProductionTime − unplannedDowntime.
+ *        Before SB0430 this handler subtracted ALL downtime (planned + unplanned)
+ *        from the SAME totalTime denominator, so a scheduled changeover counted
+ *        identically to an unplanned breakdown — inflating the "loss" and
+ *        conflating two different management actions (rejali/rejasiz).
  *        NOTE (#9): this handler aggregates the `mes_sessions` world (downtime_events).
  *                   The GSD 3-stage availability (main / setup+main+teardown) lives on the
  *                   canonical `production_sessions` table and is exposed separately via
@@ -55,7 +65,8 @@ const PERCENT = 100;
 /** runTime, plannedTime, downtime in minutes; counts are whole sessions. */
 interface WorkCenterAccumulator {
   plannedTime: number;
-  downtime: number;
+  plannedDowntime: number;
+  unplannedDowntime: number;
   totalSessions: number;
   completedSessions: number;
   defectiveSessions: number;
@@ -95,15 +106,19 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
     const sessionRows = Array.isArray(sessions) ? sessions : [];
 
     // Real downtime (setup / changeover / stoppage) keyed by session id. Pulled
-    // once and indexed so Availability subtracts genuine non-productive time
-    // instead of pretending runTime == plannedTime.
+    // once and indexed, split by is_planned (SB0430) so Availability excludes
+    // planned stoppages from the denominator and only unplanned loss from the
+    // numerator — instead of pretending runTime == plannedTime OR conflating
+    // planned + unplanned into one undifferentiated "downtime" bucket.
     const downtimeRows = await db.select().from(downtime_events);
-    const downtimeBySession = new Map<string, number>();
+    const plannedDowntimeBySession = new Map<string, number>();
+    const unplannedDowntimeBySession = new Map<string, number>();
     for (const dt of Array.isArray(downtimeRows) ? downtimeRows : []) {
       const sessionKey = dt.sessionId ?? '';
       if (!sessionKey) continue;
       const minutes = this.downtimeMinutes(dt);
-      downtimeBySession.set(sessionKey, (downtimeBySession.get(sessionKey) ?? 0) + minutes);
+      const bucket = dt.isPlanned === true ? plannedDowntimeBySession : unplannedDowntimeBySession;
+      bucket.set(sessionKey, (bucket.get(sessionKey) ?? 0) + minutes);
     }
 
     const byWorkCenter = new Map<string, WorkCenterAccumulator>();
@@ -113,16 +128,22 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
 
       let acc = byWorkCenter.get(workCenterId);
       if (!acc) {
-        acc = { plannedTime: 0, downtime: 0, totalSessions: 0, completedSessions: 0, defectiveSessions: 0 };
+        acc = { plannedTime: 0, plannedDowntime: 0, unplannedDowntime: 0, totalSessions: 0, completedSessions: 0, defectiveSessions: 0 };
         byWorkCenter.set(workCenterId, acc);
       }
 
       const startTime = new Date(session.started_at).getTime();
       const endTime = session.completed_at ? new Date(session.completed_at).getTime() : Date.now();
-      const plannedMinutes = Math.max(0, (endTime - startTime) / MS_PER_MINUTE);
+      const totalMinutes = Math.max(0, (endTime - startTime) / MS_PER_MINUTE);
+      const plannedDowntimeMin = Math.min(totalMinutes, plannedDowntimeBySession.get(session.id) ?? 0);
+      const unplannedDowntimeMin = Math.min(
+        Math.max(0, totalMinutes - plannedDowntimeMin),
+        unplannedDowntimeBySession.get(session.id) ?? 0,
+      );
 
-      acc.plannedTime += plannedMinutes;
-      acc.downtime += Math.min(plannedMinutes, downtimeBySession.get(session.id) ?? 0);
+      acc.plannedTime += Math.max(0, totalMinutes - plannedDowntimeMin);
+      acc.plannedDowntime += plannedDowntimeMin;
+      acc.unplannedDowntime += unplannedDowntimeMin;
       acc.totalSessions += 1;
 
       if (session.status === 'completed') acc.completedSessions += 1;
@@ -135,7 +156,7 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
     const oeeResults = [];
 
     for (const [workCenterId, acc] of byWorkCenter.entries()) {
-      const runTime = Math.max(0, acc.plannedTime - acc.downtime);
+      const runTime = Math.max(0, acc.plannedTime - acc.unplannedDowntime);
 
       const availability = this.ratio(runTime, acc.plannedTime);
       const performance = this.ratio(acc.completedSessions, acc.totalSessions);
@@ -152,7 +173,8 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
         oee: this.toPercent(oee),
         sessionCount: acc.totalSessions,
         plannedMinutes: Math.round(acc.plannedTime),
-        downtimeMinutes: Math.round(acc.downtime),
+        plannedDowntimeMinutes: Math.round(acc.plannedDowntime),
+        downtimeMinutes: Math.round(acc.unplannedDowntime),
         runMinutes: Math.round(runTime),
         from: query.filters.from,
         to: query.filters.to,
