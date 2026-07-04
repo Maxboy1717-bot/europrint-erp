@@ -205,7 +205,60 @@ export class DrizzleHrVacanciesFunnelRepository {
         .groupBy(hrCandidateFunnels.vacancyId)
         .limit(1);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
-      return Ok((rows[0] ?? null) as Row | null);
+      const funnelStats = (rows[0] ?? null) as Row | null;
+
+      // Q12 fix: merge in the persisted market-analysis payload (hr_vacancy_profiles.market_analysis)
+      // so a saved analysis is actually reflected on read, not just the candidate-count aggregate.
+      const profileRows = await rawSql(sql`
+        SELECT market_analysis, updated_at
+        FROM hr_vacancy_profiles
+        WHERE vacancy_id = ${vacancyId}
+        LIMIT 1
+      `);
+      const profileRow = dbRows(profileRows)[0];
+      const stored = profileRow?.['market_analysis'];
+      const storedObj = (stored && typeof stored === 'object') ? stored as Row : null;
+
+      if (!funnelStats && !storedObj) return Ok(null);
+      return Ok({
+        ...(funnelStats ?? {}),
+        ...(storedObj ?? {}),
+        analysis_saved_at: profileRow?.['updated_at'] ?? null,
+      } as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // Q12 fix: actually persist the submitted market-analysis payload — previously
+  // the POST endpoint parsed the body then discarded it and echoed back a read.
+  // hr_vacancy_profiles has no unique constraint on vacancy_id, so this does an
+  // explicit check-then-branch instead of ON CONFLICT.
+  async saveMarketAnalysis(vacancyId: number, data: Record<string, unknown>): Promise<Result<Row>> {
+    try {
+      const json = JSON.stringify(data ?? {});
+      const existing = await rawSql(sql`
+        SELECT id FROM hr_vacancy_profiles WHERE vacancy_id = ${vacancyId} LIMIT 1
+      `);
+      const existingRow = dbRows(existing)[0];
+
+      let result;
+      if (existingRow) {
+        result = await rawSql(sql`
+          UPDATE hr_vacancy_profiles
+          SET market_analysis = ${json}::jsonb, updated_at = NOW()
+          WHERE vacancy_id = ${vacancyId}
+          RETURNING vacancy_id, market_analysis, updated_at
+        `);
+      } else {
+        result = await rawSql(sql`
+          INSERT INTO hr_vacancy_profiles (vacancy_id, market_analysis, created_at, updated_at)
+          VALUES (${vacancyId}, ${json}::jsonb, NOW(), NOW())
+          RETURNING vacancy_id, market_analysis, updated_at
+        `);
+      }
+      const row = dbRows(result)[0];
+      return Ok((row ?? {}) as Row);
     } catch (e) {
       return Err(String(e));
     }

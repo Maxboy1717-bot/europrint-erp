@@ -207,6 +207,10 @@ export class DrizzleHrVacanciesRepository {
     return this.funnel.findMarketAnalysisByVacancy(vacancyId);
   }
 
+  saveMarketAnalysis(vacancyId: number, data: Record<string, unknown>): Promise<Result<Row>> {
+    return this.funnel.saveMarketAnalysis(vacancyId, data);
+  }
+
   recordFunnelHistory(funnelId: string, stage: string, changedBy: string, notes?: string): Promise<Result<Row>> {
     return this.funnel.recordFunnelHistory(funnelId, stage, changedBy, notes);
   }

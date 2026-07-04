@@ -323,10 +323,11 @@ export class HrVacanciesController {
   @Post('vacancies/:id/market-analysis')
   @HttpCode(HttpStatus.OK)
   async postMarketAnalysis(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
-    MarketAnalysisPostSchema.parse(body ?? {});
-    const r = await this.svc.findMarketAnalysisByVacancy(id);
-    const analysis = r.ok ? (r.data ?? {}) : {};
-    return { data: { vacancy_id: id, ...analysis } };
+    const dto = MarketAnalysisPostSchema.parse(body ?? {});
+    // Q12 fix: actually persist the submitted analysis (hr_vacancy_profiles.market_analysis)
+    // — previously this discarded `dto` entirely and just echoed back a read.
+    const saved = unwrapOrInternal(await this.svc.saveMarketAnalysis(id, dto));
+    return { data: { vacancy_id: id, ...saved } };
   }
 
   @ApiOperation({ summary: 'Patch portret' })

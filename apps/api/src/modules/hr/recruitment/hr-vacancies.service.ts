@@ -110,6 +110,10 @@ export class HrVacanciesService {
     return this.repo.findMarketAnalysisByVacancy(vacancyId);
   }
 
+  saveMarketAnalysis(vacancyId: number, data: Record<string, unknown>): Promise<Result<Row>> {
+    return this.repo.saveMarketAnalysis(vacancyId, data);
+  }
+
   recordFunnelHistory(funnelId: string, stage: string, changedBy: string, notes?: string): Promise<Result<Row>> {
     return this.repo.recordFunnelHistory(funnelId, stage, changedBy, notes);
   }
