@@ -15,6 +15,11 @@
  *     movementId, purchaseOrderId, totalAmount, etc.) to feed the typed
  *     GoodsReceipt interface directly.
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
+ *
+ * G2-2 (2026-07-04, SB0541): supplier_tin/currency/contract_number/movement_id
+ *   ustunlari migration g2-2-goods-receipts-tin-currency.sql orqali qo'shildi
+ *   (APPLIED) — endi haqiqiy qiymat saqlanadi/o'qiladi (avval FE yuborgan
+ *   qiymatlar jim tashlab yuborilardi).
  */
 /**
  * @module goods-receipt.repository
@@ -65,25 +70,25 @@ export class GoodsReceiptRepository {
     try {
       const lim = Math.min(filters?.limit ?? 100, 500);
       // NOTE: Live DB goods_receipts schema uses receipt_number/receipt_date/total_value
-      // (not grn_number/received_date/total_amount). Columns movement_id, waybill_number,
-      // contract_number, supplier_tin, approved_at, approved_by, currency do not exist
-      // in the live table — mapped to NULL/literals below. No DDL needed.
+      // (not grn_number/received_date/total_amount). waybill_number still maps to
+      // invoice_number (no separate column). movement_id/contract_number/supplier_tin/
+      // currency now exist (G2-2, 2026-07-04) — real values below (was NULL/'UZS' literal).
       const rows = await typedExecute<GoodsReceipt>(sql`
         SELECT
           gr.id,
           gr.receipt_number                                         AS "grnNumber",
-          NULL::int                                                 AS "movementId",
+          gr.movement_id                                            AS "movementId",
           gr.purchase_order_id::text                                AS "purchaseOrderId",
           COALESCE(gr.supplier_name, '')                            AS "supplierName",
-          NULL::text                                                AS "supplierTin",
+          gr.supplier_tin                                           AS "supplierTin",
           gr.warehouse_id                                           AS "warehouseId",
           w.code                                                    AS "warehouseCode",
           w.name                                                    AS "warehouseName",
           gr.receipt_date                                           AS "receivedDate",
           gr.invoice_number                                         AS "waybillNumber",
-          NULL::text                                                AS "contractNumber",
+          gr.contract_number                                        AS "contractNumber",
           COALESCE(gr.total_value, 0)::numeric                      AS "totalAmount",
-          'UZS'                                                     AS "currency",
+          COALESCE(gr.currency, 'UZS')                              AS "currency",
           gr.status,
           gr.notes,
           (COALESCE(u1.first_name, '') || ' ' || COALESCE(u1.last_name, '')) AS "receivedByName",
@@ -137,19 +142,22 @@ export class GoodsReceiptRepository {
   }): Promise<Result<{ id: number }, AppError>> {
     try {
       // NOTE: Live DB goods_receipts uses receipt_number/receipt_date/total_value.
-      // Columns movement_id, waybill_number, contract_number, supplier_tin, currency
-      // do not exist — invoice_number used for waybillNumber; purchase_order_id is int.
+      // invoice_number used for waybillNumber (no separate waybill column).
+      // movement_id/contract_number/supplier_tin/currency now exist (G2-2, 2026-07-04) —
+      // real values persisted below (was silently dropped before).
       const rows = await typedExecute<{ id: number }>(sql`
         INSERT INTO goods_receipts
-          (receipt_number, purchase_order_id, supplier_name,
-           warehouse_id, receipt_date, invoice_number, total_value,
+          (receipt_number, movement_id, purchase_order_id, supplier_name, supplier_tin,
+           warehouse_id, receipt_date, invoice_number, contract_number, total_value, currency,
            status, notes, received_by, created_at)
         VALUES
           (${dto.grnNumber},
+           ${dto.movementId ?? null},
            ${dto.purchaseOrderId ? parseInt(dto.purchaseOrderId, 10) : null},
-           ${dto.supplierName}, ${dto.warehouseId},
-           CURRENT_DATE::text, ${dto.waybillNumber ?? null},
-           ${dto.totalAmount ?? 0},
+           ${dto.supplierName}, ${dto.supplierTin ?? null},
+           ${dto.warehouseId},
+           CURRENT_DATE::text, ${dto.waybillNumber ?? null}, ${dto.contractNumber ?? null},
+           ${dto.totalAmount ?? 0}, ${dto.currency ?? 'UZS'},
            'draft',
            ${dto.notes ?? null}, ${dto.receivedBy}, NOW())
         RETURNING id
