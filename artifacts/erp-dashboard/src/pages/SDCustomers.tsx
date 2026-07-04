@@ -62,6 +62,12 @@ interface CustomerRow extends Customer {
 interface Customer360Data {
   recentOrders?: { documentNumber: string; status: string; totalAmount: number }[];
   contacts?: { fullName: string; position: string; phone: string }[];
+  // SB0611 — "Mahsulotlar arxivi": per-product order history for this customer.
+  productsArchive?: {
+    id: number; orderNumber: string; productName: string;
+    quantity: number; unit: string; unitPrice: number; totalPrice: number;
+    orderDate: string; orderStatus: string;
+  }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +126,7 @@ export default function SDCustomers() {
 
   // 360 view dialog
   const [view360Dialog, setView360Dialog] = useState<{ open: boolean; customerId?: number }>({ open: false });
-  const [tab360, setTab360] = useState<"orders" | "contacts">("orders");
+  const [tab360, setTab360] = useState<"orders" | "contacts" | "products">("orders");
 
   // ---------------------------------------------------------------------------
   // Queries
@@ -557,6 +563,12 @@ export default function SDCustomers() {
             >
               {tLabel("sd.360.contacts", "Kontaktlar")}
             </button>
+            <button
+              className={`text-xs px-3 py-1 rounded-md transition-colors ${tab360 === "products" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-muted"}`}
+              onClick={() => setTab360("products")}
+            >
+              {tLabel("sd.360.products", "Mahsulotlar arxivi")}
+            </button>
           </div>
 
           {tab360 === "orders" && (
@@ -627,6 +639,47 @@ export default function SDCustomers() {
                         <TableCell className="py-2 px-3 font-medium text-sm">{ct.fullName}</TableCell>
                         <TableCell className="py-2 px-3 text-sm text-muted-foreground">{ct.position}</TableCell>
                         <TableCell className="py-2 px-3 text-sm">{ct.phone}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {tab360 === "products" && (
+            <div className="ep-table-scroll">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.col.docNum", "Raqam")}
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.360.productName", "Mahsulot")}
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.360.quantity", "Tiraj")}
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-2 px-3">
+                      {tLabel("sd.col.amount", "Summa")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(Array.isArray(c360?.productsArchive) ? c360!.productsArchive : []).length === 0 ? (
+                    <TableRow className="border-none">
+                      <TableCell colSpan={4} className="py-8 text-center text-muted-foreground text-sm">
+                        {tLabel("sd.360.noProducts", "Mahsulotlar yo'q")}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    (Array.isArray(c360?.productsArchive) ? c360!.productsArchive : []).map((p, i) => (
+                      <TableRow key={`p-${i}`} className="hover:bg-muted/40 border-none">
+                        <TableCell className="py-2 px-3 font-mono text-sm">{p.orderNumber}</TableCell>
+                        <TableCell className="py-2 px-3 text-sm">{p.productName}</TableCell>
+                        <TableCell className="py-2 px-3 text-sm">{p.quantity} {p.unit}</TableCell>
+                        <TableCell className="py-2 px-3 font-semibold">{fmtMoney(Number(p.totalPrice))}</TableCell>
                       </TableRow>
                     ))
                   )}

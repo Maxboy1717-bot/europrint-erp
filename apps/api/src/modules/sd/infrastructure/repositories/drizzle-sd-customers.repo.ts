@@ -93,7 +93,7 @@ export class DrizzleSdCustomersRepository {
     const safe = async (q: ReturnType<typeof runQuery<Row>>) =>
       q.then(r => r.rows as Row[]).catch(() => [] as Row[]);
 
-    const [customerRows, ordersRows, contactsRows, documentsRows, interactionsRows, competitorsRows, paymentsRows, npsRows] = await Promise.all([
+    const [customerRows, ordersRows, contactsRows, documentsRows, interactionsRows, competitorsRows, paymentsRows, npsRows, productsRows] = await Promise.all([
       safe(runQuery<Row>(sql`SELECT * FROM sd_customers WHERE id = ${cid}`)),
       safe(runQuery<Row>(sql`
         SELECT id, document_number AS order_number, overall_status AS status,
@@ -126,11 +126,23 @@ export class DrizzleSdCustomersRepository {
                CASE WHEN score >= 9 THEN 'promoter' WHEN score >= 7 THEN 'passive' ELSE 'detractor' END AS category
         FROM nps_responses WHERE customer_id = ${cid} ORDER BY created_at DESC LIMIT 20
       `)),
+      // SB0611/EP-SD (decisions/06-sd.md:470) "mijoz kartasida mahsulotlar arxivi jadvali
+      // (sana/tiraj/narx/dizayn link)" — per-product order history for this customer.
+      safe(runQuery<Row>(sql`
+        SELECT soi.id, soi.sales_order_id, so.document_number AS order_number,
+               soi.description AS product_name, soi.material_number,
+               soi.order_quantity, soi.unit, soi.net_price, soi.total_price,
+               so.created_at AS order_date, so.delivery_date, so.overall_status AS order_status
+        FROM sales_order_items soi
+        JOIN sales_orders so ON so.id = soi.sales_order_id
+        WHERE so.customer_id = ${cid} AND so.deleted_at IS NULL
+        ORDER BY so.created_at DESC LIMIT 200
+      `)),
     ]);
 
     return buildCustomer360View({
       customerRows, ordersRows, contactsRows, documentsRows,
-      interactionsRows, competitorsRows, paymentsRows, npsRows,
+      interactionsRows, competitorsRows, paymentsRows, npsRows, productsRows,
     });
   }
 
