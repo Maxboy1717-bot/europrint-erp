@@ -40,6 +40,15 @@ interface ActiveCardAssignmentSqlRow {
   emp_department_id:      number | null;
   emp_hire_date:          string | null;
   emp_status:             string | null;
+  // SB0501: eng oxirgi employee_daily_kpi qatori (ЦКП/davomat/sifat/mehnat unumdorligi/intizom) —
+  // NULL bo'lishi mumkin (hali kunlik KPI hisoblanmagan xodim uchun); fabrikatsiya emas, LEFT JOIN.
+  kpi_date:               string | null;
+  kpi_attendance_score:   string | null;
+  kpi_quality_score:      string | null;
+  kpi_productivity_score: string | null;
+  kpi_discipline_score:   string | null;
+  kpi_task_completion:    string | null;
+  kpi_total_score:        string | null;
 }
 
 /** Raw row shape for `ai_fit_scores` fetched via parametrized `sql` (snake_case). */
@@ -169,6 +178,14 @@ export class DrizzleAiFitRepo implements IAiFitRepo {
    * DB'dagi mavjud maydonlardan yig'iladi (fabrikatsiya yo'q) — haftalik
    * AI-fit avto-tsikl (2.18) shu ro'yxatni evaluate() ga uzatadi.
    *
+   * SB0501 (2026-07): `employeeProfile` endi eng oxirgi `employee_daily_kpi`
+   * qatoridan (kunlik ЦКП/davomat/sifat/mehnat unumdorligi/intizom, allaqachon
+   * boshqa cron/servis tomonidan hisoblanadigan real jadval) LATERAL LEFT JOIN
+   * orqali bitta "eng so'nggi kun" snapshot qo'shib beradi — shu bilan AI-fit
+   * prompti nafaqat statik profil (ism/lavozim/ishga kirgan sana), balki
+   * so'nggi ishlash ko'rsatkichlarini ham ko'radi. Xodim uchun hali kunlik KPI
+   * hisoblanmagan bo'lsa hammasi NULL (LEFT JOIN) — fabrikatsiya yo'q.
+   *
    * Parametrized `sql` template (Qoide 4/B) — Drizzle table-builder ishlatilmadi,
    * chunki `@europrint/schemas` (apps/api tsconfig path) `org_functions`ni
    * eksport qilmaydi va shu barrel orqali kelgan `users`/`employees` uuid-PK
@@ -194,10 +211,26 @@ export class DrizzleAiFitRepo implements IAiFitRepo {
           e.position_id            AS emp_position_id,
           e.department_id          AS emp_department_id,
           e.hire_date              AS emp_hire_date,
-          e.status                 AS emp_status
+          e.status                 AS emp_status,
+          kpi.kpi_date             AS kpi_date,
+          kpi.attendance_score     AS kpi_attendance_score,
+          kpi.quality_score        AS kpi_quality_score,
+          kpi.productivity_score   AS kpi_productivity_score,
+          kpi.discipline_score     AS kpi_discipline_score,
+          kpi.task_completion_score AS kpi_task_completion,
+          kpi.total_score          AS kpi_total_score
         FROM org_functions f
         INNER JOIN users u ON u.org_function_id = f.id
         INNER JOIN employees e ON e.id = u.employee_id
+        LEFT JOIN LATERAL (
+          SELECT k.kpi_date, k.attendance_score, k.quality_score,
+                 k.productivity_score, k.discipline_score,
+                 k.task_completion_score, k.total_score
+          FROM employee_daily_kpi k
+          WHERE k.employee_id = e.id
+          ORDER BY k.kpi_date DESC
+          LIMIT 1
+        ) kpi ON true
         WHERE f.is_active = true
           AND f.deleted_at IS NULL
           AND e.deleted_at IS NULL
@@ -215,6 +248,16 @@ export class DrizzleAiFitRepo implements IAiFitRepo {
           departmentId: r.emp_department_id,
           hireDate:     r.emp_hire_date,
           status:       r.emp_status,
+          // SB0501: so'nggi kunlik KPI snapshot (employee_daily_kpi) — mavjud bo'lmasa null.
+          recentDailyKpi: r.kpi_date != null ? {
+            date:               r.kpi_date,
+            attendanceScore:    r.kpi_attendance_score != null ? Number(r.kpi_attendance_score) : null,
+            qualityScore:       r.kpi_quality_score != null ? Number(r.kpi_quality_score) : null,
+            productivityScore:  r.kpi_productivity_score != null ? Number(r.kpi_productivity_score) : null,
+            disciplineScore:    r.kpi_discipline_score != null ? Number(r.kpi_discipline_score) : null,
+            taskCompletionScore: r.kpi_task_completion != null ? Number(r.kpi_task_completion) : null,
+            totalScore:         r.kpi_total_score != null ? Number(r.kpi_total_score) : null,
+          } : null,
         },
         cardRequirements: {
           positionName:        r.position_name,
