@@ -10,6 +10,7 @@
  */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Ok, Err, AppErr, isOk, Result } from '@common/result';
 import { z } from 'zod';
 import { AiRouterService } from './ai-router.service';
@@ -21,6 +22,7 @@ import {
   type ListFitScoreFilters,
 } from '../../domain/repositories/i-ai-fit.repo';
 import { hasFullAiFitVisibility } from '../../infrastructure/ai-fit-visibility.helper';
+import { AI_FIT_LOW_SCORE_THRESHOLD } from '@common/constants/business.constants';
 
 /** Kim so'ralayotganini bildiradi — per-karta RBAC (SB0505) uchun. */
 export interface FitViewerContext {
@@ -60,6 +62,7 @@ export class AiFitService {
   constructor(
     private readonly aiRouter: AiRouterService,
     @Inject(AI_FIT_REPO) private readonly repo: IAiFitRepo,
+    private readonly events: EventEmitter2,
   ) {}
 
   /**
@@ -94,7 +97,7 @@ export class AiFitService {
     }
 
     const parsed = this.parseAiResponse(aiResult.data.text);
-    return this.repo.insertScore({
+    const inserted = await this.repo.insertScore({
       employeeId:          dto.employeeId,
       cardId:              dto.cardId,
       fitScore:            parsed.fitScore,
@@ -103,6 +106,25 @@ export class AiFitService {
       successionCandidate: parsed.successionCandidate,
       aiProvider:          aiResult.data.provider,
     });
+
+    // SB0504: past-moslik (fitScore < AI_FIT_LOW_SCORE_THRESHOLD) real AI baholash
+    // natijasida chiqsa — 'ai.fit.low_score' domen hodisasini chiqaramiz (fallback
+    // qatorlar uchun EMAS — 50 FALLBACK_FIT_SCORE haqiqiy baholash emas). Hodisa
+    // bloklamaydi (Q-40: hech narsani avtomatik to'xtatmaydi) — faqat xabar beradi;
+    // AiAlertsService @OnEvent orqali HR/rahbarga Telegram yuboradi (mavjud naqsh).
+    if (isOk(inserted) && inserted.data.fitScore < AI_FIT_LOW_SCORE_THRESHOLD) {
+      this.events.emit('ai.fit.low_score', {
+        employeeId: dto.employeeId,
+        cardId:     dto.cardId,
+        fitScore:   inserted.data.fitScore,
+        summary:    typeof inserted.data.fitReport?.['summary'] === 'string'
+          ? (inserted.data.fitReport['summary'] as string)
+          : null,
+        timestamp: new Date(),
+      });
+    }
+
+    return inserted;
   }
 
   /**

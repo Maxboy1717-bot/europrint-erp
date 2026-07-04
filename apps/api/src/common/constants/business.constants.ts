@@ -318,6 +318,8 @@ export const DISCIPLINE_LATE_WARNING_THRESHOLD   = 3;
 export const DISCIPLINE_LATE_REPRIMAND_THRESHOLD = 5;
 /** Monthly late arrivals before a discharge notice is issued */
 export const DISCIPLINE_LATE_DISCHARGE_THRESHOLD = 8;
+/** AI-fit (P36) score (0-100) below which a low-fit alert (`ai.fit.low_score`) fires (SB0504). */
+export const AI_FIT_LOW_SCORE_THRESHOLD = 40;
 /** Minutes after scheduled start before a check-in is classified as late */
 export const ATTENDANCE_LATE_GRACE_MINUTES       = 15;
 
