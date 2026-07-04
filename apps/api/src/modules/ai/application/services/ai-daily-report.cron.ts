@@ -7,7 +7,7 @@
  *   operatorlari ЦКП'ni IoT/MES avto-feed orqali oladi (operator-hourly-invoice.cron) —
  *   ularga savol yo'llanmaydi (takror yo'q).
  *
- *   Bu cron HAR KUNI 08:00 (Toshkent, Du-Sha) mashinasiz xodimga biriktirilgan,
+ *   Bu cron HAR KUNI 07:00 (Toshkent, Du-Sha) mashinasiz xodimga biriktirilgan,
  *   ЦКП-meta'si bor kartalar uchun ЦКП-savolni `ai_ckp_chat_logs`'ga 'assistant'
  *   navbati sifatida yozadi (xodim keyin shu sessiyada javob beradi → submit()).
  *
@@ -35,7 +35,7 @@ export class AiDailyReportCron {
 
   constructor(private readonly service: AiDailyReportService) {}
 
-  @Cron('0 8 * * 1-6') // har kuni 08:00 Toshkent (Du-Sha) — ish kuni boshida ЦКП-savol
+  @Cron('0 7 * * 1-6', { timeZone: 'Asia/Tashkent' }) // har kuni 07:00 Toshkent (Du-Sha) — ish kuni boshida ЦКП-savol
   async pushDailyCkpQuestions(): Promise<void> {
     if (this.running) {
       this.logger.warn('[T12-08] Oldingi run hali tugamadi — bu run o\'tkazib yuborildi');
