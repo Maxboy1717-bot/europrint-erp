@@ -21,6 +21,11 @@ export class HrGsdService {
     return this.repo.findEmployeeHistory(id);
   }
 
+  // Q9: real UPDATE delegate
+  updateEmployee(id: number, dto: Parameters<typeof this.repo.updateEmployee>[1]): Promise<Result<Row, AppError>> {
+    return this.repo.updateEmployee(id, dto);
+  }
+
   getReferrals(): Promise<Result<Row[], AppError>> {
     return this.repo.findReferrals();
   }

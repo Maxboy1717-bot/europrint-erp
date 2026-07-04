@@ -6,6 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { employees, employee_skills, adaptation_milestones, payroll_period_record, hr_referrals, hr_mentorship_pairings } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { eq, desc, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 
@@ -30,6 +31,40 @@ export class HrGsdRepository {
         .limit(1);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok((rows[0] ?? null) as Row | null);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // Q9: real UPDATE — was validate-only stub returning {id, updated:true} with no DB write.
+  // Raw `sql` (not typed `employees` import) — @shared/db resolves `employees` to a
+  // UUID-PK compat stub (schema-hr-lms.ts) that does not match the live integer-PK
+  // table; same workaround already used by findEmployee()/findBoomerangs() above.
+  async updateEmployee(id: number, dto: {
+    positionId?: number | string;
+    departmentId?: number | string;
+    status?: string;
+    notes?: string;
+  }): Promise<Result<Row>> {
+    try {
+      if (dto.positionId == null && dto.departmentId == null && dto.status == null && dto.notes == null) {
+        return Err('NO_FIELDS_TO_UPDATE');
+      }
+      const positionId = dto.positionId != null ? Number(dto.positionId) : null;
+      const departmentId = dto.departmentId != null ? Number(dto.departmentId) : null;
+      const rows = await typedExecute<Row>(sql`
+        UPDATE employees SET
+          position_id   = COALESCE(${positionId}::int, position_id),
+          department_id = COALESCE(${departmentId}::int, department_id),
+          status        = COALESCE(${dto.status ?? null}, status),
+          notes         = COALESCE(${dto.notes ?? null}, notes),
+          updated_at    = NOW()
+        WHERE id = ${id}
+        RETURNING id, status, position_id, department_id, notes, updated_at
+      `);
+      const row = Array.isArray(rows) ? rows[0] : undefined;
+      if (!row) return Err('NOT_FOUND');
+      return Ok(row);
     } catch (e) {
       return Err(String(e));
     }

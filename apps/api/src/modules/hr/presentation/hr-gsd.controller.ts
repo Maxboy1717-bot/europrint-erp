@@ -6,7 +6,7 @@
 import {
   Controller, Get, Post, Patch, Delete, HttpCode, HttpStatus,
   Body, Param, ParseIntPipe, Query,
-  UseGuards, UseInterceptors,
+  UseGuards, UseInterceptors, NotFoundException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -125,9 +125,21 @@ export class HrGsdController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('gsd/employees/:id')
+  // Q9: was validate-only stub (no DB write) — now real UPDATE via HrGsdService/Repository.
   async updateGsdEmployee(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
-    UpdateGsdEmployeeSchema.parse(body ?? {});
-    return { data: { id, updated: true } };
+    const dto = UpdateGsdEmployeeSchema.parse(body ?? {});
+    const r = await this.svc.updateEmployee(id, {
+      positionId:   dto.positionId,
+      departmentId: dto.departmentId,
+      status:       dto.status,
+      notes:        dto.notes,
+    });
+    if (!r.ok) {
+      const err = (r as { ok: false; error: { code?: string; message?: string } }).error;
+      if (err?.message === 'NOT_FOUND') throw new NotFoundException('Xodim topilmadi');
+      throw new BadRequestException(err?.message ?? 'Xatolik');
+    }
+    return { data: { id, updated: true, ...r.data } };
   }
 
   @ApiOperation({ summary: 'Create referral' })
