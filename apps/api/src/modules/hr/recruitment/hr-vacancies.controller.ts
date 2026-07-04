@@ -11,6 +11,7 @@ import {
   NotFoundException, UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { unwrapOrInternal } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -94,7 +95,10 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'hr_
 export class HrVacanciesController {
   private readonly logger = new Logger(HrVacanciesController.name);
 
-  constructor(private readonly svc: HrVacanciesService) {}
+  constructor(
+    private readonly svc: HrVacanciesService,
+    private readonly events: EventEmitter2,
+  ) {}
 
   @ApiOperation({ summary: 'Get vacancies' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -139,10 +143,28 @@ export class HrVacanciesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    await this.svc.recordFunnelHistory(String(id), 'telegram_announced', String(user.id));
     const r = await this.svc.findById(id);
-    const row = r.ok ? (r.data ?? {}) : {};
-    return { data: { announced: true, vacancy_id: id, title: (row as Record<string, unknown>)['title'], announced_by: user.id } };
+    const row = (r.ok ? (r.data ?? {}) : {}) as Record<string, unknown>;
+    const title = String(row['title'] ?? `Vakansiya #${id}`);
+    // Q11 fix: real dispatch — same 'vacancy.published' event consumed by
+    // TelegramBotsCronRecruitmentService.onVacancyPublished (hr/telegram-bots/telegram-bots-cron-recruitment.service.ts),
+    // which sends real Telegram/SMS messages to matched candidates. Previously this endpoint
+    // only wrote a history row and echoed { announced: true } with no dispatch at all.
+    this.events.emit('vacancy.published', {
+      vacancyId: id,
+      title,
+      department: row['department'] ? String(row['department']) : undefined,
+    });
+    await this.svc.recordFunnelHistory(String(id), 'telegram_announced', String(user.id));
+    return {
+      data: {
+        dispatched: true,
+        vacancy_id: id,
+        title,
+        announced_by: user.id,
+        note: 'Telegram/SMS yuborish fon jarayonida amalga oshiriladi (vacancy.published hodisasi orqali); natija darhol qaytmaydi.',
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Alumni notify' })
@@ -153,10 +175,27 @@ export class HrVacanciesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    await this.svc.recordFunnelHistory(String(id), 'alumni_notified', String(user.id));
     const r = await this.svc.findById(id);
-    const row = r.ok ? (r.data ?? {}) : {};
-    return { data: { notified: true, vacancy_id: id, title: (row as Record<string, unknown>)['title'] } };
+    const row = (r.ok ? (r.data ?? {}) : {}) as Record<string, unknown>;
+    const title = String(row['title'] ?? `Vakansiya #${id}`);
+    // Q11 fix: real dispatch to alumni/boomerang candidates — same 'vacancy.published' event;
+    // TelegramBotsCronRecruitmentService.onVacancyPublished queries employees who left 2+ years
+    // ago (getBoomerangCandidates), ranks them, and sends real Telegram/SMS. Previously this
+    // endpoint only wrote a history row and echoed { notified: true } with no dispatch at all.
+    this.events.emit('vacancy.published', {
+      vacancyId: id,
+      title,
+      department: row['department'] ? String(row['department']) : undefined,
+    });
+    await this.svc.recordFunnelHistory(String(id), 'alumni_notified', String(user.id));
+    return {
+      data: {
+        dispatched: true,
+        vacancy_id: id,
+        title,
+        note: 'Alumni (2+ yil oldin ketgan xodimlar) ga Telegram/SMS fon jarayonida yuboriladi (vacancy.published hodisasi orqali); natija darhol qaytmaydi.',
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Get market analysis' })
