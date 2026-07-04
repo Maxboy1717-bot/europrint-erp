@@ -57,7 +57,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   // Edit rejimida: xodim allaqachon biriktirilgan funksiyalarni olamiz
   // (rahbar bo'lgan + ishlovchi bo'lgan barcha funksiyalar)
   const { data: assignedDeptsData } = useQuery<{ orgDepartmentIds: string[] }>({
-    queryKey: [`/api/hr/employees/${employee?.id}/org-departments`],
+    queryKey: [`/api/employees/${employee?.id}/org-departments`],
     enabled: open === true && !!employee?.id,
   });
 
@@ -204,7 +204,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
     }
     // Org functions — JSON, apiRequest throws on non-2xx
     try {
-      await apiRequest('POST', `/api/hr/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
+      await apiRequest('POST', `/api/employees/${empId}/assign-org-functions`, { orgDepartmentIds: selectedOrgDepts });
     } catch (e) {
       const msg = (e as { message?: string })?.message;
       toast({
