@@ -74,6 +74,10 @@ export class HrGsdRepository {
     }
   }
 
+  // NOTE: this method name is retained for the PAYROLL history sub-tab (salary
+  // periods) — it is a distinct feature from the card-GSD weekly graph below.
+  // See findGsdDefinition()/findGsdFactHistory()/recordGsdActual() for the
+  // real GSD (ckp_fact_values) card-linked read/write path (SB0300 fix).
   async findEmployeeHistory(id: number): Promise<Result<Row[]>> {
     try {
       const rows = await db
@@ -91,6 +95,114 @@ export class HrGsdRepository {
         .limit(50);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok(rows as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // SB0300 fix: GSD (card weighted-score) definition for an employee — sourced
+  // from the employee's card (org_departments, joined via employees.department_id)
+  // ЦКП/tskp columns. Real card-linkage read (was previously absent — GsdGraph.tsx
+  // called /gsd/employees/:id/history but the repo had no card-aware query at all).
+  async findGsdDefinition(employeeId: number): Promise<Result<Row | null>> {
+    try {
+      const rows = await typedExecute<Row>(sql`
+        SELECT
+          od.id                        AS card_id,
+          COALESCE(od.tskp, '')        AS gsd_name,
+          od.tskp_target               AS target_value,
+          od.tskp_measurement_unit     AS unit,
+          COALESCE(od.ckp_frequency, 'weekly')     AS frequency,
+          COALESCE(od.ckp_formula_type, od.tskp_formula_type) AS gsd_formula
+        FROM employees e
+        JOIN org_departments od ON od.id = e.department_id
+        WHERE e.id = ${employeeId}
+        LIMIT 1
+      `);
+      const row = Array.isArray(rows) ? rows[0] : undefined;
+      return Ok((row ?? null) as Row | null);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // SB0300 fix: real per-week GSD fact history — reads ckp_fact_values by the
+  // employee's card_id (org_departments.id via employees.department_id) +
+  // employee_id, bucketed into ISO weeks to match GsdGraph.tsx's
+  // { week_date, week_label, actual, target, variance, note } shape. No
+  // fabricated rows — 0 rows in ckp_fact_values simply yields an empty history
+  // (owner/MES has not fed data yet; see recordGsdActual() for manual entry).
+  async findGsdFactHistory(employeeId: number, months: number): Promise<Result<Row[]>> {
+    try {
+      const rows = await typedExecute<Row>(sql`
+        SELECT
+          date_trunc('week', f.fact_date)::date AS week_date,
+          to_char(date_trunc('week', f.fact_date), 'DD.MM')  AS week_label,
+          AVG(f.actual_value)::numeric      AS actual,
+          AVG(f.target_value)::numeric      AS target,
+          AVG(f.achievement_pct)::numeric   AS variance,
+          MAX(f.notes)                      AS note
+        FROM ckp_fact_values f
+        JOIN employees e ON e.id = ${employeeId}
+        WHERE f.employee_id = ${employeeId}
+          AND f.card_id = e.department_id
+          AND f.fact_date >= (CURRENT_DATE - (${months}::int * INTERVAL '1 month'))
+        GROUP BY date_trunc('week', f.fact_date)
+        ORDER BY week_date DESC
+        LIMIT 52
+      `);
+      if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
+      return Ok(rows as Row[]);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  // SB0300 fix: real GSD weekly-actual write — was previously routed (by FE)
+  // to updateEmployee()'s position/department/status editor, which silently
+  // rejected every submission with NO_FIELDS_TO_UPDATE (week_date/actual/note
+  // don't match that DTO). Upserts into ckp_fact_values keyed on
+  // (card_id, fact_date, employee_id, product=NULL) — same idempotent key as
+  // CkpFactRepository.upsertFact() — source='MANUAL' (owner/HR-entered, not MES).
+  async recordGsdActual(employeeId: number, dto: {
+    weekDate: string;
+    actual: number;
+    note?: string;
+  }): Promise<Result<Row>> {
+    try {
+      const cardRows = await typedExecute<Row>(sql`
+        SELECT e.department_id AS card_id, od.tskp_target AS target_value
+        FROM employees e
+        LEFT JOIN org_departments od ON od.id = e.department_id
+        WHERE e.id = ${employeeId}
+        LIMIT 1
+      `);
+      const card = cardRows[0];
+      const cardId = card?.['card_id'] != null ? Number(card['card_id']) : null;
+      if (cardId == null) return Err('EMPLOYEE_HAS_NO_CARD');
+      const targetValue = card?.['target_value'] != null ? Number(card['target_value']) : null;
+      const achievementPct = targetValue && targetValue > 0
+        ? Math.round((dto.actual / targetValue) * 10000) / 100
+        : 0;
+      const rows = await typedExecute<Row>(sql`
+        INSERT INTO ckp_fact_values
+          (card_id, employee_id, product_id, fact_date, target_value, actual_value, achievement_pct, source, status, submitted_at, notes, created_at)
+        VALUES
+          (${cardId}, ${employeeId}, NULL, ${dto.weekDate}::date, ${targetValue}, ${dto.actual}, ${achievementPct}, 'MANUAL', 'submitted', NOW(), ${dto.note ?? null}, NOW())
+        ON CONFLICT (card_id, fact_date, COALESCE(employee_id,0), COALESCE(product_id,0))
+        DO UPDATE SET
+          actual_value = EXCLUDED.actual_value,
+          target_value = EXCLUDED.target_value,
+          achievement_pct = EXCLUDED.achievement_pct,
+          source = EXCLUDED.source,
+          status = 'submitted',
+          submitted_at = NOW(),
+          notes = EXCLUDED.notes
+        RETURNING *
+      `);
+      const row = Array.isArray(rows) ? rows[0] : undefined;
+      if (!row) return Err('INSERT_FAILED');
+      return Ok(row);
     } catch (e) {
       return Err(String(e));
     }

@@ -24,6 +24,16 @@ const UpdateGsdEmployeeSchema = z.object({
   notes: z.string().max(2000).optional(),
 }).passthrough();
 
+// SB0300 fix: GsdGraph.tsx's weekly-actual submission ({ week_date, actual, note })
+// POSTs to this same /gsd/employees/:id route (not a distinct sub-path) — it was
+// previously silently rejected (NO_FIELDS_TO_UPDATE) because none of positionId/
+// departmentId/status/notes were present in that payload. Discriminated below.
+const RecordGsdActualSchema = z.object({
+  week_date: z.string().min(1),
+  actual: z.number(),
+  note: z.string().max(2000).optional(),
+});
+
 const CreateReferralSchema = z.object({
   referrerId:    z.union([z.string(), z.number()]).optional(),
   candidateName: z.string().max(200).optional(),
@@ -63,6 +73,46 @@ export class HrGsdController {
     const r = await this.svc.getEmployeeHistory(id);
     const items = r.ok && Array.isArray(r.data) ? r.data : [];
     return { items, total: items.length };
+  }
+
+  // SB0300 fix: GsdGraph.tsx (component) reads THIS route (card-GSD weekly
+  // definition + fact history), distinct from the payroll-period history above.
+  // Was previously unserved by any card-aware query — the repo had no card_id
+  // read path at all (audit evidence: "no card_id/INSERT write path confirmed").
+  @ApiOperation({ summary: 'Get card GSD weekly definition + fact history' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('gsd/employees/:id/gsd-history')
+  async getCardGsdHistory(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('months') monthsRaw?: string,
+  ) {
+    const months = Math.min(24, Math.max(1, Number(monthsRaw) || 12));
+    const [defRes, histRes] = await Promise.all([
+      this.svc.getGsdDefinition(id),
+      this.svc.getGsdFactHistory(id, months),
+    ]);
+    const definition = defRes.ok ? defRes.data : null;
+    const history = histRes.ok && Array.isArray(histRes.data) ? histRes.data : [];
+    const last = history[0] as { actual?: number; target?: number; variance?: number } | undefined;
+    const prev = history[1] as { actual?: number } | undefined;
+    const actualValues = history
+      .map(h => Number((h as { actual?: number }).actual))
+      .filter(v => Number.isFinite(v));
+    const avgActual = actualValues.length > 0
+      ? Math.round((actualValues.reduce((s, v) => s + v, 0) / actualValues.length) * 100) / 100
+      : null;
+    return {
+      definition,
+      history,
+      stats: {
+        lastWeekActual:   last?.actual ?? null,
+        lastWeekTarget:   last?.target ?? null,
+        lastWeekVariance: last?.variance ?? null,
+        prevWeekActual:   prev?.actual ?? null,
+        avgActual,
+        totalWeeks: history.length,
+      },
+    };
   }
 
   @ApiOperation({ summary: 'Get referrals' })
@@ -126,7 +176,28 @@ export class HrGsdController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('gsd/employees/:id')
   // Q9: was validate-only stub (no DB write) — now real UPDATE via HrGsdService/Repository.
+  // SB0300 fix: this route is shared with GsdGraph.tsx's weekly-actual submission
+  // ({ week_date, actual, note }) — detect that shape first and delegate to the
+  // real ckp_fact_values write (recordGsdActual), otherwise fall through to the
+  // position/department/status editor below (unchanged behaviour).
   async updateGsdEmployee(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const gsdActualParse = RecordGsdActualSchema.safeParse(body);
+    if (gsdActualParse.success) {
+      const r = await this.svc.recordGsdActual(id, {
+        weekDate: gsdActualParse.data.week_date,
+        actual:   gsdActualParse.data.actual,
+        note:     gsdActualParse.data.note,
+      });
+      if (!r.ok) {
+        const err = (r as { ok: false; error: { code?: string; message?: string } }).error;
+        if (err?.message === 'EMPLOYEE_HAS_NO_CARD') {
+          throw new BadRequestException('Xodim biriktirilgan kartaga ega emas');
+        }
+        throw new BadRequestException(err?.message ?? 'Xatolik');
+      }
+      return { data: { id, updated: true, ...r.data } };
+    }
+
     const dto = UpdateGsdEmployeeSchema.parse(body ?? {});
     const r = await this.svc.updateEmployee(id, {
       positionId:   dto.positionId,
