@@ -110,6 +110,7 @@
   "materialWarehouseQtyRequired": "materialId, warehouseId va quantity majburiy",
   "stockNotFound": "Stock id={id} topilmadi",
   "warehouseIdInvalid": "Ombor ID noto'g'ri",
+  "warehouseSyncFailed": "Ombor POS sinxronizatsiya hodisasini yozib bo'lmadi",
   "employeeIdRequired": "employeeId majburiy",
   "documentTypeRequired": "documentType majburiy",
   "titleRequired": "title majburiy",

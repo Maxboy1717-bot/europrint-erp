@@ -110,6 +110,7 @@
   "materialWarehouseQtyRequired": "materialId, warehouseId и quantity обязательны",
   "stockNotFound": "Запас id={id} не найден",
   "warehouseIdInvalid": "Неверный ID склада",
+  "warehouseSyncFailed": "Не удалось записать событие синхронизации POS для склада",
   "employeeIdRequired": "employeeId обязателен",
   "documentTypeRequired": "documentType обязателен",
   "titleRequired": "title обязателен",

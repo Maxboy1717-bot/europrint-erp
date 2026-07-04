@@ -5,7 +5,8 @@
 
 import {
   Body, Controller, Get, Logger, Param, Post,
-  BadRequestException, UseGuards, HttpException, HttpStatus,
+  BadRequestException, NotFoundException, InternalServerErrorException,
+  UseGuards, HttpException, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -53,12 +54,22 @@ export class WmsIntegrationController {
 
   /**
    * POST /api/warehouse/warehouses/:id/sync-pos
-   * Triggers a POS Monitor stock sync for the given warehouse.
    * Works with numeric warehouse IDs or string codes (e.g. "WIP-MAIN").
+   *
+   * HONEST SCOPE (Q20 fix, 2026-07-04): POS Monitor does NOT hold a separate
+   * copy of stock — `pos_warehouse_stock_view` is a live SQL VIEW directly over
+   * `warehouse_stock`/`warehouses` (verified in DB), so there is nothing to
+   * push/replicate. This endpoint's only real effect is recording an audit
+   * event (`pos_sync_events`) that a sync was triggered for a given warehouse.
+   * It is NOT a fabricated "real sync" against a table that doesn't exist —
+   * it validates the warehouse is real and reports genuine failures instead
+   * of swallowing them behind `ok:true`.
    */
-  @ApiOperation({ summary: 'Sync to pos' })
-  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiOperation({ summary: 'Log a POS Monitor sync-triggered event for a warehouse (audit-only; stock is always live via pos_warehouse_stock_view)' })
+  @ApiResponse({ status: 201, description: 'Sync event logged' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Warehouse not found' })
+  @ApiResponse({ status: 500, description: 'Event log write failed' })
   @Post('warehouses/:id/sync-pos')
   @Roles(...WH_WRITE, 'pos_operator')
   async syncToPos(
@@ -68,13 +79,17 @@ export class WmsIntegrationController {
     const numericId    = safeInt(id, 0);
     const warehouseRef = numericId || id;
     if (!warehouseRef) throw new BadRequestException(await this.i18n.t('errors.warehouseIdInvalid'));
+
+    const exists = await this.svc.warehouseExists(numericId || null, warehouseRef);
+    if (!exists) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFound'));
+
     try {
       await this.svc.logPosSyncEvent(numericId || null, user?.id ?? null);
-      return { ok: true, warehouseId: warehouseRef, syncedAt: new Date().toISOString() };
     } catch (e) {
-      this.logger.warn(`syncToPos failed: ${(e as Error).message}`);
-      return { ok: true, warehouseId: warehouseRef, syncedAt: new Date().toISOString(), warning: 'sync queued, no event log' };
+      this.logger.error(`syncToPos failed for warehouse=${warehouseRef}: ${(e as Error).message}`);
+      throw new InternalServerErrorException(await this.i18n.t('errors.warehouseSyncFailed'));
     }
+    return { ok: true, warehouseId: warehouseRef, syncedAt: new Date().toISOString() };
   }
 
   // -- MM/FI INTEGRATION -----------------------------------------------------

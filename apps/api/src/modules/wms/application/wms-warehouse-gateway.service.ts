@@ -122,6 +122,10 @@ export class WmsWarehouseGatewayService {
     return this.repo.barcodeScan(barcode);
   }
 
+  async warehouseExists(numericId: number | null, code: string | number): Promise<boolean> {
+    return this.repo.warehouseExists(numericId, code);
+  }
+
   async logPosSyncEvent(warehouseId: number | null, userId: number | null): Promise<void> {
     return this.repo.logPosSyncEvent(warehouseId, userId);
   }

@@ -224,11 +224,34 @@ export class WmsWarehouseGatewayRepo {
     return (rows.rows[0] ?? { found: false, barcode }) as Row;
   }
 
+  /**
+   * true agar `warehouseId` yoki `code` bo'yicha faol ombor topilsa.
+   * Q20 fix: sync-pos endpoint haqiqiy omborni tekshirishi kerak — noto'g'ri
+   * ID/kod jim yutilib "ok:true" qaytarilmasligi uchun.
+   */
+  async warehouseExists(numericId: number | null, code: string | number): Promise<boolean> {
+    const rows = await runQuery<{ id: number }>(sql`
+      SELECT id FROM wms_warehouses
+      WHERE is_active = true
+        AND (
+          (${numericId}::int IS NOT NULL AND id = ${numericId})
+          OR code = ${String(code)}
+        )
+      LIMIT 1
+    `);
+    return rows.rows.length > 0;
+  }
+
+  /**
+   * `pos_sync_events`ga audit yozuvi qo'shadi. Xato bo'lsa YUTILMAYDI — chaqiruvchi
+   * (controller) haqiqiy xatoni ko'rishi va foydalanuvchiga to'g'ri javob qaytarishi
+   * uchun exception yuqoriga uzatiladi (Q20 — soxta ok:true taqiqlangan).
+   */
   async logPosSyncEvent(warehouseId: number | null, userId: number | null): Promise<void> {
     await runQuery(sql`
       INSERT INTO pos_sync_events (warehouse_id, event_type, triggered_by, created_at)
       VALUES (${warehouseId}, 'WAREHOUSE_SYNC', ${userId}, NOW())
       ON CONFLICT DO NOTHING
-    `).catch(() => null);
+    `);
   }
 }

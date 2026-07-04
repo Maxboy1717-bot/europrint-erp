@@ -109,6 +109,7 @@
   "materialWarehouseQtyRequired": "материалИд, вареҳоусеИд ва қуантитй мажбурий",
   "stockNotFound": "Стокк ид={ид} топилмади",
   "warehouseIdInvalid": "Омбор ID нотўғри",
+  "warehouseSyncFailed": "Омбор учун POS синхронизация ҳодисасини ёзиб бўлмади",
   "employeeIdRequired": "эмплоееИд мажбурий",
   "documentTypeRequired": "документТйпе мажбурий",
   "titleRequired": "титле мажбурий",
