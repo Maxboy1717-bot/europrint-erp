@@ -245,6 +245,8 @@ export function EditDialog({
               <SelectContent>
                 <SelectItem value="__none__">{t("ckpFormulaDefault", "Default (miqdor %)")}</SelectItem>
                 <SelectItem value="quantity_pct">{t("ckpFormulaQuantity", "Miqdor % (fakt / norma)")}</SelectItem>
+                <SelectItem value="foiz">{t("ckpFormulaFoiz", "Foiz (fakt o'zi %, masalan sifat/OEE)")}</SelectItem>
+                <SelectItem value="vaqt">{t("ckpFormulaVaqt", "Vaqt-norma (reja-vaqt / haqiqiy-vaqt)")}</SelectItem>
                 <SelectItem value="boolean">{t("ckpFormulaBoolean", "Ha/Yo'q (100 / 0)")}</SelectItem>
               </SelectContent>
             </Select>

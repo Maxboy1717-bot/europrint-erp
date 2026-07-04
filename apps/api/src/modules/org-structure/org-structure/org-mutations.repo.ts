@@ -81,8 +81,15 @@ export class OrgMutationsRepo {
     if (dto.rbacTier !== undefined)          sets.push(sql`rbac_tier = ${(dto.rbacTier as string) ?? null}`);
     if (dto.tskpTarget !== undefined)        sets.push(sql`tskp_target = ${(dto.tskpTarget as number) ?? null}`);
     if (dto.tskpMeasurementUnit !== undefined) sets.push(sql`tskp_measurement_unit = ${(dto.tskpMeasurementUnit as string) ?? null}`);
-    // T11-02: ЦКП formula-turi (org_departments.ckp_formula_type) — CkpFactService.calcAchievement o'qiydi.
-    if (dto.ckpFormulaType !== undefined)    sets.push(sql`ckp_formula_type = ${(dto.ckpFormulaType as string) ?? null}`);
+    // T11-02 (SB0016 to'ldirildi): ЦКП formula-turi — IKKALA ustunga ham yoziladi
+    // (ckp_formula_type = eski/fallback, tskp_formula_type = yangi/ustuvor — CkpFactService.pickFormula
+    // avval tskp_formula_type'ni o'qiydi). Ikkalasi bir xil qiymatda saqlanadi — hr-gsd.repository
+    // (ckp_formula_type ustuvor COALESCE) va ckp-fact.service (tskp_formula_type ustuvor) ikkalasi ham
+    // izchil qiymat oladi (Q-46: mavjud o'quvchilar buzilmaydi).
+    if (dto.ckpFormulaType !== undefined) {
+      sets.push(sql`ckp_formula_type = ${(dto.ckpFormulaType as string) ?? null}`);
+      sets.push(sql`tskp_formula_type = ${(dto.ckpFormulaType as string) ?? null}`);
+    }
     if (dto.workSchedule !== undefined)      sets.push(sql`work_schedule = ${(dto.workSchedule as string) ?? null}`);
     // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga (1-7); DB CHECK chk_otdeleniye_no_range 1-7|NULL'ni majburlaydi.
     if (dto.otdeleniyeNo !== undefined)      sets.push(sql`otdeleniye_no = ${(dto.otdeleniyeNo as number) ?? null}`);
