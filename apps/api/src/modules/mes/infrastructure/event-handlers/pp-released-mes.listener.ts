@@ -34,6 +34,11 @@ export class PpReleasedMesListener implements IEventHandler<PpReleasedEvent> {
       //    deliveries could both pass the check and both insert) — the exact idempotency property Trigger 9
       //    depends on (see module JSDoc). This mirrors the MM PpReleasedListener's documented Rule 4
       //    exemption for the same class of conditional-idempotent-insert problem.
+      //    VERIFIED LIVE (2026-07-04, SB0297 follow-up): a backing UNIQUE INDEX
+      //    `production_sessions_session_number_unique` ON production_sessions(session_number) exists in
+      //    the live DB — the deterministic `MES-PO${poId}` session_number gives a second layer of
+      //    protection beyond the NOT EXISTS guard (a raw INSERT collision throws and is caught below,
+      //    logged, never crashes the handler).
       // 2) NO CLEAN SCHEMA MAPPING — the only Drizzle definition for this table
       //    (`productionSessions` in apps/api/src/shared/db/schema-compat-4.ts:140) is a stale/partial stub:
       //    it declares only id/productionOrderId(text)/sessionId/workCenterId/status/startedAt/endedAt/
