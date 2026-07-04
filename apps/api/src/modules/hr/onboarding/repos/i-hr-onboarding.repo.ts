@@ -14,7 +14,15 @@ export interface IHrOnboardingRepository {
   listPlans(positionId?: number, departmentId?: number): Promise<Result<OnboardingPlanRow[]>>;
   getPlanById(id: number): Promise<Result<OnboardingPlanRow | null>>;
   findEmployeeById(employeeId: number): Promise<Result<{ id: number; fullName: string | null } | null>>;
-  startOnboarding(dto: { employeeId: number; planId: number; mentorId?: number; startDate: Date; expectedEndDate: Date }): Promise<Result<EmployeeOnboardingRow>>;
+  /**
+   * SB0072/SB0101: onboarding's `employeeId` is a `users.id` (findEmployeeById queries `users`),
+   * but `employee_cards.employee_id` FKs to `employees(id)` — a DIFFERENT id space bridged by
+   * `employees.user_id`. Resolves users.id → employees.id so completeProbation can call
+   * CardService.assignEmployeeToCard with the correct id. Returns null when the user has no
+   * employees row (e.g. a system/admin account with no HR profile) — FABRIKATSIYA YO'Q.
+   */
+  findEmployeesIdByUserId(userId: number): Promise<Result<number | null>>;
+  startOnboarding(dto: { employeeId: number; planId: number; mentorId?: number; startDate: Date; expectedEndDate: Date; cardId?: number }): Promise<Result<EmployeeOnboardingRow>>;
   getOnboardingById(id: number): Promise<Result<EmployeeOnboardingRow | null>>;
   updateProgress(id: number, weeklyProgress: unknown[], updatedAt: Date): Promise<Result<EmployeeOnboardingRow>>;
   completeProbation(id: number, dto: { status: string; probationScore?: number; probationNotes?: string; isProbationPassed: boolean; actualEndDate: Date; updatedAt: Date }): Promise<Result<EmployeeOnboardingRow>>;

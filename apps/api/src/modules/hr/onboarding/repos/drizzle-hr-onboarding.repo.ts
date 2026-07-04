@@ -6,7 +6,8 @@
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { hrOnboardingPlans, hrEmployeeOnboardings, users } from '@europrint/schemas';
-import { eq, and, desc, isNull } from 'drizzle-orm';
+import { eq, and, desc, isNull, sql } from 'drizzle-orm';
+import { typedExecute } from '@shared/db/typed-execute';
 import { Ok, Err } from '@common/result';
 import { IHrOnboardingRepository } from './i-hr-onboarding.repo';
 
@@ -59,7 +60,22 @@ export class DrizzleHrOnboardingRepository implements IHrOnboardingRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || `Xodim #${employeeId} topilmadi`); }
   }
 
-  async startOnboarding(dto: { employeeId: number; planId: number; mentorId?: number; startDate: Date; expectedEndDate: Date }) {
+  /**
+   * SB0072/SB0101: users.id → employees.id bridge (employees.user_id, UNIQUE). Raw SQL (Rule 4):
+   * `@europrint/schemas` resolves a STALE `employees` pgTable (schema-hr-lms.ts, uuid id — does
+   * NOT match the live integer-id `employees` table) ahead of the canonical `lib/db` definition —
+   * a pre-existing schema-barrel precedence drift (see reference_schema_barrel_precedence memory).
+   * Raw SQL sidesteps that ambiguity entirely; parametrized, no injection surface.
+   */
+  async findEmployeesIdByUserId(userId: number) {
+    try {
+      const rows = await typedExecute<{ id: number }>(sql`SELECT id FROM employees WHERE user_id = ${userId} LIMIT 1`);
+      const row = Array.isArray(rows) ? rows[0] : undefined;
+      return Ok(row ? Number(row.id) : null);
+    } catch (e: unknown) { return Err((e as Error)?.message || `Xodim (employees) userId=#${userId} uchun topilmadi`); }
+  }
+
+  async startOnboarding(dto: { employeeId: number; planId: number; mentorId?: number; startDate: Date; expectedEndDate: Date; cardId?: number }) {
     try {
       const row: Omit<typeof hrEmployeeOnboardings.$inferInsert, 'id'> = {
         employeeId: dto.employeeId,
@@ -68,6 +84,8 @@ export class DrizzleHrOnboardingRepository implements IHrOnboardingRepository {
         startDate: dto.startDate,
         expectedEndDate: dto.expectedEndDate,
         mentorId: dto.mentorId,
+        // SB0072/SB0101: onboarding nishon-kartasi — completeProbation shu kartani faollashtiradi.
+        cardId: dto.cardId,
         weeklyProgress: '[]',
       };
       const [onboarding] = await db.insert(hrEmployeeOnboardings).values(row as typeof hrEmployeeOnboardings.$inferInsert).returning();

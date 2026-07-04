@@ -23,6 +23,7 @@ import { EnpsModule } from './enps/enps.module';
 import { PipModule } from './pip/pip.module';
 import { FinanceModule } from '../finance/finance.module';
 import { LmsModule } from '../lms/lms.module';
+import { OrgStructureModule } from '../org-structure/org-structure.module';
 import { hrControllers, hrProviders, hrExports } from './hr.providers';
 
 @Module({
@@ -47,6 +48,7 @@ import { hrControllers, hrProviders, hrExports } from './hr.providers';
     // two modules depend on each other, so both sides must use forwardRef().
     forwardRef(() => FinanceModule), // exports GlPostingService — payroll closure posts the GL journal through the ONE engine
     LmsModule, // T7-10: exports LmsCardGateService — payroll consults the LMS oylik-gate (EP-ORG-027/EP-LMS-070)
+    OrgStructureModule, // SB0072/SB0101: exports CardService — probation-pass activates the onboarding target card
   ],
   controllers: hrControllers,
   providers: hrProviders,

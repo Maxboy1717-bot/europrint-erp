@@ -11,6 +11,7 @@ const _time = new TashkentTimeService();
  */
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
@@ -19,6 +20,7 @@ import {
 import { IHrOnboardingRepository, HR_ONBOARDING_REPO } from './repos/i-hr-onboarding.repo';
 import { OnboardingJobService } from './onboarding-job.service';
 import { OnboardingProgressService, type OnboardingRecord } from './onboarding-progress.service';
+import { CardService } from '../../org-structure/card.service';
 import type {
   CreateOnboardingPlanDto,
   StartEmployeeOnboardingDto,
@@ -35,10 +37,14 @@ export { DEFAULT_HR_MANAGER_ONBOARDING };
 
 @Injectable()
 export class OnboardingService {
+  private readonly logger = new Logger(OnboardingService.name);
+
   constructor(
     private readonly jobSvc: OnboardingJobService,
     @Inject(HR_ONBOARDING_REPO) private readonly hrOnboardingRepo: IHrOnboardingRepository,
     private readonly progressSvc: OnboardingProgressService,
+    // SB0072/SB0101: probation-pass activates the onboarding target card (employee_cards).
+    private readonly cardService: CardService,
   ) {}
 
   // ───────────────────── ONBOARDING PLANS ─────────────────────────────────
@@ -98,10 +104,18 @@ export class OnboardingService {
     const expectedEndDate = new Date(startDate);
     expectedEndDate.setDate(expectedEndDate.getDate() + (plan.durationDays ?? 90));
 
-    const result = await this.hrOnboardingRepo.startOnboarding({ employeeId: dto.employeeId, planId: dto.planId, mentorId: dto.mentorId, startDate, expectedEndDate });
+    const result = await this.hrOnboardingRepo.startOnboarding({
+      employeeId: dto.employeeId,
+      planId: dto.planId,
+      mentorId: dto.mentorId,
+      startDate,
+      expectedEndDate,
+      // SB0072/SB0101: onboarding nishon-kartasi — completeProbation shu kartani faollashtiradi.
+      cardId: dto.cardId,
+    });
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
-  
+
     });}
 
   async updateProgress(onboardingId: number, dto: UpdateOnboardingProgressDto, evaluatedById: number){
@@ -135,6 +149,15 @@ export class OnboardingService {
   
     });}
 
+  /**
+   * SB0072/SB0101 fix — onboarding→karta uzilishi: probatsiya 'PASSED' bo'lsa va onboarding
+   * yozuvida nishon-karta (`card_id`) belgilangan bo'lsa, xodim shu kartaga CardService orqali
+   * biriktiriladi (employee_cards INSERT, EP-ORG-002 atomic guard bilan). FABRIKATSIYA YO'Q
+   * (Q-40): card_id NULL bo'lsa (eski yozuv yoki hali belgilanmagan) — hech narsa faollashtirilmaydi,
+   * faqat probatsiya natijasi yoziladi (avvalgi xulq o'zgarmaydi). Karta band bo'lsa (409 CONFLICT)
+   * yoki topilmasa (404) — probatsiya natijasi baribir saqlanadi (karta-faollashtirish ikkinchi
+   * darajali qadam, probatsiya bahosini bloklamaydi), xato faqat loglanadi.
+   */
   async completeProbation(onboardingId: number, dto: CompleteProbationDto){
     return safeCall(async () => {
     const onboardingResult = await this.hrOnboardingRepo.getOnboardingById(onboardingId);
@@ -150,8 +173,33 @@ export class OnboardingService {
       updatedAt: _time.now(),
     });
     if (!result.ok) throw new InternalServerErrorException(result.error);
+
+    if (dto.isProbationPassed) {
+      const onboarding = onboardingResult.data as Record<string, unknown>;
+      // Onboarding.employeeId is a users.id (findEmployeeById queries `users`), but
+      // employee_cards.employee_id FKs to employees(id) — bridge via employees.user_id
+      // (findEmployeesIdByUserId) before calling CardService (Q-40: no id fabricated/guessed).
+      const userId = Number(onboarding['employeeId'] ?? onboarding['employee_id'] ?? 0);
+      const cardId = onboarding['cardId'] ?? onboarding['card_id'];
+      if (userId > 0 && cardId != null && Number(cardId) > 0) {
+        const empIdR = await this.hrOnboardingRepo.findEmployeesIdByUserId(userId);
+        if (!empIdR.ok || !empIdR.data) {
+          this.logger.warn(
+            `completeProbation #${onboardingId}: karta #${cardId} faollashtirilmadi — xodim (employees) userId=#${userId} uchun topilmadi`,
+          );
+        } else {
+          const assignR = await this.cardService.assignEmployeeToCard(Number(cardId), empIdR.data, true);
+          if (!assignR.ok) {
+            this.logger.warn(
+              `completeProbation #${onboardingId}: karta #${cardId} faollashtirilmadi (xodim #${empIdR.data}) — ${assignR.error.message}`,
+            );
+          }
+        }
+      }
+    }
+
     return result.data;
-  
+
     });}
 
   async getEmployeeOnboarding(employeeId: number){

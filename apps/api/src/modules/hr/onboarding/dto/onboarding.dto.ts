@@ -24,6 +24,9 @@ export const StartEmployeeOnboardingSchema = z.object({
   planId:     z.number().int(),
   mentorId:   z.number().int().optional(),
   startDate:  isoDate,
+  // SB0072/SB0101: onboarding nishon-kartasi (org_departments.id) — bo'lsa, probation
+  // o'tgach shu karta employee_cards'ga faollashtiriladi (OnboardingService.completeProbation).
+  cardId:     z.number().int().positive().optional(),
 });
 export class StartEmployeeOnboardingDto extends createZodDto(StartEmployeeOnboardingSchema) {}
 
