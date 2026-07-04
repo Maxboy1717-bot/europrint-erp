@@ -116,6 +116,27 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
     }
   }
 
+  /**
+   * SB0237 (06-PP audit) — write-path for isUrgent (EP-PP-097 ZARUR) and isFrozen/
+   * frozenUntil (EP-PP-025/061 frozen-zone no-preempt). Role-gated at the controller
+   * (owner/director authority — see production-priority.service.ts header comment).
+   */
+  async updateFlags(
+    id: number,
+    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null },
+  ): Promise<Result<Record<string, unknown>>> {
+    try {
+      const patch: Partial<typeof productionOrders.$inferInsert> = {
+        ...(flags.isUrgent !== undefined ? { isUrgent: flags.isUrgent } : {}),
+        ...(flags.isFrozen !== undefined ? { isFrozen: flags.isFrozen } : {}),
+        ...(flags.frozenUntil !== undefined ? { frozenUntil: flags.frozenUntil } : {}),
+        updatedAt: _time.now(),
+      };
+      const result = await db.update(productionOrders).set(patch).where(eq(productionOrders.id, id)).returning();
+      return Ok(result[0]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Flag yangilashda xatolik'); }
+  }
+
   async softDelete(id: number): Promise<Result<void>> {
     try {
       await db.update(productionOrders).set({ deletedAt: _time.now() }).where(eq(productionOrders.id, id));

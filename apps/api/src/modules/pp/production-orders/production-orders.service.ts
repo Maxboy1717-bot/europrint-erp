@@ -101,6 +101,24 @@ export class ProductionOrdersService {
     return '';
   }
 
+  /**
+   * SB0237 (06-PP audit) — role-gated (owner/director, enforced by the controller's
+   * @Roles) write-path for the ZARUR (isUrgent, EP-PP-097) and frozen-zone (isFrozen/
+   * frozenUntil, EP-PP-025/061 no-preempt) flags. Kept out of the generic `update()`
+   * so these authority-only fields can never be set through a lower-privileged PATCH.
+   */
+  async updateFlags(
+    id: number,
+    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null },
+  ) {
+    return safeCall(async () => {
+      await this.findOne(id);
+      const result = await this.ppProductionOrdersRepo.updateFlags(id, flags);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
+
   async remove(id: number){
     return safeCall(async () => {
     await this.findOne(id);

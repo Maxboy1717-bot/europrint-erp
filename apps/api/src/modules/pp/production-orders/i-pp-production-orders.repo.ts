@@ -12,6 +12,16 @@ export interface IPpProductionOrdersRepository {
   create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
   update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
   updateStatus(id: number, status: string, changedBy?: number): Promise<Result<Record<string, unknown>>>;
+  /**
+   * SB0237 (06-PP audit) — dedicated write-path for the EP-PP-097 (ZARUR/isUrgent) and
+   * EP-PP-025/061 (frozen-zone no-preempt) flags. Kept separate from the generic
+   * `update()` whitelist because these flags are owner/director-authority-gated at the
+   * controller (@Roles), not general-purpose PATCH fields.
+   */
+  updateFlags(
+    id: number,
+    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null },
+  ): Promise<Result<Record<string, unknown>>>;
   softDelete(id: number): Promise<Result<void>>;
 }
 export const PP_PRODUCTION_ORDERS_REPO = 'IPpProductionOrdersRepository';
