@@ -17,11 +17,13 @@
  *
  *   ARCHITECTURE.md §10 #6, §8.1 (HARD BLOCK)
  *
- *   No production code currently publishes this event on the CQRS bus
- *   (the legacy listener received no string-topic emits either, so it was
- *   already dead-letter); the listener is therefore a no-op at runtime until
- *   a publisher is wired — same dead-letter state as the legacy @OnEvent
- *   listener was previously in.
+ *   SB0811/SB0823 fix (2026-07-04, stale-comment correction — the chain is wired):
+ *   `sd/application/commands/approve-tech-checkpoint.handler.ts` publishes this event
+ *   once all 3 tech checkpoints (BOM+Routing+Card) are approved on an order
+ *   (`order.isThreeCheckpointPassed()`); this listener then evaluates the advance
+ *   percent and — on success — publishes `AdvanceApprovedEvent`, which
+ *   `pp/infrastructure/event-handlers/advance-approved.listener.ts` consumes to unlock
+ *   production planning. End-to-end: SD checkpoint → FI advance-gate → PP unlock.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -108,8 +110,12 @@ export class TechThreeCheckpointListener
 
   private async fetchOrderForAdvanceCheck(orderId: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
+      // SB0811/SB0823 fix (2026-07-04): the live sales_orders column is `advance_percent`,
+      // NOT `advance_required_percent` (that column does not exist) — this SELECT threw a
+      // DB_ERROR on every invocation, silently no-op'ing Trigger 6 for every order (caught by
+      // safeCall, logged, order stuck at master_status='pending_technology' forever).
       const result = await db.execute<Row>(sql`
-        SELECT id, total_value, advance_paid_amount, advance_required_percent,
+        SELECT id, total_value, advance_paid_amount, advance_percent AS advance_required_percent,
                tech_bom_approved, tech_routing_approved, tech_card_approved,
                master_status
         FROM sales_orders
