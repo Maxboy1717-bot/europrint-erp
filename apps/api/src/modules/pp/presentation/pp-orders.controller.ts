@@ -16,6 +16,7 @@ import { ReleaseProductionOrderCommand} from '../application/commands/release-pr
 import { ProductionPlanQuery} from '../application/queries/production-plan.handler';
 import { GetProductionOrdersQuery } from '../application/queries/get-production-orders.query';
 import { GetProductionOrderByIdQuery } from '../application/queries/get-production-order-by-id.query';
+import { ProductionOrdersService } from '../production-orders/production-orders.service';
 import { z } from 'zod';
 
 enum Role {
@@ -25,6 +26,19 @@ enum Role {
  SEX_BOSHLIG = 'sex_boshlig',
 }
 
+// SB0237 (06-PP audit): EP-PP-025/061 frozen-zone — "Cleared only by owner/director
+// authority" (production-priority.service.ts header). ZARUR (isUrgent) va freeze
+// bir xil authority-darajasi: rejalashtirish jarayonini o'zgartiradigan qaror.
+const FlagsDtoSchema = z.object({
+  isUrgent: z.boolean().optional(),
+  isFrozen: z.boolean().optional(),
+  frozenUntil: z.coerce.date().nullable().optional(),
+  reason: z.string().min(5),
+}).refine(
+  (d) => d.isUrgent !== undefined || d.isFrozen !== undefined || d.frozenUntil !== undefined,
+  { message: 'Kamida bitta flag maydoni kerak' },
+);
+
 const CreateProductionOrderDtoSchema = z.object({
   soId: z.number(),
   bomId: z.number(),
@@ -33,6 +47,8 @@ const CreateProductionOrderDtoSchema = z.object({
   plannedEnd: z.coerce.date(),
   checkpointValidated: z.boolean(),
   reason: z.string().min(5),
+  // SB0233 (06-PP audit): ixtiyoriy org-karta (org_departments.id) tayinlash.
+  orgDepartmentId: z.number().int().positive().optional(),
 });
 
 const ReleaseProductionOrderDtoSchema = z.object({
@@ -48,7 +64,8 @@ export class PpOrdersController {
   private readonly logger = new Logger(PpOrdersController.name);
 
  constructor(private commandBus: CommandBus,
-  private queryBus: QueryBus) {}
+  private queryBus: QueryBus,
+  private productionOrdersService: ProductionOrdersService) {}
 
  @ApiOperation({ summary: 'Get all' })
  @ApiResponse({ status: 200, description: 'OK' })
@@ -104,6 +121,7 @@ export class PpOrdersController {
    parsed.plannedStart,
    parsed.plannedEnd,
    parsed.checkpointValidated,
+   parsed.orgDepartmentId,
   );
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
@@ -136,4 +154,29 @@ export class PpOrdersController {
   const res = await this.queryBus.execute(query);
   return unwrapOrThrow(res);
 }
+
+ // SB0237 (06-PP audit): ZARUR (isUrgent, EP-PP-097) / frozen-zone (isFrozen+
+ // frozenUntil, EP-PP-025/061 no-preempt) — "Cleared only by owner/director
+ // authority" (production-priority.service.ts). Restricted to SUPER_ADMIN + DIRECTOR
+ // only (narrower than the read-side queue roles) — this is a planning-override
+ // decision, not an operational status change.
+ @ApiOperation({ summary: 'Set urgent/frozen flags (owner/director authority)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @Patch(':id/flags')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+ async setFlags(
+  @Param('id') id: number,
+  @Body() dto: z.infer<typeof FlagsDtoSchema>,
+ ) {
+  const parsed = FlagsDtoSchema.parse(dto);
+  this.logger.log(`Setting PP order #${id} flags: ${JSON.stringify({ isUrgent: parsed.isUrgent, isFrozen: parsed.isFrozen, frozenUntil: parsed.frozenUntil })}`);
+  const result = await this.productionOrdersService.updateFlags(Number(id), {
+   isUrgent: parsed.isUrgent,
+   isFrozen: parsed.isFrozen,
+   frozenUntil: parsed.frozenUntil,
+  });
+  return unwrapOrThrow(result);
+ }
 }
