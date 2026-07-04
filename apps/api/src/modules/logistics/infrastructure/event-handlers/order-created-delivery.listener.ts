@@ -11,14 +11,15 @@
  *   non-migrated consumers — see EVENT_NAME_MAP entry in
  *   event-bridge.service.ts.
  *
- *   PAYLOAD CAVEAT (dead-letter today):
+ *   PAYLOAD RESOLVED (T7-04, 2026-06-26, commit 2c35b89d):
  *   The canonical `OrderCreatedEvent` carries only `{ orderId, companyId,
- *   orderNumber, totalAmount }`. The previous string-topic listener also
- *   required `customerName` + `deliveryAddress` from the outbox payload to
- *   create a delivery record. Until the publisher (`CreateOrderHandler` /
- *   outbox publisher tick) is enriched OR the sales-order repo exposes the
- *   customer + delivery address, this handler logs and exits — same
- *   dead-letter state the skills-matrix listener was previously in.
+ *   orderNumber, totalAmount }` — it does NOT carry `customerName` /
+ *   `deliveryAddress`. Rather than widen the event payload, the fix moved
+ *   resolution into the repository: `IDeliveryRepo.createFromSalesOrder`
+ *   looks up the sales order (+ linked CRM company) directly and derives
+ *   customer name / delivery address from there. This handler no longer
+ *   logs-and-exits — it calls `createFromSalesOrder`, which performs a real
+ *   INSERT into `deliveries`, closing the SD → Logistics golden-thread hop.
  *
  *   The legacy `@OnEvent` listener for the string-topic flow has been
  *   retired in this migration; the rich-payload path now flows exclusively
