@@ -17,6 +17,13 @@ export const KPI_RATING_THRESHOLDS = {
   average:   0.6,
 } as const;
 
+/**
+ * IoT tablet inline-QC → qc_defects bridge (SB0357): pass rate (%) below which
+ * a defect surfaced from the floor-operator tablet is escalated from MINOR to
+ * MAJOR severity when reported into QC's own qc_defects table.
+ */
+export const IOT_INLINE_QC_MAJOR_DEFECT_THRESHOLD_PCT = 50;
+
 /** Sales / CRM forecast multipliers */
 export const FORECAST = {
   optimistic:          1.3,
