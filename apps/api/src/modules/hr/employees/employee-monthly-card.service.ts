@@ -52,17 +52,27 @@ export class EmployeeMonthlyCardService {
         (e.first_name || ' ' || e.last_name) AS full_name,
         ofn.position_name,
         od.name AS department_name,
+        -- NOTE: pre-existing bug fix (unrelated to SB0431/SB0416) -- attendance
+        -- has no check_in_date column; canonical date column is "date" (a real
+        -- date-typed column; attendance_date is varchar and TZ-shifted).
         (SELECT COUNT(*)::int FROM attendance a
           WHERE a.employee_id = e.id
-            AND EXTRACT(YEAR FROM a.check_in_date) = ${year}
-            AND EXTRACT(MONTH FROM a.check_in_date) = ${month}) AS days_present,
+            AND EXTRACT(YEAR FROM a.date) = ${year}
+            AND EXTRACT(MONTH FROM a.date) = ${month}) AS days_present,
         (SELECT COUNT(*)::int FROM hr_disciplinary_actions da
           WHERE da.employee_id = e.id
             AND da.action_type LIKE 'late%'
             AND EXTRACT(YEAR FROM da.action_date) = ${year}
             AND EXTRACT(MONTH FROM da.action_date) = ${month}) AS days_late,
         0::int AS days_absent,
-        0::numeric AS bonus_uzs,
+        -- SB0431/SB0416 fix: bonus_uzs endi haqiqiy bonus_payments (HR/DIRECTOR
+        -- tasdiqlagan, status='approved') jadvalidan yig'iladi -- bonus.repository.ts
+        -- ning sumApprovedByEmployeeAndPeriod() bilan bir xil naqsh (approve/reject
+        -- workflow allaqachon mavjud, faqat bu fayl 0 hardcode qilgan edi).
+        (SELECT COALESCE(SUM(bp.amount), 0)::numeric FROM bonus_payments bp
+          WHERE bp.employee_id = e.id AND bp.status = 'approved'
+            AND EXTRACT(YEAR FROM bp.payment_date::date) = ${year}
+            AND EXTRACT(MONTH FROM bp.payment_date::date) = ${month}) AS bonus_uzs,
         (SELECT COALESCE(SUM(applied_fine_uzs), 0)::numeric FROM hr_disciplinary_actions da
           WHERE da.employee_id = e.id AND da.status = 'applied'
             AND EXTRACT(YEAR FROM da.action_date) = ${year}
