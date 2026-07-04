@@ -147,11 +147,13 @@ export class AiRouterService {
       const todaySpentValue = isErr(todaySpentResult) ? 0 : todaySpentResult.data;
       const providerStats = await this.collectProviderStats(today);
       const topTasks = await this.collectTopTasks(today);
+      const byCard = await this.collectSpendByCard(today);
       const requestCount = Object.values(providerStats).reduce((sum, p) => sum + p.requestCount, 0);
       return Ok({
         today: { spent: todaySpentValue, remaining: DAILY_BUDGET_USD - todaySpentValue, budget: DAILY_BUDGET_USD, requestCount },
         byProvider: providerStats,
         topTaskTypes: (Array.isArray(topTasks) ? topTasks : []).map((row) => ({ taskType: row.taskType as AiTaskType, spent: parseFloat(row.spent), count: row.count })),
+        byCard,
       });
     } catch (e) {
       this.logger.warn(`getUsageStats: fallback due to error: ${e}`);
@@ -164,6 +166,7 @@ export class AiRouterService {
       today: { spent: 0, remaining: DAILY_BUDGET_USD, budget: DAILY_BUDGET_USD, requestCount: 0 },
       byProvider: { openai: { spent: 0, requestCount: 0 }, gemini: { spent: 0, requestCount: 0 }, claude: { spent: 0, requestCount: 0 } },
       topTaskTypes: [],
+      byCard: [],
     };
   }
 
@@ -198,6 +201,23 @@ export class AiRouterService {
       const topTasksResult = await this.aiRouterRepo.getTopTasksBySpend(today, 10);
       if (topTasksResult.ok) return topTasksResult.data as Array<{ taskType: string | null; spent: string; count: number }>;
     } catch { this.logger.warn('getUsageStats: topTasks query failed'); }
+    return [];
+  }
+
+  /** SB0529: per-karta xarajat rollup — UsageStats.byCard uchun. */
+  private async collectSpendByCard(today: Date): Promise<UsageStats['byCard']> {
+    try {
+      const byCardResult = await this.aiRouterRepo.getSpendByCard(today, 20);
+      if (byCardResult.ok) {
+        return byCardResult.data.map((row) => ({
+          cardId: row.cardId,
+          userId: row.userId,
+          fullName: row.fullName,
+          spent: parseFloat(row.spent),
+          count: row.count,
+        }));
+      }
+    } catch { this.logger.warn('getUsageStats: byCard query failed'); }
     return [];
   }
 

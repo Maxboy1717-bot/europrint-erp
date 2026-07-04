@@ -171,4 +171,10 @@ export interface UsageStats {
   };
   byProvider: Record<AiProvider, { spent: number; requestCount: number }>;
   topTaskTypes: Array<{ taskType: AiTaskType; spent: number; count: number }>;
+  /**
+   * SB0529: per-karta (org-chart karta) xarajat rollup — ai_usage_logs.user_id →
+   * users.card_id orqali. cardId/fullName null bo'lishi mumkin (user_id yo'q
+   * yoki users bilan mos kelmasa) — bunda ham spent yo'qolmaydi (umumiy jamg'arma).
+   */
+  byCard: Array<{ cardId: number | null; userId: string | null; fullName: string | null; spent: number; count: number }>;
 }
