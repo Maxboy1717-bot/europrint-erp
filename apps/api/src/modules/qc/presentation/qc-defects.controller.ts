@@ -249,15 +249,30 @@ export class QcDefectsController {
     return { orderId, approved: true };
   }
 
+  /** Persist the reject decision into qc_approvals (audit trail — was missing: approve
+   *  wrote an approval row but reject only flipped qc_inspections.status, so reason/
+   *  rejectedBy were dropped and the 3-decision flow (approve/reject/rework) had no
+   *  queryable record for the reject branch). Mirrors the approve/* insert pattern. */
+  private async _recordRejection(orderId: string, dto: z.infer<typeof QcRejectionSchema>): Promise<void> {
+    const oid = parseInt(orderId, 10);
+    if (!Number.isFinite(oid)) return;
+    const rejecter = dto.rejectedBy != null ? Number(dto.rejectedBy) || null : null;
+    await db.execute(sql`
+      INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
+      VALUES (${oid}, 'qc', ${rejecter}, 'rejected', ${dto.reason ?? null})
+    `);
+  }
+
   @ApiOperation({ summary: 'Reject order' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('reject/:orderId')
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcRejectionSchema.parse(body ?? {});
+    const dto = QcRejectionSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'rejected');
     if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    await this._recordRejection(orderId, dto);
     return { orderId, rejected: true };
   }
 
@@ -267,9 +282,10 @@ export class QcDefectsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('reject/:orderId')
   async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
-    QcRejectionSchema.parse(body ?? {});
+    const dto = QcRejectionSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'rejected');
     if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    await this._recordRejection(orderId, dto);
     return { orderId, rejected: true };
   }
 
