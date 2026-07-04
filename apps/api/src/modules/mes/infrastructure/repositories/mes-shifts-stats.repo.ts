@@ -68,6 +68,30 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
+  /**
+   * Handover tasdiq-gate (SB0429): shiftHandover() above creates a 'pending'
+   * draft with no signature — anyone could treat it as "done" even though the
+   * receiving supervisor never actually acknowledged it. This closes that gap
+   * the same way pos-shift-handover.service.ts's 2-signature gate does: the
+   * row only flips 'pending' → 'confirmed' when the RECEIVING supervisor
+   * (received_by) submits a signature, and the WHERE clause makes every
+   * failure mode return 0 rows (caught by the caller as NOT_FOUND/forbidden):
+   *   - already confirmed (status <> 'pending')            → 0 rows
+   *   - wrong user confirming (received_by <> confirmerId) → 0 rows
+   * INSERT into mes_shift_handovers (the VIEW) is a no-go for UPDATE targeting
+   * — write straight to the base table (shift_handovers), consistent with
+   * closeShiftEvaluation()'s base-table-not-view rule above.
+   */
+  async confirmShiftHandover(id: number, confirmerId: number, signatureData: string): Promise<Row[]> {
+    const rows = await runQuery<Row>(sql`
+      UPDATE shift_handovers
+      SET status = 'confirmed', signature_data = ${signatureData}
+      WHERE id = ${id} AND status = 'pending' AND received_by = ${confirmerId}
+      RETURNING *
+    `);
+    return rows.rows as Row[];
+  }
+
   async closeShiftEvaluation(shift_id: number, supervisor_id: number | null, production_score: number, quality_score: number, safety_score: number, notes: string | null): Promise<Row[]> {
     // INSERT into base table (shift_evaluations), NOT the VIEW (mes_shift_evaluations).
     // Column mapping: supervisor_id→operator_id, production_score→productivity_score.

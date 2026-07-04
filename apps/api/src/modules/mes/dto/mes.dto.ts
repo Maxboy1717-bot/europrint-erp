@@ -89,6 +89,19 @@ export const MesShiftHandoverSchema = z.object({
 });
 export type MesShiftHandoverDto = z.infer<typeof MesShiftHandoverSchema>;
 
+// ─── Handover tasdiq (qabul-gate, SB0429) ─────────────────────────────────────
+// A handover row is created 'pending' by shiftHandover() above. It stays an
+// unconfirmed draft until the RECEIVING supervisor (received_by) confirms it
+// with a signature — mirrors the POS 2-signature gate pattern (pos-shift-
+// handover.service.ts) scaled to MES's single-receiver schema. Confirming
+// without a signature, confirming twice, or confirming as someone other than
+// the receiver must all be rejected (enforced in the repository UPDATE WHERE
+// clause, not just here).
+export const MesConfirmShiftHandoverSchema = z.object({
+  signature_data: z.string().min(1).max(MES_TITLE_MAX_LENGTH * 10),
+});
+export type MesConfirmShiftHandoverDto = z.infer<typeof MesConfirmShiftHandoverSchema>;
+
 export const MesCloseShiftEvaluationSchema = z.object({
   shift_id:          z.number().int().positive(),
   supervisor_id:     z.number().int().positive().optional(),

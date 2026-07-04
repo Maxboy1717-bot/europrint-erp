@@ -21,6 +21,10 @@ export class MesShiftsStatsService {
     return safeCall(async () => this.repo.shiftHandover(outgoing_supervisor, incoming_supervisor, notes, issues));
   }
 
+  async confirmShiftHandover(id: number, confirmerId: number, signatureData: string) {
+    return safeCall(async () => this.repo.confirmShiftHandover(id, confirmerId, signatureData));
+  }
+
   async closeShiftEvaluation(shift_id: number, supervisor_id: number | null, production_score: number, quality_score: number, safety_score: number, notes: string | null) {
     return safeCall(async () => this.repo.closeShiftEvaluation(shift_id, supervisor_id, production_score, quality_score, safety_score, notes));
   }

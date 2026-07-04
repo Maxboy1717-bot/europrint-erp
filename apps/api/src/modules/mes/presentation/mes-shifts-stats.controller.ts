@@ -16,8 +16,11 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { MesShiftsStatsService } from '../application/mes-shifts-stats.service';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
 import {
   MesShiftHandoverSchema, MesShiftHandoverDto,
+  MesConfirmShiftHandoverSchema, MesConfirmShiftHandoverDto,
   MesCloseShiftEvaluationSchema, MesCloseShiftEvaluationDto,
   MesUpdateSessionQuantitySchema, MesUpdateSessionQuantityDto,
   MesMaterialConsumptionSchema, MesMaterialConsumptionDto,
@@ -51,6 +54,20 @@ export class MesShiftsStatsController {
   async shiftHandover(@Body() body: MesShiftHandoverDto) {
     const _rR = await this.svc.shiftHandover(body.outgoing_supervisor, body.incoming_supervisor, body.notes ?? null, body.issues ?? null);
     const r = unwrapOrThrow(_rR);
+    return r[0];
+  }
+
+  @ApiOperation({ summary: 'Confirm shift handover (receiving supervisor signature gate, SB0429)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found, already confirmed, or not the receiving supervisor' })
+  @Patch('shifts/handover/:id/confirm')
+  @UsePipes(new ZodValidationPipe(MesConfirmShiftHandoverSchema))
+  @Roles(...MES_WRITE_ROLES)
+  async confirmShiftHandover(@Param('id') id: string, @Body() body: MesConfirmShiftHandoverDto, @CurrentUser() user: AuthenticatedUser) {
+    const _rR = await this.svc.confirmShiftHandover(safeInt(id, 0), user?.id ?? 0, body.signature_data);
+    const r = unwrapOrThrow(_rR);
+    assertFound(r, 'Handover topilmadi, allaqachon tasdiqlangan, yoki siz qabul qiluvchi emassiz');
     return r[0];
   }
 
