@@ -95,16 +95,4 @@ export class CameraReportsController {
     const dto = ReportGenerateBodySchema.parse(body);
     return unwrapOrThrow(await this.svc.generateReport('excel', dto.date_from, dto.date_to));
   }
-
-  @ApiOperation({ summary: 'Download pdf' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('generate-pdf')
-  @Roles(...CAM_READ)
-  async downloadPdf(@Query('period') period?: string) { return { url: null, period }; }
-
-  @ApiOperation({ summary: 'Download excel' })
-  @ApiResponse({ status: 200, description: 'OK' })
-  @Get('generate-excel')
-  @Roles(...CAM_READ)
-  async downloadExcel(@Query('period') period?: string) { return { url: null, period }; }
 }
