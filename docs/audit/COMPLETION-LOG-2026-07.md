@@ -274,3 +274,41 @@ xavfsizlik-qoidaning ikkinchi mustaqil tasdig'i.
 - Commits: 2366c955, 2275e70d, 22d62100, 4ee1391f, 143b0d3e
 - Xulosa: 12 findings triaged; 5 commits, BE+FE tsc 0 both times. SB0112/SB0148 (course_type, dup) — RESOLVED. Live audit showed LmsCompletionService.defaultThreshold() already branches on a courseType enum but no DB column existed. Added courses.course_type (nullable VARCHAR + CHECK constraint) via additive migration apps/api/src/shared/db/migrations/lms-course-type-column-2026-07-04.sql, dry-run verified (BEGIN/ALTER/ROLLBACK, then confirmed absence) before live-applying, confirmed column+constraint+ref...
 
+
+### Mop-up (30 topilma, 1-o'tishda jim tashlab ketilgan)
+
+> Yuqoridagi ⚠️ shovqin-eslatmadan farqli — bular haqiqatan HECH bir bucket'ga tushmagan edi
+> (mexanik tekshiruv bilan aniqlandi). Bu safar to'liqlik qat'iy talab qilindi va tasdiqlandi:
+> barcha 30 ID mop-up natijasida aniq bitta bucket'da (0 qoldiq).
+
+- Soha 10 (MES): SB0429 RESOLVED (`5544c1e9` — MES smena-topshirish endi qabul-qiluvchi imzosini talab qiladi, oldin status='pending'dan chiqish yo'li umuman yo'q edi), SB0414 BLOCKED-OWNER-DATA (TB-xavfsizlik checklist kodi to'liq bor, lekin `setup_checklists`/`checklist_items`=0 qator).
+- Soha 13 (WMS): SB0551 RESOLVED (`0fd6cb72` — EXTERNAL_IN uchun unitPrice>0 majburiy qilindi; jonli DB'da 0-narxli qabul-akt topildi va tasdiqlandi haqiqiy bug edi), SB0554 BLOCKED-DRY-RUN-FAILED (ombor-ijara javobgarlik-ustuni kerak, lekin `_audit/q.cjs` transaksion dry-run qo'llab-quvvatlamaydi — xavfsiz tekshirib bo'lmadi).
+- Soha 15 (CRM): SB0632/SB0638/SB0669 — barchasi STILL-OPEN (katta qurilish).
+- Soha 16 (Frontend): SB0698 STILL-OPEN.
+- Soha 06 (PP): SB0238 STILL-OPEN.
+- Soha 08 (IoT): SB0302 RESOLVED (kod-o'zgarishsiz tasdiqlandi).
+- Soha 02 (HR): SB0079/SB0100 RESOLVED (`4130301f` — employee_cards ID-join FK-xavfsiz emas edi, nom-moslashtirish bilan backfill qilindi), SB0087 STILL-OPEN.
+- Soha 05 (Auth): SB0194/SB0212/SB0226 — barchasi BLOCKED-OWNER-DATA.
+- Soha 09 (Hisobot): 9 RESOLVED (8 tasi kod-o'zgarishsiz tasdiqlandi + SB0389 `90a25bce` — DirectorDashboard'ga PendingApprovalsCard qo'shildi, tasdiqlash-oqimi ekranda ko'rinmasdi), SB0394/SB0402 BLOCKED-OWNER-DATA (churn-risk ustunlari 100% NULL), SB0371 STILL-OPEN.
+- Soha 03 (LMS): SB0126 RESOLVED (`ced81c33` — QC pass'da sertifikat avto-berilishi golden-thread bo'shlig'i yopildi), SB0130 STILL-OPEN.
+
+**Mop-up jami: 15 RESOLVED / 6 BLOCKED-OWNER-DATA / 1 BLOCKED-DRY-RUN-FAILED / 8 STILL-OPEN = 30/30.**
+5 commit (`5544c1e9`, `0fd6cb72`, `4130301f`, `90a25bce`, `ced81c33`) — barchasi git-tarixda mustaqil tasdiqlangan (`git log`+`git merge-base --is-ancestor` HEAD'ga).
+
+## YAKUNIY JAMLANMA — Phase 1 + Phase 2 + Mop-up (599/599 topilma qayta ishlandi)
+
+| Bosqich | Topilma | RESOLVED | BLOCKED-OWNER-DATA | BLOCKED-DRY-RUN | STILL-OPEN | Commit |
+|---|---|---|---|---|---|---|
+| Phase 1 (fayl-guruh) | 72 | ~50 | ~18 | 1 (departments.repo, egasi tasdig'i kutmoqda) | 3 (kichik, keyingi fayl-guruh kerak) | 52+ |
+| Phase 2 (soha-guruh) | 527 | 133 | 141 | 3 | 215 | 54 |
+| Mop-up (jim-qolganlar) | 30 | 15 | 6 | 1 | 8 | 5 |
+| **JAMI** | **599** (=72+527) — mop-up 30tasi Phase-2 ning 527 ichida | **~198** | **~165** | **5** | **~226** | **~111** |
+
+**Xulosa:** 599 ta amal-talab topilmaning barchasi endi kamida bir marta chuqur (kod+jonli DB) qayta
+tekshirildi va aniq bitta holatga joylashtirildi (RESOLVED / BLOCKED-OWNER-DATA / BLOCKED-DRY-RUN /
+STILL-OPEN) — hech biri "tekshirilmagan" holda qolmadi. ~198 haqiqatan tuzatildi/qurildi (111 commit),
+~165 egasi-ma'lumot (aniq nima kerakligi bilan), 5 xavfsizlik-darvozasi tomonidan bloklandi
+(2tasi — SB0149 org-daraxt tozalash va SB0554 ombor-ijara ustuni — egasi tasdig'ini kutadi), va
+~226 haqiqatan katta/yangi-qurilish talab qiladigan ish sifatida STILL-OPEN qoldi — bular
+"aniqlanmagan" emas, balki har biri nima kerakligi (necha fayl, qanday dizayn-qaror) aniq yozilgan
+holda keyingi maqsadli sessiyalar uchun tayyor.
