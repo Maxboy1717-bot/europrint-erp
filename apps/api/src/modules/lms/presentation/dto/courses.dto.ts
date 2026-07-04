@@ -5,6 +5,13 @@
 
 import { z } from 'zod';
 
+// SB0112/SB0148 (03-lms-darslik): kurs turi tasnifi (courses.course_type, CHECK-constraint bilan
+// mos). LmsCompletionService.defaultThreshold() shu enum'ni ishlatadi (safety_tx/razryad_exam
+// tezroq o'tish chegarasi, boshqalari umumiy).
+export const COURSE_TYPES = [
+  'safety_tx', 'regulation', 'general', 'razryad_exam', 'onboarding', 'replication',
+] as const;
+
 export const CreateCourseSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
@@ -12,6 +19,11 @@ export const CreateCourseSchema = z.object({
   passingScore: z.number().int().min(0).max(100).optional(),
   isMandatory: z.boolean().optional(),
   durationHours: z.number().optional(),
+  // EP-LMS-001 (SB0120, T11-03): karta-markazli darslik biriktiruvi. cardId -> org_departments/org_functions.id.
+  // null/undefined = karta biriktirilmagan (universal kurs).
+  cardId: z.number().int().positive().nullish(),
+  // SB0112/SB0148: kurs turi (tasnif). null/undefined = tasniflanmagan.
+  courseType: z.enum(COURSE_TYPES).nullish(),
 });
 export type CreateCourseDto = z.infer<typeof CreateCourseSchema>;
 

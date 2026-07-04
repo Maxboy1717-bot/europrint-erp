@@ -42,6 +42,10 @@ interface CourseForEdit {
   mentorId: string | null;
   startDate: string | null;
   endDate: string | null;
+  cardId?: string | null;
+  card_id?: string | number | null;
+  courseType?: string | null;
+  course_type?: string | null;
 }
 
 export default function Courses() {
@@ -246,6 +250,10 @@ export default function Courses() {
                         mentorId: fullCourse.mentorId,
                         startDate: fullCourse.startDate,
                         endDate: fullCourse.endDate,
+                        cardId: fullCourse.cardId != null
+                          ? String(fullCourse.cardId)
+                          : (fullCourse.card_id != null ? String(fullCourse.card_id) : null),
+                        courseType: fullCourse.courseType ?? fullCourse.course_type ?? null,
                       });
                       setShowAddDialog(true);
                     } catch (error) {

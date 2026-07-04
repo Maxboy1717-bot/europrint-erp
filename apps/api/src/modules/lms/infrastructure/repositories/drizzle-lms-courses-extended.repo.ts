@@ -51,14 +51,24 @@ export class LmsCoursesExtendedRepository {
       // courses: code + title are NOT NULL (no default); the old insert wrote only title_uz -> 23502.
       // title := title_uz value, code generated.
       const t = String(data.title);
-      const r = await exec(sql`INSERT INTO courses (title_uz, title, code, description, category, is_mandatory, passing_score, is_active, author_id, created_at) VALUES (${t}, ${t}, ${'CRS-' + Date.now()}, ${data.description ? String(data.description) : null}, ${data.category ? String(data.category) : null}, ${Boolean(data.isMandatory)}, ${data.passingScore ? parseInt(String(data.passingScore), 10) : 70}, true, ${parseInt(userId, 10)}, NOW()) RETURNING *`);
+      // SB0120 (EP-LMS-001): cardId -> courses.card_id (karta-markazli darslik biriktiruvi).
+      const cardId = data.cardId != null ? parseInt(String(data.cardId), 10) : null;
+      // SB0112/SB0148: courseType -> courses.course_type (CHECK-constraint enum, nullable).
+      const courseType = data.courseType != null ? String(data.courseType) : null;
+      const r = await exec(sql`INSERT INTO courses (title_uz, title, code, description, category, is_mandatory, passing_score, is_active, author_id, card_id, course_type, created_at) VALUES (${t}, ${t}, ${'CRS-' + Date.now()}, ${data.description ? String(data.description) : null}, ${data.category ? String(data.category) : null}, ${Boolean(data.isMandatory)}, ${data.passingScore ? parseInt(String(data.passingScore), 10) : 70}, true, ${parseInt(userId, 10)}, ${cardId}, ${courseType}, NOW()) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`create: ${(error as Error).message}`); return Err((error as Error).message); }
   }
 
   async update(id: string, data: Row): Promise<Result<Row>> {
     try {
-      const r = await exec(sql`UPDATE courses SET title_uz = COALESCE(${data.title ? String(data.title) : null}, title_uz), description = COALESCE(${data.description ? String(data.description) : null}, description), category = COALESCE(${data.category ? String(data.category) : null}, category), is_mandatory = COALESCE(${data.isMandatory !== undefined ? Boolean(data.isMandatory) : null}, is_mandatory), passing_score = COALESCE(${data.passingScore ? parseInt(String(data.passingScore), 10) : null}, passing_score), updated_at = NOW() WHERE id = ${parseInt(id, 10)} RETURNING *`);
+      // SB0120: cardId undefined -> leave unchanged (COALESCE); cardId explicitly null -> unbind (handled via has-own-prop check).
+      const hasCardId = Object.prototype.hasOwnProperty.call(data, 'cardId');
+      const cardIdValue = data.cardId != null ? parseInt(String(data.cardId), 10) : null;
+      // SB0112/SB0148: same has-own-prop pattern for courseType (explicit null clears the classification).
+      const hasCourseType = Object.prototype.hasOwnProperty.call(data, 'courseType');
+      const courseTypeValue = data.courseType != null ? String(data.courseType) : null;
+      const r = await exec(sql`UPDATE courses SET title_uz = COALESCE(${data.title ? String(data.title) : null}, title_uz), description = COALESCE(${data.description ? String(data.description) : null}, description), category = COALESCE(${data.category ? String(data.category) : null}, category), is_mandatory = COALESCE(${data.isMandatory !== undefined ? Boolean(data.isMandatory) : null}, is_mandatory), passing_score = COALESCE(${data.passingScore ? parseInt(String(data.passingScore), 10) : null}, passing_score), card_id = CASE WHEN ${hasCardId} THEN ${cardIdValue}::integer ELSE card_id END, course_type = CASE WHEN ${hasCourseType} THEN ${courseTypeValue} ELSE course_type END, updated_at = NOW() WHERE id = ${parseInt(id, 10)} RETURNING *`);
       if (!r.length) return Err('Kurs topilmadi');
       return Ok(r[0] as Row);
     } catch (error) { this.logger.error(`update: ${(error as Error).message}`); return Err((error as Error).message); }
