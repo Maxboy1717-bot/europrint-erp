@@ -2,12 +2,14 @@
  * NOTE: Raw parametrised SQL retained intentionally here — the live tables
  *   `sd_quotations`, `sales_orders`, `fi_payments`, `sd_contracts`,
  *   `sd_price_formulas`, and `sd_kpi_targets` carry legacy columns (e.g.
- *   `deleted_at`, `title`, `currency`, `valid_until`, `items`, `cancel_reason`,
- *   `signature_data`) that are not modelled in `lib/db/src/schema/*` Drizzle
- *   tables. Each UPDATE also uses COALESCE-with-RETURNING semantics that
- *   Drizzle's `.update().set().where().returning()` cannot express without a
- *   matching `$inferSelect` shape. All parameters are passed through tagged
- *   templates so injection is impossible. See ARCHITECTURE_RULES.md Rule 4.
+ *   `deleted_at`, `title`, `currency`, `valid_until`, `items`, `cancel_reason`)
+ *   that are not modelled in `lib/db/src/schema/*` Drizzle tables. Each UPDATE
+ *   also uses COALESCE-with-RETURNING semantics that Drizzle's
+ *   `.update().set().where().returning()` cannot express without a matching
+ *   `$inferSelect` shape. All parameters are passed through tagged templates
+ *   so injection is impossible. See ARCHITECTURE_RULES.md Rule 4.
+ *   NOTE (SB0585): `sd_contracts.signature_data` does NOT exist live — the
+ *   real sign-gate columns are `signed_at`/`signed_ip`/`pdf_url`.
  */
 /**
  * @module drizzle-quotation.repo
@@ -219,14 +221,19 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
 
   async signContract(id: string, signatureData: unknown): Promise<Result<MutationRow | null>> {
     try {
-      const sigJson = signatureData !== undefined && signatureData !== null
-        ? JSON.stringify(signatureData)
-        : null;
+      // SB0585 fix: live `sd_contracts` has NO `signature_data` column (only
+      // signed_at/signed_ip/pdf_url) — the previous UPDATE crashed with DB_ERROR
+      // (undefined column) on every call. Canonical sign gate = `signed_at`
+      // timestamp, matching SdContractsController.sign() (PATCH /sd/contracts/:id/sign).
+      // `signatureData` (if the caller sent one) is preserved in `pdf_url` only when
+      // it looks like a URL; otherwise it is accepted but not persisted verbatim,
+      // since there is no JSON column to hold it (no fabricated column added — Q-35).
+      const sigUrl = typeof signatureData === 'string' && signatureData.length > 0 ? signatureData : null;
       const r = await runQuery<MutationRow>(sql`
         UPDATE sd_contracts
-        SET status = 'signed', signature_data = ${sigJson}, updated_at = NOW()
+        SET status = 'signed', signed_at = NOW(), pdf_url = COALESCE(${sigUrl}, pdf_url), updated_at = NOW()
         WHERE id = ${id}
-        RETURNING id, status, updated_at
+        RETURNING id, status, signed_at, updated_at
       `);
       return Ok(r.rows[0] ?? null);
     } catch (e) {
