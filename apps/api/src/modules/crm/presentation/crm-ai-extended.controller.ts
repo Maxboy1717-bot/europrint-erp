@@ -40,6 +40,13 @@ const CreateNbaTaskSchema = z.object({
   action: z.string().optional(),
 }).passthrough();
 
+// SB-mismatch fix: ExtendedAIPanel.tsx's "accept suggested tasks" bulk-create call.
+const CreateAutoTasksSchema = z.object({
+  entityType: z.string().optional(),
+  entityId: z.union([z.string(), z.number()]).optional(),
+  tasks: z.array(z.record(z.string(), z.unknown())).optional(),
+}).passthrough();
+
 const CRM_AI_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
 const NBA_ACTION_LABELS: Record<string, string> = {
@@ -104,6 +111,19 @@ export class CrmAiExtendedController {
   async postSuggestAutoTasks(@Body() body: unknown) {
     const dto = SuggestAutoTasksSchema.parse(body);
     return unwrapOrThrow(await this.svc.suggestAutoTasks(String(dto.entityType ?? 'lead'), safeInt(dto.entityId, 0)));
+  }
+
+  @ApiOperation({ summary: 'Bulk-create AI-suggested tasks — real INSERT into crm_tasks' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('extended/auto-tasks/create')
+  async createAutoTasksBulk(@Body() body: unknown) {
+    const dto = CreateAutoTasksSchema.parse(body);
+    return unwrapOrThrow(await this.svc.createAutoTasks(
+      String(dto.entityType ?? 'lead'),
+      safeInt(dto.entityId, 0),
+      Array.isArray(dto.tasks) ? dto.tasks : [],
+    ));
   }
 
   @ApiOperation({ summary: 'Get ai leads' })

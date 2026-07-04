@@ -101,6 +101,44 @@ export class CrmAiExtendedService {
   }
 
   /**
+   * Bulk-create auto-tasks — SB-mismatch fix: ExtendedAIPanel.tsx's "accept suggested
+   * tasks" button POSTs { entityType, entityId, tasks: AutoTask[] } and expects
+   * { created: number }. Real INSERT per task into crm_tasks (same table/shape as
+   * the single-task createAutoTask above) — no fabricated count.
+   */
+  async createAutoTasks(
+    entityType: string,
+    entityId: number,
+    tasks: Array<Record<string, unknown>>,
+  ): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+      const list = Array.isArray(tasks) ? tasks : [];
+      if (list.length === 0) {
+        return { created: 0, tasks: [] };
+      }
+      const rows = await db.insert(crm_tasks).values(
+        list.map((t) => {
+          // crm_tasks has no description/task_type column (Q-35: no new column added
+          // here) — fold description into title when title is missing, same lossy
+          // mapping the pre-existing single-task createAutoTask() already accepts.
+          const title = typeof t['title'] === 'string' && t['title']
+            ? t['title']
+            : (typeof t['description'] === 'string' && t['description'] ? t['description'] : 'AI Task');
+          return {
+            title,
+            lead_id:     entityType === 'lead' ? entityId : undefined,
+            deal_id:     entityType === 'deal' ? entityId : undefined,
+            due_date:    t['dueDate'] != null ? new Date(String(t['dueDate'])) : undefined,
+            status:      'pending' as const,
+            priority:    (t['priority'] as string | undefined) ?? 'medium',
+          };
+        }),
+      ).returning();
+      return { created: rows.length, tasks: rows };
+    }, 'DB_ERROR');
+  }
+
+  /**
    * Chat respond — requires conversational AI backend. No provider configured.
    * Returns 501 NOT_IMPLEMENTED.
    */
