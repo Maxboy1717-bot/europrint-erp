@@ -24,7 +24,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { db, materialCards, eq, and, sql } from '@workspace/db';
-import { Result, Ok, Err } from '@common/types/result.type';
+import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { Material } from '../../domain/aggregates/material.aggregate';
 import { MM_MATERIAL_REPO } from '../../domain/repositories/mm.repository';
 
@@ -124,8 +124,35 @@ export class DrizzleMaterialRepository implements IMmMaterialRepository {
     }
   }
 
+  /**
+   * B11 duplicate-prevention: material_cards.kod already has a DB-level
+   * UNIQUE constraint (material_cards_kod_unique), but `save()` synthesizes a
+   * fallback `MAT-<epoch>` code when the caller omits one — which bypasses
+   * that constraint entirely and lets the same material be created twice
+   * under different codes. Match on the natural business key (name), the
+   * only near-unique identifying field besides `kod` itself. See
+   * EXTENDED-GOVERNANCE-CHECK 2026-07-04 B11.
+   */
+  private async findDuplicateByName(name: string): Promise<Record<string, unknown> | undefined> {
+    if (!name || !name.trim()) return undefined;
+    const rows = await db
+      .select({ id: materialCards.id, kod: materialCards.kod, xomAshyo: materialCards.xomAshyo })
+      .from(materialCards)
+      .where(and(eq(materialCards.xomAshyo, name), eq(materialCards.isActive, true)))
+      .limit(1);
+    return rows[0] as Record<string, unknown> | undefined;
+  }
+
   async save(material: Material): Promise<Result<Material>> {
     try {
+      const dup = await this.findDuplicateByName(material.name);
+      if (dup) {
+        return Err(AppErr(
+          'CONFLICT',
+          `Bu material allaqachon mavjud (nomi mos keldi): "${String(dup.xomAshyo)}" (kod=${String(dup.kod)})`,
+        ));
+      }
+
       // material_cards.kod is UNIQUE NOT NULL — generate one if the caller
       // did not supply a business code.
       const kod =

@@ -5,7 +5,7 @@
  *   in ./drizzle-sd-customers/ to satisfy Rule 16 (file size).
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { execSdCustomerSoftDelete } from '@common/database/queries-sd';
@@ -166,6 +166,28 @@ export class DrizzleSdCustomersRepository {
     return rows.rows as Row[];
   }
 
+  /**
+   * B11 duplicate-prevention: reject create when an existing, non-deleted
+   * customer already matches on the same natural business key (tax id / STIR,
+   * or phone — the only near-unique identifying fields this table has; there
+   * is no DB-level unique constraint on either, see EXTENDED-GOVERNANCE-CHECK
+   * 2026-07-04 B11). Name is intentionally NOT matched — legitimate distinct
+   * companies/customers can share a common name.
+   */
+  private async findDuplicate(finalStir: unknown, phone: unknown): Promise<Row | undefined> {
+    const stirVal = finalStir ? String(finalStir) : null;
+    const phoneVal = phone ? String(phone) : null;
+    if (!stirVal && !phoneVal) return undefined;
+    const rows = await runQuery<Row>(sql`
+      SELECT id, name, stir, phone FROM sd_customers
+      WHERE deleted_at IS NULL AND status != 'deleted'
+        AND ((${stirVal}::text IS NOT NULL AND stir = ${stirVal})
+          OR (${phoneVal}::text IS NOT NULL AND phone = ${phoneVal}))
+      LIMIT 1
+    `);
+    return rows.rows[0] as Row | undefined;
+  }
+
   async create(body: Row): Promise<Row> {
     const { name, title, stir, inn, phone, email, address, notes } = body;
     const finalName = name ?? title ?? 'Nomsiz';
@@ -173,6 +195,14 @@ export class DrizzleSdCustomersRepository {
     const seg = String(body.segment ?? 'new');
     const dbStatus = seg === 'vip' ? 'vip' : seg === 'regular' ? 'active' : seg === 'potential' ? 'at_risk' : 'new';
     const actualAddress = body.actualAddress ?? body.actual_address ?? address ?? null;
+
+    const dup = await this.findDuplicate(finalStir, phone);
+    if (dup) {
+      throw new ConflictException(
+        `Bu mijoz allaqachon mavjud (STIR yoki telefon mos keldi): "${dup.name}" (id=${dup.id})`,
+      );
+    }
+
     const rows = await runQuery<Row>(sql`
       INSERT INTO sd_customers (name, stir, inn, phone, email, address, actual_address, notes, status, created_at, updated_at)
       VALUES (${finalName}, ${finalStir}, ${finalStir}, ${phone ?? null}, ${email ?? null},
