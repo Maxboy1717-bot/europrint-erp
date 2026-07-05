@@ -74,23 +74,72 @@ export function buildLabels(language: ReportLanguage): ReportLabels {
   };
 }
 
+/** BE `generateReport()` (camera-dashboard.service.ts) per-camera aggregate row shape. */
+export interface CameraReportRow {
+  camera: string | null;
+  location: string | null;
+  total_events: number;
+  violations: number;
+  defects: number;
+}
+
+interface CameraReportResponse {
+  type: "pdf" | "excel";
+  generated_at: string;
+  period: { from: string; to: string };
+  url: string;
+  data: CameraReportRow[];
+}
+
+/** `period` → `{date_from, date_to}` ISO (YYYY-MM-DD) range expected by ReportGenerateBodySchema. */
+function periodToDateRange(period: ReportPeriod): { date_from: string; date_to: string } {
+  const to = new Date();
+  const from = new Date(to);
+  if (period === "daily") from.setDate(from.getDate() - 1);
+  else if (period === "weekly") from.setDate(from.getDate() - 7);
+  else from.setMonth(from.getMonth() - 1);
+  return {
+    date_from: from.toISOString().split("T")[0],
+    date_to: to.toISOString().split("T")[0],
+  };
+}
+
+const REPORT_COLUMNS = [
+  { header: "Camera", key: "camera" },
+  { header: "Location", key: "location" },
+  { header: "Total events", key: "total_events" },
+  { header: "Violations", key: "violations" },
+  { header: "Defects", key: "defects" },
+] as const;
+
 export async function downloadReport(
   format: "pdf" | "xlsx",
   period: ReportPeriod,
-  apiRequest: (method: string, url: string) => Promise<unknown>
+  apiRequest: <T = unknown>(method: string, url: string, data?: unknown) => Promise<T>
 ): Promise<void> {
-  void apiRequest; // unused; raw fetch is needed for binary blob
   const endpoint = format === "pdf" ? "generate-pdf" : "generate-excel";
-  // eslint-disable-next-line no-restricted-globals -- binary blob (PDF/Excel); apiRequest() unwraps JSON and can't return Blob
-  const response = await fetch(`/api/camera-reports/${endpoint}?period=${period}`, { credentials: "include" });
-  if (!response.ok) return;
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `camera-report-${period}-${new Date().toISOString().split("T")[0]}.${format}`;
-  document.body.appendChild(a);
-  a.click();
-  window.URL.revokeObjectURL(url);
-  a.remove();
+  const { date_from, date_to } = periodToDateRange(period);
+  const report = await apiRequest<CameraReportResponse>(
+    "POST",
+    `/api/camera-reports/${endpoint}`,
+    { date_from, date_to }
+  );
+  const rows = Array.isArray(report?.data) ? report.data : [];
+  const filenameBase = `camera-report-${period}-${new Date().toISOString().split("T")[0]}`;
+
+  if (format === "pdf") {
+    const { exportToPDF } = await import("@/lib/export-utils");
+    await exportToPDF(
+      filenameBase,
+      rows as unknown as Record<string, unknown>[],
+      REPORT_COLUMNS.map((c) => ({ header: c.header, accessor: (row) => row[c.key] as string | number | null }))
+    );
+  } else {
+    const { exportToExcel } = await import("@/lib/export-utils");
+    await exportToExcel(
+      rows as unknown as Record<string, unknown>[],
+      filenameBase,
+      REPORT_COLUMNS.map((c) => ({ header: c.header, accessor: (row) => row[c.key] as string | number | null }))
+    );
+  }
 }
