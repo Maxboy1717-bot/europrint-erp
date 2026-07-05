@@ -27,7 +27,16 @@ type SalesOrderRow = typeof salesOrders.$inferSelect;
 export class DrizzleSdOrdersRepository implements ISdOrdersRepository {
   async findAll() {
     try {
-      const rows = await db.select().from(salesOrders).where(isNull(salesOrders.deletedAt));
+      // A2 governance fix (EXTENDED-GOVERNANCE-CHECK-2026-07-04): was unbounded
+      // `db.select()` with no LIMIT on the 60+ column sales_orders header table.
+      // Column list kept as-is (no live caller exists to verify a safe trim
+      // against — SD_ORDERS_REPO.findAll() is provided in sd.module.ts but not
+      // consumed by any controller today; the typed ISdOrdersRepository
+      // contract returns the full SalesOrderRow shape). Bounded with the same
+      // .limit()/.offset() convention already used by findById/findByDocumentNumber
+      // in this file, capped at the project's documented max page size
+      // (docs/PERFORMANCE_STANDARTLARI.md: pagination majburiy, max 100).
+      const rows = await db.select().from(salesOrders).where(isNull(salesOrders.deletedAt)).limit(100).offset(0);
       return Ok(rows as SalesOrderRow[]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Buyurtmalar topilmadi'); }
   }
