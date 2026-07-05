@@ -143,6 +143,62 @@ export class TelegramBotsCronRecruitmentService {
     }
   }
 
+  // ── R5 fix: telegram-announce — distinct audience/event from alumni-notify ──
+  // Previously HrVacanciesController#telegramAnnounce emitted the SAME 'vacancy.published'
+  // event as #alumniNotify, which only this class's onVacancyPublished (boomerang/alumni
+  // pool) consumed. telegram-announce's response claimed to reach "matched candidates"
+  // but no listener served that audience — it was a no-op beyond the funnel-history write.
+  // Fix: telegram-announce now emits its own 'vacancy.telegram-announce-requested' event,
+  // consumed here, targeting the ACTIVE (non-archived) candidate pool — reusing the same
+  // keyword/embedding matching (buildVacancyKeywords/candidateMatchesVacancy/rankCandidates)
+  // and the same dual Telegram+SMS dispatch already proven for boomerang.
+  @OnEvent('vacancy.telegram-announce-requested')
+  async onTelegramAnnounceRequested(payload: VacancyPublishedPayload): Promise<void> {
+    try {
+      const poolR = await this.repo.getActiveCandidatePool();
+      const pool = poolR.ok ? poolR.data : [];
+
+      const ranked = await this.boomerangEmbedding.rankCandidates(pool, {
+        title: payload.title,
+        department: payload.department,
+        requiredSkills: payload.requiredSkills,
+        tags: payload.tags,
+      });
+
+      const keywords = this.buildVacancyKeywords(payload);
+      const matchedCandidates = ranked.length > 0
+        ? ranked.map(r => r.candidate)
+        : pool.filter(c => this.candidateMatchesVacancy(c, keywords));
+
+      const salary = payload.salaryMin && payload.salaryMax
+        ? `${payload.salaryMin.toLocaleString()} – ${payload.salaryMax.toLocaleString()} so'm`
+        : 'Kelishiladi';
+      const vacancyUrl = payload.url ?? `https://erp.europrint.uz/vacancies/${payload.vacancyId}`;
+
+      let sent = 0;
+      for (const candidate of matchedCandidates) {
+        const message = renderTemplate(NOTIFICATION_TEMPLATES.VACANCY_NEW.template_uz, {
+          title: payload.title,
+          department: payload.department ?? '',
+          salary,
+          url: vacancyUrl,
+        });
+        if (candidate['telegram_chat_id']) {
+          await this.notificationBot.sendNotificationRaw(candidate['telegram_chat_id'] as string, message);
+          sent++;
+        }
+        if (candidate['phone']) {
+          await this.sendSms(candidate['phone'] as string, this.stripHtml(message));
+        }
+      }
+      this.logger.log(
+        `Telegram announce: ${sent}/${matchedCandidates.length} matched candidates (of ${pool.length} active pool) notified for vacancy #${payload.vacancyId}`,
+      );
+    } catch (err) {
+      this.logger.warn(`onTelegramAnnounceRequested error: ${errMsg(err)}`);
+    }
+  }
+
   // ── Recruiter: new candidate applied ────────────────────────────────────
   @OnEvent('candidate.applied')
   async onCandidateApplied(payload: {

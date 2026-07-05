@@ -146,11 +146,16 @@ export class HrVacanciesController {
     const r = await this.svc.findById(id);
     const row = (r.ok ? (r.data ?? {}) : {}) as Record<string, unknown>;
     const title = String(row['title'] ?? `Vakansiya #${id}`);
-    // Q11 fix: real dispatch — same 'vacancy.published' event consumed by
-    // TelegramBotsCronRecruitmentService.onVacancyPublished (hr/telegram-bots/telegram-bots-cron-recruitment.service.ts),
-    // which sends real Telegram/SMS messages to matched candidates. Previously this endpoint
-    // only wrote a history row and echoed { announced: true } with no dispatch at all.
-    this.events.emit('vacancy.published', {
+    // R5 fix: this endpoint now emits its OWN event, 'vacancy.telegram-announce-requested',
+    // consumed by TelegramBotsCronRecruitmentService.onTelegramAnnounceRequested
+    // (hr/telegram-bots/telegram-bots-cron-recruitment.service.ts). That listener targets the
+    // ACTIVE (non-archived) candidate pool — the audience this endpoint's response claims to
+    // reach — via the same keyword/embedding matching used for boomerang, then dispatches
+    // Telegram (telegram_chat_id) + SMS (phone) fallback.
+    // Previously this endpoint emitted the SAME 'vacancy.published' event as alumni-notify,
+    // which only the boomerang/alumni listener consumed — "matched candidates" was never
+    // actually reached (no-op beyond the funnel-history write).
+    this.events.emit('vacancy.telegram-announce-requested', {
       vacancyId: id,
       title,
       department: row['department'] ? String(row['department']) : undefined,
@@ -162,7 +167,7 @@ export class HrVacanciesController {
         vacancy_id: id,
         title,
         announced_by: user.id,
-        note: 'Telegram/SMS yuborish fon jarayonida amalga oshiriladi (vacancy.published hodisasi orqali); natija darhol qaytmaydi.',
+        note: 'Telegram/SMS yuborish fon jarayonida amalga oshiriladi (vacancy.telegram-announce-requested hodisasi orqali, faol nomzodlar bazasiga); natija darhol qaytmaydi. Eslatma: nomzodlarning aksariyatida hozircha telegram_chat_id yo\'q — SMS integratsiyasi ham sozlanmagan (SMS_API_URL/SMS_API_KEY) bo\'lsa, yetkazish faqat mos ma\'lumot mavjud bo\'lgan nomzodlarga amalga oshadi.',
       },
     };
   }
@@ -178,10 +183,13 @@ export class HrVacanciesController {
     const r = await this.svc.findById(id);
     const row = (r.ok ? (r.data ?? {}) : {}) as Record<string, unknown>;
     const title = String(row['title'] ?? `Vakansiya #${id}`);
-    // Q11 fix: real dispatch to alumni/boomerang candidates — same 'vacancy.published' event;
-    // TelegramBotsCronRecruitmentService.onVacancyPublished queries employees who left 2+ years
-    // ago (getBoomerangCandidates), ranks them, and sends real Telegram/SMS. Previously this
-    // endpoint only wrote a history row and echoed { notified: true } with no dispatch at all.
+    // Q11 fix: real dispatch to alumni/boomerang candidates — 'vacancy.published' event;
+    // TelegramBotsCronRecruitmentService.onVacancyPublished queries ex-employees who left 2+
+    // years ago (getBoomerangCandidates), ranks them, and sends real Telegram/SMS. Previously
+    // this endpoint only wrote a history row and echoed { notified: true } with no dispatch.
+    // R5 note: this event/listener pair is DISTINCT from telegramAnnounce()'s
+    // 'vacancy.telegram-announce-requested' below — different audience (boomerang alumni vs.
+    // the active candidate pool), on purpose. Do not merge them back into one event.
     this.events.emit('vacancy.published', {
       vacancyId: id,
       title,

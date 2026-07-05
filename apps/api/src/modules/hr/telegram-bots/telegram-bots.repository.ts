@@ -55,6 +55,7 @@ export class TelegramBotsRepository {
   getCoursesDeadlineIn3Days = () => this.events.getCoursesDeadlineIn3Days();
   getEmergencyRecipients = () => this.events.getEmergencyRecipients();
   getBoomerangCandidates = (since: string) => this.events.getBoomerangCandidates(since);
+  getActiveCandidatePool = () => this.events.getActiveCandidatePool();
   getAbsentEmployees = (days: number) => this.events.getAbsentEmployees(days);
   archiveInactiveFunnels = () => this.events.archiveInactiveFunnels();
   archiveInactiveCandidates = () => this.events.archiveInactiveCandidates();
