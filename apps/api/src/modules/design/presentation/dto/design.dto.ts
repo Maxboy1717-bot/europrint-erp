@@ -15,7 +15,7 @@ export const RequestDesignDtoSchema = z.object({
 export type RequestDesignDto = z.infer<typeof RequestDesignDtoSchema>;
 
 export const UpdateDesignStatusDtoSchema = z.object({
-  status: z.enum(['pending', 'in_progress', 'under_review', 'approved', 'rejected', 'completed']),
+  status: z.enum(['new', 'ai_generated', 'designer_review', 'waiting_customer_approval', 'approved', 'rejected', 'revision_requested']),
   files: z.array(z.string()).optional(),
 });
 

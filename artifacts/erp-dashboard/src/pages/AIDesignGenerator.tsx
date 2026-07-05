@@ -56,8 +56,18 @@ export default function AIDesignGenerator() {
   });
 
   const statusMutation = useMutation({
+    // Canonical validated path (A8, 2026-07-05): design.controller.ts's PATCH
+    // design/:id/status -> UpdateDesignStatusCommand/Handler. Checks
+    // isTransitionAllowed(DESIGN_TRANSITIONS, ...) and, on transition to
+    // "approved", publishes DesignApprovedEvent so the PP-side
+    // design-approved-trigger5.listener drives sales_orders.master_status ->
+    // 'pending_technology' (golden-thread Trigger 5). The old
+    // design/orders/:orderId/status route (design-extended.controller.ts)
+    // did a bare db.update with no transition check and never published the
+    // event — approving here silently broke the golden thread. `:id` and
+    // `:orderId` are the same design_orders.id, so the swap is a drop-in.
     mutationFn: async ({ orderId, newStatus }: { orderId: string; newStatus: string }) =>
-      apiRequest("PATCH", `/api/design/orders/${orderId}/status`, { newStatus }),
+      apiRequest("PATCH", `/api/design/${orderId}/status`, { status: newStatus }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] }); toast({ title: tLabel('common.holatYangilandi', "Holat yangilandi!") }); },
     onError: (err: Error) => toast({ title: "Xatolik", description: err.message, variant: "destructive" }),
   });

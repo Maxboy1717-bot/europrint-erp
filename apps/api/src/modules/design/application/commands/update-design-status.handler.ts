@@ -54,7 +54,10 @@ export class UpdateDesignStatusHandler implements ICommandHandler<UpdateDesignSt
     if (command.files && command.files.length > 0) {
       designOrder.aiGeneratedDesign = command.files.join(',');
     }
-    if (command.status === 'completed') {
+    // A8 fix (2026-07-05): was checking the OLD status vocabulary's terminal state
+    // ('completed'), which no longer exists in DesignStatus/DESIGN_TRANSITIONS
+    // (terminal state is now 'approved') -- approvedAt was silently never stamped.
+    if (command.status === DesignStatus.APPROVED) {
       designOrder.approvedAt = _time.now();
     }
   }

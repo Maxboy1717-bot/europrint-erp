@@ -64,15 +64,26 @@ export const DEAL_TRANSITIONS: Record<string, string[]> = {
   lost: [],
 }
 
-// Design - 8 holat
+// Design - DesignOrder aggregate holatlari (design-status.enum.ts bilan mos)
+// NOTE (2026-07-05): oldingi versiya (not_started/in_progress/review/...) hech qachon
+// DesignOrder.status haqiqiy qiymatlari (DesignStatus enum) bilan mos kelmagan edi —
+// isTransitionAllowed() har doim false qaytargan (masalan waiting_customer_approval
+// kaliti mavjud emas edi), ya'ni UpdateDesignStatusHandler orqali approve/reject
+// haqiqatda hech qachon o'tmasdi. AIDesignGenerator.tsx ni shu path'ga ulash uchun
+// tuzatildi (A8, PP Trigger 5 golden-thread fix).
+// ai_generated -> approved/rejected qo'shildi: AIDesignGenerator.tsx "Natijalar"
+// tab'ida generatsiyadan keyin (status=ai_generated) staff bitta tugma bilan
+// approve/reject qiladi (designer_review/waiting_customer_approval bosqichlarini
+// UI hali alohida ekranda o'tkazmaydi) — bu real, ishlab turgan UX oqimi (Q-46),
+// shuning uchun to'g'ridan-to'g'ri sakrash qonuniy tranzitsiya sifatida saqlangan.
 export const DESIGN_TRANSITIONS: Record<string, string[]> = {
-  not_started: ['in_progress'],
-  in_progress: ['review', 'rejected'],
-  review: ['approved', 'changes_requested'],
-  changes_requested: ['in_progress'],
-  approved: ['completed'],
-  rejected: ['in_progress'],
-  completed: [],
+  new: ['ai_generated'],
+  ai_generated: ['designer_review', 'approved', 'rejected'],
+  designer_review: ['waiting_customer_approval', 'revision_requested', 'rejected'],
+  waiting_customer_approval: ['approved', 'rejected', 'revision_requested'],
+  revision_requested: ['ai_generated', 'designer_review'],
+  approved: [],
+  rejected: [],
 }
 
 // Technology - 9 holat
