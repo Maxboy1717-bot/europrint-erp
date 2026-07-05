@@ -477,3 +477,64 @@ aniqlandi, hech narsa taxmin qilinmadi/fabrikatsiya qilinmadi. Qolgan A1 (repo-n
   o'zini kengaytirish — `target_razryad_id`ni nullable qilib, alohida
   `target_grade_letter` ustuni qo'shish) afzalmi? Tasdiqlansa, `git stash pop` bilan
   1 daqiqada tiklab commit qilish mumkin.
+
+## B10/B13/B14 ijro boshlandi (2026-07-05, "Full Non-Stop Completion" davomi)
+
+Uchala band uchun chuqur (Workflow-darajadagi) parallel tekshiruv o'tkazildi — MM modul
+yuzasi, jonli FK-fan-in, dublikat-jadval xaritasi, yozish-yo'llari. Har biri kichik,
+xavfsiz, mustaqil tekshirilgan slice sifatida bajarildi (dry-run→apply, tsc+test, alohida
+commit):
+
+- **B10 slice 1 (MM)** ✅ commit `e4a58095` — `material_cards` kanonik tasdiqlandi (31
+  qator, 18 ta jadval FK bilan bog'langan, `mm_materials` view allaqachon uni o'raydi).
+  `raw_materials` (10 qator) allaqachon 100% `material_card_id` orqali ko'priklangan
+  (2026-07-02 migratsiya), LEKIN `material_cards.unit_price` barcha 10 bog'langan
+  qatorda NULL edi, `raw_materials.unit_price`da esa haqiqiy narx bor edi — kanonik
+  jadvalga backfill qilindi (dry-run 10/10 tasdiqlangan, keyin to'liq qo'llanildi).
+  O'qish-yo'li (mm-materials-extras.repository.ts, finance inventory-valuation) hali
+  ham `raw_materials`dan o'qiydi — kategoriya-taksonomiya ikkalasida boshqacha (rm:
+  inglizcha enum, mc: o'zbekcha label), shuning uchun o'qish-yo'lini almashtirish
+  ALOHIDA egasi-qarorini talab qiladi (pastga qarang). `materials`/`product_masters`
+  ikkalasi ham 0 qator + 0 FK + 0 jonli kod-yo'li — TO'LIQ O'LIK tasdiqlandi. `products`
+  (2 qator) — kutilganidan farqli, HAQIQIY jonli jadval (SD ATP-check, MESProducts.tsx
+  `/api/products`, HR CkpTab.tsx, Finance costing/planning/variance hisobotlari) — bu
+  `material_cards`ning duplikati EMAS, balki alohida "tayyor mahsulot" tushunchasi
+  (SAP-uslubidagi "bitta Material Master" modeliga birlashtirish mumkin, lekin bu
+  katta arxitektura-qarori, B10 doirasidan tashqarida).
+- **B13 slice 1 (currency)** ✅ commit `3847f3a9` — jonli DB'da FAQAT 4 ta float-tipli
+  pul-ustun topildi: `production_orders.planned_cost/actual_cost` (double precision),
+  `system_settings.inps_rate/qqs_rate` (real). Drizzle sxemasi ularni ALLAQACHON
+  `numeric` deb kutgan (`numericMoney()` wrapper) — bu drift-tuzatish, xavf-kirituvchi
+  o'zgarish emas. Barcha ta'sirlangan qatorlar hozir NULL/0-son. `entries.entry_date`
+  (varchar→date) ATAYIN CHETLAB O'TILDI — dry-run shuni ko'rsatdiki, ~12 ta xom-SQL
+  (Drizzle emas) finance-modul iste'molchisi `date`ga o'tgandan keyin JS Date obyekti
+  oladi (string emas), global pg type-parser yo'q — Toshkent (UTC+5) uchun bir-kunlik
+  siljish xavfi bor. Bosh GL defter jadvali — alohida, kengroq partiya kerak.
+  **UNITS (74 ustun, 72 jadval)**: jonli tekshiruv tasdiqladi — HAQIQATAN xilma-xil
+  erkin-matn ('sht'/'dona'/'PC' bir xil "dona" ma'nosida), 0 FK `unit_of_measures`ga
+  (avvalgi "1 FK bor" xulosasi XATO edi — 0 ta), `unit_of_measures` 19 qator bilan
+  to'liq urug'langan lekin BUTUNLAY orfan (hech qanday kod uni so'ramaydi). Ko'lami
+  (72 jadval + qiymat-moslashtirish qarorlari kerak) B13'ning boshqa 2 qismidan ancha
+  katta — PLAN sifatida hujjatlashtirildi, EXECUTE alohida, kichikroq partiyalarga
+  bo'linishi kerak (masalan: bitta ustun/modul boshlanadi, keyin kengaytiriladi).
+- **B14 slice 1 (CRM quick-deal)** ✅ commit `ce205fd5` — tekshiruv shuni aniqladi:
+  bu kodbazada umumiy audit-stamp mexanizmi YO'Q (CLS/AsyncLocalStorage faqat
+  tenant_id uchun, `@CurrentUser()` qo'lda har joyda alohida ulanadi) — demak B14
+  "yangi mexanizm yoqish" emas, balki "isbotlangan qo'lda-ulash uslubini yana ~30
+  joyga qo'llash". `createQuickDeal()` `@CurrentUser()` qo'shilib, `created_by_id`ga
+  ulandi (asosiy `create()` yo'li allaqachon to'g'ri ulangan edi — namuna sifatida
+  ishlatildi). 2 yangi test PASS.
+- **B14 slice 2 (CRM lead created_by)** ✅ commit `5ba0797a` — ILDIZ-SABAB topildi:
+  `crm_leads.created_by_id` jonli DB'da bor, lekin Drizzle sxemasida (`crmLeads`
+  pgTable) UMUMAN e'lon qilinmagan edi — shuning uchun `save()` uni jimgina
+  tashlab yuborardi, `toDomain()` esa mavjud bo'lmagan `row['created_by']`ni o'qirdi
+  — `Lead.getCreatedBy()` doim 0 qaytarardi. Bu `convert-lead-to-deal.handler.ts`ga
+  ham OQIB O'TGAN edi (har lead→deal konvertatsiyasi ham 0 yozardi). Yetishmayotgan
+  Drizzle-xususiyat qo'shildi (crmDeals.created_by bilan bir xil alias-uslub) —
+  yangi DB ustun EMAS, faqat kod-sxema tuzatildi.
+
+**Qolgan B10 modullari** (Finance/WMS/POS raw_materials iste'molchilari) va **B14ning
+qolgan ~28 yozish-joyi** (sd_customers, material_cards 4-qatlamli, production_orders,
+sales_orders 3 ta haqiqiy xato) keyingi navbatdagi slice'lar — har biri alohida
+tekshiruv+dry-run+commit talab qiladi, bitta partiyada hammasini qilish xavfli
+(ko'lam juda katta).
