@@ -21,6 +21,7 @@ import { AuthUserAggregate, AuthUserData } from '../../domain/aggregates/auth-us
 import { runQuery } from '@shared/db';
 import { sql, type SQL } from 'drizzle-orm';
 import { resolveEffectiveRbacTier } from '@common/constants/rbac-tier.policy';
+import { MAX_FAILED_LOGIN_ATTEMPTS } from '@common/constants/security.constants';
 
 type RawUserRow = {
   id: number;
@@ -199,7 +200,7 @@ export class DrizzleAuthRepo implements IAuthRepo {
         UPDATE users
         SET failed_login_attempts = failed_login_attempts + 1,
             locked_until = CASE
-              WHEN failed_login_attempts + 1 >= 5
+              WHEN failed_login_attempts + 1 >= ${MAX_FAILED_LOGIN_ATTEMPTS}
               THEN NOW() + INTERVAL '15 minutes'
               ELSE locked_until
             END

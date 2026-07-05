@@ -34,6 +34,7 @@ import { UserLoggedInEvent } from '../../domain/events/user-logged-in.event';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+import { MAX_FAILED_LOGIN_ATTEMPTS } from '@common/constants/security.constants';
 
 /**
  * i18n PATTERN (Backend Task Group 3 — Reference Implementation)
@@ -184,7 +185,7 @@ export class LoginService {
     if (isPasswordValid) return null;
     await this.authRepo.incrementFailedAttempts(user.getId());
     user.incrementFailedAttempts();
-    if (user.getFailedLoginAttempts() >= 5) {
+    if (user.getFailedLoginAttempts() >= MAX_FAILED_LOGIN_ATTEMPTS) {
       this.logger.warn({ userId: user.getId() }, 'Account locked due to failed attempts');
     }
     await this.auditFailure(user.getId(), command, AuthErrorCode.INVALID_CREDENTIALS);

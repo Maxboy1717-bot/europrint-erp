@@ -94,6 +94,29 @@ function lockedPlaceholderHash(): string {
   return '!' + randomBytes(20).toString('hex');
 }
 
+/**
+ * Maps positions.rbac_tier (owner/executive/manager/specialist/operator/standard,
+ * 100% populated per live DB) to the users.role vocabulary this call site already
+ * produced (super_admin/director/manager/employee) -- preserves the exact same
+ * output contract, just derives it from the real semantic column instead of a
+ * numeric id-range guess. Full role-enum consolidation is a separate, larger
+ * effort (MAGIC-NUMBERS-AUDIT item #8).
+ */
+export async function resolveRoleFromPositionRbacTier(
+  exec: (q: SQL) => Promise<unknown>,
+  positionId: number | null,
+): Promise<string> {
+  if (positionId === null) return 'employee';
+  const rows = dbRows(await exec(sql`SELECT rbac_tier FROM positions WHERE id = ${positionId} LIMIT 1`));
+  const tier = String(rows[0]?.['rbac_tier'] ?? '');
+  switch (tier) {
+    case 'owner':      return 'super_admin';
+    case 'executive':  return 'director';
+    case 'manager':    return 'manager';
+    default:           return 'employee'; // specialist / operator / standard / unknown position id
+  }
+}
+
 export async function ensureUserForEmployee(
   tx: { execute: (q: SQL) => Promise<unknown> } | null,
   data: UserCreationData,
@@ -115,16 +138,14 @@ export async function ensureUserForEmployee(
       ? data.email.split('@')[0].toLowerCase()
       : `emp_${data.employeeId}`;
   const fullName = `${data.firstName} ${data.lastName}`.trim();
-  const role =
-    data.positionId === null
-      ? 'employee'
-      : data.positionId <= 2
-      ? 'super_admin'
-      : data.positionId <= 5
-      ? 'director'
-      : data.positionId <= 20
-      ? 'manager'
-      : 'employee';
+  // M7 (2026-07-05): was a raw positionId-range guess (<=2 super_admin, <=5
+  // director, <=20 manager) -- fragile (silently wrong if IDs are ever
+  // reassigned/reordered) AND already demonstrably incorrect for real rows,
+  // e.g. position #22 "Savdo Menejeri" has positions.rbac_tier='manager' but
+  // id=22 > 20, so the old logic assigned it 'employee'. Now looks up the
+  // position's own rbac_tier column (100% populated, 96/96 rows) instead of
+  // guessing from the numeric id.
+  const role = await resolveRoleFromPositionRbacTier(exec, data.positionId);
 
   const lockedHash = lockedPlaceholderHash();
   const inserted = await exec(sql`
