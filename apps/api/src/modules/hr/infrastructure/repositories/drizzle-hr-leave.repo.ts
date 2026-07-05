@@ -196,8 +196,8 @@ export class HrLeaveRepo {
       }).onConflictDoNothing().returning();
       return { ok: true, data: castTo<HrRow>((rows[0] ?? { id: null }))};
     } catch (error: unknown) {
-      this.logger.warn(`save360Feedback: ${(error as Error).message}`);
-      return { ok: true, data: castTo<HrRow>({ id: null }) };
+      this.logger.error(`save360Feedback: ${(error as Error).message}`);
+      return Err((error as Error).message);
     }
   }
 
