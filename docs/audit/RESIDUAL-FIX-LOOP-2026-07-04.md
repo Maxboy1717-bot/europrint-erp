@@ -1,6 +1,12 @@
 # EuroPrint ERP — Full Residual Fix Loop: Governance-Audit + Q1-Q34 Verification (sequential, plan-first)
 
-> Status: QUEUED (2026-07-04) — not yet started. Execution model is deliberately
+> Status: IN PROGRESS (started 2026-07-05). G1 ✅ DONE — commit `d77062b1` (mini-app
+> approve/reject gated via new `canManageRequest` admin/department-manager check; test
+> `test/pos/mini-app-approval-gate.spec.ts` + full `test/pos/` suite 99/99 pass; also fixed
+> a pre-existing `jest.config.js` gap, missing general `@shared/(.*)` moduleNameMapper fallback).
+> Next: G2.
+>
+> Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
 > which run continuously with no per-item stop. This queue is sequential and plan-first:
 > one item at a time, PLAN → owner confirmation → EXECUTE → verify → commit → Uzbek report → STOP,
