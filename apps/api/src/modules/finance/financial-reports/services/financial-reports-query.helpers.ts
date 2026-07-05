@@ -94,14 +94,18 @@ export async function queryReceivables(date: string | undefined, overdueThreshol
     const targetDate = date ?? _time.now().toISOString().slice(0, 10);
     const rows = await db.select({
       total: sql<number>`COALESCE(SUM(${customerPayments.amount}::numeric), 0)`,
-      overdueCount: sql<number>`COUNT(CASE WHEN ${customerPayments.payment_date} < ${targetDate}::date - (${overdueThreshold} * INTERVAL '1 day') THEN 1 END)`,
+      overdueAmount: sql<number>`COALESCE(SUM(CASE WHEN ${customerPayments.payment_date}::date < ${targetDate}::date - (${overdueThreshold} * INTERVAL '1 day') THEN ${customerPayments.amount}::numeric ELSE 0 END), 0)`,
     }).from(customerPayments);
 
     const total = Number(rows[0]?.total ?? 0);
-    const overdue = Number(rows[0]?.overdueCount ?? 0) > 0 ? total * 0.3 : 0;
+    const overdue = Number(rows[0]?.overdueAmount ?? 0);
     return Ok([{
       total,
       current: total - overdue,
+      // NOTE: single overdue-threshold bucket only (real SUM, not fabricated) --
+      // sub-bucketing into 30/60/90-day ages would need 3 separate cutoffs,
+      // out of scope for this fix (M3: replace the fabricated total*0.3, not
+      // add a full aging-bucket feature).
       overdue30: overdue,
       overdue60: 0,
       overdue90plus: 0,
