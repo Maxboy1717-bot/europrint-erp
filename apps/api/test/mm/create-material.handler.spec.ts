@@ -88,4 +88,19 @@ describe('CreateMaterialHandler', () => {
     const idB = repo.save.mock.calls[1][0].id;
     expect(idA).not.toEqual(idB);
   });
+
+  // B14 (2026-07-05): material_cards.created_by existed but was never populated --
+  // the Material aggregate had no createdBy field at all until this fix.
+  it('threads command.createdBy onto the saved Material', async () => {
+    const f = materialFactory();
+    const cmd = new CreateMaterialCommand(
+      f.materialCode, f.name, f.category, f.unitOfMeasure,
+      f.minStock, f.maxStock, f.unitCost, 42,
+    );
+
+    await handler.execute(cmd);
+
+    const saved = repo.save.mock.calls[0][0];
+    expect(saved.createdBy).toBe(42);
+  });
 });

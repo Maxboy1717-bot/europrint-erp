@@ -10,5 +10,6 @@ export class CreateMaterialCommand {
     public readonly unitOfMeasure: string,
     public readonly minStock: number,
     public readonly maxStock: number,
-    public readonly unitCost: number) {}
+    public readonly unitCost: number,
+    public readonly createdBy?: number) {}
 }

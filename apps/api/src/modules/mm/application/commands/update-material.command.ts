@@ -11,5 +11,6 @@ export class UpdateMaterialCommand {
     public readonly minStock?: number,
     public readonly maxStock?: number,
     public readonly unitCost?: number,
-    public readonly isActive?: boolean) {}
+    public readonly isActive?: boolean,
+    public readonly updatedBy?: number) {}
 }

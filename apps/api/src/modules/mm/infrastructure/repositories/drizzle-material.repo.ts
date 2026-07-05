@@ -247,6 +247,7 @@ export class DrizzleMaterialRepository implements IMmMaterialRepository {
               isActive: material.isActive,
               createdAt: material.createdAt,
               updatedAt: material.updatedAt,
+              createdBy: material.createdBy,
             })
             .returning();
 
@@ -292,6 +293,7 @@ export class DrizzleMaterialRepository implements IMmMaterialRepository {
           unitPrice: material.unitCost,
           isActive: material.isActive,
           updatedAt: material.updatedAt,
+          updatedBy: material.updatedBy,
         })
         .where(eq(materialCards.id, numericId));
 
@@ -355,6 +357,9 @@ export class DrizzleMaterialRepository implements IMmMaterialRepository {
       Number(row['currentStock'] ?? 0),
       Boolean(row['isActive']),
       row['createdAt'] ? new Date(String(row['createdAt'])) : _time.now(),
-      row['updatedAt'] ? new Date(String(row['updatedAt'])) : _time.now());
+      row['updatedAt'] ? new Date(String(row['updatedAt'])) : _time.now(),
+      0,
+      row['createdBy'] != null ? Number(row['createdBy']) : undefined,
+      row['updatedBy'] != null ? Number(row['updatedBy']) : undefined);
   }
 }

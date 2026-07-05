@@ -32,6 +32,8 @@ import {
  GetMaterialsDtoSchema,
 } from './dto/material.dto';
 import { LayerFormulaService } from '../application/layer-formula.service';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 enum Role {
  WAREHOUSE_MANAGER = 'warehouse_manager',
@@ -137,7 +139,7 @@ export class MmMaterialsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
  @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
- async createMaterial(@Body() body: unknown) {
+ async createMaterial(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
  const parsed = CreateMaterialDtoSchema.parse(body);
  const cmd = new CreateMaterialCommand(
@@ -147,7 +149,8 @@ export class MmMaterialsController {
  parsed.unitOfMeasure,
  parsed.minStock,
  parsed.maxStock,
- parsed.unitCost);
+ parsed.unitCost,
+ user.id);
 
  const result = await this.commandBus.execute(cmd);
 
@@ -166,7 +169,7 @@ export class MmMaterialsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Put(':id')
  @Roles(Role.WAREHOUSE_MANAGER, Role.SUPER_ADMIN)
- async updateMaterial(@Param('id') id: string, @Body() body: unknown) {
+ async updateMaterial(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
  const parsed = UpdateMaterialDtoSchema.parse(body);
  const cmd = new UpdateMaterialCommand(
@@ -177,7 +180,8 @@ export class MmMaterialsController {
  parsed.minStock,
  parsed.maxStock,
  parsed.unitCost,
- parsed.isActive);
+ parsed.isActive,
+ user.id);
 
  const result = await this.commandBus.execute(cmd);
 

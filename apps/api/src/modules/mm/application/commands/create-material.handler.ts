@@ -45,6 +45,8 @@ export class CreateMaterialHandler implements ICommandHandler<CreateMaterialComm
         true,
         _time.now(),
         _time.now(),
+        0,
+        command.createdBy,
       );
 
       const result = await this.materialRepository.save(material);

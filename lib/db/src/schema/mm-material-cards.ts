@@ -95,6 +95,10 @@ export const materialCards = pgTable("material_cards", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
+  // B14 (2026-07-05): live columns existed but were never declared here, so
+  // Drizzle silently dropped them on every insert/select.
+  createdBy: integer("created_by"),
+  updatedBy: integer("updated_by"),
 }, (t) => [
   index("idx_material_cards_warehouse_id").on(t.warehouseId),
   index("idx_material_cards_category").on(t.category),

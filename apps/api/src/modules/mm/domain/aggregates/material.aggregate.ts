@@ -30,6 +30,8 @@ export interface MaterialProps {
   createdAt: Date;
   updatedAt: Date;
   reservedQuantity?: number;
+  createdBy?: number;
+  updatedBy?: number;
 }
 
 export class Material extends AggregateRoot {
@@ -46,6 +48,8 @@ export class Material extends AggregateRoot {
   private _createdAt: Date;
   private _updatedAt: Date;
   private _reservedQuantity: number;
+  private _createdBy?: number;
+  private _updatedBy?: number;
 
   /**
    * Positional constructor kept for repository hydration paths that already
@@ -65,6 +69,8 @@ export class Material extends AggregateRoot {
     createdAt: Date,
     updatedAt: Date,
     reservedQuantity: number = 0,
+    createdBy?: number,
+    updatedBy?: number,
   ) {
     super();
     this._id = id;
@@ -80,6 +86,8 @@ export class Material extends AggregateRoot {
     this._createdAt = createdAt;
     this._updatedAt = updatedAt;
     this._reservedQuantity = reservedQuantity;
+    this._createdBy = createdBy;
+    this._updatedBy = updatedBy;
   }
 
   /**
@@ -120,6 +128,8 @@ export class Material extends AggregateRoot {
       props.createdAt,
       props.updatedAt,
       props.reservedQuantity ?? 0,
+      props.createdBy,
+      props.updatedBy,
     ));
   }
 
@@ -138,6 +148,9 @@ export class Material extends AggregateRoot {
   get createdAt(): Date { return this._createdAt; }
   get updatedAt(): Date { return this._updatedAt; }
   get reservedQuantity(): number { return this._reservedQuantity; }
+  get createdBy(): number | undefined { return this._createdBy; }
+  get updatedBy(): number | undefined { return this._updatedBy; }
+  setUpdatedBy(userId: number): void { this._updatedBy = userId; }
 
   get isLowStock(): boolean {
     return this._currentStock < this._minStock;
