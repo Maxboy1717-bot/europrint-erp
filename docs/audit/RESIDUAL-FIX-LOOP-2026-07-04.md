@@ -16,7 +16,11 @@
 > mutations + confirm dialogs untouched; BE+FE tsc 0 errors).
 > Owner directive 2026-07-05: continue R1→R6→G3→R7→R8→G4 autonomously, no per-item
 > confirmation — dry-run-then-report (not dry-run-then-ask) for schema/GL/backfill items.
-> Next: R2.
+> R2 ✅ DONE — commit `dd4db385` (camera-reports download re-pointed to the real POST
+> generate-pdf/generate-excel endpoints with {date_from,date_to} body; backend returns
+> JSON aggregate rows not a binary, so the file is now built client-side via the
+> codebase's existing exportToPDF/exportToExcel helpers; BE+FE tsc 0 errors).
+> Next: R3.
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
