@@ -532,9 +532,26 @@ commit):
   ham OQIB O'TGAN edi (har lead→deal konvertatsiyasi ham 0 yozardi). Yetishmayotgan
   Drizzle-xususiyat qo'shildi (crmDeals.created_by bilan bir xil alias-uslub) —
   yangi DB ustun EMAS, faqat kod-sxema tuzatildi.
+- **B14 slice 3 (SD customers)** ✅ commit `88bb40f4` — `sd_customers.created_by`/
+  `updated_by` (ikkalasi ham mavjud, 0/16 to'ldirilgan) — to'liq 4-qatlamli ulash
+  (controller `@CurrentUser()` + service + repo INSERT/UPDATE). 2 yangi test PASS
+  (10/10).
+- **B14 slice 4 (SD quotation→order)** ✅ commit `8cf22074` — avvalgi tekshiruvning
+  "hardcoded created_by: 0" da'vosi Q-29 bo'yicha TEKSHIRILDI va NOTO'G'RI chiqdi —
+  haqiqiy INSERT umuman creator-ustunni qamrab olmagan edi (0 emas, yo'q). To'g'ri
+  ustun aniqlandi: `sales_orders.created_by_user_id` (integer, `created_by` esa
+  uuid-tipli va ataylab bo'sh qoldirilgan boshqa joylarda) — to'liq 4-qatlamli ulash.
+  1 yangi test PASS (11/11).
 
-**Qolgan B10 modullari** (Finance/WMS/POS raw_materials iste'molchilari) va **B14ning
-qolgan ~28 yozish-joyi** (sd_customers, material_cards 4-qatlamli, production_orders,
-sales_orders 3 ta haqiqiy xato) keyingi navbatdagi slice'lar — har biri alohida
-tekshiruv+dry-run+commit talab qiladi, bitta partiyada hammasini qilish xavfli
-(ko'lam juda katta).
+**XULOSA (bu bosqich, 2026-07-05)**: B10/B13/B14 uchun 6 ta tasdiqlangan slice
+bajarildi (har biri: dry-run/tekshiruv → tsc → test → alohida commit). Qolgan ko'lam
+HALI KATTA: B14'ning ~24 ta boshqa yozish-joyi (material_cards 4-qatlamli chuqur
+gap, production_orders, qc_reclamations, warehouse_transactions event-payload,
+salary_change_log), B13'ning UNITS muammosi (74 ustun/72 jadval — qiymat-moslashtirish
+qarori kerak, alohida ko'p-partiyali ish), B10'ning Finance/WMS/POS modullari
+(raw_materials o'qish-yo'lini material_cards'ga o'tkazish — kategoriya-taksonomiya
+moslashtirish qarori kerak). Bulardan tashqari hali BOSHLANMAGAN: Ombor tozalash
+(5-qadam ketma-ketlik — ba'zi qismlari boshqa sessiya tomonidan allaqachon
+ishlanmoqda, `6e92aaf7` va keyingi commit'lar), 226 ta qolgan VISION-3340 topilma,
+IoT Kiosk-Screen bosqichi, i18n fix-loop (bu ham boshqa sessiya tomonidan parallel
+ishlanmoqda). To'liq ro'yxat — egasiga yakuniy hisobotda.
