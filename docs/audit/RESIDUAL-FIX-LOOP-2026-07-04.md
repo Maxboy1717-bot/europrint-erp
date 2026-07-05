@@ -542,16 +542,34 @@ commit):
   ustun aniqlandi: `sales_orders.created_by_user_id` (integer, `created_by` esa
   uuid-tipli va ataylab bo'sh qoldirilgan boshqa joylarda) — to'liq 4-qatlamli ulash.
   1 yangi test PASS (11/11).
+- **B14 slice 5 (warehouse_transactions)** ✅ commit `da8c394d` — `event.updatedById`
+  har chaqiruvda mavjud edi (bir bosqich yuqorida to'ldirilgan, cron/kontekstsiz holat
+  emas), lekin `onMovementCreated()` uni hech qachon o'qimagan edi. INSERT ustun
+  ro'yxatiga qo'shildi. 1 yangi test PASS (`@shared/db` runQuery-mock uslubida,
+  drizzle `sql` shablonining haqiqiy `queryChunks` tuzilishi tekshirilgan).
+- **B14 slice 6 (material_cards, 4-qatlamli)** ✅ commit `e46273a5` — ENG CHUQUR gap:
+  `material_cards.created_by`/`updated_by` jonli DB'da bor edi, LEKIN (1) Drizzle
+  sxemasida (`lib/db/src/schema/mm-material-cards.ts`) UMUMAN e'lon qilinmagan,
+  VA (2) `Material` domain-agregatida bunday maydon UMUMAN yo'q edi. To'liq 4
+  qatlam tuzatildi: lib/db sxema (yangi ustun — `lib/db` alohida paket, `dist/`
+  gitignored, faqat `src/` commit qilindi, lokal qayta-build orqali tsc+test
+  tasdiqlandi) → `Material` agregati (ixtiyoriy trailing pozitsion parametrlar,
+  6 ta mavjud `new Material(...)` chaqiruvi buzilmadi) → Create/UpdateMaterialCommand
+  → controller `@CurrentUser()`. 2 yangi test PASS (createdBy yaratishda, updatedBy
+  yangilashda + createdBy o'zgarishsiz qolishi tekshirildi). To'liq `test/mm/`
+  to'plami git-stash orqali (`lib/db` ham qayta-build qilingan haqiqiy asos uchun)
+  solishtirildi — bir xil 146 passed/1 failed (aloqasiz `MmGoodsService`)/5 to'plam
+  yuklanmagan (oldindan mavjud `DATABASE_URL` muhit-muammosi, ikkala holatda ham bor).
 
-**XULOSA (bu bosqich, 2026-07-05)**: B10/B13/B14 uchun 6 ta tasdiqlangan slice
+**XULOSA (bu bosqich, 2026-07-05)**: B10/B13/B14 uchun 8 ta tasdiqlangan slice
 bajarildi (har biri: dry-run/tekshiruv → tsc → test → alohida commit). Qolgan ko'lam
-HALI KATTA: B14'ning ~24 ta boshqa yozish-joyi (material_cards 4-qatlamli chuqur
-gap, production_orders, qc_reclamations, warehouse_transactions event-payload,
-salary_change_log), B13'ning UNITS muammosi (74 ustun/72 jadval — qiymat-moslashtirish
-qarori kerak, alohida ko'p-partiyali ish), B10'ning Finance/WMS/POS modullari
-(raw_materials o'qish-yo'lini material_cards'ga o'tkazish — kategoriya-taksonomiya
-moslashtirish qarori kerak). Bulardan tashqari hali BOSHLANMAGAN: Ombor tozalash
-(5-qadam ketma-ketlik — ba'zi qismlari boshqa sessiya tomonidan allaqachon
-ishlanmoqda, `6e92aaf7` va keyingi commit'lar), 226 ta qolgan VISION-3340 topilma,
+HALI KATTA: B14'ning ~22 ta boshqa yozish-joyi (production_orders, qc_reclamations,
+salary_change_log, va h.k.), B13'ning UNITS muammosi (74 ustun/72 jadval —
+qiymat-moslashtirish qarori kerak, alohida ko'p-partiyali ish), B10'ning
+Finance/WMS/POS modullari (raw_materials o'qish-yo'lini material_cards'ga
+o'tkazish — kategoriya-taksonomiya moslashtirish qarori kerak). Bulardan tashqari
+hali BOSHLANMAGAN: Ombor tozalash (5-qadam ketma-ketlik — ba'zi qismlari boshqa
+sessiya tomonidan allaqachon ishlanmoqda, `6e92aaf7` va keyingi commit'lar), 226
+ta qolgan VISION-3340 topilma,
 IoT Kiosk-Screen bosqichi, i18n fix-loop (bu ham boshqa sessiya tomonidan parallel
 ishlanmoqda). To'liq ro'yxat — egasiga yakuniy hisobotda.
