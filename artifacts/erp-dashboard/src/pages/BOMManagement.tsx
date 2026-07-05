@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Package, ChevronRight, ChevronDown, Trash2, Edit, FileText, Layers, AlertCircle } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useUndoDelete } from "@/components/undo-toast";
 import { ModulePage } from "@/components/ui/module-page";
 import { CardSkeleton } from "@/components/ui/loading-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -30,7 +29,6 @@ import { EPErrorState, EPStatusPill, EPLoader } from "@/components/ep";
 
 export default function BOMManagement() {
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
   const { t } = useTranslation("production");
   const { t: tCommon } = useTranslation('common');
   const [showBOMDialog, setShowBOMDialog] = useState(false);
@@ -147,11 +145,10 @@ export default function BOMManagement() {
   });
   const deleteBOMMutation = useMutation({
     mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/pp/bom/${id}`); return id; },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pp/bom"] });
       setDeleteBomId(null);
-      const bom = (Array.isArray(bomList) ? bomList : []).find((b) => b.bom.id === id);
-      showUndoToast("bom_headers", id, bom?.bom?.bomNumber || id, () => { queryClient.invalidateQueries({ queryKey: ["/api/pp/bom"] }); });
+      toast({ title: tCommon("deletedSuccessfully") });
     },
     onError: () => { setDeleteBomId(null); toast({ variant: "destructive", title: tCommon("error"), description: tCommon("operationFailed") }); },
   });

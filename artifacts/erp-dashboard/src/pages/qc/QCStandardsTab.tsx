@@ -19,7 +19,6 @@ import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useUndoDelete } from "@/components/undo-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,7 +67,6 @@ const CATEGORY_OPTIONS = [
 export function QCStandardsTab() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
   const { t: tCommon } = useTranslation('common');
   const [filterType, setFilterType] = useState<string>("");
   const [standardDialogOpen, setStandardDialogOpen] = useState(false);
@@ -122,11 +120,9 @@ export function QCStandardsTab() {
       await apiRequest("DELETE", `/api/qc/standards/${id}`);
       return id;
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/qc/standards"] });
-      showUndoToast("qc_standards", id, id, () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/qc/standards"] });
-      });
+      toast({ title: tCommon('success'), description: tCommon('deletedSuccessfully') });
     },
     onError: (error: Error) =>
       toast({ title: tCommon('error'), description: error.message, variant: "destructive" }),

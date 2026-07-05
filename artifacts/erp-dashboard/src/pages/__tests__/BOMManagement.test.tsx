@@ -18,10 +18,6 @@ vi.mock('@/lib/queryClient', async () => {
   };
 });
 
-vi.mock('@/components/undo-toast', () => ({
-  useUndoDelete: () => ({ showUndoToast: vi.fn() }),
-}));
-
 import BOMManagement from '../BOMManagement';
 import {
   makeQueryWrapper,

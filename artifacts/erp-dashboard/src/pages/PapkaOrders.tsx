@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { useUndoDelete } from "@/components/undo-toast";
 import type { PapkaOrder } from "@shared/schema";
 import {
   formSchema, FormData, Lang, DEFAULT_FORM_VALUES, TRANSLATIONS,
@@ -53,7 +52,6 @@ function normalizePapkaOrder(r: Record<string, unknown>): PapkaOrder {
 export default function PapkaOrders() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
   const [lang, setLang] = useState<Lang>("uz");
   const [showDialog, setShowDialog] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PapkaOrder | null>(null);
@@ -128,12 +126,9 @@ export default function PapkaOrders() {
       await apiRequest("PATCH", `/api/papka-orders/${id}`, { status: "cancelled" });
       return id;
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
-      const order = allOrders.find(o => o.id === id);
-      showUndoToast("papka_orders", id, order?.papkaNo || id, () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
-      });
+      toast({ title: lang === "uz" ? "Buyurtma bekor qilindi" : "Заказ отменён" });
     },
   });
 

@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUndoDelete } from "@/components/undo-toast";
 import { useForm } from "react-hook-form";
 import type { SalesOrder } from "@shared/schema";
 import { insertSalesOrderSchema, type InsertSalesOrder } from "@shared/schema";
@@ -25,7 +24,6 @@ import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 export default function SalesOrders() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
-  const { showUndoToast } = useUndoDelete();
   const { t: tCommon } = useTranslation('common');
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -131,12 +129,9 @@ export default function SalesOrders() {
       await apiRequest("DELETE", `/api/sap/sales-orders/${id}`);
       return id;
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sap/sales-orders"] });
-      const order = (Array.isArray(salesOrders) ? salesOrders : []).find((o) => o.id === id);
-      showUndoToast("sales_orders", id, order?.documentNumber || id, () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/sap/sales-orders"] });
-      });
+      toast({ title: tCommon("deletedSuccessfully") });
     },
   });
 
