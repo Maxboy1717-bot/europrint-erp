@@ -31,12 +31,12 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.get360View(cid));
   }
 
-  async create(body: Record<string, unknown>) {
-    return safeCall(async () => this.repo.create(body));
+  async create(body: Record<string, unknown>, createdBy?: number) {
+    return safeCall(async () => this.repo.create(body, createdBy));
   }
 
-  async update(cid: number, body: Record<string, unknown>) {
-    return safeCall(async () => this.repo.update(cid, body));
+  async update(cid: number, body: Record<string, unknown>, updatedBy?: number) {
+    return safeCall(async () => this.repo.update(cid, body, updatedBy));
   }
 
   async softDelete(cid: number) {

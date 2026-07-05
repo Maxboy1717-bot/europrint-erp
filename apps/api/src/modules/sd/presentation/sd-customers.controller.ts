@@ -16,6 +16,8 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 const CreateCustomerSchema = z.object({
   name: z.string().max(500).optional(),
@@ -212,12 +214,12 @@ export class SdCustomersController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles(...SD_WRITE_ROLES)
-  async create(@Body() body: unknown) {
+  async create(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateCustomerSchema.parse(body);
     if (!dto.name && !dto.title) {
       throw new BadRequestException(await this.i18n.t('errors.customerNameRequired'));
     }
-    return unwrapOrThrow(await this.svc.create(dto as Record<string, unknown>));
+    return unwrapOrThrow(await this.svc.create(dto as Record<string, unknown>, user.id));
   }
 
   @ApiOperation({ summary: 'Update' })
@@ -227,8 +229,8 @@ export class SdCustomersController {
   @Put(':id')
   @UsePipes(new ZodValidationPipe(SdUpdateCustomerSchema))
   @Roles(...SD_WRITE_ROLES)
-  async update(@Param('id') id: string, @Body() body: SdUpdateCustomerDto) {
-    const _rR = await this.svc.update(safeInt(id, 0), body);
+  async update(@Param('id') id: string, @Body() body: SdUpdateCustomerDto, @CurrentUser() user: AuthenticatedUser) {
+    const _rR = await this.svc.update(safeInt(id, 0), body, user.id);
     const r = unwrapOrThrow(_rR);
     assertFound(r, 'Customer not found');
     return r[0];

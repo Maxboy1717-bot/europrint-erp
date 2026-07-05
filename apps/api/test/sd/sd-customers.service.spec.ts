@@ -115,4 +115,18 @@ describe('SdCustomersService', () => {
     const r = await svc.softDelete(42);
     expect(r.ok).toBe(true);
   });
+
+  // B14 (2026-07-05): create()/update() never threaded the current user into
+  // sd_customers.created_by/updated_by; both columns existed but stayed NULL forever.
+  it('passes createdBy through to repo.create', async () => {
+    repo.create.mockResolvedValue({ id: 1 });
+    await svc.create({ name: 'Acme' }, 42);
+    expect(repo.create).toHaveBeenCalledWith({ name: 'Acme' }, 42);
+  });
+
+  it('passes updatedBy through to repo.update', async () => {
+    repo.update.mockResolvedValue([{ id: 1 }]);
+    await svc.update(1, { name: 'Acme Updated' }, 7);
+    expect(repo.update).toHaveBeenCalledWith(1, { name: 'Acme Updated' }, 7);
+  });
 });

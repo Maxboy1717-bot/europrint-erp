@@ -146,7 +146,7 @@ export class DrizzleSdCustomersRepository {
     });
   }
 
-  async update(cid: number, body: Row): Promise<Row[]> {
+  async update(cid: number, body: Row, updatedBy?: number): Promise<Row[]> {
     const { name, title, stir, inn, phone, email, address, status, notes } = body;
     const finalName = name ?? title ?? null;
     const finalStir = stir ?? inn ?? null;
@@ -160,6 +160,7 @@ export class DrizzleSdCustomersRepository {
           address = COALESCE(${address ?? null}, address),
           status = COALESCE(${status ?? null}, status),
           notes = COALESCE(${notes ?? null}, notes),
+          updated_by = COALESCE(${updatedBy ?? null}, updated_by),
           updated_at = NOW()
       WHERE id = ${cid} RETURNING *
     `);
@@ -188,7 +189,7 @@ export class DrizzleSdCustomersRepository {
     return rows.rows[0] as Row | undefined;
   }
 
-  async create(body: Row): Promise<Row> {
+  async create(body: Row, createdBy?: number): Promise<Row> {
     const { name, title, stir, inn, phone, email, address, notes } = body;
     const finalName = name ?? title ?? 'Nomsiz';
     const finalStir = stir ?? inn ?? null;
@@ -204,10 +205,10 @@ export class DrizzleSdCustomersRepository {
     }
 
     const rows = await runQuery<Row>(sql`
-      INSERT INTO sd_customers (name, stir, inn, phone, email, address, actual_address, notes, status, created_at, updated_at)
+      INSERT INTO sd_customers (name, stir, inn, phone, email, address, actual_address, notes, status, created_by, created_at, updated_at)
       VALUES (${finalName}, ${finalStir}, ${finalStir}, ${phone ?? null}, ${email ?? null},
               ${actualAddress}, ${actualAddress},
-              ${notes ?? null}, ${dbStatus}, NOW(), NOW())
+              ${notes ?? null}, ${dbStatus}, ${createdBy ?? null}, NOW(), NOW())
       RETURNING *
     `);
     const row = (rows.rows[0] ?? {}) as Row;
