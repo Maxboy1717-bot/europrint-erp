@@ -17,6 +17,7 @@ import { toBitrixStatusId } from '../../leads/lead-status-id.util';
 import { AIScore } from '../../domain/value-objects/ai-score.vo';
 import { Email } from '@shared/domain/value-objects/email.vo';
 import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
+import { Err, Result } from '@common/result';
 
 type DbRow = Record<string, unknown>;
 
@@ -75,7 +76,7 @@ export class DrizzleLeadRepository implements ILeadRepository {
     return { ok: true as const, data: this.toDomain(castTo<DbRow>(rows[0])) };
   }
 
-  async findByCompanyId(_companyId: number, limit: number, offset: number): Promise<{ ok: true; data: Lead[] }> {
+  async findByCompanyId(_companyId: number, limit: number, offset: number): Promise<Result<Lead[]>> {
     try {
       // Live crm_leads (Bitrix) has no company FK — a lead is not yet linked to a
       // company (that link is created at conversion → sd_customers). Return recent
@@ -84,19 +85,19 @@ export class DrizzleLeadRepository implements ILeadRepository {
         .where(isNull(crmLeads.deleted_at))
         .limit(limit).offset(offset);
       return { ok: true as const, data: rows.map((r) => this.toDomain(castTo<DbRow>(r))) };
-    } catch {
-      return { ok: true as const, data: [] };
+    } catch (e) {
+      return Err(`drizzle_lead.findByCompanyId: ${String(e)}`);
     }
   }
 
-  async findByStatus(status: string, limit: number, offset: number): Promise<{ ok: true; data: Lead[] }> {
+  async findByStatus(status: string, limit: number, offset: number): Promise<Result<Lead[]>> {
     try {
       const rows = await db.select().from(crmLeads)
         .where(eq(crmLeads.status_description, status))
         .limit(limit).offset(offset);
       return { ok: true as const, data: rows.map((r) => this.toDomain(castTo<DbRow>(r))) };
-    } catch {
-      return { ok: true as const, data: [] };
+    } catch (e) {
+      return Err(`drizzle_lead.findByStatus: ${String(e)}`);
     }
   }
 
