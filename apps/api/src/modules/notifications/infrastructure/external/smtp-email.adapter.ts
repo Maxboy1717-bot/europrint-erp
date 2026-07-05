@@ -2,8 +2,9 @@
  * @module smtp-email.adapter
  * @description Infrastructure adapter for transactional email. Implements the
  *   domain `IEmailSender` port using nodemailer + an SMTP relay (host/port/
- *   credentials from ConfigService). When SMTP env is unset `send()` is a
- *   no-op (logs + Ok) so workflows degrade gracefully in dev/test.
+ *   credentials from ConfigService). When SMTP env is unset `send()` returns
+ *   an `Err(EXTERNAL_SERVICE)` — the caller must see delivery as failed
+ *   (`sent:false`), not a fabricated success (Q-40 fake-success ban).
  *
  *   Each SMTP attempt is wrapped in `withRetry` (P2-23): 3 attempts with
  *   exponential backoff 100ms / 300ms / 1000ms and a 30s timeout per
@@ -42,7 +43,7 @@ export class SmtpEmailAdapter implements IEmailSender {
   async send(options: EmailOptions): Promise<Result<void>> {
     if (!this.smtpHost || !this.smtpUser || !this.smtpPass) {
       this.logger.warn('SMTP sozlamalari yo\'q — email yuborilmadi');
-      return Ok(undefined);
+      return Err(AppErr('EXTERNAL_SERVICE', 'Email provider sozlanmagan (SMTP_HOST/SMTP_USER/SMTP_PASS yo\'q)'));
     }
 
     const nodemailer = await import('nodemailer').catch((): null => null);

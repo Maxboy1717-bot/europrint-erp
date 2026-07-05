@@ -23,7 +23,7 @@ export class CrmCommsService {
     const r = await this.repo.logEmail(subject, leadId, dealId, body);
     if (!r.ok) return Err(r.error);
     // Real SMTP delivery (SmtpEmailAdapter). When SMTP_* env is unset the adapter
-    // no-ops and returns Ok — treat that the same as delivery failure here so the
+    // itself now returns Err(EXTERNAL_SERVICE), so sendResult.ok is false and the
     // caller sees `sent:false` instead of a fabricated success (Q-40).
     const sendResult = await this.emailSender.send({ to, subject, html: body, text: body });
     return Ok({ sent: sendResult.ok, to, subject, sent_at: _time.now() });
@@ -40,8 +40,8 @@ export class CrmCommsService {
     const r = await this.repo.logSms(phone, `SMS sent to ${phone}`, message, leadId);
     if (!r.ok) return Err(r.error);
     // Real SMS delivery (EskizSmsAdapter — Eskiz/Infobip). When ESKIZ_TOKEN /
-    // INFOBIP_API_KEY are unset the adapter no-ops and returns Ok — same
-    // caveat as email above.
+    // INFOBIP_API_KEY are unset the adapter itself now returns
+    // Err(EXTERNAL_SERVICE) — same as email above.
     const sendResult = await this.smsSender.send({ to: phone, text: message });
     return Ok({ sent: sendResult.ok, phone, message_length: message?.length ?? 0, sent_at: _time.now() });
   }

@@ -20,8 +20,9 @@ export interface EmailOptions {
 export interface IEmailSender {
   /**
    * Send an email with rendered HTML body (and optional plain-text fallback).
-   * When SMTP credentials are missing the adapter logs and returns Ok — the
-   * absence of credentials is treated as a no-op, not an error.
+   * When SMTP credentials are missing the adapter logs and returns
+   * `Err(EXTERNAL_SERVICE)` — missing required config is a delivery failure,
+   * not a silent no-op (Q-40 fake-success ban).
    */
   send(options: EmailOptions): Promise<Result<void>>;
 
