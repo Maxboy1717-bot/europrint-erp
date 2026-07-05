@@ -141,7 +141,7 @@ export default function AgentsHub() {
           <span>{t("k20ModulHolati")}</span>
           <span className="text-xs text-muted-foreground font-normal">{t('realTime1')}</span>
         </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">
           {(Array.isArray(healthQ.data) ? healthQ.data : []).map(m => (
             <div key={m.code} className="border rounded-lg p-2 text-center">
               <div className="text-xs font-medium truncate" title={m.name}>{m.name}</div>
