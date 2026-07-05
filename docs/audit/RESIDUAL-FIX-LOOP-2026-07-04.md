@@ -10,7 +10,13 @@
 > built correctly for this case; new test `test/hr/save-360-feedback.repo.spec.ts`; confirmed
 > pre-existing unrelated failures in `create-employee.handler.spec.ts` are NOT a regression,
 > via git-stash A/B against the pre-fix baseline).
-> Next: R1.
+> R1 ✅ DONE — commit `91c60c91` (removed dead `undo-toast.tsx`, calls the fake restore
+> route Q18 deleted; no soft-delete pattern exists for a real restore, so the fake Undo
+> capability was removed entirely from all 5 real call sites, not half-fixed; delete
+> mutations + confirm dialogs untouched; BE+FE tsc 0 errors).
+> Owner directive 2026-07-05: continue R1→R6→G3→R7→R8→G4 autonomously, no per-item
+> confirmation — dry-run-then-report (not dry-run-then-ask) for schema/GL/backfill items.
+> Next: R2.
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
