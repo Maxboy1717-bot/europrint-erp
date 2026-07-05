@@ -39,6 +39,7 @@ import { EnrollCourseCommand } from '../application/commands/enroll-course.handl
 import { GetCoursesQuery } from '../application/queries/get-courses.query';
 import { AuthenticatedUser } from '@auth/types';
 import { LmsCreateCourseSchema, LmsCreateCourseDto, LmsEnrollEmployeeSchema, LmsEnrollEmployeeDto, LmsSetCourseCardSchema, LmsSetCourseCardDto } from '../dto/lms.dto';
+import { LMS_GENERAL_PASS_THRESHOLD_PCT } from '../application/constants/lms-completion.constants';
 
 @ApiThrottle()
 @ApiTags('Lms Courses')
@@ -109,7 +110,7 @@ export class LmsCoursesController {
       description: body.description,
       category: body.category,
       is_mandatory: body.isMandatory ?? false,
-      passing_score: body.passingScore ?? 70,
+      passing_score: body.passingScore ?? LMS_GENERAL_PASS_THRESHOLD_PCT,
       created_by: String(user?.sub ?? user?.id ?? ''),
       created_at: _time.now(),
       card_id: body.cardId ?? null,

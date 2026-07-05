@@ -7,6 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
+import { LMS_GENERAL_PASS_THRESHOLD_PCT } from '../../application/constants/lms-completion.constants';
 
 type Row = Record<string, unknown>;
 const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
@@ -98,7 +99,7 @@ export class LmsExamsRepository {
       // 1. Fetch exam to get passing_score
       const exams = await exec(sql`SELECT id, passing_score FROM lms_exams WHERE id = ${examIdInt} LIMIT 1`);
       if (!exams.length) return Err('Imtihon topilmadi');
-      const passingScore = Number(exams[0].passing_score ?? 70);
+      const passingScore = Number(exams[0].passing_score ?? LMS_GENERAL_PASS_THRESHOLD_PCT);
 
       // 2. Fetch questions to grade answers
       const questions = await exec(sql`
@@ -170,7 +171,7 @@ export class LmsExamsRepository {
         SELECT id, passing_score FROM lms_exams WHERE id = ${examIdInt} LIMIT 1
       `);
       if (!exams.length) return Err('Imtihon topilmadi');
-      const passingScore = Number(exams[0].passing_score ?? 70);
+      const passingScore = Number(exams[0].passing_score ?? LMS_GENERAL_PASS_THRESHOLD_PCT);
 
       // 3. Fetch questions to grade
       const questions = await exec(sql`

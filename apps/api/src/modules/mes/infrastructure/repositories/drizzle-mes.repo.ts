@@ -12,6 +12,7 @@ import { ProductionSession, ChecklistStatus } from '../../domain/aggregates/prod
 import { IMesRepository, DrizzleExecutor } from '../../domain/repositories/mes.repository';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+import { LMS_GENERAL_PASS_THRESHOLD_PCT } from '../../../lms/application/constants/lms-completion.constants';
 type Row = Record<string, unknown>;
 
 /**
@@ -225,7 +226,7 @@ export class DrizzleMesRepository implements IMesRepository {
         return { ok: true as const, data: { valid: false, courseName: 'Unknown Course', expiresAt: null } };
       }
       const courseName = courseRow.title ?? 'Unknown Course';
-      const passThresholdPct = Number(courseRow.passing_score ?? 70);
+      const passThresholdPct = Number(courseRow.passing_score ?? LMS_GENERAL_PASS_THRESHOLD_PCT);
 
       // C1 — nazariy test: eng yaxshi O'TGAN urinish bali (lms_test_attempts TEXT id).
       const attemptR = await exec(sql`

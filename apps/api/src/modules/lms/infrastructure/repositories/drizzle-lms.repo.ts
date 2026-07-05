@@ -10,6 +10,7 @@ import { courses_table } from '@shared/db';
 import { Result, Err, Ok, AppErr } from '@common/types/result.type';
 import { ILmsRepo, Course, Enrollment, CourseApproval } from '../../domain/repositories/i-lms.repo';
 import { LmsCertRepo } from './drizzle-lms-cert.repo';
+import { LMS_GENERAL_PASS_THRESHOLD_PCT } from '../../application/constants/lms-completion.constants';
 
 type Row = Record<string, unknown>;
 const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
@@ -23,7 +24,7 @@ function mapCourse(row: Row): Course {
     description: row.description != null ? String(row.description) : undefined,
     category: row.category != null ? String(row.category) : undefined,
     is_mandatory: Boolean(row.is_mandatory ?? false),
-    passing_score: Number(row.passing_score ?? row.passingScore ?? 70),
+    passing_score: Number(row.passing_score ?? row.passingScore ?? LMS_GENERAL_PASS_THRESHOLD_PCT),
     created_by: String(row.author_id ?? row.created_by ?? ''),
     created_at: row.created_at instanceof Date ? row.created_at : new Date(String(row.created_at)),
     card_id: row.card_id != null ? Number(row.card_id) : null,
@@ -240,7 +241,7 @@ export class LmsRepository implements ILmsRepo {
         SELECT id, passing_score
         FROM courses
         WHERE card_id = ${cardId} AND (is_active IS NULL OR is_active = true)`);
-      return Ok((Array.isArray(rows) ? rows : []).map((r) => ({ id: Number(r.id), passing_score: Number(r.passing_score ?? 70) })));
+      return Ok((Array.isArray(rows) ? rows : []).map((r) => ({ id: Number(r.id), passing_score: Number(r.passing_score ?? LMS_GENERAL_PASS_THRESHOLD_PCT) })));
     } catch (error: unknown) {
       this.logger.error(`findActiveCoursesByCard: ${(error as Error).message}`);
       return Err((error as Error).message);
@@ -297,7 +298,7 @@ export class LmsRepository implements ILmsRepo {
           AND is_mandatory = true`);
       const list = (Array.isArray(rows) ? rows : []).map((r) => ({
         id: Number(r.id),
-        passing_score: Number(r.passing_score ?? 70),
+        passing_score: Number(r.passing_score ?? LMS_GENERAL_PASS_THRESHOLD_PCT),
       }));
       return Ok(list);
     } catch (error: unknown) {
@@ -334,7 +335,7 @@ export class LmsRepository implements ILmsRepo {
         const cid = Number(r.card_id);
         if (!Number.isInteger(cid)) continue;
         const list = byCard.get(cid) ?? [];
-        list.push({ id: Number(r.id), passing_score: Number(r.passing_score ?? 70) });
+        list.push({ id: Number(r.id), passing_score: Number(r.passing_score ?? LMS_GENERAL_PASS_THRESHOLD_PCT) });
         byCard.set(cid, list);
       }
       return Ok(byCard);
@@ -371,7 +372,7 @@ export class LmsRepository implements ILmsRepo {
 
       const courseR = await exec(sql`SELECT passing_score FROM courses WHERE id = ${courseId} LIMIT 1`);
       if (!courseR[0]) return Err('Course not found');
-      const passThresholdPct = Number(courseR[0].passing_score ?? 70);
+      const passThresholdPct = Number(courseR[0].passing_score ?? LMS_GENERAL_PASS_THRESHOLD_PCT);
 
       const bestR = await exec(sql`
         SELECT COALESCE(MAX(score), 0) AS best
