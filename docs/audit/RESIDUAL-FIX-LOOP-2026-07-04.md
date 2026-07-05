@@ -41,7 +41,20 @@
 > G3 ✅ DONE — commit `4dd08593` (FK indexes on `employees.org_department_id`/
 > `org_function_id` + `org_functions.razryad_level_id`; dry-run in BEGIN/ROLLBACK first,
 > then applied live via CONCURRENTLY; verified via pg_indexes post-apply; tsc 0 errors).
-> Next: R7 (data-only, no code).
+> R7 ✅ DONE (data-list only, no code) — verified live 2026-07-05:
+>   - `iot_sensors`=0, `iot_sensor_readings`=0. Code path is correct (honest empty
+>     results), needs: ≥1 sensor row per physical sensor (type=temperature/pressure/
+>     vibration per vision, `machine_id`→`work_centers`, 12 exist live) — suggest 3-5
+>     sensors covering the 3 vision sensor-types across a few real work-centers — plus
+>     ≥10-20 `iot_sensor_readings` rows over time per sensor (anomaly z-score needs a
+>     baseline distribution, not just 1 point).
+>   - `mro_utility_readings`=0, `mro_items`=0 (`mro_equipment`=7, already populated).
+>     Needs: per utility_type (electricity/water/gas/etc.) × facility, ≥2 readings
+>     (today+yesterday) to exercise `trend_percent`; `mro_items` needs real
+>     item_code/name/category/unit/current_stock rows for actual spare-parts/consumables.
+>   This is owner/ops data (real sensor install + real MRO stock), not fabricatable —
+>   marked BLOCKED-OWNER-DATA, no code touched.
+> Next: R8 (decision-only, no code).
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
