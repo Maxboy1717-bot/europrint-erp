@@ -393,3 +393,34 @@ allaqachon toza, harakat kerak emas.
 
 **Keyingi:** B13 (sana/valyuta/birlik formati), B14 (audit-egalik ustunlari yo'qligi),
 B15 (klassifikatsiya-maydon bo'shlig'i) — parallel tekshirilmoqda.
+
+- **B13** 🛑 EGASI QARORI KERAK, kod tegilmadi — pul-format YAXSHI (real sana-emas ustunlar
+  yo'q), lekin **sana**: ~186 jadvalda sana varchar/text sifatida saqlanadi (FI/GL'ning o'zi
+  kanonik `entries.entry_date` ham shu qatorda — ADR-003 kanonik jadval!), hech qanday DB-daraja
+  format-cheklovi yo'q. **O'lchov-birligi**: `unit_of_measures` lug'at-jadvali bor, lekin butun
+  schema-daraxtida FAQAT 1 FK unga ishora qiladi — 80+ ustun mustaqil erkin-matn (`warehouse_stock`
+  bir ustunda 'sht'/'dona'/'PC' — bir xil narsa uch xil yozilgan, jonli isbotlangan). Ikkalasi
+  ham butun tizim bo'ylab (har modul) — bitta-fayl tuzatish emas, siyosat-qaror kerak.
+- **B14** 🛑 EGASI QARORI KERAK, kod tegilmadi — `created_by` 152/1062 jadvalda bor (lekin
+  deyarli hamma joyda 0% to'ldirilgan), `updated_by` atigi 13/1062 (1.2%). `employees`
+  (232 murojaat) va `users` (185 murojaat) — ENG KO'P ishlatiladigan 2 jadval — ikkalasida ham
+  BUTUNLAY YO'Q. Ustun qo'shishning o'zi (G3 uslubida, nullable, backfill'siz) mexanik va
+  xavfsiz, LEKIN qaysi jadvallarga chindan kerakligi + to'ldirish-mexanizmi (har servisga
+  qo'lda `userId` o'tkazish vs markazlashgan AsyncLocalStorage-asosidagi avto-stamp) — arxitektura
+  qarori.
+- **B15** 🛑 EGASI QARORI KERAK, kod tegilmadi — aralash holat: `material_cards.category`
+  to'liq to'ldirilgan, lekin taksonomiya aralash (Inglizcha-kod + O'zbekcha-erkin-matn birga);
+  `sd_customers.customer_type` 16/16 bir xil qiymat ('legal') — bu KOD emas, BIZNES-HAQIQAT
+  (hali jismoniy-shaxs mijoz yo'q); `employees.vysotskiy_category/contract_type/employment_type`
+  — 3 ta MUTLAQO BOSHQA muammo: (1) FE'da A/B/C/D tanlov mavjud, lekin saqlashda TASHLAB
+  YUBORILADI (`useEmployeeMutation.ts:89` faqat baseSalary yuboradi) — LEKIN bu razryad-tayinlash
+  rasmiy HR+rahbar tasdiq-jarayoni ekanligi sababli (loyiha-xotira), shunchaki tugmani ulash
+  siyosat-savolini chetlab o'tadi; (2) `contract_type` yozish-yo'li UMUMAN yo'q (haqiqiy jonli
+  `hrEmployees` jadval-ta'rifida bu ustun yo'q); (3) `employment_type` kod TO'G'RI ishlaydi, lekin
+  31 xodimning barchasi BIR martalik SQL-seed bilan yaratilgan (API orqali emas) — sof
+  egasi-data/backfill masalasi.
+
+**G5+G6 XULOSA:** A-seriya (A2,A4,A5,A7) + qisman (A3-ochiq, A8-qaror-kerak) bajarildi.
+B-seriya (B9,B10,B13,B14,B15) — barchasi to'g'ri ravishda egasi-qaror talab qiladi deb
+aniqlandi, hech narsa taxmin qilinmadi/fabrikatsiya qilinmadi. Qolgan A1 (repo-nomlash
+570+ fayl bo'ylab) ham katta-hajmli, alohida ustuvorlik-qarori kerak.
