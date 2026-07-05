@@ -102,10 +102,15 @@ export class DrizzleAiPlanningRepo {
           planDate,
           planType,
           status:           'draft',
-          confidenceScore:  87,
+          // M3 (2026-07-05): confidenceScore/optimizationMetrics used to be fabricated
+          // (87 / {84,76,32}) at creation time, before any real analysis ran -- no method
+          // anywhere in this repo ever recomputes them afterward, so every plan carried a
+          // permanent fake "already analyzed" result. Honest default: 0/{} until a real
+          // optimization pass exists to populate them.
+          confidenceScore:  0,
           autoApproved:     false,
           planData:         [],
-          optimizationMetrics: { machineUtilization: 84, energyEfficiency: 76, changeoverReduction: 32 },
+          optimizationMetrics: {},
           aiRecommendations:   [{ type: 'info', message: 'AI reja yaratildi' }],
         })
         .returning();
