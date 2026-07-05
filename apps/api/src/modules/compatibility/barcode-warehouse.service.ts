@@ -9,6 +9,7 @@ import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall } from '@common/result';
+import { getConfigNumber } from '@common/config/business-config.helper';
 import { BarcodeWarehouseQueriesService } from './barcode-warehouse-queries.service';
 
 @Injectable()
@@ -24,14 +25,18 @@ export class BarcodeWarehouseCompatService extends BarcodeWarehouseQueriesServic
     });
   }
 
-  submitCycleCount(body: Record<string, unknown>) {
+  async submitCycleCount(body: Record<string, unknown>) {
     const counted  = Number(body['countedQuantity'] ?? 0);
     const system   = Number(body['systemQuantity'] ?? 0);
     const variance = system > 0 ? Math.abs(counted - system) / system * 100 : 0;
+    // M4 (2026-07-05): thresholds now read settings.'cycle_count_auto_adjust_pct'/
+    // 'cycle_count_supervisor_pct' first, falling back to 2%/5% when unset.
+    const autoAdjustPct = await getConfigNumber('cycle_count_auto_adjust_pct', 2);
+    const supervisorPct = await getConfigNumber('cycle_count_supervisor_pct', 5);
     let adjustmentAction: string;
-    if (variance <= 2)      adjustmentAction = 'AUTO_ADJUST';
-    else if (variance <= 5) adjustmentAction = 'SUPERVISOR_APPROVAL';
-    else                    adjustmentAction = 'RECOUNT';
+    if (variance <= autoAdjustPct)      adjustmentAction = 'AUTO_ADJUST';
+    else if (variance <= supervisorPct) adjustmentAction = 'SUPERVISOR_APPROVAL';
+    else                                adjustmentAction = 'RECOUNT';
     return {
       adjustmentAction,
       variance: +variance.toFixed(2),

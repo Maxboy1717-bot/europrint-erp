@@ -9,6 +9,7 @@ import { Result, Err } from '@common/result';
 import { PurchaseOrder, PurchaseOrderItem } from '../../domain/aggregates/purchase-order.aggregate';
 import { IMmRepository, MM_REPO } from '../../domain/repositories/mm.repository';
 import { PO_MAX_AMOUNT_UZS } from '@common/constants/app.constants';
+import { getConfigNumber } from '@common/config/business-config.helper';
 import { PoRequiresDirectorApprovalEvent } from '../../domain/events/po-requires-director-approval.event';
 
 export class CreatePurchaseOrderCommand {
@@ -48,11 +49,14 @@ export class CreatePurchaseOrderHandler
       return saveResult;
     }
 
-    // §7 HITL: > 50 mln UZS → Director approval. Publish AFTER save so poId is the REAL saved id
+    // §7 HITL: > threshold UZS → Director approval. Publish AFTER save so poId is the REAL saved id
     // (was a STRING event published BEFORE save with poId=0 — unroutable by CQRS + wrong id). The
     // class event is handled by PoRequiresDirectorApprovalListener → hitl_approvals (director reads it).
-    if (totalAmount > PO_MAX_AMOUNT_UZS) {
-      this.logger.log({ poNumber, totalAmount, createdBy: command.createdBy }, 'HITL required: PO exceeds 50 million UZS');
+    // M4 (2026-07-05): threshold now reads settings.'po_max_amount_uzs' first (adjustable without a
+    // deploy), falling back to the PO_MAX_AMOUNT_UZS constant (50M) when unset.
+    const poMaxAmount = await getConfigNumber('po_max_amount_uzs', PO_MAX_AMOUNT_UZS);
+    if (totalAmount > poMaxAmount) {
+      this.logger.log({ poNumber, totalAmount, threshold: poMaxAmount, createdBy: command.createdBy }, 'HITL required: PO exceeds threshold');
       this.eventBus.publish(new PoRequiresDirectorApprovalEvent(saveResult.data, totalAmount, command.createdBy));
     }
 
