@@ -4,7 +4,13 @@
 > approve/reject gated via new `canManageRequest` admin/department-manager check; test
 > `test/pos/mini-app-approval-gate.spec.ts` + full `test/pos/` suite 99/99 pass; also fixed
 > a pre-existing `jest.config.js` gap, missing general `@shared/(.*)` moduleNameMapper fallback).
-> Next: G2.
+> G2 ✅ DONE — commit `f136f39f` (`HrLeaveRepo.save360Feedback` catch block now returns
+> `Err(...)` like every sibling method, instead of a fake `{ok:true, data:{id:null}}`;
+> zero caller changes needed, `Record360FeedbackHandler`/`MesTo360Listener` were already
+> built correctly for this case; new test `test/hr/save-360-feedback.repo.spec.ts`; confirmed
+> pre-existing unrelated failures in `create-employee.handler.spec.ts` are NOT a regression,
+> via git-stash A/B against the pre-fix baseline).
+> Next: R1.
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
