@@ -43,6 +43,11 @@ export class DrizzleLeadRepository implements ILeadRepository {
       source:             lead.getSource?.() ?? undefined,
       notes:              lead.getNotes?.() ?? undefined,
       manager_id:         lead.getAssignedTo?.() ?? lead.getCreatedBy?.() ?? undefined,
+      // B14 (2026-07-05): was never written -- crmLeads had no Drizzle property mapped
+      // to the live created_by_id column at all (see schema-compat-1a.ts), so it was
+      // silently dropped on every insert, and Lead.getCreatedBy() always returned 0 on
+      // re-hydration regardless of who actually created the lead.
+      created_by:         lead.getCreatedBy(),
       created_at:         now,
       updated_at:         now,
     } as unknown as typeof crmLeads.$inferInsert;
@@ -160,6 +165,8 @@ export class DrizzleLeadRepository implements ILeadRepository {
       phone:      PhoneNumber.fromRaw(String(row['contact_phone'] ?? row['phone'] ?? '')),
       status:     this.parseLeadStatus(String(row['status_description'] ?? row['status_id'] ?? 'new').toLowerCase()),
       aiScore:    this.parseAiScore(aiScore),
+      // B14 (2026-07-05): crmLeads schema had no created_by property at all until this
+      // fix (see schema-compat-1a.ts) -- row['created_by'] was always undefined.
       createdBy:  Number(row['created_by'] ?? 0),
       assignedTo: (row['manager_id'] ?? row['assigned_by_id'] ?? row['assignedById']) ? Number(row['manager_id'] ?? row['assigned_by_id'] ?? row['assignedById']) : undefined,
       source:     String(row['source'] ?? row['sourceId'] ?? ''),

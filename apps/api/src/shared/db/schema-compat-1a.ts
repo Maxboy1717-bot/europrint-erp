@@ -49,6 +49,10 @@ export const crmLeads = pgTable('crm_leads', {
   // title NOT NULL in live DB — exposed so DDD-layer save() + auto-lead inserts set it
   title:              text('title'),
   manager_id:         integer('assigned_to'),         // live: assigned_to
+  // B14 (2026-07-05): live column exists (created_by_id) but was never declared here,
+  // so Drizzle silently dropped it on every insert/select — same alias pattern as
+  // crmDeals.created_by below.
+  created_by:         integer('created_by_id'),        // live: created_by_id (alias)
   status_id:          varchar('status_id', { length: 50 }).default('NEW'), // Bitrix state NEW/CONVERTED
   status_description: varchar('status_description', { length: 200 }), // lifecycle code new/converted/qualified
   source:             text('source_description'),      // live: source_description
