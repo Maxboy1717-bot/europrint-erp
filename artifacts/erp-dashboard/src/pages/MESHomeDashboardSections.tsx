@@ -138,13 +138,13 @@ export function MesMachineGrid({ sessions, sessLoad }: { sessions: Session[]; se
         </Button>
       </div>
       {sessLoad ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {([1,2,3,4]).map(i => <Skeleton key={`k-${i}`} className="h-28 rounded-lg" />)}
         </div>
       ) : sessions.length === 0 ? (
         <div className="text-center py-10 text-[13px] text-muted-foreground">{t("sessiyaTopilmadi")}</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {sessions?.slice(0, 8).map(s => {
             const st = statusInfo(s.status);
             const oeeRaw = Number(s.oee ?? 0);

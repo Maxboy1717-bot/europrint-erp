@@ -211,7 +211,7 @@ export function MesQuickLinks() {
   return (
     <section>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("tezkorHavolalar")}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {(Array.isArray(links) ? links : []).map(link => (
           <Link key={link.href} href={link.href}>
             <div className="rounded-xl border p-4 flex flex-col items-center gap-2 text-center hover-elevate cursor-pointer" data-testid={`link-quick-${link.href}`}>
