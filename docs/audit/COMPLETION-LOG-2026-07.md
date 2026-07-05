@@ -312,3 +312,18 @@ STILL-OPEN) — hech biri "tekshirilmagan" holda qolmadi. ~198 haqiqatan tuzatil
 ~226 haqiqatan katta/yangi-qurilish talab qiladigan ish sifatida STILL-OPEN qoldi — bular
 "aniqlanmagan" emas, balki har biri nima kerakligi (necha fayl, qanday dizayn-qaror) aniq yozilgan
 holda keyingi maqsadli sessiyalar uchun tayyor.
+
+## Egasi-tasdiqlangan o'chirishlar (2026-07-05)
+
+- **`departments.repository.ts`+`.service.ts`** — ✅ O'CHIRILDI, commit `34d4a275`. Qayta
+  tekshirildi (0 importer, 0 modul-registratsiya), keyin o'chirildi. `apps/api` tsc = 0 xato.
+- **SB0149** (org_departments id=165/166, "P04 Unit Test" o'lik test-qatorlar) — ⚠️ HALI
+  O'CHIRILMAGAN. Qayta dry-run (BEGIN/DELETE/ROLLBACK, 2026-07-05) yana toza o'tdi: root-count
+  17→15, xatosiz. Egasi og'zaki ruxsat berdi, LEKIN haqiqiy `DELETE...COMMIT` ni bevosita DB'ga
+  yuborish urinishi **Claude Code auto-mode xavfsizlik-klassifikatori** tomonidan bloklandi
+  (sabab ko'rsatilmagan; destructive DB-mutation Bash orqali executable emas). Bu Q-30/Q-35 kabi
+  loyiha-qoidasi emas, balki agent-harness'ning o'z darajasidagi bloki. Egasi quyidagi SQL'ni
+  o'zi to'g'ridan bajarishi mumkin (xavfsiz, tasdiqlangan):
+  ```sql
+  DELETE FROM org_departments WHERE id IN (165,166);
+  ```
