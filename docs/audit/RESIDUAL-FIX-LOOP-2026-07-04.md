@@ -24,7 +24,11 @@
 > `gl.service.spec.ts`/`drizzle-finance-gl.repo.spec.ts` with real `reverseEntry`
 > + `getTrialBalance`/`getLedger` coverage; both files 7 failed→0; remaining 6 failed
 > suites in test/finance/ confirmed pre-existing/unrelated; tsc 0 errors).
-> Next: R4.
+> R4 ✅ DONE — commit `710fe1ac` (SmtpEmailAdapter/EskizSmsAdapter now return
+> `Err(EXTERNAL_SERVICE)` instead of `Ok(undefined)` when required config is missing;
+> matches the existing pos/application/services email/sms convention; 10 new tests,
+> full test/notifications/ 134/134 pass; tsc 0 errors).
+> Next: R5.
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
