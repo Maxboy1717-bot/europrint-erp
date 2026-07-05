@@ -9,7 +9,7 @@ import { assertAuth } from '@common/assertions';
  * POS — Telegram Mini App Controller
  * Auth, Barcode, Materials, Requests endpoints
  */
-import { Controller, Get, Post, Patch, Param, Body, Query, Headers, UnauthorizedException, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, Headers, UnauthorizedException, ForbiddenException, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors } from '@nestjs/common';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -48,6 +48,23 @@ export async function resolveSession(
 ): Promise<{ userId: number; telegramUserId: bigint }> {
   assertAuth(token, "Mini App sessiya tokeni yo'q");
   return telegramService.validateSession(token.replace('Bearer ', ''));
+}
+
+/**
+ * Approve/reject gate: mini-app is @Public() so there is no JWT-populated
+ * request.user for RolesGuard/PermissionGuard to read. Resolves the caller's
+ * role+department directly (admin-tier roles bypass department scoping;
+ * 'manager' role may only act on requests from their own department).
+ */
+export async function assertCanManageRequest(
+  miniAppService: PosMiniAppService,
+  userId: number,
+  requestId: number,
+): Promise<void> {
+  const result = await miniAppService.canManageRequest(userId, requestId);
+  if (!result.ok || !result.data) {
+    throw new ForbiddenException("Bu so'rovni tasdiqlash/rad etish uchun ruxsatingiz yo'q");
+  }
 }
 
 @ApiTags('POS — Telegram Mini App')
@@ -110,6 +127,7 @@ export class MiniAppController {
   @ApiHeader({ name: 'x-tg-session', description: 'Mini App sessiya tokeni' })
   async approveRequest(@Headers('x-tg-session') sessionToken: string, @Param('id', ParseIntPipe) id: number, @Body() dto: TgApproveDto) {
     const { userId } = await resolveSession(this.telegramService, sessionToken);
+    await assertCanManageRequest(this.miniAppService, userId, id);
     return unwrapOrInternal(await this.requestService.approveRequest({ requestId: id, notes: dto.notes }, userId));
   }
 
@@ -118,6 +136,7 @@ export class MiniAppController {
   @ApiHeader({ name: 'x-tg-session', description: 'Mini App sessiya tokeni' })
   async rejectRequest(@Headers('x-tg-session') sessionToken: string, @Param('id', ParseIntPipe) id: number, @Body() dto: TgRejectDto) {
     const { userId } = await resolveSession(this.telegramService, sessionToken);
+    await assertCanManageRequest(this.miniAppService, userId, id);
     return unwrapOrInternal(await this.requestService.rejectRequest({ requestId: id, rejectionReason: dto.reason }, userId));
   }
 }

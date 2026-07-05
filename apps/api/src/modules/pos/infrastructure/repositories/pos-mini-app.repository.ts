@@ -41,6 +41,22 @@ export class PosMiniAppRepository {
       }, 'DB_ERROR');
   }
 
+  /**
+   * Manager-approval gate for mini-app approve/reject: admin-tier roles (mirrors
+   * PermissionGuard.isAdminRole) bypass department scoping; 'manager' role may only
+   * act on requests from their own department (mirrors getPendingApprovals' scoping).
+   */
+  async canManageRequest(userId: number, requestId: number): Promise<Result<boolean>> {
+    return safeCall(async () => {
+      const r = await exec(sql`SELECT u.role, u.department AS user_department, pmr.department_code AS request_department FROM users u, pos_material_requests pmr WHERE u.id = ${userId} AND pmr.id = ${requestId}`);
+      const row = r[0];
+      if (!row) return false;
+      const role = String(row.role ?? '').toLowerCase();
+      if (role === 'super_admin' || role === 'admin' || role === 'director') return true;
+      return role === 'manager' && row.user_department === row.request_department;
+      }, 'DB_ERROR');
+  }
+
   async getPendingApprovals(userId: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
       return exec(sql`SELECT pmr.id, pmr.request_number AS "requestNumber", pmr.status, pmr.priority, pmr.notes, pmr.created_at AS "createdAt", pmr.department_code AS "departmentCode", u.first_name || ' ' || u.last_name AS "requestedByName", (SELECT json_agg(json_build_object('materialId', prl.material_id, 'name', mc.xom_ashyo, 'nameRu', mc.xom_ashyo_ru, 'requestedQty', prl.requested_qty, 'unit', mc.unit_of_measure)) FROM pos_material_request_lines prl JOIN material_cards mc ON mc.id = prl.material_id WHERE prl.request_id = pmr.id) AS lines FROM pos_material_requests pmr JOIN users u ON u.id = pmr.requested_by WHERE pmr.status = 'pending' AND pmr.department_code IN (SELECT department FROM users WHERE id = ${userId}) ORDER BY CASE pmr.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END, pmr.created_at ASC LIMIT 30`);
