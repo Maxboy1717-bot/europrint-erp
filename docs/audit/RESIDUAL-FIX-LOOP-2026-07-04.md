@@ -28,7 +28,14 @@
 > `Err(EXTERNAL_SERVICE)` instead of `Ok(undefined)` when required config is missing;
 > matches the existing pos/application/services email/sms convention; 10 new tests,
 > full test/notifications/ 134/134 pass; tsc 0 errors).
-> Next: R5.
+> R5 ✅ DONE — commit `516e03ab` (telegram-announce now emits its own
+> `vacancy.telegram-announce-requested` event → new listener targeting the active
+> candidate pool, reusing existing matching/dispatch; ALSO fixed a deeper pre-existing
+> bug found along the way — the alumni listener's own SQL referenced 3 non-existent
+> columns and had been silently crashing+swallowing every firing; live DB shows 0/11
+> candidates have telegram_chat_id and SMS is unconfigured, disclosed honestly in the
+> endpoint response rather than fabricated; 6/6 new tests, tsc 0 errors).
+> Next: R6.
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
