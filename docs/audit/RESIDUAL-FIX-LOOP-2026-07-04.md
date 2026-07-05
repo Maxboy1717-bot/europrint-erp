@@ -35,7 +35,13 @@
 > columns and had been silently crashing+swallowing every firing; live DB shows 0/11
 > candidates have telegram_chat_id and SMS is unconfigured, disclosed honestly in the
 > endpoint response rather than fabricated; 6/6 new tests, tsc 0 errors).
-> Next: R6.
+> R6 ✅ DONE — commit `33e51401` (`unwrapOrInternal` NOT_IMPLEMENTED → 501 instead of
+> masked 500; purely additive, verified against 384+279+21 sample tests; real live
+> beneficiary: `POST /design/:id/mockup`; tsc 0 errors).
+> G3 ✅ DONE — commit `4dd08593` (FK indexes on `employees.org_department_id`/
+> `org_function_id` + `org_functions.razryad_level_id`; dry-run in BEGIN/ROLLBACK first,
+> then applied live via CONCURRENTLY; verified via pg_indexes post-apply; tsc 0 errors).
+> Next: R7 (data-only, no code).
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
