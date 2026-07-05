@@ -5,9 +5,7 @@
  * Shares the `/finance` route prefix and FINANCE_ROLES guard with the read sibling.
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
-import { Body, Controller, Get, HttpCode, HttpStatus, InternalServerErrorException, Logger, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Logger, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -150,6 +148,12 @@ export class FinanceMainActionsController {
    *   profit_margin = (selling_price - total_cost) / NULLIF(selling_price,0) * 100,
    *   calculated_at = NOW()
    * Optionally scoped to a single orderId.
+   *
+   * A4 (governance fix, 2026-07-05): the actual UPDATE/computation used to run here via raw
+   * `db.execute` directly in the controller. Now delegates to
+   * FinanceAccountingService.recalculateProfitability (same SQL, same conditions, same computed
+   * values — pure layer move). Controller only parses input and unwraps the Result; the 500-on-
+   * DB-error behavior from Q6 (2026-07-04) is preserved via unwrapOrInternal.
    */
   @ApiOperation({ summary: 'Recalculate profitability' })
   @ApiResponse({ status: 202, description: 'OK' })
@@ -158,44 +162,10 @@ export class FinanceMainActionsController {
   @Post('profitability/recalculate')
   @HttpCode(HttpStatus.ACCEPTED)
   async recalculateProfitability(@Body() body: unknown) {
-    try {
-      const payload = (body ?? {}) as { orderId?: string };
-      type Row = Record<string, unknown>;
-      const r = await db.execute(
-        payload.orderId
-          ? sql`
-              UPDATE order_costings
-              SET gross_profit  = (selling_price::numeric - total_cost::numeric),
-                  profit_margin = ROUND(
-                    (selling_price::numeric - total_cost::numeric)
-                    / NULLIF(selling_price::numeric, 0) * 100, 4
-                  ),
-                  calculated_at = NOW()
-              WHERE sales_order_id::text = ${payload.orderId}
-                 OR production_order_id::text = ${payload.orderId}
-              RETURNING id, gross_profit, profit_margin, calculated_at
-            `
-          : sql`
-              UPDATE order_costings
-              SET gross_profit  = (selling_price::numeric - total_cost::numeric),
-                  profit_margin = ROUND(
-                    (selling_price::numeric - total_cost::numeric)
-                    / NULLIF(selling_price::numeric, 0) * 100, 4
-                  ),
-                  calculated_at = NOW()
-              RETURNING id, gross_profit, profit_margin, calculated_at
-            `,
-      );
-      const rows = (((r as { rows?: Row[] }).rows) ?? []);
-      this.logger.log(`Profitability recalc done: ${rows.length} rows updated orderId=${payload.orderId ?? 'all'}`);
-      return { status: 'done', updated: rows.length, orderId: payload.orderId ?? null, recalcAt: _time.now().toISOString() };
-    } catch (e) {
-      this.logger.error(`recalculateProfitability: ${(e as Error).message}`);
-      // Q6 (2026-07-04): was silently swallowed into a 202 { status: 'error' } body —
-      // caller (and any monitoring) saw "Accepted" for a failed DB write. Now surfaces
-      // as a real 500 so failures are visible as failures (Q-40 catch-swallow-return-success fix).
-      throw new InternalServerErrorException((e as Error).message);
-    }
+    const payload = (body ?? {}) as { orderId?: string };
+    const result = await this.accountingSvc.recalculateProfitability(payload.orderId);
+    const data = unwrapOrInternal(result);
+    return { status: 'done', ...data };
   }
 
   /** POST /api/finance/ap/entries — create accounts-payable entry */

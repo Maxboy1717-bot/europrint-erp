@@ -6,10 +6,11 @@
 import { Injectable, Logger, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { safeInt } from '../../hr/common/db-rows';
 import { safeCall, Result, Ok, Err, AppErr, AppError } from '@common/result';
-import { runQuery } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { DrizzleFinanceAccountingRepo } from '../infrastructure/repositories/drizzle-finance-accounting.repo';
 import { GlPostingService, JournalLine } from '../domain/services/gl-posting.service';
+import { TashkentTimeService } from '@common/time';
 
 /**
  * EP-FIN-004 "4-hisob" account group.
@@ -43,6 +44,7 @@ const ACCOUNT_GROUP_ORDER: AccountGroupEntry['group'][] = ['WORKING', 'TAX', 'HE
 @Injectable()
 export class FinanceAccountingService {
   private readonly logger = new Logger(FinanceAccountingService.name);
+  private readonly _time = new TashkentTimeService();
 
   constructor(
     private readonly accountingRepo: DrizzleFinanceAccountingRepo,
@@ -266,6 +268,50 @@ export class FinanceAccountingService {
       );
     }
     return { entryId: posted.data, reference, reversedEntryId: id, ledger: 'entries' };
+  }
+
+  /**
+   * A4 (governance fix, 2026-07-05): extracted from
+   * FinanceMainActionsController.recalculateProfitability, which ran this raw UPDATE directly
+   * in the controller. Moved here verbatim (same SQL, same conditions, same computed values) —
+   * pure layer move, not a behavior change. Optionally scoped to a single orderId (matched
+   * against either sales_order_id or production_order_id); otherwise recalculates all rows.
+   */
+  async recalculateProfitability(orderId?: string): Promise<Result<{ updated: number; orderId: string | null; recalcAt: string }>> {
+    try {
+      type Row = Record<string, unknown>;
+      const r = await db.execute(
+        orderId
+          ? sql`
+              UPDATE order_costings
+              SET gross_profit  = (selling_price::numeric - total_cost::numeric),
+                  profit_margin = ROUND(
+                    (selling_price::numeric - total_cost::numeric)
+                    / NULLIF(selling_price::numeric, 0) * 100, 4
+                  ),
+                  calculated_at = NOW()
+              WHERE sales_order_id::text = ${orderId}
+                 OR production_order_id::text = ${orderId}
+              RETURNING id, gross_profit, profit_margin, calculated_at
+            `
+          : sql`
+              UPDATE order_costings
+              SET gross_profit  = (selling_price::numeric - total_cost::numeric),
+                  profit_margin = ROUND(
+                    (selling_price::numeric - total_cost::numeric)
+                    / NULLIF(selling_price::numeric, 0) * 100, 4
+                  ),
+                  calculated_at = NOW()
+              RETURNING id, gross_profit, profit_margin, calculated_at
+            `,
+      );
+      const rows = (((r as { rows?: Row[] }).rows) ?? []);
+      this.logger.log(`Profitability recalc done: ${rows.length} rows updated orderId=${orderId ?? 'all'}`);
+      return Ok({ updated: rows.length, orderId: orderId ?? null, recalcAt: this._time.now().toISOString() });
+    } catch (e) {
+      this.logger.error(`recalculateProfitability: ${(e as Error).message}`);
+      return Err(AppErr('INTERNAL', (e as Error).message));
+    }
   }
 
   async getPeriods() {
