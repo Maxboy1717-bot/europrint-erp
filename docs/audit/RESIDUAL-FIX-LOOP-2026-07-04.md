@@ -365,3 +365,31 @@ tests pass, before continuing.
 **Keyingi navbat (egasi Decision-3 bilan tasdiqlangan):** B9, B10, B13, B14, B15
 (Extended-Governance-Check). B11/B12 allaqachon G4'da bajarilgan (takrorlanmaydi). B16 —
 allaqachon toza, harakat kerak emas.
+
+## G6 — Extended-Governance-Check B-band (2026-07-05, egasi Decision-3 buyrug'i bilan)
+
+- **B9** 🛑 EGASI QARORI KERAK, kod tegilmadi — loyihaning o'z hujjati
+  (`MASTER_DATA_STANDARTLARI.md:151-159`) allaqachon "biznes-mazmunli kod" siyosatini tanlagan
+  (`[YO'NALISH]-[KATEGORIYA]-[XUSUSIYAT]-[RAQAM]`, masalan `GF-CARTO-B-001`) — bu B9'ning o'zi
+  "GAP" deb atagan narsa aslida ataylab qabul qilingan arxitektura, xato emas. LEKIN kichik
+  nomuvofiqlik topildi: `drizzle-material.repo.ts`dagi zaxira-kod generatori
+  (`MAT-${Date.now()}`) `create-material.handler.ts`ning o'z `validateMaterialCode()` regex'iga
+  ('[A-Z0-9]{1,6}(-[A-Z0-9]{1,6}){0,2}-\d{1,6}') mos KELMAYDI (13-xonali timestamp oxirgi
+  segment limitidan oshadi) — handler-qatlam "kod hech qachon fabrikatsiya qilinmaydi" deb
+  da'vo qiladi, lekin repo-qatlam hali ham fabrikatsiya qiladi. `sd_customers.customer_code`da
+  esa umuman generator yo'q (10/16 NULL). Egasi qarori kerak: kod-yo'q holatda nima bo'lishi
+  kerak (majburiy-maydon qilib generatsiyani butunlay man qilish, yoki generic prefiks bilan
+  zaxira yaratish qoidasi).
+- **B10** 🛑 EGASI QARORI KERAK, kod tegilmadi — 5 jadval (`materials`=0 qator,
+  `products`=2, `raw_materials`=10 [material_cards'ga 1:1 FK], `material_cards`=31 [KANONIK,
+  18 FK], `product_masters`=0) parallel/fragmentlangan. `mm_materials` allaqachon
+  2026-06-22'da VIEW'ga aylantirilgan (naqsh sifatida ishlatsa bo'ladi). **Butunlay o'lik
+  topildi:** `product_masters` — 0 qator, 0 kod-havola, 0 jonli FK (faqat eski migratsiya-
+  fayldagi izoh, jonli DB'da yo'q) — xavfsiz o'chirish nomzodi, lekin o'chirish o'zi ham
+  schema-o'zgarish (bajarilmadi, faqat aniqlandi). Egasi qarori kerak: `materials`/`products`/
+  `raw_materials`ni `material_cards` ustidan VIEW qilish kerakmi (mm_materials naqshi bilan),
+  `products`ning ko'p jonli iste'molchisi (Finance/WMS/SD/IoT) borligi sababli ko'chirish
+  ko'p-fayl ishi bo'ladi.
+
+**Keyingi:** B13 (sana/valyuta/birlik formati), B14 (audit-egalik ustunlari yo'qligi),
+B15 (klassifikatsiya-maydon bo'shlig'i) — parallel tekshirilmoqda.
