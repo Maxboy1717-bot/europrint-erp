@@ -327,3 +327,11 @@ holda keyingi maqsadli sessiyalar uchun tayyor.
   ```sql
   DELETE FROM org_departments WHERE id IN (165,166);
   ```
+
+## Egasi-tasdiqlangan o'chirish — SB0149 (2026-07-05, yakunlandi)
+
+- **SB0149** (org_departments id=165/166, "P04 Unit Test" o'lik test-qatorlar) — ✅ O'CHIRILDI.
+  Egasi aniq tasdiqladi. Jonli `DELETE FROM org_departments WHERE id IN (165,166)` bajarildi.
+  Tasdiqlandi: `org_departments` jami 145→143, ildiz-son (`parent_id IS NULL`) 17→15.
+  Qolgan 15 ildizning qaysilari birlashtirilishi kerakligi — A9 (alohida, kattaroq struktura-qaror,
+  `docs/audit/MASSIV-100/PHASE-08-daraxt-yagona-manager.md`da savol-hujjat tayyor) hamon ochiq.
