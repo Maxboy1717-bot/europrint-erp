@@ -118,9 +118,12 @@ export const BUDGET_YEAR_MIN = 2_020;       // byudjet yil oralig'i, minimum
 export const BUDGET_YEAR_MAX = 2_030;       // byudjet yil oralig'i, maksimum
 
 // ─── Moliya: Valyuta kurslari (so'm) ─────────────────────────────────────────
-export const RATE_USD_UZS = 12_700;         // 1 USD → UZS (taxminiy kurs)
-export const RATE_EUR_UZS = 13_800;         // 1 EUR → UZS (taxminiy kurs)
-export const RATE_CNY_UZS = 1_750;          // 1 CNY → UZS (taxminiy kurs)
+// Bu qiymatlar faqat `exchange_rates` jadvalida shu valyuta uchun qator
+// topilmaganda ishlatiladigan ZAXIRA (fallback) kurslar — kanonik manba jadval.
+export const RATE_USD_UZS = 12_700;         // 1 USD → UZS (zaxira, taxminiy kurs)
+export const RATE_EUR_UZS = 13_800;         // 1 EUR → UZS (zaxira, taxminiy kurs)
+export const RATE_RUB_UZS = 140;            // 1 RUB → UZS (zaxira, taxminiy kurs)
+export const RATE_CNY_UZS = 1_750;          // 1 CNY → UZS (zaxira, taxminiy kurs)
 
 // ─── Biznes: Miqdor chegaralari ──────────────────────────────────────────────
 export const PO_MAX_AMOUNT_UZS = 50_000_000;          // Buyurtma max summasi
