@@ -20,7 +20,11 @@
 > generate-pdf/generate-excel endpoints with {date_from,date_to} body; backend returns
 > JSON aggregate rows not a binary, so the file is now built client-side via the
 > codebase's existing exportToPDF/exportToExcel helpers; BE+FE tsc 0 errors).
-> Next: R3.
+> R3 ✅ DONE — commit `d1091345` (replaced dead `postDocument` tests in
+> `gl.service.spec.ts`/`drizzle-finance-gl.repo.spec.ts` with real `reverseEntry`
+> + `getTrialBalance`/`getLedger` coverage; both files 7 failed→0; remaining 6 failed
+> suites in test/finance/ confirmed pre-existing/unrelated; tsc 0 errors).
+> Next: R4.
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
