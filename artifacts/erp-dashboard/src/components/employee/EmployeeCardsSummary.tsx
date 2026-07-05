@@ -46,7 +46,10 @@ interface CardGate {
 
 const fmtSom = (v: string | number | null | undefined): string => {
   const n = Number(v ?? 0);
-  return Number.isFinite(n) ? n.toLocaleString("ru-RU") + " so'm" : "0 so'm";
+  // M11/i18n-F1 (2026-07-05): was the one "ru-RU" outlier against lib/format.ts's
+  // documented, stakeholder-approved uz-UZ convention (see that file's header:
+  // "everyone reads 22.04.2026 the same way" -- deliberate, not an oversight).
+  return Number.isFinite(n) ? n.toLocaleString("uz-UZ") + " so'm" : "0 so'm";
 };
 
 export function EmployeeCardsSummary({ employeeId }: { employeeId: string | number }) {
