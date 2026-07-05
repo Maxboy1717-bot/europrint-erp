@@ -88,13 +88,16 @@ export class PosWmsSyncService {
         if (!matId || qty <= 0) continue;
 
         try {
+          // B14 (2026-07-05): event.updatedById was already available on every call
+          // but never read here -- warehouse_transactions.created_by stayed NULL for
+          // every POS-driven draft transaction.
           await runQuery(sql`
             INSERT INTO warehouse_transactions
               (material_id, transaction_date, transaction_type,
-               quantity, unit_of_measure, bulim, document_number, created_at)
+               quantity, unit_of_measure, bulim, document_number, created_by, created_at)
             VALUES
               (${matId}, ${txDate}, ${transType},
-               ${qty}, ${uom}, ${bulim ?? null}, ${docNumber}, NOW())
+               ${qty}, ${uom}, ${bulim ?? null}, ${docNumber}, ${event.updatedById ?? null}, NOW())
           `);
         } catch (txErr) {
           this.logger.error(
