@@ -44,7 +44,7 @@ export class RecordSensorReadingHandler implements ICommandHandler<RecordSensorR
       await this.feedMesTelemetry(command);
 
       // Anomaly detection logic
-      const isAnomaly = this.detectAnomaly(command.value);
+      const isAnomaly = await this.detectAnomaly(command.deviceId, command.value);
       if (isAnomaly) {
         reading.markAsAnomaly();
         this.eventBus.publish(
@@ -63,9 +63,22 @@ export class RecordSensorReadingHandler implements ICommandHandler<RecordSensorR
       return Ok(saveResult.data.id);
   }
 
-  private detectAnomaly(value: number): boolean {
-    const threshold = 90;
-    return value > threshold;
+  /**
+   * M6 (2026-07-05): used to ignore the device entirely and apply a flat >90
+   * threshold to every sensor -- a temperature sensor and a humidity sensor got
+   * the identical cutoff despite iot_sensors.min_threshold/max_threshold existing
+   * specifically to configure this per device. Now reads the device's own
+   * thresholds (set via RegisterDeviceHandler/UpdateDeviceThresholdsHandler) and
+   * only falls back to the generic 90 when a device has none configured.
+   */
+  private async detectAnomaly(deviceId: string, value: number): Promise<boolean> {
+    const deviceR = await this.sensorRepo.findDeviceById(deviceId);
+    const thresholds = deviceR.ok ? deviceR.data.thresholds : undefined;
+    if (thresholds?.max !== undefined && thresholds.max !== null) {
+      return value > thresholds.max || (thresholds.min !== undefined && thresholds.min !== null && value < thresholds.min);
+    }
+    const FALLBACK_THRESHOLD = 90;
+    return value > FALLBACK_THRESHOLD;
   }
 
   /**

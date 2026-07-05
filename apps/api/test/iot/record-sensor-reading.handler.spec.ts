@@ -12,7 +12,7 @@ import { RecordSensorReadingCommand } from '../../src/modules/iot/application/co
 import { AnomalyDetectedEvent } from '../../src/modules/iot/domain/events';
 import { TELEGRAM_SENDER } from '../../src/modules/notifications/domain/ports/i-telegram-sender.port';
 import { SENSOR_REPO } from '../../src/modules/iot/domain/repositories/i-sensor.repo';
-import { Ok } from '../../src/common/result';
+import { Ok, Err } from '../../src/common/result';
 
 interface TelegramMock {
   sendAlert: jest.Mock;
@@ -21,7 +21,12 @@ interface TelegramMock {
 function makeSensorRepoMock() {
   return {
     saveReading: jest.fn().mockResolvedValue(Ok({ id: 'reading-1' })),
-    findDeviceById: jest.fn(),
+    // M6 (2026-07-05): detectAnomaly() now calls findDeviceById() to read
+    // per-device min/max thresholds. Default: device has none configured,
+    // so behavior falls back to the flat 90 threshold these existing tests
+    // already assert -- individual tests override this to prove the
+    // per-device threshold actually takes precedence when configured.
+    findDeviceById: jest.fn().mockResolvedValue(Ok({ thresholds: undefined })),
     findAllDevices: jest.fn(),
     saveDevice: jest.fn(),
     updateDevice: jest.fn(),
@@ -33,14 +38,18 @@ function makeSensorRepoMock() {
   };
 }
 
-async function build(bus: EventBus, telegram: TelegramMock): Promise<RecordSensorReadingHandler> {
+async function build(
+  bus: EventBus,
+  telegram: TelegramMock,
+  sensorRepo: ReturnType<typeof makeSensorRepoMock> = makeSensorRepoMock(),
+): Promise<RecordSensorReadingHandler> {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       RecordSensorReadingHandler,
       { provide: EventBus, useValue: bus },
       { provide: TELEGRAM_SENDER, useValue: telegram },
       // Handler now persists readings via SENSOR_REPO (Leverage #6 fix)
-      { provide: SENSOR_REPO, useValue: makeSensorRepoMock() },
+      { provide: SENSOR_REPO, useValue: sensorRepo },
     ],
   }).compile();
   return module.get(RecordSensorReadingHandler);
@@ -104,5 +113,43 @@ describe('RecordSensorReadingHandler', () => {
     expect(evt.machineId).toBe('mach-7');
     expect(evt.value).toBe(150);
     expect(evt.deviceId).toBe('dev-2');
+  });
+
+  it('M6: uses the device\'s own max threshold instead of the flat 90 default', async () => {
+    const publish = jest.fn();
+    const telegram: TelegramMock = { sendAlert: jest.fn().mockResolvedValue(undefined) };
+    const repo = makeSensorRepoMock();
+    // Humidity sensor configured with max=50 -- a value of 60 must trip anomaly
+    // even though it's well under the generic 90 default.
+    repo.findDeviceById.mockResolvedValue(Ok({ thresholds: { min: 10, max: 50 } }));
+    const handler = await build({ publish } as unknown as EventBus, telegram, repo);
+
+    await handler.execute(new RecordSensorReadingCommand('dev-humid', 'mach-3', 60, '%'));
+
+    expect(publish).toHaveBeenCalledTimes(1);
+  });
+
+  it('M6: a value under 90 that is still below the device\'s own min threshold is an anomaly', async () => {
+    const publish = jest.fn();
+    const telegram: TelegramMock = { sendAlert: jest.fn().mockResolvedValue(undefined) };
+    const repo = makeSensorRepoMock();
+    repo.findDeviceById.mockResolvedValue(Ok({ thresholds: { min: 10, max: 50 } }));
+    const handler = await build({ publish } as unknown as EventBus, telegram, repo);
+
+    await handler.execute(new RecordSensorReadingCommand('dev-humid', 'mach-3', 5, '%'));
+
+    expect(publish).toHaveBeenCalledTimes(1);
+  });
+
+  it('M6: falls back to the flat 90 default when findDeviceById errors', async () => {
+    const publish = jest.fn();
+    const telegram: TelegramMock = { sendAlert: jest.fn().mockResolvedValue(undefined) };
+    const repo = makeSensorRepoMock();
+    repo.findDeviceById.mockResolvedValue(Err({ code: 'NOT_FOUND', message: 'no device' }));
+    const handler = await build({ publish } as unknown as EventBus, telegram, repo);
+
+    await handler.execute(new RecordSensorReadingCommand('dev-missing', 'mach-3', 120, 'C'));
+
+    expect(publish).toHaveBeenCalledTimes(1);
   });
 });
