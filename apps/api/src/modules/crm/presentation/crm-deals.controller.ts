@@ -198,7 +198,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post('quick')
  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
- async createQuickDeal(@Body() body: unknown) {
+ async createQuickDeal(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
   const parsed = QuickDealSchema.parse(body);
   // Minimal quick-create: customerName → title, amount, status (defaults to 'new').
   // companyId is enforced non-null by QuickDealSchema (CRM-FK-01); leadId is optional
@@ -212,6 +212,9 @@ export class CrmDealsController {
    assignedTo:  parsed.assignedTo ?? null,
   };
   this.logger.log('Creating quick deal');
-  return unwrapOrThrow(await this.dealsService.create(dto));
+  // B14 (2026-07-05): the main create() endpoint above already threads user.id into
+  // created_by_id; this quick-create path never did, so every deal created here had
+  // created_by_id left NULL.
+  return unwrapOrThrow(await this.dealsService.create(dto, user.id));
  }
 }
