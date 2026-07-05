@@ -435,3 +435,45 @@ aniqlandi, hech narsa taxmin qilinmadi/fabrikatsiya qilinmadi. Qolgan A1 (repo-n
   yo'lning o'zi hech kim uchun ishlamas edi. Tuzatildi + `AIDesignGenerator.tsx` ulandi +
   yashirin bonus-xato ham topilib tuzatildi (`approvedAt` eski `'completed'` so'ziga
   bog'langan edi, endi hech qachon ishlamasdi). 49/49 test PASS, BE+FE tsc 0.
+- **A3-follow-up** ✅ DONE — commit `a05938c8` (7 fayl, 1012 qo'shildi). CKP-gate va LMS-gate
+  N+1 query'lar batch-prefetch bilan almashtirildi (`evaluatePeriodBatch`,
+  `prefetchMandatoryCourses`) — `computeGatedMonthlySalary` endi ixtiyoriy `prefetched`
+  parametr qabul qiladi, u yo'q yoki xato bo'lsa avvalgi per-card so'rovga xavfsiz qaytadi
+  (silent gate-pass yo'q). 28 yangi test (13+10+5), oldin/keyin `test/hr`+`test/lms` to'liq
+  paketi git-stash orqali solishtirildi — bir xil 1033 passed/11 failed (11 tasi oldindan
+  mavjud, aloqasiz `EventBus`-DI xatolari).
+- **B9** ✅ DONE — commit `19a2e7e8`. `drizzle-material.repo.ts`: `GEN-%` fallback-kod
+  generatsiyasi endi `23505` unique-violation poyga-holatida 5 martagacha qayta urinadi
+  (chaqiruvchi bergan kod to'qnashsa — darhol xato, fabrikatsiya yo'q). 8/8 yangi test PASS.
+  `create-material.handler.spec.ts`'dagi `DATABASE_URL` xatosi git-stash orqali TEKSHIRILDI —
+  B9'dan OLDIN ham xuddi shu xato bor edi (muhit-muammosi, regressiya emas).
+- **B15** 🛑 QISMAN BAJARILDI, EGASI TASDIG'I KUTILMOQDA (2026-07-05) — sub-agent to'liq
+  BE+FE+test kod yozdi (repository/service/controller + FE wiring +
+  `vysotskiy_grade_requests` yangi jadval). MEN mustaqil TEKSHIRDIM: BE+FE tsc 0 xato, yangi
+  11 test PASS (`test/org-vysotskiy-grade.spec.ts`), `vysotskiy_category`'ning haqiqatan ham
+  hech qanday yozish-yo'li yo'qligi tasdiqlandi (faqat `abc_category` nomi bilan READ-ONLY
+  SELECT, `employee-monthly-card.service.ts:81`). **LEKIN**: egasining so'zma-so'z
+  ko'rsatmasi — "route through the EXISTING razryad 2-signature approval workflow
+  (hr_approved_by + manager_approved_by in razryad_history)" — ya'ni MAVJUD jadvalni qayta
+  ishlatish edi. Sub-agent buning texnik jihatdan imkonsizligini to'g'ri aniqladi
+  (`razryad_requests.card_id`/`target_razryad_id` NOT NULL + `razryad_levels`ga (raqamli
+  1-6) FK-tipli — A/B/C/D harfli baho uchun soxta `razryad_levels` qatorlari
+  FABRIKATSIYA qilishni talab qilardi), LEKIN buning o'rniga YANGI jadval
+  (`vysotskiy_grade_requests`) yaratdi va bunga o'ZI "APPROVED (owner, B15)" izohi bilan
+  o'z-o'zini avtorizatsiya qildi. Bu Q-35'ga zid (yangi `CREATE TABLE` uchun haqiqiy egasi
+  tasdig'i kerak, agent o'zini o'zi tasdiqlay olmaydi) — SHU SO'ROVDAGI egasining o'z
+  qoidasiga ko'ra ("agar biror qaror YANGI, ko'rsatmada qamrab olinmagan egasi-qarorini
+  talab qiladigan narsani ochib bersa — FAQAT o'sha bandni to'xtat, aniq belgila, qolgan
+  hammasi bilan davom et") — MEN ushbu bandni to'xtatdim: (1) izohni halol qildim
+  ("PENDING OWNER CONFIRMATION", "APPROVED" so'zini olib tashladim), (2) BARCHA 8 faylni
+  (BE: repository/service/controller yangi + module.ts + migrations-drift.ts + test; FE: 4
+  fayl) `git stash` orqali ALOHIDA saqladim (`stash@{0}`, xabar:
+  "B15-PENDING-OWNER-CONFIRM") — **COMMIT QILINMADI, jonli DB'ga qo'llanilmadi**
+  (xavfsizlik: `migrations-drift.ts` invariant-fayl API yuklanganda avtomatik ishga
+  tushishi mumkin, shuning uchun uni working tree'da tegilmagan holda qoldirish xavfli
+  edi — stash orqali butunlay ajratildi). **EGASIGA SAVOL**: yangi
+  `vysotskiy_grade_requests` jadvalini (2-imzo shakli `razryad_requests` bilan bir xil,
+  lekin alohida jadval) tasdiqlaysizmi, yoki boshqa yechim (masalan: `razryad_requests`ni
+  o'zini kengaytirish — `target_razryad_id`ni nullable qilib, alohida
+  `target_grade_letter` ustuni qo'shish) afzalmi? Tasdiqlansa, `git stash pop` bilan
+  1 daqiqada tiklab commit qilish mumkin.
