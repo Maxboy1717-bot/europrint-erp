@@ -500,19 +500,26 @@ Barcha commitlar: `87f7e883`, `1462bef9`, `2ec13106`, `662d5468`, `dd8150fc`, `9
 `81fbb23e`, `c8b35413`, `39b83eae`, `6d81de62`, `cd7430a7`, `fc0ecf3b`, `13d0ddad`,
 `4b75f8e8`, `44038eb9`, `5c62d378` (Q9-follow-up), `56467085` (Q13-follow-up).
 
-## 8.10 Full Residual Fix Loop — Governance-Audit + Q1-Q34 verification (2026-07-04, QUEUED)
+## 8.10 Full Residual Fix Loop — Governance-Audit + Q1-Q34 verification (2026-07-04 → 2026-07-05, ✅ COMPLETE)
 
 > Egasi tomonidan qo'shilgan navbat: `docs/audit/RESIDUAL-FIX-LOOP-2026-07-04.md`. 16-tamoyilli
 > Extended Governance Check'ning eng o'tkir topilmalari + Q1-Q34 loopining ikkita mustaqil
 > tekshiruvida topilgan qoldiq nuqsonlar (jumladan Q18/Q2 o'chirishlarining o'zi keltirib
 > chiqargan 2 ta jonli regressiya — R1/R2) birlashtirilgan.
 
-**Status: QUEUED, hali BOSHLANMAGAN.** Ijro modeli §8.9/§8.7-8.8'dagi uzluksiz (to'xtamasdan)
-loopdan ATAYLAB FARQ QILADI — bu yerda HAR BAND alohida: PLAN (tahrirsiz) → egasi tasdig'i →
-EXECUTE → tekshiruv → alohida commit → o'zbek hisobot → TO'XTA, keyingi bandga o'tish uchun
-yana tasdiq kerak. Tartib: G1(xavfsizlik)→G2(golden-thread green-lie)→R1→R2→R3→R4→R5→R6→
-G3(indeks)→R7(faqat ma'lumot-ro'yxati, kod yo'q)→R8(faqat qaror-so'rov, kod yo'q)→G4. G2'dan
-keyin va R6'dan keyin qisqa holat-jadvali talab qilinadi.
+> ⚠️ **Sinxronizatsiya tuzatildi (2026-07-05):** bu bo'lim avval "QUEUED, hali BOSHLANMAGAN" deb
+> yozilgan edi va 3-kunlik mustaqil tekshiruv (`docs/audit/3-DAY-STATUS-RECONCILIATION-2026-07-05.md`)
+> buni aniq STALE-DOC deb topdi — loop aslida 2026-07-05'da TO'LIQ tugagan edi, lekin bu status-qator
+> hech qachon yangilanmagan (alohida tracking-hujjatga yozib borilgan, master-hujjatga qaytib
+> sinxronlashtirilmagan). Endi to'g'irlandi.
+
+**Status: ✅ COMPLETE (2026-07-05).** Barcha 12 band (G1-G4, R1-R8) bajarildi, HEAD=`dd210a23`.
+10 tasi kod-fix bilan (commit'lar: `d77062b1` G1, `f136f39f` G2, `91c60c91` R1, `dd4db385` R2,
+`d1091345` R3, `710fe1ac` R4, `516e03ab` R5, `33e51401` R6, `4dd08593` G3, `9eba25a6` G4), R7
+faqat ma'lumot-ro'yxati (kod yo'q, egasi-data), R8 faqat qaror-so'rov (kod yo'q, Q31/Q32 asl matni
+hech qayerda topilmadi — `docs/audit/Q31-Q32-SOURCE-SEARCH-2026-07-05.md` bu holatni tasdiqladi).
+3-kunlik mustaqil audit barcha 12 bandni CONFIRMED deb qayta-tasdiqladi (hech qanday soxta-da'vo
+topilmadi). To'liq tafsilot: `docs/audit/RESIDUAL-FIX-LOOP-2026-07-04.md`.
 
 ## 8.11 IoT Kiosk-Screen — Sex-Ekrani to'liq vizyoni (2026-07-04, QUEUED — navbatda so'nggi)
 
@@ -537,5 +544,28 @@ parent-child barkod→brak/to'xtash hisobot→PPE-checklist→2-imzo topshirish�
 QC→pauza/uptime→UZ+RU) + 30 qo'shimcha taklif 4-tierga guruhlangan (T3/AI2/W1 fundament →
 M1/S2/W2/D1/AI1 yuqori-qiymat → W3-5/D2-3-5/M2-4/AI3-5 chuqurlik → S1-5/T1-2-4-5/M5
 xavfsizlik-infratuzilma).
+
+## 8.12 To'liq i18n tuzatish loop'i — uz-Latin / Rus / uz-Kirill (2026-07-05, QUEUED — navbatda oxirgi)
+
+> To'liq matn: `docs/audit/I18N-FIX-LOOP-2026-07-05.md`. Manba: `docs/audit/I18N-FULL-AUDIT-2026-07-04.md`
+> (topilmalar A1-D13 + "Top 10 highest-leverage gaps" + "Structural verdict" bo'limlari).
+
+**Status: QUEUED — HALI BOSHLANMAYDI.** Navbat oxirida: barcha faol/navbatdagi ishlar
+(VISION-3340 Phase-1/2, Residual Fix Loop §8.10, IoT Kiosk-Screen §8.11) 100% tugagandan
+KEYIN boshlanadi. Bu band hech narsani to'xtatmaydi yoki qayta-ustuvorlashtirmaydi — faqat
+navbat oxiriga qo'shildi. Ijro modeli §8.10/§8.11 kabi ketma-ket/plan-birinchi (davomiy loop
+emas): har band PLAN (tahrirsiz) → egasi tasdig'i → EXECUTE → tekshiruv → commit → o'zbek
+hisobot → TO'XTA.
+
+**Muvofiqlik talabi:** har tuzatish mavjud i18n stekining KENGAYTMASI sifatida quriladi —
+ikkinchi, raqobatdosh i18n kutubxona kiritilmaydi. FE kanonik = `artifacts/erp-dashboard/src/lib/i18n/`
+(key-based `getTranslation`); BE kanonik = `nestjs-i18n` (`app.module.ts`da ulangan); DB
+konvensiyasi (baza uz ustun + `_ru` sibling) uchinchi `_cyrl` ustun oladimi yoki alohida
+tarjima jadvaliga o'tiladimi — bu arxitektura qarori EXECUTE'dan oldin egasidan so'raladi.
+
+**Tarkib:** bandlar leverage bo'yicha tierlarga guruhlangan (Tier 1 = fundament, masalan
+F1 — raqam/sana/valyuta formatlashni markazlashtirish, hozircha `"uz-UZ"` hardcode
+`lib/format.ts`+`sd-helpers.ts`+`MetricCard.tsx`+~15 `pos-monitor/pages/*` faylda);
+qolgan tierlar navbat boshlanishidan oldin PLAN vaqtida audit hujjatidan to'liq chiqariladi.
 
 > Bu hujjat = 2026-07-02 holat-suratining yagona manbasi. Yangilanish keyingi katta o'lchovda (Q-25).
