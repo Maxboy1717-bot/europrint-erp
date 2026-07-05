@@ -7,8 +7,13 @@
  *   GET  /api/pp/gofra/convert    — kg↔m²↔sheet conversion (Formulas 1+2)
  *   POST /api/pp/gofra/grammage   — corrugated grammage (Formula 3) from layers
  *
- *   Auth: JwtAuthGuard is applied globally (APP_GUARD in app.module.ts), so any
- *   authenticated PP/SD/MES user may read conversions; no extra guard needed here.
+ *   Auth: JwtAuthGuard + RolesGuard are applied globally (APP_GUARD in app.module.ts).
+ *   Read/compute routes (GET convert/flute-types/config, POST grammage — none of these
+ *   write anything) are open to any authenticated PP/SD/MES user, same as before. Only the
+ *   two genuine config-WRITE routes (PUT flute-types/:code, PATCH config/:key) that change
+ *   production-formula master data are @Roles-gated to the same SUPER_ADMIN/DIRECTOR/
+ *   TECHNOLOGIST tier used by the sibling `technology.controller.ts` for its equivalent
+ *   gofra grammage/material-layer config routes (A7 fix, EXTENDED-GOVERNANCE-CHECK-2026-07-04.md).
  */
 
 import {
@@ -27,6 +32,8 @@ import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { unwrapOrThrow } from '@common/http-result';
+import { Roles } from '@common/decorators/roles.decorator';
+import { Role } from '@common/constants/roles.constants';
 import { GofraConversionService } from './gofra-conversion.service';
 import {
   GOFRA_FACTORS_REPO,
@@ -97,13 +104,19 @@ export class GofraConversionController {
    * every subsequent corrugated grammage computation (vizyon: hamma narsa sozlanadigan).
    */
   @Put('flute-types/:code')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   async updateFluteFactor(@Param('code') code: string, @Body() body: unknown): Promise<FluteTypeRow> {
     const { takeUpFactor } = UpdateFluteFactorSchema.parse(body);
     const r = await this.factorsRepo.updateFluteFactor(String(code).toUpperCase(), takeUpFactor);
     return unwrapOrThrow(r);
   }
 
-  /** POST /api/pp/gofra/grammage — Formula 3: effective corrugated grammage. */
+  /**
+   * POST /api/pp/gofra/grammage — Formula 3: effective corrugated grammage.
+   * Read-only computation (reads flute factors, returns a number) — POST only because the
+   * input is a `layers` array too complex for a query string. Same open-to-any-authenticated-
+   * PP/SD/MES-user tier as GET /convert, NOT gated like the two real config-writers below.
+   */
   @Post('grammage')
   async grammage(@Body() body: unknown): Promise<{ grammageGsm: number }> {
     const { layers } = GofraGrammageBodySchema.parse(body);
@@ -155,6 +168,7 @@ export class GofraConversionController {
 
   /** PATCH /api/pp/gofra/config/:key — update a gofra config param */
   @Patch('config/:key')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   async updateGofraConfig(@Param('key') key: string, @Body() body: unknown) {
     const dto = GofraConversionController.UpdateGofraConfigSchema.parse(body);
     const rows = await rawSql(sql`
