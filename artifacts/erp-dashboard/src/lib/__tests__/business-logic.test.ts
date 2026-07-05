@@ -8,8 +8,6 @@ import {
   calcGsdCompletionPct,
   calcGsdVariance,
   calcCompanyState,
-  computeZvsLevel,
-  canApproveZvs,
   getWeekStart,
   formatMoney,
 } from '../business-logic';
@@ -91,68 +89,6 @@ describe('Company state formula', () => {
 
   it('perf_ratio=-10 → CRITICAL', () => {
     expect(calcCompanyState(-10)).toBe('CRITICAL');
-  });
-});
-
-// ─── ZVS approval matrix ──────────────────────────────────────────────────────
-
-describe('ZVS approval matrix', () => {
-  describe('computeZvsLevel', () => {
-    it('1 so\'m → level 1', () => {
-      expect(computeZvsLevel(1)).toBe(1);
-    });
-
-    it('500_000 → level 1 (chegara)', () => {
-      expect(computeZvsLevel(500_000)).toBe(1);
-    });
-
-    it('500_001 → level 2', () => {
-      expect(computeZvsLevel(500_001)).toBe(2);
-    });
-
-    it('5_000_000 → level 2 (chegara)', () => {
-      expect(computeZvsLevel(5_000_000)).toBe(2);
-    });
-
-    it('5_000_001 → level 3', () => {
-      expect(computeZvsLevel(5_000_001)).toBe(3);
-    });
-
-    it('100_000_000 → level 3', () => {
-      expect(computeZvsLevel(100_000_000)).toBe(3);
-    });
-  });
-
-  describe('canApproveZvs', () => {
-    it('manager level-1 ni tasdiqlashi mumkin', () => {
-      expect(canApproveZvs('manager', 1)).toBe(true);
-    });
-
-    it('manager level-2 ni tasdiqlash mumkin emas', () => {
-      expect(canApproveZvs('manager', 2)).toBe(false);
-    });
-
-    it('finance_manager level-2 ni tasdiqlashi mumkin', () => {
-      expect(canApproveZvs('finance_manager', 2)).toBe(true);
-    });
-
-    it('finance_manager level-3 ni tasdiqlash mumkin emas', () => {
-      expect(canApproveZvs('finance_manager', 3)).toBe(false);
-    });
-
-    it('director level-3 ni tasdiqlashi mumkin', () => {
-      expect(canApproveZvs('director', 3)).toBe(true);
-    });
-
-    it('employee (noma\'lum rol) level-1 ni ham tasdiqlash mumkin emas', () => {
-      expect(canApproveZvs('employee', 1)).toBe(false);
-    });
-
-    it('admin barcha level ni tasdiqlashi mumkin', () => {
-      expect(canApproveZvs('admin', 1)).toBe(true);
-      expect(canApproveZvs('admin', 2)).toBe(true);
-      expect(canApproveZvs('admin', 3)).toBe(true);
-    });
   });
 });
 

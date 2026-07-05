@@ -41,36 +41,6 @@ export function calcCompanyState(perfRatio: number): CompanyStateKey {
   return 'CRITICAL';
 }
 
-// ─── ZVS (Xarajat talabi) ─────────────────────────────────────────────────────
-
-export type ZvsLevel = 1 | 2 | 3;
-
-const ZVS_LEVEL1_THRESHOLD = 500_000;
-const ZVS_LEVEL2_THRESHOLD = 5_000_000;
-
-/**
- * Xarajat miqdoriga qarab ZVS tasdiqlash darajasini aniqlaydi.
- * ≤500K → Daraja 1, ≤5M → Daraja 2, >5M → Daraja 3
- */
-export function computeZvsLevel(amount: number): ZvsLevel {
-  if (amount <= ZVS_LEVEL1_THRESHOLD) return 1;
-  if (amount <= ZVS_LEVEL2_THRESHOLD) return 2;
-  return 3;
-}
-
-const ZVS_APPROVERS: Record<ZvsLevel, ReadonlyArray<string>> = {
-  1: ["admin", "super_admin", "superadmin", "director", "ceo", "cfo", "finance_manager", "department_head", "manager"],
-  2: ["admin", "super_admin", "superadmin", "director", "ceo", "cfo", "finance_manager"],
-  3: ["admin", "super_admin", "superadmin", "director", "ceo"],
-};
-
-/**
- * Berilgan rol ushbu ZVS darajasini tasdiqlay olishini tekshiradi.
- */
-export function canApproveZvs(role: string, level: ZvsLevel): boolean {
-  return ZVS_APPROVERS[level]?.includes(role) ?? false;
-}
-
 // ─── Hafta boshi hisoblash ────────────────────────────────────────────────────
 
 /**
