@@ -50,14 +50,10 @@ import { safeNum } from '@common/math/math-utils';
 import { EoqCalculatorService, EoqWithDiscountInput, EoqDiscountResult } from '../domain/services/eoq-calculator.service';
 import type { PriceTier } from '../domain/services/eoq-calculator.service';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
+import { DEFAULT_ORDERING_COST_UZS, DEFAULT_HOLDING_COST_PCT } from '../domain/constants/eoq.constants';
 
 /** Above this PO value, EOQ result is recommendation-only — buyer must sign off. */
 const HITL_PURCHASE_THRESHOLD_UZS = 50_000_000;
-
-/** Fleet default: cost to place + receive + QC one PO line. Override per-material. */
-const DEFAULT_ORDERING_COST_UZS = 150_000;
-/** Fleet default annualised holding cost (capital + storage + spoilage), 20%. */
-const DEFAULT_HOLDING_COST_PCT = 0.20;
 
 interface MaterialRow {
   id: number;
