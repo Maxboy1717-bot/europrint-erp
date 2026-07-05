@@ -54,7 +54,16 @@
 >     item_code/name/category/unit/current_stock rows for actual spare-parts/consumables.
 >   This is owner/ops data (real sensor install + real MRO stock), not fabricatable —
 >   marked BLOCKED-OWNER-DATA, no code touched.
-> Next: R8 (decision-only, no code).
+> R8 ✅ PRESENTED, awaiting owner decision (decision-only, no code) — quoted verbatim
+>   from `docs/audit/Q1-Q34-INDEPENDENT-VERIFICATION-2026-07-04.md` lines 63-64 to owner
+>   2026-07-05: both Q31/Q32 are UNCONFIRMED not because anything alarming was found, but
+>   because the ORIGINAL Q31/Q32 finding text does not exist anywhere as a primary source
+>   (not committed, no execution log, no workflow script) — the "owner's call" label traces
+>   back to a single prior agent's summary, repeated a second time by a verification pass
+>   that also couldn't find the primary text and just deferred to the same summary
+>   (circular citation, not independent confirmation). Cannot be resolved without the owner
+>   supplying the original Q31/Q32 finding text. Does not block G4 — proceeding.
+> Next: G4.
 >
 > Execution model is deliberately
 > DIFFERENT from the Phase-1/Phase-2 VISION-3340 loops (docs/audit/COMPLETION-LOG-2026-07.md),
