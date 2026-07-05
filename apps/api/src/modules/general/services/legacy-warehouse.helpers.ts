@@ -236,24 +236,6 @@ export async function getWarehouseInternalRequestsRaw(): Promise<Record<string, 
   } catch { return []; }
 }
 
-export async function getWarehouseDashboardKpisRaw(): Promise<Record<string, unknown>> {
-  const [whR, stockR, pendingR] = await Promise.allSettled([
-    db.execute(sql`SELECT COUNT(*) AS total FROM warehouses`),
-    // G9-3: kanonik warehouse_stock (avval DEMO stock_items dan o'qir edi).
-    db.execute(sql`SELECT COUNT(*) AS items FROM warehouse_stock WHERE quantity > 0`),
-    db.execute(sql`SELECT COUNT(*) AS cnt FROM warehouse_transfers WHERE status = 'pending'`),
-  ]);
-  const wh      = whR.status      === 'fulfilled' ? (whR.value.rows[0]      as Record<string, unknown>) : { total: 0 };
-  const stock   = stockR.status   === 'fulfilled' ? (stockR.value.rows[0]   as Record<string, unknown>) : { items: 0 };
-  const pending = pendingR.status === 'fulfilled' ? (pendingR.value.rows[0] as Record<string, unknown>) : { cnt: 0 };
-  return {
-    totalWarehouses:  parseInt(String(wh?.['total']   ?? '0')),
-    stockItems:       parseInt(String(stock?.['items'] ?? '0')),
-    pendingTransfers: parseInt(String(pending?.['cnt'] ?? '0')),
-    occupancyRate: 72.5,
-  };
-}
-
 export async function getWarehouseOccupancyRaw(): Promise<Record<string, unknown>[]> {
   try {
     const r = await db.execute(sql`

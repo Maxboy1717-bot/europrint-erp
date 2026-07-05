@@ -49,7 +49,7 @@ import {
   getPlanningOperationsRaw, createPlanningOperationRaw, getKanbanEmployeesRaw,
   getWarehouseListRaw, getWarehouseStockRaw,
   getWarehouseTransfersRaw, getWarehouseLotsRaw, getWarehouseInternalRequestsRaw,
-  getWarehouseDashboardKpisRaw, getWarehouseOccupancyRaw,
+  getWarehouseOccupancyRaw,
   getSalaryBenchmarkRaw, getResourceAllocationRaw,
 } from './legacy-warehouse.helpers';
 
@@ -100,7 +100,10 @@ export class LegacyService {
   async getWarehouseTransfers()                 { return getWarehouseTransfersRaw(); }
   async getWarehouseLots()                      { return getWarehouseLotsRaw(); }
   async getWarehouseInternalRequests()          { return getWarehouseInternalRequestsRaw(); }
-  async getWarehouseDashboardKpis()             { return getWarehouseDashboardKpisRaw(); }
+  // NOTE: getWarehouseDashboardKpis removed (M3, 2026-07-05) -- dead/orphaned:
+  // its route (warehouse/dashboard/kpis) was already migrated to
+  // WmsCatalogController -> WmsCatalogDashboardService (real DB-backed),
+  // and this legacy version fabricated occupancyRate:72.5 with zero callers.
   async getWarehouseOccupancy()                 { return getWarehouseOccupancyRaw(); }
 
   // ─── Finance / KPI ──────────────────────────────────────────────────────────
