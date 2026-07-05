@@ -307,6 +307,44 @@ export class LmsRepository implements ILmsRepo {
   }
 
   /**
+   * ⭐ A3-follow-up (N+1 fix, owner-approved 2026-07-05): batch sibling of
+   * {@link findMandatoryCoursesByCard}. `generatePeriodRows` (payroll.service.ts) evaluates the
+   * LMS gate for every card in its loop — calling `findMandatoryCoursesByCard` once per card is
+   * N round-trips for the SAME `courses` table. This issues ONE query (`WHERE card_id = ANY(...)`)
+   * and groups rows by card_id in memory, returning the EXACT SAME per-card list shape
+   * `findMandatoryCoursesByCard` would return for that card (same filters: is_active/is_mandatory).
+   * A cardId with zero mandatory courses maps to an empty array — identical to calling
+   * `findMandatoryCoursesByCard` for that card alone.
+   */
+  async findMandatoryCoursesByCards(
+    cardIds: number[],
+  ): Promise<Result<Map<number, { id: number; passing_score: number }[]>>> {
+    try {
+      const uniqueIds = Array.from(new Set(cardIds.filter((id) => Number.isInteger(id) && id > 0)));
+      if (uniqueIds.length === 0) return Ok(new Map());
+      const rows = await exec(sql`
+        SELECT card_id, id, passing_score
+        FROM courses
+        WHERE card_id = ANY(${uniqueIds})
+          AND (is_active IS NULL OR is_active = true)
+          AND is_mandatory = true`);
+      const byCard = new Map<number, { id: number; passing_score: number }[]>();
+      for (const cid of uniqueIds) byCard.set(cid, []);
+      for (const r of Array.isArray(rows) ? rows : []) {
+        const cid = Number(r.card_id);
+        if (!Number.isInteger(cid)) continue;
+        const list = byCard.get(cid) ?? [];
+        list.push({ id: Number(r.id), passing_score: Number(r.passing_score ?? 70) });
+        byCard.set(cid, list);
+      }
+      return Ok(byCard);
+    } catch (error: unknown) {
+      this.logger.error(`findMandatoryCoursesByCards: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
    * EP-LMS-070: per-enrollment 3-condition snapshot consumed by the PURE
    * LmsCompletionService.evaluate(). Sources (live columns only):
    *   C1 theory  = MAX(lms_test_attempts.score WHERE passed) for (user, course) — 0 when no attempt.

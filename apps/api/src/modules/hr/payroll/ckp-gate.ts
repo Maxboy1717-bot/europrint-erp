@@ -196,11 +196,9 @@ export class CkpGateService {
     from: string,
     to: string,
   ): Promise<Result<Array<{ factDate: string; decision: CkpGateDecision }>>> {
-    const start = new Date(`${from}T00:00:00.000Z`);
-    const end = new Date(`${to}T00:00:00.000Z`);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start.getTime() > end.getTime()) {
-      return Err({ code: 'INVALID_DATE_RANGE', message: `Noto'g'ri oraliq: ${from}..${to}` });
-    }
+    const range = this.parseRange(from, to);
+    if (!range.ok) return Err(range.error);
+
     // Davr fakt-yozuvlarini bitta so'rovda olib, kun bo'yicha map qilamiz (N+1 yo'q).
     const factsR = await safeCall(async () => {
       const res = await runQuery<Row>(sql`
@@ -215,13 +213,98 @@ export class CkpGateService {
     }, 'DB_ERROR');
     if (!factsR.ok) return Err(factsR.error);
 
+    return Ok(this.buildDayDecisions(factsR.data, range.data.start, range.data.end));
+  }
+
+  /**
+   * ⭐ A3-follow-up (N+1 fix, owner-approved 2026-07-05): batch sibling of {@link evaluatePeriod}.
+   *
+   * `generatePeriodRows` (payroll.service.ts) previously called `evaluatePeriod` ONCE PER CARD
+   * inside its loop — N cards = N round-trips to `ckp_fact_values`/`org_departments`, each fetching
+   * the SAME `from..to` window. This method issues ONE query for ALL `cardIds` (`WHERE d.id = ANY(...)`)
+   * and groups rows by card in memory, then re-uses the EXACT SAME pure per-card day-building logic
+   * ({@link buildDayDecisions}, which `evaluatePeriod` also calls) — so the per-card output is
+   * byte-identical to calling `evaluatePeriod` once per card. No behavior change, only fewer round-trips.
+   *
+   * Fail-closed preserved: a hard query failure returns `Err` for the WHOLE batch (same as a single
+   * `evaluatePeriod` failing) — callers must treat a batch Err as "could not evaluate any of these
+   * cards" and fail them closed, never silently open them.
+   *
+   * @param cardIds  distinct `org_departments.id` list for the current payroll batch.
+   * @returns Map keyed by cardId -> the SAME day-decision array `evaluatePeriod` would return for
+   *          that card. A cardId with no matching `org_departments` row (shouldn't happen given the
+   *          caller sources cardIds from a live JOIN, but handled honestly) maps to an all-BLOCKED
+   *          day array (hasFact=false every day) — identical to what `evaluatePeriod` would compute
+   *          for a card with zero facts and no deadline row (LEFT JOIN yields no deadline_hours row).
+   */
+  async evaluatePeriodBatch(
+    cardIds: number[],
+    from: string,
+    to: string,
+  ): Promise<Result<Map<number, Array<{ factDate: string; decision: CkpGateDecision }>>>> {
+    const range = this.parseRange(from, to);
+    if (!range.ok) return Err(range.error);
+
+    const uniqueIds = Array.from(new Set(cardIds.filter((id) => Number.isInteger(id) && id > 0)));
+    if (uniqueIds.length === 0) return Ok(new Map());
+
+    const factsR = await safeCall(async () => {
+      const res = await runQuery<Row>(sql`
+        SELECT d.id AS card_id, f.fact_date AS fact_date, f.submitted_at AS submitted_at,
+               d.ckp_report_deadline_hours AS deadline_hours
+        FROM org_departments d
+        LEFT JOIN ckp_fact_values f
+          ON f.card_id = d.id AND f.fact_date BETWEEN ${from}::date AND ${to}::date
+        WHERE d.id = ANY(${uniqueIds})
+      `);
+      return res.rows as Row[];
+    }, 'DB_ERROR');
+    if (!factsR.ok) return Err(factsR.error);
+
+    // Group rows by card_id — same shape `evaluatePeriod` sees for a single card.
+    const rowsByCard = new Map<number, Row[]>();
+    for (const r of factsR.data) {
+      const cid = Number(r['card_id']);
+      if (!Number.isInteger(cid)) continue;
+      const arr = rowsByCard.get(cid) ?? [];
+      arr.push(r);
+      rowsByCard.set(cid, arr);
+    }
+
+    const out = new Map<number, Array<{ factDate: string; decision: CkpGateDecision }>>();
+    for (const cid of uniqueIds) {
+      // Card absent from the JOIN result (org_departments row not found) -> empty rows,
+      // same as `evaluatePeriod` would see (LEFT JOIN with WHERE d.id=<missing> => 0 rows).
+      out.set(cid, this.buildDayDecisions(rowsByCard.get(cid) ?? [], range.data.start, range.data.end));
+    }
+    return Ok(out);
+  }
+
+  /** Shared date-range parse+validate (identical guard used by evaluatePeriod/evaluatePeriodBatch). */
+  private parseRange(from: string, to: string): Result<{ start: number; end: number }> {
+    const start = new Date(`${from}T00:00:00.000Z`);
+    const end = new Date(`${to}T00:00:00.000Z`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start.getTime() > end.getTime()) {
+      return Err({ code: 'INVALID_DATE_RANGE', message: `Noto'g'ri oraliq: ${from}..${to}` });
+    }
+    return Ok({ start: start.getTime(), end: end.getTime() });
+  }
+
+  /**
+   * PURE (no DB) day-decision builder — factored out of `evaluatePeriod` verbatim so
+   * `evaluatePeriod` and `evaluatePeriodBatch` compute the identical per-card result
+   * from an identical row shape (`{ fact_date, submitted_at, deadline_hours }[]`).
+   */
+  private buildDayDecisions(
+    rows: Row[],
+    startMs: number,
+    endMs: number,
+  ): Array<{ factDate: string; decision: CkpGateDecision }> {
     // deadlineHours — kartaning yagona ustuni; birinchi qatordan olamiz (LEFT JOIN bo'lsa ham keladi).
     const deadlineHours =
-      factsR.data[0] && factsR.data[0]['deadline_hours'] != null
-        ? Number(factsR.data[0]['deadline_hours'])
-        : null;
+      rows[0] && rows[0]['deadline_hours'] != null ? Number(rows[0]['deadline_hours']) : null;
     const factByDate = new Map<string, Date | null>();
-    for (const r of factsR.data) {
+    for (const r of rows) {
       const fd = r['fact_date'];
       if (fd == null) continue;
       const key = dateKey(fd);
@@ -232,7 +315,7 @@ export class CkpGateService {
     }
 
     const out: Array<{ factDate: string; decision: CkpGateDecision }> = [];
-    for (let t = start.getTime(); t <= end.getTime(); t += MS_PER_DAY) {
+    for (let t = startMs; t <= endMs; t += MS_PER_DAY) {
       const factDate = new Date(t).toISOString().split('T')[0];
       const hasFact = factByDate.has(factDate);
       const submittedAt = hasFact ? (factByDate.get(factDate) ?? null) : null;
@@ -241,6 +324,6 @@ export class CkpGateService {
         decision: applyCkpGate({ hasFact, deadlineHours, factDate, submittedAt }),
       });
     }
-    return Ok(out);
+    return out;
   }
 }

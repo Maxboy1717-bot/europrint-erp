@@ -134,8 +134,62 @@ export class LmsCardGateService {
 
     const coursesR = await this.lmsRepo.findMandatoryCoursesByCard(cardId);
     if (!coursesR.ok) return Err(coursesR.error);
-    const mandatory = coursesR.data;
+    return this.evaluateWithMandatoryCourses(cardId, employeeId, coursesR.data);
+  }
 
+  /**
+   * ⭐ A3-follow-up (N+1 fix, owner-approved 2026-07-05): batch-prefetch the mandatory-course
+   * lists for MANY cards in ONE query, for use with {@link isCardTrainingCompleteWithPrefetch}.
+   * Thin pass-through to {@link LmsRepository.findMandatoryCoursesByCards} — kept on the gate
+   * service so payroll only depends on this class, not the repo directly.
+   */
+  async prefetchMandatoryCourses(
+    cardIds: number[],
+  ): Promise<Result<Map<number, { id: number; passing_score: number }[]>>> {
+    return this.lmsRepo.findMandatoryCoursesByCards(cardIds);
+  }
+
+  /**
+   * ⭐ A3-follow-up (N+1 fix, owner-approved 2026-07-05): batch-friendly sibling of
+   * {@link isCardTrainingComplete}. Identical validation + evaluation logic — the ONLY
+   * difference is the mandatory-course list comes from a caller-supplied prefetched Map
+   * (built once via {@link prefetchMandatoryCourses}) instead of a fresh
+   * `findMandatoryCoursesByCard` query per call. A card missing from the map (shouldn't
+   * happen when the caller prefetched with the same cardIds) is treated as "no mandatory
+   * course found" — the SAME honest-open empty-array behavior `findMandatoryCoursesByCard`
+   * would produce for a card with zero bound mandatory courses (Q-40, not fabricated).
+   *
+   * Per-course evaluation (`evaluateCourse`: theory/practical/topics snapshot + Q562 cross-card
+   * credit) is UNCHANGED — still one read per mandatory course, since `courses.card_id` binding
+   * is currently 0/5 populated (owner-data not yet materialized) and batching those per-employee,
+   * per-course reads safely is out of scope for this pass (see file header / Q-40).
+   */
+  async isCardTrainingCompleteWithPrefetch(
+    cardId: number,
+    employeeId: number,
+    mandatoryByCard: Map<number, { id: number; passing_score: number }[]>,
+  ): Promise<Result<CardGateResult>> {
+    if (!Number.isInteger(cardId) || cardId <= 0) {
+      return Err(AppErr('VALIDATION', `cardId noto'g'ri (musbat butun son bo'lishi kerak): ${cardId}`));
+    }
+    if (!Number.isInteger(employeeId) || employeeId <= 0) {
+      return Err(AppErr('VALIDATION', `employeeId noto'g'ri (musbat butun son bo'lishi kerak): ${employeeId}`));
+    }
+    const mandatory = mandatoryByCard.get(cardId) ?? [];
+    return this.evaluateWithMandatoryCourses(cardId, employeeId, mandatory);
+  }
+
+  /**
+   * Shared per-card verdict builder — extracted verbatim from the body of
+   * {@link isCardTrainingComplete} so the live-query path and the prefetched-map path
+   * ({@link isCardTrainingCompleteWithPrefetch}) compute byte-identical results from an
+   * identical `mandatory` course list. No behavior change vs. the pre-existing inline logic.
+   */
+  private async evaluateWithMandatoryCourses(
+    cardId: number,
+    employeeId: number,
+    mandatory: { id: number; passing_score: number }[],
+  ): Promise<Result<CardGateResult>> {
     // No mandatory darslik bound to this card => nothing to block (honest open, not fabricated).
     if (mandatory.length === 0) {
       return Ok({

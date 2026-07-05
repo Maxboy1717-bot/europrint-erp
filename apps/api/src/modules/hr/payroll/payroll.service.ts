@@ -397,6 +397,15 @@ export class PayrollService {
    * @param workedDays         davrda ishlangan kun (proratsiya); null → to'liq davr
    * @param periodWorkingDays  davr ish-kuni soni (proratsiya bo'luvchisi); null/≤0 → yo'q
    * @param employeeId         kartani egallagan xodim (`employees.id`); ≤0/undefined → LMS-darvoza skip
+   * @param prefetched  ⭐ A3-follow-up (N+1 fix, owner-approved 2026-07-05): OPTIONAL batch-prefetched
+   *   gate data for the CURRENT card (built once outside a caller's per-card loop via
+   *   `ckpGate.evaluatePeriodBatch` + `lmsGate.prefetchMandatoryCourses`). When omitted (undefined),
+   *   behavior is 100% UNCHANGED from before this fix — `ckpGate.evaluatePeriod` and
+   *   `lmsGate.isCardTrainingComplete` are called per-card exactly as before (used by
+   *   `previewCardSalary`, single-card preview — no batching needed there). When supplied,
+   *   the SAME two gates are evaluated via their prefetched-map siblings
+   *   (`evaluatePeriodBatch`'s per-card slice, `isCardTrainingCompleteWithPrefetch`) instead of
+   *   issuing a fresh query — the decision logic itself is byte-identical either way.
    */
   async computeGatedMonthlySalary(
     cardId: number,
@@ -409,6 +418,10 @@ export class PayrollService {
     workedDays: number | null,
     periodWorkingDays: number | null,
     employeeId?: number,
+    prefetched?: {
+      ckpDaysByCard: Map<number, Array<{ factDate: string; decision: CkpGateDecision }>>;
+      mandatoryCoursesByCard: Map<number, { id: number; passing_score: number }[]>;
+    },
   ): Promise<
     Result<{
       proratedGross: number | null;
@@ -437,7 +450,9 @@ export class PayrollService {
     let lmsBlocked = false;
     let lmsReasons: string[] = [];
     if (typeof employeeId === 'number' && Number.isInteger(employeeId) && employeeId > 0) {
-      const lmsR = await this.lmsGate.isCardTrainingComplete(cardId, employeeId);
+      const lmsR = prefetched
+        ? await this.lmsGate.isCardTrainingCompleteWithPrefetch(cardId, employeeId, prefetched.mandatoryCoursesByCard)
+        : await this.lmsGate.isCardTrainingComplete(cardId, employeeId);
       if (!lmsR.ok) {
         // O'qish xatosi = fail-closed: darslik holatini bilolmasak, oylik ochilmaydi.
         lmsBlocked = true;
@@ -451,9 +466,19 @@ export class PayrollService {
     }
 
     // A11 DARVOZA CHAQIRUVI — jonli ckp_fact_values; har kun qarori.
-    const gateR = await this.ckpGate.evaluatePeriod(cardId, from, to);
-    if (!gateR.ok) return Err(gateR.error);
-    const decisions = gateR.data;
+    // Prefetched-batch bo'lsa mapdan olinadi (fail-closed: karta xaritada yo'q → xato).
+    let decisions: Array<{ factDate: string; decision: CkpGateDecision }>;
+    if (prefetched) {
+      const fromMap = prefetched.ckpDaysByCard.get(cardId);
+      if (!fromMap) {
+        return Err(AppErr('DB_ERROR', `ЦКП-gate batch-prefetch'da karta #${cardId} topilmadi (fail-closed)`));
+      }
+      decisions = fromMap;
+    } else {
+      const gateR = await this.ckpGate.evaluatePeriod(cardId, from, to);
+      if (!gateR.ok) return Err(gateR.error);
+      decisions = gateR.data;
+    }
     const totalDays = decisions.length;
 
     // LMS-darvoza yopiq → butun karta oyligi 0 (darslik tugamasa oylik yo'q — egasi).
@@ -683,6 +708,34 @@ export class PayrollService {
       this.logger.warn(`generatePeriodRows: mukofot yig'indisini o'qishda xato — 0 deb olinadi: ${bonusMapR.error.message}`);
     }
 
+    // ⭐ A3-follow-up (N+1 fix, owner-approved 2026-07-05): batch-prefetch BOTH gates for
+    // every distinct card in `inputs` BEFORE the loop — was N `ckpGate.evaluatePeriod` +
+    // N `lmsGate.isCardTrainingComplete` (each with its own `findMandatoryCoursesByCard`)
+    // round-trips, now 2 queries total for the whole batch. FAIL-CLOSED semantics preserved:
+    // if a batch-fetch call itself fails (Err), we do NOT silently fall back to "open" —
+    // `prefetched` stays `undefined` and `computeGatedMonthlySalary` is called WITHOUT the
+    // `prefetched` argument for the WHOLE run, which makes it take the ORIGINAL per-card query
+    // path (each card's own `evaluatePeriod`/`isCardTrainingComplete` call) — i.e. a batch
+    // failure degrades to the pre-fix behavior (still correct, just not batched), rather
+    // than ever treating an unreadable card as passing.
+    const cardIds = Array.from(new Set(inputs.map((inp) => inp.cardId)));
+    const ckpBatchR = await this.ckpGate.evaluatePeriodBatch(cardIds, from, to);
+    const lmsBatchR = await this.lmsGate.prefetchMandatoryCourses(cardIds);
+    let prefetched: {
+      ckpDaysByCard: Map<number, Array<{ factDate: string; decision: CkpGateDecision }>>;
+      mandatoryCoursesByCard: Map<number, { id: number; passing_score: number }[]>;
+    } | undefined;
+    if (ckpBatchR.ok && lmsBatchR.ok) {
+      prefetched = { ckpDaysByCard: ckpBatchR.data, mandatoryCoursesByCard: lmsBatchR.data };
+    } else {
+      if (!ckpBatchR.ok) {
+        this.logger.warn(`generatePeriodRows: ЦКП batch-prefetch xato — per-karta so'rovga qaytildi: ${ckpBatchR.error.message}`);
+      }
+      if (!lmsBatchR.ok) {
+        this.logger.warn(`generatePeriodRows: LMS batch-prefetch xato — per-karta so'rovga qaytildi: ${lmsBatchR.error.message}`);
+      }
+    }
+
     let generated = 0;
     let inserted = 0;
     let updated = 0;
@@ -709,6 +762,7 @@ export class PayrollService {
         null,            // workedDays
         null,            // periodWorkingDays
         inp.employeeId,
+        prefetched,      // ⭐ A3-follow-up: batch-prefetched maps (undefined => original per-card path)
       );
       if (!gatedR.ok) {
         this.logger.warn(`generatePeriodRows: emp #${inp.employeeId} karta #${inp.cardId} gate xato — skip: ${gatedR.error.message}`);
