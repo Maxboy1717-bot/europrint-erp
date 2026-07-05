@@ -326,7 +326,7 @@ export default function IdealRasmPage() {
             <CardTitle className="text-base">{t("umumiyBaholash")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {([
                 { label: "Maqsadlar", value: targets.length, sub: "ta" },
                 { label: "≥ 80% bajarilgan", value: (Array.isArray(targets) ? targets : []).filter((t) => t.achievementPct >= 80).length, sub: "ta", color: "text-[var(--ep-green)]" },

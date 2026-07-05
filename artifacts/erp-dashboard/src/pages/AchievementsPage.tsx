@@ -72,7 +72,7 @@ export default function AchievementsPage() {
       <div className="space-y-6">
         {/* Summary */}
         {!isLoading && achievements.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-primary">{achievements.length}</p>

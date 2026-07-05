@@ -56,7 +56,7 @@ function CampaignStatsRow({ campaignId }: { campaignId: string }) {
   return (
     <div className="space-y-3 pt-3 border-t border-border mt-3" data-testid={`campaign-stats-${campaignId}`}>
       {/* Qator 1: Lid statistikasi */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <div className="text-center">
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 uppercase font-semibold tracking-wider"><Users className="h-3 w-3" />{t("jamiLidlar")}</p>
           <p className="text-lg font-bold text-foreground">{stats.totalLeads}</p>
