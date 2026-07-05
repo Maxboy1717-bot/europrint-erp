@@ -325,3 +325,43 @@ G1 → G2 → R1 → R2 → R3 → R4 → R5 → R6 → G3 → R7 (data-only) �
 (decision-only) → G4. Do not skip ahead. After G2, and again after R6,
 produce a short status table confirming everything so far is committed and
 tests pass, before continuing.
+
+## G5 — Extended-Governance-Check A-band davomi (2026-07-05, egasi Decision-3 buyrug'i bilan)
+
+> 3-kunlik audit A1-A4/A5/A7-qolganlari/A8 hech qayerda navbatga qo'yilmaganini topgandan
+> keyin, egasi "Decision 3" xabarida shu bandlarni navbatga qo'shishni tasdiqladi.
+
+- **A2** ✅ DONE — commit `c06d6cda` (`drizzle-sd-orders.repo.ts findAll()` chegarasiz SELECT'ga
+  `.limit(100).offset(0)` qo'shildi; ustun-ro'yxati o'zgartirilmadi, chunki jonli chaqiruvchi yo'q
+  — `OrdersService` hech qanday controller'ga ulanmagan, o'lik/ishlatilmagan).
+- **A3** ⚠️ KOD O'ZGARMADI (to'g'ri qaror) — `payroll.service.ts`dagi 5 iqtibos qatordan 3 tasi
+  umuman so'rov emas ekan (audit noaniq edi), qolgan 2 tasi (698, 732-qator) haqiqiy N+1, lekin
+  to'g'ri tuzatish `ckp-gate.ts`/`lms-card-gate.service.ts`/`hr-payroll.repo.ts`ga tegishi kerak
+  — Q-31 yagona-fayl chegarasidan tashqari va moliyaviy-gate mantiqini buzish xavfi bilan.
+  **Keyingi maqsadli (ko'p-fayl) vazifa sifatida ochiq qoldi.**
+- **A4** ✅ DONE — commit `3857bfcb` (`finance-main-actions.controller.ts`dagi
+  `recalculateProfitability` biznes-logikasi `FinanceAccountingService`ga so'zma-so'z ko'chirildi,
+  xatti-harakat o'zgarmadi).
+- **A5 (qolgan nusxa)** ✅ DONE — commit `9f534593` (`drizzle-lead.repo.ts`dagi
+  `findByCompanyId`/`findByStatus` endi haqiqiy `Err` qaytaradi, soxta bo'sh-muvaffaqiyat emas;
+  bonus topilma: `ListLeadsQuery`/`CrmPipelineQuery` umuman hech qayerdan chaqirilmaydi — o'lik
+  CQRS handler, tegilmadi).
+- **A7 (qolgan nusxalar)** ✅ DONE — commit `cd718a03` (`gofra-conversion.controller.ts`dagi 2 ta
+  haqiqiy konfiguratsiya-yozish yo'li (`PUT flute-types/:code`, `PATCH config/:key`)
+  SUPER_ADMIN/DIRECTOR/TECHNOLOGIST bilan cheklandi; `POST grammage` esa **ataylab OCHIQ
+  qoldirildi** — u haqiqatda faqat hisob-kitob, yozish yo'q, texnolog-darajaga cheklash oddiy
+  PP/SD/MES xodimlarining kundalik buyurtma-hisoblashini buzgan bo'lardi (o'zimning birinchi
+  urinishimdagi ortiqcha-cheklovni tuzatdim). `storage.controller.ts` — audit-hujjat eskirgan,
+  allaqachon shu sessiyada boshqa topilma uchun mustahkamlangan, o'zgarish kerak emas).
+- **A8** 🛑 EGASI QARORI KERAK, kod tegilmadi — `design.controller.ts` (`PATCH design/:id/status`,
+  status-o'tish tekshiruvi + `DesignApprovedEvent` bilan, PP oltin-zanjirining 5-trigeri) va
+  `design-extended.controller.ts` (`PATCH design/orders/:orderId/status`, hech qanday
+  tekshiruvsiz/signalsiz to'g'ridan-to'g'ri UPDATE) — ikkalasi ham JONLI va ikkalasi ham FE'dan
+  chaqiriladi (`DesignDashboard.tsx` va `AIDesignGenerator.tsx` mos ravishda). **Muammo:**
+  `AIDesignGenerator.tsx` orqali dizayn tasdiqlansa, PP hech qachon bilmaydi (oltin-zanjir jimgina
+  uziladi). Qaysi yo'l kanonik ekanini (yoki `AIDesignGenerator.tsx`ni validatsiyalangan
+  command-yo'lga o'tkazish kerakmi) — egasi qarori kerak.
+
+**Keyingi navbat (egasi Decision-3 bilan tasdiqlangan):** B9, B10, B13, B14, B15
+(Extended-Governance-Check). B11/B12 allaqachon G4'da bajarilgan (takrorlanmaydi). B16 —
+allaqachon toza, harakat kerak emas.
