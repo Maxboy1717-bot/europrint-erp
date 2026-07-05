@@ -112,7 +112,7 @@ function OperatorReportCard({ report }: { report: DailyReport }) {
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
         {oee !== null && (
           <div className="bg-white/60 dark:bg-black/20 rounded-md p-2 text-center">
             <Gauge className="w-4 h-4 mx-auto mb-0.5 text-[var(--ep-blue)]" />
@@ -360,7 +360,7 @@ export function DailyReportsTab({ employeeId, isMachineOperator }: Props) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {([
           { label: "Topshirilgan", value: submitted, icon: CheckCircle, color: "text-[var(--ep-green)]", bg: "bg-green-50 dark:bg-green-950/30" },
           { label: "Sababsiz yo'qlik", value: autoAbsent, icon: XCircle, color: "text-[var(--ep-red)]", bg: "bg-red-50 dark:bg-red-950/30" },

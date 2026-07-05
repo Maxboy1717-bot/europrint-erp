@@ -88,7 +88,7 @@ export function AssetsTab({ employeeId }: Props) {
       <Button variant="ghost" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api"] })} className="sr-only" aria-label={t("refresh")}><RefreshCw className="h-4 w-4" /></Button>
     <div className="space-y-5">
       {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {([
           { label: "Faol jixozlar", value: active.length, icon: Package, color: "text-[var(--ep-blue)]", bg: "bg-blue-50 dark:bg-blue-950/20" },
           { label: "Qaytarilgan", value: returned.length, icon: CheckCircle, color: "text-[var(--ep-green)]", bg: "bg-green-50 dark:bg-green-950/20" },

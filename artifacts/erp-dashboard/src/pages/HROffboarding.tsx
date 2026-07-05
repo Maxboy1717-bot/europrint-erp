@@ -145,7 +145,7 @@ export default function HROffboarding() {
           : (
       <div className="flex-1 overflow-auto p-6 space-y-5">
         {/* Stats cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {statCards.map(s => (
             <Card key={s.label}>
               <CardContent className="pt-4 pb-3 flex items-center gap-3">

@@ -37,7 +37,7 @@ export function V2LiveKpiRow({
     { label: "Offboarding", value: activeOffboardingCount, icon: UserMinus,    accent: activeOffboardingCount > 0 ? "text-[var(--ep-primary)]" : "text-[var(--ep-green)]", bg: activeOffboardingCount > 0 ? "bg-orange-500/10" : "bg-green-500/10", desc: activeOffboardingCount > 0 ? "Faol jarayon" : "Jarayon yo'q" },
   ];
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-5 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
       {widgets.map((w) => (
         <div key={w.label} className={`rounded-xl p-4 flex items-center gap-3 ${w.bg} border border-border/30`}>
           <w.icon className={`w-7 h-7 shrink-0 ${w.accent}`} />
