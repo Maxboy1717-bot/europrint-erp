@@ -183,8 +183,8 @@ export class SdQuotationsService {
     return Ok({ id, sent: true, status: 'sent', updated_at: r.data['updated_at'] });
   }
 
-  async approveQuotation(id: string): Promise<Result<Row>> {
-    const r = await this.quotationRepo.approveQuotation(id);
+  async approveQuotation(id: string, approvedBy?: number): Promise<Result<Row>> {
+    const r = await this.quotationRepo.approveQuotation(id, approvedBy);
     if (!r.ok) return r as Result<Row>;
     if (!r.data) return Err(AppErr('NOT_FOUND', `Quotation ${id} topilmadi`));
     return Ok({ id, approved: true, status: 'approved', updated_at: r.data['updated_at'] });

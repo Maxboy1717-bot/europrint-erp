@@ -23,6 +23,7 @@ type RepoMock = {
   getFunnelReport: jest.Mock;
   convertQuotationToOrder: jest.Mock;
   getPriceSettings: jest.Mock;
+  approveQuotation: jest.Mock;
 };
 
 function makeRepo(): RepoMock {
@@ -37,6 +38,7 @@ function makeRepo(): RepoMock {
     getFunnelReport: jest.fn(),
     convertQuotationToOrder: jest.fn(),
     getPriceSettings: jest.fn(),
+    approveQuotation: jest.fn(),
   };
 }
 
@@ -170,5 +172,13 @@ describe('SdQuotationsService', () => {
       expect(r.data.order.id).toBe(555);
       expect(r.data.order.documentNumber).toBe('SO-2026-0001');
     }
+  });
+
+  // B14 (2026-07-05): approveQuotation() never threaded the current user into the
+  // resulting sales_orders.created_by_user_id -- this proves the wiring now works.
+  it('passes approvedBy through to the repo when approving a quotation', async () => {
+    repo.approveQuotation.mockResolvedValue(Ok({ id: 'q-1', status: 'approved', updated_at: '2026-07-05' }));
+    await svc.approveQuotation('q-1', 42);
+    expect(repo.approveQuotation).toHaveBeenCalledWith('q-1', 42);
   });
 });

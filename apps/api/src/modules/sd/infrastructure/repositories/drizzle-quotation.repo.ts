@@ -73,7 +73,7 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
     }
   }
 
-  async approveQuotation(id: string): Promise<Result<MutationRow | null>> {
+  async approveQuotation(id: string, approvedBy?: number): Promise<Result<MutationRow | null>> {
     try {
       // 1. Mark quotation approved
       const qr = await runQuery<Record<string, unknown>>(sql`
@@ -90,12 +90,15 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
       const totalAmount = typeof q['total_price'] === 'number' ? q['total_price']
         : parseFloat(String(q['total_price'] ?? '0')) || 0;
       const customerId = q['customer_id'] != null ? parseInt(String(q['customer_id']), 10) : null;
-      // Use only columns that actually exist in the live sales_orders table
+      // Use only columns that actually exist in the live sales_orders table.
+      // B14 (2026-07-05): created_by_user_id is the integer creator column (mirrors
+      // execSdSalesOrderInsert's convention) -- created_by is uuid-typed and
+      // intentionally left null elsewhere in this codebase, not used here.
       const or = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO sales_orders
-          (document_number, order_date, pricing_date, customer_id, net_value, total_value, quotation_id)
+          (document_number, order_date, pricing_date, customer_id, net_value, total_value, quotation_id, created_by_user_id)
         VALUES
-          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${String(id)})
+          (${docNumber}, ${today}, ${today}, ${customerId}, ${totalAmount}, ${totalAmount}, ${String(id)}, ${approvedBy ?? null})
         RETURNING id, document_number
       `);
       const orderId = or.rows[0]?.['id'] != null ? parseInt(String(or.rows[0]['id']), 10) : null;

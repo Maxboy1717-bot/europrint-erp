@@ -23,6 +23,8 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { SdQuotationsService } from '../application/sd-quotations.service';
 import { z } from 'zod';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 
@@ -182,14 +184,14 @@ export class SdQuotationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('quotations/:id/approve')
-  async approveQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.approveQuotation(id)); }
+  async approveQuotation(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) { return unwrapOrThrow(await this.svc.approveQuotation(id, user.id)); }
 
   @ApiOperation({ summary: 'Put approve quotation' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Put('quotations/:id/approve')
-  async putApproveQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.approveQuotation(id)); }
+  async putApproveQuotation(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) { return unwrapOrThrow(await this.svc.approveQuotation(id, user.id)); }
 
   @ApiOperation({ summary: 'Update quotation' })
   @ApiResponse({ status: 200, description: 'OK' })

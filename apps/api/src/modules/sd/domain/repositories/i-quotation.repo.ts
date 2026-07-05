@@ -57,7 +57,7 @@ export interface PriceFormulaPatch {
 export interface IQuotationRepo {
   // Quotation status transitions
   sendQuotation(id: string): Promise<Result<MutationRow | null, AppError>>;
-  approveQuotation(id: string): Promise<Result<MutationRow | null, AppError>>;
+  approveQuotation(id: string, approvedBy?: number): Promise<Result<MutationRow | null, AppError>>;
 
   // Quotation partial update + soft delete
   updateQuotation(id: string, patch: QuotationUpdatePatch): Promise<Result<MutationRow | null, AppError>>;
