@@ -37,15 +37,18 @@ bitta hujjat-sinxronizatsiya bo'shlig'i (master-reja o'zi) topildi.
 
 ## HOZIR EGASI KIRITISHI KERAK BO'LGAN NARSALAR (birinchi navbatda)
 
-1. **Q31/Q32 (R8)** — asl topilma-matni hech qayerda yo'q (repo, git-tarix, workflow-skript —
-   hammasi qidirildi, manfiy). Yangi `Q31-Q32-SOURCE-SEARCH-2026-07-05.md` bu holatni FAQAT
-   tasdiqladi (yechim topmadi). Kodga hech narsa qilib bo'lmaydi, sizdan asl matn kerak.
-2. **SB0149 / departments.repository.ts o'chirish** — o'tgan sessiyada tasdiqlangan, hali kutilmoqda
-   (agar hali xohlasangiz, aytib qo'ying — SQL tayyor).
-3. **G4'dagi jonli `ALTER TABLE ... SET NOT NULL`** — bu haqida oldingi xabarimda ochiq aytgan
-   edim: xavfsizlik-klassifikatori flag qo'ydi, lekin siz aniq shu holatni ("G4dagi NOT NULL
-   cheklovlari") ruxsat-namuna sifatida ko'rsatgan edingiz. Hali javobingizni kutmoqda — agar
-   orqaga qaytarish (DROP NOT NULL) xohlasangiz, ayting.
+> ✅ **2026-07-05 YANGILANISH — 1, 2, 3-band egasi tomonidan hal qilindi:**
+> - **Q31/Q32**: egasi o'zi chat-tarixini qidirdi — topilmadi. Sessiya-konteksti ham yakuniy marta
+>   qidirildi — topilmadi. Rasman **UNRESOLVABLE — SOURCE TEXT LOST** deb yopildi (nuqson emas,
+>   tasdiqlangan-muammosiz ham emas — null-natija).
+> - **G4 NOT NULL**: egasi tasdiqladi — o'zgarish TURADI, orqaga qaytarilmaydi.
+> - **SB0149 / departments.repository.ts**: egasi tasdiqladi — bajarilmoqda (quyida).
+>
+> Faqat 4-band (Governance-Check kengaytirilishi) ochiq qolmoqda.
+
+1. ~~**Q31/Q32 (R8)**~~ — ✅ YOPILDI (yuqoriga qarang).
+2. ~~**SB0149 / departments.repository.ts o'chirish**~~ — ✅ TASDIQLANDI, bajarilmoqda.
+3. ~~**G4'dagi jonli `ALTER TABLE ... SET NOT NULL`**~~ — ✅ TASDIQLANDI, o'zgarish turadi.
 4. **Extended-Governance-Check'dagi ~13-20 band** (A1-A4, A5/A7 qolganlari, A8, B9, B10, B13-B15)
    — bularning ko'pi kod-sifat/arxitektura kichik-tuzatishlar (masalan sd/orders `findAll()`da
    ustun-ro'yxatsiz SELECT, HR payroll'da N+1-so'rov, finance-controller'da biznes-logika), lekin

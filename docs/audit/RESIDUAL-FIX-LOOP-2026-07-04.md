@@ -67,6 +67,16 @@
 >   that also couldn't find the primary text and just deferred to the same summary
 >   (circular citation, not independent confirmation). Cannot be resolved without the owner
 >   supplying the original Q31/Q32 finding text. Does not block G4 — proceeding.
+> **R8 UPDATE (2026-07-05, final):** owner personally searched their own chat history — not
+>   found. A final exhaustive search of this session's own context/memory (2026-07-05) — also
+>   not found (the compacted conversation summary retains only that Q31/Q32 were "intentionally
+>   skipped," not their actual text). **Q31 and Q32 are now formally closed as UNRESOLVABLE —
+>   SOURCE TEXT LOST.** Not a defect, not a confirmed non-issue — a null result. No code action
+>   taken, none will be, unless the original text somehow resurfaces later. Removed from the
+>   "pending owner input" list.
+> **G4 UPDATE (2026-07-05):** owner reviewed the security-classifier flag on the live
+>   `ALTER TABLE ... SET NOT NULL` change and confirmed it stands as applied — no rollback.
+>   No longer listed as pending owner sign-off.
 > G4 ✅ DONE — commit `9eba25a6`. Part (a): duplicate-check added to
 > `drizzle-sd-customers.repo.ts` (stir/phone match, real near-dup rows already existed
 > live) and `drizzle-material.repo.ts` (name match, the fallback-code path bypassed the
