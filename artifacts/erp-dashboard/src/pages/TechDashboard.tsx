@@ -134,7 +134,7 @@ export default function TechDashboard() {
       {/* ── SECTION 1: Hozirgi holat ─────────────────────────── */}
       <section>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("hozirgiHolat")}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <KpiCard title={t("jamiBuyurtmalar")} value={stats?.totalOrders || 0}
             icon={ClipboardList} color="text-[var(--ep-blue)]" loading={sLoad} />
           <KpiCard title={t("faolBuyurtmalar")} value={stats?.activeOrders || 0}

@@ -236,7 +236,7 @@ export function Customer360View({ customerId, onBack }: { customerId: number; on
           </div>
 
           {/* Quick KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mt-5 pt-4 border-t">
             {[
               { label: "Buyurtmalar", value: String(totalOrders), icon: ShoppingCart, color: "text-[var(--ep-blue)]" },
               { label: "Jami daromad", value: fmtMoney(totalRevenue), icon: TrendingUp, color: "text-[var(--ep-green)]" },
