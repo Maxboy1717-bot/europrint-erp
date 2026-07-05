@@ -274,7 +274,7 @@ export default function FinanceVariance() {
           <Card>
             <CardHeader><CardTitle className="text-base">{t("variance.labeling")}</CardTitle></CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-center">
                 {[
                   { label: "MPV", val: data.details.mpvLabel },
                   { label: "MQV", val: data.details.mqvLabel },

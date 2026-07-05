@@ -83,7 +83,7 @@ export function DashboardOverviewTab({
             </button>
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {(fpCycle?.cycleDays ?? [
             { day: 2, label: "Seshanba",   event: "ЗВС — Рек.Совет",  color: "emerald" },
             { day: 3, label: "Chorshanba", event: "ФП — Moliyaviy reja", color: "blue" },
