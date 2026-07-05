@@ -424,3 +424,14 @@ B15 (klassifikatsiya-maydon bo'shlig'i) — parallel tekshirilmoqda.
 B-seriya (B9,B10,B13,B14,B15) — barchasi to'g'ri ravishda egasi-qaror talab qiladi deb
 aniqlandi, hech narsa taxmin qilinmadi/fabrikatsiya qilinmadi. Qolgan A1 (repo-nomlash
 570+ fayl bo'ylab) ham katta-hajmli, alohida ustuvorlik-qarori kerak.
+
+## Egasi qarorlari ijrosi (2026-07-05, "Full Non-Stop Completion")
+
+- **A8** ✅ DONE — commit `933ae75b`. Egasi qarori: `design.controller.ts` kanonik. Ijro
+  jarayonida (fon-agent tizim-uzilishi bilan to'xtagan, lekin qisman ish saqlanib qolgan)
+  CHUQURROQ ildiz-sabab topildi: `DESIGN_TRANSITIONS` UMUMAN xayoliy status-lug'atdan
+  foydalangan (`not_started/in_progress/review/...`) — haqiqiy `DesignStatus` enum
+  (`new/ai_generated/designer_review/...`) bilan HECH QACHON mos kelmagan, ya'ni "kanonik"
+  yo'lning o'zi hech kim uchun ishlamas edi. Tuzatildi + `AIDesignGenerator.tsx` ulandi +
+  yashirin bonus-xato ham topilib tuzatildi (`approvedAt` eski `'completed'` so'ziga
+  bog'langan edi, endi hech qachon ishlamasdi). 49/49 test PASS, BE+FE tsc 0.
