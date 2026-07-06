@@ -5,6 +5,7 @@
  *   ga pending bosqichlar sifatida biriktiriladi. Returns Result<T>; never throws raw Errors.
  */
 import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventBus } from '@nestjs/cqrs';
 import { rawSql, db } from '@shared/db';
 import { sql, and, eq } from 'drizzle-orm';
@@ -50,6 +51,7 @@ export class ProcurementRequestService {
     // Karantin-yo'l: qabul EXTERNAL_IN pos_movement orqali (bir modul ichida — tsiklik bog' yo'q:
     // PosMovementService procurement servislariga bog'lanmaydi).
     private readonly posMovement: PosMovementService,
+    private readonly i18n: I18nService,
   ) {}
 
   /**
@@ -61,9 +63,9 @@ export class ProcurementRequestService {
     createdBy?: number,
   ): Promise<Result<Record<string, unknown>, AppError>> {
     return safeCall(async () => {
-      if (!input.title?.trim()) throw new BadRequestException('title majburiy');
-      if (!input.items?.length) throw new BadRequestException('Kamida 1 qator (item) kerak');
-      if (!input.requesterEmployeeId) throw new BadRequestException('requesterEmployeeId majburiy');
+      if (!input.title?.trim()) throw new BadRequestException(await this.i18n.t('errors.titleRequired'));
+      if (!input.items?.length) throw new BadRequestException(await this.i18n.t('validation.atLeastOneItemRequired'));
+      if (!input.requesterEmployeeId) throw new BadRequestException(await this.i18n.t('validation.requesterEmployeeIdRequired'));
 
       // 1. So'rov beruvchining org-bo'limi — tasdiq zanjiri uchun MAJBURIY.
       //    employee_org_departments (is_primary birinchi) dan avtomatik to'ldiriladi;
@@ -74,8 +76,7 @@ export class ProcurementRequestService {
       const orgDepartmentId = deptR.data;
       if (orgDepartmentId == null) {
         throw new BadRequestException(
-          `Xodim #${input.requesterEmployeeId} org-sxemaga biriktirilmagan (employee_org_departments'da yozuv yo'q) — ` +
-          `xarid so'rovi yaratilmadi. Avval xodimni org-bo'limga biriktiring.`,
+          await this.i18n.t('errors.employeeNotAssignedToOrgDepartment', { args: { id: input.requesterEmployeeId } }),
         );
       }
 
@@ -94,23 +95,15 @@ export class ProcurementRequestService {
       });
       const totalAmount = lines.reduce((s, l) => s + l.lineTotal, 0);
 
-      // 3. Raqam (PR-YYYY-NNNNN)
-      const cntR = await rawSql(sql`SELECT COUNT(*)::int AS c FROM procurement_requests`);
-      const count = Number(dbRows(cntR)[0]?.['c'] ?? 0);
-      const requestNumber = `PR-${_time.now().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
-
-      // 4. Header
-      const reqR = await rawSql(sql`
-        INSERT INTO procurement_requests
-          (request_number, requester_employee_id, requester_user_id, org_department_id, title, description,
-           vendor_id, total_amount, currency, payment_mode, target_warehouse_type, status, needed_by_date, created_by)
-        VALUES (${requestNumber}, ${input.requesterEmployeeId}, ${input.requesterUserId ?? null}, ${orgDepartmentId},
-           ${input.title}, ${input.description ?? null}, ${input.vendorId ?? null}, ${totalAmount},
-           ${input.currency ?? 'UZS'}, ${input.paymentMode ?? 'advance'}, ${input.targetWarehouseType ?? null},
-           'pending_approval', ${input.neededByDate ?? null}, ${createdBy ?? null})
-        RETURNING id
-      `);
-      const requestId = Number(dbRows(reqR)[0]?.['id']);
+      // 3+4. Raqam (PR-YYYY-NNNNN) + Header — C8.3 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06):
+      // number generation is now advisory-locked (same pg_advisory_xact_lock pattern as
+      // CcDocumentNumberService — the reference the audit points to as "does this right") and
+      // the header INSERT retries with a fresh number on a residual unique-violation. Note:
+      // procurement_requests.request_number ALREADY has a live UNIQUE constraint
+      // (procurement_requests_request_number_key, verified live) — contrary to the audit's "no
+      // UNIQUE" claim — so the pre-fix behavior was a crash on collision, not a silent duplicate;
+      // this closes the "legitimate concurrent request fails instead of getting the next number" gap.
+      const { requestId, requestNumber } = await this.insertRequestHeaderWithRetry(input, orgDepartmentId, totalAmount, createdBy);
 
       // 5. Qatorlar
       for (const l of lines) {
@@ -169,6 +162,60 @@ export class ProcurementRequestService {
   }
 
   /**
+   * C8.3: keyingi PR raqami — pg_advisory_xact_lock bilan yil bo'yicha kilitlanadi
+   * (CcDocumentNumberService.nextSequence bilan bir xil naqsh). Ikkita bir vaqtdagi
+   * so'rov endi navbatda kutadi, bir xil COUNT(*) o'qib bir xil raqamni hisoblamaydi.
+   */
+  private async generateRequestNumber(): Promise<string> {
+    const year = _time.now().getFullYear();
+    return db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(abs(hashtext('procurement_request:' || ${year}::text)))`);
+      const r = await tx.execute(sql`
+        SELECT COUNT(*)::int AS c FROM procurement_requests WHERE EXTRACT(YEAR FROM created_at) = ${year}
+      `);
+      const count = Number((r.rows as { c: number }[] | undefined)?.[0]?.c ?? 0);
+      return `PR-${year}-${String(count + 1).padStart(5, '0')}`;
+    });
+  }
+
+  /**
+   * C8.3: header INSERT — lock 'q Postgres tranzaksiya bilan tugaydi (raqam hisoblanishi bilan
+   * haqiqiy INSERT orasida qisqa oyna qoladi), shuning uchun qoldiq 23505 to'qnashuvida (jonli
+   * UNIQUE cheklovi procurement_requests_request_number_key ushlaydi) yangi raqam bilan qayta
+   * urinadi — hech qachon jim duplikat yozmaydi, hech qachon cheksiz aylanmaydi.
+   */
+  private async insertRequestHeaderWithRetry(
+    input: CreateProcurementRequestInput,
+    orgDepartmentId: number,
+    totalAmount: number,
+    createdBy?: number,
+  ): Promise<{ requestId: number; requestNumber: string }> {
+    const MAX_NUMBER_RETRIES = 3;
+    let requestNumber = await this.generateRequestNumber();
+    for (let attempt = 1; attempt <= MAX_NUMBER_RETRIES; attempt++) {
+      try {
+        const reqR = await rawSql(sql`
+          INSERT INTO procurement_requests
+            (request_number, requester_employee_id, requester_user_id, org_department_id, title, description,
+             vendor_id, total_amount, currency, payment_mode, target_warehouse_type, status, needed_by_date, created_by)
+          VALUES (${requestNumber}, ${input.requesterEmployeeId}, ${input.requesterUserId ?? null}, ${orgDepartmentId},
+             ${input.title}, ${input.description ?? null}, ${input.vendorId ?? null}, ${totalAmount},
+             ${input.currency ?? 'UZS'}, ${input.paymentMode ?? 'advance'}, ${input.targetWarehouseType ?? null},
+             'pending_approval', ${input.neededByDate ?? null}, ${createdBy ?? null})
+          RETURNING id
+        `);
+        return { requestId: Number(dbRows(reqR)[0]?.['id']), requestNumber };
+      } catch (e) {
+        const pgCode = (e as { code?: string } | null)?.code;
+        if (pgCode !== '23505' || attempt === MAX_NUMBER_RETRIES) throw e;
+        this.logger.warn(`[P2P] PR raqami to'qnashuvi (${requestNumber}), qayta urinish ${attempt}/${MAX_NUMBER_RETRIES}`);
+        requestNumber = await this.generateRequestNumber();
+      }
+    }
+    throw new InternalServerErrorException("PR raqami ajratib bo'lmadi");
+  }
+
+  /**
    * Tasdiq qadami (Increment 1.4): navbatdagi (eng past) pending bosqich rahbari approve/reject qiladi.
    * approve → keyingi bosqich pending qoladi (current_approval_level oshadi); oxirgi bo'lsa so'rov 'approved'.
    * reject → so'rov darhol 'rejected'. Faqat o'sha bosqichning belgilangan rahbari qaror qila oladi.
@@ -183,9 +230,9 @@ export class ProcurementRequestService {
       const req = dbRows(await rawSql(sql`
         SELECT id, status, current_approval_level FROM procurement_requests WHERE id = ${requestId}
       `))[0];
-      if (!req) throw new NotFoundException(`So'rov topilmadi: ${requestId}`);
+      if (!req) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: requestId } }));
       if (req['status'] !== 'pending_approval') {
-        throw new BadRequestException(`So'rov tasdiq holatida emas (status=${req['status']})`);
+        throw new BadRequestException(await this.i18n.t('errors.requestNotInApprovalStatus', { args: { status: req['status'] } }));
       }
 
       // Navbatdagi pending bosqich (eng past level)
@@ -194,9 +241,9 @@ export class ProcurementRequestService {
         WHERE request_id = ${requestId} AND status = 'pending'
         ORDER BY level ASC LIMIT 1
       `))[0];
-      if (!step) throw new BadRequestException("Pending tasdiq bosqichi yo'q");
+      if (!step) throw new BadRequestException(await this.i18n.t('errors.noPendingApprovalStep'));
       if (Number(step['approver_user_id']) !== approverUserId) {
-        throw new ForbiddenException(`Bu bosqichni faqat user ${step['approver_user_id']} tasdiqlaydi`);
+        throw new ForbiddenException(await this.i18n.t('errors.onlyDesignatedApproverCanDecide', { args: { userId: step['approver_user_id'] } }));
       }
 
       const level = Number(step['level']);
@@ -377,11 +424,11 @@ export class ProcurementRequestService {
     }
     if (warehouseId == null) {
       throw new BadRequestException(
-        `So'rov ${requestNumber}: maqsadli ombor aniqlanmadi — warehouseId yuboring yoki so'rovda target_warehouse_type belgilang (tashqi kirim karantin-yo'lsiz qabul qilinmaydi)`,
+        await this.i18n.t('errors.requestTargetWarehouseNotResolved', { args: { requestNumber } }),
       );
     }
     const whInfo = dbRows(await rawSql(sql`SELECT id, code, name FROM warehouses WHERE id = ${warehouseId}`))[0];
-    if (!whInfo) throw new NotFoundException(`So'rov ${requestNumber}: ombor #${warehouseId} topilmadi`);
+    if (!whInfo) throw new NotFoundException(await this.i18n.t('errors.requestWarehouseNotFound', { args: { requestNumber, warehouseId } }));
 
     // 2. Qatorlar → material kartochka (movement satrlari uchun; qoldiq yozilMAYdi)
     const items = dbRows(await rawSql(sql`
@@ -439,7 +486,7 @@ export class ProcurementRequestService {
       });
     }
     if (lines.length === 0) {
-      throw new BadRequestException(`So'rov ${requestNumber}: qabul uchun yaroqli qator yo'q (quantity > 0 va material aniqlanishi kerak)`);
+      throw new BadRequestException(await this.i18n.t('errors.requestNoValidReceiptLines', { args: { requestNumber } }));
     }
 
     // 3. EXTERNAL_IN pos_movement — created-event avto-karantin + barkod + QC bildirishnoma qiladi.
@@ -450,7 +497,7 @@ export class ProcurementRequestService {
       notes: `P2P xarid qabul: ${requestNumber} (PR#${requestId})`,
       idempotencyKey: `P2P-RCV-${requestId}`,
     }, createdById);
-    if (!mvR.ok) throw new InternalServerErrorException(`Karantin-kirim harakati yaratilmadi: ${mvR.error.message}`);
+    if (!mvR.ok) throw new InternalServerErrorException(await this.i18n.t('errors.quarantineInboundMovementCreationFailed', { args: { message: mvR.error.message } }));
     const mv = mvR.data;
 
     this.logger.log(`[P2P] So'rov ${requestNumber} → EXTERNAL_IN ${mv.movementNumber} (#${mv.id}, ${lines.length} qator) — avto-karantin/QC-gate yo'li`);
@@ -485,9 +532,9 @@ export class ProcurementRequestService {
                requester_user_id, created_by
         FROM procurement_requests WHERE id = ${requestId}
       `))[0];
-      if (!req) throw new NotFoundException(`So'rov topilmadi: ${requestId}`);
+      if (!req) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: requestId } }));
       if (req['status'] !== 'approved') {
-        throw new BadRequestException(`So'rov 'approved' holatida emas (status=${req['status']})`);
+        throw new BadRequestException(await this.i18n.t('errors.requestNotApprovedStatus', { args: { status: req['status'] } }));
       }
 
       // 0. Harakat yaratuvchi — controller'lar doim user.id yuboradi; fallback so'rov egasidan
@@ -496,7 +543,7 @@ export class ProcurementRequestService {
         (req['created_by'] != null ? Number(req['created_by']) : null) ??
         (req['requester_user_id'] != null ? Number(req['requester_user_id']) : null);
       if (creatorId == null) {
-        throw new BadRequestException(`So'rov ${req['request_number']}: qabul qiluvchi foydalanuvchi aniqlanmadi (receivedBy yuboring)`);
+        throw new BadRequestException(await this.i18n.t('errors.requestReceiverUserNotResolved', { args: { requestNumber: req['request_number'] } }));
       }
 
       // 1. KARANTIN-YO'L: EXTERNAL_IN pos_movement (avto-karantin QC-HOLD + QC gate).
