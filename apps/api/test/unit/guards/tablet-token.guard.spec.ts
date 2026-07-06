@@ -37,60 +37,67 @@ function makeContext(req: MockRequest): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
+function makeI18n(): { t: jest.Mock } {
+  return { t: jest.fn().mockResolvedValue('translated') };
+}
+
 describe('TabletTokenGuard', () => {
-  it('returns true and attaches request.user when x-tablet-token is a valid tablet token', () => {
+  it('returns true and attaches request.user when x-tablet-token is a valid tablet token', async () => {
     const guard = new TabletTokenGuard(
       makeJwt({ sub: 7, userId: 7, tabel: 'T-001', role: 'operator', tablet: true }),
+      makeI18n() as never,
     );
     const request: MockRequest = { headers: { 'x-tablet-token': 'valid.tablet.token' } };
     const ctx = makeContext(request);
 
-    expect(guard.canActivate(ctx)).toBe(true);
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
     expect(request.user).toBeDefined();
     expect(request.user?.['id']).toBe(7);
     expect(request.user?.['role']).toBe('operator');
     expect(request.user?.['tablet']).toBe(true);
   });
 
-  it('throws UnauthorizedException when no x-tablet-token header is present (no token, no JWT)', () => {
-    const guard = new TabletTokenGuard(makeJwt());
+  it('throws UnauthorizedException when no x-tablet-token header is present (no token, no JWT)', async () => {
+    const guard = new TabletTokenGuard(makeJwt(), makeI18n() as never);
     const ctx = makeContext({ headers: {} });
 
-    expect(() => guard.canActivate(ctx)).toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
-  it('throws UnauthorizedException when x-tablet-token is an empty string', () => {
-    const guard = new TabletTokenGuard(makeJwt());
+  it('throws UnauthorizedException when x-tablet-token is an empty string', async () => {
+    const guard = new TabletTokenGuard(makeJwt(), makeI18n() as never);
     const ctx = makeContext({ headers: { 'x-tablet-token': '' } });
 
-    expect(() => guard.canActivate(ctx)).toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
-  it('throws UnauthorizedException when the token decodes but lacks tablet:true (e.g. a real ERP JWT)', () => {
+  it('throws UnauthorizedException when the token decodes but lacks tablet:true (e.g. a real ERP JWT)', async () => {
     // A normal ERP session JWT (JwtAuthGuard's own token shape) decodes fine but
     // has no `tablet` claim -- must NOT be accepted here, or an ERP-logged-in
     // browser session could silently satisfy tablet-only routes.
     const guard = new TabletTokenGuard(
       makeJwt({ sub: 42, role: 'production_manager' }),
+      makeI18n() as never,
     );
     const ctx = makeContext({ headers: { 'x-tablet-token': 'a.real.erp.jwt' } });
 
-    expect(() => guard.canActivate(ctx)).toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
-  it('throws UnauthorizedException when JwtService.verify throws (malformed/expired/wrong-secret token)', () => {
-    const guard = new TabletTokenGuard(makeJwt(undefined, new Error('jwt malformed')));
+  it('throws UnauthorizedException when JwtService.verify throws (malformed/expired/wrong-secret token)', async () => {
+    const guard = new TabletTokenGuard(makeJwt(undefined, new Error('jwt malformed')), makeI18n() as never);
     const ctx = makeContext({ headers: { 'x-tablet-token': 'garbage' } });
 
-    expect(() => guard.canActivate(ctx)).toThrow(UnauthorizedException);
+    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
-  it('accepts the header when sent as an array (defensive header-parsing)', () => {
+  it('accepts the header when sent as an array (defensive header-parsing)', async () => {
     const guard = new TabletTokenGuard(
       makeJwt({ sub: 3, tablet: true }),
+      makeI18n() as never,
     );
     const ctx = makeContext({ headers: { 'x-tablet-token': ['first.token', 'second.token'] } });
 
-    expect(guard.canActivate(ctx)).toBe(true);
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 });

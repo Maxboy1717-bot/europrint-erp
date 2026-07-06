@@ -5,6 +5,7 @@
 
 import { Injectable, CanActivate, ExecutionContext, Optional, Logger, InternalServerErrorException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { I18nService } from 'nestjs-i18n';
 import { PERMISSION_KEY } from '../decorators/require-permission.decorator';
 import { RbacCacheService } from '../cache/rbac-cache.service';
 import { db } from '@shared/db';
@@ -41,6 +42,7 @@ export class PermissionGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     @Optional() private readonly rbacCache: RbacCacheService,
+    private readonly i18n: I18nService,
   ) {}
 
   private getRequiredPermission(context: ExecutionContext): string | null {
@@ -119,7 +121,7 @@ export class PermissionGuard implements CanActivate {
         if (cardDecision !== null) return cardDecision;
       } catch (err: unknown) {
         this.logger.error(`RBAC card lookup failed: ${err}`);
-        throw new InternalServerErrorException('Permission check temporarily unavailable — please retry');
+        throw new InternalServerErrorException(await this.i18n.t('errors.permissionCheckUnavailable'));
       }
     }
 
@@ -132,7 +134,7 @@ export class PermissionGuard implements CanActivate {
       return await this.checkFromDb(positionId, moduleCode, level);
     } catch (err: unknown) {
       this.logger.error(`RBAC DB lookup failed: ${err}`);
-      throw new InternalServerErrorException('Permission check temporarily unavailable — please retry');
+      throw new InternalServerErrorException(await this.i18n.t('errors.permissionCheckUnavailable'));
     }
   }
 }

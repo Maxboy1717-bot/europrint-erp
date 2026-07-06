@@ -28,32 +28,36 @@
 
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { I18nService } from 'nestjs-i18n';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class WebhookSignatureGuard implements CanActivate {
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly i18n: I18nService,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const headers = request.headers as Record<string, string | string[] | undefined> | undefined;
     const rawSignature = headers?.['x-webhook-signature'];
     const signature = Array.isArray(rawSignature) ? rawSignature[0] : rawSignature;
 
     if (typeof signature !== 'string' || signature.length === 0) {
-      throw new UnauthorizedException('X-Webhook-Signature header majburiy');
+      throw new UnauthorizedException(await this.i18n.t('errors.webhookSignatureHeaderRequired'));
     }
 
     const source = this.resolveSource(request);
     const secret = this.resolveSecret(source);
     if (!secret) {
-      throw new UnauthorizedException(`Webhook secret sozlanmagan (source=${source})`);
+      throw new UnauthorizedException(await this.i18n.t('errors.webhookSecretNotConfigured', { args: { source } }));
     }
 
     const raw = JSON.stringify(request.body ?? {});
     const expected = crypto.createHmac('sha256', secret).update(raw, 'utf8').digest('hex');
     if (!this.timingSafeEqual(signature, expected)) {
-      throw new UnauthorizedException("Webhook imzosi noto'g'ri");
+      throw new UnauthorizedException(await this.i18n.t('errors.webhookSignatureInvalid'));
     }
 
     return true;
