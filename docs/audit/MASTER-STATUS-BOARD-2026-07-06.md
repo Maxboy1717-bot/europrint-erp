@@ -32,7 +32,7 @@
 
 | Loop | Scope | Status | Last commit(s) | Last updated | Notes |
 |---|---|---|---|---|---|
-| **i18n F2 / Combined Fix Loop (Parts 1-3)** | Part 1: Magic-Numbers (M1-M11, `docs/audit/MAGIC-NUMBERS-AUDIT-V2-FULL-2026-07-05.md`). Part 2: i18n 2-arg-helper migration (F1-F10, `docs/audit/I18N-FIX-LOOP-2026-07-05.md`). Part 3: Design/Layout QA (D1-D4, `docs/audit/DESIGN-QA-FULL-AUDIT-2026-07-05.md`). | IN PROGRESS | `05399144`,`9f22ec60`,`d4f06bde` (see loop's own commit chain for full list) | 2026-07-06 | Part 1: M2/M3/M4/M6/M7/M9/M11(partial) done; M1/M5/M10 permanently skipped (GL/payroll/Aisha restriction — owner decision needed). Part 2: F1 done; F2 in progress — IoT (14/14 files) + Warehouse (6/6 files) fully migrated; PlanningBoard/Barcode/Face-recognition/camera-ai/misc (~25 files) remaining. Part 3: D1 done (6 commits); D2 blocked on port 20806 (occupied by another session — retry periodically); D3/D4 not started. |
+| **i18n F2 / Combined Fix Loop (Parts 1-3)** | Part 1: Magic-Numbers (M1-M11, `docs/audit/MAGIC-NUMBERS-AUDIT-V2-FULL-2026-07-05.md`). Part 2: i18n 2-arg-helper migration (F1-F10, `docs/audit/I18N-FIX-LOOP-2026-07-05.md`). Part 3: Design/Layout QA (D1-D4, `docs/audit/DESIGN-QA-FULL-AUDIT-2026-07-05.md`). | IN PROGRESS | `88d608d8`,`bb40788e`,`c8585cf7`,`7069d2f5`,`0a6c0b6`,`69c24222`,`891f9401` (+ earlier IoT/Warehouse chain `467b3207`..`d4f06bde`) | 2026-07-06 | Part 1: M2/M3/M4/M6/M7/M9/M11(partial) done; M1/M5/M10 permanently skipped (GL/payroll/Aisha restriction — owner decision needed). **Part 2 F2's entire "2-language-only" bug scope is now CLOSED**: IoT/Warehouse/PlanningBoard/Barcode/Face-recognition/camera-ai-modern/wms-reservation/PapkaOrders all migrated (repo-wide grep confirms only intentional 2-state toggle buttons + legitimate DB-column fallbacks remain); `components/orders/WizardHeader.tsx` cluster and `pos-monitor/i18n/usePosI18n.ts` verified as pre-existing false positives (already 3-language-correct). F3 (Cyrillic DB column decision) and Tier 2-4 (F4 ~470 BE messages / F5 / F6 / F7 / F8 / F9 / F10) not started — F4 in particular is a large, separate undertaking. Part 3: D1 done (6 commits); D3 done (`69c24222`); D2 blocked on port 20806 (occupied by another session — retry periodically); D4 not started. |
 | **Owner-Decisions** | (per addendum reference — scope not yet documented by that loop in this file) | UNKNOWN | — | — | This loop hasn't written a row yet as of 2026-07-06. If you are that loop, please fill this in. |
 | **Two-Worlds** | (per addendum reference — scope not yet documented by that loop in this file) | UNKNOWN | — | — | This loop hasn't written a row yet as of 2026-07-06. If you are that loop, please fill this in. |
 | **Critical-Correctness** | Likely corresponds to `docs/audit/CRITICAL-CORRECTNESS-AUDIT-2026-07-06.md` (untracked as of this write) | UNKNOWN | — | — | This loop hasn't written a row yet as of 2026-07-06. If you are that loop, please fill this in. |
@@ -61,14 +61,15 @@
 | i18n F2 | `pages/iot/**` (14 files: 9 components + 5 hooks) | done | `467b3207`,`d156d641`,`05399144` (+ earlier slices) |
 | i18n F2 | `pages/WarehouseDailyView*.ts(x)` (4 files) | done | `9f22ec60` |
 | i18n F2 | `pages/WarehouseMaterialKits*.ts(x)` (4 files) | done | `d4f06bde` |
-| i18n F2 | `pages/PlanningBoard*.ts(x)`, `pages/planning/**`, `pages/usePlanningBoardActions.ts`, `locales/*/production.json` (7 files, workflow lane `planning-board`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
-| i18n F2 | `pages/BarcodeSystem*.ts(x)`, `pages/barcode/**`, `locales/*/barcode.json` (7 files, workflow lane `barcode`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
-| i18n F2 | `pages/FaceRecognitionMonitoring*.ts(x)`, `pages/FaceRegistration*.ts(x)`, `locales/*/iot.json` (5 files, workflow lane `face-recognition`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
-| i18n F2 | `camera-ai-modern/**`, `locales/*/security.json` (3 files, workflow lane `camera-ai-modern`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
-| i18n F2 | `pages/StockReservation.tsx`, `components/wms/reservation/**`, `components/wms/reports/ReportsHeader.tsx`, `locales/*/wms.json` (workflow lane `wms-reservation`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
-| i18n F2 | `pages/PapkaOrders.tsx`, `pages/PapkaOrdersSections.tsx` (narrow toast-ternary fix, no shared locale file — self-contained local TRANSLATIONS object) | queued | not yet started (main loop will do directly, not via workflow) |
+| i18n F2 | `pages/PlanningBoard*.ts(x)`, `pages/planning/**`, `pages/usePlanningBoardActions.ts`, `locales/*/production.json` (8 files, workflow lane `planning-board`) | done | `88d608d8` |
+| i18n F2 | `pages/BarcodeSystem*.ts(x)`, `pages/barcode/**`, `locales/*/barcode.json` (11 files, workflow lane `barcode`) | done | `bb40788e` |
+| i18n F2 | `pages/FaceRecognitionMonitoring*.ts(x)`, `pages/FaceRegistration*.ts(x)`, `locales/*/iot.json` (10 files, workflow lane `face-recognition`) | done | `c8585cf7` |
+| i18n F2 | `camera-ai-modern/**`, `locales/*/security.json` (7 files, workflow lane `camera-ai-modern`) | done | `7069d2f5` |
+| i18n F2 | `pages/StockReservation.tsx`, `components/wms/reservation/**`, `components/wms/reports/ReportsHeader.tsx`, `locales/*/wms.json` (13 files, workflow lane `wms-reservation`) | done | `0a6c0b6` |
+| i18n F2 | `pages/PapkaOrders.tsx`, `pages/PapkaOrdersSections.tsx`, `pages/PapkaOrdersTypes.ts` (narrow toast/status-badge ternary fix, no shared locale file) | done | `891f9401` |
 | i18n F2 (verified false-positive, no action) | `components/orders/WizardHeader.tsx` + 6 sibling wizard files | done — confirmed already 3-language-complete | n/a |
-| i18n Part 3 (D3) | `pages/ImpositionCalculator.tsx` | claimed | in progress (main loop, direct, not via workflow) |
+| i18n F2 (verified false-positive, no action) | `pos-monitor/i18n/usePosI18n.ts` | done — confirmed already implements a correct 3-state uz→uz-cyr→ru cycle | n/a |
+| i18n Part 3 (D3) | `pages/ImpositionCalculator.tsx` | done | `69c24222` |
 
 ---
 
@@ -78,3 +79,14 @@
   version existed; no established format found to mirror, so this loop
   authored a minimal one). Seeded with i18n F2's own progress; other loops'
   rows left as placeholders for them to fill in.
+- 2026-07-06 — i18n F2 loop: all 5 parallel workflow lanes
+  (planning-board/barcode/face-recognition/camera-ai-modern/wms-reservation)
+  completed, independently reviewed (tsc --noEmit 0 errors repo-wide + JSON
+  validation + grep sweep), and committed one cluster per commit. Plus
+  PapkaOrders narrow fix and D3 (ImpositionCalculator) done directly.
+  Part 2 F2's file-level scope is now fully closed. Also noted: a separate
+  concurrent session touched `apps/api/src/modules/finance/**` and
+  `apps/api/src/modules/hr/**` repo/controller files during this window
+  (observed via git status, not attributed to a named loop above, already
+  gone from git status by the time of this update — presumably committed
+  by its own session).
