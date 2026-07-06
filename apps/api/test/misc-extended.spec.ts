@@ -155,7 +155,10 @@ describe('StrategicController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StrategicController],
-      providers: [{ provide: StrategicService, useValue: mockSvc }],
+      providers: [
+        { provide: StrategicService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(StrategicController);
   });
