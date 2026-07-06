@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { timingSafeEqual } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { I18nService } from 'nestjs-i18n';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
@@ -37,7 +38,10 @@ type Row = Record<string, unknown>;
 export class TelegramAuthGuard implements CanActivate {
   private readonly logger = new Logger(TelegramAuthGuard.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<TelegramWebhookRequest>();
@@ -52,7 +56,7 @@ export class TelegramAuthGuard implements CanActivate {
     if (expected) {
       if (!rawToken || !this.timingSafeCompare(rawToken, expected)) {
         this.logger.warn({ msg: 'Bot webhook rejected: invalid secret token', botName });
-        throw new UnauthorizedException('Invalid bot webhook token');
+        throw new UnauthorizedException(await this.i18n.t('errors.botWebhookTokenInvalid'));
       }
     }
     /* In production, expected must always be set. Dev-mode warning logged only in non-production. */
@@ -60,7 +64,7 @@ export class TelegramAuthGuard implements CanActivate {
       this.logger.warn({ msg: `No secret token configured for bot ${botName} — dev mode only` });
     } else {
       this.logger.error({ msg: `No secret token configured for bot ${botName} in production!` });
-      throw new UnauthorizedException('Bot secret token not configured');
+      throw new UnauthorizedException(await this.i18n.t('errors.botSecretTokenNotConfigured'));
     }
 
     /* 2. Resolve telegram_id → employee — reject if not linked */
