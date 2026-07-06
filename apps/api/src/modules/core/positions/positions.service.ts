@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { positions } from '@europrint/schemas';
 import { Ok, Err, safeCall, Result, AppError } from '@common/result';
 import { PositionsRepository } from './positions.repository';
@@ -14,7 +15,10 @@ type Position = typeof positions.$inferSelect;
 export class PositionsService {
   private readonly logger = new Logger(PositionsService.name);
 
-  constructor(private readonly repo: PositionsRepository) {}
+  constructor(
+    private readonly repo: PositionsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(): Promise<Result<Record<string, unknown>[]>> {
     return this.repo.findAll();
@@ -24,7 +28,7 @@ export class PositionsService {
     const r = await this.repo.findOne(id);
     if (!r.ok) return Err(r.error.message);
     const row = r.data as Position | null;
-    if (!row) throw new NotFoundException(`Lavozim #${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.positionNotFoundWithId', { args: { id } }));
     return Ok(row);
   }
 
@@ -40,7 +44,7 @@ export class PositionsService {
     const r = await this.repo.update(id, dto);
     if (!r.ok) return Err(r.error.message);
     const row = r.data as Position | null;
-    if (!row) throw new NotFoundException(`Lavozim #${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.positionNotFoundWithId', { args: { id } }));
     return Ok(row);
   }
 
@@ -49,11 +53,11 @@ export class PositionsService {
     const cntR = await this.repo.countUsersForPosition(id);
     if (!cntR.ok) return Err(cntR.error.message);
     const empCount = cntR.data;
-    if (empCount > 0) throw new BadRequestException(`Lavozimda ${empCount} ta xodim bor`);
+    if (empCount > 0) throw new BadRequestException(await this.i18n.t('errors.positionHasEmployees', { args: { count: empCount } }));
     const delR = await this.repo.remove(id);
     if (!delR.ok) return Err(delR.error.message);
     const deleted = delR.data as Position | null;
-    if (!deleted) throw new NotFoundException(`Lavozim #${id} topilmadi`);
+    if (!deleted) throw new NotFoundException(await this.i18n.t('errors.positionNotFoundWithId', { args: { id } }));
     return Ok(deleted);
   }
 }
