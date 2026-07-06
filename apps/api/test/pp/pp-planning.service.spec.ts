@@ -47,11 +47,24 @@ describe('PpPlanningService', () => {
 
     const r = await svc.createScheduleEntry({ productId: 7, quantity: 100 });
 
-    expect(repo.createScheduleEntry).toHaveBeenCalledWith({ productId: 7, quantity: 100 });
+    expect(repo.createScheduleEntry).toHaveBeenCalledWith({ productId: 7, quantity: 100 }, undefined);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const inner = r.data as { ok: boolean; data: { id: number } };
     expect(inner.data.id).toBe(11);
+  });
+
+  // B14 (2026-07-05): production_orders.created_by existed but was never written from
+  // this live, @CurrentUser()-driven HTTP path (POST /planning/schedule).
+  it('passes createdBy through to the repository', async () => {
+    const repo = buildRepo({
+      createScheduleEntry: jest.fn().mockResolvedValue({ ok: true, data: { id: 11 } }),
+    });
+    const svc = new PpPlanningService(repo);
+
+    await svc.createScheduleEntry({ productId: 7, quantity: 100 }, 42);
+
+    expect(repo.createScheduleEntry).toHaveBeenCalledWith({ productId: 7, quantity: 100 }, 42);
   });
 
   it('updateOperation forwards id and patch payload', async () => {

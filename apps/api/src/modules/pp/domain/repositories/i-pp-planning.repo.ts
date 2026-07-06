@@ -12,7 +12,7 @@ type Row = Record<string, unknown>;
 
 export interface IPpPlanningRepo {
   getSchedule(start: string, end: string): Promise<Result<Row[]>>;
-  createScheduleEntry(body: Row): Promise<Result<Row | null>>;
+  createScheduleEntry(body: Row, createdBy?: number): Promise<Result<Row | null>>;
   updateOperation(id: number, body: Row): Promise<Result<Row | null>>;
 }
 

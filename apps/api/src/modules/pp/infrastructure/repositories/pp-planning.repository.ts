@@ -24,12 +24,14 @@ export class PpPlanningRepository implements IPpPlanningRepo {
 
   }
 
-  async createScheduleEntry(body: Row): Promise<Result<Row | null>>  {
+  async createScheduleEntry(body: Row, createdBy?: number): Promise<Result<Row | null>>  {
   try {
       // Read the DTO's snake_case keys (PpCreateScheduleEntrySchema) and map them onto the
       // real production_orders columns. is_urgent/is_frozen keep their DB defaults (golden-thread
       // priority columns — additive insert contract preserved).
-      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_start_date, planned_end_date, work_center_id, responsible_manager_id, sales_order_id, notes, status) VALUES (CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint), ${body.work_order_id ?? null}, ${body.quantity ?? 1}, ${body.quantity ?? 1}, ${body.planned_start ?? null}, ${body.planned_end ?? null}, ${body.work_center_id ?? null}, ${body.operator_id ?? null}, ${body.sales_order_id ?? null}, ${body.notes ?? null}, 'planned') RETURNING *`);
+      // B14 (2026-07-05): created_by existed but was never written from this live,
+      // @CurrentUser()-driven HTTP path (POST /planning/schedule).
+      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_start_date, planned_end_date, work_center_id, responsible_manager_id, sales_order_id, notes, status, created_by) VALUES (CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint), ${body.work_order_id ?? null}, ${body.quantity ?? 1}, ${body.quantity ?? 1}, ${body.planned_start ?? null}, ${body.planned_end ?? null}, ${body.work_center_id ?? null}, ${body.operator_id ?? null}, ${body.sales_order_id ?? null}, ${body.notes ?? null}, 'planned', ${createdBy ?? null}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

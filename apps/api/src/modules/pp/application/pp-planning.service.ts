@@ -17,9 +17,9 @@ export class PpPlanningService {
     });
   }
 
-  async createScheduleEntry(body: Record<string, unknown>) {
+  async createScheduleEntry(body: Record<string, unknown>, createdBy?: number) {
     return safeCall(async () => {
-      return this.repo.createScheduleEntry(body);
+      return this.repo.createScheduleEntry(body, createdBy);
     });
   }
 
