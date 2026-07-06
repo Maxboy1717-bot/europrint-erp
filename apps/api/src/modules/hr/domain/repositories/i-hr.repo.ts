@@ -29,7 +29,7 @@ export interface IHrRepo {
    */
   postPayrollToGL(payrollId: number, postedBy: number): Promise<Result<HrRow>>;
   // P1.6.3: transactional salary review (UPDATE employees + INSERT salary_history in one tx)
-  reviewSalaryTransactional(employeeId: number, newSalary: number, today: string): Promise<Result<HrRow>>;
+  reviewSalaryTransactional(employeeId: number, newSalary: number, today: string, reviewedBy?: number): Promise<Result<HrRow>>;
 
   getPayrollSummary(period: string): Promise<Result<{ totalGross: number; totalNet: number; employeeCount: number }>>;
 

@@ -97,7 +97,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
   // Concept A (salary_change_log, split from salary_history 2026-07-02): a salary "review"/raise
   // is a CHANGE-EVENT, not a payroll-period calculation — it belongs to the audit-log table, not
   // payroll_period_record.
-  async reviewSalaryTransactional(employeeId: number, newSalary: number, today: string): Promise<Result<HrRow>> {
+  async reviewSalaryTransactional(employeeId: number, newSalary: number, today: string, reviewedBy?: number): Promise<Result<HrRow>> {
     try {
       let historyRow: HrRow = {};
       await db.transaction(async (tx) => {
@@ -118,6 +118,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
           change_type:     'review',
           previous_salary: prevSalary != null ? String(prevSalary) : null,
           new_salary:      String(newSalary),
+          created_by:      reviewedBy ?? null,
         }).returning();
         historyRow = castTo<HrRow>(inserted[0] ?? {});
       });
