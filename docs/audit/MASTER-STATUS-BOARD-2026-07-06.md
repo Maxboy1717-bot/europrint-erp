@@ -70,6 +70,7 @@
 | i18n F2 (verified false-positive, no action) | `components/orders/WizardHeader.tsx` + 6 sibling wizard files | done — confirmed already 3-language-complete | n/a |
 | i18n F2 (verified false-positive, no action) | `pos-monitor/i18n/usePosI18n.ts` | done — confirmed already implements a correct 3-state uz→uz-cyr→ru cycle | n/a |
 | i18n Part 3 (D3) | `pages/ImpositionCalculator.tsx` | done | `69c24222` |
+| i18n Tier 2 F4 | `apps/api/src/modules/**` (backend hardcoded exception messages, ~470 sites, module-by-module, `apps/api/src/i18n/**` locale files), `apps/api/src/common/filters/global-exception.filter.ts` | claimed | Step 0 enumeration in progress |
 
 ---
 
