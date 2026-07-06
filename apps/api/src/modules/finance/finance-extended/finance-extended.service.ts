@@ -4,13 +4,17 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Logger, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IFinanceExtendedRepository, FINANCE_EXTENDED_REPO } from './i-finance-extended.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
 @Injectable()
 export class FinanceExtendedService {
   private readonly logger = new Logger(FinanceExtendedService.name);
-  constructor(@Inject(FINANCE_EXTENDED_REPO) private readonly repo: IFinanceExtendedRepository) {}
+  constructor(
+    @Inject(FINANCE_EXTENDED_REPO) private readonly repo: IFinanceExtendedRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findCategories(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -25,7 +29,7 @@ export class FinanceExtendedService {
   async findCategoryById(id: number) {
     const result = await this.repo.findCategoryById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Kategoriya #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.categoryNotFoundWithId', { args: { id } }));
     return result.data;
   }
 

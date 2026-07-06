@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException, InternalServerErrorException, BadRequestException, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IFiRepository, FI_REPO } from './i-fi.repo';
 import { safeCall, Result, AppError } from '@common/result';
 import { GlPostingService, JournalLine } from '../domain/services/gl-posting.service';
@@ -14,6 +15,7 @@ export class FiService {
   constructor(
     @Inject(FI_REPO) private readonly repo: IFiRepository,
     private readonly glPosting: GlPostingService,
+    private readonly i18n: I18nService,
   ) {}
 
   async findAccountingPeriods(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
@@ -38,7 +40,7 @@ export class FiService {
     return safeCall(async () => {
     const result = await this.repo.closeAccountingPeriod(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Hisob davri #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.accountingPeriodNotFoundWithId', { args: { id } }));
     return result.data;
   
     });}
@@ -47,7 +49,7 @@ export class FiService {
     return safeCall(async () => {
     const result = await this.repo.postGlDocument(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`GL hujjat #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.glDocumentNotFoundWithId', { args: { id } }));
     return result.data;
   
     });}
@@ -153,9 +155,7 @@ export class FiService {
     return safeCall(async () => {
       const rawLines = Array.isArray(dto.lines) ? (dto.lines as Array<Record<string, unknown>>) : [];
       if (rawLines.length === 0) {
-        throw new BadRequestException(
-          "GL hujjati uchun kamida ikkita yozuv (debet va kredit) kerak. Bo'sh hujjat saqlanmaydi.",
-        );
+        throw new BadRequestException(await this.i18n.t('errors.glDocumentEmptyLines'));
       }
 
       // Map each document line to a JournalLine. The account is identified by code (`accountCode`);
@@ -177,9 +177,7 @@ export class FiService {
       // that is genuinely unbalanced and is rejected here (an honest error beats a fake-green header).
       if (!hasDebitLeg || !hasCreditLeg || Math.abs(totalDebit - totalCredit) > 0.01) {
         throw new BadRequestException(
-          `Ikki tomonlama balans talab qilinadi: debet (${totalDebit}) = kredit (${totalCredit}) ` +
-            `bo'lishi shart va kamida bitta debet hamda bitta kredit yozuvi (kontra hisob) kerak. ` +
-            `Kontra hisob avtomatik tanlanmaydi — uni hujjat yozuvlariga qo'shing.`,
+          await this.i18n.t('errors.glDocumentUnbalanced', { args: { totalDebit, totalCredit } }),
         );
       }
 
@@ -226,7 +224,7 @@ export class FiService {
     return safeCall(async () => {
       const result = await this.repo.updateProfitCenter(id, dto);
       if (!result.ok) throw new InternalServerErrorException(result.error);
-      if (!result.data) throw new NotFoundException(`Foyda markazi #${id} topilmadi`);
+      if (!result.data) throw new NotFoundException(await this.i18n.t('errors.profitCenterNotFoundWithId', { args: { id } }));
       return result.data;
     });
   }

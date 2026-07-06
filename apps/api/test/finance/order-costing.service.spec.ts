@@ -9,6 +9,14 @@ import { OrderCostingService } from '../../src/modules/finance/order-costing/ord
 import { ORDER_COSTING_REPO } from '../../src/modules/finance/order-costing/i-order-costing.repo';
 import { Ok, Err, AppErr } from '../../src/common/result';
 import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
+
+function makeI18n(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
+}
 
 interface RepoMock {
   findAll: jest.Mock;
@@ -36,6 +44,7 @@ async function buildSvc(repo: RepoMock): Promise<OrderCostingService> {
     providers: [
       OrderCostingService,
       { provide: ORDER_COSTING_REPO, useValue: repo },
+      { provide: I18nService, useValue: makeI18n() },
     ],
   }).compile();
   return mod.get(OrderCostingService);

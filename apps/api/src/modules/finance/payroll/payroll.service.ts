@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, forwardRef } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IFinancePayrollRepository, FINANCE_PAYROLL_REPO } from './i-finance-payroll.repo';
 import { safeCall, Result, AppError } from '@common/result';
 // Moliya-GL-Kassa (2026-07-02, APPROVED: egasi ikki-dunyo-tuzatish 2026-07-02): HR's
@@ -21,6 +22,7 @@ export class PayrollService {
   constructor(
     @Inject(FINANCE_PAYROLL_REPO) private readonly financePayrollRepo: IFinancePayrollRepository,
     @Inject(forwardRef(() => HrPayrollService)) private readonly hrPayrollService: HrPayrollService,
+    private readonly i18n: I18nService,
   ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
@@ -38,7 +40,7 @@ export class PayrollService {
   async findOne(id: number) {
     const result = await this.financePayrollRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Oylik davri #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.payrollPeriodNotFoundWithId', { args: { id } }));
     const rowsResult = await this.financePayrollRepo.findRowsByPeriodId(id);
     if (!rowsResult.ok) throw new InternalServerErrorException(rowsResult.error);
     return { ...result.data, rows: rowsResult.data };

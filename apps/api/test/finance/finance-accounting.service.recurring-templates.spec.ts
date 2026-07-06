@@ -13,8 +13,16 @@ jest.mock('@shared/db', () => ({
 }));
 
 import { FinanceAccountingService } from '../../src/modules/finance/application/finance-accounting.service';
+import type { I18nService } from 'nestjs-i18n';
 import type { GlPostingService } from '../../src/modules/finance/domain/services/gl-posting.service';
 import type { DrizzleFinanceAccountingRepo } from '../../src/modules/finance/infrastructure/repositories/drizzle-finance-accounting.repo';
+
+function makeI18nMock(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
+}
 
 const balancedLines = [
   { accountCode: '9400', accountName: "Ma'muriyat xarajatlari", debit: 2000000, credit: 0 },
@@ -29,6 +37,7 @@ describe('FinanceAccountingService — F11 recurring journal entry templates', (
     svc = new FinanceAccountingService(
       {} as unknown as DrizzleFinanceAccountingRepo,
       { postJournal: jest.fn() } as unknown as GlPostingService,
+      makeI18nMock(),
     );
   });
 
@@ -60,7 +69,7 @@ describe('FinanceAccountingService — F11 recurring journal entry templates', (
   it('still enforces double-entry balance for a template, same as a one-off draft', async () => {
     await expect(
       svc.createRecurringTemplate({ frequency: 'monthly', lines: [{ accountCode: '9400', debit: 1000, credit: 0 }] }, 5),
-    ).rejects.toThrow(/balans/i);
+    ).rejects.toThrow(/recurringTemplateUnbalanced/i);
     expect(mockRunQuery).not.toHaveBeenCalled();
   });
 

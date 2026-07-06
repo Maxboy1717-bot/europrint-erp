@@ -17,11 +17,19 @@ jest.mock('@shared/db', () => ({
 
 import { FinanceAccountingService } from '../../src/modules/finance/application/finance-accounting.service';
 import { Ok, Err } from '../../src/common/result';
+import type { I18nService } from 'nestjs-i18n';
 import type { GlPostingService } from '../../src/modules/finance/domain/services/gl-posting.service';
 import type { DrizzleFinanceAccountingRepo } from '../../src/modules/finance/infrastructure/repositories/drizzle-finance-accounting.repo';
 
 function makeGlMock(): jest.Mocked<Pick<GlPostingService, 'postJournal'>> {
   return { postJournal: jest.fn() };
+}
+
+function makeI18nMock(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
 }
 
 const balancedLines = [
@@ -36,7 +44,7 @@ describe('FinanceAccountingService — F9 GL draft/review/post gate', () => {
   beforeEach(() => {
     mockRunQuery.mockReset();
     glMock = makeGlMock();
-    svc = new FinanceAccountingService({} as unknown as DrizzleFinanceAccountingRepo, glMock as unknown as GlPostingService);
+    svc = new FinanceAccountingService({} as unknown as DrizzleFinanceAccountingRepo, glMock as unknown as GlPostingService, makeI18nMock());
   });
 
   describe('createGlDocument() — draft only, never posts directly', () => {
@@ -58,7 +66,7 @@ describe('FinanceAccountingService — F9 GL draft/review/post gate', () => {
     it('still rejects an unbalanced document before ever touching the DB', async () => {
       await expect(
         svc.createGlDocument({ lines: [{ accountCode: '1010', debit: 1000, credit: 0 }] }, 7),
-      ).rejects.toThrow(/balans/i);
+      ).rejects.toThrow(/glDocumentUnbalanced/i);
       expect(mockRunQuery).not.toHaveBeenCalled();
     });
   });
@@ -79,7 +87,7 @@ describe('FinanceAccountingService — F9 GL draft/review/post gate', () => {
     it('rejects approving a draft that is already posted (no double-post)', async () => {
       mockRunQuery.mockResolvedValueOnce({ rows: [{ id: 42, document_number: 'GLDOC-1', status: 'posted', metadata: { lines: balancedLines } }] });
 
-      await expect(svc.approveGlDocument(42, 3)).rejects.toThrow(/allaqachon/i);
+      await expect(svc.approveGlDocument(42, 3)).rejects.toThrow(/glDocumentAlreadyReviewedWithStatus/i);
       expect(glMock.postJournal).not.toHaveBeenCalled();
     });
 
@@ -94,7 +102,7 @@ describe('FinanceAccountingService — F9 GL draft/review/post gate', () => {
 
     it('throws NotFoundException for a nonexistent draft', async () => {
       mockRunQuery.mockResolvedValueOnce({ rows: [] });
-      await expect(svc.approveGlDocument(999, 3)).rejects.toThrow(/topilmadi/i);
+      await expect(svc.approveGlDocument(999, 3)).rejects.toThrow(/glDraftNotFoundWithId/i);
     });
   });
 

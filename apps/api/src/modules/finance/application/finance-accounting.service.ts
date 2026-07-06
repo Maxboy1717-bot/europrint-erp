@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeInt } from '../../hr/common/db-rows';
 import { safeCall, Result, Ok, Err, AppErr, AppError } from '@common/result';
 import { db, runQuery } from '@shared/db';
@@ -49,6 +50,7 @@ export class FinanceAccountingService {
   constructor(
     private readonly accountingRepo: DrizzleFinanceAccountingRepo,
     private readonly glPosting: GlPostingService,
+    private readonly i18n: I18nService,
   ) {}
 
   async getDashboard() {
@@ -189,9 +191,7 @@ export class FinanceAccountingService {
   async createGlDocument(body: Record<string, unknown>, createdBy?: number) {
     const rawLines = Array.isArray(body.lines) ? (body.lines as Array<Record<string, unknown>>) : [];
     if (rawLines.length === 0) {
-      throw new BadRequestException(
-        "GL hujjati uchun kamida ikkita yozuv (debet va kredit) kerak. Bo'sh hujjat saqlanmaydi.",
-      );
+      throw new BadRequestException(await this.i18n.t('errors.glDocumentEmptyLines'));
     }
 
     // Map each document line to a JournalLine. The account is identified by code (`accountCode`);
@@ -213,9 +213,7 @@ export class FinanceAccountingService {
     // (an honest error beats a fake-green header).
     if (!hasDebitLeg || !hasCreditLeg || Math.abs(totalDebit - totalCredit) > 0.01) {
       throw new BadRequestException(
-        `Ikki tomonlama balans talab qilinadi: debet (${totalDebit}) = kredit (${totalCredit}) ` +
-          `bo'lishi shart va kamida bitta debet hamda bitta kredit yozuvi (kontra hisob) kerak. ` +
-          `Kontra hisob avtomatik tanlanmaydi — uni hujjat yozuvlariga qo'shing.`,
+        await this.i18n.t('errors.glDocumentUnbalanced', { args: { totalDebit, totalCredit } }),
       );
     }
 
@@ -233,7 +231,7 @@ export class FinanceAccountingService {
       RETURNING id, created_at
     `);
     const draft = inserted.rows[0];
-    if (!draft) throw new InternalServerErrorException('GL hujjat qoralamasi saqlanmadi');
+    if (!draft) throw new InternalServerErrorException(await this.i18n.t('errors.glDraftNotSaved'));
 
     return {
       draftId: draft.id,
@@ -258,13 +256,15 @@ export class FinanceAccountingService {
       SELECT id, document_number, status, metadata FROM gl_documents WHERE id = ${id} LIMIT 1
     `);
     const draft = rows.rows[0];
-    if (!draft) throw new NotFoundException(`GL hujjat qoralamasi #${id} topilmadi`);
+    if (!draft) throw new NotFoundException(await this.i18n.t('errors.glDraftNotFoundWithId', { args: { id } }));
     if (draft.status !== 'pending_review') {
-      throw new BadRequestException(`GL hujjat #${id} allaqachon "${draft.status}" holatida — qayta tasdiqlab bo'lmaydi`);
+      throw new BadRequestException(
+        await this.i18n.t('errors.glDocumentAlreadyReviewedWithStatus', { args: { id, status: draft.status } }),
+      );
     }
     const meta = (typeof draft.metadata === 'string' ? JSON.parse(draft.metadata) : draft.metadata) as { lines?: JournalLine[] };
     const lines = Array.isArray(meta?.lines) ? meta.lines : [];
-    if (lines.length === 0) throw new InternalServerErrorException(`GL hujjat #${id} yozuvlari yo'qolgan`);
+    if (lines.length === 0) throw new InternalServerErrorException(await this.i18n.t('errors.glDocumentLinesLost', { args: { id } }));
 
     const posted = await this.glPosting.postJournal(lines, draft.document_number);
     if (!posted.ok) {
@@ -290,7 +290,7 @@ export class FinanceAccountingService {
       RETURNING id
     `);
     if (!result.rows[0]) {
-      throw new BadRequestException(`GL hujjat #${id} topilmadi yoki allaqachon ko'rib chiqilgan (faqat pending_review rad etiladi)`);
+      throw new BadRequestException(await this.i18n.t('errors.glDocumentNotFoundOrReviewed', { args: { id } }));
     }
     return { draftId: id, status: 'rejected' as const };
   }
@@ -307,7 +307,7 @@ export class FinanceAccountingService {
   async createRecurringTemplate(body: Record<string, unknown>, createdBy?: number) {
     const rawLines = Array.isArray(body.lines) ? (body.lines as Array<Record<string, unknown>>) : [];
     if (rawLines.length === 0) {
-      throw new BadRequestException("Takrorlanuvchi shablon uchun kamida ikkita yozuv (debet va kredit) kerak.");
+      throw new BadRequestException(await this.i18n.t('errors.recurringTemplateEmptyLines'));
     }
     const lines: JournalLine[] = rawLines.map((l) => ({
       accountCode: String(l.accountCode ?? l.account_id ?? l.accountId ?? '').trim(),
@@ -319,12 +319,12 @@ export class FinanceAccountingService {
     const totalCredit = lines.reduce((s, l) => s + (l.credit > 0 ? l.credit : 0), 0);
     if (!lines.some((l) => l.debit > 0) || !lines.some((l) => l.credit > 0) || Math.abs(totalDebit - totalCredit) > 0.01) {
       throw new BadRequestException(
-        `Ikki tomonlama balans talab qilinadi: debet (${totalDebit}) = kredit (${totalCredit}) bo'lishi shart.`,
+        await this.i18n.t('errors.recurringTemplateUnbalanced', { args: { totalDebit, totalCredit } }),
       );
     }
     const frequency = String(body.frequency ?? '');
     if (!['monthly', 'quarterly', 'yearly'].includes(frequency)) {
-      throw new BadRequestException("frequency 'monthly' | 'quarterly' | 'yearly' bo'lishi kerak");
+      throw new BadRequestException(await this.i18n.t('errors.invalidRecurringFrequency'));
     }
     const description = body.description != null ? String(body.description) : null;
     const templateNumber = `RECUR-${Date.now()}`;
@@ -340,7 +340,7 @@ export class FinanceAccountingService {
       RETURNING id
     `);
     const row = inserted.rows[0];
-    if (!row) throw new InternalServerErrorException('Takrorlanuvchi shablon saqlanmadi');
+    if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.recurringTemplateNotSaved'));
     return { templateId: row.id, templateNumber, frequency, status: 'active' as const, totalDebit, totalCredit };
   }
 
@@ -370,7 +370,7 @@ export class FinanceAccountingService {
     `);
     const original = Array.isArray(rows) ? rows[0] : undefined;
     if (!original) {
-      throw new NotFoundException(`Entries qatori topilmadi: id=${id}`);
+      throw new NotFoundException(await this.i18n.t('errors.entriesRowNotFoundWithId', { args: { id } }));
     }
 
     const reference = `REV-${id}`;

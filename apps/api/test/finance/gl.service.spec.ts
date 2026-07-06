@@ -137,7 +137,7 @@ describe('GlService', () => {
     function buildSvc(glPosting: GlPostingService) {
       // reverseEntry() never touches accountingRepo — only runQuery() + glPosting.postJournal() —
       // so an empty stub satisfies the constructor without needing a real DrizzleFinanceAccountingRepo.
-      return new FinanceAccountingService({} as DrizzleFinanceAccountingRepo, glPosting);
+      return new FinanceAccountingService({} as DrizzleFinanceAccountingRepo, glPosting, makeI18n());
     }
 
     it('posts a swapped, balanced journal entry referencing REV-{id}', async () => {
@@ -164,7 +164,7 @@ describe('GlService', () => {
       const glPosting = makeGlPosting();
       const svc = buildSvc(glPosting);
 
-      await expect(svc.reverseEntry(999)).rejects.toThrow('Entries qatori topilmadi: id=999');
+      await expect(svc.reverseEntry(999)).rejects.toThrow('errors.entriesRowNotFoundWithId');
       expect(glPosting.postJournal).not.toHaveBeenCalled();
     });
 

@@ -4,6 +4,7 @@
  */
 
 import { Controller, HttpCode, HttpStatus, Patch, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Logger, InternalServerErrorException, UsePipes, NotImplementedException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { z } from 'zod';
 import { assertOk, assertOkLog, throwFromError, unwrapOrThrow } from '@common/http-result';
@@ -55,6 +56,7 @@ export class FinancePaymentsController {
     private queryBus: QueryBus,
     private recordPaymentHandler: RecordPaymentHandler,
     private readonly actionsSvc: FinanceActionsService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List payments' })
@@ -77,9 +79,7 @@ export class FinancePaymentsController {
     // 501: to'lov GL/buxgalteriyaga bog'liq — real yo'l POST /finance/payments/record
     // (RecordPaymentHandler: invoice topish + double-entry GL provodka). Root POST'ga
     // oddiy insert orphan to'lov yaratardi (buxgalteriyani buzardi), shuning uchun 501.
-    throw new NotImplementedException(
-      "To'lov yozish uchun POST /finance/payments/record ishlating (invoice + GL bilan).",
-    );
+    throw new NotImplementedException(await this.i18n.t('errors.usePaymentRecordEndpoint'));
   }
 
   @ApiOperation({ summary: 'Patch approve payment' })
@@ -148,7 +148,7 @@ export class FinancePaymentsController {
       return { data: { invoiceId: row['id'], outstanding: Number(row['outstanding']), totalAmount: Number(row['totalAmount']), paidAmount: Number(row['paidAmount']), found: true } };
     } catch (e) {
       this.logger.error(`getOutstandingPayment: query failed for invoiceId=${invoiceId}: ${e instanceof Error ? e.message : String(e)}`);
-      throw new InternalServerErrorException("Outstanding to'lov ma'lumotini olishda xatolik");
+      throw new InternalServerErrorException(await this.i18n.t('errors.outstandingPaymentFetchFailed'));
     }
   }
 
