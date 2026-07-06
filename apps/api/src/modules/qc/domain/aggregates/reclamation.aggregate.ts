@@ -29,7 +29,8 @@ export class Reclamation {
     public resolution: string | null,
     public resolvedAt: Date | null,
     public readonly createdAt: Date,
-    public updatedAt: Date) {}
+    public updatedAt: Date,
+    public readonly createdBy?: number) {}
 
   resolve(resolution: string): void {
     this.status = ReclamationStatus.RESOLVED;

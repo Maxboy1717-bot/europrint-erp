@@ -28,6 +28,8 @@ import { ReclamationStatus } from '../domain/aggregates/reclamation.aggregate';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 enum Role {
   QC_MANAGER = 'qc_manager',
@@ -94,10 +96,10 @@ export class QcReclamationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('reclamations')
   @Roles(Role.SALES_MANAGER, Role.QC_MANAGER, Role.SUPER_ADMIN)
-  async createReclamation(@Body() body: unknown) {
+  async createReclamation(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
       const parsed = CreateReclamationDtoSchema.parse(body);
-      const cmd = new CreateReclamationCommand(parsed.customerName ?? '', parsed.customerId ?? null, parsed.orderId ?? null, parsed.description ?? '', parsed.severity as DefectSeverity);
+      const cmd = new CreateReclamationCommand(parsed.customerName ?? '', parsed.customerId ?? null, parsed.orderId ?? null, parsed.description ?? '', parsed.severity as DefectSeverity, user.id);
       const result = await this.commandBus.execute(cmd);
       assertOk(result);
       this.logger.log('Reclamation created');

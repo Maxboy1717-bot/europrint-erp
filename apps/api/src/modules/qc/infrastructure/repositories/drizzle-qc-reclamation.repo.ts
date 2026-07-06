@@ -106,6 +106,7 @@ export class DrizzleQcReclamationRepo {
         resolvedAt: reclamation.resolvedAt,
         createdAt: reclamation.createdAt,
         updatedAt: reclamation.updatedAt,
+        createdBy: reclamation.createdBy,
       }).returning();
       if (!row) return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Reclamation insert returned no row' } };
       return { ok: true as const, data: this.mapRowToReclamation(row as Record<string, unknown>) };

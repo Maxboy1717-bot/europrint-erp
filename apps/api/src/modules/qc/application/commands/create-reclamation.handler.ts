@@ -38,6 +38,7 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
         null,
         _time.now(),
         _time.now(),
+        command.createdBy,
       );
 
       const saveResult = await this.qcRepository.saveReclamation(reclamation);

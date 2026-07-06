@@ -10,5 +10,6 @@ export class CreateReclamationCommand {
     public readonly customerId: number | null,
     public readonly orderId: string | null,
     public readonly description: string,
-    public readonly severity: DefectSeverity) {}
+    public readonly severity: DefectSeverity,
+    public readonly createdBy?: number) {}
 }
