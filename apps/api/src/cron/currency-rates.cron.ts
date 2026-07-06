@@ -67,6 +67,15 @@ export class CurrencyRatesCron {
         }
         const rate = rawRate / nominal;
 
+        // F6 sub-fix 2: keep `currencies.exchange_rate` in sync with `exchange_rates` every run —
+        // these were two disconnected sources of truth (currencies had a frozen 2026-05-21 seed
+        // value, exchange_rates had the real rate) that silently diverged by 1.5-14%. Updated
+        // regardless of whether today's exchange_rates row is new or already-current, so a
+        // currencies row can never again drift stale behind exchange_rates.
+        await runQuery(sql`
+          UPDATE currencies SET exchange_rate = ${rate}, updated_at = NOW() WHERE code = ${code}
+        `);
+
         // Idempotent: one row per (from_currency, to_currency, rate_date) — a re-run the same
         // day (manual trigger, cron retry) does not duplicate the day's rate.
         const existing = await runQuery<{ id: number }>(sql`

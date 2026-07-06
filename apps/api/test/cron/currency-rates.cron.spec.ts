@@ -39,40 +39,54 @@ describe('CurrencyRatesCron — F6 real feed (honest, no fabricated success)', (
 
   it('fetches the real CBU feed and inserts a new row per tracked currency', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => makeCbuResponse() });
-    mockRunQuery
-      .mockResolvedValueOnce({ rows: [] }) // USD: no existing row for today
-      .mockResolvedValueOnce({ rows: [] }) // USD insert
-      .mockResolvedValueOnce({ rows: [] }) // EUR: no existing
-      .mockResolvedValueOnce({ rows: [] }) // EUR insert
-      .mockResolvedValueOnce({ rows: [] }) // RUB: no existing
-      .mockResolvedValueOnce({ rows: [] }) // RUB insert
-      .mockResolvedValueOnce({ rows: [] }) // CNY: no existing
-      .mockResolvedValueOnce({ rows: [] }); // CNY insert
+    mockRunQuery.mockResolvedValue({ rows: [] }); // update currencies (no rows) / existence check (none) / insert
 
     await cron.run();
 
     expect(fetchMock).toHaveBeenCalledWith('https://cbu.uz/uz/arkhiv-kursov-valyut/json/', expect.anything());
-    // 4 currencies × (existence check + insert) = 8 calls
-    expect(mockRunQuery).toHaveBeenCalledTimes(8);
+    // 4 currencies × (UPDATE currencies + existence check + insert) = 12 calls
+    expect(mockRunQuery).toHaveBeenCalledTimes(12);
     expect(cronStatus.recordSuccess).toHaveBeenCalledWith('CurrencyRatesCron');
     expect(cronStatus.recordFailure).not.toHaveBeenCalled();
+  });
+
+  // F6 sub-fix 2: currencies.exchange_rate and exchange_rates were two disconnected sources of
+  // truth that silently diverged. The cron now updates currencies.exchange_rate every run.
+  it('syncs currencies.exchange_rate on every successful fetch, not just exchange_rates', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => makeCbuResponse() });
+    mockRunQuery.mockResolvedValue({ rows: [] });
+
+    await cron.run();
+
+    const updateCurrenciesCalls = mockRunQuery.mock.calls.filter((call) => {
+      const chunks = (call[0] as { queryChunks?: unknown[] }).queryChunks ?? [];
+      const text = chunks
+        .map((c) => (c && typeof c === 'object' && 'value' in (c as object) ? (c as { value: string[] }).value.join('') : ''))
+        .join('');
+      return /UPDATE currencies/.test(text);
+    });
+    expect(updateCurrenciesCalls).toHaveLength(4); // USD, EUR, RUB, CNY
   });
 
   it('skips a currency already inserted today (idempotent) without double-posting', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => makeCbuResponse() });
     mockRunQuery
+      .mockResolvedValueOnce({ rows: [] }) // USD: update currencies
       .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // USD: already exists today
+      .mockResolvedValueOnce({ rows: [] }) // EUR: update currencies
       .mockResolvedValueOnce({ rows: [] }) // EUR: no existing
       .mockResolvedValueOnce({ rows: [] }) // EUR insert
+      .mockResolvedValueOnce({ rows: [] }) // RUB: update currencies
       .mockResolvedValueOnce({ rows: [] }) // RUB: no existing
       .mockResolvedValueOnce({ rows: [] }) // RUB insert
+      .mockResolvedValueOnce({ rows: [] }) // CNY: update currencies
       .mockResolvedValueOnce({ rows: [] }) // CNY: no existing
       .mockResolvedValueOnce({ rows: [] }); // CNY insert
 
     await cron.run();
 
-    // USD: 1 call (existence check only, no insert) + 3 others × 2 = 7
-    expect(mockRunQuery).toHaveBeenCalledTimes(7);
+    // USD: 2 calls (update currencies + existence check, no insert) + 3 others × 3 = 11
+    expect(mockRunQuery).toHaveBeenCalledTimes(11);
     expect(cronStatus.recordSuccess).toHaveBeenCalledWith('CurrencyRatesCron');
   });
 
