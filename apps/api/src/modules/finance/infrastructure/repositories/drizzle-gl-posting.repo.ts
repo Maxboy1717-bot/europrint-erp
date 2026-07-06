@@ -10,7 +10,7 @@
 import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
 import { entries, accounts } from '@workspace/db';
-import { sql, inArray } from 'drizzle-orm';
+import { sql, inArray, and, eq, isNull } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/result';
 import { IGlPostingRepository } from '../../domain/repositories/i-gl-posting.repo';
 
@@ -18,6 +18,12 @@ import { IGlPostingRepository } from '../../domain/repositories/i-gl-posting.rep
  * Resolve GL account CODES (e.g. '5010') to the integer accounts.id the live `entries.*_account_id`
  * columns require (the Drizzle def says varchar but the live columns are integer FKs to accounts.id).
  * Returns a code→id map; callers Err if any code is missing rather than insert a wrong/NULL account.
+ *
+ * C6.7 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): previously had no is_active/deleted_at filter — a
+ * journal could resolve and post to a deactivated or soft-deleted account. Excluding inactive/
+ * deleted accounts here means such a code now resolves to "missing" (map has no entry for it), and
+ * the caller's existing "Err if any code is missing" contract naturally rejects the post instead of
+ * silently ledgering against a dead account.
  */
 async function resolveAccountIds(codes: string[]): Promise<Map<string, number>> {
   const distinct = [...new Set(codes.filter(Boolean))];
@@ -27,7 +33,7 @@ async function resolveAccountIds(codes: string[]): Promise<Map<string, number>> 
   const rows = await db
     .select({ account_code: accounts.accountCode, id: accounts.id })
     .from(accounts)
-    .where(inArray(accounts.accountCode, distinct));
+    .where(and(inArray(accounts.accountCode, distinct), eq(accounts.isActive, true), isNull(accounts.deletedAt)));
   return new Map((Array.isArray(rows) ? rows : []).map((r) => [String(r.account_code), Number(r.id)]));
 }
 
