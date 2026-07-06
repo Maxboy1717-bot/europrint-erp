@@ -313,6 +313,14 @@ export class PosMovementService {
         }
       }
 
+      // F6 sub-fix 3 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): a non-UZS movement with no explicit
+      // exchangeRate used to silently default to 1 — booking e.g. a USD amount at UZS par value
+      // (a ~12,700× understatement). UZS needs no rate (trivially 1); a foreign currency GATES
+      // if no rate is resolvable (owner-provided, else latest `exchange_rates` row) — mirrors
+      // cashier-hub's KAS-1 gate (Q-40/EGASI-DATA: never fabricate a conversion).
+      const movementCurrency = (dto.baseCurrency ?? 'UZS').toUpperCase();
+      const movementExchangeRate = await this.resolveExchangeRate(movementCurrency, dto.exchangeRate);
+
       const movementR = await this.repo.insertMovement({
         movementNumber,
         movementType:         movType.code as PosMovementType,
@@ -325,8 +333,8 @@ export class PosMovementService {
         purchaseOrderId:      dto.purchaseOrderId,
         cashPaid:             dto.cashPaid ?? false,
         cashAmount:           dto.cashAmount ?? 0,
-        currency:             dto.baseCurrency ?? 'UZS',
-        exchangeRate:         dto.exchangeRate ?? 1,
+        currency:             movementCurrency,
+        exchangeRate:         movementExchangeRate,
         notes:                dto.notes,
         idempotencyKey:       dto.idempotencyKey ?? null,
       });
@@ -386,6 +394,23 @@ export class PosMovementService {
   }
 
   /**
+   * F6 sub-fix 3 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): resolve a currency's UZS rate —
+   * UZS itself is trivially 1; an explicit positive rate is used as-is; otherwise the latest
+   * `exchange_rates` row is looked up. Throws (GATE) when a foreign currency has no resolvable
+   * rate, rather than silently booking it at 1:1 par (the ~12,700× USD understatement the audit
+   * flagged — mirrors cashier-hub's KAS-1 gate).
+   */
+  private async resolveExchangeRate(currency: string, explicitRate?: number | null): Promise<number> {
+    if (currency === 'UZS') return 1;
+    if (explicitRate && explicitRate > 0) return explicitRate;
+    const rateR = await this.repo.findLatestExchangeRate(currency);
+    if (rateR.ok && rateR.data) return rateR.data;
+    throw new BadRequestException(
+      `"${currency}" uchun kurs topilmadi — exchange_rates jadvaliga kurs kiriting yoki so'rovda exchangeRate yuboring`,
+    );
+  }
+
+  /**
    * ADDITIVE (2026-06-27): yangi harakat turlari uchun kontekst yozish.
    * Faqat 4 yangi tur uchun va faqat dto.context kelganda yoziladi.
    * Boshqa (mavjud) turlar uchun no-op — eski oqim o'zgarmaydi (Q-46).
@@ -436,27 +461,46 @@ export class PosMovementService {
         });
       }
     }
+    // F6 sub-fix 3: resolve each distinct non-UZS line currency to a real rate ONCE (not one
+    // silent `?? 1` per line) — GATE (Err) if a foreign-currency line has no resolvable rate,
+    // rather than booking it at par. unitPriceBase/totalPriceBase now actually apply the rate.
+    const lineRates = new Map<string, number>();
+    for (const line of safeLines) {
+      const cur = (line.currency ?? 'UZS').toUpperCase();
+      if (!lineRates.has(cur)) {
+        try {
+          lineRates.set(cur, await this.resolveExchangeRate(cur, line.exchangeRate));
+        } catch (e) {
+          return Err({ code: 'BAD_REQUEST', message: e instanceof Error ? e.message : String(e) });
+        }
+      }
+    }
     const maxSeqR = await this.repo.getMaxLineSequence(movementId);
     const maxSeq = maxSeqR.ok ? (maxSeqR.data as number) : 0;
     let seq = maxSeq + 1;
-    const values: LineInsert[] = safeLines.map((line) => ({
-      movementId,
-      materialCardId:  line.materialCardId,
-      batchId:         line.batchId ?? undefined,
-      quantity:        line.quantity,
-      unitPrice:       line.unitPrice ?? 0,
-      totalPrice:      line.quantity * (line.unitPrice ?? 0),
-      currency:        line.currency ?? 'UZS',
-      exchangeRate:    line.exchangeRate ?? 1,
-      unitPriceBase:   line.unitPrice ?? 0,
-      totalPriceBase:  line.quantity * (line.unitPrice ?? 0),
-      expiryDate:      line.expiryDate ? new Date(line.expiryDate) : undefined,
-      binId:           line.binLocation ?? undefined,
-      fifoSequence:    seq++,
-      // G1-1 (2026-07-02): FE yuborgan barkod endi saqlanadi (avval tashlanardi).
-      barcode:         line.barcode ?? undefined,
-      notes:           line.notes ?? undefined,
-    }));
+    const values: LineInsert[] = safeLines.map((line) => {
+      const cur = (line.currency ?? 'UZS').toUpperCase();
+      const rate = lineRates.get(cur) ?? 1;
+      const unitPrice = line.unitPrice ?? 0;
+      return {
+        movementId,
+        materialCardId:  line.materialCardId,
+        batchId:         line.batchId ?? undefined,
+        quantity:        line.quantity,
+        unitPrice,
+        totalPrice:      line.quantity * unitPrice,
+        currency:        cur,
+        exchangeRate:    rate,
+        unitPriceBase:   Math.round(unitPrice * rate * 100) / 100,
+        totalPriceBase:  Math.round(line.quantity * unitPrice * rate * 100) / 100,
+        expiryDate:      line.expiryDate ? new Date(line.expiryDate) : undefined,
+        binId:           line.binLocation ?? undefined,
+        fifoSequence:    seq++,
+        // G1-1 (2026-07-02): FE yuborgan barkod endi saqlanadi (avval tashlanardi).
+        barcode:         line.barcode ?? undefined,
+        notes:           line.notes ?? undefined,
+      };
+    });
     return this.repo.insertLines(values);
   }
 

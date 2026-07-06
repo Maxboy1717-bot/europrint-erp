@@ -49,4 +49,10 @@ export interface IPosMovementRepository {
    * miqdorini o'qiydi (EXTERNAL_IN qabul-toleransini hisoblash uchun).
    */
   findPoLineQty(poId: number, materialCardId: number): Promise<Result<number | null>>;
+  /**
+   * F6 sub-fix 3 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): latest currency->UZS rate from the
+   * canonical `exchange_rates` table (mirrors cashier-hub's findLatestExchangeRate). Returns null
+   * when no rate row exists — the caller then GATES rather than fabricating a 1:1 rate.
+   */
+  findLatestExchangeRate(currency: string): Promise<Result<number | null>>;
 }

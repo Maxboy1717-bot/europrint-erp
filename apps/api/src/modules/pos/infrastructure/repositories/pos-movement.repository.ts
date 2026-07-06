@@ -161,6 +161,30 @@ export class PosMovementRepository implements IPosMovementRepository {
    * ADDITIVE (2026-06-27): yangi harakat turlari uchun kontekst upsert.
    * movement_id UNIQUE — mavjud bo'lsa yangilaydi (idempotent).
    */
+  /**
+   * F6 sub-fix 3 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): latest currency->UZS rate from the
+   * canonical `exchange_rates` table (mirrors cashier-hub's DrizzleCashierHubRepository).
+   * Returns null when no rate row exists — the caller GATES rather than fabricating a 1:1 rate.
+   */
+  async findLatestExchangeRate(currency: string): Promise<Result<number | null>> {
+    try {
+      const cur = currency.toUpperCase();
+      if (cur === 'UZS') return Ok(1);
+      const rows = await db.execute(sql`
+        SELECT rate::numeric AS rate
+          FROM exchange_rates
+         WHERE UPPER(from_currency) = ${cur} AND UPPER(to_currency) = 'UZS'
+         ORDER BY created_at DESC
+         LIMIT 1
+      `);
+      const row = (rows as unknown as { rows: Array<{ rate: string | number | null }> }).rows?.[0];
+      const val = row?.rate != null ? Number(row.rate) : null;
+      return Ok(val !== null && Number.isFinite(val) && val > 0 ? val : null);
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async upsertMovementContext(row: PosMovementContextInsert): Promise<Result<PosMovementCtxRow>> {
     try {
       const [saved] = await db
