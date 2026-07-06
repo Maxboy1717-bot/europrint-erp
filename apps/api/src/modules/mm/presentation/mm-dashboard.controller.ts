@@ -18,6 +18,7 @@ Body,
   InternalServerErrorException, UsePipes, HttpException, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -64,6 +65,7 @@ export class MmDashboardController {
   constructor(
     private readonly svc: MmDashboardService,
     private readonly ratingService: MmVendorRatingService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get dashboard' })
@@ -177,7 +179,7 @@ export class MmDashboardController {
   @Get('vendor-invoices/:id') @Roles(...MM_READ)
   async getVendorInvoiceById(@Param('id') id: string) {
     const row = unwrapOrThrow(await this.svc.getVendorInvoiceById(safeInt(id, 0)));
-    if (!row) throw new HttpException(`Vendor invoice #${id} topilmadi`, HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.vendorInvoiceNotFoundWithId', { args: { id } }), HttpStatus.NOT_FOUND);
     return row;
   }
 
@@ -216,7 +218,7 @@ export class MmDashboardController {
   @Get('3way-match/:invoiceId') @Roles(...MM_READ)
   async get3wayMatch(@Param('invoiceId') invoiceId: string) {
     const row = unwrapOrThrow(await this.svc.getVendorInvoiceById(safeInt(invoiceId, 0)));
-    if (!row) throw new HttpException(`Vendor invoice #${invoiceId} topilmadi`, HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.vendorInvoiceNotFoundWithId', { args: { id: invoiceId } }), HttpStatus.NOT_FOUND);
     return row;
   }
 
@@ -288,7 +290,7 @@ export class MmDashboardController {
   @ApiResponse({ status: 501, description: 'Not implemented — needs fi_payments table' })
   @Patch('vendor-invoices/:id/payment') @Roles(...MM_WRITE)
   async patchPayVendorInvoice(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    throw new HttpException("To'lov hali amalga oshirilmagan — fi_payments jadval qurilgach ishlaydi", HttpStatus.NOT_IMPLEMENTED);
+    throw new HttpException(await this.i18n.t('errors.paymentNotImplementedFiPaymentsPending'), HttpStatus.NOT_IMPLEMENTED);
   }
 
   @ApiOperation({ summary: 'Record vendor performance score (4-factor formula: quality 40% + delivery 30% + price 20% + document 10%)' })
@@ -301,7 +303,7 @@ export class MmDashboardController {
     const parsed = VendorPerformanceSchema.safeParse(body);
     if (!parsed.success) {
       throw new HttpException(
-        { message: 'Noto\'g\'ri kiritilgan ma\'lumotlar', errors: parsed.error.flatten().fieldErrors },
+        { message: await this.i18n.t('validation.invalidInputData'), errors: parsed.error.flatten().fieldErrors },
         HttpStatus.BAD_REQUEST,
       );
     }

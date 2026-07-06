@@ -18,6 +18,7 @@ import {
   UseGuards,
   UseInterceptors, BadRequestException, NotFoundException} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '@common/guards/roles.guard';
@@ -51,7 +52,8 @@ export class MmMaterialsController {
  constructor(
  private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus,
- private readonly layerFormula: LayerFormulaService) {}
+ private readonly layerFormula: LayerFormulaService,
+ private readonly i18n: I18nService) {}
 
  @ApiOperation({ summary: 'kg<->list konvertatsiya (qatlam formulasi, vision #7)' })
  @ApiResponse({ status: 200, description: 'OK' })
@@ -63,7 +65,7 @@ export class MmMaterialsController {
  @Query('sheets') sheets?: string) {
  // Ombor kg bilan kirim/chiqim qiladi -> material config'i bo'yicha list-soni hisoblanadi.
  const materialId = parseInt(id, 10);
- if (!Number.isFinite(materialId)) throw new BadRequestException('Material id raqam bo\'lishi kerak');
+ if (!Number.isFinite(materialId)) throw new BadRequestException(await this.i18n.t('validation.materialIdMustBeNumber'));
  const opts: { totalKg?: number; sheetCount?: number } = {};
  if (kg != null && kg !== '') opts.totalKg = Number(kg);
  if (sheets != null && sheets !== '') opts.sheetCount = Number(sheets);
@@ -129,7 +131,7 @@ export class MmMaterialsController {
 
  return {
  statusCode: HttpStatus.OK,
- data: unwrapOrNotFoundDefined(result, 'Material not found'),
+ data: unwrapOrNotFoundDefined(result, await this.i18n.t('errors.materialNotFound')),
 };
 
 }
