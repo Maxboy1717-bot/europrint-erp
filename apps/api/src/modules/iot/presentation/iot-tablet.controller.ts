@@ -30,7 +30,6 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { TabletTokenGuard } from '@common/guards/tablet-token.guard';
-import { Roles } from '@common/decorators/roles.decorator';
 import { Public } from '@common/decorators/public.decorator';
 import { unwrapOrThrow } from '@common/http-result';
 import { db } from '@shared/db';
@@ -61,7 +60,6 @@ import {
   DowntimeEventSchema,
   CrewSchema,
   AcceptHandoverSchema,
-  IOT_READ,
   coerceWorkerId,
 } from './iot-tablet.schemas';
 
@@ -124,7 +122,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Get today shift handovers for tablet' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @Get('tablet/shift') @Roles(...IOT_READ)
+  @Get('tablet/shift')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async getTabletShift() {
     const r = await db.execute(sql`
       SELECT * FROM shift_handovers
@@ -137,7 +137,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Get tablet sessions (production_sessions)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @Get('tablet/sessions') @Roles(...IOT_READ)
+  @Get('tablet/sessions')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async getTabletSessions() {
     const r = await db.execute(sql`
       SELECT * FROM production_sessions WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 50
@@ -148,7 +150,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Create tablet session (production_sessions)' })
   @ApiResponse({ status: 201, description: 'OK' })
-  @Post('tablet/sessions') @Roles(...IOT_READ)
+  @Post('tablet/sessions')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async createTabletSession(@Body() body: unknown) {
     const dto = TabletSessionSchema.parse(body ?? {});
     const workerId = dto.workerId ? Number(dto.workerId) : 0;
@@ -203,7 +207,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Tablet shift handover (INSERT shift_handovers)' })
   @ApiResponse({ status: 201, description: 'OK' })
-  @Post('tablet/handover') @Roles(...IOT_READ)
+  @Post('tablet/handover')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async tabletHandover(@Body() body: unknown) {
     const dto = HandoverSchema.parse(body ?? {});
     const today = new Date().toISOString().slice(0, 10);
@@ -242,7 +248,9 @@ export class IotTabletController {
   @ApiOperation({ summary: 'Receiving operator accepts a pending shift handover (2nd signature)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Handover not found or already completed' })
-  @Patch('tablet/handover/:id/accept') @Roles(...IOT_READ)
+  @Patch('tablet/handover/:id/accept')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async acceptTabletHandover(@Param('id') id: string, @Body() body: unknown) {
     const dto = AcceptHandoverSchema.parse(body ?? {});
     const handoverId = parseInt(id, 10);
@@ -267,7 +275,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Scan material kit item (POST)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @Post('material-kit-items/:id/scan') @Roles(...IOT_READ)
+  @Post('material-kit-items/:id/scan')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async scanMaterialKitItem(@Param('id') id: string, @Body() body: unknown) {
     const dto = MaterialKitScanSchema.parse(body ?? {});
     await db.execute(sql`
@@ -280,7 +290,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Scan material kit item (PATCH)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @Patch('material-kit-items/:id/scan') @Roles(...IOT_READ)
+  @Patch('material-kit-items/:id/scan')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async patchScanMaterialKitItem(@Param('id') id: string, @Body() body: unknown) {
     const dto = MaterialKitScanSchema.parse(body ?? {});
     await db.execute(sql`
@@ -298,7 +310,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Create production session' })
   @ApiResponse({ status: 201, description: 'OK' })
-  @Post('production-sessions') @Roles(...IOT_READ)
+  @Post('production-sessions')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async createProductionSession(@Body() body: unknown) {
     const dto = ProductionSessionSchema.parse(body ?? {});
     const r = await db.execute(sql`
@@ -323,7 +337,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Get production session crew' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @Get('production-sessions/:id/crew') @Roles(...IOT_READ)
+  @Get('production-sessions/:id/crew')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async getProductionSessionCrew(@Param('id') id: string) {
     const sessionId = parseInt(id, 10);
     const r = await db.execute(sql`
@@ -335,7 +351,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Save production session crew (upsert)' })
   @ApiResponse({ status: 201, description: 'Created' })
-  @Post('production-sessions/:id/crew') @Roles(...IOT_READ)
+  @Post('production-sessions/:id/crew')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async saveProductionSessionCrew(@Param('id') id: string, @Body() body: unknown) {
     const dto = CrewSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
@@ -357,7 +375,9 @@ export class IotTabletController {
   @ApiOperation({ summary: 'Start production session' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 422, description: 'BLOCKED — TB-safety / readiness checklist incomplete' })
-  @Post('production-sessions/:id/start') @Roles(...IOT_READ)
+  @Post('production-sessions/:id/start')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async startProductionSession(@Param('id') id: string, @Body() body: unknown) {
     IotPassthroughSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
@@ -412,7 +432,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Stop production session and compute OEE' })
   @ApiResponse({ status: 200, description: 'OK — includes OEE report in report field' })
-  @Post('production-sessions/:id/stop') @Roles(...IOT_READ)
+  @Post('production-sessions/:id/stop')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async stopProductionSession(@Param('id') id: string, @Body() body: unknown) {
     // Step 1: parse typed stop body (FE sends runningTimeSeconds + actualQuantity)
     const dto = StopSessionSchema.parse(body ?? {});
@@ -548,7 +570,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Report production defect (updates session + inserts downtime_event + qc_defects)' })
   @ApiResponse({ status: 200, description: 'OK' })
-  @Post('production-sessions/:id/defect') @Roles(...IOT_READ)
+  @Post('production-sessions/:id/defect')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async reportProductionDefect(@Param('id') id: string, @Body() body: unknown) {
     const dto = DefectReportSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
@@ -616,7 +640,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Submit production evaluation' })
   @ApiResponse({ status: 201, description: 'OK' })
-  @Post('production-sessions/:id/evaluation') @Roles(...IOT_READ)
+  @Post('production-sessions/:id/evaluation')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async submitProductionEvaluation(@Param('id') id: string, @Body() body: unknown) {
     const dto = EvaluationSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
@@ -647,7 +673,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Submit material return' })
   @ApiResponse({ status: 201, description: 'OK' })
-  @Post('production-sessions/:id/material-return') @Roles(...IOT_READ)
+  @Post('production-sessions/:id/material-return')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async submitMaterialReturn(@Param('id') id: string, @Body() body: unknown) {
     const dto = MaterialReturnSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
@@ -769,7 +797,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Submit inline QC check (bridges to qc_defects when defectCount > 0)' })
   @ApiResponse({ status: 201, description: 'OK' })
-  @Post('production-sessions/:id/inline-qc') @Roles(...IOT_READ)
+  @Post('production-sessions/:id/inline-qc')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async submitInlineQc(@Param('id') id: string, @Body() body: unknown) {
     const dto = InlineQcSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
@@ -825,7 +855,9 @@ export class IotTabletController {
 
   @ApiOperation({ summary: 'Report manual downtime event (POST /api/iot/downtime-events)' })
   @ApiResponse({ status: 201, description: 'Created' })
-  @Post('downtime-events') @Roles(...IOT_READ)
+  @Post('downtime-events')
+  @Public()
+  @UseGuards(TabletTokenGuard)
   async reportDowntimeEvent(@Body() body: unknown) {
     const dto = DowntimeEventSchema.parse(body ?? {});
     const durationSeconds = dto.durationMinutes * 60;

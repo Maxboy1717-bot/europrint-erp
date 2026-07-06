@@ -149,7 +149,10 @@ export function useIoTTablet() {
       core.setScanningItemId(materialId);
       await new Promise(resolve => setTimeout(resolve, 500));
       try {
-        await apiRequest("POST", `/api/iot/material-kit-items/${materialId}/scan`, {
+        // B14/Decision 1 (2026-07-06): was using apiRequest (ERP JWT/cookie auth), but
+        // this route now requires the tablet token (x-tablet-token) -- a bare kiosk
+        // tablet has no ERP session, so this call always silently failed.
+        await data.tabletFetch("POST", `/api/iot/material-kit-items/${materialId}/scan`, {
           scannedBy: core.workerId,
           barcode: (Array.isArray(core.checklistMaterials) ? core.checklistMaterials : []).find(m => m.id === materialId)?.itemBarcode,
         });
