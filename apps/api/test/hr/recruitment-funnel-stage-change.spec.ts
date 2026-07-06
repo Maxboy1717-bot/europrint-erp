@@ -12,6 +12,7 @@
  *  - Yopilgan (inactive) funnelni o'zgartirib bo'lmaydi.
  */
 import 'reflect-metadata';
+import { I18nService } from 'nestjs-i18n';
 import {
   RecruitmentFunnelService,
   CANDIDATE_STAGE_CHANGED_EVENT,
@@ -19,6 +20,8 @@ import {
 } from '../../src/modules/hr/recruitment/recruitment-funnel.service';
 import type { IHrRecruitmentFunnelRepository } from '../../src/modules/hr/recruitment/repos/i-hr-recruitment-funnel.repo';
 import { Ok, type Result } from '../../src/common/result';
+
+const mockI18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
 
 type CandidateFunnelRow = { id: number; funnelStage: string; isActive: boolean; candidateId: number };
 
@@ -63,7 +66,7 @@ describe('RecruitmentFunnelService.moveFunnelStage event emission', () => {
     };
     const repo = buildRepo(state);
     const emitter = buildEmitter();
-    const svc = new RecruitmentFunnelService(repo, emitter);
+    const svc = new RecruitmentFunnelService(repo, emitter, mockI18n);
 
     const r = await svc.moveFunnelStage(11, { newStage: 'PHONE_SCREENING', notes: 'OK' } as never, 42);
     expect(r.ok).toBe(true);
@@ -97,7 +100,7 @@ describe('RecruitmentFunnelService.moveFunnelStage event emission', () => {
     };
     const repo = buildRepo(state);
     const emitter = buildEmitter();
-    const svc = new RecruitmentFunnelService(repo, emitter);
+    const svc = new RecruitmentFunnelService(repo, emitter, mockI18n);
 
     const r = await svc.moveFunnelStage(5, { newStage: 'HIRED' } as never, 7);
     expect(r.ok).toBe(true);
@@ -116,7 +119,7 @@ describe('RecruitmentFunnelService.moveFunnelStage event emission', () => {
     };
     const repo = buildRepo(state);
     const emitter = buildEmitter();
-    const svc = new RecruitmentFunnelService(repo, emitter);
+    const svc = new RecruitmentFunnelService(repo, emitter, mockI18n);
 
     const r = await svc.moveFunnelStage(9, { newStage: 'REJECTED', notes: 'KPI past' } as never, 1);
     expect(r.ok).toBe(true);
@@ -136,7 +139,7 @@ describe('RecruitmentFunnelService.moveFunnelStage event emission', () => {
     };
     const repo = buildRepo(state);
     const emitter = buildEmitter();
-    const svc = new RecruitmentFunnelService(repo, emitter);
+    const svc = new RecruitmentFunnelService(repo, emitter, mockI18n);
 
     // NEW -> HIRED is not in VALID_TRANSITIONS
     const r = await svc.moveFunnelStage(3, { newStage: 'HIRED' } as never, 1);
@@ -152,7 +155,7 @@ describe('RecruitmentFunnelService.moveFunnelStage event emission', () => {
     };
     const repo = buildRepo(state);
     const emitter = buildEmitter();
-    const svc = new RecruitmentFunnelService(repo, emitter);
+    const svc = new RecruitmentFunnelService(repo, emitter, mockI18n);
 
     const r = await svc.moveFunnelStage(4, { newStage: 'REFERENCES_CHECK' } as never, 1);
     expect(r.ok).toBe(false);
@@ -167,7 +170,7 @@ describe('RecruitmentFunnelService.moveFunnelStage event emission', () => {
     };
     const repo = buildRepo(state);
     const emitter = buildEmitter();
-    const svc = new RecruitmentFunnelService(repo, emitter);
+    const svc = new RecruitmentFunnelService(repo, emitter, mockI18n);
 
     const r = await svc.moveFunnelStage(2, { newStage: 'PHONE_SCREENING' } as never, 1);
     expect(r.ok).toBe(false);

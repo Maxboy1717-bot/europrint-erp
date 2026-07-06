@@ -77,7 +77,7 @@ export class ShiftService {
   async approveSwap(shiftId: number) {
     return safeCall(async () => {
       const fromShift = await this.repo.findSwapPendingShift(shiftId);
-      if (!fromShift || !fromShift.ok || !fromShift.data) throw new BadRequestException("Swap so'rov topilmadi yoki allaqachon tasdiqlangan");
+      if (!fromShift || !fromShift.ok || !fromShift.data) throw new BadRequestException(await this.i18n.t('errors.swapRequestNotFoundOrAlreadyApproved'));
       let toEmployeeId: number | null = null;
       try {
         const meta = typeof fromShift.data.notes === 'string' ? JSON.parse(fromShift.data.notes) : fromShift.data.notes;
@@ -108,7 +108,7 @@ export class ShiftService {
     return safeCall(async () => {
       const fromShift = await this.repo.findSwapPendingShift(shiftId);
       if (!fromShift || !fromShift.ok || !fromShift.data) {
-        throw new BadRequestException("Swap so'rov topilmadi yoki allaqachon tasdiqlangan");
+        throw new BadRequestException(await this.i18n.t('errors.swapRequestNotFoundOrAlreadyApproved'));
       }
       // Set status to 'rejected' and store reason in notes
       await this.repo.updateShiftStatus(shiftId, 'rejected', reason ? JSON.stringify({ reason }) : null);

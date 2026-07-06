@@ -3,6 +3,7 @@ import {
   UseGuards, UseInterceptors, BadRequestException, NotFoundException,
 } from '@nestjs/common';
 import { z } from 'zod';
+import { I18nService } from 'nestjs-i18n';
 import { createZodDto } from '@anatine/zod-nestjs';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -42,7 +43,10 @@ class UpdateChecklistDto extends createZodDto(UpdateChecklistSchema) {}
 @Roles(...HR_ROLES)
 @Controller('hr/onboarding-checklists')
 export class OnboardingChecklistsController {
-  constructor(private readonly svc: OnboardingChecklistsService) {}
+  constructor(
+    private readonly svc: OnboardingChecklistsService,
+    private readonly i18n: I18nService,
+  ) {}
 
   /**
    * `HROnboarding.tsx:128` calls `GET /api/hr/onboarding-checklists`.
@@ -63,7 +67,7 @@ export class OnboardingChecklistsController {
   async create(@Body() body: CreateChecklistDto) {
     const userId = typeof body.userId === 'number' ? body.userId : parseInt(body.userId, 10);
     if (!Number.isFinite(userId) || userId <= 0) {
-      throw new BadRequestException('userId is required and must be positive');
+      throw new BadRequestException(await this.i18n.t('validation.userIdMustBePositive'));
     }
     return unwrapOrInternal(
       await this.svc.createForUser({
@@ -90,7 +94,7 @@ export class OnboardingChecklistsController {
   async getOne(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getById(id);
     const row = unwrapOrInternal(r);
-    if (!row) throw new NotFoundException(`Onboarding checklist #${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.onboardingChecklistNotFound', { args: { id } }));
     return row;
   }
 }

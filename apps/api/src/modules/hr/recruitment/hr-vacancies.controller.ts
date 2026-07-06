@@ -11,6 +11,7 @@ import {
   NotFoundException, UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { unwrapOrInternal } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -98,6 +99,7 @@ export class HrVacanciesController {
   constructor(
     private readonly svc: HrVacanciesService,
     private readonly events: EventEmitter2,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get vacancies' })
@@ -115,7 +117,7 @@ export class HrVacanciesController {
   @Get('vacancies/:id')
   async getVacancy(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.findById(id);
-    if (!r.ok || !r.data) throw new NotFoundException(`Vakansiya #${id} topilmadi`);
+    if (!r.ok || !r.data) throw new NotFoundException(await this.i18n.t('errors.vacancyNotFoundWithId', { args: { id } }));
     return { data: r.data };
   }
 

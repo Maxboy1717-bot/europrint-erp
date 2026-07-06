@@ -15,6 +15,7 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { assertOk, throwFromError, unwrapOrThrow, unwrapOrDefault } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -50,6 +51,7 @@ export class HrEmployeesController {
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
     private readonly hrRatingReader: HrRatingReader,
     private readonly hrRatingService: HrRatingService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get employees' })
@@ -201,7 +203,7 @@ export class HrEmployeesController {
   ) {
     const existing = await this.hrRepo.findEmployeeById(String(id));
     assertOk(existing);
-    if (!existing.data) throw new NotFoundException(`Xodim #${id} topilmadi`);
+    if (!existing.data) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
     const result = await this.hrRepo.updateEmployee(String(id), {
       status:           'terminated',
       employment_status: 'terminated',

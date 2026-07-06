@@ -8,6 +8,7 @@ Controller, Get, Patch, Post, Delete, Body, Param, ParseIntPipe,
   UseGuards, UseInterceptors, UsePipes, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -31,7 +32,10 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'SAF
 @ApiBearerAuth()
 @Controller('hr/safety')
 export class HrSafetyController {
-  constructor(private readonly svc: HrSafetyService) {}
+  constructor(
+    private readonly svc: HrSafetyService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get department summary' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -63,7 +67,7 @@ export class HrSafetyController {
   @Delete('incidents/:id')
   async deleteIncident(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.updateIncident(id, { status: 'closed' } as HrSafetyUpdateIncidentDto);
-    if (!r.ok) throw new NotFoundException(`Incident ${id} topilmadi`);
+    if (!r.ok) throw new NotFoundException(await this.i18n.t('errors.incidentNotFoundWithId', { args: { id } }));
     return { data: { closed: true, id, incident: r.data } };
   }
 

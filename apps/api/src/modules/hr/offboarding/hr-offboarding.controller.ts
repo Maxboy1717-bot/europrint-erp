@@ -2,6 +2,7 @@ import {
   Controller, Get, Patch, Post, Body, Param, Query, ParseIntPipe,
   UseGuards, UseInterceptors, UsePipes, NotFoundException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -29,7 +30,10 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'adm
 @Roles(...HR_ROLES)
 @Controller('hr/offboarding')
 export class HrOffboardingController {
-  constructor(private readonly svc: HrOffboardingService) {}
+  constructor(
+    private readonly svc: HrOffboardingService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('cases')
   @UsePipes(new ZodValidationPipe(HrOffboardingListQuerySchema))
@@ -53,7 +57,7 @@ export class HrOffboardingController {
   async getCase(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.getCaseDetail(id);
     const data = unwrapOrInternal(r);
-    if (data === null) throw new NotFoundException(`Offboarding case #${id} topilmadi`);
+    if (data === null) throw new NotFoundException(await this.i18n.t('errors.offboardingCaseNotFound', { args: { id } }));
     return { data };
   }
 

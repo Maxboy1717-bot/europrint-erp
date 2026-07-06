@@ -4,10 +4,13 @@
  * (org_function_id) + priority + counts through to the repo (the Phase-7 D4 fix — these were dropped).
  */
 
+import { I18nService } from 'nestjs-i18n';
 import { HrVacanciesController } from '../src/modules/hr/recruitment/hr-vacancies.controller';
 import { HrVacanciesService } from '../src/modules/hr/recruitment/hr-vacancies.service';
 import type { DrizzleHrVacanciesRepository } from '../src/modules/hr/recruitment/repos/drizzle-hr-vacancies.repo';
 import { Ok, isOk } from '../src/common/result';
+
+const mockI18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
 
 function makeRepo(over: Partial<Record<keyof DrizzleHrVacanciesRepository, jest.Mock>> = {}): DrizzleHrVacanciesRepository {
   return {
@@ -22,7 +25,7 @@ const events = { emit: jest.fn() } as unknown as ConstructorParameters<typeof Hr
 
 describe('ORG vacancy↔card wire (Phase 7 D4)', () => {
   it('HrVacanciesController is wired to HrVacanciesService', () => {
-    const ctrl = new HrVacanciesController(new HrVacanciesService(makeRepo(), events));
+    const ctrl = new HrVacanciesController(new HrVacanciesService(makeRepo(), events), mockI18n);
     expect(ctrl).toBeInstanceOf(HrVacanciesController);
   });
 

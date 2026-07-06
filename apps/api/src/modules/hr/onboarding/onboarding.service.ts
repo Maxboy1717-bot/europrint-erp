@@ -17,6 +17,7 @@ import {
   InternalServerErrorException,
   Inject,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IHrOnboardingRepository, HR_ONBOARDING_REPO } from './repos/i-hr-onboarding.repo';
 import { OnboardingJobService } from './onboarding-job.service';
 import { OnboardingProgressService, type OnboardingRecord } from './onboarding-progress.service';
@@ -45,6 +46,7 @@ export class OnboardingService {
     private readonly progressSvc: OnboardingProgressService,
     // SB0072/SB0101: probation-pass activates the onboarding target card (employee_cards).
     private readonly cardService: CardService,
+    private readonly i18n: I18nService,
   ) {}
 
   // ───────────────────── ONBOARDING PLANS ─────────────────────────────────
@@ -86,7 +88,7 @@ export class OnboardingService {
   async getPlanById(id: number) {
     const result = await this.hrOnboardingRepo.getPlanById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Onboarding plan #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.onboardingPlanNotFound', { args: { id } }));
     return result.data;
   }
 
@@ -96,7 +98,7 @@ export class OnboardingService {
     return safeCall(async () => {
     const empResult = await this.hrOnboardingRepo.findEmployeeById(dto.employeeId);
     if (!empResult.ok) throw new InternalServerErrorException(empResult.error);
-    if (!empResult.data) throw new NotFoundException(`Xodim #${dto.employeeId} topilmadi`);
+    if (!empResult.data) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id: dto.employeeId } }));
 
     const plan = await this.getPlanById(dto.planId);
 
@@ -122,7 +124,7 @@ export class OnboardingService {
     return safeCall(async () => {
     const onboardingResult = await this.hrOnboardingRepo.getOnboardingById(onboardingId);
     if (!onboardingResult.ok) throw new InternalServerErrorException(onboardingResult.error);
-    if (!onboardingResult.data) throw new NotFoundException(`Onboarding #${onboardingId} topilmadi`);
+    if (!onboardingResult.data) throw new NotFoundException(await this.i18n.t('errors.onboardingNotFoundWithId', { args: { id: onboardingId } }));
 
     const onboarding = onboardingResult.data;
     const currentProgress = (onboarding.weeklyProgress ?? []) as Record<string, unknown>[];
@@ -162,7 +164,7 @@ export class OnboardingService {
     return safeCall(async () => {
     const onboardingResult = await this.hrOnboardingRepo.getOnboardingById(onboardingId);
     if (!onboardingResult.ok) throw new InternalServerErrorException(onboardingResult.error);
-    if (!onboardingResult.data) throw new NotFoundException(`Onboarding #${onboardingId} topilmadi`);
+    if (!onboardingResult.data) throw new NotFoundException(await this.i18n.t('errors.onboardingNotFoundWithId', { args: { id: onboardingId } }));
 
     const result = await this.hrOnboardingRepo.completeProbation(onboardingId, {
       status: dto.isProbationPassed ? 'COMPLETED' : 'FAILED',
@@ -227,7 +229,7 @@ export class OnboardingService {
     return safeCall(async () => {
       const onboardingResult = await this.hrOnboardingRepo.getOnboardingById(onboardingId);
       if (!onboardingResult.ok) throw new InternalServerErrorException(onboardingResult.error);
-      if (!onboardingResult.data) throw new NotFoundException(`Onboarding #${onboardingId} topilmadi`);
+      if (!onboardingResult.data) throw new NotFoundException(await this.i18n.t('errors.onboardingNotFoundWithId', { args: { id: onboardingId } }));
 
       const employeeId = Number((onboardingResult.data as Record<string, unknown>)['employeeId'] ?? (onboardingResult.data as Record<string, unknown>)['employee_id'] ?? 0);
       const check = this.progressSvc.validateBuddyAssignment(employeeId, buddyId);
@@ -235,7 +237,7 @@ export class OnboardingService {
 
       const buddyExists = await this.hrOnboardingRepo.findEmployeeById(buddyId);
       if (!buddyExists.ok) throw new InternalServerErrorException(buddyExists.error);
-      if (!buddyExists.data) throw new NotFoundException(`Buddy xodim #${buddyId} topilmadi`);
+      if (!buddyExists.data) throw new NotFoundException(await this.i18n.t('errors.buddyEmployeeNotFound', { args: { id: buddyId } }));
 
       const updated = await this.hrOnboardingRepo.assignBuddy(onboardingId, buddyId);
       if (!updated.ok) throw new InternalServerErrorException(updated.error);

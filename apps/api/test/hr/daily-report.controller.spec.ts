@@ -9,6 +9,7 @@
  */
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { DailyReportController } from '../../src/modules/hr/daily-report/daily-report.controller';
 import { DailyReportService } from '../../src/modules/hr/daily-report/daily-report.service';
 import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
@@ -16,6 +17,7 @@ import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
 describe('DailyReportController — broken-API repair (Phase 4 Task 4.1)', () => {
   let controller: DailyReportController;
   let svc: jest.Mocked<DailyReportService>;
+  const i18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
 
   beforeEach(() => {
     svc = {
@@ -26,7 +28,7 @@ describe('DailyReportController — broken-API repair (Phase 4 Task 4.1)', () =>
       getByDate: jest.fn(),
       getByDepartment: jest.fn(),
     } as unknown as jest.Mocked<DailyReportService>;
-    controller = new DailyReportController(svc);
+    controller = new DailyReportController(svc, i18n);
   });
 
   // ------------------------------------------------------------------

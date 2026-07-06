@@ -24,6 +24,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk, unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -72,7 +73,10 @@ const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADM
 @UseInterceptors(AuditInterceptor)
 @Roles(...HR_ROLES)
 export class HrCompatAController {
-  constructor(private readonly svc: HrCompatAService) {}
+  constructor(
+    private readonly svc: HrCompatAService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('360/review')
   async get360Reviews(@Query('employeeId') employeeId?: string) {
@@ -276,7 +280,7 @@ export class HrCompatAController {
   @HttpCode(HttpStatus.OK)
   async deleteEmployeeSkill(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.deleteEmployeeSkill(id);
-    if (!r.ok) throw new NotFoundException(`Ko'nikma #${id} topilmadi`);
+    if (!r.ok) throw new NotFoundException(await this.i18n.t('errors.skillNotFoundWithId', { args: { id } }));
     return r.data;
   }
 
@@ -316,7 +320,7 @@ export class HrCompatAController {
   @HttpCode(HttpStatus.OK)
   async deleteSkill(@Param('id', ParseIntPipe) id: number) {
     const r = await this.svc.deleteSkillCatalog(id);
-    if (!r.ok) throw new NotFoundException(`Ko'nikma #${id} topilmadi`);
+    if (!r.ok) throw new NotFoundException(await this.i18n.t('errors.skillNotFoundWithId', { args: { id } }));
     return r.data;
   }
 

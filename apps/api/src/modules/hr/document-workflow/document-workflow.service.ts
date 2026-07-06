@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { errMsg } from "../hr-v2-error";
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventBus } from '@nestjs/cqrs';
@@ -23,6 +24,7 @@ export class DocumentWorkflowService {
     private readonly eventEmitter: EventEmitter2,
     private readonly eventBus: EventBus,
     private readonly repo: DocumentWorkflowRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   async createDocument(dto: {
@@ -45,7 +47,7 @@ export class DocumentWorkflowService {
   async submitDocument(documentId: number, submittedBy: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const doc = await this.repo.submitDocument(documentId);
-      if (!doc.ok || !doc.data) throw new NotFoundException(`Document #${documentId} not found or already submitted`);
+      if (!doc.ok || !doc.data) throw new NotFoundException(await this.i18n.t('errors.documentNotFoundOrAlreadySubmitted', { args: { id: documentId } }));
       const docData = doc.data as Record<string, unknown>;
       const submittedPayload = {
         documentId,
@@ -97,7 +99,7 @@ export class DocumentWorkflowService {
   async approveStep(stepId: number, approverId: number, comment?: string) {
     return safeCall(async () => {
       const step = await this.repo.approveStep(stepId, approverId, comment);
-      if (!step.ok || !step.data) throw new NotFoundException(`Step #${stepId} not found`);
+      if (!step.ok || !step.data) throw new NotFoundException(await this.i18n.t('errors.workflowStepNotFound', { args: { id: stepId } }));
       const stepData = step.data as Record<string, unknown>;
 
       const nextStep = await this.repo.findNextStep(stepData['document_id'] as number, stepData['step_number'] as number);
@@ -132,7 +134,7 @@ export class DocumentWorkflowService {
   async rejectStep(stepId: number, rejectedById: number, reason: string) {
     return safeCall(async () => {
       const step = await this.repo.rejectStep(stepId, rejectedById, reason);
-      if (!step.ok || !step.data) throw new NotFoundException(`Step #${stepId} not found`);
+      if (!step.ok || !step.data) throw new NotFoundException(await this.i18n.t('errors.workflowStepNotFound', { args: { id: stepId } }));
       const stepData = step.data as Record<string, unknown>;
       const docId = stepData['document_id'] as number;
       await this.repo.rejectDocument(docId);
@@ -185,7 +187,7 @@ export class DocumentWorkflowService {
   async processDocument(documentId: number) {
     return safeCall(async () => {
       const doc = await this.repo.findDocument(documentId);
-      if (!doc.ok || !doc.data) throw new NotFoundException(`Hujjat #${documentId} topilmadi`);
+      if (!doc.ok || !doc.data) throw new NotFoundException(await this.i18n.t('errors.documentNotFoundWithId', { args: { id: documentId } }));
       const docData = doc.data as Record<string, unknown>;
       if (docData['status'] === 'approved') {
         this.logger.log(`Document #${documentId} already approved`);

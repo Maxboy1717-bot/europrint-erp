@@ -4,6 +4,7 @@
  */
 
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { assertOk, throwFromError, unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -34,7 +35,10 @@ const SHIFT_TIMES: Record<string, { start: string; end: string }> = {
 @Roles('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_SPECIALIST', 'MANAGER', 'DIRECTOR')
 @Controller('hr')
 export class HrShiftsCompatController {
-  constructor(private readonly shiftService: ShiftService) {}
+  constructor(
+    private readonly shiftService: ShiftService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('shifts/schedule')
   async getSchedule(
@@ -66,7 +70,7 @@ export class HrShiftsCompatController {
     const empId = body.employee_id
       ? Number(body.employee_id)
       : userLookup?.ok && userLookup.data ? (userLookup.data as number) : null;
-    if (!empId) throw new BadRequestException('employee_id yoki user_id kerak — xodim topilmadi');
+    if (!empId) throw new BadRequestException(await this.i18n.t('errors.employeeIdOrUserIdRequiredNotFound'));
     const _rAssignShift = await this.shiftService.assignShift({
       employeeId: empId,
       shiftDate:  body.shift_date,
@@ -154,7 +158,7 @@ export class HrShiftsCompatController {
       RETURNING id, code, name_uz, start_time, end_time, overtime_multiplier, is_active
     `);
     const result = rows.rows[0] ?? undefined;
-    if (!result) throw new BadRequestException(`shift_type id=${id} topilmadi`);
+    if (!result) throw new BadRequestException(await this.i18n.t('errors.shiftTypeNotFoundWithId', { args: { id } }));
     return result;
   }
 }

@@ -11,6 +11,7 @@ import { HrDashboardService } from '../application/hr-dashboard.service';
 import { HrEmployeesExtService } from '../application/hr-employees-ext.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { HrDailyReportSchema, HrDailyReportDto, HrBirthdaySettingsSchema, HrBirthdaySettingsDto, CreatePipSchema, CreatePipDto, UpdatePipSchema, UpdatePipDto } from './dto/hr.dto';
+import { I18nService } from 'nestjs-i18n';
 import { unwrapOrInternal, unwrapOrDefault } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 
@@ -25,6 +26,7 @@ export class HrDashboardController {
   constructor(
     private readonly svc: HrDashboardService,
     private readonly empExtSvc: HrEmployeesExtService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Get('birthdays')
@@ -191,7 +193,7 @@ export class HrDashboardController {
     const result = await this.svc.getAlumni();
     const items = result.ok && Array.isArray(result.data) ? result.data as Record<string,unknown>[] : [];
     const item = items.find(a => String(a['id']) === id);
-    if (!item) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!item) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return item;
   }
 
@@ -368,7 +370,7 @@ export class HrDashboardController {
       SELECT * FROM ai_interview_sessions WHERE id=${parseInt(id, 10)} LIMIT 1
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { data: row };
   }
 
@@ -444,7 +446,7 @@ export class HrDashboardController {
     const all = unwrapOrDefault(await this.svc.getAbcAnalysis(), []);
     const items = Array.isArray(all) ? all as Record<string,unknown>[] : [];
     const found = items.find(a => String(a['userId'] ?? a['user_id']) === id);
-    if (!found) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!found) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return found;
   }
 
@@ -484,7 +486,7 @@ export class HrDashboardController {
       LIMIT 1
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { data: row };
   }
 
@@ -506,7 +508,7 @@ export class HrDashboardController {
       RETURNING id
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { id, updated: true };
   }
 

@@ -10,6 +10,7 @@ import {
   BadRequestException, UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -59,7 +60,10 @@ class ScheduleQueryDto extends createZodDto(ScheduleQuerySchema) {}
 @Controller('hr-v2/shifts')
 export class ShiftController {
   private readonly logger = new Logger(ShiftController.name);
-  constructor(private readonly svc: ShiftService) {}
+  constructor(
+    private readonly svc: ShiftService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Shift tayinlash' })
   @ApiResponse({ status: 201, description: 'OK' })
@@ -78,11 +82,11 @@ export class ShiftController {
         employeeId = r.data;
       } else {
         const parsed = parseInt(body.user_id, 10);
-        if (!parsed || isNaN(parsed)) throw new BadRequestException('user_id bo\'yicha xodim topilmadi');
+        if (!parsed || isNaN(parsed)) throw new BadRequestException(await this.i18n.t('errors.employeeNotFoundByUserId'));
         employeeId = parsed;
       }
     } else {
-      throw new BadRequestException('employee_id yoki user_id kerak');
+      throw new BadRequestException(await this.i18n.t('errors.employeeIdOrUserIdRequired'));
     }
     return unwrapOrInternal(await this.svc.assignShift({
       employeeId,
@@ -101,7 +105,7 @@ export class ShiftController {
   // P1.9.2: use JWT employee ID as fallback — never 0
   async requestSwap(@Body() body: RequestSwapDto, @Req() req: { user?: { employeeId?: number } }) {
     const jwtEmpId = req.user?.employeeId;
-    if (!jwtEmpId) throw new UnauthorizedException('Employee ID topilmadi');
+    if (!jwtEmpId) throw new UnauthorizedException(await this.i18n.t('errors.employeeIdNotFound'));
 
     const fromEmpIdRaw = typeof body.from_employee_id === 'string'
       ? parseInt(body.from_employee_id, 10) : body.from_employee_id;
@@ -111,7 +115,7 @@ export class ShiftController {
     // Fall back to JWT employee ID — never allow 0
     const fromEmpId = (fromEmpIdRaw && fromEmpIdRaw > 0) ? fromEmpIdRaw : jwtEmpId;
     const toEmpId = (toEmpIdRaw && toEmpIdRaw > 0) ? toEmpIdRaw : 0;
-    if (!toEmpId) throw new BadRequestException('to_employee_id kerak');
+    if (!toEmpId) throw new BadRequestException(await this.i18n.t('errors.toEmployeeIdRequired'));
     let fromShiftId = body.from_shift_id ?? 0;
     if (!fromShiftId && fromEmpId && body.shift_date) {
       const r = await this.svc.findShiftByEmployeeAndDate(fromEmpId, body.shift_date);

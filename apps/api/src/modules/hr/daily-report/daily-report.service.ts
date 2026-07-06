@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
 import { HrV2Events } from '../events/hr-v2-events';
@@ -20,6 +21,7 @@ export class DailyReportService {
   constructor(
     private readonly eventEmitter: EventEmitter2,
     private readonly repo: DailyReportRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   async submitReport(dto: {
@@ -66,7 +68,7 @@ export class DailyReportService {
     return safeCall(async () => {
       const previousStatus = await this.repo.getReportStatus(reportId);
       const updatedRow = await this.repo.updateReportStatus(reportId, newStatus || 'submitted');
-      if (!updatedRow) throw new NotFoundException(`Report #${reportId} not found`);
+      if (!updatedRow) throw new NotFoundException(await this.i18n.t('errors.dailyReportNotFound', { args: { id: reportId } }));
       await this.repo.insertAudit(reportId, hrUserId, (previousStatus.ok ? previousStatus.data as string : undefined) as string, newStatus || 'submitted', reason);
       return updatedRow;
     });
@@ -94,7 +96,7 @@ export class DailyReportService {
   async generatePdf(reportId: number): Promise<Result<Uint8Array, AppError>> {
     return safeCall(async () => {
       const r = await this.repo.findByIdWithEmployee(reportId);
-      if (!r.ok || !r.data) throw new NotFoundException(`Daily report #${reportId} topilmadi`);
+      if (!r.ok || !r.data) throw new NotFoundException(await this.i18n.t('errors.dailyReportNotFound', { args: { id: reportId } }));
       const row = r.data as Record<string, unknown>;
 
       const pdf = await PDFDocument.create();

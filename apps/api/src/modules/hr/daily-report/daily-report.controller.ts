@@ -7,6 +7,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { createZodDto } from '@anatine/zod-nestjs';
+import { I18nService } from 'nestjs-i18n';
 import { DailyReportService } from './daily-report.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { unwrapOrInternal } from '@common/http-result';
@@ -43,7 +44,10 @@ class OverrideReportDto extends createZodDto(OverrideReportSchema) {}
 @Controller('hr-v2/daily-reports')
 export class DailyReportController {
   private readonly logger = new Logger(DailyReportController.name);
-  constructor(private readonly svc: DailyReportService) {}
+  constructor(
+    private readonly svc: DailyReportService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Post()
   async submit(@Body() body: SubmitReportDto) {
@@ -125,7 +129,7 @@ export class DailyReportController {
   ) {
     const empId = parseInt(employeeId, 10);
     if (!Number.isFinite(empId) || empId <= 0) {
-      throw new BadRequestException('employeeId is required');
+      throw new BadRequestException(await this.i18n.t('errors.employeeIdRequired'));
     }
     return unwrapOrInternal(await this.svc.getByEmployee(empId, this.parseLimit(limit, 30)));
   }

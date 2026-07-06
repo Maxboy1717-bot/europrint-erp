@@ -9,6 +9,7 @@ import {
   UseGuards, UseInterceptors, NotFoundException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -53,7 +54,10 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'adm
 @ApiBearerAuth()
 @Controller('hr')
 export class HrGsdController {
-  constructor(private readonly svc: HrGsdService) {}
+  constructor(
+    private readonly svc: HrGsdService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get gsd employee' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -191,7 +195,7 @@ export class HrGsdController {
       if (!r.ok) {
         const err = (r as { ok: false; error: { code?: string; message?: string } }).error;
         if (err?.message === 'EMPLOYEE_HAS_NO_CARD') {
-          throw new BadRequestException('Xodim biriktirilgan kartaga ega emas');
+          throw new BadRequestException(await this.i18n.t('errors.employeeHasNoAssignedCard'));
         }
         throw new BadRequestException(err?.message ?? 'Xatolik');
       }
@@ -207,7 +211,7 @@ export class HrGsdController {
     });
     if (!r.ok) {
       const err = (r as { ok: false; error: { code?: string; message?: string } }).error;
-      if (err?.message === 'NOT_FOUND') throw new NotFoundException('Xodim topilmadi');
+      if (err?.message === 'NOT_FOUND') throw new NotFoundException(await this.i18n.t('errors.employeeNotFound'));
       throw new BadRequestException(err?.message ?? 'Xatolik');
     }
     return { data: { id, updated: true, ...r.data } };

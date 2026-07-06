@@ -14,6 +14,7 @@
  */
 
 import { NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { HrOffboardingController } from '../../src/modules/hr/offboarding/hr-offboarding.controller';
 import { HrOffboardingService } from '../../src/modules/hr/offboarding/hr-offboarding.service';
 import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
@@ -21,6 +22,7 @@ import { Ok as ok, Err as err, AppErr } from '../../src/common/result';
 describe('HrOffboardingController', () => {
   let controller: HrOffboardingController;
   let svc: jest.Mocked<HrOffboardingService>;
+  const i18n = { t: jest.fn((key: string) => key) } as unknown as I18nService;
 
   beforeEach(() => {
     svc = {
@@ -33,7 +35,7 @@ describe('HrOffboardingController', () => {
       finalizeCase:         jest.fn(),
       cancelCase:           jest.fn(),
     } as unknown as jest.Mocked<HrOffboardingService>;
-    controller = new HrOffboardingController(svc);
+    controller = new HrOffboardingController(svc, i18n);
   });
 
   // ─── listCases ────────────────────────────────────────────────────────────

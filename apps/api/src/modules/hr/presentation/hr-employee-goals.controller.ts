@@ -17,6 +17,7 @@ import {
   Param, ParseIntPipe, Patch, Post, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -66,6 +67,7 @@ const CreateOneOnOneSchema = z.object({
 @UseInterceptors(AuditInterceptor)
 @Roles('HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'MANAGER')
 export class HrEmployeeGoalsController {
+  constructor(private readonly i18n: I18nService) {}
 
   // ── Goals ─────────────────────────────────────────────────────────────────
 
@@ -147,7 +149,7 @@ export class HrEmployeeGoalsController {
         RETURNING *
       `);
       if (!result.rows.length) {
-        throw new InternalServerErrorException(`Goal #${goalId} not found for employee #${id}`);
+        throw new InternalServerErrorException(await this.i18n.t('errors.goalNotFoundForEmployee', { args: { goalId, id } }));
       }
       return { data: result.rows[0] };
     } catch (e: unknown) {

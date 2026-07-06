@@ -11,6 +11,7 @@ import {
   UseGuards, UseInterceptors, Logger, UsePipes, HttpCode, HttpStatus, HttpException,
 } from '@nestjs/common';
 import { unwrapOrInternal } from '@common/http-result';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -64,7 +65,10 @@ const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'hr_
 export class HrVacanciesPipelineController {
   private readonly logger = new Logger(HrVacanciesPipelineController.name);
 
-  constructor(private readonly svc: HrVacanciesService) {}
+  constructor(
+    private readonly svc: HrVacanciesService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get pipeline' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -220,7 +224,7 @@ export class HrVacanciesPipelineController {
       WHERE id = ${id}
     `);
     const row = ((r as { rows?: unknown[] }).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', HttpStatus.NOT_FOUND);
+    if (!row) throw new HttpException(await this.i18n.t('errors.notFound'), HttpStatus.NOT_FOUND);
     return { data: row };
   }
 

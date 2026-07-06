@@ -9,6 +9,7 @@ import {
   NotFoundException, InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { UsePipes } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -41,6 +42,7 @@ export class InspectionController {
   constructor(
     private readonly svc:  InspectionService,
     private readonly repo: InspectionRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Upload reference photo' })
@@ -59,7 +61,7 @@ export class InspectionController {
     const r = await this.svc.uploadReferencePhoto(
       roomCode, body.image_base64, roomName, uploadedBy || undefined, body.description,
     );
-    if (!r.ok) throw new InternalServerErrorException('Referans rasm saqlashda xato');
+    if (!r.ok) throw new InternalServerErrorException(await this.i18n.t('errors.referencePhotoSaveFailed'));
     return { ok: true, data: r.data ?? {} };
   }
 
@@ -104,7 +106,7 @@ export class InspectionController {
   ) {
     const inspectorId = String(req.user?.id ?? '');
     const r = await this.svc.createManualInspection(body, inspectorId || undefined);
-    if (!r.ok) throw new InternalServerErrorException('Inspeksiya saqlashda xato');
+    if (!r.ok) throw new InternalServerErrorException(await this.i18n.t('errors.inspectionSaveFailed'));
     return { ok: true, data: r.data ?? {} };
   }
 
@@ -120,7 +122,7 @@ export class InspectionController {
   ) {
     const inspectorId = String(req.user?.id ?? '');
     const r = await this.svc.submitChecklist(body, inspectorId || undefined);
-    if (!r.ok) throw new InternalServerErrorException('Chek-list saqlashda xato');
+    if (!r.ok) throw new InternalServerErrorException(await this.i18n.t('errors.checklistSaveFailed'));
     return { ok: true, data: r.data ?? {} };
   }
 
@@ -132,12 +134,12 @@ export class InspectionController {
   async getChecklistPdf(@Param('id') id: string) {
     const analysisResult = await this.repo.findAnalysisById(id);
     if (!analysisResult.ok || !analysisResult.data) {
-      throw new NotFoundException(`Checklist ${id} topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.checklistNotFoundWithId', { args: { id } }));
     }
     const analysis = analysisResult.data as Record<string, unknown>;
     const storedUrl = analysis['pdf_url'] ? String(analysis['pdf_url']) : null;
     if (!storedUrl) {
-      throw new NotFoundException(`Bu tahlil uchun PDF hali tayyorlanmagan (ID: ${id})`);
+      throw new NotFoundException(await this.i18n.t('errors.analysisPdfNotReady', { args: { id } }));
     }
     return { pdf_url: storedUrl, analysis_id: id };
   }
