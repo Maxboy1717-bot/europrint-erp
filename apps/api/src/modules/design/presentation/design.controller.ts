@@ -18,6 +18,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException, NotImplementedException} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, assertOkLog, throwFromError } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -70,7 +71,8 @@ export class DesignController {
  constructor(
  private readonly commandBus: CommandBus,
  private readonly queryBus: QueryBus,
- @Inject(DESIGN_REPO) private readonly designRepo: IDesignRepo) {}
+ @Inject(DESIGN_REPO) private readonly designRepo: IDesignRepo,
+ private readonly i18n: I18nService) {}
 
  @ApiOperation({ summary: 'Get all' })
  @ApiResponse({ status: 200, description: 'OK' })
@@ -199,7 +201,7 @@ export class DesignController {
      FROM design_tooling WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
    `);
    const row = (((r as { rows?: unknown[] }).rows) ?? [])[0] ?? null;
-   if (!row) throw new BadRequestException(`Tooling #${id} not found`);
+   if (!row) throw new BadRequestException(await this.i18n.t('errors.toolingNotFoundWithId', { args: { id } }));
    return { data: row };
  }
 
@@ -226,7 +228,7 @@ export class DesignController {
    // order would be worse than the fake-create. Fragmented design-create surface (createOrder fake
    // + requestDesign real + orphan OrdersService.create + 2 schema defs) — unification tracked for
    // a later design-module cleanup stage.
-   throw new NotImplementedException('Use POST /design (requestDesign) to create a design request.');
+   throw new NotImplementedException(await this.i18n.t('errors.useRequestDesignEndpoint'));
  }
 
  @ApiOperation({ summary: 'Create order message' })

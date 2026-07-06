@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IDesignOrdersSvcRepository, DESIGN_ORDERS_SVC_REPO } from './i-design-orders-svc.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -24,7 +25,10 @@ const API_TO_DB: Record<string, string> = Object.fromEntries(
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
-  constructor(@Inject(DESIGN_ORDERS_SVC_REPO) private readonly designOrdersSvcRepo: IDesignOrdersSvcRepository) {}
+  constructor(
+    @Inject(DESIGN_ORDERS_SVC_REPO) private readonly designOrdersSvcRepo: IDesignOrdersSvcRepository,
+    private readonly i18n: I18nService,
+  ) {}
   toApiStatus(dbStatus: string) { return DB_TO_API[dbStatus] || dbStatus; }
   toDbStatus(apiStatus: string) { return API_TO_DB[apiStatus] || apiStatus; }
 
@@ -47,7 +51,7 @@ export class OrdersService {
     return safeCall(async () => {
     const result = await this.designOrdersSvcRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Dizayn buyurtma #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.designOrderNotFoundWithId', { args: { id } }));
     const row = result.data;
     return { ...row, status: this.toApiStatus((row).status) };
   
