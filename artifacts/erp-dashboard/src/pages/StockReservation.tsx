@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Package, Brain, History } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 import { StatusCards } from "@/components/wms/reservation/StatusCards";
 import { AIReservationTab } from "@/components/wms/reservation/AIReservationTab";
 import { BatchesTab } from "@/components/wms/reservation/BatchesTab";
 import { HistoryTab } from "@/components/wms/reservation/HistoryTab";
 import { AddBatchDialog } from "@/components/wms/reservation/AddBatchDialog";
-import { translations, STATUS_COLORS, GRADE_COLORS } from "@/components/wms/reservation/translations";
+import { STATUS_COLORS, GRADE_COLORS } from "@/components/wms/reservation/types";
 import { useReservationMutations } from "@/components/wms/reservation/useReservationMutations";
 import {
   DashboardData,
@@ -27,8 +28,7 @@ import { EPErrorState } from "@/components/ep";
 
 export default function StockReservation() {
   const { toast } = useToast();
-  const [lang, setLang] = useState<"uz" | "ru">("uz");
-  const t = translations[lang];
+  const { language, t, setLanguage } = useTranslation("wms");
 
   const [activeTab, setActiveTab] = useState("ai-reservation");
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +79,7 @@ export default function StockReservation() {
     cancelRequestMutation,
     addBatchMutation,
   } = useReservationMutations({
-    lang,
+    t,
     setOptimizationResult,
     setIsAddBatchOpen,
     setBatchForm,
@@ -88,7 +88,7 @@ export default function StockReservation() {
   const handleOptimize = () => {
     if (!aiForm.materialType || !aiForm.requiredQuantity) {
       toast({
-        title: lang === "uz" ? "Material turi va miqdorni kiriting" : "Укажите тип материала и количество",
+        title: t("Reservation.toastMaterialTypeAndQtyRequired"),
         variant: "destructive",
       });
       return;
@@ -113,7 +113,7 @@ export default function StockReservation() {
 
   const handleAddBatch = () => {
     if (!batchForm.batchNumber || !batchForm.materialName || !batchForm.quantity) {
-      toast({ title: lang === "uz" ? "Ma'lumotlarni to'ldiring" : "Заполните данные", variant: "destructive" });
+      toast({ title: t("Reservation.toastFillData"), variant: "destructive" });
       return;
     }
     const qty = parseFloat(batchForm.quantity);
@@ -163,22 +163,22 @@ export default function StockReservation() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold" data-testid="text-page-title">{t.title}</h1>
-          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+          <h1 className="text-2xl font-semibold" data-testid="text-page-title">{t("Reservation.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("Reservation.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Button
-            variant={lang === "uz" ? "default" : "outline"}
+            variant={language === "uz" ? "default" : "outline"}
             size="sm"
-            onClick={() => setLang("uz")}
+            onClick={() => setLanguage("uz")}
             data-testid="button-lang-uz"
           >
             UZ
           </Button>
           <Button
-            variant={lang === "ru" ? "default" : "outline"}
+            variant={language === "ru" ? "default" : "outline"}
             size="sm"
-            onClick={() => setLang("ru")}
+            onClick={() => setLanguage("ru")}
             data-testid="button-lang-ru"
           >
             RU
@@ -192,15 +192,15 @@ export default function StockReservation() {
         <TabsList>
           <TabsTrigger value="ai-reservation" data-testid="tab-ai-reservation">
             <Brain className="w-4 h-4 mr-2" />
-            {t.tabs.aiReservation}
+            {t("Reservation.tabsAiReservation")}
           </TabsTrigger>
           <TabsTrigger value="batches" data-testid="tab-batches">
             <Package className="w-4 h-4 mr-2" />
-            {t.tabs.batches}
+            {t("Reservation.tabsBatches")}
           </TabsTrigger>
           <TabsTrigger value="history" data-testid="tab-history">
             <History className="w-4 h-4 mr-2" />
-            {t.tabs.history}
+            {t("Reservation.tabsHistory")}
           </TabsTrigger>
         </TabsList>
 
@@ -250,7 +250,7 @@ export default function StockReservation() {
             cancelPending={cancelRequestMutation.isPending}
             onViewRequest={(id) => {
               const req = (Array.isArray(requests) ? requests : []).find((r) => r.id === id);
-              if (req) toast({ title: t.history.title, description: `#${req.id} — ${req.materialType}` });
+              if (req) toast({ title: t("Reservation.historyTitle"), description: `#${req.id} — ${req.materialType}` });
             }}
           />
         </TabsContent>
@@ -258,7 +258,6 @@ export default function StockReservation() {
 
       <AddBatchDialog
         t={t}
-        lang={lang}
         isOpen={isAddBatchOpen}
         onOpenChange={setIsAddBatchOpen}
         batchForm={batchForm}

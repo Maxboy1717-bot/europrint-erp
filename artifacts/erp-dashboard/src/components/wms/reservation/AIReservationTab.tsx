@@ -19,9 +19,9 @@ import {
 import {
   Sparkles, Zap, ShieldCheck, TrendingUp, Send, CheckCircle, AlertTriangle, Clock,
 } from "lucide-react";
-import { OptimizationResult, Translations } from "./types";
+import { OptimizationResult, TFunc } from "./types";
 interface AIReservationTabProps {
-  t: Translations;
+  t: TFunc;
   aiForm: {
     materialType: string;
     requiredQuantity: string;
@@ -59,19 +59,19 @@ export function AIReservationTab({t,
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5" />
-            {t.aiPanel.title}
+            {t("Reservation.aiPanelTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
-          <Label>{t.aiPanel.materialType} *</Label>
+          <Label>{t("materialType")} *</Label>
             {materialTypes.length > 0 ? (
               <Select
                 value={aiForm.materialType}
                 onValueChange={(v) => setAiForm({ ...aiForm, materialType: v })}
               >
                 <SelectTrigger data-testid="select-ai-material-type" className="h-9">
-                  <SelectValue placeholder={t.aiPanel.selectType} />
+                  <SelectValue placeholder={t("Reservation.aiPanelSelectType")} />
                 </SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(materialTypes) ? materialTypes : []).map((mt) => (
@@ -85,7 +85,7 @@ export function AIReservationTab({t,
               <Input
                 value={aiForm.materialType}
                 onChange={(e) => setAiForm({ ...aiForm, materialType: e.target.value })}
-                placeholder={t.aiPanel.materialType}
+                placeholder={t("materialType")}
                 data-testid="input-ai-material-type"
               />
             )}
@@ -93,7 +93,7 @@ export function AIReservationTab({t,
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>{t.aiPanel.quantity} *</Label>
+          <Label>{t("quantity")} *</Label>
               <Input
                 type="number"
                 value={aiForm.requiredQuantity}
@@ -103,7 +103,7 @@ export function AIReservationTab({t,
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.aiPanel.unit}</Label>
+          <Label>{t("Reservation.aiPanelUnit")}</Label>
               <Select value={aiForm.unit} onValueChange={(v) => setAiForm({ ...aiForm, unit: v })}>
                 <SelectTrigger data-testid="select-ai-unit" className="h-9">
                   <SelectValue />
@@ -122,7 +122,7 @@ export function AIReservationTab({t,
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-          <Label>{t.aiPanel.requiredBy}</Label>
+          <Label>{t("Reservation.aiPanelRequiredBy")}</Label>
               <Input
                 type="date"
                 value={aiForm.requiredByDate}
@@ -131,27 +131,27 @@ export function AIReservationTab({t,
               />
             </div>
             <div className="space-y-1">
-          <Label>{t.aiPanel.priority}</Label>
+          <Label>{t("Reservation.aiPanelPriority")}</Label>
               <Select value={aiForm.priority} onValueChange={(v) => setAiForm({ ...aiForm, priority: v })}>
                 <SelectTrigger data-testid="select-ai-priority" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">{t.priorities.low}</SelectItem>
-                  <SelectItem value="normal">{t.priorities.normal}</SelectItem>
-                  <SelectItem value="high">{t.priorities.high}</SelectItem>
-                  <SelectItem value="urgent">{t.priorities.urgent}</SelectItem>
+                  <SelectItem value="low">{t("Reservation.priorityLow")}</SelectItem>
+                  <SelectItem value="normal">{t("Reservation.priorityNormal")}</SelectItem>
+                  <SelectItem value="high">{t("Reservation.priorityHigh")}</SelectItem>
+                  <SelectItem value="urgent">{t("Reservation.priorityUrgent")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-1">
-          <Label>{t.aiPanel.notes}</Label>
+          <Label>{t("Reservation.aiPanelNotes")}</Label>
             <Textarea
               value={aiForm.notes}
               onChange={(e) => setAiForm({ ...aiForm, notes: e.target.value })}
-              placeholder={t.aiPanel.notes}
+              placeholder={t("Reservation.aiPanelNotes")}
               data-testid="textarea-ai-notes"
             />
           </div>
@@ -163,7 +163,7 @@ export function AIReservationTab({t,
             data-testid="button-ai-optimize"
           >
             <Zap className="w-4 h-4" />
-            {t.aiPanel.optimize}
+            {t("Reservation.aiPanelOptimize")}
           </Button>
         </CardContent>
       </Card>
@@ -173,12 +173,12 @@ export function AIReservationTab({t,
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[var(--ep-green)]" />
-              {t.recommendation.title}
+              {t("Reservation.recommendationTitle")}
             </div>
             {optimizationResult && (
               <Badge variant="outline" className="gap-1">
                 <ShieldCheck className="w-3 h-3" />
-                {optimizationResult.confidence}% {t.recommendation.confidence}
+                {optimizationResult.confidence}% {t("Reservation.recommendationConfidence")}
               </Badge>
             )}
           </CardTitle>
@@ -188,13 +188,13 @@ export function AIReservationTab({t,
             <div className="space-y-6 flex-1 flex flex-col">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                  <p className="text-xs text-muted-foreground">{t.recommendation.coverage}</p>
+                  <p className="text-xs text-muted-foreground">{t("Reservation.recommendationCoverage")}</p>
                   <p className="text-lg font-bold text-[var(--ep-blue)] dark:text-blue-400">
                     {optimizationResult.coverage}%
                   </p>
                 </div>
                 <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                  <p className="text-xs text-muted-foreground">{t.recommendation.shortage}</p>
+                  <p className="text-xs text-muted-foreground">{t("Reservation.recommendationShortage")}</p>
                   <p className="text-lg font-bold text-[var(--ep-primary)] dark:text-orange-400">
                     {optimizationResult.shortage} {aiForm.unit}
                   </p>
@@ -212,10 +212,10 @@ export function AIReservationTab({t,
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t.recommendation.batch}</TableHead>
-                      <TableHead className="text-right">{t.recommendation.takeQty}</TableHead>
-                      <TableHead>{t.recommendation.expiry}</TableHead>
-                      <TableHead>{t.recommendation.score}</TableHead>
+                      <TableHead>{t("Reservation.recommendationBatch")}</TableHead>
+                      <TableHead className="text-right">{t("Reservation.recommendationTakeQty")}</TableHead>
+                      <TableHead>{t("Reservation.recommendationExpiry")}</TableHead>
+                      <TableHead>{t("Reservation.recommendationScore")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -247,10 +247,10 @@ export function AIReservationTab({t,
                   data-testid="button-confirm-ai-request"
                 >
                   <CheckCircle className="w-4 h-4" />
-                  {t.recommendation.confirm}
+                  {t("Reservation.recommendationConfirm")}
                 </Button>
                 <Button variant="outline" className="flex-1" onClick={() => onClearRecommendation?.()} data-testid="button-cancel-ai-recommendation">
-                  {t.recommendation.cancel}
+                  {t("Reservation.recommendationCancel")}
                 </Button>
               </div>
             </div>
@@ -259,7 +259,7 @@ export function AIReservationTab({t,
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground">{t.recommendation.noData}</p>
+              <p className="text-muted-foreground">{t("Reservation.recommendationNoData")}</p>
             </div>
           )}
         </CardContent>
