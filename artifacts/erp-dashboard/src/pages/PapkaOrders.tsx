@@ -53,6 +53,11 @@ export default function PapkaOrders() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const [lang, setLang] = useState<Lang>("uz");
+  const tr = TRANSLATIONS[lang];
+  // Backend error payloads only ever carry {uz, ru} (no uz-cyr variant) - fall
+  // Cyrillic users through to the Latin Uzbek text rather than Russian, since
+  // that is the correct language just the wrong script (closer than Russian).
+  const errorDetailsLang: "uz" | "ru" = lang === "ru" ? "ru" : "uz";
   const [showDialog, setShowDialog] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PapkaOrder | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,17 +100,17 @@ export default function PapkaOrders() {
       queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
       setShowDialog(false);
       form.reset(DEFAULT_FORM_VALUES);
-      toast({ title: lang === "uz" ? "Buyurtma yaratildi" : "Заказ создан" });
+      toast({ title: tr.orderCreated });
     },
     onError: (error: Error & { errorDetails?: { uz: string; ru: string } }) => {
-      let errorMessage = lang === "uz" ? "Xatolik" : "Ошибка";
+      let errorMessage: string = tr.error;
       if (error.errorDetails) {
-        errorMessage = lang === "uz" ? error.errorDetails.uz : error.errorDetails.ru;
+        errorMessage = error.errorDetails[errorDetailsLang];
         if (errorMessage.toLowerCase().includes("papka raqami") || errorMessage.toLowerCase().includes("номер папки")) {
           form.setError("papkaNo", { type: "manual", message: errorMessage });
         }
       }
-      toast({ variant: "destructive", title: lang === "uz" ? "Xatolik" : "Ошибка", description: errorMessage });
+      toast({ variant: "destructive", title: tr.error, description: errorMessage });
     },
   });
 
@@ -117,7 +122,7 @@ export default function PapkaOrders() {
       setShowDialog(false);
       setEditingOrder(null);
       form.reset(DEFAULT_FORM_VALUES);
-      toast({ title: lang === "uz" ? "Buyurtma yangilandi" : "Заказ обновлен" });
+      toast({ title: tr.orderUpdated });
     },
   });
 
@@ -128,7 +133,7 @@ export default function PapkaOrders() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
-      toast({ title: lang === "uz" ? "Buyurtma bekor qilindi" : "Заказ отменён" });
+      toast({ title: tr.orderCancelled });
     },
   });
 
@@ -167,8 +172,6 @@ export default function PapkaOrders() {
 
   const activeCount = allOrders.filter(o => ["new", "planning", "production"].includes(o.status)).length;
   const completedCount = allOrders.filter(o => o.status === "completed").length;
-
-  const tr = TRANSLATIONS[lang];
 
   if (isLoading) {
     return (
