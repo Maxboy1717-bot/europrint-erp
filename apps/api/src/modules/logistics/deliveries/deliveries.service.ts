@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IDeliveriesRepository, DELIVERIES_REPO } from './i-deliveries.repo';
 import { isTransitionAllowed, DELIVERY_TRANSITIONS } from '@common/constants/status-machines.constants';
 import { safeCall, Result, AppError } from '@common/result';
@@ -14,7 +15,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class DeliveriesService {
   private readonly logger = new Logger(DeliveriesService.name);
 
-  constructor(@Inject(DELIVERIES_REPO) private readonly deliveriesRepo: IDeliveriesRepository) {}
+  constructor(
+    @Inject(DELIVERIES_REPO) private readonly deliveriesRepo: IDeliveriesRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -38,7 +42,7 @@ export class DeliveriesService {
   async findOne(id: number) {
     const result = await this.deliveriesRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Yetkazib berish #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.deliveryNotFoundWithId', { args: { id } }));
     return result.data;
   }
 
@@ -55,7 +59,7 @@ export class DeliveriesService {
     return safeCall(async () => {
     const delivery = await this.findOne(id);
     if (!isTransitionAllowed(DELIVERY_TRANSITIONS, (delivery).status, newStatus)) {
-      throw new BadRequestException(`${(delivery).status} → ${newStatus} mumkin emas`);
+      throw new BadRequestException(await this.i18n.t('errors.deliveryStatusTransitionNotAllowed', { args: { from: (delivery).status, to: newStatus } }));
     }
     const updateResult = await this.deliveriesRepo.updateStatus(
       id,

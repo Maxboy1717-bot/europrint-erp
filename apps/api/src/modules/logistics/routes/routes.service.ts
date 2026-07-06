@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { logisticsRoutes } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { RoutesRepository } from './routes.repository';
@@ -12,7 +13,10 @@ import { RoutesRepository } from './routes.repository';
 export class RoutesService {
   private readonly logger = new Logger(RoutesService.name);
 
-  constructor(private readonly repo: RoutesRepository) {}
+  constructor(
+    private readonly repo: RoutesRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -25,7 +29,7 @@ export class RoutesService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.logisticsRouteNotFoundWithId', { args: { id } }));
     return row;
   }
 

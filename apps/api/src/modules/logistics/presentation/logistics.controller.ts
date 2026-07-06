@@ -19,6 +19,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -55,6 +56,7 @@ export class LogisticsController {
  private readonly queryBus: QueryBus,
  private readonly eventEmitter: EventEmitter2,
  @Inject(DELIVERY_REPO) private readonly deliveryRepo: IDeliveryRepo,
+ private readonly i18n: I18nService,
  ) {}
 
  @ApiOperation({ summary: 'Get all' })
@@ -86,7 +88,7 @@ export class LogisticsController {
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.WAREHOUSE_MANAGER)
  async getById(@Param('id') id: string) {
    const result = await this.deliveryRepo.findById(id);
-   if (!result.ok || !result.data) throw new NotFoundException(`Yetkazib berish #${id} topilmadi`);
+   if (!result.ok || !result.data) throw new NotFoundException(await this.i18n.t('errors.deliveryNotFoundWithId', { args: { id } }));
    return { statusCode: HttpStatus.OK, data: result.data };
 }
 
