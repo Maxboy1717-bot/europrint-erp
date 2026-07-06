@@ -87,6 +87,15 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   director: "Direktor",
   department: "Bo'lim",
   section: "Sektor",
+  // G3 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B4): the Vysotskiy-7 wall chart's
+  // Otdeleniye/Otdel/Sektsiya/Sektor tiers had no create-dropdown entries — HR could nest 4
+  // levels (depth is uncapped) but couldn't label them with the owner's tier names.
+  // node_type='otdeleniye' already has 14 live rows and no DB/Zod restriction; otdel/sektsiya/
+  // sektor are net-new string values (docs/migration/02-vysotskiy-7-tree.md L2-L5).
+  otdeleniye: "Otdeleniye",
+  otdel: "Otdel",
+  sektsiya: "Sektsiya",
+  sektor: "Sektor",
 };
 
 export const CARD_W = 256;

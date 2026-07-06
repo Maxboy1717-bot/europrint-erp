@@ -95,6 +95,12 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   director: "Direktor",
   department: "Bo'lim",
   section: "Sektor",
+  // G3 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B4) — kept in sync with the sibling
+  // map in components/hr/org/types.ts (see that file's comment for the full rationale).
+  otdeleniye: "Otdeleniye",
+  otdel: "Otdel",
+  sektsiya: "Sektsiya",
+  sektor: "Sektor",
 };
 
 // Sourced from --ep-org-l0..l6 design tokens (src/erp-modern-ui/ep-motion-helpers.css) —
