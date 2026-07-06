@@ -95,10 +95,12 @@ export class GlPostingService {
   /**
    * Public entry point for other modules to post a balanced multi-leg journal through the ONE engine
    * (resolves GL codes → accounts.id, validates ΣDR==ΣCR, writes balanced pair-rows to `entries._id`).
-   * Use this instead of bespoke per-module INSERTs into `entries`.
+   * Use this instead of bespoke per-module INSERTs into `entries`. Optional createdBy attributes the
+   * posting to whoever approved it — otherwise `entries.created_by` is left NULL (see F3 migration of
+   * the POS bespoke writer, which needs this to preserve its pre-existing attribution).
    */
-  async postJournal(lines: JournalLine[], reference: string): Promise<Result<number>> {
-    return this.createJournalEntry(lines, reference);
+  async postJournal(lines: JournalLine[], reference: string, createdBy?: number): Promise<Result<number>> {
+    return this.createJournalEntry(lines, reference, createdBy);
   }
 
   /**
@@ -151,7 +153,7 @@ export class GlPostingService {
     return this.createJournalEntry(lines, `DC-${orderId}`);
   }
 
-  private async createJournalEntry(lines: JournalLine[], reference: string): Promise<Result<number>> {
+  private async createJournalEntry(lines: JournalLine[], reference: string, createdBy?: number): Promise<Result<number>> {
     // H1 idempotency: if this business reference (e.g. SI-123, PR-7) was already posted, return the
     // existing entry id WITHOUT inserting again. Covers every caller (invoice/payroll/GR/VP/MC + the
     // finance-gl admin endpoints) at the source — closes the double-post window between post + status-flip.
@@ -205,7 +207,7 @@ export class GlPostingService {
     // to a real account) — like postMovementToLedger. The old code wrote one row per leg with 'OFFSET'
     // for the missing side, which crashed against the integer account columns. Decompose the multi-leg
     // journal into balanced (debit, credit, amount) rows by greedily allocating debits against credits.
-    const rows: Array<{ entryNumber: string; entryDate: string; documentType: string; debitAccountId: string; creditAccountId: string; amount: number; description: string }> = [];
+    const rows: Array<{ entryNumber: string; entryDate: string; documentType: string; debitAccountId: string; creditAccountId: string; amount: number; description: string; createdBy?: number }> = [];
     let di = 0, ci = 0, dRem = debits[0]?.amt ?? 0, cRem = credits[0]?.amt ?? 0, guard = 0;
     while (di < debits.length && ci < credits.length && guard++ < 1000) {
       const alloc = Math.min(dRem, cRem);
@@ -217,6 +219,7 @@ export class GlPostingService {
         creditAccountId: credits[ci].code,
         amount: Math.round(alloc * 100) / 100,
         description: `${reference} — ${debits[di].name} / ${credits[ci].name}`,
+        createdBy,
       });
       dRem -= alloc; cRem -= alloc;
       if (dRem <= 0.001) { di++; dRem = debits[di]?.amt ?? 0; }
