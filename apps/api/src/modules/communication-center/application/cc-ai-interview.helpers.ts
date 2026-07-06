@@ -5,21 +5,22 @@
  */
 
 import { BadRequestException } from '@nestjs/common';
+import type { I18nService } from 'nestjs-i18n';
 import type { AiQuestion } from './cc-ai-interview.types';
 
 /**
  * Validate a user-supplied answer against an AI question definition.
- * Throws BadRequestException with an Uzbek-language message on failure.
+ * Throws BadRequestException with a localized message on failure.
  */
-export function validateAnswer(cur: AiQuestion, value: unknown): void {
+export async function validateAnswer(cur: AiQuestion, value: unknown, i18n: I18nService): Promise<void> {
   if (cur.required && (value === null || value === undefined || value === '')) {
-    throw new BadRequestException(`"${cur.qUz}" maydon majburiy`);
+    throw new BadRequestException(await i18n.t('validation.fieldRequiredNamed', { args: { field: cur.qUz } }));
   }
   if (cur.type === 'number' && value !== null && value !== '' && Number.isNaN(Number(value))) {
-    throw new BadRequestException(`"${cur.qUz}" raqam bo'lishi kerak`);
+    throw new BadRequestException(await i18n.t('validation.fieldMustBeNumber', { args: { field: cur.qUz } }));
   }
   if (cur.type === 'choice' && cur.choices && cur.choices.length > 0
       && !cur.choices.includes(String(value))) {
-    throw new BadRequestException(`Tanlangan qiymat ruxsat etilgan ro'yxatda yo'q`);
+    throw new BadRequestException(await i18n.t('validation.choiceNotInAllowedList'));
   }
 }

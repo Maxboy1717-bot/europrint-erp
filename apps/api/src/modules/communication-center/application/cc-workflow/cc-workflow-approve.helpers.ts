@@ -5,6 +5,7 @@
  */
 
 import { Logger, BadRequestException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import type { I18nService } from 'nestjs-i18n';
 import { unwrapOrThrow } from '@common/http-result';
 import { db } from '@shared/db';
 import type { CcDocumentsRepository, DocumentRow } from '../../infrastructure/repositories/cc-documents.repo';
@@ -23,6 +24,7 @@ export async function executeApproveTransaction(
   docs: CcDocumentsRepository,
   org: CcOrgResolverService,
   logger: Logger,
+  i18n: I18nService,
 ): Promise<{ ok: true; status: string; remainingApprovers?: number[]; nextStepOrder?: number; nextApproverIds?: number[] }> {
   const { doc, approverUserId, approvalId, signatureHash, comment } = args;
 
@@ -96,22 +98,24 @@ export async function executeApproveTransaction(
     });
   } catch (e) {
     if (e instanceof BadRequestException || e instanceof ForbiddenException) throw e;
-    throw new InternalServerErrorException(`ccWorkflow.approve: ${String(e)}`);
+    throw new InternalServerErrorException(
+      await i18n.t('errors.approveTransactionFailed', { args: { message: String(e) } }),
+    );
   }
 }
 
-export function findMyPendingApproval(
+export async function findMyPendingApproval(
   approvals: { id: string; approverUserId: number; state: string; rejectionStops: boolean }[],
   approverUserId: number,
+  i18n: I18nService,
 ) {
   const mine = approvals.find(a => a.approverUserId === approverUserId && a.state === 'pending');
-  // I18N_LEAK: bare helper, no I18nService DI. Caller may translate via 'errors.noApprovePermission'.
-  if (!mine) throw new ForbiddenException('Sizga bu hujjatni tasdiqlash huquqi berilmagan yoki allaqachon imzolagansiz');
+  if (!mine) throw new ForbiddenException(await i18n.t('errors.noApprovePermission'));
   return mine;
 }
 
-export function requireDocInProgress(doc: DocumentRow): void {
+export async function requireDocInProgress(doc: DocumentRow, i18n: I18nService): Promise<void> {
   if (doc.workflowState !== 'in_progress') {
-    throw new BadRequestException(`Tasdiqlab bo'lmaydi (holat: ${doc.workflowState})`);
+    throw new BadRequestException(await i18n.t('errors.cannotApproveInState', { args: { state: doc.workflowState } }));
   }
 }

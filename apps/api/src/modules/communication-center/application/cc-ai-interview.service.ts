@@ -103,7 +103,7 @@ export class CcAiInterviewService {
       RETURNING id::text AS id
     `);
     const row = r.rows[0];
-    if (!row) throw new InternalServerErrorException('Sessiya yaratilmadi');
+    if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.sessionCreationFailed'));
     return { sessionId: row.id, questionIdx: 0 };
   }
 
@@ -120,9 +120,9 @@ export class CcAiInterviewService {
 
     const questions = await this.loadQuestions(sess.template_id);
     const cur = questions[sess.current_question_idx];
-    if (!cur) throw new InternalServerErrorException('Joriy savol topilmadi');
+    if (!cur) throw new InternalServerErrorException(await this.i18n.t('errors.currentQuestionNotFound'));
 
-    validateAnswer(cur, args.value);
+    await validateAnswer(cur, args.value, this.i18n);
 
     const newAnswers = { ...sess.answers, [cur.key]: args.value };
     const newIdx     = sess.current_question_idx + 1;
@@ -219,7 +219,11 @@ export class CcAiInterviewService {
       userId:      args.userId, sessionId: sess.id,
       metadata:    { templateCode: tmpl.code, language },
     });
-    if (!isOk(r)) throw new InternalServerErrorException(`Claude xatosi: ${r.error.message}`);
+    if (!isOk(r)) {
+      throw new InternalServerErrorException(
+        await this.i18n.t('errors.claudeError', { args: { message: r.error.message } }),
+      );
+    }
     return r.data.text.trim();
   }
 
@@ -230,7 +234,11 @@ export class CcAiInterviewService {
     body: string,
   ): Promise<string> {
     const docNumR = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
-    if (!isOk(docNumR)) throw new InternalServerErrorException(`Hujjat raqami xatosi: ${docNumR.error.message}`);
+    if (!isOk(docNumR)) {
+      throw new InternalServerErrorException(
+        await this.i18n.t('errors.documentNumberError', { args: { message: docNumR.error.message } }),
+      );
+    }
     const documentNumber = docNumR.data;
     const draftRes = await this.docs.createDraft({
       templateId:      tmpl.id,

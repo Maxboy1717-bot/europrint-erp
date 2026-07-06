@@ -35,7 +35,9 @@ export class CcWorkflowRejectService {
   async reject(documentId: string, approverUserId: number, dto: RejectDto) {
     const doc = await this.requireDoc(documentId);
     if (doc.workflowState !== 'in_progress') {
-      throw new BadRequestException(`${await this.i18n.t('errors.rejectNotAllowed')} (${doc.workflowState})`);
+      throw new BadRequestException(
+        await this.i18n.t('errors.rejectNotAllowed', { args: { state: doc.workflowState } }),
+      );
     }
 
     const mine = await this.requireMyApproval(doc, approverUserId);

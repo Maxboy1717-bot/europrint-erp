@@ -82,7 +82,9 @@ export class CcWorkflowService {
       throw new ForbiddenException(await this.i18n.t('errors.onlySenderCanSend'));
     }
     if (doc.workflowState !== 'draft') {
-      throw new BadRequestException(`${await this.i18n.t('errors.duplicateEntry')} (${doc.workflowState})`);
+      throw new BadRequestException(
+        await this.i18n.t('errors.documentNotDraftState', { args: { state: doc.workflowState } }),
+      );
     }
     await this.pin.verifyAndSign(senderUserId, dto.pin, `send:${doc.id}`);
 
@@ -90,8 +92,7 @@ export class CcWorkflowService {
     const approvers = await this.createFirstStepApprovals(doc, senderUserId, firstStepRows);
     if (approvers.length === 0) {
       throw new BadRequestException(
-        `Birinchi bosqich (${firstStepOrder}) uchun mas'ul xodim topilmadi. ` +
-        `Workflow sozlamalarini tekshiring yoki administrator bilan bog'laning.`,
+        await this.i18n.t('errors.firstStepApproverNotFound', { args: { stepOrder: firstStepOrder } }),
       );
     }
 
@@ -157,16 +158,16 @@ export class CcWorkflowService {
   // ─────────────────────────────────────────────────────────────────────
   async approve(documentId: string, approverUserId: number, dto: ApproveDto) {
     const doc = await this.requireDoc(documentId);
-    requireDocInProgress(doc);
+    await requireDocInProgress(doc, this.i18n);
 
     const approvals = unwrapOrThrow(await this.docs.getPendingApprovalsAtStep(doc.id, doc.currentStepOrder));
-    const mine = findMyPendingApproval(approvals, approverUserId);
+    const mine = await findMyPendingApproval(approvals, approverUserId, this.i18n);
 
     const sigHash = await this.pin.verifyAndSign(approverUserId, dto.pin, `approve:${doc.id}:${mine.id}`);
 
     const result = await executeApproveTransaction(
       { doc, approverUserId, approvalId: mine.id, signatureHash: sigHash, comment: dto.comment ?? null },
-      this.docs, this.org, this.logger,
+      this.docs, this.org, this.logger, this.i18n,
     );
 
     // G4: hujjat TO'LIQ tasdiqlandi (oxirgi bosqich) — moliyaviy shablon bo'lsa
@@ -210,10 +211,12 @@ export class CcWorkflowService {
   async reject(documentId: string, approverUserId: number, dto: RejectDto) {
     const doc = await this.requireDoc(documentId);
     if (doc.workflowState !== 'in_progress') {
-      throw new BadRequestException(`${await this.i18n.t('errors.rejectNotAllowed')} (${doc.workflowState})`);
+      throw new BadRequestException(
+        await this.i18n.t('errors.rejectNotAllowed', { args: { state: doc.workflowState } }),
+      );
     }
 
-    const mine = await findMyRejectableApproval(this.docs, doc, approverUserId);
+    const mine = await findMyRejectableApproval(this.docs, doc, approverUserId, this.i18n);
     await signRejection(this.docs, this.pin, doc, mine, approverUserId, dto);
 
     if (mine.rejectionStops || await allApprovalsResolved(doc.id)) {

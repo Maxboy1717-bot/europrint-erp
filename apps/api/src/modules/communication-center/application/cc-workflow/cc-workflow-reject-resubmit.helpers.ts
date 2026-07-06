@@ -5,6 +5,7 @@
  */
 
 import { ForbiddenException } from '@nestjs/common';
+import type { I18nService } from 'nestjs-i18n';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { unwrapOrThrow } from '@common/http-result';
@@ -18,11 +19,11 @@ export async function findMyRejectableApproval(
   docs: CcDocumentsRepository,
   doc: DocumentRow,
   approverUserId: number,
+  i18n: I18nService,
 ): Promise<RejectablePending> {
   const approvals = unwrapOrThrow(await docs.getPendingApprovalsAtStep(doc.id, doc.currentStepOrder));
   const mine = approvals.find(a => a.approverUserId === approverUserId && a.state === 'pending');
-  // I18N_LEAK: bare helper, no I18nService DI. Caller may translate via 'errors.noRejectPermission'.
-  if (!mine) throw new ForbiddenException('Sizga bu hujjatni rad etish huquqi berilmagan');
+  if (!mine) throw new ForbiddenException(await i18n.t('errors.noRejectPermission'));
   return mine;
 }
 
