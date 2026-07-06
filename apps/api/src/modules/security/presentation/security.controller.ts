@@ -3,6 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */import { BadRequestException, Controller, Get, HttpCode, HttpException, HttpStatus, Inject, InternalServerErrorException, Logger, NotFoundException, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 
 
 import { TashkentTimeService } from '@common/time';
@@ -80,6 +81,7 @@ export class SecurityController {
  @Inject(INCIDENT_REPO) private readonly incidentRepo: IIncidentRepo,
  private readonly attendanceSvc: AttendanceService,
  private readonly accessSvc: AccessService,
+ private readonly i18n: I18nService,
  ) {}
 
  @ApiOperation({ summary: 'Get all' })
@@ -111,7 +113,7 @@ export class SecurityController {
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async getById(@Param('id') id: string) {
    const result = await this.incidentRepo.findById(id);
-   if (!result.ok || !result.data) throw new NotFoundException(`Hodisa #${id} topilmadi`);
+   if (!result.ok || !result.data) throw new NotFoundException(await this.i18n.t('errors.incidentNotFoundWithId', { args: { id } }));
    return { statusCode: HttpStatus.OK, data: result.data };
 }
 
