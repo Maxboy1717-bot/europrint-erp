@@ -3,14 +3,16 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, InternalServerErrorException, Logger, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, InternalServerErrorException, Logger, Post, Query, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FinanceReportsService } from '../reports/reports.service';
-import { unwrapOrInternal } from '@common/http-result';
+import { TrialBalancePdfService } from '../reports/trial-balance-pdf.service';
+import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { TashkentTimeService } from '@common/time';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
@@ -27,13 +29,44 @@ type Rows = { rows?: unknown[] };
 export class ReportsController {
   private readonly logger = new Logger(ReportsController.name);
   private readonly _time = new TashkentTimeService();
-  constructor(private readonly svc: FinanceReportsService) {}
+  constructor(
+    private readonly svc: FinanceReportsService,
+    private readonly trialBalancePdf: TrialBalancePdfService,
+  ) {}
 
   @ApiOperation({ summary: 'Get trial balance' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('trial-balance')
   async getTrialBalance(@Query('fiscalYear') fiscalYear?: string) {
     return unwrapOrInternal(await this.svc.findTrialBalance(fiscalYear ? Number(fiscalYear) : undefined));
+  }
+
+  /**
+   * F10 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): "Real financial-statement export" —
+   * ilgari faqat JSON qaytadigan export nuqtalari bor edi (masalan
+   * POST /reports/profitability/export). Bu haqiqiy PDF fayl generatsiya qiladi
+   * (pdf-lib, allaqachon tasdiqlangan bog'liqlik) real trial-balance ma'lumotidan.
+   */
+  @ApiOperation({ summary: 'Export trial balance as PDF' })
+  @ApiResponse({ status: 200, description: 'application/pdf' })
+  @Get('trial-balance/export/pdf')
+  async exportTrialBalancePdf(@Query('fiscalYear') fiscalYearParam: string | undefined, @Res() res: FastifyReply) {
+    const fiscalYear = fiscalYearParam ? Number(fiscalYearParam) : this._time.now().getFullYear();
+    const balance = unwrapOrThrow(await this.svc.findTrialBalance(fiscalYear)) as {
+      accounts: Array<{ accountCode: string; accountName: string; accountType: string; debitBalance: number; creditBalance: number }>;
+      totals: { debitBalance: number; creditBalance: number };
+      asOfDate: string;
+    };
+    const pdfResult = await this.trialBalancePdf.generateTrialBalancePdf({ ...balance, fiscalYear });
+    if (!pdfResult.ok) {
+      throw new InternalServerErrorException(pdfResult.error.message);
+    }
+    const buffer = pdfResult.data;
+    res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="sinov-balansi-${fiscalYear}.pdf"`)
+      .header('Content-Length', buffer.length)
+      .send(buffer);
   }
 
   @ApiOperation({ summary: 'Get profit loss' })

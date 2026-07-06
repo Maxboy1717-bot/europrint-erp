@@ -101,6 +101,7 @@ import { CashflowController } from './presentation/cashflow.controller';
 import { FINANCE_REPORTS_REPO } from './reports/i-reports.repo';
 import { DrizzleFinanceReportsRepository } from './reports/drizzle-reports.repo';
 import { FinanceReportsService } from './reports/reports.service';
+import { TrialBalancePdfService } from './reports/trial-balance-pdf.service';
 import { ReportsController } from './presentation/reports.controller';
 import { ORDER_COSTING_REPO } from './order-costing/i-order-costing.repo';
 import { DrizzleOrderCostingRepository } from './order-costing/drizzle-order-costing.repo';
@@ -240,6 +241,7 @@ const eventListeners = [
     CashflowService,
     { provide: FINANCE_REPORTS_REPO, useClass: DrizzleFinanceReportsRepository },
     FinanceReportsService,
+    TrialBalancePdfService,
     { provide: ORDER_COSTING_REPO, useClass: DrizzleOrderCostingRepository },
     OrderCostingService,
     { provide: FI_REPO, useClass: DrizzleFiRepository },
