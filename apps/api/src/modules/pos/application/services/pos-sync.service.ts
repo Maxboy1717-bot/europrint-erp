@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, ConflictException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Ok, Err, Result, AppError } from '@common/result';
 import { PosSyncRepository } from '../../infrastructure/repositories/pos-sync.repository';
 import { PosMovementService } from './pos-movement.service';
@@ -32,6 +33,7 @@ export class PosSyncService {
   constructor(
     private readonly repo: PosSyncRepository,
     private readonly movementService: PosMovementService,
+    private readonly i18n: I18nService,
   ) {}
 
   async push(payload: PushPayload): Promise<Result<{ synced: number; conflicts: number }, AppError>> {
@@ -39,7 +41,7 @@ export class PosSyncService {
     if (existing.ok && existing.data) {
       if (!payload.forceClientVersion) {
         // NestJS HTTP exception — allowed to stay as throw per project rules
-        throw new ConflictException(`Duplicate sync: ${payload.clientUuid}`);
+        throw new ConflictException(await this.i18n.t('errors.duplicateSync', { args: { clientUuid: payload.clientUuid } }));
       }
       this.logger.warn(`[SYNC] forceClientVersion=true — reprocessing clientUuid=${payload.clientUuid}`);
     }

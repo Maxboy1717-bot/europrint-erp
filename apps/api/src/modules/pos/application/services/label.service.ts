@@ -18,6 +18,7 @@ import { DEFAULT_BARCODE } from '@common/constants/app.constants';
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { LabelExtService } from './label-ext.service';
 import { LabelRepository } from '../../infrastructure/repositories/label.repository';
@@ -68,6 +69,7 @@ export class LabelService {
   constructor(
     private readonly extSvc: LabelExtService,
     private readonly labelRepo: LabelRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   async getPrinterConfig() { return this.extSvc.getPrinterConfig(); }
@@ -80,7 +82,7 @@ export class LabelService {
       const mat = await this.labelRepo.getMaterialCard(materialCardId);
 
       if (!mat) {
-        throw new NotFoundException(`Material topilmadi: ${materialCardId}`);
+        throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: materialCardId } }));
       }
 
       let batchNumber: string | undefined;

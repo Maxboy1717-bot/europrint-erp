@@ -20,6 +20,7 @@ import {
   Injectable, Logger, BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 
 import { EmployeeLedgerService, EmployeeBalance } from './employee-ledger.service';
@@ -39,6 +40,7 @@ export class PosEmployeeBalanceService {
     private readonly movementService: PosMovementService,
     private readonly notifService:    PosNotificationsService,
     private readonly repo:            PosEmployeeBalanceRepository,
+    private readonly i18n:            I18nService,
   ) {}
 
   // ─── getMyInventory ────────────────────────────────────────────────────────
@@ -58,7 +60,7 @@ export class PosEmployeeBalanceService {
   ): Promise<Result<{ movementId: number }, AppError>> {
     return safeCall(async () => {
       if (quantity <= 0) {
-        throw new BadRequestException('requestReturn: miqdor musbat bo\'lishi kerak');
+        throw new BadRequestException(await this.i18n.t('validation.quantityMustBePositive'));
       }
 
       // Verify employee actually holds this material
@@ -68,8 +70,9 @@ export class PosEmployeeBalanceService {
       );
       if (!item || (item.balance ?? 0) < quantity) {
         throw new BadRequestException(
-          `requestReturn: xodimda yetarli material mavjud emas ` +
-          `(mavjud: ${item?.balance ?? 0}, so'ralgan: ${quantity})`,
+          await this.i18n.t('errors.employeeInsufficientMaterialBalance', {
+            args: { available: item?.balance ?? 0, requested: quantity },
+          }),
         );
       }
 
@@ -109,10 +112,10 @@ export class PosEmployeeBalanceService {
   ): Promise<Result<{ movementId: number; ledgerEntryId: unknown }, AppError>> {
     return safeCall(async () => {
       if (!reason || reason.trim().length === 0) {
-        throw new BadRequestException('writeOffItem: sabab (reason) majburiy');
+        throw new BadRequestException(await this.i18n.t('validation.reasonRequired'));
       }
       if (quantity <= 0) {
-        throw new BadRequestException('writeOffItem: miqdor musbat bo\'lishi kerak');
+        throw new BadRequestException(await this.i18n.t('validation.quantityMustBePositive'));
       }
 
       // Verify employee balance
@@ -122,8 +125,9 @@ export class PosEmployeeBalanceService {
       );
       if (!item || (item.balance ?? 0) < quantity) {
         throw new BadRequestException(
-          `writeOffItem: xodimda yetarli material mavjud emas ` +
-          `(mavjud: ${item?.balance ?? 0}, so'ralgan: ${quantity})`,
+          await this.i18n.t('errors.employeeInsufficientMaterialBalance', {
+            args: { available: item?.balance ?? 0, requested: quantity },
+          }),
         );
       }
 

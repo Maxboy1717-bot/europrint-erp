@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
 import { toPdfSafeText } from '@common/pdf/pdf-safe-text.helper';
@@ -13,7 +14,10 @@ import { PosPdfInventoryRepository } from '../../infrastructure/repositories/pos
 export class PosPdfInventoryService {
   private readonly logger = new Logger(PosPdfInventoryService.name);
 
-  constructor(private readonly repo: PosPdfInventoryRepository) {}
+  constructor(
+    private readonly repo: PosPdfInventoryRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async generateInventoryCountPdf(countId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
@@ -21,7 +25,7 @@ export class PosPdfInventoryService {
       const rows = await this.repo.getInventoryCountForPdf(countId);
   
       if (!rows.ok || !rows.data.length) {
-        throw new NotFoundException(`Inventarizatsiya topilmadi: ${countId}`);
+        throw new NotFoundException(await this.i18n.t('errors.inventoryCountNotFound', { args: { id: countId } }));
       }
   
       const header = rows.data[0] as Record<string, unknown>;

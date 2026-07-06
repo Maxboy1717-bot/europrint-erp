@@ -29,6 +29,18 @@ function makeRepoMock(): jest.Mocked<Pick<IPosMovementRepository, 'getMaxLineSeq
   };
 }
 
+// i18n stub — returns the raw uz literal (with {args} interpolated) so the existing
+// message-content regex assertion (/USD.*kurs topilmadi/) keeps matching without
+// needing real translation-file loading in this isolated unit-test module.
+const mockI18n = {
+  t: jest.fn(async (key: string, options?: { args?: Record<string, unknown> }) => {
+    if (key === 'errors.exchangeRateNotFound') {
+      return `"${options?.args?.currency}" uchun kurs topilmadi — exchange_rates jadvaliga kurs kiriting yoki so'rovda exchangeRate yuboring`;
+    }
+    return key;
+  }),
+} as never;
+
 const UNUSED = {} as never;
 
 describe('PosMovementService.addLines() — F6 exchange-rate gate', () => {
@@ -37,7 +49,7 @@ describe('PosMovementService.addLines() — F6 exchange-rate gate', () => {
 
   beforeEach(() => {
     repo = makeRepoMock();
-    svc = new PosMovementService(UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, repo as unknown as IPosMovementRepository);
+    svc = new PosMovementService(UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, repo as unknown as IPosMovementRepository, mockI18n);
   });
 
   it('UZS lines need no rate lookup and post at exchangeRate=1', async () => {

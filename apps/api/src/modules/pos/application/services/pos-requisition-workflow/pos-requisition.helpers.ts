@@ -5,6 +5,7 @@
  */
 
 import { Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { posMaterialRequests, posMaterialRequestLines } from '@workspace/db';
 import { db } from '@shared/db';
 import { eq } from 'drizzle-orm';
@@ -21,12 +22,12 @@ export type ReqStatus =
   | 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED'
   | 'FULLY_ISSUED' | 'CANCELLED' | 'PARTIALLY_ISSUED';
 
-export async function fetchRequest(requestId: number): Promise<RequestRow> {
+export async function fetchRequest(requestId: number, i18n: I18nService): Promise<RequestRow> {
   const [req] = await db
     .select()
     .from(posMaterialRequests)
     .where(eq(posMaterialRequests.id, requestId));
-  if (!req) throw new NotFoundException(`So'rov topilmadi: ${requestId}`);
+  if (!req) throw new NotFoundException(await i18n.t('errors.requestNotFound', { args: { id: requestId } }));
   return req;
 }
 

@@ -12,6 +12,7 @@ const _time = new TashkentTimeService();
  * (Boshqa servislar faqat createMovement ni ishlatadi)
  */
 import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, Err, safeCall } from '@common/result';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventBus } from '@nestjs/cqrs';
@@ -62,6 +63,7 @@ export class PosMovementService {
     private readonly eventEmitter:     EventEmitter2,
     private readonly eventBus:         EventBus,
     private readonly repo:             PosMovementRepository,
+    private readonly i18n:             I18nService,
   ) {}
 
   /**
@@ -84,13 +86,13 @@ export class PosMovementService {
       } else if (dto.movementTypeCode) {
         movTypeR = await this.repo.findMovementTypeByCode(dto.movementTypeCode);
       } else {
-        throw new BadRequestException('movementTypeId yoki movementTypeCode majburiy');
+        throw new BadRequestException(await this.i18n.t('validation.movementTypeIdOrCodeRequired'));
       }
-      if (!movTypeR.ok || !movTypeR.data) throw new NotFoundException(`Harakat turi topilmadi: ${dto.movementTypeId ?? dto.movementTypeCode}`);
+      if (!movTypeR.ok || !movTypeR.data) throw new NotFoundException(await this.i18n.t('errors.movementTypeNotFoundWithCode', { args: { code: dto.movementTypeId ?? dto.movementTypeCode } }));
       const movType = movTypeR.data;
 
       if (movType.code === 'INTERNAL_RETURN' && !dto.returnReason) {
-        throw new BadRequestException('INTERNAL_RETURN uchun qaytarish sababi majburiy');
+        throw new BadRequestException(await this.i18n.t('validation.internalReturnReasonRequired'));
       }
 
       // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN kirimda har qatorda
@@ -103,7 +105,7 @@ export class PosMovementService {
           .filter((i): i is number => i !== null);
         if (missingRows.length > 0) {
           throw new BadRequestException(
-            `EXTERNAL_IN kirimda barkodsiz qator qabul qilinmaydi (qator: ${missingRows.join(', ')})`,
+            await this.i18n.t('errors.externalInMissingBarcode', { args: { rows: missingRows.join(', ') } }),
           );
         }
       }
@@ -121,7 +123,7 @@ export class PosMovementService {
           .filter((i): i is number => i !== null);
         if (badPriceRows.length > 0) {
           throw new BadRequestException(
-            `EXTERNAL_IN kirimda musbat unitPrice majburiy (0/manfiy/yo'q narx qabul qilinmaydi, qator: ${badPriceRows.join(', ')})`,
+            await this.i18n.t('errors.externalInInvalidUnitPrice', { args: { rows: badPriceRows.join(', ') } }),
           );
         }
       }
@@ -159,7 +161,7 @@ export class PosMovementService {
             throw new HttpException(
               {
                 statusCode: HttpStatus.CONFLICT,
-                message:    "Qabul miqdori PO'dan tolerans chegarasidan tashqarida — rahbar tasdig'i kerak (overrideReason yuboring)",
+                message:    await this.i18n.t('errors.receiptQtyOutOfTolerance'),
                 warnings:   receiptEscalations,
               },
               HttpStatus.CONFLICT,
@@ -198,7 +200,7 @@ export class PosMovementService {
           }
           if (reservedBlocks.length > 0) {
             throw new ForbiddenException(
-              `Bronlangan material chiqimi bloklandi (faqat super_admin/direktor ochishi mumkin):\n${reservedBlocks.join('\n')}`,
+              await this.i18n.t('errors.reservedMaterialOutboundBlocked', { args: { blocks: reservedBlocks.join('\n') } }),
             );
           }
         }
@@ -208,14 +210,14 @@ export class PosMovementService {
         const whR = await this.repo.findWarehouseType(dto.fromWarehouseId);
         const wh = whR.ok ? whR.data : null;
         if (!wh || wh.type !== 'finished_goods') {
-          throw new ForbiddenException('EXTERNAL_OUT faqat tayyor mahsulot omboridan amalga oshirilishi mumkin');
+          throw new ForbiddenException(await this.i18n.t('errors.externalOutOnlyFromFinishedGoods'));
         }
       }
 
       if (movType.code === 'INTERNAL_ISSUE' && dto.receivedByEmployeeId && dto.lines) {
         for (const line of dto.lines) {
           const check = await this.lifecycleBlock.check(dto.receivedByEmployeeId, line.materialCardId, line.quantity);
-          if (!check.allowed) throw new BadRequestException(`Material ${line.materialCardId}: ${check.reason}`);
+          if (!check.allowed) throw new BadRequestException(await this.i18n.t('errors.materialLifecycleBlocked', { args: { id: line.materialCardId, reason: check.reason } }));
         }
       }
 
@@ -234,7 +236,7 @@ export class PosMovementService {
 
         if (guardResult.blocks.length > 0) {
           throw new BadRequestException(
-            `Ombor qoldig'i yetarli emas:\n${guardResult.blocks.join('\n')}`,
+            await this.i18n.t('errors.insufficientWarehouseStock', { args: { blocks: guardResult.blocks.join('\n') } }),
           );
         }
 
@@ -243,7 +245,7 @@ export class PosMovementService {
           throw new HttpException(
             {
               statusCode: HttpStatus.CONFLICT,
-              message:    'Qoldiq ogohlantirishi: davom etish uchun overrideReason yuboring',
+              message:    await this.i18n.t('errors.stockWarningOverrideRequired'),
               warnings:   guardResult.warnings,
             },
             HttpStatus.CONFLICT,
@@ -281,7 +283,7 @@ export class PosMovementService {
         if (!gateR.data.allowed) {
           const lines = gateR.data.blocks.map((b) => `Material #${b.materialCardId}: ${b.message}`);
           throw new BadRequestException(
-            `Texkarta-material mos kelmadi (chiqim bloklandi):\n${lines.join('\n')}`,
+            await this.i18n.t('errors.techCardMaterialMismatch', { args: { blocks: lines.join('\n') } }),
           );
         }
       }
@@ -406,7 +408,7 @@ export class PosMovementService {
     const rateR = await this.repo.findLatestExchangeRate(currency);
     if (rateR.ok && rateR.data) return rateR.data;
     throw new BadRequestException(
-      `"${currency}" uchun kurs topilmadi — exchange_rates jadvaliga kurs kiriting yoki so'rovda exchangeRate yuboring`,
+      await this.i18n.t('errors.exchangeRateNotFound', { args: { currency } }),
     );
   }
 
@@ -506,7 +508,7 @@ export class PosMovementService {
 
   async createDamageAct(dto: CreateDamageActDto, createdById: number, ipAddress?: string) {
     const damageTypeR = await this.repo.findMovementTypeByCode('DAMAGE');
-    if (!damageTypeR.ok) throw new NotFoundException('DAMAGE harakat turi topilmadi');
+    if (!damageTypeR.ok) throw new NotFoundException(await this.i18n.t('errors.damageMovementTypeNotFound'));
     const damageType = damageTypeR.data as { id: number };
 
     const movementR = await this.repo.findMovementWarehouseIds(dto.posMovementId);

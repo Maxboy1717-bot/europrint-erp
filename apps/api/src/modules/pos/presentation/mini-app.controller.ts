@@ -10,6 +10,7 @@ import { assertAuth } from '@common/assertions';
  * Auth, Barcode, Materials, Requests endpoints
  */
 import { Controller, Get, Post, Patch, Param, Body, Query, Headers, UnauthorizedException, ForbiddenException, ParseIntPipe, HttpCode, HttpStatus, Logger, UseInterceptors } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -60,10 +61,11 @@ export async function assertCanManageRequest(
   miniAppService: PosMiniAppService,
   userId: number,
   requestId: number,
+  i18n: I18nService,
 ): Promise<void> {
   const result = await miniAppService.canManageRequest(userId, requestId);
   if (!result.ok || !result.data) {
-    throw new ForbiddenException("Bu so'rovni tasdiqlash/rad etish uchun ruxsatingiz yo'q");
+    throw new ForbiddenException(await i18n.t('errors.cannotManageRequest'));
   }
 }
 
@@ -79,6 +81,7 @@ export class MiniAppController {
     private readonly barcodeService: PosBarcodeService,
     private readonly requestService: PosRequestService,
     private readonly miniAppService: PosMiniAppService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Post('auth')
@@ -127,7 +130,7 @@ export class MiniAppController {
   @ApiHeader({ name: 'x-tg-session', description: 'Mini App sessiya tokeni' })
   async approveRequest(@Headers('x-tg-session') sessionToken: string, @Param('id', ParseIntPipe) id: number, @Body() dto: TgApproveDto) {
     const { userId } = await resolveSession(this.telegramService, sessionToken);
-    await assertCanManageRequest(this.miniAppService, userId, id);
+    await assertCanManageRequest(this.miniAppService, userId, id, this.i18n);
     return unwrapOrInternal(await this.requestService.approveRequest({ requestId: id, notes: dto.notes }, userId));
   }
 
@@ -136,7 +139,7 @@ export class MiniAppController {
   @ApiHeader({ name: 'x-tg-session', description: 'Mini App sessiya tokeni' })
   async rejectRequest(@Headers('x-tg-session') sessionToken: string, @Param('id', ParseIntPipe) id: number, @Body() dto: TgRejectDto) {
     const { userId } = await resolveSession(this.telegramService, sessionToken);
-    await assertCanManageRequest(this.miniAppService, userId, id);
+    await assertCanManageRequest(this.miniAppService, userId, id, this.i18n);
     return unwrapOrInternal(await this.requestService.rejectRequest({ requestId: id, rejectionReason: dto.reason }, userId));
   }
 }

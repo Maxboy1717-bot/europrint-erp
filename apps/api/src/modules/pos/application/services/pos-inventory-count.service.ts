@@ -18,7 +18,8 @@ const _time = new TashkentTimeService();
 
 import {
   Injectable, Logger, BadRequestException, NotFoundException,
-} from '@nestjs/common'; 
+} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, AppError, safeCall } from '@common/result';
 import { PosInventoryCountRepository } from '../../infrastructure/repositories/pos-inventory-count.repository';
@@ -49,6 +50,7 @@ export class PosInventoryCountService {
     private readonly queryService:    PosInventoryCountQueryService,
     private readonly inventoryRepo:   PosInventoryCountRepository,
     private readonly varianceConfig:  PosVarianceConfigService,
+    private readonly i18n:            I18nService,
   ) {}
 
   // ─── P4: Farq avto-tasdiq / eskalatsiya qarori ────────────────────────────
@@ -61,7 +63,7 @@ export class PosInventoryCountService {
   async evaluateVarianceDecision(countId: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const invCountR = await this.inventoryRepo.findById(countId);
-      if (!invCountR.ok || !invCountR.data) throw new NotFoundException(`Inventarizatsiya topilmadi: ${countId}`);
+      if (!invCountR.ok || !invCountR.data) throw new NotFoundException(await this.i18n.t('errors.inventoryCountNotFound', { args: { id: countId } }));
       const invCount = invCountR.data as Record<string, unknown>;
 
       const warehouseRaw = invCount['warehouseId'] ?? invCount['warehouse_id'];
@@ -100,15 +102,15 @@ export class PosInventoryCountService {
     return safeCall(async () => {
       // Ombor mavjudligini tekshirish
       const whR = await this.inventoryRepo.getWarehouseById(dto.warehouseId);
-      if (!whR.ok) throw new NotFoundException(`Ombor topilmadi: ${dto.warehouseId}`);
-  
+      if (!whR.ok) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id: dto.warehouseId } }));
+
       // Faol count bormi tekshirish
       const activeCountR = await this.inventoryRepo.findActiveCountForWarehouse(dto.warehouseId);
 
       if (activeCountR.ok && activeCountR.data) {
         const activeData = activeCountR.data as { countNumber: string };
         throw new BadRequestException(
-          `Bu omborda allaqachon faol inventarizatsiya mavjud: ${activeData.countNumber}`,
+          await this.i18n.t('errors.warehouseHasActiveInventoryCount', { args: { countNumber: activeData.countNumber } }),
         );
       }
   
@@ -175,10 +177,10 @@ export class PosInventoryCountService {
     ipAddress?: string,
   ) {
     const invCountR = await this.inventoryRepo.findById(dto.countId);
-    if (!invCountR.ok) throw new NotFoundException(`Inventarizatsiya topilmadi: ${dto.countId}`);
+    if (!invCountR.ok) throw new NotFoundException(await this.i18n.t('errors.inventoryCountNotFound', { args: { id: dto.countId } }));
     const invCount = invCountR.data as Record<string, unknown>;
     if (invCount.status !== 'IN_PROGRESS' && invCount.status !== 'COMPLETED') {
-      throw new BadRequestException(`Inventarizatsiya tasdiqlab bo'lmaydi: ${invCount.status}`);
+      throw new BadRequestException(await this.i18n.t('errors.inventoryCountCannotBeApproved', { args: { status: invCount.status } }));
     }
 
     // Barcha satrlar kiritilganmi tekshirish
@@ -186,7 +188,7 @@ export class PosInventoryCountService {
 
     if ((nullCount.ok ? nullCount.data as number : 0) > 0) {
       throw new BadRequestException(
-        `${nullCount.ok ? nullCount.data : 0} ta satr hali kiritilmagan. Barchasini kiriting.`,
+        await this.i18n.t('errors.inventoryCountLinesNotFilled', { args: { count: nullCount.ok ? nullCount.data : 0 } }),
       );
     }
 
@@ -239,7 +241,7 @@ export class PosInventoryCountService {
       const adjTypeCode = isPlus ? 'INVENTORY_ADJ_PLUS' : 'INVENTORY_ADJ_MINUS';
 
       const adjType = await this.inventoryRepo.getMovementTypeByCode(adjTypeCode);
-      if (!adjType || !adjType.ok || adjType.data === null) throw new BadRequestException(`Harakat turi topilmadi: ${adjTypeCode}`);
+      if (!adjType || !adjType.ok || adjType.data === null) throw new BadRequestException(await this.i18n.t('errors.movementTypeNotFoundWithCode', { args: { code: adjTypeCode } }));
 
       await this.movementService.createMovement(
         {

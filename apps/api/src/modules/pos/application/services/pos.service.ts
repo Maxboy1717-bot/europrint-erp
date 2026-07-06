@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IPosSvcRepository, POS_SVC_REPO } from '../../domain/repositories/i-pos-svc.repo';
 import {
   CreateMovementTypeDto,
@@ -35,7 +36,10 @@ function isTransitionAllowed(from: string, to: string): boolean {
 export class PosService {
   private readonly logger = new Logger(PosService.name);
 
-  constructor(@Inject(POS_SVC_REPO) private readonly posSvcRepo: IPosSvcRepository) {}
+  constructor(
+    @Inject(POS_SVC_REPO) private readonly posSvcRepo: IPosSvcRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getMovementTypes(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -49,7 +53,7 @@ export class PosService {
     return safeCall(async () => {
     const existingResult = await this.posSvcRepo.findMovementTypeByCode(dto.code);
     if (!existingResult.ok) throw new InternalServerErrorException(existingResult.error);
-    if (existingResult.data) throw new BadRequestException(`Kod '${dto.code}' allaqachon mavjud`);
+    if (existingResult.data) throw new BadRequestException(await this.i18n.t('errors.movementTypeCodeAlreadyExists', { args: { code: dto.code } }));
     const result = await this.posSvcRepo.createMovementType({ ...dto } as Record<string, unknown>);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
@@ -60,7 +64,7 @@ export class PosService {
     return safeCall(async () => {
     const findResult = await this.posSvcRepo.findMovementById(id);
     if (!findResult.ok) throw new InternalServerErrorException(findResult.error);
-    if (!findResult.data) throw new NotFoundException(`Harakat #${id} topilmadi`);
+    if (!findResult.data) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id } }));
     const updateResult = await this.posSvcRepo.updateMovementStatus(id, dto.status);
     if (!updateResult.ok) throw new InternalServerErrorException(updateResult.error);
     return updateResult.data;
@@ -81,7 +85,7 @@ export class PosService {
   async findOne(id: number) {
     const result = await this.posSvcRepo.findMovementById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Harakat #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id } }));
     return result.data;
   }
 

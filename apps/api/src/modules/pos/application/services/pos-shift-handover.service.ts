@@ -11,6 +11,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { PosShiftHandoverRepository } from '../../infrastructure/repositories/pos-shift-handover.repository';
 import { PosAuditService } from './pos-audit.service';
@@ -32,13 +33,14 @@ export class PosShiftHandoverService {
   constructor(
     private readonly repo: PosShiftHandoverRepository,
     private readonly auditService: PosAuditService,
+    private readonly i18n: I18nService,
   ) {}
 
   // ─── Akt yaratish ──────────────────────────────────────────────────────────
   async createHandover(dto: CreateShiftHandoverDto, fromUserId: number, ipAddress?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       if (dto.toUserId === fromUserId) {
-        throw new BadRequestException('Topshiruvchi va qabul qiluvchi bir xil bo\'lishi mumkin emas');
+        throw new BadRequestException(await this.i18n.t('errors.handoverFromToUserSame'));
       }
       const handoverNumber = `SH-${_time.now().getTime()}`;
       const createdR = await this.repo.createHandover({
@@ -51,7 +53,7 @@ export class PosShiftHandoverService {
         photoEvidenceUrl: dto.photoEvidenceUrl ?? null,
         createdBy: fromUserId,
       });
-      if (!createdR.ok) throw new BadRequestException(`Akt yaratilmadi: ${createdR.error.message}`);
+      if (!createdR.ok) throw new BadRequestException(await this.i18n.t('errors.handoverCreationFailed', { args: { message: createdR.error.message } }));
       const created = createdR.data as Record<string, unknown>;
 
       await this.auditService.log({
@@ -66,11 +68,11 @@ export class PosShiftHandoverService {
   async sign(id: number, dto: SignHandoverDto, userId: number, ipAddress?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const found = await this.repo.findById(id);
-      if (!found.ok || !found.data) throw new NotFoundException(`Akt topilmadi: ${id}`);
+      if (!found.ok || !found.data) throw new NotFoundException(await this.i18n.t('errors.handoverNotFound', { args: { id } }));
       const handover = found.data as Record<string, unknown>;
       const status = String(handover.status ?? '');
       if (!OPEN_STATUSES.includes(status)) {
-        throw new BadRequestException(`Akt ${status} holatida — imzolab bo'lmaydi`);
+        throw new BadRequestException(await this.i18n.t('errors.handoverCannotBeSigned', { args: { status } }));
       }
 
       const fromUserId = Number(handover.fromUserId ?? handover.from_user_id);
@@ -78,16 +80,16 @@ export class PosShiftHandoverService {
 
       // Faqat tegishli rol egasi imzolaydi (topshiruvchi 'from', qabul qiluvchi 'to').
       if (dto.role === 'from' && userId !== fromUserId) {
-        throw new ForbiddenException('Faqat topshiruvchi (from_user) topshiruvchi imzosini qo\'ya oladi');
+        throw new ForbiddenException(await this.i18n.t('errors.onlyFromUserCanSignFrom'));
       }
       if (dto.role === 'to' && userId !== toUserId) {
-        throw new ForbiddenException('Faqat qabul qiluvchi (to_user) qabul imzosini qo\'ya oladi');
+        throw new ForbiddenException(await this.i18n.t('errors.onlyToUserCanSignTo'));
       }
 
       const fromSigned = handover.fromSignedAt ?? handover.from_signed_at;
       const toSigned = handover.toSignedAt ?? handover.to_signed_at;
-      if (dto.role === 'from' && fromSigned) throw new BadRequestException('Topshiruvchi allaqachon imzolagan');
-      if (dto.role === 'to' && toSigned) throw new BadRequestException('Qabul qiluvchi allaqachon imzolagan');
+      if (dto.role === 'from' && fromSigned) throw new BadRequestException(await this.i18n.t('errors.fromUserAlreadySigned'));
+      if (dto.role === 'to' && toSigned) throw new BadRequestException(await this.i18n.t('errors.toUserAlreadySigned'));
 
       // 2-IMZO GATE: yangi status — ikkala imzo bo'lsa 'closed', aks holda yarim holat.
       const willFromSigned = dto.role === 'from' ? true : Boolean(fromSigned);
@@ -97,7 +99,7 @@ export class PosShiftHandoverService {
         : (willFromSigned ? 'from_signed' : 'to_signed');
 
       const updatedR = await this.repo.applySignature(id, dto.role, newStatus, dto.photoEvidenceUrl ?? null);
-      if (!updatedR.ok) throw new BadRequestException(`Imzo saqlanmadi: ${updatedR.error.message}`);
+      if (!updatedR.ok) throw new BadRequestException(await this.i18n.t('errors.signatureSaveFailed', { args: { message: updatedR.error.message } }));
 
       await this.auditService.log({
         userId, action: `pos.handover.signed.${dto.role}`, entityType: 'pos_shift_handovers',
@@ -115,13 +117,13 @@ export class PosShiftHandoverService {
   async cancel(id: number, dto: CancelShiftHandoverDto, userId: number, ipAddress?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const found = await this.repo.findById(id);
-      if (!found.ok || !found.data) throw new NotFoundException(`Akt topilmadi: ${id}`);
+      if (!found.ok || !found.data) throw new NotFoundException(await this.i18n.t('errors.handoverNotFound', { args: { id } }));
       const status = String((found.data as Record<string, unknown>).status ?? '');
-      if (status === 'closed') throw new BadRequestException('Yopilgan aktni bekor qilib bo\'lmaydi');
-      if (status === 'cancelled') throw new BadRequestException('Akt allaqachon bekor qilingan');
+      if (status === 'closed') throw new BadRequestException(await this.i18n.t('errors.closedHandoverCannotBeCancelled'));
+      if (status === 'cancelled') throw new BadRequestException(await this.i18n.t('errors.handoverAlreadyCancelled'));
 
       const cancelledR = await this.repo.cancel(id, dto.reason);
-      if (!cancelledR.ok) throw new BadRequestException(`Bekor qilinmadi: ${cancelledR.error.message}`);
+      if (!cancelledR.ok) throw new BadRequestException(await this.i18n.t('errors.handoverCancellationFailed', { args: { message: cancelledR.error.message } }));
 
       await this.auditService.log({
         userId, action: 'pos.handover.cancelled', entityType: 'pos_shift_handovers',
@@ -135,7 +137,7 @@ export class PosShiftHandoverService {
   async findOne(id: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const found = await this.repo.findById(id);
-      if (!found.ok || !found.data) throw new NotFoundException(`Akt topilmadi: ${id}`);
+      if (!found.ok || !found.data) throw new NotFoundException(await this.i18n.t('errors.handoverNotFound', { args: { id } }));
       return found.data as object;
     });
   }
@@ -163,7 +165,7 @@ export class PosShiftHandoverService {
         note: dto.note ?? null,
         createdBy: userId,
       });
-      if (!createdR.ok) throw new BadRequestException(`Tara yozuvi saqlanmadi: ${createdR.error.message}`);
+      if (!createdR.ok) throw new BadRequestException(await this.i18n.t('errors.palletEntrySaveFailed', { args: { message: createdR.error.message } }));
 
       await this.auditService.log({
         userId, action: `pos.pallet.${dto.direction}`, entityType: 'pos_returnable_pallets',

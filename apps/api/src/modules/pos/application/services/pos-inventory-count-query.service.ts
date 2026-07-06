@@ -8,6 +8,7 @@ const _time = new TashkentTimeService();
 import {
   Injectable, Logger, NotFoundException, BadRequestException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import type {
   RecordActualQtyDto,
@@ -21,7 +22,10 @@ import { PosInventoryCountQueryRepository } from '../../infrastructure/repositor
 export class PosInventoryCountQueryService {
   private readonly logger = new Logger(PosInventoryCountQueryService.name);
 
-  constructor(private readonly repo: PosInventoryCountQueryRepository) {}
+  constructor(
+    private readonly repo: PosInventoryCountQueryRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async snapshotStock(
     countId: number,
@@ -37,13 +41,13 @@ export class PosInventoryCountQueryService {
     _ipAddress?: string,
   ) {
     const lineR = await this.repo.findLine(dto.lineId);
-    if (!lineR.ok || !lineR.data) throw new NotFoundException(`Inventarizatsiya satri topilmadi: ${dto.lineId}`);
+    if (!lineR.ok || !lineR.data) throw new NotFoundException(await this.i18n.t('errors.inventoryCountLineNotFound', { args: { id: dto.lineId } }));
     const line = lineR.data as { materialCardId: number; systemQty: number | string; binLocation?: string };
 
     if (dto.scannedBarcode) {
       const match = await this.repo.checkBarcode(line.materialCardId, dto.scannedBarcode);
       if (!match) {
-        throw new BadRequestException(`Skanerlangan barcode ushbu material uchun mos kelmaydi`);
+        throw new BadRequestException(await this.i18n.t('errors.scannedBarcodeMismatch'));
       }
     }
 
@@ -72,7 +76,7 @@ export class PosInventoryCountQueryService {
 
   async getVarianceReport(countId: number): Promise<CountVarianceResultDto> {
     const invCountR = await this.repo.findCount(countId);
-    if (!invCountR.ok || !invCountR.data) throw new NotFoundException(`Inventarizatsiya topilmadi: ${countId}`);
+    if (!invCountR.ok || !invCountR.data) throw new NotFoundException(await this.i18n.t('errors.inventoryCountNotFound', { args: { id: countId } }));
     const invCount = invCountR.data as { countNumber: string; warehouseId: string };
 
     const allLinesR = await this.repo.getVarianceLines(countId);

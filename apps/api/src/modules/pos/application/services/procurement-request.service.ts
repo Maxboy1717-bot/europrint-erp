@@ -212,7 +212,7 @@ export class ProcurementRequestService {
         requestNumber = await this.generateRequestNumber();
       }
     }
-    throw new InternalServerErrorException("PR raqami ajratib bo'lmadi");
+    throw new InternalServerErrorException(await this.i18n.t('errors.requestNumberAllocationFailed'));
   }
 
   /**

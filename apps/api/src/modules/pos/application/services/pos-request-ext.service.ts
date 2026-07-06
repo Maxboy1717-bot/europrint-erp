@@ -7,7 +7,8 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
   Injectable, Logger, BadRequestException, NotFoundException, InternalServerErrorException,
-} from '@nestjs/common'; 
+} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, AppError, safeCall } from '@common/result';
 import { posMaterialRequests, posMaterialRequestLines, db, and, eq, sql, desc } from '@workspace/db';
@@ -30,6 +31,7 @@ export class PosRequestExtService {
     private readonly movementService: PosMovementService,
     private readonly eventEmitter:    EventEmitter2,
     private readonly requestExtRepo:  PosRequestExtRepository,
+    private readonly i18n:            I18nService,
   ) {}
 
   async issueFromRequest(
@@ -44,9 +46,9 @@ export class PosRequestExtService {
         .from(posMaterialRequests)
         .where(eq(posMaterialRequests.id, dto.requestId));
   
-      if (!request) throw new NotFoundException(`So'rov topilmadi: ${dto.requestId}`);
+      if (!request) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: dto.requestId } }));
       if (request.status !== 'APPROVED') {
-        throw new BadRequestException(`So'rov APPROVED holatida emas: ${request.status}`);
+        throw new BadRequestException(await this.i18n.t('errors.requestNotApproved', { args: { status: request.status } }));
       }
   
       const requestLines = await db
@@ -63,13 +65,13 @@ export class PosRequestExtService {
             approvedQty,
           );
           if (!check.allowed) {
-            throw new BadRequestException(`Material ${line.materialCardId}: ${check.reason}`);
+            throw new BadRequestException(await this.i18n.t('errors.materialLifecycleBlocked', { args: { id: line.materialCardId, reason: check.reason } }));
           }
         }
       }
-  
+
       const issueType = await this.requestExtRepo.getInternalIssueTypeId();
-      if (!issueType || !issueType.ok || issueType.data === null) throw new BadRequestException('Ichki chiqarish harakati turi topilmadi');
+      if (!issueType || !issueType.ok || issueType.data === null) throw new BadRequestException(await this.i18n.t('errors.internalIssueMovementTypeNotFound'));
   
       const movLines = (Array.isArray(requestLines) ? requestLines : []).map(line => {
         const detail = dto.lineDetails?.find(d => d.lineId === line.id);
@@ -144,7 +146,7 @@ export class PosRequestExtService {
       .from(posMaterialRequests)
       .where(eq(posMaterialRequests.id, requestId));
 
-    if (!request) throw new NotFoundException(`So'rov topilmadi: ${requestId}`);
+    if (!request) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: requestId } }));
 
     const lines = await db
       .select()

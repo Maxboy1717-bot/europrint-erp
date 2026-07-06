@@ -4,6 +4,7 @@
  *   Yangi toza per-tur ombor sahifalari shu config'dan generatsiya qilinadi (eski rasvo WMS'ni almashtirish).
  */
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../../../hr/common/db-rows';
@@ -20,6 +21,9 @@ export interface IssueStockInput {
 @Injectable()
 export class WarehouseConfigService {
   private readonly logger = new Logger(WarehouseConfigService.name);
+
+  constructor(private readonly i18n: I18nService) {}
+
   /** Faol ombor turlari (sort_order bo'yicha) + har turdagi omborlar soni. */
   async listTypes(): Promise<Result<Record<string, unknown>[], AppError>> {
     return safeCall(async () => {
@@ -60,7 +64,7 @@ export class WarehouseConfigService {
       const wh = dbRows(await rawSql(sql`
         SELECT id, code, name, name_ru AS "nameRu", type, location FROM warehouses WHERE id = ${warehouseId}
       `))[0];
-      if (!wh) throw new NotFoundException(`Ombor topilmadi: ${warehouseId}`);
+      if (!wh) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id: warehouseId } }));
       const typeConfig = dbRows(await rawSql(sql`
         SELECT code, name_uz AS "nameUz", category, needs_quarantine AS "needsQuarantine", needs_qc AS "needsQc",
                unit_basis AS "unitBasis", label_template AS "labelTemplate",
@@ -98,13 +102,13 @@ export class WarehouseConfigService {
   ): Promise<Result<Record<string, unknown>, AppError>> {
     return safeCall(async () => {
       const qty = Number(input.quantity);
-      if (!input.materialId) throw new BadRequestException('materialId majburiy');
-      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException("quantity musbat bo'lishi kerak");
+      if (!input.materialId) throw new BadRequestException(await this.i18n.t('validation.materialIdRequired'));
+      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException(await this.i18n.t('validation.quantityMustBePositive'));
 
       const mat = dbRows(await rawSql(sql`
         SELECT id, kod, xom_ashyo, unit_of_measure FROM material_cards WHERE id = ${input.materialId}
       `))[0];
-      if (!mat) throw new NotFoundException(`Material topilmadi: ${input.materialId}`);
+      if (!mat) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: input.materialId } }));
       const unit = input.unit ?? String(mat['unit_of_measure'] ?? 'dona');
       const materialName = String(mat['xom_ashyo'] ?? mat['kod'] ?? `#${input.materialId}`);
 
@@ -115,7 +119,7 @@ export class WarehouseConfigService {
         WHERE warehouse_id = ${warehouseId} AND material_id = ${input.materialId} AND available_quantity >= ${qty}
         RETURNING quantity, available_quantity
       `))[0];
-      if (!updated) throw new BadRequestException("Yetarli mavjud qoldiq yo'q yoki material bu omborda mavjud emas");
+      if (!updated) throw new BadRequestException(await this.i18n.t('errors.insufficientStockOrMaterialNotInWarehouse'));
 
       await rawSql(sql`
         UPDATE material_cards SET current_stock = GREATEST(0, COALESCE(current_stock, 0) - ${qty}) WHERE id = ${input.materialId}
@@ -151,15 +155,15 @@ export class WarehouseConfigService {
   ): Promise<Result<Record<string, unknown>, AppError>> {
     return safeCall(async () => {
       const qty = Number(input.quantity);
-      if (!input.materialId) throw new BadRequestException('materialId majburiy');
-      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException("quantity musbat bo'lishi kerak");
+      if (!input.materialId) throw new BadRequestException(await this.i18n.t('validation.materialIdRequired'));
+      if (!Number.isFinite(qty) || qty <= 0) throw new BadRequestException(await this.i18n.t('validation.quantityMustBePositive'));
 
       const wh = dbRows(await rawSql(sql`SELECT id, code FROM warehouses WHERE id = ${warehouseId}`))[0];
-      if (!wh) throw new NotFoundException(`Ombor topilmadi: ${warehouseId}`);
+      if (!wh) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id: warehouseId } }));
       const mat = dbRows(await rawSql(sql`
         SELECT id, kod, xom_ashyo, unit_of_measure FROM material_cards WHERE id = ${input.materialId}
       `))[0];
-      if (!mat) throw new NotFoundException(`Material topilmadi: ${input.materialId}`);
+      if (!mat) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: input.materialId } }));
       const unit = input.unit ?? String(mat['unit_of_measure'] ?? 'dona');
       const materialName = String(mat['xom_ashyo'] ?? mat['kod'] ?? `#${input.materialId}`);
 

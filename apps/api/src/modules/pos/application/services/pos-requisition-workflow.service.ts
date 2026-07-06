@@ -14,6 +14,7 @@ import {
   Injectable, Logger, BadRequestException,
   ForbiddenException, InternalServerErrorException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, AppError, safeCall } from '@common/result';
 import { posMaterialRequests } from '@workspace/db';
@@ -40,17 +41,18 @@ export class PosRequisitionWorkflowService {
     private readonly requestExtRepo: PosRequestExtRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly balanceRepo: PosEmployeeBalanceRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   // ─── 1. submitRequisition ─────────────────────────────────────────────────
   async submitRequisition(requestId: number, submittedById: number): Promise<Result<RequestRow, AppError>> {
     return safeCall(async () => {
-      const req = await fetchRequest(requestId);
+      const req = await fetchRequest(requestId, this.i18n);
       if (req.status !== 'DRAFT') {
-        throw new BadRequestException(`submitRequisition: so'rov DRAFT holatida emas — joriy holat: ${req.status}`);
+        throw new BadRequestException(await this.i18n.t('errors.requisitionNotDraft', { args: { status: req.status } }));
       }
       if (req.requestedBy !== submittedById) {
-        throw new ForbiddenException(`submitRequisition: faqat so'rov yaratuvchisi topshira oladi`);
+        throw new ForbiddenException(await this.i18n.t('errors.onlyRequesterCanSubmit'));
       }
       const updated = await setStatus(requestId, 'SUBMITTED');
 
@@ -72,9 +74,9 @@ export class PosRequisitionWorkflowService {
   // ─── 2. approveRequisition ────────────────────────────────────────────────
   async approveRequisition(requestId: number, approverId: number, note?: string): Promise<Result<RequestRow, AppError>> {
     return safeCall(async () => {
-      const req = await fetchRequest(requestId);
+      const req = await fetchRequest(requestId, this.i18n);
       if (req.status !== 'SUBMITTED') {
-        throw new BadRequestException(`approveRequisition: so'rov PENDING/SUBMITTED holatida emas — joriy holat: ${req.status}`);
+        throw new BadRequestException(await this.i18n.t('errors.requisitionNotSubmitted', { args: { status: req.status } }));
       }
       if (req.targetWarehouseId) {
         const reserveR = await reserveStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);
@@ -105,11 +107,11 @@ export class PosRequisitionWorkflowService {
   async rejectRequisition(requestId: number, approverId: number, reason: string): Promise<Result<RequestRow, AppError>> {
     return safeCall(async () => {
       if (!reason || reason.trim().length === 0) {
-        throw new BadRequestException('rejectRequisition: sabab (reason) majburiy');
+        throw new BadRequestException(await this.i18n.t('validation.reasonRequired'));
       }
-      const req = await fetchRequest(requestId);
+      const req = await fetchRequest(requestId, this.i18n);
       if (req.status !== 'SUBMITTED') {
-        throw new BadRequestException(`rejectRequisition: so'rov PENDING/SUBMITTED holatida emas — joriy holat: ${req.status}`);
+        throw new BadRequestException(await this.i18n.t('errors.requisitionNotSubmitted', { args: { status: req.status } }));
       }
       const updated = await setStatus(requestId, 'REJECTED', {
         rejectionReason: reason,
@@ -135,9 +137,9 @@ export class PosRequisitionWorkflowService {
     requestId: number, fulfilledById: number, barcodes: string[],
   ): Promise<Result<{ request: RequestRow; movementId: number }, AppError>> {
     return safeCall(async () => {
-      const req = await fetchRequest(requestId);
+      const req = await fetchRequest(requestId, this.i18n);
       if (req.status !== 'APPROVED') {
-        throw new BadRequestException(`fulfillRequisition: so'rov APPROVED holatida emas — joriy holat: ${req.status}`);
+        throw new BadRequestException(await this.i18n.t('errors.requisitionNotApproved', { args: { status: req.status } }));
       }
       if (barcodes && barcodes.length > 0) {
         const validateR = await validateBarcodes(barcodes, this.balanceRepo);
@@ -147,7 +149,7 @@ export class PosRequisitionWorkflowService {
 
       const issueTypeR = await this.requestExtRepo.getInternalIssueTypeId();
       if (!issueTypeR || !issueTypeR.ok || !issueTypeR.data) {
-        throw new InternalServerErrorException('INTERNAL_ISSUE harakati turi topilmadi');
+        throw new InternalServerErrorException(await this.i18n.t('errors.internalIssueMovementTypeNotFound'));
       }
 
       const movLines = requestLines.map((line) => ({
@@ -214,12 +216,12 @@ export class PosRequisitionWorkflowService {
   async cancelRequisition(requestId: number, cancelledById: number, reason: string): Promise<Result<RequestRow, AppError>> {
     return safeCall(async () => {
       if (!reason || reason.trim().length === 0) {
-        throw new BadRequestException('cancelRequisition: sabab (reason) majburiy');
+        throw new BadRequestException(await this.i18n.t('validation.reasonRequired'));
       }
-      const req = await fetchRequest(requestId);
+      const req = await fetchRequest(requestId, this.i18n);
       const cancellableStatuses: ReqStatus[] = ['DRAFT', 'SUBMITTED', 'APPROVED'];
       if (!cancellableStatuses.includes(req.status as ReqStatus)) {
-        throw new BadRequestException(`cancelRequisition: so'rov bekor qilib bo'lmaydi — joriy holat: ${req.status}`);
+        throw new BadRequestException(await this.i18n.t('errors.requisitionCannotBeCancelled', { args: { status: req.status } }));
       }
       if (req.status === 'APPROVED' && req.targetWarehouseId) {
         const releaseR = await releaseReservedStock(requestId, String(req.targetWarehouseId), this.balanceRepo, this.logger);

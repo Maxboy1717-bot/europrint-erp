@@ -9,6 +9,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -47,16 +48,17 @@ export class PosMovementStatusService {
     private readonly eventEmitter:     EventEmitter2,
     private readonly repo:             PosMovementStatusRepository,
     private readonly glRepo:           GlPostingLogRepository,
+    private readonly i18n:             I18nService,
   ) {}
 
   async updateStatus(movementId: number, dto: UpdateMovementStatusDto, updatedById: number, ipAddress?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const movementR = await this.repo.findMovement(movementId);
-      if (!movementR.ok) throw new NotFoundException(`Harakat topilmadi: ${movementId}`);
+      if (!movementR.ok) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id: movementId } }));
       const movement = movementR.data as Record<string, unknown>;
       const movStatus = String(movement.status ?? '');
       if (!isTransitionAllowed(movStatus, dto.status)) {
-        throw new BadRequestException(`${movStatus} → ${dto.status} o'tish ruxsat etilmagan`);
+        throw new BadRequestException(await this.i18n.t('errors.movementStatusTransitionNotAllowed', { args: { from: movStatus, to: dto.status } }));
       }
       // Completion-guard (2.2-qc-bypass-blok): quarantine_required=true bo'lsa, qc_status
       // to'ldirilmaguncha 'completed'ga o'tish TAQIQ. pending→approved→completed yo'li
@@ -65,7 +67,7 @@ export class PosMovementStatusService {
       // quarantine_required=true, qc_status=NULL, status='completed').
       if (dto.status === 'completed' && movement.quarantineRequired === true && !movement.qcStatus) {
         throw new BadRequestException(
-          `Harakat ${movementId}: karantin talab qilinadi, QC qarori (qc_status) hali chiqarilmagan — 'completed'ga o'tish taqiqlangan`,
+          await this.i18n.t('errors.movementQuarantinePendingQc', { args: { id: movementId } }),
         );
       }
       const oldStatus = movStatus;
@@ -124,9 +126,9 @@ export class PosMovementStatusService {
 
   async recordQcDecision(dto: QcDecisionDto, qcInspectorId: number, ipAddress?: string) {
     const movementR = await this.repo.findMovement(dto.movementId);
-    if (!movementR.ok) throw new NotFoundException(`Harakat topilmadi: ${dto.movementId}`);
+    if (!movementR.ok) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id: dto.movementId } }));
     const movement = movementR.data as Record<string, unknown>;
-    if (movement.status !== 'qc_pending') throw new BadRequestException('QC faqat qc_pending holatida amalga oshiriladi');
+    if (movement.status !== 'qc_pending') throw new BadRequestException(await this.i18n.t('errors.qcOnlyAllowedWhenPending'));
 
     const newStatus = QC_STATUS_MAP[dto.decision];
 

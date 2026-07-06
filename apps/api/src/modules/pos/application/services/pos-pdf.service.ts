@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { castTo } from '@common/db-rows';
 import { Result, AppError, safeCall } from '@common/result';
 import { PDFDocument, StandardFonts, rgb, PageSizes, PDFPage, PDFFont } from 'pdf-lib';
@@ -51,6 +52,7 @@ export class PosPdfService {
     private readonly inventorySvc: PosPdfInventoryService,
     private readonly pdfRepo: PosPdfRepository,
     private readonly employeeBalanceRepo: PosEmployeeBalanceRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   // ─── Harakat Akti ─────────────────────────────────────────────────────────
@@ -64,7 +66,7 @@ export class PosPdfService {
         .from(posMovements)
         .where(eq(posMovements.id, movementId));
 
-      if (!movement) throw new NotFoundException(`Harakat topilmadi: ${movementId}`);
+      if (!movement) throw new NotFoundException(await this.i18n.t('errors.movementNotFound', { args: { id: movementId } }));
 
       // FAZA D bag-fix (2026-07-01): `linesRows` — `Result<PdfMovementLine[]>`, array emas.
       // Avval to'g'ridan `castTo(linesRows).map(...)` chaqirilardi — Result-obyektning

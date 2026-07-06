@@ -22,7 +22,8 @@ const _time = new TashkentTimeService();
 import {
   Injectable, Logger, BadRequestException,
   NotFoundException, ForbiddenException,
-} from '@nestjs/common'; 
+} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, AppError, safeCall } from '@common/result';
 import { PosRequestExtService } from './pos-request-ext.service';
@@ -56,6 +57,7 @@ export class PosRequestService {
     private readonly eventEmitter:     EventEmitter2,
     private readonly extSvc:           PosRequestExtService,
     private readonly requestRepo:      PosRequestRepository,
+    private readonly i18n:             I18nService,
   ) {}
 
   // ─── So'rov Yaratish ──────────────────────────────────────────────────────
@@ -73,7 +75,7 @@ export class PosRequestService {
           .from(materialCards)
           .where(eq(materialCards.id, line.materialCardId));
   
-        if (!card) throw new NotFoundException(`Material topilmadi: ${line.materialCardId}`);
+        if (!card) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: line.materialCardId } }));
   
         // Kategoriya cheklovi tekshiruv
         const restriction = await db
@@ -88,7 +90,7 @@ export class PosRequestService {
   
         if (restriction.length > 0 && !restriction[0].canRequest) {
           throw new ForbiddenException(
-            `${dto.departmentCode} bo'limi ${card.materialType} kategoriyasini so'ray olmaydi`,
+            await this.i18n.t('errors.departmentCannotRequestCategory', { args: { department: dto.departmentCode, category: card.materialType } }),
           );
         }
       }
@@ -164,9 +166,9 @@ export class PosRequestService {
       .from(posMaterialRequests)
       .where(eq(posMaterialRequests.id, dto.requestId));
 
-    if (!request) throw new NotFoundException(`So'rov topilmadi: ${dto.requestId}`);
+    if (!request) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: dto.requestId } }));
     if (request.status !== 'DRAFT') {
-      throw new BadRequestException(`So'rov pending holatida emas: ${request.status}`);
+      throw new BadRequestException(await this.i18n.t('errors.requestNotPending', { args: { status: request.status } }));
     }
 
     // Tasdiqlangan miqdorlarni yangilash
@@ -221,9 +223,9 @@ export class PosRequestService {
       .from(posMaterialRequests)
       .where(eq(posMaterialRequests.id, dto.requestId));
 
-    if (!request) throw new NotFoundException(`So'rov topilmadi: ${dto.requestId}`);
+    if (!request) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: dto.requestId } }));
     if (!['DRAFT', 'APPROVED'].includes(request.status)) {
-      throw new BadRequestException(`So'rov rad etib bo'lmaydi: ${request.status}`);
+      throw new BadRequestException(await this.i18n.t('errors.requestCannotBeRejected', { args: { status: request.status } }));
     }
 
     const [updated] = await db

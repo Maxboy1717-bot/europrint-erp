@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { PRINTER_DEFAULT_PORT, DEFAULT_TIMEOUT_MS, MM_TO_PT_RATIO, DEFAULT_BARCODE } from '@common/constants/app.constants';
 import { Result, AppError, safeCall } from '@common/result';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -16,7 +17,10 @@ import { LABEL_QR_MODULE_PT } from '@common/constants/app.constants';
 export class LabelExtService {
   private readonly logger = new Logger(LabelExtService.name);
 
-  constructor(private readonly printerConfigRepo: PosPrinterConfigRepository) {}
+  constructor(
+    private readonly printerConfigRepo: PosPrinterConfigRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async generatePdf(data: LabelData): Promise<Result<object, AppError>>{
     return safeCall(async () => {
@@ -150,11 +154,11 @@ export class LabelExtService {
   async getPrinterConfig(): Promise<Result<PrinterConfig | null, AppError>> {
     return safeCall(async () => {
       const row = await this.printerConfigRepo.getActiveConfig();
-      if (!row) throw new NotFoundException('Aktiv printer konfiguratsiyasi topilmadi');
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.printerConfigNotFound'));
 
       const rd: Record<string, unknown> = (row.data ?? {}) as Record<string, unknown>;
       const ip = (rd['printer_ip'] as string) ?? '';
-      if (!ip) throw new NotFoundException('Printer IP manzili ko\'rsatilmagan');
+      if (!ip) throw new NotFoundException(await this.i18n.t('errors.printerIpNotSpecified'));
 
       return {
         id:     Number(rd['id']),

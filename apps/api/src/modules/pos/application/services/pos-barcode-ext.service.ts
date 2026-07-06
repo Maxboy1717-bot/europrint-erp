@@ -7,7 +7,8 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import {
   Injectable, Logger, NotFoundException, BadRequestException,
-} from '@nestjs/common'; 
+} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { castTo } from '@common/db-rows';
 import { PosBarcodeExtRepository } from '../../infrastructure/repositories/pos-barcode-ext.repository';
@@ -21,14 +22,17 @@ import type {
 export class PosBarcodeExtService {
   private readonly logger = new Logger(PosBarcodeExtService.name);
 
-  constructor(private readonly barcodeExtRepo: PosBarcodeExtRepository) {}
+  constructor(
+    private readonly barcodeExtRepo: PosBarcodeExtRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async queuePrint(dto: PrintLabelDto, userId: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
       const cardR = await this.barcodeExtRepo.findMaterialCardById(dto.materialCardId);
-      if (!cardR.ok || !cardR.data) throw new NotFoundException(`Material topilmadi: ${dto.materialCardId}`);
+      if (!cardR.ok || !cardR.data) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id: dto.materialCardId } }));
       const card = cardR.data as { barcode?: string | null };
-      if (!card.barcode) throw new BadRequestException(`Materialda barcode yo'q: ${dto.materialCardId}`);
+      if (!card.barcode) throw new BadRequestException(await this.i18n.t('errors.materialHasNoBarcode', { args: { id: dto.materialCardId } }));
 
       const printJob = await this.barcodeExtRepo.createPrintQueueJob(castTo<Parameters<typeof this.barcodeExtRepo.createPrintQueueJob>[0]>({
         materialCardId: dto.materialCardId,
@@ -50,10 +54,10 @@ export class PosBarcodeExtService {
 
   async reviewAiSuggestion(dto: ReviewAiSuggestionDto, reviewerId: number) {
     const suggestionR = await this.barcodeExtRepo.findSuggestionById(dto.suggestionId);
-    if (!suggestionR.ok || !suggestionR.data) throw new NotFoundException(`AI taklif topilmadi: ${dto.suggestionId}`);
+    if (!suggestionR.ok || !suggestionR.data) throw new NotFoundException(await this.i18n.t('errors.aiSuggestionNotFound', { args: { id: dto.suggestionId } }));
     const suggestion = suggestionR.data as { status: string; suggestedName?: string; suggestedNameRu?: string; suggestedUnit?: string; suggestedBarcode?: string };
     if (suggestion.status !== 'PENDING') {
-      throw new BadRequestException(`Taklif allaqachon ko'rib chiqilgan: ${suggestion.status}`);
+      throw new BadRequestException(await this.i18n.t('errors.suggestionAlreadyReviewed', { args: { status: suggestion.status } }));
     }
 
     let createdCardId: number | undefined;
@@ -85,9 +89,9 @@ export class PosBarcodeExtService {
     return { decision: dto.decision, createdCardId };
   }
 
-  generateEan13(dto: GenerateEan13Dto): string {
+  async generateEan13(dto: GenerateEan13Dto): Promise<string> {
     const base = dto.companyPrefix + dto.productCode;
-    if (base.length !== 12) throw new BadRequestException('Base 12 raqam bo\'lishi kerak');
+    if (base.length !== 12) throw new BadRequestException(await this.i18n.t('validation.ean13BaseMustBe12Digits'));
     return base + this._calcEan13CheckDigit(base);
   }
 
