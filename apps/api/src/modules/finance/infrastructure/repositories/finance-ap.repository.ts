@@ -108,9 +108,12 @@ export class FinanceApRepository implements IFinanceApRepo {
 
   async createApEntry(dto: CreateApEntryDto): Promise<Result<Row>> {
     return safeCall(async () => {
-      const invoiceNo = `AP-${Date.now()}`;
+      // C4 continued (CRITICAL-CORRECTNESS-AUDIT-2026-07-06, finding 1.3): was `AP-${Date.now()}` —
+      // same finance_invoices.invoice_number collision risk as the other 3 independent writers
+      // (drizzle-finance-invoice.repo.ts, finance-actions.repository.ts, finance-ar.repository.ts),
+      // now closed the same way — server-side nextval(invoice_number_seq), atomic.
       const rows = await db.insert(finance_invoices).values({
-        invoice_number: invoiceNo,
+        invoice_number: sql`'AP-' || EXTRACT(YEAR FROM NOW())::text || '-' || LPAD(nextval('invoice_number_seq')::text, 6, '0')`,
         invoice_type:   'purchase',
         vendor_id:      dto.vendorId != null ? Number(dto.vendorId) : null,
         total_amount:   String(dto.amount),
@@ -119,7 +122,7 @@ export class FinanceApRepository implements IFinanceApRepo {
         payment_status: 'unpaid',
         notes:          dto.description ?? null,
         created_by:     dto.createdBy ?? null,
-      } as typeof finance_invoices.$inferInsert).returning();
+      } as unknown as typeof finance_invoices.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
     }, 'DB_ERROR');
   }

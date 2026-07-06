@@ -131,7 +131,10 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
    */
   async createApEntry(data: Record<string, unknown>): Promise<Result<Row>> {
     try {
-      const invoiceNumber = `AP-${Date.now()}`;
+      // C4 continued (CRITICAL-CORRECTNESS-AUDIT-2026-07-06, finding 1.3): was `AP-${Date.now()}` —
+      // same collision risk as drizzle-finance-invoice.repo.ts's saveInvoice(), same target table
+      // (finance_invoices), now closed with the same fix — server-side nextval(invoice_number_seq),
+      // atomic and collision-proof. The AP/AR prefix distinguishes these from the generic INV- series.
       const totalAmount   = data['amount'] ? String(data['amount']) : '0';
       const supplierName  = data['vendorName'] ? String(data['vendorName']) : 'Vendor';
       const dueDateRaw    = data['dueDate'] ? String(data['dueDate']) : null;
@@ -144,7 +147,8 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
           (invoice_number, invoice_type, vendor_id, total_amount, paid_amount,
            payment_status, due_date, supplier_name, notes, created_at, updated_at, created_by)
         VALUES
-          (${invoiceNumber}, 'purchase', ${data['vendorId'] ? Number(data['vendorId']) : null},
+          ('AP-' || EXTRACT(YEAR FROM NOW())::text || '-' || LPAD(nextval('invoice_number_seq')::text, 6, '0'),
+           'purchase', ${data['vendorId'] ? Number(data['vendorId']) : null},
            ${totalAmount}::numeric, 0, 'unpaid', ${dueDate}, ${supplierName},
            ${data['notes'] ? String(data['notes']) : null}, NOW(), NOW(), ${createdBy})
         RETURNING id, invoice_number, payment_status AS status, total_amount, invoice_type AS type, created_at
@@ -162,7 +166,7 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
    */
   async createArEntry(data: Record<string, unknown>): Promise<Result<Row>> {
     try {
-      const invoiceNumber = `AR-${Date.now()}`;
+      // C4 continued — see createApEntry() above for the full rationale.
       const totalAmount   = data['amount'] ? String(data['amount']) : '0';
       const customerName  = data['customerName'] ? String(data['customerName']) : 'Mijoz';
       const dueDateRaw    = data['dueDate'] ? String(data['dueDate']) : null;
@@ -175,7 +179,8 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
           (invoice_number, invoice_type, total_amount, paid_amount, payment_status,
            due_date, customer_name, notes, created_at, updated_at, created_by)
         VALUES
-          (${invoiceNumber}, 'sales', ${totalAmount}::numeric, 0, 'unpaid', ${dueDate},
+          ('AR-' || EXTRACT(YEAR FROM NOW())::text || '-' || LPAD(nextval('invoice_number_seq')::text, 6, '0'),
+           'sales', ${totalAmount}::numeric, 0, 'unpaid', ${dueDate},
            ${customerName}, ${data['notes'] ? String(data['notes']) : null}, NOW(), NOW(), ${createdBy})
         RETURNING id, invoice_number, payment_status AS status, total_amount, invoice_type AS type, created_at
       `);
