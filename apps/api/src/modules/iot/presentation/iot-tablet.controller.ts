@@ -25,6 +25,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { EventBus, CommandBus } from '@nestjs/cqrs';
 import { TashkentTimeService } from '@common/time';
 import { MesCompletedEvent } from '@modules/mes/domain/events/mes-completed.event';
@@ -82,6 +83,7 @@ export class IotTabletController {
     private readonly eventBus: EventBus,
     private readonly commandBus: CommandBus,
     private readonly brakLimitRepo: MesBrakLimitRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   // -- Tablet PWA endpoints ----------------------------------------------------
@@ -201,7 +203,7 @@ export class IotTabletController {
   @Public()
   async tabletRefresh(@Headers('x-tablet-token') tabletToken: string | undefined) {
     if (!tabletToken) {
-      throw new UnauthorizedException('Tablet token majburiy');
+      throw new UnauthorizedException(await this.i18n.t('errors.tabletTokenRequired'));
     }
     return unwrapOrThrow(await this.tabletSvc.refresh(tabletToken));
   }

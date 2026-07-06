@@ -19,6 +19,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -56,6 +57,7 @@ export class IotSensorsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get devices' })
@@ -80,7 +82,7 @@ export class IotSensorsController {
   async getDevice(@Param('id') deviceId: string) {
     this.logger.log('Get device');
     const rows = await db.select().from(iotDevices).where(eq(iotDevices.id, parseInt(deviceId, 10))).limit(1);
-    if (!rows[0]) throw new NotFoundException(`Device #${deviceId} topilmadi`);
+    if (!rows[0]) throw new NotFoundException(await this.i18n.t('errors.deviceNotFoundWithId', { args: { id: deviceId } }));
     return { statusCode: HttpStatus.OK, data: rows[0] };
   }
 
@@ -203,6 +205,6 @@ export class IotSensorsController {
     }
 
     // 3. No data at all — 404 instead of fake zeros
-    throw new NotFoundException(`Sensor #${sensorId} uchun OEE ma'lumoti topilmadi`);
+    throw new NotFoundException(await this.i18n.t('errors.sensorOeeDataNotFoundWithId', { args: { id: sensorId } }));
   }
 }
