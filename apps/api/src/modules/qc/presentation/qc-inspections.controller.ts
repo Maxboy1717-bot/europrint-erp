@@ -20,6 +20,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { unwrapOrNotFoundDefined } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -49,6 +50,7 @@ export class QcInspectionsController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly qcNewService: QcNewService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List inspections' })
@@ -150,7 +152,7 @@ export class QcInspectionsController {
     this.logger.log(`Updating inspection ${inspectionId}`);
     const existing = await this.qcNewService.getInspectionById(inspectionId);
     if (!existing.ok || existing.data == null) {
-      throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.inspectionNotFoundWithId', { args: { id: inspectionId } }));
     }
     const updated = await this.qcNewService.updateInspection(inspectionId, dto);
     return { statusCode: HttpStatus.OK, data: unwrapOrNotFoundDefined(updated, `Inspection ${inspectionId} not found`) };
@@ -166,10 +168,10 @@ export class QcInspectionsController {
     this.logger.log(`Deleting inspection ${inspectionId}`);
     const existing = await this.qcNewService.getInspectionById(inspectionId);
     if (!existing.ok || existing.data == null) {
-      throw new NotFoundException(`Tekshiruv #${inspectionId} topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.inspectionNotFoundWithId', { args: { id: inspectionId } }));
     }
     const deleted = await this.qcNewService.deleteInspection(inspectionId);
-    if (!deleted.ok) throw new NotFoundException(`Inspection ${inspectionId} o'chirib bo'lmadi`);
+    if (!deleted.ok) throw new NotFoundException(await this.i18n.t('errors.inspectionDeleteFailedWithId', { args: { id: inspectionId } }));
     return { statusCode: HttpStatus.OK, data: { id: inspectionId, deleted: deleted.data } };
   }
 }

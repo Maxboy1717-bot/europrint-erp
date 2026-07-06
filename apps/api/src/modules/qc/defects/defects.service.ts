@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IDefectsRepository, DEFECTS_REPO } from './i-defects.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class DefectsService {
   private readonly logger = new Logger(DefectsService.name);
 
-  constructor(@Inject(DEFECTS_REPO) private readonly defectsRepo: IDefectsRepository) {}
+  constructor(
+    @Inject(DEFECTS_REPO) private readonly defectsRepo: IDefectsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAllBraks(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -29,7 +33,7 @@ export class DefectsService {
     return safeCall(async () => {
     const result = await this.defectsRepo.findBrakById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Brak #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.brakNotFoundWithId', { args: { id } }));
     return result.data;
   
     });}

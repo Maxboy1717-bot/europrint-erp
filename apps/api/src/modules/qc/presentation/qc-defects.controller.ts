@@ -5,6 +5,7 @@
 
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -54,7 +55,11 @@ enum Role {
 export class QcDefectsController {
   private readonly logger = new Logger(QcDefectsController.name);
 
-  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    private readonly i18n: I18nService,
+  ) {}
 
   /** Persist a QC status transition on the order's qc_inspections row (opened by the MES->QC trigger).
    *  Was missing: the approve/reject/submit routes echoed {approved:true} without writing the DB. */
@@ -177,7 +182,7 @@ export class QcDefectsController {
   async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'finance_approved');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -197,7 +202,7 @@ export class QcDefectsController {
   async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'finance_approved');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -217,7 +222,7 @@ export class QcDefectsController {
   async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'qc_approved');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -237,7 +242,7 @@ export class QcDefectsController {
   async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'qc_approved');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -271,7 +276,7 @@ export class QcDefectsController {
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcRejectionSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'rejected');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     await this._recordRejection(orderId, dto);
     return { orderId, rejected: true };
   }
@@ -284,7 +289,7 @@ export class QcDefectsController {
   async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcRejectionSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'rejected');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     await this._recordRejection(orderId, dto);
     return { orderId, rejected: true };
   }
@@ -297,7 +302,7 @@ export class QcDefectsController {
   async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'inspector_submitted');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     return { orderId, submitted: true };
   }
 
@@ -309,7 +314,7 @@ export class QcDefectsController {
   async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'inspector_submitted');
-    if (!updated) throw new NotFoundException(`QC inspection for order ${orderId} not found`);
+    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     return { orderId, submitted: true };
   }
 }
