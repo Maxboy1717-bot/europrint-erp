@@ -171,7 +171,22 @@ export class FinanceAccountingService {
    *  - Otherwise we return a CLEAR 400. We do NOT silently persist a header, do NOT write gl_lines,
    *    and do NOT invent a contra account.
    */
-  async createGlDocument(body: Record<string, unknown>) {
+  /**
+   * F9 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): manual journal entries now go through a real
+   * draft -> review -> post gate instead of posting straight to `entries`. This endpoint has no
+   * FE caller (grep-verified, per the Q1 comment below) so changing its contract is zero-risk to
+   * existing consumers. Event-driven postings (sales invoice, payroll, POS, delivery) are NOT
+   * gated here — those derive from an already-approved business event and post immediately, same
+   * as before; this gate is specifically for ad-hoc, human-entered journal entries, matching how
+   * real accounting systems treat manual JEs differently from system-generated ones.
+   *
+   * Reuses `gl_documents` (0 live rows since the SAP-conformance fix removed its old write path,
+   * per the Q1 comment above — its status/posted_by/posted_at/metadata columns already fit a
+   * draft-document workflow, so no new table is needed — Q-35) as the draft store: this method
+   * validates + persists a `pending_review` row; `approveGlDocument`/`rejectGlDocument` below
+   * complete the gate.
+   */
+  async createGlDocument(body: Record<string, unknown>, createdBy?: number) {
     const rawLines = Array.isArray(body.lines) ? (body.lines as Array<Record<string, unknown>>) : [];
     if (rawLines.length === 0) {
       throw new BadRequestException(
@@ -204,26 +219,80 @@ export class FinanceAccountingService {
       );
     }
 
-    // Balanced → post to the canonical entries ledger via the ONE engine.
     const reference = String(body.documentNumber ?? body.document_number ?? `GLDOC-${Date.now()}`);
-    const posted = await this.glPosting.postJournal(lines, reference);
-    if (!posted.ok) {
-      // Account-not-in-chart / DB failures surface honestly (no header, no gl_lines).
-      throw new BadRequestException(
-        typeof posted.error === 'string' ? posted.error : posted.error.message,
-      );
-    }
+    const inserted = await runQuery<{ id: number; created_at: string }>(sql`
+      INSERT INTO gl_documents
+        (document_number, document_date, posting_date, document_type, description, total_debit,
+         total_credit, status, created_by, metadata, created_at)
+      VALUES
+        (${reference}, ${String(body.documentDate ?? body.document_date ?? this._time.now().toISOString().slice(0, 10))},
+         ${String(body.postingDate ?? body.posting_date ?? this._time.now().toISOString().slice(0, 10))},
+         'manual_journal',
+         ${body.description != null ? String(body.description) : null}, ${totalDebit}, ${totalCredit},
+         'pending_review', ${createdBy ?? null}, ${JSON.stringify({ lines })}::jsonb, NOW())
+      RETURNING id, created_at
+    `);
+    const draft = inserted.rows[0];
+    if (!draft) throw new InternalServerErrorException('GL hujjat qoralamasi saqlanmadi');
 
     return {
-      entryId: posted.data,
+      draftId: draft.id,
+      status: 'pending_review',
       reference,
       documentDate: body.documentDate ?? body.document_date ?? null,
       description: body.description ?? null,
       totalDebit,
       totalCredit,
       lines,
-      ledger: 'entries',
+      ledger: null, // not yet posted — see POST .../gl-entries/:id/approve
     };
+  }
+
+  /**
+   * F9: approve a pending_review draft — re-validates the balance (defense in depth; it was
+   * already validated at draft time) and posts through the ONE engine. Idempotent: calling this
+   * twice on an already-posted draft returns Err (status guard), never double-posts.
+   */
+  async approveGlDocument(id: number, approvedBy: number) {
+    const rows = await runQuery<{ id: number; document_number: string; status: string; metadata: unknown }>(sql`
+      SELECT id, document_number, status, metadata FROM gl_documents WHERE id = ${id} LIMIT 1
+    `);
+    const draft = rows.rows[0];
+    if (!draft) throw new NotFoundException(`GL hujjat qoralamasi #${id} topilmadi`);
+    if (draft.status !== 'pending_review') {
+      throw new BadRequestException(`GL hujjat #${id} allaqachon "${draft.status}" holatida — qayta tasdiqlab bo'lmaydi`);
+    }
+    const meta = (typeof draft.metadata === 'string' ? JSON.parse(draft.metadata) : draft.metadata) as { lines?: JournalLine[] };
+    const lines = Array.isArray(meta?.lines) ? meta.lines : [];
+    if (lines.length === 0) throw new InternalServerErrorException(`GL hujjat #${id} yozuvlari yo'qolgan`);
+
+    const posted = await this.glPosting.postJournal(lines, draft.document_number);
+    if (!posted.ok) {
+      throw new BadRequestException(typeof posted.error === 'string' ? posted.error : posted.error.message);
+    }
+
+    await runQuery(sql`
+      UPDATE gl_documents
+      SET status = 'posted', posted_by = ${approvedBy}, posted_at = NOW(),
+          reference_type = 'entries', reference_id = ${String(posted.data)}
+      WHERE id = ${id}
+    `);
+
+    return { draftId: id, entryId: posted.data, status: 'posted' as const };
+  }
+
+  /** F9: reject a pending_review draft — no GL post, just a status flip with the reviewer recorded. */
+  async rejectGlDocument(id: number, rejectedBy: number) {
+    const result = await runQuery<{ id: number }>(sql`
+      UPDATE gl_documents
+      SET status = 'rejected', posted_by = ${rejectedBy}, posted_at = NOW()
+      WHERE id = ${id} AND status = 'pending_review'
+      RETURNING id
+    `);
+    if (!result.rows[0]) {
+      throw new BadRequestException(`GL hujjat #${id} topilmadi yoki allaqachon ko'rib chiqilgan (faqat pending_review rad etiladi)`);
+    }
+    return { draftId: id, status: 'rejected' as const };
   }
 
   /**

@@ -76,9 +76,31 @@ export class FinanceMainActionsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('gl-entries')
   @HttpCode(HttpStatus.CREATED)
-  async createGlEntry(@Body() body: unknown) {
+  async createGlEntry(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateGlEntrySchema.parse(body);
-    return this.accountingSvc.createGlDocument(dto as Record<string, unknown>);
+    return this.accountingSvc.createGlDocument(dto as Record<string, unknown>, user?.sub ?? user?.id);
+  }
+
+  // F9 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): draft -> review -> post gate for manual journal
+  // entries. Narrower @Roles than the class-level FINANCE_ROLES — the accountant/finance_manager
+  // who DRAFTS a JE above cannot also be the one who approves it (create != approve, SoD).
+  @ApiOperation({ summary: 'Approve gl entry draft' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('gl-entries/:id/approve')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
+  async approveGlEntry(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.accountingSvc.approveGlDocument(Number(id), user?.sub ?? user?.id);
+  }
+
+  @ApiOperation({ summary: 'Reject gl entry draft' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('gl-entries/:id/reject')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
+  async rejectGlEntry(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.accountingSvc.rejectGlDocument(Number(id), user?.sub ?? user?.id);
   }
 
   // Q2 (SAP-conformance fix, 2026-07-04): "reversed" status now checked against the canonical
