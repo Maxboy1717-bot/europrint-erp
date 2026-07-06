@@ -25,6 +25,16 @@ export class GlPostingService {
 
   async postSalesInvoice(invoiceId: number | string, amount: number, tax: number): Promise<Result<number>> {
     this.logger.debug(`Posting Sales Invoice - ID: ${invoiceId}, Amount: ${amount}, Tax: ${tax}`);
+    // F2 data-quality gate: a GL entry must trace to a real finance_invoices row (ACCOUNTING-STANDARDS-AUDIT-2026-07-06).
+    const invoiceIdNum = Number(invoiceId);
+    if (!Number.isFinite(invoiceIdNum)) {
+      return Err(`EP-FIN-DATA-QUALITY: invoiceId noto'g'ri (${invoiceId}) — manbasiz GL yozuvi rad etildi`);
+    }
+    const invoiceExists = await this.glPostingRepo.financeInvoiceExists(invoiceIdNum);
+    if (!invoiceExists.ok) return Err(invoiceExists.error);
+    if (!invoiceExists.data) {
+      return Err(`EP-FIN-DATA-QUALITY: finance_invoices #${invoiceIdNum} topilmadi — manbasiz GL yozuvi rad etildi`);
+    }
     const lines: JournalLine[] = [
       { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Accounts Receivable', debit: amount + tax, credit: 0 },
       { accountCode: GL.REVENUE, accountName: 'Sales Revenue', debit: 0, credit: amount },
@@ -124,6 +134,12 @@ export class GlPostingService {
     if (costOfGoods < 0 || tax < 0) {
       return Err(`EP-FIN-005: tax/costOfGoods must be >= 0 (tax=${tax}, cogs=${costOfGoods})`);
     }
+    // F2 data-quality gate: a GL entry must trace to a real sales_orders row (ACCOUNTING-STANDARDS-AUDIT-2026-07-06).
+    const orderExists = await this.glPostingRepo.salesOrderExists(orderId);
+    if (!orderExists.ok) return Err(orderExists.error);
+    if (!orderExists.data) {
+      return Err(`EP-FIN-DATA-QUALITY: sales_orders #${orderId} topilmadi — manbasiz GL yozuvi rad etildi`);
+    }
     const amount = totalAmount - tax; // revenue net of VAT
     const lines: JournalLine[] = [
       { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Debitorlar (AR)', debit: totalAmount, credit: 0 },
@@ -153,6 +169,18 @@ export class GlPostingService {
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       return Err(`Double-entry validation failed: Debit ${totalDebit} != Credit ${totalCredit}`);
+    }
+
+    // F2 data-quality gate (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): a balanced-but-zero journal (every
+    // line 0) passes the check above and used to fall through to insertJournal([]) — a silent no-op that
+    // returns Ok() while writing nothing. This is the exact root cause traced in
+    // GL-GARBAGE-ROW-ARCHIVE-2026-07-06.md's "F2/F3 residual risk" note. Enforced centrally here so every
+    // caller (current and future) is covered, not just the ones with their own per-method guard.
+    if (!(totalDebit > 0)) {
+      return Err(
+        `EP-FIN-DATA-QUALITY: jurnal umumiy summasi 0 yoki manfiy (reference=${reference}) — ` +
+          `bo'sh/soxta GL yozuvi rad etildi`,
+      );
     }
 
     const entryDate = new Date().toISOString().slice(0, 10);

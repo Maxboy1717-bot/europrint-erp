@@ -10,13 +10,25 @@ import { GlPostingService } from '../../src/modules/finance/domain/services/gl-p
 import { Ok } from '../../src/common/result';
 import type { IGlPostingRepository } from '../../src/modules/finance/domain/repositories/i-gl-posting.repo';
 
-const mockGlRepo: IGlPostingRepository = {
-  insertEntry: jest.fn().mockResolvedValue(Ok(1)),
-  insertJournal: jest.fn().mockResolvedValue(Ok(1)),
-};
+function makeMockGlRepo(): jest.Mocked<IGlPostingRepository> {
+  return {
+    insertEntry: jest.fn().mockResolvedValue(Ok(1)),
+    insertJournal: jest.fn().mockResolvedValue(Ok(1)),
+    findEntryIdByReference: jest.fn().mockResolvedValue(Ok(null)),
+    findClosedPeriodForDate: jest.fn().mockResolvedValue(Ok(null)),
+    financeInvoiceExists: jest.fn().mockResolvedValue(Ok(true)),
+    salesOrderExists: jest.fn().mockResolvedValue(Ok(true)),
+  };
+}
 
 describe('GlPostingService', () => {
-  const svc = new GlPostingService(mockGlRepo);
+  let mockGlRepo: jest.Mocked<IGlPostingRepository>;
+  let svc: GlPostingService;
+
+  beforeEach(() => {
+    mockGlRepo = makeMockGlRepo();
+    svc = new GlPostingService(mockGlRepo);
+  });
 
   describe('postSalesInvoice()', () => {
     it('balances AR debit against revenue + tax credit', async () => {
@@ -36,9 +48,23 @@ describe('GlPostingService', () => {
       expect(r.ok).toBe(true);
     });
 
-    it('handles zero-amount sales invoice (technical edge)', async () => {
+    // F2 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): a zero-amount posting used to return Ok() while
+    // inserting nothing (insertJournal([])) — the exact shape of the POS-GL-1 garbage row (F1). It is
+    // now rejected with a clear error instead of a silent no-op.
+    it('rejects a zero-amount sales invoice instead of silently no-op-ing', async () => {
       const r = await svc.postSalesInvoice(3, 0, 0);
-      expect(r.ok).toBe(true);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.message).toMatch(/EP-FIN-DATA-QUALITY/);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
+    });
+
+    // F2: the GL entry must trace to a real finance_invoices row.
+    it('rejects a posting when the source finance_invoices row does not exist', async () => {
+      mockGlRepo.financeInvoiceExists.mockResolvedValueOnce(Ok(false));
+      const r = await svc.postSalesInvoice(999999, 1_000, 150);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.message).toMatch(/finance_invoices #999999 topilmadi/);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
     });
   });
 
@@ -53,9 +79,11 @@ describe('GlPostingService', () => {
       expect(r.ok).toBe(true);
     });
 
-    it('zero payment is allowed', async () => {
+    // F2: zero payments are no longer a silent no-op (see postSalesInvoice test above for root cause).
+    it('rejects a zero payment instead of silently no-op-ing', async () => {
       const r = await svc.postCustomerPayment(12, 0);
-      expect(r.ok).toBe(true);
+      expect(r.ok).toBe(false);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
     });
   });
 
@@ -77,9 +105,11 @@ describe('GlPostingService', () => {
       expect(r.ok).toBe(true);
     });
 
-    it('zero vendor payment is allowed', async () => {
+    // F2: zero vendor payments are no longer a silent no-op.
+    it('rejects a zero vendor payment instead of silently no-op-ing', async () => {
       const r = await svc.postVendorPayment(31, 0);
-      expect(r.ok).toBe(true);
+      expect(r.ok).toBe(false);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
     });
   });
 
@@ -108,8 +138,57 @@ describe('GlPostingService', () => {
       expect(r.ok).toBe(true);
     });
 
-    it('zero gross still balances (degenerate but valid)', async () => {
+    // F2: a zero-gross "payroll" is a degenerate no-op, not a valid posting — now rejected.
+    it('rejects a zero-gross payroll instead of silently no-op-ing', async () => {
       const r = await svc.postPayroll(52, 0);
+      expect(r.ok).toBe(false);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('postDeliveryCompleted()', () => {
+    it('posts a balanced 5-leg entry when the sales order exists', async () => {
+      const r = await svc.postDeliveryCompleted(100, 10_000, 1_200, 4_000);
+      expect(r.ok).toBe(true);
+    });
+
+    it('rejects when totalAmount <= 0 (pre-existing guard, unaffected by F2)', async () => {
+      const r = await svc.postDeliveryCompleted(101, 0, 0, 0);
+      expect(r.ok).toBe(false);
+    });
+
+    // F2: the GL entry must trace to a real sales_orders row — this is the exact gap that let the
+    // POS-GL-1 garbage row (F1) post against a pending, zero-amount source movement.
+    it('rejects a posting when the source sales_orders row does not exist', async () => {
+      mockGlRepo.salesOrderExists.mockResolvedValueOnce(Ok(false));
+      const r = await svc.postDeliveryCompleted(999999, 10_000, 1_200, 4_000);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.message).toMatch(/sales_orders #999999 topilmadi/);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('postJournal() — generic path, unaffected source-check', () => {
+    it('rejects a zero-total generic journal (no per-caller table to check, but amount gate still applies)', async () => {
+      const r = await svc.postJournal(
+        [
+          { accountCode: '1000', accountName: 'A', debit: 0, credit: 0 },
+          { accountCode: '2000', accountName: 'B', debit: 0, credit: 0 },
+        ],
+        'ADHOC-1',
+      );
+      expect(r.ok).toBe(false);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
+    });
+
+    it('accepts a real balanced generic journal', async () => {
+      const r = await svc.postJournal(
+        [
+          { accountCode: '1000', accountName: 'A', debit: 500, credit: 0 },
+          { accountCode: '2000', accountName: 'B', debit: 0, credit: 500 },
+        ],
+        'ADHOC-2',
+      );
       expect(r.ok).toBe(true);
     });
   });

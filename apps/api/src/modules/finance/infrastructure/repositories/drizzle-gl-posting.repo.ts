@@ -135,6 +135,30 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
     }
   }
 
+  async financeInvoiceExists(invoiceId: number): Promise<Result<boolean>> {
+    try {
+      const res = await runQuery<{ exists: boolean }>(
+        sql`SELECT EXISTS(SELECT 1 FROM finance_invoices WHERE id = ${invoiceId}) AS exists`,
+      );
+      const row = Array.isArray(res.rows) ? res.rows[0] : undefined;
+      return Ok(row ? Boolean(row.exists) : false);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `GL_INVOICE_EXISTS_CHECK_FAILED: ${String(e)}`));
+    }
+  }
+
+  async salesOrderExists(orderId: number): Promise<Result<boolean>> {
+    try {
+      const res = await runQuery<{ exists: boolean }>(
+        sql`SELECT EXISTS(SELECT 1 FROM sales_orders WHERE id = ${orderId}) AS exists`,
+      );
+      const row = Array.isArray(res.rows) ? res.rows[0] : undefined;
+      return Ok(row ? Boolean(row.exists) : false);
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', `GL_ORDER_EXISTS_CHECK_FAILED: ${String(e)}`));
+    }
+  }
+
   async findClosedPeriodForDate(entryDate: string): Promise<Result<{ id: number; periodCode: string } | null>> {
     try {
       // EP-FIN-064 period lock. accounting_periods.start_date/end_date and entries.entry_date are all

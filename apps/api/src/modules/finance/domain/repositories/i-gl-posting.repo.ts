@@ -44,6 +44,19 @@ export interface IGlPostingRepository {
    * (or no period covers it at all). The engine rejects a journal post when this returns a period.
    */
   findClosedPeriodForDate(entryDate: string): Promise<Result<{ id: number; periodCode: string } | null>>;
+
+  /**
+   * F2 data-quality gate (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): does a `finance_invoices` row with
+   * this id exist? postSalesInvoice rejects the posting when it doesn't — a GL entry must always trace
+   * to a real source document.
+   */
+  financeInvoiceExists(invoiceId: number): Promise<Result<boolean>>;
+
+  /**
+   * F2 data-quality gate: does a `sales_orders` row with this id exist? postDeliveryCompleted rejects
+   * the posting when it doesn't, for the same reason as financeInvoiceExists.
+   */
+  salesOrderExists(orderId: number): Promise<Result<boolean>>;
 }
 
 export const GL_POSTING_REPO = Symbol('IGlPostingRepository');
