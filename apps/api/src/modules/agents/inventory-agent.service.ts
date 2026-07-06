@@ -182,7 +182,7 @@ export class InventoryAgentService {
       const r = await this.insertRoll(args, qrPayload);
       const row = r.rows[0];
       if (!row) {
-        throw new BadRequestException("Bu roll allaqachon ro'yxatga olingan: " + args.rollId);
+        throw new BadRequestException(await this.i18n.t('errors.rollAlreadyRegistered', { args: { rollId: args.rollId } }));
       }
       return { id: row.id, qrPayload };
     });

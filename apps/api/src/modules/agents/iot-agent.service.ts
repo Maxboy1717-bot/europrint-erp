@@ -17,6 +17,7 @@
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
@@ -43,17 +44,18 @@ export class IotAgentService {
     private readonly audit: AgentAuditService,
     private readonly bus:   AgentEventBusService,
     @Inject(SENSOR_REPO) private readonly sensorRepo: ISensorRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   /** Sensorning eng so'nggi haqiqiy o'qishi (iot_sensors + iot_sensor_readings). */
   async collectSensorData(machineId: string): Promise<{ vibration: number; temp: number; current: number; timestamp: string }> {
     const deviceResult = await this.sensorRepo.findDeviceById(machineId);
     if (isErr(deviceResult)) {
-      throw new NotFoundException(`Sensor qurilma topilmadi: ${machineId}`);
+      throw new NotFoundException(await this.i18n.t('errors.deviceNotFoundWithId', { args: { id: machineId } }));
     }
     const readingsResult = await this.sensorRepo.findReadings(machineId, { limit: 1 });
     if (isErr(readingsResult) || readingsResult.data.length === 0) {
-      throw new NotFoundException(`Sensor #${machineId} uchun o'qish ma'lumoti topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.sensorReadingNotFoundForMachine', { args: { id: machineId } }));
     }
     const latest = readingsResult.data[0];
     // Kanonik sxema bitta `value` ustuniga ega (vibration/temp/current alohida
@@ -92,7 +94,7 @@ export class IotAgentService {
   async predictFailure(machineId: string): Promise<{ daysLeft: number; confidence: number }> {
     const deviceResult = await this.sensorRepo.findDeviceById(machineId);
     if (isErr(deviceResult)) {
-      throw new NotFoundException(`Sensor qurilma topilmadi: ${machineId}`);
+      throw new NotFoundException(await this.i18n.t('errors.deviceNotFoundWithId', { args: { id: machineId } }));
     }
     const device = deviceResult.data;
     const baseline = device.thresholds?.min;
