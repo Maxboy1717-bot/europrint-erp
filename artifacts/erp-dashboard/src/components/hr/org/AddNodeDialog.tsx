@@ -16,24 +16,19 @@ import {
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { NODE_TYPE_LABELS } from "./types";
+import { NODE_TYPE_LABELS, OrgNode } from "./types";
 import { ParentCardSelect } from "./ParentCardSelect";
 import { useTranslation } from '@/lib/i18n';
 
-export function AddNodeDialog({
-  open,
-  onClose,
-  onSuccess,
-  initialParentId,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-  initialParentId?: string;
-}) {
-  const { t } = useTranslation("common");
-  const { toast } = useToast();
-  const [form, setForm] = useState({
+/** G4 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B5): source card + its resolved
+ * parentId, passed when the dialog is opened via the "duplicate" action instead of "add child". */
+export interface DuplicateFromInput {
+  node: OrgNode;
+  parentId: number | null;
+}
+
+function emptyForm(initialParentId?: string) {
+  return {
     name: "",
     nameRu: "",
     nodeType: "department",
@@ -50,11 +45,53 @@ export function AddNodeDialog({
     workSchedule: "",
     currentState: "",
     bonusConfig: "",
-  });
+  };
+}
 
-  // Update parentId if initialParentId changes
+/** Pre-fills from the source card's own (lightweight, tree-level) fields. Salary/rbac/schedule
+ * fields aren't carried on the tree node object — those stay blank, same as a fresh card. */
+function duplicatedForm(source: OrgNode, parentId: number | null) {
+  return {
+    ...emptyForm(),
+    name: `${source.name} (nusxa)`,
+    nameRu: source.nameRu ? `${source.nameRu} (копия)` : "",
+    nodeType: source.nodeType || "department",
+    tskp: source.tskp || "",
+    parentId: parentId != null ? String(parentId) : "",
+    razryadLevelId: source.razryadLevelId ?? null,
+  };
+}
+
+export function AddNodeDialog({
+  open,
+  onClose,
+  onSuccess,
+  initialParentId,
+  duplicateFrom,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  initialParentId?: string;
+  duplicateFrom?: DuplicateFromInput | null;
+}) {
+  const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const [form, setForm] = useState(() =>
+    duplicateFrom ? duplicatedForm(duplicateFrom.node, duplicateFrom.parentId) : emptyForm(initialParentId),
+  );
+
+  // Re-seed the form whenever the caller hands us a new prefill source — either a plain
+  // initialParentId (add-child) or a duplicateFrom (duplicate-card). Same ref-diff-on-render
+  // pattern as the pre-existing initialParentId sync below, extended to cover both.
   const prevParentId = useRef(initialParentId);
-  if (prevParentId.current !== initialParentId) {
+  const prevDuplicateFrom = useRef(duplicateFrom);
+  if (prevDuplicateFrom.current !== duplicateFrom) {
+    prevDuplicateFrom.current = duplicateFrom;
+    if (duplicateFrom) {
+      setForm(duplicatedForm(duplicateFrom.node, duplicateFrom.parentId));
+    }
+  } else if (prevParentId.current !== initialParentId) {
     prevParentId.current = initialParentId;
     setForm((f) => ({ ...f, parentId: initialParentId || "" }));
   }
@@ -95,11 +132,7 @@ export function AddNodeDialog({
       toast({ title: "Bo'lim qo'shildi" });
       onSuccess();
       onClose();
-      setForm({
-        name: "", nameRu: "", nodeType: "department", tskp: "", parentId: "",
-        razryadLevelId: null, salaryType: "", minSalary: "", maxSalary: "", rbacTier: "",
-        tskpTarget: "", tskpMeasurementUnit: "", workSchedule: "", currentState: "", bonusConfig: "",
-      });
+      setForm(emptyForm());
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });

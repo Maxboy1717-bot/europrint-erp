@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, UserX, Settings2, Users, ChevronUp, Brain } from "lucide-react";
+import { Plus, UserX, Settings2, Users, ChevronUp, Brain, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { OrgNode, CARD_W, CARD_H, LEVEL_LABELS, HRC_INDICATORS } from "./types";
 import { getLevelColor, getInitials } from "./helpers";
@@ -15,12 +15,17 @@ export function TreeNodeCard({
   node,
   onClick,
   onAdd,
+  onDuplicate,
   isDragging,
   isDragTarget,
 }: {
   node: OrgNode;
   onClick: (id: number) => void;
   onAdd: (parentId: string) => void;
+  /** G4 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B5): repetitive-entry speed-up —
+   * opens AddNodeDialog pre-filled from this card instead of a blank form. Optional so callers
+   * that don't wire it (if any remain) keep the old add-child-only toolbar. */
+  onDuplicate?: () => void;
   isDragging?: boolean;
   isDragTarget?: boolean;
 }) {
@@ -63,15 +68,28 @@ export function TreeNodeCard({
           style={{ width: 80, height: 80, background: "white" }}
         />
 
-        <button
-          className="absolute top-1.5 right-1.5 z-20 rounded-full bg-white/20 hover:bg-white/40 transition-colors flex items-center justify-center"
-          style={{ width: 20, height: 20 }}
-          onClick={(e) => { e.stopPropagation(); onAdd(String(node.id)); }}
-          title={t("pastkiBolimQoshish")}
-          data-testid={`button-add-child-${node.id}`}
-        >
-          <Plus className="h-3 w-3 text-white" />
-        </button>
+        <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1">
+          {onDuplicate && (
+            <button
+              className="rounded-full bg-white/20 hover:bg-white/40 transition-colors flex items-center justify-center"
+              style={{ width: 20, height: 20 }}
+              onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+              title={t("kartaniNusxalash", "Kartani nusxalash")}
+              data-testid={`button-duplicate-${node.id}`}
+            >
+              <Copy className="h-3 w-3 text-white" />
+            </button>
+          )}
+          <button
+            className="rounded-full bg-white/20 hover:bg-white/40 transition-colors flex items-center justify-center"
+            style={{ width: 20, height: 20 }}
+            onClick={(e) => { e.stopPropagation(); onAdd(String(node.id)); }}
+            title={t("pastkiBolimQoshish")}
+            data-testid={`button-add-child-${node.id}`}
+          >
+            <Plus className="h-3 w-3 text-white" />
+          </button>
+        </div>
 
         {isVacant && (
           <div className="absolute top-1.5 left-1.5">

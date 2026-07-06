@@ -8,6 +8,20 @@ import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP } from "./types";
 import { computeSubtreeWidth, layoutTree, flattenLayout } from "./helpers";
 import { TreeNodeCard } from "./TreeNodeCard";
 
+/** G4 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B5): OrgNode/LayoutNode don't carry
+ * their own parentId (only the nested `children` direction) — walk the tree once to build a
+ * child->parent lookup so "duplicate as sibling" (same parent as the source card) knows the
+ * right parentId, without changing the tree data shape everywhere else. */
+function buildParentMap(roots: LayoutNode[]): Map<number, number | null> {
+  const map = new Map<number, number | null>();
+  const walk = (node: LayoutNode, parentId: number | null) => {
+    map.set(node.node.id, parentId);
+    (node.children ?? []).forEach((child) => walk(child, node.node.id));
+  };
+  (Array.isArray(roots) ? roots : []).forEach((r) => walk(r, null));
+  return map;
+}
+
 function buildConnectors(nodes: LayoutNode[]): React.ReactNode[] {
   const lines: React.ReactNode[] = [];
   (Array.isArray(nodes) ? nodes : []).forEach((parent) => {
@@ -39,11 +53,14 @@ export function TreeCanvas({
   onNodeClick,
   onAddChild,
   onMoveNode,
+  onDuplicate,
 }: {
   roots: OrgNode[];
   onNodeClick: (id: number) => void;
   onAddChild: (parentId: string) => void;
   onMoveNode?: (args: { nodeId: number; newParentId: number }) => void;
+  /** G4: duplicate-card action — receives the source node plus its resolved parentId (null = root). */
+  onDuplicate?: (node: OrgNode, parentId: number | null) => void;
 }) {
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dropTargetId, setDropTargetId] = useState<number | null>(null);
@@ -60,6 +77,7 @@ export function TreeCanvas({
 
   const allNodes = (Array.isArray(layouts) ? layouts : []).flatMap(flattenLayout);
   const connectors = buildConnectors(allNodes);
+  const parentMap = onDuplicate ? buildParentMap(layouts) : null;
 
   const maxX = (Array.isArray(allNodes) ? allNodes : []).reduce((m, n) => Math.max(m, n.x + CARD_W), 0);
   const maxY = (Array.isArray(allNodes) ? allNodes : []).reduce((m, n) => Math.max(m, n.y + CARD_H), 0);
@@ -97,6 +115,7 @@ export function TreeCanvas({
             node={node}
             onClick={onNodeClick}
             onAdd={onAddChild}
+            onDuplicate={onDuplicate ? () => onDuplicate(node, parentMap?.get(node.id) ?? null) : undefined}
             isDragging={draggedId === node.id}
             isDragTarget={dropTargetId === node.id}
           />

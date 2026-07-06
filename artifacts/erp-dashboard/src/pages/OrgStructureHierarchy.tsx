@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { OrgNode, OrgStats, LEVEL_COLORS, LEVEL_LABELS } from "@/components/hr/org/types";
 import { countNodes } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
-import { AddNodeDialog } from "@/components/hr/org/AddNodeDialog";
+import { AddNodeDialog, DuplicateFromInput } from "@/components/hr/org/AddNodeDialog";
 import { TreeCanvas } from "@/components/hr/org/TreeCanvas";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -45,6 +45,7 @@ export default function OrgStructureHierarchy() {
   const [filterLevels, setFilterLevels] = useState<Set<number>>(new Set());
   const [addOpen, setAddOpen] = useState(false);
   const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
+  const [duplicateFrom, setDuplicateFrom] = useState<DuplicateFromInput | null>(null);
   // VISION (egasi 2026-06-25): KARTA-markazli — sahifa FAQAT karta-daraxti. Alohida "Kartalar" va
   // "Razryadlar" tablar OLIB TASHLANDI: razryad har KARTA ichida (node-detal), alohida emas. Karta
   // bosilsa → /org-structure/hierarchy/node/:id = to'liq karta-detali (razryad/oylik/ЦКП/rbac/xodim).
@@ -165,7 +166,16 @@ export default function OrgStructureHierarchy() {
   const totalFiltered = countNodes(filteredNodes);
 
   const handleAddChild = useCallback((parentId: string) => {
+    setDuplicateFrom(null);
     setAddParentId(parentId);
+    setAddOpen(true);
+  }, []);
+
+  // G4 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B5): opens AddNodeDialog pre-filled
+  // from an existing card instead of blank — speeds up building 50+ similar cards.
+  const handleDuplicate = useCallback((node: OrgNode, parentId: number | null) => {
+    setAddParentId(undefined);
+    setDuplicateFrom({ node, parentId });
     setAddOpen(true);
   }, []);
 
@@ -269,6 +279,7 @@ export default function OrgStructureHierarchy() {
               roots={filteredNodes}
               onNodeClick={(id) => navigate(`/org-structure/hierarchy/node/${id}`)}
               onAddChild={handleAddChild}
+              onDuplicate={handleDuplicate}
               onMoveNode={moveMutation.mutate}
             />
           </div>
@@ -287,8 +298,9 @@ export default function OrgStructureHierarchy() {
 
       <AddNodeDialog
         open={addOpen}
-        onClose={() => { setAddOpen(false); setAddParentId(undefined); }}
+        onClose={() => { setAddOpen(false); setAddParentId(undefined); setDuplicateFrom(null); }}
         initialParentId={addParentId}
+        duplicateFrom={duplicateFrom}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });
