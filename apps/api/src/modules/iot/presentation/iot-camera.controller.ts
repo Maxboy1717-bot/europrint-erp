@@ -69,7 +69,7 @@ export class IotCameraController {
   @UseGuards(RolesGuard)
   @Roles(...MANAGER_ROLES)
   async createCamera(@Body() body: unknown) {
-    const dto = parseOrThrow(CreateCameraBodySchema, body);
+    const dto = parseOrThrow(CreateCameraBodySchema, body, await this.i18n.t('validation.validationFailed'));
     const _rCreateCamera = await this.svc.createCamera(
       dto.name,
       dto.location ?? null,

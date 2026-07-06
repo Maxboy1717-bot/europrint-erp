@@ -9,10 +9,11 @@ import { z } from 'zod';
 export function parseOrThrow<S extends z.ZodTypeAny>(
   schema: S,
   body: unknown,
+  message: string,
 ): z.output<S> {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    throw new BadRequestException('Validation failed');
+    throw new BadRequestException(message);
   }
   return parsed.data as z.output<S>;
 }
