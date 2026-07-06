@@ -106,7 +106,18 @@ describe('SdLeadsService', () => {
       expect(r.data.lead_id).toBe(123);
       expect(r.data.order).toEqual({ id: 999, status: 'new' });
     }
-    expect(repo.convertLeadToOrderAtomic).toHaveBeenCalledWith(7, 50000, 123, 'note');
+    expect(repo.convertLeadToOrderAtomic).toHaveBeenCalledWith(7, 50000, 123, 'note', undefined);
+  });
+
+  // B14 (2026-07-05): sales_orders.created_by_user_id existed but was never written
+  // from lead->order conversion.
+  it('passes convertedBy through to the repository', async () => {
+    repo.getLeadForConvert.mockResolvedValue(
+      Ok({ customer_id: 7, expected_amount: 50000 }),
+    );
+    repo.convertLeadToOrderAtomic.mockResolvedValue(Ok({ id: 999, status: 'new' }));
+    await svc.convert(123, 'note', 42);
+    expect(repo.convertLeadToOrderAtomic).toHaveBeenCalledWith(7, 50000, 123, 'note', 42);
   });
 
   it('returns repository payload when getStats succeeds', async () => {

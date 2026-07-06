@@ -170,12 +170,16 @@ export class SdLeadsRepository implements ISdLeadsRepo {
     expected_amount: unknown,
     lid: number,
     notes: unknown,
+    convertedBy?: number,
   ): Promise<Result<Row>> {
     try {
       const order = await db.transaction(async (tx) => {
+        // B14 (2026-07-05): created_by_user_id (the real integer creator column --
+        // matches execSdSalesOrderInsert's convention; sales_orders.created_by is
+        // uuid-typed and intentionally left null elsewhere) was never written here.
         const res = await tx.execute(sql`
-          INSERT INTO sales_orders (customer_id, total_amount, status, crm_lead_id, notes)
-          VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null})
+          INSERT INTO sales_orders (customer_id, total_amount, status, crm_lead_id, notes, created_by_user_id)
+          VALUES (${customer_id ?? null}, ${expected_amount ?? 0}, 'draft', ${lid}, ${notes ?? null}, ${convertedBy ?? null})
           RETURNING *
         `);
         const inserted = (res.rows?.[0] ?? {}) as Row;

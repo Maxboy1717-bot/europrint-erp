@@ -22,7 +22,7 @@ export interface ISdLeadsRepo {
   getLeadForConvert(lid: number): Promise<Result<Row | null>>;
   insertOrderFromLead(customer_id: unknown, expected_amount: unknown, lid: number, notes: unknown): Promise<Result<Row>>;
   markConverted(lid: number): Promise<Result<void>>;
-  convertLeadToOrderAtomic(customer_id: unknown, expected_amount: unknown, lid: number, notes: unknown): Promise<Result<Row>>;
+  convertLeadToOrderAtomic(customer_id: unknown, expected_amount: unknown, lid: number, notes: unknown, convertedBy?: number): Promise<Result<Row>>;
   addActivity(lid: number, type: unknown, subject: unknown, notes: unknown, employee_id: unknown): Promise<Result<Row>>;
   getActivities(lid: number): Promise<Result<Row[]>>;
 }

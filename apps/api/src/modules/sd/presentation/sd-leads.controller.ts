@@ -23,6 +23,8 @@ import {
   SdConvertLeadSchema, SdConvertLeadDto,
   SdAddLeadActivitySchema, SdAddLeadActivityDto,
 } from '../dto/sd.dto';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 
 const SD_WRITE_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 const SD_ADMIN_ROLES = ['sales_manager', 'super_admin', 'director'];
@@ -155,8 +157,8 @@ export class SdLeadsController {
   @Post(':id/convert')
   @UsePipes(new ZodValidationPipe(SdConvertLeadSchema))
   @Roles(...SD_WRITE_ROLES)
-  async convert(@Param('id') id: string, @Body() body: SdConvertLeadDto) {
-    return unwrapOrThrow(await this.svc.convert(safeInt(id, 0), body.notes));
+  async convert(@Param('id') id: string, @Body() body: SdConvertLeadDto, @CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.convert(safeInt(id, 0), body.notes, user.id));
   }
 
   @ApiOperation({ summary: 'Add activity' })
