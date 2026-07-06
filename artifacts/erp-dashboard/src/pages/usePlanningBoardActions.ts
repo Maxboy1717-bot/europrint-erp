@@ -20,11 +20,11 @@ import type {
   InsertPlanningOperation,
 } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import { format } from "date-fns";
 import type { ProductionPlanRow, PlanningRunForm } from "./PlanningBoardTypes";
 
 interface UsePlanningBoardActionsOptions {
-  lang: "uz" | "ru";
   editingPlan: ProductionPlanRow | null;
   setIsDialogOpen: (open: boolean) => void;
   setOpenPlanDialog: (open: boolean) => void;
@@ -36,7 +36,6 @@ interface UsePlanningBoardActionsOptions {
 }
 
 export function usePlanningBoardActions({
-  lang,
   editingPlan,
   setIsDialogOpen,
   setOpenPlanDialog,
@@ -47,6 +46,7 @@ export function usePlanningBoardActions({
   runForm,
 }: UsePlanningBoardActionsOptions) {
   const { toast } = useToast();
+  const { t } = useTranslation("production");
 
   // ---------------------------------------------------------------------------
   // Forms
@@ -108,7 +108,7 @@ export function usePlanningBoardActions({
       queryClient.invalidateQueries({ queryKey: ["/api/planning/operations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/planning/schedule"] });
       setIsDialogOpen(false);
-      toast({ title: lang === "uz" ? "Operatsiya yaratildi" : "Операция создана" });
+      toast({ title: t("PlanningBoard.operationCreated") });
     },
   });
 
@@ -119,7 +119,7 @@ export function usePlanningBoardActions({
       queryClient.invalidateQueries({ queryKey: ["/api/planning/operations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/planning/schedule"] });
       setIsDialogOpen(false);
-      toast({ title: lang === "uz" ? "Operatsiya yangilandi" : "Операция обновлена" });
+      toast({ title: t("PlanningBoard.operationUpdated") });
     },
   });
 
@@ -136,14 +136,14 @@ export function usePlanningBoardActions({
       setEditingPlan(null);
       toast({
         title: editingPlan
-          ? lang === "uz" ? "Reja yangilandi" : "План обновлён"
-          : lang === "uz" ? "Reja yaratildi" : "План создан",
+          ? t("PlanningBoard.planUpdated")
+          : t("PlanningBoard.planCreated"),
       });
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: lang === "uz" ? "Xatolik" : "Ошибка",
+        title: t("error"),
         description: error.message,
       });
     },
@@ -156,12 +156,12 @@ export function usePlanningBoardActions({
       queryClient.invalidateQueries({ queryKey: ["/api/erp/production-facts"] });
       setOpenFactDialog(false);
       factForm.reset();
-      toast({ title: lang === "uz" ? "Hisobot saqlandi" : "Отчёт сохранён" });
+      toast({ title: t("PlanningBoard.factSaved") });
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: lang === "uz" ? "Xatolik" : "Ошибка",
+        title: t("error"),
         description: error.message,
       });
     },
@@ -173,10 +173,10 @@ export function usePlanningBoardActions({
       queryClient.invalidateQueries({ queryKey: ["/api/erp/mrp-runs"] });
       setShowRunDialog(false);
       setRunForm({ runName: "", planningHorizon: 30, includeSafetyStock: true, description: "" });
-      toast({ title: lang === "uz" ? "MRP run yaratildi" : "MRP Run создан" });
+      toast({ title: t("PlanningBoard.mrpRunCreated") });
     },
     onError: () => {
-      toast({ variant: "destructive", title: lang === "uz" ? "Xato" : "Ошибка" });
+      toast({ variant: "destructive", title: t("error") });
     },
   });
 
@@ -187,11 +187,11 @@ export function usePlanningBoardActions({
       queryClient.invalidateQueries({ queryKey: ["/api/erp/mrp-runs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/erp/mrp-results"] });
       queryClient.invalidateQueries({ queryKey: ["/api/erp/purchase-requisitions"] });
-      toast({ title: lang === "uz" ? "MRP hisoblandi" : "MRP рассчитан" });
+      toast({ title: t("mrp_calculated") });
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/erp/mrp-runs"] });
-      toast({ variant: "destructive", title: lang === "uz" ? "Xato" : "Ошибка" });
+      toast({ variant: "destructive", title: t("error") });
     },
   });
 
@@ -203,8 +203,8 @@ export function usePlanningBoardActions({
     if (!runForm.runName) {
       toast({
         variant: "destructive",
-        title: lang === "uz" ? "Xato" : "Ошибка",
-        description: lang === "uz" ? "Run nomini kiriting" : "Введите название",
+        title: t("error"),
+        description: t("PlanningBoard.enterRunName"),
       });
       return;
     }

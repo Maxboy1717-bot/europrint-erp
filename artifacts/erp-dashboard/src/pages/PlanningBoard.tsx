@@ -7,13 +7,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "@/lib/i18n";
 import { format, addDays } from "date-fns";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BarChart3, Calendar as CalendarIcon, FileText, Layers, Package } from "lucide-react";
 
 import {
-  buildTranslations,
   type PlanningFilters,
   type PlanningRunForm,
   type PlanningOperation,
@@ -47,7 +47,7 @@ import type { ScheduleEntry } from "./planning/planning-types";
 
 export default function PlanningBoard() {
   const { isAuthenticated } = useAuth();
-  const [lang, setLang] = useState<"uz" | "ru">("uz");
+  const { language, t, setLanguage } = useTranslation("production");
   const [activeTab, setActiveTab] = useState("operations");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOperation, setEditingOperation] = useState<PlanningOperation | null>(null);
@@ -72,16 +72,6 @@ export default function PlanningBoard() {
     description: "",
   });
 
-  // buildTranslations returns a flat label object. A few descendant components
-  // additionally invoke `t(...)` as a function for keys not present on the map.
-  // Wrap the map in a callable carrier so both `t.foo` and `t("foo")` work.
-  const tMap = buildTranslations(lang);
-  const tFn = ((key: string, _params?: Record<string, string | number>): string => {
-    const direct = (tMap as Record<string, unknown>)?.[key];
-    return typeof direct === 'string' ? direct : key;
-  });
-  const t = Object.assign(tFn, tMap) as typeof tMap & typeof tFn;
-
   const {
     form,
     planForm,
@@ -94,7 +84,6 @@ export default function PlanningBoard() {
     calculateMRPMutation,
     handleCreateRun,
   } = usePlanningBoardActions({
-    lang,
     editingPlan,
     setIsDialogOpen,
     setOpenPlanDialog,
@@ -229,8 +218,8 @@ export default function PlanningBoard() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <PlanningBoardHeader
-        t={t} lang={lang} operationsData={operationsData}
-        onToggleLang={() => setLang(lang === "uz" ? "ru" : "uz")}
+        t={t} language={language} operationsData={operationsData}
+        onToggleLang={() => setLanguage(language === "uz" ? "ru" : "uz")}
         onExport={() => {}} onAddOperation={handleCreate}
       />
 
@@ -239,12 +228,12 @@ export default function PlanningBoard() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
         <ScrollArea className="w-full">
           <TabsList className="bg-muted/40 p-1 rounded-xl inline-flex">
-            <TabsTrigger value="operations" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-operations"><Layers className="h-4 w-4 mr-1 hidden sm:block" />{t.operationsTab}</TabsTrigger>
-            <TabsTrigger value="schedule" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-schedule"><CalendarIcon className="h-4 w-4 mr-1 hidden sm:block" />{t.scheduleTab}</TabsTrigger>
-            <TabsTrigger value="plans" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-plans"><CalendarIcon className="h-4 w-4 mr-1 hidden sm:block" />{t.plansTab}</TabsTrigger>
-            <TabsTrigger value="facts" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-facts"><FileText className="h-4 w-4 mr-1 hidden sm:block" />{t.factsTab}</TabsTrigger>
-            <TabsTrigger value="plan-vs-fact" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-plan-vs-fact"><BarChart3 className="h-4 w-4 mr-1 hidden sm:block" />{t.planVsFactTab}</TabsTrigger>
-            <TabsTrigger value="mrp" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-mrp"><Package className="h-4 w-4 mr-1 hidden sm:block" />{t.mrpTab}</TabsTrigger>
+            <TabsTrigger value="operations" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-operations"><Layers className="h-4 w-4 mr-1 hidden sm:block" />{t("PlanningBoard.operationsTab")}</TabsTrigger>
+            <TabsTrigger value="schedule" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-schedule"><CalendarIcon className="h-4 w-4 mr-1 hidden sm:block" />{t("PlanningBoard.scheduleTab")}</TabsTrigger>
+            <TabsTrigger value="plans" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-plans"><CalendarIcon className="h-4 w-4 mr-1 hidden sm:block" />{t("PlanningBoard.plansTab")}</TabsTrigger>
+            <TabsTrigger value="facts" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-facts"><FileText className="h-4 w-4 mr-1 hidden sm:block" />{t("PlanningBoard.factsTab")}</TabsTrigger>
+            <TabsTrigger value="plan-vs-fact" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-plan-vs-fact"><BarChart3 className="h-4 w-4 mr-1 hidden sm:block" />{t("PlanningBoard.planVsFactTab")}</TabsTrigger>
+            <TabsTrigger value="mrp" className="rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all" data-testid="tab-mrp"><Package className="h-4 w-4 mr-1 hidden sm:block" />{t("PlanningBoard.mrpTab")}</TabsTrigger>
           </TabsList>
         </ScrollArea>
 
@@ -254,7 +243,7 @@ export default function PlanningBoard() {
         />
 
         <PlanningTabPanels
-          lang={lang} t={t} filters={filters}
+          t={t} filters={filters}
           isLoadingSchedule={isLoadingSchedule} scheduleData={scheduleData}
           equipmentList={equipmentList} productionPlans={productionPlans} loadingPlans={loadingPlans}
           productionFacts={productionFacts} loadingFacts={loadingFacts}
@@ -272,25 +261,25 @@ export default function PlanningBoard() {
         open={isDialogOpen} onOpenChange={setIsDialogOpen} editingOperation={!!editingOperation}
         form={form} onSubmit={onSubmit}
         isSaving={createMutation.isPending || updateMutation.isPending}
-        papkaOrdersList={papkaOrdersList} equipmentList={equipmentList} lang={lang} t={t}
+        papkaOrdersList={papkaOrdersList} equipmentList={equipmentList} t={t}
       />
 
       <PlanFormDialog
         open={openPlanDialog} onOpenChange={setOpenPlanDialog} editingPlan={!!editingPlan}
         planForm={planForm} onSubmit={(data) => savePlan.mutate(data)}
-        isSaving={savePlan.isPending} workCenters={workCenters} lang={lang} t={t}
+        isSaving={savePlan.isPending} workCenters={workCenters} t={t}
       />
 
       <FactFormDialog
         open={openFactDialog} onOpenChange={setOpenFactDialog}
         factForm={factForm} onSubmit={(data) => saveFact.mutate(data)}
-        isSaving={saveFact.isPending} workCenters={workCenters} products={products} lang={lang} t={t}
+        isSaving={saveFact.isPending} workCenters={workCenters} products={products} t={t}
       />
 
       <MRPRunDialog
         open={showRunDialog} onOpenChange={setShowRunDialog}
         runForm={runForm} onFormChange={(f) => setRunForm((prev) => ({ ...prev, ...f }))}
-        onCreateRun={handleCreateRun} isCreating={createRunMutation.isPending} lang={lang} t={t}
+        onCreateRun={handleCreateRun} isCreating={createRunMutation.isPending} t={t}
       />
 
       <MRPResultsDialog

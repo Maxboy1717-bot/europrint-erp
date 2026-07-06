@@ -16,17 +16,19 @@ import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { Plus, Filter, Calendar as CalendarIcon, Download, Pencil } from "lucide-react";
-import type { PlanningOperation, PapkaOrder, Equipment, PlanningTranslationMap, PlanningFilters } from "./PlanningBoardTypes";
+import type { PlanningOperation, PapkaOrder, Equipment, PlanningFilters } from "./PlanningBoardTypes";
 import { exportOperationsCSV } from "./PlanningBoardTypes";
 import { EPPageHeader, EPLoader } from "@/components/ep";
+
+type TFunc = (key: string, params?: Record<string, string | number>) => string;
 
 // ---------------------------------------------------------------------------
 // PlanningBoardHeader
 // ---------------------------------------------------------------------------
 
 interface PlanningBoardHeaderProps {
-  t: PlanningTranslationMap & ((key: string) => string);
-  lang: "uz" | "ru";
+  t: TFunc;
+  language: "uz" | "uz-cyr" | "ru";
   operationsData: { operations?: PlanningOperation[]; items?: PlanningOperation[] } | undefined;
   onToggleLang: () => void;
   onExport: () => void;
@@ -35,7 +37,7 @@ interface PlanningBoardHeaderProps {
 
 export function PlanningBoardHeader({
   t,
-  lang,
+  language,
   operationsData,
   onToggleLang,
   onExport,
@@ -56,9 +58,9 @@ export function PlanningBoardHeader({
         </div>
         <div>
           <EPPageHeader
-        breadcrumb={<><b className="text-foreground">{t.title}</b></>}
-        title={t.title}
-        subtitle={t.subtitle}
+        breadcrumb={<><b className="text-foreground">{t("PlanningBoard.title")}</b></>}
+        title={t("PlanningBoard.title")}
+        subtitle={t("PlanningBoard.subtitle")}
       />
         </div>
       </div>
@@ -69,7 +71,7 @@ export function PlanningBoardHeader({
           onClick={onToggleLang}
           data-testid="button-lang-toggle"
         >
-          {lang === "uz" ? "RU" : "UZ"}
+          {language === "uz" ? "RU" : "UZ"}
         </Button>
         <Button
           variant="outline"
@@ -78,7 +80,7 @@ export function PlanningBoardHeader({
           data-testid="button-export"
         >
           <Download className="h-4 w-4" />
-          {t.exportExcel}
+          {t("PlanningBoard.exportExcel")}
         </Button>
         <Button
           className="bg-primary text-white rounded-lg px-5 py-2.5 text-sm font-semibold gap-2"
@@ -86,7 +88,7 @@ export function PlanningBoardHeader({
           data-testid="button-add-operation"
         >
           <Plus className="h-4 w-4" />
-          {t.addOperation}
+          {t("addOperation")}
         </Button>
       </div>
     </div>
@@ -98,7 +100,7 @@ export function PlanningBoardHeader({
 // ---------------------------------------------------------------------------
 
 interface PlanningFiltersCardProps {
-  t: PlanningTranslationMap & ((key: string) => string);
+  t: TFunc;
   filters: PlanningFilters;
   onFiltersChange: (filters: PlanningFilters) => void;
 }
@@ -109,17 +111,17 @@ export function PlanningFiltersCard({ t, filters, onFiltersChange }: PlanningFil
       <CardHeader>
         <CardTitle className="text-[14px] font-semibold flex items-center gap-2 text-foreground">
           <Filter className="h-4 w-4 text-primary" />
-          {t.filters}
+          {t("PlanningBoard.filters")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t.papkaNo}
+              {t("PlanningBoard.papkaNo")}
             </label>
             <Input
-              placeholder={t.papkaNo}
+              placeholder={t("PlanningBoard.papkaNo")}
               value={filters.papkaNo}
               onChange={(e) => onFiltersChange({ ...filters, papkaNo: e.target.value })}
               className="bg-muted/60 border-none"
@@ -128,7 +130,7 @@ export function PlanningFiltersCard({ t, filters, onFiltersChange }: PlanningFil
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t.status}
+              {t("PlanningBoard.status")}
             </label>
             <Select
               value={filters.status}
@@ -138,20 +140,20 @@ export function PlanningFiltersCard({ t, filters, onFiltersChange }: PlanningFil
                 className="bg-muted/60 border-none h-9"
                 data-testid="select-filter-status"
               >
-                <SelectValue placeholder={t.status} />
+                <SelectValue placeholder={t("PlanningBoard.status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t.all}</SelectItem>
-                <SelectItem value="planned">{t.planned}</SelectItem>
-                <SelectItem value="in_progress">{t.inProgress}</SelectItem>
-                <SelectItem value="completed">{t.completed}</SelectItem>
-                <SelectItem value="cancelled">{t.cancelled}</SelectItem>
+                <SelectItem value="all">{t("PlanningBoard.all")}</SelectItem>
+                <SelectItem value="planned">{t("PlanningBoard.planned")}</SelectItem>
+                <SelectItem value="in_progress">{t("inProcess")}</SelectItem>
+                <SelectItem value="completed">{t("PlanningBoard.completed")}</SelectItem>
+                <SelectItem value="cancelled">{t("PlanningBoard.cancelled")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t.dateRange} (Start)
+              {t("PlanningBoard.dateRange")} (Start)
             </label>
             <Input
               type="date"
@@ -163,7 +165,7 @@ export function PlanningFiltersCard({ t, filters, onFiltersChange }: PlanningFil
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t.dateRange} (End)
+              {t("PlanningBoard.dateRange")} (End)
             </label>
             <Input
               type="date"
@@ -184,7 +186,7 @@ export function PlanningFiltersCard({ t, filters, onFiltersChange }: PlanningFil
 // ---------------------------------------------------------------------------
 
 interface OperationsTableTabProps {
-  t: PlanningTranslationMap & ((key: string) => string);
+  t: TFunc;
   isLoadingOps: boolean;
   operationsData: { items?: PlanningOperation[] } | undefined;
   papkaOrdersList: PapkaOrder[];
@@ -200,6 +202,16 @@ export function OperationsTableTab({
   equipmentList,
   onEdit,
 }: OperationsTableTabProps) {
+  const operationStatusLabel = (status: string): string => {
+    switch (status) {
+      case "planned": return t("PlanningBoard.planned");
+      case "in_progress": return t("inProcess");
+      case "completed": return t("PlanningBoard.completed");
+      case "cancelled": return t("PlanningBoard.cancelled");
+      default: return status;
+    }
+  };
+
   return (
     <TabsContent value="operations" className="space-y-4 mt-0">
       <Card className="bg-card rounded-lg border-none shadow-none">
@@ -207,10 +219,10 @@ export function OperationsTableTab({
           <div className="ep-table-scroll"><Table>
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60 border-none">
-                {[t.papkaNo, t.operationNo, t.workCenter, t.plannedQty, t.plannedStart, t.plannedEnd, t.status].map((h) => (
+                {[t("PlanningBoard.papkaNo"), t("PlanningBoard.operationNo"), t("workCenter"), t("PlanningBoard.plannedQty"), t("PlanningBoard.plannedStart"), t("PlanningBoard.plannedEnd"), t("PlanningBoard.status")].map((h) => (
                   <TableHead key={h} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6">{h}</TableHead>
                 ))}
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t.actions}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground py-3 px-6 text-right">{t("PlanningBoard.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -218,13 +230,13 @@ export function OperationsTableTab({
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-12 text-[13px] text-muted-foreground">
                     <EPLoader className="w-6 h-6 mx-auto mr-2 inline" />
-                    {t.loading}
+                    {t("PlanningBoard.loading")}
                   </TableCell>
                 </TableRow>
               ) : operationsData?.items?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-12 text-[13px] text-muted-foreground">
-                    {t.noData}
+                    {t("noDataFound")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -244,7 +256,7 @@ export function OperationsTableTab({
                     <TableCell className="py-3 px-6 text-muted-foreground">{op.plannedEndTime}</TableCell>
                     <TableCell className="py-3 px-6">
                       <Badge className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", op.status === "completed" ? "bg-green-100 text-green-800" : op.status === "in_progress" ? "bg-amber-100 text-amber-800" : op.status === "cancelled" ? "bg-red-100 text-red-800" : "bg-primary/10 text-primary")}>
-                        {(t as unknown as Record<string, string>)[op.status] || op.status}
+                        {operationStatusLabel(op.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-3 px-6 text-right">
