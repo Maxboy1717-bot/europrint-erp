@@ -70,7 +70,7 @@
 | i18n F2 (verified false-positive, no action) | `components/orders/WizardHeader.tsx` + 6 sibling wizard files | done — confirmed already 3-language-complete | n/a |
 | i18n F2 (verified false-positive, no action) | `pos-monitor/i18n/usePosI18n.ts` | done — confirmed already implements a correct 3-state uz→uz-cyr→ru cycle | n/a |
 | i18n Part 3 (D3) | `pages/ImpositionCalculator.tsx` | done | `69c24222` |
-| i18n Tier 2 F4 | `apps/api/src/modules/**` (backend hardcoded exception messages, ~470 sites, module-by-module, `apps/api/src/i18n/**` locale files), `apps/api/src/common/filters/global-exception.filter.ts` | claimed | Step 0 enumeration in progress |
+| i18n Tier 2 F4 | `apps/api/src/modules/**` + `apps/api/src/common/guards/**` + `apps/api/src/lib/**` + `apps/api/src/shared/db/**` (backend hardcoded exception messages, 486 confirmed sites across 36 module/dir groups, editing shared `apps/api/src/i18n/{uz,ru,uz-cyr}/{errors,validation}.json` — **do not edit these locale files or any `apps/api/src/modules/**` file until this claim is marked done**, to avoid racing a sequential background workflow) | IN PROGRESS | Step 0 done (486 sites confirmed, ~470 estimate matched); background workflow `wf_4a49d49b-6fd` running all 36 module batches sequentially (largest-first: pos 111 → compatibility 78 → hr 56 → ... → chat 1); global-exception.filter.ts special item not started yet |
 
 ---
 
