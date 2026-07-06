@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result, AppError, Ok } from '@common/result';
 import { ReportsHubRepository } from './reports-hub.repository';
@@ -13,7 +14,10 @@ import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 export class ReportsHubService {
   private readonly logger = new Logger(ReportsHubService.name);
 
-  constructor(private readonly repo: ReportsHubRepository) {}
+  constructor(
+    private readonly repo: ReportsHubRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getDashboard(): Promise<Result<object, AppError>> {
     const [categoriesR, definitionsR, runsR, recentRunsR] = await Promise.all([
@@ -74,8 +78,8 @@ export class ReportsHubService {
   async generateReport(definitionId: string, userId: number) {
     const defId = parseInt(definitionId, 10);
     const defR  = await safeCall(() => this.repo.findDefinition(defId));
-    if (!defR.ok) { this.logger.error(`generateReport def: ${defR.error}`); throw new NotFoundException('Report definition not found'); }
-    if (!defR.data) throw new NotFoundException('Report definition not found');
+    if (!defR.ok) { this.logger.error(`generateReport def: ${defR.error}`); throw new NotFoundException(await this.i18n.t('errors.reportDefinitionNotFound')); }
+    if (!defR.data) throw new NotFoundException(await this.i18n.t('errors.reportDefinitionNotFound'));
     const runR = await safeCall(() => this.repo.insertRun(defId, userId));
     if (!runR.ok) { this.logger.error(`generateReport run: ${runR.error}`); throw new InternalServerErrorException(String(runR.error)); }
     return runR.data;

@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import * as os from 'os';
 import { Ok, Result, safeCall } from '@common/result';
 import { SystemRepository } from './system.repository';
@@ -29,6 +30,7 @@ export class SystemService {
   constructor(
     private readonly repo: SystemRepository,
     private readonly cronStatus: CronStatusService,
+    private readonly i18n: I18nService,
   ) {}
 
   async getHealth() {
@@ -89,7 +91,7 @@ export class SystemService {
   async getSettings() {
     return safeCall(async () => {
       const found = await this.repo.getSettings();
-      if (!found) throw new NotFoundException('Record not found');
+      if (!found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
       return found;
     });
   }

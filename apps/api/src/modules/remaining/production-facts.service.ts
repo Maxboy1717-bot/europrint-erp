@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError, Ok } from '@common/result';
 import { ProductionFactsRepository } from './production-facts.repository';
 
@@ -11,7 +12,10 @@ import { ProductionFactsRepository } from './production-facts.repository';
 export class ProductionFactsService {
   private readonly logger = new Logger(ProductionFactsService.name);
 
-  constructor(private readonly repo: ProductionFactsRepository) {}
+  constructor(
+    private readonly repo: ProductionFactsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getAll(q: Record<string, string>): Promise<Result<object, AppError>> {
     const r = await safeCall(() => this.repo.getAll(
@@ -45,7 +49,7 @@ export class ProductionFactsService {
 
   async create(body: Record<string, unknown>) {
     const r = await safeCall(() => this.repo.create(body));
-    if (!r.ok) { this.logger.error(`create: ${r.error}`); throw new InternalServerErrorException('Ishlab chiqarish fakti yaratishda xatolik'); }
+    if (!r.ok) { this.logger.error(`create: ${r.error}`); throw new InternalServerErrorException(await this.i18n.t('errors.productionFactCreateFailed')); }
     return r.data;
   }
 }

@@ -4,6 +4,7 @@
  */
 
 import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -24,6 +25,7 @@ export class CompanyStateController {
   constructor(
     private readonly svc: CompanyStateService,
     private readonly snapshot: CompanyStateSnapshotCron,
+    private readonly i18n: I18nService,
   ) {}
 
   @Get('current')
@@ -111,7 +113,7 @@ export class CompanyStateController {
       RETURNING id, metric_key, level_code, min_value, max_value, weight
     `);
     const result = rows.rows[0] ?? undefined;
-    if (!result) throw new BadRequestException(`state_threshold id=${id} topilmadi`);
+    if (!result) throw new BadRequestException(await this.i18n.t('errors.stateThresholdNotFound', { args: { id } }));
     return result;
   }
 }

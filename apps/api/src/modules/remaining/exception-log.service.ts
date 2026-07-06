@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError, Ok } from '@common/result';
 import { ExceptionLogRepository, ExceptionInsert } from './exception-log.repository';
 
@@ -13,7 +14,10 @@ import { ExceptionLogRepository, ExceptionInsert } from './exception-log.reposit
 export class ExceptionLogService {
   private readonly logger = new Logger(ExceptionLogService.name);
 
-  constructor(private readonly repo: ExceptionLogRepository) {}
+  constructor(
+    private readonly repo: ExceptionLogRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getAll(q: Record<string, string>): Promise<Result<object, AppError>> {
     const limit = parseInt(q['limit'] ?? '50', 10);
@@ -55,7 +59,7 @@ export class ExceptionLogService {
 
   async getOne(id: string) {
     const row = await this.repo.getOne(id);
-    if (!row) throw new NotFoundException(`Exception log ${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.exceptionLogNotFound', { args: { id } }));
     return row;
   }
 
@@ -150,14 +154,14 @@ export class ExceptionLogService {
 
   async update(id: string, patch: Record<string, unknown>) {
     const result = await this.repo.update(id, patch);
-    if (!result.ok) throw new NotFoundException(`Exception log ${id} not found`);
-    if (!result.data) throw new NotFoundException(`Exception log ${id} not found`);
+    if (!result.ok) throw new NotFoundException(await this.i18n.t('errors.exceptionLogNotFound', { args: { id } }));
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.exceptionLogNotFound', { args: { id } }));
     return Ok(result.data);
   }
 
   async deleteOne(id: string) {
     const deleted = await this.repo.softDelete(id);
-    if (!deleted.ok || !deleted.data) throw new NotFoundException(`Exception log ${id} not found`);
+    if (!deleted.ok || !deleted.data) throw new NotFoundException(await this.i18n.t('errors.exceptionLogNotFound', { args: { id } }));
     return Ok({ deleted: true, id });
   }
 }

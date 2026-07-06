@@ -8,12 +8,16 @@ const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { IdealRasmRepository } from './ideal-rasm.repository';
 
 @Injectable()
 export class IdealRasmService {
-  constructor(private readonly repo: IdealRasmRepository) {}
+  constructor(
+    private readonly repo: IdealRasmRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async getAll(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -46,7 +50,7 @@ export class IdealRasmService {
   async updateAll(body: Record<string, unknown>) {
     return safeCall(async () => {
       const targets = body['targets'] as Array<{ targetKey: string; targetValue: string | number; horizonYears?: number; description?: string }>;
-      if (!Array.isArray(targets)) throw new BadRequestException('targets array talab qilinadi');
+      if (!Array.isArray(targets)) throw new BadRequestException(await this.i18n.t('validation.targetsArrayRequired'));
       const updated = [];
       for (const t of targets) {
         const row = await this.repo.updateTarget(t.targetKey, String(t.targetValue), t.horizonYears ?? 3, t.description ?? null);
@@ -59,7 +63,7 @@ export class IdealRasmService {
   async updateOne(key: string, body: Record<string, unknown>) {
     return safeCall(async () => {
       const row = await this.repo.updateTarget(key, String(body['targetValue']), Number(body['horizonYears'] ?? 3), (body['description'] as string) ?? null);
-      if (!row) throw new NotFoundException('Maqsad topilmadi');
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.idealTargetNotFound'));
       return { target: row };
     });
   }
