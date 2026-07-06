@@ -131,7 +131,6 @@ export default function IoTTablet() {
         reportDowntime={iot.reportDowntime}
       />
       <IoTChecklistModal
-        lang={iot.lang}
         open={iot.showChecklistModal}
         onOpenChange={iot.setShowChecklistModal}
         checklistKitBarcode={iot.checklistKitBarcode}
@@ -145,7 +144,6 @@ export default function IoTTablet() {
         activeSession={iot.activeSession}
       />
       <IoTCompletionReport
-        lang={iot.lang}
         open={iot.showCompletionReport}
         onClose={() => { iot.setShowCompletionReport(false); iot.setShowSchedule(true); iot.setCompletionReport(null); }}
         completionReport={iot.completionReport}

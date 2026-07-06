@@ -3,10 +3,9 @@
  * @description Types for IoTCompletionReport component.
  */
 
-import { CompletionReportData, IotLang } from "./iot-types";
+import { CompletionReportData } from "./iot-types";
 
 export interface IoTCompletionReportProps {
-  lang: IotLang;
   open: boolean;
   onClose: () => void;
   completionReport: CompletionReportData | null;
