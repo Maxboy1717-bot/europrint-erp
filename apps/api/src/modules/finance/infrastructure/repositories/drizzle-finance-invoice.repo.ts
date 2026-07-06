@@ -9,6 +9,15 @@ import { sql } from 'drizzle-orm';
 import { Result, Err, Ok } from '@common/types/result.type';
 import { FinanceRow } from '../../domain/repositories/i-finance.repo';
 
+/** Opaque Drizzle transaction handle — same convention as `DrizzleTxExecutor` in the SD module. */
+type FinanceTx = unknown;
+
+export interface AppliedInvoicePayment {
+  paidAmount: number;
+  totalAmount: number;
+  paymentStatus: 'paid' | 'partial';
+}
+
 @Injectable()
 export class FinanceInvoiceRepo {
   private readonly logger = new Logger(FinanceInvoiceRepo.name);
@@ -181,20 +190,63 @@ export class FinanceInvoiceRepo {
   }
 
   /**
-   * Data op only: flip an invoice to 'posted'. GL posting (DR AR / CR Revenue + VAT) is orchestrated by
-   * the controller through GlPostingService (the ONE engine, resolves codes → entries._id, balanced) —
-   * #10 GL-unify. Canonical table: finance_invoices (integer id, payment_status column).
+   * C1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): replaces the old absolute-value `SET paid_amount =
+   * X` (a read-then-write that raced under concurrent payments — two requests reading the same
+   * stale `paid_amount` could each "win", the second silently overwriting/losing the first). This
+   * is an atomic guarded UPDATE: the WHERE clause re-evaluates `paid_amount + amount <= total_amount`
+   * against the CURRENT committed row, not a snapshot read earlier in the request. Postgres row-level
+   * locking serializes concurrent UPDATEs on the same invoice row — the second concurrent payment
+   * blocks until the first commits, then re-checks the guard against the now-updated balance. Returns
+   * `Ok(null)` (not Err) when the guard rejects (0 rows matched) — that is an expected business
+   * outcome (overpayment), not a DB failure; the caller decides how to react (roll back the tx).
    */
-  async updateInvoicePaidAmount(invoiceId: number, paidAmount: number, paymentStatus: string): Promise<Result<void>> {
+  async applyInvoicePayment(invoiceId: number, amount: number, tx?: FinanceTx): Promise<Result<AppliedInvoicePayment | null>> {
     try {
-      await runQuery(sql`
+      const conn = (tx as typeof db | undefined) ?? db;
+      const r = await conn.execute(sql`
         UPDATE finance_invoices
-        SET paid_amount = ${paidAmount}, payment_status = ${paymentStatus}, updated_at = NOW()
+        SET paid_amount = COALESCE(paid_amount, 0) + ${amount},
+            payment_status = CASE WHEN COALESCE(paid_amount, 0) + ${amount} >= total_amount THEN 'paid' ELSE 'partial' END,
+            updated_at = NOW()
         WHERE id = ${invoiceId}
+          AND COALESCE(paid_amount, 0) + ${amount} <= total_amount
+        RETURNING paid_amount, total_amount, payment_status
       `);
-      return { ok: true, data: undefined };
+      const row = ((r as { rows?: Record<string, unknown>[] }).rows ?? [])[0];
+      if (!row) return Ok(null);
+      return Ok({
+        paidAmount:    parseFloat(String(row['paid_amount'])),
+        totalAmount:   parseFloat(String(row['total_amount'])),
+        paymentStatus: row['payment_status'] as 'paid' | 'partial',
+      });
     } catch (error: unknown) {
-      this.logger.error(`updateInvoicePaidAmount failed: ${(error as Error).message}`);
+      this.logger.error(`applyInvoicePayment failed: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * C1 compensating action: `GlPostingService` opens its OWN internal transaction and cannot join
+   * the caller's transaction (same constraint already documented for payroll, F3/b42ab33f) — so a
+   * GL-posting failure that happens AFTER `applyInvoicePayment` + payment INSERT have committed
+   * cannot be undone by a plain rollback. This reverses both writes explicitly (its own transaction)
+   * so the net observable effect matches "GL failure rolls back the payment+invoice rows too".
+   */
+  async reverseInvoicePayment(paymentId: number, invoiceId: number, amount: number): Promise<Result<void>> {
+    try {
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`DELETE FROM finance_payments WHERE id = ${paymentId}`);
+        await tx.execute(sql`
+          UPDATE finance_invoices
+          SET paid_amount = GREATEST(0, COALESCE(paid_amount, 0) - ${amount}),
+              payment_status = CASE WHEN GREATEST(0, COALESCE(paid_amount, 0) - ${amount}) <= 0 THEN 'unpaid' ELSE 'partial' END,
+              updated_at = NOW()
+          WHERE id = ${invoiceId}
+        `);
+      });
+      return Ok(undefined);
+    } catch (error: unknown) {
+      this.logger.error(`reverseInvoicePayment failed (payment=${paymentId}, invoice=${invoiceId}): ${(error as Error).message}`);
       return Err((error as Error).message);
     }
   }

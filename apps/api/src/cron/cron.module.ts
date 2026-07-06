@@ -10,6 +10,7 @@ import { QueueModule } from '../modules/queue/queue.module'
 import { EoqSafetyStockRefreshCron } from './eoq-safety-stock-refresh.cron'
 import { WarehouseRentalCron } from './warehouse-rental.cron'
 import { CurrencyRatesCron } from './currency-rates.cron'
+import { RecurringJournalEntriesCron } from './recurring-journal-entries.cron'
 import { AttendanceCheckCron } from './attendance-check.cron'
 import { ReminderSendCron } from './reminder-send.cron'
 import { ReportGenerateCron } from './report-generate.cron'
@@ -69,6 +70,7 @@ import { AiFitModule } from '../modules/ai/ai-fit.module'
     // Pre-existing crons
     WarehouseRentalCron,
     CurrencyRatesCron,
+    RecurringJournalEntriesCron,
     AttendanceCheckCron,
     ReminderSendCron,
     ReportGenerateCron,

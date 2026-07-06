@@ -107,7 +107,8 @@ export class FinancePaymentsController {
       this.logger.log(`Recording payment - Invoice: ${body.invoiceId}, Amount: ${body.amount}`);
       const command = new RecordPaymentCommand(
         body.paymentId, body.invoiceId, body.customerId,
-        body.amount, new Date(body.paymentDate), body.recordedBy
+        body.amount, new Date(body.paymentDate), body.recordedBy,
+        body.idempotencyKey ?? null,
       );
       const result = await this.recordPaymentHandler.execute(command);
       assertOk(result);

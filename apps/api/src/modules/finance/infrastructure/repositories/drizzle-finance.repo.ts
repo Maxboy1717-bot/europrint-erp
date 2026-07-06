@@ -26,7 +26,7 @@ import {
   PriceTierRow, PriceTierUpsertInput,
   VarianceOrderInputs, VarianceReportInput,
 } from '../../domain/repositories/i-finance.repo';
-import { FinanceInvoiceRepo } from './drizzle-finance-invoice.repo';
+import { FinanceInvoiceRepo, AppliedInvoicePayment } from './drizzle-finance-invoice.repo';
 import { FinanceReportRepo } from './drizzle-finance-report.repo';
 import { DrizzleFinanceBudgetsRepository } from '../../budgets/drizzle-finance-budgets.repo';
 import { FinanceOpsRepo } from './drizzle-finance-ops.repo';
@@ -52,7 +52,8 @@ export class FinanceRepository implements IFinanceRepo {
   getSettingValue(settingKey: string): Promise<number> { return this.opsRepo.getSettingValue(settingKey); }
   findEmployeeBalance(employeeId: number): Promise<{ baseSalary: number } | null> { return this.opsRepo.findEmployeeBalance(employeeId); }
   recordAdvance(advance: Parameters<FinanceOpsRepo['recordAdvance']>[0]): Promise<void> { return this.opsRepo.recordAdvance(advance); }
-  recordPayment(payment: Parameters<FinanceOpsRepo['recordPayment']>[0]): Promise<void> { return this.opsRepo.recordPayment(payment); }
+  recordPayment(payment: Parameters<FinanceOpsRepo['recordPayment']>[0], tx?: unknown): Promise<Result<{ id: number }>> { return this.opsRepo.recordPayment(payment, tx); }
+  findPaymentByIdempotencyKey(idempotencyKey: string): Promise<Result<{ id: number } | null>> { return this.opsRepo.findPaymentByIdempotencyKey(idempotencyKey); }
   getWarehouseRentalRate(warehouseId: number): Promise<number> { return this.opsRepo.getWarehouseRentalRate(warehouseId); }
   recordWarehouseRental(rental: Parameters<FinanceOpsRepo['recordWarehouseRental']>[0]): Promise<number> { return this.opsRepo.recordWarehouseRental(rental); }
   getAllUnpaidInvoices(): Promise<{ id: number; totalAmount: number; paidAmount: number; dueDate: Date }[]> { return this.opsRepo.getAllUnpaidInvoices(); }
@@ -69,7 +70,8 @@ export class FinanceRepository implements IFinanceRepo {
   async findInvoiceBySalesOrderId(sid: string): Promise<Result<FinanceRow | null>> { return this.invoiceRepo.findInvoiceBySalesOrderId(sid); }
   async saveInvoice(inv: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.saveInvoice(inv); }
   async updateInvoice(id: string, data: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.updateInvoice(id, data); }
-  async updateInvoicePaidAmount(invoiceId: number, paidAmount: number, paymentStatus: string): Promise<Result<void>> { return this.invoiceRepo.updateInvoicePaidAmount(invoiceId, paidAmount, paymentStatus); }
+  async applyInvoicePayment(invoiceId: number, amount: number, tx?: unknown): Promise<Result<AppliedInvoicePayment | null>> { return this.invoiceRepo.applyInvoicePayment(invoiceId, amount, tx); }
+  async reverseInvoicePayment(paymentId: number, invoiceId: number, amount: number): Promise<Result<void>> { return this.invoiceRepo.reverseInvoicePayment(paymentId, invoiceId, amount); }
   async findPayments(f: Parameters<FinanceInvoiceRepo['findPayments']>[0]): Promise<Result<{ items: FinanceRow[]; total: number }>> { return this.invoiceRepo.findPayments(f); }
   async savePayment(p: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.savePayment(p); }
   async saveGlEntry(entry: FinanceRow): Promise<Result<FinanceRow>> { return this.invoiceRepo.saveGlEntry(entry); }

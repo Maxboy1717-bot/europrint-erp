@@ -7,6 +7,12 @@ import { Result } from '@common/types/result.type';
 
 export type FinanceRow = Record<string, unknown>;
 
+export interface AppliedInvoicePayment {
+  paidAmount: number;
+  totalAmount: number;
+  paymentStatus: 'paid' | 'partial';
+}
+
 // ---- DTOs returned to domain services (P0-1 / P0-2) ----
 
 export interface CfoConfigRow {
@@ -156,7 +162,10 @@ export interface IFinanceRepo {
   findInvoiceBySalesOrderId(salesOrderId: string): Promise<Result<FinanceRow | null>>;
   saveInvoice(invoice: FinanceRow): Promise<Result<FinanceRow>>;
   updateInvoice(id: string, data: FinanceRow): Promise<Result<FinanceRow>>;
-  updateInvoicePaidAmount(invoiceId: number, paidAmount: number, paymentStatus: string): Promise<Result<void>>;
+  /** C1: atomic guarded UPDATE (paid_amount += amount WHERE paid_amount+amount<=total_amount). */
+  applyInvoicePayment(invoiceId: number, amount: number, tx?: unknown): Promise<Result<AppliedInvoicePayment | null>>;
+  /** C1: compensating action when GL posting fails after the payment+invoice tx already committed. */
+  reverseInvoicePayment(paymentId: number, invoiceId: number, amount: number): Promise<Result<void>>;
 
   // Payments
   findPayments(filters: { invoiceId?: string; from?: Date; to?: Date; page?: number; limit?: number }): Promise<Result<{ items: FinanceRow[]; total: number }>>;
@@ -212,7 +221,9 @@ export interface IFinanceRepo {
     status: string;
     recordedBy: number;
     recordedAt: Date;
-  }): Promise<void>;
+    idempotencyKey?: string | null;
+  }, tx?: unknown): Promise<Result<{ id: number }>>;
+  findPaymentByIdempotencyKey(idempotencyKey: string): Promise<Result<{ id: number } | null>>;
 
   // ---- P0-1 CFO Config ----
   findCfoConfig(key: string): Promise<Result<CfoConfigRow | null>>;

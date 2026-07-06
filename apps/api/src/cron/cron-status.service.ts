@@ -112,6 +112,7 @@ export class CronStatusService {
       // ── Pre-existing crons in cron.module (schedules match @Cron decorators) ─
       { name: 'WarehouseRentalCron',             description: "Ombor ijarasi hisob-kitob (00:05)",                   schedule: '5 0 * * *'        },
       { name: 'CurrencyRatesCron',               description: "Valyuta kurslarini yangilash (09:00)",                schedule: '0 9 * * *'        },
+      { name: 'RecurringJournalEntriesCron',      description: "Takrorlanuvchi GL yozuvlari qoralamasi (06:00)",      schedule: '0 6 * * *'        },
       { name: 'AttendanceCheckCron',             description: "Kelmaganlarni tekshirish (10:00)",                    schedule: '0 10 * * *'       },
       { name: 'ReminderSendCron',                description: "Umumiy eslatmalar (har soat)",                        schedule: '0 * * * *'        },
       { name: 'ReportGenerateCron',              description: "Hisobot generatsiya (23:00)",                         schedule: '0 23 * * *'       },

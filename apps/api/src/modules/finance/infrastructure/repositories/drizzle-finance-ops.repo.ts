@@ -17,6 +17,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { db, runQuery, settings } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
+import { Result, Ok, Err } from '@common/types/result.type';
+
+/** Opaque Drizzle transaction handle — same convention as `DrizzleTxExecutor` in the SD module. */
+type FinanceTx = unknown;
 
 @Injectable()
 export class FinanceOpsRepo {
@@ -68,23 +72,55 @@ export class FinanceOpsRepo {
     }
   }
 
+  /**
+   * C1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): accepts an optional Drizzle tx so the INSERT
+   * participates in the same transaction as the invoice's atomic guarded UPDATE (see
+   * `FinanceInvoiceRepo.applyInvoicePayment`) — either both commit or neither does. Also accepts
+   * an optional idempotencyKey (unique-indexed, nullable) so a double-tap/retry of the same
+   * logical payment cannot insert twice. Returns the real DB-generated id (previously void —
+   * callers had no way to know the actual row id, only the client-supplied `paymentId`).
+   */
   async recordPayment(payment: {
     paymentId: number; invoiceId: number; amount: number; status: string; recordedBy: number; recordedAt: Date;
-  }): Promise<void> {
+    idempotencyKey?: string | null;
+  }, tx?: FinanceTx): Promise<Result<{ id: number }>> {
     try {
       // Canonical table is finance_payments (fi_payments does not exist). It has no recorded_by
       // column, so the recorder is preserved in notes for the audit trail.
-      await runQuery(sql`
+      const conn = (tx as typeof db | undefined) ?? db;
+      const r = await conn.execute(sql`
         INSERT INTO finance_payments
-          (invoice_id, amount, status, payment_date, notes)
+          (invoice_id, amount, status, payment_date, notes, idempotency_key)
         VALUES
           (${payment.invoiceId}, ${payment.amount}, ${payment.status},
-           ${payment.recordedAt}, ${`Recorded by user #${payment.recordedBy}`})
+           ${payment.recordedAt}, ${`Recorded by user #${payment.recordedBy}`}, ${payment.idempotencyKey ?? null})
+        RETURNING id
       `);
-      this.logger.debug(`Payment recorded - Payment ID: ${payment.paymentId}`);
+      const rows = ((r as unknown as { rows?: { id: number }[] }).rows) ?? [];
+      const id = rows[0]?.id ?? payment.paymentId;
+      this.logger.debug(`Payment recorded - Payment ID: ${id}`);
+      return Ok({ id });
     } catch (error: unknown) {
-      this.logger.error(`Error recording payment: ${(error as Error).message}`);
-      throw error;
+      const msg = (error as Error).message;
+      this.logger.error(`Error recording payment: ${msg}`);
+      return Err(msg);
+    }
+  }
+
+  /**
+   * C1: idempotency lookup — a payment already inserted with this key is returned as-is so the
+   * caller can short-circuit a duplicate submission instead of reprocessing it.
+   */
+  async findPaymentByIdempotencyKey(idempotencyKey: string): Promise<Result<{ id: number } | null>> {
+    try {
+      const r = await runQuery<{ id: number }>(sql`
+        SELECT id FROM finance_payments WHERE idempotency_key = ${idempotencyKey} LIMIT 1
+      `);
+      return Ok(r.rows[0] ? { id: r.rows[0].id } : null);
+    } catch (error: unknown) {
+      const msg = (error as Error).message;
+      this.logger.error(`Error finding payment by idempotency key: ${msg}`);
+      return Err(msg);
     }
   }
 
