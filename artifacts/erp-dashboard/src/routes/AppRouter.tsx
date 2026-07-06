@@ -70,6 +70,12 @@ const REDIRECT_PATHS = [
   '/sales', '/aisha',
   // Dead sidebar links → canonical redirects
   '/assets', '/hr/documents', '/cfo', '/org-chart',
+  // G6 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding C10): OrgDepartmentsPage's create
+  // action always inserted a PARENT-LESS org_departments row (no parent picker on that thinner
+  // form) — a second, unreachable-from-sidebar create path that fed the "14 roots" single-tree
+  // problem (D11.7/G9). The canonical create path is /org-structure/hierarchy (AddNodeDialog,
+  // now with a parent picker — G4).
+  '/org-departments',
 ];
 
 function pathMatches(pattern: string, loc: string): boolean {
@@ -179,6 +185,7 @@ export function AppRouter() {
       <Route path="/hr/documents"><RoleRoute roles={HR_ROLES}><Redirect to="/employee-files" /></RoleRoute></Route>
       <Route path="/cfo"><RoleRoute roles={FINANCE_ROLES}><Redirect to="/cfo/dashboard" /></RoleRoute></Route>
       <Route path="/org-chart"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
+      <Route path="/org-departments"><RoleRoute roles={HR_ROLES}><Redirect to="/org-structure/hierarchy" /></RoleRoute></Route>
 
       {/* ── Chat ── */}
       <Route path="/chat">

@@ -27,7 +27,6 @@ const AttendancePage      = lazy(() => import("@/pages/AttendanceMonitorPage"));
 const OkrPage             = lazy(() => import("@/pages/OkrPage"));
 const MaterialCardsPage   = lazy(() => import("@/pages/MaterialCardsPage"));
 const EquipmentPage       = lazy(() => import("@/pages/EquipmentPage"));
-const OrgDepartmentsPage  = lazy(() => import("@/pages/OrgDepartmentsPage"));
 const WeeklyPlansPage     = lazy(() => import("@/pages/WeeklyPlansPage"));
 const CandidatesPage      = lazy(() => import("@/pages/CandidatesPage"));
 const EmployeeFilesPage   = lazy(() => import("@/pages/EmployeeFilesPage"));
@@ -121,7 +120,6 @@ export const STUB_ROUTES: [string, React.ComponentType][] = [
   ['/mentorships',               MentorshipsPage],
   ['/okr',                       OkrPage],
   ['/order-status',              OrderStatusPage],
-  ['/org-departments',           OrgDepartmentsPage],
   ['/production-facts',          ProductionFactsPage],
   ['/production/shift-reports',  ShiftReportsPage],
   ['/quality-defects-camera',    QualityDefectsCameraPage],
