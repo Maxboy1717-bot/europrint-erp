@@ -102,7 +102,11 @@ export class AutoBarcodeRepository {
       `);
       return Ok(undefined);
     } catch (e) {
-      return Err({ message: String(e), code: 'DB_ERROR' });
+      // C8.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): surface the Postgres error code so the
+      // caller can tell a unique-violation (23505, barcode collision — retry with a fresh
+      // barcode) apart from any other DB failure (log and give up, don't loop forever).
+      const pgCode = (e as { code?: string } | null)?.code;
+      return Err({ message: String(e), code: 'DB_ERROR', details: { pgCode } });
     }
   }
 
