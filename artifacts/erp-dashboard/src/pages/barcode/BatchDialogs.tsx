@@ -25,9 +25,8 @@ import {
 import { Barcode, Copy, Printer, X } from "lucide-react";
 import type { BatchData, MaterialCard, Warehouse, PrintData } from "./barcode-types";
 import { STATUS_COLORS, QC_STATUS_COLORS } from "./barcode-types";
-import type { translations } from "./barcode-types";
 
-type TranslationType = typeof translations.uz;
+type TranslationFn = (key: string, params?: Record<string, string | number>) => string;
 
 interface BatchFormDialogProps {
   open: boolean;
@@ -52,7 +51,7 @@ interface BatchFormDialogProps {
   isSaving: boolean;
   materials: MaterialCard[];
   warehouses: Warehouse[];
-  t: TranslationType;
+  t: TranslationFn;
 }
 
 export function BatchFormDialog({
@@ -71,11 +70,11 @@ export function BatchFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{editingBatch ? t.editBatch : t.createBatch}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{editingBatch ? t("editBatch") : t("createBatch")}</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
           <div className="space-y-1">
-          <Label>{t.batchNumber} *</Label>
+          <Label>{t("batchNumber")} *</Label>
             <Input
               value={batchForm.batchNumber}
               onChange={(e) => onFormChange({ ...batchForm, batchNumber: e.target.value })}
@@ -83,13 +82,13 @@ export function BatchFormDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t.material}</Label>
+          <Label>{t("material")}</Label>
             <Select
               value={batchForm.materialCardId}
               onValueChange={(v) => onFormChange({ ...batchForm, materialCardId: v })}
             >
               <SelectTrigger data-testid="select-batch-material" className="h-9">
-                <SelectValue placeholder={t.selectMaterial} />
+                <SelectValue placeholder={t("selectMaterial")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(materials) ? materials : []).map((m) => (
@@ -99,13 +98,13 @@ export function BatchFormDialog({
             </Select>
           </div>
           <div className="space-y-1">
-          <Label>{t.warehouse}</Label>
+          <Label>{t("warehouse")}</Label>
             <Select
               value={batchForm.warehouseId}
               onValueChange={(v) => onFormChange({ ...batchForm, warehouseId: v })}
             >
               <SelectTrigger data-testid="select-batch-warehouse" className="h-9">
-                <SelectValue placeholder={t.selectWarehouse} />
+                <SelectValue placeholder={t("selectWarehouse")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(warehouses) ? warehouses : []).map((w) => (
@@ -115,7 +114,7 @@ export function BatchFormDialog({
             </Select>
           </div>
           <div className="space-y-1">
-          <Label>{t.quantity} *</Label>
+          <Label>{t("quantity")} *</Label>
             <Input
               type="number"
               value={batchForm.quantity}
@@ -124,7 +123,7 @@ export function BatchFormDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t.remaining}</Label>
+          <Label>{t("remaining")}</Label>
             <Input
               type="number"
               value={batchForm.remainingQuantity}
@@ -133,7 +132,7 @@ export function BatchFormDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t.unitCost}</Label>
+          <Label>{t("unitCost")}</Label>
             <Input
               type="number"
               value={batchForm.unitCost}
@@ -142,7 +141,7 @@ export function BatchFormDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t.productionDate}</Label>
+          <Label>{t("productionDate")}</Label>
             <Input
               type="date"
               value={batchForm.productionDate}
@@ -151,7 +150,7 @@ export function BatchFormDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t.expiryDate}</Label>
+          <Label>{t("expiryDate")}</Label>
             <Input
               type="date"
               value={batchForm.expiryDate}
@@ -160,7 +159,7 @@ export function BatchFormDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t.supplierBatch}</Label>
+          <Label>{t("supplierBatch")}</Label>
             <Input
               value={batchForm.supplierBatchNumber}
               onChange={(e) => onFormChange({ ...batchForm, supplierBatchNumber: e.target.value })}
@@ -168,7 +167,7 @@ export function BatchFormDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t.qcStatus}</Label>
+          <Label>{t("qcStatus")}</Label>
             <Select
               value={batchForm.qcStatus}
               onValueChange={(v) => onFormChange({ ...batchForm, qcStatus: v })}
@@ -177,14 +176,14 @@ export function BatchFormDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">{t.qcStatuses.pending}</SelectItem>
-                <SelectItem value="approved">{t.qcStatuses.approved}</SelectItem>
-                <SelectItem value="rejected">{t.qcStatuses.rejected}</SelectItem>
+                <SelectItem value="pending">{t("qcStatusPending")}</SelectItem>
+                <SelectItem value="approved">{t("qcStatusApproved")}</SelectItem>
+                <SelectItem value="rejected">{t("qcStatusRejected")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-          <Label>{t.status}</Label>
+          <Label>{t("status")}</Label>
             <Select
               value={batchForm.status}
               onValueChange={(v) => onFormChange({ ...batchForm, status: v })}
@@ -193,15 +192,15 @@ export function BatchFormDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">{t.statuses.active}</SelectItem>
-                <SelectItem value="depleted">{t.statuses.depleted}</SelectItem>
-                <SelectItem value="blocked">{t.statuses.blocked}</SelectItem>
-                <SelectItem value="expired">{t.statuses.expired}</SelectItem>
+                <SelectItem value="active">{t("statusActive")}</SelectItem>
+                <SelectItem value="depleted">{t("statusDepleted")}</SelectItem>
+                <SelectItem value="blocked">{t("statusBlocked")}</SelectItem>
+                <SelectItem value="expired">{t("statusExpired")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="col-span-2 space-y-2">
-            <Label>{t.notes}</Label>
+            <Label>{t("notes")}</Label>
             <Textarea
               value={batchForm.notes}
               onChange={(e) => onFormChange({ ...batchForm, notes: e.target.value })}
@@ -210,9 +209,9 @@ export function BatchFormDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{t.cancel}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
           <Button onClick={onSave} disabled={isSaving} data-testid="button-save-batch">
-            {t.save}
+            {t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -223,11 +222,24 @@ export function BatchFormDialog({
 interface BatchViewDialogProps {
   batch: BatchData | null;
   onClose: () => void;
-  t: TranslationType;
+  t: TranslationFn;
   lang: "uz" | "ru";
 }
 
-export function BatchViewDialog({ batch, onClose, t, lang }: BatchViewDialogProps) {
+const QC_STATUS_KEYS: Record<string, string> = {
+  pending: "qcStatusPending",
+  approved: "qcStatusApproved",
+  rejected: "qcStatusRejected",
+};
+
+const STATUS_KEYS: Record<string, string> = {
+  active: "statusActive",
+  depleted: "statusDepleted",
+  blocked: "statusBlocked",
+  expired: "statusExpired",
+};
+
+export function BatchViewDialog({ batch, onClose, t }: BatchViewDialogProps) {
   if (!batch) return null;
   return (
     <Dialog open={!!batch} onOpenChange={() => onClose()}>
@@ -235,65 +247,65 @@ export function BatchViewDialog({ batch, onClose, t, lang }: BatchViewDialogProp
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Barcode className="h-4 w-4" />
-            {t.batchDetails}
+            {t("batchDetails")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t.batchNumber}:</span>
+            <span className="text-muted-foreground">{t("batchNumber")}:</span>
             <span className="font-medium">{batch.batchNumber}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t.material}:</span>
+            <span className="text-muted-foreground">{t("material")}:</span>
             <span>{batch.materialName || "-"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t.warehouse}:</span>
+            <span className="text-muted-foreground">{t("warehouse")}:</span>
             <span>{batch.warehouseName || "-"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t.quantity}:</span>
+            <span className="text-muted-foreground">{t("quantity")}:</span>
             <span>{batch.quantity.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t.remaining}:</span>
+            <span className="text-muted-foreground">{t("remaining")}:</span>
             <span>{batch.remainingQuantity.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t.productionDate}:</span>
+            <span className="text-muted-foreground">{t("productionDate")}:</span>
             <span>{batch.productionDate || "-"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t.expiryDate}:</span>
+            <span className="text-muted-foreground">{t("expiryDate")}:</span>
             <span>{batch.expiryDate || "-"}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">{t.qcStatus}:</span>
+            <span className="text-muted-foreground">{t("qcStatus")}:</span>
             <Badge className={QC_STATUS_COLORS[batch.qcStatus || "pending"]}>
-              {t.qcStatuses[batch.qcStatus as keyof typeof t.qcStatuses] || batch.qcStatus}
+              {t(QC_STATUS_KEYS[batch.qcStatus ?? "pending"] ?? "qcStatusPending") || batch.qcStatus}
             </Badge>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">{t.status}:</span>
+            <span className="text-muted-foreground">{t("status")}:</span>
             <Badge className={STATUS_COLORS[batch.status || "active"]}>
-              {t.statuses[batch.status as keyof typeof t.statuses] || batch.status}
+              {t(STATUS_KEYS[batch.status ?? "active"] ?? "statusActive") || batch.status}
             </Badge>
           </div>
           {batch.barcode && (
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">{lang === "uz" ? "Shtrix-kod" : "Штрих-код"}:</span>
+              <span className="text-muted-foreground">{t("barcodeLabel")}:</span>
               <span className="font-mono">{batch.barcode}</span>
             </div>
           )}
           {batch.notes && (
             <div>
-              <span className="text-muted-foreground">{t.notes}:</span>
+              <span className="text-muted-foreground">{t("notes")}:</span>
               <p className="mt-1 text-sm">{batch.notes}</p>
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>{lang === "uz" ? "Yopish" : "Закрыть"}</Button>
+          <Button variant="outline" onClick={onClose}>{t("close")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -307,7 +319,7 @@ interface PrintPreviewDialogProps {
   onPrint: () => void;
   onCopy: (text: string) => void;
   lang: "uz" | "ru";
-  t: TranslationType;
+  t: TranslationFn;
 }
 
 export function PrintPreviewDialog({ open, onOpenChange, printData, onPrint, onCopy, lang, t }: PrintPreviewDialogProps) {
@@ -317,7 +329,7 @@ export function PrintPreviewDialog({ open, onOpenChange, printData, onPrint, onC
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{t.printPreview}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("printPreview")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="p-6 border-2 border-dashed rounded-lg text-center">
@@ -351,11 +363,11 @@ export function PrintPreviewDialog({ open, onOpenChange, printData, onPrint, onC
         <DialogFooter>
           <Button variant="outline" onClick={() => onCopy(printData.barcode)}>
             <Copy className="h-4 w-4 mr-2" />
-            {t.copy}
+            {t("copy")}
           </Button>
           <Button onClick={onPrint}>
             <Printer className="h-4 w-4 mr-2" />
-            {t.print}
+            {t("print")}
           </Button>
         </DialogFooter>
       </DialogContent>

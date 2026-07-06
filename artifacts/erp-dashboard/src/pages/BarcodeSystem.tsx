@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Barcode, Package, QrCode, ScanLine, Settings } from "lucide-react";
 import type { BatchData, MaterialCard, Warehouse, ScanResult, BatchStats, PrintData } from "./barcode/barcode-types";
-import { translations, batchFormSchema } from "./barcode/barcode-types";
+import { batchFormSchema } from "./barcode/barcode-types";
 import { GenerateScannerContent } from "./barcode/GenerateScannerContent";
 import { PrinterSettingsTab } from "./barcode/PrinterSettingsTab";
 import { BatchFormDialog, BatchViewDialog, PrintPreviewDialog } from "./BarcodeSystemDialogs";
@@ -21,7 +21,7 @@ import { BatchesTabContent } from "./BarcodeSystemSections";
 import type { BatchFormState } from "./BarcodeSystemTypes";
 import { DEFAULT_BATCH_FORM } from "./BarcodeSystemTypes";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
-import { tLabel } from "@/lib/i18n/tLabel";
+import { useTranslation } from "@/lib/i18n";
 const escHtml = (v: unknown): string =>
   String(v ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -30,8 +30,10 @@ const escHtml = (v: unknown): string =>
 export default function BarcodeSystem() {
 
   const { toast } = useToast();
-  const [lang, setLang] = useState<"uz" | "ru">("uz");
-  const t = translations[lang] as unknown as typeof translations.uz & ((key: string) => string);
+  const { language, t, setLanguage } = useTranslation("barcode");
+  // Backend API responses (message/labels/suggestedActions) only carry {uz, ru} —
+  // uz-cyr falls back to uz, matching the DB-column-fallback pattern used elsewhere.
+  const lang: "uz" | "ru" = language === "ru" ? "ru" : "uz";
 
   const [activeTab, setActiveTab] = useState("batches");
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,28 +77,28 @@ export default function BarcodeSystem() {
 
   const createBatchMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => await apiRequest("POST", "/api/warehouse/batches", data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/warehouse/batches"] }); toast({ title: lang === "uz" ? "Partiya yaratildi" : "Партия создана" }); setIsBatchDialogOpen(false); resetBatchForm(); },
-    onError: () => { toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" }); }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/warehouse/batches"] }); toast({ title: t("batchCreated") }); setIsBatchDialogOpen(false); resetBatchForm(); },
+    onError: () => { toast({ title: t("error"), variant: "destructive" }); }
   });
   const updateBatchMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => await apiRequest("PATCH", `/api/warehouse/batches/${id}`, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/warehouse/batches"] }); toast({ title: lang === "uz" ? "Partiya yangilandi" : "Партия обновлена" }); setIsBatchDialogOpen(false); setEditingBatch(null); resetBatchForm(); },
-    onError: () => { toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" }); }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/warehouse/batches"] }); toast({ title: t("batchUpdated") }); setIsBatchDialogOpen(false); setEditingBatch(null); resetBatchForm(); },
+    onError: () => { toast({ title: t("error"), variant: "destructive" }); }
   });
   const generateBarcodeMutation = useMutation({
     mutationFn: async (data: { type: string; entityId: string }) => await apiRequest<{ barcode: string; message: Record<string, string> }>("POST", "/api/warehouse/barcode/generate", data),
     onSuccess: (data) => { setGeneratedBarcode(data.barcode); toast({ title: data.message[lang] }); },
-    onError: () => { toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" }); }
+    onError: () => { toast({ title: t("error"), variant: "destructive" }); }
   });
   const scanBarcodeMutation = useMutation({
     mutationFn: async (data: { barcode: string; action?: string }) => await apiRequest<ScanResult>("POST", "/api/warehouse/barcode/scan", data),
     onSuccess: (data) => { setScanResult(data); toast({ title: data.message[lang] }); },
-    onError: () => { setScanResult(null); toast({ title: lang === "uz" ? "Topilmadi" : "Не найдено", variant: "destructive" }); }
+    onError: () => { setScanResult(null); toast({ title: t("notFound"), variant: "destructive" }); }
   });
   const bulkGenerateMutation = useMutation({
     mutationFn: async (data: { entityIds: string[]; type: string }) => await apiRequest<{ message: Record<string, string> }>("POST", "/api/warehouse/barcode/bulk-generate", data),
     onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ["/api/warehouse/batches"] }); setSelectedBatchesForBulk([]); toast({ title: data.message[lang] }); },
-    onError: () => { toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" }); }
+    onError: () => { toast({ title: t("error"), variant: "destructive" }); }
   });
 
   const fetchPrintPreview = async (id: string, type: string = "batch") => {
@@ -104,7 +106,7 @@ export default function BarcodeSystem() {
       const data = await apiRequest<unknown>('GET', `/api/warehouse/barcode/print/${id}?type=${type}`);
       setPrintPreviewData(data as Parameters<typeof setPrintPreviewData>[0]);
       setIsPrintPreviewOpen(true);
-    } catch { toast({ title: lang === "uz" ? "Xatolik" : "Ошибка", variant: "destructive" }); }
+    } catch { toast({ title: t("error"), variant: "destructive" }); }
   };
 
   const resetBatchForm = () => setBatchForm(DEFAULT_BATCH_FORM);
@@ -132,11 +134,11 @@ export default function BarcodeSystem() {
     }
   };
 
-  const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); toast({ title: lang === "uz" ? "Nusxalandi" : "Скопировано" }); };
+  const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); toast({ title: t("copied") }); };
 
   const getEntityOptions = () => {
     switch (generateType) {
-      case "material": return (Array.isArray(materials) ? materials : []).map(m => ({ id: m.id, label: tLabel('common.mKodMXomashyo', "${m.kod} - ${m.xomAshyo}") }));
+      case "material": return (Array.isArray(materials) ? materials : []).map(m => ({ id: m.id, label: `${m.kod} - ${m.xomAshyo}` }));
       case "batch":    return (Array.isArray(batches)   ? batches   : []).map(b => ({ id: b.id, label: `${b.batchNumber} - ${b.materialName || "N/A"}` }));
       default:         return [];
     }
@@ -152,31 +154,31 @@ export default function BarcodeSystem() {
         breadcrumb={<>{"Dashboard"}<b className="text-foreground">{"Shtrix kod tizimi"}</b></>}
         title={"Shtrix kod tizimi"}
       />
-          <p className="text-muted-foreground mt-1">{t.subtitle}</p>
+          <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant={lang === "uz" ? "default" : "outline"} size="sm" onClick={() => setLang("uz")} data-testid="button-lang-uz">UZ</Button>
-          <Button variant={lang === "ru" ? "default" : "outline"} size="sm" onClick={() => setLang("ru")} data-testid="button-lang-ru">RU</Button>
+          <Button variant={language === "uz" ? "default" : "outline"} size="sm" onClick={() => setLanguage("uz")} data-testid="button-lang-uz">UZ</Button>
+          <Button variant={language === "ru" ? "default" : "outline"} size="sm" onClick={() => setLanguage("ru")} data-testid="button-lang-ru">RU</Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.stats.activeBatches}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{batchStats?.activeBatches || 0}</p></div>
-        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.stats.expiringSoon}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{batchStats?.expiringBatches || 0}</p></div>
-        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.stats.totalQuantity}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(batchStats?.totalQuantity || 0).toLocaleString()}</p></div>
-        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.stats.totalValue}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(batchStats?.totalValue || 0).toLocaleString()}</p></div>
+        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("statActiveBatches")}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{batchStats?.activeBatches || 0}</p></div>
+        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("statExpiringSoon")}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{batchStats?.expiringBatches || 0}</p></div>
+        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("statTotalQuantity")}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(batchStats?.totalQuantity || 0).toLocaleString()}</p></div>
+        <div className="bg-card rounded-lg p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("statTotalValue")}</p><p className="text-4xl font-bold tracking-tight text-foreground mt-1">{(batchStats?.totalValue || 0).toLocaleString()}</p></div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-muted/60 p-1 rounded-xl border border-border h-auto w-full grid grid-cols-2 lg:grid-cols-4 max-w-xl">
-          <TabsTrigger value="batches"  className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-batches"><Package className="h-4 w-4 mr-2" />{t.batches}</TabsTrigger>
-          <TabsTrigger value="generate" className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-generate"><QrCode className="h-4 w-4 mr-2" />{t.generate}</TabsTrigger>
-          <TabsTrigger value="scanner"  className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-scanner"><ScanLine className="h-4 w-4 mr-2" />{t.scanner}</TabsTrigger>
-          <TabsTrigger value="settings" className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-settings"><Settings className="h-4 w-4 mr-2" />{t.settings ?? (lang === "uz" ? "Sozlamalar" : "Настройки")}</TabsTrigger>
+          <TabsTrigger value="batches"  className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-batches"><Package className="h-4 w-4 mr-2" />{t("batches")}</TabsTrigger>
+          <TabsTrigger value="generate" className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-generate"><QrCode className="h-4 w-4 mr-2" />{t("generate")}</TabsTrigger>
+          <TabsTrigger value="scanner"  className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-scanner"><ScanLine className="h-4 w-4 mr-2" />{t("scanner")}</TabsTrigger>
+          <TabsTrigger value="settings" className="rounded-xl py-3 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm font-black text-xs uppercase tracking-wider" data-testid="tab-settings"><Settings className="h-4 w-4 mr-2" />{t("settings")}</TabsTrigger>
         </TabsList>
 
         <BatchesTabContent
-          lang={lang} t={t as unknown as Record<string, unknown>}
+          t={t}
           batches={batches} batchesLoading={batchesLoading}
           materials={materials} warehousesList={warehousesList}
           searchQuery={searchQuery} onSearchChange={setSearchQuery}
@@ -204,7 +206,7 @@ export default function BarcodeSystem() {
           isGenerating={generateBarcodeMutation.isPending}
           entityOptions={getEntityOptions()}
           onCopyToClipboard={copyToClipboard}
-          onPrintToast={() => toast({ title: lang === "uz" ? "Chop etish" : "Печать" })}
+          onPrintToast={() => toast({ title: t("printAction") })}
           scanInput={scanInput} onScanInputChange={setScanInput}
           scanAction={scanAction} onScanActionChange={setScanAction}
           scanResult={scanResult}
@@ -218,17 +220,17 @@ export default function BarcodeSystem() {
             <CardHeader className="pb-3">
               <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                {t.printerSettings ?? (lang === "uz" ? "Printer sozlamalari" : "Настройки принтера")}
+                {t("printerSettings")}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <PrinterSettingsTab lang={lang} t={t} />
+              <PrinterSettingsTab t={t} />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <LabelPrintDialog open={isLabelPrintOpen} onOpenChange={setIsLabelPrintOpen} batch={labelPrintBatch} lang={lang} t={t} />
+      <LabelPrintDialog open={isLabelPrintOpen} onOpenChange={setIsLabelPrintOpen} batch={labelPrintBatch} t={t} />
       <BatchFormDialog open={isBatchDialogOpen} onOpenChange={setIsBatchDialogOpen} editingBatch={editingBatch} batchForm={batchForm} onFormChange={setBatchForm} onSave={handleSaveBatch} isSaving={createBatchMutation.isPending || updateBatchMutation.isPending} materials={materials} warehouses={warehousesList} t={t} />
       <BatchViewDialog batch={viewingBatch} onClose={() => setViewingBatch(null)} t={t} lang={lang} />
       <PrintPreviewDialog open={isPrintPreviewOpen} onOpenChange={setIsPrintPreviewOpen} printData={printPreviewData} onPrint={handlePrintBarcode} onCopy={copyToClipboard} lang={lang} t={t} />
