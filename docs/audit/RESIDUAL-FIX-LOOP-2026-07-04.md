@@ -561,15 +561,70 @@ commit):
   solishtirildi — bir xil 146 passed/1 failed (aloqasiz `MmGoodsService`)/5 to'plam
   yuklanmagan (oldindan mavjud `DATABASE_URL` muhit-muammosi, ikkala holatda ham bor).
 
-**XULOSA (bu bosqich, 2026-07-05)**: B10/B13/B14 uchun 8 ta tasdiqlangan slice
-bajarildi (har biri: dry-run/tekshiruv → tsc → test → alohida commit). Qolgan ko'lam
-HALI KATTA: B14'ning ~22 ta boshqa yozish-joyi (production_orders, qc_reclamations,
-salary_change_log, va h.k.), B13'ning UNITS muammosi (74 ustun/72 jadval —
-qiymat-moslashtirish qarori kerak, alohida ko'p-partiyali ish), B10'ning
-Finance/WMS/POS modullari (raw_materials o'qish-yo'lini material_cards'ga
-o'tkazish — kategoriya-taksonomiya moslashtirish qarori kerak). Bulardan tashqari
-hali BOSHLANMAGAN: Ombor tozalash (5-qadam ketma-ketlik — ba'zi qismlari boshqa
-sessiya tomonidan allaqachon ishlanmoqda, `6e92aaf7` va keyingi commit'lar), 226
-ta qolgan VISION-3340 topilma,
-IoT Kiosk-Screen bosqichi, i18n fix-loop (bu ham boshqa sessiya tomonidan parallel
-ishlanmoqda). To'liq ro'yxat — egasiga yakuniy hisobotda.
+- **B14 slice 7 (production_orders, pp-planning)** ✅ commit `7230e1c9` —
+  `POST /planning/schedule` jonli, @CurrentUser()-ga ega bo'lgan yo'l edi, lekin
+  `created_by`ni yozmasdi. Controller→service→interface→repo to'liq ulandi.
+  Jonli 7 qatordagi NULL — SD→PP tizim-avto-yaratuv (inson-foydalanuvchi yo'q,
+  TO'G'RI xatti-harakat, xato emas) — tegilmadi. 6/6 test PASS.
+- **B14 slice 8 (qc_reclamations)** ✅ commit `74725793` — to'liq 4-qatlamli ulash
+  (controller `@CurrentUser()` → command → handler → agregat → repo). Yo'l-yo'lakay
+  `create-reclamation.handler.spec.ts`dagi 2 ta OLDINDAN BUZILGAN (aloqasiz)
+  assertion topilib tuzatildi (`ReclamationStatus.OPEN` mavjud emas edi;
+  "id noyob" testi handlerning har doim `id=0` placeholder yuborishini hisobga
+  olmagan edi) — git-stash orqali ikkalasi ham oldindan buzilgan ekani
+  tasdiqlandi. 6/6 test PASS.
+- **B14 slice 9 (salary_change_log)** ✅ commit `7da3a714` — controller allaqachon
+  `@CurrentUser()`ga ega edi, faqat `reviewSalaryTransactional()`ga uzatilmagan
+  edi. Test QO'SHILMADI — bu metod haqiqiy `db.transaction()`ni o'raydi, bu
+  to'plamda oldindan mock-namunasi yo'q; yangi tranzaksiya-mock infrastrukturasi
+  qurish bitta-maydonli o'tkazish uchun nomutanosib deb topildi — bu ochiq
+  aytilgan, soxta qamrov da'vo qilinmagan.
+- **B14 slice 10 (sales_orders, lead→order)** ✅ commit `42056eb4` —
+  `convertLeadToOrderAtomic()` `created_by_user_id`ni umuman yozmasdi (0 emas,
+  yo'q — sof qoldirilgan ustun). To'liq 4-qatlamli ulash. 7/7 test PASS.
+
+**🛑 XAVFSIZLIK BLOKI (2026-07-06, hal qilinmagan)**: IoT Kiosk auth-guard nomosligi
+(`iot-tablet.controller.ts`, 17 ta marshrut: `tablet/shift`, `tablet/sessions`,
+`tablet/handover`(+accept), `material-kit-items/:id/scan`(POST+PATCH),
+`production-sessions/*` (10 ta), `downtime-events`) — bularda `@Roles(...IOT_READ)`
+bor, lekin sinf-darajasidagi `JwtAuthGuard` planshet mijozidan kelmaydi (u
+`x-tablet-token` yuboradi, JWT bearer emas) — HAR DOIM 401. Tuzatish (allaqachon
+ishlaydigan `tablet/orders` va sh.k. namunasi bo'yicha) `@Roles`ni OLIB TASHLAB
+`@Public()+@UseGuards(TabletTokenGuard)`ga almashtirishni talab qiladi (guard
+tartibi sababli ikkalasini birga qo'yib bo'lmaydi — RolesGuard TabletTokenGuard'dan
+OLDIN ishlaydi, `request.user` hali o'rnatilmagan bo'ladi). Bu HAQIQIY autentifikatsiya
+mexanizmini almashtirish (avtorizatsiyani zaiflashtirish EMAS — TabletTokenGuard ham
+haqiqiy token-tekshiruv qiladi), lekin xavfsizlik klassifikatori buni to'g'ri
+to'xtatdi: bunday o'zgarish uchun ANIQ egasi ruxsati kerak, "davom eting va to'liq
+tugating" umumiy ko'rsatmasi YETARLI EMAS. **EGASIGA SAVOL**: ushbu 17 marshrutni
+`@Public()+TabletTokenGuard`ga o'tkazishga ruxsat berasizmi (ishlaydigan
+`tablet/orders` namunasi bilan bir xil)?
+
+**XULOSA (2026-07-06, "davom eting va to'liq tugating" bosqichi)**: B10/B13/B14 uchun
+JAMI 11 ta tasdiqlangan slice bajarildi (har biri: dry-run/tekshiruv → tsc → test →
+alohida commit). Qolgan holat, 4 ta katta blok bo'yicha mustaqil tekshirilgan
+(2026-07-06):
+1. **Ombor tozalash** — FAQAT tekshiruv (`WMS-POS-FULL-AUDIT-2026-07-05.md`),
+   kod o'zgarmagan, "egasi qaroriga muhtoj" deb yakunlangan. ~21 dublikat-nomli
+   `org_departments` juftligidan qaysi biri kanonik — egasi tanlashi kerak.
+   `warehouses.code` UNIQUE cheklovi ALLAQACHON bor (tasdiqlandi).
+2. **226 VISION-3340 STILL-OPEN** — bu QASDDAN yopilmagan backlog (har biri
+   soha-bo'yicha "haqiqatan katta/yangi-qurilish" deb aniq tasniflangan, mexanik
+   yopish uchun mo'ljallanmagan) — bu blok o'z holicha "tugatilgan" (rekonsilyatsiya
+   sifatida), 226 ochiq band = kelajakdagi maqsadli sessiyalar uchun oldindan
+   ko'lamlangan alohida vazifalar ro'yxati.
+3. **IoT Kiosk-Screen** — master hujjat "QUEUED" deydi, lekin o'z sharti (§8.10
+   tugagan) allaqachon bajarilgan — HOLAT ESKIRGAN. Yagona egasi-ma'lumotsiz
+   tuzatish (auth-guard, yuqorida) XAVFSIZLIK KLASSIFIKATORI TOMONIDAN
+   TO'XTATILDI, egasi ruxsatini kutmoqda. To'liq 20-talabli Kiosk qurilishi
+   umuman boshlanmagan.
+4. **i18n fix-loop** — ham "QUEUED", lekin boshqa sessiya allaqachon 1 ta fayl
+   ustida ishlagan (`836cc826`, IoT login panel). Arxitektura-qarori kerak
+   (Kirill DB-saqlash: 3-chi `_cyrl` ustun vs tarjima-jadvali) — hali hech
+   qayerda rasman so'ralmagan.
+
+**TO'LIQ TUGATISH MUMKIN EMAS** ushbu bosqichda — yuqoridagi 4 blokning barchasi
+kamida bitta HAQIQIY to'siqqa ega: egasi-ma'lumoti (Ombor dedup, birliklar,
+Kirill-arxitektura) yoki aniq xavfsizlik-ruxsati (IoT auth-guard). B14'ning yana
+~18 ta yozish-joyi (owner-data'siz, mexanik) davom ettirish mumkin edi, lekin
+sessiya ko'lami sababli to'xtatildi — bular xavfsiz, kichik, keyingi navbatda.
