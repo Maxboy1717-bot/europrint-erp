@@ -208,8 +208,19 @@ export class OkrRepository implements IOkrRepo {
       }, 'DB_ERROR');
   }
 
+  /**
+   * C6.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): okr_key_results has no live FK
+   * on objective_id (only owner_card_id→org_functions exists) — the Drizzle
+   * schema declares `.references(() => okrObjectives.id, {onDelete:'cascade'})`
+   * but that migration was never applied, so deleting an objective silently
+   * orphaned its key results. Cascade the delete atomically at the app layer
+   * until/unless the schema drift is reconciled with a real migration.
+   */
   async deleteObjective(id: number): Promise<void> {
-    await db.delete(okr_objectives).where(eq(okr_objectives.id, id));
+    await db.transaction(async (tx) => {
+      await tx.delete(okr_key_results).where(eq(okr_key_results.objectiveId, id));
+      await tx.delete(okr_objectives).where(eq(okr_objectives.id, id));
+    });
   }
 
   async listKeyResults(objectiveId: number | null): Promise<Result<Row[]>> {

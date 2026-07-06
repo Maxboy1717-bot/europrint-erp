@@ -3,9 +3,9 @@
  * Covers list/get/create/update on objectives + key results + dashboards.
  */
 
-import { makeDbChain } from '../_setup/db-mock';
+import { makeDb } from '../_setup/db-mock';
 
-const dbStub = makeDbChain([]);
+const dbStub = makeDb([]);
 
 jest.mock('@shared/db', () => ({
   db: dbStub,
@@ -205,6 +205,24 @@ describe('OkrRepository', () => {
       dbStub.__setRejected(new Error('boom'));
       const r = await repo.getDashboardObjectives();
       expect(r.ok).toBe(false);
+    });
+  });
+
+  describe('deleteObjective — C6.2 orphan cascade', () => {
+    it('deletes key results and the objective inside the same transaction', async () => {
+      dbStub.transaction.mockClear();
+      (dbStub.delete as jest.Mock).mockClear();
+
+      await repo.deleteObjective(9);
+
+      expect(dbStub.transaction).toHaveBeenCalledTimes(1);
+      // one delete() for okr_key_results, one for okr_objectives — never orphans the KRs.
+      expect((dbStub.delete as jest.Mock).mock.calls.length).toBe(2);
+    });
+
+    it('does not throw when the objective has zero key results', async () => {
+      dbStub.__setResolved([]);
+      await expect(repo.deleteObjective(999)).resolves.toBeUndefined();
     });
   });
 
