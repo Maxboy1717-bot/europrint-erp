@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -75,6 +76,7 @@ export class TechnologyController {
   constructor(
     private readonly svc: TechnologyService,
     private readonly grammage: TechnologyGrammageService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Get('dashboard')
@@ -163,7 +165,7 @@ export class TechnologyController {
   @ApiOperation({ summary: 'Get technology card by ID' })
   async getCardById(@Param('id') id: string) {
     const r = await this.svc.getCardById(id);
-    if (!r.ok) throw new HttpException('Texnologik karta topilmadi', HttpStatus.NOT_FOUND);
+    if (!r.ok) throw new HttpException(await this.i18n.t('errors.technologyCardNotFound'), HttpStatus.NOT_FOUND);
     return r.data;
   }
 
@@ -176,7 +178,7 @@ export class TechnologyController {
   async getCardGrammage(@Param('id') id: string, @Query() query: unknown) {
     const q = GrammageQueryDto.parse(query);
     const cardId = parseInt(id, 10);
-    if (!Number.isFinite(cardId)) throw new HttpException('Notoʻgʻri karta ID', HttpStatus.BAD_REQUEST);
+    if (!Number.isFinite(cardId)) throw new HttpException(await this.i18n.t('validation.invalidCardId'), HttpStatus.BAD_REQUEST);
     const r = await this.svc.getCardGrammage(cardId, q.materialCardId);
     if (!r.ok) {
       const code = r.error.code === 'NOT_FOUND' ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -200,7 +202,7 @@ export class TechnologyController {
   async setMaterialLayers(@Param('materialCardId') materialCardId: string, @Body() body: unknown) {
     const { layers } = SetMaterialLayersDto.parse(body);
     const id = parseInt(materialCardId, 10);
-    if (!Number.isFinite(id)) throw new HttpException('Notoʻgʻri material ID', HttpStatus.BAD_REQUEST);
+    if (!Number.isFinite(id)) throw new HttpException(await this.i18n.t('validation.invalidMaterialId'), HttpStatus.BAD_REQUEST);
     return unwrapOrInternal(await this.grammage.setMaterialLayers(id, layers));
   }
 

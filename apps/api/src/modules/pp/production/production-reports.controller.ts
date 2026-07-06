@@ -19,6 +19,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -45,7 +46,10 @@ const PROD_ROLES = ['super_admin', 'director', 'production_manager', 'operator',
 export class ProductionReportsController {
   private readonly logger = new Logger(ProductionReportsController.name);
 
-  constructor(private readonly svc: ProductionService) {}
+  constructor(
+    private readonly svc: ProductionService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Weekly report' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -73,7 +77,7 @@ export class ProductionReportsController {
   async order360Card(@Param('id') id: string) {
     const result = await this.svc.getOrder360Card(safeInt(id, 0));
     const card = unwrapOrThrow(result);
-    if (!card) throw new NotFoundException('Production order not found');
+    if (!card) throw new NotFoundException(await this.i18n.t('errors.productionOrderNotFound'));
     return card;
   }
 
@@ -150,7 +154,7 @@ export class ProductionReportsController {
       };
     } catch (e) {
       this.logger.error('getOrders failed', e);
-      throw new InternalServerErrorException('Production orders query failed');
+      throw new InternalServerErrorException(await this.i18n.t('errors.productionOrdersQueryFailed'));
     }
   }
 }

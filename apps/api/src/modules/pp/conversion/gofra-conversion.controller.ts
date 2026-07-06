@@ -28,6 +28,7 @@ import {
   Inject,
   BadRequestException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -63,6 +64,7 @@ export class GofraConversionController {
   constructor(
     private readonly svc: GofraConversionService,
     @Inject(GOFRA_FACTORS_REPO) private readonly factorsRepo: IGofraFactorsRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   /** GET /api/pp/gofra/convert?direction=&inputValue=&grammageGsm=&sheetWidthMm=&sheetLengthMm=&wastePct= */
@@ -75,7 +77,7 @@ export class GofraConversionController {
       wastePct: q.wastePct,
     };
 
-    const out = this.dispatch(q.direction, q.inputValue, q.grammageGsm, sheet);
+    const out = await this.dispatch(q.direction, q.inputValue, q.grammageGsm, sheet);
     const value = unwrapOrThrow(out);
     const units = UNIT_OF_DIRECTION[q.direction];
     return {
@@ -127,7 +129,7 @@ export class GofraConversionController {
   }
 
   /** Map a direction onto the pure service. Throws 400 if required inputs are missing. */
-  private dispatch(
+  private async dispatch(
     direction: GofraDirection,
     inputValue: number,
     grammageGsm: number | undefined,
@@ -135,19 +137,19 @@ export class GofraConversionController {
   ) {
     switch (direction) {
       case 'kg_to_m2':
-        return this.svc.kgToM2(inputValue, this.requireGsm(grammageGsm));
+        return this.svc.kgToM2(inputValue, await this.requireGsm(grammageGsm));
       case 'm2_to_kg':
-        return this.svc.m2ToKg(inputValue, this.requireGsm(grammageGsm));
+        return this.svc.m2ToKg(inputValue, await this.requireGsm(grammageGsm));
       case 'm2_to_sheets':
         return this.svc.m2ToSheets(inputValue, sheet);
       case 'sheets_to_m2':
         return this.svc.sheetsToM2(inputValue, sheet);
       case 'kg_to_sheets':
-        return this.svc.kgToSheets(inputValue, this.requireGsm(grammageGsm), sheet);
+        return this.svc.kgToSheets(inputValue, await this.requireGsm(grammageGsm), sheet);
       case 'sheets_to_kg':
-        return this.svc.sheetsToKg(inputValue, this.requireGsm(grammageGsm), sheet);
+        return this.svc.sheetsToKg(inputValue, await this.requireGsm(grammageGsm), sheet);
       default:
-        throw new BadRequestException(`Noma'lum yo'nalish: ${String(direction)}`);
+        throw new BadRequestException(await this.i18n.t('validation.unknownGofraDirection', { args: { direction: String(direction) } }));
     }
   }
 
@@ -177,13 +179,13 @@ export class GofraConversionController {
       RETURNING id, key, label_uz, value, unit
     `);
     const result = rows.rows[0] ?? undefined;
-    if (!result) throw new BadRequestException(`gofra_config key=${key} topilmadi`);
+    if (!result) throw new BadRequestException(await this.i18n.t('errors.gofraConfigKeyNotFound', { args: { key } }));
     return result;
   }
 
-  private requireGsm(grammageGsm: number | undefined): number {
+  private async requireGsm(grammageGsm: number | undefined): Promise<number> {
     if (grammageGsm === undefined) {
-      throw new BadRequestException('Bu yo\'nalish uchun grammageGsm kerak');
+      throw new BadRequestException(await this.i18n.t('validation.grammageGsmRequiredForDirection'));
     }
     return grammageGsm;
   }

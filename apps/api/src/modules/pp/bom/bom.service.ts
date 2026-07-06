@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IPpBomRepository, PP_BOM_REPO } from './i-pp-bom.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class BomService {
   private readonly logger = new Logger(BomService.name);
 
-  constructor(@Inject(PP_BOM_REPO) private readonly ppBomRepo: IPpBomRepository) {}
+  constructor(
+    @Inject(PP_BOM_REPO) private readonly ppBomRepo: IPpBomRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -28,7 +32,7 @@ export class BomService {
   async findOne(id: number) {
     const result = await this.ppBomRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`BOM #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.bomNotFoundWithId', { args: { id } }));
     const itemsResult = await this.ppBomRepo.findItemsByBomId(id);
     if (!itemsResult.ok) throw new InternalServerErrorException(itemsResult.error);
     return { ...result.data, items: itemsResult.data };

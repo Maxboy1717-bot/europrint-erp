@@ -7,6 +7,7 @@
  */
 
 import { NotFoundException } from '@nestjs/common';
+import type { I18nService } from 'nestjs-i18n';
 import { ProductionOrdersService } from '../../src/modules/pp/production-orders/production-orders.service';
 import type { IPpProductionOrdersRepository } from '../../src/modules/pp/production-orders/i-pp-production-orders.repo';
 
@@ -23,6 +24,10 @@ function buildRepo(overrides: Partial<jest.Mocked<IPpProductionOrdersRepository>
   };
 }
 
+function buildI18n(): I18nService {
+  return { t: jest.fn().mockResolvedValue('Ishlab chiqarish buyurtmasi topilmadi') } as unknown as I18nService;
+}
+
 describe('ProductionOrdersService', () => {
   it('findAll wraps repository data inside a pagination envelope', async () => {
     const repo = buildRepo({
@@ -31,7 +36,7 @@ describe('ProductionOrdersService', () => {
         data: { data: [{ id: 1, status: 'draft' }, { id: 2, status: 'released' }], count: 2 },
       }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     const r = await svc.findAll({});
 
@@ -44,7 +49,7 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 99, status: 'released' } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     const result = await svc.findOne(99);
 
@@ -55,7 +60,7 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: null }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     await expect(svc.findOne(404)).rejects.toBeInstanceOf(NotFoundException);
   });
@@ -64,7 +69,7 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       create: jest.fn().mockResolvedValue({ ok: true, data: { id: 10 } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     await svc.create({ productId: 5, qty: 100 }, 7);
 
@@ -75,7 +80,7 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, status: 'draft' } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     const r = await svc.updateStatus(5, 'released');
 
@@ -88,7 +93,7 @@ describe('ProductionOrdersService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 7 } }),
     });
-    const svc = new ProductionOrdersService(repo);
+    const svc = new ProductionOrdersService(repo, buildI18n());
 
     const r = await svc.remove(7);
 

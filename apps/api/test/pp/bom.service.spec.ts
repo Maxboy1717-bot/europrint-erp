@@ -9,6 +9,7 @@
  */
 
 import { NotFoundException } from '@nestjs/common';
+import type { I18nService } from 'nestjs-i18n';
 import { BomService } from '../../src/modules/pp/bom/bom.service';
 import type { IPpBomRepository } from '../../src/modules/pp/bom/i-pp-bom.repo';
 
@@ -25,12 +26,16 @@ function buildRepo(overrides: Partial<jest.Mocked<IPpBomRepository>> = {}): jest
   };
 }
 
+function buildI18n(): I18nService {
+  return { t: jest.fn().mockResolvedValue('BOM topilmadi') } as unknown as I18nService;
+}
+
 describe('BomService', () => {
   it('findAll uses default pagination when query is empty', async () => {
     const repo = buildRepo({
       findAll: jest.fn().mockResolvedValue({ ok: true, data: { data: [{ id: 1 }, { id: 2 }], count: 2 } }),
     });
-    const svc = new BomService(repo);
+    const svc = new BomService(repo, buildI18n());
 
     const r = await svc.findAll({});
 
@@ -42,7 +47,7 @@ describe('BomService', () => {
 
   it('findAll honours supplied page/limit and computes offset', async () => {
     const repo = buildRepo();
-    const svc = new BomService(repo);
+    const svc = new BomService(repo, buildI18n());
 
     await svc.findAll({ page: 3, limit: 25 });
 
@@ -54,7 +59,7 @@ describe('BomService', () => {
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 7, productId: 100 } }),
       findItemsByBomId: jest.fn().mockResolvedValue({ ok: true, data: [{ materialId: 1 }, { materialId: 2 }] }),
     });
-    const svc = new BomService(repo);
+    const svc = new BomService(repo, buildI18n());
 
     const result = await svc.findOne(7);
 
@@ -66,7 +71,7 @@ describe('BomService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: null }),
     });
-    const svc = new BomService(repo);
+    const svc = new BomService(repo, buildI18n());
 
     await expect(svc.findOne(404)).rejects.toBeInstanceOf(NotFoundException);
   });
@@ -75,7 +80,7 @@ describe('BomService', () => {
     const repo = buildRepo({
       create: jest.fn().mockResolvedValue({ ok: true, data: { id: 42, productId: 9 } }),
     });
-    const svc = new BomService(repo);
+    const svc = new BomService(repo, buildI18n());
 
     const r = await svc.create({ productId: 9, name: 'BOM-X' });
 
@@ -89,7 +94,7 @@ describe('BomService', () => {
     const repo = buildRepo({
       findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 9 } }),
     });
-    const svc = new BomService(repo);
+    const svc = new BomService(repo, buildI18n());
 
     const r = await svc.remove(9);
 

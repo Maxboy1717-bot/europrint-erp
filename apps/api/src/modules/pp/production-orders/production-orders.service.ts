@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IPpProductionOrdersRepository, PP_PRODUCTION_ORDERS_REPO } from './i-pp-production-orders.repo';
 import { safeCall, Result, AppError } from '@common/result';
 import { PoStatus, canTransition } from '../domain/aggregates/production-order.aggregate';
@@ -12,7 +13,10 @@ import { PoStatus, canTransition } from '../domain/aggregates/production-order.a
 export class ProductionOrdersService {
   private readonly logger = new Logger(ProductionOrdersService.name);
 
-  constructor(@Inject(PP_PRODUCTION_ORDERS_REPO) private readonly ppProductionOrdersRepo: IPpProductionOrdersRepository) {}
+  constructor(
+    @Inject(PP_PRODUCTION_ORDERS_REPO) private readonly ppProductionOrdersRepo: IPpProductionOrdersRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -29,7 +33,7 @@ export class ProductionOrdersService {
   async findOne(id: number) {
     const result = await this.ppProductionOrdersRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Ishlab chiqarish buyurtmasi #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.productionOrderNotFoundWithId', { args: { id } }));
     return result.data;
   }
 
@@ -69,12 +73,12 @@ export class ProductionOrdersService {
    */
   async updateStatus(id: number, status: string, changedBy?: number){
     return safeCall(async () => {
-    const target = this.parsePoStatus(status);
+    const target = await this.parsePoStatus(status);
     const current = await this.findOne(id);
-    const from = this.parsePoStatus(this.extractStatus(current));
+    const from = await this.parsePoStatus(this.extractStatus(current));
     if (target !== from && !canTransition(from, target)) {
       // C.23 / XATO_KODLARI: typed business-rule code; maps to 400 via safeCall.
-      throw new BadRequestException(`PP_INVALID_TRANSITION: ${from} -> ${target}`);
+      throw new BadRequestException(await this.i18n.t('errors.ppInvalidTransition', { args: { from, target } }));
     }
     // T18-C3: pass the acting user so production_order_status_log records who
     // changed the status (kim/qachon/eski→yangi).
@@ -85,12 +89,12 @@ export class ProductionOrdersService {
     });}
 
   /** Coerce a raw status string into a canonical PoStatus member or reject it (400). */
-  private parsePoStatus(raw: unknown): PoStatus {
+  private async parsePoStatus(raw: unknown): Promise<PoStatus> {
     const values = Object.values(PoStatus) as string[];
     if (typeof raw === 'string' && values.includes(raw)) {
       return raw as PoStatus;
     }
-    throw new BadRequestException(`PP_UNKNOWN_STATUS: ${String(raw)}`);
+    throw new BadRequestException(await this.i18n.t('errors.ppUnknownStatus', { args: { status: String(raw) } }));
   }
 
   /** Pull the `status` field off a persisted production-order row (defensively typed). */

@@ -4,13 +4,17 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IPpRoutingsRepository, PP_ROUTINGS_REPO } from './i-pp-routings.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
 @Injectable()
 export class RoutingsService {
 
-  constructor(@Inject(PP_ROUTINGS_REPO) private readonly ppRoutingsRepo: IPpRoutingsRepository) {}
+  constructor(
+    @Inject(PP_ROUTINGS_REPO) private readonly ppRoutingsRepo: IPpRoutingsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -27,7 +31,7 @@ export class RoutingsService {
   async findOne(id: number) {
     const result = await this.ppRoutingsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Routing #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.routingNotFoundWithId', { args: { id } }));
     const opsResult = await this.ppRoutingsRepo.findOperationsByRoutingId(String(id));
     if (!opsResult.ok) throw new InternalServerErrorException(opsResult.error);
     return { ...result.data, operations: opsResult.data };
