@@ -8,9 +8,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { safeStorage } from "@/lib/safeStorage";
+import { useTranslation } from "@/lib/i18n";
 import {
   Equipment, ProductionOrder, ProductionSession,
-  ChecklistMaterial, CrewAssignment, CompletionReportData, IotLang,
+  ChecklistMaterial, CrewAssignment, CompletionReportData,
 } from "./iot-types";
 import { SESSION_12H_MS, SosType } from "./useIoTTabletTypes";
 
@@ -18,16 +19,14 @@ export function useIoTTabletCore() {
   const { toast } = useToast();
 
   // ── Language ────────────────────────────────────────────────────────────
-  const [lang, setLang] = useState<IotLang>(
-    () => (safeStorage.getItem("iot_lang") as IotLang) || "uz",
-  );
-
-  const t = useCallback(
-    (uz: string, ru: string) => (lang === "uz" ? uz : ru),
-    [lang],
-  );
-
-  useEffect(() => { safeStorage.setItem("iot_lang", lang); }, [lang]);
+  // i18n F2 (2026-07-05): was a self-reinvented uz/ru-only useState + local
+  // t(uz,ru) helper, persisted to its OWN "iot_lang" localStorage key --
+  // disconnected from the rest of the app's language preference AND unable
+  // to represent uz-cyr at all (the type itself excluded it), so Cyrillic
+  // users on shop-floor tablets always saw Russian. Now uses the canonical
+  // key-based i18n system (locales/*/iot.json), which already has all 3
+  // languages and shares the app-wide language preference.
+  const { language: lang, setLanguage: setLang, t } = useTranslation("iot");
 
   // ── Auth / identity ─────────────────────────────────────────────────────
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -172,7 +171,7 @@ export function useIoTTabletCore() {
         setWorkerId(""); setWorkerName(""); setAssignedEquipment(null);
         setTabletToken(""); setIsLoggedIn(false);
         toast({
-          title: t("Sessiya muddati tugadi. Iltimos qayta kiring.", "Время сессии истекло. Войдите снова."),
+          title: t("sessionExpired"),
           variant: "destructive",
         });
       }
@@ -184,15 +183,20 @@ export function useIoTTabletCore() {
 
   // ── Clock ticker ──────────────────────────────────────────────────────────
   useEffect(() => {
+    // i18n F2: uz-cyr shares uz-UZ's numeric/date shape (only weekday-name
+    // script differs, no distinct Intl locale tag needed for that) -- only
+    // ru gets ru-RU. Previously this ternary only had 2 branches, so a
+    // uz-cyr tablet would have silently rendered the clock in ru-RU shape.
+    const clockLocale = lang === "ru" ? "ru-RU" : "uz-UZ";
     const timer = setInterval(() => {
       const now = new Date();
       setCurrentTime(
-        now.toLocaleTimeString(lang === "uz" ? "uz-UZ" : "ru-RU", {
+        now.toLocaleTimeString(clockLocale, {
           hour: "2-digit", minute: "2-digit", second: "2-digit",
         }),
       );
       setCurrentDate(
-        now.toLocaleDateString(lang === "uz" ? "uz-UZ" : "ru-RU", {
+        now.toLocaleDateString(clockLocale, {
           weekday: "long", year: "numeric", month: "long", day: "numeric",
         }),
       );

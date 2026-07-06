@@ -157,5 +157,13 @@
   "tabHealth": "Здоровье",
   "dashboard1": "Панель управления",
   "dashboard9": "Дашборд 9",
-  "tabMaintenance": "Обслуживание"
+  "tabMaintenance": "Обслуживание",
+  "sessionExpired": "Время сессии истекло. Войдите снова.",
+  "loginTitle": "Вход оператора",
+  "loginSubtitle": "Войдите с табельным номером и паролем",
+  "tabelNumberLabel": "Табельный номер",
+  "tabelNumberPlaceholder": "Например: 001",
+  "passwordLabel": "Пароль",
+  "loginButton": "ВОЙТИ",
+  "loginHelpText": "Введите табельный номер и PIN-код"
 }

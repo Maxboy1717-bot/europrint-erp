@@ -157,5 +157,13 @@
   "tabHealth": "Salomatlik",
   "dashboard1": "Boshqaruv paneli",
   "dashboard9": "Dashboard 9",
-  "tabMaintenance": "Tab maintenance"
+  "tabMaintenance": "Tab maintenance",
+  "sessionExpired": "Sessiya muddati tugadi. Iltimos qayta kiring.",
+  "loginTitle": "Operator kirishi",
+  "loginSubtitle": "Tabel raqami va parol bilan kiring",
+  "tabelNumberLabel": "Tabel raqami",
+  "tabelNumberPlaceholder": "Masalan: 001",
+  "passwordLabel": "Parol",
+  "loginButton": "KIRISH",
+  "loginHelpText": "Tabel raqami va PIN kodingizni kiriting"
 }

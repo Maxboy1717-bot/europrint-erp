@@ -157,5 +157,13 @@
   "tabHealth": "Саломатлик",
   "dashboard1": "Бошқарув панели",
   "dashboard9": "Дашбоард 9",
-  "tabMaintenance": "Таб маинтенанке"
+  "tabMaintenance": "Таб маинтенанке",
+  "sessionExpired": "Сессия муддати тугади. Илтимос қайта киринг.",
+  "loginTitle": "Оператор кириши",
+  "loginSubtitle": "Табел рақами ва парол билан киринг",
+  "tabelNumberLabel": "Табел рақами",
+  "tabelNumberPlaceholder": "Масалан: 001",
+  "passwordLabel": "Парол",
+  "loginButton": "КИРИШ",
+  "loginHelpText": "Табел рақами ва ПИН кодингизни киритинг"
 }

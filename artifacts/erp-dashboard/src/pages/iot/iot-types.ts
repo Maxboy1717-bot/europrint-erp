@@ -129,4 +129,7 @@ export interface CompletionReportData {
   };
 }
 
-export type IotLang = "uz" | "ru";
+// i18n F2 (2026-07-05): widened from "uz" | "ru" to the canonical 3-language
+// type -- the old 2-value type is exactly why uz-cyr tablet users always saw
+// Russian (the type itself made a 3rd branch impossible to represent).
+export type { Language as IotLang } from "@/lib/i18n";
