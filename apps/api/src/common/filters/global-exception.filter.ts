@@ -12,6 +12,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import { ZodError } from 'zod'
+import { I18nContext } from 'nestjs-i18n'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 type LogLevel = 'CRITICAL' | 'ERROR' | 'WARNING' | 'INFO'
@@ -24,9 +25,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp()
     const reply = ctx.getResponse<FastifyReply>()
     const request = ctx.getRequest<FastifyRequest>()
+    // GlobalExceptionFilter is instantiated manually via app.useGlobalFilters(new ...())
+    // (main-bootstrap.ts) rather than through Nest DI, so I18nService cannot be
+    // constructor-injected here. I18nContext.current() reads the request-scoped
+    // context nestjs-i18n's own middleware attaches via AsyncLocalStorage instead.
+    const i18n = I18nContext.current(host)
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR
-    let message = 'Internal server error'
+    let message = i18n?.t('errors.internalServerError') ?? 'Internal server error'
     let code = 'INTERNAL_ERROR'
     let logLevel: LogLevel = 'ERROR'
 
@@ -45,7 +51,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       code = this.getErrorCode(status)
     } else if (exception instanceof ZodError) {
       status = HttpStatus.UNPROCESSABLE_ENTITY
-      message = 'Validation error'
+      message = i18n?.t('validation.validationFailed') ?? 'Validation error'
       code = 'VALIDATION_ERROR'
       logLevel = 'WARNING'
     } else if (exception instanceof Error) {
@@ -83,7 +89,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // Development muhitida `debug` maydoni real xato matni — production da yashirin.
       reply.status(HttpStatus.SERVICE_UNAVAILABLE).send({
         success: false,
-        error: 'Server temporarily unavailable',
+        error: i18n?.t('errors.serverTemporarilyUnavailable') ?? 'Server temporarily unavailable',
         code: 'SERVICE_UNAVAILABLE',
         debug: process.env['NODE_ENV'] !== 'production' ? message : undefined,
         timestamp: new Date().toISOString(),

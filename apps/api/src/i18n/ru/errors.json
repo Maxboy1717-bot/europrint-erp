@@ -15,6 +15,7 @@
   "unauthorized": "Не авторизован",
   "forbidden": "Запрещено",
   "internalServerError": "Внутренняя ошибка сервера",
+  "serverTemporarilyUnavailable": "Сервер временно недоступен",
   "badRequest": "Некорректный запрос",
   "validation": "Ошибка валидации",
   "duplicateEntry": "Запись уже существует",

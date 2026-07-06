@@ -15,6 +15,7 @@
   "unauthorized": "Avtorizatsiyadan o'tilmagan",
   "forbidden": "Taqiqlangan",
   "internalServerError": "Server xatosi",
+  "serverTemporarilyUnavailable": "Server vaqtincha mavjud emas",
   "badRequest": "Noto'g'ri so'rov",
   "validation": "Tekshiruv xatosi",
   "duplicateEntry": "Yozuv allaqachon mavjud",

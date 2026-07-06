@@ -125,6 +125,7 @@ export type I18nTranslations = {
         "unauthorized": string;
         "forbidden": string;
         "internalServerError": string;
+        "serverTemporarilyUnavailable": string;
         "badRequest": string;
         "validation": string;
         "duplicateEntry": string;

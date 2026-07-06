@@ -15,6 +15,7 @@
   "unauthorized": "Авторизациядан ўтилмаган",
   "forbidden": "Тақиқланган",
   "internalServerError": "Сервер хатоси",
+  "serverTemporarilyUnavailable": "Сервер вақтинча мавжуд эмас",
   "badRequest": "Нотўғри сўров",
   "validation": "Текширув хатоси",
   "duplicateEntry": "Ёзув аллақачон мавжуд",
