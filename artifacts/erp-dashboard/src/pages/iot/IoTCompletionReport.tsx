@@ -7,11 +7,24 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from '@/lib/queryClient';
 import { IoTCompletionReportProps, CompletionStep } from "./IoTCompletionReportTypes";
 import { StepProgressBar, ResultsStep } from "./IoTCompletionReportSections";
 import { EvaluationStep, MaterialReturnStep, DoneStep } from "./IoTCompletionReportSteps";
 import { useTranslation } from "@/lib/i18n";
+
+// B14/Decision 1 (2026-07-06): these two calls previously used apiRequest (ERP
+// JWT/cookie auth) even though tabletToken was already validated in scope above --
+// the token was checked but never actually sent, so a bare kiosk tablet (no ERP
+// session) always got a silent failure here. Mirrors useIoTTabletData.ts's
+// tabletFetch pattern (x-tablet-token header, not cookie/bearer).
+async function tabletFetch(tabletToken: string, path: string, body: unknown): Promise<Response> {
+  // eslint-disable-next-line no-restricted-globals -- raw fetch: tablet-token auth, not ERP cookie
+  return fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-tablet-token': tabletToken },
+    body: JSON.stringify(body),
+  });
+}
 
 export function IoTCompletionReport({ open, onClose, completionReport, formatTime, tabletToken }: IoTCompletionReportProps) {
   const { t } = useTranslation("iot");
@@ -62,10 +75,11 @@ export function IoTCompletionReport({ open, onClose, completionReport, formatTim
     }
     setEvalSubmitting(true);
     try {
-      await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/evaluation`, {
+      const res = await tabletFetch(tabletToken, `/api/iot/production-sessions/${sessionId}/evaluation`, {
         safetyScore, qualityScore, productivityScore, teamworkScore,
         issuesReported: issuesReported || undefined, suggestions: suggestions || undefined,
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setEvalDone(true);
       toast({ title: t("crEvalSaved") });
       if (returnRequired) { setStep("material"); } else { setStep("done"); }
@@ -82,9 +96,10 @@ export function IoTCompletionReport({ open, onClose, completionReport, formatTim
     }
     setReturnSubmitting(true);
     try {
-      await apiRequest('POST', `/api/iot/production-sessions/${sessionId}/material-return`, {
+      const res = await tabletFetch(tabletToken, `/api/iot/production-sessions/${sessionId}/material-return`, {
         returnedQty: qty, unit: materialRemainder?.unit || "dona", notes: returnReason || undefined,
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setReturnDone(true);
       toast({ title: t("crMaterialReturned") });
       setStep("done");

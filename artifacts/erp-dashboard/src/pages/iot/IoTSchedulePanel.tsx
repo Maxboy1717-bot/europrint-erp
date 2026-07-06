@@ -12,6 +12,7 @@ import { Play, Languages, LogOut, Settings, Barcode, Calendar, ListTodo } from "
 import { UseMutationResult } from "@tanstack/react-query";
 import { ProductionOrder, Equipment, ProductionSession, IotLang } from "./iot-types";
 import { EPPageHeader, EPLoader } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 interface IoTSchedulePanelProps {
   lang: IotLang;
@@ -37,7 +38,7 @@ export function IoTSchedulePanel({
   ordersLoading, displayOrders, selectedOrder, setSelectedOrder,
   handleLogout, createSession,
 }: IoTSchedulePanelProps) {
-  const t = (uz: string, ru: string) => lang === "uz" ? uz : ru;
+  const { t } = useTranslation("iot");
 
   return (
     <div className="min-h-screen bg-background font-inter" data-testid="iot-tablet-schedule">
@@ -76,7 +77,7 @@ export function IoTSchedulePanel({
                 <Settings className="h-8 w-8 text-[var(--ep-green)]" />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("Sizga tayinlangan uskuna", "Закрепленное за вами оборудование")}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("spAssignedEquipment")}</p>
                 <p className="text-2xl font-bold text-foreground tracking-tight">
                   {lang === "ru" && assignedEquipment.nameRu ? assignedEquipment.nameRu : assignedEquipment.name}
                 </p>
@@ -88,17 +89,17 @@ export function IoTSchedulePanel({
         <div className="flex items-center gap-3 mb-2">
           <div className="h-8 w-1.5 bg-primary rounded-full" />
           <EPPageHeader
-        breadcrumb={<>{t("Boshqaruv paneli", "Панель управления")}<b className="text-foreground">{t("Ishlab chiqarish rejangiz", "Ваш производственный план")}</b></>}
-        title={t("Ishlab chiqarish rejangiz", "Ваш производственный план")}
+        breadcrumb={<>{t("dashboard1")}<b className="text-foreground">{t("spYourPlan")}</b></>}
+        title={t("spYourPlan")}
       />
         </div>
 
         {!assignedEquipment && (
           <div className="bg-card rounded-xl p-6 border border-border shadow-sm space-y-4">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("Uskuna tanlang", "Выберите оборудование")}</Label>
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("spSelectEquipment")}</Label>
             <Select onValueChange={v => setSelectedEquipment((Array.isArray(equipmentList) ? equipmentList : []).find(e => e.id === v) || null)}>
               <SelectTrigger className="h-14 text-lg bg-background border-border text-foreground rounded-xl focus:ring-primary" data-testid="select-equipment-schedule">
-                <SelectValue placeholder={t("Uskunani tanlang", "Выберите оборудование")} />
+                <SelectValue placeholder={t("spSelectEquipmentPlaceholder")} />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
                 {(Array.isArray(equipmentList) ? equipmentList : []).map(eq => (
@@ -112,13 +113,13 @@ export function IoTSchedulePanel({
         {ordersLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <EPLoader size={48} />
-            <p className="text-muted-foreground font-medium">{t("Reja yuklanmoqda...", "Загрузка плана...")}</p>
+            <p className="text-muted-foreground font-medium">{t("spPlanLoading")}</p>
           </div>
         ) : displayOrders.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg text-muted-foreground">{t("Bugun uchun vazifalar yo'q", "Нет задач на сегодня")}</p>
+              <p className="text-lg text-muted-foreground">{t("spNoTasksToday")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -141,7 +142,7 @@ export function IoTSchedulePanel({
                           <p className="text-2xl font-bold text-primary tracking-tight">{order.orderNumber}</p>
                           {(order.priority || 5) <= 1 && (
                             <span className="bg-red-100 text-red-800 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider">
-                              {t("Shoshilinch", "Срочный")}
+                              {t("spUrgent")}
                             </span>
                           )}
                         </div>
@@ -150,7 +151,7 @@ export function IoTSchedulePanel({
                     </div>
                     <div className="text-right space-y-1 bg-muted/40 px-4 py-2 rounded-xl border border-border/30">
                       <p className="text-3xl font-black text-foreground tracking-tighter">{(order.quantity || 0).toLocaleString()}</p>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("dona", "шт")}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("spUnit")}</p>
                     </div>
                   </div>
                   <div className="mt-5 pt-5 border-t border-border/30 flex items-center justify-between text-sm">
@@ -158,7 +159,7 @@ export function IoTSchedulePanel({
                       {order.setupTimeMinutes && (
                         <div className="flex items-center gap-2 text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/20">
                           <Settings className="h-4 w-4" />
-                          <span className="text-sm font-semibold">{order.setupTimeMinutes} {t("min sozlash", "мин настройка")}</span>
+                          <span className="text-sm font-semibold">{order.setupTimeMinutes} {t("spSetupMin")}</span>
                         </div>
                       )}
                       {order.barcode && (
@@ -169,7 +170,7 @@ export function IoTSchedulePanel({
                       )}
                     </div>
                     <Badge variant={(order.priority || 5) <= 1 ? "destructive" : "secondary"}>
-                      {(order.priority || 5) <= 1 ? t("Shoshilinch", "Срочный") : t("Oddiy", "Обычный")}
+                      {(order.priority || 5) <= 1 ? t("spUrgent") : t("spNormal")}
                     </Badge>
                   </div>
                 </CardContent>
@@ -187,7 +188,7 @@ export function IoTSchedulePanel({
               data-testid="button-start-from-schedule"
             >
               {createSession.isPending ? <EPLoader size={32} className="mr-3" /> : <Play className="h-8 w-8 fill-current mr-3" />}
-              {t("SOZLASHNI BOSHLASH", "НАЧАТЬ НАСТРОЙКУ")}
+              {t("spStartSetup")}
             </Button>
           </div>
         )}

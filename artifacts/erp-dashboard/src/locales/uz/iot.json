@@ -218,5 +218,16 @@
   "crDoneSummary": "Baholash va material qaytarish muvaffaqiyatli yakunlandi",
   "crEvalSavedShort": "Baholash saqlandi",
   "crMaterialReturnedShort": "Material qaytarildi",
-  "crCloseAndNext": "Yopish va yangi buyurtmaga o'tish"
+  "crCloseAndNext": "Yopish va yangi buyurtmaga o'tish",
+  "spAssignedEquipment": "Sizga tayinlangan uskuna",
+  "spYourPlan": "Ishlab chiqarish rejangiz",
+  "spSelectEquipment": "Uskuna tanlang",
+  "spSelectEquipmentPlaceholder": "Uskunani tanlang",
+  "spPlanLoading": "Reja yuklanmoqda...",
+  "spNoTasksToday": "Bugun uchun vazifalar yo'q",
+  "spUrgent": "Shoshilinch",
+  "spUnit": "dona",
+  "spSetupMin": "min sozlash",
+  "spNormal": "Oddiy",
+  "spStartSetup": "SOZLASHNI BOSHLASH"
 }

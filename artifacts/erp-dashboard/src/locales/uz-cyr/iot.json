@@ -218,5 +218,16 @@
   "crDoneSummary": "Баҳолаш ва материал қайтариш муваффақиятли якунланди",
   "crEvalSavedShort": "Баҳолаш сақланди",
   "crMaterialReturnedShort": "Материал қайтарилди",
-  "crCloseAndNext": "Ёпиш ва янги буюртмага ўтиш"
+  "crCloseAndNext": "Ёпиш ва янги буюртмага ўтиш",
+  "spAssignedEquipment": "Сизга тайинланган ускуна",
+  "spYourPlan": "Ишлаб чиқариш режангиз",
+  "spSelectEquipment": "Ускуна танланг",
+  "spSelectEquipmentPlaceholder": "Ускунани танланг",
+  "spPlanLoading": "Режа юкланмоқда...",
+  "spNoTasksToday": "Бугун учун вазифалар йўқ",
+  "spUrgent": "Шошилинч",
+  "spUnit": "дона",
+  "spSetupMin": "мин созлаш",
+  "spNormal": "Оддий",
+  "spStartSetup": "СОЗЛАШНИ БОШЛАШ"
 }

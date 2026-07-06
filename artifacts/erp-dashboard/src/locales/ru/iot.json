@@ -218,5 +218,16 @@
   "crDoneSummary": "Оценка и возврат материала успешно завершены",
   "crEvalSavedShort": "Оценка сохранена",
   "crMaterialReturnedShort": "Материал возвращён",
-  "crCloseAndNext": "Закрыть и перейти к следующему"
+  "crCloseAndNext": "Закрыть и перейти к следующему",
+  "spAssignedEquipment": "Закрепленное за вами оборудование",
+  "spYourPlan": "Ваш производственный план",
+  "spSelectEquipment": "Выберите оборудование",
+  "spSelectEquipmentPlaceholder": "Выберите оборудование",
+  "spPlanLoading": "Загрузка плана...",
+  "spNoTasksToday": "Нет задач на сегодня",
+  "spUrgent": "Срочный",
+  "spUnit": "шт",
+  "spSetupMin": "мин настройка",
+  "spNormal": "Обычный",
+  "spStartSetup": "НАЧАТЬ НАСТРОЙКУ"
 }
