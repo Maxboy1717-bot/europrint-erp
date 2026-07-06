@@ -9,6 +9,7 @@ import { Err, isErr, Ok, safeCall } from '@common/result';
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { I18nService } from 'nestjs-i18n';
 import { sql, gte } from 'drizzle-orm';
 import {
   AiRequest,
@@ -58,7 +59,8 @@ export class AiRouterService {
   constructor(private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
     private readonly drizzle: DrizzleService,
-    @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo) {}
+    @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo,
+    private readonly i18n: I18nService) {}
 
   async call(req: AiRequest): Promise<Result<AiResponse>> {
     const startTime = Date.now();
@@ -259,7 +261,7 @@ export class AiRouterService {
         temperature: req.temperature ?? 0.7,
       });
 
-      if (!response.choices[0]?.message?.content) throw new InternalServerErrorException('OpenAI javob bo`sh');
+      if (!response.choices[0]?.message?.content) throw new InternalServerErrorException(await this.i18n.t('errors.openAiEmptyResponse'));
 
       const text = response.choices[0].message.content;
       const inputTokens = response.usage?.prompt_tokens ?? 0;
@@ -296,7 +298,7 @@ export class AiRouterService {
     if (!apiKey) return Err('GEMINI_API_KEY / GOOGLE_API_KEY konfiguratsiyasi yo`q');
     return safeCall(async () => {
       const { response, model } = await this.invokeGemini(apiKey, req);
-      if (!response.response?.text()) throw new InternalServerErrorException('Gemini javob bo`sh');
+      if (!response.response?.text()) throw new InternalServerErrorException(await this.i18n.t('errors.geminiEmptyResponse'));
       const text = response.response.text();
       const usageMetadata = response.response.usageMetadata;
       const inputTokens = usageMetadata?.promptTokenCount ?? 0;
@@ -335,7 +337,7 @@ export class AiRouterService {
         messages: [{ role: 'user', content: userContent }],
       });
 
-      if (!response.content?.[0] || response.content[0].type !== 'text') throw new InternalServerErrorException('Claude javob bo`sh');
+      if (!response.content?.[0] || response.content[0].type !== 'text') throw new InternalServerErrorException(await this.i18n.t('errors.claudeEmptyResponse'));
 
       const text = response.content[0].text;
       const inputTokens = response.usage?.input_tokens ?? 0;

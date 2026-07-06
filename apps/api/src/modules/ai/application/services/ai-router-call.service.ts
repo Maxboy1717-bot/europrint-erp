@@ -6,6 +6,7 @@
 import { Err, isErr, safeCall } from '@common/result';
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { I18nService } from 'nestjs-i18n';
 import {
   AiRequest,
   AiResponse,
@@ -25,6 +26,7 @@ export class AiRouterCallService {
   constructor(
     private readonly configService: ConfigService,
     @Inject(AI_ROUTER_REPO) private readonly aiRouterRepo: IAiRouterRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   async callOpenAi(req: AiRequest): Promise<Result<AiResponse>> {
@@ -46,7 +48,7 @@ export class AiRouterCallService {
         temperature: req.temperature ?? 0.7,
       });
 
-      if (!response.choices[0]?.message?.content) throw new InternalServerErrorException('OpenAI javob bo`sh');
+      if (!response.choices[0]?.message?.content) throw new InternalServerErrorException(await this.i18n.t('errors.openAiEmptyResponse'));
 
       const text = response.choices[0].message.content;
       const inputTokens = response.usage?.prompt_tokens ?? 0;
@@ -74,7 +76,7 @@ export class AiRouterCallService {
         generationConfig: { maxOutputTokens: req.maxTokens ?? AI_DEFAULT_MAX_TOKENS, temperature: req.temperature ?? 0.7 },
       });
 
-      if (!response.response?.text()) throw new InternalServerErrorException('Gemini javob bo`sh');
+      if (!response.response?.text()) throw new InternalServerErrorException(await this.i18n.t('errors.geminiEmptyResponse'));
 
       const text = response.response.text();
       const usageMetadata = response.response.usageMetadata;
@@ -103,7 +105,7 @@ export class AiRouterCallService {
         messages: [{ role: 'user', content: req.prompt }],
       });
 
-      if (!response.content?.[0] || response.content[0].type !== 'text') throw new InternalServerErrorException('Claude javob bo`sh');
+      if (!response.content?.[0] || response.content[0].type !== 'text') throw new InternalServerErrorException(await this.i18n.t('errors.claudeEmptyResponse'));
 
       const text = response.content[0].text;
       const inputTokens = response.usage?.input_tokens ?? 0;

@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { AI_MAX_TOKENS_STANDARD, AI_MAX_TOKENS_MEDIUM } from '@common/constants/app.constants';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
 import { AiRouterService } from '../application/services/ai-router.service';
@@ -43,6 +44,7 @@ export class HrAiService {
   constructor(
     private readonly ai: AiRouterService,
     private readonly hrAiRepo: HrAiRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   async screenCandidate(candidateId: number, userId: number): Promise<Result<object, AppError>>{
@@ -70,7 +72,7 @@ export class HrAiService {
   private async loadCandidate(candidateId: number): Promise<Record<string, unknown>> {
     const candidateResult = await this.hrAiRepo.getCandidateById(candidateId);
     if (!candidateResult.ok) throw new InternalServerErrorException(candidateResult.error.message);
-    if (!candidateResult.data) throw new InternalServerErrorException(`Nomzod #${candidateId} topilmadi`);
+    if (!candidateResult.data) throw new InternalServerErrorException(await this.i18n.t('errors.candidateNotFoundWithId', { args: { id: candidateId } }));
     return candidateResult.data as Record<string, unknown>;
   }
 
@@ -177,7 +179,7 @@ O'ZBEK TILIDA JSON:
   async analyzeToolTest(toolTestId: number, positionTitle: string, userId: number): Promise<ToolTestAnalysis> {
     const testResult = await this.hrAiRepo.getToolTestById(toolTestId);
     if (!testResult.ok) throw new InternalServerErrorException(testResult.error.message);
-    if (!testResult.data) throw new InternalServerErrorException(`Tool Test #${toolTestId} topilmadi`);
+    if (!testResult.data) throw new InternalServerErrorException(await this.i18n.t('errors.toolTestNotFoundWithId', { args: { id: toolTestId } }));
     const test = testResult.data as Record<string, unknown>;
 
     const prompt = `HR CAPITAL Tool Test natijasini tahlil qiling.

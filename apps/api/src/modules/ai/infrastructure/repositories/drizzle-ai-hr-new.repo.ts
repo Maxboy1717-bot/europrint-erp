@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { eq, desc } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Ok, Result } from '@common/result';
@@ -28,7 +29,10 @@ export interface AiInterviewRow {
 
 @Injectable()
 export class DrizzleAiHrNewRepo {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly i18n: I18nService,
+  ) {}
 
   private toRow(r: typeof aiHrInterviews.$inferSelect): AiInterviewRow {
     return {
@@ -71,7 +75,7 @@ export class DrizzleAiHrNewRepo {
           createdBy,
         })
         .returning();
-      if (!row) throw new InternalServerErrorException('AI intervyu yaratishda xato: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.aiInterviewCreationFailed'));
       return this.toRow(row);
     });
   }

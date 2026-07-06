@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { eq, desc, sql } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { safeCall, Ok, Err, Result } from '@common/result';
@@ -47,7 +48,10 @@ export interface ReservationBatch {
 
 @Injectable()
 export class DrizzleAiReservationRepo {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly i18n: I18nService,
+  ) {}
 
   private toRequest(r: typeof aiReservationRequests.$inferSelect): ReservationRequest {
     return {
@@ -157,7 +161,7 @@ export class DrizzleAiReservationRepo {
         .set({ status })
         .where(eq(aiReservationRequests.id, id))
         .returning();
-      if (!row) throw new NotFoundException(`Rezervatsiya topilmadi: ${id}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.reservationNotFound', { args: { id } }));
       return this.toRequest(row);
     });
   }

@@ -8,6 +8,7 @@ import { AI_SHORT_MAX_TOKENS, AI_MAX_TOKENS_STANDARD } from '@common/constants/a
  * CRM AI Service — Lead scoring, Deal probability, Churn risk, Next best action
  */
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { isErr, safeJsonParse, Result, AppError, safeCall } from '@common/result';
 import { AiRouterService } from '../application/services/ai-router.service';
 import { AiDataRepository } from './ai-data.repository';
@@ -21,6 +22,7 @@ export class CrmAiService {
   constructor(
     private readonly ai:       AiRouterService,
     private readonly dataRepo: AiDataRepository,
+    private readonly i18n:     I18nService,
   ) {}
 
   // ─── Lead Scoring ────────────────────────────────────────────────────────
@@ -28,7 +30,7 @@ export class CrmAiService {
   async scoreLead(leadId: number, userId: number): Promise<Result<object, AppError>>{
     return safeCall(async () => {
       const lead = await this.dataRepo.getLeadById(leadId);
-      if (!lead) throw new InternalServerErrorException(`Lead #${leadId} topilmadi`);
+      if (!lead) throw new InternalServerErrorException(await this.i18n.t('errors.leadNotFoundWithId', { args: { id: leadId } }));
       const prompt = this.buildLeadScorePrompt(lead);
       const aiResult = await this.ai.call({ taskType: 'crm.lead_score', prompt, maxTokens: AI_SHORT_MAX_TOKENS, temperature: 0.3, userId });
       if (isErr(aiResult)) {
@@ -73,7 +75,7 @@ export class CrmAiService {
 
   async predictDealProbability(dealId: number, userId: number): Promise<DealProbabilityResult> {
     const deal = await this.dataRepo.getDealById(dealId);
-    if (!deal) throw new InternalServerErrorException(`Deal #${dealId} topilmadi`);
+    if (!deal) throw new InternalServerErrorException(await this.i18n.t('errors.dealNotFoundWithId', { args: { id: dealId } }));
     const prompt = this.buildDealProbabilityPrompt(deal);
     const aiResult = await this.ai.call({ taskType: 'crm.deal_probability', prompt, maxTokens: AI_SHORT_MAX_TOKENS, temperature: 0.3, userId });
     if (isErr(aiResult)) {

@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { eq, sql } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
 import { runQuery } from '@shared/db';
@@ -15,7 +16,10 @@ import { AiExamAttempt, AiExamDetail } from '../../presentation/dto/ai-exam.dto'
 
 @Injectable()
 export class DrizzleAiExamRepo {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAllAttempts(): Promise<Result<AiExamAttempt[]>> {
     return safeCall(async () => {
@@ -75,7 +79,7 @@ export class DrizzleAiExamRepo {
         .insert(aiExamAttempts)
         .values({ employeeId: userId, status: 'assigned', questions: [] })
         .returning();
-      if (!row) throw new InternalServerErrorException('Imtihon tayinlashda xato: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.examAssignmentFailed'));
       return { id: row.id, userId, positionId, status: 'assigned' };
     });
   }
@@ -87,7 +91,7 @@ export class DrizzleAiExamRepo {
         .set({ answers, status: 'submitted', submittedAt: _time.now() })
         .where(eq(aiExamAttempts.id, attemptId))
         .returning();
-      if (!row) throw new NotFoundException(`Urinish topilmadi: ${attemptId}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.examAttemptNotFound', { args: { id: attemptId } }));
       return { id: row.id, status: 'submitted', answerCount: Object.keys(answers).length };
     });
   }
@@ -98,7 +102,7 @@ export class DrizzleAiExamRepo {
         .delete(aiExamAttempts)
         .where(eq(aiExamAttempts.id, id))
         .returning({ id: aiExamAttempts.id });
-      if (deleted.length === 0) throw new NotFoundException(`Urinish topilmadi: ${id}`);
+      if (deleted.length === 0) throw new NotFoundException(await this.i18n.t('errors.examAttemptNotFound', { args: { id } }));
     });
   }
 

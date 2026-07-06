@@ -6,6 +6,7 @@
  */
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { and, desc, eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { DrizzleService } from '@common/services/drizzle.service';
@@ -67,7 +68,10 @@ interface AiFitScoreSqlRow {
 
 @Injectable()
 export class DrizzleAiFitRepo implements IAiFitRepo {
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly i18n: I18nService,
+  ) {}
 
   /** Map a raw Drizzle select row → transport FitScoreRow (numeric→number, dates→ISO). */
   private toRow(r: typeof aiFitScores.$inferSelect): FitScoreRow {
@@ -99,7 +103,7 @@ export class DrizzleAiFitRepo implements IAiFitRepo {
           aiProvider:          dto.aiProvider ?? null,
         })
         .returning();
-      if (!row) throw new InternalServerErrorException('AI-fit baho saqlanmadi: natija qaytmadi');
+      if (!row) throw new InternalServerErrorException(await this.i18n.t('errors.aiFitScoreSaveFailed'));
       return this.toRow(row);
     });
   }
