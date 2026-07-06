@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -84,7 +85,10 @@ export { KanbanCardFilesController } from './kanban-card-files.controller';
 export class KanbanCardsController {
   private readonly logger = new Logger(KanbanCardsController.name);
 
-  constructor(private readonly svc: KanbanExtService) {}
+  constructor(
+    private readonly svc: KanbanExtService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // --- Cards extended -------------------------------------------------------
 
@@ -159,7 +163,7 @@ export class KanbanCardsController {
       WHERE id = ${Number(id)} AND deleted_at IS NULL
       RETURNING id, rating
     `);
-    if (!rows[0]) throw new HttpException('Karta topilmadi', HttpStatus.NOT_FOUND);
+    if (!rows[0]) throw new HttpException(await this.i18n.t('errors.cardNotFound'), HttpStatus.NOT_FOUND);
     return rows[0];
   }
 
@@ -193,7 +197,7 @@ export class KanbanCardsController {
       WHERE id = ${Number(id)} AND deleted_at IS NULL
       RETURNING id, owner_user_id, updated_at
     `);
-    if (!rows[0]) throw new HttpException('Karta topilmadi', HttpStatus.NOT_FOUND);
+    if (!rows[0]) throw new HttpException(await this.i18n.t('errors.cardNotFound'), HttpStatus.NOT_FOUND);
     return rows[0];
   }
 

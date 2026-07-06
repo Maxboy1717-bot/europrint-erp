@@ -8,6 +8,7 @@ import {
   Query, UseGuards, Logger, Res, HttpException, HttpStatus, HttpCode,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import type { FastifyReply } from 'fastify';
 import * as path from 'path';
 import ExcelJS from 'exceljs';
@@ -70,7 +71,10 @@ type UpdateProjectDto = z.infer<typeof UpdateProjectSchema>;
 export class KanbanReportsController {
   private readonly logger = new Logger(KanbanReportsController.name);
 
-  constructor(private readonly svc: KanbanExtService) {}
+  constructor(
+    private readonly svc: KanbanExtService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // --- Reports --------------------------------------------------------------
 
@@ -287,7 +291,7 @@ export class KanbanReportsController {
     `);
     const rows = ((r as { rows?: unknown[] }).rows) ?? [];
     const project = rows[0];
-    if (!project) throw new HttpException('Loyiha yaratilmadi', HttpStatus.INTERNAL_SERVER_ERROR);
+    if (!project) throw new HttpException(await this.i18n.t('errors.projectCreationFailed'), HttpStatus.INTERNAL_SERVER_ERROR);
     return project;
   }
 
@@ -295,7 +299,7 @@ export class KanbanReportsController {
   @ApiOperation({ summary: 'Loyihani yangilash (task_projects UPDATE)' })
   async updateProject(@Param('id') id: string, @Body() body: unknown) {
     const projectId = parseInt(id, 10);
-    if (isNaN(projectId)) throw new HttpException('Noto\'g\'ri ID', HttpStatus.BAD_REQUEST);
+    if (isNaN(projectId)) throw new HttpException(await this.i18n.t('validation.invalidId'), HttpStatus.BAD_REQUEST);
     const dto: UpdateProjectDto = UpdateProjectSchema.parse(body);
 
     const r = await db.execute(sql`
@@ -316,7 +320,7 @@ export class KanbanReportsController {
     `);
     const rows = ((r as { rows?: unknown[] }).rows) ?? [];
     const project = rows[0];
-    if (!project) throw new HttpException('Loyiha topilmadi', HttpStatus.NOT_FOUND);
+    if (!project) throw new HttpException(await this.i18n.t('errors.projectNotFound'), HttpStatus.NOT_FOUND);
     return project;
   }
 
@@ -325,7 +329,7 @@ export class KanbanReportsController {
   @ApiOperation({ summary: 'Loyihani soft-delete qilish (deleted_at=NOW())' })
   async deleteProject(@Param('id') id: string) {
     const projectId = parseInt(id, 10);
-    if (isNaN(projectId)) throw new HttpException('Noto\'g\'ri ID', HttpStatus.BAD_REQUEST);
+    if (isNaN(projectId)) throw new HttpException(await this.i18n.t('validation.invalidId'), HttpStatus.BAD_REQUEST);
 
     const r = await db.execute(sql`
       UPDATE task_projects
@@ -334,7 +338,7 @@ export class KanbanReportsController {
       RETURNING id
     `);
     const rows = ((r as { rows?: unknown[] }).rows) ?? [];
-    if (!rows[0]) throw new HttpException('Loyiha topilmadi', HttpStatus.NOT_FOUND);
+    if (!rows[0]) throw new HttpException(await this.i18n.t('errors.projectNotFound'), HttpStatus.NOT_FOUND);
     return;
   }
 }
