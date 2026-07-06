@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ILmsCoursesRepository, LMS_COURSES_REPO } from './i-lms-courses.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class CoursesService {
   private readonly logger = new Logger(CoursesService.name);
 
-  constructor(@Inject(LMS_COURSES_REPO) private readonly lmsCoursesRepo: ILmsCoursesRepository) {}
+  constructor(
+    @Inject(LMS_COURSES_REPO) private readonly lmsCoursesRepo: ILmsCoursesRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -28,7 +32,7 @@ export class CoursesService {
   async findOne(id: number) {
     const result = await this.lmsCoursesRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Kurs #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.courseNotFoundWithId', { args: { id } }));
     const [modulesResult, testsResult] = await Promise.all([
       this.lmsCoursesRepo.findModulesByCourseId(id),
       this.lmsCoursesRepo.findTestsByCourseId(id),

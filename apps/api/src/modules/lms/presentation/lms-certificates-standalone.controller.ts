@@ -21,6 +21,7 @@ import {
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db, rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };
@@ -42,7 +43,10 @@ import type { FastifyReply } from 'fastify';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
 export class LmsCertificatesStandaloneController {
-  constructor(private readonly svc: LmsCertificatesStandaloneService) {}
+  constructor(
+    private readonly svc: LmsCertificatesStandaloneService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get('expiring')
   @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
@@ -83,7 +87,7 @@ export class LmsCertificatesStandaloneController {
       FROM certificates WHERE id = ${parseInt(id, 10)}
     `);
     const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
-    if (!row) throw new NotFoundException(`Certificate ${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.certificateNotFoundWithId', { args: { id } }));
     return row;
   }
 

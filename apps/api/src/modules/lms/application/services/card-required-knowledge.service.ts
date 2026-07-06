@@ -5,6 +5,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { z } from 'zod';
 import {
@@ -35,7 +36,10 @@ export type UpdateCardKnowledgeDto = z.infer<typeof UpdateCardKnowledgeSchema>;
 
 @Injectable()
 export class CardRequiredKnowledgeService {
-  constructor(private readonly repo: CardRequiredKnowledgeRepository) {}
+  constructor(
+    private readonly repo: CardRequiredKnowledgeRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async listByCard(cardId: number): Promise<Result<CardRequiredKnowledgeRow[], AppError>> {
     return safeCall(async () => {
@@ -48,7 +52,7 @@ export class CardRequiredKnowledgeService {
   async findById(id: number): Promise<CardRequiredKnowledgeRow> {
     const result = await this.repo.findById(id);
     if (!result.ok) throw new BadRequestException(result.error.message);
-    if (!result.data) throw new NotFoundException(`Domen-bilim #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.domainKnowledgeNotFoundWithId', { args: { id } }));
     return result.data;
   }
 
@@ -84,14 +88,14 @@ export class CardRequiredKnowledgeService {
 
     const result = await this.repo.update(id, patch);
     if (!result.ok) throw new BadRequestException(result.error.message);
-    if (!result.data) throw new NotFoundException(`Domen-bilim #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.domainKnowledgeNotFoundWithId', { args: { id } }));
     return result.data;
   }
 
   async remove(id: number): Promise<{ id: number; deleted: true }> {
     const result = await this.repo.softDelete(id);
     if (!result.ok) throw new BadRequestException(result.error.message);
-    if (!result.data) throw new NotFoundException(`Domen-bilim #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.domainKnowledgeNotFoundWithId', { args: { id } }));
     return { id: result.data.id, deleted: true };
   }
 }

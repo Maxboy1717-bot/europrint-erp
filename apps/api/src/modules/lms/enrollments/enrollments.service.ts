@@ -19,10 +19,11 @@ export class EnrollmentsService {
 
   async enroll(userId: number, courseId: number, dueAt?: Date | null): Promise<Result<object, AppError>> {
     const alreadyEnrolledMsg = await this.i18n.t('errors.alreadyEnrolled');
+    const courseNotFoundMsg = await this.i18n.t('errors.courseNotFoundWithId', { args: { id: courseId } });
     return safeCall(async () => {
     const courseResult = await this.lmsEnrollmentsRepo.findCourseById(courseId);
     if (!courseResult.ok) throw new InternalServerErrorException(courseResult.error);
-    if (!courseResult.data) throw new NotFoundException(`Kurs #${courseId} topilmadi`);
+    if (!courseResult.data) throw new NotFoundException(courseNotFoundMsg);
 
     const existResult = await this.lmsEnrollmentsRepo.findExistingEnrollment(userId, courseId);
     if (!existResult.ok) throw new InternalServerErrorException(existResult.error);
@@ -49,7 +50,7 @@ export class EnrollmentsService {
   async findOne(id: number) {
     const result = await this.lmsEnrollmentsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Yozuv #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.recordNotFoundWithId', { args: { id } }));
     return result.data;
   }
 

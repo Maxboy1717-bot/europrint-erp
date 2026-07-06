@@ -23,6 +23,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -54,6 +55,7 @@ export class LmsCoursesController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly lmsRepo: LmsRepository,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List courses' })
@@ -140,7 +142,7 @@ export class LmsCoursesController {
         card_id        = COALESCE(${(b.cardId ?? b.card_id ?? null) as number}::integer, card_id),
         updated_at     = NOW()
       WHERE id = ${parseInt(id, 10)}`);
-    if (((r as unknown as { rowCount?: number }).rowCount ?? 0) === 0) throw new NotFoundException(`Course #${id} topilmadi`);
+    if (((r as unknown as { rowCount?: number }).rowCount ?? 0) === 0) throw new NotFoundException(await this.i18n.t('errors.courseNotFoundWithId', { args: { id } }));
     return { id, updated: true };
   }
 
@@ -154,7 +156,7 @@ export class LmsCoursesController {
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'DIRECTOR', 'SUPER_ADMIN')
   async setCourseCard(@Param('id') id: string, @Body() body: LmsSetCourseCardDto) {
     const result = await this.lmsRepo.setCourseCard(id, body.cardId);
-    if (!result.ok) throw new NotFoundException(`Kurs topilmadi: ${id}`);
+    if (!result.ok) throw new NotFoundException(await this.i18n.t('errors.courseNotFoundWithId', { args: { id } }));
     return { message: 'Kurs kartaga biriktirildi', data: result.data };
   }
 
@@ -168,7 +170,7 @@ export class LmsCoursesController {
   async deleteCourse(@Param('id') id: string) {
     this.logger.log(`Deleting course ${id}`);
     const result = await this.lmsRepo.deleteCourse(id);
-    if (!result.ok) throw new NotFoundException(`Kurs topilmadi: ${id}`);
+    if (!result.ok) throw new NotFoundException(await this.i18n.t('errors.courseNotFoundWithId', { args: { id } }));
     return { message: 'Kurs o\'chirildi', data: result.data };
   }
 
