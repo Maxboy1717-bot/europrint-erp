@@ -11,19 +11,16 @@ import { IoTCompletionReportProps, CompletionStep } from "./IoTCompletionReportT
 import { StepProgressBar, ResultsStep } from "./IoTCompletionReportSections";
 import { EvaluationStep, MaterialReturnStep, DoneStep } from "./IoTCompletionReportSteps";
 import { useTranslation } from "@/lib/i18n";
+import { tabletFetch as sharedTabletFetch } from "./tabletFetch";
 
 // B14/Decision 1 (2026-07-06): these two calls previously used apiRequest (ERP
 // JWT/cookie auth) even though tabletToken was already validated in scope above --
 // the token was checked but never actually sent, so a bare kiosk tablet (no ERP
-// session) always got a silent failure here. Mirrors useIoTTabletData.ts's
-// tabletFetch pattern (x-tablet-token header, not cookie/bearer).
-async function tabletFetch(tabletToken: string, path: string, body: unknown): Promise<Response> {
-  // eslint-disable-next-line no-restricted-globals -- raw fetch: tablet-token auth, not ERP cookie
-  return fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-tablet-token': tabletToken },
-    body: JSON.stringify(body),
-  });
+// session) always got a silent failure here. C2 (CRITICAL-CORRECTNESS-AUDIT-
+// 2026-07-06): now routed through the shared tabletFetch client, which also
+// transparently refreshes an expired token and retries once instead of failing.
+function tabletFetch(tabletToken: string, path: string, body: unknown): Promise<Response> {
+  return sharedTabletFetch("POST", path, body, tabletToken);
 }
 
 export function IoTCompletionReport({ open, onClose, completionReport, formatTime, tabletToken }: IoTCompletionReportProps) {

@@ -14,11 +14,13 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Logger,
   Param,
   Patch,
   Post,
   Query,
+  UnauthorizedException,
   UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
@@ -183,6 +185,25 @@ export class IotTabletController {
     return unwrapOrThrow(
       await this.tabletSvc.login(dto.tabelNumber, dto.password),
     );
+  }
+
+  /**
+   * C2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): reissues a tablet token, including one that has
+   * ALREADY expired — the PWA calls this reactively after a 401 on any other tablet endpoint, by
+   * which point the token is by definition no longer valid under a normal `verify()`. Deliberately
+   * NOT behind `TabletTokenGuard` (that guard rejects expired tokens outright) — IotTabletService
+   * .refresh() does its own `ignoreExpiration` verify + grace-window + re-checked card-gate.
+   */
+  @ApiOperation({ summary: 'Refresh tablet token' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @Post('tablet/refresh')
+  @Public()
+  async tabletRefresh(@Headers('x-tablet-token') tabletToken: string | undefined) {
+    if (!tabletToken) {
+      throw new UnauthorizedException('Tablet token majburiy');
+    }
+    return unwrapOrThrow(await this.tabletSvc.refresh(tabletToken));
   }
 
   @ApiOperation({ summary: 'Tablet sos alert (safety-critical)' })

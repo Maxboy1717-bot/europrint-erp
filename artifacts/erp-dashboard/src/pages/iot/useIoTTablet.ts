@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { safeStorage } from "@/lib/safeStorage"; // needed for submitHandover token lookup
+import { tabletFetch as sharedTabletFetch } from "./tabletFetch";
 import { useToast } from "@/hooks/use-toast";
 import { ProductionSession, CompletionReportData } from "./iot-types";
 import { REASON_ICONS } from "./useIoTTabletTypes";
@@ -236,16 +237,11 @@ export function useIoTTablet() {
       if (!token) throw new Error("Tablet sessiyasi yo'q");
       if (!core.handoverSignature.trim())
         throw new Error(core.t("ttSignatureRequired"));
-      // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
-      const res = await fetch("/api/iot/tablet/handover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-tablet-token": token },
-        body: JSON.stringify({
-          department: core.assignedEquipment?.name || "Ishlab chiqarish",
-          ...core.handoverNotes,
-          signatureData: `${core.workerName}::${Date.now()}::${core.handoverSignature.trim()}`,
-        }),
-      });
+      const res = await sharedTabletFetch("POST", "/api/iot/tablet/handover", {
+        department: core.assignedEquipment?.name || "Ishlab chiqarish",
+        ...core.handoverNotes,
+        signatureData: `${core.workerName}::${Date.now()}::${core.handoverSignature.trim()}`,
+      }, token);
       if (!res.ok) throw new Error((await res.json()).error || "Handover xatolik");
     },
     onSuccess: () => {

@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { safeStorage } from "@/lib/safeStorage";
 import { useToast } from "@/hooks/use-toast";
+import { tabletFetch as sharedTabletFetch } from "./tabletFetch";
 import { ProductionSession, Equipment } from "./iot-types";
 import {
   OFFLINE_QUEUE_KEY, QC_TRIGGER_INTERVAL, SosType,
@@ -99,12 +100,7 @@ export function useIoTTabletAlerts({
       const remaining: OfflineAction[] = [];
       for (const action of queue) {
         try {
-          // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
-          const res = await fetch(action.path, {
-            method: action.method,
-            headers: { "Content-Type": "application/json", "x-tablet-token": token },
-            body: action.body !== undefined ? JSON.stringify(action.body) : undefined,
-          });
+          const res = await sharedTabletFetch(action.method as "GET" | "POST" | "PATCH", action.path, action.body, token);
           if (!res.ok) remaining.push(action);
         } catch {
           remaining.push(action);
@@ -177,17 +173,12 @@ export function useIoTTabletAlerts({
       return;
     }
     try {
-      // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
-      const res = await fetch("/api/iot/tablet/sos-alert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-tablet-token": token },
-        body: JSON.stringify({
-          sessionId: activeSession?.id || null,
-          equipmentId: assignedEquipment?.id || null,
-          alertType: sosType,
-          message: sosMessage.trim(),
-        }),
-      });
+      const res = await sharedTabletFetch("POST", "/api/iot/tablet/sos-alert", {
+        sessionId: activeSession?.id || null,
+        equipmentId: assignedEquipment?.id || null,
+        alertType: sosType,
+        message: sosMessage.trim(),
+      }, token);
       if (res.ok) {
         toast({
           title: t("ttSosSent"),

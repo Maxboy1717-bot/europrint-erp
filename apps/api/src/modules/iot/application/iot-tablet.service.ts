@@ -54,6 +54,14 @@ import { AUTH_REPO } from '@modules/auth/auth.tokens';
 const CARD_EXEMPT_ROLES: ReadonlyArray<string> = ['super_admin', 'admin', 'director'];
 
 /**
+ * C2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): a tablet token may be refreshed (even past its own
+ * 12h expiry) for up to this long after it was originally issued — comfortably covers one 12h
+ * shift plus a buffer for overtime/handover, while still forcing a real re-login (tabel-number +
+ * password) at least once a day rather than letting a single credential extend itself forever.
+ */
+const TABLET_REFRESH_GRACE_MS = 24 * 60 * 60 * 1000;
+
+/**
  * Canonical linked-user row for the tabel-number, resolved for the card-gate.
  * Direction: users.employee_id = employees.id (card-centric link), with a
  * fallback to employees.user_id when the inverse link is the one populated.
@@ -205,7 +213,12 @@ export class IotTabletService {
       rbacTier: gate.rbacTier,
       tablet: true,
     };
-    const tabletToken = this.jwtService.sign(payload, { expiresIn: '8h' });
+    // C2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): was '8h' while the PWA's own client-side
+    // session-expiry (SESSION_12H_MS, useIoTTabletTypes.ts) assumes 12h — a worker mid-shift
+    // between hour 8 and hour 12 got silent 401s on every write (scan, session update, SOS)
+    // with the UI still showing them as "logged in". Extended to match the FE's own assumption
+    // rather than shortening the FE (the FE's 12h reflects a real factory shift length).
+    const tabletToken = this.jwtService.sign(payload, { expiresIn: '12h' });
 
     return Ok({
       id: worker.id,
@@ -219,6 +232,76 @@ export class IotTabletService {
           : null,
       tabletToken,
     });
+  }
+
+  /**
+   * C2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): reissues a tablet token from an existing one —
+   * including one that has ALREADY expired (that's the whole point: the PWA calls this after a
+   * 401, by which time `verify()` without `ignoreExpiration` would already reject it). Re-checks
+   * the worker's `is_active` flag and card-gate on every refresh (not just once at login) so a
+   * revoked operator loses access at the next refresh, not just at the next full 8-shift login.
+   *
+   * Grace window: a token can only be refreshed within `TABLET_REFRESH_GRACE_MS` of its original
+   * `iat` — bounds how long a single credential can keep extending itself before a real
+   * tabel-number + password re-login is required (prevents an indefinitely-alive tablet session
+   * off a token that leaked once).
+   */
+  async refresh(oldToken: string): Promise<Result<{ tabletToken: string }>> {
+    const invalid = AppErr('UNAUTHORIZED', 'Tablet token yaroqsiz');
+    let decoded: { sub?: number; tabel?: string; tablet?: boolean; iat?: number };
+    try {
+      decoded = this.jwtService.verify(oldToken, { ignoreExpiration: true });
+    } catch {
+      return Err(invalid);
+    }
+    if (decoded.tablet !== true || !decoded.tabel || typeof decoded.iat !== 'number') {
+      return Err(invalid);
+    }
+    const issuedAtMs = decoded.iat * 1000;
+    if (Date.now() - issuedAtMs > TABLET_REFRESH_GRACE_MS) {
+      return Err(AppErr('UNAUTHORIZED', 'Tablet sessiyasi muddati tugagan — qayta kiring'));
+    }
+
+    // Re-run the same worker/card-gate resolution login() uses — a revoked operator or a
+    // deactivated card is caught here, not just at the next full login.
+    const workerR = await this.repo.findWorkerByTabel(decoded.tabel);
+    if (!workerR.ok) return Err(workerR.error);
+    const worker = workerR.data;
+    if (!worker) return Err(invalid);
+
+    const authUserR = await this.resolveAuthUser(decoded.tabel);
+    if (!authUserR.ok) return Err(authUserR.error);
+    const authUser = authUserR.data;
+    if (!authUser || !authUser.is_active) return Err(invalid);
+
+    const gate = await this.authRepo.resolveCardGate(authUser.user_id);
+    const cardGateEnabled =
+      this.configService.get<string>('CARD_LOGIN_GATE_ENABLED') === 'true';
+    if (
+      cardGateEnabled &&
+      !this.isCardExemptRole(authUser.user_role) &&
+      gate.activeCardCount === 0
+    ) {
+      this.logger.warn(
+        `IoT tablet refresh blocked: operator user=${authUser.user_id} lost their active card (EP-ORG-003)`,
+      );
+      return Err(AppErr('UNAUTHORIZED', 'Faol karta yo‘q — IoT planshetga kira olmaysiz'));
+    }
+
+    const cardRole = gate.rbacTier ?? worker.role ?? 'operator';
+    const tabletToken = this.jwtService.sign(
+      {
+        sub: worker.id,
+        userId: authUser.user_id,
+        tabel: worker.employee_code,
+        role: cardRole,
+        cardId: gate.primaryCardId,
+        rbacTier: gate.rbacTier,
+        tablet: true,
+      },
+      { expiresIn: '12h' },
+    );
+    return Ok({ tabletToken });
   }
 
   /**

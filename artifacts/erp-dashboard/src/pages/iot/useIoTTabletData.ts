@@ -11,13 +11,14 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, getQueryFn } from "@/lib/queryClient";
 import { safeStorage } from "@/lib/safeStorage";
 import { apiRequest } from "@/lib/queryClient";
+import { tabletFetch as sharedTabletFetch } from "./tabletFetch";
 import {
   ProductionOrder, Equipment, ProductionSession,
   DowntimeReasonCode, Employee,
 } from "./iot-types";
 
 // ---------------------------------------------------------------------------
-// Helper: typed fetch with tablet token
+// Helper: typed fetch with tablet token (401 → refresh → retry, see tabletFetch.ts)
 // ---------------------------------------------------------------------------
 
 function makeTabletFetch(tabletToken: string, t: (key: string, params?: Record<string, string | number>) => string) {
@@ -28,12 +29,7 @@ function makeTabletFetch(tabletToken: string, t: (key: string, params?: Record<s
   ): Promise<Response> {
     const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
     if (!token) throw new Error(t("sessionExpired"));
-    // eslint-disable-next-line no-restricted-globals -- raw fetch: shared tablet-fetch helper; uses x-tablet-token auth, not ERP cookie
-    return fetch(path, {
-      method,
-      headers: { "Content-Type": "application/json", "x-tablet-token": token },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    return sharedTabletFetch(method, path, body, token);
   };
 }
 
@@ -94,11 +90,7 @@ export function useIoTTabletData({
   >({
     queryKey: ["/api/iot/tablet/defect-reasons"],
     queryFn: async () => {
-      const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["x-tablet-token"] = token;
-      // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
-      const res = await fetch("/api/iot/tablet/defect-reasons", { headers });
+      const res = await sharedTabletFetch("GET", "/api/iot/tablet/defect-reasons", undefined, tabletToken);
       if (!res.ok) return [];
       return res.json();
     },
