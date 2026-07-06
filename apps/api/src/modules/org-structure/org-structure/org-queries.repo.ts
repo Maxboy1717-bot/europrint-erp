@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { castTo } from '@common/db-rows';
 import { db, runQuery } from '@shared/db';
 import { SQL, SQLWrapper, and, eq, sql } from 'drizzle-orm';
@@ -18,6 +19,7 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => (await runQuery<Row>
 
 @Injectable()
 export class OrgQueriesRepo {
+  constructor(private readonly i18n: I18nService) {}
   async getHierarchyNodes(): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
       const rows = await db
@@ -161,7 +163,7 @@ export class OrgQueriesRepo {
         .leftJoin(appUsers, and(eq(appUsers.id, orgDepartments.head_user_id), eq(appUsers.is_active, true)))
         .where(eq(orgDepartments.id, id));
 
-      if (!nodeRows[0]) throw new NotFoundException(`Node #${id} topilmadi`);
+      if (!nodeRows[0]) throw new NotFoundException(await this.i18n.t('errors.orgNodeNotFoundWithId', { args: { id } }));
 
       const empRows = await db
         .select({
