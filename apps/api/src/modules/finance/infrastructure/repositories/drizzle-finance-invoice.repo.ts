@@ -88,6 +88,15 @@ export class FinanceInvoiceRepo {
     } catch (error: unknown) { return Err((error as Error).message); }
   }
 
+  /**
+   * C4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): invoice_number is ALWAYS generated server-side via
+   * the `invoice_number_seq` Postgres sequence (previously dormant — created but never wired to a
+   * writer) instead of trusting a caller-supplied value. The two live callers
+   * (finance-invoices.controller.ts) previously built `INV-${Date.now()}`, which two requests in
+   * the same millisecond could collide on with nothing to catch it — `nextval()` is atomic and
+   * collision-proof by construction, and a UNIQUE constraint on the column is the safety net for
+   * any future caller. Format: `INV-{year}-{6-digit zero-padded sequence}`.
+   */
   async saveInvoice(invoice: FinanceRow): Promise<Result<FinanceRow>> {
     try {
       const now = new Date();
@@ -101,7 +110,7 @@ export class FinanceInvoiceRepo {
         VALUES
           (${invoice['customer_id'] ?? null},
            ${invoice['vendor_id'] ?? null},
-           ${invoice['invoice_number'] ?? null},
+           'INV-' || EXTRACT(YEAR FROM NOW())::text || '-' || LPAD(nextval('invoice_number_seq')::text, 6, '0'),
            ${invoice['invoice_type'] ?? 'sales'},
            ${invoice['total_amount'] ?? 0},
            ${invoice['paid_amount'] ?? 0},

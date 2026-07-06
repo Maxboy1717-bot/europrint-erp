@@ -4,6 +4,7 @@
  */
 
 import { Controller, Get, HttpCode, HttpStatus, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, UsePipes, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -53,6 +54,7 @@ export class FinanceInvoicesController {
     private queryBus: QueryBus,
     private readonly invoiceRepo: FinanceInvoiceRepo,
     private readonly gl: GlPostingService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List invoices' })
@@ -77,7 +79,9 @@ export class FinanceInvoicesController {
   async createInvoiceRoot(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateInvoiceRootSchema.parse(body);
     this.logger.log(`Creating invoice (root POST)`);
-    const invoiceNumber = `INV-${Date.now()}`;
+    // C4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): invoice_number is now generated server-side by
+    // saveInvoice() via the invoice_number_seq sequence (collision-proof) — no client-side
+    // Date.now() value is computed or sent; the actual saved number comes back in `row`.
     const result = await this.invoiceRepo.saveInvoice({
       customer_id: dto.customerId ?? null,
       source_type: 'manual',
@@ -91,10 +95,10 @@ export class FinanceInvoicesController {
       created_by: user?.sub ?? user?.id ?? null,
     } as Record<string, unknown>);
     if (!result.ok) {
-      throw new InternalServerErrorException('Invoice yaratilmadi');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceNotCreated'));
     }
     const row = result.data as Record<string, unknown>;
-    return { invoiceId: row['id'], invoiceNumber, ...dto, created: true };
+    return { invoiceId: row['id'], invoiceNumber: row['invoice_number'], ...dto, created: true };
   }
 
   @ApiOperation({ summary: 'Create invoice' })
@@ -105,7 +109,8 @@ export class FinanceInvoicesController {
   @UsePipes(new ZodValidationPipe(FinanceCreateInvoiceSchema))
   async createInvoice(@Body() body: FinanceCreateInvoiceDto, @CurrentUser() user: AuthenticatedUser) {
     this.logger.log(`Creating invoice for customer ${body.customerId}, Amount: ${body.amount}`);
-    const invoiceNumber = `INV-${Date.now()}`;
+    // C4: see createInvoiceRoot() above — invoice_number now comes from saveInvoice()'s
+    // sequence-based generation, not a client-side Date.now() value.
     const result = await this.invoiceRepo.saveInvoice({
       customer_id: body.customerId,
       source_type: 'manual',
@@ -119,10 +124,10 @@ export class FinanceInvoicesController {
       created_by: user?.sub ?? user?.id ?? null,
     } as Record<string, unknown>);
     if (!result.ok) {
-      throw new InternalServerErrorException('Invoice yaratilmadi');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceNotCreated'));
     }
     const row = result.data as Record<string, unknown>;
-    return { invoiceId: row['id'], invoiceNumber };
+    return { invoiceId: row['id'], invoiceNumber: row['invoice_number'] };
   }
 
   @ApiOperation({ summary: 'Post invoice to GL' })
@@ -143,11 +148,11 @@ export class FinanceInvoicesController {
     }
     const glR = await this.gl.postSalesInvoice(invoiceId, body.amount, body.taxAmount ?? 0);
     if (!glR.ok) {
-      throw new InternalServerErrorException('Invoice GL postlanmadi');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceGlNotPosted'));
     }
     const flip = await this.invoiceRepo.markInvoicePosted(invoiceId);
     if (!flip.ok) {
-      throw new InternalServerErrorException('Invoice status yangilanmadi');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceStatusNotUpdated'));
     }
     return { message: 'Invoice posted to GL', invoiceId, entryId: glR.data };
   }
@@ -160,10 +165,10 @@ export class FinanceInvoicesController {
   async getInvoice(@Param('invoiceId') invoiceId: number) {
     const result = await this.invoiceRepo.findInvoiceById(String(invoiceId));
     if (!result.ok) {
-      throw new InternalServerErrorException('Invoice topishda xatolik');
+      throw new InternalServerErrorException(await this.i18n.t('errors.invoiceFetchFailed'));
     }
     if (!result.data) {
-      throw new NotFoundException(`Invoice ${invoiceId} topilmadi`);
+      throw new NotFoundException(await this.i18n.t('errors.invoiceNotFoundWithId', { args: { invoiceId } }));
     }
     return { data: result.data };
   }
