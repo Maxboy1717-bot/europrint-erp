@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RbacCacheService } from '@common/cache/rbac-cache.service';
 import { Ok, Err, Result } from '@common/result';
@@ -29,6 +30,7 @@ export class PositionPermissionsService {
   private readonly logger = new Logger(PositionPermissionsService.name);
   constructor(
     private readonly repo: PositionPermissionsRepository,
+    private readonly i18n: I18nService,
     @Optional() private readonly rbacCache?: RbacCacheService,
     @Optional() private readonly eventBus?: EventEmitter2,
   ) {}
@@ -53,7 +55,7 @@ export class PositionPermissionsService {
   async getByPosition(positionId: number): Promise<Result<{ position: PositionRow; permissions: PermRow[]; permMap: Record<string, string> }>> {
     const positionResult = await this.repo.findPosition(positionId);
     if (!positionResult.ok) return Err(String(positionResult.error));
-    if (!positionResult.data) throw new NotFoundException(`Lavozim #${positionId} topilmadi`);
+    if (!positionResult.data) throw new NotFoundException(await this.i18n.t('errors.positionNotFoundWithId', { args: { id: positionId } }));
     const permsResult = await this.repo.findPermissionsByPosition(positionId);
     if (!permsResult.ok) return Err(String(permsResult.error));
     const perms = permsResult.data;
