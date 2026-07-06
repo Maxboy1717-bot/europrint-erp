@@ -7,6 +7,9 @@ import { GL } from "../constants/gl-accounts.constants";
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Result, Err, Ok } from '@common/result';
 import { IGlPostingRepository, GL_POSTING_REPO } from '../repositories/i-gl-posting.repo';
+import { TashkentTimeService } from '@common/time';
+
+const _time = new TashkentTimeService();
 
 export interface JournalLine {
   accountCode: string;
@@ -185,7 +188,13 @@ export class GlPostingService {
       );
     }
 
-    const entryDate = new Date().toISOString().slice(0, 10);
+    // C3 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): was `new Date().toISOString().slice(0,10)` —
+    // .toISOString() is always UTC. Tashkent is UTC+5, so any post between 00:00-05:00 Tashkent
+    // time landed on the PREVIOUS calendar day (e.g. a 02:00 Tashkent post got entry_date =
+    // yesterday), silently mis-dating GL entries and — worse — letting a post that should have
+    // been rejected by the period-lock below slip into an already-closed period one day early.
+    // TashkentTimeService.formatDate() correctly resolves the calendar day in Asia/Tashkent.
+    const entryDate = _time.formatDate(new Date());
 
     // EP-FIN-064 PERIOD LOCK: a new GL post whose entry_date falls inside a CLOSED accounting period
     // is rejected here at the ONE engine — so every caller (invoice/payroll/GR/VP/MC + the finance-gl

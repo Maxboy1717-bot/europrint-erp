@@ -168,6 +168,35 @@ describe('GlPostingService', () => {
     });
   });
 
+  describe('entry_date timezone — C3 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06)', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('resolves entry_date in Asia/Tashkent, not UTC, for a post in the 00:00-05:00 Tashkent window', async () => {
+      // Real-world moment: 2026-07-06 02:00 in Tashkent (UTC+5) = 2026-07-05 21:00 UTC.
+      // The old `new Date().toISOString().slice(0,10)` would read "2026-07-05" (still-UTC
+      // previous day) — one calendar day behind the correct Tashkent date "2026-07-06".
+      jest.useFakeTimers().setSystemTime(new Date('2026-07-05T21:00:00.000Z'));
+
+      const r = await svc.postCustomerPayment(60, 1_000);
+
+      expect(r.ok).toBe(true);
+      expect(mockGlRepo.findClosedPeriodForDate).toHaveBeenCalledWith('2026-07-06');
+    });
+
+    it('still resolves the same Tashkent calendar day for a post well inside normal daytime hours', async () => {
+      // 2026-07-06 14:00 Tashkent = 2026-07-06 09:00 UTC — both UTC and Tashkent agree on the
+      // date here, so this proves the fix didn't break the non-boundary case.
+      jest.useFakeTimers().setSystemTime(new Date('2026-07-06T09:00:00.000Z'));
+
+      const r = await svc.postCustomerPayment(61, 1_000);
+
+      expect(r.ok).toBe(true);
+      expect(mockGlRepo.findClosedPeriodForDate).toHaveBeenCalledWith('2026-07-06');
+    });
+  });
+
   describe('postJournal() — generic path, unaffected source-check', () => {
     it('rejects a zero-total generic journal (no per-caller table to check, but amount gate still applies)', async () => {
       const r = await svc.postJournal(
