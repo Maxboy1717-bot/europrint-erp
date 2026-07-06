@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -18,6 +19,8 @@ import { safeCall, Result, AppError, Ok } from '@common/result';
 @Injectable()
 export class EuroprintControlCompatService {
   private readonly logger = new Logger(EuroprintControlCompatService.name);
+
+  constructor(private readonly i18n: I18nService) {}
 
   getBusinessRules() {
     return [
@@ -189,7 +192,7 @@ export class EuroprintControlCompatService {
       WHERE al.id = ${id}
     `));
     const found = r.ok ? dbRows(r.data)[0] : undefined;
-    if (!found) throw new NotFoundException('Record not found');
+    if (!found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return found;
   }
 

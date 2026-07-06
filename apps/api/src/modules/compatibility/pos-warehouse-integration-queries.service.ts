@@ -5,6 +5,7 @@
  *   stock alerts. Kept separate so the parent facade stays under 300 lines.
  */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -26,6 +27,7 @@ interface HistoryFilters {
 
 @Injectable()
 export class PosWarehouseIntegrationQueriesService {
+  constructor(private readonly i18n: I18nService) {}
 
   /**
    * GET /api/pos/stock — POS uchun real-time stok ro'yxati (warehouse'dan).
@@ -88,7 +90,7 @@ export class PosWarehouseIntegrationQueriesService {
       const item = dbRows(rows)[0];
       if (!item) {
         throw new NotFoundException(
-          `Barcode "${barcode}" topilmadi. Qo'lda qidirish yoki yangi material kartochka yaratish kerak.`,
+          await this.i18n.t('errors.barcodeNotFoundWithGuidance', { args: { barcode } }),
         );
       }
       return item;

@@ -21,6 +21,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -28,6 +29,7 @@ import { safeCall, Result } from '@common/result';
 
 @Injectable()
 export class MentorshipsCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getMentorships(mentorId?: string, status?: string): Promise<Result<Record<string, unknown>[]>>{
     return safeCall(async () => {
@@ -54,7 +56,7 @@ export class MentorshipsCompatService {
   async createMentorship(body: Record<string, unknown>){
     return safeCall(async () => {
     const { user_id, bio, expertise, name, source, experience } = body;
-    if (!name) throw new BadRequestException('name majburiy');
+    if (!name) throw new BadRequestException(await this.i18n.t('validation.nameRequired'));
     const r = await rawSql(sql`
       INSERT INTO mentors (user_id, bio, expertise, name, source, experience)
       VALUES (${user_id ?? null}, ${bio ?? null}, ${expertise ?? null},
@@ -79,7 +81,7 @@ export class MentorshipsCompatService {
       WHERE m.id = ${id} AND m.deleted_at IS NULL
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
 
     });}
@@ -98,7 +100,7 @@ export class MentorshipsCompatService {
       RETURNING id, name, card_id, updated_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
 
     });}
@@ -139,7 +141,7 @@ export class MentorshipsCompatService {
       WHERE m.id = ${id} AND m.deleted_at IS NULL
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
 
     });}

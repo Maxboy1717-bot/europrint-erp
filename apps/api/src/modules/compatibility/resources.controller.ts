@@ -69,7 +69,10 @@ export class WarehousesCompatController {
 @UseInterceptors(AuditInterceptor)
 @Controller('material-cards')
 export class MaterialCardsCompatController {
-  constructor(private readonly svc: ResourcesCompatService) {}
+  constructor(
+    private readonly svc: ResourcesCompatService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get()
   async getAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('search') search?: string) {
@@ -91,7 +94,7 @@ export class MaterialCardsCompatController {
   @UseInterceptors(AuditInterceptor)
   async updateUnitPrice(@Param('id') id: string, @Body() body: { unit_price: unknown }) {
     const price = Number(body?.unit_price);
-    if (!Number.isFinite(price) || price < 0) throw new BadRequestException('unit_price must be a non-negative number');
+    if (!Number.isFinite(price) || price < 0) throw new BadRequestException(await this.i18n.t('validation.unitPriceMustBeNonNegative'));
     return unwrapOrInternal(await this.svc.updateMaterialCardUnitPrice(id, price));
   }
 }

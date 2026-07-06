@@ -58,7 +58,7 @@ export class WarehouseCatalogService {
                   material_type AS "materialType", category, current_stock AS "currentStock"
       `);
       const row = dbRows(result)[0];
-      if (!row) throw new ConflictException(`Bu kod allaqachon mavjud: ${kod}`);
+      if (!row) throw new ConflictException(await this.i18n.t('errors.materialCodeAlreadyExists', { args: { kod } }));
       return row;
     });
   }
@@ -91,7 +91,7 @@ export class WarehouseCatalogService {
                   material_type AS "materialType", category, current_stock AS "currentStock"
       `);
       const row = dbRows(result)[0];
-      if (!row) throw new NotFoundException(`Material topilmadi: ${id}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.materialNotFoundWithId', { args: { id } }));
       return row;
     });
   }

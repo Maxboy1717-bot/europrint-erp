@@ -4,6 +4,7 @@
  */
 
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -15,7 +16,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class ResourcesCompatService {
-  constructor() {}
+  constructor(private readonly i18n: I18nService) {}
 
   async getWarehouses(page = '1', limit = '100'): Promise<Result<Record<string, unknown>[]>> {
     return safeCall(async () => {
@@ -173,7 +174,7 @@ export class ResourcesCompatService {
 
   async createOrgFunction(body: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      if (!body['position_name'] && !body['name']) throw new BadRequestException('position_name majburiy');
+      if (!body['position_name'] && !body['name']) throw new BadRequestException(await this.i18n.t('validation.positionNameRequired'));
       const positionName   = String(body['position_name'] ?? body['name'] ?? '');
       const departmentId   = body['department_id']    ?? body['departmentId']    ?? null;
       const razryadLevelId = body['razryad_level_id'] ?? body['razryadLevelId'] ?? null;
@@ -246,7 +247,7 @@ export class ResourcesCompatService {
 
   async createWarehouse(body: Record<string, unknown>){
     return safeCall(async () => {
-    if (!body['name']) throw new BadRequestException('name majburiy');
+    if (!body['name']) throw new BadRequestException(await this.i18n.t('validation.nameRequired'));
 
     // Ombor tozalash (WMS-POS-FULL-AUDIT-2026-07-05, item 2): same duplicate-name
     // guard as the other two warehouse-create endpoints -- code has a DB UNIQUE
@@ -255,7 +256,7 @@ export class ResourcesCompatService {
       SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${body['name']})) LIMIT 1
     `);
     if (dbRows(dup).length) {
-      throw new ConflictException(`Bu nomli ombor allaqachon mavjud: "${String(body['name'])}"`);
+      throw new ConflictException(await this.i18n.t('errors.warehouseNameAlreadyExists', { args: { name: String(body['name']) } }));
     }
 
     const r = await rawSql(sql`

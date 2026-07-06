@@ -19,6 +19,7 @@
  *   - hasAnyOrgAssignment(userId)        — oylik check uchun
  */
 import { BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql, type SQL } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
@@ -40,10 +41,10 @@ export function parseOrgDepartmentIds(body: Record<string, unknown>): number[] {
  * Har bir org_department_id ning DB'da is_active=true bilan mavjudligini tekshiradi.
  * Mavjud bo'lmagan id bo'lsa — BadRequestException (foydali xato xabar).
  */
-export async function validateOrgDepartmentsExist(orgIds: number[]): Promise<void> {
+export async function validateOrgDepartmentsExist(orgIds: number[], i18n: I18nService): Promise<void> {
   if (orgIds.length === 0) {
     throw new BadRequestException(
-      "Xodim kamida bitta tashkiliy bo'limga (org_department) biriktirilishi shart",
+      await i18n.t('validation.employeeRequiresOneOrgDepartment'),
     );
   }
   // Parameterized IN list using sql.join — no sql.raw() with user-controlled values
@@ -56,7 +57,7 @@ export async function validateOrgDepartmentsExist(orgIds: number[]): Promise<voi
   const missing = orgIds.filter((id) => !found.has(id));
   if (missing.length > 0) {
     throw new BadRequestException(
-      `Tashkiliy bo'lim ID(lar) topilmadi yoki nofaol: ${missing.join(', ')}`,
+      await i18n.t('errors.orgDepartmentIdsNotFoundOrInactive', { args: { ids: missing.join(', ') } }),
     );
   }
 }
@@ -120,6 +121,7 @@ export async function resolveRoleFromPositionRbacTier(
 export async function ensureUserForEmployee(
   tx: { execute: (q: SQL) => Promise<unknown> } | null,
   data: UserCreationData,
+  i18n: I18nService,
 ): Promise<number> {
   const exec = tx
     ? (q: SQL) => tx.execute(q)
@@ -165,7 +167,7 @@ export async function ensureUserForEmployee(
   `);
   const insertedRow = dbRows(inserted)[0];
   // WHY: callers wrap this helper in safeCall; BadRequestException maps to BAD_REQUEST cleanly.
-  if (!insertedRow) throw new BadRequestException('User yaratish bajarilmadi');
+  if (!insertedRow) throw new BadRequestException(await i18n.t('errors.userCreationFailed'));
   return Number(insertedRow['id']);
 }
 

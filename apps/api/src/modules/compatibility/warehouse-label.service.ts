@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { db,
   rawSql} from '@shared/db';
@@ -23,7 +24,10 @@ export interface LabelPrintResult {
 
 @Injectable()
 export class WarehouseLabelCompatService {
-  constructor(private readonly labelSvc: LabelService) {}
+  constructor(
+    private readonly labelSvc: LabelService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async printLabel(body: PrintLabelDto): Promise<LabelPrintResult & { format?: string; copies?: number }> {
     const format = ((body.format ?? 'ZPL').toUpperCase()) as LabelFormat;
@@ -119,7 +123,7 @@ export class WarehouseLabelCompatService {
       WHERE id = ${id} RETURNING id, batch_number, status, updated_at
     `);
     const found = dbRows(result)[0];
-    if (!found) throw new NotFoundException(`Batch ${id} not found`);
+    if (!found) throw new NotFoundException(await this.i18n.t('errors.batchNotFoundWithId', { args: { id } }));
     return found;
   }
 

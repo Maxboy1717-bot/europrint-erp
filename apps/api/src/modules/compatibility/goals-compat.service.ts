@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -18,6 +19,8 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 @Injectable()
 export class GoalsCompatService {
   private readonly logger = new Logger(GoalsCompatService.name);
+
+  constructor(private readonly i18n: I18nService) {}
 
   async getGoals(status?: string, category?: string, targetType?: string, limit = '50'): Promise<Result<object, AppError>> {
     const lim = Math.min(si(limit, 50), MAX_QUERY_LIMIT);
@@ -40,7 +43,7 @@ export class GoalsCompatService {
   async createGoal(body: Record<string, unknown>) {
     const { title, description, category, target_type, target_id, metric,
             current_value, target_value, start_date, end_date, status, priority, created_by } = body;
-    if (!title) throw new BadRequestException('title majburiy');
+    if (!title) throw new BadRequestException(await this.i18n.t('errors.titleRequired'));
     const r = await safeCall(() => rawSql(sql`
       INSERT INTO goals (title, description, category, target_type, target_id, metric,
                         current_value, target_value, start_date, end_date, status, priority, created_by)
@@ -51,7 +54,7 @@ export class GoalsCompatService {
               ${status ?? 'active'}, ${priority ?? 'medium'}, ${String(created_by ?? '')})
       RETURNING id, title, status, priority, created_at
     `));
-    if (!r.ok) { this.logger.error(`createGoal: ${r.error}`); throw new InternalServerErrorException('Maqsad yaratishda xatolik'); }
+    if (!r.ok) { this.logger.error(`createGoal: ${r.error}`); throw new InternalServerErrorException(await this.i18n.t('errors.goalCreationFailed')); }
     return dbRows(r.data)[0];
   }
 
@@ -70,7 +73,7 @@ export class GoalsCompatService {
       return { total_goals: 0, active_goals: 0, completed_goals: 0, overdue_goals: 0, avg_progress: 0 };
     }
     const found = dbRows(r.data)[0];
-    if (!found) throw new NotFoundException('Record not found');
+    if (!found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return found;
   }
 
@@ -84,10 +87,10 @@ export class GoalsCompatService {
     `));
     if (!r.ok) {
       this.logger.warn(`getGoal(${id}): ${r.error}`);
-      throw new NotFoundException('Record not found');
+      throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     }
     const found = dbRows(r.data)[0];
-    if (!found) throw new NotFoundException('Record not found');
+    if (!found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return found;
   }
 
@@ -108,10 +111,10 @@ export class GoalsCompatService {
     `));
     if (!r.ok) {
       this.logger.warn(`updateGoal(${id}): ${r.error}`);
-      throw new NotFoundException('Record not found');
+      throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     }
     const found = dbRows(r.data)[0];
-    if (!found) throw new NotFoundException('Record not found');
+    if (!found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return found;
   }
 

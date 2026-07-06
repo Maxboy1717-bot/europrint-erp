@@ -15,6 +15,7 @@
  * tekshiradi. PostgreSQL'ning umumiy `Failed query` o'rniga aniq xato xabar beradi.
  */
 import { BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -68,18 +69,19 @@ export interface AdaptedEmployee {
  */
 export async function validateEmployeeFks(
   a: AdaptedEmployee,
+  i18n: I18nService,
   excludeEmployeeId?: number,
 ): Promise<void> {
   if (a.departmentId !== null) {
     const dept = await rawSql(sql`SELECT id FROM departments WHERE id = ${a.departmentId} LIMIT 1`);
     if (dbRows(dept).length === 0) {
-      throw new BadRequestException(`Bo'lim ID=${a.departmentId} mavjud emas (departments jadvalida)`);
+      throw new BadRequestException(await i18n.t('errors.departmentIdNotFound', { args: { id: a.departmentId } }));
     }
   }
   if (a.positionId !== null) {
     const pos = await rawSql(sql`SELECT id FROM positions WHERE id = ${a.positionId} LIMIT 1`);
     if (dbRows(pos).length === 0) {
-      throw new BadRequestException(`Lavozim ID=${a.positionId} mavjud emas (positions jadvalida)`);
+      throw new BadRequestException(await i18n.t('errors.positionIdNotFound', { args: { id: a.positionId } }));
     }
   }
   if (a.employeeCode !== null) {
@@ -89,7 +91,7 @@ export async function validateEmployeeFks(
         : sql`SELECT id FROM employees WHERE employee_code = ${a.employeeCode} LIMIT 1`,
     );
     if (dbRows(dup).length > 0) {
-      throw new BadRequestException(`Tabel raqami "${a.employeeCode}" allaqachon mavjud — boshqa raqam tanlang`);
+      throw new BadRequestException(await i18n.t('errors.employeeCodeAlreadyExists', { args: { code: a.employeeCode } }));
     }
   }
 }

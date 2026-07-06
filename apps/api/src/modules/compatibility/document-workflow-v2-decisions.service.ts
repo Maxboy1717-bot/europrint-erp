@@ -4,6 +4,7 @@
  *   to keep that file <300 lines (Rule 16).
  */
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -12,6 +13,8 @@ import { safeCall, Result, AppError } from '@common/result';
 @Injectable()
 export class DocumentWorkflowV2DecisionsService {
   private readonly logger = new Logger(DocumentWorkflowV2DecisionsService.name);
+
+  constructor(private readonly i18n: I18nService) {}
 
   /** Tasdiqlash — keyingi bosqichga o'tish. */
   async approveStep(
@@ -28,7 +31,7 @@ export class DocumentWorkflowV2DecisionsService {
         WHERE i.id = ${instanceId} AND i.status = 'pending'
       `);
       const inst = dbRows(instRows)[0];
-      if (!inst) throw new NotFoundException(`Workflow instance #${instanceId} topilmadi yoki yopilgan`);
+      if (!inst) throw new NotFoundException(await this.i18n.t('errors.workflowInstanceNotFoundOrClosed', { args: { id: instanceId } }));
 
       const verticalSteps = Array.isArray(inst['vertical_steps']) ? inst['vertical_steps'] : [];
       const currentIndex = Number(inst['current_step_index'] ?? 0);
@@ -99,7 +102,7 @@ export class DocumentWorkflowV2DecisionsService {
     return safeCall(async () => {
       if (!reason || reason.trim().length < 10) {
         throw new BadRequestException(
-          'Rad etish sababini kamida 10 belgi yozing (kim uchun ekanligini tushuntirib bering)',
+          await this.i18n.t('validation.rejectReasonMinLength10'),
         );
       }
 
@@ -109,7 +112,7 @@ export class DocumentWorkflowV2DecisionsService {
         WHERE id = ${instanceId} AND status = 'pending'
       `);
       const inst = dbRows(instRows)[0];
-      if (!inst) throw new NotFoundException(`Workflow #${instanceId} topilmadi`);
+      if (!inst) throw new NotFoundException(await this.i18n.t('errors.workflowNotFoundWithId', { args: { id: instanceId } }));
 
       const oldHistory = Array.isArray(inst['steps_history']) ? inst['steps_history'] : [];
       const newHistory = [

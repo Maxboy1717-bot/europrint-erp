@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -15,6 +16,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class SuccessionCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getCareerPlans(employeeId?: string): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -62,7 +64,7 @@ export class SuccessionCompatService {
       RETURNING id, position_id, candidate_id, readiness_level, development_plan, status, created_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
 
     });}
@@ -96,7 +98,7 @@ export class SuccessionCompatService {
       RETURNING id, position_id, readiness_level, status, created_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -135,7 +137,7 @@ export class SuccessionCompatService {
       WHERE sp.id = ${si(id)}
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -154,7 +156,7 @@ export class SuccessionCompatService {
       RETURNING id, readiness_level, status, updated_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -228,7 +230,7 @@ export class SuccessionCompatService {
       RETURNING id, candidate_id, position_id, readiness_level, status
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}

@@ -14,6 +14,7 @@
  */
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db, rawSql } from '@shared/db';
 import {
   employee_daily_reports,
@@ -31,6 +32,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class EmployeesCompatProfileOrmService {
+  constructor(private readonly i18n: I18nService) {}
 
   /**
    * Passport ma'lumotlari `employees` jadvalining ustunlarida saqlanadi
@@ -136,7 +138,7 @@ export class EmployeesCompatProfileOrmService {
           status:          String(body['status'] ?? 'active'),
         })
         .returning();
-      if (!item) throw new InternalServerErrorException('Contract creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.contractCreationFailed'));
       return item as Row;
     });
   }
@@ -152,7 +154,7 @@ export class EmployeesCompatProfileOrmService {
           entryType:     String(body['type'] ?? body['entryType'] ?? 'out'),
         })
         .returning();
-      if (!item) throw new InternalServerErrorException('Corporate inventory creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.corporateInventoryCreationFailed'));
       return item as Row;
     });
   }
@@ -195,7 +197,7 @@ export class EmployeesCompatProfileOrmService {
           requested_at: new Date(),
         })
         .returning();
-      if (!item) throw new InternalServerErrorException('Leave request creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.leaveRequestCreationFailed'));
       return item as Row;
     });
   }
@@ -212,7 +214,7 @@ export class EmployeesCompatProfileOrmService {
           requested_at: new Date(),
         })
         .returning();
-      if (!item) throw new InternalServerErrorException('Sick leave creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.sickLeaveCreationFailed'));
       return item as Row;
     });
   }

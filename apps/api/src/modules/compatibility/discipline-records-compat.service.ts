@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -15,6 +16,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class DisciplineRecordsCompatService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getDisciplineRecords(employeeId?: string, type?: string, status?: string): Promise<Result<Record<string, unknown>[]>>{
     return safeCall(async () => {
@@ -54,9 +56,9 @@ export class DisciplineRecordsCompatService {
     const violation_date = body['violation_date']  ?? body['violationDate'] ?? null;
     const description     = body['description']      ?? body['reason']       ?? null;
     const fine_amount    = body['fine_amount']      ?? body['amount']       ?? null;
-    if (!employee_id) throw new BadRequestException('employee_id (userId) majburiy');
-    if (!given_by)    throw new BadRequestException('given_by (givenBy) majburiy');
-    if (!reason)      throw new BadRequestException('reason majburiy');
+    if (!employee_id) throw new BadRequestException(await this.i18n.t('errors.employeeIdRequired'));
+    if (!given_by)    throw new BadRequestException(await this.i18n.t('validation.givenByRequired'));
+    if (!reason)      throw new BadRequestException(await this.i18n.t('validation.reasonRequired'));
     const r = await rawSql(sql`
       INSERT INTO discipline_records
         (employee_id, violation_type, discipline_type, severity,
@@ -67,7 +69,7 @@ export class DisciplineRecordsCompatService {
       RETURNING id, violation_type, reason, given_by, severity, status, created_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -83,7 +85,7 @@ export class DisciplineRecordsCompatService {
       WHERE dr.id = ${si(id)} AND dr.deleted_at IS NULL
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}
@@ -102,7 +104,7 @@ export class DisciplineRecordsCompatService {
       RETURNING id, status, fine_amount, updated_at
     `);
     const _found = dbRows(r)[0];
-    if (!_found) throw new NotFoundException('Record not found');
+    if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
     return _found;
   
     });}

@@ -14,6 +14,7 @@
  */
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -24,6 +25,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class EmployeesCompatProfileRawService {
+  constructor(private readonly i18n: I18nService) {}
 
   async getCareer(id: string): Promise<Result<{ history: Row[]; goals: Row[] }, AppError>> {
     return safeCall(async () => {
@@ -150,7 +152,7 @@ export class EmployeesCompatProfileRawService {
         RETURNING id, employee_id, current_position_id, target_position_id, estimated_months, progress_percent, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Career path creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.careerPathCreationFailed'));
       return item;
     });
   }
@@ -163,7 +165,7 @@ export class EmployeesCompatProfileRawService {
         RETURNING id, employee_id, skill_name, skill_category, proficiency_level, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Skill creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.skillCreationFailed'));
       return item;
     });
   }
@@ -185,7 +187,7 @@ export class EmployeesCompatProfileRawService {
         RETURNING id, user_id, employee_id, contact_name, relationship, phone_number, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Emergency contact creation failed (no user for employee)');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.emergencyContactCreationFailedNoUser'));
       return item;
     });
   }
@@ -263,7 +265,7 @@ export class EmployeesCompatProfileRawService {
         RETURNING id, employee_id, salary_period_start, salary_period_end, base_salary, salary_earned, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Salary history creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.salaryHistoryCreationFailed'));
       return item;
     });
   }

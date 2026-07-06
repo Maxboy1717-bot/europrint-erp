@@ -12,6 +12,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -24,6 +25,7 @@ const IMPORT_CODE_PREFIX = 'IMP';
 
 @Injectable()
 export class EmployeesCompatSubService {
+  constructor(private readonly i18n: I18nService) {}
   async importEmployees(employees: Record<string, unknown>[]): Promise<Result<{ imported: number; total: number; errors: string[] }, AppError>> {
     return safeCall(async () => {
       let imported = 0;
@@ -69,7 +71,7 @@ export class EmployeesCompatSubService {
         RETURNING id, asset_name, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Asset assignment failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.assetAssignmentFailed'));
       return item;
     });
   }
@@ -122,7 +124,7 @@ export class EmployeesCompatSubService {
         RETURNING id, severity, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Complaint creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.complaintCreationFailed'));
       return item;
     });
   }

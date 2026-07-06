@@ -11,6 +11,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -24,6 +25,7 @@ const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
 
 @Injectable()
 export class EmployeesCompatFinancialsService {
+  constructor(private readonly i18n: I18nService) {}
   async deleteEmployeeFile(employeeId: string, fileId: string): Promise<Result<{ deleted: boolean }, AppError>> {
     return safeCall(async () => {
       await rawSql(sql`
@@ -132,7 +134,7 @@ export class EmployeesCompatFinancialsService {
         RETURNING id, employee_id, bank_name, account_number, account_type, is_primary, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Bank account creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.bankAccountCreationFailed'));
       return item;
     });
   }
@@ -145,7 +147,7 @@ export class EmployeesCompatFinancialsService {
         RETURNING id, employee_id, salary_period_start AS period, total_bonuses AS amount, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Bonus creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.bonusCreationFailed'));
       return item;
     });
   }
@@ -158,7 +160,7 @@ export class EmployeesCompatFinancialsService {
         RETURNING id, employee_id, destination, purpose, start_date, end_date, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Business trip creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.businessTripCreationFailed'));
       return item;
     });
   }
@@ -171,7 +173,7 @@ export class EmployeesCompatFinancialsService {
         RETURNING id, employee_id, amount, request_date, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Cash advance creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.cashAdvanceCreationFailed'));
       return item;
     });
   }
@@ -184,7 +186,7 @@ export class EmployeesCompatFinancialsService {
         RETURNING id, employee_id, type, reason, severity, appeal_status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Fine creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.fineCreationFailed'));
       return item;
     });
   }
@@ -198,7 +200,7 @@ export class EmployeesCompatFinancialsService {
         RETURNING id, employee_id, attendance_date AS log_date, overtime_minutes AS overtime_hours, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Overtime creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.overtimeCreationFailed'));
       return item;
     });
   }
@@ -211,7 +213,7 @@ export class EmployeesCompatFinancialsService {
         RETURNING id, employee_id, assessment_period, assessment_year, status, created_at
       `);
       const item = dbRows(r)[0] as Row | undefined;
-      if (!item) throw new InternalServerErrorException('Assessment creation failed');
+      if (!item) throw new InternalServerErrorException(await this.i18n.t('errors.assessmentCreationFailed'));
       return item;
     });
   }
@@ -220,12 +222,12 @@ export class EmployeesCompatFinancialsService {
     return safeCall(async () => {
       const password = typeof body.password === 'string' ? body.password.trim() : '';
       if (!password || password.length < 6) {
-        throw new BadRequestException('Parol kamida 6 ta belgidan iborat bo\'lishi kerak');
+        throw new BadRequestException(await this.i18n.t('validation.passwordMinLength6'));
       }
       const empRow = await rawSql(sql`SELECT user_id FROM employees WHERE id = ${si(id)} LIMIT 1`);
       const row = dbRows(empRow)[0] as Row | undefined;
       if (!row || !row.user_id) {
-        throw new NotFoundException(`Xodim topilmadi yoki foydalanuvchi bog'liq emas: ${id}`);
+        throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundOrNoLinkedUser', { args: { id } }));
       }
       const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
       await rawSql(sql`UPDATE users SET password_hash = ${passwordHash}, updated_at = NOW() WHERE id = ${si(row.user_id)}`);
