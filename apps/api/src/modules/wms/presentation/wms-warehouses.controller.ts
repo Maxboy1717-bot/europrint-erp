@@ -6,7 +6,7 @@
 import { assertRequired } from '@common/assertions';
 import {
   Controller, Get, Post, Patch, Delete, Body, Param,
-  UseGuards, UseInterceptors, Query, Logger, BadRequestException, NotFoundException,
+  UseGuards, UseInterceptors, Query, Logger, BadRequestException, NotFoundException, ConflictException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { assertOk, throwFromError, unwrapOrNotFound, unwrapOrThrow } from '@common/http-result';
@@ -86,6 +86,17 @@ export class WmsWarehousesController {
       const warehouseType = String(dto.type ?? dto.warehouse_type ?? 'main');
       const nameRu = dto.name_ru ? String(dto.name_ru) : null;
       const location = (dto.location ?? dto.address) ? String(dto.location ?? dto.address) : null;
+
+      // Ombor tozalash (WMS-POS-FULL-AUDIT-2026-07-05, item 2): warehouses.code has a
+      // DB-level UNIQUE constraint, but name does not -- two warehouses with the same
+      // name and different auto-generated codes could both be created silently.
+      const dup = await rawSql(sql`
+        SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${name})) LIMIT 1
+      `);
+      if ((dup as { rows?: Record<string, unknown>[] }).rows?.length) {
+        throw new ConflictException(`Bu nomli ombor allaqachon mavjud: "${name}"`);
+      }
+
       const r = await rawSql(sql`
         INSERT INTO warehouses (code, name, name_ru, type, location, is_active, manager_id)
         VALUES (${code}, ${name}, ${nameRu}, ${warehouseType}, ${location}, true, ${user?.id ?? null})
@@ -94,6 +105,7 @@ export class WmsWarehousesController {
       const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
       return row ?? {};
     } catch (e) {
+      if (e instanceof ConflictException) throw e;
       throw new BadRequestException(`Ombor yaratishda xatolik: ${String(e).substring(0, 200)}`);
     }
   }

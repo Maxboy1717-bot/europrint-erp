@@ -9,7 +9,7 @@
 
 import {
   Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query,
-  UseGuards, BadRequestException, NotFoundException,
+  UseGuards, BadRequestException, NotFoundException, ConflictException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -135,6 +135,17 @@ export class WmsGatewayWarehousesController {
       const warehouseType = String(dto.type ?? dto.warehouse_type ?? 'main');
       const nameRu   = dto.name_ru ? String(dto.name_ru) : null;
       const location = (dto.location ?? dto.address) ? String(dto.location ?? dto.address) : null;
+
+      // Ombor tozalash (WMS-POS-FULL-AUDIT-2026-07-05, item 2): same duplicate-name
+      // guard as WmsWarehousesController.create() -- code has a DB UNIQUE constraint,
+      // name does not.
+      const dup = await rawSql(sql`
+        SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${name})) LIMIT 1
+      `);
+      if ((dup as { rows?: Record<string, unknown>[] }).rows?.length) {
+        throw new ConflictException(`Bu nomli ombor allaqachon mavjud: "${name}"`);
+      }
+
       const r = await rawSql(sql`
         INSERT INTO warehouses (code, name, name_ru, type, location, is_active, manager_id)
         VALUES (${code}, ${name}, ${nameRu}, ${warehouseType}, ${location}, true, ${user?.id ?? null})
@@ -142,6 +153,7 @@ export class WmsGatewayWarehousesController {
       `);
       return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
     } catch (e) {
+      if (e instanceof ConflictException) throw e;
       throw new BadRequestException(`Ombor yaratishda xatolik: ${String(e).substring(0, 200)}`);
     }
   }

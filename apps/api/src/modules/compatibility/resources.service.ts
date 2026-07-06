@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { MAX_LARGE_QUERY_LIMIT } from '@common/constants/app.constants';
 import { db,
   rawSql} from '@shared/db';
@@ -247,6 +247,17 @@ export class ResourcesCompatService {
   async createWarehouse(body: Record<string, unknown>){
     return safeCall(async () => {
     if (!body['name']) throw new BadRequestException('name majburiy');
+
+    // Ombor tozalash (WMS-POS-FULL-AUDIT-2026-07-05, item 2): same duplicate-name
+    // guard as the other two warehouse-create endpoints -- code has a DB UNIQUE
+    // constraint, name does not.
+    const dup = await rawSql(sql`
+      SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${body['name']})) LIMIT 1
+    `);
+    if (dbRows(dup).length) {
+      throw new ConflictException(`Bu nomli ombor allaqachon mavjud: "${String(body['name'])}"`);
+    }
+
     const r = await rawSql(sql`
       INSERT INTO warehouses (name, code, description, is_active, created_at, updated_at)
       VALUES (${body['name'] ?? ''}, ${body['code'] ?? null}, ${body['description'] ?? null}, true, NOW(), NOW())

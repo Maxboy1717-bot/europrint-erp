@@ -4,9 +4,11 @@
  * The service runs raw SQL through @shared/db.rawSql. We mock the shared/db
  * module to avoid hitting Postgres.
  */
+const mockRawSql = jest.fn().mockResolvedValue({ rows: [] });
+
 jest.mock('../../src/shared/db', () => ({
   db:       {},
-  rawSql:   jest.fn().mockResolvedValue({ rows: [] }),
+  rawSql:   (...args: unknown[]) => mockRawSql(...args),
   runQuery: jest.fn().mockResolvedValue({ rows: [] }),
 }));
 
@@ -36,5 +38,36 @@ describe('ResourcesCompatService', () => {
     const res = await svc.getWarehouses('1', '50');
     expect(res).toHaveProperty('ok');
     expect(typeof res.ok).toBe('boolean');
+  });
+
+  // Ombor tozalash (WMS-POS-FULL-AUDIT-2026-07-05, item 2, 2026-07-06): createWarehouse
+  // never checked for an existing active warehouse with the same name -- code has a DB
+  // UNIQUE constraint, name does not.
+  describe('createWarehouse duplicate-name guard', () => {
+    beforeEach(() => mockRawSql.mockReset());
+
+    it('rejects with ConflictException when an active warehouse already has this name', async () => {
+      mockRawSql.mockResolvedValueOnce({ rows: [{ id: 5 }] }); // duplicate-check finds a match
+      const svc = new ResourcesCompatService();
+      const res = await svc.createWarehouse({ name: 'Asosiy ombor' });
+
+      expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.error.code).toBe('CONFLICT');
+      }
+      // Only the duplicate-check query ran -- no INSERT was attempted.
+      expect(mockRawSql).toHaveBeenCalledTimes(1);
+    });
+
+    it('creates the warehouse when no duplicate name exists', async () => {
+      mockRawSql
+        .mockResolvedValueOnce({ rows: [] }) // duplicate-check: none found
+        .mockResolvedValueOnce({ rows: [{ id: 9, name: 'Yangi ombor', code: 'YO-1' }] }); // insert
+      const svc = new ResourcesCompatService();
+      const res = await svc.createWarehouse({ name: 'Yangi ombor' });
+
+      expect(res.ok).toBe(true);
+      expect(mockRawSql).toHaveBeenCalledTimes(2);
+    });
   });
 });
