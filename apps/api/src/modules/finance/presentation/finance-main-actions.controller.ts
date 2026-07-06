@@ -33,6 +33,12 @@ const CreateGlEntrySchema = z.object({
   lines: z.array(z.record(z.string(), z.unknown())).optional(),
 }).passthrough();
 
+const CreateRecurringTemplateSchema = z.object({
+  frequency: z.enum(['monthly', 'quarterly', 'yearly']),
+  description: z.string().max(2000).optional(),
+  lines: z.array(z.record(z.string(), z.unknown())),
+}).passthrough();
+
 const ApEntrySchema = z.object({
   vendorId: z.union([z.string(), z.number()]).optional(),
   amount: z.number().optional(),
@@ -101,6 +107,19 @@ export class FinanceMainActionsController {
   @Roles('DIRECTOR', 'SUPER_ADMIN')
   async rejectGlEntry(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.accountingSvc.rejectGlDocument(Number(id), user?.sub ?? user?.id);
+  }
+
+  // F11 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): recurring journal entries, minimal viable —
+  // create a template; RecurringJournalEntriesCron generates due drafts (still gated by F9's
+  // approve/reject above, never auto-posts unattended).
+  @ApiOperation({ summary: 'Create recurring gl entry template' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('gl-entries/recurring-templates')
+  @HttpCode(HttpStatus.CREATED)
+  async createRecurringGlTemplate(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = CreateRecurringTemplateSchema.parse(body);
+    return this.accountingSvc.createRecurringTemplate(dto as Record<string, unknown>, user?.sub ?? user?.id);
   }
 
   // Q2 (SAP-conformance fix, 2026-07-04): "reversed" status now checked against the canonical

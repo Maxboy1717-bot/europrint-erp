@@ -296,6 +296,55 @@ export class FinanceAccountingService {
   }
 
   /**
+   * F11 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): recurring journal entries — minimal viable.
+   * Reuses `gl_documents` (document_type='recurring_template', status='active') as the template
+   * store — no new table (Q-35). The template itself is NEVER posted; `RecurringJournalEntriesCron`
+   * reads active templates and, when due, creates a NEW draft instance (document_type=
+   * 'manual_journal', status='pending_review', same as a hand-entered createGlDocument() draft) —
+   * a recurring entry still goes through the F9 draft->review->post gate before it ever reaches
+   * `entries`, rather than auto-posting unattended.
+   */
+  async createRecurringTemplate(body: Record<string, unknown>, createdBy?: number) {
+    const rawLines = Array.isArray(body.lines) ? (body.lines as Array<Record<string, unknown>>) : [];
+    if (rawLines.length === 0) {
+      throw new BadRequestException("Takrorlanuvchi shablon uchun kamida ikkita yozuv (debet va kredit) kerak.");
+    }
+    const lines: JournalLine[] = rawLines.map((l) => ({
+      accountCode: String(l.accountCode ?? l.account_id ?? l.accountId ?? '').trim(),
+      accountName: String(l.accountName ?? l.account_name ?? l.accountCode ?? ''),
+      debit: Number(l.debit ?? l.debitAmount ?? l.debit_amount ?? 0) || 0,
+      credit: Number(l.credit ?? l.creditAmount ?? l.credit_amount ?? 0) || 0,
+    }));
+    const totalDebit = lines.reduce((s, l) => s + (l.debit > 0 ? l.debit : 0), 0);
+    const totalCredit = lines.reduce((s, l) => s + (l.credit > 0 ? l.credit : 0), 0);
+    if (!lines.some((l) => l.debit > 0) || !lines.some((l) => l.credit > 0) || Math.abs(totalDebit - totalCredit) > 0.01) {
+      throw new BadRequestException(
+        `Ikki tomonlama balans talab qilinadi: debet (${totalDebit}) = kredit (${totalCredit}) bo'lishi shart.`,
+      );
+    }
+    const frequency = String(body.frequency ?? '');
+    if (!['monthly', 'quarterly', 'yearly'].includes(frequency)) {
+      throw new BadRequestException("frequency 'monthly' | 'quarterly' | 'yearly' bo'lishi kerak");
+    }
+    const description = body.description != null ? String(body.description) : null;
+    const templateNumber = `RECUR-${Date.now()}`;
+    const today = this._time.now().toISOString().slice(0, 10);
+    const inserted = await runQuery<{ id: number }>(sql`
+      INSERT INTO gl_documents
+        (document_number, document_date, posting_date, document_type, description, total_debit,
+         total_credit, status, created_by, metadata, created_at)
+      VALUES
+        (${templateNumber}, ${today}, ${today}, 'recurring_template', ${description}, ${totalDebit},
+         ${totalCredit}, 'active', ${createdBy ?? null},
+         ${JSON.stringify({ lines, frequency, lastGeneratedPeriod: null })}::jsonb, NOW())
+      RETURNING id
+    `);
+    const row = inserted.rows[0];
+    if (!row) throw new InternalServerErrorException('Takrorlanuvchi shablon saqlanmadi');
+    return { templateId: row.id, templateNumber, frequency, status: 'active' as const, totalDebit, totalCredit };
+  }
+
+  /**
    * Q2 (SAP-conformance fix, 2026-07-04): reverses a canonical `entries` row by posting a NEW
    * balanced journal entry with debit/credit swapped, via the same ONE engine as createGlDocument
    * (GlPostingService.postJournal). Previously this "reversal" only inserted a `[REVERSAL]`-tagged
