@@ -3,7 +3,7 @@
  * @description React page component. Route-level UI.
  */
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,10 @@ import type { PapkaOrder, MaterialKit, MaterialKitItem } from "./WarehouseMateri
 import { SummaryCards, KitsTable } from "./WarehouseMaterialKitsSections";
 import { CreateKitDialog, KitDetailsDialog } from "./WarehouseMaterialKitsDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 export default function WarehouseMaterialKits() {
-  const [lang, setLang] = useState<"uz" | "ru">("uz");
+  const { language, t, setLanguage } = useTranslation("warehouse");
   const [selectedTab, setSelectedTab] = useState("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKit, setSelectedKit] = useState<MaterialKit | null>(null);
@@ -24,8 +25,6 @@ export default function WarehouseMaterialKits() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { toast } = useToast();
-
-  const t = useCallback((uz: string, ru: string) => lang === "uz" ? uz : ru, [lang]);
 
   const { data: ordersData = [], isLoading: ordersLoading, refetch: refetchOrders, isError, error } = useQuery({
     queryKey: ["/api/iot-enhanced/orders-for-kits"],
@@ -46,12 +45,12 @@ export default function WarehouseMaterialKits() {
       return await apiRequest("POST", `/api/iot-enhanced/orders/${orderId}/calculate-bom`);
     },
     onSuccess: () => {
-      toast({ title: t("Material to'plami yaratildi!", "Комплект материалов создан!") });
+      toast({ title: t("WarehouseMaterialKits.toastKitCreated") });
       refetchKits();
       setShowCreateDialog(false);
     },
     onError: () => {
-      toast({ title: t("Xatolik yuz berdi", "Произошла ошибка"), variant: "destructive" });
+      toast({ title: t("WarehouseMaterialKits.toastError"), variant: "destructive" });
     },
   });
 
@@ -60,7 +59,7 @@ export default function WarehouseMaterialKits() {
       return await apiRequest("PATCH", `/api/iot/material-kits/${kitId}/prepare`);
     },
     onSuccess: () => {
-      toast({ title: t("To'plam tayyorlanmoqda", "Комплект готовится") });
+      toast({ title: t("WarehouseMaterialKits.toastPreparing") });
       refetchKits();
     },
   });
@@ -70,7 +69,7 @@ export default function WarehouseMaterialKits() {
       return await apiRequest("PATCH", `/api/iot/material-kits/${kitId}/ready`);
     },
     onSuccess: () => {
-      toast({ title: t("To'plam tayyor!", "Комплект готов!") });
+      toast({ title: t("WarehouseMaterialKits.toastReady") });
       refetchKits();
     },
   });
@@ -114,22 +113,22 @@ export default function WarehouseMaterialKits() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Package className="h-7 w-7 text-primary" />
-            {t("Ombor Material To'plamlari", "Складские комплекты материалов")}
+            {t("WarehouseMaterialKits.title")}
           </h1>
           <p className="text-muted-foreground">
-            {t("Ishlab chiqarish uchun material to'plamlarini tayyorlash", "Подготовка комплектов материалов для производства")}
+            {t("WarehouseMaterialKits.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => { refetchKits(); refetchOrders(); }} data-testid="button-refresh">
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setLang(l => l === "uz" ? "ru" : "uz")} data-testid="button-lang">
+          <Button variant="ghost" size="icon" onClick={() => setLanguage(language === "uz" ? "ru" : "uz")} data-testid="button-lang">
             <Languages className="h-4 w-4" />
           </Button>
           <Button onClick={() => setShowCreateDialog(true)} data-testid="button-new-kit">
             <Calculator className="h-4 w-4 mr-2" />
-            {t("Yangi to'plam", "Новый комплект")}
+            {t("WarehouseMaterialKits.newKitButton")}
           </Button>
         </div>
       </div>
@@ -144,7 +143,6 @@ export default function WarehouseMaterialKits() {
         setSelectedTab={setSelectedTab}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        lang={lang}
         onPrepare={(id) => prepareKit.mutate(id)}
         onMarkReady={(id) => markReady.mutate(id)}
         onOpenDetails={openKitDetails}

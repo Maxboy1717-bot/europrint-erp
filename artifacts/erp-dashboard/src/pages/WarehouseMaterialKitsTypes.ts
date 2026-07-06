@@ -5,7 +5,6 @@
 
 import { Package, Palette, Droplets, Layers, Scissors, Sparkles, Box } from "lucide-react";
 
-import { tLabel } from '@/lib/i18n/tLabel';
 export interface PapkaOrder {
   id: number;
   papkaNo: string;
@@ -65,10 +64,10 @@ export const MATERIAL_COLORS: Record<string, string> = {
   begovka: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
-export const STATUS_BADGES: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; labelRu: string }> = {
-  pending: { variant: "secondary", label: tLabel('warehouse.WarehouseMaterialKits.kutilmoqda', "Kutilmoqda"), labelRu: "Ожидает" },
-  preparing: { variant: "default", label: tLabel('warehouse.WarehouseMaterialKits.tayyorlanmoqda', "Tayyorlanmoqda"), labelRu: "Готовится" },
-  ready: { variant: "outline", label: "Tayyor", labelRu: "Готов" },
-  delivered: { variant: "default", label: "Yetkazildi", labelRu: "Доставлен" },
-  consumed: { variant: "secondary", label: "Ishlatildi", labelRu: "Использован" },
+export const STATUS_BADGES: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; labelKey: string }> = {
+  pending: { variant: "secondary", labelKey: "WarehouseMaterialKits.kutilmoqda" },
+  preparing: { variant: "default", labelKey: "WarehouseMaterialKits.tayyorlanmoqda" },
+  ready: { variant: "outline", labelKey: "WarehouseMaterialKits.statusReady" },
+  delivered: { variant: "default", labelKey: "WarehouseMaterialKits.statusDelivered" },
+  consumed: { variant: "secondary", labelKey: "WarehouseMaterialKits.statusConsumed" },
 };

@@ -19,14 +19,14 @@ interface PendingOrdersListProps {
   pendingOrders: PapkaOrder[];
   selectedOrderId: number | null;
   onSelectOrder: (id: number) => void;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function PendingOrdersList({ pendingOrders, selectedOrderId, onSelectOrder, t }: PendingOrdersListProps) {
   if (pendingOrders.length === 0) {
     return (
       <div className="text-center py-8 text-[13px] text-muted-foreground">
-        {t("Barcha buyurtmalar uchun to'plam yaratilgan", "Для всех заказов созданы комплекты")}
+        {t("WarehouseMaterialKits.allOrdersHaveKits")}
       </div>
     );
   }
@@ -46,7 +46,7 @@ export function PendingOrdersList({ pendingOrders, selectedOrderId, onSelectOrde
                 <p className="text-sm text-muted-foreground">{order.naimenovanie}</p>
               </div>
               <div className="text-right">
-                <Badge variant="outline">{order.tiraj?.toLocaleString()} {t("dona", "шт")}</Badge>
+                <Badge variant="outline">{order.tiraj?.toLocaleString()} {t("WarehouseDailyView.unitDona")}</Badge>
                 <p className="text-xs text-muted-foreground mt-1">{order.formatA} x {order.formatB} mm</p>
               </div>
             </div>
@@ -59,14 +59,14 @@ export function PendingOrdersList({ pendingOrders, selectedOrderId, onSelectOrde
 
 interface KitItemsListProps {
   kitItems: MaterialKitItem[];
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function KitItemsList({ kitItems, t }: KitItemsListProps) {
   if (kitItems.length === 0) {
     return (
       <p className="text-center text-muted-foreground py-4">
-        {t("Materiallar yuklanmoqda...", "Загрузка материалов...")}
+        {t("WarehouseDailyView.materialsLoading")}
       </p>
     );
   }
@@ -111,7 +111,7 @@ interface CreateKitDialogProps {
   onSelectOrder: (id: number) => void;
   onCalculate: () => void;
   isPending: boolean;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function CreateKitDialog({
@@ -121,21 +121,21 @@ export function CreateKitDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{t("Buyurtma uchun material to'plami yaratish", "Создать комплект материалов для заказа")}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("WarehouseMaterialKits.createDialogTitle")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {t("Buyurtmani tanlang va AI avtomatik ravishda kerakli materiallarni hisoblaydi", "Выберите заказ и AI автоматически рассчитает необходимые материалы")}
+            {t("WarehouseMaterialKits.createDialogHint")}
           </p>
           <PendingOrdersList pendingOrders={pendingOrders} selectedOrderId={selectedOrderId} onSelectOrder={onSelectOrder} t={t} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t("Bekor qilish", "Отмена")}
+            {t("WarehouseDailyView.cancelButton")}
           </Button>
           <Button onClick={onCalculate} disabled={!selectedOrderId || isPending} data-testid="button-calculate-bom">
             {isPending ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Calculator className="h-4 w-4 mr-2" />}
-            {t("AI bilan hisoblash", "Рассчитать с AI")}
+            {t("WarehouseMaterialKits.calculateWithAiButton")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -148,7 +148,7 @@ interface KitDetailsDialogProps {
   onOpenChange: (v: boolean) => void;
   selectedKit: MaterialKit | null;
   kitItems: MaterialKitItem[];
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t }: KitDetailsDialogProps) {
@@ -158,43 +158,43 @@ export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            {t("Material to'plami", "Комплект материалов")}: {selectedKit?.kitNumber}
+            {t("WarehouseMaterialKits.kitDetailsTitle")}: {selectedKit?.kitNumber}
           </DialogTitle>
         </DialogHeader>
         {selectedKit && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-muted-foreground">{t("Buyurtma", "Заказ")}</Label>
+                <Label className="text-muted-foreground">{t("WarehouseMaterialKits.colOrder")}</Label>
                 <p className="font-medium">{selectedKit.order?.papkaNo}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{t("Mahsulot", "Продукция")}</Label>
+                <Label className="text-muted-foreground">{t("WarehouseMaterialKits.colProduct")}</Label>
                 <p className="font-medium">{selectedKit.order?.naimenovanie}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{t("Tiraj", "Тираж")}</Label>
-                <p className="font-medium">{selectedKit.order?.tiraj?.toLocaleString()} {t("dona", "шт")}</p>
+                <Label className="text-muted-foreground">{t("WarehouseMaterialKits.colQty")}</Label>
+                <p className="font-medium">{selectedKit.order?.tiraj?.toLocaleString()} {t("WarehouseDailyView.unitDona")}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{t("O'lcham", "Размер")}</Label>
+                <Label className="text-muted-foreground">{t("WarehouseMaterialKits.sizeLabel")}</Label>
                 <p className="font-medium">{selectedKit.order?.formatA} x {selectedKit.order?.formatB} mm</p>
               </div>
             </div>
             <div className="border-t pt-4">
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <Box className="h-4 w-4" />
-                {t("Materiallar ro'yxati", "Список материалов")}
+                {t("WarehouseMaterialKits.materialsListTitle")}
               </h4>
               <KitItemsList kitItems={kitItems} t={t} />
             </div>
             {selectedKit.barcode && (
               <div className="border-t pt-4">
-                <Label className="text-muted-foreground">{t("Shtrix kod", "Штрих-код")}</Label>
+                <Label className="text-muted-foreground">{t("WarehouseMaterialKits.barcodeLabel")}</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <code className="bg-muted px-3 py-2 rounded font-mono text-lg">{selectedKit.barcode}</code>
                   <Button size="sm" variant="outline">
-                    <Printer className="h-4 w-4 mr-1" />{t("Chop etish", "Печать")}
+                    <Printer className="h-4 w-4 mr-1" />{t("WarehouseDailyView.printButton")}
                   </Button>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t 
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("Yopish", "Закрыть")}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("WarehouseMaterialKits.closeButton")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
