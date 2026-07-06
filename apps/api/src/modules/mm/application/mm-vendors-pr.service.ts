@@ -4,12 +4,16 @@
  */
 
 import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { MM_VENDORS_PR_REPO, type IMmVendorsPrRepo } from '../domain/repositories/i-mm-vendors-pr.repo';
 
 @Injectable()
 export class MmVendorsPrService {
-  constructor(@Inject(MM_VENDORS_PR_REPO) private readonly repo: IMmVendorsPrRepo) {}
+  constructor(
+    @Inject(MM_VENDORS_PR_REPO) private readonly repo: IMmVendorsPrRepo,
+    private readonly i18n: I18nService,
+  ) {}
 
   async listVendors(search: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -41,7 +45,7 @@ export class MmVendorsPrService {
   async getRequisition(rid: number) {
     return safeCall(async () => {
       const header = await this.repo.getRequisitionHeader(rid);
-      if (!header) throw new NotFoundException(`Requisitsiya #${rid} topilmadi`);
+      if (!header) throw new NotFoundException(await this.i18n.t('errors.requisitionNotFoundWithId', { args: { id: rid } }));
       const items = await this.repo.getRequisitionItems(rid);
       return { ...header, items };
     });
@@ -59,13 +63,13 @@ export class MmVendorsPrService {
   async createRequisition(title: unknown, requested_by: number | null, needed_by: unknown, notes: unknown, items: Array<Record<string, unknown>>) {
     return safeCall(async () => {
       if (!Array.isArray(items) || items.length === 0) {
-        throw new BadRequestException("Xarid so'rovi uchun kamida 1 material (item) kerak");
+        throw new BadRequestException(await this.i18n.t('validation.atLeastOneItemRequired'));
       }
       const first = items[0];
       const materialId = Number(first?.material_id);
       const quantity = Number(first?.quantity);
       if (!Number.isFinite(materialId) || materialId <= 0 || !Number.isFinite(quantity) || quantity <= 0) {
-        throw new BadRequestException("Birinchi item uchun material_id va quantity majburiy");
+        throw new BadRequestException(await this.i18n.t('errors.firstItemMaterialAndQuantityRequired'));
       }
 
       const req = await this.repo.createRequisition(title, requested_by, needed_by, notes, materialId, quantity);

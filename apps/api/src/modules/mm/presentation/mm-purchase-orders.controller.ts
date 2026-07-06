@@ -7,6 +7,7 @@ import {
 Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Body, Param, UseGuards, UseInterceptors, Logger, UsePipes,
 InternalServerErrorException, HttpException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { unwrapOrThrow } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CommandBus } from '@nestjs/cqrs';
@@ -39,7 +40,10 @@ enum Role {
 export class MmPurchaseOrdersController {
   private readonly logger = new Logger(MmPurchaseOrdersController.name);
 
-  constructor(private commandBus: CommandBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'List pos' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -174,7 +178,7 @@ export class MmPurchaseOrdersController {
     `);
     const rows = Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? [];
     const r = rows[0] as Record<string, unknown> | undefined;
-    if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
+    if (!r) throw new HttpException(await this.i18n.t('errors.orderNotFound'), HttpStatus.NOT_FOUND);
     return {
       id: String(r.id),
       po_number: `PO-${String(r.id).padStart(6, '0')}`,
@@ -251,8 +255,8 @@ export class MmPurchaseOrdersController {
     const poId = Number(id);
     const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
     const r = rows[0];
-    if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
-    if ((r.status ?? 'draft') !== 'draft') throw new HttpException("Faqat 'draft' holatdagi buyurtmani o'chirish mumkin", HttpStatus.BAD_REQUEST);
+    if (!r) throw new HttpException(await this.i18n.t('errors.orderNotFound'), HttpStatus.NOT_FOUND);
+    if ((r.status ?? 'draft') !== 'draft') throw new HttpException(await this.i18n.t('errors.onlyDraftOrderDeletable'), HttpStatus.BAD_REQUEST);
     await db.execute(sql`UPDATE mm_purchase_orders SET deleted_at = NOW() WHERE id = ${poId}`);
     return { id: String(poId), deleted: true };
   }
@@ -270,8 +274,8 @@ export class MmPurchaseOrdersController {
     const poId = Number(id);
     const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
     const r = rows[0];
-    if (!r) throw new HttpException('Buyurtma topilmadi', HttpStatus.NOT_FOUND);
-    if ((r.status ?? 'draft') !== 'draft') throw new HttpException("Faqat 'draft' holatdagi buyurtmani tahrirlash mumkin", HttpStatus.BAD_REQUEST);
+    if (!r) throw new HttpException(await this.i18n.t('errors.orderNotFound'), HttpStatus.NOT_FOUND);
+    if ((r.status ?? 'draft') !== 'draft') throw new HttpException(await this.i18n.t('errors.onlyDraftOrderEditable'), HttpStatus.BAD_REQUEST);
     // Header-only update (notes + vendor); line-item recalc is a larger task, deferred.
     await db.execute(sql`UPDATE mm_purchase_orders SET
       notes = COALESCE(${dto.notes ?? null}, notes),

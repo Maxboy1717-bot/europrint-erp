@@ -96,7 +96,7 @@ export class PurchaseService {
     const newDb = this.toDbStatus(apiStatus);
     const allowed = PO_STATUS_MACHINE[String(currentDb)] || [];
     if (!allowed.includes(newDb)) {
-      throw new BadRequestException(`${currentDb} → ${newDb} mumkin emas`);
+      throw new BadRequestException(await this.i18n.t('errors.movementStatusTransitionNotAllowed', { args: { from: currentDb, to: newDb } }));
     }
     const updateResult = await this.purchaseSvcRepo.updateStatus(id, newDb);
     if (!updateResult.ok) throw new InternalServerErrorException(updateResult.error);
