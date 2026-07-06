@@ -85,6 +85,59 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
       // To'lov summasi > 0 bo'lishi shart
       if (amount <= 0) return Err('To\'lov summasi musbat son bo\'lishi kerak');
 
+      // C1.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): PARTIAL mitigation, not a full fix — a
+      // true concurrent double-submit (same millisecond) still races past this SELECT exactly
+      // like it races past the overpay-guard SELECT below; only the accidental-double-click
+      // class (human click latency, typically well under the debounce window) is caught here.
+      // A full fix needs a client-generated idempotency key persisted across retries (frontend
+      // work, out of scope for this backend-only stopgap) — see MASTER-STATUS-BOARD-2026-07-06.md.
+      //
+      // An explicit idempotency_key in the body bypasses this debounce entirely (the caller is
+      // asserting "this is intentionally a new/different payment"); it is NOT itself deduped by
+      // a unique index (unlike finance_invoices.invoice_number's C4 fix) — resubmitting the same
+      // key twice within the window still inserts twice. Persistent key-based dedup would need
+      // its own schema migration (idempotency_key column + partial UNIQUE index, same shape as
+      // pos_movements) and is a distinct, larger follow-up, not silently folded into this stopgap.
+      const idempotencyKey = body['idempotency_key'] != null ? String(body['idempotency_key']).trim()
+        : body['idempotencyKey'] != null ? String(body['idempotencyKey']).trim() : null;
+      const paymentMethod = String(body['payment_method'] ?? body['method'] ?? 'bank_transfer');
+      const DEBOUNCE_WINDOW_SECONDS = 7; // accidental-double-click window, not a concurrency lock
+
+      if (!idempotencyKey) {
+        const customerId = body['customer_id'] != null ? Number(body['customer_id']) : null;
+        // Key on order_id when present (strongest natural key — ties the payment to one
+        // invoice/order); fall back to customer_id for cash/unlinked sales (order_id null).
+        // If BOTH are null there is no natural key to dedupe on — skip the check rather than
+        // block a legitimate anonymous/walk-in payment.
+        if (orderId != null) {
+          const dupR = await exec(sql`
+            SELECT 1 FROM payments
+            WHERE order_id = ${orderId} AND amount = ${amount} AND payment_method = ${paymentMethod}
+              AND created_at > NOW() - make_interval(secs => ${DEBOUNCE_WINDOW_SECONDS})
+            LIMIT 1
+          `);
+          if (dupR.ok && dupR.data.length > 0) {
+            return Err(
+              `Bu to'lov so'nggi ${DEBOUNCE_WINDOW_SECONDS} soniya ichida allaqachon yuborilgan ` +
+              `(buyurtma #${orderId}, summa ${amount}). Takroriy yuborishni oldini olish uchun kuting.`
+            );
+          }
+        } else if (customerId != null) {
+          const dupR = await exec(sql`
+            SELECT 1 FROM payments
+            WHERE order_id IS NULL AND customer_id = ${customerId} AND amount = ${amount} AND payment_method = ${paymentMethod}
+              AND created_at > NOW() - make_interval(secs => ${DEBOUNCE_WINDOW_SECONDS})
+            LIMIT 1
+          `);
+          if (dupR.ok && dupR.data.length > 0) {
+            return Err(
+              `Bu to'lov so'nggi ${DEBOUNCE_WINDOW_SECONDS} soniya ichida allaqachon yuborilgan ` +
+              `(mijoz #${customerId}, summa ${amount}). Takroriy yuborishni oldini olish uchun kuting.`
+            );
+          }
+        }
+      }
+
       // Agar buyurtma ID berilgan bo'lsa — faktura summasidan oshib ketmasligi tekshiriladi
       if (orderId) {
         const invoiceRows = await exec(sql`
@@ -107,7 +160,7 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
         }
       }
 
-      const r = await exec(sql`INSERT INTO sd_payments (customer_id, order_id, amount, type, status, due_date, payment_method, notes, created_by) VALUES (${body['customer_id'] ?? null}, ${orderId}, ${amount}, ${body['type'] ?? 'payment'}, ${body['status'] ?? 'pending'}, ${body['due_date'] ?? _time.now().toISOString()}, ${body['payment_method'] ?? body['method'] ?? 'bank_transfer'}, ${body['notes'] ?? null}, ${body['created_by'] ?? null}) RETURNING *`);
+      const r = await exec(sql`INSERT INTO sd_payments (customer_id, order_id, amount, type, status, due_date, payment_method, notes, created_by) VALUES (${body['customer_id'] ?? null}, ${orderId}, ${amount}, ${body['type'] ?? 'payment'}, ${body['status'] ?? 'pending'}, ${body['due_date'] ?? _time.now().toISOString()}, ${paymentMethod}, ${body['notes'] ?? null}, ${body['created_by'] ?? null}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) {
     return Err(String(_e));

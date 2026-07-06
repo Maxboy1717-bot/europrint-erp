@@ -83,6 +83,11 @@ export const SdCreatePaymentSchema = z.object({
   payment_method: z.enum(['cash', 'card', 'bank_transfer', 'online']).optional(),
   currency:       z.string().max(10).optional(),
   notes:          z.string().optional(),
+  // C1.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): supplying a distinct value here bypasses the
+  // repository's short debounce-window duplicate check — see sd-payments.repository.ts create().
+  // NOT yet persistently deduped (no unique index backs this field today); a real client-side
+  // idempotency-key flow is a separate, larger frontend follow-up.
+  idempotency_key: z.string().min(1).max(100).optional(),
 }).passthrough();
 export type SdCreatePaymentDto = z.infer<typeof SdCreatePaymentSchema>;
 
