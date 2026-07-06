@@ -4,6 +4,7 @@
  */
 
 import { Injectable, Logger, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ICrmContactsRepository, CRM_CONTACTS_REPO } from './i-crm-contacts.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class ContactsService {
   private readonly logger = new Logger(ContactsService.name);
 
-  constructor(@Inject(CRM_CONTACTS_REPO) private readonly crmContactsRepo: ICrmContactsRepository) {}
+  constructor(
+    @Inject(CRM_CONTACTS_REPO) private readonly crmContactsRepo: ICrmContactsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -29,7 +33,7 @@ export class ContactsService {
   async findOne(id: number) {
     const result = await this.crmContactsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`#${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.crmContactNotFoundWithId', { args: { id } }));
     return result.data;
   }
 

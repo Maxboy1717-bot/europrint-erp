@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ICrmPipelinesRepository, CRM_PIPELINES_REPO } from './i-crm-pipelines.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class PipelinesService {
   private readonly logger = new Logger(PipelinesService.name);
 
-  constructor(@Inject(CRM_PIPELINES_REPO) private readonly crmPipelinesRepo: ICrmPipelinesRepository) {}
+  constructor(
+    @Inject(CRM_PIPELINES_REPO) private readonly crmPipelinesRepo: ICrmPipelinesRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -25,7 +29,7 @@ export class PipelinesService {
     return safeCall(async () => {
     const result = await this.crmPipelinesRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Pipeline #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.crmPipelineNotFoundWithId', { args: { id } }));
     const stagesResult = await this.crmPipelinesRepo.findStagesByCategoryId(id);
     if (!stagesResult.ok) throw new InternalServerErrorException(stagesResult.error);
     return { ...(result.data as Record<string, unknown>), stages: stagesResult.data };

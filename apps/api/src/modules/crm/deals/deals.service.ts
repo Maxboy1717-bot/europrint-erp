@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ICrmDealsRepository, CRM_DEALS_REPO } from './i-crm-deals.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class DealsService {
   private readonly logger = new Logger(DealsService.name);
 
-  constructor(@Inject(CRM_DEALS_REPO) private readonly crmDealsRepo: ICrmDealsRepository) {}
+  constructor(
+    @Inject(CRM_DEALS_REPO) private readonly crmDealsRepo: ICrmDealsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -29,7 +33,7 @@ export class DealsService {
   async findOne(id: string) {
     const result = await this.crmDealsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`#${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.dealNotFoundWithId', { args: { id } }));
     return result.data;
   }
 

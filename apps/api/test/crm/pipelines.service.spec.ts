@@ -6,12 +6,20 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { I18nService } from 'nestjs-i18n';
 import {
   ICrmPipelinesRepository,
   CRM_PIPELINES_REPO,
 } from '../../src/modules/crm/pipelines/i-crm-pipelines.repo';
 import { PipelinesService } from '../../src/modules/crm/pipelines/pipelines.service';
 import { Ok, Err, AppErr } from '../../src/common/result';
+
+function makeI18n(): I18nService {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as I18nService;
+}
 
 function makeRepo(): jest.Mocked<ICrmPipelinesRepository> {
   return {
@@ -34,6 +42,7 @@ describe('PipelinesService', () => {
       providers: [
         PipelinesService,
         { provide: CRM_PIPELINES_REPO, useValue: repo },
+        { provide: I18nService, useValue: makeI18n() },
       ],
     }).compile();
     svc = module.get(PipelinesService);

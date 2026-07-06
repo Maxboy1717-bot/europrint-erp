@@ -4,13 +4,17 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ICrmLeadsRepository, CRM_LEADS_REPO } from './i-crm-leads.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
 @Injectable()
 export class LeadsService {
 
-  constructor(@Inject(CRM_LEADS_REPO) private readonly crmLeadsRepo: ICrmLeadsRepository) {}
+  constructor(
+    @Inject(CRM_LEADS_REPO) private readonly crmLeadsRepo: ICrmLeadsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -27,7 +31,7 @@ export class LeadsService {
   async findOne(id: number) {
     const result = await this.crmLeadsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`#${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.leadNotFoundWithId', { args: { id } }));
     return result.data;
   }
 
