@@ -447,8 +447,8 @@
 | Critical-Correctness | 1.10 Kanban MAX(sort_order)+1 (acceptable) | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 2.1 GL entryDate UTC day instead of Tashkent | DONE | e6cebf7d | 100% | GL entry mis-dating; #5 top-10 (C3) |
 | Critical-Correctness | 2.2 GL period lock raw text compare, no cast normalize | DONE | 9919dc92 | 100% | GL posting into closed period; #5 top-10 (C2) |
-| Critical-Correctness | 2.3 CKP 16h deadline anchored UTC midnight | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 2.4 Two 'today' conventions coexist (Tashkent vs UTC) | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 2.3 CKP 16h deadline anchored UTC midnight | BLOCKED-OWNER-DECISION | n/a | 0% | Fixing anchors deadline 5h earlier (16:00 not 21:00 Tashkent) — live payroll-gate business-rule change, needs owner sign-off before touching ckp-gate.ts + ckp-fact.service.ts in lockstep |
+| Critical-Correctness | 2.4 Two 'today' conventions coexist (Tashkent vs UTC) | DONE (verified stale) | e6cebf7d | 100% | GL half fixed under C3; cashier cron was never broken; remainder is fully subsumed by 2.3 |
 | Critical-Correctness | 2.5 sd-quotations getMonth() OS-local/UTC | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 2.6 addDays() not TZDate-wrapped | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 3.1 GL balance check unrounded vs rounded (latent) | UNKNOWN | n/a | 0% | n/a |
@@ -476,20 +476,20 @@
 | Critical-Correctness | 6.3 warehouse-barcode-ops no soft-delete filter | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 6.4 pos-barcode findByBarcode no soft-delete filter | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 6.5 auto-barcode LEFT JOIN no deleted_at filter | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 6.6 customer-360 inconsistent deleted_at filtering | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 6.7 gl-posting account resolve no is_active filter | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 6.6 customer-360 inconsistent deleted_at filtering | DONE (verified stale) | n/a | 100% | drizzle-sd-customers.repo.ts:103 already has `AND deleted_at IS NULL`, matches sibling getRecentOrders(); audit's citation pointed at a pure-presentation file with no SQL |
+| Critical-Correctness | 6.7 gl-posting account resolve no is_active filter | DONE | 9e3963b1 | 100% | n/a |
 | Critical-Correctness | 6.8 systemic soft-delete non-enforcement (~92 files) | UNKNOWN | n/a | 0% | Read-side soft-delete enforcement; #8 top-10 |
-| Critical-Correctness | 7.1 IoT tablet TTL mismatch BE 8h vs FE 12h | UNKNOWN | n/a | 0% | Silent write failures up to 4h/shift; #2 top-10 |
-| Critical-Correctness | 7.2 No 401/refresh handling on IoT tablet, no refresh endpoint | UNKNOWN | n/a | 0% | Unsaved session/scan work lost; #2 top-10 |
-| Critical-Correctness | 7.3 login.service comment/code TTL doc drift | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 7.4 chat JWT 24h vs auth 15m default mismatch | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 7.5 15m access token risk for long unsaved POSTs | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 7.1 IoT tablet TTL mismatch BE 8h vs FE 12h | DONE | f4d17363,b29c8bce | 100% | Silent write failures up to 4h/shift; #2 top-10 |
+| Critical-Correctness | 7.2 No 401/refresh handling on IoT tablet, no refresh endpoint | DONE | f4d17363,b29c8bce | 100% | Unsaved session/scan work lost; #2 top-10 |
+| Critical-Correctness | 7.3 login.service comment/code TTL doc drift | QUEUED-NOT-STARTED | n/a | 0% | Mechanical, JSDoc-only fix, low priority |
+| Critical-Correctness | 7.4 chat JWT 24h vs auth 15m default mismatch | QUEUED-NOT-STARTED | n/a | 0% | Mechanical one-line default-value alignment |
+| Critical-Correctness | 7.5 15m access token risk for long unsaved POSTs | BLOCKED-OWNER-DECISION | n/a | 0% | Should wizard forms autosave (localStorage/server-draft) before a forced-logout redirect, or is losing unsaved state on session expiry acceptable given refresh normally succeeds? If autosave wanted, which wizards first? |
 | Critical-Correctness | 7.6 refresh-token race, two live token pairs | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 8.1 auto-barcode Math.random suffix no unique constraint | DONE | 12e6bd63 | 100% | Duplicate barcodes; #7 top-10 |
 | Critical-Correctness | 8.2 pos-stock-issuable COUNT(*)+1 TOCTOU barcode | DONE | 9f8a62e1 | 100% | Duplicate barcodes; #7 top-10 |
 | Critical-Correctness | 8.3 procurement-request PR number COUNT(*)+1 no lock | DONE | 4167a16a | 100% | Duplicate PR numbers; #10 top-10 |
 | Critical-Correctness | 8.4 employees-compat inline COUNT(*)+1 (low volume) | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 8.5 ecommerce order number read-lastNumber+1 (unverified constraint) | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 8.5 ecommerce order number read-lastNumber+1 (unverified constraint) | DONE (verified stale) | n/a | 100% | generateSequenceNumber() already uses atomic db.transaction UPDATE-RETURNING/ON CONFLICT; customer_orders.order_number has a live UNIQUE constraint — audit's own "not confirmed" now confirmed safe |
 | Critical-Correctness | 8.6 pos-barcode scan no is_active/status gate | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 8.7 barcode-warehouse movement_number timestamp collision | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 8.8 mm-purchase-orders po_number from serial (fine) | DONE | n/a | 100% | n/a |
