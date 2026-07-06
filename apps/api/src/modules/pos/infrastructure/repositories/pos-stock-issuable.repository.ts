@@ -170,7 +170,12 @@ export class PosStockIssuableRepository {
       if (!id) return Err({ message: 'Barkod navbatga yozilmadi', code: 'DB_ERROR' });
       return Ok({ id });
     } catch (e) {
-      return Err({ message: String(e), code: 'DB_ERROR' });
+      // C8.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): surface the Postgres error code so the
+      // caller can distinguish a unique-violation (23505 — the COUNT(*)+1/barcodeExists
+      // allocation above is TOCTOU-racy; the live UNIQUE constraint on barcode_print_queue.barcode
+      // is what actually catches a collision) from any other DB failure.
+      const pgCode = (e as { code?: string } | null)?.code;
+      return Err({ message: String(e), code: 'DB_ERROR', details: { pgCode } });
     }
   }
 

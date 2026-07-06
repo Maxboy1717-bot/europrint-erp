@@ -40,6 +40,12 @@ export const LABEL_DIMENSIONS: Record<string, LabelDimensions> = {
   roll:     { template: 'roll',     widthMm: 80, heightMm: 50, dpi: 203 },
 };
 
+// C8.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): bounded retry for the allocate+insert cycle
+// when the live UNIQUE constraint on barcode_print_queue.barcode catches a collision that
+// _allocateUniqueBarcode()'s non-atomic existence check missed.
+const MAX_BARCODE_ALLOCATE_RETRIES = 5;
+const POSTGRES_UNIQUE_VIOLATION = '23505';
+
 export interface InboundBarcodeResult {
   barcode:        string;
   queueId:        number;
@@ -119,29 +125,41 @@ export class PosStockIssuableService {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const prefix = `${prefixCore}-${datePart}-`;
 
-    // Ketma-ket seq (shu ombor-prefiks + sana bo'yicha). Qarama-qarshilik bo'lsa
-    // (poyga holati) — noyoblik tekshiruvi bilan keyingi raqamga suriladi.
-    const barcode = await this._allocateUniqueBarcode(prefix);
-    if (!barcode.ok) return Err(barcode.error);
-
     const unit = input.unit ?? mat.unit;
     const dimensions = LABEL_DIMENSIONS[cfg.labelTemplate ?? 'standard'] ?? LABEL_DIMENSIONS['standard'];
 
-    const insR = await this.repo.insertGeneratedBarcode({
-      materialCardId: input.materialCardId,
-      warehouseId:    input.warehouseId,
-      barcode:        barcode.data,
-      quantity:       input.quantity ?? null,
-      unit,
-      templateName:   dimensions.template,
-      requestedBy:    input.requestedBy,
-    });
+    // C8.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): _allocateUniqueBarcode()'s COUNT(*)+1 +
+    // barcodeExists() check is itself TOCTOU-racy — two concurrent calls can both see a
+    // candidate as free and both attempt to insert it. The live UNIQUE constraint on
+    // barcode_print_queue.barcode is the actual guarantee; on a 23505 collision at insert time,
+    // retry the WHOLE allocate+insert cycle (a fresh nextSequenceForPrefix() will see the
+    // concurrent insert that just committed and pick a genuinely free seq).
+    let barcodeValue = '';
+    let insR: Result<{ id: number }, AppError> = Err({ message: 'Barkod ajratib bo\'lmadi', code: 'CONFLICT' });
+    for (let attempt = 1; attempt <= MAX_BARCODE_ALLOCATE_RETRIES; attempt++) {
+      const barcode = await this._allocateUniqueBarcode(prefix);
+      if (!barcode.ok) return Err(barcode.error);
+      barcodeValue = barcode.data;
+      insR = await this.repo.insertGeneratedBarcode({
+        materialCardId: input.materialCardId,
+        warehouseId:    input.warehouseId,
+        barcode:        barcodeValue,
+        quantity:       input.quantity ?? null,
+        unit,
+        templateName:   dimensions.template,
+        requestedBy:    input.requestedBy,
+      });
+      if (insR.ok) break;
+      const pgCode = (insR.error.details as { pgCode?: string } | undefined)?.pgCode;
+      if (pgCode !== POSTGRES_UNIQUE_VIOLATION) return Err(insR.error);
+      this.logger.warn(`[KIRIM-barkod] Barkod to'qnashuvi (${barcodeValue}), qayta urinish ${attempt}/${MAX_BARCODE_ALLOCATE_RETRIES}`);
+    }
     if (!insR.ok) return Err(insR.error);
 
-    this.logger.log(`[KIRIM-barkod] ${barcode.data} → material ${input.materialCardId} @ ombor ${cfg.warehouseCode} (queue #${insR.data.id})`);
+    this.logger.log(`[KIRIM-barkod] ${barcodeValue} → material ${input.materialCardId} @ ombor ${cfg.warehouseCode} (queue #${insR.data.id})`);
 
     return Ok({
-      barcode:        barcode.data,
+      barcode:        barcodeValue,
       queueId:        insR.data.id,
       materialCardId: input.materialCardId,
       warehouseId:    input.warehouseId,
