@@ -32,7 +32,7 @@ export interface UseIoTTabletAlertsParams {
   setShowSOSDialog: (v: boolean) => void;
   showQcFormDialog: boolean;
   setShowQcFormDialog: (v: boolean) => void;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function useIoTTabletAlerts({
@@ -113,10 +113,7 @@ export function useIoTTabletAlerts({
       safeStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remaining));
       if (remaining.length < queue.length) {
         toast({
-          title: t(
-            `${queue.length - remaining.length} ta offline action sinxronlandi`,
-            `${queue.length - remaining.length} оффлайн-действий синхронизировано`,
-          ),
+          title: t("ttOfflineSynced", { n: queue.length - remaining.length }),
         });
       }
     } catch { /* ignore */ }
@@ -125,15 +122,12 @@ export function useIoTTabletAlerts({
   // Online / offline event listeners
   useEffect(() => {
     const handleOnline = () => {
-      toast({ title: t("Internet tiklandi — sinxronlash...", "Интернет восстановлен — синхронизация...") });
+      toast({ title: t("ttOnlineRestored") });
       flushOfflineQueue();
     };
     const handleOffline = () => {
       toast({
-        title: t(
-          "Internet aloqasi yo'q — offline rejimda davom etilmoqda",
-          "Нет интернета — работа в оффлайн режиме",
-        ),
+        title: t("ttOfflineMode"),
         variant: "destructive",
       });
     };
@@ -171,13 +165,13 @@ export function useIoTTabletAlerts({
 
   async function handleSOSSend() {
     if (!sosMessage.trim()) {
-      toast({ title: t("Xabar kiriting", "Введите сообщение"), variant: "destructive" });
+      toast({ title: t("ttEnterMessage"), variant: "destructive" });
       return;
     }
     const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
     if (!token) {
       toast({
-        title: t("Sessiya muddati tugagan, qayta kiring", "Сессия истекла, войдите снова"),
+        title: t("sessionExpired"),
         variant: "destructive",
       });
       return;
@@ -196,15 +190,15 @@ export function useIoTTabletAlerts({
       });
       if (res.ok) {
         toast({
-          title: t("SOS xabari yuborildi!", "SOS-сообщение отправлено!"),
-          description: t("Sex boshlig'i xabardor qilindi", "Начальник цеха уведомлён"),
+          title: t("ttSosSent"),
+          description: t("ttForemanNotified"),
         });
       } else {
-        toast({ title: t("Yuborishda xatolik", "Ошибка отправки"), variant: "destructive" });
+        toast({ title: t("ttSendError"), variant: "destructive" });
       }
     } catch {
       toast({
-        title: t("Server bilan bog'lanishda xatolik", "Ошибка подключения к серверу"),
+        title: t("ttServerConnError"),
         variant: "destructive",
       });
     }

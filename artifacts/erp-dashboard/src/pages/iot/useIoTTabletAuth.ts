@@ -12,7 +12,7 @@ export interface UseIoTTabletAuthParams {
   tabelNumber: string;
   workerPassword: string;
   tabletToken: string;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   toast: (opts: { title: string; description?: string; variant?: "destructive" | "default" }) => void;
   setWorkerId: (v: string) => void;
   setWorkerName: (v: string) => void;
@@ -37,11 +37,11 @@ export function buildIoTTabletAuth({
 
   const handleLogin = async () => {
     if (!tabelNumber || tabelNumber.length < 3) {
-      toast({ title: t("Tabel raqamini to'liq kiriting", "Введите табельный номер полностью"), variant: "destructive" });
+      toast({ title: t("ttEnterFullTabelNumber"), variant: "destructive" });
       return;
     }
     if (!workerPassword || workerPassword.length < 4) {
-      toast({ title: t("Parol kamida 4 belgi bo'lishi kerak", "Пароль должен быть не менее 4 символов"), variant: "destructive" });
+      toast({ title: t("ttPasswordMinLength"), variant: "destructive" });
       return;
     }
     try {
@@ -62,13 +62,13 @@ export function buildIoTTabletAuth({
         safeStorage.setItem("iot_login_at", String(Date.now()));
         if (d.tabletToken) { setTabletToken(d.tabletToken); safeStorage.setItem("iot_tablet_token", d.tabletToken); }
         setIsLoggedIn(true); setTabelNumber(""); setWorkerPassword("");
-        toast({ title: t("Xush kelibsiz!", "Добро пожаловать!") });
+        toast({ title: t("ttWelcome") });
       } else {
         const err = await res.json();
-        toast({ title: err.error || t("Noto'g'ri ma'lumotlar", "Неверные данные"), variant: "destructive" });
+        toast({ title: err.error || t("ttInvalidCredentials"), variant: "destructive" });
       }
     } catch {
-      toast({ title: t("Server bilan bog'lanishda xatolik", "Ошибка подключения к серверу"), variant: "destructive" });
+      toast({ title: t("ttServerConnError"), variant: "destructive" });
     }
   };
 

@@ -140,7 +140,7 @@ export function useIoTTablet() {
       await applyKitChecklist(session);
       core.setCrewAssignment({ masterId: core.workerId, polmasterId: null, shogirdId: null, roklerId: null });
       core.setShowChecklistModal(true);
-      toast({ title: core.t("Sozlash boshlandi - Cheklistni to'ldiring", "Настройка началась - Заполните чек-лист") });
+      toast({ title: core.t("ttSetupStartedFillChecklist") });
     },
   });
 
@@ -164,7 +164,7 @@ export function useIoTTablet() {
         (Array.isArray(prev) ? prev : []).map(m => m.id === materialId ? { ...m, isScanned: true } : m),
       );
       core.setScanningItemId(null);
-      toast({ title: core.t("Material skanlandi", "Материал отсканирован") });
+      toast({ title: core.t("ttMaterialScanned") });
     },
     onError: () => { core.setScanningItemId(null); },
   });
@@ -179,7 +179,7 @@ export function useIoTTablet() {
     onSuccess: (session) => {
       core.setActiveSession(session); core.setShowChecklistModal(false); core.setShowSchedule(false);
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
-      toast({ title: core.t("Ishlab chiqarish boshlandi!", "Производство началось!") });
+      toast({ title: core.t("ttProductionStartedExcl") });
     },
   });
 
@@ -192,7 +192,7 @@ export function useIoTTablet() {
     onSuccess: (session) => {
       core.setActiveSession(session);
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
-      toast({ title: core.t("Ishlab chiqarish boshlandi", "Производство началось") });
+      toast({ title: core.t("ttProductionStarted") });
     },
   });
 
@@ -211,7 +211,7 @@ export function useIoTTablet() {
       alerts.setQcReminderVisible(false); alerts.setLastQcCheckQty(0);
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/iot/tablet/orders"] });
-      toast({ title: core.t("Sessiya yakunlandi", "Сессия завершена") });
+      toast({ title: core.t("ttSessionEnded") });
     },
   });
 
@@ -226,7 +226,7 @@ export function useIoTTablet() {
     onSuccess: () => {
       core.setShowDefectDialog(false); core.setDefectQty(""); core.setDefectReason(""); core.setDefectStage("");
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
-      toast({ title: core.t("Brak qayd etildi", "Брак зафиксирован") });
+      toast({ title: core.t("ttDefectLogged") });
     },
   });
 
@@ -235,7 +235,7 @@ export function useIoTTablet() {
       const token = core.tabletToken || safeStorage.getItem("iot_tablet_token") || "";
       if (!token) throw new Error("Tablet sessiyasi yo'q");
       if (!core.handoverSignature.trim())
-        throw new Error(core.t("Raqamli imzo majburiy", "Цифровая подпись обязательна"));
+        throw new Error(core.t("ttSignatureRequired"));
       // eslint-disable-next-line no-restricted-globals -- raw fetch: IoT tablet uses x-tablet-token auth, not ERP session cookie
       const res = await fetch("/api/iot/tablet/handover", {
         method: "POST",
@@ -252,7 +252,7 @@ export function useIoTTablet() {
       core.setShowHandoverDialog(false);
       core.setHandoverNotes({ machineStatus: "", pendingTasks: "", qualityIssues: "", safetyNotes: "", materialStatus: "" });
       core.setHandoverSignature("");
-      toast({ title: core.t("Smena muvaffaqiyatli topshirildi", "Смена успешно сдана") });
+      toast({ title: core.t("ttHandoverSuccess") });
     },
     onError: (err: Error) => { toast({ title: err.message, variant: "destructive" }); },
   });
@@ -268,10 +268,10 @@ export function useIoTTablet() {
     onSuccess: () => {
       core.setShowQcFormDialog(false); alerts.setQcReminderVisible(false);
       core.setQcSampleSize(""); core.setQcDefectCount(""); core.setQcNotes("");
-      toast({ title: core.t("QC tekshiruvi qayd etildi", "QC проверка зарегистрирована") });
+      toast({ title: core.t("ttQcLogged") });
     },
     onError: (err: Error) => {
-      toast({ title: core.t("QC saqlanmadi — xatolik", "QC не сохранено — ошибка"), description: err.message, variant: "destructive" });
+      toast({ title: core.t("ttQcSaveError"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -288,7 +288,7 @@ export function useIoTTablet() {
     onSuccess: () => {
       core.setShowDowntimeDialog(false);
       core.setSelectedReasonCode(""); core.setDowntimeNotes(""); core.setDowntimeMinutes("");
-      toast({ title: core.t("To'xtash qayd etildi", "Остановка зафиксирована") });
+      toast({ title: core.t("ttDowntimeLogged") });
     },
   });
 

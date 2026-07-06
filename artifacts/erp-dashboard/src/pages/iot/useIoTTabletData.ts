@@ -20,14 +20,14 @@ import {
 // Helper: typed fetch with tablet token
 // ---------------------------------------------------------------------------
 
-function makeTabletFetch(tabletToken: string, t: (uz: string, ru: string) => string) {
+function makeTabletFetch(tabletToken: string, t: (key: string, params?: Record<string, string | number>) => string) {
   return async function tabletFetch(
     method: "GET" | "POST" | "PATCH",
     path: string,
     body?: unknown,
   ): Promise<Response> {
     const token = tabletToken || safeStorage.getItem("iot_tablet_token") || "";
-    if (!token) throw new Error(t("Sessiya muddati tugagan — iltimos qayta kiring", "Сессия истекла — войдите снова"));
+    if (!token) throw new Error(t("sessionExpired"));
     // eslint-disable-next-line no-restricted-globals -- raw fetch: shared tablet-fetch helper; uses x-tablet-token auth, not ERP cookie
     return fetch(path, {
       method,
@@ -46,7 +46,7 @@ export interface UseIoTTabletDataParams {
   workerId: string;
   tabletToken: string;
   showChecklistModal: boolean;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   setShiftInfo: React.Dispatch<React.SetStateAction<{
     name: string; nameRu: string; startTime: string; endTime: string;
     coWorkers?: { id: string; name: string }[];
