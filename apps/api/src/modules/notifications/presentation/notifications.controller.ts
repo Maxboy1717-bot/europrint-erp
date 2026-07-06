@@ -17,6 +17,7 @@ import {
   Put,
   Query,
   UseInterceptors, BadRequestException, InternalServerErrorException, UseGuards} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
@@ -47,6 +48,7 @@ export class NotificationsController {
     private readonly queryBus: QueryBus,
     private readonly prefsSvc: NotificationPreferencesService,
     @Inject(NOTIFICATION_REPO) private readonly notifRepo: INotificationRepo,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List notifications' })
@@ -128,7 +130,7 @@ export class NotificationsController {
   @Patch('/:id/read')
   async markAsRead(@Param('id') notificationId: string) {
     const result = await this.notifRepo.markAsRead(notificationId);
-    if (!result.ok) throw new NotFoundException(`Bildirishnoma #${notificationId} topilmadi`);
+    if (!result.ok) throw new NotFoundException(await this.i18n.t('errors.notificationNotFoundWithId', { args: { id: notificationId } }));
     return { statusCode: HttpStatus.OK, data: { id: notificationId, isRead: true } };
   }
 

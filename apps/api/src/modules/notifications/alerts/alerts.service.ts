@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { notifications } from '@europrint/schemas';
 import { Result, safeCall } from '@common/result';
 import { AlertsRepository } from './alerts.repository';
@@ -14,7 +15,10 @@ type NotificationRow = typeof notifications.$inferSelect;
 export class AlertsService {
   private readonly logger = new Logger(AlertsService.name);
 
-  constructor(private readonly repo: AlertsRepository) {}
+  constructor(
+    private readonly repo: AlertsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}) {
     return safeCall(async () => {
@@ -29,7 +33,7 @@ export class AlertsService {
   async findOne(id: number): Promise<NotificationRow> {
     const rowR = await this.repo.findOne(id);
     const row = (rowR.ok ? rowR.data : null) as NotificationRow | null;
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.notificationGenericNotFoundWithId', { args: { id } }));
     return row;
   }
 

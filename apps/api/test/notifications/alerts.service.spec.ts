@@ -30,13 +30,20 @@ function makeRepo(): RepoMock {
   };
 }
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  };
+}
+
 describe('AlertsService', () => {
   let service: AlertsService;
   let repo: RepoMock;
 
   beforeEach(() => {
     repo = makeRepo();
-    service = new AlertsService(repo as unknown as AlertsRepository);
+    service = new AlertsService(repo as unknown as AlertsRepository, makeI18n() as never);
   });
 
   describe('findAll', () => {
