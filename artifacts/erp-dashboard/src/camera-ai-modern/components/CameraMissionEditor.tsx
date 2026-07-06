@@ -27,13 +27,13 @@ import {
 import { AI_TASK_CATALOG, AI_TASK_GROUPS, normalizeCategories, type AiTaskGroup } from "../taskCatalog";
 import type { CameraAiRow } from "../types";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 import "../camera-ai-visual.css";
 
 interface CameraMissionEditorProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   camera: CameraAiRow | null;
-  lang: "uz" | "ru";
   isSaving: boolean;
   onSave: (payload: {
     aiCategories: string[];
@@ -46,10 +46,10 @@ export function CameraMissionEditor({
   open,
   onOpenChange,
   camera,
-  lang,
   isSaving,
   onSave,
 }: CameraMissionEditorProps) {
+  const { t } = useTranslation("security");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [prompt, setPrompt] = useState("");
   const [sensitivity, setSensitivity] = useState<"low" | "medium" | "high">("medium");
@@ -89,15 +89,13 @@ export function CameraMissionEditor({
         <div className="cai-mission-header">
           <DialogHeader className="text-left space-y-2 p-0">
             <DialogTitle className="cai-mission-title">
-              {lang === "uz" ? "AI topshiriqlar markazi" : "Центр задач AI"}
+              {t("CameraAI.editor.title")}
             </DialogTitle>
             <DialogDescription className="cai-mission-desc">
               <span className="font-semibold text-foreground/90">{camera.name}</span>
               {camera.code ? ` · ${camera.code}` : ""}
               <br />
-              {lang === "uz"
-                ? "Davlat va korxona nazorati uchun har vazifa alohida yoqiladi."
-                : "Каждая задача включается отдельно."}
+              {t("CameraAI.editor.desc")}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -107,7 +105,7 @@ export function CameraMissionEditor({
             {(Array.from(byGroup.entries()) as [AiTaskGroup, typeof AI_TASK_CATALOG][]).map(([group, tasks]) => (
               <div key={group}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ep-cyan)] dark:text-cyan-400 mb-2">
-                  {lang === "uz" ? AI_TASK_GROUPS[group].uz : AI_TASK_GROUPS[group].ru}
+                  {t(AI_TASK_GROUPS[group].labelKey)}
                 </p>
                 <div className="space-y-2">
                   {(Array.isArray(tasks) ? tasks : []).map((task) => (
@@ -125,7 +123,7 @@ export function CameraMissionEditor({
                       />
                       <span className="min-w-0">
                         <span className="font-semibold text-sm block">
-                          {lang === "uz" ? task.labelUz : task.labelRu}
+                          {t(task.labelKey)}
                         </span>
                         <span className="text-xs text-muted-foreground">{task.hintUz}</span>
                       </span>
@@ -140,32 +138,28 @@ export function CameraMissionEditor({
         <div className="px-5 space-y-3 border-t border-border/80 pt-4 bg-muted/20">
           <div className="space-y-1">
           <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {lang === "uz" ? "Sezgirlik" : "Чувствительность"}
+              {t("CameraAI.editor.sensitivity")}
             </Label>
             <Select value={sensitivity} onValueChange={(v) => setSensitivity(v as typeof sensitivity)}>
               <SelectTrigger className="rounded-xl border-cyan-500/20 h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">{lang === "uz" ? "Past" : "Низкая"}</SelectItem>
-                <SelectItem value="medium">{lang === "uz" ? "O‘rtacha" : "Средняя"}</SelectItem>
-                <SelectItem value="high">{lang === "uz" ? "Yuqori" : "Высокая"}</SelectItem>
+                <SelectItem value="low">{t("CameraAI.editor.sensitivityLow")}</SelectItem>
+                <SelectItem value="medium">{t("CameraAI.editor.sensitivityMedium")}</SelectItem>
+                <SelectItem value="high">{t("CameraAI.editor.sensitivityHigh")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
           <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {lang === "uz" ? "Operator prompti" : "Промпт оператора"}
+              {t("CameraAI.editor.operatorPrompt")}
             </Label>
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={3}
-              placeholder={
-                lang === "uz"
-                  ? "Masalan: faqat sariq kaskani PPE deb hisobla..."
-                  : "Например: только жёлтые каски..."
-              }
+              placeholder={t("CameraAI.editor.operatorPromptPlaceholder")}
               className="resize-none text-sm rounded-xl border-cyan-500/15"
             />
           </div>
@@ -173,7 +167,7 @@ export function CameraMissionEditor({
 
         <DialogFooter className="p-5 pt-3 border-t border-border/80 gap-2 sm:gap-0 bg-card">
           <Button type="button" variant="outline" className="rounded-xl" onClick={() => onOpenChange(false)}>
-            {lang === "uz" ? "Bekor" : "Отмена"}
+            {t("CameraAI.editor.cancel")}
           </Button>
           <Button
             type="button"
@@ -187,7 +181,7 @@ export function CameraMissionEditor({
               })
             }
           >
-            {isSaving ? "…" : lang === "uz" ? "Saqlash" : "Сохранить"}
+            {isSaving ? "…" : t("CameraAI.editor.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

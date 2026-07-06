@@ -40,11 +40,10 @@ function fileToBase64(file: File): Promise<string> {
 
 interface CameraAnalysisWorkbenchProps {
   cameras: CameraAiRow[];
-  lang: "uz" | "ru";
 }
 
-export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkbenchProps) {
-  const { t } = useTranslation('common');
+export function CameraAnalysisWorkbench({ cameras }: CameraAnalysisWorkbenchProps) {
+  const { t } = useTranslation('security');
   const qc = useQueryClient();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,18 +70,15 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
       qc.invalidateQueries({ queryKey: ["/api/camera-dashboard/pending-alerts"] });
       const executedLanes = Array.isArray(data.executedLanes) ? (data.executedLanes as string[]) : [];
       toast({
-        title: lang === "uz" ? "Tahlil tugadi" : "Анализ завершён",
-        description:
-          lang === "uz"
-            ? `Yo‘llar: ${executedLanes.join(", ") || "—"}`
-            : `Каналы: ${executedLanes.join(", ") || "—"}`,
+        title: t("CameraAI.lab.analysisDoneTitle"),
+        description: t("CameraAI.lab.analysisDoneDesc", { lanes: executedLanes.join(", ") || "—" }),
       });
     },
     onError: (e: Error) => {
       toast({
         variant: "destructive",
-        title: lang === "uz" ? "Xato" : "Ошибка",
-        description: e.message || (lang === "uz" ? "So‘rov bajarilmadi" : "Ошибка запроса"),
+        title: t("CameraAI.errorTitle"),
+        description: e.message || t("CameraAI.lab.analysisErrorDesc"),
       });
     },
   });
@@ -99,13 +95,11 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
           </div>
           <div>
             <h3 className="font-bold text-lg tracking-tight flex items-center gap-2">
-              {lang === "uz" ? "Tahlil laboratoriyasi" : "Лаборатория"}
+              {t("CameraAI.lab.title")}
               <Zap className="h-4 w-4 text-[var(--ep-yellow)]" />
             </h3>
             <p className="text-xs text-muted-foreground">
-              {lang === "uz"
-                ? "Kadr yuklang — faqat tanlangan topshiriqlar bo‘yicha AI ishlaydi."
-                : "Загрузите кадр — AI по выбранным задачам."}
+              {t("CameraAI.lab.subtitle")}
             </p>
           </div>
         </div>
@@ -115,7 +109,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="space-y-1">
           <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {lang === "uz" ? "Kamera" : "Камера"}
+              {t("CameraAI.lab.camera")}
             </Label>
             <Select value={cameraId} onValueChange={setCameraId}>
               <SelectTrigger className="rounded-xl h-9 border-cyan-500/20">
@@ -131,15 +125,15 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
             </Select>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-[var(--ep-cyan)] dark:text-cyan-400">
-                {lang === "uz" ? "Faol topshiriqlar: " : "Задачи: "}
+                {t("CameraAI.lab.activeTasks")}
               </span>
-              {missions.length ? missions.join(", ") : lang === "uz" ? "yo‘q (panelda tanlang)" : "нет"}
+              {missions.length ? missions.join(", ") : t("CameraAI.lab.noneSelectTasks")}
             </p>
           </div>
 
           <div className="space-y-1">
           <Label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {lang === "uz" ? "Kadr fayli" : "Кадр"}
+              {t("CameraAI.lab.frameFile")}
             </Label>
             <input
               ref={inputRef}
@@ -154,7 +148,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
                   setBase64(b);
                   setPreview(URL.createObjectURL(f));
                 } catch {
-                  toast({ variant: "destructive", title: "Fayl" });
+                  toast({ variant: "destructive", title: t("CameraAI.lab.fileErrorTitle") });
                 }
               }}
             />
@@ -165,9 +159,9 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
             >
               <Upload className="h-8 w-8 text-[var(--ep-cyan)]/70" />
               <span className="text-sm font-medium text-foreground">
-                {lang === "uz" ? "Rasmni tanlash yoki bu yerga torting" : "Выберите изображение"}
+                {t("CameraAI.lab.chooseOrDrag")}
               </span>
-              <span className="text-xs text-muted-foreground">{t("jpegPng")}</span>
+              <span className="text-xs text-muted-foreground">{t("CameraAI.lab.jpegPng")}</span>
             </button>
           </div>
         </div>
@@ -183,7 +177,7 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
             <Switch id="cai-persist" checked={persist} onCheckedChange={setPersist} />
             <Label htmlFor="cai-persist" className="flex items-center gap-2 cursor-pointer text-sm">
               <Database className="h-4 w-4 text-[var(--ep-purple)]" />
-              {lang === "uz" ? "Bazaga yozish (alert / buzilish)" : "Запись в БД"}
+              {t("CameraAI.lab.persistToDb")}
             </Label>
           </div>
           <Button
@@ -193,15 +187,13 @@ export function CameraAnalysisWorkbench({ cameras, lang }: CameraAnalysisWorkben
             onClick={() => runMutation.mutate()}
           >
             {runMutation.isPending ? <EPLoader /> : <Scan className="h-4 w-4" />}
-            {lang === "uz" ? "Tahlilni boshlash" : "Запустить"}
+            {t("CameraAI.lab.startAnalysis")}
           </Button>
         </div>
 
         {missions.length === 0 && selected && (
           <p className="text-sm rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-900 dark:text-amber-100">
-            {lang === "uz"
-              ? "Avval «Kameralar» tabida ushbu kamera uchun topshiriqlarni belgilang."
-              : "Сначала назначьте задачи камере во вкладке «Камеры»."}
+            {t("CameraAI.lab.assignTasksFirst")}
           </p>
         )}
 
