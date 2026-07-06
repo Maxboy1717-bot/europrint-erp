@@ -73,7 +73,7 @@ export class HrPayrollController {
   @UsePipes(new ZodValidationPipe(HrCalculatePayrollSchema))
   async calculatePayroll(
     @Body() body: HrCalculatePayrollDto,
-    @CurrentUser() _user: AuthenticatedUser,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     // Biznes qoida: oylik kiritishdan oldin xodim org-structure'da biriktirilgan bo'lishi shart.
     const userId = await findUserIdByEmployee(body.employeeId);
@@ -110,6 +110,7 @@ export class HrPayrollController {
       netSalary,
       bonus:         body.bonus ?? 0,
       otherDeductions: body.otherDeductions ?? 0,
+      createdBy:     user?.sub ?? user?.id,
     });
     assertOk(result);
     return { ...result.data, grossSalary, netSalary, period, razryadCoefficient: razryadCoeff };

@@ -82,6 +82,7 @@ export class CalculatePayrollHandler implements ICommandHandler<CalculatePayroll
         netSalary,
         bonus: command.bonus,
         otherDeductions: command.otherDeductions,
+        createdBy: command.calculatedBy || undefined,
       });
 
       if (!result.ok) {

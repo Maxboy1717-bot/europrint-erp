@@ -18,6 +18,9 @@ import { FinanceAccountingService } from '../application/finance-accounting.serv
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+
+interface AuthenticatedUser { id: number; sub?: number; }
 
 const FINANCE_ROLES = ['FINANCE_MANAGER', 'ACCOUNTANT', 'SUPER_ADMIN', 'DIRECTOR'];
 
@@ -174,9 +177,9 @@ export class FinanceMainActionsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('ap/entries')
   @HttpCode(HttpStatus.CREATED)
-  async createApEntry(@Body() body: unknown) {
+  async createApEntry(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = ApEntrySchema.parse(body);
-    const result = await this.actionsSvc.createApEntry(dto as Record<string, unknown>);
+    const result = await this.actionsSvc.createApEntry({ ...dto, createdBy: user?.sub ?? user?.id } as Record<string, unknown>);
     return unwrapOrInternal(result);
   }
 
@@ -186,9 +189,9 @@ export class FinanceMainActionsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('ar/entries')
   @HttpCode(HttpStatus.CREATED)
-  async createArEntry(@Body() body: unknown) {
+  async createArEntry(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = ArEntrySchema.parse(body);
-    const result = await this.actionsSvc.createArEntry(dto as Record<string, unknown>);
+    const result = await this.actionsSvc.createArEntry({ ...dto, createdBy: user?.sub ?? user?.id } as Record<string, unknown>);
     return unwrapOrInternal(result);
   }
 }

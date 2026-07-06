@@ -138,14 +138,15 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
       const dueDate       = dueDateRaw
         ? sql`${dueDateRaw}::date`
         : sql`(NOW() + INTERVAL '30 days')::date`;
+      const createdBy = data['createdBy'] != null ? Number(data['createdBy']) : null;
       const r = await db.execute(sql`
         INSERT INTO finance_invoices
           (invoice_number, invoice_type, vendor_id, total_amount, paid_amount,
-           payment_status, due_date, supplier_name, notes, created_at, updated_at)
+           payment_status, due_date, supplier_name, notes, created_at, updated_at, created_by)
         VALUES
           (${invoiceNumber}, 'purchase', ${data['vendorId'] ? Number(data['vendorId']) : null},
            ${totalAmount}::numeric, 0, 'unpaid', ${dueDate}, ${supplierName},
-           ${data['notes'] ? String(data['notes']) : null}, NOW(), NOW())
+           ${data['notes'] ? String(data['notes']) : null}, NOW(), NOW(), ${createdBy})
         RETURNING id, invoice_number, payment_status AS status, total_amount, invoice_type AS type, created_at
       `);
       const rows = ((r as { rows?: Row[] }).rows) ?? [];
@@ -168,13 +169,14 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
       const dueDate       = dueDateRaw
         ? sql`${dueDateRaw}::date`
         : sql`(NOW() + INTERVAL '30 days')::date`;
+      const createdBy = data['createdBy'] != null ? Number(data['createdBy']) : null;
       const r = await db.execute(sql`
         INSERT INTO finance_invoices
           (invoice_number, invoice_type, total_amount, paid_amount, payment_status,
-           due_date, customer_name, notes, created_at, updated_at)
+           due_date, customer_name, notes, created_at, updated_at, created_by)
         VALUES
           (${invoiceNumber}, 'sales', ${totalAmount}::numeric, 0, 'unpaid', ${dueDate},
-           ${customerName}, ${data['notes'] ? String(data['notes']) : null}, NOW(), NOW())
+           ${customerName}, ${data['notes'] ? String(data['notes']) : null}, NOW(), NOW(), ${createdBy})
         RETURNING id, invoice_number, payment_status AS status, total_amount, invoice_type AS type, created_at
       `);
       const rows = ((r as { rows?: Row[] }).rows) ?? [];

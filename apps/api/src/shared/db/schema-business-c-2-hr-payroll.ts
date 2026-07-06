@@ -70,6 +70,7 @@ export const payroll_period_record = pgTable('payroll_period_record', {
   paid_date:            date('paid_date'),
   created_at:           timestamp('created_at').defaultNow(),
   updated_at:           timestamp('updated_at').defaultNow(),
+  created_by:           integer('created_by'),
 });
 
 // payroll_periods_hr: used with snake_case columns (period_name etc.) in drizzle-hr.repo.ts

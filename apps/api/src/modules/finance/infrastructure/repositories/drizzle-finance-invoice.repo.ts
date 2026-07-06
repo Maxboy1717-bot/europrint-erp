@@ -84,9 +84,11 @@ export class FinanceInvoiceRepo {
       const now = new Date();
       // finance_invoices columns: customer_id, vendor_id, invoice_number, invoice_type,
       //   total_amount, paid_amount, payment_status, due_date, created_at, updated_at
+      // F5 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): created_by added — nullable, historical rows
+      // stay NULL (cannot be fabricated); only newly-created invoices get it going forward.
       const r = await runQuery<FinanceRow>(sql`
         INSERT INTO finance_invoices
-          (customer_id, vendor_id, invoice_number, invoice_type, total_amount, paid_amount, payment_status, due_date, created_at)
+          (customer_id, vendor_id, invoice_number, invoice_type, total_amount, paid_amount, payment_status, due_date, created_at, created_by)
         VALUES
           (${invoice['customer_id'] ?? null},
            ${invoice['vendor_id'] ?? null},
@@ -96,7 +98,8 @@ export class FinanceInvoiceRepo {
            ${invoice['paid_amount'] ?? 0},
            ${invoice['payment_status'] ?? invoice['status'] ?? 'unpaid'},
            ${invoice['due_date'] ?? null},
-           ${invoice['created_at'] ?? now})
+           ${invoice['created_at'] ?? now},
+           ${invoice['created_by'] ?? null})
         RETURNING *
       `);
       return Ok((r.rows[0] ?? invoice) as FinanceRow);

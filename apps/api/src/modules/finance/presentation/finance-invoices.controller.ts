@@ -20,6 +20,9 @@ import {
 } from './dto/finance.dto';
 import { FinanceInvoiceRepo } from '../infrastructure/repositories/drizzle-finance-invoice.repo';
 import { GlPostingService } from '../domain/services/gl-posting.service';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+
+interface AuthenticatedUser { id: number; sub?: number; }
 
 const CreateInvoiceRootSchema = z.object({
   customerId: z.union([z.string(), z.number()]).optional(),
@@ -71,7 +74,7 @@ export class FinanceInvoicesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
-  async createInvoiceRoot(@Body() body: unknown) {
+  async createInvoiceRoot(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateInvoiceRootSchema.parse(body);
     this.logger.log(`Creating invoice (root POST)`);
     const invoiceNumber = `INV-${Date.now()}`;
@@ -85,6 +88,7 @@ export class FinanceInvoicesController {
       due_date: dto.dueDate ?? null,
       notes: dto.notes ?? null,
       created_at: new Date(),
+      created_by: user?.sub ?? user?.id ?? null,
     } as Record<string, unknown>);
     if (!result.ok) {
       throw new InternalServerErrorException('Invoice yaratilmadi');
@@ -99,7 +103,7 @@ export class FinanceInvoicesController {
   @Post('create')
   @Roles(Role.FINANCE_OFFICER, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(FinanceCreateInvoiceSchema))
-  async createInvoice(@Body() body: FinanceCreateInvoiceDto) {
+  async createInvoice(@Body() body: FinanceCreateInvoiceDto, @CurrentUser() user: AuthenticatedUser) {
     this.logger.log(`Creating invoice for customer ${body.customerId}, Amount: ${body.amount}`);
     const invoiceNumber = `INV-${Date.now()}`;
     const result = await this.invoiceRepo.saveInvoice({
@@ -112,6 +116,7 @@ export class FinanceInvoicesController {
       due_date: body.dueDate,
       notes: body.description,
       created_at: new Date(),
+      created_by: user?.sub ?? user?.id ?? null,
     } as Record<string, unknown>);
     if (!result.ok) {
       throw new InternalServerErrorException('Invoice yaratilmadi');

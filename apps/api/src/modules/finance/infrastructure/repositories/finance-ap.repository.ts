@@ -118,6 +118,7 @@ export class FinanceApRepository implements IFinanceApRepo {
         due_date:       dto.dueDate ?? null,
         payment_status: 'unpaid',
         notes:          dto.description ?? null,
+        created_by:     dto.createdBy ?? null,
       } as typeof finance_invoices.$inferInsert).returning();
       return (rows[0] ?? {}) as Row;
     }, 'DB_ERROR');

@@ -66,6 +66,8 @@ export const finance_invoices = pgTable('finance_invoices', {
   notes:          text('notes'),
   created_at:     timestamp('created_at').defaultNow(),
   updated_at:     timestamp('updated_at').defaultNow(),
+  created_by:     integer('created_by'),
+  approved_by:    integer('approved_by'),
 });
 
 export const finance_invoice_lines = pgTable('finance_invoice_lines', {

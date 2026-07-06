@@ -15,6 +15,9 @@ import { FinanceApService } from '../application/finance-ap.service';
 import type { Result } from '@common/result';
 import { ApAgingQuery, type ApAgingResult } from '../application/queries/ap-aging.handler';
 import { z } from 'zod';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+
+interface AuthenticatedUser { id: number; sub?: number; }
 
 const CreateApEntrySchema = z.object({
   vendorId: z.union([z.string(), z.number()]).optional().nullable(),
@@ -91,13 +94,14 @@ export class FinanceApController {
   @ApiResponse({ status: 201, description: 'Created' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('entries')
-  async createApEntry(@Body() body: unknown) {
+  async createApEntry(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateApEntrySchema.parse(body);
     const result = await this.svc.createEntry({
       vendorId:    dto.vendorId ?? null,
       amount:      dto.amount,
       dueDate:     dto.dueDate ?? null,
       description: dto.description ?? null,
+      createdBy:   user?.sub ?? user?.id ?? null,
     });
     return unwrapOrInternal(result);
   }

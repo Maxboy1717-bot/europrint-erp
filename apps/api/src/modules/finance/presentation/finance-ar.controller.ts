@@ -15,6 +15,9 @@ import { FinanceArService } from '../application/finance-ar.service';
 import type { Result } from '@common/result';
 import { ArAgingQuery, type ArAgingResult } from '../application/queries/ar-aging.handler';
 import { z } from 'zod';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+
+interface AuthenticatedUser { id: number; sub?: number; }
 
 const CreateArEntrySchema = z.object({
   customerId: z.union([z.string(), z.number()]).optional().nullable(),
@@ -91,13 +94,14 @@ export class FinanceArController {
   @ApiResponse({ status: 201, description: 'Created' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('entries')
-  async createArEntry(@Body() body: unknown) {
+  async createArEntry(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateArEntrySchema.parse(body);
     const result = await this.svc.createEntry({
       customerId:  dto.customerId ?? null,
       amount:      dto.amount,
       dueDate:     dto.dueDate ?? null,
       description: dto.description ?? null,
+      createdBy:   user?.sub ?? user?.id ?? null,
     });
     return unwrapOrInternal(result);
   }

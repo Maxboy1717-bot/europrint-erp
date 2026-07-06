@@ -73,16 +73,19 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       const earned  = String(payrollRecord.netSalary ?? payrollRecord.net ?? 0);
       const bonuses = String(payrollRecord.bonus ?? 0);
       const otherB  = String(payrollRecord.otherBonuses ?? payrollRecord.other_bonuses ?? 0);
+      const createdBy = payrollRecord.createdBy != null ? Number(payrollRecord.createdBy) : null;
       // payroll_period_record (Concept B, split from salary_history 2026-07-02) — clean payroll-
       // period-only insert. No more legacy audit-column hack (user_id/effective_date/change_type/
       // new_salary) — those now live in salary_change_log (Concept A: reviewSalaryTransactional).
+      // F5 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): created_by added — nullable, historical rows
+      // stay NULL (cannot be fabricated); only newly-calculated periods get it going forward.
       const r = await runQuery<HrRow>(sql`
         INSERT INTO payroll_period_record
           (employee_id, salary_period_start, salary_period_end, base_salary, salary_earned,
-           total_bonuses, other_bonuses)
+           total_bonuses, other_bonuses, created_by)
         VALUES
           (${empId}, ${pStart}::date, ${pEnd}::date,
-           ${baseSal}::numeric, ${earned}::numeric, ${bonuses}::numeric, ${otherB}::numeric)
+           ${baseSal}::numeric, ${earned}::numeric, ${bonuses}::numeric, ${otherB}::numeric, ${createdBy})
         RETURNING *
       `);
       return { ok: true, data: castTo<HrRow>((r.rows[0] ?? {})) };
