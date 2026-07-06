@@ -13,6 +13,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 import { TelegramBotsService } from './telegram-bots.service';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { requireInternalSecret } from '@common/internal-secret';
@@ -34,7 +35,10 @@ import { unwrapOrInternal } from '@common/http-result';
 @Controller('hr-v2/telegram-bots')
 export class TelegramBotsController {
   private readonly logger = new Logger(TelegramBotsController.name);
-  constructor(private readonly svc: TelegramBotsService) {}
+  constructor(
+    private readonly svc: TelegramBotsService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get status' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -52,7 +56,7 @@ export class TelegramBotsController {
     @Headers('x-internal-secret') secret: string,
     @Body() body: TelegramSendMessageDto
   ) {
-    requireInternalSecret(secret);
+    requireInternalSecret(secret, await this.i18n.t('errors.internalSecretMissingOrInvalid'));
     return unwrapOrInternal(await this.svc.sendMessage(body.bot_type, String(body.chat_id), body.message));
   }
 
@@ -74,7 +78,7 @@ export class TelegramBotsController {
     @Headers('x-internal-secret') secret: string,
     @Body() body: TelegramVacancyPublishedDto
   ) {
-    requireInternalSecret(secret);
+    requireInternalSecret(secret, await this.i18n.t('errors.internalSecretMissingOrInvalid'));
     await this.svc.onInternalVacancyPublished(body);
     return {};
   }
@@ -88,7 +92,7 @@ export class TelegramBotsController {
     @Headers('x-internal-secret') secret: string,
     @Body() body: TelegramNotifyEmployeeDto
   ) {
-    requireInternalSecret(secret);
+    requireInternalSecret(secret, await this.i18n.t('errors.internalSecretMissingOrInvalid'));
     await this.svc.notifyEmployee(body.employeeId, body.message);
     return {};
   }
@@ -102,7 +106,7 @@ export class TelegramBotsController {
     @Headers('x-internal-secret') secret: string,
     @Body() body: TelegramNotifyHrDto
   ) {
-    requireInternalSecret(secret);
+    requireInternalSecret(secret, await this.i18n.t('errors.internalSecretMissingOrInvalid'));
     await this.svc.notifyHrGroup(body.message);
     return {};
   }
