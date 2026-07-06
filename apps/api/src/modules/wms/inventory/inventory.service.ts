@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IWmsInventoryRepository, WMS_INVENTORY_REPO } from './i-wms-inventory.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class InventoryService {
   private readonly logger = new Logger(InventoryService.name);
 
-  constructor(@Inject(WMS_INVENTORY_REPO) private readonly wmsInventoryRepo: IWmsInventoryRepository) {}
+  constructor(
+    @Inject(WMS_INVENTORY_REPO) private readonly wmsInventoryRepo: IWmsInventoryRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -31,7 +35,7 @@ export class InventoryService {
     return safeCall(async () => {
     const warehouseResult = await this.wmsInventoryRepo.findWarehouseById(warehouseId);
     if (!warehouseResult.ok) throw new InternalServerErrorException(warehouseResult.error);
-    if (!warehouseResult.data) throw new NotFoundException(`Ombor #${warehouseId} topilmadi`);
+    if (!warehouseResult.data) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id: warehouseId } }));
     const stockResult = await this.wmsInventoryRepo.findStockByWarehouse(warehouseId);
     if (!stockResult.ok) throw new InternalServerErrorException(stockResult.error);
     return { warehouse: warehouseResult.data, stock: stockResult.data };
@@ -42,7 +46,7 @@ export class InventoryService {
     return safeCall(async () => {
     const result = await this.wmsInventoryRepo.findStockById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Stok #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.stockNotFound', { args: { id } }));
     return result.data;
   
     });}

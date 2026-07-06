@@ -27,11 +27,21 @@ function makeMockRepo(): jest.Mocked<IWmsInventoryRepository> {
   } as unknown as jest.Mocked<IWmsInventoryRepository>;
 }
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string, opts?: { args?: Record<string, unknown> }) => {
+      const id = opts?.args?.id;
+      return id !== undefined ? `${key}:${id}` : key;
+    }),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 describe('InventoryService.findAll', () => {
   it('parametrsiz chaqirilsa page=1, limit=10, offset=0 qo\'llaniladi', async () => {
     const repo = makeMockRepo();
     repo.findAll.mockResolvedValue(Ok({ data: [{ id: 1 }], count: 1 }));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.findAll({});
 
@@ -47,7 +57,7 @@ describe('InventoryService.findAll', () => {
   it('limit 100 dan oshsa MAX_PAGE_LIMIT (100) ga clamp qilinadi', async () => {
     const repo = makeMockRepo();
     repo.findAll.mockResolvedValue(Ok({ data: [], count: 0 }));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.findAll({ page: 2, limit: 500 });
 
@@ -64,7 +74,7 @@ describe('InventoryService.findAll', () => {
   it('limit 0 yoki manfiy bo\'lsa 1 ga clamp qilinadi', async () => {
     const repo = makeMockRepo();
     repo.findAll.mockResolvedValue(Ok({ data: [], count: 0 }));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.findAll({ page: 1, limit: -5 });
 
@@ -79,7 +89,7 @@ describe('InventoryService.findAll', () => {
   it('repo xatosi qaytarsa → Result.err (throw emas)', async () => {
     const repo = makeMockRepo();
     repo.findAll.mockResolvedValue(Err({ code: 'DB_ERROR', message: 'boom' }));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.findAll({});
 
@@ -97,7 +107,7 @@ describe('InventoryService.getByWarehouse', () => {
   it('ombor topilmasa → NOT_FOUND, stock so\'ralmaydi', async () => {
     const repo = makeMockRepo();
     repo.findWarehouseById.mockResolvedValue(Ok(null));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.getByWarehouse(99);
 
@@ -113,7 +123,7 @@ describe('InventoryService.getByWarehouse', () => {
     const repo = makeMockRepo();
     repo.findWarehouseById.mockResolvedValue(Ok({ id: 10, name: 'Asosiy ombor' }));
     repo.findStockByWarehouse.mockResolvedValue(Ok([{ material_id: 1, qty: 5 }]));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.getByWarehouse(10);
 
@@ -130,7 +140,7 @@ describe('InventoryService.findOne', () => {
   it('stok topilmasa → NOT_FOUND', async () => {
     const repo = makeMockRepo();
     repo.findStockById.mockResolvedValue(Ok(null));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.findOne(7);
 
@@ -144,7 +154,7 @@ describe('InventoryService.findOne', () => {
   it('stok topilsa → real data qaytadi', async () => {
     const repo = makeMockRepo();
     repo.findStockById.mockResolvedValue(Ok({ id: 7, material_id: 3, qty: 12 }));
-    const svc = new InventoryService(repo);
+    const svc = new InventoryService(repo, makeI18n());
 
     const res = await svc.findOne(7);
 

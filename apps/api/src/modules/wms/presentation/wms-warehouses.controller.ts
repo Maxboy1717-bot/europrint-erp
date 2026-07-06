@@ -18,6 +18,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { I18nService } from 'nestjs-i18n';
 import { CreateWarehouseCommand } from '../application/commands/create-warehouse.command';
 import { GetWarehousesQuery } from '../application/queries/get-warehouses.query';
 import { CreateWarehouseDtoSchema, CreateWarehouseDto } from './dto/wms-extended.dto';
@@ -43,6 +44,7 @@ export class WmsWarehousesController {
     private commandBus: CommandBus,
     private queryBus: QueryBus,
     private readonly crudSvc: WmsCrudService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get all' })
@@ -94,7 +96,7 @@ export class WmsWarehousesController {
         SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${name})) LIMIT 1
       `);
       if ((dup as { rows?: Record<string, unknown>[] }).rows?.length) {
-        throw new ConflictException(`Bu nomli ombor allaqachon mavjud: "${name}"`);
+        throw new ConflictException(await this.i18n.t('errors.warehouseNameAlreadyExists', { args: { name } }));
       }
 
       const r = await rawSql(sql`
@@ -106,7 +108,7 @@ export class WmsWarehousesController {
       return row ?? {};
     } catch (e) {
       if (e instanceof ConflictException) throw e;
-      throw new BadRequestException(`Ombor yaratishda xatolik: ${String(e).substring(0, 200)}`);
+      throw new BadRequestException(await this.i18n.t('errors.warehouseCreationFailed', { args: { message: String(e).substring(0, 200) } }));
     }
   }
 
@@ -125,7 +127,7 @@ export class WmsWarehousesController {
         RETURNING id, code, name, type, is_active
       `);
       const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
-      if (!row) throw new NotFoundException(`Ombor #${id} topilmadi`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id } }));
       return row;
     } catch (e) {
       if (e instanceof NotFoundException) throw e;

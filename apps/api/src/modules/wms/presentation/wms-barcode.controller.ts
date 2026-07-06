@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { I18nService } from 'nestjs-i18n';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 import { db, posPrinterConfig } from '@shared/db';
 import { sql, eq, desc } from 'drizzle-orm';
@@ -68,7 +69,10 @@ const rows = (r: unknown): Row[] => ((r as { rows?: Row[] }).rows) ?? [];
 @ApiBearerAuth()
 @Controller('warehouse')
 export class WmsBarcodeController {
-  constructor(private readonly svc: WmsWarehouseGatewayService) {}
+  constructor(
+    private readonly svc: WmsWarehouseGatewayService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // -- PRINTER CONFIG (kanonik: pos_printer_config, G9-4) ----------------------
 
@@ -129,7 +133,7 @@ export class WmsBarcodeController {
       .set(patch)
       .where(eq(posPrinterConfig.id, parseInt(id, 10)))
       .returning();
-    if (!row) throw new NotFoundException('Printer config topilmadi');
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.printerConfigNotFoundById'));
     return row;
   }
 
@@ -143,7 +147,7 @@ export class WmsBarcodeController {
       .delete(posPrinterConfig)
       .where(eq(posPrinterConfig.id, parseInt(id, 10)))
       .returning({ id: posPrinterConfig.id });
-    if (!row) throw new NotFoundException('Printer config topilmadi');
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.printerConfigNotFoundById'));
     return { id: row.id, deleted: true };
   }
 

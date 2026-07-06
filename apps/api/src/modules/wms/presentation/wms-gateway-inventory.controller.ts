@@ -15,6 +15,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
@@ -66,7 +67,10 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 export class WmsGatewayInventoryController {
   private readonly logger = new Logger(WmsGatewayInventoryController.name);
 
-  constructor(private readonly svc: WmsWarehouseGatewayService) {}
+  constructor(
+    private readonly svc: WmsWarehouseGatewayService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get inventory counts stats' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -192,7 +196,7 @@ export class WmsGatewayInventoryController {
       WHERE icl.id = ${id}
     `);
     const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
-    if (!row) throw new NotFoundException(`inventory_count_lines id=${lineId} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.inventoryCountLineNotFound', { args: { id: lineId } }));
     return row;
   }
 

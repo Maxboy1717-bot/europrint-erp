@@ -19,6 +19,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { safeInt } from '../../hr/common/db-rows';
@@ -57,7 +58,10 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 export class WmsGatewayWarehousesController {
   private readonly logger = new Logger(WmsGatewayWarehousesController.name);
 
-  constructor(private readonly svc: WmsWarehouseGatewayService) {}
+  constructor(
+    private readonly svc: WmsWarehouseGatewayService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Get warehouses total stats' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -143,7 +147,7 @@ export class WmsGatewayWarehousesController {
         SELECT id FROM warehouses WHERE is_active = true AND lower(trim(name)) = lower(trim(${name})) LIMIT 1
       `);
       if ((dup as { rows?: Record<string, unknown>[] }).rows?.length) {
-        throw new ConflictException(`Bu nomli ombor allaqachon mavjud: "${name}"`);
+        throw new ConflictException(await this.i18n.t('errors.warehouseNameAlreadyExists', { args: { name } }));
       }
 
       const r = await rawSql(sql`
@@ -154,7 +158,7 @@ export class WmsGatewayWarehousesController {
       return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
     } catch (e) {
       if (e instanceof ConflictException) throw e;
-      throw new BadRequestException(`Ombor yaratishda xatolik: ${String(e).substring(0, 200)}`);
+      throw new BadRequestException(await this.i18n.t('errors.warehouseCreationFailed', { args: { message: String(e).substring(0, 200) } }));
     }
   }
 
@@ -314,7 +318,7 @@ export class WmsGatewayWarehousesController {
     try {
       const r = await rawSql(sql`SELECT id, code, name, name_ru, type, location, is_active, manager_id, created_at FROM warehouses WHERE id = ${id} AND deleted_at IS NULL`);
       const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
-      if (!row) throw new NotFoundException(`Ombor #${id} topilmadi`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.warehouseNotFoundWithId', { args: { id } }));
       return row;
     } catch (e) { if (e instanceof NotFoundException) throw e; return { id }; }
   }

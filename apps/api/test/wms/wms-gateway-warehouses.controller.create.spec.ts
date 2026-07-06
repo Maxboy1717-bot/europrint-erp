@@ -17,6 +17,13 @@ jest.mock('@shared/db', () => ({
 import { ConflictException } from '@nestjs/common';
 import { WmsGatewayWarehousesController } from '../../src/modules/wms/presentation/wms-gateway-warehouses.controller';
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string) => key),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 describe('WmsGatewayWarehousesController.createWarehouse (duplicate-name guard)', () => {
   let controller: WmsGatewayWarehousesController;
 
@@ -24,6 +31,7 @@ describe('WmsGatewayWarehousesController.createWarehouse (duplicate-name guard)'
     jest.clearAllMocks();
     controller = new WmsGatewayWarehousesController(
       {} as ConstructorParameters<typeof WmsGatewayWarehousesController>[0],
+      makeI18n(),
     );
   });
 

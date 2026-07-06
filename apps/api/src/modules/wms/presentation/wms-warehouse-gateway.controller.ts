@@ -44,6 +44,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { I18nService } from 'nestjs-i18n';
 import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
@@ -68,7 +69,10 @@ const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER']
 export class WmsWarehouseGatewayController {
   private readonly logger = new Logger(WmsWarehouseGatewayController.name);
 
-  constructor(private readonly svc: WmsWarehouseGatewayService) {}
+  constructor(
+    private readonly svc: WmsWarehouseGatewayService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // ── TRANSFERS ─────────────────────────────────────────────────────────────
 
@@ -101,7 +105,7 @@ export class WmsWarehouseGatewayController {
       WHERE id = ${intId}
     `);
     const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
-    if (!row) throw new NotFoundException(`Transfer #${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.transferNotFoundWithId', { args: { id } }));
     return row;
   }
 
