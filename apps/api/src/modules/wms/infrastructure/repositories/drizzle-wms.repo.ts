@@ -156,6 +156,16 @@ export class DrizzleWmsRepository implements IWmsRepository {
     }
   }
 
+  /**
+   * C1.4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): `queryFefoStock`'s SELECT is a snapshot that can
+   * be stale by the time the per-row UPDATE runs. `execUpdateStockReserved`/`execUpdateStockIssued`
+   * now guard the write itself against the row's CURRENT state and report success/failure —
+   * `toReserve`/`toIssue` amounts computed from the stale snapshot are only ATTRIBUTED to
+   * `remainingAmount` once the guarded UPDATE actually confirms it applied. If a concurrent
+   * operation already consumed this row's capacity between the SELECT and this UPDATE, the guard
+   * fails, the amount is NOT deducted from `remainingAmount`, and the loop moves to the next FEFO
+   * row — conservative (may under-attribute to an exhausted row) but never oversells.
+   */
   async reserveMaterial(materialId: number, warehouseId: number, amount: number): Promise<Result<void>> {
     try {
       const rows = await queryFefoStock(materialId, warehouseId);
@@ -165,8 +175,8 @@ export class DrizzleWmsRepository implements IWmsRepository {
         const available = Number(row['quantity']) - Number(row['reserved_quantity']);
         const toReserve = Math.min(available, remainingAmount);
         if (toReserve > 0) {
-          await execUpdateStockReserved(row['id'], Number(row['reserved_quantity']) + toReserve);
-          remainingAmount -= toReserve;
+          const applied = await execUpdateStockReserved(row['id'], toReserve);
+          if (applied) remainingAmount -= toReserve;
         }
       }
       if (remainingAmount > 0) return Err("Yetarli stock yo'q");
@@ -190,24 +200,16 @@ export class DrizzleWmsRepository implements IWmsRepository {
           // Reserved issue: deduct from reserved_quantity and current quantity
           const toIssue = Math.min(Number(row['reserved_quantity']), remainingAmount);
           if (toIssue > 0) {
-            await execUpdateStockIssued(
-              row['id'],
-              Number(row['quantity']) - toIssue,
-              Number(row['reserved_quantity']) - toIssue,
-            );
-            remainingAmount -= toIssue;
+            const applied = await execUpdateStockIssued(row['id'], toIssue, toIssue);
+            if (applied) remainingAmount -= toIssue;
           }
         } else {
           // Ad-hoc issue: deduct from available (quantity - reserved_quantity), reserved unchanged
           const available = Number(row['quantity']) - Number(row['reserved_quantity']);
           const toIssue = Math.min(available, remainingAmount);
           if (toIssue > 0) {
-            await execUpdateStockIssued(
-              row['id'],
-              Number(row['quantity']) - toIssue,
-              Number(row['reserved_quantity']), // reserved_quantity unchanged
-            );
-            remainingAmount -= toIssue;
+            const applied = await execUpdateStockIssued(row['id'], toIssue, 0);
+            if (applied) remainingAmount -= toIssue;
           }
         }
       }

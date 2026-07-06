@@ -134,29 +134,68 @@ export async function queryFefoBatchLots(materialId: number, warehouseId: number
   return rows.rows as StockRow[];
 }
 
-export async function execUpdateStockReserved(id: unknown, newReserved: number): Promise<void> {
-  // Set absolute reserved and recompute available = on-hand quantity - reserved.
-  await runQuery(sql`
+/**
+ * C1.4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): was `execUpdateStockReserved(id, newReserved)` —
+ * the caller (reserveMaterial) computed `newReserved` in JS from a SELECT read moments earlier,
+ * then this wrote it as an ABSOLUTE value with no guard. Two concurrent reservations against the
+ * same row could both read the same stale `available_quantity`, both pass their own JS-side
+ * check, and the second UPDATE would silently clobber the first's result — reserving more than
+ * was ever actually available (oversell).
+ *
+ * Now takes a RELATIVE `delta` (amount to add to reserved_quantity) and guards the UPDATE itself
+ * against the CURRENT row (`quantity - reserved_quantity >= delta`), mirroring the already-correct
+ * `execIssueFromWarehouseStock` pattern below. Postgres row-level locking serializes concurrent
+ * UPDATEs on the same row — the second one re-evaluates its guard against the first's committed
+ * result, closing the race the old absolute-value write could not. Returns `true` iff the guard
+ * passed and the row was updated; `false` means the caller's stale read overestimated availability
+ * and this delta could not be applied (0 rows affected — no write happened, nothing to roll back).
+ */
+export async function execUpdateStockReserved(id: unknown, delta: number): Promise<boolean> {
+  const rows = await execRows(sql`
     UPDATE warehouse_stock
-    SET reserved_quantity  = ${newReserved},
-        available_quantity = quantity - ${newReserved},
+    SET reserved_quantity  = reserved_quantity + ${delta},
+        available_quantity = quantity - (reserved_quantity + ${delta}),
         last_movement_at   = NOW(),
         last_updated_at    = NOW()
     WHERE id = ${id as number}
+      AND (quantity - reserved_quantity) >= ${delta}
+    RETURNING id
   `);
+  return rows.length > 0;
 }
 
-export async function execUpdateStockIssued(id: unknown, newQty: number, newReserved: number): Promise<void> {
-  // newQty = new on-hand quantity, newReserved = new reserved; recompute available.
-  await runQuery(sql`
+/**
+ * C1.4: was `execUpdateStockIssued(id, newQty, newReserved)` — same absolute-value/no-guard
+ * vulnerability as execUpdateStockReserved above, on the issue path. Now takes RELATIVE deltas
+ * (`qtyDelta` = amount to subtract from on-hand quantity, `reservedDelta` = amount to subtract
+ * from reserved_quantity — 0 for an ad-hoc issue that doesn't touch reservations, equal to
+ * `qtyDelta` for a reserved-stock issue) and guards against the CURRENT row on all three
+ * post-write invariants staying non-negative: `quantity - qtyDelta >= 0`,
+ * `reserved_quantity - reservedDelta >= 0`, and — the one an earlier version of this fix MISSED,
+ * caught by a live rollback-tx dry-run before this shipped — `available_quantity` (quantity minus
+ * reserved) computed post-write must also stay >= 0: `(quantity - reserved_quantity) >=
+ * (qtyDelta - reservedDelta)`. Without that third check, an ad-hoc issue (reservedDelta=0) could
+ * pass `quantity >= qtyDelta` while eating into stock some OTHER caller already had reserved,
+ * driving `available_quantity` negative — the exact class of bug this fix exists to close. For a
+ * reserved-issue (reservedDelta=qtyDelta) the third check reduces to `available_quantity >= 0`,
+ * which adds no new constraint — so this one formula is correct for both call shapes. Returns
+ * `true` iff all three invariants held and the row was updated.
+ */
+export async function execUpdateStockIssued(id: unknown, qtyDelta: number, reservedDelta: number): Promise<boolean> {
+  const rows = await execRows(sql`
     UPDATE warehouse_stock
-    SET quantity           = ${newQty},
-        reserved_quantity  = ${newReserved},
-        available_quantity = ${newQty} - ${newReserved},
+    SET quantity           = quantity - ${qtyDelta},
+        reserved_quantity  = reserved_quantity - ${reservedDelta},
+        available_quantity = (quantity - ${qtyDelta}) - (reserved_quantity - ${reservedDelta}),
         last_movement_at   = NOW(),
         last_updated_at    = NOW()
     WHERE id = ${id as number}
+      AND quantity >= ${qtyDelta}
+      AND reserved_quantity >= ${reservedDelta}
+      AND (quantity - reserved_quantity) >= (${qtyDelta} - ${reservedDelta})
+    RETURNING id
   `);
+  return rows.length > 0;
 }
 
 export async function execReceiveFg(
