@@ -5,6 +5,7 @@
  */
 
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall, Ok, Err, Result } from '@common/result';
@@ -20,6 +21,8 @@ const execOne = async (q: SQL | SQLWrapper): Promise<Result<Row | null>> => {
 
 @Injectable()
 export class SdQuotationsRepository implements ISdQuotationsRepo {
+  constructor(private readonly i18n: I18nService) {}
+
   async listQuotations(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>> {
     return customerId && status
       ? exec(sql`SELECT q.*, c.name AS customer_name FROM sd_quotations q LEFT JOIN sd_customers c ON c.id = q.customer_id WHERE q.customer_id = ${customerId} AND q.status = ${status} ORDER BY q.created_at DESC LIMIT ${lim} OFFSET ${off}`)
@@ -205,7 +208,7 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
       const totalAmount = String(quotation['total_amount'] ?? '0');
       const companyId = Number(quotation['customer_id'] ?? quotation['company_id'] ?? 0);
       if (isNaN(companyId) || companyId === 0) {
-        throw new BadRequestException('Invalid or missing customer_id on quotation');
+        throw new BadRequestException(await this.i18n.t('errors.quotationCustomerIdInvalid'));
       }
       const advancePercent = Number(quotation['advance_percent'] ?? 30);
       // Atomic: order INSERT + quotation status UPDATE must succeed together.

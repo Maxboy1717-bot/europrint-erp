@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { ISdDeliveriesRepository, SD_DELIVERIES_REPO } from './i-sd-deliveries.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class DeliveriesService {
   private readonly logger = new Logger(DeliveriesService.name);
 
-  constructor(@Inject(SD_DELIVERIES_REPO) private readonly sdDeliveriesRepo: ISdDeliveriesRepository) {}
+  constructor(
+    @Inject(SD_DELIVERIES_REPO) private readonly sdDeliveriesRepo: ISdDeliveriesRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -28,7 +32,7 @@ export class DeliveriesService {
   async findOne(id: number) {
     const result = await this.sdDeliveriesRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Yetkazish #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.deliveryNotFoundWithId', { args: { id } }));
     const itemsResult = await this.sdDeliveriesRepo.findItemsByDeliveryId(id);
     if (!itemsResult.ok) throw new InternalServerErrorException(itemsResult.error);
     return { ...result.data, items: itemsResult.data };

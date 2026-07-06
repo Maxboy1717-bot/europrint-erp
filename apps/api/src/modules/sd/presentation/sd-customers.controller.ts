@@ -148,7 +148,7 @@ export class SdCustomersController {
     @Res({ passthrough: true }) res?: FastifyReply,
   ): Promise<StreamableFile> {
     const result = await this.svc.exportCsv(search, status);
-    if (!result.ok) throw new HttpException('Export failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    if (!result.ok) throw new HttpException(await this.i18n.t('errors.customerExportFailed'), HttpStatus.INTERNAL_SERVER_ERROR);
     void res!.header('Content-Type', 'text/csv; charset=utf-8')
               .header('Content-Disposition', 'attachment; filename="customers.csv"');
     return new StreamableFile(Readable.from(Buffer.from(result.data as string, 'utf-8')));

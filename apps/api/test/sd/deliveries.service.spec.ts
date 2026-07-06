@@ -6,6 +6,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { I18nService } from 'nestjs-i18n';
 import {
   ISdDeliveriesRepository,
   SD_DELIVERIES_REPO,
@@ -23,6 +24,10 @@ function makeRepo(): jest.Mocked<ISdDeliveriesRepository> {
   } as jest.Mocked<ISdDeliveriesRepository>;
 }
 
+function makeI18n(): { t: jest.Mock } {
+  return { t: jest.fn().mockResolvedValue('Yetkazib berish topilmadi') };
+}
+
 describe('DeliveriesService', () => {
   let svc: DeliveriesService;
   let repo: jest.Mocked<ISdDeliveriesRepository>;
@@ -33,6 +38,7 @@ describe('DeliveriesService', () => {
       providers: [
         DeliveriesService,
         { provide: SD_DELIVERIES_REPO, useValue: repo },
+        { provide: I18nService, useValue: makeI18n() },
       ],
     }).compile();
     svc = module.get(DeliveriesService);
