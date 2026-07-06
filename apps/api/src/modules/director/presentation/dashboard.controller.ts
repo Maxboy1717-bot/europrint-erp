@@ -5,6 +5,7 @@
 
 import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
+import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -46,6 +47,7 @@ export class DashboardController {
     private readonly queryBus: QueryBus,
     private readonly queries: DashboardQueryService,
     private readonly directorData: DirectorDataService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Get('')
@@ -169,7 +171,7 @@ export class DashboardController {
       RETURNING id, kpi_code, kpi_name, target_value, warning_threshold, critical_threshold
     `);
     const result = rows.rows[0] ?? undefined;
-    if (!result) throw new BadRequestException(`kpi_definition id=${id} topilmadi`);
+    if (!result) throw new BadRequestException(await this.i18n.t('errors.kpiDefinitionNotFoundWithId', { args: { id } }));
     return result;
   }
 
@@ -206,7 +208,7 @@ export class DashboardController {
       RETURNING id, code, label_uz, weight
     `);
     const result = rows.rows[0] ?? undefined;
-    if (!result) throw new BadRequestException(`kpi_score_weight code=${code} topilmadi`);
+    if (!result) throw new BadRequestException(await this.i18n.t('errors.kpiScoreWeightNotFoundWithCode', { args: { code } }));
     return result;
   }
 }

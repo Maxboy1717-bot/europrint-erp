@@ -19,6 +19,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -60,7 +61,10 @@ function toTargetString(v: number | null | undefined): string | null {
 export class StatRegulationController {
   private readonly logger = new Logger(StatRegulationController.name);
 
-  constructor(private readonly svc: StatRegulationService) {}
+  constructor(
+    private readonly svc: StatRegulationService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List stat-regulations (active by default)' })
@@ -74,7 +78,7 @@ export class StatRegulationController {
   @ApiOperation({ summary: 'Version history of a stat-regulation by name' })
   @ApiResponse({ status: 200, description: 'OK' })
   async history(@Query('name') name?: string) {
-    if (!name) throw new BadRequestException('name majburiy');
+    if (!name) throw new BadRequestException(await this.i18n.t('validation.nameRequired'));
     return { data: unwrapOrInternal(await this.svc.getHistory(name)) };
   }
 
