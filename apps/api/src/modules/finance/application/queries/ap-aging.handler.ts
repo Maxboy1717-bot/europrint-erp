@@ -3,7 +3,7 @@
  * @description CQRS query handler — AP (accounts-payable / creditor) aging by due-date bucket,
  *   symmetric to ArAgingHandler. execute() returns Result<ApAgingResult>. Tashkent TZ.
  *   Unlike AR, payables carry no ECL (you owe the money — there is no expected-credit-loss),
- *   so buckets report amount/percentage only. Source = fi_invoices WHERE type='payable'.
+ *   so buckets report amount/percentage only. Source = finance_invoices WHERE invoice_type='purchase'.
  */
 
 import { TashkentTimeService } from '@common/time';
@@ -51,9 +51,9 @@ export class ApAgingHandler implements IQueryHandler<ApAgingQuery> {
         COALESCE(SUM(
           total_amount - COALESCE(paid_amount, 0)
         ), 0)::numeric(18,4)             AS remaining
-      FROM fi_invoices
-      WHERE status NOT IN ('paid', 'cancelled', 'void')
-        AND COALESCE(type, 'receivable') = 'payable'
+      FROM finance_invoices
+      WHERE payment_status NOT IN ('paid', 'cancelled', 'void')
+        AND COALESCE(invoice_type, 'sales') = 'purchase'
         AND total_amount > COALESCE(paid_amount, 0)
       GROUP BY 1
     `);

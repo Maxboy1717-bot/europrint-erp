@@ -72,9 +72,9 @@ export class ArAgingHandler implements IQueryHandler<ArAgingQuery> {
         COALESCE(SUM(
           total_amount - COALESCE(paid_amount, 0)
         ), 0)::numeric(18,4)             AS remaining
-      FROM fi_invoices
-      WHERE status NOT IN ('paid', 'cancelled', 'void')
-        AND COALESCE(type, 'receivable') = 'receivable'
+      FROM finance_invoices
+      WHERE payment_status NOT IN ('paid', 'cancelled', 'void')
+        AND COALESCE(invoice_type, 'sales') = 'sales'
         AND total_amount > COALESCE(paid_amount, 0)
       GROUP BY 1
     `);
