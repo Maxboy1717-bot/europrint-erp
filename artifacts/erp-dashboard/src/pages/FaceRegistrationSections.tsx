@@ -1,65 +1,23 @@
-/** @module FaceRegistrationSections @description Panel-level section components for FaceRegistration: PageHeader, EmployeeSelectionPanel (left column), and RegisteredFacesList (right column). These are pure presentational components — all state and mutations live in the parent page. */
+/** @module FaceRegistrationSections @description Panel-level section components for FaceRegistration: EmployeeSelectionPanel (left column) and RegisteredFacesList (right column). These are pure presentational components — all state and mutations live in the parent page. */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { User, Search, CheckCircle } from 'lucide-react';
-import type { Employee, FaceEmbedding, FaceRegTranslations } from './FaceRegistrationTypes';
+import type { Employee, FaceEmbedding } from './FaceRegistrationTypes';
 import { DeleteFaceDialog } from './FaceRegistrationDialogs';
-import { EPPageHeader, EPStatusPill, EPLoader } from "@/components/ep";
-import { useTranslation } from '@/lib/i18n';
+import { EPStatusPill, EPLoader } from "@/components/ep";
+import type { UseTranslationReturn } from '@/lib/i18n';
 
-// ---------------------------------------------------------------------------
-// PageHeader
-// ---------------------------------------------------------------------------
-
-interface PageHeaderProps {
-  text: FaceRegTranslations;
-  modelsLoaded: boolean;
-  lang: 'uz' | 'ru';
-  onToggleLang: () => void;
-}
-
-export function PageHeader({ text, modelsLoaded, lang, onToggleLang }: PageHeaderProps) {
-  const { t } = useTranslation("common");
-  return (
-    <div className="flex items-center justify-between mb-6">
-      <div>
-        <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("yuzRoAposYxatdanOApos")}</b></>}
-        title={t("yuzRoAposYxatdanOApos2")}
-        subtitle={text.subtitle}
-      />
-      </div>
-      <div className="flex items-center gap-4">
-        <Badge variant={modelsLoaded ? 'default' : 'secondary'} className="gap-1">
-          {modelsLoaded ? (
-            <><CheckCircle className="h-3 w-3" /> {text.modelsReady}</>
-          ) : (
-            <><EPLoader size={12} /> {text.modelsLoading}</>
-          )}
-        </Badge>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onToggleLang}
-          data-testid="button-lang-toggle"
-        >
-          {lang === 'uz' ? 'RU' : 'UZ'}
-        </Button>
-      </div>
-    </div>
-  );
-}
+type TFunc = UseTranslationReturn['t'];
 
 // ---------------------------------------------------------------------------
 // EmployeeSelectionPanel
 // ---------------------------------------------------------------------------
 
 interface EmployeeSelectionPanelProps {
-  text: FaceRegTranslations;
+  t: TFunc;
   employees: Employee[];
   registeredFaces: FaceEmbedding[];
   isLoading: boolean;
@@ -70,7 +28,7 @@ interface EmployeeSelectionPanelProps {
 }
 
 export function EmployeeSelectionPanel({
-  text,
+  t,
   employees,
   registeredFaces,
   isLoading,
@@ -95,14 +53,14 @@ export function EmployeeSelectionPanel({
       <CardHeader className="pb-2">
         <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
           <User className="h-4 w-4" />
-          {text.selectEmployee}
+          {t('FaceReg.selectEmployee')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={text.searchPlaceholder}
+            placeholder={t('FaceReg.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9"
@@ -163,7 +121,7 @@ export function EmployeeSelectionPanel({
 // ---------------------------------------------------------------------------
 
 interface RegisteredFacesListProps {
-  text: FaceRegTranslations;
+  t: TFunc;
   faces: FaceEmbedding[];
   isLoading: boolean;
   isDeletePending: boolean;
@@ -171,7 +129,7 @@ interface RegisteredFacesListProps {
 }
 
 export function RegisteredFacesList({
-  text,
+  t,
   faces,
   isLoading,
   isDeletePending,
@@ -183,7 +141,7 @@ export function RegisteredFacesList({
         <CardTitle className="text-[14px] font-semibold flex items-center justify-between">
           <span className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5" />
-            {text.registeredFaces}
+            {t('FaceReg.registeredFaces')}
           </span>
           <Badge>{faces.length}</Badge>
         </CardTitle>
@@ -197,7 +155,7 @@ export function RegisteredFacesList({
           ) : faces.length === 0 ? (
             <div className="text-center py-8 text-[13px] text-muted-foreground">
               <User className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>{text.noFaces}</p>
+              <p>{t('FaceReg.noFaces')}</p>
             </div>
           ) : (
             <div className="space-y-3">

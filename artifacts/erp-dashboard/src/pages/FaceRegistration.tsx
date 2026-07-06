@@ -6,15 +6,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useLivenessDetection } from '@/hooks/useLivenessDetection';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { loadFaceApi } from '@/lib/faceApiLoader';
-import { TRANSLATIONS } from './FaceRegistrationTypes';
 import type { Employee, FaceEmbedding, RegisterFacePayload } from './FaceRegistrationTypes';
-import { PageHeader, EmployeeSelectionPanel, RegisteredFacesList } from './FaceRegistrationSections';
+import { EmployeeSelectionPanel, RegisteredFacesList } from './FaceRegistrationSections';
 import { CameraCaptureCard } from './FaceRegistrationCamera';
 import { EPPageHeader, EPErrorState } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function FaceRegistration() {
-  const { t } = useTranslation("common");
+  const { t: tCommon } = useTranslation("common");
+  const { t } = useTranslation("iot");
   const { toast } = useToast();
   const [lang, setLang] = useState<'uz' | 'ru'>('uz');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -36,8 +36,6 @@ export default function FaceRegistration() {
     status: livenessStatus, blinkCount, timeRemaining, isDetecting,
     startChallenge, stopChallenge, resetLiveness,
   } = useLivenessDetection(videoRef);
-
-  const text = TRANSLATIONS[lang];
 
   // Load face-api models once on mount
   useEffect(() => {
@@ -70,11 +68,11 @@ export default function FaceRegistration() {
   // Toast on liveness state change
   useEffect(() => {
     if (livenessStatus === 'passed') {
-      toast({ title: text.livenessPassed, description: text.blinkDetected });
+      toast({ title: t('FaceReg.livenessPassed'), description: t('FaceReg.blinkDetected') });
     } else if (livenessStatus === 'failed') {
-      toast({ title: text.livenessFailed, description: text.tryAgain, variant: 'destructive' });
+      toast({ title: t('FaceReg.livenessFailed'), description: t('FaceReg.tryAgain'), variant: 'destructive' });
     }
-  }, [livenessStatus, text.livenessPassed, text.livenessFailed, text.blinkDetected, text.tryAgain, toast]);
+  }, [livenessStatus, t, toast]);
 
   // Queries
 
@@ -102,7 +100,7 @@ export default function FaceRegistration() {
       return apiRequest('POST', '/api/hr/attendance/face/register', payload);
     },
     onSuccess: () => {
-      toast({ title: text.success, description: text.faceRegistered });
+      toast({ title: t('FaceReg.success'), description: t('FaceReg.faceRegistered') });
       queryClient.invalidateQueries({ queryKey: ['/api/face-embeddings'] });
       setCapturedFace(null);
       setCapturedImageUrl(null);
@@ -111,18 +109,18 @@ export default function FaceRegistration() {
       resetLiveness();
     },
     onError: () => {
-      toast({ title: text.error, description: 'Registration failed', variant: 'destructive' });
+      toast({ title: t('FaceReg.error'), description: 'Registration failed', variant: 'destructive' });
     },
   });
 
   const deleteFaceMutation = useMutation({
     mutationFn: (id: string) => apiRequest('DELETE', `/api/face-embeddings/${id}`),
     onSuccess: () => {
-      toast({ title: text.success, description: text.faceDeleted });
+      toast({ title: t('FaceReg.success'), description: t('FaceReg.faceDeleted') });
       queryClient.invalidateQueries({ queryKey: ['/api/face-embeddings'] });
     },
     onError: () => {
-      toast({ title: text.error, description: 'Delete failed', variant: 'destructive' });
+      toast({ title: t('FaceReg.error'), description: 'Delete failed', variant: 'destructive' });
     },
   });
 
@@ -140,7 +138,7 @@ export default function FaceRegistration() {
         setIsStreaming(true);
       }
     } catch {
-      toast({ title: text.error, description: 'Camera access denied', variant: 'destructive' });
+      toast({ title: t('FaceReg.error'), description: 'Camera access denied', variant: 'destructive' });
     }
   };
 
@@ -185,19 +183,19 @@ export default function FaceRegistration() {
           setCapturedFrames((prev) => {
             const next = [...prev, imageBase64].slice(-3);
             toast({
-              title: text.faceDetected,
-              description: `${text.confidence}: ${confidence}% · Rasm ${next.length}/3`,
+              title: t('FaceReg.faceDetected'),
+              description: `${t('FaceReg.confidence')}: ${confidence}% · Rasm ${next.length}/3`,
             });
             return next;
           });
         } else {
-          toast({ title: text.faceDetected, description: `${text.confidence}: ${confidence}%` });
+          toast({ title: t('FaceReg.faceDetected'), description: `${t('FaceReg.confidence')}: ${confidence}%` });
         }
       } else {
-        toast({ title: text.noFaceDetected, variant: 'destructive' });
+        toast({ title: t('FaceReg.noFaceDetected'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: text.error, variant: 'destructive' });
+      toast({ title: t('FaceReg.error'), variant: 'destructive' });
     }
     setIsLoading(false);
   };
@@ -232,9 +230,8 @@ export default function FaceRegistration() {
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{t("page")}</b></>}
-        title={t("page")}
-        text={text}
+        breadcrumb={<>{tCommon("dashboard9")}<b className="text-foreground">{tCommon("page")}</b></>}
+        title={tCommon("page")}
         modelsLoaded={modelsLoaded}
         lang={lang}
         onToggleLang={() => setLang(lang === 'uz' ? 'ru' : 'uz')}
@@ -243,7 +240,7 @@ export default function FaceRegistration() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left: employee selection */}
         <EmployeeSelectionPanel
-          text={text}
+          t={t}
           employees={Array.isArray(employees) ? employees : []}
           registeredFaces={Array.isArray(registeredFaces) ? registeredFaces : []}
           isLoading={employeesLoading}
@@ -255,7 +252,7 @@ export default function FaceRegistration() {
 
         {/* Centre: camera & face capture */}
         <CameraCaptureCard
-          text={text}
+          t={t}
           selectedEmployee={selectedEmployee}
           videoRef={videoRef}
           canvasRef={canvasRef}
@@ -282,7 +279,7 @@ export default function FaceRegistration() {
 
         {/* Right: registered faces list */}
         <RegisteredFacesList
-          text={text}
+          t={t}
           faces={Array.isArray(registeredFaces) ? registeredFaces : []}
           isLoading={facesLoading}
           isDeletePending={deleteFaceMutation.isPending}
