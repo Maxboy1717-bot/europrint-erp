@@ -143,8 +143,16 @@ export class ErpRepository {
 
   async deleteBomHeader(id: number): Promise<Result<Row | null>> {
   try {
-    const r = await exec(sql`DELETE FROM bom_headers WHERE id = ${id} RETURNING *`);
-    return r.ok ? Ok(r.data[0] ?? { id, deleted: true }) : Err(r.error);
+    // C6.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): bom_items has no FK to
+    // bom_headers (its only FK is component_id→material_cards, NO ACTION) —
+    // deleting a header alone left its line items orphaned (deleteBomItem was
+    // never called on header delete). Cascade the delete atomically instead.
+    const headerRow = await db.transaction(async (tx) => {
+      await tx.execute(sql`DELETE FROM bom_items WHERE bom_id = ${id}`);
+      const r = await tx.execute(sql`DELETE FROM bom_headers WHERE id = ${id} RETURNING *`);
+      return ((r as unknown as { rows: Row[] }).rows[0]) ?? null;
+    });
+    return Ok(headerRow ?? { id, deleted: true });
   } catch (_e) { return Err(String(_e)); }
   }
 
