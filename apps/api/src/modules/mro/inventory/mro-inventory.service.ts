@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { mroInventory } from '@europrint/schemas';
 import { safeCall, Result, AppError } from '@common/result';
 import { MroInventoryRepository } from './mro-inventory.repository';
@@ -12,7 +13,10 @@ import { MroInventoryRepository } from './mro-inventory.repository';
 export class MroInventoryService {
   private readonly logger = new Logger(MroInventoryService.name);
 
-  constructor(private readonly repo: MroInventoryRepository) {}
+  constructor(
+    private readonly repo: MroInventoryRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   async findAll(query: Record<string, unknown> = {}): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -25,7 +29,7 @@ export class MroInventoryService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.mroInventoryItemNotFound', { args: { id } }));
     return row;
   }
 

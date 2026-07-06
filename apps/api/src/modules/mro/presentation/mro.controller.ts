@@ -19,6 +19,7 @@ import {
   UseGuards,
   UseInterceptors, BadRequestException, InternalServerErrorException} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -82,6 +83,7 @@ export class MroController {
  private readonly queryBus: QueryBus,
  @Inject(MAINTENANCE_REPO) private readonly maintenanceRepo: IMaintenanceRepo,
  private readonly maintenanceSvc: MaintenanceService,
+ private readonly i18n: I18nService,
  ) {}
 
  @ApiOperation({ summary: 'Get all' })
@@ -115,7 +117,7 @@ export class MroController {
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.MAINTENANCE)
  async getById(@Param('id') id: string) {
    const result = await this.maintenanceRepo.findById(id);
-   if (!result.ok || !result.data) throw new NotFoundException(`Ta'mirlash buyurtmasi #${id} topilmadi`);
+   if (!result.ok || !result.data) throw new NotFoundException(await this.i18n.t('errors.maintenanceOrderNotFound', { args: { id } }));
    return { statusCode: HttpStatus.OK, data: result.data };
 }
 

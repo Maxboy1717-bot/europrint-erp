@@ -3,7 +3,8 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common'; 
+import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger} from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IMaintenanceSvcRepository, MAINTENANCE_SVC_REPO } from './i-maintenance-svc.repo';
 import { safeCall, Result, AppError } from '@common/result';
 
@@ -11,7 +12,10 @@ import { safeCall, Result, AppError } from '@common/result';
 export class MaintenanceService {
   private readonly logger = new Logger(MaintenanceService.name);
 
-  constructor(@Inject(MAINTENANCE_SVC_REPO) private readonly maintenanceSvcRepo: IMaintenanceSvcRepository) {}
+  constructor(
+    @Inject(MAINTENANCE_SVC_REPO) private readonly maintenanceSvcRepo: IMaintenanceSvcRepository,
+    private readonly i18n: I18nService,
+  ) {}
   normalizeType(type: string): string { return type?.toUpperCase() || 'CORRECTIVE'; }
 
   private mapRow(r: Record<string, unknown>) {
@@ -42,7 +46,7 @@ export class MaintenanceService {
     return safeCall(async () => {
     const result = await this.maintenanceSvcRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
-    if (!result.data) throw new NotFoundException(`Ta'mirlash #${id} topilmadi`);
+    if (!result.data) throw new NotFoundException(await this.i18n.t('errors.maintenanceOrderNotFound', { args: { id } }));
     return this.mapRow(result.data);
   
     });}
