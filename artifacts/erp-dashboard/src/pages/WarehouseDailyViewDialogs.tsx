@@ -29,7 +29,7 @@ interface CreateKitDialogProps {
   equipment: Equipment[];
   onConfirm: () => void;
   isPending: boolean;
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function CreateKitDialog({
@@ -40,7 +40,7 @@ export function CreateKitDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold">{t("Material Komplekti Yaratish", "Создание Комплекта Материалов")}</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold">{t("WarehouseDailyView.createKitTitle")}</DialogTitle>
           <DialogDescription>
             {selectedOrder && (
               <span className="font-mono">{selectedOrder.papkaNo} - {selectedOrder.mahsulotNomi}</span>
@@ -49,7 +49,7 @@ export function CreateKitDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-1">
-          <Label>{t("Ishlab chiqarish vaqti", "Время производства")}</Label>
+          <Label>{t("WarehouseDailyView.productionTimeLabel")}</Label>
             <Input
               type="time"
               value={scheduledTime}
@@ -58,10 +58,10 @@ export function CreateKitDialog({
             />
           </div>
           <div className="space-y-1">
-          <Label>{t("Uskuna", "Оборудование")}</Label>
+          <Label>{t("WarehouseDailyView.equipmentLabel")}</Label>
             <Select value={selectedEquipmentId} onValueChange={setSelectedEquipmentId}>
               <SelectTrigger data-testid="select-equipment" className="h-9">
-                <SelectValue placeholder={t("Uskunani tanlang", "Выберите оборудование")} />
+                <SelectValue placeholder={t("WarehouseDailyView.selectEquipmentPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {(Array.isArray(equipment) ? equipment : []).map((eq) => (
@@ -73,13 +73,13 @@ export function CreateKitDialog({
           <div className="p-4 bg-muted rounded-lg">
             <div className="flex items-center gap-2 text-sm">
               <Calculator className="h-4 w-4" />
-              <span>{t("AI avtomatik materiallarni hisoblaydi", "AI автоматически рассчитает материалы")}</span>
+              <span>{t("WarehouseDailyView.aiAutoCalcNote")}</span>
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t("Bekor qilish", "Отмена")}
+            {t("WarehouseDailyView.cancelButton")}
           </Button>
           <Button
             onClick={onConfirm}
@@ -91,7 +91,7 @@ export function CreateKitDialog({
             ) : (
               <PackagePlus className="h-4 w-4 mr-2" />
             )}
-            {t("Yaratish", "Создать")}
+            {t("WarehouseDailyView.createButton")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -104,7 +104,7 @@ interface KitDetailsDialogProps {
   onOpenChange: (v: boolean) => void;
   selectedKit: MaterialKit | null;
   kitItems: MaterialKitItem[];
-  t: (uz: string, ru: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t }: KitDetailsDialogProps) {
@@ -117,20 +117,20 @@ export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t 
             {selectedKit?.kitNumber}
           </DialogTitle>
           <DialogDescription>
-            {t("Material komplekti tafsilotlari", "Детали комплекта материалов")}
+            {t("WarehouseDailyView.kitDetailsSubtitle")}
           </DialogDescription>
         </DialogHeader>
         {selectedKit && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg">
-                <div className="text-sm text-muted-foreground">{t("Status", "Статус")}</div>
+                <div className="text-sm text-muted-foreground">{t("WarehouseDailyView.statusLabel")}</div>
                 <Badge className={`mt-1 ${STATUS_COLORS[selectedKit.status]?.bg} ${STATUS_COLORS[selectedKit.status]?.text}`}>
-                  {t(STATUS_COLORS[selectedKit.status]?.label, STATUS_COLORS[selectedKit.status]?.labelRu)}
+                  {t(STATUS_COLORS[selectedKit.status]?.labelKey)}
                 </Badge>
               </div>
               <div className="p-4 border rounded-lg">
-                <div className="text-sm text-muted-foreground">{t("Shtrix-kod", "Штрих-код")}</div>
+                <div className="text-sm text-muted-foreground">{t("WarehouseDailyView.barcodeLabel")}</div>
                 <div className="font-mono font-bold mt-1 flex items-center gap-2">
                   <Barcode className="h-4 w-4" />
                   {selectedKit.barcode}
@@ -142,17 +142,17 @@ export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t 
               <div className="p-3 border-b bg-muted/50">
                 <h4 className="font-medium flex items-center gap-2">
                   <Layers className="h-4 w-4" />
-                  {t("Materiallar", "Материалы")} ({kitItems.length})
+                  {t("WarehouseDailyView.materialsLabel")} ({kitItems.length})
                 </h4>
               </div>
               <ScrollArea className="h-[300px]">
                 <div className="ep-table-scroll"><Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t("Material", "Материал")}</TableHead>
-                      <TableHead className="text-right">{t("Kerakli", "Требуется")}</TableHead>
-                      <TableHead className="text-center">{t("Shtrix-kod", "Штрих-код")}</TableHead>
-                      <TableHead className="text-center">{t("Skanerlangan", "Отсканирован")}</TableHead>
+                      <TableHead>{t("WarehouseDailyView.materialLabel")}</TableHead>
+                      <TableHead className="text-right">{t("WarehouseDailyView.requiredLabel")}</TableHead>
+                      <TableHead className="text-center">{t("WarehouseDailyView.barcodeLabel")}</TableHead>
+                      <TableHead className="text-center">{t("WarehouseDailyView.scannedLabel")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -173,7 +173,7 @@ export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t 
                     {kitItems.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-8 text-[13px] text-muted-foreground">
-                          {t("Materiallar yuklanmoqda...", "Загрузка материалов...")}
+                          {t("WarehouseDailyView.materialsLoading")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -184,10 +184,10 @@ export function KitDetailsDialog({ open, onOpenChange, selectedKit, kitItems, t 
 
             <div className="flex items-center gap-2 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/30">
               <Printer className="h-5 w-5 text-[var(--ep-blue)]" />
-              <span className="text-sm flex-1">{t("Shtrix-kodni chop etish uchun bosing", "Нажмите для печати штрих-кода")}</span>
+              <span className="text-sm flex-1">{t("WarehouseDailyView.printBarcodeHint")}</span>
               <Button size="sm" variant="outline" onClick={() => window.print()} data-testid="button-print-barcode">
                 <Printer className="h-4 w-4 mr-2" />
-                {t("Chop etish", "Печать")}
+                {t("WarehouseDailyView.printButton")}
               </Button>
             </div>
           </div>

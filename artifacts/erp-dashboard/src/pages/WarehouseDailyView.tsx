@@ -3,21 +3,22 @@
  * @description React page component. Route-level UI.
  */
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, getQueryFn } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays } from "date-fns";
-import { uz, ru } from "date-fns/locale";
+import { uz, ru, uzCyrl } from "date-fns/locale";
 import { Package, RefreshCw, Languages } from "lucide-react";
 import type { DailyOrder, MaterialKit, MaterialKitItem, Equipment } from "./WarehouseDailyViewTypes";
 import { DateNavigator, OrdersList } from "./WarehouseDailyViewSections";
 import { CreateKitDialog, KitDetailsDialog } from "./WarehouseDailyViewDialogs";
 import { EPErrorState } from "@/components/ep";
+import { useTranslation } from "@/lib/i18n";
 
 export default function WarehouseDailyView() {
-  const [lang, setLang] = useState<"uz" | "ru">("uz");
+  const { language, t, setLanguage } = useTranslation("warehouse");
   const [selectedDate, setSelectedDate] = useState<Date>(addDays(new Date(), 1));
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<DailyOrder | null>(null);
@@ -29,8 +30,7 @@ export default function WarehouseDailyView() {
   const [scheduledTime, setScheduledTime] = useState("08:00");
   const { toast } = useToast();
 
-  const t = useCallback((uz: string, ru: string) => lang === "uz" ? uz : ru, [lang]);
-  const dateLocale = lang === "uz" ? uz : ru;
+  const dateLocale = language === "uz" ? uz : language === "uz-cyr" ? uzCyrl : ru;
   const formattedDate = format(selectedDate, "yyyy-MM-dd");
 
   const { data: ordersData, isLoading: ordersLoading, refetch: refetchOrders, isError, error } = useQuery({
@@ -54,12 +54,12 @@ export default function WarehouseDailyView() {
       return apiRequest("POST", "/api/warehouse/material-kits", data);
     },
     onSuccess: () => {
-      toast({ title: t("Material komplekti yaratildi!", "Комплект материалов создан!") });
+      toast({ title: t("WarehouseDailyView.toastKitCreated") });
       queryClient.invalidateQueries({ queryKey: ['/api/warehouse/orders-by-date'] });
       setShowCreateKitDialog(false);
     },
     onError: (error: Error) => {
-      toast({ title: t("Xatolik", "Ошибка"), description: error.message, variant: "destructive" });
+      toast({ title: t("WarehouseDailyView.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -68,7 +68,7 @@ export default function WarehouseDailyView() {
       return apiRequest("PATCH", `/api/warehouse/material-kits/${data.kitId}/status`, { status: data.status });
     },
     onSuccess: () => {
-      toast({ title: t("Status yangilandi", "Статус обновлён") });
+      toast({ title: t("WarehouseDailyView.toastStatusUpdated") });
       queryClient.invalidateQueries({ queryKey: ['/api/warehouse/orders-by-date'] });
       refetchOrders();
     },
@@ -120,9 +120,9 @@ export default function WarehouseDailyView() {
             <div className="flex items-center gap-3">
               <Package className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-xl font-bold">{t("Ombor Kunlik Rejasi", "Складской Дневной План")}</h1>
+                <h1 className="text-xl font-bold">{t("WarehouseDailyView.title")}</h1>
                 <p className="text-sm text-muted-foreground">
-                  {t("1 kun oldin materiallarni tayyorlash", "Подготовка материалов за 1 день")}
+                  {t("WarehouseDailyView.subtitle")}
                 </p>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function WarehouseDailyView() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setLang(l => l === "uz" ? "ru" : "uz")}
+                onClick={() => setLanguage(language === "uz" ? "ru" : "uz")}
                 data-testid="button-language"
               >
                 <Languages className="h-4 w-4" />
