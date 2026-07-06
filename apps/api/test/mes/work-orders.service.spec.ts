@@ -30,12 +30,22 @@ function buildRepo(
   } as unknown as jest.Mocked<IWorkOrdersRepository>;
 }
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string, opts?: { args?: Record<string, unknown> }) => {
+      const id = opts?.args?.id;
+      return id !== undefined ? `${key}:${id}` : key;
+    }),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 describe('WorkOrdersService.findAll — pagination derivation', () => {
   it('defaults to page=1/limit=10 and computes offset=0 when the query is empty', async () => {
     const repo = buildRepo({
       findAll: jest.fn().mockResolvedValue(Ok({ data: [{ id: 1 }], count: 1 })),
     });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.findAll({});
 
@@ -53,7 +63,7 @@ describe('WorkOrdersService.findAll — pagination derivation', () => {
     const repo = buildRepo({
       findAll: jest.fn().mockResolvedValue(Ok({ data: [], count: 95 })),
     });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.findAll({ page: 3, limit: 20 });
 
@@ -72,7 +82,7 @@ describe('WorkOrdersService.findAll — pagination derivation', () => {
     const repo = buildRepo({
       findAll: jest.fn().mockResolvedValue(Err('connection lost')),
     });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.findAll({});
 
@@ -83,7 +93,7 @@ describe('WorkOrdersService.findAll — pagination derivation', () => {
 describe('WorkOrdersService.findOne', () => {
   it('returns a NOT_FOUND result and skips session/crew lookups when the order is missing', async () => {
     const repo = buildRepo({ findById: jest.fn().mockResolvedValue(Ok(null)) });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.findOne(404);
 
@@ -103,7 +113,7 @@ describe('WorkOrdersService.findOne', () => {
       findSessionsByOrderId: jest.fn().mockResolvedValue(Ok([{ id: 1, orderId: 7 }])),
       findCrewsByOrderId: jest.fn().mockResolvedValue(Ok([{ id: 2, orderId: 7 }])),
     });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.findOne(7);
 
@@ -126,7 +136,7 @@ describe('WorkOrdersService.findOne', () => {
       findSessionsByOrderId: jest.fn().mockResolvedValue(Err('timeout')),
       findCrewsByOrderId: jest.fn().mockResolvedValue(Ok([{ id: 2 }])),
     });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.findOne(7);
 
@@ -141,7 +151,7 @@ describe('WorkOrdersService.create', () => {
   it('forwards the dto unchanged and wraps the repository result', async () => {
     const created = { id: 42, status: 'pending' };
     const repo = buildRepo({ create: jest.fn().mockResolvedValue(Ok(created)) });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
     const dto = { production_order_id: 3, quantity: 100 };
 
     const result = await svc.create(dto);
@@ -154,7 +164,7 @@ describe('WorkOrdersService.create', () => {
 describe('WorkOrdersService.updateStatus', () => {
   it('returns NOT_FOUND and never calls repo.updateStatus when the order does not exist', async () => {
     const repo = buildRepo({ findById: jest.fn().mockResolvedValue(Ok(null)) });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.updateStatus(999, 'completed');
 
@@ -171,7 +181,7 @@ describe('WorkOrdersService.updateStatus', () => {
       findById: jest.fn().mockResolvedValue(Ok({ id: 5, status: 'pending' })),
       updateStatus: jest.fn().mockResolvedValue(Ok({ id: 5, status: 'completed' })),
     });
-    const svc = new WorkOrdersService(repo);
+    const svc = new WorkOrdersService(repo, makeI18n());
 
     const result = await svc.updateStatus(5, 'completed');
 

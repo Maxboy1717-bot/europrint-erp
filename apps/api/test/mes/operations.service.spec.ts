@@ -22,13 +22,23 @@ function buildRepo(overrides: Partial<jest.Mocked<OperationsRepository>> = {}): 
   } as unknown as jest.Mocked<OperationsRepository>;
 }
 
+function makeI18n() {
+  return {
+    t: jest.fn().mockImplementation(async (key: string, opts?: { args?: Record<string, unknown> }) => {
+      const id = opts?.args?.id;
+      return id !== undefined ? `${key}:${id}` : key;
+    }),
+    translate: jest.fn().mockImplementation(async (key: string) => key),
+  } as unknown as import('nestjs-i18n').I18nService;
+}
+
 describe('OperationsService.createDowntimeEvent', () => {
   it('creates the downtime event when the referenced session exists', async () => {
     const repo = buildRepo({
       findSession: jest.fn().mockResolvedValue(Ok([{ id: 7 }])),
       createDowntimeEvent: jest.fn().mockResolvedValue(Ok({ id: 42, sessionId: '7' })),
     });
-    const svc = new OperationsService(repo);
+    const svc = new OperationsService(repo, makeI18n());
 
     const result = await svc.createDowntimeEvent({ sessionId: '7', reasonCode: 'JAM' });
 
@@ -44,7 +54,7 @@ describe('OperationsService.createDowntimeEvent', () => {
     const repo = buildRepo({
       findSession: jest.fn().mockResolvedValue(Ok([])),
     });
-    const svc = new OperationsService(repo);
+    const svc = new OperationsService(repo, makeI18n());
 
     const result = await svc.createDowntimeEvent({ sessionId: '999' });
 
@@ -61,7 +71,7 @@ describe('OperationsService.createDowntimeEvent', () => {
     const repo = buildRepo({
       findSession: jest.fn().mockResolvedValue(Err('db down')),
     });
-    const svc = new OperationsService(repo);
+    const svc = new OperationsService(repo, makeI18n());
 
     const result = await svc.createDowntimeEvent({ sessionId: '3' });
 
@@ -76,7 +86,7 @@ describe('OperationsService.createDowntimeEvent', () => {
 describe('OperationsService — passthroughs', () => {
   it('getDowntimeEvents forwards the session id to the repository', async () => {
     const repo = buildRepo({ findDowntimeEvents: jest.fn().mockResolvedValue(Ok([{ id: 1 }])) });
-    const svc = new OperationsService(repo);
+    const svc = new OperationsService(repo, makeI18n());
 
     const result = await svc.getDowntimeEvents('12');
 
@@ -87,7 +97,7 @@ describe('OperationsService — passthroughs', () => {
   it('getReasonCodes forwards straight to the repository', async () => {
     const reasonCodes = [{ id: 1, code: 'JAM' }];
     const repo = buildRepo({ findReasonCodes: jest.fn().mockResolvedValue(Ok(reasonCodes)) });
-    const svc = new OperationsService(repo);
+    const svc = new OperationsService(repo, makeI18n());
 
     const result = await svc.getReasonCodes();
 
