@@ -20,5 +20,4 @@ export interface StarRatingProps {
   value: number;
   onChange: (v: number) => void;
   label: string;
-  lang: IotLang;
 }
