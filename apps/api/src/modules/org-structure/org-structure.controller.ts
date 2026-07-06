@@ -140,7 +140,12 @@ const NodePortretSchema = z.object({
   }).passthrough(),
 }).passthrough();
 
-@Roles('admin', 'manager', 'supervisor', 'viewer', 'director')
+// G1 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding A2): class-level list gates BOTH
+// reads and writes uniformly. Broadened here to include hr/hr_manager (a dedicated HR login
+// was 403ing on every write) — this class-level list is now the READ baseline; every
+// create/update/delete method below carries its own narrower @Roles override that drops
+// 'viewer' (a viewer could previously write, which was over-permissive).
+@Roles('admin', 'manager', 'supervisor', 'viewer', 'director', 'hr', 'hr_manager')
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard)
@@ -198,6 +203,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.findOne(id));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Create' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -212,6 +219,8 @@ export class OrgStructureController {
   // 1-based row number + reason (a single bad row never aborts the batch). The
   // static `nodes/import` POST is distinct from `POST nodes` (create), so no
   // route collision. Admin/HR-style write op — same class @Roles apply.
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Import org nodes from Excel (qator-validatsiya, partial-commit)' })
   @ApiResponse({ status: 201, description: 'OK — { imported, failed, total, created, errors }' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -221,6 +230,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.importNodes(dto.rows as Record<string, unknown>[]));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Update' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -231,6 +242,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.update(id, dto as Record<string, unknown>));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Remove' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -240,6 +253,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.remove(id));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Move' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -250,6 +265,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.service.move(id, dto.newParentId !== undefined && dto.newParentId !== null ? Number(dto.newParentId) : null));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Assign user' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -269,6 +286,8 @@ export class OrgStructureController {
     );
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Remove user from node (kartadan olib tashlash)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Delete('users/:userId/node/:nodeId')
@@ -317,6 +336,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.folderService.getFolderItems(id));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Add folder item' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -327,6 +348,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.folderService.addFolderItem(id, dto as { itemType: 'document' | 'video' | 'test'; title: string; url?: string; description?: string; lmsCourseId?: number }));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Remove folder item' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -378,6 +401,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.portretService.getHrRequests(nodeId));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Create node hr request' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -407,6 +432,8 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.portretService.getPortret(nodeId));
   }
 
+  // G1: write override — drops 'viewer' from the class-level read baseline.
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
   @ApiOperation({ summary: 'Create node portret' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
