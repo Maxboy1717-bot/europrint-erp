@@ -10,6 +10,7 @@
  *     - DRAFT (INTERNAL_RETURN — tasdiq yo'q)
  */
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { rawSql, db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
@@ -36,32 +37,34 @@ const INBOUND_TYPES = ['EXTERNAL_IN', 'INTERNAL_RETURN', 'INTERNAL_TRANSFER'];
 export class PosWarehouseIntegrationMovementService {
   private readonly logger = new Logger(PosWarehouseIntegrationMovementService.name);
 
+  constructor(private readonly i18n: I18nService) {}
+
   /**
    * POS movement yaratish — har turi uchun mos workflow.
    * Atomic: material_movement + warehouse_stock update.
    */
   async createMovement(dto: PosMovementDto): Promise<Result<unknown, AppError>> {
     return safeCall(async () => {
-      this.validateMovementDto(dto);
+      await this.validateMovementDto(dto);
       if (OUTBOUND_TYPES.includes(dto.movementType)) {
         await this.validateOutboundStock(dto);
       }
       if (INBOUND_TYPES.includes(dto.movementType) && !dto.toWarehouseId) {
-        throw new BadRequestException(`${dto.movementType} uchun toWarehouseId majburiy`);
+        throw new BadRequestException(await this.i18n.t('errors.toWarehouseIdRequiredForMovementType', { args: { movementType: dto.movementType } }));
       }
       return await db.transaction(async (tx) => this.executeMovement(tx, dto));
     });
   }
 
-  private validateMovementDto(dto: PosMovementDto): void {
-    if (!dto.materialCardId) throw new BadRequestException('materialCardId majburiy');
-    if (!dto.quantity || dto.quantity <= 0) throw new BadRequestException("quantity > 0 bo'lishi kerak");
-    if (!dto.performedBy) throw new BadRequestException('performedBy majburiy');
+  private async validateMovementDto(dto: PosMovementDto): Promise<void> {
+    if (!dto.materialCardId) throw new BadRequestException(await this.i18n.t('errors.materialCardIdRequired'));
+    if (!dto.quantity || dto.quantity <= 0) throw new BadRequestException(await this.i18n.t('validation.quantityMustBePositive'));
+    if (!dto.performedBy) throw new BadRequestException(await this.i18n.t('errors.performedByRequired'));
   }
 
   private async validateOutboundStock(dto: PosMovementDto): Promise<void> {
     if (!dto.fromWarehouseId) {
-      throw new BadRequestException(`${dto.movementType} uchun fromWarehouseId majburiy`);
+      throw new BadRequestException(await this.i18n.t('errors.fromWarehouseIdRequiredForMovementType', { args: { movementType: dto.movementType } }));
     }
     const stockRows = await rawSql(sql`
       SELECT available_quantity, material_type FROM pos_warehouse_stock_view
@@ -71,7 +74,7 @@ export class PosWarehouseIntegrationMovementService {
     const stock = dbRows(stockRows)[0];
     if (!stock) {
       throw new BadRequestException(
-        `Material #${dto.materialCardId} ombor #${dto.fromWarehouseId} da yo'q`,
+        await this.i18n.t('errors.materialNotInWarehouse', { args: { materialCardId: dto.materialCardId, warehouseId: dto.fromWarehouseId } }),
       );
     }
     const available = Number(stock['available_quantity']);
@@ -79,7 +82,7 @@ export class PosWarehouseIntegrationMovementService {
       // PRD Q38: ASSET → BLOCK, CONSUMABLE → OGOHLANTIRISH (lekin ruxsat)
       if (stock['material_type'] === 'ASSET') {
         throw new BadRequestException(
-          `Aktiv yetarli emas. Mavjud: ${available}, So'ralgan: ${dto.quantity}. Aktivlar uchun minus saldo BLOK.`,
+          await this.i18n.t('errors.assetInsufficientStock', { args: { available, requested: dto.quantity } }),
         );
       }
       this.logger.warn(`Minus saldo: material #${dto.materialCardId}, available=${available}, requested=${dto.quantity}`);
@@ -121,14 +124,44 @@ export class PosWarehouseIntegrationMovementService {
     return Number(movement?.['id'] ?? 0);
   }
 
+  /**
+   * C1.5 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): `validateOutboundStock()` reads
+   * `available_quantity` well before this write runs (outside the transaction) — a
+   * classic TOCTOU gap where two concurrent requests can both pass validation against
+   * the same stale snapshot, then both apply their decrement here unconditionally
+   * (the old UPDATE had no WHERE-guard on quantity at all). The guard below is
+   * evaluated against the row Postgres has just locked for this UPDATE, not a stale
+   * read, so it is race-free regardless of how many concurrent movements target the
+   * same (warehouse_id, material_id) pair. It preserves the existing PRD Q38 rule
+   * (ASSET → hard block on insufficient stock; CONSUMABLE → allowed to go negative,
+   * with the existing warn-log in validateOutboundStock as the user-facing signal).
+   */
   private async decreaseFromWarehouseStock(tx: Tx, dto: PosMovementDto): Promise<void> {
-    await tx.execute(sql`
+    const applied = dbRows(await tx.execute(sql`
       UPDATE warehouse_stock
       SET quantity = quantity - ${dto.quantity},
           available_quantity = available_quantity - ${dto.quantity},
           last_updated_at = NOW()
       WHERE warehouse_id = ${dto.fromWarehouseId} AND material_id = ${dto.materialCardId}
-    `);
+        AND (
+          available_quantity >= ${dto.quantity}
+          OR NOT EXISTS (
+            SELECT 1 FROM material_cards mc WHERE mc.id = ${dto.materialCardId} AND mc.material_type = 'ASSET'
+          )
+        )
+      RETURNING id
+    `));
+    if (applied.length === 0) {
+      const current = dbRows(await tx.execute(sql`
+        SELECT available_quantity FROM warehouse_stock
+        WHERE warehouse_id = ${dto.fromWarehouseId} AND material_id = ${dto.materialCardId}
+      `))[0];
+      throw new BadRequestException(
+        await this.i18n.t('errors.assetInsufficientStock', {
+          args: { available: Number(current?.['available_quantity'] ?? 0), requested: dto.quantity },
+        }),
+      );
+    }
   }
 
   private async increaseToWarehouseStock(tx: Tx, dto: PosMovementDto): Promise<void> {
