@@ -17,6 +17,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NODE_TYPE_LABELS } from "./types";
+import { ParentCardSelect } from "./ParentCardSelect";
 import { useTranslation } from '@/lib/i18n';
 
 export function AddNodeDialog({
@@ -150,11 +151,9 @@ export function AddNodeDialog({
           </div>
           <div>
             <Label>{t("otaNodeId")}</Label>
-            <Input
+            <ParentCardSelect
               value={form.parentId}
-              onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value }))}
-              placeholder={t("masalan2BoShQoldirsaIldiz")}
-              type="number"
+              onChange={(v) => setForm((f) => ({ ...f, parentId: v }))}
             />
           </div>
 

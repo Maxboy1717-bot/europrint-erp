@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--port", "20806", "--host"],
       "port": 20806
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@europrint/api", "run", "dev:unsafe"],
+      "port": 3030
     }
   ]
 }
