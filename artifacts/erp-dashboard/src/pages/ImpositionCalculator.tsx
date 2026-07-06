@@ -83,12 +83,12 @@ export default function ImpositionCalculator() {
   const res = mutation.data;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
       <div className="flex items-center gap-3">
         <LayoutGrid className="h-7 w-7 text-[var(--ep-blue)]" />
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('imposition')}</h1>
-          <p className="text-sm text-slate-500">{t('impositionDesc')}</p>
+          <h1 className="text-2xl font-bold">{t('imposition')}</h1>
+          <p className="text-sm text-muted-foreground">{t('impositionDesc')}</p>
         </div>
       </div>
 
@@ -163,19 +163,19 @@ export default function ImpositionCalculator() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 <Card className="text-center p-3">
-                  <p className="text-xs text-slate-500">{t('sheets')}</p>
+                  <p className="text-xs text-muted-foreground">{t('sheets')}</p>
                   <p className="text-2xl font-bold text-[var(--ep-blue)]">{res.sheets}</p>
                 </Card>
                 <Card className="text-center p-3">
-                  <p className="text-xs text-slate-500">{t('utilization')}</p>
+                  <p className="text-xs text-muted-foreground">{t('utilization')}</p>
                   <p className="text-2xl font-bold text-[var(--ep-green)]">{res.utilization.toFixed(1)}%</p>
                 </Card>
                 <Card className="text-center p-3">
-                  <p className="text-xs text-slate-500">{t('waste')}</p>
+                  <p className="text-xs text-muted-foreground">{t('waste')}</p>
                   <p className="text-2xl font-bold text-[var(--ep-primary)]">{res.wastePercent.toFixed(1)}%</p>
                 </Card>
-                <Card className={`text-center p-3 ${res.unplaced.length > 0 ? "border-red-300" : "border-green-300"}`}>
-                  <p className="text-xs text-slate-500">{t('unplaced')}</p>
+                <Card className={`text-center p-3 ${res.unplaced.length > 0 ? "border-destructive/40" : "border-[var(--ep-green)]/40"}`}>
+                  <p className="text-xs text-muted-foreground">{t('unplaced')}</p>
                   <p className={`text-2xl font-bold ${res.unplaced.length > 0 ? "text-[var(--ep-red)]" : "text-[var(--ep-green)]"}`}>
                     {res.unplaced.length}
                   </p>
@@ -198,7 +198,7 @@ export default function ImpositionCalculator() {
                 </CardHeader>
                 <CardContent>
                   <Progress value={res.utilization} className="h-3" />
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
                     <span>{t('usedArea')}: {res.usedArea.toFixed(0)} mm²</span>
                     <span>{t('totalArea')}: {res.sheetArea * res.sheets} mm²</span>
                   </div>
@@ -236,7 +236,7 @@ export default function ImpositionCalculator() {
               )}
 
               {res.unplaced.length > 0 && (
-                <Card className="border-red-200 bg-red-50">
+                <Card className="border-destructive/30 bg-destructive/10">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm text-[var(--ep-red)]">{t('unplaced')}</CardTitle>
                   </CardHeader>
@@ -255,7 +255,7 @@ export default function ImpositionCalculator() {
 
           {!res && !mutation.isPending && (
             <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center h-48 text-slate-400 gap-2">
+              <CardContent className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-2">
                 <LayoutGrid className="h-10 w-10" />
                 <p className="text-sm">{t('fillForm')}</p>
               </CardContent>
@@ -264,7 +264,7 @@ export default function ImpositionCalculator() {
 
           {mutation.isPending && (
             <Card>
-              <CardContent className="flex items-center justify-center h-48 gap-3 text-slate-500">
+              <CardContent className="flex items-center justify-center h-48 gap-3 text-muted-foreground">
                 <EPLoader size={24} />
                 <p>{t('calculating')}</p>
               </CardContent>
