@@ -65,11 +65,13 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         const total = qty * price;
         // Raw SQL targets the LIVE columns (the drizzle salesOrderItems stub drifts material_id/sales_order_id
         // to varchar; live is integer). product_id binds to products (finished goods, owner 2026-06-05).
+        // B13/Decision 3 (2026-07-06): default fallback was the free-text 'PC' -- now the
+        // canonical unit_of_measures.code for "piece" ('dona').
         await exec.execute(sql`
           INSERT INTO sales_order_items
             (sales_order_id, item_number, product_id, description, order_quantity, open_quantity, unit, net_price, total_price, created_at)
           VALUES
-            (${orderId}, ${itemNumber}, ${it.productId}, ${it.description}, ${qty}, ${qty}, ${it.unit ?? 'PC'}, ${price}, ${total}, NOW())`);
+            (${orderId}, ${itemNumber}, ${it.productId}, ${it.description}, ${qty}, ${qty}, ${it.unit ?? 'dona'}, ${price}, ${total}, NOW())`);
         saved++;
       }
       return { ok: true as const, data: saved };
