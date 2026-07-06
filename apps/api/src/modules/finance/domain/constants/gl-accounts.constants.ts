@@ -33,6 +33,8 @@ export const GL = {
   SALES_TAX_PAYABLE:         '6310', // QQS (qo'shilgan qiymat solig'i)
   EMPLOYEE_DEDUCTIONS:       '6520', // INPS, JSHD (ijtimoiy soliqlar)
   SALARY_PAYABLE:            '6710', // Xodimlarga ish haqi
+  DEPRECIATION_EXPENSE:      '9430', // Amortizatsiya
+  ACCUMULATED_DEPRECIATION:  '0200', // Asosiy vositalar amortizatsiyasi (contra-asset)
 } as const;
 
 /** Uzbekistan BHM-compliant unique account codes (v2 — no duplicate codes) */

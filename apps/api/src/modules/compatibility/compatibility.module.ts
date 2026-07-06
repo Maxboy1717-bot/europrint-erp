@@ -93,9 +93,10 @@ import { LabelExtService }            from '../pos/application/services/label-ex
 import { LabelRepository }            from '../pos/infrastructure/repositories/label.repository';
 import { PosPrinterConfigRepository } from '../pos/infrastructure/repositories/pos-printer-config.repository';
 import { AuthModule }                 from '../auth/auth.module';
+import { FinanceModule }              from '../finance/finance.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, FinanceModule],
   controllers: [
     EmployeesCompatController,
     EmployeesCompatSubController,
