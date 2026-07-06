@@ -18,16 +18,15 @@ import {
   hrEmployees, hrDepartments, hrPositions,
   payroll_period_record, salary_change_log, payroll_periods_hr,
   candidates, discipline_records, hr_health_checkups,
-  accounts,
 } from '@shared/db';
-import { entries } from '@workspace/db';
+import { GlPostingService } from '../../../finance/domain/services/gl-posting.service';
 
 type Row = Record<string, unknown>;
 
 
 @Injectable()
 export class HrRepository extends HrBaseRepository implements IHrRepo {
-  constructor(leaveRepo: HrLeaveRepo) { super(leaveRepo); }
+  constructor(leaveRepo: HrLeaveRepo, private readonly glPostingService: GlPostingService) { super(leaveRepo); }
   async findPayroll(filters: { employeeId?: string; period?: string; status?: string }): Promise<Result<HrRow[]>> {
     try {
       const eid = filters.employeeId ? parseInt(filters.employeeId, 10) : null;
@@ -171,52 +170,38 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
       const amount = Number(sh.salary_earned ?? 0);
       if (amount <= 0) return Err(`salary_earned <= 0; GL yozuvi yaratilmaydi`);
 
-      // 2. Resolve GL account IDs (9410 debit, 6710 credit)
-      const acctRows = await db.select({ id: accounts.id, code: accounts.accountCode })
-        .from(accounts)
-        .where(sql`${accounts.accountCode} IN ('9410', '6710') AND ${accounts.isActive} = true`);
-
-      const debitAcct  = acctRows.find((a) => a.code === '9410');
-      const creditAcct = acctRows.find((a) => a.code === '6710');
-      if (!debitAcct)  return Err(`GL hisob 9410 (Ish haqi expense) topilmadi`);
-      if (!creditAcct) return Err(`GL hisob 6710 (Xodimlarga to'lanadigan) topilmadi`);
+      // F3 (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): route through the ONE engine (GlPostingService)
+      // instead of a bespoke raw INSERT INTO entries — gains period-lock (EP-FIN-064), the F2
+      // data-quality gate, and idempotency (reference `PR-${payrollId}`) for free. postPayroll()
+      // posts the exact same Dr 9410 (Salary Expense) / Cr 6710 (Salary Payable) pair this bespoke
+      // writer used to build by hand.
+      //
+      // NOTE — transactional-atomicity tradeoff: the previous code wrapped the GL INSERT and this
+      // status UPDATE in one `db.transaction`. GlPostingService.insertJournal opens its OWN internal
+      // transaction on the shared `db`, so it cannot participate in an external transaction here — true
+      // cross-module atomicity is not achievable without a deeper engine refactor (out of scope for
+      // this item). Instead this mirrors the already-accepted pattern used for SD invoices
+      // (finance-invoices.controller.ts: postSalesInvoice() then a separate markInvoicePosted()):
+      // post the GL entry FIRST (idempotent — safe to retry), then flip the status. If the GL post
+      // succeeds but the status UPDATE below fails, a retry of postPayrollToGL is safe: the engine's
+      // idempotency check returns the existing entry id without a second post, and the status UPDATE
+      // is re-attempted. The only way to get a false "paid" without a GL entry would be if the UPDATE
+      // itself throws AFTER succeeding, which is not possible for a single synchronous statement.
+      const glResult = await this.glPostingService.postPayroll(payrollId, amount);
+      if (!glResult.ok) {
+        this.logger.error(`postPayrollToGL: GL posting failed — ${glResult.error.message}`);
+        return Err(glResult.error.message);
+      }
+      const glEntryId = glResult.data;
 
       const today = _time.now().toISOString().split('T')[0];
-      const description = `Oylik maosh: xodim #${sh.employee_id ?? payrollId}`;
-
-      let glEntryId: number | null = null;
-      let updatedRow: HrRow = {};
-
-      // 3. Atomic transaction: INSERT entry + UPDATE payroll_period_record
-      await db.transaction(async (tx) => {
-        // INSERT INTO entries using canonical @workspace/db schema
-        // entryNumber is required by schema; generate as PAYROLL-{id}-{ts}
-        // debitAccountId / creditAccountId are varchar in Drizzle schema (DB stores as int FK)
-        const entryNumber = `PAYROLL-${payrollId}-${Date.now()}`;
-        const insertedEntry = await tx.insert(entries).values({
-          entryNumber:      entryNumber,
-          entryDate:        today,
-          documentType:     'PAYROLL',
-          documentId:       String(payrollId),
-          debitAccountId:   String(debitAcct.id),
-          creditAccountId:  String(creditAcct.id),
-          amount:           amount,
-          description:      description,
-          createdBy:        postedBy,
-        }).returning({ id: entries.id });
-
-        if (!insertedEntry[0]) throw new Error('GL entries INSERT returned no rows');
-        glEntryId = insertedEntry[0].id;
-
-        // UPDATE payroll_period_record SET status='paid', paid_by, paid_date
-        const updated = await tx.update(payroll_period_record).set({
-          status:   'paid',
-          paid_by:  postedBy,
-          paid_date: today,
-          updated_at: _time.now(),
-        }).where(eq(payroll_period_record.id, payrollId)).returning();
-        updatedRow = castTo<HrRow>(updated[0] ?? {});
-      });
+      const updated = await db.update(payroll_period_record).set({
+        status:   'paid',
+        paid_by:  postedBy,
+        paid_date: today,
+        updated_at: _time.now(),
+      }).where(eq(payroll_period_record.id, payrollId)).returning();
+      const updatedRow = castTo<HrRow>(updated[0] ?? {});
 
       return Ok({ ...updatedRow, gl_entry_id: glEntryId });
     } catch (error: unknown) {
