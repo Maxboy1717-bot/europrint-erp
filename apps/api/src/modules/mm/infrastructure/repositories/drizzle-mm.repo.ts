@@ -102,7 +102,8 @@ export class DrizzleMmRepository implements IMmRepository {
       // Insert line items into purchase_order_items (integer purchase_order_id).
       // The LIST query JOINs this table on purchase_order_id to aggregate item count/totals.
       // NOT NULL cols: po_id, raw_material_id, quantity, unit, unit_price, total_price.
-      // 'unit' is not on PurchaseOrderItem domain object — default to 'sht' (piece).
+      // 'unit' is not on PurchaseOrderItem domain object — default to the canonical
+      // unit_of_measures.code for "piece" (B13/Decision 3, 2026-07-06: was 'sht').
       const items = po.getItems();
       for (const item of items) {
         await db.execute(sql`
@@ -110,7 +111,7 @@ export class DrizzleMmRepository implements IMmRepository {
             (po_id, purchase_order_id, material_id, raw_material_id, quantity, unit, unit_price, total_price)
           VALUES
             (${poId}, ${poId}, ${item.materialId}, ${item.materialId},
-             ${item.quantity}, ${'sht'}, ${item.unitPrice}, ${item.quantity * item.unitPrice})
+             ${item.quantity}, ${'dona'}, ${item.unitPrice}, ${item.quantity * item.unitPrice})
         `);
       }
 
