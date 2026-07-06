@@ -8,6 +8,7 @@ import {
   StreamableFile, Logger, NotFoundException, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -110,6 +111,8 @@ interface MultipartRequest {
 export class StorageController {
   private readonly logger = new Logger(StorageController.name);
 
+  constructor(private readonly i18n: I18nService) {}
+
   /**
    * PUT /storage/upload?key=chat/1/file/xxx.png&mime=image/png
    *
@@ -205,7 +208,7 @@ export class StorageController {
   ): Promise<StreamableFile> {
     const safePath = resolveWithinUploads(filePath);
     if (!safePath || !fs.existsSync(safePath)) {
-      throw new NotFoundException('File not found');
+      throw new NotFoundException(await this.i18n.t('errors.fileNotFound'));
     }
 
     const ext = path.extname(filePath).toLowerCase();
@@ -215,9 +218,7 @@ export class StorageController {
     // tiplar (rasm/media — chat ImageLightbox) uchun ixtiyoriy, bo'lsa loglanadi.
     const parsedReason = DownloadReasonSchema.safeParse(reasonRaw ?? '');
     if (isGatedDoc && !parsedReason.success) {
-      throw new BadRequestException(
-        "Hujjatni yuklab olish uchun sabab kiritilishi shart (?reason=, kamida 5 belgi)",
-      );
+      throw new BadRequestException(await this.i18n.t('validation.downloadReasonRequired'));
     }
     const userReason = parsedReason.success ? parsedReason.data : null;
 
@@ -265,7 +266,7 @@ export class StorageController {
   ): Promise<StreamableFile> {
     const safePath = resolveWithinUploads(filePath);
     if (!safePath || !fs.existsSync(safePath)) {
-      throw new NotFoundException('File not found');
+      throw new NotFoundException(await this.i18n.t('errors.fileNotFound'));
     }
     const ext = path.extname(filePath).toLowerCase();
 
