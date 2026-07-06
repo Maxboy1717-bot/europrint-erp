@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -83,7 +84,10 @@ const CreateLeadContactSchema = z.object({
 export class MarketingGroup2Controller {
   private readonly logger = new Logger(MarketingGroup2Controller.name);
 
-  constructor(private readonly svc: MarketingGroup2Service) {}
+  constructor(
+    private readonly svc: MarketingGroup2Service,
+    private readonly i18n: I18nService,
+  ) {}
 
   // ── Blog ──────────────────────────────────────────────────────────────────
 
@@ -247,7 +251,7 @@ export class MarketingGroup2Controller {
       RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? null;
-    if (!row) throw new HttpException('Topilmadi', 404);
+    if (!row) throw new HttpException(await this.i18n.t('errors.calendarEventNotFoundWithId', { args: { id } }), 404);
     return { data: row };
   }
 

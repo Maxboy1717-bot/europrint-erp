@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
+import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -110,7 +111,10 @@ const InboxStatusSchema = z.object({
 export class MarketingAnalyticsStubsController {
   private readonly logger = new Logger(MarketingAnalyticsStubsController.name);
 
-  constructor(private readonly svc: MarketingExtService) {}
+  constructor(
+    private readonly svc: MarketingExtService,
+    private readonly i18n: I18nService,
+  ) {}
 
   // -- Content ---------------------------------------------------------------
   @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'director')
@@ -286,7 +290,7 @@ export class MarketingAnalyticsStubsController {
     const ml = first(await db.execute(sql`
       SELECT * FROM marketing_leads WHERE id=${id} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!ml) throw new NotFoundException(`Marketing lead #${id} topilmadi`);
+    if (!ml) throw new NotFoundException(await this.i18n.t('errors.marketingLeadNotFoundWithId', { args: { id } }));
     if (ml['crm_lead_id']) return { message: 'Allaqachon CRM ga aylantirilgan', crm_lead_id: ml['crm_lead_id'] };
     const crmRow = first(await db.execute(sql`
       INSERT INTO crm_leads (contact_name, contact_phone, contact_email, source, notes, status, assigned_by_id, created_at, updated_at)
@@ -433,7 +437,7 @@ export class MarketingAnalyticsStubsController {
     const row = first(await db.execute(sql`
       SELECT * FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!row) throw new NotFoundException(`Exposition #${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.exhibitionNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 
@@ -450,7 +454,7 @@ export class MarketingAnalyticsStubsController {
     const row = first(await db.execute(sql`
       SELECT id, name, qr_code FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!row) throw new NotFoundException(`Exposition #${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.exhibitionNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 
@@ -532,7 +536,7 @@ export class MarketingAnalyticsStubsController {
       RETURNING *
     `);
     const row = rows(r)[0] ?? null;
-    if (!row) throw new NotFoundException('Ko\'rgazma topilmadi');
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.exhibitionNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 
@@ -559,7 +563,7 @@ export class MarketingAnalyticsStubsController {
     const row = first(await db.execute(sql`
       SELECT * FROM pr_activities WHERE id=${id} AND deleted_at IS NULL LIMIT 1
     `));
-    if (!row) throw new NotFoundException(`PR activity #${id} not found`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.prActivityNotFoundWithId', { args: { id } }));
     return { data: row };
   }
 

@@ -4,6 +4,7 @@
  */
 
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { LeadsRepository } from './leads.repository';
 
@@ -11,7 +12,10 @@ import { LeadsRepository } from './leads.repository';
 export class LeadsService {
   private readonly logger = new Logger(LeadsService.name);
 
-  constructor(private readonly repo: LeadsRepository) {}
+  constructor(
+    private readonly repo: LeadsRepository,
+    private readonly i18n: I18nService,
+  ) {}
 
   private mapRow(r: Record<string, unknown>) {
     const parts = String(r['name'] ?? '').split(' ');
@@ -35,7 +39,7 @@ export class LeadsService {
 
   async findOne(id: number) {
     const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(`#${id} topilmadi`);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.marketingLeadNotFoundWithId', { args: { id } }));
     return row;
   }
 

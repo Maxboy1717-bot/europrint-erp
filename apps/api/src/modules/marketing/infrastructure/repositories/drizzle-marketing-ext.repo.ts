@@ -6,6 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { and, eq, desc, isNull, sql, notInArray, lt } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { typedExecute } from '@shared/db/typed-execute';
@@ -24,6 +25,8 @@ import {
 @Injectable()
 export class DrizzleMarketingExtRepository {
   private readonly logger = new Logger(DrizzleMarketingExtRepository.name);
+
+  constructor(private readonly i18n: I18nService) {}
 
   /**
    * Attributed revenue per campaign (EP-MKT-051 — profit-based ROI input).
@@ -183,7 +186,7 @@ export class DrizzleMarketingExtRepository {
         .set({ status: 'published', publishedAt: _time.now(), updatedAt: _time.now() })
         .where(eq(marketingContentPosts.id, id))
         .returning();
-      if (!row) throw new NotFoundException(`Post topilmadi: ${id}`);
+      if (!row) throw new NotFoundException(await this.i18n.t('errors.marketingPostNotFoundWithId', { args: { id } }));
       return row;
     });
   }
