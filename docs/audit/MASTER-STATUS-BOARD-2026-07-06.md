@@ -61,7 +61,14 @@
 | i18n F2 | `pages/iot/**` (14 files: 9 components + 5 hooks) | done | `467b3207`,`d156d641`,`05399144` (+ earlier slices) |
 | i18n F2 | `pages/WarehouseDailyView*.ts(x)` (4 files) | done | `9f22ec60` |
 | i18n F2 | `pages/WarehouseMaterialKits*.ts(x)` (4 files) | done | `d4f06bde` |
-| i18n F2 | `pages/PlanningBoard*.ts(x)`, `pages/planning/**`, `pages/usePlanningBoardActions.ts` (7 files) | claimed | in progress |
+| i18n F2 | `pages/PlanningBoard*.ts(x)`, `pages/planning/**`, `pages/usePlanningBoardActions.ts`, `locales/*/production.json` (7 files, workflow lane `planning-board`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
+| i18n F2 | `pages/BarcodeSystem*.ts(x)`, `pages/barcode/**`, `locales/*/barcode.json` (7 files, workflow lane `barcode`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
+| i18n F2 | `pages/FaceRecognitionMonitoring*.ts(x)`, `pages/FaceRegistration*.ts(x)`, `locales/*/iot.json` (5 files, workflow lane `face-recognition`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
+| i18n F2 | `camera-ai-modern/**`, `locales/*/security.json` (3 files, workflow lane `camera-ai-modern`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
+| i18n F2 | `pages/StockReservation.tsx`, `components/wms/reservation/**`, `components/wms/reports/ReportsHeader.tsx`, `locales/*/wms.json` (workflow lane `wms-reservation`) | claimed | in progress (background workflow `wf_77dcf939-e4f`) |
+| i18n F2 | `pages/PapkaOrders.tsx`, `pages/PapkaOrdersSections.tsx` (narrow toast-ternary fix, no shared locale file — self-contained local TRANSLATIONS object) | queued | not yet started (main loop will do directly, not via workflow) |
+| i18n F2 (verified false-positive, no action) | `components/orders/WizardHeader.tsx` + 6 sibling wizard files | done — confirmed already 3-language-complete | n/a |
+| i18n Part 3 (D3) | `pages/ImpositionCalculator.tsx` | claimed | in progress (main loop, direct, not via workflow) |
 
 ---
 
