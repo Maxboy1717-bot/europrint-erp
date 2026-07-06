@@ -315,6 +315,36 @@ export class OrgMutationsRepo {
       await this.recordStakeChange(ins?.id ?? null, userId, nodeId, null, stakeFraction, 'assign', allowOverload);
     }
 
+    // G2 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, C9): dual-write to `employee_cards` so this
+    // reachable assignment reaches FORMULA-A salary/card-gate logic (card.repository.ts:495
+    // employeeSalaryTotal, :477 listEmployeeCards), which reads employee_cards EXCLUSIVELY — an
+    // assignment made only through this /users/:userId/node path was previously invisible
+    // downstream. employee_cards.card_id → org_departments.id (same id-space as nodeId, live FK
+    // confirmed) so no translation is needed there; employee_cards.employee_id → employees.id
+    // does need resolving from userId (users.id), via the same bidirectional bridge already used
+    // elsewhere in this module (razryad-history.repository.ts:139): employees.user_id = userId,
+    // falling back to users.employee_id for the inverse link direction. Best-effort: an operator
+    // with no linked employees row (rare, e.g. a system/service account) still gets the
+    // employee_org_departments write above — only the employee_cards mirror is skipped for them.
+    const empRow = (await runQuery<{ id: number }>(sql`
+      SELECT e.id FROM employees e
+      LEFT JOIN users u ON u.id = ${userId}
+      WHERE e.user_id = ${userId} OR e.id = u.employee_id
+      LIMIT 1
+    `)).rows;
+    const employeeId = empRow[0]?.id ?? null;
+    if (employeeId != null) {
+      const cardPrimaryCheck = (await runQuery<{ cnt: number }>(sql`
+        SELECT COUNT(*)::int AS cnt FROM employee_cards WHERE employee_id = ${employeeId} AND is_active = true AND is_primary = true
+      `)).rows;
+      const cardIsPrimary = Number(cardPrimaryCheck[0]?.cnt ?? 0) === 0;
+      await runQuery(sql`
+        INSERT INTO employee_cards (employee_id, card_id, is_primary, is_active, assigned_at, created_at, updated_at)
+        VALUES (${employeeId}, ${nodeId}, ${cardIsPrimary}, true, NOW(), NOW(), NOW())
+        ON CONFLICT (employee_id, card_id) WHERE is_active DO NOTHING
+      `);
+    }
+
     // T12-05: head_user_id WRITER-WIRE. Rahbarlik-kartasiga (owner/ceo/director/section)
     // xodim biriktirilganda — bu xodim AYNAN shu kartaning rahbari → org_departments.head_user_id
     // ni biriktirilgan user'dan to'ldir. Manba = MAVJUD user (biriktirilayotgan userId), soxta emas
@@ -357,6 +387,21 @@ export class OrgMutationsRepo {
     if (prior[0]) {
       const oldStake = prior[0].stake_fraction == null ? null : Number(prior[0].stake_fraction);
       await this.recordStakeChange(prior[0].id, userId, nodeId, oldStake, null, 'remove', false);
+    }
+    // G2 mirror: soft-remove the employee_cards counterpart written by assignUser() above, so
+    // removing an assignment through this path doesn't leave a stale row visible to FORMULA-A.
+    const empRow = (await runQuery<{ id: number }>(sql`
+      SELECT e.id FROM employees e
+      LEFT JOIN users u ON u.id = ${userId}
+      WHERE e.user_id = ${userId} OR e.id = u.employee_id
+      LIMIT 1
+    `)).rows;
+    const employeeId = empRow[0]?.id ?? null;
+    if (employeeId != null) {
+      await runQuery(sql`
+        UPDATE employee_cards SET is_active = false, ended_at = NOW(), updated_at = NOW()
+        WHERE employee_id = ${employeeId} AND card_id = ${nodeId} AND is_active = true
+      `);
     }
     return { removed: true };
   }
