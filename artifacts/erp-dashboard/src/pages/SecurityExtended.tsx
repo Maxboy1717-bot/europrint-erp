@@ -132,12 +132,12 @@ export default function SecurityExtended() {
         className="flex-1 flex flex-col overflow-hidden"
       >
         <div className="border-b border-border px-4 bg-muted/40">
-          <TabsList className="bg-transparent h-12 gap-4">
+          <TabsList className="bg-transparent h-12 gap-4 flex w-full overflow-x-auto">
             {Object.entries(tabMeta).map(([key, meta]) => (
               <TabsTrigger
                 key={key}
                 value={key}
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 text-muted-foreground font-medium transition-all"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4 shrink-0 whitespace-nowrap text-muted-foreground font-medium transition-all"
               >
                 <meta.icon className="h-4 w-4 mr-2" />
                 {meta.title}
