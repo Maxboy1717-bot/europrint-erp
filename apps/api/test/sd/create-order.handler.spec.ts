@@ -13,6 +13,8 @@ jest.mock('@shared/db', () => ({
     ),
   },
   domain_events: {},
+  // C1.7: _generateOrderNumber() now calls nextval('sales_order_number_seq') via runQuery.
+  runQuery: jest.fn().mockResolvedValue({ rows: [{ seq: '42' }] }),
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -125,7 +127,27 @@ describe('CreateOrderHandler', () => {
     expect(published.some(e => e.constructor.name === 'OrderCreatedEvent')).toBe(true);
   });
 
-  it('produces order number using sequence prefix when count is available', async () => {
+  // C1.7 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): _generateOrderNumber() used to read
+  // orderRepo.count()+1 (a read-max race); it now calls Postgres's atomic
+  // nextval('sales_order_number_seq') via runQuery instead. `count` is no longer consulted
+  // for numbering at all — this replaces the old "produces order number using sequence prefix
+  // when count is available" test, which no longer reflects how numbering actually works.
+  it('generates the order number via nextval(sales_order_number_seq), not repo.count()', async () => {
+    const repo = makeRepo(true, 99); // count=99 is now irrelevant to numbering
+    const handler = await buildHandler(repo, makeBus());
+
+    const result = await handler.execute(
+      new CreateOrderCommand(10, 1_000_000, 'UZS'),
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.getOrderNumber()).toBe('SO-' + new Date().getFullYear() + '-000042'); // seq='42' from the mock
+    expect(repo.count).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a Date.now()-based number if the sequence query itself fails', async () => {
+    const dbModule = jest.requireMock('@shared/db') as { runQuery: jest.Mock };
+    dbModule.runQuery.mockRejectedValueOnce(new Error('connection reset'));
     const repo = makeRepo(true, 99);
     const handler = await buildHandler(repo, makeBus());
 
@@ -134,6 +156,6 @@ describe('CreateOrderHandler', () => {
     );
 
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.data.getOrderNumber()).toMatch(/^SO-/);
+    if (result.ok) expect(result.data.getOrderNumber()).toMatch(/^SO-\d+$/); // Date.now() fallback, no year/dash-padding
   });
 });
