@@ -527,7 +527,7 @@
 | Critical-Correctness | 1.4 WMS oversell (no atomic quantity guard) | DONE | e8c5a1f6 | 100% | WMS oversell; #3 top-10 |
 | Critical-Correctness | 1.5 POS oversell / negative stock (TOCTOU) | DONE | 7e8d7bd9 | 100% | POS oversell; #4 top-10 |
 | Critical-Correctness | 1.6 Quarantine GREATEST clamp masking oversell | DONE | a9d1a583 | 100% | n/a |
-| Critical-Correctness | 1.7 count()+1 seqNum read-max race | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 1.7 count()+1 seqNum read-max race | DONE | b8422afd | 100% | n/a |
 | Critical-Correctness | 1.8 SELECT-then-INSERT duplicate-name guard non-atomic | UNKNOWN | d75898a2 | 0% | n/a |
 | Critical-Correctness | 1.9 GL findEntryIdByReference-then-insert (safe) | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 1.10 Kanban MAX(sort_order)+1 (acceptable) | UNKNOWN | n/a | 0% | n/a |
