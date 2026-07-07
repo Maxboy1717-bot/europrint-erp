@@ -528,7 +528,7 @@
 | Critical-Correctness | 1.5 POS oversell / negative stock (TOCTOU) | DONE | 7e8d7bd9 | 100% | POS oversell; #4 top-10 |
 | Critical-Correctness | 1.6 Quarantine GREATEST clamp masking oversell | DONE | a9d1a583 | 100% | n/a |
 | Critical-Correctness | 1.7 count()+1 seqNum read-max race | DONE | b8422afd | 100% | n/a |
-| Critical-Correctness | 1.8 SELECT-then-INSERT duplicate-name guard non-atomic | UNKNOWN | d75898a2 | 0% | n/a |
+| Critical-Correctness | 1.8 SELECT-then-INSERT duplicate-name guard non-atomic | PARTIAL (see note) | d75898a2 | 60% | Full atomic fix (UNIQUE index) blocked by pre-existing duplicate warehouse names, itself a symptom of the already-tracked org_departments duplication (Two-Worlds cluster-3 / G9 "14 roots") — cross-referenced, not a new independent bug |
 | Critical-Correctness | 1.9 GL findEntryIdByReference-then-insert (safe) | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 1.10 Kanban MAX(sort_order)+1 (acceptable) | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 2.1 GL entryDate UTC day instead of Tashkent | DONE | e6cebf7d | 100% | GL entry mis-dating; #5 top-10 (C3) |
