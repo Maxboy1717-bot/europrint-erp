@@ -9,6 +9,7 @@ import { assertFound, assertRequired } from '@common/assertions';
 import { z } from 'zod';
 import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -44,7 +45,10 @@ const OkrCreateObjectiveP30Schema = OkrCreateObjectiveSchema.extend({
 export class OkrController {
   private readonly logger = new Logger(OkrController.name);
 
-  constructor(private readonly svc: OkrService) {}
+  constructor(
+    private readonly svc: OkrService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'List objectives' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -73,7 +77,7 @@ export class OkrController {
     const _rData = await this.svc.getObjective(parseInt(id, 10));
     assertOk(_rData);
     const data = _rData.data;
-    assertFound(data, 'Topilmadi');
+    assertFound(data, await this.i18n.t('errors.notFound'));
     return data[0];
   }
 
@@ -87,7 +91,7 @@ export class OkrController {
   ) {
     const dto = OkrCreateObjectiveP30Schema.parse(body);
     const { title, type, year, quarter, description, parent_goal_id, owner_card_id } = dto;
-    assertRequired(title, 'title majburiy');
+    assertRequired(title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrInternal(await this.svc.createObjective(
       title, type ?? 'company',
       year ? Number(year) : _time.now().getFullYear(),
@@ -135,8 +139,9 @@ export class OkrController {
     @CurrentUser() user: { id: number },
   ) {
     const { objective_id, title, target_value, unit, current_value } = body;
-    assertRequired(objective_id, 'objective_id va title majburiy');
-    assertRequired(title, 'objective_id va title majburiy');
+    const objectiveIdAndTitleMsg = await this.i18n.t('validation.objectiveIdAndTitleRequired');
+    assertRequired(objective_id, objectiveIdAndTitleMsg);
+    assertRequired(title, objectiveIdAndTitleMsg);
     return unwrapOrInternal(await this.svc.createKeyResult(
       Number(objective_id), title as string,
       target_value ? Number(target_value) : 100,

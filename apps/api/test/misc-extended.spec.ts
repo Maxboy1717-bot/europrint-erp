@@ -50,7 +50,10 @@ describe('OkrController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OkrController],
-      providers: [{ provide: OkrService, useValue: mockSvc }],
+      providers: [
+        { provide: OkrService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(OkrController);
   });
@@ -102,7 +105,10 @@ describe('KaizenController', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [KaizenController],
-      providers: [{ provide: KaizenService, useValue: mockSvc }],
+      providers: [
+        { provide: KaizenService, useValue: mockSvc },
+        { provide: I18nService, useValue: mockI18n },
+      ],
     }).overrideGuard(RolesGuard).useValue(mockGuard).overrideGuard(JwtAuthGuard).useValue(mockGuard).compile();
     ctrl = module.get(KaizenController);
   });

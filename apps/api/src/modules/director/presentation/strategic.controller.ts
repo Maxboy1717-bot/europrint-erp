@@ -134,7 +134,7 @@ export class StrategicController {
     const _rData = await this.svc.getTask(parseInt(id, 10));
     assertOk(_rData);
     const data = _rData.data;
-    assertFound(data, 'Topilmadi');
+    assertFound(data, await this.i18n.t('errors.notFound'));
     return data[0];
   }
 

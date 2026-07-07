@@ -69,5 +69,12 @@
   "materialIdMustBeNumber": "ID материала должен быть числом",
   "targetsArrayRequired": "Требуется массив targets",
   "statusRequired": "Требуется параметр status",
-  "supplierNameRequired": "supplier_name обязателен"
+  "supplierNameRequired": "supplier_name обязателен",
+  "emojiRequired": "emoji обязателен",
+  "contentRequired": "content обязателен",
+  "roomIdAndQuestionRequired": "roomId и question обязательны",
+  "pollOptionsCountRange": "Нужно от 2 до 10 вариантов",
+  "optionIndexRequired": "optionIndex обязателен",
+  "objectiveIdAndTitleRequired": "objective_id и title обязательны",
+  "titleAndDescriptionRequired": "title и description обязательны"
 }

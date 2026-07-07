@@ -6,6 +6,7 @@
 import { assertFound, assertRequired } from '@common/assertions';
 import { BadRequestException, Body, Controller, Get, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, assertOk, unwrapOrInternal } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -33,7 +34,10 @@ const REVIEW_ROLES = ['director', 'hr_manager', 'department_head', 'super_admin'
 export class KaizenController {
   private readonly logger = new Logger(KaizenController.name);
 
-  constructor(private readonly svc: KaizenService) {}
+  constructor(
+    private readonly svc: KaizenService,
+    private readonly i18n: I18nService,
+  ) {}
 
   @ApiOperation({ summary: 'Create suggestion' })
   @ApiResponse({ status: 201, description: 'OK' })
@@ -45,8 +49,9 @@ export class KaizenController {
     @CurrentUser() user: { id: number },
   ) {
     const { title, description, category, expected_benefit } = body;
-    assertRequired(title, 'title va description majburiy');
-    assertRequired(description, 'title va description majburiy');
+    const titleAndDescriptionMsg = await this.i18n.t('validation.titleAndDescriptionRequired');
+    assertRequired(title, titleAndDescriptionMsg);
+    assertRequired(description, titleAndDescriptionMsg);
     return unwrapOrInternal(await this.svc.createSuggestion(title, description, category ?? 'general', expected_benefit ?? null, user.id));
   }
 
@@ -72,7 +77,7 @@ export class KaizenController {
     const _rData = await this.svc.getSuggestion(parseInt(id, 10));
     assertOk(_rData);
     const data = _rData.data;
-    assertFound(data, 'Topilmadi');
+    assertFound(data, await this.i18n.t('errors.notFound'));
     return data[0];
   }
 

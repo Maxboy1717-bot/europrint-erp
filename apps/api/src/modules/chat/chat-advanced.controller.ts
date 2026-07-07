@@ -12,6 +12,7 @@ import { Controller, Get, Post, Patch, Body, Param, UseGuards, Logger, UseInterc
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../common/types/user.types';
@@ -40,6 +41,7 @@ export class ChatAdvancedController {
   constructor(
     private readonly chatService: ChatService,
     private readonly chatGateway: ChatGateway,
+    private readonly i18n: I18nService,
   ) {}
 
   // ── ROOMS ──────────────────────────────────────────────────────────────────
@@ -73,7 +75,7 @@ export class ChatAdvancedController {
     @Param('id') messageId: string,
     @Body() body: ChatEmojiDto,
   ) {
-    assertRequired(body.emoji, 'emoji is required');
+    assertRequired(body.emoji, await this.i18n.t('validation.emojiRequired'));
 
     const reactions = unwrapOrThrow(await this.chatService.toggleReaction(messageId, user.id, body.emoji));
 
@@ -98,7 +100,7 @@ export class ChatAdvancedController {
     @Body() body: ChatPinMessageDto,
   ) {
     const msg = await this.chatService.pinMessage(messageId, user.id, body.pin ?? true);
-    assertFound(msg, 'Message not found');
+    assertFound(msg, await this.i18n.t('errors.messageNotFound'));
 
     const roomId = String(msg.roomId);
     const pinned = msg.isPinned ? await this.chatService.getPinnedMessage(roomId) : null;
@@ -123,11 +125,12 @@ export class ChatAdvancedController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() body: ChatAdvancedCreatePollDto,
   ) {
-    assertRequired(body.roomId, 'roomId and question are required');
-    assertRequired(body.question?.trim(), 'roomId and question are required');
+    const roomIdAndQuestionMsg = await this.i18n.t('validation.roomIdAndQuestionRequired');
+    assertRequired(body.roomId, roomIdAndQuestionMsg);
+    assertRequired(body.question?.trim(), roomIdAndQuestionMsg);
     assertValidated(
       Boolean(body.options && body.options.length >= 2 && body.options.length <= 10),
-      '2-10 ta variant kerak',
+      await this.i18n.t('validation.pollOptionsCountRange'),
     );
 
     const roomId = String(body.roomId);
@@ -165,7 +168,7 @@ export class ChatAdvancedController {
     @Param('pollId') pollId: string,
     @Body() body: ChatAdvancedVotePollDto,
   ) {
-    assertDefined(body.optionIndex, 'optionIndex is required');
+    assertDefined(body.optionIndex, await this.i18n.t('validation.optionIndexRequired'));
 
     const indices = Array.isArray(body.optionIndex) ? body.optionIndex : [body.optionIndex];
     const voteData = unwrapOrThrow(await this.chatService.votePoll(pollId, user.id, indices));

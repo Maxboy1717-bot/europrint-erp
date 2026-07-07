@@ -433,5 +433,7 @@
   "workCenterNotFoundWithId": "Ish markazi #{id} topilmadi",
   "qcStandardNotFoundWithId": "QC standarti #{id} topilmadi",
   "qcFinalInspectionNotFoundWithId": "Yakuniy tekshiruv #{id} topilmadi",
-  "qcRootCauseNotFoundWithId": "Ildiz sabab #{id} topilmadi"
+  "qcRootCauseNotFoundWithId": "Ildiz sabab #{id} topilmadi",
+  "invalidRole": "Noto'g'ri rol",
+  "cannotDeleteOwnAccount": "O'z hisobingizni o'chira olmaysiz"
 }

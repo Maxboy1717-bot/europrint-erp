@@ -433,5 +433,7 @@
   "workCenterNotFoundWithId": "Рабочий центр #{id} не найден",
   "qcStandardNotFoundWithId": "Стандарт ОТК #{id} не найден",
   "qcFinalInspectionNotFoundWithId": "Финальная инспекция #{id} не найдена",
-  "qcRootCauseNotFoundWithId": "Первопричина #{id} не найдена"
+  "qcRootCauseNotFoundWithId": "Первопричина #{id} не найдена",
+  "invalidRole": "Неверная роль",
+  "cannotDeleteOwnAccount": "Нельзя удалить свою учётную запись"
 }

@@ -100,7 +100,7 @@ export class AdminUsersController {
     @Body() body: { role: UserRole },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    assertValidated(Object.values(UserRole).includes(body.role), 'Invalid role');
+    assertValidated(Object.values(UserRole).includes(body.role), await this.i18n.t('errors.invalidRole'));
     const result = await this.updateUserRoleHandler.execute({ userId, newRole: body.role, executorId: user.id });
     assertOk(result);
     return { message: 'Role updated successfully' };
@@ -111,7 +111,7 @@ export class AdminUsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Foydalanuvchini o'chirish" })
   async deleteUser(@Param('id', ParseIntPipe) userId: number, @CurrentUser() user: AuthenticatedUser) {
-    assertValidated(userId !== user.id, 'Cannot delete your own account');
+    assertValidated(userId !== user.id, await this.i18n.t('errors.cannotDeleteOwnAccount'));
     try {
       await this.userRepo.softDelete(userId);
     } catch {

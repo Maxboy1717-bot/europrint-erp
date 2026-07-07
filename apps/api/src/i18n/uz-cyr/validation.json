@@ -69,5 +69,12 @@
   "materialIdMustBeNumber": "Материал id рақам бўлиши керак",
   "targetsArrayRequired": "targets array талаб қилинади",
   "statusRequired": "status талаб қилинади",
-  "supplierNameRequired": "supplier_name мажбурий"
+  "supplierNameRequired": "supplier_name мажбурий",
+  "emojiRequired": "emoji мажбурий",
+  "contentRequired": "content мажбурий",
+  "roomIdAndQuestionRequired": "roomId ва question мажбурий",
+  "pollOptionsCountRange": "2-10 та вариант керак",
+  "optionIndexRequired": "optionIndex мажбурий",
+  "objectiveIdAndTitleRequired": "objective_id ва title мажбурий",
+  "titleAndDescriptionRequired": "title ва description мажбурий"
 }
