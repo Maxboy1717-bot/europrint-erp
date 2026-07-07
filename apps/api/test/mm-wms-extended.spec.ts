@@ -17,6 +17,7 @@ import { MovementsService } from '../src/modules/wms/movements/movements.service
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 
 const ok = (data: unknown) => ({ ok: true, data });
 const mockGuard = { canActivate: () => true };
@@ -76,6 +77,7 @@ describe('MM Vendors and WMS Extended Controllers — Behavioral Integration Tes
         { provide: WmsCountsService, useValue: mockWmsCountsSvc },
         { provide: WmsCrudService, useValue: mockWmsCrudSvc },
         { provide: MovementsService, useValue: mockMovementsSvc },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)

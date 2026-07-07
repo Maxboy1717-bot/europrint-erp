@@ -92,5 +92,7 @@
   "fieldNameRequired": "fieldName (ёки name) мажбурий",
   "fieldLabelRequired": "fieldLabel (ёки label) мажбурий",
   "itemsOrOrderedIdsRequired": "items ёки orderedIds мажбурий",
-  "firstNameRequired": "first_name мажбурий"
+  "firstNameRequired": "first_name мажбурий",
+  "userIdOrEmployeeIdRequired": "userId ёки employeeId талаб қилинади",
+  "purchaseOrderIdRequired": "purchase_order_id мажбурий"
 }

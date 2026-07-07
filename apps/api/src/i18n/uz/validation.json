@@ -92,5 +92,7 @@
   "fieldNameRequired": "fieldName (yoki name) majburiy",
   "fieldLabelRequired": "fieldLabel (yoki label) majburiy",
   "itemsOrOrderedIdsRequired": "items yoki orderedIds majburiy",
-  "firstNameRequired": "first_name majburiy"
+  "firstNameRequired": "first_name majburiy",
+  "userIdOrEmployeeIdRequired": "userId yoki employeeId talab qilinadi",
+  "purchaseOrderIdRequired": "purchase_order_id majburiy"
 }

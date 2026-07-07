@@ -12,6 +12,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { HrEmployeesController } from '../../src/modules/hr/presentation/hr-employees.controller';
 import { HR_REPO } from '../../src/modules/hr/domain/repositories/i-hr.repo';
 import { RolesGuard } from '../../src/common/guards/roles.guard';
+import { I18nService } from 'nestjs-i18n';
 
 interface BusMock { execute: jest.Mock }
 interface HrRepoMock {
@@ -37,6 +38,7 @@ describe('HrEmployeesController (e2e)', () => {
         { provide: QueryBus, useValue: queryBus },
         { provide: HR_REPO, useValue: hrRepo },
         { provide: Reflector, useValue: new Reflector() },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
     })
       .overrideGuard(RolesGuard).useValue({ canActivate: (): boolean => rolesAllowed })

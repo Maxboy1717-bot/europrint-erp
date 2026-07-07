@@ -14,6 +14,7 @@ import { FinanceArService } from '../src/modules/finance/application/finance-ar.
 import { FinanceApService } from '../src/modules/finance/application/finance-ap.service';
 import { JwtAuthGuard } from 'shared/guards/jwt-auth.guard';
 import { RolesGuard } from 'shared/guards/roles.guard';
+import { I18nService } from 'nestjs-i18n';
 
 const ok = (data: unknown) => ({ ok: true, data });
 const mockGuard = { canActivate: () => true };
@@ -70,6 +71,7 @@ describe('Finance Accounting Routes (NestJS migration)', () => {
         { provide: FinancePayrollService, useValue: mockPayrollSvc },
         { provide: FinanceArService, useValue: mockArSvc },
         { provide: FinanceApService, useValue: mockApSvc },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)

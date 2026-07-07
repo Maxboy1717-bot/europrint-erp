@@ -20,6 +20,7 @@ Controller,
   InternalServerErrorException, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -47,7 +48,7 @@ const PROD_WRITE_ROLES = ['super_admin', 'director', 'production_manager', 'tech
 export class ProductionShiftReportsController {
   private readonly logger = new Logger(ProductionShiftReportsController.name);
 
-  constructor(private readonly svc: ProductionService) {}
+  constructor(private readonly svc: ProductionService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -65,7 +66,7 @@ export class ProductionShiftReportsController {
   @Get(':id')
   async getById(@Param('id') id: string) {
     const r = await this.svc.getShiftReport(safeInt(id, 0));
-    assertFound(r, 'Shift report not found');
+    assertFound(r, await this.i18n.t('errors.shiftReportNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -86,7 +87,7 @@ export class ProductionShiftReportsController {
   @UsePipes(new ZodValidationPipe(ProductionUpdateShiftReportSchema))
   async update(@Param('id') id: string, @Body() body: ProductionUpdateShiftReportDto) {
     const r = await this.svc.updateShiftReport(safeInt(id, 0), body);
-    assertFound(r, 'Shift report not found');
+    assertFound(r, await this.i18n.t('errors.shiftReportNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -98,7 +99,7 @@ export class ProductionShiftReportsController {
   @UsePipes(new ZodValidationPipe(ProductionCloseShiftReportSchema))
   async close(@Param('id') id: string, @Body() body: ProductionCloseShiftReportDto) {
     const r = await this.svc.closeShiftReport(safeInt(id, 0), body);
-    assertFound(r, 'Shift report not found or already closed');
+    assertFound(r, await this.i18n.t('errors.shiftReportNotFoundOrClosedWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -110,7 +111,7 @@ export class ProductionShiftReportsController {
   @UsePipes(new ZodValidationPipe(ProductionCloseShiftReportSchema))
   async putClose(@Param('id') id: string, @Body() body: ProductionCloseShiftReportDto) {
     const r = await this.svc.closeShiftReport(safeInt(id, 0), body);
-    assertFound(r, 'Shift report not found or already closed');
+    assertFound(r, await this.i18n.t('errors.shiftReportNotFoundOrClosedWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 

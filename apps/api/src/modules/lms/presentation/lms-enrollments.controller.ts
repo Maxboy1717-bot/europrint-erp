@@ -21,6 +21,7 @@ BadRequestException,
   UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -58,6 +59,7 @@ export class LmsEnrollmentsController {
     private readonly queryBus: QueryBus,
     private readonly lmsRepo: LmsRepository,
     private readonly eventEmitter: EventEmitter2,
+    private readonly i18n: I18nService,
   ) {}
 
   /**
@@ -91,7 +93,7 @@ export class LmsEnrollmentsController {
   @Roles('HR_MANAGER', 'HR_SPECIALIST', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getEnrollments(@Query() query: { userId?: string; employeeId?: string; status?: string; page?: string; limit?: string }) {
     const userId = query.userId ?? query.employeeId;
-    assertRequired(userId, 'userId yoki employeeId talab qilinadi');
+    assertRequired(userId, await this.i18n.t('validation.userIdOrEmployeeIdRequired'));
     const result = await this.lmsRepo.findEnrollmentsByUser(userId, {
       status: query.status,
       page: parseInt(query.page ?? '1', 10),
@@ -107,7 +109,7 @@ export class LmsEnrollmentsController {
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'SUPER_ADMIN')
   async getMyEnrollments(@CurrentUser() user: AuthenticatedUser, @Query() query: { status?: string; page?: string; limit?: string }) {
     const userId = String(user?.employeeId ?? user?.sub ?? user?.id ?? '');
-    assertRequired(userId, 'Foydalanuvchi aniqlanmadi');
+    assertRequired(userId, await this.i18n.t('errors.currentUserNotIdentified'));
     const result = await this.lmsRepo.findEnrollmentsByUser(userId, {
       status: query.status,
       page: parseInt(query.page ?? '1', 10),

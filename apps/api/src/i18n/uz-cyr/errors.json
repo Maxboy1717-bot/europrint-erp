@@ -444,5 +444,21 @@
   "activityNotFound": "Фаолият топилмади",
   "customFieldNotFound": "Махсус майдон топилмади",
   "leadStageNotFound": "Лид босқичи топилмади",
-  "entityTypeNotFound": "{entityType} топилмади"
+  "entityTypeNotFound": "{entityType} топилмади",
+  "shiftReportNotFoundWithId": "Смена ҳисоботи #{id} топилмади",
+  "shiftReportNotFoundOrClosedWithId": "Смена ҳисоботи #{id} топилмади ёки аллақачон ёпилган",
+  "applicationNotFoundWithId": "Ариза #{id} топилмади",
+  "applicationResponseNotFoundWithId": "Ариза жавоби #{id} топилмади",
+  "vendorNotFoundWithId": "Етказиб берувчи #{id} топилмади",
+  "materialCardNotFoundWithId": "Материал картаси #{id} топилмади",
+  "goodsReceiptNotFoundWithId": "Товар қабул ҳужжати #{id} топилмади",
+  "goodsIssueNotFoundWithId": "Товар чиқим ҳужжати #{id} топилмади",
+  "shiftHandoverNotFoundOrNotReceiverWithId": "Смена топшириш акти #{id} топилмади, аллақачон тасдиқланган, ёки сиз қабул қилувчи эмассиз",
+  "sessionNotFoundOrNotActiveWithId": "Сессия #{id} топилмади ёки актив эмас",
+  "sessionNotFoundOrNotPausedWithId": "Сессия #{id} топилмади ёки пауза ҳолатида эмас",
+  "maintenanceRequestNotFoundWithId": "Техник хизмат сўрови #{id} топилмади",
+  "taskNotFoundWithId": "Вазифа #{id} топилмади",
+  "glDocumentCreationFailed": "GL ҳужжат яратишда хатолик",
+  "accountingPeriodAlreadyClosed": "Ҳисоб даври аллақачон ёпилган",
+  "currentUserNotIdentified": "Фойдаланувчи аниқланмади"
 }

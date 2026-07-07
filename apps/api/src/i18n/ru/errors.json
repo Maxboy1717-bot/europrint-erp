@@ -444,5 +444,21 @@
   "activityNotFound": "Активность не найдена",
   "customFieldNotFound": "Пользовательское поле не найдено",
   "leadStageNotFound": "Этап лида не найден",
-  "entityTypeNotFound": "{entityType}: не найдено"
+  "entityTypeNotFound": "{entityType}: не найдено",
+  "shiftReportNotFoundWithId": "Отчёт смены #{id} не найден",
+  "shiftReportNotFoundOrClosedWithId": "Отчёт смены #{id} не найден или уже закрыт",
+  "applicationNotFoundWithId": "Заявка #{id} не найдена",
+  "applicationResponseNotFoundWithId": "Ответ на заявку #{id} не найден",
+  "vendorNotFoundWithId": "Поставщик #{id} не найден",
+  "materialCardNotFoundWithId": "Карточка материала #{id} не найдена",
+  "goodsReceiptNotFoundWithId": "Документ приёмки товара #{id} не найден",
+  "goodsIssueNotFoundWithId": "Документ отпуска товара #{id} не найден",
+  "shiftHandoverNotFoundOrNotReceiverWithId": "Акт передачи смены #{id} не найден, уже подтверждён, либо вы не являетесь принимающим",
+  "sessionNotFoundOrNotActiveWithId": "Сессия #{id} не найдена или не активна",
+  "sessionNotFoundOrNotPausedWithId": "Сессия #{id} не найдена или не на паузе",
+  "maintenanceRequestNotFoundWithId": "Заявка на техобслуживание #{id} не найдена",
+  "taskNotFoundWithId": "Задача #{id} не найдена",
+  "glDocumentCreationFailed": "Ошибка создания GL-документа",
+  "accountingPeriodAlreadyClosed": "Учётный период уже закрыт",
+  "currentUserNotIdentified": "Пользователь не определён"
 }

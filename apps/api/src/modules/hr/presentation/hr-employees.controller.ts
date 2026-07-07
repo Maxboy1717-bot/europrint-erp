@@ -81,7 +81,7 @@ export class HrEmployeesController {
   async getEmployee(@Param('id') id: string) {
     const result = await this.hrRepo.findEmployeeById(id);
     assertOk(result);
-    assertFound(result.data, `Xodim #${id} topilmadi`);
+    assertFound(result.data, await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
     return result.data;
   }
 
@@ -108,7 +108,7 @@ export class HrEmployeesController {
     // 1. Verify employee exists (404 guard)
     const empResult = await this.hrRepo.findEmployeeById(String(id));
     assertOk(empResult);
-    assertFound(empResult.data, `Xodim #${id} topilmadi`);
+    assertFound(empResult.data, await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
 
     // 2. Read all 7 factors from existing DB tables
     const readerResult = await this.hrRatingReader.readFactors(id);

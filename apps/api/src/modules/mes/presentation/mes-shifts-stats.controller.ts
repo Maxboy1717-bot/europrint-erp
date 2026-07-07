@@ -6,6 +6,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 
 
 import { assertFound } from '@common/assertions';
+import { I18nService } from 'nestjs-i18n';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
@@ -36,7 +37,7 @@ const MES_FLOOR_ROLES  = ['operator', 'worker', 'shift_supervisor', 'production_
 export class MesShiftsStatsController {
   private readonly logger = new Logger(MesShiftsStatsController.name);
 
-  constructor(private readonly svc: MesShiftsStatsService) {}
+  constructor(private readonly svc: MesShiftsStatsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'Get current shift' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -67,7 +68,7 @@ export class MesShiftsStatsController {
   async confirmShiftHandover(@Param('id') id: string, @Body() body: MesConfirmShiftHandoverDto, @CurrentUser() user: AuthenticatedUser) {
     const _rR = await this.svc.confirmShiftHandover(safeInt(id, 0), user?.id ?? 0, body.signature_data);
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Handover topilmadi, allaqachon tasdiqlangan, yoki siz qabul qiluvchi emassiz');
+    assertFound(r, await this.i18n.t('errors.shiftHandoverNotFoundOrNotReceiverWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -130,7 +131,7 @@ export class MesShiftsStatsController {
   async pauseSession(@Param('id') id: string, @Body() body: { reason?: string }) {
     const _rR = await this.svc.pauseSession(safeInt(id, 0), body.reason);
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Session not found or not active');
+    assertFound(r, await this.i18n.t('errors.sessionNotFoundOrNotActiveWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -144,7 +145,7 @@ export class MesShiftsStatsController {
   async resumeSession(@Param('id') id: string) {
     const _rR = await this.svc.resumeSession(safeInt(id, 0));
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Session not found or not paused');
+    assertFound(r, await this.i18n.t('errors.sessionNotFoundOrNotPausedWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -158,7 +159,7 @@ export class MesShiftsStatsController {
   async updateSessionQuantity(@Param('id') id: string, @Body() body: MesUpdateSessionQuantityDto) {
     const _rR = await this.svc.updateSessionQuantity(safeInt(id, 0), body.produced_qty, body.rejected_qty);
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Session not found');
+    assertFound(r, await this.i18n.t('errors.mesSessionNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 

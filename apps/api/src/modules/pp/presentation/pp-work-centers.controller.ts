@@ -6,6 +6,7 @@
 import { assertRequired } from '@common/assertions';
 import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, UseInterceptors, Query, Logger, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -47,6 +48,7 @@ export class PpWorkCentersController {
   constructor(
     private commandBus: CommandBus,
     private queryBus: QueryBus,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'Get all' })
@@ -79,7 +81,7 @@ export class PpWorkCentersController {
     const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
     assertOk(result);
     const workCenter = result.data?.find((wc: Record<string, unknown>) => String(wc.id) === id);
-    assertRequired(workCenter, 'Work center topilmadi');
+    assertRequired(workCenter, await this.i18n.t('errors.workCenterNotFoundWithId', { args: { id } }));
     return workCenter;
   }
 
@@ -172,7 +174,7 @@ export class PpWorkCentersController {
     const result = await this.queryBus.execute(new GetWorkCentersQuery({}));
     assertOk(result);
     const existing = result.data?.find((wc: Record<string, unknown>) => String(wc.id) === id);
-    assertRequired(existing, 'Work center topilmadi');
+    assertRequired(existing, await this.i18n.t('errors.workCenterNotFoundWithId', { args: { id } }));
     const command = new UpdateWorkCenterCommand(
       id,
       undefined,

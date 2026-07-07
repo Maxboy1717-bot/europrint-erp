@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException, Param, Patch, Post, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -35,7 +36,7 @@ const MM_WRITE_ROLES = ['ERP_MANAGER', 'mm_manager', 'warehouse_manager', 'super
 export class MmVendorsPrController {
   private readonly logger = new Logger(MmVendorsPrController.name);
 
-  constructor(private readonly svc: MmVendorsPrService) {}
+  constructor(private readonly svc: MmVendorsPrService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List vendors' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -100,7 +101,7 @@ export class MmVendorsPrController {
     const _rR = await this.svc.getVendor(safeInt(id, 0));
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Vendor not found');
+    assertFound(r, await this.i18n.t('errors.vendorNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -111,7 +112,7 @@ export class MmVendorsPrController {
   @UsePipes(new ZodValidationPipe(MmCreateVendorSchema))
   @Roles(...MM_WRITE_ROLES)
   async createVendor(@Body() body: MmCreateVendorDto) {
-    assertRequired((body as Record<string, unknown>).name, 'name required');
+    assertRequired((body as Record<string, unknown>).name, await this.i18n.t('validation.nameRequired'));
     return unwrapOrThrow(await this.svc.createVendor(body));
   }
 
@@ -126,7 +127,7 @@ export class MmVendorsPrController {
     const _rR = await this.svc.updateVendor(safeInt(id, 0), body);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Vendor not found');
+    assertFound(r, await this.i18n.t('errors.vendorNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 
@@ -157,7 +158,7 @@ export class MmVendorsPrController {
     const _rGetRequisition = await this.svc.getRequisition(safeInt(id, 0));
     assertOk(_rGetRequisition);
     const r = _rGetRequisition.data as Record<string, unknown>;
-    assertFound(r, 'Requisition not found');
+    assertFound(r, await this.i18n.t('errors.requisitionNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -168,7 +169,7 @@ export class MmVendorsPrController {
   @UsePipes(new ZodValidationPipe(MmCreateRequisitionSchema))
   @Roles(...MM_WRITE_ROLES)
   async createRequisition(@Body() body: MmCreateRequisitionDto, @CurrentUser() user: Record<string, unknown>) {
-    assertRequired((body as Record<string, unknown>).title, 'title required');
+    assertRequired((body as Record<string, unknown>).title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrThrow(await this.svc.createRequisition(body.title, (user?.id as number) ?? null, body.needed_by, body.notes, (body.items ?? []) as Array<Record<string, unknown>>));
   }
 
@@ -183,7 +184,7 @@ export class MmVendorsPrController {
     const _rR = await this.svc.updateRequisition(safeInt(id, 0), body);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Requisition not found');
+    assertFound(r, await this.i18n.t('errors.requisitionNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 

@@ -92,5 +92,7 @@
   "fieldNameRequired": "fieldName (или name) обязателен",
   "fieldLabelRequired": "fieldLabel (или label) обязателен",
   "itemsOrOrderedIdsRequired": "Обязателен items или orderedIds",
-  "firstNameRequired": "first_name обязателен"
+  "firstNameRequired": "first_name обязателен",
+  "userIdOrEmployeeIdRequired": "Обязателен userId или employeeId",
+  "purchaseOrderIdRequired": "purchase_order_id обязателен"
 }
