@@ -324,7 +324,7 @@
 | Design-QA | HR: Compact-header family no flex-wrap | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | HR: HRMap fixed height map (uncertain) | UNKNOWN | n/a | 0% | n/a |
 | Design-QA | HR: No BROKEN pages (verified sound) | DONE | n/a | 100% | n/a |
-| Design-QA | Production: DesignOrderDetail gradient never renders | QUEUED-NOT-STARTED | n/a | 0% | n/a |
+| Design-QA | Production: DesignOrderDetail gradient never renders | DONE | `882f476c` | 100% | Added missing `bg-gradient-to-br` base class at both flagged locations (from-/via-/to- are no-ops without it); color stops unchanged. Typecheck clean; no live design_orders row exists to visually exercise the loaded-state branch, verified via diff+syntax review instead (Q-32 static fallback). |
 | Design-QA | Production: DesignOrderDetail min-h-screen scroll-trap | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Production: ImpositionCalculator duplicate sm: grid bug | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Production: ImpositionCalculator raw palette colors | QUEUED-NOT-STARTED | n/a | 0% | n/a |
@@ -339,16 +339,16 @@
 | Design-QA | Finance/Director: FinanceDashboardTabs duplicate sm: grid bug | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Finance/Director: PricingTiers duplicate sm: grid bug | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Finance/Director: IdealRasmPage duplicate sm: grid bug | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | Finance/Director: AgentsHub duplicate lg: grid bug | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | Finance/Director: DirectorExtended missing h-full under overflow-hidden | QUEUED-NOT-STARTED | n/a | 0% | 6 director routes |
+| Design-QA | Finance/Director: AgentsHub duplicate lg: grid bug | NOT REPRODUCIBLE | n/a | 100% | Re-checked live code: line already reads `grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7` (no duplicate `lg:`) — a clean progressive ladder matching this file's own other grids (lines 124, 160). Already fixed by an earlier, uncredited session; audit was stale. Repo-wide regex scan confirmed zero remaining duplicate-breakpoint grid classes anywhere in this file. |
+| Design-QA | Finance/Director: DirectorExtended missing h-full under overflow-hidden | DONE | `4db11567` | 100% | 6 director routes. Confirmed real (not a false positive) — every other page using the same Tabs/flex-1/overflow-hidden pattern (FinanceExtended/MMExtended/QCExtended/MROExtended/SaaSExtended/TechPPExtended/SecurityExtended/IoTExtended/LMSExtended) sets h-full; DirectorExtended was the sole outlier. Live-verified in browser: header now stays pinned, tab body scrolls independently. |
 | Design-QA | Finance/Director: agent dashboards hand-rolled KpiBox | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Finance/Director: KpiThresholdConfig etc. custom header | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Finance/Director: FinanceExtendedTabsExtra placeholders (allowed) | UNKNOWN | n/a | 0% | n/a |
 | Design-QA | Finance/Director: kanban DashboardPanel bounded scroll (acceptable) | DONE | n/a | 100% | n/a |
 | Design-QA | Finance/Director: No BROKEN pages (verified sound) | DONE | n/a | 100% | n/a |
-| Design-QA | CRM: SDSalesOrders fixed w-80 sidebar no mobile stacking | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | CRM: CRMWorkspace 7-day calendar collapses to 2 columns | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | CRM: SecurityExtended TabsList overflow no wrap | QUEUED-NOT-STARTED | n/a | 0% | n/a |
+| Design-QA | CRM: SDSalesOrders fixed w-80 sidebar no mobile stacking | DONE | `6ddee48f` | 100% | flex-col below lg:, flex-row at 1024px+; list panel w-full when stacked, w-80 side-by-side. Live-verified at 900px (stacks) and desktop (side-by-side, unchanged). |
+| Design-QA | CRM: CRMWorkspace 7-day calendar collapses to 2 columns | DONE | `6383ae79` | 100% | Removed the responsive breakpoint entirely — cell content (2-char day labels, truncated event chips) fits at any width, so grid-cols-7 now applies unconditionally. Live-verified at 900px: clean 7-column render. |
+| Design-QA | CRM: SecurityExtended TabsList overflow no wrap | DONE | `503ca93f` | 100% | Matched the ERPProduction.tsx pattern (flex w-full overflow-x-auto + shrink-0 whitespace-nowrap per trigger) rather than a grid-based tab convention, since SecurityExtended uses an underline-style tab design. Live-verified via computed style: overflowX=auto, scrollWidth(1043)>clientWidth(944) — tab strip scrolls instead of clipping. |
 | Design-QA | CRM: SDEuroprint inert sticky nav (uncertain) | UNKNOWN | n/a | 0% | n/a |
 | Design-QA | CRM: Camera module hand-rolled KPI cards | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | CRM: Camera AI/Live-Monitoring tight max-h scroll (uncertain) | UNKNOWN | n/a | 0% | n/a |
@@ -363,7 +363,7 @@
 | Design-QA | Admin/LMS: Extended/Hub family triple nested padding | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Admin/LMS: ApprovalHub/SaaSExtended inset border-b header | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | Admin/LMS: ~54/76 pages missing EPPageHeader | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | Admin/LMS: AgentsHub duplicate lg:grid-cols (dup of Finance finding) | QUEUED-NOT-STARTED | n/a | 0% | n/a |
+| Design-QA | Admin/LMS: AgentsHub duplicate lg:grid-cols (dup of Finance finding) | NOT REPRODUCIBLE | n/a | 100% | Same finding as the Finance/Director row above — see that row's note. Already fixed by an earlier session; audit was stale. |
 | Design-QA | Admin/LMS: NotificationSettings cramped 5-field grid (uncertain) | UNKNOWN | n/a | 0% | n/a |
 | Design-QA | Admin/LMS: TelegramBotAdmin bounded scroll (likely intentional) | UNKNOWN | n/a | 0% | n/a |
 | Design-QA | Admin/LMS: CameraAIAnalytics bounded scroll (likely intentional) | UNKNOWN | n/a | 0% | n/a |
