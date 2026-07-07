@@ -482,29 +482,29 @@
 | Two-Worlds | Open Decision D4 (GL entries canonical + currency col) | BLOCKED-OWNER | n/a | 0% | GL world merge |
 | Two-Worlds | Open Decision D5 (posStockLedger Drizzle/VIEW mismatch) | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Two-Worlds | Role-catalog finalization (~36 catalogs) | DONE (minority enum retired) | `5b68d53b` | 100% for the `auth/enums/role.enum.ts` fork (a genuine live warehouse-lockout bug fixed, not just a naming decision) | Same fix as Magic-Numbers Finding #10/M8 above — see that row. The other ~34 catalogs (local per-controller `enum Role{}` re-declarations + raw uppercase `@Roles('X',...)` literals) are separate, confirmed-cosmetic-only, and remain queued as a lower-value follow-up. |
-| **VISION-3340 BACKLOG (226 open items, 835 total)** | | | | | |
-| VISION-3340 | SUMMARY-TOTAL | IN-PROGRESS | n/a | 17% DONE/46% OPEN/27% PARTIAL/10% UNVERIF | n/a |
-| VISION-3340 | AREA-01-CKP (54 items) | IN-PROGRESS | n/a | ~31% resolved | n/a |
-| VISION-3340 | AREA-02-HR (54 items) | IN-PROGRESS | n/a | ~24% resolved | n/a |
-| VISION-3340 | AREA-05-AUTH (44 items) | IN-PROGRESS | n/a | ~9% resolved | n/a |
-| VISION-3340 | AREA-07-GOLDEN-THREAD (20 items) | IN-PROGRESS | n/a | ~45% resolved | n/a |
-| VISION-3340 | AREA-06-PP (46 items) | IN-PROGRESS | n/a | ~11% resolved | n/a |
-| VISION-3340 | AREA-08-IOT (69 items) | IN-PROGRESS | n/a | ~12% resolved | n/a |
-| VISION-3340 | AREA-11-QC (54 items) | IN-PROGRESS | n/a | ~19% resolved | n/a |
-| VISION-3340 | AREA-15-CRM (51 items) | IN-PROGRESS | n/a | ~6% resolved | n/a |
-| VISION-3340 | AREA-14-SD (50 items) | IN-PROGRESS | n/a | ~4% resolved | n/a |
-| VISION-3340 | AREA-13-WMS (49 items) | IN-PROGRESS | n/a | ~10% resolved | n/a |
-| VISION-3340 | AREA-09-REPORTS (43 items) | IN-PROGRESS | n/a | ~9% resolved | n/a |
-| VISION-3340 | AREA-03-LMS (40 items, highest resolved rate) | IN-PROGRESS | n/a | ~53% resolved | n/a |
-| VISION-3340 | AREA-04-ORG-STRUCTURE (40 items) | IN-PROGRESS | n/a | ~13% resolved | n/a |
-| VISION-3340 | AREA-20-FINANCE (40 items, read-only) | IN-PROGRESS | n/a | ~10% resolved | n/a |
-| VISION-3340 | AREA-12-AI (33 items) | IN-PROGRESS | n/a | ~18% resolved | n/a |
-| VISION-3340 | AREA-19-RAZRYAD (33 items) | IN-PROGRESS | n/a | ~24% resolved | n/a |
-| VISION-3340 | AREA-10-MES (32 items) | IN-PROGRESS | n/a | ~13% resolved | n/a |
-| VISION-3340 | AREA-18-MASTER-DATA (31 items) | IN-PROGRESS | n/a | ~35% resolved | n/a |
-| VISION-3340 | AREA-16-FRONTEND (27 items) | IN-PROGRESS | n/a | ~4% resolved | n/a |
-| VISION-3340 | AREA-17-SECURITY (25 items, final area) | IN-PROGRESS | n/a | ~8% resolved | n/a |
-| VISION-3340 | (835 individual SB-numbered items: SB0001-SB0835) | MIXED | n/a | see per-item | Full item-level detail omitted here for space; see source doc VISION-3340-RECONCILIATION-2026-07-04.md — notable items: SB0312 (0 live `operator` role users) blocks every downstream tablet/shift/GSD/sensor-session workflow; SB0445 (aql_standards/sort_grade_pricing tables absent) blocks 6+ other QC findings; SB0421 (no routing version/effective-date) blocks norma-change-affects-next-batch vision requirement; SB0691 (no --mod-org/--ep-org-l0..l6 tokens) blocks org-level visual differentiation |
+| **VISION-3340 BACKLOG (835 total findings — 2026-07-07 re-triage supersedes the stale "226 open" figure)** | | | | | |
+| VISION-3340 | 2026-07-07 RE-TRIAGE | IN-PROGRESS | n/a | see `docs/audit/VISION-3340-RETRIAGE-2026-07-07.md` | The 2026-07-04 reconciliation (385 STILL-OPEN + 223 PARTIALLY-RESOLVED = 608 candidates) was re-verified against live code by 20 parallel read-only agents (one per area), 2026-07-07. **116 already resolved** by intervening work since the audit (not previously credited on this board — see the retriage doc's "Now-Resolved" section for the list, including GL two-worlds P0 closure, cashier 4-stage payout chain, Z-report cron, VAT de-hardcoding, period-lock enforcement, employee_cards 100% coverage, and the IotGateway dead-WebSocket-provider fix). After dedup, **365 distinct root causes** remain, classified: **65 fixable-now** (59 dispatched to fix-batch1 workflow `wf_1eee15f8-be1`, pending main-agent review+commit; 6 explicitly need owner/schema sign-off — see doc), **41 owner-data** (grouped into 12 themes — mostly card/karta attribute master-data + org-chart linkage still empty, cross-referencing the same "owner-data" blockers already tracked elsewhere on this board), **82 owner-decision** (grouped into ~17 themes — largest cross-cutting one: activate card-based permission system, `CARD_PERMISSION_SOURCE_READY` hardcoded false), **177 skip-low-value** (vague/cosmetic/requires-live-runtime-proof, no action needed). The old 20 per-area "~X% resolved" rows below are superseded by this retriage and left as historical record only — do not re-cite their percentages. |
+| VISION-3340 | AREA-01-CKP (54 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-02-HR (54 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-05-AUTH (44 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-07-GOLDEN-THREAD (20 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-06-PP (46 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-08-IOT (69 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-11-QC (54 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-15-CRM (51 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-14-SD (50 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-13-WMS (49 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-09-REPORTS (43 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-03-LMS (40 items, highest resolved rate) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-04-ORG-STRUCTURE (40 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-20-FINANCE (40 items, read-only) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-12-AI (33 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-19-RAZRYAD (33 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-10-MES (32 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-18-MASTER-DATA (31 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-16-FRONTEND (27 items) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | AREA-17-SECURITY (25 items, final area) | SUPERSEDED | n/a | see retriage | historical — superseded by 2026-07-07 retriage row above |
+| VISION-3340 | (835 individual SB-numbered items: SB0001-SB0835) | MIXED | n/a | see `docs/audit/VISION-3340-RETRIAGE-2026-07-07.md` for the deduplicated/reclassified list | Superseded pointer: the original per-item detail lived in `VISION-3340-RECONCILIATION-2026-07-04.md`; the 2026-07-07 retriage doc is now the source of truth for STILL-OPEN/PARTIALLY-RESOLVED items (RESOLVED/UNVERIFIABLE items from the original doc are unaffected and still valid as-is). |
 | **GOVERNANCE CHECK (A/B-series)** | | | | | |
 | Governance | A1 (.repo.ts vs .repository.ts naming split) | IN-PROGRESS | n/a | 40% | Tooling/lint codemods for A2/A3/A4 |
 | Governance | A2 (unbounded SELECT *, 561+236 occurrences) | QUEUED-NOT-STARTED | n/a | 0% | n/a |
