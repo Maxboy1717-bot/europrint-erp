@@ -599,21 +599,32 @@ export class IotTabletController {
   async reportProductionDefect(@Param('id') id: string, @Body() body: unknown) {
     const dto = DefectReportSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
-    await db.execute(sql`
-      UPDATE production_sessions
-      SET defect_quantity = defect_quantity + ${dto.defectCount}, updated_at=NOW()
-      WHERE id=${sessionId}
-    `);
-    await db.execute(sql`
-      INSERT INTO downtime_events (
-        session_id, event_type, started_at,
-        reason_code, reason_description, is_planned, notes, created_at
-      ) VALUES (
-        ${sessionId}, ${dto.eventType}, NOW(),
-        ${dto.reasonCode ?? null}, ${dto.reasonDescription ?? null},
-        false, ${dto.notes ?? null}, NOW()
-      )
-    `);
+    // 5.2 (Critical-Correctness audit): the session-defect UPDATE and the
+    // downtime_events INSERT must land together or not at all — wrapped in a
+    // single db.transaction (same convention as procurement-request.service.ts)
+    // so a failed INSERT rolls back the UPDATE instead of leaving a defect
+    // count bumped with no matching downtime_events row. The QC-bridge call
+    // below stays OUTSIDE this transaction on purpose: it already has its own
+    // try/catch and reports into a different module's table (qc_defects) —
+    // forcing it into this transaction would let a QC-bridge hiccup roll back
+    // a legitimate, already-valid production_sessions/downtime_events write.
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`
+        UPDATE production_sessions
+        SET defect_quantity = defect_quantity + ${dto.defectCount}, updated_at=NOW()
+        WHERE id=${sessionId}
+      `);
+      await tx.execute(sql`
+        INSERT INTO downtime_events (
+          session_id, event_type, started_at,
+          reason_code, reason_description, is_planned, notes, created_at
+        ) VALUES (
+          ${sessionId}, ${dto.eventType}, NOW(),
+          ${dto.reasonCode ?? null}, ${dto.reasonDescription ?? null},
+          false, ${dto.notes ?? null}, NOW()
+        )
+      `);
+    });
     // 3.2-brak-ushlanma-zanjiri (Master-reja §5.3): work_centers.brak_limit_pct konfiguratsiya
     // qilingan bo'lsa (egasi-data — C14 hali OCHIQ, shu sabab % FABRIKATSIYA QILINMAYDI, faqat
     // MAVJUD ustun o'qiladi), limit oshganda signal + (agar HR fine_rules siyosati mavjud bo'lsa)
@@ -775,6 +786,19 @@ export class IotTabletController {
    * `material_cards.current_stock` mirror, same two writes `WarehouseConfigService
    * .receiveStock` performs for a manual kirim. If the material has no home warehouse
    * configured, the stock write is skipped (logged) — the audit row above is still kept.
+   *
+   * C-CORRECTNESS-5.3 (2026-07-07): the warehouse_stock write used to be a
+   * SELECT/UPDATE-else-INSERT — TOCTOU-prone under concurrent returns for the same
+   * (warehouseId, materialId) pair (two requests can both miss the UPDATE and both
+   * INSERT, or race between the UPDATE and a concurrent INSERT). Collapsed into a
+   * single atomic `INSERT ... ON CONFLICT (warehouse_id, material_id) DO UPDATE`,
+   * the same established upsert shape as `execReceiveFg` (queries-wms.ts) and
+   * `upsertWarehouseStock` (pos-wms-sync.helpers.ts) — both rely on the
+   * `warehouse_stock_wh_mat_uniq` UNIQUE(warehouse_id, material_id) index. The
+   * increment formula (quantity/available_quantity both += quantity,
+   * last_movement_at/last_updated_at touched) is preserved exactly from the
+   * original UPDATE branch; the original INSERT branch's column list/defaults
+   * (reserved_quantity=0) are preserved as the ON CONFLICT's initial-insert values.
    */
   private async creditReturnedMaterialToStock(materialId: number, quantity: number, sessionId: number): Promise<void> {
     try {
@@ -789,22 +813,18 @@ export class IotTabletController {
         return;
       }
 
-      const updated = (((await db.execute(sql`
-        UPDATE warehouse_stock
-        SET quantity = quantity + ${quantity},
-            available_quantity = available_quantity + ${quantity},
-            last_movement_at = NOW(), last_updated_at = NOW()
-        WHERE warehouse_id = ${warehouseId} AND material_id = ${materialId}
-        RETURNING id
-      `)) as Rows).rows ?? [])[0];
-      if (!updated) {
-        await db.execute(sql`
-          INSERT INTO warehouse_stock
-            (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
-          VALUES
-            (${warehouseId}, ${materialId}, ${quantity}, 0, ${quantity}, NOW(), NOW(), NOW())
-        `);
-      }
+      await db.execute(sql`
+        INSERT INTO warehouse_stock
+          (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+        VALUES
+          (${warehouseId}, ${materialId}, ${quantity}, 0, ${quantity}, NOW(), NOW(), NOW())
+        ON CONFLICT (warehouse_id, material_id)
+        DO UPDATE SET
+          quantity            = warehouse_stock.quantity + ${quantity},
+          available_quantity  = warehouse_stock.available_quantity + ${quantity},
+          last_movement_at    = NOW(),
+          last_updated_at     = NOW()
+      `);
 
       await db.execute(sql`
         UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${quantity} WHERE id = ${materialId}
