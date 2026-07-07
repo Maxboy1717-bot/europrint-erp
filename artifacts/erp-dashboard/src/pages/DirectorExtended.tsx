@@ -133,7 +133,7 @@ export default function DirectorExtended() {
   ];
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="border-b border-surface-container px-6 py-4 flex items-center justify-between bg-card">
         <div className="flex items-center gap-2">
           <EPPageHeader
