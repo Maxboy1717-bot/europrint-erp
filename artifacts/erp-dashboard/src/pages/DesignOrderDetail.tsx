@@ -109,7 +109,7 @@ export default function DesignOrderDetail() {
 
   if (!orderId) {
     return (
-      <div className="min-h-screen from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -154,7 +154,7 @@ export default function DesignOrderDetail() {
   };
 
   return (
-    <div className="min-h-screen from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-gray-50 to-orange-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/design/orders">
