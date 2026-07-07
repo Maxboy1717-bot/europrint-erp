@@ -87,15 +87,27 @@ export class QuarantineWorkflowRepository {
     `);
   }
 
-  async reduceWarehouseStock(warehouseId: number, materialCardId: number, qty: number): Promise<void> {
-    await db.execute(sql`
+  /**
+   * C1.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): GREATEST(quantity-qty,0) silently CLAMPED an
+   * oversell to zero instead of rejecting it — a movement claiming to move/discard more than
+   * QC-HOLD actually has would silently succeed with a wrong (clamped) result, masking the
+   * discrepancy instead of surfacing it. Now a guarded UPDATE (WHERE quantity/available_quantity
+   * both cover qty) — the caller gets a boolean and must decide how to react (log/skip) rather
+   * than the DB quietly lying about how much stock actually moved.
+   */
+  async reduceWarehouseStock(warehouseId: number, materialCardId: number, qty: number): Promise<boolean> {
+    const rows = await typedExecute<{ id: number }>(sql`
       UPDATE warehouse_stock
-         SET quantity           = GREATEST(quantity           - ${qty}, 0),
-             available_quantity = GREATEST(available_quantity - ${qty}, 0),
+         SET quantity           = quantity           - ${qty},
+             available_quantity = available_quantity - ${qty},
              last_updated_at    = NOW()
-       WHERE warehouse_id     = ${warehouseId}
-         AND material_id = ${materialCardId}
+       WHERE warehouse_id = ${warehouseId}
+         AND material_id  = ${materialCardId}
+         AND quantity           >= ${qty}
+         AND available_quantity >= ${qty}
+      RETURNING id
     `);
+    return rows.length > 0;
   }
 
   async updateInventoryPassport(movementId: number, decision: string, qcNote: string | null): Promise<void> {

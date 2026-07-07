@@ -114,7 +114,13 @@ export class QuarantineWorkflowService {
           for (const line of lines) {
             const qty = Number(line.quantity);
             if (!Number.isFinite(qty) || qty <= 0) continue;
-            await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            // C1.6: a guard failure means QC-HOLD doesn't actually have this much stock to move —
+            // do not credit RM-MAIN with quantity that was never actually debited from QC-HOLD.
+            const reduced = await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            if (!reduced) {
+              this.logger.warn(`[QC] Movement ${movementId}: QC-HOLD'da material #${line.material_card_id} uchun yetarli qoldiq yo'q (so'ralgan ${qty}) — bu qator o'tkazib yuborildi`);
+              continue;
+            }
             await this.repo.upsertWarehouseStock(mainWh.id, line.material_card_id, qty, line.unit);
             moved++;
           }
@@ -128,7 +134,12 @@ export class QuarantineWorkflowService {
           const lines = await this.repo.findMovementLines(movementId);
           for (const line of lines) {
             const qty = Number(line.quantity);
-            if (qty > 0) await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            if (qty <= 0) continue;
+            // C1.6: same guard as the QABUL branch above — log rather than silently clamp.
+            const reduced = await this.repo.reduceWarehouseStock(qcWh.id, line.material_card_id, qty);
+            if (!reduced) {
+              this.logger.warn(`[QC] Movement ${movementId}: QC-HOLD'da material #${line.material_card_id} uchun yetarli qoldiq yo'q (so'ralgan ${qty}) — bu qator o'tkazib yuborildi`);
+            }
           }
           this.logger.log(`[QC] Movement ${movementId}: CHIQARISH — QC-HOLD dan stok qaytarildi`);
         }
