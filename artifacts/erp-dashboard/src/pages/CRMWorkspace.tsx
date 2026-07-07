@@ -316,7 +316,7 @@ function CrmCalendarView({
       </div>
 
       {/* ── grid ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-7 gap-px bg-border rounded-xl overflow-hidden border border-border/60">
+      <div className="grid grid-cols-7 gap-px bg-border rounded-xl overflow-hidden border border-border/60">
         {WEEK_LABELS.map((d) => (
           <div
             key={d}
