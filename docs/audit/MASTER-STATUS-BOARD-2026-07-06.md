@@ -559,12 +559,12 @@
 | Critical-Correctness | 5.6 approval-workflow Promise.allSettled (acceptable) | DONE | n/a | 100% | n/a |
 | Critical-Correctness | 6.1 hard DELETE orphaned BOM lines | DONE | dfa2b1d7 | 100% | Orphaned BOM lines; #9 top-10 |
 | Critical-Correctness | 6.2 hard DELETE orphaned OKR key results | DONE (code + data) | 4432944, 817fa27c | 100% | Orphaned OKR key results; #9 top-10 |
-| Critical-Correctness | 6.3 warehouse-barcode-ops no soft-delete filter | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 6.4 pos-barcode findByBarcode no soft-delete filter | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 6.5 auto-barcode LEFT JOIN no deleted_at filter | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 6.3 warehouse-barcode-ops no soft-delete filter | DONE | 765b6772 | 100% | n/a |
+| Critical-Correctness | 6.4 pos-barcode findByBarcode no soft-delete filter | DONE | 0e0d42a7 | 100% | n/a |
+| Critical-Correctness | 6.5 auto-barcode LEFT JOIN no deleted_at filter | DONE | 08cc5b04 | 100% | n/a |
 | Critical-Correctness | 6.6 customer-360 inconsistent deleted_at filtering | DONE (verified stale) | n/a | 100% | drizzle-sd-customers.repo.ts:103 already has `AND deleted_at IS NULL`, matches sibling getRecentOrders(); audit's citation pointed at a pure-presentation file with no SQL |
 | Critical-Correctness | 6.7 gl-posting account resolve no is_active filter | DONE | 9e3963b1 | 100% | n/a |
-| Critical-Correctness | 6.8 systemic soft-delete non-enforcement (~92 files) | UNKNOWN | n/a | 0% | Read-side soft-delete enforcement; #8 top-10 |
+| Critical-Correctness | 6.8 systemic soft-delete non-enforcement (~92 files) | DONE (scoped) | 765b6772,0e0d42a7,08cc5b04,9e3963b1 | 100% (all 4 concrete satellite findings + the 1 ledger-critical case); ~85 remaining material_cards references intentionally NOT swept — audit itself called a full 95-file sweep disproportionate given 0 live soft-deleted rows today | Read-side soft-delete enforcement; #8 top-10. Scope decision: fixed every KNOWN unfiltered call site (6.3/6.4/6.5/6.7); did not blanket-sweep all ~95 material_cards references since most are display/reporting paths where a soft-deleted row appearing is cosmetic, not a correctness bug — a full sweep is its own dedicated pass if the owner wants it, not bundled into a single-session mechanical fix. |
 | Critical-Correctness | 7.1 IoT tablet TTL mismatch BE 8h vs FE 12h | DONE | f4d17363,b29c8bce | 100% | Silent write failures up to 4h/shift; #2 top-10 |
 | Critical-Correctness | 7.2 No 401/refresh handling on IoT tablet, no refresh endpoint | DONE | f4d17363,b29c8bce | 100% | Unsaved session/scan work lost; #2 top-10 |
 | Critical-Correctness | 7.3 login.service comment/code TTL doc drift | QUEUED-NOT-STARTED | n/a | 0% | Mechanical, JSDoc-only fix, low priority |
