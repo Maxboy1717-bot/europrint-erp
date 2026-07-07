@@ -189,8 +189,8 @@ export default function HRBrandPage() {
     <div className="p-6 space-y-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("hrBrend")}</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">{t("hrBrend")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Kompaniya employer brand strategiyasini boshqarish (Material №59)
           </p>
         </div>

@@ -102,7 +102,7 @@ export default function CandidateReport() {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{t("yakuniyHisobotMaterial55")}</p>
-            <h1 className="ep-h1 text-gray-900">{candidate.fullName}</h1>
+            <h1 className="ep-h1 text-gray-900 dark:text-foreground">{candidate.fullName}</h1>
             <div className="flex flex-wrap gap-3 mt-2">
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <Phone className="w-4 h-4" />{candidate.phone}
