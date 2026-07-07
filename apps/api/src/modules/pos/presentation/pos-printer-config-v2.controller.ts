@@ -6,6 +6,7 @@
 import { assertFound } from '@common/assertions';
 import { PRINTER_DEFAULT_PORT } from '@common/constants/app.constants';
 import { Controller, Post, Param, HttpCode, HttpStatus, UseGuards, UseInterceptors, ParseIntPipe, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, assertOk } from '@common/http-result';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -26,6 +27,7 @@ export class PosPrinterConfigV2Controller {
   constructor(
     private readonly svc: PosPrinterConfigService,
     private readonly labelService: LabelService,
+    private readonly i18n: I18nService,
   ) {}
 
   @Post(':id/test')
@@ -35,7 +37,7 @@ export class PosPrinterConfigV2Controller {
     const _rRow = await this.svc.getForTest(id);
     assertOk(_rRow);
     const row = _rRow.data;
-    assertFound(row, 'Config topilmadi');
+    assertFound(row, await this.i18n.t('errors.printerConfigNotFoundById'));
     const port = (row.printer_port as number) ?? PRINTER_DEFAULT_PORT;
     const ip = row.printer_ip as string;
     const connected = await this.labelService.sendToPrinter('', ip, port);

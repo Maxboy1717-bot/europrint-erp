@@ -9,6 +9,7 @@ BadRequestException, Body, Controller, Delete, Get, NotFoundException,
   Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
   WmsCreateInventoryCountSchema, WmsCreateInventoryCountDto,
@@ -45,6 +46,7 @@ export class WmsCountsController {
     private readonly svc: WmsCountsService,
     private readonly crudSvc: WmsCrudService,
     private readonly freezeSvc: InventoryFreezeService,
+    private readonly i18n: I18nService,
   ) {}
 
   @ApiOperation({ summary: 'List inventory counts' })
@@ -130,7 +132,7 @@ export class WmsCountsController {
   @UsePipes(new ZodValidationPipe(WmsCreateInventoryCountSchema))
   async createInventoryCount(@Body() body: WmsCreateInventoryCountDto) {
     const { warehouse_id, counted_by, notes } = body;
-    assertRequired(warehouse_id, 'warehouse_id required');
+    assertRequired(warehouse_id, await this.i18n.t('validation.warehouseIdRequired'));
     return unwrapOrThrow(await this.svc.createInventoryCount(safeInt(warehouse_id, 0), counted_by != null ? safeInt(counted_by, 0) : null, notes != null ? String(notes) : null));
   }
 
@@ -162,8 +164,9 @@ export class WmsCountsController {
   @Roles(...WMS_FLOOR_ROLES)
   async createInternalRequest(@Body() body: WmsCreateInternalRequestDto, @CurrentUser() user: AuthenticatedUser) {
     const { from_warehouse_id, to_warehouse_id, material_id, quantity, notes } = body;
-    assertRequired(material_id, 'material_id and quantity required');
-    assertRequired(quantity, 'material_id and quantity required');
+    const materialQuantityMsg = await this.i18n.t('validation.materialIdAndQuantityRequired');
+    assertRequired(material_id, materialQuantityMsg);
+    assertRequired(quantity, materialQuantityMsg);
     return unwrapOrThrow(await this.svc.createInternalRequest(user?.id ?? null, from_warehouse_id != null ? safeInt(from_warehouse_id, 0) : null, to_warehouse_id != null ? safeInt(to_warehouse_id, 0) : null, safeInt(material_id, 0), safeInt(quantity, 0), notes != null ? String(notes) : null));
   }
 
@@ -178,7 +181,7 @@ export class WmsCountsController {
     const _rR = await this.svc.updateInternalRequest(safeInt(id, 0), status != null ? String(status) : null, notes != null ? String(notes) : null);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Request not found');
+    assertFound(r, await this.i18n.t('errors.requestNotFound', { args: { id } }));
     const items = Array.isArray(r) ? r : [];
     return items[0];
   }

@@ -88,7 +88,7 @@ export class WmsWarehouseGatewayController {
   ) {
     this.logger.log('POST warehouse transfer');
     const row = await this.svc.createTransfer(body, user?.id ?? null);
-    assertInternal(row, 'Transfer yaratishda xatolik');
+    assertInternal(row, await this.i18n.t('errors.transferCreationFailed'));
     return row;
   }
 
@@ -144,7 +144,7 @@ export class WmsWarehouseGatewayController {
   ) {
     this.logger.log('POST internal request');
     const row = await this.svc.createInternalRequest(body, user?.id ?? null);
-    assertInternal(row, "So'rov yaratishda xatolik");
+    assertInternal(row, await this.i18n.t('errors.internalRequestCreationFailed'));
     return row;
   }
 
@@ -179,7 +179,7 @@ export class WmsWarehouseGatewayController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const row = await this.svc.createGoodsReceipt(body, user?.id ?? null);
-    assertInternal(row, 'Tovar qabul qilishda xatolik');
+    assertInternal(row, await this.i18n.t('errors.goodsReceiptCreationFailed'));
     return row;
   }
 

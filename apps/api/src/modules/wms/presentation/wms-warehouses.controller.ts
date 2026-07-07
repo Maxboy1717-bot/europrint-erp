@@ -69,7 +69,7 @@ export class WmsWarehousesController {
     assertOk(result);
     const items = Array.isArray(result.data?.items) ? result.data.items : [];
     const warehouse = (Array.isArray(items) ? items : []).find((w: Record<string, unknown>) => w.id === id);
-    assertRequired(warehouse, 'Omborni topilmadi');
+    assertRequired(warehouse, await this.i18n.t('errors.warehouseNotFound'));
     return warehouse;
   }
 

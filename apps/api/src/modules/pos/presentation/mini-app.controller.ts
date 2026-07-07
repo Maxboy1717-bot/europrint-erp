@@ -43,6 +43,11 @@ class TgApproveDto extends createZodDto(TgApproveSchema) {}
 const TgRejectSchema = z.object({ reason: z.string().min(1) });
 class TgRejectDto extends createZodDto(TgRejectSchema) {}
 
+// NOTE (F4-2 batch 2, 2026-07-07): message left hardcoded intentionally.
+// This is a plain exported function (no DI), also imported by
+// mini-app-history.controller.ts (out of scope for this batch) — adding an
+// i18n param here would force a signature change onto that out-of-scope
+// file. Revisit together with mini-app-history.controller.ts if localized.
 export async function resolveSession(
   telegramService: PosTelegramService,
   token: string | undefined,
@@ -90,10 +95,10 @@ export class MiniAppController {
   async authenticate(@Body() dto: TgAuthDto) {
     const params = new URLSearchParams(dto.initData);
     const userStr = params.get('user');
-    assertAuth(userStr, "initData da user yo'q");
+    assertAuth(userStr, await this.i18n.t('errors.telegramInitDataNoUser'));
     let tgUser: { id: number; first_name?: string; last_name?: string; username?: string };
     const parsed = safeJsonParse<{ id: number; first_name?: string; last_name?: string; username?: string } | null>(userStr, null);
-    assertAuth(parsed?.id, "initData dan foydalanuvchi ma'lumotlari o'qib bo'lmadi");
+    assertAuth(parsed?.id, await this.i18n.t('errors.telegramInitDataUserUnreadable'));
     tgUser = parsed;
     const session = await this.telegramService.createOrRenewSession({ telegramUserId: BigInt(tgUser.id), initData: dto.initData });
     const _rUser = await this.miniAppService.getUserDetails(session.userId);

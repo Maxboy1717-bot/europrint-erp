@@ -3,6 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */import { BadRequestException, Body, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Patch, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 
 
 import { assertRequired } from '@common/assertions';
@@ -40,6 +41,7 @@ export class WmsInventoryController {
     private commandBus: CommandBus,
     private queryBus: QueryBus,
     private readonly crudSvc: WmsCrudService,
+    private readonly i18n: I18nService,
   ) {}
 
   // A2/green-lie retire (2026-06-05, owner-approved): `POST /api/wms/inventory`
@@ -81,7 +83,7 @@ export class WmsInventoryController {
     const result = await this.queryBus.execute(new GetStockInventoryQuery({ page: 1, limit: MAX_EXPORT_LIMIT }));
     assertOk(result);
     const item = result.data?.items?.find((i: Record<string, unknown>) => i.id === id);
-    assertRequired(item, 'Stok elementi topilmadi');
+    assertRequired(item, await this.i18n.t('errors.stockNotFound', { args: { id } }));
     return item;
   }
 
