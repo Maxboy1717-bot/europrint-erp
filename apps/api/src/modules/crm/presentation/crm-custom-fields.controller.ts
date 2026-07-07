@@ -10,6 +10,7 @@ import {
   BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException,
   Param, Patch, Post, Query, UseGuards, UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -30,7 +31,7 @@ const CRM_ADMIN_ROLES = ['super_admin', 'director', 'crm_manager'];
 export class CrmCustomFieldsController {
   private readonly logger = new Logger(CrmCustomFieldsController.name);
 
-  constructor(private readonly svc: CrmCustomFieldsService) {}
+  constructor(private readonly svc: CrmCustomFieldsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -57,8 +58,8 @@ export class CrmCustomFieldsController {
     // Accept camelCase (FE: fieldName/fieldLabel) or snake_case (API: name/label) keys.
     const nameVal  = (body as Record<string, unknown>)['fieldName']  ?? body.name;
     const labelVal = (body as Record<string, unknown>)['fieldLabel'] ?? body.label;
-    assertRequired(nameVal,  'fieldName (or name) required');
-    assertRequired(labelVal, 'fieldLabel (or label) required');
+    assertRequired(nameVal,  await this.i18n.t('validation.fieldNameRequired'));
+    assertRequired(labelVal, await this.i18n.t('validation.fieldLabelRequired'));
     return unwrapOrThrow(await this.svc.create(body as Record<string, unknown>));
   }
 
@@ -74,7 +75,7 @@ export class CrmCustomFieldsController {
     const _rUpdate = await this.svc.update(safeInt(id, 0), body);
     assertOk(_rUpdate);
     const r = _rUpdate.data as Record<string, unknown>;
-    assertFound(r, 'Custom field not found');
+    assertFound(r, await this.i18n.t('errors.customFieldNotFound'));
     return r;
   }
 
@@ -92,7 +93,7 @@ export class CrmCustomFieldsController {
       const orderedIds = (body as Record<string, unknown>)['orderedIds'] as number[];
       items = orderedIds.map((id, index) => ({ id, order_index: index }));
     }
-    assertRequired(items?.length, 'items or orderedIds required');
+    assertRequired(items?.length, await this.i18n.t('validation.itemsOrOrderedIdsRequired'));
     return unwrapOrThrow(await this.svc.reorder(items!));
   }
 

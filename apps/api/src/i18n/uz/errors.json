@@ -438,5 +438,11 @@
   "cannotDeleteOwnAccount": "O'z hisobingizni o'chira olmaysiz",
   "dataNotAvailable": "Ma'lumot mavjud emas",
   "cameraNotFound": "Kamera topilmadi",
-  "contactNotFound": "Kontakt topilmadi"
+  "contactNotFound": "Kontakt topilmadi",
+  "dealNotFound": "Deal topilmadi",
+  "companyNotFound": "Kompaniya topilmadi",
+  "activityNotFound": "Faoliyat topilmadi",
+  "customFieldNotFound": "Maxsus maydon topilmadi",
+  "leadStageNotFound": "Lead bosqichi topilmadi",
+  "entityTypeNotFound": "{entityType} topilmadi"
 }

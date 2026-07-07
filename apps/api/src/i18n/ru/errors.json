@@ -438,5 +438,11 @@
   "cannotDeleteOwnAccount": "Нельзя удалить свою учётную запись",
   "dataNotAvailable": "Данные недоступны",
   "cameraNotFound": "Камера не найдена",
-  "contactNotFound": "Контакт не найден"
+  "contactNotFound": "Контакт не найден",
+  "dealNotFound": "Сделка не найдена",
+  "companyNotFound": "Компания не найдена",
+  "activityNotFound": "Активность не найдена",
+  "customFieldNotFound": "Пользовательское поле не найдено",
+  "leadStageNotFound": "Этап лида не найден",
+  "entityTypeNotFound": "{entityType}: не найдено"
 }

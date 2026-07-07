@@ -80,5 +80,17 @@
   "cameraIdAndEventTypeRequired": "camera_id va event_type majburiy",
   "promptOrInstructionsRequired": "prompt yoki instructions talab qilinadi",
   "taskIdRequired": "task_id majburiy",
-  "roleRequired": "role majburiy"
+  "roleRequired": "role majburiy",
+  "toAndSubjectRequired": "to va subject majburiy",
+  "phoneAndMessageRequired": "phone va message majburiy",
+  "phoneRequired": "phone majburiy",
+  "emailOrPhoneRequired": "email yoki phone majburiy",
+  "telegramIdRequired": "telegram_id majburiy",
+  "leadIdOrDealIdRequired": "lead_id yoki deal_id majburiy",
+  "typeAndSubjectRequired": "type va subject majburiy",
+  "textRequired": "text majburiy",
+  "fieldNameRequired": "fieldName (yoki name) majburiy",
+  "fieldLabelRequired": "fieldLabel (yoki label) majburiy",
+  "itemsOrOrderedIdsRequired": "items yoki orderedIds majburiy",
+  "firstNameRequired": "first_name majburiy"
 }

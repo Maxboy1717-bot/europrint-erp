@@ -12,6 +12,7 @@ import { CrmContactsController } from '../../src/modules/crm/presentation/crm-co
 import { CrmContactsService } from '../../src/modules/crm/application/crm-contacts.service';
 import { JwtAuthGuard } from '../../src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/common/guards/roles.guard';
+import { I18nService } from 'nestjs-i18n';
 
 interface SvcMock {
   listContacts: jest.Mock; getContact: jest.Mock; checkDuplicates: jest.Mock;
@@ -32,6 +33,7 @@ describe('CrmContactsController (e2e)', () => {
       providers: [
         { provide: CrmContactsService, useValue: svc },
         { provide: Reflector, useValue: new Reflector() },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue({ canActivate: (): boolean => jwtAllowed })

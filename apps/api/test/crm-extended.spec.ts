@@ -19,6 +19,7 @@ import { RolesGuard } from 'shared/guards/roles.guard';
 import { WebhookSignatureGuard } from '@common/guards/webhook-signature.guard';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
+import { I18nService } from 'nestjs-i18n';
 
 const ok = (data: unknown) => ({ ok: true, data });
 const fail = () => ({ ok: false, code: 'DB_ERROR', error: new Error('fail') });
@@ -94,6 +95,7 @@ describe('CRM Extended Controllers — Behavioral Integration Tests', () => {
         { provide: CrmAiService, useValue: mockAiSvc },
         { provide: CrmAutoLeadService, useValue: mockAutoLeadSvc },
         { provide: CommandBus, useValue: (commandBusMock = { execute: jest.fn() }) },
+        { provide: I18nService, useValue: { t: jest.fn((key: string) => key) } },
       ],
     })
       .overrideGuard(JwtAuthGuard).useValue(mockGuard)

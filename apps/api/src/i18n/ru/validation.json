@@ -80,5 +80,17 @@
   "cameraIdAndEventTypeRequired": "camera_id и event_type обязательны",
   "promptOrInstructionsRequired": "требуется prompt или instructions",
   "taskIdRequired": "task_id обязателен",
-  "roleRequired": "role обязательна"
+  "roleRequired": "role обязательна",
+  "toAndSubjectRequired": "to и subject обязательны",
+  "phoneAndMessageRequired": "phone и message обязательны",
+  "phoneRequired": "phone обязателен",
+  "emailOrPhoneRequired": "Обязателен email или phone",
+  "telegramIdRequired": "telegram_id обязателен",
+  "leadIdOrDealIdRequired": "Обязателен lead_id или deal_id",
+  "typeAndSubjectRequired": "type и subject обязательны",
+  "textRequired": "text обязателен",
+  "fieldNameRequired": "fieldName (или name) обязателен",
+  "fieldLabelRequired": "fieldLabel (или label) обязателен",
+  "itemsOrOrderedIdsRequired": "Обязателен items или orderedIds",
+  "firstNameRequired": "first_name обязателен"
 }

@@ -21,6 +21,7 @@ import {
   Param, Patch, Post, Query, UseGuards,
   UseInterceptors, InternalServerErrorException, UsePipes } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -46,7 +47,7 @@ const CRM_WRITE_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manage
 export class CrmCompaniesController {
   private readonly logger = new Logger(CrmCompaniesController.name);
 
-  constructor(private readonly svc: CrmCompaniesService) {}
+  constructor(private readonly svc: CrmCompaniesService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List companies' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -63,7 +64,7 @@ export class CrmCompaniesController {
     const _rGetCompany = await this.svc.getCompany(safeInt(id, 0));
     assertOk(_rGetCompany);
     const r = _rGetCompany.data as Record<string, unknown>;
-    assertFound(r, 'Company not found');
+    assertFound(r, await this.i18n.t('errors.companyNotFound'));
     return r;
   }
 
@@ -75,7 +76,7 @@ export class CrmCompaniesController {
     const r = await this.svc.getCompanyContacts(safeInt(companyId, 0));
     const items = r.ok && Array.isArray(r.data) ? r.data : [];
     const contact = (Array.isArray(items) ? items : []).find((c: Record<string, unknown>) => String(c['id']) === contactId);
-    assertFound(contact, 'Contact not found');
+    assertFound(contact, await this.i18n.t('errors.contactNotFound'));
     return contact;
   }
 
@@ -103,7 +104,7 @@ export class CrmCompaniesController {
     const _rGetCompanyCredit = await this.svc.getCompanyCredit(safeInt(id, 0));
     assertOk(_rGetCompanyCredit);
     const r = _rGetCompanyCredit.data as Record<string, unknown>;
-    assertFound(r, 'Company not found');
+    assertFound(r, await this.i18n.t('errors.companyNotFound'));
     return r;
   }
 
@@ -124,7 +125,7 @@ export class CrmCompaniesController {
   @Roles(...CRM_WRITE_ROLES)
   @UsePipes(new ZodValidationPipe(CreateCompanyDtoSchema))
   async createCompany(@Body() body: CreateCompanyDto) {
-    assertRequired(body.name, 'name required');
+    assertRequired(body.name, await this.i18n.t('validation.nameRequired'));
     return unwrapOrThrow(await this.svc.createCompany(body));
   }
 
@@ -140,7 +141,7 @@ export class CrmCompaniesController {
     const _rUpdateCompany = await this.svc.updateCompany(safeInt(id, 0), body);
     assertOk(_rUpdateCompany);
     const r = _rUpdateCompany.data as Record<string, unknown>;
-    assertFound(r, 'Company not found');
+    assertFound(r, await this.i18n.t('errors.companyNotFound'));
     return r;
   }
 
@@ -168,7 +169,7 @@ export class CrmCompaniesController {
     const _rUpdateCreditLimit = await this.svc.updateCreditLimit(safeInt(id, 0), body.credit_limit ?? 0);
     assertOk(_rUpdateCreditLimit);
     const r = _rUpdateCreditLimit.data as Record<string, unknown>;
-    assertFound(r, 'Company not found');
+    assertFound(r, await this.i18n.t('errors.companyNotFound'));
     return r;
   }
 
@@ -187,7 +188,7 @@ export class CrmCompaniesController {
     const _rGetLeadStage = await this.svc.getLeadStage(safeInt(id, 0));
     assertOk(_rGetLeadStage);
     const r = _rGetLeadStage.data as Record<string, unknown>;
-    assertFound(r, 'Lead stage not found');
+    assertFound(r, await this.i18n.t('errors.leadStageNotFound'));
     return r;
   }
 
@@ -199,7 +200,7 @@ export class CrmCompaniesController {
   @Roles(...CRM_WRITE_ROLES)
   @UsePipes(new ZodValidationPipe(CreateLeadStageDtoSchema))
   async createLeadStage(@Body() body: CreateLeadStageDto) {
-    assertRequired(body.name, 'name required');
+    assertRequired(body.name, await this.i18n.t('validation.nameRequired'));
     return unwrapOrThrow(await this.svc.createLeadStage(body.name, body.color, body.sort_order));
   }
 
@@ -215,7 +216,7 @@ export class CrmCompaniesController {
     const _rUpdateLeadStage = await this.svc.updateLeadStage(safeInt(id, 0), body);
     assertOk(_rUpdateLeadStage);
     const r = _rUpdateLeadStage.data as Record<string, unknown>;
-    assertFound(r, 'Lead stage not found');
+    assertFound(r, await this.i18n.t('errors.leadStageNotFound'));
     return r;
   }
 

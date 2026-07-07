@@ -438,5 +438,11 @@
   "cannotDeleteOwnAccount": "Ўз ҳисобингизни ўчира олмайсиз",
   "dataNotAvailable": "Маълумот мавжуд эмас",
   "cameraNotFound": "Камера топилмади",
-  "contactNotFound": "Контакт топилмади"
+  "contactNotFound": "Контакт топилмади",
+  "dealNotFound": "Deal топилмади",
+  "companyNotFound": "Компания топилмади",
+  "activityNotFound": "Фаолият топилмади",
+  "customFieldNotFound": "Махсус майдон топилмади",
+  "leadStageNotFound": "Лид босқичи топилмади",
+  "entityTypeNotFound": "{entityType} топилмади"
 }

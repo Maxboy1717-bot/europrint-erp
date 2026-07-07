@@ -80,5 +80,17 @@
   "cameraIdAndEventTypeRequired": "camera_id ва event_type мажбурий",
   "promptOrInstructionsRequired": "prompt ёки instructions талаб қилинади",
   "taskIdRequired": "task_id мажбурий",
-  "roleRequired": "role мажбурий"
+  "roleRequired": "role мажбурий",
+  "toAndSubjectRequired": "to ва subject мажбурий",
+  "phoneAndMessageRequired": "phone ва message мажбурий",
+  "phoneRequired": "phone мажбурий",
+  "emailOrPhoneRequired": "email ёки phone мажбурий",
+  "telegramIdRequired": "telegram_id мажбурий",
+  "leadIdOrDealIdRequired": "lead_id ёки deal_id мажбурий",
+  "typeAndSubjectRequired": "type ва subject мажбурий",
+  "textRequired": "text мажбурий",
+  "fieldNameRequired": "fieldName (ёки name) мажбурий",
+  "fieldLabelRequired": "fieldLabel (ёки label) мажбурий",
+  "itemsOrOrderedIdsRequired": "items ёки orderedIds мажбурий",
+  "firstNameRequired": "first_name мажбурий"
 }

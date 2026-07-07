@@ -19,6 +19,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -38,7 +39,7 @@ const CRM_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'crm_man
 export class CrmExtrasController {
   private readonly logger = new Logger(CrmExtrasController.name);
 
-  constructor(private readonly svc: CrmExtrasService) {}
+  constructor(private readonly svc: CrmExtrasService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List comments' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -62,7 +63,7 @@ export class CrmExtrasController {
   @Post('comments')
   @UsePipes(new ZodValidationPipe(CreateCommentDtoSchema))
   async createComment(@Body() body: CreateCommentDto) {
-    assertRequired(body.text, 'text required');
+    assertRequired(body.text, await this.i18n.t('validation.textRequired'));
     const _rCreateComment = await this.svc.createComment(
       body.lead_id ? safeInt(body.lead_id, 0) : null,
       body.deal_id ? safeInt(body.deal_id, 0) : null,
@@ -125,7 +126,7 @@ export class CrmExtrasController {
   @Post('tasks')
   @UsePipes(new ZodValidationPipe(CreateTaskDtoSchema))
   async createTask(@Body() body: CreateTaskDto) {
-    assertRequired(body.title, 'title required');
+    assertRequired(body.title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrThrow(await this.svc.createTask(body));
   }
 
