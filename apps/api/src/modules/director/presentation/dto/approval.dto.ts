@@ -36,8 +36,8 @@ export const GetPendingDtoSchema = z.object({
   documentType: z
     .enum(Object.values(HitlDocumentType) as [string, ...string[]])
     .optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export type GetPendingDto = z.infer<typeof GetPendingDtoSchema>;
