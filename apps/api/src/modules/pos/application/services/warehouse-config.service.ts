@@ -5,7 +5,7 @@
  */
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { rawSql } from '@shared/db';
+import { rawSql, db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../../../hr/common/db-rows';
 import { safeCall, Result, AppError } from '@common/result';
@@ -17,6 +17,10 @@ export interface IssueStockInput {
   reason?: string;
   notes?: string;
 }
+
+/** `db.transaction(async (tx) => ...)` callback param type — same convention as
+ *  pos-warehouse-integration-movement.service.ts's `Tx` alias. */
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 @Injectable()
 export class WarehouseConfigService {
@@ -144,8 +148,9 @@ export class WarehouseConfigService {
   }
 
   /**
-   * Ombor KIRIM (qo'lda / tuzatish) — warehouse_stock qoldig'i oshiriladi (UPDATE→INSERT upsert),
-   * material_cards.current_stock yangilanadi va material_movements ('RECEIVE') jurnaliga yoziladi.
+   * Ombor KIRIM (qo'lda / tuzatish) — warehouse_stock qoldig'i atomik ON CONFLICT upsert bilan
+   * oshiriladi, material_cards.current_stock yangilanadi va material_movements ('RECEIVE')
+   * jurnaliga yoziladi — uchalasi bitta db.transaction ichida (hammasi yoki hech biri).
    * Inventarizatsiya tuzatishi yoki P2P'siz qo'lda kirim uchun (korreksiya). performedBy = bajaruvchi.
    */
   async receiveStock(
@@ -167,40 +172,42 @@ export class WarehouseConfigService {
       const unit = input.unit ?? String(mat['unit_of_measure'] ?? 'dona');
       const materialName = String(mat['xom_ashyo'] ?? mat['kod'] ?? `#${input.materialId}`);
 
-      // warehouse_stock upsert (oshirish)
-      const updated = dbRows(await rawSql(sql`
-        UPDATE warehouse_stock
-        SET quantity = quantity + ${qty}, available_quantity = available_quantity + ${qty}, last_updated_at = NOW()
-        WHERE warehouse_id = ${warehouseId} AND material_id = ${input.materialId}
-        RETURNING quantity, available_quantity
-      `))[0];
-      let newQuantity: number;
-      let newAvailable: number;
-      if (updated) {
-        newQuantity = Number(updated['quantity']);
-        newAvailable = Number(updated['available_quantity']);
-      } else {
-        const ins = dbRows(await rawSql(sql`
+      // C-5.4 (CRITICAL-CORRECTNESS-AUDIT): warehouse_stock upsert + material_cards.current_stock
+      // + material_movements — bitta db.transaction ichida, hammasi birga commit yoki hammasi
+      // rollback (avval 3 mustaqil rawSql chaqiruv edi — yarim yozilish xavfi bor edi). Upsert
+      // endi UPDATE→fallback-INSERT emas, balki atomik INSERT ... ON CONFLICT DO UPDATE — xuddi
+      // pos-warehouse-integration-movement.service.ts#increaseToWarehouseStock bilan bir xil
+      // naqsh/ustun ro'yxati (warehouse_id, material_id ustidagi UNIQUE'ga ON CONFLICT).
+      const { newQuantity, newAvailable, movementId } = await db.transaction(async (tx: Tx) => {
+        const upserted = dbRows(await tx.execute(sql`
           INSERT INTO warehouse_stock (warehouse_id, material_id, quantity, reserved_quantity, available_quantity)
           VALUES (${warehouseId}, ${input.materialId}, ${qty}, 0, ${qty})
+          ON CONFLICT (warehouse_id, material_id) DO UPDATE
+          SET quantity = warehouse_stock.quantity + EXCLUDED.quantity,
+              available_quantity = warehouse_stock.available_quantity + EXCLUDED.quantity,
+              last_updated_at = NOW()
           RETURNING quantity, available_quantity
         `))[0];
-        newQuantity = Number(ins?.['quantity'] ?? qty);
-        newAvailable = Number(ins?.['available_quantity'] ?? qty);
-      }
 
-      await rawSql(sql`
-        UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${qty} WHERE id = ${input.materialId}
-      `);
+        await tx.execute(sql`
+          UPDATE material_cards SET current_stock = COALESCE(current_stock, 0) + ${qty} WHERE id = ${input.materialId}
+        `);
 
-      const mv = dbRows(await rawSql(sql`
-        INSERT INTO material_movements (material_id, material_name, movement_type, quantity, unit, performed_by, reason)
-        VALUES (${input.materialId}, ${materialName}, 'RECEIVE', ${qty}, ${unit}, ${performedBy}, ${input.reason ?? "Qo'lda kirim"})
-        RETURNING id
-      `))[0];
+        const mv = dbRows(await tx.execute(sql`
+          INSERT INTO material_movements (material_id, material_name, movement_type, quantity, unit, performed_by, reason)
+          VALUES (${input.materialId}, ${materialName}, 'RECEIVE', ${qty}, ${unit}, ${performedBy}, ${input.reason ?? "Qo'lda kirim"})
+          RETURNING id
+        `))[0];
 
-      this.logger.log(`[WMS] Ombor #${warehouseId} kirim: material ${input.materialId} +${qty} ${unit} (movement #${mv?.['id'] ?? '?'})`);
-      return { warehouseId, materialId: input.materialId, received: qty, newQuantity, newAvailable, movementId: mv?.['id'] ?? null };
+        return {
+          newQuantity: Number(upserted?.['quantity'] ?? qty),
+          newAvailable: Number(upserted?.['available_quantity'] ?? qty),
+          movementId: mv?.['id'] ?? null,
+        };
+      });
+
+      this.logger.log(`[WMS] Ombor #${warehouseId} kirim: material ${input.materialId} +${qty} ${unit} (movement #${movementId ?? '?'})`);
+      return { warehouseId, materialId: input.materialId, received: qty, newQuantity, newAvailable, movementId };
     });
   }
 
