@@ -243,6 +243,12 @@ export class StorageController {
     const fastifyRes = res as unknown as { header: (k: string, v: string) => void };
     fastifyRes.header('Content-Type', contentType);
     fastifyRes.header('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
+    // C9.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): .svg is allowlisted for upload and can carry
+    // an embedded <script> (stored XSS) if a browser is ever tricked into sniffing/rendering it
+    // as image/svg+xml. Currently latent (.svg has no MIME_MAP entry -> falls back to
+    // application/octet-stream), but nosniff is the correct hardening regardless of MIME_MAP's
+    // current contents — it stops the browser from second-guessing Content-Type via sniffing.
+    fastifyRes.header('X-Content-Type-Options', 'nosniff');
     return new StreamableFile(fs.createReadStream(safePath));
   }
 
@@ -281,8 +287,11 @@ export class StorageController {
       }
     }
     const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
-    (res as unknown as { header: (k: string, v: string) => void }).header('Content-Type', contentType);
-    (res as unknown as { header: (k: string, v: string) => void }).header('Cache-Control', 'public, max-age=86400');
+    const fastifyRes = res as unknown as { header: (k: string, v: string) => void };
+    fastifyRes.header('Content-Type', contentType);
+    fastifyRes.header('Cache-Control', 'public, max-age=86400');
+    // C9.2 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): see downloadFile() above for rationale.
+    fastifyRes.header('X-Content-Type-Options', 'nosniff');
     return new StreamableFile(fs.createReadStream(safePath));
   }
 }
