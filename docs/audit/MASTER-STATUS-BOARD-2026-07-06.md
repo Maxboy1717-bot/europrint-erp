@@ -574,7 +574,7 @@
 | Critical-Correctness | 8.1 auto-barcode Math.random suffix no unique constraint | DONE | 12e6bd63 | 100% | Duplicate barcodes; #7 top-10 |
 | Critical-Correctness | 8.2 pos-stock-issuable COUNT(*)+1 TOCTOU barcode | DONE | 9f8a62e1 | 100% | Duplicate barcodes; #7 top-10 |
 | Critical-Correctness | 8.3 procurement-request PR number COUNT(*)+1 no lock | DONE | 4167a16a | 100% | Duplicate PR numbers; #10 top-10 |
-| Critical-Correctness | 8.4 employees-compat inline COUNT(*)+1 (low volume) | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 8.4 employees-compat inline COUNT(*)+1 (low volume) | DONE | 7b7b3edc | 100% | n/a |
 | Critical-Correctness | 8.5 ecommerce order number read-lastNumber+1 (unverified constraint) | DONE (verified stale) | n/a | 100% | generateSequenceNumber() already uses atomic db.transaction UPDATE-RETURNING/ON CONFLICT; customer_orders.order_number has a live UNIQUE constraint — audit's own "not confirmed" now confirmed safe |
 | Critical-Correctness | 8.6 pos-barcode scan no is_active/status gate | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 8.7 barcode-warehouse movement_number timestamp collision | UNKNOWN | n/a | 0% | n/a |
