@@ -146,8 +146,9 @@ export class AuthController {
 
   /**
    * POST /auth/refresh — exchange a valid refresh token for a fresh access token
-   * AND a fresh refresh token (rotation). The OLD refresh token is blacklisted
-   * the moment a new pair is issued.
+   * AND a fresh refresh token (rotation). The OLD refresh token is atomically
+   * claimed (revoked) BEFORE a new pair is minted (C7.6 fix) — single-use,
+   * race-free even under concurrent refresh calls with the same old token.
    * Uses JWT_REFRESH_SECRET (NOT JWT_SECRET) to verify, so an exfiltrated
    * access token cannot be replayed here.
    */
@@ -170,9 +171,18 @@ export class AuthController {
       const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
       const payload = this.jwtService.verify(oldRefreshToken, { secret: refreshSecret });
 
-      // Reject replays: blacklisted tokens must not mint new pairs.
-      const isBlacklisted = await this.authRepo.isTokenBlacklisted(oldRefreshToken);
-      if (isBlacklisted) throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
+      // C7.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): atomically CLAIM (revoke) the old refresh
+      // token BEFORE minting a new pair — this is what actually closes the race, not a separate
+      // check-then-mint-then-revoke sequence. Two concurrent requests with the same old token:
+      // only one's claim can win (blacklistToken()'s guarded UPDATE is serialized by Postgres
+      // row-level locking); the loser is rejected here and never mints a second live pair.
+      // Replaces the old separate isTokenBlacklisted() pre-check, which left exactly this gap
+      // open (both requests could pass it before either blacklisted).
+      const oldExpiresAt = typeof payload.exp === 'number'
+        ? new Date(payload.exp * 1000)
+        : new Date(Date.now() + REFRESH_COOKIE_MAX_AGE_SEC * 1000);
+      const claimed = await this.authRepo.blacklistToken(oldRefreshToken, oldExpiresAt);
+      if (!claimed) throw new UnauthorizedException(await this.i18n.t('auth.tokenRevoked'));
 
       // Issue NEW access token (same lifetime / claims as login).
       // T10-17: 15-daqiqalik access TTL — login.service bilan bir manba (JWT_ACCESS_TOKEN_TTL).
@@ -187,13 +197,6 @@ export class AuthController {
         { sub: payload.sub, username: payload.username, role: payload.role },
         { secret: refreshSecret, expiresIn: refreshExpiresIn },
       );
-
-      // Blacklist the OLD refresh token AFTER successfully minting the new pair,
-      // so a transient DB error doesn't leave the user locked out.
-      const oldExpiresAt = typeof payload.exp === 'number'
-        ? new Date(payload.exp * 1000)
-        : new Date(Date.now() + REFRESH_COOKIE_MAX_AGE_SEC * 1000);
-      await this.authRepo.blacklistToken(oldRefreshToken, oldExpiresAt);
 
       // Rotate both cookies on the response so the browser picks up the new pair.
       if (typeof reply.setCookie === 'function') {

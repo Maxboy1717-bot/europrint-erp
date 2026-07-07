@@ -21,7 +21,14 @@ export interface IAuthRepo {
   findById(id: number): Promise<AuthUserAggregate | null>;
   save(user: AuthUserAggregate): Promise<AuthUserAggregate>;
   updateLastLogin(userId: number, ipAddress: string, timestamp: Date): Promise<void>;
-  blacklistToken(token: string, expiresAt: Date): Promise<void>;
+  /**
+   * C7.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): returns true only if THIS call performed the
+   * token's first-ever revocation (atomic claim) — false if it was already revoked (by a
+   * concurrent call or an earlier logout) or if the write itself failed. Callers that need the
+   * "did I win the single-use race" guarantee (auth.controller.ts's refresh()) must check this
+   * return value; fire-and-forget callers (logout.service.ts) may ignore it.
+   */
+  blacklistToken(token: string, expiresAt: Date): Promise<boolean>;
   isTokenBlacklisted(token: string): Promise<boolean>;
   incrementFailedAttempts(userId: number): Promise<void>;
   lockUserAccount(userId: number, minutesDuration: number): Promise<void>;

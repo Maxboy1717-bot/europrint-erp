@@ -17,7 +17,7 @@ const mockI18n = {
 };
 
 interface RepoMock {
-  blacklistToken: jest.Mock<Promise<void>, [string, Date]>;
+  blacklistToken: jest.Mock<Promise<boolean>, [string, Date]>;
   findByUsername: jest.Mock; findById: jest.Mock; save: jest.Mock;
   updateLastLogin: jest.Mock; isTokenBlacklisted: jest.Mock;
   incrementFailedAttempts: jest.Mock; lockUserAccount: jest.Mock; resetFailedAttempts: jest.Mock;
@@ -25,7 +25,7 @@ interface RepoMock {
 
 function makeRepo(): RepoMock {
   return {
-    blacklistToken: jest.fn().mockResolvedValue(undefined),
+    blacklistToken: jest.fn().mockResolvedValue(true),
     findByUsername: jest.fn(), findById: jest.fn(), save: jest.fn(),
     updateLastLogin: jest.fn(), isTokenBlacklisted: jest.fn(),
     incrementFailedAttempts: jest.fn(), lockUserAccount: jest.fn(), resetFailedAttempts: jest.fn(),

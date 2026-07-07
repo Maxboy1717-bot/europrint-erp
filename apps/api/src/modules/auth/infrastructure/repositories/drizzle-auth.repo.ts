@@ -137,7 +137,27 @@ export class DrizzleAuthRepo implements IAuthRepo {
    * INSERT qilamiz. ON CONFLICT (jti) — unikal constraint mavjud.
    * Guard `WHERE jti = $jti AND is_revoked = true` → endi topiladi.
    */
-  async blacklistToken(token: string, _expiresAt: Date): Promise<void> {
+  /**
+   * C7.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): the old ON CONFLICT ... DO UPDATE SET
+   * is_revoked = true unconditionally "succeeded" whether this call was the token's first
+   * revocation or its hundredth — the caller (auth.controller.ts's refresh()) had no way to
+   * tell "did I just win the single-use claim" from "this was already revoked". Two concurrent
+   * refresh() calls with the same old token could BOTH pass a separate isTokenBlacklisted()
+   * check before either blacklisted, both mint new pairs -> two live sessions from one
+   * single-use refresh token.
+   *
+   * Fix: add `WHERE refresh_tokens.is_revoked = false` to the DO UPDATE action + RETURNING jti.
+   * Postgres row-level locking on the UPDATE serializes concurrent claims against the same jti
+   * row — only the FIRST caller's write actually flips is_revoked false->true and gets a row
+   * back; a second concurrent (or later) call sees is_revoked already true, the WHERE excludes
+   * it, RETURNING yields nothing. Returns true only for that winning first-time transition.
+   *
+   * KNOWN LIMITATION (unchanged from before this fix): tokens with no jti (legacy format) never
+   * hit the partial unique index at all, so ON CONFLICT never fires and every call plain-INSERTs
+   * a new row — the single-use race is NOT closed for that legacy path. All tokens minted by the
+   * current login/refresh flow carry a jti; this only affects pre-existing legacy-format tokens.
+   */
+  async blacklistToken(token: string, _expiresAt: Date): Promise<boolean> {
     try {
       const hash = this.hashToken(token);
       const payload = this.extractPayload(token);
@@ -153,22 +173,22 @@ export class DrizzleAuthRepo implements IAuthRepo {
         this.logger.warn(`blacklistToken: jti yo'q — token-hash bilan yoziladi`);
       }
 
-      // Guard jti orqali tekshiradi: SELECT is_revoked FROM refresh_tokens WHERE jti = $jti.
-      // ON CONFLICT (jti) WHERE jti IS NOT NULL — refresh_tokens.jti partial UNIQUE index
-      // (idx_refresh_tokens_jti, WHERE jti IS NOT NULL) — predikat MOS bo'lishi shart, aks holda
-      // "no unique or exclusion constraint matching" xatosi. user_id endi NULLABLE (migrations-drift
-      // T8-03): auth user.id INTEGER, ustun UUID — fabrikatsiya YO'Q, NULL yoziladi (FK yo'q, lookup
-      // jti/token orqali). user_id_text = audit uchun (kim chiqdi).
       // `id` UUID NOT NULL, DB-default YO'Q (Drizzle $defaultFn faqat app-code'da ishlaydi) →
       // gen_random_uuid() bilan beriladi, aks holda insert "id NOT NULL" da yiqiladi.
-      await runQuery(sql`
+      const result = await runQuery<{ jti: string | null }>(sql`
         INSERT INTO refresh_tokens (id, token, jti, user_id_text, is_revoked, expires_at, created_at)
         VALUES (gen_random_uuid(), ${hash}, ${jti}, ${userIdTx}, true, NOW() + INTERVAL '25 hours', NOW())
-        ON CONFLICT (jti) WHERE jti IS NOT NULL DO UPDATE SET is_revoked = true
+        ON CONFLICT (jti) WHERE jti IS NOT NULL
+        DO UPDATE SET is_revoked = true
+        WHERE refresh_tokens.is_revoked = false
+        RETURNING jti
       `);
-      this.logger.log(`blacklistToken: jti=${jti ?? '(yo\'q)'} qora ro'yxatga qo'shildi`);
+      const won = result.rows.length > 0;
+      this.logger.log(`blacklistToken: jti=${jti ?? '(yo\'q)'} ${won ? "qora ro'yxatga qo'shildi (birinchi)" : 'allaqachon bekor qilingan (poyga yutqazdi)'}`);
+      return won;
     } catch (error: unknown) {
       this.logger.error(`blacklistToken failed: ${error}`);
+      return false;
     }
   }
 
