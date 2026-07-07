@@ -48,6 +48,24 @@ describe('TashkentTimeService', () => {
     expect(result.getUTCMonth()).toBe(4); // May (0-indexed)
   });
 
+  // C2.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): addDays() now wraps in TZDate like its
+  // sibling addBusinessDays() does, for consistency (defense-in-depth; UZ has no DST so this
+  // is not observably different from the old raw-Date math on a UTC-clocked host, but the two
+  // sibling methods should not silently diverge in technique).
+  it('advances a calendar day across a late-UTC/next-day-Tashkent boundary instant', () => {
+    // 23:30 UTC on 14th = 04:30 Tashkent on 15th; +1 day -> 04:30 Tashkent on 16th = 23:30 UTC 15th.
+    const start = new Date('2026-05-14T23:30:00.000Z');
+    const result = svc.addDays(start, 1);
+    expect(result.toISOString()).toBe('2026-05-15T23:30:00.000Z');
+  });
+
+  it('subtracts a calendar day when addDays receives a negative delta', () => {
+    const start = new Date('2026-05-15T12:00:00.000Z');
+    const result = svc.addDays(start, -3);
+    expect(result.getUTCDate()).toBe(12);
+    expect(result.getUTCMonth()).toBe(4);
+  });
+
   it('skips weekends when addBusinessDays crosses Saturday + Sunday', () => {
     // Friday 2026-05-15 → +1 business day → Monday 2026-05-18
     const friday = new Date('2026-05-15T08:00:00.000Z');

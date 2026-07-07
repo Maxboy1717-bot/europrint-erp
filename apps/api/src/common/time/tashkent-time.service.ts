@@ -103,11 +103,16 @@ export class TashkentTimeService {
 
   /**
    * Sanaga N kun qo'shish.
+   *
+   * C2.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): wrapped in TZDate, matching addBusinessDays()
+   * below — UZ has no DST so this was low-impact, but kept inconsistent with its sibling method
+   * otherwise (a raw `new Date(date)` calendar-math call interprets day boundaries in OS-local
+   * time, not Tashkent).
    */
   addDays(date: Date, days: number): Date {
-    const result = new Date(date);
+    const result = new TZDate(date, this.TIMEZONE);
     result.setDate(result.getDate() + days);
-    return result;
+    return new Date(result);
   }
 
   /**
