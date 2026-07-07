@@ -14,6 +14,7 @@ import {
   employeeIssuanceLog as canonicalEmployeeIssuanceLog,
   posInventoryCountLines as canonicalPosInventoryCountLines,
   inventoryBarcodeAssignments as canonicalInventoryBarcodeAssignments,
+  barcodeMap as canonicalBarcodeMap,
   idealRasmTargets as canonicalIdealRasmTargets,
   glLines as canonicalGlLines,
   sdCustomerContacts as canonicalSdCustomerContacts,
@@ -81,6 +82,13 @@ export const pos_inventory_count_lines = canonicalPosInventoryCountLines;
 // ─── POS: Inventory Barcode Assignments ──────────────────────────────────────
 // inventory_barcode_assignments: re-exported from canonical definition in @workspace/db (pos-schema.ts)
 export const inventory_barcode_assignments = canonicalInventoryBarcodeAssignments;
+
+// ─── POS: Barcode Map ─────────────────────────────────────────────────────────
+// pos_barcode_map: re-exported from canonical definition in @workspace/db (pos-schema-extensions.ts).
+// C8.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): this is the REAL table findByBarcode()'s
+// pos_barcode_map subquery (`... AND is_primary = TRUE`) reads from — NOT
+// inventory_barcode_assignments (an unrelated passport/serial-tracking barcode table).
+export const pos_barcode_map = canonicalBarcodeMap;
 
 // ─── LMS: Lessons & Certificates ─────────────────────────────────────────────
 // lessons: re-exported from canonical definition in @workspace/db (lms-schema.ts)

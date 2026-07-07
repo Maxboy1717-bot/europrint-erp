@@ -12,7 +12,7 @@ import {
   employee_issuance_log, three_way_match_results,
   mm_purchase_requisition_items, qc_inspections,
   materials_legacy, purchase_orders_legacy,
-  pos_inventory_count_lines, inventory_barcode_assignments,
+  pos_inventory_count_lines, pos_barcode_map,
   pos_movements_legacy, lessons, certificates_table, courses_table,
   cameras, hr_interview_questions, hr_applications, gl_lines,
   gamification_totals, absence_tracking, hr_brand_settings,
@@ -50,11 +50,21 @@ export async function execPosInventoryCountMarkGlPosted(lineId: number): Promise
 }
 
 export async function execPosBarcodeClearPrimary(materialCardId: number): Promise<void> {
-  await db.update(inventory_barcode_assignments)
+  // C8.6 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): this used to demote `isPrimary` on
+  // `inventory_barcode_assignments` filtered by `passportId = materialCardId` — but that
+  // table is keyed by a *passport* id (inventory_passports.id), an entirely different,
+  // unrelated barcode table (passport/serial-number tracking). Passing a material_card id
+  // as a passport id there is a no-op in practice, so the OLD primary row in the REAL
+  // barcode table (`pos_barcode_map`, the one findByBarcode()'s
+  // `... AND is_primary = TRUE` branch reads from) was never demoted. Result: after
+  // reassigning a material's primary barcode, the old/reissued barcode value kept
+  // `is_primary = TRUE` forever and kept resolving via findByBarcode(). Fixed to demote
+  // the correct table/column.
+  await db.update(pos_barcode_map)
     .set({ isPrimary: false })
     .where(and(
-      eq(inventory_barcode_assignments.passportId, materialCardId),
-      eq(inventory_barcode_assignments.isPrimary, true),
+      eq(pos_barcode_map.materialCardId, materialCardId),
+      eq(pos_barcode_map.isPrimary, true),
     ));
 }
 

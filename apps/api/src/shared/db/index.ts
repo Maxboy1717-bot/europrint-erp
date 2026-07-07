@@ -97,7 +97,7 @@ export {
 export {
   stocks, current_stock, ideal_rasm_targets, order_status_logs,
   pos_damage_qc_links, pos_barcode_print_queue, employee_issuance_log,
-  pos_inventory_count_lines, inventory_barcode_assignments,
+  pos_inventory_count_lines, inventory_barcode_assignments, pos_barcode_map,
   lessons, certificates_table, courses_table,
   hr_interview_questions, hr_applications, gl_lines,
   sd_customer_contacts, sd_customer_documents, sd_customer_competitors, sd_sales_orders,
