@@ -115,10 +115,13 @@ export class EmployeesCompatSubService {
 
   async createComplaint(employeeId: string, body: Record<string, unknown>): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
+      // C8.4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): the old COUNT(*)+1 was a TOCTOU read-max
+      // race (id is the PRIMARY KEY, so a collision already failed loudly rather than silently
+      // duplicating — same "crash under concurrent load" class as 1.7/8.3). nextval() is atomic.
       const r = await rawSql(sql`
         INSERT INTO hr_conflict_reports (id, party1, party2, description, severity, status)
         VALUES (
-          'CR-' || LPAD(CAST((SELECT COUNT(*)+1 FROM hr_conflict_reports) AS TEXT), 3, '0'),
+          'CR-' || LPAD(nextval('hr_conflict_report_seq')::text, 3, '0'),
           ${employeeId}, ${body['party2'] ?? ''}, ${body['description'] ?? null}, ${body['severity'] ?? 'low'}, 'open'
         )
         RETURNING id, severity, status, created_at
