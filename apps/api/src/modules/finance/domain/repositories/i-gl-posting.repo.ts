@@ -19,7 +19,16 @@ export interface IGlPostingRepository {
     createdBy?: number;
   }): Promise<Result<number>>;
 
-  /** Atomic multi-leg journal insert — all legs commit together or none (rolls back on any failure). */
+  /**
+   * Atomic multi-leg journal insert — all legs commit together or none (rolls back on any failure).
+   *
+   * C1.9 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): when `reference` is supplied, the insert is
+   * additionally serialized against concurrent posts of the SAME business reference via a
+   * transaction-scoped advisory lock + in-transaction re-check of findEntryIdByReference's
+   * `entry_number LIKE '${reference}-%'` pattern — closing the double-post race that a
+   * before-the-transaction-only idempotency check cannot. Omit `reference` for the old
+   * unconditional-insert behavior.
+   */
   insertJournal(rows: Array<{
     entryNumber: string;
     entryDate: string;
@@ -30,7 +39,7 @@ export interface IGlPostingRepository {
     amount: number;
     description?: string;
     createdBy?: number;
-  }>): Promise<Result<number>>;
+  }>, reference?: string): Promise<Result<number>>;
 
   /**
    * Idempotency lookup: the first entries.id already posted for a business reference (entry_number

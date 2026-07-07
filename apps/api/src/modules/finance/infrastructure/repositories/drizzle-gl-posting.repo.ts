@@ -88,7 +88,7 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
     amount: number;
     description?: string;
     createdBy?: number;
-  }>): Promise<Result<number>> {
+  }>, reference?: string): Promise<Result<number>> {
     try {
       // #04 fix: rows carry account CODES in debitAccountId/creditAccountId (both real legs, no 'OFFSET').
       // Resolve them to integer accounts.id (live entries.*_account_id are integer) before insert; if any
@@ -100,6 +100,24 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
       // Atomic: all journal legs commit together — a mid-journal failure rolls
       // back every leg (no orphaned half-journal). Mirrors saveBudget pattern.
       const firstId = await db.transaction(async (tx) => {
+        // C1.9 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): createJournalEntry's pre-check
+        // (findEntryIdByReference, outside any transaction) is a fast best-effort path only —
+        // two truly-concurrent posts of the SAME business reference can both see "not yet posted"
+        // before either commits, and both insert distinct entry_number values (entry_number embeds
+        // Date.now(), so no UNIQUE constraint can catch this) — a silent GL double-post. A
+        // transaction-scoped advisory lock keyed on `reference` (auto-released on commit/rollback,
+        // no DDL/migration needed) serializes concurrent callers: the second blocks here until the
+        // first's transaction commits, then re-checks for an existing entry_number under THIS same
+        // transaction (guaranteed to see the first's now-committed row) and returns it instead of
+        // inserting a duplicate. When `reference` is omitted, this whole idempotency path is skipped
+        // — unchanged behavior for any caller that doesn't need it.
+        if (reference) {
+          await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${reference}))`);
+          const existing = await tx.execute(sql`SELECT id FROM entries WHERE entry_number LIKE ${reference + '-%'} ORDER BY id LIMIT 1`);
+          const existingRow = (Array.isArray(existing.rows) ? existing.rows : [])[0] as { id: number } | undefined;
+          if (existingRow) return Number(existingRow.id);
+        }
+
         let first: number | undefined;
         for (const row of rows) {
           const insertValues: typeof entries.$inferInsert = {

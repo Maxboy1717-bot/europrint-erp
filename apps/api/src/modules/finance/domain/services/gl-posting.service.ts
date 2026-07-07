@@ -265,7 +265,10 @@ export class GlPostingService {
       }
     }
 
-    const result = await this.glPostingRepo.insertJournal(rows);
+    // C1.9 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): pass `reference` so the repo serializes against
+    // a truly-concurrent duplicate post of this SAME business event via an advisory lock + in-tx
+    // re-check — the idempotency pre-check above is a fast, non-authoritative best-effort path only.
+    const result = await this.glPostingRepo.insertJournal(rows, reference);
     if (result.ok) {
       this.logger.debug(`Journal entry created - Reference: ${reference}, Debit/Credit: ${totalDebit}`);
     }
