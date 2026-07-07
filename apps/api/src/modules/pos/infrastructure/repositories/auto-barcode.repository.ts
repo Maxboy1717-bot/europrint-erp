@@ -60,7 +60,12 @@ export class AutoBarcodeRepository {
           pml.quantity,
           pml.unit
         FROM pos_movement_lines pml
-        LEFT JOIN material_cards mc ON mc.id = pml.material_id
+        -- C6.5 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): a soft-deleted/deactivated material must
+        -- not surface its code/name onto a printed barcode. Filtering in the JOIN condition (not
+        -- WHERE) preserves the movement line row — materialCode simply comes back NULL, which
+        -- generateBarcode() already falls back to 'MAT' for — instead of silently dropping the
+        -- whole line from the barcode-generation batch.
+        LEFT JOIN material_cards mc ON mc.id = pml.material_id AND mc.deleted_at IS NULL AND mc.is_active = true
         WHERE pml.movement_id = ${movementId}
       `);
       return Ok(rows);
