@@ -350,9 +350,9 @@ export default function SDSalesOrders() {
         </div>
       </div>
 
-      <div className="flex gap-6 h-[calc(100vh-260px)]">
+      <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-260px)]">
         {/* Order list */}
-        <div className="w-80 flex flex-col gap-2 shrink-0 overflow-y-auto">
+        <div className="w-full lg:w-80 flex flex-col gap-2 shrink-0 overflow-y-auto">
           {isLoading && <div className="text-sm text-muted-foreground p-2">{t("Yuklanmoqda...")}</div>}
           {(Array.isArray(orders) ? orders : []).map((o) => (
               <div key={o.id} data-testid={`card-order-${o.id}`}
