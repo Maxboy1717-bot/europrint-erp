@@ -14,7 +14,7 @@ import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard }   from '../../auth/guards/roles.guard';
 import { Roles }        from '../../auth/decorators/roles.decorator';
-import { Role }         from '../../auth/types/role';
+import { Role }         from '@common/constants/roles.constants';
 import { unwrapOrBadRequest, unwrapOrNotFound, unwrapOrInternal } from '@common/http-result';
 import { AiExamService } from '../application/services/ai-exam.service';
 import { AssignAiExamDto, SubmitAiExamDto } from './dto/ai-exam.dto';

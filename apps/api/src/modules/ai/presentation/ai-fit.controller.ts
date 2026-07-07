@@ -16,7 +16,7 @@ import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { Role } from '../../auth/types/role';
+import { Role } from '@common/constants/roles.constants';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { unwrapOrThrow, unwrapOrNotFoundDefined, throwFromError } from '@common/http-result';

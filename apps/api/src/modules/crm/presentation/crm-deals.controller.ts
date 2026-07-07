@@ -50,7 +50,7 @@ const QuickDealSchema = z.object({
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard} from '../../auth/guards/roles.guard';
 import { Roles} from '../../auth/decorators/roles.decorator';
-import { Role} from '../../auth/enums/role.enum';
+import { Role} from '@common/constants/roles.constants';
 import { AuditInterceptor} from '../../shared/interceptors/audit.interceptor';
 import { CreateDealCommand} from '../application/commands/create-deal.handler';
 import { MarkDealWonCommand} from '../application/commands/mark-deal-won.handler';

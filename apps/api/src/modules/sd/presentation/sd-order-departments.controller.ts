@@ -12,7 +12,7 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { Role } from '../../auth/enums/role.enum';
+import { Role } from '@common/constants/roles.constants';
 import { AuditInterceptor } from '../../shared/interceptors/audit.interceptor';
 import { SdOrderDepartmentsService } from '../application/sd-order-departments.service';
 import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto } from './dto/sd-order-departments.dto';
@@ -86,7 +86,7 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/shipping/status')
-  @Roles(Role.WAREHOUSE, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.WAREHOUSE_KEEPER, Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(UpdateShippingStatusSchema))
   async setShippingStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateShippingStatusDto) {
     return unwrapOrThrow(await this.svc.setShippingStatus(id, dto.status));
@@ -96,7 +96,7 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/materials/:reqId/status')
-  @Roles(Role.WAREHOUSE, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.WAREHOUSE_KEEPER, Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(UpdateMaterialStatusSchema))
   async setMaterialStatus(@Param('id', ParseIntPipe) id: number, @Param('reqId') reqId: string, @Body() dto: UpdateMaterialStatusDto) {
     return unwrapOrThrow(await this.svc.setMaterialStatus(id, reqId, dto.status));

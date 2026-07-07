@@ -16,7 +16,7 @@ import { RolesGuard }  from '../../auth/guards/roles.guard';
 import { Roles }       from '../../auth/decorators/roles.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../auth/types/authenticated-user';
-import { Role }        from '../../auth/types/role';
+import { Role }        from '@common/constants/roles.constants';
 import { unwrapOrBadRequest } from '@common/http-result';
 import { AiHrNewService } from '../application/services/ai-hr-new.service';
 import { CreateAiInterviewDto } from './dto/ai-hr-new.dto';
