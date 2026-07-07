@@ -579,8 +579,8 @@
 | Critical-Correctness | 8.6 pos-barcode scan no is_active/status gate | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 8.7 barcode-warehouse movement_number timestamp collision | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 8.8 mm-purchase-orders po_number from serial (fine) | DONE | n/a | 100% | n/a |
-| Critical-Correctness | 9.1 uncapped array .min(1) no .max(), DoS risk | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 9.2 .svg in upload allowlist, stored XSS risk (mitigated) | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 9.1 uncapped array .min(1) no .max(), DoS risk | DONE | 30469999 | 100% | n/a |
+| Critical-Correctness | 9.2 .svg in upload allowlist, stored XSS risk (mitigated) | DONE | 918a2685 | 100% | n/a |
 | Critical-Correctness | 9.3 storage.controller path-confinement (correct) | DONE | n/a | 100% | n/a |
 | Critical-Correctness | 9.4 upload handlers ext-allowlist+size-cap (correct) | DONE | n/a | 100% | n/a |
 | Critical-Correctness | 9.5 xlsx export-only, no upload-parse (correct) | DONE | n/a | 100% | n/a |
