@@ -128,7 +128,11 @@ export class SdQuotationsService {
   async getKpiTeam(period: string | null): Promise<Result<{ team_kpi: Row[]; period: string }, AppError>> {
     // Parse "YYYY-MM" or fall back to the current calendar month so the FE period
     // selector is honoured end-to-end (previously year/month were dropped here).
-    const now = new Date();
+    // C2.5 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): `new Date()` resolves in OS-local/UTC time —
+    // wrong month during the 00:00-05:00 Tashkent window on a month boundary. `_time.now()`
+    // (already used elsewhere in this file, e.g. calculatePrice's calculated_at) resolves in
+    // Tashkent-local calendar terms instead.
+    const now = _time.now();
     let year  = now.getFullYear();
     let month = now.getMonth() + 1;
     if (period) {

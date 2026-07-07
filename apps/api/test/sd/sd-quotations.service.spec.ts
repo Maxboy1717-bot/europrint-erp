@@ -181,4 +181,40 @@ describe('SdQuotationsService', () => {
     await svc.approveQuotation('q-1', 42);
     expect(repo.approveQuotation).toHaveBeenCalledWith('q-1', 42);
   });
+
+  // C2.5 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): getKpiTeam()'s current-month fallback used
+  // to call `new Date()` (OS-local/UTC), giving the wrong month during the 00:00-05:00 Tashkent
+  // window on a month boundary. Now uses TashkentTimeService's `_time.now()`.
+  describe('getKpiTeam — current-month fallback (Tashkent, not UTC)', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('resolves the Tashkent-local month, not the UTC month, at a UTC month-boundary instant', async () => {
+      // 2026-07-31T20:30:00Z = 2026-08-01T01:30:00+05:00 (Tashkent) -- UTC says July, Tashkent
+      // says August. The bug (new Date().getMonth()) would resolve July on a UTC-clocked host.
+      jest.useFakeTimers().setSystemTime(new Date('2026-07-31T20:30:00.000Z'));
+      repo.getKpiTeam.mockResolvedValue(Ok([]));
+
+      await svc.getKpiTeam(null);
+
+      expect(repo.getKpiTeam).toHaveBeenCalledWith(2026, 8);
+    });
+
+    it('does not regress the normal daytime-UTC case', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-03-15T10:00:00.000Z'));
+      repo.getKpiTeam.mockResolvedValue(Ok([]));
+
+      await svc.getKpiTeam(null);
+
+      expect(repo.getKpiTeam).toHaveBeenCalledWith(2026, 3);
+    });
+
+    it('still honours an explicit period= override regardless of the current instant', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-07-31T20:30:00.000Z'));
+      repo.getKpiTeam.mockResolvedValue(Ok([]));
+
+      await svc.getKpiTeam('2025-11');
+
+      expect(repo.getKpiTeam).toHaveBeenCalledWith(2025, 11);
+    });
+  });
 });
