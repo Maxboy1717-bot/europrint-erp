@@ -51,8 +51,11 @@ const ImportEmployeeRowSchema = z.object({
   address:       z.string().max(500).optional(),
   phone:         z.string().max(20).optional(),
 });
+// C9.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): uncapped array on a JSON @Body — one INSERT per
+// row with no batching means a caller could submit an arbitrarily large batch (memory/DoS),
+// bypassing the global multipart file-size cap since this isn't a file upload.
 const ImportEmployeesSchema = z.object({
-  employees: z.array(ImportEmployeeRowSchema).min(1),
+  employees: z.array(ImportEmployeeRowSchema).min(1).max(1000),
 });
 export class ImportEmployeesDto extends createZodDto(ImportEmployeesSchema) {}
 

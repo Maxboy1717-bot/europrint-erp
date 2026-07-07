@@ -45,8 +45,11 @@ export const HrAssignOrgFunctionsSchema = z.object({
 });
 export type HrAssignOrgFunctionsDto = z.infer<typeof HrAssignOrgFunctionsSchema>;
 
+// C9.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): uncapped array on a JSON @Body — a caller could
+// submit an arbitrarily large batch (memory/DoS), bypassing the global multipart file-size cap
+// since this isn't a file upload. Bound matches the sibling fix in compat-body.dto.ts.
 export const HrImportEmployeesSchema = z.object({
-  employees: z.array(z.record(z.string(), z.unknown())).optional(),
+  employees: z.array(z.record(z.string(), z.unknown())).max(1000).optional(),
 });
 export type HrImportEmployeesDto = z.infer<typeof HrImportEmployeesSchema>;
 
