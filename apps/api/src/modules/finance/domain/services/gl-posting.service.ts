@@ -172,8 +172,21 @@ export class GlPostingService {
     const totalDebit  = debits.reduce((s, d) => s + d.amt, 0);
     const totalCredit = credits.reduce((s, c) => s + c.amt, 0);
 
-    if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      return Err(`Double-entry validation failed: Debit ${totalDebit} != Credit ${totalCredit}`);
+    // C3.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): this used to compare the raw UNROUNDED float
+    // sums with a flat `> 0.01` tolerance, while the decomposition below persists every leg rounded
+    // to money precision (Math.round(alloc*100)/100, cents — see Money.vo's SCALE philosophy: never
+    // compare/store money at float precision). That let a genuine sub-cent-to-1-cent debit/credit
+    // gap slip through unrejected (e.g. 100.006 vs 100.00 — diff 0.006 < 0.01 — was accepted even
+    // though the two sides differ by more than a possible cent), inconsistent with the exact-cent
+    // precision the ledger actually stores. Fix: round BOTH sides to the SAME money precision
+    // (cents) first — this also makes the comparison immune to pure float noise (0.1+0.2 style)
+    // without needing an arbitrary tolerance — then require EXACT equality in integer cents.
+    const totalDebitCents  = Math.round(totalDebit  * 100);
+    const totalCreditCents = Math.round(totalCredit * 100);
+    if (totalDebitCents !== totalCreditCents) {
+      return Err(
+        `Double-entry validation failed: Debit ${(totalDebitCents / 100).toFixed(2)} != Credit ${(totalCreditCents / 100).toFixed(2)}`,
+      );
     }
 
     // F2 data-quality gate (ACCOUNTING-STANDARDS-AUDIT-2026-07-06): a balanced-but-zero journal (every
@@ -233,6 +246,23 @@ export class GlPostingService {
       dRem -= alloc; cRem -= alloc;
       if (dRem <= 0.001) { di++; dRem = debits[di]?.amt ?? 0; }
       if (cRem <= 0.001) { ci++; cRem = credits[ci]?.amt ?? 0; }
+    }
+
+    // C3.1 last-leg residual adjustment (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): each row's `amount`
+    // above is independently rounded to cents (Math.round(alloc*100)/100). With enough legs — or legs
+    // whose raw amounts carry more than 2 decimal places (e.g. a 100/3 proportional split) — those
+    // independent roundings can accumulate a few cents of drift between Σ(persisted rows) and the
+    // totalDebitCents/totalCreditCents already validated above, even though the validation passed
+    // exactly. Force the LAST leg to absorb that drift so what lands in `entries` always sums to
+    // EXACTLY the validated total — closing the gap between "what createJournalEntry validated" and
+    // "what actually got persisted" that this audit item flagged as latent.
+    if (rows.length > 0) {
+      const postedCents = rows.reduce((s, r) => s + Math.round(r.amount * 100), 0);
+      const residualCents = totalDebitCents - postedCents;
+      if (residualCents !== 0) {
+        const last = rows[rows.length - 1];
+        last.amount = Math.round(last.amount * 100 + residualCents) / 100;
+      }
     }
 
     const result = await this.glPostingRepo.insertJournal(rows);

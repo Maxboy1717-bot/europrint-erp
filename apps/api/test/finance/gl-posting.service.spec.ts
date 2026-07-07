@@ -221,4 +221,61 @@ describe('GlPostingService', () => {
       expect(r.ok).toBe(true);
     });
   });
+
+  describe('createJournalEntry() balance check — C3.1 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06)', () => {
+    // Old code: Math.abs(100.006 - 100.00) = 0.006 < 0.01 tolerance → WRONGLY accepted a genuine
+    // cent-level debit/credit mismatch. Fixed code rounds both sides to cents (10001 vs 10000) and
+    // requires exact equality → correctly rejected.
+    it('rejects a genuine cent-level debit/credit mismatch that the old >0.01 tolerance let through', async () => {
+      const r = await svc.postJournal(
+        [
+          { accountCode: '1000', accountName: 'A', debit: 100.006, credit: 0 },
+          { accountCode: '2000', accountName: 'B', debit: 0, credit: 100.0 },
+        ],
+        'ADHOC-3',
+      );
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.message).toMatch(/Double-entry validation failed/);
+      expect(mockGlRepo.insertJournal).not.toHaveBeenCalled();
+    });
+
+    // 3 debit legs of 100/3 (a repeating-decimal split) sum to 99.99999999999999, which rounds to
+    // exactly 100.00 in cents — so the balance check (correctly) passes. But decomposing that against
+    // a single 100.00 credit leg, with EACH partial allocation independently rounded to cents
+    // (33.333... -> 33.33 three times), used to persist 33.33+33.33+33.33 = 99.99 — one cent short of
+    // the validated 100.00. The last-leg residual adjustment must make the persisted rows sum exactly
+    // to 100.00.
+    it('reconciles per-leg rounding drift onto the last leg so persisted rows sum exactly to the validated total', async () => {
+      const third = 100 / 3; // 33.333333333333336
+      const r = await svc.postJournal(
+        [
+          { accountCode: '1000', accountName: 'A', debit: third, credit: 0 },
+          { accountCode: '1000', accountName: 'A', debit: third, credit: 0 },
+          { accountCode: '1000', accountName: 'A', debit: third, credit: 0 },
+          { accountCode: '2000', accountName: 'B', debit: 0, credit: 100 },
+        ],
+        'ADHOC-4',
+      );
+      expect(r.ok).toBe(true);
+      expect(mockGlRepo.insertJournal).toHaveBeenCalledTimes(1);
+      const rows = mockGlRepo.insertJournal.mock.calls[0][0] as Array<{ amount: number }>;
+      const postedTotalCents = rows.reduce((s, row) => s + Math.round(row.amount * 100), 0);
+      expect(postedTotalCents).toBe(10000); // exactly $100.00 in cents, not 9999 ($99.99)
+      // Without the fix the naive per-row rounding would have posted 33.33 three times (9999 cents).
+      expect(rows.some((row) => Math.round(row.amount * 100) === 34 + 3300)).toBe(true); // one leg absorbed the missing cent (33.34)
+    });
+
+    it('still accepts a normal already-cent-precision balanced entry (no behavior change for the common case)', async () => {
+      const r = await svc.postJournal(
+        [
+          { accountCode: '1000', accountName: 'A', debit: 500.5, credit: 0 },
+          { accountCode: '2000', accountName: 'B', debit: 0, credit: 500.5 },
+        ],
+        'ADHOC-5',
+      );
+      expect(r.ok).toBe(true);
+      const rows = mockGlRepo.insertJournal.mock.calls[0][0] as Array<{ amount: number }>;
+      expect(rows).toEqual([expect.objectContaining({ amount: 500.5 })]);
+    });
+  });
 });
