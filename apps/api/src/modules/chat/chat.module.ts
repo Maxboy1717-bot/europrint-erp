@@ -36,7 +36,11 @@ import { TelegramBotsModule } from '../hr/telegram-bots/telegram-bots.module';
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
         secret: cfg.getOrThrow<string>('JWT_SECRET'),
-        signOptions: { expiresIn: (cfg.get<string>('JWT_ACCESS_TOKEN_TTL') ?? '24h') as SignOptions['expiresIn'] },
+        // C7.4 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): fallback aligned with auth.module.ts
+        // (was '24h' here vs '15m' there) — same env var, same token, must agree on lifetime
+        // when JWT_ACCESS_TOKEN_TTL is unset so a chat-issued token doesn't outlive the main
+        // API's notion of "expired".
+        signOptions: { expiresIn: (cfg.get<string>('JWT_ACCESS_TOKEN_TTL') ?? cfg.get<string>('JWT_EXPIRES_IN') ?? '15m') as SignOptions['expiresIn'] },
       }),
     }),
   ],
