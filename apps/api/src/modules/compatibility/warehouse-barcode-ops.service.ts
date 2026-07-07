@@ -52,9 +52,13 @@ export class WarehouseBarcodeOpsService {
 
   async scanBarcode(barcode: string){
     return safeCall(async () => {
+    // C6.3 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): no deleted_at/is_active filter — a
+    // soft-deleted or deactivated material previously still scanned as live.
     const result = await rawSql(sql`
       SELECT mc.id, mc.xom_ashyo AS "xomAshyo", mc.barcode, mc.unit_of_measure AS "unitOfMeasure"
-      FROM material_cards mc WHERE mc.barcode = ${barcode} LIMIT 1
+      FROM material_cards mc
+      WHERE mc.barcode = ${barcode} AND mc.deleted_at IS NULL AND mc.is_active = true
+      LIMIT 1
     `);
     const row = dbRows(result)[0];
     if (!row) return { found: false, message: { uz: 'Barcode topilmadi', ru: 'Штрих-код не найден' } };
