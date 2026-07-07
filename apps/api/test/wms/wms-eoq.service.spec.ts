@@ -13,6 +13,14 @@ jest.mock('@shared/db', () => {
   };
 });
 
+// MN-3 (Magic-Numbers Independent Verification 2026-07-07, M9 config-schema gap):
+// recalculateAll() now resolves the ordering-cost/holding-cost-pct via getConfigNumber
+// instead of the DEFAULT_* constants directly.
+const mockGetConfigNumber = jest.fn();
+jest.mock('@common/config/business-config.helper', () => ({
+  getConfigNumber: (...args: unknown[]) => mockGetConfigNumber(...args),
+}));
+
 import { WmsEoqService } from '../../src/modules/wms/application/wms-eoq.service';
 import { EoqCalculatorService } from '../../src/modules/wms/domain/services/eoq-calculator.service';
 import { Ok, Err, AppErr } from '../../src/common/result';
@@ -52,6 +60,10 @@ function makeEoqCalcStub(overrides: Partial<{
 describe('WmsEoqService', () => {
   beforeEach(() => {
     (runQuery as jest.Mock).mockReset();
+    // Default: behave exactly like the real getConfigNumber's fallback path (no settings
+    // override), so every pre-existing test below keeps its prior fixed-constant behavior.
+    mockGetConfigNumber.mockReset();
+    mockGetConfigNumber.mockImplementation((_key: string, fallback: number) => Promise.resolve(fallback));
   });
 
   describe('enqueueRecalculation()', () => {
@@ -192,6 +204,31 @@ describe('WmsEoqService', () => {
       const r = await svc.recalculateAll();
 
       expect(r.ok).toBe(false);
+    });
+
+    it('MN-3: resolves ordering-cost/holding-cost-pct from settings, not the hardcoded constants', async () => {
+      mockGetConfigNumber.mockImplementation((key: string) =>
+        Promise.resolve(key === 'eoq_default_ordering_cost_uzs' ? 999_999 : 0.42),
+      );
+      (runQuery as jest.Mock)
+        .mockResolvedValueOnce(rowsResult([
+          { id: 1, unit_price: 10, abc_segment: 'B', current_stock: 100 },
+        ]))
+        .mockResolvedValueOnce(rowsResult([{ material_id: 1, annual_demand: 1200 }]))
+        .mockResolvedValueOnce(rowsResult([]))
+        .mockResolvedValueOnce(rowsResult([]));
+
+      const inner = makeEoqCalcStub();
+      const svc = new WmsEoqService(inner, makeQueue());
+
+      const r = await svc.recalculateAll();
+
+      expect(r.ok).toBe(true);
+      expect(mockGetConfigNumber).toHaveBeenCalledWith('eoq_default_ordering_cost_uzs', 150_000);
+      expect(mockGetConfigNumber).toHaveBeenCalledWith('eoq_default_holding_cost_pct', 0.20);
+      const call = (inner.calculate as jest.Mock).mock.calls[0]?.[0];
+      expect(call.orderingCostUzs).toBe(999_999);
+      expect(call.holdingCostPercent).toBe(0.42);
     });
 
     it('skips materials when calculate returns Err', async () => {

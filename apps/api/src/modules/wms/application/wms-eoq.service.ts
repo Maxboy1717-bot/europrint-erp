@@ -51,6 +51,7 @@ import { EoqCalculatorService, EoqWithDiscountInput, EoqDiscountResult } from '.
 import type { PriceTier } from '../domain/services/eoq-calculator.service';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
 import { DEFAULT_ORDERING_COST_UZS, DEFAULT_HOLDING_COST_PCT } from '../domain/constants/eoq.constants';
+import { getConfigNumber } from '@common/config/business-config.helper';
 
 /** Above this PO value, EOQ result is recommendation-only — buyer must sign off. */
 const HITL_PURCHASE_THRESHOLD_UZS = 50_000_000;
@@ -122,6 +123,13 @@ export class WmsEoqService {
     let saved = 0;
     let hitlFlagged = 0;
 
+    // MN-3 (Magic-Numbers Independent Verification 2026-07-07, M9 config-schema gap):
+    // fetched once per recalc run (not per-material) -- these were named constants only,
+    // never owner-tunable without a deploy. Resolved outside the per-material loop below
+    // to avoid a settings-table round-trip per row.
+    const orderingCostUzs = await getConfigNumber('eoq_default_ordering_cost_uzs', DEFAULT_ORDERING_COST_UZS);
+    const holdingCostPercent = await getConfigNumber('eoq_default_holding_cost_pct', DEFAULT_HOLDING_COST_PCT);
+
     try {
       const materialsResult = await runQuery<MaterialRow>(sql`
         SELECT id,
@@ -185,16 +193,16 @@ export class WmsEoqService {
         if (tiers && tiers.length > 0) {
           result = await this.eoqSvc.calculateWithDiscounts({
             annualDemand,
-            orderingCostUzs: DEFAULT_ORDERING_COST_UZS,
-            holdingCostPercent: DEFAULT_HOLDING_COST_PCT,
+            orderingCostUzs,
+            holdingCostPercent,
             priceTiers: tiers,
             packSize: 1,
           });
         } else {
           const basicResult = await this.eoqSvc.calculate({
             annualDemand,
-            orderingCostUzs: DEFAULT_ORDERING_COST_UZS,
-            holdingCostPercent: DEFAULT_HOLDING_COST_PCT,
+            orderingCostUzs,
+            holdingCostPercent,
             unitPriceUzs: unitPrice,
             packSize: 1,
           });
