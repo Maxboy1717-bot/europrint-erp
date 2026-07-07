@@ -535,8 +535,8 @@
 | Critical-Correctness | 2.2 GL period lock raw text compare, no cast normalize | DONE | 9919dc92 | 100% | GL posting into closed period; #5 top-10 (C2) |
 | Critical-Correctness | 2.3 CKP 16h deadline anchored UTC midnight | BLOCKED-OWNER-DECISION | n/a | 0% | Fixing anchors deadline 5h earlier (16:00 not 21:00 Tashkent) — live payroll-gate business-rule change, needs owner sign-off before touching ckp-gate.ts + ckp-fact.service.ts in lockstep |
 | Critical-Correctness | 2.4 Two 'today' conventions coexist (Tashkent vs UTC) | DONE (verified stale) | e6cebf7d | 100% | GL half fixed under C3; cashier cron was never broken; remainder is fully subsumed by 2.3 |
-| Critical-Correctness | 2.5 sd-quotations getMonth() OS-local/UTC | UNKNOWN | n/a | 0% | n/a |
-| Critical-Correctness | 2.6 addDays() not TZDate-wrapped | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 2.5 sd-quotations getMonth() OS-local/UTC | DONE | 44cd0814 | 100% | n/a |
+| Critical-Correctness | 2.6 addDays() not TZDate-wrapped | DONE | 37623cda | 100% | n/a |
 | Critical-Correctness | 3.1 GL balance check unrounded vs rounded (latent) | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 3.2 delivery-completed float math (exact by construction) | UNKNOWN | n/a | 0% | n/a |
 | Critical-Correctness | 3.3 payroll multi-step float division/resum (tolerance holds) | UNKNOWN | n/a | 0% | n/a |
