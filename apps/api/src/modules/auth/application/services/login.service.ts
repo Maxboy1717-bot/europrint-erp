@@ -91,7 +91,7 @@ export class LoginService {
    *  2. Reject if locked / inactive
    *  3. Verify password (bcrypt); increment failed-attempt counter on miss
    *  4. Reset counter, update last-login timestamp
-   *  5. Sign access (8h) and refresh (30d) tokens
+   *  5. Sign access (15m default, config-driven) and refresh (7d default, config-driven) tokens
    *  6. Best-effort audit log insert (errors swallowed)
    * @param command - credentials + request metadata
    * @returns Result.ok({ accessToken, refreshToken, user }) on success
