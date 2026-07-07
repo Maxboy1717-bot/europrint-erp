@@ -570,7 +570,7 @@
 | Critical-Correctness | 7.3 login.service comment/code TTL doc drift | QUEUED-NOT-STARTED | n/a | 0% | Mechanical, JSDoc-only fix, low priority |
 | Critical-Correctness | 7.4 chat JWT 24h vs auth 15m default mismatch | QUEUED-NOT-STARTED | n/a | 0% | Mechanical one-line default-value alignment |
 | Critical-Correctness | 7.5 15m access token risk for long unsaved POSTs | BLOCKED-OWNER-DECISION | n/a | 0% | Should wizard forms autosave (localStorage/server-draft) before a forced-logout redirect, or is losing unsaved state on session expiry acceptable given refresh normally succeeds? If autosave wanted, which wizards first? |
-| Critical-Correctness | 7.6 refresh-token race, two live token pairs | UNKNOWN | n/a | 0% | n/a |
+| Critical-Correctness | 7.6 refresh-token race, two live token pairs | DONE | 90f9b226 | 100% | n/a |
 | Critical-Correctness | 8.1 auto-barcode Math.random suffix no unique constraint | DONE | 12e6bd63 | 100% | Duplicate barcodes; #7 top-10 |
 | Critical-Correctness | 8.2 pos-stock-issuable COUNT(*)+1 TOCTOU barcode | DONE | 9f8a62e1 | 100% | Duplicate barcodes; #7 top-10 |
 | Critical-Correctness | 8.3 procurement-request PR number COUNT(*)+1 no lock | DONE | 4167a16a | 100% | Duplicate PR numbers; #10 top-10 |
