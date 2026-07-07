@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Query, UseGuards, Logger, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { CommandBus } from '@nestjs/cqrs';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
@@ -41,7 +42,7 @@ const QC_FLOOR_ROLES = ['qc_inspector', 'operator', 'worker', 'QC_MANAGER', 'pro
 export class QcDefectsExtendedController {
   private readonly logger = new Logger(QcDefectsExtendedController.name);
 
-  constructor(private readonly svc: QcDefectsExtendedService, private readonly commandBus: CommandBus) {}
+  constructor(private readonly svc: QcDefectsExtendedService, private readonly commandBus: CommandBus, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List braks' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -82,7 +83,7 @@ export class QcDefectsExtendedController {
   @UsePipes(new ZodValidationPipe(QcCreateBrakSchema))
   @Roles(...QC_FLOOR_ROLES)
   async createBrak(@Body() body: QcCreateBrakDto) {
-    assertRequired((body as Record<string, unknown>).quantity, 'quantity required');
+    assertRequired((body as Record<string, unknown>).quantity, await this.i18n.t('errors.quantityRequired'));
     // QC-birlashtirish (2026-07-02, APPROVED egasi): brak yozuvi endi qc_braks-ga to'g'ridan
     // INSERT o'rniga ReportDefectCommand CQRS oqimi orqali qc_defects jadvaliga yoziladi
     // (6 ta yangi ustun: papka_order_id/stage/cost_impact/is_reworkable/reworked/brak_date).
@@ -140,7 +141,7 @@ export class QcDefectsExtendedController {
   @UsePipes(new ZodValidationPipe(QcCreateSupplierQualitySchema))
   @Roles(...QC_WRITE_ROLES)
   async createSupplierQuality(@Body() body: QcCreateSupplierQualityDto) {
-    assertRequired(body.supplier_name, 'supplier_name required');
+    assertRequired(body.supplier_name, await this.i18n.t('validation.supplierNameRequired'));
     const _rCreateSupplierQuality = await this.svc.createSupplierQuality(
       body.vendor_id != null ? safeInt(body.vendor_id, 0) : null,
       String(body.supplier_name),
@@ -203,7 +204,7 @@ export class QcDefectsExtendedController {
     const _rR = await this.svc.updateApproval(safeInt(id, 0), String(body.status), body.notes != null ? String(body.notes) : null);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'Approval not found');
+    assertFound(r, await this.i18n.t('errors.approvalRequestNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r[0];
   }
 

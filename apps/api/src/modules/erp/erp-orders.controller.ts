@@ -22,6 +22,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -44,7 +45,7 @@ const ERP_WRITE = ['super_admin', 'director', 'production_manager'];
 export class ErpOrdersController {
   private readonly logger = new Logger(ErpOrdersController.name);
 
-  constructor(private readonly svc: ErpExtraService) {}
+  constructor(private readonly svc: ErpExtraService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List orders' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -63,7 +64,7 @@ export class ErpOrdersController {
   @Get('orders/:id')
   async getOrder(@Param('id') id: string) {
     const r = await this.svc.getOrder(safeInt(id, 0));
-    assertFound(r, 'Order not found');
+    assertFound(r, await this.i18n.t('errors.orderNotFound'));
     return r;
   }
 
@@ -125,7 +126,7 @@ export class ErpOrdersController {
   @Get('work-centers/:id')
   async getWorkCenter(@Param('id') id: string) {
     const r = await this.svc.getWorkCenter(safeInt(id, 0));
-    assertFound(r, 'Work center not found');
+    assertFound(r, await this.i18n.t('errors.workCenterNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 

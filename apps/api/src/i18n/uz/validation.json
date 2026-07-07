@@ -66,5 +66,6 @@
   "invalidInputData": "Noto'g'ri kiritilgan ma'lumotlar",
   "materialIdMustBeNumber": "Material id raqam bo'lishi kerak",
   "targetsArrayRequired": "targets array talab qilinadi",
-  "statusRequired": "status talab qilinadi"
+  "statusRequired": "status talab qilinadi",
+  "supplierNameRequired": "supplier_name majburiy"
 }

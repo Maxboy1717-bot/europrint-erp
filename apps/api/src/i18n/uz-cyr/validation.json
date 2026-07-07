@@ -66,5 +66,6 @@
   "invalidInputData": "Нотўғри киритилган маълумотлар",
   "materialIdMustBeNumber": "Материал id рақам бўлиши керак",
   "targetsArrayRequired": "targets array талаб қилинади",
-  "statusRequired": "status талаб қилинади"
+  "statusRequired": "status талаб қилинади",
+  "supplierNameRequired": "supplier_name мажбурий"
 }

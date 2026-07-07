@@ -422,5 +422,11 @@
   "workOrderNotFoundWithId": "Заказ на работу #{id} не найден",
   "notificationGenericNotFoundWithId": "#{id} не найден",
   "notificationNotFoundWithId": "Уведомление #{id} не найдено",
-  "salesOrderNotFoundWithId": "Заказ на продажу #{id} не найден"
+  "salesOrderNotFoundWithId": "Заказ на продажу #{id} не найден",
+  "downtimeLogNotFoundWithId": "Запись простоя #{id} не найдена",
+  "employeeWorkCenterNotFoundWithId": "Назначение сотрудника на рабочий центр #{id} не найдено",
+  "workCenterNotFoundWithId": "Рабочий центр #{id} не найден",
+  "qcStandardNotFoundWithId": "Стандарт ОТК #{id} не найден",
+  "qcFinalInspectionNotFoundWithId": "Финальная инспекция #{id} не найдена",
+  "qcRootCauseNotFoundWithId": "Первопричина #{id} не найдена"
 }

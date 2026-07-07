@@ -66,5 +66,6 @@
   "invalidInputData": "Введены неверные данные",
   "materialIdMustBeNumber": "ID материала должен быть числом",
   "targetsArrayRequired": "Требуется массив targets",
-  "statusRequired": "Требуется параметр status"
+  "statusRequired": "Требуется параметр status",
+  "supplierNameRequired": "supplier_name обязателен"
 }

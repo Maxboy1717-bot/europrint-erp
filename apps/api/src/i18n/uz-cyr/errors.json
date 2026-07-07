@@ -422,5 +422,11 @@
   "workOrderNotFoundWithId": "Иш буюртмаси #{id} топилмади",
   "notificationGenericNotFoundWithId": "#{id} топилмади",
   "notificationNotFoundWithId": "Билдиришнома #{id} топилмади",
-  "salesOrderNotFoundWithId": "Сотув буюртмаси #{id} топилмади"
+  "salesOrderNotFoundWithId": "Сотув буюртмаси #{id} топилмади",
+  "downtimeLogNotFoundWithId": "Тўхташ журнали #{id} топилмади",
+  "employeeWorkCenterNotFoundWithId": "Ходимнинг иш марказига бириктирилиши #{id} топилмади",
+  "workCenterNotFoundWithId": "Иш маркази #{id} топилмади",
+  "qcStandardNotFoundWithId": "QC стандарти #{id} топилмади",
+  "qcFinalInspectionNotFoundWithId": "Якуний текшируви #{id} топилмади",
+  "qcRootCauseNotFoundWithId": "Илдиз сабаб #{id} топилмади"
 }

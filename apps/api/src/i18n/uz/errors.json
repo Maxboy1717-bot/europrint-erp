@@ -422,5 +422,11 @@
   "workOrderNotFoundWithId": "Ish buyurtmasi #{id} topilmadi",
   "notificationGenericNotFoundWithId": "#{id} topilmadi",
   "notificationNotFoundWithId": "Bildirishnoma #{id} topilmadi",
-  "salesOrderNotFoundWithId": "Sotuv buyurtmasi #{id} topilmadi"
+  "salesOrderNotFoundWithId": "Sotuv buyurtmasi #{id} topilmadi",
+  "downtimeLogNotFoundWithId": "To'xtash jurnali #{id} topilmadi",
+  "employeeWorkCenterNotFoundWithId": "Xodimning ish markaziga biriktirilishi #{id} topilmadi",
+  "workCenterNotFoundWithId": "Ish markazi #{id} topilmadi",
+  "qcStandardNotFoundWithId": "QC standarti #{id} topilmadi",
+  "qcFinalInspectionNotFoundWithId": "Yakuniy tekshiruv #{id} topilmadi",
+  "qcRootCauseNotFoundWithId": "Ildiz sabab #{id} topilmadi"
 }

@@ -22,6 +22,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { throwFromError, unwrapOrThrow } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -44,7 +45,7 @@ const ERP_WRITE = ['super_admin', 'director', 'production_manager', 'technologis
 export class ErpProductsController {
   private readonly logger = new Logger(ErpProductsController.name);
 
-  constructor(private readonly svc: ErpService) {}
+  constructor(private readonly svc: ErpService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List products' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -62,7 +63,7 @@ export class ErpProductsController {
   @Get('products/:id')
   async getProduct(@Param('id') id: string) {
     const r = await this.svc.getProduct(safeInt(id, 0));
-    assertFound(r, 'Product not found');
+    assertFound(r, await this.i18n.t('errors.productNotFound'));
     return r;
   }
 
@@ -85,7 +86,7 @@ export class ErpProductsController {
   @UsePipes(new ZodValidationPipe(ErpBodySchema))
   async updateProduct(@Param('id') id: string, @Body() body: ErpBodyDto) {
     const r = await this.svc.updateProduct(safeInt(id, 0), body);
-    assertFound(r, 'Product not found');
+    assertFound(r, await this.i18n.t('errors.productNotFound'));
     return r;
   }
 
@@ -126,7 +127,7 @@ export class ErpProductsController {
   @Get('bom-headers/:id')
   async getBomHeader(@Param('id') id: string) {
     const r = await this.svc.getBomHeader(safeInt(id, 0));
-    assertFound(r, 'BOM header not found');
+    assertFound(r, await this.i18n.t('errors.bomNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
@@ -226,7 +227,7 @@ export class ErpProductsController {
   @Get('routings/:id')
   async getRouting(@Param('id') id: string) {
     const r = await this.svc.getRouting(safeInt(id, 0));
-    assertFound(r, 'Routing not found');
+    assertFound(r, await this.i18n.t('errors.routingNotFoundWithId', { args: { id: safeInt(id, 0) } }));
     return r;
   }
 
