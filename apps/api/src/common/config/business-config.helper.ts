@@ -21,3 +21,15 @@ export async function getConfigNumber(key: string, fallback: number): Promise<nu
     return fallback;
   }
 }
+
+export async function getConfigString(key: string, fallback: string): Promise<string> {
+  try {
+    const r = await rawSql(sql`SELECT value FROM settings WHERE key = ${key} LIMIT 1`);
+    const rows = (r as { rows?: Record<string, unknown>[] }).rows ?? [];
+    const raw = rows[0]?.['value'];
+    if (raw === undefined || raw === null || String(raw).trim() === '') return fallback;
+    return String(raw);
+  } catch {
+    return fallback;
+  }
+}

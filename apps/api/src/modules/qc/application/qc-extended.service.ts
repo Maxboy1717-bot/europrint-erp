@@ -5,7 +5,10 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
+import { getConfigNumber } from '@common/config/business-config.helper';
 import { QC_EXTENDED_REPO, type IQcExtendedRepo } from '../domain/repositories/i-qc-extended.repo';
+
+const QC_LOT_DEFECT_FAIL_RATIO_DEFAULT = 0.05;
 
 @Injectable()
 export class QcExtendedService {
@@ -61,14 +64,18 @@ export class QcExtendedService {
     return this.repo.listInProcess(sid, status, lim);
   }
 
-  deriveInspectionStatus(total: number, defects: number): 'passed' | 'failed' | 'conditional' {
+  deriveInspectionStatus(total: number, defects: number, failRatio = QC_LOT_DEFECT_FAIL_RATIO_DEFAULT): 'passed' | 'failed' | 'conditional' {
     return defects === 0 ? 'passed'
-      : total > 0 && defects / total > 0.05 ? 'failed'
+      : total > 0 && defects / total > failRatio ? 'failed'
       : 'conditional';
   }
 
   async createInProcessInspection(session_id: number, inspector_id: number | null, check_point: string | null, total: number, defects: number, notes: string | null) {
-    const status = this.deriveInspectionStatus(total, defects);
+    // MN-1 (Magic-Numbers Independent Verification 2026-07-07, M6 2/4 gap): the 0.05
+    // QC-lot auto-fail ratio is now settings-table-tunable, matching the ai_auto_reject_score
+    // pattern (M6, f069bb09) -- falls back to the prior hardcoded 0.05 when unset.
+    const failRatio = await getConfigNumber('qc_lot_defect_fail_ratio', QC_LOT_DEFECT_FAIL_RATIO_DEFAULT);
+    const status = this.deriveInspectionStatus(total, defects, failRatio);
     return this.repo.createInProcessInspection(session_id, inspector_id, check_point, total, defects, status, notes);
   }
 

@@ -7,8 +7,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, Ok, Err, AppError } from '@common/result';
+import { getConfigString } from '@common/config/business-config.helper';
 import { QuarantineWorkflowRepository } from '../../infrastructure/repositories/quarantine-workflow.repository';
 import { StockLedgerService } from './stock-ledger.service';
+
+// MN-1 (Magic-Numbers Independent Verification 2026-07-07, M6 2/4 gap): quarantine
+// routing warehouse codes are now settings-table-tunable -- fall back to the prior
+// hardcoded codes when unset. NOTE: 'raw_material' type currently has 2 active
+// warehouses (RM-MAIN + RM-ROLLS) live, so a type-based lookup would be ambiguous;
+// the code itself (not the type) remains the correct, owner-tunable identifier.
+const QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT = 'QC-HOLD';
+const QUARANTINE_SOURCE_WAREHOUSE_CODE_DEFAULT = 'RM-MAIN';
 
 export type MovementStatus =
   | 'draft' | 'pending' | 'karantin' | 'qc_review'
@@ -37,7 +46,8 @@ export class QuarantineWorkflowService {
 
   async moveToQuarantine(movementId: number): Promise<Result<void, AppError>> {
     try {
-      const qcWh = await this.repo.findQcHoldWarehouse();
+      const qcCode = await getConfigString('quarantine_hold_warehouse_code', QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT);
+      const qcWh = await this.repo.findQcHoldWarehouse(qcCode);
       if (!qcWh) {
         this.logger.warn('[Quarantine] QC-HOLD ombor topilmadi');
         return Err({ message: 'QC-HOLD ombor topilmadi', code: 'NOT_FOUND' });
@@ -103,9 +113,11 @@ export class QuarantineWorkflowService {
       this.logger.log(`[QC] Movement ${movementId}: ${decision} → status='${targetStatus}'`);
 
       if (decision === 'QABUL') {
-        const whs = await this.repo.findWarehousesByCode(['RM-MAIN', 'QC-HOLD']);
-        const mainWh = whs.find(w => w.code === 'RM-MAIN');
-        const qcWh   = whs.find(w => w.code === 'QC-HOLD');
+        const sourceCode = await getConfigString('quarantine_source_warehouse_code', QUARANTINE_SOURCE_WAREHOUSE_CODE_DEFAULT);
+        const qcCode = await getConfigString('quarantine_hold_warehouse_code', QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT);
+        const whs = await this.repo.findWarehousesByCode([sourceCode, qcCode]);
+        const mainWh = whs.find(w => w.code === sourceCode);
+        const qcWh   = whs.find(w => w.code === qcCode);
 
         if (mainWh && qcWh) {
           await this.repo.updateMovementStatus(movementId, targetStatus, { toWarehouseId: mainWh.id });
@@ -129,7 +141,8 @@ export class QuarantineWorkflowService {
       }
 
       if (decision === 'CHIQARISH') {
-        const qcWh = await this.repo.findQcHoldWarehouse();
+        const qcCode = await getConfigString('quarantine_hold_warehouse_code', QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT);
+        const qcWh = await this.repo.findQcHoldWarehouse(qcCode);
         if (qcWh) {
           const lines = await this.repo.findMovementLines(movementId);
           for (const line of lines) {

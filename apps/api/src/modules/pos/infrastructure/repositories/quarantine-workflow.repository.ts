@@ -11,9 +11,9 @@ import type { MovementStatus } from '../../application/services/quarantine-workf
 
 @Injectable()
 export class QuarantineWorkflowRepository {
-  async findQcHoldWarehouse(): Promise<{ id: number } | null> {
+  async findQcHoldWarehouse(code: string): Promise<{ id: number } | null> {
     const rows = await typedExecute<{ id: number }>(sql`
-      SELECT id FROM warehouses WHERE code = 'QC-HOLD' AND is_active = true LIMIT 1
+      SELECT id FROM warehouses WHERE code = ${code} AND is_active = true LIMIT 1
     `);
     return rows[0] ?? null;
   }
