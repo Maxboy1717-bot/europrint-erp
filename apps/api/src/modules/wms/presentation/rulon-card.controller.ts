@@ -38,8 +38,8 @@ import {
   ChangeRulonStatusSchema,
 } from './dto/rulon-card.dto';
 
-const WMS_READ = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER', 'warehouse_keeper'];
-const WMS_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER', 'warehouse_keeper'];
+const WMS_READ = ['super_admin', 'warehouse_manager', 'director', 'warehouse_keeper'];
+const WMS_WRITE = ['super_admin', 'warehouse_manager', 'director', 'warehouse_keeper'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

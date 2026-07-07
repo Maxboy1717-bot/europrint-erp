@@ -43,8 +43,8 @@ const UpdateWarehouseSchema = z.object({
   is_active: z.boolean().optional(),
 }).passthrough();
 
-const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
-const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'manager', 'accountant', 'finance'];
+const WH_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 /**
  * WmsGatewayWarehousesController
@@ -166,7 +166,7 @@ export class WmsGatewayWarehousesController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('warehouses/:id/stock')
-  @Roles(...WH_READ, 'pos_operator', 'employee', 'manager', 'admin')
+  @Roles(...WH_READ, 'pos_operator', 'employee')
   async getWarehouseStock(@Param('id') id: string) {
     const wid = safeInt(id, 0);
     if (!wid) return { totalItems: 0, items: [] };

@@ -30,8 +30,8 @@ import { WmsCountsService } from '../application/wms-counts.service';
 import { WmsCrudService } from '../application/wms-crud.service';
 import { InventoryFreezeService } from '../application/inventory-freeze.service';
 
-const WMS_WRITE_ROLES = ['warehouse_manager', 'ERP_MANAGER', 'mm_manager', 'super_admin', 'director'];
-const WMS_FLOOR_ROLES = ['WAREHOUSE_WORKER', 'warehouse_manager', 'ERP_MANAGER', 'mm_manager', 'super_admin', 'director'];
+const WMS_WRITE_ROLES = ['warehouse_manager', 'mm_manager', 'super_admin', 'director'];
+const WMS_FLOOR_ROLES = ['WAREHOUSE_WORKER', 'warehouse_manager', 'mm_manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @ApiTags('Wms Counts')

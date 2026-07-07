@@ -17,8 +17,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CameraExtendedService } from '../application/camera-extended.service';
 import { RecognitionLogsQuerySchema } from './dto/iot-camera.dto';
 
-const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager', 'ERP_MANAGER', 'admin'];
-const CAM_WRITE = ['super_admin', 'director', 'security_manager', 'ERP_MANAGER', 'admin'];
+const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager'];
+const CAM_WRITE = ['super_admin', 'director', 'security_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

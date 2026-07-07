@@ -36,7 +36,7 @@ import { WmsCrudService } from '../application/wms-crud.service';
 import { MovementsService } from '../movements/movements.service';
 import { PatchTransactionDto } from './dto/wms-crud.dto';
 
-const WMS_WRITE_ROLES = ['warehouse_manager', 'ERP_MANAGER', 'mm_manager', 'super_admin', 'director'];
+const WMS_WRITE_ROLES = ['warehouse_manager', 'mm_manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

@@ -26,8 +26,8 @@ import {
   WmsAddImportDocumentSchema, WmsAddImportDocumentDto,
 } from '../dto/wms-in-transit.dto';
 
-const IT_READ = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER', 'finance_manager'];
-const IT_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const IT_READ = ['super_admin', 'warehouse_manager', 'director', 'finance_manager'];
+const IT_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

@@ -36,8 +36,8 @@ import { safeInt } from '../../hr/common/db-rows';
 import { MaterialLifeService } from '../application/material-life.service';
 import { MATERIAL_OWNER_TYPES } from '../domain/constants/material-life.constants';
 
-const ML_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'director', 'ERP_MANAGER'];
-const ML_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const ML_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'director'];
+const ML_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 // Atribut yangilash — barcha maydonlar ixtiyoriy (faqat berilgani yangilanadi).
 const UpdateLifeSchema = z

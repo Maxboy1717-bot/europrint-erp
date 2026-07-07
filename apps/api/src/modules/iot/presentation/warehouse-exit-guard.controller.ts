@@ -15,7 +15,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { WarehouseExitGuardService } from '../application/warehouse-exit-guard.service';
 import { VerifyExitBodySchema, CrossCheckListQuerySchema } from './dto/warehouse-exit-guard.dto';
 
-const GUARD_ROLES = ['super_admin', 'director', 'security_manager', 'warehouse_manager', 'ERP_MANAGER', 'admin'];
+const GUARD_ROLES = ['super_admin', 'director', 'security_manager', 'warehouse_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

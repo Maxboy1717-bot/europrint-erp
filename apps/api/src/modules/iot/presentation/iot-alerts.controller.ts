@@ -26,8 +26,8 @@ const CreateAlertSchema = z.object({
   source:   z.string().max(200).optional(),
 }).passthrough();
 
-const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
-const IOT_WRITE = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin'];
+const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
+const IOT_WRITE = ['super_admin', 'director', 'production_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

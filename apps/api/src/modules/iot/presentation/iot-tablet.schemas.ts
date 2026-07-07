@@ -149,7 +149,7 @@ export const CrewSchema = z.object({
   roklerId:    z.coerce.number().int().nullable().optional(),
 }).passthrough();
 
-export const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
+export const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
 
 /**
  * Helper: coerce the optional workerId field (string|number|undefined) to a

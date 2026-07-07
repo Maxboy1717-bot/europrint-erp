@@ -49,8 +49,8 @@ import { WmsWarehouseGatewayService } from '../application/wms-warehouse-gateway
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
 
-const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
-const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'manager', 'accountant', 'finance'];
+const WH_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 /**
  * WmsWarehouseGatewayController

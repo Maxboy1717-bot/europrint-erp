@@ -18,8 +18,8 @@ import { unwrapOrThrow } from '@common/http-result';
 import { z } from 'zod';
 import { WmsSettingsService } from '../application/wms-settings.service';
 
-const WS_READ = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
-const WS_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const WS_READ = ['super_admin', 'warehouse_manager', 'director'];
+const WS_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 const SaveSettingsSchema = z.record(z.string());
 const PatchSettingSchema = z.object({ value: z.string() });

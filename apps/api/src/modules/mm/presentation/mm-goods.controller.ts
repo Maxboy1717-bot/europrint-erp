@@ -24,7 +24,7 @@ import {
   MmUpdateGoodsIssueSchema, MmUpdateGoodsIssueDto,
 } from '../dto/mm.dto';
 
-const MM_WRITE_ROLES = ['ERP_MANAGER', 'mm_manager', 'warehouse_manager', 'super_admin', 'director'];
+const MM_WRITE_ROLES = ['mm_manager', 'warehouse_manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

@@ -40,8 +40,8 @@ import { InventoryMaterialsService } from '../application/inventory-materials.se
 import { safeInt } from '../../hr/common/db-rows';
 import { WmsUpdateMaterialSchema, WmsUpdateMaterialDto } from '../dto/wms.dto';
 
-const INV_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'director', 'ERP_MANAGER'];
-const INV_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const INV_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'director'];
+const INV_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

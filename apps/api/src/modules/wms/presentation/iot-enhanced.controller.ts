@@ -35,8 +35,8 @@ import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
-const IOT_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'production_manager', 'ERP_MANAGER'];
-const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager', 'ERP_MANAGER'];
+const IOT_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'production_manager'];
+const IOT_WRITE = ['super_admin', 'warehouse_manager', 'production_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

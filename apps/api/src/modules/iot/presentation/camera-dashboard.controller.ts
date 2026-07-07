@@ -21,7 +21,7 @@ import {
   TopEmployeesQuerySchema,
 } from './dto/iot-camera.dto';
 
-const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager', 'ERP_MANAGER', 'admin'];
+const CAM_READ = ['super_admin', 'director', 'security_manager', 'production_manager'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

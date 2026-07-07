@@ -62,8 +62,8 @@ const UpdateZoneSchema = z.object({
   is_active: z.boolean().optional(),
 }).passthrough();
 
-const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'ERP_MANAGER', 'admin', 'manager', 'accountant', 'finance'];
-const WH_WRITE = ['super_admin', 'warehouse_manager', 'director', 'ERP_MANAGER'];
+const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'manager', 'accountant', 'finance'];
+const WH_WRITE = ['super_admin', 'warehouse_manager', 'director'];
 
 /**
  * WmsGatewayBinZoneController

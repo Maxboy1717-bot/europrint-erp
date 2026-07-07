@@ -42,7 +42,7 @@ import {
   SensorTrendsQuerySchema,
 } from './dto/iot-camera.dto';
 
-const IOT_READ = ['super_admin', 'director', 'production_manager', 'ERP_MANAGER', 'admin', 'technologist'];
+const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
 
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)

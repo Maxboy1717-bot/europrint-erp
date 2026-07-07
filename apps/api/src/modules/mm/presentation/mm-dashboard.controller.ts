@@ -48,8 +48,8 @@ const VendorPerformanceSchema = z.object({
 });
 type VendorPerformanceDto = z.infer<typeof VendorPerformanceSchema>;
 
-const MM_READ = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director', 'purchasing_manager'];
-const MM_WRITE = ['super_admin', 'mm_manager', 'ERP_MANAGER', 'director'];
+const MM_READ = ['super_admin', 'mm_manager', 'director', 'purchasing_manager'];
+const MM_WRITE = ['super_admin', 'mm_manager', 'director'];
 
 // FEATURE_FLAGGED: vendor-invoice / 3-way-match / fleet logistics endpoints
 // (tracking #FX-2) - not wired to a service yet. Returning 501 instead of fake
