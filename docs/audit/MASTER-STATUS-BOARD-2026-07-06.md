@@ -28,6 +28,14 @@
 
 ---
 
+## Live Console Errors (CE-1/2/3, reported 2026-07-07)
+
+| Item | Status | Commit | Notes |
+|---|---|---|---|
+| CE-1 (CRITICAL) — login/`/auth/me` 500 | **NOT REPRODUCIBLE** | none | Started backend fresh, live-tested `POST /api/auth/login` (admin/Admin123!) → 200 with valid tokens; `GET /api/auth/me` with that token → 200 with correct user claims. Code-reviewed the full path: `login.service.ts`'s card-gate call (`resolveCardGate`) is try/catch-guarded with a safe `empty` fallback on any error; `LoginSchema` is permissive and matches the frontend's exact payload shape (`{username: trim().toLowerCase(), password}`); `global-exception.filter.ts` correctly converts `ZodError`→422, not 500. Could not find or trigger any 500 path. Likely explanations: already fixed by an earlier commit in this branch, or environment/data-specific to whichever session observed it (not reproducible with the current live DB's admin account). **Flagging for the owner**: if this recurs, please capture the exact backend log line (`[Nest] ... ERROR`) and request body — without a live reproduction, further guessing risks a blind, unverified change. |
+| CE-2 (HIGH) — `/api/director/approvals/pending?limit=5` 422 | **FIXED** | `275fe94c` | Root cause: `GetPendingDtoSchema`'s `page`/`limit` used `z.number()`, but `@Query()` always delivers HTTP query-string values as strings — fixed with `z.coerce.number()`, matching every sibling query schema in the module. Live-verified: reproduced the exact 422 before, confirmed 200 with real approval data after, using the exact reported repro. |
+| CE-3 (MEDIUM) — 3 missing i18n keys in `PendingApprovalsCard.tsx` | **FIXED** | `8bac9d2e` | `kutilayotganTasdiqlar`/`hitlTasdiqSorovlari`/`kutayotganTasdiqYoq` were missing from all 3 locale files (not just uz) — real translations added to all 3. Note: the FE's `t(key, fallback)` 2-arg pattern already prevented literal raw-key display (falls back to inline Uzbek text on any missing key), so the actual symptom was ru/uz-cyr users silently seeing Uzbek text for these 3 labels, not raw keys as literally described — same underlying gap, corrected symptom description. |
+
 ## Active Loops — Summary
 
 | Loop | Scope | Status | Last commit(s) | Last updated | Notes |
