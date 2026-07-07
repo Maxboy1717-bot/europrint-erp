@@ -76,5 +76,9 @@
   "pollOptionsCountRange": "2-10 ta variant kerak",
   "optionIndexRequired": "optionIndex majburiy",
   "objectiveIdAndTitleRequired": "objective_id va title majburiy",
-  "titleAndDescriptionRequired": "title va description majburiy"
+  "titleAndDescriptionRequired": "title va description majburiy",
+  "cameraIdAndEventTypeRequired": "camera_id va event_type majburiy",
+  "promptOrInstructionsRequired": "prompt yoki instructions talab qilinadi",
+  "taskIdRequired": "task_id majburiy",
+  "roleRequired": "role majburiy"
 }

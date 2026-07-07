@@ -76,5 +76,9 @@
   "pollOptionsCountRange": "Нужно от 2 до 10 вариантов",
   "optionIndexRequired": "optionIndex обязателен",
   "objectiveIdAndTitleRequired": "objective_id и title обязательны",
-  "titleAndDescriptionRequired": "title и description обязательны"
+  "titleAndDescriptionRequired": "title и description обязательны",
+  "cameraIdAndEventTypeRequired": "camera_id и event_type обязательны",
+  "promptOrInstructionsRequired": "требуется prompt или instructions",
+  "taskIdRequired": "task_id обязателен",
+  "roleRequired": "role обязательна"
 }

@@ -10,6 +10,7 @@ import {
 BadRequestException, Body, Controller, Delete, Get, Logger, NotFoundException, Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { throwFromError, unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -38,7 +39,7 @@ const SD_ADMIN_ROLES = ['sales_manager', 'super_admin', 'director'];
 export class SdLeadsController {
   private readonly logger = new Logger(SdLeadsController.name);
 
-  constructor(private readonly svc: SdLeadsService) {}
+  constructor(private readonly svc: SdLeadsService, private readonly i18n: I18nService) {}
 
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -95,7 +96,7 @@ export class SdLeadsController {
     const _rR = await this.svc.getById(safeInt(id, 0));
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'SD Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r[0];
   }
 
@@ -120,7 +121,7 @@ export class SdLeadsController {
     const _rR = await this.svc.update(safeInt(id, 0), body);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'SD Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r[0];
   }
 
@@ -135,7 +136,7 @@ export class SdLeadsController {
     const _rR = await this.svc.updateStatus(safeInt(id, 0), body.status);
     assertOk(_rR);
     const r = _rR.data;
-    assertFound(r, 'SD Lead not found');
+    assertFound(r, await this.i18n.t('errors.leadNotFound'));
     return r[0];
   }
 

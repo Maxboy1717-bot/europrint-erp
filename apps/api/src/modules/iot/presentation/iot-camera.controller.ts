@@ -58,7 +58,7 @@ export class IotCameraController {
   @Get('cameras/:id')
   async getCamera(@Param('id', ParseIntPipe) id: number) {
     const data = await this.svc.getCamera(id);
-    assertFound(data, 'Kamera topilmadi');
+    assertFound(data, await this.i18n.t('errors.cameraNotFound'));
     return Array.isArray(data) ? data[0] : data;
   }
 

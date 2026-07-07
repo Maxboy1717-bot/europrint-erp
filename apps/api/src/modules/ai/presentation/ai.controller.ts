@@ -20,6 +20,7 @@ import {
   UseGuards,
   UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth} from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import { AiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard} from '../../auth/guards/roles.guard';
 import { Roles} from '../../auth/decorators/roles.decorator';
@@ -49,7 +50,7 @@ const RejectRushOrderSchema = z.object({
 export class AiController {
  private readonly logger = new Logger(AiController.name);
 
- constructor(private readonly aiRouter: AiRouterService) {}
+ constructor(private readonly aiRouter: AiRouterService, private readonly i18n: I18nService) {}
 
  @Post('call')
  @HttpCode(HttpStatus.OK)
@@ -162,7 +163,7 @@ export class AiController {
  const result = await this.aiRouter.getUsageStats();
 
  const _d = unwrapOrThrow(result);
- assertFound(_d, 'Data not available');
+ assertFound(_d, await this.i18n.t('errors.dataNotAvailable'));
  return _d;
 }
 

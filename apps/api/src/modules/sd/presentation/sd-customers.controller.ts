@@ -162,7 +162,7 @@ export class SdCustomersController {
     const cid = safeInt(id, 0);
     const _rR = await this.svc.getById(cid);
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Customer not found');
+    assertFound(r, await this.i18n.t('errors.customerNotFound'));
     const customer = r[0];
     // Enrich with contacts and recent orders in parallel
     const [contactsResult, ordersResult] = await Promise.all([
@@ -198,7 +198,7 @@ export class SdCustomersController {
   async get360View(@Param('id') id: string) {
     const _rResult = await this.svc.get360View(safeInt(id, 0));
     const data = unwrapOrThrow(_rResult);
-    assertFound((data as Record<string, unknown>).customer ?? (data as Record<string, unknown>).basic, 'Customer not found');
+    assertFound((data as Record<string, unknown>).customer ?? (data as Record<string, unknown>).basic, await this.i18n.t('errors.customerNotFound'));
     return data;
   }
 
@@ -232,7 +232,7 @@ export class SdCustomersController {
   async update(@Param('id') id: string, @Body() body: SdUpdateCustomerDto, @CurrentUser() user: AuthenticatedUser) {
     const _rR = await this.svc.update(safeInt(id, 0), body, user.id);
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Customer not found');
+    assertFound(r, await this.i18n.t('errors.customerNotFound'));
     return r[0];
   }
 
@@ -292,7 +292,7 @@ export class SdCustomersController {
         role_note: dto.role_note, telegram: dto.telegram },
     );
     const r = unwrapOrThrow(_rR);
-    assertFound(r, 'Contact not found');
+    assertFound(r, await this.i18n.t('errors.contactNotFound'));
     return r[0];
   }
 

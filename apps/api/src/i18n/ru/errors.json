@@ -435,5 +435,8 @@
   "qcFinalInspectionNotFoundWithId": "Финальная инспекция #{id} не найдена",
   "qcRootCauseNotFoundWithId": "Первопричина #{id} не найдена",
   "invalidRole": "Неверная роль",
-  "cannotDeleteOwnAccount": "Нельзя удалить свою учётную запись"
+  "cannotDeleteOwnAccount": "Нельзя удалить свою учётную запись",
+  "dataNotAvailable": "Данные недоступны",
+  "cameraNotFound": "Камера не найдена",
+  "contactNotFound": "Контакт не найден"
 }

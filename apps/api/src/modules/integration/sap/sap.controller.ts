@@ -67,7 +67,7 @@ export class SapController {
     const _rGetSalesOrder = await this.svc.getSalesOrder(safeInt(id, 0));
     assertOk(_rGetSalesOrder);
     const r = _rGetSalesOrder.data as Record<string, unknown>;
-    assertFound(r, 'SAP Sales order not found');
+    assertFound(r, await this.i18n.t('errors.salesOrderNotFoundWithId', { args: { id } }));
     return r;
   }
 

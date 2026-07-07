@@ -435,5 +435,8 @@
   "qcFinalInspectionNotFoundWithId": "Yakuniy tekshiruv #{id} topilmadi",
   "qcRootCauseNotFoundWithId": "Ildiz sabab #{id} topilmadi",
   "invalidRole": "Noto'g'ri rol",
-  "cannotDeleteOwnAccount": "O'z hisobingizni o'chira olmaysiz"
+  "cannotDeleteOwnAccount": "O'z hisobingizni o'chira olmaysiz",
+  "dataNotAvailable": "Ma'lumot mavjud emas",
+  "cameraNotFound": "Kamera topilmadi",
+  "contactNotFound": "Kontakt topilmadi"
 }

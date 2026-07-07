@@ -76,5 +76,9 @@
   "pollOptionsCountRange": "2-10 та вариант керак",
   "optionIndexRequired": "optionIndex мажбурий",
   "objectiveIdAndTitleRequired": "objective_id ва title мажбурий",
-  "titleAndDescriptionRequired": "title ва description мажбурий"
+  "titleAndDescriptionRequired": "title ва description мажбурий",
+  "cameraIdAndEventTypeRequired": "camera_id ва event_type мажбурий",
+  "promptOrInstructionsRequired": "prompt ёки instructions талаб қилинади",
+  "taskIdRequired": "task_id мажбурий",
+  "roleRequired": "role мажбурий"
 }
