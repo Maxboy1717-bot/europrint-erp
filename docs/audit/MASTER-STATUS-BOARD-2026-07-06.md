@@ -318,9 +318,9 @@
 | Design-QA | HR: page-header.tsx no mobile stacking | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | HR: AppShellModern double padding (uncertain) | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | HR: RecruitingKanban legacy tokens + nested scroll | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | HR: InspectionPage hardcoded light colors break dark mode | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | HR: HRBrandPage/CandidateReport hardcoded text-gray-900 | QUEUED-NOT-STARTED | n/a | 0% | n/a |
-| Design-QA | HR: HROffboarding duplicate sm: breakpoint | QUEUED-NOT-STARTED | n/a | 0% | n/a |
+| Design-QA | HR: InspectionPage hardcoded light colors break dark mode | **DONE** | `949490db` | 100% | title/subtitle -> text-foreground/muted-foreground, anomaly alert box -> bg-destructive/10 border-destructive/40. Live-verified in browser dark mode (screenshot confirms readable white text). |
+| Design-QA | HR: HRBrandPage/CandidateReport hardcoded text-gray-900 | **DONE** | `949490db` | 100% | HRBrandPage: full token swap. CandidateReport: this is an intentional paper-styled printable report card (`print:border-black`, `border-gray-800`) — only the specifically-flagged title fixed via `dark:text-foreground` variant, preserving the light "paper" look rather than restyling the whole print-card. |
+| Design-QA | HR: HROffboarding duplicate sm: breakpoint | **NOT REPRODUCIBLE** | n/a | n/a | Re-checked live code at the cited line — already correctly reads `grid-cols-1 sm:grid-cols-2 md:grid-cols-4` (no duplicate `sm:`). Audit finding was stale; no action taken. |
 | Design-QA | HR: Compact-header family no flex-wrap | QUEUED-NOT-STARTED | n/a | 0% | n/a |
 | Design-QA | HR: HRMap fixed height map (uncertain) | UNKNOWN | n/a | 0% | n/a |
 | Design-QA | HR: No BROKEN pages (verified sound) | DONE | n/a | 100% | n/a |
