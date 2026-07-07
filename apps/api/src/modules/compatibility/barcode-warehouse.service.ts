@@ -12,8 +12,56 @@ import { safeCall } from '@common/result';
 import { getConfigNumber } from '@common/config/business-config.helper';
 import { BarcodeWarehouseQueriesService } from './barcode-warehouse-queries.service';
 
+// C8.7 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): receive()/productionReceive() generated
+// movement_number via second-resolution TO_CHAR(NOW(),'YYYYMMDD-HH24MISS') — two concurrent
+// requests landing in the same second produced the identical string. pos_movements.movement_number
+// already has a live UNIQUE constraint (pos_movements_movement_number_key, verified live), so the
+// pre-fix symptom was a crash on collision (23505 propagating as an opaque error), not a silent
+// duplicate. Fix mirrors C8.1/C8.2's approach: movement_number is generated in JS with a random
+// suffix (prefix-YYYYMMDD-HHMMSS-RND6) and the INSERT retries with a freshly generated number on a
+// 23505, bounded at 5 attempts. Any other failure kind is rethrown immediately, no retry.
+const MAX_MOVEMENT_NUMBER_RETRIES = 5;
+const POSTGRES_UNIQUE_VIOLATION = '23505';
+
 @Injectable()
 export class BarcodeWarehouseCompatService extends BarcodeWarehouseQueriesService {
+  // Note: `logger` is inherited from BarcodeWarehouseQueriesService (protected readonly) — do NOT
+  // redeclare it here. A `private readonly logger` in this subclass previously caused
+  // TS2415 (incompatible override of the base class's `protected` member).
+
+  /** C8.7: prefix-YYYYMMDD-HHMMSS-RND6 — a fresh call yields a different string. */
+  private generateMovementNumber(prefix: string): string {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const datePart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+    const timePart = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const rnd = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `${prefix}-${datePart}-${timePart}-${rnd}`;
+  }
+
+  /**
+   * C8.7: runs `insertFn` (an INSERT ... RETURNING keyed by the given movement_number) with a
+   * bounded retry on a Postgres 23505 unique-violation (pos_movements_movement_number_key) — each
+   * retry generates a fresh movement_number so a genuine collision resolves instead of crashing.
+   * Any other failure kind is rethrown immediately (the outer safeCall() converts it to a Result).
+   */
+  private async insertMovementWithRetry<T>(
+    prefix: string,
+    insertFn: (movementNumber: string) => Promise<T>,
+  ): Promise<T> {
+    let movementNumber = this.generateMovementNumber(prefix);
+    for (let attempt = 1; attempt <= MAX_MOVEMENT_NUMBER_RETRIES; attempt++) {
+      try {
+        return await insertFn(movementNumber);
+      } catch (e) {
+        const pgCode = (e as { code?: string } | null)?.code;
+        if (pgCode !== POSTGRES_UNIQUE_VIOLATION || attempt === MAX_MOVEMENT_NUMBER_RETRIES) throw e;
+        this.logger.warn(`[BarcodeWarehouse] Harakat raqami to'qnashuvi (${movementNumber}), qayta urinish ${attempt}/${MAX_MOVEMENT_NUMBER_RETRIES}`);
+        movementNumber = this.generateMovementNumber(prefix);
+      }
+    }
+    throw new Error("Harakat raqami ajratib bo'lmadi");
+  }
 
   async qcDecision(id: string, passed: boolean) {
     return safeCall(async () => {
@@ -52,25 +100,31 @@ export class BarcodeWarehouseCompatService extends BarcodeWarehouseQueriesServic
   async receive(body: Record<string, unknown>) {
     return safeCall(async () => {
       const movementTypeCode = String(body['movementType'] ?? 'RECEIPT');
-      const result = await rawSql(sql`
+      const lotNumber = String(body['lotNumber'] ?? '');
+      // C8.7 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): movement_number now generated in JS
+      // (random suffix) with a bounded retry-on-23505 — see insertMovementWithRetry() above.
+      const result = await this.insertMovementWithRetry('RCV', (movementNumber) => rawSql(sql`
         INSERT INTO pos_movements (movement_number, movement_type_id, status, lot_number, created_at, updated_at)
-        SELECT CONCAT('RCV-', TO_CHAR(NOW(), 'YYYYMMDD-HH24MISS')), id, 'pending', ${String(body['lotNumber'] ?? '')}, NOW(), NOW()
+        SELECT ${movementNumber}, id, 'pending', ${lotNumber}, NOW(), NOW()
         FROM pos_movement_types WHERE code = ${movementTypeCode} LIMIT 1
         RETURNING id, movement_number, status
-      `);
+      `));
       return dbRows(result)[0] ?? { success: true };
     });
   }
 
   async productionReceive(body: Record<string, unknown>) {
     return safeCall(async () => {
-      const result = await rawSql(sql`
+      const lotNumber = String(body['lotNumber'] ?? '');
+      const notes = String(body['notes'] ?? '');
+      // C8.7 (CRITICAL-CORRECTNESS-AUDIT-2026-07-06): movement_number now generated in JS
+      // (random suffix) with a bounded retry-on-23505 — see insertMovementWithRetry() above.
+      const result = await this.insertMovementWithRetry('PROD-RCV', (movementNumber) => rawSql(sql`
         INSERT INTO pos_movements (movement_number, movement_type_id, status, lot_number, notes, created_at, updated_at)
-        SELECT CONCAT('PROD-RCV-', TO_CHAR(NOW(), 'YYYYMMDD-HH24MISS')), id, 'pending',
-               ${String(body['lotNumber'] ?? '')}, ${String(body['notes'] ?? '')}, NOW(), NOW()
+        SELECT ${movementNumber}, id, 'pending', ${lotNumber}, ${notes}, NOW(), NOW()
         FROM pos_movement_types WHERE code = 'PRODUCTION_RECEIPT' LIMIT 1
         RETURNING id, movement_number, status
-      `);
+      `));
       return dbRows(result)[0] ?? { success: true };
     });
   }
