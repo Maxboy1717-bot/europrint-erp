@@ -8,6 +8,9 @@ import { IotModule } from '../iot/iot.module';
 import { AgentEventBusService } from './shared/agent-event-bus.service';
 import { AgentAuditService } from './shared/agent-audit.service';
 import { AgentAlertService } from './shared/agent-alert.service';
+// Golden-thread gap (2026-06-27): finance.fraud_suspected / hr.low_performance were already
+// emitted but had no listener — signal reached nobody. Bridges them to `notifications`.
+import { AgentAlertNotificationListener } from './shared/agent-alert-notification.listener';
 
 import { DirectorAgentService } from './director-agent.service';
 import { LeadScoringAgentService } from './lead-scoring-agent.service';
@@ -33,6 +36,7 @@ import { AgentsController } from './agents.controller';
     AgentEventBusService,
     AgentAuditService,
     AgentAlertService,
+    AgentAlertNotificationListener,
     DirectorAgentService,
     LeadScoringAgentService,
     ProductionAgentService,
