@@ -1,6 +1,17 @@
 /**
  * @module vision-qc.service
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
+ *
+ *   ⭐ VISION-3340 #39 fix (2026-07-08): the AI auto-execute confidence gate was
+ *   previously the hardcoded AI_AUTO_CONFIDENCE_THRESHOLD constant (0.85). QC
+ *   auto-accept risk tolerance is an owner call, not a code constant, so it is now
+ *   read at runtime from the canonical `settings` key/value table (key
+ *   AI_VISION_QC_AUTO_CONFIDENCE) via the shared getConfigNumber() helper — same
+ *   DB-first/constant-fallback pattern as EP_COST_RATIO/EP_VAT_RATE in
+ *   delivery-completed.listener.ts's readCostRatio()/readVatRate(). If the setting
+ *   is absent/out-of-range, AI_VISION_QC_AUTO_CONFIDENCE_DEFAULT (0.85 — the prior
+ *   hardcoded value) is used, so behaviour is unchanged until the owner configures
+ *   an override via `settings` (never fabricates a threshold).
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -9,9 +20,19 @@ import { isErr } from '@common/result';
 import { AiDecisionLogService } from '../common/ai-decision-log.service';
 import {
   AGENT_CODES, AI_GEMINI_MODEL,
-  AI_VISION_PASS_THRESHOLD, AI_VISION_SCRAP_THRESHOLD, AI_AUTO_CONFIDENCE_THRESHOLD,
+  AI_VISION_PASS_THRESHOLD, AI_VISION_SCRAP_THRESHOLD,
 } from '../common/ai-agents.constants';
 import { CONFIDENCE_MEDIUM } from '../../../common/constants/business.constants';
+import { getConfigNumber } from '@common/config/business-config.helper';
+
+// Master-data setting key — canonical `settings` table (key/value). Owner changes the
+// value via settings screen/seed; no code deploy needed to retune the auto-accept gate.
+const AI_VISION_QC_AUTO_CONFIDENCE_KEY = 'AI_VISION_QC_AUTO_CONFIDENCE';
+
+// Statutory/current default — identical to the former hardcoded AI_AUTO_CONFIDENCE_THRESHOLD
+// (0.85). Used when `settings` has no row for AI_VISION_QC_AUTO_CONFIDENCE, or an invalid
+// (out-of [0,1] range / non-numeric) one — never fabricated, just the previous known-good value.
+const AI_VISION_QC_AUTO_CONFIDENCE_DEFAULT = 0.85;
 
 export type QcVerdict = 'PASS' | 'REWORK' | 'SCRAP';
 
@@ -40,6 +61,22 @@ export class AiVisionQcService {
     return 'REWORK';
   }
 
+  /**
+   * Read AI_VISION_QC_AUTO_CONFIDENCE from the canonical `settings` table via the
+   * shared getConfigNumber() helper (same DB-first/constant-fallback pattern as
+   * EP_COST_RATIO/EP_VAT_RATE in delivery-completed.listener.ts). Falls back to
+   * AI_VISION_QC_AUTO_CONFIDENCE_DEFAULT (0.85) when the setting is absent or
+   * out of the valid [0,1] confidence range — never fabricates a threshold.
+   */
+  private async readAutoConfidenceThreshold(): Promise<number> {
+    const value = await getConfigNumber(
+      AI_VISION_QC_AUTO_CONFIDENCE_KEY,
+      AI_VISION_QC_AUTO_CONFIDENCE_DEFAULT,
+    );
+    if (!Number.isFinite(value) || value < 0 || value > 1) return AI_VISION_QC_AUTO_CONFIDENCE_DEFAULT;
+    return value;
+  }
+
   async analyze(
     workOrderId:   string,
     imageUrl:      string,
@@ -48,17 +85,18 @@ export class AiVisionQcService {
     const start          = Date.now();
     const canonicalInput = { workOrderId, imageUrl, colorTargets };
     const inputHash      = this.logSvc.hashInput(canonicalInput);
+    const autoConfidenceThreshold = await this.readAutoConfidenceThreshold();
 
     const cached = await this.logSvc.findCachedDecision(AGENT_CODES.VISION_QC, inputHash).catch(() => null);
     if (cached) {
       const stored = cached.alternatives[0] as { deltaE: number; defects: string[]; verdict: QcVerdict } | undefined;
       if (stored) {
         const verdict        = stored.verdict;
-        const autoExecuted   = verdict !== 'REWORK' && cached.confidence >= AI_AUTO_CONFIDENCE_THRESHOLD;
+        const autoExecuted   = verdict !== 'REWORK' && cached.confidence >= autoConfidenceThreshold;
         return { workOrderId, verdict, deltaE: stored.deltaE, defects: stored.defects, confidence: cached.confidence, autoExecuted, requiresHuman: verdict === 'REWORK' || !autoExecuted };
       }
       const verdict        = (cached.action ?? 'REWORK') as QcVerdict;
-      const autoExecuted   = verdict !== 'REWORK' && cached.confidence >= AI_AUTO_CONFIDENCE_THRESHOLD;
+      const autoExecuted   = verdict !== 'REWORK' && cached.confidence >= autoConfidenceThreshold;
       const deltaE         = verdict === 'PASS' ? AI_VISION_PASS_THRESHOLD - 0.5 : verdict === 'SCRAP' ? AI_VISION_SCRAP_THRESHOLD + 1.0 : (AI_VISION_PASS_THRESHOLD + AI_VISION_SCRAP_THRESHOLD) / 2;
       return { workOrderId, verdict, deltaE, defects: [], confidence: cached.confidence, autoExecuted, requiresHuman: verdict === 'REWORK' || !autoExecuted };
     }
@@ -92,7 +130,7 @@ CIEDE2000 ΔE ni hisoblang va quyidagi JSON qaytaring:
     }
 
     const verdict       = this.verdictFromDeltaE(deltaE);
-    const autoExecuted  = verdict !== 'REWORK' && confidence >= AI_AUTO_CONFIDENCE_THRESHOLD;
+    const autoExecuted  = verdict !== 'REWORK' && confidence >= autoConfidenceThreshold;
     const requiresHuman = verdict === 'REWORK' || !autoExecuted;
     const latencyMs     = Date.now() - start;
 
