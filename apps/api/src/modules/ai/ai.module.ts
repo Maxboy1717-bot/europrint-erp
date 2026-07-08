@@ -13,6 +13,8 @@ import { AuthModule } from '../auth/auth.module';
 import { OrgStructureModule } from '../org-structure/org-structure.module';
 // 2.8 — AI-reservation → warehouse_stock.reserved_quantity wiring (WMS_REPO.reserveMaterial)
 import { WmsModule } from '../wms/wms.module';
+// 07-07 to'lqin: AiAutomationDailyService kunlik ijroiya xulosasini Telegram'ga yuboradi (SB0379 naqshi)
+import { TelegramModule } from '../../telegram/telegram.module';
 import { AiRouterService }          from './application/services/ai-router.service';
 import { AiRouterCallService }       from './application/services/ai-router-call.service';
 import { CentralAiService }          from './application/services/central-ai.service';
@@ -94,6 +96,8 @@ import { AiDailyReportCron }         from './application/services/ai-daily-repor
     OrgStructureModule,
     // 2.8 — exports WMS_REPO (IWmsRepository.reserveMaterial) for AiReservationService.
     WmsModule,
+    // 07-07 to'lqin: exports TelegramService for AiAutomationDailyService's owner digest push.
+    TelegramModule,
   ],
   providers: [
     AiRouterRepository,
