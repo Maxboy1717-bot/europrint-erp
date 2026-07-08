@@ -3,8 +3,6 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { TashkentTimeService } from '@common/time';
-const _time = new TashkentTimeService();
 import {
   Body,
   Controller,
@@ -77,16 +75,30 @@ export class LmsCertificatesStandaloneController {
     return { message: 'Sertifikat yaratildi', data };
   }
 
+  // Single source of truth for a certificate row. NB: certificates has BOTH `expires_at`
+  // (always NULL — no writer) and `expiry_date` (the real column every insert/sweep uses); read
+  // the real one. `name` is likewise never written, so the holder name comes from the employee
+  // join. LEFT JOINs so a cert with a missing employee/course link is still viewable.
+  private async _fetchCertificate(id: string): Promise<Record<string, unknown> | null> {
+    const r = await rawSql(sql`
+      SELECT cert.id::text AS id, cert.status,
+             cert.certificate_number AS "certificateNumber", cert.cert_number AS "certNumber",
+             cert.name, COALESCE(cert.issued_at, cert.issued_date) AS "issuedAt",
+             cert.expiry_date AS "expiresAt", cert.is_active AS "isActive", cert.created_at AS "createdAt",
+             NULLIF(TRIM(COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'')), '') AS "holderName",
+             c.title_uz AS "courseTitle"
+      FROM certificates cert
+      LEFT JOIN employees emp ON emp.id = cert.employee_id
+      LEFT JOIN courses c ON c.id = cert.course_id
+      WHERE cert.id = ${parseInt(id, 10)}
+    `);
+    return (r as { rows?: Record<string, unknown>[] }).rows?.[0] ?? null;
+  }
+
   @Get(':id')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async getCertificateById(@Param('id') id: string) {
-    const r = await rawSql(sql`
-      SELECT id::text AS id, status, certificate_number AS "certificateNumber",
-             cert_number AS "certNumber", name, issued_at AS "issuedAt",
-             expires_at AS "expiresAt", is_active AS "isActive", created_at AS "createdAt"
-      FROM certificates WHERE id = ${parseInt(id, 10)}
-    `);
-    const row = (r as { rows?: Record<string, unknown>[] }).rows?.[0];
+    const row = await this._fetchCertificate(id);
     if (!row) throw new NotFoundException(await this.i18n.t('errors.certificateNotFoundWithId', { args: { id } }));
     return row;
   }
@@ -102,17 +114,30 @@ export class LmsCertificatesStandaloneController {
   @Get(':id/download')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
   async downloadCertificate(@Param('id') id: string, @Res() res: FastifyReply) {
+    // Was a green-lie stub: hardcoded HTML that never queried the DB, echoed only the URL id +
+    // today's date, and 200'd for a non-existent cert. Now renders the REAL certificate (404 if
+    // absent). Full legal PDF (SHA-256/hash, book format) stays a separate owner-gated item.
+    const row = await this._fetchCertificate(id);
+    if (!row) throw new NotFoundException(await this.i18n.t('errors.certificateNotFoundWithId', { args: { id } }));
+    const esc = (v: unknown): string => String(v ?? '—').replace(/[<>&"]/g, (ch) =>
+      ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[ch] ?? ch);
+    const fmtDate = (v: unknown): string => (v ? new Date(String(v)).toLocaleDateString('uz-UZ') : '—');
+    const certNo = row['certificateNumber'] ?? row['certNumber'] ?? id;
     const html = [
       '<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8">',
-      `<title>Sertifikat #${id}</title></head>`,
+      `<title>Sertifikat ${esc(certNo)}</title></head>`,
       '<body style="font-family:sans-serif;text-align:center;padding:60px">',
       '<h1>EuroPrint ERP Sertifikati</h1>',
-      `<p>Sertifikat raqami: <strong>${id}</strong></p>`,
-      `<p>Sana: ${_time.now().toLocaleDateString('uz-UZ')}</p>`,
+      `<p>Sertifikat raqami: <strong>${esc(certNo)}</strong></p>`,
+      `<p>Egasi: <strong>${esc(row['holderName'])}</strong></p>`,
+      `<p>Kurs: ${esc(row['courseTitle'])}</p>`,
+      `<p>Berilgan sana: ${fmtDate(row['issuedAt'])}</p>`,
+      `<p>Amal qilish muddati: ${fmtDate(row['expiresAt'])}</p>`,
+      `<p>Holati: ${esc(row['status'])}</p>`,
       '</body></html>',
     ].join('');
     res.header('Content-Type', 'text/html');
-    res.header('Content-Disposition', `attachment; filename="certificate-${id}.html"`);
+    res.header('Content-Disposition', `attachment; filename="certificate-${esc(certNo)}.html"`);
     return res.send(html);
   }
 }
