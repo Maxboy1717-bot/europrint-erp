@@ -23,10 +23,26 @@ import { QcAqlService } from '../domain/services/qc-aql.service';
 import type { AqlInspectionLevel, AqlLevel } from '../constants/qc-aql.constants';
 import { z } from 'zod';
 
+/**
+ * Canonical QC "stage" enum for qc_defects / qc_checkpoints rows.
+ *
+ * VISION-3340 #42: this enum used to exist ONLY inline inside CheckpointDto
+ * below. The sibling write path — QcDefectsExtendedController.createBrak
+ * (POST /qc/braks) — accepted an unvalidated free-text "stage" field that
+ * defaulted to the literal 'production', which is NOT a member of this enum.
+ * That let two rows land in the same qc_defects table with incompatible
+ * "stage" values, silently breaking any downstream filter/group-by on stage.
+ *
+ * Exported so QcDefectsExtendedController imports and validates against this
+ * SAME schema instance instead of redefining a second, driftable copy.
+ */
+export const QcStageSchema = z.enum(['incoming', 'in_process', 'final', 'dispatch']);
+export type QcStage = z.infer<typeof QcStageSchema>;
+
 const CheckpointDto = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  stage: z.enum(['incoming', 'in_process', 'final', 'dispatch']).default('in_process'),
+  stage: QcStageSchema.default('in_process'),
   standard_id: z.number().optional(),
 });
 

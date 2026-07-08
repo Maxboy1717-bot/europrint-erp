@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { assertFound, assertRequired } from '@common/assertions';
+import { assertFound, assertRequired, parseSafe } from '@common/assertions';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
@@ -22,6 +22,7 @@ import { QcDefectsExtendedService } from '../application/qc-defects-extended.ser
 import { ResolveReclamationCommand } from '../application/commands/resolve-reclamation.command';
 import { ReportDefectCommand } from '../application/commands/report-defect.command';
 import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
+import { QcStageSchema, type QcStage } from './qc-new.controller';
 import {
   QcCreateBrakSchema, QcCreateBrakDto,
   QcCreateSupplierQualitySchema, QcCreateSupplierQualityDto,
@@ -99,8 +100,20 @@ export class QcDefectsExtendedController {
     // qc-defects-extended repos, qc.bot) only recognize a qc_defects row as a "brak" when at
     // least one of papka_order_id/stage/brak_date is non-null. The pre-CQRS repo.createBrak
     // always defaulted these two (stage ?? 'production', brak_date ?? today) -- replicate that
-    // here so a minimal-payload POST /qc/braks still lands as a visible brak, not a hidden row.
-    const effectiveStage = body.stage != null ? String(body.stage) : 'production';
+    // intent here so a minimal-payload POST /qc/braks still lands as a visible brak, not a
+    // hidden row.
+    //
+    // VISION-3340 #42: 'production' is NOT a member of the qc_stage enum enforced by
+    // QcNewController.createCheckpoint (incoming/in_process/final/dispatch) — the two write
+    // paths into qc_defects disagreed on valid "stage" values. Validate the incoming value
+    // against that SAME exported schema (QcStageSchema, imported — not redefined here) and
+    // default to 'in_process', the shop-floor/production-line stage of that enum and the same
+    // default CheckpointDto already uses, which best matches the original 'production' intent.
+    const effectiveStage: QcStage = parseSafe(
+      QcStageSchema.default('in_process'),
+      body.stage,
+      `stage noto'g'ri qiymat: "${String(body.stage)}" — ruxsat etilgan: ${QcStageSchema.options.join(', ')}`,
+    );
     const effectiveBrakDate = body.brak_date != null ? String(body.brak_date) : new Date().toISOString().slice(0, 10);
 
     const cmd = new ReportDefectCommand(
