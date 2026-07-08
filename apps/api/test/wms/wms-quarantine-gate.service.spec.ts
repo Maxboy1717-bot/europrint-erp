@@ -9,8 +9,14 @@
  *   4. Og'irlik ±2% dan yuqori → menejer bayrog'i + majburiy sabab shart (BLOK).
  *   5. Noto'g'ri o'tish (masalan DRAFT → MAIN, KARANTIN → MAIN) → Err.
  *   6. QC qarori: QABUL → QC_PASS, CHIQARISH → REJECT (faqat KARANTIN dan).
+ *   7. TOCTOU guard (VISION-3340 #41): SELECT ↔ UPDATE oynasida holat parallel
+ *      o'zgargan bo'lsa → Err('CONFLICT'), yozuv muvaffaqiyat deb hisoblanMAYdi;
+ *      repository UPDATE ga `AND status IS NOT DISTINCT FROM <expected>` guard
+ *      qo'shadi va 0-qator RETURNING ni CONFLICT ga aylantiradi.
  *
  * Mock repo — DB ga tegmaydi; faqat darvoza mantig'i tekshiriladi.
+ * Repository SQL matni esa drizzle PgDialect (sqlToQuery) orqali tekshiriladi —
+ * xuddi test/iot/iot-tablet.controller.material-return-upsert.spec.ts naqshi.
  */
 
 // Shared DB stub — domen/application servislari @common/result orqali
@@ -20,13 +26,25 @@ jest.mock('../../src/shared/db', () => ({
   runQuery: jest.fn(),
 }));
 
+import { PgDialect } from 'drizzle-orm/pg-core';
+import type { SQL } from 'drizzle-orm';
+import { runQuery } from '../../src/shared/db';
 import { QuarantineGateService } from '../../src/modules/wms/domain/services/quarantine-gate.service';
 import { WmsQuarantineGateService } from '../../src/modules/wms/application/wms-quarantine-gate.service';
+import { WmsQuarantineRepository } from '../../src/modules/wms/infrastructure/repositories/wms-quarantine.repository';
 import type {
   IWmsQuarantineRepo,
   ReceiptStatusRow,
 } from '../../src/modules/wms/domain/repositories/i-wms-quarantine.repo';
 import { Ok, Err } from '../../src/common/result';
+
+/** Interfeys bilan bir xil audit shakli (mock impl'larda takror yozmaslik uchun). */
+type UpdateAudit = {
+  userId?: number | null;
+  completed?: boolean;
+  note?: string | null;
+  expectedStatus?: string | null;
+};
 
 // ─── Mock repo factory ───────────────────────────────────────────────────────
 function makeMockRepo(initialStatus: string | null, id = 1): {
@@ -42,7 +60,12 @@ function makeMockRepo(initialStatus: string | null, id = 1): {
         ? Ok<ReceiptStatusRow | null>({ id, status: current })
         : Ok<ReceiptStatusRow | null>(null),
     ),
-    updateReceiptStatus: jest.fn(async (_receiptId: number, status: string) => {
+    updateReceiptStatus: jest.fn(async (_receiptId: number, status: string, audit?: UpdateAudit) => {
+      // Real repo guard'iga sodiq mock (VISION-3340 #41): expectedStatus
+      // berilsa va joriy holatga mos kelmasa — 0 qator → CONFLICT, yozuv YO'Q.
+      if (audit && audit.expectedStatus !== undefined && audit.expectedStatus !== current) {
+        return Err<ReceiptStatusRow>({ code: 'CONFLICT', message: `Qabul ${id}: holat parallel o'zgargan` });
+      }
       current = status;
       captured = { status };
       return Ok<ReceiptStatusRow>({ id, status });
@@ -50,6 +73,25 @@ function makeMockRepo(initialStatus: string | null, id = 1): {
   };
 
   return { repo, lastUpdate: () => captured };
+}
+
+/**
+ * TOCTOU poygasini simulyatsiya qiluvchi repo: findReceiptStatus ESKI (stale)
+ * holatni qaytaradi, updateReceiptStatus esa guard'ni haqiqiy DB holatiga
+ * (actualDbStatus — parallel tranzaksiya allaqachon o'zgartirgan) qarshi
+ * tekshiradi. Guard uzatilmasa yozuv "muvaffaqiyatli" o'tib ketadi — shu
+ * bilan servis guard'ni HAR DOIM uzatishi ham isbotlanadi.
+ */
+function makeRacyRepo(readStatus: string, actualDbStatus: string, id = 1): jest.Mocked<IWmsQuarantineRepo> {
+  return {
+    findReceiptStatus: jest.fn(async () => Ok<ReceiptStatusRow | null>({ id, status: readStatus })),
+    updateReceiptStatus: jest.fn(async (_receiptId: number, status: string, audit?: UpdateAudit) => {
+      if (audit?.expectedStatus !== undefined && audit.expectedStatus !== actualDbStatus) {
+        return Err<ReceiptStatusRow>({ code: 'CONFLICT', message: `Qabul ${id}: holat parallel o'zgargan` });
+      }
+      return Ok<ReceiptStatusRow>({ id, status });
+    }),
+  };
 }
 
 describe('QuarantineGateService (sof domen)', () => {
@@ -259,6 +301,162 @@ describe('WmsQuarantineGateService (DB enforcement, mock repo)', () => {
     const svc = new WmsQuarantineGateService(gate, repo);
 
     const res = await svc.releaseToMain(1, 1);
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe('DB_ERROR');
+  });
+});
+
+// ─── VISION-3340 #41: TOCTOU poyga guard (servis qatlami) ───────────────────
+describe('WmsQuarantineGateService — TOCTOU guard (VISION-3340 #41)', () => {
+  const gate = new QuarantineGateService();
+
+  it("releaseToMain: o'qilganda QC_PASS, yozguncha parallel MAIN bo'lgan → CONFLICT (ikkilangan release BLOK)", async () => {
+    const repo = makeRacyRepo('QC_PASS', 'MAIN');
+    const svc = new WmsQuarantineGateService(gate, repo);
+
+    const res = await svc.releaseToMain(1, 42);
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe('CONFLICT');
+    // Guard repo ga AYNAN o'qilgan holat bilan uzatilgan.
+    expect(repo.updateReceiptStatus).toHaveBeenCalledWith(
+      1,
+      'MAIN',
+      expect.objectContaining({ expectedStatus: 'QC_PASS' }),
+    );
+  });
+
+  it("applyQcDecision: o'qilganda KARANTIN, parallel REJECT bo'lgan → CONFLICT", async () => {
+    const repo = makeRacyRepo('KARANTIN', 'REJECT');
+    const svc = new WmsQuarantineGateService(gate, repo);
+
+    const res = await svc.applyQcDecision(1, 'QABUL', 9, null);
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe('CONFLICT');
+    expect(repo.updateReceiptStatus).toHaveBeenCalledWith(
+      1,
+      'QC_PASS',
+      expect.objectContaining({ expectedStatus: 'KARANTIN' }),
+    );
+  });
+
+  it("sendToQuarantine: o'qilganda DRAFT, parallel KARANTIN bo'lgan → CONFLICT", async () => {
+    const repo = makeRacyRepo('DRAFT', 'KARANTIN');
+    const svc = new WmsQuarantineGateService(gate, repo);
+
+    const res = await svc.sendToQuarantine(1, 7);
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe('CONFLICT');
+    expect(repo.updateReceiptStatus).toHaveBeenCalledWith(
+      1,
+      'KARANTIN',
+      expect.objectContaining({ expectedStatus: 'DRAFT' }),
+    );
+  });
+
+  it('guard mos kelsa yozuv o\'tadi (poyga yo\'q holat regressiyasi)', async () => {
+    const repo = makeRacyRepo('QC_PASS', 'QC_PASS');
+    const svc = new WmsQuarantineGateService(gate, repo);
+
+    const res = await svc.releaseToMain(1, 42);
+
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.status).toBe('MAIN');
+  });
+
+  it("expectedStatus = aynan o'qilgan XOM holat (legacy 'draft' normalizatsiya qilinMAYdi)", async () => {
+    // DB da legacy kichik harfli 'draft' saqlangan bo'lsa guard ham XOM 'draft'
+    // bilan solishtirilishi shart — normalizatsiya qilingan 'DRAFT' bilan emas,
+    // aks holda guard hech qachon mos kelmay har doim CONFLICT bo'lardi.
+    const repo = makeRacyRepo('draft', 'draft');
+    const svc = new WmsQuarantineGateService(gate, repo);
+
+    const res = await svc.sendToQuarantine(1, 7);
+
+    expect(res.ok).toBe(true);
+    expect(repo.updateReceiptStatus).toHaveBeenCalledWith(
+      1,
+      'KARANTIN',
+      expect.objectContaining({ expectedStatus: 'draft' }),
+    );
+  });
+});
+
+// ─── VISION-3340 #41: guarded UPDATE SQL (repository qatlami) ───────────────
+describe('WmsQuarantineRepository — guarded UPDATE (VISION-3340 #41)', () => {
+  const repoUnderTest = new WmsQuarantineRepository();
+  const dialect = new PgDialect();
+  const mockRunQuery = runQuery as jest.Mock;
+
+  beforeEach(() => {
+    mockRunQuery.mockReset();
+  });
+
+  /** Oxirgi runQuery chaqiruvining REAL parametrlangan SQL matni + paramlari. */
+  function renderedSql(): { text: string; params: unknown[] } {
+    const q = mockRunQuery.mock.calls[0]?.[0] as SQL;
+    const { sql: text, params } = dialect.sqlToQuery(q);
+    return { text: text.replace(/\s+/g, ' ').trim(), params };
+  }
+
+  it("expectedStatus berilsa WHERE ga NULL-xavfsiz holat sharti qo'shiladi (parametrlangan)", async () => {
+    mockRunQuery.mockResolvedValueOnce({ rows: [{ id: 5, status: 'KARANTIN' }] });
+
+    const res = await repoUnderTest.updateReceiptStatus(5, 'KARANTIN', {
+      userId: 1,
+      expectedStatus: 'DRAFT',
+    });
+
+    expect(res.ok).toBe(true);
+    const { text, params } = renderedSql();
+    expect(text).toContain('AND status IS NOT DISTINCT FROM');
+    // Holat qiymati SQL matniga yopishtirilmagan — parametr sifatida bog'langan.
+    expect(params).toContain('DRAFT');
+    expect(text).not.toContain("'DRAFT'");
+  });
+
+  it("expectedStatus berilmasa eski xatti-harakat saqlanadi (guard YO'Q — regressiya)", async () => {
+    mockRunQuery.mockResolvedValueOnce({ rows: [{ id: 5, status: 'KARANTIN' }] });
+
+    const res = await repoUnderTest.updateReceiptStatus(5, 'KARANTIN', { userId: 1 });
+
+    expect(res.ok).toBe(true);
+    const { text } = renderedSql();
+    expect(text).not.toContain('IS NOT DISTINCT FROM');
+  });
+
+  it('guard bilan 0-qator RETURNING → CONFLICT (muvaffaqiyat deb hisoblanMAYdi)', async () => {
+    mockRunQuery.mockResolvedValueOnce({ rows: [] });
+
+    const res = await repoUnderTest.updateReceiptStatus(5, 'MAIN', {
+      userId: 1,
+      completed: true,
+      expectedStatus: 'QC_PASS',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe('CONFLICT');
+  });
+
+  it("guard YO'Q holatda 0-qator → NOT_FOUND (mavjud semantika buzilmagan)", async () => {
+    mockRunQuery.mockResolvedValueOnce({ rows: [] });
+
+    const res = await repoUnderTest.updateReceiptStatus(999, 'KARANTIN', { userId: 1 });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe('NOT_FOUND');
+  });
+
+  it('runQuery istisnosi throw qilinmaydi — Err(DB_ERROR) qaytadi (Result pattern)', async () => {
+    mockRunQuery.mockRejectedValueOnce(new Error('connection lost'));
+
+    const res = await repoUnderTest.updateReceiptStatus(5, 'KARANTIN', {
+      userId: 1,
+      expectedStatus: 'DRAFT',
+    });
 
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error.code).toBe('DB_ERROR');

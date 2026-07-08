@@ -22,11 +22,22 @@ export interface IWmsQuarantineRepo {
   /**
    * Qabul holatini yangilaydi (holat-mashinasi tasdiqlangandan keyin).
    * Ixtiyoriy audit maydonlari (qcBy, completedBy) ham yoziladi.
+   *
+   * TOCTOU himoyasi (VISION-3340 #41): `audit.expectedStatus` berilsa UPDATE
+   * `AND status = <expectedStatus>` sharti bilan bajariladi (optimistik guard).
+   * O'qish ↔ yozish orasida holat parallel o'zgargan bo'lsa 0 qator qaytadi
+   * va Err('CONFLICT') beriladi — muvaffaqiyat deb hisoblanMAYdi.
    */
   updateReceiptStatus(
     receiptId: number,
     status: string,
-    audit?: { userId?: number | null; completed?: boolean; note?: string | null },
+    audit?: {
+      userId?: number | null;
+      completed?: boolean;
+      note?: string | null;
+      /** O'qilgan (kutilgan) joriy XOM holat — optimistik guard; undefined = guard yo'q. */
+      expectedStatus?: string | null;
+    },
   ): Promise<Result<ReceiptStatusRow>>;
 }
 

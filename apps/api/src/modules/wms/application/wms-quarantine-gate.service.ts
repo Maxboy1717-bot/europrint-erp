@@ -7,6 +7,11 @@
  *   servisi (QuarantineGateService) orqali tekshiriladi; DB esa repo orqali
  *   (CLAUDE.md Qoida 15 — service ichida to'g'ridan db.* YO'Q).
  *   Result<T> qaytaradi; hech qachon throw qilmaydi.
+ *
+ *   TOCTOU himoyasi (VISION-3340 #41): har bir yozuv o'qilgan holatga
+ *   SHARTLANGAN (optimistik guard — repo `expectedStatus`). O'qish ↔ yozish
+ *   oynasida holat parallel o'zgargan bo'lsa 0-qator RETURNING →
+ *   Err('CONFLICT') — muvaffaqiyat deb hisoblanMAYdi.
  * @layer Application (WMS)
  */
 
@@ -33,6 +38,31 @@ export class WmsQuarantineGateService {
   ) {}
 
   /**
+   * Guarded (optimistik) holat yozuvi — TOCTOU himoyasi (VISION-3340 #41).
+   * UPDATE o'qilgan holatga (`expectedStatus`) shartlanadi; SELECT ↔ UPDATE
+   * oynasida parallel tranzaksiya holatni o'zgartirgan bo'lsa repo 0-qator
+   * RETURNING ni Err('CONFLICT') qilib qaytaradi va bu yerda muvaffaqiyat deb
+   * QABUL QILINMAYDI (xuddi execIssueFromWarehouseStock guarded-UPDATE naqshi).
+   */
+  private async updateStatusGuarded(
+    receiptId: number,
+    targetStatus: string,
+    expectedStatus: string | null,
+    audit: { userId?: number | null; completed?: boolean; note?: string | null },
+  ): Promise<Result<ReceiptStatusRow, AppError>> {
+    const updated = await this.repo.updateReceiptStatus(receiptId, targetStatus, {
+      ...audit,
+      expectedStatus,
+    });
+    if (!updated.ok && updated.error.code === 'CONFLICT') {
+      this.logger.warn(
+        `[Karantin CONFLICT] Qabul ${receiptId}: '${expectedStatus}' → '${targetStatus}' yozuvi bekor — holat parallel o'zgargan (TOCTOU guard)`,
+      );
+    }
+    return updated;
+  }
+
+  /**
    * Tashqi kirimni karantinga yuboradi: DRAFT → KARANTIN.
    * Stok bu bosqichda MAIN omborga TUSHMAYDI (bloklangan holatda saqlanadi).
    */
@@ -45,7 +75,7 @@ export class WmsQuarantineGateService {
     if (!transition.ok) return transition as Result<ReceiptStatusRow, AppError>;
 
     this.logger.log(`[Karantin] Qabul ${receiptId}: '${cur.data.status}' → KARANTIN`);
-    return this.repo.updateReceiptStatus(receiptId, QUARANTINE_STATUS.KARANTIN, { userId });
+    return this.updateStatusGuarded(receiptId, QUARANTINE_STATUS.KARANTIN, cur.data.status, { userId });
   }
 
   /**
@@ -67,7 +97,10 @@ export class WmsQuarantineGateService {
     if (!resolved.ok) return resolved as Result<ReceiptStatusRow, AppError>;
 
     this.logger.log(`[QC] Qabul ${receiptId}: ${decision} → '${resolved.data}'`);
-    return this.repo.updateReceiptStatus(receiptId, resolved.data, { userId: inspectorId, note: note ?? null });
+    return this.updateStatusGuarded(receiptId, resolved.data, cur.data.status, {
+      userId: inspectorId,
+      note: note ?? null,
+    });
   }
 
   /**
@@ -102,6 +135,9 @@ export class WmsQuarantineGateService {
     if (!transition.ok) return transition as Result<ReceiptStatusRow, AppError>;
 
     this.logger.log(`[Karantin] Qabul ${receiptId}: QC_PASS → MAIN (stok mavjud bo'ldi)`);
-    return this.repo.updateReceiptStatus(receiptId, QUARANTINE_STATUS.MAIN, { userId, completed: true });
+    return this.updateStatusGuarded(receiptId, QUARANTINE_STATUS.MAIN, cur.data.status, {
+      userId,
+      completed: true,
+    });
   }
 }
