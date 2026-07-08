@@ -19,6 +19,7 @@ const SDCustomers = lazy(() => import("@/pages/SDCustomers"));
 const Customer360Page = lazy(() => import("@/pages/Customer360Page"));
 const SDSalesQuotes = lazy(() => import("@/pages/SDSalesQuotes"));
 const SDSalesOrders = lazy(() => import("@/pages/SDSalesOrders"));
+const SDOrderDetail = lazy(() => import("@/pages/SDOrderDetail"));
 const SDSalesPayments = lazy(() => import("@/pages/SDSalesPayments"));
 const SDSalesManagement = lazy(() => import("@/pages/SDSalesManagement"));
 const SDKpi = lazy(() => import("@/pages/SDKpi"));
@@ -64,6 +65,7 @@ export const SALES_ROUTES: [string, React.ComponentType][] = [
   ['/crm/customer/:id',        Customer360Page],
   ['/sd/sales-quotes',         SDSalesQuotes],
   ['/sd/sales-orders',         SDSalesOrders],
+  ['/sd/orders/:id',           SDOrderDetail],
   ['/sd/sales-payments',       SDSalesPayments],
   ['/sd/sales-management',     SDSalesManagement],
   ['/sd/invoices',             SDSalesManagement],

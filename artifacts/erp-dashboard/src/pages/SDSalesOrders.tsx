@@ -4,6 +4,7 @@
  */
 
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -414,6 +415,12 @@ export default function SDSalesOrders() {
                   )}
                 </div>
                 <div className="flex gap-2 flex-wrap pt-4 mt-4 border-t">
+                  <Link href={`/sd/orders/${selected.id}`}>
+                    <Button size="sm" variant="outline" data-testid={`button-open-order-${selected.id}`}>
+                      <ArrowRight className="w-3 h-3 mr-1" />
+                      {tLabel("sd.orders.fullPage", "Alohida sahifada")}
+                    </Button>
+                  </Link>
                   {detail?.moduleStatus && NEXT_STATUS[detail.moduleStatus] && (
                     <Button size="sm" data-testid={`button-next-status-${detail.id}`}
                       onClick={() => statusMut.mutate({ id: detail.id, status: NEXT_STATUS[detail.moduleStatus] })}
