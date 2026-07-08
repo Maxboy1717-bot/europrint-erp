@@ -26,6 +26,7 @@ const PosMaterialBalance = lazy(() => import("./pages/PosMaterialBalance"));
 const PosMovements      = lazy(() => import("./pages/PosMovements"));
 const PosMovementNew    = lazy(() => import("./pages/PosMovementNew"));
 const PosMovementKirim  = lazy(() => import("./pages/PosMovementKirim"));
+const PosPresKirim      = lazy(() => import("./pages/PosPresKirim"));
 const PosMovementChiqim = lazy(() => import("./pages/PosMovementChiqim"));
 const PosMovementDetail = lazy(() => import("./pages/PosMovementDetail"));
 const PosMyInventory   = lazy(() => import("./pages/PosMyInventory"));
@@ -236,6 +237,15 @@ export default function PosMonitorApp() {
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosMovementChiqim /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
+        {/* Pres-kirim — kg → barkod → ichki kirim tez oqimi (VISION-3340 #59) */}
+        <Route path="/pos-monitor/movements/new/pres-kirim">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosPresKirim /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>
