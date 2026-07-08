@@ -46,9 +46,12 @@ export class DirectorRootController {
     return unwrapOrThrow(res);
   }
 
+  // VISION-3340 #12: DirSummary endilikda `ckpDeadlineCompliance` maydonini ham
+  // o'z ichiga oladi (bugungi ЦКП deadline-gate muvofiqlik foizi — ckp-gate.ts
+  // qoidasi bilan; hisoblash director-data.service.ts da).
   @Get('summary')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
-  @ApiOperation({ summary: 'Director summary — DirSummary shape' })
+  @ApiOperation({ summary: 'Director summary — DirSummary shape (+ ЦКП deadline-gate compliance rate)' })
   async getSummary() {
     return unwrapOrInternal(await this.directorData.getSummaryFull());
   }

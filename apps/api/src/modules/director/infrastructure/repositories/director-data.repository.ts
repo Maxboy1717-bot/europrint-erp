@@ -8,7 +8,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { safeNum } from '@common/math';
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 import { sales_orders, mes_sessions } from '@shared/db';
@@ -17,6 +17,11 @@ import {
   invoicesTable, accountsTable, systemAlerts, iotAlerts,
 } from '@shared/db';
 import { warehouseStock } from '@shared/db';
+// VISION-3340 #12: ЦКП deadline-gate qoidasi REIMPLEMENT qilinmaydi — jonli
+// `applyCkpGate` (hr/payroll/ckp-gate.ts, payroll'da ishlatiladigan HAQIQIY
+// darvoza) shu yerda import/reuse qilinadi (Q-39 regressiya-taqiq: bitta qoida,
+// bitta joy).
+import { applyCkpGate, type CkpGateDayInput } from '@modules/hr/payroll/ckp-gate';
 import type {
   IDirectorDataRepo,
   DashboardData,
@@ -26,6 +31,7 @@ import type {
   FinanceData,
   AlertsData,
   AiSummaryData,
+  CkpDeadlineComplianceRate,
 } from '../../domain/repositories/i-director-data.repo';
 
 type Row = Record<string, unknown>;
@@ -40,6 +46,7 @@ export type {
   FinanceData,
   AlertsData,
   AiSummaryData,
+  CkpDeadlineComplianceRate,
 };
 
 @Injectable()
@@ -106,6 +113,54 @@ export class DirectorDataRepository implements IDirectorDataRepo {
         production: { oee: oe?.oee != null ? Number(oe.oee) : null },
         generatedAt: _time.now().toISOString(),
       };
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * VISION-3340 #12 — bir kunlik ЦКП deadline-gate muvofiqlik foizi. Har bir
+   * ЦКП-normasi belgilangan karta (`tskp_target IS NOT NULL`) uchun `ckp_fact_values`
+   * (LEFT JOIN, bo'sh bo'lsa NO_FACT) o'qib, AYNAN o'sha kunlik-gate qoidasini
+   * (`applyCkpGate`, hr/payroll/ckp-gate.ts) qo'llaydi — pass (gate ochiq) va
+   * fail (NO_FACT/DEADLINE_PASSED) sonini yig'adi. FABRIKATSIYA YO'Q: karta yo'q
+   * bo'lsa complianceRate halol 0.
+   */
+  async getCkpDeadlineComplianceRate(date: string): Promise<Result<CkpDeadlineComplianceRate>> {
+
+    return safeCall(async () => {
+      const res = await runQuery<Row>(sql`
+        SELECT f.id                        AS fact_id,
+               f.submitted_at              AS submitted_at,
+               d.ckp_report_deadline_hours AS deadline_hours
+        FROM org_departments d
+        LEFT JOIN ckp_fact_values f
+          ON f.card_id = d.id AND f.fact_date = ${date}::date
+        WHERE d.tskp_target IS NOT NULL
+      `);
+      const rows = Array.isArray(res.rows) ? (res.rows as Row[]) : [];
+      let passCount = 0;
+      let failCount = 0;
+      for (const row of rows) {
+        const hasFact = row['fact_id'] != null;
+        const deadlineHours = row['deadline_hours'] != null ? Number(row['deadline_hours']) : null;
+        const submittedRaw = row['submitted_at'];
+        const submittedAt =
+          submittedRaw == null
+            ? null
+            : submittedRaw instanceof Date
+              ? submittedRaw
+              : new Date(String(submittedRaw));
+        const dayInput: CkpGateDayInput = {
+          hasFact,
+          deadlineHours,
+          factDate: date,
+          submittedAt: submittedAt && !Number.isNaN(submittedAt.getTime()) ? submittedAt : null,
+        };
+        if (applyCkpGate(dayInput).open) passCount += 1;
+        else failCount += 1;
+      }
+      const totalCards = passCount + failCount;
+      const complianceRate = totalCards > 0 ? Math.round((passCount / totalCards) * 100) : 0;
+      return { date, totalCards, passCount, failCount, complianceRate };
     }, 'DB_ERROR');
   }
 

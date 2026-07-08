@@ -26,6 +26,36 @@ export interface SummaryData {
   };
   production: { oee: number | null };
   generatedAt: string;
+  /**
+   * VISION-3340 #12: bugungi kun bo'yicha ЦКП deadline-gate muvofiqlik foizi
+   * (ckp-gate.ts'dagi HAQIQIY `applyCkpGate` qoidasi bilan hisoblangan — reimplement
+   * emas). Repository qatlamining `querySummary()` bu maydonni to'ldirmaydi —
+   * u faqat `DirectorDataService.getSummaryFull()` da (alohida
+   * `getCkpDeadlineComplianceRate` so'rovidan keyin) qo'shiladi, shuning uchun
+   * bu yerda ixtiyoriy. `null` faqat gate-so'rov DB xatoga uchraganda
+   * (fail-open — asosiy summary bloklanmaydi, Q-40: soxta % o'rniga honest null).
+   */
+  ckpDeadlineCompliance?: CkpDeadlineComplianceRate | null;
+}
+
+/**
+ * VISION-3340 #12 — bir kunlik ЦКП deadline-gate muvofiqlik hisoboti. Bir xil
+ * `applyCkpGate` (hr/payroll/ckp-gate.ts) qoidasi HAR bir ЦКП-normasi belgilangan
+ * karta (org_departments.tskp_target IS NOT NULL) uchun qo'llanadi; natija
+ * pass/fail sonlariga yig'iladi. FABRIKATSIYA YO'Q: karta yo'q bo'lsa (totalCards=0)
+ * complianceRate halol 0 (soxta 100% emas).
+ */
+export interface CkpDeadlineComplianceRate {
+  /** ЦКП kuni ('YYYY-MM-DD'). */
+  date: string;
+  /** ЦКП-normasi belgilangan (tskp_target IS NOT NULL) kartalar soni. */
+  totalCards: number;
+  /** Gate OCHIQ (applyCkpGate().open === true) bo'lgan kartalar soni. */
+  passCount: number;
+  /** Gate YOPIQ (NO_FACT yoki DEADLINE_PASSED) bo'lgan kartalar soni. */
+  failCount: number;
+  /** passCount/totalCards*100, yaxlitlangan. totalCards=0 bo'lsa 0. */
+  complianceRate: number;
 }
 
 export interface ProductionData {
@@ -85,6 +115,8 @@ export interface IDirectorDataRepo {
   queryFinance(): Promise<Result<FinanceData>>;
   queryAlerts(): Promise<Result<AlertsData>>;
   queryAiSummary(): Promise<Result<AiSummaryData>>;
+  /** VISION-3340 #12 — bir kunlik ЦКП deadline-gate muvofiqlik foizi (ckp-gate.ts qoidasi bilan). */
+  getCkpDeadlineComplianceRate(date: string): Promise<Result<CkpDeadlineComplianceRate>>;
 }
 
 export const DIRECTOR_DATA_REPO = Symbol('DIRECTOR_DATA_REPO');

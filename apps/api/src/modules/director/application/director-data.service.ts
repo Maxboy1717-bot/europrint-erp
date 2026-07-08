@@ -5,6 +5,7 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { Ok, Result } from '@common/result';
+import { TashkentTimeService } from '@common/time';
 import {
   DIRECTOR_DATA_REPO,
   type IDirectorDataRepo,
@@ -15,7 +16,10 @@ import {
   type FinanceData,
   type AlertsData,
   type AiSummaryData,
+  type CkpDeadlineComplianceRate,
 } from '../domain/repositories/i-director-data.repo';
+
+const _time = new TashkentTimeService();
 
 @Injectable()
 export class DirectorDataService {
@@ -25,8 +29,20 @@ export class DirectorDataService {
     return this.repo.queryDashboard();
   }
 
+  /**
+   * VISION-3340 #12: director/summary javobiga bugungi kunlik ЦКП deadline-gate
+   * muvofiqlik foizi qo'shildi (ckp-gate.ts'dagi HAQIQIY `applyCkpGate` qoidasi
+   * bilan hisoblangan — reimplement emas, repo orqali reuse). Gate-so'rov DB
+   * xatoga uchrasa — asosiy summary BLOKLANMAYDI (fail-open faqat shu ko'rsatkich
+   * uchun): ckpDeadlineCompliance = null (Q-40: soxta % o'rniga honest null).
+   */
   async getSummaryFull(): Promise<Result<SummaryData>> {
-    return this.repo.querySummary();
+    const summaryR = await this.repo.querySummary();
+    if (!summaryR.ok) return summaryR;
+    const today = _time.formatDate(_time.now());
+    const ckpR = await this.repo.getCkpDeadlineComplianceRate(today);
+    const ckpDeadlineCompliance: CkpDeadlineComplianceRate | null = ckpR.ok ? ckpR.data : null;
+    return Ok({ ...summaryR.data, ckpDeadlineCompliance });
   }
 
   async getProductionFull(): Promise<Result<ProductionData>> {
