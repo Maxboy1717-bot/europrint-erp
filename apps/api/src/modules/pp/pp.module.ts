@@ -49,6 +49,9 @@ import { DesignApprovedTrigger5Listener } from './infrastructure/event-handlers/
 import { LabTestPassedTrigger5Listener } from './infrastructure/event-handlers/lab-test-passed-trigger5.listener';
 import { DesignLabJoinService } from './infrastructure/event-handlers/design-lab-join.service';
 import { WmsGoodsIssuedListener } from './infrastructure/event-handlers/wms-goods-issued.listener';
+// T27-A2-QC-REWORK: QC's third-decision REWORK path returns the inspected
+// production order to PP so MES re-plans it (golden thread: SD→PP→MES→QC→rework→MES).
+import { QcReworkListener } from './infrastructure/event-handlers/qc-rework.listener';
 import { PP_PRODUCTION_ORDERS_REPO } from './production-orders/i-pp-production-orders.repo';
 import { DrizzlePpProductionOrdersRepository } from './production-orders/drizzle-pp-production-orders.repo';
 import { ProductionOrdersService } from './production-orders/production-orders.service';
@@ -119,6 +122,7 @@ const listeners = [
   DesignApprovedTrigger5Listener,     // Trigger 5 (design side, Wave 4 round-2)
   LabTestPassedTrigger5Listener,      // Trigger 5 (lab side, Wave 4 round-2)
   WmsGoodsIssuedListener,             // Trigger 9
+  QcReworkListener,                   // T27-A2-QC-REWORK
 ];
 
 @Module({
