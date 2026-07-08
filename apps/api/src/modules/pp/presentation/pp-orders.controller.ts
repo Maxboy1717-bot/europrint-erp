@@ -17,6 +17,8 @@ import { ProductionPlanQuery} from '../application/queries/production-plan.handl
 import { GetProductionOrdersQuery } from '../application/queries/get-production-orders.query';
 import { GetProductionOrderByIdQuery } from '../application/queries/get-production-order-by-id.query';
 import { ProductionOrdersService } from '../production-orders/production-orders.service';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@auth/types';
 import { z } from 'zod';
 
 enum Role {
@@ -55,6 +57,15 @@ const CreateProductionOrderDtoSchema = z.object({
 });
 
 const ReleaseProductionOrderDtoSchema = z.object({
+  reason: z.string().min(5),
+});
+
+// EP-PP-082: drive the production order through its 9-status lifecycle. `status` is
+// validated against the aggregate's PoStatus + PO_STATUS_TRANSITIONS in the service
+// (unknown → 400, illegal hop → 400); `reason` is the mandatory written justification
+// (#2/#39) now persisted on production_order_status_log.reason.
+const UpdateStatusDtoSchema = z.object({
+  status: z.string().min(1),
   reason: z.string().min(5),
 });
 
@@ -181,6 +192,28 @@ export class PpOrdersController {
    frozenUntil: parsed.frozenUntil,
    reasonCodeId: parsed.reasonCodeId,
   });
+  return unwrapOrThrow(result);
+ }
+
+ // EP-PP-082 (rows #2/#6/#39/#88): the production-order status lifecycle + audit journal.
+ // The 9-status state machine + canTransition + the status-log writer were already built
+ // but unreachable — this route activates them. Operational status changes (shop chief +
+ // director + admin), narrower than the read-side queue roles but broader than the
+ // planning-override flags path.
+ @ApiOperation({ summary: 'Update production-order status (lifecycle transition + audit log)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Unknown status or illegal transition' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @Patch(':id/status')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
+ async updateStatus(
+  @Param('id') id: number,
+  @Body() dto: z.infer<typeof UpdateStatusDtoSchema>,
+  @CurrentUser() user: AuthenticatedUser,
+ ) {
+  const parsed = UpdateStatusDtoSchema.parse(dto);
+  this.logger.log(`PP order #${id} status -> ${parsed.status} by user ${user?.id}`);
+  const result = await this.productionOrdersService.updateStatus(Number(id), parsed.status, user?.id, parsed.reason);
   return unwrapOrThrow(result);
  }
 }

@@ -11,7 +11,7 @@ export interface IPpProductionOrdersRepository {
   findByOrderNumber(orderNumber: string): Promise<Result<any | null>>;
   create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
   update(id: number, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
-  updateStatus(id: number, status: string, changedBy?: number): Promise<Result<Record<string, unknown>>>;
+  updateStatus(id: number, status: string, changedBy?: number, reason?: string): Promise<Result<Record<string, unknown>>>;
   /**
    * SB0237 (06-PP audit) — dedicated write-path for the EP-PP-097 (ZARUR/isUrgent) and
    * EP-PP-025/061 (frozen-zone no-preempt) flags. Kept separate from the generic

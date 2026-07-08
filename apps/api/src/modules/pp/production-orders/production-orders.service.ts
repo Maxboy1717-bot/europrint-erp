@@ -71,7 +71,7 @@ export class ProductionOrdersService {
    * is still allowed; the 3 new statuses (confirmed, in_qc, closed) + paused only
    * EXTEND the reachable set. The repo signature is unchanged.
    */
-  async updateStatus(id: number, status: string, changedBy?: number){
+  async updateStatus(id: number, status: string, changedBy?: number, reason?: string){
     return safeCall(async () => {
     const target = await this.parsePoStatus(status);
     const current = await this.findOne(id);
@@ -81,8 +81,9 @@ export class ProductionOrdersService {
       throw new BadRequestException(await this.i18n.t('errors.ppInvalidTransition', { args: { from, target } }));
     }
     // T18-C3: pass the acting user so production_order_status_log records who
-    // changed the status (kim/qachon/eski→yangi).
-    const result = await this.ppProductionOrdersRepo.updateStatus(id, target, changedBy);
+    // changed the status (kim/qachon/eski→yangi). EP-PP-082 #2/#39: `reason` is the
+    // mandatory written justification, persisted on the audit row.
+    const result = await this.ppProductionOrdersRepo.updateStatus(id, target, changedBy, reason);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
 

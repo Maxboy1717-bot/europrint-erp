@@ -76,17 +76,34 @@ describe('ProductionOrdersService', () => {
     expect(repo.create).toHaveBeenCalledWith({ productId: 5, qty: 100 }, 7);
   });
 
-  it('updateStatus checks existence before calling repo.updateStatus', async () => {
+  it('updateStatus checks existence then forwards the acting user + reason to the repo (EP-PP-082)', async () => {
     const repo = buildRepo({
-      findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, status: 'draft' } }),
+      findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, status: 'planned' } }),
     });
     const svc = new ProductionOrdersService(repo, buildI18n());
 
-    const r = await svc.updateStatus(5, 'released');
+    // planned -> confirmed is a legal PO_STATUS_TRANSITIONS hop.
+    const r = await svc.updateStatus(5, 'confirmed', 7, 'Rejaga muvofiq tasdiqlandi');
 
     expect(repo.findById).toHaveBeenCalledWith(5);
-    expect(repo.updateStatus).toHaveBeenCalledWith(5, 'released');
+    // The mandatory written justification (#2/#39) + acting user are threaded through
+    // to repo.updateStatus so production_order_status_log records kim/nima-uchun.
+    expect(repo.updateStatus).toHaveBeenCalledWith(5, 'confirmed', 7, 'Rejaga muvofiq tasdiqlandi');
     expect(r.ok).toBe(true);
+  });
+
+  it('updateStatus rejects an illegal lifecycle hop with a 400 (planned -> completed)', async () => {
+    const repo = buildRepo({
+      findById: jest.fn().mockResolvedValue({ ok: true, data: { id: 5, status: 'planned' } }),
+    });
+    const svc = new ProductionOrdersService(repo, buildI18n());
+
+    // planned may only go to confirmed/released_to_production/cancelled — completed is illegal.
+    const r = await svc.updateStatus(5, 'completed', 7, 'noqonuniy sakrash');
+
+    // Illegal transition -> BadRequest surfaced as a failed Result; the row is never written.
+    expect(r.ok).toBe(false);
+    expect(repo.updateStatus).not.toHaveBeenCalled();
   });
 
   it('remove confirms with localized message after soft-delete', async () => {

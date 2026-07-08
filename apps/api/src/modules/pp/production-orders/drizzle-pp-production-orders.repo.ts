@@ -76,7 +76,7 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
   }
 
-  async updateStatus(id: number, status: string, changedBy?: number): Promise<Result<Record<string, unknown>>> {
+  async updateStatus(id: number, status: string, changedBy?: number, reason?: string): Promise<Result<Record<string, unknown>>> {
     try {
       // T18-C3: capture old status BEFORE the write so the audit log records the
       // real old→new transition (kim/qachon/eski→yangi).
@@ -88,7 +88,9 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
 
       // Only log a genuine change (no-op writes are not status transitions).
       if (oldStatus !== status) {
-        await this._logStatusChange(id, oldStatus, status, changedBy);
+        // EP-PP-082 #2/#39: the written justification (sabab majburiy) is now persisted
+        // on the audit row, not just seen by the AuditInterceptor.
+        await this._logStatusChange(id, oldStatus, status, changedBy, reason);
       }
       return Ok(result[0]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Holat yangilashda xatolik'); }
@@ -104,12 +106,13 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
     oldStatus: string | null,
     newStatus: string,
     changedBy?: number,
+    reason?: string | null,
   ): Promise<void> {
     try {
       await runQuery(sql`
         INSERT INTO production_order_status_log
-          (production_order_id, old_status, new_status, changed_by)
-        VALUES (${orderId}, ${oldStatus}, ${newStatus}, ${changedBy ?? null})
+          (production_order_id, old_status, new_status, changed_by, reason)
+        VALUES (${orderId}, ${oldStatus}, ${newStatus}, ${changedBy ?? null}, ${reason ?? null})
       `);
     } catch (e: unknown) {
       this.logger.error({ msg: 'production_order_status_log insert failed', orderId, error: (e as Error)?.message });
