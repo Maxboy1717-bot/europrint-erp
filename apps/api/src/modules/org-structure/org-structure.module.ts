@@ -4,6 +4,10 @@
  */
 
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
+// T7-10-follow-up: CardRepository.resolveGate() reuses LmsCardGateService (EP-ORG-027) to
+// surface the mandatory-darslik gate to the FE card-gate banner (Q-40, no reimplementation).
+import { LmsModule } from '../lms/lms.module';
 import { OrgStructureController } from './org-structure.controller';
 import { OrgStructureService } from './org-structure.service';
 import { OrgExportService } from './org-export.service';
@@ -36,6 +40,10 @@ import { CardTemplateRepository } from './card-template.repository';
 import { ErrorCatalogController } from './error-catalog.controller';
 import { ErrorCatalogService } from './error-catalog.service';
 import { ErrorCatalogRepository } from './error-catalog.repository';
+// EP-ORG-046 — hr_question_bank CRUD (AI-imtihon savollar banki; avval faqat o'qilardi)
+import { QuestionBankController } from './question-bank.controller';
+import { QuestionBankService } from './question-bank.service';
+import { QuestionBankRepository } from './question-bank.repository';
 // EP-ORG-041 (ORG-CASCADE, owner decision #13)
 import { OrgCascadeListener } from './cascade/org-cascade.listener';
 import { OrgCascadeRepository } from './cascade/org-cascade.repository';
@@ -47,8 +55,9 @@ import { CkpCascadeListener } from './cascade/ckp-cascade.listener';
 import { ExamPassedRazryadListener } from './exam-passed-razryad.listener';
 
 @Module({
-  controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController, CardTemplateController, ErrorCatalogController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository, ExamPassedRazryadListener],
+  imports: [NotificationsModule, LmsModule],
+  controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController, CardTemplateController, ErrorCatalogController, QuestionBankController],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository, ExamPassedRazryadListener, QuestionBankService, QuestionBankRepository],
   exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService, CardTemplateService, CkpFactService],
 })
 export class OrgStructureModule {}
