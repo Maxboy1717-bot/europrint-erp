@@ -117,10 +117,14 @@ export class ProductionOrdersService {
     // VISION-3340 #23: reasonCodeId (pp_reason_codes.id) optionally tags the flag with a
     // structured reason. Threaded straight to the repo alongside the existing flags.
     flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null; reasonCodeId?: number },
+    // EP-PP-082 #2/#39: the acting user + mandatory written justification are threaded to
+    // the repo so the freeze/urgent override is persisted as an order-queryable audit row.
+    changedBy?: number,
+    reason?: string,
   ) {
     return safeCall(async () => {
       await this.findOne(id);
-      const result = await this.ppProductionOrdersRepo.updateFlags(id, flags);
+      const result = await this.ppProductionOrdersRepo.updateFlags(id, flags, changedBy, reason);
       if (!result.ok) throw new InternalServerErrorException(result.error);
       return result.data;
     });

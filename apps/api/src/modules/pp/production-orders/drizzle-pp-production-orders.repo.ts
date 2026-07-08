@@ -127,6 +127,8 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
   async updateFlags(
     id: number,
     flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null; reasonCodeId?: number },
+    changedBy?: number,
+    reason?: string,
   ): Promise<Result<Record<string, unknown>>> {
     try {
       const patch: Partial<typeof productionOrders.$inferInsert> = {
@@ -143,6 +145,33 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
       // caller supplied a value (no fabrication — Q-40).
       if (flags.reasonCodeId !== undefined) {
         await runQuery(sql`UPDATE production_orders SET reason_code_id = ${flags.reasonCodeId} WHERE id = ${id}`);
+      }
+      // EP-PP-082 #2/#39: the freeze/urgent override carries a MANDATORY written
+      // justification (the DTO's `reason`). Previously it was validated then discarded
+      // (only the generic AuditInterceptor saw it) — now persist it as an order-queryable
+      // audit row on the status journal. A flag change is not a status transition, so
+      // old_status === new_status (the order's CURRENT status, read off the updated row —
+      // new_status is NOT NULL so a real value is required), and metadata.event tags it as
+      // a flags override so timeline queries don't confuse it with a real transition.
+      // Best-effort like the status log; only when a reason was actually supplied (Q-40).
+      const curStatus = ((result[0] as Record<string, unknown> | undefined)?.status ?? null) as string | null;
+      if (reason && curStatus) {
+        const meta = JSON.stringify({
+          event: 'flags_override',
+          isUrgent: flags.isUrgent ?? null,
+          isFrozen: flags.isFrozen ?? null,
+          frozenUntil: flags.frozenUntil ? flags.frozenUntil.toISOString() : null,
+          reasonCodeId: flags.reasonCodeId ?? null,
+        });
+        try {
+          await runQuery(sql`
+            INSERT INTO production_order_status_log
+              (production_order_id, old_status, new_status, changed_by, reason, metadata)
+            VALUES (${id}, ${curStatus}, ${curStatus}, ${changedBy ?? null}, ${reason}, ${meta}::jsonb)
+          `);
+        } catch (e: unknown) {
+          this.logger.error({ msg: 'flags-override audit insert failed', id, error: (e as Error)?.message });
+        }
       }
       return Ok(result[0]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Flag yangilashda xatolik'); }

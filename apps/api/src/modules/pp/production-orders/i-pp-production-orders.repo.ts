@@ -23,6 +23,10 @@ export interface IPpProductionOrdersRepository {
     // VISION-3340 #23: reasonCodeId (pp_reason_codes.id) is an optional structured
     // reason tag persisted onto production_orders.reason_code_id alongside the flags.
     flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null; reasonCodeId?: number },
+    // EP-PP-082 #2/#39: acting user + mandatory written justification, persisted as an
+    // order-queryable audit row (previously validated then discarded).
+    changedBy?: number,
+    reason?: string,
   ): Promise<Result<Record<string, unknown>>>;
   softDelete(id: number): Promise<Result<void>>;
 }

@@ -183,15 +183,18 @@ export class PpOrdersController {
  async setFlags(
   @Param('id') id: number,
   @Body() dto: z.infer<typeof FlagsDtoSchema>,
+  @CurrentUser() user: AuthenticatedUser,
  ) {
   const parsed = FlagsDtoSchema.parse(dto);
   this.logger.log(`Setting PP order #${id} flags: ${JSON.stringify({ isUrgent: parsed.isUrgent, isFrozen: parsed.isFrozen, frozenUntil: parsed.frozenUntil, reasonCodeId: parsed.reasonCodeId })}`);
+  // EP-PP-082 #2/#39: pass the acting user + the mandatory written justification so the
+  // override is persisted as an order-queryable audit row (previously reason was dropped).
   const result = await this.productionOrdersService.updateFlags(Number(id), {
    isUrgent: parsed.isUrgent,
    isFrozen: parsed.isFrozen,
    frozenUntil: parsed.frozenUntil,
    reasonCodeId: parsed.reasonCodeId,
-  });
+  }, user?.id, parsed.reason);
   return unwrapOrThrow(result);
  }
 

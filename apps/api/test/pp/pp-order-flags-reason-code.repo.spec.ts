@@ -56,4 +56,30 @@ describe('DrizzlePpProductionOrdersRepository.updateFlags — structured reason 
     expect(r.ok).toBe(false);
     expect(kit.runQuery).not.toHaveBeenCalled();
   });
+
+  // EP-PP-082 #2/#39 — the freeze/urgent override's mandatory written justification is now
+  // persisted as an order-queryable audit row (previously validated then discarded).
+  it('persists the override justification as an audit row when a reason is supplied', async () => {
+    // the .returning() row carries `status` — the audit row uses it for old===new_status
+    // (new_status is NOT NULL, so a real current status is required).
+    kit.queueUpdate([{ id: 1, is_urgent: true, status: 'in_progress' }]);
+    const r = await repo.updateFlags(1, { isUrgent: true }, 7, "Direktor buyrug'i bilan shoshilinch");
+    expect(r.ok).toBe(true);
+    // one runQuery: the flags-override audit insert (no reasonCodeId this time).
+    expect(kit.runQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes BOTH the reason_code_id update AND the audit row when reasonCodeId + reason supplied', async () => {
+    kit.queueUpdate([{ id: 1, is_frozen: true, status: 'released_to_production' }]);
+    const r = await repo.updateFlags(1, { isFrozen: true, reasonCodeId: 9 }, 7, 'Muzlatish sababi yozildi');
+    expect(r.ok).toBe(true);
+    expect(kit.runQuery).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT write an audit row when no reason is supplied (Q-40 — no fabrication)', async () => {
+    kit.queueUpdate([{ id: 1, is_urgent: true }]);
+    const r = await repo.updateFlags(1, { isUrgent: true });
+    expect(r.ok).toBe(true);
+    expect(kit.runQuery).not.toHaveBeenCalled();
+  });
 });
