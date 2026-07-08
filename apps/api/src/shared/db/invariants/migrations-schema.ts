@@ -438,4 +438,54 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'material_kit_items.batch_id index (VISION-3340 #16)',
     sql: `CREATE INDEX IF NOT EXISTS idx_material_kit_items_batch_id ON material_kit_items(batch_id)`,
   },
+  // APPROVED: egasi 2026-06-30 "kod-tomonni boshla" — notification_schedules jadval yaratish
+  // kiritilgan (Modul 18 / NTF Q3/Q79: markazlashtirilgan, sozlanuvchi, takrorlanuvchi
+  // bildirishnoma-jadval matritsasi). Recovered from a weeks-old uncommitted working-tree
+  // state (see apps/api/src/shared/db/migrations/notification-schedules-2026-06-30.sql for
+  // the human-readable mirror of this entry) — this MigrationDef registration itself never
+  // existed before, so the table was never actually applied despite the source/SQL files
+  // being written.
+  {
+    name: 'notification_schedules table (2026-06-30, egasi-approved)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS notification_schedules (
+        id                SERIAL PRIMARY KEY,
+        name              TEXT        NOT NULL,
+        notification_type TEXT        NOT NULL,
+        target_role       TEXT,
+        target_user_id    INTEGER,
+        title_uz          TEXT        NOT NULL,
+        title_ru          TEXT,
+        body_uz           TEXT        NOT NULL,
+        body_ru           TEXT,
+        priority          VARCHAR(10) NOT NULL DEFAULT 'normal',
+        interval_hours    INTEGER     NOT NULL DEFAULT 24,
+        next_run_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_run_at       TIMESTAMPTZ,
+        is_active         BOOLEAN     NOT NULL DEFAULT TRUE,
+        created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `,
+  },
+  {
+    name: 'notification_schedules due-lookup index (2026-06-30)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_notification_schedules_due ON notification_schedules (next_run_at) WHERE is_active = TRUE`,
+  },
+  {
+    name: 'notification_schedules default daily company-digest seed (2026-06-30)',
+    sql: `
+      INSERT INTO notification_schedules
+        (name, notification_type, target_role, title_uz, title_ru, body_uz, body_ru, priority, interval_hours, next_run_at)
+      SELECT
+        'Kunlik kompaniya digesti', 'company_digest', 'super_admin',
+        'Kunlik hisobot', 'Ежедневный отчёт',
+        'Bugungi kompaniya holati: buyurtmalar, ishlab chiqarish, moliya — panelda ko''ring.',
+        'Состояние компании за сегодня: заказы, производство, финансы — смотрите на панели.',
+        'normal', 24, date_trunc('day', NOW()) + INTERVAL '1 day 9 hours'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM notification_schedules WHERE notification_type = 'company_digest' AND target_role = 'super_admin'
+      )
+    `,
+  },
 ];
