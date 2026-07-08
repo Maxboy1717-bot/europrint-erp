@@ -181,11 +181,21 @@ export class DrizzleKanbanCardsRepository {
       // EP-KAN-027: topshiruvchi (assigner)
       const rawAssigner = data.assignerUserId ?? data.assigner_user_id;
       const assignerId  = rawAssigner != null && rawAssigner !== '' ? Number(rawAssigner) : null;
+      // Vision #18 / §15 #46: a sub-task spawned from a card's chat message carries its
+      // parent link (parent_card_id) + inherited deadline (due_date). The FE
+      // (createTaskFromMessage) sends parentCardId/dueDate and the controller schema accepts
+      // them, but this INSERT dropped both — the sub-task was silently orphaned (Q-40/Q-43).
+      // Normalize ''→null like ownerId above (also keeps due_date out of the '' state that
+      // would break the report ::date casts).
+      const rawParent     = data.parentCardId ?? data.parent_card_id;
+      const parentCardId  = rawParent != null && rawParent !== '' ? Number(rawParent) : null;
+      const rawDue        = data.dueDate ?? data.due_date;
+      const dueDate       = rawDue != null && rawDue !== '' ? String(rawDue) : null;
       const rows = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO kanban_cards
-          (board_id, column_id, title, description, priority, owner_user_id, assigner_user_id, sort_order)
+          (board_id, column_id, title, description, priority, owner_user_id, assigner_user_id, parent_card_id, due_date, sort_order)
         VALUES
-          (${boardId}, ${columnId}, ${title}, ${description}, ${priority}, ${ownerId}, ${assignerId}, 0)
+          (${boardId}, ${columnId}, ${title}, ${description}, ${priority}, ${ownerId}, ${assignerId}, ${parentCardId}, ${dueDate}, 0)
         RETURNING *
       `);
       if (!rows.rows[0]) return Err('Karta yaratishda xato');
