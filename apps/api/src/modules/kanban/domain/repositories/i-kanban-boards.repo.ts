@@ -154,4 +154,19 @@ export interface IKanbanBoardsRepo {
    * the column lookup, the update, and the fallback soft-delete are atomic.
    */
   moveOrderCardToCancelled(orderId: number, orderNumber: string): Promise<Result<void>>;
+
+  /**
+   * Golden-thread sync (§15 #127 / vision #22): when a sales order's status
+   * changes, append a dated status note to every kanban card linked to that
+   * order (`related_type='sales_order'`) so the transition is visible/auditable
+   * on the card. Mirrors the note-append half of {@link moveOrderCardToCancelled}
+   * but does NOT move the card between columns — the status→column mapping is an
+   * owner policy decision (Guruh-B). Best-effort: when no card is linked to the
+   * order this is a no-op that still returns Ok(void).
+   */
+  appendOrderStatusNote(
+    orderId: number,
+    oldStatus: string,
+    newStatus: string,
+  ): Promise<Result<void>>;
 }

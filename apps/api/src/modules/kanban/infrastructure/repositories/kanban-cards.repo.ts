@@ -293,4 +293,47 @@ export class KanbanCardsRepository {
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
   }
+
+  /**
+   * Golden-thread sync (§15 #127 / vision #22): when a sales order's status
+   * changes, append a dated status note to every kanban card linked to that
+   * order so the transition is visible/auditable on the card. Mirrors the
+   * note-append half of {@link moveOrderCardToCancelled} (find by
+   * related_type='sales_order' + related_id, `COALESCE(description,'') || note`)
+   * but deliberately does NOT change column/stage — the status→column mapping is
+   * an owner policy decision (Guruh-B). Best-effort: when no card is linked to
+   * the order the UPDATE matches nothing and this is a no-op that still returns
+   * Ok(void), so a sync miss can never break the SD status change.
+   */
+  async appendOrderStatusNote(
+    orderId: number,
+    oldStatus: string,
+    newStatus: string,
+  ): Promise<Result<void>> {
+    try {
+      // related_id is stored as text (createKanbanForOrder inserts String(orderId));
+      // mirror moveOrderCardToCancelled's String(orderId) binding.
+      const orderIdText = String(orderId);
+      const note = `\n[${new Date().toISOString()}] Buyurtma holati: ${oldStatus} -> ${newStatus}`;
+
+      const res = await runQuery<{ id: number }>(sql`
+        UPDATE kanban_cards
+        SET description = COALESCE(description, '') || ${note},
+            updated_at  = NOW()
+        WHERE related_type = 'sales_order'
+          AND related_id   = ${orderIdText}
+          AND deleted_at IS NULL
+        RETURNING id
+      `);
+
+      const rows = Array.isArray(res.rows) ? res.rows : [];
+      this.logger.log(
+        `appendOrderStatusNote: orderId=${orderId} ${oldStatus}->${newStatus} cards=${rows.length}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error('appendOrderStatusNote: ' + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
 }

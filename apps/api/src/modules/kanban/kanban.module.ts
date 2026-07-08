@@ -13,6 +13,7 @@ import { KanbanExtCardService } from './application/kanban-ext-card.service';
 import { KanbanRobotService } from './application/kanban-robot.service';
 import { OrderCreatedKanbanHandler } from './application/event-handlers/order-created-kanban.handler';
 import { OrderCancelledKanbanHandler } from './application/event-handlers/order-cancelled-kanban.handler';
+import { OrderStatusChangedKanbanHandler } from './application/event-handlers/order-status-changed-kanban.handler';
 import { DrizzleKanbanExtRepository } from './infrastructure/repositories/drizzle-kanban-ext.repo';
 import { DrizzleKanbanCoreRepository } from './infrastructure/repositories/drizzle-kanban-core.repo';
 import { DrizzleKanbanFlowsRobotsRepository } from './infrastructure/repositories/drizzle-kanban-flows-robots.repo';
@@ -34,7 +35,7 @@ import { KanbanRepository } from './infrastructure/kanban.repository';
 // 06-30 to'lqin: muddati o'tgan vazifa eskalatsiya cron
 import { KanbanOverdueEscalationCron } from './infrastructure/cron/kanban-overdue-escalation.cron';
 
-const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler];
+const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler, OrderStatusChangedKanbanHandler];
 
 const repositories = [
   { provide: KANBAN_BOARDS_REPO, useClass: KanbanBoardsRepository   },

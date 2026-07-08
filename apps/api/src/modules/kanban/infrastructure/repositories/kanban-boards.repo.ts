@@ -194,4 +194,7 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
   moveOrderCardToCancelled(orderId: number, orderNumber: string): Promise<Result<void>> {
     return this.cardsRepo.moveOrderCardToCancelled(orderId, orderNumber);
   }
+  appendOrderStatusNote(orderId: number, oldStatus: string, newStatus: string): Promise<Result<void>> {
+    return this.cardsRepo.appendOrderStatusNote(orderId, oldStatus, newStatus);
+  }
 }
