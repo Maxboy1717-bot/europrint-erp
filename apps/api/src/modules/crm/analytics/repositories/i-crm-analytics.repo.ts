@@ -12,6 +12,8 @@
  * @layer Domain (CRM analytics)
  */
 
+import { Result } from '@common/result';
+
 export const CRM_ANALYTICS_REPO = Symbol('CRM_ANALYTICS_REPO');
 
 // ---------- Churn types ----------
@@ -49,6 +51,15 @@ export interface FunnelVelocityRow {
   closed_count: number;
   avg_deal_size: number;
   avg_cycle_days: number;
+}
+
+// ---------- Loss-reason rollup (VISION-3340 #31) ----------
+export interface LossReasonRollupRow {
+  lost_reason_id: number | null;
+  code: string | null;
+  label_uz: string | null;
+  label_ru: string | null;
+  deal_count: number;
 }
 
 // ---------- K-Means persistence input ----------
@@ -91,4 +102,10 @@ export interface ICrmAnalyticsRepo {
 
   /** Persist k-means cluster assignments (UPSERT per customer × calculated_at). */
   upsertRfmCluster(row: RfmClusterRow, calculatedAtIso: string): Promise<void>;
+
+  /**
+   * VISION-3340 #31 — rollup of lost deals grouped by loss-reason taxonomy id
+   * (crm_deals.lost_reason_id LEFT JOIN crm_loss_reasons for labels). Returns Result<T>.
+   */
+  getLossReasonRollup(): Promise<Result<LossReasonRollupRow[]>>;
 }

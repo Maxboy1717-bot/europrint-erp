@@ -3,7 +3,7 @@
  * @description NestJS controller. HTTP route handlers; delegates to services and returns unwrapped Result data.
  */
 
-import { Controller, Get, Post, Body, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Inject, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -11,13 +11,14 @@ import { PermissionGuard } from '@common/guards/permission.guard';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { SodGuard } from '@common/guards/sod.guard';
-import { unwrapOrBadRequest } from '@common/http-result';
+import { unwrapOrBadRequest, unwrapOrThrow } from '@common/http-result';
 import { z } from 'zod';
 import { FunnelService }       from '../analytics/funnel.service';
 import { CohortService }       from '../analytics/cohort.service';
 import { KMeansService }       from '../analytics/kmeans.service';
 import { ChurnService }        from '../analytics/churn.service';
 import { ChurnRetrainService } from '../analytics/churn-retrain.service';
+import { CRM_ANALYTICS_REPO, ICrmAnalyticsRepo } from '../analytics/repositories/i-crm-analytics.repo';
 
 /** Must match FEATURE_NAMES.length in churn-retrain.service.ts */
 const CHURN_FEATURE_DIM = 7;
@@ -68,6 +69,7 @@ export class CrmAnalyticsController {
     private readonly kmeansSvc:       KMeansService,
     private readonly churnSvc:        ChurnService,
     private readonly churnRetrainSvc: ChurnRetrainService,
+    @Inject(CRM_ANALYTICS_REPO) private readonly analyticsRepo: ICrmAnalyticsRepo,
   ) {}
 
   @Get('funnel')
@@ -111,5 +113,12 @@ export class CrmAnalyticsController {
   async churnRetrain(@Body() body: unknown) {
     const dto = ChurnRetrainDto.parse(body);
     return unwrapOrBadRequest(await this.churnRetrainSvc.retrain(dto.samples));
+  }
+
+  @Get('analytics/loss-reasons')
+  @RequirePermission('crm.analytics:READ')
+  @ApiOperation({ summary: 'VISION-3340 #31: Lost-deal rollup grouped by loss-reason taxonomy (COUNT + labels)' })
+  async getLossReasons() {
+    return unwrapOrThrow(await this.analyticsRepo.getLossReasonRollup());
   }
 }

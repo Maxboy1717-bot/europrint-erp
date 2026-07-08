@@ -105,6 +105,24 @@ export class DrizzleDealRepository implements IDealRepository {
     }
   }
 
+  async updateLostReasonId(dealId: number, lostReasonId: number): Promise<Result<void>> {
+    try {
+      // VISION-3340 #31: targeted additive UPDATE of the taxonomy FK only. The @shared/db
+      // compat crm_deals def is a drift-aligned shim that intentionally omits this bolt-on
+      // column, so write it via parameterized raw SQL (Rule B: sql`` params, no injection).
+      // date_modify is the live modify-stamp column (compat `updated_at` alias).
+      await db.execute(sql`
+        UPDATE crm_deals
+        SET lost_reason_id = ${lostReasonId},
+            date_modify    = NOW()
+        WHERE id = ${dealId}
+      `);
+      return Ok();
+    } catch (e) {
+      return Err(`drizzle_deal.updateLostReasonId: ${String(e)}`);
+    }
+  }
+
   async delete(id: number): Promise<Result<void>> {
     try {
       await db.delete(crmDeals).where(eq(crmDeals.id, id));

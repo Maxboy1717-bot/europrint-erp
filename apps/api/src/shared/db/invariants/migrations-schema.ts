@@ -754,4 +754,41 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'pp_shift_plans shift_date index (VISION-3340 #23)',
     sql: `CREATE INDEX IF NOT EXISTS idx_pp_shift_plans_shift_date ON pp_shift_plans (shift_date)`,
   },
+  // APPROVED: egasi (owner) 2026-07-08 VISION-3340 #31 — crm_deals.lost_reason was
+  // FREE-TEXT only, so no rollup/analytics over WHY deals are lost was possible. Adds a
+  // structured loss-reason taxonomy (crm_loss_reasons — seeds NOTHING, owner master-data,
+  // Q-40) plus an OPTIONAL nullable crm_deals.lost_reason_id FK tag; the existing free-text
+  // lost_reason column is kept as a supplementary note. Table is created FIRST so the ALTER
+  // that references it always resolves. FK is ON DELETE SET NULL (deleting a reason keeps
+  // historical deals — Q-39/Q-46). Write path: MarkDealLostHandler → DrizzleDealRepository
+  // .updateLostReasonId. Read path: GET /api/crm/analytics/loss-reasons →
+  // DrizzleCrmAnalyticsRepository.getLossReasonRollup. See
+  // apps/api/src/shared/db/migrations/crm-loss-reasons-2026-07-08.sql for the human-readable
+  // mirror of these entries.
+  {
+    name: 'crm_loss_reasons table (VISION-3340 #31, loss-reason taxonomy)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS crm_loss_reasons (
+        id          SERIAL       PRIMARY KEY,
+        code        VARCHAR(50)  NOT NULL UNIQUE,
+        label_uz    TEXT,
+        label_ru    TEXT,
+        is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+        sort_order  INTEGER      NOT NULL DEFAULT 0,
+        created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `,
+  },
+  {
+    name: 'crm_loss_reasons active index (VISION-3340 #31)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_crm_loss_reasons_active ON crm_loss_reasons (is_active, sort_order)`,
+  },
+  {
+    name: 'crm_deals.lost_reason_id column (VISION-3340 #31, structured loss reason)',
+    sql: `ALTER TABLE IF EXISTS crm_deals ADD COLUMN IF NOT EXISTS lost_reason_id INTEGER REFERENCES crm_loss_reasons(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'crm_deals.lost_reason_id index (VISION-3340 #31)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_crm_deals_lost_reason_id ON crm_deals (lost_reason_id)`,
+  },
 ];

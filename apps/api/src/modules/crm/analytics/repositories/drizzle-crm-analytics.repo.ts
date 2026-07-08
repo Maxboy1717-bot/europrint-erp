@@ -12,6 +12,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { db, rawSql, runQuery } from '@shared/db';
+import { Ok, Err, Result } from '@common/result';
 import type {
   ChurnMaxVersionRow,
   ChurnModelRow,
@@ -20,6 +21,7 @@ import type {
   FunnelStageRow,
   FunnelVelocityRow,
   ICrmAnalyticsRepo,
+  LossReasonRollupRow,
   RfmClusterRow,
 } from './i-crm-analytics.repo';
 
@@ -191,6 +193,34 @@ export class DrizzleCrmAnalyticsRepository implements ICrmAnalyticsRepo {
     } catch (e: unknown) {
       this.logger.error(`getFunnelVelocityData xatosi: ${(e as Error).message}`);
       throw e;
+    }
+  }
+
+  // ----- Loss reasons (VISION-3340 #31) -----
+
+  // Rollup of lost deals grouped by loss-reason taxonomy. LEFT JOIN so lost deals with a
+  // NULL lost_reason_id (no structured reason yet) are still counted (label_* NULL). Lost
+  // deals are identified by the app business status stored in the free-form `stage_id`
+  // column (= 'lost'; the compat crm_deals def aliases `status` → stage_id).
+  async getLossReasonRollup(): Promise<Result<LossReasonRollupRow[]>> {
+    try {
+      const rows = await runQuery<LossReasonRollupRow>(sql`
+        SELECT
+          d.lost_reason_id      AS lost_reason_id,
+          lr.code               AS code,
+          lr.label_uz           AS label_uz,
+          lr.label_ru           AS label_ru,
+          COUNT(*)::int         AS deal_count
+        FROM crm_deals d
+        LEFT JOIN crm_loss_reasons lr ON lr.id = d.lost_reason_id
+        WHERE d.stage_id = 'lost' AND d.deleted_at IS NULL
+        GROUP BY d.lost_reason_id, lr.code, lr.label_uz, lr.label_ru
+        ORDER BY deal_count DESC
+      `);
+      return Ok(Array.isArray(rows) ? rows : []);
+    } catch (e: unknown) {
+      this.logger.error(`getLossReasonRollup xatosi: ${(e as Error).message}`);
+      return Err(`getLossReasonRollup: ${(e as Error).message}`);
     }
   }
 

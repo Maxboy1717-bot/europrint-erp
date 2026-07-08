@@ -131,6 +131,28 @@ export type CustomerCompetitor = typeof customerCompetitors.$inferSelect;
 export type InsertCustomerCompetitor = z.infer<typeof insertCustomerCompetitorSchema>;
 
 
+// CRM loss-reason taxonomy (VISION-3340 #31) — structured, reusable reasons a deal was
+// lost, so crm_deals.lost_reason_id can be rolled up for analytics instead of only the
+// free-text lost_reason note. Rows are owner master-data (Q-40 — seeded by nobody in code).
+// Live table created via apps/api/src/shared/db/migrations/crm-loss-reasons-2026-07-08.sql
+// + the matching migrations-schema.ts entries.
+export const crmLossReasons = pgTable("crm_loss_reasons", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  labelUz: text("label_uz"),
+  labelRu: text("label_ru"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_crm_loss_reasons_active").on(t.isActive, t.sortOrder),
+]);
+
+export const insertCrmLossReasonSchema = createInsertSchema(crmLossReasons).omit({ id: true, createdAt: true } as never);
+export type CrmLossReason = typeof crmLossReasons.$inferSelect;
+export type InsertCrmLossReason = z.infer<typeof insertCrmLossReasonSchema>;
+
+
 // CRM Deals (Kelishuvlar - b_crm_deal) - MARKAZIY ENTITY
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
@@ -205,6 +227,9 @@ export const crmDeals = pgTable("crm_deals", {
   wonAt: timestamp("won_at"),
   closedAt: timestamp("closed_at"),
   lostReason: text("lost_reason"),
+  // VISION-3340 #31: structured loss-reason taxonomy FK (nullable, additive). Free-text
+  // lostReason above is kept as a supplementary note. ON DELETE SET NULL — see migration.
+  lostReasonId: integer("lost_reason_id").references(() => crmLossReasons.id, { onDelete: "set null" }),
   createdBy: integer("created_by"),
   customerId: integer("customer_id"),
   managerId: integer("manager_id"),
@@ -225,6 +250,7 @@ export const crmDeals = pgTable("crm_deals", {
   index("idx_crm_deals_tenant_id").on(t.tenantId),
   index("idx_crm_deals_closed").on(t.closed),
   index("idx_crm_deals_next_activity_at").on(t.nextActivityAt),
+  index("idx_crm_deals_lost_reason_id").on(t.lostReasonId),
 ]);
 
 

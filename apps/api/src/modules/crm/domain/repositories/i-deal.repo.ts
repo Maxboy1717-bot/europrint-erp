@@ -15,6 +15,11 @@ export interface IDealRepository {
   update(deal: Deal): Promise<Result<void>>;
   delete(id: number): Promise<Result<void>>;
   countByStatus(status: string): Promise<Result<number>>;
+  /**
+   * VISION-3340 #31 — persist the structured loss-reason taxonomy FK
+   * (crm_deals.lost_reason_id) on a lost deal. Additive; free-text lost_reason untouched.
+   */
+  updateLostReasonId(dealId: number, lostReasonId: number): Promise<Result<void>>;
 }
 
 /**
