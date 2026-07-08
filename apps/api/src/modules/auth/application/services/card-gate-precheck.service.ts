@@ -4,13 +4,17 @@
  *   login-gate. Computes, against LIVE data, how many currently-active users
  *   would be blocked the moment `CARD_LOGIN_GATE_ENABLED` flips to `true`.
  *
- *   The rule mirrors `login.service.ts` EXACTLY (do NOT diverge):
+ *   The rule mirrors `login.service.ts:129` EXACTLY (do NOT diverge):
  *     - exempt roles {super_admin, admin, director} always pass (never counted
  *       as blocked) — see {@link CARD_EXEMPT_ROLES} / login.service.isCardExemptRole;
- *     - a non-exempt active user is BLOCKED iff it has no active card:
- *         users.card_id IS NULL  AND  0 live employee_cards
- *       where a live employee_card = is_active = true AND (ended_at IS NULL OR
- *       ended_at > NOW()) — identical to drizzle-auth.repo.resolveCardGate.
+ *     - a non-exempt active user is BLOCKED iff it has 0 live employee_cards
+ *       (i.e. resolveCardGate.activeCardCount === 0), where a live employee_card =
+ *       is_active = true AND (ended_at IS NULL OR ended_at > NOW()). The gate does
+ *       NOT consider users.card_id for the block decision (card_id only feeds the
+ *       JWT primary-card claim), so this pre-check must not either.
+ *       [VISION-3340 fix 2026-07-08: dropped a stale `card_id IS NULL` condition
+ *       that made this pre-check more lenient than the real gate — it could report
+ *       a cardless-but-card_id-set user as "not blocked" while login blocked them.]
  *
  *   This service NEVER mutates anything. It only reads. It exists so the owner
  *   can make the gate-ON decision (Q8 vision-lock) with a real 401-surge number
@@ -78,14 +82,13 @@ export class CardGatePrecheckService {
     try {
       const summaryRes = await runQuery<SummaryRow>(sql`
         WITH active_users AS (
-          SELECT id, role, employee_id, card_id
+          SELECT id, role, employee_id
           FROM users
           WHERE is_active = true
         ),
         card_status AS (
           SELECT
             au.role,
-            (au.card_id IS NOT NULL) AS has_direct_card,
             (SELECT COUNT(*) FROM employee_cards ec
                WHERE ec.employee_id = au.employee_id
                  AND ec.is_active = true
@@ -99,12 +102,11 @@ export class CardGatePrecheckService {
           )::int AS exempt_total,
           COUNT(*) FILTER (
             WHERE lower(role) NOT IN ('super_admin', 'admin', 'director')
-              AND NOT has_direct_card
               AND active_card_count = 0
           )::int AS cardless_blocked,
           COUNT(*) FILTER (
             WHERE lower(role) NOT IN ('super_admin', 'admin', 'director')
-              AND (has_direct_card OR active_card_count > 0)
+              AND active_card_count > 0
           )::int AS carded_non_exempt
         FROM card_status
       `);
@@ -114,14 +116,13 @@ export class CardGatePrecheckService {
 
       const byRoleRes = await runQuery<ByRoleRow>(sql`
         WITH active_users AS (
-          SELECT id, role, employee_id, card_id
+          SELECT id, role, employee_id
           FROM users
           WHERE is_active = true
         ),
         card_status AS (
           SELECT
             au.role,
-            (au.card_id IS NOT NULL) AS has_direct_card,
             (SELECT COUNT(*) FROM employee_cards ec
                WHERE ec.employee_id = au.employee_id
                  AND ec.is_active = true
@@ -131,7 +132,6 @@ export class CardGatePrecheckService {
         SELECT role, COUNT(*)::int AS n
         FROM card_status
         WHERE lower(role) NOT IN ('super_admin', 'admin', 'director')
-          AND NOT has_direct_card
           AND active_card_count = 0
         GROUP BY role
         ORDER BY n DESC
