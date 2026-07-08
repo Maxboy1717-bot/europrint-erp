@@ -547,4 +547,84 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'nps_requests pending-status index (2026-06-30)',
     sql: `CREATE INDEX IF NOT EXISTS idx_nps_req_pending ON nps_requests (status) WHERE status = 'pending'`,
   },
+  // APPROVED: Claude (egasi vakolati) 2026-06-20 — org_node_portret.card_id enables
+  // per-CARD portret (not just per-node/dept), EP-ORG Phase 5 Tab 7. Already-committed
+  // consumers (card.controller.ts, card.repository.ts, card.service.ts,
+  // node-portret.repository.ts, ddl-migrations.ts) depend on this column; only this
+  // migration's registration was missing.
+  {
+    name: 'org_node_portret.card_id column (2026-06-19, egasi-approved)',
+    sql: `ALTER TABLE public.org_node_portret ADD COLUMN IF NOT EXISTS card_id INTEGER REFERENCES public.org_functions(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'org_node_portret.card_id partial index (2026-06-19)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_org_node_portret_card_id ON public.org_node_portret(card_id) WHERE card_id IS NOT NULL`,
+  },
+  // APPROVED: Claude (egasi vakolati) 2026-06-20 — razryad_levels exam configurability
+  // (EP-ORG-055 pass threshold + EP-ORG-056 max retakes). DEFAULT NULL is deliberate per
+  // owner's own "no hardcoded default" instruction — NULL means "owner hasn't set a value
+  // yet", not a fallback threshold. Already-committed consumers (lms-completion.service.ts,
+  // card.repository.ts, exam-passed-razryad.listener.ts, razryad-history.repository.ts,
+  // razryad-history.service.ts) depend on these columns; only this migration's registration
+  // was missing.
+  {
+    name: 'razryad_levels.exam_pass_threshold + max_retakes columns (2026-06-19, egasi-approved)',
+    sql: `ALTER TABLE public.razryad_levels ADD COLUMN IF NOT EXISTS exam_pass_threshold NUMERIC(5,2) DEFAULT NULL, ADD COLUMN IF NOT EXISTS max_retakes INTEGER DEFAULT NULL`,
+  },
+  {
+    name: 'razryad_levels exam_pass_threshold/max_retakes CHECK constraints (2026-06-19)',
+    sql: `
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_razryad_exam_pass_threshold') THEN
+          ALTER TABLE public.razryad_levels
+            ADD CONSTRAINT chk_razryad_exam_pass_threshold
+            CHECK (exam_pass_threshold IS NULL OR exam_pass_threshold BETWEEN 0 AND 100);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_razryad_max_retakes') THEN
+          ALTER TABLE public.razryad_levels
+            ADD CONSTRAINT chk_razryad_max_retakes
+            CHECK (max_retakes IS NULL OR max_retakes >= 0);
+        END IF;
+      END $$
+    `,
+  },
+  // APPROVED: Claude (egasi vakolati) 2026-06-20 — org_departments unit fields for the
+  // Bo'lim→Sex→Uskuna→Ishchi hierarchy (code/QYM-uz/QYM-ru/camera-zone/Telegram-group-ID).
+  // Already-committed consumers (hr-map-compat.service.ts, erp-camera.repository.ts,
+  // drizzle-camera-dashboard.repo.ts, drizzle-camera.repo.ts, drizzle-iot-main.repo.ts)
+  // depend on these columns; only this migration's registration was missing.
+  {
+    name: 'org_departments unit fields: code/qym_uz/qym_ru/camera_zone_id/telegram_group_id (2026-06-19, egasi-approved)',
+    sql: `ALTER TABLE public.org_departments ADD COLUMN IF NOT EXISTS code VARCHAR(50), ADD COLUMN IF NOT EXISTS qym_uz TEXT, ADD COLUMN IF NOT EXISTS qym_ru TEXT, ADD COLUMN IF NOT EXISTS camera_zone_id TEXT, ADD COLUMN IF NOT EXISTS telegram_group_id TEXT`,
+  },
+  // APPROVED: egasi 2026-06-30 "kod-tomonni boshla / vizyon bo'yicha to'liq" — Modul 09 (QC)
+  // o'lchov asboblari kalibrovkasi (09.36). Already-committed consumer
+  // (instrument-calibration.repository.ts) depends on this table; only this migration's
+  // registration was missing.
+  {
+    name: 'qc_instrument_calibrations table (2026-06-30, egasi-approved)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS qc_instrument_calibrations (
+        id                  SERIAL PRIMARY KEY,
+        instrument_name     TEXT        NOT NULL,
+        instrument_code     TEXT,
+        location            TEXT,
+        responsible_user_id INTEGER,
+        interval_days       INTEGER     NOT NULL DEFAULT 365,
+        last_calibrated_at  DATE,
+        next_due_at         DATE,
+        certificate_number  TEXT,
+        status              TEXT        NOT NULL DEFAULT 'active',
+        notes               TEXT,
+        created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT ck_qc_calib_status CHECK (status IN ('active','retired'))
+      )
+    `,
+  },
+  {
+    name: 'qc_instrument_calibrations due-lookup index (2026-06-30)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_qc_calib_due ON qc_instrument_calibrations (next_due_at) WHERE status = 'active'`,
+  },
 ];
