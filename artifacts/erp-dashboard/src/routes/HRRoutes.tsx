@@ -18,6 +18,7 @@ const ShiftSchedule = lazy(() => import("@/pages/ShiftSchedule"));
 const ShiftTypesConfig = lazy(() => import("@/pages/ShiftTypesConfig"));
 const RazryadLevelConfig = lazy(() => import("@/pages/RazryadLevelConfig"));
 const ErrorCatalogConfig = lazy(() => import("@/pages/ErrorCatalogConfig"));
+const QuestionBankConfig = lazy(() => import("@/pages/QuestionBankConfig"));
 const HRDashboard = lazy(() => import("@/pages/HRDashboard"));
 const HRCapitalTests = lazy(() => import("@/pages/HRCapitalTests"));
 const OrgStructureHierarchy = lazy(() => import("@/pages/OrgStructureHierarchy"));
@@ -73,6 +74,7 @@ export const HR_ROUTES: [string, React.ComponentType][] = [
   ['/org-structure/hierarchy',          OrgStructureHierarchy],
   ['/org-structure/hierarchy/node/:id', OrgNodeDetail],
   ['/org-structure/error-catalog',      ErrorCatalogConfig],  // XATO-KATALOG: defect-dropdown manbai CRUD
+  ['/org-structure/question-bank',      QuestionBankConfig],  // EP-ORG-046: AI-imtihon savollar banki CRUD
   ['/hr/onboarding',                    HROnboarding],
   ['/hr/vacation-sick',                 HRVacationSick],
   ['/hr/succession',                    HRSuccessionPlanning],
