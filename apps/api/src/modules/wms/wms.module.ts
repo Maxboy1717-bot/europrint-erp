@@ -85,6 +85,7 @@ import { WMS_REPO } from './domain/repositories/wms.repository';
 import { QcPassedListener } from './infrastructure/event-handlers/qc-passed.listener';
 import { QcFailedFgListener } from './infrastructure/event-handlers/qc-failed-fg.listener';
 import { MesCompletedFgListener } from './infrastructure/event-handlers/mes-completed-fg.listener';
+import { DeliveryGoodsIssuedListener } from './infrastructure/event-handlers/delivery-goods-issued.listener';
 import { WMS_INVENTORY_REPO } from './inventory/i-wms-inventory.repo';
 import { DrizzleWmsInventoryRepository } from './inventory/drizzle-wms-inventory.repo';
 import { InventoryService } from './inventory/inventory.service';
@@ -145,7 +146,7 @@ const handlers = [
   DeleteRentalHandler,
 ];
 
-const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener, RopTriggerHandler, SupplierRatingListener];
+const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener, DeliveryGoodsIssuedListener, RopTriggerHandler, SupplierRatingListener];
 
 @Module({
   imports: [
