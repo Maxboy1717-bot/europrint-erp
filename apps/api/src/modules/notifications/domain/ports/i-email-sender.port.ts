@@ -10,11 +10,24 @@ import { Result } from '@common/result';
 
 export const EMAIL_SENDER = Symbol('EMAIL_SENDER');
 
+/**
+ * Binary file attached to an outgoing email (e.g. a generated PDF — Karta
+ * Portret export). `content` is the raw file bytes; `contentType` defaults
+ * to the adapter's best guess from `filename` when omitted.
+ */
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+}
+
 export interface EmailOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  /** Optional file attachments (e.g. PDF exports). Empty/omitted = no attachment. */
+  attachments?: EmailAttachment[];
 }
 
 export interface IEmailSender {

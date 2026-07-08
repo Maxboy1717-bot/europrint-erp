@@ -449,6 +449,33 @@ export class OrgStructureController {
     return unwrapOrInternal(await this.portretService.savePortret(nodeId, dto.portret_data as Record<string, unknown>, creatorId));
   }
 
+  // Read-only export — same @Roles baseline as GET .../portret (class-level list).
+  @ApiOperation({ summary: 'Export node portret as PDF' })
+  @ApiResponse({ status: 200, description: 'OK — application/pdf' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get('nodes/:nodeId/portret/pdf')
+  async getNodePortretPdf(@Param('nodeId', ParseIntPipe) nodeId: number, @Res() reply: FastifyReply) {
+    const r = await this.portretService.generatePortretPdf(nodeId);
+    assertOk(r);
+    const filename = `portret-karta-${nodeId}.pdf`;
+    reply
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="${filename}"`)
+      .send(r.data);
+  }
+
+  // G1: write override — drops 'viewer' from the class-level read baseline
+  // (sends email — a side-effecting action, not a plain read).
+  @Roles('admin', 'manager', 'supervisor', 'director', 'hr', 'hr_manager')
+  @ApiOperation({ summary: 'Email node portret PDF to HR managers + the card employee(s)' })
+  @ApiResponse({ status: 200, description: 'OK — { sent, failed, recipients }' })
+  @ApiResponse({ status: 400, description: 'Bad request — no recipient email found' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post('nodes/:nodeId/portret/email')
+  async emailNodePortret(@Param('nodeId', ParseIntPipe) nodeId: number) {
+    return unwrapOrInternal(await this.portretService.sendPortretEmail(nodeId));
+  }
+
   @ApiOperation({ summary: 'Get approval chain' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })

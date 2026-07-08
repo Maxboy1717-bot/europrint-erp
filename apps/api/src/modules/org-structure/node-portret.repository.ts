@@ -6,7 +6,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { org_node_portret, node_hr_requests, appUsers } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 import { ensureOrgNodePortretTable, ensureNodeHrRequestsTable } from '@common/database/ddl-migrations';
@@ -133,6 +133,60 @@ export class NodePortretRepository {
         created_at:   node_hr_requests.created_at,
       });
       return (rows[0] ?? {}) as Row;
+    }, 'DB_ERROR');
+  }
+
+  // ─── Portret PDF / Email ─────────────────────────────────────────────────────
+
+  /**
+   * Karta (org_departments — kanonik "node=karta" jadval, MASSIV-100) + razryad
+   * ma'lumotlarini o'qiydi: lavozim nomi, ЦКП target, oylik vilkasi, razryad.
+   * razryad_levels — ixtiyoriy FK (razryad_level_id NULL bo'lishi mumkin), shuning
+   * uchun LEFT JOIN. org_departments/razryad_levels — poydevor jadvallar (ensureTables
+   * shart emas, org_node_portret/node_hr_requests dan farqli — ular boot'da mavjud).
+   */
+  async getNodeCardInfo(nodeId: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        SELECT
+          d.id, d.name, d.name_ru, d.description, d.node_type, d.parent_id,
+          d.tskp, d.tskp_ru, d.tskp_target, d.tskp_measurement_unit,
+          d.salary_type, d.min_salary, d.max_salary, d.razryad_level_id,
+          p.name AS parent_name,
+          r.level AS razryad_level, r.name AS razryad_name,
+          r.min_requirement AS razryad_min_requirement
+        FROM org_departments d
+        LEFT JOIN org_departments p ON p.id = d.parent_id
+        LEFT JOIN razryad_levels r ON r.id = d.razryad_level_id
+        WHERE d.id = ${nodeId}
+        LIMIT 1
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * Portret PDF/email qabul qiluvchilar ro'yxati: faol HR menejerlar (role
+   * hr/hr_manager) + shu kartaga biriktirilgan xodim(lar) (employee_org_departments,
+   * is_active=true). Email bo'sh yoki foydalanuvchi soft-delete bo'lsa chiqarib
+   * tashlanadi; DISTINCT — HR bo'lib, shu kartaga ham biriktirilgan xodim ikki marta
+   * kelmaydi.
+   */
+  async getPortretRecipientEmails(nodeId: number): Promise<Result<string[]>> {
+    return safeCall(async () => {
+      const rows = await runQuery<{ email: string }>(sql`
+        SELECT DISTINCT email FROM (
+          SELECT email FROM users
+          WHERE role IN ('hr', 'hr_manager') AND is_active = true
+            AND deleted_at IS NULL AND email IS NOT NULL
+          UNION
+          SELECT u.email FROM employee_org_departments eod
+          JOIN users u ON u.id = eod.user_id
+          WHERE eod.org_department_id = ${nodeId} AND eod.is_active = true
+            AND u.email IS NOT NULL AND u.deleted_at IS NULL
+        ) recipients
+      `);
+      return rows.rows.map((r) => r.email);
     }, 'DB_ERROR');
   }
 }
