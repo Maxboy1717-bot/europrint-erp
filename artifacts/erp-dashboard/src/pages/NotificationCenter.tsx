@@ -14,13 +14,22 @@ import { useTranslation } from '@/lib/i18n';
 
 interface Notification {
   id: number;
-  type: string;
+  // The /api/pos/notifications view returns the category as `notificationType`; some legacy
+  // rows also carry `type`. The page previously read only `n.type` (undefined) so every item
+  // showed the generic fallback and the type-filter collapsed. Accept both — see catOf().
+  type?: string;
+  notificationType?: string;
   title: string;
   body: string;
   entityType?: string;
   entityId?: number;
   isRead: boolean;
   createdAt: string;
+}
+
+/** Resolve a notification's category from either field name (API sends notificationType). */
+function catOf(n: Notification): string {
+  return n.notificationType ?? n.type ?? '';
 }
 
 const TYPE_CONFIG: Record<string, { icon: string; color: string; labelKey: string }> = {
@@ -88,11 +97,11 @@ export default function NotificationCenter() {
   const filtered = notifications.filter(n => {
     if (filter === "unread" && n.isRead) return false;
     if (filter === "read" && !n.isRead) return false;
-    if (typeFilter !== "all" && n.type !== typeFilter) return false;
+    if (typeFilter !== "all" && catOf(n) !== typeFilter) return false;
     return true;
   });
 
-  const types = Array.from(new Set(notifications.map(n => n.type))).sort();
+  const types = Array.from(new Set(notifications.map(n => catOf(n)).filter(Boolean))).sort();
   const stats = {
     total: notifications.length,
     unread: notifications.filter(n => !n.isRead).length,
@@ -155,10 +164,10 @@ export default function NotificationCenter() {
           {!loading && filtered.length > 0 && (
             <div className="divide-y divide-gray-100">
               {filtered.map(n => {
-                const cfgBase = TYPE_CONFIG[n.type];
+                const cfgBase = TYPE_CONFIG[catOf(n)];
                 const cfg = cfgBase
                   ? { icon: cfgBase.icon, color: cfgBase.color, label: t(cfgBase.labelKey) }
-                  : { icon: "📬", color: "bg-gray-100 text-gray-700", label: n.type };
+                  : { icon: "📬", color: "bg-gray-100 text-gray-700", label: catOf(n) };
                 return (
                   <div
                     key={n.id}
