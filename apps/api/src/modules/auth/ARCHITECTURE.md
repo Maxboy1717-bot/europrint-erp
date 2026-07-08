@@ -125,7 +125,7 @@ auth/
    - Complexity validation (8+ chars, mixed case, numbers, special chars)
 
 3. **JWT Token Management**
-   - TTL: 24 hours (configurable via JWT_EXPIRES_IN)
+   - TTL: 15 minutes (configurable via JWT_ACCESS_TOKEN_TTL; legacy fallback JWT_EXPIRES_IN)
    - Blacklist support (Redis - placeholder)
 
 4. **Audit Logging**
@@ -137,7 +137,7 @@ auth/
 
 ```env
 JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=24h
+JWT_ACCESS_TOKEN_TTL=15m
 ```
 
 ## Usage Examples
