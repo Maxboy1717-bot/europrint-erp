@@ -31,6 +31,10 @@ export const AddMovementLineSchema = z.object({
   binLocation:    z.string().max(100).optional(),
   serialNumber:   z.string().max(MAX_NAME_LENGTH).optional(),
   lotNumber:      z.string().max(MAX_SHORT_TEXT).optional(),
+  // §19 #25 FIFO/FEFO partiya: the KIRIM line's batch/lot. The FE sends batchNumber; this schema
+  // is strict (no .passthrough()) so it was stripped, and lotNumber was accepted-then-dropped in
+  // addLines. Both now persist to pos_movement_lines.batch_number / lot_number.
+  batchNumber:    z.string().max(100).optional(),
   // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN uchun MAJBURIY (egasi:
   // "barcode bo'lmasa qabul qilmaydi", kitob 18400-18402) — sxemada optional,
   // tur-bog'liq majburiylik CreateMovementSchema.superRefine + PosMovementService

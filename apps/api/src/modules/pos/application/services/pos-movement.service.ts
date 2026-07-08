@@ -510,6 +510,10 @@ export class PosMovementService {
         fifoSequence:    seq++,
         // G1-1 (2026-07-02): FE yuborgan barkod endi saqlanadi (avval tashlanardi).
         barcode:         line.barcode ?? undefined,
+        // §19 #25 partiya/lot: FE batchNumber (avval strict-DTO tashlab yuborardi) + lotNumber
+        // (avval qabul-qilinib-tashlanardi) endi batch_number / lot_number ustunlariga yoziladi.
+        batchNumber:     line.batchNumber ?? undefined,
+        lotNumber:       line.lotNumber ?? undefined,
         notes:           line.notes ?? undefined,
       };
     });

@@ -182,6 +182,11 @@ export const posMovementLines = pgTable('pos_movement_lines', {
   // (egasi: "barcode bo'lmasa qabul qilmaydi", kitob 18400-18402). Migration:
   // pos-movement-lines-barcode-2026-07-02.sql (ADD COLUMN IF NOT EXISTS, additive).
   barcode:             text('barcode'),
+  // Partiya/lot (§19 #25 FIFO/FEFO traceability): batch_number (Code-128 partiya) + lot_number
+  // (seriya). Live columns existed but were unmapped in the ORM, so the KIRIM line's
+  // batchNumber/lotNumber were dropped. ADD-ONLY superset (no migration) — mirrors `barcode`.
+  batchNumber:         varchar('batch_number', { length: 100 }),
+  lotNumber:           text('lot_number'),
   sortOrder:           integer('sort_order').notNull().default(0),
   notes:               text('notes'),
   createdAt:           timestamp('created_at').notNull().defaultNow(),
