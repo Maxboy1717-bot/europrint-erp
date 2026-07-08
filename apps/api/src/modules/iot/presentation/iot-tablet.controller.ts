@@ -377,6 +377,13 @@ export class IotTabletController {
   @UseGuards(TabletTokenGuard)
   async createProductionSession(@Body() body: unknown) {
     const dto = ProductionSessionSchema.parse(body ?? {});
+    // Resolve the canonical FE fields with back-compat aliases. equipment_id and machine_id
+    // both denote the machine, so populate each from whichever id was supplied.
+    const num = (v: unknown): number | null => (v != null && v !== '' ? Number(v) : null);
+    const poNum  = num(dto.productionOrderId ?? dto.orderId);
+    const eqNum  = num(dto.equipmentId ?? dto.machineId);
+    const mcNum  = num(dto.machineId ?? dto.equipmentId);
+    const tgtNum = num(dto.targetQuantity);
     const r = await db.execute(sql`
       INSERT INTO production_sessions (
         session_number, production_order_id, equipment_id, worker_id, status,
@@ -385,10 +392,10 @@ export class IotTabletController {
         order_id, machine_id, shift_id, created_at, updated_at
       ) VALUES (
         'SES-' || extract(epoch from now())::bigint,
-        ${dto.orderId ? Number(dto.orderId) : 0},
-        0, 0, 'pending', 0, 0, 0, 0, 0,
-        ${dto.orderId ? Number(dto.orderId) : null},
-        ${dto.machineId ? Number(dto.machineId) : null},
+        ${poNum ?? 0},
+        ${eqNum ?? 0}, 0, 'pending', ${tgtNum ?? 0}, 0, 0, 0, 0,
+        ${poNum},
+        ${mcNum},
         ${dto.shiftId ? Number(dto.shiftId) : null},
         NOW(), NOW()
       ) RETURNING *

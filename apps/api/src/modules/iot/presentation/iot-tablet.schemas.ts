@@ -40,6 +40,14 @@ export const ProductionSessionSchema = z.object({
   orderId:   z.union([z.string(), z.number()]).optional(),
   machineId: z.union([z.string(), z.number()]).optional(),
   shiftId:   z.union([z.string(), z.number()]).optional(),
+  // The live tablet FE (useIoTTablet.createSession) sends these canonical names, but the
+  // schema declared only orderId/machineId, so productionOrderId/equipmentId/targetQuantity
+  // were dropped and the INSERT hardcoded 0/0 + derived the order from the absent orderId.
+  // That fed MesCompletedEvent(ppId=0) (orphan QC), a 0 target (broken OEE/completion), and
+  // no machine attribution. Accept them + keep orderId/machineId as back-compat aliases.
+  productionOrderId: z.union([z.string(), z.number()]).optional(),
+  equipmentId:       z.union([z.string(), z.number()]).optional(),
+  targetQuantity:    z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 
 // Wave 11 P1: SOS alert payload mirrors the existing PWA call site
