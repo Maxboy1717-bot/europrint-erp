@@ -36,6 +36,51 @@
 | CE-2 (HIGH) — `/api/director/approvals/pending?limit=5` 422 | **FIXED** | `275fe94c` | Root cause: `GetPendingDtoSchema`'s `page`/`limit` used `z.number()`, but `@Query()` always delivers HTTP query-string values as strings — fixed with `z.coerce.number()`, matching every sibling query schema in the module. Live-verified: reproduced the exact 422 before, confirmed 200 with real approval data after, using the exact reported repro. |
 | CE-3 (MEDIUM) — 3 missing i18n keys in `PendingApprovalsCard.tsx` | **FIXED** | `8bac9d2e` | `kutilayotganTasdiqlar`/`hitlTasdiqSorovlari`/`kutayotganTasdiqYoq` were missing from all 3 locale files (not just uz) — real translations added to all 3. Note: the FE's `t(key, fallback)` 2-arg pattern already prevented literal raw-key display (falls back to inline Uzbek text on any missing key), so the actual symptom was ru/uz-cyr users silently seeing Uzbek text for these 3 labels, not raw keys as literally described — same underlying gap, corrected symptom description. |
 
+## VISION-3340 batch1 fix-workflow — CHECKPOINT (2026-07-08)
+
+Full routing detail: **`docs/audit/OWNER-QUEUE-2026-07-08.md`**. Summary:
+
+**Workflow `wf_1eee15f8-be1` (43 units for the 59 fixable items): `status: completed`
+but only 9/43 units actually succeeded.** ~34 units FAILED on `You've hit your weekly
+limit · resets 9am (Asia/Tashkent)`; 5 of those stalled ~1000s and left **partial edits**
+in the shared tree first (agents ran concurrently in ONE working dir, no worktree
+isolation). The `43/43 processed` line counts dispatched, not implemented, units.
+
+| Bucket | Count | Detail |
+|---|---|---|
+| Succeeded + committed (1 commit/item, tested) | 4 | #1 `9f3f3e61`, #3 `0db81c59`, #4 `5d112328`, #5 `5500a0aa` |
+| Succeeded, UNCOMMITTED (need review+test+commit) | 5 | units 08, 10, 11, 18, 19 |
+| FAILED on weekly limit (re-run after 9am reset) | ~34 | some left partial fragments in tree |
+
+**Working-tree hazard (do NOT bulk-commit):** ~45 tracked-modified files + many
+untracked = the 9 units' output + failed-unit fragments + *pre-existing* multi-session
+uncommitted accumulation (June-30 vizyon wave: notification-schedules/hr-nda/qc-calib;
+question-bank; error-catalog). `tsc --noEmit` (apps/api) = exit 0, but that does not
+prove partial fragments are complete. Recommended follow-up: re-run the ~34 failed units
+with `isolation:'worktree'` after the reset; commit the 5 done units one-per-item first;
+triage the pre-existing accumulation separately. **No new large workflow launched this phase.**
+
+### Owner-routed items (nothing executed until owner responds)
+
+- **Dead role-file deletion (Part 1): ALREADY DONE — no yes/no needed.** `role.enum.ts`
+  + `types/role.ts` barrel were deleted inside M8 commit `5b68d53b` (fresh check: absent
+  on disk, 0 importers). The earlier "BLOCKED-OWNER-DECISION" flag was already corrected
+  to DONE in `ac476cc0`. Premise was stale.
+
+- **6 schema-approval items — PENDING-OWNER-DECISION** (ordered by downstream impact,
+  plain-language questions in the queue doc):
+  1. GL `entries.cost_center_id` — tag GL postings to a cost center? (owner-protected area)
+  2. PP `pp_reason_codes` + `pp_shift_plans` — 2 new tables for reason codes + real shift plans?
+  3. CRM `crm_deals.sales_order_id` varchar→integer + FK — irreversible type change (empty now)?
+  4. CRM `crm_loss_reasons` new lookup + `lost_reason_id` — canonical loss-reason taxonomy?
+  5. CRM `crm_stage_history` new audit table — funnel stage-change audit trail?
+  6. IoT tablet `tablet_id`+`local_seq_no` idempotency columns — offline-retry dedup?
+
+- **123 owner-data/owner-decision items — PENDING-OWNER-INPUT.** 41 owner-data (ranked by
+  highest-leverage data-point: #1 = per-card attributes unblocks 8) + 82 owner-decision
+  (grouped by type: A flip-a-switch / B which-table-is-canonical / C what-rule-applies /
+  D should-feature-exist). Full grouped list + counts: `docs/audit/OWNER-QUEUE-2026-07-08.md`.
+
 ## Active Loops — Summary
 
 | Loop | Scope | Status | Last commit(s) | Last updated | Notes |
