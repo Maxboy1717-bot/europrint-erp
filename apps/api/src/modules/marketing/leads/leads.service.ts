@@ -6,6 +6,7 @@
 import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
+import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
 import { LeadsRepository } from './leads.repository';
 
 @Injectable()
@@ -50,10 +51,21 @@ export class LeadsService {
 
   async create(dto: Record<string, unknown>, _createdBy?: number) {
     return safeCall(async () => {
+      // vision #2 (14-marketing): normalize the phone on entry — strip spaces/dashes/parens so
+      // "+998 (90) 123-45-67" is stored as "+998901234567". Lenient (Q-39): a value that isn't
+      // strict E.164 is still stored in stripped form (with a warn) rather than rejected, so
+      // existing lead-create flows keep working. Strict-reject would be an owner policy add.
+      const rawPhone = (dto['phone'] as string | undefined) || undefined;
+      let normalizedPhone = rawPhone;
+      if (rawPhone) {
+        const p = PhoneNumber.create(rawPhone);
+        normalizedPhone = p.ok ? p.data.value : PhoneNumber.fromRaw(rawPhone).value;
+        if (!p.ok) this.logger.warn(`marketing lead phone not E.164 after normalize: "${rawPhone}"`);
+      }
       const row: Record<string, unknown> = {
         name: String(dto['name'] ?? dto['firstName'] ?? ''),
         company: (dto['company'] as string | undefined) || undefined,
-        phone: (dto['phone'] as string | undefined) || undefined,
+        phone: normalizedPhone,
         email: (dto['email'] as string | undefined) || undefined,
         source: (dto['source'] as string | undefined) ?? 'website',
         channel: (dto['channel'] as string | undefined) || undefined,

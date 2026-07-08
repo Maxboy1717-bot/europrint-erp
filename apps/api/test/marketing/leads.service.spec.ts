@@ -67,3 +67,30 @@ describe('LeadsService — varchar id + real 404', () => {
     expect(repo.update).not.toHaveBeenCalled();
   });
 });
+
+describe('LeadsService.create — phone normalization (vision #2)', () => {
+  function buildCreate() {
+    const repo = { create: jest.fn().mockResolvedValue(Ok({ id: 'new-lead' })) };
+    const i18n = { t: jest.fn().mockResolvedValue('x') };
+    return { svc: new LeadsService(repo as never, i18n as never), repo };
+  }
+
+  it('normalizes a human-formatted phone to E.164 digits', async () => {
+    const { svc, repo } = buildCreate();
+    await svc.create({ name: 'A', phone: '+998 (90) 123-45-67' });
+    expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ phone: '+998901234567' }));
+  });
+
+  it('stores a non-E.164 phone in stripped form (lenient, not rejected)', async () => {
+    const { svc, repo } = buildCreate();
+    const r = await svc.create({ name: 'A', phone: '12-34' }); // too short for E.164
+    expect(r.ok).toBe(true);
+    expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ phone: '1234' }));
+  });
+
+  it('leaves phone undefined when none is provided', async () => {
+    const { svc, repo } = buildCreate();
+    await svc.create({ name: 'A' });
+    expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ phone: undefined }));
+  });
+});
