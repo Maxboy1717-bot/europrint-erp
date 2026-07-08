@@ -21,6 +21,8 @@ import { TelegramBotsModule } from './telegram-bots/telegram-bots.module';
 import { InspectionModule } from './inspection/inspection.module';
 import { EnpsModule } from './enps/enps.module';
 import { PipModule } from './pip/pip.module';
+// Modul 02 (HR) vizyon 02.41 — tijorat siri NDA imzosi (owner-approved 2026-06-30).
+import { NdaModule } from './nda/nda.module';
 import { FinanceModule } from '../finance/finance.module';
 import { LmsModule } from '../lms/lms.module';
 import { OrgStructureModule } from '../org-structure/org-structure.module';
@@ -43,6 +45,7 @@ import { hrControllers, hrProviders, hrExports } from './hr.providers';
     InspectionModule,
     EnpsModule,
     PipModule,
+    NdaModule,
     // forwardRef: FinanceModule (Moliya-GL-Kassa 2026-07-02) now also imports HrModule
     // (to proxy its payroll-close route through HR's PayrollService.closePeriod) — the
     // two modules depend on each other, so both sides must use forwardRef().
