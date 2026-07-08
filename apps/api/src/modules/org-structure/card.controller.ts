@@ -62,9 +62,12 @@ const CardPortretSchema = z.union([
   z.record(z.unknown()),
 ]);
 
-/** FAZA-09 muzlatish: sabab (ixtiyoriy) + muddat (ISO sana/timestamp yoki null). */
+/**
+ * FAZA-09 muzlatish: sabab MAJBURIY (VISION-3340 #24 — sezgir karta-holat o'zgarishi
+ * sababsiz qabul qilinmaydi, min 3 belgi) + muddat (ISO sana/timestamp yoki null, ixtiyoriy).
+ */
 const CardFreezeSchema = z.object({
-  reason: z.union([z.string().max(2000), z.null()]).optional(),
+  reason: z.string().min(3).max(2000),
   until:  z.union([z.string().max(40), z.null()]).optional(),
 }).strict();
 

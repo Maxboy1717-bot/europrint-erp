@@ -24,7 +24,10 @@ const SENSITIVE_KEYS = new Set([
 // WHY: salary/razryad/reject DTO'lari sabab-matnini turli kalitlarda yuboradi.
 // Audit-log uchun shu kalitlardan birinchi topilgani 'reason' ustuniga yoziladi
 // (placeholder 'success • PATCH undefined' o'rniga real foydalanuvchi sababi).
-const REASON_KEYS = ['reason', 'justification', 'comment', 'note', 'description'] as const;
+// Exported (VISION-3340 #24) so controllers/repos that need to REQUIRE or THREAD a
+// caller-supplied reason (sensitive karta-field edits) reuse this exact list instead
+// of hardcoding a second copy that could drift from what this interceptor extracts.
+export const REASON_KEYS = ['reason', 'justification', 'comment', 'note', 'description'] as const;
 
 function extractReason(body: Record<string, unknown>): string | null {
   for (const k of REASON_KEYS) {

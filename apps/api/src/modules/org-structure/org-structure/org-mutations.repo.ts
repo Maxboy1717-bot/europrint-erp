@@ -17,9 +17,21 @@ import { eq, sql, and } from 'drizzle-orm';
 import { orgDepartments, employeeOrgDepartments } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 import { resolveSeatGuardMode, type SeatGuardMode } from '@common/constants/seat-guard.policy';
+import { REASON_KEYS } from '@common/interceptors/audit.interceptor';
 import { syncToCoreTable } from './sync-helper';
 
 type Row = Record<string, unknown>;
+
+// VISION-3340 #24: same extraction as AuditInterceptor.extractReason — first non-empty
+// REASON_KEYS value on the caller's PATCH body — reused here so razryad_history stores the
+// REAL caller-supplied reason instead of the historical hardcoded literal.
+function extractCallerReason(dto: Record<string, unknown>): string | null {
+  for (const k of REASON_KEYS) {
+    const v = dto[k];
+    if (typeof v === 'string' && v.trim().length > 0) return v.trim().slice(0, 2000);
+  }
+  return null;
+}
 
 @Injectable()
 export class OrgMutationsRepo {
@@ -164,7 +176,7 @@ export class OrgMutationsRepo {
 
       const newRazryadId = dto.razryadLevelId === undefined ? undefined : ((dto.razryadLevelId as number) ?? null);
       if (razryadChanging && newRazryadId !== undefined && newRazryadId !== oldRazryadId) {
-        await this.recordManualRazryadChange(id, employeeId, oldRazryadId, newRazryadId);
+        await this.recordManualRazryadChange(id, employeeId, oldRazryadId, newRazryadId, extractCallerReason(dto));
       }
 
       await syncToCoreTable(finalRow as Row, 'update');
@@ -178,12 +190,19 @@ export class OrgMutationsRepo {
    * ai_suggested=false; reason flags it as a direct/manual edit, distinct from the guarded
    * increase/decrease request flow in razryad-history.service.ts. Never throws (Q-40: never-throw
    * best-effort side-effect — a failed history-insert must not roll back the actual razryad save).
+   *
+   * VISION-3340 #24: `callerReason` is the REAL user-supplied reason (extracted via
+   * extractCallerReason/REASON_KEYS from the PATCH body, enforced non-empty by the controller's
+   * requireReasonForSensitiveFields gate). Falls back to the historical placeholder literal only
+   * for callers that bypass the controller gate (e.g. a future internal caller of this repo
+   * method directly) — never blocks the razryad save itself.
    */
   private async recordManualRazryadChange(
     cardId: number,
     employeeId: number | null,
     oldRazryadId: number | null,
     newRazryadId: number | null,
+    callerReason: string | null,
   ): Promise<void> {
     if (newRazryadId == null) return; // clearing razryad — nothing to record as a "change to" X
     try {
@@ -198,12 +217,14 @@ export class OrgMutationsRepo {
         const newLevel = lvls.rows[0]?.new_level == null ? null : Number(lvls.rows[0].new_level);
         if (oldLevel != null && newLevel != null && newLevel < oldLevel) changeType = 'decrease';
       }
+      const reasonText = callerReason ??
+        "Karta to'g'ridan tahrirlash (manual PATCH, 2-imzo oqimidan tashqari)";
       await runQuery(sql`
         INSERT INTO razryad_history
           (card_id, employee_id, old_razryad_id, new_razryad_id, change_type, reason, ai_suggested, effective_at, created_at)
         VALUES
           (${cardId}, ${employeeId}, ${oldRazryadId}, ${newRazryadId}, ${changeType},
-           'Karta to''g''ridan tahrirlash (manual PATCH, 2-imzo oqimidan tashqari)', false, NOW(), NOW())
+           ${reasonText}, false, NOW(), NOW())
       `);
     } catch {
       // best-effort audit trail — never block the actual razryad save on a logging failure.

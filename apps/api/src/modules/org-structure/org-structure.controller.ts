@@ -5,7 +5,7 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { AuditInterceptor, REASON_KEYS } from '@common/interceptors/audit.interceptor';
 import {
 Controller, Get, HttpException, HttpStatus, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, Res, Logger, UseGuards, UseInterceptors, UsePipes, InternalServerErrorException,
 } from '@nestjs/common';
@@ -96,6 +96,33 @@ const OrgNodeSchema = z.object({
   freeze_until:      z.union([z.string().max(40), z.null()]).optional(),
   reason:            z.union([z.string().max(2000), z.null()]).optional(),
 }).strict();
+
+// VISION-3340 #24: sensitive karta-field edits (razryad/salary/lifecycle-state/head) must carry
+// a caller-supplied reason. AuditInterceptor opportunistically CAPTURES a reason (REASON_KEYS)
+// but never REJECTED a request that omitted one. This gate mirrors the exact same REASON_KEYS
+// list (imported from audit.interceptor — single source of truth, no second copy) so "what
+// counts as a reason" can never drift between capture and enforcement.
+const SENSITIVE_KARTA_FIELDS = [
+  'razryadLevelId', 'salaryType', 'minSalary', 'maxSalary',
+  'otdeleniyeNo', 'currentState', 'headUserId',
+] as const;
+
+function requireReasonForSensitiveFields(data: Record<string, unknown>, ctx: z.RefinementCtx): void {
+  const touchesSensitive = SENSITIVE_KARTA_FIELDS.some((f) => Object.prototype.hasOwnProperty.call(data, f));
+  if (!touchesSensitive) return;
+  const hasReason = REASON_KEYS.some((k) => {
+    const v = data[k as keyof typeof data];
+    return typeof v === 'string' && v.trim().length > 0;
+  });
+  if (!hasReason) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        `Sabab (reason) kiritilishi shart — quyidagi sezgir maydonlardan biri o'zgartirilmoqda: ${SENSITIVE_KARTA_FIELDS.join(', ')}`,
+      path: ['reason'],
+    });
+  }
+}
 
 // T10-04 — bulk Excel import. Body = { rows: OrgNode[] }. Each row reuses the
 // same .strict() OrgNodeSchema (mass-assignment guard) so an import row can set
@@ -210,7 +237,7 @@ export class OrgStructureController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('nodes')
   async create(@Body() body: unknown) {
-    const dto = OrgNodeSchema.parse(body);
+    const dto = OrgNodeSchema.superRefine(requireReasonForSensitiveFields).parse(body);
     return unwrapOrInternal(await this.service.create(dto as Record<string, unknown>));
   }
 
@@ -238,7 +265,7 @@ export class OrgStructureController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('nodes/:id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
-    const dto = OrgNodeSchema.partial().parse(body);
+    const dto = OrgNodeSchema.partial().superRefine(requireReasonForSensitiveFields).parse(body);
     return unwrapOrInternal(await this.service.update(id, dto as Record<string, unknown>));
   }
 
