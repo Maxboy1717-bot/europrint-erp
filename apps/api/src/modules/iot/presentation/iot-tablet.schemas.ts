@@ -176,6 +176,30 @@ export const CrewSchema = z.object({
   roklerId:    z.coerce.number().int().nullable().optional(),
 }).passthrough();
 
+// VISION-3340 #45 (08-mes#8): the tablet marks one setup-checklist item done.
+// `completedBy` is the operator id (optional — the tablet may omit it and let the
+// server store NULL; it is not required to satisfy the gate, only to record who ticked).
+export const ChecklistItemCompleteSchema = z.object({
+  completedBy: z.coerce.number().int().positive().optional(),
+}).passthrough();
+
+// VISION-3340 #45 (08-mes#8): fixed TB-safety / smena-readiness item set seeded for a
+// production session so the (already fail-closed) start gate — checklist_items JOIN
+// setup_checklists — becomes satisfiable. These are STRUCTURAL safety-readiness labels
+// (not owner business master-data), so a fixed default set is correct; they are stored
+// in Uzbek and the tablet FE localises them via t() when rendering. Every item is
+// REQUIRED — the gate blocks session start until each one is completed.
+export const SETUP_CHECKLIST_DEFAULT_ITEMS: ReadonlyArray<{
+  category: string;
+  itemType: string;
+  title: string;
+}> = [
+  { category: 'safety',   itemType: 'machine_clean',  title: 'Mashina tozaligi tekshirildi' },
+  { category: 'safety',   itemType: 'ppe',            title: 'Himoya vositalari (PPE) kiyilgan' },
+  { category: 'material', itemType: 'material_ready', title: 'Material tayyor va joyida' },
+  { category: 'setup',    itemType: 'die_mounted',    title: "Qolip / shtamp o'rnatilgan" },
+];
+
 export const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
 
 /**

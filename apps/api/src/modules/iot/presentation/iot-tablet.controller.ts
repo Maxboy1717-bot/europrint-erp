@@ -16,6 +16,7 @@ import {
   Get,
   Headers,
   Logger,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -63,6 +64,8 @@ import {
   DowntimeEventSchema,
   CrewSchema,
   AcceptHandoverSchema,
+  ChecklistItemCompleteSchema,
+  SETUP_CHECKLIST_DEFAULT_ITEMS,
   coerceWorkerId,
 } from './iot-tablet.schemas';
 
@@ -174,6 +177,7 @@ export class IotTabletController {
       ) RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? {};
+    await this.autoSeedChecklist(row);
     return { data: row };
   }
 
@@ -390,6 +394,7 @@ export class IotTabletController {
       ) RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? {};
+    await this.autoSeedChecklist(row);
     return { data: row };
   }
 
@@ -427,6 +432,120 @@ export class IotTabletController {
       RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? {};
+    return { data: row };
+  }
+
+  // -- Setup-checklist CRUD (VISION-3340 #45 / 08-mes#8) -----------------------
+  // The session start gate (startProductionSession here + StartSessionHandler) is
+  // correctly fail-closed against setup_checklists/checklist_items, but nothing ever
+  // seeded a checklist or let an operator tick items off — so EVERY session was
+  // permanently un-startable. These two endpoints make the gate SATISFIABLE; they do
+  // NOT touch the gate itself. All queries key off the varchar `session_id` link or a
+  // row's own integer PK — never the setup_checklists.id ↔ checklist_items.checklist_id
+  // comparison — so the seed/toggle are type-safe regardless of that column's type.
+
+  /**
+   * Seeds one `setup_checklists` row + the fixed TB-safety item set for a session and
+   * returns them. Idempotent: an existing checklist for the session is returned
+   * unchanged (so the tablet can fetch-or-create in a single call, no duplicate rows).
+   */
+  private async seedSessionChecklist(
+    sessionId: number,
+  ): Promise<{ checklistId: number; items: unknown[]; seeded: boolean }> {
+    // Idempotency probe on the varchar session_id (varchar = varchar — type-safe).
+    const existing = await db.execute(sql`
+      SELECT id FROM setup_checklists WHERE session_id = ${String(sessionId)} ORDER BY id ASC LIMIT 1
+    `);
+    const existingRow = (((existing as Rows).rows) ?? [])[0] as { id?: unknown } | undefined;
+    if (existingRow?.id !== undefined && existingRow.id !== null) {
+      const checklistId = Number(existingRow.id);
+      const itemsR = await db.execute(sql`
+        SELECT * FROM checklist_items
+        WHERE checklist_id = ${String(checklistId)}
+        ORDER BY sort_order ASC, id ASC
+      `);
+      const existingItems = ((itemsR as Rows).rows) ?? [];
+      return { checklistId, items: Array.isArray(existingItems) ? existingItems : [], seeded: false };
+    }
+
+    const scR = await db.execute(sql`
+      INSERT INTO setup_checklists (session_id, status, created_at)
+      VALUES (${String(sessionId)}, 'pending', NOW())
+      RETURNING id
+    `);
+    const checklistId = Number((((scR as Rows).rows ?? [])[0] as { id?: unknown } | undefined)?.id ?? 0);
+
+    // Single multi-row INSERT (no N+1). checklist_id is written as text so the write
+    // succeeds whether the column is varchar (canonical schema) or integer.
+    const valueRows = SETUP_CHECKLIST_DEFAULT_ITEMS.map((it, idx) =>
+      sql`(${String(checklistId)}, ${it.category}, ${it.itemType}, ${it.title}, true, false, ${idx})`,
+    );
+    const insR = await db.execute(sql`
+      INSERT INTO checklist_items
+        (checklist_id, category, item_type, title, is_required, is_completed, sort_order)
+      VALUES ${sql.join(valueRows, sql`, `)}
+      RETURNING *
+    `);
+    const items = ((insR as Rows).rows) ?? [];
+    return { checklistId, items: Array.isArray(items) ? items : [], seeded: true };
+  }
+
+  /**
+   * Best-effort auto-seed used by the two session-create paths: reads the new row's
+   * integer id and seeds its checklist. A seed failure must NEVER fail session
+   * creation — a missing checklist just leaves the gate's fail-safe block in place.
+   */
+  private async autoSeedChecklist(row: unknown): Promise<void> {
+    const newId = Number((row as { id?: unknown } | undefined)?.id);
+    if (!Number.isFinite(newId) || newId <= 0) return;
+    try {
+      await this.seedSessionChecklist(newId);
+    } catch (err) {
+      this.logger.warn(`[IoT] auto-seed checklist failed (sessionId=${newId}): ${String(err)}`);
+    }
+  }
+
+  @ApiOperation({ summary: 'Seed / fetch setup-checklist for a production session' })
+  @ApiResponse({ status: 201, description: 'OK — checklist + items' })
+  @Post('production-sessions/:id/checklist')
+  @Public()
+  @UseGuards(TabletTokenGuard)
+  async seedProductionSessionChecklist(@Param('id') id: string, @Body() body: unknown) {
+    IotPassthroughSchema.parse(body ?? {});
+    const sessionId = parseInt(id, 10);
+    if (!Number.isFinite(sessionId) || sessionId <= 0) {
+      throw new UnprocessableEntityException('Sessiya id noto\'g\'ri');
+    }
+    const result = await this.seedSessionChecklist(sessionId);
+    return { data: { checklistId: result.checklistId, items: result.items }, seeded: result.seeded };
+  }
+
+  @ApiOperation({ summary: 'Complete a setup-checklist item' })
+  @ApiResponse({ status: 200, description: 'OK — updated item' })
+  @ApiResponse({ status: 404, description: 'Item not found' })
+  @Patch('checklist-items/:id/complete')
+  @Public()
+  @UseGuards(TabletTokenGuard)
+  async completeChecklistItem(@Param('id') id: string, @Body() body: unknown) {
+    const dto = ChecklistItemCompleteSchema.parse(body ?? {});
+    const itemId = parseInt(id, 10);
+    if (!Number.isFinite(itemId) || itemId <= 0) {
+      throw new UnprocessableEntityException('Chek-list band id noto\'g\'ri');
+    }
+    const completedBy = dto.completedBy ?? null;
+    // WHERE id = <int PK> — no int↔varchar comparison, always type-safe.
+    const r = await db.execute(sql`
+      UPDATE checklist_items
+      SET is_completed = true,
+          completed_by = ${completedBy},
+          completed_at = NOW()
+      WHERE id = ${itemId}
+      RETURNING *
+    `);
+    const row = (((r as Rows).rows) ?? [])[0];
+    if (!row) {
+      throw new NotFoundException('Chek-list bandi topilmadi');
+    }
     return { data: row };
   }
 
