@@ -760,13 +760,18 @@ export class IotTabletController {
   async reportProductionDefect(@Param('id') id: string, @Body() body: unknown) {
     const dto = DefectReportSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
+    // Resolve the FE aliases: the tablet sends `quantity` + `reason`; the canonical names are
+    // defectCount/reasonDescription. Record the operator's REAL count (was always 1) and carry
+    // the free-text reason. defectCount falls back to 1 only when neither field is supplied.
+    const defectCount = dto.defectCount ?? (dto.quantity != null ? Number(dto.quantity) : 1);
+    const reasonDescription = dto.reasonDescription ?? dto.reason ?? null;
     // VISION-3340 #38 (idempotency): an offline tablet re-submitting after a network
     // retry carries the same (tablet_id, local_seq_no). If that pair already produced
     // a downtime_events row, the defect was already counted + QC-bridged — return an
     // idempotent success WITHOUT re-running the transaction (no double defect_quantity
     // bump), the brak-limit check, or the QC command dispatch.
     if (await this.isDuplicateTabletSubmit('downtime_events', dto.tabletId, dto.localSeqNo)) {
-      return { sessionId, defectCount: dto.defectCount, reported: true, brakLimitCheck: null, qcDefectId: null, idempotent: true };
+      return { sessionId, defectCount, reported: true, brakLimitCheck: null, qcDefectId: null, idempotent: true };
     }
     // 5.2 (Critical-Correctness audit): the session-defect UPDATE and the
     // downtime_events INSERT must land together or not at all — wrapped in a
@@ -780,7 +785,7 @@ export class IotTabletController {
     await db.transaction(async (tx) => {
       await tx.execute(sql`
         UPDATE production_sessions
-        SET defect_quantity = defect_quantity + ${dto.defectCount}, updated_at=NOW()
+        SET defect_quantity = defect_quantity + ${defectCount}, updated_at=NOW()
         WHERE id=${sessionId}
       `);
       await tx.execute(sql`
@@ -790,7 +795,7 @@ export class IotTabletController {
           tablet_id, local_seq_no
         ) VALUES (
           ${sessionId}, ${dto.eventType}, NOW(),
-          ${dto.reasonCode ?? null}, ${dto.reasonDescription ?? null},
+          ${dto.reasonCode ?? null}, ${reasonDescription},
           false, ${dto.notes ?? null}, NOW(),
           ${dto.tabletId ?? null}, ${dto.localSeqNo ?? null}
         )
@@ -826,9 +831,9 @@ export class IotTabletController {
           null,
           null,
           dto.reasonCode ?? 'IOT_TABLET_DEFECT',
-          dto.reasonDescription ?? dto.notes ?? `Tablet defect report (session #${sessionId})`,
+          reasonDescription ?? dto.notes ?? `Tablet defect report (session #${sessionId})`,
           DefectSeverity.MINOR,
-          dto.defectCount,
+          defectCount,
           'pcs',
           reportedBy,
         ),

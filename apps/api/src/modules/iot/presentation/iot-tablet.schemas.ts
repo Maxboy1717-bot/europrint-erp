@@ -83,10 +83,16 @@ export const WorkerScheduleQuerySchema = z.object({
 }).passthrough();
 
 export const DefectReportSchema = z.object({
-  defectCount: z.coerce.number().int().min(0).default(1),
+  // The live tablet FE (useIoTTablet.reportDefect) sends `quantity` + `reason`, but the schema
+  // only read defectCount (with .default(1)) + reasonDescription — so the operator's real count
+  // was dropped and EVERY defect was recorded as 1 (and propagated to qc_defects as 1). Accept
+  // the FE aliases; drop the default so the controller can resolve defectCount ?? quantity ?? 1.
+  defectCount: z.coerce.number().int().min(0).optional(),
+  quantity: z.coerce.number().int().min(0).optional(),
   eventType: z.string().max(50).default('defect'),
   reasonCode: z.string().max(100).optional(),
   reasonDescription: z.string().max(1000).optional(),
+  reason: z.string().max(1000).optional(),
   notes: z.string().max(2000).optional(),
   ...TabletIdempotencyFields,
 }).passthrough();
