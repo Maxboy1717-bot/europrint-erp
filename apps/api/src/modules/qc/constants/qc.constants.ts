@@ -3,6 +3,8 @@
  * @description Named-constant exports (business thresholds, enums, lookup tables).
  */
 
+import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
+
 // ─── FMEA RPN chegaralari (IEC 60812 / AIAG FMEA standart) ──────────────────
 export const FMEA_SOD_MIN = 1;           // S/O/D minimal ball
 export const FMEA_SOD_MAX = 10;          // S/O/D maksimal ball
@@ -10,6 +12,24 @@ export const FMEA_SOD_MAX = 10;          // S/O/D maksimal ball
 export const FMEA_CRITICAL_RPN = 200;    // RPN > 200 → ishlab chiqarishni to'xtatish
 export const FMEA_HIGH_RPN = 100;        // RPN > 100 → tuzatish majburiy
 export const FMEA_MEDIUM_RPN = 50;       // RPN > 50  → monitoring kerak
+
+// ─── VISION-3340 #43: nuqson jiddiyligi → FMEA S/O/D profili ────────────────
+// Nuqson hisobotida faqat KATEGORIK `severity` (minor/major/critical) bor. FMEA
+// RPN = S × O × D uchun uni AIAG 1..10 shkalasidagi vakillik profiliga o'giramiz.
+// Jiddiylik o'qi qc-new.repository.ts severityScore (critical > major > minor)
+// bilan bir xil tartibda. O va D o'rta bandda ushlab turiladi — natijada FAQAT
+// `critical` (S=10) RPN>200 (FMEA_CRITICAL_RPN) to'xtatish chegarasidan o'tadi:
+//   critical: 10 × 5 × 5 = 250 > 200 → ishlab chiqarish to'xtatiladi (qc_hold)
+//   major:     6 × 5 × 5 = 150 ≤ 200 → tuzatish talab (stop yo'q)
+//   minor:     3 × 3 × 3 =  27 ≤ 200 → monitoring
+export const FMEA_DEFECT_SOD_PROFILE: Record<
+  DefectSeverity,
+  { severity: number; occurrence: number; detection: number }
+> = {
+  [DefectSeverity.CRITICAL]: { severity: 10, occurrence: 5, detection: 5 },
+  [DefectSeverity.MAJOR]: { severity: 6, occurrence: 5, detection: 5 },
+  [DefectSeverity.MINOR]: { severity: 3, occurrence: 3, detection: 3 },
+};
 
 // ─── DPMO + Six Sigma (Motorola metodologiyasi) ───────────────────────────────
 export const DPMO_PER_MILLION = 1_000_000;  // million imkoniyatlardagi nuqsonlar
