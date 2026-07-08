@@ -93,6 +93,13 @@ import { GofraConversionController } from './conversion/gofra-conversion.control
 import { GofraConversionService } from './conversion/gofra-conversion.service';
 import { GOFRA_FACTORS_REPO } from './conversion/i-gofra-factors.repo';
 import { DrizzleGofraFactorsRepo } from './conversion/drizzle-gofra-factors.repo';
+// PP reason-code catalog (pp_reason_codes) — structured reason vocabulary for the
+// order-flags path (production_orders.reason_code_id, VISION-3340 #23). Management
+// surface so the FE can list/create/patch codes to populate reasonCodeId.
+import { PpReasonCodesController } from './reason-codes/pp-reason-codes.controller';
+import { PpReasonCodesService } from './reason-codes/pp-reason-codes.service';
+import { PP_REASON_CODES_REPO } from './reason-codes/i-pp-reason-codes.repo';
+import { DrizzlePpReasonCodesRepository } from './reason-codes/drizzle-pp-reason-codes.repo';
 
 const handlers = [
   CreateProductionOrderHandler,
@@ -135,6 +142,8 @@ const listeners = [
     ProductionReportsController,
     // ⭐ Gofra 3-formula conversion entry
     GofraConversionController,
+    // PP reason-code catalog management surface
+    PpReasonCodesController,
   ],
   providers: [
     ...handlers,
@@ -181,6 +190,9 @@ const listeners = [
     // ⭐ Gofra 3-formula conversion engine
     GofraConversionService,
     { provide: GOFRA_FACTORS_REPO, useClass: DrizzleGofraFactorsRepo },
+    // PP reason-code catalog
+    PpReasonCodesService,
+    { provide: PP_REASON_CODES_REPO, useClass: DrizzlePpReasonCodesRepository },
   ],
   exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService, ProductionService, GofraConversionService],
 })
