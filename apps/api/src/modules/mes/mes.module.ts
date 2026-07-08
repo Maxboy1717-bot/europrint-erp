@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { MesSessionsController } from './presentation/mes-sessions.controller';
 import { MesOperationsController } from './presentation/mes-operations.controller';
 import { MesMaintenanceController }  from './presentation/mes-maintenance.controller';
@@ -15,6 +16,7 @@ import { StartSessionHandler } from './application/commands/start-session.handle
 import { CompleteSessionHandler } from './application/commands/complete-session.handler';
 import { RecordDowntimeHandler } from './application/commands/record-downtime.handler';
 import { EndDowntimeHandler } from './application/commands/end-downtime.handler';
+import { PauseSessionHandler } from './application/commands/pause-session.handler';
 import { GetSessionsHandler } from './application/queries/get-sessions.handler';
 import { GetOeeHandler } from './application/queries/get-oee.handler';
 import { GetDowntimeHandler } from './application/queries/get-downtime.handler';
@@ -54,6 +56,7 @@ const handlers = [
   CompleteSessionHandler,
   RecordDowntimeHandler,
   EndDowntimeHandler,
+  PauseSessionHandler,
   GetSessionsHandler,
   GetOeeHandler,
   GetDowntimeHandler,
@@ -61,7 +64,7 @@ const handlers = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot()],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), NotificationsModule],
   controllers: [MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController],
   providers: [
     ...handlers,

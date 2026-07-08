@@ -10,6 +10,10 @@
  *     on whether a current department / parent department exists, and
  *     increments escalation_level by exactly 1 on escalation.
  *   - resolve: thin passthrough to repo.markResolved.
+ *   - Telegram (ITelegramSender.sendAlert): fired ONLY when the chain reaches
+ *     its highest tier (current department has no parent) — the CRITICAL
+ *     unresolved case. Lower-tier escalations and the no-department defensive
+ *     branch must NOT page Telegram (DB notification only, no alert spam).
  */
 
 import { MesSosEscalationService } from '../../src/modules/mes/application/mes-sos-escalation.service';
@@ -32,10 +36,23 @@ function buildRepo(overrides: Partial<jest.Mocked<MesSosEscalationRepository>> =
   } as unknown as jest.Mocked<MesSosEscalationRepository>;
 }
 
+interface TelegramMock {
+  sendMessage: jest.Mock;
+  sendAlert: jest.Mock;
+}
+
+function buildTelegram(): TelegramMock {
+  return {
+    sendMessage: jest.fn().mockResolvedValue({ ok: true, data: undefined }),
+    sendAlert: jest.fn().mockResolvedValue({ ok: true, data: undefined }),
+  };
+}
+
 describe('MesSosEscalationService.assignOnRaise', () => {
   it('returns assigned=false and performs no writes when work_center resolves to no KARTA', async () => {
     const repo = buildRepo({ resolveInitialDepartment: jest.fn().mockResolvedValue(null) });
-    const svc = new MesSosEscalationService(repo);
+    const telegram = buildTelegram();
+    const svc = new MesSosEscalationService(repo, telegram);
 
     const result = await svc.assignOnRaise(5, 999, 'machine jam');
 
@@ -45,6 +62,7 @@ describe('MesSosEscalationService.assignOnRaise', () => {
     }
     expect(repo.assignInitialResponsible).not.toHaveBeenCalled();
     expect(repo.notifyResponsible).not.toHaveBeenCalled();
+    expect(telegram.sendAlert).not.toHaveBeenCalled();
   });
 
   it('assigns the resolved KARTA, sets level 0, and notifies its head_user_id', async () => {
@@ -53,7 +71,8 @@ describe('MesSosEscalationService.assignOnRaise', () => {
       resolveInitialDepartment: jest.fn().mockResolvedValue(node),
       assignInitialResponsible: jest.fn().mockResolvedValue({ id: 5, current_department_id: 3 }),
     });
-    const svc = new MesSosEscalationService(repo);
+    const telegram = buildTelegram();
+    const svc = new MesSosEscalationService(repo, telegram);
 
     const result = await svc.assignOnRaise(5, 10, 'machine jam');
 
@@ -68,6 +87,7 @@ describe('MesSosEscalationService.assignOnRaise', () => {
         user_id: 42,
       });
     }
+    expect(telegram.sendAlert).not.toHaveBeenCalled();
   });
 });
 
@@ -78,7 +98,8 @@ describe('MesSosEscalationService.escalateOverdue', () => {
         { id: 1, current_department_id: null, escalation_level: 0, reason: 'jam', escalation_history: [] },
       ]),
     });
-    const svc = new MesSosEscalationService(repo);
+    const telegram = buildTelegram();
+    const svc = new MesSosEscalationService(repo, telegram);
 
     const result = await svc.escalateOverdue();
 
@@ -88,16 +109,20 @@ describe('MesSosEscalationService.escalateOverdue', () => {
     if (result.ok) {
       expect(result.data).toEqual({ escalated: 0, exhausted: 1 });
     }
+    // No current department at all is a defensive data-anomaly branch, not the
+    // "highest tier reached" case — must NOT page Telegram.
+    expect(telegram.sendAlert).not.toHaveBeenCalled();
   });
 
-  it('marks chain exhausted when there is no parent department (chain top reached)', async () => {
+  it('marks chain exhausted AND sends a CRITICAL Telegram alert when there is no parent department (highest escalation tier reached)', async () => {
     const repo = buildRepo({
       findOverdue: jest.fn().mockResolvedValue([
         { id: 2, current_department_id: 7, escalation_level: 1, reason: 'jam', escalation_history: [] },
       ]),
       getParentDepartment: jest.fn().mockResolvedValue(null),
     });
-    const svc = new MesSosEscalationService(repo);
+    const telegram = buildTelegram();
+    const svc = new MesSosEscalationService(repo, telegram);
 
     const result = await svc.escalateOverdue();
 
@@ -108,6 +133,13 @@ describe('MesSosEscalationService.escalateOverdue', () => {
     if (result.ok) {
       expect(result.data).toEqual({ escalated: 0, exhausted: 1 });
     }
+    // Highest escalation tier (no parent left) + still unresolved (CRITICAL) → Telegram fires.
+    expect(telegram.sendAlert).toHaveBeenCalledTimes(1);
+    const [chatId, title, body, urgency] = telegram.sendAlert.mock.calls[0];
+    expect(chatId).toEqual(expect.any(String));
+    expect(title).toEqual(expect.stringContaining('2'));
+    expect(body).toEqual(expect.stringContaining('jam'));
+    expect(urgency).toBe('high');
   });
 
   it('escalates to the parent department, incrementing escalation_level by 1 and notifying the new head', async () => {
@@ -118,7 +150,8 @@ describe('MesSosEscalationService.escalateOverdue', () => {
       ]),
       getParentDepartment: jest.fn().mockResolvedValue(parent),
     });
-    const svc = new MesSosEscalationService(repo);
+    const telegram = buildTelegram();
+    const svc = new MesSosEscalationService(repo, telegram);
 
     const result = await svc.escalateOverdue();
 
@@ -129,6 +162,8 @@ describe('MesSosEscalationService.escalateOverdue', () => {
     if (result.ok) {
       expect(result.data).toEqual({ escalated: 1, exhausted: 0 });
     }
+    // A parent still exists (mid-chain escalation, not the highest tier yet) → no Telegram.
+    expect(telegram.sendAlert).not.toHaveBeenCalled();
   });
 
   it('aggregates escalated/exhausted counts across multiple overdue SOS rows', async () => {
@@ -140,7 +175,8 @@ describe('MesSosEscalationService.escalateOverdue', () => {
       ]),
       getParentDepartment: jest.fn().mockResolvedValue(parent),
     });
-    const svc = new MesSosEscalationService(repo);
+    const telegram = buildTelegram();
+    const svc = new MesSosEscalationService(repo, telegram);
 
     const result = await svc.escalateOverdue();
 
@@ -148,13 +184,18 @@ describe('MesSosEscalationService.escalateOverdue', () => {
     if (result.ok) {
       expect(result.data).toEqual({ escalated: 1, exhausted: 1 });
     }
+    // Row #10 escalates to a resolved parent; row #11 exhausts via the
+    // no-current-department branch — neither hits the "no parent" top-tier
+    // branch, so Telegram must stay silent.
+    expect(telegram.sendAlert).not.toHaveBeenCalled();
   });
 });
 
 describe('MesSosEscalationService.resolve', () => {
   it('forwards sosId and resolvedBy to repo.markResolved', async () => {
     const repo = buildRepo();
-    const svc = new MesSosEscalationService(repo);
+    const telegram = buildTelegram();
+    const svc = new MesSosEscalationService(repo, telegram);
 
     const result = await svc.resolve(8, 4);
 
@@ -163,5 +204,6 @@ describe('MesSosEscalationService.resolve', () => {
     if (result.ok) {
       expect(result.data).toEqual({ sosId: 8, resolved: true });
     }
+    expect(telegram.sendAlert).not.toHaveBeenCalled();
   });
 });

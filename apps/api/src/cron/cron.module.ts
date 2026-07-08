@@ -7,6 +7,7 @@ import { Module } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
 import { TelegramModule } from '../telegram/telegram.module'
 import { QueueModule } from '../modules/queue/queue.module'
+import { NotificationsModule } from '../modules/notifications/notifications.module'
 import { EoqSafetyStockRefreshCron } from './eoq-safety-stock-refresh.cron'
 import { WarehouseRentalCron } from './warehouse-rental.cron'
 import { CurrencyRatesCron } from './currency-rates.cron'
@@ -62,7 +63,7 @@ import { AiFitWeeklyCron } from './ai-fit-weekly.cron'
 import { AiFitModule } from '../modules/ai/ai-fit.module'
 
 @Module({
-  imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule],
+  imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule, NotificationsModule],
   providers: [
     CronStatusService,
     // Sprint 2 — Haftalik EOQ + Safety Stock yangilash (TZ-02/TZ-04)

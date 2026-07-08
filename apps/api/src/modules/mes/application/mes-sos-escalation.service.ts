@@ -5,19 +5,30 @@
  *     biriktiradi, deadline qo'yadi, javobgarga bildirishnoma yuboradi.
  *   - escalateOverdue: timeout-cron chaqiradi — javob yo'q (deadline o'tgan) SOS'larni
  *     org_departments.parent_id bo'ylab keyingi darajaga (usta→bo'lim→direktor) ko'taradi.
+ *     Zanjir eng yuqori kartaga (parent yo'q — direktor) yetganda ham hal qilinmagan SOS
+ *     CRITICAL hisoblanadi — bu eng yuqori eskalatsiya darajasi bo'lgani uchun Telegram
+ *     orqali ham xabar beriladi (DB notification'dan tashqari; boshqa zanjir bosqichlari
+ *     faqat DB notification bilan cheklanadi — spam bo'lmasligi uchun).
  *   - resolve: SOS hal qilindi → eskalatsiya to'xtaydi.
  *   Result<T> qaytaradi; raw throw yo'q.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
 import { MesSosEscalationRepository } from '../infrastructure/repositories/mes-sos-escalation.repo';
+import { ITelegramSender, TELEGRAM_SENDER } from '@modules/notifications/domain/ports/i-telegram-sender.port';
+
+/** Zanjir tepasiga yetgan (parent yo'q) hal qilinmagan SOS uchun Telegram kanal identifikatori. */
+const MES_SOS_CRITICAL_TELEGRAM_CHANNEL = 'mes_sos_critical';
 
 @Injectable()
 export class MesSosEscalationService {
   private readonly logger = new Logger(MesSosEscalationService.name);
 
-  constructor(private readonly repo: MesSosEscalationRepository) {}
+  constructor(
+    private readonly repo: MesSosEscalationRepository,
+    @Inject(TELEGRAM_SENDER) private readonly telegram: ITelegramSender,
+  ) {}
 
   /**
    * SOS ko'tarilganda boshlang'ich javobgarni biriktiradi (level 0 = usta/karta egasi).
@@ -64,6 +75,18 @@ export class MesSosEscalationService {
         if (!parent) {
           await this.repo.markChainExhausted(sosId);
           exhausted += 1;
+          // CRITICAL: zanjir eng yuqori kartaga (direktor, parent yo'q) yetdi va SOS
+          // hamon hal qilinmagan — bu eng yuqori eskalatsiya darajasi, shuning uchun
+          // faqat shu holatda Telegram xabar yuboriladi (pastroq darajalar faqat DB
+          // notification bilan cheklanadi). Best-effort: Result<T> tekshirilmaydi —
+          // Telegram muvaffaqiyatsiz bo'lsa ham eskalatsiya hisobi buzilmasin.
+          await this.telegram.sendAlert(
+            MES_SOS_CRITICAL_TELEGRAM_CHANNEL,
+            `KRITIK: SOS #${sosId} eskalatsiya zanjiri tugadi`,
+            `Sabab: ${reason}. Karta #${currentDeptId} — zanjir tepasida (daraja ${level}) hamon javobsiz.`,
+            'high',
+          );
+          this.logger.error(`SOS #${sosId}: zanjir tepasiga yetdi (karta ${currentDeptId}), Telegram CRITICAL xabar yuborildi`);
           continue;
         }
 
