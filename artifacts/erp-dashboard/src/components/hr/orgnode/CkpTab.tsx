@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { NodeDetail } from "./types";
 import { CkpCascadeDashboard } from "./CkpCascadeDashboard";
+import { CkpCardProductsDialog } from "./CkpCardProductsDialog";
 import { useTranslation } from "@/lib/i18n";
 
 /** ckp_fact_values qatori (transport shakli — ckp-fact.repository bilan bir xil). */
@@ -66,8 +67,12 @@ interface CkpAggregate {
   avg_achievement?: number | string | null;
 }
 
-/** Mahsulot (ЦКП fakt biriktirilishi mumkin bo'lgan natija/mahsulot) — /api/products. */
-interface ProductOption {
+/**
+ * Mahsulot (ЦКП fakt biriktirilishi mumkin bo'lgan natija/mahsulot) — /api/products.
+ * Exported: CkpCardProductsDialog (GAP #10 norma-boshqaruv oynasi) shu ro'yxatni qayta
+ * ishlatadi (alohida /api/products so'rov yubormaydi — bitta manba).
+ */
+export interface ProductOption {
   id: number;
   name: string;
 }
@@ -220,6 +225,9 @@ export function CkpTab({ node }: { node: NodeDetail }) {
     for (const p of products) m.set(p.id, p.name);
     return m;
   }, [products]);
+
+  // GAP #10 write-path — mahsulot bo'yicha ЦКП norma boshqaruv oynasi (CkpCardProductsDialog).
+  const [productsDialogOpen, setProductsDialogOpen] = useState(false);
 
   // ── Fakt-kiritish formasi (kunlik, multi-product slot) ──
   const [factDate, setFactDate] = useState<string>(today);
@@ -433,17 +441,30 @@ export function CkpTab({ node }: { node: NodeDetail }) {
                   <Package className="h-3.5 w-3.5" />
                   {t("ckpNatijalar", "Natijalar (mahsulot bo'yicha)")}
                 </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-[11px]"
-                  onClick={addSlot}
-                  data-testid="button-ckp-add-slot"
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  {t("natijaQoshish", "Natija qo'shish")}
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  {/* GAP #10 write-path — mahsulot bo'yicha ЦКП norma boshqarish (ckp_card_products). */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[11px]"
+                    onClick={() => setProductsDialogOpen(true)}
+                    data-testid="button-ckp-manage-products"
+                  >
+                    {t("ckpNormalarniBoshqarish", "Normalarni boshqarish")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-[11px]"
+                    onClick={addSlot}
+                    data-testid="button-ckp-add-slot"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    {t("natijaQoshish", "Natija qo'shish")}
+                  </Button>
+                </div>
               </div>
 
               {slots.map((slot, i) => (
@@ -662,6 +683,14 @@ export function CkpTab({ node }: { node: NodeDetail }) {
           "ЦКП — Конечно Ценный Продукт (karta yakuniy qiymatli mahsuloti). Kunlik fakt → bajarish% → oylik formulasiga (baza × razryad × ЦКП% × stake) kiradi. Norma/deadline egasi-data; manba: ckp_fact_values."
         )}
       </p>
+
+      {/* GAP #10 write-path — mahsulot bo'yicha ЦКП norma boshqaruv oynasi (ckp_card_products). */}
+      <CkpCardProductsDialog
+        cardId={node.id}
+        products={products}
+        open={productsDialogOpen}
+        onOpenChange={setProductsDialogOpen}
+      />
     </div>
   );
 }

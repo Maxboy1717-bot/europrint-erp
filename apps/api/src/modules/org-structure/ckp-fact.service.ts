@@ -7,7 +7,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Ok, Err, Result, AppErr } from '@common/result';
-import { CkpFactRepository, CkpFactInput } from './ckp-fact.repository';
+import { CkpFactRepository, CkpFactInput, UpsertCardProductInput, UpsertPersonalTargetInput } from './ckp-fact.repository';
 import { CkpReportedEvent } from './cascade/ckp-reported.event';
 import { CKP_REPORTED_EVENT, CKP_ROLLUP_SOURCE } from './cascade/ckp-cascade.constants';
 
@@ -243,5 +243,37 @@ export class CkpFactService {
 
   aggregate(cardId: number, date: string): Promise<Result<Row | null>> {
     return this.repo.aggregateByDate(cardId, date);
+  }
+
+  // ─── GAP #10 write-path — karta+mahsulot ЦКП norma slot boshqaruvi (thin passthrough). ───
+  listCardProducts(cardId: number): Promise<Result<Row[]>> {
+    return this.repo.listCardProducts(cardId);
+  }
+
+  upsertCardProduct(input: UpsertCardProductInput): Promise<Result<Row | null>> {
+    return this.repo.upsertCardProduct(input);
+  }
+
+  async deactivateCardProduct(id: number): Promise<Result<Row>> {
+    const r = await this.repo.deactivateCardProduct(id);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `ЦКП karta-mahsulot slot #${id} topilmadi`));
+    return Ok(r.data);
+  }
+
+  // ─── GAP #14 write-path — xodim shaxsiy ЦКП norma override boshqaruvi (thin passthrough). ───
+  listPersonalTargets(cardId: number): Promise<Result<Row[]>> {
+    return this.repo.listPersonalTargets(cardId);
+  }
+
+  upsertPersonalTarget(input: UpsertPersonalTargetInput): Promise<Result<Row | null>> {
+    return this.repo.upsertPersonalTarget(input);
+  }
+
+  async deletePersonalTarget(id: number): Promise<Result<Row>> {
+    const r = await this.repo.deletePersonalTarget(id);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Shaxsiy ЦКП norma override #${id} topilmadi`));
+    return Ok(r.data);
   }
 }

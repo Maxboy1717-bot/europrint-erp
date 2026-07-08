@@ -29,6 +29,30 @@ export interface CkpFactInput {
   recordedBy?: number | null;
 }
 
+/** GAP #10 write-path — karta+mahsulot ЦКП norma slot (ckp_card_products) yaratish/yangilash. */
+export interface UpsertCardProductInput {
+  cardId: number;
+  productId: number;
+  targetValue?: number | null;
+  formulaType?: string | null;
+  measurementUnit?: string | null;
+  isActive?: boolean;
+  notes?: string | null;
+}
+
+/** GAP #14 write-path — xodim shaxsiy ЦКП norma override (ckp_personal_targets) yaratish/yangilash. */
+export interface UpsertPersonalTargetInput {
+  employeeId: number;
+  cardId: number;
+  /** Ixtiyoriy: mahsulot-specifik shaxsiy norma (NULL = umumiy). */
+  productId?: number | null;
+  /** 'YYYY-MM' yoki NULL (davrsiz override). */
+  period?: string | null;
+  targetValue?: number | null;
+  formulaType?: string | null;
+  notes?: string | null;
+}
+
 @Injectable()
 export class CkpFactRepository {
   private exec(q: SQL | SQLWrapper): Promise<Result<Row[]>> {
@@ -79,6 +103,101 @@ export class CkpFactRepository {
         AND (period IS NULL OR period = ${period})
       ORDER BY (product_id IS NOT NULL)::int DESC, (period IS NOT NULL)::int DESC, id DESC
       LIMIT 1
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * GAP #10 write-path — karta+mahsulot ЦКП norma slotlari ro'yxati (boshqaruv oynasi).
+   * Faol+nofaol HAMMASI qaytariladi (is_active DESC) — deaktivatsiya qilingan slot ham
+   * ko'rinadi (qayta faollashtirish uchun); faqat fakt-baholash (cardProductTarget) is_active=true filtrlaydi.
+   */
+  async listCardProducts(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT * FROM ckp_card_products
+      WHERE card_id = ${cardId}
+      ORDER BY is_active DESC, id DESC
+    `);
+  }
+
+  /**
+   * GAP #10 write-path — karta+mahsulot slot idempotent upsert (uq_ckp_card_products_card_product
+   * kaliti: card_id+product_id). Qayta yuborish mavjud slotni yangilaydi (is_active=true bilan
+   * qayta-faollashtiradi ham).
+   */
+  async upsertCardProduct(i: UpsertCardProductInput): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        INSERT INTO ckp_card_products
+          (card_id, product_id, target_value, formula_type, measurement_unit, is_active, notes, created_at, updated_at)
+        VALUES
+          (${i.cardId}, ${i.productId}, ${i.targetValue ?? null}, ${i.formulaType ?? null}, ${i.measurementUnit ?? null}, ${i.isActive ?? true}, ${i.notes ?? null}, NOW(), NOW())
+        ON CONFLICT (card_id, product_id) DO UPDATE SET
+          target_value = EXCLUDED.target_value,
+          formula_type = EXCLUDED.formula_type,
+          measurement_unit = EXCLUDED.measurement_unit,
+          is_active = EXCLUDED.is_active,
+          notes = EXCLUDED.notes,
+          updated_at = NOW()
+        RETURNING *
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * GAP #10 write-path — slot deaktivatsiya (is_active=false). Hard-DELETE emas: eski
+   * ckp_fact_values.target_value yozuvlari shu slotdan kelgan bo'lishi mumkin (tarixiy fakt
+   * o'zgarmasin — Q-40 "yashil lekin noto'g'ri" bo'lmasligi uchun norma-manba yo'qolmaydi).
+   */
+  async deactivateCardProduct(id: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      UPDATE ckp_card_products SET is_active = false, updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `);
+    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /** GAP #14 write-path — karta bo'yicha barcha shaxsiy ЦКП norma override'lar (boshqaruv oynasi). */
+  async listPersonalTargets(cardId: number): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT * FROM ckp_personal_targets
+      WHERE card_id = ${cardId}
+      ORDER BY id DESC
+    `);
+  }
+
+  /**
+   * GAP #14 write-path — shaxsiy norma idempotent upsert (uq_ckp_personal_targets_key kaliti:
+   * employee_id+card_id+COALESCE(product_id,0)+COALESCE(period,'') — NULL=joker COALESCE-slot,
+   * `personalTarget()` o'qish metodi bilan bir xil kalit semantikasi).
+   */
+  async upsertPersonalTarget(i: UpsertPersonalTargetInput): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<Row>(sql`
+        INSERT INTO ckp_personal_targets
+          (employee_id, card_id, product_id, period, target_value, formula_type, notes, created_at, updated_at)
+        VALUES
+          (${i.employeeId}, ${i.cardId}, ${i.productId ?? null}, ${i.period ?? null}, ${i.targetValue ?? null}, ${i.formulaType ?? null}, ${i.notes ?? null}, NOW(), NOW())
+        ON CONFLICT (employee_id, card_id, COALESCE(product_id,0), COALESCE(period,'')) DO UPDATE SET
+          target_value = EXCLUDED.target_value,
+          formula_type = EXCLUDED.formula_type,
+          notes = EXCLUDED.notes,
+          updated_at = NOW()
+        RETURNING *
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * GAP #14 write-path — shaxsiy norma o'chirish. Hard-DELETE (jadvalda is_active/deleted_at
+   * ustuni yo'q — override butunlay bekor qilinadi, karta-mahsulot/karta-global fallback'ga qaytadi).
+   */
+  async deletePersonalTarget(id: number): Promise<Result<Row | null>> {
+    const r = await this.exec(sql`
+      DELETE FROM ckp_personal_targets WHERE id = ${id} RETURNING *
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
