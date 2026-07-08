@@ -32,6 +32,21 @@ import { Result, AppError } from '@common/result';
 
 const HR_ROLES = ['HR_MANAGER', 'HR_SPECIALIST', 'SUPER_ADMIN', 'DIRECTOR', 'ADMIN', 'MANAGER'] as const;
 
+/**
+ * VISION-3340 #55: PII sub-endpoints (passport, bank accounts, salary history) were only
+ * gated by the class-level HR_ROLES above, which includes plain 'MANAGER' — wider than the
+ * FE's client-side mask. Mirrors `PII_VIEWER_ROLES` in
+ * `artifacts/erp-dashboard/src/components/RoleGate.tsx` EXACTLY (including casing) so a
+ * manager without HR standing can no longer bypass the FE mask via a direct API call.
+ * RolesGuard resolves `@Roles()` via `reflector.getAllAndOverride('roles', [handler, class])`
+ * — the method-level list below fully replaces the class-level HR_ROLES for these methods
+ * only; every other method on this controller is unaffected.
+ * NOTE: RolesGuard also has an unconditional super_admin/admin/director bypass (see
+ * roles.guard.ts) — those roles pass regardless of this list, which is why 'director' does
+ * not strictly need to be repeated here, but it is kept for parity with the FE list.
+ */
+const PII_ROLES = ['super_admin', 'director', 'hr_manager', 'hr_specialist', 'hr'] as const;
+
 type Row = Record<string, unknown>;
 const toList = (r: Result<Row[], AppError>) => { const rows = r.ok && Array.isArray(r.data) ? r.data : []; return { items: rows, total: rows.length }; };
 
@@ -75,9 +90,11 @@ export class EmployeesCompatSubController {
 
   // --- Bank Accounts ---
   @Get(':id/bank-accounts')
+  @Roles(...PII_ROLES)
   async getBankAccounts(@Param('id') id: string) { return toList(await this.financials.getBankAccounts(id)); }
 
   @Post(':id/bank-accounts') @HttpCode(HttpStatus.CREATED)
+  @Roles(...PII_ROLES)
   async createBankAccount(@Param('id') id: string, @Body() body: CompatBodyDto) { return unwrapOrInternal(await this.financials.createBankAccount(id, body)); }
 
   // --- Bonuses ---
@@ -218,19 +235,23 @@ export class EmployeesCompatSubController {
    * frontend `EmployeeProfile.tsx` 404/null ni "passport yo'q" sifatida qabul qiladi.
    */
   @Get(':id/passport')
+  @Roles(...PII_ROLES)
   async getPassport(@Param('id') id: string) {
     const r = await this.profile.getPassport(id);
     return r.ok ? r.data : null;
   }
 
   @Post(':id/passport') @HttpCode(HttpStatus.OK)
+  @Roles(...PII_ROLES)
   async createPassport(@Param('id') id: string, @Body() body: CompatBodyDto) { return unwrapOrInternal(await this.profile.createPassport(id, body)); }
 
   // --- Salary History ---
   @Get(':id/salary-history')
+  @Roles(...PII_ROLES)
   async getSalaryHistory(@Param('id') id: string) { return toList(await this.profile.getSalaryHistory(id)); }
 
   @Post(':id/salary-history') @HttpCode(HttpStatus.CREATED)
+  @Roles(...PII_ROLES)
   async createSalaryHistory(@Param('id') id: string, @Body() body: CompatBodyDto) { return unwrapOrInternal(await this.profile.createSalaryHistory(id, body)); }
 
   // --- Sick Leaves ---
