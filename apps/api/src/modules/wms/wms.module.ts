@@ -83,6 +83,7 @@ import { GetLowStockHandler } from './application/queries/get-low-stock.handler'
 import { DrizzleWmsRepository } from './infrastructure/repositories/drizzle-wms.repo';
 import { WMS_REPO } from './domain/repositories/wms.repository';
 import { QcPassedListener } from './infrastructure/event-handlers/qc-passed.listener';
+import { QcFailedFgListener } from './infrastructure/event-handlers/qc-failed-fg.listener';
 import { MesCompletedFgListener } from './infrastructure/event-handlers/mes-completed-fg.listener';
 import { WMS_INVENTORY_REPO } from './inventory/i-wms-inventory.repo';
 import { DrizzleWmsInventoryRepository } from './inventory/drizzle-wms-inventory.repo';
@@ -144,7 +145,7 @@ const handlers = [
   DeleteRentalHandler,
 ];
 
-const listeners = [QcPassedListener, MesCompletedFgListener, RopTriggerHandler, SupplierRatingListener];
+const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener, RopTriggerHandler, SupplierRatingListener];
 
 @Module({
   imports: [
