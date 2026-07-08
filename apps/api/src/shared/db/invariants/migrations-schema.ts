@@ -518,4 +518,33 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'hr_nda_acknowledgments pending-status partial index (2026-06-30)',
     sql: `CREATE INDEX IF NOT EXISTS idx_hr_nda_pending ON hr_nda_acknowledgments (status) WHERE status = 'pending'`,
   },
+  // APPROVED: egasi 2026-06-30 "vizyon bo'yicha to'liq" — Modul 14 (Marketing) NPS
+  // avto-yig'ish so'rovi (vizyon 14.60). All consumer source (nps-auto-request.listener.ts,
+  // nps-requests.repository.ts, nps-requests.controller.ts, marketing.module.ts) was already
+  // committed and depended on this table; only this migration's registration was missing.
+  {
+    name: 'nps_requests table (2026-06-30, egasi-approved)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS nps_requests (
+        id              SERIAL PRIMARY KEY,
+        delivery_id     INTEGER,
+        sales_order_id  INTEGER,
+        customer_id     INTEGER,
+        customer_name   TEXT,
+        status          TEXT        NOT NULL DEFAULT 'pending',
+        nps_response_id INTEGER,
+        requested_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        responded_at    TIMESTAMPTZ,
+        CONSTRAINT ck_nps_req_status CHECK (status IN ('pending','responded','skipped'))
+      )
+    `,
+  },
+  {
+    name: 'nps_requests unique delivery index (2026-06-30)',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_nps_req_delivery ON nps_requests (delivery_id) WHERE delivery_id IS NOT NULL`,
+  },
+  {
+    name: 'nps_requests pending-status index (2026-06-30)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_nps_req_pending ON nps_requests (status) WHERE status = 'pending'`,
+  },
 ];
