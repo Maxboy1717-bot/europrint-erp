@@ -8,9 +8,9 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 import { unwrapOrThrow } from '@common/http-result';
 import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
-import { RolesGuard} from 'src/common/guards/roles.guard';
-import { Roles} from 'src/common/decorators/roles.decorator';
-import { AuditInterceptor} from 'src/common/interceptors/audit.interceptor';
+import { RolesGuard} from '@common/guards/roles.guard';
+import { Roles} from '@common/decorators/roles.decorator';
+import { AuditInterceptor} from '@common/interceptors/audit.interceptor';
 import { CreateProductionOrderCommand} from '../application/commands/create-production-order.handler';
 import { ReleaseProductionOrderCommand} from '../application/commands/release-production-order.handler';
 import { ProductionPlanQuery} from '../application/queries/production-plan.handler';
