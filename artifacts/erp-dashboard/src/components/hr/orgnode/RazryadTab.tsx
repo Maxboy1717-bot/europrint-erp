@@ -8,7 +8,7 @@
 
 import { type ReactNode, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Award, Settings2, Check, X, ShieldCheck, Sparkles } from "lucide-react";
+import { Award, Settings2, Check, X, ShieldCheck, Sparkles, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -186,6 +186,30 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
     return levels.find((r) => r.id === id)?.name ?? `#${id}`;
   };
 
+  // VISION-3340 #15 — razryad sertifikati PDF yuklab olish (mirrors HRSafety.tsx's
+  // raw-fetch blob-download pattern: apiRequest() JSON'ni unwrap qiladi, binar PDF'ni
+  // qaytara olmaydi; auth = httpOnly cookie, credentials:'include' orqali yuboriladi).
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const downloadCertificate = (historyId: number) => {
+    setDownloadingId(historyId);
+    // eslint-disable-next-line no-restricted-globals
+    fetch(`/api/org-structure/razryad-history/${historyId}/certificate.pdf`, { credentials: "include" })
+      .then((r) => {
+        if (!r.ok) throw new Error(t("sertifikatYaratishXatosi", "Sertifikat PDF yaratishda xatolik"));
+        return r.blob();
+      })
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `razryad-sertifikat-${historyId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      })
+      .catch(() => toast({ title: t("sertifikatYaratishXatosi", "Sertifikat PDF yaratishda xatolik"), variant: "destructive" }))
+      .finally(() => setDownloadingId(null));
+  };
+
   if (isLoading) return <EPLoader />;
 
   return (
@@ -335,22 +359,40 @@ export function RazryadTab({ node }: { node: NodeDetail }) {
           {history.length > 0 && (
             <div className="border-t border-border/60 pt-2 space-y-1">
               <p className="text-[12px] font-semibold text-muted-foreground uppercase">{t("razryadTarixi", "Razryad tarixi")}</p>
-              {history.slice(0, 8).map((h, i) => (
-                <div key={i} className="flex items-center justify-between text-xs rounded border border-border px-2 py-1">
-                  <span className="flex items-center gap-1.5">
-                    {String(h.old_name ?? "—")} → <b>{String(h.new_name ?? "")}</b> · {String(h.change_type ?? "")}
-                    {h.ai_suggested === true && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] py-0 px-1.5 bg-violet-300/15 text-violet-600 border-violet-400/40 flex items-center gap-0.5"
-                      >
-                        <Sparkles className="h-2.5 w-2.5" />{t("ai", "AI")}
-                      </Badge>
-                    )}
-                  </span>
-                  <span className="text-muted-foreground">{h.certificate_number ? String(h.certificate_number) : ""}</span>
-                </div>
-              ))}
+              {history.slice(0, 8).map((h, i) => {
+                const historyId = typeof h.id === "number" ? h.id : Number(h.id);
+                return (
+                  <div key={i} className="flex items-center justify-between text-xs rounded border border-border px-2 py-1">
+                    <span className="flex items-center gap-1.5">
+                      {String(h.old_name ?? "—")} → <b>{String(h.new_name ?? "")}</b> · {String(h.change_type ?? "")}
+                      {h.ai_suggested === true && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] py-0 px-1.5 bg-violet-300/15 text-violet-600 border-violet-400/40 flex items-center gap-0.5"
+                        >
+                          <Sparkles className="h-2.5 w-2.5" />{t("ai", "AI")}
+                        </Badge>
+                      )}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{h.certificate_number ? String(h.certificate_number) : ""}</span>
+                      {Number.isFinite(historyId) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-1.5 text-muted-foreground hover:text-foreground"
+                          disabled={downloadingId === historyId}
+                          onClick={() => downloadCertificate(historyId)}
+                          data-testid={`button-razryad-certificate-${historyId}`}
+                          title={t("sertifikatniYuklabOlish", "Sertifikatni yuklab olish (PDF)")}
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>

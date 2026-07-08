@@ -5,8 +5,9 @@
  */
 
 import {
-  Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards, UseInterceptors, Logger,
+  Body, Controller, Get, Param, ParseIntPipe, Post, Res, UseGuards, UseInterceptors, Logger,
 } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -14,9 +15,10 @@ import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
-import { unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
+import { unwrapOrThrow, unwrapOrInternal, throwFromError } from '@common/http-result';
 import { z } from 'zod';
 import { RazryadHistoryService } from './razryad-history.service';
+import { RazryadCertificatePdfService } from './razryad-certificate-pdf.service';
 
 const CreateRequestSchema = z.object({
   targetRazryadId: z.number().int().positive(),
@@ -36,7 +38,10 @@ const RejectSchema = z.object({ reason: z.string().min(1).max(2000) }).strict();
 @Controller('org-structure')
 export class RazryadHistoryController {
   private readonly logger = new Logger(RazryadHistoryController.name);
-  constructor(private readonly service: RazryadHistoryService) {}
+  constructor(
+    private readonly service: RazryadHistoryService,
+    private readonly certPdfSvc: RazryadCertificatePdfService,
+  ) {}
 
   @ApiOperation({ summary: 'Karta razryad tarixi' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -45,6 +50,31 @@ export class RazryadHistoryController {
     const data = unwrapOrInternal(await this.service.historyByCard(cardId));
     const items = Array.isArray(data) ? data : [];
     return { items, total: items.length };
+  }
+
+  /**
+   * GET /org-structure/razryad-history/:id/certificate.pdf
+   * VISION-3340 #15 — razryad tarix yozuvi bo'yicha sertifikat PDF (karta, xodim,
+   * eski->yangi razryad, sertifikat raqami, tasdiqlovchi, sana). Mirrors QC's
+   * `certificates/generate-pdf` route response-header pattern (application/pdf,
+   * Content-Disposition attachment, X-Certificate-Number).
+   */
+  @ApiOperation({ summary: 'VISION-3340 #15: Razryad sertifikati PDF (tarix yozuvi bo\'yicha)' })
+  @ApiResponse({ status: 200, description: 'PDF binary' })
+  @ApiResponse({ status: 404, description: 'Tarix yozuvi topilmadi' })
+  @Get('razryad-history/:id/certificate.pdf')
+  async certificatePdf(
+    @Param('id', ParseIntPipe) id: number,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<Buffer> {
+    const result = await this.certPdfSvc.generateForHistory(id);
+    if (!result.ok) throwFromError(result.error);
+    const { certNumber, pdf } = result.data;
+    void res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="${certNumber}.pdf"`)
+      .header('X-Certificate-Number', certNumber);
+    return pdf;
   }
 
   @ApiOperation({ summary: "Karta razryad so'rovlari" })

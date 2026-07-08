@@ -26,6 +26,8 @@ import { RazryadRepository } from './razryad.repository';
 import { RazryadHistoryController } from './razryad-history.controller';
 import { RazryadHistoryService } from './razryad-history.service';
 import { RazryadHistoryRepository } from './razryad-history.repository';
+// VISION-3340 #15 — razryad promotion certificate PDF (mirrors QcCertificatePdfService pattern)
+import { RazryadCertificatePdfService } from './razryad-certificate-pdf.service';
 import { CkpController } from './ckp.controller';
 import { CkpFactService } from './ckp-fact.service';
 import { CkpFactRepository } from './ckp-fact.repository';
@@ -57,7 +59,7 @@ import { ExamPassedRazryadListener } from './exam-passed-razryad.listener';
 @Module({
   imports: [NotificationsModule, LmsModule],
   controllers: [OrgStructureController, CardController, RazryadController, RazryadHistoryController, CkpController, CardFolderController, CardTemplateController, ErrorCatalogController, QuestionBankController],
-  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository, ExamPassedRazryadListener, QuestionBankService, QuestionBankRepository],
+  providers: [OrgStructureService, OrgExportRepository, OrgExportService, PositionFolderRepository, PositionFolderService, NodePortretRepository, NodePortretService, OrgQueriesRepo, OrgMutationsRepo, OrgStructureRepository, CardService, CardRepository, RazryadService, RazryadRepository, RazryadHistoryService, RazryadHistoryRepository, RazryadCertificatePdfService, CkpFactService, CkpFactRepository, CardFolderService, CardFolderRepository, OrgCascadeListener, OrgCascadeRepository, CkpMesFeedListener, CkpCascadeListener, CardTemplateService, CardTemplateRepository, ErrorCatalogService, ErrorCatalogRepository, ExamPassedRazryadListener, QuestionBankService, QuestionBankRepository],
   exports: [OrgStructureService, PositionFolderService, CardService, RazryadService, CardFolderService, CardTemplateService, CkpFactService],
 })
 export class OrgStructureModule {}
