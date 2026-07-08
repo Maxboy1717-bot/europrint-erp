@@ -14,6 +14,7 @@ import { CcWorkflowService } from '../src/modules/communication-center/applicati
 function build() {
   const docs = {
     logAudit: jest.fn().mockResolvedValue({ ok: true, data: undefined }),
+    notifyUser: jest.fn().mockResolvedValue({ ok: true, data: undefined }),
     createApproval: jest.fn().mockResolvedValue({ ok: true, data: { id: 1 } }),
   };
   const org = { resolveApprover: jest.fn() };
@@ -64,5 +65,22 @@ describe('CcWorkflowService self-route guard (CC #21 SoD)', () => {
     expect(approvers).toEqual([9]);
     expect(docs.createApproval).toHaveBeenCalledTimes(1);
     expect(docs.logAudit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('CcWorkflowService unresolvable-route guard (CC #3 ambiguous_route)', () => {
+  it('journals approver_unresolved + notifies the sender instead of silently continuing', async () => {
+    const { svc, docs, org } = build();
+    org.resolveApprover.mockResolvedValue({ ok: false, error: { code: 'NOT_FOUND', message: 'no head' } });
+
+    const approvers = await svc.createFirstStepApprovals(DOC, 7, [step(1, 'DEPT_HEAD')]);
+
+    expect(approvers).toEqual([]);
+    expect(docs.createApproval).not.toHaveBeenCalled();
+    expect(docs.logAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ documentId: 'doc-1', action: 'approver_unresolved', performedByUserId: null }),
+    );
+    // the sender (7) is proactively notified so the doc never disappears silently.
+    expect(docs.notifyUser).toHaveBeenCalledWith(expect.objectContaining({ userId: 7, documentId: 'doc-1', type: 'route_unresolved' }));
   });
 });

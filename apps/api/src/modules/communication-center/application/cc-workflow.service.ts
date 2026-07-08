@@ -135,9 +135,28 @@ export class CcWorkflowService {
     for (const step of firstStepRows) {
       const approverResult = await this.org.resolveApprover(step.approverPositionCode, senderUserId);
       if (!approverResult.ok) {
+        // CC #3 ambiguous_route: an unresolvable approver used to only be logger.warn'd,
+        // so the document could silently deadlock with nobody able to act. Journal it
+        // (queryable) AND proactively notify the sender so it never disappears silently.
         this.logger.warn(
           `Step ${step.stepOrder}: approver unresolvable (${approverResult.error.message}) — skipping. Document ${doc.id} may get stuck.`,
         );
+        await this.docs.logAudit({
+          documentId:        doc.id,
+          action:            'approver_unresolved',
+          performedByUserId: null,
+          comment:           `Bosqich ${step.stepOrder} (${step.approverPositionCode}): imzolovchi aniqlanmadi — ${approverResult.error.message}`,
+        });
+        await this.docs.notifyUser({
+          userId:    senderUserId,
+          documentId: doc.id,
+          type:      'route_unresolved',
+          priority:  'high',
+          titleUz:   'Hujjat marshruti aniqlanmadi',
+          titleRu:   'Маршрут документа не определён',
+          messageUz: `Bosqich ${step.stepOrder} uchun imzolovchi topilmadi; hujjat yuborilmadi.`,
+          messageRu: `Не найден утверждающий для этапа ${step.stepOrder}; документ не отправлен.`,
+        });
         continue;
       }
       const approverId = approverResult.data;

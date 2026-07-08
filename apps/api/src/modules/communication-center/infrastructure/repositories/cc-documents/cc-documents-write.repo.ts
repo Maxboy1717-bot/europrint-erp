@@ -280,4 +280,30 @@ export class CcDocumentsWriteRepo {
       return Err({ message: (e as Error).message, code: 'DB_ERROR' });
     }
   }
+
+  /**
+   * Insert a cc_notifications row. cc_notifications is a VIEW over `notifications`
+   * whose NOT NULL columns are title + body, so we supply title := titleUz and
+   * body := messageUz alongside the localized columns (same shape as cc-sla.cron's
+   * pushNotification). Used to proactively alert a user (e.g. CC #3: the sender when
+   * routing is unresolvable, so the document does not silently deadlock).
+   */
+  async notifyUser(args: {
+    userId: number; documentId: string; type: string;
+    titleUz: string; titleRu: string; messageUz: string; messageRu: string;
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+  }): Promise<Result<void>> {
+    try {
+      await runQuery(sql`
+        INSERT INTO cc_notifications
+          (user_id, document_id, type, priority, title_uz, title_ru, message_uz, message_ru, title, body)
+        VALUES
+          (${args.userId}, ${args.documentId}, ${args.type}, ${args.priority ?? 'normal'},
+           ${args.titleUz}, ${args.titleRu}, ${args.messageUz}, ${args.messageRu}, ${args.titleUz}, ${args.messageUz})
+      `);
+      return Ok(undefined);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
 }
