@@ -40,8 +40,11 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { sql } from 'drizzle-orm';
+import { runQuery } from '@shared/db';
 import { Ok, Err, isOk, Result, AppError } from '@common/result';
 import { TashkentTimeService } from '@common/time';
+import { safeNum } from '@common/math/math-utils';
 import { PpMpsService } from './pp-mps.service';
 import { PpCrpService } from './pp-crp.service';
 import { PpIntelligenceService } from './pp-intelligence.service';
@@ -158,7 +161,7 @@ export class PpAiPlanningService {
       await this.runStep3Mrp(),
       await this.runStep4Crp(),
       this.runStep5Sequencing(),
-      this.runStep6ShiftAssign(),
+      await this.runStep6ShiftAssign(date),
     ];
 
     // Step 7 — AI optimisation verdict. Key-gated: no key → no AI call, no verdict.
@@ -275,18 +278,157 @@ export class PpAiPlanningService {
     };
   }
 
-  // ─── Step 6: Shift assignment (structural — frozen-zone rule) ─────────────
-  private runStep6ShiftAssign(): AiPlanStepResult {
-    return {
-      step: AiPlanStep.SHIFT_ASSIGN,
-      order: 5,
-      status: 'completed',
-      label: STEP_LABELS[AiPlanStep.SHIFT_ASSIGN],
-      summary: {
-        rule: 'faqat bo\'sh kelajak slotlar to\'ldiriladi; frozen-window (~1-2 kun) tegilmaydi (EP-PP-081)',
-      },
-      ranAt: _time.now().toISOString(),
-    };
+  // ─── Step 6: Shift assignment (REAL — reads capacity + crew, persists a plan) ─
+  // VISION-3340 #23: was a hardcoded string with no DB read/write. Now it:
+  //   (a) reads REAL work-center capacity + target demand and the crew actually
+  //       assigned to the plan date (shift_assignments),
+  //   (b) persists a real pp_shift_plans row (idempotent upsert per
+  //       work_center/date/shift), and
+  //   (c) returns the real planned assignment.
+  // Q-40: if the capacity or crew data is absent (0 rows) — or there is no open
+  // demand to produce — it returns an honest "insufficient data" result and does
+  // NOT persist a fabricated plan.
+  private async runStep6ShiftAssign(planDate: string): Promise<AiPlanStepResult> {
+    try {
+      const capacity = await this.loadShiftCapacity();
+      const crew = await this.loadShiftCrew(planDate);
+      const target = capacity[0]; // highest real target-quantity work centre (query is ordered)
+      const totalTarget = safeNum(target?.targetQuantity, 0);
+
+      // Honest no-data gate (Q-40): need at least one active work centre, at least
+      // one assigned crew member for the date, AND a positive open-order target.
+      if (capacity.length === 0 || crew.length === 0 || totalTarget <= 0) {
+        return {
+          step: AiPlanStep.SHIFT_ASSIGN,
+          order: 5,
+          status: 'empty',
+          label: STEP_LABELS[AiPlanStep.SHIFT_ASSIGN],
+          summary: {
+            planned: false,
+            reason: 'Smena rejasi uchun yetarli maʼlumot yoʻq (ish markazi quvvati / biriktirilgan smena / ochiq buyurtma yoʻq) — soxta reja yozilmaydi',
+            workCenters: capacity.length,
+            crew: crew.length,
+            targetQuantity: totalTarget,
+          },
+          ranAt: _time.now().toISOString(),
+        };
+      }
+
+      const assignedEmployees = crew.map((c) => Number(c.employeeId)).filter((n) => Number.isFinite(n));
+      const shiftType = this.pickShiftType(crew);
+      const workCenterId = Number(target.workCenterId);
+
+      const shiftPlanId = await this.persistShiftPlan({
+        workCenterId,
+        shiftDate: planDate,
+        shiftType,
+        targetQuantity: totalTarget,
+        assignedEmployees,
+      });
+
+      return {
+        step: AiPlanStep.SHIFT_ASSIGN,
+        order: 5,
+        status: 'completed',
+        label: STEP_LABELS[AiPlanStep.SHIFT_ASSIGN],
+        summary: {
+          planned: true,
+          shiftPlanId,
+          workCenterId,
+          workCenterName: String(target.workCenterName ?? ''),
+          shiftDate: planDate,
+          shiftType,
+          targetQuantity: totalTarget,
+          crewSize: assignedEmployees.length,
+          rule: 'faqat boʻsh kelajak slotlar toʻldiriladi; frozen-window (~1-2 kun) tegilmaydi (EP-PP-081)',
+        },
+        ranAt: _time.now().toISOString(),
+      };
+    } catch (e) {
+      return this.failStep(AiPlanStep.SHIFT_ASSIGN, 5, { code: 'INTERNAL', message: String(e) });
+    }
+  }
+
+  // Real work-center capacity + open-order target demand. target_quantity = Σ open
+  // production-order planned_quantity assigned to that work centre (real linkage;
+  // 0 when nothing is queued there → the no-data gate above degrades honestly).
+  private async loadShiftCapacity(): Promise<Array<{ workCenterId: string; workCenterName: string; targetQuantity: number }>> {
+    const r = await runQuery(sql`
+      SELECT wc.id AS work_center_id,
+             COALESCE(wc.name, wc.code, 'Ish markaz') AS work_center_name,
+             COALESCE((
+               SELECT SUM(po.planned_quantity)
+               FROM production_orders po
+               WHERE po.work_center_id::text = wc.id::text
+                 AND po.status NOT IN ('completed', 'cancelled')
+                 AND po.deleted_at IS NULL
+             ), 0)::numeric AS target_quantity
+      FROM work_centers wc
+      WHERE wc.is_active = true AND wc.deleted_at IS NULL
+      ORDER BY target_quantity DESC, wc.id
+      LIMIT 100
+    `);
+    const rows = Array.isArray(r?.rows) ? r.rows : (Array.isArray(r) ? r : []);
+    return rows.map((row) => ({
+      workCenterId: String(row['work_center_id'] ?? ''),
+      workCenterName: String(row['work_center_name'] ?? ''),
+      targetQuantity: safeNum(row['target_quantity'], 0),
+    }));
+  }
+
+  // Crew actually assigned to the plan date (real — shift_assignments). No work-center
+  // column exists on shift_assignments, so the date's crew is attached to the top-target
+  // work centre's shift plan (the schema's best real signal).
+  private async loadShiftCrew(planDate: string): Promise<Array<{ employeeId: number; shiftTypeId: number }>> {
+    const r = await runQuery(sql`
+      SELECT employee_id, shift_type_id
+      FROM shift_assignments
+      WHERE assignment_date = ${planDate}
+      ORDER BY employee_id
+    `);
+    const rows = Array.isArray(r?.rows) ? r.rows : (Array.isArray(r) ? r : []);
+    return rows.map((row) => ({
+      employeeId: Number(row['employee_id']),
+      shiftTypeId: Number(row['shift_type_id']),
+    }));
+  }
+
+  // Representative shift for the plan row = the most common shift_type_id among the
+  // date's crew, rendered as text (the pp_shift_plans.shift_type varchar). 'day' when absent.
+  private pickShiftType(crew: Array<{ shiftTypeId: number }>): string {
+    const counts = new Map<number, number>();
+    for (const c of Array.isArray(crew) ? crew : []) {
+      if (Number.isFinite(c.shiftTypeId)) counts.set(c.shiftTypeId, (counts.get(c.shiftTypeId) ?? 0) + 1);
+    }
+    let mode: number | null = null;
+    let best = -1;
+    for (const [id, n] of counts) {
+      if (n > best) { best = n; mode = id; }
+    }
+    return mode === null ? 'day' : String(mode);
+  }
+
+  // Persist (upsert) the real shift plan. Idempotent on (work_center, date, shift):
+  // re-running the planner updates target/crew instead of duplicating rows.
+  private async persistShiftPlan(plan: {
+    workCenterId: number;
+    shiftDate: string;
+    shiftType: string;
+    targetQuantity: number;
+    assignedEmployees: number[];
+  }): Promise<number | null> {
+    const crewJson = JSON.stringify(Array.isArray(plan.assignedEmployees) ? plan.assignedEmployees : []);
+    const r = await runQuery(sql`
+      INSERT INTO pp_shift_plans (work_center_id, shift_date, shift_type, target_quantity, assigned_employees, created_by)
+      VALUES (${plan.workCenterId}, ${plan.shiftDate}, ${plan.shiftType}, ${plan.targetQuantity}, ${crewJson}::jsonb, ${null})
+      ON CONFLICT (work_center_id, shift_date, shift_type)
+      DO UPDATE SET target_quantity = EXCLUDED.target_quantity,
+                    assigned_employees = EXCLUDED.assigned_employees
+      RETURNING id
+    `);
+    const rows = Array.isArray(r?.rows) ? r.rows : (Array.isArray(r) ? r : []);
+    const id = rows[0]?.['id'];
+    return id === undefined || id === null ? null : Number(id);
   }
 
   // ─── Step 7: AI optimisation verdict (KEY-GATED — Q-40, no fabrication) ────

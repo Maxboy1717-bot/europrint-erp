@@ -5,7 +5,7 @@
 
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, type AnyPgColumn, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, date, uniqueIndex, index, type AnyPgColumn, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, unitOfMeasures, users } from "../core-schema";
@@ -597,3 +597,60 @@ export const techCardVersions = pgTable("tech_card_versions", {
 export const insertTechCardVersionSchema = createInsertSchema(techCardVersions).omit({ id: true, changedAt: true } as never);
 export type TechCardVersion = typeof techCardVersions.$inferSelect;
 export type InsertTechCardVersion = z.infer<typeof insertTechCardVersionSchema>;
+
+// ============================================================
+// VISION-3340 #23 — PP order-level reason codes + real shift-plan persistence
+// APPROVED: egasi (owner) 2026-07-08 VISION-3340 #23. DDL mirror of
+// apps/api/src/shared/db/migrations/pp-reason-codes-shift-plans-2026-07-08.sql.
+// ============================================================
+
+// PP Reason Codes (buyurtma-darajasidagi sabab lug'ati) — structured, reusable
+// replacement for the free-text `reason` on the /pp/orders/:id/flags path.
+// Column shape mirrors downtime_reason_codes (pp-iot.ts). Seed nothing — the
+// reason vocabulary is owner master-data (Q-40).
+export const ppReasonCodes = pgTable("pp_reason_codes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 30 }).notNull().unique(),
+  name: text("name").notNull(),
+  nameRu: text("name_ru"),
+  category: varchar("category", { length: 30 }).notNull(),
+  color: varchar("color", { length: 10 }).default("#808080"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_reason_codes_active").on(t.isActive, t.sortOrder),
+]);
+
+export const insertPpReasonCodeSchema = createInsertSchema(ppReasonCodes, {
+  code: z.string().min(1, "Kod kerak"),
+  name: z.string().min(2, "Nom kerak"),
+  // No enum: PP reason categories are owner-defined master-data (not fabricated).
+  category: z.string().min(1, "Kategoriya kerak"),
+}).omit({ id: true, createdAt: true } as never);
+
+export type PpReasonCode = typeof ppReasonCodes.$inferSelect;
+export type InsertPpReasonCode = z.infer<typeof insertPpReasonCodeSchema>;
+
+// PP Shift Plans — real persistence target for the AI 7-step planner's step 6
+// (shift-assign), replacing its former hardcoded stub. One plan per
+// (work_center, shift_date, shift_type). work_center_id references the SERIAL
+// work_centers.id; the FK is enforced at DB level (kept as a plain integer here,
+// same as techCardRoutes.machineId, to avoid a cross-file FK import cycle).
+export const ppShiftPlans = pgTable("pp_shift_plans", {
+  id: serial("id").primaryKey(),
+  workCenterId: integer("work_center_id"),
+  shiftDate: date("shift_date"),
+  shiftType: varchar("shift_type", { length: 20 }),
+  targetQuantity: numericMoney("target_quantity"),
+  assignedEmployees: jsonb("assigned_employees"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("uq_pp_shift_plans_wc_date_type").on(t.workCenterId, t.shiftDate, t.shiftType),
+  index("idx_pp_shift_plans_shift_date").on(t.shiftDate),
+]);
+
+export const insertPpShiftPlanSchema = createInsertSchema(ppShiftPlans).omit({ id: true, createdAt: true } as never);
+export type PpShiftPlan = typeof ppShiftPlans.$inferSelect;
+export type InsertPpShiftPlan = z.infer<typeof insertPpShiftPlanSchema>;

@@ -8,6 +8,11 @@
  * provider key configured → `pending_ai_key`, never a fabricated verdict.
  */
 
+// VISION-3340 #23: step 6 now reads/writes via @shared/db.runQuery. Mock it so these
+// skeleton-orchestration tests never touch a real DB — with no rows queued, step 6
+// degrades to an honest `empty` (no persist), leaving every assertion below unchanged.
+jest.mock('@shared/db', () => ({ runQuery: jest.fn().mockResolvedValue({ rows: [] }) }));
+
 import { PpAiPlanningService, AiPlanStep } from '../../src/modules/pp/application/services/pp-ai-planning.service';
 import type { PpMpsService } from '../../src/modules/pp/application/services/pp-mps.service';
 import type { PpCrpService } from '../../src/modules/pp/application/services/pp-crp.service';

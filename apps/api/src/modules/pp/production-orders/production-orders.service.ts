@@ -113,7 +113,9 @@ export class ProductionOrdersService {
    */
   async updateFlags(
     id: number,
-    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null },
+    // VISION-3340 #23: reasonCodeId (pp_reason_codes.id) optionally tags the flag with a
+    // structured reason. Threaded straight to the repo alongside the existing flags.
+    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null; reasonCodeId?: number },
   ) {
     return safeCall(async () => {
       await this.findOne(id);

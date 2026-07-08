@@ -690,4 +690,68 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'entries.cost_center_id index (VISION-3340 #21)',
     sql: `CREATE INDEX IF NOT EXISTS idx_entries_cost_center_id ON entries (cost_center_id)`,
   },
+  // APPROVED: egasi (owner) 2026-07-08 VISION-3340 #23 — two NEW tables:
+  //   (A) pp_reason_codes — structured, reusable order-level PP reason lookup
+  //       (mirrors downtime_reason_codes shape) so a flagged order can reference a
+  //       reason code instead of only free-text. Seeds NOTHING (owner master-data, Q-40).
+  //       Adds a NULLABLE production_orders.reason_code_id tag (write-path:
+  //       pp-orders.controller.ts setFlags → ProductionOrdersService.updateFlags →
+  //       DrizzlePpProductionOrdersRepository.updateFlags).
+  //   (B) pp_shift_plans — real persistence target for the AI 7-step planner's step 6
+  //       (PpAiPlanningService.runStep6ShiftAssign), replacing its hardcoded stub.
+  // See apps/api/src/shared/db/migrations/pp-reason-codes-shift-plans-2026-07-08.sql
+  // for the human-readable mirror of these entries. work_centers.id is SERIAL so the
+  // INTEGER FK on pp_shift_plans.work_center_id is type-correct; both FKs use ON DELETE
+  // SET NULL so existing rows stay valid (Q-39/Q-46).
+  {
+    name: 'pp_reason_codes table (VISION-3340 #23, order-level reason lookup)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS pp_reason_codes (
+        id          SERIAL PRIMARY KEY,
+        code        VARCHAR(30)  NOT NULL UNIQUE,
+        name        TEXT         NOT NULL,
+        name_ru     TEXT,
+        category    VARCHAR(30)  NOT NULL,
+        color       VARCHAR(10)  DEFAULT '#808080',
+        is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+        sort_order  INTEGER      NOT NULL DEFAULT 0,
+        created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `,
+  },
+  {
+    name: 'pp_reason_codes active index (VISION-3340 #23)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_pp_reason_codes_active ON pp_reason_codes (is_active, sort_order)`,
+  },
+  {
+    name: 'production_orders.reason_code_id column (VISION-3340 #23, structured flag reason)',
+    sql: `ALTER TABLE IF EXISTS production_orders ADD COLUMN IF NOT EXISTS reason_code_id INTEGER REFERENCES pp_reason_codes(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'production_orders.reason_code_id index (VISION-3340 #23)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_production_orders_reason_code_id ON production_orders (reason_code_id)`,
+  },
+  {
+    name: 'pp_shift_plans table (VISION-3340 #23, real shift-plan persistence)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS pp_shift_plans (
+        id                 SERIAL PRIMARY KEY,
+        work_center_id     INTEGER REFERENCES work_centers(id) ON DELETE SET NULL,
+        shift_date         DATE,
+        shift_type         VARCHAR(20),
+        target_quantity    NUMERIC(18,4),
+        assigned_employees JSONB,
+        created_by         INTEGER,
+        created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `,
+  },
+  {
+    name: 'pp_shift_plans (work_center_id, shift_date, shift_type) unique index (VISION-3340 #23)',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_pp_shift_plans_wc_date_type ON pp_shift_plans (work_center_id, shift_date, shift_type)`,
+  },
+  {
+    name: 'pp_shift_plans shift_date index (VISION-3340 #23)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_pp_shift_plans_shift_date ON pp_shift_plans (shift_date)`,
+  },
 ];

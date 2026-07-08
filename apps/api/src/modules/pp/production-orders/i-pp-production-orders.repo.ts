@@ -20,7 +20,9 @@ export interface IPpProductionOrdersRepository {
    */
   updateFlags(
     id: number,
-    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null },
+    // VISION-3340 #23: reasonCodeId (pp_reason_codes.id) is an optional structured
+    // reason tag persisted onto production_orders.reason_code_id alongside the flags.
+    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null; reasonCodeId?: number },
   ): Promise<Result<Record<string, unknown>>>;
   softDelete(id: number): Promise<Result<void>>;
 }

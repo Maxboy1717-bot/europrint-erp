@@ -34,6 +34,9 @@ const FlagsDtoSchema = z.object({
   isFrozen: z.boolean().optional(),
   frozenUntil: z.coerce.date().nullable().optional(),
   reason: z.string().min(5),
+  // VISION-3340 #23: optional structured reason (pp_reason_codes.id). Complements the
+  // free-text `reason` above — a flagged order can now point at a reusable reason code.
+  reasonCodeId: z.coerce.number().int().positive().optional(),
 }).refine(
   (d) => d.isUrgent !== undefined || d.isFrozen !== undefined || d.frozenUntil !== undefined,
   { message: 'Kamida bitta flag maydoni kerak' },
@@ -171,11 +174,12 @@ export class PpOrdersController {
   @Body() dto: z.infer<typeof FlagsDtoSchema>,
  ) {
   const parsed = FlagsDtoSchema.parse(dto);
-  this.logger.log(`Setting PP order #${id} flags: ${JSON.stringify({ isUrgent: parsed.isUrgent, isFrozen: parsed.isFrozen, frozenUntil: parsed.frozenUntil })}`);
+  this.logger.log(`Setting PP order #${id} flags: ${JSON.stringify({ isUrgent: parsed.isUrgent, isFrozen: parsed.isFrozen, frozenUntil: parsed.frozenUntil, reasonCodeId: parsed.reasonCodeId })}`);
   const result = await this.productionOrdersService.updateFlags(Number(id), {
    isUrgent: parsed.isUrgent,
    isFrozen: parsed.isFrozen,
    frozenUntil: parsed.frozenUntil,
+   reasonCodeId: parsed.reasonCodeId,
   });
   return unwrapOrThrow(result);
  }

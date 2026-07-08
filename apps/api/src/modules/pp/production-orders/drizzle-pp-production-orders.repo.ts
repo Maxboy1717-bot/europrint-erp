@@ -123,7 +123,7 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
    */
   async updateFlags(
     id: number,
-    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null },
+    flags: { isUrgent?: boolean; isFrozen?: boolean; frozenUntil?: Date | null; reasonCodeId?: number },
   ): Promise<Result<Record<string, unknown>>> {
     try {
       const patch: Partial<typeof productionOrders.$inferInsert> = {
@@ -133,6 +133,14 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
         updatedAt: _time.now(),
       };
       const result = await db.update(productionOrders).set(patch).where(eq(productionOrders.id, id)).returning();
+      // VISION-3340 #23: persist the structured reason tag. reason_code_id is a
+      // migration-added column (pp-reason-codes-shift-plans-2026-07-08.sql) not yet
+      // mirrored in the productionOrders Drizzle table, so it is written via a
+      // parameterised runQuery rather than the builder `set()` above. Only when the
+      // caller supplied a value (no fabrication — Q-40).
+      if (flags.reasonCodeId !== undefined) {
+        await runQuery(sql`UPDATE production_orders SET reason_code_id = ${flags.reasonCodeId} WHERE id = ${id}`);
+      }
       return Ok(result[0]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Flag yangilashda xatolik'); }
   }
