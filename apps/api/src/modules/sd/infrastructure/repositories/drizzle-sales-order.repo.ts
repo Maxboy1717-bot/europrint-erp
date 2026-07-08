@@ -24,7 +24,7 @@ import { execSdSalesOrderInsert, execSdSalesOrderUpdate, execSdSalesOrderDelete 
 import { Err } from '@common/result';
 import { SalesOrder } from '../../domain/aggregates/sales-order.aggregate';
 import { CustomerId } from '@shared/domain/value-objects/customer-id.vo';
-import { ISalesOrderRepository, DrizzleTxExecutor, SalesOrderLineInput } from '../../domain/repositories/i-sales-order.repo';
+import { ISalesOrderRepository, DrizzleTxExecutor, SalesOrderLineInput, SalesOrderItemView } from '../../domain/repositories/i-sales-order.repo';
 import { SoStatus } from '../../domain/value-objects/so-status.vo';
 import { Money } from '@common/money/money.vo';
 
@@ -75,6 +75,34 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         saved++;
       }
       return { ok: true as const, data: saved };
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
+  }
+
+  async findItemsByOrderId(orderId: number): Promise<Result<SalesOrderItemView[]>> {
+    try {
+      // Read the order's persisted lines. product_id is the canonical finished-good
+      // binding the create flow writes (FK → products); material_id is a legacy/unused
+      // column (drizzle-sd-atp.repo) — surfaced too so a clone of an older row is not lost.
+      const r = await runQuery<Row>(sql`
+        SELECT id, item_number, product_id, material_id, material_number,
+               description, order_quantity, unit, net_price, total_price
+          FROM sales_order_items
+         WHERE sales_order_id = ${orderId}
+         ORDER BY item_number ASC`);
+      const rows = Array.isArray(r.rows) ? r.rows : [];
+      const items: SalesOrderItemView[] = rows.map((row) => ({
+        id: Number(row.id ?? 0),
+        itemNumber: String(row.item_number ?? ''),
+        productId: row.product_id != null ? Number(row.product_id) : null,
+        materialId: row.material_id != null ? Number(row.material_id) : null,
+        materialNumber: row.material_number != null ? String(row.material_number) : null,
+        description: String(row.description ?? ''),
+        orderQuantity: Number(row.order_quantity ?? 0),
+        unit: String(row.unit ?? ''),
+        netPrice: Number(row.net_price ?? 0),
+        totalPrice: Number(row.total_price ?? 0),
+      }));
+      return { ok: true as const, data: items };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
 

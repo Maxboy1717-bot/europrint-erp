@@ -26,6 +26,7 @@ import { ApproveAdvanceBypassCommand} from '../application/commands/approve-adva
 import { ApproveTechCheckpointCommand} from '../application/commands/approve-tech-checkpoint.handler';
 import { ListOrdersQuery} from '../application/queries/list-orders.handler';
 import { GetOrderByIdQuery} from '../application/queries/get-order-by-id.handler';
+import { GetOrderItemsQuery} from '../application/queries/get-order-items.handler';
 import { PendingAdvanceOrdersQuery} from '../application/queries/pending-advance-orders.handler';
 import { CreateOrderDtoSchema} from './dto/create-order.dto';
 import { AtpCheckDtoSchema } from './dto/atp-check.dto';
@@ -114,6 +115,17 @@ export class SdOrdersController {
  async getOrder(@Param('id', ParseIntPipe) id: number) {
   this.logger.log('Fetching order');
   const query = new GetOrderByIdQuery(id);
+  const res = await this.queryBus.execute(query);
+  return unwrapOrThrow(res);
+}
+
+ @ApiOperation({ summary: "Get an order's line-items (Takrorlash/clone enabler)" })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get(':id/items')
+ @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ async getOrderItems(@Param('id', ParseIntPipe) id: number) {
+  this.logger.log('Fetching order line-items');
+  const query = new GetOrderItemsQuery(id);
   const res = await this.queryBus.execute(query);
   return unwrapOrThrow(res);
 }

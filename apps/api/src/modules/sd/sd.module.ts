@@ -36,6 +36,7 @@ import { CreateInvoiceHandler } from './application/commands/create-invoice.hand
 import { ConfirmAdvancePaymentHandler } from './application/commands/confirm-advance-payment.handler';
 import { ListOrdersHandler } from './application/queries/list-orders.handler';
 import { GetOrderByIdHandler } from './application/queries/get-order-by-id.handler';
+import { GetOrderItemsHandler } from './application/queries/get-order-items.handler';
 import { AtpCheckHandler } from './application/queries/atp-check.handler';
 import { DrizzleSdAtpRepository } from './infrastructure/repositories/drizzle-sd-atp.repo';
 import { PendingAdvanceOrdersHandler } from './application/queries/pending-advance-orders.handler';
@@ -93,6 +94,7 @@ const commandHandlers = [
 const queryHandlers = [
   ListOrdersHandler,
   GetOrderByIdHandler,
+  GetOrderItemsHandler,
   AtpCheckHandler,
   PendingAdvanceOrdersHandler,
   GetInvoicesHandler,

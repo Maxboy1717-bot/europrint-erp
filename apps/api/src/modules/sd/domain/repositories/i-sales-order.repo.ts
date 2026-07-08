@@ -24,6 +24,25 @@ export interface SalesOrderLineInput {
   netPrice: number;
 }
 
+/**
+ * One persisted order line as read back from sales_order_items (VISION-3340 #53
+ * "Takrorlash"/clone enabler). `productId` is the canonical finished-good binding
+ * the create flow writes (FK → products); `materialId` is the legacy/unused column
+ * kept only so a clone of an older row is not silently dropped (see drizzle-sd-atp.repo).
+ */
+export interface SalesOrderItemView {
+  id: number;
+  itemNumber: string;
+  productId: number | null;
+  materialId: number | null;
+  materialNumber: string | null;
+  description: string;
+  orderQuantity: number;
+  unit: string;
+  netPrice: number;
+  totalPrice: number;
+}
+
 export interface ISalesOrderRepository {
   /**
    * @param crmLeadId 2.6 golden-thread: originating CRM lead id (crm_leads.id), when
@@ -34,6 +53,8 @@ export interface ISalesOrderRepository {
   save(order: SalesOrder, tx?: DrizzleTxExecutor, crmLeadId?: number | null): Promise<Result<SalesOrder>>;
   /** Persist order line-items into sales_order_items (product_id-bound). Runs in the create tx. */
   saveItems(orderId: number, items: SalesOrderLineInput[], tx?: DrizzleTxExecutor): Promise<Result<number>>;
+  /** Read an order's persisted line-items from sales_order_items, ordered by item_number (clone/Takrorlash enabler). */
+  findItemsByOrderId(orderId: number): Promise<Result<SalesOrderItemView[]>>;
   findById(id: number): Promise<Result<SalesOrder | null>>;
   findByOrderNumber(orderNumber: string): Promise<Result<SalesOrder | null>>;
   findByCompanyId(companyId: number, limit: number, offset: number): Promise<Result<SalesOrder[]>>;
