@@ -243,11 +243,13 @@ export class SdCustomersController {
   // LEGACY_NOOP: soft-delete returns 200 with empty body; frontend SdCustomers
   // page does not read the response. P3-26 audit verified service.softDelete()
   // does real work; only the response shape is empty.
+  // VISION-3340 #63: now threads the acting user into deleted_by (previously the
+  // controller never accepted @CurrentUser(), so deleted_at/deleted_by stayed NULL).
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'director')
-  async delete(@Param('id') id: string) {
-    await this.svc.softDelete(safeInt(id, 0));
+  async delete(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    await this.svc.softDelete(safeInt(id, 0), user.id);
     return {};
   }
 

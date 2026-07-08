@@ -5,7 +5,7 @@
 
 import { db } from '@shared/db';
 import {
-  sd_customers, sd_customer_contacts, sd_customer_documents,
+  sd_customer_contacts, sd_customer_documents,
   sd_customer_competitors, sd_sales_orders,
   ai_report_subscriptions, ai_report_categories,
 } from '@shared/db';
@@ -13,12 +13,20 @@ import { eq, and, sql } from 'drizzle-orm';
 
 type Row = Record<string, unknown>;
 
-export async function execSdCustomerSoftDelete(cid: number): Promise<void> {
-  // sd_customers is now the canonical `sdCustomers` (@workspace/db) re-export — TS field
-  // names are camelCase (updatedAt), unlike the removed local snake_case declaration.
-  await db.update(sd_customers)
-    .set({ status: 'deleted', updatedAt: sql`NOW()` })
-    .where(eq(sd_customers.id, cid));
+/**
+ * VISION-3340 #63: sd_customers.deleted_at/deleted_by exist live (A89 boot migration —
+ * see apps/api/src/shared/db/invariants/migrations-drift.ts:3908-3909) but are NOT mapped
+ * on the Drizzle `sdCustomers` pgTable (lib/db/src/schema/sd-europrint-schema.ts), so the
+ * Drizzle query-builder's `.set()` cannot target them type-safely. Raw SQL is used here
+ * (same pattern as execSdLeadDelete below) so both audit columns are populated in the
+ * SAME UPDATE as the status flip, instead of leaving them NULL forever.
+ */
+export async function execSdCustomerSoftDelete(cid: number, deletedBy?: number): Promise<void> {
+  await db.execute(sql`
+    UPDATE sd_customers
+       SET status = 'deleted', updated_at = NOW(), deleted_at = NOW(), deleted_by = ${deletedBy ?? null}
+     WHERE id = ${cid}
+  `);
 }
 
 export async function execSdContactDelete(kid: number, cid: number): Promise<void> {

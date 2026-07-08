@@ -129,4 +129,19 @@ describe('SdCustomersService', () => {
     await svc.update(1, { name: 'Acme Updated' }, 7);
     expect(repo.update).toHaveBeenCalledWith(1, { name: 'Acme Updated' }, 7);
   });
+
+  // VISION-3340 #63 (2026-07-08): delete() never threaded the current user into
+  // sd_customers.deleted_by — the controller didn't even accept @CurrentUser(), so
+  // deleted_at/deleted_by stayed NULL forever even though both columns existed.
+  it('passes deletedBy through to repo.softDelete', async () => {
+    repo.softDelete.mockResolvedValue(undefined);
+    await svc.softDelete(42, 9);
+    expect(repo.softDelete).toHaveBeenCalledWith(42, 9);
+  });
+
+  it('passes undefined deletedBy through when no acting user is known', async () => {
+    repo.softDelete.mockResolvedValue(undefined);
+    await svc.softDelete(42);
+    expect(repo.softDelete).toHaveBeenCalledWith(42, undefined);
+  });
 });

@@ -39,8 +39,8 @@ export class SdCustomersService {
     return safeCall(async () => this.repo.update(cid, body, updatedBy));
   }
 
-  async softDelete(cid: number) {
-    return safeCall(async () => this.repo.softDelete(cid));
+  async softDelete(cid: number, deletedBy?: number) {
+    return safeCall(async () => this.repo.softDelete(cid, deletedBy));
   }
 
   async getContacts(cid: number) {

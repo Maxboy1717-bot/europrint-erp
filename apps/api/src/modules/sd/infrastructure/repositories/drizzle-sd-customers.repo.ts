@@ -27,7 +27,7 @@ export class DrizzleSdCustomersRepository {
              COUNT(DISTINCT o.id)::int AS "totalOrders",
              COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue"
       FROM sd_customers c LEFT JOIN sales_orders o ON o.customer_id = c.id
-      WHERE c.status != 'deleted'
+      WHERE c.status != 'deleted' AND c.deleted_at IS NULL
         AND (${pat}::text IS NULL OR c.name ILIKE ${pat} OR c.stir ILIKE ${pat})
         AND (${dbStatus ?? null}::text IS NULL OR c.status = ${dbStatus ?? null})
       GROUP BY c.id, c.name, c.stir, c.status, c.actual_address, c.notes,
@@ -51,7 +51,7 @@ export class DrizzleSdCustomersRepository {
              COALESCE(SUM(o.total_value), 0)::numeric(15,2) AS "totalRevenue"
       FROM sd_customers c
       LEFT JOIN sales_orders o ON o.customer_id = c.id
-      WHERE c.id = ${cid} AND c.status != 'deleted'
+      WHERE c.id = ${cid} AND c.status != 'deleted' AND c.deleted_at IS NULL
       GROUP BY c.id
     `);
     return (rows.rows as Row[]).map(r => ({
@@ -74,7 +74,7 @@ export class DrizzleSdCustomersRepository {
       SELECT c.id, COALESCE(c.credit_limit, 0)::numeric AS credit_limit,
              COALESCE((SELECT SUM(p.amount) FROM sd_payments p
                        WHERE p.customer_id = c.id AND p.status = 'pending'), 0)::numeric AS outstanding
-      FROM sd_customers c WHERE c.id = ${cid} AND c.status != 'deleted'
+      FROM sd_customers c WHERE c.id = ${cid} AND c.status != 'deleted' AND c.deleted_at IS NULL
     `);
     const row = rows.rows[0] as Row | undefined;
     if (!row) return { found: false };
@@ -215,7 +215,7 @@ export class DrizzleSdCustomersRepository {
     return { ...row, segment: this.mapSegment(String(row.status ?? '')), creditLimit: Number(row.credit_limit ?? 0), actualAddress: row.actual_address ?? null };
   }
 
-  async softDelete(cid: number): Promise<void> { await execSdCustomerSoftDelete(cid); }
+  async softDelete(cid: number, deletedBy?: number): Promise<void> { await execSdCustomerSoftDelete(cid, deletedBy); }
 
   async getRecentOrders(cid: number): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
