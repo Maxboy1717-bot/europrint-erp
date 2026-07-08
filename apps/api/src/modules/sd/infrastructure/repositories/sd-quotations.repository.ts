@@ -9,6 +9,7 @@ import { I18nService } from 'nestjs-i18n';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall, Ok, Err, Result } from '@common/result';
+import { DEFAULT_ADVANCE_PERCENT } from '@common/constants/business.constants';
 import { ISdQuotationsRepo } from '../../domain/repositories/i-sd-quotations.repo';
 
 type Row = Record<string, unknown>;
@@ -210,7 +211,11 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
       if (isNaN(companyId) || companyId === 0) {
         throw new BadRequestException(await this.i18n.t('errors.quotationCustomerIdInvalid'));
       }
-      const advancePercent = Number(quotation['advance_percent'] ?? 30);
+      // Avans %: kotirovkada berilgan qiymat, aks holda egasi-vizyoni standarti (70%).
+      // Musbat, sonli qiymat bo'lmasa (null/NaN/<=0) — DEFAULT_ADVANCE_PERCENT (canonical
+      // execSdSalesOrderInsert bilan bir xil), avvalgi ?? 30 drift emas.
+      const parsedAdvance = Number(quotation['advance_percent']);
+      const advancePercent = Number.isFinite(parsedAdvance) && parsedAdvance > 0 ? parsedAdvance : DEFAULT_ADVANCE_PERCENT;
       // Atomic: order INSERT + quotation status UPDATE must succeed together.
       // Without tx: if UPDATE fails after INSERT, you get an orphaned order with the quotation
       // still marked "not converted", leading to a duplicate-conversion attempt on retry.
@@ -219,7 +224,7 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
           INSERT INTO sales_orders
             (order_number, status, company_id, total_amount, advance_required, advance_paid, advance_status, design_flag, sample_flag, created_by)
           VALUES
-            (${orderNumber}, 'pending', ${companyId}, ${totalAmount}, ${advancePercent ?? 30}, '0', 'pending', false, false, 0)
+            (${orderNumber}, 'pending', ${companyId}, ${totalAmount}, ${advancePercent}, '0', 'pending', false, false, 0)
           RETURNING id, order_number, status, total_amount, created_at
         `);
         const order = (orderRes.rows?.[0] ?? null) as Row | null;

@@ -10,6 +10,7 @@ import {
   ai_report_subscriptions, ai_report_categories,
 } from '@shared/db';
 import { eq, and, sql } from 'drizzle-orm';
+import { DEFAULT_ADVANCE_PERCENT } from '@common/constants/business.constants';
 
 type Row = Record<string, unknown>;
 
@@ -81,7 +82,7 @@ export async function execSdSalesOrderInsert(
     company_id: companyId as number,
     customer_id: customerId ?? null,
     total_amount: String(totalAmount),
-    advance_required: 70,
+    advance_required: DEFAULT_ADVANCE_PERCENT,
     advance_paid: '0',
     advance_status: 'pending',
     design_flag: false,

@@ -34,6 +34,14 @@ export const FORECAST = {
 /** SLA first-response window in hours */
 export const SLA_RESPONSE_HOURS = 4;
 
+/**
+ * SD sotuv-buyurtma avans (advance) standarti — egasi vizyoni: 70% oldindan to'lov.
+ * Canonical yangi-buyurtma INSERT (queries-sd.ts execSdSalesOrderInsert) shu qiymatni
+ * ishlatadi; kotirovka→buyurtma konversiyasi ham shu bilan mos bo'lishi shart
+ * (ikki yo'l bir xil default berishi kerak — avval konversiya 30% ishlatib drift qilardi).
+ */
+export const DEFAULT_ADVANCE_PERCENT = 70;
+
 /** Safety stock = demand_avg * SAFETY_STOCK_FACTOR */
 export const SAFETY_STOCK_FACTOR = 0.5;
 
