@@ -42,7 +42,7 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { LmsMiscService } from '../application/services/lms-misc.service';
-import { VideoProgressSchema, VideoProgressDto, AssignCardMentorSchema, UpdateCardMentorSchema } from './dto/courses.dto';
+import { VideoProgressSchema, VideoProgressDto, AssignCardMentorSchema, UpdateCardMentorSchema, RateCardMentorSchema } from './dto/courses.dto';
 import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiThrottle()
@@ -268,6 +268,31 @@ export class LmsMentorsController {
     const result = await this.svc.revokeCardMentor(id);
     if (!result.ok) throw new NotFoundException(result.error.message);
     return { message: 'Mentor biriktiruvi bekor qilindi', data: result.data };
+  }
+
+  // EP-ORG-116 follow-up (2026-07-07): mentor bahosi (0..5) + malaka tasdiqlash
+  // (qualification_verified_at/by). Narrower role set than assign/update on purpose —
+  // baholash/tasdiqlash HR_SPECIALIST darajasidan yuqori qaror.
+  @ApiOperation({ summary: 'Rate a card-mentor assignment and/or verify their qualification' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('cards/:id/rating')
+  @Roles('HR_MANAGER', 'TRAINING_OFFICER', 'DIRECTOR', 'SUPER_ADMIN')
+  @UsePipes(new ZodValidationPipe(RateCardMentorSchema))
+  async rateCardMentor(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = body as { rating?: number; verifyQualification?: boolean };
+    const verify = dto.verifyQualification === true;
+    const result = await this.svc.rateCardMentor(id, {
+      rating: dto.rating ?? null,
+      qualificationVerified: verify,
+      verifiedBy: verify ? (Number(user?.id ?? 0) || null) : null,
+    });
+    // Repo returns "topilmadi" for a missing/inactive row (dominant path) or a CHECK-constraint
+    // message if an out-of-range rating somehow bypasses Zod (0..5) — mirrors updateCardMentor's
+    // NotFoundException mapping since "not found" is the only realistically reachable failure.
+    if (!result.ok) throw new NotFoundException(result.error.message);
+    return { message: 'Mentor bahosi saqlandi', data: result.data };
   }
 }
 

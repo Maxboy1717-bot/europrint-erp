@@ -232,6 +232,33 @@ export class LmsMiscRepository {
     } catch (error) { this.logger.error(`updateCardMentor: ${(error as Error).message}`); return Err((error as Error).message); }
   }
 
+  // Mentorni baholash / malakasini tasdiqlash (EP-ORG-116 follow-up). rating -> NUMERIC(2,1)
+  // CHECK 0..5 (23514 agar chegaradan tashqari bo'lsa); qualificationVerified=true bo'lsa
+  // qualification_verified_at/by to'ldiriladi, aks holda mavjud qiymat saqlanadi (COALESCE emas —
+  // false explicit "tasdiqlanmagan" holatini qaytarib qo'ymasligi uchun CASE ishlatiladi).
+  async rateCardMentor(
+    id: string,
+    data: { rating?: number | null; qualificationVerified?: boolean; verifiedBy?: number | null },
+  ): Promise<Result<Row>> {
+    try {
+      const verify = data.qualificationVerified === true;
+      const r = await exec(sql`
+        UPDATE lms_card_mentors
+        SET rating = COALESCE(${data.rating ?? null}, rating),
+            qualification_verified_at = CASE WHEN ${verify} THEN NOW() ELSE qualification_verified_at END,
+            qualification_verified_by = CASE WHEN ${verify} THEN ${data.verifiedBy ?? null} ELSE qualification_verified_by END,
+            updated_at = NOW()
+        WHERE id = ${parseInt(id, 10)} AND is_active = true
+        RETURNING *`);
+      if (!r.length) return Err('Faol mentor biriktiruvi topilmadi');
+      return Ok(r[0] as Row);
+    } catch (error) {
+      const msg = (error as Error).message;
+      if (/lms_card_mentors_rating_check|violates check constraint/.test(msg)) return Err('Baho 0 dan 5 gacha bo\'lishi kerak');
+      this.logger.error(`rateCardMentor: ${msg}`); return Err(msg);
+    }
+  }
+
   // Revoke (soft): is_active=false + revoked_at — uq idx faqat is_active=true ni qamrab oladi, qayta-biriktirish mumkin.
   async revokeCardMentor(id: string): Promise<Result<Row>> {
     try {

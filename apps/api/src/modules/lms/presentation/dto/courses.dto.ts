@@ -79,3 +79,15 @@ export const UpdateCardMentorSchema = z.object({
   notes: z.string().max(2000).optional(),
 });
 export type UpdateCardMentorDto = z.infer<typeof UpdateCardMentorSchema>;
+
+// EP-ORG-116 follow-up (2026-07-07): mentor rating + qualification-verification on
+// lms_card_mentors.rating (NUMERIC(2,1) CHECK 0..5) / qualification_verified_at / _by.
+// At least one of the two fields must be present — an empty PATCH is a no-op the client
+// should not send.
+export const RateCardMentorSchema = z.object({
+  rating: z.number().min(0).max(5).optional(),
+  verifyQualification: z.boolean().optional(),
+}).refine((d) => d.rating !== undefined || d.verifyQualification !== undefined, {
+  message: "rating yoki verifyQualification kiritilishi kerak",
+});
+export type RateCardMentorDto = z.infer<typeof RateCardMentorSchema>;

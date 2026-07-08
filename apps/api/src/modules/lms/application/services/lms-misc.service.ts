@@ -76,4 +76,11 @@ export class LmsMiscService {
   async revokeCardMentor(id: string): Promise<Result<Record<string, unknown>>> {
     return this.repo.revokeCardMentor(id);
   }
+
+  async rateCardMentor(
+    id: string,
+    data: { rating?: number | null; qualificationVerified?: boolean; verifiedBy?: number | null },
+  ): Promise<Result<Record<string, unknown>>> {
+    return this.repo.rateCardMentor(id, data);
+  }
 }

@@ -393,4 +393,25 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'approval_matrix_config document_type+active index (2.15)',
     sql: `CREATE INDEX IF NOT EXISTS idx_approval_matrix_config_doctype_active ON approval_matrix_config (document_type, is_active)`,
   },
+  // EP-ORG-116 follow-up (2026-07-07): mentor assignment/approval CRUD on lms_card_mentors is
+  // real (T10-09), but no rating or qualification-verification existed. Additive columns only
+  // (Q-35 — no new table). `rating` nullable NUMERIC(2,1), bounded 0..5 via CHECK — same
+  // bounded-rating shape as employee_360_assessments.*_rating. Existing rows unaffected (Q-39,
+  // live table = 0 rows, dry-run verified 2026-07-07). See
+  // apps/api/src/shared/db/migrations/lms-card-mentors-rating-qualification-2026-07-07.sql for
+  // the human-readable mirror of this entry.
+  {
+    name: 'lms_card_mentors.rating column (mentor bahosi, EP-ORG-116 follow-up)',
+    sql: `ALTER TABLE IF EXISTS lms_card_mentors ADD COLUMN IF NOT EXISTS rating NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5)`,
+  },
+  {
+    name: 'lms_card_mentors.qualification_verified_at column (EP-ORG-116 follow-up)',
+    sql: `ALTER TABLE IF EXISTS lms_card_mentors ADD COLUMN IF NOT EXISTS qualification_verified_at TIMESTAMP`,
+  },
+  // FK convention mirrors standard_cost.created_by / price_tier.created_by above (REFERENCES
+  // users(id) ON DELETE SET NULL — verifier account deletion must not delete the mentor record).
+  {
+    name: 'lms_card_mentors.qualification_verified_by column (EP-ORG-116 follow-up)',
+    sql: `ALTER TABLE IF EXISTS lms_card_mentors ADD COLUMN IF NOT EXISTS qualification_verified_by INTEGER REFERENCES users(id) ON DELETE SET NULL`,
+  },
 ];
