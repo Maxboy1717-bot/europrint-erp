@@ -44,6 +44,8 @@ export default function PosMovementChiqim() {
   const [fromWarehouseId, setFromWarehouseId] = useState("");
   const [lines, setLines] = useState<ScannedLine[]>([]);
   const [reason, setReason] = useState<ReasonState>(initialReason());
+  // VISION-3340 #60: ixtiyoriy foto-dalil URL → pos_movements.photo_evidence_url.
+  const [photoUrl, setPhotoUrl] = useState("");
 
   // Skan + UI holati
   const [scanValue, setScanValue] = useState("");
@@ -206,6 +208,8 @@ export default function PosMovementChiqim() {
       movementTypeCode: movementType,
       fromWarehouseId,
       notes: buildNotes(),
+      // VISION-3340 #60: ixtiyoriy foto-dalil URL (bo'lmasa yuborilmaydi → BE NULL yozadi).
+      photoEvidenceUrl: photoUrl.trim() || undefined,
       // BE (pos-movement.service): INTERNAL_RETURN uchun returnReason MAJBURIY —
       // sabab-katalog matni (buildNotes) qaytarish sababi sifatida yoziladi.
       ...(movementType === "INTERNAL_RETURN" ? { returnReason: buildNotes() } : {}),
@@ -224,10 +228,10 @@ export default function PosMovementChiqim() {
       setSubmitting(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromWarehouseId, lines, reason, movementType]);
+  }, [fromWarehouseId, lines, reason, movementType, photoUrl]);
 
   function resetForm() {
-    setLines([]); setSubmitted(null); setReason(initialReason()); setScanValue("");
+    setLines([]); setSubmitted(null); setReason(initialReason()); setScanValue(""); setPhotoUrl("");
   }
 
   // ── Success ────────────────────────────────────────────────────────────────
@@ -312,6 +316,8 @@ export default function PosMovementChiqim() {
             lines={lines}
             reason={reason}
             onReasonChange={setReason}
+            photoUrl={photoUrl}
+            onPhotoUrlChange={setPhotoUrl}
             reasons={CHIQIM_REASONS}
             onOpenQty={openKeypad}
             onOverride={overrideLine}

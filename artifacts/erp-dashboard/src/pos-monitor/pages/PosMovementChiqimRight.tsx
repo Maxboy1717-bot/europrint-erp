@@ -121,6 +121,9 @@ interface LinesPanelProps {
   lines: ScannedLine[];
   reason: ReasonState;
   onReasonChange: (v: ReasonState) => void;
+  /** VISION-3340 #60: ixtiyoriy foto-dalil URL (pos_movements.photo_evidence_url). */
+  photoUrl: string;
+  onPhotoUrlChange: (v: string) => void;
   reasons: { code: string; label: string }[];
   onOpenQty: (key: string) => void;
   onOverride: (key: string) => void;
@@ -132,7 +135,7 @@ interface LinesPanelProps {
 }
 
 export function LinesPanel({
-  lines, reason, onReasonChange, reasons,
+  lines, reason, onReasonChange, photoUrl, onPhotoUrlChange, reasons,
   onOpenQty, onOverride, onRemove, submitting, confirmLabel, onSubmit,
 }: LinesPanelProps) {
   const { t } = useTranslation("common");
@@ -170,6 +173,20 @@ export function LinesPanel({
       {lines.length > 0 && (
         <div style={{ padding: "16px", borderTop: "1px solid var(--pos-border)", background: "rgba(248,250,252,0.5)" }}>
           <ReasonPicker reasons={reasons} value={reason} onChange={onReasonChange} />
+
+          {/* VISION-3340 #60: ixtiyoriy foto-dalil URL (shift-handover formasi bilan bir xil naqsh) */}
+          <div style={{ marginTop: 12 }}>
+            <label style={{ fontSize: 12, color: "var(--pos-text-muted)", marginBottom: 4, display: "block" }}>
+              {t("fotoDalilUrl", "Foto-dalil URL (ixtiyoriy)")}
+            </label>
+            <input
+              className="pos-input"
+              style={{ width: "100%" }}
+              placeholder="https://..."
+              value={photoUrl}
+              onChange={e => onPhotoUrlChange(e.target.value)}
+            />
+          </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "16px 0 12px" }}>
             <span style={{ fontSize: 12, color: "var(--pos-text-muted)" }}>

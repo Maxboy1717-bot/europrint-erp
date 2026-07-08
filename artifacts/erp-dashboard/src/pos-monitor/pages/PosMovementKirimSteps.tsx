@@ -77,6 +77,11 @@ export function Step1Header({header, errors, warehouses, warehousesLoading, kiri
           <label className="_lbl">{t("Izoh")}</label>
           <textarea className="pos-input" rows={3} value={header.notes} onChange={e => setH("notes", e.target.value)} placeholder={t("qoshimchaIzoh")} style={{ resize: "vertical" }} />
         </div>
+        {/* VISION-3340 #60: ixtiyoriy foto-dalil URL (shift-handover formasi bilan bir xil naqsh) */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label className="_lbl">{t("PosMovementKirim.fotoDalilUrl", "Foto-dalil URL (ixtiyoriy)")}</label>
+          <input className="pos-input" value={header.photoEvidenceUrl ?? ""} onChange={e => setH("photoEvidenceUrl", e.target.value)} placeholder="https://..." />
+        </div>
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
         <button className="pos-btn pos-btn-primary" onClick={goNext}>{t("keyingiMateriallar")}</button>

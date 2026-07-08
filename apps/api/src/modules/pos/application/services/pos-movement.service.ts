@@ -338,6 +338,9 @@ export class PosMovementService {
         currency:             movementCurrency,
         exchangeRate:         movementExchangeRate,
         notes:                dto.notes,
+        // VISION-3340 #60: ixtiyoriy foto-dalil URL → photo_evidence_url. Bo'lmasa NULL
+        // (fabrikatsiya YO'Q, Q-40). idempotencyKey bilan bir xil ?? null idiom.
+        photoEvidenceUrl:     dto.photoEvidenceUrl ?? null,
         idempotencyKey:       dto.idempotencyKey ?? null,
       });
       if (!movementR.ok) {

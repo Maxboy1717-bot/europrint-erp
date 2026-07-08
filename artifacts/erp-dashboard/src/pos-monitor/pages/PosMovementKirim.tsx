@@ -33,6 +33,7 @@ export default function PosMovementKirim() {
   const [header, setHeader] = useState<HeaderForm>({
     toWarehouseId: "", supplierName: "", contractNumber: "",
     waybillNumber: "", arrivalDate: today(), currency: "UZS", notes: "",
+    photoEvidenceUrl: "",
   });
 
   const [lines, setLines] = useState<LineItem[]>([mkLine()]);
@@ -228,6 +229,8 @@ export default function PosMovementKirim() {
       movementTypeCode: "EXTERNAL_IN", toWarehouseId: header.toWarehouseId,
       supplierName: header.supplierName, documentNumber: header.contractNumber,
       documentDate: header.arrivalDate, notes: header.notes || undefined,
+      // VISION-3340 #60: ixtiyoriy foto-dalil URL (bo'lmasa yuborilmaydi → BE NULL yozadi).
+      photoEvidenceUrl: header.photoEvidenceUrl?.trim() || undefined,
       lines: lines.map(l => ({ materialCardId: parseInt(l.materialCardId, 10), quantity: parseFloat(l.quantity), unitPrice: parseFloat(l.unitPrice) || 0, batchNumber: l.batchNumber || undefined, barcode: l.barcode || undefined, expiryDate: l.expiryDate || undefined, notes: l.notes || undefined })).filter(l => l.materialCardId > 0 && l.quantity > 0),
       submit: submitToKarantin,
       // Savdo-sity referens H-8 naqshi: double-tap "Saqlash" bir xil kirim-hujjatni ikki marta yaratmasin.

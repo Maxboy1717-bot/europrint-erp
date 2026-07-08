@@ -61,6 +61,9 @@ export const CreateMovementSchema = z.object({
   offlineCreatedAt:     isoDate.optional(),
   lines:                z.array(AddMovementLineSchema).optional(),
   notes:                z.string().max(MAX_NOTES_LENGTH).optional(),
+  // VISION-3340 #60: ixtiyoriy foto-dalil URL — shift-handover DTO bilan bir xil shakl
+  // (z.string().max(2048).optional()). pos_movements.photo_evidence_url jonli ustuniga yoziladi.
+  photoEvidenceUrl:     z.string().max(2048).optional(),
   submit:               z.boolean().optional(),
   // ADDITIVE (2026-06-27): yangi harakat turlari uchun ixtiyoriy kontekst
   // (WASTE_IN / LAB_SAMPLE_OUT / PARTIAL_RECEIPT / CUSTOMER_MATERIAL).

@@ -141,6 +141,10 @@ export const posMovements = pgTable('pos_movements', {
   direction:             varchar('direction', { length: 20 }),
   documentRef:           varchar('document_ref', { length: 100 }),
   completedBy:           integer('completed_by'),
+  // photo_evidence_url — jonli DB ustuni (text, nullable); avval faqat pos_shift_handovers
+  // yozardi. VISION-3340 #60: harakat-yaratish oqimiga ulandi (kirim/chiqim ixtiyoriy
+  // foto-dalil). ADD-ONLY superset — mavjud jonli ustunni ORM'ga ko'rsatadi (yangi migration YO'Q).
+  photoEvidenceUrl:      text('photo_evidence_url'),
 }, (t) => [
   index('idx_pos_movements_type').on(t.movementType),
   index('idx_pos_movements_status').on(t.status),

@@ -69,6 +69,9 @@ export class PosMovementRepository implements IPosMovementRepository {
 
   async insertMovement(movRow: Omit<typeof posMovements.$inferInsert, 'id'>): Promise<Result<PosMovement>> {
     try {
+      // movRow = xizmat qatlami qurgan to'liq insert-obyekt (notes, idempotencyKey,
+      // photoEvidenceUrl → photo_evidence_url, va h.k.). Generic `.values()` barcha
+      // ustunlarni yozadi — foto-dalil bo'lmasa xizmat NULL beradi (VISION-3340 #60).
       const [movement] = await db.insert(posMovements).values(movRow).returning();
       return Ok(movement);
     } catch (_e) {

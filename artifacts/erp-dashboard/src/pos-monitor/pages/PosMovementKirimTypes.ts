@@ -33,6 +33,8 @@ export const headerSchema = z.object({
   arrivalDate:    z.string().min(1, "Kelish sanasi kiritilishi shart"),
   currency:       z.enum(["UZS", "USD", "EUR"]),
   notes:          z.string().optional(),
+  // VISION-3340 #60: ixtiyoriy foto-dalil URL → pos_movements.photo_evidence_url.
+  photoEvidenceUrl: z.string().optional(),
 });
 
 export const lineSchema = z.object({
