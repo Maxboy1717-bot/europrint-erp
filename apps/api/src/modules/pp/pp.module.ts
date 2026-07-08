@@ -36,6 +36,7 @@ import { GetRoutingsHandler } from './application/queries/get-routings.handler';
 import { GetMrpReportHandler } from './application/queries/get-mrp-report.handler';
 import { GetWorkCentersHandler } from './application/queries/get-work-centers.handler';
 import { GetProductionQueueHandler } from './application/queries/get-production-queue.handler';
+import { PpPlanExportService } from './application/services/pp-plan-export.service';
 import { GetWorkCentersStatsHandler } from './application/queries/get-work-centers-stats.handler';
 import { DrizzlePpRepository } from './infrastructure/repositories/drizzle-pp.repo';
 import { DrizzleWorkCenterRepository } from './infrastructure/repositories/drizzle-work-center.repo';
@@ -170,6 +171,7 @@ const listeners = [
     CrpService,
     LearningCurveService,
     ProductionPriorityService,
+    PpPlanExportService,            // EP-PP-129: ranked-plan CSV snapshot serializer (pure, Rule 15)
     BomExplosionService,
     MpsAtpHandler,
     RunMrpHandler,

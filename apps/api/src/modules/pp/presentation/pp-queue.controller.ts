@@ -4,7 +4,7 @@
  *              (ProductionPriorityService.buildQueue) — frozen segment + flexible ZARUR→deadline→band.
  */
 
-import { Controller, Get, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards, UseInterceptors, StreamableFile, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { QueryBus } from '@nestjs/cqrs';
@@ -13,6 +13,9 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GetProductionQueueQuery } from '../application/queries/get-production-queue.query';
+import { PpPlanExportService } from '../application/services/pp-plan-export.service';
+import type { FastifyReply } from 'fastify';
+import { Readable } from 'stream';
 
 const QUEUE_ROLES = ['super_admin', 'director', 'production_manager', 'planner', 'operator'];
 
@@ -24,7 +27,10 @@ const QUEUE_ROLES = ['super_admin', 'director', 'production_manager', 'planner',
 export class PpQueueController {
   private readonly logger = new Logger(PpQueueController.name);
 
-  constructor(private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly planExport: PpPlanExportService,
+  ) {}
 
   @ApiOperation({ summary: 'Get ranked production queue (frozen + flexible: ZARUR → deadline → band)' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -33,5 +39,26 @@ export class PpQueueController {
   async getQueue() {
     this.logger.log('Getting ranked production queue');
     return unwrapOrThrow(await this.queryBus.execute(new GetProductionQueueQuery({})));
+  }
+
+  /**
+   * EP-PP-129 (Modul-07 #41): download the current ranked production plan as a
+   * CSV snapshot for audit. Same data source as GET /pp/queue (the ranked plan);
+   * the controller stays transport-only (Rule 6) — it runs the query, hands the
+   * REAL rows to the serializer, and streams. Empty queue → header-only CSV.
+   */
+  @ApiOperation({ summary: 'Export the ranked production plan as a CSV snapshot (audit) — EP-PP-129' })
+  @ApiResponse({ status: 200, description: 'CSV attachment (text/csv)' })
+  @Get('plan/export')
+  @Roles(...QUEUE_ROLES)
+  async exportPlanCsv(@Res({ passthrough: true }) res: FastifyReply): Promise<StreamableFile> {
+    this.logger.log('Exporting ranked production plan as CSV snapshot');
+    const rows = unwrapOrThrow(await this.queryBus.execute(new GetProductionQueueQuery({})));
+    const csv = this.planExport.serializePlanCsv(rows);
+    const filename = 'production-plan.csv';
+    void res
+      .header('Content-Type', 'text/csv; charset=utf-8')
+      .header('Content-Disposition', `attachment; filename="${filename}"`);
+    return new StreamableFile(Readable.from(Buffer.from(csv, 'utf-8')));
   }
 }
