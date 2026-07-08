@@ -53,19 +53,33 @@ export async function execCurrentStockUpsert(matId: number, warehouseId: unknown
 /**
  * A84: POS confirmed-movement stock-OUT canonical decrement on `warehouse_stock` (was the
  * `current_stock` VIEW, which only shrank `quantity` and left `available_quantity` stale —
- * over-stating issuable stock). Decrements BOTH quantity and available_quantity in lockstep,
- * floored at 0 (GREATEST), so the canonical balance the WMS issue guard / GL valuation read
- * stays correct. Mirrors execIssueFromWarehouseStock (queries-wms.ts).
+ * over-stating issuable stock). Decrements BOTH quantity and available_quantity in lockstep
+ * so the canonical balance the WMS issue guard / GL valuation read stays correct.
+ *
+ * VISION-3340 #57: this used to write an UNCONDITIONAL UPDATE floored at 0 via
+ * `GREATEST(0, quantity - qty)` — no pre-check, no guard. An overdraw (qty > available)
+ * silently succeeded and just clamped the balance to 0, instead of failing the movement.
+ * That is the same class of TOCTOU/no-guard bug already fixed on the WMS issue path
+ * (`execIssueFromWarehouseStock`, queries-wms.ts) and the reservation/issue paths
+ * (`execUpdateStockReserved`/`execUpdateStockIssued`, queries-wms.ts). This now mirrors
+ * `execIssueFromWarehouseStock` exactly: a guarded conditional UPDATE (`available_quantity
+ * >= qty`) with `RETURNING id`. Postgres row-level locking makes the guard atomic against
+ * concurrent decrements on the same row. Returns `true` iff the guard passed and the row
+ * was updated; `false` (0 rows affected, no write happened) means the caller must treat
+ * this as insufficient stock rather than silently proceeding.
  */
-export async function execCurrentStockDecrement(matId: number, warehouseId: unknown, qty: number): Promise<void> {
-  await runQuery(sql`
+export async function execCurrentStockDecrement(matId: number, warehouseId: unknown, qty: number): Promise<boolean> {
+  const result = await runQuery(sql`
     UPDATE warehouse_stock
-    SET quantity           = GREATEST(0, quantity - ${qty}),
-        available_quantity = GREATEST(0, available_quantity - ${qty}),
+    SET quantity           = quantity - ${qty},
+        available_quantity = available_quantity - ${qty},
         last_movement_at   = NOW(),
         last_updated_at    = NOW()
     WHERE material_id = ${matId} AND warehouse_id = ${warehouseId as number}
+      AND available_quantity >= ${qty}
+    RETURNING id
   `);
+  return result.rows.length > 0;
 }
 
 export async function execIdealRasmTargetInsert(t: {

@@ -3,7 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
-import { Ok, Err, Result } from '@common/result';
+import { Ok, Err, Result, AppErr, AppErrorCode } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { posMovements, posMovementLines, posMovementTypes, materialCards, db, eq, sql } from '@workspace/db';
 import { execCurrentStockUpsert, execCurrentStockDecrement } from '@common/database/queries-remaining';
@@ -67,9 +67,22 @@ export class PosMovementStatusRepository {
     }
   }
 
+  /**
+   * VISION-3340 #57: execCurrentStockDecrement() now performs a guarded conditional UPDATE
+   * (`available_quantity >= qty ... RETURNING id`) instead of an unconditional floor-at-0
+   * write. When the guard fails (overdraw / concurrent movement already consumed the stock)
+   * it returns `false` — surface that here as Err(INSUFFICIENT_STOCK) instead of the old
+   * behaviour of silently returning Ok() no matter what happened in the DB.
+   */
   async decrementStock(matId: number, warehouseId: unknown, qty: number): Promise<Result<void>> {
     try {
-      await execCurrentStockDecrement(matId, warehouseId, qty);
+      const updated = await execCurrentStockDecrement(matId, warehouseId, qty);
+      if (!updated) {
+        return Err(AppErr(
+          'INSUFFICIENT_STOCK' as AppErrorCode,
+          `Yetarli qoldiq yo'q: material=${matId}, ombor=${String(warehouseId)}, miqdor=${qty}`,
+        ));
+      }
       return Ok();
     } catch (_e) {
       return Err(String(_e));

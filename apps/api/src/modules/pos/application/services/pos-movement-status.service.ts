@@ -179,10 +179,22 @@ export class PosMovementStatusService {
         await this.repo.upsertStockIn(matId, toWh, qty);
         await this.stockLedger.recordEntry(matId, toWh, qty, movId, `in:${movType.code}`);
       } else if (movType?.direction === 'out') {
-        await this.repo.decrementStock(matId, fromWh, qty);
+        // VISION-3340 #57: decrementStock() now guards against overdraw at the DB level
+        // (available_quantity >= qty) and reports Err(INSUFFICIENT_STOCK) when the guard
+        // fails. Previously the Result was discarded here, so an overdrawn line silently
+        // floored to 0 and the movement completed as if nothing had gone wrong. Abort the
+        // whole completion instead of recording a ledger entry / GL posting for stock that
+        // was never actually moved.
+        const decR = await this.repo.decrementStock(matId, fromWh, qty);
+        if (!decR.ok) {
+          throw new BadRequestException(await this.i18n.t('errors.insufficientStockOrMaterialNotInWarehouse'));
+        }
         await this.stockLedger.recordEntry(matId, fromWh, -qty, movId, `out:${movType.code}`);
       } else if (movType?.direction === 'transfer') {
-        await this.repo.decrementStock(matId, fromWh, qty);
+        const decR = await this.repo.decrementStock(matId, fromWh, qty);
+        if (!decR.ok) {
+          throw new BadRequestException(await this.i18n.t('errors.insufficientStockOrMaterialNotInWarehouse'));
+        }
         await this.repo.upsertStockIn(matId, toWh, qty);
         await this.stockLedger.recordEntry(matId, fromWh, -qty, movId, `transfer_out:${movType.code}`);
         await this.stockLedger.recordEntry(matId, toWh, qty, movId, `transfer_in:${movType.code}`);
