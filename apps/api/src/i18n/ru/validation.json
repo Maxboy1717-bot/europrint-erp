@@ -94,5 +94,6 @@
   "itemsOrOrderedIdsRequired": "Обязателен items или orderedIds",
   "firstNameRequired": "first_name обязателен",
   "userIdOrEmployeeIdRequired": "Обязателен userId или employeeId",
-  "purchaseOrderIdRequired": "purchase_order_id обязателен"
+  "purchaseOrderIdRequired": "purchase_order_id обязателен",
+  "mentorCardCapReached": "К этой карте уже прикреплено {{count}} наставника (максимум {{max}})"
 }

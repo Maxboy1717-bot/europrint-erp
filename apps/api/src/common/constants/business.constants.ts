@@ -432,3 +432,14 @@ export const ADAPTATION_MILESTONE_STEPS = [
   { number: 3, dayOffset: 30, title: 'Oy 1',    titleRu: 'Месяц 1' },
   { number: 4, dayOffset: 90, title: 'Oy 3',    titleRu: 'Месяц 3' },
 ] as const;
+
+// ---------------------------------------------------------------------------
+// HR — Mentorlik (mentors.card_id, hr-card-links-2026-07-04.sql)
+// ---------------------------------------------------------------------------
+
+/**
+ * Bitta kartaga (org_departments.id) biriktirilishi mumkin bo'lgan faol
+ * mentorlar soni chegarasi. `mentors.card_id` NULL bo'lgan (kartaga
+ * bog'lanmagan) yozuvlar bu chegaraga kirmaydi.
+ */
+export const MENTORS_PER_CARD_CAP = 2;

@@ -1775,7 +1775,7 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\types.ts",
-      "line": 130,
+      "line": 136,
       "text": "Faol",
       "kind": "OBJECT_LABEL",
       "locale": "uz"

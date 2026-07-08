@@ -94,5 +94,6 @@
   "itemsOrOrderedIdsRequired": "items ёки orderedIds мажбурий",
   "firstNameRequired": "first_name мажбурий",
   "userIdOrEmployeeIdRequired": "userId ёки employeeId талаб қилинади",
-  "purchaseOrderIdRequired": "purchase_order_id мажбурий"
+  "purchaseOrderIdRequired": "purchase_order_id мажбурий",
+  "mentorCardCapReached": "Бу картага аллақачон {{count}} та ментор бириктирилган (максимум {{max}})"
 }

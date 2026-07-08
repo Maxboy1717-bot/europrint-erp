@@ -94,5 +94,6 @@
   "itemsOrOrderedIdsRequired": "items yoki orderedIds majburiy",
   "firstNameRequired": "first_name majburiy",
   "userIdOrEmployeeIdRequired": "userId yoki employeeId talab qilinadi",
-  "purchaseOrderIdRequired": "purchase_order_id majburiy"
+  "purchaseOrderIdRequired": "purchase_order_id majburiy",
+  "mentorCardCapReached": "Bu kartaga allaqachon {{count}} ta mentor biriktirilgan (maksimum {{max}})"
 }

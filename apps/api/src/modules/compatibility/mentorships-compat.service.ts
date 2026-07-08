@@ -15,9 +15,15 @@
  *   OrgNodeDetail/CardDetailDialog) always rendered "no mentors" even when mentor rows existed.
  *   POST/PUT/DELETE surfaced as raw 500s (no unwrapOrDefault on those routes). Fixed by dropping
  *   the phantom columns from every SELECT/INSERT/UPDATE (Q-46 — broken code fully repaired, not
- *   left half-working). `card_id` (added by hr-card-links-2026-07-04.sql) is now surfaced read-only
- *   for future use, but the mentor-registry write paths keep the existing user_id-only contract
+ *   left half-working). `card_id` (added by hr-card-links-2026-07-04.sql) was surfaced read-only
+ *   at that time; the mentor-registry write paths kept the existing user_id-only contract
  *   (unchanged request/response shape for the one real consumer, MentorTab.tsx).
+ *
+ *   FIX 2026-07-07 (SB0071 follow-up): createMentorship/updateMentorship now accept `card_id`
+ *   from the request body and write it (INSERT / `COALESCE(...)` UPDATE, same pattern as every
+ *   other optional field here), and enforce the "max MENTORS_PER_CARD_CAP (2) active mentors per
+ *   card" rule via `assertCardMentorCapNotReached()` (BadRequestException when the cap is already
+ *   reached). No DTO change was needed — `CompatBodyDto` is `z.object({}).passthrough()`.
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
@@ -26,6 +32,7 @@ import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result } from '@common/result';
+import { MENTORS_PER_CARD_CAP } from '@common/constants/business.constants';
 
 @Injectable()
 export class MentorshipsCompatService {
@@ -53,14 +60,37 @@ export class MentorshipsCompatService {
 
     });}
 
+  /**
+   * SB0071 follow-up (2026-07-07): `mentors.card_id` was surfaced read-only only —
+   * createMentorship/updateMentorship never accepted or wrote it, and nothing enforced
+   * the "max MENTORS_PER_CARD_CAP active mentors per card" business rule. Counts only
+   * non-deleted rows (`deleted_at IS NULL`), matching every other query in this service.
+   */
+  private async assertCardMentorCapNotReached(cardId: unknown, excludeMentorId?: string): Promise<void> {
+    const excludeFilter = excludeMentorId ? sql`AND id != ${excludeMentorId}` : sql``;
+    const r = await rawSql(sql`
+      SELECT COUNT(*)::int AS count FROM mentors
+      WHERE card_id = ${cardId} AND deleted_at IS NULL ${excludeFilter}
+    `);
+    const current = Number(dbRows(r)[0]?.count ?? 0);
+    if (current >= MENTORS_PER_CARD_CAP) {
+      throw new BadRequestException(await this.i18n.t('validation.mentorCardCapReached', {
+        args: { count: current, max: MENTORS_PER_CARD_CAP },
+      }));
+    }
+  }
+
   async createMentorship(body: Record<string, unknown>){
     return safeCall(async () => {
-    const { user_id, bio, expertise, name, source, experience } = body;
+    const { user_id, bio, expertise, name, source, experience, card_id } = body;
     if (!name) throw new BadRequestException(await this.i18n.t('validation.nameRequired'));
+    if (card_id !== undefined && card_id !== null) {
+      await this.assertCardMentorCapNotReached(card_id);
+    }
     const r = await rawSql(sql`
-      INSERT INTO mentors (user_id, bio, expertise, name, source, experience)
+      INSERT INTO mentors (user_id, bio, expertise, name, source, experience, card_id)
       VALUES (${user_id ?? null}, ${bio ?? null}, ${expertise ?? null},
-              ${name ?? null}, ${source ?? null}, ${experience ?? null})
+              ${name ?? null}, ${source ?? null}, ${experience ?? null}, ${card_id ?? null})
       RETURNING id, name, card_id, created_at
     `);
     const created = dbRows(r)[0];
@@ -88,13 +118,18 @@ export class MentorshipsCompatService {
 
   async updateMentorship(id: string, body: Record<string, unknown>){
     return safeCall(async () => {
-    const { bio, expertise, name, experience } = body;
+    const { bio, expertise, name, experience, card_id } = body;
+    if (card_id !== undefined && card_id !== null) {
+      // Exclude this mentor's own row so re-saving/moving does not double-count itself.
+      await this.assertCardMentorCapNotReached(card_id, id);
+    }
     const r = await rawSql(sql`
       UPDATE mentors
       SET bio = COALESCE(${bio ?? null}, bio),
           expertise = COALESCE(${expertise ?? null}, expertise),
           name = COALESCE(${name ?? null}, name),
           experience = COALESCE(${experience ?? null}, experience),
+          card_id = COALESCE(${card_id ?? null}, card_id),
           updated_at = NOW()
       WHERE id = ${id}
       RETURNING id, name, card_id, updated_at
