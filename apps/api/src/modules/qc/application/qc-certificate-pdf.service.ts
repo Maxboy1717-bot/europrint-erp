@@ -5,7 +5,8 @@
  *   Vazifa:
  *     - Sertifikat raqami SF-<YYYY>-NNNNN ketma-ket (qc_certificate_seq, atomar nextval).
  *     - PDF (pdf-lib): sarlavha, sertifikat meta, lab-test natijalari jadvali,
- *       QR-kod (data-matrix placeholder = scan-mos matn + ramka), imzo joyi.
+ *       HAQIQIY skanerlanadigan QR-kod (qrcode + pdf.embedPng — cc-pdf.service.ts
+ *       bilan bir xil pattern), imzo joyi. Uch tilli (uz/ru/en) yorliqlar.
  *     - Sertifikat yozuvi DB'ga saqlanadi (certificates jadvali — qc_certificates VIEW
  *       ustidan; QcNewRepository.insertCertificate bilan bir xil pattern).
  *
@@ -13,14 +14,21 @@
  *   dan o'qiladi; SOXTA natija o'ylab topilmaydi. Test bo'lmasa — jadval bo'sh, lekin
  *   sertifikat baribir chiqadi (meta + imzo). Raqam REAL sekvensdan (ketma-ket, takror yo'q).
  *
+ *   VISION-3340 #36 (2026-07-08): fake QR ramka → haqiqiy QR rasm; uz/en → uz/ru/en.
+ *   pdf-lib StandardFonts (WinAnsi) kirillni qo'llab-quvvatlamaydi — ru yorliqlar
+ *   `toPdfSafeText()` orqali lotin transliteratsiyasiga o'giriladi (sd-invoice-pdf.service.ts
+ *   bilan bir xil, ilgari FAZA D'da o'rnatilgan pattern).
+ *
  * @layer Service (application)
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage, PDFImage } from 'pdf-lib';
+import * as QRCode from 'qrcode';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { Ok, Err, Result, safeCall } from '@common/result';
+import { toPdfSafeText } from '@common/pdf/pdf-safe-text.helper';
 
 type Row = Record<string, unknown>;
 
@@ -148,13 +156,15 @@ export class QcCertificatePdfService {
     const page = pdf.addPage([595, 842]); // A4
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    // Haqiqiy skanerlanadigan QR rasm — cc-pdf.service.ts (embedQrCode) bilan bir xil.
+    const qrImage = await this.embedQrCode(pdf, certNumber);
 
     let y = 800;
     const draw = (
       text: string,
       opts?: { x?: number; bold?: boolean; size?: number; color?: ReturnType<typeof rgb> },
     ) => {
-      page.drawText(text, {
+      page.drawText(toPdfSafeText(text), {
         x: opts?.x ?? 50,
         y,
         size: opts?.size ?? 11,
@@ -164,32 +174,49 @@ export class QcCertificatePdfService {
       y -= (opts?.size ?? 11) + 7;
     };
 
-    // Header
-    draw('EuroPrint — Sifat Sertifikati / Quality Certificate', { bold: true, size: 18 });
+    // Header (uz / ru / en)
+    draw('EuroPrint — Sifat Sertifikati / Сертификат качества / Quality Certificate', { bold: true, size: 14 });
     page.drawLine({ start: { x: 50, y: y + 4 }, end: { x: 545, y: y + 4 }, thickness: 1.2, color: rgb(0.1, 0.3, 0.6) });
     y -= 12;
-    draw(`Sertifikat raqami:  ${certNumber}`, { bold: true, size: 13, color: rgb(0.1, 0.3, 0.6) });
+    draw(`Sertifikat raqami / Номер сертификата / Certificate No:  ${certNumber}`, { bold: true, size: 11, color: rgb(0.1, 0.3, 0.6) });
     y -= 4;
 
-    // Meta
-    draw(`Buyurtma:    ${input.orderId ?? '-'}`);
-    draw(`Mahsulot:    ${input.productName ?? '-'}`);
-    draw(`Sana:        ${new Date().toISOString().slice(0, 10)}`);
-    draw(`Holat:       Faol / Active`);
-    if (input.notes) draw(`Izoh:        ${this.truncate(input.notes, 80)}`);
+    // Meta (uz / ru / en)
+    draw(`Buyurtma / Заказ / Order:    ${input.orderId ?? '-'}`);
+    draw(`Mahsulot / Продукт / Product:    ${input.productName ?? '-'}`);
+    draw(`Sana / Дата / Date:        ${new Date().toISOString().slice(0, 10)}`);
+    draw(`Holat / Статус / Status:       Faol / Активен / Active`);
+    if (input.notes) draw(`Izoh / Примечание / Note:        ${this.truncate(input.notes, 80)}`);
     y -= 8;
 
     // Lab test results table
-    draw('Sinov natijalari / Test results:', { bold: true, size: 13 });
+    draw('Sinov natijalari / Результаты испытаний / Test results:', { bold: true, size: 13 });
     y -= 2;
     this.drawTestTable(page, font, bold, labTests, () => y, (ny) => { y = ny; });
 
-    // QR placeholder + signature area on a fixed lower band
-    this.drawQrPlaceholder(page, font, certNumber, certificateId);
+    // Real QR image + signature area on a fixed lower band
+    this.drawQrCode(page, font, qrImage, certNumber, certificateId);
     this.drawSignatureArea(page, font, bold, input.issuedBy);
 
     const bytes = await pdf.save();
     return Buffer.from(bytes);
+  }
+
+  /**
+   * QR-kod PNG rasmini generatsiya qilib PDF hujjatiga embed qiladi (ISO/IEC 18004).
+   * `cc-pdf.service.ts#embedQrCode` bilan bir xil pattern (QRCode.toBuffer + pdf.embedPng).
+   * QC modulida hozircha alohida ochiq verifikatsiya URL/endpoint yo'q (Q-40: mavjud
+   * bo'lmagan URL fabrikatsiya qilinmaydi) — shuning uchun QR ichiga sertifikat
+   * raqamining o'zi (real, DB sekvensidan) kodlanadi.
+   */
+  private async embedQrCode(pdf: PDFDocument, certNumber: string): Promise<PDFImage> {
+    const png = await QRCode.toBuffer(certNumber, {
+      type: 'png',
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 160,
+    });
+    return pdf.embedPng(png);
   }
 
   private drawTestTable(
@@ -202,13 +229,18 @@ export class QcCertificatePdfService {
   ): void {
     let y = getY();
     const cols = [50, 200, 290, 360, 470]; // Parameter, Value, Unit, Range, Result
-    const headers = ['Parametr', 'Qiymat', 'Birlik', 'Diapazon', 'Natija'];
-    headers.forEach((h, i) => page.drawText(h, { x: cols[i], y, size: 9, font: bold, color: rgb(0.3, 0.3, 0.3) }));
-    y -= 14;
+    // Header row 1: uz / en (bold). Row 2: ru, transliterated via toPdfSafeText
+    // (pdf-lib StandardFonts/WinAnsi kirillni qo'llab-quvvatlamaydi).
+    const headersUzEn = ['Parametr / Parameter', 'Qiymat / Value', 'Birlik / Unit', 'Diapazon / Range', 'Natija / Result'];
+    const headersRu = ['Параметр', 'Значение', 'Единица', 'Диапазон', 'Результат'].map(toPdfSafeText);
+    headersUzEn.forEach((h, i) => page.drawText(h, { x: cols[i], y, size: 8, font: bold, color: rgb(0.3, 0.3, 0.3) }));
+    y -= 10;
+    headersRu.forEach((h, i) => page.drawText(h, { x: cols[i], y, size: 7, font, color: rgb(0.5, 0.5, 0.5) }));
+    y -= 12;
     page.drawLine({ start: { x: 50, y: y + 4 }, end: { x: 545, y: y + 4 }, thickness: 0.5, color: rgb(0.7, 0.7, 0.7) });
 
     if (tests.length === 0) {
-      page.drawText("Sinov yozuvlari mavjud emas (No lab tests recorded)", { x: 50, y, size: 9, font, color: rgb(0.5, 0.5, 0.5) });
+      page.drawText(toPdfSafeText("Sinov yozuvlari mavjud emas / Записи испытаний отсутствуют (No lab tests recorded)"), { x: 50, y, size: 8, font, color: rgb(0.5, 0.5, 0.5) });
       y -= 16;
     } else {
       for (const t of tests) {
@@ -238,28 +270,16 @@ export class QcCertificatePdfService {
   }
 
   /**
-   * QR-kod o'rni: haqiqiy QR-kutubxona loyihada yo'q, shuning uchun deterministik
-   * data-matrix placeholder (ramka + sertifikat raqami matni — skanerlanadigan/o'qiladigan).
-   * Verifikatsiya URL'i matn sifatida beriladi (qo'lda tekshirish uchun).
+   * Haqiqiy skanerlanadigan QR rasmini sahifaga chizadi (embedQrCode natijasi) +
+   * tekshiruv matni (uz/ru/en). cc-pdf.service.ts#drawFooter bilan bir xil
+   * page.drawImage pattern — endi soxta ramka emas.
    */
-  private drawQrPlaceholder(page: PDFPage, font: PDFFont, certNumber: string, certificateId: number | null): void {
+  private drawQrCode(page: PDFPage, font: PDFFont, qrImage: PDFImage, certNumber: string, certificateId: number | null): void {
     const x = 50;
     const yTop = 170;
     const size = 90;
-    // Outer frame
-    page.drawRectangle({ x, y: yTop - size, width: size, height: size, borderColor: rgb(0, 0, 0), borderWidth: 1.2, color: rgb(1, 1, 1) });
-    // Deterministic finder-pattern blocks (3 corners) — QR-ko'rinish placeholder
-    const block = size / 7;
-    const corners = [
-      { cx: x + block, cy: yTop - block * 2 },
-      { cx: x + size - block * 2, cy: yTop - block * 2 },
-      { cx: x + block, cy: yTop - size + block },
-    ];
-    for (const c of corners) {
-      page.drawRectangle({ x: c.cx, y: c.cy, width: block, height: block, color: rgb(0, 0, 0) });
-    }
-    page.drawText('QR', { x: x + size / 2 - 8, y: yTop - size / 2 - 4, size: 10, font, color: rgb(0.4, 0.4, 0.4) });
-    page.drawText(`Verify: ${certNumber}`, { x, y: yTop - size - 14, size: 8, font, color: rgb(0.4, 0.4, 0.4) });
+    page.drawImage(qrImage, { x, y: yTop - size, width: size, height: size });
+    page.drawText(toPdfSafeText(`Tekshirish / Проверка / Verify: ${certNumber}`), { x, y: yTop - size - 14, size: 8, font, color: rgb(0.4, 0.4, 0.4) });
     if (certificateId != null) {
       page.drawText(`ID: ${certificateId}`, { x, y: yTop - size - 24, size: 8, font, color: rgb(0.4, 0.4, 0.4) });
     }
@@ -269,16 +289,19 @@ export class QcCertificatePdfService {
     const x = 330;
     const yLine = 110;
     page.drawLine({ start: { x, y: yLine }, end: { x: 545, y: yLine }, thickness: 0.8, color: rgb(0, 0, 0) });
-    page.drawText('Imzo / Signature', { x, y: yLine - 14, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
-    page.drawText(issuedBy ? `Imzolovchi: ${this.truncate(issuedBy, 30)}` : 'Imzolovchi: __________________', {
+    page.drawText(toPdfSafeText('Imzo / Подпись / Signature'), { x, y: yLine - 14, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
+    // Label (uz/ru/en) and value on separate lines — a single combined line with a
+    // long signer name would overflow the 330→545 signature column (measured).
+    page.drawText(toPdfSafeText('Imzolovchi / Подписал:'), { x, y: yLine - 28, size: 8, font, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(issuedBy ? toPdfSafeText(this.truncate(issuedBy, 30)) : '__________________', {
       x,
-      y: yLine - 30,
+      y: yLine - 40,
       size: 9,
       font: bold,
       color: rgb(0, 0, 0),
     });
-    page.drawText('M.O. / Stamp', { x, y: yLine - 48, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
-    page.drawText(`Hisobot: ${new Date().toISOString().replace('T', ' ').slice(0, 19)}`, {
+    page.drawText(toPdfSafeText('M.O. / Печать / Stamp'), { x, y: yLine - 56, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(toPdfSafeText(`Hisobot / Отчёт / Generated: ${new Date().toISOString().replace('T', ' ').slice(0, 19)}`), {
       x: 50,
       y: 40,
       size: 8,
