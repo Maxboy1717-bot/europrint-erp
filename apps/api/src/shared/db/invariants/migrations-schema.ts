@@ -414,4 +414,16 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'lms_card_mentors.qualification_verified_by column (EP-ORG-116 follow-up)',
     sql: `ALTER TABLE IF EXISTS lms_card_mentors ADD COLUMN IF NOT EXISTS qualification_verified_by INTEGER REFERENCES users(id) ON DELETE SET NULL`,
   },
+  // VISION-3340 #13 (2026-07-08): razryad_levels.min_months=0 silently disables the
+  // 3-month interval guard already coded in razryad-history.service.ts checkInterval()
+  // ("if (minMonths <= 0) return Ok(true)"). All 6 rows carry the column DEFAULT 0
+  // (razryad-levels-upgrade-2026-06-18.sql) and were never set — DATA-only backfill,
+  // guard logic itself is unchanged. APPROVED: egasi — EP-ORG-011 "Imtihon oralig'i
+  // (min 3 oy)", Holat: JAVOBLANGAN/APPROVE (docs/audit/decisions/01-org-kartalar.md:85-90).
+  // See apps/api/src/shared/db/migrations/razryad-min-months-activate-2026-07-08.sql for
+  // the human-readable mirror of this entry.
+  {
+    name: 'razryad_levels.min_months activate 3-month guard (VISION-3340 #13, EP-ORG-011)',
+    sql: `UPDATE public.razryad_levels SET min_months = 3 WHERE min_months = 0`,
+  },
 ];
