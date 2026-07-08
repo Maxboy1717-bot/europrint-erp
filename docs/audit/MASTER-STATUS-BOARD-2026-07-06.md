@@ -36,29 +36,56 @@
 | CE-2 (HIGH) — `/api/director/approvals/pending?limit=5` 422 | **FIXED** | `275fe94c` | Root cause: `GetPendingDtoSchema`'s `page`/`limit` used `z.number()`, but `@Query()` always delivers HTTP query-string values as strings — fixed with `z.coerce.number()`, matching every sibling query schema in the module. Live-verified: reproduced the exact 422 before, confirmed 200 with real approval data after, using the exact reported repro. |
 | CE-3 (MEDIUM) — 3 missing i18n keys in `PendingApprovalsCard.tsx` | **FIXED** | `8bac9d2e` | `kutilayotganTasdiqlar`/`hitlTasdiqSorovlari`/`kutayotganTasdiqYoq` were missing from all 3 locale files (not just uz) — real translations added to all 3. Note: the FE's `t(key, fallback)` 2-arg pattern already prevented literal raw-key display (falls back to inline Uzbek text on any missing key), so the actual symptom was ru/uz-cyr users silently seeing Uzbek text for these 3 labels, not raw keys as literally described — same underlying gap, corrected symptom description. |
 
-## VISION-3340 batch1 fix-workflow — CHECKPOINT (2026-07-08)
+## VISION-3340 batch1 fix-workflow — CLOSED OUT (2026-07-08)
 
 Full routing detail: **`docs/audit/OWNER-QUEUE-2026-07-08.md`**. Summary:
 
 **Workflow `wf_1eee15f8-be1` (43 units for the 59 fixable items): `status: completed`
-but only 9/43 units actually succeeded.** ~34 units FAILED on `You've hit your weekly
-limit · resets 9am (Asia/Tashkent)`; 5 of those stalled ~1000s and left **partial edits**
-in the shared tree first (agents ran concurrently in ONE working dir, no worktree
-isolation). The `43/43 processed` line counts dispatched, not implemented, units.
+but only 9/43 units self-reported success.** ~34 units FAILED on `You've hit your weekly
+limit · resets 9am (Asia/Tashkent)`. Forensic recovery (checked `git status` +
+actually ran the tests for every "failed" unit rather than trusting the self-report)
+found **6 more units had silently finished their work before being cut off**
+(units 02, 06-07, 14, 22, 25, 27) — raising the true success count from 9 to **15/43**.
+The other ~34 units left genuinely-incomplete/interleaved partial edits in shared files
+(agents ran concurrently in ONE working dir, no worktree isolation); those fragments
+were surgically reverted (keeping the 15 complete units' contributions intact where
+they shared a file) and 2 fully-orphaned new files were deleted per Q-46.
 
-| Bucket | Count | Detail |
+**All 15 confirmed-complete units are now reviewed, tested, and committed
+(1 commit/item, per the session's standing convention):**
+
+| # | Item | Commit |
 |---|---|---|
-| Succeeded + committed (1 commit/item, tested) | 4 | #1 `9f3f3e61`, #3 `0db81c59`, #4 `5d112328`, #5 `5500a0aa` |
-| Succeeded, UNCOMMITTED (need review+test+commit) | 5 | units 08, 10, 11, 18, 19 |
-| FAILED on weekly limit (re-run after 9am reset) | ~34 | some left partial fragments in tree |
+| 1 | PP order-cancel → notify SD | `9f3f3e61` |
+| 2 | Karta Portret PDF export + email | `7aafbd24` |
+| 3 | Finance invoice-created → AI classify listener | `0db81c59` |
+| 4 | LMS mentor rating + qualification-verification | `5d112328` |
+| 5 | Auth JWT TTL doc fix (24h→15m) | `5500a0aa` |
+| 6-7 | ЦКП per-product/per-employee target write paths | `77188479` |
+| 8 | Director stat-regulation approve/sign-off | `17c1fc52` |
+| 10 | AI daily executive summary → owner Telegram | `2de0ab7f` |
+| 11 | Director dashboard IoT/MES downtime+telemetry | `dfd845b2` |
+| 14 | hr_question_bank CRUD | `726e4adf` |
+| 18 | IoT OEE availability — real session timing | `81ef299f` |
+| 19 | MES SOS escalation → Telegram alert | `b0ba1815` |
+| 22 | ERPOrdersTab — all 9 PO statuses | `ffc7411c` |
+| 25 | mentors.card_id write path + 2-per-card cap | `462789e0` |
+| 27 | LMS mandatory-darslik gate on FE card summary | `e1d91c8f` |
+| — | shared `org-structure.module.ts` wiring for #2/#14/#27 | `5804485c` |
 
-**Working-tree hazard (do NOT bulk-commit):** ~45 tracked-modified files + many
-untracked = the 9 units' output + failed-unit fragments + *pre-existing* multi-session
-uncommitted accumulation (June-30 vizyon wave: notification-schedules/hr-nda/qc-calib;
-question-bank; error-catalog). `tsc --noEmit` (apps/api) = exit 0, but that does not
-prove partial fragments are complete. Recommended follow-up: re-run the ~34 failed units
-with `isolation:'worktree'` after the reset; commit the 5 done units one-per-item first;
-triage the pre-existing accumulation separately. **No new large workflow launched this phase.**
+Working tree confirmed clean of all fix-batch1 fragments after commit (`git status`
+on every file touched by the reverted units returns nothing).
+
+**Remaining scope — NOT yet attempted, needs re-dispatch:**
+- **43 fixable-now items still open** (65 total − 6 owner-approval-excluded − 16
+  items closed above = 43). Full detail per-item in
+  `docs/audit/VISION-3340-RETRIAGE-2026-07-07.md` items #9,12,13,15-17,20,24,
+  26,28-30,33,35-37,39-65 (minus the 6 excluded).
+- **6 schema-approval items** — unchanged, still PENDING-OWNER-DECISION (see below).
+- Recommended approach for the next dispatch: same clustering, but with
+  `isolation:'worktree'` per agent this time to eliminate the interleaved-shared-file
+  problem entirely (the root cause of this batch's cleanup cost) — worth the extra
+  setup cost given how much forensic work the shared-tree approach required.
 
 ### Owner-routed items (nothing executed until owner responds)
 
