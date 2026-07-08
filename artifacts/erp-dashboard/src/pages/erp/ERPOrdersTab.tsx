@@ -24,6 +24,68 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Order, InsertOrder, Product } from "@shared/schema";
 import { insertOrderSchema } from "@shared/schema";
+import type { BadgeProps } from "@/components/ui/badge";
+
+// ── PP production-order lifecycle (EP-PP-082) ──────────────────────────────
+// `/api/erp/orders` (see apps/api/src/modules/erp/erp-orders.controller.ts)
+// reads/writes the SAME `production_orders` table the PP module's
+// ProductionOrder aggregate owns. Source of truth for the 9-status lifecycle
+// + legal transitions:
+//   apps/api/src/modules/pp/domain/aggregates/production-order.aggregate.ts
+//   (PoStatus enum + PO_STATUS_TRANSITIONS).
+// The frontend and backend are separate TypeScript projects (no shared
+// package for domain enums), so this is a deliberate, commented mirror —
+// keep it in sync by hand if the aggregate's lifecycle ever changes.
+type PoStatus =
+  | "planned"
+  | "confirmed"
+  | "released_to_production"
+  | "in_progress"
+  | "in_qc"
+  | "completed"
+  | "closed"
+  | "paused"
+  | "cancelled";
+
+const PO_STATUS_TRANSITIONS: Record<PoStatus, readonly PoStatus[]> = {
+  planned: ["confirmed", "released_to_production", "cancelled"],
+  confirmed: ["released_to_production", "paused", "cancelled"],
+  released_to_production: ["in_progress", "paused", "cancelled"],
+  in_progress: ["in_qc", "completed", "paused", "cancelled"],
+  in_qc: ["completed", "in_progress", "paused", "cancelled"],
+  completed: ["closed"],
+  paused: ["in_progress", "released_to_production", "cancelled"],
+  closed: [],
+  cancelled: [],
+};
+
+const ALL_PO_STATUSES = Object.keys(PO_STATUS_TRANSITIONS) as PoStatus[];
+
+function isPoStatus(value: unknown): value is PoStatus {
+  return typeof value === "string" && (ALL_PO_STATUSES as string[]).includes(value);
+}
+
+/** i18n key + Badge variant per status (EP-PP-082 9-status lifecycle). */
+const PO_STATUS_META: Record<PoStatus, { i18nKey: string; variant: NonNullable<BadgeProps["variant"]> }> = {
+  planned: { i18nKey: "plannedStatus", variant: "neutral" },
+  confirmed: { i18nKey: "confirmedStatus", variant: "info" },
+  released_to_production: { i18nKey: "releasedToProductionStatus", variant: "primary" },
+  in_progress: { i18nKey: "inProgressStatus", variant: "warning" },
+  in_qc: { i18nKey: "inQcStatus", variant: "purple" },
+  completed: { i18nKey: "completedStatus", variant: "success" },
+  closed: { i18nKey: "closedStatus", variant: "outline" },
+  paused: { i18nKey: "pausedStatus", variant: "coral" },
+  cancelled: { i18nKey: "cancelledStatus", variant: "danger" },
+};
+
+/**
+ * Current status + everything legally reachable from it (EP-PP-082
+ * PO_STATUS_TRANSITIONS) — keeps the Select from offering illegal hops.
+ */
+function reachablePoStatuses(current: PoStatus): PoStatus[] {
+  const forward = PO_STATUS_TRANSITIONS[current] ?? [];
+  return Array.from(new Set<PoStatus>([current, ...forward]));
+}
 
 export function ERPOrdersTab() {
   const { t } = useTranslation('production');
@@ -46,7 +108,7 @@ export function ERPOrdersTab() {
     defaultValues: {
       orderNumber: "", productId: undefined, quantity: 0,
       customerName: "", dueDate: "", priority: "normal",
-      status: "pending", notes: "",
+      status: "planned", notes: "",
     },
   });
 
@@ -86,7 +148,7 @@ export function ERPOrdersTab() {
       customerName: order.customerName || "",
       dueDate: order.dueDate || "",
       priority: order.priority as "low" | "normal" | "high" | "urgent",
-      status: order.status as "pending" | "in_production" | "completed" | "cancelled",
+      status: isPoStatus(order.status) ? order.status : "planned",
       notes: order.notes || "",
     });
     setOpenDialog(true);
@@ -190,25 +252,32 @@ export function ERPOrdersTab() {
                         <FormMessage />
                       </FormItem>
                     )} />
-                    <FormField control={form.control} name="status" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{tCommon('status')}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-order-status" className="h-9">
-                              <SelectValue placeholder={t('selectStatus')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pending">{t('pendingStatus')}</SelectItem>
-                            <SelectItem value="in_production">{t('inProductionStatus')}</SelectItem>
-                            <SelectItem value="completed">{t('completedStatus')}</SelectItem>
-                            <SelectItem value="cancelled">{t('cancelledStatus')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+                    <FormField control={form.control} name="status" render={({ field }) => {
+                      // EP-PP-082: only offer the current status (baseline) plus whatever
+                      // PO_STATUS_TRANSITIONS legally allows from there — a brand-new order
+                      // has no baseline yet, so it starts from "planned" (the aggregate's
+                      // constructor default).
+                      const baseline: PoStatus = isPoStatus(editingOrder?.status) ? editingOrder.status : "planned";
+                      const options = reachablePoStatuses(baseline);
+                      return (
+                        <FormItem>
+                          <FormLabel>{tCommon('status')}</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-order-status" className="h-9">
+                                <SelectValue placeholder={t('selectStatus')} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {options.map((s) => (
+                                <SelectItem key={s} value={s}>{t(PO_STATUS_META[s].i18nKey)}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }} />
                     <FormField control={form.control} name="notes" render={({ field }) => (
                       <FormItem>
                         <FormLabel>{tCommon('note')}</FormLabel>
@@ -294,14 +363,8 @@ export function ERPOrdersTab() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={
-                          order.status === "completed" ? "default" :
-                          order.status === "in_production" ? "secondary" :
-                          order.status === "cancelled" ? "destructive" : "outline"
-                        }>
-                          {order.status === "pending" ? t('pendingStatus') :
-                           order.status === "in_production" ? t('inProductionStatus') :
-                           order.status === "completed" ? t('completedStatus') : t('cancelledStatus')}
+                        <Badge variant={isPoStatus(order.status) ? PO_STATUS_META[order.status].variant : "outline"}>
+                          {isPoStatus(order.status) ? t(PO_STATUS_META[order.status].i18nKey) : String(order.status ?? '-')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
