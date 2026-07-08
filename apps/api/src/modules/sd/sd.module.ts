@@ -47,6 +47,7 @@ import { DealWonListener } from './infrastructure/event-handlers/deal-won.listen
 import { PaymentReceivedListener } from './infrastructure/event-handlers/payment-received.listener';
 import { AdvanceApprovedFanoutListener } from './infrastructure/event-handlers/advance-approved-fanout.listener';
 import { PpCancelledSdListener } from './infrastructure/event-handlers/pp-cancelled-sd.listener';
+import { AutoInvoiceListener } from './infrastructure/event-handlers/auto-invoice.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { TashkentTimeService } from '@common/time';
 import { SD_ORDERS_REPO } from './orders/i-sd-orders.repo';
@@ -103,6 +104,7 @@ const eventListeners = [
   PaymentReceivedListener,
   AdvanceApprovedFanoutListener,
   PpCancelledSdListener, // PP→SD: production order cancelled -> sales order on_hold
+  AutoInvoiceListener, // VISION-3340 #50: billable status transition -> auto draft invoice
 ];
 
 const repositories = [
