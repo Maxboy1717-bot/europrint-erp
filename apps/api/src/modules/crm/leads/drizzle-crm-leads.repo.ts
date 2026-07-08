@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { crmLeads } from '@europrint/schemas';
-import { eq, and, isNull, count, desc, sql } from 'drizzle-orm';
+import { eq, and, isNull, count, desc, sql, getTableColumns } from 'drizzle-orm';
 import { Result, Ok, Err } from '@common/result';
 import { toBitrixStatusId } from './lead-status-id.util';
 import { ICrmLeadsRepository } from './i-crm-leads.repo';
@@ -37,7 +37,11 @@ function mapLeadRow(r: Row, scoringService: CrmLeadScoringService): Row {
     : null;
   const scoreResult = scoringService.score({
     budgetUzs,
-    activityCount: null, // activity-count join not available at this call site (sd_lead_activities is currently empty for all leads)
+    // Real engagement: crm_activities count for this lead, surfaced by a correlated
+    // subquery in findAll/findById (`activity_count`). Absent on the create/update return
+    // rows (a just-written lead has ~0 activities) → null → the scorer treats engagement
+    // as 0. No fabrication (Q-40): 0 only when there genuinely are no activities.
+    activityCount: r['activity_count'] != null ? Number(r['activity_count']) : null,
     daysSinceLastActivity,
     source: sourceId,
     hasCompany: Boolean(r['company_title']),
@@ -84,7 +88,12 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
     try {
       const [countResult, rows] = await Promise.all([
         db.select({ count: count() }).from(crmLeads).where(isNull(crmLeads.deleted_at)).limit(1).offset(0),
-        db.select().from(crmLeads).where(isNull(crmLeads.deleted_at)).orderBy(desc(crmLeads.created_at)).limit(limit).offset(offset),
+        // ...all lead columns + a correlated crm_activities count so the scorer's engagement
+        // dimension is real (was always 0). One query, no N+1.
+        db.select({
+          ...getTableColumns(crmLeads),
+          activity_count: sql<number>`(SELECT COUNT(*)::int FROM crm_activities a WHERE a.lead_id = ${crmLeads.id})`,
+        }).from(crmLeads).where(isNull(crmLeads.deleted_at)).orderBy(desc(crmLeads.created_at)).limit(limit).offset(offset),
       ]);
       return Ok({ data: (rows as Row[]).map(r => mapLeadRow(r, this.scoringService)), count: Number(countResult[0]?.count || 0) });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Lidlar topilmadi'); }
@@ -92,7 +101,10 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
 
   async findById(id: number): Promise<Result<Row | null>> {
     try {
-      const rows = await db.select().from(crmLeads).where(and(eq(crmLeads.id, id), isNull(crmLeads.deleted_at))).limit(1).offset(0);
+      const rows = await db.select({
+        ...getTableColumns(crmLeads),
+        activity_count: sql<number>`(SELECT COUNT(*)::int FROM crm_activities a WHERE a.lead_id = ${crmLeads.id})`,
+      }).from(crmLeads).where(and(eq(crmLeads.id, id), isNull(crmLeads.deleted_at))).limit(1).offset(0);
       const row = (rows as Row[])[0] || null;
       return Ok(row ? mapLeadRow(row, this.scoringService) : null);
     } catch (e: unknown) { return Err((e as Error)?.message || `Lid #${id} topilmadi`); }
