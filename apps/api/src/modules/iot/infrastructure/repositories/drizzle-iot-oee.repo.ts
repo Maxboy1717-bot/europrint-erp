@@ -16,12 +16,74 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
 
 @Injectable()
 export class DrizzleIotOeeRepo {
+  /**
+   * EP-IOT-014 fix: Availability used to be a sensor-reading proxy
+   * (`iot_sensor_readings.value::float > 80` share of readings) — a made-up
+   * threshold with no relationship to real machine uptime. `production_sessions`
+   * now carries the real GSD timing columns (verified live via information_schema,
+   * 2026-07-07: running_time_seconds, stopped_time_seconds, setup_seconds all
+   * `integer`, present on every row), so Availability is computed from those:
+   *
+   *   Availability = (running_time_seconds − stopped_time_seconds − setup_seconds)
+   *                  / NULLIF(running_time_seconds − stopped_time_seconds, 0)
+   *
+   * i.e. of the net time the machine was actually running (stops already
+   * removed), what share was productive main-run vs. GSD setup/changeover.
+   * NULLIF guards divide-by-zero → NULL (never a fabricated 100%/NaN), mapped
+   * to 0 below (Qoida 2 — never surface NaN).
+   *
+   * Grouped by work-center: production_sessions.work_center_id (text) is
+   * unpopulated (0 rows, confirmed live), so the real grouping key is the
+   * equipment → work_centers chain (production_sessions.equipment_id →
+   * equipment.id → equipment.work_center_id → work_centers.id — 6/7 equipment
+   * rows have this FK populated, confirmed live).
+   */
   async findOee(deviceId: string | undefined, days: number): Promise<Result<Row>> {
     try {
       const since = new Date(Date.now() - days * 86_400_000);
-      const devices = deviceId
-        ? await exec(sql`SELECT s.id, s.sensor_code, s.name, s.type, s.location, s.unit, COUNT(r.id) AS total_readings, COUNT(r.id) FILTER (WHERE r.value::float > 0) AS active_readings, ROUND((COUNT(r.id) FILTER (WHERE r.value::float > 80))::float::numeric / GREATEST(COUNT(r.id), 1) * 100, 1) AS availability_pct, ROUND((AVG(r.value::float) FILTER (WHERE r.value::float > 0))::numeric, 2) AS avg_efficiency, ROUND(((COUNT(r.id) FILTER (WHERE r.value::float > 80))::float / GREATEST(COUNT(r.id), 1) * COALESCE(AVG(CASE WHEN r.value::float > 0 THEN r.value::float END), 0) / 100)::numeric, 2) AS oee FROM iot_sensors s LEFT JOIN iot_sensor_readings r ON r.sensor_id = s.id AND r.recorded_at >= ${since} WHERE s.type IN ('machine', 'production', 'equipment') AND s.id = ${deviceId} GROUP BY s.id, s.sensor_code, s.name, s.type, s.location, s.unit ORDER BY oee DESC NULLS LAST`)
-        : await exec(sql`SELECT s.id, s.sensor_code, s.name, s.type, s.location, s.unit, COUNT(r.id) AS total_readings, COUNT(r.id) FILTER (WHERE r.value::float > 0) AS active_readings, ROUND((COUNT(r.id) FILTER (WHERE r.value::float > 80))::float::numeric / GREATEST(COUNT(r.id), 1) * 100, 1) AS availability_pct, ROUND((AVG(r.value::float) FILTER (WHERE r.value::float > 0))::numeric, 2) AS avg_efficiency, ROUND(((COUNT(r.id) FILTER (WHERE r.value::float > 80))::float / GREATEST(COUNT(r.id), 1) * COALESCE(AVG(CASE WHEN r.value::float > 0 THEN r.value::float END), 0) / 100)::numeric, 2) AS oee FROM iot_sensors s LEFT JOIN iot_sensor_readings r ON r.sensor_id = s.id AND r.recorded_at >= ${since} WHERE s.type IN ('machine', 'production', 'equipment') GROUP BY s.id, s.sensor_code, s.name, s.type, s.location, s.unit ORDER BY oee DESC NULLS LAST`);
+      const parsedDeviceId = deviceId !== undefined ? Number.parseInt(deviceId, 10) : undefined;
+      const deviceFilter = parsedDeviceId !== undefined && Number.isFinite(parsedDeviceId)
+        ? sql`AND e.id = ${parsedDeviceId}`
+        : sql``;
+
+      const rows = await exec(sql`
+        SELECT
+          wc.id                                                          AS work_center_id,
+          COALESCE(wc.name, e.name)                                      AS work_center_name,
+          COUNT(ps.id)                                                   AS session_count,
+          COALESCE(SUM(ps.running_time_seconds), 0)                      AS running_time_seconds,
+          COALESCE(SUM(ps.stopped_time_seconds), 0)                      AS stopped_time_seconds,
+          COALESCE(SUM(ps.setup_seconds), 0)                             AS setup_seconds,
+          ROUND(
+            (
+              (COALESCE(SUM(ps.running_time_seconds), 0)
+                - COALESCE(SUM(ps.stopped_time_seconds), 0)
+                - COALESCE(SUM(ps.setup_seconds), 0))::numeric
+              / NULLIF(
+                  COALESCE(SUM(ps.running_time_seconds), 0)
+                    - COALESCE(SUM(ps.stopped_time_seconds), 0),
+                  0
+                )
+            ) * 100,
+            1
+          )                                                               AS availability_pct
+        FROM equipment e
+        LEFT JOIN work_centers wc ON wc.id = e.work_center_id
+        LEFT JOIN production_sessions ps
+          ON ps.equipment_id = e.id
+          AND ps.deleted_at IS NULL
+          AND ps.started_at >= ${since}
+        WHERE e.deleted_at IS NULL
+        ${deviceFilter}
+        GROUP BY wc.id, wc.name, e.name
+        ORDER BY availability_pct DESC NULLS LAST
+      `);
+
+      const devices = rows.map((r) => ({
+        ...r,
+        availability_pct: Number(r.availability_pct ?? 0),
+      }));
+
       return Ok({ period_days: days, devices });
     } catch (e) { return Err((e as Error).message); }
   }
