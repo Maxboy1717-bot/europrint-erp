@@ -42,14 +42,11 @@ import { OrderMaterialWaitingListener } from './infrastructure/event-handlers/or
 import { PurchaseService } from './purchase/purchase.service';
 import { DrizzlePurchaseSvcRepository } from './purchase/drizzle-purchase-svc.repo';
 import { PURCHASE_SVC_REPO } from './purchase/i-purchase-svc.repo';
-import { MaterialsService } from './materials/materials.service';
 import { MmGoodsService } from './application/mm-goods.service';
 import { DrizzleMmGoodsRepository } from './infrastructure/repositories/drizzle-mm-goods.repo';
 import { MmVendorsPrService } from './application/mm-vendors-pr.service';
 import { MmVendorsPrRepository } from './infrastructure/repositories/mm-vendors-pr.repository';
 import { MM_VENDORS_PR_REPO } from './domain/repositories/i-mm-vendors-pr.repo';
-import { DrizzleMaterialsSvcRepository } from './materials/drizzle-materials-svc.repo';
-import { MATERIALS_SVC_REPO } from './materials/i-materials-svc.repo';
 import { MmVendorRatingService } from './application/mm-vendor-rating.service';
 
 const commandHandlers = [
@@ -68,14 +65,13 @@ const repositories = [
   { provide: MM_REPO, useClass: DrizzleMmRepository },
   { provide: MM_MATERIAL_REPO, useClass: DrizzleMaterialRepository },
   { provide: PURCHASE_SVC_REPO, useClass: DrizzlePurchaseSvcRepository },
-  { provide: MATERIALS_SVC_REPO, useClass: DrizzleMaterialsSvcRepository },
   { provide: HITL_APPROVALS_REPO, useClass: HitlApprovalsRepository },
 ];
 
 @Module({
   imports: [AuthModule, CqrsModule, EventEmitterModule.forRoot()],
   controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController, HitlApprovalsController],
-  providers: [...commandHandlers, ...queryHandlers, ...listeners, ...repositories, PurchaseService, MaterialsService, DrizzleMmGoodsRepository, MmGoodsService,
+  providers: [...commandHandlers, ...queryHandlers, ...listeners, ...repositories, PurchaseService, DrizzleMmGoodsRepository, MmGoodsService,
     MmVendorsPrRepository,
     { provide: MM_VENDORS_PR_REPO, useClass: MmVendorsPrRepository },
     MmVendorsPrService,
@@ -87,6 +83,6 @@ const repositories = [
     MmDashboardService,
     MmVendorRatingService,
     LayerFormulaService],
-  exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, MATERIALS_SVC_REPO, PurchaseService, MaterialsService, LayerFormulaService],
+  exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, PurchaseService, LayerFormulaService],
 })
 export class MmModule {}
