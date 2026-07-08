@@ -36,6 +36,80 @@
 | CE-2 (HIGH) — `/api/director/approvals/pending?limit=5` 422 | **FIXED** | `275fe94c` | Root cause: `GetPendingDtoSchema`'s `page`/`limit` used `z.number()`, but `@Query()` always delivers HTTP query-string values as strings — fixed with `z.coerce.number()`, matching every sibling query schema in the module. Live-verified: reproduced the exact 422 before, confirmed 200 with real approval data after, using the exact reported repro. |
 | CE-3 (MEDIUM) — 3 missing i18n keys in `PendingApprovalsCard.tsx` | **FIXED** | `8bac9d2e` | `kutilayotganTasdiqlar`/`hitlTasdiqSorovlari`/`kutayotganTasdiqYoq` were missing from all 3 locale files (not just uz) — real translations added to all 3. Note: the FE's `t(key, fallback)` 2-arg pattern already prevented literal raw-key display (falls back to inline Uzbek text on any missing key), so the actual symptom was ru/uz-cyr users silently seeing Uzbek text for these 3 labels, not raw keys as literally described — same underlying gap, corrected symptom description. |
 
+## VISION-3340 batch2 fix-workflow — CLOSED OUT (2026-07-08)
+
+`wf_91c2396c-5db` ("vision-3340-fix-batch2", 39 clustered work-units covering the
+remaining 43 fixable-now items). The background workflow process itself got
+killed by session/environment restarts multiple times during this dispatch
+(not a code failure — `<task-notification status="stopped">`, no completion
+record) and had to be resumed 3 times; each resume re-started whatever hadn't
+reached a durable "result" checkpoint, so units that were mid-task at each kill
+lost progress and restarted from scratch. Recovery used the same forensic
+process as batch1: `git status` + actually running tests/diff-reading each
+unit's leftover files rather than trusting any self-report (none of the 39
+agents actually got to return a final report in this run).
+
+**Result: 14 of 39 clusters (14 items) fully completed, reviewed, tested, and
+committed; 1 more (item #29) partially completed (backend-only, its FE half
+still open); the other 24 clusters (28 items) never wrote any code at all —
+cut off before starting, not "attempted and failed."**
+
+| # | Item | Commit |
+|---|---|---|
+| 12 | ЦКП deadline-gate compliance rate on director summary | `a5282363` |
+| 13 | razryad_levels.min_months 0→3 backfill (EP-ORG-011) | `a1dbd39d` |
+| 15 | Razryad promotion certificate PDF | `7916944a` |
+| 16-17 | material_kit_items batch/LOT FK + production_sessions stage writes | `32bd6ccb` |
+| 20 | IoT CRITICAL anomaly → MES auto-pause | `53ffb456` |
+| 24 | Sensitive karta-field edits require a reason | `976ee28c` |
+| 26 | Card-template apply + bulk node import FE | `6632f1db` |
+| 28 | CRM Kanban stage-keys match real DB values | `a19218e0` |
+| 29 | Customer 360 financial/risk fields — **backend only** | `b1e1c767`, `7827d3a1` |
+| 30 | CRM overdue badge (pending activities + history tab) | `acee03f9` |
+| 33 | CRM lead-aging daily reassignment cron | `f855ca16` |
+| 36 | QC certificate PDF trilingual + real QR | `d62d0784` |
+| 37 | QC final sign-off razryad gate | `0af03e54` |
+| 39 | AI vision QC confidence threshold configurable | `b931b326` |
+| — | shared `business.constants.ts` append for #20/#33/#37 | `022481b0` |
+
+**Two real defects found and fixed during forensic review** (beyond the dispatched
+scope, both necessary to make the dispatched work actually correct — not scope
+creep, completion of what was already claimed done):
+1. **Unit 20's `mes.module.ts` registration was already silently broken since
+   commit `b0ba1815`** (VISION-3340 #19, batch1): that commit's `mes.module.ts`
+   diff referenced `PauseSessionHandler` from a file that was never actually
+   committed to git — only present as an untracked leftover in this working
+   tree. A fresh clone at that commit would have failed to build. Fixed by
+   finally committing `pause-session.command.ts`/`pause-session.handler.ts` as
+   part of `53ffb456`.
+2. **Unit 29's premise was wrong**: `getCompany()`'s `db.select().from(crmCompanies)`
+   only returns columns mapped in the Drizzle schema object, not a literal SQL
+   `SELECT *` — `is_blocked`/`block_reason`/`open_debt` existed live but were
+   never mapped in `schema-compat-1a.ts`, so they were silently omitted
+   regardless of the DB. Fixed in `7827d3a1`.
+
+**Also recovered a fully-written implementation from a leftover `.tmp` file**:
+unit 16-17's `drizzle-mes.repo.ts` edit was interrupted mid-write (an atomic
+write-then-rename got killed between steps), leaving a `.tmp` sibling file with
+the COMPLETE intended implementation and the real file with only a partial
+version + an orphaned unused import. Diffed the two, confirmed the `.tmp`
+version was a clean superset, promoted it. Also completed a genuinely missing
+piece unit 16 referenced but never created: the `material_kit_items.batch_id`
+migration + Drizzle schema mapping (`32bd6ccb`).
+
+**Remaining scope — 28 items never attempted, need re-dispatch**: 9, 35, 40,
+41, 42, 43, 44-45, 46, 47, 48-49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
+61-62, 63, 64, 65 (full fix detail in `VISION-3340-RETRIAGE-2026-07-07.md`) +
+item #29's FE half (Customer 360 "Financial status" block). Plus the 6
+schema-approval items, still PENDING-OWNER-DECISION (unchanged).
+
+**Recommendation for the next dispatch**: this environment appears to kill
+long-running background processes unpredictably (observed 3 times across
+batch1+batch2, unrelated to the weekly rate limit that caused batch1's
+failures) — favor smaller batches (4-8 units at a time via direct Agent calls,
+not one large Workflow) so a kill mid-run loses less committed-but-unreported
+progress, and so forensic recovery per round stays tractable.
+
 ## VISION-3340 batch1 fix-workflow — CLOSED OUT (2026-07-08)
 
 Full routing detail: **`docs/audit/OWNER-QUEUE-2026-07-08.md`**. Summary:
