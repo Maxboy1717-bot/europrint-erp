@@ -128,6 +128,13 @@ export const crmCompanies = pgTable('crm_companies', {
   address:      text('address'),
   credit_limit: decimal('credit_limit').default('0'),
   used_credit:  decimal('credit_used').default('0'),
+  // Financial/risk fields (columns already added live via migrations-drift.ts
+  // + drift-fix-04a-missing-cols.sql). Not previously mapped here, so
+  // db.select().from(crmCompanies) silently omitted them from getCompany()
+  // (VISION-3340 #29 — Customer 360 financial status block).
+  is_blocked:   boolean('is_blocked').notNull().default(false),
+  block_reason: text('block_reason'),
+  open_debt:    decimal('open_debt'),
   created_at:   ts('date_create').defaultNow(),
   deleted_at:   ts('deleted_at'),
   updated_at:   ts('date_modify').defaultNow(),
