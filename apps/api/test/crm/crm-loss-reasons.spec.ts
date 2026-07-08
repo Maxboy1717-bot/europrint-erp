@@ -24,6 +24,7 @@ jest.mock('@shared/db', () => ({
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventBus } from '@nestjs/cqrs';
+import { PgDialect } from 'drizzle-orm/pg-core';
 
 import { MarkDealLostHandler, MarkDealLostCommand } from '../../src/modules/crm/application/commands/mark-deal-lost.handler';
 import { Deal } from '../../src/modules/crm/domain/aggregates/deal.aggregate';
@@ -176,10 +177,29 @@ describe('VISION-3340 #31 — DrizzleCrmAnalyticsRepository.getLossReasonRollup'
     if (r.ok) {
       expect(r.data).toHaveLength(3);
       expect(r.data[0]).toEqual({ lost_reason_id: 1, code: 'PRICE', label_uz: 'Narx yuqori', label_ru: 'Высокая цена', deal_count: 5 });
-      // NULL lost_reason_id (unspecified) is still counted via the LEFT JOIN
+      // deals with no reason (NULL lost_reason) are still counted in the rollup
       expect(r.data[2].lost_reason_id).toBeNull();
       expect(r.data[2].deal_count).toBe(2);
     }
+  });
+
+  // Regression (the endpoint used to 500): the previous SQL grouped by d.lost_reason_id and
+  // JOINed crm_loss_reasons, but live crm_deals has NO lost_reason_id column -> every call
+  // raised "столбец d.lost_reason_id не существует". The mocked (b) tests above passed anyway
+  // because they never execute the SQL. This test renders the ACTUAL SQL and pins it to the
+  // real free-text `lost_reason` column so the nonexistent-column bug cannot come back.
+  it('(b) renders SQL against the real lost_reason column, never lost_reason_id / crm_loss_reasons', async () => {
+    kit.runQuery.mockResolvedValueOnce([]);
+    await repo.getLossReasonRollup();
+
+    const sqlArg = kit.runQuery.mock.calls[0][0];
+    const rendered = new PgDialect().sqlToQuery(sqlArg).sql;
+
+    // NB: `AS lost_reason_id` is a legitimate OUTPUT alias (response contract). The bug was the
+    // COLUMN reference `d.lost_reason_id` + the crm_loss_reasons JOIN — guard those precisely.
+    expect(rendered).toContain('GROUP BY d.lost_reason'); // groups by the real free-text column
+    expect(rendered).not.toContain('d.lost_reason_id');   // the column reference that does not exist
+    expect(rendered).not.toContain('crm_loss_reasons');   // the JOIN that caused the 500
   });
 
   it('(b) Array.isArray-guards a non-array runQuery result → Ok([])', async () => {

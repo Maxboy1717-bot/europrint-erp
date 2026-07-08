@@ -198,23 +198,27 @@ export class DrizzleCrmAnalyticsRepository implements ICrmAnalyticsRepo {
 
   // ----- Loss reasons (VISION-3340 #31) -----
 
-  // Rollup of lost deals grouped by loss-reason taxonomy. LEFT JOIN so lost deals with a
-  // NULL lost_reason_id (no structured reason yet) are still counted (label_* NULL). Lost
-  // deals are identified by the app business status stored in the free-form `stage_id`
-  // column (= 'lost'; the compat crm_deals def aliases `status` → stage_id).
+  // Rollup of lost deals grouped by loss reason. NB: live crm_deals has a free-text
+  // `lost_reason` (text) column — there is NO `lost_reason_id`, and crm_loss_reasons is
+  // empty, so the previous JOIN on d.lost_reason_id raised
+  // "столбец d.lost_reason_id не существует" and the endpoint 500'd on every call. Group by
+  // the real free-text column, surfacing it as code/label_uz; lost_reason_id/label_ru stay
+  // NULL (the response contract is preserved). Lost deals are identified by the app business
+  // status in the free-form `stage_id` column (= 'lost'; compat crm_deals aliases status →
+  // stage_id). Structured taxonomy (a real lost_reason_id column + seeded crm_loss_reasons)
+  // is a separate owner-gated migration (Q-35).
   async getLossReasonRollup(): Promise<Result<LossReasonRollupRow[]>> {
     try {
       const rows = await runQuery<LossReasonRollupRow>(sql`
         SELECT
-          d.lost_reason_id      AS lost_reason_id,
-          lr.code               AS code,
-          lr.label_uz           AS label_uz,
-          lr.label_ru           AS label_ru,
+          NULL::int             AS lost_reason_id,
+          d.lost_reason         AS code,
+          d.lost_reason         AS label_uz,
+          NULL::text            AS label_ru,
           COUNT(*)::int         AS deal_count
         FROM crm_deals d
-        LEFT JOIN crm_loss_reasons lr ON lr.id = d.lost_reason_id
         WHERE d.stage_id = 'lost' AND d.deleted_at IS NULL
-        GROUP BY d.lost_reason_id, lr.code, lr.label_uz, lr.label_ru
+        GROUP BY d.lost_reason
         ORDER BY deal_count DESC
       `);
       return Ok(Array.isArray(rows) ? rows : []);
