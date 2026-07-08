@@ -14,8 +14,14 @@ import { Ok, Err, Result, safeCall } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db, runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
+import { LmsCardGateService } from '../lms/application/services/lms-card-gate.service';
 
 type Row = Record<string, unknown>;
+
+/** SB0777 (finding A2) manual-PATCH razryad_history fallback — mirrors org-mutations.repo.ts's
+ *  identical literal. Used only when the caller supplied no reason (defense-in-depth; this repo
+ *  method has direct unit-test callers too, not exclusively the CardController PATCH route). */
+const DEFAULT_MANUAL_RAZRYAD_REASON = "Karta to'g'ridan tahrirlash (manual PATCH, 2-imzo oqimidan tashqari)";
 
 export interface CardInput {
   positionName?: string;
@@ -40,6 +46,8 @@ export interface CardInput {
 
 @Injectable()
 export class CardRepository {
+  constructor(private readonly lmsGate: LmsCardGateService) {}
+
   private exec(q: SQL | SQLWrapper): Promise<Result<Row[]>> {
     return safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
   }
@@ -174,7 +182,7 @@ export class CardRepository {
    * half-state). Guards (min_months/exam_pass_threshold) intentionally do NOT apply here — those
    * belong to the request-flow (`razryad-history.service.ts`); this only records WHAT happened.
    */
-  async update(id: number, dto: CardInput): Promise<Result<Row | null>> {
+  async update(id: number, dto: CardInput, reason: string | null = null): Promise<Result<Row | null>> {
     return safeCall(async () => {
       return await db.transaction(async (tx) => {
         let oldRazryadId: number | null = null;
@@ -236,7 +244,7 @@ export class CardRepository {
               (card_id, employee_id, old_razryad_id, new_razryad_id, change_type, reason, ai_suggested, effective_at, created_at)
             VALUES
               (${id}, ${employeeId}, ${oldRazryadId}, ${dto.razryadLevelId}, ${changeType},
-               'Karta to\'g\'ridan tahrirlash (manual PATCH, 2-imzo oqimidan tashqari)', false, NOW(), NOW())
+               ${reason ?? DEFAULT_MANUAL_RAZRYAD_REASON}, false, NOW(), NOW())
           `);
         }
 
@@ -705,6 +713,14 @@ export class CardRepository {
    * RBAC tier, and salary eligibility (an active employee_cards link). Read-only, non-blocking — the
    * card-LESS case is FLAGGED (principle 1), NOT a login block. FAZA 2 wires the full login-gate.
    * PHASE-00: canonical card join = org_departments.
+   *
+   * ⭐ T7-10-follow-up: also surfaces `lmsGateBlocked` — the SAME EP-ORG-027 mandatory-darslik
+   * verdict `LmsCardGateService.isCardTrainingComplete` already computes for payroll (reused here
+   * verbatim, NOT reimplemented), so the FE card-gate banner shows the darslik-gate too, not just
+   * RBAC/salary. `employee_id` is resolved via the bidirectional user<->employee bridge already
+   * used elsewhere in this module (employees.user_id = userId OR users.employee_id = employees.id —
+   * see org-mutations.repo.ts:330). Only evaluable when the user HAS a card AND a linked employee;
+   * otherwise there is nothing to gate (honest N/A = false, not a fabricated block).
    */
   async resolveGate(userId: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
@@ -713,11 +729,26 @@ export class CardRepository {
              (u.org_function_id IS NOT NULL AND ofn.id IS NOT NULL) AS has_card,
              EXISTS (SELECT 1 FROM employees e JOIN employee_cards ec ON ec.employee_id = e.id
                      WHERE e.user_id = u.id AND ec.is_active
-                       AND (ec.ended_at IS NULL OR ec.ended_at > now())) AS salary_eligible
+                       AND (ec.ended_at IS NULL OR ec.ended_at > now())) AS salary_eligible,
+             (SELECT e2.id FROM employees e2 WHERE e2.user_id = u.id OR e2.id = u.employee_id LIMIT 1) AS employee_id
       FROM users u
       LEFT JOIN org_departments ofn ON ofn.id = u.org_function_id AND ofn.is_active = true
       WHERE u.id = ${userId}
     `);
-    return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+    if (!r.ok) return Err(r.error);
+    const row = r.data[0] ?? null;
+    if (!row) return Ok(null);
+
+    const cardId = row.card_id == null ? null : Number(row.card_id);
+    const employeeId = row.employee_id == null ? null : Number(row.employee_id);
+    let lmsGateBlocked = false;
+    if (row.has_card === true && cardId != null && cardId > 0 && employeeId != null && employeeId > 0) {
+      const lmsR = await this.lmsGate.isCardTrainingComplete(cardId, employeeId);
+      // FAIL-CLOSED (mirrors payroll.service.ts T7-10): a read/evaluate error surfaces as
+      // blocked, so a transient problem never silently hides an open darslik-gate from the FE.
+      lmsGateBlocked = lmsR.ok ? !lmsR.data.allComplete : true;
+    }
+
+    return Ok({ ...row, lmsGateBlocked });
   }
 }

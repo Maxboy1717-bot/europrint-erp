@@ -42,6 +42,9 @@ interface CardGate {
   salary_eligible?: boolean;
   gated?: boolean;
   flag?: string | null;
+  /** EP-ORG-027 (T7-10-follow-up): mandatory-darslik gate reused from LmsCardGateService —
+   *  true => at least one mandatory course bound to this card is unfinished (oylik to'xtaydi). */
+  lmsGateBlocked?: boolean;
 }
 
 const fmtSom = (v: string | number | null | undefined): string => {
