@@ -8,7 +8,8 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
-import { CheckCircle, Clock, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Clock, Zap, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import type { CrmActivity, HistoryRecord } from "./DetailSheetTypes";
 import { HISTORY_ACTION_LABELS } from "./DetailSheetTypes";
@@ -36,30 +37,49 @@ export function HistoryTab({ activities, historyData }: HistoryTabProps) {
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 {t("faoliyatlar")}
               </h4>
-              {activities.map((act) => (
-                <div
-                  key={act.id}
-                  className="flex items-start gap-3 mb-2 p-2 border-l-2 border-blue-200 pl-3"
-                >
-                  {act.isDone ? (
-                    <CheckCircle className="h-4 w-4 text-[var(--ep-green)] mt-0.5 shrink-0" />
-                  ) : (
-                    <Clock className="h-4 w-4 text-[var(--ep-primary)] mt-0.5 shrink-0" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium">{act.subject}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {act.type} •{" "}
-                      {act.dueDate
-                        ? format(new Date(act.dueDate), "dd.MM.yyyy HH:mm")
-                        : "Muddat yo'q"}
-                      {act.isDone && (
-                        <span className="ml-1 text-[var(--ep-green)]">{t("bajarildi")}</span>
-                      )}
-                    </p>
+              {activities.map((act) => {
+                const isOverdue =
+                  !!act.dueDate && new Date(act.dueDate) < new Date() && !act.isDone;
+                return (
+                  <div
+                    key={act.id}
+                    className={`flex items-start gap-3 mb-2 p-2 border-l-2 pl-3 ${
+                      isOverdue ? "border-[var(--ep-red)]" : "border-blue-200"
+                    }`}
+                  >
+                    {act.isDone ? (
+                      <CheckCircle className="h-4 w-4 text-[var(--ep-green)] mt-0.5 shrink-0" />
+                    ) : isOverdue ? (
+                      <AlertTriangle className="h-4 w-4 text-[var(--ep-red)] mt-0.5 shrink-0" />
+                    ) : (
+                      <Clock className="h-4 w-4 text-[var(--ep-primary)] mt-0.5 shrink-0" />
+                    )}
+                    <div>
+                      <div className="text-sm font-medium flex items-center gap-2">
+                        {act.subject}
+                        {isOverdue && (
+                          <Badge
+                            variant="destructive"
+                            className="gap-1"
+                            data-testid={`badge-overdue-${act.id}`}
+                          >
+                            {t("muddatiOtgan")}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {act.type} •{" "}
+                        {act.dueDate
+                          ? format(new Date(act.dueDate), "dd.MM.yyyy HH:mm")
+                          : "Muddat yo'q"}
+                        {act.isDone && (
+                          <span className="ml-1 text-[var(--ep-green)]">{t("bajarildi")}</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
