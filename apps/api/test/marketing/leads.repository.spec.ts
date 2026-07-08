@@ -53,21 +53,21 @@ describe('LeadsRepository', () => {
   describe('findOne', () => {
     it('returns Ok with row when found', async () => {
       dbStub.__setResolved([{ id: 1, status: 'new' }]);
-      const r = await repo.findOne(1);
+      const r = await repo.findOne('demo-lead-1');
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.data).toEqual({ id: 1, status: 'new' });
     });
 
     it('returns Ok with null when missing', async () => {
       dbStub.__setResolved([]);
-      const r = await repo.findOne(99);
+      const r = await repo.findOne('missing-id');
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.data).toBeNull();
     });
 
     it('returns Err when DB throws', async () => {
       dbStub.__setRejected(new Error('boom'));
-      const r = await repo.findOne(1);
+      const r = await repo.findOne('demo-lead-1');
       expect(r.ok).toBe(false);
     });
   });
@@ -96,20 +96,20 @@ describe('LeadsRepository', () => {
   describe('update', () => {
     it('returns Ok with updated row when match', async () => {
       dbStub.__setResolved([{ id: 1, status: 'qualified' }]);
-      const r = await repo.update(1, { status: 'qualified' });
+      const r = await repo.update('demo-lead-1', { status: 'qualified' });
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.data).toEqual({ id: 1, status: 'qualified' });
     });
 
     it('returns Ok when nothing updated', async () => {
       dbStub.__setResolved([]);
-      const r = await repo.update(99, {});
+      const r = await repo.update('missing-id', {});
       expect(r.ok).toBe(true);
     });
 
     it('returns Err when DB throws', async () => {
       dbStub.__setRejected(new Error('conflict'));
-      const r = await repo.update(1, {});
+      const r = await repo.update('demo-lead-1', {});
       expect(r.ok).toBe(false);
     });
   });
@@ -117,19 +117,19 @@ describe('LeadsRepository', () => {
   describe('softDelete', () => {
     it('returns Ok when update succeeds', async () => {
       dbStub.__setResolved(undefined);
-      const r = await repo.softDelete(1);
+      const r = await repo.softDelete('demo-lead-1');
       expect(r.ok).toBe(true);
     });
 
     it('returns Ok when no rows match', async () => {
       dbStub.__setResolved([]);
-      const r = await repo.softDelete(999);
+      const r = await repo.softDelete('missing-id');
       expect(r.ok).toBe(true);
     });
 
     it('returns Err when DB throws', async () => {
       dbStub.__setRejected(new Error('boom'));
-      const r = await repo.softDelete(1);
+      const r = await repo.softDelete('demo-lead-1');
       expect(r.ok).toBe(false);
     });
   });

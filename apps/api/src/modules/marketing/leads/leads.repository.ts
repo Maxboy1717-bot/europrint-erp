@@ -38,9 +38,12 @@ export class LeadsRepository {
     }
   }
 
-  async findOne(id: number): Promise<Result<Record<string, unknown> | null>> {
+  async findOne(id: string): Promise<Result<Record<string, unknown> | null>> {
   try {  
-      const rows = await db.select().from(marketingLeads).where(and(eq(marketingLeads.id, id), isNull(marketingLeads.deletedAt)));
+      // NB: the @europrint/schemas Drizzle def mis-types marketingLeads.id as integer, but the
+      // LIVE column is varchar (slug ids like "demo-lead-010"). Use a parametrized sql comparison
+      // so a string id binds correctly (eq() would fail to compile against the mistyped column).
+      const rows = await db.select().from(marketingLeads).where(and(sql`${marketingLeads.id} = ${id}`, isNull(marketingLeads.deletedAt)));
       return Ok(rows[0] ?? null);  } catch (_e) {
     return Err(String(_e));
   }
@@ -73,18 +76,18 @@ export class LeadsRepository {
     }
   }
 
-  async update(id: number, values: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
+  async update(id: string, values: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
   try {
-      const result = await db.update(marketingLeads).set(values as Partial<typeof marketingLeads.$inferInsert>).where(eq(marketingLeads.id, id)).returning();
+      const result = await db.update(marketingLeads).set(values as Partial<typeof marketingLeads.$inferInsert>).where(sql`${marketingLeads.id} = ${id}`).returning();
       return Ok(result[0] as Record<string, unknown>);  } catch (_e) {
     return Err(String(_e));
   }
 
   }
 
-  async softDelete(id: number): Promise<Result<void>> {
+  async softDelete(id: string): Promise<Result<void>> {
   try {
-      await db.update(marketingLeads).set({ deletedAt: _time.now() }).where(eq(marketingLeads.id, id));  return Ok();  } catch (_e) {
+      await db.update(marketingLeads).set({ deletedAt: _time.now() }).where(sql`${marketingLeads.id} = ${id}`);  return Ok();  } catch (_e) {
     return Err(String(_e));
   }
 

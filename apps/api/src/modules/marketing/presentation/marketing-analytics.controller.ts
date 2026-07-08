@@ -114,7 +114,9 @@ export class MarketingAnalyticsController {
   @Get('leads/:id')
   @ApiOperation({ summary: 'Lead tafsiloti' })
   async getLead(@Param('id') id: string) {
-    return unwrapOrInternal(await this.leadsSvc.findOne(Number(id)));
+    // marketing_leads.id is varchar (slug) — pass it straight through (was Number(id) -> NaN).
+    // findOne now returns the raw row or throws 404, so no unwrap wrapper here.
+    return await this.leadsSvc.findOne(id);
   }
 
   @Put('leads/:id')
@@ -122,7 +124,7 @@ export class MarketingAnalyticsController {
   @ApiOperation({ summary: "Lead ma'lumotlarini yangilash" })
   async updateLead(@Param('id') id: string, @Body() body: unknown) {
     const dto = MarketingLeadUpdateSchema.parse(body);
-    return unwrapOrThrow(await this.leadsSvc.update(Number(id), dto as Record<string, unknown>));
+    return unwrapOrThrow(await this.leadsSvc.update(id, dto as Record<string, unknown>));
   }
 
   @Patch('leads/:id/status')
@@ -130,7 +132,7 @@ export class MarketingAnalyticsController {
   @ApiOperation({ summary: 'Lead statusini yangilash' })
   async updateLeadStatus(@Param('id') id: string, @Body() body: UpdateLeadStatusDto) {
     const dto = UpdateLeadStatusDtoSchema.parse(body);
-    return unwrapOrThrow(await this.leadsSvc.update(Number(id), { status: dto.status }));
+    return unwrapOrThrow(await this.leadsSvc.update(id, { status: dto.status }));
   }
 
   @Patch('leads/:id')
@@ -142,7 +144,7 @@ export class MarketingAnalyticsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   async patchLead(@Param('id') id: string, @Body() body: unknown) {
     const dto = MarketingLeadUpdateSchema.parse(body);
-    return unwrapOrThrow(await this.leadsSvc.update(Number(id), dto as Record<string, unknown>));
+    return unwrapOrThrow(await this.leadsSvc.update(id, dto as Record<string, unknown>));
   }
 
   @Get('email/templates')

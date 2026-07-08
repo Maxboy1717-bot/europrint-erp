@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { LeadsRepository } from './leads.repository';
@@ -37,10 +37,15 @@ export class LeadsService {
     });
   }
 
-  async findOne(id: number) {
-    const row = await this.repo.findOne(id);
-    if (!row) throw new NotFoundException(await this.i18n.t('errors.marketingLeadNotFoundWithId', { args: { id } }));
-    return row;
+  async findOne(id: string) {
+    // marketing_leads.id is varchar (slugs like "demo-lead-010") — the caller must pass the
+    // raw string id (the controller previously did Number(id) -> NaN, so real leads were never
+    // found). Properly unwrap the repo Result: the previous `if (!row)` tested the Result
+    // wrapper (always truthy), so the 404 never fired and a missing lead returned 200 null.
+    const r = await this.repo.findOne(id);
+    if (!r.ok) throw new InternalServerErrorException(String(r.error));
+    if (!r.data) throw new NotFoundException(await this.i18n.t('errors.marketingLeadNotFoundWithId', { args: { id } }));
+    return r.data;
   }
 
   async create(dto: Record<string, unknown>, _createdBy?: number) {
@@ -64,14 +69,14 @@ export class LeadsService {
     });
   }
 
-  async update(id: number, dto: Record<string, unknown>) {
+  async update(id: string, dto: Record<string, unknown>) {
     return safeCall(async () => {
-      await this.findOne(id);
+      await this.findOne(id); // now really 404s on a missing lead (no silent 0-row update)
       return this.repo.update(id, dto);
     });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     return safeCall(async () => {
       await this.findOne(id);
       await this.repo.softDelete(id);
