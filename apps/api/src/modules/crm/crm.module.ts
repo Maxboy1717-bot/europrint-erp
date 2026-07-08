@@ -45,6 +45,7 @@ import { WebsiteContactLeadListener } from './listeners/website-contact-lead.lis
 import { LeadConvertedCustomerListener } from './listeners/lead-converted-customer.listener';
 import { WebsiteLeadService } from './listeners/website-lead.service';
 import { WebsiteLeadRepository } from './listeners/website-lead.repository';
+import { LeadAgingReassignCron } from './cron/lead-aging-reassign.cron';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { LeadScorerService } from './domain/services/lead-scorer.service';
 import { CrmLeadScoringService } from './domain/services/crm-lead-scoring.service';
@@ -221,6 +222,8 @@ const repositories = [
     // Trigger 21/22 — Saytdan CRM Lead
     WebsiteLeadRepository,
     WebsiteLeadService,
+    // VISION-3340 #33 — Lead-aging avtomatik qayta biriktirish (daily @Cron)
+    LeadAgingReassignCron,
   ],
   exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, CrmLeadScoringService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
 })

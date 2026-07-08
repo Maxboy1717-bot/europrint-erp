@@ -98,20 +98,89 @@ export class WebsiteLeadRepository {
   }
 
   /**
-   * Mavjud lead'ga sotuv menejerini biriktiradi (manager bo'sh bo'lsa).
+   * Mavjud lead'ga sotuv menejerini biriktiradi.
+   *
+   * Standart (overwrite=false, mavjud chaqiruvchilar — website/order/contact
+   * listener'lari — shu holatga tayanadi): faqat `manager_id` bo'sh bo'lsa
+   * yozadi (null-fill).
+   *
+   * overwrite=true (VISION-3340 #33, faqat `lead-aging-reassign.cron.ts`
+   * ishlatadi): joriy tayinlangan menejerni ham almashtirib, YANGI menejerga
+   * qayta biriktiradi — 60+ kun sovigan lead'larni boshqa menejerga o'tkazish
+   * uchun aniq opt-in parametr. Standart chaqiruvchilar bu parametrni
+   * bermagani uchun ularning xatti-harakati o'zgarmaydi.
    */
-  async assignManagerIfMissing(leadId: number, managerId: number): Promise<Result<boolean>> {
-    // crm_leads.manager_id (integer) — only set if currently empty.
+  async assignManagerIfMissing(leadId: number, managerId: number, overwrite = false): Promise<Result<boolean>> {
+    // crm_leads.manager_id (integer).
     return safeCall(async () => {
-      const updated = await db.execute<Row>(sql`
-        UPDATE crm_leads SET manager_id = ${managerId}
-        WHERE id = ${leadId} AND manager_id IS NULL
-        RETURNING id
-      `);
+      const updated = overwrite
+        ? await db.execute<Row>(sql`
+            UPDATE crm_leads SET manager_id = ${managerId}, updated_at = NOW()
+            WHERE id = ${leadId}
+            RETURNING id
+          `)
+        : await db.execute<Row>(sql`
+            UPDATE crm_leads SET manager_id = ${managerId}
+            WHERE id = ${leadId} AND manager_id IS NULL
+            RETURNING id
+          `);
       const updList = Array.isArray((updated as { rows?: Row[] }).rows)
         ? ((updated as { rows: Row[] }).rows)
         : (Array.isArray(updated) ? (updated as Row[]) : []);
       return updList.length > 0;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * VISION-3340 #33 — lead-aging-reassign.cron uchun: `COALESCE(last_activity_at,
+   * created_at)` `agingDays` kundan ko'proq oldin bo'lgan va `status`
+   * `terminalStatuses` ro'yxatida BO'LMAGAN (hali yakunlanmagan) lead'larni
+   * topadi. Soft-delete'langan (`deleted_at IS NOT NULL`) lead'lar chetlab
+   * o'tiladi.
+   */
+  async findColdLeadsForReassignment(
+    agingDays: number,
+    terminalStatuses: readonly string[],
+  ): Promise<Result<Array<{ id: number; managerId: number | null }>>> {
+    return safeCall(async () => {
+      const rows = await db.execute<Row>(sql`
+        SELECT id, manager_id
+        FROM crm_leads
+        WHERE deleted_at IS NULL
+          AND COALESCE(last_activity_at, created_at) < NOW() - (${agingDays} || ' days')::interval
+          AND COALESCE(status, 'new') <> ALL(${Array.from(terminalStatuses)}::text[])
+        ORDER BY id ASC
+      `);
+      const list = Array.isArray((rows as { rows?: Row[] }).rows)
+        ? ((rows as { rows: Row[] }).rows)
+        : (Array.isArray(rows) ? (rows as Row[]) : []);
+      return list
+        .map((r) => ({
+          id: Number(r['id']),
+          managerId: r['manager_id'] != null ? Number(r['manager_id']) : null,
+        }))
+        .filter((r) => Number.isFinite(r.id));
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * VISION-3340 #33 — har bir avtomatik lead-aging qayta biriktirishni
+   * `crm_activities`'ga 'note' turi bilan yozadi (audit trail: kimdan-kimga,
+   * necha kun sovigani).
+   */
+  async logLeadReassignmentNote(
+    leadId: number,
+    previousManagerId: number | null,
+    newManagerId: number,
+    agingDays: number,
+  ): Promise<Result<void>> {
+    return safeCall(async () => {
+      const fromText = previousManagerId != null ? `#${previousManagerId}` : 'biriktirilmagan';
+      const noteText = `Lead ${agingDays}+ kun faolsiz (aging) — menejer ${fromText} dan #${newManagerId} ga avtomatik qayta biriktirildi.`;
+      await db.execute(sql`
+        INSERT INTO crm_activities (type, subject, lead_id, notes, status)
+        VALUES ('note', 'Lead aging — avtomatik qayta biriktirish', ${leadId}, ${noteText}, 'completed')
+      `);
     }, 'DB_ERROR');
   }
 
