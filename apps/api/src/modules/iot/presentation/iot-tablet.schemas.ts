@@ -151,6 +151,13 @@ export const DowntimeEventSchema = z.object({
   eventType:       z.string().max(100).default('manual_entry'),
   durationMinutes: z.coerce.number().int().min(1).max(480),
   reasonCode:      z.string().max(100),
+  // VISION-3340 #44 (08-mes#10): optional link to the LIVE mes_downtime_reasons
+  // catalog. When the operator picks a reason from the live list (not a hardcoded
+  // dictionary) the tablet resolves its mes_downtime_reasons.id and sends it here;
+  // the endpoint then persists downtime_events.reason_code_id so root-cause stats
+  // can group by reason_code_id. Omitted => free-text reason_code only,
+  // reason_code_id NULL — exact pre-existing behaviour.
+  reasonId:        z.coerce.number().int().positive().optional(),
   notes:           z.string().max(2000).optional(),
 });
 

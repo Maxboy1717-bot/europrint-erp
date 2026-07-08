@@ -995,12 +995,33 @@ export class IotTabletController {
   async reportDowntimeEvent(@Body() body: unknown) {
     const dto = DowntimeEventSchema.parse(body ?? {});
     const durationSeconds = dto.durationMinutes * 60;
+
+    // VISION-3340 #44 (08-mes#10): when the operator picked a reason from the LIVE
+    // mes_downtime_reasons list, resolve that row so downtime_events.reason_code_id
+    // is populated (root-cause stats group by it) and reason_code stays consistent
+    // with the catalog code. When reasonId is absent OR does not resolve, fall back
+    // to the free-text reason_code with reason_code_id NULL — pre-existing behaviour.
+    let reasonCodeId: number | null = null;
+    let reasonCode: string = dto.reasonCode;
+    if (dto.reasonId != null) {
+      const reasonRows = ((await db.execute(sql`
+        SELECT id, code FROM mes_downtime_reasons WHERE id = ${dto.reasonId} LIMIT 1
+      `)) as Rows).rows ?? [];
+      const reasonRow = reasonRows[0] as { id?: unknown; code?: unknown } | undefined;
+      if (reasonRow) {
+        reasonCodeId = Number(reasonRow.id);
+        if (typeof reasonRow.code === 'string' && reasonRow.code.length > 0) {
+          reasonCode = reasonRow.code;
+        }
+      }
+    }
+
     const r = await db.execute(sql`
       INSERT INTO downtime_events (
         session_id, event_type,
         started_at, ended_at,
         duration_seconds, duration_minutes,
-        reason_code, is_planned,
+        reason_code, reason_code_id, is_planned,
         notes, created_at
       ) VALUES (
         ${dto.sessionId},
@@ -1009,7 +1030,8 @@ export class IotTabletController {
         NOW(),
         ${durationSeconds},
         ${dto.durationMinutes},
-        ${dto.reasonCode},
+        ${reasonCode},
+        ${reasonCodeId},
         false,
         ${dto.notes ?? null},
         NOW()

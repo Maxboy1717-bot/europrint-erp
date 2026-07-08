@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, selectArray } from "@/lib/queryClient";
 import { mesApi } from "@/lib/api/mes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,33 +45,43 @@ function fmtSecs(secs: number) {
   return h > 0 ? `${h} ${soat} ${m} ${daq}` : `${m} ${daqiqa}`;
 }
 
-const REASON_LABELS: Record<string, string> = {
-  unknown: tLabel("common.MESDowntimes.reason.unknown", "Noma'lum"),
-  material_shortage: tLabel("common.MESDowntimes.reason.material_shortage", "Material yetishmovchiligi"),
-  tool_change: tLabel("common.MESDowntimes.reason.tool_change", "Asbob almashtirish"),
-  machine_breakdown: tLabel("common.MESDowntimes.reason.machine_breakdown", "Mashina nosozligi"),
-  maintenance: tLabel("common.MESDowntimes.reason.maintenance", "Texnik xizmat"),
-  quality_issue: tLabel("common.MESDowntimes.reason.quality_issue", "Sifat muammosi"),
-  operator_break: tLabel("common.MESDowntimes.reason.operator_break", "Operator tanaffusi"),
-  shift_end: tLabel("common.MESDowntimes.reason.shift_end", "Smena tugashi"),
-  setup: tLabel("common.MESDowntimes.reason.setup", "Sozlash"),
-  lunch: tLabel("common.MESDowntimes.reason.lunch", "Tushlik"),
-  quality: tLabel("common.MESDowntimes.reason.quality", "Sifat sozlash"),
-  planned_maintenance: tLabel("common.MESDowntimes.reason.planned_maintenance", "Rejalashtirilgan TA"),
-  unplanned_stop: tLabel("common.MESDowntimes.reason.unplanned_stop", "Rejalanmagan to'xtash"),
-};
+// VISION-3340 #44 (08-mes#10): downtime reasons come from the LIVE
+// mes_downtime_reasons catalog (GET /api/mes/downtime-reasons), not a hardcoded
+// dictionary, so the operator's pick carries a real reason_code_id and root-cause
+// stats can group by it. One row of that catalog.
+interface DowntimeReasonRow {
+  id?: number | string;
+  code?: string;
+  name?: string;
+}
 
 export default function MESDowntimes() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
   const [filter, setFilter] = useState<"all" | "planned" | "unplanned">("all");
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState({ sessionId: "", reasonCode: "unknown", notes: "", isPlanned: false });
+  const [form, setForm] = useState<{ sessionId: string; reasonCode: string; reasonId: number | null; notes: string; isPlanned: boolean }>(
+    { sessionId: "", reasonCode: "", reasonId: null, notes: "", isPlanned: false },
+  );
 
   const { data: raw, isLoading } = useQuery<Downtime[]>({
     queryKey: ["/api/iot/downtime-events"],
     refetchInterval: 30000,
   });
+
+  // VISION-3340 #44 (08-mes#10): live downtime-reason catalog (same source the
+  // sibling MESExtended page reads). Operators pick from this list; the picked
+  // row's id flows through as reasonId so the backend can persist reason_code_id.
+  const { data: reasonRows = [], isLoading: reasonsLoading } = useQuery<DowntimeReasonRow[]>({
+    queryKey: ["/api/mes/downtime-reasons"],
+    select: selectArray<DowntimeReasonRow>,
+  });
+
+  const reasonNameByCode = new Map<string, string>();
+  (Array.isArray(reasonRows) ? reasonRows : []).forEach(r => {
+    if (r.code) reasonNameByCode.set(String(r.code), String(r.name || r.code));
+  });
+  const reasonName = (code: string) => reasonNameByCode.get(code) || code;
 
   const downtimes: Downtime[] = Array.isArray(raw) ? raw : [];
 
@@ -80,6 +90,7 @@ export default function MESDowntimes() {
       mesApi.startDowntime({
         sessionId: data.sessionId,
         reasonCode: data.reasonCode,
+        reasonId: data.reasonId ?? undefined,
         notes: data.notes,
         isPlanned: data.isPlanned,
       }),
@@ -87,7 +98,7 @@ export default function MESDowntimes() {
       queryClient.invalidateQueries({ queryKey: ["/api/iot/downtime-events"] });
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
       setCreateOpen(false);
-      setForm({ sessionId: "", reasonCode: "unknown", notes: "", isPlanned: false });
+      setForm({ sessionId: "", reasonCode: "", reasonId: null, notes: "", isPlanned: false });
       toast({ title: t("MESDowntimes.toxtashBoshlandi"), description: t("MESDowntimes.downtimeQaydQilindi") });
     },
     onError: () => toast({ title: t("MESDowntimes.xatolik"), variant: "destructive" }),
@@ -168,7 +179,7 @@ export default function MESDowntimes() {
           <CardContent className="space-y-2">
             {(Array.isArray(topReasons) ? topReasons : []).map(([code, cnt]) => (
               <div key={code} className="flex items-center justify-between gap-2">
-                <span className="text-xs text-foreground truncate flex-1">{REASON_LABELS[code] || code}</span>
+                <span className="text-xs text-foreground truncate flex-1">{reasonName(code)}</span>
                 <EPStatusPill tone="neutral" className="text-[10px] shrink-0">{cnt}</EPStatusPill>
               </div>
             ))}
@@ -223,7 +234,7 @@ export default function MESDowntimes() {
                       )} />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground">
-                          {d.reasonDescription || REASON_LABELS[d.reasonCode] || d.reasonCode}
+                          {d.reasonDescription || reasonName(d.reasonCode)}
                         </p>
                         <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                           <span className={cn("text-[10px] font-medium",
@@ -288,12 +299,30 @@ export default function MESDowntimes() {
             </div>
             <div className="space-y-1">
           <Label>{t("sabab")}</Label>
-              <Select value={form.reasonCode} onValueChange={v => setForm(p => ({ ...p, reasonCode: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={form.reasonCode}
+                onValueChange={v => {
+                  const picked = (Array.isArray(reasonRows) ? reasonRows : []).find(r => String(r.code) === v);
+                  setForm(p => ({ ...p, reasonCode: v, reasonId: picked?.id != null ? Number(picked.id) : null }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("MESDowntimes.sababniTanlang", "Sababni tanlang")} />
+                </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(REASON_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
+                  {reasonsLoading ? (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">{t("loading", "Yuklanmoqda...")}</div>
+                  ) : (Array.isArray(reasonRows) ? reasonRows : []).length === 0 ? (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">{t("malumotYoq")}</div>
+                  ) : (
+                    (Array.isArray(reasonRows) ? reasonRows : [])
+                      .filter(r => r.code)
+                      .map(r => (
+                        <SelectItem key={String(r.id ?? r.code)} value={String(r.code)}>
+                          {r.name || r.code}
+                        </SelectItem>
+                      ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -320,7 +349,7 @@ export default function MESDowntimes() {
             <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("cancel")}</Button>
             <Button
               onClick={() => startDowntimeMutation.mutate(form)}
-              disabled={startDowntimeMutation.isPending || !form.sessionId}
+              disabled={startDowntimeMutation.isPending || !form.sessionId || !form.reasonCode}
             >
               {t("qaydEtish")}
             </Button>
