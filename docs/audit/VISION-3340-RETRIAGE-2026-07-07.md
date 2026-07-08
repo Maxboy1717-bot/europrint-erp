@@ -6,6 +6,16 @@
 
 **2026-07-08 update:** fix-batch1 closed out at 15/43 units confirmed complete (see `MASTER-STATUS-BOARD-2026-07-06.md`'s "VISION-3340 batch1 fix-workflow — CLOSED OUT" section for the full commit list — items #1-8,10,11,14,18,19,22,25,27 done). The remaining 43 fixable-now items (65 − 6 excluded − 16 done) were re-dispatched as `wf_91c2396c-5db` ("vision-3340-fix-batch2", 39 clustered work-units) — outcome to be recorded on the board once reviewed/tested/committed.
 
+**2026-07-08 — SIX OWNER-APPROVED SCHEMA ITEMS EXECUTED (5 done, 1 blocked).** The owner explicitly approved all six schema-approval items. Executed sequentially, single-writer, one commit each:
+- **#38** IoT `tablet_id`+`local_seq_no` idempotency (downtime_events/inline_qc_checks/material_movements) → `58bfcdc9` ✅
+- **#21** GL `entries.cost_center_id` (canonical posting table verified = `entries`) + journal-line threading → `e594c987` ✅
+- **#23** PP `pp_reason_codes` + `pp_shift_plans` (2 new tables) + real AI shift-assign → `83bb47d7` ✅
+- **#31** CRM `crm_loss_reasons` new table + `crm_deals.lost_reason_id` FK + loss-reason rollup → `ace8852` ✅
+- **#34** CRM `crm_stage_history` new table + audit write in deal/lead stage handlers → `be68dd24` ✅
+- **#32** `crm_deals.sales_order_id` varchar→integer + FK → **BLOCKED-OWNER-DECISION.** Fresh live re-verify: column still 0/5 non-empty (safe on that axis), BUT `crm_deals` is a **VIEW** over base table `deals` (`pg_class.relkind='v'`), so `ALTER COLUMN TYPE`/`ADD CONSTRAINT` is physically impossible (dry-run BEGIN/ROLLBACK confirmed 3 distinct errors). The only path is DROP VIEW → ALTER base `deals` → RECREATE 50-column view → ADD FK — a structural two-worlds change beyond the approved "in-place empty-column type change." No workaround substituted (per owner rule). Note: the reverse FK **`fk_sales_orders_deal_id`** (`sales_orders.deal_id uuid → deals.id uuid`) already exists, so the CRM↔SD link is already FK-enforced in that direction; `deals.sales_order_id` is a redundant varchar back-pointer. Owner options: (a) approve the DROP/RECREATE-view structural task, (b) treat #32 as satisfied by the existing reverse FK and drop the redundant back-pointer, or (c) leave as-is.
+
+Also this session: the card-gate precheck was aligned to the authoritative login-gate predicate (`857938bd`), `CARD_LOGIN_GATE_ENABLED` turned ON (`00002f20`, 0/32 blocked), and the card-attribute owner-data template written (`726e5987`).
+
 Source: `wf_008e68d3-fb6/journal.jsonl`, 20 area-level `result` records, 365 total distinct root causes.
 
 ---
