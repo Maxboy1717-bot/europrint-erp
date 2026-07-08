@@ -249,6 +249,25 @@ export class QcNewController {
     return unwrapOrInternal(await this.svc.getSupplierQualityRatings());
   }
 
+  /**
+   * GET /qc/traceability/:productionOrderId
+   *
+   * VISION-3340 #40 — full material→QC→delivery golden-thread trace for one production order:
+   * the production order + its sales order, the QC inspections, the MES sessions, the finished-goods
+   * stock receipts (wms_transactions 'IN' ledger) with their QC-/MES- batch trace, the current
+   * on-hand FG stock, and the outbound deliveries. Un-linkable hops (Guruh-B — e.g. raw-material
+   * mm_goods_receipts, which has no FK to the production order) are reported in `missingHops`.
+   *
+   * Transport-only (Rule 6): the repo validates the id (VALIDATION → 400) and returns NOT_FOUND
+   * (→ 404) when the production order does not exist. unwrapOrInternal maps both codes.
+   */
+  @Get('traceability/:productionOrderId')
+  @Roles(...QC_ROLES)
+  @ApiOperation({ summary: 'VISION-3340 #40: production-order traceability (material → QC → FG stock → delivery)' })
+  async getTraceability(@Param('productionOrderId') productionOrderId: string) {
+    return unwrapOrInternal(await this.svc.getTraceability(Number.parseInt(productionOrderId, 10)));
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // AQL sampling-plan endpoints
   // ─────────────────────────────────────────────────────────────────────────

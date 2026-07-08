@@ -8,10 +8,10 @@ const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import {
   db, qc_checkpoints, qc_certificates, qc_lab_tests, qc_spc_data, qc_parameters,
-  qc_defects, qc_inspections, qc_supplier_quality, mm_vendors,
+  qc_defects, qc_inspections, qc_supplier_quality, mm_vendors, runQuery,
 } from '@shared/db';
 import { eq, ne, desc, gte, isNull, or, sql } from 'drizzle-orm';
-import { safeCall, Result } from '@common/result';
+import { safeCall, Result, Ok, Err, AppErr } from '@common/result';
 
 /**
  * QC-birlashtirish (2026-07-02, APPROVED egasi): POST /qc/braks endi ReportDefectCommand
@@ -94,6 +94,114 @@ export interface AiTrendSummary {
   categoryStats: Array<{ category: string; total: number; passed: number; passRate: number }>;
   aiInsights: string[];
 }
+
+// ============================================================================
+// VISION-3340 #40 — material → QC → delivery traceability (read-only)
+// ============================================================================
+
+/** One chain hop that has NO queryable FK in the live schema (Guruh-B — not fabricated). */
+export interface QcTraceMissingHop {
+  hop: string;
+  reason: string;
+  /** 'B' = Guruh-B: the link genuinely does not exist as an FK/reference column. */
+  group: 'B';
+}
+
+export interface QcTraceProductionOrder {
+  id: number;
+  orderNumber: string | null;
+  productId: number | null;
+  productName: string | null;
+  status: string | null;
+  plannedQuantity: number | null;
+  confirmedQuantity: number | null;
+  salesOrderId: number | null;
+}
+
+export interface QcTraceSalesOrder {
+  id: number;
+  orderNumber: string | null;
+  customerId: number | null;
+  customerName: string | null;
+  status: string | null;
+  deliveryStatus: string | null;
+  fgWarehouseEntryAt: string | null;
+}
+
+export interface QcTraceInspection {
+  id: number;
+  status: string | null;
+  result: string | null;
+  passCount: number;
+  failCount: number;
+  totalCount: number;
+  itemsChecked: number;
+  itemsPassed: number;
+  itemsFailed: number;
+  sortGrade: string | null;
+  inspectedAt: string | null;
+  /** QC→WMS listener stamps this on the FG receipt (wms_transactions.notes = 'FG receipt QC-<id>'). */
+  fgBatchRef: string;
+}
+
+export interface QcTraceSession {
+  id: number;
+  sessionNumber: string | null;
+  status: string | null;
+  actualQuantity: number | null;
+  producedQty: number | null;
+  endedAt: string | null;
+  /** MES→WMS listener stamps this on the FG receipt (wms_transactions.notes = 'FG receipt MES-<id>'). */
+  fgBatchRef: string;
+}
+
+export interface QcTraceFgReceipt {
+  transactionId: number;
+  materialId: number | null;
+  warehouseId: number | null;
+  quantity: number | null;
+  unitCost: number | null;
+  batchNumber: string | null;
+  referenceId: number | null;
+  notes: string | null;
+  createdAt: string | null;
+}
+
+export interface QcTraceStock {
+  warehouseId: number | null;
+  materialId: number | null;
+  quantity: number | null;
+  availableQuantity: number | null;
+  reservedQuantity: number | null;
+}
+
+export interface QcTraceDelivery {
+  id: number;
+  deliveryNumber: string | null;
+  deliveryStatus: string | null;
+  status: string | null;
+  dispatchedAt: string | null;
+  deliveredAt: string | null;
+  driverName: string | null;
+  vehicleNumber: string | null;
+}
+
+export interface QcTraceability {
+  productionOrder: QcTraceProductionOrder;
+  salesOrder: QcTraceSalesOrder | null;
+  qcInspections: QcTraceInspection[];
+  productionSessions: QcTraceSession[];
+  fgReceipts: QcTraceFgReceipt[];
+  currentStock: QcTraceStock[];
+  deliveries: QcTraceDelivery[];
+  /** Hops with no real link (Guruh-B) — surfaced, never joined on an invented column. */
+  missingHops: QcTraceMissingHop[];
+}
+
+/** Null-safe coercers for the traceability row mapping. */
+const traceStr = (v: unknown): string | null => (v == null ? null : String(v));
+const traceNum = (v: unknown): number | null => (v == null ? null : Number(v));
+const traceInt = (v: unknown): number => (v == null ? 0 : Number(v));
 
 @Injectable()
 export class QcNewRepository {
@@ -512,5 +620,229 @@ export class QcNewRepository {
         .limit(50);
       return rows;
     }, 'DB_ERROR');
+  }
+
+  /**
+   * VISION-3340 #40 — multi-hop material→QC→delivery traceability for one production order.
+   *
+   * Walks the golden thread using ONLY real, queryable links (live columns confirmed via
+   * information_schema; the Drizzle schema is drifted for these tables so raw parametrised
+   * SQL is used, per the file's existing raw-SQL pattern):
+   *
+   *   production_orders.id (integer PK — live 48/49/50)
+   *     ├─ LEFT JOIN sales_orders  (so.id = po.sales_order_id)                       [REAL]
+   *     ├─ qc_inspections          (qi.order_id = po.id AND reference_type='production_order') [REAL]
+   *     ├─ production_sessions     (ps.production_order_id = po.id)                  [REAL]
+   *     ├─ wms_transactions 'IN'   (wt.reference_id = sales_order_id                 [REAL]
+   *     │                            AND wt.material_id = po.product_id) — FG receipt ledger;
+   *     │                            the QC-/MES- batch string lives in wt.notes, NOT batch_number,
+   *     │                            and warehouse_stock has NO batch_number column at all.
+   *     ├─ warehouse_stock         (ws.material_id = po.product_id) — current FG on-hand [REAL]
+   *     └─ deliveries              (d.sales_order_id = sales_order_id) — final hop     [REAL]
+   *
+   * GURUH-B (missing hop, NOT fabricated): mm_goods_receipts (incoming raw material) has NO FK to
+   * production_orders / sales_orders — it keys on purchase_order_id (supplier side). The raw-material
+   * → production-consumption link is not queryable, so it is reported in `missingHops` rather than
+   * joined on an invented column.
+   *
+   * @returns NOT_FOUND when the production order does not exist; VALIDATION for a bad id.
+   */
+  async getProductionOrderTrace(productionOrderId: number): Promise<Result<QcTraceability>> {
+    if (!Number.isFinite(productionOrderId) || productionOrderId <= 0) {
+      return Err(AppErr('VALIDATION', `productionOrderId musbat butun son bo'lishi kerak (got: ${String(productionOrderId)})`));
+    }
+    try {
+      // Spine: LEFT JOIN production_orders → sales_orders (both single-row) + existence check.
+      const anchorRes = await runQuery<Row>(sql`
+        SELECT
+          po.id                    AS production_order_id,
+          po.order_number          AS production_order_number,
+          po.product_id            AS product_id,
+          po.product_name          AS product_name,
+          po.status                AS production_status,
+          po.planned_quantity      AS planned_quantity,
+          po.confirmed_quantity    AS confirmed_quantity,
+          po.sales_order_id        AS sales_order_id,
+          so.order_number          AS sales_order_number,
+          so.customer_id           AS customer_id,
+          so.customer_name         AS customer_name,
+          so.status                AS sales_order_status,
+          so.delivery_status       AS delivery_status,
+          so.fg_warehouse_entry_at AS fg_warehouse_entry_at
+        FROM production_orders po
+        LEFT JOIN sales_orders so ON so.id = po.sales_order_id
+        WHERE po.id = ${productionOrderId}
+        LIMIT 1
+      `);
+      const anchorRows = Array.isArray(anchorRes?.rows) ? anchorRes.rows : [];
+      const po = anchorRows[0];
+      if (!po) {
+        return Err(AppErr('NOT_FOUND', `Production order ${productionOrderId} topilmadi`));
+      }
+
+      const salesOrderId = po['sales_order_id'] != null ? Number(po['sales_order_id']) : null;
+      const productId = po['product_id'] != null ? Number(po['product_id']) : null;
+
+      // QC inspections linked to the production order (reference_type='production_order').
+      const inspRes = await runQuery<Row>(sql`
+        SELECT qi.id, qi.status, qi.result, qi.pass_count, qi.fail_count, qi.total_count,
+               qi.items_checked, qi.items_passed, qi.items_failed, qi.sort_grade, qi.inspected_at,
+               ('QC-' || qi.id) AS fg_batch_ref
+        FROM qc_inspections qi
+        WHERE qi.order_id = ${productionOrderId}
+          AND qi.reference_type = 'production_order'
+        ORDER BY qi.id DESC
+      `);
+      const inspRows = Array.isArray(inspRes?.rows) ? inspRes.rows : [];
+
+      // MES sessions (produced qty + the MES-<sessionId> FG batch trace).
+      const sessRes = await runQuery<Row>(sql`
+        SELECT ps.id, ps.session_number, ps.status, ps.actual_quantity, ps.produced_qty, ps.ended_at,
+               ('MES-' || ps.id) AS fg_batch_ref
+        FROM production_sessions ps
+        WHERE ps.production_order_id = ${productionOrderId}
+        ORDER BY ps.id DESC
+      `);
+      const sessRows = Array.isArray(sessRes?.rows) ? sessRes.rows : [];
+
+      // FG stock hop: current on-hand (warehouse_stock) + the 'IN' receipt ledger (wms_transactions).
+      // Both key on the FG material (po.product_id); the ledger additionally references the sales
+      // order. Skipped when the FG material / sales order is unknown (no fabricated match).
+      let stockRows: Row[] = [];
+      if (productId != null) {
+        const stockRes = await runQuery<Row>(sql`
+          SELECT ws.warehouse_id, ws.material_id, ws.quantity, ws.available_quantity, ws.reserved_quantity
+          FROM warehouse_stock ws
+          WHERE ws.material_id = ${productId}
+          ORDER BY ws.warehouse_id
+        `);
+        stockRows = Array.isArray(stockRes?.rows) ? stockRes.rows : [];
+      }
+
+      let fgRows: Row[] = [];
+      if (salesOrderId != null && productId != null) {
+        const fgRes = await runQuery<Row>(sql`
+          SELECT wt.id AS transaction_id, wt.material_id, wt.warehouse_id, wt.quantity, wt.unit_cost,
+                 wt.batch_number, wt.reference_id, wt.notes, wt.created_at
+          FROM wms_transactions wt
+          WHERE wt.type = 'IN'
+            AND wt.deleted_at IS NULL
+            AND wt.reference_id = ${salesOrderId}
+            AND wt.material_id = ${productId}
+          ORDER BY wt.id DESC
+        `);
+        fgRows = Array.isArray(fgRes?.rows) ? fgRes.rows : [];
+      }
+
+      // Final hop: deliveries for the sales order. Skipped when there is no sales order.
+      let deliveryRows: Row[] = [];
+      if (salesOrderId != null) {
+        const delRes = await runQuery<Row>(sql`
+          SELECT d.id, d.delivery_number, d.delivery_status, d.status, d.dispatched_at, d.delivered_at,
+                 d.driver_name, d.vehicle_number
+          FROM deliveries d
+          WHERE d.sales_order_id = ${salesOrderId}
+          ORDER BY d.id DESC
+        `);
+        deliveryRows = Array.isArray(delRes?.rows) ? delRes.rows : [];
+      }
+
+      return Ok(this._assembleTrace(po, salesOrderId, productId, inspRows, sessRows, fgRows, stockRows, deliveryRows));
+    } catch (e) {
+      return Err(AppErr('DB_ERROR', `QC traceability oqishda xato: ${String(e)}`));
+    }
+  }
+
+  /** Pure row→DTO mapping for getProductionOrderTrace (kept separate to bound method size). */
+  private _assembleTrace(
+    po: Row,
+    salesOrderId: number | null,
+    productId: number | null,
+    inspRows: Row[],
+    sessRows: Row[],
+    fgRows: Row[],
+    stockRows: Row[],
+    deliveryRows: Row[],
+  ): QcTraceability {
+    return {
+      productionOrder: {
+        id: Number(po['production_order_id']),
+        orderNumber: traceStr(po['production_order_number']),
+        productId,
+        productName: traceStr(po['product_name']),
+        status: traceStr(po['production_status']),
+        plannedQuantity: traceNum(po['planned_quantity']),
+        confirmedQuantity: traceNum(po['confirmed_quantity']),
+        salesOrderId,
+      },
+      salesOrder: salesOrderId != null ? {
+        id: salesOrderId,
+        orderNumber: traceStr(po['sales_order_number']),
+        customerId: traceNum(po['customer_id']),
+        customerName: traceStr(po['customer_name']),
+        status: traceStr(po['sales_order_status']),
+        deliveryStatus: traceStr(po['delivery_status']),
+        fgWarehouseEntryAt: traceStr(po['fg_warehouse_entry_at']),
+      } : null,
+      qcInspections: (Array.isArray(inspRows) ? inspRows : []).map((r) => ({
+        id: Number(r['id']),
+        status: traceStr(r['status']),
+        result: traceStr(r['result']),
+        passCount: traceInt(r['pass_count']),
+        failCount: traceInt(r['fail_count']),
+        totalCount: traceInt(r['total_count']),
+        itemsChecked: traceInt(r['items_checked']),
+        itemsPassed: traceInt(r['items_passed']),
+        itemsFailed: traceInt(r['items_failed']),
+        sortGrade: traceStr(r['sort_grade']),
+        inspectedAt: traceStr(r['inspected_at']),
+        fgBatchRef: String(r['fg_batch_ref'] ?? `QC-${Number(r['id'])}`),
+      })),
+      productionSessions: (Array.isArray(sessRows) ? sessRows : []).map((r) => ({
+        id: Number(r['id']),
+        sessionNumber: traceStr(r['session_number']),
+        status: traceStr(r['status']),
+        actualQuantity: traceNum(r['actual_quantity']),
+        producedQty: traceNum(r['produced_qty']),
+        endedAt: traceStr(r['ended_at']),
+        fgBatchRef: String(r['fg_batch_ref'] ?? `MES-${Number(r['id'])}`),
+      })),
+      fgReceipts: (Array.isArray(fgRows) ? fgRows : []).map((r) => ({
+        transactionId: Number(r['transaction_id']),
+        materialId: traceNum(r['material_id']),
+        warehouseId: traceNum(r['warehouse_id']),
+        quantity: traceNum(r['quantity']),
+        unitCost: traceNum(r['unit_cost']),
+        batchNumber: traceStr(r['batch_number']),
+        referenceId: traceNum(r['reference_id']),
+        notes: traceStr(r['notes']),
+        createdAt: traceStr(r['created_at']),
+      })),
+      currentStock: (Array.isArray(stockRows) ? stockRows : []).map((r) => ({
+        warehouseId: traceNum(r['warehouse_id']),
+        materialId: traceNum(r['material_id']),
+        quantity: traceNum(r['quantity']),
+        availableQuantity: traceNum(r['available_quantity']),
+        reservedQuantity: traceNum(r['reserved_quantity']),
+      })),
+      deliveries: (Array.isArray(deliveryRows) ? deliveryRows : []).map((r) => ({
+        id: Number(r['id']),
+        deliveryNumber: traceStr(r['delivery_number']),
+        deliveryStatus: traceStr(r['delivery_status']),
+        status: traceStr(r['status']),
+        dispatchedAt: traceStr(r['dispatched_at']),
+        deliveredAt: traceStr(r['delivered_at']),
+        driverName: traceStr(r['driver_name']),
+        vehicleNumber: traceStr(r['vehicle_number']),
+      })),
+      missingHops: [
+        {
+          hop: 'mm_goods_receipts -> production_orders',
+          reason:
+            "Guruh-B: mm_goods_receipts (kiruvchi xom-ashyo qabuli) purchase_order_id (yetkazib beruvchi PO) ga bog'langan; production_orders yoki sales_orders ga FK/reference ustuni yo'q — xom-ashyoni aynan shu ishlab chiqarish buyurtmasiga bog'lash uchun so'raladigan link mavjud emas (soxta join yaratilmadi).",
+          group: 'B',
+        },
+      ],
+    };
   }
 }

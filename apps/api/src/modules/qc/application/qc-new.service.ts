@@ -106,4 +106,9 @@ export class QcNewService {
   deleteInspection(id: string): ReturnType<QcNewRepository['deleteInspection']> {
     return this.repo.deleteInspection(id);
   }
+
+  /** VISION-3340 #40 — full material→QC→delivery trace for one production order. */
+  getTraceability(productionOrderId: number): ReturnType<QcNewRepository['getProductionOrderTrace']> {
+    return this.repo.getProductionOrderTrace(productionOrderId);
+  }
 }
