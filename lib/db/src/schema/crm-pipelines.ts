@@ -206,8 +206,10 @@ export const crmDeals = pgTable("crm_deals", {
   originatorId: varchar("originator_id", { length: 50 }),
   originId: varchar("origin_id", { length: 255 }),
 
-  // Sales Order link (for idempotency - one deal = one sales order)
-  salesOrderId: varchar("sales_order_id"),
+  // Sales Order link (for idempotency - one deal = one sales order).
+  // VISION-3340 #32: converted varchar -> integer with a real FK to sales_orders(id)
+  // (base table `deals`; crm_deals is a view). See migration crm-deals-sales-order-fk-2026-07-08.sql.
+  salesOrderId: integer("sales_order_id"),
 
   // Bitrix24-style extended fields
   forecastAmount: numeric("forecast_amount"), // Weighted forecast

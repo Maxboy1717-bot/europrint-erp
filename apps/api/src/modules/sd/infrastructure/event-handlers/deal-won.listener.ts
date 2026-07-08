@@ -131,9 +131,11 @@ export class DealWonListener implements IEventHandler<DealWonEvent> {
    */
   private async _linkDealToOrder(dealUuid: string, orderId: number): Promise<void> {
     try {
+      // VISION-3340 #32: crm_deals.sales_order_id is now integer (was varchar) with a
+      // real FK to sales_orders(id) -- bind the integer orderId directly, not String(orderId).
       await runQuery(sql`
         UPDATE crm_deals
-        SET sales_order_id = ${String(orderId)}
+        SET sales_order_id = ${orderId}
         WHERE id = ${dealUuid}::uuid AND deleted_at IS NULL
       `);
       await runQuery(sql`
