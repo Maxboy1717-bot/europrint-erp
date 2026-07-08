@@ -16,7 +16,7 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
-import { ICrmDealsRepository } from './i-crm-deals.repo';
+import { ICrmDealsRepository, StageHistoryEntry } from './i-crm-deals.repo';
 
 type Row = Record<string, unknown>;
 
@@ -127,5 +127,18 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       `);
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error)?.message || "O'chirishda xatolik"); }
+  }
+
+  // VISION-3340 #34: append-only stage-transition audit row. Raw parametrized INSERT (same
+  // @shared/db runQuery style this repo uses everywhere) — crm_stage_history has no Drizzle
+  // binding. entity_id holds the deal UUID as text; from_stage/to_stage are stage codes.
+  async recordStageHistory(entry: StageHistoryEntry): Promise<Result<void>> {
+    try {
+      await runQuery(sql`
+        INSERT INTO crm_stage_history (entity_type, entity_id, from_stage, to_stage, changed_by)
+        VALUES (${entry.entityType}, ${entry.entityId}, ${entry.fromStage}, ${entry.toStage}, ${entry.changedBy})
+      `);
+      return Ok(undefined);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Stage tarixini yozishda xatolik'); }
   }
 }

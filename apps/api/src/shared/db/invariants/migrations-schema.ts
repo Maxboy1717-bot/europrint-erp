@@ -791,4 +791,34 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'crm_deals.lost_reason_id index (VISION-3340 #31)',
     sql: `CREATE INDEX IF NOT EXISTS idx_crm_deals_lost_reason_id ON crm_deals (lost_reason_id)`,
   },
+  // APPROVED: egasi (owner) 2026-07-08 VISION-3340 #34 — the CRM stage-transition handlers
+  // (update-deal-stage.handler.ts / update-lead-stage.handler.ts) overwrote stage_id in place
+  // with NO audit trail. Adds one append-only history table (crm_stage_history) that receives a
+  // row on each successful transition. Seeds NOTHING (Q-40 — rows come only from real moves).
+  // entity_id is VARCHAR (not integer) on purpose: a deal id is a UUID (crm_deals.id ::uuid) and
+  // a lead id is an integer, so one column must hold both; from_stage/to_stage are VARCHAR
+  // (deal stage = free-form code, lead stage = numeric crm_lead_stages.id stored as text);
+  // changed_by is a plain nullable INTEGER (neither command carries an acting user yet → NULL).
+  // Write path (best-effort, never rolls back the transition): DrizzleCrmDealsRepository /
+  // CrmLeadsOpsRepository.recordStageHistory. See
+  // apps/api/src/shared/db/migrations/crm-stage-history-2026-07-08.sql for the human-readable
+  // mirror of these entries.
+  {
+    name: 'crm_stage_history table (VISION-3340 #34, stage-transition audit trail)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS crm_stage_history (
+        id          SERIAL       PRIMARY KEY,
+        entity_type VARCHAR(10)  NOT NULL,
+        entity_id   VARCHAR(64)  NOT NULL,
+        from_stage  VARCHAR(100),
+        to_stage    VARCHAR(100) NOT NULL,
+        changed_by  INTEGER,
+        changed_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `,
+  },
+  {
+    name: 'crm_stage_history (entity_type, entity_id, changed_at) index (VISION-3340 #34)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_crm_stage_history_entity ON crm_stage_history (entity_type, entity_id, changed_at)`,
+  },
 ];
