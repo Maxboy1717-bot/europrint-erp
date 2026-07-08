@@ -718,6 +718,7 @@ export type I18nTranslations = {
         "firstNameRequired": string;
         "userIdOrEmployeeIdRequired": string;
         "purchaseOrderIdRequired": string;
+        "mentorCardCapReached": string;
     };
 };
 /* prettier-ignore */
