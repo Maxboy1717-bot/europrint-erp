@@ -634,6 +634,14 @@ export class IotTabletController {
   async reportProductionDefect(@Param('id') id: string, @Body() body: unknown) {
     const dto = DefectReportSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
+    // VISION-3340 #38 (idempotency): an offline tablet re-submitting after a network
+    // retry carries the same (tablet_id, local_seq_no). If that pair already produced
+    // a downtime_events row, the defect was already counted + QC-bridged — return an
+    // idempotent success WITHOUT re-running the transaction (no double defect_quantity
+    // bump), the brak-limit check, or the QC command dispatch.
+    if (await this.isDuplicateTabletSubmit('downtime_events', dto.tabletId, dto.localSeqNo)) {
+      return { sessionId, defectCount: dto.defectCount, reported: true, brakLimitCheck: null, qcDefectId: null, idempotent: true };
+    }
     // 5.2 (Critical-Correctness audit): the session-defect UPDATE and the
     // downtime_events INSERT must land together or not at all — wrapped in a
     // single db.transaction (same convention as procurement-request.service.ts)
@@ -652,11 +660,13 @@ export class IotTabletController {
       await tx.execute(sql`
         INSERT INTO downtime_events (
           session_id, event_type, started_at,
-          reason_code, reason_description, is_planned, notes, created_at
+          reason_code, reason_description, is_planned, notes, created_at,
+          tablet_id, local_seq_no
         ) VALUES (
           ${sessionId}, ${dto.eventType}, NOW(),
           ${dto.reasonCode ?? null}, ${dto.reasonDescription ?? null},
-          false, ${dto.notes ?? null}, NOW()
+          false, ${dto.notes ?? null}, NOW(),
+          ${dto.tabletId ?? null}, ${dto.localSeqNo ?? null}
         )
       `);
     });
@@ -748,10 +758,18 @@ export class IotTabletController {
   async submitMaterialReturn(@Param('id') id: string, @Body() body: unknown) {
     const dto = MaterialReturnSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
+    // VISION-3340 #38 (idempotency): a re-submitted material return carrying the same
+    // (tablet_id, local_seq_no) must NOT be inserted a second time — a duplicate would
+    // both double the material_movements audit trail AND double-credit warehouse_stock.
+    // Return an idempotent success without the INSERT or the stock credit.
+    if (await this.isDuplicateTabletSubmit('material_movements', dto.tabletId, dto.localSeqNo)) {
+      return { data: null, idempotent: true };
+    }
     const r = await db.execute(sql`
       INSERT INTO material_movements (
         session_id, movement_type, material_name, quantity, unit,
-        performed_by, material_id, reason, notes, created_at
+        performed_by, material_id, reason, notes, created_at,
+        tablet_id, local_seq_no
       ) VALUES (
         ${sessionId}, 'RETURN',
         ${dto.materialName},
@@ -761,7 +779,8 @@ export class IotTabletController {
         ${dto.materialId ?? null},
         ${dto.reason ?? null},
         ${dto.notes ?? null},
-        NOW()
+        NOW(),
+        ${dto.tabletId ?? null}, ${dto.localSeqNo ?? null}
       ) RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? {};
@@ -776,6 +795,37 @@ export class IotTabletController {
     }
 
     return { data: row };
+  }
+
+  /**
+   * VISION-3340 #38 (IoT-tablet idempotency): probes whether an offline tablet's
+   * defect / inline-QC / material-return submit has ALREADY landed. When the tablet
+   * supplies BOTH a stable tablet_id and a monotonic per-tablet local_seq_no, a
+   * network-retry re-submit carries the same pair, so a matching persisted row means
+   * "this mutation already applied" — the caller must return an idempotent success
+   * WITHOUT re-inserting, re-bumping any count, re-crediting stock, or re-dispatching
+   * any command (the key correctness point). Missing either key = returns false =
+   * behave exactly as before. The PARTIAL UNIQUE INDEX (tablet_id, local_seq_no)
+   * WHERE both NOT NULL is the race backstop if two retries slip past the probe.
+   * Table is a fixed literal union (never user input) so each branch stays a static,
+   * fully-parameterised sql template (Rule B — no sql.raw on a variable).
+   */
+  private async isDuplicateTabletSubmit(
+    table: 'downtime_events' | 'inline_qc_checks' | 'material_movements',
+    tabletId: string | undefined,
+    localSeqNo: number | undefined,
+  ): Promise<boolean> {
+    if (tabletId == null || localSeqNo == null) return false;
+    let probe;
+    if (table === 'downtime_events') {
+      probe = sql`SELECT 1 FROM downtime_events WHERE tablet_id = ${tabletId} AND local_seq_no = ${localSeqNo} LIMIT 1`;
+    } else if (table === 'inline_qc_checks') {
+      probe = sql`SELECT 1 FROM inline_qc_checks WHERE tablet_id = ${tabletId} AND local_seq_no = ${localSeqNo} LIMIT 1`;
+    } else {
+      probe = sql`SELECT 1 FROM material_movements WHERE tablet_id = ${tabletId} AND local_seq_no = ${localSeqNo} LIMIT 1`;
+    }
+    const rows = ((await db.execute(probe)) as Rows).rows ?? [];
+    return Array.isArray(rows) && rows.length > 0;
   }
 
   /**
@@ -881,11 +931,17 @@ export class IotTabletController {
   async submitInlineQc(@Param('id') id: string, @Body() body: unknown) {
     const dto = InlineQcSchema.parse(body ?? {});
     const sessionId = parseInt(id, 10);
+    // VISION-3340 #38 (idempotency): a re-submitted inline-QC check carrying the same
+    // (tablet_id, local_seq_no) must NOT insert a second inline_qc_checks row or
+    // re-dispatch the QC ReportDefectCommand. Return an idempotent success instead.
+    if (await this.isDuplicateTabletSubmit('inline_qc_checks', dto.tabletId, dto.localSeqNo)) {
+      return { data: null, qcDefectId: null, idempotent: true };
+    }
     const passRate = dto.passRate ??
       (dto.sampleSize > 0 ? Math.round((dto.sampleSize - dto.defectCount) / dto.sampleSize * 100) : 100);
     const r = await db.execute(sql`
-      INSERT INTO inline_qc_checks (session_id, sample_size, defect_count, pass_rate, notes, checked_at)
-      VALUES (${sessionId}, ${dto.sampleSize}, ${dto.defectCount}, ${passRate}, ${dto.notes ?? null}, NOW())
+      INSERT INTO inline_qc_checks (session_id, sample_size, defect_count, pass_rate, notes, checked_at, tablet_id, local_seq_no)
+      VALUES (${sessionId}, ${dto.sampleSize}, ${dto.defectCount}, ${passRate}, ${dto.notes ?? null}, NOW(), ${dto.tabletId ?? null}, ${dto.localSeqNo ?? null})
       RETURNING *
     `);
     const row = ((r as Rows).rows ?? [])[0] ?? {};

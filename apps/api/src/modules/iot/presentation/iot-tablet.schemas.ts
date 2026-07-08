@@ -8,6 +8,17 @@ import { z } from 'zod';
 
 export const IotPassthroughSchema = z.record(z.unknown());
 
+// VISION-3340 #38 (IoT-tablet idempotency): an offline tablet re-submitting a
+// defect / inline-QC / material-return after a network retry must not double-apply
+// the mutation. When the tablet supplies BOTH a stable tablet_id and a monotonic
+// per-tablet local_seq_no, the endpoint probes for an already-persisted row with
+// that pair and returns an idempotent success instead of re-inserting. Both fields
+// are OPTIONAL — omitting either preserves the exact pre-existing behaviour.
+export const TabletIdempotencyFields = {
+  tabletId:   z.string().max(120).optional(),
+  localSeqNo: z.coerce.number().int().nonnegative().optional(),
+};
+
 export const StopSessionSchema = z.object({
   runningTimeSeconds: z.coerce.number().int().min(0).optional(),
   actualQuantity:     z.coerce.number().int().min(0).optional(),
@@ -69,6 +80,7 @@ export const DefectReportSchema = z.object({
   reasonCode: z.string().max(100).optional(),
   reasonDescription: z.string().max(1000).optional(),
   notes: z.string().max(2000).optional(),
+  ...TabletIdempotencyFields,
 }).passthrough();
 
 export const InlineQcSchema = z.object({
@@ -76,6 +88,7 @@ export const InlineQcSchema = z.object({
   defectCount: z.coerce.number().int().min(0).default(0),
   passRate: z.coerce.number().int().min(0).max(100).optional(),
   notes: z.string().max(2000).optional(),
+  ...TabletIdempotencyFields,
 }).passthrough();
 
 export const HandoverSchema = z.object({
@@ -129,6 +142,7 @@ export const MaterialReturnSchema = z.object({
   performedBy: z.coerce.number().int().default(0),
   reason: z.string().max(1000).optional(),
   notes: z.string().max(2000).optional(),
+  ...TabletIdempotencyFields,
 }).passthrough();
 
 // FE: useIoTTablet.ts reportDowntime mutationFn — POST /api/iot/downtime-events

@@ -627,4 +627,49 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'qc_instrument_calibrations due-lookup index (2026-06-30)',
     sql: `CREATE INDEX IF NOT EXISTS idx_qc_calib_due ON qc_instrument_calibrations (next_due_at) WHERE status = 'active'`,
   },
+  // APPROVED: egasi (owner) 2026-07-08 VISION-3340 #38 — IoT tablet offline defect /
+  // inline-QC / material-return mutations had no dedup key, so an offline tablet
+  // re-submitting after a network retry double-inserts. Adds an OPTIONAL idempotency
+  // key (tablet_id TEXT + local_seq_no BIGINT, both nullable) to each of the three
+  // raw-SQL INSERT targets, plus a PARTIAL UNIQUE INDEX per table on (tablet_id,
+  // local_seq_no) WHERE both NOT NULL so legacy NULL rows are exempt. Write-path is
+  // IotTabletController.reportProductionDefect/submitInlineQc/submitMaterialReturn.
+  // See apps/api/src/shared/db/migrations/iot-tablet-idempotency-2026-07-08.sql for
+  // the human-readable mirror of these entries.
+  {
+    name: 'downtime_events.tablet_id column (VISION-3340 #38, iot-tablet idempotency)',
+    sql: `ALTER TABLE IF EXISTS downtime_events ADD COLUMN IF NOT EXISTS tablet_id TEXT`,
+  },
+  {
+    name: 'downtime_events.local_seq_no column (VISION-3340 #38, iot-tablet idempotency)',
+    sql: `ALTER TABLE IF EXISTS downtime_events ADD COLUMN IF NOT EXISTS local_seq_no BIGINT`,
+  },
+  {
+    name: 'inline_qc_checks.tablet_id column (VISION-3340 #38, iot-tablet idempotency)',
+    sql: `ALTER TABLE IF EXISTS inline_qc_checks ADD COLUMN IF NOT EXISTS tablet_id TEXT`,
+  },
+  {
+    name: 'inline_qc_checks.local_seq_no column (VISION-3340 #38, iot-tablet idempotency)',
+    sql: `ALTER TABLE IF EXISTS inline_qc_checks ADD COLUMN IF NOT EXISTS local_seq_no BIGINT`,
+  },
+  {
+    name: 'material_movements.tablet_id column (VISION-3340 #38, iot-tablet idempotency)',
+    sql: `ALTER TABLE IF EXISTS material_movements ADD COLUMN IF NOT EXISTS tablet_id TEXT`,
+  },
+  {
+    name: 'material_movements.local_seq_no column (VISION-3340 #38, iot-tablet idempotency)',
+    sql: `ALTER TABLE IF EXISTS material_movements ADD COLUMN IF NOT EXISTS local_seq_no BIGINT`,
+  },
+  {
+    name: 'downtime_events (tablet_id, local_seq_no) partial unique index (VISION-3340 #38)',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_downtime_events_tablet_seq ON downtime_events (tablet_id, local_seq_no) WHERE tablet_id IS NOT NULL AND local_seq_no IS NOT NULL`,
+  },
+  {
+    name: 'inline_qc_checks (tablet_id, local_seq_no) partial unique index (VISION-3340 #38)',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_inline_qc_checks_tablet_seq ON inline_qc_checks (tablet_id, local_seq_no) WHERE tablet_id IS NOT NULL AND local_seq_no IS NOT NULL`,
+  },
+  {
+    name: 'material_movements (tablet_id, local_seq_no) partial unique index (VISION-3340 #38)',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_material_movements_tablet_seq ON material_movements (tablet_id, local_seq_no) WHERE tablet_id IS NOT NULL AND local_seq_no IS NOT NULL`,
+  },
 ];
