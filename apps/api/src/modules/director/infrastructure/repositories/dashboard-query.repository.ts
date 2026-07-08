@@ -94,7 +94,14 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
           COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed,
           COUNT(po.id) FILTER (WHERE po.status NOT IN ('completed','cancelled'))::int AS remaining
         FROM departments d
-        LEFT JOIN production_orders po ON po.department_id = d.id
+        -- Join on org_department_id: production_orders has no plain department_id column, so
+        -- the old join threw a nonexistent-column error that safeCall swallowed into []
+        -- (green-lie) -- same class as the sales_orders status -> overall_status fix in
+        -- get-dashboard-kpis.handler. NB: org_department_id references the org-structure world
+        -- and is NULL on all rows today, so this makes the reader schema-correct (no more
+        -- swallowed error) though the widget stays empty until PP writes it; the
+        -- departments-vs-org_departments join target is an owner two-world call.
+        LEFT JOIN production_orders po ON po.org_department_id = d.id
           AND DATE(po.created_at) = CURRENT_DATE
         GROUP BY d.id, d.name_uz
         ORDER BY d.name_uz
@@ -111,7 +118,7 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
                 / NULLIF(COUNT(po.id), 0), 1) AS readiness_pct,
           (
             SELECT d.name_uz FROM production_orders pp
-            LEFT JOIN departments d ON d.id = pp.department_id
+            LEFT JOIN departments d ON d.id = pp.org_department_id
             WHERE pp.sales_order_id = so.id AND pp.status = 'in_progress'
             ORDER BY pp.created_at DESC LIMIT 1
           ) AS current_department
