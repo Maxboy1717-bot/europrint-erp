@@ -672,4 +672,22 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'material_movements (tablet_id, local_seq_no) partial unique index (VISION-3340 #38)',
     sql: `CREATE UNIQUE INDEX IF NOT EXISTS uq_material_movements_tablet_seq ON material_movements (tablet_id, local_seq_no) WHERE tablet_id IS NOT NULL AND local_seq_no IS NOT NULL`,
   },
+  // APPROVED: egasi (owner) 2026-07-08 VISION-3340 #21 — cost_centers is full CRUD master
+  // data (drizzle-fi.repo.ts), but no GL posting could be tagged to a cost center: the
+  // canonical posting table `entries` (written by drizzle-gl-posting.repo.ts's
+  // insertJournal/insertEntry — the ONE engine, NOT gl_journal_entries/gl_lines, SAP#76)
+  // had no cost_center_id. Adds an OPTIONAL nullable FK tag to each GL journal line, plus
+  // an index. cost_centers.id is SERIAL (integer) so the INTEGER FK matches; ON DELETE SET
+  // NULL keeps historical entries intact when a cost center is deleted. Existing rows/callers
+  // unaffected (NULL when the tag is omitted — Q-39/Q-46). See
+  // apps/api/src/shared/db/migrations/gl-entries-cost-center-2026-07-08.sql for the
+  // human-readable mirror of these entries.
+  {
+    name: 'entries.cost_center_id column (VISION-3340 #21, GL cost-center tag)',
+    sql: `ALTER TABLE IF EXISTS entries ADD COLUMN IF NOT EXISTS cost_center_id INTEGER REFERENCES cost_centers(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'entries.cost_center_id index (VISION-3340 #21)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_entries_cost_center_id ON entries (cost_center_id)`,
+  },
 ];

@@ -88,6 +88,8 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
     amount: number;
     description?: string;
     createdBy?: number;
+    // VISION-3340 #21: OPTIONAL cost-center tag → entries.cost_center_id (NULL when omitted).
+    costCenterId?: number;
   }>, reference?: string): Promise<Result<number>> {
     try {
       // #04 fix: rows carry account CODES in debitAccountId/creditAccountId (both real legs, no 'OFFSET').
@@ -132,6 +134,8 @@ export class DrizzleGlPostingRepository implements IGlPostingRepository {
             amount: row.amount,
             description: row.description ?? null,
             createdBy: row.createdBy ?? null,
+            // VISION-3340 #21: optional cost-center tag; NULL when the caller didn't set one.
+            costCenterId: row.costCenterId ?? null,
           };
           const inserted = await tx.insert(entries).values(insertValues).returning({ id: entries.id });
           if (!inserted[0]) throw new Error('GL entry insert returned no rows');

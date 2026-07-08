@@ -72,6 +72,13 @@ export const entries = pgTable("entries", {
   currency: varchar("currency", { length: 10 }).notNull().default('UZS'),
   // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
   tenantId: integer("tenant_id").notNull().default(1),
+  // VISION-3340 #21 (2026-07-08, egasi-approved): OPTIONAL cost-center tag on a GL journal
+  // line. Nullable + additive — existing rows/callers unaffected. DB-level FK to
+  // cost_centers(id) ON DELETE SET NULL is enforced by the migration
+  // (gl-entries-cost-center-2026-07-08.sql); kept a plain integer column here (no .references())
+  // because the cost_centers pgTable lives in apps/api shared/db, not this lib/db fi-gl module —
+  // mirrors gl_lines.costCenterId below (also a plain column for the same cross-module reason).
+  costCenterId: integer("cost_center_id"),
 }, (t) => [
   check("entries_amount_chk", sql`${t.amount} > 0`),
   index("idx_entries_tenant_id").on(t.tenantId),

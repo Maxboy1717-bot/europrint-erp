@@ -39,6 +39,9 @@ export interface IGlPostingRepository {
     amount: number;
     description?: string;
     createdBy?: number;
+    // VISION-3340 #21: OPTIONAL cost-center tag (cost_centers.id) persisted to entries.cost_center_id.
+    // Omitted → inserted as NULL (backward-compatible with every existing caller).
+    costCenterId?: number;
   }>, reference?: string): Promise<Result<number>>;
 
   /**

@@ -16,6 +16,11 @@ export interface JournalLine {
   accountName: string;
   debit: number;
   credit: number;
+  // VISION-3340 #21 (2026-07-08): OPTIONAL cost-center tag (cost_centers.id). When omitted,
+  // the resulting `entries` row's cost_center_id is left NULL — fully backward-compatible with
+  // every existing caller (postSalesInvoice/postPayroll/postJournal/...). Does NOT affect any
+  // debit/credit/balance logic; it is a pass-through attribute persisted alongside the line.
+  costCenterId?: number;
 }
 
 @Injectable()
@@ -167,8 +172,8 @@ export class GlPostingService {
     }
 
     const safeLines = Array.isArray(lines) ? lines : [];
-    const debits = safeLines.filter((l) => l.debit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.debit }));
-    const credits = safeLines.filter((l) => l.credit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.credit }));
+    const debits = safeLines.filter((l) => l.debit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.debit, cc: l.costCenterId }));
+    const credits = safeLines.filter((l) => l.credit > 0).map((l) => ({ code: l.accountCode, name: l.accountName, amt: l.credit, cc: l.costCenterId }));
     const totalDebit  = debits.reduce((s, d) => s + d.amt, 0);
     const totalCredit = credits.reduce((s, c) => s + c.amt, 0);
 
@@ -229,7 +234,7 @@ export class GlPostingService {
     // to a real account) — like postMovementToLedger. The old code wrote one row per leg with 'OFFSET'
     // for the missing side, which crashed against the integer account columns. Decompose the multi-leg
     // journal into balanced (debit, credit, amount) rows by greedily allocating debits against credits.
-    const rows: Array<{ entryNumber: string; entryDate: string; documentType: string; debitAccountId: string; creditAccountId: string; amount: number; description: string; createdBy?: number }> = [];
+    const rows: Array<{ entryNumber: string; entryDate: string; documentType: string; debitAccountId: string; creditAccountId: string; amount: number; description: string; createdBy?: number; costCenterId?: number }> = [];
     let di = 0, ci = 0, dRem = debits[0]?.amt ?? 0, cRem = credits[0]?.amt ?? 0, guard = 0;
     while (di < debits.length && ci < credits.length && guard++ < 1000) {
       const alloc = Math.min(dRem, cRem);
@@ -242,6 +247,11 @@ export class GlPostingService {
         amount: Math.round(alloc * 100) / 100,
         description: `${reference} — ${debits[di].name} / ${credits[ci].name}`,
         createdBy,
+        // VISION-3340 #21: tag the balanced (debit,credit) pair-row with a cost center. Prefer
+        // the debit leg's tag (cost centers conventionally attach to the expense/cost side),
+        // falling back to the credit leg's; undefined when neither carries one → NULL in the DB
+        // (unchanged behavior for callers that don't set costCenterId).
+        costCenterId: debits[di].cc ?? credits[ci].cc,
       });
       dRem -= alloc; cRem -= alloc;
       if (dRem <= 0.001) { di++; dRem = debits[di]?.amt ?? 0; }
