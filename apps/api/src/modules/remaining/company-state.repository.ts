@@ -58,6 +58,34 @@ export interface RawMetricValues {
   activeOrders: number;
 }
 
+/**
+ * Downtime + machine telemetry health, sourced from live `downtime_events` and
+ * `mes_telemetry` rows (fix for: real telemetry data existed but no director-level
+ * query consumed it).
+ *
+ * NOTE — no "energy" figure here on purpose: `mes_telemetry.metric_type` only ever
+ * holds availability / performance / quality / temperature('C') / vibration('%')
+ * readings (verified against the live DB — 684 rows, zero energy/power rows).
+ * IoT energy sensors are not physically installed; `iot-main.controller.ts`
+ * (`getEnergyConsumption`) already documents the owner's EP-IOT-018 ruling that a
+ * fabricated energy number is forbidden (Qoida 10 — soxta javob taqiqlangan) and
+ * the honest response is HTTP 501 until a real sensor exists. Inventing an energy
+ * figure here would repeat that mistake, so this exposes real downtime + telemetry
+ * health instead.
+ */
+export interface OperationsMetrics {
+  /** Count of downtime_events rows (all-time; live dataset is small/build-stage). */
+  downtimeEventsCount: number;
+  /** Sum of downtime duration, minutes (duration_min → duration_minutes → duration_seconds → started/ended span). */
+  downtimeMinutesTotal: number;
+  /** Average downtime duration per event, minutes (0 when no events). */
+  downtimeMinutesAvg: number;
+  /** Average machine availability %, from mes_telemetry metric_type='availability'. */
+  machineAvailabilityPct: number;
+  /** Average machine performance %, from mes_telemetry metric_type='performance'. */
+  machinePerformancePct: number;
+}
+
 @Injectable()
 export class CompanyStateRepository {
   // -------------------------------------------------------------------------
@@ -179,6 +207,67 @@ export class CompanyStateRepository {
         totalEmployees: empTotal,
         activeEmployees: empActive,
         activeOrders: ordOpen,
+      };
+    }, 'DB_ERROR');
+  }
+
+  // -------------------------------------------------------------------------
+  // Operations: downtime + machine telemetry health — live data, one round trip
+  // -------------------------------------------------------------------------
+
+  /**
+   * Aggregate real downtime (downtime_events) and machine telemetry health
+   * (mes_telemetry availability/performance averages) into director-level
+   * figures. Mirrors getRawMetrics()'s CTE + COALESCE-guard pattern so an
+   * empty build-stage table yields finite zeros, never NaN/null.
+   *
+   * Downtime minutes fall back through the real columns in priority order
+   * (duration_min → duration_minutes → duration_seconds → started/ended span),
+   * the same precedence GetOeeHandler.downtimeMinutes() uses for the same table.
+   */
+  async getOperationsMetrics(): Promise<Result<OperationsMetrics>> {
+    return safeCall(async () => {
+      const r = await exec(sql`
+        WITH dt AS (
+          SELECT
+            COUNT(*) AS events,
+            COALESCE(SUM(
+              GREATEST(0, COALESCE(
+                NULLIF(duration_min, 0)::numeric,
+                NULLIF(duration_minutes, 0)::numeric,
+                NULLIF(duration_seconds, 0)::numeric / 60,
+                CASE WHEN ended_at IS NOT NULL
+                     THEN EXTRACT(EPOCH FROM (ended_at - started_at)) / 60
+                     ELSE NULL END,
+                0
+              ))
+            ), 0) AS minutes_total
+          FROM downtime_events
+        ),
+        tel AS (
+          SELECT
+            AVG(COALESCE(value, metric_value)) FILTER (WHERE metric_type = 'availability') AS avg_availability,
+            AVG(COALESCE(value, metric_value)) FILTER (WHERE metric_type = 'performance')  AS avg_performance
+          FROM mes_telemetry
+        )
+        SELECT dt.events, dt.minutes_total, tel.avg_availability, tel.avg_performance
+        FROM dt, tel
+      `);
+      const row = (Array.isArray(r) ? r[0] : undefined) ?? {};
+      const num = (v: unknown): number => {
+        const n = typeof v === 'number' ? v : Number(v);
+        return Number.isFinite(n) ? n : 0;
+      };
+
+      const events = num(row.events);
+      const minutesTotal = num(row.minutes_total);
+
+      return {
+        downtimeEventsCount: events,
+        downtimeMinutesTotal: minutesTotal,
+        downtimeMinutesAvg: events > 0 ? minutesTotal / events : 0,
+        machineAvailabilityPct: num(row.avg_availability),
+        machinePerformancePct: num(row.avg_performance),
       };
     }, 'DB_ERROR');
   }

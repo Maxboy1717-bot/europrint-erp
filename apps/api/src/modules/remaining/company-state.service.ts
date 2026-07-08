@@ -19,7 +19,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
-import { CompanyStateRepository, type StateThresholdRow, type StateLevelRow } from './company-state.repository';
+import { CompanyStateRepository, type StateThresholdRow, type StateLevelRow, type OperationsMetrics } from './company-state.repository';
 import { DirectorHolatService, type WeightMap } from '../director/application/director-holat.service';
 import {
   HOLAT_METRIC_KEYS,
@@ -66,10 +66,11 @@ export class CompanyStateService {
 
   async getCurrent(): Promise<Result<object, AppError>> {
     return safeCall(async () => {
-      const [thresholdsR, levelsR, metricsR] = await Promise.all([
+      const [thresholdsR, levelsR, metricsR, opsR] = await Promise.all([
         this.repo.getStateThresholds(),
         this.repo.getStateLevels(),
         this.repo.getRawMetrics(),
+        this.repo.getOperationsMetrics(),
       ]);
 
       const thresholdRows: StateThresholdRow[] = thresholdsR.ok ? thresholdsR.data : [];
@@ -79,6 +80,12 @@ export class CompanyStateService {
         : {
             cash_flow: 0, production_plan: 0, orders: 0, hr: 0, quality: 100,
             revenue: 0, expenses: 0, totalEmployees: 0, activeEmployees: 0, activeOrders: 0,
+          };
+      const ops: OperationsMetrics = opsR.ok
+        ? opsR.data
+        : {
+            downtimeEventsCount: 0, downtimeMinutesTotal: 0, downtimeMinutesAvg: 0,
+            machineAvailabilityPct: 0, machinePerformancePct: 0,
           };
 
       // ---- Build configurable weight map from DB (EP-DIR-001) --------------
@@ -146,6 +153,17 @@ export class CompanyStateService {
           orders: { raw: m.orders, score: normalised.orders, weight: weights.orders },
           hr: { raw: m.hr, score: normalised.hr, weight: weights.hr },
           quality: { raw: m.quality, score: normalised.quality, weight: weights.quality },
+        },
+        // Director-level operations figures — downtime (downtime_events) + machine
+        // telemetry health (mes_telemetry), real live data alongside production_plan
+        // above. No "energy" field: see OperationsMetrics doc-comment (owner ruling
+        // EP-IOT-018 — no real energy sensor data exists, fabricating one is banned).
+        operations: {
+          downtimeEventsCount: ops.downtimeEventsCount,
+          downtimeMinutesTotal: Math.round(ops.downtimeMinutesTotal * 100) / 100,
+          downtimeMinutesAvg: Math.round(ops.downtimeMinutesAvg * 100) / 100,
+          machineAvailabilityPct: Math.round(ops.machineAvailabilityPct * 10) / 10,
+          machinePerformancePct: Math.round(ops.machinePerformancePct * 10) / 10,
         },
         score: holatResult.ok ? holatResult.data.score : 0,
         summary: {
