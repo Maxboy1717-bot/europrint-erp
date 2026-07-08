@@ -6,7 +6,7 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, Body, Param, Query, UseGuards, UseInterceptors, Logger, UsePipes, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus, EventBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -22,6 +22,7 @@ import {
 import { FinanceInvoiceRepo } from '../infrastructure/repositories/drizzle-finance-invoice.repo';
 import { GlPostingService } from '../domain/services/gl-posting.service';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { FinanceInvoiceCreatedEvent } from '@modules/ai/domain/events/finance-invoice-created.event';
 
 interface AuthenticatedUser { id: number; sub?: number; }
 
@@ -52,6 +53,7 @@ export class FinanceInvoicesController {
   constructor(
     private commandBus: CommandBus,
     private queryBus: QueryBus,
+    private readonly eventBus: EventBus,
     private readonly invoiceRepo: FinanceInvoiceRepo,
     private readonly gl: GlPostingService,
     private readonly i18n: I18nService,
@@ -98,6 +100,16 @@ export class FinanceInvoicesController {
       throw new InternalServerErrorException(await this.i18n.t('errors.invoiceNotCreated'));
     }
     const row = result.data as Record<string, unknown>;
+    // AI-INVOICE-CLASSIFY (2026-07-07): AiInvoiceClassifyHandler was a dead-letter handler —
+    // nothing published FinanceInvoiceCreatedEvent. Publishing it here triggers the already-built
+    // auto-classification (category/subcategory/confidence) for every newly created invoice.
+    this.eventBus.publish(new FinanceInvoiceCreatedEvent({
+      invoiceId: Number(row['id']),
+      description: dto.notes ?? '',
+      amount: dto.amount ?? 0,
+      vendor: String(dto.customerId ?? row['customer_id'] ?? ''),
+      userId: user?.sub ?? user?.id ?? 0,
+    }));
     return { invoiceId: row['id'], invoiceNumber: row['invoice_number'], ...dto, created: true };
   }
 
@@ -127,6 +139,15 @@ export class FinanceInvoicesController {
       throw new InternalServerErrorException(await this.i18n.t('errors.invoiceNotCreated'));
     }
     const row = result.data as Record<string, unknown>;
+    // AI-INVOICE-CLASSIFY (2026-07-07): see createInvoiceRoot() above — wires the same
+    // already-built AiInvoiceClassifyHandler auto-classification for this creation path.
+    this.eventBus.publish(new FinanceInvoiceCreatedEvent({
+      invoiceId: Number(row['id']),
+      description: body.description,
+      amount: body.amount,
+      vendor: String(body.customerId),
+      userId: user?.sub ?? user?.id ?? 0,
+    }));
     return { invoiceId: row['id'], invoiceNumber: row['invoice_number'] };
   }
 
