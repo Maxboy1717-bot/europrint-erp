@@ -38,9 +38,10 @@ import { DrizzleCrmAnalyticsRepository } from '../../src/modules/crm/analytics/r
 import type { LossReasonRollupRow } from '../../src/modules/crm/analytics/repositories/i-crm-analytics.repo';
 
 interface RepoMock {
-  findById: jest.Mock<Promise<Result<Deal | null>>, [number]>;
-  update: jest.Mock<Promise<Result<void>>, [Deal]>;
-  updateLostReasonId: jest.Mock<Promise<Result<void>>, [number, number]>;
+  // T18-C3: deal id threaded as the live uuid string (was number → Number(uuid)=NaN).
+  findById: jest.Mock<Promise<Result<Deal | null>>, [string]>;
+  update: jest.Mock<Promise<Result<void>>, [string, Record<string, unknown>]>;
+  updateLostReasonId: jest.Mock<Promise<Result<void>>, [string, number]>;
   save: jest.Mock;
   findByLeadId: jest.Mock;
   findByCompanyId: jest.Mock;
@@ -104,13 +105,16 @@ describe('VISION-3340 #31 — MarkDealLostHandler loss-reason taxonomy', () => {
     const deal = makeDeal('proposal');
     repo.findById.mockResolvedValue(Ok(deal));
 
-    const r = await handler.execute(new MarkDealLostCommand(42, 'Narx yuqori', 7));
+    const r = await handler.execute(new MarkDealLostCommand('deal-uuid-42', 'Narx yuqori', 7));
 
     expect(r.ok).toBe(true);
     expect(deal.getStatus()).toBe('lost');
-    // (a) taxonomy id persisted via the dedicated repo method
+    // arm 1: the terminal transition + free-text reason is persisted by the uuid string
+    expect(repo.update).toHaveBeenCalledTimes(1);
+    expect(repo.update).toHaveBeenCalledWith('deal-uuid-42', { stage_id: 'lost', lost_reason: 'Narx yuqori' });
+    // (a) taxonomy id persisted via the dedicated repo method (uuid string id)
     expect(repo.updateLostReasonId).toHaveBeenCalledTimes(1);
-    expect(repo.updateLostReasonId).toHaveBeenCalledWith(42, 7);
+    expect(repo.updateLostReasonId).toHaveBeenCalledWith('deal-uuid-42', 7);
     // free-text reason still carried on the DealLostEvent (kept working)
     expect(publishSpy).toHaveBeenCalledTimes(1);
     const ev = publishSpy.mock.calls[0][0] as DealLostEvent;
@@ -122,7 +126,7 @@ describe('VISION-3340 #31 — MarkDealLostHandler loss-reason taxonomy', () => {
     const deal = makeDeal('negotiation');
     repo.findById.mockResolvedValue(Ok(deal));
 
-    const r = await handler.execute(new MarkDealLostCommand(42, 'Raqobatchiga ketdi'));
+    const r = await handler.execute(new MarkDealLostCommand('deal-uuid-42', 'Raqobatchiga ketdi'));
 
     expect(r.ok).toBe(true);
     expect(deal.getStatus()).toBe('lost');
@@ -136,7 +140,7 @@ describe('VISION-3340 #31 — MarkDealLostHandler loss-reason taxonomy', () => {
     repo.findById.mockResolvedValue(Ok(deal));
     repo.updateLostReasonId.mockResolvedValue(Err('db gone'));
 
-    const r = await handler.execute(new MarkDealLostCommand(42, 'Narx', 3));
+    const r = await handler.execute(new MarkDealLostCommand('deal-uuid-42', 'Narx', 3));
 
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('INTERNAL');
@@ -146,7 +150,7 @@ describe('VISION-3340 #31 — MarkDealLostHandler loss-reason taxonomy', () => {
   it('returns NOT_FOUND (no reason write) when the deal does not exist', async () => {
     repo.findById.mockResolvedValue(Ok(null));
 
-    const r = await handler.execute(new MarkDealLostCommand(999, 'Narx', 7));
+    const r = await handler.execute(new MarkDealLostCommand('deal-uuid-999', 'Narx', 7));
 
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');

@@ -12,6 +12,13 @@ import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 
+// A lost deal must carry a reason (drives the loss-reason rollup / churn analysis). The
+// structured taxonomy id (lostReasonId) is intentionally NOT accepted here — crm_deals has
+// no lost_reason_id column yet (owner-gated Guruh-B); only the free-text lost_reason is written.
+const MarkDealLostSchema = z.object({
+  reason: z.string().min(3, 'Yo\'qotish sababi majburiy (kamida 3 belgi)'),
+});
+
 const UpdateDealStageSchema = z.object({
   stageId: z.string().optional(),
   stage_id: z.string().optional(),
@@ -54,6 +61,7 @@ import { Role} from '@common/constants/roles.constants';
 import { AuditInterceptor} from '../../shared/interceptors/audit.interceptor';
 import { CreateDealCommand} from '../application/commands/create-deal.handler';
 import { MarkDealWonCommand} from '../application/commands/mark-deal-won.handler';
+import { MarkDealLostCommand} from '../application/commands/mark-deal-lost.handler';
 import { UpdateDealCommand} from '../application/commands/update-deal.handler';
 import { UpdateDealStageCommand} from '../application/commands/update-deal-stage.handler';
 import { DeleteDealCommand} from '../application/commands/delete-deal.handler';
@@ -146,6 +154,26 @@ export class CrmDealsController {
   // T18-C3: live crm_deals.id is a uuid — pass the string id through (Number(id)
   // produced NaN and never matched, leaving DealWonEvent unfired).
   const command = new MarkDealWonCommand(String(id));
+  const res = await this.commandBus.execute(command);
+  return unwrapOrThrow(res);
+}
+
+ @ApiOperation({ summary: 'Mark lost' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Bad request' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @Patch(':id/lost')
+ @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ async markLost(@Param('id') id: string, @Body() body: unknown) {
+  const dto = MarkDealLostSchema.parse(body);
+  this.logger.log('Marking deal as lost');
+
+  // Mirror markWon: live crm_deals.id is a uuid — pass the string id through (Number(id)
+  // produced NaN and never matched, so a deal could never transition to 'lost' and the
+  // loss-reason rollup stayed empty). lostReasonId is intentionally omitted: the structured
+  // crm_deals.lost_reason_id column does not exist yet (owner-gated), so the handler writes
+  // only the real free-text lost_reason and emits DealLostEvent.
+  const command = new MarkDealLostCommand(String(id), dto.reason);
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }

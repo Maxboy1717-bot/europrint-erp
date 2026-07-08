@@ -7,7 +7,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { eq, sql } from 'drizzle-orm';
 import { crmDeals } from '@shared/db';
 import { Deal } from '../../domain/aggregates/deal.aggregate';
@@ -50,11 +50,16 @@ export class DrizzleDealRepository implements IDealRepository {
     }
   }
 
-  async findById(id: number): Promise<Result<Deal | null>> {
+  async findById(id: string): Promise<Result<Deal | null>> {
     try {
-      const rows = await db.select().from(crmDeals).where(eq(crmDeals.id, id)).limit(1);
-      if (!rows[0]) return Ok(null);
-      return Ok(this.toDomain(castTo<DbRow>(rows[0])));
+      // Live crm_deals.id is uuid; the compat crmDeals Drizzle def types `id` as integer,
+      // so it cannot be addressed via `eq(crmDeals.id, uuid)`. Query by an explicit ::uuid
+      // cast (raw parameterized SQL, Rule B) — mirrors the won path / DrizzleCrmDealsRepository.
+      const res = await runQuery<DbRow>(sql`
+        SELECT * FROM crm_deals WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
+      `);
+      if (!res.rows[0]) return Ok(null);
+      return Ok(this.toDomain(castTo<DbRow>(res.rows[0])));
     } catch (e) {
       return Err(`drizzle_deal.findById: ${String(e)}`);
     }
@@ -93,29 +98,43 @@ export class DrizzleDealRepository implements IDealRepository {
     }
   }
 
-  async update(deal: Deal): Promise<Result<void>> {
+  async update(id: string, patch: Record<string, unknown>): Promise<Result<void>> {
     try {
-      await db.update(crmDeals).set({
-        status:     deal.getStatus(),
-        updated_at: _time.now(),
-      }).where(eq(crmDeals.id, deal.getId()));
+      const stageId    = patch['stage_id']    != null ? String(patch['stage_id'])    : null;
+      const lostReason = patch['lost_reason'] != null ? String(patch['lost_reason']) : null;
+      // Terminal (lost) transition persist, addressed by the real uuid. Business status
+      // lives in free-form stage_id — NEVER stage_semantic_id ({process,success,fail}
+      // CHECK). lost_reason is the real free-text column (lost_reason_id does NOT exist).
+      // Raw parameterized SQL (Rule B): the compat crm_deals def types id as integer and
+      // omits lost_reason/closed, so these live columns can't be written via the binding.
+      await db.execute(sql`
+        UPDATE crm_deals
+           SET stage_id    = COALESCE(${stageId}, stage_id),
+               lost_reason = COALESCE(${lostReason}, lost_reason),
+               closed      = true,
+               closed_at   = NOW(),
+               date_modify = NOW()
+         WHERE id = ${id}::uuid AND deleted_at IS NULL
+      `);
       return Ok();
     } catch (e) {
       return Err(`drizzle_deal.update: ${String(e)}`);
     }
   }
 
-  async updateLostReasonId(dealId: number, lostReasonId: number): Promise<Result<void>> {
+  async updateLostReasonId(dealId: string, lostReasonId: number): Promise<Result<void>> {
     try {
       // VISION-3340 #31: targeted additive UPDATE of the taxonomy FK only. The @shared/db
       // compat crm_deals def is a drift-aligned shim that intentionally omits this bolt-on
       // column, so write it via parameterized raw SQL (Rule B: sql`` params, no injection).
-      // date_modify is the live modify-stamp column (compat `updated_at` alias).
+      // date_modify is the live modify-stamp column (compat `updated_at` alias). Owner-gated
+      // (Guruh-B): lost_reason_id does not exist yet, so this arm is only reached when a
+      // structured taxonomy id is explicitly supplied (the live route never supplies one).
       await db.execute(sql`
         UPDATE crm_deals
         SET lost_reason_id = ${lostReasonId},
             date_modify    = NOW()
-        WHERE id = ${dealId}
+        WHERE id = ${dealId}::uuid
       `);
       return Ok();
     } catch (e) {
