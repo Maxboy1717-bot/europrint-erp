@@ -426,4 +426,16 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'razryad_levels.min_months activate 3-month guard (VISION-3340 #13, EP-ORG-011)',
     sql: `UPDATE public.razryad_levels SET min_months = 3 WHERE min_months = 0`,
   },
+  // VISION-3340 #16 (2026-07-08): material_kit_items had no FK to material_batches
+  // (28 cols, 0 rows) — a floor-operator's scan could never be traced back to the
+  // physical LOT it consumed. Additive nullable FK; write-path is
+  // IotTabletController.persistKitItemScan (scanMaterialKitItem/patchScanMaterialKitItem).
+  {
+    name: 'material_kit_items.batch_id column (VISION-3340 #16, LOT/batch traceability)',
+    sql: `ALTER TABLE IF EXISTS material_kit_items ADD COLUMN IF NOT EXISTS batch_id INTEGER REFERENCES material_batches(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'material_kit_items.batch_id index (VISION-3340 #16)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_material_kit_items_batch_id ON material_kit_items(batch_id)`,
+  },
 ];

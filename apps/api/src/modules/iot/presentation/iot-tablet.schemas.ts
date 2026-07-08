@@ -98,8 +98,14 @@ export const HandoverSchema = z.object({
   status: z.string().max(50).default('pending'),
 }).passthrough();
 
+// VISION-3340 #16: optional LOT/batch link — when the tablet scan resolves a
+// material_batches.id (e.g. from a batch barcode), the scan endpoint persists it
+// onto material_kit_items.batch_id and decrements that batch's remaining_quantity
+// (IotTabletController.scanMaterialKitItem/patchScanMaterialKitItem). Omitted =
+// scan behaves exactly as before (no batch link, no stock decrement).
 export const MaterialKitScanSchema = z.object({
   scannedBy: z.coerce.number().int().optional(),
+  batchId: z.coerce.number().int().positive().optional(),
 }).passthrough();
 
 export const EvaluationSchema = z.object({

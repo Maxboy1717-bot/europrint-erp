@@ -142,11 +142,15 @@ export const materialKitItems = pgTable("material_kit_items", {
   isScanned: boolean("is_scanned").default(false), // Master skanerladimi
   scannedAt: timestamp("scanned_at"),
   scannedBy: varchar("scanned_by").references(() => users.id, { onDelete: "set null" }),
+  // VISION-3340 #16 — LOT/batch traceability (material-kit-items-batch-id-2026-07-08.sql).
+  // Write path: IotTabletController.persistKitItemScan.
+  batchId: integer("batch_id").references(() => materialBatches.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   index("idx_material_kit_items_kit_id").on(t.kitId),
   index("idx_material_kit_items_material_id").on(t.materialId),
   index("idx_material_kit_items_created_at").on(t.createdAt),
+  index("idx_material_kit_items_batch_id").on(t.batchId),
 ]);
 
 

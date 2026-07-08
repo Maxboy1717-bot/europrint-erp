@@ -303,12 +303,7 @@ export class IotTabletController {
   @UseGuards(TabletTokenGuard)
   async scanMaterialKitItem(@Param('id') id: string, @Body() body: unknown) {
     const dto = MaterialKitScanSchema.parse(body ?? {});
-    await db.execute(sql`
-      UPDATE material_kit_items
-      SET is_scanned=true, scanned_at=NOW(), scanned_by=${dto.scannedBy ?? null}
-      WHERE id=${parseInt(id, 10)}
-    `);
-    return { id: parseInt(id, 10), scanned: true };
+    return this.persistKitItemScan(parseInt(id, 10), dto);
   }
 
   @ApiOperation({ summary: 'Scan material kit item (PATCH)' })
@@ -318,12 +313,52 @@ export class IotTabletController {
   @UseGuards(TabletTokenGuard)
   async patchScanMaterialKitItem(@Param('id') id: string, @Body() body: unknown) {
     const dto = MaterialKitScanSchema.parse(body ?? {});
-    await db.execute(sql`
-      UPDATE material_kit_items
-      SET is_scanned=true, scanned_at=NOW(), scanned_by=${dto.scannedBy ?? null}
-      WHERE id=${parseInt(id, 10)}
-    `);
-    return { id: parseInt(id, 10), scanned: true };
+    return this.persistKitItemScan(parseInt(id, 10), dto);
+  }
+
+  /**
+   * VISION-3340 #16 (MES LOT/batch WRITER-wire): material_kit_items had no FK to
+   * material_batches (28 cols, 0 rows) — a floor-operator's scan could never be traced
+   * back to the physical LOT it consumed, and material_batches.remaining_quantity had
+   * zero writers pointed at it anywhere in the codebase. When the scan resolves a
+   * batchId (material_batches.id, e.g. from a batch barcode), this now (a) persists it
+   * onto material_kit_items.batch_id — COALESCE-guarded so an already-linked item keeps
+   * its batch on a re-scan (same first-write-wins idiom as T12-02 operator_card_id) —
+   * and (b) decrements that batch's remaining_quantity by the kit item's
+   * required_quantity (the amount this kit item needed, i.e. consumed from the LOT).
+   * Both writes share ONE transaction (mirrors reportProductionDefect's session +
+   * downtime_events wrap) so a batch-quantity failure cannot leave the scan
+   * half-committed. GREATEST(0, ...) guards remaining_quantity against going negative
+   * on an over-scan (Q-40 — no silent wraparound). No batchId supplied = behaves
+   * exactly as before (scan-only, no batch link, no stock movement).
+   */
+  private async persistKitItemScan(
+    id: number,
+    dto: { scannedBy?: number; batchId?: number },
+  ): Promise<{ id: number; scanned: true; batchId: number | null }> {
+    let batchDecrementedFrom: number | null = null;
+    await db.transaction(async (tx) => {
+      const upd = await tx.execute(sql`
+        UPDATE material_kit_items
+        SET is_scanned = true,
+            scanned_at = NOW(),
+            scanned_by = ${dto.scannedBy ?? null},
+            batch_id   = COALESCE(${dto.batchId ?? null}, batch_id)
+        WHERE id = ${id}
+        RETURNING required_quantity
+      `);
+      if (dto.batchId != null) {
+        const row = ((upd as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
+        const consumedQty = row ? Number(row['required_quantity'] ?? 0) : 0;
+        await tx.execute(sql`
+          UPDATE material_batches
+          SET remaining_quantity = GREATEST(0, remaining_quantity - ${consumedQty})
+          WHERE id = ${dto.batchId}
+        `);
+        batchDecrementedFrom = dto.batchId;
+      }
+    });
+    return { id, scanned: true, batchId: batchDecrementedFrom };
   }
 
   // -- Production-sessions endpoints -------------------------------------------

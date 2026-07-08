@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok } from '@common/result';
 import { Result } from '@common/result';
-import { ProductionSession, ChecklistStatus } from '../../domain/aggregates/production-session.aggregate';
+import { ProductionSession, ChecklistStatus, MesStatus } from '../../domain/aggregates/production-session.aggregate';
 import { IMesRepository, DrizzleExecutor } from '../../domain/repositories/mes.repository';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
@@ -54,9 +54,30 @@ export class DrizzleMesRepository implements IMesRepository {
     try {
       const startedAt = session.getStartedAt();
       const endedAt = session.getCompletedAt();
+      const status = session.getStatus();
+      // T-VISION3340-17 (stage-transition WRITER-wire, mirrors the T12-02
+      // operator_card_id COALESCE-write directly above): this CQRS path
+      // (StartSessionCommand/CompleteSessionCommand -> saveSession, the ONLY write
+      // this handler pair performs) persisted status/started_at/ended_at/
+      // operator_card_id but never touched current_stage/stage_started_at — those
+      // columns stayed 100% NULL for every session driven through the command bus,
+      // even though the GSD vocabulary (setup/main/teardown/done, T21-A1-MES) and
+      // the raw-SQL tablet start/stop endpoints (iot-tablet.controller.ts
+      // production-sessions/:id/start|stop) already write them correctly.
+      // isRunning opens GSD SETUP the FIRST time a session reaches RUNNING — COALESCE
+      // makes this idempotent (a later saveSession() call for an already-staged
+      // session leaves current_stage/stage_started_at untouched, same first-write-wins
+      // idiom as operator_card_id). isFinished (COMPLETED or SENT_TO_QC) folds
+      // whatever stage was still open into its accumulator using the IDENTICAL
+      // elapsed-time CASE formula the tablet's stopProductionSession() uses, then
+      // closes GSD with 'done' + stage_started_at=NULL. PAUSED is handled by the
+      // existing mes-shifts-stats.repo.ts pauseSession()/resumeSession() pair —
+      // untouched here (different write path, out of scope for this gap).
+      const isRunning = status === MesStatus.RUNNING;
+      const isFinished = status === MesStatus.COMPLETED || status === MesStatus.SENT_TO_QC;
       const r = await exec(sql`
         UPDATE production_sessions ps
-        SET status = ${session.getStatus()},
+        SET status = ${status},
             started_at = COALESCE(${startedAt}, started_at),
             ended_at = COALESCE(${endedAt}, ended_at),
             operator_card_id = COALESCE(
@@ -67,6 +88,26 @@ export class DrizzleMesRepository implements IMesRepository {
                    AND ec.is_active = true AND ec.is_primary = true
                 WHERE u.id = ps.worker_id),
               ps.operator_card_id),
+            setup_seconds = CASE
+              WHEN ${isFinished} AND ps.current_stage = 'setup' AND ps.stage_started_at IS NOT NULL
+                THEN ps.setup_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - ps.stage_started_at))::int)
+              ELSE ps.setup_seconds END,
+            main_seconds = CASE
+              WHEN ${isFinished} AND ps.current_stage = 'main' AND ps.stage_started_at IS NOT NULL
+                THEN ps.main_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - ps.stage_started_at))::int)
+              ELSE ps.main_seconds END,
+            teardown_seconds = CASE
+              WHEN ${isFinished} AND ps.current_stage = 'teardown' AND ps.stage_started_at IS NOT NULL
+                THEN ps.teardown_seconds + GREATEST(0, EXTRACT(EPOCH FROM (NOW() - ps.stage_started_at))::int)
+              ELSE ps.teardown_seconds END,
+            current_stage = CASE
+              WHEN ${isRunning} THEN COALESCE(ps.current_stage, 'setup')
+              WHEN ${isFinished} AND ps.current_stage IS NOT NULL THEN 'done'
+              ELSE ps.current_stage END,
+            stage_started_at = CASE
+              WHEN ${isRunning} THEN COALESCE(ps.stage_started_at, NOW())
+              WHEN ${isFinished} THEN NULL
+              ELSE ps.stage_started_at END,
             updated_at = NOW()
         WHERE ps.id = ${session.getId()}
         RETURNING ps.id`, tx);
