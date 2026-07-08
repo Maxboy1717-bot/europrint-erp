@@ -276,9 +276,18 @@ export function useIoTTablet() {
       if (!core.activeSession) throw new Error("No session");
       const minutes = Number(core.downtimeMinutes);
       if (isNaN(minutes) || minutes < 1 || minutes > 480) throw new Error("Invalid duration");
+      // VISION-3340 16.60/16.61: selectedReasonCode now holds the picked mes_downtime_reasons
+      // id (Select value). Resolve the catalog row so we send reasonId (populates
+      // downtime_events.reason_code_id) plus the catalog code as reasonCode (schema-required
+      // string). Falls back to the raw value if the row is not found (defensive).
+      const picked = (Array.isArray(data.reasonCodes) ? data.reasonCodes : [])
+        .find(rc => String(rc.id) === core.selectedReasonCode);
       await data.tabletFetch("POST", "/api/iot/downtime-events", {
         sessionId: core.activeSession.id, eventType: "manual_entry",
-        durationMinutes: minutes, reasonCode: core.selectedReasonCode, notes: core.downtimeNotes,
+        durationMinutes: minutes,
+        reasonCode: picked?.code ?? core.selectedReasonCode,
+        reasonId: picked ? Number(picked.id) : undefined,
+        notes: core.downtimeNotes,
       });
     },
     onSuccess: () => {

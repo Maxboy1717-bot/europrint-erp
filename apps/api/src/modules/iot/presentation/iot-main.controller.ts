@@ -278,11 +278,29 @@ export class IotMainController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('downtime-reason-codes') @Roles(...IOT_READ)
   async getDowntimeReasonCodes() {
+    // VISION-3340 16.60/16.61: repointed from the EMPTY downtime_reason_codes table
+    // (0 rows, name/name_ru columns) to the LIVE mes_downtime_reasons catalog (16 rows),
+    // so the tablet downtime picker renders real reasons (the submit button is disabled
+    // until one is selected — an empty list made downtime un-submittable). Mirrors
+    // legacy-iot.service.ts getIotTabletDefectReasons: id + code + name AS labelUz +
+    // COALESCE(drc.name_ru, name) AS labelRu (LEFT JOIN downtime_reason_codes for the RU
+    // fallback; that table is empty so it falls back to the Uzbek name — Russian appears
+    // automatically once seeded) + category AS stage. Returns a BARE ARRAY — the FE
+    // (useIoTTabletData) maps over it directly (a {items,total} object would not be an array).
     const r = await db.execute(sql`
-      SELECT * FROM downtime_reason_codes WHERE is_active=true ORDER BY sort_order, name
+      SELECT
+        dr.id                                     AS id,
+        dr.code                                   AS code,
+        dr.name                                   AS "labelUz",
+        COALESCE(drc.name_ru, dr.name)            AS "labelRu",
+        dr.category                               AS stage
+      FROM mes_downtime_reasons dr
+      LEFT JOIN downtime_reason_codes drc ON drc.code = dr.code
+      WHERE dr.is_active = true
+      ORDER BY dr.code
     `);
-    const items = ((r as { rows?: unknown[] }).rows) ?? [];
-    return { items, total: items.length };
+    const rows = (r as { rows?: unknown[] }).rows;
+    return Array.isArray(rows) ? rows : [];
   }
 
   // -- Device patch ------------------------------------------------------------

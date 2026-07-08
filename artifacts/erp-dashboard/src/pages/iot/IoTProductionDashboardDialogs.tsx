@@ -158,8 +158,11 @@ export function ActionButtons({
                 <SelectContent className="max-h-[300px]">
                   {(Array.isArray(reasonCodes) ? reasonCodes : []).map(r => {
                     const Icon = REASON_ICONS[r.code as keyof typeof REASON_ICONS] || AlertTriangle;
+                    // VISION-3340 16.60/16.61: the Select value carries the mes_downtime_reasons
+                    // id (not the code), so the picked reason maps to a catalog id — the mutation
+                    // resolves that id and sends reasonId, populating downtime_events.reason_code_id.
                     return (
-                      <SelectItem key={r.code} value={r.code} className="py-3 text-base" data-testid={`downtime-reason-${r.code}`}>
+                      <SelectItem key={String(r.id)} value={String(r.id)} className="py-3 text-base" data-testid={`downtime-reason-${r.code}`}>
                         <div className="flex items-center gap-2">
                           <Icon className="h-4 w-4 text-[var(--ep-yellow)]" />
                           <span>{r.code}: {lang === "uz" ? r.labelUz : r.labelRu}</span>
