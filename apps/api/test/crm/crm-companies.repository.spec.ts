@@ -14,6 +14,7 @@ jest.mock('@shared/db', () => ({
     id: 'cc.id', title: 'cc.title', inn: 'cc.inn', industry: 'cc.industry',
     address: 'cc.address', website: 'cc.website', credit_limit: 'cc.credit_limit',
     used_credit: 'cc.used_credit', status: 'cc.status', created_at: 'cc.created_at',
+    is_blocked: 'cc.is_blocked', block_reason: 'cc.block_reason', open_debt: 'cc.open_debt',
   },
   crmContacts: { id: 'ct.id', company_id: 'ct.company_id', first_name: 'ct.first_name' },
   crmDeals: { id: 'cd.id', company_id: 'cd.company_id', created_at: 'cd.created_at' },
@@ -70,6 +71,38 @@ describe('CrmCompaniesRepository', () => {
       dbStub.__setRejected(new Error('boom'));
       const r = await repo.getCompany(1);
       expect(r.ok).toBe(false);
+    });
+
+    // VISION-3340 #29 — Customer 360 financial/risk fields (open_debt,
+    // credit_limit, is_blocked, block_reason) must pass through untouched
+    // so the FE Customer 360 view can render the "Financial status" block.
+    it('returns Ok with financial/risk fields when company is blocked', async () => {
+      dbStub.__setResolved([{
+        id: 1, title: 'Acme', credit_limit: '5000000.00', open_debt: '1200000.00',
+        is_blocked: true, block_reason: 'Toʻlov muddati 90 kundan oshdi',
+      }]);
+      const r = await repo.getCompany(1);
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.data).toMatchObject({
+          credit_limit: '5000000.00', open_debt: '1200000.00',
+          is_blocked: true, block_reason: 'Toʻlov muddati 90 kundan oshdi',
+        });
+      }
+    });
+
+    it('returns Ok with financial/risk fields when company is not blocked', async () => {
+      dbStub.__setResolved([{
+        id: 2, title: 'Beta', credit_limit: '0.00', open_debt: null,
+        is_blocked: false, block_reason: null,
+      }]);
+      const r = await repo.getCompany(2);
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.data).toMatchObject({
+          credit_limit: '0.00', open_debt: null, is_blocked: false, block_reason: null,
+        });
+      }
     });
   });
 
