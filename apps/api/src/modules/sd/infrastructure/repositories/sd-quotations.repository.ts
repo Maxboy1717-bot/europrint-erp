@@ -4,13 +4,17 @@
  * @layer Infrastructure (SD)
  */
 
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { db , runQuery } from '@shared/db';
 import { safeCall, Ok, Err, Result } from '@common/result';
 import { DEFAULT_ADVANCE_PERCENT } from '@common/constants/business.constants';
+import { ERP_EVENTS } from '@common/constants/erp-events.constants';
 import { ISdQuotationsRepo } from '../../domain/repositories/i-sd-quotations.repo';
+import { OutboxRepository } from '../../../shared/outbox/outbox.repository';
+import { OrderCreatedEvent } from '../../domain/events/order-created.event';
 
 type Row = Record<string, unknown>;
 const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () => (await runQuery<Row>(q)).rows as Row[]);
@@ -22,7 +26,12 @@ const execOne = async (q: SQL | SQLWrapper): Promise<Result<Row | null>> => {
 
 @Injectable()
 export class SdQuotationsRepository implements ISdQuotationsRepo {
-  constructor(private readonly i18n: I18nService) {}
+  private readonly logger = new Logger(SdQuotationsRepository.name);
+  constructor(
+    private readonly i18n: I18nService,
+    private readonly eventBus: EventBus,
+    private readonly outboxRepo: OutboxRepository,
+  ) {}
 
   async listQuotations(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>> {
     return customerId && status
@@ -207,6 +216,7 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
       }
       const orderNumber = `QO-${id}-${Date.now().toString(36).toUpperCase()}`;
       const totalAmount = String(quotation['total_amount'] ?? '0');
+      const totalAmountNum = Number(quotation['total_amount'] ?? 0);
       const companyId = Number(quotation['customer_id'] ?? quotation['company_id'] ?? 0);
       if (isNaN(companyId) || companyId === 0) {
         throw new BadRequestException(await this.i18n.t('errors.quotationCustomerIdInvalid'));
@@ -216,9 +226,15 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
       // execSdSalesOrderInsert bilan bir xil), avvalgi ?? 30 drift emas.
       const parsedAdvance = Number(quotation['advance_percent']);
       const advancePercent = Number.isFinite(parsedAdvance) && parsedAdvance > 0 ? parsedAdvance : DEFAULT_ADVANCE_PERCENT;
-      // Atomic: order INSERT + quotation status UPDATE must succeed together.
-      // Without tx: if UPDATE fails after INSERT, you get an orphaned order with the quotation
-      // still marked "not converted", leading to a duplicate-conversion attempt on retry.
+      // Atomic golden-thread (VISION-3340 #49): order INSERT + quotation status UPDATE +
+      // the OrderCreated outbox row all commit together or all roll back. Previously this
+      // path wrote the order + quotation atomically but produced NO OrderCreatedEvent /
+      // outbox row, so it was a golden-thread dead-end (no PP/MES fan-out, no downstream
+      // listeners). The outbox entry mirrors CreateOrderHandler._buildOutboxEntries exactly
+      // (same aggregate_type / event_name / payload shape) so the OutboxPublisher re-emits
+      // ERP_EVENTS.ORDER_CREATED to the very same listeners the canonical create-order path
+      // feeds. No-orphan is preserved: still one transaction, and now an order can never be
+      // created without its event (an outbox failure throws → the whole conversion rolls back).
       const insertedOrder = await db.transaction(async (tx) => {
         const orderRes = await tx.execute(sql`
           INSERT INTO sales_orders
@@ -234,9 +250,35 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
           SET status = 'converted', order_id = ${order['id']}, updated_at = NOW()
           WHERE id = ${id}
         `);
+        const outboxRes = await this.outboxRepo.insertBatch([{
+          aggregate_type: 'SalesOrder',
+          aggregate_id: String(order['id']),
+          event_name: ERP_EVENTS.ORDER_CREATED,
+          payload: {
+            orderId: Number(order['id']),
+            companyId,
+            orderNumber: String(order['order_number'] ?? orderNumber),
+            totalAmount: totalAmountNum,
+          },
+        }], tx);
+        if (!outboxRes.ok) throw new Error(`Outbox insert failed: ${outboxRes.error.message}`);
         return order;
       });
       if (!insertedOrder) return { error: 'Failed to create sales order — DB insert returned no row' };
+      // Belt-and-suspenders in-process emission after commit (same as CreateOrderHandler):
+      // @nestjs/cqrs EventBus listeners fire immediately; the OutboxPublisher tick also
+      // re-emits the persisted row. Best-effort — a publish hiccup must never fail an
+      // already-committed conversion (the outbox row guarantees eventual delivery).
+      try {
+        this.eventBus.publish(new OrderCreatedEvent(
+          Number(insertedOrder['id']),
+          companyId,
+          String(insertedOrder['order_number'] ?? orderNumber),
+          totalAmountNum,
+        ));
+      } catch (err) {
+        this.logger.warn(`[#49] OrderCreatedEvent in-process publish failed (outbox will re-emit): ${(err as Error).message}`);
+      }
       return { order: insertedOrder };
       }, 'DB_ERROR');
   }
