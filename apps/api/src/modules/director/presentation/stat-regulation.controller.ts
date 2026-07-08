@@ -44,6 +44,11 @@ type StatRegCreateBody = z.infer<typeof StatRegCreateSchema>;
 const StatRegUpdateSchema = StatRegCreateSchema.partial();
 type StatRegUpdateBody = z.infer<typeof StatRegUpdateSchema>;
 
+const StatRegApproveSchema = z.object({
+  approver_card_id: z.coerce.number().int().positive(),
+});
+type StatRegApproveBody = z.infer<typeof StatRegApproveSchema>;
+
 const DIRECTOR_ROLES = ['director', 'super_admin'];
 
 /** Numeric target_value DB ustuni TEXT/NUMERIC sifatida saqlanadi (string). */
@@ -139,5 +144,14 @@ export class StatRegulationController {
   async deactivate(@Param('id') id: string) {
     unwrapOrInternal(await this.svc.deactivate(parseInt(id, 10)));
     return { message: "O'chirildi" };
+  }
+
+  @Post(':id/approve')
+  @ApiOperation({ summary: 'Approve / sign-off the current version of a stat-regulation' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async approve(@Param('id') id: string, @Body() body: unknown) {
+    const dto: StatRegApproveBody = StatRegApproveSchema.parse(body);
+    return unwrapOrInternal(await this.svc.approve(parseInt(id, 10), dto.approver_card_id));
   }
 }

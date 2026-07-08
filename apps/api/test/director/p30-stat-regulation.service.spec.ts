@@ -26,6 +26,8 @@ function row(over: Partial<IStatRegRow> = {}): IStatRegRow {
     version: 1,
     valid_from: '2026-06-19',
     is_active: true,
+    approved_by_card_id: null,
+    approved_at: null,
     created_at: new Date(),
     updated_at: new Date(),
     ...over,
@@ -63,6 +65,13 @@ function makeVersioningRepo(): { repo: IStatRegulationRepo; store: IStatRegRow[]
       return Ok(next);
     }),
     deactivate: jest.fn(async () => Ok(undefined)),
+    approve: jest.fn(async (id: number, approverCardId: number) => {
+      const target = store.find((r) => r.id === id && r.is_active);
+      if (!target) throw new Error('NOT_FOUND');
+      target.approved_by_card_id = approverCardId;
+      target.approved_at = new Date();
+      return Ok(target);
+    }),
   };
   return { repo, store };
 }
@@ -117,5 +126,29 @@ describe('P30 StatRegulationService — versioning', () => {
     const r = await svc.create({ name_uz: 'Yangi', frequency: 'daily' });
     expect(r.ok).toBe(true);
     expect(repo.create).toHaveBeenCalled();
+  });
+
+  it('approve stamps approved_by_card_id + approved_at on the active row', async () => {
+    const { repo, store } = makeVersioningRepo();
+    const svc = new StatRegulationService(repo);
+
+    const r = await svc.approve(1, 42);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+
+    expect(r.data.approved_by_card_id).toBe(42);
+    expect(r.data.approved_at).toBeInstanceOf(Date);
+    expect(repo.approve).toHaveBeenCalledWith(1, 42);
+
+    // sign-off does NOT create a new version — same row, same version number
+    expect(store.length).toBe(1);
+    expect(r.data.version).toBe(1);
+  });
+
+  it('approve rejects an id that has no active row', async () => {
+    const { repo } = makeVersioningRepo();
+    const svc = new StatRegulationService(repo);
+
+    await expect(svc.approve(999, 42)).rejects.toThrow('NOT_FOUND');
   });
 });

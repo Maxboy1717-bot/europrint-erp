@@ -50,4 +50,9 @@ export class StatRegulationService {
   async deactivate(id: number): Promise<Result<void>> {
     return this.repo.deactivate(id);
   }
+
+  async approve(id: number, approverCardId: number): Promise<Result<IStatRegRow>> {
+    this.logger.log({ code: 'EP-DIR-024', op: 'dir.statReg.approve', id, approverCardId });
+    return this.repo.approve(id, approverCardId);
+  }
 }

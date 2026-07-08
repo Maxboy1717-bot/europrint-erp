@@ -116,4 +116,27 @@ export class StatRegulationRepository implements IStatRegulationRepo {
       );
     }, 'DB_ERROR');
   }
+
+  /**
+   * Sign-off: joriy (faol) versiyani tasdiqlagan KARTA (org_functions.id) + vaqtini
+   * yozadi. Yangi versiya yaratilmaydi — faqat approved_by_card_id/approved_at
+   * to'ldiriladi (update() dagi versiyalashdan farqli — tasdiqlash tarixni buzmaydi).
+   */
+  async approve(id: number, approverCardId: number): Promise<Result<IStatRegRow>> {
+    return safeCall(async () => {
+      const existing = await typedExecute<IStatRegRow>(
+        sql`SELECT * FROM stat_regulations WHERE id = ${id} AND is_active = TRUE`,
+      );
+      if (!existing[0]) throw new Error('NOT_FOUND');
+
+      const rows = await typedExecute<IStatRegRow>(sql`
+        UPDATE stat_regulations
+        SET approved_by_card_id = ${approverCardId}, approved_at = NOW(), updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      if (!rows[0]) throw new Error('APPROVE_FAILED');
+      return rows[0];
+    }, 'DB_ERROR');
+  }
 }

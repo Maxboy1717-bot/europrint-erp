@@ -23,6 +23,8 @@ export interface IStatRegRow {
   version: number;
   valid_from: string;
   is_active: boolean;
+  approved_by_card_id?: number | null;
+  approved_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -49,6 +51,8 @@ export interface IStatRegulationRepo {
   /** Versiyalash: eski qator is_active=false, yangi versiya INSERT. */
   update(id: number, dto: StatRegUpdateInput): Promise<Result<IStatRegRow>>;
   deactivate(id: number): Promise<Result<void>>;
+  /** Sign-off: joriy (faol) versiyani tasdiqlagan KARTA + vaqtini yozadi. */
+  approve(id: number, approverCardId: number): Promise<Result<IStatRegRow>>;
 }
 
 export const STAT_REGULATION_REPO = Symbol('STAT_REGULATION_REPO');
