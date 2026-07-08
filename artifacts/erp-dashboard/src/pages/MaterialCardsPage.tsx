@@ -3,8 +3,11 @@
  * @description React page component. Route-level UI.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -30,23 +34,67 @@ interface Material {
   status: string;
 }
 
+type TFunc = (key: string, fallback?: string) => string;
+
+// VISION-3340 #64 — FE zod schemas mirror the backend DTOs in
+// apps/api/src/modules/compatibility/warehouse-catalog.controller.ts
+// (CreateWarehouseMaterialSchema / UpdateWarehouseMaterialSchema) so client
+// validation agrees with server validation.
+const buildCreateMaterialSchema = (t: TFunc) =>
+  z.object({
+    materialCode: z
+      .string()
+      .trim()
+      .min(1, t('materialKodKiriting', 'Kodni kiriting'))
+      .max(100, t('materialKodMaks100', "Kod 100 belgidan oshmasligi kerak")),
+    name: z
+      .string()
+      .trim()
+      .min(1, t('materialNomKiriting', 'Nomni kiriting'))
+      .max(500, t('materialNomMaks500', "Nom 500 belgidan oshmasligi kerak")),
+    unit: z
+      .string()
+      .trim()
+      .min(1, t('olchovBirliginiTanlang', "O'lchov birligini tanlang"))
+      .max(50),
+    category: z
+      .string()
+      .trim()
+      .max(100, t('kategoriyaMaks100', "Kategoriya 100 belgidan oshmasligi kerak")),
+    minStock: z.coerce
+      .number({ invalid_type_error: t('minQoldiqRaqamBolsin', "Minimal qoldiq raqam bo'lishi kerak") })
+      .nonnegative(t('minQoldiqManfiyBolmasin', "Minimal qoldiq manfiy bo'lmasligi kerak")),
+  });
+
+const buildUpdateMaterialSchema = (t: TFunc) => buildCreateMaterialSchema(t).omit({ materialCode: true });
+
+type CreateMaterialForm = z.infer<ReturnType<typeof buildCreateMaterialSchema>>;
+type UpdateMaterialForm = z.infer<ReturnType<typeof buildUpdateMaterialSchema>>;
+
+const CREATE_DEFAULTS: CreateMaterialForm = { materialCode: "", name: "", unit: "kg", category: "", minStock: 0 };
+const UPDATE_DEFAULTS: UpdateMaterialForm = { name: "", unit: "kg", category: "", minStock: 0 };
+
 export default function MaterialCardsPage() {
   const { t } = useTranslation('common');
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
-  const [unit, setUnit] = useState("kg");
-  const [category, setCategory] = useState("");
-  const [minStock, setMinStock] = useState("");
 
   // SB0756/SB0757 — edit path (create existed, edit did not).
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editUnit, setEditUnit] = useState("kg");
-  const [editCategory, setEditCategory] = useState("");
-  const [editMinStock, setEditMinStock] = useState("");
+
+  const createSchema = useMemo(() => buildCreateMaterialSchema(t), [t]);
+  const updateSchema = useMemo(() => buildUpdateMaterialSchema(t), [t]);
+
+  const createForm = useForm<CreateMaterialForm>({
+    resolver: zodResolver(createSchema),
+    defaultValues: CREATE_DEFAULTS,
+  });
+
+  const editForm = useForm<UpdateMaterialForm>({
+    resolver: zodResolver(updateSchema),
+    defaultValues: UPDATE_DEFAULTS,
+  });
 
   const { data: materials = [], isLoading } = useQuery<Material[]>({
     queryKey: ["/api/warehouse/materials"],
@@ -66,19 +114,11 @@ export default function MaterialCardsPage() {
 
   const resetForm = () => {
     setIsDialogOpen(false);
-    setCode("");
-    setName("");
-    setUnit("kg");
-    setCategory("");
-    setMinStock("");
+    createForm.reset(CREATE_DEFAULTS);
   };
 
-  const handleSave = () => {
-    if (!code.trim() || !name.trim()) {
-      toast({ title: "Kod va nomni kiriting", variant: "destructive" });
-      return;
-    }
-    createMutation.mutate({ materialCode: code, name, unit, category, minStock: Number(minStock) || 0 });
+  const onCreateSubmit = (values: CreateMaterialForm) => {
+    createMutation.mutate(values);
   };
 
   const updateMutation = useMutation({
@@ -96,22 +136,17 @@ export default function MaterialCardsPage() {
 
   const openEditDialog = (m: Material) => {
     setEditingMaterial(m);
-    setEditName(m.name ?? "");
-    setEditUnit(m.unit ?? "kg");
-    setEditCategory(m.category ?? "");
-    setEditMinStock(String(m.minStock ?? ""));
+    editForm.reset({
+      name: m.name ?? "",
+      unit: m.unit ?? "kg",
+      category: m.category ?? "",
+      minStock: m.minStock ?? 0,
+    });
   };
 
-  const handleUpdate = () => {
+  const onUpdateSubmit = (values: UpdateMaterialForm) => {
     if (!editingMaterial) return;
-    if (!editName.trim()) {
-      toast({ title: "Nomni kiriting", variant: "destructive" });
-      return;
-    }
-    updateMutation.mutate({
-      id: editingMaterial.id,
-      data: { name: editName, unit: editUnit, category: editCategory, minStock: Number(editMinStock) || 0 },
-    });
+    updateMutation.mutate({ id: editingMaterial.id, data: values });
   };
 
   const list = (Array.isArray(materials) ? materials : []).filter((m) => {
@@ -126,6 +161,15 @@ export default function MaterialCardsPage() {
     if (low) return <EPStatusPill tone="danger">{t("kamQoldi")}</EPStatusPill>;
     return <EPStatusPill tone="success">{t("active")}</EPStatusPill>;
   };
+
+  const unitSelectItems = (
+    <SelectContent>
+      <SelectItem value="kg">kg</SelectItem>
+      <SelectItem value="pcs">dona</SelectItem>
+      <SelectItem value="m">metr</SelectItem>
+      <SelectItem value="L">litr</SelectItem>
+    </SelectContent>
+  );
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 space-y-6">
@@ -205,42 +249,54 @@ export default function MaterialCardsPage() {
           <DialogHeader>
             <DialogTitle className="text-[18px] font-semibold">{t("yangiMaterialQoshish")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label>{t('materialKodi')}</Label>
-                <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="MAT-001" />
+          <Form {...createForm}>
+            <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField control={createForm.control} name="materialCode" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('materialKodi')}</FormLabel>
+                    <FormControl><Input placeholder="MAT-001" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={createForm.control} name="unit" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("olchovBirligi")}</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      {unitSelectItems}
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               </div>
-              <div>
-                <Label>{t("olchovBirligi")}</Label>
-                <Select value={unit} onValueChange={setUnit}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="pcs">dona</SelectItem>
-                    <SelectItem value="m">metr</SelectItem>
-                    <SelectItem value="L">litr</SelectItem>
-                  </SelectContent>
-                </Select>
+              <FormField control={createForm.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("name")}</FormLabel>
+                  <FormControl><Input placeholder={t("materialNomi")} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={createForm.control} name="category" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("category")}</FormLabel>
+                  <FormControl><Input placeholder={t("masalanQogoz")} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={createForm.control} name="minStock" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("minimalQoldiq")}</FormLabel>
+                  <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={resetForm}>{t("cancel")}</Button>
+                <Button type="submit" disabled={createMutation.isPending}>{t("Saqlash")}</Button>
               </div>
-            </div>
-            <div>
-              <Label>{t("name")}</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("materialNomi")} />
-            </div>
-            <div>
-              <Label>{t("category")}</Label>
-              <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder={t("masalanQogoz")} />
-            </div>
-            <div>
-              <Label>{t("minimalQoldiq")}</Label>
-              <Input type="number" value={minStock} onChange={(e) => setMinStock(e.target.value)} placeholder="0" />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={resetForm}>{t("cancel")}</Button>
-              <Button onClick={handleSave} disabled={createMutation.isPending}>{t("Saqlash")}</Button>
-            </div>
-          </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
@@ -249,42 +305,51 @@ export default function MaterialCardsPage() {
           <DialogHeader>
             <DialogTitle className="text-[18px] font-semibold">{t("materialniTahrirlash", "Materialni tahrirlash")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label>{t('materialKodi')}</Label>
-                <Input value={editingMaterial?.materialCode ?? ""} disabled />
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onUpdateSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>{t('materialKodi')}</Label>
+                  <Input value={editingMaterial?.materialCode ?? ""} disabled />
+                </div>
+                <FormField control={editForm.control} name="unit" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("olchovBirligi")}</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      {unitSelectItems}
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               </div>
-              <div>
-                <Label>{t("olchovBirligi")}</Label>
-                <Select value={editUnit} onValueChange={setEditUnit}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="pcs">dona</SelectItem>
-                    <SelectItem value="m">metr</SelectItem>
-                    <SelectItem value="L">litr</SelectItem>
-                  </SelectContent>
-                </Select>
+              <FormField control={editForm.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("name")}</FormLabel>
+                  <FormControl><Input placeholder={t("materialNomi")} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={editForm.control} name="category" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("category")}</FormLabel>
+                  <FormControl><Input placeholder={t("masalanQogoz")} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={editForm.control} name="minStock" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("minimalQoldiq")}</FormLabel>
+                  <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setEditingMaterial(null)}>{t("cancel")}</Button>
+                <Button type="submit" disabled={updateMutation.isPending} data-testid="btn-save-edit-material">{t("Saqlash")}</Button>
               </div>
-            </div>
-            <div>
-              <Label>{t("name")}</Label>
-              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t("materialNomi")} />
-            </div>
-            <div>
-              <Label>{t("category")}</Label>
-              <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} placeholder={t("masalanQogoz")} />
-            </div>
-            <div>
-              <Label>{t("minimalQoldiq")}</Label>
-              <Input type="number" value={editMinStock} onChange={(e) => setEditMinStock(e.target.value)} placeholder="0" />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setEditingMaterial(null)}>{t("cancel")}</Button>
-              <Button onClick={handleUpdate} disabled={updateMutation.isPending} data-testid="btn-save-edit-material">{t("Saqlash")}</Button>
-            </div>
-          </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
