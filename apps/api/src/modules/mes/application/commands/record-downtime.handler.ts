@@ -11,6 +11,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { Result, Err } from '@common/result';
 import { DowntimeEvent } from '../../domain/aggregates/downtime-event.aggregate';
 import { DrizzleDowntimeRepository } from '../../infrastructure/repositories/drizzle-downtime.repo';
+import { MesMaintenanceRepository } from '../../infrastructure/repositories/mes-maintenance.repo';
 import { IMesRepository, MES_REPO, DOWNTIME_REPO } from '../../domain/repositories/mes.repository';
 
 export class RecordDowntimeCommand {
@@ -31,6 +32,7 @@ export class RecordDowntimeHandler implements ICommandHandler<RecordDowntimeComm
     @Inject(DOWNTIME_REPO)
     private readonly downtimeRepo: DrizzleDowntimeRepository,
     @Inject(MES_REPO) private readonly mesRepo: IMesRepository,
+    private readonly maintenanceRepo: MesMaintenanceRepository,
   ) {}
 
   async execute(command: RecordDowntimeCommand): Promise<Result<DowntimeEvent>> {
@@ -60,6 +62,26 @@ export class RecordDowntimeHandler implements ICommandHandler<RecordDowntimeComm
       }
 
       this.logger.log(`Downtime event recorded: ${saveResult.data?.id}`);
+
+      // VISION 08-mes#37 (Avariya remont): an emergency/breakdown downtime auto-opens
+      // a maintenance task for the technician. Best-effort — the repo itself gates on
+      // the breakdown marker and dedups, so a failure or a non-emergency reason here
+      // must NEVER fail the (already persisted) downtime write.
+      try {
+        const wc = command.workCenterId;
+        const auto = await this.maintenanceRepo.createFromDowntime({
+          sessionId: Number(command.sessionId),
+          workCenterId: wc != null && Number.isFinite(Number(wc)) ? Number(wc) : null,
+          reasonCode: command.reasonCode,
+          reasonText: command.notes ?? null,
+        });
+        if (auto.ok && auto.data.created) {
+          this.logger.log(`Avariya remont vazifasi ochildi: task ${auto.data.taskId}`);
+        }
+      } catch (e) {
+        this.logger.warn(`Avariya remont auto-open o'tkazib yuborildi (non-fatal): ${String(e)}`);
+      }
+
       return { ok: true, data: saveResult.data };
   }
 }
