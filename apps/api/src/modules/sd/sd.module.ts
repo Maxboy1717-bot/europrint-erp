@@ -46,6 +46,7 @@ import { SALES_ORDER_REPO } from './domain/repositories/i-sales-order.repo';
 import { DealWonListener } from './infrastructure/event-handlers/deal-won.listener';
 import { PaymentReceivedListener } from './infrastructure/event-handlers/payment-received.listener';
 import { AdvanceApprovedFanoutListener } from './infrastructure/event-handlers/advance-approved-fanout.listener';
+import { PpCancelledSdListener } from './infrastructure/event-handlers/pp-cancelled-sd.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { TashkentTimeService } from '@common/time';
 import { SD_ORDERS_REPO } from './orders/i-sd-orders.repo';
@@ -97,7 +98,12 @@ const queryHandlers = [
   GetInvoiceHandler,
 ];
 
-const eventListeners = [DealWonListener, PaymentReceivedListener, AdvanceApprovedFanoutListener];
+const eventListeners = [
+  DealWonListener,
+  PaymentReceivedListener,
+  AdvanceApprovedFanoutListener,
+  PpCancelledSdListener, // PP→SD: production order cancelled -> sales order on_hold
+];
 
 const repositories = [
   {
