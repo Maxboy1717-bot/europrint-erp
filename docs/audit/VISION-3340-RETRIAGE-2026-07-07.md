@@ -4,6 +4,8 @@
 
 **Status as of this writing:** the 65 `fixable-now` items below (minus 6 flagged for explicit owner/schema approval — see the caveats inline: #21 GL cost_center_id, #23 new pp_reason_codes/pp_shift_plans tables, #31 new crm_loss_reasons table, #32 crm_deals.sales_order_id type change, #34 new crm_stage_history table, #38 IoT idempotency columns) were dispatched as 43 clustered work-units to a second workflow (`wf_1eee15f8-be1`, "vision-3340-fix-batch1"). Each cluster's outcome (implemented / partially implemented / found-already-resolved / blocked) will be recorded in `MASTER-STATUS-BOARD-2026-07-06.md` once reviewed, tested, and committed by the main agent — this document is the frozen triage snapshot, not a live status tracker.
 
+**2026-07-08 update:** fix-batch1 closed out at 15/43 units confirmed complete (see `MASTER-STATUS-BOARD-2026-07-06.md`'s "VISION-3340 batch1 fix-workflow — CLOSED OUT" section for the full commit list — items #1-8,10,11,14,18,19,22,25,27 done). The remaining 43 fixable-now items (65 − 6 excluded − 16 done) were re-dispatched as `wf_91c2396c-5db` ("vision-3340-fix-batch2", 39 clustered work-units) — outcome to be recorded on the board once reviewed/tested/committed.
+
 Source: `wf_008e68d3-fb6/journal.jsonl`, 20 area-level `result` records, 365 total distinct root causes.
 
 ---
