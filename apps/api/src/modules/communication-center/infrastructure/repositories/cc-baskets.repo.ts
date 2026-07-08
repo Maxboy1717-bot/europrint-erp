@@ -32,7 +32,7 @@ export class CcBasketsRepository {
    *  - inbox/pending  → basket_owner_user_id = userId
    *  - outbox         → sender_user_id      = userId  (yuboruvchi ko'radi)
    */
-  async listBasket(userId: number, basket: BasketState): Promise<Result<BasketCardRow[]>> {
+  async listBasket(userId: number, basket: BasketState, limit = 50, offset = 0): Promise<Result<BasketCardRow[]>> {
     try {
       const ownerCondition = basket === 'outbox'
         ? sql`d.sender_user_id = ${userId}`
@@ -68,7 +68,7 @@ export class CcBasketsRepository {
           CASE d.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END,
           d.is_inbox_overdue DESC,
           d.basket_entered_at ASC
-        LIMIT 200
+        LIMIT ${limit} OFFSET ${offset}
       `);
       return Ok(castTo<BasketCardRow[]>(rows.rows));
     } catch (e) {
