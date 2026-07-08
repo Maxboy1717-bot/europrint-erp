@@ -252,7 +252,9 @@ export class KanbanBoardsService {
         title: String(body.title || 'Yangi vazifa'),
         description: body.description != null ? String(body.description) : null,
         priority: String(body.priority || 'normal'),
-        due_date: rawDue != null ? String(rawDue) : null,
+        // Normalize ''→null (mirrors updateCard's str() + createCardFlat): an empty-string
+        // due_date breaks the report ::date casts (''::date throws). Keep it out of the DB.
+        due_date: rawDue != null && rawDue !== '' ? String(rawDue) : null,
         owner_user_id: ownerUserId,
         assigner_user_id: assignerUserId,
       });

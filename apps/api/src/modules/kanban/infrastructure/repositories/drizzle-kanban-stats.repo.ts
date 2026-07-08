@@ -34,7 +34,7 @@ export class DrizzleKanbanStatsRepository {
             COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NULL)                      AS pending_tasks,
             COUNT(*) FILTER (WHERE deleted_at IS NULL AND accepted_at IS NOT NULL AND completed_at IS NULL) AS accepted_not_completed,
             COUNT(*) FILTER (WHERE deleted_at IS NULL AND source = 'telegram')                       AS telegram_tasks,
-            COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date::date < CURRENT_DATE AND completed_at IS NULL) AS overdue_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(due_date FROM 1 FOR 10)::date < CURRENT_DATE AND completed_at IS NULL) AS overdue_tasks,
             ROUND(
               CASE WHEN COUNT(*) FILTER (WHERE deleted_at IS NULL) = 0 THEN 0
                    ELSE COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)::numeric
@@ -204,7 +204,7 @@ export class DrizzleKanbanStatsRepository {
         WHERE kc.deleted_at IS NULL
           AND kc.completed_at IS NULL
           AND (
-            (kc.due_date::date < CURRENT_DATE)
+            (kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(kc.due_date FROM 1 FOR 10)::date < CURRENT_DATE)
             OR (LOWER(kco.name) LIKE '%kiruvchi%' AND kc.created_at < NOW() - INTERVAL '24 hours')
             OR (LOWER(kco.name) LIKE '%inbox%'    AND kc.created_at < NOW() - INTERVAL '24 hours')
           )
@@ -273,7 +273,7 @@ export class DrizzleKanbanStatsRepository {
         FROM kanban_cards kc
         LEFT JOIN users u ON u.id = kc.owner_user_id
         WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date::date < CURRENT_DATE
+          AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(kc.due_date FROM 1 FOR 10)::date < CURRENT_DATE
         ORDER BY kc.due_date ASC
         LIMIT 100
       `);
@@ -301,7 +301,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT
           COUNT(*)                                                                AS total,
           COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
+          COUNT(*) FILTER (WHERE due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(due_date FROM 1 FOR 10)::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
           COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')        AS last_7_days,
           COUNT(*) FILTER (WHERE completed_at >= NOW() - INTERVAL '7 days')      AS completed_7_days
         FROM kanban_cards WHERE deleted_at IS NULL
@@ -328,7 +328,7 @@ export class DrizzleKanbanStatsRepository {
         LEFT JOIN users u ON u.id = kc.owner_user_id
         LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         WHERE kc.deleted_at IS NULL AND kc.completed_at IS NULL
-          AND kc.due_date::date < CURRENT_DATE
+          AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(kc.due_date FROM 1 FOR 10)::date < CURRENT_DATE
         ORDER BY kc.due_date ASC
         LIMIT 200
       `);
@@ -346,7 +346,7 @@ export class DrizzleKanbanStatsRepository {
         SELECT
           COUNT(*)                                                                AS total,
           COUNT(*) FILTER (WHERE completed_at IS NOT NULL)                       AS completed,
-          COUNT(*) FILTER (WHERE due_date::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
+          COUNT(*) FILTER (WHERE due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(due_date FROM 1 FOR 10)::date < CURRENT_DATE AND completed_at IS NULL) AS overdue,
           COUNT(DISTINCT owner_user_id) FILTER (WHERE owner_user_id IS NOT NULL) AS active_users
         FROM kanban_cards WHERE deleted_at IS NULL
       `);
