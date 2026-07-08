@@ -228,23 +228,32 @@ export interface Stage {
   color: string | null;
 }
 
+// Stage keys below MUST match the real values persisted by the backend:
+//  - Leads:  crm_leads.status_id (coarse Bitrix CHECK state) = NEW/IN_PROCESS/CONVERTED/JUNK
+//            (see apps/api/src/modules/crm/leads/lead-status-id.util.ts). ANALYSIS/FINAL/WON/
+//            CONVERTED/LOST are finer lifecycle stages persisted verbatim in status_description
+//            (crm_leads.statusId, as exposed to the FE) when the card is dragged into that column.
+//  - Deals:  crm_deals.status (DealStatus VO) = qualification/proposal/negotiation/won/lost
+//            (see apps/api/src/modules/crm/domain/value-objects/deal-status.vo.ts).
+// VISION-3340 #28: previous keys (IN_PROGRESS, C0:NEW, ...) were stale Bitrix-style values that
+// never matched what gets written to the DB, so real rows fell into no Kanban column at all.
 export const LEAD_STAGES: Stage[] = [
   { id: 1, stageId: "NEW",         name: "Ishlov berilmagan", sort: 100, color: "#4CAF50" },
-  { id: 2, stageId: "IN_PROGRESS", name: "Ishda",             sort: 200, color: "#2196F3" },
+  { id: 2, stageId: "IN_PROCESS",  name: "Ishda",             sort: 200, color: "#2196F3" },
   { id: 3, stageId: "ANALYSIS",    name: "Tahlil qilish",     sort: 300, color: "#FF9800" },
   { id: 4, stageId: "FINAL",       name: "Yakunlash",         sort: 400, color: "#9C27B0" },
   { id: 5, stageId: "CONVERTED",   name: "Konvertatsiya",     sort: 500, color: "#22C55E" },
   { id: 6, stageId: "WON",         name: "Yutildi",           sort: 600, color: "#16A34A" },
   { id: 7, stageId: "LOST",        name: tLabel('crm.crm-.yoqotildi', "Yo'qotildi"),        sort: 700, color: "#EF4444" },
+  { id: 8, stageId: "JUNK",        name: tLabel('crm.crm-.nomaqbulLid', "Nomaqbul lid"),     sort: 800, color: "#6B7280" },
 ];
 
 export const DEAL_STAGES: Stage[] = [
-  { id: 1, stageId: "C0:NEW", name: tLabel('crm.crm-.yangi', "Yangi"), sort: 100, color: "#4CAF50" },
-  { id: 2, stageId: "C0:IN_PROGRESS", name: "Ishda", sort: 200, color: "#2196F3" },
-  { id: 3, stageId: "C0:PAYMENT_PENDING", name: tLabel('crm.crm-.tolovKutilmoqda', "To'lov kutilmoqda"), sort: 300, color: "#FF9800" },
-  { id: 4, stageId: "C0:ORDER", name: tLabel('crm.crm-.buyurtma', "Buyurtma"), sort: 400, color: "#9C27B0" },
-  { id: 5, stageId: "C0:DELIVERY_PENDING", name: tLabel('crm.crm-.yetkazishKutilmoqda', "Yetkazish kutilmoqda"), sort: 500, color: "#00BCD4" },
-  { id: 6, stageId: "C0:DELIVERY", name: tLabel('crm.crm-.yetkazish', "Yetkazish"), sort: 600, color: "#8BC34A" },
+  { id: 1, stageId: "qualification", name: tLabel('crm.crm-.malakalashtirish', "Malakalashtirish"), sort: 100, color: "#4CAF50" },
+  { id: 2, stageId: "proposal",      name: tLabel('crm.crm-.taklif', "Taklif"),                      sort: 200, color: "#2196F3" },
+  { id: 3, stageId: "negotiation",   name: tLabel('crm.crm-.muzokara', "Muzokara"),                  sort: 300, color: "#FF9800" },
+  { id: 4, stageId: "won",           name: tLabel('crm.crm-.yutildi', "Yutildi"),                    sort: 400, color: "#22C55E" },
+  { id: 5, stageId: "lost",          name: tLabel('crm.crm-.yoqotildi', "Yo'qotildi"),                sort: 500, color: "#EF4444" },
 ];
 
 export const PROPOSAL_STAGES: Stage[] = [

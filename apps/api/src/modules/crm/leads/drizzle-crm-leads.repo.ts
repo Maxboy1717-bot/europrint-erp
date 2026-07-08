@@ -56,9 +56,9 @@ function mapLeadRow(r: Row, scoringService: CrmLeadScoringService): Row {
     // Live crm_leads columns: status_id/status_description, source_id, assigned_to,
     // date_create, comments (NOT status/source/manager_id/created_at/notes/customer_id).
     // statusId is what the kanban board groups cards by → expose the FINE stage from
-    // status_description (= LEAD_STAGES.stageId domain: NEW/IN_PROGRESS/ANALYSIS/FINAL/
-    // CONVERTED/WON/LOST). status_id is the coarse Bitrix CHECK state {NEW,IN_PROCESS,
-    // CONVERTED,JUNK} and can't represent 4 of the 7 columns, so it's only the fallback
+    // status_description (= LEAD_STAGES.stageId domain: NEW/IN_PROCESS/ANALYSIS/FINAL/
+    // CONVERTED/WON/LOST/JUNK). status_id is the coarse Bitrix CHECK state {NEW,IN_PROCESS,
+    // CONVERTED,JUNK} and can't represent all 8 columns, so it's only the fallback
     // for legacy rows that have no description.
     statusId:     r['status_description'] ? String(r['status_description']).toUpperCase() : (r['status_id'] ? String(r['status_id']).toUpperCase() : 'NEW'),
     // Lifecycle code (new/qualified/proposal/...) for the FE label; statusId stays the

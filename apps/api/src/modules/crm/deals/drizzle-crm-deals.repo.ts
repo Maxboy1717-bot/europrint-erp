@@ -49,7 +49,11 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
   async create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Row>> {
     try {
       const title               = String(dto.title ?? '');
-      const stageId             = String(dto.stageId ?? dto.stage_id ?? 'C0:NEW');
+      // VISION-3340 #28: default stage was the stale Bitrix-style 'C0:NEW', which never
+      // matched a DEAL_STAGES column (real values: qualification/proposal/negotiation/won/
+      // lost — see deal-status.vo.ts). 'qualification' is the same default the DDD
+      // CreateDealCommand path uses (create-deal.handler.ts).
+      const stageId             = String(dto.stageId ?? dto.stage_id ?? 'qualification');
       const companyId           = Number(dto.companyId ?? dto.company_id) || null;
       const opportunity         = String(dto.opportunity ?? dto.amount ?? '0');
       const assignedById        = Number(dto.assignedById ?? dto.assigned_by_id ?? dto.assignedTo ?? createdBy) || null;

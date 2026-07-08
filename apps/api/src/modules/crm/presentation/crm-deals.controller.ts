@@ -206,7 +206,9 @@ export class CrmDealsController {
   const dto: Record<string, unknown> = {
    title:       parsed.customerName ?? parsed.title ?? 'Yangi bitim',
    opportunity: parsed.amount ?? parsed.opportunity ?? '0',
-   stage_id:    parsed.status === 'new' || !parsed.status ? 'C0:NEW' : String(parsed.status),
+   // VISION-3340 #28: 'C0:NEW' was a stale Bitrix-style stage key that never matched a
+   // DEAL_STAGES column; 'qualification' is the real default (deal-status.vo.ts).
+   stage_id:    parsed.status === 'new' || !parsed.status ? 'qualification' : String(parsed.status),
    companyId:   parsed.companyId,
    leadId:      parsed.leadId ?? null,
    assignedTo:  parsed.assignedTo ?? null,
