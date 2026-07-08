@@ -338,6 +338,13 @@ export class PosMovementService {
         currency:             movementCurrency,
         exchangeRate:         movementExchangeRate,
         notes:                dto.notes,
+        // KIRIM qabul-akti sarlavhasi (§19 #51/#33): yetkazib beruvchi + hujjat raqami/sanasi.
+        // FE (PosMovementKirim) yuboradi, DTO qabul qiladi, ustunlar mavjud, lekin insert
+        // tashlab yuborardi — harakat kartasi + supplier filtri o'qiydi (o'lik). Endi yoziladi
+        // (yo'q bo'lsa NULL — fabrikatsiya YO'Q, Q-40). date ustuni uchun YYYY-MM-DD.
+        supplierName:         dto.supplierName ?? null,
+        documentNumber:       dto.documentNumber ?? null,
+        documentDate:         dto.documentDate ? String(dto.documentDate).slice(0, 10) : null,
         // VISION-3340 #60: ixtiyoriy foto-dalil URL → photo_evidence_url. Bo'lmasa NULL
         // (fabrikatsiya YO'Q, Q-40). idempotencyKey bilan bir xil ?? null idiom.
         photoEvidenceUrl:     dto.photoEvidenceUrl ?? null,

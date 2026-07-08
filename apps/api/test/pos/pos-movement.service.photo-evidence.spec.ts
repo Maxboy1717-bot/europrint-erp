@@ -32,7 +32,10 @@ import type { IPosMovementRepository } from '../../src/modules/pos/domain/reposi
 import type { CreateMovementDto } from '../../src/modules/pos/dto/movement.dto';
 
 /** Only the fields this spec asserts on; the real insert row has many more. */
-type CapturedInsert = { photoEvidenceUrl?: string | null; notes?: string | null };
+type CapturedInsert = {
+  photoEvidenceUrl?: string | null; notes?: string | null;
+  supplierName?: string | null; documentNumber?: string | null; documentDate?: string | null;
+};
 
 function makeRepoMock() {
   return {
@@ -91,5 +94,42 @@ describe('PosMovementService.createMovement() — VISION-3340 #60 photo_evidence
     expect(repo.insertMovement).toHaveBeenCalledTimes(1);
     const insertArg = repo.insertMovement.mock.calls[0][0] as CapturedInsert;
     expect(insertArg.photoEvidenceUrl).toBeNull();
+  });
+});
+
+describe('PosMovementService.createMovement() — KIRIM receipt header (supplier/document)', () => {
+  let repo: ReturnType<typeof makeRepoMock>;
+  let svc: PosMovementService;
+
+  beforeEach(() => {
+    repo = makeRepoMock();
+    svc = makeService(repo);
+  });
+
+  it('threads supplierName + documentNumber + documentDate (YYYY-MM-DD) into the insert (were dropped)', async () => {
+    const r = await svc.createMovement(
+      {
+        movementTypeCode: 'INTERNAL_TRANSFER',
+        supplierName: 'Test Yetkazuvchi AJ', documentNumber: 'C-1', documentDate: '2026-07-08T00:00:00Z',
+      } as unknown as CreateMovementDto,
+      1,
+    );
+    expect(r.ok).toBe(true);
+    const insertArg = repo.insertMovement.mock.calls[0][0] as CapturedInsert;
+    expect(insertArg.supplierName).toBe('Test Yetkazuvchi AJ');
+    expect(insertArg.documentNumber).toBe('C-1');
+    expect(insertArg.documentDate).toBe('2026-07-08'); // date column -> sliced to YYYY-MM-DD
+  });
+
+  it('inserts NULL for the header fields when none are provided (no fabrication)', async () => {
+    const r = await svc.createMovement(
+      { movementTypeCode: 'INTERNAL_TRANSFER' } as unknown as CreateMovementDto,
+      1,
+    );
+    expect(r.ok).toBe(true);
+    const insertArg = repo.insertMovement.mock.calls[0][0] as CapturedInsert;
+    expect(insertArg.supplierName).toBeNull();
+    expect(insertArg.documentNumber).toBeNull();
+    expect(insertArg.documentDate).toBeNull();
   });
 });
