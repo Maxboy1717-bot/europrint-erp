@@ -212,8 +212,34 @@ export class CcOrgResolverService {
     return Ok(id);
   }
 
-  // ── ichki: faol delegatsiya tekshiruvi ───────────────────────────────
+  // CC #33: delegatsiya zanjiri MAKS 3 daraja chuqur (A→B→C→D — 3 delegatsiya hop);
+  // undan chuqur zanjir kesiladi. Cheksiz sikl (A→B→A) `visited` to'plami bilan
+  // uziladi — hal qilish har doim tugaydi.
+  private static readonly MAX_DELEGATION_DEPTH = 3;
+
+  // ── ichki: faol delegatsiya zanjirini kuzatish (MAKS 3 hop, siklsiz) ─────
   private async checkDelegation(userId: number): Promise<number | null> {
+    const visited = new Set<number>([userId]);
+    let current = userId;
+    let resolved: number | null = null;
+    for (let hop = 0; hop < CcOrgResolverService.MAX_DELEGATION_DEPTH; hop++) {
+      const next = await this._activeDelegateOf(current);
+      if (next === null) break;               // bu foydalanuvchida faol delegatsiya yo'q — tugadi
+      if (visited.has(next)) {                // sikl aniqlandi — to'xtatiladi
+        this.logger.warn(
+          `checkDelegation: delegatsiya sikli aniqlandi (foydalanuvchi ${next}, boshi ${userId}) — to'xtatildi`,
+        );
+        break;
+      }
+      visited.add(next);
+      resolved = next;
+      current = next;
+    }
+    return resolved;
+  }
+
+  /** Bitta hop: userId ning joriy faol delegatini qaytaradi (yo'q bo'lsa null). */
+  private async _activeDelegateOf(userId: number): Promise<number | null> {
     const r = await runQuery<{ to_user_id: number }>(sql`
       SELECT to_user_id
       FROM cc_delegations
