@@ -49,27 +49,65 @@
  *   Divide-by-zero is guarded everywhere: a missing denominator yields 0, never
  *   NaN and never 100. An empty `mes_sessions` table therefore returns [] (no
  *   work centers), and a work center with zero planned time scores 0.
+ *
+ *   VISION-3340 #46 — 4-level OEE cascade (groupBy):
+ *     machine (default) — per work center from `mes_sessions` (legacy behavior,
+ *                          output shape unchanged; `groupBy`/`groupKey` fields added).
+ *     shift             — per `production_sessions.shift_id`, read through the
+ *                          canonical `mes_production_sessions` VIEW binding.
+ *                          Rows with NULL shift_id are skipped, so this level
+ *                          returns [] until shift_id data is populated
+ *                          (owner-DATA gap, expected — not a bug).
+ *     shop              — per `work_centers.org_department_id` (T12-04 KARTA link),
+ *                          resolved from `mes_sessions.work_center_id`. Work
+ *                          centers with NULL org_department_id are skipped, so
+ *                          this level returns [] until the owner links work
+ *                          centers to org KARTAs (owner-DATA gap, expected).
+ *     brigade           — BLOCKED: neither `production_sessions` nor
+ *                          `mes_sessions` (nor any related MES table) has a
+ *                          crew/brigade column (`work_centers.min/max_crew_size`
+ *                          are sizing params, not a grouping key). Returns
+ *                          Err(NOT_IMPLEMENTED) until the schema gains one.
  */
 
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { db, mes_sessions, downtime_events } from '@shared/db';
+import { z } from 'zod';
+import { db, mes_sessions, downtime_events, mes_production_sessions, ppWorkCenters } from '@shared/db';
 import { and, gte, lte } from 'drizzle-orm';
-import { Result, Ok } from '@common/types/result.type';
+import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { GetOeeQuery } from './get-oee.query';
 
 import { MS_PER_MINUTE } from '@common/constants/app.constants';
 
 const PERCENT = 100;
 
+/** VISION-3340 #46: accepted cascade levels. Default = legacy machine level. */
+const OeeGroupBySchema = z.enum(['machine', 'shift', 'brigade', 'shop']).default('machine');
+
 /** runTime, plannedTime, downtime in minutes; counts are whole sessions. */
-interface WorkCenterAccumulator {
+interface OeeAccumulator {
   plannedTime: number;
   plannedDowntime: number;
   unplannedDowntime: number;
   totalSessions: number;
   completedSessions: number;
   defectiveSessions: number;
+}
+
+/** Normalized per-session input consumed by the shared accumulator. */
+interface SessionSample {
+  /** Key used to look up this session's downtime rows (downtime_events.session_id). */
+  sessionKey: string;
+  startMs: number | null;
+  endMs: number | null;
+  isCompleted: boolean;
+  isDefective: boolean;
+}
+
+interface DowntimeMaps {
+  planned: Map<string, number>;
+  unplanned: Map<string, number>;
 }
 
 @Injectable()
@@ -90,6 +128,49 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
   }
 
   async execute(query: GetOeeQuery): Promise<Result<object[]>> {
+    const parsedGroupBy = OeeGroupBySchema.safeParse(query.filters.groupBy);
+    if (!parsedGroupBy.success) {
+      return Err(AppErr(
+        'VALIDATION',
+        `groupBy noto'g'ri: '${String(query.filters.groupBy)}'. Ruxsat etilgan: machine | shift | brigade | shop`,
+      ));
+    }
+    const groupBy = parsedGroupBy.data;
+
+    if (groupBy === 'brigade') {
+      // Blocked-on-missing-column: no crew/brigade grouping key exists on
+      // production_sessions / mes_sessions (verified 2026-07-08 — only
+      // work_centers.min_crew_size/max_crew_size sizing params exist). Adding
+      // the column is DDL = owner decision (Q-35); until then this level is
+      // honestly unavailable rather than silently empty.
+      return Err(AppErr(
+        'NOT_IMPLEMENTED',
+        "OEE brigada darajasi hali mavjud emas: production_sessions jadvalida crew/brigada ustuni yo'q (schema gap — egasi qarori). machine | shift | shop ishlating.",
+      ));
+    }
+
+    const downtime = await this.loadDowntimeMaps();
+
+    const oeeResults = groupBy === 'shift'
+      ? await this.aggregateByShift(query, downtime)
+      : await this.aggregateMesSessions(query, groupBy, downtime);
+
+    this.logger.debug(`OEE calculated for ${oeeResults.length} ${groupBy} groups`);
+
+    return Ok(oeeResults);
+  }
+
+  /**
+   * machine (legacy, default) and shop levels — both aggregate `mes_sessions`.
+   *   machine: key = workCenterId filter override | session.work_center_id | 'unknown'.
+   *   shop:    key = work_centers.org_department_id resolved via the session's
+   *            work center; unresolved sessions are skipped (owner-DATA gap).
+   */
+  private async aggregateMesSessions(
+    query: GetOeeQuery,
+    groupBy: 'machine' | 'shop',
+    downtime: DowntimeMaps,
+  ): Promise<object[]> {
     const conditions = [];
 
     if (query.filters.from) {
@@ -105,57 +186,121 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
     const sessions = await db.select().from(mes_sessions).where(where);
     const sessionRows = Array.isArray(sessions) ? sessions : [];
 
-    // Real downtime (setup / changeover / stoppage) keyed by session id. Pulled
-    // once and indexed, split by is_planned (SB0430) so Availability excludes
-    // planned stoppages from the denominator and only unplanned loss from the
-    // numerator — instead of pretending runTime == plannedTime OR conflating
-    // planned + unplanned into one undifferentiated "downtime" bucket.
-    const downtimeRows = await db.select().from(downtime_events);
-    const plannedDowntimeBySession = new Map<string, number>();
-    const unplannedDowntimeBySession = new Map<string, number>();
-    for (const dt of Array.isArray(downtimeRows) ? downtimeRows : []) {
-      const sessionKey = dt.sessionId ?? '';
-      if (!sessionKey) continue;
-      const minutes = this.downtimeMinutes(dt);
-      const bucket = dt.isPlanned === true ? plannedDowntimeBySession : unplannedDowntimeBySession;
-      bucket.set(sessionKey, (bucket.get(sessionKey) ?? 0) + minutes);
-    }
+    const shopByWorkCenter = groupBy === 'shop' ? await this.loadWorkCenterShopMap() : null;
 
-    const byWorkCenter = new Map<string, WorkCenterAccumulator>();
+    const byGroup = new Map<string, OeeAccumulator>();
 
     for (const session of sessionRows) {
-      const workCenterId = query.filters.workCenterId || session.work_center_id || 'unknown';
-
-      let acc = byWorkCenter.get(workCenterId);
-      if (!acc) {
-        acc = { plannedTime: 0, plannedDowntime: 0, unplannedDowntime: 0, totalSessions: 0, completedSessions: 0, defectiveSessions: 0 };
-        byWorkCenter.set(workCenterId, acc);
+      let key: string | null;
+      if (shopByWorkCenter) {
+        const workCenterId = session.work_center_id;
+        key = workCenterId ? (shopByWorkCenter.get(String(workCenterId)) ?? null) : null;
+        // Owner-DATA gap: work center not linked to an org KARTA yet → no shop bucket.
+        if (key === null) continue;
+      } else {
+        key = query.filters.workCenterId || session.work_center_id || 'unknown';
       }
 
-      const startTime = new Date(session.started_at).getTime();
-      const endTime = session.completed_at ? new Date(session.completed_at).getTime() : Date.now();
-      const totalMinutes = Math.max(0, (endTime - startTime) / MS_PER_MINUTE);
-      const plannedDowntimeMin = Math.min(totalMinutes, plannedDowntimeBySession.get(session.id) ?? 0);
-      const unplannedDowntimeMin = Math.min(
-        Math.max(0, totalMinutes - plannedDowntimeMin),
-        unplannedDowntimeBySession.get(session.id) ?? 0,
-      );
-
-      acc.plannedTime += Math.max(0, totalMinutes - plannedDowntimeMin);
-      acc.plannedDowntime += plannedDowntimeMin;
-      acc.unplannedDowntime += unplannedDowntimeMin;
-      acc.totalSessions += 1;
-
-      if (session.status === 'completed') acc.completedSessions += 1;
-
       const defects = session.defect_qty ?? 0;
-      const isDefective = session.quality_passed === false || defects > 0;
-      if (isDefective) acc.defectiveSessions += 1;
+      this.accumulateSession(byGroup, key, {
+        sessionKey: session.id,
+        startMs: new Date(session.started_at).getTime(),
+        endMs: session.completed_at ? new Date(session.completed_at).getTime() : null,
+        isCompleted: session.status === 'completed',
+        isDefective: session.quality_passed === false || defects > 0,
+      }, downtime);
     }
+
+    return this.summarize(byGroup, groupBy, query.filters);
+  }
+
+  /**
+   * shift level — aggregates the canonical `production_sessions` world through
+   * the `mes_production_sessions` VIEW binding (the only session source that
+   * carries shift_id). Rows with NULL shift_id are skipped → [] until the
+   * owner/MES actually populates shift data (expected, not a bug).
+   */
+  private async aggregateByShift(query: GetOeeQuery, downtime: DowntimeMaps): Promise<object[]> {
+    const conditions = [];
+
+    if (query.filters.from) {
+      conditions.push(gte(mes_production_sessions.startTime, query.filters.from));
+    }
+
+    if (query.filters.to) {
+      conditions.push(lte(mes_production_sessions.startTime, query.filters.to));
+    }
+
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const sessions = await db.select().from(mes_production_sessions).where(where);
+    const sessionRows = Array.isArray(sessions) ? sessions : [];
+
+    const byShift = new Map<string, OeeAccumulator>();
+
+    for (const session of sessionRows) {
+      if (session.shiftId === null || session.shiftId === undefined) continue; // owner-DATA gap
+
+      this.accumulateSession(byShift, String(session.shiftId), {
+        sessionKey: String(session.id),
+        startMs: session.startTime ? new Date(session.startTime).getTime() : null,
+        endMs: session.endTime ? new Date(session.endTime).getTime() : null,
+        isCompleted: session.status === 'completed',
+        isDefective: Number(session.defectQty ?? 0) > 0,
+      }, downtime);
+    }
+
+    return this.summarize(byShift, 'shift', query.filters);
+  }
+
+  /**
+   * Shared accumulator step (all cascade levels) — same minute math the machine
+   * level has always used: span minus planned downtime = planned production
+   * time; unplanned downtime capped by what remains (SB0430 invariants hold at
+   * every grouping level).
+   */
+  private accumulateSession(
+    map: Map<string, OeeAccumulator>,
+    key: string,
+    sample: SessionSample,
+    downtime: DowntimeMaps,
+  ): void {
+    let acc = map.get(key);
+    if (!acc) {
+      acc = { plannedTime: 0, plannedDowntime: 0, unplannedDowntime: 0, totalSessions: 0, completedSessions: 0, defectiveSessions: 0 };
+      map.set(key, acc);
+    }
+
+    const endMs = sample.endMs ?? Date.now();
+    const totalMinutes = sample.startMs === null ? 0 : Math.max(0, (endMs - sample.startMs) / MS_PER_MINUTE);
+    const plannedDowntimeMin = Math.min(totalMinutes, downtime.planned.get(sample.sessionKey) ?? 0);
+    const unplannedDowntimeMin = Math.min(
+      Math.max(0, totalMinutes - plannedDowntimeMin),
+      downtime.unplanned.get(sample.sessionKey) ?? 0,
+    );
+
+    acc.plannedTime += Math.max(0, totalMinutes - plannedDowntimeMin);
+    acc.plannedDowntime += plannedDowntimeMin;
+    acc.unplannedDowntime += unplannedDowntimeMin;
+    acc.totalSessions += 1;
+
+    if (sample.isCompleted) acc.completedSessions += 1;
+    if (sample.isDefective) acc.defectiveSessions += 1;
+  }
+
+  /** Shared A×P×Q roll-up for every cascade level — single home for the OEE math. */
+  private summarize(
+    map: Map<string, OeeAccumulator>,
+    groupBy: 'machine' | 'shift' | 'shop',
+    filters: { from?: Date; to?: Date },
+  ): object[] {
+    // machine keeps the legacy `workCenterId` field name (live FE/dashboard
+    // contract — Q-39 no-regress); shift/shop get dimension-true field names.
+    const keyField = groupBy === 'machine' ? 'workCenterId' : groupBy === 'shift' ? 'shiftId' : 'orgDepartmentId';
 
     const oeeResults = [];
 
-    for (const [workCenterId, acc] of byWorkCenter.entries()) {
+    for (const [groupKey, acc] of map.entries()) {
       const runTime = Math.max(0, acc.plannedTime - acc.unplannedDowntime);
 
       const availability = this.ratio(runTime, acc.plannedTime);
@@ -166,7 +311,9 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
       const oee = availability * performance * quality;
 
       oeeResults.push({
-        workCenterId,
+        [keyField]: groupKey,
+        groupBy,
+        groupKey,
         availability: this.toPercent(availability),
         performance: this.toPercent(performance),
         quality: this.toPercent(quality),
@@ -176,14 +323,51 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
         plannedDowntimeMinutes: Math.round(acc.plannedDowntime),
         downtimeMinutes: Math.round(acc.unplannedDowntime),
         runMinutes: Math.round(runTime),
-        from: query.filters.from,
-        to: query.filters.to,
+        from: filters.from,
+        to: filters.to,
       });
     }
 
-    this.logger.debug(`OEE calculated for ${oeeResults.length} work centers`);
+    return oeeResults;
+  }
 
-    return Ok(oeeResults);
+  /**
+   * Real downtime (setup / changeover / stoppage) keyed by session id. Pulled
+   * once and indexed, split by is_planned (SB0430) so Availability excludes
+   * planned stoppages from the denominator and only unplanned loss from the
+   * numerator — instead of pretending runTime == plannedTime OR conflating
+   * planned + unplanned into one undifferentiated "downtime" bucket.
+   */
+  private async loadDowntimeMaps(): Promise<DowntimeMaps> {
+    const downtimeRows = await db.select().from(downtime_events);
+    const planned = new Map<string, number>();
+    const unplanned = new Map<string, number>();
+    for (const dt of Array.isArray(downtimeRows) ? downtimeRows : []) {
+      const sessionKey = dt.sessionId ?? '';
+      if (!sessionKey) continue;
+      const minutes = this.downtimeMinutes(dt);
+      const bucket = dt.isPlanned === true ? planned : unplanned;
+      bucket.set(sessionKey, (bucket.get(sessionKey) ?? 0) + minutes);
+    }
+    return { planned, unplanned };
+  }
+
+  /**
+   * shop level lookup: work_centers.id → org_department_id (T12-04 KARTA FK).
+   * Keys are stringified so the uuid-typed mes_sessions.work_center_id binding
+   * and the serial-int ppWorkCenters binding (same physical table, two Drizzle
+   * bindings) compare consistently. NULL org_department_id → omitted.
+   */
+  private async loadWorkCenterShopMap(): Promise<Map<string, string>> {
+    const rows = await db
+      .select({ id: ppWorkCenters.id, orgDepartmentId: ppWorkCenters.orgDepartmentId })
+      .from(ppWorkCenters);
+    const map = new Map<string, string>();
+    for (const row of Array.isArray(rows) ? rows : []) {
+      if (row.orgDepartmentId === null || row.orgDepartmentId === undefined) continue;
+      map.set(String(row.id), String(row.orgDepartmentId));
+    }
+    return map;
   }
 
   /** Resolve a downtime event's duration in minutes from the real columns. */
