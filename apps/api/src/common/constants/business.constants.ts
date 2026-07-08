@@ -443,3 +443,64 @@ export const ADAPTATION_MILESTONE_STEPS = [
  * bog'lanmagan) yozuvlar bu chegaraga kirmaydi.
  */
 export const MENTORS_PER_CARD_CAP = 2;
+
+// ---------------------------------------------------------------------------
+// IoT — Anomaly detection severity / MES auto-pause (VISION-3340 #20)
+// ---------------------------------------------------------------------------
+
+/**
+ * AnomalyDetectedHandler severity escalation: when the measured sensor value
+ * is at/above this ratio over the sensor's own configured `iot_sensors
+ * .max_threshold` (1.5 = value is >= 50% over the limit), the anomaly is
+ * classified 'critical' (iot_alerts.severity) instead of the default 'high',
+ * and the handler additionally dispatches MES's PauseSessionCommand to pause
+ * the related production_sessions row (fail-safe: an off-spec/unsafe machine
+ * should not keep running unattended). No threshold configured on the sensor
+ * (or threshold <= 0) => ratio cannot be computed => stays 'high', no auto-pause
+ * (Q-40 — never fabricate a severity without real threshold data).
+ */
+export const IOT_ANOMALY_CRITICAL_THRESHOLD_RATIO = 1.5;
+
+// ---------------------------------------------------------------------------
+// QC — Final inspection sign-off razryad gate (VISION-3340 #37)
+// ---------------------------------------------------------------------------
+
+/**
+ * `qc_inspections.reference_type` value that marks an inspection as a FINAL
+ * QC sign-off (as opposed to `'batch'` / `'order'` / `'production_order'` —
+ * interim/in-process checks). SubmitInspectionHandler gates on this literal.
+ * `reference_type` is an unconstrained TEXT column (live DB verified), so no
+ * migration is required to introduce this new value — upstream creators can
+ * start stamping it whenever the 'final QC' workflow needs it.
+ */
+export const QC_FINAL_INSPECTION_REFERENCE_TYPE = 'final';
+
+/**
+ * Minimum `razryad_levels.level` (1..6, seeded scale) the INSPECTOR's card
+ * (`qc_inspections.inspector_card_id` → `org_departments.razryad_level_id`)
+ * must meet to submit a decision on a FINAL QC inspection. Below this level
+ * (or no razryad/card at all) → Err(BUSINESS_RULE_VIOLATION), no sign-off.
+ * Does not apply to non-final (in-process/batch) inspections.
+ */
+export const QC_FINAL_SIGNOFF_MIN_RAZRYAD_LEVEL = 3;
+
+// ---------------------------------------------------------------------------
+// CRM — Lead-aging avtomatik qayta biriktirish (VISION-3340 #33)
+// ---------------------------------------------------------------------------
+
+/**
+ * `crm_leads` uchun: COALESCE(last_activity_at, created_at) shu kunlar sonidan
+ * ko'proq oldin bo'lsa, lead "sovigan" (cold) hisoblanadi va
+ * `lead-aging-reassign.cron.ts` uni boshqa faol sotuv menejeriga qayta
+ * biriktiradi (agar joriy holati terminal bo'lmasa).
+ */
+export const CRM_LEAD_AGING_REASSIGN_DAYS = 60;
+
+/**
+ * `crm_leads.status` ning "yakunlangan" (terminal) qiymatlari — bu holatdagi
+ * lead'lar lead-aging cron tomonidan chetlab o'tiladi (qayta biriktirilmaydi).
+ * 'converted' — SD oqimi orqali (queries-sd.ts execSdLeadConvert / sd-leads
+ * repository); 'won'/'lost' — LEAD_STATUS lug'atidagi (lead-sources.constants.ts)
+ * yakuniy holatlar.
+ */
+export const CRM_LEAD_TERMINAL_STATUSES = ['won', 'lost', 'converted'] as const;
