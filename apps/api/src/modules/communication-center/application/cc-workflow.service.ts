@@ -141,6 +141,24 @@ export class CcWorkflowService {
         continue;
       }
       const approverId = approverResult.data;
+      // CC #21 self_route_blocked (SoD): the sender can NEVER be their own approver
+      // — a doc must not land in the sender's own inbox for self-sign-off. Most
+      // resolver branches (dept-head / position / director / ceo) do not exclude the
+      // sender, so this is the catch-all guard for every branch. Skip this approval
+      // and journal it; if no other approver resolves, sendDocument's
+      // approvers.length===0 guard throws firstStepApproverNotFound (400).
+      if (approverId === senderUserId) {
+        this.logger.warn(
+          `Step ${step.stepOrder}: resolved approver === sender (${senderUserId}) — self-route blocked (SoD). Document ${doc.id}.`,
+        );
+        await this.docs.logAudit({
+          documentId:        doc.id,
+          action:            'self_route_blocked',
+          performedByUserId: null,
+          comment:           `Yuboruvchi (${senderUserId}) o'ziga imzo qo'ya olmaydi (SoD); bosqich ${step.stepOrder} o'tkazib yuborildi.`,
+        });
+        continue;
+      }
       approvers.push(approverId);
       unwrapOrThrow(await this.docs.createApproval({
         documentId:     doc.id,

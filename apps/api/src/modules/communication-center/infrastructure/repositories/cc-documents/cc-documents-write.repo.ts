@@ -260,4 +260,24 @@ export class CcDocumentsWriteRepo {
       return Err({ message: (e as Error).message, code: 'DB_ERROR' });
     }
   }
+
+  /**
+   * Append a standalone cc_audit_trail row (no state transition). Used for events
+   * that must be journalled but do not move the document — e.g. CC #21
+   * self_route_blocked (SoD: sender resolved as their own approver) and CC #3
+   * approver_unresolved. performedByUserId is nullable (system-generated events).
+   */
+  async logAudit(args: {
+    documentId: string; action: string; performedByUserId?: number | null; comment?: string | null;
+  }): Promise<Result<void>> {
+    try {
+      await runQuery(sql`
+        INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
+        VALUES (${args.documentId}, ${args.action}, ${args.performedByUserId ?? null}, ${args.comment ?? null})
+      `);
+      return Ok(undefined);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
 }

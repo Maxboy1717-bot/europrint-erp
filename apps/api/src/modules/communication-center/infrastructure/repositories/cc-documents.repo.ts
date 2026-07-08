@@ -40,4 +40,5 @@ export class CcDocumentsRepository {
   updateBody = (args: Parameters<CcDocumentsWriteRepo['updateBody']>[0]) => this.writer.updateBody(args);
   createComplaint = (args: Parameters<CcDocumentsWriteRepo['createComplaint']>[0]) => this.writer.createComplaint(args);
   logPrint = (args: Parameters<CcDocumentsWriteRepo['logPrint']>[0]) => this.writer.logPrint(args);
+  logAudit = (args: Parameters<CcDocumentsWriteRepo['logAudit']>[0]) => this.writer.logAudit(args);
 }
