@@ -45,6 +45,9 @@ import { MesSosEscalationService } from '../modules/mes/application/mes-sos-esca
 import { MesSosEscalationRepository } from '../modules/mes/infrastructure/repositories/mes-sos-escalation.repo'
 import { CkpDailyAggregateCron } from './ckp-daily-aggregate.cron'
 import { CardRepository } from '../modules/org-structure/card.repository'
+// CardRepository injects LmsCardGateService (mandatory-darslik gate, VISION-3340 #27) —
+// import LmsModule so that exported service is resolvable for the CardRepository provider below.
+import { LmsModule } from '../modules/lms/lms.module'
 import { CkpFactRepository } from '../modules/org-structure/ckp-fact.repository'
 import { CronStatusService } from './cron-status.service'
 // A4 (vizyon) — har xodim kunlik ishlagan-pul PDF (19:00); HrPdfGeneratorService = standalone (pdf-lib, deps yo'q)
@@ -63,7 +66,7 @@ import { AiFitWeeklyCron } from './ai-fit-weekly.cron'
 import { AiFitModule } from '../modules/ai/ai-fit.module'
 
 @Module({
-  imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule, NotificationsModule],
+  imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule],
   providers: [
     CronStatusService,
     // Sprint 2 — Haftalik EOQ + Safety Stock yangilash (TZ-02/TZ-04)
