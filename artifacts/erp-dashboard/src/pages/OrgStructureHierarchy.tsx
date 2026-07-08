@@ -10,7 +10,7 @@ import {
   Building2, Users, ZoomIn, ZoomOut, RotateCcw, Move,
   Plus, Search, Bell, UserX,
   TrendingUp, AlertCircle, Network, X, Filter, Maximize2,
-  FileText, CheckSquare, Square,
+  FileText, CheckSquare, Square, Upload,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import { OrgNode, OrgStats, LEVEL_COLORS, LEVEL_LABELS } from "@/components/hr/o
 import { countNodes } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
 import { AddNodeDialog, DuplicateFromInput } from "@/components/hr/org/AddNodeDialog";
+import { ImportNodesDialog } from "@/components/hr/org/ImportNodesDialog";
 import { TreeCanvas } from "@/components/hr/org/TreeCanvas";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -46,6 +47,9 @@ export default function OrgStructureHierarchy() {
   const [addOpen, setAddOpen] = useState(false);
   const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
   const [duplicateFrom, setDuplicateFrom] = useState<DuplicateFromInput | null>(null);
+  // VISION-3340 #26 — bulk .xlsx import (org-structure.controller.ts POST nodes/import), the FE
+  // half that never existed for this already-real backend endpoint.
+  const [importOpen, setImportOpen] = useState(false);
   // VISION (egasi 2026-06-25): KARTA-markazli — sahifa FAQAT karta-daraxti. Alohida "Kartalar" va
   // "Razryadlar" tablar OLIB TASHLANDI: razryad har KARTA ichida (node-detal), alohida emas. Karta
   // bosilsa → /org-structure/hierarchy/node/:id = to'liq karta-detali (razryad/oylik/ЦКП/rbac/xodim).
@@ -201,6 +205,9 @@ export default function OrgStructureHierarchy() {
             <Button size="sm" variant="outline" onClick={() => notifyMutation.mutate()} disabled={notifyMutation.isPending}>
               <Bell className="h-3.5 w-3.5 mr-1" />{t("vakantlar")}
             </Button>
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} data-testid="button-import-nodes">
+              <Upload className="h-3.5 w-3.5 mr-1" />{t("import", "Import")}
+            </Button>
             <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => { setAddParentId(undefined); setAddOpen(true); }}>
               <Plus className="h-3.5 w-3.5 mr-1" />{t("bolimQoshish")}
             </Button>
@@ -301,6 +308,15 @@ export default function OrgStructureHierarchy() {
         onClose={() => { setAddOpen(false); setAddParentId(undefined); setDuplicateFrom(null); }}
         initialParentId={addParentId}
         duplicateFrom={duplicateFrom}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });
+        }}
+      />
+
+      <ImportNodesDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });

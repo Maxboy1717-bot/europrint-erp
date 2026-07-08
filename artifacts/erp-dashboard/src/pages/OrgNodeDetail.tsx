@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Building2, Users, Network, ChevronRight,
   UserX, Pencil, Trash2, CheckCircle, AlertCircle,
-  MoveRight, History, FolderOpen, ClipboardList, Award, Activity, Sparkles, Target, GraduationCap, UserCheck
+  MoveRight, History, FolderOpen, ClipboardList, Award, Activity, Sparkles, Target, GraduationCap, UserCheck,
+  LayoutTemplate,
 } from "lucide-react";
 import { OrgNodePortretTab } from "./OrgNodePortretTab";
 import { RazryadTab } from "@/components/hr/orgnode/RazryadTab";
@@ -23,6 +24,10 @@ import { MentorTab } from "@/components/hr/orgnode/MentorTab";
 // Sub-components
 import { EditDialog } from "@/components/hr/orgnode/EditDialog";
 import { MoveDialog } from "@/components/hr/orgnode/MoveDialog";
+// VISION-3340 #26 — card-template CRUD + apply-template already existed on the backend
+// (card-template.controller.ts) with zero FE consumer; surfaced here as "add a child karta
+// from a template" (the current node becomes the new card's parent).
+import { ApplyCardTemplateDialog } from "@/components/hr/org/ApplyCardTemplateDialog";
 import { MainTab } from "@/components/hr/orgnode/MainTab";
 import { EmployeesTab } from "@/components/hr/orgnode/EmployeesTab";
 import { ChildrenTab } from "@/components/hr/orgnode/ChildrenTab";
@@ -43,6 +48,7 @@ export default function OrgNodeDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -103,6 +109,7 @@ export default function OrgNodeDetail() {
           </div>
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)} data-testid="button-edit-node"><Pencil className="h-3.5 w-3.5 mr-1" />{t("edit")}</Button>
+            <Button size="sm" variant="secondary" onClick={() => setApplyTemplateOpen(true)} data-testid="button-apply-card-template"><LayoutTemplate className="h-3.5 w-3.5 mr-1" />{t("shablondanQoshish", "Shablondan qo'shish")}</Button>
             <Button size="sm" className="bg-primary text-primary-foreground hover:opacity-90" onClick={() => setMoveOpen(true)} data-testid="button-move-node"><MoveRight className="h-3.5 w-3.5 mr-1" />{t("move")}</Button>
             <Button size="sm" variant="destructive" onClick={() => setDeleteConfirmOpen(true)} disabled={deleteMutation.isPending} data-testid="button-delete-node"><Trash2 className="h-3.5 w-3.5 mr-1" />{t("delete")}</Button>
             <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-white/20" onClick={() => navigate("/org-structure/hierarchy")}><ArrowLeft className="h-3.5 w-3.5 mr-1" />{t("ortga")}</Button>
@@ -160,6 +167,15 @@ export default function OrgNodeDetail() {
 
       {editOpen && <EditDialog node={node} open={editOpen} onClose={() => setEditOpen(false)} onSuccess={onRefresh} />}
       {moveOpen && <MoveDialog node={node} open={moveOpen} onClose={() => setMoveOpen(false)} onSuccess={onRefresh} />}
+      {applyTemplateOpen && (
+        <ApplyCardTemplateDialog
+          open={applyTemplateOpen}
+          onClose={() => setApplyTemplateOpen(false)}
+          onSuccess={onRefresh}
+          parentNodeId={node.id}
+          parentNodeName={node.name}
+        />
+      )}
       <ConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
