@@ -124,7 +124,8 @@ export class CrmBitrixCompatController {
   async updateInvoiceStage(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateStageSchema.parse(body);
     const status = String(dto.status ?? dto.stageId ?? dto.stage_id ?? '');
-    return unwrapOrThrow(await this.svc.updateInvoiceStage(parseInt(id, 10) || 0, status));
+    // invoices.id is a uuid — pass the raw id (parseInt(id) -> NaN -> 0 matched nothing).
+    return unwrapOrThrow(await this.svc.updateInvoiceStage(id, status));
   }
 
   @Delete('proposals/:id')
@@ -136,6 +137,7 @@ export class CrmBitrixCompatController {
   @Delete('invoices/:id')
   @Roles('super_admin', 'director', 'manager')
   async deleteInvoice(@Param('id') id: string) {
-    return unwrapOrThrow(await this.svc.deleteInvoice(parseInt(id, 10) || 0));
+    // invoices.id is a uuid — pass the raw id (parseInt(id) -> NaN -> 0 matched nothing).
+    return unwrapOrThrow(await this.svc.deleteInvoice(id));
   }
 }
