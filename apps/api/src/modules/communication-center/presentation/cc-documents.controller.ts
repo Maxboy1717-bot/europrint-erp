@@ -16,7 +16,7 @@
  */
 
 import {
-  Body, Controller, Get, Param, Post, UseGuards, UseInterceptors, Res, Header,
+  Body, Controller, Get, Param, Patch, Post, UseGuards, UseInterceptors, Res, Header,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -28,6 +28,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { unwrapOrThrow } from '@common/http-result';
+import { CcRetentionService } from '../application/cc-retention.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CcWorkflowService } from '../application/cc-workflow.service';
 import { CcBasketsService } from '../application/cc-baskets.service';
@@ -79,7 +81,32 @@ export class CcDocumentsController {
     private readonly pin:     CcPinService,
     private readonly pdfSvc:  CcPdfService,
     private readonly configService: ConfigService,
+    private readonly retention: CcRetentionService,
   ) {}
+
+  // ── Batch 5 Item 3 — arxiv-saqlash muddati (EP-CC-016) + imzo-hash yaxlitligi ──
+  @ApiOperation({ summary: 'Get document retention (leader 10y / worker 3y)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('documents/:id/retention')
+  async getRetention(@Param('id') id: string) {
+    return unwrapOrThrow(await this.retention.getRetention(id));
+  }
+
+  @ApiOperation({ summary: 'Archive a document + set retention (immutable, no re-archive)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 409, description: 'Already archived' })
+  @Patch('documents/:id/archive')
+  @Roles('admin', 'super_admin', 'director', 'manager')
+  async archive(@Param('id') id: string) {
+    return unwrapOrThrow(await this.retention.archiveWithRetention(id));
+  }
+
+  @ApiOperation({ summary: 'Verify an approval signature hash (tamper-evidence)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('approvals/:id/verify')
+  async verifySignature(@Param('id') id: string) {
+    return unwrapOrThrow(await this.retention.verifySignature(id));
+  }
 
   // ── PDF download ─────────────────────────────────────────────────
   @ApiOperation({ summary: 'Download pdf' })

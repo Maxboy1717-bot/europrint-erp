@@ -33,6 +33,7 @@ import { CcDocumentNumberService } from './application/cc-document-number.servic
 import { CcOrgResolverService }    from './application/cc-org-resolver.service';
 import { CcAiInterviewService }    from './application/cc-ai-interview.service';
 import { CcPdfService }            from './application/cc-pdf.service';
+import { CcRetentionService }      from './application/cc-retention.service';
 import { CcStatsService }          from './application/cc-stats.service';
 import { CcKanbanBridgeService }   from './application/cc-kanban-bridge.service';
 
@@ -87,6 +88,7 @@ import { CcApprovedKassirListener } from './events/cc-approved-kassir.listener';
     CcOrgResolverService,
     CcAiInterviewService,
     CcPdfService,
+    CcRetentionService,
     CcStatsService,
     CcKanbanBridgeService,
     // realtime + cron + telegram + events

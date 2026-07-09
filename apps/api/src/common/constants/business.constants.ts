@@ -539,3 +539,13 @@ export const COUNCIL_QUORUM_NUMERATOR = 2;
 export const COUNCIL_QUORUM_DENOMINATOR = 3;
 /** Ovoz beradigan (kvorumga sanaladigan) rollar — 'guest' ovoz bermaydi. */
 export const COUNCIL_VOTING_ROLES = ['chair', 'secretary', 'member'] as const;
+
+/**
+ * Kommunikatsiya Markazi (CC) arxiv-saqlash muddati — egasi qarori (decisions/20-cc.md EP-CC-016, Q73):
+ * tasdiqlangan hujjat immutable, o'chmaydi — arxivga ko'chadi; muddat lavozimga qarab:
+ * RAHBAR (leader — kengash/direktor/menejer roli) 10 yil, ISHCHI (worker) 3 yil. (Batch 5 Item 3)
+ */
+export const CC_RETENTION_LEADER_YEARS = 10;
+export const CC_RETENTION_WORKER_YEARS = 3;
+/** "Rahbar" (leader) deb hisoblanadigan rollar — kengash/boshqaruv darajasi (10 yil saqlash). */
+export const CC_LEADER_ROLES = ['super_admin', 'admin', 'director', 'ceo', 'manager', 'supervisor'] as const;
