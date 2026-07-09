@@ -45,6 +45,14 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { DeliveryGoodsIssuedEvent } from '../../../sd/domain/events/delivery-goods-issued.event';
 
+/**
+ * GATE 4/5 CUTOVER: this #51 delivery-based FG stock-out is DISABLED. Finished-goods stock now decrements
+ * via the POS zayavka-fulfillment path (DeliveryRequestFulfillmentService.fulfillReal → warehouse_stock_fg).
+ * The listener code is KEPT (not deleted) so the cutover is ONE-LINE reversible: flip this flag to false.
+ * Gate 5 leaves it disabled.
+ */
+const DELIVERY_51_DISABLED = true;
+
 /** One finished-goods line of the delivery — the shipped material + partial-qty inputs. */
 interface DeliveryLineRow {
   /** finished-goods material shipped (delivery_items.material_id). */
@@ -61,6 +69,16 @@ export class DeliveryGoodsIssuedListener implements IEventHandler<DeliveryGoodsI
   private readonly logger = new Logger(DeliveryGoodsIssuedListener.name);
 
   async handle(event: DeliveryGoodsIssuedEvent): Promise<void> {
+    // GATE 4/5 CUTOVER: FG stock-out is now handled by the POS zayavka-fulfillment path; this #51 listener
+    // is disabled (kept for one-line reversibility — see DELIVERY_51_DISABLED). No-op + log, no decrement.
+    if (DELIVERY_51_DISABLED) {
+      this.logger.log(
+        { deliveryId: event.deliveryId, salesOrderId: event.salesOrderId },
+        'DeliveryGoodsIssuedListener DISABLED (Gate 4 cutover) — FG stock-out handled by zayavka fulfillment (warehouse_stock_fg)',
+      );
+      return;
+    }
+
     this.logger.log(
       { deliveryId: event.deliveryId, salesOrderId: event.salesOrderId },
       'Delivery goods-issued - routing shipped quantity OUT of finished-goods warehouse',

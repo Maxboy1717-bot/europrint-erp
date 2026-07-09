@@ -59,6 +59,25 @@ export class DeliveryRequestFulfillmentController {
     return r.data;
   }
 
+  // Gate 4 (real cutover): REALLY decrements warehouse_stock_fg (guarded) + writes the FG audit ledger.
+  // This is the new FG stock-out path; the #51 delivery-goods-issued listener is disabled.
+  @Post(':documentId/fulfill-live')
+  @RequirePermission('pos.operations.write')
+  @ApiOperation({ summary: 'Gate 4: tasdiqlangan zayavkani HAQIQATAN bajarish — warehouse_stock_fg kamayadi (guarded)' })
+  @ApiResponse({ status: 201, description: 'FG stok kamaytirildi (har qator uchun status)' })
+  @ApiResponse({ status: 400, description: 'Zayavka tasdiqlanmagan / noto\'g\'ri tur / ombor topilmadi' })
+  @ApiResponse({ status: 404, description: 'Zayavka topilmadi' })
+  async fulfillLive(
+    @Param('documentId') documentId: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = FulfillShadowSchema.parse(body);
+    const r = await this.svc.fulfillReal(documentId, dto.warehouseId ?? null, dto.salesOrderId ?? null, dto.lines, user?.id ?? null);
+    if (!r.ok) throwFromError(r.error);
+    return r.data;
+  }
+
   // Gate 3: compares the shadow's would-decrement against #51's ACTUAL warehouse_stock_fg decrement for a
   // sales order + logs the diff. SHADOW-only diagnostic — NO warehouse_stock / warehouse_stock_fg writes.
   @Get('compare/:salesOrderId')
