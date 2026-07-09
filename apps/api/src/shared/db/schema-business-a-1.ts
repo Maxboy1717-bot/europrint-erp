@@ -20,7 +20,7 @@ export { enpsSurveys as enps_surveys } from '@workspace/db';
 // enps_survey_responses — NOT yet in lib/db
 
 import {
-  pgTable, serial, text, integer, boolean, timestamp, jsonb, date,
+  pgTable, serial, text, integer, boolean, timestamp, jsonb, date, unique,
 } from 'drizzle-orm/pg-core';
 
 export const enps_survey_responses = pgTable('enps_survey_responses', {
@@ -84,6 +84,21 @@ export const notification_preferences = pgTable('notification_preferences', {
   quiet_hours:         jsonb('quiet_hours'),
   updated_at:          timestamp('updated_at').defaultNow(),
 });
+
+// Granular per-type × per-channel notification preferences (owner-decisions
+// batch item 7, 2026-07-09). Complements the flat `notification_preferences`
+// row above: one row per (user, notification_type, channel). The NotificationSettings
+// page renders a matrix (10 types × {email, telegram, inApp}); this is where it persists.
+export const notification_type_preferences = pgTable('notification_type_preferences', {
+  id:                serial('id').primaryKey(),
+  user_id:           integer('user_id').notNull(),
+  notification_type: text('notification_type').notNull(),
+  channel:           text('channel').notNull(),
+  enabled:           boolean('enabled').notNull().default(true),
+  updated_at:        timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  uq_user_type_channel: unique('uq_ntp_user_type_channel').on(t.user_id, t.notification_type, t.channel),
+}));
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 // notifications → lib/db (core/core-users.ts), re-exported under legacy alias

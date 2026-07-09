@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, safeArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Bell, Mail, MessageSquare, Smartphone, Save } from "lucide-react";
 import { EPStatusPill } from "@/components/ep";
@@ -20,7 +20,6 @@ interface NotifPref {
   email: boolean;
   telegram: boolean;
   inApp: boolean;
-  sms: boolean;
 }
 
 const NOTIFICATION_TYPES = [
@@ -41,7 +40,6 @@ const DEFAULT_PREFS: NotifPref[] = NOTIFICATION_TYPES.map((t) => ({
   email: true,
   telegram: true,
   inApp: true,
-  sms: false,
 }));
 
 export default function NotificationSettings() {
@@ -49,13 +47,17 @@ export default function NotificationSettings() {
   const { toast } = useToast();
   const [prefs, setPrefs] = useState<NotifPref[]>(DEFAULT_PREFS);
 
-  const { data: savedPrefs } = useQuery<NotifPref[]>({
+  // Backend returns the granular matrix inside a { statusCode, data } envelope,
+  // which the api-request unwrapper (only unwraps { ok:true }) passes through
+  // untouched. safeArray extracts the `data` array so saved prefs actually hydrate.
+  const { data: savedPrefs } = useQuery<unknown>({
     queryKey: ["/api/notifications/preferences"],
   });
 
   useEffect(() => {
-    if (Array.isArray(savedPrefs) && savedPrefs.length > 0) {
-      setPrefs(savedPrefs);
+    const rows = safeArray<NotifPref>(savedPrefs);
+    if (rows.length > 0) {
+      setPrefs(rows);
     }
   }, [savedPrefs]);
 
@@ -81,12 +83,11 @@ export default function NotificationSettings() {
       email: false,
       telegram: false,
       inApp: false,
-      sms: false,
     };
   }
 
   const activeCount = (Array.isArray(prefs) ? prefs : []).reduce(
-    (acc, p) => acc + (p.email || p.telegram || p.inApp || p.sms ? 1 : 0),
+    (acc, p) => acc + (p.email || p.telegram || p.inApp ? 1 : 0),
     0
   );
 

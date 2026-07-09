@@ -107,7 +107,9 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('/preferences')
   async getPreferences(@CurrentUser() user: AuthenticatedUser) {
-    const result = await this.prefsSvc.getPreferences(user.id);
+    // Granular per-type × per-channel matrix (owner-decisions batch item 7).
+    // The FE NotificationSettings page renders/hydrates this NotifPref[] matrix.
+    const result = await this.prefsSvc.getMatrix(user.id);
     assertOk(result);
     return { statusCode: HttpStatus.OK, data: result.data };
   }
@@ -118,6 +120,12 @@ export class NotificationsController {
   @Put('/preferences')
   async updatePreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     const dto = parseNotificationPreferences(body);
+    // Matrix body (FE NotifPref[]) → persist the granular per-type × per-channel matrix.
+    if (dto.preferences !== undefined) {
+      const matrixResult = await this.prefsSvc.updateMatrix(user.id, dto.preferences);
+      assertOk(matrixResult);
+      return { statusCode: HttpStatus.OK, data: matrixResult.data };
+    }
     const result = await this.prefsSvc.updatePreferences(user.id, dto);
     assertOk(result);
     return { statusCode: HttpStatus.OK, data: result.data };
@@ -161,6 +169,12 @@ export class NotificationsController {
   @Patch('/preferences')
   async patchPreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     const dto = parseNotificationPreferences(body);
+    // Matrix body (FE NotifPref[]) → persist the granular per-type × per-channel matrix.
+    if (dto.preferences !== undefined) {
+      const matrixResult = await this.prefsSvc.updateMatrix(user.id, dto.preferences);
+      assertOk(matrixResult);
+      return { statusCode: HttpStatus.OK, data: matrixResult.data };
+    }
     const result = await this.prefsSvc.updatePreferences(user.id, dto);
     assertOk(result);
     return { statusCode: HttpStatus.OK, data: result.data };

@@ -8,7 +8,7 @@ const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { db } from '@shared/db';
-import { notification_preferences, notificationsApp } from '@shared/db';
+import { notification_preferences, notification_type_preferences, notificationsApp } from '@shared/db';
 import { eq, and, sql } from 'drizzle-orm';
 
 export interface NotificationPrefsRow {
@@ -17,6 +17,13 @@ export interface NotificationPrefsRow {
   qcAlerts: boolean; financeAlerts: boolean; systemAlerts: boolean;
 }
 export interface MarkAllReadResult { updated: number }
+
+/** One granular per-type × per-channel preference row (owner-decisions batch item 7). */
+export interface NotificationTypePrefRow {
+  notification_type: string;
+  channel: string;
+  enabled: boolean;
+}
 
 @Injectable()
 export class NotificationPreferencesRepository {
@@ -71,6 +78,55 @@ export class NotificationPreferencesRepository {
           updated_at: _time.now(),
         },
       });
+      return Ok(undefined);
+    } catch (e: unknown) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Read the granular per-type × per-channel matrix for a user.
+   * Returns [] when the user has no saved granular rows yet (the service
+   * synthesizes sensible defaults in that case).
+   */
+  async findMatrixByUserId(userId: number): Promise<Result<NotificationTypePrefRow[]>> {
+    try {
+      const rows = await db.select({
+        notification_type: notification_type_preferences.notification_type,
+        channel: notification_type_preferences.channel,
+        enabled: notification_type_preferences.enabled,
+      }).from(notification_type_preferences)
+        .where(eq(notification_type_preferences.user_id, userId));
+      const list = (Array.isArray(rows) ? rows : []).map((r) => ({
+        notification_type: String(r.notification_type),
+        channel: String(r.channel),
+        enabled: Boolean(r.enabled),
+      }));
+      return Ok(list);
+    } catch (e: unknown) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Persist the granular matrix: one INSERT ... ON CONFLICT per (user, type, channel).
+   * Idempotent — re-running with the same rows updates `enabled`/`updated_at` in place.
+   */
+  async upsertMatrix(userId: number, rows: NotificationTypePrefRow[]): Promise<Result<void>> {
+    try {
+      const list = Array.isArray(rows) ? rows : [];
+      for (const row of list) {
+        await db.insert(notification_type_preferences).values({
+          user_id: userId,
+          notification_type: row.notification_type,
+          channel: row.channel,
+          enabled: row.enabled,
+          updated_at: _time.now(),
+        }).onConflictDoUpdate({
+          target: [
+            notification_type_preferences.user_id,
+            notification_type_preferences.notification_type,
+            notification_type_preferences.channel,
+          ],
+          set: { enabled: row.enabled, updated_at: _time.now() },
+        });
+      }
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error).message); }
   }

@@ -199,6 +199,19 @@ export async function ensureNotificationTables(): Promise<void> {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  // Granular per-type × per-channel matrix (owner-decisions batch item 7, 2026-07-09).
+  // See migration notification-type-preferences-2026-07-09.sql.
+  await ddlRun(sql`
+    CREATE TABLE IF NOT EXISTS notification_type_preferences (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      notification_type TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      enabled BOOLEAN NOT NULL DEFAULT TRUE,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, notification_type, channel)
+    )
+  `);
 }
 
 export async function ensureTechnologyTables(): Promise<void> {
