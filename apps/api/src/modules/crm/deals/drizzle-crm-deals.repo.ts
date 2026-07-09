@@ -71,13 +71,17 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       // (lead link → metadata jsonb).
       // crm_deals is a VIEW over `deals`; base `amount` is NOT NULL while the insert only set the
       // duplicate `opportunity` -> 23502. amount := opportunity (same deal value, no value-logic change).
+      // Item A (CRM ownership convergence): assigned_to is the canonical owner column (mirrors
+      // crm_leads). It already exists on base `deals` and is exposed by the crm_deals view, so no
+      // migration is needed — just populate it here from the same resolved owner (explicit assignee
+      // or, by default, the creator). assigned_by_id (Bitrix "responsible") is kept in sync.
       const res = await runQuery<Row>(sql`
         INSERT INTO crm_deals (
-          title, stage_id, company_id, opportunity, amount, assigned_by_id, created_by_id,
+          title, stage_id, company_id, opportunity, amount, assigned_by_id, assigned_to, created_by_id,
           probability, currency_id, close_date, additional_info, metadata
         )
         VALUES (
-          ${title}, ${stageId}, ${companyId}, ${opportunity}, ${opportunity}, ${assignedById}, ${createdById},
+          ${title}, ${stageId}, ${companyId}, ${opportunity}, ${opportunity}, ${assignedById}, ${assignedById}, ${createdById},
           ${probability}, ${currency}, ${expectedClosureDate}, ${description},
           ${JSON.stringify({ lead_id: leadId })}::jsonb
         )
@@ -95,6 +99,9 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       const opportunity  = (dto.opportunity  ?? dto.amount)         != null ? String(dto.opportunity  ?? dto.amount)        : null;
       const probability  = (dto.probability  != null)               ? Number(dto.probability)  : null;
       const assignedById = (dto.assignedById ?? dto.assigned_by_id) != null ? Number(dto.assignedById ?? dto.assigned_by_id) || null : null;
+      // Item A: reassignment updates the canonical assigned_to. Accepts assignedTo (preferred) or the
+      // Bitrix assignedById/assigned_by_id, so a manager can hand a deal to another manager.
+      const ownerId      = (dto.assignedTo ?? dto.assignedById ?? dto.assigned_by_id) != null ? Number(dto.assignedTo ?? dto.assignedById ?? dto.assigned_by_id) || null : null;
       const status       = (dto.status       != null) ? String(dto.status)                                       : null;
       const closeDate    = (dto.closeDate    ?? dto.close_date)     != null ? String(dto.closeDate    ?? dto.close_date)    : null;
       const notes        = (dto.notes        != null) ? String(dto.notes)                                        : null;
@@ -110,6 +117,7 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
           opportunity    = COALESCE(${opportunity},  opportunity),
           probability    = COALESCE(${probability},  probability),
           assigned_by_id = COALESCE(${assignedById}, assigned_by_id),
+          assigned_to    = COALESCE(${ownerId},      assigned_to),
           close_date     = COALESCE(${closeDate},    close_date),
           comments       = COALESCE(${notes},        comments),
           date_modify    = NOW()
