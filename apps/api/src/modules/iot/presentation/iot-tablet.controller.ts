@@ -858,7 +858,11 @@ export class IotTabletController {
       this.logger.error(`[IoT] reportProductionDefect: QC bridge failed (sessionId=${sessionId}): ${String(err)}`);
     }
 
-    return { sessionId, defectCount: dto.defectCount, reported: true, brakLimitCheck: brakCheck, qcDefectId };
+    // Batch 2 item 1.5: echo the RESOLVED defectCount (dto.defectCount ?? dto.quantity ?? 1) that was
+    // actually persisted/reported — the raw dto.defectCount is undefined when the caller sent `quantity`,
+    // so the response showed `defectCount: undefined` despite a correct write. Matches the idempotent
+    // early-return above, which already used the resolved local.
+    return { sessionId, defectCount, reported: true, brakLimitCheck: brakCheck, qcDefectId };
   }
 
   @ApiOperation({ summary: 'Submit production evaluation' })
