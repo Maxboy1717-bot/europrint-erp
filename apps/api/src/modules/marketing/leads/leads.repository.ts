@@ -77,12 +77,37 @@ export class LeadsRepository {
   }
 
   async update(id: string, values: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
-  try {
-      const result = await db.update(marketingLeads).set(values as Partial<typeof marketingLeads.$inferInsert>).where(sql`${marketingLeads.id} = ${id}`).returning();
-      return Ok(result[0] as Record<string, unknown>);  } catch (_e) {
-    return Err(String(_e));
-  }
-
+    // Raw SQL mirror of create(): the @europrint/schemas marketingLeads def OMITS
+    // name/company/source/channel/notes/score, so db.update(...).set(values) silently
+    // dropped exactly those 6 fields (Drizzle builds the SET clause from the def's
+    // columns, so unmapped keys never reach the DB → "saved" but nothing saved). The
+    // live table has all of them. COALESCE(new, old) preserves .partial() semantics:
+    // an absent DTO key leaves the column unchanged. camelCase DTO keys → snake_case cols.
+    try {
+      const v = values;
+      const result = await db.execute(sql`
+        UPDATE marketing_leads SET
+          name        = COALESCE(${v.name        !== undefined ? String(v.name)          : null}, name),
+          company     = COALESCE(${v.company     !== undefined ? (v.company as string)    : null}, company),
+          phone       = COALESCE(${v.phone       !== undefined ? (v.phone as string)      : null}, phone),
+          email       = COALESCE(${v.email       !== undefined ? (v.email as string)      : null}, email),
+          source      = COALESCE(${v.source      !== undefined ? (v.source as string)     : null}, source),
+          channel     = COALESCE(${v.channel     !== undefined ? (v.channel as string)    : null}, channel),
+          status      = COALESCE(${v.status      !== undefined ? (v.status as string)     : null}, status),
+          score       = COALESCE(${v.score !== undefined && v.score !== null ? Number(v.score) : null}, score),
+          notes       = COALESCE(${v.notes       !== undefined ? (v.notes as string)      : null}, notes),
+          lost_reason = COALESCE(${v.lostReason  !== undefined ? (v.lostReason as string) : null}, lost_reason),
+          first_name  = COALESCE(${v.firstName   !== undefined ? (v.firstName as string)  : null}, first_name),
+          last_name   = COALESCE(${v.lastName    !== undefined ? (v.lastName as string)   : null}, last_name),
+          updated_at  = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
+      return Ok(rows[0] ?? {});
+    } catch (_e) {
+      return Err(String(_e));
+    }
   }
 
   async softDelete(id: string): Promise<Result<void>> {
