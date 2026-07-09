@@ -35,10 +35,13 @@ Branch: `chore/schema-convergence`. Loop commits: `b0f3c144`..`0346b2e6`.
    `departments` (HR/general) or `org_departments` (org-structure)? `production_orders
    .org_department_id` is now read but the two department worlds must be reconciled.
 9. **PP daily-replan ordering.** Persist a `production_orders.queue_sequence` column (§3) or keep
-   ordering computed read-only?
+   ordering computed read-only? — ✅ **BUILT (Batch-5 Item 4, `d4ac0b9a`):** `queue_sequence` persisted;
+   per-machine drag-reorder endpoint + FE `/pp/queue`; partial-unique index prevents dup positions.
 10. **Inventory variance auto-approve ±N% limit** (POS/WMS) — owner numbers. *(Batch-5 Item 10
     owner-decision: NO percentage auto-approval ever; every variance auto-detected/flagged but
-    human-confirmed before close — pending build.)*
+    human-confirmed before close.)* — ✅ **BUILT (`5b3828a9`):** human-confirm approve gate
+    (`approveCount` = only path to `status='approved'`, always stamps a real `approved_by`, refuses
+    while any variance line lacks a reason); FE `/wms/variance-approval`. No percentage threshold anywhere.
     **GSD 3-indicator KPI weights** — ✅ **OWNER-CORRECTED-PREMISE (2026-07-10):** this org uses
     **CKP** (Cennaya Konechnaya Produkciya / per-position Valuable Final Product, per the
     Hubbard/Vysotsky methodology — see live `company_tskp`, `org_departments.tskp_measurement_unit`,
@@ -95,12 +98,18 @@ Owner answered 8 items; built the buildable ones (commits on `chore/schema-conve
 
 ## 2. Master-data / seed (provide the values — schema already built)
 
+> ⭐ **Batch 5 (2026-07-09) built the MANAGEMENT SCREENS for the next four owner-DATA items** — the
+> owner/manager now enters these vocabularies via UI (no code gap remains; only the data is owner's):
+> PP reason-codes `/pp/reason-codes` (`908c13c1`); CRM loss-reasons + funnel-stage names
+> `/crm/funnel-settings` (`c5b42216`); LMS course↔card `/lms/course-card-binding` (`1e48e2ef`).
 - **PP reason-code vocabulary** (`pp_reason_codes` — CRUD live, 0 rows): delayPareto/5-group codes
-  (code, uz/ru name, category, color).
+  (code, uz/ru name, category, color). — ✅ **mgmt screen built** (`908c13c1`, `/pp/reason-codes`).
 - **CRM loss-reason taxonomy** + **voronka stage names** (`crm_stages`=0): the factory stage set
-  (Namuna→STP→Narx→Shartnoma→Buyurtma) and loss-reason list.
+  (Namuna→STP→Narx→Shartnoma→Buyurtma) and loss-reason list. — ✅ **mgmt screen built** (`c5b42216`,
+  `/crm/funnel-settings`); `deals.lost_reason_id` FK + structured rollup wired (`918d79bc`).
 - **LMS course↔card bindings** (`courses.card_id` 0/5, `enrollments.card_id` 0/15 — code ready):
-  which darsliklar bind to which org-cards; + pass-score per course_type.
+  which darsliklar bind to which org-cards; + pass-score per course_type. — ✅ **binding screen built**
+  (`1e48e2ef`, `/lms/course-card-binding`; enrollments.card_id auto-backfills from courses.card_id).
 - **IoT downtime-reason additions** ("иш йук"/"колиб тайёр эмас"/"переделка") and **camera/sensor
   CAPEX** (which machines get which sensors).
 - **Director**: stat-regulation / ideal-rasm / OKR-cascade seed values; resolve the OKR key-results

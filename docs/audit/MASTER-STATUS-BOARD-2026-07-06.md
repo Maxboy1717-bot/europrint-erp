@@ -47,8 +47,24 @@
 | 2 | 9 fake-saves (Mkt/PP/WMS/CRM/SD) | **DONE-VERIFIED** — incl. 2 adversarial-verify follow-ups (`softDeleteLead` 500→404; SD internal-notes real fields). 3 Q-35 flags **re-confirmed still-live**: `social_messages.conversation_id` int vs `social_conversations.id` varchar; `production_sessions` missing dept/shift cols; `wms_in_transit_shipments` missing `invoice_number` | `cd25da8d`,`a2295249`,`9d490690`,`cda7ce1e`,`9111fdf1`,`be40fa14`,`0c7960ca` |
 | 3 | 8 owner-decisions | **DONE-VERIFIED** — LOW_STOCK per-user warehouse routing (rule=`warehouse_keeper` ✓); Kanban inert map; granular notif prefs; MES accepted-status; frozen-zone/split docs. **3 blockers re-confirmed live** (see below) | `34f2b9d8`,`a2499ab0`,`8b35f2e3`,`1762c6c8`,`d39c33e5`,`8368657b`,`190c2854` |
 | 4 | MM security + 15 fake-saves | **PARTIAL** — Phase 0 (SoD security) **DONE-THIS-SESSION + VERIFIED**; Phase 1 (13 items) **investigated, not built** (1.3 already-fixed by `d39c33e5`; 1.1 premise incomplete — service also drops `assignedTo`) | Phase 0 = `b779f221` |
-| 5 | 16 owner-decisions (schema/CRUD/cleanup/calendar) | **NOT STARTED** | — |
+| 5 | 16 owner-decisions (schema/CRUD/cleanup/calendar) | **DONE (11 build items, 2026-07-09)** — all DB-proven, tsc 0, i18n baseline held. Items 9/15 = owner-premise-corrections (docs, prior); 12/13 correctly halted (live refs); 16 (AI) skipped. Items 5/6/7 "3 settings-CRUDs" owner-clarified 2026-07-09 (PP reason-codes / CRM loss+stage vocab / LMS course-card). See Batch-5 detail table below. | `cfc8a336`,`a76771e4`,`d4ac0b9a`,`908c13c1`,`c5b42216`,`1e48e2ef`,`c52525aa`,`5b3828a9`,`83b7c21e`,`7327f44f`,`918d79bc`,`e4f9ca3f` |
 | 6 | CRM ownership (Item A) + SD zayavka 5-gate (Item B) | **Item A ATTEMPTED→REVERTED** (implement-only sub-agent died mid-refactor; broken partial NOT committed, tree restored clean); **Item B NOT STARTED** (5-gate safety-critical, needs a dedicated session) | — |
+
+**Batch 5 — per-item outcome (2026-07-09; single-writer, one commit/item, DB-proof each; concurrent CRM-ownership session's `crm-extended.controller.ts`/`schema-compat-1a.ts` left untouched):**
+
+| Item | Built | Commit(s) | Verify |
+|---|---|---|---|
+| 2 IoT CAPEX | `sensor_devices.install_status` (needed/planned/installed) + first-ever CRUD + settings screen `/iot/sensor-capex` | `cfc8a336`,`a76771e4` | DB: INSERT/LIST/UPDATE/CHECK/UNIQUE; routes 401 |
+| 4 PP navbat | `production_orders.queue_sequence` per-machine queue (EP-PP-085) + drag reorder + FE `/pp/queue` | `d4ac0b9a` | DB: reorder→1,2,3, dup-pos 23505; 401 |
+| 5 PP reason-codes | `pp_reason_codes` mgmt screen `/pp/reason-codes` (BE existed; added findAll+includeInactive) | `908c13c1` | DB: active/all + reactivate; 401 |
+| 6 CRM funnel settings | `crm_loss_reasons` + `crm_stages` manager CRUD `/crm/funnel-settings` (new crm/settings slice) | `c5b42216` | DB: loss+stage create/update, auto status_id; 401 |
+| 7 LMS course-card | course→org_departments binding screen `/lms/course-card-binding` (BE existed; FE gap) | `1e48e2ef` | DB: bind/unbind/by-card; 401 |
+| 8 CC quorum | council 2/3 quorum + decision eval (advisory/majority/chair-tie) `/coordination/quorum` | `c52525aa` | DB: 5 outcomes + guest-exclude; 401 |
+| 10 WMS variance | inventory variance always-human-confirm (no %-auto-approve) `/wms/variance-approval` | `5b3828a9` | DB: block-no-reason/approve/conflict; 401 |
+| 11 Coordination | auto-rasporyazhenie from resolved dokla (idempotent) + FE "Avto" badge | `83b7c21e` | DB: auto+idempotent+subject-fallback; 401 |
+| 14 PP weekly | weekly plan calendar + reschedule `/pp/weekly-plan` (EP-PP-110) | `7327f44f` | DB: 7-in-range, reschedule; 401 |
+| 1 CRM lost-reason | `deals.lost_reason_id` FK + controller wiring + structured rollup (stage-history already wired) | `918d79bc` | DB: write+FK 23503+labelled rollup+stage-hist |
+| 3 CC hash/retention | archive retention leader10y/worker3y (immutable) + signature-hash verify | `e4f9ca3f` | DB: 10y/3y+immutable+hash-format; static-fallback (Q-44 boot) |
 
 **Batch-3 blockers (re-confirmed live 2026-07-09):**
 - **CRM ownership (→ Batch 6 Item A):** `crm_leads.assigned_to` exists but 0/16 populated; `crm_deals`/`deals` have NO `assigned_to`. Owner decided (Item A) to converge on `assigned_to` + add it to deals — attempted, reverted (see above).
