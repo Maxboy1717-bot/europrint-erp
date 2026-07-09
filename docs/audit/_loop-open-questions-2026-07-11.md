@@ -8,6 +8,38 @@
 
 ## (a) Owner-gated items (need data / decision / credential / schema approval)
 
+### Q-A0 — ⭐ HIGHEST-LEVERAGE: approve the Phase-2 schema so its items become buildable
+On live Step-1.2 re-verification, the master plan's "Code-buildable-now" fast-pass label very
+often means "buildable **once a new table/column exists**" — which is owner-gated under **Q-35**
+(`check-unauthorized-migration` blocks unapproved `CREATE TABLE`). In the **MES(08)** module
+(top priority, fully triaged this pass), of 62 "Code-buildable-now" markers the genuinely
+no-schema-change, non-blocked, non-chain buildable set is **near-empty** — the rest need new
+schema. **One decision — "approve these tables/columns" — unlocks the most items at once.**
+MES schema asks (each = its own item # in the plan; all additive):
+- **Norma-versioning** (items 4, 17, 58): per-station/per-norm `effective_date`+`version` columns
+  so a session locks its norm version (retro-safety). Unlocks 4/17/58 + downstream 11/13.
+- **OEE-target settings table** (item 36): `oee_targets(scope, target, effective_date, set_by)` —
+  replaces the hardcoded `85` at `MESExtended.tsx:146`; НО/director-editable, versioned.
+- **Crew model** (items 83, 23, 55, 94): `machine_crew_members(session_id, employee_id, role_label,
+  share_percent)` child table (N named assistants + contribution %) replacing 4 fixed-role columns.
+- **Per-station norm + unit** (items 84, 85, 88, 95): `station_norms(station_id, unit_id,
+  hourly_rate, twelve_hour_rate, effective_date, department)` + station×unit link to the existing
+  19-row `unit_of_measures`; Ofset(НО12-1)/Flekso(НО12-2) department scoping.
+- **Additive downtime codes** (items 86/87/97): seed `DT-NOWORK`, `DT-MOLD` into
+  `mes_downtime_reasons` (same additive-seed pattern as the 2026-07-04 migration).
+- **Misc columns**: training boolean on `production_sessions` (item 33, exclude from OEE);
+  format/gramm cols (24); passport-power kVt col on `equipment` (28); layer/gofra cols (34);
+  `equipment_department_assignments` junction (92); corrected-net qty class (25).
+- **Pure owner data-entry** (items 89, 90): the real ~30-machine list into existing `equipment`.
+> **Item 68** (stopped-machine 15/30-min auto-alert) is buildable on existing schema
+> (`machine_status_logs.status_started_at` present, 5 'stopped' rows live) BUT its recipient
+> routing (15min→НО, 30min→director) resolves through the org-chain `head_user_id` — the BLOCKED
+> Org-01 area. Buildable only once you confirm either (a) reuse the existing SOS org-chain resolver
+> as-is (degrades gracefully on NULL head_user_id, same as SOS today), or (b) route by RBAC role
+> instead. **Decision needed before build.**
+> Modules 09–20/06/07/04/05 not yet triaged — a fresh session should continue per-module (QC next),
+> expecting the same schema-approval-is-the-unlock pattern.
+
 ### Q-A1 — Deprecate the parallel `ModulePage` shell? (design §3.5 / Part 5 page-by-page #2)
 Two non-interoperating page-shell systems coexist: canonical `EPPageHeader` (162 files)
 and the parallel `ModulePage` (`components/ui/module-page.tsx`, 45 files) with its own
