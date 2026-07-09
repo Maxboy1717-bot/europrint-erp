@@ -117,19 +117,17 @@ export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
       return Err(saveResult.error);
     }
 
-    // T23-A2: resolve the rental-timer storage footprint (areaM2) from a REAL source instead of
-    // leaving it permanently undefined (which made WmsFgReceivedListener debug-skip every time).
-    // The golden-thread listeners do not derive an area, so derive it here from the received FG:
-    //   • explicit areaM2 on the command always wins (e.g. roll receipts that already know it);
-    //   • otherwise, for weight-unit FG (kg/tn) we apply the canonical roll-area formula already
-    //     used by wms-roll-calc.service:  areaM2 = weightKg × 1000 / grammageGsm  (from
-    //     material_cards.grammage). Q-40: NO fabrication — when the FG is not weight-based or has
-    //     no grammage, areaM2 stays undefined (the finance listener then books the rental with the
-    //     area pending rather than inventing a number).
+    // Rental-timer storage footprint (areaM2): an explicit areaM2 on the command always wins (e.g.
+    // roll receipts that already know it). Otherwise we try to derive it from the finished good.
+    // DECISION 8: the old fallback read material_cards by the productId (WRONG id space —
+    // products.id is disjoint from material_cards.id) and applied the roll weight/grammage formula
+    // (wrong for a finished-good box) — removed (see _resolveAreaM2ForProduct). Q-40: when no
+    // product-keyed area source is available, areaM2 stays undefined and the finance listener books
+    // the rental with the area pending rather than inventing a number.
     const resolvedAreaM2 =
       command.areaM2 != null && Number.isFinite(command.areaM2) && command.areaM2 > 0
         ? command.areaM2
-        : await this._resolveAreaM2FromMaterial(command.materialId, command.amount);
+        : await this._resolveAreaM2ForProduct(command.materialId, command.amount);
 
     // Trigger 12: WMS FG → FI ijara taymer
     // PA2-18 Wave 6: canonical class form; EventBridge re-emits to legacy @OnEvent listeners.
@@ -151,42 +149,33 @@ export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
   }
 
   /**
-   * T23-A2 — derive the FG storage footprint (m²) from real material-card data so the rental
-   * timer has a non-fabricated area. Weight-unit FG (kg/tn) → areaM2 = weightKg × 1000 / grammage
-   * (the canonical roll-area formula). Q-40: returns undefined (NOT a fabricated 1/0) when the FG
-   * is not weight-based or has no grammage — the finance listener then books the rental with the
-   * area pending. Never throws; a lookup failure simply yields undefined.
+   * DECISION 8 — derive the FG storage footprint (m²) for the rental timer from a PRODUCT-space
+   * source. A finished good's area = its physical footprint (length × width), NOT a weight/grammage
+   * figure (that formula is a raw-ROLL concept — rulon_cards/material_cards.grammage).
+   *
+   * The previous implementation read `SELECT grammage FROM material_cards WHERE id = <productId>` and
+   * applied the roll formula. That was wrong TWICE: (1) products.id and material_cards.id are disjoint
+   * id spaces, so it matched nothing today; and (2) it was a latent CORRECTNESS HAZARD — the two id
+   * sequences already overlap in range (material_cards_id_seq=57, products_id_seq=53), so a future
+   * product id (≥58) will collide with an unrelated raw-material card and fabricate an area from ITS
+   * grammage. Removed.
+   *
+   * OWNER-DATA-GAP (read-only-verified 2026-07-09): there is currently NO populated, product-keyed
+   * source of finished-good dimensions. `products` and `product_masters` have no dimension columns,
+   * `sales_order_items` has none, and the only table with dimension columns
+   * (`sd_quotation_items`.length_mm/width_mm/height_mm) has no product_id link and is empty. So FG
+   * area/m² cannot be resolved yet. Q-40: return undefined (area PENDING) — the finance listener then
+   * books the rental with the area pending, NOT a fabricated number. This removes the cross-space
+   * hazard now; wiring the real footprint (areaM2 = length_mm × width_mm / 1e6 × amount) awaits an
+   * owner decision to add product dimensions (see DECISION 8 report).
    */
-  private async _resolveAreaM2FromMaterial(
-    materialId: number,
+  private async _resolveAreaM2ForProduct(
+    productId: number,
     amount: number,
   ): Promise<number | undefined> {
-    if (!materialId || !Number.isFinite(amount) || amount <= 0) return undefined;
-    try {
-      const r = await runQuery<{ unit_of_measure: string | null; grammage: string | number | null }>(sql`
-        SELECT unit_of_measure, grammage
-        FROM material_cards
-        WHERE id = ${materialId}
-        LIMIT 1
-      `);
-      const row = Array.isArray(r.rows) ? r.rows[0] : undefined;
-      if (!row) return undefined;
-      const unit = String(row.unit_of_measure ?? '').toLowerCase();
-      const grammage = row.grammage != null ? Number(row.grammage) : NaN;
-      // Only weight-based FG can use the weight→area formula. Pieces/sht/units carry no area.
-      const weightKg = unit === 'kg' ? amount : unit === 'tn' || unit === 't' ? amount * 1000 : NaN;
-      if (!Number.isFinite(weightKg) || !Number.isFinite(grammage) || grammage <= 0) {
-        return undefined;
-      }
-      // areaM2 = weightKg × 1000 / grammageGsm  (mirrors wms-roll-calc.service)
-      const area = (weightKg * 1000) / grammage;
-      return Number.isFinite(area) && area > 0 ? Math.round(area * 1000) / 1000 : undefined;
-    } catch (e: unknown) {
-      this.logger.warn(
-        { materialId, err: e instanceof Error ? e.message : String(e) },
-        'areaM2 resolution failed — rental timer will book with area pending',
-      );
-      return undefined;
-    }
+    if (!productId || !Number.isFinite(amount) || amount <= 0) return undefined;
+    // No product-keyed FG dimension source exists yet (owner-data-gap) → honest PENDING, never a
+    // cross-space material_cards read, never a fabricated figure.
+    return undefined;
   }
 }
