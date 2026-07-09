@@ -77,9 +77,13 @@ export class NotificationPreferencesRepository {
 
   async markAllReadByUserId(userId: number): Promise<Result<MarkAllReadResult>> {
     try {
+      // The feed (NotificationCenter via pos_notifications) reads `is_read`, not the legacy
+      // `read` column (external writers set is_read; `read` stays false on all rows), so marking
+      // only `read` marked nothing the reader looks at. Set is_read (+ read for legacy
+      // consistency) + read_at, and filter on the reader's real unread flag.
       const result = await db.update(notificationsApp)
-        .set({ read: true })
-        .where(and(eq(notificationsApp.userId, userId), eq(notificationsApp.read, false)))
+        .set({ isRead: true, read: true, readAt: sql`now()` })
+        .where(and(eq(notificationsApp.userId, userId), eq(notificationsApp.isRead, false)))
         .returning({ id: notificationsApp.id });
       return Ok({ updated: result.length });
     } catch (e: unknown) { return Err((e as Error).message); }

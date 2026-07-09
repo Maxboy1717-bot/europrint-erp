@@ -162,7 +162,10 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     const notification = new Notification(
       String(row.userId ?? ''),
       String(row.title ?? ''),
-      String(row.message ?? ''),
+      // Read `body` first: external writers (pos/cron) populate body (6765/6765) but leave the
+      // drifted-nullable `message` NULL, so reading message alone returned empty for every real
+      // row. body ?? message keeps repo-created rows (which set both) working too.
+      String(row.body ?? row.message ?? ''),
       String(row.type ?? 'info'),
     );
 
