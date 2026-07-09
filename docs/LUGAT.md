@@ -134,6 +134,9 @@ CRM lead bosqichi (crm_pipeline_stages.code):
 | `material_id` va `material_card_id` | material_card_id = eski nom. material_id = kanonik |
 | `unit` va `unit_of_measure` | unit_of_measure = eski ustun nomi. unit = yangi kanonik |
 | POS = kassir | POS Monitor = zavod ombori kirim/chiqim (kassir emas!) |
+| `split` (uch xil ma'no — aralashtirilmasin) | **qisman yetkazish** = partial delivery (mijozga buyurtmani bo'lib yetkazish; SD `sales_orders.delivery_status` — kanonik qiymat `'partial'`; hozircha stub, #19 da quriladi) ≠ **ish taqsimlash** = operation-split (bitta ishni bir nechta dastgohga taqsimlash; EP-PP-063 bo'yicha **QURILMAYDI** — "ish bo'linmaydi, 100% tugamaguncha") ≠ **income-split** = moliya 4-fond taqsimoti (`income_split_config`, GL — ishlab turibdi, "split" so'zi shunga tegishli) |
+
+> **Split disambiguation (owner-decisions 2026-07-09):** kodda hech qaysi "split"/kolonna ikki maqsad-tushunchani (qisman-yetkazish / ish-taqsimlash) ulashmaydi — faqat moliya `income-split` "split" so'zini ishlatadi. Shuning uchun rename shart emas; bu faqat nomlash qoidasi. Yangi kodda **"split"** bare-so'zini yetkazish/operatsiya uchun ishlatMANG (moliya bilan to'qnashadi): yetkazish → `partial_delivery`/`qisman_yetkazish`, operatsiya → `operation_split`/`ish_taqsimlash`. Operation-split = QURILMAYDI (EP-PP-063). Partial-delivery build = #19 (SB0265/275) — FE UPPERCASE `PARTIALLY_DELIVERED` vs DB lowercase `not_delivered` vs dashboard `'PARTIALLY'` uch tomonlama drift #19 da bitta kanonik to'plamga keltirilsin (additiv).
 
 ---
 
