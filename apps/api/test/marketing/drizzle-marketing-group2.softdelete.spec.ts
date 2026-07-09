@@ -39,10 +39,12 @@ describe('DrizzleMarketingGroup2Repository.softDeleteLead (item 3 — real strin
     if (r.ok) expect(r.data.message).toContain("o'chirildi");
   });
 
-  it('returns Err (not fake success) when the id matches no row', async () => {
+  it('returns a NOT_FOUND Err (not fake success, not a 500) when the id matches no row', async () => {
     dbStub.__setResolved([]);
     const r = await repo.softDeleteLead('demo-lead-004');
     expect(r.ok).toBe(false); // old code returned Ok here — the fake-delete
+    // structured NOT_FOUND so unwrapOrThrow maps to HTTP 404, not a bare-string INTERNAL/500
+    if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
   });
 
   it('binds the string id via a sql comparison (no Number()/NaN coercion)', async () => {

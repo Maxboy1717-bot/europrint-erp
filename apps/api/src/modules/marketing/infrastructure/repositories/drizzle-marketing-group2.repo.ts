@@ -347,7 +347,10 @@ export class DrizzleMarketingGroup2Repository {
         .where(sql`${marketingLeads.id} = ${id}`)
         .returning({ id: marketingLeads.id });
       if (!Array.isArray(rows) || rows.length === 0) {
-        return Err('Lead topilmadi');
+        // Structured NOT_FOUND (not a bare string) so unwrapOrThrow maps it to HTTP 404,
+        // matching every other method in this repo. A bare Err(string) becomes code
+        // 'INTERNAL' -> 500, which is wrong for a missing lead and noisy in monitoring.
+        return Err({ code: 'NOT_FOUND' as const, message: `Lead topilmadi: ${id}` });
       }
       return Ok({ message: "Lead o'chirildi" });
     } catch (e) {
