@@ -324,7 +324,7 @@ export default function SDCustomers() {
           />
 
           {/* Table */}
-          <div className="bg-card rounded-xl border-none overflow-hidden">
+          <div className="bg-card rounded-xl border border-[var(--ep-border)] overflow-hidden">
             <div className="ep-table-scroll">
               <Table>
                 <TableHeader>
