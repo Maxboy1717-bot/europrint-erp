@@ -9,7 +9,10 @@
  *                          legacy/unused column on this table (no FK, drizzle-sales-order.repo never
  *                          writes it) — reading it here previously made every real order look like
  *                          "no lines" to ATP.
- *   - products           : canonical finished-good catalog (name, unit) + stock_quantity fallback.
+ *   - products           : canonical finished-good catalog (name, unit).
+ *   - warehouse_stock_fg : finished-goods stock (products.id-keyed) — SUM(available_quantity) per product
+ *                          is the real free-to-promise on-hand (DECISION 3; replaces the dead
+ *                          products.stock_quantity read, which was never written and always NULL).
  *
  * Finished goods are made-to-order via production, not replenished from a supplier lead time like
  * raw materials — there is no per-product inventory_policy row. Every short/unknown line therefore
@@ -35,7 +38,7 @@ export interface AtpSupplyRow {
   productId: number;
   productName: string | null;
   unit: string | null;
-  /** Free stock now: products.stock_quantity (finished-good on-hand quantity). */
+  /** Free stock now: SUM(warehouse_stock_fg.available_quantity) across FG warehouses (finished-good on-hand). */
   available: number;
   /** Whether a products row exists for this id (false ⇒ unknown product). */
   productExists: boolean;
@@ -85,7 +88,10 @@ export class DrizzleSdAtpRepository {
           ids.product_id,
           p.name AS product_name,
           p.unit AS unit,
-          COALESCE(p.stock_quantity, 0) AS available,
+          COALESCE(
+            (SELECT SUM(fg.available_quantity) FROM warehouse_stock_fg fg WHERE fg.product_id = ids.product_id),
+            0
+          ) AS available,
           (p.id IS NOT NULL) AS product_exists
         FROM ids
         LEFT JOIN products p ON p.id = ids.product_id`);
