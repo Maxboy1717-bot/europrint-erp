@@ -95,6 +95,17 @@ Owner answered 8 items; built the buildable ones (commits on `chore/schema-conve
   endpoint (CC controller has only draft/send/approve) and no approved-request→POS-issue link. Rough size:
   ~0 new tables (reuse cc_documents), 1 template + steps seed, ~2–3 files to wire request→approval→POS
   reference on `pos_movements`. Owner to greenlight as a dedicated future pass.
+- **Design-system §3.5 (added 2026-07-11).** Two page-shell systems coexist: canonical `EPPageHeader`
+  (162 pages) and the parallel `ModulePage` (`components/ui/module-page.tsx`, 45 pages, own colour map).
+  Its root spacing was fixed to `space-y-6` this pass (commit `436e060f`); the remaining decision is
+  whether to **migrate all 45 ModulePage consumers to EPPageHeader and retire ModulePage** (converge on
+  one shell) or keep it as a documented second system. No new schema.
+- **Design-system §3.1/§3.3 (added 2026-07-11).** The peach-modal root token was fixed (commit
+  `dbce2b1e`, `--background`→#FAFAF9). Two optional follow-ups from the same proposal were NOT in the
+  design task's D1–D6 list, so not built: (a) change shared `ui/dialog.tsx`/`alert-dialog.tsx`/`sheet.tsx`
+  default `bg-background`→`bg-card` so modals get a pure-white surface distinct from the #FAFAF9 page;
+  (b) retire the `kit.css` blush sub-palette (`--bg-blush*`/`--line-warm*`) + its `badge.tsx`/`button.tsx`
+  hover consumers (peach can still surface on hover). Greenlight either/both as small shared-component fixes.
 
 ## 2. Master-data / seed (provide the values — schema already built)
 
@@ -137,6 +148,25 @@ Owner answered 8 items; built the buildable ones (commits on `chore/schema-conve
   `ntf_bot_health`/`ntf_doc_views` tables.
 - **Marketing/Director**: GL "reklama xarajati" sub-code; delay_count/plan_deviation counters;
   daily_plan/operation_norm/control_sheet tables.
+- **MES(08)** *(added 2026-07-11, full item-level triage — extends the "IoT/MES norma_per_hour/12h"
+  line above)*: **one sign-off here unlocks the largest block of MES vision items.**
+  - Norma-**versioning** (`effective_date`+`version` on the norm table) so a session locks its norm
+    version — retro-safety (plan items 4/17/58; unlocks downstream 11/13).
+  - `oee_targets(scope, target, effective_date, set_by)` table (item 36) — replaces hardcoded `85`
+    at `MESExtended.tsx:146`; НО/director-editable + versioned.
+  - `machine_crew_members(session_id, employee_id, role_label, share_percent)` child table (items
+    83/23/55/94) — N named assistants + contribution %, replacing 4 fixed-role columns.
+  - `station_norms(station_id, unit_id, hourly_rate, twelve_hour_rate, effective_date, department)`
+    + station×`unit_of_measures` link (items 84/85/88/95); Ofset(НО12-1)/Flekso(НО12-2) scoping.
+  - Additive seed downtime codes `DT-NOWORK`, `DT-MOLD` into `mes_downtime_reasons` (86/87/97).
+  - Columns: `production_sessions` training-boolean (33, exclude from OEE); format/gramm (24);
+    `equipment` passport-power kVt (28); layer/gofra (34); corrected-net qty class (25);
+    `equipment_department_assignments` junction (92).
+  - **Item 68** (stopped-machine 15/30-min auto-alert) is buildable on existing schema but its
+    15min→НО / 30min→director routing hits the blocked org `head_user_id` — needs a routing
+    decision (reuse SOS org-chain resolver as-is, or route by RBAC role) before build.
+- **MES(08) master-data** *(→ belongs to §2 too)*: the real ~30-machine list + Tigel 1-10 into the
+  existing `equipment` table (items 89/90) — pure owner data entry, no schema change.
 
 ## 4. Cross-module event maps (need the consumer/contract defined)
 
