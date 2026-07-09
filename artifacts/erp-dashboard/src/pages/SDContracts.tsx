@@ -213,7 +213,7 @@ export default function SDContracts() {
         emptyTitle="Shartnomalar topilmadi"
         emptyDescription="Taklifnoma tasdiqlanganida avtomatik yaratiladi."
       >
-        <div className="bg-card rounded-xl overflow-hidden border-none">
+        <div className="bg-card rounded-xl overflow-hidden border border-[var(--ep-border)]">
           <table className="w-full text-left">
             <thead>
               <tr>
