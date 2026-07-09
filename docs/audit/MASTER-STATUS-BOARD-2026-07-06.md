@@ -36,6 +36,32 @@
 | CE-2 (HIGH) — `/api/director/approvals/pending?limit=5` 422 | **FIXED** | `275fe94c` | Root cause: `GetPendingDtoSchema`'s `page`/`limit` used `z.number()`, but `@Query()` always delivers HTTP query-string values as strings — fixed with `z.coerce.number()`, matching every sibling query schema in the module. Live-verified: reproduced the exact 422 before, confirmed 200 with real approval data after, using the exact reported repro. |
 | CE-3 (MEDIUM) — 3 missing i18n keys in `PendingApprovalsCard.tsx` | **FIXED** | `8bac9d2e` | `kutilayotganTasdiqlar`/`hitlTasdiqSorovlari`/`kutayotganTasdiqYoq` were missing from all 3 locale files (not just uz) — real translations added to all 3. Note: the FE's `t(key, fallback)` 2-arg pattern already prevented literal raw-key display (falls back to inline Uzbek text on any missing key), so the actual symptom was ru/uz-cyr users silently seeing Uzbek text for these 3 labels, not raw keys as literally described — same underlying gap, corrected symptom description. |
 
+## Six-batch verification + build (2026-07-09 → 07-10)
+
+> One session processed six dispatched batches. Verification (Batches 1-3) was an
+> independent read-only pass (git ledger + re-derived DB-proofs + 98 tests re-run).
+
+| Batch | Scope | True status | Commits |
+|---|---|---|---|
+| 1 | Vision-Build Pass 2 (Section-6 residuals + re-scan) | **DONE-VERIFIED** — 9 commits real; re-derived Director `/kpi` phantom-table (`kpi_metrics` absent, canonical present), CRM invoice uuid (`id='0'` throws), Marketing A2 (campaigns.id varchar) | `5173d1d8`,`79b70747`,`9400075d`,`2099949e`,`16147dc3`,`91aca52a`,`e9ef01d9`,`0c7960ca`,`5bce37e6` |
+| 2 | 9 fake-saves (Mkt/PP/WMS/CRM/SD) | **DONE-VERIFIED** — incl. 2 adversarial-verify follow-ups (`softDeleteLead` 500→404; SD internal-notes real fields). 3 Q-35 flags **re-confirmed still-live**: `social_messages.conversation_id` int vs `social_conversations.id` varchar; `production_sessions` missing dept/shift cols; `wms_in_transit_shipments` missing `invoice_number` | `cd25da8d`,`a2295249`,`9d490690`,`cda7ce1e`,`9111fdf1`,`be40fa14`,`0c7960ca` |
+| 3 | 8 owner-decisions | **DONE-VERIFIED** — LOW_STOCK per-user warehouse routing (rule=`warehouse_keeper` ✓); Kanban inert map; granular notif prefs; MES accepted-status; frozen-zone/split docs. **3 blockers re-confirmed live** (see below) | `34f2b9d8`,`a2499ab0`,`8b35f2e3`,`1762c6c8`,`d39c33e5`,`8368657b`,`190c2854` |
+| 4 | MM security + 15 fake-saves | **PARTIAL** — Phase 0 (SoD security) **DONE-THIS-SESSION + VERIFIED**; Phase 1 (13 items) **investigated, not built** (1.3 already-fixed by `d39c33e5`; 1.1 premise incomplete — service also drops `assignedTo`) | Phase 0 = `b779f221` |
+| 5 | 16 owner-decisions (schema/CRUD/cleanup/calendar) | **NOT STARTED** | — |
+| 6 | CRM ownership (Item A) + SD zayavka 5-gate (Item B) | **Item A ATTEMPTED→REVERTED** (implement-only sub-agent died mid-refactor; broken partial NOT committed, tree restored clean); **Item B NOT STARTED** (5-gate safety-critical, needs a dedicated session) | — |
+
+**Batch-3 blockers (re-confirmed live 2026-07-09):**
+- **CRM ownership (→ Batch 6 Item A):** `crm_leads.assigned_to` exists but 0/16 populated; `crm_deals`/`deals` have NO `assigned_to`. Owner decided (Item A) to converge on `assigned_to` + add it to deals — attempted, reverted (see above).
+- **SD stock-out coupling (→ Batch 6 Item B):** POS `EXTERNAL_OUT` already decrements `warehouse_stock` inline; no delivery↔POS link (0 EXTERNAL_OUT rows) → retiring `#51` prematurely = silent under-issue. Owner decided the 5-gate zayavka chain (Item B).
+- **MES shift-id:** `shifts` master table = 0 rows; no shift-id source. (Accepted-status half shipped `8368657b`.)
+
+**Open owner-facing questions carried forward:**
+- LOW_STOCK routing is mechanism-only until warehouse users exist: **0 active `warehouse_keeper` users**; **6,739** historical `user_id=0` LOW_STOCK rows left as-is (non-destructive).
+- Dead-code: PP `/planning/schedule` (`createScheduleEntry`) — 0 FE callers → wire up or remove?
+- Q-35 column gaps (Batch 2's 3 flags above) awaiting sign-off.
+
+---
+
 ## VISION-3340 batch2 fix-workflow — CLOSED OUT (2026-07-08)
 
 `wf_91c2396c-5db` ("vision-3340-fix-batch2", 39 clustered work-units covering the
