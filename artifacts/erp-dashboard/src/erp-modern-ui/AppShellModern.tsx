@@ -176,8 +176,12 @@ export function AppShellModern({
         )}
         style={{ height: "calc(100dvh - 3.5rem)", display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
-        {/* flex-1 + min-h-0 gives children a real height to fill with h-full */}
-        <div className="p-4 lg:p-6" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
+        {/* flex-1 + min-h-0 gives children a real height to fill with h-full.
+            overflowX:auto (not hidden) so children that request horizontal scroll
+            (Kanban boards, wide tables via overflow-x-auto) can actually scroll instead
+            of being clipped by this ancestor. auto renders identically to hidden when
+            content does not overflow, so this is safe for every non-overflowing page. */}
+        <div className="p-4 lg:p-6" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "auto" }}>
           {children}
         </div>
       </main>
