@@ -91,6 +91,9 @@ export interface Raspo {
   status: RaspoStatus;
   priority: string;
   from_name?: string;
+  // Batch 5 Item 11 — dokladan avto-yaratilgan ko'rsatma belgisi + manba-dokla.
+  auto_generated?: boolean;
+  source_dokla_id?: number | null;
 }
 
 export interface BasketDoc {

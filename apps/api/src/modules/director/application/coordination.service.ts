@@ -48,7 +48,17 @@ export class CoordinationService {
     const record = existing.data[0] as Record<string, unknown>;
     if (String(record.from_user_id) !== String(userId) && !PRIVILEGED_ROLES.has(userRole))
       return Err({ code: 'FORBIDDEN', message: "Faqat muallif yoki administrator o'zgartira oladi" });
-    return this.repo.updateDokla(id, status);
+    const updated = await this.repo.updateDokla(id, status);
+    if (!updated.ok) return updated;
+    // Batch 5 Item 11 — hisobot (dokla) 'resolved' bo'lsa, taklifidan avtomatik ko'rsatma
+    // (rasporyazhenie) yaratiladi. Idempotent (source_dokla_id unique) — takror 'resolved' PATCH
+    // ikkinchi rasp yaratmaydi. Xatoni yutamiz: avto-rasp dokla yangilanishini buzmasin.
+    let autoRasp: unknown = null;
+    if (status === 'resolved') {
+      const rasp = await this.repo.createRaspFromDokla(id, userId);
+      if (rasp.ok) autoRasp = rasp.data;
+    }
+    return { ok: true, data: { ...(updated.data as Record<string, unknown>), autoRasporyazhenie: autoRasp } };
   }
 
   async deleteDoklaWithAuth(

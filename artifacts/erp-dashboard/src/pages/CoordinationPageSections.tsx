@@ -193,7 +193,14 @@ export function RaspoSection({
                   <ArrowDown className="w-3.5 h-3.5 text-[var(--ep-primary)]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{r.task}</p>
+                  <p className="text-sm font-medium">
+                    {r.task}
+                    {r.auto_generated && (
+                      <span className="ml-2 align-middle inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-[var(--ep-primary)]/10 text-[var(--ep-primary)]" data-testid={`raspo-auto-${r.id}`}>
+                        {isRu ? "Авто (из доклада)" : "Avto (hisobotdan)"}
+                      </span>
+                    )}
+                  </p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-[11px] text-muted-foreground">{isRu ? "Кому:" : "Kimga:"} <b>{r.to_name ?? r.to_user}</b></span>
                     {r.from_name && <span className="text-[11px] text-muted-foreground">{isRu ? "От:" : "Kimdan:"} {r.from_name}</span>}

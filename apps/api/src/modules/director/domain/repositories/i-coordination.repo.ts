@@ -36,6 +36,12 @@ export interface ICoordinationRepo {
   ): Promise<Result<Row>>;
   listRasporyazhenie(): Promise<Result<Row[]>>;
   getRaspById(id: number): Promise<Result<unknown[]>>;
+  /**
+   * Batch 5 Item 11 — dokla (hisobot) 'resolved' bo'lganda undan avtomatik rasporyazhenie
+   * (ko'rsatma) yaratish. Idempotent: shu dokla uchun rasp allaqachon bo'lsa null qaytaradi.
+   * task = dokla.proposal (bo'lmasa subject); to_user = dokla muallifi; auto_generated=true.
+   */
+  createRaspFromDokla(doklaId: number, issuedBy: number): Promise<Result<Row | null>>;
   markRaspDone(id: number, userId: number, note: string | null): Promise<Result<Row>>;
   updateRasp(id: number, status: string | null): Promise<Result<Row>>;
   deleteRasp(id: number): Promise<void>;

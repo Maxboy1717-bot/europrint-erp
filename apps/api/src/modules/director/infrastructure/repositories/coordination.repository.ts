@@ -99,6 +99,27 @@ export class CoordinationRepository implements ICoordinationRepo {
       }, 'DB_ERROR');
   }
 
+  // Batch 5 Item 11 — dokla 'resolved' bo'lganda undan avto-rasporyazhenie. Raw parametrized SQL
+  // (source_dokla_id/auto_generated migration-qo'shilgan ustunlar, Drizzle def'da yo'q — runtime parity).
+  // Idempotent: qisman-unique index + INSERT ... WHERE NOT EXISTS. Proposal bo'sh bo'lsa subject ishlatiladi;
+  // ikkalasi ham bo'lmasa yaratmaydi (Q-40 — fabrikatsiya yo'q).
+  async createRaspFromDokla(doklaId: number, issuedBy: number): Promise<Result<Row | null>> {
+    return safeCall(async () => {
+      const dk = (await runQuery<Row>(sql`
+        SELECT id, from_user_id, subject, proposal FROM dokla WHERE id = ${doklaId} LIMIT 1`)).rows[0];
+      if (!dk) return null;
+      const task = ((dk.proposal as string) ?? '').trim() || ((dk.subject as string) ?? '').trim();
+      if (!task) return null; // hech qanday bajariladigan matn yo'q
+      const toUser = dk.from_user_id != null ? String(dk.from_user_id) : null;
+      const ins = (await runQuery<Row>(sql`
+        INSERT INTO rasporyazhenie (from_user_id, to_user, task, priority, status, source_dokla_id, auto_generated)
+        SELECT ${issuedBy}, ${toUser}, ${task}, 'normal', 'assigned', ${doklaId}, true
+        WHERE NOT EXISTS (SELECT 1 FROM rasporyazhenie WHERE source_dokla_id = ${doklaId})
+        RETURNING id, task, to_user, source_dokla_id, auto_generated`)).rows[0];
+      return ins ?? null; // null = allaqachon mavjud (idempotent)
+    }, 'DB_ERROR');
+  }
+
   async listRasporyazhenie(): Promise<Result<Row[]>> {
     return safeCall(async () => {
       return db.select({
@@ -114,6 +135,9 @@ export class CoordinationRepository implements ICoordinationRepo {
         done_note:    rasporyazhenie.done_note,
         created_at:   rasporyazhenie.created_at,
         updated_at:   rasporyazhenie.updated_at,
+        // Batch 5 Item 11 — avto-yaratilgan (dokladan) belgisi + manba-dokla (migration ustunlari; raw sql).
+        auto_generated: sql<boolean>`COALESCE(auto_generated, false)`,
+        source_dokla_id: sql<number | null>`source_dokla_id`,
         from_name:    sql<string>`COALESCE(NULLIF(TRIM(COALESCE(${hrEmployees.first_name},'') || ' ' || COALESCE(${hrEmployees.last_name},'')), ''), NULLIF(TRIM(COALESCE(${appUsers.first_name},'') || ' ' || COALESCE(${appUsers.last_name},'')), ''), '')`,
         to_name:      sql<string>`NULLIF(TRIM(COALESCE(${toUserAlias.first_name},'') || ' ' || COALESCE(${toUserAlias.last_name},'')), '')`,
       })
