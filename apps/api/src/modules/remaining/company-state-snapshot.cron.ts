@@ -36,8 +36,8 @@ export class CompanyStateSnapshotCron {
 
   constructor(private readonly companyState: CompanyStateService) {}
 
-  // Har kuni 06:00 (Asia/Tashkent) — kunlik holat snapshot.
-  @Cron('0 6 * * *', { timeZone: 'Asia/Tashkent' })
+  // Har kuni 07:00 (Asia/Tashkent) — kunlik holat snapshot (vizyon 05.3/#18: 07:00).
+  @Cron('0 7 * * *', { timeZone: 'Asia/Tashkent' })
   async dailySnapshot(): Promise<Result<{ written: boolean; stateCode: string }, AppError>> {
     this.logger.log('[CompanyStateSnapshot] kunlik holat snapshot boshlandi');
     return this.snapshotNow();
