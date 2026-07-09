@@ -35,6 +35,7 @@ import type { CreateMovementDto } from '../../src/modules/pos/dto/movement.dto';
 type CapturedInsert = {
   photoEvidenceUrl?: string | null; notes?: string | null;
   supplierName?: string | null; documentNumber?: string | null; documentDate?: string | null;
+  movementTypeId?: number | null;
 };
 
 function makeRepoMock() {
@@ -131,5 +132,16 @@ describe('PosMovementService.createMovement() — KIRIM receipt header (supplier
     expect(insertArg.supplierName).toBeNull();
     expect(insertArg.documentNumber).toBeNull();
     expect(insertArg.documentDate).toBeNull();
+  });
+
+  it('persists the resolved movement_type_id (was always NULL — only the code was written)', async () => {
+    const r = await svc.createMovement(
+      { movementTypeCode: 'INTERNAL_TRANSFER' } as unknown as CreateMovementDto,
+      1,
+    );
+    expect(r.ok).toBe(true);
+    const insertArg = repo.insertMovement.mock.calls[0][0] as CapturedInsert;
+    // makeRepoMock's findMovementTypeByCode resolves { id: 5, code: 'INTERNAL_TRANSFER' }
+    expect(insertArg.movementTypeId).toBe(5);
   });
 });

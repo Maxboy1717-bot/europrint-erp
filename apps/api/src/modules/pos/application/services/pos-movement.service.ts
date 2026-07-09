@@ -326,6 +326,10 @@ export class PosMovementService {
       const movementR = await this.repo.insertMovement({
         movementNumber,
         movementType:         movType.code as PosMovementType,
+        // Also persist the resolved type id (movement_type_id was always NULL — only the code
+        // column was written; the damage path already sets this). Keeps the FK-shaped column in
+        // sync with the code so joins/filters on movement_type_id resolve.
+        movementTypeId:       movType.id,
         status:               'draft',
         fromWarehouseId:      dto.fromWarehouseId,
         toWarehouseId:        dto.toWarehouseId,
