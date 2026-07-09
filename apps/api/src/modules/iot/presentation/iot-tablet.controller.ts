@@ -432,13 +432,26 @@ export class IotTabletController {
     const polmasterId = dto.polmasterId ?? null;
     const shogirdId   = dto.shogirdId   ?? null;
     const roklerId    = dto.roklerId    ?? null;
-    const r = await db.execute(sql`
-      INSERT INTO machine_crews (session_id, master_id, polmaster_id, shogird_id, rokler_id, created_at)
-      VALUES (${sessionId}, ${masterId}, ${polmasterId}, ${shogirdId}, ${roklerId}, NOW())
-      ON CONFLICT DO NOTHING
+    // Batch 2 item 1.4 (premise-corrected): machine_crews has NO unique constraint (only PK on id),
+    // so the old `ON CONFLICT DO NOTHING` never fired — every save silently INSERTed a DUPLICATE crew
+    // row (the read returns them all), contradicting this endpoint's "upsert / current crew" contract
+    // (the columns are one crew snapshot per session). Real replace-in-place upsert instead: UPDATE the
+    // session's latest crew row so a mid-shift crew change actually takes effect, or INSERT the first one.
+    const upd = await db.execute(sql`
+      UPDATE machine_crews
+      SET master_id = ${masterId}, polmaster_id = ${polmasterId}, shogird_id = ${shogirdId}, rokler_id = ${roklerId}
+      WHERE id = (SELECT id FROM machine_crews WHERE session_id = ${sessionId} ORDER BY id DESC LIMIT 1)
       RETURNING *
     `);
-    const row = ((r as Rows).rows ?? [])[0] ?? {};
+    let row = ((upd as Rows).rows ?? [])[0];
+    if (!row) {
+      const ins = await db.execute(sql`
+        INSERT INTO machine_crews (session_id, master_id, polmaster_id, shogird_id, rokler_id, created_at)
+        VALUES (${sessionId}, ${masterId}, ${polmasterId}, ${shogirdId}, ${roklerId}, NOW())
+        RETURNING *
+      `);
+      row = ((ins as Rows).rows ?? [])[0] ?? {};
+    }
     return { data: row };
   }
 
