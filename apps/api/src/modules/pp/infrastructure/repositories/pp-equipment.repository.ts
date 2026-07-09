@@ -241,7 +241,10 @@ export class PpEquipmentRepository implements IPpEquipmentRepo {
 
   async update(id: number, body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`UPDATE equipment SET status = COALESCE(${body['status'] ?? null}, status), name = COALESCE(${body['name'] ?? null}, name), updated_at = NOW() WHERE id = ${id} RETURNING *`);
+      // Batch 2 item 1.6: `location` is a real equipment column the UPDATE dropped (only status+name
+      // were set), so an equipment location edit "saved" but was lost. Added. NB: `notes` is NOT a
+      // column on equipment (verified live) — deliberately not added here; flagged Q-35 (owner schema).
+      const r = await exec(sql`UPDATE equipment SET status = COALESCE(${body['status'] ?? null}, status), name = COALESCE(${body['name'] ?? null}, name), location = COALESCE(${body['location'] ?? null}, location), updated_at = NOW() WHERE id = ${id} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
