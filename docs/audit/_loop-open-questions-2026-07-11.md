@@ -45,3 +45,30 @@ Fix #1/#2/#3):
 **Question:** Do you want Fix #2 and Fix #3 built too (each as its own commit, same discipline)?
 They're low-risk shared-component corrections but were not enumerated in the D1–D6 list, so per
 no-scope-creep I did not build them. D1 alone already removes the peach page/modal background.
+
+### Q-C2 — D5: how EPTable adoption was interpreted (safety-driven), + remainder
+`EPTable` (built in D3) is a **config-driven smart-table** (its `onRowAction` renders a single
+⋯ dropdown; columns/cells come from a `columns` array). The audit's "NOT separated" tables are
+**bespoke JSX tables** with inline multi-button row actions, per-row `data-testid`s, and
+per-column alignment that a wholesale swap to `<EPTable>` **cannot reproduce without changing
+behavior** (inline buttons→dropdown, lost testids/alignment). D5 itself says "preserving actions
+exactly … not a behavior change," and this loop forbids forcing an unsafe (behavior-changing)
+build. So I delivered D5's actual intent — **separation matching §3.4** — by applying the §3.4
+separation **spec in-place** (bordered `border border-[var(--ep-border)]` container where missing;
+`bg-muted/50` uppercase header; remove `border-none`/`shadow-none` strips), which is
+behavior-preserving. `EPTable` remains the canonical component for **new/greenfield** tables and
+any future table that is a clean config-fit.
+**If you'd rather** these specific tables be genuinely re-implemented on `<EPTable>` (accepting
+the actions→dropdown UX change and testid rework), say so and I'll convert them properly.
+
+**D5 done this pass (7, one commit each):** RulonCards (header bg), SDCustomers, SDContracts
+(border-none→border), GLDocuments, AccountsPayable, AccountsReceivable, SDKpi (flat→bordered).
+**Correctly skipped:** SalesOrdersSections:107 & SDDebitors:149 (table already inner-bordered —
+adding outer border would double it); DesignOrders:301/311 (a clickable order **card grid** +
+empty-state, not a data table — flat style intentional).
+**Named remainder for a future pass (~7 + long-tail):** CRM `ListView.tsx` (zero wrapper — needs
+a container built), `WarehouseReportsAllSections.tsx` ReportTable (zero wrapper + hardcoded gray
+`bg-gray-50`/`text-gray-600` → also needs token fix), `SDSalesManagement.tsx:232`,
+`SDSalesQuotes.tsx:255`, `PapkaOrdersSections.tsx:114`, `CashFlowManagementSections.tsx:176→211`,
+`BudgetManagementSections.tsx:215→255`; plus the broader long-tail (~65 raw `<table>` one-offs,
+Part 5 page-by-page #5, most already have adequate ad-hoc separation).
