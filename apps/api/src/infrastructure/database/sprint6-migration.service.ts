@@ -237,6 +237,21 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
     ];
   }
 
+  // SD status -> Kanban column auto-move mapping (owner-decisions batch item 4, Guruh-B).
+  // Ships INERT (ZERO rows); KanbanCardsRepository.moveOrderCardByStatusMap is a no-op
+  // until the owner seeds rules. Boot mirror of
+  // apps/api/src/shared/db/migrations/kanban-status-column-map-2026-07-09.sql.
+  private buildStatusColumnMapDdls(): string[] {
+    return [
+      `CREATE TABLE IF NOT EXISTS kanban_status_column_map (
+        id               SERIAL PRIMARY KEY,
+        sd_status        VARCHAR(64) NOT NULL UNIQUE,
+        kanban_column_id INTEGER NOT NULL REFERENCES kanban_columns(id),
+        created_at       TIMESTAMPTZ DEFAULT NOW()
+      )`,
+    ];
+  }
+
   private buildKanbanCardsAlterDdls(): string[] {
     return [
       `ALTER TABLE kanban_cards ADD COLUMN IF NOT EXISTS accepted_at       TIMESTAMPTZ`,
@@ -269,6 +284,7 @@ export class Sprint6MigrationService implements OnApplicationBootstrap {
       ...this.buildTagsObserversDdls(),
       ...this.buildTimeResultsFilesDdls(),
       ...this.buildNotificationsTemplatesDdls(),
+      ...this.buildStatusColumnMapDdls(),
       ...this.buildKanbanCardsAlterDdls(),
     ];
     const created = await this.applyDdlList(ddls);

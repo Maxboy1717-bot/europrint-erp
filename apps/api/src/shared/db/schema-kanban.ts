@@ -48,6 +48,19 @@ export const kanbanCards = pgTable('kanban_cards', {
   deleted_at:       timestamp('deleted_at'),
 });
 
+// ── SD status → Kanban column auto-move mapping (owner policy, INERT by default) ──
+// Guruh-B owner decision (owner-decisions batch item 4): when a sales order's SD
+// status changes, a linked kanban card may auto-move to a mapped column. Ships with
+// ZERO rows → the move mechanism (KanbanCardsRepository.moveOrderCardByStatusMap) is
+// a no-op until the owner inserts (sd_status → kanban_column_id) rules. One rule per
+// SD status (UNIQUE sd_status). kanban_column_id → kanban_columns.id (integer serial).
+export const kanbanStatusColumnMap = pgTable('kanban_status_column_map', {
+  id:             serial('id').primaryKey(),
+  sdStatus:       varchar('sd_status', { length: 64 }).notNull().unique(),
+  kanbanColumnId: integer('kanban_column_id').notNull(),
+  createdAt:      timestamp('created_at').defaultNow(),
+});
+
 export const kanbanFlows = pgTable('kanban_flows', {
   id:          uuid('id').primaryKey().defaultRandom(),
   boardId:     text('board_id'),

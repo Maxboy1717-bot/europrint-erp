@@ -169,4 +169,16 @@ export interface IKanbanBoardsRepo {
     oldStatus: string,
     newStatus: string,
   ): Promise<Result<void>>;
+
+  /**
+   * SD status → Kanban column auto-move (owner-decisions batch item 4, Guruh-B).
+   * Reads the `kanban_status_column_map` rule for `newStatus` and, if present, moves
+   * every linked sales_order card to the mapped column (same board only, and only
+   * when it changes column; sort_order = MAX+1 in the target). INERT by default: the
+   * map ships with ZERO rows, so with no rule this is a no-op that returns Ok(void).
+   * SEPARATE from {@link appendOrderStatusNote} (note-append stays column-agnostic).
+   * Best-effort: any failure returns Err (never throws) so a move miss can't break
+   * the SD status change.
+   */
+  moveOrderCardByStatusMap(orderId: number, newStatus: string): Promise<Result<void>>;
 }

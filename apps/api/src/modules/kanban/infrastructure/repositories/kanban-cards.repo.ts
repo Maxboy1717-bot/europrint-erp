@@ -19,7 +19,7 @@ import {
   MoveCardInput,
   UpdateCardInput,
 } from '../../domain/repositories/i-kanban-boards.repo';
-import { kanbanBoards, kanbanColumns, kanbanCards } from '../kanban-tables';
+import { kanbanBoards, kanbanColumns, kanbanCards, kanbanStatusColumnMap } from '../kanban-tables';
 
 @Injectable()
 export class KanbanCardsRepository {
@@ -333,6 +333,100 @@ export class KanbanCardsRepository {
       return Ok(undefined);
     } catch (error) {
       this.logger.error('appendOrderStatusNote: ' + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * SD status → Kanban column auto-move (owner-decisions batch item 4, Guruh-B).
+   * INERT until the owner seeds `kanban_status_column_map`: this reads the mapping
+   * rule for `newStatus` and, if one exists, moves every linked sales_order card to
+   * the mapped column. With ZERO map rows (ships empty) this is a pure no-op that
+   * returns Ok(void), so the status→column policy stays off until the owner enables
+   * it. This is a SEPARATE mechanism from {@link appendOrderStatusNote} (which only
+   * appends a note and must stay column-agnostic) — the two run side by side.
+   *
+   * Move guard: a card is moved ONLY when the mapped column lives on the card's own
+   * board AND is a different column than the card currently sits in. sort_order is
+   * placed at MAX+1 of the target column (appended last). Mirrors
+   * {@link moveOrderCardToCancelled}'s transaction/style and its String(orderId)
+   * binding for the drifted-to-varchar `related_id` (integer live). Best-effort:
+   * any failure returns Err (never throws) so a move miss can't break the SD status
+   * change.
+   */
+  async moveOrderCardByStatusMap(orderId: number, newStatus: string): Promise<Result<void>> {
+    try {
+      const orderIdText = String(orderId);
+
+      const outcome = await db.transaction(async (tx) => {
+        // 1. Owner-policy lookup: is there a mapping rule for this SD status?
+        const mapRows = await tx
+          .select({ kanban_column_id: kanbanStatusColumnMap.kanbanColumnId })
+          .from(kanbanStatusColumnMap)
+          .where(eq(kanbanStatusColumnMap.sdStatus, newStatus))
+          .limit(1);
+
+        const mappedColumnId = mapRows[0]?.kanban_column_id;
+        // INERT: no rule for this status → no-op (this is the ships-empty default).
+        if (mappedColumnId == null) return { mapped: false as const, moved: 0 };
+
+        // 2. Resolve the mapped column's board (move stays within the card's board).
+        const mappedColRows = await tx
+          .select({ id: kanbanColumns.id, board_id: kanbanColumns.board_id })
+          .from(kanbanColumns)
+          .where(and(eq(kanbanColumns.id, mappedColumnId), isNull(kanbanColumns.deleted_at)))
+          .limit(1);
+
+        const mappedColBoardId = mappedColRows[0]?.board_id;
+        if (mappedColBoardId == null) return { mapped: true as const, moved: 0 };
+
+        // 3. Find all cards linked to this order (mirror moveOrderCardToCancelled's
+        //    related_type + String(orderId) binding).
+        const linkedCards = await tx
+          .select({
+            id:        kanbanCards.id,
+            board_id:  kanbanCards.board_id,
+            column_id: kanbanCards.column_id,
+          })
+          .from(kanbanCards)
+          .where(
+            and(
+              eq(kanbanCards.related_type, 'sales_order'),
+              eq(kanbanCards.related_id, orderIdText),
+              isNull(kanbanCards.deleted_at),
+            ),
+          );
+
+        let moved = 0;
+        for (const card of linkedCards) {
+          // Move ONLY within the same board and only when it actually changes column.
+          if (card.board_id !== mappedColBoardId) continue;
+          if (card.column_id === mappedColumnId) continue;
+
+          // sort_order = MAX(sort_order)+1 in the target column (append at the end).
+          const maxRows = await tx
+            .select({ max_order: sql<number>`COALESCE(MAX(${kanbanCards.sort_order}), -1)` })
+            .from(kanbanCards)
+            .where(and(eq(kanbanCards.column_id, mappedColumnId), isNull(kanbanCards.deleted_at)));
+          const nextOrder = Number(maxRows[0]?.max_order ?? -1) + 1;
+
+          await tx
+            .update(kanbanCards)
+            .set({ column_id: mappedColumnId, sort_order: nextOrder, updated_at: sql`NOW()` })
+            .where(eq(kanbanCards.id, card.id));
+          moved += 1;
+        }
+
+        return { mapped: true as const, moved };
+      });
+
+      this.logger.log(
+        `moveOrderCardByStatusMap: orderId=${orderId} status=${newStatus} ` +
+        `mapped=${outcome.mapped} moved=${outcome.moved}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error('moveOrderCardByStatusMap: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
   }

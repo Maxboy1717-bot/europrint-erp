@@ -88,6 +88,8 @@ function makeRepo(ok = true) {
     appendOrderStatusNote: jest
       .fn()
       .mockResolvedValue(ok ? Ok(undefined) : Err(AppErr('DB_ERROR', 'append failed'))),
+    // Owner batch #4 (Guruh-B): status->column auto-move runs ALONGSIDE the note-append.
+    moveOrderCardByStatusMap: jest.fn().mockResolvedValue(Ok(undefined)),
     moveOrderCardToCancelled: jest.fn(),
     createKanbanForOrder: jest.fn(),
   };
@@ -113,6 +115,8 @@ describe('OrderStatusChangedKanbanHandler', () => {
     await handler.handle(new OrderStatusChangedEvent(42, 'shaping', 'approved'));
 
     expect(repo.appendOrderStatusNote).toHaveBeenCalledWith(42, 'shaping', 'approved');
+    // Also delegates the status->column auto-move (orderId, newStatus) — INERT unless mapped.
+    expect(repo.moveOrderCardByStatusMap).toHaveBeenCalledWith(42, 'approved');
   });
 
   it('resolves without throwing when repo succeeds', async () => {

@@ -50,6 +50,22 @@ export class OrderStatusChangedKanbanHandler
           `OrderStatusChangedKanbanHandler: orderId=${event.orderId} — ${result.error.message}`,
         );
       }
+
+      // ADDITIONAL (owner-decisions batch item 4, Guruh-B): status→column auto-move.
+      // INERT until the owner seeds kanban_status_column_map — with no rule this is a
+      // no-op. Runs ALONGSIDE the note-append above (note-append stays unchanged) and
+      // is equally best-effort: a move failure is logged, never thrown, and never
+      // undoes the note or breaks the SD status change.
+      const moveResult = await this.kanbanBoardsRepo.moveOrderCardByStatusMap(
+        event.orderId,
+        event.newStatus,
+      );
+
+      if (!moveResult.ok) {
+        this.logger.error(
+          `OrderStatusChangedKanbanHandler(move): orderId=${event.orderId} — ${moveResult.error.message}`,
+        );
+      }
     } catch (e) {
       // Best-effort: kanban sinxronizatsiya xatosi SD holat o'zgarishini buzmasin.
       this.logger.error(
