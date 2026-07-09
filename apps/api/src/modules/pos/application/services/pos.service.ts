@@ -10,7 +10,6 @@ import {
   CreateMovementTypeDto,
   GrantWarehouseAccessDto,
   CreateMovementDto,
-  AddMovementLineDto,
   UpdateMovementStatusDto,
 } from '../../dto/pos.dto';
 import { safeCall, Result, AppError } from '@common/result';
@@ -134,13 +133,9 @@ export class PosService {
   async createMovement(dto: CreateMovementDto, userId: number){
     return safeCall(async () => {
     return this.create(dto, userId);
-  
-    });}
 
-  async addMovementLine(id: number, dto: AddMovementLineDto){
-    return safeCall(async () => {
-    this.logger.log(`Adding line to movement ${id}`);
-    return { movementId: id, ...dto };
-  
     });}
+  // Batch 2 item 1.12 / Gate 2c: addMovementLine() removed — it was a dead orphan echo (returned
+  // { movementId, ...dto } with NO INSERT and no FE caller). Real per-line persistence lives in
+  // PosMovementService.addLines (the POST /movements create flow).
 }

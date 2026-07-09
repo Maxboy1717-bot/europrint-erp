@@ -18,7 +18,7 @@ import { PosService } from '../application/services/pos.service';
 import { PosInventoryService } from '../application/services/pos-inventory.service';
 import {
   CreateMovementTypeDto, GrantWarehouseAccessDto,
-  CreateMovementDto, AddMovementLineDto, UpdateMovementStatusDto,
+  CreateMovementDto, UpdateMovementStatusDto,
   CreateInventoryPassportDto, AssignBarcodeDto, CreatePdfTemplateDto,
 } from '../dto/pos.dto';
 import { unwrapOrInternal } from '@common/http-result';
@@ -125,15 +125,10 @@ export class PosController {
     return unwrapOrInternal(await this.service.createMovement(dto, user.id));
   }
 
-  @Post('movements/:id/lines')
-  @RequirePermission('pos.movements.write')
-  @ApiOperation({ summary: 'Harakatga mahsulot qatori qo\'shish' })
-  async addLine(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: AddMovementLineDto,
-  ) {
-    return unwrapOrInternal(await this.service.addMovementLine(id, dto));
-  }
+  // Batch 2 item 1.12 / Gate 2c: the POST /movements/:id/lines endpoint + its PosService.addMovementLine
+  // were a dead orphan echo (returned { movementId, ...dto } with NO INSERT, and no FE caller — the POS
+  // Monitor builds a movement WITH its lines client-side and submits via POST /movements, which persists
+  // to pos_movement_lines). Removed. The real per-line writer PosMovementService.addLines is unaffected.
 
   @Put('movements/:id/status')
   @RequirePermission('pos.movements.write')
