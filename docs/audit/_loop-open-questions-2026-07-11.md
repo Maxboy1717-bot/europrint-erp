@@ -8,7 +8,16 @@
 
 ## (a) Owner-gated items (need data / decision / credential / schema approval)
 
-_(none yet)_
+### Q-A1 — Deprecate the parallel `ModulePage` shell? (design §3.5 / Part 5 page-by-page #2)
+Two non-interoperating page-shell systems coexist: canonical `EPPageHeader` (162 files)
+and the parallel `ModulePage` (`components/ui/module-page.tsx`, 45 files) with its own
+per-module color map that duplicates the `--mod-*` accent concept. Phase-1 Item D4b already
+corrected ModulePage's root spacing (`space-y-4` → `space-y-6`) so it no longer violates the
+scale. The proposal's further recommendation — **migrate all 45 ModulePage consumers to
+EPPageHeader and retire ModulePage** — is a 45-file page-by-page effort AND a design
+decision (keep two documented systems vs. converge on one). Not done in this loop.
+**Question:** converge on EPPageHeader (retire ModulePage), or keep ModulePage as a
+documented second shell?
 
 ---
 
