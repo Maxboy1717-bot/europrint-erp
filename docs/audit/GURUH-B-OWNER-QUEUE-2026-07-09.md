@@ -95,15 +95,45 @@ Branch: `chore/schema-convergence`. Loop commits: `b0f3c144`..`0346b2e6`.
 
 ## 6. Low-value residuals (real but de-prioritized — no FE caller / cosmetic)
 
-- Marketing A2 campaign-stats crash-guard (FE-orphan + ads.campaign_id int vs campaigns.id varchar
-  = a Guruh-B join); A4 score-weight constants (cosmetic).
-- Notifications A2-A4: canonical `/api/notifications` reader/writer bugs (message vs body, read vs
-  is_read, uuid-vs-int DTO) — **no FE caller**.
-- Kanban getTaskStats 2× `due_date::timestamp` casts (IS-NOT-NULL-guarded; source now stops new '').
-- Director bot `/kpi` reads nonexistent `kpi_metrics`; missing `/holat`,`/kundalik`,`/ideal_rasm`
-  (Telegram-gated); company-state cron 06:00 vs vision 07:00.
-- POS `pos-stub.controller` low-stock/movements/monthly-report (no FE caller); `movement_type_id`
-  never written (code column is).
+> **Pass-2 (2026-07-09) update.** Re-triaged all 7 residuals; built the confirmed Guruh-A
+> parts (each with a DB-proof + a behavioral/render test), reclassified the rest as Guruh-B.
+> ✅ = shipped this pass, → B = stays owner-gated.
+
+- Marketing A2 campaign-stats — ✅ **shipped** `16147dc3`: both stats endpoints now take the raw
+  varchar slug id (was `Number(id)`→NaN→500) and aggregate `marketing_ads` only for numeric-shaped
+  ids (honest-zero for slugs). → B: the int `ads.campaign_id` ↔ varchar `campaigns.id` join is a
+  data-model decision.
+- Marketing A4 score-weight constants — ✅ **shipped** `91aca52a`: weights moved to
+  `LEAD_SCORE` in business.constants.ts (values unchanged; rollback-tx proof 12 leads).
+- Notifications A2 (read `body`) + A3 (markAllRead `is_read`) — ✅ **shipped** `9400075d`.
+  → **A4 reclassified Guruh-B**: the create DTO `z.string().uuid()` vs integer `user_id`/`reference_id`
+  ripples into the aggregate's string-vs-int `userId` model + notification-system unification — a
+  cross-cutting design decision, not a mechanical fix. Still **no FE caller** for the canonical reader.
+- Kanban getTaskStats 2× `due_date::timestamp` — ✅ **shipped** `79b70747`: both casts regex-gated
+  (`~ '^\d{4}-\d{2}-\d{2}'`), time-of-day preserved; DB-proof over garbage/'' rows.
+- Director bot `/kpi` — ✅ **shipped** `e9ef01d9`: re-pointed from the phantom `kpi_metrics` table to
+  the canonical `kpi_definitions JOIN kpi_values` (same source as the dashboard); DB-proof 6 real KPI
+  rows. `/ai` + `/summary` already hit real tables. Director company-state cron 06:00→07:00 — ✅
+  **shipped** `5173d1d8`. → B: extra bot commands (`/holat`,`/kundalik`,`/ideal_rasm`) need the owner
+  to define the intended command surface (+ Telegram token to live-test).
+- POS `movement_type_id` never written — ✅ **shipped** `2099949e` (code column was the only one set).
+  → No action: `pos-stub.controller` is a **misnomer** — all its endpoints do real work
+  (StockLedgerService + a real `pos_stock_ledger` insert); only the "Stub" name/tag is stale. Per Q-46
+  (working code isn't touched) a rename is cosmetic/risky and deferred.
+
+### 6b. Pass-2 re-scan finds (same bug class: coercion / phantom-table / green-lie)
+
+- CRM invoice stage/delete uuid id — ✅ **shipped** `0c7960ca`: `crm-bitrix-compat` did
+  `parseInt(id,10)||0` on a **uuid** `invoices.id` → `eq(id,'0')` threw *invalid syntax for uuid*, so
+  `PATCH /invoices/:id/stage` + `DELETE /invoices/:id` never touched the row. Threaded the raw string id
+  through controller→service→repo→interface; sibling proposals use integer `crm_proposals.id` (unchanged).
+- MM `getMaterial` reads `materials`(uuid) via `eq(id, String(number))` with an `id: number` signature —
+  → **B (needs investigation)**: no clear mm-controller caller, and it sits on the `materials`(uuid) vs
+  canonical `material_cards`(integer) ambiguity — which table MM should read is a semantic/owner call, not
+  a mechanical fix. Not forced.
+- Scanned but clean: `crm_proposals`/`crm_robots`/`design_tooling`/`product_categories`/`public_products`/
+  `purchase_orders`/`routings` all have **integer** ids (parseInt/String are correct). `finance/budgets`
+  has the same `String(id)` shape but **Finance-03 is a standing-blocked module** — not inspected/touched.
 
 ---
 
@@ -117,11 +147,11 @@ Branch: `chore/schema-convergence`. Loop commits: `b0f3c144`..`0346b2e6`.
 | SD 06 | delivery→WMS stock-out; advance 30→70; quotation→order outbox; order-detail page; items endpoint; clone dialog | firing point; PDF+deadline; expose flags in GET :id |
 | PP 07 | status-lifecycle endpoint+audit; override justification; reason-codes CRUD; plan CSV export | vocabulary seed; replan column; reservation; progress; split-gate |
 | CC 04+20 | self-route SoD; unresolved-route journal+notify; delegation cap; basket pagination; Prikaz/Protocol UI | RBAC filter; retention; events; hashes; quorum; councils |
-| CRM 13 | loss-rollup 500 fix; mark-deal-lost (uuid); lead engagement | #35 scoping; taxonomy; stages; aging; history tables |
-| Marketing 14 | lead varchar-id fake-save; phone VO normalize | goal-type/promo cols; product/region cols; brand/UTM tables |
-| Kanban 15 | parent/due fake-save; due_date report hardening; order-status card-sync | auto-move map; WIP/escalation tables; confidential |
+| CRM 13 | loss-rollup 500 fix; mark-deal-lost (uuid); lead engagement; **P2: invoice stage/delete uuid id** | #35 scoping; taxonomy; stages; aging; history tables |
+| Marketing 14 | lead varchar-id fake-save; phone VO normalize; **P2: campaign-stats varchar id + ads guard (A2); LEAD_SCORE constants (A4)** | ads↔campaign int-vs-varchar join; goal-type/promo cols; product/region cols; brand/UTM tables |
+| Kanban 15 | parent/due fake-save; due_date report hardening; order-status card-sync; **P2: getTaskStats both `due_date::timestamp` regex-gated** | auto-move map; WIP/escalation tables; confidential |
 | IoT 16 | session order/target; defect real count; downtime picker repoint | sensors/camera CAPEX; norma table; produced-count capture |
 | LMS 12 | certificate detail/download real data | card bindings; PDCA/rubric tables; full legal PDF |
-| Notifications 18 | NotificationCenter category field | per-type prefs storage; broadcast policy; SLA/outbox tables |
-| Director 05 | plan-fact/order-progress org_department_id; (+coordination-docs UI) | #9 root-cause; two-world join; plan/norm tables |
-| POS 19 | KIRIM header supplier/document; KIRIM line batch/lot | MES→POS FG-kirim; low-stock→PR; techcard gate FE |
+| Notifications 18 | NotificationCenter category field; **P2: reader reads `body` (A2); markAllRead sets `is_read` (A3)** | A4 uuid-vs-int DTO/aggregate; per-type prefs storage; broadcast policy; SLA/outbox tables |
+| Director 05 | plan-fact/order-progress org_department_id; (+coordination-docs UI); **P2: bot `/kpi` canonical KPI source; company-state cron →07:00** | extra bot commands (surface+token); #9 root-cause; two-world join; plan/norm tables |
+| POS 19 | KIRIM header supplier/document; KIRIM line batch/lot; **P2: persist `movement_type_id`** | MES→POS FG-kirim; low-stock→PR; techcard gate FE |
