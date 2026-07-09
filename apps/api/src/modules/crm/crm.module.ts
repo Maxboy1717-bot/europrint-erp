@@ -120,6 +120,10 @@ import { ChurnRetrainService } from './analytics/churn-retrain.service';
 import { CrmAnalyticsController } from './presentation/crm-analytics.controller';
 import { CRM_ANALYTICS_REPO } from './analytics/repositories/i-crm-analytics.repo';
 import { DrizzleCrmAnalyticsRepository } from './analytics/repositories/drizzle-crm-analytics.repo';
+// Batch 5 Item 6 — manager-owned CRM vocabularies (loss reasons + funnel stage names).
+import { CrmSettingsController } from './settings/crm-settings.controller';
+import { CrmSettingsService } from './settings/crm-settings.service';
+import { CrmSettingsRepository } from './settings/crm-settings.repo';
 
 const commandHandlers = [
   CreateLeadHandler, QualifyLeadHandler, CreateDealHandler,
@@ -159,6 +163,7 @@ const repositories = [
     CrmCustomFieldsController,
     CrmAiExtendedController,
     CrmAnalyticsController,
+    CrmSettingsController,
   ],
   providers: [
     loggerProvider,
@@ -224,6 +229,9 @@ const repositories = [
     WebsiteLeadService,
     // VISION-3340 #33 — Lead-aging avtomatik qayta biriktirish (daily @Cron)
     LeadAgingReassignCron,
+    // Batch 5 Item 6 — CRM vocabulary settings
+    CrmSettingsRepository,
+    CrmSettingsService,
   ],
   exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, CrmLeadScoringService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
 })
