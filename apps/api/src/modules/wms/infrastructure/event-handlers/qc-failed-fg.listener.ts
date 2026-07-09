@@ -7,12 +7,17 @@
  *   notification ({@link QcFailedNotificationListener} on the same {@link QcFailedEvent}).
  *   The WMS side did NOTHING — the failed (brak) quantity left no trace at all.
  *
- *   Batch 3 Variant-2 split (owner decision #1): FG-brak is NOT a physical stock balance. It is
- *   recorded in the pure REGISTER table `fg_scrap_log` (product_id, quantity, reason, source
- *   order, timestamp) — NO warehouse, NO stock balance, NO scrap-warehouse `warehouse_stock`
- *   row, and NO scrap `wms_transactions` movement. Rationale: raw material and finished goods are
- *   separate stock domains, and brak is a record-keeping event, not a warehouse balance. (This
- *   supersedes the earlier scrap-warehouse routing, which never ran on live data.)
+ *   Batch 3 Variant-2 split — brak is NOT a physical stock balance. It is recorded in TWO places:
+ *     • `fg_scrap_log` (owner decision #1): the detailed REGISTER — product_id, quantity, reason,
+ *       source order, timestamp. NO warehouse, NO stock balance.
+ *     • `wms_transactions` (owner decision #7): a summary AUDIT-LEDGER row so brak appears in the
+ *       unified "everything that left the warehouse" report instead of being siloed. type='OUT',
+ *       reference_id=orderId, material_id=product_id, attributed to the finished-goods warehouse —
+ *       the SAME OUT-side pattern the #51 delivery EXTERNAL_OUT uses. LEDGER-ONLY: NO warehouse_stock /
+ *       warehouse_stock_fg balance write (decision #1 stands — no physical scrap-warehouse stock).
+ *   Rationale: raw material and finished goods are separate stock domains; brak is a record-keeping +
+ *   audit event, not a warehouse balance. (Supersedes the earlier scrap-warehouse stock UPSERT, which
+ *   never ran on live data.)
  *
  *   NO FABRICATION (Q-40 / Q-46): the failed quantity is read from the real inspection row
  *   (`qc_inspections.fail_count`, fall back to `items_failed`) and the FG product from the real
@@ -131,6 +136,17 @@ export class QcFailedFgListener implements IEventHandler<QcFailedEvent> {
       return;
     }
 
+    // Decision #7: resolve the finished-goods warehouse for the audit-ledger row's warehouse_id
+    // (wms_transactions.warehouse_id is NOT NULL). The brak is finished goods that failed QC — the FG
+    // warehouse is their origin. This is a LEDGER attribution only, NOT a scrap-warehouse stock balance
+    // (decision #1 stands). Same resolution the #51 delivery / QC-pass siblings use. If missing, the
+    // fg_scrap_log register still records the brak; only the audit-ledger row is skipped (with a warning).
+    const fgWhRows = await runQuery<{ id: number | null }>(sql`
+      SELECT w.id FROM warehouses w WHERE w.type = 'finished_goods' ORDER BY w.id LIMIT 1
+    `);
+    const fgWarehouseId =
+      Array.isArray(fgWhRows.rows) && fgWhRows.rows[0]?.id != null ? Number(fgWhRows.rows[0].id) : 0;
+
     const reason = `QC-FAIL-${event.inspectionId}${event.reason ? `: ${event.reason}` : ''}`;
 
     for (const line of lines) {
@@ -163,8 +179,8 @@ export class QcFailedFgListener implements IEventHandler<QcFailedEvent> {
         continue;
       }
 
-      // Batch 3 Variant-2 split (decision #1): FG-brak is a PURE REGISTER — no warehouse, no stock
-      // balance, no wms_transactions movement. Record product + quantity + reason + source order only.
+      // (a) Detailed REGISTER (decision #1): fg_scrap_log — no warehouse, no stock balance. Written
+      //     FIRST so it is the dedup source: a re-fire after a full success finds this row and skips both.
       await runQuery(sql`
         INSERT INTO fg_scrap_log
           (product_id, quantity, reason, source_order_id, source_type, created_by, created_at)
@@ -172,9 +188,29 @@ export class QcFailedFgListener implements IEventHandler<QcFailedEvent> {
           (${productId}, ${failQty}, ${reason}, ${event.orderId}, 'qc_failed', NULL, NOW())
       `);
 
+      // (b) Audit LEDGER (decision #7): a wms_transactions OUT row so brak appears in the unified
+      //     "everything that left the warehouse" report — NOT siloed in fg_scrap_log. Same OUT-side
+      //     pattern as the #51 delivery EXTERNAL_OUT (type='OUT', reference_id=orderId, material_id=product),
+      //     linking this ledger row to the same order as the fg_scrap_log register. LEDGER-ONLY: NO
+      //     warehouse_stock / warehouse_stock_fg balance write (decision #1 stands). Skipped only if no
+      //     finished-goods warehouse exists (warehouse_id is NOT NULL) — the register above still stands.
+      if (fgWarehouseId > 0) {
+        await runQuery(sql`
+          INSERT INTO wms_transactions
+            (warehouse_id, material_id, type, quantity, unit_cost, reference_id, created_by, notes, created_at)
+          VALUES
+            (${fgWarehouseId}, ${productId}, 'OUT', ${failQty}, NULL, ${event.orderId}, NULL, ${reason}, NOW())
+        `);
+      } else {
+        this.logger.warn(
+          { orderId: event.orderId, productId },
+          'QcFailedFgListener: no finished-goods warehouse — brak registered in fg_scrap_log but NOT in the audit ledger',
+        );
+      }
+
       this.logger.log(
-        { orderId: event.orderId, productId, qty: failQty },
-        'QC failed → WMS: brak registered in fg_scrap_log (pure register, no warehouse stock)',
+        { orderId: event.orderId, productId, qty: failQty, audited: fgWarehouseId > 0 },
+        'QC failed → WMS: brak registered (fg_scrap_log) + audit-ledgered (wms_transactions OUT), no warehouse stock',
       );
     }
   }
