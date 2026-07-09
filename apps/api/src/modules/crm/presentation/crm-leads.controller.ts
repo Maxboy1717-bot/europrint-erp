@@ -50,6 +50,12 @@ const QualifyLeadSchema = z.object({
   expectedDealAmount: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 
+// Item A: reassign a lead to another manager. The owning manager (or a privileged role) hands the
+// lead to a different manager; assignedTo is the new owner's user id.
+const ReassignLeadSchema = z.object({
+  assignedTo: z.coerce.number().int().positive(),
+});
+
 const SendLeadEmailSchema = z.object({
   subject: z.string().max(500).optional(),
   body: z.string().max(50000).optional(),
@@ -181,6 +187,20 @@ export class CrmLeadsController {
     const parsed = QualifyLeadSchema.parse(dto);
     const command = new QualifyLeadCommand(safeInt(id, 0), Number(parsed.expectedDealAmount) || 0, new Date());
     return unwrapOrThrow(await this.commandBus.execute(command));
+  }
+
+  @ApiOperation({ summary: 'Reassign lead to another manager' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found or not owned' })
+  @Patch(':id/assign')
+  async reassign(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = ReassignLeadSchema.parse(body);
+    // Item A: ownership gate reuses findOne's row-scoping — a non-privileged manager may reassign
+    // only a lead they currently own (findOne throws 404 otherwise); privileged roles may reassign
+    // any. Then the update converges the new owner onto assigned_to (via the manager_id property).
+    await this.leadsService.findOne(safeInt(id, 0), user);
+    const res = await this.leadsService.update(safeInt(id, 0), { assignedTo: dto.assignedTo });
+    return unwrapOrThrow(res);
   }
 
   @ApiOperation({ summary: 'Send lead email' })
