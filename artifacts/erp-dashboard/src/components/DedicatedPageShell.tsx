@@ -27,7 +27,7 @@ export function DedicatedPageShell({
 }: DedicatedPageShellProps) {
   const { t } = useTranslation("common");
   return (
-    <div className="flex flex-col h-full p-5 lg:p-6 gap-5">
+    <div className="space-y-6">
       <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{title}</b></>}
         title={title}
