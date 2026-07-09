@@ -30,11 +30,24 @@ export class DirectorBotService {
   }
 
   private async getKpi(): Promise<BotReply> {
+    // Canonical KPI source is kpi_definitions JOIN kpi_values (same as the director
+    // dashboard). The old query hit a phantom `kpi_metrics` table (does not exist in the
+    // live DB) filtered on a NULL `period` column, so /kpi always fell through to a DB
+    // error. Take the latest snapshot per active KPI (kpi_values.period is unused/NULL;
+    // period_date carries the real date), preferring the value-row's target then the
+    // definition's target.
     const res = await execSqlResult<{ metric_name: string; value: string; target: string }>(
       sql`
-        SELECT metric_name, value, target
-        FROM kpi_metrics
-        WHERE period = TO_CHAR(NOW(), 'YYYY-MM')
+        SELECT metric_name, value, target FROM (
+          SELECT DISTINCT ON (kd.id)
+                 kd.kpi_name                                   AS metric_name,
+                 kv.value::text                                AS value,
+                 COALESCE(kv.target_value, kd.target_value)::text AS target
+          FROM kpi_definitions kd
+          JOIN kpi_values kv ON kv.kpi_id = kd.id
+          WHERE kd.is_active = true
+          ORDER BY kd.id, kv.period_date DESC NULLS LAST
+        ) t
         ORDER BY metric_name
         LIMIT 6
       `,
