@@ -226,7 +226,8 @@ export class MarketingAnalyticsController {
   @Get('reports/:id')
   @ApiOperation({ summary: 'Marketing kampaniya hisobot tafsiloti' })
   async getReportById(@Param('id') id: string) {
-    return unwrapOrBadRequest(await this.svc.getCampaignStats(Number(id)));
+    // campaign ids are varchar slugs — pass the raw id (Number(id) -> NaN 500'd the lookup).
+    return unwrapOrBadRequest(await this.svc.getCampaignStats(id));
   }
 
 }

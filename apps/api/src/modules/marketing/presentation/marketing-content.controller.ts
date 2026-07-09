@@ -34,7 +34,8 @@ export class MarketingContentController {
   @Get('campaigns/:id/stats')
   @ApiOperation({ summary: 'Kampaniya statistikasi' })
   async getCampaignStats(@Param('id') id: string) {
-    return unwrapOrBadRequest(await this.svc.getCampaignStats(Number(id)));
+    // campaign ids are varchar slugs -- pass the raw id (Number(id) -> NaN 500'd the lookup).
+    return unwrapOrBadRequest(await this.svc.getCampaignStats(id));
   }
 
   @Get('dashboard/stats')

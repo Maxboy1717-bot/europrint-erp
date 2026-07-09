@@ -152,7 +152,7 @@ export class MarketingExtService {
     });
   }
 
-  getCampaignStats(id: number): Promise<Result<Record<string, unknown>>> {
+  getCampaignStats(id: string): Promise<Result<Record<string, unknown>>> {
     return this.repo.getCampaignStats(id);
   }
 

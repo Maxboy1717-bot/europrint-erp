@@ -71,22 +71,34 @@ export class DrizzleMarketingExtRepository {
     return map;
   }
 
-  async getCampaignStats(id: number): Promise<Result<Record<string, unknown>>> {
+  async getCampaignStats(id: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
-      const [row] = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
-      const [adStats] = await db.select({
-        impressions: sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
-        clicks:      sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
-        conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
-        totalSpent:  sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
-        totalBudget: sql<number>`coalesce(sum(${marketingAds.budget}), 0)::numeric`,
-      }).from(marketingAds).where(eq(marketingAds.campaignId, String(id)));
+      // campaign ids are varchar slugs -- the caller previously did Number(id), so both the
+      // campaign lookup (varchar id vs number) and the ads query 500'd. Take the raw string id.
+      // The @europrint/schemas barrel drifted marketing_campaigns.id to PgInteger while live +
+      // the canonical def are varchar(36); compare via sql`` so the string param binds to the
+      // real varchar column instead of failing the eq() number-column overload.
+      const [row] = await db.select().from(marketingCampaigns)
+        .where(sql`${marketingCampaigns.id} = ${id}`).limit(1);
+      // marketing_ads.campaign_id is INTEGER in the live DB (the Drizzle def drifted to varchar)
+      // while campaign ids are varchar slugs -- the two cannot truly join. Aggregate ads only when
+      // the id is numeric-shaped; otherwise return zero ad stats (honest) instead of 500ing on the
+      // int cast. The int-vs-varchar ad->campaign join is a separate owner data-model decision.
+      const [adStats] = /^\d+$/.test(id)
+        ? await db.select({
+            impressions: sql<number>`coalesce(sum(${marketingAds.impressions}), 0)::int`,
+            clicks:      sql<number>`coalesce(sum(${marketingAds.clicks}), 0)::int`,
+            conversions: sql<number>`coalesce(sum(${marketingAds.conversions}), 0)::int`,
+            totalSpent:  sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
+            totalBudget: sql<number>`coalesce(sum(${marketingAds.budget}), 0)::numeric`,
+          }).from(marketingAds).where(eq(marketingAds.campaignId, id))
+        : [undefined];
 
       const spent   = Number(adStats?.totalSpent  ?? 0);
       // EP-MKT-051: ROI = (attributed sales revenue − marketing spend) / spend.
       // Profit-based per owner answer (NOT the old budget-utilization formula).
       const revenueMap = await this.getAttributedRevenueByCampaign();
-      const revenue = revenueMap[String(id)] ?? 0;
+      const revenue = revenueMap[id] ?? 0;
       const roi     = spent > 0 ? Math.round(((revenue - spent) / spent) * 100 * 100) / 100 : 0;
 
       const base = row ?? { id };
