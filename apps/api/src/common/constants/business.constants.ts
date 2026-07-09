@@ -236,6 +236,21 @@ export const OWNER_SALES_TREND_WINDOW_DAYS   = 30;
 export const VIP_REVENUE_THRESHOLD_UZS = 100_000_000;
 export const VIP_ACTIVE_WINDOW_DAYS    = 30;
 
+/**
+ * Marketing lead-score recompute weights (marketing leads/recalculate-scores):
+ * score = base + channel bonus (organic/referral) + status bonus, capped at MAX.
+ * Values pinned from the pre-existing recalculateLeadScores SQL — do not change
+ * without an owner decision (they drive the lead-warmth funnel).
+ */
+export const LEAD_SCORE = {
+  base:          30,  // every lead starts here
+  max:           100, // LEAST(100, ...) cap
+  channelBonus:  10,  // channel IN ('organic','referral')
+  statusHot:     15,
+  statusWarm:    8,
+  statusNew:     3,
+} as const;
+
 // ---------------------------------------------------------------------------
 // ABC score weighting (customer value ranking)
 // ---------------------------------------------------------------------------

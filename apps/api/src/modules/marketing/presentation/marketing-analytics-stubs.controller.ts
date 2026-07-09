@@ -23,6 +23,7 @@ import { AuthenticatedUser } from '@common/types/user.types';
 import { MarketingExtService } from '../application/marketing-ext.service';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { LEAD_SCORE } from '@common/constants/business.constants';
 
 type Row = Record<string, unknown>;
 const rows = (r: unknown): Row[] => ((r as { rows?: Row[] }).rows) ?? [];
@@ -262,15 +263,16 @@ export class MarketingAnalyticsStubsController {
   @Post('leads/recalculate-scores') @Roles('super_admin', 'marketing_manager', 'director')
   @HttpCode(HttpStatus.OK)
   async recalculateLeadScores(@Body() _body: unknown) {
-    // Recompute score: base 30 + channel bonus (10 for organic) + status bonus (15 for hot)
+    // Recompute score: base + channel bonus (organic/referral) + status bonus, capped at MAX.
+    // Weights live in business.constants.ts (LEAD_SCORE) — values unchanged (Qoida 12).
     const r = await db.execute(sql`
       UPDATE marketing_leads
-         SET score = LEAST(100,
-               30
-               + CASE WHEN channel IN ('organic', 'referral') THEN 10 ELSE 0 END
-               + CASE WHEN status = 'hot'      THEN 15
-                      WHEN status = 'warm'     THEN 8
-                      WHEN status = 'new'      THEN 3
+         SET score = LEAST(${LEAD_SCORE.max},
+               ${LEAD_SCORE.base}
+               + CASE WHEN channel IN ('organic', 'referral') THEN ${LEAD_SCORE.channelBonus} ELSE 0 END
+               + CASE WHEN status = 'hot'      THEN ${LEAD_SCORE.statusHot}
+                      WHEN status = 'warm'     THEN ${LEAD_SCORE.statusWarm}
+                      WHEN status = 'new'      THEN ${LEAD_SCORE.statusNew}
                       ELSE 0 END
              ),
              updated_at = NOW()
