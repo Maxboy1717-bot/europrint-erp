@@ -8,6 +8,7 @@ import { lazy } from "react";
 const ForecastAnalytics = lazy(() => import("@/pages/ForecastAnalytics"));
 const LMSDashboard = lazy(() => import("@/pages/LMSDashboard"));
 const Courses = lazy(() => import("@/pages/Courses"));
+const LMSCourseCardBinding = lazy(() => import("@/pages/LMSCourseCardBinding"));
 const CourseDetail = lazy(() => import("@/pages/CourseDetail"));
 const LessonPlayer = lazy(() => import("@/pages/LessonPlayer"));
 const Tests = lazy(() => import("@/pages/Tests"));
@@ -29,6 +30,7 @@ export const ANALYTICS_ROUTES: [string, React.ComponentType][] = [
   ['/ai/forecast',                    ForecastAnalytics],
   ['/lms-dashboard',                  LMSDashboard],
   ['/courses',                        Courses],
+  ['/lms/course-card-binding',        LMSCourseCardBinding],
   ['/lessons',                        Courses],
   ['/courses/:id',                    CourseDetail],
   ['/courses/:id/lessons',            LessonPlayer],
