@@ -160,22 +160,38 @@ export class ReceiveFgHandler implements ICommandHandler<ReceiveFgCommand> {
    * product id (≥58) will collide with an unrelated raw-material card and fabricate an area from ITS
    * grammage. Removed.
    *
-   * OWNER-DATA-GAP (read-only-verified 2026-07-09): there is currently NO populated, product-keyed
-   * source of finished-good dimensions. `products` and `product_masters` have no dimension columns,
-   * `sales_order_items` has none, and the only table with dimension columns
-   * (`sd_quotation_items`.length_mm/width_mm/height_mm) has no product_id link and is empty. So FG
-   * area/m² cannot be resolved yet. Q-40: return undefined (area PENDING) — the finance listener then
-   * books the rental with the area pending, NOT a fabricated number. This removes the cross-space
-   * hazard now; wiring the real footprint (areaM2 = length_mm × width_mm / 1e6 × amount) awaits an
-   * owner decision to add product dimensions (see DECISION 8 report).
+   * DECISION 8 follow-up: products now carries physical dimensions (length_mm, width_mm — migration
+   * decision8-product-dimensions). The FG storage footprint = area × quantity, where per-unit area =
+   * length_mm × width_mm / 1e6 (mm² → m²). Q-40: when a product has no length/width (columns nullable,
+   * populated as master-data), return undefined (area PENDING) — the finance listener books the rental
+   * with the area pending, NEVER a fabricated number. Never a cross-space material_cards read. Never throws.
    */
   private async _resolveAreaM2ForProduct(
     productId: number,
     amount: number,
   ): Promise<number | undefined> {
     if (!productId || !Number.isFinite(amount) || amount <= 0) return undefined;
-    // No product-keyed FG dimension source exists yet (owner-data-gap) → honest PENDING, never a
-    // cross-space material_cards read, never a fabricated figure.
-    return undefined;
+    try {
+      const r = await runQuery<{ length_mm: string | number | null; width_mm: string | number | null }>(sql`
+        SELECT length_mm, width_mm FROM products WHERE id = ${productId} LIMIT 1
+      `);
+      const row = Array.isArray(r.rows) ? r.rows[0] : undefined;
+      if (!row) return undefined;
+      const lengthMm = row.length_mm != null ? Number(row.length_mm) : NaN;
+      const widthMm = row.width_mm != null ? Number(row.width_mm) : NaN;
+      // No dimensions on the product master yet → honest PENDING (Q-40), never fabricated.
+      if (!Number.isFinite(lengthMm) || lengthMm <= 0 || !Number.isFinite(widthMm) || widthMm <= 0) {
+        return undefined;
+      }
+      // areaM2 = (length_mm × width_mm / 1e6) per unit × received quantity.
+      const area = (lengthMm * widthMm / 1_000_000) * amount;
+      return Number.isFinite(area) && area > 0 ? Math.round(area * 1000) / 1000 : undefined;
+    } catch (e: unknown) {
+      this.logger.warn(
+        { productId, err: e instanceof Error ? e.message : String(e) },
+        'areaM2 resolution failed — rental timer will book with area pending',
+      );
+      return undefined;
+    }
   }
 }
