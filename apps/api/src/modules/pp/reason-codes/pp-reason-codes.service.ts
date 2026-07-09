@@ -26,6 +26,11 @@ export class PpReasonCodesService {
     return this.repo.findActive();
   }
 
+  /** All codes incl. inactive — for the management/settings screen (Batch 5 Item 5). */
+  findAll(): Promise<Result<PpReasonCodeRow[]>> {
+    return this.repo.findAll();
+  }
+
   /** Create a new reason code. */
   create(dto: CreatePpReasonCodeInput): Promise<Result<PpReasonCodeRow>> {
     return this.repo.create(dto);

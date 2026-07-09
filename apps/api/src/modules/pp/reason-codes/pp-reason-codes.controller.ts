@@ -15,7 +15,7 @@
  *   Transport-only (Rule 6): validate with Zod, delegate to the service, unwrap Result.
  */
 
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { z } from 'zod';
 import { unwrapOrThrow, unwrapOrNotFoundDefined } from '@common/http-result';
@@ -63,8 +63,11 @@ export class PpReasonCodesController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   @Roles(...PP_REASON_READ)
-  async list() {
-    const items = unwrapOrThrow(await this.svc.findActive());
+  async list(@Query('includeInactive') includeInactive?: string) {
+    // Batch 5 Item 5: the management screen passes includeInactive=1 to also see (and reactivate)
+    // deactivated codes; the reasonCodeId-populating flow keeps the default active-only list.
+    const wantAll = includeInactive === '1' || includeInactive === 'true';
+    const items = unwrapOrThrow(await (wantAll ? this.svc.findAll() : this.svc.findActive()));
     return { items, total: items.length };
   }
 

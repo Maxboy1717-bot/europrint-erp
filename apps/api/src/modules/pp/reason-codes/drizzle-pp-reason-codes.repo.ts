@@ -60,6 +60,20 @@ export class DrizzlePpReasonCodesRepository implements IPpReasonCodesRepo {
     }
   }
 
+  // Batch 5 Item 5 — management screen needs to see (and reactivate) inactive codes too.
+  async findAll(): Promise<Result<PpReasonCodeRow[]>> {
+    try {
+      const r = await runQuery<PpReasonCodeDbRow>(sql`
+        SELECT id, code, name, name_ru, category, color, is_active, sort_order
+        FROM pp_reason_codes
+        ORDER BY is_active DESC, sort_order, id`);
+      const rows = Array.isArray(r.rows) ? r.rows : [];
+      return Ok(rows.map(mapRow));
+    } catch (e: unknown) {
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || "Sabab kodlarini o'qishda xatolik"));
+    }
+  }
+
   async create(dto: CreatePpReasonCodeInput): Promise<Result<PpReasonCodeRow>> {
     try {
       // is_active omitted from the column list → DB default TRUE.

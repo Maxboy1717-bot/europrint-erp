@@ -56,6 +56,9 @@ export interface IPpReasonCodesRepo {
    */
   findActive(): Promise<Result<PpReasonCodeRow[]>>;
 
+  /** All codes (active + inactive), active-first then sort_order/id — for the management screen. */
+  findAll(): Promise<Result<PpReasonCodeRow[]>>;
+
   /** Insert a new reason code; returns the created row. */
   create(dto: CreatePpReasonCodeInput): Promise<Result<PpReasonCodeRow>>;
 
