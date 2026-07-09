@@ -67,9 +67,11 @@ const AddNpsSchema = z.object({
 }).passthrough();
 
 const UpdateInternalNotesSchema = z.object({
+  // Only fields the repo actually persists. risk_level / internal_classification were
+  // advertised here but sd_customers has no such columns (repo writes relationship_quality
+  // /notes/share_of_wallet), so they were silently dropped — trimmed to stop the misleading
+  // contract. No live caller sent them.
   notes: z.string().max(5000).optional(),
-  risk_level: z.string().max(50).optional(),
-  internal_classification: z.string().max(100).optional(),
 }).passthrough();
 
 const CreateComplaintSchema = z.object({
