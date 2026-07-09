@@ -62,6 +62,28 @@ export interface WarehouseStock {
   totalQuantity: number;
 }
 
+/** DECISION 2 — Tayyor-mahsulot ombori qoldig'i qatori (warehouse_stock_fg, products bo'yicha). */
+export interface FinishedGoodsStockLine {
+  id: number;
+  productId: number;
+  code: string | null;
+  name: string;
+  unit: string;
+  warehouseId: number;
+  warehouseName: string | null;
+  quantity: number;
+  reserved: number;
+  available: number;
+  lastUpdatedAt: string | null;
+}
+
+export interface FinishedGoodsStock {
+  stock: FinishedGoodsStockLine[];
+  lineCount: number;
+  totalQuantity: number;
+  totalAvailable: number;
+}
+
 export interface IssueStockInput {
   materialId: number;
   quantity: number;
@@ -144,4 +166,6 @@ export const warehouseApi = {
     apiRequest<MaterialMovement[]>("GET", `${BASE}/materials/${materialId}/movements`),
   /** Moliya/Ombor umumiy dashboard (qoldiq + qiymat + so'nggi harakatlar). */
   dashboard: () => apiRequest<WarehouseDashboard>("GET", `${BASE}/dashboard`),
+  /** DECISION 2 — Tayyor-mahsulot ombori qoldig'i (warehouse_stock_fg, products bo'yicha; xom-ashyodan alohida). */
+  finishedGoodsStock: () => apiRequest<FinishedGoodsStock>("GET", `${BASE}/finished-goods-stock`),
 };

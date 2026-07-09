@@ -62,4 +62,12 @@ export class WarehouseConfigController {
   async dashboard() {
     return unwrapOrThrow(await this.svc.getDashboard());
   }
+
+  /** DECISION 2 — Tayyor-mahsulot ombori qoldig'i (warehouse_stock_fg, products bo'yicha). Xom-ashyodan alohida. */
+  @Get('finished-goods-stock')
+  @RequirePermission('pos.reports.read')
+  @ApiOperation({ summary: "Tayyor mahsulot ombori qoldig'i (warehouse_stock_fg)" })
+  async finishedGoodsStock() {
+    return unwrapOrThrow(await this.svc.getFinishedGoodsStock());
+  }
 }

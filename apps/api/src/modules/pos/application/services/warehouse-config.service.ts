@@ -95,6 +95,35 @@ export class WarehouseConfigService {
   }
 
   /**
+   * DECISION 2 — Tayyor-mahsulot ombori qoldig'i: warehouse_stock_fg (products.id-kalitli) + products
+   * (kod/nom/birlik) + warehouses (ombor nomi). Xom-ashyo warehouse_stock'dan ALOHIDA (Variant-2 split) —
+   * bu faqat tayyor mahsulot qoldig'ini ko'rsatadi, xom-ashyo qatorlari bu yerda chiqmaydi.
+   */
+  async getFinishedGoodsStock(): Promise<Result<Record<string, unknown>, AppError>> {
+    return safeCall(async () => {
+      const stock = dbRows(await rawSql(sql`
+        SELECT fg.id, fg.product_id AS "productId", p.code AS "code",
+               COALESCE(p.name, '—') AS "name",
+               COALESCE(p.unit, 'dona') AS "unit",
+               fg.warehouse_id AS "warehouseId", w.name AS "warehouseName",
+               COALESCE(fg.quantity, 0) AS quantity,
+               COALESCE(fg.reserved_quantity, 0) AS reserved,
+               COALESCE(fg.available_quantity, 0) AS available,
+               fg.last_updated_at AS "lastUpdatedAt"
+        FROM warehouse_stock_fg fg
+        LEFT JOIN products p ON p.id = fg.product_id
+        LEFT JOIN warehouses w ON w.id = fg.warehouse_id
+        ORDER BY p.name NULLS LAST, w.name NULLS LAST, fg.id
+        LIMIT 500
+      `));
+      const rows = Array.isArray(stock) ? stock : [];
+      const totalQuantity = rows.reduce((s, r) => s + Number(r['quantity'] ?? 0), 0);
+      const totalAvailable = rows.reduce((s, r) => s + Number(r['available'] ?? 0), 0);
+      return { stock: rows, lineCount: rows.length, totalQuantity, totalAvailable };
+    });
+  }
+
+  /**
    * Ombordan material CHIQIM (iste'mol/sarf) — warehouse_stock atomik kamaytiriladi (faqat mavjud
    * qoldiq yetsa), material_cards.current_stock yangilanadi va material_movements ('ISSUE') jurnaliga
    * yoziladi. Qoldiq yetmasa BadRequest. performedBy = amalni bajargan foydalanuvchi.

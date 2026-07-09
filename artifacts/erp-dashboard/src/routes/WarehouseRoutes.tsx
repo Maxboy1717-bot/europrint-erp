@@ -38,6 +38,7 @@ const ProcurementPage = lazy(() => import("@/pages/ProcurementPage"));
 const WarehousesPage = lazy(() => import("@/pages/WarehousesPage"));
 const WarehouseTypePage = lazy(() => import("@/pages/WarehouseTypePage"));
 const WarehouseStockPage = lazy(() => import("@/pages/WarehouseStockPage"));
+const FinishedGoodsStockPage = lazy(() => import("@/pages/FinishedGoodsStock"));
 const WarehouseDashboardPage = lazy(() => import("@/pages/WarehouseDashboardPage"));
 const PosMonitorPage = lazy(() => import("@/pages/PosMonitorPage"));
 const MaterialUnitPriceConfig = lazy(() => import("@/pages/MaterialUnitPriceConfig"));
@@ -55,6 +56,7 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/procurement',            ProcurementPage],
   ['/wms/warehouses',             WarehousesPage],
   ['/wms/warehouse-stock/:id',    WarehouseStockPage],
+  ['/warehouse/finished-goods',   FinishedGoodsStockPage],   // DECISION 2 — tayyor mahsulot ombori (warehouse_stock_fg)
   ['/wms/warehouses/:type',       WarehouseTypePage],
   ['/wms/pos-monitor',            PosMonitorPage],
   // Inventar / hisobot (ishlaydigan sahifalar)
