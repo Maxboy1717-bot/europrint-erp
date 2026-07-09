@@ -5,15 +5,17 @@
 
 import { z } from 'zod';
 
+// Matches the real createPo contract (FE MMPurchaseOrders.tsx + CreatePurchaseOrderCommand):
+// camelCase supplierId + items[{materialId,quantity,unitPrice}]. The prior snake_case shape
+// (vendor_id/material_id/unit_price) never matched the handler or the FE and was never wired.
+// createdBy is intentionally NOT accepted from the body — it is set from the session (SoD).
 export const MmCreatePurchaseOrderSchema = z.object({
-  vendor_id:     z.number().int().positive(),
-  expected_date: z.string().optional(),
-  notes:         z.string().optional(),
-  items:         z.array(z.object({
-    material_id: z.number().int().positive(),
-    quantity:    z.number().positive(),
-    unit_price:  z.number().positive().optional(),
-  })).optional(),
+  supplierId: z.number().int().positive(),
+  items:      z.array(z.object({
+    materialId: z.number().int().positive(),
+    quantity:   z.number().positive(),
+    unitPrice:  z.number().nonnegative(),
+  })).min(1),
 });
 export type MmCreatePurchaseOrderDto = z.infer<typeof MmCreatePurchaseOrderSchema>;
 

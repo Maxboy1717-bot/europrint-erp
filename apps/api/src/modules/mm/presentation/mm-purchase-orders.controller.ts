@@ -12,9 +12,12 @@ import { unwrapOrThrow } from '@common/http-result';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { RolesGuard } from '@common/guards/roles.guard';
+import { Roles } from '@common/decorators/roles.decorator';
+import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '@common/types/user.types';
+import { MmCreatePurchaseOrderSchema, MmCreatePurchaseOrderDto } from '../dto/mm.dto';
 import { CreatePurchaseOrderCommand } from '../application/commands/create-purchase-order.handler';
 import { ApprovePurchaseOrderCommand } from '../application/commands/approve-purchase-order.handler';
 import { GoodsReceiptCommand } from '../application/commands/goods-receipt.handler';
@@ -200,17 +203,16 @@ export class MmPurchaseOrdersController {
   @Post()
   @Roles(Role.PURCHASER, Role.SUPER_ADMIN)
   async createPo(
-    @Body()
-    dto: {
-      supplierId: number;
-      items: Array<{ materialId: number; quantity: number; unitPrice: number }>;
-      createdBy: number;
-    },
+    @Body(new ZodValidationPipe(MmCreatePurchaseOrderSchema)) dto: MmCreatePurchaseOrderDto,
+    @CurrentUser() user: AuthenticatedUser,
   ){
+    // SECURITY (SoD): createdBy is the authenticated session user — NEVER the request body.
+    // Previously the body supplied createdBy (FE hard-coded 1), so the creator identity was
+    // fully forgeable and the creator!=approver control could be trivially defeated.
     const command = new CreatePurchaseOrderCommand(
       dto.supplierId,
       dto.items,
-      dto.createdBy,
+      user.id,
     );
     const res = await this.commandBus.execute(command);
     return unwrapOrThrow(res);
@@ -223,9 +225,13 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async approvePo(
     @Param('id') id: number,
-    @Body() dto: { approvedBy: number },
+    @CurrentUser() user: AuthenticatedUser,
   ){
-    const command = new ApprovePurchaseOrderCommand(id, dto.approvedBy);
+    // SECURITY (SoD): approvedBy is the authenticated session user — NEVER the request body.
+    // The handler/aggregate reject creator === approver; with both ids now session-derived
+    // (created_by stored from the creator's session, approvedBy from the approver's session)
+    // that check is finally meaningful and cannot be bypassed by sending two arbitrary numbers.
+    const command = new ApprovePurchaseOrderCommand(id, user.id);
     const res = await this.commandBus.execute(command);
     return unwrapOrThrow(res);
   }
