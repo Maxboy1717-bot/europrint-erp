@@ -75,7 +75,13 @@ export class ProductionRepository {
 
   async updateShiftReport(id: number, body: Row): Promise<Result<Row | null>>  {
   try {
-      const r = await exec(sql`UPDATE production_sessions SET worker_notes = COALESCE(${body.notes ?? null}, worker_notes), status = COALESCE(${body.status ?? null}, status), updated_at = NOW() WHERE id = ${id} RETURNING *`);
+      // The DTO accepts actual_output/reject_qty/downtime_min but the UPDATE only ever set
+      // worker_notes/status, so those three were silently dropped. Map to the real columns:
+      // actual_output -> actual_quantity(int), reject_qty -> defect_quantity(int),
+      // downtime_min -> stopped_time_seconds (minutes*60; the session downtime accumulator,
+      // read as totalStoppedHours elsewhere). COALESCE keeps partial-update semantics.
+      const downtimeSec = body.downtime_min != null ? Number(body.downtime_min) * 60 : null;
+      const r = await exec(sql`UPDATE production_sessions SET worker_notes = COALESCE(${body.notes ?? null}, worker_notes), status = COALESCE(${body.status ?? null}, status), actual_quantity = COALESCE(${body.actual_output ?? null}, actual_quantity), defect_quantity = COALESCE(${body.reject_qty ?? null}, defect_quantity), stopped_time_seconds = COALESCE(${downtimeSec}, stopped_time_seconds), updated_at = NOW() WHERE id = ${id} RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }
