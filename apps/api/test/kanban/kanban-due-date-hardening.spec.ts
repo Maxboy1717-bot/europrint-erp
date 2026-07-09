@@ -99,4 +99,15 @@ describe('DrizzleKanbanStatsRepository — due_date::date casts are guarded (no 
     }
     expect(count).toBe(6);
   });
+
+  // Pass 2: getTaskStats also has 2 due_date::timestamp casts (on_time/late). Unlike the ::date
+  // sites they must KEEP the full ::timestamp cast (time-of-day matters for completed_at vs
+  // due_date), so they are regex-gated in place rather than substring-truncated.
+  it('getTaskStats regex-gates both due_date::timestamp casts (time-of-day preserved)', async () => {
+    const rendered = await renderSql(() => repo.getTaskStats());
+    const tsCasts = rendered.split('due_date::timestamp').length - 1;
+    const guards  = rendered.split("~ '^\\d{4}-\\d{2}-\\d{2}'").length - 1;
+    expect(tsCasts).toBe(2);                 // both full ::timestamp casts remain (not truncated)
+    expect(guards).toBeGreaterThanOrEqual(3); // 1 existing ::date (overdue_tasks) + 2 new ::timestamp gates
+  });
 });

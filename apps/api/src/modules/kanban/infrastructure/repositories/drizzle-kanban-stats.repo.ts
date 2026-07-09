@@ -93,11 +93,13 @@ export class DrizzleKanbanStatsRepository {
             COUNT(*) FILTER (
               WHERE kc.completed_at IS NOT NULL
                 AND kc.due_date IS NOT NULL
+                AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
                 AND kc.completed_at <= kc.due_date::timestamp
             )::int                                                        AS on_time,
             COUNT(*) FILTER (
               WHERE kc.completed_at IS NOT NULL
                 AND kc.due_date IS NOT NULL
+                AND kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
                 AND kc.completed_at > kc.due_date::timestamp
             )::int                                                        AS late,
             ROUND(
