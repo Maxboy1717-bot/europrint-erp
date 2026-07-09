@@ -8,6 +8,7 @@ import { lazy } from "react";
 // Original Coordination sahifasi saqlanadi — Kommunikatsiya Markazi shu yerda
 // "baskets" tab sifatida joylashadi (sidebar -> coordination?tab=baskets).
 const CoordinationPage = lazy(() => import("@/pages/CoordinationPage"));
+const CouncilQuorum = lazy(() => import("@/pages/CouncilQuorum"));
 const AgentsHub                  = lazy(() => import("@/pages/agents/AgentsHub"));
 const ProductionAgentDashboard   = lazy(() => import("@/pages/agents/ProductionDashboard"));
 const HRPerformanceAgentDash     = lazy(() => import("@/pages/agents/HRPerformanceDashboard"));
@@ -40,6 +41,7 @@ const StatRegulationsPage      = lazy(() => import("@/pages/StatRegulationsPage"
 export const DIRECTOR_ROUTES: [string, React.ComponentType][] = [
   ['/coordination',             CoordinationPage],
   ['/coordination/workflow-rules', WorkflowRules],
+  ['/coordination/quorum',      CouncilQuorum],
   ['/agents',                   AgentsHub],
   ['/agents/production',        ProductionAgentDashboard],
   ['/agents/hr-performance',    HRPerformanceAgentDash],

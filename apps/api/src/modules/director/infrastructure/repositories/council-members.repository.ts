@@ -43,6 +43,19 @@ export class CouncilMembersRepository {
     }
   }
 
+  // Batch 5 Item 8 — count voting members (chair/secretary/member; 'guest' excluded) for quorum.
+  async countVotingMembers(councilId: number): Promise<Result<number>> {
+    try {
+      const r = await runQuery<{ n: number }>(sql`
+        SELECT COUNT(*)::int AS n FROM council_members
+        WHERE council_id = ${councilId} AND role IN ('chair', 'secretary', 'member')
+      `);
+      return Ok(Number(r.rows[0]?.n ?? 0));
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
   async add(councilId: number, userId: number, role: string, isPermanent: boolean): Promise<Result<{ id: number }>> {
     try {
       // bir foydalanuvchi kengashda bir marta — takror qo'shilsa rolni yangilaydi (upsert)

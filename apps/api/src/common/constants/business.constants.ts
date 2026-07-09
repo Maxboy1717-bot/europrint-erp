@@ -527,3 +527,15 @@ export const CRM_LEAD_AGING_REASSIGN_DAYS = 60;
  * yakuniy holatlar.
  */
 export const CRM_LEAD_TERMINAL_STATUSES = ['won', 'lost', 'converted'] as const;
+
+/**
+ * Kengash (council) kvorumi — modul 04 Coordination, egasi qarori (decisions/04-coordination.md
+ * BO'LIM 1: "2/3 (66%) shart; kvorum yetmasa maslahat majlisi = qaror kuchsiz").
+ * Ovoz beruvchi a'zolarning kamida 2/3 qismi hozir bo'lsa kvorum bor; aks holda qaror
+ * "maslahat" (advisory) — majburiy emas. Qaror oddiy ko'pchilik bilan; teng bo'lsa Rais hal qiladi.
+ * (Batch 5 Item 8)
+ */
+export const COUNCIL_QUORUM_NUMERATOR = 2;
+export const COUNCIL_QUORUM_DENOMINATOR = 3;
+/** Ovoz beradigan (kvorumga sanaladigan) rollar — 'guest' ovoz bermaydi. */
+export const COUNCIL_VOTING_ROLES = ['chair', 'secretary', 'member'] as const;

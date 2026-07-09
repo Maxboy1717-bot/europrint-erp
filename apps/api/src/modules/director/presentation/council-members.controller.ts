@@ -15,8 +15,16 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { assertOk } from '@common/http-result';
 import { CouncilMembersRepository } from '../infrastructure/repositories/council-members.repository';
+import { CouncilQuorumService } from '../application/council-quorum.service';
 
 const RoleEnum = z.enum(['chair', 'secretary', 'member', 'guest']);
+
+// Batch 5 Item 8 — kengash qarori kvorumini baholash (2/3 + oddiy ko'pchilik, Rais teng-tie).
+const EvaluateSchema = z.object({
+  presentCount: z.number().int().min(0),
+  votesFor:     z.number().int().min(0),
+  votesAgainst: z.number().int().min(0),
+});
 
 const AddSchema = z.object({
   userId:      z.number().int().positive(),
@@ -34,7 +42,29 @@ const UpdateSchema = z.object({ role: RoleEnum });
 @UseInterceptors(AuditInterceptor)
 @Controller()
 export class CouncilMembersController {
-  constructor(private readonly repo: CouncilMembersRepository) {}
+  constructor(
+    private readonly repo: CouncilMembersRepository,
+    private readonly quorum: CouncilQuorumService,
+  ) {}
+
+  // Batch 5 Item 8 — kvorum ma'lumoti: ovoz beruvchi a'zolar soni + 2/3 talab.
+  @ApiOperation({ summary: 'Get council quorum (2/3 requirement)' })
+  @Get('councils/:councilId/quorum')
+  async getQuorum(@Param('councilId') councilId: string) {
+    const r = await this.quorum.getQuorum(Number(councilId));
+    assertOk(r);
+    return r.data;
+  }
+
+  // Kengash qarorini kvorum + oddiy ko'pchilik qoidasi bo'yicha baholaydi.
+  @ApiOperation({ summary: 'Evaluate a council decision against quorum + majority' })
+  @Post('councils/:councilId/quorum/evaluate')
+  async evaluateQuorum(@Param('councilId') councilId: string, @Body() body: unknown) {
+    const dto = EvaluateSchema.parse(body);
+    const r = await this.quorum.evaluateDecision(Number(councilId), dto);
+    assertOk(r);
+    return r.data;
+  }
 
   @ApiOperation({ summary: 'List council members' })
   @Get('councils/:councilId/members')
