@@ -27,6 +27,8 @@ export const productionOrders = pgTable('production_orders', {
   quantity: decimal('quantity', { precision: 15, scale: 4 }).notNull(),
   unit: text('unit'),
   status: text('status').notNull().default('draft'),
+  // EP-PP-085 "Очеред" — operator ko'radigan stanok-ichi navbat raqami (Batch 5 Item 4).
+  queueSequence: integer('queue_sequence'),
   plannedStart: ts('planned_start'),
   plannedEnd: ts('planned_end'),
   actualStart: ts('actual_start'),

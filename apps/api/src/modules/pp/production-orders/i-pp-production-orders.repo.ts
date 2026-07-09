@@ -29,5 +29,8 @@ export interface IPpProductionOrdersRepository {
     reason?: string,
   ): Promise<Result<Record<string, unknown>>>;
   softDelete(id: number): Promise<Result<void>>;
+  // EP-PP-085 "Очеред" (Batch 5 Item 4) — per-machine operator-visible queue.
+  getQueueByWorkCenter(workCenterId: string): Promise<Result<Row[]>>;
+  reorderQueue(workCenterId: string, orderedIds: number[]): Promise<Result<Row[]>>;
 }
 export const PP_PRODUCTION_ORDERS_REPO = 'IPpProductionOrdersRepository';

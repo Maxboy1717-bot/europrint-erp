@@ -412,6 +412,9 @@ export const productionOrders = pgTable("production_orders", {
   // Cleared only by owner/director authority.
   isFrozen: boolean("is_frozen").notNull().default(false),
   frozenUntil: timestamp("frozen_until"),
+  // EP-PP-085 "Очеред" — operator ko'radigan stanok-ichi navbat raqami (1,2,3...), drag-drop
+  // bilan qayta tartiblanadi. `priority` (band) va `isUrgent` (ZARUR) dan ALOHIDA. (Batch 5 Item 4)
+  queueSequence: integer("queue_sequence"),
   workCenterId: varchar("work_center_id").references(() => workCenters.id, { onDelete: "set null" }),
   // SB0233/SB0234/SB0258 (06-PP audit): karta-markazli ERP-ORG — buyurtma qaysi
   // org-karta (sex/bo'lim)ga tegishli ekanini bildiradi. Naqsh work_centers.orgDepartmentId

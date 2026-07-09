@@ -60,6 +60,13 @@ const ReleaseProductionOrderDtoSchema = z.object({
   reason: z.string().min(5),
 });
 
+// EP-PP-085 "Очеред" (Batch 5 Item 4): drag-drop reorder of one machine's production queue.
+// orderedIds = the new top-to-bottom order; the service assigns queue_sequence 1..N.
+const ReorderQueueDtoSchema = z.object({
+  workCenterId: z.string().min(1),
+  orderedIds: z.array(z.coerce.number().int().positive()).min(1).max(500),
+});
+
 // EP-PP-082: drive the production order through its 9-status lifecycle. `status` is
 // validated against the aggregate's PoStatus + PO_STATUS_TRANSITIONS in the service
 // (unknown → 400, illegal hop → 400); `reason` is the mandatory written justification
@@ -178,6 +185,30 @@ export class PpOrdersController {
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
+ // EP-PP-085 "Очеред" (Batch 5 Item 4) — read one machine's operator-visible queue (ordered by
+ // the manual queue number). Read-side roles mirror getAll (shop chief sees his machine's navbat).
+ @ApiOperation({ summary: 'Get one work-center production queue (EP-PP-085 navbat)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('queue/:workCenterId')
+ @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
+ async getQueue(@Param('workCenterId') workCenterId: string) {
+  const result = await this.productionOrdersService.getQueue(workCenterId);
+  return unwrapOrThrow(result);
+ }
+
+ // Persist a drag-drop reorder of a machine's queue. Planning-authority write (shop chief +
+ // director + admin) — same tier as status transitions.
+ @ApiOperation({ summary: 'Reorder a work-center production queue (EP-PP-085 drag-drop)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Patch('queue/reorder')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
+ async reorderQueue(@Body() dto: z.infer<typeof ReorderQueueDtoSchema>) {
+  const parsed = ReorderQueueDtoSchema.parse(dto);
+  this.logger.log(`Reorder PP queue wc=${parsed.workCenterId} ids=[${parsed.orderedIds.join(',')}]`);
+  const result = await this.productionOrdersService.reorderQueue(parsed.workCenterId, parsed.orderedIds);
+  return unwrapOrThrow(result);
+ }
+
  @Patch(':id/flags')
  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
  async setFlags(

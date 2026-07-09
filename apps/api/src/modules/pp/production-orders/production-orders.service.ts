@@ -136,6 +136,30 @@ export class ProductionOrdersService {
     const result = await this.ppProductionOrdersRepo.softDelete(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return { message: "O'chirildi" };
-  
+
     });}
+
+  /**
+   * EP-PP-085 "Очеред" (Batch 5 Item 4) — read the operator-visible per-machine production queue,
+   * ordered by the manual queue number (then urgent/priority as tiebreak).
+   */
+  async getQueue(workCenterId: string){
+    return safeCall(async () => {
+      const result = await this.ppProductionOrdersRepo.getQueueByWorkCenter(workCenterId);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return { data: result.data };
+    });
+  }
+
+  /**
+   * Persist a drag-drop reorder of one machine's queue. `orderedIds` is the new top-to-bottom
+   * order; queue_sequence is assigned 1..N accordingly (EP-PP-085).
+   */
+  async reorderQueue(workCenterId: string, orderedIds: number[]){
+    return safeCall(async () => {
+      const result = await this.ppProductionOrdersRepo.reorderQueue(workCenterId, orderedIds);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return { data: result.data };
+    });
+  }
 }

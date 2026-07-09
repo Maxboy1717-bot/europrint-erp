@@ -183,4 +183,43 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
       return Ok(undefined);
     } catch (e: unknown) { return Err((e as Error)?.message || "O'chirishda xatolik"); }
   }
+
+  // EP-PP-085 "Очеред" (Batch 5 Item 4) — stanok-ichi navbat. Raw parametrized SQL (queue_sequence
+  // is a migration-added column mirrored in the Drizzle def but written via runQuery for runtime
+  // parity, like reason_code_id above). Returns orders for one work_center ordered by the operator's
+  // visible queue number (NULLs — not yet queued — last), then priority/urgent as a tiebreak.
+  async getQueueByWorkCenter(workCenterId: string): Promise<Result<Row[]>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        SELECT id, order_number, product_name, status, priority, is_urgent, queue_sequence, planned_start
+        FROM production_orders
+        WHERE work_center_id = ${workCenterId} AND deleted_at IS NULL
+        ORDER BY queue_sequence ASC NULLS LAST, is_urgent DESC, priority ASC, id ASC`);
+      return Ok(r.rows as Row[]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Navbatni olishda xatolik'); }
+  }
+
+  // Persist a drag-drop reorder: assign queue_sequence = 1..N in the given id order, atomically.
+  // Two-phase (offset to a negative band first) so the partial-unique index
+  // (work_center_id, queue_sequence) never trips mid-update on a swap. Only ids that belong to the
+  // same work_center are touched; foreign ids are ignored by the WHERE guard.
+  async reorderQueue(workCenterId: string, orderedIds: number[]): Promise<Result<Row[]>> {
+    try {
+      await db.transaction(async (tx) => {
+        // Phase 1: park all target rows at negative sequences to clear the unique-index space.
+        for (let i = 0; i < orderedIds.length; i++) {
+          await tx.execute(sql`
+            UPDATE production_orders SET queue_sequence = ${-(i + 1)}, updated_at = ${_time.now()}
+            WHERE id = ${orderedIds[i]} AND work_center_id = ${workCenterId} AND deleted_at IS NULL`);
+        }
+        // Phase 2: set the real 1..N positions.
+        for (let i = 0; i < orderedIds.length; i++) {
+          await tx.execute(sql`
+            UPDATE production_orders SET queue_sequence = ${i + 1}
+            WHERE id = ${orderedIds[i]} AND work_center_id = ${workCenterId} AND deleted_at IS NULL`);
+        }
+      });
+      return this.getQueueByWorkCenter(workCenterId);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Navbatni qayta tartiblashda xatolik'); }
+  }
 }
