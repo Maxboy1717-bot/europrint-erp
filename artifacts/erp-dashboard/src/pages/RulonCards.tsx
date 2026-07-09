@@ -359,15 +359,15 @@ export default function RulonCards() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-muted-foreground text-xs">
-                  <th className="text-left py-2 pr-4">Kod</th>
+                <tr className="border-b bg-muted/50 text-muted-foreground text-xs uppercase tracking-wide font-semibold">
+                  <th className="text-left py-2 px-4">Kod</th>
                   <th className="text-left py-2 pr-4">Turi</th>
                   <th className="text-right py-2 pr-4">Kenglik (mm)</th>
                   <th className="text-right py-2 pr-4">Gramaj (gsm)</th>
                   <th className="text-right py-2 pr-4">Og'irlik (kg)</th>
                   <th className="text-left py-2 pr-4">Yetkazuvchi</th>
                   <th className="text-left py-2 pr-4">Holat</th>
-                  <th className="py-2"></th>
+                  <th className="py-2 pr-4"></th>
                 </tr>
               </thead>
               <tbody>
