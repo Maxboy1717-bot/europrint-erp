@@ -309,7 +309,7 @@ export default function GLDocuments() {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl p-6" data-testid="card-documents-table">
+        <div className="bg-card rounded-xl border border-[var(--ep-border)] p-6" data-testid="card-documents-table">
           <div className="flex flex-col gap-1 mb-6">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <FileText className="h-4 w-4" />
