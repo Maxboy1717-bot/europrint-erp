@@ -336,10 +336,19 @@ export class DrizzleMarketingGroup2Repository {
 
   async softDeleteLead(id: string): Promise<Result<{ message: string }>> {
     try {
-      await db
+      // marketing_leads.id is varchar (slug ids like "demo-lead-004"); Number(id)=NaN
+      // matched 0 rows yet still returned success (fake delete). Bind the string id via
+      // sql`` (the @europrint/schemas def mistypes id as integer so eq() can't take a
+      // string — same pattern as the canonical leads.repository.softDelete), and confirm
+      // a row was actually flagged before reporting success.
+      const rows = await db
         .update(marketingLeads)
         .set({ deletedAt: _time.now() })
-        .where(eq(marketingLeads.id, Number(id)));
+        .where(sql`${marketingLeads.id} = ${id}`)
+        .returning({ id: marketingLeads.id });
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return Err('Lead topilmadi');
+      }
       return Ok({ message: "Lead o'chirildi" });
     } catch (e) {
       return Err(String(e));
