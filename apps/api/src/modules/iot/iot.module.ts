@@ -46,6 +46,9 @@ import { IotMainController } from './presentation/iot-main.controller';
 import { IotAlertsController } from './presentation/iot-alerts.controller';
 import { IotTabletController } from './presentation/iot-tablet.controller';
 import { IotSensorsMainController } from './presentation/iot-sensors-main.controller';
+import { SensorCapexController } from './presentation/sensor-capex.controller';
+import { SensorCapexService } from './application/sensor-capex.service';
+import { DrizzleSensorCapexRepo } from './infrastructure/repositories/drizzle-sensor-capex.repo';
 import { IotCameraService } from './application/iot-camera.service';
 import { IotCameraRepository } from './infrastructure/repositories/iot-camera.repository';
 import { IOT_CAMERA_REPO } from './domain/repositories/i-iot-camera.repo';
@@ -95,6 +98,7 @@ const newControllers = [
   IotAlertsController,
   IotTabletController,
   IotSensorsMainController,
+  SensorCapexController,
 ];
 
 const newRepositories = [
@@ -105,6 +109,7 @@ const newRepositories = [
   DrizzleIotSensorsRepo,
   DrizzleCameraAiRepo,
   DrizzleIotTabletRepo,
+  DrizzleSensorCapexRepo,
 ];
 
 @Module({
@@ -133,6 +138,7 @@ const newRepositories = [
     CameraExtendedService,
     CameraDashboardService,
     IotMainService,
+    SensorCapexService,
     IotSensorsExtendedService,
     IotTabletService,
     OeeCalculatorService,

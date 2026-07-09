@@ -48,6 +48,7 @@ const MROExtended = lazy(() => import("@/pages/MROExtended"));
 const IoTTablet = lazy(() => import("@/pages/IoTTablet"));
 const IoTDashboard = lazy(() => import("@/pages/IoTDashboard"));
 const IoTExtended = lazy(() => import("@/pages/IoTExtended"));
+const IotSensorCapex = lazy(() => import("@/pages/IotSensorCapex"));
 const WarehouseMaterialKits = lazy(() => import("@/pages/WarehouseMaterialKits"));
 const WarehouseDailyView = lazy(() => import("@/pages/WarehouseDailyView"));
 const MrpMatrix = lazy(() => import("@/pages/MrpMatrix"));
@@ -211,6 +212,7 @@ export const IOT_ROUTES: [string, React.ComponentType][] = [
   ['/iot/alerts',                 IoTExtended],
   ['/iot/tablet',                 IoTTablet],
   ['/iot/dashboard',              IoTDashboard],
+  ['/iot/sensor-capex',           IotSensorCapex],
   ['/iot/material-kits',          WarehouseMaterialKits],
   ['/iot/daily-view',             WarehouseDailyView],
 ];
