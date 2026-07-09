@@ -465,6 +465,56 @@ export type WarehouseStock = typeof warehouseStock.$inferSelect;
 export type InsertWarehouseStock = z.infer<typeof insertWarehouseStockSchema>;
 
 
+// ============================================================================
+// Batch 3 Variant-2 split — FINISHED-GOODS stock (products.id-keyed), separate
+// from warehouse_stock (which STAYS material_cards.id-keyed = raw material).
+// Clean product_id FK (the raw table lacks a material_id FK); ONE
+// UNIQUE(warehouse_id, product_id) — NOT the raw table's duplicate pair.
+// Physical FKs (warehouse_id->warehouses, product_id->products) live in the
+// migration warehouse-stock-fg-split-2026-07-09.sql; the Drizzle def references
+// products.id (integer, type-safe) and keeps warehouse_id a plain integer to
+// avoid the warehouses.id Drizzle-varchar / live-integer drift. UoM + cost are
+// JOINed from products (products.unit / standard_cost / unit_price), NOT stored.
+// ============================================================================
+export const warehouseStockFg = pgTable("warehouse_stock_fg", {
+  id: serial("id").primaryKey(),
+  warehouseId: integer("warehouse_id").notNull(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  quantity: numericMoney("quantity").notNull().default(0),
+  reservedQuantity: numericMoney("reserved_quantity").notNull().default(0),
+  availableQuantity: numericMoney("available_quantity").notNull().default(0),
+  lastMovementAt: timestamp("last_movement_at"),
+  lastUpdatedAt: timestamp("last_updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  tenantId: integer("tenant_id").notNull().default(1),
+}, (t) => [
+  unique("warehouse_stock_fg_wh_prod_uniq").on(t.warehouseId, t.productId),
+  index("idx_warehouse_stock_fg_product_id").on(t.productId),
+]);
+
+export type WarehouseStockFg = typeof warehouseStockFg.$inferSelect;
+
+
+// FG scrap/brak REGISTER (owner decision #1): pure record-keeping — NO warehouse
+// balance semantics (no warehouse_id, no available_quantity). Logs a failed
+// finished-goods quantity with its reason + source order. Separate from any stock.
+export const fgScrapLog = pgTable("fg_scrap_log", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  quantity: numericMoney("quantity").notNull(),
+  reason: text("reason"),
+  sourceOrderId: integer("source_order_id"),
+  sourceType: varchar("source_type", { length: 30 }),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_fg_scrap_log_product_id").on(t.productId),
+  index("idx_fg_scrap_log_source_order").on(t.sourceOrderId),
+]);
+
+export type FgScrapLog = typeof fgScrapLog.$inferSelect;
+
+
 // Daily Warehouse Plans - Ombor kunlik rejasi
 export const dailyWarehousePlans = pgTable("daily_warehouse_plans", {
   id: serial("id").primaryKey(),
