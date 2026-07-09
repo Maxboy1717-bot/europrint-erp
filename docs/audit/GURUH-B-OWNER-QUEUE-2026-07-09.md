@@ -19,9 +19,10 @@ Branch: `chore/schema-convergence`. Loop commits: `b0f3c144`..`0346b2e6`.
    `delivered`, or at delivery-create? (Currently fires on either in_transit/delivered, deduped.)
 3. **MES shift-handover close-gate.** Option A: wire the real shift id into `from/to_shift_id` on
    both create paths. Option B: department+date semantics + fix the canonical accepted-status set.
-4. **MES frozen-zone gate.** Already satisfied by the PP `PATCH /pp/orders/:id/flags` (director+
-   audit), or should the operator's retro qty-edit on frozen orders be blocked (inverts meaning +
-   needs an FK + a reason column)?
+4. **MES frozen-zone gate.** ✅ **OWNER-CONFIRMED-NO-ACTION (2026-07-09):** the existing PP
+   `PATCH /pp/orders/:id/flags` (director+audit) is sufficient — do NOT build a MES-side
+   operator-block. The retro-qty-edit-block alternative (invert meaning + FK + reason column)
+   is rejected. No code change.
 5. **Kanban status→column auto-move.** Provide the SD-status → Kanban-column map (e.g.
    confirmed→"Jarayonda", cancelled→"Bekor"). Today only an auditable note is written.
 6. **Notifications role-broadcast.** 6483 `LOW_STOCK` rows are written with `user_id=0` but the
@@ -141,7 +142,7 @@ Branch: `chore/schema-convergence`. Loop commits: `b0f3c144`..`0346b2e6`.
 
 | Module | Guruh-A shipped (this loop) | Remaining = Guruh-B |
 |---|---|---|
-| MES 08 | tablet-downtime catalog+reason_code_id; checklist CRUD; breakdown→maintenance | handover gate, technician roster, frozen-zone, PM table |
+| MES 08 | tablet-downtime catalog+reason_code_id; checklist CRUD; breakdown→maintenance | handover gate, technician roster, ~~frozen-zone~~ (OWNER-CONFIRMED-NO-ACTION 2026-07-09), PM table |
 | QC 09 | FMEA stop-production; production→QC→delivery traceability | mm_goods_receipts FK; AQL/quarantine master-data |
 | WMS 10 | failed-QC→scrap; movement photo; Pres-kirim | (delivery firing point → SD) |
 | SD 06 | delivery→WMS stock-out; advance 30→70; quotation→order outbox; order-detail page; items endpoint; clone dialog | firing point; PDF+deadline; expose flags in GET :id |
