@@ -73,19 +73,26 @@ export class MesShiftsStatsRepository {
    * draft with no signature — anyone could treat it as "done" even though the
    * receiving supervisor never actually acknowledged it. This closes that gap
    * the same way pos-shift-handover.service.ts's 2-signature gate does: the
-   * row only flips 'pending' → 'confirmed' when the RECEIVING supervisor
+   * row only flips 'pending' → 'completed' when the RECEIVING supervisor
    * (received_by) submits a signature, and the WHERE clause makes every
    * failure mode return 0 rows (caught by the caller as NOT_FOUND/forbidden):
-   *   - already confirmed (status <> 'pending')            → 0 rows
+   *   - already accepted (status <> 'pending')             → 0 rows
    *   - wrong user confirming (received_by <> confirmerId) → 0 rows
    * INSERT into mes_shift_handovers (the VIEW) is a no-go for UPDATE targeting
    * — write straight to the base table (shift_handovers), consistent with
    * closeShiftEvaluation()'s base-table-not-view rule above.
+   *
+   * Owner-decisions 2026-07-09: canonical accepted-status set on shift_handovers is
+   * {pending -> completed} — the terminal value is 'completed' (the value the IoT
+   * tablet accept-path already writes). This path previously wrote 'confirmed',
+   * splitting the vocabulary across the two writers of the same table; unified to
+   * 'completed'. (No live CHECK constraint and no reader compares 'confirmed', so
+   * this is a safe convergence.)
    */
   async confirmShiftHandover(id: number, confirmerId: number, signatureData: string): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
       UPDATE shift_handovers
-      SET status = 'confirmed', signature_data = ${signatureData}
+      SET status = 'completed', signature_data = ${signatureData}
       WHERE id = ${id} AND status = 'pending' AND received_by = ${confirmerId}
       RETURNING *
     `);
