@@ -124,16 +124,14 @@ export class DrizzleDealRepository implements IDealRepository {
 
   async updateLostReasonId(dealId: string, lostReasonId: number): Promise<Result<void>> {
     try {
-      // VISION-3340 #31: targeted additive UPDATE of the taxonomy FK only. The @shared/db
-      // compat crm_deals def is a drift-aligned shim that intentionally omits this bolt-on
-      // column, so write it via parameterized raw SQL (Rule B: sql`` params, no injection).
-      // date_modify is the live modify-stamp column (compat `updated_at` alias). Owner-gated
-      // (Guruh-B): lost_reason_id does not exist yet, so this arm is only reached when a
-      // structured taxonomy id is explicitly supplied (the live route never supplies one).
+      // VISION-3340 #31 / Batch 5 Item 1: targeted additive UPDATE of the taxonomy FK only.
+      // ⚠️ crm_deals is a VIEW; the FK column lives on the BASE `deals` table (migration
+      // item1-crm-deals-lost-reason-id) — write it there directly via parameterized raw SQL
+      // (Rule B: sql`` params, no injection). Writing through the view would fail (the view
+      // does not expose lost_reason_id and is being recreated by the ownership session).
       await db.execute(sql`
-        UPDATE crm_deals
-        SET lost_reason_id = ${lostReasonId},
-            date_modify    = NOW()
+        UPDATE deals
+        SET lost_reason_id = ${lostReasonId}
         WHERE id = ${dealId}::uuid
       `);
       return Ok();

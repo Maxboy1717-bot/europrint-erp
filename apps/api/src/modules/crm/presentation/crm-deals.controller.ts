@@ -12,11 +12,12 @@ import { CommandBus, QueryBus} from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 
-// A lost deal must carry a reason (drives the loss-reason rollup / churn analysis). The
-// structured taxonomy id (lostReasonId) is intentionally NOT accepted here — crm_deals has
-// no lost_reason_id column yet (owner-gated Guruh-B); only the free-text lost_reason is written.
+// A lost deal must carry a reason (drives the loss-reason rollup / churn analysis). Batch 5 Item 1:
+// the structured taxonomy id (lostReasonId -> crm_loss_reasons, managed in CRM funnel settings) is now
+// accepted and persisted on the base deals.lost_reason_id; the free-text reason is still required.
 const MarkDealLostSchema = z.object({
   reason: z.string().min(3, 'Yo\'qotish sababi majburiy (kamida 3 belgi)'),
+  lostReasonId: z.coerce.number().int().positive().nullable().optional(),
 });
 
 const UpdateDealStageSchema = z.object({
@@ -169,11 +170,9 @@ export class CrmDealsController {
   this.logger.log('Marking deal as lost');
 
   // Mirror markWon: live crm_deals.id is a uuid — pass the string id through (Number(id)
-  // produced NaN and never matched, so a deal could never transition to 'lost' and the
-  // loss-reason rollup stayed empty). lostReasonId is intentionally omitted: the structured
-  // crm_deals.lost_reason_id column does not exist yet (owner-gated), so the handler writes
-  // only the real free-text lost_reason and emits DealLostEvent.
-  const command = new MarkDealLostCommand(String(id), dto.reason);
+  // produced NaN and never matched). Batch 5 Item 1: lostReasonId (optional) is now threaded to
+  // the handler, which persists it on base deals.lost_reason_id alongside the free-text lost_reason.
+  const command = new MarkDealLostCommand(String(id), dto.reason, dto.lostReasonId ?? undefined);
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
 }
