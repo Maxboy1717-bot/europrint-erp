@@ -8,6 +8,9 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { ProcurementApprovalChainService } from './application/services/procurement-approval-chain.service';
 import { ProcurementController } from './presentation/procurement.controller';
 import { WarehouseConfigController } from './presentation/warehouse-config.controller';
+// Batch 3 Item B, Gate 2 — DELIVERY_REQUEST zayavka fulfillment shadow capture (stock'siz).
+import { DeliveryRequestFulfillmentController } from './presentation/delivery-request-fulfillment.controller';
+import { DeliveryRequestFulfillmentService } from './application/services/delivery-request-fulfillment.service';
 import { ProcurementRequestService } from './application/services/procurement-request.service';
 import { WarehouseConfigService } from './application/services/warehouse-config.service';
 import { NotificationRoutingRepository } from '../notifications/infrastructure/notification-routing.repository';
@@ -100,6 +103,7 @@ import { FinanceModule } from '@modules/finance/finance.module';
     PosOperationsController,
     WarehouseOpenController,
     StockIssuableController,
+    DeliveryRequestFulfillmentController,
   ],
   providers: [
     { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },
@@ -120,6 +124,7 @@ import { FinanceModule } from '@modules/finance/finance.module';
     ProcurementApprovalChainService,
     ProcurementRequestService,
     WarehouseConfigService,
+    DeliveryRequestFulfillmentService,
     PosBarcodeRepository,
     PosBarcodeService,
     PosBarcodeExtRepository,
