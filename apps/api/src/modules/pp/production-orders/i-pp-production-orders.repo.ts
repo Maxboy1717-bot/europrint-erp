@@ -32,5 +32,8 @@ export interface IPpProductionOrdersRepository {
   // EP-PP-085 "Очеред" (Batch 5 Item 4) — per-machine operator-visible queue.
   getQueueByWorkCenter(workCenterId: string): Promise<Result<Row[]>>;
   reorderQueue(workCenterId: string, orderedIds: number[]): Promise<Result<Row[]>>;
+  // EP-PP-110 (Batch 5 Item 14) — weekly plan view + reschedule.
+  getWeeklyPlan(weekStart: string): Promise<Result<Row[]>>;
+  rescheduleOrder(id: number, plannedStartDate: string, plannedEndDate: string | null): Promise<Result<Row>>;
 }
 export const PP_PRODUCTION_ORDERS_REPO = 'IPpProductionOrdersRepository';

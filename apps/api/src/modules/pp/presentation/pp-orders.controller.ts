@@ -67,6 +67,13 @@ const ReorderQueueDtoSchema = z.object({
   orderedIds: z.array(z.coerce.number().int().positive()).min(1).max(500),
 });
 
+// EP-PP-110 (Batch 5 Item 14): move an order to a different planned day/week (weekly view).
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const RescheduleDtoSchema = z.object({
+  plannedStartDate: z.string().regex(ISO_DATE, 'YYYY-MM-DD kerak'),
+  plannedEndDate: z.string().regex(ISO_DATE).nullable().optional(),
+});
+
 // EP-PP-082: drive the production order through its 9-status lifecycle. `status` is
 // validated against the aggregate's PoStatus + PO_STATUS_TRANSITIONS in the service
 // (unknown → 400, illegal hop → 400); `reason` is the mandatory written justification
@@ -206,6 +213,28 @@ export class PpOrdersController {
   const parsed = ReorderQueueDtoSchema.parse(dto);
   this.logger.log(`Reorder PP queue wc=${parsed.workCenterId} ids=[${parsed.orderedIds.join(',')}]`);
   const result = await this.productionOrdersService.reorderQueue(parsed.workCenterId, parsed.orderedIds);
+  return unwrapOrThrow(result);
+ }
+
+ // EP-PP-110 (Batch 5 Item 14) — haftalik reja ko'rinishi (weekStart = dushanba 'YYYY-MM-DD').
+ @ApiOperation({ summary: 'Weekly production plan (EP-PP-110)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('weekly/:weekStart')
+ @Roles(Role.TECHNOLOGIST, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
+ async getWeeklyPlan(@Param('weekStart') weekStart: string) {
+  const result = await this.productionOrdersService.getWeeklyPlan(weekStart);
+  return unwrapOrThrow(result);
+ }
+
+ // Buyurtmani boshqa kunga/haftaga ko'chirish (haftalik ko'rinishdan drag/tanlash).
+ @ApiOperation({ summary: 'Reschedule a production order to a planned day (EP-PP-110)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @Patch(':id/reschedule')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
+ async reschedule(@Param('id') id: number, @Body() dto: z.infer<typeof RescheduleDtoSchema>) {
+  const parsed = RescheduleDtoSchema.parse(dto);
+  const result = await this.productionOrdersService.rescheduleOrder(Number(id), parsed.plannedStartDate, parsed.plannedEndDate ?? null);
   return unwrapOrThrow(result);
  }
 

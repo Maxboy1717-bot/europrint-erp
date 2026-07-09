@@ -222,4 +222,39 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
       return this.getQueueByWorkCenter(workCenterId);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Navbatni qayta tartiblashda xatolik'); }
   }
+
+  // EP-PP-110 (Batch 5 Item 14) — haftalik reja: planned_start_date [weekStart, weekStart+6] oralig'ida.
+  // planned_start_date varchar 'YYYY-MM-DD' (ISO → leksikografik = xronologik); weekEnd SQL'da hisoblanadi.
+  async getWeeklyPlan(weekStart: string): Promise<Result<Row[]>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        SELECT id, order_number, product_name, status, priority, is_urgent, work_center_id,
+               planned_start_date, planned_end_date, quantity, queue_sequence
+        FROM production_orders
+        WHERE deleted_at IS NULL
+          AND planned_start_date IS NOT NULL
+          AND planned_start_date >= ${weekStart}
+          AND planned_start_date <= to_char((${weekStart})::date + 6, 'YYYY-MM-DD')
+        ORDER BY planned_start_date, is_urgent DESC, priority ASC, id`);
+      return Ok(r.rows as Row[]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Haftalik rejani olishda xatolik'); }
+  }
+
+  // Move a production order to a different planned day/week (EP-PP-110 weekly view reschedule).
+  async rescheduleOrder(id: number, plannedStartDate: string, plannedEndDate: string | null): Promise<Result<Row>> {
+    try {
+      const existing = await runQuery<Row>(sql`SELECT id FROM production_orders WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`);
+      if (!existing.rows[0]) return Err({ code: 'NOT_FOUND', message: 'Buyurtma topilmadi' });
+      const r = await runQuery<Row>(sql`
+        UPDATE production_orders
+        SET planned_start_date = ${plannedStartDate},
+            planned_end_date = COALESCE(${plannedEndDate}, planned_end_date),
+            updated_at = ${_time.now()}
+        WHERE id = ${id} AND deleted_at IS NULL
+        RETURNING id, order_number, planned_start_date, planned_end_date`);
+      const row = r.rows[0];
+      if (!row) return Err({ code: 'INTERNAL', message: 'Ko\'chirilmadi' });
+      return Ok(row);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Ko\'chirishda xatolik'); }
+  }
 }

@@ -17,6 +17,7 @@ const OrderApprovalWorkflow = lazy(() => import("@/pages/OrderApprovalWorkflow")
 const PPDashboard = lazy(() => import("@/pages/PPDashboard"));
 const PPQueue = lazy(() => import("@/pages/PPQueue"));
 const PPReasonCodes = lazy(() => import("@/pages/PPReasonCodes"));
+const PPWeeklyPlan = lazy(() => import("@/pages/PPWeeklyPlan"));
 const BOMManagement = lazy(() => import("@/pages/BOMManagement"));
 const RoutingConfiguration = lazy(() => import("@/pages/RoutingConfiguration"));
 const CapacityPlanning = lazy(() => import("@/pages/CapacityPlanning"));
@@ -103,6 +104,7 @@ export const PRODUCTION_ROUTES: [string, React.ComponentType][] = [
   ['/pp/dashboard',               PPDashboard],
   ['/pp/queue',                   PPQueue],
   ['/pp/reason-codes',            PPReasonCodes],
+  ['/pp/weekly-plan',             PPWeeklyPlan],
   ['/erp/pp/bom',                 BOMManagement],
   ['/erp/pp/routing',             RoutingConfiguration],
   ['/erp/pp/capacity',            CapacityPlanning],

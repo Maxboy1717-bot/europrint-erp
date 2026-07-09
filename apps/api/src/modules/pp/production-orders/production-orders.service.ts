@@ -162,4 +162,22 @@ export class ProductionOrdersService {
       return { data: result.data };
     });
   }
+
+  /** EP-PP-110 (Batch 5 Item 14) — haftalik reja (weekStart = dushanba 'YYYY-MM-DD'). */
+  async getWeeklyPlan(weekStart: string){
+    return safeCall(async () => {
+      const result = await this.ppProductionOrdersRepo.getWeeklyPlan(weekStart);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return { data: result.data, weekStart };
+    });
+  }
+
+  /** Buyurtmani boshqa kunga/haftaga ko'chirish (haftalik ko'rinishdan). */
+  async rescheduleOrder(id: number, plannedStartDate: string, plannedEndDate: string | null){
+    return safeCall(async () => {
+      const result = await this.ppProductionOrdersRepo.rescheduleOrder(id, plannedStartDate, plannedEndDate);
+      if (!result.ok) throw new InternalServerErrorException(result.error);
+      return result.data;
+    });
+  }
 }
