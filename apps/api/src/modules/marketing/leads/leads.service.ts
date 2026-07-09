@@ -70,6 +70,9 @@ export class LeadsService {
         source: (dto['source'] as string | undefined) ?? 'website',
         channel: (dto['channel'] as string | undefined) || undefined,
         campaignId: (dto['campaignId'] as string | undefined) || undefined,
+        // Batch 2 item 1.1: the service row also dropped assignedTo (only the repo INSERT was blamed
+        // in the audit) — thread it through so a lead created with an explicit owner keeps it.
+        assignedTo: dto['assignedTo'] != null ? dto['assignedTo'] : undefined,
         status: (dto['status'] as string | undefined) ?? 'new',
         score: dto['score'] != null ? Number(dto['score']) : 0,
         notes: (dto['notes'] as string | undefined) || undefined,

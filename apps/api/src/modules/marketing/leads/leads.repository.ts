@@ -56,15 +56,18 @@ export class LeadsRepository {
     // them. The live marketing_leads table has all of these — insert them directly.
     try {
       const v = values;
+      // Batch 2 item 1.1: campaign_id + assigned_to are real integer columns the previous INSERT
+      // silently dropped (a lead created from a campaign / with an owner "saved" but lost both). Added.
       const result = await db.execute(sql`
         INSERT INTO marketing_leads
           (id, name, company, phone, email, source, channel, status, score, notes,
-           lost_reason, first_name, last_name, created_at, updated_at)
+           lost_reason, first_name, last_name, campaign_id, assigned_to, created_at, updated_at)
         VALUES (
           gen_random_uuid()::text, ${String(v.name ?? '')}, ${(v.company as string) ?? null}, ${(v.phone as string) ?? null},
           ${(v.email as string) ?? null}, ${(v.source as string) ?? 'website'}, ${(v.channel as string) ?? null},
           ${(v.status as string) ?? 'new'}, ${Number(v.score ?? 0)}, ${(v.notes as string) ?? null},
           ${(v.lostReason as string) ?? null}, ${(v.firstName as string) ?? null}, ${(v.lastName as string) ?? null},
+          ${v.campaignId != null ? Number(v.campaignId) || null : null}, ${v.assignedTo != null ? Number(v.assignedTo) || null : null},
           NOW(), NOW()
         )
         RETURNING *
@@ -99,6 +102,9 @@ export class LeadsRepository {
           lost_reason = COALESCE(${v.lostReason  !== undefined ? (v.lostReason as string) : null}, lost_reason),
           first_name  = COALESCE(${v.firstName   !== undefined ? (v.firstName as string)  : null}, first_name),
           last_name   = COALESCE(${v.lastName    !== undefined ? (v.lastName as string)   : null}, last_name),
+          -- Batch 2 item 1.2: campaign_id + assigned_to were dropped by the UPDATE too (sibling of 1.1).
+          campaign_id = COALESCE(${v.campaignId  !== undefined && v.campaignId !== null ? Number(v.campaignId) : null}, campaign_id),
+          assigned_to = COALESCE(${v.assignedTo  !== undefined && v.assignedTo !== null ? Number(v.assignedTo) : null}, assigned_to),
           updated_at  = NOW()
         WHERE id = ${id}
         RETURNING *
