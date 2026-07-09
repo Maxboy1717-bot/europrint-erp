@@ -29,10 +29,14 @@ export const sensorDevices = pgTable("sensor_devices", {
   isActive: boolean("is_active").notNull().default(true),
   lastHeartbeat: timestamp("last_heartbeat"),
   status: varchar("status", { length: 20 }).notNull().default("offline"),
+  // install_status = CAPEX (kapital xarajat) o'qi: qurilma kerak/rejalashtirilgan/o'rnatilgan.
+  // `status` (online/offline heartbeat) dan ALOHIDA o'q — aralashtirilmaydi. (Batch 5 Item 2)
+  installStatus: varchar("install_status", { length: 20 }).notNull().default("installed"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   check("sensor_devices_device_type_chk", sql`${t.deviceType} IN ('inductive','optical','encoder','plc_digital')`),
   check("sensor_devices_connection_type_chk", sql`${t.connectionType} IN ('http','mqtt','websocket')`),
+  check("chk_sensor_devices_install_status", sql`${t.installStatus} IN ('needed','planned','installed')`),
 ]);
 
 export const insertSensorDeviceSchema = createInsertSchema(sensorDevices, {

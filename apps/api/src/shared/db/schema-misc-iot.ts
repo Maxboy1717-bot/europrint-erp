@@ -38,6 +38,8 @@ export const sensor_devices = pgTable('sensor_devices', {
   location: text('location'),
   type: text('type').notNull(),
   status: text('status').notNull().default('active'),
+  // install_status = CAPEX o'qi (needed/planned/installed) — `status` dan ALOHIDA. (Batch 5 Item 2)
+  install_status: varchar('install_status', { length: 20 }).notNull().default('installed'),
   last_reading_at: timestamp('last_reading_at', { withTimezone: true }),
   thresholds: text('thresholds').default('{}'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
