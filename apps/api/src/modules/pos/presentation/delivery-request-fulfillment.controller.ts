@@ -8,7 +8,7 @@
  *   Transport-only: validate with Zod, delegate to the service, unwrap Result.
  */
 
-import { Body, Controller, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { z } from 'zod';
 import { throwFromError } from '@common/http-result';
@@ -22,6 +22,9 @@ import { DeliveryRequestFulfillmentService } from '../application/services/deliv
 
 const FulfillShadowSchema = z.object({
   warehouseId: z.coerce.number().int().positive().optional(),
+  // GATE 3 (decision Variant A): structured sales order link. Optional — falls back to the zayavka's
+  // sales_order_ref ai-answer in the service; if neither resolves, the shadow is captured with a NULL link.
+  salesOrderId: z.coerce.number().int().positive().optional(),
   lines: z.array(z.object({
     // STEP B (decision #4): finished-goods shadow is keyed by product_id (same space as #51 + warehouse_stock_fg).
     productId: z.coerce.number().int().positive(),
@@ -51,7 +54,19 @@ export class DeliveryRequestFulfillmentController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = FulfillShadowSchema.parse(body);
-    const r = await this.svc.fulfillShadow(documentId, dto.warehouseId ?? null, dto.lines, user?.id ?? null);
+    const r = await this.svc.fulfillShadow(documentId, dto.warehouseId ?? null, dto.salesOrderId ?? null, dto.lines, user?.id ?? null);
+    if (!r.ok) throwFromError(r.error);
+    return r.data;
+  }
+
+  // Gate 3: compares the shadow's would-decrement against #51's ACTUAL warehouse_stock_fg decrement for a
+  // sales order + logs the diff. SHADOW-only diagnostic — NO warehouse_stock / warehouse_stock_fg writes.
+  @Get('compare/:salesOrderId')
+  @RequirePermission('pos.operations.write')
+  @ApiOperation({ summary: 'Gate 3: shadow would-decrement ni #51 haqiqiy warehouse_stock_fg kamayishi bilan solishtirish (shadow-only)' })
+  @ApiResponse({ status: 200, description: 'Solishtiruv natijasi (product bo\'yicha would/actual/diff + hasMismatch)' })
+  async compare(@Param('salesOrderId', ParseIntPipe) salesOrderId: number) {
+    const r = await this.svc.compareShadowVsActual(salesOrderId);
     if (!r.ok) throwFromError(r.error);
     return r.data;
   }
