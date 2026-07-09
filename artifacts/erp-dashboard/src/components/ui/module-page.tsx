@@ -129,7 +129,7 @@ export function ModulePage({
   const styles = moduleStyles[module];
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-6", className)}>
       <div className={cn(
         "flex items-center justify-between gap-4 p-4 rounded-lg border-l-4",
         styles.headerBg,
