@@ -67,12 +67,15 @@ const AddNpsSchema = z.object({
 }).passthrough();
 
 const UpdateInternalNotesSchema = z.object({
-  // Only fields the repo actually persists. risk_level / internal_classification were
-  // advertised here but sd_customers has no such columns (repo writes relationship_quality
-  // /notes/share_of_wallet), so they were silently dropped — trimmed to stop the misleading
-  // contract. No live caller sent them.
-  notes: z.string().max(5000).optional(),
-}).passthrough();
+  // Declares exactly what the repo (updateInternalNotes) reads and the FE (Customer360View)
+  // sends: relationship_quality, internal_notes (-> the `notes` column), share_of_wallet.
+  // risk_level/internal_classification had no column (dropped); the earlier trim left `notes`,
+  // but the repo reads body.internal_notes (NOT body.notes) so `notes` was itself a phantom.
+  // No passthrough: the advertised contract now matches what actually saves.
+  relationship_quality: z.string().max(100).optional(),
+  internal_notes: z.string().max(5000).optional(),
+  share_of_wallet: z.number().nonnegative().optional(),
+});
 
 const CreateComplaintSchema = z.object({
   subject: z.string().max(500).optional(),

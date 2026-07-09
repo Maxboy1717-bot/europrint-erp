@@ -52,11 +52,13 @@ export const AddNpsSchema = z.object({
 }).passthrough();
 
 export const UpdateInternalNotesSchema = z.object({
-  // sd_customers has no risk_level / internal_classification columns; only `notes` (plus the
-  // repo's relationship_quality/share_of_wallet via passthrough) is persisted. Trimmed the two
-  // phantom fields so the advertised contract matches what actually saves.
-  notes: z.string().max(5000).optional(),
-}).passthrough();
+  // Matches what the repo reads + the FE sends: relationship_quality, internal_notes
+  // (-> notes column), share_of_wallet. (`notes` was a phantom — the repo reads
+  // body.internal_notes; risk_level/internal_classification have no column.)
+  relationship_quality: z.string().max(100).optional(),
+  internal_notes: z.string().max(5000).optional(),
+  share_of_wallet: z.number().nonnegative().optional(),
+});
 
 export const CreateComplaintSchema = z.object({
   subject: z.string().max(500).optional(),
