@@ -84,9 +84,12 @@ export class WebsiteLeadRepository {
       // no `status` prop, manager_id->assigned_to). tenant_id defaults to 1.
       // estimatedValue -> opportunity_amount; sub-source kept in lost_reason (no sub_source col yet).
       const insLostReason = subNote + (input.metadata ? ' ' + JSON.stringify(input.metadata) : '');
+      // Item A (CRM ownership convergence): write the resolved manager into the canonical ownership
+      // column `assigned_to` (the one row-scoping filters on) as well as the legacy `manager_id`
+      // column, so a website lead is visible to its owning manager under the new row-level filter.
       const inserted = await db.execute<Row>(sql`
-        INSERT INTO crm_leads (source, status, contact_name, contact_phone, manager_id, product_interest, opportunity_amount, lost_reason)
-        VALUES (${LEAD_SOURCE.WEBSITE}, ${LEAD_STATUS.NEW}, ${input.contactName}, ${input.contactPhone}, ${input.managerId ?? null}, ${input.productInterest ?? null}, ${input.estimatedValue ?? null}, ${insLostReason})
+        INSERT INTO crm_leads (source, status, contact_name, contact_phone, manager_id, assigned_to, product_interest, opportunity_amount, lost_reason)
+        VALUES (${LEAD_SOURCE.WEBSITE}, ${LEAD_STATUS.NEW}, ${input.contactName}, ${input.contactPhone}, ${input.managerId ?? null}, ${input.managerId ?? null}, ${input.productInterest ?? null}, ${input.estimatedValue ?? null}, ${insLostReason})
         RETURNING id
       `);
       const list = Array.isArray((inserted as { rows?: Row[] }).rows)
@@ -111,16 +114,19 @@ export class WebsiteLeadRepository {
    * bermagani uchun ularning xatti-harakati o'zgarmaydi.
    */
   async assignManagerIfMissing(leadId: number, managerId: number, overwrite = false): Promise<Result<boolean>> {
-    // crm_leads.manager_id (integer).
+    // crm_leads.manager_id (legacy) + assigned_to (Item A canonical ownership — the row-scoping
+    // column). Both are set to the same manager so reassignment (incl. the aging cron) keeps the
+    // scoping column in sync. Non-overwrite guards on manager_id IS NULL to preserve the existing
+    // null-fill semantics for the standard callers.
     return safeCall(async () => {
       const updated = overwrite
         ? await db.execute<Row>(sql`
-            UPDATE crm_leads SET manager_id = ${managerId}, updated_at = NOW()
+            UPDATE crm_leads SET manager_id = ${managerId}, assigned_to = ${managerId}, updated_at = NOW()
             WHERE id = ${leadId}
             RETURNING id
           `)
         : await db.execute<Row>(sql`
-            UPDATE crm_leads SET manager_id = ${managerId}
+            UPDATE crm_leads SET manager_id = ${managerId}, assigned_to = ${managerId}
             WHERE id = ${leadId} AND manager_id IS NULL
             RETURNING id
           `);

@@ -146,9 +146,11 @@ export class CrmLeadsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
-  async create(@Body() dto: unknown) {
+  async create(@Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
     const parsed = LeadCreateSchema.parse(dto);
-    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>));
+    // Item A (CRM ownership convergence): default assigned_to to the creating user when no explicit
+    // assignee is given; an explicit assignedTo/assignedById in the body still wins (repo COALESCE order).
+    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>), user?.id);
     return unwrapOrThrow(res);
   }
 
@@ -196,9 +198,10 @@ export class CrmLeadsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('quick')
-  async createQuickLead(@Body() body: unknown) {
+  async createQuickLead(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const parsed = LeadCreateSchema.parse(body);
-    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>));
+    // Item A: same default-to-creator ownership as create() above.
+    const res = await this.leadsService.create(normalizeLeadDto(parsed as Record<string, unknown>), user?.id);
     return unwrapOrThrow(res);
   }
 }
