@@ -146,6 +146,10 @@ Owner answered 8 items; built the buildable ones (commits on `chore/schema-conve
 - **Standing blockers** (out of loop scope): Org-01 structural (G5/G9/G10), HR-02 razryad/salary,
   Finance-03 SoD (needs real FINANCE_OFFICER users), org-card canonicalization, head_user_id
   completeness, bilingual/Cyrillic (F1/F3).
+- **Finance-role user provisioning** — ✅ **OWNER-NOTE (2026-07-10):** not a separate task; resolves
+  automatically via the card-master-data / orgsxema completion work already in progress (assigns real
+  people to kassir/buxgalter positions with the right `rbac_tier`). No standalone action needed here.
+  (Same real kassir/FINANCE_OFFICER users unblock the Finance-03 SoD line above.)
 
 ## 6. Low-value residuals (real but de-prioritized — no FE caller / cosmetic)
 
