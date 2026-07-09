@@ -332,6 +332,8 @@ export default function RulonCards() {
     <DedicatedPageShell
       title="Rulon Kartalar"
       description="WMS — qog'oz rulonlari pasporti, og'irlik va uzunlik nazorati"
+      module="warehouse"
+      icon={<Package className="h-4 w-4" />}
       actions={
         <Button onClick={() => setDialogOpen(true)} data-testid="btn-add-rulon">
           <Plus className="h-4 w-4 mr-1.5" /> Yangi rulon

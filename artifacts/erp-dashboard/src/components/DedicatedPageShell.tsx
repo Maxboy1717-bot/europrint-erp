@@ -6,6 +6,7 @@
 import { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EPPageHeader } from "@/components/ep";
+import type { EPModuleColor } from "@/components/ep/EPCard";
 import { useTranslation } from '@/lib/i18n';
 
 interface DedicatedPageShellProps {
@@ -13,6 +14,10 @@ interface DedicatedPageShellProps {
   description?: string;
   actions?: ReactNode;
   children: ReactNode;
+  /** Optional header icon (rendered in a module-tinted tile — §3.6 signature). */
+  icon?: ReactNode;
+  /** Module accent for the header icon tile (§3.6 wayfinding). */
+  module?: EPModuleColor;
 }
 
 /**
@@ -24,6 +29,8 @@ export function DedicatedPageShell({
   description,
   actions,
   children,
+  icon,
+  module,
 }: DedicatedPageShellProps) {
   const { t } = useTranslation("common");
   return (
@@ -33,6 +40,8 @@ export function DedicatedPageShell({
         title={title}
         subtitle={description}
         actions={actions}
+        icon={icon}
+        module={module}
       />
       {children}
     </div>
