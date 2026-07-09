@@ -12,8 +12,12 @@ import { NotificationRoutingRepository } from '../../../notifications/infrastruc
 
 /** notification_routing_rules.event_type — config-driven qilib qo'yiladi (FAZA Bildirishnoma, 2026-07-01). */
 const LOW_STOCK_EVENT_TYPE = 'wms.low_stock';
-/** Jadvalda qator bo'lmasa qaytiladigan avvalgi hardcoded rol (regressiya yo'q, Q-39). */
-const LOW_STOCK_FALLBACK_ROLE = 'pos_manager';
+/**
+ * Owner-decisions 2026-07-09: LOW_STOCK auto-routes to WAREHOUSE-role users
+ * (omborchi / ombor boshlig'i), by role — not per-user subscription. Used as the
+ * fallback when notification_routing_rules has no active rule for the event.
+ */
+const LOW_STOCK_FALLBACK_ROLE = 'warehouse_keeper';
 
 @Injectable()
 export class PosLowStockJob {
@@ -38,19 +42,24 @@ export class PosLowStockJob {
 
       this.logger.warn(`${r.data.length} ta material past qoldiqlarda`);
 
-      // egasi/admin sozlagan nishon rol(lar) — notification_routing_rules (event_type='wms.low_stock');
-      // sozlanmagan bo'lsa avvalgi hardcoded 'pos_manager'ga qaytadi (regressiya yo'q).
-      const targetRolesResult = await this.routing.resolveRoles(LOW_STOCK_EVENT_TYPE, LOW_STOCK_FALLBACK_ROLE);
-      const targetRoles = targetRolesResult.ok ? targetRolesResult.data : [LOW_STOCK_FALLBACK_ROLE];
+      // Resolve the routing rule's target role(s) to concrete active user ids
+      // (notification_routing_rules event_type='wms.low_stock'; falls back to the
+      // warehouse_keeper role when unconfigured). We write ONE per-user notification
+      // row each — visible via getForUser's user_id match — instead of a role-broadcast
+      // row (user_id=0) that the reader never surfaced (that made the old routing inert).
+      const userIdsResult = await this.routing.resolveUserIds(LOW_STOCK_EVENT_TYPE, LOW_STOCK_FALLBACK_ROLE);
+      const targetUserIds = userIdsResult.ok ? userIdsResult.data : [];
 
       for (const item of r.data.slice(0, 20)) {
-        for (const targetRole of targetRoles) {
-          await this.notifications.createNotification({
-            type: 'LOW_STOCK',
-            title: 'Past qoldiq ogohlantirishi',
-            body: `Material ${item.materialCode}: ${item.currentQty}/${item.minQty} (Ombor #${item.warehouseId})`,
-            targetRole,
-          }).catch(() => null);
+        for (const uid of targetUserIds) {
+          await this.notifications.sendNotification(
+            uid,
+            'LOW_STOCK',
+            'Past qoldiq ogohlantirishi',
+            `Material ${item.materialCode}: ${item.currentQty}/${item.minQty} (Ombor #${item.warehouseId})`,
+            'warehouse',
+            item.warehouseId,
+          ).catch(() => null);
         }
       }
 

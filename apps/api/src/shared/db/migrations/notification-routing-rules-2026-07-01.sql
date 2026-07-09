@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_notification_routing_rules_event_type
 INSERT INTO notification_routing_rules (event_type, target_role, notes)
 SELECT v.event_type, v.target_role, v.notes
 FROM (VALUES
-  ('wms.low_stock',     'pos_manager',        'Ombor past qoldiq — avval pos-low-stock.job.ts da qattiq yozilgan edi'),
+  ('wms.low_stock',     'warehouse_keeper',   'Ombor past qoldiq -> ombor roli (omborchi/ombor boshligi). Owner-decisions 2026-07-09: pos_manager emas, warehouse roli.'),
   ('qc.failed',         'production_manager', 'QC rad — avval qc-failed-notification.listener.ts da qattiq yozilgan edi'),
   ('mro.machine_stopped','director',          'Uskuna to''xtashi — avval mro-machine-stopped-notification.listener.ts da qattiq yozilgan edi'),
   ('wms.lot_expiring',  'director',           'Ombor lot/partiya muddati tugashi — yangi (avval hech qanday trigger yo''q edi)')
