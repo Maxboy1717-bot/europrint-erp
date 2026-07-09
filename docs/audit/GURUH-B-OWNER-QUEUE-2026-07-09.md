@@ -40,6 +40,51 @@ Branch: `chore/schema-convergence`. Loop commits: `b0f3c144`..`0346b2e6`.
     owner numbers.
 11. **CC protocol quorum %** (2/3?) and **PP split vs work-splitting** semantic collision (#8/#15).
 
+### ✅ 2026-07-09 build-pass — owner answers applied (8-item batch)
+Owner answered 8 items; built the buildable ones (commits on `chore/schema-convergence`):
+- **§1.3 MES shift-handover (Option A):** accepted-status set unified to `'completed'` ✅ `8368657b`.
+  **BUT shift-id wiring BLOCKED** → still open, see new blocker A below.
+- **§1.4 MES frozen-zone:** OWNER-CONFIRMED-NO-ACTION ✅ (marked above).
+- **§1.5 Kanban status→column:** mechanism built, ships INERT ✅ `a2499ab0`. Activate by inserting
+  rows: `INSERT INTO kanban_status_column_map (sd_status, kanban_column_id) VALUES ('<sd_status>', <col_id>);`
+  (owner supplies the map later — no code change needed; board 2 columns = 16 Kiruvchi/17 Jarayonda/18 Bajarildi).
+- **§1.6 LOW_STOCK role-broadcast:** fixed ✅ `1762c6c8` — now fans out per-user to `warehouse_keeper`
+  (rule + fallback retargeted from `pos_manager`). ⚠️ existing `user_id=0` broadcast rows left as historical
+  (not backfilled — non-destructive); **0 active `warehouse_keeper` users exist yet** → seed warehouse users.
+- **§1.7 Notification preferences:** granular `notification_type_preferences` table built + real save/load ✅
+  `d39c33e5` (A4 uuid/int entanglement confirmed SEPARABLE — create-notif DTO untouched).
+- **§1.11 PP split naming:** LUGAT ruling ✅ `8b35f2e3` — no code conflates the two; operation-split =
+  WILL-NOT-BUILD (EP-PP-063); partial-delivery build = #19.
+
+### 🔶 NEW blockers surfaced this pass (owner decision needed)
+- **A. MES shift-handover real shift id (Option A) — BLOCKED on data.** `shifts` master table is EMPTY
+  (0 rows, no morning/afternoon/night seed) and neither create path receives a shift id (FE conflates
+  "shift" with `mes_sessions.operator_id`). Need: (a) seed `shifts` per department; (b) decide the shift-id
+  SOURCE — FE-supplied `from/to_shift_id`, or BE-resolved from `shifts` by department+time. Wiring is small
+  once both exist. `from/to_shift_id` are unconstrained ints (no FK) so a value is only meaningful after seed.
+- **B. CRM row-level scoping — ownership column ambiguous + writes fragmented.** Owner said filter
+  `assigned_to = self`, but live `crm_leads.assigned_to` is 100% EMPTY and `crm_deals` has NO `assigned_to`
+  column; the only populated owner col on both is `assigned_by_id`. WORSE: the 3 lead WRITE paths all write
+  `assigned_to`, while seeds/deals write `assigned_by_id` — so filtering on `assigned_by_id` would hide a
+  manager's own just-created leads. Decide the canonical ownership column and converge the writes to it
+  (recommend `assigned_by_id` everywhere, or read `COALESCE(assigned_by_id, assigned_to, created_by_id)`),
+  THEN the filter is safe. Also 3/11 leads have NULL owner (invisible to managers post-scoping) + FE list
+  totals assume "see all". First-ever row-level RBAC pattern here → build the scope helper reusably.
+- **C. SD stock-out → POS goods-issue (3a) — coupled to 3b; removing #51 risks silent under-issue.**
+  The POS `EXTERNAL_OUT` completion path ALREADY decrements the same `warehouse_stock` inline, so running it
+  AND the delivery-status `#51` listener double-counts. BUT there is NO link today between an SD delivery and
+  a POS movement (`pos_movements` has no `sales_order_id`/`delivery_id`; live `EXTERNAL_OUT` count = 0). So
+  simply retiring #51 would leave customer-shipment FG-out **never decrementing** unless the warehouse keeper
+  records a POS movement per delivery — which is exactly the 3b workflow (below). **3a should land WITH 3b**,
+  not before. Owner confirm: is POS-Monitor `EXTERNAL_OUT` the canonical customer-shipment goods-issue?
+- **3b (SCOPE — not built).** Zayavka/delivery-request → CC approval → warehouse POS fulfilment. Fits as
+  CONFIG/DATA, not new schema: one `cc_document_templates` row (code `DELIVERY_REQUEST`, `ai_questions`
+  defining request fields: when/where/vehicle/price/extras/SO-ref) + `cc_workflow_steps` rows for its
+  approval route; the request payload lives in `cc_documents.ai_answers` (jsonb). Gap: no template-create
+  endpoint (CC controller has only draft/send/approve) and no approved-request→POS-issue link. Rough size:
+  ~0 new tables (reuse cc_documents), 1 template + steps seed, ~2–3 files to wire request→approval→POS
+  reference on `pos_movements`. Owner to greenlight as a dedicated future pass.
+
 ## 2. Master-data / seed (provide the values — schema already built)
 
 - **PP reason-code vocabulary** (`pp_reason_codes` — CRUD live, 0 rows): delayPareto/5-group codes
