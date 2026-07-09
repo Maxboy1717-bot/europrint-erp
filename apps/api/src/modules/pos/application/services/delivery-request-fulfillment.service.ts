@@ -3,10 +3,12 @@
  * @description Batch 3 Item B, GATE 2 — POS "zayavka bajarildi" capture (SHADOW-only).
  *   Warehouse staff mark an APPROVED DELIVERY_REQUEST (cc_documents) zayavka as physically issued.
  *   This ONLY writes the delivery_request_fulfillment_shadow record — it does NOT touch
- *   warehouse_stock, does NOT touch the #51 listener, and does NOT reuse the existing
- *   stock-decrementing endpoints (pos/operations/issue, pos/movements). Gate 4 (later, on owner
- *   go-ahead) will turn this same capture into the real decrement + disable #51. Raw parametrized
- *   SQL (like the sibling POS repos); Result<T>.
+ *   warehouse_stock, does NOT touch warehouse_stock_fg, does NOT touch the #51 listener, and does
+ *   NOT reuse the existing stock-decrementing endpoints (pos/operations/issue, pos/movements). Gate 4
+ *   (later, on owner go-ahead) will turn this same capture into the real decrement + disable #51.
+ *   STEP B (owner decision #4): the shadow is keyed by product_id (finished good) — the SAME id space
+ *   as the real FG delivery (#51, delivery_items.material_id -> products) and warehouse_stock_fg — so
+ *   the Gate 3 shadow-compare is finally apples-to-apples. Raw parametrized SQL; Result<T>.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -16,10 +18,10 @@ import { Ok, Err, Result, AppError } from '@common/result';
 
 type Row = Record<string, unknown>;
 
-export interface FulfillLine { materialCardId: number; quantity: number; }
+export interface FulfillLine { productId: number; quantity: number; }
 export interface ShadowRow {
   id: number; documentId: string; documentRef: string | null;
-  warehouseId: number | null; materialCardId: number | null;
+  warehouseId: number | null; productId: number | null;
   wouldDecrementQty: number; gate: string; capturedAt: string;
 }
 
@@ -63,14 +65,14 @@ export class DeliveryRequestFulfillmentService {
       for (const line of lines) {
         const r = (await runQuery<Row>(sql`
           INSERT INTO delivery_request_fulfillment_shadow
-            (document_id, document_ref, warehouse_id, material_card_id, would_decrement_qty, captured_by, gate)
-          VALUES (${documentId}::uuid, ${ref}, ${warehouseId ?? null}, ${line.materialCardId}, ${line.quantity}, ${capturedBy ?? null}, 'shadow')
-          RETURNING id, document_id, document_ref, warehouse_id, material_card_id, would_decrement_qty, gate, captured_at`)).rows[0];
+            (document_id, document_ref, warehouse_id, product_id, would_decrement_qty, captured_by, gate)
+          VALUES (${documentId}::uuid, ${ref}, ${warehouseId ?? null}, ${line.productId}, ${line.quantity}, ${capturedBy ?? null}, 'shadow')
+          RETURNING id, document_id, document_ref, warehouse_id, product_id, would_decrement_qty, gate, captured_at`)).rows[0];
         if (r) {
           out.push({
             id: Number(r.id), documentId: String(r.document_id), documentRef: (r.document_ref as string | null) ?? null,
             warehouseId: r.warehouse_id != null ? Number(r.warehouse_id) : null,
-            materialCardId: r.material_card_id != null ? Number(r.material_card_id) : null,
+            productId: r.product_id != null ? Number(r.product_id) : null,
             wouldDecrementQty: Number(r.would_decrement_qty), gate: String(r.gate), capturedAt: String(r.captured_at),
           });
         }

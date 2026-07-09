@@ -23,7 +23,8 @@ import { DeliveryRequestFulfillmentService } from '../application/services/deliv
 const FulfillShadowSchema = z.object({
   warehouseId: z.coerce.number().int().positive().optional(),
   lines: z.array(z.object({
-    materialCardId: z.coerce.number().int().positive(),
+    // STEP B (decision #4): finished-goods shadow is keyed by product_id (same space as #51 + warehouse_stock_fg).
+    productId: z.coerce.number().int().positive(),
     quantity: z.coerce.number().positive(),
   })).min(1).max(500),
 });
