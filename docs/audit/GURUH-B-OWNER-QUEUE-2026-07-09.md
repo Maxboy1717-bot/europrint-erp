@@ -36,8 +36,16 @@ Branch: `chore/schema-convergence`. Loop commits: `b0f3c144`..`0346b2e6`.
    .org_department_id` is now read but the two department worlds must be reconciled.
 9. **PP daily-replan ordering.** Persist a `production_orders.queue_sequence` column (§3) or keep
    ordering computed read-only?
-10. **Inventory variance auto-approve ±N% limit** (POS/WMS) and **GSD 3-indicator KPI weights** —
-    owner numbers.
+10. **Inventory variance auto-approve ±N% limit** (POS/WMS) — owner numbers. *(Batch-5 Item 10
+    owner-decision: NO percentage auto-approval ever; every variance auto-detected/flagged but
+    human-confirmed before close — pending build.)*
+    **GSD 3-indicator KPI weights** — ✅ **OWNER-CORRECTED-PREMISE (2026-07-10):** this org uses
+    **CKP** (Cennaya Konechnaya Produkciya / per-position Valuable Final Product, per the
+    Hubbard/Vysotsky methodology — see live `company_tskp`, `org_departments.tskp_measurement_unit`,
+    `ai_ckp_scores`), **not** a generic weighted-KPI model; no KPI-weight config is needed. If
+    GSD/ombor-kassir participants need a performance measure it routes through the same CKP mechanism
+    as every other position, not a separate KPI system. *(Whether GSD/kassir positions have
+    per-position `tskp_target` populated is a separate data-check — flagged, not built.)*
 11. **CC protocol quorum %** (2/3?) and **PP split vs work-splitting** semantic collision (#8/#15).
 
 ### ✅ 2026-07-09 build-pass — owner answers applied (8-item batch)
