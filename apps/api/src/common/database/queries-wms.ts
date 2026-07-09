@@ -200,25 +200,26 @@ export async function execUpdateStockIssued(id: unknown, qtyDelta: number, reser
 
 export async function execReceiveFg(
   warehouseId: number,
-  materialId: number,
+  productId: number,
   amount: number,
   exec?: ExecuteLike,
 ): Promise<void> {
-  // #03 HOP-4: QC-passed finished goods land in the CANONICAL warehouse_stock (was non-canonical `stocks`,
-  // conflict #8 — invisible to every downstream WMS/POS reader). Idempotent upsert on (warehouse_id, material_id);
-  // the unique index warehouse_stock_wh_mat_uniq backs the ON CONFLICT. Same proven pattern as pos-wms-sync.helpers.
+  // Batch 3 Variant-2 split: finished-goods receipts land in warehouse_stock_fg (products.id-keyed),
+  // NOT the raw warehouse_stock (material_cards.id-keyed). This helper is FG-EXCLUSIVE (sole caller =
+  // DrizzleWmsRepository.receiveFg), so its id is always a products.id. Idempotent upsert on
+  // (warehouse_id, product_id); the unique warehouse_stock_fg_wh_prod_uniq backs the ON CONFLICT.
   // A60: an optional `exec` (tx) lets the FG-receipt upsert run in the SAME transaction as the
   // wms_transactions IN-ledger row (execInsertWmsTransaction below), so stock + movement stay atomic.
   await execRows(
     sql`
-    INSERT INTO warehouse_stock
-      (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+    INSERT INTO warehouse_stock_fg
+      (warehouse_id, product_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
     VALUES
-      (${warehouseId}, ${materialId}, ${amount}, 0, ${amount}, NOW(), NOW(), NOW())
-    ON CONFLICT (warehouse_id, material_id)
+      (${warehouseId}, ${productId}, ${amount}, 0, ${amount}, NOW(), NOW(), NOW())
+    ON CONFLICT (warehouse_id, product_id)
     DO UPDATE SET
-      quantity           = warehouse_stock.quantity + ${amount},
-      available_quantity = warehouse_stock.available_quantity + ${amount},
+      quantity           = warehouse_stock_fg.quantity + ${amount},
+      available_quantity = warehouse_stock_fg.available_quantity + ${amount},
       last_movement_at   = NOW(),
       last_updated_at    = NOW()
   `,

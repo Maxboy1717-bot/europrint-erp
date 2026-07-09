@@ -21,7 +21,11 @@ interface InspectionLookupRow {
 
 /** One finished-goods line item of the sales order. T21-A2: net_price = base unit price. */
 interface FgLineRow {
-  material_id: number;
+  /** finished-goods product (sales_order_items.product_id). Contamination guard (decision 5): NO
+   *  material_cards fallback — a line with NULL product_id is skipped, never keyed by material_id. */
+  product_id: number | null;
+  /** kept ONLY to log a skipped line (has a material_cards id but no product_id). */
+  material_id: number | null;
   net_price: string | number | null;
 }
 
@@ -106,15 +110,17 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
       return;
     }
 
-    // Finished-goods material(s) come from the real line-item table. product_id is the
-    // FG material; it is nullable in live data, so fall back to material_id.
+    // Contamination guard (decision 5): finished-goods stock is products.id-keyed, so the FG receipt
+    // uses soi.product_id ONLY — NO COALESCE fallback to soi.material_id (which lives in the
+    // material_cards id space). A line with a NULL product_id is skipped + flagged in the loop below,
+    // never fabricated from a material_cards id.
     const lineRows = await runQuery<FgLineRow>(sql`
       SELECT
-        COALESCE(soi.product_id, soi.material_id) AS material_id,
-        soi.net_price                             AS net_price
+        soi.product_id  AS product_id,
+        soi.material_id AS material_id,
+        soi.net_price   AS net_price
       FROM sales_order_items soi
       WHERE soi.sales_order_id = ${event.orderId}
-        AND COALESCE(soi.product_id, soi.material_id) IS NOT NULL
     `);
 
     const lines = Array.isArray(lineRows.rows) ? lineRows.rows : [];
@@ -132,8 +138,16 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
     // both performs the warehouse_stock UPSERT and publishes the order-attributed
     // WmsFgReceivedEvent. One receipt per finished-goods line item.
     for (const line of lines) {
-      const materialId = Number(line.material_id) || 0;
-      if (!materialId) continue;
+      // Contamination guard (decision 5): use product_id ONLY. A line without a product_id (e.g. only
+      // a material_cards id) is SKIPPED + flagged — never fabricate a product id from a material_cards id.
+      const productId = line.product_id != null ? Number(line.product_id) : 0;
+      if (!productId) {
+        this.logger.warn(
+          { orderId: event.orderId, materialCardsId: line.material_id },
+          'QcPassedListener: FG receipt SKIPPED — sales_order_item has no product_id (contamination guard, decision 5)',
+        );
+        continue;
+      }
 
       // T21-A2: graded FG unit cost = base (net_price) × sort coefficient. When either the
       // base price is missing OR no coefficient is configured for the nav, gradedUnitCost
@@ -146,13 +160,13 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
 
       const result = await this.commandBus.execute<ReceiveFgCommand, Result<void>>(
         new ReceiveFgCommand(
-          materialId,
+          productId, // FG stock is products.id-keyed (warehouse_stock_fg)
           warehouseId,
           passQty, // received quantity = QC passed count
           `QC-${event.inspectionId}`, // batchNumber — traceable to the inspection
           null, // expiryDate — FG has no expiry by default
           event.orderId, // orderId — attributes the FG + enables Trigger 12 rental timer
-          undefined, // areaM2 — resolved inside the handler from material_cards
+          undefined, // areaM2 — resolved in the handler (FG area source is a flagged follow-up, see STEP 2 report)
           gradedUnitCost, // T21-A2: nav-koeffitsienti bilan saralangan birlik narxi
           true, // T23-A1: cross-listener dedup — skip if MES already received FG for this order+material
         ),
@@ -160,13 +174,13 @@ export class QcPassedListener implements IEventHandler<QcPassedEvent> {
 
       if (!result.ok) {
         this.logger.error(
-          { orderId: event.orderId, materialId, error: String(result.error) },
+          { orderId: event.orderId, productId, error: String(result.error) },
           'Failed to receive FG after QC passed',
         );
       } else {
         this.logger.log(
-          { orderId: event.orderId, materialId, qty: passQty, grade: inspection.sort_grade, gradedUnitCost },
-          'Trigger 11 -> 12: FG receipt UPSERTed to warehouse_stock (grade-priced), rental timer will start',
+          { orderId: event.orderId, productId, qty: passQty, grade: inspection.sort_grade, gradedUnitCost },
+          'Trigger 11 -> 12: FG receipt UPSERTed to warehouse_stock_fg (grade-priced), rental timer will start',
         );
       }
     }

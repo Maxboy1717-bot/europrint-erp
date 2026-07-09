@@ -179,16 +179,19 @@ export class DeliveryGoodsIssuedListener implements IEventHandler<DeliveryGoodsI
 
       // Guarded decrement — NEVER below zero. The `available_quantity >= ${shippedQty}` guard is the
       // inverse of the FG-receipt UPSERT: when stock is insufficient the UPDATE touches 0 rows (skip,
-      // no negative), never fabricating a phantom negative balance. Same shape as the canonical
-      // execIssueFromWarehouseStock OUT decrement.
+      // no negative), never fabricating a phantom negative balance.
+      // Batch 3 Variant-2 split: finished-goods deliveries decrement warehouse_stock_fg (products.id-keyed),
+      // NOT the raw warehouse_stock (material_cards.id). `materialId` here = delivery_items.material_id,
+      // which lives in the products.id space (delivery_items.material_id -> products.id), so it maps to
+      // warehouse_stock_fg.product_id directly. A non-FG id simply matches 0 rows (safe no-op).
       await runQuery(sql`
-        UPDATE warehouse_stock
+        UPDATE warehouse_stock_fg
         SET quantity           = quantity - ${shippedQty},
             available_quantity = available_quantity - ${shippedQty},
             last_movement_at   = NOW(),
             last_updated_at    = NOW()
         WHERE warehouse_id = ${fgWarehouseId}
-          AND material_id = ${materialId}
+          AND product_id = ${materialId}
           AND available_quantity >= ${shippedQty}
       `);
 
