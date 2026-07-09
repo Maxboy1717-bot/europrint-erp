@@ -47,6 +47,23 @@ export class WmsCountsService {
     return this.repo.createInventoryCount(warehouseId, countedBy, notes);
   }
 
+  /** Batch 5 Item 10 — tafovutlar ro'yxati (inson tasdig'i uchun). */
+  getCountVariances(countId: number) {
+    return this.repo.getCountVariances(countId);
+  }
+
+  /**
+   * Batch 5 Item 10 — inventarizatsiyani INSON tasdig'i bilan yopish. Egasi qarori: foiz-chegara
+   * bo'yicha avto-tasdiq YO'Q — har bir tafovut aniqlanadi/belgilangan, lekin yopishdan oldin
+   * inson tasdiqlaydi. approvedBy majburiy (jonli foydalanuvchi bo'lmasa — tasdiq yo'q).
+   */
+  async approveInventoryCount(countId: number, approvedBy: number | null): Promise<Result<object, AppError>> {
+    if (approvedBy == null) {
+      return Err(AppErr('FORBIDDEN', 'Tasdiqlash uchun jonli foydalanuvchi kerak (avto-tasdiq taqiq)'));
+    }
+    return this.repo.approveCount(countId, approvedBy);
+  }
+
   /**
    * W3-COUNT — count-line yozish. system_qty ≠ counted_qty bo'lsa deviationReasonCode
    * MAJBURIY va katalogda (count_deviation_reasons) mavjud bo'lishi shart. Aks holda

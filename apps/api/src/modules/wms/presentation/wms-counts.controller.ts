@@ -65,6 +65,29 @@ export class WmsCountsController {
     return { items, total: items.length, blind_mode: isBlind };
   }
 
+  // Batch 5 Item 10 — bitta inventarizatsiyaning tafovutlari (inson tasdig'i uchun ko'rib chiqiladi).
+  @ApiOperation({ summary: 'List variance lines of a count (for human confirmation)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('inventory-counts/:id/variances')
+  async listCountVariances(@Param('id', ParseIntPipe) id: number) {
+    const r = await this.svc.getCountVariances(id);
+    const items = r.ok && Array.isArray(r.data) ? r.data : [];
+    return { items, total: items.length };
+  }
+
+  // Batch 5 Item 10 — inventarizatsiyani INSON tasdig'i bilan yopish. Egasi qarori: foiz-chegara
+  // bo'yicha avto-tasdiq YO'Q; approved_by har doim jonli foydalanuvchi (@CurrentUser).
+  @ApiOperation({ summary: 'Approve (human-confirm) an inventory count — no auto-approval' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Variance without reason' })
+  @ApiResponse({ status: 403, description: 'No authenticated user' })
+  @Patch('inventory-counts/:id/approve')
+  async approveInventoryCount(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
+    const r = await this.svc.approveInventoryCount(id, user?.id ?? null);
+    if (!r.ok) throwFromError(r.error);
+    return r.data;
+  }
+
   @ApiOperation({ summary: 'List count deviation reasons (catalog)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('count-deviation-reasons')

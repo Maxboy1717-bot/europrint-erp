@@ -43,6 +43,17 @@ export interface IWmsCountsRepo {
    * MAJBURIY (validatsiya service'da). book/system miqdori va og'ish hisoblanadi.
    */
   recordCountLine(input: CountLineInput): Promise<Result<Row>>;
+  /**
+   * Batch 5 Item 10 — inventarizatsiya tafovutlari (variance != 0) ro'yxati; sabab-kodi
+   * bo'lmagan tafovutlar `missing_reason=true` bilan belgilanadi (tasdiqdan oldin to'ldirilishi shart).
+   */
+  getCountVariances(countId: number): Promise<Result<Row[]>>;
+  /**
+   * Batch 5 Item 10 — inventarizatsiyani INSON tasdig'i bilan yopish (avto-tasdiq YO'Q, foiz-chegara YO'Q).
+   * Har bir tafovutda sabab-kodi bo'lishi shart; approvedBy majburiy (jonli foydalanuvchi).
+   * Muvaffaqiyatda status='approved', approved_by, approved_at yoziladi.
+   */
+  approveCount(countId: number, approvedBy: number): Promise<Result<Row>>;
 }
 
 export interface CountLineInput {

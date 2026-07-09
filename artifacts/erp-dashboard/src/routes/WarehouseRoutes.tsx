@@ -8,6 +8,7 @@
 import { lazy } from "react";
 
 const InventoryCount = lazy(() => import("@/pages/InventoryCount"));
+const WMSVarianceApproval = lazy(() => import("@/pages/WMSVarianceApproval"));
 const GoodsReceiving = lazy(() => import("@/pages/GoodsReceiving"));
 const StockReservation = lazy(() => import("@/pages/StockReservation"));
 const WarehouseReports = lazy(() => import("@/pages/WarehouseReports"));
@@ -65,6 +66,7 @@ export const WAREHOUSE_ROUTES: [string, React.ComponentType][] = [
   ['/wms/grn',                    GoodsReceiving],
   ['/wms/reservation',            StockReservation],
   ['/wms/inventory',              InventoryCount],
+  ['/wms/variance-approval',      WMSVarianceApproval],
   ['/wms/rental',                 WarehouseRental],
   ['/wms/dashboard',              WMSDashboard],
   ['/wms/kpi-hub',                WarehouseKpiHub],

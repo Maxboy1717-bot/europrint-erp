@@ -144,4 +144,48 @@ export class WmsCountsRepository implements IWmsCountsRepo {
       RETURNING *`);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
+
+  // Batch 5 Item 10 — variance lines needing human confirmation (variance != 0). missing_reason
+  // flags a variance with no deviation_reason_code — it must be filled before the count can close.
+  async getCountVariances(countId: number): Promise<Result<Row[]>> {
+    return exec(sql`
+      SELECT l.id, l.material_id, l.item_name, l.sku,
+             l.book_quantity, l.counted_quantity, l.variance, l.variance_percent,
+             l.deviation_reason_code, l.reason,
+             (l.deviation_reason_code IS NULL OR l.deviation_reason_code = '') AS missing_reason
+      FROM inventory_count_lines l
+      WHERE l.count_id = ${countId} AND COALESCE(l.variance, 0) <> 0
+      ORDER BY ABS(COALESCE(l.variance, 0)) DESC, l.id`);
+  }
+
+  // Batch 5 Item 10 — human-confirm close. No percentage auto-approval anywhere: this is the only
+  // path that sets status='approved', it always stamps a real approved_by, and it refuses to close
+  // while any variance line lacks a deviation reason.
+  async approveCount(countId: number, approvedBy: number): Promise<Result<Row>> {
+    const cur = await exec(sql`SELECT id, status FROM inventory_counts WHERE id = ${countId} LIMIT 1`);
+    if (!cur.ok) return Err(cur.error);
+    const row = cur.data[0];
+    if (!row) return Err({ code: 'NOT_FOUND', message: 'Inventarizatsiya topilmadi' });
+    if (String(row.status) === 'approved') return Err({ code: 'CONFLICT', message: 'Allaqachon tasdiqlangan' });
+
+    const missing = await exec(sql`
+      SELECT COUNT(*)::int AS n FROM inventory_count_lines
+      WHERE count_id = ${countId} AND COALESCE(variance, 0) <> 0
+        AND (deviation_reason_code IS NULL OR deviation_reason_code = '')`);
+    if (!missing.ok) return Err(missing.error);
+    const missingCount = Number((missing.data[0]?.n as number) ?? 0);
+    if (missingCount > 0) {
+      return Err({ code: 'BUSINESS_RULE_VIOLATION', message: `Tasdiqdan oldin ${missingCount} ta tafovutga sabab-kodi kerak` });
+    }
+
+    const upd = await exec(sql`
+      UPDATE inventory_counts
+      SET status = 'approved', approved_by = ${approvedBy}, approved_at = NOW(), updated_at = NOW()
+      WHERE id = ${countId} AND status <> 'approved'
+      RETURNING id, status, approved_by, approved_at`);
+    if (!upd.ok) return Err(upd.error);
+    const updated = upd.data[0];
+    if (!updated) return Err({ code: 'CONFLICT', message: 'Tasdiqlanmadi (holat o\'zgargan)' });
+    return Ok(updated);
+  }
 }
