@@ -87,7 +87,7 @@ export function ApAgingTable({ sortedBuckets, totals, onSort }: ApAgingTableProp
   const { t } = useTranslation('finance');
 
   return (
-    <div className="bg-card rounded-xl p-6" data-testid="card-aging-table">
+    <div className="bg-card rounded-xl border border-[var(--ep-border)] p-6" data-testid="card-aging-table">
       <div className="flex flex-col gap-1 mb-6">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Building2 className="h-5 w-5" />
