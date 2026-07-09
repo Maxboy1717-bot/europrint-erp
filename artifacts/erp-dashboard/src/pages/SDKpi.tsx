@@ -216,7 +216,7 @@ export default function SDKpi() {
       {/* ── Team + Funnel ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Team KPI Table */}
-        <div className="bg-card rounded-xl overflow-hidden">
+        <div className="bg-card rounded-xl border border-[var(--ep-border)] overflow-hidden">
           <div className="px-6 py-4 border-b border-border/40">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("menejerlarReytingi")}
