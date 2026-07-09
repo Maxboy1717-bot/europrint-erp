@@ -99,6 +99,7 @@ export class CrmLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
   async list(
+    @CurrentUser() user: AuthenticatedUser,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
     @Query('status') _status?: string,
@@ -106,15 +107,15 @@ export class CrmLeadsController {
     const res = await this.leadsService.findAll({
       limit: safeInt(limit, 20),
       page: safeInt(page, 1),
-    });
+    }, user);
     return unwrapOrThrow(res);
   }
 
   @ApiOperation({ summary: 'Quick leads' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('quick')
-  async quickLeads(@Query('limit') _limit?: string) {
-    const res = await this.leadsService.findAll({ limit: safeInt(_limit, 10) });
+  async quickLeads(@CurrentUser() user: AuthenticatedUser, @Query('limit') _limit?: string) {
+    const res = await this.leadsService.findAll({ limit: safeInt(_limit, 10) }, user);
     return unwrapOrThrow(res);
   }
 
@@ -122,20 +123,22 @@ export class CrmLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     // findOne already unwraps (returns the row or throws NotFound/500). It is NOT a Result
     // envelope, so it must NOT be passed through unwrapOrThrow again — doing so read
     // `.error.message` on a plain row → "Cannot read properties of undefined" → 500/503.
-    return await this.leadsService.findOne(safeInt(id, 0));
+    // Item A: pass the caller so a non-privileged manager gets 404 for a lead they don't own.
+    return await this.leadsService.findOne(safeInt(id, 0), user);
   }
 
   @ApiOperation({ summary: 'Get lead emails' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/emails')
-  async getLeadEmails(@Param('id') id: string) {
+  async getLeadEmails(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     // findOne already unwraps (row or throws) — do not double-unwrap (see getById).
-    const lead = await this.leadsService.findOne(safeInt(id, 0));
+    // Item A: ownership-scoped (404 if a non-privileged manager doesn't own the lead).
+    const lead = await this.leadsService.findOne(safeInt(id, 0), user);
     const emails = Array.isArray((lead as Record<string, unknown>).emails)
       ? ((lead as Record<string, unknown>).emails as { value: string; type: string }[])
       : [];

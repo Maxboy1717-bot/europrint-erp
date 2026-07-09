@@ -84,16 +84,22 @@ function mapLeadRow(r: Row, scoringService: CrmLeadScoringService): Row {
 export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
   constructor(private readonly scoringService: CrmLeadScoringService) {}
 
-  async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
+  async findAll(limit: number, offset: number, ownerId?: number | null): Promise<Result<{ data: Row[]; count: number }>> {
     try {
+      // Item A row-scoping: when ownerId is provided (non-privileged caller), restrict to leads the
+      // caller owns. crmLeads.manager_id is the Drizzle property mapping to the physical assigned_to
+      // column (the canonical ownership column). Applied to BOTH the count and the page so the
+      // paginated total never leaks the global count. ownerId == null → privileged → no filter.
+      const ownerFilter = ownerId != null ? eq(crmLeads.manager_id, ownerId) : undefined;
+      const whereClause = ownerFilter ? and(isNull(crmLeads.deleted_at), ownerFilter) : isNull(crmLeads.deleted_at);
       const [countResult, rows] = await Promise.all([
-        db.select({ count: count() }).from(crmLeads).where(isNull(crmLeads.deleted_at)).limit(1).offset(0),
+        db.select({ count: count() }).from(crmLeads).where(whereClause).limit(1).offset(0),
         // ...all lead columns + a correlated crm_activities count so the scorer's engagement
         // dimension is real (was always 0). One query, no N+1.
         db.select({
           ...getTableColumns(crmLeads),
           activity_count: sql<number>`(SELECT COUNT(*)::int FROM crm_activities a WHERE a.lead_id = ${crmLeads.id})`,
-        }).from(crmLeads).where(isNull(crmLeads.deleted_at)).orderBy(desc(crmLeads.created_at)).limit(limit).offset(offset),
+        }).from(crmLeads).where(whereClause).orderBy(desc(crmLeads.created_at)).limit(limit).offset(offset),
       ]);
       return Ok({ data: (rows as Row[]).map(r => mapLeadRow(r, this.scoringService)), count: Number(countResult[0]?.count || 0) });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Lidlar topilmadi'); }

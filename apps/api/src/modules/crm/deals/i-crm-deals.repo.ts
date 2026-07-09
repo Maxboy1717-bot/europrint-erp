@@ -21,7 +21,8 @@ export interface StageHistoryEntry {
 }
 
 export interface ICrmDealsRepository {
-  findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>>;
+  // ownerId (Item A row-scoping): when provided (non-privileged caller), restrict to that owner's deals.
+  findAll(limit: number, offset: number, ownerId?: number | null): Promise<Result<{ data: Row[]; count: number }>>;
   findById(id: string): Promise<Result<any | null>>;
   create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
   update(id: string, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;

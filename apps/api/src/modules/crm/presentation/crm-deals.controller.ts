@@ -98,12 +98,14 @@ export class CrmDealsController {
  @Get()
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async list(
+  @CurrentUser() user: AuthenticatedUser,
   @Query('companyId') companyId: number,
   @Query('limit') limit: number = 20,
   @Query('offset') offset: number = 0,
  ) {
   this.logger.log('Listing deals');
-  return unwrapOrThrow(await this.dealsService.findAll({ companyId: companyId ? Number(companyId) : undefined, limit, offset }));
+  // Item A: non-privileged managers see only their own deals; super_admin/admin/director see all.
+  return unwrapOrThrow(await this.dealsService.findAll({ companyId: companyId ? Number(companyId) : undefined, limit, offset }, user));
 }
 
  @ApiOperation({ summary: 'Get by id' })
@@ -111,12 +113,13 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
- async getById(@Param('id') id: string) {
+ async getById(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Fetching deal');
   // findOne already unwraps — it returns the row or throws NotFound/500. It is NOT a
   // Result envelope, so it must NOT be passed through unwrapOrThrow again (doing so read
   // `.error.message` on a plain row → "Cannot read properties of undefined").
-  return await this.dealsService.findOne(String(id));
+  // Item A: ownership-scoped — a non-privileged manager gets 404 for a deal they don't own.
+  return await this.dealsService.findOne(String(id), user);
 }
 
  @ApiOperation({ summary: 'Create' })

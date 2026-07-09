@@ -22,13 +22,17 @@ type Row = Record<string, unknown>;
 
 @Injectable()
 export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
-  async findAll(limit: number, offset: number): Promise<Result<{ data: Row[]; count: number }>> {
+  async findAll(limit: number, offset: number, ownerId?: number | null): Promise<Result<{ data: Row[]; count: number }>> {
     try {
+      // Item A row-scoping: non-privileged callers see only their own deals (assigned_to = self),
+      // applied to BOTH the count and the page so the total never leaks the global count.
+      // ownerId == null → privileged → no filter.
+      const ownerFilter = ownerId != null ? sql`AND assigned_to = ${ownerId}` : sql``;
       const [countRes, dataRes] = await Promise.all([
-        runQuery<{ c: string }>(sql`SELECT count(*)::text AS c FROM crm_deals WHERE deleted_at IS NULL`),
+        runQuery<{ c: string }>(sql`SELECT count(*)::text AS c FROM crm_deals WHERE deleted_at IS NULL ${ownerFilter}`),
         runQuery<Row>(sql`
           SELECT * FROM crm_deals
-          WHERE deleted_at IS NULL
+          WHERE deleted_at IS NULL ${ownerFilter}
           ORDER BY date_create DESC
           LIMIT ${limit} OFFSET ${offset}
         `),
