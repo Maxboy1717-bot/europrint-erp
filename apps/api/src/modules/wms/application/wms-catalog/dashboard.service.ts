@@ -131,4 +131,61 @@ export class WmsCatalogDashboardService {
       return { lowStock: [], lowStockCount: 0, pendingQC: 0, expiringBatches: 0, overdueTasks: 0 };
     }
   }
+
+  /**
+   * Kunlik ombor hisoboti (vizyon 10-warehouse#47): BARCHA faol ombor turlari bo'yicha
+   * agregat — "bo'sh" tur ham 0 bilan qaytariladi (LEFT JOIN, transparentlik uchun,
+   * hisobotdan chiqarilmaydi). Detalli (ombor boshlig'i) va summary (Direktor)
+   * recipientlar uchun bitta manba; matn CRON qatlamida formatlanadi (Qoida 6).
+   */
+  async getDailyWarehouseReport() {
+    try {
+      const [byTypeRows, totalRows] = await Promise.all([
+        rawSql(sql`
+          SELECT w.type,
+                 COUNT(DISTINCT w.id)::int AS warehouse_count,
+                 COUNT(DISTINCT ws.material_id)::int AS material_count,
+                 COALESCE(SUM(ws.quantity), 0)::numeric AS total_quantity,
+                 COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS total_value
+          FROM warehouses w
+          LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
+          LEFT JOIN material_cards mc ON mc.id = ws.material_id
+          WHERE w.deleted_at IS NULL AND w.is_active = true
+          GROUP BY w.type
+          ORDER BY w.type
+        `),
+        rawSql(sql`
+          SELECT COUNT(DISTINCT w.id)::int AS warehouse_count,
+                 COUNT(DISTINCT w.type)::int AS type_count,
+                 COUNT(DISTINCT ws.material_id)::int AS material_count,
+                 COALESCE(SUM(ws.quantity), 0)::numeric AS total_quantity,
+                 COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS total_value
+          FROM warehouses w
+          LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
+          LEFT JOIN material_cards mc ON mc.id = ws.material_id
+          WHERE w.deleted_at IS NULL AND w.is_active = true
+        `),
+      ]);
+      const byType = ((byTypeRows as { rows?: Record<string, unknown>[] }).rows ?? []).map(r => ({
+        type: String(r.type ?? '—'),
+        warehouseCount: Number(r.warehouse_count ?? 0),
+        materialCount: Number(r.material_count ?? 0),
+        totalQuantity: Number(r.total_quantity ?? 0),
+        totalValue: Number(r.total_value ?? 0),
+      }));
+      const t = (totalRows as { rows?: Record<string, unknown>[] }).rows?.[0] ?? {};
+      return {
+        byType,
+        totals: {
+          warehouseCount: Number(t.warehouse_count ?? 0),
+          typeCount: Number(t.type_count ?? 0),
+          materialCount: Number(t.material_count ?? 0),
+          totalQuantity: Number(t.total_quantity ?? 0),
+          totalValue: Number(t.total_value ?? 0),
+        },
+      };
+    } catch {
+      return { byType: [], totals: { warehouseCount: 0, typeCount: 0, materialCount: 0, totalQuantity: 0, totalValue: 0 } };
+    }
+  }
 }

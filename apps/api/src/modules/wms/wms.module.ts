@@ -128,6 +128,8 @@ import { WmsCycleCountGeneratorCron } from './infrastructure/cron/wms-cycle-coun
 // Vizyon 10-warehouse #28 — sanoq aniqlik% <95% darhol signal (Direktorga RBAC marshrut).
 import { CountAccuracyAlertCron } from './infrastructure/cron/count-accuracy-alert.cron';
 import { NotificationRoutingRepository } from '../notifications/infrastructure/notification-routing.repository';
+// Vizyon 10-warehouse#47 — kunlik ombor hisoboti (barcha turlar, bo'sh=0) CRON (NotificationRoutingRepository allaqachon provider).
+import { DailyWarehouseReportCron } from './infrastructure/cron/daily-warehouse-report.cron';
 // G9-1 (Taksonomiya, 2026-07-02) — bo'lim ichki omborlari org-sxemadan avto-derivatsiya (boot + kunlik cron).
 import { DepartmentWarehouseSyncService } from './infrastructure/cron/department-warehouse-sync.service';
 // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub (SD/Marketing/QC pattern reuse).
@@ -275,6 +277,8 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     // NotificationRoutingRepository — standalone provider (faqat runQuery), pos.module.ts namunasi.
     NotificationRoutingRepository,
     CountAccuracyAlertCron,
+    // Vizyon 10-warehouse#47 — kunlik ombor hisoboti CRON (WmsCatalogDashboardService + config-driven routing).
+    DailyWarehouseReportCron,
     // G9-1 (Taksonomiya, 2026-07-02) — bo'lim ichki omborlari avto-sinxron (vizyon CHAT-TARIXI:52).
     DepartmentWarehouseSyncService,
     // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub.
