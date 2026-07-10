@@ -73,14 +73,22 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { z } from 'zod';
-import { db, mes_sessions, downtime_events, mes_production_sessions, ppWorkCenters } from '@shared/db';
-import { and, gte, lte } from 'drizzle-orm';
+import { db, mes_sessions, downtime_events, mes_production_sessions, ppWorkCenters, mes_downtime_reasons } from '@shared/db';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { Result, Ok, Err, AppErr } from '@common/types/result.type';
 import { GetOeeQuery } from './get-oee.query';
 
 import { MS_PER_MINUTE } from '@common/constants/app.constants';
 
 const PERCENT = 100;
+
+/**
+ * #86: mes_downtime_reasons.category value marking operator-not-at-fault idle
+ * time ("ish yo'q" / no-work). No-work minutes are booked to their own bucket
+ * and kept OUT of the OEE availability penalty — they are neither a planned
+ * stoppage nor an unplanned breakdown, so they must not skew availability.
+ */
+const NO_WORK_CATEGORY = 'no-work';
 
 /** VISION-3340 #46: accepted cascade levels. Default = legacy machine level. */
 const OeeGroupBySchema = z.enum(['machine', 'shift', 'brigade', 'shop']).default('machine');
@@ -90,6 +98,8 @@ interface OeeAccumulator {
   plannedTime: number;
   plannedDowntime: number;
   unplannedDowntime: number;
+  /** #86: no-work (ish yo'q) idle minutes — tracked apart from downtime. */
+  noWorkTime: number;
   totalSessions: number;
   completedSessions: number;
   defectiveSessions: number;
@@ -108,6 +118,8 @@ interface SessionSample {
 interface DowntimeMaps {
   planned: Map<string, number>;
   unplanned: Map<string, number>;
+  /** #86: no-work (ish yo'q) minutes keyed by session id — excluded from availability. */
+  noWork: Map<string, number>;
 }
 
 @Injectable()
@@ -267,21 +279,27 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
   ): void {
     let acc = map.get(key);
     if (!acc) {
-      acc = { plannedTime: 0, plannedDowntime: 0, unplannedDowntime: 0, totalSessions: 0, completedSessions: 0, defectiveSessions: 0 };
+      acc = { plannedTime: 0, plannedDowntime: 0, unplannedDowntime: 0, noWorkTime: 0, totalSessions: 0, completedSessions: 0, defectiveSessions: 0 };
       map.set(key, acc);
     }
 
     const endMs = sample.endMs ?? Date.now();
     const totalMinutes = sample.startMs === null ? 0 : Math.max(0, (endMs - sample.startMs) / MS_PER_MINUTE);
-    const plannedDowntimeMin = Math.min(totalMinutes, downtime.planned.get(sample.sessionKey) ?? 0);
+    // #86: 'ish yo'q' (no-work) idle time is peeled off the span FIRST — it is
+    // not a productivity loss, so it must not sit in the availability
+    // denominator nor be mistaken for a planned/unplanned stoppage.
+    const noWorkMin = Math.min(totalMinutes, downtime.noWork.get(sample.sessionKey) ?? 0);
+    const spanAfterNoWork = Math.max(0, totalMinutes - noWorkMin);
+    const plannedDowntimeMin = Math.min(spanAfterNoWork, downtime.planned.get(sample.sessionKey) ?? 0);
     const unplannedDowntimeMin = Math.min(
-      Math.max(0, totalMinutes - plannedDowntimeMin),
+      Math.max(0, spanAfterNoWork - plannedDowntimeMin),
       downtime.unplanned.get(sample.sessionKey) ?? 0,
     );
 
-    acc.plannedTime += Math.max(0, totalMinutes - plannedDowntimeMin);
+    acc.plannedTime += Math.max(0, spanAfterNoWork - plannedDowntimeMin);
     acc.plannedDowntime += plannedDowntimeMin;
     acc.unplannedDowntime += unplannedDowntimeMin;
+    acc.noWorkTime += noWorkMin;
     acc.totalSessions += 1;
 
     if (sample.isCompleted) acc.completedSessions += 1;
@@ -322,6 +340,7 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
         plannedMinutes: Math.round(acc.plannedTime),
         plannedDowntimeMinutes: Math.round(acc.plannedDowntime),
         downtimeMinutes: Math.round(acc.unplannedDowntime),
+        noWorkMinutes: Math.round(acc.noWorkTime),
         runMinutes: Math.round(runTime),
         from: filters.from,
         to: filters.to,
@@ -339,17 +358,44 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
    * planned + unplanned into one undifferentiated "downtime" bucket.
    */
   private async loadDowntimeMaps(): Promise<DowntimeMaps> {
+    const noWorkCodes = await this.loadNoWorkReasonCodes();
     const downtimeRows = await db.select().from(downtime_events);
     const planned = new Map<string, number>();
     const unplanned = new Map<string, number>();
+    const noWork = new Map<string, number>();
     for (const dt of Array.isArray(downtimeRows) ? downtimeRows : []) {
       const sessionKey = dt.sessionId ?? '';
       if (!sessionKey) continue;
       const minutes = this.downtimeMinutes(dt);
+      // #86: no-work idle time gets its own bucket (checked BEFORE the
+      // planned/unplanned split) so it is excluded from the availability
+      // penalty and reported separately — "ish yo'q" is not downtime.
+      if (dt.reasonCode && noWorkCodes.has(dt.reasonCode)) {
+        noWork.set(sessionKey, (noWork.get(sessionKey) ?? 0) + minutes);
+        continue;
+      }
       const bucket = dt.isPlanned === true ? planned : unplanned;
       bucket.set(sessionKey, (bucket.get(sessionKey) ?? 0) + minutes);
     }
-    return { planned, unplanned };
+    return { planned, unplanned, noWork };
+  }
+
+  /**
+   * #86: reason codes classified as no-work (category = 'no-work') in the
+   * mes_downtime_reasons catalog. Data-driven so НО can add further no-work
+   * codes without a code change; an empty set (catalog lacks the category)
+   * leaves availability math unchanged (no regression).
+   */
+  private async loadNoWorkReasonCodes(): Promise<Set<string>> {
+    const rows = await db
+      .select({ code: mes_downtime_reasons.code })
+      .from(mes_downtime_reasons)
+      .where(eq(mes_downtime_reasons.category, NO_WORK_CATEGORY));
+    const codes = new Set<string>();
+    for (const row of Array.isArray(rows) ? rows : []) {
+      if (row.code) codes.add(row.code);
+    }
+    return codes;
   }
 
   /**
