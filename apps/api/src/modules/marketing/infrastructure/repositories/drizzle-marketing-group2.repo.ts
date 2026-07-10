@@ -8,6 +8,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { and, eq, gte, lte, desc, sql } from 'drizzle-orm';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { Ok, Err, Result } from '@common/result';
 import {
   marketingLeads,
@@ -26,6 +27,60 @@ const _time = new TashkentTimeService();
 @Injectable()
 export class DrizzleMarketingGroup2Repository {
   private readonly logger = new Logger(DrizzleMarketingGroup2Repository.name);
+
+  // ── Papka repeat lookup (Item 14-75) ──────────────────────────────────────
+  // Resolve a papka № (PT/KT/E) to its linked sales order so the marketing
+  // "takror qil" button can drive the EXISTING SD repeat flow. The @europrint
+  // barrel resolves papka_orders to a messaging stub; the live prod-master
+  // columns (papka_no, sales_order_id) are queried with parametrised raw SQL
+  // (Qoida 4 exception — ORM object cannot express these columns).
+  async resolvePapkaOrder(papkaNo: string): Promise<Result<{
+    papkaNo: string;
+    salesOrderId: number;
+    orderNumber: string | null;
+    mijozNomi: string;
+    mahsulotNomi: string;
+    mahsulotTuri: string | null;
+    tiraj: number;
+    status: string;
+  }>> {
+    try {
+      const rows = await typedExecute<{
+        papka_no: string;
+        sales_order_id: number | null;
+        mijoz_nomi: string;
+        mahsulot_nomi: string;
+        mahsulot_turi: string | null;
+        tiraj: number;
+        status: string;
+        order_number: string | null;
+      }>(sql`
+        SELECT p.papka_no, p.sales_order_id, p.mijoz_nomi, p.mahsulot_nomi,
+               p.mahsulot_turi, p.tiraj, p.status, so.order_number
+        FROM papka_orders p
+        LEFT JOIN sales_orders so ON so.id = p.sales_order_id
+        WHERE p.papka_no = ${papkaNo} AND p.deleted_at IS NULL
+        LIMIT 1
+      `);
+      const row = Array.isArray(rows) ? rows[0] : undefined;
+      if (!row) return Err({ code: 'NOT_FOUND' as const, message: `Papka topilmadi: ${papkaNo}` });
+      if (row.sales_order_id == null) {
+        return Err({ code: 'CONFLICT' as const, message: `Papka №${papkaNo} biror buyurtmaga bog'lanmagan — takrorlash uchun manba yo'q` });
+      }
+      return Ok({
+        papkaNo: row.papka_no,
+        salesOrderId: row.sales_order_id,
+        orderNumber: row.order_number ?? null,
+        mijozNomi: row.mijoz_nomi,
+        mahsulotNomi: row.mahsulot_nomi,
+        mahsulotTuri: row.mahsulot_turi ?? null,
+        tiraj: row.tiraj,
+        status: row.status,
+      });
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
 
   // ── Blog ──────────────────────────────────────────────────────────────────
 

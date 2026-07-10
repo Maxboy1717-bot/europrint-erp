@@ -73,6 +73,10 @@ const CreateLeadContactSchema = z.object({
   nextFollowUp: z.string().datetime({ offset: true }).optional(),
 }).strict();
 
+const PapkaLookupSchema = z.object({
+  papkaNo: z.string().min(1).max(50),
+}).strict();
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 @ApiTags('§17 Marketing GURUH 2')
@@ -262,6 +266,17 @@ export class MarketingGroup2Controller {
   async deleteCalendarEvent(@Param('id') id: string) {
     await db.execute(sql`DELETE FROM marketing_calendar_events WHERE id = ${parseInt(id, 10)}`);
     return { id, deleted: true };
+  }
+
+  // ── Papka repeat lookup (Item 14-75) ──────────────────────────────────────
+
+  @Get('papka-lookup')
+  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @ApiOperation({ summary: "Papka № (PT/KT/E) → bog'langan buyurtmani topish ('takror qil' uchun)" })
+  async lookupPapka(@Query('papkaNo') papkaNo?: string) {
+    const dto = PapkaLookupSchema.parse({ papkaNo });
+    const result = await this.svc.resolvePapkaOrder(dto.papkaNo);
+    return unwrapOrThrow(result);
   }
 
   // ── Competitors ───────────────────────────────────────────────────────────
