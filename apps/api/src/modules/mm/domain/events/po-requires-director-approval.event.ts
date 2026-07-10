@@ -10,5 +10,11 @@ export class PoRequiresDirectorApprovalEvent {
     public readonly poId: number,
     public readonly totalAmount: number,
     public readonly requestedBy: number,
+    /**
+     * Why the PO needs director sign-off, as a comma-joined machine tag:
+     * 'amount_over_threshold' (PO > po_max_amount_uzs) and/or 'low_vendor_rating'
+     * (vendors.rating_low_flag=TRUE). Defaults to the amount reason for back-compat.
+     */
+    public readonly reason: string = 'amount_over_threshold',
   ) {}
 }

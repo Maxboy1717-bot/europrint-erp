@@ -20,6 +20,7 @@ import { purchaseOrderItemFactory } from '../_fixtures/factories';
 
 type RepoMock = Partial<Record<keyof IMmRepository, jest.Mock>> & {
   savePurchaseOrder: jest.Mock<Promise<Result<number>>, [PurchaseOrder]>;
+  getVendorRating: jest.Mock;
 };
 
 function makeRepo(): RepoMock {
@@ -34,6 +35,7 @@ function makeRepo(): RepoMock {
     recordInvoice: jest.fn(),
     validateThreeWayMatch: jest.fn(),
     updateVendorRating: jest.fn(),
+    getVendorRating: jest.fn().mockResolvedValue(Ok({ rating: null, ratingLowFlag: false })),
   };
 }
 
@@ -83,6 +85,18 @@ describe('CreatePurchaseOrderHandler', () => {
     expect(publishedEvent).toBeInstanceOf(PoRequiresDirectorApprovalEvent);
     expect(publishedEvent.totalAmount).toBe(100 * PO_MAX_AMOUNT_UZS);
     expect(publishedEvent.requestedBy).toBe(1);
+  });
+
+  it('publishes director-approval for a low-rated vendor even below the amount threshold', async () => {
+    repo.getVendorRating.mockResolvedValueOnce(Ok({ rating: 1.5, ratingLowFlag: true }));
+
+    const r = await handler.execute(new CreatePurchaseOrderCommand(7, [cheapItem()], 1));
+
+    expect(r.ok).toBe(true);
+    expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    const publishedEvent = eventBus.publish.mock.calls[0][0];
+    expect(publishedEvent).toBeInstanceOf(PoRequiresDirectorApprovalEvent);
+    expect(publishedEvent.reason).toContain('low_vendor_rating');
   });
 
   it('rejects the command when duplicate material lines are supplied', async () => {

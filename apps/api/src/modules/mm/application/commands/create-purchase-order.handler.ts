@@ -54,10 +54,30 @@ export class CreatePurchaseOrderHandler
     // class event is handled by PoRequiresDirectorApprovalListener → hitl_approvals (director reads it).
     // M4 (2026-07-05): threshold now reads settings.'po_max_amount_uzs' first (adjustable without a
     // deploy), falling back to the PO_MAX_AMOUNT_UZS constant (50M) when unset.
+    // 11-MM#3: a PO to a low-rated vendor (vendors.rating_low_flag=TRUE, set by the WMS
+    // supplier-rating pipeline when the 4-factor rating < 2.5) also needs director sign-off,
+    // even under the amount threshold. The 2.5 threshold lives in the WMS rating service, so MM
+    // only reads the persisted boolean flag (no MM-side magic number). Both triggers share ONE
+    // director event (one hitl_approvals row) with a combined reason tag.
     const poMaxAmount = await getConfigNumber('po_max_amount_uzs', PO_MAX_AMOUNT_UZS);
-    if (totalAmount > poMaxAmount) {
-      this.logger.log({ poNumber, totalAmount, threshold: poMaxAmount, createdBy: command.createdBy }, 'HITL required: PO exceeds threshold');
-      this.eventBus.publish(new PoRequiresDirectorApprovalEvent(saveResult.data, totalAmount, command.createdBy));
+    const overThreshold = totalAmount > poMaxAmount;
+
+    let lowRating = false;
+    const ratingResult = await this.mmRepo.getVendorRating(command.supplierId);
+    if (ratingResult.ok) {
+      lowRating = ratingResult.data.ratingLowFlag;
+    } else {
+      // A rating-read failure must NOT drop the already-saved PO; log and fall back to the amount gate.
+      this.logger.warn({ supplierId: command.supplierId, error: ratingResult.error.message }, 'Vendor rating fetch failed — low-rating HITL check skipped');
+    }
+
+    if (overThreshold || lowRating) {
+      const reasons: string[] = [];
+      if (overThreshold) reasons.push('amount_over_threshold');
+      if (lowRating) reasons.push('low_vendor_rating');
+      const reason = reasons.join(',');
+      this.logger.log({ poNumber, totalAmount, threshold: poMaxAmount, lowRating, reason, createdBy: command.createdBy }, 'HITL required: director approval');
+      this.eventBus.publish(new PoRequiresDirectorApprovalEvent(saveResult.data, totalAmount, command.createdBy, reason));
     }
 
     this.logger.log('Purchase order created');

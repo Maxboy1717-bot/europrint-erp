@@ -282,4 +282,30 @@ export class DrizzleMmRepository implements IMmRepository {
       return Err('Reyting yangilashda xatolik');
     }
   }
+
+  async getVendorRating(
+    supplierId: number,
+  ): Promise<Result<{ rating: number | null; ratingLowFlag: boolean }>> {
+    try {
+      // rating_low_flag is not declared on the schema-compat-2 `vendors` Drizzle
+      // table (only `rating` is), so read both columns with raw SQL — the same
+      // `vendors` table the WMS supplier-rating pipeline writes rating_low_flag to.
+      const result = await db.execute(sql`
+        SELECT rating, COALESCE(rating_low_flag, FALSE) AS rating_low_flag
+        FROM vendors
+        WHERE id = ${supplierId} AND deleted_at IS NULL
+        LIMIT 1
+      `);
+      const rows = Array.isArray(result) ? result : ((result as { rows?: unknown[] }).rows ?? []);
+      const row = rows[0] as { rating: string | number | null; rating_low_flag: boolean | null } | undefined;
+      if (!row) return Err('Ta\'minotchi topilmadi');
+      return Ok({
+        rating: row.rating == null ? null : Number(row.rating),
+        ratingLowFlag: Boolean(row.rating_low_flag),
+      });
+    } catch (error: unknown) {
+      this.logger.error('Failed to get vendor rating');
+      return Err('Reyting oqishda xatolik');
+    }
+  }
 }

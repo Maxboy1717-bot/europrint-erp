@@ -28,6 +28,16 @@ export interface IMmRepository {
   updateVendorRating(supplierId: number, newRating: number): Promise<Result<void>>;
 
   /**
+   * Reads a vendor's persisted supplier-rating signal (vendors.rating +
+   * rating_low_flag). rating_low_flag is set by the WMS supplier-rating pipeline
+   * when the 4-factor rating drops below the low threshold (2.5). Used by the
+   * create-PO handler to route low-rated-vendor POs into the director-HITL path.
+   */
+  getVendorRating(
+    supplierId: number,
+  ): Promise<Result<{ rating: number | null; ratingLowFlag: boolean }>>;
+
+  /**
    * Runs the supplied work inside a Drizzle transaction. Lets callers keep the
    * transaction boundary inside the repo layer (handlers don't need `db`).
    */
