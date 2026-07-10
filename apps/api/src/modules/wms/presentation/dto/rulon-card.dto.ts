@@ -47,3 +47,8 @@ export const ChangeRulonStatusSchema = z.object({
   status: z.enum(RULON_STATUSES),
 });
 export type ChangeRulonStatusDto = z.infer<typeof ChangeRulonStatusSchema>;
+
+export const RemnantSuggestionsQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+export type RemnantSuggestionsQueryDto = z.infer<typeof RemnantSuggestionsQuerySchema>;

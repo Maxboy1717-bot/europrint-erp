@@ -50,6 +50,12 @@ export interface IRulonCardRepo {
   ): Promise<Result<RulonCard>>;
   /** Holat o'tishi (full → opened → remnant). */
   updateStatus(id: number, status: string): Promise<Result<RulonCard>>;
+  /**
+   * Qoldiq (remnant) rulonlar taklif ro'yxati — PP rejalashtiruvchiga.
+   * Tartib: eng kam qoldiq (currentWeightKg ASC), keyin eng eski kelgan
+   * (receivedDate ASC). AVTO-tayinlamaydi — faqat taklif.
+   */
+  findRemnantSuggestions(limit: number): Promise<Result<RulonCard[]>>;
 }
 
 export const RULON_CARD_REPO = Symbol('RULON_CARD_REPO');

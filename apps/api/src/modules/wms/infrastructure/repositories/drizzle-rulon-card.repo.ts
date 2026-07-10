@@ -9,12 +9,13 @@ import { Injectable } from '@nestjs/common';
 import { Ok, Err, Result } from '@common/result';
 import { db } from '@shared/db';
 import { rulonCards, RulonCard } from '@workspace/db';
-import { and, count, desc, eq, SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, SQL } from 'drizzle-orm';
 import type {
   IRulonCardRepo,
   RulonCardListFilter,
   RulonCardCreateData,
 } from '../../domain/repositories/i-rulon-card.repo';
+import { RULON_STATUS_REMNANT } from '../../domain/constants/wms-rulon-card.constants';
 
 @Injectable()
 export class DrizzleRulonCardRepository implements IRulonCardRepo {
@@ -117,6 +118,20 @@ export class DrizzleRulonCardRepository implements IRulonCardRepo {
       return Ok(row);
     } catch (e: unknown) {
       return Err((e as Error)?.message || 'Holatni yangilashda xatolik');
+    }
+  }
+
+  async findRemnantSuggestions(limit: number): Promise<Result<RulonCard[]>> {
+    try {
+      const rows = await db
+        .select()
+        .from(rulonCards)
+        .where(eq(rulonCards.status, RULON_STATUS_REMNANT))
+        .orderBy(asc(rulonCards.currentWeightKg), asc(rulonCards.receivedDate))
+        .limit(limit);
+      return Ok(rows);
+    } catch (e: unknown) {
+      return Err((e as Error)?.message || 'Qoldiq rulon takliflarini olishda xatolik');
     }
   }
 }

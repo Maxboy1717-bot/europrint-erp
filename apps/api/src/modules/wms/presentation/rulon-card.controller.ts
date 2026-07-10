@@ -36,6 +36,7 @@ import {
   ListRulonCardSchema,
   UpdateRulonWeightSchema,
   ChangeRulonStatusSchema,
+  RemnantSuggestionsQuerySchema,
 } from './dto/rulon-card.dto';
 
 const WMS_READ = ['super_admin', 'warehouse_manager', 'director', 'warehouse_keeper'];
@@ -78,6 +79,18 @@ export class RulonCardController {
     if (!res.ok) throwFromError(res.error);
     const data = res.ok ? res.data : { items: [], total: 0 };
     return { items: data.items, total: data.total, page: q.page, limit: q.limit };
+  }
+
+  @ApiOperation({ summary: 'Remnant-roll suggestion list for PP planner (weight ASC, received ASC)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('remnant-suggestions')
+  @Roles(...WMS_READ, 'production_manager', 'planner')
+  async remnantSuggestions(@Query() query: unknown) {
+    const q = RemnantSuggestionsQuerySchema.parse(query);
+    const res = await this.svc.listRemnantSuggestions(q.limit);
+    if (!res.ok) throwFromError(res.error);
+    const items = res.ok ? res.data : [];
+    return { items, total: items.length, limit: q.limit };
   }
 
   @ApiOperation({ summary: 'Get one rulon card' })

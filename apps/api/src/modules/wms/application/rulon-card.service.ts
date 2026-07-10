@@ -189,4 +189,15 @@ export class RulonCardService {
     }
     return this.repo.updateStatus(id, nextStatus);
   }
+
+  /**
+   * Qoldiq (remnant) rulonlar taklif ro'yxati — PP rejalashtiruvchiga.
+   * Deterministik heuristika: eng kam qoldiq (currentWeightKg ASC), keyin eng eski
+   * kelgan (receivedDate ASC) — birinchi ishlatilishi tavsiya etiladi. AI-priority
+   * (muddat mosligi) keyingi bosqich; bu ro'yxat AVTO-tayinlamaydi, faqat taklif.
+   * VIZYON: vision-1000-answers/10-warehouse.md #24.
+   */
+  async listRemnantSuggestions(limit: number): Promise<Result<RulonCard[]>> {
+    return this.repo.findRemnantSuggestions(limit);
+  }
 }
