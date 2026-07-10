@@ -84,7 +84,11 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
 
   // ── P30 EP-DIR-025/036/053/073: dashboard kengaytma ────────────────────────
 
-  /** Bo'limlar kesimida bugungi reja-fakt (total/completed/remaining). */
+  /**
+   * Bo'limlar kesimida bugungi reja-fakt.
+   * vision 05-director#48: faqat to'liq tugagan ishlar "fakt" (completed);
+   * jarayondagi ishlar alohida ustunda (in_progress) — ikkalasi ajratilgan bucket.
+   */
   async getPlanFact(): Promise<Result<Row[]>> {
     return safeCall(async () =>
       exec(sql`
@@ -92,6 +96,7 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
           d.name_uz AS department,
           COUNT(po.id)::int AS total,
           COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed,
+          COUNT(po.id) FILTER (WHERE po.status = 'in_progress')::int AS in_progress,
           COUNT(po.id) FILTER (WHERE po.status NOT IN ('completed','cancelled'))::int AS remaining
         FROM departments d
         -- Join on org_department_id: production_orders has no plain department_id column, so
