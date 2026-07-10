@@ -18,6 +18,7 @@ import {
 import { KanbanRobotService } from './kanban-robot.service';
 import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { KANBAN_MAX_URGENT_PER_DAY } from '@common/constants/business.constants';
 
 @Injectable()
 export class KanbanBoardsService {
@@ -252,6 +253,39 @@ export class KanbanBoardsService {
     ));
   }
 
+  /**
+   * EP-KAN §15 #29 (C29): kunlik shoshilinch (urgent) kvota tekshiruvi.
+   * assigner_user_id bugungi kunda yaratgan 'urgent' kartalar sonini hisoblaydi;
+   * KANBAN_MAX_URGENT_PER_DAY ga yetgan bo'lsa 400 (VALIDATION) qaytaradi.
+   * Tekshiruv so'rovi xato bersa yaratishni bloklamaydi (non-regress, Q-39).
+   */
+  private async assertUrgentQuotaAvailable(assignerUserId: number): Promise<Result<void>> {
+    try {
+      const rows = await runQuery<{ cnt: string }>(sql`
+        SELECT COUNT(*)::text AS cnt
+        FROM kanban_cards
+        WHERE priority = 'urgent'
+          AND assigner_user_id = ${assignerUserId}
+          AND deleted_at IS NULL
+          AND created_at::date = CURRENT_DATE
+      `);
+      const used = Number(rows.rows[0]?.cnt ?? 0);
+      if (used >= KANBAN_MAX_URGENT_PER_DAY) {
+        return Err(AppErr(
+          'VALIDATION',
+          `Bir kunda ko'pi bilan ${KANBAN_MAX_URGENT_PER_DAY} ta "Shoshilinch" vazifa yaratish mumkin (bugun ${used} ta yaratilgan).`,
+        ));
+      }
+      return { ok: true, data: undefined };
+    } catch (e) {
+      this.logger.warn(
+        { method: 'assertUrgentQuotaAvailable', assignerUserId, error: String(e) },
+        'urgent quota check failed — allowing create',
+      );
+      return { ok: true, data: undefined };
+    }
+  }
+
   async addCard(
     boardId: string,
     body: Record<string, unknown>,
@@ -268,13 +302,23 @@ export class KanbanBoardsService {
       const assignerUserId = rawAssigner != null
         ? String(rawAssigner)
         : (creatorUserId != null ? String(creatorUserId) : null);
+      const priority = String(body.priority || 'normal');
+
+      // EP-KAN §15 #29 (C29): kunlik "Shoshilinch" (urgent) limiti. Bir topshiruvchi
+      // (assigner) bir kunda ko'pi bilan KANBAN_MAX_URGENT_PER_DAY ta urgent karta
+      // yarata oladi; keyingisi rad etiladi. assigner yo'q (legacy/tizim) yoki
+      // normal-prioritetli kartalar cheklovga tushmaydi (non-regress, Q-39).
+      if (priority === 'urgent' && assignerUserId != null) {
+        const quota = await this.assertUrgentQuotaAvailable(Number(assignerUserId));
+        if (!quota.ok) return quota as Result<KanbanCard>;
+      }
 
       const result = await this.boardsRepo.addCard({
         board_id: boardId,
         column_id: columnId,
         title: String(body.title || 'Yangi vazifa'),
         description: body.description != null ? String(body.description) : null,
-        priority: String(body.priority || 'normal'),
+        priority,
         // Normalize ''→null (mirrors updateCard's str() + createCardFlat): an empty-string
         // due_date breaks the report ::date casts (''::date throws). Keep it out of the DB.
         due_date: rawDue != null && rawDue !== '' ? String(rawDue) : null,

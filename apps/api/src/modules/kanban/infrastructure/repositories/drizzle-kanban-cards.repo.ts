@@ -21,6 +21,7 @@ import {
 } from '@shared/db';
 import { safeCall, Err, Ok, Result, AppErr } from '@common/result';
 import { castTo } from '@common/db-rows';
+import { KANBAN_MAX_URGENT_PER_DAY } from '@common/constants/business.constants';
 
 @Injectable()
 export class DrizzleKanbanCardsRepository {
@@ -257,6 +258,22 @@ export class DrizzleKanbanCardsRepository {
       const parentCardId  = rawParent != null && rawParent !== '' ? Number(rawParent) : null;
       const rawDue        = data.dueDate ?? data.due_date;
       const dueDate       = rawDue != null && rawDue !== '' ? String(rawDue) : null;
+      // EP-KAN §15 #29 (C29): kunlik "Shoshilinch" (urgent) limiti — bir topshiruvchi
+      // (assigner) bir kunda ko'pi bilan KANBAN_MAX_URGENT_PER_DAY ta urgent karta
+      // yaratadi. assigner yo'q yoki normal-prioritetli kartalar cheklovga tushmaydi.
+      if (priority === 'urgent' && assignerId != null) {
+        const used = await runQuery<{ cnt: string }>(sql`
+          SELECT COUNT(*)::text AS cnt FROM kanban_cards
+          WHERE priority = 'urgent' AND assigner_user_id = ${assignerId}
+            AND deleted_at IS NULL AND created_at::date = CURRENT_DATE
+        `);
+        if (Number(used.rows[0]?.cnt ?? 0) >= KANBAN_MAX_URGENT_PER_DAY) {
+          return Err(AppErr(
+            'VALIDATION',
+            `Bir kunda ko'pi bilan ${KANBAN_MAX_URGENT_PER_DAY} ta "Shoshilinch" vazifa yaratish mumkin.`,
+          ));
+        }
+      }
       const rows = await runQuery<Record<string, unknown>>(sql`
         INSERT INTO kanban_cards
           (board_id, column_id, title, description, priority, owner_user_id, assigner_user_id, parent_card_id, due_date, sort_order)

@@ -549,3 +549,12 @@ export const CC_RETENTION_LEADER_YEARS = 10;
 export const CC_RETENTION_WORKER_YEARS = 3;
 /** "Rahbar" (leader) deb hisoblanadigan rollar — kengash/boshqaruv darajasi (10 yil saqlash). */
 export const CC_LEADER_ROLES = ['super_admin', 'admin', 'director', 'ceo', 'manager', 'supervisor'] as const;
+
+/**
+ * Kanban — kunlik "Shoshilinch" (urgent) karta limiti (modul 15 Kanban, vizyon
+ * TASDIQ-2146 §15 #29 / vision-1000-answers/15-kanban.md #15:
+ * "Bir kunda ko'pi bilan 2 Shoshilinch"). Bir foydalanuvchi (topshiruvchi/assigner)
+ * bir kunda ko'pi bilan shuncha 'urgent' prioritetli karta yarata oladi; keyingisi
+ * rad etiladi. (Item C29)
+ */
+export const KANBAN_MAX_URGENT_PER_DAY = 2;
