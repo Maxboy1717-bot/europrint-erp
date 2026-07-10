@@ -5,7 +5,7 @@
 
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, index, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, date, jsonb, index, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, users } from "../core-schema";
@@ -470,6 +470,28 @@ export const insertProductionOrderSchema = createInsertSchema(productionOrders, 
 
 export type ProductionOrder = typeof productionOrders.$inferSelect;
 export type InsertProductionOrder = z.infer<typeof insertProductionOrderSchema>;
+
+// EP-PP-106 (vision 07-pp#20): per-order plan-vs-actual snapshot feeding the
+// last-year-fact recommendation (median primary + best-20% mean + last-5 mean).
+// production_order_id / product_id are ON DELETE SET NULL so a snapshot survives its
+// source order/product (historical stats must never vanish). product_id is the
+// denormalised grouping key the recommendation reads by; entry_date windows "last
+// year". All quantity columns are nullable so a half-logged row never blocks.
+export const ppPlanFactEntries = pgTable("pp_plan_fact_entries", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").references(() => productionOrders.id, { onDelete: "set null" }),
+  productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
+  entryDate: date("entry_date").notNull().default(sql`CURRENT_DATE`),
+  plannedQty: numericMoney("planned_qty"),
+  actualQty: numericMoney("actual_qty"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_plan_fact_entries_product_date").on(t.productId, t.entryDate),
+  index("idx_pp_plan_fact_entries_order").on(t.productionOrderId),
+]);
+
+export type PpPlanFactEntry = typeof ppPlanFactEntries.$inferSelect;
+export type InsertPpPlanFactEntry = typeof ppPlanFactEntries.$inferInsert;
 
 // Production Order Operations
 export const productionOrderOperations = pgTable("production_order_operations", {

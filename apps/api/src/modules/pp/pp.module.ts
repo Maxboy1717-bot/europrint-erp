@@ -102,6 +102,12 @@ import { PpReasonCodesController } from './reason-codes/pp-reason-codes.controll
 import { PpReasonCodesService } from './reason-codes/pp-reason-codes.service';
 import { PP_REASON_CODES_REPO } from './reason-codes/i-pp-reason-codes.repo';
 import { DrizzlePpReasonCodesRepository } from './reason-codes/drizzle-pp-reason-codes.repo';
+// Plan-fact store (pp_plan_fact_entries) — vision 07-pp#20 (EP-PP-106) last-year-fact
+// recommendation (median + best-20% + last-5).
+import { PpPlanFactController } from './plan-fact/pp-plan-fact.controller';
+import { PpPlanFactService } from './plan-fact/pp-plan-fact.service';
+import { PP_PLAN_FACT_REPO } from './plan-fact/i-pp-plan-fact.repo';
+import { DrizzlePpPlanFactRepository } from './plan-fact/drizzle-pp-plan-fact.repo';
 // vision 07-pp#46: operation queue-time tracker -- queue (waiting-for-next-stage) time is
 // tracked distinct from active work and EXCLUDED from the OEE availability denominator.
 import { PpOeeController } from './oee/pp-oee.controller';
@@ -153,6 +159,8 @@ const listeners = [
     GofraConversionController,
     // PP reason-code catalog management surface
     PpReasonCodesController,
+    // Plan-fact recommendation surface (vision 07-pp#20)
+    PpPlanFactController,
     // vision 07-pp#46: queue-time tracker + OEE queue-exclusion surface
     PpOeeController,
   ],
@@ -205,6 +213,9 @@ const listeners = [
     // PP reason-code catalog
     PpReasonCodesService,
     { provide: PP_REASON_CODES_REPO, useClass: DrizzlePpReasonCodesRepository },
+    // Plan-fact store (vision 07-pp#20)
+    PpPlanFactService,
+    { provide: PP_PLAN_FACT_REPO, useClass: DrizzlePpPlanFactRepository },
     // vision 07-pp#46: queue-time tracker + OEE queue-exclusion
     PpQueueTimeService,
     { provide: PP_QUEUE_TIME_REPO, useClass: DrizzlePpQueueTimeRepository },
