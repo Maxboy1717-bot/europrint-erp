@@ -135,6 +135,11 @@ import { WmsSettingsController } from './presentation/wms-settings.controller';
 import { WmsSettingsService } from './application/wms-settings.service';
 import { WmsSettingsRepository } from './infrastructure/repositories/wms-settings.repository';
 import { WMS_SETTINGS_REPO } from './domain/repositories/i-wms-settings.repo';
+// Vision 10-warehouse #30 - off-hours (outside-shift) warehouse-movement flag + weekly HR/Director report.
+import { NotificationsModule } from '../notifications/notifications.module';
+import { OffHoursAuditRepository } from './infrastructure/repositories/off-hours-audit.repository';
+import { OffHoursAuditService } from './application/off-hours-audit.service';
+import { OffHoursReportCron } from './infrastructure/cron/off-hours-report.cron';
 
 const handlers = [
   GoodsIssueHandler,
@@ -157,6 +162,7 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     CqrsModule,
     EventEmitterModule.forRoot(),
     BullModule.registerQueue({ name: QUEUE_NAMES.MRP_RUN }),
+    NotificationsModule,
   ],
   controllers: [
     WmsStockController,
@@ -269,6 +275,10 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub.
     { provide: WMS_SETTINGS_REPO, useClass: WmsSettingsRepository },
     WmsSettingsService,
+    // Vision 10-warehouse #30 - off-hours (outside-shift) warehouse-movement flag + weekly HR/Director report.
+    OffHoursAuditRepository,
+    OffHoursAuditService,
+    OffHoursReportCron,
   ],
   exports: [WMS_REPO],
 })
