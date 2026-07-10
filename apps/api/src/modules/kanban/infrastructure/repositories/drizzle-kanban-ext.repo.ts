@@ -79,6 +79,7 @@ export class DrizzleKanbanExtRepository {
 
   acceptCard(cardId: string, userId: number) { return this.core.acceptCard(cardId, userId); }
   completeCard(cardId: string, userId: number, completionReport?: string) { return this.core.completeCard(cardId, userId, completionReport); }
+  rejectCard(cardId: string, userId: number, reason: string) { return this.core.rejectCard(cardId, userId, reason); }
   bulkAssignCards(cardIds: number[], ownerUserId: number | null) { return this.core.bulkAssignCards(cardIds, ownerUserId); }
 
   // ─── Notifications ────────────────────────────────────────────────────────

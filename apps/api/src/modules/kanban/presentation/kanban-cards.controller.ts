@@ -60,6 +60,10 @@ const CompleteCardSchema = z.object({
   completionReport: z.string().max(5000).optional(),
 }).passthrough();
 
+const RejectCardSchema = z.object({
+  reason: z.string().min(1).max(5000),
+}).passthrough();
+
 const PostChatSchema = z.object({
   message: z.string().max(5000).optional(),
   content: z.string().max(5000).optional(),
@@ -242,6 +246,21 @@ export class KanbanCardsController {
     const dto = CompleteCardSchema.parse(body ?? {});
     return unwrapOrBadRequest(
       await this.svc.completeCard(id, user?.id ?? 0, dto.completionReport),
+    );
+  }
+
+  @Put('cards/:id/reject')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AuditInterceptor)
+  @ApiOperation({ summary: 'Vazifani sabab bilan topshiruvchiga qaytarish (EP-KAN-118)' })
+  async rejectCard(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: { id: number },
+  ) {
+    const dto = RejectCardSchema.parse(body ?? {});
+    return unwrapOrBadRequest(
+      await this.svc.rejectCard(id, user?.id ?? 0, dto.reason),
     );
   }
 

@@ -425,4 +425,56 @@ export class DrizzleKanbanCardsRepository {
       return Err(String(e));
     }
   }
+
+  // ─── Reject (qaytarish) ───────────────────────────────────────────────────
+
+  /**
+   * EP-KAN-118: bajaruvchi (owner_user_id) vazifani sabab bilan topshiruvchiga
+   * (assigner_user_id) qaytaradi — egalik teskari almashadi
+   * (owner_user_id ← assigner_user_id), sabab kanban_card_comments qatori sifatida
+   * saqlanadi, topshiruvchiga bildirishnoma yuboriladi.
+   */
+  async rejectCard(cardId: string, userId: number, reason: string): Promise<Result<Record<string, unknown>>> {
+    try {
+      const pre = await runQuery<{ owner_user_id: number | null; assigner_user_id: number | null }>(sql`
+        SELECT owner_user_id, assigner_user_id
+        FROM kanban_cards WHERE id = ${cardId} AND deleted_at IS NULL LIMIT 1
+      `);
+      if (!pre.rows[0]) return Err(AppErr('NOT_FOUND', 'Karta topilmadi'));
+      const owner    = pre.rows[0].owner_user_id;
+      const assigner = pre.rows[0].assigner_user_id;
+      if (assigner == null) {
+        return Err(AppErr('VALIDATION', "Kartada topshiruvchi ko'rsatilmagan — qaytarib bo'lmaydi."));
+      }
+      // Faqat joriy bajaruvchi (owner) vazifani qaytara oladi.
+      if (owner != null && Number(owner) !== userId) {
+        return Err(AppErr('FORBIDDEN', 'Faqat vazifa bajaruvchisi uni qaytara oladi.'));
+      }
+      const rows = await runQuery<Record<string, unknown>>(sql`
+        UPDATE kanban_cards
+        SET owner_user_id = assigner_user_id, updated_at = NOW()
+        WHERE id = ${cardId} AND deleted_at IS NULL
+        RETURNING id, title, owner_user_id, assigner_user_id, column_id
+      `);
+      if (!rows.rows[0]) return Err(AppErr('NOT_FOUND', 'Karta topilmadi'));
+      const card = rows.rows[0];
+      // Sabab — izoh sifatida saqlanadi (kanban_card_comments).
+      await db.insert(kanbanCardComments).values({
+        cardId: String(cardId),
+        userId,
+        content: `Vazifa qaytarildi: ${reason}`,
+      });
+      // Topshiruvchiga (yangi egaga) bildirishnoma.
+      await db.insert(kanbanNotifications).values({
+        userId: Number(assigner),
+        cardId: String(cardId),
+        type: 'status_changed',
+        title: `"${String(card.title)}" qaytarildi`,
+        message: reason,
+      });
+      return Ok(castTo<Record<string, unknown>>(rows.rows[0]));
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
 }

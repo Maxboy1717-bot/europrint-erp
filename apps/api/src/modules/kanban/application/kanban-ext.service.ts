@@ -125,6 +125,7 @@ export class KanbanExtService {
 
   acceptCard(cardId: string, userId: number): Promise<Result<Record<string, unknown>>> { return this.card.acceptCard(cardId, userId); }
   completeCard(cardId: string, userId: number, completionReport?: string): Promise<Result<Record<string, unknown>>> { return this.card.completeCard(cardId, userId, completionReport); }
+  rejectCard(cardId: string, userId: number, reason: string): Promise<Result<Record<string, unknown>>> { return this.card.rejectCard(cardId, userId, reason); }
   bulkAssignCards(cardIds: number[], ownerUserId: number | null): Promise<Result<{ updated: number; ids: number[] }>> { return this.card.bulkAssignCards(cardIds, ownerUserId); }
 
   // ─── Analytics ────────────────────────────────────────────────────────────
