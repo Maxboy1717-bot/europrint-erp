@@ -125,6 +125,9 @@ import { MaterialLifeRepository } from './infrastructure/repositories/material-l
 import { MATERIAL_LIFE_REPO } from './domain/repositories/i-material-life.repo';
 // FAZA E (Inventarizatsiya, 2026-07-01) — "Davriy (rejalashtirilgan)" cycle-count avto-generatsiya.
 import { WmsCycleCountGeneratorCron } from './infrastructure/cron/wms-cycle-count-generator.cron';
+// Vizyon 10-warehouse #28 — sanoq aniqlik% <95% darhol signal (Direktorga RBAC marshrut).
+import { CountAccuracyAlertCron } from './infrastructure/cron/count-accuracy-alert.cron';
+import { NotificationRoutingRepository } from '../notifications/infrastructure/notification-routing.repository';
 // G9-1 (Taksonomiya, 2026-07-02) — bo'lim ichki omborlari org-sxemadan avto-derivatsiya (boot + kunlik cron).
 import { DepartmentWarehouseSyncService } from './infrastructure/cron/department-warehouse-sync.service';
 // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub (SD/Marketing/QC pattern reuse).
@@ -257,6 +260,10 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     MaterialLifeService,
     // FAZA E (Inventarizatsiya, 2026-07-01) — davriy (rejalashtirilgan) cycle-count avto-generatsiya.
     WmsCycleCountGeneratorCron,
+    // Vizyon 10-warehouse #28 — sanoq aniqlik% <95% darhol signal (RBAC marshrut → Direktor).
+    // NotificationRoutingRepository — standalone provider (faqat runQuery), pos.module.ts namunasi.
+    NotificationRoutingRepository,
+    CountAccuracyAlertCron,
     // G9-1 (Taksonomiya, 2026-07-02) — bo'lim ichki omborlari avto-sinxron (vizyon CHAT-TARIXI:52).
     DepartmentWarehouseSyncService,
     // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub.
