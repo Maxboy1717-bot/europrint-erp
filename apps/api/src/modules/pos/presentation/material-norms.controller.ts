@@ -39,6 +39,11 @@ const ListQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
+const DeviationQuerySchema = z.object({
+  materialId: z.coerce.number().int().positive(),
+  departmentCode: z.string().trim().min(1).max(50).nullable().optional(),
+});
+
 const CreateSchema = z.object({
   materialId: z.coerce.number().int().positive().nullable().optional(),
   materialName: z.string().trim().min(1).max(300),
@@ -88,6 +93,16 @@ export class MaterialNormsController {
       limit: dto.limit,
       offset: dto.offset,
     }));
+  }
+
+  @Get('deviation')
+  @RequirePermission('pos.material_norms.read')
+  @ApiOperation({ summary: "Norma og'ish tahlili (norma/fakt %) — bitta material" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Faol norma topilmadi' })
+  async deviation(@Query() query: unknown) {
+    const dto = DeviationQuerySchema.parse(query ?? {});
+    return unwrapOrThrow(await this.service.getDeviation(dto.materialId, dto.departmentCode ?? null));
   }
 
   @Get(':id')
