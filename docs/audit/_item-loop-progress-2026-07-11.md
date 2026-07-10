@@ -30,8 +30,8 @@ Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
   tsc validates). **Harvested so far (12): #36 5b5c2a7c, #23 fd313f48, #56 20576be8, #16 e1cc49e2,
   #13 cffdd66f, #55 2c948b8f, #15 e2d579ec, #32 82b37103, #09 9c00fbda, #24 2456338d,
   #53 c6a0f2ae, #06 db28924a, #51 004e13aa, #74 dd3d3f77, #73 b4054358, #50 5018d782,
-  #22 9ab8fe06.**
-  RESUME: collision-free remaining — #52,#01,#02,#28,#67,#11,#17,#18,#54,#26,#49
+  #22 9ab8fe06, #02 6de960b4 (WMS #24 remnant-roll suggestions for PP planner).**
+  RESUME: collision-free remaining — #52,#01,#28,#67,#11,#17,#18,#54,#26,#49
   — then same-file clusters (director/kanban/mm/marketing).
   ~60 ready specs remain (of 75). Each: read scratchpad/specs/NN.json → verify anchors live →
   apply Edit(s)+newFiles → commit (pre-commit tsc). 15 landed; #73 needed a tsc fix (return
