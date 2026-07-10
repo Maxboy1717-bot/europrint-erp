@@ -41,6 +41,11 @@ const CreateReasonCodeSchema = z.object({
   sort_order: z.number().int().optional(),
 });
 
+// EP-PP-136: the Pareto report is scoped to one calendar month ('YYYY-MM').
+const MonthSchema = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month 'YYYY-MM' formatda bo'lishi kerak");
+
 const UpdateReasonCodeSchema = z
   .object({
     name: z.string().min(1).max(500).optional(),
@@ -69,6 +74,19 @@ export class PpReasonCodesController {
     const wantAll = includeInactive === '1' || includeInactive === 'true';
     const items = unwrapOrThrow(await (wantAll ? this.svc.findAll() : this.svc.findActive()));
     return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Monthly reason-code Pareto report (EP-PP-136)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad month format' })
+  @Get('pareto')
+  @Roles(...PP_REASON_READ)
+  async pareto(@Query('month') month?: string) {
+    // Default to the current calendar month (UTC) when ?month=YYYY-MM is omitted.
+    const now = new Date();
+    const fallback = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+    const m = MonthSchema.parse(month ?? fallback);
+    return unwrapOrThrow(await this.svc.monthlyPareto(m));
   }
 
   @ApiOperation({ summary: 'Create a PP reason code' })

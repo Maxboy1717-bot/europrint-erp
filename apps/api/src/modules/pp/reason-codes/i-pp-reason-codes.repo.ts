@@ -25,6 +25,22 @@ export interface PpReasonCodeRow {
 }
 
 /**
+ * One grouped-count row for the monthly reason-code Pareto source query (EP-PP-136,
+ * vision 07-pp#142): a reason code plus how many production orders carried it as their
+ * flag (production_orders.reason_code_id) within the reporting window. Raw counts only —
+ * the cumulative-% Pareto arithmetic is added by the service (Rule 15).
+ */
+export interface ReasonCodeCountRow {
+  reasonCodeId: number;
+  code: string;
+  name: string;
+  nameRu: string | null;
+  category: string;
+  color: string | null;
+  occurrences: number;
+}
+
+/**
  * Create payload. `category` is required because pp_reason_codes.category is
  * NOT NULL (a reason code with no category is meaningless — the category groups
  * codes, e.g. urgent/freeze/quality). `color`/`sort_order` fall back to the DB
@@ -67,6 +83,14 @@ export interface IPpReasonCodesRepo {
    * Ok(null) when no row matched the id, so the controller can raise a 404.
    */
   update(id: number, patch: UpdatePpReasonCodeInput): Promise<Result<PpReasonCodeRow | null>>;
+
+  /**
+   * EP-PP-136 (vision 07-pp#142): grouped occurrence counts of the reason flags
+   * applied within [startInclusive, endExclusive) — both ISO date strings ('YYYY-MM-DD')
+   * compared against production_orders.updated_at — ordered most-frequent first. Returns
+   * Ok([]) for a window with no flagged orders (no fabrication).
+   */
+  reasonCodePareto(startInclusive: string, endExclusive: string): Promise<Result<ReasonCodeCountRow[]>>;
 }
 
 export const PP_REASON_CODES_REPO = Symbol('IPpReasonCodesRepo');
