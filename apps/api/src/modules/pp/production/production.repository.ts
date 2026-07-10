@@ -480,4 +480,75 @@ export class ProductionRepository {
   }
 
   }
+
+  async getDailyTimers(): Promise<Result<Row>>  {
+  try {
+      // EP-PP-100 (vision 07-pp#106): 3 taymer kunlik dashboard — ketgan/qolgan/boshlanmagan.
+      // Partitions the active production plan (non-deleted, non-cancelled orders) into three
+      // mutually-exclusive buckets by effective start/end, then aggregates timer minutes.
+      // eff_start = order.actual_start, or the earliest production_sessions.started_at
+      // (order.actual_start is sparse in practice; sessions carry the real floor timestamps).
+      // planned_*_date are varchar -> regex-guarded ::timestamp cast (trivial, no DDL).
+      const rows = await exec(sql`
+        WITH po AS (
+          SELECT
+            o.id,
+            o.status,
+            o.planned_start_date,
+            o.planned_end_date,
+            o.actual_start,
+            o.actual_end,
+            COALESCE(
+              o.actual_start,
+              (SELECT MIN(ps.started_at) FROM production_sessions ps
+                 WHERE ps.production_order_id = o.id AND ps.deleted_at IS NULL)
+            ) AS eff_start,
+            o.actual_end AS eff_end
+          FROM production_orders o
+          WHERE o.deleted_at IS NULL AND o.status <> 'cancelled'
+        ),
+        classified AS (
+          SELECT *,
+            CASE
+              WHEN status = 'completed' OR eff_end IS NOT NULL THEN 'completed'
+              WHEN eff_start IS NOT NULL THEN 'in_progress'
+              ELSE 'not_started'
+            END AS bucket,
+            CASE WHEN planned_end_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+                 THEN planned_end_date::timestamp END AS planned_end_ts,
+            CASE WHEN planned_start_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+                 THEN planned_start_date::timestamp END AS planned_start_ts
+          FROM po
+        )
+        SELECT
+          COUNT(*) FILTER (WHERE bucket = 'in_progress')::int AS in_progress_count,
+          COALESCE(ROUND(SUM(EXTRACT(EPOCH FROM (now() - eff_start)) / 60)
+            FILTER (WHERE bucket = 'in_progress'))::int, 0) AS elapsed_minutes,
+          COALESCE(ROUND(SUM(GREATEST(EXTRACT(EPOCH FROM (planned_end_ts - now())) / 60, 0))
+            FILTER (WHERE bucket = 'in_progress'))::int, 0) AS remaining_minutes,
+          COUNT(*) FILTER (WHERE bucket = 'not_started')::int AS not_started_count,
+          COALESCE(ROUND(SUM(GREATEST(EXTRACT(EPOCH FROM (planned_end_ts - planned_start_ts)) / 60, 0))
+            FILTER (WHERE bucket = 'not_started'))::int, 0) AS not_started_planned_minutes,
+          COUNT(*) FILTER (WHERE bucket = 'completed')::int AS completed_count
+        FROM classified
+      `);
+      if (!rows.ok) return Err(rows.error);
+      const r = rows.data[0] ?? {};
+      const timers: Row = {
+        asOf: new Date().toISOString(),
+        // ketgan — in-progress orders, wall-clock minutes already spent
+        elapsed:    { orderCount: Number(r.in_progress_count) || 0, minutes: Number(r.elapsed_minutes) || 0 },
+        // qolgan — same in-progress orders, planned minutes still left (>= 0)
+        remaining:  { orderCount: Number(r.in_progress_count) || 0, minutes: Number(r.remaining_minutes) || 0 },
+        // boshlanmagan — planned orders not yet started
+        notStarted: { orderCount: Number(r.not_started_count) || 0, plannedMinutes: Number(r.not_started_planned_minutes) || 0 },
+        // contextual: finished orders in the plan
+        completed:  { orderCount: Number(r.completed_count) || 0 },
+      };
+      return Ok(timers);
+  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
 }

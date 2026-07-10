@@ -70,6 +70,13 @@ export class ProductionReportsController {
     return unwrapOrThrow(await this.svc.getProductionStats());
   }
 
+  @ApiOperation({ summary: 'Daily 3-timer dashboard (elapsed/remaining/not-started)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('timers-daily')
+  async dailyTimers() {
+    return unwrapOrThrow(await this.svc.getDailyTimers());
+  }
+
   @ApiOperation({ summary: 'Order360 card' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
