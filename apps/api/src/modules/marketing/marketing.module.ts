@@ -29,6 +29,9 @@ import { MarketingRoiService } from './application/marketing-roi.service';
 import { NpsRequestsController } from './presentation/nps-requests.controller';
 import { NpsRequestsRepository } from './infrastructure/repositories/nps-requests.repository';
 import { NpsAutoRequestListener } from './infrastructure/listeners/nps-auto-request.listener';
+import { CustomerRhythmController } from './presentation/customer-rhythm.controller';
+import { CustomerRhythmService } from './application/customer-rhythm.service';
+import { DrizzleCustomerRhythmRepository } from './infrastructure/repositories/drizzle-customer-rhythm.repo';
 
 const commandHandlers = [CreateCampaignHandler, UpdateCampaignHandler, LaunchCampaignHandler];
 const queryHandlers = [GetCampaignsHandler, GetCampaignHandler];
@@ -48,6 +51,7 @@ const repositories = [
     MarketingAnalyticsStubsController,
     MarketingGroup2Controller,
     NpsRequestsController,
+    CustomerRhythmController,
   ],
   providers: [
     ...commandHandlers,
@@ -64,6 +68,8 @@ const repositories = [
     MarketingRoiService,
     NpsRequestsRepository,
     NpsAutoRequestListener,
+    DrizzleCustomerRhythmRepository,
+    CustomerRhythmService,
   ],
   exports: [CAMPAIGN_REPO, MarketingRoiService],
 })
