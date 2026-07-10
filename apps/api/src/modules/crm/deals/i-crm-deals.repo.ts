@@ -41,6 +41,8 @@ export interface ICrmDealsRepository {
   findById(id: string): Promise<Result<any | null>>;
   create(dto: Record<string, unknown>, createdBy?: number): Promise<Result<Record<string, unknown>>>;
   update(id: string, dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>>;
+  /** Item 93 (ГП-kod takror buyurtma): clone a past deal into a fresh is_repeating draft. */
+  clone(sourceId: string, createdBy?: number): Promise<Result<Record<string, unknown>>>;
   softDelete(id: string): Promise<Result<void>>;
   /** VISION-3340 #34: append a stage-change audit row to crm_stage_history. */
   recordStageHistory(entry: StageHistoryEntry): Promise<Result<void>>;

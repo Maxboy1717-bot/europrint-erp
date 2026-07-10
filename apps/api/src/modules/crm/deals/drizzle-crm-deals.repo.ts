@@ -165,6 +165,37 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yangilashda xatolik'); }
   }
 
+  // Item 93 (ГП-kod takror buyurtma tugmasi): one-click "repeat order" — clone a past deal into a
+  // fresh draft. Single atomic INSERT..SELECT copies the business fields straight from the source
+  // row (same auto-updatable crm_deals view create() writes through) and flags the new deal
+  // is_repeating=true. stage_id resets to the create() default 'qualification' (a repeat order is a
+  // NEW opportunity to re-qualify — carrying over a won/lost stage would mis-state the pipeline).
+  // assigned_to/assigned_by_id/created_by_id point at the acting manager so Item A row-scoping lets
+  // them see their own clone; metadata keeps the source lead link (jsonb merge) and records
+  // source_deal_id for provenance.
+  async clone(sourceId: string, createdBy?: number): Promise<Result<Row>> {
+    try {
+      const creator = Number(createdBy) || null;
+      const res = await runQuery<Row>(sql`
+        INSERT INTO crm_deals (
+          title, stage_id, company_id, lead_id, opportunity, amount, currency_id,
+          probability, close_date, additional_info, assigned_by_id, assigned_to,
+          created_by_id, is_repeating, metadata
+        )
+        SELECT
+          title, 'qualification', company_id, lead_id, opportunity, amount, currency_id,
+          probability, close_date, additional_info, ${creator}, ${creator},
+          ${creator}, true,
+          COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('source_deal_id', id::text)
+        FROM crm_deals
+        WHERE id = ${sourceId}::uuid AND deleted_at IS NULL
+        RETURNING *
+      `);
+      if (!res.rows[0]) return Err(`Manba bitim #${sourceId} topilmadi`);
+      return Ok(res.rows[0]);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Klonlashda xatolik'); }
+  }
+
   async softDelete(id: string): Promise<Result<void>> {
     try {
       await runQuery(sql`

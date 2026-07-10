@@ -92,6 +92,18 @@ export class DealsService {
 
     });}
 
+  async clone(sourceId: string, user?: ScopeUser){
+    return safeCall(async () => {
+    // Ownership gate (Item A): findOne enforces that a non-privileged manager may only clone a deal
+    // they own; privileged roles bypass. It throws NotFound (404) when the source is missing or not
+    // owned — safeCall preserves that HTTP status. Then the repo copies the row into a new draft.
+    await this.findOne(sourceId, user);
+    const result = await this.crmDealsRepo.clone(sourceId, user?.id ?? undefined);
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    return result.data;
+
+    });}
+
   async remove(id: string){
     return safeCall(async () => {
     await this.findOne(id);

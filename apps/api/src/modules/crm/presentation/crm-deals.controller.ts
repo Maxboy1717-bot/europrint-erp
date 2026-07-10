@@ -236,6 +236,19 @@ export class CrmDealsController {
   return unwrapOrThrow(res);
 }
 
+ @ApiOperation({ summary: 'Clone deal (repeat order)' })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @Post(':id/clone')
+ @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
+ async cloneDeal(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  this.logger.log('Cloning deal (repeat order)');
+  // Item 93 (ГП-kod takror buyurtma tugmasi): one-click clone a past deal into a fresh
+  // is_repeating draft. DealsService.clone is ownership-gated (Item A) then delegates to the repo
+  // INSERT..SELECT; it returns a Result envelope, so unwrapOrThrow surfaces 404/500 correctly.
+  return unwrapOrThrow(await this.dealsService.clone(String(id), user));
+ }
+
  @ApiOperation({ summary: 'Create quick deal' })
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
