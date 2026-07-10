@@ -6,11 +6,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, Ok, Err, AppErr } from '@common/result';
-import { LmsExamsRepository } from '../../infrastructure/repositories/drizzle-lms-exams.repo';
+import { LmsExamsRepository, type ReTeachNotificationRow } from '../../infrastructure/repositories/drizzle-lms-exams.repo';
 import {
   EXAM_PASSED_EVENT,
   type ExamPassedPayload,
 } from '../../infrastructure/event-handlers/exam-passed.contract';
+import { LMS_AUTO_RETEACH_FAIL_THRESHOLD } from '../constants/lms-completion.constants';
 
 export interface ExamResult {
   score:   number;
@@ -72,6 +73,12 @@ export class LmsExamsService {
       }
     }
 
+    // ⭐ EP-LMS #3: 2 marta yiqilsa AVTO qayta-oqish (rahbar tasdiqisiz) + murabbiy/HR xabar.
+    //   Grading allaqachon saqlangan; bu blok NON-BLOCKING — xatosi imtihon natijasini buzmaydi.
+    if (!passedBool && Number.isInteger(examId) && examId > 0) {
+      await this.maybeAutoReTeach(examId, Number(userId));
+    }
+
     return Ok<ExamResult>({
       score:   scoreNum,
       status:  passedBool ? 'passed' : 'failed',
@@ -80,5 +87,63 @@ export class LmsExamsService {
       passed:  passedBool,
       message: String(row.message ?? 'Imtihon topshirildi'),
     });
+  }
+
+  /**
+   * EP-LMS #3 — auto re-teach on repeated failure. When a user has failed one exam
+   * LMS_AUTO_RETEACH_FAIL_THRESHOLD (2) times, reopen the exam's course enrollment to
+   * in_progress (no supervisor approval) and notify the failing employee + card mentor(s)
+   * + HR. Fully non-blocking + Result-based; never throws into submitExam.
+   */
+  private async maybeAutoReTeach(examId: number, userId: number): Promise<void> {
+    try {
+      const countRes = await this.repo.countFailedSubmittedAttempts(examId, userId);
+      if (!countRes.ok) {
+        this.logger.warn(`re-teach count skipped exam=${examId} user=${userId}: ${countRes.error.message}`);
+        return;
+      }
+      const failCount = countRes.data;
+      if (failCount < LMS_AUTO_RETEACH_FAIL_THRESHOLD) return;
+
+      const reopenRes = await this.repo.reopenEnrollmentForExam(examId, userId);
+      if (!reopenRes.ok) {
+        this.logger.warn(`re-teach reopen skipped exam=${examId} user=${userId}: ${reopenRes.error.message}`);
+      }
+
+      const recRes = await this.repo.findReTeachRecipients(examId, userId);
+      const mentorIds = recRes.ok ? recRes.data.mentorIds : [];
+      const hrIds = recRes.ok ? recRes.data.hrIds : [];
+
+      const rows: ReTeachNotificationRow[] = [{
+        userId,
+        type: 'lms_auto_reteach',
+        title: `Qayta-o'qishga yo'naltirildingiz`,
+        body: `Imtihondan ${failCount} marta o'ta olmadingiz — kurs avtomatik qayta-o'qish uchun ochildi.`,
+        referenceId: examId,
+        referenceType: 'lms_exam',
+        priority: 'high',
+      }];
+      const alertIds = Array.from(new Set([...mentorIds, ...hrIds])).filter(id => id !== userId);
+      for (const rid of alertIds) {
+        rows.push({
+          userId: rid,
+          type: 'lms_reteach_alert',
+          title: `Xodim imtihondan 2 marta yiqildi`,
+          body: `Xodim (user #${userId}) imtihondan (#${examId}) ${failCount} marta o'ta olmadi va qayta-o'qishga yo'naltirildi.`,
+          referenceId: examId,
+          referenceType: 'lms_exam',
+          priority: 'normal',
+        });
+      }
+
+      const insRes = await this.repo.insertReTeachNotifications(rows);
+      if (!insRes.ok) {
+        this.logger.warn(`re-teach notify skipped exam=${examId} user=${userId}: ${insRes.error.message}`);
+        return;
+      }
+      this.logger.log(`EP-LMS#3 auto re-teach: exam=${examId} user=${userId} fails=${failCount} reopened=${reopenRes.ok ? reopenRes.data.reopened : false} notified=${insRes.data}`);
+    } catch (e) {
+      this.logger.warn(`maybeAutoReTeach failed exam=${examId} user=${userId}: ${String(e)}`);
+    }
   }
 }

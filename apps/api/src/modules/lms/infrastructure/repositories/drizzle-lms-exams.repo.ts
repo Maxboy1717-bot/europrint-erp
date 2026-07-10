@@ -14,6 +14,18 @@ const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
 };
 
+/** EP-LMS #3 — shape of a single auto re-teach notification row (built in the service,
+ *  written by {@link LmsExamsRepository.insertReTeachNotifications}). */
+export interface ReTeachNotificationRow {
+  userId: number;
+  type: string;
+  title: string;
+  body: string;
+  referenceId: number | null;
+  referenceType: string;
+  priority: string;
+}
+
 @Injectable()
 export class LmsExamsRepository {
   private readonly logger = new Logger(LmsExamsRepository.name);
@@ -287,6 +299,107 @@ export class LmsExamsRepository {
     } catch (error) {
       this.logger.error(`findMyProgress: ${(error as Error).message}`);
       return Ok({});
+    }
+  }
+
+  /**
+   * EP-LMS #3 — count FAILED (graded + submitted) attempts on one exam by one user.
+   * user_id = users.id (JWT), matching lms_exam_attempts.user_id. Triggers auto
+   * re-teach once the count reaches LMS_AUTO_RETEACH_FAIL_THRESHOLD.
+   */
+  async countFailedSubmittedAttempts(examId: number, userId: number): Promise<Result<number>> {
+    try {
+      const r = await exec(sql`
+        SELECT COUNT(*)::int AS n
+        FROM lms_exam_attempts
+        WHERE exam_id = ${examId}
+          AND user_id = ${userId}
+          AND status = 'submitted'
+          AND passed = false
+      `);
+      return Ok(Number(r[0]?.n ?? 0));
+    } catch (error) {
+      this.logger.error(`countFailedSubmittedAttempts: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * EP-LMS #3 — reopen the exam's-course enrollment for auto re-study (status -> in_progress).
+   * enrollments.employee_id is an employees.id, NOT a users.id, so map users.id -> employees.id
+   * via employees.user_id. Idempotent: only rows not already in_progress are touched (RETURNING
+   * then signals a real reopen). Reopens even a 'completed' enrollment — a repeated exam failure
+   * means certification is lost and the course must be re-studied.
+   */
+  async reopenEnrollmentForExam(
+    examId: number,
+    userId: number,
+  ): Promise<Result<{ courseId: number | null; reopened: boolean }>> {
+    try {
+      const courseRows = await exec(sql`SELECT course_id FROM lms_exams WHERE id = ${examId} LIMIT 1`);
+      const courseId = courseRows.length ? Number(courseRows[0].course_id) : null;
+      if (courseId === null || !Number.isInteger(courseId)) return Ok({ courseId: null, reopened: false });
+      const upd = await exec(sql`
+        UPDATE enrollments
+        SET status = 'in_progress', updated_at = NOW()
+        WHERE course_id = ${courseId}
+          AND employee_id = (SELECT id FROM employees WHERE user_id = ${userId} LIMIT 1)
+          AND status IS DISTINCT FROM 'in_progress'
+        RETURNING id
+      `);
+      return Ok({ courseId, reopened: upd.length > 0 });
+    } catch (error) {
+      this.logger.error(`reopenEnrollmentForExam: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * EP-LMS #3 — resolve auto re-teach alert recipients: the failing user's active card
+   * mentors (lms_card_mentors via users.card_id; course-scoped OR global) plus every HR
+   * manager (users.role = 'HR_MANAGER', matched case-insensitively — role is stored lowercase).
+   */
+  async findReTeachRecipients(
+    examId: number,
+    userId: number,
+  ): Promise<Result<{ mentorIds: number[]; hrIds: number[] }>> {
+    try {
+      const mentors = await exec(sql`
+        SELECT DISTINCT m.mentor_user_id AS uid
+        FROM lms_card_mentors m
+        JOIN users u ON u.card_id = m.card_id
+        WHERE u.id = ${userId}
+          AND m.is_active = true
+          AND (m.course_id IS NULL OR m.course_id = (SELECT course_id FROM lms_exams WHERE id = ${examId}))
+      `);
+      const hr = await exec(sql`SELECT id AS uid FROM users WHERE UPPER(role) = 'HR_MANAGER'`);
+      const mentorIds = mentors.map(x => Number(x.uid)).filter(n => Number.isInteger(n) && n > 0);
+      const hrIds = hr.map(x => Number(x.uid)).filter(n => Number.isInteger(n) && n > 0);
+      return Ok({ mentorIds, hrIds });
+    } catch (error) {
+      this.logger.error(`findReTeachRecipients: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /**
+   * EP-LMS #3 — single multi-row INSERT of auto re-teach notifications. Mirrors the
+   * rasporyazhenie-escalation.cron column set (user_id/type/title/body/is_read NOT NULL,
+   * reference_id/reference_type/priority optional). No-op on empty input.
+   */
+  async insertReTeachNotifications(rows: ReTeachNotificationRow[]): Promise<Result<number>> {
+    try {
+      if (!Array.isArray(rows) || rows.length === 0) return Ok(0);
+      const values = rows.map(r => sql`(${r.userId}, ${r.type}, ${r.title}, ${r.body}, false, ${r.referenceId}, ${r.referenceType}, ${r.priority}, NOW())`);
+      await exec(sql`
+        INSERT INTO notifications
+          (user_id, type, title, body, is_read, reference_id, reference_type, priority, created_at)
+        VALUES ${sql.join(values, sql`, `)}
+      `);
+      return Ok(rows.length);
+    } catch (error) {
+      this.logger.error(`insertReTeachNotifications: ${(error as Error).message}`);
+      return Err((error as Error).message);
     }
   }
 }

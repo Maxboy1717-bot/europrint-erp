@@ -52,3 +52,11 @@ export const LMS_MAX_SCORE_PCT = 100;
  * Minimum allowed score_pct value (percentage, inclusive lower bound).
  */
 export const LMS_MIN_SCORE_PCT = 0;
+
+/**
+ * EP-LMS #3 — auto re-teach trigger. Number of FAILED (passed=false, status='submitted')
+ * exam attempts on ONE exam by one user after which the course enrollment auto-reopens
+ * to in_progress (no supervisor approval) and mentor + HR are notified.
+ * Vision '2 marta yiqilsa auto qayta-oqish' (vision-1000-answers/12-lms.md #3) fixes this at 2.
+ */
+export const LMS_AUTO_RETEACH_FAIL_THRESHOLD = 2;
