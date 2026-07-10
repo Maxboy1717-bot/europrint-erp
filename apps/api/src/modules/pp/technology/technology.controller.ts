@@ -69,6 +69,20 @@ const RouteDto = z.object({
 
 
 
+// EP-PP-126 (§07 #132) — Konstruktor/dizayn bosqichi (chizma+qolip) marshrutda: qo'shish + holat/davomiylik.
+const ConstructionPhaseDto = z.object({
+  opSeq: z.coerce.number().int().optional(),
+  operation: z.string().min(1).max(100).optional(),
+  machineId: z.coerce.number().int().positive().optional(),
+  minRazryad: z.coerce.number().int().optional(),
+  status: z.enum(['not_started', 'drawing', 'mold_making', 'completed']).optional(),
+  durationMinutes: z.coerce.number().int().nonnegative().optional(),
+});
+const UpdateConstructionPhaseDto = z.object({
+  status: z.enum(['not_started', 'drawing', 'mold_making', 'completed']).optional(),
+  durationMinutes: z.coerce.number().int().nonnegative().optional(),
+});
+
 @ApiTags('Technology')
 @ApiBearerAuth()
 @ApiThrottle()
@@ -309,6 +323,27 @@ export class TechnologyController {
     const dto = RouteDto.parse(body);
     const r = await this.svc.addRoute(id, dto);
     if (!r.ok) throw new HttpException(String(r.error), HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  // ── EP-PP-126 (§07 #132) — Konstruktor/dizayn bosqichi (chizma+qolip) marshrutda ──
+  @Post('cards/:id/construction-phase')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Add the construction/design phase (drawing+mold) to a card route — EP-PP-126' })
+  async addConstructionPhase(@Param('id') id: string, @Body() body: unknown) {
+    const dto = ConstructionPhaseDto.parse(body);
+    const r = await this.svc.addConstructionPhase(id, dto);
+    if (!r.ok) throw new HttpException(r.error.message, HttpStatus.BAD_REQUEST);
+    return r.data;
+  }
+
+  @Put('routes/:routeId/construction-phase')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Update construction-phase status/duration (drawing→mold→completed) — EP-PP-126' })
+  async updateConstructionPhase(@Param('routeId') routeId: string, @Body() body: unknown) {
+    const dto = UpdateConstructionPhaseDto.parse(body);
+    const r = await this.svc.updateConstructionPhase(routeId, dto);
+    if (!r.ok) throw new HttpException(r.error.message, r.error.code === 'NOT_FOUND' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST);
     return r.data;
   }
 

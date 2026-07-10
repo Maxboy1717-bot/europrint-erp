@@ -382,6 +382,41 @@ export class TechnologyRepository {
     } catch (e) { return Err(fkOrRaw(e)); }
   }
 
+  // EP-PP-126 (§07 #132) — Konstruktor/dizayn bosqichi (chizma+qolip) marshrutga, ishlab-chiqarish
+  // oplaridan OLDIN qo'shiladi: is_construction_phase=true, o'z holati (status) va rejalashtirilgan
+  // davomiyligi (daqiqa) bilan. Oddiy oplar tegilmaydi (is_construction_phase=false default).
+  async addConstructionPhase(cardId: string, d: { opSeq?: number; operation?: string; machineId?: number; minRazryad?: number; status?: string; durationMinutes?: number }): Promise<Result<Row>> {
+    try {
+      const r = await db.execute(sql`
+        INSERT INTO tech_card_routes
+          (technology_card_id, op_seq, operation, machine_id, min_razryad, is_core,
+           is_construction_phase, construction_status, construction_duration_min)
+        VALUES
+          (${parseInt(cardId, 10)}, ${d.opSeq ?? 0}, ${d.operation ?? 'Konstruktor: chizma+qolip'},
+           ${d.machineId ?? null}, ${d.minRazryad ?? null}, false,
+           true, ${d.status ?? 'not_started'}::construction_phase_status, ${d.durationMinutes ?? null})
+        RETURNING *`);
+      const row = ((r as { rows?: Row[] }).rows ?? [])[0];
+      return row ? Ok(row) : Err('Konstruktor bosqichi qoʻshilmadi');
+    } catch (e) { return Err(fkOrRaw(e)); }
+  }
+
+  // EP-PP-126 (§07 #132) — konstruktor bosqichi holati/davomiyligini yangilash (chizma→qolip→tayyor).
+  // Faqat konstruktor-bosqich qatorlariga ta'sir qiladi; COALESCE bilan berilmagan maydon o'zgarmaydi.
+  async updateConstructionPhase(routeId: string, d: { status?: string; durationMinutes?: number }): Promise<Result<Row>> {
+    try {
+      const r = await db.execute(sql`
+        UPDATE tech_card_routes SET
+          construction_status = COALESCE(${d.status ?? null}::construction_phase_status, construction_status),
+          construction_duration_min = COALESCE(${d.durationMinutes ?? null}, construction_duration_min)
+        WHERE id = ${parseInt(routeId, 10)} AND is_construction_phase = true
+        RETURNING *`);
+      const row = ((r as { rows?: Row[] }).rows ?? [])[0];
+      if (!row) return Err(AppErr('NOT_FOUND', 'Konstruktor bosqichi topilmadi'));
+      return Ok(row);
+    } catch (e) { return Err(String(e)); }
+  }
+
   async getVersions(cardId: string): Promise<Result<object[]>> {
     try {
       const r = await db.execute(sql`SELECT id, version, changed_by, changed_at FROM tech_card_versions WHERE technology_card_id = ${parseInt(cardId, 10)} ORDER BY version DESC`);

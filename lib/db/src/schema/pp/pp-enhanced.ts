@@ -577,6 +577,9 @@ export const insertTechCardBomSchema = createInsertSchema(techCardBom).omit({ id
 export type TechCardBom = typeof techCardBom.$inferSelect;
 export type InsertTechCardBom = z.infer<typeof insertTechCardBomSchema>;
 
+// EP-PP-126 (§07 #132) — Konstruktor bosqichi marshrut holati (chizma → qolip → tayyor).
+export const constructionPhaseStatus = pgEnum("construction_phase_status", ["not_started", "drawing", "mold_making", "completed"]);
+
 // Marshrut (EP-PP-032..036) — 10/20/30 ops; machine bind + alt + norm + setup + scrap + min razryad.
 export const techCardRoutes = pgTable("tech_card_routes", {
   id: serial("id").primaryKey(),
@@ -596,6 +599,10 @@ export const techCardRoutes = pgTable("tech_card_routes", {
   operationSubtype: varchar("operation_subtype", { length: 30 }),
   materialId: integer("material_id"),
   isCore: boolean("is_core").default(false),
+  // EP-PP-126 (§07 #132) — Konstruktor/dizayn bosqichi (chizma+qolip): oldindan, alohida holat + davomiylik.
+  isConstructionPhase: boolean("is_construction_phase").notNull().default(false),
+  constructionStatus: constructionPhaseStatus("construction_status"),
+  constructionDurationMin: integer("construction_duration_min"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
