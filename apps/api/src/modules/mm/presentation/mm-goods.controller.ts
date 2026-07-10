@@ -20,6 +20,7 @@ import { MmGoodsService } from '../application/mm-goods.service';
 import {
   MmCreateGoodsReceiptSchema, MmCreateGoodsReceiptDto,
   MmUpdateGoodsReceiptSchema, MmUpdateGoodsReceiptDto,
+  MmAssignReceiptLocationSchema, MmAssignReceiptLocationDto,
   MmCreateGoodsIssueSchema, MmCreateGoodsIssueDto,
   MmUpdateGoodsIssueSchema, MmUpdateGoodsIssueDto,
 } from '../dto/mm.dto';
@@ -71,6 +72,16 @@ export class MmGoodsController {
   @Roles(...MM_WRITE_ROLES)
   async postGoodsReceipt(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.postGoodsReceipt(safeInt(id, 0)));
+  }
+
+  @ApiOperation({ summary: 'Assign warehouse location (zone/bin) to a goods-receipt line — required before confirm (kirim tasdiqlash, vision 10-wms#5)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Item not found or zone/bin invalid' })
+  @Patch('goods-receipts/items/:itemId/location')
+  @UsePipes(new ZodValidationPipe(MmAssignReceiptLocationSchema))
+  @Roles(...MM_WRITE_ROLES)
+  async assignReceiptItemLocation(@Param('itemId') itemId: string, @Body() body: MmAssignReceiptLocationDto) {
+    return unwrapOrThrow(await this.svc.assignReceiptItemLocation(safeInt(itemId, 0), body.zone_id, body.bin_location_id ?? null));
   }
 
   @ApiOperation({ summary: 'Update goods receipt' })

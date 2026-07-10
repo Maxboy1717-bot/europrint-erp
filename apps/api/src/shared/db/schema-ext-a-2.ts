@@ -40,6 +40,9 @@ export const mm_goods_receipt_items = pgTable('mm_goods_receipt_items', {
   ordered_qty:   numeric('ordered_qty', { precision: 15, scale: 4 }).default('0'),
   received_qty:  numeric('received_qty', { precision: 15, scale: 4 }).default('0'),
   batch_number:  text('batch_number'),
+  // vision 10-wms#5: receipt-location confirm gate — nullable FK to warehouse_zones / warehouse_bins
+  zone_id:         integer('zone_id'),
+  bin_location_id: integer('bin_location_id'),
   created_at:    timestamp('created_at').defaultNow(),
 });
 

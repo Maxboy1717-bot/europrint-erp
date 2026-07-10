@@ -49,9 +49,18 @@ export const MmCreateGoodsReceiptSchema = z.object({
     material_id:  z.number().int().positive(),
     quantity:     z.number().positive(),
     received_qty: z.number().nonnegative().optional(),
+    zone_id:         z.number().int().positive().optional(),        // vision 10-wms#5: FK warehouse_zones
+    bin_location_id: z.number().int().positive().optional(),        // vision 10-wms#5: FK warehouse_bins
   })).optional(),
 });
 export type MmCreateGoodsReceiptDto = z.infer<typeof MmCreateGoodsReceiptSchema>;
+
+// vision 10-wms#5: assign a real zone (+optional bin) to a draft receipt line so it can be confirmed.
+export const MmAssignReceiptLocationSchema = z.object({
+  zone_id:         z.number().int().positive(),
+  bin_location_id: z.number().int().positive().optional(),
+});
+export type MmAssignReceiptLocationDto = z.infer<typeof MmAssignReceiptLocationSchema>;
 
 export const MmUpdateGoodsReceiptSchema = z.object({
   status:        z.enum(['draft', 'pending', 'approved', 'rejected']).optional(),

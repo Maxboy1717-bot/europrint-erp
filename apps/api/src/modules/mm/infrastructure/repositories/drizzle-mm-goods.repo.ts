@@ -6,6 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   queryGoodsReceipts, queryGoodsReceipt, execCreateGoodsReceipt, execInsertGoodsReceiptItem,
+  execCountReceiptItemsMissingLocation, execAssignReceiptItemLocation,
   execUpdateGoodsReceipt, execDeleteGoodsReceipt, execPostGoodsReceiptStock,
   queryGoodsIssues, queryGoodsIssue, execCreateGoodsIssue, execInsertGoodsIssueItem,
   execUpdateGoodsIssue, execDeleteGoodsIssue,
@@ -28,8 +29,18 @@ export class DrizzleMmGoodsRepository {
     return execCreateGoodsReceipt(purchase_order_id, received_by, notes, delivery_note, warehouse_id);
   }
 
-  async insertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown): Promise<void> {
-    return execInsertGoodsReceiptItem(receiptId, material_id, ordered_qty, received_qty, batch_number);
+  async insertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown, zone_id?: unknown, bin_location_id?: unknown): Promise<void> {
+    return execInsertGoodsReceiptItem(receiptId, material_id, ordered_qty, received_qty, batch_number, undefined, zone_id, bin_location_id);
+  }
+
+  /** vision 10-wms#5: how many lines of this receipt still lack a zone (address). >0 blocks confirm. */
+  async countReceiptItemsMissingLocation(gid: number): Promise<number> {
+    return execCountReceiptItemsMissingLocation(gid);
+  }
+
+  /** vision 10-wms#5: assign a real zone (+optional bin) to a draft receipt line; null when item/zone/bin invalid. */
+  async assignReceiptItemLocation(itemId: number, zoneId: number, binLocationId: number | null): Promise<Record<string, unknown> | null> {
+    return execAssignReceiptItemLocation(itemId, zoneId, binLocationId);
   }
 
   /**

@@ -74,6 +74,8 @@ export async function queryGoodsReceipt(gid: number): Promise<{ receipt: Row | n
     ordered_qty:     mm_goods_receipt_items.ordered_qty,
     received_qty:    mm_goods_receipt_items.received_qty,
     batch_number:    mm_goods_receipt_items.batch_number,
+    zone_id:         mm_goods_receipt_items.zone_id,
+    bin_location_id: mm_goods_receipt_items.bin_location_id,
     material_name:   mm_materials_ext.name,
     unit_of_measure: mm_materials_ext.unit_of_measure,
   })
@@ -131,13 +133,46 @@ export async function execPostGoodsReceiptStock(receiptId: number): Promise<numb
   return Array.isArray(r) ? r.length : 0;
 }
 
-export async function execInsertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown, unit?: unknown): Promise<void> {
+export async function execInsertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown, unit?: unknown, zone_id?: unknown, bin_location_id?: unknown): Promise<void> {
   // Base goods_receipt_items: gr_id/raw_material_id, numeric ordered_qty/received_qty, NOT NULL unit.
+  // zone_id/bin_location_id (vision 10-wms#5) are nullable — a location-less line stays DRAFT until assigned.
   await typedExecute<Row>(sql`
-    INSERT INTO goods_receipt_items (gr_id, raw_material_id, ordered_qty, received_qty, unit, batch_number)
+    INSERT INTO goods_receipt_items (gr_id, raw_material_id, ordered_qty, received_qty, unit, batch_number, zone_id, bin_location_id)
     VALUES (${receiptId as number}, ${material_id as number}, ${Number(ordered_qty ?? 0)}, ${Number(received_qty ?? 0)},
-      ${(unit as string | null) ?? 'dona'}, ${(batch_number as string | null) ?? null})
+      ${(unit as string | null) ?? 'dona'}, ${(batch_number as string | null) ?? null},
+      ${(zone_id as number | null) ?? null}, ${(bin_location_id as number | null) ?? null})
   `);
+}
+
+/**
+ * Confirm-gate (vision 10-wms#5): count receipt lines that have no zone (address) yet. A receipt with
+ * >0 location-less lines cannot be posted/confirmed — it stays DRAFT until the warehouse worker assigns
+ * at least a zone-level location to every line.
+ */
+export async function execCountReceiptItemsMissingLocation(gid: number): Promise<number> {
+  const rows = await typedExecute<{ missing: number }>(sql`
+    SELECT count(*)::int AS missing
+    FROM goods_receipt_items
+    WHERE gr_id = ${gid} AND zone_id IS NULL
+  `);
+  return Number(rows[0]?.missing ?? 0);
+}
+
+/**
+ * Assign a real zone (+optional bin) to a single draft receipt line. Freeform is not allowed
+ * (vision 10-wms#5): the EXISTS guards reject any zone/bin id that is not present in the master-data
+ * tables, so an invalid or made-up location updates 0 rows and returns null.
+ */
+export async function execAssignReceiptItemLocation(itemId: number, zoneId: number, binLocationId: number | null): Promise<Row | null> {
+  const rows = await typedExecute<Row>(sql`
+    UPDATE goods_receipt_items
+    SET zone_id = ${zoneId}, bin_location_id = ${binLocationId}
+    WHERE id = ${itemId}
+      AND EXISTS (SELECT 1 FROM warehouse_zones WHERE id = ${zoneId})
+      AND (${binLocationId}::int IS NULL OR EXISTS (SELECT 1 FROM warehouse_bins WHERE id = ${binLocationId}))
+    RETURNING id, gr_id, zone_id, bin_location_id
+  `);
+  return rows[0] ?? null;
 }
 
 export async function execUpdateGoodsReceipt(gid: number, status: unknown, notes: unknown): Promise<Row[]> {

@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { DrizzleMmGoodsRepository } from '../infrastructure/repositories/drizzle-mm-goods.repo';
@@ -35,15 +35,27 @@ export class MmGoodsService {
       // The DTO sends `quantity`; map it to received_qty/ordered_qty (was always 0 — received_qty key never sent).
       await Promise.all(items.map(item => {
         const qty = item.received_qty ?? item.quantity ?? 0;
-        return this.repo.insertGoodsReceiptItem(receipt.id, item.material_id, item.ordered_qty ?? qty, qty, item.batch_number);
+        return this.repo.insertGoodsReceiptItem(receipt.id, item.material_id, item.ordered_qty ?? qty, qty, item.batch_number, item.zone_id ?? null, item.bin_location_id ?? null);
       }));
       return receipt;
     });
   }
 
-  /** #09 xarid->kirim: post received quantities into canonical warehouse_stock + mark receipt received. */
+  /**
+   * #09 xarid->kirim: post received quantities into canonical warehouse_stock + mark receipt received.
+   * vision 10-wms#5 confirm-gate: a receipt with any location-less line (zone_id IS NULL) cannot be
+   * posted/confirmed — it stays DRAFT until the warehouse worker assigns at least a zone-level location.
+   */
   async postGoodsReceipt(gid: number) {
-    return safeCall(async () => this.repo.postGoodsReceipt(gid));
+    return safeCall(async () => {
+      const missingLocation = await this.repo.countReceiptItemsMissingLocation(gid);
+      if (missingLocation > 0) {
+        throw new ConflictException(
+          `Manzilsiz kirim akti tasdiqlanmaydi: ${missingLocation} qatorda joylashuv (zona) ko'rsatilmagan — omborchi kamida zona darajasida manzil kiritishi shart.`,
+        );
+      }
+      return this.repo.postGoodsReceipt(gid);
+    });
   }
 
   async updateGoodsReceipt(gid: number, status: unknown, notes: unknown) {
@@ -52,6 +64,19 @@ export class MmGoodsService {
 
   async deleteGoodsReceipt(gid: number) {
     return safeCall(async () => this.repo.deleteGoodsReceipt(gid));
+  }
+
+  /**
+   * vision 10-wms#5: assign a real warehouse location (zone + optional bin) to a draft receipt line so
+   * the receipt can later be confirmed. Freeform is rejected at the repo/DB layer (FK/EXISTS): an item
+   * that is missing or a zone/bin that does not exist yields null -> NOT_FOUND.
+   */
+  async assignReceiptItemLocation(itemId: number, zone_id: number, bin_location_id: number | null) {
+    return safeCall(async () => {
+      const row = await this.repo.assignReceiptItemLocation(itemId, zone_id, bin_location_id);
+      if (!row) throw new NotFoundException("Kirim qatori topilmadi yoki ko'rsatilgan zona/yacheyka mavjud emas.");
+      return row;
+    });
   }
 
   async listGoodsIssues(status: string | undefined, lim: number, off: number) {
