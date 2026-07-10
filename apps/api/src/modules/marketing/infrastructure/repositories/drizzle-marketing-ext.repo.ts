@@ -711,4 +711,100 @@ export class DrizzleMarketingExtRepository {
       return result;
     });
   }
+
+  /**
+   * Per-customer order money-value trend — vision 14-marketing #12 "kichiklashgan
+   * buyurtma" signal (dup #55/#63). Splits each customer's orders chronologically
+   * (order_date, falling back to created_at since order_date is largely NULL in the
+   * live data) into a RECENT window (last `recentWindow` orders) and the prior
+   * HISTORICAL orders, and returns ONLY customers whose recent average total_amount
+   * is BELOW their historical average — i.e. the MONEY value of their orders is
+   * shrinking (not size/quantity). Honest-empty when none qualify.
+   *
+   * NOTE: per-partition window functions + FILTER are not expressible in the Drizzle
+   * query builder, so this uses parameterized raw SQL (Qoida 4). recentWindow/minOrders
+   * are numeric constants supplied by the service — no injection surface.
+   */
+  async getOrderValueTrend(recentWindow: number, minOrders: number): Promise<Result<{
+    customerId: number;
+    customerName: string;
+    orderCount: number;
+    recentAvg: number;
+    historicalAvg: number;
+    declinePct: number;
+  }[]>> {
+    return safeCall(async () => {
+      type Row = {
+        customer_id: number;
+        customer_name: string | null;
+        order_count: number | string;
+        recent_avg: string | null;
+        historical_avg: string | null;
+        decline_pct: string | null;
+      };
+      const rows = await typedExecute<Row>(sql`
+        WITH ordered AS (
+          SELECT so.customer_id,
+                 so.total_amount::numeric AS amount,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY so.customer_id
+                   ORDER BY COALESCE(so.order_date, so.created_at::date) DESC, so.id DESC
+                 ) AS rn_desc,
+                 COUNT(*) OVER (PARTITION BY so.customer_id) AS order_count
+          FROM sales_orders so
+          WHERE so.deleted_at IS NULL
+            AND so.customer_id IS NOT NULL
+            AND so.total_amount IS NOT NULL
+        ),
+        agg AS (
+          SELECT customer_id,
+                 MAX(order_count) AS order_count,
+                 AVG(amount) FILTER (WHERE rn_desc <= ${recentWindow}) AS recent_avg,
+                 AVG(amount) FILTER (WHERE rn_desc > ${recentWindow}) AS historical_avg
+          FROM ordered
+          WHERE order_count >= ${minOrders}
+          GROUP BY customer_id
+        )
+        SELECT a.customer_id,
+               c.name AS customer_name,
+               a.order_count,
+               a.recent_avg,
+               a.historical_avg,
+               ROUND(((a.historical_avg - a.recent_avg) / NULLIF(a.historical_avg, 0) * 100)::numeric, 1) AS decline_pct
+        FROM agg a
+        LEFT JOIN sd_customers c ON c.id = a.customer_id
+        WHERE a.recent_avg < a.historical_avg
+        ORDER BY decline_pct DESC
+        LIMIT 50
+      `);
+
+      return (Array.isArray(rows) ? rows : []).map((r) => ({
+        customerId: Number(r.customer_id),
+        customerName: r.customer_name ?? `#${r.customer_id}`,
+        orderCount: Number(r.order_count),
+        recentAvg: Number(r.recent_avg ?? 0),
+        historicalAvg: Number(r.historical_avg ?? 0),
+        declinePct: Number(r.decline_pct ?? 0),
+      }));
+    });
+  }
+
+  /**
+   * Optional owner-tunable minimum decline-% for the "kichiklashgan buyurtma" signal
+   * (marketing_settings KV, key 'marketing.order_trend.min_decline_pct'). Defaults to
+   * 0 when the key is absent or non-numeric — the base signal needs no threshold.
+   */
+  async getOrderTrendMinDeclinePct(): Promise<Result<number>> {
+    return safeCall(async () => {
+      type Row = { value: string | null };
+      const rows = await typedExecute<Row>(sql`
+        SELECT value FROM marketing_settings
+        WHERE key = 'marketing.order_trend.min_decline_pct'
+        LIMIT 1
+      `);
+      const raw = Array.isArray(rows) && rows[0] ? rows[0].value : null;
+      const parsed = raw !== null ? Number(raw) : NaN;
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    });
+  }
 }

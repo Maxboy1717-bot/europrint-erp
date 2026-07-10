@@ -18,6 +18,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { unwrapOrBadRequest, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
 import { MarketingExtService } from '../application/marketing-ext.service';
+import { OrderTrendService } from '../application/order-trend.service';
 import { LeadsService } from '../leads/leads.service';
 import {
   CreateSocialPostDtoSchema, CreateSocialPostDto,
@@ -53,6 +54,7 @@ export class MarketingAnalyticsController {
   constructor(
     private readonly svc: MarketingExtService,
     private readonly leadsSvc: LeadsService,
+    private readonly orderTrendSvc: OrderTrendService,
   ) {}
 
   @Get('social/posts')
@@ -209,6 +211,15 @@ export class MarketingAnalyticsController {
   @ApiResponse({ status: 200, description: 'OK' })
   async getChannelRoi() {
     return unwrapOrInternal(await this.svc.getChannelRoi());
+  }
+
+  @Get('analytics/order-trend')
+  @ApiOperation({
+    summary: "'Kichiklashgan buyurtma' signali — pul qiymati kamaygan mijozlar (vision 14 #12)",
+  })
+  @ApiResponse({ status: 200, description: 'OK' })
+  async getOrderTrend() {
+    return unwrapOrInternal(await this.orderTrendSvc.getOrderValueTrend());
   }
 
   @Get('funnel')

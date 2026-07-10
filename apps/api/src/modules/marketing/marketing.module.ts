@@ -16,6 +16,7 @@ import { MarketingContentController } from './presentation/marketing-content.con
 import { MarketingAnalyticsController, MarketingAnalyticsStubsController } from './presentation/marketing-analytics.controller';
 import { MarketingGroup2Controller } from './presentation/marketing-group2.controller';
 import { MarketingExtService } from './application/marketing-ext.service';
+import { OrderTrendService } from './application/order-trend.service';
 import { MarketingGroup2Service } from './application/marketing-group2.service';
 import { DrizzleMarketingExtRepository } from './infrastructure/repositories/drizzle-marketing-ext.repo';
 import { DrizzleMarketingGroup2Repository } from './infrastructure/repositories/drizzle-marketing-group2.repo';
@@ -59,6 +60,7 @@ const repositories = [
     ...repositories,
     DrizzleMarketingExtRepository,
     MarketingExtService,
+    OrderTrendService,
     DrizzleMarketingGroup2Repository,
     MarketingGroup2Service,
     LeadsRepository,
