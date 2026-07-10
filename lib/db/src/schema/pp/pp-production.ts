@@ -853,6 +853,38 @@ export const insertProductionStatusHistorySchema = createInsertSchema(production
 export type ProductionStatusHistory = typeof productionStatusHistory.$inferSelect;
 export type InsertProductionStatusHistory = z.infer<typeof insertProductionStatusHistorySchema>;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// vision 07-pp#49 — Director "holat formulasi" PP reja% smena/kunlik SNAPSHOT.
+// Director dashboardi reja%-ni real-time EMAS, muzlatilgan snapshotdan o'qiydi (har
+// smena yopilganda / kunlik cron yozadi). MES offline bo'lsa oxirgi snapshot "offline"
+// belgisi bilan ko'rsatiladi (A5). Formula qat'iy: actual/planned*100. #20
+// (pp_plan_fact_entries) dan ALOHIDA — bu Director uchun agregat, offline-xavfsiz.
+// Migration: pp-plan-snapshots-director-status-2026-07-11.sql (append-only; Director
+// eng oxirgi captured_at qatorini o'qiydi). date/numericMoney/serial/index import allaqachon mavjud.
+// ─────────────────────────────────────────────────────────────────────────────
+export const ppPlanSnapshots = pgTable("pp_plan_snapshots", {
+  id: serial("id").primaryKey(),
+  snapshotDate: date("snapshot_date").notNull(),
+  periodType: varchar("period_type", { length: 10 }).notNull().default("daily"),
+  shiftLabel: varchar("shift_label", { length: 20 }),
+  workCenterId: integer("work_center_id"),
+  plannedQty: numericMoney("planned_qty").notNull().default(0),
+  actualQty: numericMoney("actual_qty").notNull().default(0),
+  planPercent: numericMoney("plan_percent").notNull().default(0),
+  sessionCount: integer("session_count").notNull().default(0),
+  source: varchar("source", { length: 20 }).notNull().default("shift_close"),
+  capturedAt: timestamp("captured_at").notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_plan_snapshots_period_captured").on(t.periodType, t.capturedAt),
+]);
+
+export const insertPpPlanSnapshotSchema = createInsertSchema(ppPlanSnapshots).omit({
+  id: true,
+} as never);
+
+export type PpPlanSnapshot = typeof ppPlanSnapshots.$inferSelect;
+export type InsertPpPlanSnapshot = z.infer<typeof insertPpPlanSnapshotSchema>;
+
 // ─── PP MATERIAL RESERVATIONS (vision 07-pp#30 / EP-PP-068) ────────────────────
 // PP-owned MRP priority-reservation ledger: which production order gets first claim
 // on a scarce material, ranked by priority (1=Shoshilinch..4=Past) then FIFO

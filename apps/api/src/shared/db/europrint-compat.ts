@@ -54,7 +54,7 @@ export {
 
 // Marketing GURUH 2: tables from lib/db dist, 1 new local (calendar)
 // marketingBudgetItems has `name` col — used by FE MarketingBudget.tsx
-export { blogPosts, marketingBudgetItems, marketingBudgetLines, marketingLeadContacts, sdCustomerCompetitors } from '@workspace/db';
+export { blogPosts, marketingBudgetItems, marketingBudgetLines, marketingLeadContacts, sdCustomerCompetitors, ppPlanSnapshots } from '@workspace/db';
 export { marketingCalendarEvents } from './schema-marketing-group2';
 
 // P36 — AI-fit per-card scorer (+ sibling CKP tables)

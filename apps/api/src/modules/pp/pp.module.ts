@@ -6,6 +6,13 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+// Director PP plan% shift/daily snapshot (pp_plan_snapshots, vision 07-pp#49) — the
+// Director 'holat formulasi' reads plan% from a frozen, offline-safe snapshot.
+import { PpPlanSnapshotsController } from './plan-snapshots/pp-plan-snapshots.controller';
+import { PpPlanSnapshotsService } from './plan-snapshots/pp-plan-snapshots.service';
+import { PP_PLAN_SNAPSHOTS_REPO } from './plan-snapshots/i-pp-plan-snapshots.repo';
+import { DrizzlePpPlanSnapshotsRepository } from './plan-snapshots/drizzle-pp-plan-snapshots.repo';
+import { PpPlanSnapshotCron } from './plan-snapshots/pp-plan-snapshot.cron';
 import { PpOrdersController } from './presentation/pp-orders.controller';
 import { PpBomController } from './presentation/pp-bom.controller';
 import { PpRoutingController } from './presentation/pp-routing.controller';
@@ -164,6 +171,8 @@ const listeners = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot()],
   controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpQueueController, PpIntelligenceController,
+    // Director PP plan% snapshot surface (vision 07-pp#49)
+    PpPlanSnapshotsController,
     // Vision 07-pp#30: material reserve priority + FIFO tie-break + director override
     PpMaterialReservationsController,
     // PA3-17 Wave 5: merged from modules/technology/
@@ -183,6 +192,10 @@ const listeners = [
     PpOeeController,
   ],
   providers: [
+    // Director PP plan% snapshot (vision 07-pp#49): service + repo + daily-close cron
+    PpPlanSnapshotsService,
+    { provide: PP_PLAN_SNAPSHOTS_REPO, useClass: DrizzlePpPlanSnapshotsRepository },
+    PpPlanSnapshotCron,
     // Vision 07-pp#30: material-reservation ledger (priority + FIFO tie-break + director override)
     PpMaterialReservationsService,
     { provide: PP_MATERIAL_RESERVATIONS_REPO, useClass: DrizzlePpMaterialReservationsRepository },
