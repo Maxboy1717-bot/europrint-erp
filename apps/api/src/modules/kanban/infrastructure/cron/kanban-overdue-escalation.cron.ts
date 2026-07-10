@@ -63,6 +63,19 @@ export class KanbanOverdueEscalationCron {
             `«${t}» vazifasi belgilangan muddatda bajarilmadi.`,
             'normal');
         }
+        // Vizyon §15 #72: kuzatuvchilarga FAQAT muhim hodisada (muddat o'tishi) xabar.
+        // owner/assigner yuqorida allaqachon xabar oldi — ular ro'yxatdan chiqariladi;
+        // oddiy ustun ko'chirish esa umuman xabar bermaydi ("faqat muhim hodisa").
+        const obs = await runQuery<{ user_id: number }>(sql`
+          SELECT user_id FROM kanban_observers WHERE card_id = ${String(row.id)}
+        `);
+        await Promise.all(obs.rows
+          .filter((o) => o.user_id !== row.owner_user_id && o.user_id !== row.assigner_user_id)
+          .map((o) => this.notify(
+            o.user_id, row.id, 'kanban_overdue',
+            'Kuzatayotgan vazifangiz muddati o\'tdi',
+            `«${t}» vazifasi belgilangan muddatda bajarilmadi.`,
+            'normal')));
       }));
     } catch (e) {
       this.logger.error(`escalateOverdue: ${(e as Error).message}`);

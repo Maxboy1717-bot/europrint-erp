@@ -381,6 +381,18 @@ export class DrizzleKanbanCardsRepository {
           message: completionReport ?? 'Karta muvaffaqiyatli yakunlandi',
         });
       }
+      // Vizyon §15 #72: kuzatuvchilarga FAQAT muhim hodisada (yakunlash) xabar —
+      // oddiy ustun ko'chirish jim qoladi. Har kuzatuvchiga bitta bildirishnoma
+      // (yakunlagan foydalanuvchining o'zi bundan mustasno). INSERT...SELECT —
+      // Drizzle boshqa jadvaldan SELECT bilan INSERT ni ifodalay olmaydi (Rule 4).
+      const obsTitle = `"${String(card.title)}" yakunlandi`;
+      const obsMsg   = completionReport ?? 'Karta yakunlandi';
+      await runQuery(sql`
+        INSERT INTO kanban_notifications (user_id, card_id, type, title, message)
+        SELECT o.user_id, ${cardId}, 'status_changed', ${obsTitle}, ${obsMsg}
+        FROM kanban_observers o
+        WHERE o.card_id = ${cardId} AND o.user_id <> ${userId}
+      `);
       return Ok(castTo<Record<string, unknown>>(rows.rows[0]));
     } catch (e) {
       return Err(String(e));
