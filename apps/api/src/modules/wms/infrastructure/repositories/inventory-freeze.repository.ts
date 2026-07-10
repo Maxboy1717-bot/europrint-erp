@@ -34,6 +34,29 @@ export class InventoryFreezeRepository implements IInventoryFreezeRepo {
     return Ok(r.data[0] ?? null);
   }
 
+  async findPreFreezeReservation(
+    warehouseId: number,
+    materialId: number,
+    frozenAt: Date | string,
+  ): Promise<Result<Row | null>> {
+    // #45 PP banki USTUN: faqat muzlatishdan OLDIN yaratilgan (created_at < frozen_at)
+    // AKTIV PP rezervi chiqimni "KUTMOQDA" qiladi; muzlatishdan keyin ochilgan rezerv =
+    // YANGI harakat -> hard-blok. warehouse_id + material_id aniq mos kelishi shart.
+    const r = await exec(sql`
+      SELECT id, reservation_number, material_id, warehouse_id, order_type,
+             order_id, production_order_id, status, created_at
+      FROM stock_reservations
+      WHERE UPPER(status) = 'ACTIVE'
+        AND warehouse_id = ${warehouseId}
+        AND material_id = ${materialId}
+        AND created_at < ${frozenAt}
+      ORDER BY created_at ASC
+      LIMIT 1
+    `);
+    if (!r.ok) return Err(r.error);
+    return Ok(r.data[0] ?? null);
+  }
+
   async createFreeze(input: FreezeZoneInput): Promise<Result<Row>> {
     const r = await exec(sql`
       INSERT INTO inventory_freeze_zones

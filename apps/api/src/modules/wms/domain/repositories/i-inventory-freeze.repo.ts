@@ -26,6 +26,16 @@ export interface IInventoryFreezeRepo {
    * Butun-zona muzlatishi (material_id IS NULL) har qanday materialni qamrab oladi.
    */
   findActiveFreeze(warehouseId: number, materialId: number): Promise<Result<Row | null>>;
+  /**
+   * #45 PP banki USTUN — muzlatishdan OLDIN (created_at < frozenAt) yaratilgan AKTIV PP
+   * rezervini qaytaradi (yo'q bo'lsa null). Bor bo'lsa chiqim "KUTMOQDA" (bloklanmaydi,
+   * rezerv bekor qilinmaydi); yo'q bo'lsa muzlatish hard-blok qiladi.
+   */
+  findPreFreezeReservation(
+    warehouseId: number,
+    materialId: number,
+    frozenAt: Date | string,
+  ): Promise<Result<Row | null>>;
   createFreeze(input: FreezeZoneInput): Promise<Result<Row>>;
   releaseFreeze(id: number, releasedBy: number | null): Promise<Result<Row | null>>;
   listFreezes(status?: string, warehouseId?: number): Promise<Result<Row[]>>;

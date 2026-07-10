@@ -25,6 +25,7 @@ function makeMockRepo(
 ): jest.Mocked<IInventoryFreezeRepo> {
   return {
     findActiveFreeze: jest.fn(async () => Ok(freeze)),
+    findPreFreezeReservation: jest.fn(async () => Ok(null)),
     createFreeze: jest.fn(),
     releaseFreeze: jest.fn(),
     listFreezes: jest.fn(),
@@ -76,6 +77,23 @@ describe('InventoryFreezeService.checkExitAllowed', () => {
       expect(res.data.blockCode).toBe('BLOCK_ZONE_FROZEN');
       expect(res.data.message).toContain('material #5');
     }
+  });
+
+  it('muzlatish + pre-freeze PP rezervi → KUTMOQDA (allowed=false, blockCode=null)', async () => {
+    const repo = makeMockRepo({ id: 7, material_id: null });
+    (repo.findPreFreezeReservation as jest.Mock).mockResolvedValue(Ok({ id: 1, created_at: '2026-07-03' }));
+    const svc = new InventoryFreezeService(repo);
+
+    const res = await svc.checkExitAllowed(11, 29);
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.data.allowed).toBe(false);
+      expect(res.data.status).toBe('KUTMOQDA');
+      expect(res.data.blockCode).toBeNull();
+      expect(res.data.message).toContain('KUTMOQDA');
+    }
+    expect(repo.findPreFreezeReservation).toHaveBeenCalledWith(11, 29, expect.anything());
   });
 
   it('repo xatosi (DB xato) → fail-open, chiqim TO\'XTATILMAYDI', async () => {
