@@ -136,6 +136,35 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
       `), 'DB_ERROR');
   }
 
+  /**
+   * Buyurtma sikl-vaqt (reja vs fakt) — item #113: har buyurtma uchun ketgan/qolgan kun.
+   * reja  = planned_cycle_days (start→delivery rejalashtirilgan davomiylik)
+   * fakt  = days_elapsed (start→bugun); days_remaining = delivery−bugun (manfiy = kechikkan).
+   * order_date jonli DB'da ko'p qatorda NULL → COALESCE(..., created_at::date) bilan real
+   * start sanaga tushamiz (getPlanFact'dagi NULL-xavfsizlik uslubi bilan bir xil). Bekor
+   * qilingan buyurtma (delivery_date NULL) status filtri + IS NOT NULL bilan chiqib ketadi.
+   */
+  async getOrderCycleTime(limit = 20): Promise<Result<Row[]>> {
+    return safeCall(async () =>
+      exec(sql`
+        SELECT
+          so.id,
+          so.order_number,
+          so.status,
+          COALESCE(so.order_date, so.created_at::date)                                AS start_date,
+          so.delivery_date::date                                                      AS delivery_date,
+          (so.delivery_date::date - COALESCE(so.order_date, so.created_at::date))::int AS planned_cycle_days,
+          (CURRENT_DATE - COALESCE(so.order_date, so.created_at::date))::int           AS days_elapsed,
+          (so.delivery_date::date - CURRENT_DATE)::int                                AS days_remaining,
+          (so.delivery_date::date < CURRENT_DATE)                                     AS is_overdue
+        FROM sales_orders so
+        WHERE so.status NOT IN ('cancelled','completed')
+          AND so.delivery_date IS NOT NULL
+        ORDER BY days_remaining ASC NULLS LAST
+        LIMIT ${limit}
+      `), 'DB_ERROR');
+  }
+
   /** Aktiv KPI definitsiyalar uchun N-kunlik haqiqiy trend (kpi_values dan). */
   async getStatTrends(days = 7): Promise<Result<Row[]>> {
     // period_date = varchar 'YYYY-MM-DD' — text taqqoslash to_char orqali

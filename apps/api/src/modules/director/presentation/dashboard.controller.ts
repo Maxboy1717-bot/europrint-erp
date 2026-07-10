@@ -91,6 +91,13 @@ export class DashboardController {
     return { data: await this.queries.getOrderProgress() };
   }
 
+  @Get('order-cycle-time')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Order cycle-time — elapsed/remaining days vs planned (reja vs fakt)' })
+  async getOrderCycleTime() {
+    return { data: await this.queries.getOrderCycleTime() };
+  }
+
   @Get('stat-trends')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
   @ApiOperation({ summary: 'Stat-regulation trend skeleton' })

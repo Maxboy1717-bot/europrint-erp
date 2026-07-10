@@ -168,6 +168,11 @@ export class DashboardQueryService {
     return r.ok && Array.isArray(r.data) ? r.data : [];
   }
 
+  async getOrderCycleTime(): Promise<Row[]> {
+    const r = await this.statRepo.getOrderCycleTime();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
+  }
+
   async getStatTrends(): Promise<Row[]> {
     const r = await this.statRepo.getStatTrends();
     return r.ok && Array.isArray(r.data) ? r.data : [];
