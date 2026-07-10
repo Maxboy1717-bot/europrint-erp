@@ -31,6 +31,21 @@ Specs live in `scratchpad/schema-specs/<m>__<n>.json` (migration .sql in newFile
   (schema-compat-4 productionSessions), #106 (pp-enhanced material_norms); pp #30/#124 (pp-production),
   #49 (pp.module), #125 (pp-enhanced). **pp #90 = DUP of pp#37** (both gang-runs) → mark satisfied/merge, not rebuild.
 
+## ITER-4 (2026-07-11): regen worked — 29 landed this wave
+- Regen workflow `wf_76be6944-45e` (stable anchors) → harvested **10 more**: qc#22 `e35f5249`, #67 `549f94d6`,
+  #39 `14c0414b`, #35 `695e6dd2`; wms#6 `5468930c`, #17 `bfd4770a`; mes#24 `5691aaa8`, #116 `a691a5c3`;
+  pp#30 `d8d314fd`, #125 `0d36ada9`. **29 landed this wave** (of 39 batch-1).
+- **⭐ RECURRING tsc-slip = new table not re-exported via the barrel.** qc#8 (`qcSupplierRegime` absent from
+  `@workspace/db`), pp#49 (`ppPlanSnapshots` absent from `@europrint/schemas`) — the Drizzle table is defined
+  in the schema file but the barrel index doesn't re-export it, so the repo's `import { X } from '@workspace/db'`
+  fails. FIX: add the re-export line to the barrel. ⭐ FUTURE build-spec agents MUST add the barrel re-export
+  for every new table (add to the stable-anchor instruction set).
+- **Batch-1 stragglers (9) for next iter:** tsc barrel-export: qc#8, pp#49. tsc Result-type (return Err(res.error)):
+  qc#26 (qc-dispatch-conclusion.service:70), mes#83 (mes-crew-members.service:26). tsc property: mes#108
+  (get-oee.handler:256 isTrainingSession not on session type — the VIEW/type needs the column). anchor-straggler
+  (re-run driver; siblings landed): qc#62 (qc.module import), mes#33 (mes-schema.ts import), pp#124 (pp.module
+  providers). edits=0 (regen returned empty — re-run 1 agent or hand-build): mes#106. pp#90 still = DUP of pp#37.
+
 ## Batch-1 (39 specs) — HARVEST in progress
 **Landed this wave: 18** (see below + PP/MES additions iter 2).
 PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
