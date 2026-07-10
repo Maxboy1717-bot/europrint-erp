@@ -152,6 +152,13 @@ export const productionSessions = pgTable('production_sessions', {
   // 08-mes #4 — sessiya BOSHLANGANDAGI norma versiyasi snapshot (retro-buzilmaslik).
   // NULL = hali snapshot qilinmagan / amaldagi norma yo'q. start-session.handler yozadi.
   normaVersion: integer('norma_version'),
+  // #116 (08-mes, EP-MES-066) — qog'oz formati (list A×B, mm) + gramm (g/m²) + kg (aniq material sarfi).
+  // Additive, nullable (operator per-sessiya kiritadi); NULL → mavjud sessiyalar regress emas.
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  formatA: decimal('format_a', { precision: 12, scale: 2 }),
+  formatB: decimal('format_b', { precision: 12, scale: 2 }),
+  gramm: decimal('gramm', { precision: 10, scale: 2 }),
+  kg: decimal('kg', { precision: 14, scale: 3 }),
 });
 
 // NOTE: convergence deferred (tier-1) — lib/db aiUsageLogs.userId is numeric but

@@ -172,3 +172,17 @@ export const MesMaterialConsumptionSchema = z.object({
   unit_of_measure: z.string().max(20).optional(),
 });
 export type MesMaterialConsumptionDto = z.infer<typeof MesMaterialConsumptionSchema>;
+
+// #116 (08-mes, EP-MES-066) — sessiyaga qog'oz formati (list A×B) + gramm + kg yoziladi (aniq material
+// sarfi). Barcha maydon ixtiyoriy (qisman yangilash) — repo COALESCE bilan faqat berilganini yozadi;
+// .refine kamida bitta maydon berilishini talab qiladi (bo'sh PATCH mantiqsiz).
+export const MesSetPaperFormatSchema = z.object({
+  format_a: z.number().positive().optional(), // list o'lchami A (mm)
+  format_b: z.number().positive().optional(), // list o'lchami B (mm)
+  gramm:    z.number().positive().optional(), // grammaj (g/m²)
+  kg:       z.number().positive().optional(), // haqiqiy material sarfi (kg)
+}).refine(
+  (v) => v.format_a != null || v.format_b != null || v.gramm != null || v.kg != null,
+  { message: 'Kamida bitta maydon kerak (format_a/format_b/gramm/kg)' },
+);
+export type MesSetPaperFormatDto = z.infer<typeof MesSetPaperFormatSchema>;

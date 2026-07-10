@@ -23,6 +23,11 @@ export class MesProductionSessionsService {
     return safeCall(async () => this.repo.getSession(id));
   }
 
+  /** #116 (EP-MES-066): sessiyaga qog'oz formati (A×B) + gramm + kg yozadi (aniq material sarfi). */
+  async setPaperFormat(sessionId: number, body: Record<string, unknown>) {
+    return safeCall(async () => this.repo.setPaperFormat(sessionId, body));
+  }
+
   /** GSD 3-bosqich (#9): joriy bosqichni yopib keyingisiga o'tadi (setup→main→teardown→done). */
   async advanceSessionStage(sessionId: number) {
     return safeCall(async () => this.repo.advanceSessionStage(sessionId));

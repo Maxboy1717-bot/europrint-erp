@@ -261,6 +261,36 @@ export class MesProductionSessionsRepository {
     }
   }
 
+  /**
+   * #116 (EP-MES-066) — qog'oz formati (list A×B, mm) + gramm (g/m²) + kg (aniq material sarfi) sessiyaga
+   * yoziladi. Заявка бумаги "Формат/Грам/Лист размер А/В" bergan qiymatlar operator tomonidan sessiya
+   * davomida kiritiladi. COALESCE — faqat berilgan maydon yangilanadi, qolgani o'zgarmaydi (qisman
+   * yangilash xavfsiz). Barcha ustun nullable → eski sessiyalar regress emas. getSession `SELECT ps.*`
+   * bu ustunlarni avtomatik qaytaradi, alohida o'qish-yo'li shart emas. Topilmasa null (controller 404).
+   */
+  async setPaperFormat(sessionId: number, body: Row): Promise<Row | null> {
+    try {
+      const formatA = body.format_a == null ? null : Number(body.format_a);
+      const formatB = body.format_b == null ? null : Number(body.format_b);
+      const gramm   = body.gramm   == null ? null : Number(body.gramm);
+      const kg      = body.kg      == null ? null : Number(body.kg);
+      const rows = await runQuery<Row>(sql`
+        UPDATE production_sessions
+        SET format_a = COALESCE(${formatA}::numeric, format_a),
+            format_b = COALESCE(${formatB}::numeric, format_b),
+            gramm    = COALESCE(${gramm}::numeric, gramm),
+            kg       = COALESCE(${kg}::numeric, kg),
+            updated_at = NOW()
+        WHERE id = ${sessionId} AND deleted_at IS NULL
+        RETURNING id, format_a, format_b, gramm, kg, updated_at
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    } catch (err) {
+      this.logger.error(`setPaperFormat: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   async recordDowntimeForSession(sessionId: number, body: Row): Promise<Row | null> {
     try {
       const rows = await runQuery<Row>(sql`
