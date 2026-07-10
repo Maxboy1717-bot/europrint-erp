@@ -171,6 +171,9 @@ export const qc_inspections = pgTable(
     // T21-A2 — sifat-saralash navi (first|second|third|scrap); NULL = saralanmagan.
     // Narx-koeffitsienti qc_sort_price_config / qc_grade_price_coefficients dan keladi.
     sort_grade: text('sort_grade'),
+    // 09-qc #34 — QC gate stage classifier for per-stage FTQ weakest-link auto-flag.
+    // text+CHECK in live DB (matches status varchar convention); NULL = unclassified.
+    stage: text('stage', { enum: ['incoming', 'in_process', 'final', 'dispatch'] }),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -178,5 +181,6 @@ export const qc_inspections = pgTable(
     index('qc_inspections_reference_id_idx').on(table.reference_id),
     index('qc_inspections_inspector_id_idx').on(table.inspector_id),
     index('qc_inspections_status_idx').on(table.status),
+    index('qc_inspections_stage_idx').on(table.stage),
   ],
 );

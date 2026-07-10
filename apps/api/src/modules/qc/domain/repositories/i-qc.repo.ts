@@ -20,6 +20,14 @@ export interface ProcessDpmoData {
   itemsChecked: number;
 }
 
+/** Per-stage FTQ aggregate row (09-qc #34) — one row per qc_inspections.stage. */
+export interface StageFtqRow {
+  stage:        string;
+  itemsChecked: number;
+  itemsPassed:  number;
+  itemsFailed:  number;
+}
+
 export interface JobSpoilageRow {
   defectiveSheets: number;
   totalSheets:     number;
@@ -58,6 +66,9 @@ export interface IQcComputeRepository {
 
   /** DPMO — aggregate defects/items_checked for a production order. */
   findProcessDpmoData(processId: string): Promise<ProcessDpmoData>;
+
+  /** FTQ (09-qc #34) — per-stage passed/checked aggregate; optional order filter. */
+  findStageFtq(orderId: number | null): Promise<StageFtqRow[]>;
 
   /** Spoilage — aggregate defective/total sheets for a print job. */
   findJobSpoilageRow(jobId: string): Promise<JobSpoilageRow>;

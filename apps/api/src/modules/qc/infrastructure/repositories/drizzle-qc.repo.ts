@@ -13,6 +13,7 @@ import {
   IQcComputeRepository,
   SpcReading,
   ProcessDpmoData,
+  StageFtqRow,
   JobSpoilageRow,
   JobCostRow,
   InkInventoryRow,
@@ -60,6 +61,30 @@ export class DrizzleQcComputeRepository implements IQcComputeRepository {
       defects:      safeNum(rows[0]?.defects ?? 0),
       itemsChecked: Math.max(safeNum(rows[0]?.items_checked ?? 1), 1),
     };
+  }
+
+  async findStageFtq(orderId: number | null): Promise<StageFtqRow[]> {
+    // 09-qc #34 — per-stage FTQ aggregate. Groups qc_inspections by the `stage`
+    // classifier (only classified rows); optional order filter uses the same bind
+    // param twice: when orderId is null the `$::int IS NULL` branch returns all rows.
+    const rows = await runQuery<{ stage: string; items_passed: number; items_checked: number; items_failed: number }>(sql`
+      SELECT
+        COALESCE(stage, 'unclassified')     AS stage,
+        COALESCE(SUM(items_passed), 0)::int  AS items_passed,
+        COALESCE(SUM(items_checked), 0)::int AS items_checked,
+        COALESCE(SUM(items_failed), 0)::int  AS items_failed
+      FROM qc_inspections
+      WHERE stage IS NOT NULL
+        AND (${orderId}::int IS NULL OR order_id = ${orderId}::int)
+      GROUP BY stage
+      ORDER BY stage
+    `);
+    return (Array.isArray(rows) ? rows : []).map(r => ({
+      stage:        r.stage,
+      itemsChecked: safeNum(r.items_checked),
+      itemsPassed:  safeNum(r.items_passed),
+      itemsFailed:  safeNum(r.items_failed),
+    }));
   }
 
   async findJobSpoilageRow(jobId: string): Promise<JobSpoilageRow> {

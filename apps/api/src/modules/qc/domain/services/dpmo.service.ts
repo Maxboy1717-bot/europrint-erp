@@ -53,6 +53,22 @@ export interface ProcessDpmoData {
   itemsChecked: number;
 }
 
+export interface StageFtq {
+  stage:         string;
+  itemsChecked:  number;
+  itemsPassed:   number;
+  itemsFailed:   number;
+  ftqPercent:    number;
+  isWeakestLink: boolean;
+}
+
+export interface StageFtqReport {
+  orderId:               number | null;
+  stages:                StageFtq[];
+  weakestLinkStage:      string | null;
+  weakestLinkFtqPercent: number | null;
+}
+
 function normalQuantile(p: number): number {
   const q = p < 0.5 ? p : 1 - p;
   const t = Math.sqrt(-2 * Math.log(Math.max(q, 1e-15)));
@@ -93,6 +109,48 @@ export class DpmoService {
    */
   async getProcessDpmoData(processId: string): Promise<ProcessDpmoData> {
     return this.qcRepo.findProcessDpmoData(processId);
+  }
+
+  /**
+   * 09-qc #34 — Per-stage First-Time-Quality (FTQ%) + "eng zaif halqa" (weakest link)
+   * auto-flag. Aggregates qc_inspections by stage; the stage with the minimum FTQ%
+   * (among stages that actually inspected items) is flagged isWeakestLink=true.
+   * Pure computation over existing inspection counts — no owner data.
+   */
+  async getStageFtq(orderId?: number | null): Promise<Result<StageFtqReport, AppError>> {
+    try {
+      const rows = await this.qcRepo.findStageFtq(orderId ?? null);
+      const stages: StageFtq[] = (Array.isArray(rows) ? rows : []).map(r => {
+        const checked = safeNum(r.itemsChecked);
+        const passed = safeNum(r.itemsPassed);
+        const ftqPercent = checked > 0 ? Math.round(safeDiv(passed, checked) * 100 * 100) / 100 : 0;
+        return {
+          stage:         r.stage,
+          itemsChecked:  checked,
+          itemsPassed:   passed,
+          itemsFailed:   safeNum(r.itemsFailed),
+          ftqPercent,
+          isWeakestLink: false,
+        };
+      });
+
+      // Weakest link = lowest FTQ% among stages that actually inspected items.
+      let weakest: StageFtq | null = null;
+      for (const s of stages) {
+        if (s.itemsChecked <= 0) continue;
+        if (weakest === null || s.ftqPercent < weakest.ftqPercent) weakest = s;
+      }
+      if (weakest) weakest.isWeakestLink = true;
+
+      return Ok({
+        orderId: orderId ?? null,
+        stages,
+        weakestLinkStage: weakest ? weakest.stage : null,
+        weakestLinkFtqPercent: weakest ? weakest.ftqPercent : null,
+      });
+    } catch (e) {
+      return Err({ code: 'DB_ERROR', message: String(e) });
+    }
   }
 
   @Calculation('qc.dpmo.calculate')
