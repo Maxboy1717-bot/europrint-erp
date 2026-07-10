@@ -20,6 +20,13 @@ import { runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { KANBAN_MAX_URGENT_PER_DAY } from '@common/constants/business.constants';
 
+/**
+ * WIP (work-in-progress) cap for any column mapped to the JARAYONDA (in-progress)
+ * stage. Owner vision (TASDIQ-2146 §15 #8): "Jarayonda"da ko'pi bilan 3 ta vazifa.
+ * Named constant per Qoida 12 (no bare magic number for a business rule).
+ */
+const KANBAN_WIP_LIMIT_JARAYONDA = 3;
+
 @Injectable()
 export class KanbanBoardsService {
   private readonly logger = new Logger(KanbanBoardsService.name);
@@ -130,17 +137,19 @@ export class KanbanBoardsService {
     let ownerUserId: string | null = null;
     let assignerUserId: string | null = null;
     let dueDate: string | null = null;
+    let currentColumnId: string | null = null;
     try {
       const rows = await runQuery<{
-        board_id: string; owner_user_id: string | null; assigner_user_id: string | null; due_date: string | null;
+        board_id: string; owner_user_id: string | null; assigner_user_id: string | null; due_date: string | null; column_id: string | null;
       }>(
-        sql`SELECT board_id, owner_user_id, assigner_user_id, due_date
+        sql`SELECT board_id, owner_user_id, assigner_user_id, due_date, column_id
             FROM kanban_cards WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`,
       );
-      boardId        = rows.rows[0]?.board_id;
-      ownerUserId    = rows.rows[0]?.owner_user_id ?? null;
-      assignerUserId = rows.rows[0]?.assigner_user_id ?? null;
-      dueDate        = rows.rows[0]?.due_date ?? null;
+      boardId         = rows.rows[0]?.board_id;
+      ownerUserId     = rows.rows[0]?.owner_user_id ?? null;
+      assignerUserId  = rows.rows[0]?.assigner_user_id ?? null;
+      dueDate         = rows.rows[0]?.due_date ?? null;
+      currentColumnId = rows.rows[0]?.column_id ?? null;
     } catch { /* ignore, robot trigger ixtiyoriy */ }
 
     // ─── Assigner-confirm guard (EP-KAN-027/032) ───────────────────────────────
@@ -151,6 +160,8 @@ export class KanbanBoardsService {
     // to request confirmation.
     if (newColumnId) {
       const guard = await this.assertCanMoveTo(newColumnId, {
+        cardId: id,
+        currentColumnId,
         actingUserId,
         ownerUserId,
         assignerUserId,
@@ -193,7 +204,14 @@ export class KanbanBoardsService {
    */
   private async assertCanMoveTo(
     destColumnId: string,
-    ctx: { actingUserId?: number; ownerUserId: string | null; assignerUserId: string | null; dueDate: string | null },
+    ctx: {
+      cardId: string;
+      currentColumnId: string | null;
+      actingUserId?: number;
+      ownerUserId: string | null;
+      assignerUserId: string | null;
+      dueDate: string | null;
+    },
   ): Promise<Result<void>> {
     // Resolve destination column NAME -> canonical stage.
     let destName: string | null = null;
@@ -218,6 +236,26 @@ export class KanbanBoardsService {
           'VALIDATION',
           "\"Jarayonda\"ga o'tkazish uchun ijrochi (owner) va muddat (due_date) to'ldirilishi shart.",
         ));
+      }
+      // ─── WIP limit guard (TASDIQ-2146 §15 #8) — max 3 active in "Jarayonda" ──
+      // A real ENTRY is capped; reordering within the same column is never blocked
+      // (Q-39 non-regression). The moving card is excluded from the count. The count
+      // query failing must not block the move (fail-open).
+      if (String(ctx.currentColumnId) !== String(destColumnId)) {
+        try {
+          const countRows = await runQuery<{ n: number }>(
+            sql`SELECT COUNT(*)::int AS n FROM kanban_cards
+                WHERE column_id = ${destColumnId} AND id <> ${ctx.cardId} AND deleted_at IS NULL`,
+          );
+          const inProgress = Number(countRows.rows[0]?.n ?? 0);
+          if (inProgress >= KANBAN_WIP_LIMIT_JARAYONDA) {
+            return Err(AppErr(
+              'CONFLICT',
+              `"Jarayonda" ustunida bir vaqtda ko'pi bilan ${KANBAN_WIP_LIMIT_JARAYONDA} ta ` +
+              `vazifa bo'lishi mumkin. Avval mavjud vazifani yakunlang yoki "Tekshiruvda"ga o'tkazing.`,
+            ));
+          }
+        } catch { /* count failed -> do not block the move (fail-open, non-regression) */ }
       }
       return { ok: true, data: undefined };
     }
