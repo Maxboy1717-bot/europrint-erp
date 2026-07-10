@@ -1,0 +1,989 @@
+# SCHEMA-UNLOCK BUILD QUEUE — 2026-07-11 (315 items)
+
+> Owner schema-approval berildi (`SCHEMA-APPROVAL-2026-07-11.md`). Bular **sof-schema** — egangiz DATA'siz quriladi
+> (yangi jadval/ustun/enum/seed + kod; default/NULL bilan ishlaydi). Har migration `-- APPROVED: owner schema-approval 2026-07-11` markeri bilan.
+> Pipeline: bu navbat → build-spec workflow → single-writer harvest (aynan 51-spec to'lqinidagidek). Golden-thread tartibida.
+
+## 08-mes (9)
+- **#4** Session-start norma version applied (no retro-break)
+  - SCHEMA: ALTER production-norm table (material_norms/technology_cards) ADD version int + effective_date date; session-start handler snapshots the version whose effective_date <= started_at.
+  - note: Versioning mechanism is pure schema+code and needs no owner input: version defaults to 1, effective_date defaults to created_at/now(). Retro-break protection works over whatever norm rows exist (even 0).
+- **#24** Format/gramm compared vs WMS batch parameters
+  - SCHEMA: ALTER production_sessions ADD format/gramm columns (reuses #116 format_a/format_b/gramm/kg) + a WMS-batch comparison job.
+  - note: Columns default NULL and are entered per session operationally; the comparison job simply matches session values against the WMS batch record and raises a mismatch flag when both are present. No owner threshold or master-data needed.
+- **#33** Academy/training work synced with LMS; excluded from OEE
+  - SCHEMA: ALTER production_sessions ADD is_training boolean DEFAULT false; get-oee.handler.ts filters WHERE is_training = false.
+  - note: Boolean defaults false so all existing sessions stay in OEE unchanged; only sessions explicitly flagged training are excluded. LMS-sync is an additive listener; core exclusion works with the column alone.
+- **#36** OEE target editable only by НО/director; versioned
+  - SCHEMA: CREATE mes_oee_targets (id, station_id nullable, target_percent, effective_date, version, created_by); seed one row target_percent=85.
+  - note: Seeds with the current hardcoded 85 (MESExtended.tsx:146) so it functions immediately; owner target values are entered at runtime through the settings CRUD, not required at build time. This is a settings-CRUD like the Batch-5 pattern.
+- **#83** 1 operator + N named assistants + contribution %
+  - SCHEMA: CREATE machine_crew_members (session_id FK, employee_id FK, role_label, share_percent) replacing the 4 fixed-role columns; migrate existing role columns into rows.
+  - note: Crew members and share_percent are entered per session operationally (employees already exist in HR); share_percent defaults NULL or equal-split. No owner master-data or threshold needed.
+- **#86** 'ish yo'q' (no-work) counted separately from downtime
+  - SCHEMA: Additive seed one mes_downtime_reasons row code='DT-NOWORK', category no-work, is_planned=true; get-oee.handler.ts excludes DT-NOWORK from the downtime/availability penalty.
+  - note: DT-NOWORK is a fixed concept with a self-defined label; no owner data. mes_downtime_reasons is a simple code/name/category lookup so the additive seed is trivial. Unblocks items 5/87.
+- **#106** Store norma version + effective-date
+  - SCHEMA: ALTER the norm table ADD version int + effective_date date (same root schema as #4/#17).
+  - note: Identical versioning columns to #4; defaults version=1, effective_date=created_at/now(). Pure schema+code, no owner values required to store versions.
+- **#108** Separate 'Академия'/training work classification
+  - SCHEMA: ALTER production_sessions ADD is_training_session boolean DEFAULT false; excluded from OEE and GSD aggregates.
+  - note: Near-duplicate of #33. Boolean defaults false so no regression; only flagged sessions drop out of OEE/GSD. Consider consolidating with #33 into one column.
+- **#116** Paper format (A×B) + gramm on session
+  - SCHEMA: ALTER production_sessions ADD format_a, format_b, gramm, kg columns (production_sessions currently has none; mes_papka_orders has them but is a different 0-row PP table).
+  - note: Operational per-session data entered by the operator; all default NULL so existing sessions are unaffected. No owner master-data or threshold.
+
+## 09-qc (11)
+- **#8** Kuchaytirilgan nazorat (ISO 2859): 2 partiya ketma-ket rad -> per-supplier+per-mahsulot regime
+  - SCHEMA: New enum inspection_regime (normal|tightened|reduced) + CREATE TABLE qc_supplier_regime (supplier_id, material_id, regime, consecutive_rejections, updated_at).
+  - note: Regime defaults to 'normal', counter=0. The '2 consecutive lot rejections -> tightened' transition is the fixed ISO 2859 rule (not owner data) and increments off existing qc_inspections rejection results. The downstream AQL sample-plan (aql_standards, item 2 - verified absent) is a separate chain, but the regime tracker itself builds and defaults now.
+- **#11** Har rulon tabletda scan -> qc_material_scan_log
+  - SCHEMA: CREATE TABLE qc_material_scan_log (id, order_id, lot, work_center_id, shift_id, scanned_at, tablet_id, local_seq_no).
+  - note: Verified absent (to_regclass=null). Pure append-only scan log; records each roll scan at runtime; no owner master-data/threshold needed. Doc itself flags 'needs only Q-35 migration approval'.
+- **#22** Davriy ichki sifat auditi qc_internal_audits (cron)
+  - SCHEMA: CREATE TABLE qc_internal_audits (id, scheduled_for, auditor_id, scope, findings, status, created_at).
+  - note: Verified absent. Cron infra + calendar_events already exist; the table was the only gate. Audit cadence defaults to a standard interval (e.g. monthly) until owner overrides; audit records are populated at runtime, no owner data to start.
+- **#26** Yakuniy sifat xulosasi PP Yopildi da; qisman yetkazishda har dispatch+yakuniy
+  - SCHEMA: ALTER qc_final_inspections ADD COLUMN dispatch_id int NULL (FK to dispatch/shipment), or new qc_dispatch_conclusions record type.
+  - note: dispatch_id NULL = the single final PP-close conclusion; populated per partial shipment for per-dispatch conclusions. Links to existing dispatch / PP-close events; no owner data. Verified qc_final_inspections exists but has no per-shipment conclusion type.
+- **#34** Yakuniy xulosada har bosqich holati; eng past FTQ% = eng zaif halqa auto-belgi
+  - SCHEMA: ALTER qc_inspections ADD COLUMN stage (enum: incoming|in_process|final|dispatch).
+  - note: Verified qc_inspections has no stage column (only reference_type). Weakest-link = auto MIN(FTQ%) over stages - pure computation, no owner data. stage defaults/derives from existing reference_type; enables per-stage FTQ.
+- **#35** Tekshiruv o'tkazib yuborish = qc:override RBAC; kunlik 3 (oylik 15)
+  - SCHEMA: CREATE TABLE qc_override_log (id, user_id, inspection_id, reason, created_at).
+  - note: Verified absent. Daily(3)/monthly(15) limits are given by the vision (not owner-supplied); counts computed from the log; director escalation fires on breach. RBAC qc:override already expressible.
+- **#39** Snapshot versioning: qc_norm_versions (valid_from/to/json)
+  - SCHEMA: CREATE TABLE qc_norm_versions (id, norm_ref, valid_from, valid_to, snapshot_json, created_at).
+  - note: Verified absent. Snapshots whatever QC norms already exist at effective-date boundaries; no owner data needed to stand up the versioning table.
+- **#48** QC brak statistika Director paneliga real-time event stream (outbox)
+  - SCHEMA: CREATE TABLE qc_outbox (id, event_type, payload_json, created_at, published_at).
+  - note: Verified zero %outbox% tables exist. Standard durable-outbox infrastructure; emits brak stats from existing qc data to the Director panel. No owner data - it is a delivery mechanism.
+- **#62** Birinchi namuna (first article) tirajni to'xtatadi
+  - SCHEMA: Add 'first_article' value to the qc_inspections stage enum + a first-article approval gate record.
+  - note: Current stage set is {incoming,in_process,final,dispatch} with no first_article. Gate blocks the full tiraj on a production_order until a first_article inspection passes - a fixed rule, no owner threshold. Defaults: production start blocked until first-article pass.
+- **#67** Arxiv namuna (etalon) 6 oy+joylashuv
+  - SCHEMA: CREATE TABLE qc_reference_samples (id, sample_ref, metadata_json, storage_location, archived_at, retention_until).
+  - note: Verified no etalon/reference_sample table exists. Retention defaults to 6 months (given in the vision); storage_location is entered per-record at runtime, not master-data. Builds and defaults now.
+- **#96** Priladka (sozlash) brakini alohida hisoblash
+  - SCHEMA: Add 'setup'/'priladka' value to a defect_stage enum/column on qc_defects (or qc_braks).
+  - note: Both qc_defects and qc_braks confirmed to exist. Separates setup waste from production waste; existing defects default to 'production'. Categorization only - no owner master-data or threshold required.
+
+## 10-wms (7)
+- **4** Ochiq PR miqdori ogohlantirish bayrog'i (open-PR-quantity warning flag)
+  - SCHEMA: CREATE TABLE purchase_request_lines (id, purchase_request_id FK, material_id FK, qty_requested numeric, qty_fulfilled numeric default 0, ...) — verified absent (to_regclass=null) — plus a computed/boolean open_qty_warning column (ALTER ADD COLUMN).
+  - note: Schema is the only blocker; no owner threshold needed. The warning is a pure derivation: flag=true when (qty_requested - qty_fulfilled) > 0. Defaults harmlessly to false on fully-fulfilled/new lines. No MM PR service exists yet, but the line table + derived flag is self-contained greenfield code.
+- **5** Manzilsiz kirim akti tasdiqlanmaydi (receipt without location not confirmable)
+  - SCHEMA: ALTER mm_goods_receipt_items ADD COLUMN bin_location_id INT FK -> warehouse_bins (and/or zone_id -> warehouse_zones); enforce NOT-NULL at the confirm step.
+  - note: Buildable now: the zone/bin master data ALREADY exists (warehouse_zones + warehouse_bins verified present), so no owner data required — only the missing FK column + a confirm-time required-field gate. Existing receipts default NULL; only new confirmations must carry a location.
+- **6** IoT signalda zonadagi barcha zaxira 'xavf ostida' (zone at-risk flag)
+  - SCHEMA: ALTER warehouse_stock ADD COLUMN at_risk boolean DEFAULT false (+ at_risk_reason, at_risk_at); optionally CREATE TABLE qc_review_queue (both verified absent).
+  - note: Schema + an IoT-event handler is the mechanism; no owner threshold/GL/master-data. Defaults sensibly: at_risk=false until a zone signal fires, then set all warehouse_stock rows in that zone. Live wiring leans on IoT sensor->zone mapping (item 111, partial) but the column defaults harmlessly with zero rows at-risk until that lands.
+- **10** GTD yo'q bo'lsa ogohlantirish + bayroq (missing-customs-declaration flag)
+  - SCHEMA: ALTER mm_goods_receipts ADD COLUMN gtd_number varchar + gtd_missing boolean (+ optional gtd_due_date) — no GTD/customs field exists today (only invoice_number).
+  - note: Core warning is a derivation (gtd_missing = gtd_number IS NULL) needing no owner input. The secondary 14-day escalation window is already cited in the vision, so it defaults to 14 days; owner can later confirm. Schema is the only hard blocker.
+- **17** Bir paletda 2 partiya ogohlantirish (two-batches-on-one-pallet warning)
+  - SCHEMA: ALTER batch_lots ADD COLUMN pallet_id (varchar business key, or FK to a pallet table) — only bin_location_id exists today.
+  - note: Once batches carry a pallet key, the warning is a pure duplicate-detection query (>=2 distinct batch_lots sharing a non-null pallet_id). No owner threshold/master-data — pallet assignment is operational receipt-time data, not owner master data. Defaults NULL (no warnings) until pallet tracking (item 55) populates it.
+- **39** Lead-time o'zgarsa reorder qayta-hisob + auto-PR
+  - SCHEMA: NONE required — inventory_policy table ALREADY EXISTS with safety_stock, lead_time_days, reorder_point, eoq, lot_sizing_method AND 31 populated rows (doc's 'nothing is persisted' is stale). Work = wire run-mrp.handler.ts:133-139 to read this table + recompute on lead_time_days change + draft auto-PR.
+  - note: Buildable immediately: schema exists and is populated, so no owner data and no migration needed. Recompute defaults to the 31 persisted policy rows. Auto-PR authority (the only owner-sensitive part) defaults to DRAFT-requiring-manual-approval, so no procurement-spend approval is needed to ship the recompute + draft.
+- **29** Namuna/probnik chiqimi 'namuna' kod bilan hisobotda (sample-issue tagging)
+  - SCHEMA: Essentially none — material_movements.reason is free-text varchar, so tag reason='SAMPLE', exclude those from shrinkage, and surface them in the report. Optional additive seed: a sample_issue_monthly_limit_kg config value.
+  - note: Tagging + shrinkage-exclusion + reporting need no schema and no owner data. The only owner-flavored input (the 10 kg/month signal threshold) is already cited in the vision, so it defaults to 10 kg/month; owner can tune later. The core feature is fully buildable now.
+
+## 06-sd (44)
+- **#2** MaterialRequiredEvent + MM reject/24h escalation
+  - SCHEMA: New 'material-wait' value on sales_orders status enum; emit MaterialRequiredEvent via existing domain_events/outbox
+  - note: Event infra exists; 24h escalation is a fixed owner-tunable default, no owner data needed
+- **#14** Klishe ~3yr retention cron + write-off act
+  - SCHEMA: Add ow_molds.owner_type, retention_until, archived_at columns (verified absent — ow_molds has only order_id)
+  - note: Defaults to 3-year retention (vision '~3yr'); cron computes expiry=received_at+1095d and issues write-off act; no owner data
+- **#16** Per-line partial hold
+  - SCHEMA: Add sales_order_items.hold_status column + partial_hold_policy enum
+  - note: Status machine is order-level only; per-line hold defaults to policy 'others-continue', hold_status NULL
+- **#18** Shared forma auto-detect + warning
+  - SCHEMA: Add a die identity column (e.g. ow_molds.die_code) decoupled from the 1:1 order_id
+  - note: Detects same physical die across orders; defaults NULL until dies tagged, warning fires on duplicate identity — no owner data
+- **#19** CRP-derived delay_risk_days + urgent flag + AI risk
+  - SCHEMA: Add sales_orders.delay_risk_days + is_urgent columns (confirmed absent)
+  - note: Risk computed by rule-based CRP delta (defaults 0); AI enrichment is additive/non-blocking, not required to function
+- **#27** Nightly inactive-customer cron (A=90/B=60/C=30)
+  - SCHEMA: CREATE TABLE crm_inactivity_rules (abc_class, inactive_days) seeded A=90/B=60/C=30 (verified absent)
+  - note: Thresholds already specified in vision — seed them; no owner input needed
+- **#29** Per-line deadline scheduling
+  - SCHEMA: Add sales_order_items.line_deadline column + sales_orders.per_line_scheduling boolean
+  - note: Defaults: boolean false, line_deadline NULL falling back to order-level deadline
+- **#35** Davalcheskoe QC quarantine → QC_HOLD
+  - SCHEMA: New QC_HOLD value on sales_orders status enum
+  - note: Transition wired from QC quarantine; the #6/#104 material_owner dependency is a code dep (not owner data) — buildable now
+- **#40** Kashirovka offset+gofra sync (predecessor)
+  - SCHEMA: Add sales_orders/production_orders.predecessor_order_id column (confirmed absent)
+  - note: Links predecessor order for sync scheduling; defaults NULL — no owner data
+- **#78** Structured contract terms (payment/penalty/penya)
+  - SCHEMA: Add sd_contracts payment_terms/penalty_rate/penya_rate/currency columns (or JSONB terms) — none exist
+  - note: Values are per-contract, user-entered at runtime; defaults NULL — not owner master-data
+- **#100** Ojd.Syryo → material signal to supply
+  - SCHEMA: New 'pending_material' value on sales_orders status enum + emit material-signal event
+  - note: Event mechanism; no owner data needed
+- **#101** Printing method Offset/Flexo (+AI rec)
+  - SCHEMA: Add sd_quotation_items.printing_method enum('offset','flexo') (confirmed absent)
+  - note: Enum values known; per-order selection; AI rec additive/non-blocking
+- **#102** Machine format (72/52SM/KVA) rec+price
+  - SCHEMA: Add sd_quotation_items.machine_format enum('72','52SM','KVA') (+ optional format_prices table)
+  - note: Format enum values known and drive sheet-size/material calc independently; the price-rec sub-part defaults until owner enters format prices via CRUD
+- **#104** Material owner (davalcheskoe) flag
+  - SCHEMA: Add sd_quotation_items/sales_order_items.material_owner enum('factory','customer') (confirmed absent)
+  - note: Values known; defaults 'factory'; no owner data
+- **#107** Load capacity (kg) → flute-layer AI rec
+  - SCHEMA: Add sd_quotation_items.load_capacity_kg numeric (confirmed absent)
+  - note: Per-order input, defaults NULL; flute-layer AI rec is additive/non-blocking
+- **#117** Cup/pizza special-dimension template
+  - SCHEMA: Add sd_quotation_items.diameter_mm, volume_ml columns + per-type geometry branch
+  - note: Per-order dimension capture, defaults NULL; no owner data
+- **#118** Roll self-adhesive roll parameters
+  - SCHEMA: Add sd_quotation_items core_diameter_mm, gilza_diameter_mm, roll_length_m columns
+  - note: Per-order roll spec capture, defaults NULL; no owner data
+- **#122** Packaging type → time+material
+  - SCHEMA: Add sd_quotation_items.packaging_type column (mirrors MES ow_packaging_records)
+  - note: Captures packaging type per order; time/material consequence flows through existing routing/BOM; defaults NULL
+- **#123** Pallet piece-count + pallet size
+  - SCHEMA: Add sd_quotation_items.pallet_qty, pallet_dimensions columns
+  - note: Per-order pallet spec, defaults NULL; no owner data
+- **#124** Klishe/forma ownership + 3yr archive (dup #14)
+  - SCHEMA: Add ow_molds.owner_type + retention_until/archived_at (same schema as #14)
+  - note: Duplicate of #14; 3-year retention default; build once together with #14
+- **#138** Kongrev vs tisnenie separate operation
+  - SCHEMA: Split sd_quotation_items.special_coating boolean into embossing_type enum + per-type rate columns
+  - note: Operation distinction enables separate routing/costing immediately; per-type rate defaults 0, owner prices via CRUD
+- **#139** Foil color zoloto/serebro → stock
+  - SCHEMA: Add sd_quotation_items.foil_color column
+  - note: Per-order value driving stock selection; defaults NULL; no owner data
+- **#140** Lamination type (glyants/mat/metal)
+  - SCHEMA: Replace sd_quotation_items.lamination boolean with lamination_type enum + rate-per-type column
+  - note: Enum values known and drive material selection now; rate-per-type defaults 0, owner prices via CRUD
+- **#141** Varnish type (sploshnoy/trafaret/VD) + coverage%
+  - SCHEMA: Add sd_quotation_items.varnish_type enum + coverage_percent numeric
+  - note: Enum values known; coverage% is per-order input; defaults NULL
+- **#142** Kashirovka separate operation+price
+  - SCHEMA: Add sd_quotation_items.kashirovka flag + routing marker
+  - note: Flag defaults false; enables distinct routing now; rate additive via CRUD
+- **#143** Die-cut method (avtotigel/rotatsion/plotter)
+  - SCHEMA: Add sd_quotation_items.die_cut_method enum (only is_new_die boolean exists)
+  - note: Enum values known; drives routing; defaults NULL
+- **#144** Gluing method (avtomat/ruchnaya/FSM)
+  - SCHEMA: Add sd_quotation_items.gluing_method enum + labour-rate lookup
+  - note: Enum values known and route to the correct gluing machine now; labour-rate defaults 0, owner enters via CRUD
+- **#145** One/two-sided print (2x)
+  - SCHEMA: Add sd_quotation_items.print_sides column (confirmed absent)
+  - note: Per-order value (1/2 sides) doubling factor; defaults 1; no owner data
+- **#146** Flute type 3-makro/3-mikro (dictionary)
+  - SCHEMA: Add sd_quotation_items.flute_type field distinct from thickness_mm; seed standard flute dictionary
+  - note: Flute profiles are industry-standard (seedable) values; per-order selection; defaults NULL
+- **#147** Gofra layer count (2/3/5-sloy) + AI load
+  - SCHEMA: Add sd_quotation_items.layer_count column (only thickness_mm exists)
+  - note: Per-order value (2/3/5), defaults NULL; AI load rec additive/non-blocking; deps #107
+- **#151** Marka T22/profil S central dictionary
+  - SCHEMA: CREATE material_grade/profile lookup table + FK from sd_quotation_items; seed standard GOST corrugated grades (T-21..T-24) + flute profiles (B/C/E/S)
+  - note: Corrugated marka/profile are industry-standard (not owner-specific business taxonomy like the ~15 product categories) — seed standard values, owner extends via CRUD
+- **#152** Film thickness (30/100 mkr) from list
+  - SCHEMA: Add sd_quotation_items.film_thickness_mkr enum/lookup field; seed common thicknesses (30/100 mkr)
+  - note: Standard film thicknesses are seedable; per-order selection; defaults NULL
+- **#154** 'Zakaz 1S' optional legacy number
+  - SCHEMA: Add sales_orders.legacy_order_number column (confirmed absent)
+  - note: Optional free-text legacy 1C number; defaults NULL; no owner data
+- **#5** Quotation 14-day expiry + price re-calc + >5% approval
+  - SCHEMA: Add quotation status 'expired'/'superseded' + re-approval threshold config (valid_until column already exists)
+  - note: 14-day expiry cron + recalc buildable now; >5% re-approval threshold defaults to 5% and RBAC routes the approval; old quote → superseded
+- **#7** ±10% overage allowed, 15%+ manager approve
+  - SCHEMA: Add overage-tolerance config (order_quantity/delivered_quantity columns already exist)
+  - note: Defaults 10% allowed / 15%+ requires manager approval (vision figures); owner-tunable, not a build blocker
+- **#10** EmployeeDeactivated → customers reassigned
+  - SCHEMA: Add SD listener for the existing OFFBOARDING_COMPLETED event + customer_reassignment_queue table
+  - note: HR already emits OFFBOARDING_COMPLETED (hr-offboarding.service.ts:134); defaults to a manual queue routed to the sales-department head
+- **#11** Advance awaits bank confirm (PaymentConfirmedEvent)
+  - SCHEMA: Emit PaymentConfirmedEvent on markPaymentPaid + add sd_payments.confirmation_source (default 'manual')
+  - note: markPaymentPaid/sd_payments exist; defaults to manual bank-confirmation entry; bank-API integration is optional later
+- **#13** Overall discount cap ≈15% (checkDiscountCap)
+  - SCHEMA: Add discount-cap config constant (default 15%) enforced in checkDiscountCap
+  - note: Vision says ≈15% — default to 15%, owner-tunable; no un-fabricatable data
+- **#28** AI Offset vs Flexo recommendation (non-blocking)
+  - SCHEMA: No new table (consumes printing_method from #101); add a rule-based recommendation function
+  - note: Explicitly non-blocking; defaults to a rule-based heuristic (high qty→offset, low/variable→flexo), tunable later
+- **#44** Shipment+N days → balance due + warning
+  - SCHEMA: Add deliveries/sales_orders.balance_due_date column (= dispatched_at + N; dispatched_at exists)
+  - note: Defaults N to a standard net term (e.g. 30 days); owner-tunable; warning cron builds on it
+- **#88** Over/under ICh (±N%), invoice from real qty
+  - SCHEMA: Invoice from confirmedQuantity + tolerance config (confirmedQuantity/orderQuantity columns exist)
+  - note: Invoice-from-real-qty works now; ±N% tolerance defaults (e.g. 10%), owner-tunable
+- **#113** Manager leaves → customer auto-reassign (dup #10)
+  - SCHEMA: Same as #10: SD listener on OFFBOARDING_COMPLETED + reassignment queue
+  - note: Duplicate of #10; doc's 'HR emits nothing' premise is stale — event exists; defaults to manual queue to sales-head
+- **#129** 100% advance → 5% discount auto
+  - SCHEMA: Add auto-discount rule keyed on advance_percent=100 (advance_percent column exists)
+  - note: Vision says 5% — default 5% with a manager-overridable flag (defaults true); no un-fabricatable data
+- **#134** New vs repeat customer different flow
+  - SCHEMA: Add customer.is_returning derivation + branch in the order-creation flow
+  - note: Defaults to new=full onboarding (requisites+contract), repeat=skip re-collection; a flag-decision the owner can adjust, not un-fabricatable data
+
+## 07-pp (12)
+- **20** AI last-year-fact median/top20%/last-5 recommendation
+  - SCHEMA: CREATE TABLE pp_plan_fact_entries (id, production_order_id FK, entry_date, planned_qty numeric, actual_qty numeric, created_at)
+  - note: System logs planned vs actual as production runs; the median/top20%/last-5 recommendation is a fixed algorithm computed from accumulated rows. No owner data: empty table simply yields no recommendation yet (sensible default).
+- **24** Alternative stanok fail-over on IoT downtime + CRP recompute
+  - SCHEMA: ALTER TABLE pp_routing_operations ADD COLUMN alternative_work_center_id int NULL REFERENCES work_centers(id)
+  - note: Fail-over + CRP-recompute is pure code. The alternate is ordinary per-operation routing config a planner sets (not un-fabricatable owner master-data); defaults NULL -> no fail-over triggers, current behavior preserved.
+- **30** Material reserve priority + FIFO tie-break + director override
+  - SCHEMA: CREATE TABLE pp_material_reservations (id, production_order_id FK, material_id FK, qty, priority int, reserved_at, status, released_at)
+  - note: Reservations are generated from existing orders/stock; priority defaults to reserved_at (FIFO tie-break) and director-override is a role-gated action. No owner data needed to function.
+- **37** Gang-run per-order acceptance act + lot-split brak
+  - SCHEMA: CREATE TABLE pp_gang_runs (id, print_job_ref, created_at) + pp_gang_run_orders (gang_run_id FK, production_order_id FK, acceptance_act_id, brak_qty)
+  - note: Gang grouping is operational data; per-order acceptance act and brak split default to proportional-by-quantity/area. Mechanism-only build, no owner input.
+- **46** Queue-time excluded from OEE denominator
+  - SCHEMA: ALTER TABLE production_order_operations ADD COLUMN queued_at timestamptz, started_at timestamptz (queue time = started_at - queued_at)
+  - note: Queue time is derived from op timestamps and subtracted from the existing OEE denominator formula. Defaults to 0 when untracked (= current OEE behavior); no owner threshold or master-data.
+- **49** Director status-formula PP plan% shift/daily snapshot
+  - SCHEMA: Reuses pp_plan_fact_entries (same table as #20); read shift/daily plan% aggregates from it
+  - note: Director dashboard reads plan% per shift/day off the snapshot table. Empty -> 0%/no-data default; algorithm is fixed, no owner data.
+- **90** Order merge (gang run) = single print job
+  - SCHEMA: CREATE TABLE pp_gang_runs linking multiple production_orders -> one print job (same structure as #37)
+  - note: Merge-modeling only; defaults to no gang unless orders are explicitly grouped by a planner. No owner data required.
+- **118** Oynakcha (PVC window) = material + labor separate stage
+  - SCHEMA: ALTER TABLE tech_card_routes ADD COLUMN operation_subtype varchar (enum incl 'pvc_window') + material_id int NULL
+  - note: Models the PVC-window as its own labor stage. The labor norm is entered per-route like any operation norm (operational config, not owner policy); default NULL subtype = ordinary op.
+- **124** Multi-line order (each position own route)
+  - SCHEMA: CREATE TABLE production_order_lines (id, production_order_id FK, product_id FK, quantity, route_id, seq); migrate scalar production_orders.product_id -> single line
+  - note: Structural refactor + code; existing orders default to a single line so nothing breaks. Q-35 sign-off already granted for the SD/PP blast radius; no owner data needed.
+- **125** External stages (material prep/delivery) in route
+  - SCHEMA: ALTER TABLE tech_card_routes ADD COLUMN is_external boolean DEFAULT false (+ operation_type enum value 'external')
+  - note: External/lead-time op does not occupy a work center; lead time is entered per route (operational). Default false = internal op = current behavior; no owner data.
+- **131** Maket status cycle + auto deadline shift
+  - SCHEMA: CREATE TYPE maket_status AS ENUM ('draft','sent','revision_requested','approved'); ALTER TABLE technology_cards ADD COLUMN maket_status; migrate maket_approved=true->'approved', false->'draft'
+  - note: Status cycle + auto deadline-shift; shift defaults to elapsed revision duration (sensible mechanism default). No owner threshold needed; existing boolean migrates cleanly.
+- **132** Constructor/drawing+mold phase in route
+  - SCHEMA: ALTER TABLE tech_card_routes ADD operation_type enum value 'construction' + status/duration fields (drawing/mold ahead of production ops)
+  - note: Models the construction phase; durations/status entered per route (operational). Default = no construction phase unless added; no owner data.
+
+## 20-cc (25)
+- **#5** AI asl (immutable) draft snapshot
+  - SCHEMA: ALTER TABLE cc_documents ADD COLUMN ai_draft text (write-once)
+  - note: Verified only ai_body exists. Copy AI output into ai_draft on generation, never UPDATE; defaults to same value as ai_body. Pure schema+code, no owner data.
+- **#9** Horizontal authority matrix (super-admin only)
+  - SCHEMA: CREATE TABLE cc_horizontal_authority_matrix (from_position_code, to_position_code)
+  - note: to_regclass=null confirmed. Super-admin-only CRUD + enforcement in send path; table ships empty (permissive default until super-admin adds restricting rows). Runtime-managed permission grid, not un-fabricatable seed.
+- **#14** 'Tanishdim' PIN acknowledgment table
+  - SCHEMA: CREATE TABLE cc_policy_acknowledgments (user_id, document_id, pin_signature, acknowledged_at)
+  - note: to_regclass=null confirmed. BE middleware records ack; starts empty, populated at runtime by user PIN. No owner data.
+- **#16** Idempotent PIN-signature unique constraint
+  - SCHEMA: ALTER TABLE cc_approvals ADD CONSTRAINT UNIQUE(document_id, step_order, approver_user_id)
+  - note: Only PK/FK/NOT-NULL exist today. Pure constraint + 409 on duplicate; no owner data.
+- **#23** Quality worker journal (append-only)
+  - SCHEMA: CREATE TABLE cc_quality_journal (insert-only, correction_of_id self-FK) + QC endpoint
+  - note: to_regclass=null. Append-only; corrections as new rows, no UPDATE/DELETE grants; starts empty. No owner data.
+- **#25** Org-error auto-stats + human-confirm gate
+  - SCHEMA: CREATE TABLE cc_org_error_stats (write-only) + manual-confirm gate before KPI feed
+  - note: Auto-log stats; E1 human-confirm is a code gate before KPI feed; defaults empty. No owner data.
+- **#31** Manager summary immutable append-only
+  - SCHEMA: ALTER TABLE cc_documents ADD COLUMN manager_summary jsonb
+  - note: Verified only sender_comment exists. Append per level on escalation; defaults empty. No owner data.
+- **#47** 'Ko'rildi' viewed_at/viewed_via (ERP-only)
+  - SCHEMA: ALTER TABLE cc_documents ADD COLUMN viewed_at timestamptz, viewed_via varchar
+  - note: Verified absent. Set only by ERP GET handler, never the Telegram path; defaults NULL. No owner data.
+- **#50** Outbox + retry worker
+  - SCHEMA: CREATE TABLE cc_outbox (event_type, payload, status, attempts, next_retry_at) + worker
+  - note: to_regclass=null confirmed. Executor flag-decides build-cc_outbox vs reuse domain_events; 30s poll + exponential backoff + dead_letter are standard engineering defaults, not owner policy.
+- **#87** Horizontal authority matrix (who-sends-which-type)
+  - SCHEMA: Same table as #9: CREATE TABLE cc_horizontal_authority_matrix
+  - note: Same super-admin-managed matrix as #9; ships empty, filled via CRUD at runtime. No owner data.
+- **#89** Mandatory 'asos hujjat raqami' reference field
+  - SCHEMA: ALTER TABLE cc_approvals ADD COLUMN reference_document_number varchar (queryable field, vs shared free-text comment)
+  - note: cc_audit_trail only has a shared free-text comment today. User enters reference at runtime; DTO required-field enforces it. No owner data.
+- **#101** Orgpolitika PIN → MES check-in block
+  - SCHEMA: Reuse #14 cc_policy_acknowledgments + MES check-in gate
+  - note: Reuses #14 table; gate is code blocking MES check-in until ack recorded. No owner data.
+- **#102** НАЗОРАТ ВАРАҚАСИ checklist (LMS↔CC)
+  - SCHEMA: CREATE TABLE cc_checklists (topic × per-item PIN × progress%) FK to existing LMS course/module IDs
+  - note: Mechanism buildable; checklists created via CRUD referencing existing LMS rows; starts empty. No un-fabricatable data.
+- **#117** Per-level manager summary forwarded up
+  - SCHEMA: Same column as #31: cc_documents.manager_summary (append-only)
+  - note: Reuses #31 column; append + forward on each escalation level. No owner data.
+- **#119** 'Сифат ишчи журнали' append-only registr (QC↔CC)
+  - SCHEMA: Same as #23: CREATE TABLE cc_quality_journal
+  - note: Same append-only journal as #23; corrections as new rows. No owner data.
+- **#124** Multi-signature inter-dept decision protocol
+  - SCHEMA: CREATE TABLE cc_document_signatures (N required signers per step, replacing single-approver-per-step)
+  - note: Mechanism buildable; signer count/identity flow through existing position-based workflow-step config, defaults to N=1 (current behavior). No un-fabricatable data.
+- **#12** ZVS approval → Finance event
+  - SCHEMA: Emit Finance notification via cc_outbox (#50); no new Finance schema
+  - note: Executor flag-decides notification-only, matching the deliberate 'kassir enters manually' pattern already chosen for ADVANCE/FINANCIAL_AID. No auto-payment, no GL, no owner data.
+- **#15** Immutable file upload (UUID + doc-number)
+  - SCHEMA: cc_attachments already exists (empty); build upload endpoint + metadata
+  - note: Flag-decide sensible defaults: local-disk storage, max ~20MB, common types (pdf/jpg/png/docx); owner can tighten later. Table already present.
+- **#18** Cancelled-doc approval routing
+  - SCHEMA: Reuse existing approval-chain tables
+  - note: Pure workflow-semantics flag-decision: default cancellation to a single director/super-admin sign-off (simpler). No owner data.
+- **#30** Remove auto-reject-48h → flag + HR-notify + 24h reminder
+  - SCHEMA: Optional overdue flag column on cc_documents
+  - note: Vision-aligned flag-decision ('avto-qaror yo'q'): remove autoRejectOverdue48h, replace with overdue flag + HR-notify at 48h + 24h reminder loop; timing values already specified. No owner data.
+- **#39** getById participant access filter
+  - SCHEMA: None (add WHERE participant clause; optional composite GIN index)
+  - note: Real hole: getById has ZERO access filter today. Flag-decide participant = sender OR any current/past approver (sensible default). No owner data.
+- **#40** Og'zaki topshiriq → cc_verbal_pending
+  - SCHEMA: CREATE TABLE cc_verbal_pending
+  - note: Flag-decide standalone-button origin in UI; 4h reminder / 24h 'hujjatsiz' mark values already given in the item. No owner data.
+- **#77** ZVS approval → Finance payment queue
+  - SCHEMA: Same as #12: cc_outbox Finance notification event
+  - note: Duplicate of #12; flag-decide notification-only per the established manual-kassir pattern. No owner data.
+- **#109** Multi-target parallel delivery semantics
+  - SCHEMA: None (parallel delivery to each 'maqsad lavozim' already exists)
+  - note: Flag-decide AND (all targets must acknowledge) as default delivery-complete rule. No owner data.
+- **#116** 'Keyin rasmiylashtir' button + reminder
+  - SCHEMA: Same as #40: cc_verbal_pending
+  - note: Duplicate of #40; flag-decide standalone-button UX; reminder timings already given. No owner data.
+
+## 04-coordination (12)
+- **##12** External customer signature: mandatory scan + signed_by_external
+  - SCHEMA: ALTER protocol/prikaz ADD COLUMN signed_by_external boolean DEFAULT false + signed_document_url text
+  - note: File-upload infra already exists; the gate only requires the URL on external-signed docs. Both columns default false/NULL, so existing internal documents are unaffected. No owner data needed.
+- **##16** Execution proof file with proof_status
+  - SCHEMA: New enum proof_status(missing|present|rejected) column on the Kanban completion record
+  - note: kanban-card-files.controller.ts already handles uploads; only the enum + banner are new. Defaults to 'missing' until a file is attached — sensible default, no owner input.
+- **##20** Off-hours Telegram approval, absolute deadline (EP-COR-092)
+  - SCHEMA: ALTER off-hours approval/rasporyazhenie record ADD COLUMN absolute_deadline timestamptz
+  - note: Records lateness only, no auto-block. Column defaults NULL (only off-hours approvals set it). Telegram bot infra already present (telegram-bots-cron services). Deadline is per-record, not a global owner threshold.
+- **##26** attendance_reason field (manager fills within 2 days)
+  - SCHEMA: ALTER attendance ADD COLUMN attendance_reason text + a within-2-days manager role gate
+  - note: The 2-day window is already specified in the item and uses existing roles. Reason defaults NULL. This is a coordination workflow column, not HR razryad/salary scope, so not blocked.
+- **##56** Conflict-of-interest member exclusion from vote
+  - SCHEMA: ALTER council_members ADD COLUMN conflict_of_interest boolean DEFAULT false (+ optional reason text)
+  - note: council-members.repository confirmed to exist; countVotingMembers currently excludes only role='guest'. Add COI to that exclusion. Defaults false = no exclusion, preserving current behavior.
+- **##59** ЗВС session report auto-generation
+  - SCHEMA: New zvs_sessions wrapper table (open/close per weekly cycle) keyed to the flat zvs rows
+  - note: ЗВС create/approve/reject already works on flat zvs; the GET /report just aggregates approved/rejected/total. Pure aggregation — no owner master-data, threshold, or GL mapping.
+- **##67** Buyurtma/Papka № yagona kalit (coordination docs)
+  - SCHEMA: ALTER dokla + rasporyazhenie ADD COLUMN papka_order_id FK -> design_orders.papka_order_id + thread through create DTOs
+  - note: Mirror FK confirmed to exist in pp-design/pp-papka schema. Defaults NULL for legacy rows; new docs capture the key. Additive schema only.
+- **##76** Ichki transport reestri (Rohler/poddon)
+  - SCHEMA: New internal_transport_registry table (equipment_id, status enum soz|ta'mir|band, scheduling calendar) + CRUD
+  - note: Standalone CRUD master-data — owner populates equipment through the UI at runtime, not a pre-seed build dependency. Table starts empty and functions immediately. ow_pallet_recoveries serves a different purpose.
+- **##106** Operator+yordamchi juftlik signal
+  - SCHEMA: ALTER MES production-session table/DTO ADD COLUMN assistant_operator_id (nullable FK -> users)
+  - note: Session currently has a single operator_id; duplicate the pairing signal logic to cover both. Defaults NULL = single-operator sessions unchanged. MES is not a blocked module.
+- **##107** Razmer optimizatsiya koordinatsiya qaror
+  - SCHEMA: New HitlDocumentType.SIZE_OPTIMIZATION enum value in hitl-document-type.enum.ts, wired through the real ApprovalRequest aggregate + approvals.controller.ts
+  - note: Real approval pipeline has 4 live rows; adding the enum value + routing is additive. No owner data — the approval mechanism already exists.
+- **##8** 3-hour 50% quorum shortfall -> emergency meeting (session model)
+  - SCHEMA: New council_sessions/meetings table (council_id FK, scheduled_at, quorum_required_pct, quorum_timeout_hours, status lifecycle) — also unblocks #1/#2/#9/#21/#34/#42/#57
+  - note: Manager flag-decision per owner mandate (design/model decisions are mine to make): a 'session' = an instance of an existing council. The 50% and 3-hour values are given in the vision text, so they seed as column defaults (quorum_required_pct=50, quorum_timeout_hours=3). No un-fabricatable data.
+- **##30** STOP category excluded from readiness-% denominator
+  - SCHEMA: Code-only (readiness_pct/getOrderProgress + COUNT(po.id) already computed); optionally add is_stop boolean to a production-status lookup
+  - note: Defaults STOP = status='paused' — the only STOP-like state that currently exists (statuses are completed/paused/in_progress) — excluded from the denominator. Extend to a dedicated MES downtime-STOP signal if/when one is added. Sensible default, no owner data required.
+
+## 13-crm (26)
+- **5** KP viewed: email pixel + Telegram flag
+  - SCHEMA: ALTER crm_proposals ADD viewed_at timestamptz, viewed_source text (email_pixel|telegram)
+  - note: Defaults NULL = never viewed; pixel-hit/TG webhook stamps it. No owner data — pure event capture.
+- **19** Format-change per-line consent dialog
+  - SCHEMA: New crm_line_consents (order_line_id FK, consented_by, consented_at, affected_lock bool) OR per-line consent columns
+  - note: No consent row = unconsented (default). Manager records at runtime; no master-data.
+- **20** 'Size confirmed' flag gate (Dizayn)
+  - SCHEMA: ALTER design/deal record ADD size_confirmed_by int, size_confirmed_at timestamptz
+  - note: NULL = unconfirmed; gate blocks handoff until set. Filled at runtime by Dizayn.
+- **22** Reorder diff view + per-field confirm
+  - SCHEMA: New crm_spec_snapshots (prior-spec JSON) + per-field consent record + constraint blocking silent stale-spec reuse
+  - note: No snapshot until first reorder (default). Basic clone already buildable (Item 93); only diff/consent layer is new schema.
+- **29** Discount-abuse flag (90d, 3+/10%+)
+  - SCHEMA: New crm_discount_events table + abuse_flag + director-approval gate-state column
+  - note: Thresholds (90d window, 3+ events, 10%+) already specified in vision → hardcode as constants; only the persistence/gate was missing.
+- **30** Sample order: PP low-priority + excl. revenue
+  - SCHEMA: Add order_type field with enum value 'sample' on sales_orders/deals (currently only document_type)
+  - note: Defaults to normal order_type; 'sample' rows excluded from revenue + flagged PP low-priority in code.
+- **35** ГП-kod QC brak/rad defect flag
+  - SCHEMA: ALTER product-code record ADD defect_flag bool, last_reject_reason text
+  - note: Defaults NULL = no defect. Populated when the QC reject event (Item 15) fires — a code/wiring dependency inside the system, not owner data.
+- **38** Next-order reminder AI (default 30d)
+  - SCHEMA: ALTER customer ADD next_order_reminder_at timestamptz
+  - note: Rule-based default = last_order_date + 30d (given in vision). AI refinement can layer on later; core works with the date rule and no creds.
+- **39** Currency 5%+ jump -> 'qayta hisob kerak'
+  - SCHEMA: ALTER deal ADD rate_at_quote numeric (baseline rate snapshot)
+  - note: Snapshot live rate at quote from existing Finance exchange_rates feed; 5% threshold is given in vision (hardcode). No owner data.
+- **40** Warehouse-entry reqs auto from sales_orders
+  - SCHEMA: ALTER customer/delivery record ADD warehouse_entry_requirements jsonb/text
+  - note: Near-duplicate of #132. Auto-populated from sales_orders; entered at runtime; defaults empty.
+- **81** НО-2 corporate-number on manager card
+  - SCHEMA: New corporate_numbers table (number, manager/card_id FK, active, transfer-on-departure state)
+  - note: Numbers entered via CRUD at runtime; defaults empty. Binds to existing card/manager — not the blocked org head_user_id logic.
+- **85** Corporate TG/business account ownership
+  - SCHEMA: New crm_account_ownership table (bot/account_id -> card_id FK, not employee)
+  - note: Records which karta owns which account; entered at runtime. Telegram ingest already exists; defaults empty.
+- **95** Customer artwork/logo versioned library
+  - SCHEMA: ALTER crm_documents ADD parent_document_id, version int (or new versioned-artwork table)
+  - note: Every upload = new version (default v1). Files uploaded at runtime; no owner master-data.
+- **99** Razmer plan↔actual lock+flag
+  - SCHEMA: ALTER deal/design record ADD planned_size, actual_size, size_locked bool
+  - note: Values entered at runtime; flag raised on mismatch. Defaults NULL/unlocked.
+- **100** Format-change electronic consent
+  - SCHEMA: Consent-capture field/table tied to a format-change event (shares model with #19)
+  - note: Manager records electronic rozilik at runtime; defaults none. No owner data.
+- **105** Customer kg-trend + decline signal
+  - SCHEMA: ADD weight_kg column on sales_order_items
+  - note: kg is code-derivable, NOT owner data: material_cards.grammage (GSM, confirmed present) x area via the project's existing sloy m²->kg formula. Defaults NULL until back-computed.
+- **108** Customer×format price matrix
+  - SCHEMA: New crm_customer_format_prices table (customer_id, format, price)
+  - note: Prices entered through the normal sales pricing workflow at runtime (like any CRUD), not a fixed owner seed-list; defaults empty.
+- **120** Default payment type on customer
+  - SCHEMA: ADD sd_customers.default_payment_type enum (naqd|o'tkazma|bartar)
+  - note: Enum values already given in vision; column confirmed absent (only payment_terms_days exists). Defaults NULL.
+- **121** USD-pegged price + rate warning
+  - SCHEMA: ADD is_usd_pegged bool + peg_rate numeric on the price field
+  - note: CRON compares peg_rate to existing exchange_rates feed; related to #39 (reuse 5% threshold). Defaults not-pegged.
+- **124** Compensation/discount history + abuse flag
+  - SCHEMA: New crm_discount_history table (customer_id, discount events, abuse_flag)
+  - note: Shares thresholds with #29 (vision-specified). Per-customer events logged at runtime; defaults empty.
+- **125** Monthly cohort by kg
+  - SCHEMA: Same weight_kg source on order line (#105) + add kg flavor to cohort.service
+  - note: cohort.service already supports count/revenue flavors; kg derived from grammage x area (grammage confirmed present) — code, not owner data.
+- **128** Customer product-lines (price/volume/defect)
+  - SCHEMA: New crm_customer_product_lines table (customer_id, product, price, volume, defect) replacing flat 2-row crm_products
+  - note: Per-customer-per-product rows entered at runtime; defaults empty.
+- **132** Customer warehouse-entry reqs save
+  - SCHEMA: Customer-scoped warehouse_entry_requirements field surfaced to Logistics
+  - note: Near-duplicate of #40; runtime-entered customer data; defaults empty.
+- **133** Agreed packaging method on card
+  - SCHEMA: ADD packaging_method/packing_preference field on customer or product-line record
+  - note: Agreed method entered at runtime; defaults NULL.
+- **134** Sample/Академия separation from sales
+  - SCHEMA: order_type enum value 'namuna'/'academy' (same field family as #30) to exclude from revenue stats
+  - note: Defaults to normal order; 'namuna'/academy rows excluded from revenue aggregation in code.
+- **48** CRM audit module='CRM' filter + 7yr retention
+  - SCHEMA: No new column — populate existing audit_logs.module='CRM' on CRM writes + add retention job/config (optional seed row)
+  - note: module column exists but 100% NULL; 7-year value already stated in vision, so owner's general approval covers the sign-off. Pure wiring + tagging.
+
+## 14-marketing (29)
+- **#14-4** Budget-exhaustion soft warning + campaign approval + 24h escalation
+  - SCHEMA: ALTER marketing_campaigns ADD approval_status (enum draft/pending/approved), pending_since timestamptz, approved_by int
+  - note: 24h escalation timer and budget-exhaustion warning read existing budget field; approval_status defaults 'draft', pending_since NULL until submit. Works with zero owner input.
+- **#14-13** 90-day two-campaign ROI attribution to last campaign
+  - SCHEMA: New lead_campaign_touch table (lead_id, campaign_id, touched_at, is_participation bool)
+  - note: 90-day window already exists as MKT_ATTRIBUTION_WINDOW_DAYS constant; code populates rows on each lead↔campaign touch; empty default = no attribution yet. Verified no such table exists.
+- **#14-14** Sample material shortage -> 'material waiting' + MM auto-signal
+  - SCHEMA: ALTER ow_order_samples ADD material_id int (FK material_cards), status enum
+  - note: status defaults 'pending', material_id NULL until linked; 'material kutilmoqda' + MM signal is a pure mechanism, no owner data needed.
+- **#14-16** Quality lead unsold 30 days -> salesperson KPI penalty
+  - SCHEMA: New manager_kpi/elo_ratings persistence table (subject_id, rating, updated_at)
+  - note: 30-day trigger stated; EloRatingService already computes but is stateless — table just persists it, default seed rating (e.g. 1500). Sales Elo KPI, NOT HR razryad/salary, so not blocked.
+- **#14-19** Marketing KPI updates real-time on 'qualified lead' event
+  - SCHEMA: New marketing_kpi_counter table + a 'qualified lead' domain event
+  - note: Counters default 0 and increment on the event; event-driven mechanism needs no owner data.
+- **#14-20** Promo code default 1 customer / 1 campaign
+  - SCHEMA: New promo_codes table with per-customer/per-campaign usage_limit column (default 1)
+  - note: Default 1/1 is stated in the item; owner creates individual codes through normal CRUD UI (operational, not un-fabricatable gating data). Enforcement mechanism works with the default.
+- **#14-21** Seasonal-demand calendar as 'orientir' to PP/MPS
+  - SCHEMA: New marketing_seasonal_calendar table
+  - note: CRUD populated via UI; empty default = no orientir sent; one-directional guidance into PP. No computation requires a hardcoded value.
+- **#14-23** Oprosny-list draft; SD blocked until complete
+  - SCHEMA: New oprosny_list (brief) table with draft/complete status
+  - note: Required-field list defaults to a sensible core set (name/product/qty/deadline), owner can refine later; draft->complete->SD-block mechanism works on the default.
+- **#14-31** Exhibition follow-up 48h per HR working days
+  - SCHEMA: ALTER exhibitions/exhibition_leads ADD next_follow_up_at timestamptz
+  - note: 48h stated, computed over HR working-day calendar (read-only); touches no razryad/salary, so not HR-blocked.
+- **#14-32** Lead payment-discipline flag from AR daily cron
+  - SCHEMA: ALTER lead/customer ADD payment_discipline flag column + daily cron
+  - note: openDebt read already exists via getChurnRisk; defaults to flag-on-any-overdue-AR (sensible default). Exact threshold is the separate #14-69 decision but the flag works with the default.
+- **#14-34** Upsell recommendation real-time, kept 90 days
+  - SCHEMA: New upsell_recommendations table with 90-day expiry/TTL column
+  - note: 90-day TTL stated; table + expiry mechanism buildable now. Recommender defaults to rule-based (bought-X->suggest-Y); AI enrichment optional, not required for the store to function (unlike #14-76 which needs external spend).
+- **#14-36** Customer annual forecast to PP/MPS; +/-30% alert
+  - SCHEMA: New customer_forecast table
+  - note: +/-30% alert threshold is stated; capture table populated by sales/owner via CRUD, empty default, feeds PP as orientir only.
+- **#14-41** New Pantone code -> auto-notify design
+  - SCHEMA: New pantone_codes table
+  - note: Pantone is a public standard list; codes entered via CRUD, new-code insert triggers design notification. No owner-specific data. grep pantone = 0 today.
+- **#14-42** Manager proceeds-despite-warning -> audit log (7yr)
+  - SCHEMA: New marketing/CRM audit_log table (7-year retention)
+  - note: 7-year retention stated; also instrument the currently-passive 'proceed despite warning' action to emit the log. Defaults empty.
+- **#14-45** Exhibition trip expense from HR into ROI
+  - SCHEMA: ALTER business_trips ADD exhibition_id (or trip<->exhibition join table)
+  - note: Trip cost already stored in business_trips; adding the FK link enables exhibition ROI rollup. Structural link, not HR razryad/salary, so not blocked.
+- **#14-48** Contact change -> Kanban task to current manager, 48h
+  - SCHEMA: New contact-persons table (or ALTER add is_primary + primary_changed flag)
+  - note: 48h stated; marketing_lead_contacts stays the activity/attempt log; new distinct-contact model with is_primary triggers a Kanban task to the current manager on primary change.
+- **#14-56** Customer brand passport (logo/Pantone/CMYK/font/prohibitions)
+  - SCHEMA: New brand_passport table
+  - note: Per-customer CRUD, empty default; brand_templates has 0 rows and no brand_passport exists today.
+- **#14-58** Oprosny-list auto-prefill from lead (dup of #23)
+  - SCHEMA: Same oprosny_list table as #14-23 — build once
+  - note: Duplicate of #14-23; auto-prefill from lead data. No extra owner input.
+- **#14-59** Lead product type (ofset/gofra/etiketka/flekso) mandatory
+  - SCHEMA: ALTER leads/crm_leads ADD product_type enum with the 4 stated values
+  - note: The four enum values are explicitly stated in the item, giving a sensible default set; 'owner confirm' is confirmation only, not un-fabricatable data. Absent on all three lead tables today.
+- **#14-64** Per-customer brand passport (dup of #56)
+  - SCHEMA: Same brand_passport table as #14-56 — build once
+  - note: Duplicate of #14-56.
+- **#14-66** Lead auto-prefills oprosny list (dup of #58/#23)
+  - SCHEMA: Same oprosny_list table — build once
+  - note: Duplicate of #14-58/#14-23.
+- **#14-67** Lead product type +blanka mandatory (dup of #59)
+  - SCHEMA: Same product_type enum as #14-59, add 'blanka' value — build once
+  - note: Duplicate of #14-59 with an extra stated value.
+- **#14-70** Seasonal-demand calendar 'call this month' (dup of #21)
+  - SCHEMA: Same marketing_seasonal_calendar table — build once
+  - note: Duplicate of #14-21.
+- **#14-73** Large-customer annual forecast -> production/material (dup of #36)
+  - SCHEMA: Same customer_forecast table — build once
+  - note: Duplicate of #14-36.
+- **#14-79** New-manager sales script + FAQ (position handbook)
+  - SCHEMA: New sales_script_kb / faq knowledge-base table
+  - note: KB CRUD filled by managers/HR, empty default; email_templates stays the quick-reply store. No owner-specific threshold or list required.
+- **#14-80** Lead/customer region + export flag + sales map
+  - SCHEMA: ALTER leads ADD region column + is_export boolean
+  - note: region nullable (free-text/lookup), is_export defaults false; sales-map is a visualization over these columns. Neither exists on any lead table today.
+- **#14-85** Customer-facing order-status (%) link/bot
+  - SCHEMA: ALTER sales_orders ADD non-guessable share_token column
+  - note: progressPct already computed by get-order-saga.handler.ts; token generated server-side, public read endpoint keyed by token. Internal data ready — only the token column is missing.
+- **#14-92** Per-customer promo calendar + 'box needed before this date'
+  - SCHEMA: New per-customer promotional_events calendar table with lead-time reminder
+  - note: Per-customer CRUD, empty default; lead-time reminder mechanism computed from entered event dates. No owner policy number needed.
+- **#14-40** Warm lead not accepted in 15 min -> escalate to sales head
+  - SCHEMA: New SD warm-lead escalation timer/rule (accept-within-15min -> escalate to sales-head position, no route-back to marketing)
+  - note: Policy is fully specified in the item (15-min, sales head, never back to marketing) — implement as the default; owner 'confirm' is optional not un-fabricatable. Escalation target resolves via position (resolveByPosition), not the blocked org head_user_id hierarchy.
+
+## 15-kanban (37)
+- **#A5** Rollover cron shift-aware + race-fix
+  - SCHEMA: ALTER kanban_cards ADD rolled_over boolean DEFAULT false
+  - note: Cron marks incomplete cards rolled_over; defaults to calendar-day (midnight) boundary with SELECT..FOR UPDATE row-lock for the race. Shift-aware boundary is layered later once C11 shift-calendar is chosen; works standalone now.
+- **#A6** WIP limit in service + boss override log
+  - SCHEMA: CREATE TABLE kanban_wip_overrides (id, column_id, user_id, prev_limit, reason, created_at); optional kanban_columns.wip_limit int NULL
+  - note: WIP count check moves into service layer; limit defaults NULL=unlimited and is admin-set per column in-app (no owner data). Override row logged only when a boss bypasses.
+- **#A9** Tiraj change recomputes progress
+  - SCHEMA: ALTER kanban_cards ADD total_qty int NULL, completed_qty int NULL
+  - note: progress = completed_qty/total_qty recomputed on change; defaults to manual entry (NULL). Auto-sync of tiraj from the order (two-worlds qty-source) is a separate deferral; recompute mechanism functions standalone.
+- **#A12** Confidential discipline task, no auto-watcher
+  - SCHEMA: ALTER kanban_cards ADD confidential boolean DEFAULT false, card_type text NULL
+  - note: When confidential=true the auto-watcher hook is skipped. Defaults false = normal card, no behavior change.
+- **#A34** Летучка materialized view (5-min refresh)
+  - SCHEMA: CREATE MATERIALIZED VIEW kanban_letuchka_mv over kanban_cards + REFRESH cron
+  - note: Aggregates existing card rows for standup mode; 5-min refresh interval is a hardcoded/configurable constant. No owner data needed.
+- **#A41** Station-maintenance blocked state
+  - SCHEMA: ALTER kanban_cards ADD blocked_reason text NULL (value 'maintenance') or card_state enum
+  - note: Operator can manually mark a card blocked-maintenance now (excluded from active WIP). The automatic MES-StationDown -> auto-block -> PP-reschedule trigger defaults OFF (no event = no auto-fire) until the MES StationDownEvent is built as a separate MES task.
+- **#A42** Internal (Academy) order low AI priority
+  - SCHEMA: ALTER kanban_cards ADD internal_flag boolean DEFAULT false
+  - note: Defaults false=external. Priority/AI sort simply deprioritizes internal_flag=true rows — a sorting rule, no AI credential. Duplicate of ##115 (is_internal); build one column.
+- **#A43** Примечание badge, ack blocks transition
+  - SCHEMA: ALTER kanban_cards ADD special_note text NULL
+  - note: Badge renders the note; transition blocked until operator acknowledges. Defaults NULL = no note. Duplicate of ##106.
+- **#A47** InspectionAddedEvent outbox
+  - SCHEMA: CREATE TABLE kanban_inspection_outbox (id, event_id, payload jsonb, processed boolean DEFAULT false, created_at)
+  - note: Standard outbox for reliable inspection-registry event delivery; processed defaults false. No owner data.
+- **#A48** File QC 8D/CAPA link + size limit
+  - SCHEMA: ALTER kanban_files ADD linked_qc_id int NULL FK
+  - note: linked_qc_id ties a kanban file to a QC 8D/CAPA record. File-size limit defaults to the 10MB value already stated in the item (business constant, configurable). Virus-scan integration is a separate infra concern that defaults to no-scan.
+- **#C3** Backward move: reason mandatory + history
+  - SCHEMA: CREATE TABLE kanban_card_transitions (id, card_id, from_column_id, to_column_id, reason, user_id, created_at)
+  - note: Reason required on backward move, appended to append-only history. No owner data.
+- **#C4** Reopen from Done: boss + reason + mark
+  - SCHEMA: ALTER kanban_cards ADD reopened_at timestamptz NULL, reopened_count int DEFAULT 0
+  - note: Reopen gated by manager role via existing RBAC (not Org head_user_id), reason logged, count increments. Defaults 0.
+- **#C15** Monthly report 'escalation count'
+  - SCHEMA: ALTER kanban_cards ADD escalation_count int DEFAULT 0
+  - note: Increments on each escalation, surfaced in the monthly report. Defaults 0; counter is buildable independently of the escalation router.
+- **#C18** Personal Program hourly-grid module
+  - SCHEMA: CREATE TABLE personal_program (id, user_id, date, hour_slot, activity, card_id NULL, slot_type)
+  - note: Per-user hourly daily schedule; root module for C19-25/C58-59/#88. Users already exist, no master-data; defaults to empty grid the user fills.
+- **#C26** 7-category master
+  - SCHEMA: CREATE TABLE kanban_categories (id, name, color, sort_order) + ALTER kanban_cards ADD category_id int NULL FK
+  - note: Built as an owner-populated master with CRUD; card category defaults NULL=uncategorized. Owner adds the 7 category names via UI, so no taxonomy is fabricated and the mechanism works empty.
+- **#C28** Priority proposed -> approved
+  - SCHEMA: ALTER kanban_cards ADD priority_proposed text NULL, priority_approved text NULL
+  - note: Creator proposes, manager approves via existing RBAC; reuses the existing priority vocabulary. Defaults NULL.
+- **#C33** Incomplete task auto-rolls to tomorrow
+  - SCHEMA: kanban_cards.rolled_over boolean DEFAULT false (same column as A5)
+  - note: Same root/column as A5 — build once. 'ko'chirilgan' marker defaults false.
+- **#C34** '3x rolled' signal
+  - SCHEMA: ALTER kanban_cards ADD rolled_over_count int DEFAULT 0
+  - note: Threshold 3 is explicitly owner-stated in the item (not un-fabricatable). Signal fires when count>3; defaults 0. Depends on C33 column.
+- **#C45** Confidential task: approved watchers only
+  - SCHEMA: reuses kanban_cards.confidential (A12)
+  - note: Duplicate of A12/##75/##120 — one column. Defaults false.
+- **#C61** Delegated task returns to original owner
+  - SCHEMA: CREATE TABLE kanban_delegations (id, card_id, original_owner_id, delegate_id, delegated_at, return_date, returned_at NULL)
+  - note: Kanban-local delegation: delegate is ANY user chosen in-app, NOT the HR substitute. On return the card reverts to original_owner. Distinct from the HR-vacation-substitute items (A4/C60/##90) which are dataGated. Duplicate of ##91.
+- **#C69** Card tiraj + progress-bar (7000/10000)
+  - SCHEMA: kanban_cards.total_qty/completed_qty (same as A9)
+  - note: Progress bar from total/completed; defaults NULL, manual entry. Same columns as A9/##99/##69.
+- **##75** Confidential: approved watcher only
+  - SCHEMA: kanban_cards.confidential boolean DEFAULT false
+  - note: Duplicate of A12/C45/##120 — one column. Defaults false.
+- **##88** Lunch/prayer fixed busy slots
+  - SCHEMA: personal_program.slot_type fixed-slot rows (part of C18)
+  - note: User adds own fixed slots (lunch/prayer) marked band/busy; defaults empty. No owner data; part of the C18 module.
+- **##91** Delegated task returns to owner
+  - SCHEMA: CREATE TABLE kanban_delegations (same as C61)
+  - note: Duplicate of C61 — kanban-local delegation, build once.
+- **##99** Тираж + progress-bar on card
+  - SCHEMA: kanban_cards.total_qty/completed_qty
+  - note: Duplicate of C69/A9. Defaults NULL.
+- **##100** 'Сумма осталось' remaining payment
+  - SCHEMA: ALTER kanban_cards ADD payment_balance numeric NULL
+  - note: Displays remaining payment; defaults NULL/manual (order-sync deferred). The block-vs-warn enforcement policy (A29) defaults to warn/display-only, so the display feature is buildable now.
+- **##106** 'Примечание' face badge
+  - SCHEMA: kanban_cards.special_note text (dup of A43)
+  - note: Duplicate of A43 — one column.
+- **##109** Task category by series (3 values)
+  - SCHEMA: CREATE TABLE kanban_task_series (id, name) + ALTER kanban_cards ADD task_series_id int NULL FK
+  - note: Owner-populated lookup (3 rows via CRUD), card defaults NULL. Mirrors the C26 master pattern; series names entered in-app, none fabricated.
+- **##111** 'Expected outcome' field
+  - SCHEMA: ALTER kanban_cards ADD expected_outcome text NULL
+  - note: Free-text field; defaults NULL.
+- **##115** Internal/external flag, external-paid priority
+  - SCHEMA: ALTER kanban_cards ADD is_internal boolean DEFAULT false
+  - note: Duplicate of A42; defaults false=external. External-paid cards sort higher — pure rule, no owner data.
+- **##120** Confidential visible to giver+doer+boss only
+  - SCHEMA: kanban_cards.confidential (A12) + extend existing kanbanCardVisibilityPredicate (#84)
+  - note: Visibility predicate already exists (#84); add a confidential branch (assigner+executor+manager). Defaults false.
+- **##122** Stage dependency ('blocked until X done')
+  - SCHEMA: ALTER kanban_cards ADD blocked_by int NULL FK(kanban_cards.id)
+  - note: Card is blocked until the referenced card is done; defaults NULL = not blocked.
+- **##129** Card color by product type (гофра/картон)
+  - SCHEMA: CREATE TABLE kanban_product_type_colors (id, product_type, color)
+  - note: Colors auto-assigned from a palette by default and product-type derived from the linked order/product, so it renders without owner input. Owner later refines the taxonomy/colors via UI; defaults to auto-color.
+- **#A2** Rasporyajenie -> auto task
+  - SCHEMA: Define RasporyajenieIssuedEvent contract + CREATE TABLE kanban_rasporyajenie_inbox (id, event_id, payload jsonb, processed boolean DEFAULT false); wire emitter in Coordination/CC module
+  - note: The payload contract is a manager flag-decision, not un-fabricatable owner data: {rasporyazhenie_id, title, assignee_user_id, due_date}. CC auto-rasporyazhenie already exists (Batch 5); kanban listener auto-creates a card. Defaults: unmatched assignee -> board default column.
+- **#A13** Brak rework dedup; fine stays in QC
+  - SCHEMA: ALTER kanban_cards ADD source_qc_defect_id int NULL + UNIQUE partial index on it
+  - note: Flag-decision: QC owns the jarima (fine) ledger. Kanban's auto rework card carries the dedup key so it can never double-create and never writes the fine itself (references it). No GL/owner data touched by kanban.
+- **##117** Deadline extension w/ manager approval
+  - SCHEMA: ALTER kanban_cards ADD deadline_ext_status text NULL, deadline_ext_requested_due timestamptz NULL, deadline_ext_approved_by int NULL
+  - note: Prior-approval-vs-post-hoc is a policy that sensibly defaults to prior manager approval (configurable) — a flag-decision, not owner data per the buildNow 'can default' clause.
+- **##125** @xabar (notify) vs @so'rov (task) parser
+  - SCHEMA: none new — kanban_notifications + kanban_cards.parent_card_id already exist
+  - note: Parser defaults @xabar -> passive notification, @so'rov -> auto-create sub-task via parent_card_id. Token syntax is a product flag-decision we set, not owner data.
+
+## 16-iot (6)
+- **#13** Brak% escalation log + 10min cron
+  - SCHEMA: CREATE TABLE iot_alert_escalation_log (id, alert_id FK, work_center_id, escalated_at, from_level, to_level, reason, acknowledged_at, acknowledged_by)
+  - note: Escalation is purely time-based: a 10-min cron finds brak alerts (already produced by the existing checkBrakLimit) left unacknowledged >10min and logs an escalation to the next level. Escalation target defaults to a fixed role/broadcast notification (not a precise manager_id), so it needs no owner threshold or master-data. Verified absent: no %escalat% table.
+- **#41** Color-count change -> paint approval/PR
+  - SCHEMA: ALTER production_sessions ADD COLUMN color_count int NULL
+  - note: color_count is operational data entered per session; a change between consecutive sessions fires the existing approval/purchase-request flow. Defaults NULL (no trigger) until first captured. No owner master-data or threshold required.
+- **#57** SM/KBA color count (4+0/4+4)
+  - SCHEMA: ALTER production_sessions ADD COLUMN color_count int, color_section varchar (e.g. '4+0','4+4')
+  - note: Same column family as #41; the 4+0/4+4 value is operator-entered per session, defaults NULL. Pure operational capture, no owner data. Build jointly with #41 to avoid a duplicate color_count column.
+- **#71** Configurable shift length 8/10/12h
+  - SCHEMA: ALTER equipment ADD COLUMN shift_length_hours int DEFAULT 12 (per-machine shift-config field)
+  - note: A sensible universal default (12h, the current implicit assumption) keeps OEE/norm math correct out of the box; texnolog overrides per machine via config UI at runtime. Feature ships working and immediately useful with no owner data.
+- **#42** Inter-operation wait (okoshka) category
+  - SCHEMA: Additive seed: INSERT INTO mes_downtime_reasons a row (e.g. code 'DT-OKOSHKA', name 'Operatsiyalararo kutish', category 'wait')
+  - note: The category is fully specified by the item and additive seed is now allowed. Seed with sensible wording (owner can rename later per the drive-to-vision mandate). mes_downtime_reasons has 16 rows today, none for inter-operation wait.
+- **#102** Night-shift (C) tightened thresholds
+  - SCHEMA: None (code constant): add NIGHT_SHIFT_ANOMALY_MULTIPLIER=0.8 to business.constants.ts, applied to IOT_ANOMALY_CRITICAL_THRESHOLD_RATIO (=1.5) when shift=C in anomaly-detected.handler.ts
+  - note: Vision already specifies ~20% lower for night shift, so the 0.8 multiplier is fabricable from the vision, not an un-fabricatable owner number. Owner-tunable constant later. Only requires that shift=C is identifiable (shift info already present).
+
+## 12-lms (13)
+- **5** Yo'riqnoma diff-mavzular qayta-o'qish (course versioning)
+  - SCHEMA: ALTER courses ADD version INT DEFAULT 1, changed_topics JSONB (confirmed absent — %version% col query empty)
+  - note: Self-contained versioning: version starts at 1, changed_topics empty; each course edit bumps version and records diffed topics that trigger re-read. No owner data.
+- **8** AI xavfli savol bayrog'i (keyword) + NO-14 approval-state
+  - SCHEMA: ALTER lms_questions + lms_exam_questions ADD flag_type text, flag_state enum('none','flagged','approved','rejected') DEFAULT 'none'
+  - note: Keyword-based (the '(keyword)' qualifier — NOT an AI-provider feature). Keyword list is CRUD-configurable, defaults empty; flag_state defaults 'none' and walks the NO-14 approval states. Works without owner data.
+- **10** PDCA Check salbiy → Reja (kaizen stage machine)
+  - SCHEMA: ALTER kaizen_suggestions ADD pdca_stage enum('plan','do','check','act') DEFAULT 'plan' (table has no PDCA cols today)
+  - note: Pure state machine; a negative Check transitions the row back to Plan. Defaults to 'plan'; no owner data.
+- **11** Sick leave → o'qish timer PAUSE
+  - SCHEMA: ALTER enrollments ADD paused_until timestamptz NULL
+  - note: Reacts to existing HR sick-leave records/events; paused_until defaults NULL (not paused) and shifts the deadline while on leave. Leave is operational data that already exists — no owner master-data.
+- **15** Murabbiy 3 kun baholamasa eskalatsiya
+  - SCHEMA: NEW lms_grading_submissions (id, enrollment_id, mentor_id, submitted_at, graded_at, graded_by_deadline)
+  - note: 3-day threshold is given in the vision (deadline defaults submitted_at+3d). Replaces binary practicalPassed with a per-submission grading queue; escalation defaults to a notification when ungraded past deadline — no owner data.
+- **16** Tashqi sertifikat HR tasdiqi bilan hisob
+  - SCHEMA: NEW external_certificates (id, employee_id, course_id, file_ref, status enum('pending','approved','rejected') DEFAULT 'pending', approved_by, approved_at) — table confirmed absent
+  - note: Per-submission HR judgement, not a master-data mapping: employee uploads a cert against a course, HR approves → that course gate is satisfied. Defaults status 'pending'.
+- **34** Tablet offline o'qish + BullMQ idempotent sync
+  - SCHEMA: NEW lms_sync_ledger (sync_id text UNIQUE, entity, payload, synced_at) for dedup
+  - note: Idempotency via UNIQUE sync_id; no owner data/threshold/GL. Requires Redis/BullMQ queue wiring + FE IndexedDB/service-worker cache (infra/code, not owner-gated).
+- **35** Onboarding 0-4/4-8/8+ soat eskalatsiya
+  - SCHEMA: ALTER hr_onboarding_milestones ADD escalation_tier smallint, last_escalated_at timestamptz
+  - note: Hour-buckets given in vision (0-4/4-8/8+). last_escalated_at makes each tier fire once (idempotent); defaults NULL. No owner data.
+- **42** Reglament test 7-kun uzr (matn+fayl) +7 kun
+  - SCHEMA: NEW excuse_requests (id, employee_id, test_id, reason_text, file_ref, status DEFAULT 'pending', extension_granted bool) — table confirmed absent
+  - note: 7-day one-time extension is fixed in vision; file via existing storage module; manager/HR approve routes to a role generically. Defaults status 'pending' — no owner data.
+- **47** Jihoz yo'qolsa review_required + NO-14 xabar
+  - SCHEMA: ALTER card_required_knowledge ADD review_required boolean DEFAULT false (CRUD already exists)
+  - note: Column defaults false; manual set + NO-14 notify works immediately. Auto-fire needs an assets/equipment status-change event wired in (integration/code, not owner data).
+- **60** Yakuniy topshiriqlar bo'lim yig'ma test (unlock gate)
+  - SCHEMA: ALTER lms_modules ADD section_final_test_id int REF lms_tests, gate_enabled boolean DEFAULT false (only order/order_index/sort_order exist today)
+  - note: section_final_test_id defaults NULL (no gate); assigning a section test per-course is operational config, not owner master-data. Gate unlocks the next section on pass.
+- **62** Amaliy imtihon baholash varaqasi (rubrika)
+  - SCHEMA: NEW lms_practical_exam_rubrics (id, exam_or_course_id, criterion, max_score, score, comments) — table confirmed absent
+  - note: Replaces raw practicalPassed boolean; mentor enters criteria/scores per exam (operational config, not owner master-data). Defaults empty.
+- **75** Tashqi malaka ichki kurs o'rniga (dup of #16)
+  - SCHEMA: NEW external_certificates (same schema as #16)
+  - note: Duplicate ask of #16 — same external_certificates table + HR-approve gate. Build once; both items satisfied.
+
+## 18-notifications (23)
+- **#2** Single ntf_notifications table w/ module_code filter
+  - SCHEMA: ALTER notifications ADD COLUMN module_code text, channel text DEFAULT 'in_app', payload_json jsonb, immutable boolean DEFAULT true
+  - note: Verified notifications only has user_id+read_at. Single-table + module_code filter works with code alone; module_code defaults NULL/derived from source event, channel defaults in_app, payload_json NULL. No owner data.
+- **#7** Deep-link/OTP onboarding + telegram_id UNIQUE
+  - SCHEMA: ADD UNIQUE constraint on users.telegram_id + CREATE TABLE ntf_onboarding_tokens(token, user_id, expires_at)
+  - note: Generate/validate/link deep-link OTP reuses existing telegram-bot infra (telegram-bots-cron services already in codebase). 24h expiry is a fixed constant; defaults to no linked telegram until user completes. No owner data.
+- **#10** DB immutability DELETE trigger + immutable flag
+  - SCHEMA: ALTER notifications ADD COLUMN immutable boolean DEFAULT true, archived_at timestamp + BEFORE DELETE trigger RAISE EXCEPTION
+  - note: Pure DB integrity guard; immutable defaults true, deletes route to archived_at. No owner data.
+- **#14** Verbal task source='verbal' + 24h timer
+  - SCHEMA: ALTER kanban_cards ADD COLUMN verbal_confirmed_at timestamp (source varchar already exists, verified)
+  - note: 24h confirm window is a fixed constant; verbal_confirmed_at NULL until confirmed. No owner data.
+- **#15** ntf_doc_views (who opened) + version signal
+  - SCHEMA: CREATE TABLE ntf_doc_views(user_id, doc_id, doc_version, viewed_at) — confirmed to_regclass null
+  - note: Generic view-tracking; table empty until docs opened. No owner data.
+- **#23** IoT EquipmentFaultEvent → ntf_outbox offline retry
+  - SCHEMA: CREATE TABLE ntf_outbox(id, event_type, payload, status, retry_count, next_retry_at, created_at) + new EquipmentFaultEvent class — confirmed null
+  - note: Generic offline-retry outbox pattern; empty until faults occur. No owner data.
+- **#41** Kanban block signal + blocked_reason
+  - SCHEMA: ALTER kanban_cards ADD COLUMN blocked_reason text (verified no blocked* column) + new KanbanBlockRequestedEvent
+  - note: blocked_reason NULL default; block-request event + notification signal buildable with code. No owner data.
+- **#45** Night solo-decision soft-cancel record
+  - SCHEMA: CREATE TABLE night_solo_decisions(id, decided_by, decision, soft_cancelled_at, created_at) — confirmed null
+  - note: Append-only with soft-cancel-only semantics; rows written at runtime. No owner data.
+- **#46** Responsibility-transfer form
+  - SCHEMA: CREATE TABLE responsibility_transfers(id, from_user_id, to_user_id, scope, reason, created_at) + BE endpoint
+  - note: Formal transfer form; from/to chosen at runtime by user. No owner data.
+- **#50** Bot health ntf_bot_health 30s ping
+  - SCHEMA: CREATE TABLE ntf_bot_health(bot, last_ping, status) — confirmed null
+  - note: 30s ping interval fixed; rows written by health cron. No owner data.
+- **#66** Read/ACK button (ack_at)
+  - SCHEMA: ALTER notifications ADD COLUMN ack_at timestamp (verified only read_at exists)
+  - note: ACK endpoint sets ack_at, NULL default; column+endpoint buildable now (inline-button item 17 is UI polish, not a blocker). No owner data.
+- **#73** New-employee onboarding deep-link + telegram_id UNIQUE
+  - SCHEMA: ADD UNIQUE constraint on users.telegram_id (verified no constraint; telegram_id 0 populated)
+  - note: Near-duplicate of #7; onboarding deep-link/OTP mechanism. No owner data.
+- **#85** Night-shift phone-escalation call_log
+  - SCHEMA: CREATE TABLE call_log(caller, callee, timestamp, response) — confirmed null
+  - note: call_log recording table is the deliverable; rows written at runtime. No owner data (the who-to-call escalation-target routing is a separate concern).
+- **#93** Recurring-defect defect_type_code
+  - SCHEMA: ALTER qc_defects ADD COLUMN defect_type_code text (verified defect_type + defect_code exist separately)
+  - note: Recurring-defect grouping key; backfillable by concatenating/deriving from existing defect_type/defect_code. No owner data.
+- **#105** Designer unapproved-file signal (design_files)
+  - SCHEMA: CREATE TABLE design_files(id, file_ref, uploaded_by, approved_by integer NULL FK, created_at) — confirmed null
+  - note: approved_by NULL = unapproved default drives the notify-on-missing-approval signal. No owner data.
+- **#116** Route responsibility to karta (recipient_card_id)
+  - SCHEMA: ALTER notifications ADD COLUMN recipient_card_id integer FK org_functions (verified only user_id exists)
+  - note: Card-centric routing column; NULL default falls back to existing user_id routing; uses existing org_functions cards. No owner data.
+- **#4** CRITICAL bypass quiet-hours window
+  - SCHEMA: None needed — notification_preferences.quiet_hours jsonb already exists (verified); seed default '22:00-07:00' (business.constants QUIET_HOURS)
+  - note: CRITICAL-priority bypass builds with the doc-suggested default window 22:00–07:00, owner-editable in settings. Default is sensible, not fabricated policy.
+- **#38** Alert debounce 5min/3signal
+  - SCHEMA: business.constants ALERT_DEBOUNCE_MIN=5, ALERT_DEBOUNCE_SIGNALS=3 (or seed alert_thresholds row)
+  - note: Doc explicitly suggests 5 min / 3 signals as defaults — build debounce with these, owner-tunable later.
+- **#68** Quiet-hours default + per-user editable
+  - SCHEMA: None — notification_preferences.quiet_hours jsonb exists (verified, unpopulated); seed default 22:00–07:00
+  - note: Mechanism reads the existing column; default window seeded, per-user editable. Sensible default, no un-fabricatable data.
+- **#75** Two-stage deadline reminder thresholds
+  - SCHEMA: business.constants DEADLINE_PRE_HOURS=24, DEADLINE_POST_HOURS=24 (or alert_thresholds rows)
+  - note: Two-stage reminder builds with a universally sensible default (remind 24h before / escalate 24h after), owner-tunable per notification type later. Default makes the feature useful immediately.
+- **#76** Weekly ЦКП-completion message
+  - SCHEMA: None — ckp_fact_values.achievement_pct + ckp_personal_targets already store ЦКП completion per employee_id/card_id (verified live)
+  - note: Audit's 'not identified as existing table' was WRONG; wire a weekly cron querying ckp_fact_values.achievement_pct by employee/card. No owner data.
+- **#110** Damaged-material notify + quarantine
+  - SCHEMA: Additive enum/value 'quarantine' on batch_lots.quality_status (batch_lots/batches/wms_supplier_traceability already carry quality_status — verified)
+  - note: Wire the damaged-material flag to set batch_lots.quality_status='quarantine'; host table/column already exist. Identifiable by code inspection, not owner data.
+- **#121** Meeting-assigned task reminder
+  - SCHEMA: Reuse kanban_cards.source (exists, verified) with value 'meeting' + reminder cron (optional additive seed of source value)
+  - note: Meeting-assigned tasks recorded as kanban_cards with source='meeting'; reminder cron on existing table. Defaults to Kanban source, no owner data.
+
+## 05-director (6)
+- **6** To'liqsiz kundalik 'to'liqsiz' teg bilan saqlanadi
+  - SCHEMA: ALTER TABLE diary_entries ADD COLUMN is_incomplete boolean DEFAULT false (column confirmed absent)
+  - note: Pure derived flag: at save, code sets it from required-field completeness. No owner input — defaults false and is computed mechanically.
+- **7** 3 kun 'hal qilinmadi' -> surunkali eskalatsiya (dir_chronic_days)
+  - SCHEMA: ALTER TABLE diary_entries ADD COLUMN dir_chronic_days integer DEFAULT 0 (column confirmed absent)
+  - note: Counter incremented by the already-real carryOverIssues cron; the 3-day chronic threshold is given by the vision itself, not owner-supplied. Defaults 0.
+- **23** Downtime AGGREGATE + breakdown; director 'taniqladim' bayrog'i
+  - SCHEMA: ALTER TABLE downtime_events ADD COLUMN acknowledged_by_card_id integer + acknowledged_at timestamptz (both tables exist; columns absent)
+  - note: Acknowledge flag is set by a director click (defaults NULL); the aggregate/breakdown is a query. No master-data needed to function.
+- **31** Director 'anormallik, trend hisoblama' -> outlier flag
+  - SCHEMA: ALTER TABLE kpi_values (and/or company_state_log) ADD COLUMN is_outlier boolean DEFAULT false (both tables exist; column absent)
+  - note: Director-settable MANUAL flag — no threshold or data to supply; defaults false and the trend-calc query simply skips rows where is_outlier=true.
+- **46** Info-request javob muddat sozlanadigan (24s), EP-DIR-072
+  - SCHEMA: ALTER TABLE rasporyazhenie ADD COLUMN response_deadline_hours integer DEFAULT 24 (table exists; dokla/rasporyazhenie flow already live)
+  - note: Configurable deadline defaults to the vision's stated 24h; escalation cron is code. No un-fabricatable input — 24h is given.
+- **29** Eski yil buyurtmalari arxiv qatlamdan + yil filtri
+  - SCHEMA: ALTER TABLE sales_orders ADD COLUMN is_archived boolean DEFAULT false + a year-filter/archive view (table exists; column absent)
+  - note: Self-defaulting calendar boundary: current year shown live, prior years via the year filter, archive boundary defaults to before Jan 1 of current year. Owner can override the boundary later, but it functions with the standard default.
+
+## 19-pos (11)
+- **17** Shoshilinch chiqim ruxsat, reason majburiy + is_unplanned, boshliq Telegram
+  - SCHEMA: ALTER TABLE pos_movements ADD COLUMN is_unplanned boolean DEFAULT false + ADD COLUMN variance_qty numeric (both confirmed absent)
+  - note: Pure additive ADD COLUMN — covered by the grant. is_unplanned defaults false, variance_qty NULL; mandatory-reason is a code/Zod rule; dept-head Telegram uses the existing role-based PosTelegramService. No owner master-data, threshold, or GL pair needed.
+- **25** Prostoy vaqti pos_downtime_requests, omborchi+boshliq push, MES FK
+  - SCHEMA: CREATE TABLE pos_downtime_requests (id, work_center_id, reason, started_at, ended_at, requested_by, status, mes_downtime_log_id nullable FK)
+  - note: New table = additive/granted. mes_downtime_logs does NOT exist (verified null) so the MES FK is made NULLABLE and deferred. Downtime reason is runtime user input, not master-data; warehouse+dept-head push reuses existing role-based routing. Defaults cleanly with no owner input.
+- **29** Storno GL teskari yozuv, original_movement_id, ikki storno 409
+  - SCHEMA: ALTER TABLE pos_movements ADD COLUMN original_movement_id integer self-FK + partial UNIQUE constraint on original_movement_id (reject 2nd storno). Both confirmed absent.
+  - note: Additive column + unique constraint = granted. Reversal simply mirrors the ORIGINAL movement's debit/credit via the existing AutoGlPostingService, so NO new GL account mapping is required. Second-storno rejected with 409 by the unique constraint. No owner data.
+- **31** MES session yopilganda avto FG-kirim DRAFT, QC_PENDING
+  - SCHEMA: New MovementTypeCode enum value FG_RECEIPT + additive pos_movement_types seed row
+  - note: MesCompletedEvent is already emitted and consumed (QC mes-completed.listener), so the trigger exists. The auto-created FG-intake movement lands as DRAFT/QC_PENDING and does NOT post GL until QC approval, so it falls to the zero-GL calculateEntries default — the FG/WIP account pair can be filled later without blocking the core mechanism. Quantities come from the MES session (runtime), not owner master-data.
+- **32** Rulon og'irlik+sertifikat pos_movement_rolls, QC lab FK, proporsional narx
+  - SCHEMA: CREATE TABLE pos_movement_rolls (movement_id FK, weight numeric, certificate_ref text, qc_lab_result_id nullable FK)
+  - note: New table = additive/granted. qc_lab_results is absent (verified null; qc_lab_tests exists as a later target) so qc_lab_result_id is NULLABLE and deferred. Weight/certificate are runtime data entry; proportional price allocation is computed from the roll weights. No owner data required.
+- **47** Bo'yoq IoT 'tugadi' signali, iot_job_ref unique
+  - SCHEMA: ALTER TABLE pos_movements ADD COLUMN iot_job_ref text + partial UNIQUE index (idempotent dedupe). Confirmed absent.
+  - note: Additive column = granted. Column is nullable; the receiving listener and unique-index dedupe are buildable now. Whether IoT actually emits the paint-finished event is a code-wiring task on the IoT side, not owner data — so nothing owner-gated blocks it.
+- **49** Bitta qurilmada MES brak + POS chiqim, mes_session_id FK
+  - SCHEMA: ALTER TABLE pos_movements ADD COLUMN mes_session_id integer FK -> production_sessions (target EXISTS, verified) . Column confirmed absent.
+  - note: Pure additive FK column with a live target table. Nullable; populated at runtime from the active MES session context to correlate MES-defect with POS-issue on the same device. No owner master-data, threshold, or GL pair.
+- **50** Director dashboard pos_director_summary materialized view, 5min cron, drill-down GL
+  - SCHEMA: CREATE MATERIALIZED VIEW pos_director_summary + a scheduled REFRESH (5-min cron)
+  - note: A new read-only DB object aggregating existing pos_movements/entries — additive, no existing table altered. No owner input: it summarizes data already present. GL drill-down reliability simply tracks the item-#2 canonical-entries mirror being hardened (a code-quality dependency, not owner data).
+- **91** Bekor turish (prostoy) signali
+  - SCHEMA: CREATE TABLE pos_downtime_requests (duplicate of #25; mes_downtime_logs FK nullable, target absent)
+  - note: Duplicate of #25 — same additive new table. FK to non-existent mes_downtime_logs made nullable/deferred; reason is runtime input; push routing exists. Build once, satisfies both.
+- **117** Shoshilinch chiqim (rejasiz/ruxsatli)
+  - SCHEMA: ALTER TABLE pos_movements ADD COLUMN is_unplanned boolean DEFAULT false + variance_qty numeric (duplicate of #17)
+  - note: Duplicate of #17 — same additive ADD COLUMN. Defaults false/NULL; unplanned-but-authorized issue flow is a code rule plus existing Telegram routing. No owner data.
+- **131** Yuk topshirishda nomuvofiqlik (topshir↔qabul nizo)
+  - SCHEMA: ALTER TYPE (pos_movement_confirmations.decision enum) ADD VALUE 'dispute' + ALTER TABLE pos_movement_confirmations ADD COLUMN handed_over_qty numeric, received_qty numeric
+  - note: Additive enum value + additive columns = granted (table verified to exist, currently has no qty fields). Qty columns NULL until the two-step confirmation records them; any handed-over vs received mismatch raises the 'dispute' state and routes to dept-head via the already-existing role-based Telegram routing. No tolerance/threshold specified for dispute (any mismatch), so no owner data blocks it.
+
+## 11-mm (33)
+- **##8** Avans qisman kelishida proporsional zachet
+  - SCHEMA: CREATE TABLE mm_advances (id, purchase_order_id FK, amount, applied_amount, remaining, status)
+  - note: Proportional offset computed mechanically from received-qty ratio; no owner threshold needed. applied_amount defaults 0, auto-closes when PO fully received.
+- **##13** Gramaj +/-dopusk material kartasida + laborant override
+  - SCHEMA: ALTER material_cards ADD COLUMN gramaj_tolerance numeric
+  - note: Defaults NULL (no check); laborant fills/overrides tolerance per card in-app. Per-card master data entered via UI, not fabricated by us.
+- **##19** Klishe/trafaret MM asbob katalogi, 3-yil cron
+  - SCHEMA: CREATE TABLE mm_tool_catalog (type klishe/trafaret, code, name, acquired_at, retired_at)
+  - note: Starts empty, users populate; 3-year retention/archival cron per vision. Functions with no owner data.
+- **##20** Rekvizit o'zgarishida SLA 2 kun, vendor_requisite_history
+  - SCHEMA: CREATE TABLE vendor_requisite_history (vendor_id FK, field, old_value, new_value, changed_at)
+  - note: 2-day SLA is given in vision; starts empty, written on each requisite change.
+- **##22** 'Aloqador shaxs' bayrog'i ARIZA bosqichidan
+  - SCHEMA: ALTER requisition table ADD COLUMN related_party boolean DEFAULT false
+  - note: Defaults false, set manually at application stage. HR auto-detection is a separate owner-deferred piece; the manual flag works alone.
+- **##32** Landed cost MIQDOR nisbatida taqsim, GL qabulda
+  - SCHEMA: ALTER mm_purchase_orders / mm_goods_receipts ADD landed_cost columns (or mm_po_landed_cost lines)
+  - note: Distributed by quantity ratio (mechanical); capitalizes into the existing inventory/material account already debited at receipt - reuses current GL, no new mapping. Defaults 0. Doc flags no GL-data gate (unlike #16/#36).
+- **##34** Vendor muloqot jurnali vendor_communications
+  - SCHEMA: CREATE TABLE vendor_communications (vendor_id FK, date, user_id, subject, result)
+  - note: Pure journal; starts empty; no owner data to function.
+- **##35** Narx muzokara izi immutable + AI tavsiya
+  - SCHEMA: CREATE TABLE mm_price_negotiations (append-only: po/material, old_price, new_price, user_id, ts)
+  - note: Immutable negotiation audit trail builds now, defaults empty. AI-suggestion half is deferred pending AI credentials - core log works without it.
+- **##38** 'Qimmat partiya' >50mln/import -> komissiya, SLA 4soat
+  - SCHEMA: ALTER mm_purchase_orders ADD is_import boolean + CREATE mm_po_approvals (3-step chain state store)
+  - note: >50mln threshold and 4h SLA are stated in vision (not un-fabricatable). Below threshold defaults to no-commission single-step.
+- **##39** Vendor artikul->bir necha materialga, unique index
+  - SCHEMA: ALTER ADD vendor_article column + CREATE mm_vendor_article_map (vendor_article, material_id) + UNIQUE index
+  - note: Starts empty, mapped as vendor articles are entered; unique index enforces the mapping rule mechanically.
+- **##41** Boj/broker 'xizmat PO' (service-type), 3-way match yo'q
+  - SCHEMA: ALTER mm_purchase_orders ADD COLUMN po_type enum('goods','service') DEFAULT 'goods'
+  - note: Defaults 'goods' (current behavior); service-type PO skips 3-way match. Pure enum+branch, no owner data.
+- **##44** Rulon qoldiqlari PP push + soft-lock 24soat bron
+  - SCHEMA: CREATE TABLE mm_roll_reservations (roll_id, reserved_by, reserved_until, expiry=24h)
+  - note: 24h expiry is given in vision; PP push on remainder; starts empty. reserved_quantity scalar insufficient, so needs its own table.
+- **##47** Kechikish har PO qatori uchun, miqdor-og'irlikli
+  - SCHEMA: ALTER mm_purchase_order_items ADD expected_delivery_date + on_time_flag columns
+  - note: Quantity-weighted lateness computed mechanically; expected date defaults from PO header date.
+- **#11.6** Shartnoma (raqam/sana/muddat/skan) + 30 kun ogohlantirish
+  - SCHEMA: CREATE TABLE vendor_contracts (vendor_id, number, date, expiry, scan_ref)
+  - note: 30-day expiry-warning cron is given; starts empty.
+- **#11.20** Yetkazuvchi narx taqqoslash (tender, 3+ vendor)
+  - SCHEMA: CREATE TABLE mm_rfq + mm_rfq_lines (material, vendor_id, quoted_price)
+  - note: 3+ vendor comparison per vision; starts empty, populated per tender.
+- **#11.25** Yetkazib berish sharti (Incoterms) belgilanadi
+  - SCHEMA: ALTER mm_purchase_orders ADD COLUMN incoterms varchar/enum
+  - note: Incoterms is a fixed international standard set (EXW/FOB/CIF/...), not owner data; defaults NULL.
+- **#11.31** To'lov muddati kirim sanasidan
+  - SCHEMA: ALTER mm_purchase_orders ADD prepayment_percent + payment_delay_days columns
+  - note: Due-date computed from receipt date (mechanical); defaults NULL or migrated from the existing unstructured payment_terms varchar.
+- **#11.32** Har avans PO ga bog'lanadi, mol kelganda yopiladi
+  - SCHEMA: Same mm_advances table as ##8 (purchase_order_id FK)
+  - note: Advance linked to PO, auto-closed when goods arrive; mechanical, shares ##8 schema.
+- **#11.37** 1 asosiy + 1-2 zaxira vendor, auto-fallback
+  - SCHEMA: CREATE material_vendor_link (material_id, vendor_id, role primary/backup, priority) replacing unused preferred_supplier_id
+  - note: Auto-fallback primary->backup is mechanical; populated by users; defaults to primary-only.
+- **#11.38** Prays-list PO ga avto, muddat tugashida ogohlantirish
+  - SCHEMA: ALTER supplier_price_tiers ADD valid_from + valid_to columns
+  - note: Price auto-applied to PO within validity; expiry-warning cron; defaults NULL (open-ended).
+- **#11.39** Import xarajatlar material miqdoriga taqsim (landed cost)
+  - SCHEMA: Same landed_cost columns as ##32 on PO
+  - note: Distributed by material quantity; mechanical, shares ##32 schema.
+- **#11.43** Hujjatlar skani (litsenziya/sertifikat/NDS) + muddat
+  - SCHEMA: CREATE TABLE vendor_documents (vendor_id, doc_type, file_ref, expiry)
+  - note: Expiry-warning cron; starts empty; no owner data to function.
+- **#11.44** 'NDS to'lovchi' belgisi + NDS-hisobga taqqoslash
+  - SCHEMA: ALTER mm_vendors ADD COLUMN is_vat_payer boolean DEFAULT false
+  - note: Defaults false; drives VAT-accounting comparison. Pure boolean flag.
+- **#11.49** Vendor muloqot jurnali (sana/kim/mavzu/natija)
+  - SCHEMA: Same vendor_communications/interactions table as ##34
+  - note: Interaction journal; starts empty; duplicate of ##34, shares schema.
+- **#11.54** Kirim qog'oz laboratoriya (RD-5) tasdiqsiz PP ga chiqmaydi
+  - SCHEMA: ALTER mm_goods_receipts ADD lab_test_id FK (to qc_lab_tests) + pp_blocked boolean
+  - note: Gate defaults blocked until lab-approved; mechanical linkage to existing qc_lab_tests (keyed by order_id). No owner data.
+- **#11.56** Grammaj texkartaga avto solishtirish, dopuskdan oshsa
+  - SCHEMA: Same gramaj_tolerance column on material_cards as ##13
+  - note: Auto-compare grammage to tech card, flag if beyond tolerance; defaults NULL, lab fills. Shares ##13 schema.
+- **#11.58** Gofra ECT + qavat material kartasi -> texkartaga moslik
+  - SCHEMA: ALTER material_cards ADD ect_value + layer_count columns
+  - note: ECT/layer are standard measures entered as per-material master data (defaults NULL); auto-matched to tech-card requirement. Not owner policy.
+- **#11.59** Shartli ruxsat (o'tdi/shartli/rad) 3 holatli kirim
+  - SCHEMA: ALTER mm_goods_receipts status enum ADD VALUE 'conditional'/'shartli'
+  - note: 3-state receipt (passed/conditional/rejected); pure additive enum value on existing draft/pending/approved/rejected.
+- **#11.61** Brak sabab tahlili jurnali (sabab+qaror+vendor javob)
+  - SCHEMA: CREATE TABLE mm_brak_reason_journal (receipt_id, reason, decision, vendor_response)
+  - note: QC-fail listener writes into it; starts empty; no owner data.
+- **#11.63** Texkarta kompozitsiyasi laborant tasdiqsiz PP ga o'tmaydi
+  - SCHEMA: ADD laborant_approved gate column/table on technology_cards composition
+  - note: Composition blocked from PP until laborant signs; mechanical gate, defaults unapproved. (PP-domain gate but pure code+column.)
+- **#11.64** Etalon namuna (foto/spetsifikatsiya) kirim solishtiriladi
+  - SCHEMA: CREATE TABLE mm_reference_samples (material_id, photo_ref, spec)
+  - note: Compared at receipt; starts empty, users add etalon samples.
+- **#11.65** Yangi vendor 'sinovda'->lab o'tsa 'tasdiqlangan'
+  - SCHEMA: ALTER mm_vendors status enum ADD VALUE 'trial'/'sinovda' + auto-promotion on lab pass
+  - note: trial->approved when lab test passes (mechanical). The enum value + promotion need no threshold - only ##43's PO cap is owner-gated.
+- **#11.66** Manfaatlar to'qnashuvi - vendor xodim/qarindosh belgisi
+  - SCHEMA: ALTER mm_vendors ADD COLUMN related_party boolean DEFAULT false
+  - note: Manual conflict-of-interest flag, defaults false; duplicate of ##22. HR auto-detect deferred.
+
+## 01-org (4)
+- **#50** Race himoya: 3-ustunli partial-unique + FOR UPDATE
+  - SCHEMA: Index migration: DROP uq_employee_cards_active_link (2-col employee_id,card_id WHERE is_active) and CREATE the 3-col partial-unique (card_id, employee_id, is_primary) WHERE is_active on employee_cards; FOR UPDATE tx-wrap is pure code.
+  - note: Pure concurrency/integrity hardening that enforces the ALREADY-decided vision rule (1 card = 1 primary employee) — no head_user_id/hierarchy decision, no owner master-data, threshold, or GL mapping. General schema-approval unblocks the index DDL; the uniqueness semantics are fixed, so nothing to default.
+- **#118** 'Унвон' lavozimdan alohida maydon
+  - SCHEMA: ALTER TABLE org_departments ADD COLUMN unvon text; expose in CardCreateSchema/CardUpdateSchema DTOs.
+  - note: Doc explicitly flags NO undecided business rule — pure additive free-text column. Non-structural card attribute (not head_user_id/hierarchy). Defaults NULL; users type a title per card, no owner master-data required to function.
+- **#123** Karta korporativ raqam + abonent doirasi
+  - SCHEMA: ALTER TABLE org_departments ADD COLUMN corporate_phone text, ADD COLUMN abonent_scope text (org_departments already has telegram_group_id, confirmed no phone/abonent col); add both to the card DTO.
+  - note: Schema add is the only gate (per doc). The actual phone numbers are per-card user-entered form data, NOT gating master-data — columns default NULL and are filled through the card form. Non-structural, so buildable now.
+- **#129** Karta atamalar lug'ati (Глоссарий) tooltip
+  - SCHEMA: CREATE TABLE org_glossary (id, term, definition, card_id nullable, category) — confirmed absent (org_glossary=null, grep=0); add a lookup endpoint + tooltip wire.
+  - note: Standard CRUD content table the owner populates through the UI, not un-fabricatable gating data. Defaults empty: with no terms the tooltip simply shows nothing (graceful). Non-structural supporting table, so buildable now.
+
+## 02-hr (6)
+- **#22** Pre-shift TB checklist gate on IoT tablet
+  - SCHEMA: New CREATE TABLE hr_preshift_tb_checklist (id, item_text, sort_order, is_active) + hr_preshift_tb_confirmations (id, employee_id, shift/date, confirmed_at) wired as a clock-in gate (may reuse existing checklist_items).
+  - note: Genuinely non-razryad/non-structural safety feature. Gate + confirmation store build now; checklist rows default to empty (or a seeded generic TB list) and are admin-CRUD editable — no un-fabricatable owner data. Empty checklist = gate no-ops until items added.
+- **#23** Offline photo local-queue + reconciliation + 2h stale alert
+  - SCHEMA: ALTER hr_tz2_territory_logs ADD sync_status enum default 'pending', queued_at, uploaded_at — or new CREATE TABLE hr_photo_sync_state (log_id FK, status, queued_at, synced_at). (Confirmed: tz2_logs currently has no sync columns.)
+  - note: Non-structural IoT-resilience feature. Reconciliation store + 2h-stale alert cron (role IT+HR) build now; the 2h threshold is fixed by the vision, status defaults 'pending'. Client-side localStorage queue is frontend-only.
+- **#28** Employee-caused vs no-employee idle split -> KPI
+  - SCHEMA: New enum + column on the MES idle/downtime event: idle_reason_category enum('employee_caused','no_employee','unspecified') default 'unspecified'.
+  - note: Non-razryad/non-structural downtime-reason field (lives in MES, out of HR scope). Captures the binary split with an 'unspecified' default — no owner mapping needed to record it; KPI consumption is downstream.
+- **#32** Job-description version-bump -> re-familiarization checklist
+  - SCHEMA: New CREATE TABLE hr_jd_reacknowledgments (id, employee_id FK, job_description_id FK, jd_version, acknowledged_at, signature) — mirrors existing hr_nda_acknowledgments (confirmed present).
+  - note: Non-razryad/non-salary acknowledgment store. On hr_job_descriptions version bump, service creates pending re-ack rows; signature defaults to PIN/checkbox — no owner master-data required to function.
+- **#43** Glossary 'Atamalar' section + tooltip + closed-book exam
+  - SCHEMA: New CREATE TABLE hr_glossary_terms (id, term, definition, is_active) + closed_book boolean default false on the LMS mini-test table.
+  - note: Non-structural. Glossary + tooltip + closed-book toggle build now; terms seed from docs/LUGAT.md or admin CRUD (default empty), closed_book defaults false — ordinary configurable content, no un-fabricatable owner data.
+- **#27** Optional 'responsible employee' on defect ('noma'lum' allowed)
+  - SCHEMA: ALTER defect_reports ADD nullable responsible_employee_id FK -> employees, default NULL (confirmed column absent).
+  - note: Additive nullable QC/defect-tracking field; recording responsibility has standalone value and defaults NULL ('unknown' allowed). Genuinely non-razryad/non-structural. The discipline/fine CONSEQUENCE (whether it triggers a fine) is the separate open decision #57 and is NOT built here.
+
+## 03-finance (1)
+- **#2** O'zgargan taqsim foizi immutable versiyali (faqat keyingi davrlarga)
+  - SCHEMA: ALTER TABLE income_split_config ADD COLUMN effective_from timestamptz, effective_until timestamptz, version int (or new income_split_config_history table). VERIFIED live cols = id,fund_key,share,is_active,updated_at,created_by,updated_by — zero versioning columns.
+  - note: Non-SoD, non-structural. No new owner data: the split % (share) values already exist as owner-entered rows. Defaults sensibly — existing config becomes version 1 with effective_from = updated_at and effective_until = NULL (open); an edit closes the current version (effective_until = now) and inserts a new immutable version with effective_from = now, so changes only affect future periods. Pure schema + versioning code.
+
