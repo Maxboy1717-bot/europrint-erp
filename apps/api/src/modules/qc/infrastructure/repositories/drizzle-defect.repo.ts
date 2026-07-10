@@ -25,6 +25,7 @@ export interface IQcDefectRepository {
   saveDefect(defect: Defect): Promise<Result<Defect>>;
   updateDefect(defect: Defect): Promise<Result<Defect>>;
   recategorizeDefect(id: string, defectType: string): Promise<Result<{ id: number; defectType: string }>>;
+  setWasteCategory(id: string, category: 'production' | 'setup'): Promise<Result<{ id: number; wasteCategory: string }>>;
   getDefectStats(): Promise<Result<{ byStatus: Record<string, number>; bySeverity: Record<string, number>; totalQuantity: number; resolvedThisMonth: number }>>;
   findReclamationById(id: number): Promise<Result<Reclamation | null>>;
   findReclamations(filters: { status?: ReclamationStatus; severity?: DefectSeverity; from?: Date; to?: Date; page?: number; limit?: number }): Promise<Result<{ data: Reclamation[]; total: number }>>;
@@ -134,6 +135,34 @@ export class DrizzleDefectRepository implements IQcDefectRepository {
     } catch (error: unknown) {
       this.logger.error('Failed to recategorize defect');
       return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to recategorize defect' } };
+    }
+  }
+
+  // vision 09-qc#96 (APPROVED owner 2026-07-11 Q-35): setup/priladka braki alohida hisoblansin.
+  // Xom parametrli SQL -- live qc_defects.id INTEGER sequence (Drizzle drift uuid), saveDefect kabi.
+  async setWasteCategory(id: string, category: 'production' | 'setup'): Promise<Result<{ id: number; wasteCategory: string }>> {
+    try {
+      const oid = Number.parseInt(id, 10);
+      if (!Number.isInteger(oid) || oid <= 0) {
+        return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: 'Defect not found' } };
+      }
+      if (category !== 'production' && category !== 'setup') {
+        return { ok: false as const, error: { code: 'VALIDATION' as const, message: 'Invalid waste category' } };
+      }
+      const res = await db.execute(sql`
+        UPDATE qc_defects
+        SET waste_category = ${category}, updated_at = NOW()
+        WHERE id = ${oid}
+        RETURNING id, waste_category AS "wasteCategory"`);
+      const rows = ((res as unknown as { rows?: Array<{ id: number; wasteCategory: string }> }).rows) ?? [];
+      const row = rows[0];
+      if (!row) {
+        return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: 'Defect not found' } };
+      }
+      return { ok: true as const, data: row };
+    } catch (error: unknown) {
+      this.logger.error('Failed to set waste category');
+      return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to set waste category' } };
     }
   }
 

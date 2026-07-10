@@ -34,6 +34,9 @@ export const qc_defects = pgTable('qc_defects', {
   isReworkable: boolean('is_reworkable'),
   reworked: boolean('reworked'),
   brakDate: date('brak_date'),
+  // vision 09-qc#96 (APPROVED owner 2026-07-11 Q-35): setup/priladka braki alohida
+  // hisoblansin -- 'production' | 'setup'; mavjud yozuvlar 'production' default oladi.
+  wasteCategory: text('waste_category').notNull().default('production'),
 });
 
 export const qc_reclamations = pgTable('qc_reclamations', {

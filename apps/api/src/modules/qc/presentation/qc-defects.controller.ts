@@ -17,8 +17,10 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ReportDefectCommand } from '../application/commands/report-defect.command';
 import { ResolveDefectCommand } from '../application/commands/resolve-defect.command';
 import { RecategorizeDefectCommand } from '../application/commands/recategorize-defect.command';
+import { SetWasteCategoryCommand } from '../application/commands/set-waste-category.command';
 import { GetDefectsQuery } from '../application/queries/get-defects.query';
 import { GetDefectStatsQuery } from '../application/queries/get-defect-stats.query';
+import { GetWasteCategoryStatsQuery } from '../application/queries/get-waste-category-stats.query';
 import { GetDefectByIdQuery } from '../application/queries/get-defect-by-id.query';
 import { DefectStatus } from '../domain/aggregates/defect.aggregate';
 import { ReportDefectDtoSchema, ResolveDefectDtoSchema, GetDefectsDtoSchema } from './dto/defect.dto';
@@ -45,6 +47,11 @@ const InspectorSubmitSchema = z.object({
 // Vision 18-notifications#20: QC texnolog brak tabiatini (defect_type) belgilaydi.
 const RecategorizeDefectSchema = z.object({
   defectType: z.string().min(1).max(100),
+});
+
+// vision 09-qc#96: priladka (setup) brakini ishlab-chiqarish brakidan alohida toifalash.
+const SetWasteCategorySchema = z.object({
+  wasteCategory: z.enum(['production', 'setup']),
 });
 
 enum Role {
@@ -100,6 +107,16 @@ export class QcDefectsController {
       assertOk(result);
       return (result).data;
     
+  }
+
+  @ApiOperation({ summary: 'Get setup (priladka) vs production brak counts (vision 09-qc#96)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('defects/waste-stats')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
+  async getWasteCategoryStats() {
+    const result = await this.queryBus.execute(new GetWasteCategoryStatsQuery());
+    assertOk(result);
+    return (result).data;
   }
 
   @ApiOperation({ summary: 'Get defect by id' })
@@ -159,6 +176,22 @@ export class QcDefectsController {
     const result = await this.commandBus.execute(cmd);
     assertOk(result);
     this.logger.log('Defect recategorized');
+    return { statusCode: HttpStatus.OK, data: (result).data };
+  }
+
+  @ApiOperation({ summary: 'Set defect waste category — separate setup (priladka) brak from production (vision 09-qc#96)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('defects/:id/waste-category')
+  @Roles(Role.QC_MANAGER, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
+  async setDefectWasteCategory(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const parsed = SetWasteCategorySchema.parse(body);
+    const cmd = new SetWasteCategoryCommand(id, parsed.wasteCategory, String(user?.id ?? user?.userId ?? 'system-user'));
+    const result = await this.commandBus.execute(cmd);
+    assertOk(result);
+    this.logger.log('Defect waste category set');
     return { statusCode: HttpStatus.OK, data: (result).data };
   }
 

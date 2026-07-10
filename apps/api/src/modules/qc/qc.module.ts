@@ -10,6 +10,7 @@ import { SubmitInspectionHandler } from './application/commands/submit-inspectio
 import { ReportDefectHandler } from './application/commands/report-defect.handler';
 import { ResolveDefectHandler } from './application/commands/resolve-defect.handler';
 import { RecategorizeDefectHandler } from './application/commands/recategorize-defect.handler';
+import { SetWasteCategoryHandler } from './application/commands/set-waste-category.handler';
 import { CreateReclamationHandler } from './application/commands/create-reclamation.handler';
 import { ResolveReclamationHandler } from './application/commands/resolve-reclamation.handler';
 import { CreateInspectionHandler } from './application/commands/create-inspection.handler';
@@ -17,6 +18,7 @@ import { GetInspectionsHandler } from './application/queries/get-inspections.han
 import { GetInspectionStatsHandler } from './application/queries/get-inspection-stats.handler';
 import { GetDefectsHandler } from './application/queries/get-defects.handler';
 import { GetDefectStatsHandler } from './application/queries/get-defect-stats.handler';
+import { GetWasteCategoryStatsHandler } from './application/queries/get-waste-category-stats.handler';
 import { GetDefectByIdHandler } from './application/queries/get-defect-by-id.handler';
 import { GetReclamationsHandler } from './application/queries/get-reclamations.handler';
 import { GetReclamationByIdHandler } from './application/queries/get-reclamation-by-id.handler';
@@ -82,6 +84,7 @@ const commandHandlers = [
   ReportDefectHandler,
   ResolveDefectHandler,
   RecategorizeDefectHandler,
+  SetWasteCategoryHandler,
   CreateReclamationHandler,
   ResolveReclamationHandler,
   CreateInspectionHandler,
@@ -94,6 +97,7 @@ const queryHandlers = [
   GetInspectionStatsHandler,
   GetDefectsHandler,
   GetDefectStatsHandler,
+  GetWasteCategoryStatsHandler,
   GetDefectByIdHandler,
   GetReclamationsHandler,
   GetReclamationByIdHandler,
