@@ -12,7 +12,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
 
 import { HrV2Events } from '../events/hr-v2-events';
-import { Result, safeCall } from '@common/result';
+import { Result, safeCall, Err, AppErr } from '@common/result';
 import { ShiftRepository } from './shift.repository';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
@@ -34,6 +34,13 @@ export class ShiftService {
     endTime: string;
     notes?: string;
   }) {
+    // Vision 02-hr #25: an expired qualification is a HARD block on scheduling — no override.
+    const expired = await this.repo.hasExpiredQualification(dto.employeeId);
+    if (!expired.ok) return Err(expired.error);
+    if (expired.data) {
+      // Inline-Uzbek message mirrors this file's convention (see requestSwap leaveConflictMsg).
+      return Err(AppErr('CONFLICT', "Xodimning malakasi (sertifikat) muddati o'tgan — smena tayinlab bo'lmaydi"));
+    }
     return safeCall(async () => {
       const row = await this.repo.assignShift(dto);
       this.eventEmitter.emit(HrV2Events.SHIFT_ASSIGNED, {

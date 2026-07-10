@@ -7,6 +7,7 @@ import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
+import { typedExecute } from '@shared/db/typed-execute';
 import { eq, and, gte, lt, isNotNull, sql } from 'drizzle-orm';
 import { shiftSchedules, leaveRequestsApp, hrEmployees, hrDepartments } from '@shared/db';
 
@@ -44,6 +45,33 @@ export class ShiftRepository {
         })
         .returning();
       return Ok(castTo<Record<string, unknown>>(row));
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
+  /**
+   * @description Hard-reject guard for shift scheduling (vision 02-hr #25):
+   * returns true when the employee holds an ACTIVE qualification/skill whose
+   * expiry_date is already in the past. `expiry_date` is VARCHAR in the live
+   * schema, so it is date-cast ONLY after a regex gate that skips '', NULL and
+   * non-ISO values — preventing a cast error from spuriously blocking assignment.
+   */
+  async hasExpiredQualification(employeeId: number): Promise<Result<boolean>> {
+    try {
+      // Raw SQL: the canonical Drizzle employee_skills model is drifted (no `status`
+      // column; expiry_date typed `date` not the live `varchar`), so the query
+      // builder cannot express this guard. In-repo raw SQL satisfies Qoida 4 + 15.
+      const rows = await typedExecute<{ found: number }>(sql`
+        SELECT 1 AS found
+        FROM employee_skills
+        WHERE employee_id = ${employeeId}
+          AND status = 'active'
+          AND expiry_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          AND expiry_date::date < CURRENT_DATE
+        LIMIT 1
+      `);
+      return Ok(Array.isArray(rows) && rows.length > 0);
     } catch (_e) {
       return Err(String(_e));
     }
