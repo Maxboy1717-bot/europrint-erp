@@ -5,9 +5,9 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { date } from "drizzle-orm/pg-core";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, date, jsonb, unique, uuid, check, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { pgEnum } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { users } from "./core-schema";
 import { Test } from "./lms-schema";
@@ -329,6 +329,31 @@ export const qcMaterialScanLog = pgTable("qc_material_scan_log", {
 });
 
 export type QcMaterialScanLog = typeof qcMaterialScanLog.$inferSelect;
+
+
+// ========== vision 09-qc#8: ISO 2859 kuchaytirilgan nazorat rejimi (per-supplier + per-material) ==========
+// APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+// Ketma-ket 2 partiya rad -> 'tightened'; 'tightened' ostida ketma-ket 5 qabul -> 'normal' (ISO 2859-1).
+export const inspectionRegimeEnum = pgEnum("inspection_regime", ["normal", "tightened", "reduced"]);
+
+export const qcSupplierRegime = pgTable("qc_supplier_regime", {
+  id: serial("id").primaryKey(),
+  supplierId: integer("supplier_id").notNull(),            // vendors.id (soft ref)
+  materialId: integer("material_id").notNull(),            // material_cards.id (soft ref)
+  regime: inspectionRegimeEnum("regime").notNull().default("normal"),
+  consecutiveRejections: integer("consecutive_rejections").notNull().default(0),
+  consecutiveAccepts: integer("consecutive_accepts").notNull().default(0),
+  lastInspectionId: integer("last_inspection_id"),         // qc_inspections.id (soft ref, audit)
+  tightenedAt: timestamp("tightened_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  unique("qc_supplier_regime_supplier_material_uq").on(t.supplierId, t.materialId),
+]);
+
+export type QcSupplierRegime = typeof qcSupplierRegime.$inferSelect;
+export type InsertQcSupplierRegime = typeof qcSupplierRegime.$inferInsert;
+
 
 
 // ============================================

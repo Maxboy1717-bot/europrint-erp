@@ -4,6 +4,10 @@
  */
 
 import { Module } from '@nestjs/common';
+import { DrizzleService } from '@common/services/drizzle.service';
+import { DrizzleQcSupplierRegimeRepository } from './infrastructure/repositories/drizzle-qc-supplier-regime.repo';
+import { QcSupplierRegimeService } from './application/qc-supplier-regime.service';
+import { QcSupplierRegimeController } from './presentation/qc-supplier-regime.controller';
 import { QcNormVersionsRepository } from './infrastructure/repositories/qc-norm-versions.repository';
 import { QcNormVersionsController } from './presentation/qc-norm-versions.controller';
 import { ReferenceSampleController } from './presentation/reference-sample.controller';
@@ -125,6 +129,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
   controllers: [
+    QcSupplierRegimeController,
     QcOverrideController,
     QcNormVersionsController,
     ReferenceSampleController,
@@ -142,6 +147,9 @@ const repositories = [
     QcMaterialScanController,
   ],
   providers: [
+    DrizzleService,
+    DrizzleQcSupplierRegimeRepository,
+    QcSupplierRegimeService,
     QcOverrideService,
     QcOverrideRepository,
     QcNormVersionsRepository,
