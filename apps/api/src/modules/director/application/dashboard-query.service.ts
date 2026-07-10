@@ -187,4 +187,12 @@ export class DashboardQueryService {
     const r = await this.statRepo.getPlanDeviationCounts();
     return r.ok && Array.isArray(r.data) ? r.data : [];
   }
+
+  /** Priladka/setup-loss panel (EP-DIR-064). Xato bo'lsa nol-shakl (degrade). */
+  async getSetupLoss(): Promise<Row> {
+    const r = await this.statRepo.getSetupLoss();
+    return r.ok && r.data
+      ? r.data
+      : { session_count: 0, total_setup_seconds: 0, total_main_seconds: 0, total_teardown_seconds: 0, setup_loss_pct: null };
+  }
 }

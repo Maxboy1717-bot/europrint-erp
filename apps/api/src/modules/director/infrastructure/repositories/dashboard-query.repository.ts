@@ -230,4 +230,31 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
         WHERE status <> 'cancelled'
       `), 'DB_ERROR');
   }
+
+  /**
+   * Priladka/setup vaqti sozlash-yo'qotish panel (EP-DIR-064 · vision 05-director#114).
+   * Fleet-darajasidagi setup vs samarali vaqt va yo'qotish % (oxirgi N kun).
+   * setup_seconds/main_seconds/teardown_seconds ustunlari MES/IoT bosqich
+   * o'tishlari orqali yoziladi (iot-tablet.controller / drizzle-mes.repo) va
+   * drizzle-iot-oee.repo tomonidan iste'mol qilinadi. Aggregate har doim bitta
+   * qator qaytaradi (bo'sh to'plamda ham 0/NULL) — soxta javob emas.
+   */
+  async getSetupLoss(days = 30): Promise<Result<Row>> {
+    return safeCall(async () => {
+      const r = await exec(sql`
+        SELECT
+          COUNT(*)::int                                AS session_count,
+          COALESCE(SUM(setup_seconds), 0)::int         AS total_setup_seconds,
+          COALESCE(SUM(main_seconds), 0)::int          AS total_main_seconds,
+          COALESCE(SUM(teardown_seconds), 0)::int      AS total_teardown_seconds,
+          ROUND(
+            100.0 * COALESCE(SUM(setup_seconds), 0)
+            / NULLIF(COALESCE(SUM(setup_seconds + main_seconds + teardown_seconds), 0), 0)
+          , 1)                                         AS setup_loss_pct
+        FROM mes_production_sessions
+        WHERE started_at >= CURRENT_DATE - ${days}::int
+      `);
+      return (r[0] ?? {}) as Row;
+    }, 'DB_ERROR');
+  }
 }

@@ -112,6 +112,13 @@ export class DashboardController {
     return { data: await this.queries.getOpenIssues() };
   }
 
+  @Get('setup-loss')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.PRODUCTION_MANAGER)
+  @ApiOperation({ summary: "Priladka/setup vaqti sozlash-yo'qotish panel (EP-DIR-064)" })
+  async getSetupLoss() {
+    return { data: await this.queries.getSetupLoss() };
+  }
+
   @Get('plan-deviation-counts')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
   @ApiOperation({ summary: 'Delay count + plan-deviation count (raw; reason breakdown owner-gated)' })
