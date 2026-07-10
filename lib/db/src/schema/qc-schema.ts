@@ -331,6 +331,34 @@ export const qcMaterialScanLog = pgTable("qc_material_scan_log", {
 export type QcMaterialScanLog = typeof qcMaterialScanLog.$inferSelect;
 
 
+// ============================================
+// QC NORM VERSIONS (Norma snapshot-versiyalash) — 09.39
+// ============================================
+// Norma o'zgarganda joriy normalar JSON-snapshot sifatida [valid_from, valid_to) oynasi
+// bilan saqlanadi. Eski sanadagi buyurtma o'sha paytdagi (eski) norma versiyasiga
+// bog'lanadi. valid_to IS NULL = joriy faol versiya. Migration: qc-norm-versions-2026-07-11.sql.
+export const qcNormVersions = pgTable("qc_norm_versions", {
+  id: serial("id").primaryKey(),
+  normRef: text("norm_ref").notNull(),                    // norma to'plami biznes-kaliti (standart/material kodi)
+  versionNo: integer("version_no").notNull().default(1),  // norm_ref bo'yicha monoton versiya
+  validFrom: timestamp("valid_from", { withTimezone: true }).notNull().defaultNow(),
+  validTo: timestamp("valid_to", { withTimezone: true }), // NULL = joriy faol versiya
+  snapshotJson: jsonb("snapshot_json").notNull().default(sql`'{}'::jsonb`),
+  note: text("note"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  check("ck_qc_norm_versions_window", sql`${t.validTo} IS NULL OR ${t.validTo} >= ${t.validFrom}`),
+]);
+
+export const insertQcNormVersionSchema = createInsertSchema(qcNormVersions, {
+  normRef: z.string().min(1).max(200),
+}).omit({ id: true, createdAt: true } as never);
+
+export type QcNormVersion = typeof qcNormVersions.$inferSelect;
+export type InsertQcNormVersion = z.infer<typeof insertQcNormVersionSchema>;
+
+
 // ========== Item 09#67: Arxiv namuna (etalon) 6 oy + joylashuv (TASDIQ-2146 §09 #21) ==========
 // Etalon namuna arxivi: metadata + ombor joylashuvi + 6 oy saqlash muddati.
 // NOTE: repo raw SQL (reference-sample.repository.ts) — bu ta'rif migratsiyaga mos, tsc/schema uchun.

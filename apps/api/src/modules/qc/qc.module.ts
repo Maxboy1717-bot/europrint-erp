@@ -4,6 +4,8 @@
  */
 
 import { Module } from '@nestjs/common';
+import { QcNormVersionsRepository } from './infrastructure/repositories/qc-norm-versions.repository';
+import { QcNormVersionsController } from './presentation/qc-norm-versions.controller';
 import { ReferenceSampleController } from './presentation/reference-sample.controller';
 import { ReferenceSampleRepository } from './infrastructure/repositories/reference-sample.repository';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -120,6 +122,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
   controllers: [
+    QcNormVersionsController,
     ReferenceSampleController,
     QcInspectionsController,
     QcDefectsController,
@@ -135,6 +138,7 @@ const repositories = [
     QcMaterialScanController,
   ],
   providers: [
+    QcNormVersionsRepository,
     ReferenceSampleRepository,
     ...commandHandlers,
     ...eventHandlers,
