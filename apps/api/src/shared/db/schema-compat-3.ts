@@ -210,3 +210,23 @@ export const securityAttendance = pgTable('security_attendance', {
   method: text('method'),
   createdAt: ts('created_at').defaultNow(),
 });
+
+// 08-mes #83 — 1 operator + N nomli yordamchi + hissa% (contribution share).
+// machine_crews bola-jadvali: qat'iy 4 rol ustuni (master/polmaster/shogird/
+// rokler) o'rniga N qator, har biri role_label + share_percent bilan.
+// share_percent NULL = teng-taqsim (MesCrewMembersService hisoblaydi).
+// session_id → production_sessions.id, employee_id → employees.id (app-FK,
+// machine_crews kabi DB-FK constraintsiz). id: integer('id').primaryKey() —
+// fayldagi barcha sibling jadvallar kabi (DB SERIAL default id ni to'ldiradi,
+// Drizzle unset id ni INSERT dan tashlaydi; import qatoriga tegmaymiz).
+// Jadval faylning oxiriga (securityAttendance dan keyin) qo'shildi —
+// barqaror anchor: securityAttendance verbatim saqlanadi, sibling-append
+// bilan drift bo'lmaydi. Migration: mes-machine-crew-members-2026-07-11.sql
+export const machineCrewMembers = pgTable('machine_crew_members', {
+  id: integer('id').primaryKey(),
+  sessionId: integer('session_id').notNull(),
+  employeeId: integer('employee_id').notNull(),
+  roleLabel: text('role_label'),
+  sharePercent: decimal('share_percent', { precision: 5, scale: 2 }),
+  createdAt: ts('created_at').defaultNow(),
+});

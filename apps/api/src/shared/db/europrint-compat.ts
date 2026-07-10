@@ -24,7 +24,7 @@ export {
 
 export {
   mroInventory, productionOrders, routings, routingOperations, bomHeaders, bomItems,
-  workCenters, downtimeEvents, downtimeReasonCodes, machineCrews, equipmentMaintenance,
+  workCenters, downtimeEvents, downtimeReasonCodes, machineCrews, machineCrewMembers, equipmentMaintenance,
   qcReclamations, qcBraks, notifications, marketingCampaigns, marketingLeads,
   productCategories, websiteBanners, websiteSettings, securityAccess, securityAttendance,
 } from './schema-compat-3';

@@ -4,6 +4,10 @@
  */
 
 import { Module } from '@nestjs/common';
+// 08-mes #83 — 1 operator + N nomli yordamchi + hissa% (contribution share)
+import { MesCrewMembersController } from './presentation/mes-crew-members.controller';
+import { MesCrewMembersService } from './application/mes-crew-members.service';
+import { MesCrewMembersRepository } from './infrastructure/repositories/mes-crew-members.repo';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -72,8 +76,11 @@ const handlers = [
 
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), NotificationsModule],
-  controllers: [MesWmsParamCompareController, MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController, MesOeeTargetsController],
+  controllers: [MesCrewMembersController, MesWmsParamCompareController, MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController, MesOeeTargetsController],
   providers: [
+    // 08-mes #83 — 1 operator + N nomli yordamchi + hissa% (crew-members CRUD)
+    MesCrewMembersRepository,
+    MesCrewMembersService,
     // 08-mes #24 — Format/gramm ↔ WMS batch (batch_lots→material_cards) parameter comparison
     MesWmsParamCompareRepository,
     MesWmsParamCompareService,
