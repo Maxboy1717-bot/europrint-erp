@@ -88,6 +88,71 @@ export class DrizzleIotOeeRepo {
     } catch (e) { return Err((e as Error).message); }
   }
 
+  /**
+   * 07-pp#38 — "Eng yomon stanok" OEE reytingi + alohida brak% flag (Director).
+   * Vision (vision-1000-answers/07-pp.md #38): OEE% = ASOSIY mezon — reyting shu
+   * bo'yicha o'suvchi tartibda (eng past OEE = eng yomon = 1-o'rin). brak% = OEE
+   * ichiga aralashtirilmaydigan ALOHIDA flag: brak% = SUM(defect_qty)/SUM(produced_qty)*100;
+   * flag ko'tariladi qachonki brak% > work_centers.brak_limit_pct (stored master-data
+   * chegara — ishlab chiquvchi o'ylab topmaydi). brak_limit_pct NULL bo'lsa flag=false.
+   * Bir stanokning bir necha smenasi agregatlanadi (SUM miqdorlar, AVG oee).
+   * mes_shift_stats.machine_id = work_centers.id (live 1:1). Aggregatsiya + hisoblangan
+   * brak% + NULLIF himoya uchun raw SQL (Qoida 4).
+   */
+  async findWorstMachineRanking(
+    from: string | undefined,
+    to: string | undefined,
+  ): Promise<Result<Row>> {
+    try {
+      const fromFilter = from ? sql`AND s.shift_date >= ${from}::date` : sql``;
+      const toFilter = to ? sql`AND s.shift_date <= ${to}::date` : sql``;
+      const rows = await exec(sql`
+        SELECT
+          s.machine_id                                          AS machine_id,
+          wc.code                                               AS work_center_code,
+          wc.name                                               AS work_center_name,
+          ROUND(AVG(s.oee)::numeric, 1)                         AS oee,
+          COALESCE(SUM(s.produced_qty), 0)                      AS produced_qty,
+          COALESCE(SUM(s.defect_qty), 0)                        AS defect_qty,
+          ROUND(
+            (COALESCE(SUM(s.defect_qty), 0)::numeric
+              / NULLIF(SUM(s.produced_qty), 0)) * 100,
+            2
+          )                                                     AS brak_pct,
+          wc.brak_limit_pct                                     AS brak_limit_pct,
+          (
+            wc.brak_limit_pct IS NOT NULL
+            AND (COALESCE(SUM(s.defect_qty), 0)::numeric
+                  / NULLIF(SUM(s.produced_qty), 0)) * 100 > wc.brak_limit_pct
+          )                                                     AS brak_flag,
+          COUNT(*)                                              AS shift_count
+        FROM mes_shift_stats s
+        JOIN work_centers wc ON wc.id = s.machine_id
+        WHERE TRUE
+        ${fromFilter}
+        ${toFilter}
+        GROUP BY s.machine_id, wc.code, wc.name, wc.brak_limit_pct
+        ORDER BY AVG(s.oee) ASC NULLS LAST
+      `);
+
+      const ranking = rows.map((r, i) => ({
+        rank:             i + 1,
+        machine_id:       Number(r.machine_id),
+        work_center_code: (r.work_center_code as string | null) ?? null,
+        work_center_name: (r.work_center_name as string | null) ?? null,
+        oee:              r.oee == null ? null : Number(r.oee),
+        produced_qty:     Number(r.produced_qty ?? 0),
+        defect_qty:       Number(r.defect_qty ?? 0),
+        brak_pct:         r.brak_pct == null ? null : Number(r.brak_pct),
+        brak_limit_pct:   r.brak_limit_pct == null ? null : Number(r.brak_limit_pct),
+        brak_flag:        r.brak_flag === true,
+        shift_count:      Number(r.shift_count ?? 0),
+      }));
+
+      return Ok({ ranking, count: ranking.length });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
   async findProductionMetrics(): Promise<Result<Row>> {
     try {
       const since8h = new Date(Date.now() - 8 * MS_PER_HOUR);

@@ -37,6 +37,12 @@ const PatchDeviceSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 }).passthrough();
 
+// 07-pp#38 — Director "eng yomon stanok" OEE reytingi: ixtiyoriy sana oralig'i (shift_date).
+const WorstMachineQuerySchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
 const IOT_READ = ['super_admin', 'director', 'production_manager', 'technologist'];
 const IOT_WRITE = ['super_admin', 'director', 'production_manager'];
 
@@ -225,6 +231,18 @@ export class IotMainController {
   async getOee(@Query() raw: Record<string, unknown>) {
     const q = OeeQuerySchema.parse(raw);
     return unwrapOrThrow(await this.svc.getOee(q.device_id, q.period));
+  }
+
+  // 07-pp#38 — Director "eng yomon stanok": OEE% asosiy mezon (o'suvchi reyting),
+  // brak% ALOHIDA flag (brak% > work_centers.brak_limit_pct). Static path — 'oee'
+  // va 'oee/live' bilan to'qnashmaydi.
+  @ApiOperation({ summary: 'Get worst-machine OEE ranking (Director)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('oee/worst-machines')
+  @Roles(...IOT_READ)
+  async getWorstMachines(@Query() raw: Record<string, unknown>) {
+    const q = WorstMachineQuerySchema.parse(raw);
+    return unwrapOrThrow(await this.svc.getWorstMachineRanking(q.from, q.to));
   }
 
   @ApiOperation({ summary: 'Get downtime' })
