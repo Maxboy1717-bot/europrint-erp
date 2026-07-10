@@ -10,6 +10,9 @@ import { ReferenceSampleController } from './presentation/reference-sample.contr
 import { ReferenceSampleRepository } from './infrastructure/repositories/reference-sample.repository';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { QcOverrideController } from './presentation/qc-override.controller';
+import { QcOverrideService } from './application/qc-override.service';
+import { QcOverrideRepository } from './infrastructure/repositories/qc-override.repository';
 import { SubmitInspectionHandler } from './application/commands/submit-inspection.handler';
 import { ReportDefectHandler } from './application/commands/report-defect.handler';
 import { ResolveDefectHandler } from './application/commands/resolve-defect.handler';
@@ -122,6 +125,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
   controllers: [
+    QcOverrideController,
     QcNormVersionsController,
     ReferenceSampleController,
     QcInspectionsController,
@@ -138,6 +142,8 @@ const repositories = [
     QcMaterialScanController,
   ],
   providers: [
+    QcOverrideService,
+    QcOverrideRepository,
     QcNormVersionsRepository,
     ReferenceSampleRepository,
     ...commandHandlers,

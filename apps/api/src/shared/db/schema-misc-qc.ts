@@ -267,3 +267,15 @@ export type QcDefectSeverityWeightRow = typeof qc_defect_severity_weights.$infer
 export type QcGradePriceCoefficientRow = typeof qc_grade_price_coefficients.$inferSelect;
 export type QcCertificateTemplateRow = typeof qc_certificate_templates.$inferSelect;
 export type QcAqlConfigRow = typeof qc_aql_config.$inferSelect;
+
+// Vision 09-qc#35 (APPROVED owner schema-approval 2026-07-11, Q-35): "Tekshiruv o'tkazib yuborish"
+// = qc:override audit log. Kunlik 3 / oylik 15 limit created_at bo'yicha hisoblanadi; limitdan
+// oshgan override escalated=true bilan yoziladi (direktorga eskalatsiya). Append-only audit.
+export const qc_override_log = pgTable('qc_override_log', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  inspectionId: integer('inspection_id'),
+  reason: text('reason').notNull(),
+  escalated: boolean('escalated').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
