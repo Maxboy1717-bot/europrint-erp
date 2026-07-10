@@ -32,13 +32,16 @@ Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
   (plus earlier-session 18 harvest entries). FE specs 26/40/49/52 passed FE typecheck too.
   WMS cluster 05/07/08 landed via newonly+hand-wire (re-anchored around #04 off-hours block,
   deduped NotificationRoutingRepository which #03 already registered).
-- **NEEDS MANUAL (12) — anchor-drift (each a distinct file, sibling landed first) + 2 real tsc-slips:**
-  tsc-slip: 18 (pp reason-codes Pareto — service:82 Result<ParetoReport> type),
-  19 (cc parent_document_id — CreateDraftInput shape). anchor-drift: 27 (crm-deals.controller),
-  33 (marketing-analytics.controller), 34,38 (marketing.module), 42 (kanban-boards.service),
-  48 (drizzle-kanban repo), 60 (director.bot), 64 (dashboard-query repo), 70 (mm.module),
-  71 (mm.repository). Re-anchor against current file or fix the slip; use `harvest.cjs <n> newonly`
-  + hand-wire for cluster-casualty module edits.
+- **Manual tail progress (tools: scratchpad/applymatch.cjs applies all matching edits + writes newFiles
+  + reports drift idx; then hand-fix drift + commit exact files from spec).** LANDED: 18 (63abc1d4,
+  Err(res.error) fix), 19 (6724e799, +parentDocumentId:null at 2 call sites), 27 (1c007e5b, re-anchor
+  clone endpoint on `}`), 33 (6147d1fb, re-anchor CurrentUser import past sibling OrderTrendService),
+  60 (953583aa — /holat already in #58, added only /kundalik+/ideal_rasm, NO dup getHolat).
+- **NEEDS MANUAL (7) — anchor-drift, each a distinct sibling-modified file:** 34,38 (marketing.module),
+  42 (kanban-boards.service — ALL 4 edits drift, sibling 39/41/43), 48 (drizzle-kanban repo),
+  64 (dashboard-query repo), 70 (mm.module, nf6), 71 (mm.repository — ALL 3 drift, entangled w/ 65/69/72).
+  ⚠️ Watch cross-spec DUPLICATION (like 58/60): a superset spec may re-add a sibling's symbol.
+  For each: applymatch → re-anchor drift edits → verify no dup → commit.
 - **edits=0 probes (re-run/skip): 14, 29, 44, 45, 62, 75.**
 - Watch: pre-commit flagged route dups GET /api/crm/deals/:id ×2 and /api/mm/purchase-orders/:id ×2
   (WARN) — verify #72/#26 didn't add a genuinely duplicate route in the manual pass.
