@@ -104,6 +104,12 @@ import { PpReasonCodesController } from './reason-codes/pp-reason-codes.controll
 import { PpReasonCodesService } from './reason-codes/pp-reason-codes.service';
 import { PP_REASON_CODES_REPO } from './reason-codes/i-pp-reason-codes.repo';
 import { DrizzlePpReasonCodesRepository } from './reason-codes/drizzle-pp-reason-codes.repo';
+// Vision 07-pp#30 (EP-PP-068): PP material-reservation ledger — priority + FIFO tie-break
+// + director-only manual override. New pp_material_reservations table.
+import { PpMaterialReservationsController } from './material-reservations/pp-material-reservations.controller';
+import { PpMaterialReservationsService } from './material-reservations/pp-material-reservations.service';
+import { PP_MATERIAL_RESERVATIONS_REPO } from './material-reservations/i-pp-material-reservations.repo';
+import { DrizzlePpMaterialReservationsRepository } from './material-reservations/drizzle-pp-material-reservations.repo';
 // PP gang-run per-order acceptance act + lot-split brak (pp_gang_runs / pp_gang_run_orders,
 // vision 07-pp#37). Groups several production orders on one print job; accept splits brak.
 import { PpGangRunsController } from './gang-runs/pp-gang-runs.controller';
@@ -158,6 +164,8 @@ const listeners = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot()],
   controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpQueueController, PpIntelligenceController,
+    // Vision 07-pp#30: material reserve priority + FIFO tie-break + director override
+    PpMaterialReservationsController,
     // PA3-17 Wave 5: merged from modules/technology/
     TechnologyController,
     // PA3-17 Wave 6: merged from modules/production/
@@ -175,6 +183,9 @@ const listeners = [
     PpOeeController,
   ],
   providers: [
+    // Vision 07-pp#30: material-reservation ledger (priority + FIFO tie-break + director override)
+    PpMaterialReservationsService,
+    { provide: PP_MATERIAL_RESERVATIONS_REPO, useClass: DrizzlePpMaterialReservationsRepository },
     ...handlers,
     ...listeners,
     DesignLabJoinService,            // Wave 4 round-2: shared by Trigger 5 split listeners

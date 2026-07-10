@@ -852,3 +852,44 @@ export const insertProductionStatusHistorySchema = createInsertSchema(production
 
 export type ProductionStatusHistory = typeof productionStatusHistory.$inferSelect;
 export type InsertProductionStatusHistory = z.infer<typeof insertProductionStatusHistorySchema>;
+
+// ─── PP MATERIAL RESERVATIONS (vision 07-pp#30 / EP-PP-068) ────────────────────
+// PP-owned MRP priority-reservation ledger: which production order gets first claim
+// on a scarce material, ranked by priority (1=Shoshilinch..4=Past) then FIFO
+// (reserved_at), with a director-only manual override (priority_overridden_by /
+// override_reason / overridden_at). Distinct from the WMS physical reservation ledger
+// (stock_reservations) — this is the planning decision, not a stock hold. FK columns
+// are plain integers, enforced by the migration
+// pp-material-reservations-priority-fifo-2026-07-11.sql (same circular-import
+// avoidance convention as production_order_components.rawMaterialId above).
+export const ppMaterialReservations = pgTable("pp_material_reservations", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").notNull(),
+  materialId: integer("material_id").notNull(),
+  qty: numericMoney("qty").notNull(),
+  // 1=Shoshilinch(urgent) 2=Yuqori(high) 3=Oddiy(normal) 4=Past(low); lower = allocated first.
+  priority: integer("priority").notNull().default(3),
+  reservedAt: timestamp("reserved_at", { withTimezone: true }).notNull().defaultNow(),
+  status: varchar("status", { length: 20 }).notNull().default("reserved"),
+  estimatedAvailableDate: date("estimated_available_date"),
+  priorityOverriddenBy: integer("priority_overridden_by"),
+  overrideReason: text("override_reason"),
+  overriddenAt: timestamp("overridden_at", { withTimezone: true }),
+  releasedAt: timestamp("released_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_pp_material_reservations_alloc").on(t.materialId, t.priority, t.reservedAt),
+  index("idx_pp_material_reservations_order").on(t.productionOrderId),
+  index("idx_pp_material_reservations_status").on(t.status),
+  check("chk_pp_material_reservations_priority", sql`${t.priority} BETWEEN 1 AND 4`),
+  check("chk_pp_material_reservations_status", sql`${t.status} IN ('reserved','waiting','released','issued')`),
+]);
+
+export const insertPpMaterialReservationSchema = createInsertSchema(ppMaterialReservations).omit({
+  id: true,
+  createdAt: true,
+} as never);
+
+export type PpMaterialReservation = typeof ppMaterialReservations.$inferSelect;
+export type InsertPpMaterialReservation = z.infer<typeof insertPpMaterialReservationSchema>;
+
