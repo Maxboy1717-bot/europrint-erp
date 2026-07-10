@@ -102,6 +102,12 @@ import { PpReasonCodesController } from './reason-codes/pp-reason-codes.controll
 import { PpReasonCodesService } from './reason-codes/pp-reason-codes.service';
 import { PP_REASON_CODES_REPO } from './reason-codes/i-pp-reason-codes.repo';
 import { DrizzlePpReasonCodesRepository } from './reason-codes/drizzle-pp-reason-codes.repo';
+// PP gang-run per-order acceptance act + lot-split brak (pp_gang_runs / pp_gang_run_orders,
+// vision 07-pp#37). Groups several production orders on one print job; accept splits brak.
+import { PpGangRunsController } from './gang-runs/pp-gang-runs.controller';
+import { PpGangRunsService } from './gang-runs/pp-gang-runs.service';
+import { PP_GANG_RUNS_REPO } from './gang-runs/i-pp-gang-runs.repo';
+import { DrizzlePpGangRunsRepository } from './gang-runs/drizzle-pp-gang-runs.repo';
 // Plan-fact store (pp_plan_fact_entries) — vision 07-pp#20 (EP-PP-106) last-year-fact
 // recommendation (median + best-20% + last-5).
 import { PpPlanFactController } from './plan-fact/pp-plan-fact.controller';
@@ -159,6 +165,8 @@ const listeners = [
     GofraConversionController,
     // PP reason-code catalog management surface
     PpReasonCodesController,
+    // PP gang-run acceptance + brak-split surface (vision 07-pp#37)
+    PpGangRunsController,
     // Plan-fact recommendation surface (vision 07-pp#20)
     PpPlanFactController,
     // vision 07-pp#46: queue-time tracker + OEE queue-exclusion surface
@@ -213,6 +221,9 @@ const listeners = [
     // PP reason-code catalog
     PpReasonCodesService,
     { provide: PP_REASON_CODES_REPO, useClass: DrizzlePpReasonCodesRepository },
+    // PP gang-run acceptance + brak-split (vision 07-pp#37)
+    PpGangRunsService,
+    { provide: PP_GANG_RUNS_REPO, useClass: DrizzlePpGangRunsRepository },
     // Plan-fact store (vision 07-pp#20)
     PpPlanFactService,
     { provide: PP_PLAN_FACT_REPO, useClass: DrizzlePpPlanFactRepository },

@@ -660,3 +660,48 @@ export const ppShiftPlans = pgTable("pp_shift_plans", {
 export const insertPpShiftPlanSchema = createInsertSchema(ppShiftPlans).omit({ id: true, createdAt: true } as never);
 export type PpShiftPlan = typeof ppShiftPlans.$inferSelect;
 export type InsertPpShiftPlan = z.infer<typeof insertPpShiftPlanSchema>;
+
+// ============================================================
+// VISION 07-pp #37 — Gang-run per-order acceptance act + lot-split brak
+// APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+// DDL mirror of apps/api/src/shared/db/migrations/pp-gang-runs-acceptance-brak-2026-07-11.sql.
+// A gang run groups several production orders printed on one physical gang sheet
+// (print_job_ref); on acceptance the run-total brak is split proportionally by each
+// member order's quantity (vision default proportional-by-quantity) and each order gets
+// its own generated acceptance-act reference. Mechanism-only — no owner data (Q-40).
+// ============================================================
+
+// Gang-run header — one physical print job over several production orders.
+export const ppGangRuns = pgTable("pp_gang_runs", {
+  id: serial("id").primaryKey(),
+  printJobRef: varchar("print_job_ref", { length: 80 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("open"),
+  totalBrakQty: numericMoney("total_brak_qty").notNull().default(0),
+  notes: text("notes"),
+  createdBy: integer("created_by"),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPpGangRunSchema = createInsertSchema(ppGangRuns).omit({ id: true, createdAt: true } as never);
+export type PpGangRun = typeof ppGangRuns.$inferSelect;
+export type InsertPpGangRun = z.infer<typeof insertPpGangRunSchema>;
+
+// Gang-run member — per-order acceptance act + this order's share of the run brak.
+export const ppGangRunOrders = pgTable("pp_gang_run_orders", {
+  id: serial("id").primaryKey(),
+  gangRunId: integer("gang_run_id").notNull().references(() => ppGangRuns.id, { onDelete: "cascade" }),
+  productionOrderId: integer("production_order_id").notNull(),
+  orderQuantity: numericMoney("order_quantity").notNull().default(0),
+  acceptanceActId: varchar("acceptance_act_id", { length: 60 }),
+  brakQty: numericMoney("brak_qty").notNull().default(0),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("uq_pp_gang_run_orders_run_order").on(t.gangRunId, t.productionOrderId),
+  index("idx_pp_gang_run_orders_order").on(t.productionOrderId),
+]);
+
+export const insertPpGangRunOrderSchema = createInsertSchema(ppGangRunOrders).omit({ id: true, createdAt: true } as never);
+export type PpGangRunOrder = typeof ppGangRunOrders.$inferSelect;
+export type InsertPpGangRunOrder = z.infer<typeof insertPpGangRunOrderSchema>;
