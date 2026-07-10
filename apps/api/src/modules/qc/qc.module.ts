@@ -69,7 +69,10 @@ import { DpmoService } from './domain/services/dpmo.service';
 import { QcAqlService } from './domain/services/qc-aql.service';
 import { GradePricingService } from './domain/services/grade-pricing.service';
 import { InstrumentCalibrationController } from './presentation/instrument-calibration.controller';
-import { InstrumentCalibrationRepository } from './infrastructure/repositories/instrument-calibration.repository';
+import { InstrumentCalibrationRepository } from './infrastructure/repositories/instrument-calibration.repository';
+import { QcBrakSnapshotRepository } from './infrastructure/repositories/qc-brak-snapshot.repository';
+import { QcBrakSnapshotService } from './application/qc-brak-snapshot.service';
+import { QcBrakSnapshotController } from './presentation/qc-brak-snapshot.controller';
 import { QcMaterialScanController } from './presentation/qc-material-scan.controller';
 import { QcMaterialScanService } from './application/qc-material-scan.service';
 import { QcMaterialScanRepository } from './infrastructure/repositories/qc-material-scan.repository';
@@ -120,7 +123,8 @@ const repositories = [
     QcParametersController,
     PrintController,
     QcDpmoController,
-    InstrumentCalibrationController,
+    InstrumentCalibrationController,
+    QcBrakSnapshotController,
     QcMaterialScanController,
   ],
   providers: [
@@ -157,7 +161,9 @@ const repositories = [
     DpmoService,
     QcAqlService,
     GradePricingService,
-    InstrumentCalibrationRepository,
+    InstrumentCalibrationRepository,
+    QcBrakSnapshotRepository,
+    QcBrakSnapshotService,
     QcMaterialScanRepository,
     QcMaterialScanService,
   ],

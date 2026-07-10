@@ -278,7 +278,32 @@ export const insertQcRootCauseSchema = createInsertSchema(qcRootCauses, {
 }).omit({ id: true, createdAt: true, updatedAt: true, closedAt: true } as never);
 
 export type QcRootCause = typeof qcRootCauses.$inferSelect;
-export type InsertQcRootCause = z.infer<typeof insertQcRootCauseSchema>;
+export type InsertQcRootCause = z.infer<typeof insertQcRootCauseSchema>;
+
+
+// ========== Vision 09-qc #48: QC brak statistika Director paneli snapshot (durable outbox fallback) ==========
+// Real-time oqim = KANONIK outbox (domain_events + OutboxRepository/OutboxPublisher).
+// Bu jadval = faqat Director paneli QC momentan uzilganda ko'rsatadigan oxirgi SNAPSHOT
+// (oee_snapshots / financial_ratios_snapshot naqshiga mos). Yangi qc_outbox YARATILMAYDI —
+// u domain_events ni takrorlagan bo'lardi. Migration: qc-brak-snapshot-2026-07-11.sql.
+export const qcBrakSnapshot = pgTable("qc_brak_snapshot", {
+  id: serial("id").primaryKey(),
+  scope: varchar("scope", { length: 64 }).notNull().default("global"),
+  totalBraks: integer("total_braks").notNull().default(0),
+  totalBrakQty: numericMoney("total_brak_qty").notNull().default(0),
+  openDefects: integer("open_defects").notNull().default(0),
+  scrap7daysQty: numericMoney("scrap_7days_qty").notNull().default(0),
+  topReason: text("top_reason"),
+  byStage: jsonb("by_stage").notNull().default(sql`'[]'::jsonb`),
+  byReason: jsonb("by_reason").notNull().default(sql`'[]'::jsonb`),
+  computedAt: timestamp("computed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  unique("uq_qc_brak_snapshot_scope").on(t.scope),
+]);
+
+export type QcBrakSnapshotRow = typeof qcBrakSnapshot.$inferSelect;
 
 
 // ========== Vision 09-qc#11: per-roll tablet scan log (FIFO aybdor-lot) ==========
