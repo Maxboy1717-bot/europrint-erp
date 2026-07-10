@@ -29,6 +29,7 @@ import { OperatorCertificationsHandler } from './application/queries/operator-ce
 import { GetCoursesHandler } from './application/queries/get-courses.handler';
 import { GetMyEnrollmentsHandler } from './application/queries/get-my-enrollments.handler';
 import { CertExpiryHandler } from './infrastructure/event-handlers/cert-expiry.handler';
+import { WeeklyProgressReportHandler } from './infrastructure/event-handlers/weekly-progress-report.handler';
 import { CardEmployeeAssignedHandler } from './infrastructure/event-handlers/card-employee-assigned.handler';
 import { CourseCompletedCreditHandler } from './infrastructure/event-handlers/course-completed-credit.handler';
 import { LmsCoursesController } from './presentation/lms-courses.controller';
@@ -64,7 +65,7 @@ import { EnrollmentsService } from './enrollments/enrollments.service';
 
 const commandHandlers = [IssueCertificateHandler, EnrollCourseHandler];
 const queryHandlers = [OperatorCertificationsHandler, GetCoursesHandler, GetMyEnrollmentsHandler];
-const eventListeners = [CertExpiryHandler, CardEmployeeAssignedHandler, CourseCompletedCreditHandler];
+const eventListeners = [CertExpiryHandler, CardEmployeeAssignedHandler, CourseCompletedCreditHandler, WeeklyProgressReportHandler];
 
 const appControllers = [
   LmsCoursesController,

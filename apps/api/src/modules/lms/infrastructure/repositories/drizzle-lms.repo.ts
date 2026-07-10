@@ -586,6 +586,108 @@ export class LmsRepository implements ILmsRepo {
     }
   }
 
+  /**
+   * 12-lms #27 (non-AI half): per-employee weekly progress aggregate for the
+   * `weekly-progress-report` cron. One row per active user who has an enrollment.
+   * NOTE: the module's GET /progress/summary is a GLOBAL COUNT over courseProgress —
+   * NOT per-employee — so it is the wrong source; this reads enrollments +
+   * lms_exam_attempts grouped by employee. `self_user_id` = users.id resolved via
+   * users.employee_id (notifications.user_id is INT). lms_exam_attempts.employee_id is
+   * TEXT -> guarded with `~ '^[0-9]+$'` before ::integer. Exam stats are aggregated in a
+   * separate subquery (not a LEFT JOIN before GROUP BY) to avoid cross-join inflation.
+   */
+  async findWeeklyProgressReport(): Promise<Result<Array<{
+    employeeId: number; selfUserId: number; cardId: number | null;
+    completedCourses: number; totalCourses: number; avgProgress: number;
+    examsPassed: number; examsFailed: number;
+  }>>> {
+    try {
+      const rows = await exec(sql`
+        SELECT en.employee_id, u.id AS self_user_id, en.card_id,
+          en.completed_courses, en.total_courses, en.avg_progress,
+          COALESCE(ex.exams_passed, 0) AS exams_passed,
+          COALESCE(ex.exams_failed, 0) AS exams_failed
+        FROM (
+          SELECT employee_id, MAX(card_id) AS card_id,
+            COUNT(*) FILTER (WHERE status = 'completed') AS completed_courses,
+            COUNT(*) AS total_courses,
+            COALESCE(ROUND(AVG(progress_percent)), 0) AS avg_progress
+          FROM enrollments GROUP BY employee_id
+        ) en
+        JOIN users u ON u.employee_id = en.employee_id AND u.is_active = true
+        LEFT JOIN (
+          SELECT employee_id::integer AS emp_id,
+            COUNT(*) FILTER (WHERE passed = true) AS exams_passed,
+            COUNT(*) FILTER (WHERE passed = false AND status = 'submitted') AS exams_failed
+          FROM lms_exam_attempts
+          WHERE employee_id ~ '^[0-9]+$'
+          GROUP BY employee_id::integer
+        ) ex ON ex.emp_id = en.employee_id
+        ORDER BY en.employee_id`);
+      return Ok(rows.map((r) => ({
+        employeeId: Number(r.employee_id),
+        selfUserId: Number(r.self_user_id),
+        cardId: r.card_id != null ? Number(r.card_id) : null,
+        completedCourses: Number(r.completed_courses ?? 0),
+        totalCourses: Number(r.total_courses ?? 0),
+        avgProgress: Number(r.avg_progress ?? 0),
+        examsPassed: Number(r.exams_passed ?? 0),
+        examsFailed: Number(r.exams_failed ?? 0),
+      })));
+    } catch (error: unknown) {
+      this.logger.error(`findWeeklyProgressReport: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /** 12-lms #27: active mentor user-ids for a card (lms_card_mentors). Empty when the
+   *  enrollment carries no card trail (card_id NULL) — the mentor copy then honestly no-ops. */
+  async findActiveMentorUserIdsByCard(cardId: number): Promise<Result<number[]>> {
+    try {
+      if (!Number.isInteger(cardId) || cardId <= 0) return Ok([]);
+      const rows = await exec(sql`
+        SELECT DISTINCT mentor_user_id
+        FROM lms_card_mentors
+        WHERE card_id = ${cardId} AND is_active = true AND revoked_at IS NULL
+          AND mentor_user_id IS NOT NULL`);
+      return Ok(rows.map((r) => Number(r.mentor_user_id)));
+    } catch (error: unknown) {
+      this.logger.error(`findActiveMentorUserIdsByCard: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /** 12-lms #27: HR recipients for the weekly report — RBAC by users.role (no org head_user_id). */
+  async findHrManagerUserIds(): Promise<Result<number[]>> {
+    try {
+      const rows = await exec(sql`
+        SELECT id FROM users WHERE role = 'HR_MANAGER' AND is_active = true`);
+      return Ok(rows.map((r) => Number(r.id)));
+    } catch (error: unknown) {
+      this.logger.error(`findHrManagerUserIds: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
+  /** 12-lms #27: write one weekly-progress notification (reference_type='lms_progress').
+   *  Mirrors rasporyazhenie-escalation.cron.ts:76 required-column set (user_id/type/title/body/is_read). */
+  async insertProgressNotification(
+    userId: number, type: string, title: string, body: string,
+    referenceId: number, priority: 'low' | 'normal' | 'high' | 'urgent',
+  ): Promise<Result<{ inserted: boolean }>> {
+    try {
+      await exec(sql`
+        INSERT INTO notifications
+          (user_id, type, title, body, is_read, reference_id, reference_type, priority, created_at)
+        VALUES
+          (${userId}, ${type}, ${title}, ${body}, false, ${referenceId}, 'lms_progress', ${priority}, NOW())`);
+      return Ok({ inserted: true });
+    } catch (error: unknown) {
+      this.logger.error(`insertProgressNotification: ${(error as Error).message}`);
+      return Err((error as Error).message);
+    }
+  }
+
   findExpiringCertificates(d: number) { return this.certRepo.findExpiringCertificates(d) as Promise<Result<Enrollment[]>>; }
   findExpiredToFlag() { return this.certRepo.findExpiredToFlag(); }
   saveCertificate(cert: Record<string, unknown>, issuedBy?: number) { return this.certRepo.saveCertificate(cert, issuedBy); }
