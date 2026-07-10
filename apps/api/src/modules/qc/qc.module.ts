@@ -70,6 +70,9 @@ import { QcAqlService } from './domain/services/qc-aql.service';
 import { GradePricingService } from './domain/services/grade-pricing.service';
 import { InstrumentCalibrationController } from './presentation/instrument-calibration.controller';
 import { InstrumentCalibrationRepository } from './infrastructure/repositories/instrument-calibration.repository';
+import { QcMaterialScanController } from './presentation/qc-material-scan.controller';
+import { QcMaterialScanService } from './application/qc-material-scan.service';
+import { QcMaterialScanRepository } from './infrastructure/repositories/qc-material-scan.repository';
 
 const commandHandlers = [
   SubmitInspectionHandler,
@@ -118,6 +121,7 @@ const repositories = [
     PrintController,
     QcDpmoController,
     InstrumentCalibrationController,
+    QcMaterialScanController,
   ],
   providers: [
     ...commandHandlers,
@@ -154,6 +158,8 @@ const repositories = [
     QcAqlService,
     GradePricingService,
     InstrumentCalibrationRepository,
+    QcMaterialScanRepository,
+    QcMaterialScanService,
   ],
   exports: [
     QC_DEFECT_REPO, QC_REPOSITORY_PROVIDER, DEFECTS_REPO, DefectsService,

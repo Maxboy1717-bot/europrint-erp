@@ -5,7 +5,7 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, check, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -279,3 +279,27 @@ export const insertQcRootCauseSchema = createInsertSchema(qcRootCauses, {
 
 export type QcRootCause = typeof qcRootCauses.$inferSelect;
 export type InsertQcRootCause = z.infer<typeof insertQcRootCauseSchema>;
+
+
+// ========== Vision 09-qc#11: per-roll tablet scan log (FIFO aybdor-lot) ==========
+// Each roll a floor operator scans on the tablet writes ONE append-only row
+// (order/lot/stanok=work_center/smena=shift/ts). Idempotency + indexes live in the
+// migration apps/api/src/shared/db/migrations/qc-material-scan-log-2026-07-11.sql.
+// Columns match that migration EXACTLY (all business columns nullable).
+export const qcMaterialScanLog = pgTable("qc_material_scan_log", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id"),
+  sessionId: integer("session_id"),
+  lot: varchar("lot", { length: 100 }),
+  materialId: integer("material_id"),
+  workCenterId: integer("work_center_id"),
+  shiftId: integer("shift_id"),
+  scannedBy: integer("scanned_by"),
+  scannedAt: timestamp("scanned_at").notNull().defaultNow(),
+  tabletId: text("tablet_id"),
+  localSeqNo: bigint("local_seq_no", { mode: "number" }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type QcMaterialScanLog = typeof qcMaterialScanLog.$inferSelect;
