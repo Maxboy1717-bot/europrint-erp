@@ -36,6 +36,7 @@ import { GetRoutingsHandler } from './application/queries/get-routings.handler';
 import { GetMrpReportHandler } from './application/queries/get-mrp-report.handler';
 import { GetWorkCentersHandler } from './application/queries/get-work-centers.handler';
 import { GetProductionQueueHandler } from './application/queries/get-production-queue.handler';
+import { GetSalesOrderQueuePositionHandler } from './application/queries/get-sales-order-queue-position.handler';
 import { PpPlanExportService } from './application/services/pp-plan-export.service';
 import { GetWorkCentersStatsHandler } from './application/queries/get-work-centers-stats.handler';
 import { DrizzlePpRepository } from './infrastructure/repositories/drizzle-pp.repo';
@@ -121,6 +122,7 @@ const handlers = [
   GetWorkCentersHandler,
   GetWorkCentersStatsHandler,
   GetProductionQueueHandler,
+  GetSalesOrderQueuePositionHandler,
 ];
 
 const listeners = [

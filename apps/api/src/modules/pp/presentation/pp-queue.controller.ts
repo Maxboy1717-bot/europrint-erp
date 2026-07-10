@@ -4,7 +4,7 @@
  *              (ProductionPriorityService.buildQueue) — frozen segment + flexible ZARUR→deadline→band.
  */
 
-import { Controller, Get, Res, UseGuards, UseInterceptors, StreamableFile, Logger } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Res, UseGuards, UseInterceptors, StreamableFile, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { unwrapOrThrow } from '@common/http-result';
 import { QueryBus } from '@nestjs/cqrs';
@@ -13,11 +13,15 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GetProductionQueueQuery } from '../application/queries/get-production-queue.query';
+import { GetSalesOrderQueuePositionQuery } from '../application/queries/get-sales-order-queue-position.query';
 import { PpPlanExportService } from '../application/services/pp-plan-export.service';
 import type { FastifyReply } from 'fastify';
 import { Readable } from 'stream';
 
 const QUEUE_ROLES = ['super_admin', 'director', 'production_manager', 'planner', 'operator'];
+// Modul-06 #47: the SD order card (viewed by sales managers) reads its own queue slot;
+// base GET /pp/queue excludes sales_manager, so the by-sales-order read widens the roles.
+const SALES_ORDER_QUEUE_ROLES = [...QUEUE_ROLES, 'sales_manager'];
 
 @ApiThrottle()
 @ApiTags('Pp Queue')
@@ -60,5 +64,22 @@ export class PpQueueController {
       .header('Content-Type', 'text/csv; charset=utf-8')
       .header('Content-Disposition', `attachment; filename="${filename}"`);
     return new StreamableFile(Readable.from(Buffer.from(csv, 'utf-8')));
+  }
+
+  /**
+   * Modul-06 #47: surface queue_position (=rank in the ranked plan) + estimated_start
+   * (production_orders.scheduled_start) for ONE sales order, so the SD order card can
+   * show where the order sits in production. Transport-only (Rule 6): delegates the
+   * lookup + ranking to the query handler. 404 when no production order links the
+   * sales order yet.
+   */
+  @ApiOperation({ summary: "Get a sales order's production queue_position + estimated_start (SD order card) — Modul-06 #47" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'No production order linked to this sales order' })
+  @Get('sales-order/:salesOrderId')
+  @Roles(...SALES_ORDER_QUEUE_ROLES)
+  async getSalesOrderQueuePosition(@Param('salesOrderId', ParseIntPipe) salesOrderId: number) {
+    this.logger.log(`Getting production queue position for sales order ${salesOrderId}`);
+    return unwrapOrThrow(await this.queryBus.execute(new GetSalesOrderQueuePositionQuery(salesOrderId)));
   }
 }

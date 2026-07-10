@@ -73,6 +73,10 @@ export class GetProductionQueueHandler implements IQueryHandler<GetProductionQue
           isUrgent: o.isUrgent ?? false,
           isFrozen: o.isFrozen ?? false,
           deadline: o.deadline === FAR_FUTURE ? null : o.deadline,
+          // Modul-06 #47: surface queue_position (=rank) + estimated_start (scheduled_start)
+          //              keyed by sales_order_id so the SD order card can look up its slot.
+          salesOrderId: row.sales_order_id != null ? Number(row.sales_order_id) : null,
+          estimatedStart: row.scheduled_start ?? null,
         };
       });
 
