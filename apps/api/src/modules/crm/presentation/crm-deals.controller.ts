@@ -108,6 +108,19 @@ export class CrmDealsController {
   return unwrapOrThrow(await this.dealsService.findAll({ companyId: companyId ? Number(companyId) : undefined, limit, offset }, user));
 }
 
+ @ApiOperation({ summary: 'Export deals (row-scoped to caller; audited)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @Get('export')
+ @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ async export(@CurrentUser() user: AuthenticatedUser) {
+  this.logger.log('Exporting deals');
+  // Item 14 (vision 13-crm#14): a non-privileged manager exports ONLY their own deals
+  // (assigned_to = self); super_admin/admin/director export all. Every export writes an
+  // audit_logs row (action='export') — "eksport urinishi loglanadi". Declared BEFORE the
+  // @Get(':id') route so '/crm/deals/export' is not captured as an id param.
+  return unwrapOrThrow(await this.dealsService.exportDeals(user));
+ }
+
  @ApiOperation({ summary: 'Get by id' })
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 404, description: 'Not found' })

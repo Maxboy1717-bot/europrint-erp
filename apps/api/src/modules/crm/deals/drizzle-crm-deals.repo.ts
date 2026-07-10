@@ -16,7 +16,7 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
-import { ICrmDealsRepository, StageHistoryEntry } from './i-crm-deals.repo';
+import { ICrmDealsRepository, StageHistoryEntry, ExportAuditEntry } from './i-crm-deals.repo';
 
 type Row = Record<string, unknown>;
 
@@ -39,6 +39,39 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       ]);
       return Ok({ data: dataRes.rows, count: Number(countRes.rows[0]?.c || 0) });
     } catch (e: unknown) { return Err((e as Error)?.message || 'Bitimlar topilmadi'); }
+  }
+
+  async findAllForExport(ownerId?: number | null): Promise<Result<Row[]>> {
+    try {
+      // Item 14: full (unpaginated) export, row-scoped identically to findAll. Safety-capped so a
+      // runaway export cannot OOM the API. ownerId == null → privileged → no owner filter.
+      const ownerFilter = ownerId != null ? sql`AND assigned_to = ${ownerId}` : sql``;
+      const res = await runQuery<Row>(sql`
+        SELECT * FROM crm_deals
+        WHERE deleted_at IS NULL ${ownerFilter}
+        ORDER BY date_create DESC
+        LIMIT 10000
+      `);
+      return Ok(res.rows);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Eksport uchun bitimlar topilmadi'); }
+  }
+
+  async recordExportAudit(entry: ExportAuditEntry): Promise<Result<void>> {
+    try {
+      // Item 14 (vision 13-crm#14 "eksport urinishi loglanadi"): one row per export. record_id='*'
+      // = whole-table bulk export (no single record). id/created_at fill from column defaults
+      // (gen_random_uuid()/now()); audit_logs.user_id/user_role are varchar → user id is stringified.
+      await runQuery(sql`
+        INSERT INTO audit_logs (table_name, record_id, action, user_id, user_role, new_values)
+        VALUES (
+          'crm_deals', '*', 'export',
+          ${entry.userId != null ? String(entry.userId) : null},
+          ${entry.userRole},
+          ${JSON.stringify({ row_count: entry.rowCount, row_scoped: entry.scoped })}::jsonb
+        )
+      `);
+      return Ok(undefined);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Eksport auditini yozishda xatolik'); }
   }
 
   async findById(id: string): Promise<Result<Row | null>> {

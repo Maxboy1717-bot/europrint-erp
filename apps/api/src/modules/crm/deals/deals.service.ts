@@ -36,6 +36,29 @@ export class DealsService {
 
     });}
 
+  /**
+   * Item 14 (vision 13-crm#14): row-scoped export + audit. A non-privileged manager exports ONLY
+   * their own deals (assigned_to = self); super_admin/admin/director export all. Every export writes
+   * an audit_logs row (action='export') — satisfies "eksport urinishi loglanadi". The audit write is
+   * NOT best-effort: if it fails the whole export fails (the log is the point of this item).
+   */
+  async exportDeals(user?: ScopeUser): Promise<Result<object, AppError>> {
+    return safeCall(async () => {
+    const ownerScope = crmOwnerScope(user);
+    const result = await this.crmDealsRepo.findAllForExport(ownerScope);
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    const rows = result.data;
+    const auditRes = await this.crmDealsRepo.recordExportAudit({
+      userId: user?.id ?? null,
+      userRole: user?.role ?? null,
+      rowCount: rows.length,
+      scoped: ownerScope != null,
+    });
+    if (!auditRes.ok) throw new InternalServerErrorException(auditRes.error);
+    return { data: rows, total: rows.length };
+
+    });}
+
   async findOne(id: string, user?: ScopeUser) {
     const result = await this.crmDealsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
