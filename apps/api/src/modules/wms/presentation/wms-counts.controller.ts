@@ -65,6 +65,17 @@ export class WmsCountsController {
     return { items, total: items.length, blind_mode: isBlind };
   }
 
+  // Vision 10-warehouse#12 — sanoq aniqlik% KPI (farqsiz poz / jami poz × 100).
+  // NB: statik 'accuracy' segmenti :id yo'nalishlaridan OLDIN e'lon qilinadi (marshrut ustuvorligi).
+  @ApiOperation({ summary: 'Inventory count accuracy % (variance-free positions / total × 100)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('inventory-counts/accuracy')
+  async getCountAccuracy(@Query('warehouseId') warehouseId?: string) {
+    const r = await this.svc.getCountAccuracy(warehouseId);
+    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+    return rows[0] ?? { total_positions: 0, variance_positions: 0, accurate_positions: 0, accuracy_pct: 0 };
+  }
+
   // Batch 5 Item 10 — bitta inventarizatsiyaning tafovutlari (inson tasdig'i uchun ko'rib chiqiladi).
   @ApiOperation({ summary: 'List variance lines of a count (for human confirmation)' })
   @ApiResponse({ status: 200, description: 'OK' })

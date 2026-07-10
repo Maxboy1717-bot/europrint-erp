@@ -108,4 +108,12 @@ export class WmsCountsService {
   async getProductionSupply(sessionId?: string) {
     return this.repo.getProductionSupply(sessionId);
   }
+
+  /**
+   * Vision 10-warehouse #12 — sanoq aniqlik% KPI (farqsiz poz / jami poz × 100),
+   * yakunlangan inventarizatsiyalar bo'yicha; ixtiyoriy warehouseId filtri.
+   */
+  getCountAccuracy(warehouseId?: string) {
+    return this.repo.getCountAccuracy(warehouseId);
+  }
 }

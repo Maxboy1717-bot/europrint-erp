@@ -39,6 +39,13 @@ export interface IWmsCountsRepo {
   ): Promise<Result<Row[]>>;
   getProductionSupply(sessionId?: string): Promise<Result<Row[]>>;
   /**
+   * Vision 10-warehouse #12 — sanoq aniqlik% KPI: farqsiz pozitsiya / jami pozitsiya × 100.
+   * Yakunlangan (completed/approved) inventarizatsiyalar bo'yicha agregatsiya; ixtiyoriy
+   * warehouseId filtri. Mavjud `total_items`/`variance_items` ustunlaridan hisoblanadi
+   * (yangi ustun YO'Q). Bitta agregat qator qaytadi.
+   */
+  getCountAccuracy(warehouseId?: string): Promise<Result<Row[]>>;
+  /**
    * W3-COUNT — count-line yozish. system≠counted bo'lganda deviationReasonCode
    * MAJBURIY (validatsiya service'da). book/system miqdori va og'ish hisoblanadi.
    */

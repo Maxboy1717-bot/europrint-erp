@@ -112,6 +112,33 @@ export class WmsCountsRepository implements IWmsCountsRepo {
 
   }
 
+  /**
+   * Vision 10-warehouse #12 — sanoq aniqlik% = farqsiz pozitsiya / jami pozitsiya × 100.
+   * Yakunlangan (completed/approved) inventarizatsiyalar bo'yicha jami agregat; mavjud
+   * `total_items`/`variance_items` ustunlaridan (yangi ustun YO'Q). GREATEST(...,0) manfiy
+   * bo'lib qolmasligi uchun; jami=0 bo'lsa aniqlik 0 (nol bo'linish emas).
+   */
+  async getCountAccuracy(warehouseId?: string): Promise<Result<Row[]>> {
+    try {
+      const wid = warehouseId ? safeInt(warehouseId, 0) : null;
+      const q = (whereWid: SQL) => sql`
+        SELECT
+          COALESCE(SUM(total_items), 0)::int AS total_positions,
+          COALESCE(SUM(variance_items), 0)::int AS variance_positions,
+          COALESCE(SUM(GREATEST(COALESCE(total_items,0) - COALESCE(variance_items,0), 0)), 0)::int AS accurate_positions,
+          CASE WHEN COALESCE(SUM(total_items), 0) > 0
+            THEN ROUND(
+              SUM(GREATEST(COALESCE(total_items,0) - COALESCE(variance_items,0), 0))::numeric
+              / SUM(total_items) * 100, 2)
+            ELSE 0 END AS accuracy_pct
+        FROM wms_inventory_counts
+        WHERE status IN ('completed', 'approved')${whereWid}`;
+      return wid ? exec(q(sql` AND warehouse_id = ${wid}`)) : exec(q(sql``));
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async recordCountLine(input: CountLineInput): Promise<Result<Row>> {
     // book_quantity = tizim miqdori (snapshot); counted_quantity = sanoqchi kiritgani.
     // variance = counted - book. deviation_reason_code = majburiy kod (system≠counted bo'lsa).
