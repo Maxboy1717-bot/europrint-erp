@@ -70,6 +70,7 @@ export class CcWorkflowService {
       senderComment:   dto.senderComment ?? null,
       priority:        dto.priority ?? tmpl.defaultPriority,
       language:        dto.language ?? 'uz',
+      parentDocumentId: dto.parentDocumentId ?? null,
       documentNumber,
     }));
     return created;

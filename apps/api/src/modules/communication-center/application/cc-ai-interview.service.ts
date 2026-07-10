@@ -251,6 +251,7 @@ export class CcAiInterviewService {
       senderComment:   null,
       priority:        tmpl.defaultPriority,
       language:        sess.language,
+      parentDocumentId: null,
       documentNumber,
     });
     if (!isOk(draftRes)) throw new InternalServerErrorException(draftRes.error.message);

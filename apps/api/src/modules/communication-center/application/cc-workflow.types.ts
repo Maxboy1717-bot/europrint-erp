@@ -14,6 +14,7 @@ export interface CreateDraftDto {
   priority?:     Priority;
   language?:     Language;
   branchId?:     string;
+  parentDocumentId?: string;
 }
 
 export interface SendDocumentDto { pin: string }

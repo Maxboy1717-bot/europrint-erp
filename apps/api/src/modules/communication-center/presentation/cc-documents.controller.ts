@@ -46,6 +46,7 @@ const CreateDraftSchema = z.object({
   priority:      z.enum(['low', 'normal', 'high', 'urgent']).optional(),
   language:      z.enum(['uz', 'ru']).optional(),
   branchId:      z.string().uuid().optional(),
+  parentDocumentId: z.string().uuid().optional(),
 });
 const SendSchema     = z.object({ pin: z.string().regex(/^\d{4,8}$/) });
 const ApproveSchema  = z.object({ pin: z.string().regex(/^\d{4,8}$/), comment: z.string().max(4000).optional() });

@@ -85,6 +85,7 @@ export class CcEventListener implements IEventHandler<CcSpawnRequestedEvent> {
         senderComment:   null,
         priority:        payload.priority ?? (tmpl.default_priority as Priority),
         language:        payload.language ?? 'uz',
+        parentDocumentId: null,
         documentNumber,
       });
       if (!isOk(draftR)) {

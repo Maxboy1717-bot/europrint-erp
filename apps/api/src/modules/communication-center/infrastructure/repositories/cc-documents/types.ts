@@ -71,6 +71,7 @@ export interface CreateDraftInput {
   priority:      Priority;
   language:      Language;
   branchId:      string | null;
+  parentDocumentId: string | null;
   documentNumber: string;
   templateVersion: number;
 }

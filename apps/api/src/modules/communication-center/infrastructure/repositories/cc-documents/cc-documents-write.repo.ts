@@ -34,14 +34,16 @@ export class CcDocumentsWriteRepo {
           document_number, template_id, template_version, sender_user_id, branch_id,
           basket_state, basket_owner_user_id, basket_entered_at,
           workflow_state, current_step_order,
-          subject, ai_body, ai_answers, sender_comment, priority, language
+          subject, ai_body, ai_answers, sender_comment, priority, language,
+          parent_document_id
         )
         VALUES (
           ${input.documentNumber}, ${input.templateId}, ${input.templateVersion}, ${input.senderUserId}, ${input.branchId},
           'outbox', ${input.senderUserId}, NOW(),
           'draft', 0,
           ${input.subject}, ${input.aiBody}, ${JSON.stringify(input.aiAnswers)}::jsonb,
-          ${input.senderComment}, ${input.priority}, ${input.language}
+          ${input.senderComment}, ${input.priority}, ${input.language},
+          ${input.parentDocumentId}
         )
         RETURNING id::text AS id
       `);
