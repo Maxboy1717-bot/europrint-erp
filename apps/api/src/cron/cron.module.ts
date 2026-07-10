@@ -4,6 +4,10 @@
  */
 
 import { Module } from '@nestjs/common'
+// 09-qc #22 — Davriy ichki sifat auditi (choraklik cron); QcInternalAuditRepository = standalone (runQuery)
+import { QcInternalAuditCron } from './qc-internal-audit.cron'
+import { QcInternalAuditService } from '../modules/qc/application/qc-internal-audit.service'
+import { QcInternalAuditRepository } from '../modules/qc/infrastructure/repositories/qc-internal-audit.repo'
 import { ScheduleModule } from '@nestjs/schedule'
 import { TelegramModule } from '../telegram/telegram.module'
 import { QueueModule } from '../modules/queue/queue.module'
@@ -72,6 +76,10 @@ import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.
 @Module({
   imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule],
   providers: [
+    // 09-qc #22 — Davriy ichki sifat auditi (choraklik cron): qc_internal_audits idempotent scheduling
+    QcInternalAuditCron,
+    QcInternalAuditService,
+    QcInternalAuditRepository,
     CronStatusService,
     // Sprint 2 — Haftalik EOQ + Safety Stock yangilash (TZ-02/TZ-04)
     EoqSafetyStockRefreshCron,

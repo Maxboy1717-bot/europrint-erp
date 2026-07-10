@@ -5,7 +5,7 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, unique, uuid, check, bigint } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, date, jsonb, unique, uuid, check, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./core-schema";
@@ -278,31 +278,31 @@ export const insertQcRootCauseSchema = createInsertSchema(qcRootCauses, {
 }).omit({ id: true, createdAt: true, updatedAt: true, closedAt: true } as never);
 
 export type QcRootCause = typeof qcRootCauses.$inferSelect;
-export type InsertQcRootCause = z.infer<typeof insertQcRootCauseSchema>;
-
-
-// ========== Vision 09-qc #48: QC brak statistika Director paneli snapshot (durable outbox fallback) ==========
-// Real-time oqim = KANONIK outbox (domain_events + OutboxRepository/OutboxPublisher).
-// Bu jadval = faqat Director paneli QC momentan uzilganda ko'rsatadigan oxirgi SNAPSHOT
-// (oee_snapshots / financial_ratios_snapshot naqshiga mos). Yangi qc_outbox YARATILMAYDI —
-// u domain_events ni takrorlagan bo'lardi. Migration: qc-brak-snapshot-2026-07-11.sql.
-export const qcBrakSnapshot = pgTable("qc_brak_snapshot", {
-  id: serial("id").primaryKey(),
-  scope: varchar("scope", { length: 64 }).notNull().default("global"),
-  totalBraks: integer("total_braks").notNull().default(0),
-  totalBrakQty: numericMoney("total_brak_qty").notNull().default(0),
-  openDefects: integer("open_defects").notNull().default(0),
-  scrap7daysQty: numericMoney("scrap_7days_qty").notNull().default(0),
-  topReason: text("top_reason"),
-  byStage: jsonb("by_stage").notNull().default(sql`'[]'::jsonb`),
-  byReason: jsonb("by_reason").notNull().default(sql`'[]'::jsonb`),
-  computedAt: timestamp("computed_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [
-  unique("uq_qc_brak_snapshot_scope").on(t.scope),
-]);
-
+export type InsertQcRootCause = z.infer<typeof insertQcRootCauseSchema>;
+
+
+// ========== Vision 09-qc #48: QC brak statistika Director paneli snapshot (durable outbox fallback) ==========
+// Real-time oqim = KANONIK outbox (domain_events + OutboxRepository/OutboxPublisher).
+// Bu jadval = faqat Director paneli QC momentan uzilganda ko'rsatadigan oxirgi SNAPSHOT
+// (oee_snapshots / financial_ratios_snapshot naqshiga mos). Yangi qc_outbox YARATILMAYDI —
+// u domain_events ni takrorlagan bo'lardi. Migration: qc-brak-snapshot-2026-07-11.sql.
+export const qcBrakSnapshot = pgTable("qc_brak_snapshot", {
+  id: serial("id").primaryKey(),
+  scope: varchar("scope", { length: 64 }).notNull().default("global"),
+  totalBraks: integer("total_braks").notNull().default(0),
+  totalBrakQty: numericMoney("total_brak_qty").notNull().default(0),
+  openDefects: integer("open_defects").notNull().default(0),
+  scrap7daysQty: numericMoney("scrap_7days_qty").notNull().default(0),
+  topReason: text("top_reason"),
+  byStage: jsonb("by_stage").notNull().default(sql`'[]'::jsonb`),
+  byReason: jsonb("by_reason").notNull().default(sql`'[]'::jsonb`),
+  computedAt: timestamp("computed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  unique("uq_qc_brak_snapshot_scope").on(t.scope),
+]);
+
 export type QcBrakSnapshotRow = typeof qcBrakSnapshot.$inferSelect;
 
 
@@ -328,3 +328,32 @@ export const qcMaterialScanLog = pgTable("qc_material_scan_log", {
 });
 
 export type QcMaterialScanLog = typeof qcMaterialScanLog.$inferSelect;
+
+// ========== 09-qc #22: Davriy ichki sifat auditi (qc_internal_audits, cron) ==========
+// Vizyon (vision-1000-answers/09-qc.md #22): davriy ichki sifat auditi QC modulida alohida jadvalda
+// saqlanadi (cron choraklik/yillik); Coordination kalendar (calendar_event_id) + protokol (protocol_id)
+// bilan bog'lanadi. auditor_id/findings/calendar_event_id/protocol_id/completed_at NULL — runtime'da to'ladi.
+export const QC_INTERNAL_AUDIT_STATUSES = ["scheduled", "in_progress", "completed", "cancelled"] as const;
+export type QcInternalAuditStatus = typeof QC_INTERNAL_AUDIT_STATUSES[number];
+
+export const qcInternalAudits = pgTable("qc_internal_audits", {
+  id: serial("id").primaryKey(),
+  // Idempotentlik kaliti — cron takror ishga tushsa dublikat yozmaydi (masalan '2026-Q3').
+  period: varchar("period", { length: 20 }).notNull().unique(),
+  scheduledFor: date("scheduled_for").notNull(),        // audit rejalashtirilgan sana (chorak boshi)
+  scope: varchar("scope", { length: 50 }).notNull().default("full_quality_system"),
+  auditorId: integer("auditor_id").references(() => users.id, { onDelete: "set null" }), // NULL = tayinlanmagan
+  findings: jsonb("findings"),                          // topilmalar (runtime'da to'ladi)
+  status: varchar("status", { length: 20 }).notNull().default("scheduled"),
+  // Coordination integratsiya — kalendar hodisasi + protokol (runtime'da bog'lanadi; NULL = hali yo'q).
+  // FK'lar migration'da (calendar_events / protocol); bu yerda plain integer (cross-file import yo'q).
+  calendarEventId: integer("calendar_event_id"),
+  protocolId: integer("protocol_id"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  check("chk_qc_internal_audits_status", sql`${t.status} IN ('scheduled','in_progress','completed','cancelled')`),
+]);
+
+export type QcInternalAudit = typeof qcInternalAudits.$inferSelect;
+
