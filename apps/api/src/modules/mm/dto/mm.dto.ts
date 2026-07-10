@@ -121,6 +121,13 @@ export const MmUpdateRequisitionSchema = z.object({
 });
 export type MmUpdateRequisitionDto = z.infer<typeof MmUpdateRequisitionSchema>;
 
+// #11.13 — convert an APPROVED requisition into a PO. supplierId is optional:
+// when omitted, the service falls back to the requisition's own supplier_id.
+export const MmConvertRequisitionToPoSchema = z.object({
+  supplierId: z.number().int().positive().optional(),
+});
+export type MmConvertRequisitionToPoDto = z.infer<typeof MmConvertRequisitionToPoSchema>;
+
 export const MmCreateFleetVehicleSchema = z.object({
   plate_number: z.string().min(1).max(50),
   model:        z.string().max(100).optional(),

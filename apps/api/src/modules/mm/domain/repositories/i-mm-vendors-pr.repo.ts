@@ -43,6 +43,12 @@ export interface IMmVendorsPrRepo {
   ): Promise<Result<void>>;
   updateRequisition(rid: number, body: Row): Promise<Result<Row[]>>;
   deleteRequisition(rid: number): Promise<Result<void>>;
+  /**
+   * #11.13: link an approved requisition to the PO it was converted into.
+   * `mm_purchase_requisitions` is an updatable VIEW over `purchase_requisitions`;
+   * purchase_order_id is a nullable base column so this UPDATE rewrites cleanly.
+   */
+  setRequisitionPurchaseOrderId(rid: number, poId: number): Promise<Result<void>>;
 }
 
 export const MM_VENDORS_PR_REPO = Symbol('MM_VENDORS_PR_REPO');

@@ -25,6 +25,7 @@ import {
   MmUpdateVendorSchema, MmUpdateVendorDto,
   MmCreateRequisitionSchema, MmCreateRequisitionDto,
   MmUpdateRequisitionSchema, MmUpdateRequisitionDto,
+  MmConvertRequisitionToPoSchema, MmConvertRequisitionToPoDto,
 } from '../dto/mm.dto';
 
 const MM_WRITE_ROLES = ['mm_manager', 'warehouse_manager', 'super_admin', 'director'];
@@ -171,6 +172,24 @@ export class MmVendorsPrController {
   async createRequisition(@Body() body: MmCreateRequisitionDto, @CurrentUser() user: Record<string, unknown>) {
     assertRequired((body as Record<string, unknown>).title, await this.i18n.t('errors.titleRequired'));
     return unwrapOrThrow(await this.svc.createRequisition(body.title, (user?.id as number) ?? null, body.needed_by, body.notes, (body.items ?? []) as Array<Record<string, unknown>>));
+  }
+
+  @ApiOperation({ summary: 'Convert approved requisition to purchase order' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Already converted' })
+  @Post('purchase-requisitions/:id/convert-to-po')
+  @UsePipes(new ZodValidationPipe(MmConvertRequisitionToPoSchema))
+  @Roles(...MM_WRITE_ROLES)
+  async convertRequisitionToPo(
+    @Param('id') id: string,
+    @Body() body: MmConvertRequisitionToPoDto,
+    @CurrentUser() user: Record<string, unknown>,
+  ) {
+    return unwrapOrThrow(
+      await this.svc.convertRequisitionToPo(safeInt(id, 0), body.supplierId ?? null, (user?.id as number) ?? 0),
+    );
   }
 
   @ApiOperation({ summary: 'Update requisition' })

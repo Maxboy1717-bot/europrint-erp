@@ -200,4 +200,23 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
   }
 
   }
+
+  /**
+   * #11.13: write back the PO id onto the source requisition. Runs through the
+   * `mm_purchase_requisitions` VIEW (base `purchase_requisitions`) — the same
+   * updatable view createRequisition() already inserts through. purchase_order_id
+   * is a nullable base column, so the UPDATE rewrites cleanly to the base table.
+   */
+  async setRequisitionPurchaseOrderId(rid: number, poId: number): Promise<Result<void>>  {
+  try {
+      await runQuery(sql`
+        UPDATE mm_purchase_requisitions
+        SET purchase_order_id = ${poId}, updated_at = NOW()
+        WHERE id = ${rid}
+      `);
+      return Ok();  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
 }

@@ -4,15 +4,18 @@
  */
 
 import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { MM_VENDORS_PR_REPO, type IMmVendorsPrRepo } from '../domain/repositories/i-mm-vendors-pr.repo';
+import { CreatePurchaseOrderCommand } from './commands/create-purchase-order.handler';
 
 @Injectable()
 export class MmVendorsPrService {
   constructor(
     @Inject(MM_VENDORS_PR_REPO) private readonly repo: IMmVendorsPrRepo,
     private readonly i18n: I18nService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   async listVendors(search: string | undefined, lim: number, off: number): Promise<Result<object, AppError>> {
@@ -88,5 +91,81 @@ export class MmVendorsPrService {
 
   async deleteRequisition(rid: number) {
     return this.repo.deleteRequisition(rid);
+  }
+
+  /**
+   * #11.13 — Convert an APPROVED requisition into a purchase order and link them.
+   * Vision TASDIQ-2146 §11 #13 ("Tasdiqlangan arizadan PO ga avto-ko'chirish").
+   * Eligible = status 'approved' AND not yet converted. Items are copied from
+   * mm_purchase_requisition_items (aggregated by material — the PO aggregate's
+   * addItem() rejects a repeated materialId), with a fallback to the requisition
+   * header line when the item table is empty. createdBy is the session user (SoD).
+   */
+  async convertRequisitionToPo(
+    rid: number,
+    supplierIdOverride: number | null,
+    createdBy: number,
+  ): Promise<Result<{ requisitionId: number; purchaseOrderId: number }>> {
+    try {
+      const headerR = await this.repo.getRequisitionHeader(rid);
+      if (!headerR.ok) return Err(AppErr('DB_ERROR', String(headerR.error.message ?? headerR.error)));
+      const header = headerR.data;
+      if (!header) return Err(AppErr('NOT_FOUND', `Ariza topilmadi: #${rid}`));
+
+      if (String(header.status) !== 'approved') {
+        return Err(AppErr('VALIDATION', 'Faqat tasdiqlangan (approved) arizani PO ga aylantirish mumkin'));
+      }
+      if (header.purchase_order_id != null) {
+        return Err(AppErr('CONFLICT', `Ariza allaqachon PO ga aylantirilgan (PO #${header.purchase_order_id})`));
+      }
+
+      const supplierId = supplierIdOverride ?? (header.supplier_id != null ? Number(header.supplier_id) : null);
+      if (supplierId == null || !Number.isFinite(supplierId) || supplierId <= 0) {
+        return Err(AppErr('VALIDATION', "Yetkazib beruvchi aniqlanmadi — supplierId yuboring yoki arizada supplier_id bo'lsin"));
+      }
+
+      const itemsR = await this.repo.getRequisitionItems(rid);
+      if (!itemsR.ok) return Err(AppErr('DB_ERROR', String(itemsR.error.message ?? itemsR.error)));
+      const rawItems = Array.isArray(itemsR.data) ? (itemsR.data as Array<Record<string, unknown>>) : [];
+
+      // Aggregate by materialId — PurchaseOrder.addItem() forbids a repeated material.
+      const byMaterial = new Map<number, { materialId: number; quantity: number; unitPrice: number }>();
+      for (const it of rawItems) {
+        const materialId = Number(it.material_id);
+        const quantity = Number(it.quantity);
+        if (!Number.isFinite(materialId) || materialId <= 0 || !Number.isFinite(quantity) || quantity <= 0) continue;
+        const unitPrice = Number(it.unit_price);
+        const line = byMaterial.get(materialId) ?? { materialId, quantity: 0, unitPrice: 0 };
+        line.quantity += quantity;
+        if (Number.isFinite(unitPrice) && unitPrice > 0) line.unitPrice = unitPrice;
+        byMaterial.set(materialId, line);
+      }
+      let items = Array.from(byMaterial.values());
+
+      // Fallback: no item rows -> use the requisition header's single material line.
+      if (items.length === 0) {
+        const materialId = Number(header.material_id);
+        const quantity = Number(header.required_quantity);
+        if (!Number.isFinite(materialId) || materialId <= 0 || !Number.isFinite(quantity) || quantity <= 0) {
+          return Err(AppErr('VALIDATION', "Arizada kamida bitta material bo'lishi kerak"));
+        }
+        const est = Number(header.estimated_cost);
+        const unitPrice = Number.isFinite(est) && est > 0 && quantity > 0 ? est / quantity : 0;
+        items = [{ materialId, quantity, unitPrice }];
+      }
+
+      const poRes: Result<number> = await this.commandBus.execute(
+        new CreatePurchaseOrderCommand(supplierId, items, createdBy),
+      );
+      if (!poRes.ok) return Err(AppErr('INTERNAL', String(poRes.error.message ?? poRes.error)));
+      const purchaseOrderId = poRes.data;
+
+      const writeR = await this.repo.setRequisitionPurchaseOrderId(rid, purchaseOrderId);
+      if (!writeR.ok) return Err(AppErr('DB_ERROR', String(writeR.error.message ?? writeR.error)));
+
+      return Ok({ requisitionId: rid, purchaseOrderId });
+    } catch (e) {
+      return Err(AppErr('INTERNAL', e instanceof Error ? e.message : String(e)));
+    }
   }
 }
