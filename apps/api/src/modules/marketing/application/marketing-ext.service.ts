@@ -52,6 +52,15 @@ export interface ChannelRoiBreakdown {
 export class MarketingExtService {
   private readonly logger = new Logger(MarketingExtService.name);
 
+  /**
+   * Vision 14-marketing#30 — roles allowed to see a dealer's raw AR balance
+   * (openDebt). Every other viewer gets openDebt=null plus a debtOverdue badge.
+   * 'marketing_manager' = marketing head; finance roles + admins round out the set.
+   */
+  private static readonly AR_BALANCE_ROLES = [
+    'super_admin', 'director', 'finance', 'finance_manager', 'marketing_manager',
+  ];
+
   constructor(
     private readonly repo: DrizzleMarketingExtRepository,
     private readonly roi: MarketingRoiService,
@@ -288,13 +297,32 @@ export class MarketingExtService {
     return this.repo.getInboxStats();
   }
 
-  getChurnRisk(): Promise<Result<{
+  /**
+   * Vision 14-marketing#30 — field-level RBAC on the dealer AR balance. The repo
+   * returns raw churn-risk rows (including openDebt); here openDebt is masked to
+   * null for viewers outside AR_BALANCE_ROLES, exposing only a boolean debtOverdue
+   * badge so a plain manager sees "to'lov kechikmoqda" without the figure. Masking
+   * lives in the service so both churn-risk endpoints share one policy (Qoida 6/15).
+   */
+  async getChurnRisk(viewerRole?: string): Promise<Result<{
     customerId: number;
     customerName: string;
     riskLevel: 'high' | 'medium' | 'low';
     daysSinceLastOrder: number;
-    openDebt: number;
+    openDebt: number | null;
+    debtOverdue: boolean;
   }[]>> {
-    return this.repo.getChurnRisk();
+    const res = await this.repo.getChurnRisk();
+    if (!res.ok) return Err(res.error);
+    const canSeeDebt = MarketingExtService.AR_BALANCE_ROLES.includes((viewerRole ?? '').toLowerCase());
+    const masked = res.data.map((c) => ({
+      customerId: c.customerId,
+      customerName: c.customerName,
+      riskLevel: c.riskLevel,
+      daysSinceLastOrder: c.daysSinceLastOrder,
+      debtOverdue: Number(c.openDebt) > 0,
+      openDebt: canSeeDebt ? c.openDebt : null,
+    }));
+    return Ok(masked);
   }
 }

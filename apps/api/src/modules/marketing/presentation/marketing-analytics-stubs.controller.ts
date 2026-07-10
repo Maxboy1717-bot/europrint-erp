@@ -179,15 +179,15 @@ export class MarketingAnalyticsStubsController {
   }
 
   @Get('churn-risk/ai-signal')
-  @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRiskAiSignal() {
-    return unwrapOrThrow(await this.svc.getChurnRisk());
+  @Roles('super_admin', 'director', 'marketing_manager', 'finance', 'finance_manager', 'manager')
+  async getChurnRiskAiSignal(@CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.getChurnRisk(user?.role));
   }
 
   @Get('churn-risk')
-  @Roles('super_admin', 'marketing_manager', 'director')
-  async getChurnRisk() {
-    return unwrapOrThrow(await this.svc.getChurnRisk());
+  @Roles('super_admin', 'director', 'marketing_manager', 'finance', 'finance_manager', 'manager')
+  async getChurnRisk(@CurrentUser() user: AuthenticatedUser) {
+    return unwrapOrThrow(await this.svc.getChurnRisk(user?.role));
   }
 
   @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director') @HttpCode(HttpStatus.OK)
