@@ -36,7 +36,8 @@ export class WmsCatalogDashboardService {
         rawSql(sql`
           SELECT
             COUNT(DISTINCT mc.id)::int AS total_materials,
-            COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)), 0)::numeric AS total_value
+            -- vision 11-mm#18: mijoz materiali (owner_type='customer') tannarx/valuatsiyaga KIRMAYDI
+            COALESCE(SUM(ws.quantity * COALESCE(mc.unit_price, 0)) FILTER (WHERE ws.owner_type <> 'customer'), 0)::numeric AS total_value
           FROM material_cards mc
           LEFT JOIN warehouse_stock ws ON ws.material_id = mc.id
           WHERE mc.is_active IS NOT FALSE
