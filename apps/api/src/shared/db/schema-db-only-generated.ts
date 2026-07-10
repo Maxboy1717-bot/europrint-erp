@@ -752,7 +752,11 @@ export const priceTier = pgTable('price_tier', {
   createdBy: integer('created_by'),
 });
 
-export const purchaseRequests = pgTable('purchase_requests', {
+export const purchaseRequests = pgTable('purchase_requests', {
+  // Vision 10-warehouse #4 — open-PR-quantity warning (qty_fulfilled + derived open_qty_warning flag).
+  qtyFulfilled: numeric('qty_fulfilled', { precision: 12, scale: 2 }).notNull().default('0'),
+  openQtyWarning: boolean('open_qty_warning').notNull().default(false),
+  openQtyWarningAt: timestamp('open_qty_warning_at'),
   id: uuid('id').primaryKey(),
   materialId: integer('material_id').notNull(),
   qty: numeric('qty', { precision: 12, scale: 2

@@ -149,7 +149,11 @@ import { OffHoursReportCron } from './infrastructure/cron/off-hours-report.cron'
 // WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya (cron→service→repo).
 import { InternalRequestEscalationCron } from './infrastructure/cron/internal-request-escalation.cron';
 import { InternalRequestEscalationService } from './application/internal-request-escalation.service';
-import { InternalRequestEscalationRepository } from './infrastructure/repositories/internal-request-escalation.repository';
+import { InternalRequestEscalationRepository } from './infrastructure/repositories/internal-request-escalation.repository';
+// Vision 10-warehouse #4 — Ochiq PR miqdori ogohlantirish bayrog'i (open-PR-quantity warning flag).
+import { OpenPrWarningController } from './presentation/open-pr-warning.controller';
+import { OpenPrWarningService } from './application/open-pr-warning.service';
+import { OpenPrWarningRepository } from './infrastructure/repositories/open-pr-warning.repository';
 
 const handlers = [
   GoodsIssueHandler,
@@ -203,7 +207,8 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     MaterialLifeController,
     WmsSupplierRatingController,
     WmsSettingsController,
-    AdvanceLinkageController,
+    AdvanceLinkageController,
+    OpenPrWarningController,
   ],
   providers: [
     ...handlers,
@@ -298,7 +303,10 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     // WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya.
     InternalRequestEscalationRepository,
     InternalRequestEscalationService,
-    InternalRequestEscalationCron,
+    InternalRequestEscalationCron,
+    // Vision 10-warehouse #4 — open-PR-quantity warning (recompute comparison job + read model).
+    OpenPrWarningRepository,
+    OpenPrWarningService,
   ],
   exports: [WMS_REPO],
 })
