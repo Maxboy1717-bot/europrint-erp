@@ -360,6 +360,9 @@ export const routingOperations = pgTable("routing_operations", {
   successorOperationIds: jsonb("successor_operation_ids"),
   returnToOperationId: integer("return_to_operation_id"),
   routingCondition: varchar("routing_condition", { length: 50 }),
+  // 07-pp#24: per-operation alternative (backup) work-center for IoT/MRO-downtime fail-over.
+  // NULL = no alternative = fail-over never triggers (current behavior). FK -> work_centers(id).
+  alternativeWorkCenterId: integer("alternative_work_center_id"),
 }, (t) => [
   index("idx_routing_operations_routing_id").on(t.routingId),
   index("idx_routing_operations_work_center_id").on(t.workCenterId),

@@ -151,6 +151,8 @@ export const pp_routing_operations = pgTable(
     run_time_per_unit_min: numeric('run_time_per_unit_min', { precision: 8, scale: 4 }).notNull(),
     is_active: boolean('is_active').notNull().default(true),
     created_at: timestamp('created_at').defaultNow(),
+    // 07-pp#24: view now surfaces the base-table alternative_work_center_id column.
+    alternative_work_center_id: integer('alternative_work_center_id'),
   },
   (t) => [
     index('pp_routing_op_product_idx').on(t.product_id),
