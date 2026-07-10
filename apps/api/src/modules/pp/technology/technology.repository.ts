@@ -263,10 +263,50 @@ export class TechnologyRepository {
 
   async setMaketApproved(id: string): Promise<Result<Row>> {
     try {
-      const r = await db.execute(sql`UPDATE technology_cards SET maket_approved = true, updated_at = now() WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL RETURNING *`);
+      // EP-PP-131 — keep the enum in sync with the legacy boolean (direct approve = draft/sent -> approved).
+      const r = await db.execute(sql`UPDATE technology_cards SET maket_approved = true, maket_status = 'approved', updated_at = now() WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL RETURNING *`);
       const row = ((r as { rows?: Row[] }).rows ?? [])[0];
       return row ? Ok(row) : Err('Texkarta topilmadi');
     } catch (e) { return Err(String(e)); }
+  }
+
+  /**
+   * EP-PP-131 (§07 #131) — Maket holat sikli + avto muddat surish (dorabotka).
+   * 'send': draft/revision_requested -> sent; a re-send (from revision_requested) accrues the
+   * elapsed revision minutes into maket_revision_minutes (= auto deadline shift for the factory).
+   * 'request_revision': sent -> revision_requested; starts the shift clock (maket_revision_started_at).
+   * Guarded transitions — CONFLICT on an invalid source state, NOT_FOUND when the card is missing.
+   */
+  async advanceMaket(id: string, action: 'send' | 'request_revision'): Promise<Result<Row>> {
+    const cardId = parseInt(id, 10);
+    if (!Number.isFinite(cardId)) return Err(AppErr('VALIDATION', "Texkarta id noto'g'ri"));
+    try {
+      const r = (action === 'send'
+        ? await db.execute(sql`
+            UPDATE technology_cards
+               SET maket_status = 'sent',
+                   maket_sent_at = now(),
+                   maket_revision_minutes = maket_revision_minutes
+                     + COALESCE(CASE WHEN maket_status = 'revision_requested' AND maket_revision_started_at IS NOT NULL
+                            THEN CEIL(EXTRACT(EPOCH FROM (now() - maket_revision_started_at)) / 60.0) ELSE 0 END, 0),
+                   maket_revision_started_at = NULL,
+                   updated_at = now()
+             WHERE id = ${cardId} AND deleted_at IS NULL AND maket_status IN ('draft','revision_requested')
+             RETURNING *`)
+        : await db.execute(sql`
+            UPDATE technology_cards
+               SET maket_status = 'revision_requested',
+                   maket_revision_started_at = now(),
+                   updated_at = now()
+             WHERE id = ${cardId} AND deleted_at IS NULL AND maket_status = 'sent'
+             RETURNING *`)) as { rows?: Row[] };
+      const row = (r.rows ?? [])[0];
+      if (row) return Ok(row);
+      const exist = (await db.execute(sql`SELECT maket_status FROM technology_cards WHERE id = ${cardId} AND deleted_at IS NULL LIMIT 1`)) as { rows?: Row[] };
+      const cur = (exist.rows ?? [])[0];
+      if (!cur) return Err(AppErr('NOT_FOUND', 'Texkarta topilmadi'));
+      return Err(AppErr('CONFLICT', `Maket holati '${String(cur.maket_status)}' dan '${action}' amalini bajarib bo'lmaydi`));
+    } catch (e) { return Err(AppErr('DB_ERROR', String(e))); }
   }
 
   /**

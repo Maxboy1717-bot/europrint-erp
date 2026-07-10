@@ -44,6 +44,9 @@ export class TechnologyService {
   async deleteCard(id: string, byId?: number) { return this.repo.softDeleteCard(id, byId); }
   async labApprove(id: string, byId?: number) { return this.repo.setLabApproved(id, byId); }
   async maketApprove(id: string) { return this.repo.setMaketApproved(id); }
+  // EP-PP-131 (§07 #131) — maket status-cycle transitions (auto deadline shift accrues on re-send).
+  async maketSend(id: string) { return this.repo.advanceMaket(id, 'send'); }
+  async maketRequestRevision(id: string) { return this.repo.advanceMaket(id, 'request_revision'); }
   async getBom(id: string) { return this.repo.getBom(id); }
   async addBomItem(id: string, item: { materialCode: string; quantity: number; unit?: string; layer?: string }) { return this.repo.addBomItem(id, item); }
   async getRoutes(id: string) { return this.repo.getRoutes(id); }

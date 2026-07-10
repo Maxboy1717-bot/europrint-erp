@@ -5,7 +5,7 @@
 
 import { numericMoney } from "../numeric-money";
 import { sql } from "drizzle-orm";
-import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, date, uniqueIndex, index, type AnyPgColumn, check } from "drizzle-orm/pg-core";
+import { serial, pgTable, text, varchar, integer, boolean, timestamp, jsonb, date, uniqueIndex, index, type AnyPgColumn, check, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { departments, unitOfMeasures, users } from "../core-schema";
@@ -121,6 +121,9 @@ export const bomTemplates = pgTable("bom_templates", {
 export type BomTemplate = typeof bomTemplates.$inferSelect;
 
 // Technology Cards
+// EP-PP-131 (§07 #131) — Maket status cycle: draft -> sent -> revision_requested -> approved.
+export const maketStatusEnum = pgEnum("maket_status", ["draft", "sent", "revision_requested", "approved"]);
+
 export const technologyCards = pgTable("technology_cards", {
   id: serial("id").primaryKey(),
   productId: varchar("product_id").references(() => products.id, { onDelete: "set null" }),
@@ -140,6 +143,11 @@ export const technologyCards = pgTable("technology_cards", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by"),
+  // EP-PP-131 (§07 #131) — maket status cycle + auto deadline shift (accumulated revision minutes).
+  maketStatus: maketStatusEnum("maket_status").notNull().default("draft"),
+  maketSentAt: timestamp("maket_sent_at", { withTimezone: true }),
+  maketRevisionStartedAt: timestamp("maket_revision_started_at", { withTimezone: true }),
+  maketRevisionMinutes: integer("maket_revision_minutes").notNull().default(0),
 });
 
 export const insertTechnologyCardSchema = createInsertSchema(technologyCards).omit({ id: true, createdAt: true, updatedAt: true } as never);

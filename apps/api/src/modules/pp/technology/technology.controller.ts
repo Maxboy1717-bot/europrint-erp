@@ -263,6 +263,21 @@ export class TechnologyController {
     return r.data;
   }
 
+  // EP-PP-131 (§07 #131) — maket status cycle + auto deadline shift (dorabotka).
+  @Post('cards/:id/maket-send')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'EP-PP-131 maket cycle: send to client (draft/revision -> sent)' })
+  async maketSend(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.maketSend(id));
+  }
+
+  @Post('cards/:id/maket-request-revision')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'EP-PP-131 maket cycle: client requests revision (sent -> revision_requested); starts auto deadline-shift clock' })
+  async maketRequestRevision(@Param('id') id: string) {
+    return unwrapOrThrow(await this.svc.maketRequestRevision(id));
+  }
+
   @Get('cards/:id/bom')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'List BOM rows of a card' })
