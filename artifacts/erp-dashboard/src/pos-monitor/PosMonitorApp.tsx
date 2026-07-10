@@ -38,6 +38,7 @@ const PosAdmin         = lazy(() => import("./pages/PosAdmin"));
 const PosQuarantine    = lazy(() => import("./pages/PosQuarantine"));
 const PosQCReview      = lazy(() => import("./pages/PosQCReview"));
 const PosHandovers     = lazy(() => import("./pages/PosHandovers"));
+const PosTraining      = lazy(() => import("./pages/PosTraining"));
 const PosLayout        = lazy(() => import("./layout/PosLayout"));
 
 function PosLoader() {
@@ -331,6 +332,15 @@ export default function PosMonitorApp() {
           <AuthGuard>
             <WithLayout>
               <Suspense fallback={<PosLoader />}><PosQCReview /></Suspense>
+            </WithLayout>
+          </AuthGuard>
+        </Route>
+
+        {/* Tez o'quv (LMS mikro-modul + video davomi) — VISION 12-lms#85 */}
+        <Route path="/pos-monitor/training">
+          <AuthGuard>
+            <WithLayout>
+              <Suspense fallback={<PosLoader />}><PosTraining /></Suspense>
             </WithLayout>
           </AuthGuard>
         </Route>

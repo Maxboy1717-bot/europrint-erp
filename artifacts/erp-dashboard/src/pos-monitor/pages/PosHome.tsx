@@ -109,6 +109,7 @@ const QUICK_LINKS: QuickLinkDef[] = [
   { key: "handovers",  icon: "🤝", nameKey: "nav.handovers",   nameFallback: "Smena topshirish",   to: "/pos-monitor/handovers" },
   { key: "kpi",        icon: "📊", nameKey: "posHome.kpi",     nameFallback: "KPI / Tahlil",       to: "/pos-monitor/kpi" },
   { key: "materialBalance", icon: "📈", nameKey: "posHome.materialBalance", nameFallback: "Material balans", to: "/pos-monitor/material-balance" },
+  { key: "training",   icon: "🎓", nameKey: "posHome.training",   nameFallback: "Tez o'quv",         to: "/pos-monitor/training" },
 ];
 
 const ACTIONS: ActionDef[] = [
