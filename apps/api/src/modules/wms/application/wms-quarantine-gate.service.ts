@@ -38,50 +38,24 @@ export class WmsQuarantineGateService {
   ) {}
 
   /**
-   * Guarded (optimistik) holat yozuvi — TOCTOU himoyasi (VISION-3340 #41).
-   * UPDATE o'qilgan holatga (`expectedStatus`) shartlanadi; SELECT ↔ UPDATE
-   * oynasida parallel tranzaksiya holatni o'zgartirgan bo'lsa repo 0-qator
-   * RETURNING ni Err('CONFLICT') qilib qaytaradi va bu yerda muvaffaqiyat deb
-   * QABUL QILINMAYDI (xuddi execIssueFromWarehouseStock guarded-UPDATE naqshi).
-   */
-  private async updateStatusGuarded(
-    receiptId: number,
-    targetStatus: string,
-    expectedStatus: string | null,
-    audit: { userId?: number | null; completed?: boolean; note?: string | null },
-  ): Promise<Result<ReceiptStatusRow, AppError>> {
-    const updated = await this.repo.updateReceiptStatus(receiptId, targetStatus, {
-      ...audit,
-      expectedStatus,
-    });
-    if (!updated.ok && updated.error.code === 'CONFLICT') {
-      this.logger.warn(
-        `[Karantin CONFLICT] Qabul ${receiptId}: '${expectedStatus}' → '${targetStatus}' yozuvi bekor — holat parallel o'zgargan (TOCTOU guard)`,
-      );
-    }
-    return updated;
-  }
-
-  /**
    * Tashqi kirimni karantinga yuboradi: DRAFT → KARANTIN.
    * Stok bu bosqichda MAIN omborga TUSHMAYDI (bloklangan holatda saqlanadi).
+   * VISION-3340 QC#1: o'qish→tekshiruv→yozish atomik (SERIALIZABLE + FOR UPDATE).
    */
   async sendToQuarantine(receiptId: number, userId: number | null): Promise<Result<ReceiptStatusRow, AppError>> {
-    const cur = await this.repo.findReceiptStatus(receiptId);
-    if (!cur.ok) return cur as Result<ReceiptStatusRow, AppError>;
-    if (!cur.data) return Err({ code: 'NOT_FOUND', message: `Qabul topilmadi: ${receiptId}` });
-
-    const transition = this.gate.validateTransition(cur.data.status, QUARANTINE_STATUS.KARANTIN);
-    if (!transition.ok) return transition as Result<ReceiptStatusRow, AppError>;
-
-    this.logger.log(`[Karantin] Qabul ${receiptId}: '${cur.data.status}' → KARANTIN`);
-    return this.updateStatusGuarded(receiptId, QUARANTINE_STATUS.KARANTIN, cur.data.status, { userId });
+    return this.repo.transitionReceiptStatusAtomic(receiptId, (status) => {
+      const transition = this.gate.validateTransition(status, QUARANTINE_STATUS.KARANTIN);
+      if (!transition.ok) return Err(transition.error);
+      this.logger.log(`[Karantin] Qabul ${receiptId}: '${status}' → KARANTIN`);
+      return Ok({ target: QUARANTINE_STATUS.KARANTIN, audit: { userId } });
+    });
   }
 
   /**
    * QC qarorini (QABUL/REWORK/CHIQARISH) qabulga qo'llaydi.
    * Faqat KARANTIN holatidagi qabulda ishlaydi (holat-mashinasi tekshiradi).
    *   QABUL → QC_PASS, REWORK → REWORK, CHIQARISH → REJECT.
+   * VISION-3340 QC#1: qaror bloklangan qatorning HAQIQIY holatiga qarab beriladi.
    */
   async applyQcDecision(
     receiptId: number,
@@ -89,17 +63,11 @@ export class WmsQuarantineGateService {
     inspectorId: number | null,
     note?: string | null,
   ): Promise<Result<ReceiptStatusRow, AppError>> {
-    const cur = await this.repo.findReceiptStatus(receiptId);
-    if (!cur.ok) return cur as Result<ReceiptStatusRow, AppError>;
-    if (!cur.data) return Err({ code: 'NOT_FOUND', message: `Qabul topilmadi: ${receiptId}` });
-
-    const resolved = this.gate.resolveQcDecision(cur.data.status, decision);
-    if (!resolved.ok) return resolved as Result<ReceiptStatusRow, AppError>;
-
-    this.logger.log(`[QC] Qabul ${receiptId}: ${decision} → '${resolved.data}'`);
-    return this.updateStatusGuarded(receiptId, resolved.data, cur.data.status, {
-      userId: inspectorId,
-      note: note ?? null,
+    return this.repo.transitionReceiptStatusAtomic(receiptId, (status) => {
+      const resolved = this.gate.resolveQcDecision(status, decision);
+      if (!resolved.ok) return Err(resolved.error);
+      this.logger.log(`[QC] Qabul ${receiptId}: ${decision} → '${resolved.data}'`);
+      return Ok({ target: resolved.data, audit: { userId: inspectorId, note: note ?? null } });
     });
   }
 
@@ -119,25 +87,21 @@ export class WmsQuarantineGateService {
    * Bu — completeGoodsReceipt darvozasining yagona ruxsat nuqtasi.
    */
   async releaseToMain(receiptId: number, userId: number | null): Promise<Result<ReceiptStatusRow, AppError>> {
-    const cur = await this.repo.findReceiptStatus(receiptId);
-    if (!cur.ok) return cur as Result<ReceiptStatusRow, AppError>;
-    if (!cur.data) return Err({ code: 'NOT_FOUND', message: `Qabul topilmadi: ${receiptId}` });
+    // VISION-3340 QC#1: ikkala darvoza ham qulf ostidagi HAQIQIY holatga qarab
+    // atomik tekshiriladi — "tayyor"dan (MAIN) oldin, poyga oynasisiz.
+    return this.repo.transitionReceiptStatusAtomic(receiptId, (status) => {
+      // Darvoza 1: stok faqat QC_PASS dan keyin MAIN ga o'tadi.
+      const canPost = this.gate.canPostToMain(status);
+      if (!canPost.ok) {
+        this.logger.warn(`[Karantin BLOK] Qabul ${receiptId}: '${status}' MAIN ga o'tolmaydi — ${canPost.error.message}`);
+        return Err(canPost.error);
+      }
+      // Darvoza 2: holat-mashinasi (QC_PASS → MAIN) ham tasdiqlasin.
+      const transition = this.gate.validateTransition(status, QUARANTINE_STATUS.MAIN);
+      if (!transition.ok) return Err(transition.error);
 
-    // Darvoza 1: stok faqat QC_PASS dan keyin MAIN ga o'tadi.
-    const canPost = this.gate.canPostToMain(cur.data.status);
-    if (!canPost.ok) {
-      this.logger.warn(`[Karantin BLOK] Qabul ${receiptId}: '${cur.data.status}' MAIN ga o'tolmaydi — ${canPost.error.message}`);
-      return canPost as unknown as Result<ReceiptStatusRow, AppError>;
-    }
-
-    // Darvoza 2: holat-mashinasi (QC_PASS → MAIN) ham tasdiqlasin.
-    const transition = this.gate.validateTransition(cur.data.status, QUARANTINE_STATUS.MAIN);
-    if (!transition.ok) return transition as Result<ReceiptStatusRow, AppError>;
-
-    this.logger.log(`[Karantin] Qabul ${receiptId}: QC_PASS → MAIN (stok mavjud bo'ldi)`);
-    return this.updateStatusGuarded(receiptId, QUARANTINE_STATUS.MAIN, cur.data.status, {
-      userId,
-      completed: true,
+      this.logger.log(`[Karantin] Qabul ${receiptId}: QC_PASS → MAIN (stok mavjud bo'ldi)`);
+      return Ok({ target: QUARANTINE_STATUS.MAIN, audit: { userId, completed: true } });
     });
   }
 }
