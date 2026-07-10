@@ -24,6 +24,7 @@ export interface IQcDefectRepository {
   findDefects(filters: { severity?: DefectSeverity; status?: DefectStatus; productionOrderId?: string; from?: Date; to?: Date; page?: number; limit?: number }): Promise<Result<{ data: Defect[]; total: number }>>;
   saveDefect(defect: Defect): Promise<Result<Defect>>;
   updateDefect(defect: Defect): Promise<Result<Defect>>;
+  recategorizeDefect(id: string, defectType: string): Promise<Result<{ id: number; defectType: string }>>;
   getDefectStats(): Promise<Result<{ byStatus: Record<string, number>; bySeverity: Record<string, number>; totalQuantity: number; resolvedThisMonth: number }>>;
   findReclamationById(id: number): Promise<Result<Reclamation | null>>;
   findReclamations(filters: { status?: ReclamationStatus; severity?: DefectSeverity; from?: Date; to?: Date; page?: number; limit?: number }): Promise<Result<{ data: Reclamation[]; total: number }>>;
@@ -107,6 +108,32 @@ export class DrizzleDefectRepository implements IQcDefectRepository {
     } catch (error: unknown) {
       this.logger.error('Failed to update defect');
       return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to update defect' } };
+    }
+  }
+
+  // Vision 18-notifications#20: operator faqat "brak" bosadi; brak tabiatini (defect_type)
+  // QC texnolog belgilaydi/qayta-toifalaydi. Xom SQL — live qc_defects.id INTEGER sequence,
+  // defect_type Drizzle sxemasida yo'q (drift), shuning uchun saveDefect kabi parametrli xom SQL.
+  async recategorizeDefect(id: string, defectType: string): Promise<Result<{ id: number; defectType: string }>> {
+    try {
+      const oid = Number.parseInt(id, 10);
+      if (!Number.isInteger(oid) || oid <= 0) {
+        return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: 'Defect not found' } };
+      }
+      const res = await db.execute(sql`
+        UPDATE qc_defects
+        SET defect_type = ${defectType}, updated_at = NOW()
+        WHERE id = ${oid}
+        RETURNING id, defect_type AS "defectType"`);
+      const rows = ((res as unknown as { rows?: Array<{ id: number; defectType: string }> }).rows) ?? [];
+      const row = rows[0];
+      if (!row) {
+        return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: 'Defect not found' } };
+      }
+      return { ok: true as const, data: row };
+    } catch (error: unknown) {
+      this.logger.error('Failed to recategorize defect');
+      return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to recategorize defect' } };
     }
   }
 

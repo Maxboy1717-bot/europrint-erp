@@ -16,6 +16,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ReportDefectCommand } from '../application/commands/report-defect.command';
 import { ResolveDefectCommand } from '../application/commands/resolve-defect.command';
+import { RecategorizeDefectCommand } from '../application/commands/recategorize-defect.command';
 import { GetDefectsQuery } from '../application/queries/get-defects.query';
 import { GetDefectStatsQuery } from '../application/queries/get-defect-stats.query';
 import { GetDefectByIdQuery } from '../application/queries/get-defect-by-id.query';
@@ -41,10 +42,16 @@ const InspectorSubmitSchema = z.object({
   notes: z.string().max(2000).optional(),
 }).passthrough();
 
+// Vision 18-notifications#20: QC texnolog brak tabiatini (defect_type) belgilaydi.
+const RecategorizeDefectSchema = z.object({
+  defectType: z.string().min(1).max(100),
+});
+
 enum Role {
   QC_MANAGER = 'qc_manager',
   PRODUCTION_MANAGER = 'production_manager',
   SUPER_ADMIN = 'super_admin',
+  TECHNOLOGIST = 'technologist',
 }
 
 @ApiThrottle()
@@ -137,6 +144,22 @@ export class QcDefectsController {
       this.logger.log('Defect resolved');
       return { statusCode: HttpStatus.OK, data: { id: (result).data } };
     
+  }
+
+  @ApiOperation({ summary: 'Recategorize defect nature — QC technologist only (operator only flags brak)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('defects/:id/recategorize')
+  @Roles(Role.TECHNOLOGIST)
+  async recategorizeDefect(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const parsed = RecategorizeDefectSchema.parse(body);
+    const cmd = new RecategorizeDefectCommand(id, parsed.defectType, String(user?.id ?? user?.userId ?? 'system-user'));
+    const result = await this.commandBus.execute(cmd);
+    assertOk(result);
+    this.logger.log('Defect recategorized');
+    return { statusCode: HttpStatus.OK, data: (result).data };
   }
 
   @ApiOperation({ summary: 'Get braks cost impact aggregated by stage' })

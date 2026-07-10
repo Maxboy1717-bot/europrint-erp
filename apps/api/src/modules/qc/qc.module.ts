@@ -9,6 +9,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SubmitInspectionHandler } from './application/commands/submit-inspection.handler';
 import { ReportDefectHandler } from './application/commands/report-defect.handler';
 import { ResolveDefectHandler } from './application/commands/resolve-defect.handler';
+import { RecategorizeDefectHandler } from './application/commands/recategorize-defect.handler';
 import { CreateReclamationHandler } from './application/commands/create-reclamation.handler';
 import { ResolveReclamationHandler } from './application/commands/resolve-reclamation.handler';
 import { CreateInspectionHandler } from './application/commands/create-inspection.handler';
@@ -74,6 +75,7 @@ const commandHandlers = [
   SubmitInspectionHandler,
   ReportDefectHandler,
   ResolveDefectHandler,
+  RecategorizeDefectHandler,
   CreateReclamationHandler,
   ResolveReclamationHandler,
   CreateInspectionHandler,
