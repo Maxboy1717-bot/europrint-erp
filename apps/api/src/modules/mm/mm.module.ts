@@ -49,6 +49,12 @@ import { MmVendorsPrRepository } from './infrastructure/repositories/mm-vendors-
 import { MM_VENDORS_PR_REPO } from './domain/repositories/i-mm-vendors-pr.repo';
 import { MmVendorRatingService } from './application/mm-vendor-rating.service';
 import { MmPriceVarianceService } from './application/mm-price-variance.service';
+import { MmReconciliationController } from './presentation/mm-reconciliation.controller';
+import { MmReconciliationService } from './application/mm-reconciliation.service';
+import { MmReconciliationPdfService } from './application/mm-reconciliation-pdf.service';
+import { MmReconciliationRepository } from './infrastructure/repositories/mm-reconciliation.repository';
+import { MM_RECONCILIATION_REPO } from './domain/repositories/i-mm-reconciliation.repo';
+import { MmReconciliationDigestCron } from './infrastructure/cron/mm-reconciliation-digest.cron';
 
 const commandHandlers = [
   CreatePurchaseOrderHandler,
@@ -71,7 +77,7 @@ const repositories = [
 
 @Module({
   imports: [AuthModule, CqrsModule, EventEmitterModule.forRoot()],
-  controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController, HitlApprovalsController],
+  controllers: [MmMaterialsController, MmPurchaseOrdersController, MmVendorsPrController, MmGoodsController, MmRawMaterialsController, MmMaterialCardsController, MmDashboardController, HitlApprovalsController, MmReconciliationController],
   providers: [...commandHandlers, ...queryHandlers, ...listeners, ...repositories, PurchaseService, DrizzleMmGoodsRepository, MmGoodsService,
     MmVendorsPrRepository,
     { provide: MM_VENDORS_PR_REPO, useClass: MmVendorsPrRepository },
@@ -84,6 +90,11 @@ const repositories = [
     MmDashboardService,
     MmVendorRatingService,
     MmPriceVarianceService,
+    MmReconciliationRepository,
+    { provide: MM_RECONCILIATION_REPO, useClass: MmReconciliationRepository },
+    MmReconciliationService,
+    MmReconciliationPdfService,
+    MmReconciliationDigestCron,
     LayerFormulaService],
   exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, PurchaseService, LayerFormulaService],
 })
