@@ -27,17 +27,21 @@ Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
   idempotent — skips edits whose replacement is already present) + `driver.sh` (apply→commit;
   on tsc-fail auto-revert that spec [tracked→HEAD, new→rm] and continue; collects casualties
   to `_needmanual.txt`). Pre-commit tsc gates EVERY commit.
-- **36 specs landed this session** (range 6de960b4..77c4cc7a). Committed spec-file #s:
-  02,03,04,10,11,12,17,20,21,25,26,28,30,31,35,37,39,40,41,43,46,47,49,52,54,57,58,59,61,63,65,66,67,68,69,72
+- **39 specs landed this session** (range 6de960b4..066ac4fc). Committed spec-file #s:
+  02,03,04,05,07,08,10,11,12,17,20,21,25,26,28,30,31,35,37,39,40,41,43,46,47,49,52,54,57,58,59,61,63,65,66,67,68,69,72
   (plus earlier-session 18 harvest entries). FE specs 26/40/49/52 passed FE typecheck too.
-- **NEEDS MANUAL (15) — anchor-drift (mostly same-file cluster casualties) + 3 real tsc-slips:**
-  tsc-slip: 07 (wms.module dup NotificationRoutingRepository — #03 already added it),
-  18 (pp reason-codes Pareto — service:82 Result<ParetoReport> type), 19 (cc parent_document_id
-  — CreateDraftInput shape). anchor-drift: 05,08 (wms.module), 27 (crm-deals.controller),
+  WMS cluster 05/07/08 landed via newonly+hand-wire (re-anchored around #04 off-hours block,
+  deduped NotificationRoutingRepository which #03 already registered).
+- **NEEDS MANUAL (12) — anchor-drift (each a distinct file, sibling landed first) + 2 real tsc-slips:**
+  tsc-slip: 18 (pp reason-codes Pareto — service:82 Result<ParetoReport> type),
+  19 (cc parent_document_id — CreateDraftInput shape). anchor-drift: 27 (crm-deals.controller),
   33 (marketing-analytics.controller), 34,38 (marketing.module), 42 (kanban-boards.service),
   48 (drizzle-kanban repo), 60 (director.bot), 64 (dashboard-query repo), 70 (mm.module),
-  71 (mm.repository). Re-anchor against current file (sibling spec landed first) or fix the slip.
+  71 (mm.repository). Re-anchor against current file or fix the slip; use `harvest.cjs <n> newonly`
+  + hand-wire for cluster-casualty module edits.
 - **edits=0 probes (re-run/skip): 14, 29, 44, 45, 62, 75.**
+- Watch: pre-commit flagged route dups GET /api/crm/deals/:id ×2 and /api/mm/purchase-orders/:id ×2
+  (WARN) — verify #72/#26 didn't add a genuinely duplicate route in the manual pass.
 
 ## Phase 2 — build-spec workflow (84 items) → HARVEST in progress
 - **Workflow phase2-build-specs** (84 agents): **75 ready | 1 rejected | 1 already-done | 5 dup | 2 errored**.
