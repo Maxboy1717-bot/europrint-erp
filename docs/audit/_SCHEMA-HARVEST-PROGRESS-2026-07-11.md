@@ -61,6 +61,16 @@ Specs live in `scratchpad/schema-specs/<m>__<n>.json` (migration .sql in newFile
   (return Err(res.error)); property mes#108 (get-oee:256 isTrainingSession — VIEW/type); anchor qc#62/mes#33/
   pp#124 (hand-re-anchor); mes#106 (edits=0 → hand-build material_norms ALTER). pp#90 = DUP of pp#37.
 
+## ITER-6 (2026-07-11): 33/39 batch-1 landed
+- Stragglers cleared: qc#26 `dee2bbf2` (Err(res.error)), mes#83 `3556262a` (Err(res.error)), pp#49 `3fbc0cfc`
+  (dist-rebuild + re-export `ppPlanSnapshots` from @workspace/db in europrint-compat.ts barrel line 57).
+- ⭐ 2nd barrel confirmed: `@europrint/schemas` → apps/api/src/shared/db/europrint-compat.ts (tsconfig path).
+  It does `export * from './schema'` + an explicit `export { … } from '@workspace/db'` list — a NEW @workspace/db
+  table used via @europrint/schemas must be ADDED to that explicit list (+rebuild lib/db dist).
+- **Remaining 6 batch-1: mes#108** (get-oee.handler:256 isTrainingSession missing on session type — expose via
+  mes_production_sessions VIEW/type or raw cast), **qc#62/mes#33/pp#124** (anchor — hand re-anchor at stable spot),
+  **mes#106** (edits=0 → hand-build material_norms version+effective_date ALTER). **pp#90** = DUP of pp#37 (satisfied).
+
 ## Batch-1 (39 specs) — HARVEST in progress
 **Landed this wave: 18** (see below + PP/MES additions iter 2).
 PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
