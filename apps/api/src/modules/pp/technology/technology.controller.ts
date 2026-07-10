@@ -65,6 +65,7 @@ const RouteDto = z.object({
   scrapFixed: z.coerce.number().int().optional(), scrapPct: z.coerce.number().optional(),
   minRazryad: z.coerce.number().int().optional(), isCore: z.boolean().optional(),
   operationSubtype: z.enum(['pvc_window']).optional(), materialId: z.coerce.number().int().positive().optional(),
+  isExternal: z.boolean().optional(), externalLeadTimeHours: z.coerce.number().nonnegative().optional(),
 });
 
 
@@ -314,6 +315,14 @@ export class TechnologyController {
   @ApiOperation({ summary: 'List route operations of a card' })
   async getRoutes(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.getRoutes(id));
+  }
+
+  // EP-PP-119 (§07 #125) — external-stage (material prep / delivery) lead-time roll-up.
+  @Get('cards/:id/route-lead-time')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'External-stage lead-time roll-up for a card (EP-PP-119)' })
+  async getRouteLeadTime(@Param('id') id: string) {
+    return unwrapOrInternal(await this.svc.getRouteLeadTime(id));
   }
 
   @Post('cards/:id/routes')

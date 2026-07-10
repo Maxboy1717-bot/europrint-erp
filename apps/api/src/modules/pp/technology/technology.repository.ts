@@ -371,11 +371,37 @@ export class TechnologyRepository {
     } catch (e) { return Err(String(e)); }
   }
 
+  /**
+   * EP-PP-119 (§07 #125) — External-stage lead-time roll-up. External route steps
+   * (is_external=true) don't occupy a work center; each contributes external_lead_time_hours
+   * to the card's total lead time. Sums those hours + counts internal vs external ops so the
+   * planner can add external lead time to the schedule without allocating machine capacity.
+   * All-internal / empty card -> 0 hours (= current behavior).
+   */
+  async getRouteLeadTime(cardId: string): Promise<Result<{ internalOps: number; externalOps: number; externalLeadTimeHours: number }>> {
+    try {
+      const r = await db.execute(sql`
+        SELECT
+          count(*) FILTER (WHERE is_external = false) AS internal_ops,
+          count(*) FILTER (WHERE is_external = true)  AS external_ops,
+          COALESCE(sum(external_lead_time_hours) FILTER (WHERE is_external = true), 0) AS external_lead_time_hours
+        FROM tech_card_routes
+        WHERE technology_card_id = ${parseInt(cardId, 10)}`);
+      const row = ((r as { rows?: Row[] }).rows ?? [])[0];
+      if (!row) return Err(AppErr('NOT_FOUND', 'Marshrut topilmadi'));
+      return Ok({
+        internalOps: Number(row.internal_ops ?? 0),
+        externalOps: Number(row.external_ops ?? 0),
+        externalLeadTimeHours: Number(row.external_lead_time_hours ?? 0),
+      });
+    } catch (e) { return Err(AppErr('DB_ERROR', String(e))); }
+  }
+
   async addRoute(cardId: string, route: AddRouteInput): Promise<Result<Row>> {
     try {
       const r = await db.execute(sql`
-        INSERT INTO tech_card_routes (technology_card_id, op_seq, operation, machine_id, alt_machine_id, norm_per_hour, setup_minutes, scrap_fixed, scrap_pct, min_razryad, is_core, operation_subtype, material_id)
-        VALUES (${parseInt(cardId, 10)}, ${route.opSeq}, ${route.operation}, ${route.machineId ?? null}, ${route.altMachineId ?? null}, ${route.normPerHour ?? null}, ${route.setupMinutes ?? null}, ${route.scrapFixed ?? null}, ${route.scrapPct ?? null}, ${route.minRazryad ?? null}, ${route.isCore ?? false}, ${route.operationSubtype ?? null}, ${route.materialId ?? null})
+        INSERT INTO tech_card_routes (technology_card_id, op_seq, operation, machine_id, alt_machine_id, norm_per_hour, setup_minutes, scrap_fixed, scrap_pct, min_razryad, is_core, operation_subtype, material_id, is_external, external_lead_time_hours)
+        VALUES (${parseInt(cardId, 10)}, ${route.opSeq}, ${route.operation}, ${route.machineId ?? null}, ${route.altMachineId ?? null}, ${route.normPerHour ?? null}, ${route.setupMinutes ?? null}, ${route.scrapFixed ?? null}, ${route.scrapPct ?? null}, ${route.minRazryad ?? null}, ${route.isCore ?? false}, ${route.operationSubtype ?? null}, ${route.materialId ?? null}, ${route.isExternal ?? false}, ${route.externalLeadTimeHours ?? null})
         RETURNING *`);
       const row = ((r as { rows?: Row[] }).rows ?? [])[0];
       return row ? Ok(row) : Err('Marshrut qatori qoʻshilmadi');
@@ -491,6 +517,7 @@ export interface AddRouteInput {
   opSeq: number; operation: string; machineId?: number; altMachineId?: number; normPerHour?: number;
   setupMinutes?: number; scrapFixed?: number; scrapPct?: number; minRazryad?: number; isCore?: boolean;
   operationSubtype?: string; materialId?: number;
+  isExternal?: boolean; externalLeadTimeHours?: number;
 }
 
 function jb(v: unknown): string | null { return v === undefined || v === null ? null : JSON.stringify(v); }

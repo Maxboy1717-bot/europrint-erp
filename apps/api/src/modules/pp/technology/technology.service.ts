@@ -50,6 +50,7 @@ export class TechnologyService {
   async getBom(id: string) { return this.repo.getBom(id); }
   async addBomItem(id: string, item: { materialCode: string; quantity: number; unit?: string; layer?: string }) { return this.repo.addBomItem(id, item); }
   async getRoutes(id: string) { return this.repo.getRoutes(id); }
+  async getRouteLeadTime(id: string) { return this.repo.getRouteLeadTime(id); }
   async addRoute(id: string, route: AddRouteInput) { return this.repo.addRoute(id, route); }
   // EP-PP-126 (§07 #132) — konstruktor/dizayn bosqichi (chizma+qolip) marshrutda.
   async addConstructionPhase(id: string, d: { opSeq?: number; operation?: string; machineId?: number; minRazryad?: number; status?: string; durationMinutes?: number }) { return this.repo.addConstructionPhase(id, d); }

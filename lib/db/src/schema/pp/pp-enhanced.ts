@@ -603,6 +603,10 @@ export const techCardRoutes = pgTable("tech_card_routes", {
   isConstructionPhase: boolean("is_construction_phase").notNull().default(false),
   constructionStatus: constructionPhaseStatus("construction_status"),
   constructionDurationMin: integer("construction_duration_min"),
+  // EP-PP-119 (§07 #125) — external stages (material prep / delivery): an external route step
+  // does NOT occupy a work center (machine_id NULL) and instead contributes lead time.
+  isExternal: boolean("is_external").notNull().default(false),
+  externalLeadTimeHours: numericMoney("external_lead_time_hours"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
