@@ -10,12 +10,10 @@
  *     for comment listings (avoids N+1 user lookups from frontend).
  *   - COALESCE(NULLIF(TRIM(first_name || ' ' || last_name), ''), email, 'Foydalanuvchi')
  *     full-name derivation used across comments projections.
- *   - sql<boolean>`NOT ${column}` toggle expression inside .set() for checklist
- *     item toggle (Drizzle has no native boolean-flip operator).
  */
 
 import { Injectable } from '@nestjs/common';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { db, runQuery } from '@shared/db';
 import {
   kanbanChecklists, kanbanChecklistItems,
@@ -67,7 +65,17 @@ export class DrizzleKanbanCardsRepository {
 
   async createChecklistItem(checklistId: string, title: string): Promise<Result<Record<string, unknown>>> {
     try {
-      const [row] = await db.insert(kanbanChecklistItems).values({ checklistId, title }).returning();
+      // Vision §15 #16 (cascade-freeze): checklist items are an ORDERED chain, so each
+      // new item takes the next sequential position. The create endpoint carries no
+      // position, so without this every item defaulted to 0 and the ordering/freeze
+      // logic in toggleChecklistItem below would have nothing to order by.
+      const [maxRow] = await db
+        .select({ maxPos: sql<number>`COALESCE(MAX(${kanbanChecklistItems.position}), -1)` })
+        .from(kanbanChecklistItems)
+        .where(eq(kanbanChecklistItems.checklistId, checklistId));
+      const nextPos = Number(maxRow?.maxPos ?? -1) + 1;
+      const [row] = await db.insert(kanbanChecklistItems)
+        .values({ checklistId, title, position: nextPos }).returning();
       if (!row) return Err('Checklist elementi yaratishda xato');
       return Ok(row as Record<string, unknown>);
     } catch (e) {
@@ -95,13 +103,71 @@ export class DrizzleKanbanCardsRepository {
   }
 
   async toggleChecklistItem(itemId: string): Promise<Result<Record<string, unknown>>> {
-    return safeCall(async () => {
-      const [row] = await db.update(kanbanChecklistItems)
-        .set({ isCompleted: sql<boolean>`NOT ${kanbanChecklistItems.isCompleted}` })
-        .where(eq(kanbanChecklistItems.id, itemId))
-        .returning();
-      return row ?? { id: itemId };
-    });
+    try {
+      // Vision §15 #16 — cascade-freeze. Checklist items form an ordered process
+      // chain. Two coupled rules, applied atomically:
+      //   • toggle-to-complete: blocked while any EARLIER-position item is still
+      //     incomplete (a later step cannot close before an earlier one).
+      //   • toggle-to-reopen (step N): every LATER step (position > N) is re-locked
+      //     to is_completed=false (cascade-freeze); they only re-open once N is
+      //     completed again.
+      // FOR UPDATE on the target row serialises concurrent toggles of the same item.
+      const outcome = await db.transaction(async (tx) => {
+        const cur = await tx
+          .select({
+            checklistId: kanbanChecklistItems.checklistId,
+            position:    kanbanChecklistItems.position,
+            isCompleted: kanbanChecklistItems.isCompleted,
+          })
+          .from(kanbanChecklistItems)
+          .where(eq(kanbanChecklistItems.id, itemId))
+          .limit(1)
+          .for('update');
+        const item = cur[0];
+        if (!item) return { kind: 'not_found' as const };
+
+        const willComplete = !item.isCompleted;
+        if (willComplete) {
+          const earlier = await tx
+            .select({ id: kanbanChecklistItems.id })
+            .from(kanbanChecklistItems)
+            .where(and(
+              eq(kanbanChecklistItems.checklistId, item.checklistId),
+              lt(kanbanChecklistItems.position, item.position),
+              eq(kanbanChecklistItems.isCompleted, false),
+            ))
+            .limit(1);
+          if (earlier[0]) return { kind: 'blocked' as const };
+        }
+
+        const [row] = await tx.update(kanbanChecklistItems)
+          .set({ isCompleted: willComplete })
+          .where(eq(kanbanChecklistItems.id, itemId))
+          .returning();
+
+        let cascadeFrozen = 0;
+        if (!willComplete) {
+          const reset = await tx.update(kanbanChecklistItems)
+            .set({ isCompleted: false })
+            .where(and(
+              eq(kanbanChecklistItems.checklistId, item.checklistId),
+              gt(kanbanChecklistItems.position, item.position),
+              eq(kanbanChecklistItems.isCompleted, true),
+            ))
+            .returning({ id: kanbanChecklistItems.id });
+          cascadeFrozen = reset.length;
+        }
+        return { kind: 'ok' as const, row: { ...(row ?? { id: itemId }), cascadeFrozen } };
+      });
+
+      if (outcome.kind === 'not_found') return Err(AppErr('NOT_FOUND', 'Checklist elementi topilmadi'));
+      if (outcome.kind === 'blocked') {
+        return Err(AppErr('VALIDATION', "Bu qadamni bajarilgan deb belgilash mumkin emas — oldingi qadam(lar) hali bajarilmagan."));
+      }
+      return Ok(outcome.row as Record<string, unknown>);
+    } catch (e) {
+      return Err(AppErr('DB_ERROR', String(e)));
+    }
   }
 
   // ─── Comments ─────────────────────────────────────────────────────────────
