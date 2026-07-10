@@ -199,6 +199,30 @@ export class DrizzleKanbanCardsRepository {
     try {
       const [row] = await db.insert(kanbanCardComments).values({ cardId, userId, content }).returning();
       if (!row) return Err("Izoh qo'shishda xato");
+      // §15 #46: @mention → xabar. Parse @username tokens from the comment, resolve them
+      // against real usernames (all users have one) and fan out a 'mention' notification
+      // to each mentioned user — excluding the author (no self-notify) and any token that
+      // is not a real username. Mirrors the in-band notification inserts in
+      // acceptCard/completeCard above.
+      const mentionTokens = Array.from(new Set(
+        (content.match(/@([a-zA-Z0-9_.-]+)/g) ?? []).map((t) => t.slice(1)),
+      ));
+      if (mentionTokens.length > 0) {
+        const mentioned = await runQuery<{ id: number }>(sql`
+          SELECT id FROM users
+          WHERE username = ANY(${mentionTokens}::text[]) AND id <> ${userId}
+        `);
+        const preview = content.length > 140 ? `${content.slice(0, 140)}…` : content;
+        for (const m of mentioned.rows) {
+          await db.insert(kanbanNotifications).values({
+            userId:  Number(m.id),
+            cardId,
+            type:    'mention',
+            title:   'Izohda eslatildingiz',
+            message: preview,
+          });
+        }
+      }
       // Return with user info so the frontend can display immediately without re-fetch
       const userRows = await runQuery<Record<string, unknown>>(sql`
         SELECT id,
