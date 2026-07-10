@@ -128,16 +128,18 @@ export class KanbanBoardsService {
     let boardId: string | undefined;
     let ownerUserId: string | null = null;
     let assignerUserId: string | null = null;
+    let dueDate: string | null = null;
     try {
       const rows = await runQuery<{
-        board_id: string; owner_user_id: string | null; assigner_user_id: string | null;
+        board_id: string; owner_user_id: string | null; assigner_user_id: string | null; due_date: string | null;
       }>(
-        sql`SELECT board_id, owner_user_id, assigner_user_id
+        sql`SELECT board_id, owner_user_id, assigner_user_id, due_date
             FROM kanban_cards WHERE id = ${id} AND deleted_at IS NULL LIMIT 1`,
       );
       boardId        = rows.rows[0]?.board_id;
       ownerUserId    = rows.rows[0]?.owner_user_id ?? null;
       assignerUserId = rows.rows[0]?.assigner_user_id ?? null;
+      dueDate        = rows.rows[0]?.due_date ?? null;
     } catch { /* ignore, robot trigger ixtiyoriy */ }
 
     // ─── Assigner-confirm guard (EP-KAN-027/032) ───────────────────────────────
@@ -151,6 +153,7 @@ export class KanbanBoardsService {
         actingUserId,
         ownerUserId,
         assignerUserId,
+        dueDate,
       });
       if (!guard.ok) return guard as Result<KanbanCard>;
     }
@@ -170,10 +173,12 @@ export class KanbanBoardsService {
   }
 
   /**
-   * Enforces the assigner-confirm rule when a card is moved.
-   * Only the terminal "Bajarildi" (done) stage is restricted; all other moves
-   * (reja/jarayonda/tekshiruvda and any unmapped custom column) are allowed for
-   * any permitted user — non-regressive (Q-39).
+   * Enforces two owner-vision move gates:
+   *  1. C6 (EP-KAN §15 #6): moving INTO "Jarayonda" requires the card to have
+   *     BOTH an executor (owner_user_id) and a deadline (due_date).
+   *  2. Assigner-confirm: only the terminal "Bajarildi" (done) confirm is
+   *     restricted to the assigner.
+   * Reja / Tekshiruvda / unmapped custom columns stay freely movable (Q-39).
    *
    * Rule (EP-KAN-027/032): moving INTO a "Bajarildi" column is the CONFIRMATION
    * step. It may only be done by the assigner (assigner_user_id). The assignee
@@ -187,7 +192,7 @@ export class KanbanBoardsService {
    */
   private async assertCanMoveTo(
     destColumnId: string,
-    ctx: { actingUserId?: number; ownerUserId: string | null; assignerUserId: string | null },
+    ctx: { actingUserId?: number; ownerUserId: string | null; assignerUserId: string | null; dueDate: string | null },
   ): Promise<Result<void>> {
     // Resolve destination column NAME -> canonical stage.
     let destName: string | null = null;
@@ -198,7 +203,25 @@ export class KanbanBoardsService {
       destName = rows.rows[0]?.name ?? null;
     } catch { /* if we cannot resolve the column, do not block the move */ }
 
-    if (statusFromColumnName(destName) !== KanbanStatus.BAJARILDI) {
+    const destStatus = statusFromColumnName(destName);
+
+    // ─── C6 guard (EP-KAN §15 #6): entering "Jarayonda" requires ijrochi+muddat ──
+    // A card may only be pulled INTO the "Jarayonda" (in-progress) stage once it
+    // has BOTH an executor (owner_user_id) and a deadline (due_date). Reja /
+    // Tekshiruvda / unmapped custom columns are unaffected (Q-39 non-regression).
+    if (destStatus === KanbanStatus.JARAYONDA) {
+      const hasOwner = ctx.ownerUserId != null && ctx.ownerUserId !== '';
+      const hasDue   = ctx.dueDate != null && ctx.dueDate !== '';
+      if (!hasOwner || !hasDue) {
+        return Err(AppErr(
+          'VALIDATION',
+          "\"Jarayonda\"ga o'tkazish uchun ijrochi (owner) va muddat (due_date) to'ldirilishi shart.",
+        ));
+      }
+      return { ok: true, data: undefined };
+    }
+
+    if (destStatus !== KanbanStatus.BAJARILDI) {
       return { ok: true, data: undefined };
     }
 
