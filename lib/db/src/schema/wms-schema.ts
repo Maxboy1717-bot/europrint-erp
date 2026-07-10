@@ -449,8 +449,13 @@ export const warehouseStock = pgTable("warehouse_stock", {
   unit: varchar("unit", { length: 20 }),
   // --- A92: multi-tenant isolation (additive, canonical integer pattern) ---
   tenantId: integer("tenant_id").notNull().default(1),
+  // --- Vision 10-warehouse #6: IoT-signal zone at-risk flag (Q-35 approved 2026-07-11) ---
+  atRisk: boolean("at_risk").notNull().default(false),
+  atRiskReason: text("at_risk_reason"),
+  atRiskAt: timestamp("at_risk_at"),
 }, (t) => [
   index("idx_warehouse_stock_tenant_id").on(t.tenantId),
+  index("idx_warehouse_stock_at_risk").on(t.atRisk),
 ]);
 
 
@@ -958,4 +963,31 @@ export const insertWarehouseRentalRecordSchema = createInsertSchema(warehouseRen
 
 export type WarehouseRentalRecord = typeof warehouseRentalRecords.$inferSelect;
 export type InsertWarehouseRentalRecord = z.infer<typeof insertWarehouseRentalRecordSchema>;
+
+// ============================================================================
+// Vision 10-warehouse #6 (Q-35 approved 2026-07-11) — QC review queue.
+// When an IoT anomaly flags a warehouse zone at-risk, one row is enqueued here
+// per newly flagged warehouse_stock row so QC can review the affected stock.
+// Pure append/resolve log — no balance/warehouse semantics of its own.
+// ============================================================================
+export const qcReviewQueue = pgTable("qc_review_queue", {
+  id: serial("id").primaryKey(),
+  stockId: integer("stock_id").notNull().references(() => warehouseStock.id, { onDelete: "cascade" }),
+  warehouseId: integer("warehouse_id"),
+  zoneId: integer("zone_id"),
+  materialId: integer("material_id"),
+  reason: text("reason"),
+  source: varchar("source", { length: 40 }).notNull().default("iot_signal"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: integer("resolved_by"),
+  tenantId: integer("tenant_id").notNull().default(1),
+}, (t) => [
+  index("idx_qc_review_queue_status").on(t.status),
+  index("idx_qc_review_queue_stock_id").on(t.stockId),
+  index("idx_qc_review_queue_zone_id").on(t.zoneId),
+]);
+
+export type QcReviewQueue = typeof qcReviewQueue.$inferSelect;
 

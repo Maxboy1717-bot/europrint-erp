@@ -4,6 +4,11 @@
  */
 
 import { Module } from '@nestjs/common';
+// Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
+import { ZoneRiskController } from './presentation/zone-risk.controller';
+import { ZoneRiskService } from './application/zone-risk.service';
+import { ZoneRiskRepository } from './infrastructure/repositories/zone-risk.repository';
+import { ZONE_RISK_REPO } from './domain/repositories/i-zone-risk.repo';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bullmq';
@@ -191,6 +196,8 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     NotificationsModule,
   ],
   controllers: [
+    // Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
+    ZoneRiskController,
     WmsStockController,
     WmsGoodsIssueController,
     WmsRentalController,
@@ -226,6 +233,10 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     WmsGtdController,
   ],
   providers: [
+    // Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
+    ZoneRiskRepository,
+    { provide: ZONE_RISK_REPO, useClass: ZoneRiskRepository },
+    ZoneRiskService,
     ...handlers,
     ...listeners,
     { provide: WMS_REPO, useClass: DrizzleWmsRepository },
