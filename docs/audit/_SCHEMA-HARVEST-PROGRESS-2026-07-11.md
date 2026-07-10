@@ -71,6 +71,19 @@ Specs live in `scratchpad/schema-specs/<m>__<n>.json` (migration .sql in newFile
   mes_production_sessions VIEW/type or raw cast), **qc#62/mes#33/pp#124** (anchor — hand re-anchor at stable spot),
   **mes#106** (edits=0 → hand-build material_norms version+effective_date ALTER). **pp#90** = DUP of pp#37 (satisfied).
 
+## ITER-7 (2026-07-11): 34/39 batch-1; QC complete (11/11)
+- qc#62 landed `37087916` (applymatch + added the 3 QcFirstArticle imports the reg drifted past). **QC batch-1 DONE.**
+- **4 batch-1 stragglers DEFERRED (need careful single build, not rushed re-anchor):**
+  - **mes#33 + mes#108** = NEAR-DUPLICATES (both add is_training[_session] to production_sessions + exclude from
+    OEE; #33 also lms_enrollment_id). Both entangled in the production_sessions cluster (schema-compat-4.ts +
+    mes-schema.ts VIEW, 3 drift edits each after siblings #4/#24/#116). ⭐ BUILD ONE (mes#33, superset) carefully
+    in a focused pass, mark #108 satisfied/redundant. mes#33 reverted clean (was half-applied).
+  - **mes#106** (edits=0) — hand-build: idempotent ALTER material_norms ADD version+effective_date (POS-owned).
+  - **pp#124** (pp.module providers anchor) — re-anchor at array-decl line.
+  - pp#90 = DUP of pp#37 (satisfied).
+- Moving to STEP 2 (SD batch) for forward progress on fresh, non-entangled items; the 4 stragglers get a
+  focused mini-pass later (they're a coherent production_sessions-cluster + 2 one-offs).
+
 ## Batch-1 (39 specs) — HARVEST in progress
 **Landed this wave: 18** (see below + PP/MES additions iter 2).
 PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
