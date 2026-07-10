@@ -39,6 +39,7 @@ export class TechnologyService {
 
   // Phase 1: texkarta master CRUD + child tables + lab-gate.
   async createCard(data: CreateCardInput) { return this.repo.createCard(data); }
+  async cloneLatestApproved(productId: number, opts?: { papkaOrderId?: number; createdBy?: number }) { return this.repo.cloneLatestApproved(productId, opts); }
   async updateCard(id: string, data: UpdateCardInput, changedBy?: number) { return this.repo.updateCard(id, data, changedBy); }
   async deleteCard(id: string, byId?: number) { return this.repo.softDeleteCard(id, byId); }
   async labApprove(id: string, byId?: number) { return this.repo.setLabApproved(id, byId); }

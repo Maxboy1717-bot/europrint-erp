@@ -14,7 +14,7 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { TechnologyService } from './technology.service';
 import { TechnologyGrammageService } from './technology-grammage.service';
@@ -37,6 +37,7 @@ const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manag
 
 const CreateCardDto = z.object({
   code: z.string().max(50).optional(),
+  productId: z.coerce.number().int().positive().optional(),
   name: z.string().max(200).optional(),
   direction: z.string().max(20).optional(),
   materialType: z.string().max(50).optional(),
@@ -56,6 +57,7 @@ const CreateCardDto = z.object({
 });
 const UpdateCardDto = CreateCardDto.extend({ status: z.enum(['draft', 'approved', 'archived']).optional() });
 const BomItemDto = z.object({ materialCode: z.string().min(1), quantity: z.coerce.number(), unit: z.string().max(10).optional(), layer: z.string().max(20).optional() });
+const CloneCardDto = z.object({ productId: z.coerce.number().int().positive(), papkaOrderId: z.coerce.number().int().positive().optional() });
 const RouteDto = z.object({
   opSeq: z.coerce.number().int(), operation: z.string().min(1).max(100),
   machineId: z.coerce.number().int().optional(), altMachineId: z.coerce.number().int().optional(),
@@ -213,6 +215,15 @@ export class TechnologyController {
   async createCard(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateCardDto.parse(body);
     return unwrapOrInternal(await this.svc.createCard({ ...dto, createdBy: Number(user.id) }));
+  }
+
+  // EP-PP-104 (§07 #110) — Takror buyurtmada eng oxirgi tasdiqlangan texkartani klonlash.
+  @Post('cards/clone')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
+  @ApiOperation({ summary: 'Clone latest lab-approved tech card for a product onto a repeat order (EP-PP-104)' })
+  async cloneCard(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = CloneCardDto.parse(body);
+    return unwrapOrThrow(await this.svc.cloneLatestApproved(dto.productId, { papkaOrderId: dto.papkaOrderId, createdBy: Number(user.id) }));
   }
 
   @Put('cards/:id')

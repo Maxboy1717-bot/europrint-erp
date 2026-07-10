@@ -4,7 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { safeCall, Ok, Err, Result } from '@common/result';
+import { safeCall, Ok, Err, Result, AppErr } from '@common/result';
 import {
   queryTechOrders, queryTechApprovalLog, queryTechDashboardStats,
   queryTechCards, queryOrderTechCard, queryRunAiCheck,
@@ -197,12 +197,12 @@ export class TechnologyRepository {
     try {
       const r = await db.execute(sql`
         INSERT INTO technology_cards
-          (code, name, direction, material_type, product_type,
+          (product_id, code, name, direction, material_type, product_type,
            format_a, format_b, format_code, gofra_profile, raskroy_per_list, scrap_pct, qolip_id,
            print_params, kesim, post_press, ish_tartibi, operations,
            calculated_by_ai, is_active, created_by)
         VALUES
-          (${d.code ?? null}, ${d.name ?? null}, ${d.direction ?? null}, ${d.materialType ?? null}, ${d.productType ?? null},
+          (${d.productId ?? null}, ${d.code ?? null}, ${d.name ?? null}, ${d.direction ?? null}, ${d.materialType ?? null}, ${d.productType ?? null},
            ${d.formatA ?? null}, ${d.formatB ?? null}, ${d.formatCode ?? null}, ${d.gofraProfile ?? null}, ${d.raskroyPerList ?? null}, ${d.scrapPct ?? null}, ${d.qolipId ?? null},
            ${jb(d.printParams)}::jsonb, ${jb(d.kesim)}::jsonb, ${jb(d.postPress)}::jsonb, ${jb(d.ishTartibi)}::jsonb, ${d.operations ?? null},
            false, true, ${d.createdBy ?? null})
@@ -267,6 +267,45 @@ export class TechnologyRepository {
       const row = ((r as { rows?: Row[] }).rows ?? [])[0];
       return row ? Ok(row) : Err('Texkarta topilmadi');
     } catch (e) { return Err(String(e)); }
+  }
+
+  /**
+   * EP-PP-104 (§07 #110) — Takror buyurtmada eng oxirgi TASDIQLANGAN texkartani klonlash.
+   * Repeat order: find the latest lab-approved technology_cards row for a product and clone it
+   * (full spec copy) onto the new order — "instead of a fresh technolog pass". Single atomic
+   * INSERT ... SELECT (no separate read → no race). Approval provenance (lab_approved / _by / _at,
+   * maket_approved, status) is carried forward from the source; version resets to 1 (new card's own
+   * chain); code is de-duplicated with an -R<epoch> suffix to respect ux_technology_cards_code.
+   */
+  async cloneLatestApproved(productId: number, opts?: { papkaOrderId?: number; createdBy?: number }): Promise<Result<Row>> {
+    try {
+      const r = await db.execute(sql`
+        INSERT INTO technology_cards
+          (product_id, papka_order_id, code, name, direction, material_type, product_type,
+           format_a, format_b, format_code, gofra_profile, raskroy_per_list, scrap_pct, qolip_id,
+           print_params, kesim, post_press, ish_tartibi, operations,
+           total_duration_minutes, setup_duration_minutes,
+           status, lab_approved, lab_approved_by, lab_approved_at, maket_approved,
+           calculated_by_ai, is_active, created_by)
+        SELECT
+          product_id, ${opts?.papkaOrderId ?? null},
+          CASE WHEN code IS NULL THEN NULL ELSE code || '-R' || (extract(epoch from now())::bigint)::text END,
+          name, direction, material_type, product_type,
+          format_a, format_b, format_code, gofra_profile, raskroy_per_list, scrap_pct, qolip_id,
+          print_params, kesim, post_press, ish_tartibi, operations,
+          total_duration_minutes, setup_duration_minutes,
+          status, lab_approved, lab_approved_by, lab_approved_at, maket_approved,
+          false, true, ${opts?.createdBy ?? null}
+        FROM technology_cards
+        WHERE product_id = ${productId} AND lab_approved = true AND deleted_at IS NULL
+        ORDER BY version DESC
+        LIMIT 1
+        RETURNING *`);
+      const row = ((r as { rows?: Row[] }).rows ?? [])[0];
+      if (!row) return Err(AppErr('NOT_FOUND', 'Bu mahsulot uchun tasdiqlangan texkarta topilmadi'));
+      await this.snapshot(Number(row.id), Number(row.version), row, opts?.createdBy);
+      return Ok(row);
+    } catch (e) { return Err(uniqueOrRaw(e)); }
   }
 
   // ── Child tables (BOM / routes / versions) ────────────────────────────────
@@ -366,6 +405,7 @@ export class TechnologyRepository {
 }
 
 export interface CreateCardInput {
+  productId?: number;
   code?: string; name?: string; direction?: string; materialType?: string; productType?: string;
   formatA?: number; formatB?: number; formatCode?: string; gofraProfile?: string; raskroyPerList?: number; scrapPct?: number; qolipId?: number;
   printParams?: unknown; kesim?: unknown; postPress?: unknown; ishTartibi?: unknown; operations?: string;
