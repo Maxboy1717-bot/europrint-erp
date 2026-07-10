@@ -124,6 +124,10 @@ import { DrizzleCrmAnalyticsRepository } from './analytics/repositories/drizzle-
 import { CrmSettingsController } from './settings/crm-settings.controller';
 import { CrmSettingsService } from './settings/crm-settings.service';
 import { CrmSettingsRepository } from './settings/crm-settings.repo';
+// Vision 14-marketing#2 — telefon dedup + dublikat lid merge
+import { CrmDedupController } from './presentation/crm-dedup.controller';
+import { CrmDedupService } from './application/crm-dedup.service';
+import { CrmDedupRepository } from './infrastructure/repositories/crm-dedup.repository';
 
 const commandHandlers = [
   CreateLeadHandler, QualifyLeadHandler, CreateDealHandler,
@@ -164,6 +168,7 @@ const repositories = [
     CrmAiExtendedController,
     CrmAnalyticsController,
     CrmSettingsController,
+    CrmDedupController,
   ],
   providers: [
     loggerProvider,
@@ -232,6 +237,9 @@ const repositories = [
     // Batch 5 Item 6 — CRM vocabulary settings
     CrmSettingsRepository,
     CrmSettingsService,
+    // Vision 14-marketing#2 — telefon dedup + dublikat lid merge
+    CrmDedupRepository,
+    CrmDedupService,
   ],
   exports: [LEAD_REPO, DEAL_REPO, LeadScorerService, CrmLeadScoringService, LeadScorerV2Service, EloRatingService, RfmService, ClvService, ChurnService, FunnelService, CohortService, KMeansService, ChurnRetrainService],
 })
