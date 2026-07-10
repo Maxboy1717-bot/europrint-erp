@@ -337,6 +337,7 @@ export class DrizzleWmsRepository implements IWmsRepository {
             r.cost_per_unit != null && Number.isFinite(Number(r.cost_per_unit)) && Number(r.cost_per_unit) > 0
               ? Number(r.cost_per_unit)
               : null,
+          qualityStatus: r.quality_status != null ? String(r.quality_status) : null,
         }),
       );
       return Ok(lots);

@@ -20,6 +20,12 @@ export interface BatchLotRow {
    * material_cards.unit_price for that portion — never invents a FIFO value, Q-40).
    */
   cost_per_unit: string | number | null;
+  /**
+   * EP-MM #15 (Q515) — batch_lots.quality_status. Selection service chiqim
+   * ustuvorligini "holat > FIFO sana" bo'yicha hisoblaydi (approved < pending).
+   * Faqat issuable holatlar (approved/pending) query filtri orqali keladi.
+   */
+  quality_status: string | null;
 }
 
 /** Minimal executor surface (db or a Drizzle tx) for raw-SQL helpers below. */
@@ -318,6 +324,7 @@ export async function queryIssuableBatchLots(
              remaining_quantity,
              expiry_date,
              cost_per_unit,
+             quality_status,
              COALESCE(received_date, created_at) AS received_date
       FROM batch_lots
       WHERE material_id = ${materialId}

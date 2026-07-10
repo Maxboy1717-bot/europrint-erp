@@ -123,4 +123,25 @@ describe('BatchSelectionService.buildPlan', () => {
       ]);
     }
   });
+
+  it('EP-MM #15 (Q515) — issues QC-approved batch before pending even when pending is older (holat > FIFO sana)', () => {
+    // pending lot is OLDER (received 30d ago) than the approved lot (5d ago),
+    // yet status outranks FIFO date -> the approved lot must be picked first.
+    const pending: IssuableBatchLot = { ...lot(1, 100, null, 30), qualityStatus: 'pending' };
+    const approved: IssuableBatchLot = { ...lot(2, 100, null, 5), qualityStatus: 'approved' };
+    const r = svc.buildPlan([pending, approved], 40, NOW);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.strategy).toBe(BatchIssueStrategy.FIFO);
+      expect(r.data.picks).toEqual([{ lotId: 2, qty: 40, costPerUnit: null }]);
+    }
+  });
+
+  it('EP-MM #15 — when status is equal, falls back to FIFO date (oldest received first)', () => {
+    const older: IssuableBatchLot = { ...lot(1, 100, null, 30), qualityStatus: 'approved' };
+    const newer: IssuableBatchLot = { ...lot(2, 100, null, 5), qualityStatus: 'approved' };
+    const r = svc.buildPlan([newer, older], 40, NOW);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.picks).toEqual([{ lotId: 1, qty: 40, costPerUnit: null }]);
+  });
 });

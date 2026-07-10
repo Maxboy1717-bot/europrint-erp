@@ -16,6 +16,8 @@ import { Result, Ok, Err, AppErr } from '@common/result';
 import {
   BatchIssueStrategy,
   BATCH_MIN_REMAINING,
+  BATCH_QUALITY_ISSUE_RANK,
+  BATCH_QUALITY_ISSUE_RANK_DEFAULT,
 } from '../constants/wms-batch-issue.constants';
 
 /**
@@ -34,6 +36,12 @@ export interface IssuableBatchLot {
    * etilmagan (o'sha qism uchun finance material_cards fallback ishlatadi).
    */
   costPerUnit: number | null;
+  /**
+   * EP-MM #15 (Q515) — batch_lots.quality_status. Chiqim ustuvorligi: holat > sana.
+   * QC "o'tgan" (approved) partiya "shartli" (pending) partiyadan OLDIN chiqariladi.
+   * null/undefined = holat noma'lum → sana bo'yicha (eng past ustuvorlik).
+   */
+  qualityStatus?: string | null;
 }
 
 /**
@@ -71,7 +79,18 @@ export class BatchSelectionService {
   }
 
   /**
-   * Partiyalarni strategiya bo'yicha tartiblaydi.
+   * batch_lots.quality_status ni chiqim ustuvorligiga aylantiradi
+   * (EP-MM #15 / Q515 — holat > FIFO sana). Kichik son = oldin chiqariladi.
+   * approved=0, pending=1, noma'lum/undefined = DEFAULT (eng oxirida).
+   */
+  private qualityRank(status: string | null | undefined): number {
+    if (status == null) return BATCH_QUALITY_ISSUE_RANK_DEFAULT;
+    return BATCH_QUALITY_ISSUE_RANK[status] ?? BATCH_QUALITY_ISSUE_RANK_DEFAULT;
+  }
+
+  /**
+   * Partiyalarni tartiblaydi. EP-MM #15 (Q515): AVVAL sifat holati (approved
+   * "o'tgan" partiya pending "shartli" dan OLDIN), keyin strategiya sanasi:
    * FEFO: expiry_date ASC (NULL oxirida), keyin received ASC.
    * FIFO: received ASC, keyin expiry ASC (NULL oxirida).
    */
@@ -85,6 +104,9 @@ export class BatchSelectionService {
     const rec = (d: Date | null): number =>
       d ? new Date(d).getTime() : Number.POSITIVE_INFINITY;
     list.sort((a, b) => {
+      // EP-MM #15: ustuvorlik holat > sana — "o'tgan" partiya "shartli" dan oldin.
+      const q = this.qualityRank(a.qualityStatus) - this.qualityRank(b.qualityStatus);
+      if (q !== 0) return q;
       if (strategy === BatchIssueStrategy.FEFO) {
         const e = exp(a.expiryDate) - exp(b.expiryDate);
         if (e !== 0) return e;

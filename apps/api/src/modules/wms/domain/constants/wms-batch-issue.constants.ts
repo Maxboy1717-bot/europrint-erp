@@ -48,3 +48,19 @@ export const BATCH_BLOCKED_QUALITY_STATUSES = ['quarantine', 'defective', 'rejec
  * Birlik: material birligi (kg / dona / litr ...).
  */
 export const BATCH_MIN_REMAINING = 0;
+
+/**
+ * batch_lots.quality_status → chiqim USTUVORLIK darajasi (EP-MM #15 / Q515:
+ * "Ustuvorlik: holat > FIFO sana"). QC dan "o'tgan" (approved) partiya
+ * "shartli/hali tekshirilmagan" (pending) partiyadan OLDIN chiqariladi; holat
+ * teng bo'lsa FIFO/FEFO sana qo'llanadi. Kichik son = oldin chiqariladi.
+ * Faqat issuable holatlar (approved/pending) bu yerda tartiblanadi; noma'lum
+ * holat xavfsizlik uchun eng oxirida (DEFAULT).
+ */
+export const BATCH_QUALITY_ISSUE_RANK: Readonly<Record<string, number>> = {
+  approved: 0,
+  pending: 1,
+};
+
+/** Noma'lum/ro'yxatda yo'q quality_status uchun ustuvorlik (eng past = oxirida). */
+export const BATCH_QUALITY_ISSUE_RANK_DEFAULT = 2;
