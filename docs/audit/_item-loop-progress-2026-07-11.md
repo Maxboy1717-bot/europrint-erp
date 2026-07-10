@@ -27,9 +27,10 @@ Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
 - **28 collision-free** specs = safe first-harvest batch; the rest share files (kanban/director/mm/marketing
   clusters — sequence same-file specs).
 - Harvest loop PROVEN: read spec → verify anchor in live file → apply Edit(s)+newFiles → commit (pre-commit
-  tsc validates). **Harvested so far (5): #36 5b5c2a7c, #23 fd313f48, #56 20576be8, #16 e1cc49e2, #13 cffdd66f.**
-  RESUME: collision-free list remaining — #49,#55,#32,#51,#52,#73,#74,#09,#15,#06,#24,#50,#53,#01,#02,#22,
-  #28,#67,#11,#17,#18,#54,#26 — then same-file clusters (director/kanban/mm/marketing).
+  tsc validates). **Harvested so far (7): #36 5b5c2a7c, #23 fd313f48, #56 20576be8, #16 e1cc49e2,
+  #13 cffdd66f, #55 2c948b8f, #15 e2d579ec.**
+  RESUME: collision-free remaining — #32,#51,#52,#73,#74,#09,#06,#24,#50,#53,#01,#02,#22,
+  #28,#67,#11,#17,#18,#54,#26,#49 — then same-file clusters (director/kanban/mm/marketing).
 - **Rejected (log, do not build): 13-crm#16** — parallel-360 FE refactor would REGRESS live data
   (standalone :id/complaints reads sd_customer_complaints=0 rows vs the 360's sd_customer_interactions
   type='complaint'=1 row; no :id/orders or :id/payments endpoint exists). Needs a 2-item re-scope:
