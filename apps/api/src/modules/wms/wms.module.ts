@@ -21,6 +21,9 @@ import { SafetyStockService } from './domain/services/safety-stock.service';
 import { RopService } from './domain/services/rop.service';
 import { InventoryTurnoverService } from './domain/services/inventory-turnover.service';
 import { RopTriggerHandler } from './infrastructure/event-handlers/rop-trigger.handler';
+import { LeadTimeReorderController } from './presentation/lead-time-reorder.controller';
+import { LeadTimeReorderService } from './application/lead-time-reorder.service';
+import { LeadTimeReorderRepository } from './infrastructure/repositories/lead-time-reorder.repository';
 import { WmsWarehousesController } from './presentation/wms-warehouses.controller';
 import { WmsInventoryController } from './presentation/wms-inventory.controller';
 import { WmsExtendedController } from './presentation/wms-extended.controller';
@@ -205,6 +208,7 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     InventoryAdvancedController,
     WmsEoqController,
     WmsAnalyticsController,
+    LeadTimeReorderController,
     RulonCardController,
     WmsOverflowController,
     WmsInTransitController,
@@ -261,6 +265,8 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     InventoryTurnoverService,
     WmsEoqService,
     WmsAnalyticsService,
+    LeadTimeReorderRepository,
+    LeadTimeReorderService,
     // Rulon qog'oz karta (paper-roll card) — WMS core (PROMT-08 §PHASE 3).
     WmsRollCalcService,
     DrizzleRulonCardRepository,
