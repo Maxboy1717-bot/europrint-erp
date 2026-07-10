@@ -5,7 +5,24 @@ Pipeline: triage(`wf_79de48f6-ebb`) → build-spec(`wf_5c4c4be5-895`, batch-1=39
 Tools: `scratchpad/harvest.cjs` (now `SPEC_DIR` env + `<m>__<n>` names), `applymatch.cjs`, `driver.sh`.
 Specs live in `scratchpad/schema-specs/<m>__<n>.json` (migration .sql in newFiles w/ APPROVED marker + Drizzle edits + code + rollback-tx DB-proof).
 
+## ⚠️ Harvester fix + collision insight (2026-07-11, iter 2)
+- **CRLF anchor bug FIXED** in harvest.cjs/applymatch.cjs: schema-spec agents captured anchors from
+  CRLF files (embedded `\r`); harvester now normalizes anchorOld/replacement to LF too. (Some fails were
+  this; most are genuine cluster collisions.)
+- **KEY INSIGHT for next batches:** parallel agents each editing the SAME shared per-module file
+  (`lib/db/src/schema/<mod>-schema.ts`, `apps/api/src/shared/db/schema-*.ts`, `<mod>.module.ts`,
+  `pp/pp-production.ts`) collide — only 1-3/module land automatically; the rest need re-anchoring because
+  a sibling changed the region. Additive-only (each adds a DISTINCT table/column), so re-anchoring is
+  mechanical (append the new table at the CURRENT end; add the provider at the current array end). ⭐ FUTURE
+  build-spec batches: instruct agents to anchor new Drizzle tables at END-OF-FILE and providers/controllers
+  at the array's last element (stable anchors) to cut the collision rate.
+
 ## Batch-1 (39 specs) — HARVEST in progress
+**Landed this wave: 18** (see below + PP/MES additions iter 2).
+PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
+#131 `d65e1205`, #132 `ab151834`. PP casualties (cluster): #30/#90/#49/#124/#125.
+MES production_sessions cluster (#24/#33/#108/#116) + #106: all need re-anchor (target
+`apps/api/src/shared/db/schema-compat-4.ts` productionSessions def + mes.module.ts).
 **LANDED (11):** 09-qc#11 `aea8cd07`, #48 `f60d541f`, #34 `5a353001`, #96 `fd63da32`; 10-wms#4 `6b9e0802`,
 #5 `f508edb1`, #29 `724539d8`, #39 `3e5fa037`; 08-mes#36 `636a39d6`, #86 `013b21a6`, #4 `48f85a82`.
 
