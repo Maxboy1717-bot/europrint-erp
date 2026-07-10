@@ -29,6 +29,19 @@ export interface IMesRepository {
   withTransaction<T>(
     work: (tx: DrizzleExecutor) => Promise<Result<T>>,
   ): Promise<Result<T>>;
+
+  /**
+   * PP#3 — bitta stanokda (work_center) parallel sessiya to'qnashuvini oldini olish.
+   * Berilgan tranzaksiya ichida work_center bo'yicha advisory xact-lock oladi (parallel
+   * start'lar shu stanok bo'yicha serializatsiya qilinadi; qulf tranzaksiya tugashida
+   * avto-bo'shaydi), so'ng shu stanokda FAOL (in_progress/running) boshqa sessiyalar sonini
+   * qaytaradi (joriy sessiya `excludeSessionId` chiqarib tashlanadi). > 0 => stanok band.
+   */
+  lockWorkCenterAndCountActive(
+    workCenterId: number,
+    excludeSessionId: number,
+    tx: DrizzleExecutor,
+  ): Promise<Result<number>>;
 }
 
 /**

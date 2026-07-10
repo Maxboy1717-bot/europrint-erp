@@ -7,7 +7,7 @@ import { Ok, Err, AppErr } from '@common/result';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/result';
-import { IMesRepository, MES_REPO } from '../../domain/repositories/mes.repository';
+import { IMesRepository, MES_REPO, DrizzleExecutor } from '../../domain/repositories/mes.repository';
 import { ProductionSession } from '../../domain/aggregates/production-session.aggregate';
 
 export class StartSessionCommand {
@@ -30,7 +30,29 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       'Starting MES session',
     );
 
-    const sessionResult = await this.mesRepo.getSession(command.sessionId);
+    // PP#3 — bitta stanokda parallel sessiya to'qnashuvini oldini olish. Butun start
+    // oqimi bitta tranzaksiyada; work_center bo'yicha advisory xact-lock parallel start'larni
+    // serializatsiya qiladi va faol sessiya bo'lsa ikkinchisini rad etadi (poyga oynasi yo'q).
+    return this.mesRepo.withTransaction(async (tx) => this.startWithinTx(command, tx));
+  }
+
+  private async startWithinTx(
+    command: StartSessionCommand,
+    tx: DrizzleExecutor,
+  ): Promise<Result<void>> {
+    const activeResult = await this.mesRepo.lockWorkCenterAndCountActive(
+      command.workCenterId,
+      command.sessionId,
+      tx,
+    );
+    if (!activeResult.ok) return Err(activeResult.error);
+    if (activeResult.data > 0) {
+      const msg = `Stanok ${command.workCenterId} band: boshqa sessiya allaqachon ishlamoqda (parallel start rad etildi)`;
+      this.logger.warn({ workCenterId: command.workCenterId, sessionId: command.sessionId }, msg);
+      return Err(AppErr('CONFLICT', msg));
+    }
+
+    const sessionResult = await this.mesRepo.getSession(command.sessionId, tx);
     if (!sessionResult.ok) {
       return Err(sessionResult.error);
     }
@@ -63,7 +85,7 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
     // TB-safety / smena-readiness gate (Q-40 — real enforcement, no silent flip):
     // load REQUIRED checklist items from setup_checklists/checklist_items and BLOCK
     // start unless every required item is completed.
-    const checklistStatusResult = await this.mesRepo.getChecklistStatus(command.sessionId);
+    const checklistStatusResult = await this.mesRepo.getChecklistStatus(command.sessionId, tx);
     if (!checklistStatusResult.ok) {
       return Err(checklistStatusResult.error);
     }
@@ -83,7 +105,7 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       return startResult;
     }
 
-    const saveResult = await this.mesRepo.saveSession(session);
+    const saveResult = await this.mesRepo.saveSession(session, tx);
     if (!saveResult.ok) {
       return Err(saveResult.error);
     }

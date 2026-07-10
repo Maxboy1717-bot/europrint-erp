@@ -169,6 +169,30 @@ export class DrizzleMesRepository implements IMesRepository {
     }
   }
 
+  async lockWorkCenterAndCountActive(
+    workCenterId: number,
+    excludeSessionId: number,
+    tx: DrizzleExecutor,
+  ): Promise<Result<number>> {
+    try {
+      // Advisory xact-lock (namespace 88088 = MES work-center) — parallel start'lar shu
+      // stanok bo'yicha serializatsiya qilinadi; qulf tranzaksiya tugashida avto-bo'shaydi.
+      await exec(sql`SELECT pg_advisory_xact_lock(88088, ${workCenterId})`, tx);
+      const rows = await exec(
+        sql`SELECT count(*)::int AS n FROM production_sessions
+            WHERE work_center_id = ${workCenterId}
+              AND id <> ${excludeSessionId}
+              AND status IN ('in_progress', 'running')`,
+        tx,
+      );
+      const n = rows[0] ? Number((rows[0] as Record<string, unknown>).n) : 0;
+      return Ok(n);
+    } catch (e: unknown) {
+      this.logger.error('lockWorkCenterAndCountActive failed');
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || 'work_center qulf xatoligi'));
+    }
+  }
+
   async getSessionByPpId(ppId: number): Promise<Result<ProductionSession>> {
     try {
       const r = await exec(sql`SELECT * FROM production_sessions WHERE production_order_id = ${ppId} LIMIT 1`);
