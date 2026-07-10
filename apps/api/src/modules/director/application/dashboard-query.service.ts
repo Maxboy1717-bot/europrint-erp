@@ -177,4 +177,9 @@ export class DashboardQueryService {
     const r = await this.statRepo.getOpenIssues();
     return r.ok && Array.isArray(r.data) ? r.data : [];
   }
+
+  async getPlanDeviationCounts(): Promise<Row[]> {
+    const r = await this.statRepo.getPlanDeviationCounts();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
+  }
 }

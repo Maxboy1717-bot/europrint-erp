@@ -171,4 +171,34 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
         ORDER BY author_card_id
       `), 'DB_ERROR');
   }
+
+  /** EP-DIR-087: 'Kechikishlar soni' + 'plan-og'ish soni' alohida (xom ikki son;
+   *  sabab-kategoriya taqsimoti owner-gated, shu sababli bu yerda faqat sonlar). */
+  async getPlanDeviationCounts(): Promise<Result<Row[]>> {
+    return safeCall(async () =>
+      exec(sql`
+        SELECT
+          -- Kechikish soni: haqiqiy tugash sanasi rejadan kech.
+          -- actual/planned_end_date = varchar (YYYY-MM-DD yoki NULL); CASE-guard
+          -- ISO formatni tekshirib keyin xavfsiz ::date cast qiladi. Buzuq/bosh
+          -- matn cast-crash bermaydi (Postgres CASE kafolatlangan short-circuit).
+          COUNT(*) FILTER (
+            WHERE CASE
+              WHEN actual_end_date  ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+               AND planned_end_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+              THEN actual_end_date::date > planned_end_date::date
+              ELSE false
+            END
+          )::int AS delay_count,
+          -- Plan-ogish soni: tasdiqlangan miqdor rejadan farq qiladi (kam/kop).
+          COUNT(*) FILTER (
+            WHERE confirmed_quantity IS NOT NULL
+              AND planned_quantity  IS NOT NULL
+              AND confirmed_quantity <> planned_quantity
+          )::int AS deviation_count,
+          COUNT(*)::int AS total_orders
+        FROM production_orders
+        WHERE status <> 'cancelled'
+      `), 'DB_ERROR');
+  }
 }

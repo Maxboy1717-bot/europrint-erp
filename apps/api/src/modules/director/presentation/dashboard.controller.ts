@@ -105,6 +105,13 @@ export class DashboardController {
     return { data: await this.queries.getOpenIssues() };
   }
 
+  @Get('plan-deviation-counts')
+  @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
+  @ApiOperation({ summary: 'Delay count + plan-deviation count (raw; reason breakdown owner-gated)' })
+  async getPlanDeviationCounts() {
+    return { data: await this.queries.getPlanDeviationCounts() };
+  }
+
   @Get('kpis')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR)
   @ApiOperation({ summary: 'Get director dashboard KPIs' })
