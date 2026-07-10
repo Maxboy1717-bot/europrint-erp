@@ -596,3 +596,12 @@ export const CC_LEADER_ROLES = ['super_admin', 'admin', 'director', 'ceo', 'mana
  * rad etiladi. (Item C29)
  */
 export const KANBAN_MAX_URGENT_PER_DAY = 2;
+
+/**
+ * WMS — GTD (bojxona yuk deklaratsiyasi) yetishmovchilik eskalatsiya oynasi (modul 10 Ombor,
+ * vizyon vision-1000-answers/10-warehouse.md #10: "GTD yo'q bo'lsa ogohlantirish + bayroq…
+ * ~14 kun ichida"). Import qabulida GTD raqami kiritilmasa, receipt_date + shuncha kundan
+ * keyin Klassifikatsiya + Moliyaga eskalatsiya (qabulni bloklamaydi). Egasi keyin toraytirishi
+ * mumkin (Q-35/Izoh: "Muddat konfiguratsiya"). (Item 10-wms#10)
+ */
+export const WMS_GTD_ESCALATION_DAYS = 14;

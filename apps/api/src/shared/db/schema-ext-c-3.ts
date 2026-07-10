@@ -45,6 +45,14 @@ export const goods_receipts = pgTable('goods_receipts', {
   completed_by:      integer('completed_by'),
   completed_at:      timestamp('completed_at'),
   created_at:        timestamp('created_at').defaultNow(),
+  // Vision 10-warehouse#10 — GTD (bojxona yuk deklaratsiyasi) yetishmovchilik bayrog'i.
+  // w10-gtd-missing-flag.sql migratsiyasiga mos (goods_receipts = kanonik jadval; mm_goods_receipts = VIEW).
+  // gtd_number DB'da varchar(40) — bu yerda loose text (repo raw SQL bilan yozadi, runtime ziddiyat yo'q).
+  gtd_number:        text('gtd_number'),
+  gtd_due_date:      date('gtd_due_date'),
+  // gtd_missing = GENERATED ALWAYS AS (gtd_due_date IS NOT NULL AND gtd_number IS NULL) STORED —
+  // faqat-o'qish derivatsiya; kod hech qachon bu ustunga YOZMAYDI.
+  gtd_missing:       boolean('gtd_missing'),
 });
 
 // SHIM: re-export canonical inventoryCounts from mm-inventory.ts as `inventory_counts`.

@@ -153,13 +153,18 @@ import { OffHoursReportCron } from './infrastructure/cron/off-hours-report.cron'
 import { InternalRequestEscalationCron } from './infrastructure/cron/internal-request-escalation.cron';
 import { InternalRequestEscalationService } from './application/internal-request-escalation.service';
 import { InternalRequestEscalationRepository } from './infrastructure/repositories/internal-request-escalation.repository';
+// Vision 10-warehouse#10 — GTD (bojxona) yetishmovchilik bayrog'i + 14-kunlik eskalatsiya (blok emas).
+import { WmsGtdController } from './presentation/wms-gtd.controller';
+import { GtdFlagService } from './application/gtd-flag.service';
+import { GtdFlagRepository } from './infrastructure/repositories/gtd-flag.repository';
+import { GtdMissingEscalationCron } from './infrastructure/cron/gtd-missing-escalation.cron';
 // Vision 10-warehouse #29 — namuna/probnik chiqim 'NAMUNA' kod bilan hisobotda (sample-issue tagging) READ-model.
 import { SampleIssueReportRepository } from './infrastructure/repositories/sample-issue-report.repository';
 import { SampleIssueReportService } from './application/sample-issue-report.service';
-import { SampleIssueReportController } from './presentation/sample-issue-report.controller';
-// Vision 10-warehouse #4 — Ochiq PR miqdori ogohlantirish bayrog'i (open-PR-quantity warning flag).
-import { OpenPrWarningController } from './presentation/open-pr-warning.controller';
-import { OpenPrWarningService } from './application/open-pr-warning.service';
+import { SampleIssueReportController } from './presentation/sample-issue-report.controller';
+// Vision 10-warehouse #4 — Ochiq PR miqdori ogohlantirish bayrog'i (open-PR-quantity warning flag).
+import { OpenPrWarningController } from './presentation/open-pr-warning.controller';
+import { OpenPrWarningService } from './application/open-pr-warning.service';
 import { OpenPrWarningRepository } from './infrastructure/repositories/open-pr-warning.repository';
 
 const handlers = [
@@ -216,8 +221,9 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     WmsSupplierRatingController,
     WmsSettingsController,
     AdvanceLinkageController,
-    SampleIssueReportController,
+    SampleIssueReportController,
     OpenPrWarningController,
+    WmsGtdController,
   ],
   providers: [
     ...handlers,
@@ -317,10 +323,14 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     InternalRequestEscalationCron,
     // Vision 10-warehouse #29 — namuna/probnik chiqim hisobot READ-model (sample-issue tagging).
     SampleIssueReportRepository,
-    SampleIssueReportService,
-    // Vision 10-warehouse #4 — open-PR-quantity warning (recompute comparison job + read model).
-    OpenPrWarningRepository,
+    SampleIssueReportService,
+    // Vision 10-warehouse #4 — open-PR-quantity warning (recompute comparison job + read model).
+    OpenPrWarningRepository,
     OpenPrWarningService,
+    // Vision 10-warehouse#10 — GTD (bojxona) yetishmovchilik bayrogi + 14-kunlik eskalatsiya cron.
+    GtdFlagRepository,
+    GtdFlagService,
+    GtdMissingEscalationCron,
   ],
   exports: [WMS_REPO],
 })
