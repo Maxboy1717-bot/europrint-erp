@@ -37,11 +37,16 @@ Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
   Err(res.error) fix), 19 (6724e799, +parentDocumentId:null at 2 call sites), 27 (1c007e5b, re-anchor
   clone endpoint on `}`), 33 (6147d1fb, re-anchor CurrentUser import past sibling OrderTrendService),
   60 (953583aa — /holat already in #58, added only /kundalik+/ideal_rasm, NO dup getHolat).
-- **NEEDS MANUAL (7) — anchor-drift, each a distinct sibling-modified file:** 34,38 (marketing.module),
-  42 (kanban-boards.service — ALL 4 edits drift, sibling 39/41/43), 48 (drizzle-kanban repo),
-  64 (dashboard-query repo), 70 (mm.module, nf6), 71 (mm.repository — ALL 3 drift, entangled w/ 65/69/72).
-  ⚠️ Watch cross-spec DUPLICATION (like 58/60): a superset spec may re-add a sibling's symbol.
-  For each: applymatch → re-anchor drift edits → verify no dup → commit.
+- **✅ ALL 51 BUILDABLE SPECS LANDED (2026-07-11).** Manual tail all cleared via applymatch + hand
+  re-anchor: 48 (e8156412, kanban rejectCard added past bulk-assign sibling), 64 (665e739c, setup-loss
+  past getPlanDeviationCounts), 34 (bf99ce37, win-back providers), 38 (2d2d4659, manager-KPI controllers
+  +providers), 70 (865c9ee4, mm reconciliation imports+providers past MmPriceVariance), 71 (4788b23e,
+  mm price-history — 3-file additive merge, new method, insertion after #65 director-event), 42 (36052a40,
+  kanban WIP=3 cap merged INTO #41's JARAYONDA guard block — cardId/currentColumnId threaded through
+  ctx+callsite, KANBAN_WIP_LIMIT_JARAYONDA const, fail-open count).
+- **Full Phase-2 harvest commit range: 6de960b4 .. 36052a40.** 6 edits=0 probes (14/29/44/45/62/75)
+  logged to _loop-open-questions (2 real re-spec: #29 kanban design-task, #62 director op-duration;
+  4 workflow probe artifacts). Both route-dup WARNs = false positives (comments). No specs left unbuilt.
 - **edits=0 probes (re-run/skip): 14, 29, 44, 45, 62, 75.**
 - Watch: pre-commit flagged route dups GET /api/crm/deals/:id ×2 and /api/mm/purchase-orders/:id ×2
   (WARN) — verify #72/#26 didn't add a genuinely duplicate route in the manual pass.

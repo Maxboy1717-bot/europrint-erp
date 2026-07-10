@@ -132,3 +132,29 @@ a container built), `WarehouseReportsAllSections.tsx` ReportTable (zero wrapper 
 `SDSalesQuotes.tsx:255`, `PapkaOrdersSections.tsx:114`, `CashFlowManagementSections.tsx:176→211`,
 `BudgetManagementSections.tsx:215→255`; plus the broader long-tail (~65 raw `<table>` one-offs,
 Part 5 page-by-page #5, most already have adequate ad-hoc separation).
+
+---
+
+## Phase-2 HARVEST COMPLETE — edits=0 probes (needs re-spec, 2026-07-11)
+
+The 84-agent build-spec workflow emitted 75 ready specs; **all 51 genuinely-buildable specs are now
+LANDED** (single-writer, tsc-gated; range 6de960b4..36052a40). The following 6 spec-files came back
+with `edits: []` and could NOT be harvested:
+
+**Real work items whose spec generation was incomplete (re-run the build-spec agent for these):**
+- **#29 — kanban: auto-create design Kanban task on design-stage entry** (vision 15-kanban; the agent
+  returned no edits). Re-spec: on a card/order entering the design stage, INSERT a linked kanban_cards
+  row on the design board. Verify the design-stage event/hook exists before building.
+- **#62 — director: operation-duration plan vs fact panel endpoint** (vision 05-director). Re-spec: a
+  read-only GET returning per-operation planned vs actual duration (mirror the setup-loss panel #64
+  that DID land — dashboard-query repo→service→controller). Likely quick on the same pattern.
+
+**Workflow probe artifacts (NOT real work items — discard):** #14 (07-pp), #44 (kanban), #45 (kanban),
+#75 (finance) were diagnostic "probe" specs the build workflow emitted while debugging the args-passing
+bug (angle-bracket transport). They contain no vision item and need no action.
+
+### Route-dup WARNs — both FALSE POSITIVES (verified, no fix)
+The pre-commit route-dup check flagged `GET /api/crm/deals/:id ×2` and `GET /api/mm/purchase-orders/:id
+×2`. Both second hits are **comments** mentioning `@Get(':id')` (crm-deals.controller:120 explanatory
+comment; mm-purchase-orders.controller:309 a comment on #69's POST endpoint noting it avoids the
+`:id` collision). Only one real `@Get(':id')` exists in each. No duplicate route.
