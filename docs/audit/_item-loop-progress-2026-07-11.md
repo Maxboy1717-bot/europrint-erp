@@ -16,6 +16,12 @@ Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
 | Item | Commit | Proof |
 |---|---|---|
 | 09-qc#1 atomic quarantine transition (SERIALIZABLE + FOR UPDATE) | 537e2ab3 | BE tsc EXIT=0; rollback-tx DB-proof: FOR UPDATE mutual-exclusion (57014) + KARANTIN→QC_PASS + guard + clean rollback |
+| 10-warehouse#12 count-accuracy KPI (GET /wms/inventory-counts/accuracy) | 19b2e0fc | BE tsc EXIT=0; DB-proof: emitted SQL → total=35 var=3 accurate=32 accuracy_pct=91.43 (=32/35×100) |
+
+## Phase 2 — already-satisfied on live re-verify (STALE-DOC, marked Ha, no build needed)
+| Item | Finding |
+|---|---|
+| 10-warehouse#120 blind count | Plan says Yo'q ("grep=0") but live code HAS it: `wms-counts.service.ts` blind-mask (5 refs) + controller `blind` param. Mechanism DONE. Only the UX policy (opt-in / mandatory / A-segment) is owner-gated → open-questions. |
 
 ## Phase 2 — 1,163-item build loop: STARTED, MES(08) triaged
 - **Step 0 queue built:** `_item-loop-queue-2026-07-11.md` (priority order + module offsets).

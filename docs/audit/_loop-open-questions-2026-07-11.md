@@ -54,6 +54,20 @@ MES schema asks (each = its own item # in the plan; all additive):
 > ✅ **Item 1 BUILT** this pass (atomic quarantine transition, commit 537e2ab3) — the clean,
 > no-schema, no-owner QC win.
 
+### Q-A3 — WMS(10) items needing owner input (triaged during build)
+- **Item 120 blind count** — MECHANISM already live (built after the plan's grep). Only the UX
+  policy is owner's: blind-count **opt-in per session / mandatory for all cycle counts / only
+  A-segment materials**? Decide and the mechanism is switched on accordingly.
+- **Item 32 rohler escalation (15/30/60 min)** — buildable on existing `internal_requests` CRUD,
+  but the escalation **recipient routing (`shift → Direktor`)** resolves through the org chain
+  (`head_user_id`, blocked) — same routing decision as MES#68 (reuse SOS org-chain resolver, or
+  route by RBAC role?). Also needs a cron registration + a `material-logistika` downtime reason code
+  seed (additive). Decide routing → buildable.
+- **Item 8 approval-matrix** (amount → warehouse-head/purchasing-head/director): the **amount
+  thresholds** need owner definition (like QC#27). **Item 37** bilingual (UZ+EN) PDF passport →
+  touches bilingual logic (blocked area). **Item 49** AI embedding similarity → AI module (skipped).
+> ✅ **Item 12 BUILT** (count-accuracy KPI, 19b2e0fc) — the clean no-schema WMS win.
+
 ### Q-A1 — Deprecate the parallel `ModulePage` shell? (design §3.5 / Part 5 page-by-page #2)
 Two non-interoperating page-shell systems coexist: canonical `EPPageHeader` (162 files)
 and the parallel `ModulePage` (`components/ui/module-page.tsx`, 45 files) with its own
