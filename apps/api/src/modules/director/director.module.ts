@@ -60,6 +60,7 @@ import { ZvsRepository } from './infrastructure/repositories/zvs.repository';
 import { KaizenRepository } from './infrastructure/repositories/kaizen.repository';
 import { DirectorHolatService } from './application/director-holat.service';
 import { AdvanceBypassApprovedListener } from './infrastructure/event-handlers/advance-bypass-approved.listener';
+import { RasporyazhenieStatusChangedListener } from './infrastructure/event-handlers/rasporyazhenie-status.listener';
 // PA3-17 Wave 6: merged from former modules/analytics/ (route prefix '/analytics' preserved)
 import { AnalyticsController } from './analytics/analytics.controller';
 import { AnalyticsExtendedController } from './analytics/analytics-extended.controller';
@@ -183,6 +184,8 @@ const Repositories = [
     DirectorHolatService,
     // PA0 Trigger 20 — advance bypass audit listener
     AdvanceBypassApprovedListener,
+    // 04-coordination #4 — rasporyazhenie status o'zgarishida COR % qayta hisoblash listeneri
+    RasporyazhenieStatusChangedListener,
     // PA3-17 Wave 6: merged from modules/analytics/
     AnalyticsService,
     AnalyticsExtendedService,

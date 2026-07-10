@@ -4,14 +4,19 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { safeCall, Result, AppError, Err } from '@common/result';
 import { COORDINATION_REPO, type ICoordinationRepo } from '../domain/repositories/i-coordination.repo';
+import { RasporyazhenieStatusChangedEvent } from '../domain/events/rasporyazhenie-status-changed.event';
 
 const PRIVILEGED_ROLES = new Set(['admin', 'super_admin', 'director', 'ceo']);
 
 @Injectable()
 export class CoordinationService {
-  constructor(@Inject(COORDINATION_REPO) private readonly repo: ICoordinationRepo) {}
+  constructor(
+    @Inject(COORDINATION_REPO) private readonly repo: ICoordinationRepo,
+    private readonly eventBus: EventBus,
+  ) {}
 
   async createDoklaWithValidation(
     userId: number,
@@ -107,7 +112,13 @@ export class CoordinationService {
     const isIssuer = String(record.from_user_id) === String(userId);
     if (!isAssignee && !isIssuer && !PRIVILEGED_ROLES.has(userRole))
       return Err({ code: 'FORBIDDEN', message: "Faqat bajaruvchi, beruvchi yoki administrator bajarildi deb belgilashi mumkin" });
-    return this.repo.markRaspDone(id, userId, note);
+    const done = await this.repo.markRaspDone(id, userId, note);
+    // 04-coordination #4 — 'done' status: event -> OutboxEventWriter domain_events'ga yozadi,
+    // RasporyazhenieStatusChangedListener COR bajarilish %ini qayta hisoblaydi.
+    if (done.ok) {
+      this.eventBus.publish(new RasporyazhenieStatusChangedEvent(id, 'done', userId));
+    }
+    return done;
   }
 
   async updateRaspWithAuth(
@@ -122,7 +133,13 @@ export class CoordinationService {
     const record = existing.data[0] as Record<string, unknown>;
     if (String(record.from_user_id) !== String(userId) && !PRIVILEGED_ROLES.has(userRole))
       return Err({ code: 'FORBIDDEN', message: "Faqat beruvchi yoki administrator o'zgartira oladi" });
-    return this.repo.updateRasp(id, status);
+    const updated = await this.repo.updateRasp(id, status);
+    // 04-coordination #4 — status o'zgarganda event -> OutboxEventWriter domain_events'ga yozadi,
+    // RasporyazhenieStatusChangedListener COR bajarilish %ini qayta hisoblaydi.
+    if (updated.ok && status) {
+      this.eventBus.publish(new RasporyazhenieStatusChangedEvent(id, status, userId));
+    }
+    return updated;
   }
 
   async deleteRaspWithAuth(
