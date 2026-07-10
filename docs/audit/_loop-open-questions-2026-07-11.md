@@ -40,6 +40,20 @@ MES schema asks (each = its own item # in the plan; all additive):
 > Modules 09–20/06/07/04/05 not yet triaged — a fresh session should continue per-module (QC next),
 > expecting the same schema-approval-is-the-unlock pattern.
 
+### Q-A2 — QC(09) items needing owner input / schema (triaged during build)
+- **Item 27** (reclamation "rejected" approval + customer notify): core role-gate is buildable, but
+  the **"katta/strategik" threshold** that routes to director vs quality-head needs owner definition;
+  also customer Telegram+email dispatch depends on notification infra/contact data. → owner-gated.
+- **Item 34** (per-stage FTQ% "eng zaif halqa"): `qc_inspections` has `status/result/pass_count/
+  items_passed` but **no stage/operation dimension** — per-stage FTQ can't be computed faithfully
+  without a stage source (schema column or a cross-module production-operation join). → needs schema
+  or a defined stage source.
+- **Item 8** (consecutive-rejection counter + regime enum), **Item 59** (warranty-window field),
+  **Item 39** (`qc_norm_versions` table), **Item 11** (`qc_material_scan_log` table), **Item 22**
+  (`qc_internal_audits` table) → new table/column = Q-35 owner sign-off.
+> ✅ **Item 1 BUILT** this pass (atomic quarantine transition, commit 537e2ab3) — the clean,
+> no-schema, no-owner QC win.
+
 ### Q-A1 — Deprecate the parallel `ModulePage` shell? (design §3.5 / Part 5 page-by-page #2)
 Two non-interoperating page-shell systems coexist: canonical `EPPageHeader` (162 files)
 and the parallel `ModulePage` (`components/ui/module-page.tsx`, 45 files) with its own

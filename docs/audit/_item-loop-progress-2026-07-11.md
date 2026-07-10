@@ -12,6 +12,11 @@
 | D6 module-colour signature | a0c79e7f | EPPageHeader `--mod-*` tile, live on RulonCards |
 Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
 
+## Phase 2 — BUILT ITEMS (Ha achieved)
+| Item | Commit | Proof |
+|---|---|---|
+| 09-qc#1 atomic quarantine transition (SERIALIZABLE + FOR UPDATE) | 537e2ab3 | BE tsc EXIT=0; rollback-tx DB-proof: FOR UPDATE mutual-exclusion (57014) + KARANTIN→QC_PASS + guard + clean rollback |
+
 ## Phase 2 — 1,163-item build loop: STARTED, MES(08) triaged
 - **Step 0 queue built:** `_item-loop-queue-2026-07-11.md` (priority order + module offsets).
 - **MES(08) triaged (Step 1.2 live re-verification):** 62 "Code-buildable-now" markers →
