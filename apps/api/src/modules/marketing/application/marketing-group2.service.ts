@@ -85,6 +85,12 @@ export class MarketingGroup2Service {
     return this.repo.getCompetitors();
   }
 
+  // ── Design workload (kanban yuki) ───────────────────────────────────────────
+
+  getDesignWorkload(): Promise<Result<unknown[]>> {
+    return this.repo.getDesignWorkload();
+  }
+
   // ── Lead Contacts ─────────────────────────────────────────────────────────
 
   getLeadContacts(leadId: string): Promise<Result<unknown[]>> {

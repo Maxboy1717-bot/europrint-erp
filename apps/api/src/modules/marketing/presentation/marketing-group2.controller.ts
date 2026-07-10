@@ -289,6 +289,16 @@ export class MarketingGroup2Controller {
     return unwrapOrBadRequest(result);
   }
 
+  // ── Design workload (kanban yuki) ───────────────────────────────────────────
+
+  @Get('design-workload')
+  @Roles('super_admin', 'marketing_manager', 'director')
+  @ApiOperation({ summary: "Dizayn bandligi (kanban yuki) — ustun bo'yicha jonli karta soni; va'da berishdan oldin ko'riladi" })
+  async getDesignWorkload() {
+    const result = await this.svc.getDesignWorkload();
+    return unwrapOrThrow(result);
+  }
+
   // ── Lead Contacts ─────────────────────────────────────────────────────────
 
   @Get('leads/:id/contacts')

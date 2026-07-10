@@ -7,7 +7,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { and, eq, gte, lte, desc, sql } from 'drizzle-orm';
-import { db } from '@shared/db';
+import { db, runQuery } from '@shared/db';
 import { typedExecute } from '@shared/db/typed-execute';
 import { Ok, Err, Result } from '@common/result';
 import {
@@ -351,6 +351,38 @@ export class DrizzleMarketingGroup2Repository {
       return Ok(Array.isArray(rows) ? rows : []);
     } catch (e) {
       this.logger.error('getCompetitors error', e);
+      return Err(String(e));
+    }
+  }
+
+  // ── Design workload (kanban yuki — read-only signal for marketing) ──────────
+
+  /**
+   * Live per-column card load across kanban boards. Read-only aggregate over
+   * kanban_columns / kanban_cards / kanban_boards so marketing can gauge design
+   * busyness (bandlik) BEFORE quoting delivery dates. No writes, no owner input.
+   * vision 14-marketing#87 (EP-MKT-109).
+   */
+  async getDesignWorkload(): Promise<Result<unknown[]>> {
+    try {
+      const rows = await runQuery(sql`
+        SELECT
+          col.id       AS column_id,
+          col.name     AS column_name,
+          col.board_id AS board_id,
+          b.name       AS board_name,
+          count(c.id) FILTER (WHERE c.deleted_at IS NULL)::int AS active_cards,
+          count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.priority = 'urgent')::int AS urgent_cards
+        FROM kanban_columns col
+        JOIN kanban_boards b ON b.id = col.board_id
+        LEFT JOIN kanban_cards c ON c.column_id = col.id
+        WHERE col.deleted_at IS NULL AND b.deleted_at IS NULL
+        GROUP BY col.id, col.name, col.board_id, b.name, col.sort_order
+        ORDER BY col.board_id, col.sort_order
+      `);
+      return Ok(Array.isArray(rows) ? rows : []);
+    } catch (e) {
+      this.logger.error('getDesignWorkload error', e);
       return Err(String(e));
     }
   }
