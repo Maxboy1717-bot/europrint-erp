@@ -258,6 +258,19 @@ export const mes_downtime_reasons = pgTable('mes_downtime_reasons', {
   created_at:  timestamp('created_at').defaultNow(),
 });
 
+// mes_oee_targets: OEE-target versioned settings (08-mes #36). Append-only versioning —
+// each edit inserts a new higher-version active row; station_id NULL = factory-wide.
+export const mes_oee_targets = pgTable('mes_oee_targets', {
+  id:             serial('id').primaryKey(),
+  station_id:     integer('station_id'),
+  target_percent: numeric('target_percent', { precision: 5, scale: 2 }).notNull().default('85'),
+  effective_date: date('effective_date').notNull(),
+  version:        integer('version').notNull().default(1),
+  is_active:      boolean('is_active').notNull().default(true),
+  created_by:     integer('created_by'),
+  created_at:     timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ─── Purchase Invoices ────────────────────────────────────────────────────────
 // purchase_invoices: used with snake_case columns (vendor_id, payment_status, due_date etc.)
 // in finance-ap.repository.ts and queries-mm-goods.ts — kept as local stub.

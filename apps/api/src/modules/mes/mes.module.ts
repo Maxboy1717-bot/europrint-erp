@@ -12,6 +12,7 @@ import { MesOperationsController } from './presentation/mes-operations.controlle
 import { MesMaintenanceController }  from './presentation/mes-maintenance.controller';
 import { MesShiftsStatsController }  from './presentation/mes-shifts-stats.controller';
 import { MesProductionSessionsController } from './presentation/mes-production-sessions.controller';
+import { MesOeeTargetsController } from './presentation/mes-oee-targets.controller';
 import { StartSessionHandler } from './application/commands/start-session.handler';
 import { CompleteSessionHandler } from './application/commands/complete-session.handler';
 import { RecordDowntimeHandler } from './application/commands/record-downtime.handler';
@@ -36,6 +37,8 @@ import { MesProductionSessionsRepository } from './infrastructure/repositories/m
 import { MesSosEscalationRepository } from './infrastructure/repositories/mes-sos-escalation.repo';
 import { MesSosEscalationService } from './application/mes-sos-escalation.service';
 import { MesBrakLimitRepository } from './infrastructure/repositories/mes-brak-limit.repo';
+import { MesOeeTargetsService } from './application/mes-oee-targets.service';
+import { MesOeeTargetsRepository } from './infrastructure/repositories/mes-oee-targets.repo';
 // Wave 4 round-2 (PA2-18): LmsCertExpiredListener split into two
 // canonical @EventsHandler listeners + a shared block service.
 import { LmsCertExpiredMesListener } from './infrastructure/event-handlers/lms-cert-expired-mes.listener';
@@ -65,7 +68,7 @@ const handlers = [
 
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), NotificationsModule],
-  controllers: [MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController],
+  controllers: [MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController, MesOeeTargetsController],
   providers: [
     ...handlers,
     ...listeners,
@@ -85,6 +88,9 @@ const handlers = [
     MesSosEscalationService,
     // 3.2-brak-ushlanma-zanjiri — MES defect-report → work_centers.brak_limit_pct gate → signal/HR jarima
     MesBrakLimitRepository,
+    // 08-mes #36 — OEE-target versiyalangan settings-CRUD (faqat НО/direktor yozadi)
+    MesOeeTargetsRepository,
+    MesOeeTargetsService,
   ],
   exports: [MES_REPO, DOWNTIME_REPO, WORK_ORDERS_REPO, WorkOrdersService, MesSosEscalationService, MesBrakLimitRepository],
 })
