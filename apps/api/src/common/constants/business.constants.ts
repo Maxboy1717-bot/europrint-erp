@@ -558,6 +558,15 @@ export const CRM_LEAD_AGING_REASSIGN_DAYS = 60;
 export const CRM_LEAD_TERMINAL_STATUSES = ['won', 'lost', 'converted'] as const;
 
 /**
+ * Modul 14 Marketing — win-back avto-start (vision 14-marketing #46): mijoz oxirgi
+ * buyurtmasidan shu OY sonidan ko'proq o'tgan bo'lsa "faol emas" hisoblanadi va
+ * `win-back.cron.ts` unga qaytarish (win-back) kanban vazifasini avtomatik yaratadi —
+ * agar SD'da ochiq (terminal bo'lmagan) lead bo'lmasa. Qiymat vision sarlavhasida
+ * belgilangan (3 oy), egasi-qarori EMAS.
+ */
+export const MARKETING_WINBACK_INACTIVE_MONTHS = 3;
+
+/**
  * Kengash (council) kvorumi — modul 04 Coordination, egasi qarori (decisions/04-coordination.md
  * BO'LIM 1: "2/3 (66%) shart; kvorum yetmasa maslahat majlisi = qaror kuchsiz").
  * Ovoz beruvchi a'zolarning kamida 2/3 qismi hozir bo'lsa kvorum bor; aks holda qaror

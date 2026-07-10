@@ -30,6 +30,8 @@ import { MarketingRoiService } from './application/marketing-roi.service';
 import { NpsRequestsController } from './presentation/nps-requests.controller';
 import { NpsRequestsRepository } from './infrastructure/repositories/nps-requests.repository';
 import { NpsAutoRequestListener } from './infrastructure/listeners/nps-auto-request.listener';
+import { WinBackRepository } from './infrastructure/repositories/win-back.repository';
+import { WinBackCron } from './infrastructure/cron/win-back.cron';
 import { CustomerRhythmController } from './presentation/customer-rhythm.controller';
 import { CustomerRhythmService } from './application/customer-rhythm.service';
 import { DrizzleCustomerRhythmRepository } from './infrastructure/repositories/drizzle-customer-rhythm.repo';
@@ -72,6 +74,8 @@ const repositories = [
     NpsAutoRequestListener,
     DrizzleCustomerRhythmRepository,
     CustomerRhythmService,
+    WinBackRepository,
+    WinBackCron,
   ],
   exports: [CAMPAIGN_REPO, MarketingRoiService],
 })
