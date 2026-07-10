@@ -105,8 +105,10 @@ export class SdQuotationsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('calculate-price') @UsePipes(new ZodValidationPipe(SdCalculatePriceSchema))
-  async calculatePrice(@Body() body: SdCalculatePriceDto) {
+  async calculatePrice(@Body() body: SdCalculatePriceDto, @CurrentUser() user: AuthenticatedUser) {
     // EP-SD-037: pass carton dims/colours/qty to the real price engine (reads sd_price_formulas).
+    // EP-SD-043 (vision 06-sd #43): the viewer's role decides whether costPrice/margin leave the
+    // service — sales_manager/SALES get the customer price only; director+ see the full breakdown.
     const r = await this.svc.calculatePrice({
       productType: body.productType,
       paperType: body.paperType,
@@ -117,7 +119,7 @@ export class SdQuotationsController {
       printColors: Number(body.printColors ?? 0),
       quantity: Number(body.quantity ?? 1),
       isNewDie: body.isNewDie === true,
-    });
+    }, user?.role);
     assertOk(r);
     return r.data;
   }

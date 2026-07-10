@@ -12,6 +12,7 @@ const _time = new TashkentTimeService();
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { GlPostingService } from '@modules/finance/domain/services/gl-posting.service';
+import { Role } from '@common/constants/roles.constants';
 
 /** EP-SD-037 price-engine input (carton dims + colours + qty). */
 export type PriceCalcInput = {
@@ -35,6 +36,15 @@ import {
 } from '../domain/repositories/i-quotation.repo';
 
 type Row = Record<string, unknown>;
+
+/**
+ * EP-SD-043 — vision 06-sd #43 (Q19): a quotation's internal cost (`costPrice`) and
+ * profit (`margin`) are visible ONLY to director-tier roles. A sales manager sees the
+ * customer-facing price but never the company's cost/margin. (`sales_manager_senior`
+ * is named in the vision but absent from the Role enum, so the split uses the existing
+ * privileged tiers; add that role here to widen it once the owner defines it.)
+ */
+const MARGIN_VISIBLE_ROLES: ReadonlySet<string> = new Set<string>([Role.DIRECTOR, Role.SUPER_ADMIN]);
 
 @Injectable()
 export class SdQuotationsService {
@@ -70,7 +80,7 @@ export class SdQuotationsService {
    * cost from the carton dimensions + colors + qty, then applies the configured markup + VAT. Every
    * component is returned for the FE breakdown (paperCost/printCost/dieCost/productionCost/deliveryCost).
    */
-  async calculatePrice(input: PriceCalcInput) {
+  async calculatePrice(input: PriceCalcInput, viewerRole?: string) {
     return safeCall(async () => {
       const f = await this.quotationRepo.getPriceSettings();
       const cfg = (f.ok ? f.data : null) ?? {};
@@ -115,13 +125,18 @@ export class SdQuotationsService {
       const totalPrice = priceBeforeVat * (1 + vatRate / 100);
       const unitPrice = qty > 0 ? totalPrice / qty : 0;
 
-      return {
+      const customerView = {
         paperCost: round2(paperCost), printCost: round2(printCost), dieCost: round2(dieCost),
         productionCost: round2(productionCost), deliveryCost: round2(deliveryCost),
-        costPrice: round2(costPrice), unitPrice: round2(unitPrice), totalPrice: round2(totalPrice),
-        margin: round2(totalPrice - costPrice), markupPercent, vatRate,
+        unitPrice: round2(unitPrice), totalPrice: round2(totalPrice),
+        markupPercent, vatRate,
         areaPerUnitM2: round2(areaPerUnitM2), quantity: qty, currency: 'UZS', calculated_at: _time.now(),
       };
+      // EP-SD-043 (vision 06-sd #43, Q19): costPrice + margin are director-tier only. A sales
+      // manager (sales_manager/SALES) gets the customer-facing price WITHOUT the company's internal
+      // cost or profit. Role is case-normalised to match RolesGuard's case-insensitive comparison.
+      if (!MARGIN_VISIBLE_ROLES.has((viewerRole ?? '').toLowerCase())) return customerView;
+      return { ...customerView, costPrice: round2(costPrice), margin: round2(totalPrice - costPrice) };
     });
   }
 
