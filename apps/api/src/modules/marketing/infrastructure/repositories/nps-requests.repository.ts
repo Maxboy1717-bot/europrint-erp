@@ -27,13 +27,23 @@ export interface NpsRequestRow {
 
 @Injectable()
 export class NpsRequestsRepository {
-  /** Yetkazib berishdan pending NPS so'rovi yaratish (customer/order deliveries'dan). Dedup: bir delivery=bir so'rov. */
+  /**
+   * Yetkazib berishdan pending NPS so'rovi yaratish (customer/order deliveries'dan). Dedup: bir delivery=bir so'rov.
+   * Gate (14-77): mijozda ochiq (is_resolved=false) QC reklamatsiya bo'lsa — so'rov YARATILMAYDI (skip).
+   *   `NOT EXISTS` guard bir statementda: hech qator qaytmasa -> id=null (listener jim o'tadi).
+   */
   async createFromDelivery(deliveryId: number): Promise<Result<{ id: number | null }>> {
     try {
       const r = await runQuery<{ id: number }>(sql`
         INSERT INTO nps_requests (delivery_id, sales_order_id, customer_id, customer_name)
         SELECT d.id, d.sales_order_id, d.customer_id, d.customer_name
-        FROM deliveries d WHERE d.id = ${deliveryId}
+        FROM deliveries d
+        WHERE d.id = ${deliveryId}
+          AND NOT EXISTS (
+            SELECT 1 FROM qc_reclamations qr
+            WHERE qr.customer_id = d.customer_id
+              AND qr.is_resolved = false
+          )
         ON CONFLICT (delivery_id) WHERE delivery_id IS NOT NULL DO NOTHING
         RETURNING id
       `);
