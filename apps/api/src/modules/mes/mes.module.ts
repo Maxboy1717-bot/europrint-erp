@@ -37,6 +37,10 @@ import { MesProductionSessionsRepository } from './infrastructure/repositories/m
 import { MesSosEscalationRepository } from './infrastructure/repositories/mes-sos-escalation.repo';
 import { MesSosEscalationService } from './application/mes-sos-escalation.service';
 import { MesBrakLimitRepository } from './infrastructure/repositories/mes-brak-limit.repo';
+// 08-mes #24 — session Format/gramm vs WMS batch (batch_lots→material_cards) parameter comparison
+import { MesWmsParamCompareController } from './presentation/mes-wms-param-compare.controller';
+import { MesWmsParamCompareService } from './application/mes-wms-param-compare.service';
+import { MesWmsParamCompareRepository } from './infrastructure/repositories/mes-wms-param-compare.repo';
 import { MesOeeTargetsService } from './application/mes-oee-targets.service';
 import { MesOeeTargetsRepository } from './infrastructure/repositories/mes-oee-targets.repo';
 // Wave 4 round-2 (PA2-18): LmsCertExpiredListener split into two
@@ -68,8 +72,11 @@ const handlers = [
 
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), NotificationsModule],
-  controllers: [MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController, MesOeeTargetsController],
+  controllers: [MesWmsParamCompareController, MesSessionsController, MesOperationsController, MesMaintenanceController, MesShiftsStatsController, MesProductionSessionsController, MesOeeTargetsController],
   providers: [
+    // 08-mes #24 — Format/gramm ↔ WMS batch (batch_lots→material_cards) parameter comparison
+    MesWmsParamCompareRepository,
+    MesWmsParamCompareService,
     ...handlers,
     ...listeners,
     LmsCertExpiredBlockService,    // Wave 4 round-2: shared by Trigger 17 split listeners

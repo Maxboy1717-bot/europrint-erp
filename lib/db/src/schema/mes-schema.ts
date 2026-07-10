@@ -8,7 +8,7 @@
 import { sql } from 'drizzle-orm';
 import {
   serial, pgTable, text, varchar, integer, timestamp,
-  numeric, uniqueIndex, index, check,
+  numeric, boolean, uniqueIndex, index, check,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -222,3 +222,32 @@ export const mesShiftStats = pgTable('mes_shift_stats', {
 export const insertMesShiftStatSchema = createInsertSchema(mesShiftStats).omit({ id: true, createdAt: true } as never);
 export type MesShiftStat = typeof mesShiftStats.$inferSelect;
 export type InsertMesShiftStat = z.infer<typeof insertMesShiftStatSchema>;
+
+// ─── 8. mes_wms_param_checks ──────────────────────────────────────────────────
+// 08-mes #24 — session Format/gramm (А×В + grammaj) compared against the WMS batch's
+// material parameters (batch_lots → material_cards). One row per comparison; is_mismatch
+// flags when a parameter present on BOTH sides differs. Additive, all-nullable snapshot
+// columns; existing rows/flows unaffected. Written by MesWmsParamCompareRepository (raw SQL).
+export const mesWmsParamChecks = pgTable('mes_wms_param_checks', {
+  id:             serial('id').primaryKey(),
+  sessionId:      integer('session_id').notNull(),
+  batchLotId:     integer('batch_lot_id'),
+  materialId:     integer('material_id'),
+  sessionFormatA: numeric('session_format_a', { precision: 12, scale: 4 }),
+  sessionFormatB: numeric('session_format_b', { precision: 12, scale: 4 }),
+  sessionGramm:   numeric('session_gramm', { precision: 12, scale: 4 }),
+  wmsFormatA:     numeric('wms_format_a', { precision: 12, scale: 4 }),
+  wmsFormatB:     numeric('wms_format_b', { precision: 12, scale: 4 }),
+  wmsGrammage:    numeric('wms_grammage', { precision: 12, scale: 4 }),
+  comparedParams: integer('compared_params').notNull().default(0),
+  isMismatch:     boolean('is_mismatch').notNull().default(false),
+  mismatchDetail: text('mismatch_detail'),
+  checkedBy:      integer('checked_by'),
+  checkedAt:      timestamp('checked_at', { withTimezone: false }).notNull().defaultNow(),
+}, (t) => [
+  index('idx_mes_wms_param_checks_session').on(t.sessionId),
+]);
+
+export const insertMesWmsParamCheckSchema = createInsertSchema(mesWmsParamChecks).omit({ id: true, checkedAt: true } as never);
+export type MesWmsParamCheck = typeof mesWmsParamChecks.$inferSelect;
+export type InsertMesWmsParamCheck = z.infer<typeof insertMesWmsParamCheckSchema>;
