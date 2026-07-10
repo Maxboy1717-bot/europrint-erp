@@ -30,6 +30,9 @@ import { MarketingRoiService } from './application/marketing-roi.service';
 import { NpsRequestsController } from './presentation/nps-requests.controller';
 import { NpsRequestsRepository } from './infrastructure/repositories/nps-requests.repository';
 import { NpsAutoRequestListener } from './infrastructure/listeners/nps-auto-request.listener';
+import { ManagerKpiController } from './presentation/manager-kpi.controller';
+import { ManagerKpiService } from './application/manager-kpi.service';
+import { DrizzleManagerKpiRepository } from './infrastructure/repositories/drizzle-manager-kpi.repo';
 import { WinBackRepository } from './infrastructure/repositories/win-back.repository';
 import { WinBackCron } from './infrastructure/cron/win-back.cron';
 import { CustomerRhythmController } from './presentation/customer-rhythm.controller';
@@ -55,6 +58,7 @@ const repositories = [
     MarketingGroup2Controller,
     NpsRequestsController,
     CustomerRhythmController,
+    ManagerKpiController,
   ],
   providers: [
     ...commandHandlers,
@@ -76,6 +80,8 @@ const repositories = [
     CustomerRhythmService,
     WinBackRepository,
     WinBackCron,
+    ManagerKpiService,
+    DrizzleManagerKpiRepository,
   ],
   exports: [CAMPAIGN_REPO, MarketingRoiService],
 })
