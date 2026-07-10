@@ -149,7 +149,11 @@ import { OffHoursReportCron } from './infrastructure/cron/off-hours-report.cron'
 // WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya (cron→service→repo).
 import { InternalRequestEscalationCron } from './infrastructure/cron/internal-request-escalation.cron';
 import { InternalRequestEscalationService } from './application/internal-request-escalation.service';
-import { InternalRequestEscalationRepository } from './infrastructure/repositories/internal-request-escalation.repository';
+import { InternalRequestEscalationRepository } from './infrastructure/repositories/internal-request-escalation.repository';
+// Vision 10-warehouse #29 — namuna/probnik chiqim 'NAMUNA' kod bilan hisobotda (sample-issue tagging) READ-model.
+import { SampleIssueReportRepository } from './infrastructure/repositories/sample-issue-report.repository';
+import { SampleIssueReportService } from './application/sample-issue-report.service';
+import { SampleIssueReportController } from './presentation/sample-issue-report.controller';
 // Vision 10-warehouse #4 — Ochiq PR miqdori ogohlantirish bayrog'i (open-PR-quantity warning flag).
 import { OpenPrWarningController } from './presentation/open-pr-warning.controller';
 import { OpenPrWarningService } from './application/open-pr-warning.service';
@@ -207,7 +211,8 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     MaterialLifeController,
     WmsSupplierRatingController,
     WmsSettingsController,
-    AdvanceLinkageController,
+    AdvanceLinkageController,
+    SampleIssueReportController,
     OpenPrWarningController,
   ],
   providers: [
@@ -303,7 +308,10 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     // WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya.
     InternalRequestEscalationRepository,
     InternalRequestEscalationService,
-    InternalRequestEscalationCron,
+    InternalRequestEscalationCron,
+    // Vision 10-warehouse #29 — namuna/probnik chiqim hisobot READ-model (sample-issue tagging).
+    SampleIssueReportRepository,
+    SampleIssueReportService,
     // Vision 10-warehouse #4 — open-PR-quantity warning (recompute comparison job + read model).
     OpenPrWarningRepository,
     OpenPrWarningService,
