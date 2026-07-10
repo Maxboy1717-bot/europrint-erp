@@ -78,4 +78,29 @@ export class CcKanbanBridgeService {
       this.logger.error(`cc-kanban-bridge: kanban karta yaratilmadi: ${String(err)}`);
     }
   }
+
+  /**
+   * CC #36: hujjatning yangi versiyasi yaratilganda (resubmit) mavjud Kanban
+   * kartaga "[ESKIRGAN]" belgisi qo'yiladi — karta KO'CHIRILMAYDI/O'CHIRILMAYDI
+   * (E1 naqsh, avto-ko'chirmasdan). Idempotent: allaqachon belgilangan karta
+   * qayta belgilanmaydi. Xato bo'lsa faqat log — kanban qo'shimcha funksiya,
+   * resubmit oqimini to'xtatmasligi kerak.
+   */
+  async markCardStale(documentId: string): Promise<void> {
+    try {
+      const r = await runQuery<{ id: number }>(sql`
+        UPDATE kanban_cards
+        SET title = title || ' [ESKIRGAN]', updated_at = NOW()
+        WHERE related_type = 'cc_document'
+          AND related_ref = ${String(documentId)}
+          AND title NOT LIKE '%[ESKIRGAN]%'
+        RETURNING id
+      `);
+      this.logger.log(
+        `cc-kanban-bridge: ${r.rows.length} ta kanban karta 'eskirgan' deb belgilandi (doc=${documentId})`,
+      );
+    } catch (err) {
+      this.logger.error(`cc-kanban-bridge: markCardStale xato (doc=${documentId}): ${String(err)}`);
+    }
+  }
 }

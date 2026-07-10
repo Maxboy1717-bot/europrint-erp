@@ -14,6 +14,7 @@ import type { WorkflowStepRow } from '../infrastructure/repositories/cc-document
 import { CcOrgResolverService } from './cc-org-resolver.service';
 import { CcPinService } from './cc-pin.service';
 import { CcDocumentNumberService } from './cc-document-number.service';
+import { CcKanbanBridgeService } from './cc-kanban-bridge.service';
 import { unwrapOrThrow } from '@common/http-result';
 import { isOk } from '@common/result';
 import { db } from '@shared/db';
@@ -43,6 +44,7 @@ export class CcWorkflowService {
     private readonly numbers: CcDocumentNumberService,
     private readonly i18n:    I18nService,
     private readonly eventBus: EventBus,
+    private readonly kanban:  CcKanbanBridgeService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────
@@ -301,6 +303,10 @@ export class CcWorkflowService {
       this.logger.error(`resubmit transaction failed for doc ${doc.id}: ${String(err)}`);
       throw new BadRequestException(await this.i18n.t('errors.resubmitFailed'));
     }
+    // CC #36: yangi versiya yaratildi (snapshotVersion + updateBody) — eski Kanban
+    // kartaga "[ESKIRGAN]" belgisi qo'yiladi, karta ko'chirilmaydi/o'chirilmaydi.
+    // Kanban qo'shimcha funksiya: markCardStale ichida try/catch bor, resubmit'ni to'xtatmaydi.
+    await this.kanban.markCardStale(doc.id);
     return await this.sendDocument(doc.id, senderUserId, { pin: dto.pin });
   }
 
