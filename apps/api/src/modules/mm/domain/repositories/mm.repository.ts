@@ -38,6 +38,16 @@ export interface IMmRepository {
   updateVendorRating(supplierId: number, newRating: number): Promise<Result<void>>;
 
   /**
+   * §11.8 — On PO creation, appends each line's unit price to material_price_history
+   * (append-only) and upserts the supplier→material base tier in supplier_price_tiers.
+   * Best-effort: callers must NOT roll back the PO if this fails.
+   */
+  recordPurchasePrices(
+    supplierId: number,
+    items: { materialId: number; unitPrice: number }[],
+  ): Promise<Result<void>>;
+
+  /**
    * Reads a vendor's persisted supplier-rating signal (vendors.rating +
    * rating_low_flag). rating_low_flag is set by the WMS supplier-rating pipeline
    * when the 4-factor rating drops below the low threshold (2.5). Used by the

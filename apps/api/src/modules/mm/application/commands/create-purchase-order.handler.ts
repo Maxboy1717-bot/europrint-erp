@@ -80,6 +80,14 @@ export class CreatePurchaseOrderHandler
       this.eventBus.publish(new PoRequiresDirectorApprovalEvent(saveResult.data, totalAmount, command.createdBy, reason));
     }
 
+    // §11.8 Material-narx-tarix + yetkazadigan-materiallar ro'yxati: log each line's
+    // price into material_price_history and upsert the supplier→material base tier in
+    // supplier_price_tiers. Best-effort — a failure here must NOT roll back the saved PO.
+    const priceRes = await this.mmRepo.recordPurchasePrices(command.supplierId, command.items);
+    if (!priceRes.ok) {
+      this.logger.warn({ poId: saveResult.data }, 'Narx-tarix yozib bo\'lmadi (PO saqlandi)');
+    }
+
     this.logger.log('Purchase order created');
     return saveResult;
   }

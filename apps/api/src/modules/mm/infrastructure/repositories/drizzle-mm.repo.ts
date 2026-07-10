@@ -322,6 +322,54 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
+  async recordPurchasePrices(
+    supplierId: number,
+    items: { materialId: number; unitPrice: number }[],
+  ): Promise<Result<void>> {
+    try {
+      // §11.8 — resolve supplier display-name for the price-history log (raw SQL to
+      // match this repo's style; `name` is nullable if the vendor row is missing).
+      const vRes = await db.execute(sql`SELECT name FROM vendors WHERE id = ${supplierId} LIMIT 1`);
+      const vRows = Array.isArray(vRes) ? vRes : ((vRes as { rows?: unknown[] }).rows ?? []);
+      const supplierName =
+        ((vRows[0] as Record<string, unknown> | undefined)?.['name'] as string | undefined) ?? null;
+
+      for (const item of items) {
+        // material_price_history = append-only price log. material_id has a FK to
+        // material_cards, so guard the insert with WHERE EXISTS to silently skip a
+        // non-catalogued material id instead of throwing a FK error.
+        await db.execute(sql`
+          INSERT INTO material_price_history (material_id, unit_price, currency, supplier_name, purchase_date)
+          SELECT ${item.materialId}, ${item.unitPrice}, ${'UZS'}, ${supplierName}, CURRENT_DATE
+          WHERE EXISTS (SELECT 1 FROM material_cards WHERE id = ${item.materialId})
+        `);
+
+        // supplier_price_tiers = "which materials this vendor delivers" + latest base
+        // price (the EOQ all-units base tier, min_qty=0). No unique index exists, so
+        // upsert = UPDATE the base tier, then INSERT only when absent. Idempotent:
+        // re-ordering the same material from the same vendor updates the price in place.
+        await db.execute(sql`
+          UPDATE supplier_price_tiers
+          SET unit_price = ${item.unitPrice}, created_at = now()
+          WHERE supplier_id = ${supplierId} AND material_id = ${item.materialId} AND min_qty = 0
+        `);
+        await db.execute(sql`
+          INSERT INTO supplier_price_tiers (supplier_id, material_id, min_qty, unit_price)
+          SELECT ${supplierId}, ${item.materialId}, 0, ${item.unitPrice}
+          WHERE EXISTS (SELECT 1 FROM material_cards WHERE id = ${item.materialId})
+            AND NOT EXISTS (
+              SELECT 1 FROM supplier_price_tiers
+              WHERE supplier_id = ${supplierId} AND material_id = ${item.materialId} AND min_qty = 0
+            )
+        `);
+      }
+      return Ok(undefined);
+    } catch (error: unknown) {
+      this.logger.error('Failed to record purchase prices');
+      return Err(AppErr('DB_ERROR', 'Narx tarixini saqlashda xatolik'));
+    }
+  }
+
   async getVendorRating(
     supplierId: number,
   ): Promise<Result<{ rating: number | null; ratingLowFlag: boolean }>> {
