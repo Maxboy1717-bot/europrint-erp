@@ -135,6 +135,10 @@ import { WmsSettingsController } from './presentation/wms-settings.controller';
 import { WmsSettingsService } from './application/wms-settings.service';
 import { WmsSettingsRepository } from './infrastructure/repositories/wms-settings.repository';
 import { WMS_SETTINGS_REPO } from './domain/repositories/i-wms-settings.repo';
+// Vision 10-warehouse #65 (TASDIQ-2146 §10 #65) — avans↔yetkazish bog'lanishi (yopilmagan avanslar), kross-modul READ-model.
+import { AdvanceLinkageController } from './presentation/advance-linkage.controller';
+import { AdvanceLinkageService } from './application/advance-linkage.service';
+import { AdvanceLinkageRepository } from './infrastructure/repositories/advance-linkage.repository';
 // Vision 10-warehouse #30 - off-hours (outside-shift) warehouse-movement flag + weekly HR/Director report.
 import { NotificationsModule } from '../notifications/notifications.module';
 import { OffHoursAuditRepository } from './infrastructure/repositories/off-hours-audit.repository';
@@ -193,6 +197,7 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     MaterialLifeController,
     WmsSupplierRatingController,
     WmsSettingsController,
+    AdvanceLinkageController,
   ],
   providers: [
     ...handlers,
@@ -275,6 +280,9 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     // FAZA "Sozlama har bo'limda" (2026-07-01) — Ombor sozlama-hub.
     { provide: WMS_SETTINGS_REPO, useClass: WmsSettingsRepository },
     WmsSettingsService,
+    // Vision 10-warehouse #65 (TASDIQ-2146 §10 #65) — avans↔yetkazish (yopilmagan avanslar) READ-model.
+    AdvanceLinkageRepository,
+    AdvanceLinkageService,
     // Vision 10-warehouse #30 - off-hours (outside-shift) warehouse-movement flag + weekly HR/Director report.
     OffHoursAuditRepository,
     OffHoursAuditService,
