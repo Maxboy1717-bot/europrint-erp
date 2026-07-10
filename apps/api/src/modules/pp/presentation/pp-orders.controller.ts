@@ -83,6 +83,12 @@ const UpdateStatusDtoSchema = z.object({
   reason: z.string().min(5),
 });
 
+// EP-PP-083 (#89): Bekor qilish. `reason` MAJBURIY (bekor sababi). The service validates
+// the CANCELLED transition and reverses ACTIVE material allocations back to stock.
+const CancelOrderDtoSchema = z.object({
+  reason: z.string().min(5),
+});
+
 @ApiThrottle()
 @ApiTags('Pp Orders')
 @Controller('pp/orders')
@@ -277,6 +283,25 @@ export class PpOrdersController {
   const parsed = UpdateStatusDtoSchema.parse(dto);
   this.logger.log(`PP order #${id} status -> ${parsed.status} by user ${user?.id}`);
   const result = await this.productionOrdersService.updateStatus(Number(id), parsed.status, user?.id, parsed.reason);
+  return unwrapOrThrow(result);
+ }
+
+ // EP-PP-083 (#89): Bekor qilish — mandatory reason + WIP/allocation reversal. Same
+ // operational authority tier as status transitions (shop chief + director + admin).
+ @ApiOperation({ summary: 'Cancel production order (mandatory reason + WIP/alloc reversal)' })
+ @ApiResponse({ status: 200, description: 'OK' })
+ @ApiResponse({ status: 400, description: 'Illegal transition (already completed/cancelled)' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @Patch(':id/cancel')
+ @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.SEX_BOSHLIG)
+ async cancel(
+  @Param('id') id: number,
+  @Body() dto: z.infer<typeof CancelOrderDtoSchema>,
+  @CurrentUser() user: AuthenticatedUser,
+ ) {
+  const parsed = CancelOrderDtoSchema.parse(dto);
+  this.logger.log(`PP order #${id} CANCEL by user ${user?.id}`);
+  const result = await this.productionOrdersService.cancelOrder(Number(id), user?.id, parsed.reason);
   return unwrapOrThrow(result);
  }
 }

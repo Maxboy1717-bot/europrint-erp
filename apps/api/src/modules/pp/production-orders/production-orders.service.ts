@@ -89,6 +89,27 @@ export class ProductionOrdersService {
 
     });}
 
+  /**
+   * EP-PP-083 (#89) — Bekor qilish (mandatory reason + WIP/alloc reversal).
+   * Validates the CANCELLED transition through the SAME aggregate choke-point as
+   * updateStatus (canTransition) — a completed/already-cancelled order -> 400 — then
+   * delegates to the repo's atomic cancel (status flip + ACTIVE-alloc reversal + audit
+   * row). `reason` is mandatory (the controller's Zod schema enforces min length) and
+   * is persisted on the status log.
+   */
+  async cancelOrder(id: number, changedBy?: number, reason?: string){
+    return safeCall(async () => {
+    const current = await this.findOne(id);
+    const from = await this.parsePoStatus(this.extractStatus(current));
+    if (!canTransition(from, PoStatus.CANCELLED)) {
+      throw new BadRequestException(await this.i18n.t('errors.ppInvalidTransition', { args: { from, target: PoStatus.CANCELLED } }));
+    }
+    const result = await this.ppProductionOrdersRepo.cancel(id, changedBy, reason);
+    if (!result.ok) throw new InternalServerErrorException(result.error);
+    return result.data;
+
+    });}
+
   /** Coerce a raw status string into a canonical PoStatus member or reject it (400). */
   private async parsePoStatus(raw: unknown): Promise<PoStatus> {
     const values = Object.values(PoStatus) as string[];

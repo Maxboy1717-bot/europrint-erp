@@ -35,5 +35,7 @@ export interface IPpProductionOrdersRepository {
   // EP-PP-110 (Batch 5 Item 14) — weekly plan view + reschedule.
   getWeeklyPlan(weekStart: string): Promise<Result<Row[]>>;
   rescheduleOrder(id: number, plannedStartDate: string, plannedEndDate: string | null): Promise<Result<Row>>;
+  // EP-PP-083 (#89) — Bekor qilish: atomic status->cancelled + ACTIVE material-alloc reversal + mandatory-reason audit row.
+  cancel(id: number, changedBy?: number, reason?: string): Promise<Result<{ order: Record<string, unknown>; reversedAllocs: number }>>;
 }
 export const PP_PRODUCTION_ORDERS_REPO = 'IPpProductionOrdersRepository';

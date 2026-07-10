@@ -257,4 +257,48 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
       return Ok(row);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Ko\'chirishda xatolik'); }
   }
+
+  /**
+   * EP-PP-083 (#89) — Bekor qilish: atomic cancel with WIP/allocation reversal.
+   * In ONE transaction: (1) flip the order to 'cancelled', (2) reverse every ACTIVE
+   * material allocation tied to the order back to stock (status->'RETURNED',
+   * returned_qty<-allocated_qty). COMPLETED (already-consumed) allocs are a genuine
+   * material loss and are left untouched. (3) Persist the MANDATORY `reason` to the
+   * status journal. Transition legality (only non-terminal->cancelled) is enforced by
+   * the service (canTransition) BEFORE this runs, mirroring updateStatus.
+   * production_material_allocs.production_order_id is varchar -> cast ${id}::text;
+   * status CHECK allows only ('ACTIVE','COMPLETED','RETURNED').
+   */
+  async cancel(id: number, changedBy?: number, reason?: string): Promise<Result<{ order: Record<string, unknown>; reversedAllocs: number }>> {
+    try {
+      return await db.transaction(async (tx) => {
+        const before = await tx.select({ status: productionOrders.status })
+          .from(productionOrders).where(eq(productionOrders.id, id)).limit(1);
+        const oldStatus = (before[0]?.status ?? null) as string | null;
+
+        const updated = await tx.update(productionOrders)
+          .set({ status: 'cancelled', updatedAt: _time.now() })
+          .where(eq(productionOrders.id, id)).returning();
+        const order = updated[0];
+
+        const rev = await tx.execute(sql`
+          UPDATE production_material_allocs
+          SET status = 'RETURNED', returned_qty = allocated_qty, returned_at = ${_time.now()}, updated_at = ${_time.now()}
+          WHERE production_order_id = ${id}::text AND status = 'ACTIVE'
+          RETURNING id`);
+        const revRows = Array.isArray((rev as { rows?: unknown[] }).rows)
+          ? ((rev as { rows: unknown[] }).rows)
+          : (Array.isArray(rev) ? (rev as unknown[]) : []);
+        const reversedAllocs = revRows.length;
+
+        // EP-PP-083: persist the mandatory written justification on the status journal.
+        await tx.execute(sql`
+          INSERT INTO production_order_status_log
+            (production_order_id, old_status, new_status, changed_by, reason, metadata)
+          VALUES (${id}, ${oldStatus}, ${'cancelled'}, ${changedBy ?? null}, ${reason ?? null}, ${JSON.stringify({ event: 'cancel', reversedAllocs })}::jsonb)`);
+
+        return Ok({ order, reversedAllocs });
+      });
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Bekor qilishda xatolik'); }
+  }
 }
