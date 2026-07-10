@@ -22,11 +22,45 @@ export class DirectorBotService {
 
     const cmd = (msg.command ?? '').toLowerCase();
 
+    if (cmd === '/holat'   || msg.text.toLowerCase().includes('holat'))       return this.getHolat();
     if (cmd === '/kpi'     || msg.text.toLowerCase().includes('kpi'))         return this.getKpi();
     if (cmd === '/ai'      || msg.text.toLowerCase().includes('ai qaror'))    return this.getAiStats();
     if (cmd === '/summary' || msg.text.toLowerCase().includes('xulosa'))      return this.getSummary();
 
-    return helpReply('📊 Director Bot:\n/kpi — KPI\n/ai — AI qarorlar\n/summary — Xulosa');
+    return helpReply('📊 Director Bot:\n/holat — Kompaniya holati\n/kpi — KPI\n/ai — AI qarorlar\n/summary — Xulosa');
+  }
+
+  private async getHolat(): Promise<BotReply> {
+    // vizyon 05-director#18: return the LAST saved company_state_log snapshot
+    // (written daily by CompanyStateSnapshotCron @07:00 Asia/Tashkent). Read-only
+    // pull of the newest row — state_code is the authoritative qualitative verdict
+    // (computed from state_thresholds master-data), score_total the weighted score.
+    const res = await execSqlResult<{ state_code: string; score_total: string; snapshot_at: string }>(
+      sql`
+        SELECT state_code,
+               score_total::text AS score_total,
+               to_char(detected_at AT TIME ZONE 'Asia/Tashkent', 'YYYY-MM-DD HH24:MI') AS snapshot_at
+        FROM company_state_log
+        ORDER BY detected_at DESC
+        LIMIT 1
+      `,
+      'director.bot/getHolat',
+    );
+    if (!res.ok) {
+      this.logger.error(`getHolat DB error: ${res.error}`);
+      return dbErrorReply();
+    }
+    const row = res.rows[0];
+    if (!row) return helpReply('🏢 Holat ma\'lumotlari hali yo\'q');
+    return {
+      text:
+        `🏢 <b>Kompaniya Holati</b>\n` +
+        `  📊 Holat: <b>${row.state_code}</b>\n` +
+        `  🎯 Ball: <b>${row.score_total}</b>\n` +
+        `  🕖 Saqlangan: ${row.snapshot_at}`,
+      parse: 'HTML',
+      success: true,
+    };
   }
 
   private async getKpi(): Promise<BotReply> {
