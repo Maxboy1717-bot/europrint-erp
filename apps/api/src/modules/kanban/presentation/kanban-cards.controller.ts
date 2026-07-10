@@ -50,6 +50,12 @@ const AssignCardSchema = z.object({
   assignedTo: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 
+const BulkAssignCardsSchema = z.object({
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+  assignedTo: z.union([z.string(), z.number()]).nullish(),
+  userId: z.union([z.string(), z.number()]).nullish(),
+}).passthrough();
+
 const CompleteCardSchema = z.object({
   completionReport: z.string().max(5000).optional(),
 }).passthrough();
@@ -182,6 +188,18 @@ export class KanbanCardsController {
       payload.assigner_user_id = String(user.id);
     }
     return unwrapOrBadRequest(await this.svc.createCardFlat(payload, user?.id ?? 0));
+  }
+
+  @Patch('cards/bulk-assign')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AuditInterceptor)
+  @ApiOperation({ summary: "Kartalarni ommaviy tayinlash (ta'til / 50+ vazifa — EP-KAN A24)" })
+  async bulkAssignCards(@Body() body: unknown) {
+    const dto = BulkAssignCardsSchema.parse(body);
+    const raw = dto.assignedTo ?? dto.userId ?? null;
+    const ownerUserId = raw != null && raw !== '' ? Number(raw) : null;
+    const ids = dto.ids.map((v) => Number(v));
+    return unwrapOrBadRequest(await this.svc.bulkAssignCards(ids, ownerUserId));
   }
 
   @Patch(':id/assign')

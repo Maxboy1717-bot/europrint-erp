@@ -345,4 +345,31 @@ export class DrizzleKanbanCardsRepository {
       return Err(String(e));
     }
   }
+
+  // ─── Bulk assign (EP-KAN A24: ta'til / 50+ vazifa ommaviy tayinlash) ──────
+  // Bir userga ko'p kartani bitta UPDATE bilan tayinlaydi (owner_user_id).
+  // IN-ro'yxati sql.join orqali parametrlangan (loyihada `= ANY(${arr})` JS massivni
+  // satr-kortejga mis-bind qiladi — notification-routing.repository.ts:143). deleted_at
+  // IS NULL guard soft-delete kartalarni chetlab o'tadi; RETURNING haqiqiy sonni beradi.
+  async bulkAssignCards(
+    cardIds: number[], ownerUserId: number | null,
+  ): Promise<Result<{ updated: number; ids: number[] }>> {
+    try {
+      const ids = (Array.isArray(cardIds) ? cardIds : [])
+        .map((v) => Number(v))
+        .filter((v) => Number.isInteger(v) && v > 0);
+      if (ids.length === 0) return Err(AppErr('VALIDATION', 'Kamida bitta karta ID kerak'));
+      const owner = ownerUserId != null && Number.isInteger(Number(ownerUserId)) ? Number(ownerUserId) : null;
+      const idList = sql.join(ids.map((v) => sql`${v}`), sql`, `);
+      const rows = await runQuery<{ id: number; owner_user_id: number | null }>(sql`
+        UPDATE kanban_cards
+        SET owner_user_id = ${owner}, updated_at = NOW()
+        WHERE id IN (${idList}) AND deleted_at IS NULL
+        RETURNING id, owner_user_id
+      `);
+      return Ok({ updated: rows.rows.length, ids: rows.rows.map((r) => Number(r.id)) });
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
 }

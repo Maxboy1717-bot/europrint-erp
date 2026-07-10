@@ -155,4 +155,8 @@ export class DrizzleKanbanCoreRepository {
   completeCard(cardId: string, userId: number, completionReport?: string): Promise<Result<Record<string, unknown>>> {
     return this.cards.completeCard(cardId, userId, completionReport);
   }
+
+  bulkAssignCards(cardIds: number[], ownerUserId: number | null): Promise<Result<{ updated: number; ids: number[] }>> {
+    return this.cards.bulkAssignCards(cardIds, ownerUserId);
+  }
 }

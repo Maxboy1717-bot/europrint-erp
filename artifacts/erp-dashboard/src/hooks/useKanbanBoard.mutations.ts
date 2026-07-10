@@ -177,6 +177,20 @@ export function useKanbanMutations(
     },
   });
 
+  const bulkAssignMutation = useMutation({
+    mutationFn: async ({ ids, assignedTo }: { ids: Array<string | number>; assignedTo: string | number | null }) => {
+      return await apiRequest("PATCH", "/api/kanban/cards/bulk-assign", { ids, assignedTo });
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kanban/boards", selectedBoardId] });
+      const updated = (result as { updated?: number } | null)?.updated ?? 0;
+      toast({ title: `${updated} ta vazifa tayinlandi` });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Ommaviy tayinlashda xato", description: err.message, variant: "destructive" });
+    },
+  });
+
   const moveCardMutation = useMutation({
     mutationFn: async ({
       id,
@@ -239,5 +253,6 @@ export function useKanbanMutations(
     deleteBoardMutation,
     moveCardMutation,
     quickStartMutation,
+    bulkAssignMutation,
   };
 }
