@@ -41,4 +41,17 @@ export interface ITelegramSender {
   sendCertExpiry(employeeId: number, certName: string, expiresAt: Date): Promise<Result<void>>;
   sendStockAlert(warehouseManagerId: number, materialId: number, currentQty: number): Promise<Result<void>>;
   sendQcResult(productionManagerId: number, orderId: number, passed: boolean): Promise<Result<void>>;
+
+  /**
+   * Post a binary document (e.g. a generated PDF digest) to a Telegram chat as a
+   * file attachment via multipart /sendDocument. On transport failure the adapter
+   * falls back to a text-only sendMessage so the recipient still receives the
+   * report body. No-op Ok() when the bot token is unconfigured.
+   */
+  sendDocument(
+    chatId: string,
+    document: Buffer | Uint8Array,
+    filename: string,
+    caption?: string,
+  ): Promise<Result<void>>;
 }

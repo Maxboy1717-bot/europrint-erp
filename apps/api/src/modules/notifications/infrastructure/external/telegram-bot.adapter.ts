@@ -17,6 +17,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Err, Ok, AppErr } from '@common/result';
 import { withRetry, classifyRetryError } from '@common/retry/with-retry';
+import { randomBytes } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
@@ -61,6 +62,94 @@ export class TelegramBotAdapter implements ITelegramSender {
     }
     this.logger.debug('Telegram message sent');
     return Ok(undefined);
+  }
+
+  async sendDocument(
+    chatId: string,
+    document: Buffer | Uint8Array,
+    filename: string,
+    caption?: string,
+  ): Promise<Result<void>> {
+    if (!this.botToken) {
+      this.logger.warn('Telegram bot token not configured');
+      return Ok(undefined);
+    }
+    const safeName =
+      filename && filename.trim().length > 0 ? filename : 'document.pdf';
+    const { body, contentType } = this.buildDocumentMultipart(
+      chatId,
+      Buffer.from(document),
+      safeName,
+      caption,
+    );
+    try {
+      await withRetry<void>(async () => {
+        await firstValueFrom(
+          this.httpService.post(`${this.apiUrl}/sendDocument`, body, {
+            headers: { 'Content-Type': contentType },
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
+          }),
+        );
+      });
+    } catch (err) {
+      const code = classifyRetryError(err);
+      const msg  = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Failed to send Telegram document (${code}): ${msg}`);
+      // Graceful degradation (P2 #70 / EP-NTF-020): if the attachment can't be
+      // delivered, still send the digest text so the recipient gets the report.
+      const fallbackText =
+        caption && caption.length > 0
+          ? caption
+          : `📎 Hujjat biriktirib bo'lmadi (${safeName})`;
+      return this.sendMessage(chatId, fallbackText);
+    }
+    this.logger.debug('Telegram document sent');
+    return Ok(undefined);
+  }
+
+  /**
+   * Build a multipart/form-data body for Telegram's /sendDocument. Dependency-free
+   * (manual boundary + Buffer.concat) so no new npm package is pulled in; the file
+   * part is streamed as raw bytes with an application/pdf content-type.
+   */
+  private buildDocumentMultipart(
+    chatId: string,
+    document: Buffer,
+    filename: string,
+    caption?: string,
+  ): { body: Buffer; contentType: string } {
+    const boundary = `----EuroPrintFormBoundary${randomBytes(16).toString('hex')}`;
+    const CRLF = '\r\n';
+    const parts: Buffer[] = [];
+    const pushField = (name: string, value: string): void => {
+      parts.push(
+        Buffer.from(
+          `--${boundary}${CRLF}` +
+            `Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}` +
+            `${value}${CRLF}`,
+        ),
+      );
+    };
+    pushField('chat_id', chatId);
+    if (caption && caption.length > 0) {
+      // Telegram caption hard limit is 1024 chars.
+      pushField('caption', caption.slice(0, 1024));
+      pushField('parse_mode', 'HTML');
+    }
+    parts.push(
+      Buffer.from(
+        `--${boundary}${CRLF}` +
+          `Content-Disposition: form-data; name="document"; filename="${filename}"${CRLF}` +
+          `Content-Type: application/pdf${CRLF}${CRLF}`,
+      ),
+    );
+    parts.push(document);
+    parts.push(Buffer.from(`${CRLF}--${boundary}--${CRLF}`));
+    return {
+      body: Buffer.concat(parts),
+      contentType: `multipart/form-data; boundary=${boundary}`,
+    };
   }
 
   async sendAlert(
