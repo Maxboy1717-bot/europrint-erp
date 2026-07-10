@@ -15,6 +15,11 @@ import { BullModule } from '@nestjs/bullmq';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { AuthModule } from '../auth/auth.module';
 import { WmsStockController } from './presentation/wms-stock.controller';
+// 10-wms #17 — bir paletda 2 partiya "Aralash" ogohlantirish (blok emas).
+import { WmsPalletMixingController } from './presentation/wms-pallet-mixing.controller';
+import { PalletMixingService } from './application/pallet-mixing.service';
+import { PalletMixingRepository } from './infrastructure/repositories/pallet-mixing.repository';
+import { PALLET_MIXING_REPO } from './domain/repositories/i-pallet-mixing.repo';
 import { WmsGoodsIssueController } from './presentation/wms-goods-issue.controller';
 import { WmsRentalController } from './presentation/wms-rental.controller';
 import { WmsEoqController } from './presentation/wms-eoq.controller';
@@ -196,6 +201,8 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     NotificationsModule,
   ],
   controllers: [
+    // 10-wms #17 — bir paletda 2 partiya "Aralash" ogohlantirish (blok emas).
+    WmsPalletMixingController,
     // Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
     ZoneRiskController,
     WmsStockController,
@@ -233,6 +240,10 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     WmsGtdController,
   ],
   providers: [
+    // 10-wms #17 — bir paletda 2 partiya "Aralash" ogohlantirish (blok emas).
+    PalletMixingRepository,
+    { provide: PALLET_MIXING_REPO, useClass: PalletMixingRepository },
+    PalletMixingService,
     // Vision 10-warehouse #6 — IoT-signal zone at-risk flag + QC review queue (Q-35 approved 2026-07-11).
     ZoneRiskRepository,
     { provide: ZONE_RISK_REPO, useClass: ZoneRiskRepository },
