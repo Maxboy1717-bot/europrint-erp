@@ -17,6 +17,20 @@ Specs live in `scratchpad/schema-specs/<m>__<n>.json` (migration .sql in newFile
   build-spec batches: instruct agents to anchor new Drizzle tables at END-OF-FILE and providers/controllers
   at the array's last element (stable anchors) to cut the collision rate.
 
+## ITER-3 (2026-07-11): 19 landed; double-CR bug fixed; STRATEGY PIVOT
+- **Landed 19** (wms#10 `32623dce` GTD-flag added iter-3). Double-CR (`\r\r\n`) corruption fixed in
+  harvest.cjs/applymatch.cjs (strip ALL `\r`, not just `\r\n`) — was breaking anchors + the Edit tool.
+- **STRATEGY PIVOT — manual re-anchor is too token-expensive** (~1 spec/iteration). The ~20 batch-1
+  cluster casualties are ADDITIVE but collide because parallel agents anchored on the ORIGINAL shared
+  file; the fix is to REGENERATE them (not hand-re-anchor): a small build-spec workflow that reads the
+  CURRENT (post-sibling) files and anchors new Drizzle tables at END-OF-FILE + providers/controllers at
+  the array's LAST element (stable) → then harvest cleanly. Apply the SAME stable-anchor rule to all
+  future batches from the start.
+- **Casualties to regenerate (~20):** qc #8/#22/#26/#67 (qc-schema.ts), #39 (qc.module), #62 (schema-wms.ts),
+  #35 (tsc-slip: cast+user.id); wms #6/#17 (wms.module/wms-schema); mes #83 (mes.module), #24/#33/#108/#116
+  (schema-compat-4 productionSessions), #106 (pp-enhanced material_norms); pp #30/#124 (pp-production),
+  #49 (pp.module), #125 (pp-enhanced). **pp #90 = DUP of pp#37** (both gang-runs) → mark satisfied/merge, not rebuild.
+
 ## Batch-1 (39 specs) — HARVEST in progress
 **Landed this wave: 18** (see below + PP/MES additions iter 2).
 PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
