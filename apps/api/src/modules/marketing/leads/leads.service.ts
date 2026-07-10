@@ -3,11 +3,16 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException, Logger } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { safeCall, Result, AppError } from '@common/result';
 import { PhoneNumber } from '@shared/domain/value-objects/phone-number.vo';
 import { LeadsRepository } from './leads.repository';
+
+/** vision 14-marketing#43: dealer-origin lead source ("manba: diler"). There is no dealer
+ *  self-service portal — a marketing employee enters the dealer under this tag and the lead is
+ *  owned by that employee (assigned_to). */
+const MARKETING_LEAD_SOURCE_DILER = 'diler';
 
 @Injectable()
 export class LeadsService {
@@ -49,7 +54,7 @@ export class LeadsService {
     return r.data;
   }
 
-  async create(dto: Record<string, unknown>, _createdBy?: number) {
+  async create(dto: Record<string, unknown>, createdBy?: number) {
     return safeCall(async () => {
       // vision #2 (14-marketing): normalize the phone on entry — strip spaces/dashes/parens so
       // "+998 (90) 123-45-67" is stored as "+998901234567". Lenient (Q-39): a value that isn't
@@ -62,17 +67,32 @@ export class LeadsService {
         normalizedPhone = p.ok ? p.data.value : PhoneNumber.fromRaw(rawPhone).value;
         if (!p.ok) this.logger.warn(`marketing lead phone not E.164 after normalize: "${rawPhone}"`);
       }
+      // vision 14-marketing#43: "diler" is a first-class lead source entered ONLY on behalf of a
+      // marketing employee (no dealer self-service portal). Such a lead must therefore carry an
+      // owning marketing user (assigned_to): an explicit assignee wins, otherwise the acting user.
+      const source = (dto['source'] as string | undefined) ?? 'website';
+      const explicitAssignee = dto['assignedTo'] != null ? Number(dto['assignedTo']) : undefined;
+      let assignedTo: number | undefined = explicitAssignee;
+      if (source === MARKETING_LEAD_SOURCE_DILER) {
+        assignedTo = explicitAssignee ?? createdBy;
+        if (assignedTo == null) {
+          throw new BadRequestException(
+            "Diler manba lead marketing xodimi nomidan kiritilishi shart (assigned_to majburiy)",
+          );
+        }
+      }
       const row: Record<string, unknown> = {
         name: String(dto['name'] ?? dto['firstName'] ?? ''),
         company: (dto['company'] as string | undefined) || undefined,
         phone: normalizedPhone,
         email: (dto['email'] as string | undefined) || undefined,
-        source: (dto['source'] as string | undefined) ?? 'website',
+        source,
         channel: (dto['channel'] as string | undefined) || undefined,
         campaignId: (dto['campaignId'] as string | undefined) || undefined,
         // Batch 2 item 1.1: the service row also dropped assignedTo (only the repo INSERT was blamed
         // in the audit) — thread it through so a lead created with an explicit owner keeps it.
-        assignedTo: dto['assignedTo'] != null ? dto['assignedTo'] : undefined,
+        // vision 14-marketing#43: for a diler lead this resolves to the acting marketing user.
+        assignedTo: assignedTo != null ? assignedTo : undefined,
         status: (dto['status'] as string | undefined) ?? 'new',
         score: dto['score'] != null ? Number(dto['score']) : 0,
         notes: (dto['notes'] as string | undefined) || undefined,

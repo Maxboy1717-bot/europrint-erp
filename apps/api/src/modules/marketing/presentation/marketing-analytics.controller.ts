@@ -17,6 +17,8 @@ import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { unwrapOrBadRequest, unwrapOrThrow, unwrapOrInternal } from '@common/http-result';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
 import { MarketingExtService } from '../application/marketing-ext.service';
 import { OrderTrendService } from '../application/order-trend.service';
 import { LeadsService } from '../leads/leads.service';
@@ -98,9 +100,11 @@ export class MarketingAnalyticsController {
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(AuditInterceptor)
   @ApiOperation({ summary: 'Yangi lead yaratish' })
-  async createLead(@Body() body: unknown) {
+  async createLead(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = MarketingLeadSchema.parse(body);
-    return unwrapOrThrow(await this.leadsSvc.create(dto as Record<string, unknown>));
+    // vision 14-marketing#43: no dealer portal — a "manba: diler" lead is entered on behalf of
+    // the acting marketing employee, so thread the current user id through as the lead owner.
+    return unwrapOrThrow(await this.leadsSvc.create(dto as Record<string, unknown>, user?.id));
   }
 
   @Get('leads/loss-analysis')
