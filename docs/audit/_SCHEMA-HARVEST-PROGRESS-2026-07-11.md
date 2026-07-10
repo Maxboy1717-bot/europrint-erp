@@ -46,6 +46,21 @@ Specs live in `scratchpad/schema-specs/<m>__<n>.json` (migration .sql in newFile
   (re-run driver; siblings landed): qc#62 (qc.module import), mes#33 (mes-schema.ts import), pp#124 (pp.module
   providers). edits=0 (regen returned empty — re-run 1 agent or hand-build): mes#106. pp#90 still = DUP of pp#37.
 
+## ⭐⭐ ITER-5 CRITICAL INFRA FINDING — @workspace/db = STALE DIST (2026-07-11)
+- `@workspace/db` package.json resolves to `./dist/cjs/index.d.ts` (COMPILED), NOT source. So a new
+  Drizzle table added to `lib/db/src/schema/*` is INVISIBLE to `apps/api` tsc until **lib/db is rebuilt**.
+  This is why table-OBJECT-importing specs (qc#8 `qcSupplierRegime`, pp#49 `ppPlanSnapshots`) tsc-failed
+  while raw-SQL specs passed. **MANDATORY harvest step for any new-table spec whose repo imports the table
+  object: after applying, run `cd lib/db && npx tsc -p tsconfig.cjs.json` (dist is gitignored — local only),
+  THEN the apps/api pre-commit tsc validates correctly.**
+- **Integrity check PASSED:** after rebuilding dist, `apps/api npx tsc --noEmit` = **0 errors** — all 30
+  landed schema items are genuinely type-valid; stale dist masked barrel-visibility only, not real errors.
+- qc#8 landed `15f95222` (via dist-rebuild) — **30 landed this wave.** Also fixed a duplicate `date` import
+  in qc-schema.ts committed by a sibling (masked by stale dist; apps/api tsc doesn't compile lib/db source).
+- **Remaining 8 stragglers:** pp#49 (apply→rebuild-dist→commit, same as qc#8); Result-type qc#26/mes#83
+  (return Err(res.error)); property mes#108 (get-oee:256 isTrainingSession — VIEW/type); anchor qc#62/mes#33/
+  pp#124 (hand-re-anchor); mes#106 (edits=0 → hand-build material_norms ALTER). pp#90 = DUP of pp#37.
+
 ## Batch-1 (39 specs) — HARVEST in progress
 **Landed this wave: 18** (see below + PP/MES additions iter 2).
 PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
