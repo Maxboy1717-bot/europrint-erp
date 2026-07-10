@@ -18,6 +18,16 @@ export interface IMmRepository {
   getPurchaseOrder(id: number, tx?: DrizzleExecutor): Promise<Result<PurchaseOrder>>;
   getAllPoByStatus(status: string): Promise<Result<PurchaseOrder[]>>;
 
+  /**
+   * §11-MM #23 — Material reference narxi: supplier price-list (supplier_price_tiers)
+   * bo'lsa shundan, aks holda oxirgi PO satr narxidan (purchase_order_items, id DESC —
+   * created_at jonli ma'lumotda NULL). Ikkalasi ham yo'q bo'lsa null (yangi material).
+   * Read-only; hech narsa yozilmaydi.
+   */
+  getMaterialReferencePrice(
+    materialId: number,
+  ): Promise<Result<{ price: number; source: 'price_list' | 'last_po' } | null>>;
+
   recordGoodsReceipt(poId: number, quantity: number): Promise<Result<void>>;
   recordInvoice(poId: number, quantity: number): Promise<Result<void>>;
 

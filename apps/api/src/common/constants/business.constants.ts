@@ -45,6 +45,18 @@ export const DEFAULT_ADVANCE_PERCENT = 70;
 /** Safety stock = demand_avg * SAFETY_STOCK_FACTOR */
 export const SAFETY_STOCK_FACTOR = 0.5;
 
+/**
+ * §11-MM #23 — PO narx-variance ogohlantirish chegaralari (percent). Yangi PO satr
+ * narxi material reference narxidan (supplier price-list bo'lsa shundan, aks holda
+ * oxirgi PO satr narxidan) qancha YUQORI bo'lsa flag rangi:
+ *   > RED%    → qizil (red)
+ *   ≥ YELLOW% → sariq (yellow)
+ * Chegaralar vizyonda ko'rsatilgan (vision-1000-answers/11-mm.md #23: 10%/25%) —
+ * fabrikatsiya emas, DATA-qiymat egasidan talab qilinmaydi.
+ */
+export const PO_PRICE_VARIANCE_YELLOW_PCT = 10;
+export const PO_PRICE_VARIANCE_RED_PCT = 25;
+
 /** POS / queue status poll interval */
 export const QUEUE_POLL_INTERVAL_MS = 2_000;
 

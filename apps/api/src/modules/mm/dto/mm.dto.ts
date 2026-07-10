@@ -19,6 +19,14 @@ export const MmCreatePurchaseOrderSchema = z.object({
 });
 export type MmCreatePurchaseOrderDto = z.infer<typeof MmCreatePurchaseOrderSchema>;
 
+// §11-MM #23 — Narx-variance tekshirish (price-warning). Read-only: taklif qilingan PO
+// satr unitPrice ni material reference narxi (price-list yoki oxirgi PO) bilan solishtiradi.
+export const MmPriceVarianceCheckSchema = z.object({
+  materialId: z.number().int().positive(),
+  unitPrice:  z.number().nonnegative(),
+});
+export type MmPriceVarianceCheckDto = z.infer<typeof MmPriceVarianceCheckSchema>;
+
 export const MmApprovePurchaseOrderSchema = z.object({
   notes: z.string().optional(),
 });

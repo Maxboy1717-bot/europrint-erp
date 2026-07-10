@@ -159,6 +159,45 @@ export class DrizzleMmRepository implements IMmRepository {
     }
   }
 
+  async getMaterialReferencePrice(
+    materialId: number,
+  ): Promise<Result<{ price: number; source: 'price_list' | 'last_po' } | null>> {
+    try {
+      // §11-MM #23 narx-nazorat reference: price-list (supplier_price_tiers) bo'lsa
+      // shundan, aks holda oxirgi PO satr narxidan. purchase_order_items.created_at
+      // jonli ma'lumotda NULL (savePurchaseOrder uni to'ldirmaydi) — shuning uchun eng
+      // oxirgi satr `id DESC` bilan olinadi (serial id kiritish tartibini ishonchli aks
+      // ettiradi). supplier_price_tiers hozir bo'sh (0 satr) → price_list_price NULL
+      // qaytadi va last_po ga tushadi (graceful; jadval to'lgach avtomatik price-list'ga o'tadi).
+      const query = sql`
+        SELECT pl.unit_price AS price_list_price, lp.unit_price AS last_po_price
+        FROM (SELECT 1) x
+        LEFT JOIN LATERAL (
+          SELECT unit_price FROM supplier_price_tiers
+          WHERE material_id = ${materialId}
+          ORDER BY id DESC LIMIT 1
+        ) pl ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT unit_price FROM purchase_order_items
+          WHERE material_id = ${materialId}
+          ORDER BY id DESC LIMIT 1
+        ) lp ON TRUE
+      `;
+      const result = await db.execute(query);
+      const rows = (Array.isArray(result) ? result : (result as { rows?: unknown[] }).rows ?? []) as Record<string, unknown>[];
+      const row = rows[0];
+      if (!row) return Ok(null);
+      const priceListPrice = row['price_list_price'];
+      const lastPoPrice = row['last_po_price'];
+      if (priceListPrice != null) return Ok({ price: Number(priceListPrice), source: 'price_list' as const });
+      if (lastPoPrice != null) return Ok({ price: Number(lastPoPrice), source: 'last_po' as const });
+      return Ok(null);
+    } catch (error: unknown) {
+      this.logger.error('Failed to get material reference price');
+      return Err(AppErr('DB_ERROR', 'Material reference narxini olishda xatolik'));
+    }
+  }
+
   async recordGoodsReceipt(poId: number, _quantity: number): Promise<Result<void>> {
     try {
       const rows = await db.select().from(purchase_orders).where(eq(purchase_orders.id, poId)).limit(1);

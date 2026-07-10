@@ -17,7 +17,8 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@common/types/user.types';
-import { MmCreatePurchaseOrderSchema, MmCreatePurchaseOrderDto } from '../dto/mm.dto';
+import { MmCreatePurchaseOrderSchema, MmCreatePurchaseOrderDto, MmPriceVarianceCheckSchema, MmPriceVarianceCheckDto } from '../dto/mm.dto';
+import { MmPriceVarianceService } from '../application/mm-price-variance.service';
 import { CreatePurchaseOrderCommand } from '../application/commands/create-purchase-order.handler';
 import { ApprovePurchaseOrderCommand } from '../application/commands/approve-purchase-order.handler';
 import { GoodsReceiptCommand } from '../application/commands/goods-receipt.handler';
@@ -46,6 +47,7 @@ export class MmPurchaseOrdersController {
   constructor(
     private commandBus: CommandBus,
     private readonly i18n: I18nService,
+    private readonly priceVarianceService: MmPriceVarianceService,
   ) {}
 
   @ApiOperation({ summary: 'List pos' })
@@ -299,6 +301,22 @@ export class MmPurchaseOrdersController {
   async patchApprovePo(@Param('id') id: number, @Body() dto: { approvedBy: number }) {
     const command = new ApprovePurchaseOrderCommand(id, dto.approvedBy ?? 0);
     const res = await this.commandBus.execute(command);
+    return unwrapOrThrow(res);
+  }
+
+  // §11-MM #23 — PO satr narxi uchun ogohlantirish flagi (qizil/sariq). Read-only:
+  // reference narx (price-list yoki oxirgi PO) bilan solishtiradi, hech narsa saqlamaydi.
+  // POST (GET emas) — @Get(':id') marshruti bilan to'qnashmaslik uchun; bitta statik segment.
+  @ApiOperation({ summary: 'Check PO line price variance vs price-list / last PO' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('price-variance')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+  async checkPriceVariance(
+    @Body(new ZodValidationPipe(MmPriceVarianceCheckSchema)) dto: MmPriceVarianceCheckDto,
+  ){
+    const res = await this.priceVarianceService.checkPriceVariance(dto.materialId, dto.unitPrice);
     return unwrapOrThrow(res);
   }
 }

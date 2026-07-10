@@ -48,6 +48,7 @@ import { MmVendorsPrService } from './application/mm-vendors-pr.service';
 import { MmVendorsPrRepository } from './infrastructure/repositories/mm-vendors-pr.repository';
 import { MM_VENDORS_PR_REPO } from './domain/repositories/i-mm-vendors-pr.repo';
 import { MmVendorRatingService } from './application/mm-vendor-rating.service';
+import { MmPriceVarianceService } from './application/mm-price-variance.service';
 
 const commandHandlers = [
   CreatePurchaseOrderHandler,
@@ -82,6 +83,7 @@ const repositories = [
     { provide: MM_DASHBOARD_REPO, useClass: MmDashboardRepository },
     MmDashboardService,
     MmVendorRatingService,
+    MmPriceVarianceService,
     LayerFormulaService],
   exports: [MM_REPO, MM_MATERIAL_REPO, PURCHASE_SVC_REPO, PurchaseService, LayerFormulaService],
 })
