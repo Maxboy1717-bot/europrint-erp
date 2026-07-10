@@ -166,6 +166,12 @@ export const materialNorms = pgTable("material_norms", {
   // Bo'lim-darajasidagi norma override (NULL = global/barcha bo'lim uchun norma).
   // Qiymat-fazosi pos_movements.bulim bilan bir xil (erkin matn, FK yo'q).
   departmentCode: varchar("department_code", { length: 50 }),
+  // 08-mes #4 / #106 — norma versiyalash (retro-buzilmaslik). version = norma avlodi;
+  // effective_date = o'sha avlod amalga kirgan sana. Sessiya started_at'da amalda bo'lgan
+  // (effective_date <= started_at) versiya start-session.handler tomonidan snapshot qilinadi.
+  // Migration: mes-norma-version-snapshot-2026-07-11.sql (material_norms ADD version/effective_date).
+  version: integer("version").notNull().default(1),
+  effectiveDate: date("effective_date").default(sql`CURRENT_DATE`),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

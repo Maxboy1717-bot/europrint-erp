@@ -149,6 +149,9 @@ export const productionSessions = pgTable('production_sessions', {
   // T7-05: direct operator=KARTA link → org_departments(id). Additive, nullable
   // (owner/MES DATA). A67 ckp-mes-feed listener prefers this over resolve-via paths.
   operatorCardId: integer('operator_card_id'),
+  // 08-mes #4 — sessiya BOSHLANGANDAGI norma versiyasi snapshot (retro-buzilmaslik).
+  // NULL = hali snapshot qilinmagan / amaldagi norma yo'q. start-session.handler yozadi.
+  normaVersion: integer('norma_version'),
 });
 
 // NOTE: convergence deferred (tier-1) — lib/db aiUsageLogs.userId is numeric but

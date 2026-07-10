@@ -16,6 +16,15 @@ export interface IMesRepository {
   checkOperatorCertification(operatorId: number, courseId: number): Promise<Result<Record<string, unknown>>>;
 
   /**
+   * 08-mes #4 — Sessiya BOSHLANGANDAGI norma versiyasini production_sessions.norma_version
+   * ga snapshot qiladi (retro-buzilmaslik): started_at sanasida amalda bo'lgan
+   * (material_norms.effective_date <= started_at) eng yuqori aktiv norma versiyasi.
+   * Bir marta yozilgach qayta yozilmaydi (first-write-wins). Amaldagi norma yo'q bo'lsa
+   * (0 qator yoki hammasi kelajakda amalga kiradi) NULL qaytadi — mavjud sessiyalar regressiyasiz.
+   */
+  snapshotNormaVersion(sessionId: number, tx?: DrizzleExecutor): Promise<Result<number | null>>;
+
+  /**
    * Loads the TB-safety / smena-readiness checklist status for a session from the
    * canonical `setup_checklists` + `checklist_items` tables (required items only).
    * Feeds {@link ProductionSession.passChecklist} so the start gate is real (Q-40).

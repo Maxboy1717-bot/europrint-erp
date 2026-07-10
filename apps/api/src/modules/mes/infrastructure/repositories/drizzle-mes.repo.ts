@@ -216,6 +216,43 @@ export class DrizzleMesRepository implements IMesRepository {
   }
 
   /**
+   * 08-mes #4 — Sessiya BOSHLANGANDAGI norma versiyasini snapshot qiladi (retro-buzilmaslik).
+   *
+   * Vizyon (vision-1000-answers/08-mes.md #4): sessiya boshlanganda O'SHA PAYTDA amalda bo'lgan
+   * norma versiyasi qo'llanadi va MUZLATILADI — norma keyin yangi versiyaga o'zgartirilsa
+   * (yuqori version + kechroq effective_date), allaqachon boshlangan sessiya eski versiyada
+   * qoladi (retrospektiv buzilish yo'q).
+   *
+   * Snapshot = sessiya started_at sanasida amalda bo'lgan (effective_date <= started_at) eng
+   * yuqori AKTIV norma versiyasi (material_norms). `norma_version IS NULL` sharti bir marta
+   * yozilgach qayta yozilishni bloklaydi (first-write-wins — saveSession qayta chaqirilsa ham
+   * muzlaydi). Norma qatori 0 bo'lsa MAX() NULL qaytaradi — ustun NULL qoladi, mavjud sessiyalar
+   * buzilmaydi. Qaytadi: snapshot qilingan versiya, yoki NULL.
+   */
+  async snapshotNormaVersion(sessionId: number, tx?: DrizzleExecutor): Promise<Result<number | null>> {
+    try {
+      const r = await exec(sql`
+        UPDATE production_sessions ps
+        SET norma_version = (
+              SELECT MAX(mn.version)
+              FROM material_norms mn
+              WHERE mn.is_active = true
+                AND mn.deleted_at IS NULL
+                AND COALESCE(mn.effective_date, mn.created_at::date)
+                    <= COALESCE(ps.started_at::date, CURRENT_DATE)
+            )
+        WHERE ps.id = ${sessionId}
+          AND ps.norma_version IS NULL
+        RETURNING ps.norma_version AS norma_version`, tx);
+      const v = r[0]?.norma_version;
+      return Ok(v == null ? null : Number(v));
+    } catch (e: unknown) {
+      this.logger.error('Failed to snapshot norma version');
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Norma versiyasini snapshot qilishda xatolik'));
+    }
+  }
+
+  /**
    * Reads the session's TB-safety / smena-readiness checklist from the canonical
    * `setup_checklists` (one row per session) → `checklist_items` tables. Returns
    * only REQUIRED items: total count + titles of those not yet completed. The

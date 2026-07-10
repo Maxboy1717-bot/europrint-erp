@@ -110,6 +110,24 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       return Err(saveResult.error);
     }
 
+    // 08-mes #4 — Sessiya boshlanganda amaldagi norma versiyasini muzlatib snapshot qilamiz
+    // (retro-buzilmaslik). started_at endi saveSession orqali yozilgan; shu sanada amalda
+    // bo'lgan (effective_date <= started_at) versiya production_sessions.norma_version ga
+    // yoziladi. Snapshot xatosi/NULL START'ni BLOKLAMAYDI (norma qatori bo'lmasligi mumkin) —
+    // faqat log qilinadi, sessiya ishlashda davom etadi (Q-46 regressiya himoyasi).
+    const normaSnapshot = await this.mesRepo.snapshotNormaVersion(command.sessionId, tx);
+    if (!normaSnapshot.ok) {
+      this.logger.warn(
+        { sessionId: command.sessionId, error: normaSnapshot.error },
+        'Norma versiya snapshot xatoligi (start bloklanmadi)',
+      );
+    } else {
+      this.logger.log(
+        { sessionId: command.sessionId, normaVersion: normaSnapshot.data },
+        'Norma versiyasi snapshot qilindi',
+      );
+    }
+
     this.logger.log('MES session started');
     return Ok(undefined);
   }
