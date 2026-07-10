@@ -80,8 +80,14 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
 
   async listRequisitions(status: string | undefined, lim: number, off: number): Promise<Result<Row[]>>  {
   try {
+      // vision 11-mm#10: expose an `overdue_days` computed field ('+N kun' warning)
+      // for the approver dashboard. Display-only — the requisition status is NEVER
+      // auto-changed (no auto-reject). NULL-safe (0 when needed_by unset) and
+      // clamped to >= 0 (never negative for not-yet-due requisitions).
       const rows = await runQuery<Row>(sql`
-        SELECT pr.*, e.full_name AS requested_by_name
+        SELECT pr.*, e.full_name AS requested_by_name,
+               CASE WHEN pr.needed_by IS NOT NULL AND pr.needed_by < CURRENT_DATE
+                    THEN (CURRENT_DATE - pr.needed_by) ELSE 0 END AS overdue_days
         FROM mm_purchase_requisitions pr
         LEFT JOIN employees e ON e.id = pr.requested_by
         WHERE ${status ?? null}::text IS NULL OR pr.status = ${status ?? null}
