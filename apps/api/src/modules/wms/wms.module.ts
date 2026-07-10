@@ -146,6 +146,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { OffHoursAuditRepository } from './infrastructure/repositories/off-hours-audit.repository';
 import { OffHoursAuditService } from './application/off-hours-audit.service';
 import { OffHoursReportCron } from './infrastructure/cron/off-hours-report.cron';
+// WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya (cron→service→repo).
+import { InternalRequestEscalationCron } from './infrastructure/cron/internal-request-escalation.cron';
+import { InternalRequestEscalationService } from './application/internal-request-escalation.service';
+import { InternalRequestEscalationRepository } from './infrastructure/repositories/internal-request-escalation.repository';
 
 const handlers = [
   GoodsIssueHandler,
@@ -291,6 +295,10 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     OffHoursAuditRepository,
     OffHoursAuditService,
     OffHoursReportCron,
+    // WMS #32 (vizyon 10-warehouse.md #32) — "Rohler chaqiruv" 15/30/60 daqiqa eskalatsiya.
+    InternalRequestEscalationRepository,
+    InternalRequestEscalationService,
+    InternalRequestEscalationCron,
   ],
   exports: [WMS_REPO],
 })
