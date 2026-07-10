@@ -63,12 +63,39 @@ export interface PosMovement {
 }
 
 /* ════════════════════════════════════════════════════════════════
+   FLOW 4 — CRM offline capture (lead + activity)  [vision 13-crm#50]
+   ════════════════════════════════════════════════════════════════
+   Offline-first for lead + activity CREATE only. KP (kommercheskoye
+   predlozheniye / quotation) is intentionally NOT queued here → it stays
+   online-only by construction. Conflict policy = server-wins: on reconnect
+   each queued create is replayed to its live endpoint and the SERVER's
+   canonical record (server-assigned id) is adopted; the local draft is
+   marked synced and never overwrites server state.
+   `synced` is stored as a NUMBER (0=pending, 1=synced) — IndexedDB cannot
+   index booleans, so a numeric flag guarantees the `.where("synced")`
+   index query (and the compound `[kind+synced]` index) return pending rows.
+   ════════════════════════════════════════════════════════════════ */
+export type CrmDraftKind = "lead" | "activity";
+
+export interface CrmOfflineDraft {
+  id?:        number;
+  localId:    string;
+  kind:       CrmDraftKind;
+  payload:    Record<string, unknown>;
+  capturedAt: number;
+  synced:     number;   // 0 = pending, 1 = synced
+  serverId?:  number;
+  syncError?: string;
+}
+
+/* ════════════════════════════════════════════════════════════════
    Dexie database
    ════════════════════════════════════════════════════════════════ */
 export class ErpOfflineDatabase extends Dexie {
   qcGoldenSamples!:  Table<QcGoldenSample,      string>;
   qcRecheckQueue!:   Table<QcDeferredRecheck,   number>;
   posMovements!:     Table<PosMovement,          number>;
+  crmQueue!:         Table<CrmOfflineDraft,      number>;
 
   constructor() {
     super("erp_offline_v2");
@@ -76,6 +103,11 @@ export class ErpOfflineDatabase extends Dexie {
       qcGoldenSamples: "id, productCode, schemaVersion, cachedAt",
       qcRecheckQueue:  "++id, localId, workOrderId, synced, capturedAt",
       posMovements:    "++id, localId, deviceId, synced, conflicted, wallClock",
+    });
+    // v2: CRM offline capture queue (lead + activity). Dexie carries the v1
+    // stores forward automatically; only the new store is declared here.
+    this.version(2).stores({
+      crmQueue: "++id, localId, kind, synced, capturedAt, [kind+synced]",
     });
   }
 }
@@ -260,17 +292,76 @@ export async function syncPosMovements(
 }
 
 /* ════════════════════════════════════════════════════════════════
+   Flow 4 helpers — CRM offline capture (lead + activity)  [13-crm#50]
+   ════════════════════════════════════════════════════════════════ */
+const CRM_ENDPOINT_BY_KIND: Record<CrmDraftKind, string> = {
+  lead:     "/crm/leads",
+  activity: "/crm/activities",
+};
+
+/** Enqueue an offline CRM create. `payload` is the exact request body that will
+ *  be replayed to the live create endpoint on reconnect. Returns the localId. */
+export async function queueCrmDraft(
+  kind: CrmDraftKind,
+  payload: Record<string, unknown>,
+): Promise<string> {
+  const localId = crypto.randomUUID();
+  await erpDb.crmQueue.add({ localId, kind, payload, capturedAt: Date.now(), synced: 0 });
+  return localId;
+}
+
+export function queueCrmLead(payload: Record<string, unknown>): Promise<string> {
+  return queueCrmDraft("lead", payload);
+}
+
+export function queueCrmActivity(payload: Record<string, unknown>): Promise<string> {
+  return queueCrmDraft("activity", payload);
+}
+
+/** Replay every pending CRM draft to its live endpoint (oldest first).
+ *  Server-wins (vision 13-crm#50): the server's returned id is adopted as
+ *  canonical and the draft is marked synced; a failed replay keeps the draft
+ *  (with syncError) for the next attempt and is never force-pushed over the
+ *  server. */
+export async function syncCrmQueue(
+  apiPost: (path: string, body: unknown) => Promise<unknown>,
+): Promise<{ success: number; failed: number }> {
+  const pending = await erpDb.crmQueue.where("synced").equals(0).sortBy("capturedAt");
+  let success = 0; let failed = 0;
+  for (const item of pending) {
+    try {
+      const res = await apiPost(CRM_ENDPOINT_BY_KIND[item.kind], item.payload);
+      const serverId = (res as { id?: unknown })?.id;
+      await erpDb.crmQueue.update(item.id!, {
+        synced:    1,
+        serverId:  typeof serverId === "number" ? serverId : undefined,
+        syncError: undefined,
+      });
+      success++;
+    } catch (err) {
+      await erpDb.crmQueue.update(item.id!, { syncError: err instanceof Error ? err.message : String(err) });
+      failed++;
+    }
+  }
+  return { success, failed };
+}
+
+/* ════════════════════════════════════════════════════════════════
    Summary counts
    ════════════════════════════════════════════════════════════════ */
 export async function getPendingSyncCount(): Promise<{
-  qcRechecks:  number;
-  posMovements: number;
-  conflicts:   number;
+  qcRechecks:    number;
+  posMovements:  number;
+  conflicts:     number;
+  crmLeads:      number;
+  crmActivities: number;
 }> {
-  const [qcRechecks, posMovements, conflicts] = await Promise.all([
+  const [qcRechecks, posMovements, conflicts, crmLeads, crmActivities] = await Promise.all([
     erpDb.qcRecheckQueue.where("synced").equals(0).count(),
     erpDb.posMovements.where("synced").equals(0).count(),
     erpDb.posMovements.where("conflicted").equals(1).count(),
+    erpDb.crmQueue.where("[kind+synced]").equals(["lead", 0]).count(),
+    erpDb.crmQueue.where("[kind+synced]").equals(["activity", 0]).count(),
   ]);
-  return { qcRechecks, posMovements, conflicts };
+  return { qcRechecks, posMovements, conflicts, crmLeads, crmActivities };
 }

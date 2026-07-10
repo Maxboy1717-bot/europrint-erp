@@ -13,6 +13,7 @@ import {
   User, Building2, X, DollarSign, Sparkles,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queueCrmLead } from "@/lib/erp-offline-db";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 import type { QuickCreateModalProps, EntityType } from "./crm-types";
@@ -83,9 +84,20 @@ export function QuickCreateModal({ entityType, onClose }: QuickCreateModalProps)
     mutationFn: async (force: boolean) => {
       const endpoint = ENDPOINTS[entityType];
       if (!endpoint) throw new Error("Unknown entity type");
+      // vision 13-crm#50: lead capture works offline (queued + auto-synced on
+      // reconnect, server-wins). Deals/contacts/companies stay online-only.
+      if (entityType === "leads" && !navigator.onLine) {
+        await queueCrmLead(buildPayload("leads", form, force));
+        return { __offlineQueued: true };
+      }
       return apiRequest("POST", endpoint, buildPayload(entityType, form, force));
     },
-    onSuccess: () => {
+    onSuccess: (res: unknown) => {
+      if ((res as { __offlineQueued?: boolean } | null)?.__offlineQueued) {
+        toast({ title: "📵 Oflayn saqlandi", description: "Tarmoq tiklanganda avtomatik yuboriladi" });
+        onClose();
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: [`/api/crm/${entityType}`] });
       toast({ title: "Yaratildi" });
       onClose();

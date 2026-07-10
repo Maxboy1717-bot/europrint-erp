@@ -9,30 +9,35 @@ import {
   getPendingSyncCount,
   syncQcRecheckQueue,
   syncPosMovements,
+  syncCrmQueue,
 } from "@/lib/erp-offline-db";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SyncStatus {
-  qcRechecks:   number;
-  posMovements: number;
-  conflicts:    number;
-  syncing:      boolean;
-  isOnline:     boolean;
+  qcRechecks:    number;
+  posMovements:  number;
+  conflicts:     number;
+  crmLeads:      number;
+  crmActivities: number;
+  syncing:       boolean;
+  isOnline:      boolean;
 }
 
 export function useErpOfflineSync() {
   const { toast } = useToast();
   const [status, setStatus] = useState<SyncStatus>({
-    qcRechecks:   0,
-    posMovements: 0,
-    conflicts:    0,
-    syncing:      false,
-    isOnline:     navigator.onLine,
+    qcRechecks:    0,
+    posMovements:  0,
+    conflicts:     0,
+    crmLeads:      0,
+    crmActivities: 0,
+    syncing:       false,
+    isOnline:      navigator.onLine,
   });
 
   const refreshCounts = useCallback(async () => {
     const counts = await getPendingSyncCount().catch(() => ({
-      qcRechecks: 0, posMovements: 0, conflicts: 0,
+      qcRechecks: 0, posMovements: 0, conflicts: 0, crmLeads: 0, crmActivities: 0,
     }));
     setStatus((prev) => ({ ...prev, ...counts }));
   }, []);
@@ -44,13 +49,14 @@ export function useErpOfflineSync() {
     }
     setStatus((prev) => ({ ...prev, syncing: true }));
     try {
-      const [qcRes, posRes] = await Promise.all([
+      const [qcRes, posRes, crmRes] = await Promise.all([
         syncQcRecheckQueue((path, body) => apiRequest('POST', `/api${path}`, body)),
         syncPosMovements((path, body) => apiRequest('POST', `/api${path}`, body)),
+        syncCrmQueue((path, body) => apiRequest('POST', `/api${path}`, body)),
       ]);
 
-      const total     = qcRes.success + posRes.success;
-      const failed    = qcRes.failed  + posRes.failed;
+      const total     = qcRes.success + posRes.success + crmRes.success;
+      const failed    = qcRes.failed  + posRes.failed  + crmRes.failed;
       const conflicts = posRes.conflicts;
 
       if (total > 0 || failed > 0 || conflicts > 0) {
@@ -90,7 +96,7 @@ export function useErpOfflineSync() {
     };
   }, [refreshCounts, syncAll, toast]);
 
-  const totalPending = status.qcRechecks + status.posMovements;
+  const totalPending = status.qcRechecks + status.posMovements + status.crmLeads + status.crmActivities;
 
   return { status, totalPending, syncAll, refreshCounts };
 }

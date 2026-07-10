@@ -10,12 +10,14 @@ const {
   getPendingSyncCountMock,
   syncQcRecheckQueueMock,
   syncPosMovementsMock,
+  syncCrmQueueMock,
   toastMock,
   apiRequestMock,
 } = vi.hoisted(() => ({
   getPendingSyncCountMock: vi.fn(),
   syncQcRecheckQueueMock: vi.fn(),
   syncPosMovementsMock: vi.fn(),
+  syncCrmQueueMock: vi.fn(),
   toastMock: vi.fn(),
   apiRequestMock: vi.fn(),
 }));
@@ -24,6 +26,7 @@ vi.mock('@/lib/erp-offline-db', () => ({
   getPendingSyncCount: () => getPendingSyncCountMock(),
   syncQcRecheckQueue: (req: unknown) => syncQcRecheckQueueMock(req),
   syncPosMovements: (req: unknown) => syncPosMovementsMock(req),
+  syncCrmQueue: (req: unknown) => syncCrmQueueMock(req),
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -41,6 +44,7 @@ describe('useErpOfflineSync', () => {
     getPendingSyncCountMock.mockReset();
     syncQcRecheckQueueMock.mockReset();
     syncPosMovementsMock.mockReset();
+    syncCrmQueueMock.mockReset();
     toastMock.mockReset();
     apiRequestMock.mockReset();
     Object.defineProperty(navigator, 'onLine', {
