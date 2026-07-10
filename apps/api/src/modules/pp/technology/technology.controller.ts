@@ -64,6 +64,7 @@ const RouteDto = z.object({
   normPerHour: z.coerce.number().optional(), setupMinutes: z.coerce.number().int().optional(),
   scrapFixed: z.coerce.number().int().optional(), scrapPct: z.coerce.number().optional(),
   minRazryad: z.coerce.number().int().optional(), isCore: z.boolean().optional(),
+  operationSubtype: z.enum(['pvc_window']).optional(), materialId: z.coerce.number().int().positive().optional(),
 });
 
 

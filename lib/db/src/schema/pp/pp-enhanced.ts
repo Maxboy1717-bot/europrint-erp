@@ -582,6 +582,11 @@ export const techCardRoutes = pgTable("tech_card_routes", {
   scrapFixed: integer("scrap_fixed"),
   scrapPct: numericMoney("scrap_pct"),
   minRazryad: integer("min_razryad"),
+  // EP-PP-112 (§07 #118) — Oynakcha (PVC window) = alohida bosqich. operationSubtype='pvc_window'
+  // flags a route op as the window-patch stage; materialId links the PVX film it consumes
+  // (plain integer + DB-level FK to material_cards — same no-cross-file-FK convention as machineId).
+  operationSubtype: varchar("operation_subtype", { length: 30 }),
+  materialId: integer("material_id"),
   isCore: boolean("is_core").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });

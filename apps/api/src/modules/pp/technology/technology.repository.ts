@@ -334,8 +334,8 @@ export class TechnologyRepository {
   async addRoute(cardId: string, route: AddRouteInput): Promise<Result<Row>> {
     try {
       const r = await db.execute(sql`
-        INSERT INTO tech_card_routes (technology_card_id, op_seq, operation, machine_id, alt_machine_id, norm_per_hour, setup_minutes, scrap_fixed, scrap_pct, min_razryad, is_core)
-        VALUES (${parseInt(cardId, 10)}, ${route.opSeq}, ${route.operation}, ${route.machineId ?? null}, ${route.altMachineId ?? null}, ${route.normPerHour ?? null}, ${route.setupMinutes ?? null}, ${route.scrapFixed ?? null}, ${route.scrapPct ?? null}, ${route.minRazryad ?? null}, ${route.isCore ?? false})
+        INSERT INTO tech_card_routes (technology_card_id, op_seq, operation, machine_id, alt_machine_id, norm_per_hour, setup_minutes, scrap_fixed, scrap_pct, min_razryad, is_core, operation_subtype, material_id)
+        VALUES (${parseInt(cardId, 10)}, ${route.opSeq}, ${route.operation}, ${route.machineId ?? null}, ${route.altMachineId ?? null}, ${route.normPerHour ?? null}, ${route.setupMinutes ?? null}, ${route.scrapFixed ?? null}, ${route.scrapPct ?? null}, ${route.minRazryad ?? null}, ${route.isCore ?? false}, ${route.operationSubtype ?? null}, ${route.materialId ?? null})
         RETURNING *`);
       const row = ((r as { rows?: Row[] }).rows ?? [])[0];
       return row ? Ok(row) : Err('Marshrut qatori qoʻshilmadi');
@@ -415,6 +415,7 @@ export type UpdateCardInput = Omit<CreateCardInput, 'createdBy'> & { status?: st
 export interface AddRouteInput {
   opSeq: number; operation: string; machineId?: number; altMachineId?: number; normPerHour?: number;
   setupMinutes?: number; scrapFixed?: number; scrapPct?: number; minRazryad?: number; isCore?: boolean;
+  operationSubtype?: string; materialId?: number;
 }
 
 function jb(v: unknown): string | null { return v === undefined || v === null ? null : JSON.stringify(v); }
