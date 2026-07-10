@@ -4,6 +4,7 @@
  */
 
 import { numericMoney } from "./numeric-money";
+import { index, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, date, jsonb, unique, uuid, check, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -329,6 +330,46 @@ export const qcMaterialScanLog = pgTable("qc_material_scan_log", {
 });
 
 export type QcMaterialScanLog = typeof qcMaterialScanLog.$inferSelect;
+
+
+// ========== Vision 09-qc #26: Yakuniy sifat xulosasi (per-dispatch + yakuniy, N+1) ==========
+// PP buyurtma "Yopildi" da bitta yakuniy xulosa (deliveryId NULL); qisman yetkazishda
+// har dispatch tasdiqlanganda bitta per-dispatch xulosa (deliveryId SET) — jami N+1 yozuv.
+// Partial unique index'lar N+1 shaklini kafolatlaydi: buyurtmaga ko'pi bilan 1 ta 'final',
+// (buyurtma, dispatch) juftligiga ko'pi bilan 1 ta xulosa. FK'lar (production_orders/deliveries/
+// users) DDL migratsiyada — jonli integer PK'lar bilan; Drizzle'da plain ustun (tip-drift oldini olish).
+export const qcDispatchConclusions = pgTable("qc_dispatch_conclusions", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").notNull(),   // PP buyurtma (FK production_orders — DDL)
+  deliveryId: integer("delivery_id"),                            // dispatch (FK deliveries — DDL); NULL = yakuniy
+  conclusionType: varchar("conclusion_type", { length: 20 }).notNull().default("dispatch"), // dispatch | final
+  totalInspected: integer("total_inspected").notNull().default(0),
+  totalPassed: integer("total_passed").notNull().default(0),
+  totalDefects: integer("total_defects").notNull().default(0),
+  defectRate: numericMoney("defect_rate"),                       // nuqson foizi (0-100)
+  verdict: varchar("verdict", { length: 20 }).notNull().default("pending"), // pending|passed|conditional_pass|failed
+  summary: jsonb("summary"),                                     // per-dispatch / kumulyativ breakdown
+  notes: text("notes"),
+  concludedBy: integer("concluded_by"),                          // FK users(id) — DDL (Drizzle'da plain)
+  concludedAt: timestamp("concluded_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => [
+  check("qc_dispatch_conclusions_type_chk", sql`${t.conclusionType} IN ('dispatch','final')`),
+  check("qc_dispatch_conclusions_verdict_chk", sql`${t.verdict} IN ('pending','passed','conditional_pass','failed')`),
+  check("qc_dispatch_conclusions_final_no_delivery_chk", sql`(${t.conclusionType} = 'final') = (${t.deliveryId} IS NULL)`),
+  uniqueIndex("uq_qc_dispatch_conclusions_final").on(t.productionOrderId).where(sql`${t.deliveryId} IS NULL`),
+  uniqueIndex("uq_qc_dispatch_conclusions_dispatch").on(t.productionOrderId, t.deliveryId).where(sql`${t.deliveryId} IS NOT NULL`),
+  index("idx_qc_dispatch_conclusions_order").on(t.productionOrderId),
+]);
+
+export const insertQcDispatchConclusionSchema = createInsertSchema(qcDispatchConclusions, {
+  productionOrderId: z.number().int().positive(),
+  conclusionType: z.enum(["dispatch", "final"]),
+  verdict: z.enum(["pending", "passed", "conditional_pass", "failed"]).default("pending"),
+}).omit({ id: true, createdAt: true, concludedAt: true } as never);
+
+export type QcDispatchConclusion = typeof qcDispatchConclusions.$inferSelect;
+export type InsertQcDispatchConclusion = z.infer<typeof insertQcDispatchConclusionSchema>;
 
 
 // ========== vision 09-qc#8: ISO 2859 kuchaytirilgan nazorat rejimi (per-supplier + per-material) ==========
