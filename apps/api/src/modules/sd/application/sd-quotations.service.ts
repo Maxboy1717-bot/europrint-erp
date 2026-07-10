@@ -34,6 +34,7 @@ import {
   KpiTargetPatch,
   PriceFormulaPatch,
 } from '../domain/repositories/i-quotation.repo';
+import type { QuotationPdfData, QuotationPdfLine } from '../invoices/sd-quotation-pdf.service';
 
 type Row = Record<string, unknown>;
 
@@ -61,6 +62,47 @@ export class SdQuotationsService {
 
   async createQuotation(body: Record<string, unknown>) {
     return this.repo.createQuotation(body);
+  }
+
+  /**
+   * EP-SD (vision 06 #108): build the typed KP-PDF payload from the clean header
+   * (getQuotationForPdf) + line rows (getQuotationItems). Margin/cost_price are
+   * NOT included — the KP is customer-facing. NOT_FOUND when the quotation is absent.
+   */
+  async getQuotationPdfData(id: string): Promise<Result<QuotationPdfData, AppError>> {
+    const hdrR = await this.repo.getQuotationForPdf(id);
+    if (!hdrR.ok) return hdrR as Result<QuotationPdfData, AppError>;
+    const hdr = hdrR.data;
+    if (!hdr) return Err(AppErr('NOT_FOUND', `Kotirovka ${id} topilmadi`));
+    const itemsR = await this.repo.getQuotationItems(id);
+    if (!itemsR.ok) return itemsR as Result<QuotationPdfData, AppError>;
+    const num = (v: unknown, d = 0): number => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+    const rows = Array.isArray(itemsR.data) ? itemsR.data : [];
+    const lines: QuotationPdfLine[] = rows.map((it) => {
+      const quantity = num(it['quantity']);
+      const unitPrice = num(it['unit_price']);
+      return {
+        name: String(it['product_type'] ?? '—'),
+        paperType: String(it['paper_type'] ?? ''),
+        quantity,
+        unitPrice,
+        colors: num(it['print_colors']),
+        lineTotal: quantity * unitPrice,
+      };
+    });
+    return Ok({
+      quotationNumber: String(hdr['quotation_number'] ?? id),
+      customerName: String(hdr['customer_name'] ?? ''),
+      status: String(hdr['status'] ?? 'draft'),
+      quotationDate: (hdr['quotation_date'] as string | null) ?? null,
+      validUntil: (hdr['valid_until'] as string | null) ?? null,
+      subtotal: num(hdr['net_value'] ?? hdr['total_value']),
+      taxAmount: num(hdr['tax_amount']),
+      totalAmount: num(hdr['total_amount'] ?? hdr['total_value']),
+      currency: String(hdr['currency'] ?? 'UZS'),
+      notes: (hdr['notes'] as string | null) ?? null,
+      lines,
+    });
   }
 
   async listContracts(customerId: number | null, status: string | null, lim: number, off: number) {

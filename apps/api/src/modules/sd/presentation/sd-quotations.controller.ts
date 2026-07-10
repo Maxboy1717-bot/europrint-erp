@@ -7,7 +7,8 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { safeInt } from '../../hr/common/db-rows';
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus,
-  Param, Patch, Post, Put, Query, UseGuards, UseInterceptors, UsePipes,
+  Param, Patch, Post, Put, Query, Res, Logger, InternalServerErrorException,
+  UseGuards, UseInterceptors, UsePipes,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -25,6 +26,8 @@ import { SdQuotationsService } from '../application/sd-quotations.service';
 import { z } from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@auth/types';
+import { FastifyReply } from 'fastify';
+import { SdQuotationPdfService } from '../invoices/sd-quotation-pdf.service';
 
 const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 
@@ -63,7 +66,11 @@ const SdPriceSettingsSchema = z.object({
 @ApiBearerAuth()
 @Controller('sd')
 export class SdQuotationsController {
-  constructor(private readonly svc: SdQuotationsService) {}
+  private readonly logger = new Logger(SdQuotationsController.name);
+  constructor(
+    private readonly svc: SdQuotationsService,
+    private readonly pdfSvc: SdQuotationPdfService,
+  ) {}
 
   @ApiOperation({ summary: 'List quotations' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -85,6 +92,26 @@ export class SdQuotationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('quotations') @UsePipes(new ZodValidationPipe(SdCreateQuotationSchema))
   async createQuotation(@Body() body: SdCreateQuotationDto) { return unwrapOrThrow(await this.svc.createQuotation(body)); }
+
+  @ApiOperation({ summary: 'Kotirovka (KP) PDF' })
+  @ApiResponse({ status: 200, description: 'PDF fayl' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Get('quotations/:id/pdf')
+  async downloadQuotationPdf(@Param('id') id: string, @Res() res: FastifyReply) {
+    // unwrapOrThrow: NOT_FOUND -> 404 (throwFromError mapping), otherwise narrows to the data.
+    const data = unwrapOrThrow(await this.svc.getQuotationPdfData(id));
+    const pdfR = await this.pdfSvc.generateQuotationPdf(data);
+    if (!pdfR.ok) {
+      this.logger.error(`KP PDF generatsiya xatoligi (id=${id}): ${pdfR.error.message}`);
+      throw new InternalServerErrorException(pdfR.error.message);
+    }
+    const buffer = pdfR.data;
+    res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="kp-${id}.pdf"`)
+      .header('Content-Length', buffer.length)
+      .send(buffer);
+  }
 
   // NOTE: GET /sd/contracts olib tashlandi — SdContractsController ushlab turadi.
 

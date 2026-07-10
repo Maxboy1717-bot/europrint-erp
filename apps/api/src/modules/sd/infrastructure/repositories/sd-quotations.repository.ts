@@ -199,6 +199,31 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     return Ok(r.data[0] ?? null);
   }
 
+  // KP-PDF uchun toza sarlavha. getQuotationById dagi `q.*, c.name AS customer_name`
+  // dublikat-alias mijoz JOIN topilmaganda q.customer_name ni NULL ga tushiradi
+  // (DB-proof bilan tasdiqlangan) — shu bug'dan qochish uchun COALESCE ishlatiladi.
+  async getQuotationForPdf(id: string): Promise<Result<Row | null>> {
+    const r = await exec(sql`
+      SELECT q.quotation_number, COALESCE(c.name, q.customer_name) AS customer_name, q.status,
+             q.quotation_date, q.valid_until, q.net_value, q.tax_amount, q.total_value,
+             q.total_amount, q.currency, q.notes
+      FROM sd_quotations q
+      LEFT JOIN sd_customers c ON c.id = q.customer_id
+      WHERE q.id = ${id} AND q.deleted_at IS NULL LIMIT 1
+    `);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
+  }
+
+  async getQuotationItems(id: string): Promise<Result<Row[]>> {
+    return exec(sql`
+      SELECT product_type, paper_type, quantity, unit_price, print_colors
+      FROM sd_quotation_items
+      WHERE quotation_id = ${id}
+      ORDER BY id
+    `);
+  }
+
   async convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>> {
     return safeCall(async () => {
       const quotationResult = await this.getQuotationById(id);

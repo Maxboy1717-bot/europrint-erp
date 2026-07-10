@@ -21,6 +21,8 @@ export interface ISdQuotationsRepo {
   getKpiTargets(managerId: number | null): Promise<Result<Row[]>>;
   getFunnelReport(): Promise<Result<Row>>;
   getQuotationById(id: string): Promise<Result<Row | null>>;
+  getQuotationForPdf(id: string): Promise<Result<Row | null>>;
+  getQuotationItems(id: string): Promise<Result<Row[]>>;
   convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>>;
 }
 
