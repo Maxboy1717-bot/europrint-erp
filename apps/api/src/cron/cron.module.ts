@@ -64,6 +64,10 @@ import { DrizzleSdCustomerAbcRepository } from '../modules/sd/infrastructure/rep
 // 2.18 (MASTER-REJA-VIZYON) — AI-fit haftalik avto-tsikl (har faol karta+xodim evaluate())
 import { AiFitWeeklyCron } from './ai-fit-weekly.cron'
 import { AiFitModule } from '../modules/ai/ai-fit.module'
+// 02-hr #46 (vizyon) — "E'tibor talab qiluvchi xodim" haftalik HR digest (Dushanba 09:00);
+// HrAttentionDigestRepository = standalone (typedExecute); RBAC = AbsenceBlockRepository.findHrManagersWithTelegram()
+import { HrAttentionDigestCron } from './hr-attention-digest.cron'
+import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.repository'
 
 @Module({
   imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule],
@@ -131,6 +135,9 @@ import { AiFitModule } from '../modules/ai/ai-fit.module'
     { provide: SD_CUSTOMER_ABC_REPO, useClass: DrizzleSdCustomerAbcRepository },
     // 2.18 — AI-fit haftalik avto-tsikl (Dushanba 03:00); AiFitService = AiFitModule'dan (import qilingan, exported)
     AiFitWeeklyCron,
+    // 02-hr #46 — "E'tibor talab qiluvchi xodim" haftalik HR digest (Dushanba 09:00)
+    HrAttentionDigestCron,
+    HrAttentionDigestRepository,
   ],
   exports: [CronStatusService],
 })
