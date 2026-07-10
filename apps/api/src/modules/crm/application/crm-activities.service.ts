@@ -34,8 +34,8 @@ export class CrmActivitiesService {
     });
   }
 
-  async create(type: unknown, subject: unknown, lead_id: unknown, deal_id: unknown, assigned_to: unknown, due_date: unknown, notes: unknown, status: unknown) {
-    return this.repo.create(type, subject, lead_id, deal_id, assigned_to, due_date, notes, status);
+  async create(type: unknown, subject: unknown, lead_id: unknown, deal_id: unknown, assigned_to: unknown, due_date: unknown, notes: unknown, status: unknown, communication_data: unknown, scheduled_at: unknown) {
+    return this.repo.create(type, subject, lead_id, deal_id, assigned_to, due_date, notes, status, communication_data, scheduled_at);
   }
 
   async update(aid: number, body: Record<string, unknown>) {

@@ -109,6 +109,7 @@ export const crm_activities = pgTable('crm_activities', {
   subject:     text('subject'),
   notes:       text('notes'),
   outcome:     text('outcome'),
+  communication_data: jsonb('communication_data'),
   scheduled_at: timestamp('scheduled_at'),
   completed_at: timestamp('completed_at'),
   due_date:    timestamp('due_date'),

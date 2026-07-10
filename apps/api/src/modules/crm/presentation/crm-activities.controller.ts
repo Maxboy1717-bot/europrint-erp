@@ -85,7 +85,7 @@ export class CrmActivitiesController {
   async create(@Body() body: CreateActivityDto) {
     assertRequired(body.type, await this.i18n.t('validation.typeAndSubjectRequired'));
     assertRequired(body.subject, await this.i18n.t('validation.typeAndSubjectRequired'));
-    return unwrapOrThrow(await this.svc.create(body.type, body.subject, body.lead_id, body.deal_id, body.assigned_to, body.due_date, body.notes, body.status));
+    return unwrapOrThrow(await this.svc.create(body.type, body.subject, body.lead_id, body.deal_id, body.assigned_to, body.due_date, body.notes, body.status, body.communication_data, body.scheduled_at));
   }
 
   @ApiOperation({ summary: 'Complete' })
