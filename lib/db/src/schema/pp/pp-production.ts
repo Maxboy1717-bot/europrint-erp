@@ -481,6 +481,11 @@ export const productionOrderOperations = pgTable("production_order_operations", 
   plannedDuration: numericMoney("planned_duration").notNull().default(0),
   actualDuration: numericMoney("actual_duration").notNull().default(0),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
+  // vision 07-pp#46: op enters the work-center queue at queued_at; the gap
+  // queued_at -> started_at is WAITING time (not machine work) and is EXCLUDED from the
+  // OEE availability denominator (which uses active work = completed_at - started_at).
+  // NULL = untracked -> 0 queue time, so existing rows keep their current OEE contribution.
+  queuedAt: timestamp("queued_at"),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   operatorId: integer("operator_id"),

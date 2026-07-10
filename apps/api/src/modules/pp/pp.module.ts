@@ -102,6 +102,12 @@ import { PpReasonCodesController } from './reason-codes/pp-reason-codes.controll
 import { PpReasonCodesService } from './reason-codes/pp-reason-codes.service';
 import { PP_REASON_CODES_REPO } from './reason-codes/i-pp-reason-codes.repo';
 import { DrizzlePpReasonCodesRepository } from './reason-codes/drizzle-pp-reason-codes.repo';
+// vision 07-pp#46: operation queue-time tracker -- queue (waiting-for-next-stage) time is
+// tracked distinct from active work and EXCLUDED from the OEE availability denominator.
+import { PpOeeController } from './oee/pp-oee.controller';
+import { PpQueueTimeService } from './oee/pp-queue-time.service';
+import { PP_QUEUE_TIME_REPO } from './oee/i-pp-queue-time.repo';
+import { DrizzlePpQueueTimeRepository } from './oee/drizzle-pp-queue-time.repo';
 
 const handlers = [
   CreateProductionOrderHandler,
@@ -147,6 +153,8 @@ const listeners = [
     GofraConversionController,
     // PP reason-code catalog management surface
     PpReasonCodesController,
+    // vision 07-pp#46: queue-time tracker + OEE queue-exclusion surface
+    PpOeeController,
   ],
   providers: [
     ...handlers,
@@ -197,6 +205,9 @@ const listeners = [
     // PP reason-code catalog
     PpReasonCodesService,
     { provide: PP_REASON_CODES_REPO, useClass: DrizzlePpReasonCodesRepository },
+    // vision 07-pp#46: queue-time tracker + OEE queue-exclusion
+    PpQueueTimeService,
+    { provide: PP_QUEUE_TIME_REPO, useClass: DrizzlePpQueueTimeRepository },
   ],
   exports: [PP_REPO, WORK_CENTER_REPO, BomExplosionService, ProductionService, GofraConversionService],
 })
