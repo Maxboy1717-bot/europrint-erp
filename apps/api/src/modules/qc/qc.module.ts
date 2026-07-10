@@ -4,6 +4,8 @@
  */
 
 import { Module } from '@nestjs/common';
+import { ReferenceSampleController } from './presentation/reference-sample.controller';
+import { ReferenceSampleRepository } from './infrastructure/repositories/reference-sample.repository';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SubmitInspectionHandler } from './application/commands/submit-inspection.handler';
@@ -71,9 +73,9 @@ import { DpmoService } from './domain/services/dpmo.service';
 import { QcAqlService } from './domain/services/qc-aql.service';
 import { GradePricingService } from './domain/services/grade-pricing.service';
 import { InstrumentCalibrationController } from './presentation/instrument-calibration.controller';
-import { InstrumentCalibrationRepository } from './infrastructure/repositories/instrument-calibration.repository';
-import { QcBrakSnapshotRepository } from './infrastructure/repositories/qc-brak-snapshot.repository';
-import { QcBrakSnapshotService } from './application/qc-brak-snapshot.service';
+import { InstrumentCalibrationRepository } from './infrastructure/repositories/instrument-calibration.repository';
+import { QcBrakSnapshotRepository } from './infrastructure/repositories/qc-brak-snapshot.repository';
+import { QcBrakSnapshotService } from './application/qc-brak-snapshot.service';
 import { QcBrakSnapshotController } from './presentation/qc-brak-snapshot.controller';
 import { QcMaterialScanController } from './presentation/qc-material-scan.controller';
 import { QcMaterialScanService } from './application/qc-material-scan.service';
@@ -118,6 +120,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), AuthModule],
   controllers: [
+    ReferenceSampleController,
     QcInspectionsController,
     QcDefectsController,
     QcExtendedController,
@@ -127,11 +130,12 @@ const repositories = [
     QcParametersController,
     PrintController,
     QcDpmoController,
-    InstrumentCalibrationController,
+    InstrumentCalibrationController,
     QcBrakSnapshotController,
     QcMaterialScanController,
   ],
   providers: [
+    ReferenceSampleRepository,
     ...commandHandlers,
     ...eventHandlers,
     ...queryHandlers,
@@ -165,8 +169,8 @@ const repositories = [
     DpmoService,
     QcAqlService,
     GradePricingService,
-    InstrumentCalibrationRepository,
-    QcBrakSnapshotRepository,
+    InstrumentCalibrationRepository,
+    QcBrakSnapshotRepository,
     QcBrakSnapshotService,
     QcMaterialScanRepository,
     QcMaterialScanService,

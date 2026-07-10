@@ -5,6 +5,7 @@
 
 import { numericMoney } from "./numeric-money";
 import { sql } from "drizzle-orm";
+import { date } from "drizzle-orm/pg-core";
 import { serial, pgTable, text, varchar, integer, boolean, timestamp, date, jsonb, unique, uuid, check, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -328,6 +329,36 @@ export const qcMaterialScanLog = pgTable("qc_material_scan_log", {
 });
 
 export type QcMaterialScanLog = typeof qcMaterialScanLog.$inferSelect;
+
+
+// ========== Item 09#67: Arxiv namuna (etalon) 6 oy + joylashuv (TASDIQ-2146 §09 #21) ==========
+// Etalon namuna arxivi: metadata + ombor joylashuvi + 6 oy saqlash muddati.
+// NOTE: repo raw SQL (reference-sample.repository.ts) — bu ta'rif migratsiyaga mos, tsc/schema uchun.
+export const qcReferenceSamples = pgTable("qc_reference_samples", {
+  id: serial("id").primaryKey(),
+  sampleRef: text("sample_ref").notNull(),                          // namuna kodi / etalon nomeri
+  productId: integer("product_id"),
+  orderId: integer("order_id"),
+  inspectionId: integer("inspection_id"),
+  description: text("description"),
+  storageLocation: text("storage_location"),                       // ombor joylashuvi (run-time)
+  responsibleUserId: integer("responsible_user_id"),
+  metadataJson: jsonb("metadata_json").notNull().default(sql`'{}'::jsonb`),
+  archivedAt: timestamp("archived_at", { withTimezone: true }).notNull().defaultNow(),
+  retentionMonths: integer("retention_months").notNull().default(6), // vizyon: 6 oy
+  retentionUntil: date("retention_until"),                         // = archived_at + retention_months
+  status: text("status").notNull().default("archived"),            // archived | disposed
+  disposedAt: timestamp("disposed_at", { withTimezone: true }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  check("ck_qc_ref_sample_status", sql`${t.status} IN ('archived','disposed')`),
+  check("ck_qc_ref_sample_retention", sql`${t.retentionMonths} > 0`),
+]);
+
+export type QcReferenceSample = typeof qcReferenceSamples.$inferSelect;
+
 
 // ========== 09-qc #22: Davriy ichki sifat auditi (qc_internal_audits, cron) ==========
 // Vizyon (vision-1000-answers/09-qc.md #22): davriy ichki sifat auditi QC modulida alohida jadvalda
