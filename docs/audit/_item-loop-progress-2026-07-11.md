@@ -29,9 +29,11 @@ Doc commits: 13d81d43, e9fb66c1 (open-questions). All tsc + hooks green.
 - Harvest loop PROVEN: read spec → verify anchor in live file → apply Edit(s)+newFiles → commit (pre-commit
   tsc validates). **Harvested so far (12): #36 5b5c2a7c, #23 fd313f48, #56 20576be8, #16 e1cc49e2,
   #13 cffdd66f, #55 2c948b8f, #15 e2d579ec, #32 82b37103, #09 9c00fbda, #24 2456338d,
-  #53 c6a0f2ae, #06 db28924a.**
-  RESUME: collision-free remaining — #51,#52,#73,#74,#50,#01,#02,#22,
+  #53 c6a0f2ae, #06 db28924a, #51 004e13aa.**
+  RESUME: collision-free remaining — #52,#73,#74,#50,#01,#02,#22,
   #28,#67,#11,#17,#18,#54,#26,#49 — then same-file clusters (director/kanban/mm/marketing).
+  ~62 ready specs remain (of 75). Each: read spec file scratchpad/specs/NN.json → verify anchors
+  live → apply Edit(s)+newFiles → commit (pre-commit tsc). All 13 so far passed tsc.
   NOTE: verify repo return-shape (camelCase vs snake_case) per spec before applying — spec #09
   looked wrong (snake_case query type) but HistoricalConsumption maps to camelCase; always
   check the mapped RETURN type, not the intermediate query type.
