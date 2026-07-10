@@ -362,6 +362,23 @@ export const HOLAT_SCORE_MIN = 0;
 export const HOLAT_SCORE_MAX = 100;
 
 // ---------------------------------------------------------------------------
+// Director — EP-DIR-005 "Og'ish tezligi" (rate-of-change) decline detector
+// Vision 05-director #3: 2 consecutive daily declines = worsening TREND flag;
+// 3 consecutive daily declines = EP-DIR-005 alert. Vision-given thresholds
+// (NOT owner-configurable), so they live here as named constants (Qoida 12).
+// ---------------------------------------------------------------------------
+
+/** Consecutive daily declines that mark a worsening TREND (early warning). */
+export const DIR_DECLINE_TREND_DAYS = 2;
+
+/** Consecutive daily declines that fire the EP-DIR-005 alert event. */
+export const DIR_DECLINE_ALERT_DAYS = 3;
+
+/** Daily snapshots to read back when measuring the current decline run
+ *  (needs ALERT_DAYS + 1 points to count ALERT_DAYS day-over-day drops). */
+export const DIR_DECLINE_LOOKBACK_DAYS = 4;
+
+// ---------------------------------------------------------------------------
 // MM — 3-Way Match (PO ↔ Goods Receipt ↔ Invoice)
 // The match passes only when the largest pairwise spread between the PO total,
 // the received goods value and the invoice amount stays within this fraction

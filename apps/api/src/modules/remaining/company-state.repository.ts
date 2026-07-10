@@ -86,6 +86,14 @@ export interface OperationsMetrics {
   machinePerformancePct: number;
 }
 
+/** One daily holat score point (the latest snapshot of a calendar day). */
+export interface DailyScoreRow {
+  /** Calendar day, text form of date_trunc('day', detected_at) (YYYY-MM-DD ...). */
+  day: string;
+  /** score_total recorded for that day. */
+  score: number;
+}
+
 @Injectable()
 export class CompanyStateRepository {
   // -------------------------------------------------------------------------
@@ -269,6 +277,63 @@ export class CompanyStateRepository {
         machineAvailabilityPct: num(row.avg_availability),
         machinePerformancePct: num(row.avg_performance),
       };
+    }, 'DB_ERROR');
+  }
+
+  // -------------------------------------------------------------------------
+  // EP-DIR-005 — consecutive daily decline detector ("og'ish tezligi")
+  // -------------------------------------------------------------------------
+
+  /**
+   * Last `days` DAILY holat scores (one row per calendar day — the latest
+   * snapshot of that day), most-recent day first. DISTINCT ON collapses
+   * multiple intra-day snapshots; NULL score_total rows are skipped.
+   */
+  async getRecentDailyScores(days: number): Promise<Result<DailyScoreRow[]>> {
+    return safeCall(async () => {
+      const r = await exec(sql`
+        SELECT day::text AS day, score AS score
+        FROM (
+          SELECT DISTINCT ON (date_trunc('day', detected_at))
+            date_trunc('day', detected_at) AS day,
+            score_total AS score
+          FROM company_state_log
+          WHERE score_total IS NOT NULL
+          ORDER BY date_trunc('day', detected_at) DESC, detected_at DESC
+        ) t
+        ORDER BY day DESC
+        LIMIT ${days}
+      `);
+      return (Array.isArray(r) ? r : []).map((row) => ({
+        day: String(row.day ?? ''),
+        score: Number(row.score ?? 0),
+      }));
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * Emit ONE `EP-DIR-005` row into the canonical `domain_events` outbox for
+   * today, idempotent per calendar day (a second call the same day is a no-op).
+   * The OutboxPublisher re-emits it downstream by event_name. Returns whether a
+   * row was actually written.
+   */
+  async emitDeclineAlertOncePerDay(
+    aggregateId: string,
+    payload: Record<string, unknown>,
+  ): Promise<Result<{ emitted: boolean }>> {
+    return safeCall(async () => {
+      const r = await exec(sql`
+        INSERT INTO domain_events (aggregate_type, aggregate_id, event_name, payload, occurred_at, created_at)
+        SELECT 'CompanyState', ${aggregateId}, 'EP-DIR-005', ${JSON.stringify(payload)}::jsonb, NOW(), NOW()
+        WHERE NOT EXISTS (
+          SELECT 1 FROM domain_events
+          WHERE event_name = 'EP-DIR-005'
+            AND occurred_at >= date_trunc('day', NOW())
+            AND occurred_at <  date_trunc('day', NOW()) + INTERVAL '1 day'
+        )
+        RETURNING id
+      `);
+      return { emitted: Array.isArray(r) && r.length > 0 };
     }, 'DB_ERROR');
   }
 }

@@ -19,6 +19,11 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError } from '@common/result';
+import {
+  DIR_DECLINE_ALERT_DAYS,
+  DIR_DECLINE_TREND_DAYS,
+  DIR_DECLINE_LOOKBACK_DAYS,
+} from '@common/constants/business.constants';
 import { CompanyStateRepository, type StateThresholdRow, type StateLevelRow, type OperationsMetrics } from './company-state.repository';
 import { DirectorHolatService, type WeightMap } from '../director/application/director-holat.service';
 import {
@@ -174,6 +179,61 @@ export class CompanyStateService {
         weights,
         generatedAt: _time.now().toISOString(),
         generated_at: _time.now().toISOString(),
+      };
+    });
+  }
+
+  /**
+   * EP-DIR-005 — "Og'ish tezligi" (rate-of-change) detector (vision 05-director
+   * #3). Reads the recent DAILY holat scores (company_state_log) and counts the
+   * current run of consecutive day-over-day declines ending at the latest day:
+   *   - run >= DIR_DECLINE_TREND_DAYS (2) → `trend` flag (early warning)
+   *   - run >= DIR_DECLINE_ALERT_DAYS (3) → emit the `EP-DIR-005` alert event
+   * The 2/3 thresholds are vision-given (not owner config). Emission is
+   * idempotent per calendar day.
+   */
+  async detectConsecutiveDecline(): Promise<Result<{
+    daysChecked: number;
+    consecutiveDeclineDays: number;
+    trend: boolean;
+    alert: boolean;
+    emitted: boolean;
+  }, AppError>> {
+    return safeCall(async () => {
+      const scoresR = await this.repo.getRecentDailyScores(DIR_DECLINE_LOOKBACK_DAYS);
+      const rows = scoresR.ok ? scoresR.data : [];
+
+      // rows are most-recent day first; count consecutive strict declines.
+      let run = 0;
+      for (let i = 0; i + 1 < rows.length; i++) {
+        if (rows[i].score < rows[i + 1].score) run++;
+        else break;
+      }
+
+      const trend = run >= DIR_DECLINE_TREND_DAYS;
+      const alert = run >= DIR_DECLINE_ALERT_DAYS;
+
+      let emitted = false;
+      if (alert) {
+        const latest = rows[0];
+        const aggregateId = latest ? latest.day : 'company';
+        const emitR = await this.repo.emitDeclineAlertOncePerDay(aggregateId, {
+          code: 'EP-DIR-005',
+          type: 'dir.state.declineAlert',
+          consecutiveDeclineDays: run,
+          latestDay: latest?.day ?? null,
+          latestScore: latest?.score ?? null,
+          scores: rows.map((r) => r.score),
+        });
+        emitted = emitR.ok ? emitR.data.emitted : false;
+      }
+
+      return {
+        daysChecked: rows.length,
+        consecutiveDeclineDays: run,
+        trend,
+        alert,
+        emitted,
       };
     });
   }

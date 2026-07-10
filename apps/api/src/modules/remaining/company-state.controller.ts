@@ -77,6 +77,18 @@ export class CompanyStateController {
     return unwrapOrThrow(await this.snapshot.snapshotNow());
   }
 
+  /**
+   * EP-DIR-005 (vision 05-director #3): run the consecutive daily-decline
+   * detector on demand (the cron also runs it right after the daily snapshot).
+   * Emits an `EP-DIR-005` domain event when 3 consecutive daily declines are
+   * detected (idempotent per calendar day). director/admin only.
+   */
+  @Post('decline-check')
+  @Roles('director', 'super_admin', 'admin', 'ceo')
+  async checkDecline() {
+    return unwrapOrThrow(await this.svc.detectConsecutiveDecline());
+  }
+
   // ─── state_thresholds config (owner-configurable bands + weights) ────────────
 
   // T21-B1 #23: trend `days` query — coerced int, 1..365 (default handled at call site).

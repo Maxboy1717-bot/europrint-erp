@@ -78,6 +78,17 @@ export class CompanyStateSnapshotCron {
         VALUES (${stateCode}, ${JSON.stringify(kpis)}::jsonb, ${scoreTotal}, NOW())
       `);
       this.logger.log(`[CompanyStateSnapshot] yozildi: state=${stateCode} score=${scoreTotal}`);
+
+      // EP-DIR-005 (vizyon 05.3): bugungi snapshot yozilgach, ketma-ket kunlik
+      // "og'ish tezligi" tekshiruvi — 3 kun ketma-ket tushishda alert event
+      // chiqadi. Best-effort: detektor xatosi snapshot natijasini buzmaydi.
+      const declineR = await this.companyState.detectConsecutiveDecline();
+      if (declineR.ok && declineR.data.alert) {
+        this.logger.warn(
+          `[CompanyStateSnapshot] EP-DIR-005 og'ish alert: ${declineR.data.consecutiveDeclineDays} kun ketma-ket tushish (emitted=${declineR.data.emitted})`,
+        );
+      }
+
       return { written: true, stateCode };
     }, 'DB_ERROR');
   }
