@@ -21,6 +21,7 @@ import { OrderCreatedNotificationListener } from './infrastructure/event-handler
 import { QcFailedNotificationListener } from './infrastructure/event-handlers/qc-failed-notification.listener';
 import { LmsCertExpiredNotificationListener } from './infrastructure/event-handlers/lms-cert-expired-notification.listener';
 import { OrphanEventsListener } from './infrastructure/event-handlers/orphan-events.listener';
+import { LeaveApprovedNotificationListener } from './infrastructure/event-handlers/leave-approved-notification.listener';
 import { NotificationsController } from './presentation/notifications.controller';
 import { NOTIFICATION_REPO } from './domain/repositories/i-notification.repo';
 import { DrizzleNotificationRepository } from './infrastructure/repositories/drizzle-notification.repo';
@@ -48,6 +49,8 @@ const eventHandlers = [
   LmsCertExpiredNotificationListener,
   // Orphan @OnEvent handlers — kanban, absence-block, access/IoT events.
   OrphanEventsListener,
+  // HR LeaveApprovedEvent (EventEmitter2 bus) -> in-app notification for the requester.
+  LeaveApprovedNotificationListener,
 ];
 const queryHandlers = [GetNotificationsHandler];
 
