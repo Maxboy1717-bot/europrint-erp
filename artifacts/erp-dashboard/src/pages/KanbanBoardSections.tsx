@@ -305,7 +305,7 @@ export function BoardContent({
   }
 
   if (viewMode === "dashboard") {
-    return <DashboardPanel t={t} />;
+    return <DashboardPanel t={t} boardId={selectedBoardId} />;
   }
 
   if (viewMode === "allocation") {

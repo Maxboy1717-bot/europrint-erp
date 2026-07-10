@@ -29,13 +29,18 @@ type OverdueInboxData = {
   }[];
 };
 
-export function DashboardPanel({ t }: { t: (key: string) => string }) {
+export function DashboardPanel({ t, boardId }: { t: (key: string) => string; boardId?: string | null }) {
+  // Board-scoped "letuchka" (kunlik letuchka) — bir ekran. When a department
+  // board is selected the metrics / task-stats / overdue-inbox queries are
+  // filtered to that board via ?boardId= (buildUrlFromQueryKey drops null/
+  // undefined, so an unset boardId preserves the org-wide view). Vision
+  // 15-kanban #124 (TASDIQ-2146 §15 #124).
   const { data: metrics, isLoading: metricsLoading } = useQuery<TeamMetrics>({
-    queryKey: ['/api/kanban/dashboard/team-metrics'],
+    queryKey: ['/api/kanban/dashboard/team-metrics', { boardId }],
   });
 
   const { data: taskStats, isLoading: statsLoading } = useQuery<TaskStats>({
-    queryKey: ['/api/kanban/task-stats'],
+    queryKey: ['/api/kanban/task-stats', { boardId }],
   });
 
   const { data: employees = [] } = useQuery<{ id: string; fullName: string; profileImageUrl?: string | null }[]>({
@@ -43,7 +48,7 @@ export function DashboardPanel({ t }: { t: (key: string) => string }) {
   });
 
   const { data: overdueInbox } = useQuery<OverdueInboxData>({
-    queryKey: ['/api/kanban/overdue-inbox'],
+    queryKey: ['/api/kanban/overdue-inbox', { boardId }],
     refetchInterval: 5 * 60 * 1000,
   });
 
