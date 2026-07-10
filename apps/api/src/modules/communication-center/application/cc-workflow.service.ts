@@ -160,6 +160,25 @@ export class CcWorkflowService {
         continue;
       }
       const approverId = approverResult.data;
+      // CC #3 ambiguous_route: a POSITION:<CODE> first step matching MORE THAN ONE active
+      // employee (e.g. two uchastka heads share one positions.code) is structurally
+      // ambiguous — resolveByPosition silently picks the first (ORDER BY e.id ASC LIMIT 1).
+      // Keep the pick-one behavior, but JOURNAL the ambiguity (queryable) so the owner can
+      // make the template specify "qaysi bo'lim" (vision 20-cc #3). Read-only count, additive log.
+      if (/^\s*position:/i.test(step.approverPositionCode)) {
+        const ambigR = await this.org.countActiveByPosition(step.approverPositionCode);
+        if (ambigR.ok && ambigR.data > 1) {
+          this.logger.warn(
+            `Step ${step.stepOrder}: POSITION ${step.approverPositionCode} matched ${ambigR.data} active employees — ambiguous_route; picked user ${approverId}. Document ${doc.id}.`,
+          );
+          await this.docs.logAudit({
+            documentId:        doc.id,
+            action:            'ambiguous_route',
+            performedByUserId: null,
+            comment:           `Lavozim ${step.approverPositionCode}: ${ambigR.data} nomzod topildi — birinchisi (foydalanuvchi ${approverId}) tanlandi; shablonda "qaysi bo'lim" aniqlashtirilishi kerak.`,
+          });
+        }
+      }
       // CC #21 self_route_blocked (SoD): the sender can NEVER be their own approver
       // — a doc must not land in the sender's own inbox for self-sign-off. Most
       // resolver branches (dept-head / position / director / ceo) do not exclude the

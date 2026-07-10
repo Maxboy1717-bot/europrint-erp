@@ -212,6 +212,37 @@ export class CcOrgResolverService {
     return Ok(id);
   }
 
+  /**
+   * CC #3 ambiguous_route detection: how many DISTINCT active employees a
+   * `POSITION:<CODE>` step resolves to. resolveByPosition picks ONE (ORDER BY e.id
+   * ASC LIMIT 1); when this returns >1 the route is structurally ambiguous (e.g. two
+   * uchastka heads sharing one positions.code) and the caller journals 'ambiguous_route'.
+   * Mirrors resolveByPosition's WHERE clause exactly, minus the LIMIT. Read-only.
+   * Accepts the full 'POSITION:<CODE>' code or a bare code; returns Ok(0) for a blank code.
+   */
+  async countActiveByPosition(positionCode: string): Promise<Result<number>> {
+    try {
+      const normalized = positionCode.trim().toUpperCase();
+      const posCode = normalized.startsWith('POSITION:')
+        ? normalized.slice('POSITION:'.length).trim()
+        : normalized;
+      if (!posCode) return Ok(0);
+      const r = await runQuery<{ n: number }>(sql`
+        SELECT COUNT(*)::int AS n
+        FROM employees e
+        INNER JOIN positions p ON p.id = e.position_id
+        WHERE UPPER(p.code) = ${posCode}
+          AND COALESCE(e.is_active, true) = true
+          AND e.user_id IS NOT NULL
+      `);
+      return Ok(r.rows[0]?.n ?? 0);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.warn(`countActiveByPosition(${positionCode}): ${msg}`);
+      return Err(AppErr('INTERNAL', msg));
+    }
+  }
+
   // CC #33: delegatsiya zanjiri MAKS 3 daraja chuqur (A→B→C→D — 3 delegatsiya hop);
   // undan chuqur zanjir kesiladi. Cheksiz sikl (A→B→A) `visited` to'plami bilan
   // uziladi — hal qilish har doim tugaydi.
