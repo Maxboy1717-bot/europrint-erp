@@ -12,10 +12,26 @@ const helperLogger = new Logger('BotHelpers');
 
 export type Row = Record<string, unknown>;
 
+/**
+ * Telegram inline-keyboard button. `callback_data` re-invokes the same bot
+ * webhook with the button payload as the message text (item 18-notif#17 —
+ * bot inline keyboard is the PRIMARY channel at night). `url` opens a link.
+ */
+export interface InlineKeyboardButton {
+  text:           string;
+  callback_data?: string;
+  url?:           string;
+}
+
+/** Rows of inline buttons — maps 1:1 to Telegram's reply_markup.inline_keyboard. */
+export type InlineKeyboard = InlineKeyboardButton[][];
+
 export interface BotReply {
   text:    string;
   parse:   'HTML' | 'Markdown' | 'plain';
   success: boolean;
+  /** Optional inline keyboard; controller emits it as reply_markup.inline_keyboard. */
+  replyMarkup?: InlineKeyboard;
 }
 
 export interface BotMessage {
@@ -85,6 +101,15 @@ export function dbErrorReply(detail?: string): BotReply {
 
 export function helpReply(text: string): BotReply {
   return { text, parse: 'HTML', success: true };
+}
+
+/**
+ * Reply that renders inline-keyboard action buttons (item 18-notif#17). Each
+ * button's callback_data re-enters the bot handler, so a night-shift user can
+ * tap instead of typing the command.
+ */
+export function keyboardReply(text: string, replyMarkup: InlineKeyboard): BotReply {
+  return { text, parse: 'HTML', success: true, replyMarkup };
 }
 
 export function deniedReply(role?: string): BotReply {
