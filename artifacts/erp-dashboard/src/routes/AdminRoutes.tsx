@@ -34,10 +34,12 @@ const ValidatePage = lazy(() => import("@/pages/ValidatePage"));
 const ProgressPage = lazy(() => import("@/pages/ProgressPage"));
 const EmployeesForFacePage = lazy(() => import("@/pages/EmployeesForFacePage"));
 const AuditLogPage = lazy(() => import("@/pages/AuditLogPage"));
+const BusinessSettings = lazy(() => import("@/pages/BusinessSettings"));
 
 export const ADMIN_ROUTES: [string, React.ComponentType][] = [
   ['/settings',                Settings],
   ['/settings/notifications',  NotificationSettings],
+  ['/admin/business-settings', BusinessSettings],
   ['/super-admin',             SuperAdminPanel],
   ['/system-monitor',          SystemMonitor],
   ['/telegram-bot',            TelegramBotAdmin],
