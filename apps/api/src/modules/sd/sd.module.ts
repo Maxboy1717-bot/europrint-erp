@@ -86,6 +86,10 @@ import { SdLostOrdersReclamationsController } from './presentation/sd-lost-order
 import { SdLostOrdersReclamationsService } from './application/sd-lost-orders-reclamations.service';
 import { DrizzleSdLostOrdersReclamationsRepo } from './infrastructure/repositories/drizzle-sd-lost-orders-reclamations.repo';
 import { SD_LOST_ORDERS_RECLAMATIONS_REPO } from './domain/repositories/i-sd-lost-orders-reclamations.repo';
+// 06-sd #27 — nofaol mijoz cron manba (controller + service + repo)
+import { SdCustomerInactivityController } from './presentation/sd-customer-inactivity.controller';
+import { CustomerInactivityService } from './application/customer-inactivity.service';
+import { DrizzleCustomerInactivityRepository } from './infrastructure/repositories/drizzle-customer-inactivity.repo';
 
 const commandHandlers = [
   CreateOrderHandler,
@@ -125,6 +129,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule],
   controllers: [
+    SdCustomerInactivityController, // 06-sd #27 nofaol mijoz thresholds + manual sweep
     SdKlisheRetentionController,
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
     SdDashboardController, SdCustomersController, SdLeadsController,
@@ -133,6 +138,9 @@ const repositories = [
     SdLostOrdersReclamationsController,
   ],
   providers: [
+    // 06-sd #27 — nofaol mijoz cron manba (service + repo)
+    CustomerInactivityService,
+    DrizzleCustomerInactivityRepository,
     KlisheRetentionService,
     KlisheRetentionCron,
     { provide: KLISHE_RETENTION_REPO, useClass: DrizzleKlisheRetentionRepository },

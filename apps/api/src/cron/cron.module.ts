@@ -65,6 +65,10 @@ import { EnpsCronRepository } from './repositories/enps-cron.repository'
 import { DataRetentionRepository } from './repositories/data-retention.repository'
 // 2.5 (MASTER-REJA-VIZYON) — mijoz ABC segmentatsiya kunlik avto-hisob (sd_customers.abc_class)
 import { CustomerAbcRecomputeCron } from './customer-abc-recompute.cron'
+// 06-sd #27 — nofaol mijoz cron (har kuni 03:30)
+import { CustomerInactivityCron } from './customer-inactivity.cron'
+import { CustomerInactivityService } from '../modules/sd/application/customer-inactivity.service'
+import { DrizzleCustomerInactivityRepository } from '../modules/sd/infrastructure/repositories/drizzle-customer-inactivity.repo'
 import { CustomerAbcService } from '../modules/sd/application/customer-abc.service'
 import { SD_CUSTOMER_ABC_REPO } from '../modules/sd/infrastructure/repositories/i-sd-customer-abc.repo'
 import { DrizzleSdCustomerAbcRepository } from '../modules/sd/infrastructure/repositories/drizzle-sd-customer-abc.repo'
@@ -79,6 +83,10 @@ import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.
 @Module({
   imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule],
   providers: [
+    // 06-sd #27 — nofaol mijoz cron (har kuni 03:30) + manba service/repo
+    CustomerInactivityCron,
+    CustomerInactivityService,
+    DrizzleCustomerInactivityRepository,
     // 09-qc #22 — Davriy ichki sifat auditi (choraklik cron): qc_internal_audits idempotent scheduling
     QcInternalAuditCron,
     QcInternalAuditService,
