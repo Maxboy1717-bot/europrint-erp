@@ -37,6 +37,10 @@ import { AdminQueueService } from './application/services/admin-queue.service';
 import { BusinessSettingsController } from './settings/business-settings.controller';
 import { BusinessSettingsService } from './settings/business-settings.service';
 import { BusinessSettingsRepository } from './settings/business-settings.repo';
+// §2 Taksonomiya CRUD (nomli ro'yxatlar — mahsulot turi, chegirma, bezash...).
+import { TaxonomyController } from './settings/taxonomy.controller';
+import { TaxonomyService } from './settings/taxonomy.service';
+import { TaxonomyRepository } from './settings/taxonomy.repo';
 
 @Module({
   imports: [
@@ -51,7 +55,7 @@ import { BusinessSettingsRepository } from './settings/business-settings.repo';
       },
     ]),
   ],
-  controllers: [AdminUsersController, AdminSettingsController, AdminCronStatusController, AdminQueueController, AdminExtraController, BusinessSettingsController],
+  controllers: [AdminUsersController, AdminSettingsController, AdminCronStatusController, AdminQueueController, AdminExtraController, BusinessSettingsController, TaxonomyController],
   providers: [
     CreateUserService,
     UpdateUserRoleService,
@@ -70,9 +74,11 @@ import { BusinessSettingsRepository } from './settings/business-settings.repo';
     AdminExtraRepository,
     BusinessSettingsService,
     BusinessSettingsRepository,
+    TaxonomyService,
+    TaxonomyRepository,
     RolesGuard,
     AuditInterceptor,
   ],
-  exports: [USER_REPO, SETTINGS_REPO, BusinessSettingsService],
+  exports: [USER_REPO, SETTINGS_REPO, BusinessSettingsService, TaxonomyService],
 })
 export class AdminModule {}
