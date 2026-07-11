@@ -226,6 +226,13 @@ export class StockLedgerService {
    * Record a signed movement confirmation to pos_movement_confirmations.
    * signatureHash = SHA-256 of "<userId>:<movementId>:<decision>:<isoTimestamp>"
    * — canonical spec order: userId + movementId + decision + timestamp
+   *
+   * POS-19 #131 (2026-07-11, owner schema-grant — Q-35): optional handedOverQty/
+   * receivedQty — when a caller supplies BOTH and they differ, the recorded
+   * decision is forced to 'DISPUTED' regardless of what the caller passed in
+   * (no tolerance/threshold — any mismatch is a dispute per the owner grant,
+   * docs/audit/_PHASE2-OWNER-DECISIONS-2026-07-11.md #131). Callers that pass
+   * neither (all existing call sites) are unaffected — additive only.
    */
   async recordConfirmation(
     movementId: number,
@@ -234,24 +241,34 @@ export class StockLedgerService {
     decision: ConfirmDecision,
     comment?: string,
     ip?: string,
+    handedOverQty?: number,
+    receivedQty?: number,
   ): Promise<Result<ConfirmRow, AppError>> {
     try {
+      const isDisputed = handedOverQty != null && receivedQty != null && handedOverQty !== receivedQty;
+      const finalDecision: ConfirmDecision = isDisputed ? 'DISPUTED' : decision;
+
       const signedAt = new Date();
-      const signaturePayload = `${userId}:${movementId}:${decision}:${signedAt.toISOString()}`;
+      const signaturePayload = `${userId}:${movementId}:${finalDecision}:${signedAt.toISOString()}`;
       const signatureHash = createHash('sha256').update(signaturePayload).digest('hex');
 
       const r = await this.repo.insertConfirmation({
         movementId,
         step,
         userId,
-        decision,
+        decision: finalDecision,
         comment,
         signedAt,
         signatureHash,
         ip,
+        handedOverQty,
+        receivedQty,
       });
       if (!r.ok) return Err(r.error);
-      this.logger.log(`[CONFIRM] movement=${movementId} step=${step} decision=${decision} user=${userId} hash=${signatureHash.slice(0, 12)}...`);
+      if (isDisputed) {
+        this.logger.warn(`[CONFIRM] DISPUTED: movement=${movementId} step=${step} handedOver=${handedOverQty} received=${receivedQty} user=${userId}`);
+      }
+      this.logger.log(`[CONFIRM] movement=${movementId} step=${step} decision=${finalDecision} user=${userId} hash=${signatureHash.slice(0, 12)}...`);
       return Ok(r.data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

@@ -122,6 +122,11 @@ export class CreateMovementDto extends createZodDto(CreateMovementSchema) {}
 export const UpdateMovementStatusSchema = z.object({
   status: z.enum(MOVEMENT_STATUS_VALUES),
   reason: z.string().max(MAX_SHORT_TEXT).optional(),
+  // POS-19 #131 (2026-07-11, owner schema-grant — Q-35): ombor tomonidan
+  // qabul qilingan haqiqiy miqdor — 'approved' (OMBOR) bosqichida harakat
+  // qatorlari yig'indisi (topshirilgan miqdor) bilan solishtiriladi; farq
+  // bo'lsa pos_movement_confirmations.decision='DISPUTED' bo'lib yoziladi.
+  receivedQty: z.number().min(0).optional(),
 });
 export class UpdateMovementStatusDto extends createZodDto(UpdateMovementStatusSchema) {}
 

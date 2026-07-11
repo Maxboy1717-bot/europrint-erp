@@ -83,11 +83,25 @@ export class PosMovementStatusService {
 
       const step = statusToConfirmStep(dto.status);
       if (step) {
+        // POS-19 #131: OMBOR bosqichida (status='approved') agar receivedQty
+        // kiritilgan bo'lsa, harakat qatorlari yig'indisi (topshirilgan
+        // miqdor) bilan solishtiramiz — farq bo'lsa recordConfirmation
+        // decision='DISPUTED' ga o'tkazadi (nizo holati).
+        let handedOverQty: number | undefined;
+        let receivedQty: number | undefined;
+        if (step === 'OMBOR' && dto.receivedQty != null) {
+          const linesR = await this.repo.getMovementLines(movementId);
+          const lines = linesR.ok && Array.isArray(linesR.data) ? linesR.data as Record<string, unknown>[] : [];
+          handedOverQty = lines.reduce((s, l) => s + Number(l.quantity ?? 0), 0);
+          receivedQty = dto.receivedQty;
+        }
         await this.stockLedger.recordConfirmation(
           movementId, step, updatedById,
           statusToConfirmDecision(dto.status),
           dto.reason,
           ipAddress,
+          handedOverQty,
+          receivedQty,
         );
       }
 
