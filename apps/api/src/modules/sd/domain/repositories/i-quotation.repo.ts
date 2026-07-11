@@ -46,6 +46,8 @@ export interface PriceFormulaPatch {
   dieCostNew?: unknown;
   laminationPrice?: unknown;
   embossingPrice?: unknown;
+  // 06-sd #142: kashirovka (ofset+gofra yelimlash) alohida operatsiya narxi.
+  kashirovkaPrice?: unknown;
   perforationPrice?: unknown;
   deliveryBaseCost?: unknown;
   storageFreedays?: unknown;

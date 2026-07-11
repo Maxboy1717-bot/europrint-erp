@@ -51,6 +51,7 @@ const SdPriceSettingsSchema = z.object({
   dieCostNew: z.number().nonnegative().optional(),
   laminationPrice: z.number().nonnegative().optional(),
   embossingPrice: z.number().nonnegative().optional(),
+  kashirovkaPrice: z.number().nonnegative().optional(),
   perforationPrice: z.number().nonnegative().optional(),
   deliveryBaseCost: z.number().nonnegative().optional(),
   storageFreedays: z.number().int().nonnegative().optional(),
@@ -153,6 +154,7 @@ export class SdQuotationsController {
       printColors: Number(body.printColors ?? 0),
       quantity: Number(body.quantity ?? 1),
       isNewDie: body.isNewDie === true,
+      kashirovka: body.kashirovka === true,
     }, user?.role);
     assertOk(r);
     return r.data;

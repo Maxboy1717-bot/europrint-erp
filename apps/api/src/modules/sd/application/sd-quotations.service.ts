@@ -25,6 +25,8 @@ export type PriceCalcInput = {
   printColors: number;
   quantity: number;
   isNewDie: boolean;
+  /** 06-sd #142: kashirovka (ofset+gofra) alohida operatsiya kerakmi. */
+  kashirovka?: boolean;
 };
 import { ISdQuotationsRepo, SD_QUOTATIONS_REPO } from '../domain/repositories/i-sd-quotations.repo';
 import {
@@ -226,13 +228,18 @@ export class SdQuotationsService {
       // Die/shtamp: new vs existing (EP-SD-042/125 klishe ownership).
       const dieCost = input.isNewDie ? num(cfg.die_cost_new) : num(cfg.die_cost_existing);
 
+      // Kashirovka (vision 06-sd #142): ofset bosma + gofra qatlamni yelimlab birlashtirish —
+      // alohida pardozlash operatsiyasi. Bayroq yoqilganda sozlanadigan kashirovka narxi qo'shiladi.
+      // getPriceSettings camelCase proyeksiyasi bo'yicha cfg.kashirovkaPrice o'qiladi; default 0 = ta'sirsiz.
+      const kashirovkaCost = input.kashirovka ? num(cfg.kashirovkaPrice) : 0;
+
       // Labour throughput assumption: 1 labour-hour per UNITS_PER_LABOR_HOUR units.
       const UNITS_PER_LABOR_HOUR = 1000;
       const productionCost = num(cfg.hourly_labor_rate) * (qty / UNITS_PER_LABOR_HOUR);
 
       const deliveryCost = num(cfg.delivery_base_cost);
 
-      const costPrice = paperCost + printCost + dieCost + productionCost + deliveryCost;
+      const costPrice = paperCost + printCost + dieCost + kashirovkaCost + productionCost + deliveryCost;
       const markupPercent = num(cfg.default_markup_percent, 35);
       const vatRate = num(cfg.vat_rate, 12);
       const priceBeforeVat = costPrice * (1 + markupPercent / 100);
@@ -241,6 +248,7 @@ export class SdQuotationsService {
 
       const customerView = {
         paperCost: round2(paperCost), printCost: round2(printCost), dieCost: round2(dieCost),
+        kashirovkaCost: round2(kashirovkaCost),
         productionCost: round2(productionCost), deliveryCost: round2(deliveryCost),
         unitPrice: round2(unitPrice), totalPrice: round2(totalPrice),
         markupPercent, vatRate,

@@ -44,6 +44,7 @@ export const SdCalculatePriceSchema = z.object({
   printColors:  z.coerce.number().int().nonnegative().default(0),
   quantity:     z.coerce.number().positive().default(1),
   isNewDie:     z.coerce.boolean().optional().default(false),
+  kashirovka:   z.coerce.boolean().optional().default(false),
   product_id:   z.union([z.string(), z.number()]).optional(),
   formula_id:   z.union([z.string(), z.number()]).optional(),
 }).passthrough();
