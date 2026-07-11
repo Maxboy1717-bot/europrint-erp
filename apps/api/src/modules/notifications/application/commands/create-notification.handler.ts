@@ -6,6 +6,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result } from '@common/types/result.type';
+import { sql } from 'drizzle-orm';
+import { runQuery } from '@shared/db';
 import { CreateNotificationCommand } from './create-notification.command';
 import { Notification } from '../../domain/aggregates/notification.aggregate';
 import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/i-notification.repo';
@@ -54,14 +56,29 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
 
     const deliveries: Promise<void>[] = [];
 
+    // 18-notif — KRITIK BUG (2026-07-11 topildi): bu yergacha command.userId
+    // (ichki users.id) TO'G'RIDAN-TO'G'RI Telegram chat_id sifatida yuborilardi
+    // — Telegram API buni HAR DOIM rad etardi (haqiqiy chat_id emas), xato esa
+    // .catch() ichida jimgina yutilardi. Endi haqiqiy users.telegram_chat_id
+    // avval qidiriladi; topilmasa — urinilmaydi (soxta muvaffaqiyat emas, Q-40).
     if (channels.includes('telegram')) {
       deliveries.push(
-        this.telegramService
-          .sendMessage(command.userId, `${command.title}\n${command.body}`)
-          .then((): void => { /* void */ })
-          .catch((): void => {
-            this.logger.warn('Telegram notification yuborilmadi');
-          }),
+        (async (): Promise<void> => {
+          const row = await runQuery<{ telegram_chat_id: number | null }>(sql`
+            SELECT telegram_chat_id FROM users WHERE id = ${command.userId} LIMIT 1
+          `);
+          const chatId = row.rows[0]?.telegram_chat_id;
+          if (!chatId) {
+            this.logger.log(`Telegram yuborilmadi — user ${command.userId} chat_id bog'lamagan`);
+            return;
+          }
+          await this.telegramService
+            .sendMessage(String(chatId), `${command.title}\n${command.body}`)
+            .then((): void => { /* void */ })
+            .catch((): void => {
+              this.logger.warn('Telegram notification yuborilmadi');
+            });
+        })(),
       );
     }
 
