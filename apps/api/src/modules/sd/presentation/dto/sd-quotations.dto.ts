@@ -15,6 +15,9 @@ export const SdCreateQuotationSchema = z.object({
     product_id: z.coerce.number().int().positive(),
     quantity:   z.coerce.number().positive(),
     price:      z.coerce.number().positive().optional(),
+    // EP-SD-101 (vision 06-sd #101): per-line printing method (offset/flexo). Optional — the
+    // AI recommendation from calculate-price fills the gap when the user leaves it unset.
+    printing_method: z.enum(['offset', 'flexo']).optional(),
   })).optional(),
 }).passthrough();
 export type SdCreateQuotationDto = z.infer<typeof SdCreateQuotationSchema>;

@@ -47,6 +47,34 @@ type Row = Record<string, unknown>;
  */
 const MARGIN_VISIBLE_ROLES: ReadonlySet<string> = new Set<string>([Role.DIRECTOR, Role.SUPER_ADMIN]);
 
+/**
+ * EP-SD-101 (vision 06-sd #101 / #28) — rule-based Offset-vs-Flexo recommendation.
+ * ADDITIVE + NON-BLOCKING: returned alongside the calculated price as a hint so the
+ * manager can pick a `printing_method` per quotation line; it never overrides an explicit
+ * choice. Heuristic: long runs amortise offset's plate-setup cost and register multi-colour
+ * artwork more sharply, so qty >= OFFSET_MIN_RUN_QTY -> offset; shorter / variable runs ->
+ * flexo. OFFSET_MIN_RUN_QTY is an owner-tunable default (vision: "high qty -> offset,
+ * low/variable -> flexo"), not a hard business gate.
+ */
+const OFFSET_MIN_RUN_QTY = 5000;
+function recommendPrintingMethod(
+  quantity: number,
+  printColors: number,
+): { recommended: 'offset' | 'flexo'; reason: string } {
+  const qty = Math.max(0, Number(quantity) || 0);
+  const colors = Math.max(0, Number(printColors) || 0);
+  if (qty >= OFFSET_MIN_RUN_QTY) {
+    return {
+      recommended: 'offset',
+      reason: `Katta tiraj (${qty} >= ${OFFSET_MIN_RUN_QTY}) — ofset klishe/sozlash narxini qoplaydi va ${colors}-rangli bosma aniqroq chiqadi`,
+    };
+  }
+  return {
+    recommended: 'flexo',
+    reason: `Kichik/o'zgaruvchan tiraj (${qty} < ${OFFSET_MIN_RUN_QTY}) — flekso tez sozlanadi, gofra/qisqa tiraj uchun tejamli`,
+  };
+}
+
 @Injectable()
 export class SdQuotationsService {
   private readonly logger = new Logger(SdQuotationsService.name);
@@ -172,6 +200,9 @@ export class SdQuotationsService {
         productionCost: round2(productionCost), deliveryCost: round2(deliveryCost),
         unitPrice: round2(unitPrice), totalPrice: round2(totalPrice),
         markupPercent, vatRate,
+        // EP-SD-101 (vision 06-sd #101): additive, non-blocking printing-method hint returned
+        // with the price so the FE quote form can pre-select offset/flexo (manager may override).
+        printingMethodRecommendation: recommendPrintingMethod(qty, colors),
         areaPerUnitM2: round2(areaPerUnitM2), quantity: qty, currency: 'UZS', calculated_at: _time.now(),
       };
       // EP-SD-043 (vision 06-sd #43, Q19): costPrice + margin are director-tier only. A sales

@@ -66,10 +66,14 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     if (quote && items.length > 0) {
       const qId = Number((quote as Row).id);
       for (const it of items) {
+        // EP-SD-101 (vision 06-sd #101): persist the per-line printing_method when supplied.
+        // The DTO enum + the sd_quotation_items_printing_method_chk CHECK guard the value;
+        // null is accepted (line has no chosen method yet -> the AI rec applies at quote time).
         await exec(sql`
-          INSERT INTO sd_quotation_items (quotation_id, product_type, quantity, unit_price)
+          INSERT INTO sd_quotation_items (quotation_id, product_type, quantity, unit_price, printing_method)
           VALUES (${qId}, ${it.product_type ?? it.productType ?? null},
-                  ${Number(it.quantity ?? it.qty ?? 1)}, ${Number(it.unit_price ?? it.unitPrice ?? 0)})`);
+                  ${Number(it.quantity ?? it.qty ?? 1)}, ${Number(it.unit_price ?? it.unitPrice ?? 0)},
+                  ${(it.printing_method ?? it.printingMethod ?? null) as string | null})`);
       }
     }
     return Ok(quote);
