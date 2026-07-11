@@ -151,6 +151,9 @@ export const notifications = pgTable('notifications', {
   entityType: text('entity_type'),
   entityId: text('entity_id'),
   createdAt: ts('created_at').defaultNow(),
+  priority: text('priority'),  // live column (varchar) — 'urgent'|'high'|'normal'|'low', same vocabulary
+                                // as PriorityEnum in notification-schedules.controller.ts. Used to sort the
+                                // notification list (urgent/high first) in drizzle-notification.repo.ts.
 });
 
 export const marketingCampaigns = pgTable('marketing_campaigns', {

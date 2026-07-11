@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { and, eq, desc } from 'drizzle-orm';
+import { and, eq, desc, sql } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/types/result.type';
 import { INotificationRepo } from '../../domain/repositories/i-notification.repo';
 import { Notification } from '../../domain/aggregates/notification.aggregate';
@@ -46,6 +46,18 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     const limit = filters.limit || 10;
     const offset = (page - 1) * limit;
 
+    // Priority rank: urgent/high surface first, created_at DESC is the secondary sort.
+    // Labels match the existing PriorityEnum that already writes this column
+    // (notification-schedules.controller.ts: 'low' | 'normal' | 'high' | 'urgent').
+    // NULL/unknown priority sorts last, after 'low'.
+    const priorityRank = sql`CASE ${notifications.priority}
+          WHEN 'urgent' THEN 0
+          WHEN 'high' THEN 1
+          WHEN 'normal' THEN 2
+          WHEN 'low' THEN 3
+          ELSE 4
+        END`;
+
     return Promise.all([
       db
         .select()
@@ -54,7 +66,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
           and(
             eq(notifications.userId, filters.userId),
             filters.isRead !== undefined ? eq(notifications.isRead, filters.isRead) : undefined))
-        .orderBy(desc(notifications.createdAt))
+        .orderBy(priorityRank, desc(notifications.createdAt))
         .limit(limit)
         .offset(offset)
         .execute()
