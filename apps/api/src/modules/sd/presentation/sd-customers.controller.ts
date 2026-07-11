@@ -26,6 +26,11 @@ const CreateCustomerSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().max(50).optional(),
   address: z.string().max(2000).optional(),
+  // CRM-13 #120: customer's usual settlement method — same vocabulary as
+  // SdCreatePaymentSchema.payment_method (sd.dto.ts) / sd_payments.payment_method.
+  default_payment_type: z.enum(['cash', 'card', 'bank_transfer', 'online']).optional(),
+  // CRM-13 #133 — agreed packaging method (free text; runtime-entered, no fixed vocabulary in vision)
+  packaging_method: z.string().max(500).optional(),
 }).passthrough();
 
 const AddContactSchema = z.object({

@@ -150,6 +150,11 @@ export class DrizzleSdCustomersRepository {
     const { name, title, stir, inn, phone, email, address, status, notes } = body;
     const finalName = name ?? title ?? null;
     const finalStir = stir ?? inn ?? null;
+    // CRM-13 #120: default_payment_type — validated upstream by SdUpdateCustomerSchema
+    // (sd.dto.ts) against the existing SD payment-method vocabulary (cash/card/bank_transfer/online).
+    const defaultPaymentType = body.default_payment_type ?? body.defaultPaymentType ?? null;
+    // CRM-13 #133 — agreed packaging method; accept either camelCase or snake_case body key.
+    const packagingMethod = (body.packagingMethod ?? body.packaging_method ?? null) as string | null;
     const rows = await runQuery<Row>(sql`
       UPDATE sd_customers
       SET name = COALESCE(${finalName}, name),
@@ -160,6 +165,8 @@ export class DrizzleSdCustomersRepository {
           address = COALESCE(${address ?? null}, address),
           status = COALESCE(${status ?? null}, status),
           notes = COALESCE(${notes ?? null}, notes),
+          default_payment_type = COALESCE(${defaultPaymentType}, default_payment_type),
+          packaging_method = COALESCE(${packagingMethod}, packaging_method),
           updated_by = COALESCE(${updatedBy ?? null}, updated_by),
           updated_at = NOW()
       WHERE id = ${cid} RETURNING *
@@ -196,6 +203,11 @@ export class DrizzleSdCustomersRepository {
     const seg = String(body.segment ?? 'new');
     const dbStatus = seg === 'vip' ? 'vip' : seg === 'regular' ? 'active' : seg === 'potential' ? 'at_risk' : 'new';
     const actualAddress = body.actualAddress ?? body.actual_address ?? address ?? null;
+    // CRM-13 #120: default_payment_type — validated upstream by CreateCustomerSchema
+    // (this controller) against the existing SD payment-method vocabulary.
+    const defaultPaymentType = body.default_payment_type ?? body.defaultPaymentType ?? null;
+    // CRM-13 #133 — agreed packaging method; accept either camelCase or snake_case body key.
+    const packagingMethod = (body.packagingMethod ?? body.packaging_method ?? null) as string | null;
 
     const dup = await this.findDuplicate(finalStir, phone);
     if (dup) {
@@ -205,10 +217,10 @@ export class DrizzleSdCustomersRepository {
     }
 
     const rows = await runQuery<Row>(sql`
-      INSERT INTO sd_customers (name, stir, inn, phone, email, address, actual_address, notes, status, created_by, created_at, updated_at)
+      INSERT INTO sd_customers (name, stir, inn, phone, email, address, actual_address, notes, status, default_payment_type, packaging_method, created_by, created_at, updated_at)
       VALUES (${finalName}, ${finalStir}, ${finalStir}, ${phone ?? null}, ${email ?? null},
               ${actualAddress}, ${actualAddress},
-              ${notes ?? null}, ${dbStatus}, ${createdBy ?? null}, NOW(), NOW())
+              ${notes ?? null}, ${dbStatus}, ${defaultPaymentType}, ${packagingMethod}, ${createdBy ?? null}, NOW(), NOW())
       RETURNING *
     `);
     const row = (rows.rows[0] ?? {}) as Row;

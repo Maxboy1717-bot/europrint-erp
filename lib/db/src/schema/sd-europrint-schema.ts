@@ -38,6 +38,12 @@ export const sdCustomers = pgTable("sd_customers", {
   creditLimit: numericMoney("credit_limit").default(0),
   /** Payment terms in days (e.g. 7, 14, 30) */
   paymentTermsDays: integer("payment_terms_days").default(30),
+  /**
+   * CRM-13 #120: customer's usual settlement method, pre-fillable onto new
+   * orders/payments. Vocabulary reused from the existing SD payment-method
+   * enum (SdCreatePaymentSchema.payment_method / sd_payments.payment_method).
+   */
+  defaultPaymentType: varchar("default_payment_type", { length: 20 }),
   openDebt: numericMoney("open_debt").default(0),
   totalOrders: integer("total_orders").default(0),
   totalRevenue: numericMoney("total_revenue").default(0),
@@ -51,6 +57,8 @@ export const sdCustomers = pgTable("sd_customers", {
   /** Primary email address for the company */
   email: varchar("email", { length: 255 }),
   notes: text("notes"),
+  /** CRM-13 #133 — agreed packaging method negotiated with the customer (free text; runtime-entered, defaults NULL) */
+  packagingMethod: text("packaging_method"),
   // Link to CRM company (application-level FK — avoids circular import)
   crmCompanyId: integer("crm_company_id"),
   /**
@@ -66,6 +74,7 @@ export const sdCustomers = pgTable("sd_customers", {
 }, (t) => [
   check("sd_customers_segment_chk", sql`${t.segment} IN ('vip','regular','new','potential')`),
   check("sd_customers_status_chk", sql`${t.status} IN ('active','inactive')`),
+  check("sd_customers_default_payment_type_chk", sql`${t.defaultPaymentType} IS NULL OR ${t.defaultPaymentType} IN ('cash','card','bank_transfer','online')`),
 ]);
 
 export const insertSdCustomerSchema = createInsertSchema(sdCustomers, {
@@ -73,6 +82,7 @@ export const insertSdCustomerSchema = createInsertSchema(sdCustomers, {
   segment: z.enum(["vip", "regular", "new", "potential"]).default("new"),
   status: z.enum(["active", "inactive"]).default("active"),
   crmCompanyId: z.number().int().positive().optional().nullable(),
+  defaultPaymentType: z.enum(["cash", "card", "bank_transfer", "online"]).optional().nullable(),
 }).omit({ id: true, createdAt: true, updatedAt: true } as never);
 
 export type SdCustomer = typeof sdCustomers.$inferSelect;

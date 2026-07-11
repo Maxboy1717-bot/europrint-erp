@@ -23,6 +23,11 @@ export const SdUpdateCustomerSchema = z.object({
   email:        z.string().email().optional(),
   address:      z.string().optional(),
   status:       z.enum(['active', 'inactive', 'blacklisted']).optional(),
+  // CRM-13 #120: same vocabulary as SdCreatePaymentSchema.payment_method below /
+  // sd_payments.payment_method — the customer's usual settlement method.
+  default_payment_type: z.enum(['cash', 'card', 'bank_transfer', 'online']).optional(),
+  // CRM-13 #133 — agreed packaging method (free text; runtime-entered, no fixed vocabulary in vision)
+  packaging_method: z.string().max(500).optional(),
 }).passthrough();
 export type SdUpdateCustomerDto = z.infer<typeof SdUpdateCustomerSchema>;
 

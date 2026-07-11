@@ -11,6 +11,8 @@ export const CreateCustomerSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().max(50).optional(),
   address: z.string().max(2000).optional(),
+  // CRM-13 #133 — agreed packaging method (free text; runtime-entered, no fixed vocabulary in vision)
+  packaging_method: z.string().max(500).optional(),
 }).passthrough();
 
 export const AddContactSchema = z.object({
