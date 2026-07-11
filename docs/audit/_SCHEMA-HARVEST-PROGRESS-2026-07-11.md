@@ -95,6 +95,17 @@ against live europrint — the code references new columns/tables that don't exi
 endpoints would fail at runtime. Completeness step: apply the session's idempotent migrations to
 europrint (they carry IF NOT EXISTS + APPROVED). business_settings/taxonomy already applied.
 
+## SD BATCH (06-sd) — 16/30 landed + migrations applied (2026-07-11)
+Re-ran build-spec (wf_a8b1e979-dd5, raw-SQL-first) → 30 ready specs. Harvested 16 (range 7681905b..9ad0c5bb),
+migrations applied to europrint (0 fail). Landed: #2 #14 #18 #27 #29 #40 #78 #100 #101 #102 #107 #118 #142
+#145 #147 #154 (material-wait escalation, klishe retention, shared-forma, inactive-customer cron, per-line
+deadline, kashirovka predecessor, contract terms, pending-material, print-method, machine-format, load-cap,
+roll-adhesive, two-sided, gofra-layer, zakaz-1s).
+**NEEDS re-anchor (14 cluster casualties):** #104 #117 #122 #123 #138 #139 #140 #141 #143 #144 #146 (all
+collide on sd-quotations repo/controller/dto — decoration/material specs), + tsc-slip #16 (hold-order-line
+Result-type), #35 (qc-holds cast), + anchor #19 (sd.module providers). → regen pass (stable anchors) like
+batch-1, OR hand re-anchor. §2 taxonomy content SEEDED (81 entries live) — dependencies for many SD lists ready.
+
 ## Batch-1 (39 specs) — HARVEST in progress
 **Landed this wave: 18** (see below + PP/MES additions iter 2).
 PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
