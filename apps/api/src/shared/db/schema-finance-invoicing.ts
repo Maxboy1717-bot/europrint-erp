@@ -46,6 +46,13 @@ export const invoices = pgTable(
     delivery_term: text('delivery_term'),
     incoterm_code: text('incoterm_code'),
     currency: text('currency'),
+    // VISION-3340 SD-06 #24 — additive, computed column (Q-35/Q-40, owner schema-approval
+    // 2026-07-11). Values: 'full' | 'partial' | NULL (pre-existing rows / orders with no
+    // delivery data yet stay NULL — not fabricated). Written by CreateInvoiceHandler at
+    // invoice-creation time by comparing delivery_items.delivery_quantity (yetkazilgan)
+    // against sales_order_items.order_quantity (buyurtma qilingan) for the invoice's
+    // sales_order_id — see DrizzleSdInvoicesRepository.getOrderFulfillmentQty.
+    invoice_type: text('invoice_type'),
   },
   (table) => [
     uniqueIndex('invoices_invoice_number_idx').on(table.invoice_number),
