@@ -24,6 +24,7 @@ import { SdLeadsController } from './presentation/sd-leads.controller';
 import { SdPaymentsController } from './presentation/sd-payments.controller';
 import { SdQuotationsController } from './presentation/sd-quotations.controller';
 import { SdContractsController } from './presentation/sd-contracts.controller';
+import { SdContractTermsRepository } from './infrastructure/repositories/sd-contract-terms.repo';
 import { SdPaymentsService } from './application/sd-payments.service';
 import { SdPaymentsRepository } from './infrastructure/repositories/sd-payments.repository';
 import { SD_PAYMENTS_REPO } from './domain/repositories/i-sd-payments.repo';
@@ -150,6 +151,7 @@ const repositories = [
     SdLostOrdersReclamationsController,
   ],
   providers: [
+    SdContractTermsRepository, // #78 vision 06-sd: structured contract terms repo (payment/penalty/penya)
     SdOrderSyncService,
     { provide: SD_ORDER_SYNC_REPO, useClass: DrizzleSdOrderSyncRepo },
     SdLineDeadlineService,
