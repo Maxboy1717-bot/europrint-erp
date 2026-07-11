@@ -16,7 +16,7 @@
  */
 
 import {
-  Body, Controller, Get, Param, Patch, Post, UseGuards, UseInterceptors, Res, Header,
+  Body, Controller, ForbiddenException, Get, NotFoundException, Param, Patch, Post, UseGuards, UseInterceptors, Res, Header,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -193,12 +193,24 @@ export class CcDocumentsController {
     return this.wf.createDraft(user.id, body);
   }
 
+  // 20-cc#39/76: bu route xuddi shu hujjatga cc-baskets.controller.ts:101 GET /baskets/:id
+  // bilan bir xil ma'lumotni beradi, lekin ownership-tekshiruvsiz edi (istalgan autentifikatsiya
+  // qilingan foydalanuvchi istalgan hujjatni o'qiy olardi) — cc-baskets.controller.ts:107-109
+  // dagi bilan bir xil tekshiruvni qo'shdim (yuboruvchi/savat-egasi/imtiyozli rol).
   @ApiOperation({ summary: 'Get one' })
   @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('documents/:id')
-  getOne(@Param('id') id: string) {
-    return this.baskets.getOne(id);
+  async getOne(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }) {
+    const doc = await this.baskets.getOne(id);
+    if (!doc) throw new NotFoundException('Hujjat topilmadi');
+    const isPrivileged = ['admin', 'super_admin', 'director', 'ceo'].includes(user.role);
+    const isParticipant = doc.senderUserId === user.id || doc.basketOwnerUserId === user.id;
+    if (!isPrivileged && !isParticipant) {
+      throw new ForbiddenException('Bu hujjatni ko\'rish huquqingiz yo\'q');
+    }
+    return doc;
   }
 
   @ApiOperation({ summary: 'Send' })
