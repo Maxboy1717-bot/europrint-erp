@@ -23,6 +23,7 @@ export type PriceCalcInput = {
   heightMm: number;
   thicknessMm?: number;
   printColors: number;
+  printSides?: number;
   quantity: number;
   isNewDie: boolean;
   /** 06-sd #142: kashirovka (ofset+gofra) alohida operatsiya kerakmi. */
@@ -223,7 +224,11 @@ export class SdQuotationsService {
       const printRunRate = colors >= 4 ? num(cfg.print_4color_price)
         : colors >= 2 ? num(cfg.print_2color_price)
         : colors >= 1 ? num(cfg.print_1color_price) : 0;
-      const printCost = colors > 0 ? num(cfg.plate_cost_per_color) * colors + printRunRate : 0;
+      // vision 06-sd #145 (Bez oborota/s oborotom): two-sided print doubles the print
+      // operation (plates + run). printSides is the per-line 1|2 factor persisted on
+      // sd_quotation_items; clamp defensively to {1,2} so a bad payload can't inflate cost.
+      const printSides = num(input.printSides, 1) >= 2 ? 2 : 1;
+      const printCost = (colors > 0 ? num(cfg.plate_cost_per_color) * colors + printRunRate : 0) * printSides;
 
       // Die/shtamp: new vs existing (EP-SD-042/125 klishe ownership).
       const dieCost = input.isNewDie ? num(cfg.die_cost_new) : num(cfg.die_cost_existing);

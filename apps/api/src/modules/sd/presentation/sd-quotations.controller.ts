@@ -152,6 +152,7 @@ export class SdQuotationsController {
       heightMm: Number(body.heightMm ?? 0),
       thicknessMm: body.thicknessMm != null ? Number(body.thicknessMm) : undefined,
       printColors: Number(body.printColors ?? 0),
+      printSides: Number(body.printSides ?? 1),
       quantity: Number(body.quantity ?? 1),
       isNewDie: body.isNewDie === true,
       kashirovka: body.kashirovka === true,

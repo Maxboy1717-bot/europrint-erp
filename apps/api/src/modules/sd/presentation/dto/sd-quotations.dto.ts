@@ -42,6 +42,7 @@ export const SdCalculatePriceSchema = z.object({
   heightMm:     z.coerce.number().nonnegative().default(0),
   thicknessMm:  z.coerce.number().nonnegative().optional(),
   printColors:  z.coerce.number().int().nonnegative().default(0),
+  printSides:   z.coerce.number().int().min(1).max(2).default(1),
   quantity:     z.coerce.number().positive().default(1),
   isNewDie:     z.coerce.boolean().optional().default(false),
   kashirovka:   z.coerce.boolean().optional().default(false),
