@@ -74,3 +74,34 @@
 6. **Org `head_user_id`** — 52 blocked + ko'p rol-item ochadi.
 
 > ⭐ Tavsiya: keyingi ish — **taksonomiya (mahsulot turlari)** — eng ko'p joyda ishlatiladi.
+
+---
+
+## 📋 TAKSONOMIYA KONTENTI — SEED QILINDI (2026-07-11, jonli)
+Egasi haqiqiy ro'yxatlarni berdi → `taxonomy_entries`ga 81 yozuv seed qilindi (commit de4004d8,
+europrint jonli). Egasi `/admin/taxonomy` orqali o'zgartiradi:
+- **product_type (15):** Gofrakarton list, Gofrokorob, Mikrogofrokorob, Latok, Tray/podnos, Fleksopechat qadoq, Ofset qadoq, Kashirovka, Tigel, Palletli, Displey, Rulon(gofra), List(yassi), Bo'yalgan/laminatsiya, Maxsus.
+- discount_type(5) · decoration_type(3) · document_type(6) · kanban_stage(7) · supplier_type(6) · rejection_reason(6) · paper_class(4: topliner/mahalliy/testliner/flyuting) · expense_category(9) · notification_category(6) · org_policy_series(5) · manager_note_category(5) · code_prefix(4: KT/PT/E/GL).
+- ⚠️ **07-pp#119 tuzatish:** bezash turlari = CRUD ro'yxat (AI-reja+operator-tayinlash uchun MAJBURIY), "erkin matn" EMAS.
+
+## 💰 GL/MOLIYA QOIDALARI (soddalashtirildi, 2026-07-11)
+- **Zarar itemlari** (rework/brak/material-isrofi/muddati-o'tgan/kamomad) → vaqtincha **"Ishlab chiqarish zarari"** hisobiga, keyin buxgalter aniqlaydi.
+- **Makulatura qayta-sotuv daromadi** → **"Boshqa daromadlar"**.
+- **Marketing xarajat + referral bonus** → ikkisi alohida yangi hisobga.
+- **Yo'lda tovar** → vaqtincha **"Yo'lda tovar"** → yetib borgach asosiy hisobga.
+- **Boshlang'ich ombor qoldig'i** → direktor tasdig'i bilan bir-martalik.
+- **CC hujjat tasdig'i** → auto GL (aniq hisob-raqam buxgalter bilan keyin).
+
+## 🔌 KREDENSIALLAR (2026-07-11)
+- Telegram: **har modulga alohida bot** (batafsil 30-savollik alohida sessiya).
+- SMS: Eskiz.uz/Play Mobile CRUD + ⭐ **AI qo'ng'iroq** (muhim jarayonlar SMS+qo'ng'iroq → rahbarlar) — YANGI talab.
+- AI-kamera (5S/sifat): CAPEX ✓, dona keyin.
+- ⚠️ 1C: kattalashtirildi — **ERP→1C moliyaviy uzatish** (alohida loyiha).
+- Telefoniya: IP-PBX (Zadarma/Beeline). Yig'ilish kamerasi: CAPEX ✓, direktor-only, 1 yil.
+
+## 📄 HUJJAT SHABLONLARI — YAKUNLANDI
+20-cc shablonlar "asosiy maydonlar + CRUD kengaytirish" bilan yopildi. ⚠️ Ochiq: **приказ + NDA yuridik matn** (alohida matn-sessiya).
+
+## ⏳ HAQIQIY OCHIQ (keyingi sessiya)
+1. **Org `head_user_id`** — ENG KATTA blocker (52 item + rol-itemlar). 2. приказ+NDA yuridik matn.
+3. Telegram bot-per-modul reja. 4. ERP↔1C integratsiya. 5. 5 taksonomiya (cc aloqa-turi, yo'nalish-turi ro'yxat, qadoqlash 10+, lavozim-vositalari, operatsiya-katalogi). 6. Buxgalteriya avtomatlashtirish g'oyasi.
