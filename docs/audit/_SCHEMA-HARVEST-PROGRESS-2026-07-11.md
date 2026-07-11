@@ -84,6 +84,17 @@ Specs live in `scratchpad/schema-specs/<m>__<n>.json` (migration .sql in newFile
 - Moving to STEP 2 (SD batch) for forward progress on fresh, non-entangled items; the 4 stragglers get a
   focused mini-pass later (they're a coherent production_sessions-cluster + 2 one-offs).
 
+## ✅ BATCH-1 COMPLETE (39/39) — 2026-07-11
+36 built + 3 satisfied-dups (mes#106←mes#4 material_norms version; mes#108←mes#33 is_training;
+pp#90←pp#37 gang-runs). Final stragglers cleared: pp#124 `2cb0c620` (production_order_lines,
+re-anchor providers + dist-rebuild), mes#33 `5bf6e6fd` (production_sessions is_training +
+lms_enrollment_id, re-anchor 3 drifts, dist-rebuild). No chala left in batch-1.
+
+⚠️ **MIGRATIONS-NOT-APPLIED chala:** ~37 batch-1 migration .sql files are COMMITTED but not run
+against live europrint — the code references new columns/tables that don't exist live yet, so those
+endpoints would fail at runtime. Completeness step: apply the session's idempotent migrations to
+europrint (they carry IF NOT EXISTS + APPROVED). business_settings/taxonomy already applied.
+
 ## Batch-1 (39 specs) — HARVEST in progress
 **Landed this wave: 18** (see below + PP/MES additions iter 2).
 PP iter2: 07-pp#46 `228c60a7`, #20 `a1461058`, #37 `b152f7e6`, #24 `b58c9f42`, #118 `a5ee4f94`,
