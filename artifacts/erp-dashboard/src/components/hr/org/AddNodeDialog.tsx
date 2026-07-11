@@ -14,11 +14,24 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NODE_TYPE_LABELS, OrgNode } from "./types";
 import { ParentCardSelect } from "./ParentCardSelect";
 import { useTranslation } from '@/lib/i18n';
+
+// 2026-07-11: default rang har node_type darajasi bo'yicha — egasi "yangi kartalar hammasi bir
+// xil rangda chiqyapti" deb topdi (root-cause: backend har doim '#3b82f6'ga fallback qiladi,
+// chunki bu forma color'ni umuman yubormasdi). Bu palette darrov vizual farq beradi; rang
+// pikkeri baribir erkin qayta tanlash imkonini beradi.
+const NODE_TYPE_DEFAULT_COLOR: Record<string, string> = {
+  owner: "#a855f7", top_director: "#3b82f6", director: "#2563eb", department: "#14b8a6",
+  otdeleniye: "#6366f1", otdel: "#06b6d4", sektsiya: "#10b981", sektor: "#f97316",
+};
+
+interface ShiftTypeOption {
+  id: number; code: string; name_uz: string; start_time: string; end_time: string;
+}
 
 /** G4 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B5): source card + its resolved
  * parentId, passed when the dialog is opened via the "duplicate" action instead of "add child". */
@@ -32,10 +45,13 @@ function emptyForm(initialParentId?: string) {
     name: "",
     nameRu: "",
     nodeType: "department",
+    color: NODE_TYPE_DEFAULT_COLOR.department,
     tskp: "",
     parentId: initialParentId || "",
     // VISION node=karta — to'liq karta-maydonlari (HR 0 dan quradi)
     razryadLevelId: null as number | null,
+    // 2026-07-11: Vysotskiy-7 — "Otdeleniye" tanlanganda qaysi 7 tadan ekani (DB CHECK 1-7).
+    otdeleniyeNo: null as number | null,
     salaryType: "",
     minSalary: "",
     maxSalary: "",
@@ -56,6 +72,7 @@ function duplicatedForm(source: OrgNode, parentId: number | null) {
     name: `${source.name} (nusxa)`,
     nameRu: source.nameRu ? `${source.nameRu} (копия)` : "",
     nodeType: source.nodeType || "department",
+    color: source.color || NODE_TYPE_DEFAULT_COLOR[source.nodeType || "department"] || NODE_TYPE_DEFAULT_COLOR.department,
     tskp: source.tskp || "",
     parentId: parentId != null ? String(parentId) : "",
     razryadLevelId: source.razryadLevelId ?? null,
@@ -103,6 +120,15 @@ export function AddNodeDialog({
   });
   const razryadOptions = Array.isArray(razryadData?.items) ? razryadData.items : [];
 
+  // 2026-07-11: "Ish vaqti" preset-tanlagich — shift_types (master-data, egasi-tahrirlanadigan)
+  // dan tayyor smenalarni taklif qiladi; matn maydoni pastda qoladi (erkin tahrir/qo'lda kiritish).
+  const { data: shiftData } = useQuery<ShiftTypeOption[]>({
+    queryKey: ["/api/hr/shifts/types"],
+    select: selectArray<ShiftTypeOption>,
+    staleTime: 60_000,
+  });
+  const shiftOptions = Array.isArray(shiftData) ? shiftData : [];
+
   const mutation = useMutation({
     mutationFn: () => {
       const parentId = form.parentId ? Number(form.parentId) : null;
@@ -112,11 +138,13 @@ export function AddNodeDialog({
         name: form.name,
         nameRu: form.nameRu,
         nodeType: form.nodeType,
+        color: form.color,
         tskp: form.tskp,
         parentId,
         level,
         // VISION node=karta — to'liq karta-maydonlari
         razryadLevelId: form.razryadLevelId,
+        otdeleniyeNo: form.nodeType === "otdeleniye" ? form.otdeleniyeNo : null,
         salaryType: form.salaryType || null,
         minSalary: numOrNull(form.minSalary),
         maxSalary: numOrNull(form.maxSalary),
@@ -163,15 +191,47 @@ export function AddNodeDialog({
           </div>
           <div>
             <Label>{t("type")}</Label>
-            <Select value={form.nodeType} onValueChange={(v) => setForm((f) => ({ ...f, nodeType: v }))}>
+            <Select value={form.nodeType} onValueChange={(v) => setForm((f) => ({
+              ...f, nodeType: v,
+              // Turi o'zgarganda rang ham shu daraja default'iga yangilanadi (pastda erkin qayta tanlanadi).
+              color: NODE_TYPE_DEFAULT_COLOR[v] || f.color,
+              otdeleniyeNo: v === "otdeleniye" ? f.otdeleniyeNo : null,
+            }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(NODE_TYPE_LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>{l}</SelectItem>
+                  <SelectItem key={v} value={v}>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: NODE_TYPE_DEFAULT_COLOR[v] || "var(--ep-muted)" }} />
+                      {l}
+                    </span>
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label>{t("rang", "Rang")}</Label>
+            <div className="flex items-center gap-2">
+              <input type="color" value={form.color}
+                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                className="h-8 w-16 rounded border" />
+              <span className="text-sm text-muted-foreground">{form.color}</span>
+            </div>
+          </div>
+          {form.nodeType === "otdeleniye" && (
+            <div>
+              <Label>{t("otdeleniyeRaqami", "Otdeleniye raqami (1-7)")}</Label>
+              <Select value={form.otdeleniyeNo == null ? "__none__" : String(form.otdeleniyeNo)}
+                onValueChange={(v) => setForm((f) => ({ ...f, otdeleniyeNo: v === "__none__" ? null : Number(v) }))}>
+                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">—</SelectItem>
+                  {[1, 2, 3, 4, 5, 6, 7].map((n) => (<SelectItem key={n} value={String(n)}>{n}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label>{t("qyamAsosiyVazifasiMaks32Belgi")}</Label>
             <Input
@@ -205,7 +265,9 @@ export function AddNodeDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          {/* 2026-07-11: grid-cols-1 tor (mobil/Telegram Mini App) ekranda — 2-ustunli grid
+              raqam maydonlarini (masalan ЦКП maqsad) siqib qo'yardi ("juda qisqa" shikoyati). */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <Label>{t("oylikTuri", "Oylik turi")}</Label>
               <Select value={form.salaryType || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, salaryType: v === "__none__" ? "" : v }))}>
@@ -249,6 +311,20 @@ export function AddNodeDialog({
           </div>
           <div>
             <Label>{t("ishVaqti", "Ish vaqti / smena")}</Label>
+            {shiftOptions.length > 0 && (
+              <Select value="__pick__" onValueChange={(v) => {
+                const s = shiftOptions.find((o) => String(o.id) === v);
+                if (s) setForm((f) => ({ ...f, workSchedule: `${s.start_time}-${s.end_time}` }));
+              }}>
+                <SelectTrigger className="mb-1"><SelectValue placeholder={t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__pick__" disabled>{t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")}</SelectItem>
+                  {shiftOptions.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>{s.name_uz} ({s.start_time}-{s.end_time})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
           </div>
           <div>
