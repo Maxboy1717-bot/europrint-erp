@@ -86,6 +86,11 @@ import { SdLostOrdersReclamationsController } from './presentation/sd-lost-order
 import { SdLostOrdersReclamationsService } from './application/sd-lost-orders-reclamations.service';
 import { DrizzleSdLostOrdersReclamationsRepo } from './infrastructure/repositories/drizzle-sd-lost-orders-reclamations.repo';
 import { SD_LOST_ORDERS_RECLAMATIONS_REPO } from './domain/repositories/i-sd-lost-orders-reclamations.repo';
+// 06-sd #29: per-line deadline scheduling (line_deadline + per_line_scheduling)
+import { SdLineDeadlineController } from './presentation/sd-line-deadline.controller';
+import { SdLineDeadlineService } from './application/sd-line-deadline.service';
+import { DrizzleSdLineDeadlineRepo } from './infrastructure/repositories/drizzle-sd-line-deadline.repo';
+import { SD_LINE_DEADLINE_REPO } from './domain/repositories/i-sd-line-deadline.repo';
 // 06-sd #27 — nofaol mijoz cron manba (controller + service + repo)
 import { SdCustomerInactivityController } from './presentation/sd-customer-inactivity.controller';
 import { CustomerInactivityService } from './application/customer-inactivity.service';
@@ -129,6 +134,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule],
   controllers: [
+    SdLineDeadlineController,
     SdCustomerInactivityController, // 06-sd #27 nofaol mijoz thresholds + manual sweep
     SdKlisheRetentionController,
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
@@ -138,6 +144,8 @@ const repositories = [
     SdLostOrdersReclamationsController,
   ],
   providers: [
+    SdLineDeadlineService,
+    { provide: SD_LINE_DEADLINE_REPO, useClass: DrizzleSdLineDeadlineRepo },
     // 06-sd #27 — nofaol mijoz cron manba (service + repo)
     CustomerInactivityService,
     DrizzleCustomerInactivityRepository,
