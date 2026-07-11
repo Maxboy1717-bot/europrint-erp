@@ -120,6 +120,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
         entityType: notification.referenceType || null,
         entityId: notification.referenceId || null,
         createdAt: notification.createdAt,
+        senderId: notification.senderId ? Number(notification.senderId) : null,   // 18-notif #88
       } as typeof notifications.$inferInsert)
       .returning()
       .execute()
@@ -185,6 +186,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     notification.isRead = Boolean(row.isRead);
     notification.referenceId = String(row.entityId ?? '');
     notification.referenceType = String(row.entityType ?? '');
+    notification.senderId = row.senderId != null ? String(row.senderId) : null;   // 18-notif #88
     notification.createdAt = row.createdAt ? new Date(String(row.createdAt)) : _time.now();
     notification.updatedAt = _time.now();
 

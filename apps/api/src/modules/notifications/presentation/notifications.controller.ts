@@ -185,9 +185,10 @@ export class NotificationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
   @Roles('admin', 'super_admin')
-  async createNotification(@Body() dto: CreateNotificationDto) {
+  async createNotification(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateNotificationDto) {
+    // 18-notif #88 — the authenticated caller is the originating actor (sender_id).
     const cmd = new CreateNotificationCommand(
-      dto.userId, dto.title, dto.body, dto.type, dto.referenceId, dto.referenceType);
+      dto.userId, dto.title, dto.body, dto.type, dto.referenceId, dto.referenceType, String(user.id));
     const result = await this.commandBus.execute(cmd);
     assertOk(result);
     this.logger.log({ notificationId: result.data.id, userId: dto.userId }, 'Notification created');

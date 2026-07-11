@@ -9,5 +9,8 @@ export class CreateNotificationCommand {
     readonly body: string,
     readonly type: string,
     readonly referenceId?: string,
-    readonly referenceType?: string) {}
+    readonly referenceType?: string,
+    // 18-notif #88 — originating actor id (e.g. admin who triggered POST /notifications).
+    // Undefined for system/cron-generated notifications (no human actor) — sender_id stays NULL.
+    readonly senderId?: string) {}
 }

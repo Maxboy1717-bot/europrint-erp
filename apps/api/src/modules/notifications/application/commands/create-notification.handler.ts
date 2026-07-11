@@ -43,6 +43,9 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     if (command.referenceType) {
       notification.referenceType = command.referenceType;
     }
+    if (command.senderId) {
+      notification.senderId = command.senderId;
+    }
 
     const saveResult = await this.notificationRepo.save(notification);
 

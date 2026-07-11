@@ -154,6 +154,7 @@ export const notifications = pgTable('notifications', {
   priority: text('priority'),  // live column (varchar) — 'urgent'|'high'|'normal'|'low', same vocabulary
                                 // as PriorityEnum in notification-schedules.controller.ts. Used to sort the
                                 // notification list (urgent/high first) in drizzle-notification.repo.ts.
+  senderId: integer('sender_id'),   // 18-notif #88: originating actor (nullable, additive; NULL = system/cron)
 });
 
 export const marketingCampaigns = pgTable('marketing_campaigns', {

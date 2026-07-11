@@ -29,6 +29,8 @@ export class Notification extends AggregateRoot {
   isRead: boolean;
   referenceId: string | null;
   referenceType: string | null;
+  // 18-notif #88 — originating actor id (who sent this notification); null = system/cron.
+  senderId: string | null;
 
   constructor(userId: number | string, title: string, body: string, type?: NotificationType | string);
   constructor(
@@ -88,6 +90,7 @@ export class Notification extends AggregateRoot {
     this.createdAt = _time.now();
     this.updatedAt = _time.now();
     this.readAt = null;
+    this.senderId = null;
   }
 
   markAsRead(by?: number): Result<void> | void {
