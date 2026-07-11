@@ -88,6 +88,11 @@ import { SdLostOrdersReclamationsController } from './presentation/sd-lost-order
 import { SdLostOrdersReclamationsService } from './application/sd-lost-orders-reclamations.service';
 import { DrizzleSdLostOrdersReclamationsRepo } from './infrastructure/repositories/drizzle-sd-lost-orders-reclamations.repo';
 import { SD_LOST_ORDERS_RECLAMATIONS_REPO } from './domain/repositories/i-sd-lost-orders-reclamations.repo';
+// 06-sd #102: mashina formati (72/52SM/KVA) tavsiya+narx katalogi
+import { SdMachineFormatController } from './presentation/sd-machine-format.controller';
+import { SdMachineFormatService } from './application/sd-machine-format.service';
+import { SD_MACHINE_FORMAT_REPO } from './domain/repositories/i-sd-machine-format.repo';
+import { DrizzleSdMachineFormatRepo } from './infrastructure/repositories/drizzle-sd-machine-format.repo';
 // vision 06-sd#40: Kashirovka offset+gofra sync — predecessor_order_id link + MES can-start gate
 import { SdOrderSyncController } from './presentation/sd-order-sync.controller';
 import { SdOrderSyncService } from './application/sd-order-sync.service';
@@ -151,6 +156,7 @@ const repositories = [
     SdPaymentsController, SdQuotationsController, SdContractsController,
     SalesController, SdOrderDepartmentsController,
     SdLostOrdersReclamationsController,
+    SdMachineFormatController,
   ],
   providers: [
     SdContractTermsRepository, // #78 vision 06-sd: structured contract terms repo (payment/penalty/penya)
@@ -200,6 +206,9 @@ const repositories = [
     // T26-4-QC-WMS-SD genuine-gap: lost-orders + reklamatsiya
     SdLostOrdersReclamationsService,
     { provide: SD_LOST_ORDERS_RECLAMATIONS_REPO, useClass: DrizzleSdLostOrdersReclamationsRepo },
+    // 06-sd #102: mashina formati (72/52SM/KVA) tavsiya+narx katalogi
+    SdMachineFormatService,
+    { provide: SD_MACHINE_FORMAT_REPO, useClass: DrizzleSdMachineFormatRepo },
   ],
   exports: [SALES_ORDER_REPO, SalesService],
 })
