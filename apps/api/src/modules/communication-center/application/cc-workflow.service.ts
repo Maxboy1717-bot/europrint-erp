@@ -55,6 +55,19 @@ export class CcWorkflowService {
     if (!tmpl) throw new NotFoundException(await this.i18n.t('errors.templateNotFound'));
     if (!tmpl.isActive) throw new BadRequestException(await this.i18n.t('errors.templateInactive'));
 
+    // 20-cc#11: bola-hujjat faqat ota-hujjat 'approved' yoki 'in_progress' holatida
+    // bo'lsagina yaratilishi mumkin — ota hali qoralama/rad/bekor bo'lsa, bog'liq
+    // bola-hujjat ma'nosiz (ota hech qachon amalga oshmasligi mumkin).
+    if (dto.parentDocumentId) {
+      const parent = unwrapOrThrow(await this.docs.getById(dto.parentDocumentId));
+      if (!parent) throw new NotFoundException(await this.i18n.t('errors.documentNotFound'));
+      if (!['approved', 'in_progress'].includes(parent.workflowState)) {
+        throw new BadRequestException(
+          `Ota-hujjat holati "${parent.workflowState}" — faqat tasdiqlangan/jarayondagi ota-hujjatga bola-hujjat qo'shish mumkin`,
+        );
+      }
+    }
+
     const docNumR = await this.numbers.generate(tmpl.id, tmpl.numberFormat);
     if (!isOk(docNumR)) throw new BadRequestException(docNumR.error.message);
     const documentNumber = docNumR.data;
