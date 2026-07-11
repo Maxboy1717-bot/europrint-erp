@@ -8,7 +8,7 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
-import { Result, Ok, Err } from '@common/result';
+import { Result, Ok, Err, AppErr } from '@common/result';
 
 type Row = Record<string, unknown>;
 
@@ -346,6 +346,48 @@ export class SdOrderDepartmentsRepository {
       if (status === 'RECEIVED') await this.markStatus(orderId, 'mold', 'done');
       return Ok(r.rows[0]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Mold statusini yangilashda xatolik'); }
+  }
+
+  /** Vision 06-sd#18: tag a mold with its physical die identity (die_code), decoupled from the
+   *  1:1 order_id. On tagging, auto-detect whether the same die_code already belongs to OTHER
+   *  orders and return them as a shared-forma warning (informational, non-blocking — shared forma
+   *  is technically allowed; the write itself is audit-logged by the controller's AuditInterceptor). */
+  async setDieCode(orderId: number, moldId: string, dieCode: string): Promise<Result<{ mold: Row; sharedWith: Row[]; warning: boolean }>> {
+    try {
+      const upd = await runQuery<Row>(sql`
+        UPDATE ow_molds SET die_code = ${dieCode}
+         WHERE id = ${moldId}::uuid AND order_id = ${orderId}
+        RETURNING id, order_id, die_code, vendor, status
+      `);
+      const mold = upd.rows[0];
+      if (!mold) return Err(AppErr('NOT_FOUND', 'Mold topilmadi'));
+      const shared = await runQuery<Row>(sql`
+        SELECT id, order_id, vendor, status
+        FROM ow_molds
+        WHERE die_code = ${dieCode} AND order_id <> ${orderId}
+        ORDER BY order_id
+      `);
+      return Ok({ mold, sharedWith: shared.rows, warning: shared.rows.length > 0 });
+    } catch (e: unknown) { return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Die code saqlashda xatolik')); }
+  }
+
+  /** Vision 06-sd#18: global shared-forma detector — every physical die (die_code) referenced by
+   *  more than one order. Surfaces the warning list for the SD panel. Empty until dies are tagged. */
+  async getSharedDieWarnings(): Promise<Result<Row[]>> {
+    try {
+      const r = await runQuery<Row>(sql`
+        SELECT die_code,
+               COUNT(*)::int AS mold_count,
+               COUNT(DISTINCT order_id)::int AS order_count,
+               array_agg(DISTINCT order_id ORDER BY order_id) AS order_ids
+        FROM ow_molds
+        WHERE die_code IS NOT NULL
+        GROUP BY die_code
+        HAVING COUNT(DISTINCT order_id) > 1
+        ORDER BY die_code
+      `);
+      return Ok(r.rows);
+    } catch (e: unknown) { return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Shared forma tekshiruvida xatolik')); }
   }
 
   async markStatus(orderId: number, department: string, status: string): Promise<Result<void>> {

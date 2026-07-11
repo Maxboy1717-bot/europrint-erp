@@ -15,7 +15,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
 import { AuditInterceptor } from '../../shared/interceptors/audit.interceptor';
 import { SdOrderDepartmentsService } from '../application/sd-order-departments.service';
-import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto } from './dto/sd-order-departments.dto';
+import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto, SetDieCodeSchema, SetDieCodeDto } from './dto/sd-order-departments.dto';
 
 @ApiTags('SD Order Departments')
 @ApiBearerAuth()
@@ -100,5 +100,23 @@ export class SdOrderDepartmentsController {
   @UsePipes(new ZodValidationPipe(UpdateMaterialStatusSchema))
   async setMaterialStatus(@Param('id', ParseIntPipe) id: number, @Param('reqId') reqId: string, @Body() dto: UpdateMaterialStatusDto) {
     return unwrapOrThrow(await this.svc.setMaterialStatus(id, reqId, dto.status));
+  }
+
+  @ApiOperation({ summary: 'Shared forma auto-detect: physical dies (die_code) referenced by >1 order (vision 06-sd#18)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('molds/shared-dies')
+  @Roles(Role.SALES_MANAGER, Role.PRODUCTION_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  async sharedDies() {
+    return unwrapOrThrow(await this.svc.getSharedDieWarnings());
+  }
+
+  @ApiOperation({ summary: 'Tag a mold with its physical die identity + shared-forma warning (vision 06-sd#18)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/molds/:moldId/die-code')
+  @Roles(Role.PRODUCTION_MANAGER, Role.TECHNOLOGIST, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @UsePipes(new ZodValidationPipe(SetDieCodeSchema))
+  async setDieCode(@Param('id', ParseIntPipe) id: number, @Param('moldId') moldId: string, @Body() dto: SetDieCodeDto) {
+    return unwrapOrThrow(await this.svc.setDieCode(id, moldId, dto.dieCode));
   }
 }

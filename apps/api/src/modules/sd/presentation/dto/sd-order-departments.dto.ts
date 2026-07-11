@@ -47,3 +47,9 @@ export const UpdateMaterialStatusSchema = z.object({
   status: z.enum(MATERIAL_STATUSES),
 });
 export type UpdateMaterialStatusDto = z.infer<typeof UpdateMaterialStatusSchema>;
+
+// Vision 06-sd#18: physical die identity (die_code) tagged onto a mold; decoupled from order_id.
+export const SetDieCodeSchema = z.object({
+  dieCode: z.string().min(1).max(100),
+});
+export type SetDieCodeDto = z.infer<typeof SetDieCodeSchema>;
