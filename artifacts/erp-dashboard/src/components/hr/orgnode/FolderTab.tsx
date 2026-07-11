@@ -3,9 +3,9 @@
  * @description React UI component.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { FolderOpen, Plus, FileText, Video, ClipboardList, X } from "lucide-react";
+import { FolderOpen, Plus, FileText, Video, ClipboardList, X, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,13 @@ export function FolderTab({nodeId }: FolderTabProps) {
     url: "",
     description: "",
   });
+  // 2026-07-11: egasi so'rovi — QYaM (ЦКП) maydoni "fayl yuklash" bo'lishi kerak edi. Karta hali
+  // yaratilmagan paytda papkaga fayl biriktirib bo'lmaydi (nodeId kerak) — shuning uchun bu
+  // AddNodeDialog'da emas, shu yerda (karta yaratilgach ochiladigan "Papka" bo'limi) real fayl
+  // yuklashga ulanadi. Backend PUT /api/storage/upload allaqachon mavjud (chat/podotchet bilan
+  // bir xil naqsh — CashierHub.tsx:307), faqat bu forma hozirgacha URL matn kiritishni talab qilardi.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: folderItems = [], isLoading: folderLoading, refetch: refetchFolder } = useQuery<FolderItem[]>({
     queryKey: [`/api/org-structure/nodes/${nodeId}/folder`],
@@ -67,6 +74,26 @@ export function FolderTab({nodeId }: FolderTabProps) {
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
+
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // xuddi shu faylni qayta tanlasa ham onChange yana ishga tushsin
+    if (!file) return;
+    setUploading(true);
+    try {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+      const key = `org-folder/${nodeId}/${Date.now()}-${safeName}`;
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      await apiRequest("PUT", `/api/storage/upload?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(file.type || "application/octet-stream")}`, fd);
+      setFolderForm((f) => ({ ...f, url: `/api/storage/${key}`, title: f.title || file.name }));
+      toast({ title: "Fayl yuklandi", description: file.name });
+    } catch {
+      toast({ title: "Fayl yuklashda xatolik", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
 
   if (folderLoading) {
     return (
@@ -228,11 +255,34 @@ export function FolderTab({nodeId }: FolderTabProps) {
               />
             </div>
             <div>
-              <Label>{t("urlHavola")}</Label>
+              <Label>{t("faylniYuklash", "Faylni yuklash")}</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileSelected}
+                data-testid="input-folder-item-file"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-start text-muted-foreground"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading
+                  ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  : <Upload className="mr-2 h-3.5 w-3.5" />}
+                {uploading ? t("yuklanmoqda", "Yuklanmoqda...") : t("kompyuterdanFaylTanlash", "Kompyuterdan fayl tanlash...")}
+              </Button>
+            </div>
+            <div>
+              <Label>{t("urlHavola")} {t("yokiTashqiHavola", "(yoki tashqi havola)")}</Label>
               <Input
                 value={folderForm.url}
                 onChange={(e) => setFolderForm((f) => ({ ...f, url: e.target.value }))}
-                placeholder="https://..."
+                placeholder={t("yokiYuqoridanFaylYuklang", "https://... yoki yuqoridan fayl yuklang")}
                 data-testid="input-folder-item-url"
               />
             </div>

@@ -140,6 +140,56 @@ export class HrShiftsCompatController {
     is_active:            z.boolean().optional(),
   });
 
+  // 2026-07-11: owner feedback — ShiftTypesConfig.tsx could only EDIT the 3 seeded rows,
+  // no way to add a new shift type or remove one ("sozlanishi kerak" — needs to be
+  // configurable). GET+PATCH already existed; this closes the gap with CREATE+DELETE.
+  private static readonly CreateShiftTypeSchema = z.object({
+    code:                 z.string().min(1).max(30).regex(/^[A-Z0-9_]+$/, "Kod faqat A-Z, 0-9, _ (masalan: DAY_SHIFT_2)"),
+    name_uz:              z.string().min(1).max(100),
+    name_ru:              z.string().max(100).optional(),
+    start_time:           z.string().regex(/^\d{2}:\d{2}$/),
+    end_time:             z.string().regex(/^\d{2}:\d{2}$/),
+    overtime_multiplier:  z.number().min(1).max(5).optional(),
+  });
+
+  @Post('shifts/types')
+  async createShiftType(@Body() body: unknown) {
+    const dto = HrShiftsCompatController.CreateShiftTypeSchema.parse(body);
+    const [sh, sm] = dto.start_time.split(':').map(Number);
+    const [eh, em] = dto.end_time.split(':').map(Number);
+    const startMin = sh * 60 + sm;
+    const endMin = eh * 60 + em;
+    const isOvernight = endMin <= startMin;
+    const durationHours = ((isOvernight ? endMin + 24 * 60 : endMin) - startMin) / 60;
+    try {
+      const rows = await rawSql(sql`
+        INSERT INTO shift_types (code, name_uz, name_ru, start_time, end_time, duration_hours, is_overnight, overtime_multiplier, is_active, sort_order)
+        VALUES (
+          ${dto.code}, ${dto.name_uz}, ${dto.name_ru ?? null}, ${dto.start_time}, ${dto.end_time},
+          ${durationHours}, ${isOvernight}, ${dto.overtime_multiplier ?? 1.5}, true,
+          (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM shift_types)
+        )
+        RETURNING id, code, name_uz, start_time, end_time, duration_hours, is_overnight, overtime_multiplier, is_active, sort_order
+      `);
+      return rows.rows[0];
+    } catch (e) {
+      if (e instanceof Error && /duplicate key|unique constraint/i.test(e.message)) {
+        throw new BadRequestException(`Kod "${dto.code}" allaqachon mavjud`);
+      }
+      throw e;
+    }
+  }
+
+  @Delete('shifts/types/:id')
+  async deleteShiftType(@Param('id', ParseIntPipe) id: number) {
+    // Soft-guard: agar biror karta shu smenani ishlatayotgan bo'lsa (org_departments.work_schedule
+    // erkin matn bo'lgani uchun to'g'ridan-to'g'ri FK yo'q) — o'chirish shunchaki yozuvni o'chiradi,
+    // matn sifatida saqlangan qadimgi qiymatlarga ta'sir qilmaydi (Q-46: mavjud ma'lumot buzilmaydi).
+    const rows = await rawSql(sql`DELETE FROM shift_types WHERE id = ${id} RETURNING id`);
+    if (rows.rows.length === 0) throw new BadRequestException('Smena turi topilmadi');
+    return { deleted: true, id };
+  }
+
   @Patch('shifts/types/:id')
   async updateShiftType(
     @Param('id', ParseIntPipe) id: number,

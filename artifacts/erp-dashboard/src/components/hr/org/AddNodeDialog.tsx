@@ -33,6 +33,15 @@ interface ShiftTypeOption {
   id: number; code: string; name_uz: string; start_time: string; end_time: string;
 }
 
+// 2026-07-11: egasi 2026-06-25 (AskUserQuestion) TASDIQLAGAN qoida — bir xil manba
+// apps/api/src/common/constants/rbac-tier.policy.ts bilan (backend derive-on-read; bu FE
+// nusxa faqat forma ichida "avtomatik nima bo'ladi" ko'rsatish uchun — yozish/hisoblash BACKEND
+// tomonda amalga oshadi, bu shunchaki hint). "RBAC/ruxsat" maydoni ODATDA bo'sh qoldiriladi —
+// egasi shikoyati: forma "qo'lda kiriting" deb ko'rinardi, aslida avtomatik hisoblanadi.
+const RAZRYAD_LEVEL_TO_RBAC_TIER_HINT: Record<number, string> = {
+  1: "operator", 2: "operator", 3: "specialist", 4: "specialist", 5: "manager", 6: "executive",
+};
+
 /** G4 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B5): source card + its resolved
  * parentId, passed when the dialog is opened via the "duplicate" action instead of "add child". */
 export interface DuplicateFromInput {
@@ -281,8 +290,23 @@ export function AddNodeDialog({
               </Select>
             </div>
             <div>
-              <Label>{t("rbacDaraja", "RBAC/ruxsat")}</Label>
-              <Input value={form.rbacTier} onChange={(e) => setForm((f) => ({ ...f, rbacTier: e.target.value }))} placeholder="operator/manager" />
+              <Label>{t("rbacDaraja", "RBAC/ruxsat (avtomatik)")}</Label>
+              <Input
+                value={form.rbacTier}
+                onChange={(e) => setForm((f) => ({ ...f, rbacTier: e.target.value }))}
+                placeholder={
+                  form.razryadLevelId != null
+                    ? (() => {
+                        const lvl = razryadOptions.find((r) => r.id === form.razryadLevelId)?.level;
+                        const auto = lvl != null ? RAZRYAD_LEVEL_TO_RBAC_TIER_HINT[lvl] : undefined;
+                        return auto ? `Avtomatik: ${auto} (razryaddan)` : "Bo'sh — razryaddan avtomatik";
+                      })()
+                    : "Bo'sh qoldiring — razryaddan avtomatik hisoblanadi"
+                }
+              />
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {t("rbacAvtomatikIzoh", "Bo'sh qoldirsangiz razryaddan avtomatik aniqlanadi (1-2=operator, 3-4=specialist, 5=manager, 6=executive). Faqat maxsus holatda qo'lda yozing.")}
+              </p>
             </div>
             <div>
               <Label>{t("minOylik", "Min oylik")}</Label>
