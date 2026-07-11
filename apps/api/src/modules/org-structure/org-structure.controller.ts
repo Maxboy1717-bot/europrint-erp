@@ -237,7 +237,13 @@ export class OrgStructureController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('nodes')
   async create(@Body() body: unknown) {
-    const dto = OrgNodeSchema.superRefine(requireReasonForSensitiveFields).parse(body);
+    // 2026-07-11: requireReasonForSensitiveFields deliberately NOT applied here (unlike PATCH
+    // below). That gate exists to force a "why" when a sensitive field on an EXISTING karta
+    // changes value — it makes no sense on first creation (there is no prior value to diverge
+    // from). Bug found live: AddNodeDialog.tsx always sends razryadLevelId/salaryType keys
+    // (defaulting to null) and never a `reason` field, so with the shared refine every single
+    // "Yangi bo'lim qo'shish" 422'd unconditionally, regardless of what the user filled in.
+    const dto = OrgNodeSchema.parse(body);
     return unwrapOrInternal(await this.service.create(dto as Record<string, unknown>));
   }
 
