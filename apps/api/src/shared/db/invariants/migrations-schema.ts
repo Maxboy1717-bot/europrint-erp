@@ -879,4 +879,23 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'pos_movements.mes_session_id index (POS-19 #49)',
     sql: `CREATE INDEX IF NOT EXISTS idx_pos_movements_mes_session_id ON pos_movements (mes_session_id)`,
   },
+  // LMS-12 #30 (2026-07-11): legal-minimal certificate fields — vision
+  // docs/audit/vision-1000-answers/12-lms.md #30 requires to'liq ism / lavozim / tashkilot
+  // nomi / tasdiq sana+vaqt / IP manzil / SHA-256 hash on every issued certificate (F5
+  // immutable-document principle). ism (employees JOIN) and sana (issued_at/issued_date)
+  // already exist on `certificates`; the two missing technical columns are added here
+  // (additive, nullable — Q-39 existing rows unaffected). Wired in both certificate-issuance
+  // write paths (LmsCertRepo.saveCertificate for POST /lms/certificates/issue,
+  // LmsCoursesExtendedRepository.saveCertificate for POST /certificates) since both insert
+  // into this same table. See
+  // apps/api/src/shared/db/migrations/lms-certificate-legal-fields-2026-07-11.sql for the
+  // human-readable mirror of this entry.
+  {
+    name: 'certificates.issued_ip column (LMS-12 #30, legal-minimal cert fields)',
+    sql: `ALTER TABLE IF EXISTS certificates ADD COLUMN IF NOT EXISTS issued_ip VARCHAR(64)`,
+  },
+  {
+    name: 'certificates.cert_hash column (LMS-12 #30, SHA-256 digital-signature substitute)',
+    sql: `ALTER TABLE IF EXISTS certificates ADD COLUMN IF NOT EXISTS cert_hash VARCHAR(64)`,
+  },
 ];

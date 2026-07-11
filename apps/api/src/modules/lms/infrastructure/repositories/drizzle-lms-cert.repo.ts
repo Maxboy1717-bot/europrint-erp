@@ -3,6 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
+import { createHash } from 'crypto';
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
@@ -51,7 +52,18 @@ export class LmsCertRepo {
       // certificates: user_id + certificate_number are NOT NULL (no default); the old insert wrote only
       // the legacy employee_id and omitted both -> 23502. user_id := employee, certificate_number generated.
       const emp = certificate.employeeId ?? certificate.employee_id;
-      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_date, expiry_date, score, is_active, created_at) VALUES (${emp}, ${emp}, ${certificate.courseId ?? certificate.course_id}, ${'CERT-' + Date.now()}, NOW(), ${certificate.expiresAt ?? certificate.expiry_date ?? null}, ${certificate.score ?? null}, true, NOW()) ON CONFLICT DO NOTHING RETURNING *`);
+      const courseId = certificate.courseId ?? certificate.course_id;
+      const expiresAt = certificate.expiresAt ?? certificate.expiry_date ?? null;
+      const certNumber = 'CERT-' + Date.now();
+      // LMS-12 #30 (legal-minimal cert fields, vision docs/audit/vision-1000-answers/12-lms.md
+      // #30): issued_ip captures the requester IP at issuance time; cert_hash is a SHA-256
+      // digest over the immutable cert payload — digital-signature substitute (F5 principle),
+      // not a secret, so a plain digest (no HMAC key) is sufficient here.
+      const issuedIp = certificate.issuedIp ? String(certificate.issuedIp) : null;
+      const certHash = createHash('sha256')
+        .update(`${emp}|${courseId}|${certNumber}|${expiresAt ?? ''}|${issuedBy ?? ''}`)
+        .digest('hex');
+      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_date, expiry_date, score, is_active, created_at, issued_ip, cert_hash) VALUES (${emp}, ${emp}, ${courseId}, ${certNumber}, NOW(), ${expiresAt}, ${certificate.score ?? null}, true, NOW(), ${issuedIp}, ${certHash}) ON CONFLICT DO NOTHING RETURNING *`);
       return Ok(r[0]);
     } catch (error: unknown) {
       this.logger.error(`saveCertificate: ${(error as Error).message}`);

@@ -3,6 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
+import { createHash } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql, eq, count } from 'drizzle-orm';
@@ -116,7 +117,17 @@ export class LmsCoursesExtendedRepository {
     try {
       // user_id + certificate_number NOT NULL (no default) — supply both (was omitted -> 23502).
       const emp = parseInt(String(data.employeeId), 10);
-      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_at, expiry_date, issued_by, is_active, created_at) VALUES (${emp}, ${emp}, ${parseInt(String(data.courseId), 10)}, ${'CERT-' + Date.now()}, NOW(), ${data.expiryDate ? String(data.expiryDate) : null}, ${parseInt(userId, 10)}, true, NOW()) RETURNING *`);
+      const courseId = parseInt(String(data.courseId), 10);
+      const expiryDate = data.expiryDate ? String(data.expiryDate) : null;
+      const certNumber = 'CERT-' + Date.now();
+      // LMS-12 #30 (legal-minimal cert fields, vision docs/audit/vision-1000-answers/12-lms.md
+      // #30): issued_ip captures the requester IP at issuance time; cert_hash is a SHA-256
+      // digest over the immutable cert payload — digital-signature substitute (F5 principle).
+      const issuedIp = data.issuedIp ? String(data.issuedIp) : null;
+      const certHash = createHash('sha256')
+        .update(`${emp}|${courseId}|${certNumber}|${expiryDate ?? ''}|${userId}`)
+        .digest('hex');
+      const r = await exec(sql`INSERT INTO certificates (employee_id, user_id, course_id, certificate_number, issued_at, expiry_date, issued_by, is_active, created_at, issued_ip, cert_hash) VALUES (${emp}, ${emp}, ${courseId}, ${certNumber}, NOW(), ${expiryDate}, ${parseInt(userId, 10)}, true, NOW(), ${issuedIp}, ${certHash}) RETURNING *`);
       return Ok((r[0] ?? data) as Row);
     } catch (error) { this.logger.error(`saveCertificate: ${(error as Error).message}`); return Err((error as Error).message); }
   }

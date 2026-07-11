@@ -14,6 +14,7 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
   UsePipes,
   UseGuards,
@@ -34,7 +35,7 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { LmsCertificatesStandaloneService } from '../application/services/lms-certificates-standalone.service';
 import { CreateCertificateSchema, CreateCertificateDto } from './dto/lms-questionnaire.dto';
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 @ApiThrottle()
 @Controller('certificates')
@@ -69,8 +70,16 @@ export class LmsCertificatesStandaloneController {
   @Post()
   @Roles('TRAINING_OFFICER', 'HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   @UsePipes(new ZodValidationPipe(CreateCertificateSchema))
-  async createCertificate(@Body() dto: CreateCertificateDto, @CurrentUser() user: AuthenticatedUser) {
-    const result = await this.svc.createCertificate(dto, String(user?.id ?? 0));
+  async createCertificate(
+    @Body() dto: CreateCertificateDto,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() req: FastifyRequest,
+  ) {
+    // LMS-12 #30 (legal-minimal cert fields, vision docs/audit/vision-1000-answers/12-lms.md
+    // #30): capture the issuing IP at issuance time — same pattern as
+    // auth-account.controller.ts resendOtp().
+    const issuedIp = (req.ip as string) || 'unknown';
+    const result = await this.svc.createCertificate(dto, String(user?.id ?? 0), issuedIp);
     const data = unwrapOrInternal(result);
     return { message: 'Sertifikat yaratildi', data };
   }
