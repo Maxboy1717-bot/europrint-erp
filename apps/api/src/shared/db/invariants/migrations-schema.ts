@@ -860,4 +860,23 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
       END $$;
     `,
   },
+  // POS-19 #49 (Bitta qurilmada MES brak + POS chiqim, mes_session_id FK) — vision
+  // vision-1000-answers/19-pos.md #49: "MES sessiya ID POS harakat metadata'siga avtomatik
+  // bog'lanadi: pos_movements.mes_session_id -> MES production_sessions.id FK." Column
+  // confirmed absent via a full information_schema.columns read of pos_movements
+  // (2026-07-11); production_sessions(id integer) confirmed to exist. Pure additive
+  // ADD COLUMN, nullable, ON DELETE SET NULL — no consumer wiring yet (schema-only per
+  // the build note; the auto-link write path is a separate later slice).
+  // APPROVED: owner schema-approval wave 2026-07-11 (Muslimbek, chat) — Q-35,
+  // docs/audit/_PHASE2-OWNER-DECISIONS-2026-07-11.md ##49 (Schema sign-off Q-35 batch).
+  // Human-readable mirror:
+  // apps/api/src/shared/db/migrations/pos-49-mes-session-id-fk-2026-07-11.sql.
+  {
+    name: 'pos_movements.mes_session_id FK -> production_sessions (POS-19 #49)',
+    sql: `ALTER TABLE IF EXISTS pos_movements ADD COLUMN IF NOT EXISTS mes_session_id INTEGER REFERENCES production_sessions(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'pos_movements.mes_session_id index (POS-19 #49)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_pos_movements_mes_session_id ON pos_movements (mes_session_id)`,
+  },
 ];
