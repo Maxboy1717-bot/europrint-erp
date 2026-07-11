@@ -607,6 +607,15 @@ export const KANBAN_MAX_URGENT_PER_DAY = 2;
 export const WMS_GTD_ESCALATION_DAYS = 14;
 
 /**
+ * Modul 14 Marketing -- promo-kod standart cheklash (vision-1000-answers/14-marketing.md #20):
+ * "Promo-kod 1 mijoz / 1 kampaniya bo'yicha cheklangan (default); cheklash qoidasini
+ * marketing boshliq kampaniya sozlamalarida belgilaydi -- yangi kampaniyada boshqa limit
+ * qo'yish mumkin." Qiymat vision matnida aniq berilgan (1), egasi-qarori EMAS; promo-kod
+ * yaratishda boshqa limit uzatilsa shu default override qilinadi (promo-codes.service.ts).
+ */
+export const MARKETING_PROMO_CODE_DEFAULT_USAGE_LIMIT = 1;
+
+/**
  * Kanban — "bekor qilingan" (cancelled) ustunni tanish uchun kalit so'zlar
  * (modul 15 Kanban, Kanban-15 A17). Buyurtma bekor qilinganda
  * `moveOrderCardToCancelled` (kanban-cards.repo.ts) unga bog'liq kartalarni

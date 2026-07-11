@@ -38,6 +38,9 @@ import { WinBackCron } from './infrastructure/cron/win-back.cron';
 import { CustomerRhythmController } from './presentation/customer-rhythm.controller';
 import { CustomerRhythmService } from './application/customer-rhythm.service';
 import { DrizzleCustomerRhythmRepository } from './infrastructure/repositories/drizzle-customer-rhythm.repo';
+import { PromoCodesController } from './presentation/promo-codes.controller';
+import { PromoCodesService } from './promo-codes/promo-codes.service';
+import { PromoCodesRepository } from './promo-codes/promo-codes.repository';
 
 const commandHandlers = [CreateCampaignHandler, UpdateCampaignHandler, LaunchCampaignHandler];
 const queryHandlers = [GetCampaignsHandler, GetCampaignHandler];
@@ -59,6 +62,7 @@ const repositories = [
     NpsRequestsController,
     CustomerRhythmController,
     ManagerKpiController,
+    PromoCodesController,
   ],
   providers: [
     ...commandHandlers,
@@ -82,6 +86,8 @@ const repositories = [
     WinBackCron,
     ManagerKpiService,
     DrizzleManagerKpiRepository,
+    PromoCodesRepository,
+    PromoCodesService,
   ],
   exports: [CAMPAIGN_REPO, MarketingRoiService],
 })
