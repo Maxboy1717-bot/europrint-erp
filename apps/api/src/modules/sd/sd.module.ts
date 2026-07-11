@@ -86,6 +86,11 @@ import { SdLostOrdersReclamationsController } from './presentation/sd-lost-order
 import { SdLostOrdersReclamationsService } from './application/sd-lost-orders-reclamations.service';
 import { DrizzleSdLostOrdersReclamationsRepo } from './infrastructure/repositories/drizzle-sd-lost-orders-reclamations.repo';
 import { SD_LOST_ORDERS_RECLAMATIONS_REPO } from './domain/repositories/i-sd-lost-orders-reclamations.repo';
+// vision 06-sd#40: Kashirovka offset+gofra sync — predecessor_order_id link + MES can-start gate
+import { SdOrderSyncController } from './presentation/sd-order-sync.controller';
+import { SdOrderSyncService } from './application/sd-order-sync.service';
+import { DrizzleSdOrderSyncRepo } from './infrastructure/repositories/drizzle-sd-order-sync.repo';
+import { SD_ORDER_SYNC_REPO } from './domain/repositories/i-sd-order-sync.repo';
 // 06-sd #29: per-line deadline scheduling (line_deadline + per_line_scheduling)
 import { SdLineDeadlineController } from './presentation/sd-line-deadline.controller';
 import { SdLineDeadlineService } from './application/sd-line-deadline.service';
@@ -134,6 +139,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule],
   controllers: [
+    SdOrderSyncController,
     SdLineDeadlineController,
     SdCustomerInactivityController, // 06-sd #27 nofaol mijoz thresholds + manual sweep
     SdKlisheRetentionController,
@@ -144,6 +150,8 @@ const repositories = [
     SdLostOrdersReclamationsController,
   ],
   providers: [
+    SdOrderSyncService,
+    { provide: SD_ORDER_SYNC_REPO, useClass: DrizzleSdOrderSyncRepo },
     SdLineDeadlineService,
     { provide: SD_LINE_DEADLINE_REPO, useClass: DrizzleSdLineDeadlineRepo },
     // 06-sd #27 — nofaol mijoz cron manba (service + repo)
