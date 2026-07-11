@@ -63,6 +63,26 @@ export class PosEventHandler {
     broadcastPosEvent('movement.created', { id: payload.movementId, movementNumber: payload.movementNumber, movementType: payload.typeCode, status: 'draft', createdAt: new Date().toISOString() });
     this.n(payload.createdById, 'MOVEMENT_CREATED', 'Harakat yaratildi', `${payload.movementNumber} yaratildi`, payload.movementId);
 
+    // 19-pos#17 (vision-1000-answers/19-pos.md #17): shoshilinch/rejasiz chiqim (is_unplanned=true)
+    // — boshliqqa real-time Telegram push (@OnEvent, cron emas). Rol-so'rov + Telegram chaqiruv
+    // naqshi pos.movement.data.pending handleri bilan bir xil (findByRoles + sendNotification).
+    if (payload.isUnplanned) {
+      try {
+        const chiefs = await this.eventRepo.findByRoles(['warehouse_manager', 'pos_manager']);
+        await Promise.all(chiefs.map(async (c) => {
+          if (c.telegramId) {
+            await this.telegramService.sendNotification(
+              BigInt(String(c.telegramId)),
+              `🚨 <b>Shoshilinch (rejasiz) chiqim</b>\n\nHarakat: <code>${payload.movementNumber}</code>\nBu chiqim PP kunlik rejadan tashqari — "og'ish" (variance) sifatida qaydlandi.`,
+            );
+          }
+          this.n(c.id, 'UNPLANNED_ISSUE', 'Shoshilinch chiqim', `${payload.movementNumber} — rejadan tashqari chiqim`, payload.movementId);
+        }));
+      } catch (e) {
+        this.logger.warn(`[UnplannedIssue] Telegram xabar xatosi (${payload.movementNumber}): ${String(e)}`);
+      }
+    }
+
     if (payload.typeCode === 'EXTERNAL_IN') {
       // Auto-karantin: EXTERNAL_IN avtomatik QC-HOLD omborga
       try {

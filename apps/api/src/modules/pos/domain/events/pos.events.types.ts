@@ -9,6 +9,9 @@ export interface MovementCreatedEvent {
   movementNumber: string;
   typeCode: string;
   createdById: number;
+  // 19-pos#17 (vision-1000-answers/19-pos.md #17): shoshilinch/rejasiz chiqim bayrog'i —
+  // true bo'lsa pos.events.ts onMovementCreated boshliqqa real-time Telegram push yuboradi.
+  isUnplanned?: boolean;
 }
 
 export interface MovementStatusChangedEvent {

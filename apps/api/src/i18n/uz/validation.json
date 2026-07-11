@@ -36,6 +36,7 @@
   "ean13BaseMustBe12Digits": "Base 12 raqam bo'lishi kerak",
   "downloadReasonRequired": "Hujjatni yuklab olish uchun sabab kiritilishi shart (?reason=, kamida 5 belgi)",
   "internalReturnReasonRequired": "INTERNAL_RETURN uchun qaytarish sababi majburiy",
+  "unplannedIssueReasonRequired": "Shoshilinch (rejasiz) chiqimda sabab (notes) majburiy",
   "materialIdRequired": "materialId majburiy",
   "materialIdAndQuantityRequired": "material_id va quantity majburiy",
   "movementTypeIdOrCodeRequired": "movementTypeId yoki movementTypeCode majburiy",

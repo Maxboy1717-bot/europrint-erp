@@ -36,6 +36,7 @@
   "ean13BaseMustBe12Digits": "База должна состоять из 12 цифр",
   "downloadReasonRequired": "Для скачивания документа необходимо указать причину (?reason=, минимум 5 символов)",
   "internalReturnReasonRequired": "Для INTERNAL_RETURN обязательна причина возврата",
+  "unplannedIssueReasonRequired": "Для срочного (незапланированного) расхода обязательна причина (notes)",
   "materialIdRequired": "materialId обязателен",
   "materialIdAndQuantityRequired": "material_id и quantity обязательны",
   "movementTypeIdOrCodeRequired": "Обязателен movementTypeId или movementTypeCode",

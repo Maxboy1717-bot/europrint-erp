@@ -95,6 +95,14 @@ export class PosMovementService {
         throw new BadRequestException(await this.i18n.t('validation.internalReturnReasonRequired'));
       }
 
+      // 19-pos#17 (vision-1000-answers/19-pos.md #17): shoshilinch/rejasiz chiqim ruxsat etiladi,
+      // lekin sabab (notes) majburiy + is_unplanned=true bayrog'i. Server = yagona darvoza (DTO
+      // superRefine faqat movementTypeCode yo'lini ushlaydi — bu yerda movementTypeId yo'li ham
+      // qamrab olinadi, G1-1 barkod-darvozasi bilan bir xil naqsh).
+      if (movType.code === 'INTERNAL_ISSUE' && dto.isUnplanned && !(dto.notes && dto.notes.trim().length > 0)) {
+        throw new BadRequestException(await this.i18n.t('validation.unplannedIssueReasonRequired'));
+      }
+
       // G1-1 BARKOD SERVER-GATE (2026-07-02): EXTERNAL_IN kirimda har qatorda
       // barkod MAJBURIY (egasi: "barcode bo'lmasa qabul qilmaydi", kitob
       // 18400-18402). DTO superRefine faqat movementTypeCode yo'lini ushlaydi —
@@ -344,6 +352,13 @@ export class PosMovementService {
       const movementCurrency = (dto.baseCurrency ?? 'UZS').toUpperCase();
       const movementExchangeRate = await this.resolveExchangeRate(movementCurrency, dto.exchangeRate);
 
+      // 19-pos#17: shoshilinch chiqim miqdori PP kunlik reja balansini o'zgartirmaydi — "og'ish"
+      // sifatida variance_qty ustunida alohida qaydlanadi (Q-40: fabrikatsiya yo'q, faqat kelgan
+      // qatorlar yig'indisi; is_unplanned=false yoki qatorlar yo'q bo'lsa NULL).
+      const varianceQty = (movType.code === 'INTERNAL_ISSUE' && dto.isUnplanned && dto.lines && dto.lines.length > 0)
+        ? dto.lines.reduce((sum, l) => sum + l.quantity, 0)
+        : null;
+
       const movementR = await this.repo.insertMovement({
         movementNumber,
         movementType:         movType.code as PosMovementType,
@@ -374,6 +389,11 @@ export class PosMovementService {
         // (fabrikatsiya YO'Q, Q-40). idempotencyKey bilan bir xil ?? null idiom.
         photoEvidenceUrl:     dto.photoEvidenceUrl ?? null,
         idempotencyKey:       dto.idempotencyKey ?? null,
+        // 19-pos#17 (vision-1000-answers/19-pos.md #17): shoshilinch/rejasiz chiqim bayrog'i +
+        // "og'ish" miqdori — pos-movements-unplanned-issue-2026-07-11.sql (ADDITIVE, Q-35 owner
+        // schema-approval 2026-07-11).
+        isUnplanned:          dto.isUnplanned ?? false,
+        varianceQty:          varianceQty,
       });
       if (!movementR.ok) {
         // Race-condition: ikkita bir-vaqtli so'rov bir xil kalit bilan — UNIQUE-buzilish
@@ -417,7 +437,7 @@ export class PosMovementService {
       // typed event. EventBridge bridges CQRS → string for any consumer not
       // yet migrated; the legacy emit is kept here as a belt-and-suspenders
       // measure while migration is in flight.
-      this.eventEmitter.emit('pos.movement.data.created', { movementId: movement.id, movementNumber, typeCode: movType.code, createdById });
+      this.eventEmitter.emit('pos.movement.data.created', { movementId: movement.id, movementNumber, typeCode: movType.code, createdById, isUnplanned: dto.isUnplanned ?? false });
       this.eventBus.publish(new PosMovementCreatedEvent({ movementId: movement.id, movementNumber, typeCode: movType.code, createdById }));
 
       if (dto.submit) {

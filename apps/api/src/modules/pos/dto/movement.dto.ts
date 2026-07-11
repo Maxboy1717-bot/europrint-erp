@@ -79,6 +79,11 @@ export const CreateMovementSchema = z.object({
   // ADDITIVE (2026-07-01, Savdo-sity referens H-8 naqshi): double-tap/retry himoyasi —
   // FE crypto.randomUUID() yuboradi, BE bir xil kalit bilan qayta so'rovda mavjud harakatni qaytaradi.
   idempotencyKey:       z.string().max(100).optional(),
+  // 19-pos#17 (vision-1000-answers/19-pos.md #17): shoshilinch/rejasiz chiqim (INTERNAL_ISSUE)
+  // bayrog'i — true bo'lsa sabab (notes) majburiy (quyidagi superRefine + PosMovementService
+  // ichida ham tekshiriladi, G1-1 barkod-darvozasi bilan bir xil ikki-yo'lli naqsh) va boshliqqa
+  // real-time Telegram push yuboriladi (pos.movement.data.created eventi orqali).
+  isUnplanned:          z.boolean().optional(),
 }).refine(d => d.movementTypeId != null || (d.movementTypeCode != null && d.movementTypeCode.length > 0), {
   message: 'movementTypeId yoki movementTypeCode majburiy',
   path: ['movementTypeId'],
@@ -116,6 +121,17 @@ export const CreateMovementSchema = z.object({
           path: ['lines', i, 'unitPrice'],
         });
       }
+    });
+  }
+  // 19-pos#17 (vision-1000-answers/19-pos.md #17): shoshilinch/rejasiz chiqim (is_unplanned=true)
+  // uchun sabab (notes) majburiy. Bu yerda faqat movementTypeCode yo'li ushlanadi; movementTypeId
+  // yo'li PosMovementService.createMovement ichida (DB-lookup dan keyin) tekshiriladi — server =
+  // yagona darvoza (G1-1 barkod-darvozasi bilan bir xil naqsh).
+  if (d.movementTypeCode === MovementTypeCode.INTERNAL_ISSUE && d.isUnplanned === true && !(d.notes && d.notes.trim().length > 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Shoshilinch (rejasiz) chiqimda sabab (notes) majburiy",
+      path: ['notes'],
     });
   }
 });

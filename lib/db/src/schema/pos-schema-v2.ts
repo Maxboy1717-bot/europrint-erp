@@ -145,6 +145,15 @@ export const posMovements = pgTable('pos_movements', {
   // yozardi. VISION-3340 #60: harakat-yaratish oqimiga ulandi (kirim/chiqim ixtiyoriy
   // foto-dalil). ADD-ONLY superset — mavjud jonli ustunni ORM'ga ko'rsatadi (yangi migration YO'Q).
   photoEvidenceUrl:      text('photo_evidence_url'),
+  // 19-pos#17 (vision-1000-answers/19-pos.md #17, Q-35 owner schema-approval 2026-07-11):
+  // shoshilinch/rejasiz chiqim (INTERNAL_ISSUE) bayrog'i — true bo'lsa sabab (notes) majburiy
+  // (CreateMovementSchema + PosMovementService.createMovement tekshiradi) va boshliqqa real-time
+  // Telegram push yuboriladi (pos.events.ts onMovementCreated). ADDITIVE — migration:
+  // pos-movements-unplanned-issue-2026-07-11.sql.
+  isUnplanned:           boolean('is_unplanned').notNull().default(false),
+  // 19-pos#17: shoshilinch chiqim miqdori — PP kunlik reja balansini o'zgartirmaydi, "og'ish"
+  // sifatida shu ustunda alohida qaydlanadi (fabrikatsiya yo'q — faqat kelgan qatorlar yig'indisi).
+  varianceQty:           numericMoney('variance_qty'),
 }, (t) => [
   index('idx_pos_movements_type').on(t.movementType),
   index('idx_pos_movements_status').on(t.status),
