@@ -105,3 +105,29 @@ europrint jonli). Egasi `/admin/taxonomy` orqali o'zgartiradi:
 ## ⏳ HAQIQIY OCHIQ (keyingi sessiya)
 1. **Org `head_user_id`** — ENG KATTA blocker (52 item + rol-itemlar). 2. приказ+NDA yuridik matn.
 3. Telegram bot-per-modul reja. 4. ERP↔1C integratsiya. 5. 5 taksonomiya (cc aloqa-turi, yo'nalish-turi ro'yxat, qadoqlash 10+, lavozim-vositalari, operatsiya-katalogi). 6. Buxgalteriya avtomatlashtirish g'oyasi.
+
+---
+
+## 📋 5 QOLGAN TAKSONOMIYA — YAKUNLANDI (2026-07-11, seed)
+Seed qilindi (commit 6d27e557, jonli — jami 96 taxonomy_entries):
+- **contact_type (5):** Buyruq, Ma'lumot talabi, Bildirishnoma, So'rov, Hisobot.
+- **direction_type (4 starter):** Ofs-karton, Ofs-gofra, Flekso-gofra, Flekso-karton (egasi CRUD orqali to'ldiradi).
+- **operation_type (6 starter):** Lak, Kley, Rezka, Bosma, Kashirovka, Vysechka (egasi to'ldiradi).
+- packaging (07-pp#120) + lavozim-vositalari (05-director#102) → egasi ERP CRUD orqali to'ldiradi (bo'sh kategoriya).
+
+## 📄 YURIDIK MATNLAR (2026-07-11)
+- 01-org#37 (приказ): standart shablon (O'zbekiston mehnat qonuni) — Claude tayyorlaydi (kelgusi matn-sessiya).
+- 12-lms#74 (NDA): yurist bilan (tashqi).
+
+## 🌍 YANGI GLOBAL TAMOYIL (xotirada)
+**Hech kim ERP tashqarisida (Excel/Word) ishlamasin** — ERP ichida teng funksionallik shart. Excel-import = ixtiyoriy/bir-martalik, asosiy yo'l emas.
+
+## 🏛️ ORG STRUKTURA (head_user_id) — ⚠️ TEKSHIRUV NATIJASI (2026-07-11)
+Egasi: "93 test-karta o'chirilsin, hammasi test/demo". **LEKIN jonli tekshiruv ZID ko'rsatdi:**
+- `org_departments` = **143 qator, HAQIQIY nomlar bilan** (Ma'muriyat, Bosh Direktor ofisi, Kadrlar bo'limi,
+  Marketing, Sotuvlar, Moliya...) + **head_user_id ALLAQACHON to'ldirilgan** (34/35/37/39/40/42/44/47...).
+- `org_functions` = 97 qator · `positions` = 96 qator · `users.card_id` = 1 · `employees` = 31.
+- Bu "hammasi test/demo" tavsifiga MOS EMAS — ko'pi haqiqiy-ko'rinishli struktura, head_user_id bog'langan.
+- ⛔ **HECH NARSA O'CHIRILMADI.** Agar bularni o'chirsam, head_user_id (RBAC) bog'lanishlari uziladi — ko'p
+  item shunga tayanadi. **Aniqlik kerak:** aynan qaysi 93 karta / qaysi jadval test? (org_departments haqiqiy
+  ko'rinadi.) Egasi tasdiqlamaguncha o'chirish yo'q (Q-46 look-before-delete).
