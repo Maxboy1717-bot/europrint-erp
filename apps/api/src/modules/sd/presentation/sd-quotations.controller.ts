@@ -16,6 +16,7 @@ import {
   SdCreateQuotationSchema, SdCreateQuotationDto,
   SdCreateContractSchema, SdCreateContractDto,
   SdCalculatePriceSchema, SdCalculatePriceDto,
+  SdRollParamsSchema, SdRollParamsDto,
 } from './dto/sd-quotations.dto';
 import { unwrapOrThrow, assertOk } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -302,4 +303,14 @@ export class SdQuotationsController {
   @Put('price-formulas')
   @UsePipes(new ZodValidationPipe(SdPriceSettingsSchema))
   async putPriceFormulas(@Body() body: Body_) { return unwrapOrThrow(await this.svc.upsertPriceFormula(body)); }
+
+  @ApiOperation({ summary: 'Set self-adhesive roll parameters on a quotation line (EP-SD-118)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('quotation-items/:itemId/roll-params')
+  @UsePipes(new ZodValidationPipe(SdRollParamsSchema))
+  async setItemRollParams(@Param('itemId') itemId: string, @Body() body: SdRollParamsDto) {
+    return unwrapOrThrow(await this.svc.setItemRollParams(safeInt(itemId, 0), body));
+  }
 }

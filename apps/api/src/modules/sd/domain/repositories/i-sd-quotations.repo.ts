@@ -23,6 +23,7 @@ export interface ISdQuotationsRepo {
   getQuotationById(id: string): Promise<Result<Row | null>>;
   getQuotationForPdf(id: string): Promise<Result<Row | null>>;
   getQuotationItems(id: string): Promise<Result<Row[]>>;
+  setItemRollParams(itemId: number, params: { coreDiameterMm: number | null; gilzaDiameterMm: number | null; rollLengthM: number | null }): Promise<Result<Row | null>>;
   convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>>;
   // 06-sd#107 — load-capacity persist + non-blocking flute/layer recommendation
   setItemLoadCapacity(itemId: string, loadKg: number): Promise<Result<Row | null>>;

@@ -221,11 +221,29 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
 
   async getQuotationItems(id: string): Promise<Result<Row[]>> {
     return exec(sql`
-      SELECT product_type, paper_type, quantity, unit_price, print_colors
+      SELECT product_type, paper_type, quantity, unit_price, print_colors,
+             core_diameter_mm, gilza_diameter_mm, roll_length_m
       FROM sd_quotation_items
       WHERE quotation_id = ${id}
       ORDER BY id
     `);
+  }
+
+  // EP-SD-118 (vision 06-sd #118, TASDIQ-2146 §06 #68): capture self-adhesive ROLL
+  // parameters (core/gilza diameter + roll length) on a quotation line. Per-order
+  // operator data — all columns NULL by default so box lines are unaffected. NOT_FOUND
+  // when the line id does not exist (or is soft-deleted).
+  async setItemRollParams(
+    itemId: number,
+    params: { coreDiameterMm: number | null; gilzaDiameterMm: number | null; rollLengthM: number | null },
+  ): Promise<Result<Row | null>> {
+    return execOne(sql`
+      UPDATE sd_quotation_items
+      SET core_diameter_mm  = ${params.coreDiameterMm},
+          gilza_diameter_mm = ${params.gilzaDiameterMm},
+          roll_length_m     = ${params.rollLengthM}
+      WHERE id = ${itemId} AND deleted_at IS NULL
+      RETURNING id, quotation_id, product_type, core_diameter_mm, gilza_diameter_mm, roll_length_m`);
   }
 
   // 06-sd#107 — persist per-order load capacity (kg) on a quotation line (canonical

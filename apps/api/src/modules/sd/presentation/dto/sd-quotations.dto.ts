@@ -48,3 +48,13 @@ export const SdCalculatePriceSchema = z.object({
   formula_id:   z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 export type SdCalculatePriceDto = z.infer<typeof SdCalculatePriceSchema>;
+
+// EP-SD-118 — vision 06-sd #118: self-adhesive ROLL parameters on a quotation line.
+// All optional/nullable; a null explicitly clears the value, undefined keys are ignored
+// by the service normaliser. coerce so '76'/76 both parse.
+export const SdRollParamsSchema = z.object({
+  core_diameter_mm:  z.coerce.number().nonnegative().nullable().optional(),
+  gilza_diameter_mm: z.coerce.number().nonnegative().nullable().optional(),
+  roll_length_m:     z.coerce.number().nonnegative().nullable().optional(),
+}).passthrough();
+export type SdRollParamsDto = z.infer<typeof SdRollParamsSchema>;

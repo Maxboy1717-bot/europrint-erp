@@ -93,6 +93,29 @@ export class SdQuotationsService {
   }
 
   /**
+   * EP-SD-118 (vision 06-sd #118): set self-adhesive ROLL parameters on a quotation
+   * line item. Each field is optional — a null/blank value clears the column; only
+   * finite numbers are written. NOT_FOUND when the line id is absent.
+   */
+  async setItemRollParams(
+    itemId: number,
+    body: { core_diameter_mm?: number | null; gilza_diameter_mm?: number | null; roll_length_m?: number | null },
+  ): Promise<Result<Row, AppError>> {
+    const norm = (v: unknown): number | null => {
+      const n = Number(v);
+      return v == null || v === '' || !Number.isFinite(n) ? null : n;
+    };
+    const r = await this.repo.setItemRollParams(itemId, {
+      coreDiameterMm: norm(body.core_diameter_mm),
+      gilzaDiameterMm: norm(body.gilza_diameter_mm),
+      rollLengthM: norm(body.roll_length_m),
+    });
+    if (!r.ok) return r as Result<Row, AppError>;
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Kotirovka qatori ${itemId} topilmadi`));
+    return Ok(r.data);
+  }
+
+  /**
    * 06-sd#107 — persist a quotation line's load capacity (kg) and return a NON-BLOCKING
    * flute/layer recommendation. The recommendation is read from the owner-fillable
    * sd_load_capacity_rules lookup; while that table is empty (the weight->construction
