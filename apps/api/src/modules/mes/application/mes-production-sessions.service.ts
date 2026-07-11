@@ -45,4 +45,13 @@ export class MesProductionSessionsService {
   async getStageBasedAvailability(sessionId?: number) {
     return safeCall(async () => this.repo.getStageBasedAvailability(sessionId));
   }
+
+  /**
+   * 08-mes#33 — Sessiyani Akademiya/o'quv (LMS-sync) deb belgilaydi; is_training=true ->
+   * OEE shift-agregatidan chiqariladi. lms_enrollment_id (nullable) LMS ro'yxatga olish bog'lami.
+   */
+  async setSessionTraining(sessionId: number, body: { is_training: boolean; lms_enrollment_id?: number | null }) {
+    return safeCall(async () =>
+      this.repo.markSessionTraining(sessionId, body.is_training, body.lms_enrollment_id ?? null));
+  }
 }

@@ -252,6 +252,9 @@ export class GetOeeHandler implements IQueryHandler<GetOeeQuery> {
 
     for (const session of sessionRows) {
       if (session.shiftId === null || session.shiftId === undefined) continue; // owner-DATA gap
+      // 08-mes#33 — Akademiya/o'quv (LMS-sync) sessiyalari OEE agregatidan chiqariladi.
+      // is_training default=false, shuning uchun oddiy sessiyalar avvalgidek qoladi (Q-46).
+      if (session.isTraining === true) continue;
 
       this.accumulateSession(byShift, String(session.shiftId), {
         sessionKey: String(session.id),

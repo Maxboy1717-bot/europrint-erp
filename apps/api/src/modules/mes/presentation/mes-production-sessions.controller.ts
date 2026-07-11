@@ -28,6 +28,7 @@ import {
   MesCreateProductionSessionSchema, MesCreateProductionSessionDto,
   MesRecordDowntimeSchema, MesRecordDowntimeDto,
   MesSetPaperFormatSchema, MesSetPaperFormatDto,
+  MesSetSessionTrainingSchema, MesSetSessionTrainingDto,
 } from '../dto/mes.dto';
 
 const MES_ROLES = ['super_admin', 'director', 'production_manager', 'operator', 'technologist'];
@@ -120,5 +121,17 @@ export class MesProductionSessionsController {
   @Get(':sessionId/downtime-events')
   async listDowntimeEvents(@Param('sessionId') sessionId: string) {
     return unwrapOrThrow(await this.svc.listDowntimeEvents(safeInt(sessionId, 0)));
+  }
+
+  @ApiOperation({ summary: 'Flag session as academy/training (LMS-synced) — excluded from OEE' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post(':sessionId/training')
+  @UsePipes(new ZodValidationPipe(MesSetSessionTrainingSchema))
+  async setTraining(
+    @Param('sessionId') sessionId: string,
+    @Body() body: MesSetSessionTrainingDto,
+  ) {
+    return unwrapOrThrow(await this.svc.setSessionTraining(safeInt(sessionId, 0), body));
   }
 }

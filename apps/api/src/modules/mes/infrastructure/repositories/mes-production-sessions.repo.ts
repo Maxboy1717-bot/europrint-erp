@@ -342,6 +342,29 @@ export class MesProductionSessionsRepository {
     }
   }
 
+  /**
+   * 08-mes#33 — Sessiyani Akademiya/o'quv (LMS-sync) deb belgilaydi. is_training=true bo'lsa
+   * get-oee shift-kaskadi uni OEE'dan chiqaradi (default false -> mavjud sessiyalar o'zgarishsiz,
+   * Q-46). lms_enrollment_id (nullable) shu o'quv ishi qaysi LMS ro'yxatga olishga (lms_enrollments.id)
+   * mos kelishini bog'laydi — runtime-DATA, egasi ma'lumoti kerak emas. Topilmasa null qaytaradi.
+   */
+  async markSessionTraining(sessionId: number, isTraining: boolean, lmsEnrollmentId: number | null): Promise<Row | null> {
+    try {
+      const rows = await runQuery<Row>(sql`
+        UPDATE production_sessions
+        SET is_training       = ${isTraining},
+            lms_enrollment_id = ${lmsEnrollmentId},
+            updated_at        = NOW()
+        WHERE id = ${sessionId} AND deleted_at IS NULL
+        RETURNING id, is_training, lms_enrollment_id
+      `);
+      return (rows.rows[0] ?? null) as Row | null;
+    } catch (err) {
+      this.logger.error(`markSessionTraining: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   async listDowntimeEvents(sessionId: number): Promise<Row[]> {
     try {
       const rows = await runQuery<Row>(sql`SELECT * FROM downtime_events WHERE session_id = ${sessionId} ORDER BY started_at DESC`);

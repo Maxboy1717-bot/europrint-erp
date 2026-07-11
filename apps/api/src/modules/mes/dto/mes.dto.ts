@@ -173,6 +173,14 @@ export const MesMaterialConsumptionSchema = z.object({
 });
 export type MesMaterialConsumptionDto = z.infer<typeof MesMaterialConsumptionSchema>;
 
+// 08-mes#33 — Sessiyani Akademiya/o'quv (LMS-sync) deb belgilash. is_training=true bo'lgan
+// sessiya OEE shift-kaskadidan chiqariladi; lms_enrollment_id = LMS ro'yxatga olish bog'lami.
+export const MesSetSessionTrainingSchema = z.object({
+  is_training:       z.boolean(),
+  lms_enrollment_id: z.number().int().positive().nullable().optional(),
+});
+export type MesSetSessionTrainingDto = z.infer<typeof MesSetSessionTrainingSchema>;
+
 // #116 (08-mes, EP-MES-066) — sessiyaga qog'oz formati (list A×B) + gramm + kg yoziladi (aniq material
 // sarfi). Barcha maydon ixtiyoriy (qisman yangilash) — repo COALESCE bilan faqat berilganini yozadi;
 // .refine kamida bitta maydon berilishini talab qiladi (bo'sh PATCH mantiqsiz).

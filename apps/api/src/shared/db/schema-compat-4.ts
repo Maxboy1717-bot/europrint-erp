@@ -159,6 +159,10 @@ export const productionSessions = pgTable('production_sessions', {
   formatB: decimal('format_b', { precision: 12, scale: 2 }),
   gramm: decimal('gramm', { precision: 10, scale: 2 }),
   kg: decimal('kg', { precision: 14, scale: 3 }),
+  // 08-mes#33 — Akademiya/o'quv sessiyasini OEE'dan chiqarish bayrog'i (default false, Q-46 regress yo'q)
+  // + LMS-sync bog'lami (lms_enrollments.id ga ishora, nullable runtime-DATA).
+  isTraining: boolean('is_training').notNull().default(false),
+  lmsEnrollmentId: integer('lms_enrollment_id'),
 });
 
 // NOTE: convergence deferred (tier-1) — lib/db aiUsageLogs.userId is numeric but

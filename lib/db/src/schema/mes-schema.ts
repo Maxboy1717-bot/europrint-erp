@@ -190,6 +190,10 @@ export const mesProductionSessions = pgTable('mes_production_sessions', {
   endTime:     timestamp('end_time',   { withTimezone: true }),
   createdAt:   timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt:   timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  // 08-mes#33 — Akademiya/o'quv sessiyasi bayrog'i (OEE'dan chiqariladi) + LMS-sync bog'lami.
+  // mes_production_sessions VIEW orqali ochiladi; get-oee shift-kaskadi is_training=true ni chiqaradi.
+  isTraining:      boolean('is_training'),
+  lmsEnrollmentId: integer('lms_enrollment_id'),
 }, (t) => [
   index('mes_prod_sessions_operator_idx').on(t.operatorId),
   index('mes_prod_sessions_machine_idx').on(t.machineId),
