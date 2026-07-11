@@ -63,7 +63,10 @@ export const MmAssignReceiptLocationSchema = z.object({
 export type MmAssignReceiptLocationDto = z.infer<typeof MmAssignReceiptLocationSchema>;
 
 export const MmUpdateGoodsReceiptSchema = z.object({
-  status:        z.enum(['draft', 'pending', 'approved', 'rejected']).optional(),
+  // 'conditional' = §11-MM#59: receipt accepted with a caveat (e.g. partial defect / pending QC
+  // re-check) rather than a clean 'approved'. No downstream branch keys off this value yet — it is
+  // stored/read like any other status (goods_receipts.status is varchar, no DB CHECK constraint).
+  status:        z.enum(['draft', 'pending', 'approved', 'rejected', 'conditional']).optional(),
   notes:         z.string().optional(),
   received_date: z.string().optional(),
 });
