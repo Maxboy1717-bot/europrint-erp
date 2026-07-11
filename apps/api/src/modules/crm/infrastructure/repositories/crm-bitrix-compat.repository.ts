@@ -33,6 +33,9 @@ export class CrmBitrixCompatRepository implements ICrmBitrixCompatRepo {
   updateProposalStage(id: number, status: string): Promise<Result<Row | null>> {
     return this.proposals.updateProposalStage(id, status);
   }
+  markProposalViewed(id: number): Promise<Result<void>> {
+    return this.proposals.markProposalViewed(id);
+  }
 
   listRobots(lim: number, off: number): Promise<Result<Row[]>> { return this.robots.listRobots(lim, off); }
   getRobot(id: number): Promise<Result<Row | null>>            { return this.robots.getRobot(id); }

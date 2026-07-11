@@ -25,4 +25,6 @@ export interface ICrmBitrixCompatRepo {
   deleteInvoice(id: string): Promise<void>;
   updateProposalStage(id: number, status: string): Promise<Result<Row | null>>;
   updateInvoiceStage(id: string, status: string): Promise<Result<Row | null>>;
+  /** CRM-13#5: idempotent first-view stamp for the KP email pixel (mirrors CC #47 markViewed). */
+  markProposalViewed(id: number): Promise<Result<void>>;
 }

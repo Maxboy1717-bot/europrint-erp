@@ -71,6 +71,11 @@ export class CrmBitrixCompatService {
     return this.repo.updateProposalStage(id, status);
   }
 
+  /** CRM-13#5: called by the public KP-pixel GET; best-effort, idempotent (see repo doc). */
+  async markProposalViewed(id: number) {
+    return this.repo.markProposalViewed(id);
+  }
+
   async updateInvoiceStage(id: string, status: string) {
     return this.repo.updateInvoiceStage(id, status);
   }

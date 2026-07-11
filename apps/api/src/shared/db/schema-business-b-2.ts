@@ -198,6 +198,8 @@ export const crm_proposals = pgTable('crm_proposals', {
   valid_until: date('valid_until'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
+  // CRM-13#5: KP email-pixel birinchi ochilgan vaqt (idempotent — CC #47 markViewed naqshi).
+  viewed_at:  timestamp('viewed_at'),
 });
 
 export const crm_invoices = pgTable('crm_invoices', {
