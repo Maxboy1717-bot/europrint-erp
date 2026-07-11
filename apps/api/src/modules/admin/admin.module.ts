@@ -33,6 +33,10 @@ import { USER_REPO, SETTINGS_REPO } from './admin.tokens';
 import { QUERY_TIMEOUT_MS } from '@common/constants/app.constants';
 export { USER_REPO, SETTINGS_REPO } from './admin.tokens';
 import { AdminQueueService } from './application/services/admin-queue.service';
+// Global biznes-sozlamalar CRUD (OWNER-JAVOBLAR-2026-07-11 — global CRUD qoidasi).
+import { BusinessSettingsController } from './settings/business-settings.controller';
+import { BusinessSettingsService } from './settings/business-settings.service';
+import { BusinessSettingsRepository } from './settings/business-settings.repo';
 
 @Module({
   imports: [
@@ -47,7 +51,7 @@ import { AdminQueueService } from './application/services/admin-queue.service';
       },
     ]),
   ],
-  controllers: [AdminUsersController, AdminSettingsController, AdminCronStatusController, AdminQueueController, AdminExtraController],
+  controllers: [AdminUsersController, AdminSettingsController, AdminCronStatusController, AdminQueueController, AdminExtraController, BusinessSettingsController],
   providers: [
     CreateUserService,
     UpdateUserRoleService,
@@ -64,9 +68,11 @@ import { AdminQueueService } from './application/services/admin-queue.service';
     AdminQueueService,
     AdminExtraService,
     AdminExtraRepository,
+    BusinessSettingsService,
+    BusinessSettingsRepository,
     RolesGuard,
     AuditInterceptor,
   ],
-  exports: [USER_REPO, SETTINGS_REPO],
+  exports: [USER_REPO, SETTINGS_REPO, BusinessSettingsService],
 })
 export class AdminModule {}
