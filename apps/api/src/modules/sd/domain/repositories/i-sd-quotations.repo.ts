@@ -24,6 +24,9 @@ export interface ISdQuotationsRepo {
   getQuotationForPdf(id: string): Promise<Result<Row | null>>;
   getQuotationItems(id: string): Promise<Result<Row[]>>;
   convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>>;
+  // 06-sd#107 — load-capacity persist + non-blocking flute/layer recommendation
+  setItemLoadCapacity(itemId: string, loadKg: number): Promise<Result<Row | null>>;
+  recommendConstruction(loadKg: number): Promise<Result<Row | null>>;
 }
 
 export const SD_QUOTATIONS_REPO = Symbol('SD_QUOTATIONS_REPO');

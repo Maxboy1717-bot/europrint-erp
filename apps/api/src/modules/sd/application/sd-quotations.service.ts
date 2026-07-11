@@ -93,6 +93,27 @@ export class SdQuotationsService {
   }
 
   /**
+   * 06-sd#107 — persist a quotation line's load capacity (kg) and return a NON-BLOCKING
+   * flute/layer recommendation. The recommendation is read from the owner-fillable
+   * sd_load_capacity_rules lookup; while that table is empty (the weight->construction
+   * mapping is owner/production-engineering DATA) it returns null — the load capacity is
+   * still saved. No fabricated mapping. NOT_FOUND when the line is absent/soft-deleted.
+   */
+  async setItemLoadCapacity(itemId: string, loadKg: number): Promise<Result<Row, AppError>> {
+    const saved = await this.repo.setItemLoadCapacity(itemId, loadKg);
+    if (!saved.ok) return saved as Result<Row, AppError>;
+    if (!saved.data) return Err(AppErr('NOT_FOUND', `Kotirovka satri ${itemId} topilmadi`));
+    const recR = await this.repo.recommendConstruction(loadKg);
+    const recommendation = recR.ok ? recR.data : null; // null => non-blocking, no owner rule yet
+    return Ok({
+      itemId: saved.data['id'],
+      quotationId: saved.data['quotation_id'],
+      loadCapacityKg: saved.data['load_capacity_kg'],
+      recommendation,
+    });
+  }
+
+  /**
    * EP-SD (vision 06 #108): build the typed KP-PDF payload from the clean header
    * (getQuotationForPdf) + line rows (getQuotationItems). Margin/cost_price are
    * NOT included — the KP is customer-facing. NOT_FOUND when the quotation is absent.

@@ -58,6 +58,12 @@ const SdPriceSettingsSchema = z.object({
   vatRate: z.number().nonnegative().optional(),
 });
 
+// 06-sd#107 — per-order load capacity (kg) for a quotation line. Positive, coerced
+// ('12.5'/12.5 both parse). Drives the non-blocking flute/layer recommendation.
+const SdItemLoadCapacitySchema = z.object({
+  loadCapacityKg: z.coerce.number().positive().max(100000),
+});
+
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -228,6 +234,16 @@ export class SdQuotationsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('quotations/:id')
   async updateQuotation(@Param('id') id: string, @Body() body: Body_) { return unwrapOrThrow(await this.svc.updateQuotation(id, body)); }
+
+  @ApiOperation({ summary: 'Set quotation line load capacity (kg) + flute/layer rec (06-sd#107)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('quotation-items/:id/load-capacity')
+  @UsePipes(new ZodValidationPipe(SdItemLoadCapacitySchema))
+  async setItemLoadCapacity(@Param('id') id: string, @Body() body: { loadCapacityKg: number }) {
+    return unwrapOrThrow(await this.svc.setItemLoadCapacity(id, body.loadCapacityKg));
+  }
 
   @ApiOperation({ summary: 'Delete quotation' })
   @ApiResponse({ status: 200, description: 'OK' })

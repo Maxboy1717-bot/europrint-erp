@@ -228,6 +228,35 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     `);
   }
 
+  // 06-sd#107 — persist per-order load capacity (kg) on a quotation line (canonical
+  // sd_quotation_items). Real UPDATE, RETURNING the saved value; null when the line is
+  // absent/soft-deleted so the service can map NOT_FOUND.
+  async setItemLoadCapacity(itemId: string, loadKg: number): Promise<Result<Row | null>> {
+    const r = await exec(sql`
+      UPDATE sd_quotation_items
+      SET load_capacity_kg = ${loadKg}
+      WHERE id = ${itemId} AND deleted_at IS NULL
+      RETURNING id, quotation_id, load_capacity_kg`);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
+  }
+
+  // 06-sd#107 — NON-BLOCKING flute/layer recommendation for a load capacity (kg).
+  // Reads the owner-fillable sd_load_capacity_rules lookup; returns null when no active
+  // rule matches (e.g. the table is still empty) — never a hardcoded/fabricated mapping.
+  async recommendConstruction(loadKg: number): Promise<Result<Row | null>> {
+    const r = await exec(sql`
+      SELECT recommended_layers, recommended_flute, note
+      FROM sd_load_capacity_rules
+      WHERE is_active = true
+        AND ${loadKg} >= min_load_kg
+        AND (max_load_kg IS NULL OR ${loadKg} < max_load_kg)
+      ORDER BY min_load_kg DESC
+      LIMIT 1`);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
+  }
+
   async convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>> {
     return safeCall(async () => {
       const quotationResult = await this.getQuotationById(id);
