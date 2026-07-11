@@ -253,6 +253,7 @@ export class CcAiInterviewService {
       language:        sess.language,
       parentDocumentId: null,
       documentNumber,
+      aiDraft: true,
     });
     if (!isOk(draftRes)) throw new InternalServerErrorException(draftRes.error.message);
 

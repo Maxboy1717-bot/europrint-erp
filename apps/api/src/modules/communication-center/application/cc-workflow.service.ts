@@ -238,7 +238,10 @@ export class CcWorkflowService {
     const sigHash = await this.pin.verifyAndSign(approverUserId, dto.pin, `approve:${doc.id}:${mine.id}`);
 
     const result = await executeApproveTransaction(
-      { doc, approverUserId, approvalId: mine.id, signatureHash: sigHash, comment: dto.comment ?? null },
+      {
+        doc, approverUserId, approvalId: mine.id, signatureHash: sigHash, comment: dto.comment ?? null,
+        referenceDocumentNumber: dto.referenceDocumentNumber,
+      },
       this.docs, this.org, this.logger, this.i18n,
     );
 

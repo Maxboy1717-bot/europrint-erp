@@ -33,6 +33,7 @@ import { CcRetentionService } from '../application/cc-retention.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CcWorkflowService } from '../application/cc-workflow.service';
 import { CcBasketsService } from '../application/cc-baskets.service';
+import { CcDocumentsRepository } from '../infrastructure/repositories/cc-documents.repo';
 import { CcPinService } from '../application/cc-pin.service';
 import { CcPdfService } from '../application/cc-pdf.service';
 
@@ -49,11 +50,17 @@ const CreateDraftSchema = z.object({
   parentDocumentId: z.string().uuid().optional(),
 });
 const SendSchema     = z.object({ pin: z.string().regex(/^\d{4,8}$/) });
-const ApproveSchema  = z.object({ pin: z.string().regex(/^\d{4,8}$/), comment: z.string().max(4000).optional() });
+// 20-cc#89: referenceDocumentNumber majburiy — qaysi hujjatga asoslanib qaror qilinganini yozadi.
+const ApproveSchema  = z.object({
+  pin: z.string().regex(/^\d{4,8}$/),
+  comment: z.string().max(4000).optional(),
+  referenceDocumentNumber: z.string().min(1).max(100),
+});
 const RejectSchema   = z.object({
   pin: z.string().regex(/^\d{4,8}$/),
   rejectionReasonId: z.string().uuid().optional(),
   comment: z.string().max(4000).optional(),
+  referenceDocumentNumber: z.string().min(1).max(100),
 });
 const ResubmitSchema = z.object({
   pin: z.string().regex(/^\d{4,8}$/),
@@ -83,6 +90,7 @@ export class CcDocumentsController {
     private readonly pdfSvc:  CcPdfService,
     private readonly configService: ConfigService,
     private readonly retention: CcRetentionService,
+    private readonly docsRepo: CcDocumentsRepository,
   ) {}
 
   // ── Batch 5 Item 3 — arxiv-saqlash muddati (EP-CC-016) + imzo-hash yaxlitligi ──
@@ -210,6 +218,8 @@ export class CcDocumentsController {
     if (!isPrivileged && !isParticipant) {
       throw new ForbiddenException('Bu hujjatni ko\'rish huquqingiz yo\'q');
     }
+    // 20-cc#47: birinchi ko'rish vaqti — faqat shu ERP web yo'l orqali (Telegram bot bu yerni chaqirmaydi).
+    await this.docsRepo.markViewed(id, 'erp_web');
     return doc;
   }
 
@@ -231,7 +241,7 @@ export class CcDocumentsController {
   @Post('documents/:id/approve')
   approve(
     @Param('id') id: string,
-    @Body(new ZodValidationPipe(ApproveSchema)) body: { pin: string; comment?: string },
+    @Body(new ZodValidationPipe(ApproveSchema)) body: { pin: string; comment?: string; referenceDocumentNumber: string },
     @CurrentUser() user: { id: number },
   ) {
     return this.wf.approve(id, user.id, body);
@@ -243,7 +253,7 @@ export class CcDocumentsController {
   @Post('documents/:id/reject')
   reject(
     @Param('id') id: string,
-    @Body(new ZodValidationPipe(RejectSchema)) body: { pin: string; rejectionReasonId?: string; comment?: string },
+    @Body(new ZodValidationPipe(RejectSchema)) body: { pin: string; rejectionReasonId?: string; comment?: string; referenceDocumentNumber: string },
     @CurrentUser() user: { id: number },
   ) {
     return this.wf.reject(id, user.id, body);

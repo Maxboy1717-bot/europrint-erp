@@ -74,4 +74,6 @@ export interface CreateDraftInput {
   parentDocumentId: string | null;
   documentNumber: string;
   templateVersion: number;
+  /** 20-cc#5: true faqat AI-intervyu orqali yaratilgan qoralamalar uchun (o'zgarmas belgi). */
+  aiDraft?: boolean;
 }

@@ -41,5 +41,6 @@ export class CcDocumentsRepository {
   createComplaint = (args: Parameters<CcDocumentsWriteRepo['createComplaint']>[0]) => this.writer.createComplaint(args);
   logPrint = (args: Parameters<CcDocumentsWriteRepo['logPrint']>[0]) => this.writer.logPrint(args);
   logAudit = (args: Parameters<CcDocumentsWriteRepo['logAudit']>[0]) => this.writer.logAudit(args);
+  markViewed = (documentId: string, via: string) => this.writer.markViewed(documentId, via);
   notifyUser = (args: Parameters<CcDocumentsWriteRepo['notifyUser']>[0]) => this.writer.notifyUser(args);
 }

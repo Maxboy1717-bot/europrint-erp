@@ -42,6 +42,7 @@ export async function signRejection(
     signatureHash:     sigHash,
     rejectionReasonId: dto.rejectionReasonId ?? null,
     comment:           dto.comment ?? null,
+    referenceDocumentNumber: dto.referenceDocumentNumber,
   }));
 }
 

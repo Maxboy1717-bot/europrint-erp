@@ -35,7 +35,7 @@ export class CcDocumentsWriteRepo {
           basket_state, basket_owner_user_id, basket_entered_at,
           workflow_state, current_step_order,
           subject, ai_body, ai_answers, sender_comment, priority, language,
-          parent_document_id
+          parent_document_id, ai_draft
         )
         VALUES (
           ${input.documentNumber}, ${input.templateId}, ${input.templateVersion}, ${input.senderUserId}, ${input.branchId},
@@ -43,7 +43,7 @@ export class CcDocumentsWriteRepo {
           'draft', 0,
           ${input.subject}, ${input.aiBody}, ${JSON.stringify(input.aiAnswers)}::jsonb,
           ${input.senderComment}, ${input.priority}, ${input.language},
-          ${input.parentDocumentId}
+          ${input.parentDocumentId}, ${input.aiDraft ?? false}
         )
         RETURNING id::text AS id
       `);
@@ -140,6 +140,8 @@ export class CcDocumentsWriteRepo {
     signatureHash: string;
     rejectionReasonId: string | null;
     comment: string | null;
+    /** 20-cc#89: majburiy — qaysi hujjatga asoslanib qaror qilinganini yozadi. */
+    referenceDocumentNumber?: string;
   }): Promise<Result<void>> {
     try {
       await runQuery(sql`
@@ -149,8 +151,22 @@ export class CcDocumentsWriteRepo {
             signature_hash      = ${args.signatureHash},
             rejection_reason_id = ${args.rejectionReasonId},
             comment             = ${args.comment},
+            reference_document_number = ${args.referenceDocumentNumber ?? null},
             updated_at          = NOW()
         WHERE id = ${args.approvalId}
+      `);
+      return Ok(undefined);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /** 20-cc#47: huquqiy belgi — faqat ERP web GET yozadi, birinchi ko'rishdan keyin o'zgarmaydi. */
+  async markViewed(documentId: string, via: string): Promise<Result<void>> {
+    try {
+      await runQuery(sql`
+        UPDATE cc_documents SET viewed_at = NOW(), viewed_via = ${via}
+        WHERE id = ${documentId} AND viewed_at IS NULL
       `);
       return Ok(undefined);
     } catch (e) {

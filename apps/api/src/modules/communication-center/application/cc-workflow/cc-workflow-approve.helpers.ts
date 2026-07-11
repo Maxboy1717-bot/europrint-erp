@@ -17,6 +17,8 @@ export interface ApproveArgs {
   approvalId: string;
   signatureHash: string;
   comment: string | null;
+  /** 20-cc#89: ERP web'da majburiy, Telegram bot yo'lida hali ixtiyoriy (yuqoridagi izoh). */
+  referenceDocumentNumber?: string;
 }
 
 export async function executeApproveTransaction(
@@ -26,13 +28,13 @@ export async function executeApproveTransaction(
   logger: Logger,
   i18n: I18nService,
 ): Promise<{ ok: true; status: string; remainingApprovers?: number[]; nextStepOrder?: number; nextApproverIds?: number[] }> {
-  const { doc, approverUserId, approvalId, signatureHash, comment } = args;
+  const { doc, approverUserId, approvalId, signatureHash, comment, referenceDocumentNumber } = args;
 
   try {
     return await db.transaction(async () => {
       unwrapOrThrow(await docs.signApproval({
         approvalId, state: 'approved',
-        signatureHash, rejectionReasonId: null, comment,
+        signatureHash, rejectionReasonId: null, comment, referenceDocumentNumber,
       }));
 
       const updated = unwrapOrThrow(await docs.getPendingApprovalsAtStep(doc.id, doc.currentStepOrder));
