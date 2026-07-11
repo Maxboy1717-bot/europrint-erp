@@ -138,6 +138,7 @@
   "barcodeNotFoundWithValue": "Barcode \"{barcode}\" topilmadi",
   "cannotManageRequest": "Bu so'rovni tasdiqlash/rad etish uchun ruxsatingiz yo'q",
   "closedHandoverCannotBeCancelled": "Yopilgan aktni bekor qilib bo'lmaydi",
+  "customerCreditLimitExceeded": "Mijoz #{customerId}: kredit-limit oshib ketgan (limit: {creditLimit}, joriy qarzdorlik: {outstanding}) — EXTERNAL_OUT chiqim bloklandi",
   "damageMovementTypeNotFound": "DAMAGE harakat turi topilmadi",
   "departmentCannotRequestCategory": "{department} bo'limi {category} kategoriyasini so'ray olmaydi",
   "departmentDataAccessDenied": "Siz faqat {department} bo'limiga tegishli ma'lumotlarga kirish huquqiga egasiz",

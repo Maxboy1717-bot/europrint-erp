@@ -55,4 +55,10 @@ export interface IPosMovementRepository {
    * when no rate row exists — the caller then GATES rather than fabricating a 1:1 rate.
    */
   findLatestExchangeRate(currency: string): Promise<Result<number | null>>;
+  /**
+   * POS-19 #26 (2026-07-11): EXTERNAL_OUT chiqimdan oldin mijoz kredit-limitini tekshirish uchun
+   * o'qiydi (credit_limit vs joriy qarzdorlik — EP-SD-060/061/062 formulasi bilan bir xil,
+   * drizzle-sd-customers.repo.ts getCreditStatus).
+   */
+  findCustomerCreditStatus(customerId: number): Promise<Result<{ creditLimit: number; outstanding: number } | null>>;
 }

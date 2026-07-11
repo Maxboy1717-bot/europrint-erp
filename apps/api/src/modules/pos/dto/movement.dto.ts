@@ -57,6 +57,10 @@ export const CreateMovementSchema = z.object({
   documentDate:         isoDate.optional(),
   returnReason:         z.string().max(MAX_SHORT_TEXT).optional(),
   purchaseOrderId:      z.string().optional(),
+  // POS-19 #26 (2026-07-11): EXTERNAL_OUT chiqim qaysi mijoz uchun ekanini bildiradi — berilsa,
+  // PosMovementService kredit-limit tekshiruvini ishga tushiradi (sd_customers.credit_limit vs
+  // joriy qarzdorlik). Berilmasa — tekshiruv no-op (mavjud EXTERNAL_OUT oqimi o'zgarmaydi, Q-46).
+  customerId:           z.number().int().positive().optional(),
   cashPaid:             z.boolean().optional(),
   cashAmount:           z.number().min(0).optional(),
   baseCurrency:         z.string().max(3).optional(),

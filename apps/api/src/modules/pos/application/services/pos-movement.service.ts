@@ -214,6 +214,27 @@ export class PosMovementService {
         }
       }
 
+      // POS-19 #26 (2026-07-11, kredit-limit real-time blok): EXTERNAL_OUT chiqim mijoz uchun
+      // yaratilayotganda (dto.customerId berilgan bo'lsa) — sd_customers.credit_limit va joriy
+      // qarzdorlik (sd_payments status='pending' yig'indisi, EP-SD-060/061/062 formulasi bilan bir
+      // xil, drizzle-sd-customers.repo.ts getCreditStatus) solishtiriladi. credit_limit=0 → limit
+      // belgilanmagan (har doim o'tadi). customerId berilmasa — tekshiruv no-op (mavjud EXTERNAL_OUT
+      // oqimi o'zgarmaydi, Q-46). Eslatma: SD modulidagi getCreditStatus faqat FLAG qaytaradi (E1 —
+      // direktor qaror qiladi, avto-blok yo'q); bu yer jismoniy ombor-chiqimi (tovar allaqachon
+      // ketmoqda) — vazifa talabiga ko'ra QATTIQ BLOK (ForbiddenException).
+      if (movType.code === 'EXTERNAL_OUT' && dto.customerId) {
+        const creditR = await this.repo.findCustomerCreditStatus(dto.customerId);
+        if (!creditR.ok) throw new InternalServerErrorException(creditR.error.message);
+        const credit = creditR.data;
+        if (credit && credit.creditLimit > 0 && credit.outstanding > credit.creditLimit) {
+          throw new ForbiddenException(
+            await this.i18n.t('errors.customerCreditLimitExceeded', {
+              args: { customerId: dto.customerId, creditLimit: credit.creditLimit, outstanding: credit.outstanding },
+            }),
+          );
+        }
+      }
+
       if (movType.code === 'INTERNAL_ISSUE' && dto.receivedByEmployeeId && dto.lines) {
         for (const line of dto.lines) {
           const check = await this.lifecycleBlock.check(dto.receivedByEmployeeId, line.materialCardId, line.quantity);

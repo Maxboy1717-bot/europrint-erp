@@ -138,6 +138,7 @@
   "barcodeNotFoundWithValue": "Штрихкод \"{barcode}\" не найден",
   "cannotManageRequest": "У вас нет прав подтверждать/отклонять эту заявку",
   "closedHandoverCannotBeCancelled": "Закрытый акт нельзя отменить",
+  "customerCreditLimitExceeded": "Клиент #{customerId}: превышен кредитный лимит (лимит: {creditLimit}, текущая задолженность: {outstanding}) — отгрузка EXTERNAL_OUT заблокирована",
   "damageMovementTypeNotFound": "Тип движения DAMAGE не найден",
   "departmentCannotRequestCategory": "Отдел {department} не может запрашивать категорию {category}",
   "departmentDataAccessDenied": "У вас есть доступ только к данным отдела {department}",

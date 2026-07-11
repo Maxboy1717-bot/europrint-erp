@@ -138,6 +138,7 @@
   "barcodeNotFoundWithValue": "Штрихкод \"{barcode}\" топилмади",
   "cannotManageRequest": "Бу сўровни тасдиқлаш/рад этиш учун рухсатингиз йўқ",
   "closedHandoverCannotBeCancelled": "Ёпилган актни бекор қилиб бўлмайди",
+  "customerCreditLimitExceeded": "Мижоз #{customerId}: кредит-лимит ошиб кетган (лимит: {creditLimit}, жорий қарздорлик: {outstanding}) — EXTERNAL_OUT чиқим блокланди",
   "damageMovementTypeNotFound": "DAMAGE ҳаракат тури топилмади",
   "departmentCannotRequestCategory": "{department} бўлими {category} категориясини сўрай олмайди",
   "departmentDataAccessDenied": "Сиз фақат {department} бўлимига тегишли маълумотларга кириш ҳуқуқига эгасиз",

@@ -188,6 +188,34 @@ export class PosMovementRepository implements IPosMovementRepository {
     }
   }
 
+  /**
+   * POS-19 #26 (2026-07-11): EXTERNAL_OUT chiqimdan oldin mijoz kredit-limitini tekshirish uchun
+   * o'qiydi. Formula EP-SD-060/061/062 credit-limit check bilan bir xil (sd modulidagi
+   * drizzle-sd-customers.repo.ts getCreditStatus) — outstanding = sd_payments.status='pending'
+   * yig'indisi, credit_limit=0 bo'lsa "limit belgilanmagan" (har doim ichida). SD modul servisi
+   * import qilinmaydi (modul chegarasi, MODUL_SHARTNOMASI.md) — o'qish-only SQL, findPoLineQty
+   * (MM jadvalini o'qish) bilan bir xil naqsh.
+   */
+  async findCustomerCreditStatus(customerId: number): Promise<Result<{ creditLimit: number; outstanding: number } | null>> {
+    try {
+      const rows = await db.execute(sql`
+        SELECT COALESCE(c.credit_limit, 0)::numeric AS credit_limit,
+               COALESCE((SELECT SUM(p.amount) FROM sd_payments p
+                         WHERE p.customer_id = c.id AND p.status = 'pending'), 0)::numeric AS outstanding
+        FROM sd_customers c
+        WHERE c.id = ${customerId} AND c.status != 'deleted' AND c.deleted_at IS NULL
+      `);
+      const row = (rows as unknown as { rows: Array<{ credit_limit: string | number | null; outstanding: string | number | null }> }).rows?.[0];
+      if (!row) return Ok(null);
+      return Ok({
+        creditLimit: Number(row.credit_limit ?? 0),
+        outstanding: Number(row.outstanding ?? 0),
+      });
+    } catch (_e) {
+      return Err(String(_e));
+    }
+  }
+
   async upsertMovementContext(row: PosMovementContextInsert): Promise<Result<PosMovementCtxRow>> {
     try {
       const [saved] = await db
