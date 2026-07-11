@@ -33,6 +33,36 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     private readonly outboxRepo: OutboxRepository,
   ) {}
 
+  // 06-sd#147 — persist per-order gofra layer count (2/3/5/7-sloy) on a quotation line
+  // (canonical sd_quotation_items). Real UPDATE, RETURNING the saved value; null when the
+  // line is absent/soft-deleted so the service can map NOT_FOUND. The DB CHECK guards the
+  // standard corrugated wall counts. Raw SQL via exec(sql`..`) — no Drizzle table import.
+  async setItemLayerCount(itemId: string, layerCount: number): Promise<Result<Row | null>> {
+    const r = await exec(sql`
+      UPDATE sd_quotation_items
+      SET layer_count = ${layerCount}
+      WHERE id = ${itemId} AND deleted_at IS NULL
+      RETURNING id, quotation_id, layer_count`);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
+  }
+
+  // 06-sd#147 — NON-BLOCKING "AI load" hint: the rated load-capacity range for a chosen
+  // layer count. Reverse lookup on the owner-fillable sd_load_capacity_rules lookup (owned
+  // by 06-sd#107). Returns null when no active rule matches, the table is empty, or the
+  // table does not exist yet (#107 not applied) — the caller treats a failed/empty read as
+  // "no recommendation", never a fabricated mapping.
+  async recommendLoadForLayers(layerCount: number): Promise<Result<Row | null>> {
+    const r = await exec(sql`
+      SELECT min_load_kg, max_load_kg, recommended_flute, note
+      FROM sd_load_capacity_rules
+      WHERE is_active = true AND recommended_layers = ${layerCount}
+      ORDER BY min_load_kg ASC
+      LIMIT 1`);
+    if (!r.ok) return r as Result<Row | null>;
+    return Ok(r.data[0] ?? null);
+  }
+
   async listQuotations(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<Row[]>> {
     return customerId && status
       ? exec(sql`SELECT q.*, c.name AS customer_name FROM sd_quotations q LEFT JOIN sd_customers c ON c.id = q.customer_id WHERE q.customer_id = ${customerId} AND q.status = ${status} ORDER BY q.created_at DESC LIMIT ${lim} OFFSET ${off}`)

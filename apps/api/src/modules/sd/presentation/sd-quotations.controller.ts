@@ -34,6 +34,15 @@ const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
 
 type Body_ = Record<string, unknown>;
 
+// 06-sd#147 — per-order gofra layer count for a quotation line. Standard corrugated wall
+// counts: 2 (single-face), 3 (single-wall), 5 (double-wall), 7 (triple-wall). Coerced
+// ('3'/3 both parse); matches the DB CHECK on sd_quotation_items.layer_count.
+const SdItemLayerCountSchema = z.object({
+  layerCount: z.coerce.number().int().refine((v) => [2, 3, 5, 7].includes(v), {
+    message: "layerCount 2, 3, 5 yoki 7 bo'lishi kerak",
+  }),
+});
+
 /**
  * SDSettings price-settings PUT body — a PARTIAL set of camelCase price fields
  * (only the ones the user changed). All optional, non-negative numbers; unknown
@@ -255,6 +264,16 @@ export class SdQuotationsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Delete('quotations/:id')
   async deleteQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.deleteQuotation(id)); }
+
+  @ApiOperation({ summary: 'Set quotation line gofra layer count (2/3/5-sloy) + non-blocking load hint (06-sd#147)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('quotation-items/:id/layer-count')
+  @UsePipes(new ZodValidationPipe(SdItemLayerCountSchema))
+  async setItemLayerCount(@Param('id') id: string, @Body() body: { layerCount: number }) {
+    return unwrapOrThrow(await this.svc.setItemLayerCount(id, body.layerCount));
+  }
 
   // NOTE: PATCH /sd/contracts/:id/sign olib tashlandi — SdContractsController.sign() ushlab turadi.
 

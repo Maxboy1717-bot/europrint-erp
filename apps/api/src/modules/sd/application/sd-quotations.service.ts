@@ -87,6 +87,27 @@ export class SdQuotationsService {
     private readonly gl: GlPostingService,
   ) {}
 
+  /**
+   * 06-sd#147 — persist a quotation line's gofra layer count (2/3/5-sloy; 7 = triple
+   * wall) and return a NON-BLOCKING "AI load" hint (the rated load-capacity range for
+   * that layer count). The hint is read from the owner-fillable sd_load_capacity_rules
+   * lookup (06-sd#107); while that mapping is empty/absent it returns null — the layer
+   * count is still saved. No fabricated mapping. NOT_FOUND when the line is missing.
+   */
+  async setItemLayerCount(itemId: string, layerCount: number): Promise<Result<Row, AppError>> {
+    const saved = await this.repo.setItemLayerCount(itemId, layerCount);
+    if (!saved.ok) return saved as Result<Row, AppError>;
+    if (!saved.data) return Err(AppErr('NOT_FOUND', `Kotirovka satri ${itemId} topilmadi`));
+    const recR = await this.repo.recommendLoadForLayers(layerCount);
+    const loadRecommendation = recR.ok ? recR.data : null; // null => non-blocking, no owner rule yet
+    return Ok({
+      itemId: saved.data['id'],
+      quotationId: saved.data['quotation_id'],
+      layerCount: saved.data['layer_count'],
+      loadRecommendation,
+    });
+  }
+
   async listQuotations(customerId: number | null, status: string | null, lim: number, off: number): Promise<Result<object, AppError>> {
     return this.repo.listQuotations(customerId, status, lim, off);
   }
