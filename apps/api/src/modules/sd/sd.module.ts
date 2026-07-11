@@ -4,6 +4,11 @@
  */
 
 import { Module } from '@nestjs/common';
+import { SdKlisheRetentionController } from './presentation/sd-klishe-retention.controller';
+import { KlisheRetentionService } from './application/klishe-retention.service';
+import { KlisheRetentionCron } from './cron/klishe-retention.cron';
+import { DrizzleKlisheRetentionRepository } from './infrastructure/repositories/drizzle-klishe-retention.repo';
+import { KLISHE_RETENTION_REPO } from './domain/repositories/i-klishe-retention.repo';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FinanceModule } from '@modules/finance/finance.module'; // #04 EP-SD-030: GlPostingService for payment→entries
@@ -120,6 +125,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule],
   controllers: [
+    SdKlisheRetentionController,
     SdOrdersController, SdInvoicesController, SdDeliveriesController,
     SdDashboardController, SdCustomersController, SdLeadsController,
     SdPaymentsController, SdQuotationsController, SdContractsController,
@@ -127,6 +133,9 @@ const repositories = [
     SdLostOrdersReclamationsController,
   ],
   providers: [
+    KlisheRetentionService,
+    KlisheRetentionCron,
+    { provide: KLISHE_RETENTION_REPO, useClass: DrizzleKlisheRetentionRepository },
     loggerProvider,
     TashkentTimeService,
     DrizzleSdAtpRepository,
