@@ -62,6 +62,15 @@ export default function MESExtended() {
     queryKey: ["/api/mes/oee"],
   });
 
+  // 08-mes#36 (Qoida 12 magic-number): factory-wide "World Class" chegara endi
+  // mes_oee_targets'dan (НО/direktor CRUD orqali versiyalanadigan) o'qiladi — 85 hardcode emas.
+  // Backend default (station_id yo'q holatda) ham 85 — shu bilan mos, faqat endi tahrirlanadi.
+  const { data: oeeTargetData } = useQuery<{ target_percent: number }>({
+    queryKey: ["/api/mes/oee-targets/current"],
+    staleTime: 60_000,
+  });
+  const oeeTargetPercent = Number(oeeTargetData?.target_percent) || 85;
+
   const { data: maintenanceRequests = [], isLoading: maintLoading, refetch: refetchMaint } = useQuery<MaintenanceRequest[]>({
     queryKey: ["/api/mes/maintenance-requests"],
     select: selectArray<MaintenanceRequest>,
@@ -143,11 +152,11 @@ export default function MESExtended() {
   const avgOee = machines.length > 0
     ? Math.round(machines.reduce((s, m) => s + Number(m.oee || 0), 0) / machines.length)
     : (oeeData?.averageOee || 0);
-  const worldClass = machines.filter(m => Number(m.oee || 0) >= 85).length;
+  const worldClass = machines.filter(m => Number(m.oee || 0) >= oeeTargetPercent).length;
 
   const kpiItems = [
     { label: t("ortachaOee"),      value: `${avgOee || (mesStats?.avgOee as number) || 0}%`,    desc: t("uskunalarSamaradorligi"), Icon: Activity, accent: "text-[var(--ep-blue)]"   },
-    { label: "World Class (≥85%)", value: worldClass || (mesStats?.worldClassCount as number) || 0, desc: t("stanoqDesc"),               Icon: Trophy,   accent: "text-[var(--ep-green)]"  },
+    { label: `World Class (≥${oeeTargetPercent}%)`, value: worldClass || (mesStats?.worldClassCount as number) || 0, desc: t("stanoqDesc"),               Icon: Trophy,   accent: "text-[var(--ep-green)]"  },
     { label: t("tamirlashda"),       value: machines.filter(m => m.status?.includes("Ta'mir") || m.status === "maintenance").length, desc: t("hozirNosoz"), Icon: Wrench, accent: "text-[var(--ep-red)]"    },
     { label: t("jamiStanoqlar"),     value: machines.length,                                       desc: t("monitoringOstida"),      Icon: Cpu,      accent: "text-[var(--ep-purple)]" },
   ];

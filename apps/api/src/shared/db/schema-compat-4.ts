@@ -163,6 +163,11 @@ export const productionSessions = pgTable('production_sessions', {
   // + LMS-sync bog'lami (lms_enrollments.id ga ishora, nullable runtime-DATA).
   isTraining: boolean('is_training').notNull().default(false),
   lmsEnrollmentId: integer('lms_enrollment_id'),
+  // 08-mes#34 (EP-MES-059) — gofra qatlam soni + м2, format_a/b/gramm'dan ALOHIDA
+  // (5/3-qatlam aralashib ketish xatosini oldini olish uchun). Additive, nullable.
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  gofraLayerCount: integer('gofra_layer_count'),
+  gofraAreaM2: decimal('gofra_area_m2', { precision: 10, scale: 2 }),
 });
 
 // NOTE: convergence deferred (tier-1) — lib/db aiUsageLogs.userId is numeric but
