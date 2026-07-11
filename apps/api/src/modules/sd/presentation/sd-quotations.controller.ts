@@ -165,6 +165,7 @@ export class SdQuotationsController {
       quantity: Number(body.quantity ?? 1),
       isNewDie: body.isNewDie === true,
       kashirovka: body.kashirovka === true,
+      advancePercent: body.advancePercent != null ? Number(body.advancePercent) : undefined,
     }, user?.role);
     assertOk(r);
     return r.data;

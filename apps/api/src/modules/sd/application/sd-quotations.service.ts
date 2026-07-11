@@ -13,6 +13,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { safeCall, Result, AppError, Ok, Err, AppErr } from '@common/result';
 import { GlPostingService } from '@modules/finance/domain/services/gl-posting.service';
 import { Role } from '@common/constants/roles.constants';
+import { getBusinessSettingNumber } from '../../../shared/config/business-settings.reader';
 
 /** EP-SD-037 price-engine input (carton dims + colours + qty). */
 export type PriceCalcInput = {
@@ -28,6 +29,12 @@ export type PriceCalcInput = {
   isNewDie: boolean;
   /** 06-sd #142: kashirovka (ofset+gofra) alohida operatsiya kerakmi. */
   kashirovka?: boolean;
+  /**
+   * 06-sd#12 (vision-1000-answers/06-sd.md #12, Q6): kotirovkaga rejalashtirilgan avans foizi
+   * (0-100). Faqat TO'LIQ 100% avansda avtomatik chegirma qo'llanadi (95% = chegirmasiz).
+   * Optional — yubormagan chaqiruvchilar uchun eski hisob-kitob o'zgarishsiz qoladi.
+   */
+  advancePercent?: number;
 };
 import { ISdQuotationsRepo, SD_QUOTATIONS_REPO } from '../domain/repositories/i-sd-quotations.repo';
 import {
@@ -268,7 +275,19 @@ export class SdQuotationsService {
       const costPrice = paperCost + printCost + dieCost + kashirovkaCost + productionCost + deliveryCost;
       const markupPercent = num(cfg.default_markup_percent, 35);
       const vatRate = num(cfg.vat_rate, 12);
-      const priceBeforeVat = costPrice * (1 + markupPercent / 100);
+      // 06-sd#12 (vision-1000-answers/06-sd.md #12, Q6): "Chegirma faqat TO'LIQ 100% avans
+      // faktida beriladi (95% = chegirmasiz)... tekshiruv BE tomonida quotation_service.ts'da:
+      // if (advancePercent < 100) discount5pct = false." Foiz qiymati business_settings'dan
+      // o'qiladi (owner CRUD orqali sozlanadi, hech qachon hardcode qilinmaydi); fallback=5
+      // to'g'ridan vizyon matnidagi "discount5pct" nomidan olingan — o'ylab topilgan raqam emas.
+      const rawAdvancePercent = input.advancePercent;
+      const advancePercentInput = typeof rawAdvancePercent === 'number' && Number.isFinite(rawAdvancePercent)
+        ? rawAdvancePercent : null;
+      const advanceDiscountEligible = advancePercentInput === 100;
+      const advanceDiscountPercent = advanceDiscountEligible
+        ? await getBusinessSettingNumber('full_advance_discount_pct', 5)
+        : 0;
+      const priceBeforeVat = costPrice * (1 + markupPercent / 100) * (1 - advanceDiscountPercent / 100);
       const totalPrice = priceBeforeVat * (1 + vatRate / 100);
       const unitPrice = qty > 0 ? totalPrice / qty : 0;
 
@@ -278,6 +297,10 @@ export class SdQuotationsService {
         productionCost: round2(productionCost), deliveryCost: round2(deliveryCost),
         unitPrice: round2(unitPrice), totalPrice: round2(totalPrice),
         markupPercent, vatRate,
+        // 06-sd#12: 100%-avans chegirmasi qo'llanilganini FE'ga ko'rsatish uchun qo'shimcha
+        // (additive) maydonlar — mavjud maydonlar semantikasi o'zgarmagan.
+        advancePercent: advancePercentInput,
+        advanceDiscountPercent: round2(advanceDiscountPercent),
         // EP-SD-101 (vision 06-sd #101): additive, non-blocking printing-method hint returned
         // with the price so the FE quote form can pre-select offset/flexo (manager may override).
         printingMethodRecommendation: recommendPrintingMethod(qty, colors),

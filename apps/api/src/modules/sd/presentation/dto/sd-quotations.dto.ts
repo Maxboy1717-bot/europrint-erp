@@ -48,6 +48,9 @@ export const SdCalculatePriceSchema = z.object({
   kashirovka:   z.coerce.boolean().optional().default(false),
   product_id:   z.union([z.string(), z.number()]).optional(),
   formula_id:   z.union([z.string(), z.number()]).optional(),
+  // 06-sd#12 (vision-1000-answers/06-sd.md #12, Q6): rejalashtirilgan avans foizi (0-100).
+  // Optional — yubormasa eski hisob-kitob (chegirmasiz) o'zgarishsiz qoladi.
+  advancePercent: z.coerce.number().min(0).max(100).optional(),
 }).passthrough();
 export type SdCalculatePriceDto = z.infer<typeof SdCalculatePriceSchema>;
 
