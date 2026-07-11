@@ -80,6 +80,9 @@ function mapLeadRow(r: Row, scoringService: CrmLeadScoringService): Row {
     // Marketing-14 #59/#67: ofset/gofra/etiketka/flekso/blanka (null for legacy rows
     // or callers that haven't been updated to send it yet — see crm-leads.controller.ts).
     productType:  r['product_type'] ?? null,
+    // EP-MKT-102 (Marketing #80, Hudud+eksport belgisi): raw column passthrough.
+    region:       r['region'] ?? null,
+    isExport:     Boolean(r['is_export']),
   };
 }
 
@@ -161,6 +164,9 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
         // LeadCreateSchema (crm-leads.controller.ts) when present. DB CHECK constraint
         // (crm_leads_product_type_check) is the last line of defense for any other caller.
         product_type:       (dto.productType as string | undefined) ?? null,
+        // EP-MKT-102 (Marketing #80, Hudud+eksport belgisi): lid hududi + eksport/ichki belgisi.
+        region:             (dto.region as string | undefined) ?? null,
+        is_export:          Boolean(dto.isExport ?? dto.is_export ?? false),
       };
       const result = await db.insert(crmLeads).values(row as unknown as typeof crmLeads.$inferInsert).returning();
       return Ok(mapLeadRow(result[0] as Row, this.scoringService));
@@ -198,6 +204,9 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       // Marketing-14 #59/#67: allow correcting the product type post-creation (e.g. from
       // a lead-detail edit form once one exists) — CHECK constraint guards the DB value.
       if (dto.productType != null) setObj.product_type = String(dto.productType);
+      // EP-MKT-102 (Marketing #80, Hudud+eksport belgisi): lid hududi + eksport/ichki belgisi.
+      if (dto.region != null) setObj.region = String(dto.region);
+      if (dto.isExport != null || dto.is_export != null) setObj.is_export = Boolean(dto.isExport ?? dto.is_export);
       setObj.updated_at = _time.now();
       const result = await db.update(crmLeads).set(setObj as Partial<typeof crmLeads.$inferInsert>).where(eq(crmLeads.id, id)).returning();
       return Ok(result[0] ? mapLeadRow(result[0] as Row, this.scoringService) : {} as Row);

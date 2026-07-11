@@ -100,6 +100,15 @@ export const CRM_MIGRATIONS: Array<MigrationDef> = [
   { name: 'crm_leads add contact_name col if missing', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS contact_name VARCHAR(200)` },
   { name: 'crm_leads add contact_email col if missing', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS contact_email VARCHAR(200)` },
   { name: 'crm_leads add contact_phone col if missing', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50)` },
+  // APPROVED: owner Q-35 schema-approval wave (2026-07-11, ca3648bf) — EP-MKT-102
+  // (docs/audit/decisions/14-marketing.md:733-738, Javob A, action: CREATE). Marketing #80
+  // "Hudud+eksport belgisi": har lid uchun hudud (viloyat/davlat) + eksport/ichki belgisi.
+  // Scoped to crm_leads only (the live lead table — the standalone `leads` table has 0 code
+  // references, confirmed 2026-07-11). Additive/nullable region + default-false is_export;
+  // existing rows unaffected (Q-39/Q-46). Human-readable mirror:
+  // apps/api/src/shared/db/migrations/crm-leads-region-export-2026-07-11.sql.
+  { name: 'crm_leads add region col if missing (EP-MKT-102, Marketing #80)', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS region TEXT` },
+  { name: 'crm_leads add is_export col if missing (EP-MKT-102, Marketing #80)', sql: `ALTER TABLE IF EXISTS crm_leads ADD COLUMN IF NOT EXISTS is_export BOOLEAN NOT NULL DEFAULT FALSE` },
   { name: 'warehouses: deactivate old WH-* test warehouses',
     sql: `UPDATE warehouses SET is_active = false WHERE code LIKE 'WH-%' AND is_active = true` },
   { name: 'warehouses seed: RM-MAIN (Xom Ashyo)',

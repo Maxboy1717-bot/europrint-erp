@@ -51,6 +51,9 @@ const LeadCreateSchema = z.object({
   // non-optional once the FE form grows a product-type selector (tracked, not done
   // in this change — see migration crm-leads-product-type-2026-07-11.sql).
   productType: z.enum(LEAD_PRODUCT_TYPES).optional(),
+  // EP-MKT-102 (Marketing #80, Hudud+eksport belgisi): lid hududi + eksport/ichki belgisi.
+  region: z.string().max(200).optional(),
+  isExport: z.boolean().optional(),
 }).passthrough();
 
 const UpdateLeadStageSchema = z.object({
@@ -96,6 +99,9 @@ function normalizeLeadDto(dto: Record<string, unknown>): Record<string, unknown>
     companyId:  dto.companyId,
     assignedTo: dto.assignedTo ?? dto.assignedById,
     productType: dto.productType,
+    // EP-MKT-102 (Marketing #80, Hudud+eksport belgisi): lid hududi + eksport/ichki belgisi.
+    region:     dto.region,
+    isExport:   dto.isExport,
   };
 }
 

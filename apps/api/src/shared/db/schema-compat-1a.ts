@@ -64,6 +64,12 @@ export const crmLeads = pgTable('crm_leads', {
   // ofset/gofra/etiketka/flekso/blanka (CHECK-constrained in the migration; nullable
   // here for the same reason it's nullable in the DB — see migration comment).
   product_type:       text('product_type'),
+  // EP-MKT-102 (owner-approved, docs/audit/decisions/14-marketing.md:733-738, action:
+  // CREATE) — Marketing #80 "Hudud+eksport belgisi": lid hududi (viloyat/davlat) +
+  // eksport/ichki belgisi. Additive; nullable region + default-false is_export
+  // (Q-39/Q-46 safe — no existing caller reads/writes these names).
+  region:             text('region'),
+  is_export:          boolean('is_export').notNull().default(false),
   deleted_at:         ts('deleted_at'),
   created_at:         ts('date_create').defaultNow(),  // live: date_create
   updated_at:         ts('date_modify').defaultNow(),  // live: date_modify
