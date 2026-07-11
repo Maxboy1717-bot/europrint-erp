@@ -88,6 +88,10 @@ import { SdLostOrdersReclamationsController } from './presentation/sd-lost-order
 import { SdLostOrdersReclamationsService } from './application/sd-lost-orders-reclamations.service';
 import { DrizzleSdLostOrdersReclamationsRepo } from './infrastructure/repositories/drizzle-sd-lost-orders-reclamations.repo';
 import { SD_LOST_ORDERS_RECLAMATIONS_REPO } from './domain/repositories/i-sd-lost-orders-reclamations.repo';
+// EP-SD-154 (vision 06-sd#154): optional legacy 1C (Zakaz 1S) order number on the order header
+import { SdLegacyOrderController } from './presentation/sd-legacy-order.controller';
+import { SdLegacyOrderService } from './application/sd-legacy-order.service';
+import { SdLegacyOrderRepository } from './orders/sd-legacy-order.repository';
 // 06-sd #102: mashina formati (72/52SM/KVA) tavsiya+narx katalogi
 import { SdMachineFormatController } from './presentation/sd-machine-format.controller';
 import { SdMachineFormatService } from './application/sd-machine-format.service';
@@ -147,6 +151,7 @@ const repositories = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule],
   controllers: [
+    SdLegacyOrderController, // EP-SD-154
     SdOrderSyncController,
     SdLineDeadlineController,
     SdCustomerInactivityController, // 06-sd #27 nofaol mijoz thresholds + manual sweep
@@ -159,6 +164,8 @@ const repositories = [
     SdMachineFormatController,
   ],
   providers: [
+    SdLegacyOrderService, // EP-SD-154
+    SdLegacyOrderRepository,
     SdContractTermsRepository, // #78 vision 06-sd: structured contract terms repo (payment/penalty/penya)
     SdOrderSyncService,
     { provide: SD_ORDER_SYNC_REPO, useClass: DrizzleSdOrderSyncRepo },
