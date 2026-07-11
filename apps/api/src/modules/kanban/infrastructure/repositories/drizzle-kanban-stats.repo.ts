@@ -11,6 +11,7 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { safeCall, Result } from '@common/result';
+import { KANBAN_RATING_WEIGHT_ACHIEVEMENT, KANBAN_RATING_WEIGHT_ESCALATION } from '@common/constants/business.constants';
 
 @Injectable()
 export class DrizzleKanbanStatsRepository {
@@ -166,24 +167,47 @@ export class DrizzleKanbanStatsRepository {
           u.email,
           COUNT(*) FILTER (WHERE kc.deleted_at IS NULL)                              AS total,
           COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.completed_at IS NOT NULL) AS completed,
-          COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.due_date < ${today} AND kc.completed_at IS NULL) AS overdue
+          COUNT(*) FILTER (WHERE kc.deleted_at IS NULL AND kc.due_date < ${today} AND kc.completed_at IS NULL) AS overdue,
+          COUNT(DISTINCT n.id) FILTER (WHERE kc.deleted_at IS NULL)                  AS escalation_count
         FROM kanban_cards kc
         LEFT JOIN users u ON u.id = kc.owner_user_id
+        LEFT JOIN notifications n
+               ON n.reference_type = 'kanban_card'
+              AND n.reference_id = kc.id
+              AND n.type = 'kanban_overdue'
+              AND n.user_id = kc.owner_user_id
         WHERE kc.owner_user_id IS NOT NULL ${boardFilter}
         GROUP BY kc.owner_user_id, u.first_name, u.last_name, u.email
         ORDER BY total DESC
         LIMIT 50
       `);
       return {
-        employees: rows.rows.map((r) => ({
-          userId:    r.owner_user_id,
-          fullName:  r.full_name ?? 'Noma\'lum',
-          email:     r.email ?? '',
-          total:     Number(r.total     ?? 0),
-          completed: Number(r.completed ?? 0),
-          overdue:   Number(r.overdue   ?? 0),
-          rate:      Number(r.total) > 0 ? Math.round((Number(r.completed) / Number(r.total)) * 100) : 0,
-        })),
+        // Vision-1000-answers/15-kanban.md #39 (Item A39): KPI_score = achievement*0.7
+        // - escalation_penalty*0.3. `rate` (existing achievement %) and `escalationCount`
+        // (new — count of 'kanban_overdue' notifications this owner received, written by
+        // kanban-overdue-escalation.cron.ts / EP-KAN-045) are combined into `ratingScore`
+        // using the named weights from business.constants.ts. Existing fields
+        // (total/completed/overdue/rate) are unchanged.
+        employees: rows.rows.map((r) => {
+          const total = Number(r.total ?? 0);
+          const completed = Number(r.completed ?? 0);
+          const achievementRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+          const escalationCount = Number(r.escalation_count ?? 0);
+          const ratingScore = Math.round(
+            (achievementRate * KANBAN_RATING_WEIGHT_ACHIEVEMENT - escalationCount * KANBAN_RATING_WEIGHT_ESCALATION) * 100,
+          ) / 100;
+          return {
+            userId:          r.owner_user_id,
+            fullName:        r.full_name ?? 'Noma\'lum',
+            email:           r.email ?? '',
+            total,
+            completed,
+            overdue:         Number(r.overdue ?? 0),
+            rate:            achievementRate,
+            escalationCount,
+            ratingScore,
+          };
+        }),
       };
     });
   }

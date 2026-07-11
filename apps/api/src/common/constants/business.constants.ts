@@ -605,3 +605,23 @@ export const KANBAN_MAX_URGENT_PER_DAY = 2;
  * mumkin (Q-35/Izoh: "Muddat konfiguratsiya"). (Item 10-wms#10)
  */
 export const WMS_GTD_ESCALATION_DAYS = 14;
+
+// ---------------------------------------------------------------------------
+// Kanban — Karta-egasi reyting formulasi (VISION-3340 #39 / Item A39)
+// ---------------------------------------------------------------------------
+
+/**
+ * Kanban karta-egasi (ijrochi) reyting formulasi og'irliklari — modul 15 Kanban,
+ * vizyon vision-1000-answers/15-kanban.md #39 / FULL-ITEM-LEVEL-MASTER-PLAN Item A39:
+ * "Bajarilish reytingi (COR-073) va eskalatsiya soni (EP-KAN-045) birlashtirilgan
+ * formula: KPI_score = achievement * 0.7 - escalation_penalty * 0.3; og'irlik
+ * koeffitsientlari business.constants.ts da; formula HR tomonidan inson tasdig'i
+ * (E1) bilan tasdiqlangan; quarter sayin qayta ko'rib chiqiladi."
+ * achievement = shu owner bajargan kartalar foizi (0-100 shkala — DrizzleKanbanStatsRepository
+ * .getTeamMetrics() dagi mavjud `rate` bilan bir xil hisoblash); escalation_penalty = shu
+ * owner'ga `kanban-overdue-escalation.cron.ts` yuborgan 'kanban_overdue' bildirishnomalari
+ * soni (EP-KAN-045, notifications jadvalidan). Natija (`ratingScore`) faqat ko'rsatkich —
+ * E1 bo'yicha avtomatik jazo/bonus emas, HR/boshliq tasdig'i bilan ishlatiladi.
+ */
+export const KANBAN_RATING_WEIGHT_ACHIEVEMENT = 0.7;
+export const KANBAN_RATING_WEIGHT_ESCALATION = 0.3;
