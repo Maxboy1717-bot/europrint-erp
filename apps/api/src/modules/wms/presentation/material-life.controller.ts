@@ -47,7 +47,8 @@ const UpdateLifeSchema = z
     storageCondition: z.string().max(64).nullable().optional(),
     ageAlertDays: z.number().int().positive().nullable().optional(),
     isRecyclable: z.boolean().optional(),
-    palletUnitQty: z.number().positive().nullable().optional(),
+    // 10-wms#31: poddondagi birlik soni butun bo'lishi kerak (0.5 dona bo'lmaydi).
+    palletUnitQty: z.number().int().positive().nullable().optional(),
     isSample: z.boolean().optional(),
   })
   .strict();
