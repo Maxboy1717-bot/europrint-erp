@@ -60,6 +60,10 @@ export const crmLeads = pgTable('crm_leads', {
   contact_phone:      varchar('contact_phone', { length: 50 }),
   contact_email:      varchar('contact_email', { length: 200 }),
   notes:              text('comments'),                // live: comments
+  // Marketing-14 #59/#67 (2026-07-11): product category the lead is interested in —
+  // ofset/gofra/etiketka/flekso/blanka (CHECK-constrained in the migration; nullable
+  // here for the same reason it's nullable in the DB — see migration comment).
+  product_type:       text('product_type'),
   deleted_at:         ts('deleted_at'),
   created_at:         ts('date_create').defaultNow(),  // live: date_create
   updated_at:         ts('date_modify').defaultNow(),  // live: date_modify

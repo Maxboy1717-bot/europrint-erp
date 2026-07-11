@@ -19,6 +19,11 @@ import { safeInt } from '@common/db/db-rows';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@common/types/user.types';
 
+// Marketing-14 #59/#67 — vision-approved lead product categories (TASDIQ-2146 §14
+// #59/#67, EP-MKT-089). Kept as its own const so LeadCreateSchema and any future
+// lead-update schema can share the exact same 5 values.
+const LEAD_PRODUCT_TYPES = ['ofset', 'gofra', 'etiketka', 'flekso', 'blanka'] as const;
+
 const LeadCreateSchema = z.object({
   firstName: z.string().max(200).optional(),
   lastName: z.string().max(200).optional(),
@@ -37,6 +42,15 @@ const LeadCreateSchema = z.object({
   assignedById: z.union([z.string(), z.number()]).optional(),
   phones: z.array(z.record(z.string(), z.string())).optional(),
   emails: z.array(z.record(z.string(), z.string())).optional(),
+  // NOTE on "majburiy" (required): vision text calls this field mandatory, but the
+  // only live lead-create caller today — QuickCreateModal (FE) posting to this same
+  // endpoint — has no product-type input yet (artifacts/erp-dashboard/src/pages/crm/
+  // QuickCreateModalTypes.ts). Hard-requiring it here would 400 every existing lead
+  // creation, breaking a working caller (STANDARTLAR §15 / "never break an existing
+  // caller"). Left `.optional()` so it validates-when-present today; flip to
+  // non-optional once the FE form grows a product-type selector (tracked, not done
+  // in this change — see migration crm-leads-product-type-2026-07-11.sql).
+  productType: z.enum(LEAD_PRODUCT_TYPES).optional(),
 }).passthrough();
 
 const UpdateLeadStageSchema = z.object({
@@ -81,6 +95,7 @@ function normalizeLeadDto(dto: Record<string, unknown>): Record<string, unknown>
     notes:      dto.notes      ?? dto.comments,
     companyId:  dto.companyId,
     assignedTo: dto.assignedTo ?? dto.assignedById,
+    productType: dto.productType,
   };
 }
 

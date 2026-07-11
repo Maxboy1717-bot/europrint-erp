@@ -77,6 +77,9 @@ function mapLeadRow(r: Row, scoringService: CrmLeadScoringService): Row {
     notes:        r['comments'] ?? null,
     ai_score:     aiScore,
     companyId:    null,
+    // Marketing-14 #59/#67: ofset/gofra/etiketka/flekso/blanka (null for legacy rows
+    // or callers that haven't been updated to send it yet — see crm-leads.controller.ts).
+    productType:  r['product_type'] ?? null,
   };
 }
 
@@ -154,6 +157,10 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
         contact_email:      emailVal ?? null,
         notes:              (dto.notes as string | undefined) ?? (dto.comments as string | undefined) ?? null,  // → comments
         manager_id:         Number(dto.assignedById ?? dto.assignedTo ?? createdBy) || null,                    // → assigned_to
+        // Marketing-14 #59/#67: ofset/gofra/etiketka/flekso/blanka, validated by
+        // LeadCreateSchema (crm-leads.controller.ts) when present. DB CHECK constraint
+        // (crm_leads_product_type_check) is the last line of defense for any other caller.
+        product_type:       (dto.productType as string | undefined) ?? null,
       };
       const result = await db.insert(crmLeads).values(row as unknown as typeof crmLeads.$inferInsert).returning();
       return Ok(mapLeadRow(result[0] as Row, this.scoringService));
@@ -188,6 +195,9 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       if (dto.source != null || dto.sourceId != null) setObj.source = String(dto.source ?? dto.sourceId);
       if (dto.notes != null || dto.comments != null) setObj.notes = String(dto.notes ?? dto.comments);
       if (dto.assignedById != null || dto.assignedTo != null) setObj.manager_id = Number(dto.assignedById ?? dto.assignedTo) || null;
+      // Marketing-14 #59/#67: allow correcting the product type post-creation (e.g. from
+      // a lead-detail edit form once one exists) — CHECK constraint guards the DB value.
+      if (dto.productType != null) setObj.product_type = String(dto.productType);
       setObj.updated_at = _time.now();
       const result = await db.update(crmLeads).set(setObj as Partial<typeof crmLeads.$inferInsert>).where(eq(crmLeads.id, id)).returning();
       return Ok(result[0] ? mapLeadRow(result[0] as Row, this.scoringService) : {} as Row);
