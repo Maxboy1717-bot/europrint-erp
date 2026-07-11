@@ -63,7 +63,10 @@ export class OrgQueriesRepo {
       const rows = await exec(sql`
         SELECT
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true) AS "totalNodes",
-          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND node_type = 'department') AS "totalDepartments",
+          -- 2026-07-11: "Jami bo'limlar" endi faqat literal 'department' emas — Vysotskiy-7
+          -- otdeleniye/otdel/sektsiya/sektor ham org-birlik (guruh-karta), aks holda bu KPI
+          -- egasi yangi tier-nomlar bilan struktura qursa ham doim 0 ko'rsatardi.
+          (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND node_type IN ('department', 'section', 'otdeleniye', 'otdel', 'sektsiya', 'sektor')) AS "totalDepartments",
           (SELECT COUNT(*)::int FROM users u JOIN employee_org_departments eod ON eod.user_id = u.id WHERE u.is_active = TRUE) AS "totalEmployees",
           (SELECT COUNT(*)::int FROM org_departments WHERE is_active = true AND head_user_id IS NULL) AS "vacantCount",
           (SELECT COUNT(*)::int FROM audit_logs WHERE table_name = 'orgstructure' AND created_at >= NOW() - INTERVAL '30 days') AS "recentChanges"

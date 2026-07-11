@@ -30,10 +30,25 @@ describe("NODE_TYPE_LABELS — G3 Vysotskiy-7 tier vocabulary", () => {
     }
   });
 
-  it("pre-existing tiers are untouched (no regression on owner/top_director/director/department/section)", () => {
+  it("pre-existing tiers are untouched (no regression on owner/top_director/director/department)", () => {
     expect(ORG_LABELS).toMatchObject({
       owner: "Egasi", top_director: "Bosh Direktor", director: "Direktor",
-      department: "Bo'lim", section: "Sektor",
+      department: "Bo'lim",
     });
+  });
+
+  it("2026-07-11: legacy 'section' is retired from both label maps — it duplicated 'sektor'\'s label (\"Sektor\"), making the create-dropdown offer two indistinguishable options", () => {
+    expect(ORG_LABELS.section).toBeUndefined();
+    expect(ORGNODE_LABELS.section).toBeUndefined();
+  });
+
+  it("no two node_type keys share the same display label (would be indistinguishable in the dropdown)", () => {
+    for (const labels of [ORG_LABELS, ORGNODE_LABELS]) {
+      const seen = new Map<string, string>();
+      for (const [type, label] of Object.entries(labels)) {
+        expect(seen.has(label)).toBe(false);
+        seen.set(label, type);
+      }
+    }
   });
 });

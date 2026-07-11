@@ -378,7 +378,11 @@ export class OrgMutationsRepo {
     // KANONIK rahbar-kartalar = jonli data'da head_user_id to'ldirilgan node_type'lar (DB-proof:
     // owner/ceo/director/section = 18/18 to'liq; position/department/otdeleniye = 0/122, ularning
     // rahbari daraxt bo'ylab leadership-kartadan keladi — backfillManagerIds parent-chain).
-    const HEAD_BEARING_TYPES = ['owner', 'ceo', 'director', 'section'];
+    // 2026-07-11 (full company-data reset — bazadagi 18/18 namuna edi, DB-proof endi eskirgan):
+    // Vysotskiy-7 otdeleniye/otdel/sektsiya/sektor har biri o'z rahbariga ega bo'lishi kerak
+    // ('section' bilan bir xil "rahbarlik-karta" konsepti — endi create-dropdown'da 'sektor'
+    // 'section'ni almashtirdi, shu logikaga ham ko'chishi shart edi, chala qolgan edi).
+    const HEAD_BEARING_TYPES = ['owner', 'ceo', 'director', 'section', 'otdeleniye', 'otdel', 'sektsiya', 'sektor'];
     if (node.node_type != null && HEAD_BEARING_TYPES.includes(node.node_type) && node.head_user_id == null) {
       await runQuery(sql`
         UPDATE org_departments SET head_user_id = ${userId}

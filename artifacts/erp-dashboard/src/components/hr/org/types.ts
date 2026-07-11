@@ -86,7 +86,6 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   top_director: "Bosh Direktor",
   director: "Direktor",
   department: "Bo'lim",
-  section: "Sektor",
   // G3 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B4): the Vysotskiy-7 wall chart's
   // Otdeleniye/Otdel/Sektsiya/Sektor tiers had no create-dropdown entries — HR could nest 4
   // levels (depth is uncapped) but couldn't label them with the owner's tier names.
@@ -96,6 +95,11 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   otdel: "Otdel",
   sektsiya: "Sektsiya",
   sektor: "Sektor",
+  // 2026-07-11: legacy 'section' (also "Sektor") retired from this create-dropdown map — it
+  // duplicated 'sektor' with an identical label, making the two indistinguishable when adding a
+  // karta. 'sektor' (Vysotskiy-7 canonical) is now the only creatable "Sektor" tier. 'section'
+  // stays valid elsewhere (org-export.service.ts display map, HEAD_BEARING_TYPES) for any
+  // pre-existing rows, it's just no longer offered for new cards.
 };
 
 export const CARD_W = 256;
