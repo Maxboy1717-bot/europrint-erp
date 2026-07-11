@@ -40,8 +40,8 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
   async createVendor(body: Row): Promise<Result<Row>>  {
   try {
       const rows = await runQuery<Row>(sql`
-        INSERT INTO mm_vendors (name, code, contact_person, phone, email, address, payment_terms, currency)
-        VALUES (${body.name}, ${body.code ?? null}, ${body.contact_person ?? null}, ${body.phone ?? null}, ${body.email ?? null}, ${body.address ?? null}, ${body.payment_terms ?? 30}, ${body.currency ?? 'UZS'})
+        INSERT INTO mm_vendors (name, code, contact_person, phone, email, address, payment_terms, currency, is_vat_payer)
+        VALUES (${body.name}, ${body.code ?? null}, ${body.contact_person ?? null}, ${body.phone ?? null}, ${body.email ?? null}, ${body.address ?? null}, ${body.payment_terms ?? 30}, ${body.currency ?? 'UZS'}, ${body.is_vat_payer ?? true})
         RETURNING *
       `);
       return Ok((rows.rows[0] ?? {}) as Row);  } catch (_e) {
@@ -61,6 +61,7 @@ export class MmVendorsPrRepository implements IMmVendorsPrRepo {
             address = COALESCE(${body.address ?? null}, address),
             payment_terms = COALESCE(${body.payment_terms ?? null}, payment_terms),
             is_active = COALESCE(${body.is_active ?? null}, is_active),
+            is_vat_payer = COALESCE(${body.is_vat_payer ?? null}, is_vat_payer),
             updated_at = NOW()
         WHERE id = ${id} RETURNING *
       `);

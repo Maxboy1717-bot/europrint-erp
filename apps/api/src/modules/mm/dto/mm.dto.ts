@@ -97,6 +97,7 @@ export const MmCreateVendorSchema = z.object({
   phone:   z.string().optional(),
   email:   z.string().email().optional(),
   address: z.string().optional(),
+  is_vat_payer: z.boolean().optional(), // MM-11 #11.44 -- QQS to'lovchi; omit => DB default true
 });
 export type MmCreateVendorDto = z.infer<typeof MmCreateVendorSchema>;
 
@@ -107,6 +108,7 @@ export const MmUpdateVendorSchema = z.object({
   email:   z.string().email().optional(),
   address: z.string().optional(),
   status:  z.enum(['active', 'inactive', 'blacklisted']).optional(),
+  is_vat_payer: z.boolean().optional(), // MM-11 #11.44 -- QQS to'lovchi
 });
 export type MmUpdateVendorDto = z.infer<typeof MmUpdateVendorSchema>;
 

@@ -4493,4 +4493,19 @@ $fn$ LANGUAGE plpgsql` },
   // status → 23514 RAD, live qatorlar hammasi OK.
   { name: 'SB0241 production_orders_status_chk CHECK', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='production_orders_status_chk') THEN ALTER TABLE production_orders ADD CONSTRAINT production_orders_status_chk CHECK (status IN ('created','pending','planned','confirmed','released','released_to_production','in_progress','in_qc','qc_hold','completed','closed','cancelled','paused')); END IF; END $$` },
 
+  // MM-11 #11.44 -- "QQS to'lovchi" (VAT payer) bayrog'i. `mm_vendors` BAZA JADVAL EMAS --
+  // `vendors` ustidan oddiy VIEW (pg_get_viewdef bilan tasdiqlandi, 2026-07-11). Ustun asl
+  // `vendors` jadvaliga qo'shiladi, so'ng view uni ko'rsatishi uchun CREATE OR REPLACE VIEW
+  // bilan qayta e'lon qilinadi (bir xil ustun ro'yxati + yangi ustun -- Q-39 regressiyasiz).
+  // Default TRUE -- mavjud vendor qatorlari QQS to'lovchi deb hisoblanadi.
+  { name: 'MM-11 #11.44 vendors.is_vat_payer ADD COLUMN', sql: `ALTER TABLE vendors ADD COLUMN IF NOT EXISTS is_vat_payer boolean NOT NULL DEFAULT true` },
+  {
+    name: 'MM-11 #11.44 mm_vendors VIEW +is_vat_payer',
+    sql: `CREATE OR REPLACE VIEW mm_vendors AS
+      SELECT id, vendor_code, name, name_ru, address, phone, email, tax_id, payment_terms,
+             currency, is_active, created_at, deleted_at, tin, rating, code, contact_person,
+             is_vat_payer
+      FROM vendors`,
+  },
+
 ];

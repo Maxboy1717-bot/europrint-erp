@@ -140,6 +140,7 @@ export const mm_vendors = pgTable('mm_vendors', {
   address: text('address'),
   paymentTerms: integer('payment_terms'),
   currency: text('currency'),
+  isVatPayer: boolean('is_vat_payer').notNull().default(true), // MM-11 #11.44 -- QQS to'lovchi bayrog'i (migration: mm-vendors-vat-payer-2026-07-11.sql)
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
