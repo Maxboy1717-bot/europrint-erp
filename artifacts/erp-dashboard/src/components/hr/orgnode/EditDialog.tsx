@@ -14,10 +14,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, selectArray } from "@/lib/queryClient";
 import { NodeDetail, NODE_TYPE_LABELS } from "./types";
 import { useTranslation } from '@/lib/i18n';
+
+// Xuddi shu manba components/hr/org/AddNodeDialog.tsx bilan (rbac-tier.policy.ts backend
+// derive-on-read qoidasi — bu FE nusxa faqat "avtomatik nima bo'ladi" hintini ko'rsatadi).
+const RAZRYAD_LEVEL_TO_RBAC_TIER_HINT: Record<number, string> = {
+  1: "operator", 2: "operator", 3: "specialist", 4: "specialist", 5: "manager", 6: "executive",
+};
+
+interface ShiftTypeOption {
+  id: number; code: string; name_uz: string; start_time: string; end_time: string;
+}
 
 interface EditDialogProps {
   node: NodeDetail;
@@ -55,6 +66,12 @@ export function EditDialog({
     // VISION (A35 — Vysotskiy 7-otdeleniye): karta qaysi 7 bo'limdan biriga (1-7); null = belgilanmagan.
     otdeleniyeNo: node.otdeleniyeNo ?? null,
     bonusConfig: node.bonusConfig ?? "",
+    // 2026-07-11: sezgir maydon (razryad/oylik/boshliq/holat/otdeleniye) o'zgarganda backend
+    // "reason" talab qiladi (VISION-3340 #24, org-structure.controller.ts requireReasonForSensitiveFields).
+    // Bu forma payload'i BARCHA sezgir kalitlarni doim yuboradi (form state doim to'la) — demak
+    // deyarli HAR BIR saqlash shu tekshiruvdan o'tishi kerak, lekin bu yerda hech qanday "sabab"
+    // maydoni yo'q edi (faqat "Tavsif" tasodifan REASON_KEYS'da bo'lgani uchun ba'zan o'tib ketardi).
+    reason: "",
   });
 
   // VISION: har node razryadga ega — razryad darajalari ro'yxati
@@ -63,6 +80,13 @@ export function EditDialog({
     staleTime: 60_000,
   });
   const razryadOptions = Array.isArray(razryadData?.items) ? razryadData.items : [];
+
+  const { data: shiftData } = useQuery<ShiftTypeOption[]>({
+    queryKey: ["/api/hr/shifts/types"],
+    select: selectArray<ShiftTypeOption>,
+    staleTime: 60_000,
+  });
+  const shiftOptions = Array.isArray(shiftData) ? shiftData : [];
 
   // Fetch all active users for the department-head picker.
   // 87% of org nodes have zero members → member-based list leaves headOptions=[].
@@ -79,6 +103,11 @@ export function EditDialog({
   if (node.headUserId != null && !headOptions.some((o) => o.id === node.headUserId)) {
     headOptions.unshift({ id: node.headUserId, name: node.headUserName || `#${node.headUserId}` });
   }
+
+  // Bu forma payload'i quyidagi kalitlarni DOIM yuboradi (form state doim to'la) — mos ravishda
+  // backend requireReasonForSensitiveFields har safar "sabab" talab qiladi. Client-side pre-check
+  // aniq xabar beradi (raw 422 o'rniga).
+  const needsReason = true; // payload har doim razryadLevelId/salaryType/minSalary/maxSalary/headUserId/currentState/otdeleniyeNo yuboradi
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -97,6 +126,7 @@ export function EditDialog({
         workSchedule: form.workSchedule || null, currentState: form.currentState || null,
         otdeleniyeNo: form.otdeleniyeNo,
         bonusConfig: form.bonusConfig || null,
+        reason: form.reason || undefined,
       };
       return apiRequest("PATCH", `/api/org-structure/nodes/${node.id}`, payload);
     },
@@ -105,8 +135,24 @@ export function EditDialog({
       onSuccess();
       onClose();
     },
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    onError: (e) => toast({
+      title: t("xatolik", "Xatolik"),
+      description: (e as Error).message,
+      variant: "destructive",
+    }),
   });
+
+  function handleSave() {
+    if (needsReason && !form.reason.trim()) {
+      toast({
+        title: t("sababKiritingXatolik", "Sabab kiritilishi shart"),
+        description: t("sababKiritingIzoh", "Razryad/oylik/boshliq/holat kabi sezgir maydonlar o'zgarganda, nega o'zgartirilayotgani yozilishi kerak (audit izi uchun)."),
+        variant: "destructive",
+      });
+      return;
+    }
+    mutation.mutate();
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -208,8 +254,20 @@ export function EditDialog({
             </Select>
           </div>
           <div>
-            <Label>{t("rbacDaraja", "RBAC / ruxsat darajasi")}</Label>
-            <Input value={form.rbacTier} onChange={(e) => setForm((f) => ({ ...f, rbacTier: e.target.value }))} placeholder="operator / manager / director" />
+            <Label>{t("rbacDaraja", "RBAC / ruxsat (avtomatik)")}</Label>
+            <Input
+              value={form.rbacTier}
+              onChange={(e) => setForm((f) => ({ ...f, rbacTier: e.target.value }))}
+              placeholder={
+                form.razryadLevelId != null
+                  ? (() => {
+                      const lvl = razryadOptions.find((r) => r.id === form.razryadLevelId)?.level;
+                      const auto = lvl != null ? RAZRYAD_LEVEL_TO_RBAC_TIER_HINT[lvl] : undefined;
+                      return auto ? `Avtomatik: ${auto} (razryaddan)` : "Bo'sh — razryaddan avtomatik";
+                    })()
+                  : "Bo'sh qoldiring — razryaddan avtomatik hisoblanadi"
+              }
+            />
           </div>
           <div>
             <Label>{t("minOylik", "Min oylik")}</Label>
@@ -253,6 +311,20 @@ export function EditDialog({
           </div>
           <div>
             <Label>{t("ishVaqti", "Ish vaqti / smena")}</Label>
+            {shiftOptions.length > 0 && (
+              <Select value="__pick__" onValueChange={(v) => {
+                const s = shiftOptions.find((o) => String(o.id) === v);
+                if (s) setForm((f) => ({ ...f, workSchedule: `${s.start_time}-${s.end_time}` }));
+              }}>
+                <SelectTrigger className="mb-1"><SelectValue placeholder={t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__pick__" disabled>{t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")}</SelectItem>
+                  {shiftOptions.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>{s.name_uz} ({s.start_time}-{s.end_time})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
           </div>
           <div>
@@ -278,10 +350,23 @@ export function EditDialog({
             <Label>{t("bonus", "Bonus (konfiguratsiya)")}</Label>
             <Input value={form.bonusConfig} onChange={(e) => setForm((f) => ({ ...f, bonusConfig: e.target.value }))} placeholder="masalan: reja oshsa 5%" />
           </div>
+          <div className="col-span-2 border-t border-border/50 mt-1 pt-2">
+            <Label>{t("sababOzgartirish", "Sabab — nega o'zgartirilmoqda? *")}</Label>
+            <Textarea
+              value={form.reason}
+              onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
+              placeholder={t("sababPlaceholder", "Masalan: razryad attestatsiyadan keyin oshirildi / yangi boshliq tayinlandi")}
+              rows={2}
+              data-testid="input-node-reason"
+            />
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {t("sababIzoh", "Har bir saqlashda talab qilinadi (audit izi uchun) — kimning nima uchun o'zgartirganini keyin ko'rish mumkin bo'lsin.")}
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t("Bekor")}</Button>
-          <Button onClick={() => mutation.mutate()} disabled={!form.name || mutation.isPending}>
+          <Button onClick={handleSave} disabled={!form.name || mutation.isPending}>
             {mutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
           </Button>
         </DialogFooter>
