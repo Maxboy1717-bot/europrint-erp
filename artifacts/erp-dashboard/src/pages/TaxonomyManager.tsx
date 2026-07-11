@@ -39,6 +39,10 @@ const KNOWN: [string, string][] = [
   ["paper_class", "Qog'oz sinfi"],
   ["operation_type", "Operatsiya turi"],
   ["expense_category", "Xarajat kategoriyasi"],
+  ["kanban_stage", "Kanban bosqichi"],
+  ["notification_category", "Xabar kategoriyasi"],
+  ["org_policy_series", "Orgsiyosat seriyasi"],
+  ["manager_note_category", "Menejer izoh kategoriyasi"],
 ];
 const DEFAULT_NEW = { code: "", nameUz: "", nameRu: "", sortOrder: "" };
 
