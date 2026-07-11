@@ -16,6 +16,10 @@ export const MmCreatePurchaseOrderSchema = z.object({
     quantity:   z.number().positive(),
     unitPrice:  z.number().nonnegative(),
   })).min(1),
+  // MM-11 #11.25 — Incoterms/delivery-terms free-text note (e.g. "EXW Toshkent", "DAP 5 kun").
+  // .max(500) matches the existing free-text-note convention in this file (see vehicle
+  // schema's `notes: z.string().max(500).optional()` below).
+  deliveryTerms: z.string().max(500).optional(),
 });
 export type MmCreatePurchaseOrderDto = z.infer<typeof MmCreatePurchaseOrderSchema>;
 

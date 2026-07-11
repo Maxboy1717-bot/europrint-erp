@@ -215,6 +215,7 @@ export class MmPurchaseOrdersController {
       dto.supplierId,
       dto.items,
       user.id,
+      dto.deliveryTerms ?? null,
     );
     const res = await this.commandBus.execute(command);
     return unwrapOrThrow(res);
@@ -277,17 +278,18 @@ export class MmPurchaseOrdersController {
   @Roles(Role.PURCHASER, Role.PURCHASE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
   async updatePo(
     @Param('id') id: string,
-    @Body() dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string }>,
+    @Body() dto: Partial<{ supplierId: number; items: Array<{ materialId: number; quantity: number; unitPrice: number }>; notes: string; deliveryTerms: string }>,
   ) {
     const poId = Number(id);
     const rows = await db.select({ ...getTableColumns(mm_purchase_orders), vendorName: sql<string | null>`vendor_name` }).from(mm_purchase_orders).where(eq(mm_purchase_orders.id, poId)).limit(1);
     const r = rows[0];
     if (!r) throw new HttpException(await this.i18n.t('errors.orderNotFound'), HttpStatus.NOT_FOUND);
     if ((r.status ?? 'draft') !== 'draft') throw new HttpException(await this.i18n.t('errors.onlyDraftOrderEditable'), HttpStatus.BAD_REQUEST);
-    // Header-only update (notes + vendor); line-item recalc is a larger task, deferred.
+    // Header-only update (notes + vendor + delivery terms); line-item recalc is a larger task, deferred.
     await db.execute(sql`UPDATE mm_purchase_orders SET
       notes = COALESCE(${dto.notes ?? null}, notes),
-      vendor_id = COALESCE(${dto.supplierId != null ? Number(dto.supplierId) : null}, vendor_id)
+      vendor_id = COALESCE(${dto.supplierId != null ? Number(dto.supplierId) : null}, vendor_id),
+      delivery_terms = COALESCE(${dto.deliveryTerms ?? null}, delivery_terms)
       WHERE id = ${poId}`);
     return { id: String(poId), updated: true };
   }

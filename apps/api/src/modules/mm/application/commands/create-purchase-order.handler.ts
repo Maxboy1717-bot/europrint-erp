@@ -15,7 +15,9 @@ import { PoRequiresDirectorApprovalEvent } from '../../domain/events/po-requires
 export class CreatePurchaseOrderCommand {
   constructor(public supplierId: number,
     public items: { materialId: number; quantity: number; unitPrice: number }[],
-    public createdBy: number) {}
+    public createdBy: number,
+    // MM-11 #11.25 — optional Incoterms/delivery-terms free-text note.
+    public deliveryTerms: string | null = null) {}
 }
 
 @CommandHandler(CreatePurchaseOrderCommand)
@@ -32,7 +34,7 @@ export class CreatePurchaseOrderHandler
     this.logger.log('Creating purchase order');
 
     const poNumber = `PO-${Date.now()}`;
-    const po = new PurchaseOrder(0, poNumber, command.supplierId, command.createdBy);
+    const po = new PurchaseOrder(0, poNumber, command.supplierId, command.createdBy, command.deliveryTerms);
 
     for (const item of command.items) {
       const poItem = new PurchaseOrderItem(item.materialId, item.quantity, item.unitPrice);

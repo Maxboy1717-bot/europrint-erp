@@ -89,10 +89,10 @@ export class DrizzleMmRepository implements IMmRepository {
       const poNumber = po.getPoNumber(); // generated as PO-{timestamp} in the handler
       const result = await db.execute(sql`
         INSERT INTO purchase_orders
-          (po_number, vendor_id, order_date, status, total_amount, currency, created_by)
+          (po_number, vendor_id, order_date, status, total_amount, currency, created_by, delivery_terms)
         VALUES
           (${poNumber}, ${po.getSupplierId()}, ${today},
-           ${po.getStatus()}, ${po.getTotalAmount()}, ${'UZS'}, ${po.getCreatedBy()})
+           ${po.getStatus()}, ${po.getTotalAmount()}, ${'UZS'}, ${po.getCreatedBy()}, ${po.getDeliveryTerms()})
         RETURNING id
       `);
       const rows = Array.isArray(result) ? result : ((result as { rows?: unknown[] }).rows ?? []);

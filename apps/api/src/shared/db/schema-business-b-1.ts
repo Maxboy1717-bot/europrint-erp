@@ -161,6 +161,9 @@ export const mm_purchase_orders = pgTable('mm_purchase_orders', {
   created_by:      integer('created_by'),
   created_at:      timestamp('created_at').defaultNow(),
   updated_at:      timestamp('updated_at').defaultNow(),
+  // MM-11 #11.25 — Incoterms/delivery-terms free-text note (additive; see
+  // migrations/mm-11-po-delivery-terms-2026-07-11.sql).
+  delivery_terms:  text('delivery_terms'),
 });
 
 export const mm_purchase_requisitions = pgTable('mm_purchase_requisitions', {
