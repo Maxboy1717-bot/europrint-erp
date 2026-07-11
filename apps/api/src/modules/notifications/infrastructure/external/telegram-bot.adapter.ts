@@ -24,6 +24,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Result } from '@common/types/result.type';
 import { ITelegramSender, TelegramUrgency } from '../../domain/ports/i-telegram-sender.port';
+import { getNotificationIcon } from '../../notification-icon.util';
 
 @Injectable()
 export class TelegramBotAdapter implements ITelegramSender {
@@ -178,11 +179,7 @@ export class TelegramBotAdapter implements ITelegramSender {
     ) {
       urgency = bodyOrUrgency as TelegramUrgency;
     }
-    const urgencyEmoji = {
-      low: '🔵',
-      medium: '🟡',
-      high: '🔴',
-    }[urgency];
+    const urgencyEmoji = getNotificationIcon({ priority: urgency });
     const timestamp = _time.now().toLocaleString('en-US', {
       year: 'numeric',
       month: '2-digit',
