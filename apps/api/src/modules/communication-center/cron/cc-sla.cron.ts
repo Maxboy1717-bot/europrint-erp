@@ -38,7 +38,7 @@ export class CcSlaCron {
   async runEvery30Min(): Promise<void> {
     try {
       await this.markInboxOverdue();
-      await this.autoRejectOverdue48h();   // 48 soat o'tgan hujjatlarni majburiy rad etish
+      await this.remindOverdue48h();       // 48 soat o'tgan hujjatlar uchun 24h-gated takroriy eslatma (20-cc#30)
       await this.escalateApprovals();
       await this.expireDelegations();
     } catch (e) {
@@ -112,49 +112,71 @@ export class CcSlaCron {
   }
 
   // 48 soat o'tgan hujjatlarni tizim tomonidan majburiy rad etish
-  private async autoRejectOverdue48h(): Promise<void> {
+  /**
+   * 20-cc#30 — egasi qarori (2026-07-11 chat): 48-soatlik AVTO-RAD ETISH olib
+   * tashlandi (hujjatni majburiy 'rejected' qilib qo'yish noto'g'ri edi — vizyon
+   * "HR notify + 24h repeat reminder" so'ragan, "avtomatik rad etish" emas).
+   * Hujjat workflow_state/basket_state O'ZGARMAYDI — faqat 24 soatda BIR MARTA
+   * (overdue_reminder_sent_at gate) yuboruvchi + pending approver'larga takroriy
+   * "hali ko'rib chiqilmadi" eslatma yuboriladi, muddat cheksiz davom etadi.
+   */
+  private async remindOverdue48h(): Promise<void> {
     const r = await runQuery<{
       id: string; sender_user_id: number;
     }>(sql`
-      UPDATE cc_documents
-      SET workflow_state = 'rejected',
-          basket_state   = 'outbox',
-          updated_at     = NOW()
+      SELECT id::text AS id, sender_user_id
+      FROM cc_documents
       WHERE basket_state = 'inbox'
         AND is_inbox_overdue = true
         AND basket_entered_at + INTERVAL '48 hours' < NOW()
         AND workflow_state NOT IN ('rejected', 'cancelled', 'approved')
-      RETURNING id::text AS id, sender_user_id
+        AND (overdue_reminder_sent_at IS NULL OR overdue_reminder_sent_at < NOW() - INTERVAL '24 hours')
     `);
 
     if (r.rows.length > 0) {
-      this.logger.warn(`48h auto-reject: ${r.rows.length} hujjat avtomatik rad etildi`);
-      const rejectedIds = r.rows.map(row => row.id);
+      this.logger.warn(`48h+ overdue reminder: ${r.rows.length} hujjatga takroriy eslatma`);
+      const overdueIds = r.rows.map(row => row.id);
 
-      // Pending approvallarni eskalatsiya holatiga o'tkazish
       await runQuery(sql`
-        UPDATE cc_approvals SET state = 'escalated', updated_at = NOW()
-        WHERE document_id = ANY(${rejectedIds}::uuid[]) AND state = 'pending'
+        UPDATE cc_documents SET overdue_reminder_sent_at = NOW()
+        WHERE id = ANY(${overdueIds}::uuid[])
       `);
 
-      // Pattern 2: per-row audit + notification writes fan out in parallel
+      // Pending approvallarga alohida eslatma — kim javob berishi kerakligini bilsin.
+      const approvers = await runQuery<{ document_id: string; approver_user_id: number }>(sql`
+        SELECT document_id::text AS document_id, approver_user_id
+        FROM cc_approvals
+        WHERE document_id = ANY(${overdueIds}::uuid[]) AND state = 'pending'
+      `);
+
       await Promise.all(r.rows.map(async (row) => {
         await runQuery(sql`
           INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
-          VALUES (${row.id}, 'auto_rejected_48h', NULL,
-                  '48 soat SLA chegarasi oshdi — tizim tomonidan avtomatik rad etildi')
+          VALUES (${row.id}, 'overdue_reminder', NULL,
+                  '48 soat SLA chegarasi oshdi — takroriy eslatma yuborildi (avto-rad etish YO''Q)')
         `);
         await this.pushNotification({
           userId:    row.sender_user_id,
           docId:     row.id,
-          type:      'auto_rejected',
-          titleUz:   'Hujjat avtomatik rad etildi',
-          titleRu:   'Документ автоматически отклонён',
-          messageUz: 'Hujjatingiz 48 soat davomida ko\'rib chiqilmadi va tizim tomonidan rad etildi.',
-          messageRu: 'Ваш документ не рассмотрен за 48 часов и автоматически отклонён системой.',
-          priority:  'urgent',
+          type:      'overdue_reminder',
+          titleUz:   'Hujjat hali ko\'rib chiqilmadi',
+          titleRu:   'Документ всё ещё не рассмотрен',
+          messageUz: 'Hujjatingiz 48 soatdan ortiq ko\'rib chiqilmayapti. Mas\'ul shaxsga yana eslatma yuborildi.',
+          messageRu: 'Ваш документ не рассмотрен более 48 часов. Ответственному отправлено повторное напоминание.',
+          priority:  'high',
         });
       }));
+
+      await Promise.all(approvers.rows.map((row) => this.pushNotification({
+        userId:    row.approver_user_id,
+        docId:     row.document_id,
+        type:      'overdue_reminder_approver',
+        titleUz:   'Sizga muddati o\'tgan hujjat kutmoqda',
+        titleRu:   'Вас ожидает просроченный документ',
+        messageUz: '48 soatdan ortiq javob kutilayotgan hujjat bor — iltimos ko\'rib chiqing.',
+        messageRu: 'Есть документ, ожидающий ответа более 48 часов — пожалуйста, рассмотрите.',
+        priority:  'high',
+      })));
     }
   }
 
