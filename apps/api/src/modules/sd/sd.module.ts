@@ -55,6 +55,7 @@ import { DealWonListener } from './infrastructure/event-handlers/deal-won.listen
 import { PaymentReceivedListener } from './infrastructure/event-handlers/payment-received.listener';
 import { AdvanceApprovedFanoutListener } from './infrastructure/event-handlers/advance-approved-fanout.listener';
 import { PpCancelledSdListener } from './infrastructure/event-handlers/pp-cancelled-sd.listener';
+import { QcFailedSdListener } from './infrastructure/event-handlers/qc-failed-sd.listener';
 import { AutoInvoiceListener } from './infrastructure/event-handlers/auto-invoice.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { TashkentTimeService } from '@common/time';
