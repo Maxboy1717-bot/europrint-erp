@@ -294,6 +294,23 @@ export class MarketingAnalyticsStubsController {
     `));
     if (!ml) throw new NotFoundException(await this.i18n.t('errors.marketingLeadNotFoundWithId', { args: { id } }));
     if (ml['crm_lead_id']) return { message: 'Allaqachon CRM ga aylantirilgan', crm_lead_id: ml['crm_lead_id'] };
+
+    // VISION EP-MKT-118 / #96 — rekvizit to'liqlik darvozasi: owner qaror
+    // (docs/audit/QARORLAR-JURNALI-2026-07-11.md:62) "SD'ga o'tish majburiy → STIR +
+    // shartnoma + manzil" — STIR (soliq raqami), shartnoma raqami va manzil
+    // to'ldirilmagan lid CRM ga (demak keyinchalik SD/savdoga) o'tkazilmaydi —
+    // invoys/to'lov muammosi oldini olish (TASDIQ-2146 §14 #96).
+    const missingRequisites: string[] = [];
+    if (!String(ml['stir'] ?? '').trim()) missingRequisites.push('STIR');
+    if (!String(ml['contract_number'] ?? '').trim()) missingRequisites.push('shartnoma');
+    if (!String(ml['address'] ?? '').trim()) missingRequisites.push('manzil');
+    if (missingRequisites.length > 0) {
+      throw new HttpException(
+        await this.i18n.t('errors.marketingLeadRequisitesIncomplete', { args: { fields: missingRequisites.join(', ') } }),
+        HttpStatus.CONFLICT,
+      );
+    }
+
     const crmRow = first(await db.execute(sql`
       INSERT INTO crm_leads (contact_name, contact_phone, contact_email, source, notes, status, assigned_by_id, created_at, updated_at)
       VALUES (

@@ -390,6 +390,7 @@
   "reportDefinitionNotFound": "Определение отчёта не найдено",
   "campaignNotFoundWithId": "Кампания #{id} не найдена",
   "marketingLeadNotFoundWithId": "Маркетинговый лид #{id} не найден",
+  "marketingLeadRequisitesIncomplete": "Реквизиты лида неполные: необходимо заполнить {fields} (обязательно перед передачей в SD)",
   "marketingPostNotFoundWithId": "Публикация не найдена: {id}",
   "exhibitionNotFoundWithId": "Выставка #{id} не найдена",
   "prActivityNotFoundWithId": "PR-мероприятие #{id} не найдено",

@@ -61,13 +61,15 @@ export class LeadsRepository {
       const result = await db.execute(sql`
         INSERT INTO marketing_leads
           (id, name, company, phone, email, source, channel, status, score, notes,
-           lost_reason, first_name, last_name, campaign_id, assigned_to, created_at, updated_at)
+           lost_reason, first_name, last_name, campaign_id, assigned_to,
+           stir, contract_number, address, created_at, updated_at)
         VALUES (
           gen_random_uuid()::text, ${String(v.name ?? '')}, ${(v.company as string) ?? null}, ${(v.phone as string) ?? null},
           ${(v.email as string) ?? null}, ${(v.source as string) ?? 'website'}, ${(v.channel as string) ?? null},
           ${(v.status as string) ?? 'new'}, ${Number(v.score ?? 0)}, ${(v.notes as string) ?? null},
           ${(v.lostReason as string) ?? null}, ${(v.firstName as string) ?? null}, ${(v.lastName as string) ?? null},
           ${v.campaignId != null ? Number(v.campaignId) || null : null}, ${v.assignedTo != null ? Number(v.assignedTo) || null : null},
+          ${(v.stir as string) ?? null}, ${(v.contractNumber as string) ?? null}, ${(v.address as string) ?? null},
           NOW(), NOW()
         )
         RETURNING *
@@ -105,6 +107,11 @@ export class LeadsRepository {
           -- Batch 2 item 1.2: campaign_id + assigned_to were dropped by the UPDATE too (sibling of 1.1).
           campaign_id = COALESCE(${v.campaignId  !== undefined && v.campaignId !== null ? Number(v.campaignId) : null}, campaign_id),
           assigned_to = COALESCE(${v.assignedTo  !== undefined && v.assignedTo !== null ? Number(v.assignedTo) : null}, assigned_to),
+          -- VISION EP-MKT-118 / #96: STIR/shartnoma/manzil rekvizitlari — convertLeadToCrm
+          -- darvozasi shu maydonlarni tekshiradi (owner qaror 2026-07-11).
+          stir            = COALESCE(${v.stir           !== undefined ? (v.stir as string)           : null}, stir),
+          contract_number = COALESCE(${v.contractNumber !== undefined ? (v.contractNumber as string) : null}, contract_number),
+          address         = COALESCE(${v.address        !== undefined ? (v.address as string)        : null}, address),
           updated_at  = NOW()
         WHERE id = ${id}
         RETURNING *

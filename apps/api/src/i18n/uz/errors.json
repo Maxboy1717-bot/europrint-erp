@@ -390,6 +390,7 @@
   "reportDefinitionNotFound": "Hisobot ta'rifi topilmadi",
   "campaignNotFoundWithId": "Kampaniya #{id} topilmadi",
   "marketingLeadNotFoundWithId": "Marketing lid #{id} topilmadi",
+  "marketingLeadRequisitesIncomplete": "Lid rekvizitlari to'liq emas: {fields} to'ldirilishi shart (SD'ga o'tishdan oldin majburiy)",
   "marketingPostNotFoundWithId": "Post topilmadi: {id}",
   "exhibitionNotFoundWithId": "Ko'rgazma #{id} topilmadi",
   "prActivityNotFoundWithId": "PR faoliyati #{id} topilmadi",

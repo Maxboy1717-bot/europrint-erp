@@ -390,6 +390,7 @@
   "reportDefinitionNotFound": "Report definition топилмади",
   "campaignNotFoundWithId": "Кампания #{id} топилмади",
   "marketingLeadNotFoundWithId": "Маркетинг лиди #{id} топилмади",
+  "marketingLeadRequisitesIncomplete": "Лид реквизитлари тўлиқ эмас: {fields} тўлдирилиши шарт (SD'га ўтишдан олдин мажбурий)",
   "marketingPostNotFoundWithId": "Пост топилмади: {id}",
   "exhibitionNotFoundWithId": "Кўргазма #{id} топилмади",
   "prActivityNotFoundWithId": "PR фаолияти #{id} топилмади",

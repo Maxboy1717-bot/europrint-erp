@@ -38,6 +38,12 @@ const MarketingLeadSchema = z.object({
   source: z.string().max(100).optional(),
   status: z.string().max(50).optional(),
   notes: z.string().max(2000).optional(),
+  // VISION EP-MKT-118 / #96 (owner qaror QARORLAR-JURNALI-2026-07-11: "SD'ga o'tish
+  // majburiy → STIR + shartnoma + manzil") — convertLeadToCrm darvozasi shu 3 ta
+  // maydonni tekshiradi; shu yerda kiritish/yangilash imkoniyati beriladi.
+  stir: z.string().max(20).optional(),
+  contractNumber: z.string().max(100).optional(),
+  address: z.string().max(1000).optional(),
 }).passthrough();
 
 const MarketingLeadUpdateSchema = MarketingLeadSchema.partial();
