@@ -11,7 +11,7 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { safeCall, Result } from '@common/result';
-import { KANBAN_RATING_WEIGHT_ACHIEVEMENT, KANBAN_RATING_WEIGHT_ESCALATION } from '@common/constants/business.constants';
+import { KANBAN_RATING_WEIGHT_ACHIEVEMENT, KANBAN_RATING_WEIGHT_ESCALATION, KANBAN_CANCELLED_COLUMN_KEYWORDS } from '@common/constants/business.constants';
 
 @Injectable()
 export class DrizzleKanbanStatsRepository {
@@ -25,10 +25,32 @@ export class DrizzleKanbanStatsRepository {
         ? sql`AND ktt.card_id IN (SELECT id::text FROM kanban_cards WHERE board_id = ${boardId})`
         : sql``;
 
+      // Kanban-15 A17: a card moved into a "bekor"/"cancel" column by
+      // moveOrderCardToCancelled (kanban-cards.repo.ts, on order cancellation)
+      // is NEUTRAL for the completion-rate KPI below — excluded from both the
+      // numerator and the denominator (not counted as a failure/incomplete
+      // task), and reported separately as `cancelled_tasks` so the exclusion
+      // stays visible instead of silently skewing the rate
+      // (business.constants.ts KANBAN_CANCELLED_COLUMN_KEYWORDS).
+      const cancelledColumnMatch = sql.join(
+        KANBAN_CANCELLED_COLUMN_KEYWORDS.map((kw) => sql`kcol.name ILIKE ${'%' + kw + '%'}`),
+        sql` OR `,
+      );
+
       // ── 1. Summary ────────────────────────────────────────────────────────
       const [summaryRes, weeklyRes, timeRes, empRes] = await Promise.all([
 
         runQuery<Record<string, unknown>>(sql`
+          WITH card_flags AS (
+            SELECT
+              kc.*,
+              EXISTS (
+                SELECT 1 FROM kanban_columns kcol
+                WHERE kcol.id = kc.column_id AND kcol.deleted_at IS NULL AND (${cancelledColumnMatch})
+              ) AS is_cancelled
+            FROM kanban_cards kc
+            WHERE 1=1 ${boardFilter}
+          )
           SELECT
             COUNT(*) FILTER (WHERE deleted_at IS NULL)                                               AS total_tasks,
             COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)                  AS completed_tasks,
@@ -36,10 +58,11 @@ export class DrizzleKanbanStatsRepository {
             COUNT(*) FILTER (WHERE deleted_at IS NULL AND accepted_at IS NOT NULL AND completed_at IS NULL) AS accepted_not_completed,
             COUNT(*) FILTER (WHERE deleted_at IS NULL AND source = 'telegram')                       AS telegram_tasks,
             COUNT(*) FILTER (WHERE deleted_at IS NULL AND due_date ~ '^\\d{4}-\\d{2}-\\d{2}' AND substring(due_date FROM 1 FOR 10)::date < CURRENT_DATE AND completed_at IS NULL) AS overdue_tasks,
+            COUNT(*) FILTER (WHERE deleted_at IS NULL AND is_cancelled)                               AS cancelled_tasks,
             ROUND(
-              CASE WHEN COUNT(*) FILTER (WHERE deleted_at IS NULL) = 0 THEN 0
-                   ELSE COUNT(*) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)::numeric
-                      / COUNT(*) FILTER (WHERE deleted_at IS NULL) * 100
+              CASE WHEN COUNT(*) FILTER (WHERE deleted_at IS NULL AND NOT is_cancelled) = 0 THEN 0
+                   ELSE COUNT(*) FILTER (WHERE deleted_at IS NULL AND NOT is_cancelled AND completed_at IS NOT NULL)::numeric
+                      / COUNT(*) FILTER (WHERE deleted_at IS NULL AND NOT is_cancelled) * 100
               END
             )                                                                                         AS completion_rate,
             ROUND(
@@ -47,8 +70,7 @@ export class DrizzleKanbanStatsRepository {
                 EXTRACT(EPOCH FROM (completed_at - created_at)) / 86400.0
               ) FILTER (WHERE deleted_at IS NULL AND completed_at IS NOT NULL)
             )                                                                                         AS avg_completion_days
-          FROM kanban_cards
-          WHERE 1=1 ${boardFilter}
+          FROM card_flags
         `),
 
         // ── 2. Weekly trend (last 7 days) ──────────────────────────────────
@@ -131,6 +153,7 @@ export class DrizzleKanbanStatsRepository {
           acceptedNotCompleted: Number(s.accepted_not_completed ?? 0),
           telegramTasks:        Number(s.telegram_tasks        ?? 0),
           overdueTasks:         Number(s.overdue_tasks         ?? 0),
+          cancelledTasks:       Number(s.cancelled_tasks       ?? 0),
           completionRate:       Number(s.completion_rate       ?? 0),
           avgCompletionDays:    Number(s.avg_completion_days   ?? 0),
         },

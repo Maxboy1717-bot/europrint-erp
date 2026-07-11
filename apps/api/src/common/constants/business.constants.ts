@@ -606,6 +606,19 @@ export const KANBAN_MAX_URGENT_PER_DAY = 2;
  */
 export const WMS_GTD_ESCALATION_DAYS = 14;
 
+/**
+ * Kanban — "bekor qilingan" (cancelled) ustunni tanish uchun kalit so'zlar
+ * (modul 15 Kanban, Kanban-15 A17). Buyurtma bekor qilinganda
+ * `moveOrderCardToCancelled` (kanban-cards.repo.ts) unga bog'liq kartalarni
+ * shu kalit so'zlardan biriga mos "bekor"/"cancel" ustuniga ko'chiradi (mavjud
+ * ilike('%bekor%')/ilike('%cancel%') konvensiyasi shu yerda nomlanadi).
+ * KPI agregatsiyasida (drizzle-kanban-stats.repo.ts → getTaskStats,
+ * bajarilish foizi) bunday kartalar NEYTRAL — muvaffaqiyatsizlik/bajarilmagan
+ * vazifa sifatida hisoblanmaydi, balki maxrajdan (va suratdan) butunlay
+ * chiqarib tashlanadi; alohida `cancelledTasks` sonida ko'rsatiladi.
+ */
+export const KANBAN_CANCELLED_COLUMN_KEYWORDS = ['bekor', 'cancel'] as const;
+
 // ---------------------------------------------------------------------------
 // Kanban — Karta-egasi reyting formulasi (VISION-3340 #39 / Item A39)
 // ---------------------------------------------------------------------------
