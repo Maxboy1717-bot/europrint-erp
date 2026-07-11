@@ -80,6 +80,13 @@ export interface ISalesOrderRepository {
     expectedVersion: number,
     idempotencyKey: string,
   ): Promise<Result<{ updated: boolean; newVersion: number; duplicate: boolean }>>;
+  /**
+   * 06-sd #100 — Ojd.Syryo (Ожд.Сырьё). Flag the order as awaiting raw material
+   * (status -> 'pending_material') + stamp the signal columns on the canonical
+   * sales_orders base table. Pass `tx` so the flip commits atomically with the
+   * durable outbox 'sd.order.pending_material' event. Returns the signal timestamp.
+   */
+  markPendingMaterial(orderId: number, reason: string | null, tx?: DrizzleTxExecutor): Promise<Result<{ signaledAt: string }>>;
   delete(id: number): Promise<Result<void>>;
   count(): Promise<Result<number>>;
 }

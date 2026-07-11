@@ -36,6 +36,7 @@ import { SD_QUOTATIONS_REPO } from './domain/repositories/i-sd-quotations.repo';
 import { CreateOrderHandler } from './application/commands/create-order.handler';
 import { CreateTestOrderHandler } from './application/commands/create-test-order.handler';
 import { UpdateOrderStatusHandler } from './application/commands/update-order-status.handler';
+import { SignalPendingMaterialHandler } from './application/commands/signal-pending-material.handler';
 import { ApproveAdvanceBypassHandler } from './application/commands/approve-advance-bypass.handler';
 import { ApproveTechCheckpointHandler } from './application/commands/approve-tech-checkpoint.handler';
 import { CreateInvoiceHandler } from './application/commands/create-invoice.handler';
@@ -106,6 +107,7 @@ const commandHandlers = [
   CreateOrderHandler,
   CreateTestOrderHandler,
   UpdateOrderStatusHandler,
+  SignalPendingMaterialHandler,
   ApproveAdvanceBypassHandler,
   ApproveTechCheckpointHandler,
   CreateInvoiceHandler,

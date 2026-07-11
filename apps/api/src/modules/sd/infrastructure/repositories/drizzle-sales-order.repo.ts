@@ -239,6 +239,27 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     }
   }
 
+  async markPendingMaterial(orderId: number, reason: string | null, tx?: DrizzleTxExecutor): Promise<Result<{ signaledAt: string }>> {
+    try {
+      // 06-sd #100 — write the "Ожд.Сырьё" signal on the canonical BASE table
+      // sales_orders (sd_sales_orders is a read VIEW that does not carry these
+      // columns). Raw SQL (no Drizzle table object) keeps this off the stale-dist
+      // rebuild path. tx (when present) makes the flip atomic with the outbox row.
+      const conn = (tx ?? db) as { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Row[] }> };
+      const r = await conn.execute(sql`
+        UPDATE sales_orders
+           SET status                  = 'pending_material',
+               pending_material_since  = NOW(),
+               pending_material_reason = ${reason},
+               updated_at              = NOW()
+         WHERE id = ${orderId} AND deleted_at IS NULL
+        RETURNING pending_material_since`);
+      const rows = Array.isArray(r.rows) ? r.rows : [];
+      if (rows.length === 0) return Err({ code: 'NOT_FOUND', message: 'Buyurtma topilmadi' });
+      return { ok: true as const, data: { signaledAt: String((rows[0] as Row).pending_material_since) } };
+    } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
+  }
+
   async delete(id: number): Promise<Result<void>> {
     try {
       await execSdSalesOrderDelete(id);

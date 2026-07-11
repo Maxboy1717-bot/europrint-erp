@@ -4,7 +4,7 @@
  */
 
 export const SO_VALID_STATUSES: readonly string[] = [
-  'draft', 'pending_approval', 'approved', 'pending_advance',
+  'draft', 'pending_approval', 'approved', 'pending_advance', 'pending_material',
   'ready_for_planning', 'in_planning', 'completed_planning',
   'ready_for_production', 'in_production', 'ready_for_shipment',
   'shipped', 'delivered', 'closed', 'cancelled', 'on_hold',
@@ -26,4 +26,5 @@ export const SO_VALID_TRANSITIONS: Record<string, string[]> = {
   closed:               [],
   cancelled:            [],
   on_hold:              ['pending_approval', 'pending_advance', 'ready_for_planning', 'cancelled'],
+  pending_material:     ['ready_for_planning', 'pending_advance', 'on_hold', 'cancelled'],
 };

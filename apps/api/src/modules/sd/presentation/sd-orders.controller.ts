@@ -22,6 +22,7 @@ import { AuthenticatedUser } from '@auth/types';
 import { AuditInterceptor} from '../../shared/interceptors/audit.interceptor';
 import { CreateOrderCommand} from '../application/commands/create-order.handler';
 import { UpdateOrderStatusCommand} from '../application/commands/update-order-status.handler';
+import { SignalPendingMaterialCommand} from '../application/commands/signal-pending-material.handler';
 import { ApproveAdvanceBypassCommand} from '../application/commands/approve-advance-bypass.handler';
 import { ApproveTechCheckpointCommand} from '../application/commands/approve-tech-checkpoint.handler';
 import { ListOrdersQuery} from '../application/queries/list-orders.handler';
@@ -32,6 +33,7 @@ import { CreateOrderDtoSchema} from './dto/create-order.dto';
 import { AtpCheckDtoSchema } from './dto/atp-check.dto';
 import { AtpCheckQuery } from '../application/queries/atp-check.handler';
 import { UpdateStatusDtoSchema} from './dto/update-status.dto';
+import { MaterialSignalDtoSchema} from './dto/material-signal.dto';
 import { AdvanceBypassDtoSchema} from './dto/advance-bypass.dto';
 import { TechCheckpointDtoSchema} from './dto/tech-checkpoint.dto';
 import { ConfirmAdvancePaymentCommand } from '../application/commands/confirm-advance-payment.handler';
@@ -239,6 +241,20 @@ export class SdOrdersController {
  async putOrderStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   const command = new UpdateOrderStatusCommand(id, validated.newStatus);
+  const res = await this.commandBus.execute(command);
+  return unwrapOrThrow(res);
+ }
+
+ @ApiOperation({ summary: "Signal Ta'minot: order awaiting raw material (Ожд.Сырьё)" })
+ @ApiResponse({ status: 201, description: 'OK' })
+ @ApiResponse({ status: 404, description: 'Not found' })
+ @ApiResponse({ status: 409, description: 'Order not in a signalable state' })
+ @Post(':id/material-signal')
+ @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ async signalMaterial(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
+  const validated = MaterialSignalDtoSchema.parse(dto);
+  this.logger.log('Signalling order awaiting raw material');
+  const command = new SignalPendingMaterialCommand(id, validated.reason ?? null);
   const res = await this.commandBus.execute(command);
   return unwrapOrThrow(res);
  }
