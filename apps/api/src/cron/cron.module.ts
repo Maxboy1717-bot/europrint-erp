@@ -47,6 +47,9 @@ import { ActingRevertCron } from './acting-revert.cron'
 import { MesSosEscalationCron } from './mes-sos-escalation.cron'
 import { MesSosEscalationService } from '../modules/mes/application/mes-sos-escalation.service'
 import { MesSosEscalationRepository } from '../modules/mes/infrastructure/repositories/mes-sos-escalation.repo'
+import { SdMaterialWaitEscalationCron } from './sd-material-wait-escalation.cron'
+import { SdMaterialWaitEscalationService } from '../modules/sd/application/sd-material-wait-escalation.service'
+import { DrizzleSdMaterialWaitEscalationRepo } from '../modules/sd/infrastructure/repositories/drizzle-sd-material-wait-escalation.repo'
 import { CkpDailyAggregateCron } from './ckp-daily-aggregate.cron'
 import { CardRepository } from '../modules/org-structure/card.repository'
 // CardRepository injects LmsCardGateService (mandatory-darslik gate, VISION-3340 #27) —
@@ -122,6 +125,10 @@ import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.
     MesSosEscalationCron,
     MesSosEscalationService,
     MesSosEscalationRepository,
+    // 06-sd #2 — material-wait (Ожд.Сырьё) MM-reject / 24h→48h escalation (hourly); repo+service standalone (typedExecute)
+    SdMaterialWaitEscalationCron,
+    SdMaterialWaitEscalationService,
+    DrizzleSdMaterialWaitEscalationRepo,
     // A68 (ЦКП) — kunlik kaskad-agregat (har root-karta subtree avg, 01:00); CkpFactRepository = standalone (runQuery)
     CkpDailyAggregateCron,
     CkpFactRepository,
