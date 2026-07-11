@@ -49,6 +49,15 @@ export const dokla = pgTable('dokla', {
   status:        text('status').default('sent'),
   created_at:    timestamp('created_at').defaultNow(),
   updated_at:    timestamp('updated_at').defaultNow(),
+  // 04-cc EP-COR-043/044/046/067 — additive (Q-35, 2026-07-11). doc_type: rejali |
+  // sorovga_javob | muammo. sla_deadline_at: hisoblovchi cron kelgusi bosqich, bu
+  // faqat qiymat ustuni. period/attachment_url: EP-COR-046 "Davr"/"Ilova" (mavjud
+  // subject/problem/result/proposal RENAME qilinmadi — Q-46).
+  doc_type:         text('doc_type'),
+  sla_deadline_at:  timestamp('sla_deadline_at', { withTimezone: true }),
+  period:           text('period'),
+  attachment_url:   text('attachment_url'),
+  papka_order_id:   integer('papka_order_id'),
 });
 
 export const rasporyazhenie = pgTable('rasporyazhenie', {
@@ -64,6 +73,8 @@ export const rasporyazhenie = pgTable('rasporyazhenie', {
   done_note:    text('done_note'),
   created_at:   timestamp('created_at').defaultNow(),
   updated_at:   timestamp('updated_at').defaultNow(),
+  // 04-cc EP-COR-067/097 — additive (Q-35, 2026-07-11): Buyurtma/Papka yagona kalit.
+  papka_order_id: integer('papka_order_id'),
 });
 
 // ─── Core: Seven Functions & RACI ─────────────────────────────────────────────
