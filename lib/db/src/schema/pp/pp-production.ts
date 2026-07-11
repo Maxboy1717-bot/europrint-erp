@@ -853,6 +853,50 @@ export const insertProductionStatusHistorySchema = createInsertSchema(production
 export type ProductionStatusHistory = typeof productionStatusHistory.$inferSelect;
 export type InsertProductionStatusHistory = z.infer<typeof insertProductionStatusHistorySchema>;
 
+// Multi-line order (EP-PP-118, vision 07-pp#124) — each order POSITION is one row here, with
+// its own product / route / quantity / status / seq. Additive CHILD of production_orders; the
+// scalar production_orders.product_id is RETAINED (Q-46, nothing regresses) and every existing
+// order is back-filled to a single line (seq=1) by pp-production-order-lines-2026-07-11.sql.
+//
+// Appended at the END of the file (after production_status_history — the prior last statement)
+// so this insert never collides with sibling edits elsewhere in the file, and needs NO new
+// pg-core import (it uses only already-imported symbols).
+//
+// NOTE (schema-barrel precedence): the runtime PP repo reads/writes this table via parameterised
+// runQuery (like the pp_reason_codes sibling), because @europrint/schemas resolves productionOrders
+// from the apps/api compat layer — NOT this lib/db module — so a lib/db-only table object is not
+// import-resolvable at runtime. This def is the CANONICAL schema mirror, kept aligned with the
+// migration (columns / types / defaults). product_id is a plain NOT NULL integer with NO FK,
+// mirroring the scalar production_orders.product_id (live carries dangling ids — products
+// master-data is still seeding). route_id is a plain column here (technology_cards lives in another
+// schema file — same in-file convention as bomId / orgDepartmentId above, avoiding an import cycle);
+// the migration carries its real FK -> technology_cards(id) ON DELETE SET NULL. The (order, seq)
+// pair is UNIQUE at the DB level (uq_production_order_lines_order_seq in the migration); the mirror
+// declares it as a plain index() to avoid adding a uniqueIndex import to this shared file — the
+// mirror is documentation only (runtime uniqueness is enforced by the migration DDL, DB-proven).
+export const productionOrderLines = pgTable("production_order_lines", {
+  id: serial("id").primaryKey(),
+  productionOrderId: integer("production_order_id").notNull().references(() => productionOrders.id, { onDelete: "cascade" }),
+  productId: integer("product_id").notNull(),
+  quantity: numericMoney("quantity").notNull().default(0),
+  routeId: integer("route_id"),
+  seq: integer("seq").notNull().default(1),
+  status: varchar("status", { length: 20 }).notNull().default("created"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_production_order_lines_order").on(t.productionOrderId),
+  index("idx_production_order_lines_product").on(t.productId),
+  index("idx_production_order_lines_route").on(t.routeId),
+  // DB-level constraint is UNIQUE (uq_production_order_lines_order_seq — see migration); the
+  // mirror uses index() to avoid a new pg-core uniqueIndex import on this shared file.
+  index("idx_production_order_lines_order_seq").on(t.productionOrderId, t.seq),
+]);
+
+export type ProductionOrderLine = typeof productionOrderLines.$inferSelect;
+export type InsertProductionOrderLine = typeof productionOrderLines.$inferInsert;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // vision 07-pp#49 — Director "holat formulasi" PP reja% smena/kunlik SNAPSHOT.
 // Director dashboardi reja%-ni real-time EMAS, muzlatilgan snapshotdan o'qiydi (har

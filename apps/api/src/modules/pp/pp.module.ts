@@ -111,6 +111,12 @@ import { PpReasonCodesController } from './reason-codes/pp-reason-codes.controll
 import { PpReasonCodesService } from './reason-codes/pp-reason-codes.service';
 import { PP_REASON_CODES_REPO } from './reason-codes/i-pp-reason-codes.repo';
 import { DrizzlePpReasonCodesRepository } from './reason-codes/drizzle-pp-reason-codes.repo';
+// Multi-line order (EP-PP-118, vision 07-pp#124) — production_order_lines child CRUD:
+// each order position carries its own product / route / quantity / status.
+import { PpProductionOrderLinesController } from './production-order-lines/pp-production-order-lines.controller';
+import { PpProductionOrderLinesService } from './production-order-lines/pp-production-order-lines.service';
+import { PP_PRODUCTION_ORDER_LINES_REPO } from './production-order-lines/i-pp-production-order-lines.repo';
+import { DrizzlePpProductionOrderLinesRepository } from './production-order-lines/drizzle-pp-production-order-lines.repo';
 // Vision 07-pp#30 (EP-PP-068): PP material-reservation ledger — priority + FIFO tie-break
 // + director-only manual override. New pp_material_reservations table.
 import { PpMaterialReservationsController } from './material-reservations/pp-material-reservations.controller';
@@ -171,6 +177,8 @@ const listeners = [
 @Module({
   imports: [CqrsModule, EventEmitterModule.forRoot()],
   controllers: [PpOrdersController, PpBomController, PpRoutingController, PpWorkCentersController, PpPlanningController, PpEquipmentController, PpQueueController, PpIntelligenceController,
+    // Multi-line order (EP-PP-118, vision 07-pp#124) — per-position line CRUD
+    PpProductionOrderLinesController,
     // Director PP plan% snapshot surface (vision 07-pp#49)
     PpPlanSnapshotsController,
     // Vision 07-pp#30: material reserve priority + FIFO tie-break + director override
@@ -192,6 +200,9 @@ const listeners = [
     PpOeeController,
   ],
   providers: [
+    // Multi-line order (EP-PP-118, vision 07-pp#124) — production_order_lines slice
+    PpProductionOrderLinesService,
+    { provide: PP_PRODUCTION_ORDER_LINES_REPO, useClass: DrizzlePpProductionOrderLinesRepository },
     // Director PP plan% snapshot (vision 07-pp#49): service + repo + daily-close cron
     PpPlanSnapshotsService,
     { provide: PP_PLAN_SNAPSHOTS_REPO, useClass: DrizzlePpPlanSnapshotsRepository },
