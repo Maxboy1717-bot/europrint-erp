@@ -15,7 +15,7 @@ import { EPStatusPill } from "@/components/ep";
 
 export function ResourceAllocationView({ t, boardId }: { t: typeof T.uz & ((key: string) => string); boardId: string | null }) {
   const { data: allocation = [], isLoading } = useQuery<AllocationData[]>({
-    queryKey: ['/api/kanban/resource-allocation', boardId],
+    queryKey: ['/api/kanban/resource-allocation', { boardId }],
     enabled: true,
   });
 

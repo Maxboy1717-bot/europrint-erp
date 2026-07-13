@@ -141,6 +141,7 @@ export class DrizzleKanbanExtRepository {
   getTeamMetrics(boardId?: string) { return this.analytics.getTeamMetrics(boardId); }
   getOverdueInbox(boardId?: string) { return this.analytics.getOverdueInbox(boardId); }
   getEmployees() { return this.analytics.getEmployees(); }
+  getResourceAllocation(boardId?: string) { return this.analytics.getResourceAllocation(boardId); }
 
   // ─── Legacy helpers ───────────────────────────────────────────────────────
 

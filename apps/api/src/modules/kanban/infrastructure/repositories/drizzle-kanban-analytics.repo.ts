@@ -81,6 +81,10 @@ export class DrizzleKanbanAnalyticsRepository {
     return this.stats.getEmployees();
   }
 
+  getResourceAllocation(boardId?: string): Promise<Result<Record<string, unknown>[]>> {
+    return this.stats.getResourceAllocation(boardId);
+  }
+
   // ─── Legacy helpers (keeping for backward compatibility) ──────────────────
 
   getSprintInfo(): Promise<Result<Record<string, unknown>>> {

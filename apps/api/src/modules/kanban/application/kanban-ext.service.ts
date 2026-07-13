@@ -134,6 +134,7 @@ export class KanbanExtService {
   getTeamMetrics(boardId?: string): Promise<Result<Record<string, unknown>>> { return this.flow.getTeamMetrics(boardId); }
   getOverdueInbox(boardId?: string): Promise<Result<Record<string, unknown>[]>> { return this.flow.getOverdueInbox(boardId); }
   getEmployees(): Promise<Result<Record<string, unknown>[]>> { return this.flow.getEmployees(); }
+  getResourceAllocation(boardId?: string): Promise<Result<Record<string, unknown>[]>> { return this.flow.getResourceAllocation(boardId); }
 
   // ─── Board operations ─────────────────────────────────────────────────────
 

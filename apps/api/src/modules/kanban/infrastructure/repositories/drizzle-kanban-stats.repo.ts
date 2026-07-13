@@ -444,4 +444,58 @@ export class DrizzleKanbanStatsRepository {
       }));
     });
   }
+
+  async getResourceAllocation(boardId?: string): Promise<Result<Record<string, unknown>[]>> {
+    return safeCall(async () => {
+      // "Resource allocation" = active (not completed, not soft-deleted) card
+      // workload per owner_user_id, bucketed by due_date window — today /
+      // next 7 days / current calendar month — plus `total` = all open cards
+      // assigned regardless of due date. Mirrors getEmployeePerformance's
+      // user{id,fullName,profileImageUrl} contract above (FE AllocationData,
+      // kanban-types.ts / ResourceAllocationView.tsx).
+      const boardFilter = boardId ? sql`AND kc.board_id = ${boardId}` : sql``;
+      const rows = await runQuery<Record<string, unknown>>(sql`
+        SELECT
+          u.id::text                                             AS user_id,
+          COALESCE(u.first_name || ' ' || u.last_name, u.email)  AS full_name,
+          u.profile_image_url,
+          COUNT(*) FILTER (
+            WHERE kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+              AND substring(kc.due_date FROM 1 FOR 10)::date = CURRENT_DATE
+          )::int                                                  AS today,
+          COUNT(*) FILTER (
+            WHERE kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+              AND substring(kc.due_date FROM 1 FOR 10)::date
+                    BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '6 days'
+          )::int                                                  AS this_week,
+          COUNT(*) FILTER (
+            WHERE kc.due_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+              AND substring(kc.due_date FROM 1 FOR 10)::date >= CURRENT_DATE
+              AND substring(kc.due_date FROM 1 FOR 10)::date
+                    < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+          )::int                                                  AS this_month,
+          COUNT(*)::int                                           AS total
+        FROM kanban_cards kc
+        LEFT JOIN users u ON u.id = kc.owner_user_id
+        WHERE kc.deleted_at IS NULL
+          AND kc.completed_at IS NULL
+          AND kc.owner_user_id IS NOT NULL
+          ${boardFilter}
+        GROUP BY u.id, u.first_name, u.last_name, u.email, u.profile_image_url
+        ORDER BY total DESC
+        LIMIT 50
+      `);
+      return rows.rows.map((r) => ({
+        user: {
+          id:              String(r.user_id ?? ''),
+          fullName:        String(r.full_name ?? 'Noma\'lum'),
+          profileImageUrl: (r.profile_image_url as string | null) ?? null,
+        },
+        today:     Number(r.today      ?? 0),
+        thisWeek:  Number(r.this_week  ?? 0),
+        thisMonth: Number(r.this_month ?? 0),
+        total:     Number(r.total      ?? 0),
+      }));
+    });
+  }
 }

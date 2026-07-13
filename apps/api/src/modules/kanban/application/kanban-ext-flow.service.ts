@@ -204,4 +204,8 @@ export class KanbanExtFlowService {
   getEmployees(): Promise<Result<Record<string, unknown>[]>> {
     return this.repo.getEmployees();
   }
+
+  getResourceAllocation(boardId?: string): Promise<Result<Record<string, unknown>[]>> {
+    return this.repo.getResourceAllocation(boardId);
+  }
 }

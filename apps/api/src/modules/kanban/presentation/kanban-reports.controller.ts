@@ -247,6 +247,12 @@ export class KanbanReportsController {
     return unwrapOrBadRequest(await this.svc.getTeamMetrics(boardId));
   }
 
+  @Get('resource-allocation')
+  @ApiOperation({ summary: 'Resurs taqsimoti — xodim boshiga joriy yuk (bugun/hafta/oy/jami)' })
+  async getResourceAllocation(@Query('boardId') boardId?: string) {
+    return unwrapOrBadRequest(await this.svc.getResourceAllocation(boardId));
+  }
+
   // --- Overdue Inbox --------------------------------------------------------
 
   @Get('overdue-inbox')
