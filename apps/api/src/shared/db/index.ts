@@ -234,3 +234,8 @@ export { document_hashes } from './schema-cc-document-hashes';
 // Single canonical document_access_log (view/print/copy/export). STEP 3.1.
 export { document_access_log, DOCUMENT_ACCESS_ACTIONS, SENSITIVITY_TIERS } from './schema-document-control';
 export type { DocumentAccessLogRow, DocumentAccessLogInsert, DocumentAccessAction, SensitivityTier } from './schema-document-control';
+
+// schema-erp-documents: "erkin hujjatlar" free-form documents (Phase A1, owner 2026-07-13).
+// Consumes the document-control layer above (same tiers, logged, download-blocked, watermarked).
+export { erp_documents } from './schema-erp-documents';
+export type { ErpDocumentRow, ErpDocumentInsert } from './schema-erp-documents';
