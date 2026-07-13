@@ -1216,4 +1216,64 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'notifications.immutable column (owner 2026-07-13)',
     sql: `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS immutable BOOLEAN NOT NULL DEFAULT false`,
   },
+  // ── GL/CoA owner-interview 2026-07-13 (chat) — 4 related decisions ─────────
+  // (1) Scrap/loss (DAMAGE + INVENTORY_ADJ_MINUS) → new general "Ishlab chiqarish
+  //     zarari" (9520) instead of sharing 9500 "Boshqa operatsion xarajatlar".
+  // (2) Makulatura (waste-paper) resale income → new sibling "Boshqa daromadlar
+  //     (makulatura)" (9820, parent_account_id=9810) — 9810 stays FX-differences only.
+  // (3) Marketing expense (9210) + referral bonus (9220) split out of the combined
+  //     9200 "Sotuv xarajatlari (logistika, marketing)" (9200 itself untouched, Q-46).
+  // (4) In-transit imported goods → new temporary "Yo'lda tovar" (1020) asset account,
+  //     wired in wms-in-transit.service.ts markArrived() via GlPostingService.postJournal.
+  // `parent_account_id` already existed on `accounts` (unused before this) — used here
+  // for the (2)/(3) sub-account hierarchy without touching the FK-less flat rows.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/gl-loss-marketing-referral-intransit-accounts-2026-07-13.sql.
+  {
+    name: 'accounts: 5 new GL accounts (production-loss/makulatura-income/marketing/referral-bonus/in-transit, owner 2026-07-13)',
+    sql: `INSERT INTO accounts (account_code, account_name, account_type, parent_account_id)
+      VALUES
+        ('9520', 'Ishlab chiqarish zarari (brak, kamomad)', 'EXPENSE', NULL),
+        ('9820', 'Boshqa daromadlar (makulatura sotuvidan)', 'REVENUE', (SELECT id FROM accounts WHERE account_code = '9810')),
+        ('9210', 'Marketing xarajatlari', 'EXPENSE', (SELECT id FROM accounts WHERE account_code = '9200')),
+        ('9220', 'Referal (xodim tavsiyasi) bonuslari', 'EXPENSE', (SELECT id FROM accounts WHERE account_code = '9200')),
+        ('1020', 'Yo''lda tovar (import, hali yetib kelmagan)', 'ASSET', NULL)
+      ON CONFLICT (account_code) DO NOTHING`,
+  },
+  {
+    name: 'gl_account_mappings: DAMAGE + INVENTORY_ADJ_MINUS reassigned 9500->9520 (owner 2026-07-13, all loss-type events)',
+    sql: `DO $$
+      BEGIN
+        UPDATE gl_account_mappings
+          SET debit_account = '9520',
+              description = 'Brak/zarar: Dr Ishlab chiqarish zarari / Cr Xom ashyo',
+              updated_at = NOW()
+          WHERE transaction_type = 'DAMAGE' AND debit_account = '9500';
+        UPDATE gl_account_mappings
+          SET debit_account = '9520',
+              description = 'Inventar kamayishi: Dr Ishlab chiqarish zarari / Cr Xom ashyo',
+              updated_at = NOW()
+          WHERE transaction_type = 'INVENTORY_ADJ_MINUS' AND debit_account = '9500';
+      END $$`,
+  },
+  {
+    name: 'gl_account_mappings: WASTE_OUT seed row (makulatura resale -> 9820, owner 2026-07-13)',
+    sql: `INSERT INTO gl_account_mappings (transaction_type, debit_account, credit_account, description, created_at, updated_at)
+      SELECT 'WASTE_OUT', '4000', '9820', 'Makulatura sotuvi: Dr Debitorlar / Cr Boshqa daromadlar (makulatura)', NOW(), NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM gl_account_mappings WHERE transaction_type = 'WASTE_OUT')`,
+  },
+  {
+    name: 'pos_movement_type_enum ADD VALUE WASTE_OUT (conditional, mirrors 2026-06-27 WASTE_IN pattern)',
+    sql: `DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'pos_movement_type_enum') THEN
+          ALTER TYPE pos_movement_type_enum ADD VALUE IF NOT EXISTS 'WASTE_OUT';
+        END IF;
+      END $$`,
+  },
+  {
+    name: 'pos_movement_types: WASTE_OUT seed row (makulatura chiqim/sotuv, owner 2026-07-13)',
+    sql: `INSERT INTO pos_movement_types (code, name, name_ru, direction, is_issue, is_receipt, is_active, requires_document)
+      VALUES ('WASTE_OUT', 'Chiqindi/Qoldiq chiqim (makulatura sotuvi)', 'Расход отходов/макулатуры (продажа)', 'out', true, false, true, false)
+      ON CONFLICT (code) DO NOTHING`,
+  },
 ];

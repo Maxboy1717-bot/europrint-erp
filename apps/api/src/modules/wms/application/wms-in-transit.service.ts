@@ -7,6 +7,10 @@
  *   jo'natmaga goods_receipt_id biriktiriladi. Mavjud WMS yo'liga TEGMAYDI (Q-46
  *   additive). Result<T> qaytaradi; throw qilmaydi. service'da to'g'ridan db.* YO'Q
  *   (Qoida 15) — barchasi repo orqali.
+ *   Owner interview 2026-07-13 (chat) item (4): "arrived" bosqichida haqiqiy GL
+ *   yozuvi (Dr Materiallar / Cr Yo'lda tovar) GlPostingService orqali yoziladi —
+ *   avval bu logistika-holat-mashinasi to'liq ishlagan, lekin buxgalteriya tomoni
+ *   umuman yo'q edi (gl_entries/GlPosting chaqiruvi nol edi).
  * @layer Application (WMS)
  */
 
@@ -18,6 +22,8 @@ import {
   IN_TRANSIT_STATUS,
   IN_TRANSIT_TRANSITIONS,
 } from '../domain/repositories/i-wms-in-transit.repo';
+import { GlPostingService, type JournalLine } from '@modules/finance/domain/services/gl-posting.service';
+import { GL } from '@modules/finance/domain/constants/gl-accounts.constants';
 
 type Row = Record<string, unknown>;
 
@@ -27,6 +33,7 @@ export class WmsInTransitService {
 
   constructor(
     @Inject(WMS_IN_TRANSIT_REPO) private readonly repo: IWmsInTransitRepo,
+    private readonly glPosting: GlPostingService,
   ) {}
 
   async list(status?: string): Promise<Result<Row[], AppError>> {
@@ -87,6 +94,36 @@ export class WmsInTransitService {
     // Mavjud karantin darvozasiga kirim oching (DRAFT qabul).
     const gr = await this.repo.createGoodsReceiptDraft(cur.data, userId);
     if (!gr.ok) return gr as Result<Row, AppError>;
+
+    // Owner interview 2026-07-13 item (4): qiymat "Yo'lda tovar" (1020) hisobidan
+    // "Materiallar" (1000) hisobiga ko'chadi — aynan shu arrival lahzasida, real
+    // ikki-tomonlama GL yozuvi (mirrors wms-goods-issued.listener.ts's WMS→FIN
+    // GlPostingService.postJournal chaqiruv uslubi). Faqat declared_value musbat
+    // VA valyuta UZS/bo'sh bo'lganda post qilinadi — bu jadvalda kurs (exchange
+    // rate) saqlanmaydi, shuning uchun chet-el valyutasi uchun raqamni o'ylab
+    // topmaymiz (Q-40) — o'tkazib yuboriladi va log yoziladi, tranzitsiyani
+    // bloklamaydi (best-effort, xuddi WmsGoodsIssuedListener/WmsFgReceivedGlListener
+    // kabi — subledger/logistika manba-haqiqat, GL xatosi arrival'ni to'xtatmaydi).
+    const declaredValue = Number(cur.data.declared_value);
+    const currency = cur.data.currency == null ? null : String(cur.data.currency).trim().toUpperCase();
+    if (Number.isFinite(declaredValue) && declaredValue > 0) {
+      if (!currency || currency === 'UZS') {
+        const lines: JournalLine[] = [
+          { accountCode: GL.INVENTORY, accountName: 'Materiallar (Inventory) - Dr', debit: declaredValue, credit: 0 },
+          { accountCode: GL.GOODS_IN_TRANSIT, accountName: "Yo'lda tovar - Cr", debit: 0, credit: declaredValue },
+        ];
+        const glR = await this.glPosting.postJournal(lines, `WIT-${id}`, userId ?? undefined);
+        if (!glR.ok) {
+          this.logger.warn(`[In-transit] Jo'natma ${id}: GL yozuvi muvaffaqiyatsiz (arrival) — ${glR.error.message}`);
+        } else {
+          this.logger.log(`[In-transit] Jo'natma ${id}: GL yozuvi yozildi (Yo'lda tovar → Materiallar), entryId=${glR.data}`);
+        }
+      } else {
+        this.logger.warn(
+          `[In-transit] Jo'natma ${id}: declared_value ${currency} valyutasida — bu jadvalda kurs yo'q, GL post o'tkazib yuborildi (Q-40)`,
+        );
+      }
+    }
 
     this.logger.log(`[In-transit] Jo'natma ${id}: customs → arrived; karantin qabul #${gr.data.id} ochildi`);
     return this.repo.updateStatus(id, IN_TRANSIT_STATUS.ARRIVED, {

@@ -125,6 +125,10 @@ import { WmsInTransitController } from './presentation/wms-in-transit.controller
 import { WmsInTransitService } from './application/wms-in-transit.service';
 import { WmsInTransitRepository } from './infrastructure/repositories/wms-in-transit.repository';
 import { WMS_IN_TRANSIT_REPO } from './domain/repositories/i-wms-in-transit.repo';
+// Owner interview 2026-07-13 (chat) item (4): in-transit arrival now posts a real GL entry
+// (Yo'lda tovar → Materiallar) via GlPostingService — FinanceModule import mirrors sd.module.ts /
+// pos.module.ts's own "GlPostingService" import (FinanceModule does not import WmsModule, no cycle).
+import { FinanceModule } from '@modules/finance/finance.module';
 // W2-SUPPLIER-RATING — ta'minotchi ishonchlilik reytingi (EP-WMS-094/022).
 import { SupplierRatingService } from './application/supplier-rating.service';
 import { SupplierRatingRepository } from './infrastructure/repositories/supplier-rating.repository';
@@ -199,6 +203,8 @@ const listeners = [QcPassedListener, QcFailedFgListener, MesCompletedFgListener,
     EventEmitterModule.forRoot(),
     BullModule.registerQueue({ name: QUEUE_NAMES.MRP_RUN }),
     NotificationsModule,
+    // W1-INTRANSIT GL wiring (owner 2026-07-13): WmsInTransitService injects GlPostingService.
+    FinanceModule,
   ],
   controllers: [
     // 10-wms #17 — bir paletda 2 partiya "Aralash" ogohlantirish (blok emas).

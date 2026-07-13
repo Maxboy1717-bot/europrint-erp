@@ -42,7 +42,12 @@ const GL_ACCOUNTS = {
   COGS:                '9100', // Sotilgan mahsulot tannarxi
   DEPT_EXPENSE:        '2010', // Asosiy ishlab chiqarish (material issued to production / WIP)
   QC_EXPENSE:          '9500', // Boshqa operatsion xarajatlar (no distinct QC-expense account)
-  DAMAGE_EXPENSE:      '9500', // Boshqa operatsion xarajatlar (shortage/damage write-off — NOT depreciation)
+  // Owner interview 2026-07-13 (chat): scrap/loss value now defaults to a dedicated general
+  // "Ishlab chiqarish zarari" account for ALL loss-type events, instead of sharing 9500 "Boshqa
+  // operatsion xarajatlar" with unrelated other-expense postings. Was '9500' — see
+  // gl-loss-marketing-referral-intransit-accounts-2026-07-13.sql (also updates the matching
+  // gl_account_mappings DAMAGE/INVENTORY_ADJ_MINUS rows used by gl-posting-log.repository.ts).
+  DAMAGE_EXPENSE:      '9520', // Ishlab chiqarish zarari (shortage/damage write-off — NOT depreciation)
 } as const;
 
 @Injectable()

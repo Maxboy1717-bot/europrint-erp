@@ -35,6 +35,13 @@ export const GL = {
   SALARY_PAYABLE:            '6710', // Xodimlarga ish haqi
   DEPRECIATION_EXPENSE:      '9430', // Amortizatsiya
   ACCUMULATED_DEPRECIATION:  '0200', // Asosiy vositalar amortizatsiyasi (contra-asset)
+  // Owner interview 2026-07-13 (chat) — 4 GL/CoA qarori (schema: see migrations-schema.ts
+  // "GL/CoA owner-interview 2026-07-13" block + gl-loss-marketing-referral-intransit-accounts-2026-07-13.sql):
+  PRODUCTION_LOSS:           '9520', // Ishlab chiqarish zarari — barcha "loss" turlari (brak/kamomad) uchun umumiy hisob (avval 9500'ga tushardi)
+  OTHER_INCOME_WASTE_PAPER:  '9820', // Boshqa daromadlar (makulatura sotuvidan) — 9810 (kurs farqi) dan alohida, uning farzand-hisobi
+  MARKETING_EXPENSE:         '9210', // Marketing xarajatlari — 9200 (sotuv+logistika+marketing) dan ajratilgan
+  REFERRAL_BONUS_EXPENSE:    '9220', // Referal (xodim tavsiyasi) bonuslari — 9200 dan ajratilgan, hozircha alohida to'lov-yo'li yo'q
+  GOODS_IN_TRANSIT:          '1020', // Yo'lda tovar (import, hali yetib kelmagan) — vaqtinchalik aktiv; wms-in-transit.service.ts markArrived() da ishlatiladi
 } as const;
 
 /** Uzbekistan BHM-compliant unique account codes (v2 — no duplicate codes) */

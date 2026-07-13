@@ -17,6 +17,9 @@ export enum MovementTypeCode {
   LAB_SAMPLE_OUT      = 'LAB_SAMPLE_OUT',      // laboratoriya namuna olish (chiqim)
   PARTIAL_RECEIPT     = 'PARTIAL_RECEIPT',     // kam/buzuq material qisman qabul
   CUSTOMER_MATERIAL   = 'CUSTOMER_MATERIAL',   // mijoz-mol (davalcheskoe) kirim
+  // Owner interview 2026-07-13 (chat) — makulatura (waste-paper) resale chiqim tomoni.
+  // WASTE_IN'ning juft-tomoni: chiqindi/qoldiq ikkilamchi omboridan SOTUV uchun chiqim.
+  WASTE_OUT           = 'WASTE_OUT',           // chiqindi/qoldiq (makulatura) sotuv-chiqim
 }
 
 export enum MovementStatus {
@@ -106,6 +109,8 @@ export const MOVEMENT_CATEGORY_META: Readonly<Record<MovementCategory, MovementC
       MovementTypeCode.INTERNAL_ISSUE,
       // Vizyon-kengaytirish: laboratoriya namuna ombordan chiqim (stockSign -1)
       MovementTypeCode.LAB_SAMPLE_OUT,
+      // Owner interview 2026-07-13: makulatura (chiqindi/qoldiq) sotuv-chiqimi (stockSign -1)
+      MovementTypeCode.WASTE_OUT,
     ],
   },
   [MovementCategory.KOCHIRISH]: {
