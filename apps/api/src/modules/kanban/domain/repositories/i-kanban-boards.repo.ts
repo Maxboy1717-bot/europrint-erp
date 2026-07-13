@@ -46,6 +46,12 @@ export interface KanbanCard {
   source: string | null;
   start_date: Date | null;
   estimated_time: number | null;
+  /** Owner 4-field request (2026-07-13): Tiraj/progress — numeric column, pg driver returns numeric as string. */
+  progress: string | null;
+  /** Owner 4-field request (2026-07-13): stansiya-operator — FK -> work_centers.id. */
+  station_operator_id: number | null;
+  /** Owner 4-field request (2026-07-13): Izoh-belgi — "has important note" flag. */
+  comment_flag: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -84,6 +90,12 @@ export interface CreateCardInput {
   owner_user_id: string | null;
   /** EP-KAN-027: kim topshirdi (assigner) — assigner-confirm uchun. Odatda yaratuvchi. */
   assigner_user_id: string | null;
+  /** Owner 4-field request (2026-07-13): Tiraj/progress. */
+  progress: number | null;
+  /** Owner 4-field request (2026-07-13): stansiya-operator — FK -> work_centers.id. */
+  station_operator_id: string | null;
+  /** Owner 4-field request (2026-07-13): Izoh-belgi flag. DB column is NOT NULL DEFAULT false. */
+  comment_flag: boolean;
 }
 
 export interface UpdateCardInput {
@@ -101,6 +113,12 @@ export interface UpdateCardInput {
   recurrence_pattern: string | null;
   recurrence_interval: number | null;
   recurrence_end_date: string | null; // varchar in DB
+  /** Owner 4-field request (2026-07-13): Tiraj/progress. null = no change (COALESCE). */
+  progress: number | null;
+  /** Owner 4-field request (2026-07-13): stansiya-operator FK. null = no change (COALESCE). */
+  station_operator_id: number | null;
+  /** Owner 4-field request (2026-07-13): Izoh-belgi flag. null = no change (COALESCE). */
+  comment_flag: boolean | null;
 }
 
 export interface MoveCardInput {

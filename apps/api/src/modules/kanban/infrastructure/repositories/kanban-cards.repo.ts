@@ -29,10 +29,11 @@ export class KanbanCardsRepository {
     try {
       // sort_order: ustundagi MAX + 1 — har doim oxirga qo'shiladi
       const rows = await runQuery<Record<string, unknown>>(sql`
-        INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, assigner_user_id, sort_order)
+        INSERT INTO kanban_cards (board_id, column_id, title, description, priority, due_date, owner_user_id, assigner_user_id, progress, station_operator_id, comment_flag, sort_order)
         VALUES (
           ${input.board_id}, ${input.column_id}, ${input.title}, ${input.description},
           ${input.priority}, ${input.due_date}, ${input.owner_user_id}, ${input.assigner_user_id},
+          ${input.progress}, ${input.station_operator_id}, ${input.comment_flag},
           COALESCE(
             (SELECT MAX(sort_order) FROM kanban_cards
              WHERE column_id = ${input.column_id} AND deleted_at IS NULL),
@@ -73,6 +74,9 @@ export class KanbanCardsRepository {
           related_id          = COALESCE(${input.related_id ?? null},           related_id),
           recurrence_pattern  = COALESCE(${input.recurrence_pattern ?? null},   recurrence_pattern),
           recurrence_end_date = COALESCE(${input.recurrence_end_date ?? null},  recurrence_end_date),
+          progress             = COALESCE(${input.progress ?? null},             progress),
+          station_operator_id  = COALESCE(${input.station_operator_id ?? null},  station_operator_id),
+          comment_flag         = COALESCE(${input.comment_flag ?? null},         comment_flag),
           updated_at          = NOW()
         WHERE id = ${id} AND deleted_at IS NULL RETURNING *
       `);

@@ -118,8 +118,14 @@ export class KanbanCardsController {
   ) {
     try {
       const visible = this.cardVisibilityClause(user);
+      // qoldiq_tolov (owner 4-field request 2026-07-13): computed on read, NOT a stored
+      // column — LEFT JOIN sales_orders via kc.related_id when related_type='sales_order';
+      // prefers the maintained balance_due_amount, falls back to total-paid.
       const { rows } = await runQuery<Record<string, unknown>>(sql`
-        SELECT kc.* FROM kanban_cards kc
+        SELECT kc.*,
+               COALESCE(so.balance_due_amount, so.total_amount - so.paid_amount) AS qoldiq_tolov
+        FROM kanban_cards kc
+        LEFT JOIN sales_orders so ON kc.related_type = 'sales_order' AND so.id = kc.related_id AND so.deleted_at IS NULL
         WHERE kc.board_id = ${boardId} AND kc.deleted_at IS NULL AND ${visible}
         ORDER BY kc.sort_order ASC
       `);
@@ -138,8 +144,12 @@ export class KanbanCardsController {
     const visible = this.cardVisibilityClause(user);
     if (boardId) {
       try {
+        // qoldiq_tolov (owner 4-field request 2026-07-13): computed on read, see getBoardCards.
         const { rows } = await runQuery<Record<string, unknown>>(sql`
-          SELECT kc.* FROM kanban_cards kc
+          SELECT kc.*,
+                 COALESCE(so.balance_due_amount, so.total_amount - so.paid_amount) AS qoldiq_tolov
+          FROM kanban_cards kc
+          LEFT JOIN sales_orders so ON kc.related_type = 'sales_order' AND so.id = kc.related_id AND so.deleted_at IS NULL
           WHERE kc.board_id = ${boardId} AND kc.deleted_at IS NULL AND ${visible}
           ORDER BY kc.sort_order ASC
         `);
@@ -150,10 +160,12 @@ export class KanbanCardsController {
     }
     try {
       const { rows } = await runQuery<Record<string, unknown>>(sql`
-        SELECT kc.*, kb.name AS board_name, kcol.name AS column_name
+        SELECT kc.*, kb.name AS board_name, kcol.name AS column_name,
+               COALESCE(so.balance_due_amount, so.total_amount - so.paid_amount) AS qoldiq_tolov
         FROM kanban_cards kc
         LEFT JOIN kanban_boards kb ON kb.id = kc.board_id
         LEFT JOIN kanban_columns kcol ON kcol.id = kc.column_id
+        LEFT JOIN sales_orders so ON kc.related_type = 'sales_order' AND so.id = kc.related_id AND so.deleted_at IS NULL
         WHERE kc.deleted_at IS NULL AND ${visible}
         ORDER BY kc.sort_order ASC, kc.created_at DESC
         LIMIT 500

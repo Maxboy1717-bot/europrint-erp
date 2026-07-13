@@ -91,6 +91,7 @@ export class KanbanBoardsService {
   updateCard(id: string, body: Record<string, unknown>): Promise<Result<KanbanCard>> {
     const str = (v: unknown) => (v != null && v !== '' ? String(v) : null);
     const num = (v: unknown) => (v != null && v !== '' ? Number(v) || null : null);
+    const bool = (v: unknown) => (typeof v === 'boolean' ? v : null);
 
     // owner_user_id uchun maxsus mantiq:
     // - kalit body da mavjud VA qiymati null/''  → '__CLEAR__' sentinel (DB da NULL ga o'zgartiriladi)
@@ -121,6 +122,10 @@ export class KanbanBoardsService {
       recurrence_pattern:  str(body.recurrencePattern ?? body.recurrence_pattern),
       recurrence_interval: num(body.recurrenceInterval ?? body.recurrence_interval),
       recurrence_end_date: str(body.recurrenceEndDate ?? body.recurrence_end_date),
+      // Owner 4-field request (2026-07-13): Tiraj/progress, stansiya-operator, Izoh-belgi.
+      progress:             num(body.progress),
+      station_operator_id:  num(body.stationOperatorId ?? body.station_operator_id),
+      comment_flag:         bool(body.commentFlag ?? body.comment_flag),
     });
   }
 
@@ -341,6 +346,13 @@ export class KanbanBoardsService {
         ? String(rawAssigner)
         : (creatorUserId != null ? String(creatorUserId) : null);
       const priority = String(body.priority || 'normal');
+      // Owner 4-field request (2026-07-13): Tiraj/progress, stansiya-operator, Izoh-belgi.
+      const progress = body.progress != null && body.progress !== '' ? Number(body.progress) : null;
+      const rawStationOperator = body.stationOperatorId ?? body.station_operator_id;
+      const stationOperatorId = rawStationOperator != null && rawStationOperator !== ''
+        ? String(rawStationOperator) : null;
+      const rawCommentFlag = body.commentFlag ?? body.comment_flag;
+      const commentFlag = typeof rawCommentFlag === 'boolean' ? rawCommentFlag : false;
 
       // EP-KAN §15 #29 (C29): kunlik "Shoshilinch" (urgent) limiti. Bir topshiruvchi
       // (assigner) bir kunda ko'pi bilan KANBAN_MAX_URGENT_PER_DAY ta urgent karta
@@ -362,6 +374,9 @@ export class KanbanBoardsService {
         due_date: rawDue != null && rawDue !== '' ? String(rawDue) : null,
         owner_user_id: ownerUserId,
         assigner_user_id: assignerUserId,
+        progress,
+        station_operator_id: stationOperatorId,
+        comment_flag: commentFlag,
       });
 
       if (result.ok && columnId && result.data?.id) {

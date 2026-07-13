@@ -49,6 +49,13 @@ export const KanbanAddCardSchema = z.object({
   assigner_user_id: z.string().optional(),
   estimatedTime: z.number().int().positive().optional(),
   projectId:     z.string().optional(),
+  // Owner 4-field request (2026-07-13): Tiraj/progress, stansiya-operator, Izoh-belgi.
+  // qoldiq-to'lov is intentionally absent — it's a read-only computed field, never settable.
+  progress:            z.number().optional(),
+  stationOperatorId:   z.string().optional(),
+  station_operator_id: z.string().optional(),
+  commentFlag:         z.boolean().optional(),
+  comment_flag:        z.boolean().optional(),
 });
 export type KanbanAddCardDto = z.infer<typeof KanbanAddCardSchema>;
 
@@ -80,6 +87,13 @@ export const KanbanUpdateCardSchema = z.object({
   recurrenceInterval: z.number().int().positive().nullable().optional(),
   recurrenceEndDate:  z.string().nullable().optional(),
   recurrence_end_date: z.string().nullable().optional(),
+  // Owner 4-field request (2026-07-13): Tiraj/progress, stansiya-operator, Izoh-belgi.
+  // qoldiq-to'lov is intentionally absent — it's a read-only computed field, never settable.
+  progress:             z.number().nullable().optional(),
+  stationOperatorId:    z.string().nullable().optional(),
+  station_operator_id:  z.string().nullable().optional(),
+  commentFlag:          z.boolean().nullable().optional(),
+  comment_flag:         z.boolean().nullable().optional(),
 });
 export type KanbanUpdateCardDto = z.infer<typeof KanbanUpdateCardSchema>;
 

@@ -982,4 +982,34 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'technology_cards.decoration_type column (07-pp#119)',
     sql: `ALTER TABLE IF EXISTS technology_cards ADD COLUMN IF NOT EXISTS decoration_type VARCHAR(50)`,
   },
+  // Owner decision (2026-07-13, chat): 4 new kanban_cards fields — Tiraj/progress (production
+  // qty progress), qoldiq-to'lov (remaining payment on the linked sales_order — COMPUTED via a
+  // read-time LEFT JOIN in kanban-cards.controller.ts getBoardCards/getAllCards, deliberately
+  // NOT a stored column here to avoid a sync-bug-prone denormalized copy of
+  // sales_orders.balance_due_amount), stansiya-operator (work_centers FK — "which
+  // station/operator is handling this card"), Izoh-belgi (boolean "has important note" flag).
+  // Additive + idempotent, all nullable/defaulted — no existing row impact (Q-39).
+  // Verified live before drafting: kanban_cards had exactly the 32 documented columns (no
+  // progress/station_operator_id/comment_flag yet); work_centers.id is an integer PK (FK target
+  // confirmed, same pattern as mes_sos_events/pp_shift_plans); sales_orders has
+  // total_amount/paid_amount/balance_due_amount (2026-07-13).
+  // APPROVED: owner schema-approval wave 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror:
+  // apps/api/src/shared/db/migrations/kanban-cards-progress-station-flag-2026-07-13.sql.
+  {
+    name: 'kanban_cards.progress column (owner 4-field request 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS progress NUMERIC`,
+  },
+  {
+    name: 'kanban_cards.station_operator_id FK -> work_centers (owner 4-field request 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS station_operator_id INTEGER REFERENCES work_centers(id) ON DELETE SET NULL`,
+  },
+  {
+    name: 'kanban_cards.station_operator_id index (owner 4-field request 2026-07-13)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_kanban_cards_station_operator_id ON kanban_cards (station_operator_id)`,
+  },
+  {
+    name: 'kanban_cards.comment_flag column (owner 4-field request 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS comment_flag BOOLEAN NOT NULL DEFAULT false`,
+  },
 ];

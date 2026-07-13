@@ -3,7 +3,7 @@
  * @description Source module. See exports for details.
  */
 
-import { pgTable, uuid, text, varchar, boolean, integer, jsonb, timestamp, index, serial } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, varchar, boolean, integer, jsonb, timestamp, index, serial, numeric } from 'drizzle-orm/pg-core';
 
 // ── Kanban Boards / Columns / Cards (canonical) ───────────────────────────────
 // Moved here from apps/api/src/modules/kanban/infrastructure/kanban-tables.ts
@@ -42,6 +42,12 @@ export const kanbanCards = pgTable('kanban_cards', {
   related_ref:      text('related_ref'),
   owner_user_id:    integer('owner_user_id'),       // assignee (bajaruvchi)
   assigner_user_id: integer('assigner_user_id'),    // EP-KAN-027: topshiruvchi (assigner)
+  // Owner 4-field request (2026-07-13, chat): Tiraj/progress, stansiya-operator, Izoh-belgi.
+  // qoldiq-to'lov is deliberately NOT a stored column here — it's computed on read from
+  // sales_orders via kc.related_id (see KanbanCardsController.getBoardCards/getAllCards).
+  progress:            numeric('progress'),                              // Tiraj/progress (percent or produced-vs-ordered count; owner didn't specify unit, Q-40)
+  station_operator_id: integer('station_operator_id'),                   // stansiya-operator — FK -> work_centers.id
+  comment_flag:        boolean('comment_flag').notNull().default(false), // Izoh-belgi ("has important note")
   sort_order:       integer('sort_order').notNull().default(0),
   created_at:       timestamp('created_at').notNull().defaultNow(),
   updated_at:       timestamp('updated_at').notNull().defaultNow(),
