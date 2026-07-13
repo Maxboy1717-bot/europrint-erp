@@ -28,6 +28,7 @@ import { AiHrNewService }            from './application/services/ai-hr-new.serv
 import { AiPlanningService }         from './application/services/ai-planning.service';
 import { AiReservationService }      from './application/services/ai-reservation.service';
 import { InsightsService }           from './application/services/insights.service';
+import { DemandForecastService }     from './application/services/demand-forecast.service';
 import { AiController }              from './presentation/ai.controller';
 import { AiExamController }          from './presentation/ai-exam.controller';
 import { AiHrNewController }         from './presentation/ai-hr-new.controller';
@@ -84,6 +85,9 @@ import { AiDailyReportRepository }   from './infrastructure/repositories/ai-dail
 import { AiDailyReportController }   from './presentation/ai-daily-report.controller';
 // T12-08 — Kunlik ЦКП AI-chatbot cron (mashinasiz xodimga savol)
 import { AiDailyReportCron }         from './application/services/ai-daily-report.cron';
+// AI Rush Orders (GET/approve/reject /ai/rush-orders, owner 2026-07-13)
+import { RushOrdersService }         from './application/services/rush-orders.service';
+import { DrizzleRushOrdersRepo }     from './infrastructure/repositories/drizzle-rush-orders.repo';
 
 @Module({
   imports: [
@@ -148,11 +152,16 @@ import { AiDailyReportCron }         from './application/services/ai-daily-repor
     CrostonService,
     NelderMeadService,
     EnsembleForecastService,
+    // GET /ai/forecast/demand — real per-product EMA forecast (owner 2026-07-13)
+    DemandForecastService,
     // A75 — Kunlik AI-chatbot
     AiDailyReportService,
     AiDailyReportRepository,
     // T12-08 — Kunlik ЦКП AI-chatbot cron (08:00 Du-Sha, mashinasiz xodimga savol)
     AiDailyReportCron,
+    // GET/approve/reject /ai/rush-orders (owner 2026-07-13)
+    DrizzleRushOrdersRepo,
+    RushOrdersService,
   ],
   controllers: [
     AiController,
