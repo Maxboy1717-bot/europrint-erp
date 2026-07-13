@@ -8,7 +8,7 @@
  *   bo'lim), bo'lim/filial ko'rsatkichi. Tab-bar + qolgan tablar keyingi commit.
  */
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, Phone, Mail, Briefcase, Building2, MapPin, Plus, Tag, Paperclip, Download, ClipboardPlus } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -65,13 +65,37 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  // "Vazifa yaratish" — bu xodimga tayinlangan Kanban karta (mavjud endpoint,
-  // default board; assignedTo → owner_user_id → Bog'liq-vazifalar tab'da ko'rinadi).
+  // "Vazifa yaratish" — bu xodimga tayinlangan Kanban karta (mavjud kanban modul;
+  // assignedTo → owner_user_id → Bog'liq-vazifalar tab'da ko'rinadi). kanban_cards
+  // board_id/column_id MAJBURIY (integer) — shuning uchun doska tanlab, uning
+  // 1-ustunini yuboramiz (owner 2026-07-13: foydalanuvchi doskani tanlaydi).
   // CC hujjat templateId (uuid) talab qiladi → paneldan inline emas (CC moduli orqali).
   const [creatingTask, setCreatingTask] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
+  const [taskBoardId, setTaskBoardId] = useState("");
+
+  const { data: boards = [] } = useQuery<{ id: string | number; name: string }[]>({
+    queryKey: ["/api/kanban/boards"],
+    queryFn: () => apiRequest("GET", "/api/kanban/boards").then((r: unknown) => (Array.isArray(r) ? r as { id: string | number; name: string }[] : [])),
+  });
+  useEffect(() => {
+    if (!taskBoardId && boards.length > 0) setTaskBoardId(String(boards[0].id));
+  }, [boards, taskBoardId]);
+  const { data: taskBoardDetail } = useQuery<{ columns?: { id: string | number }[] } | null>({
+    queryKey: [`/api/kanban/boards/${taskBoardId}`],
+    queryFn: () => apiRequest("GET", `/api/kanban/boards/${taskBoardId}`).then((r: unknown) => r as { columns?: { id: string | number }[] }),
+    enabled: !!taskBoardId,
+  });
+  const taskColumnId = Array.isArray(taskBoardDetail?.columns) && taskBoardDetail!.columns!.length > 0
+    ? String(taskBoardDetail!.columns![0].id) : "";
+
   const createTask = useMutation({
-    mutationFn: (title: string) => apiRequest("POST", "/api/kanban/cards", { title, assignedTo: employee.userId }),
+    mutationFn: (title: string) => {
+      if (!taskBoardId || !taskColumnId) return Promise.reject(new Error("board"));
+      return apiRequest("POST", "/api/kanban/cards", {
+        title, boardId: taskBoardId, columnId: taskColumnId, assignedTo: employee.userId, priority: "medium",
+      });
+    },
     onSuccess: () => {
       toast({ title: t("vazifaYaratildi") });
       setTaskTitle(""); setCreatingTask(false);
@@ -220,28 +244,40 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
               <ClipboardPlus className="w-4 h-4" /> {t("vazifaYaratish")}
             </button>
           ) : (
-            <div className="flex gap-1.5">
-              <input
-                autoFocus
-                value={taskTitle}
-                onChange={(e) => setTaskTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && taskTitle.trim()) createTask.mutate(taskTitle.trim());
-                  if (e.key === "Escape") { setCreatingTask(false); setTaskTitle(""); }
-                }}
-                placeholder={t("vazifaNomi")}
-                className="flex-1 px-2.5 py-1.5 text-[13px] rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] outline-none focus:border-[var(--ep-primary)]"
-              />
-              <button
-                onClick={() => taskTitle.trim() && createTask.mutate(taskTitle.trim())}
-                disabled={createTask.isPending}
-                className="px-3 rounded-lg bg-[var(--ep-primary)] text-white text-[13px]"
+            <div className="space-y-1.5">
+              {/* Doska tanlash — kanban_cards board_id/column_id majburiy */}
+              <select
+                value={taskBoardId}
+                onChange={(e) => setTaskBoardId(e.target.value)}
+                className="w-full px-2.5 py-1.5 text-[13px] rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] outline-none focus:border-[var(--ep-primary)]"
               >
-                {t("yaratish")}
-              </button>
-              <button onClick={() => { setCreatingTask(false); setTaskTitle(""); }} className="px-2 rounded-lg text-[var(--ep-muted)]">
-                <X className="w-4 h-4" />
-              </button>
+                {(Array.isArray(boards) ? boards : []).map((b) => (
+                  <option key={String(b.id)} value={String(b.id)}>{b.name}</option>
+                ))}
+              </select>
+              <div className="flex gap-1.5">
+                <input
+                  autoFocus
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && taskTitle.trim() && taskColumnId) createTask.mutate(taskTitle.trim());
+                    if (e.key === "Escape") { setCreatingTask(false); setTaskTitle(""); }
+                  }}
+                  placeholder={t("vazifaNomi")}
+                  className="flex-1 px-2.5 py-1.5 text-[13px] rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] outline-none focus:border-[var(--ep-primary)]"
+                />
+                <button
+                  onClick={() => taskTitle.trim() && createTask.mutate(taskTitle.trim())}
+                  disabled={createTask.isPending || !taskColumnId}
+                  className="px-3 rounded-lg bg-[var(--ep-primary)] text-white text-[13px] disabled:opacity-50"
+                >
+                  {t("yaratish")}
+                </button>
+                <button onClick={() => { setCreatingTask(false); setTaskTitle(""); }} className="px-2 rounded-lg text-[var(--ep-muted)]">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
