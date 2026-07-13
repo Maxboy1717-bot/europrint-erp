@@ -1560,4 +1560,27 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'cc_document_templates.contact_type_code column (CC taxonomy soft-ref, owner 2026-07-11 schema-approval)',
     sql: `ALTER TABLE IF EXISTS cc_document_templates ADD COLUMN IF NOT EXISTS contact_type_code VARCHAR(60)`,
   },
+  // Notifications module gap (docs/audit/NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md):
+  // the 6-value notification-category taxonomy (buyruq/ogohlantirish/talab/tasdiqlash_sorovi/
+  // hisobot/elon) was already seeded into taxonomy_entries (category='notification_category', 6
+  // rows, ids 62-67 — verified live 2026-07-13 via SELECT * FROM taxonomy_entries WHERE
+  // category='notification_category'; source: taxonomy-seed-2026-07-11.sql:66-71) but the
+  // `notifications` table had no column referencing it. category_code closes that gap: a
+  // soft-reference to taxonomy_entries.code, same FK-less TEXT convention as the sibling
+  // module_code/channel/status columns added on this same table earlier today (entries directly
+  // above in this file) and the same convention already used for other taxonomy soft-references
+  // in this codebase (ow_molds.code_prefix, technology_cards.decoration_type,
+  // kanban_cards.task_type) — taxonomy_entries has zero incoming FK constraints by design
+  // (2026-07-13 check: pg_constraint WHERE confrelid = 'taxonomy_entries'::regclass = 0 rows),
+  // validated at the application layer instead. Nullable, additive — existing rows/callers
+  // unaffected (Q-46). Scope of this change is deliberately narrow (Q-33/Q-46): column +
+  // CreateNotificationCommand optional constructor param only. Populating category_code on every
+  // existing notification-creation call site across the codebase is a separate, much larger
+  // follow-up item and is explicitly NOT attempted here.
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/notifications-category-code-2026-07-13.sql.
+  {
+    name: 'notifications.category_code column (notification-category taxonomy soft-reference, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS category_code TEXT`,
+  },
 ];

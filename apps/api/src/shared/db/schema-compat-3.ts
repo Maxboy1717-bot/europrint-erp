@@ -169,6 +169,18 @@ export const notifications = pgTable('notifications', {
   channel: text('channel'),
   status: text('status').default('pending'),
   immutable: boolean('immutable').notNull().default(false),
+  // Notifications module gap (docs/audit/NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md):
+  // a 6-value notification-category taxonomy (buyruq/ogohlantirish/talab/tasdiqlash_sorovi/
+  // hisobot/elon) was already seeded into taxonomy_entries (category='notification_category',
+  // 6 rows — verified live 2026-07-13, taxonomy-seed-2026-07-11.sql:66-71) but notifications had
+  // no column referencing it. categoryCode is a soft-reference to taxonomy_entries.code — same
+  // FK-less TEXT convention as the sibling moduleCode/channel/status columns immediately above
+  // (taxonomy_entries has zero incoming FK constraints by design, validated at the application
+  // layer instead — see kanban_cards.task_type migration comment for the live pg_constraint
+  // check). Nullable, additive — existing rows/callers unaffected (Q-46). Scope: column +
+  // CreateNotificationCommand optional constructor param only (create-notification.command.ts) —
+  // NOT backfilled on existing call sites (separate follow-up item).
+  categoryCode: text('category_code'),
 });
 
 export const marketingCampaigns = pgTable('marketing_campaigns', {

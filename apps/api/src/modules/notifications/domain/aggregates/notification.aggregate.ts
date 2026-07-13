@@ -39,6 +39,10 @@ export class Notification extends AggregateRoot {
   // null when not supplied (additive, no regression on existing rows/callers).
   moduleCode: string | null;
   channel: string | null;
+  // Owner decision 2026-07-13 (chat) — notification-category taxonomy soft-reference
+  // (taxonomy_entries.code, category='notification_category'). Same nullable/additive shape as
+  // moduleCode/channel above — null when not supplied by the caller.
+  categoryCode: string | null;
 
   constructor(userId: number | string, title: string, body: string, type?: NotificationType | string);
   constructor(
@@ -101,6 +105,7 @@ export class Notification extends AggregateRoot {
     this.senderId = null;
     this.moduleCode = null;
     this.channel = null;
+    this.categoryCode = null;
   }
 
   markAsRead(by?: number): Result<void> | void {

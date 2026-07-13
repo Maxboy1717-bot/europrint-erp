@@ -19,5 +19,12 @@ export class CreateNotificationCommand {
     // this is accepted as an explicit optional field instead of guessed (Q-40). Undefined for
     // callers that don't supply it — module_code stays NULL (additive, no regression on existing
     // callers).
-    readonly moduleCode?: string) {}
+    readonly moduleCode?: string,
+    // Owner decision 2026-07-13 (chat) — notification-category taxonomy soft-reference
+    // (taxonomy_entries.code, category='notification_category': buyruq/ogohlantirish/talab/
+    // tasdiqlash_sorovi/hisobot/elon — already seeded, 6 rows). Mirrors moduleCode exactly: an
+    // explicit optional field, undefined for callers that don't supply it — category_code stays
+    // NULL (additive, no regression on existing callers). Not backfilled on existing call sites
+    // in this change (Q-46 scope note — separate follow-up item).
+    readonly categoryCode?: string) {}
 }

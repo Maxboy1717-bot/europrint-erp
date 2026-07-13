@@ -123,6 +123,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
         senderId: notification.senderId ? Number(notification.senderId) : null,   // 18-notif #88
         moduleCode: notification.moduleCode || null,   // owner 2026-07-13
         channel: notification.channel || null,          // owner 2026-07-13
+        categoryCode: notification.categoryCode || null, // owner 2026-07-13 (notification_category taxonomy)
       } as typeof notifications.$inferInsert)
       .returning()
       .execute()
@@ -191,6 +192,7 @@ export class DrizzleNotificationRepository implements INotificationRepo {
     notification.senderId = row.senderId != null ? String(row.senderId) : null;   // 18-notif #88
     notification.moduleCode = row.moduleCode != null ? String(row.moduleCode) : null;   // owner 2026-07-13
     notification.channel = row.channel != null ? String(row.channel) : null;             // owner 2026-07-13
+    notification.categoryCode = row.categoryCode != null ? String(row.categoryCode) : null; // owner 2026-07-13
     notification.createdAt = row.createdAt ? new Date(String(row.createdAt)) : _time.now();
     notification.updatedAt = _time.now();
 

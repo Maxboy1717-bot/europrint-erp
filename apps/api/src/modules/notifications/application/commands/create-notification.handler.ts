@@ -51,6 +51,11 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     if (command.moduleCode) {
       notification.moduleCode = command.moduleCode;
     }
+    // Owner decision 2026-07-13 (chat) — category_code column: caller-supplied
+    // notification-category taxonomy code (taxonomy_entries.code, category='notification_category').
+    if (command.categoryCode) {
+      notification.categoryCode = command.categoryCode;
+    }
 
     const ext = command as ExtendedCreateNotificationCommand;
     const channels = ext.channels ?? ['telegram', 'in_app'];
