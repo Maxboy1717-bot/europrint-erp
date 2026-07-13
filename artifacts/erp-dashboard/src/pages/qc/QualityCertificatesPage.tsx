@@ -202,7 +202,7 @@ export default function QualityCertificatesPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
                       <span>{t("mahsulot")}<strong>{c.productName}</strong></span>
                       <span>{t("mijoz")}<strong>{c.customerName ?? '—'}</strong></span>
-                      <span>{t("berildi1")}<strong>{c.issueDate}</strong></span>
+                      <span>{t("berildi1")} <strong>{c.issueDate}</strong></span>
                       <span>{t("muddati1")}<strong>{c.expiryDate ?? '—'}</strong></span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
