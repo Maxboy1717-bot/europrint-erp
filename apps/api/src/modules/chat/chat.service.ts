@@ -139,6 +139,9 @@ export class ChatService {
   getOnlineUsers() { return this.presenceRepo.findOnlineUsers(); }
   getUserPresence(userId: string) { return this.presenceRepo.findPresence(userId); }
   getRelatedTasks(userId: number) { return this.roomRepo.findRelatedTasks(userId); }
+  listRoomNotes(roomId: number) { return this.roomRepo.listRoomNotes(roomId); }
+  addRoomNote(roomId: number, authorUserId: number, body: string) { return this.roomRepo.addRoomNote(roomId, authorUserId, body); }
+  deleteRoomNote(roomId: number, noteId: number) { return this.roomRepo.deleteRoomNote(roomId, noteId); }
   listRoomTags(roomId: number) { return this.roomRepo.listRoomTags(roomId); }
   addRoomTag(roomId: number, tag: string, createdBy: number) { return this.roomRepo.addRoomTag(roomId, tag, createdBy); }
   removeRoomTag(roomId: number, tag: string) { return this.roomRepo.removeRoomTag(roomId, tag); }

@@ -10,7 +10,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
 import { eq, and, isNotNull, sql } from 'drizzle-orm';
-import { chatRooms, chatMembers, chatMessages, appUsers, chatRoomTags } from '@shared/db';
+import { chatRooms, chatMembers, chatMessages, appUsers, chatRoomTags, chatRoomNotes } from '@shared/db';
 import { ensureChatTables as _ensureChatTables, runChatMigrations as _runChatMigrations, ensureChatTrigger as _ensureChatTrigger } from '@common/database/ddl-migrations';
 import { safeCall, Result } from '@common/result';
 import { ChatRoomUsersRepository } from './chat-room-users.repository';
@@ -203,6 +203,36 @@ export class ChatRoomRepository {
         LIMIT 40`);
       const rows = (res as unknown as { rows?: Array<{ kind: string; id: string; label: string; status: string | null }> }).rows ?? [];
       return castTo<Array<{ kind: string; id: string; label: string; status: string | null }>>(rows);
+    }, 'DB_ERROR');
+  }
+
+  // ── Suhbat izohlari (Izohlar tab) ───────────────────────────────────────
+  async listRoomNotes(roomId: number): Promise<Result<Array<{ id: number; body: string; authorName: string | null; createdAt: unknown }>>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({
+          id: chatRoomNotes.id,
+          body: chatRoomNotes.body,
+          authorName: appUsers.full_name,
+          createdAt: chatRoomNotes.createdAt,
+        })
+        .from(chatRoomNotes)
+        .leftJoin(appUsers, sql`${appUsers.id} = ${chatRoomNotes.authorUserId}`)
+        .where(sql`${chatRoomNotes.roomId} = ${roomId}`)
+        .orderBy(sql`${chatRoomNotes.createdAt} DESC`);
+      return castTo<Array<{ id: number; body: string; authorName: string | null; createdAt: unknown }>>(rows);
+    }, 'DB_ERROR');
+  }
+
+  async addRoomNote(roomId: number, authorUserId: number, body: string): Promise<Result<void>> {
+    return safeCall(async () => {
+      await db.insert(chatRoomNotes).values({ roomId, authorUserId, body });
+    }, 'DB_ERROR');
+  }
+
+  async deleteRoomNote(roomId: number, noteId: number): Promise<Result<void>> {
+    return safeCall(async () => {
+      await db.delete(chatRoomNotes).where(and(sql`${chatRoomNotes.roomId} = ${roomId}`, sql`${chatRoomNotes.id} = ${noteId}`));
     }, 'DB_ERROR');
   }
 

@@ -235,6 +235,30 @@ export class ChatController {
     return unwrapOrInternal(await this.chatService.getRelatedTasks(Number(userId)));
   }
 
+  @ApiOperation({ summary: 'Suhbat izohlari (Izohlar tab)' })
+  @Get('rooms/:roomId/notes')
+  async getRoomNotes(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    return unwrapOrInternal(await this.chatService.listRoomNotes(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbatga izoh qo\'shish' })
+  @Post('rooms/:roomId/notes')
+  async addRoomNote(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Body() body: unknown) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    const text = String((body as Record<string, unknown>)?.body ?? '').trim().slice(0, 2000);
+    if (text) await this.chatService.addRoomNote(Number(roomId), user.id, text);
+    return unwrapOrInternal(await this.chatService.listRoomNotes(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Izohni o\'chirish' })
+  @Delete('rooms/:roomId/notes/:noteId')
+  async deleteRoomNote(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Param('noteId') noteId: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    await this.chatService.deleteRoomNote(Number(roomId), Number(noteId));
+    return unwrapOrInternal(await this.chatService.listRoomNotes(Number(roomId)));
+  }
+
   @ApiOperation({ summary: 'Suhbat teglari (xodim-info paneli)' })
   @Get('rooms/:roomId/tags')
   async getRoomTags(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string) {

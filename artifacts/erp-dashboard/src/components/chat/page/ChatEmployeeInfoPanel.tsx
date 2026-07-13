@@ -80,7 +80,24 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
     onSuccess: (fresh) => qc.setQueryData(tagsKey, fresh),
   });
 
-  const [tab, setTab] = useState<"umumiy" | "fayllar" | "vazifalar">("umumiy");
+  const [tab, setTab] = useState<"umumiy" | "izohlar" | "fayllar" | "vazifalar">("umumiy");
+  // Izohlar tab — suhbatga ichki izoh (chat_room_notes).
+  const [noteText, setNoteText] = useState("");
+  const notesKey = [`/api/chat/rooms/${roomId}/notes`];
+  const { data: notesData } = useQuery<Array<{ id: number; body: string; authorName: string | null; createdAt: string }>>({
+    queryKey: notesKey,
+    queryFn: () => apiRequest("GET", `/api/chat/rooms/${roomId}/notes`),
+    enabled: !!roomId && tab === "izohlar",
+  });
+  const notes = Array.isArray(notesData) ? notesData : [];
+  const addNote = useMutation({
+    mutationFn: (body: string) => apiRequest("POST", `/api/chat/rooms/${roomId}/notes`, { body }),
+    onSuccess: (fresh) => { qc.setQueryData(notesKey, fresh); setNoteText(""); },
+  });
+  const deleteNote = useMutation({
+    mutationFn: (noteId: number) => apiRequest("DELETE", `/api/chat/rooms/${roomId}/notes/${noteId}`),
+    onSuccess: (fresh) => qc.setQueryData(notesKey, fresh),
+  });
   // Fayllar tab — suhbatda ulashilgan fayllar (mavjud endpoint).
   const { data: filesData } = useQuery<Array<{ fileUrl?: string; fileName?: string; fileType?: string }>>({
     queryKey: [`/api/chat/rooms/${roomId}/files`],
@@ -126,7 +143,7 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
 
       {/* Tab bar */}
       <div className="flex border-b border-[var(--ep-border)] flex-shrink-0 px-2 text-[13px]">
-        {([["umumiy", t("umumiyMalumot")], ["fayllar", t("fayllar")], ["vazifalar", t("bogliqVazifalar")]] as const).map(([key, label]) => (
+        {([["umumiy", t("umumiyMalumot")], ["izohlar", t("izohlar")], ["fayllar", t("fayllar")], ["vazifalar", t("bogliqVazifalar")]] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -206,6 +223,45 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
                 <span className="text-[13px] truncate flex-1">{f.fileName || f.fileUrl}</span>
                 <Download className="w-4 h-4 text-[var(--ep-muted)] flex-shrink-0" />
               </a>
+            ))}
+          </div>
+        )}
+
+        {tab === "izohlar" && (
+          <div className="space-y-2">
+            <div className="flex gap-1.5">
+              <input
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && noteText.trim()) addNote.mutate(noteText.trim()); }}
+                placeholder={t("izohQoshish")}
+                className="flex-1 px-2.5 py-1.5 text-[13px] rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] outline-none focus:border-[var(--ep-primary)]"
+              />
+              <button
+                onClick={() => { if (noteText.trim()) addNote.mutate(noteText.trim()); }}
+                className="px-2.5 rounded-lg bg-[var(--ep-primary)] text-white flex items-center"
+                title={t("izohQoshish")}
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            {notes.length === 0 && (
+              <p className="text-[13px] text-[var(--ep-muted)] text-center py-6">{t("izohYoq")}</p>
+            )}
+            {notes.map((n) => (
+              <div key={n.id} className="group p-2 rounded-lg bg-[var(--ep-subtle)]">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[13px] whitespace-pre-wrap break-words flex-1">{n.body}</p>
+                  <button
+                    onClick={() => deleteNote.mutate(n.id)}
+                    className="opacity-0 group-hover:opacity-100 text-[var(--ep-muted)] hover:text-[var(--ep-red)]"
+                    title={t("olibTashlash")}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                {n.authorName && <p className="text-[11px] text-[var(--ep-muted)] mt-1">{n.authorName}</p>}
+              </div>
             ))}
           </div>
         )}
