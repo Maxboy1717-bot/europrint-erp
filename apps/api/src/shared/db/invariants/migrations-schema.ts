@@ -1984,15 +1984,20 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
   },
   {
     name: 'business_settings hr.discipline_archive_after_months seed (2026-07-13)',
+    // NOTE: value_type must be one of business_settings_value_type_chk's allowed values
+    // (number|percent|days|minutes|amount|text|boolean) — 'months' is NOT in that CHECK
+    // constraint list (business-settings-2026-07-11.sql) and silently failed every boot
+    // until fixed here 2026-07-13; 'number' + unit='oy' carries the same meaning.
     sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
-      VALUES ('hr', 'hr.discipline_archive_after_months', 'Intizom: ogohlantirish arxiv muddati (oy)', 'months', 6, 'oy', 1, 60,
+      VALUES ('hr', 'hr.discipline_archive_after_months', 'Intizom: ogohlantirish arxiv muddati (oy)', 'number', 6, 'oy', 1, 60,
         'Discipline_records.discipline_type = ''reprimand'' bo''lgan yozuvlar shu oy sonidan (issued_date bo''yicha) o''tgach discipline.cron.ts orqali avtomatik soft-arxivlanadi (is_archived=true) — o''chirilmaydi, faqat faol Intizom ro''yxatidan yashiriladi, kumulyativ hisobga ta''sir qilmaydi. Default=6 oy, egasi business_settings CRUD orqali sozlaydi.', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
   {
     name: 'business_settings hr.discipline_escalation_window_months seed (2026-07-13)',
+    // NOTE: same value_type fix as hr.discipline_archive_after_months above.
     sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
-      VALUES ('hr', 'hr.discipline_escalation_window_months', 'Intizom: eskalatsiya oyna muddati (oy)', 'months', 12, 'oy', 1, 60,
+      VALUES ('hr', 'hr.discipline_escalation_window_months', 'Intizom: eskalatsiya oyna muddati (oy)', 'number', 12, 'oy', 1, 60,
         'Xodimning intizom eskalatsiya bosqichi (verbal/written/fine/dismissal) shu oy oynasi ichidagi qoidabuzarliklar soni bo''yicha hisoblanadi (discipline-escalation.helper.ts computeDisciplineEscalation). Default=12 oy, egasi business_settings CRUD orqali sozlaydi.', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
@@ -2038,5 +2043,49 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
   {
     name: 'hazard_zones.description column (2026-07-13)',
     sql: `ALTER TABLE IF EXISTS hazard_zones ADD COLUMN IF NOT EXISTS description TEXT`,
+  },
+  // HR Nazorat fix (2026-07-13, verified live): safety_training_records.training_id was
+  // NOT NULL at the DB level, which made the whole training_name free-text-fallback
+  // feature (added above) unreachable — even with training_name populated, ANY insert
+  // with no course selected (training_id=null) still hit "null value in column
+  // training_id violates not-null constraint" (confirmed via direct psql insert).
+  // employee_id stays NOT NULL (a training record must always name who was trained).
+  {
+    name: 'safety_training_records.training_id DROP NOT NULL (2026-07-13, unblocks free-text fallback)',
+    sql: `ALTER TABLE IF EXISTS safety_training_records ALTER COLUMN training_id DROP NOT NULL`,
+  },
+  // Owner question (2026-07-13): "where is most of the Add-Employee form's data configured
+  // from?" — the "Vysotskiy darajasi (preset)" salary midpoints were hardcoded in
+  // BaseSalaryInput.tsx (GRADE_PRESETS), not adjustable anywhere. Moved to business_settings
+  // (module "hr") so HR/owner can tune them via the existing /admin/business-settings CRUD
+  // screen. Human-readable mirror:
+  // apps/api/src/shared/db/migrations/hr-vysotskiy-grade-salaries-2026-07-13.sql.
+  {
+    name: 'business_settings hr.grade_a_salary seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, description, is_active)
+      VALUES ('hr', 'hr.grade_a_salary', 'Vysotskiy darajasi A - asosiy maosh (o''rtacha)', 'amount', 12000000, 'som',
+        'Xodim qo''shish formasidagi "Vysotskiy darajasi" tanlagichida A darajani tanlaganda asosiy maoshga taklif qilinadigan o''rtacha qiymat.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings hr.grade_b_salary seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, description, is_active)
+      VALUES ('hr', 'hr.grade_b_salary', 'Vysotskiy darajasi B - asosiy maosh (o''rtacha)', 'amount', 8000000, 'som',
+        'Xodim qo''shish formasidagi "Vysotskiy darajasi" tanlagichida B darajani tanlaganda asosiy maoshga taklif qilinadigan o''rtacha qiymat.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings hr.grade_c_salary seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, description, is_active)
+      VALUES ('hr', 'hr.grade_c_salary', 'Vysotskiy darajasi C - asosiy maosh (o''rtacha)', 'amount', 5000000, 'som',
+        'Xodim qo''shish formasidagi "Vysotskiy darajasi" tanlagichida C darajani tanlaganda asosiy maoshga taklif qilinadigan o''rtacha qiymat.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings hr.grade_d_salary seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, description, is_active)
+      VALUES ('hr', 'hr.grade_d_salary', 'Vysotskiy darajasi D - asosiy maosh (o''rtacha)', 'amount', 3000000, 'som',
+        'Xodim qo''shish formasidagi "Vysotskiy darajasi" tanlagichida D darajani tanlaganda asosiy maoshga taklif qilinadigan o''rtacha qiymat.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
   },
 ];
