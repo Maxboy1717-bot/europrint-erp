@@ -9,10 +9,11 @@
  */
 
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3, Plus } from 'lucide-react';
+import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3, Plus, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { evalCell, numToCol, colToNum, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
 import { tLabel } from '@/lib/i18n/tLabel';
+import { useToast } from '@/hooks/use-toast';
 
 const DEFAULT_ROWS = 30;
 const DEFAULT_COLS = 12; // A..L
@@ -83,6 +84,7 @@ export function SpreadsheetGrid({
   const [rows, setRows] = useState(DEFAULT_ROWS);
   const [cols, setCols] = useState(DEFAULT_COLS);
   const gridRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   // Grow (never shrink) so every populated cell is visible when a sheet loads.
   useEffect(() => {
@@ -129,6 +131,67 @@ export function SpreadsheetGrid({
     onChange(next);
   };
 
+  // Bounds of the current selection rectangle (single cell when anchor===sel).
+  const rectBounds = (): [number, number, number, number] | null => {
+    const a = parseRef(anchor), b = parseRef(sel);
+    if (!a || !b) return null;
+    return [Math.min(a[0], b[0]), Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[1], b[1])];
+  };
+
+  // Copy the selected rectangle to the clipboard as TSV (tab = column, newline = row),
+  // using each cell's DISPLAYED value (formulas evaluated) — pastes cleanly into Excel/Sheets
+  // and back into this grid. Ctrl/Cmd+C when a range is selected (Excel parity).
+  const copySelection = async () => {
+    const bnds = rectBounds();
+    if (!bnds) return;
+    const [c0, c1, r0, r1] = bnds;
+    const lines: string[] = [];
+    for (let r = r0; r <= r1; r++) {
+      const row: string[] = [];
+      for (let c = c0; c <= c1; c++) {
+        const ref = numToCol(c) + r;
+        row.push(formatDisplay(evalCell(ref, cells), cells[ref]?.s?.fmt));
+      }
+      lines.push(row.join('\t'));
+    }
+    const tsv = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(tsv);
+      const count = (c1 - c0 + 1) * (r1 - r0 + 1);
+      toast({ title: tLabel('documents.copied', 'Nusxalandi'), description: `${count} ${tLabel('documents.cellsUnit', 'katak')}` });
+    } catch {
+      toast({ title: tLabel('common.error', 'Xatolik'), description: tLabel('documents.copyFailed', 'Nusxalab bo\'lmadi'), variant: 'destructive' });
+    }
+  };
+
+  // Paste TSV/plain text from the clipboard starting at the active cell. Grid grows to fit
+  // (via the size effect). Values starting with '=' become formulas.
+  const pasteSelection = async () => {
+    if (!editable || !onChange) return;
+    let text = '';
+    try { text = await navigator.clipboard.readText(); } catch { return; }
+    if (!text) return;
+    const start = parseRef(sel);
+    if (!start) return;
+    const next: Cells = { ...cells };
+    text.replace(/\r/g, '').replace(/\n$/, '').split('\n').forEach((line, ri) => {
+      line.split('\t').forEach((val, ci) => {
+        const c = start[0] + ci, r = start[1] + ri;
+        if (c > MAX_COLS || r > MAX_ROWS) return;
+        const ref = numToCol(c) + r;
+        const t = val.trim();
+        const cur = next[ref] ?? {};
+        if (t === '') delete next[ref];
+        else if (t.startsWith('=')) next[ref] = { ...cur, f: t, v: undefined };
+        else next[ref] = { ...cur, v: val, f: undefined };
+      });
+    });
+    onChange(next);
+    toast({ title: tLabel('documents.pasted', 'Joylandi') });
+  };
+
+  const cutSelection = async () => { await copySelection(); clearRange(); };
+
   const startEdit = (ref: string, initial?: string) => { if (!editable) return; setEditing(ref); setBuf(initial ?? raw(ref)); };
   const commitEdit = () => { if (editing) commit(editing, buf); setEditing(null); };
 
@@ -144,9 +207,15 @@ export function SpreadsheetGrid({
   // Excel-style keyboard: single click selects, typing edits immediately (no double-click);
   // arrows move, Shift+arrows extend the range, Ctrl+A selects all, F2 edits, Delete clears.
   const onGridKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (editing || !editable) return; // while editing, the cell <input> owns the keys
+    if (editing) return; // while editing, the cell <input> owns the keys
     const k = e.key;
-    if ((e.ctrlKey || e.metaKey) && (k === 'a' || k === 'A')) { selectAll(); e.preventDefault(); return; }
+    const mod = e.ctrlKey || e.metaKey;
+    // Clipboard: copy/select-all work even in read-only; cut/paste no-op unless editable.
+    if (mod && (k === 'c' || k === 'C')) { void copySelection(); e.preventDefault(); return; }
+    if (mod && (k === 'x' || k === 'X')) { void cutSelection(); e.preventDefault(); return; }
+    if (mod && (k === 'v' || k === 'V')) { void pasteSelection(); e.preventDefault(); return; }
+    if (mod && (k === 'a' || k === 'A')) { selectAll(); e.preventDefault(); return; }
+    if (!editable) return;
     switch (k) {
       case 'ArrowUp': moveSel(0, -1, e.shiftKey); e.preventDefault(); return;
       case 'ArrowDown': case 'Enter': moveSel(0, 1, e.shiftKey && k !== 'Enter'); e.preventDefault(); return;
@@ -252,6 +321,11 @@ export function SpreadsheetGrid({
           <button type="button" title={tLabel('documents.selectAll', 'Hammasini belgilash')} onClick={selectAll}
             className="inline-flex items-center gap-1 h-7 px-2 rounded hover:bg-[var(--ep-bg)] text-xs font-medium text-[var(--ep-text)]">
             <Grid3x3 className="w-3.5 h-3.5" />{tLabel('documents.selectAllShort', 'Hammasi')}
+          </button>
+          {/* Copy the selection (also Ctrl+C) — labelled so it is discoverable, not keyboard-only. */}
+          <button type="button" title={tLabel('documents.copyHint', 'Belgilangan kataklarni nusxalash (Ctrl+C)')} onClick={() => void copySelection()}
+            className="inline-flex items-center gap-1 h-7 px-2 rounded hover:bg-[var(--ep-bg)] text-xs font-medium text-[var(--ep-text)]">
+            <Copy className="w-3.5 h-3.5" />{tLabel('documents.copyShort', 'Nusxa')}
           </button>
           <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
           {/* Filter toggle */}
