@@ -98,7 +98,11 @@ export class ChatMessageService {
     const msgRowResult = await this.msgRepo.findMessageRoomId(msgIdStr);
     const msgRow = (msgRowResult.ok ? msgRowResult.data : null) as Record<string, unknown> | null;
     if (!msgRow) throw new NotFoundException(await this.i18n.t('errors.messageNotFound'));
-    const roomId = String(msgRow['room_id']);
+    // findMessageRoomId `{ roomId }` (camelCase) qaytaradi — `room_id` emas. Oldin
+    // `msgRow['room_id']` o'qib `undefined` → checkMembership 0 qator → har pin 403
+    // berardi (a'zo bo'lsa ham). Q-40: "ishlaydi ≠ to'g'ri" — endpoint bor edi lekin
+    // hech qachon pin qilmasdi.
+    const roomId = String(msgRow['roomId'] ?? msgRow['room_id']);
     const isMemberResult = await this.msgRepo.checkMembership(roomId, String(userId));
     const isMember = isMemberResult.ok && isMemberResult.data;
     if (!isMember) throw new ForbiddenException(await this.i18n.t('errors.notRoomMember'));

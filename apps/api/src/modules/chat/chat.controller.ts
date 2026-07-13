@@ -10,7 +10,7 @@
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
   Controller, Get, Patch, Post, Delete, Body, Param, Query,
-  UseGuards, Logger, UseInterceptors, HttpCode, HttpStatus,
+  UseGuards, Logger, UseInterceptors, HttpCode, HttpStatus, HttpException,
 } from '@nestjs/common';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -210,6 +210,49 @@ export class ChatController {
           created_at: pinned.createdAt,
         }
       : null;
+  }
+
+  // FE xabar-amal paneli reaction/pin ni FLAT `/api/chat/messages/:id/...` da
+  // chaqiradi (getChatApiBase). Bu handlerlar oldin faqat `/api/hr-v2/chat` da
+  // bor edi → `/api/chat` da 404 (reaction bosilsa hech narsa, pin xato berardi).
+  // Bir xil servisga delegatsiya + gateway broadcast (hr-v2 retire yo'nalishi).
+  @ApiOperation({ summary: 'Toggle reaction (flat /api/chat alias)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Post('messages/:messageId/reactions')
+  @HttpCode(HttpStatus.OK)
+  async toggleReactionFlat(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('messageId') messageId: string,
+    @Body() body: { emoji?: string },
+  ) {
+    const emoji = String(body?.emoji ?? '').trim();
+    if (!emoji) throw new HttpException('emoji majburiy', HttpStatus.BAD_REQUEST);
+    const reactions = unwrapOrInternal(await this.chatService.toggleReaction(messageId, user.id, emoji));
+    this.gateway.server?.emit('reaction:updated', { messageId, reactions });
+    return { reactions };
+  }
+
+  @ApiOperation({ summary: 'Pin/unpin message (flat /api/chat PATCH alias)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Patch('messages/:messageId/pin')
+  async pinMessageFlat(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('messageId') messageId: string,
+    @Body() body: { pin?: boolean },
+  ) {
+    const pin = body?.pin ?? true;
+    const msg = await this.chatService.pinMessage(messageId, user.id, pin);
+    if (!msg) throw new HttpException('Xabar topilmadi', HttpStatus.NOT_FOUND);
+    const roomId = String((msg as { roomId?: unknown }).roomId ?? '');
+    const isPinned = Boolean((msg as { isPinned?: unknown }).isPinned);
+    const pinned = isPinned ? await this.chatService.getPinnedMessage(roomId) : null;
+    this.gateway.server?.to(`room:${roomId}`).emit(
+      isPinned ? 'message:pinned' : 'message:unpinned',
+      isPinned
+        ? { roomId, messageId, content: pinned?.content, senderName: pinned?.senderName }
+        : { roomId, messageId },
+    );
+    return msg;
   }
 
   @ApiOperation({ summary: 'Get shared files in room' })
