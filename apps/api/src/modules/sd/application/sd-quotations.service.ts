@@ -242,24 +242,24 @@ export class SdQuotationsService {
       const areaPerUnitM2 = ((2 * (L + W) + GLUE_FLAP_MM) * (H + W)) / MM2_PER_M2;
 
       const paperRates: Record<string, number> = {
-        'B-flute': num(cfg.paper_b_price), 'C-flute': num(cfg.paper_c_price),
-        'BC-flute': num(cfg.paper_bc_price), 'E-flute': num(cfg.paper_e_price),
+        'B-flute': num(cfg.paperBPrice), 'C-flute': num(cfg.paperCPrice),
+        'BC-flute': num(cfg.paperBcPrice), 'E-flute': num(cfg.paperEPrice),
       };
-      const paperRate = paperRates[input.paperType ?? 'B-flute'] ?? num(cfg.paper_b_price);
+      const paperRate = paperRates[input.paperType ?? 'B-flute'] ?? num(cfg.paperBPrice);
       const paperCost = areaPerUnitM2 * paperRate * qty;
 
       // Print = plates per colour (one-time klishe) + the per-job run rate for that colour count.
-      const printRunRate = colors >= 4 ? num(cfg.print_4color_price)
-        : colors >= 2 ? num(cfg.print_2color_price)
-        : colors >= 1 ? num(cfg.print_1color_price) : 0;
+      const printRunRate = colors >= 4 ? num(cfg.print4ColorPrice)
+        : colors >= 2 ? num(cfg.print2ColorPrice)
+        : colors >= 1 ? num(cfg.print1ColorPrice) : 0;
       // vision 06-sd #145 (Bez oborota/s oborotom): two-sided print doubles the print
       // operation (plates + run). printSides is the per-line 1|2 factor persisted on
       // sd_quotation_items; clamp defensively to {1,2} so a bad payload can't inflate cost.
       const printSides = num(input.printSides, 1) >= 2 ? 2 : 1;
-      const printCost = (colors > 0 ? num(cfg.plate_cost_per_color) * colors + printRunRate : 0) * printSides;
+      const printCost = (colors > 0 ? num(cfg.plateCostPerColor) * colors + printRunRate : 0) * printSides;
 
       // Die/shtamp: new vs existing (EP-SD-042/125 klishe ownership).
-      const dieCost = input.isNewDie ? num(cfg.die_cost_new) : num(cfg.die_cost_existing);
+      const dieCost = input.isNewDie ? num(cfg.dieCostNew) : num(cfg.dieCostExisting);
 
       // Kashirovka (vision 06-sd #142): ofset bosma + gofra qatlamni yelimlab birlashtirish —
       // alohida pardozlash operatsiyasi. Bayroq yoqilganda sozlanadigan kashirovka narxi qo'shiladi.
@@ -268,13 +268,13 @@ export class SdQuotationsService {
 
       // Labour throughput assumption: 1 labour-hour per UNITS_PER_LABOR_HOUR units.
       const UNITS_PER_LABOR_HOUR = 1000;
-      const productionCost = num(cfg.hourly_labor_rate) * (qty / UNITS_PER_LABOR_HOUR);
+      const productionCost = num(cfg.hourlyLaborRate) * (qty / UNITS_PER_LABOR_HOUR);
 
-      const deliveryCost = num(cfg.delivery_base_cost);
+      const deliveryCost = num(cfg.deliveryBaseCost);
 
       const costPrice = paperCost + printCost + dieCost + kashirovkaCost + productionCost + deliveryCost;
-      const markupPercent = num(cfg.default_markup_percent, 35);
-      const vatRate = num(cfg.vat_rate, 12);
+      const markupPercent = num(cfg.defaultMarkupPercent, 35);
+      const vatRate = num(cfg.vatRate, 12);
       // 06-sd#12 (vision-1000-answers/06-sd.md #12, Q6): "Chegirma faqat TO'LIQ 100% avans
       // faktida beriladi (95% = chegirmasiz)... tekshiruv BE tomonida quotation_service.ts'da:
       // if (advancePercent < 100) discount5pct = false." Foiz qiymati business_settings'dan
