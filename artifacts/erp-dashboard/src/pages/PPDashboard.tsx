@@ -96,7 +96,7 @@ export default function PPDashboard() {
   ];
 
   const quickActions: QuickAction[] = [
-    { title: t("newOrder"), href: "/order-wizard", icon: Plus },
+    { title: t("newOrder"), href: "/order-create", icon: Plus },
     { title: t("scheduling"), href: "/planning", icon: Calendar },
     { title: t("createBom"), href: "/erp/pp/bom", icon: Package },
     { title: t("runMrp"), href: "/erp/pp/mrp", icon: ClipboardList },
@@ -143,7 +143,7 @@ export default function PPDashboard() {
             asChild
             data-testid="button-new-order-pp"
           >
-            <Link href="/order-wizard">
+            <Link href="/order-create">
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               {t("yangiBuyurtma")}
             </Link>
