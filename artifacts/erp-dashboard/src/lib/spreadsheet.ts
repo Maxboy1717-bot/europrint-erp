@@ -6,8 +6,19 @@
  * Cells are stored as { "A1": { v?: rawText, f?: "=SUM(...)" }, ... } in erp_spreadsheets.cells.
  */
 
-export interface Cell { v?: string; f?: string }
+export interface CellStyle { b?: boolean; a?: 'l' | 'c' | 'r'; fmt?: 'num' | 'money' | 'pct' }
+export interface Cell { v?: string; f?: string; s?: CellStyle }
 export type Cells = Record<string, Cell>;
+
+/** Apply a cell's number-format to its evaluated display value. */
+export function formatDisplay(display: string, fmt?: string): string {
+  if (!fmt || fmt === 'num' || display === '' || display.startsWith('#')) return display;
+  const n = Number(display);
+  if (Number.isNaN(n)) return display;
+  if (fmt === 'money') return n.toLocaleString('uz-UZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (fmt === 'pct') return n.toLocaleString('uz-UZ', { maximumFractionDigits: 2 }) + '%';
+  return display;
+}
 
 const A1_RE = /^([A-Z]+)([0-9]+)$/;
 

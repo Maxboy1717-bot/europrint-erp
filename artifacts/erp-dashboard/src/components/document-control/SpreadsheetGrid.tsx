@@ -7,8 +7,10 @@
  */
 
 import { useState } from 'react';
+import { Bold, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { evalCell, numToCol, type Cells } from '@/lib/spreadsheet';
+import { evalCell, numToCol, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 const ROWS = 30;
 const COLS = 12; // A..L
@@ -41,8 +43,37 @@ export function SpreadsheetGrid({
   const startEdit = (ref: string) => { if (!editable) return; setEditing(ref); setBuf(raw(ref)); };
   const commitEdit = () => { if (editing) commit(editing, buf); setEditing(null); };
 
+  const setStyle = (patch: Partial<CellStyle>) => {
+    if (!editable || !onChange) return;
+    const cur = cells[sel] ?? {};
+    onChange({ ...cells, [sel]: { ...cur, s: { ...(cur.s ?? {}), ...patch } } });
+  };
+  const selStyle = cells[sel]?.s ?? {};
+
   return (
     <div className="flex flex-col bg-white border border-[var(--ep-border)] rounded-lg overflow-hidden">
+      {/* Cell-format toolbar */}
+      {editable && (
+        <div className="flex items-center gap-0.5 px-2 py-1 border-b border-[var(--ep-border)] bg-[var(--ep-surface)]">
+          <button type="button" title={tLabel('documents.bold', 'Qalin')} onClick={() => setStyle({ b: !selStyle.b })}
+            className={cn('w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)]', selStyle.b && 'bg-[var(--ep-blue)]/12 text-[var(--ep-blue)]')}><Bold className="w-3.5 h-3.5" /></button>
+          <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
+          {(['l', 'c', 'r'] as const).map((a) => (
+            <button key={a} type="button" title={tLabel('documents.align' + a.toUpperCase(), a)} onClick={() => setStyle({ a })}
+              className={cn('w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)]', selStyle.a === a && 'bg-[var(--ep-blue)]/12 text-[var(--ep-blue)]')}>
+              {a === 'l' ? <AlignLeft className="w-3.5 h-3.5" /> : a === 'c' ? <AlignCenter className="w-3.5 h-3.5" /> : <AlignRight className="w-3.5 h-3.5" />}
+            </button>
+          ))}
+          <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
+          <select value={selStyle.fmt ?? 'num'} onChange={(e) => setStyle({ fmt: e.target.value as CellStyle['fmt'] })}
+            title={tLabel('documents.numberFormat', 'Raqam formati')} className="h-7 text-xs rounded border border-[var(--ep-border)] bg-[var(--ep-surface)] px-1">
+            <option value="num">{tLabel('documents.fmtPlain', 'Oddiy')}</option>
+            <option value="money">{tLabel('documents.fmtMoney', 'Pul')}</option>
+            <option value="pct">{tLabel('documents.fmtPct', 'Foiz')}</option>
+          </select>
+        </div>
+      )}
+
       {/* Formula bar */}
       <div className="flex items-center gap-2 px-2 py-1.5 border-b border-[var(--ep-border)] bg-[var(--ep-surface)]">
         <span className="text-xs font-mono font-semibold text-[var(--ep-muted)] w-12 text-center shrink-0">{sel}</span>
@@ -79,8 +110,12 @@ export function SpreadsheetGrid({
                   const ref = numToCol(c + 1) + (r + 1);
                   const isSel = sel === ref;
                   const isEditing = editing === ref;
-                  const display = evalCell(ref, cells);
-                  const isNum = display !== '' && !Number.isNaN(Number(display));
+                  const style = cells[ref]?.s;
+                  const rawDisplay = evalCell(ref, cells);
+                  const display = formatDisplay(rawDisplay, style?.fmt);
+                  const isNum = rawDisplay !== '' && !rawDisplay.startsWith('#') && !Number.isNaN(Number(rawDisplay));
+                  const align = style?.a ?? (isNum ? 'r' : 'l');
+                  const isErr = rawDisplay === '#CYCLE' || rawDisplay === '#ERR';
                   return (
                     <td
                       key={c}
@@ -89,7 +124,7 @@ export function SpreadsheetGrid({
                       className={cn(
                         'min-w-[96px] h-7 border border-[var(--ep-border)] px-1.5 cursor-cell align-middle',
                         isSel && 'ring-2 ring-[var(--ep-blue)] ring-inset',
-                        isNum ? 'text-right tabular-nums' : 'text-left',
+                        align === 'r' ? 'text-right tabular-nums' : align === 'c' ? 'text-center' : 'text-left',
                       )}
                     >
                       {isEditing ? (
@@ -102,7 +137,7 @@ export function SpreadsheetGrid({
                           className="w-full h-full outline-none bg-transparent text-sm font-mono"
                         />
                       ) : (
-                        <span className={cn(display === '#CYCLE' || display === '#ERR' ? 'text-[var(--ep-red)]' : 'text-[var(--ep-text)]')}>{display}</span>
+                        <span className={cn(style?.b && 'font-bold', isErr ? 'text-[var(--ep-red)]' : 'text-[var(--ep-text)]')}>{display}</span>
                       )}
                     </td>
                   );
