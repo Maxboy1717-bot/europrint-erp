@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
+import { tLabel } from "@/lib/i18n/tLabel";
 import { Loader2, FileText, ArrowRight, ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
 
 import { EPLoader } from "@/components/ep";
@@ -48,6 +50,19 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
   const { t } = useTranslation("common");
   const qc = useQueryClient();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  // STEP 3.6b — "Erkin hujjat" template bypasses the AI wizard: create a blank erp_document
+  // + linked CC draft, then open the TipTap editor (CC drives the send/approval afterwards).
+  const createErkin = useMutation({
+    mutationFn: (title: string) => apiRequest<{ erpDocumentId: string }>("POST", "/api/cc/documents/erkin-hujjat", { title }),
+    onSuccess: (r) => { onOpenChange(false); if (r?.erpDocumentId) navigate(`/documents/${r.erpDocumentId}`); },
+    onError: () => toast({ title: tLabel("common.error", "Xatolik"), variant: "destructive" }),
+  });
+  const handlePickTemplate = (tpl: Template) => {
+    if (tpl.code === "ERKIN-HUJJAT") { createErkin.mutate(tLabel("documents.untitled", "Nomsiz hujjat")); return; }
+    setTmplId(tpl.id);
+  };
   const [step, setStep]               = useState<Step>(1);
   const [tmplId, setTmplId]           = useState<string | null>(null);
   const [sessionId, setSessionId]     = useState<string | null>(null);
@@ -180,7 +195,7 @@ export function NewDocumentModal({ open, onOpenChange, onCreated }: {
                 {(Array.isArray(tmplsQ.data) ? tmplsQ.data : []).map(t => (
                   <button
                     key={t.id}
-                    onClick={() => setTmplId(t.id)}
+                    onClick={() => handlePickTemplate(t)}
                     className={`p-3 rounded-lg text-left text-sm flex flex-col gap-1 border transition ${
                       tmplId === t.id
                         ? "bg-blue-50 border-blue-300 text-blue-900"
