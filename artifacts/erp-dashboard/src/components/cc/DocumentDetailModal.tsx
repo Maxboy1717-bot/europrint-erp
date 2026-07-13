@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 import { EPLoader, EPDocumentPreview } from "@/components/ep";
+import { DocumentWatermark } from "@/components/document-control/DocumentWatermark";
 import { useTranslation } from '@/lib/i18n';
 interface DocumentDetail {
   id: string;
@@ -29,6 +30,7 @@ interface DocumentDetail {
   senderName: string | null;
   basketEnteredAt: string;
   createdAt: string;
+  sensitivityTier?: string | null; // Doc Control: oddiy|maxfiy|juda-maxfiy → drives watermark
 }
 
 const STATE: Record<string, { uz: string; tone: string }> = {
@@ -143,7 +145,7 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
           {bodyQ.isLoading ? (
             <EPLoader className="mx-auto" />
           ) : (
-            <div className="space-y-4">
+            <DocumentWatermark tier={doc?.sensitivityTier} className="space-y-4">
               <Section title="AI tayyorlagan matn" icon={<FileText size={14} />}>
                 <pre className="whitespace-pre-wrap text-sm bg-muted/30 border rounded-lg p-3 leading-relaxed font-sans">
                   {bodyQ.data?.aiBody ?? "Matn yuklab bo'lmadi"}
@@ -157,7 +159,7 @@ export function DocumentDetailModal({ documentId, open, onOpenChange }: {
                   </div>
                 </Section>
               )}
-            </div>
+            </DocumentWatermark>
           )}
         </ScrollArea>
 

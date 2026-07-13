@@ -204,6 +204,7 @@ export class CcBasketsRepository {
           d.sender_user_id           AS "senderUserId",
           NULLIF(TRIM(COALESCE(u.first_name,'') || ' ' || COALESCE(u.last_name,'')), '') AS "senderName",
           d.basket_owner_user_id     AS "basketOwnerUserId",
+          d.sensitivity_tier         AS "sensitivityTier",
           d.created_at               AS "createdAt",
           d.updated_at               AS "updatedAt"
         FROM cc_documents d
