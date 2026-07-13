@@ -67,11 +67,22 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         // to varchar; live is integer). product_id binds to products (finished goods, owner 2026-06-05).
         // B13/Decision 3 (2026-07-06): default fallback was the free-text 'PC' -- now the
         // canonical unit_of_measures.code for "piece" ('dona').
+        // Owner decision 2026-07-13 (chat) — "Mahsulot vs Buyurtma zanjiri": when it.productId is
+        // absent, this is a bespoke print job (no catalog SKU) — product_id stays NULL and the
+        // custom-spec columns (mirroring sd_quotation_items) carry the job description instead.
+        // Same convention as approveQuotation()/convertQuotationToOrder()'s item-copy INSERTs.
         await exec.execute(sql`
           INSERT INTO sales_order_items
-            (sales_order_id, item_number, product_id, description, order_quantity, open_quantity, unit, net_price, total_price, created_at)
+            (sales_order_id, item_number, product_id, description, order_quantity, open_quantity, unit,
+             net_price, total_price, product_type, paper_type, thickness_mm, length_mm, width_mm, height_mm,
+             print_colors, lamination, perforation, special_coating, is_new_die, printing_method,
+             machine_format, created_at)
           VALUES
-            (${orderId}, ${itemNumber}, ${it.productId}, ${it.description}, ${qty}, ${qty}, ${it.unit ?? 'dona'}, ${price}, ${total}, NOW())`);
+            (${orderId}, ${itemNumber}, ${it.productId ?? null}, ${it.description}, ${qty}, ${qty}, ${it.unit ?? 'dona'},
+             ${price}, ${total}, ${it.productType ?? null}, ${it.paperType ?? null}, ${it.thicknessMm ?? null},
+             ${it.lengthMm ?? null}, ${it.widthMm ?? null}, ${it.heightMm ?? null}, ${it.printColors ?? null},
+             ${it.lamination ?? null}, ${it.perforation ?? null}, ${it.specialCoating ?? null}, ${it.isNewDie ?? null},
+             ${it.printingMethod ?? null}, ${it.machineFormat ?? null}, NOW())`);
         saved++;
       }
       return { ok: true as const, data: saved };

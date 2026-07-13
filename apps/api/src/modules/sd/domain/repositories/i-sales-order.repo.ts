@@ -15,13 +15,32 @@ import { SalesOrder } from '../aggregates/sales-order.aggregate';
  */
 export type DrizzleTxExecutor = unknown;
 
-/** One order line — binds to a finished-good product (owner 2026-06-05). */
+/**
+ * One order line — EITHER binds to a finished-good product (owner 2026-06-05, `productId`
+ * set) OR, when `productId` is omitted, describes a bespoke print job by physical spec
+ * (owner decision 2026-07-13, chat — "Mahsulot vs Buyurtma zanjiri"). Mirrors the same
+ * optional-productId + custom-spec shape already used by the quotation-conversion paths
+ * (approveQuotation()/convertQuotationToOrder() in the sd infrastructure layer).
+ */
 export interface SalesOrderLineInput {
-  productId: number;
+  productId?: number;
   description: string;
   orderQuantity: number;
   unit?: string;
   netPrice: number;
+  productType?: string;
+  paperType?: string;
+  thicknessMm?: number;
+  lengthMm?: number;
+  widthMm?: number;
+  heightMm?: number;
+  printColors?: number;
+  lamination?: boolean;
+  perforation?: boolean;
+  specialCoating?: boolean;
+  isNewDie?: boolean;
+  printingMethod?: string;
+  machineFormat?: string;
 }
 
 /**
