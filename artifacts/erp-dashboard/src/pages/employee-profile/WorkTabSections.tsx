@@ -8,7 +8,6 @@
 
 import { useTranslation } from '@/lib/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Briefcase, Target, Settings, Activity, Gauge, Wrench } from "lucide-react";
@@ -229,10 +228,6 @@ export function CkpAttestationCard({
             <p className="font-medium">
               {employee.attestationDate || tCommon("notSpecified")}
             </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("role")}</p>
-            <Badge variant="outline">{employee.role}</Badge>
           </div>
         </div>
       </CardContent>
