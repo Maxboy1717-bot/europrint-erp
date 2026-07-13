@@ -35,6 +35,7 @@ export const employeeSchema = z.object({
   housingType: z.string().optional(),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
+  geoConsent: z.boolean().optional(),
 });
 
 export type EmployeeFormData = z.infer<typeof employeeSchema>;
@@ -70,6 +71,7 @@ export interface EmployeeDialogProps {
     profileImageUrl?: string;
     latitude?: number;
     longitude?: number;
+    geoConsent?: boolean;
   };
 }
 

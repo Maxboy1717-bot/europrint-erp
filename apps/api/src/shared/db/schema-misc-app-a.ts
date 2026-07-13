@@ -73,6 +73,7 @@ export const hrEmployees = pgTable('employees', {
   address_actual:              text('address_actual'),
   lat:                         decimal('lat', { precision: 9, scale: 6 }),
   lng:                         decimal('lng', { precision: 9, scale: 6 }),
+  geo_consent:                 boolean('geo_consent').default(false),
   // hr-employees-orphan-fields (2026-07-13): EmployeeDialog.tsx form fields that had no
   // matching column — see apps/api/src/shared/db/migrations/hr-employees-orphan-fields-2026-07-13.sql
   shift:               varchar('shift'),

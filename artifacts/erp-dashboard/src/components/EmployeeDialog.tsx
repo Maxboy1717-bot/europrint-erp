@@ -89,6 +89,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
       housingType: "",
       latitude: "",
       longitude: "",
+      geoConsent: false,
     },
   });
 
@@ -142,6 +143,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         housingType: employee.housingType || "",
         latitude: employee.latitude?.toString() || "",
         longitude: employee.longitude?.toString() || "",
+        geoConsent: employee.geoConsent ?? false,
       });
       
       // Xodim'ning barcha biriktirilgan funksiyalari (rahbar + ishlovchi)
@@ -180,6 +182,7 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
         housingType: "",
         latitude: "",
         longitude: "",
+        geoConsent: false,
       });
       setPreviewUrl(null);
       setSelectedFile(null);
