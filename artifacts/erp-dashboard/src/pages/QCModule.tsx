@@ -38,11 +38,11 @@ import { EPErrorState, EPPageHeader, EPLoader } from "@/components/ep";
 // ─── Route → initial tab ──────────────────────────────────────────────────────
 
 function getInitialTab(location: string): string {
-  // Standards (Normalar) tab — explicit URL hint
+  // Standards (Normalar) tab — explicit URL hint (routed directly, not via redirect —
+  // see QC_ROUTES in ProductionRoutes.tsx)
   if (location.includes("/qc/standards")) return "standards";
   if (location.includes("/qc/ai-analysis")) return "ai_analysis";
-  // /qc/tests va /qc/parameters — fizik tab default
-  // /qc-module — eskirgan, fizik tab default
+  // /qc/tests (Material Testlari) va /qc-module — fizik tab default
   return "physical";
 }
 
@@ -150,7 +150,7 @@ export default function QCModule() {
     onError: (error: Error) => toast({ title: tCommon("error"), description: error.message, variant: "destructive" }),
   });
 
-  const parameters = parametersData?.grouped ?? {};
+  const parameters = parametersData ?? {};
   const orders = (Array.isArray(ordersData) ? ordersData : []) as PapkaOrder[];
   const materials = (Array.isArray(materialsData) ? materialsData : []) as MaterialCard[];
   const tests = (Array.isArray(testsData) ? testsData : []) as QcMaterialTest[];
