@@ -56,6 +56,7 @@ import {
 } from './feature-modules';
 import { DocumentControlModule } from './common/document-control/document-control.module';
 import { ErpDocumentsModule } from './modules/erp-documents/erp-documents.module';
+import { ErpSpreadsheetsModule } from './modules/erp-spreadsheets/erp-spreadsheets.module';
 
 @Module({
   imports: [
@@ -127,6 +128,7 @@ import { ErpDocumentsModule } from './modules/erp-documents/erp-documents.module
     // ── Document Control (cross-cutting leak-prevention layer, owner 2026-07-13) ──
     DocumentControlModule,
     ErpDocumentsModule, // erkin hujjatlar — consumes DocumentControlModule
+    ErpSpreadsheetsModule, // jadvallar — consumes DocumentControlModule
 
     // ── Core Modullar (24 ta) ─────────────────────────────────────────────────
     AuthModule,
