@@ -155,6 +155,19 @@ export const careerPathSteps = pgTable("career_path_steps", {
 // apps/api/src/shared/db/schema-business-c-2-misc.ts.
 
 // ─── Employee Skill Scores ────────────────────────────────────────────────────
+/**
+ * @deprecated FROZEN 2026-07-13. Was the sole backing table for
+ * `hr/skills-matrix/skills-matrix.repository.ts` (catalog/employee/score/
+ * gap-analysis/team endpoints), which had zero FE consumers (grep-verified:
+ * no page calls /api/hr-v2/skills-matrix/*) and duplicated `employee_skills`
+ * (the canonical, FE-wired, MES/Director-wired per-employee skill table —
+ * see schema-misc-app-b.ts:104-110 for the earlier skills/user_skills
+ * convergence this follows). That repository was repointed to
+ * `employee_skills` (which the live DB already carries current_level/
+ * skill_code/required_level columns for). 0 rows at time of freeze — nothing
+ * to migrate. Kept (not dropped) per convergence policy; do not add new
+ * consumers — use employee_skills.
+ */
 export const employeeSkillScores = pgTable(
   "employee_skill_scores",
   {

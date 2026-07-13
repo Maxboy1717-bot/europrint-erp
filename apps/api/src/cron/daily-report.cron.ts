@@ -51,11 +51,18 @@ export class DailyReportCron {
       }
 
       await db.insert(hr_daily_reports).values(
+        // Bug fixed: 'absent' is NOT a valid `status` value — it violates the canonical
+        // hr_daily_reports_status_chk CHECK constraint (only 'draft'|'submitted'|
+        // 'approved'|'rejected' are allowed). This insert is a batch (one row per absent
+        // employee) — a single CHECK violation would fail the whole batch, silently
+        // skipping every absent employee for the day. `isAutoAbsent: true` already carries
+        // the real "no report submitted" signal (matches what the FE renders); `status`
+        // just stays at the column's own default meaning ('draft' — never submitted).
         (Array.isArray(activeEmps) ? activeEmps : []).map(e => ({
           employeeId: e.id,
           reportDate: today,
           tasksCompleted: '',
-          status: 'absent',
+          status: 'draft',
           isAutoAbsent: true,
         })),
       ).onConflictDoNothing()

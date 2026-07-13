@@ -194,7 +194,17 @@ export async function execDailyReportMarkAbsent(today: string): Promise<void> {
       employeeId: emp.id,
       reportDate: today,
       tasksCompleted: '',
-      status: 'absent',
+      // Bug fixed: 'absent' is NOT a valid value for `status` — the canonical schema's
+      // hr_daily_reports_status_chk CHECK constraint (lib/db/src/schema/hr-v2-schema.ts)
+      // only allows 'draft' | 'submitted' | 'approved' | 'rejected'. Writing 'absent' here
+      // would violate that constraint the moment it's applied to the live DB, aborting
+      // this INSERT (and, since this loop has no per-row try/catch, every remaining
+      // employee in the same 16:00 cron run too — "silently fails on every run").
+      // Absence is already tracked correctly via `isAutoAbsent` below; the FE never reads
+      // `status === 'absent'` (it renders the "yo'qlik" badge off `is_auto_absent`), so
+      // 'draft' (the column's own default) is both safe and semantically correct: no
+      // report was ever actually submitted.
+      status: 'draft',
       isAutoAbsent: true,
     }).onConflictDoNothing();
   }

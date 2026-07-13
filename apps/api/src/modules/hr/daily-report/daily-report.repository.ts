@@ -44,10 +44,17 @@ export class DailyReportRepository {
       }, 'DB_ERROR');
   }
 
-  async updateReportStatus(reportId: number, newStatus: string): Promise<Result<Row | null>> {
+  async updateReportStatus(reportId: number, newStatus: string, isAutoAbsent?: boolean): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const rows = await db.update(hr_daily_reports)
-        .set({ status: newStatus, updatedAt: _time.now() })
+        .set({
+          status: newStatus,
+          updatedAt: _time.now(),
+          // Only touch is_auto_absent when the caller actually passed a value — an HR
+          // override that just changes status (e.g. approve/reject) shouldn't silently
+          // clear or set the absence flag as a side effect.
+          ...(isAutoAbsent !== undefined ? { isAutoAbsent } : {}),
+        })
         .where(eq(hr_daily_reports.id, reportId))
         .returning();
       return castTo<Row | null>((rows[0] ?? null));
