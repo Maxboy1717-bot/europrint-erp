@@ -366,6 +366,22 @@ Bu bo'lim ikkala moduldagi bir xil ildiz-sabab bo'yicha takrorlanadigan muammola
 7. **Ikki-olam kanonik jadval** (§2.2) — `org_departments` vs `org_functions` parallel yashashi
    HR-side (`org_functions`ga keyed Payroll/RBAC) va Org-side (`org_departments`ga keyed FE) ni
    bir-biridan uzib qo'yadi — istalgan yangi HR yoki Org featuri ikkalasini ham hisobga olishi kerak.
+8. **`employees.user_id` = 30/30 — HAMMASI NULL** — xodim↔login-akkaunt identifikatsiyasi
+   uzilgan. Bu CC (Coordination Center)ning `MANAGER_OF_SENDER`/`POSITION:<CODE>` resolverlarini
+   va Telegram-guruh qidiruvini buzadi — ikkala modul ham shu bog'lanishga tayanadi
+   (`docs/agent12-hr-orgsxema-2026-06-02.md:279-290`).
+9. **`workflow_rules` (gorizontal hujjat-marshrut) jadvali umuman mavjud emas** — bu ham Org
+   primitivi (bo'limlar aro avto-marshrut), ham HR primitivi (ta'til/avans/komandirovka tasdiq
+   marshruti). Hozir uning o'rnini `cc_workflow_steps` (34 qator, **hardcoded**, jadval emas)
+   bosib turibdi (`docs/audit/org-study-2026-06-07.md:191-192`; `vision/_parts/02-hr.md:35`).
+10. **PII/oylik-maxfiylik ikkala tomonda ham ochiq** — HR: `EmployeeProfile.tsx:321` har
+    qanday ko'rувchiga xom oylikni ko'rsatadi; Org: `findOne` node-endpoint to'liq ma'lumotni
+    field-filtrsiz qaytaradi — bu §2.8/§4.7dagi field-RBAC muammosining aniq amaliy ko'rinishi.
+11. **Portret wizard — ikki audit bir-biriga zid xulosaga kelgan** — HR-nuqtai-nazardan
+    (`docs/hr-module-deep-audit-2026-05-28.md:178-182`) backend **STUB** (GET `{portret:null}`,
+    POST DB'ga yozmaydi); Org-nuqtai-nazardan (`docs/ui5-hr-orgsxema-ui-2026-06-02.md:82-93`)
+    "TO'LIQ ULANGAN, real JSONB persist" deb da'vo qilinadi — bir kunlik ikkita hujjat orasidagi
+    **hal qilinmagan ziddiyat**, jonli tekshiruv talab qiladi.
 
 ---
 
@@ -389,17 +405,123 @@ o'tadi (chunki mexanizm allaqachon qurilgan, faqat data/flag/ulanish yetishmayap
 
 ---
 
-## Manba fayllar (to'liq ro'yxat)
+## 7. HR — sahifa-darajali chuqur audit (28-sahifa, 2026-05-28) — qo'shimcha aniq xatolar
 
+Bo'lim 4dagi tematik xulosalarga qo'shimcha — bu yerda **har bir HR sahifa** alohida tekshirilgan
+(`docs/hr-module-deep-audit-2026-05-28.md`, 2026 qatorlik chuqur audit). Faqat eng jiddiy/konkret
+buglar (fayl:satr bilan) keltirilgan — to'liq ro'yxat manba faylda.
+
+| Sahifa | Bahо | Jiddiy xato |
+|---|---|---|
+| HR Xarita (Map) | ~40%, BUZUQ | BE SELECT `lat/lng` ustunlarini o'z ichiga olmaydi → xarita production'da **butunlay bo'sh** ko'rinadi (:282-360) |
+| Xodimlar (Employees) | ~75% | DELETE tugmasi uchun **BE handler yo'q** (404 qaytaradi, lekin FE "o'chirildi" toast ko'rsatadi); `base_salary` ustuni `text` turida; 10 ta orphan forma-maydon DB ustunisiz (:630-736) |
+| AI HR Dashboard | ~45%, HIGH | Asosiy "AI vazifani ishga tushirish" tugmasi **mavjud bo'lmagan route**ga uradi (404 natija sifatida ko'rsatiladi) (:762-843) |
+| Bildirishnomalar | ~30%, 🚫 | Schema mos kelmasligi tufayli **Saqlash tugmasi hech narsa saqlamaydi** (:1114-1190) |
+| Ta'til va Kasallik | ~40%, ❌ | Contract mos kelmasligi → POST doim 400; `EMPLOYEE` roli ariza topshira olmaydi (chiqarib tashlangan) (:1308-1386) |
+| Xodim Baholash (360°) | ~25%, 🚫 | DB ustun-nomi drift (`period_year` vs `rating_year`) — kod yo'li **hech qachon** ishga tushmaydi; sahifa `@deprecated` lekin hamon routed (:1402-1480) |
+| Ko'nikmalar Matritsasi | ~25%, 🚫 | 7 tadan 5 ta endpoint sof soxta (`{id:Date.now(),created:true}`); **4 ta** bir-biriga mos kelmaydigan skill-schema parallel yashaydi (:1498-1590) |
+| Referral Tizimi | **~10%, ENG PAST** | Maxsus jadval **umuman yo'q** — `findReferrals` aslida `employees` jadvalini so'raydi; POST sof stub; PATCH endpoint mavjud emas (:2079-2163) |
+| Kasbiy O'sish (Career Path) | ~20%, ❌ | Jiddiy maydon-nom mos kelmasligi — POST doim 400; mavjud qatorlar hamma joyda "—" ko'rinadi (:1673-1744) |
+| Reception | ~50% | 4 ta statistika-kartadan 3 tasi doim 0 ko'rsatadi; auto-checkout cron **o'zining DB CHECK constraint'ini buzadi** (har ishga tushishda jim xato) (:1976-2052) |
+| Smena Jadvali | ~75% | `approveSwap` `action` maydonini e'tiborsiz qoldiradi — **rad tugmasi tasdiqlash bilan bir xil ishlaydi** (:1012-1098) |
+| Maqsadlar (Goals) | ~70% | FE PATCH yuboradi, BE faqat PUT qabul qiladi — yangilash **jimgina** ishlamaydi; `OPERATOR` roli maqsadlarni o'chira oladi (:917-1003) |
+| Mentorlik | — | BE rahbarlar *directory*sini modellashtiradi, FE juftlik (pairing)ni — create **doim 400** |
+| Kunlik Hisobot | ~70% | HR-override contract buzilgan (maydonlar jimgina tashlab yuboriladi); PDF shrifti kirill harflarini render qila olmaydi; `empId\|\|1` identifikatsiya-soxtalashtirish bugi (:1878-1951) |
+| HR Brend | ~65% | Javob-envelope mos kelmasligi → birinchi yuklashda forma doim bo'sh; `company_id='default'` hardcoded (multi-tenant blocker) (:2170-2247) |
+| Haftalik Reja | ~60% | camelCase/snake_case mos kelmasligi — **mavjud har qanday reja o'qishda bo'sh ko'rinadi**; tasdiq-muddat hisobida 5 soatlik teskari xato (:2266-2353) |
+| Aktivlar | **~85%, ENG YAXSHI** | Bu guruhdagi yagona to'liq ishlaydigan CRUD sahifa (:1204-1287) |
+
+**Strategik xulosa (manba faylning o'zidan):** ~40% buzuq sahifalarning ildiz sababi asosan
+**FE↔BE shartnoma-drift** (javob-envelope shakli + camelCase/snake_case), mantiq yetishmasligi
+emas — bitta umumiy unwrapper/interceptor/mapper tuzatilsa 6-8 sahifa bir yo'la tuzaladi.
+`lib/api-spec`/`api-zod`/`api-client-react` paketlari **mavjud, lekin bo'sh/ishlatilmagan**
+(:2710-2716). Bundan tashqari: xavfsizlik teshigi — `discipline-records-compat`,
+`mentorships-compat`, `goals-compat` kontrollerlarida `@UseGuards(RolesGuard)` bor, lekin
+**`@Roles()` dekoratori umuman yo'q** — har qanday autentifikatsiyalangan foydalanuvchi kira oladi
+(:2574-2579).
+
+---
+
+## 8. Org — fazalar-hujjatlari (Phase1/4/6/7) DDL va kanonik-jadval ziddiyatlari
+
+Bo'lim 2dagi topilmalarga qo'shimcha — 2026-06-08 kunlik 4 ta chuqur faza-hujjat (`ORG-PHASE1/4/6/7`)
+alohida DDL-darajadagi bloklovchi qarorlarni aniqladi:
+
+- **Phase 1 — kanonik jadval yo'nalishi TESKARI bo'ldi bir kun ichida:** ertalabki audit
+  (`ORG-RE-AUDIT`) `positions`ni kanonik deb tavsiya qildi ("boyroq ustunlar" asosida); kechqurungi
+  audit (`ORG-PHASE1-MIGRATION-FINDING`) jonli FK-dalil bilan buni **teskari** qildi —
+  `org_functions` 28 jadvaldan 29 ta real FK qabul qiladi, `positions` esa 0 ta. Bundan tashqari
+  `org_functions.id=1` va `positions.id=1` **butunlay boshqa** obyektlarni bildiradi ("Bosh
+  direktor" vs "Egasi") — qatorlar mos kelmaydi (`:8-30`).
+- **Phase 4 — imtihon infratuzilmasi "qayta qurish emas, qayta ishlatish":** AI-imtihon =
+  `ai_exam_attempts`, rasmiy imtihon = `lms_exams`, sertifikat = `certificates`, savol-bank =
+  `hr_question_bank` — yangi `org_exams`/`org_certificates` jadval KERAK EMAS (`:26-48`). Barcha
+  jadvallar 0 qator — qurilish bosqichida.
+- **Phase 6 — M:N karta-model qurilishini 4 ta qaror bloklaydi:**
+  - Oylik-manba yo'q (yagona `salary` ustuni yo'q, faqat min/max range, ikkalasi ham 100% NULL);
+  - **≤1-faol-xodim qoidasi jonli DATA'da BUZILGAN** — 10 ta karta 2-3 ta faol xodimga ega
+    (memory "3 karta" deb yozgan edi — bu **kam baholash**, haqiqiy son 10ta) (`:10-19`);
+  - "Atomik guard" (`card.service.ts canAssignEmployee`) faqat **ilova darajasida maslahat**
+    xarakterida — hech qanday yozuv-yo'li uni chaqirmaydi, DB unique-index yo'q (`:38-41`);
+  - Payroll dvigateli faqat `payroll_contracts`ni o'qiydi (0 qator) — `employees.base_salary`
+    yoki `org_functions`ni HECH QACHON o'qimaydi; 14 ta payroll/salary jadval — HAMMASI bo'sh;
+    "kartalar bo'yicha yig'indi" formulasi hech qayerda amalga oshirilmagan (`:98-101`).
+- **Phase 7 — vakansiya-yaratish bugi + i.o. greenfield:**
+  `DrizzleHrVacanciesRepository.create()` **ataylab** `org_function_id`/`priority`/
+  `number_of_positions`/`open_positions`/`closing_date` maydonlarini insert paytida tashlab
+  yuboradi — shuning uchun "Vakant" tab (to'g'ri o'qiydigan) doim bo'sh ko'rinadi (`:35-39`).
+  Acting/i.o. konsepsiyasi bu fazagacha DB yoki kodda **umuman mavjud emas edi** — to'liq
+  greenfield sifatida qurilgan (`:58-59`). FORMULA-A (oylik yig'indisi) **3 ta alohida joyda**
+  qaytadan yozilgan — lockstep-edit xavfi (`:76-84,127-133`).
+
+### 8.1 Meta-topilma — audit hujjatlarining o'zida "ikki xulosa" (twin-conflict)
+Kengaytirilgan tadqiqot shuni aniqladi: bir xil EP-ORG-ID **bir xil hujjat ichida** ikki marta
+tekshirilib, ikki xil xulosaga kelingan holatlar bor — bu tasodifiy xato emas, balki ikki
+mustaqil audit-o'tish (pass) natijasi:
+- Karta-shablon qo'llash mexanizmi: 01.15 "✅ bor" vs 01.57 "🟡 qisman" (bir xil ID, bir xil hujjat).
+- Vakansiya-ustuvorlik ustuni: 01.31 "bor" vs 01.73 "qisman".
+- Import xato-boshqaruvi: 01.34 "bor" vs 01.76 "yo'q".
+- ЦКП hisobot-muddati: ba'zi joyda 16 soat, boshqasida 3 soat (§2.5/§2.9da ham qayd etilgan).
+- Eskalatsiya-sakrash: Q22 "sakrash yo'q" vs Q38 "max 3 sakrash" (§2.9dan ham).
+- Vakant-karta rangi: vizyon "kulrang" so'ragan, kod qizil-punktir ko'rsatadi.
+- Kanonik-jadval tavsiyasi **bir kun ichida teskari bo'ldi** (yuqoridagi Phase-1 topilmasi).
+
+**Amaliy xulosa:** kelgusi audit/tekshiruv ishlarida bitta hujjatning o'zidagi ikkita xulosani
+"ikkalasi ham to'g'ri" deb qabul qilmaslik kerak — qaysi audit-pass so'nggi/aniqroq ekanini
+jonli kod/DB bilan qayta tekshirish talab qilinadi.
+
+---
+
+## Manba fayllar (to'liq ro'yxat — 2 bosqichli tadqiqot: qo'lda o'qilgan asosiy 4 + agent tomonidan 36 fayl)
+
+**Asosiy (qo'lda o'qilgan, §1-6 negizi):**
 - `docs/vision/_parts/01-org-kartalar.md` — Org 50 qaror + 10 ochiq savol (2026-06-08)
 - `docs/vision/_parts/02-hr.md` — HR 50 qaror + 13 ochiq savol (2026-06-08)
 - `docs/audit/VIZYON-TEKSHIRUV-2026-06-27/01-org-kartalar.md` — Org 143-savolli mustaqil verify
 - `docs/audit/VIZYON-TEKSHIRUV-2026-06-27/02-hr.md` — HR 82-savolli mustaqil verify
 - `docs/audit/OPEN-OWNER-QUESTIONS-CONSOLIDATED-2026-07-11.md` — eng so'nggi konsolidatsiya (#1 head_user_id)
+
+**Qo'shimcha (§7-8 negizi, fon-agent tomonidan o'qilgan):**
+- `docs/ORG-KARTA-MODEL-SPEC-2026-06-07.md`, `docs/ORG-PHASE1-MIGRATION-FINDING-2026-06-08.md`,
+  `docs/ORG-PHASE4-EXAM-REAUDIT-2026-06-08.md`, `docs/ORG-PHASE6-EMP-CARD-REAUDIT-2026-06-08.md`,
+  `docs/ORG-PHASE7-REAUDIT-2026-06-08.md`, `docs/ORG-RE-AUDIT-2026-06-08.md`,
+  `docs/org-structure-current-state-2026-06-04.md`, `docs/audit/org-study-2026-06-07.md`,
+  `docs/audit/org-vision-analysis-2026-06-07.md`, `docs/audit/KARTALAR-JAVOBLAR-IMPACT-2026-06-08.md`,
+  `docs/audit/ORGSXEMA-INTERVYU-VS-HOLAT-2026-06-25.md`,
+  `docs/audit/FINANCE-SOD-ORGCHART-READINESS-2026-07-06.md`,
+  `docs/audit/ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06.md`,
+  `docs/audit/ORGCHART-PERMISSION-READINESS-FULL-2026-07-06.md`,
+  `docs/audit/MUSLIMBEK-PROMT-02-ORG-BUILD-2026-06-08.md`, `docs/audit/MUSLIMBEK-PROMT-11-HR-2026-06-08.md`,
+  `docs/audit/MUSLIMBEK-PROMT-ORG-RAZRYAD-FIX-2026-06-17.md`, `docs/EMPLOYEES_MODULE_AUDIT.md`,
+  `docs/EMPLOYEES_MODULE_FIX_PLAN.md`, `docs/HR_MODULE_COMPLETE_AUDIT.md`,
+  `docs/HR_PRODUCTION_AGENT_PROMPT.md`, `docs/hr-module-audit.md`, `docs/hr-module-deep-audit-2026-05-28.md`,
+  `docs/hr-progress-phase8.md`, `docs/hr-progress.md`, `docs/modul11-hr-FULL-2026-06-03.md`,
+  `docs/agent12-hr-orgsxema-2026-06-02.md`, `docs/ui5-hr-orgsxema-ui-2026-06-02.md`,
+  `docs/_ui-codescan-5-hr.md`, `docs/vision/_parts/V-01-org.md`, `docs/vision/_parts/V-02-hr.md`,
+  `docs/vision/_parts/I4-orgsxema.md`, `docs/vision/_parts/_archive/{B01,B-01}-org.md`,
+  `docs/vision/_parts/_archive/{B02,B-02}-hr.md`
 - `docs/audit/CARD-ATTRIBUTES-REQUEST.md` — 93-lavozim × 4-atribut bo'sh varaq (egasi-DATA)
-- `docs/ORG-KARTA-MODEL-SPEC-2026-06-07.md` — Karta model spetsifikatsiyasi
 - `docs/audit/MASSIV-100/` — 12-fazali karta-markazli execution reja (PHASE-01..10)
-- `docs/audit/ORGSXEMA-INTERVYU-VS-HOLAT-2026-06-25.md` — Interview vs holat
 - Memory: `project_org_card_centric_model`, `project_org_structure_vysotskiy7`,
   `project_karta_vizyon_spec_2026_06_25`, `project_massiv_100_complete_2026_06_25`,
   `project_ijro_reja_99_agent_2026_06_25`, `project_hr_massive_build_2026_06_18`,
@@ -407,6 +529,8 @@ o'tadi (chunki mexanizm allaqachon qurilgan, faqat data/flag/ulanish yetishmayap
 
 ---
 
-*Tuzilgan: 2026-07-13. Rol: faqat konsolidatsiya (read-only tahlil) — hech qanday kod/DB
+*Tuzilgan: 2026-07-13, ikki bosqichda. 1-bosqich: qo'lda 4 ta asosiy manba o'qildi, §1-6 yozildi,
+commit `2bdb37f6`. 2-bosqich: fon-agent 36 faylni chuqurroq skanerlab qaytardi (§7-8 + §5.8-11
+shu asosda qo'shildi). Rol: faqat konsolidatsiya (read-only tahlil) — hech qanday kod/DB
 o'zgartirilmadi. Hech qanday raqam/savol to'qib chiqarilmagan — har bir band yuqoridagi manba
 fayllarga bevosita asoslangan.*
