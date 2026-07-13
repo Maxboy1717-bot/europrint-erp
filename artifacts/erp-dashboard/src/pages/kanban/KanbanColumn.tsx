@@ -9,6 +9,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus, AlertTriangle, Clock, Trash2, Pencil } from "lucide-react";
 import { SortableTaskCard } from "./KanbanCard";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { CardWithOwner } from "./kanban-types";
 import type { KanbanColumn as KanbanColumnType } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -85,6 +86,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
   const qc = useQueryClient();
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(column.name ?? "");
+  const [confirmDeleteColumn, setConfirmDeleteColumn] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { if (renaming) inputRef.current?.focus(); }, [renaming]);
@@ -222,10 +224,7 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
           </button>
 
           <button
-            onClick={() => {
-              if (window.confirm(`"${column.name}" ustunini o'chirasizmi? Barcha kartalar ham o'chadi.`))
-                onDeleteColumn(String(column.id));
-            }}
+            onClick={() => setConfirmDeleteColumn(true)}
             title={t("ustunniOchirish")}
             data-testid={`button-delete-column-${column.id}`}
             style={{
@@ -326,6 +325,17 @@ export function KanbanColumn({ column, cards, onCardClick, onAddCard, onDeleteCo
           )}
         </SortableContext>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteColumn}
+        onOpenChange={setConfirmDeleteColumn}
+        title={t("ustunniOchirish")}
+        description={`"${column.name}" ustunini o'chirasizmi? Barcha kartalar ham o'chadi.`}
+        confirmText="O'chirish"
+        cancelText="Bekor qilish"
+        variant="destructive"
+        onConfirm={() => { setConfirmDeleteColumn(false); onDeleteColumn(String(column.id)); }}
+      />
     </div>
   );
 }
