@@ -1012,4 +1012,61 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'kanban_cards.comment_flag column (owner 4-field request 2026-07-13)',
     sql: `ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS comment_flag BOOLEAN NOT NULL DEFAULT false`,
   },
+  // Owner decision 2026-07-13 (chat): the "orders" Kanban board must have exactly these 7
+  // columns in this exact order: Navbatda -> Flekso -> Yuqori bosma -> Kesish/Vysechka ->
+  // Kashirovka -> Qadoqlash -> Tayyor. Applies to the EXISTING orders board, not a new/separate
+  // board concept. kanban_boards and kanban_columns were BOTH EMPTY (0 rows, verified live
+  // 2026-07-13 — post the 2026-07-11 full company reset). OrderCreatedKanbanHandler ->
+  // KanbanCardsRepository.createKanbanForOrder() (kanban-cards.repo.ts) already runs on every
+  // new sales order and looks for a board matching type='sales' OR
+  // name ILIKE '%buyurtma%'/'%order%'/'%sotuv%', then drops a card into that board's first
+  // (lowest sort_order) column — with zero boards it has been silently no-op'ing (logs a warn,
+  // never blocks order creation, by design). This seeds exactly the board+columns that lookup
+  // already expects, closing the gap without touching that repo code. Column labels reused
+  // verbatim from taxonomy_entries (category='kanban_stage', sort_order 1-7, already seeded by
+  // taxonomy-seed-2026-07-11.sql) — no re-invented wording (Q-40). Both INSERTs are idempotent
+  // (re-run every boot per ensureSchemaAdditions — no migrations-tracking table): the board
+  // insert only fires if no board already matches createKanbanForOrder()'s own lookup predicate;
+  // the columns insert only fires for the exact 'Buyurtmalar'/'sales' board and only while it has
+  // zero active columns.
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/kanban-buyurtmalar-board-2026-07-13.sql.
+  {
+    name: 'kanban_boards Buyurtmalar orders-board seed (7-stage, owner 2026-07-13)',
+    sql: `
+      INSERT INTO kanban_boards (name, type, description)
+      SELECT
+        'Buyurtmalar',
+        'sales',
+        'Standart 7 bosqichli buyurtma ishlab chiqarish oqimi: Navbatda -> Flekso -> Yuqori bosma -> Kesish/Vysechka -> Kashirovka -> Qadoqlash -> Tayyor.'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM kanban_boards
+        WHERE deleted_at IS NULL
+          AND (type = 'sales' OR name ILIKE '%buyurtma%' OR name ILIKE '%order%' OR name ILIKE '%sotuv%')
+      )
+    `,
+  },
+  {
+    name: 'kanban_columns Buyurtmalar 7-stage seed (owner 2026-07-13)',
+    sql: `
+      INSERT INTO kanban_columns (board_id, name, sort_order, color)
+      SELECT b.id, v.name, v.sort_order, v.color
+      FROM kanban_boards b
+      CROSS JOIN (VALUES
+        ('Navbatda',        0, '#A0AEC0'),
+        ('Flekso',          1, '#5B9BD5'),
+        ('Yuqori bosma',    2, '#F5C96A'),
+        ('Kesish/Vysechka', 3, '#A78BFA'),
+        ('Kashirovka',      4, '#F6AD55'),
+        ('Qadoqlash',       5, '#6DC5A0'),
+        ('Tayyor',          6, '#48BB78')
+      ) AS v(name, sort_order, color)
+      WHERE b.name = 'Buyurtmalar'
+        AND b.type = 'sales'
+        AND b.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM kanban_columns kc WHERE kc.board_id = b.id AND kc.deleted_at IS NULL
+        )
+    `,
+  },
 ];
