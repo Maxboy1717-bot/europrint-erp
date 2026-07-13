@@ -10,11 +10,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Save, ArrowLeft, Check } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Check, Share2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { tLabel } from '@/lib/i18n/tLabel';
 import { RichTextEditor } from '@/components/document-control/RichTextEditor';
+import { SendToCcModal } from './SendToCcModal';
 
 interface ErpDoc {
   id: string;
@@ -49,6 +50,7 @@ export default function ErpDocumentEditor() {
   const [content, setContent] = useState<Record<string, unknown> | null>(null);
   const [contentHtml, setContentHtml] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [showSendCc, setShowSendCc] = useState(false);
 
   const docQ = useQuery<ErpDoc>({
     queryKey: [`/api/erp-documents/${id}`],
@@ -123,6 +125,16 @@ export default function ErpDocumentEditor() {
             </span>
           </div>
         </div>
+        {id && (
+          <button
+            onClick={() => setShowSendCc(true)}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-[var(--ep-border)] text-[var(--ep-text)] text-sm font-medium hover:bg-[var(--ep-bg)] shrink-0"
+            title={tLabel('documents.sendViaCc', 'CC orqali yuborish')}
+          >
+            <Share2 className="w-4 h-4" />
+            {tLabel('documents.sendViaCc', 'CC orqali yuborish')}
+          </button>
+        )}
         <button
           onClick={() => title.trim() && save.mutate()}
           disabled={!title.trim() || save.isPending}
@@ -132,6 +144,8 @@ export default function ErpDocumentEditor() {
           {tLabel('documents.save', 'Saqlash')}
         </button>
       </div>
+
+      {id && <SendToCcModal erpDocumentId={id} open={showSendCc} onClose={() => setShowSendCc(false)} />}
 
       <RichTextEditor
         value={content}
