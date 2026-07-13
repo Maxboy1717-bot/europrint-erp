@@ -156,7 +156,9 @@ export class HrEmployeesController {
   async createEmployee(@Body() body: HrCreateEmployeeDto, @CurrentUser() _user: AuthenticatedUser) {
     const result = await this.hrRepo.saveEmployee({
       ...body,
-      employeeCode: body.employeeCode ?? `EMP-${Date.now()}`,
+      // Bug #3 fix: prefer the user-entered code (employeeCode, or the FE's
+      // `employeeId` field alias) over the auto-generated fallback.
+      employeeCode: body.employeeCode ?? body.employeeId ?? `EMP-${Date.now()}`,
       createdAt:    _time.now(),
       updatedAt:    _time.now(),
     });
@@ -205,9 +207,10 @@ export class HrEmployeesController {
     assertOk(existing);
     if (!existing.data) throw new NotFoundException(await this.i18n.t('errors.employeeNotFoundWithId', { args: { id } }));
     const result = await this.hrRepo.updateEmployee(String(id), {
-      status:           'terminated',
+      status:            'terminated',
       employment_status: 'terminated',
-      deleted_at:       _time.now().toISOString(),
+      deleted_at:        _time.now().toISOString(),
+      is_active:         false,
     });
     assertOk(result);
     return { success: true, message: "Xodim o'chirildi", deletedBy: user?.id ?? null };

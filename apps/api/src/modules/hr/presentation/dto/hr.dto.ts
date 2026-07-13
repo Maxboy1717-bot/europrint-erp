@@ -184,6 +184,7 @@ export const HrHazardZoneSchema = z.object({
   maxOccupancy:  z.number().int().positive().optional(),  // camelCase alias
   location:      z.string().optional(),           // FE uses this
   hazardType:    z.string().optional(),           // FE uses this
+  description:   z.string().optional(),           // FE uses this (HR Nazorat fix 2026-07-13)
 }).passthrough();
 export type HrHazardZoneDto = z.infer<typeof HrHazardZoneSchema>;
 
@@ -211,6 +212,11 @@ export const HrCreateEmployeeSchema = z.object({
   departmentId:     z.string().optional(),
   positionId:       z.string().optional(),
   employeeCode:     z.string().optional(),
+  // EmployeeDialog.tsx (FE Add-Employee form, "Tabel raqami" field) posts this key,
+  // not `employeeCode` — accept it explicitly so the user-entered value isn't
+  // silently discarded and replaced by the auto-generated EMP-<timestamp> fallback
+  // in HrEmployeesController.createEmployee() (bug #3 fix, 2026-07-13).
+  employeeId:       z.string().optional(),
   hireDate:         z.string().optional(),
   salary:           z.number().positive().optional(),
   employmentStatus: z.string().optional(),
@@ -223,6 +229,8 @@ export const HrUpdateEmployeeSchema = z.object({
   middleName:       z.string().max(MAX_NAME_LENGTH).optional(),
   departmentId:     z.string().optional(),
   positionId:       z.string().optional(),
+  employeeCode:     z.string().optional(),
+  employeeId:       z.string().optional(),  // FE alias, see HrCreateEmployeeSchema note
   hireDate:         z.string().optional(),
   salary:           z.number().positive().optional(),
   employmentStatus: z.string().optional(),

@@ -26,7 +26,6 @@ export const employeeSchema = z.object({
   hireDate: z.string().optional(),
   address: z.string().optional(),
   attestationDate: z.string().optional(),
-  age: z.string().optional(),
   gender: z.string().optional(),
   childrenCount: z.string().optional(),
   maritalStatus: z.string().optional(),
@@ -61,7 +60,6 @@ export interface EmployeeDialogProps {
     hireDate?: string;
     address?: string;
     attestationDate?: string;
-    age?: number;
     gender?: string;
     childrenCount?: number;
     maritalStatus?: string;
