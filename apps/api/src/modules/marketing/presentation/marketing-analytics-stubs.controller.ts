@@ -345,8 +345,8 @@ export class MarketingAnalyticsStubsController {
   async getInboxConversations(@Query('platform') platform?: string, @Query('status') status?: string) {
     const data = rows(await db.execute(sql`
       SELECT * FROM social_conversations
-      WHERE (${platform ?? null} IS NULL OR platform=${platform ?? null})
-        AND (${status ?? null} IS NULL OR status=${status ?? null})
+      WHERE (${platform ?? null}::text IS NULL OR platform=${platform ?? null}::text)
+        AND (${status ?? null}::text IS NULL OR status=${status ?? null}::text)
       ORDER BY last_message_at DESC NULLS LAST
       LIMIT 50
     `));
