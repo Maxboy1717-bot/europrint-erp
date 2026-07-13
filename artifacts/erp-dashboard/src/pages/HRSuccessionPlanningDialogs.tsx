@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import type { NewPlanForm } from "./HRSuccessionPlanningTypes";
 import { useTranslation } from '@/lib/i18n';
@@ -19,10 +20,12 @@ interface NewPlanDialogProps {
   onFormChange: (updater: (f: NewPlanForm) => NewPlanForm) => void;
   isPending: boolean;
   onSubmit: () => void;
+  /** Real positions list (/api/hr/positions) — target position the candidate is being groomed for. */
+  positions?: Record<string, unknown>[];
 }
 
 export function NewPlanDialog({
-  open, onOpenChange, form, onFormChange, isPending, onSubmit,
+  open, onOpenChange, form, onFormChange, isPending, onSubmit, positions,
 }: NewPlanDialogProps) {
   const { t } = useTranslation("common");
   return (
@@ -45,6 +48,24 @@ export function NewPlanDialog({
               onChange={e => onFormChange(f => ({ ...f, userId: e.target.value }))}
               placeholder={t("xodimIdSi")}
             />
+          </div>
+          <div>
+            <Label>{t("maqsadLavozim1", "Maqsad lavozim")}</Label>
+            <Select
+              value={form.targetPositionId}
+              onValueChange={(value) => onFormChange(f => ({ ...f, targetPositionId: value }))}
+            >
+              <SelectTrigger data-testid="select-plan-target-position">
+                <SelectValue placeholder={t("maqsadLavozim1", "Maqsad lavozim")} />
+              </SelectTrigger>
+              <SelectContent>
+                {(Array.isArray(positions) ? positions : []).map((p) => (
+                  <SelectItem key={String(p.id)} value={String(p.id)}>
+                    {String(p.name ?? p.id)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>{t("maqsadSana1")}</Label>

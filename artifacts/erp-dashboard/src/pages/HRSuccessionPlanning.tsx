@@ -37,6 +37,14 @@ export default function HRSuccessionPlanning() {
     queryKey: ["/api/succession/career-plans"],
   });
 
+  // FIX (2026-07-13): NewPlanDialog had no target-position field at all (targetPositionId
+  // stayed "" forever, so every created plan lost its target position). Load the real
+  // positions list so the dialog can offer an actual Select.
+  const { data: positionsResp } = useQuery<{ data: Record<string, unknown>[] }>({
+    queryKey: ["/api/hr/positions"],
+  });
+  const positions = Array.isArray(positionsResp?.data) ? positionsResp.data : [];
+
   const createPlanMutation = useMutation({
     mutationFn: (data: Record<string, string>) => apiRequest("POST", "/api/succession/career-plans", data),
     onSuccess: () => {
@@ -123,6 +131,7 @@ export default function HRSuccessionPlanning() {
                 onFormChange={setNewPlanForm}
                 isPending={createPlanMutation.isPending}
                 onSubmit={() => createPlanMutation.mutate(newPlanForm as unknown as Record<string, string>)}
+                positions={positions}
               />
             </CardHeader>
             <CareerPlansTab plans={careerPlans} isLoading={plansLoading} />

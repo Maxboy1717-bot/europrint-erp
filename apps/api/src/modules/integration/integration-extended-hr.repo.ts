@@ -9,6 +9,7 @@ import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
+import { EMPLOYEE_RATING_EXCELLENT, EMPLOYEE_RATING_AVERAGE } from '@common/constants/business.constants';
 type Row = Record<string, unknown>;
 const exec = async (q: SQL | SQLWrapper): Promise<Row[]> => {
   return (await runQuery<Row>(q)).rows as Row[];
@@ -39,12 +40,18 @@ export class IntegrationExtendedHrRepository {
     });
   }
 
+  // NOTE (drift): employee_ratings carries two parallel column families —
+  // legacy period_year/period_month (actually populated, see hr-full-seed.sql)
+  // and a newer rating_year/rating_month pair added later via drift-fix
+  // migration but never written by any INSERT path. COALESCE reads whichever
+  // is populated so the filter keeps working regardless of which world wrote
+  // the row.
   findEmployeeRatings(periodYear?: number, periodMonth?: number): Promise<Result<Row[]>> {
     return safeCall(async () =>
       periodYear && periodMonth
-        ? exec(sql`SELECT er.*, e.full_name AS employee_name FROM employee_ratings er LEFT JOIN employees e ON e.id = er.employee_id WHERE period_year = ${periodYear} AND period_month = ${periodMonth} ORDER BY er.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`)
+        ? exec(sql`SELECT er.*, e.full_name AS employee_name FROM employee_ratings er LEFT JOIN employees e ON e.id = er.employee_id WHERE COALESCE(er.period_year, er.rating_year) = ${periodYear} AND COALESCE(er.period_month, er.rating_month) = ${periodMonth} ORDER BY er.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`)
         : periodYear
-        ? exec(sql`SELECT er.*, e.full_name AS employee_name FROM employee_ratings er LEFT JOIN employees e ON e.id = er.employee_id WHERE period_year = ${periodYear} ORDER BY er.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`)
+        ? exec(sql`SELECT er.*, e.full_name AS employee_name FROM employee_ratings er LEFT JOIN employees e ON e.id = er.employee_id WHERE COALESCE(er.period_year, er.rating_year) = ${periodYear} ORDER BY er.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`)
         : exec(sql`SELECT er.*, e.full_name AS employee_name FROM employee_ratings er LEFT JOIN employees e ON e.id = er.employee_id ORDER BY er.created_at DESC LIMIT ${MAX_QUERY_LIMIT}`)
     );
   }
@@ -57,7 +64,23 @@ export class IntegrationExtendedHrRepository {
 
   getEmployeeRatingStats(): Promise<Result<Row>> {
     return safeCall(async () => {
-      const rows = await exec(sql`SELECT COUNT(*) AS total_ratings, ROUND(AVG(overall_score), 2) AS average_score, COUNT(CASE WHEN overall_score >= 4 THEN 1 END) AS high_performers, COUNT(CASE WHEN overall_score < 2.5 THEN 1 END) AS needs_improvement FROM employee_ratings WHERE period_year = EXTRACT(YEAR FROM NOW())::int`);
+      // FIX (verified live 2026-07-13): query referenced a 3rd, nonexistent
+      // column `overall_score` (matches neither the legacy `composite_score`
+      // 0-100 world nor the never-written `overall_rating` 0-5 world) —
+      // confirmed via direct SQL: 'column "overall_score" does not exist'.
+      // safeCall swallowed the error so this endpoint silently always
+      // returned {} (all-zero stat cards on the Xodim Baholash page) even
+      // when rating rows existed. composite_score is the actually-populated
+      // field (0-100 scale, same scale as EMPLOYEE_RATING_* thresholds).
+      const rows = await exec(sql`
+        SELECT
+          COUNT(*) AS total_ratings,
+          ROUND(AVG(COALESCE(overall_rating, composite_score)), 2) AS average_score,
+          COUNT(CASE WHEN COALESCE(overall_rating, composite_score) >= ${EMPLOYEE_RATING_EXCELLENT} THEN 1 END) AS high_performers,
+          COUNT(CASE WHEN COALESCE(overall_rating, composite_score) < ${EMPLOYEE_RATING_AVERAGE} THEN 1 END) AS needs_improvement
+        FROM employee_ratings
+        WHERE COALESCE(rating_year, period_year) = EXTRACT(YEAR FROM NOW())::int
+      `);
       return (rows[0] ?? {}) as Row;
     });
   }

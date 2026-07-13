@@ -1,6 +1,16 @@
 /**
  * @module Mentorship
  * @description React page component. Route-level UI.
+ *
+ * FIX (2026-07-13): this page previously POSTed to /api/mentorships expecting a
+ * mentor<->mentee PAIRING (mentorId/menteeId/courseId/deadline/bonusPercentage).
+ * That route is owned by MentorshipsCompatController (a mentor DIRECTORY —
+ * name/bio/expertise — backing the org-card MentorTab.tsx widget), whose create
+ * requires `name` and rejected every submission from this page with 400. Repointed
+ * to the new dedicated pairing endpoint /api/hr/mentorships (hr-mentorship-pairings
+ * .controller.ts / .service.ts), backed by the already-existing `mentorships` table
+ * (exact column match: mentor_id/mentee_id/course_id/deadline/bonus_percentage/
+ * status/notes) which previously had zero write path.
  */
 
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -31,7 +41,7 @@ export default function Mentorship() {
   const [deleteMentorshipId, setDeleteMentorshipId] = useState<string | null>(null);
 
   const { data: mentorships, isLoading: loadingMentorships, isError, error, refetch } = useQuery<MentorshipRecord[]>({
-    queryKey: ["/api/mentorships"],
+    queryKey: ["/api/hr/mentorships"],
   });
 
   const { data: employees } = useQuery<Employee[]>({
@@ -56,9 +66,9 @@ export default function Mentorship() {
   });
 
   const createMentorshipMutation = useMutation({
-    mutationFn: (data: MentorshipFormValues) => apiRequest("POST", "/api/mentorships", data),
+    mutationFn: (data: MentorshipFormValues) => apiRequest("POST", "/api/hr/mentorships", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mentorships"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/mentorships"] });
       setIsMentorshipDialogOpen(false);
       mentorshipForm.reset();
       toast({ title: tCommon('createdSuccessfully') });
@@ -70,9 +80,9 @@ export default function Mentorship() {
 
   const updateMentorshipMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
-      apiRequest("PUT", `/api/mentorships/${id}`, { status }),
+      apiRequest("PUT", `/api/hr/mentorships/${id}`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mentorships"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/mentorships"] });
       toast({ title: tCommon('updatedSuccessfully') });
     },
     onError: () => {
@@ -81,9 +91,9 @@ export default function Mentorship() {
   });
 
   const deleteMentorshipMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("DELETE", `/api/mentorships/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/hr/mentorships/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mentorships"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/mentorships"] });
       toast({ title: tCommon('deletedSuccessfully') });
     },
     onError: () => {

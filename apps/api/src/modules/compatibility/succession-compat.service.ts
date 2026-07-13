@@ -23,45 +23,107 @@ export class SuccessionCompatService {
     const empFilter = employeeId
       ? sql`AND (sp.candidate_id = ${si(employeeId)} OR sp.current_holder_id = ${si(employeeId)})`
       : sql``;
+    // FIX 2026-07-13 (verified live: HRSuccessionPlanningSections.tsx CareerPlansTab always
+    // rendered "—" for every column except date/status): the FE reads
+    // plan.employee_name / plan.current_position_title / plan.employee_position /
+    // plan.target_position_title, but this query only ever returned candidate_name /
+    // position_name — none of which match. Added employee_name/target_position_title as
+    // extra aliases (kept candidate_name/position_name too, for any other reader), plus a
+    // real current_position_title via employees.position_id -> positions (the candidate's
+    // own current position, distinct from sp.position_id which is the TARGET position).
     const r = await rawSql(sql`
       SELECT sp.id, sp.position_id, sp.current_holder_id, sp.candidate_id,
-             sp.readiness_level, sp.development_plan, sp.target_date,
+             sp.readiness_level, sp.development_plan, sp.notes, sp.target_date,
              sp.priority, sp.status, sp.created_at, sp.updated_at,
              e1.first_name || ' ' || e1.last_name AS current_holder_name,
              e2.first_name || ' ' || e2.last_name AS candidate_name,
-             COALESCE(p.name, p.name_uz) AS position_name
+             e2.first_name || ' ' || e2.last_name AS employee_name,
+             COALESCE(p.name, p.name_uz) AS position_name,
+             COALESCE(p.name, p.name_uz) AS target_position_title,
+             COALESCE(p2.name, p2.name_uz) AS current_position_title
       FROM succession_plans sp
       LEFT JOIN employees e1 ON e1.id = sp.current_holder_id
       LEFT JOIN employees e2 ON e2.id = sp.candidate_id
       LEFT JOIN positions p ON p.id = sp.position_id
+      LEFT JOIN positions p2 ON p2.id = e2.position_id
       WHERE true ${empFilter}
       ORDER BY sp.priority DESC, sp.created_at DESC
       LIMIT ${MAX_QUERY_LIMIT}
     `);
-    return dbRows(r);
-  
+    // HR Nazorat fix (2026-07-13, Kasbiy O'sish / HRCareerPath.tsx page): mentor_name and
+    // progress_percent have no real succession_plans column — createCareerPlan() below
+    // JSON-stuffs them into development_plan when there is no real position/candidate FK
+    // for them yet. Parse that blob here so HRCareerPath.tsx's PlanCard/table (which read
+    // plan.mentor_name / plan.progress_percent directly) render real values instead of
+    // always falling back to "mentor tayinlanmagan" / 0%.
+    const rows = dbRows(r);
+    return (Array.isArray(rows) ? rows : []).map((row) => {
+      const raw = row['development_plan'];
+      if (typeof raw !== 'string' || !raw.trim().startsWith('{')) return row;
+      try {
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        return {
+          ...row,
+          mentor_name: row['mentor_name'] ?? parsed['mentor_name'] ?? null,
+          progress_percent: row['progress_percent'] ?? parsed['progress_percent'] ?? 0,
+          // real columns win; JSON blob is only a fallback for legacy free-text creates
+          employee_name: (row['employee_name'] as string | null) ?? parsed['employee_name'] ?? null,
+          target_position_title: (row['target_position_title'] as string | null) ?? parsed['target_position_title'] ?? null,
+          current_position_title: (row['current_position_title'] as string | null) ?? parsed['current_position_title'] ?? null,
+        };
+      } catch {
+        return row;
+      }
+    });
+
     });}
 
   async createCareerPlan(body: Record<string, unknown>){
     return safeCall(async () => {
     // P1.22: FE sends { employee_name, target_position_title, notes, progress_percent } rather
     // than { position_id, candidate_id }. Accept both formats — store name info in development_plan.
+    //
+    // FIX 2026-07-13 (verified live: create ALWAYS threw a NOT NULL violation on candidate_id):
+    // the actual current FE (HRSuccessionPlanningDialogs.tsx "Yangi vorislik rejasi" form) sends
+    // camelCase { userId, targetPositionId, targetDate, notes } — none of which matched
+    // candidate_id/position_id/target_date above, so candidate_id (NOT NULL on succession_plans)
+    // was always null and every create from the real "Vorislik Rejalari" tab failed with a raw
+    // Postgres constraint error. `user_id`/`target_position_id`/`readiness` columns exist on the
+    // live table (added by an auto-generated drift-fix migration) but are dead/orphaned — Q-29
+    // verified they came from a since-deleted local Drizzle definition with zero real callers, not
+    // a hidden newer succession module — so this reads userId/targetPositionId/targetDate as
+    // additional accepted aliases for the real columns (candidate_id/position_id/target_date),
+    // same pattern as the employee_name/target_position_title aliasing already here.
     const {
       position_id, current_holder_id, candidate_id,
       readiness_level, development_plan, target_date, priority,
       employee_name, target_position_title, current_position_title, notes, progress_percent,
+      userId, targetPositionId, targetDate,
+      // HR Nazorat fix (2026-07-13, Kasbiy O'sish / HRCareerPathDialogs.tsx NewPlanDialog):
+      // mentor_name has no real succession_plans column — was silently dropped even though
+      // the FE form collects and sends it. JSON-stuffed into development_plan alongside the
+      // other free-text fields (same pattern already used here), parsed back out in
+      // getCareerPlans() above.
+      mentor_name, mentorName,
     } = body;
+    const resolvedCandidateId = candidate_id ?? userId ?? null;
+    const resolvedPositionId = position_id ?? (targetPositionId || null);
+    const resolvedTargetDate = target_date ?? targetDate ?? null;
+    const resolvedMentorName = mentor_name ?? mentorName ?? null;
+    if (resolvedCandidateId == null) {
+      throw new BadRequestException('candidate_id / userId talab qilinadi');
+    }
     const planNote = development_plan
-      ?? (employee_name || target_position_title || notes
-          ? JSON.stringify({ employee_name, target_position_title, current_position_title, notes, progress_percent })
+      ?? (employee_name || target_position_title || notes || resolvedMentorName
+          ? JSON.stringify({ employee_name, target_position_title, current_position_title, notes, progress_percent, mentor_name: resolvedMentorName })
           : null);
     const r = await rawSql(sql`
       INSERT INTO succession_plans
-        (position_id, current_holder_id, candidate_id, readiness_level, development_plan, target_date, priority, status)
-      VALUES (${position_id ?? null}, ${current_holder_id ?? null}, ${candidate_id ?? null},
-              ${readiness_level ?? 'low'}, ${planNote ?? null}, ${target_date ?? null},
-              ${priority ?? 1}, 'active')
-      RETURNING id, position_id, candidate_id, readiness_level, development_plan, status, created_at
+        (position_id, current_holder_id, candidate_id, readiness_level, development_plan, target_date, priority, status, notes)
+      VALUES (${resolvedPositionId}, ${current_holder_id ?? null}, ${resolvedCandidateId},
+              ${readiness_level ?? 'low'}, ${planNote ?? null}, ${resolvedTargetDate},
+              ${priority ?? 1}, 'active', ${notes ?? null})
+      RETURNING id, position_id, candidate_id, readiness_level, development_plan, status, notes, created_at
     `);
     const _found = dbRows(r)[0];
     if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));
