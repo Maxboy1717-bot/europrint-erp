@@ -1276,4 +1276,39 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
       VALUES ('WASTE_OUT', 'Chiqindi/Qoldiq chiqim (makulatura sotuvi)', 'Расход отходов/макулатуры (продажа)', 'out', true, false, true, false)
       ON CONFLICT (code) DO NOTHING`,
   },
+  // Owner decision 2026-07-13 (chat): MES/QC/HR/PP domain events should ALL be able to
+  // auto-spawn CC documents (previously only POS/procurement did). Three new
+  // cc_document_templates rows (FAQAT DATA seed, idempotent WHERE NOT EXISTS — same
+  // shape as itemB-gate1-delivery-request-cc-type-2026-07-09.sql's DELIVERY_REQUEST
+  // insert). No cc_workflow_steps row (matches PROCUREMENT's existing informational-only
+  // pattern — Q-46 minimal scope). APPROVED: owner schema-approval 2026-07-11
+  // (Muslimbek, chat) — Q-35. Human-readable mirror:
+  // apps/api/src/shared/db/migrations/cc-cross-module-spawn-templates-2026-07-13.sql.
+  {
+    name: 'cc_document_templates MES_ESCALATION row (owner 2026-07-13, cross-module CC spawn)',
+    sql: `INSERT INTO cc_document_templates
+      (code, name_uz, name_ru, category, ai_questions, version, is_active, default_priority, number_format)
+    SELECT
+      'MES_ESCALATION', 'To''xtagan ishlab chiqarish — eskalatsiya xabari', 'Уведомление об эскалации простоя',
+      'xabar', '[]'::jsonb, 1, true, 'urgent', 'MES-ESK-{YYYY}-{SEQ}'
+    WHERE NOT EXISTS (SELECT 1 FROM cc_document_templates WHERE code = 'MES_ESCALATION')`,
+  },
+  {
+    name: 'cc_document_templates QC_INSPECTION_FAILED row (owner 2026-07-13, cross-module CC spawn)',
+    sql: `INSERT INTO cc_document_templates
+      (code, name_uz, name_ru, category, ai_questions, version, is_active, default_priority, number_format)
+    SELECT
+      'QC_INSPECTION_FAILED', 'QC tekshiruvi rad etildi — rahbariyat ko''rigi', 'Инспекция ОТК отклонена — на рассмотрение руководства',
+      'hisobot', '[]'::jsonb, 1, true, 'high', 'QC-FAIL-{YYYY}-{SEQ}'
+    WHERE NOT EXISTS (SELECT 1 FROM cc_document_templates WHERE code = 'QC_INSPECTION_FAILED')`,
+  },
+  {
+    name: 'cc_document_templates PLAN_CHANGE row (owner 2026-07-13, cross-module CC spawn)',
+    sql: `INSERT INTO cc_document_templates
+      (code, name_uz, name_ru, category, ai_questions, version, is_active, default_priority, number_format)
+    SELECT
+      'PLAN_CHANGE', 'Ishlab chiqarish rejasi o''zgarishi', 'Изменение производственного плана',
+      'xabar', '[]'::jsonb, 1, true, 'normal', 'REJA-{YYYY}-{SEQ}'
+    WHERE NOT EXISTS (SELECT 1 FROM cc_document_templates WHERE code = 'PLAN_CHANGE')`,
+  },
 ];

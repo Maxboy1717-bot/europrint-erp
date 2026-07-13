@@ -14,9 +14,11 @@
  */
 
 import { Injectable, Logger, Inject } from '@nestjs/common';
+import { EventBus } from '@nestjs/cqrs';
 import { safeCall, Result, AppError } from '@common/result';
 import { MesSosEscalationRepository } from '../infrastructure/repositories/mes-sos-escalation.repo';
 import { ITelegramSender, TELEGRAM_SENDER } from '@modules/notifications/domain/ports/i-telegram-sender.port';
+import { CcSpawnRequestedEvent } from '../../communication-center/domain/events/cc-spawn-requested.event';
 
 /** Zanjir tepasiga yetgan (parent yo'q) hal qilinmagan SOS uchun Telegram kanal identifikatori. */
 const MES_SOS_CRITICAL_TELEGRAM_CHANNEL = 'mes_sos_critical';
@@ -28,6 +30,7 @@ export class MesSosEscalationService {
   constructor(
     private readonly repo: MesSosEscalationRepository,
     @Inject(TELEGRAM_SENDER) private readonly telegram: ITelegramSender,
+    private readonly eventBus: EventBus,
   ) {}
 
   /**
@@ -64,6 +67,13 @@ export class MesSosEscalationService {
         const level = Number(ev.escalation_level ?? 0);
         const reason = String(ev.reason ?? 'SOS');
         const history = Array.isArray(ev.escalation_history) ? ev.escalation_history : [];
+        // Owner decision 2026-07-13: real top-of-chain responsible user (already resolved
+        // onto this row by assignInitialResponsible/escalateTo) — used below to address the
+        // CC document when the chain is exhausted. No fabrication (Q-40): stays null when
+        // the topmost karta has no head_user_id (owner-data gap), and the CC spawn is
+        // skipped in that case.
+        const assignedUserId = ev.assigned_user_id != null ? Number(ev.assigned_user_id) : null;
+        const workCenterId = ev.work_center_id != null ? Number(ev.work_center_id) : null;
 
         if (!currentDeptId) {
           await this.repo.markChainExhausted(sosId);
@@ -86,6 +96,25 @@ export class MesSosEscalationService {
             `Sabab: ${reason}. Karta #${currentDeptId} — zanjir tepasida (daraja ${level}) hamon javobsiz.`,
             'high',
           );
+          // Owner decision 2026-07-13 (chat): the same CRITICAL moment also leaves a durable
+          // CC document (template MES_ESCALATION) in the top-of-chain responsible user's
+          // basket — not just a transient Telegram ping. Best-effort, non-fatal (mirrors
+          // procurement-request.service.ts's CC spawn try/catch) — a CC hiccup must never
+          // break the escalation count.
+          if (assignedUserId != null) {
+            try {
+              this.eventBus.publish(new CcSpawnRequestedEvent({
+                templateCode: 'MES_ESCALATION',
+                senderUserId: assignedUserId,
+                subject: `SOS eskalatsiya zanjiri tugadi — SOS #${sosId}`,
+                body: `Sabab: ${reason}. ${workCenterId != null ? `Ish markazi #${workCenterId}. ` : ''}Karta #${currentDeptId} — zanjir tepasida (daraja ${level}) hamon javobsiz.`,
+                priority: 'urgent',
+                metadata: { sosId, currentDeptId, level, workCenterId },
+              }));
+            } catch (e) {
+              this.logger.warn(`SOS #${sosId}: CC hujjat spawn xatosi (ignore) — ${String(e)}`);
+            }
+          }
           this.logger.error(`SOS #${sosId}: zanjir tepasiga yetdi (karta ${currentDeptId}), Telegram CRITICAL xabar yuborildi`);
           continue;
         }

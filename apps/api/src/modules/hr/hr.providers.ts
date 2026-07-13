@@ -123,6 +123,7 @@ import { HrOffboardingController } from './offboarding/hr-offboarding.controller
 import { HrOffboardingService } from './offboarding/hr-offboarding.service';
 import { HrOffboardingRepository } from './offboarding/hr-offboarding.repository';
 import { OffboardingWorkflowService } from './offboarding/offboarding-workflow.service';
+import { HrOffboardingCcListener } from './offboarding/hr-offboarding-cc.listener';
 import { HrGsdController } from './presentation/hr-gsd.controller';
 import { HrGsdService } from './presentation/hr-gsd.service';
 import { HrGsdRepository } from './presentation/hr-gsd.repository';
@@ -154,7 +155,7 @@ export const hrQueryHandlers = [
   GetAttendanceHandler, GetLeavesHandler, GetLeaveBalanceHandler,
 ];
 
-export const hrEventListeners = [MesTo360Listener];
+export const hrEventListeners = [MesTo360Listener, HrOffboardingCcListener];
 
 export const hrDomainServices = [
   KpiService, AttritionService, UtilizationService, OvertimeCalculatorService,

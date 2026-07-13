@@ -72,7 +72,8 @@ export class PpPlanningController {
   async updateOperation(
     @Param('id') id: string,
     @Body() body: PpUpdateOperationDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return unwrapOrThrow(await this.svc.updateOperation(safeInt(id, 0), body));
+    return unwrapOrThrow(await this.svc.updateOperation(safeInt(id, 0), body, user.id));
   }
 }
