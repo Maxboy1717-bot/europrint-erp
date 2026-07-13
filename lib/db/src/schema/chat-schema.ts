@@ -149,6 +149,15 @@ export const chatRoomTags = pgTable('chat_room_tags', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+// Internal per-conversation notes ("Izohlar" tab). room_id INTEGER (live chat_rooms.id).
+export const chatRoomNotes = pgTable('chat_room_notes', {
+  id:           serial('id').primaryKey(),
+  roomId:       integer('room_id').notNull(),
+  authorUserId: integer('author_user_id'),
+  body:         text('body').notNull(),
+  createdAt:    timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
 export const chatEmojiPacks = pgTable('chat_emoji_packs', {
   id:        varchar('id').primaryKey().default(sql`gen_random_uuid()`),
   name:      varchar('name').notNull(),

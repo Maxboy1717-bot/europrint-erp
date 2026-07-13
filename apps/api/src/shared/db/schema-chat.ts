@@ -11,6 +11,7 @@ export {
   chatMessages,
   chatMessageHiddenFor,
   chatRoomTags,
+  chatRoomNotes,
   chatReactions,
   chatPolls,
   chatPollVotes,

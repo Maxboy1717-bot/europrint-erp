@@ -207,7 +207,7 @@ export {
   chatStarredMessages, chat_starred_messages,
   chatUserPresence, chat_user_presence,
   chatMessages, chatMembers, chatRooms, chatReactions, chatPolls, chatPollVotes,
-  chatMessageTasks, chat_message_tasks, chatMessageHiddenFor, chatRoomTags,
+  chatMessageTasks, chat_message_tasks, chatMessageHiddenFor, chatRoomTags, chatRoomNotes,
 } from './schema-chat';
 
 // schema-hr-tz2: HR Territory/Camera Attendance + Inspection tables (HR-03/04)
