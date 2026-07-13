@@ -51,6 +51,7 @@ export class HrGsdService {
     candidatePhone?: string;
     positionTitle?: string;
     hrNotes?: string;
+    candidateId?: number | null;
   }): Promise<Result<Row, AppError>> {
     return this.repo.createReferral(dto);
   }
@@ -61,6 +62,8 @@ export class HrGsdService {
     bonusAmount?: number;
     bonusPaid?: boolean;
     hrNotes?: string;
+    candidateId?: number | null;
+    hiredEmployeeId?: number | null;
   }): Promise<Result<Row, AppError>> {
     return this.repo.updateReferral(id, dto);
   }

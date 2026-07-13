@@ -18,6 +18,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IHrOnboardingRepository, HR_ONBOARDING_REPO } from './repos/i-hr-onboarding.repo';
 import { OnboardingJobService } from './onboarding-job.service';
 import { OnboardingProgressService, type OnboardingRecord } from './onboarding-progress.service';
@@ -31,6 +32,9 @@ import type {
 } from './dto/onboarding.dto';
 import { safeCall, Result, AppError } from '@common/result';
 import { DEFAULT_HR_MANAGER_ONBOARDING } from './onboarding-defaults';
+// Referral Tizimi completion (2026-07-13, vizyon 02-hr#12/20/21): real
+// "probation completed" signal for the referral-bonus payroll listener.
+import { HR_PROBATION_COMPLETED_EVENT } from './onboarding.events';
 
 // Re-export so any external consumer importing from `onboarding.service` keeps working.
 // Per Rule 16 (≤ 300 lines): the 80-line default plan now lives in `onboarding-defaults.ts`.
@@ -47,6 +51,7 @@ export class OnboardingService {
     // SB0072/SB0101: probation-pass activates the onboarding target card (employee_cards).
     private readonly cardService: CardService,
     private readonly i18n: I18nService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ───────────────────── ONBOARDING PLANS ─────────────────────────────────
@@ -183,20 +188,44 @@ export class OnboardingService {
       // (findEmployeesIdByUserId) before calling CardService (Q-40: no id fabricated/guessed).
       const userId = Number(onboarding['employeeId'] ?? onboarding['employee_id'] ?? 0);
       const cardId = onboarding['cardId'] ?? onboarding['card_id'];
-      if (userId > 0 && cardId != null && Number(cardId) > 0) {
+
+      // 2026-07-13: resolve employees.id once — used both by the (pre-existing)
+      // card-activation step below AND by the new referral-bonus event (was
+      // previously only resolved inside the `cardId` branch, so probation-passed
+      // employees with no target card never got an employees.id resolved at all).
+      let employeesId: number | null = null;
+      if (userId > 0) {
         const empIdR = await this.hrOnboardingRepo.findEmployeesIdByUserId(userId);
-        if (!empIdR.ok || !empIdR.data) {
+        if (empIdR.ok && empIdR.data) employeesId = empIdR.data;
+      }
+
+      if (cardId != null && Number(cardId) > 0) {
+        if (!employeesId) {
           this.logger.warn(
             `completeProbation #${onboardingId}: karta #${cardId} faollashtirilmadi — xodim (employees) userId=#${userId} uchun topilmadi`,
           );
         } else {
-          const assignR = await this.cardService.assignEmployeeToCard(Number(cardId), empIdR.data, true);
+          const assignR = await this.cardService.assignEmployeeToCard(Number(cardId), employeesId, true);
           if (!assignR.ok) {
             this.logger.warn(
-              `completeProbation #${onboardingId}: karta #${cardId} faollashtirilmadi (xodim #${empIdR.data}) — ${assignR.error.message}`,
+              `completeProbation #${onboardingId}: karta #${cardId} faollashtirilmadi (xodim #${employeesId}) — ${assignR.error.message}`,
             );
           }
         }
+      }
+
+      // Referral Tizimi completion (2026-07-13, vizyon 02-hr#12/20/21): real
+      // "probation completed" signal — ReferralBonusListener pays the referral
+      // bonus (business_settings 'hr.referral_bonus_amount') if this employee
+      // was hired through a referral. Fired regardless of card-activation outcome
+      // (a referral bonus does not depend on whether a target card exists).
+      if (employeesId) {
+        this.eventEmitter.emit(HR_PROBATION_COMPLETED_EVENT, {
+          onboardingId,
+          employeeId: employeesId,
+          probationScore: dto.probationScore,
+          completedAt: _time.now(),
+        });
       }
     }
 

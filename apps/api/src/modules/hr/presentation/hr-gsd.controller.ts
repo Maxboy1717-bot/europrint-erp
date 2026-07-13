@@ -35,14 +35,38 @@ const RecordGsdActualSchema = z.object({
   note: z.string().max(2000).optional(),
 });
 
+// 2026-07-13 fix: FE (ReferralPage.tsx) sends `referrer_id` (snake_case) while this
+// schema only recognized `referrerId` (camelCase) — every referral submitted from
+// the real UI silently lost its referrer, which then hit the `referrer_id` FK
+// (-> employees(id)) with a fabricated fallback (see hr-gsd.repository.ts
+// createReferral() 2026-07-13 fix note) and failed. Same for candidate name/
+// email/phone/position — FE sends snake_case field names throughout. Both
+// casings are now accepted (contract fix, not a FE rewrite — Q-18 FE-BE URL/
+// payload contract).
 const CreateReferralSchema = z.object({
-  referrerId:    z.union([z.string(), z.number()]).optional(),
-  candidateName: z.string().max(200).optional(),
-  email:         z.string().email().optional(),
-  phone:         z.string().max(50).optional(),
-  positionTitle: z.string().max(200).optional(),
-  hrNotes:       z.string().max(2000).optional(),
-}).passthrough();
+  referrerId:           z.union([z.string(), z.number()]).optional(),
+  referrer_id:          z.union([z.string(), z.number()]).optional(),
+  candidateName:        z.string().max(200).optional(),
+  candidate_full_name:  z.string().max(200).optional(),
+  email:                z.string().email().optional(),
+  candidate_email:      z.string().email().optional().or(z.literal('')),
+  phone:                z.string().max(50).optional(),
+  candidate_phone:      z.string().max(50).optional(),
+  positionTitle:        z.string().max(200).optional(),
+  position_title:       z.string().max(200).optional(),
+  hrNotes:              z.string().max(2000).optional(),
+  hr_notes:             z.string().max(2000).optional(),
+  candidateId:          z.union([z.string(), z.number()]).optional(),
+  candidate_id:         z.union([z.string(), z.number()]).optional(),
+}).passthrough().transform((d) => ({
+  referrerId:    d.referrerId    ?? d.referrer_id,
+  candidateName: d.candidateName ?? d.candidate_full_name,
+  email:         d.email         ?? (d.candidate_email || undefined),
+  phone:         d.phone         ?? d.candidate_phone,
+  positionTitle: d.positionTitle ?? d.position_title,
+  hrNotes:       d.hrNotes       ?? d.hr_notes,
+  candidateId:   d.candidateId   ?? d.candidate_id,
+}));
 
 const HR_ROLES = ['SUPER_ADMIN', 'DIRECTOR', 'HR_MANAGER', 'HR_SPECIALIST', 'admin'] as const;
 
@@ -125,17 +149,30 @@ export class HrGsdController {
   async getReferrals() {
     const r = await this.svc.getReferrals();
     const referrals = r.ok && Array.isArray(r.data) ? r.data : [];
-    // ReferralPage.tsx expects { referrals, stats } envelope
-    return { referrals, stats: { total: referrals.length } };
+    // ReferralPage.tsx / StatsGrid expects { referrals, stats } envelope.
+    // 2026-07-13 fix: was `{ total: referrals.length }` only — StatsGrid also
+    // reads stats.hired / stats.pending / stats.bonus_paid_count, which were
+    // always 0 regardless of real data (dead stat cards).
+    const stats = {
+      total: referrals.length,
+      hired: referrals.filter(x => (x as { status?: string }).status === 'hired').length,
+      pending: referrals.filter(x => (x as { status?: string }).status === 'pending').length,
+      bonus_paid_count: referrals.filter(x => (x as { bonus_paid?: boolean }).bonus_paid === true).length,
+    };
+    return { referrals, stats };
   }
 
   @ApiOperation({ summary: 'Get boomerang referrals' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('referrals/boomerang')
+  // 2026-07-13 fix: FE (ReferralPage.tsx) reads `boomerang?.alumni` but this
+  // endpoint only ever returned `{ items, total }` — the boomerang tab was
+  // always empty regardless of DB content (key-name drift). `alumni` added
+  // alongside `items` (back-compat) rather than renamed.
   async getBoomerangReferrals() {
     const r = await this.svc.getBoomerangs();
     const items = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { items, total: items.length };
+    return { items, alumni: items, total: items.length };
   }
 
   // NOTE: GET /hr/skills, GET /hr/skills/:id, POST /hr/skills, PATCH /hr/skills/:id,
@@ -231,27 +268,57 @@ export class HrGsdController {
       candidatePhone: dto.phone,
       positionTitle: dto.positionTitle,
       hrNotes:       dto.hrNotes,
+      candidateId:   dto.candidateId != null ? Number(dto.candidateId) : null,
     });
-    const data = r.ok ? r.data : { error: (r as { ok: false; error: unknown }).error };
-    return { data };
+    if (!r.ok) {
+      const err = (r as { ok: false; error: { code?: string; message?: string } | string }).error;
+      const msg = typeof err === 'string' ? err : (err?.message ?? err?.code ?? 'Xatolik');
+      if (msg === 'REFERRER_ID_REQUIRED') {
+        throw new BadRequestException(await this.i18n.t('errors.referrerIdRequired'));
+      }
+      throw new BadRequestException(msg);
+    }
+    return { data: r.data };
   }
 
   // P1.26.1: update referral status/bonus (HR_MANAGER only)
+  // 2026-07-13 fix: enum was `['submitted','reviewing','hired','rejected','pending']`
+  // but the LIVE `hr_referrals_status_check` CHECK constraint only allows
+  // `pending|contacted|interviewing|hired|rejected|bonus_paid` — 'submitted' and
+  // 'reviewing' always violated the constraint and the PATCH failed (Q-40:
+  // "ishlaydi" endpoint that was never actually reachable for those 2 values).
+  // + optional candidateId/hiredEmployeeId manual-link fields (Referral Tizimi
+  // completion item #3 — links to the real recruiting-pipeline candidate row and,
+  // once hired, to the real employees row used by the probation-bonus listener).
   @ApiOperation({ summary: 'Update referral' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Roles('HR_MANAGER', 'SUPER_ADMIN', 'DIRECTOR')
   @Patch('referrals/:id')
   async updateReferral(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
     const UpdateReferralSchema = z.object({
-      status:      z.enum(['submitted', 'reviewing', 'hired', 'rejected', 'pending']).optional(),
-      bonusAmount: z.number().min(0).optional(),
-      bonusPaid:   z.boolean().optional(),
-      hrNotes:     z.string().max(2000).optional(),
+      status:          z.enum(['pending', 'contacted', 'interviewing', 'hired', 'rejected', 'bonus_paid']).optional(),
+      bonusAmount:     z.number().min(0).optional(),
+      bonusPaid:       z.boolean().optional(),
+      hrNotes:         z.string().max(2000).optional(),
+      candidateId:     z.union([z.string(), z.number()]).nullish(),
+      hiredEmployeeId: z.union([z.string(), z.number()]).nullish(),
     }).passthrough();
     const dto = UpdateReferralSchema.parse(body ?? {});
-    const r = await this.svc.updateReferral(id, dto);
-    const data = r.ok ? r.data : { error: (r as { ok: false; error: unknown }).error };
-    return { data };
+    const r = await this.svc.updateReferral(id, {
+      status:          dto.status,
+      bonusAmount:     dto.bonusAmount,
+      bonusPaid:       dto.bonusPaid,
+      hrNotes:         dto.hrNotes,
+      candidateId:     dto.candidateId     != null ? Number(dto.candidateId)     : undefined,
+      hiredEmployeeId: dto.hiredEmployeeId != null ? Number(dto.hiredEmployeeId) : undefined,
+    });
+    if (!r.ok) {
+      const err = (r as { ok: false; error: { code?: string; message?: string } | string }).error;
+      const msg = typeof err === 'string' ? err : (err?.message ?? err?.code ?? 'Xatolik');
+      if (msg === 'NOT_FOUND') throw new NotFoundException(await this.i18n.t('errors.referralNotFound'));
+      throw new BadRequestException(msg);
+    }
+    return { data: r.data };
   }
 
   // ── P1.15.1: hr_mentorship_pairings CRUD ─────────────────────────────────────

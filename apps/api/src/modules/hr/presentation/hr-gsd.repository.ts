@@ -209,6 +209,7 @@ export class HrGsdRepository {
   }
 
   // P1.26.1: query hr_referrals table — column names match FE ReferralPage.tsx interface
+  // 2026-07-13: + candidate_id/hired_employee_id (Referral Tizimi completion linkage).
   async findReferrals(): Promise<Result<Row[]>> {
     try {
       const rows = await db
@@ -224,6 +225,8 @@ export class HrGsdRepository {
           bonus_amount:        hr_referrals.bonus_amount,
           bonus_paid:          hr_referrals.bonus_paid,
           hr_notes:            hr_referrals.hr_notes,
+          candidate_id:        hr_referrals.candidate_id,
+          hired_employee_id:   hr_referrals.hired_employee_id,
           created_at:          hr_referrals.created_at,
         })
         .from(hr_referrals)
@@ -237,6 +240,13 @@ export class HrGsdRepository {
   }
 
   // P1.26.1: real insert into hr_referrals — column names match updated schema
+  // 2026-07-13 fix: `referrer_id` FK -> employees(id) is NOT NULL-effective in
+  // practice (live CHECK/FK requires a real employees.id) — the previous
+  // `dto.referrerId ? Number(...) : 0` fallback inserted the fabricated id `0`,
+  // which always violates the FK (Q-40: "ishlaydi ≠ to'g'ri" — this silently
+  // failed every referral submitted without a resolvable referrerId). Now a
+  // missing/invalid referrerId is a real validation error instead of a guessed id.
+  // + optional candidateId (links to the real recruiting-pipeline candidate row).
   async createReferral(dto: {
     referrerId?: number | string | null;
     candidateName?: string;
@@ -244,17 +254,23 @@ export class HrGsdRepository {
     candidatePhone?: string;
     positionTitle?: string;
     hrNotes?: string;
+    candidateId?: number | null;
   }): Promise<Result<Row>> {
     try {
+      const referrerId = dto.referrerId != null ? Number(dto.referrerId) : NaN;
+      if (!Number.isInteger(referrerId) || referrerId <= 0) {
+        return Err('REFERRER_ID_REQUIRED');
+      }
       const rows = await db
         .insert(hr_referrals)
         .values({
-          referrer_id:         dto.referrerId ? Number(dto.referrerId) : 0,
+          referrer_id:         referrerId,
           candidate_full_name: dto.candidateName ?? 'Unknown',
           candidate_email:     dto.candidateEmail ?? null,
           candidate_phone:     dto.candidatePhone ?? null,
           position_title:      dto.positionTitle ?? null,
           hr_notes:            dto.hrNotes ?? null,
+          candidate_id:        dto.candidateId ?? null,
         })
         .returning();
       if (!Array.isArray(rows) || !rows[0]) return Err('INSERT_FAILED');
@@ -264,23 +280,42 @@ export class HrGsdRepository {
     }
   }
 
+  // 2026-07-13 — Referral Tizimi completion (item #5, vizyon 02-hr#12/20/21):
+  // boomerang-alumni suggestion list. Was previously a placeholder that just
+  // returned the last 20 CREATED employees regardless of employment status
+  // (Q-40 violation — nonsensical "boomerang" candidates). Now real: terminated
+  // employees only, with anyone dismissed "jarima bilan" (for cause — a serious/
+  // critical discipline record or an actual fine) auto-filtered OUT per vision.
+  // Raw SQL (not typed `employees` import) — same live-integer-PK-vs-compat-stub
+  // workaround already used by findEmployee()/findBoomerangs() elsewhere in this
+  // file (@shared/db resolves `employees` to a UUID-PK compat stub).
   async findBoomerangs(): Promise<Result<Row[]>> {
     try {
-      const rows = await db
-        .select({
-          id: employees.id,
-          full_name: sql<string>`COALESCE("employees"."full_name", '')`,
-          // Q9-follow-up (2026-07-04): was reading the legacy `position`/`department` text
-          // columns (always NULL) under a misleading position_id/department_id alias — the
-          // real FK columns (written by updateEmployee() above) were never read here, so a
-          // GSD employee updated via Q9's fix would still show null in every GET/list call.
-          position_id: sql<string>`"employees"."position_id"`,
-          department_id: sql<string>`"employees"."department_id"`,
-          hire_date: employees.hire_date,
-        })
-        .from(employees)
-        .orderBy(desc(employees.created_at))
-        .limit(20);
+      const rows = await typedExecute<Row>(sql`
+        SELECT
+          e.id,
+          COALESCE(e.full_name, '')      AS full_name,
+          od.name                        AS department_name,
+          COALESCE(p.name, p.title, p.official_title, '') AS position_name,
+          e.termination_date             AS last_day,
+          e.status,
+          TRUE                           AS rehire_eligible
+        FROM employees e
+        LEFT JOIN org_departments od ON od.id = e.department_id
+        LEFT JOIN positions p        ON p.id = e.position_id
+        WHERE e.status = 'terminated'
+          AND NOT EXISTS (
+            SELECT 1 FROM discipline_records dr
+            WHERE dr.employee_id = e.id
+              AND dr.status = 'issued'
+              AND (
+                dr.severity IN ('serious', 'critical')
+                OR dr.fine_amount > 0
+              )
+          )
+        ORDER BY e.termination_date DESC NULLS LAST, e.updated_at DESC
+        LIMIT 20
+      `);
       if (!Array.isArray(rows)) return Err('DB_TYPE_ERROR');
       return Ok(rows as Row[]);
     } catch (e) {
@@ -339,26 +374,55 @@ export class HrGsdRepository {
   }
 
   // P1.26.1: update hr_referrals row — column names match updated schema
+  // 2026-07-13: + candidateId (manual link to a recruiting-pipeline candidate)
+  // and hiredEmployeeId (manual link to the resulting employees row — HR sets
+  // this once the candidate is actually hired and the employees row exists;
+  // the referral-bonus listener keys off it when that employee's probation
+  // completes). Kept as explicit HR-driven fields rather than guessed/derived,
+  // because the recruiting-pipeline's funnel.hire() currently uses a
+  // placeholder employeeId (Q-40: no fabricated linkage).
   async updateReferral(id: number, dto: {
     status?: string;
     bonusAmount?: number;
     bonusPaid?: boolean;
     hrNotes?: string;
+    candidateId?: number | null;
+    hiredEmployeeId?: number | null;
   }): Promise<Result<Row>> {
     try {
       const rows = await db
         .update(hr_referrals)
         .set({
-          ...(dto.status      != null ? { status:       dto.status }              : {}),
-          ...(dto.bonusAmount != null ? { bonus_amount: String(dto.bonusAmount) } : {}),
-          ...(dto.bonusPaid   != null ? { bonus_paid:   dto.bonusPaid }           : {}),
-          ...(dto.hrNotes     != null ? { hr_notes:     dto.hrNotes }             : {}),
+          ...(dto.status          != null ? { status:             dto.status }              : {}),
+          ...(dto.bonusAmount     != null ? { bonus_amount:       String(dto.bonusAmount) }  : {}),
+          ...(dto.bonusPaid       != null ? { bonus_paid:         dto.bonusPaid }             : {}),
+          ...(dto.hrNotes         != null ? { hr_notes:           dto.hrNotes }               : {}),
+          ...(dto.candidateId     != null ? { candidate_id:       dto.candidateId }           : {}),
+          ...(dto.hiredEmployeeId != null ? { hired_employee_id:  dto.hiredEmployeeId }        : {}),
           updated_at: new Date(),
         })
         .where(eq(hr_referrals.id, id))
         .returning();
       if (!Array.isArray(rows) || !rows[0]) return Err('NOT_FOUND');
       return Ok(rows[0] as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  /** 2026-07-13 — internal helper for ReferralStageSyncListener/ReferralBonusListener
+   * (event-driven auto-sync); not exposed via HTTP. Raw SQL — same live-shape
+   * workaround as the rest of this file. */
+  async updateReferralStatusByCandidateId(candidateId: number, status: string): Promise<Result<number>> {
+    try {
+      const rows = await typedExecute<Row>(sql`
+        UPDATE hr_referrals
+        SET status = ${status}, updated_at = NOW()
+        WHERE candidate_id = ${candidateId}
+          AND status != 'bonus_paid'
+        RETURNING id
+      `);
+      return Ok(Array.isArray(rows) ? rows.length : 0);
     } catch (e) {
       return Err(String(e));
     }
