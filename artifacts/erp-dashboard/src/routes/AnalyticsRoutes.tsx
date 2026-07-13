@@ -23,10 +23,17 @@ const KanbanBoard = lazy(() => import("@/pages/KanbanBoard"));
 const RecruitingKanban = lazy(() => import("@/pages/RecruitingKanban"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
 const NotificationCenter = lazy(() => import("@/pages/NotificationCenter"));
+const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
 
 export const ANALYTICS_ROUTES: [string, React.ComponentType][] = [
   ['/analytics',                      Analytics],
   ['/notifications',                  NotificationCenter],
+  // Moved from ADMIN_ROUTES (was admin-only, unreachable from any nav — HR sidebar's
+  // "Bildirishnomalar" needs it): this is a personal per-type notification-channel
+  // preferences form (Save persists to notification_type_preferences, scoped to
+  // @CurrentUser()), not an admin-only company setting — any authenticated user
+  // manages their own preferences here.
+  ['/settings/notifications',         NotificationSettings],
   ['/ai/forecast',                    ForecastAnalytics],
   ['/lms-dashboard',                  LMSDashboard],
   ['/courses',                        Courses],

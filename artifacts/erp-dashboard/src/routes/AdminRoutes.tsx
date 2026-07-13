@@ -9,7 +9,6 @@ const KaizenPage = lazy(() => import("@/pages/KaizenPage"));
 const OrdersRegistry = lazy(() => import("@/pages/OrdersRegistry"));
 
 const Settings = lazy(() => import("@/pages/Settings"));
-const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
 const SuperAdminPanel = lazy(() => import("@/pages/SuperAdminPanel"));
 const SystemMonitor = lazy(() => import("@/pages/SystemMonitor"));
 const TelegramBotAdmin = lazy(() => import("@/pages/TelegramBotAdmin"));
@@ -39,7 +38,6 @@ const TaxonomyManager = lazy(() => import("@/pages/TaxonomyManager"));
 
 export const ADMIN_ROUTES: [string, React.ComponentType][] = [
   ['/settings',                Settings],
-  ['/settings/notifications',  NotificationSettings],
   ['/admin/business-settings', BusinessSettings],
   ['/admin/taxonomy',          TaxonomyManager],
   ['/super-admin',             SuperAdminPanel],

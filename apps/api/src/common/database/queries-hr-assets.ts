@@ -39,6 +39,8 @@ export async function queryAllAssets(
     ))
     .leftJoin(hrEmployees, eq(sql`${hrEmployees.id}::text`, employee_assets.employee_id))
     .where(and(
+      // Soft-deleted assets (is_active=false, set by execRemoveAsset) never appear in listings.
+      or(isNull(asset_items_ext.is_active), eq(asset_items_ext.is_active, true)),
       search ? or(ilike(asset_items_ext.name, search), ilike(asset_items_ext.serial_number, search)) : sql`TRUE`,
       category ? eq(asset_items_ext.category, category) : sql`TRUE`,
       status ? eq(asset_items_ext.status, status) : sql`TRUE`,
@@ -129,7 +131,12 @@ export async function execUpdateAsset(
 }
 
 export async function execRemoveAsset(id: string): Promise<void> {
-  await db.delete(asset_items_ext).where(eq(sql`${asset_items_ext.id}::text`, id));
+  // Soft-delete only (Qoida: hard DELETE taqiqlangan) — flips is_active=false instead of
+  // removing the row, so assignment history (employee_assets FK to asset_id) is preserved
+  // and the asset simply drops out of queryAllAssets' listing (is_active filter above).
+  await db.update(asset_items_ext)
+    .set({ is_active: false })
+    .where(eq(sql`${asset_items_ext.id}::text`, id));
 }
 
 export async function queryAssetsByEmployee(employeeId: string): Promise<Row[]> {
