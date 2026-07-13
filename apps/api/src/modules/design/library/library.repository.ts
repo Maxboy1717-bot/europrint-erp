@@ -9,7 +9,7 @@ import { Ok, Err, Result } from '@common/result';
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
 import { designLibraryItems } from '@europrint/schemas';
-import { eq, and, isNull, count, desc } from 'drizzle-orm';
+import { eq, and, isNull, count, desc, sql } from 'drizzle-orm';
 
 @Injectable()
 export class LibraryRepository {
@@ -41,7 +41,14 @@ export class LibraryRepository {
 
   async create(values: typeof designLibraryItems.$inferInsert): Promise<Result<Record<string, unknown>>> {
     try {
-      const result = await db.insert(designLibraryItems).values(values).returning();
+      // design_library_items.id is a plain `integer PRIMARY KEY` with no DEFAULT/sequence
+      // (verified live via \d design_library_items) — generate the next id ourselves,
+      // same COALESCE(MAX(id)+1) convention used elsewhere in this codebase for
+      // no-default integer PKs (e.g. crm_custom_fields.order_index).
+      const result = await db.insert(designLibraryItems).values({
+        ...values,
+        id: sql`(SELECT COALESCE(MAX(id), 0) + 1 FROM design_library_items)`,
+      }).returning();
       return Ok(result[0] as Record<string, unknown>);
     } catch (_e) {
       return Err(String(_e));

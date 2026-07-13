@@ -22,6 +22,9 @@ import { DesignExtendedController } from './presentation/design-extended.control
 import { DesignExtendedService } from './application/design-extended.service';
 import { DesignExtendedRepository } from './infrastructure/repositories/design-extended.repository';
 import { DESIGN_EXTENDED_REPO } from './domain/repositories/i-design-extended.repo';
+import { LibraryController } from './library/library.controller';
+import { LibraryService } from './library/library.service';
+import { LibraryRepository } from './library/library.repository';
 
 const commandHandlers = [RequestDesignHandler, UpdateDesignStatusHandler];
 const eventHandlers = [SoDesignRequestedListener];
@@ -36,9 +39,9 @@ const repositories = [
 
 @Module({
   imports: [CqrsModule, NotificationsModule, AuthModule],
-  controllers: [DesignController, DesignExtendedController],
+  controllers: [DesignController, DesignExtendedController, LibraryController],
   providers: [...commandHandlers, ...eventHandlers, ...queryHandlers, ...repositories, OrdersService, DesignExtendedService, DesignExtendedRepository,
-    { provide: DESIGN_EXTENDED_REPO, useClass: DesignExtendedRepository }],
+    { provide: DESIGN_EXTENDED_REPO, useClass: DesignExtendedRepository }, LibraryService, LibraryRepository],
   exports: [DESIGN_REPO, DESIGN_ORDERS_SVC_REPO, OrdersService],
 })
 export class DesignModule {}
