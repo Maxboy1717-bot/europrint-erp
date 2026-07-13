@@ -192,12 +192,18 @@ export function EmployeeDialog({ open, onOpenChange, employee }: EmployeeDialogP
   }, [open, employee, form, orgDepartments, assignedDeptsData]);
 
   const handleAfterSubmit = async (empId: string) => {
-    // Profile image — FormData (Content-Type avtomatik), faqat Authorization header
+    // Profile image — 2-step upload (bug fix: FormData was built but never sent, and the
+    // profile-image endpoint expects {imageUrl}, not a raw file, so a fixed single-call
+    // version still couldn't have worked). Same PUT /storage/upload -> POST {imageUrl}
+    // pattern already used by FolderTab.tsx/CashierHub.tsx.
     if (selectedFile) {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
       try {
-        await apiRequest('POST', `/api/hr/employees/${empId}/profile-image`);
+        const safeName = selectedFile.name.replace(/[^\w.\-]+/g, "_");
+        const key = `hr-employees/${empId}/${Date.now()}-${safeName}`;
+        const fd = new FormData();
+        fd.append("file", selectedFile, selectedFile.name);
+        await apiRequest('PUT', `/api/storage/upload?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(selectedFile.type || "application/octet-stream")}`, fd);
+        await apiRequest('POST', `/api/hr/employees/${empId}/profile-image`, { imageUrl: `/api/storage/${key}` });
       } catch {
         // Silently fail — asosiy xodim yaratilgan, rasm yuklash optional
       }
