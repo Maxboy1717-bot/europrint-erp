@@ -31,7 +31,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { tLabel } from "@/lib/i18n/tLabel";
-import { NODE_TYPE_LABELS } from "./types";
+import { useCurrentLanguage } from "@/lib/i18n";
+import { resolveNodeTypeLabel } from "./types";
 
 interface CardOption {
   id: number;
@@ -60,6 +61,7 @@ export function ParentCardSelect({
 }: ParentCardSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const language = useCurrentLanguage();
 
   const { data, isLoading } = useQuery<{ data?: CardOption[] }>({
     queryKey: ["/api/org-structure/nodes/flat", { limit: 1000, picker: true }],
@@ -154,7 +156,7 @@ export function ParentCardSelect({
                     />
                     <span className="flex-1 truncate">{card.name}</span>
                     <span className="ml-2 text-xs text-muted-foreground truncate">
-                      {card.nodeType ? NODE_TYPE_LABELS[card.nodeType] ?? card.nodeType : ""}
+                      {card.nodeType ? (resolveNodeTypeLabel(card.nodeType, language) ?? card.nodeType) : ""}
                       {card.headUserName ? ` · ${card.headUserName}` : ""}
                     </span>
                   </CommandItem>

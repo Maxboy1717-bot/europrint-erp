@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { OrgNode, OrgStats, LEVEL_COLORS, LEVEL_LABELS } from "@/components/hr/org/types";
+import { OrgNode, OrgStats, ORG_TIERS } from "@/components/hr/org/types";
 import { countNodes } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
 import { AddNodeDialog, DuplicateFromInput } from "@/components/hr/org/AddNodeDialog";
@@ -30,7 +30,7 @@ import { EPErrorState, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function OrgStructureHierarchy() {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -233,11 +233,12 @@ export default function OrgStructureHierarchy() {
 
           <div className="flex items-center gap-1 border rounded-md px-2 h-8">
             <Filter className="h-3 w-3 text-muted-foreground mr-1" />
-            {([0, 1, 2, 3, 4]).map((lvl) => {
+            {ORG_TIERS.map((tier) => {
+              const lvl = tier.level;
               const checked = filterLevels.has(lvl);
               return (
-                <button key={lvl} className="flex items-center gap-0.5 text-[10px] px-1 rounded hover:bg-muted transition-colors" onClick={() => toggleLevel(lvl)} style={{ color: checked ? LEVEL_COLORS[lvl] : undefined }}>
-                  {checked ? <CheckSquare className="h-3 w-3" style={{ color: LEVEL_COLORS[lvl] }} /> : <Square className="h-3 w-3 text-muted-foreground" />}
+                <button key={lvl} className="flex items-center gap-0.5 text-[10px] px-1 rounded hover:bg-muted transition-colors" onClick={() => toggleLevel(lvl)} style={{ color: checked ? tier.color : undefined }} title={language === "ru" ? tier.ru : tier.uz}>
+                  {checked ? <CheckSquare className="h-3 w-3" style={{ color: tier.color }} /> : <Square className="h-3 w-3 text-muted-foreground" />}
                   <span>{lvl}</span>
                 </button>
               );
@@ -294,10 +295,10 @@ export default function OrgStructureHierarchy() {
       </div>
 
       <div className="border-t px-6 py-1.5 flex items-center gap-4 bg-background shrink-0">
-        {Object.entries(LEVEL_LABELS).map(([lvl, label]) => (
-          <div key={lvl} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="h-2.5 w-2.5 rounded-full" style={{ background: LEVEL_COLORS[Number(lvl)] }} />
-            {label}
+        {ORG_TIERS.map((tier) => (
+          <div key={tier.level} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="h-2.5 w-2.5 rounded-full" style={{ background: tier.color }} />
+            {language === "ru" ? tier.ru : tier.uz}
           </div>
         ))}
       </div>

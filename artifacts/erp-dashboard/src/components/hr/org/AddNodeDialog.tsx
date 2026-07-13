@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { NODE_TYPE_LABELS, OrgNode } from "./types";
+import { NODE_TYPE_LABELS, OrgNode, resolveNodeTypeLabel } from "./types";
 import { ParentCardSelect } from "./ParentCardSelect";
 import { useTranslation } from '@/lib/i18n';
 
@@ -90,7 +90,7 @@ export function AddNodeDialog({
   initialParentId?: string;
   duplicateFrom?: DuplicateFromInput | null;
 }) {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState(() =>
     duplicateFrom ? duplicatedForm(duplicateFrom.node, duplicateFrom.parentId) : emptyForm(initialParentId),
@@ -194,14 +194,14 @@ export function AddNodeDialog({
             }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.entries(NODE_TYPE_LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>{l}</SelectItem>
+                {Object.keys(NODE_TYPE_LABELS).map((v) => (
+                  <SelectItem key={v} value={v}>{resolveNodeTypeLabel(v, language)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          {/* 2026-07-13 (egasi): rang tanlash umuman kerak emas — karta rangi standart 7 ta
-              daraja (hierarchyLevel) bo'yicha AVTOMATIK beriladi (TreeNodeCard/getLevelColor),
+          {/* 2026-07-13 (egasi): rang tanlash umuman kerak emas — karta rangi TURI (nodeType, 6
+              ta tier — ORG_TIERS) bo'yicha AVTOMATIK beriladi (TreeNodeCard/resolveTierColor),
               qo'lda rang tanlash butunlay olib tashlandi. `color` ustuni DB'da hamon bor
               (legacy, default '#3b82f6') lekin FE endi umuman yubormaydi va o'qimaydi. */}
           {form.nodeType === "otdeleniye" && (

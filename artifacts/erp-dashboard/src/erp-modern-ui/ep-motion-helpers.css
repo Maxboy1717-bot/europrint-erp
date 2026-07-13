@@ -35,17 +35,18 @@
   --mod-org:             #7c3aed;
   --mod-org-light:       #F1EBFC;
 
-  /* ─── Org hierarchy level tokens (Vysotskiy 7-Otdeleniye, L0=Egasi..L6) ─
-     Used by Org-sxema (OrgStructureHierarchy/OrgNodeDetail) for karta level
-     accents. L0-L4 mirror the previously-hardcoded LEVEL_COLORS in
-     src/components/hr/org/types.ts; L5/L6 extend the same ramp. ──────────── */
-  --ep-org-l0: #7c3aed; /* Egasi     — Binafsha */
-  --ep-org-l1: #1d4ed8; /* Boshqarma — Ko'k */
-  --ep-org-l2: #16a34a; /* Bo'lim    — Yashil */
-  --ep-org-l3: #b45309; /* Sektor    — Sariq */
-  --ep-org-l4: #dc2626; /* Lavozim   — Qizil */
-  --ep-org-l5: #0d9488; /* 5-daraja  — Teal */
-  --ep-org-l6: #be185d; /* 6-daraja  — Pushti */
+  /* ─── Org tier color tokens (owner 6-tier spec, 2026-07-14: L0=Egasi..L5=Sektsiya/Sektor) ─
+     Used by Org-sxema (TreeNodeCard/OrgStructureHierarchy/OrgNodeDetail) for karta TIER
+     accents — resolveTierColor() in src/components/hr/org/types.ts keys color off a card's
+     nodeType (ORG_TIERS), not its raw tree depth, so the color always matches the chosen
+     tier even when a card's parent skips levels. l6 is a spare/unused ramp step. ──────────── */
+  --ep-org-l0: #7c3aed; /* Egasi                  — Binafsha */
+  --ep-org-l1: #1d4ed8; /* Bosh Direktor          — Ko'k */
+  --ep-org-l2: #16a34a; /* Yo'nalish direktorlari — Yashil */
+  --ep-org-l3: #b45309; /* Departament            — Sariq */
+  --ep-org-l4: #dc2626; /* Bo'lim/Otdel           — Qizil */
+  --ep-org-l5: #0d9488; /* Sektsiya/Sektor        — Teal */
+  --ep-org-l6: #be185d; /* (ishlatilmagan zaxira) — Pushti */
 
   /* ─── Status soft tints ────────────────────────────────────────────────── */
   --ep-green-soft:  rgba(46, 138, 90, 0.12);

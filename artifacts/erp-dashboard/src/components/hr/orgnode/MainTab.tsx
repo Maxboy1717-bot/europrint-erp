@@ -16,7 +16,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { NodeDetail, resolveNodeTypeLabel } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
 interface MainTabProps {
@@ -315,7 +315,7 @@ function RahbarCard({ node, t }: { node: NodeDetail; t: ReturnType<typeof useTra
 }
 
 export function MainTab({ node }: MainTabProps) {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
 
   const cardSalary = (() => {
     const lo = fmtSom(node.minSalary), hi = fmtSom(node.maxSalary);
@@ -338,7 +338,7 @@ export function MainTab({ node }: MainTabProps) {
           <DefRow label="ID" value={node.id} />
           <DefRow label="Nom (UZ)" value={node.name} />
           <DefRow label="Nom (RU)" value={node.nameRu || "—"} />
-          <DefRow label="Turi" value={NODE_TYPE_LABELS[node.nodeType] || node.nodeType} />
+          <DefRow label="Turi" value={resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType} />
           <DefRow label="Daraja" value={node.hierarchyLevel} />
           <DefRow label="Ota node" value={node.parentId ? `#${node.parentId}` : "Ildiz"} />
           <DefRow label="Holat" value={node.isActive ? "Faol" : "Nofaol"} />

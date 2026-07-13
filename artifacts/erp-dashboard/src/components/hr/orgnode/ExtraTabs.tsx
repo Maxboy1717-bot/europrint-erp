@@ -6,7 +6,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, UserX, Layers, TrendingUp, CheckCircle, BarChart2 } from "lucide-react";
 import { StatCard } from "./StatCard";
-import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { NodeDetail, resolveNodeTypeLabel } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
 import { tLabel } from '@/lib/i18n/tLabel';
@@ -15,7 +15,7 @@ interface StatsTabProps {
 }
 
 export function StatsTab({ node }: StatsTabProps) {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const isVacant = !node.headUserName;
   
   return (
@@ -42,7 +42,7 @@ export function StatsTab({ node }: StatsTabProps) {
         <StatCard
           icon={<Layers className="h-4 w-4" />}
           label={t("ierarxiyaDarajasi")}
-          value={`${node.hierarchyLevel} — ${NODE_TYPE_LABELS[node.nodeType] || node.nodeType}`}
+          value={`${node.hierarchyLevel} — ${resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType}`}
           color="var(--ep-org-l0)"
         />
         <StatCard
@@ -68,7 +68,7 @@ export function StatsTab({ node }: StatsTabProps) {
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             {([
-              { label: "Bo'lim turi", value: NODE_TYPE_LABELS[node.nodeType] || node.nodeType },
+              { label: "Bo'lim turi", value: resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType },
               { label: "Ota bo'lim", value: node.parentName || (node.parentId ? `#${node.parentId}` : "Ildiz (asosiy)") },
               { label: "QYaM uzunligi", value: node.tskp ? `${node.tskp.length} belgi` : "Kiritilmagan" },
               { label: "Rang kodi", value: node.color },

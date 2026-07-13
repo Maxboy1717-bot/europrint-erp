@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, selectArray } from "@/lib/queryClient";
-import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { NodeDetail, NODE_TYPE_LABELS, resolveNodeTypeLabel } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
 // Xuddi shu manba components/hr/org/AddNodeDialog.tsx bilan (rbac-tier.policy.ts backend
@@ -40,7 +40,7 @@ interface EditDialogProps {
 export function EditDialog({
   node, open, onClose, onSuccess,
 }: EditDialogProps) {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const { toast } = useToast();
   const [form, setForm] = useState({
     name: node.name,
@@ -174,8 +174,8 @@ export function EditDialog({
             <Select value={form.nodeType} onValueChange={(v) => setForm((f) => ({ ...f, nodeType: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.entries(NODE_TYPE_LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>{l}</SelectItem>
+                {Object.keys(NODE_TYPE_LABELS).map((v) => (
+                  <SelectItem key={v} value={v}>{resolveNodeTypeLabel(v, language)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

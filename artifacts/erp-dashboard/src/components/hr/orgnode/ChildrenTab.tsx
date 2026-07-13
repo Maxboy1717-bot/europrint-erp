@@ -6,7 +6,7 @@
 import { useLocation } from "wouter";
 import { Network, Users, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { NodeDetail, NODE_TYPE_LABELS } from "./types";
+import { NodeDetail, resolveNodeTypeLabel } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
 interface ChildrenTabProps {
@@ -14,7 +14,7 @@ interface ChildrenTabProps {
 }
 
 export function ChildrenTab({ node }: ChildrenTabProps) {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const [, navigate] = useLocation();
 
   if (node.children.length === 0) {
@@ -38,7 +38,7 @@ export function ChildrenTab({ node }: ChildrenTabProps) {
             <div className="flex items-center gap-2 mt-1 text-muted-foreground text-xs">
               <Users className="h-3 w-3" />
               <span>{child.employeeCount} xodim</span>
-              <span className="ml-auto">{NODE_TYPE_LABELS[child.nodeType] || child.nodeType}</span>
+              <span className="ml-auto">{resolveNodeTypeLabel(child.nodeType, language) ?? child.nodeType}</span>
               <ChevronRight className="h-3 w-3" />
             </div>
           </CardContent>

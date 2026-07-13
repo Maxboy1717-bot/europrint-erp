@@ -89,29 +89,18 @@ export interface FolderItem {
   createdAt: string;
 }
 
-export const NODE_TYPE_LABELS: Record<string, string> = {
-  owner: "Egasi",
-  top_director: "Bosh Direktor",
-  director: "Direktor",
-  department: "Bo'lim",
-  // G3 (ORG-CARD-MANUAL-ENTRY-READINESS-2026-07-06, finding B4) — kept in sync with the sibling
-  // map in components/hr/org/types.ts (see that file's comment for the full rationale).
-  otdeleniye: "Otdeleniye",
-  otdel: "Otdel",
-  sektsiya: "Sektsiya",
-  sektor: "Sektor",
-  // 2026-07-11: legacy 'section' retired here too — see components/hr/org/types.ts comment.
-};
-
-// Sourced from --ep-org-l0..l6 design tokens (src/erp-modern-ui/ep-motion-helpers.css) —
-// keep in sync with the sibling LEVEL_COLORS in components/hr/org/types.ts.
-export const LEVEL_COLORS: Record<number, string> = {
-  0: "var(--ep-org-l0)",
-  1: "var(--ep-org-l1)",
-  2: "var(--ep-org-l2)",
-  3: "var(--ep-org-l3)",
-  4: "var(--ep-org-l4)",
-};
+// 2026-07-14: this used to be a hand-maintained SECOND copy of components/hr/org/types.ts's
+// tier maps, kept in sync only by convention + a vitest guard — a real drift risk (this file's
+// LEVEL_COLORS had only 5 entries vs the sibling's 7, already stale for any card at depth 5/6).
+// Re-exporting from the single canonical source makes drift structurally impossible.
+export {
+  ORG_TIERS,
+  NODE_TYPE_LABELS,
+  LEVEL_COLORS,
+  resolveNodeTypeLabel,
+  resolveLevelLabel,
+  resolveTierColor,
+} from "@/components/hr/org/types";
 
 /**
  * KARTA 5-HOLAT LIFECYCLE (A32 — VISION EP-ORG-084/086).

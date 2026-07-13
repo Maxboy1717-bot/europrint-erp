@@ -36,13 +36,13 @@ import { HistoryTab } from "@/components/hr/orgnode/HistoryTab";
 import { StatsTab, VacantTab } from "@/components/hr/orgnode/ExtraTabs";
 import { LifecycleTab } from "@/components/hr/orgnode/LifecycleTab";
 import { useOrgNodeData } from "@/components/hr/orgnode/useOrgNodeData";
-import { NODE_TYPE_LABELS, LEVEL_COLORS, CARD_STATES, resolveCardState } from "@/components/hr/orgnode/types";
+import { CARD_STATES, resolveCardState, resolveNodeTypeLabel, resolveTierColor } from "@/components/hr/orgnode/types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
 
 export default function OrgNodeDetail() {
-  const { t } = useTranslation("common");
+  const { t, language } = useTranslation("common");
   const { nodeId, node, isLoading, isError, deleteMutation, onRefresh, navigate } = useOrgNodeData();
   const [tab, setTab] = useState("main");
   const [editOpen, setEditOpen] = useState(false);
@@ -70,7 +70,7 @@ export default function OrgNodeDetail() {
     );
   }
 
-  const headerBg = node.color || LEVEL_COLORS[node.hierarchyLevel] || "#1d4ed8";
+  const headerBg = node.color || resolveTierColor(node.nodeType, node.hierarchyLevel);
   const isVacant = !node.headUserName;
   const cardState = resolveCardState(node);
   const cardStateMeta = CARD_STATES[cardState];
@@ -93,11 +93,11 @@ export default function OrgNodeDetail() {
         <span className="text-foreground font-medium truncate max-w-xs">{node.name}</span>
       </div>
 
-      <div className="px-6 py-5 shrink-0" style={{ background: `linear-gradient(135deg, ${headerBg}dd, ${headerBg}99)` }}>
+      <div className="px-6 py-5 shrink-0" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${headerBg} 87%, transparent), color-mix(in srgb, ${headerBg} 60%, transparent))` }}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="text-white">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Badge style={{ background: "rgba(255,255,255,0.25)", color: "white", border: "none" }}>{NODE_TYPE_LABELS[node.nodeType] || node.nodeType}</Badge>
+              <Badge className="bg-white/25 text-white border-none">{resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType}</Badge>
               <span className="text-white/60 text-xs">#{node.id} · Daraja {node.hierarchyLevel}</span>
               {!node.isActive && <EPStatusPill tone="danger" className="text-xs">{t("inactive")}</EPStatusPill>}
               <EPStatusPill tone={cardStateMeta.tone} className="text-xs" data-testid="header-card-state">{t(`cardState_${cardState}`, cardStateMeta.label)}</EPStatusPill>
