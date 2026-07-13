@@ -126,9 +126,11 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
   const { data: tasksData } = useQuery<Array<{ kind: string; id: string; label: string; status: string | null }>>({
     queryKey: [`/api/chat/employees/${employee.userId}/related-tasks`],
     queryFn: () => apiRequest("GET", `/api/chat/employees/${employee.userId}/related-tasks`),
-    enabled: tab === "vazifalar",
+    // Always enabled — the counts also feed the Umumiy-tab stat row (3g).
   });
   const tasks = Array.isArray(tasksData) ? tasksData : [];
+  const kanbanCount = tasks.filter((tk) => tk.kind !== "cc").length;
+  const ccCount = tasks.filter((tk) => tk.kind === "cc").length;
 
   // Kengaytirilgan profil — kanonik HR endpointidan (mavjud bo'lmasa dash).
   const { data } = useQuery<EmployeeProfile>({
@@ -184,6 +186,18 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
           <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--ep-subtle)]">
             <span className={cn("w-2 h-2 rounded-full", ws ? ws.dot : (employee.isOnline ? "bg-[var(--ep-green)]" : "bg-[var(--ep-muted)]"))} />
             <span className="text-[12px]">{ws ? ws.label : (employee.isOnline ? t("onlayn") : t("oflayn"))}</span>
+          </div>
+        </div>
+
+        {/* Stat-qatori (3g) — ochiq vazifalar + CC hujjatlar soni */}
+        <div className="grid grid-cols-2 gap-2 py-3 border-b border-[var(--ep-border)]">
+          <div className="text-center">
+            <p className="text-[18px] font-semibold text-[var(--ep-text)]">{kanbanCount}</p>
+            <p className="text-[11px] text-[var(--ep-muted)]">{t("ochiqVazifalar")}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[18px] font-semibold text-[var(--ep-text)]">{ccCount}</p>
+            <p className="text-[11px] text-[var(--ep-muted)]">{t("ccHujjatlar")}</p>
           </div>
         </div>
 
