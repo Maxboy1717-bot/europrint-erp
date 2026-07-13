@@ -95,6 +95,7 @@ export class DocumentAccessLogService {
     const map: Record<string, { table: string; idIsUuid: boolean }> = {
       cc: { table: 'cc_documents', idIsUuid: true },
       erp_document: { table: 'erp_documents', idIsUuid: true },
+      erp_spreadsheet: { table: 'erp_spreadsheets', idIsUuid: true },
       hr_document: { table: 'hr_documents', idIsUuid: false },
       employment_contract: { table: 'employment_contracts', idIsUuid: false },
       technology_card: { table: 'technology_cards', idIsUuid: false },

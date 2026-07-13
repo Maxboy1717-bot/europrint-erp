@@ -239,3 +239,8 @@ export type { DocumentAccessLogRow, DocumentAccessLogInsert, DocumentAccessActio
 // Consumes the document-control layer above (same tiers, logged, download-blocked, watermarked).
 export { erp_documents } from './schema-erp-documents';
 export type { ErpDocumentRow, ErpDocumentInsert } from './schema-erp-documents';
+
+// schema-erp-spreadsheets: "Jadval" spreadsheets (Phase B, owner 2026-07-13). Consumes the
+// document-control layer (same tiers, logged, download-blocked, watermarked, CC-surfaced).
+export { erp_spreadsheets } from './schema-erp-spreadsheets';
+export type { ErpSpreadsheetRow, ErpSpreadsheetInsert } from './schema-erp-spreadsheets';
