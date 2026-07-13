@@ -190,8 +190,15 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
   // visible queue number (NULLs — not yet queued — last), then priority/urgent as a tiebreak.
   async getQueueByWorkCenter(workCenterId: string): Promise<Result<Row[]>> {
     try {
+      // BUGFIX (2026-07-13, security-sensitive 503 root cause): this previously selected
+      // `planned_start`, which does not exist on production_orders (live columns are
+      // `planned_start_date` varchar / `scheduled_start` timestamp / `actual_start`
+      // timestamp — see \d production_orders). The undefined-column error threw a
+      // DrizzleQueryError whose .message embeds the full raw SQL text, which then leaked
+      // to the client (see api-request.ts throwIfResNotOk fix, same date). Corrected to
+      // the real column, matching the sibling getWeeklyPlan() query below.
       const r = await runQuery<Row>(sql`
-        SELECT id, order_number, product_name, status, priority, is_urgent, queue_sequence, planned_start
+        SELECT id, order_number, product_name, status, priority, is_urgent, queue_sequence, planned_start_date
         FROM production_orders
         WHERE work_center_id = ${workCenterId} AND deleted_at IS NULL
         ORDER BY queue_sequence ASC NULLS LAST, is_urgent DESC, priority ASC, id ASC`);
