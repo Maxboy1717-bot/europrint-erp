@@ -15,6 +15,34 @@ import { HR_DASHBOARD_EXTRA_REPO, type IHrDashboardExtraRepo } from '../domain/r
 /** Palette used by the FE pie/bar charts. Five distinct hues. */
 const COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#C7B3E0'];
 
+/**
+ * i18n for `GET /hr/resignation-stats/:lang` (previously the `:lang` param was silently
+ * ignored — the base and `/:lang` routes returned byte-identical payloads regardless of
+ * language, see hr-dashboard-deep-audit-2026-05-28.md line ~70/108). `dismissal_type` is a
+ * CONTROLLED enum (validated in offboarding-workflow.service.ts#validateDismissalType — not
+ * free text), so translating the known codes is safe. Unknown/legacy codes fall back to the
+ * raw stored string (no fabrication).
+ */
+export type SupportedLang = 'uz' | 'uz-cyr' | 'ru';
+
+function normalizeLang(lang?: string): SupportedLang {
+  return lang === 'ru' || lang === 'uz-cyr' ? lang : 'uz';
+}
+
+const RESIGNATION_REASON_LABELS: Record<string, Record<SupportedLang, string>> = {
+  voluntary:       { uz: "O'z xohishi bilan",        'uz-cyr': 'Ўз хоҳиши билан',        ru: 'По собственному желанию' },
+  resignation:     { uz: "O'z xohishi bilan",        'uz-cyr': 'Ўз хоҳиши билан',        ru: 'По собственному желанию' },
+  termination:     { uz: "Ishdan bo'shatish",         'uz-cyr': 'Ишдан бўшатиш',          ru: 'Увольнение по инициативе компании' },
+  retirement:      { uz: 'Pensiyaga chiqish',          'uz-cyr': 'Пенсияга чиқиш',         ru: 'Выход на пенсию' },
+  end_of_contract: { uz: "Shartnoma muddati tugashi",  'uz-cyr': 'Шартнома муддати тугаши', ru: 'Истечение срока контракта' },
+  mutual:          { uz: "O'zaro kelishuv",           'uz-cyr': 'Ўзаро келишув',          ru: 'По соглашению сторон' },
+  other:           { uz: 'Boshqa sabab',               'uz-cyr': 'Бошқа сабаб',            ru: 'Другая причина' },
+};
+
+const NO_DATA_LABEL: Record<SupportedLang, string> = {
+  uz: "Ma'lumot yo'q", 'uz-cyr': 'Маълумот йўқ', ru: 'Нет данных',
+};
+
 export interface ResignationStatsRow {
   reason: string;
   count: number;
@@ -125,18 +153,22 @@ export class HrDashboardExtraService {
 
   // ─── Projected views (Rule 6 — moved out of controllers) ─────────────────
 
-  async getResignationStatsProjected(): Promise<Result<ResignationStatsRow[], AppError>> {
+  async getResignationStatsProjected(lang?: string): Promise<Result<ResignationStatsRow[], AppError>> {
+    const l = normalizeLang(lang);
     const r = await this.repo.getResignationStats();
     if (!r.ok) return r as Result<never, AppError>;
     const rows = (Array.isArray(r.data) ? r.data : []) as Record<string, unknown>[];
     if (rows.length === 0) {
-      return Ok([{ reason: "Ma'lumot yo'q", count: 0, color: COLORS[0] ?? '#94a3b8' }]);
+      return Ok([{ reason: NO_DATA_LABEL[l], count: 0, color: COLORS[0] ?? '#94a3b8' }]);
     }
-    return Ok(rows.map((row, i) => ({
-      reason: String(row.reason),
-      count: Number(row.count),
-      color: COLORS[i % COLORS.length] ?? '#94a3b8',
-    })));
+    return Ok(rows.map((row, i) => {
+      const code = String(row.reason ?? 'other');
+      return {
+        reason: RESIGNATION_REASON_LABELS[code]?.[l] ?? code,
+        count: Number(row.count),
+        color: COLORS[i % COLORS.length] ?? '#94a3b8',
+      };
+    }));
   }
 
   async getRiskScoresProjected(): Promise<Result<RiskScoresPayload, AppError>> {

@@ -21,8 +21,16 @@ export interface DailyReportsStatsRow {
 }
 
 export interface IHrDashboardRepo {
-  getBirthdaysToday(): Promise<Result<Row[]>>;
-  getBirthdaysUpcoming(d: number): Promise<Result<Row[]>>;
+  /**
+   * @param departmentId - when provided, restricts results to employees whose
+   *   PRIMARY org department matches this id. Used to scope PII (birth_date +
+   *   full name) for the `MANAGER` role to their own department instead of
+   *   company-wide (security fix — see hr-dashboard.controller.ts).
+   */
+  getBirthdaysToday(departmentId?: number): Promise<Result<Row[]>>;
+  getBirthdaysUpcoming(d: number, departmentId?: number): Promise<Result<Row[]>>;
+  /** Resolves the caller's own primary org_department_id (for MANAGER PII scoping). Null when unresolvable. */
+  getUserPrimaryDepartmentId(userId: number): Promise<Result<number | null>>;
   getMilestonesUpcoming(d: number): Promise<Result<unknown[]>>;
   getMonthlyTrend(): Promise<Result<unknown[]>>;
   getAbcAnalysis(): Promise<Result<unknown[]>>;

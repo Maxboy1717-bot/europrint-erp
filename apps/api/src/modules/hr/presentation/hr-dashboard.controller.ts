@@ -29,19 +29,42 @@ export class HrDashboardController {
     private readonly i18n: I18nService,
   ) {}
 
+  /**
+   * SECURITY (birthday PII scoping): `birth_date` + full name + position/department are
+   * personal data. HR/DIRECTOR/ADMIN/SUPER_ADMIN legitimately need company-wide visibility
+   * (HR function), but a plain `MANAGER` should only see their own department's birthdays —
+   * not every employee in the company. There is no verified manager→subordinate chain live
+   * yet (`org_departments.manager_id` is largely NULL per memory `feedback`/org audits), so
+   * we scope to the manager's OWN primary department (`employee_org_departments.is_primary`)
+   * instead — never company-wide for that role. If a manager has no resolvable department,
+   * we fail CLOSED (empty list) rather than leaking company-wide PII.
+   * TODO(follow-up, needs owner decision): once `manager_id` / KARTA hierarchy is reliably
+   * populated, scope to "all departments under this manager" instead of just their own.
+   */
+  private async resolveBirthdayDeptScope(user?: { id?: number; role?: string }): Promise<number | undefined> {
+    const role = (user?.role ?? '').toLowerCase();
+    if (role !== 'manager') return undefined; // HR/admin/director roles: company-wide (unchanged)
+    const r = await this.svc.getUserPrimaryDepartmentId(user?.id ?? 0);
+    // Fail closed: unresolvable department → sentinel that matches no real department id.
+    return r.ok && typeof r.data === 'number' ? r.data : -1;
+  }
+
   @Get('birthdays')
-  async getBirthdays(@Query('days') days?: string) {
-    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)), []);
+  async getBirthdays(@Query('days') days?: string, @CurrentUser() user?: { id: number; role?: string }) {
+    const deptScope = await this.resolveBirthdayDeptScope(user);
+    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90), deptScope), []);
   }
 
   @Get('birthdays/today')
-  async getBirthdaysToday() {
-    return unwrapOrDefault(await this.svc.getBirthdaysToday(), []);
+  async getBirthdaysToday(@CurrentUser() user?: { id: number; role?: string }) {
+    const deptScope = await this.resolveBirthdayDeptScope(user);
+    return unwrapOrDefault(await this.svc.getBirthdaysToday(deptScope), []);
   }
 
   @Get('birthdays/upcoming')
-  async getBirthdaysUpcoming(@Query('days') days?: string) {
-    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90)), []);
+  async getBirthdaysUpcoming(@Query('days') days?: string, @CurrentUser() user?: { id: number; role?: string }) {
+    const deptScope = await this.resolveBirthdayDeptScope(user);
+    return unwrapOrDefault(await this.svc.getBirthdaysUpcoming(Math.min(parseInt(days ?? '7', 10) || 7, 90), deptScope), []);
   }
 
   @Get('milestones/upcoming')
@@ -54,6 +77,13 @@ export class HrDashboardController {
     return unwrapOrDefault(await this.svc.getMonthlyTrend(), []);
   }
 
+  // NOTE (verified 2026-07-13, was flagged in hr-dashboard-deep-audit-2026-05-28.md
+  // as "`_lang` ignored — no DB effect"): checked deliberately. The payload here is
+  // `{ month: 'YYYY-MM', newHires: number, resignations: number }` — no free-text
+  // field exists to translate; the numbers themselves don't change by language. This
+  // is unlike `resignation-stats/:lang` (fixed above), which does carry a localizable
+  // dismissal-reason label. Left as an intentional passthrough rather than fabricating
+  // month-name localization the FE (TurnoverTab.tsx) doesn't consume.
   @Get('monthly-trend/:lang')
   async getMonthlyTrendByLang(@Param('lang') _lang: string) {
     return unwrapOrDefault(await this.svc.getMonthlyTrend(), []);

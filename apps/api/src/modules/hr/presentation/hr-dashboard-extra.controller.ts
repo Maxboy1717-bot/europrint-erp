@@ -27,16 +27,20 @@ export class HrDashboardExtraController {
   @ApiOperation({ summary: 'Get resignation stats' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('resignation-stats')
-  async getResignationStats() {
-    const r = await this.svc.getResignationStatsProjected();
+  async getResignationStats(@Query('lang') lang?: string) {
+    const r = await this.svc.getResignationStatsProjected(lang);
     return { data: r.ok && r.data ? r.data : [] };
   }
 
+  // SECURITY/BUG FIX: previously ignored `:lang` and delegated to the exact same
+  // handler as the base route (byte-identical response regardless of language —
+  // hr-dashboard-deep-audit-2026-05-28.md line ~70/108). Now threads `lang` through
+  // to `getResignationStatsProjected`, which localizes the dismissal-reason labels.
   @ApiOperation({ summary: 'Get resignation stats by lang' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('resignation-stats/:lang')
-  getResignationStatsByLang() {
-    return this.getResignationStats();
+  async getResignationStatsByLang(@Param('lang') lang: string) {
+    return this.getResignationStats(lang);
   }
 
   @ApiOperation({ summary: 'Get risk scores' })

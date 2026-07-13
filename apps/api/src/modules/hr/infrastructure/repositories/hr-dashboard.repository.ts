@@ -23,7 +23,7 @@ export type { DailyReportsStatsRow };
 
 @Injectable()
 export class HrDashboardRepository implements IHrDashboardRepo {
-  async getBirthdaysToday(): Promise<Result<Row[]>> {
+  async getBirthdaysToday(departmentId?: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
@@ -33,7 +33,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.id AS dept_id, od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.department_id = eod.org_department_id
@@ -44,6 +44,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
           AND e.birth_date IS NOT NULL
           AND EXTRACT(MONTH FROM e.birth_date) = EXTRACT(MONTH FROM NOW())
           AND EXTRACT(DAY FROM e.birth_date) = EXTRACT(DAY FROM NOW())
+          AND (${departmentId ?? null}::int IS NULL OR primary_org.dept_id = ${departmentId ?? null}::int)
         ORDER BY e.last_name
         LIMIT 50
       `);
@@ -51,7 +52,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
       }, 'DB_ERROR');
   }
 
-  async getBirthdaysUpcoming(d: number): Promise<Result<Row[]>> {
+  async getBirthdaysUpcoming(d: number, departmentId?: number): Promise<Result<Row[]>> {
     return safeCall(async () => {
       const rows = await runQuery<Row>(sql`
         SELECT e.id,
@@ -63,7 +64,7 @@ export class HrDashboardRepository implements IHrDashboardRepo {
         FROM employees e
         LEFT JOIN users u ON u.employee_id = e.id AND u.deleted_at IS NULL
         LEFT JOIN LATERAL (
-          SELECT od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
+          SELECT od.id AS dept_id, od.name AS dept_name, COALESCE(of2.position_name, '') AS pos_name
           FROM employee_org_departments eod
           JOIN org_departments od ON od.id = eod.org_department_id
           LEFT JOIN org_functions of2 ON of2.department_id = eod.org_department_id
@@ -74,10 +75,26 @@ export class HrDashboardRepository implements IHrDashboardRepo {
           AND e.birth_date IS NOT NULL
           AND MAKE_DATE(EXTRACT(YEAR FROM NOW())::int, EXTRACT(MONTH FROM e.birth_date)::int, EXTRACT(DAY FROM e.birth_date)::int)
               BETWEEN NOW()::date AND (NOW() + (${d}||' days')::interval)::date
+          AND (${departmentId ?? null}::int IS NULL OR primary_org.dept_id = ${departmentId ?? null}::int)
         ORDER BY birth_month, birth_day
         LIMIT 50
       `);
       return rows.rows as Row[];
+      }, 'DB_ERROR');
+  }
+
+  /** Caller's own primary org department (for MANAGER-role PII scoping — see controller). */
+  async getUserPrimaryDepartmentId(userId: number): Promise<Result<number | null>> {
+    return safeCall(async () => {
+      const rows = await runQuery<{ org_department_id: number }>(sql`
+        SELECT eod.org_department_id
+        FROM employee_org_departments eod
+        WHERE eod.user_id = ${userId} AND eod.is_primary = true
+        ORDER BY eod.assigned_at DESC
+        LIMIT 1
+      `);
+      const row = rows.rows[0];
+      return row ? Number(row.org_department_id) : null;
       }, 'DB_ERROR');
   }
 

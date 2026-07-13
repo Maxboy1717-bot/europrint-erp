@@ -12,12 +12,17 @@ import type { CreatePipDto, UpdatePipDto } from '../presentation/dto/hr.dto';
 export class HrDashboardService {
   constructor(@Inject(HR_DASHBOARD_REPO) private readonly repo: IHrDashboardRepo) {}
 
-  async getBirthdaysToday(): Promise<Result<object, AppError>> {
-    return this.repo.getBirthdaysToday();
+  async getBirthdaysToday(departmentId?: number): Promise<Result<object, AppError>> {
+    return this.repo.getBirthdaysToday(departmentId);
   }
 
-  async getBirthdaysUpcoming(d: number) {
-    return this.repo.getBirthdaysUpcoming(d);
+  async getBirthdaysUpcoming(d: number, departmentId?: number) {
+    return this.repo.getBirthdaysUpcoming(d, departmentId);
+  }
+
+  /** Resolves the caller's own primary org_department_id — used to scope MANAGER-role birthday PII. */
+  async getUserPrimaryDepartmentId(userId: number) {
+    return this.repo.getUserPrimaryDepartmentId(userId);
   }
 
   async getMilestonesUpcoming(d: number) {
