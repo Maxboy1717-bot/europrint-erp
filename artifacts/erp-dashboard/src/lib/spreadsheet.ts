@@ -94,14 +94,16 @@ function evalCondition(cond: string, cells: Cells, seen: Set<string>): boolean {
   }
 }
 
-// Quote-aware arg splitter: commas inside "..." or nested () are not separators.
+// Quote-aware arg splitter: separators inside "..." or nested () are not separators. Accepts
+// BOTH ',' and ';' as argument separators — many RU/UZ Excel users type '=SUM(A1;A2)' (the
+// European/Cyrillic-locale list separator), which otherwise parsed as a single broken arg.
 function splitArgs(s: string): string[] {
   const out: string[] = []; let depth = 0, cur = '', inQ = false;
   for (const ch of s) {
     if (ch === '"') inQ = !inQ;
     if (!inQ && ch === '(') depth++;
     if (!inQ && ch === ')') depth--;
-    if (!inQ && ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch;
+    if (!inQ && (ch === ',' || ch === ';') && depth === 0) { out.push(cur); cur = ''; } else cur += ch;
   }
   if (cur.trim() !== '') out.push(cur);
   return out;
