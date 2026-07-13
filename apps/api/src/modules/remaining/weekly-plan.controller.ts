@@ -68,6 +68,11 @@ export class WeeklyPlanController {
   }
 
   @Patch(':id/approve')
+  // Manager-tier gate at the guard layer too (matches deletePlan's override below) — closes
+  // the self-approval gap: this class's default @Roles(...) includes 'employee'/'operator',
+  // which let any authenticated user approve their own plan before this override + the
+  // service-level MANAGER_ROLES check (WeeklyPlanService#approve) were added.
+  @Roles('admin', 'super_admin', 'director', 'manager', 'department_head')
   async approve(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }) {
     const r = await this.svc.approve(id, user);
     assertOk(r);

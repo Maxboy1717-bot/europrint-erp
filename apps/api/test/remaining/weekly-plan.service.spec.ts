@@ -7,16 +7,16 @@
  * gates, and the Friday-18:00 approval-deadline rule) against a jest.fn() repo
  * stub — no live DB required.
  *
- * IMPORTANT quirk documented here (not a test bug): every method body is
- * `return safeCall(async () => { ...; return Err(...); ... })`. `safeCall`
- * always resolves with `Ok(await fn())` unless `fn` *throws* — an early
- * `return Err(...)` inside the callback is just its resolved value, so it
- * gets wrapped a second time. At the top level `res.ok` is therefore always
- * `true` for these business-rule rejections; the real failure is nested at
- * `res.data.ok === false` / `res.data.error.message`. (The controller's
- * `assertOk(r)` only checks the outer `ok`, so today these rejections do not
- * actually throw an HTTP error — they would return 200/201 with an
- * error-shaped body. This spec asserts the real, current behaviour.)
+ * Result<T> shape: business-rule rejections are thrown as NestJS HttpExceptions
+ * *inside* the `safeCall(async () => {...})` callback, so `safeCall`'s catch
+ * block turns them into a top-level `Err({code, message})` — `res.ok` is
+ * `false` and `res.error.message` carries the human-readable reason. (Earlier
+ * revisions of this service used `return Err(...)` instead of `throw`, which
+ * `safeCall` — designed to catch *thrown* errors — silently re-wrapped as
+ * `Ok(...)`, so the controller's `assertOk()`/`unwrapOrThrow()` never saw the
+ * failure and the HTTP response came back 200/201 with an error-shaped body.
+ * Fixed: every rejection below now throws, so it surfaces as a proper
+ * 400/403/404/409 at the HTTP layer.)
  */
 import { WeeklyPlanService, getMondayOfWeek, MANAGER_ROLES } from '../../src/modules/remaining/weekly-plan.service';
 
@@ -24,12 +24,10 @@ type Row = Record<string, unknown>;
 const Ok = <T>(data: T) => ({ ok: true, data } as const);
 const Err = (message: string) => ({ ok: false, error: { code: 'INTERNAL', message } } as const);
 
-/** Unwraps the double-wrapped rejection shape described above and asserts on it. */
-function expectRejected(res: { ok: boolean; data?: unknown }, matcher: (message: string) => void) {
-  expect(res.ok).toBe(true); // outer Result is always Ok — see file-header note
-  const inner = res.data as { ok: boolean; error?: { message: string } };
-  expect(inner.ok).toBe(false);
-  matcher(inner.error?.message ?? '');
+/** Asserts a rejected Result: top-level `ok === false` with the expected message. */
+function expectRejected(res: { ok: boolean; error?: { message: string } }, matcher: (message: string) => void) {
+  expect(res.ok).toBe(false);
+  matcher(res.error?.message ?? '');
 }
 
 describe('WeeklyPlanService', () => {
@@ -71,6 +69,18 @@ describe('WeeklyPlanService', () => {
 
     it('rolls a Sunday back to the Monday that started that week (day===0 branch)', () => {
       expect(getMondayOfWeek('2026-07-05T12:00:00')).toBe('2026-06-29');
+    });
+
+    it('is stable regardless of the host process timezone (explicit Asia/Tashkent via TZDate)', () => {
+      // Regression guard for the root-cause timezone bug: this must not depend on
+      // process.env.TZ / the OS default zone the way plain `new Date()` arithmetic would.
+      const original = process.env.TZ;
+      process.env.TZ = 'UTC';
+      try {
+        expect(getMondayOfWeek('2026-07-01T12:00:00')).toBe('2026-06-29');
+      } finally {
+        process.env.TZ = original;
+      }
     });
   });
 
@@ -218,6 +228,14 @@ describe('WeeklyPlanService', () => {
       expectRejected(res, (msg) => expect(msg).toBe("Noto'g'ri ID"));
       expect(repo.getOne).not.toHaveBeenCalled();
     });
+
+    it('reports not-found (not a silent 200) when the repo row is null', async () => {
+      const repo = makeRepo();
+      repo.getOne.mockResolvedValue(Ok<Row | null>(null));
+      const svc = new WeeklyPlanService(repo as never);
+      const res = await svc.getOne('999', { id: 1, role: 'manager' });
+      expectRejected(res, (msg) => expect(msg).toBe('Reja topilmadi'));
+    });
   });
 
   describe('deletePlan', () => {
@@ -242,6 +260,14 @@ describe('WeeklyPlanService', () => {
   });
 
   describe('approve', () => {
+    it('blocks a non-manager from approving (self-approval gap closed)', async () => {
+      const repo = makeRepo();
+      const svc = new WeeklyPlanService(repo as never);
+      const res = await svc.approve('1', { id: 7, role: 'employee' });
+      expectRejected(res, (msg) => expect(msg).toBe('Faqat menejer reja tasdiqlay oladi'));
+      expect(repo.getOne).not.toHaveBeenCalled();
+    });
+
     it('rejects re-approving an already-approved plan', async () => {
       const repo = makeRepo();
       repo.getOne.mockResolvedValue(Ok<Row>({ id: 1, status: 'approved', week_start: '2026-06-29' }));
@@ -270,6 +296,25 @@ describe('WeeklyPlanService', () => {
       const res = await svc.approve('1', { id: 3, role: 'manager' });
       expect(res.ok).toBe(true);
       expect(repo.approve).toHaveBeenCalledWith(1, 3);
+    });
+
+    it('is not fooled by the host process timezone when checking the deadline', async () => {
+      // Regression guard for the 5h double-conversion bug: on a UTC-TZ host, the old
+      // "new Date + setHours + manual -5h" code computed the wrong instant. Force TZ=UTC
+      // here and confirm a week whose Tashkent deadline has clearly not passed is still
+      // approvable, and a week whose Tashkent deadline has clearly passed is still blocked.
+      const original = process.env.TZ;
+      process.env.TZ = 'UTC';
+      try {
+        const repo = makeRepo();
+        repo.getOne.mockResolvedValue(Ok<Row>({ id: 1, status: 'submitted', week_start: '2099-01-05' }));
+        repo.approve.mockResolvedValue(Ok<Row>({ id: 1, status: 'approved' }));
+        const svc = new WeeklyPlanService(repo as never);
+        const res = await svc.approve('1', { id: 3, role: 'manager' });
+        expect(res.ok).toBe(true);
+      } finally {
+        process.env.TZ = original;
+      }
     });
   });
 });
