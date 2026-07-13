@@ -89,7 +89,7 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
 
       const [columnsRows, cardsRows] = await Promise.all([
         db.execute<Record<string, unknown>>(sql`
-          SELECT id, board_id, name, sort_order, color, created_at
+          SELECT id, board_id, name, sort_order, color, wip_limit, created_at
           FROM kanban_columns WHERE board_id = ${boardId} AND deleted_at IS NULL ORDER BY sort_order ASC
         `),
         db.execute<Record<string, unknown>>(sql`

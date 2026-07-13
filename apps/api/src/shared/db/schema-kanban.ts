@@ -24,6 +24,10 @@ export const kanbanColumns = pgTable('kanban_columns', {
   name:       text('name').notNull(),
   sort_order: integer('sort_order').notNull().default(0),
   color:      varchar('color', { length: 20 }),
+  // Per-column WIP-limit override (owner decision 2026-07-13, chat). NULL = use the
+  // global KANBAN_WIP_LIMIT_JARAYONDA default (kanban-boards.service.ts). CRUD via
+  // POST/PATCH /kanban/boards/:boardId/columns[/:columnId] (wipLimit/wip_limit).
+  wip_limit:  integer('wip_limit'),
   created_at: timestamp('created_at').notNull().defaultNow(),
   updated_at: timestamp('updated_at'),
   deleted_at: timestamp('deleted_at'),
@@ -65,6 +69,24 @@ export const kanbanCards = pgTable('kanban_cards', {
   updated_at:       timestamp('updated_at').notNull().defaultNow(),
   deleted_at:       timestamp('deleted_at'),
 });
+
+// ── WIP override log (per-column Kanban WIP limits, owner decision 2026-07-13) ──
+// Written by KanbanBoardsService.assertCanMoveTo() when a supervisor-role user moves
+// a card into an at-limit "Jarayonda" column: instead of the normal CONFLICT block,
+// the move is allowed and logged here. Shape/naming mirrors qc_override_log's
+// convention (schema-misc-qc.ts / qc-override-log-2026-07-11.sql): user_id ->
+// overridden_by_user_id, reason, created_at.
+export const kanbanWipOverrides = pgTable('kanban_wip_overrides', {
+  id:                 serial('id').primaryKey(),
+  cardId:             integer('card_id').notNull(),
+  columnId:           integer('column_id').notNull(),
+  overriddenByUserId: integer('overridden_by_user_id').notNull(),
+  reason:             text('reason').notNull(),
+  createdAt:          timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('kanban_wip_overrides_column_idx').on(t.columnId),
+  index('kanban_wip_overrides_card_idx').on(t.cardId),
+]);
 
 // ── SD status → Kanban column auto-move mapping (owner policy, INERT by default) ──
 // Guruh-B owner decision (owner-decisions batch item 4): when a sales order's SD

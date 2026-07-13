@@ -26,6 +26,9 @@ export interface KanbanColumn {
   name: string;
   sort_order: number;
   color: string | null;
+  /** Per-column WIP-limit override (owner decision 2026-07-13). NULL = use the
+   *  global KANBAN_WIP_LIMIT_JARAYONDA default (kanban-boards.service.ts). */
+  wip_limit: number | null;
   created_at: Date;
 }
 
@@ -74,12 +77,18 @@ export interface CreateColumnInput {
   name: string;
   sort_order: number;
   color: string | null;
+  /** Per-column WIP-limit override (owner decision 2026-07-13). NULL = use the
+   *  global KANBAN_WIP_LIMIT_JARAYONDA default. */
+  wip_limit: number | null;
 }
 
 export interface UpdateColumnInput {
   name: string | null;
   color: string | null;
   sort_order: number | null;
+  /** Per-column WIP-limit override (owner decision 2026-07-13). NULL leaves the
+   *  column's current wip_limit unchanged (repo update uses COALESCE). */
+  wip_limit: number | null;
 }
 
 export interface CreateCardInput {

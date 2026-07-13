@@ -1323,4 +1323,45 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'qc_defects.is_customer_fault column (owner 2026-07-13, sales-manager auto-notify)',
     sql: `ALTER TABLE IF EXISTS qc_defects ADD COLUMN IF NOT EXISTS is_customer_fault BOOLEAN`,
   },
+  // Owner decision 2026-07-13 (chat): Kanban WIP-limit (kanban-boards.service.ts
+  // KANBAN_WIP_LIMIT_JARAYONDA=3, previously hardcoded identically on every
+  // "Jarayonda" column of every board) is now per-column CRUD-configurable. Nullable —
+  // NULL keeps a column on the historical global default (additive, Q-46
+  // non-regression). CRUD: existing POST /kanban/boards/:boardId/columns and
+  // PATCH /kanban/boards/:boardId/columns/:columnId endpoints (kanban-boards.service.ts
+  // addColumn/updateColumn) now also accept wipLimit/wip_limit. Verified live
+  // 2026-07-13: kanban_columns is a base table (relkind='r', not a view), no
+  // wip_limit column yet. APPROVED: owner schema-approval 2026-07-11 (Muslimbek,
+  // chat) — Q-35. Human-readable mirror:
+  // apps/api/src/shared/db/migrations/kanban-wip-limit-2026-07-13.sql.
+  {
+    name: 'kanban_columns.wip_limit column (per-column WIP-limit override, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS kanban_columns ADD COLUMN IF NOT EXISTS wip_limit INTEGER`,
+  },
+  // kanban_wip_overrides — audit log written when a supervisor-role user moves a card
+  // into an at-limit "Jarayonda" column: KanbanBoardsService.assertCanMoveTo() allows
+  // the move and records it here instead of blocking with the usual CONFLICT error.
+  // Shape/naming mirrors qc_override_log (schema-misc-qc.ts /
+  // qc-override-log-2026-07-11.sql): user_id -> overridden_by_user_id, reason,
+  // created_at. Verified live 2026-07-13: table does not exist yet; kanban_cards.id /
+  // kanban_columns.id are both integer serial PKs (FK-safe).
+  {
+    name: 'kanban_wip_overrides table (WIP-limit supervisor-override log, owner 2026-07-13)',
+    sql: `CREATE TABLE IF NOT EXISTS kanban_wip_overrides (
+      id                    SERIAL PRIMARY KEY,
+      card_id               INTEGER NOT NULL REFERENCES kanban_cards(id) ON DELETE CASCADE,
+      column_id             INTEGER NOT NULL REFERENCES kanban_columns(id) ON DELETE CASCADE,
+      overridden_by_user_id INTEGER NOT NULL REFERENCES users(id),
+      reason                TEXT NOT NULL,
+      created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`,
+  },
+  {
+    name: 'kanban_wip_overrides.column_id index',
+    sql: `CREATE INDEX IF NOT EXISTS idx_kanban_wip_overrides_column ON kanban_wip_overrides (column_id)`,
+  },
+  {
+    name: 'kanban_wip_overrides.card_id index',
+    sql: `CREATE INDEX IF NOT EXISTS idx_kanban_wip_overrides_card ON kanban_wip_overrides (card_id)`,
+  },
 ];

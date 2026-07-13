@@ -21,6 +21,11 @@ export const KanbanAddColumnSchema = z.object({
   color:      z.string().max(50).optional(),
   sort_order: z.number().int().min(0).optional(),
   sortOrder:  z.number().int().min(0).optional(),
+  // Owner decision 2026-07-13 (chat): per-column WIP-limit override
+  // (kanban_columns.wip_limit). Unset/omitted -> falls back to the global
+  // KANBAN_WIP_LIMIT_JARAYONDA default (kanban-boards.service.ts).
+  wip_limit:  z.number().int().positive().optional(),
+  wipLimit:   z.number().int().positive().optional(),
 });
 export type KanbanAddColumnDto = z.infer<typeof KanbanAddColumnSchema>;
 
@@ -29,6 +34,9 @@ export const KanbanUpdateColumnSchema = z.object({
   color:      z.string().max(50).optional(),
   sort_order: z.number().int().min(0).optional(),
   sortOrder:  z.number().int().min(0).optional(),
+  // Owner decision 2026-07-13 (chat): per-column WIP-limit override (kanban_columns.wip_limit).
+  wip_limit:  z.number().int().positive().optional(),
+  wipLimit:   z.number().int().positive().optional(),
 });
 export type KanbanUpdateColumnDto = z.infer<typeof KanbanUpdateColumnSchema>;
 

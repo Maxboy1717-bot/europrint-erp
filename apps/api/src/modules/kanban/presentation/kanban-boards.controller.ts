@@ -141,13 +141,13 @@ export class KanbanBoardsController {
 
   @Put('cards/:id/move')
   @UsePipes(new ZodValidationPipe(KanbanMoveCardSchema))
-  @ApiOperation({ summary: 'Kartani ko\'chirish (assigner-confirm: Bajarildiga faqat topshiruvchi)' })
+  @ApiOperation({ summary: 'Kartani ko\'chirish (assigner-confirm: Bajarildiga faqat topshiruvchi; WIP-limitni faqat supervisor bypass qila oladi)' })
   async moveCard(
     @Param('id') id: string,
     @Body() body: KanbanMoveCardDto,
-    @CurrentUser() user: { id: number },
+    @CurrentUser() user: { id: number; role?: string },
   ) {
-    return unwrapOrThrow(await this.boardsSvc.moveCard(id, body, user?.id));
+    return unwrapOrThrow(await this.boardsSvc.moveCard(id, body, user?.id, user?.role));
   }
 
   @Delete('cards/:id')

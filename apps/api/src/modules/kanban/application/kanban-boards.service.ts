@@ -16,7 +16,7 @@ import {
   KanbanViewerContext,
 } from '../domain/repositories/i-kanban-boards.repo';
 import { KanbanRobotService } from './kanban-robot.service';
-import { runQuery } from '@shared/db';
+import { runQuery, db, kanbanWipOverrides } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { KANBAN_MAX_URGENT_PER_DAY } from '@common/constants/business.constants';
 
@@ -24,8 +24,22 @@ import { KANBAN_MAX_URGENT_PER_DAY } from '@common/constants/business.constants'
  * WIP (work-in-progress) cap for any column mapped to the JARAYONDA (in-progress)
  * stage. Owner vision (TASDIQ-2146 §15 #8): "Jarayonda"da ko'pi bilan 3 ta vazifa.
  * Named constant per Qoida 12 (no bare magic number for a business rule).
+ * Owner decision 2026-07-13 (chat): this is now only the FALLBACK default — used
+ * when a column's own `kanban_columns.wip_limit` is unset (NULL). See
+ * assertCanMoveTo() below; CRUD via PATCH /kanban/boards/:boardId/columns/:columnId.
  */
 const KANBAN_WIP_LIMIT_JARAYONDA = 3;
+
+/**
+ * Roles allowed to bypass an at-limit "Jarayonda" column instead of being blocked
+ * (owner decision 2026-07-13, chat): the move is allowed and logged to
+ * `kanban_wip_overrides` (mirrors qc_override_log's shape/naming — see
+ * qc-override.repository.ts / qc-override-log-2026-07-11.sql). Comparison is
+ * case-insensitive, same convention as RolesGuard (roles.guard.ts) and the
+ * class-level `@Roles('admin', 'manager', 'supervisor', ...)` list on
+ * KanbanBoardsController.
+ */
+const KANBAN_WIP_OVERRIDE_ROLES = ['supervisor'];
 
 @Injectable()
 export class KanbanBoardsService {
@@ -61,11 +75,15 @@ export class KanbanBoardsService {
     try {
       const maxOrderResult = await this.boardsRepo.getMaxColumnOrder(boardId);
       const maxOrder = maxOrderResult.ok ? maxOrderResult.data : 0;
+      // Owner decision 2026-07-13 (chat): per-column WIP-limit override (nullable —
+      // unset falls back to KANBAN_WIP_LIMIT_JARAYONDA, see assertCanMoveTo()).
+      const rawWipLimit = body.wipLimit ?? body.wip_limit;
       return await this.boardsRepo.addColumn({
         board_id: boardId,
         name: String(body.name || 'Yangi Ustun'),
         sort_order: maxOrder + 1,
         color: body.color != null ? String(body.color) : null,
+        wip_limit: rawWipLimit != null ? Number(rawWipLimit) : null,
       });
     } catch (error) {
       this.logger.error(
@@ -77,10 +95,14 @@ export class KanbanBoardsService {
   }
 
   updateColumn(boardId: string, columnId: string, body: Record<string, unknown>): Promise<Result<KanbanColumn>> {
+    // Owner decision 2026-07-13 (chat): per-column WIP-limit override (nullable —
+    // unset/omitted leaves the column's current value unchanged, repo uses COALESCE).
+    const rawWipLimit = body.wipLimit ?? body.wip_limit;
     return this.boardsRepo.updateColumn(boardId, columnId, {
       name: body.name != null ? String(body.name) : null,
       color: body.color != null ? String(body.color) : null,
       sort_order: body.sort_order != null ? Number(body.sort_order) : null,
+      wip_limit: rawWipLimit != null ? Number(rawWipLimit) : null,
     });
   }
 
@@ -142,6 +164,7 @@ export class KanbanBoardsService {
     id: string,
     body: Record<string, unknown>,
     actingUserId?: number,
+    actingUserRole?: string,
   ): Promise<Result<KanbanCard>> {
     const newColumnId = (body.columnId ?? body.column_id) != null
       ? String(body.columnId ?? body.column_id) : null;
@@ -177,6 +200,7 @@ export class KanbanBoardsService {
         cardId: id,
         currentColumnId,
         actingUserId,
+        actingUserRole,
         ownerUserId,
         assignerUserId,
         dueDate,
@@ -222,18 +246,21 @@ export class KanbanBoardsService {
       cardId: string;
       currentColumnId: string | null;
       actingUserId?: number;
+      actingUserRole?: string;
       ownerUserId: string | null;
       assignerUserId: string | null;
       dueDate: string | null;
     },
   ): Promise<Result<void>> {
-    // Resolve destination column NAME -> canonical stage.
+    // Resolve destination column NAME (+ its own WIP-limit override) -> canonical stage.
     let destName: string | null = null;
+    let destWipLimit: number | null = null;
     try {
-      const rows = await runQuery<{ name: string }>(
-        sql`SELECT name FROM kanban_columns WHERE id = ${destColumnId} AND deleted_at IS NULL LIMIT 1`,
+      const rows = await runQuery<{ name: string; wip_limit: number | null }>(
+        sql`SELECT name, wip_limit FROM kanban_columns WHERE id = ${destColumnId} AND deleted_at IS NULL LIMIT 1`,
       );
       destName = rows.rows[0]?.name ?? null;
+      destWipLimit = rows.rows[0]?.wip_limit ?? null;
     } catch { /* if we cannot resolve the column, do not block the move */ }
 
     const destStatus = statusFromColumnName(destName);
@@ -251,21 +278,50 @@ export class KanbanBoardsService {
           "\"Jarayonda\"ga o'tkazish uchun ijrochi (owner) va muddat (due_date) to'ldirilishi shart.",
         ));
       }
-      // ─── WIP limit guard (TASDIQ-2146 §15 #8) — max 3 active in "Jarayonda" ──
-      // A real ENTRY is capped; reordering within the same column is never blocked
-      // (Q-39 non-regression). The moving card is excluded from the count. The count
-      // query failing must not block the move (fail-open).
+      // ─── WIP limit guard (TASDIQ-2146 §15 #8) — per-column, default 3 ──────────
+      // Owner decision 2026-07-13 (chat): the cap is now per-column
+      // (kanban_columns.wip_limit, CRUD via the existing POST/PATCH
+      // /kanban/boards/:boardId/columns[/:columnId] endpoints). NULL (unset) falls
+      // back to the historical global default KANBAN_WIP_LIMIT_JARAYONDA=3 — every
+      // existing board/column keeps behaving exactly as before (additive, Q-46
+      // non-regression). A real ENTRY is capped; reordering within the same column
+      // is never blocked (Q-39 non-regression). The moving card is excluded from the
+      // count. The count query failing must not block the move (fail-open).
       if (String(ctx.currentColumnId) !== String(destColumnId)) {
+        const wipLimit = destWipLimit != null ? Number(destWipLimit) : KANBAN_WIP_LIMIT_JARAYONDA;
         try {
           const countRows = await runQuery<{ n: number }>(
             sql`SELECT COUNT(*)::int AS n FROM kanban_cards
                 WHERE column_id = ${destColumnId} AND id <> ${ctx.cardId} AND deleted_at IS NULL`,
           );
           const inProgress = Number(countRows.rows[0]?.n ?? 0);
-          if (inProgress >= KANBAN_WIP_LIMIT_JARAYONDA) {
+          if (inProgress >= wipLimit) {
+            // Owner decision 2026-07-13 (chat): a supervisor-role acting user bypasses
+            // the block — the move is allowed and logged to kanban_wip_overrides
+            // instead (mirrors qc_override_log's shape/naming convention). Role
+            // comparison is case-insensitive, same convention RolesGuard uses
+            // (roles.guard.ts).
+            const actingRole = ctx.actingUserRole ? ctx.actingUserRole.toLowerCase() : null;
+            if (actingRole != null && KANBAN_WIP_OVERRIDE_ROLES.includes(actingRole) && ctx.actingUserId != null) {
+              try {
+                await db.insert(kanbanWipOverrides).values({
+                  cardId: Number(ctx.cardId),
+                  columnId: Number(destColumnId),
+                  overriddenByUserId: ctx.actingUserId,
+                  reason: `WIP limiti (${wipLimit}) supervisor tomonidan oshirib o'tkazildi`,
+                });
+              } catch (logErr) {
+                // Log-write failure must not undo the already-authorized override move.
+                this.logger.warn(
+                  { method: 'assertCanMoveTo.wipOverride', cardId: ctx.cardId, destColumnId, error: String(logErr) },
+                  'kanban_wip_overrides insert failed — move still allowed (fail-open)',
+                );
+              }
+              return { ok: true, data: undefined };
+            }
             return Err(AppErr(
               'CONFLICT',
-              `"Jarayonda" ustunida bir vaqtda ko'pi bilan ${KANBAN_WIP_LIMIT_JARAYONDA} ta ` +
+              `"Jarayonda" ustunida bir vaqtda ko'pi bilan ${wipLimit} ta ` +
               `vazifa bo'lishi mumkin. Avval mavjud vazifani yakunlang yoki "Tekshiruvda"ga o'tkazing.`,
             ));
           }
