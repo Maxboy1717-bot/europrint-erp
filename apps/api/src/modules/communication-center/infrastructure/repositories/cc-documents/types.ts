@@ -91,6 +91,12 @@ export interface CcTemplateAdminRow {
   nameUz:               string;
   nameRu:               string;
   category:             string;
+  // CC gap fix (docs/audit/CC-COMPLETE-FRESH-ANALYSIS-2026-07-11.md #25): soft-reference to
+  // taxonomy_entries(category='document_type'/'contact_type', code) — no FK, matched by
+  // category+code (schema-kanban.ts kanban_cards.task_type convention). NULL = not yet
+  // classified.
+  documentTypeCode:     string | null;
+  contactTypeCode:      string | null;
   aiQuestions:          AiQuestion[];
   htmlTemplate:         string | null;
   version:              number;
@@ -123,6 +129,8 @@ export interface CreateTemplateInput {
   nameUz:               string;
   nameRu:               string;
   category:             string;
+  documentTypeCode?:    string | null;
+  contactTypeCode?:     string | null;
   aiQuestions?:         AiQuestion[];
   htmlTemplate?:        string | null;
   defaultPriority?:     Priority;

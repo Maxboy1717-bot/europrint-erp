@@ -96,6 +96,12 @@ const CreateCcTemplateSchema = z.object({
   nameUz:               z.string().trim().min(1).max(200),
   nameRu:               z.string().trim().min(1).max(200),
   category:             z.string().trim().min(1).max(30),
+  // CC gap fix (docs/audit/CC-COMPLETE-FRESH-ANALYSIS-2026-07-11.md #25): soft-reference to
+  // taxonomy_entries(category='document_type'/'contact_type', code) — no FK, matched by
+  // category+code (project convention, schema-kanban.ts kanban_cards.task_type comment).
+  // Max 60 matches taxonomy_entries.code's live width. NULL/omitted = not yet classified.
+  documentTypeCode:     z.string().trim().min(1).max(60).nullable().optional(),
+  contactTypeCode:      z.string().trim().min(1).max(60).nullable().optional(),
   aiQuestions:          z.array(AiQuestionSchema).optional(),
   htmlTemplate:         z.string().optional(),
   defaultPriority:      z.enum(['low', 'normal', 'high', 'urgent']).optional(),

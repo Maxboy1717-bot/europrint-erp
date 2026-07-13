@@ -1531,4 +1531,33 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'document_hashes.document_id index',
     sql: `CREATE INDEX IF NOT EXISTS idx_document_hashes_document_id ON document_hashes (document_id)`,
   },
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // CC gap fix (docs/audit/CC-COMPLETE-FRESH-ANALYSIS-2026-07-11.md, item #25, P1):
+  // taxonomy_entries already seeds contact_type (5 rows: buyruq/malumot_talabi/
+  // bildirishnoma/sorov/hisobot) and document_type (6 rows: tex_karta/ish_rejasi/
+  // sifat_hisoboti/smena_topshirigi/xavfsizlik_brifingi/nazorat_varaqasi) — confirmed live
+  // 2026-07-13 (11 rows total) — but no cc_* table references them (\d on cc_documents and
+  // cc_document_templates: no such column). Target = cc_document_templates, not
+  // cc_documents: a document's type/contact-nature is a property of its template
+  // (cc_documents.template_id already fixes which template — and therefore which
+  // classification — a document has), mirroring how cc_document_templates.category
+  // (ariza/buyruq/hisobot/xabar, 21 live rows) already classifies templates, not
+  // individual documents; only cc_document_templates has an admin CRUD surface today
+  // (POST /cc/templates, PATCH /cc/templates/:id — cc-documents.controller.ts
+  // createTemplate/updateTemplate, super_admin-only) for an owner to set these on.
+  // Soft-reference, no FK — project convention (schema-kanban.ts kanban_cards.task_type
+  // comment: taxonomy_entries(category=..., code) ga soft-reference, FK'siz). VARCHAR(60)
+  // matches taxonomy_entries.code's live width (character varying(60)). Nullable, no
+  // default: NULL = not yet classified — every existing cc_document_templates row and
+  // every existing createTemplate/updateTemplate caller keeps working unchanged (Q-46).
+  // Human-readable mirror:
+  // apps/api/src/shared/db/migrations/cc-document-templates-taxonomy-codes-2026-07-13.sql.
+  {
+    name: 'cc_document_templates.document_type_code column (CC taxonomy soft-ref, owner 2026-07-11 schema-approval)',
+    sql: `ALTER TABLE IF EXISTS cc_document_templates ADD COLUMN IF NOT EXISTS document_type_code VARCHAR(60)`,
+  },
+  {
+    name: 'cc_document_templates.contact_type_code column (CC taxonomy soft-ref, owner 2026-07-11 schema-approval)',
+    sql: `ALTER TABLE IF EXISTS cc_document_templates ADD COLUMN IF NOT EXISTS contact_type_code VARCHAR(60)`,
+  },
 ];

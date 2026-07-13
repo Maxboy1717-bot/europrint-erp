@@ -128,6 +128,8 @@ export class CcDocumentsReadRepo {
           code, name_uz         AS "nameUz",
           name_ru               AS "nameRu",
           category,
+          document_type_code    AS "documentTypeCode",
+          contact_type_code     AS "contactTypeCode",
           ai_questions          AS "aiQuestions",
           html_template         AS "htmlTemplate",
           version,

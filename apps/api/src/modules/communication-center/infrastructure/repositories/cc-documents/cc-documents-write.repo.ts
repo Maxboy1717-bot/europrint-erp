@@ -341,7 +341,8 @@ export class CcDocumentsWriteRepo {
 
       const r = await runQuery<{ id: string }>(sql`
         INSERT INTO cc_document_templates (
-          code, name_uz, name_ru, category, ai_questions, html_template,
+          code, name_uz, name_ru, category, document_type_code, contact_type_code,
+          ai_questions, html_template,
           default_priority, max_file_size_mb, allowed_file_types, print_requires_reason,
           cooldown_days, archive_after_days, number_format,
           inbox_sla_hours, reminder_hours, escalation_hours,
@@ -349,6 +350,7 @@ export class CcDocumentsWriteRepo {
         )
         VALUES (
           ${input.code}, ${input.nameUz}, ${input.nameRu}, ${input.category},
+          ${input.documentTypeCode ?? null}, ${input.contactTypeCode ?? null},
           ${JSON.stringify(input.aiQuestions ?? [])}::jsonb, ${input.htmlTemplate ?? null},
           ${input.defaultPriority ?? 'normal'}, ${input.maxFileSizeMb ?? 10},
           ${JSON.stringify(input.allowedFileTypes ?? ['pdf', 'png', 'jpg', 'jpeg', 'docx', 'xlsx'])}::jsonb,
@@ -390,6 +392,8 @@ export class CcDocumentsWriteRepo {
           name_uz               = COALESCE(${patch.nameUz ?? null}, name_uz),
           name_ru               = COALESCE(${patch.nameRu ?? null}, name_ru),
           category              = COALESCE(${patch.category ?? null}, category),
+          document_type_code    = COALESCE(${patch.documentTypeCode ?? null}, document_type_code),
+          contact_type_code     = COALESCE(${patch.contactTypeCode ?? null}, contact_type_code),
           ai_questions          = COALESCE(${patch.aiQuestions ? JSON.stringify(patch.aiQuestions) : null}::jsonb, ai_questions),
           html_template         = COALESCE(${patch.htmlTemplate ?? null}, html_template),
           default_priority      = COALESCE(${patch.defaultPriority ?? null}, default_priority),
