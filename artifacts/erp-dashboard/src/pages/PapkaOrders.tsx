@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ function normalizePapkaOrder(r: Record<string, unknown>): PapkaOrder {
 export default function PapkaOrders() {
   const { t } = useTranslation("common");
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [lang, setLang] = useState<Lang>("uz");
   const tr = TRANSLATIONS[lang];
   // Backend error payloads only ever carry {uz, ru} (no uz-cyr variant) - fall
@@ -156,10 +158,14 @@ export default function PapkaOrders() {
     setShowDialog(true);
   };
 
+  // Owner decision 2026-07-13 (chat) — "buyurtma 1 ta joydan yaratilishi kerak": new orders
+  // are created ONLY at /order-create (the wizard, wired to the real sales_orders chain).
+  // This page's own create-dialog posted to /api/papka-orders, a legacy table with zero
+  // link into Design/QC/Technologist/production-planning — kept for editing/managing
+  // existing papka_orders rows (handleEdit below, untouched) but no longer offered for
+  // creating new ones.
   const handleNewOrder = () => {
-    setEditingOrder(null);
-    form.reset({ ...DEFAULT_FORM_VALUES, sana: new Date().toISOString().split("T")[0] });
-    setShowDialog(true);
+    setLocation("/order-create");
   };
 
   const onSubmit = (data: FormData) => {
