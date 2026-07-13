@@ -1,17 +1,19 @@
 /**
  * @module ErpDocumentEditor
- * @description Erkin hujjat yaratish/tahrirlash sahifasi (Phase A3). Title + tier + TipTap
- * rich-text body → saves content (JSON) + content_html to /api/erp-documents. The editor is
- * wrapped in DocumentWatermark (tier-gated, STEP 3.4); download is blocked globally (3.2);
- * view/copy logging happens on the API side (3.3). Single-author, explicit Save (no auto-save).
+ * @description Erkin hujjat yaratish/tahrirlash — Google-Docs-style shell (Variant B, visual
+ * only). Top bar = inline-editable title + tier badge near the title + save-status; below it
+ * the sticky toolbar + paper canvas (RichTextEditor). Saves content (JSON) + content_html to
+ * /api/erp-documents (same endpoint/security as before). Explicit Save with a dirty indicator
+ * (no autosave — every save bumps version).
  */
 
 import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Save, ArrowLeft } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Check } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { tLabel } from '@/lib/i18n/tLabel';
 import { RichTextEditor } from '@/components/document-control/RichTextEditor';
 
 interface ErpDoc {
@@ -24,10 +26,16 @@ interface ErpDoc {
 }
 
 const TIERS: { value: string; label: string }[] = [
-  { value: 'oddiy', label: 'Oddiy' },
-  { value: 'maxfiy', label: 'Maxfiy' },
-  { value: 'juda-maxfiy', label: 'Juda maxfiy' },
+  { value: 'oddiy', label: tLabel('documents.tierOddiy', 'Oddiy') },
+  { value: 'maxfiy', label: tLabel('documents.tierMaxfiy', 'Maxfiy') },
+  { value: 'juda-maxfiy', label: tLabel('documents.tierJudaMaxfiy', 'Juda maxfiy') },
 ];
+
+const TIER_PILL: Record<string, string> = {
+  oddiy: 'border-slate-200 text-slate-600 bg-slate-50',
+  maxfiy: 'border-amber-200 text-amber-700 bg-amber-50',
+  'juda-maxfiy': 'border-red-200 text-red-700 bg-red-50',
+};
 
 export default function ErpDocumentEditor() {
   const params = useParams();
@@ -40,6 +48,7 @@ export default function ErpDocumentEditor() {
   const [tier, setTier] = useState('oddiy');
   const [content, setContent] = useState<Record<string, unknown> | null>(null);
   const [contentHtml, setContentHtml] = useState('');
+  const [dirty, setDirty] = useState(false);
 
   const docQ = useQuery<ErpDoc>({
     queryKey: [`/api/erp-documents/${id}`],
@@ -52,6 +61,7 @@ export default function ErpDocumentEditor() {
       setTitle(docQ.data.title);
       setTier(docQ.data.sensitivity_tier);
       setContent(docQ.data.content);
+      setDirty(false);
     }
   }, [docQ.data]);
 
@@ -63,51 +73,70 @@ export default function ErpDocumentEditor() {
         : apiRequest<ErpDoc>('POST', '/api/erp-documents', payload);
     },
     onSuccess: (doc) => {
-      toast({ title: 'Saqlandi', description: title.trim() });
+      toast({ title: tLabel('documents.saved', 'Saqlandi'), description: title.trim() });
+      setDirty(false);
       qc.invalidateQueries({ queryKey: ['/api/erp-documents'] });
       if (!id && doc?.id) navigate(`/documents/${doc.id}`);
     },
-    onError: () => toast({ title: 'Xatolik', description: "Saqlab bo'lmadi", variant: 'destructive' }),
+    onError: () => toast({ title: tLabel('common.error', 'Xatolik'), description: tLabel('documents.saveFailed', "Saqlab bo'lmadi"), variant: 'destructive' }),
   });
+
+  const statusText = save.isPending
+    ? tLabel('documents.saving', 'Saqlanmoqda…')
+    : dirty
+      ? tLabel('documents.unsaved', "Saqlanmagan o'zgarishlar")
+      : id
+        ? tLabel('documents.allSaved', 'Barcha o\'zgarishlar saqlangan')
+        : '';
 
   if (id && docQ.isLoading) {
     return <div className="p-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[var(--ep-muted)]" /></div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-4">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/documents')} className="p-2 rounded-lg text-[var(--ep-muted)] hover:bg-[var(--ep-bg)]" title="Orqaga">
+    <div className="flex flex-col">
+      {/* ── Google-Docs-style top bar ── */}
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--ep-border)] bg-[var(--ep-surface)]">
+        <button onClick={() => navigate('/documents')} className="p-2 rounded-lg text-[var(--ep-muted)] hover:bg-[var(--ep-bg)] shrink-0" title={tLabel('documents.back', 'Orqaga')}>
           <ArrowLeft className="w-4 h-4" />
         </button>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Hujjat sarlavhasi"
-          className="flex-1 text-lg font-semibold bg-transparent outline-none border-b border-transparent focus:border-[var(--ep-border)] py-1"
-        />
-        <select
-          value={tier}
-          onChange={(e) => setTier(e.target.value)}
-          className="h-9 rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] px-2 text-sm"
-          title="Maxfiylik darajasi"
-        >
-          {TIERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-        </select>
+        <div className="flex-1 min-w-0">
+          <input
+            value={title}
+            onChange={(e) => { setTitle(e.target.value); setDirty(true); }}
+            placeholder={tLabel('documents.titlePlaceholder', 'Hujjat sarlavhasi')}
+            className="w-full text-[17px] font-medium text-[var(--ep-text)] bg-transparent outline-none border-b border-transparent hover:border-[var(--ep-border)] focus:border-[var(--ep-blue)] transition-colors py-0.5"
+          />
+          <div className="flex items-center gap-2 mt-0.5">
+            {/* tier badge-dropdown near the title (de-emphasised) */}
+            <select
+              value={tier}
+              onChange={(e) => { setTier(e.target.value); setDirty(true); }}
+              title={tLabel('documents.tierLabel', 'Maxfiylik darajasi')}
+              className={`text-[11px] font-medium rounded-full border px-2 py-0.5 outline-none cursor-pointer ${TIER_PILL[tier] ?? TIER_PILL.oddiy}`}
+            >
+              {TIERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <span className="text-[11px] text-[var(--ep-muted)] inline-flex items-center gap-1">
+              {statusText && !dirty && !save.isPending && <Check className="w-3 h-3 text-[var(--ep-green)]" />}
+              {statusText}
+            </span>
+          </div>
+        </div>
         <button
           onClick={() => title.trim() && save.mutate()}
           disabled={!title.trim() || save.isPending}
-          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--ep-primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--ep-primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 shrink-0"
         >
           {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Saqlash
+          {tLabel('documents.save', 'Saqlash')}
         </button>
       </div>
 
       <RichTextEditor
         value={content}
         tier={tier}
-        onChange={(json, html) => { setContent(json); setContentHtml(html); }}
+        onChange={(json, html) => { setContent(json); setContentHtml(html); setDirty(true); }}
       />
     </div>
   );
