@@ -63,6 +63,8 @@ function severityTone(severity: string | null): EPStatusTone {
     case "critical":
     case "yuqori":
       return "danger";
+    case "major":
+      return "brand";
     case "medium":
     case "o'rta":
     case "orta":
