@@ -145,9 +145,12 @@ export class MarketingAnalyticsStubsController {
   @Get('nps/monthly')
   @Roles('super_admin', 'marketing_manager', 'director')
   async getNpsMonthly() {
+    // FE reads this with `useQuery<NpsMonthly[]>` (no `select` unwrap) — must return
+    // a bare array, not `{ monthlyTrend: [...] }`, or Array.isArray() fails silently
+    // and the NPS trend + newly-created records never render (Q-40).
     const r = await this.svc.getNpsStats();
-    if (!r.ok) return { monthlyTrend: [] };
-    return { monthlyTrend: r.data.monthlyTrend };
+    if (!r.ok) return [];
+    return r.data.monthlyTrend;
   }
 
   @Get('nps')

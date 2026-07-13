@@ -456,7 +456,7 @@ export class DrizzleMarketingExtRepository {
     promoters: number;
     passives: number;
     detractors: number;
-    monthlyTrend: { month: string; score: number }[];
+    monthlyTrend: { month: string; score: number; responses: number; promoters: number; passives: number; detractors: number }[];
   }>> {
     return safeCall(async () => {
       const all = await db.select({ score: npsResponses.score, createdAt: npsResponses.createdAt })
@@ -472,7 +472,7 @@ export class DrizzleMarketingExtRepository {
 
       // Monthly trend — last 6 months
       const now = new Date();
-      const monthlyTrend: { month: string; score: number }[] = [];
+      const monthlyTrend: { month: string; score: number; responses: number; promoters: number; passives: number; detractors: number }[] = [];
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -483,10 +483,15 @@ export class DrizzleMarketingExtRepository {
         });
         const mTotal = monthRows.length;
         const mPro   = monthRows.filter(r => Number(r.score) >= 9).length;
+        const mPas   = monthRows.filter(r => Number(r.score) >= 7 && Number(r.score) < 9).length;
         const mDet   = monthRows.filter(r => Number(r.score) < 7).length;
         monthlyTrend.push({
           month: label,
           score: mTotal > 0 ? Math.round(((mPro - mDet) / mTotal) * 100) : 0,
+          responses: mTotal,
+          promoters: mPro,
+          passives: mPas,
+          detractors: mDet,
         });
       }
       return { npsScore, promoters, passives, detractors, monthlyTrend };

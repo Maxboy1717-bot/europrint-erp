@@ -272,7 +272,7 @@ export class MarketingExtService {
     promoters: number;
     passives: number;
     detractors: number;
-    monthlyTrend: { month: string; score: number }[];
+    monthlyTrend: { month: string; score: number; responses: number; promoters: number; passives: number; detractors: number }[];
   }>> {
     return this.repo.getNpsStats();
   }
