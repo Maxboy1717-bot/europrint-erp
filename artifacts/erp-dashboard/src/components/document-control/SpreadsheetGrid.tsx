@@ -359,7 +359,7 @@ export function SpreadsheetGrid({
                 <span className="absolute bottom-[2px] right-[2px] w-0 h-0 border-l-[7px] border-l-transparent border-b-[7px] border-b-[var(--ep-muted)]" />
               </th>
               {Array.from({ length: cols }, (_, c) => (
-                <th key={c} className="sticky top-0 z-[5] min-w-[96px] h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] text-[11px] font-semibold text-[var(--ep-muted)]">
+                <th key={c} className="sticky top-0 z-[5] min-w-[72px] h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] text-[11px] font-semibold text-[var(--ep-muted)]">
                   {numToCol(c + 1)}
                 </th>
               ))}
@@ -368,7 +368,7 @@ export function SpreadsheetGrid({
               <tr>
                 <th className="sticky left-0 z-[4] w-10 h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)]" />
                 {Array.from({ length: cols }, (_, c) => (
-                  <th key={c} className="min-w-[96px] h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)] p-0.5">
+                  <th key={c} className="min-w-[72px] h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)] p-0.5">
                     <input value={filters[c] ?? ''} onChange={(e) => setFilters((f) => ({ ...f, [c]: e.target.value }))}
                       placeholder={tLabel('documents.filterCol', 'Filtr…')}
                       className="w-full h-6 text-[11px] px-1 rounded border border-[var(--ep-border)] bg-white outline-none font-normal" />
@@ -399,10 +399,13 @@ export function SpreadsheetGrid({
                       onDoubleClick={() => startEdit(ref)}
                       style={style?.bg ? { backgroundColor: style.bg } : undefined}
                       className={cn(
-                        'min-w-[96px] h-7 px-1.5 cursor-cell align-middle',
+                        'min-w-[72px] h-7 px-1.5 cursor-cell align-middle',
                         style?.bd ? 'border-2 border-[var(--ep-text)]' : 'border border-[var(--ep-border)]',
-                        isSel && 'ring-2 ring-[var(--ep-blue)] ring-inset',
-                        ranged && 'bg-[var(--ep-blue)]/20 ring-1 ring-[var(--ep-blue)]/30 ring-inset',
+                        // Active cell = ONE crisp blue box. outline (drawn over the border, no layout
+                        // shift) with -1px offset covers the grey border instead of sitting inside it,
+                        // so it no longer looks like "a cell inside the cell".
+                        isSel && 'relative z-10 outline outline-2 outline-[var(--ep-blue)] -outline-offset-1',
+                        ranged && 'bg-[var(--ep-blue)]/20',
                         align === 'r' ? 'text-right tabular-nums' : align === 'c' ? 'text-center' : 'text-left',
                       )}
                     >
@@ -417,7 +420,7 @@ export function SpreadsheetGrid({
                             else if (e.key === 'Tab') { commitEdit(); moveSel(1, 0); gridRef.current?.focus(); e.preventDefault(); }
                             else if (e.key === 'Escape') { setEditing(null); gridRef.current?.focus(); }
                           }}
-                          className="w-full h-full outline-none bg-transparent text-sm font-mono"
+                          className="w-full h-full border-0 outline-none bg-transparent text-sm font-mono"
                         />
                       ) : (
                         <span className={cn(style?.b && 'font-bold', isErr ? 'text-[var(--ep-red)]' : 'text-[var(--ep-text)]')}>{display}</span>
