@@ -21,11 +21,12 @@
  */
 
 import {
-  Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Patch, Post, UseGuards, UseInterceptors, Res, Header,
+  Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Patch, Post, UseGuards, UseInterceptors, Res, Header, Req,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import { DocumentAccessLogService } from '@common/document-control/document-access-log.service';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -139,6 +140,7 @@ export class CcDocumentsController {
     private readonly configService: ConfigService,
     private readonly retention: CcRetentionService,
     private readonly docsRepo: CcDocumentsRepository,
+    private readonly accessLog: DocumentAccessLogService,
   ) {}
 
   // ── Batch 5 Item 3 — arxiv-saqlash muddati (EP-CC-016) + imzo-hash yaxlitligi ──
@@ -171,10 +173,13 @@ export class CcDocumentsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('documents/:id/pdf')
   @Header('Content-Type', 'application/pdf')
-  async downloadPdf(@Param('id') id: string, @Res({ passthrough: true }) res: FastifyReply): Promise<Buffer> {
+  async downloadPdf(@Param('id') id: string, @Res({ passthrough: true }) res: FastifyReply, @Req() req: FastifyRequest): Promise<Buffer> {
     const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL') ?? 'http://localhost:3001';
     const bytes = await this.pdfSvc.generate(id, baseUrl);
+    // NB: the download-block hook (STEP 3.2) rewrites this attachment -> inline unless the
+    // route is allowlisted (CC pdf is NOT) — so this renders in-app; still logged as a view.
     res.header('Content-Disposition', `attachment; filename="cc-${id.slice(-8)}.pdf"`);
+    await this.accessLog.logFromReq(req, { documentType: 'cc', documentId: id, action: 'view' });
     return Buffer.from(bytes);
   }
 
@@ -294,7 +299,7 @@ export class CcDocumentsController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('documents/:id')
-  async getOne(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }) {
+  async getOne(@Param('id') id: string, @CurrentUser() user: { id: number; role: string }, @Req() req: FastifyRequest) {
     const doc = await this.baskets.getOne(id);
     if (!doc) throw new NotFoundException('Hujjat topilmadi');
     const isPrivileged = ['admin', 'super_admin', 'director', 'ceo'].includes(user.role);
@@ -304,6 +309,8 @@ export class CcDocumentsController {
     }
     // 20-cc#47: birinchi ko'rish vaqti — faqat shu ERP web yo'l orqali (Telegram bot bu yerni chaqirmaydi).
     await this.docsRepo.markViewed(id, 'erp_web');
+    // Doc Control #7: every view logged (who opened which document, when) — tier resolved server-side.
+    await this.accessLog.logFromReq(req, { documentType: 'cc', documentId: id, action: 'view' });
     return doc;
   }
 
@@ -383,11 +390,15 @@ export class CcDocumentsController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('documents/:id/print')
-  print(
+  async print(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(PrintSchema)) body: { reason: string },
     @CurrentUser() user: { id: number },
+    @Req() req: FastifyRequest,
   ) {
-    return this.wf.logPrint(id, user.id, body.reason);
+    const result = await this.wf.logPrint(id, user.id, body.reason);
+    // Doc Control #4: print requires a reason (PrintSchema enforces it) + is logged centrally.
+    await this.accessLog.logFromReq(req, { documentType: 'cc', documentId: id, action: 'print', reason: body.reason });
+    return result;
   }
 }

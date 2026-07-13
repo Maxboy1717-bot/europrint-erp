@@ -54,6 +54,7 @@ import {
   ErpModule, ExportModule,
   SharedEventsModule, OutboxModule,
 } from './feature-modules';
+import { DocumentControlModule } from './common/document-control/document-control.module';
 
 @Module({
   imports: [
@@ -121,6 +122,9 @@ import {
     // ── Sprint 5 Infratuzilma (TZ-59 L1/L2 Cache, TZ-60 BullMQ 6 Navbat) ────
     CacheModule,
     QueueModule,
+
+    // ── Document Control (cross-cutting leak-prevention layer, owner 2026-07-13) ──
+    DocumentControlModule,
 
     // ── Core Modullar (24 ta) ─────────────────────────────────────────────────
     AuthModule,
