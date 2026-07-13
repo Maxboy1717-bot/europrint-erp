@@ -35,6 +35,13 @@ const SetMaterialLayersDto = z.object({
 const ApproveDto = z.object({ bomApproved: z.boolean().default(false), routingApproved: z.boolean().default(false), techCardApproved: z.boolean().default(false), notes: z.string().optional() });
 const RejectDto = z.object({ reason: z.string().min(1), returnTo: z.enum(['manager', 'designer']).default('manager') });
 
+// 07-pp#119 owner-correction (docs/audit/QARORLAR-JURNALI-2026-07-11.md:85): "bezash
+// turlari = CRUD ro'yxat (AI-reja+operator-tayinlash uchun MAJBURIY), 'erkin matn' EMAS."
+// These 3 literals mirror the exact seeded taxonomy_entries rows (category='decoration_type',
+// apps/api/src/shared/db/migrations/taxonomy-seed-2026-07-11.sql:25-27) — no free text allowed;
+// do not add a 4th literal here without a corresponding taxonomy_entries row (Q-40).
+const DECORATION_TYPE_CODES = ['laminatsiya_yaltiroq_mat', 'uv_lak_toliq_spot', 'oddiy_lak'] as const;
+
 const CreateCardDto = z.object({
   code: z.string().max(50).optional(),
   productId: z.coerce.number().int().positive().optional(),
@@ -54,6 +61,9 @@ const CreateCardDto = z.object({
   postPress: z.any().optional(),
   ishTartibi: z.any().optional(),
   operations: z.string().optional(),
+  // Nullable at the schema level (not every card involves a decoration/lamination/varnish
+  // operation), but structured-only when provided — free text is rejected (07-pp#119).
+  decorationType: z.enum(DECORATION_TYPE_CODES).optional(),
 });
 const UpdateCardDto = CreateCardDto.extend({ status: z.enum(['draft', 'approved', 'archived']).optional() });
 const BomItemDto = z.object({ materialCode: z.string().min(1), quantity: z.coerce.number(), unit: z.string().max(10).optional(), layer: z.string().max(20).optional() });

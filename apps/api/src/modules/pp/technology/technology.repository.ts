@@ -140,7 +140,7 @@ export class TechnologyRepository {
   // calculated_by_ai=false → human master card; true → AI estimate. One table for both.
   async findTechnologyCards(): Promise<Result<object[]>> {
     try {
-      const r = await db.execute(sql`SELECT id, code, name, direction, material_type, product_type, format_a, format_b, format_code, gofra_profile, status, version, lab_approved, maket_approved, calculated_by_ai, is_active, created_at FROM technology_cards WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 300`);
+      const r = await db.execute(sql`SELECT id, code, name, direction, material_type, product_type, format_a, format_b, format_code, gofra_profile, decoration_type, status, version, lab_approved, maket_approved, calculated_by_ai, is_active, created_at FROM technology_cards WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 300`);
       return Ok(((r as { rows?: object[] }).rows ?? []) as object[]);
     } catch (e) { return Err(String(e)); }
   }
@@ -199,12 +199,12 @@ export class TechnologyRepository {
         INSERT INTO technology_cards
           (product_id, code, name, direction, material_type, product_type,
            format_a, format_b, format_code, gofra_profile, raskroy_per_list, scrap_pct, qolip_id,
-           print_params, kesim, post_press, ish_tartibi, operations,
+           print_params, kesim, post_press, ish_tartibi, operations, decoration_type,
            calculated_by_ai, is_active, created_by)
         VALUES
           (${d.productId ?? null}, ${d.code ?? null}, ${d.name ?? null}, ${d.direction ?? null}, ${d.materialType ?? null}, ${d.productType ?? null},
            ${d.formatA ?? null}, ${d.formatB ?? null}, ${d.formatCode ?? null}, ${d.gofraProfile ?? null}, ${d.raskroyPerList ?? null}, ${d.scrapPct ?? null}, ${d.qolipId ?? null},
-           ${jb(d.printParams)}::jsonb, ${jb(d.kesim)}::jsonb, ${jb(d.postPress)}::jsonb, ${jb(d.ishTartibi)}::jsonb, ${d.operations ?? null},
+           ${jb(d.printParams)}::jsonb, ${jb(d.kesim)}::jsonb, ${jb(d.postPress)}::jsonb, ${jb(d.ishTartibi)}::jsonb, ${d.operations ?? null}, ${d.decorationType ?? null},
            false, true, ${d.createdBy ?? null})
         RETURNING *`);
       const row = ((r as { rows?: Row[] }).rows ?? [])[0];
@@ -235,6 +235,7 @@ export class TechnologyRepository {
           post_press = COALESCE(${jb(d.postPress)}::jsonb, post_press),
           ish_tartibi = COALESCE(${jb(d.ishTartibi)}::jsonb, ish_tartibi),
           operations = COALESCE(${d.operations ?? null}, operations),
+          decoration_type = COALESCE(${d.decorationType ?? null}, decoration_type),
           status = COALESCE(${d.status ?? null}, status),
           version = version + 1,
           updated_at = now()
@@ -510,6 +511,10 @@ export interface CreateCardInput {
   code?: string; name?: string; direction?: string; materialType?: string; productType?: string;
   formatA?: number; formatB?: number; formatCode?: string; gofraProfile?: string; raskroyPerList?: number; scrapPct?: number; qolipId?: number;
   printParams?: unknown; kesim?: unknown; postPress?: unknown; ishTartibi?: unknown; operations?: string;
+  // 07-pp#119 owner-correction — structured taxonomy_entries.code (category='decoration_type'),
+  // validated against the 3 known codes at the controller (technology.controller.ts
+  // DECORATION_TYPE_CODES); NOT free text. Nullable — not every card decorates.
+  decorationType?: string;
   createdBy?: number;
 }
 export type UpdateCardInput = Omit<CreateCardInput, 'createdBy'> & { status?: string };

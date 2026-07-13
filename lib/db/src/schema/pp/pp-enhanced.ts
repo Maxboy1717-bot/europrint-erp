@@ -148,6 +148,11 @@ export const technologyCards = pgTable("technology_cards", {
   maketSentAt: timestamp("maket_sent_at", { withTimezone: true }),
   maketRevisionStartedAt: timestamp("maket_revision_started_at", { withTimezone: true }),
   maketRevisionMinutes: integer("maket_revision_minutes").notNull().default(0),
+  // 07-pp#119 owner-correction (docs/audit/QARORLAR-JURNALI-2026-07-11.md:85) — decoration
+  // type MUST be a structured field (taxonomy_entries.code, category='decoration_type'), not
+  // free text. Nullable: not every card decorates. Feeds PP AI-planning step 6 shift-assign +
+  // operator-assignment visibility (pp-ai-planning.service.ts).
+  decorationType: varchar("decoration_type", { length: 50 }),
 });
 
 export const insertTechnologyCardSchema = createInsertSchema(technologyCards).omit({ id: true, createdAt: true, updatedAt: true } as never);

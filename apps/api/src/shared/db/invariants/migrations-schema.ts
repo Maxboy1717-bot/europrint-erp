@@ -965,4 +965,21 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'ow_molds.code_prefix index (SD #18-followup)',
     sql: `CREATE INDEX IF NOT EXISTS idx_ow_molds_code_prefix ON ow_molds (code_prefix) WHERE code_prefix IS NOT NULL`,
   },
+  // 07-pp#119 owner-correction (docs/audit/QARORLAR-JURNALI-2026-07-11.md:85): "bezash
+  // turlari = CRUD ro'yxat (AI-reja+operator-tayinlash uchun MAJBURIY), 'erkin matn' EMAS."
+  // Decoration type (Laminatsiya yaltiroq/mat, UV-lak to'liq/spot, Oddiy lak) must be a
+  // MANDATORY STRUCTURED field — taxonomy_entries.code, category='decoration_type' (3 seeded
+  // rows: apps/api/src/shared/db/migrations/taxonomy-seed-2026-07-11.sql:25-27). Feeds PP
+  // AI-planning (pp-ai-planning.service.ts step 6 shift-assign) + operator-assignment
+  // visibility. Nullable: not every technology card involves a decoration/lamination/varnish
+  // operation (e.g. plain corrugated boxes) — additive, no regress on existing NULL rows
+  // (Q-46). Application layer (technology.controller.ts CreateCardDto/UpdateCardDto,
+  // DECORATION_TYPE_CODES) restricts the value to the 3 known codes — no free text.
+  // APPROVED: owner schema-approval wave 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror:
+  // apps/api/src/shared/db/migrations/technology-cards-decoration-type-2026-07-13.sql.
+  {
+    name: 'technology_cards.decoration_type column (07-pp#119)',
+    sql: `ALTER TABLE IF EXISTS technology_cards ADD COLUMN IF NOT EXISTS decoration_type VARCHAR(50)`,
+  },
 ];

@@ -340,6 +340,10 @@ export class PpAiPlanningService {
           shiftType,
           targetQuantity: totalTarget,
           crewSize: assignedEmployees.length,
+          // 07-pp#119: structured decoration-type codes (taxonomy_entries) queued at this work
+          // centre — surfaced so the human planner can see/use them on the shift-plan record
+          // (empty when nothing queued there decorates; never fabricated — Q-40).
+          decorationTypes: target.decorationTypes,
           rule: 'faqat boʻsh kelajak slotlar toʻldiriladi; frozen-window (~1-2 kun) tegilmaydi (EP-PP-081)',
         },
         ranAt: _time.now().toISOString(),
@@ -352,7 +356,13 @@ export class PpAiPlanningService {
   // Real work-center capacity + open-order target demand. target_quantity = Σ open
   // production-order planned_quantity assigned to that work centre (real linkage;
   // 0 when nothing is queued there → the no-data gate above degrades honestly).
-  private async loadShiftCapacity(): Promise<Array<{ workCenterId: string; workCenterName: string; targetQuantity: number }>> {
+  // decorationTypes (07-pp#119 owner-correction): distinct technology_cards.decoration_type
+  // values in scope for this work centre's open queue, resolved via the real
+  // production_order_lines.route_id -> technology_cards(id) FK (no new linkage invented —
+  // this FK already exists live). Surfaced so a human planner sees which structured
+  // decoration/lamination/varnish jobs (taxonomy_entries codes, never free text) are queued
+  // there; empty array when nothing queued there decorates (Q-40 — no fabrication).
+  private async loadShiftCapacity(): Promise<Array<{ workCenterId: string; workCenterName: string; targetQuantity: number; decorationTypes: string[] }>> {
     const r = await runQuery(sql`
       SELECT wc.id AS work_center_id,
              COALESCE(wc.name, wc.code, 'Ish markaz') AS work_center_name,
@@ -362,7 +372,16 @@ export class PpAiPlanningService {
                WHERE po.work_center_id::text = wc.id::text
                  AND po.status NOT IN ('completed', 'cancelled')
                  AND po.deleted_at IS NULL
-             ), 0)::numeric AS target_quantity
+             ), 0)::numeric AS target_quantity,
+             (
+               SELECT ARRAY_AGG(DISTINCT tc.decoration_type ORDER BY tc.decoration_type)
+               FROM production_orders po2
+               JOIN production_order_lines pol ON pol.production_order_id = po2.id
+               JOIN technology_cards tc ON tc.id = pol.route_id AND tc.decoration_type IS NOT NULL
+               WHERE po2.work_center_id::text = wc.id::text
+                 AND po2.status NOT IN ('completed', 'cancelled')
+                 AND po2.deleted_at IS NULL
+             ) AS decoration_types
       FROM work_centers wc
       WHERE wc.is_active = true AND wc.deleted_at IS NULL
       ORDER BY target_quantity DESC, wc.id
@@ -373,6 +392,7 @@ export class PpAiPlanningService {
       workCenterId: String(row['work_center_id'] ?? ''),
       workCenterName: String(row['work_center_name'] ?? ''),
       targetQuantity: safeNum(row['target_quantity'], 0),
+      decorationTypes: Array.isArray(row['decoration_types']) ? (row['decoration_types'] as unknown[]).map(String) : [],
     }));
   }
 
