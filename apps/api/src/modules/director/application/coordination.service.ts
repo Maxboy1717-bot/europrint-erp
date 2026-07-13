@@ -77,7 +77,7 @@ export class CoordinationService {
     const record = existing.data[0] as Record<string, unknown>;
     if (String(record.from_user_id) !== String(userId) && !PRIVILEGED_ROLES.has(userRole))
       return Err({ code: 'FORBIDDEN', message: "Faqat muallif yoki administrator o'chira oladi" });
-    await this.repo.deleteDokla(id);
+    await this.repo.deleteDokla(id, userId);
     return { ok: true, data: { message: "O'chirildi", deleted: String(id) } };
   }
 
@@ -153,7 +153,7 @@ export class CoordinationService {
     const record = existing.data[0] as Record<string, unknown>;
     if (String(record.from_user_id) !== String(userId) && !PRIVILEGED_ROLES.has(userRole))
       return Err({ code: 'FORBIDDEN', message: "Faqat beruvchi yoki administrator o'chira oladi" });
-    await this.repo.deleteRasp(id);
+    await this.repo.deleteRasp(id, userId);
     return { ok: true, data: { message: "O'chirildi", deleted: String(id) } };
   }
 

@@ -39,6 +39,7 @@ export class RasporyazhenieEscalationCron {
         WHERE status NOT IN ('done', 'overdue', 'cancelled')
           AND deadline IS NOT NULL
           AND deadline < CURRENT_DATE
+          AND deleted_at IS NULL
         RETURNING id, from_user_id, to_user::text AS to_user, task
       `);
       if (r.rows.length === 0) return;

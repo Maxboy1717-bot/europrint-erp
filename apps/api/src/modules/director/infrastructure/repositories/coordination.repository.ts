@@ -8,7 +8,7 @@ import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
-import { sql, eq, desc } from 'drizzle-orm';
+import { sql, eq, desc, and, isNull } from 'drizzle-orm';
 import { db, runQuery } from '@shared/db';
 import { dokla, rasporyazhenie } from '@shared/db';
 import { hrEmployees } from '@shared/db';
@@ -59,6 +59,9 @@ export class CoordinationRepository implements ICoordinationRepo {
         .from(dokla)
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${dokla.from_user_id}::text`)
         .leftJoin(appUsers, sql`${appUsers.id}::text = ${dokla.from_user_id}::text`)
+        // Owner decision 2026-07-13 (chat) — soft-delete: hide soft-deleted dokla from the
+        // normal list view (mirrors sd_customers list filter, VISION-3340 #63).
+        .where(isNull(dokla.deleted_at))
         .orderBy(desc(dokla.created_at))
         .limit(100).then(r => castTo<Row[]>(r));
       }, 'DB_ERROR');
@@ -67,7 +70,7 @@ export class CoordinationRepository implements ICoordinationRepo {
   async getDoklaById(id: number): Promise<Result<unknown[]>> {
     return safeCall(async () => {
       return db.select({ id: dokla.id, from_user_id: dokla.from_user_id })
-        .from(dokla).where(eq(dokla.id, id)).limit(1).then(r => castTo<unknown[]>(r));
+        .from(dokla).where(and(eq(dokla.id, id), isNull(dokla.deleted_at))).limit(1).then(r => castTo<unknown[]>(r));
       }, 'DB_ERROR');
   }
 
@@ -81,8 +84,15 @@ export class CoordinationRepository implements ICoordinationRepo {
       }, 'DB_ERROR');
   }
 
-  async deleteDokla(id: number): Promise<void> {
-    await db.delete(dokla).where(eq(dokla.id, id));
+  async deleteDokla(id: number, deletedBy?: number): Promise<void> {
+    // Owner decision 2026-07-13 (chat) — soft-delete + audit trail (was a real Drizzle
+    // .delete() hard DELETE). Mirrors sd_customers softDelete shape (VISION-3340 #63,
+    // commit 01daa468): deleted_at/deleted_by set together; every read path in this
+    // file now filters deleted_at IS NULL so soft-deleted dokla disappear from normal
+    // views exactly as a hard-delete would have, but the row is recoverable.
+    await db.update(dokla)
+      .set({ deleted_at: sql`NOW()`, deleted_by: deletedBy ?? null })
+      .where(eq(dokla.id, id));
   }
 
   async createRasporyazhenie(userId: number, toUser: string | null, task: string, deadline: string | null, priority: string): Promise<Result<Row>> {
@@ -106,7 +116,7 @@ export class CoordinationRepository implements ICoordinationRepo {
   async createRaspFromDokla(doklaId: number, issuedBy: number): Promise<Result<Row | null>> {
     return safeCall(async () => {
       const dk = (await runQuery<Row>(sql`
-        SELECT id, from_user_id, subject, proposal FROM dokla WHERE id = ${doklaId} LIMIT 1`)).rows[0];
+        SELECT id, from_user_id, subject, proposal FROM dokla WHERE id = ${doklaId} AND deleted_at IS NULL LIMIT 1`)).rows[0];
       if (!dk) return null;
       const task = ((dk.proposal as string) ?? '').trim() || ((dk.subject as string) ?? '').trim();
       if (!task) return null; // hech qanday bajariladigan matn yo'q
@@ -145,6 +155,9 @@ export class CoordinationRepository implements ICoordinationRepo {
         .leftJoin(hrEmployees, sql`${hrEmployees.id}::text = ${rasporyazhenie.from_user_id}::text`)
         .leftJoin(appUsers, sql`${appUsers.id}::text = ${rasporyazhenie.from_user_id}::text`)
         .leftJoin(toUserAlias, sql`${toUserAlias.id}::text = ${rasporyazhenie.to_user}`)
+        // Owner decision 2026-07-13 (chat) — soft-delete: hide soft-deleted rasporyazhenie
+        // from the normal list view (mirrors sd_customers list filter, VISION-3340 #63).
+        .where(isNull(rasporyazhenie.deleted_at))
         .orderBy(
           sql`CASE WHEN ${rasporyazhenie.status} != 'done' AND ${rasporyazhenie.deadline} IS NOT NULL AND ${rasporyazhenie.deadline} < CURRENT_DATE THEN 0 WHEN ${rasporyazhenie.status} = 'in_progress' THEN 1 WHEN ${rasporyazhenie.status} = 'assigned' THEN 2 WHEN ${rasporyazhenie.status} = 'done' THEN 3 ELSE 4 END`,
           sql`${rasporyazhenie.deadline} ASC NULLS LAST`,
@@ -157,7 +170,7 @@ export class CoordinationRepository implements ICoordinationRepo {
   async getRaspById(id: number): Promise<Result<unknown[]>> {
     return safeCall(async () => {
       return db.select({ id: rasporyazhenie.id, to_user: rasporyazhenie.to_user, from_user_id: rasporyazhenie.from_user_id })
-        .from(rasporyazhenie).where(eq(rasporyazhenie.id, id)).limit(1).then(r => castTo<unknown[]>(r));
+        .from(rasporyazhenie).where(and(eq(rasporyazhenie.id, id), isNull(rasporyazhenie.deleted_at))).limit(1).then(r => castTo<unknown[]>(r));
       }, 'DB_ERROR');
   }
 
@@ -183,8 +196,15 @@ export class CoordinationRepository implements ICoordinationRepo {
       }, 'DB_ERROR');
   }
 
-  async deleteRasp(id: number): Promise<void> {
-    await db.delete(rasporyazhenie).where(eq(rasporyazhenie.id, id));
+  async deleteRasp(id: number, deletedBy?: number): Promise<void> {
+    // Owner decision 2026-07-13 (chat) — soft-delete + audit trail (was a real Drizzle
+    // .delete() hard DELETE). Mirrors sd_customers softDelete shape (VISION-3340 #63,
+    // commit 01daa468): deleted_at/deleted_by set together; every read path in this
+    // file now filters deleted_at IS NULL so soft-deleted rasporyazhenie disappear from
+    // normal views exactly as a hard-delete would have, but the row is recoverable.
+    await db.update(rasporyazhenie)
+      .set({ deleted_at: sql`NOW()`, deleted_by: deletedBy ?? null })
+      .where(eq(rasporyazhenie.id, id));
   }
 
   async getStatsDokla(): Promise<Result<DoklaStats>> {
@@ -194,7 +214,7 @@ export class CoordinationRepository implements ICoordinationRepo {
         read:     sql<number>`COUNT(*) FILTER (WHERE ${dokla.status}='read')`,
         resolved: sql<number>`COUNT(*) FILTER (WHERE ${dokla.status}='resolved')`,
         total:    sql<number>`COUNT(*)`,
-      }).from(dokla).where(sql`${dokla.created_at} >= NOW() - INTERVAL '7 days'`);
+      }).from(dokla).where(sql`${dokla.created_at} >= NOW() - INTERVAL '7 days' AND ${dokla.deleted_at} IS NULL`);
       return r[0] ?? { total: 0, sent: 0, read: 0, resolved: 0 };
       }, 'DB_ERROR');
   }
@@ -272,7 +292,7 @@ export class CoordinationRepository implements ICoordinationRepo {
         done:        sql<number>`COUNT(*) FILTER (WHERE ${rasporyazhenie.status}='done')`,
         overdue:     sql<number>`COUNT(*) FILTER (WHERE ${rasporyazhenie.status} != 'done' AND ${rasporyazhenie.deadline} IS NOT NULL AND ${rasporyazhenie.deadline} < CURRENT_DATE)`,
         total:       sql<number>`COUNT(*)`,
-      }).from(rasporyazhenie).where(sql`${rasporyazhenie.created_at} >= NOW() - INTERVAL '7 days'`);
+      }).from(rasporyazhenie).where(sql`${rasporyazhenie.created_at} >= NOW() - INTERVAL '7 days' AND ${rasporyazhenie.deleted_at} IS NULL`);
       return r[0] ?? { total: 0, assigned: 0, in_progress: 0, done: 0, overdue: 0 };
       }, 'DB_ERROR');
   }

@@ -26,7 +26,7 @@ export interface ICoordinationRepo {
   listDokla(): Promise<Result<Row[]>>;
   getDoklaById(id: number): Promise<Result<unknown[]>>;
   updateDokla(id: number, status: string | null): Promise<Result<Row>>;
-  deleteDokla(id: number): Promise<void>;
+  deleteDokla(id: number, deletedBy?: number): Promise<void>;
   createRasporyazhenie(
     userId: number,
     toUser: string | null,
@@ -44,7 +44,7 @@ export interface ICoordinationRepo {
   createRaspFromDokla(doklaId: number, issuedBy: number): Promise<Result<Row | null>>;
   markRaspDone(id: number, userId: number, note: string | null): Promise<Result<Row>>;
   updateRasp(id: number, status: string | null): Promise<Result<Row>>;
-  deleteRasp(id: number): Promise<void>;
+  deleteRasp(id: number, deletedBy?: number): Promise<void>;
   getStatsDokla(): Promise<Result<DoklaStats>>;
   listBaskets(): Promise<Result<Row[]>>;
   getStatsRasp(): Promise<Result<RaspStats>>;

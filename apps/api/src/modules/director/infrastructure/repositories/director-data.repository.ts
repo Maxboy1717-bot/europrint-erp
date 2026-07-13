@@ -332,7 +332,7 @@ export class DirectorDataRepository implements IDirectorDataRepo {
             AND mc.is_active = true
             AND COALESCE(warehouse_stock.available_quantity, 0) < COALESCE(mc.min_stock, 0)
         )`),
-        db.execute(sql`SELECT COUNT(*) AS cnt FROM rasporyazhenie WHERE status != 'done' AND deadline IS NOT NULL AND deadline < CURRENT_DATE`),
+        db.execute(sql`SELECT COUNT(*) AS cnt FROM rasporyazhenie WHERE status != 'done' AND deadline IS NOT NULL AND deadline < CURRENT_DATE AND deleted_at IS NULL`),
       ]);
       const o = (ordRow as Row | undefined) ?? {};
       const h = (hrRow as Row | undefined) ?? {};

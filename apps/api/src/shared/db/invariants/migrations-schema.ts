@@ -1364,4 +1364,25 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'kanban_wip_overrides.card_id index',
     sql: `CREATE INDEX IF NOT EXISTS idx_kanban_wip_overrides_card ON kanban_wip_overrides (card_id)`,
   },
+  // Owner decision 2026-07-13 (chat): dokla/rasporyazhenie hard-delete -> soft-delete +
+  // audit trail (coordination.repository.ts deleteDokla()/deleteRasp() previously ran a
+  // real Drizzle .delete()). Mirrors sd_customers.deleted_at/deleted_by shape
+  // (VISION-3340 #63, commit 01daa468). Additive, nullable (Q-35/Q-46). Human-readable
+  // mirror: apps/api/src/shared/db/migrations/dokla-rasporyazhenie-soft-delete-2026-07-13.sql.
+  {
+    name: 'dokla.deleted_at column (soft-delete, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS dokla ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP`,
+  },
+  {
+    name: 'dokla.deleted_by column (soft-delete audit, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS dokla ADD COLUMN IF NOT EXISTS deleted_by INTEGER`,
+  },
+  {
+    name: 'rasporyazhenie.deleted_at column (soft-delete, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS rasporyazhenie ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP`,
+  },
+  {
+    name: 'rasporyazhenie.deleted_by column (soft-delete audit, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS rasporyazhenie ADD COLUMN IF NOT EXISTS deleted_by INTEGER`,
+  },
 ];
