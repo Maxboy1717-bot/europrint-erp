@@ -67,7 +67,7 @@ export class ChatGatewayHelperService {
 
   async handleSendMessage(
     client: Socket,
-    data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string },
+    data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string; clientMsgId?: string },
   ) {
     const userId = client.data?.userId;
     if (!userId) return;
@@ -78,7 +78,7 @@ export class ChatGatewayHelperService {
         roomId,
         userId,
         data.content,
-        { fileUrl: data.fileUrl, fileName: data.fileName, fileType: data.fileType, replyToId: data.replyToId ? Number(data.replyToId) : undefined },
+        { fileUrl: data.fileUrl, fileName: data.fileName, fileType: data.fileType, replyToId: data.replyToId ? Number(data.replyToId) : undefined, clientMsgId: data.clientMsgId },
       );
       if (!sendResult.ok) { client.emit('error', { message: sendResult.error.message }); return; }
       const message = sendResult.data;

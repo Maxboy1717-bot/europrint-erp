@@ -186,7 +186,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('message:send')
   async handleSendMessageNew(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string },
+    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string; clientMsgId?: string },
   ) {
     return this.helper.handleSendMessage(client, data);
   }
@@ -194,7 +194,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('send_message')
   async handleSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string },
+    @MessageBody() data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string; clientMsgId?: string },
   ) {
     return this.helper.handleSendMessage(client, data);
   }

@@ -5,6 +5,7 @@
 
 import { useCallback } from "react";
 import { useChatStore } from "@/store/chatStore";
+import { useAuth } from "@/hooks/useAuth";
 
 let sharedSocketRef: { socket: import("socket.io-client").Socket | null } = { socket: null };
 
@@ -32,6 +33,8 @@ export function getSharedSocket() {
 }
 
 export function useChatSocket() {
+  const { user } = useAuth();
+
   const joinRoom = useCallback((roomId: string) => {
     const s = sharedSocketRef.socket;
     if (!s) return;
@@ -43,14 +46,35 @@ export function useChatSocket() {
   }, []);
 
   const sendMessage = useCallback((roomId: string, content: string, replyToId?: string, mentionedUserIds?: string[]) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
+    const clientMsgId = crypto.randomUUID();
+    // Optimistic bubble: render instantly in a "sending" state so the composer
+    // feels instant. The server echo (new_message carrying this clientMsgId)
+    // reconciles it into the persisted message via chatStore.reconcileMessage.
+    if (user) {
+      useChatStore.getState().addOptimisticMessage({
+        id: `optimistic-${clientMsgId}`,
+        clientMsgId,
+        status: "sending",
+        roomId,
+        senderId: String(user.id),
+        senderName: user.fullName || user.username || "",
+        content: trimmed,
+        messageType: "text",
+        isDeleted: false,
+        replyToId: replyToId ?? null,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    const payload = { roomId, content: trimmed, replyToId, mentionedUserIds, clientMsgId };
     const s = sharedSocketRef.socket;
-    if (!content.trim()) return;
     if (!s) {
-      pendingQueue.push({ event: "message:send", data: { roomId, content: content.trim(), replyToId, mentionedUserIds } });
+      pendingQueue.push({ event: "message:send", data: payload });
       return;
     }
-    s.emit("message:send", { roomId, content: content.trim(), replyToId, mentionedUserIds });
-  }, []);
+    s.emit("message:send", payload);
+  }, [user]);
 
   const sendTypingStart = useCallback((roomId: string) => {
     sharedSocketRef.socket?.emit("typing", { roomId: Number(roomId) || roomId, isTyping: true });

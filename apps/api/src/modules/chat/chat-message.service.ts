@@ -31,6 +31,7 @@ export class ChatMessageService {
       threadCount: 0, reactions: [], createdAt: msg['created_at'],
       senderName: user?.['full_name'], senderAvatar: user?.['profile_image_url'], senderEmployeeId: user?.['employee_id'],
       isStarred: msg['is_starred'] ?? false,
+      clientMsgId: msg['client_msg_id'] ?? null,
     };
   }
 
@@ -49,6 +50,7 @@ export class ChatMessageService {
   async sendMessage(
     roomId: string | number, senderId: number, content: string,
     fileUrl?: string, fileName?: string, fileType?: string, replyToId?: number,
+    clientMsgId?: string,
   ): Promise<Result<Record<string, unknown>, AppError>> {
     const roomIdStr = String(roomId);
     const senderIdStr = String(senderId);
@@ -60,6 +62,7 @@ export class ChatMessageService {
     const msgResult = await this.msgRepo.insertMessage(
       roomIdStr, senderIdStr, content || null, fileUrl || null,
       fileName || null, fileType || null, messageType, replyToIdStr,
+      clientMsgId || null,
     );
     if (!msgResult.ok) return Err(msgResult.error.message);
     await this.msgRepo.incrementUnreadForOthers(roomIdStr, senderIdStr);

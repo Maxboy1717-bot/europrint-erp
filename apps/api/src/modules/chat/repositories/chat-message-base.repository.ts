@@ -77,6 +77,7 @@ export class ChatMessageBaseRepository {
     roomIdStr: string, senderIdStr: string, content: string | null,
     fileUrl: string | null, fileName: string | null, fileType: string | null,
     messageType: string, replyToIdStr: string | null,
+    clientMsgId: string | null = null,
   ): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db
@@ -90,6 +91,7 @@ export class ChatMessageBaseRepository {
           fileType: fileType,
           messageType: messageType,
           replyToId: replyToIdStr,
+          clientMsgId: clientMsgId,
         })
         .returning();
       return castTo<Record<string, unknown>>(row);

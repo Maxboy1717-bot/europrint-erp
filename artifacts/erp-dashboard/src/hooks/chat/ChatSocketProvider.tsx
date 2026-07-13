@@ -150,6 +150,8 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
         messageType: (rawMsg.messageType ?? rawMsg.message_type ?? "text") as ChatMessage["messageType"],
         isDeleted: Boolean(rawMsg.isDeleted ?? rawMsg.is_deleted ?? false),
         senderName: String(rawMsg.senderName ?? rawMsg.sender_name ?? ""),
+        clientMsgId: (rawMsg.clientMsgId ?? rawMsg.client_msg_id) ? String(rawMsg.clientMsgId ?? rawMsg.client_msg_id) : undefined,
+        status: "sent",
       };
       const roomId = msg.roomId;
       if (msg.threadRootId) {
@@ -158,7 +160,13 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
         st.updateThreadCount(roomId, threadRootId, (st.threadMessages[threadRootId]?.length ?? 0) + 1);
         return;
       }
-      st.addMessage(msg);
+      // If this echo carries a clientMsgId, reconcile the optimistic bubble this
+      // sender rendered on send (replace in place, no duplicate); otherwise add.
+      if (msg.clientMsgId) {
+        st.reconcileMessage(roomId, msg.clientMsgId, msg);
+      } else {
+        st.addMessage(msg);
+      }
       st.updateRoom(roomId, {
         lastMessage: {
           id: msg.id,
