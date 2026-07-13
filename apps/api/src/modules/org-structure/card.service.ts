@@ -294,4 +294,23 @@ export class CardService {
     if (!r.data) return Err(AppErr('INTERNAL', `Karta #${cardId} portreti saqlanmadi`));
     return Ok(r.data);
   }
+
+  // ─── Kerakli jihozlar (required equipment per card) ──────────────────────────
+  listRequiredEquipment(cardId: number): Promise<Result<string[]>> {
+    return this.repo.listRequiredEquipment(cardId);
+  }
+
+  async addRequiredEquipmentItem(cardId: number, item: string): Promise<Result<string[]>> {
+    const r = await this.repo.addRequiredEquipmentItem(cardId, item);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+    return Ok(r.data);
+  }
+
+  async removeRequiredEquipmentItem(cardId: number, item: string): Promise<Result<string[]>> {
+    const r = await this.repo.removeRequiredEquipmentItem(cardId, item);
+    if (!r.ok) return Err(r.error);
+    if (!r.data) return Err(AppErr('NOT_FOUND', `Karta #${cardId} topilmadi`));
+    return Ok(r.data);
+  }
 }

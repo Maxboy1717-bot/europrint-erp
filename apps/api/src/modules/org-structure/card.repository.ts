@@ -706,6 +706,64 @@ export class CardRepository {
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
+  // ─── Kerakli jihozlar (required_equipment jsonb per card, 2026-07-13) ────────
+  // APPROVED: owner schema-approval 2026-07-13 (Muslimbek, chat) -- HR-modul to'liq qurish
+  // direktivasi. Genuinely missing data model (confirmed by multiple prior audits — no
+  // columns/tables at all). Minimal: a jsonb array of equipment-name strings on the card row
+  // itself (org_departments.required_equipment). All 3 ops are single atomic UPDATE/SELECT
+  // statements — no read-then-write race on concurrent add/remove.
+
+  /** List the card's required-equipment names. Empty array when the card has none or is archived/missing. */
+  async listRequiredEquipment(cardId: number): Promise<Result<string[]>> {
+    const r = await this.exec(sql`
+      SELECT COALESCE(required_equipment, '[]'::jsonb) AS items
+      FROM org_departments WHERE id = ${cardId} AND is_active = true
+    `);
+    if (!r.ok) return Err(r.error);
+    const items = r.data[0]?.items;
+    return Ok(Array.isArray(items) ? items.map((x) => String(x)) : []);
+  }
+
+  /**
+   * Add one equipment item. Idempotent — the jsonb `?` (array-contains-string) operator skips
+   * an exact duplicate. Atomic single UPDATE. Returns the FULL updated list, or null when the
+   * card doesn't exist / is archived (service maps that to NOT_FOUND).
+   */
+  async addRequiredEquipmentItem(cardId: number, item: string): Promise<Result<string[] | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET required_equipment = CASE
+               WHEN COALESCE(required_equipment, '[]'::jsonb) ? ${item}
+               THEN COALESCE(required_equipment, '[]'::jsonb)
+               ELSE COALESCE(required_equipment, '[]'::jsonb) || to_jsonb(${item}::text)
+             END
+       WHERE id = ${cardId} AND is_active = true
+      RETURNING required_equipment AS items
+    `);
+    if (!r.ok) return Err(r.error);
+    if (!r.data[0]) return Ok(null);
+    const items = r.data[0].items;
+    return Ok(Array.isArray(items) ? items.map((x) => String(x)) : []);
+  }
+
+  /** Remove one equipment item by exact value (atomic single UPDATE via jsonb_agg filter). */
+  async removeRequiredEquipmentItem(cardId: number, item: string): Promise<Result<string[] | null>> {
+    const r = await this.exec(sql`
+      UPDATE org_departments
+         SET required_equipment = (
+           SELECT COALESCE(jsonb_agg(elem), '[]'::jsonb)
+           FROM jsonb_array_elements_text(COALESCE(required_equipment, '[]'::jsonb)) AS elem
+           WHERE elem <> ${item}
+         )
+       WHERE id = ${cardId} AND is_active = true
+      RETURNING required_equipment AS items
+    `);
+    if (!r.ok) return Err(r.error);
+    if (!r.data[0]) return Ok(null);
+    const items = r.data[0].items;
+    return Ok(Array.isArray(items) ? items.map((x) => String(x)) : []);
+  }
+
   // ─── EP-ORG-003 card-gate (RBAC + salary from the card) ─────────────────────
 
   /**

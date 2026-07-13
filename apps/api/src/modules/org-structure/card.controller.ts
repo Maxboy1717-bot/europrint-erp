@@ -71,6 +71,11 @@ const CardFreezeSchema = z.object({
   until:  z.union([z.string().max(40), z.null()]).optional(),
 }).strict();
 
+/** "Kerakli jihozlar" (required equipment) — one equipment-name string per add/remove call. */
+const EquipmentItemSchema = z.object({
+  item: z.string().min(1).max(300),
+}).strict();
+
 @Roles('admin', 'manager', 'hr_manager', 'director', 'super_admin')
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -138,6 +143,39 @@ export class CardController {
     const creatorId = user?.id ?? user?.sub ?? null;
     const data = unwrapOrThrow(await this.service.saveCardPortret(id, portretData, creatorId));
     return { portret: data };
+  }
+
+  // ─── Kerakli jihozlar (required equipment per card, 2026-07-13) ────────────
+
+  @ApiOperation({ summary: "Card's required equipment (Kerakli jihozlar)" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get(':id/equipment')
+  async equipment(@Param('id', ParseIntPipe) id: number) {
+    const data = unwrapOrInternal(await this.service.listRequiredEquipment(id));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Add a required-equipment item' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Post(':id/equipment')
+  async addEquipment(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = EquipmentItemSchema.parse(body);
+    const data = unwrapOrThrow(await this.service.addRequiredEquipmentItem(id, dto.item));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
+  }
+
+  @ApiOperation({ summary: 'Remove a required-equipment item' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete(':id/equipment')
+  async removeEquipment(@Param('id', ParseIntPipe) id: number, @Query('item') item: string) {
+    const parsed = z.string().min(1).max(300).parse(item);
+    const data = unwrapOrThrow(await this.service.removeRequiredEquipmentItem(id, parsed));
+    const items = Array.isArray(data) ? data : [];
+    return { items, total: items.length };
   }
 
   // ─── Phase 5 card-detail tabs (read-only) ──────────────────────────────────

@@ -11,12 +11,14 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { FolderOpen, UserPlus, Trash2, CheckCircle2, Pencil, Inbox, Save } from "lucide-react";
+import { FolderOpen, UserPlus, Trash2, CheckCircle2, Pencil, Inbox, Save, Wrench, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -166,6 +168,27 @@ export function CardDetailDialog({
     onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
   });
 
+  // Kerakli jihozlar (required equipment) — minimal per-item CRUD on a jsonb array field.
+  const equipment = useQuery<{ items: string[] }>({ queryKey: [`${base}/equipment`], enabled });
+  const [newEquipment, setNewEquipment] = useState("");
+  const addEquipmentMutation = useMutation({
+    mutationFn: (item: string) => apiRequest("POST", `${base}/equipment`, { item }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`${base}/equipment`] });
+      setNewEquipment("");
+      toast({ title: t("qoshildi", "Qo'shildi") });
+    },
+    onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
+  });
+  const removeEquipmentMutation = useMutation({
+    mutationFn: (item: string) => apiRequest("DELETE", `${base}/equipment?item=${encodeURIComponent(item)}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`${base}/equipment`] });
+      toast({ title: t("ochirildi", "O'chirildi") });
+    },
+    onError: () => toast({ title: t("Xatolik"), variant: "destructive" }),
+  });
+
   const reviewMutation = useMutation({
     mutationFn: () => apiRequest("PATCH", `${base}/review`),
     onSuccess: () => {
@@ -223,6 +246,7 @@ export function CardDetailDialog({
                 <TabsTrigger value="vakant">{t("vakant")}</TabsTrigger>
                 <TabsTrigger value="papka">{t("papka")}</TabsTrigger>
                 <TabsTrigger value="statistika">{t("statistika")}</TabsTrigger>
+                <TabsTrigger value="jihozlar">{t("jihozlar", "Jihozlar")}</TabsTrigger>
                 <TabsTrigger value="darslik">{t("darslik", "Darslik")}</TabsTrigger>
                 <TabsTrigger value="portret">{t("portret")}</TabsTrigger>
                 <TabsTrigger value="tarix">{t("tarixJurnali")}</TabsTrigger>
@@ -403,6 +427,60 @@ export function CardDetailDialog({
                       : <span className="text-amber-600">{t("hechQachon")} · {t("eskirgan")}</span>}
                   />
                 </div>
+              </TabsContent>
+
+              {/* 6b. Jihozlar — Kerakli jihozlar (required equipment, jsonb array on the card) */}
+              <TabsContent value="jihozlar" className="mt-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder={t("jihozNomiKiriting", "Jihoz nomini kiriting...")}
+                    value={newEquipment}
+                    onChange={(e) => setNewEquipment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newEquipment.trim()) {
+                        addEquipmentMutation.mutate(newEquipment.trim());
+                      }
+                    }}
+                    data-testid="input-new-equipment"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => newEquipment.trim() && addEquipmentMutation.mutate(newEquipment.trim())}
+                    disabled={addEquipmentMutation.isPending || !newEquipment.trim()}
+                    data-testid="button-add-equipment"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />{t("qoshish")}
+                  </Button>
+                </div>
+                {equipment.isLoading ? (
+                  <EPLoader />
+                ) : (equipment.data?.items ?? []).length === 0 ? (
+                  <EPEmptyState icon={Wrench} title={t("jihozlarYoq", "Kerakli jihozlar kiritilmagan")} />
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(Array.isArray(equipment.data?.items) ? equipment.data!.items : []).map((eq) => (
+                      <Badge key={eq} variant="outline" className="flex items-center gap-1.5 py-1.5 px-2.5" data-testid={`badge-equipment-${eq}`}>
+                        <Wrench className="h-3 w-3" />
+                        {eq}
+                        <DeleteConfirmDialog
+                          title={t("jihozniOchirish", "Jihozni o'chirish")}
+                          description={t("jihozniOchirishMatn", "Bu jihozni ro'yxatdan o'chirasizmi?")}
+                          trigger={
+                            <button
+                              className="ml-1 hover:text-destructive"
+                              disabled={removeEquipmentMutation.isPending}
+                              data-testid={`button-remove-equipment-${eq}`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          }
+                          isPending={removeEquipmentMutation.isPending}
+                          onConfirm={() => removeEquipmentMutation.mutate(eq)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </TabsContent>
 
               {/* 7. Darslik — karta-markazli LMS ko'rinishi (kartaga biriktirilgan kurslar + progress) */}

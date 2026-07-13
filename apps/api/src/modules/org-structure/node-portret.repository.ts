@@ -59,12 +59,23 @@ export class NodePortretRepository {
     creatorId: number | null,
   ): Promise<Result<Row>> {
     return safeCall(async () => {
+      // BUG FIX (live-verified 2026-07-13): `idx_org_node_portret_node_id` was made a PARTIAL
+      // unique index (`WHERE card_id IS NULL`) by org-node-portret-card-key-2026-06-20.sql so
+      // card-keyed portret rows (card_id NOT NULL) could coexist with node-keyed rows without
+      // colliding on node_id. `onConflictDoUpdate({ target: node_id })` alone no longer matches
+      // any arbiter (Postgres needs the SAME predicate on the ON CONFLICT clause as the partial
+      // index), so every save 500'd with "no unique or exclusion constraint matching the ON
+      // CONFLICT specification" — the 7-step Portret wizard (OrgNodePortretTab.tsx) silently
+      // failed on every "Saqlash" click, and a reload's GET legitimately showed portret:null
+      // (nothing was ever persisted) — reproducing the exact "wizard wiped on reload" symptom.
+      // Fix: `targetWhere` mirrors the partial index predicate so Postgres can resolve the arbiter.
       const rows = await db.insert(org_node_portret).values({
         node_id:      nodeId,
         portret_data: portretData,
         creator_id:   creatorId,
       }).onConflictDoUpdate({
         target: org_node_portret.node_id,
+        targetWhere: sql`card_id IS NULL`,
         set: {
           portret_data: portretData,
           creator_id:   creatorId,
