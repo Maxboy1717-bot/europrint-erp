@@ -9,13 +9,29 @@ import { db } from '@shared/db';
 import { securityAttendance } from '@europrint/schemas';
 import { eq, count, desc } from 'drizzle-orm';
 
+// NOTE: `db.select()` with no column list selects every column declared on the
+// Drizzle `securityAttendance` schema — including `timestamp`, which does not
+// exist on the live `security_attendance` table (live has check_in/check_out
+// instead; see europrint DB `\d security_attendance`). Selecting an explicit
+// column list here avoids generating `SELECT ..., "timestamp", ...` and the
+// resulting `42703 column "timestamp" does not exist` Postgres error (which
+// the global exception filter was masking as a 503).
+const ATTENDANCE_SELECT_COLUMNS = {
+  id: securityAttendance.id,
+  employeeId: securityAttendance.employeeId,
+  eventType: securityAttendance.eventType,
+  gateId: securityAttendance.gateId,
+  method: securityAttendance.method,
+  createdAt: securityAttendance.createdAt,
+};
+
 @Injectable()
 export class AttendanceRepository {
   async findAll(page: number, limit: number): Promise<Result<Record<string, unknown>>> {
-  try {  
+  try {
       const [countResult, data] = await Promise.all([
         db.select({ count: count() }).from(securityAttendance),
-        db.select().from(securityAttendance).orderBy(desc(securityAttendance.createdAt)).limit(limit).offset((page - 1) * limit),
+        db.select(ATTENDANCE_SELECT_COLUMNS).from(securityAttendance).orderBy(desc(securityAttendance.createdAt)).limit(limit).offset((page - 1) * limit),
       ]);
       return Ok({ data, total: Number(countResult[0]?.count || 0) });  } catch (_e) {
     return Err(String(_e));
@@ -24,8 +40,8 @@ export class AttendanceRepository {
   }
 
   async findOne(id: number): Promise<Result<Record<string, unknown> | null>> {
-  try {  
-      const rows = await db.select().from(securityAttendance).where(eq(securityAttendance.id, id));
+  try {
+      const rows = await db.select(ATTENDANCE_SELECT_COLUMNS).from(securityAttendance).where(eq(securityAttendance.id, id));
       return Ok(rows[0] ?? null);  } catch (_e) {
     return Err(String(_e));
   }
