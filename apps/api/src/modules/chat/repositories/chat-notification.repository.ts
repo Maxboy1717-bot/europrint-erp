@@ -186,7 +186,7 @@ export class ChatNotificationRepository {
   async insertTask(
     messageId: string, title: string, assignedTo: string | null,
     dueDate: string | null, priority: string, roomId?: string,
-    createdBy?: string,
+    createdBy?: string, kanbanCardId?: string | null,
   ): Promise<Result<Row>> {
     try {
       // DB has integer types (id SERIAL, message_id int, assigned_to int)
@@ -195,8 +195,10 @@ export class ChatNotificationRepository {
       if (isNaN(msgIdInt)) return Err("messageId raqam bo'lishi kerak");
       const assignedToInt = assignedTo ? parseInt(assignedTo, 10) : null;
       const createdByStr = createdBy ?? null;
+      // Owner 2026-07-13: yaratilgan haqiqiy Kanban kartaga bog'lam (traceability).
+      const kanbanCardInt = kanbanCardId ? parseInt(kanbanCardId, 10) : null;
       const r = await db.execute(sql`
-        INSERT INTO chat_message_tasks (message_id, title, assigned_to, due_date, priority, status, room_id, created_by)
+        INSERT INTO chat_message_tasks (message_id, title, assigned_to, due_date, priority, status, room_id, created_by, kanban_card_id)
         VALUES (
           ${msgIdInt},
           ${title},
@@ -205,9 +207,10 @@ export class ChatNotificationRepository {
           ${priority ?? 'medium'},
           'open',
           ${roomId ?? null},
-          ${createdByStr}
+          ${createdByStr},
+          ${kanbanCardInt}
         )
-        RETURNING id, message_id, title, assigned_to, due_date, priority, status, created_at, room_id, created_by
+        RETURNING id, message_id, title, assigned_to, due_date, priority, status, created_at, room_id, created_by, kanban_card_id
       `);
       const row = ((r as { rows?: Row[] }).rows ?? [])[0] ?? {};
       return Ok(row as Row);

@@ -111,6 +111,7 @@ export class ChatExtController {
     const result = await this.chatNotifSvc.createMessageTask(
       user.id, dto.roomId, dto.messageId, dto.title,
       dto.assignedTo ?? null, dto.dueDate ?? null, dto.priority,
+      dto.kanbanCardId ?? null,
     );
     assertOk(result);
     return result.data;

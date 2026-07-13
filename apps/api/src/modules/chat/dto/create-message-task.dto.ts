@@ -9,7 +9,11 @@ import { ZodError } from 'zod';
 
 import { MAX_SHORT_TEXT } from '@common/constants/app.constants';
 
-const idSchema = z.union([z.string().uuid(), z.number().int().positive()]);
+// Chat ID'lari live DB'da INTEGER, lekin FE ularni raqam-satr ("42") sifatida
+// yuboradi (Phase-4 #23 schema drift). Shuning uchun UUID | raqam-satr | raqam —
+// hammasini qabul qilamiz (avvalgi `z.string().uuid()` raqam-satrni rad etib,
+// har chaqiruvni 400 qilardi).
+const idSchema = z.union([z.string().min(1), z.number().int().positive()]);
 
 export const CreateMessageTaskSchema = z.object({
   roomId:     idSchema,
@@ -18,6 +22,8 @@ export const CreateMessageTaskSchema = z.object({
   assignedTo: z.union([z.string(), z.number().int().positive()]).optional(),
   dueDate:    z.string().datetime({ offset: true }).optional().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()),
   priority:   z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
+  // Owner 2026-07-13: yaratilgan haqiqiy Kanban kartaga bog'lam (traceability).
+  kanbanCardId: z.union([z.string(), z.number().int().positive()]).optional(),
 });
 
 export type CreateMessageTaskDto = z.infer<typeof CreateMessageTaskSchema>;

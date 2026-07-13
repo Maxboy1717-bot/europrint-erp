@@ -59,6 +59,11 @@ export class ChatService {
       `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS last_message_id TEXT`,
       `ALTER TABLE chat_rooms ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`,
       `CREATE TABLE IF NOT EXISTS chat_message_tasks (id SERIAL PRIMARY KEY, message_id INTEGER NOT NULL, title TEXT NOT NULL, assigned_to INTEGER, due_date DATE, priority TEXT DEFAULT 'medium', status TEXT DEFAULT 'open', created_at TIMESTAMPTZ DEFAULT NOW())`,
+      `ALTER TABLE chat_message_tasks ADD COLUMN IF NOT EXISTS room_id INTEGER`,
+      `ALTER TABLE chat_message_tasks ADD COLUMN IF NOT EXISTS created_by INTEGER`,
+      // Owner 2026-07-13: "Xabardan Task Yaratish" endi haqiqiy Kanban karta yaratadi;
+      // bu ustun o'sha kartaga bog'lam (traceability: qaysi xabar → qaysi karta).
+      `ALTER TABLE chat_message_tasks ADD COLUMN IF NOT EXISTS kanban_card_id INTEGER`,
       `DELETE FROM chat_members cm USING admins a JOIN users u ON u.username = a.username WHERE cm.user_id = a.id::text AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.room_id = cm.room_id AND cm2.user_id = u.id::text)`,
       `UPDATE chat_members cm SET user_id = u.id::text FROM admins a JOIN users u ON u.username = a.username WHERE cm.user_id = a.id::text AND NOT EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.room_id = cm.room_id AND cm2.user_id = u.id::text)`,
     ];
