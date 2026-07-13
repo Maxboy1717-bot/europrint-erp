@@ -939,4 +939,30 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'council_votes.voter_user_id index',
     sql: `CREATE INDEX IF NOT EXISTS idx_council_votes_voter ON council_votes (voter_user_id)`,
   },
+  // SD #18-followup (2026-07-13): taxonomy_entries category='code_prefix' (KT/PT/E/GL —
+  // Korobka tartibi/Paddon tartibi/Etiketka/Gofra list; seeded taxonomy-entries-2026-07-11.sql)
+  // was dead: zero code referenced the 4 literal prefixes anywhere. Investigated live:
+  // ow_molds.die_code (vision 06-sd#18, sd-ow-molds-die-code-18-2026-07-11.sql) is a
+  // free-text physical-die identity tagged MANUALLY via PATCH
+  // /sd/orders/:id/molds/:moldId/die-code (SdOrderDepartmentsRepository.setDieCode) — no
+  // numbering sequence exists in the ow_molds insert path to prepend a prefix onto, so
+  // code_prefix is added as a CLASSIFICATION TAG on the mold/die, validated against the
+  // live taxonomy_entries set at the application layer (SdOrderDepartmentsRepository.
+  // setCodePrefix reads taxonomy_entries at request time — not hardcoded, Q-40). Additive,
+  // nullable — no regression (0 rows in ow_molds today). SCHEMA_MIGRATIONS runs before
+  // DRIFT_MIGRATIONS' `ow_molds CREATE TABLE`, hence the defensive `IF EXISTS`.
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/sd-ow-molds-code-prefix-2026-07-13.sql.
+  {
+    name: 'ow_molds.code_prefix column (SD #18-followup, taxonomy code_prefix classification tag)',
+    sql: `ALTER TABLE IF EXISTS ow_molds ADD COLUMN IF NOT EXISTS code_prefix TEXT`,
+  },
+  {
+    name: 'ow_molds.code_prefix comment (SD #18-followup)',
+    sql: `COMMENT ON COLUMN ow_molds.code_prefix IS 'taxonomy_entries(category=code_prefix).code classification tag for this mold/die (kt/pt/e/gl = Korobka tartibi/Paddon tartibi/Etiketka/Gofra list). NULL until tagged; validated against the live taxonomy_entries set at the application layer (SdOrderDepartmentsRepository.setCodePrefix), not hardcoded.'`,
+  },
+  {
+    name: 'ow_molds.code_prefix index (SD #18-followup)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_ow_molds_code_prefix ON ow_molds (code_prefix) WHERE code_prefix IS NOT NULL`,
+  },
 ];

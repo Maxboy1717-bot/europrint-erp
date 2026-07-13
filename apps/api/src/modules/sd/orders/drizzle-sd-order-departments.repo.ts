@@ -371,6 +371,32 @@ export class SdOrderDepartmentsRepository {
     } catch (e: unknown) { return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Die code saqlashda xatolik')); }
   }
 
+  /** SD #18-followup: tag a mold/die with a taxonomy code_prefix classification (KT/PT/E/GL —
+   *  Korobka tartibi/Paddon tartibi/Etiketka/Gofra list). Validated against the LIVE
+   *  taxonomy_entries set (category='code_prefix', is_active) — not a hardcoded list (Q-40) —
+   *  so a category added later via the taxonomy admin screen takes effect with no code change. */
+  async setCodePrefix(orderId: number, moldId: string, codePrefix: string): Promise<Result<Row>> {
+    try {
+      const normalized = codePrefix.trim().toLowerCase();
+      const valid = await runQuery<{ code: string }>(sql`
+        SELECT code FROM taxonomy_entries
+        WHERE category = 'code_prefix' AND code = ${normalized} AND is_active = true
+        LIMIT 1
+      `);
+      if (!valid.rows[0]) {
+        return Err(AppErr('VALIDATION', `Noto'g'ri kod prefiksi: ${codePrefix} (taxonomy_entries category=code_prefix dan tanlang)`));
+      }
+      const upd = await runQuery<Row>(sql`
+        UPDATE ow_molds SET code_prefix = ${normalized}
+         WHERE id = ${moldId}::uuid AND order_id = ${orderId}
+        RETURNING id, order_id, code_prefix, die_code, vendor, status
+      `);
+      const mold = upd.rows[0];
+      if (!mold) return Err(AppErr('NOT_FOUND', 'Mold topilmadi'));
+      return Ok(mold);
+    } catch (e: unknown) { return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Code prefix saqlashda xatolik')); }
+  }
+
   /** Vision 06-sd#18: global shared-forma detector — every physical die (die_code) referenced by
    *  more than one order. Surfaces the warning list for the SD panel. Empty until dies are tagged. */
   async getSharedDieWarnings(): Promise<Result<Row[]>> {

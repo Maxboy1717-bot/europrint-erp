@@ -50,4 +50,8 @@ export class SdOrderDepartmentsService {
   getSharedDieWarnings() {
     return this.repo.getSharedDieWarnings();
   }
+
+  setCodePrefix(orderId: number, moldId: string, codePrefix: string) {
+    return this.repo.setCodePrefix(orderId, moldId, codePrefix);
+  }
 }

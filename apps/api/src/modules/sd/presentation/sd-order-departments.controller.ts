@@ -15,7 +15,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
 import { AuditInterceptor } from '../../shared/interceptors/audit.interceptor';
 import { SdOrderDepartmentsService } from '../application/sd-order-departments.service';
-import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto, SetDieCodeSchema, SetDieCodeDto } from './dto/sd-order-departments.dto';
+import { SetOrderDepartmentsSchema, SetOrderDepartmentsDto, UpdateMoldStatusSchema, UpdateMoldStatusDto, UpdateDesignStatusSchema, UpdateDesignStatusDto, UpdateClicheStatusSchema, UpdateClicheStatusDto, UpdateShippingStatusSchema, UpdateShippingStatusDto, UpdateMaterialStatusSchema, UpdateMaterialStatusDto, SetDieCodeSchema, SetDieCodeDto, SetCodePrefixSchema, SetCodePrefixDto } from './dto/sd-order-departments.dto';
 
 @ApiTags('SD Order Departments')
 @ApiBearerAuth()
@@ -118,5 +118,16 @@ export class SdOrderDepartmentsController {
   @UsePipes(new ZodValidationPipe(SetDieCodeSchema))
   async setDieCode(@Param('id', ParseIntPipe) id: number, @Param('moldId') moldId: string, @Body() dto: SetDieCodeDto) {
     return unwrapOrThrow(await this.svc.setDieCode(id, moldId, dto.dieCode));
+  }
+
+  @ApiOperation({ summary: 'Classify a mold/die against a taxonomy code_prefix (KT/PT/E/GL, SD #18-followup)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Invalid code_prefix (not in live taxonomy_entries)' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch(':id/molds/:moldId/code-prefix')
+  @Roles(Role.PRODUCTION_MANAGER, Role.TECHNOLOGIST, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @UsePipes(new ZodValidationPipe(SetCodePrefixSchema))
+  async setCodePrefix(@Param('id', ParseIntPipe) id: number, @Param('moldId') moldId: string, @Body() dto: SetCodePrefixDto) {
+    return unwrapOrThrow(await this.svc.setCodePrefix(id, moldId, dto.codePrefix));
   }
 }
