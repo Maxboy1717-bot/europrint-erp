@@ -79,6 +79,7 @@ const CancelSchema   = z.object({
 });
 const ComplaintSchema = z.object({ reason: z.string().min(5).max(4000) });
 const FromErpSchema   = z.object({ erpDocumentId: z.string().uuid(), targetUserId: z.number().int().positive() });
+const ErkinHujjatSchema = z.object({ title: z.string().trim().min(1).max(500) });
 const PrintSchema     = z.object({ reason: z.string().min(3).max(2000) });
 const SetPinSchema    = z.object({ pin: z.string().regex(/^\d{4,8}$/) });
 
@@ -302,6 +303,18 @@ export class CcDocumentsController {
     @CurrentUser() user: { id: number },
   ) {
     return this.wf.surfaceErpInCc(body.erpDocumentId, user.id, body.targetUserId);
+  }
+
+  // STEP 3.6b — start an "Erkin hujjat" from CC's create flow: makes a blank erp_document
+  // + a linked CC draft (author's outbox); the FE then opens the TipTap editor.
+  @ApiOperation({ summary: "CC'dan erkin hujjat boshlash" })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @Post('documents/erkin-hujjat')
+  createErkin(
+    @Body(new ZodValidationPipe(ErkinHujjatSchema)) body: z.infer<typeof ErkinHujjatSchema>,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.wf.createErkinHujjatFromCc(user.id, body.title);
   }
 
   // 20-cc#39/76: bu route xuddi shu hujjatga cc-baskets.controller.ts:101 GET /baskets/:id

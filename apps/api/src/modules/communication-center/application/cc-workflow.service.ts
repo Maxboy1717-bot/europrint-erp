@@ -148,6 +148,36 @@ export class CcWorkflowService {
     return { ccDocumentId: ccDocId, targetUserId, related_erp_document_id: erpDocumentId };
   }
 
+  // STEP 3.6b — "Erkin hujjat" started FROM CC's create flow: create a blank erp_document
+  // (free-form content, owned by the author) + a linked CC draft in the author's outbox, so
+  // CC drives the subsequent workflow (send/approval) while the content is written in the
+  // TipTap editor. Bypasses the template AI Q&A wizard (free-form, not template-driven).
+  async createErkinHujjatFromCc(senderUserId: number, title: string) {
+    const clean = title.trim();
+    if (!clean) throw new BadRequestException('Sarlavha majburiy');
+
+    const erpRes = await db.execute(
+      sql`INSERT INTO erp_documents (title, content, owner_id) VALUES (${clean}, ${'{"type":"doc","content":[]}'}::jsonb, ${senderUserId}) RETURNING id`,
+    );
+    const erpDocumentId = String((erpRes as unknown as { rows?: Array<{ id?: string }> }).rows?.[0]?.id ?? '');
+    if (!erpDocumentId) throw new BadRequestException("Erkin hujjat yaratilmadi");
+
+    const tplRes = await db.execute(sql`SELECT id FROM cc_document_templates WHERE code = 'ERKIN-HUJJAT' LIMIT 1`);
+    const templateId = (tplRes as unknown as { rows?: Array<{ id?: string }> }).rows?.[0]?.id;
+    if (!templateId) throw new BadRequestException("ERKIN-HUJJAT shabloni topilmadi");
+
+    const created = await this.createDraft(senderUserId, {
+      templateId,
+      subject: clean,
+      aiBody: `Erkin hujjat: "${clean}" — /documents orqali tahrirlang.`,
+    } as CreateDraftDto);
+    const ccDocId = String((created as { id?: unknown }).id ?? '');
+
+    await db.execute(sql`UPDATE cc_documents SET related_erp_document_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+
+    return { erpDocumentId, ccDocumentId: ccDocId };
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // SEND
   // ─────────────────────────────────────────────────────────────────────
