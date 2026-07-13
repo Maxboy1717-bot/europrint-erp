@@ -233,11 +233,34 @@ export default function RoutingConfiguration() {
 
   const labels = buildRoutingLabels(t, tCommon);
 
-  // ---- early returns ------------------------------------------------------
-  if (routingsLoading) return <RoutingLoadingState />;
-  if (isError) return <RoutingErrorState onRetry={refetch} />;
-  if (!routings || routings.length === 0) {
-    return <RoutingEmptyState noDataLabel={t("noDataYet")} hintLabel={t("addNewRecordHint")} />;
+  // ---- body content (loading/error/empty/list) ----------------------------
+  // NOTE: these must NOT be early `return`s — the header (with the create
+  // button) and the dialogs below have to render regardless of data state,
+  // otherwise the empty-state hint ("click the button above") has no button
+  // to refer to.
+  let body: React.ReactNode;
+  if (routingsLoading) {
+    body = <RoutingLoadingState />;
+  } else if (isError) {
+    body = <RoutingErrorState onRetry={refetch} />;
+  } else if (!routings || routings.length === 0) {
+    body = <RoutingEmptyState noDataLabel={t("noDataYet")} hintLabel={t("addNewRecordHint")} />;
+  } else {
+    body = (
+      <>
+        <RoutingSearchBar value={searchTerm} onChange={setSearchTerm} placeholder={t("searchRouting")} />
+        <RoutingList
+          routings={filteredRoutings}
+          operations={operations}
+          isLoading={false}
+          notFoundLabel={t("routingNotFound")}
+          cardLabels={labels.cardLabels}
+          onManage={setSelectedRouting}
+          onDelete={(id) => deleteRoutingMutation.mutate(id)}
+          deletingMutationPending={deleteRoutingMutation.isPending}
+        />
+      </>
+    );
   }
 
   // ---- render -------------------------------------------------------------
@@ -266,18 +289,7 @@ export default function RoutingConfiguration() {
         </Button>
       </div>
 
-      <RoutingSearchBar value={searchTerm} onChange={setSearchTerm} placeholder={t("searchRouting")} />
-
-      <RoutingList
-        routings={filteredRoutings}
-        operations={operations}
-        isLoading={false}
-        notFoundLabel={t("routingNotFound")}
-        cardLabels={labels.cardLabels}
-        onManage={setSelectedRouting}
-        onDelete={(id) => deleteRoutingMutation.mutate(id)}
-        deletingMutationPending={deleteRoutingMutation.isPending}
-      />
+      {body}
 
       <CreateRoutingDialog
         open={showRoutingDialog}
