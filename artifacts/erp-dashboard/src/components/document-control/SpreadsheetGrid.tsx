@@ -359,7 +359,7 @@ export function SpreadsheetGrid({
                 <span className="absolute bottom-[2px] right-[2px] w-0 h-0 border-l-[7px] border-l-transparent border-b-[7px] border-b-[var(--ep-muted)]" />
               </th>
               {Array.from({ length: cols }, (_, c) => (
-                <th key={c} className="sticky top-0 z-[5] min-w-[72px] h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] text-[11px] font-semibold text-[var(--ep-muted)]">
+                <th key={c} className="sticky top-0 z-[5] min-w-[56px] h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] text-[11px] font-semibold text-[var(--ep-muted)]">
                   {numToCol(c + 1)}
                 </th>
               ))}
@@ -368,7 +368,7 @@ export function SpreadsheetGrid({
               <tr>
                 <th className="sticky left-0 z-[4] w-10 h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)]" />
                 {Array.from({ length: cols }, (_, c) => (
-                  <th key={c} className="min-w-[72px] h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)] p-0.5">
+                  <th key={c} className="min-w-[56px] h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)] p-0.5">
                     <input value={filters[c] ?? ''} onChange={(e) => setFilters((f) => ({ ...f, [c]: e.target.value }))}
                       placeholder={tLabel('documents.filterCol', 'Filtr…')}
                       className="w-full h-6 text-[11px] px-1 rounded border border-[var(--ep-border)] bg-white outline-none font-normal" />
@@ -399,7 +399,7 @@ export function SpreadsheetGrid({
                       onDoubleClick={() => startEdit(ref)}
                       style={style?.bg ? { backgroundColor: style.bg } : undefined}
                       className={cn(
-                        'min-w-[72px] h-7 px-1.5 cursor-cell align-middle',
+                        'min-w-[56px] h-7 px-1.5 cursor-cell align-middle',
                         style?.bd ? 'border-2 border-[var(--ep-text)]' : 'border border-[var(--ep-border)]',
                         // Active cell = ONE crisp blue box. outline (drawn over the border, no layout
                         // shift) with -1px offset covers the grey border instead of sitting inside it,
