@@ -12,17 +12,25 @@ export const SdCreateQuotationSchema = z.object({
   payment_terms:  z.string().optional(),
   notes:          z.string().optional(),
   items:          z.array(z.object({
-    product_id: z.coerce.number().int().positive(),
+    // sd_quotation_items has no product_id column at all — every quotation line here is a
+    // bespoke print job described by physical spec (paper/dimensions/colors), not a catalog
+    // SKU (same "Mahsulot vs Buyurtma" convention as sales_order_items). Requiring product_id
+    // rejected every real submission from the calc-form-driven create dialog with a 400.
+    product_id: z.coerce.number().int().positive().optional(),
     quantity:   z.coerce.number().positive(),
     price:      z.coerce.number().positive().optional(),
     // EP-SD-101 (vision 06-sd #101): per-line printing method (offset/flexo). Optional — the
     // AI recommendation from calculate-price fills the gap when the user leaves it unset.
     printing_method: z.enum(['offset', 'flexo']).optional(),
-  })).optional(),
+  }).passthrough()).optional(),
 }).passthrough();
 export type SdCreateQuotationDto = z.infer<typeof SdCreateQuotationSchema>;
 
 export const SdCreateContractSchema = z.object({
+  // sd_contracts.order_id is live NOT NULL with no default (verified via
+  // information_schema.columns) — required here so an invalid/missing FE order
+  // selection is rejected with a 400 before it reaches the DB INSERT (Qoida 3).
+  order_id:      z.coerce.number().int().positive(),
   customer_id:   z.coerce.number().int().positive().optional(),
   start_date:    z.string().optional(),
   end_date:      z.string().optional(),

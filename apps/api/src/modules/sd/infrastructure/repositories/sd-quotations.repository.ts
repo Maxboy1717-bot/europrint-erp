@@ -86,7 +86,7 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
         (quotation_number, customer_id, customer_name, quotation_date, total_value, total_amount, net_value,
          currency, valid_until, status, notes, payment_terms, markup_percent, created_at, updated_at)
       VALUES
-        (${qNum}, ${customerId}, ${body.customer_name ?? null}, to_char(NOW(),'YYYY-MM-DD'), ${total}, ${total}, ${total},
+        (${qNum}, ${customerId}, ${body.customer_name ?? body.customerName ?? null}, to_char(NOW(),'YYYY-MM-DD'), ${total}, ${total}, ${total},
          ${body.currency ?? 'UZS'}, COALESCE(${validUntil}, to_char(NOW() + INTERVAL '14 days', 'YYYY-MM-DD')), ${body.status ?? 'draft'}, ${body.notes ?? null},
          ${body.payment_terms ?? body.paymentTerms ?? null}, ${body.markup_percent ?? body.markupPercent ?? null}, NOW(), NOW())
       RETURNING *`);
@@ -96,14 +96,30 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     if (quote && items.length > 0) {
       const qId = Number((quote as Row).id);
       for (const it of items) {
-        // EP-SD-101 (vision 06-sd #101): persist the per-line printing_method when supplied.
-        // The DTO enum + the sd_quotation_items_printing_method_chk CHECK guard the value;
-        // null is accepted (line has no chosen method yet -> the AI rec applies at quote time).
+        // Bespoke print job (no product_id — see the Zod schema comment): persist the real
+        // dimension/paper/color/cost-breakdown columns the calc-form + calculate-price response
+        // actually carry, instead of the narrow product_type/quantity/unit_price/printing_method
+        // set this used to write (which silently discarded every dimension and cost field the
+        // FE sends). product_type falls back to the column's own 'box' default — the column is
+        // NOT NULL, so passing an explicit NULL here would violate the constraint outright.
         await exec(sql`
-          INSERT INTO sd_quotation_items (quotation_id, product_type, quantity, unit_price, printing_method)
-          VALUES (${qId}, ${it.product_type ?? it.productType ?? null},
-                  ${Number(it.quantity ?? it.qty ?? 1)}, ${Number(it.unit_price ?? it.unitPrice ?? 0)},
-                  ${(it.printing_method ?? it.printingMethod ?? null) as string | null})`);
+          INSERT INTO sd_quotation_items
+            (quotation_id, product_type, paper_type, length_mm, width_mm, height_mm, print_colors,
+             lamination, perforation, is_new_die, kashirovka, quantity, unit_price, cost_price,
+             paper_cost, production_cost, print_cost, delivery_cost, die_cost, printing_method)
+          VALUES
+            (${qId}, ${(it.product_type ?? it.productType ?? 'box') as string},
+             ${(it.paper_type ?? it.paperType ?? null) as string | null},
+             ${it.length_mm ?? it.lengthMm ?? null}, ${it.width_mm ?? it.widthMm ?? null},
+             ${it.height_mm ?? it.heightMm ?? null}, ${Number(it.print_colors ?? it.printColors ?? 0)},
+             ${Boolean(it.lamination ?? false)}, ${Boolean(it.perforation ?? false)},
+             ${Boolean(it.is_new_die ?? it.isNewDie ?? false)}, ${Boolean(it.kashirovka ?? false)},
+             ${Number(it.quantity ?? it.qty ?? 1)},
+             ${Number(it.unit_price ?? it.unitPrice ?? 0)}, ${Number(it.cost_price ?? it.costPrice ?? 0)},
+             ${Number(it.paper_cost ?? it.paperCost ?? 0)}, ${Number(it.production_cost ?? it.productionCost ?? 0)},
+             ${Number(it.print_cost ?? it.printCost ?? 0)}, ${Number(it.delivery_cost ?? it.deliveryCost ?? 0)},
+             ${Number(it.die_cost ?? it.dieCost ?? 0)},
+             ${(it.printing_method ?? it.printingMethod ?? null) as string | null})`);
       }
     }
     return Ok(quote);

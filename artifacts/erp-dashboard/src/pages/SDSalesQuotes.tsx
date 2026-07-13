@@ -79,13 +79,33 @@ export default function SDSalesQuotes() {
   // Support both paginated `{ data, total }` and plain array
   type QuotationPage = { data?: SdQuotationItem[]; items?: SdQuotationItem[]; total?: number };
   const _qr = quotationsRaw as QuotationPage | SdQuotationItem[] | null | undefined;
-  const quotations: SdQuotationItem[] = Array.isArray(_qr)
+  const _quotationRows: SdQuotationItem[] = Array.isArray(_qr)
     ? (_qr as SdQuotationItem[])
     : Array.isArray((_qr as QuotationPage)?.data)
     ? (_qr as QuotationPage).data!
     : Array.isArray((_qr as QuotationPage)?.items)
     ? (_qr as QuotationPage).items!
     : [];
+  // GET /sd/quotations returns raw sd_quotations columns (snake_case: quotation_number,
+  // customer_name, total_value/total_amount) — the table below reads the camelCase
+  // SdQuotationItem shape, so every row rendered "—"/"0 so'm" regardless of real data.
+  const quotations: SdQuotationItem[] = _quotationRows.map((row) => {
+    const r = row as unknown as Record<string, unknown>;
+    return {
+      id: String(r.id ?? ''),
+      quotationNumber: (r.quotation_number ?? r.quotationNumber) as string | undefined,
+      status: r.status as string | undefined,
+      customerName: (r.customer_name ?? r.customerName) as string | undefined,
+      quantity: r.quantity != null ? Number(r.quantity) : undefined,
+      validUntil: (r.valid_until ?? r.validUntil) as string | undefined,
+      totalPrice: r.total_value != null ? Number(r.total_value)
+        : r.total_amount != null ? Number(r.total_amount)
+        : r.totalPrice != null ? Number(r.totalPrice) : undefined,
+      unitPrice: r.unit_price != null ? Number(r.unit_price) : r.unitPrice != null ? Number(r.unitPrice) : undefined,
+      notes: r.notes as string | undefined,
+      customerId: (r.customer_id ?? r.customerId) != null ? String(r.customer_id ?? r.customerId) : undefined,
+    };
+  });
   const totalItems: number = (_qr as QuotationPage)?.total ?? quotations.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
@@ -190,10 +210,22 @@ export default function SDSalesQuotes() {
       validUntil: form.validUntil,
       notes: form.notes,
       paymentTerms: form.paymentTerms,
+      totalAmount: priceResult.totalPriceWithVat,
       items: [{
         ...calcForm,
         printColors: Number(calcForm.printColors),
         quantity: Number(calcForm.quantity),
+        // Carry the just-calculated price breakdown onto the bespoke line item — this is a
+        // custom-spec job (no product catalog binding, same convention as sales_order_items),
+        // so the price has to travel with the calcForm params rather than being re-derived
+        // from a product_id the line doesn't have.
+        unitPrice: priceResult.unitPriceWithVat,
+        costPrice: priceResult.totalCostPrice,
+        paperCost: priceResult.paperCost,
+        printCost: priceResult.printCost,
+        dieCost: priceResult.dieCost,
+        deliveryCost: priceResult.deliveryCost,
+        productionCost: priceResult.productionCost,
       }],
       markupPercent: priceResult.markupPercent,
       vatRate: 12,
