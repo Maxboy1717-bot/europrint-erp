@@ -70,7 +70,14 @@ export class AbsenceBlockCron {
             this.logger.warn(`AbsenceBlockCron day1 notify emp=${emp.employee_id}: ${String(e)}`),
           );
         }
-        this.events.emit('employee.absence.day1', { employee_id: emp.employee_id });
+        this.events.emit('employee.absence.day1', {
+          employee_id: emp.employee_id,
+          first_name: emp.first_name,
+          last_name: emp.last_name,
+          department_id: emp.department_id,
+          department_name: emp.department_name,
+          consecutive_day_count: emp.consecutive_day_count,
+        });
       } catch (e) {
         this.logger.warn(`AbsenceBlockCron _warnDay1 emp=${emp.employee_id}: ${String(e)}`);
       }
@@ -103,7 +110,14 @@ export class AbsenceBlockCron {
             );
           }
         }
-        this.events.emit('employee.absence.day2', { employee_id: emp.employee_id });
+        this.events.emit('employee.absence.day2', {
+          employee_id: emp.employee_id,
+          first_name: emp.first_name,
+          last_name: emp.last_name,
+          department_id: emp.department_id,
+          department_name: emp.department_name,
+          consecutive_day_count: emp.consecutive_day_count,
+        });
       } catch (e) {
         this.logger.warn(`AbsenceBlockCron _escalateDay2 emp=${emp.employee_id}: ${String(e)}`);
       }
@@ -167,7 +181,16 @@ export class AbsenceBlockCron {
           }
         }
 
-        this.events.emit('employee.blocked', { employee_id: emp.employee_id, reason: blockReason, source: 'AbsenceBlockCron' });
+        this.events.emit('employee.blocked', {
+          employee_id: emp.employee_id,
+          reason: blockReason,
+          source: 'AbsenceBlockCron',
+          first_name: emp.first_name,
+          last_name: emp.last_name,
+          department_id: emp.department_id,
+          department_name: emp.department_name,
+          consecutive_day_count: emp.consecutive_day_count,
+        });
         this.events.emit('access.chip.revoke',   { employee_id: emp.employee_id });
         this.events.emit('iot.attendance.block',  { employee_id: emp.employee_id });
         this.events.emit('email.account.disable', { employee_id: emp.employee_id });
