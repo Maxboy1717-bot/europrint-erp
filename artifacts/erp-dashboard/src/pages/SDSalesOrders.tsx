@@ -4,7 +4,7 @@
  */
 
 import { cn } from "@/lib/utils";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,10 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ShoppingCart, ArrowRight, Clock, MapPin, Plus, CheckCircle2, AlertTriangle, Copy } from "lucide-react";
+import { ShoppingCart, ArrowRight, Clock, MapPin, Plus, Copy } from "lucide-react";
 import {
   fmt, PAYMENT_STATUS_COLORS,
 } from "@/lib/sd-helpers";
@@ -100,49 +99,6 @@ interface CustomerItem {
   title?: string;
 }
 
-/** EP-PP-066 ATP check — see apps/api/src/modules/sd/application/queries/atp-check.handler.ts */
-type AtpLineStatus = "in_stock" | "short" | "unknown_product";
-
-interface AtpLineResult {
-  productId: number;
-  productName: string | null;
-  unit: string | null;
-  demand: number;
-  available: number;
-  shortage: number;
-  leadTimeDays: number;
-  leadTimeIsDefault: boolean;
-  status: AtpLineStatus;
-  availableOn: string;
-}
-
-interface AtpCheckResult {
-  orderId: number | null;
-  overallStatus: AtpLineStatus;
-  estimatedReadyDate: string;
-  estimatedReadyInDays: number;
-  allInStock: boolean;
-  lines: AtpLineResult[];
-}
-
-const ATP_STATUS_LABELS: Record<AtpLineStatus, string> = {
-  in_stock: tLabel("sd.orders.atpInStock", "Omborda bor"),
-  short: tLabel("sd.orders.atpShort", "Yetishmaydi"),
-  unknown_product: tLabel("sd.orders.atpUnknown", "Mahsulot topilmadi"),
-};
-
-const ATP_STATUS_CLASSES: Record<AtpLineStatus, string> = {
-  in_stock: "bg-green-100 text-green-800",
-  short: "bg-amber-100 text-amber-800",
-  unknown_product: "bg-red-100 text-red-800",
-};
-
-function AtpStatusIcon({ status }: { status: AtpLineStatus }) {
-  if (status === "in_stock") return <CheckCircle2 className="w-3.5 h-3.5" />;
-  if (status === "short") return <Clock className="w-3.5 h-3.5" />;
-  return <AlertTriangle className="w-3.5 h-3.5" />;
-}
-
 const NEXT_STATUS: Record<string, string> = {
   sales: "design",
   design: "tech",
@@ -197,13 +153,12 @@ const EMPTY_ORDER_FORM = {
 export default function SDSalesOrders() {
   const { t } = useTranslation("common");
   const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selected, setSelected] = useState<SalesOrderListItem | null>(null);
-  const [createDialog, setCreateDialog] = useState(false);
-  const [orderForm, setOrderForm] = useState({ ...EMPTY_ORDER_FORM });
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   // VISION-3340 #53 "Takrorlash": clone an existing order into a new one.
@@ -288,6 +243,10 @@ export default function SDSalesOrders() {
       const linesSum = lines.reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
       return apiRequest("POST", "/api/sd/orders", {
         companyId: Number(body.companyId),
+        // #03 golden-thread HOP-0: BE also accepts/writes the dedicated customer_id link
+        // (create-order.dto.ts customerId, sales_orders.customer_id is NOT NULL live).
+        // The "Mijoz (kompaniya)" dropdown already selects a real customer id — reuse it.
+        customerId: Number(body.companyId),
         totalAmount: lines.length > 0 ? linesSum : Number(body.totalAmount),
         currency: body.currency,
         designFlag: body.designFlag,
@@ -303,9 +262,8 @@ export default function SDSalesOrders() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/sd/orders"] });
-      setCreateDialog(false);
-      setOrderForm({ ...EMPTY_ORDER_FORM });
-      // Shared by the "Takrorlash"/clone flow — close its dialog + clear its prefill too.
+      // Only the "Takrorlash"/clone flow still uses this mutation (manual create moved to
+      // /order-create — see the "Yangi buyurtma" button above).
       setRepeatDialog(false);
       setRepeatSourceId(null);
       setRepeatForm(null);
@@ -317,34 +275,6 @@ export default function SDSalesOrders() {
   const orders = Array.isArray(data?.data) ? data.data : [];
   const totalItems = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-
-  // STEP 4 — finished-goods catalog for the line-item picker. Empty until the owner adds products.
-  const { data: productsData } = useQuery<{ data?: Array<Record<string, unknown>> } | Array<Record<string, unknown>>>({
-    queryKey: ["/api/erp/products"],
-    enabled: createDialog,
-  });
-  const products: Array<Record<string, unknown>> = Array.isArray((productsData as { data?: unknown[] })?.data)
-    ? (productsData as { data: Array<Record<string, unknown>> }).data
-    : (Array.isArray(productsData) ? (productsData as Array<Record<string, unknown>>) : []);
-  const orderLines = orderForm.items;
-  const linesTotal = orderLines.reduce((s, it) => s + (Number(it.orderQuantity) || 0) * (Number(it.netPrice) || 0), 0);
-
-  // EP-PP-066 — ATP (Available-To-Promise) preview: as soon as the line-items have a product +
-  // quantity, ask the backend for real stock/estimated-ready-date before the order is saved.
-  const atpItems = (Array.isArray(orderLines) ? orderLines : [])
-    .filter(it => it.productId && Number(it.orderQuantity) > 0)
-    .map(it => ({ productId: Number(it.productId), quantity: Number(it.orderQuantity) }));
-  const atpKey = atpItems.map(it => `${it.productId}:${it.quantity}`).join(",");
-
-  const { data: atpResult, isFetching: atpLoading } = useQuery<AtpCheckResult>({
-    queryKey: ["/api/sd/orders/atp-check", atpKey],
-    queryFn: () => apiRequest("POST", "/api/sd/orders/atp-check", { items: atpItems }),
-    enabled: createDialog && atpItems.length > 0,
-    staleTime: 0,
-  });
-  const atpLineByProduct = new Map<number, AtpLineResult>(
-    (Array.isArray(atpResult?.lines) ? atpResult.lines : []).map(l => [l.productId, l]),
-  );
 
   // Clone prefill: once both the source header + its REAL items are loaded, map each
   // sales_order_items row into the create-order form shape (product_id → productId,
@@ -392,16 +322,6 @@ export default function SDSalesOrders() {
     setRepeatForm(f => (f ? { ...f, items: f.items.filter((_, i) => i !== idx) } : f));
   }
 
-  function addLine() {
-    setOrderForm(f => ({ ...f, items: [...f.items, { productId: "", description: "", orderQuantity: "1", unit: "PC", netPrice: "0" }] }));
-  }
-  function removeLine(idx: number) {
-    setOrderForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
-  }
-  function updateLine(idx: number, patch: Partial<(typeof EMPTY_ORDER_FORM)["items"][number]>) {
-    setOrderForm(f => ({ ...f, items: f.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }));
-  }
-
   function handleSearchChange(val: string) {
     setSearch(val);
     setPage(1);
@@ -432,7 +352,7 @@ export default function SDSalesOrders() {
               {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button onClick={() => setCreateDialog(true)} className="gap-1.5" data-testid="btn-new-order">
+          <Button onClick={() => setLocation("/order-create")} className="gap-1.5" data-testid="btn-new-order">
             <Plus className="h-4 w-4" />
             {tLabel("sd.orders.yangiBuyurtma", "Yangi buyurtma")}
           </Button>
@@ -592,174 +512,6 @@ export default function SDSalesOrders() {
           onPageSizeChange={(sz) => { setPageSize(sz); setPage(1); }}
         />
       )}
-
-      {/* Create order dialog */}
-      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold">{tLabel("sd.orders.yangiBuyurtma", "Yangi buyurtma")}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>{tLabel("sd.orders.mijozKompaniya", "Mijoz (kompaniya)")}</Label>
-              <Select value={orderForm.companyId} onValueChange={v => setOrderForm(f => ({ ...f, companyId: v }))}>
-                <SelectTrigger className="h-9" data-testid="select-order-company">
-                  <SelectValue placeholder={tLabel("sd.orders.mijozniTanlang", "Mijozni tanlang")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Array.isArray(customers) ? customers : []).map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name || c.title || `Mijoz #${c.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>{tLabel("sd.orders.umumiySumma", "Umumiy summa")}</Label>
-              <Input
-                type="number"
-                value={orderForm.totalAmount}
-                onChange={e => setOrderForm(f => ({ ...f, totalAmount: e.target.value }))}
-                placeholder="0"
-                data-testid="input-order-amount"
-              />
-            </div>
-            <div>
-              <Label>{tLabel("sd.orders.valyuta", "Valyuta")}</Label>
-              <Select value={orderForm.currency} onValueChange={v => setOrderForm(f => ({ ...f, currency: v }))}>
-                <SelectTrigger className="h-9" data-testid="select-order-currency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* STEP 4 — Buyurtma qatorlari (tayyor mahsulotlar) */}
-            <div className="space-y-2 pt-2 border-t border-border mt-1">
-              <div className="flex items-center justify-between">
-                <Label>{tLabel("sd.orders.qatorlar", "Buyurtma qatorlari (mahsulotlar)")}</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addLine}
-                  disabled={products.length === 0} data-testid="btn-add-line">
-                  + {tLabel("sd.orders.qator", "Qator")}
-                </Button>
-              </div>
-              {products.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {tLabel("sd.orders.mahsulotYoq", "Mahsulot katalogi bo'sh — avval mahsulot qo'shing.")}
-                </p>
-              )}
-              {(Array.isArray(orderLines) ? orderLines : []).map((line, idx) => {
-                const lineTotal = (Number(line.orderQuantity) || 0) * (Number(line.netPrice) || 0);
-                const atpLine = line.productId ? atpLineByProduct.get(Number(line.productId)) : undefined;
-                return (
-                  <div key={idx} className="space-y-1" data-testid={`order-line-${idx}`}>
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <Select value={line.productId} onValueChange={v => {
-                          const p = products.find(pr => String(pr.id) === v);
-                          updateLine(idx, { productId: v, description: String(p?.name ?? p?.description ?? "") });
-                        }}>
-                          <SelectTrigger className="h-9"><SelectValue placeholder={tLabel("sd.orders.mahsulot", "Mahsulot")} /></SelectTrigger>
-                          <SelectContent>
-                            {products.map(p => (
-                              <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name ?? p.code ?? p.id)}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Input className="w-20" type="number" value={line.orderQuantity}
-                        onChange={e => updateLine(idx, { orderQuantity: e.target.value })} placeholder={tLabel("sd.orders.soni", "Soni")} data-testid={`line-qty-${idx}`} />
-                      <Input className="w-16" value={line.unit}
-                        onChange={e => updateLine(idx, { unit: e.target.value })} placeholder={tLabel("sd.orders.birlik", "Birlik")} />
-                      <Input className="w-24" type="number" value={line.netPrice}
-                        onChange={e => updateLine(idx, { netPrice: e.target.value })} placeholder={tLabel("sd.orders.narx", "Narx")} data-testid={`line-price-${idx}`} />
-                      <span className="w-24 text-right text-sm tabular-nums text-muted-foreground">{lineTotal.toLocaleString()}</span>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)} data-testid={`btn-remove-line-${idx}`}>✕</Button>
-                    </div>
-                    {line.productId && Number(line.orderQuantity) > 0 && (
-                      <div className="pl-1" data-testid={`atp-line-${idx}`}>
-                        {atpLoading && !atpLine ? (
-                          <span className="text-xs text-muted-foreground">{tLabel("sd.orders.atpTekshirilmoqda", "Mavjudlik tekshirilmoqda...")}</span>
-                        ) : atpLine ? (
-                          <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", ATP_STATUS_CLASSES[atpLine.status])}>
-                            <AtpStatusIcon status={atpLine.status} />
-                            {ATP_STATUS_LABELS[atpLine.status]}
-                            {atpLine.status === "short" && (
-                              <span>
-                                {" "}({tLabel("sd.orders.atpYetmaydi", "yetmaydi")}: {atpLine.shortage} {atpLine.unit || ""} —{" "}
-                                {tLabel("sd.orders.atpTayyor", "tayyor")}: {atpLine.availableOn})
-                              </span>
-                            )}
-                          </span>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {atpResult && (
-                <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 mt-1" data-testid="atp-order-summary">
-                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", ATP_STATUS_CLASSES[atpResult.overallStatus].replace("bg-", "text-").split(" ")[0])}>
-                    <AtpStatusIcon status={atpResult.overallStatus} />
-                    {ATP_STATUS_LABELS[atpResult.overallStatus]}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {atpResult.allInStock
-                      ? tLabel("sd.orders.atpBugun", "Bugun tayyor")
-                      : `${tLabel("sd.orders.atpTaxminiySana", "Taxminiy tayyor sana")}: ${atpResult.estimatedReadyDate} (${atpResult.estimatedReadyInDays} ${tLabel("sd.orders.kun", "kun")})`}
-                  </span>
-                </div>
-              )}
-              {orderLines.length > 0 && (
-                <div className="flex justify-end text-sm font-medium pt-1">
-                  {tLabel("sd.orders.qatorlarJami", "Qatorlar jami")}: {linesTotal.toLocaleString()} {orderForm.currency}
-                </div>
-              )}
-            </div>
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="design-flag"
-                  checked={orderForm.designFlag}
-                  onCheckedChange={v => setOrderForm(f => ({ ...f, designFlag: !!v }))}
-                  data-testid="check-design-flag"
-                />
-                <Label htmlFor="design-flag" className="font-normal cursor-pointer">
-                  {tLabel("sd.orders.dizaynKerak", "Dizayn kerak")}
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="sample-flag"
-                  checked={orderForm.sampleFlag}
-                  onCheckedChange={v => setOrderForm(f => ({ ...f, sampleFlag: !!v }))}
-                  data-testid="check-sample-flag"
-                />
-                <Label htmlFor="sample-flag" className="font-normal cursor-pointer">
-                  {tLabel("sd.orders.namunaKerak", "Namuna kerak")}
-                </Label>
-              </div>
-            </div>
-            <div className="flex gap-2 pt-1">
-              <Button variant="outline" className="flex-1" onClick={() => setCreateDialog(false)}>
-                {t("cancel")}
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={() => createMut.mutate(orderForm)}
-                disabled={!orderForm.companyId || createMut.isPending}
-                data-testid="btn-save-order"
-              >
-                {createMut.isPending ? tLabel("sd.orders.saving", "Saqlanmoqda...") : tLabel("sd.orders.saqlash", "Saqlash")}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={cancelDialogOpen} onOpenChange={(open) => { setCancelDialogOpen(open); if (!open) setCancelReason(""); }}>
         <DialogContent data-testid="dialog-cancel-order">
