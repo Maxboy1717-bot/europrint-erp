@@ -527,13 +527,15 @@ export class QcNewRepository {
   }
 
   async insertLabTest(data: {
-    orderId?: number; parameterName: string; value?: number; unit?: string;
+    orderId?: number; parameterName?: string; value?: number; unit?: string;
     minValue?: number; maxValue?: number; testedBy?: string; notes?: string; result: string;
+    materialName?: string; lotNumber?: string; grammatura?: number; qalinlik?: number;
+    bosim?: number; namlik?: number; operatorName?: string;
   }): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(qc_lab_tests).values({
         orderId: data.orderId ?? null,
-        parameterName: data.parameterName,
+        parameterName: data.parameterName ?? null,
         value: data.value != null ? String(data.value) : null,
         unit: data.unit ?? null,
         result: data.result,
@@ -542,6 +544,14 @@ export class QcNewRepository {
         testedBy: data.testedBy ?? null,
         notes: data.notes ?? null,
         testedAt: _time.now(),
+        // Lab-test session model (owner 2026-07-13) -- materialName/4 measurements/operator.
+        materialName: data.materialName ?? null,
+        lotNumber: data.lotNumber ?? null,
+        grammatura: data.grammatura != null ? String(data.grammatura) : null,
+        qalinlik: data.qalinlik != null ? String(data.qalinlik) : null,
+        bosim: data.bosim != null ? String(data.bosim) : null,
+        namlik: data.namlik != null ? String(data.namlik) : null,
+        operatorName: data.operatorName ?? null,
       }).returning();
       return rows[0] as Row;
     }, 'DB_ERROR');

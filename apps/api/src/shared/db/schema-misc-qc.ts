@@ -83,7 +83,10 @@ export const qc_certificates = pgTable('qc_certificates', {
 export const qc_lab_tests = pgTable('qc_lab_tests', {
   id: serial('id').primaryKey(),
   orderId: integer('order_id'),
-  parameterName: text('parameter_name').notNull(),
+  // Generic one-parameter-per-row model (original shape). parameterName is nullable
+  // (owner 2026-07-13: qc-lab-tests-session-model-2026-07-13.sql) because the session
+  // model below has 4 simultaneous parameters, not one.
+  parameterName: text('parameter_name'),
   value: decimal('value', { precision: 12, scale: 4 }),
   unit: text('unit'),
   result: text('result').notNull().default('pending'),
@@ -93,6 +96,18 @@ export const qc_lab_tests = pgTable('qc_lab_tests', {
   notes: text('notes'),
   testedAt: timestamp('tested_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  // Lab-test SESSION model (APPROVED: owner schema-approval 2026-07-13, Muslimbek, chat --
+  // QC lab-tests session model). Matches LabSection.tsx's real workflow: material identity
+  // + 4 simultaneous measurements + operator, recorded as one row. Additive alongside the
+  // generic columns above (Q-46) -- migration:
+  // qc-lab-tests-session-model-2026-07-13.sql.
+  materialName: text('material_name'),
+  lotNumber: text('lot_number'),
+  grammatura: numeric('grammatura'),
+  qalinlik: numeric('qalinlik'),
+  bosim: numeric('bosim'),
+  namlik: numeric('namlik'),
+  operatorName: text('operator_name'),
 });
 
 export const qc_parameters = pgTable('qc_parameters', {

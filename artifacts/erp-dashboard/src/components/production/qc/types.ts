@@ -28,6 +28,7 @@ export interface QCLabTest {
   bosim?: number | string;
   namlik?: number | string;
   operator?: string;
+  operatorName?: string;
 }
 
 export interface QCVendor {

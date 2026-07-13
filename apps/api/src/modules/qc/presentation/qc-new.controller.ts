@@ -77,15 +77,46 @@ const GenerateCertPdfDto = z.object({
   notes: z.string().max(2000).optional(),
 });
 
+/**
+ * Numeric field that may arrive as a string (LabSection.tsx's react-hook-form registers
+ * grammatura/qalinlik/bosim/namlik as z.string().optional() on the FE, so <Input type="number">
+ * values travel over the wire as strings -- and an untouched optional field arrives as "").
+ * Blank/null/undefined -> undefined (not persisted); anything else is coerced to a number.
+ */
+const optionalNumericInput = z.preprocess(
+  (v) => (v === '' || v === null || v === undefined ? undefined : v),
+  z.coerce.number(),
+).optional();
+
+/**
+ * POST /qc/lab-tests body. Two shapes are accepted on the SAME endpoint (owner 2026-07-13,
+ * QC lab-tests session model -- Q-46 additive, not a replacement):
+ *  - generic one-parameter-per-row model (parameter_name + value/unit/min_value/max_value)
+ *  - LabSection.tsx's real lab-test SESSION model (materialName + 4 simultaneous
+ *    measurements + operatorName + result), which has no single "parameter name".
+ * At least one of parameter_name / materialName must be present so the row is identifiable.
+ */
 const LabTestDto = z.object({
   order_id: z.number().optional(),
-  parameter_name: z.string().min(1),
+  parameter_name: z.string().min(1).optional(),
   value: z.number().optional(),
   unit: z.string().optional(),
   min_value: z.number().optional(),
   max_value: z.number().optional(),
   tested_by: z.string().optional(),
   notes: z.string().optional(),
+  // Session-model fields -- LabSection.tsx's LabSchema/createLabTest payload.
+  materialName: z.string().min(1).optional(),
+  lotNumber: z.string().optional(),
+  grammatura: optionalNumericInput,
+  qalinlik: optionalNumericInput,
+  bosim: optionalNumericInput,
+  namlik: optionalNumericInput,
+  operatorName: z.string().optional(),
+  result: z.enum(['pass', 'fail', 'conditional', 'pending']).optional(),
+}).refine((d) => !!(d.parameter_name || d.materialName), {
+  message: 'parameter_name yoki materialName kiritilishi shart',
+  path: ['materialName'],
 });
 
 const QC_ROLES = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.QC_SPECIALIST, Role.PRODUCTION_MANAGER, 'qc_manager', 'qc_inspector'];
