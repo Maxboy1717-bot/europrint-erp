@@ -8,9 +8,9 @@
  *   bo'lim), bo'lim/filial ko'rsatkichi. Tab-bar + qolgan tablar keyingi commit.
  */
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, Phone, Mail, Briefcase, Building2, MapPin, Plus, Tag } from "lucide-react";
+import { X, Phone, Mail, Briefcase, Building2, MapPin, Plus, Tag, Paperclip, Download } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { ChatAvatar } from "./ChatAvatar";
@@ -80,6 +80,15 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
     onSuccess: (fresh) => qc.setQueryData(tagsKey, fresh),
   });
 
+  const [tab, setTab] = useState<"umumiy" | "fayllar">("umumiy");
+  // Fayllar tab — suhbatda ulashilgan fayllar (mavjud endpoint).
+  const { data: filesData } = useQuery<Array<{ fileUrl?: string; fileName?: string; fileType?: string }>>({
+    queryKey: [`/api/chat/rooms/${roomId}/files`],
+    queryFn: () => apiRequest("GET", `/api/chat/rooms/${roomId}/files`),
+    enabled: !!roomId && tab === "fayllar",
+  });
+  const files = Array.isArray(filesData) ? filesData : [];
+
   // Kengaytirilgan profil — kanonik HR endpointidan (mavjud bo'lmasa dash).
   const { data } = useQuery<EmployeeProfile>({
     queryKey: [`/api/hr/employees/${employee.employeeId}`],
@@ -102,13 +111,30 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
   return (
     <div className="flex flex-col h-full bg-[var(--ep-surface)] text-[var(--ep-text)]">
       <header className="flex items-center justify-between px-4 h-14 border-b border-[var(--ep-border)] flex-shrink-0">
-        <span className="text-[14px] font-semibold">{t("umumiyMalumot")}</span>
+        <span className="text-[14px] font-semibold truncate">{employee.fullName}</span>
         <button onClick={onClose} className="p-1.5 rounded-md hover:bg-[var(--ep-subtle)] text-[var(--ep-muted)]" title={t("yopish")}>
           <X className="w-4 h-4" />
         </button>
       </header>
 
+      {/* Tab bar */}
+      <div className="flex border-b border-[var(--ep-border)] flex-shrink-0 px-2 text-[13px]">
+        {([["umumiy", t("umumiyMalumot")], ["fayllar", t("fayllar")]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={cn(
+              "px-3 py-2.5 -mb-px border-b-2 transition-colors",
+              tab === key ? "border-[var(--ep-primary)] text-[var(--ep-text)] font-medium" : "border-transparent text-[var(--ep-muted)] hover:text-[var(--ep-text)]"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex-1 overflow-y-auto p-4">
+        {tab === "umumiy" && (<>
         {/* Avatar + ism + ish-holati */}
         <div className="flex flex-col items-center text-center pb-4 border-b border-[var(--ep-border)]">
           <ChatAvatar name={employee.fullName || "?"} url={employee.avatarUrl} size={72} />
@@ -154,6 +180,28 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
             ))}
           </div>
         </div>
+        </>)}
+
+        {tab === "fayllar" && (
+          <div className="space-y-1.5">
+            {files.length === 0 && (
+              <p className="text-[13px] text-[var(--ep-muted)] text-center py-6">{t("fayllarYoq")}</p>
+            )}
+            {files.map((f, i) => (
+              <a
+                key={i}
+                href={f.fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--ep-subtle)]"
+              >
+                <Paperclip className="w-4 h-4 text-[var(--ep-muted)] flex-shrink-0" />
+                <span className="text-[13px] truncate flex-1">{f.fileName || f.fileUrl}</span>
+                <Download className="w-4 h-4 text-[var(--ep-muted)] flex-shrink-0" />
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
