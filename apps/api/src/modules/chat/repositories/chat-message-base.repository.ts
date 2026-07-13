@@ -93,6 +93,17 @@ export class ChatMessageBaseRepository {
           replyToId: replyToIdStr,
           clientMsgId: clientMsgId,
         })
+        // Retry idempotency: a re-sent optimistic message carries the same
+        // client_msg_id. The (room_id, client_msg_id) unique index makes this a
+        // conflict; the no-op DO UPDATE returns the ALREADY-persisted row (its
+        // original id/content/created_at) so the echo reconciles the FE bubble
+        // to the existing message instead of creating a duplicate. NULL
+        // client_msg_id never conflicts (Postgres NULLs are distinct), so other
+        // send paths are unaffected.
+        .onConflictDoUpdate({
+          target: [chatMessages.roomId, chatMessages.clientMsgId],
+          set: { clientMsgId: clientMsgId },
+        })
         .returning();
       return castTo<Record<string, unknown>>(row);
       }, 'DB_ERROR');
