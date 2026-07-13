@@ -94,9 +94,15 @@ export function RoomInfoPanel({room, onClose }: Props) {
         <div className="text-center">
           <h4 className="font-semibold text-sm">{room.displayName || room.name}</h4>
           <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-            {room.type === "direct" ? "Shaxsiy chat" :
-             room.type === "group" ? "Guruh" :
-             room.type === "channel" ? "Kanal" : room.type}
+            {/* DB `type` aralash registr ('GROUP'/'CHANNEL'/'DIRECT') → normalize */}
+            {(() => {
+              switch ((room.type ?? "").toLowerCase()) {
+                case "direct":  return "Shaxsiy chat";
+                case "group":   return "Guruh";
+                case "channel": return "Kanal";
+                default:        return room.type;
+              }
+            })()}
           </p>
           {room.description && (
             <p className="text-xs text-muted-foreground/80 mt-1 max-w-[200px]">{room.description}</p>

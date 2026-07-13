@@ -64,7 +64,9 @@ export function formatDateSeparator(iso: string): string {
 }
 
 export function getRoomIcon(type: string): string {
-  switch (type) {
+  // DB `type` aralash registrda saqlanadi ('GROUP'/'CHANNEL'/'DIRECT' va lowercase
+  // 'direct') → normalize qilib solishtiramiz, aks holda ikonka ko'rinmaydi.
+  switch ((type ?? "").toLowerCase()) {
     case "direct":     return "";
     case "group":      return "👥";
     case "channel":    return "📢";
