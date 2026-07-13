@@ -32,7 +32,7 @@ interface Reclamation {
   status: "new" | "investigating" | "resolved" | "rejected";
   priority: "low" | "medium" | "high" | "critical";
   resolutionDays: number | null;
-  receivedAt: string;
+  reportedDate: string;
   resolvedAt: string | null;
 }
 
@@ -203,7 +203,7 @@ export default function ReclamationsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
                     <span>{t("mahsulot")}<strong>{r.productName ?? '—'}</strong></span>
                     <span>{t("kategoriya1")}<strong>{r.category}</strong></span>
-                    <span>{t("qabul")}<strong>{new Date(r.receivedAt).toLocaleDateString()}</strong></span>
+                    <span>{t("qabul")}<strong>{new Date(r.reportedDate).toLocaleDateString()}</strong></span>
                   </div>
                 </div>
               );
