@@ -96,7 +96,9 @@ export function ChatLayout() {
   // For a 1:1 (direct) room the info panel shows the OTHER participant's
   // employee profile (Crisp/Intercom-style). Members come from a fetch (the
   // Zustand `members` map is never populated) so the panel actually resolves.
-  const directRoomId = activeRoom?.type === "direct" ? (activeRoom.id ?? null) : null;
+  // Live data has both 'direct' and 'DIRECT' — match case-insensitively.
+  const isDirectRoom = (activeRoom?.type ?? "").toLowerCase() === "direct";
+  const directRoomId = isDirectRoom ? (activeRoom?.id ?? null) : null;
   const { data: directMembersData } = useRoomMembers(directRoomId);
   const directMembers = (Array.isArray(directMembersData) ? directMembersData : []) as Array<{
     userId?: string | number; fullName?: string; avatarUrl?: string | null; employeeId?: string | number | null; role?: string;
@@ -436,13 +438,13 @@ export function ChatLayout() {
 
       {/* Right panel: employee profile — ALWAYS shown for a 1:1 room (Crisp/
           Intercom 3-column layout, no toggle needed). */}
-      {activeRoom && !threadRootMsg && activeRoom.type === "direct" && panelEmployee && (
+      {activeRoom && !threadRootMsg && isDirectRoom && panelEmployee && (
         <aside className="hidden lg:flex w-full sm:w-[380px] flex-shrink-0 border-l border-[var(--ep-border)] flex-col">
           <ChatEmployeeInfoPanel employee={panelEmployee} roomId={String(activeRoom.id)} onClose={() => setInfoOpen(false)} />
         </aside>
       )}
       {/* Right panel: room info (groups/channels) — toggle-gated. */}
-      {infoOpen && activeRoom && !threadRootMsg && activeRoom.type !== "direct" && (
+      {infoOpen && activeRoom && !threadRootMsg && !isDirectRoom && (
         <aside className="hidden lg:flex w-full sm:w-[380px] flex-shrink-0 border-l border-[var(--tg-border)] bg-[var(--tg-sidebar-bg)] flex-col">
           <RoomInfoPanel room={activeRoom} onClose={() => setInfoOpen(false)} />
         </aside>
