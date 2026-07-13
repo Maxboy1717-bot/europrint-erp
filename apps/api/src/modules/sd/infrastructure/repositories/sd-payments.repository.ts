@@ -80,7 +80,19 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
   async create(body: Row): Promise<Result<Row | null>>  {
   try {
       const amount   = Number(body['amount'] ?? 0);
-      const orderId  = body['order_id'] != null ? Number(body['order_id']) : null;
+      // EP-SD sd-payments-create-field-mapping-fix: FE (SDSalesPayments.tsx) sends camelCase
+      // orderId/customerId/dueDate; without these fallbacks order_id/customer_id/due_date always
+      // land NULL/default, silently losing the order/customer link and disabling the overpay
+      // guard (orderId-gated below) and the debounce dedupe-by-order. Same pattern already used
+      // for idempotency_key/idempotencyKey and payment_method/method below.
+      // Empty-string guard: FE form fields default to "" when unset (e.g. the create-payment
+      // dialog has no customerId input at all) — treat "" as absent, not as Number("")===0.
+      const orderId  = body['order_id'] != null && body['order_id'] !== '' ? Number(body['order_id'])
+        : body['orderId'] != null && body['orderId'] !== '' ? Number(body['orderId']) : null;
+      const customerId = body['customer_id'] != null && body['customer_id'] !== '' ? Number(body['customer_id'])
+        : body['customerId'] != null && body['customerId'] !== '' ? Number(body['customerId']) : null;
+      const dueDate = body['due_date'] != null && body['due_date'] !== '' ? body['due_date']
+        : body['dueDate'] != null && body['dueDate'] !== '' ? body['dueDate'] : _time.now().toISOString();
 
       // To'lov summasi > 0 bo'lishi shart
       if (amount <= 0) return Err('To\'lov summasi musbat son bo\'lishi kerak');
@@ -104,7 +116,7 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
       const DEBOUNCE_WINDOW_SECONDS = 7; // accidental-double-click window, not a concurrency lock
 
       if (!idempotencyKey) {
-        const customerId = body['customer_id'] != null ? Number(body['customer_id']) : null;
+        // customerId already resolved above (sd-payments-create-field-mapping-fix)
         // Key on order_id when present (strongest natural key — ties the payment to one
         // invoice/order); fall back to customer_id for cash/unlinked sales (order_id null).
         // If BOTH are null there is no natural key to dedupe on — skip the check rather than
@@ -160,7 +172,7 @@ export class SdPaymentsRepository implements ISdPaymentsRepo {
         }
       }
 
-      const r = await exec(sql`INSERT INTO sd_payments (customer_id, order_id, amount, type, status, due_date, payment_method, notes, created_by) VALUES (${body['customer_id'] ?? null}, ${orderId}, ${amount}, ${body['type'] ?? 'payment'}, ${body['status'] ?? 'pending'}, ${body['due_date'] ?? _time.now().toISOString()}, ${paymentMethod}, ${body['notes'] ?? null}, ${body['created_by'] ?? null}) RETURNING *`);
+      const r = await exec(sql`INSERT INTO sd_payments (customer_id, order_id, amount, type, status, due_date, payment_method, notes, created_by) VALUES (${customerId}, ${orderId}, ${amount}, ${body['type'] ?? 'payment'}, ${body['status'] ?? 'pending'}, ${dueDate}, ${paymentMethod}, ${body['notes'] ?? null}, ${body['created_by'] ?? null}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   } catch (_e) {
     return Err(String(_e));
