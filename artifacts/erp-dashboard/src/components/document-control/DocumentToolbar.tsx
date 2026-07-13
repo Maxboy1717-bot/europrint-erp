@@ -53,6 +53,9 @@ function Sep() {
   return <span className="w-px h-5 bg-[var(--ep-border)] mx-1.5 shrink-0" />;
 }
 
+const FONTS = ['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Tahoma'];
+const SIZES = ['10', '11', '12', '14', '16', '18', '24', '36'];
+
 export function DocumentToolbar({ editor }: { editor: Editor }) {
   const setLink = () => {
     const prev = editor.getAttributes('link').href as string | undefined;
@@ -66,6 +69,25 @@ export function DocumentToolbar({ editor }: { editor: Editor }) {
     <div className="sticky top-0 z-20 flex flex-wrap items-center gap-0.5 border-b border-[var(--ep-border)] bg-[var(--ep-surface)] px-3 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <Btn title="Orqaga (Ctrl+Z)" disabled={!editor.can().undo()} onClick={() => c().undo().run()}><Undo className="w-4 h-4" /></Btn>
       <Btn title="Oldinga (Ctrl+Y)" disabled={!editor.can().redo()} onClick={() => c().redo().run()}><Redo className="w-4 h-4" /></Btn>
+      <Sep />
+      <select
+        title={tLabel('documents.fontFamily', 'Shrift')}
+        value={(editor.getAttributes('textStyle').fontFamily as string) ?? ''}
+        onChange={(e) => (e.target.value ? c().setFontFamily(e.target.value).run() : c().unsetFontFamily().run())}
+        className="h-8 text-xs rounded border border-[var(--ep-border)] bg-[var(--ep-surface)] px-1 max-w-[120px]"
+      >
+        <option value="">{tLabel('documents.fontDefault', 'Shrift')}</option>
+        {FONTS.map((f) => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+      </select>
+      <select
+        title={tLabel('documents.fontSize', "O'lcham")}
+        value={((editor.getAttributes('textStyle').fontSize as string) ?? '').replace('px', '')}
+        onChange={(e) => (e.target.value ? c().setFontSize(`${e.target.value}px`).run() : c().unsetFontSize().run())}
+        className="h-8 text-xs rounded border border-[var(--ep-border)] bg-[var(--ep-surface)] px-1"
+      >
+        <option value="">–</option>
+        {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+      </select>
       <Sep />
       <Btn title="Qalin (Ctrl+B)" active={editor.isActive('bold')} onClick={() => c().toggleBold().run()}><Bold className="w-4 h-4" /></Btn>
       <Btn title="Kursiv (Ctrl+I)" active={editor.isActive('italic')} onClick={() => c().toggleItalic().run()}><Italic className="w-4 h-4" /></Btn>

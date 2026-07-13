@@ -11,7 +11,7 @@
 import StarterKit from '@tiptap/starter-kit';
 import { TableKit } from '@tiptap/extension-table';
 import { TextAlign } from '@tiptap/extension-text-align';
-import { TextStyle } from '@tiptap/extension-text-style';
+import { TextStyle, FontFamily, FontSize } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Highlight } from '@tiptap/extension-highlight';
 import { Image } from '@tiptap/extension-image';
@@ -22,6 +22,8 @@ export const documentEditorExtensions: Extensions = [
   TableKit,
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   TextStyle,
+  FontFamily,
+  FontSize,
   Color,
   Highlight.configure({ multicolor: true }),
   Image.configure({ inline: false, allowBase64: false }),
