@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/popover";
 import { ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FormData, Translation, CrmCompany, Product } from "./types";
+import { FormData, Translation, CrmCompany } from "./types";
 import { PRODUCT_TYPES, VID_ZAKAZA, KRASOK_OPTIONS } from "./order-constants";
 
 interface CustomerStepProps {
@@ -37,12 +37,8 @@ interface CustomerStepProps {
   setFormData: (data: FormData) => void;
   t: Translation;
   companies: CrmCompany[];
-  products: Product[];
   customerOpen: boolean;
   setCustomerOpen: (open: boolean) => void;
-  productOpen: boolean;
-  setProductOpen: (open: boolean) => void;
-  handleProductSelect: (product: Product) => void;
 }
 
 export function CustomerStep({
@@ -50,12 +46,8 @@ export function CustomerStep({
   setFormData,
   t,
   companies,
-  products,
   customerOpen,
   setCustomerOpen,
-  productOpen,
-  setProductOpen,
-  handleProductSelect,
 }: CustomerStepProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -124,48 +116,13 @@ export function CustomerStep({
 
         <div className="space-y-1">
           <Label className="text-muted-foreground font-semibold">{t.product} <span className="text-[var(--ep-red)]">*</span></Label>
-          <Popover open={productOpen} onOpenChange={setProductOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={productOpen}
-                className="w-full justify-between bg-muted/40 border-border text-foreground hover:bg-muted transition-colors text-left font-normal"
-                data-testid="button-product-select"
-              >
-                {formData.mahsulotNomi || t.productPlaceholder}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full sm:w-[400px] p-0" align="start">
-              <Command className="bg-background">
-                <CommandInput placeholder={t.searchProduct} className="border-none focus:ring-0" />
-                <CommandList>
-                  <CommandEmpty>{t.noProducts}</CommandEmpty>
-                  <CommandGroup>
-                    {(Array.isArray(products) ? products : []).map((product) => (
-                      <CommandItem
-                        key={product.id}
-                        onSelect={() => handleProductSelect(product)}
-                        className="hover:bg-primary/10 cursor-pointer py-3"
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4 text-primary",
-                            formData.productId === product.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <div className="flex flex-col">
-                          <span>{product.name}</span>
-                          <span className="text-xs text-muted-foreground font-mono">{product.code}</span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <Input
+            value={formData.mahsulotNomi}
+            onChange={(e) => setFormData({ ...formData, mahsulotNomi: e.target.value })}
+            placeholder={t.productPlaceholder}
+            className="bg-muted/40 border-border rounded-lg"
+            data-testid="input-product-name"
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

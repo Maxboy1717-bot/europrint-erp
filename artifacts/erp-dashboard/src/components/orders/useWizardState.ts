@@ -249,9 +249,13 @@ export function useWizardState() {
     switch (step) {
       case 1:
         return !!(formData.mijozNomi && formData.customerId && formData.mahsulotNomi && formData.tiraj > 0 && formData.narx > 0);
-      case 2:
-        return !!formData.selectedBomId;
       default:
+        // Steps 2-4 (BOM/material/routing) are optional context: this wizard submits a
+        // bespoke custom-spec job (owner decision 2026-07-13, see createOrderMutation
+        // comment above) that never depends on product_id/BOM binding. Gating on
+        // selectedBomId here permanently blocked order creation whenever bom_headers
+        // was empty (e.g. right after the 2026-07-11 full DB reset) since there was no
+        // way to ever satisfy the gate — the sole canonical entry point was unusable.
         return true;
     }
   };
