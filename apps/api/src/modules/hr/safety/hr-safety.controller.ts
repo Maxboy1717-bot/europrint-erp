@@ -4,9 +4,10 @@
  */
 
 import {
-Controller, Get, Patch, Post, Delete, Body, Param, ParseIntPipe,
-  UseGuards, UseInterceptors, UsePipes, NotFoundException,
+Controller, Get, Patch, Post, Delete, Body, Param, ParseIntPipe, Res,
+  UseGuards, UseInterceptors, UsePipes, NotFoundException, InternalServerErrorException,
 } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
@@ -16,6 +17,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { HrSafetyService } from './hr-safety.service';
+import { HrCompatSafetyService } from '../application/hr-compat-safety.service';
 import {
   HrSafetyUpdateIncidentSchema, HrSafetyUpdateIncidentDto,
   HrSafetyUpdateHazardZoneSchema, HrSafetyUpdateHazardZoneDto,
@@ -35,6 +37,7 @@ export class HrSafetyController {
   constructor(
     private readonly svc: HrSafetyService,
     private readonly i18n: I18nService,
+    private readonly compatSafetySvc: HrCompatSafetyService,
   ) {}
 
   @ApiOperation({ summary: 'Get department summary' })
@@ -109,14 +112,31 @@ export class HrSafetyController {
     return { data: row };
   }
 
+  // NOTE (2026-07-13, HR Nazorat fix): this endpoint used to fake success — it returned
+  // { exported: true, count, format: 'pdf' } as JSON instead of an actual PDF binary
+  // (Q-10 no-fake-success violation). GET /api/hr/safety/export/pdf (HrCompatSafetyController
+  // .exportSafetyPdf) already builds a REAL pdf-lib report from the same safety_incidents
+  // table — reused here (rather than duplicating the pdf-lib layout code) so this POST
+  // variant returns a genuine PDF binary too, following the same @Res()+FastifyReply
+  // Content-Type/Content-Disposition pattern used by finance reports.controller.ts
+  // exportTrialBalancePdf and org-export.service consumers.
   @ApiOperation({ summary: 'Export pdf' })
-  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 200, description: 'application/pdf' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('export/pdf')
   @UsePipes(new ZodValidationPipe(HrSafetyExportPdfSchema))
-  async exportPdf(@Body() _body: HrSafetyExportPdfDto) {
-    const r = await this.svc.getAllIncidents();
-    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
-    return { data: { exported: true, count: rows.length, format: 'pdf' } };
+  async exportPdf(@Body() _body: HrSafetyExportPdfDto, @Res() res: FastifyReply) {
+    const result = await this.compatSafetySvc.generateSafetyIncidentReport();
+    if (!result.ok) {
+      // Matches the message used by the GET counterpart (hr-compat-safety.controller.ts
+      // exportSafetyPdf) — no dedicated i18n key exists for this yet (out of scope to add).
+      throw new InternalServerErrorException('PDF yaratishda xatolik');
+    }
+    const buffer = result.data;
+    res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', 'attachment; filename="safety-incidents.pdf"')
+      .header('Content-Length', buffer.length)
+      .send(buffer);
   }
 }

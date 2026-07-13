@@ -20,6 +20,16 @@ export const disciplineRecords = pgTable("discipline_records", {
   severity: varchar("severity", { length: 20 }),
   violationDate: date("violation_date").notNull(),
   description: text("description"),
+  // HR Nazorat fix (2026-07-13, verified live: POST /api/hr/discipline-records — the
+  // main "Intizom" page create flow — ALWAYS 500'd with a NOT NULL violation): reason/
+  // given_by exist as NOT NULL columns on the live DB (added by fix-discipline-schema.sql,
+  // outside Drizzle) but were never declared here, so no Drizzle-typed insert path could
+  // ever satisfy them. reason mirrors `description` (kept as a separate column since the
+  // legacy discipline-records-compat.service.ts raw-SQL path already writes both
+  // independently); given_by is the HR user who issued the record.
+  reason: text("reason").notNull(),
+  reasonRu: text("reason_ru"),
+  givenBy: integer("given_by").notNull(),
   evidenceUrl: text("evidence_url"),
   issuedBy: integer("issued_by"),
   issuedDate: date("issued_date").notNull(),
@@ -37,6 +47,19 @@ export const disciplineRecords = pgTable("discipline_records", {
   softDeleteReason: varchar("soft_delete_reason", { length: 255 }),
   softDeletedBy: integer("soft_deleted_by"),
   softDeletedAt: timestamp("soft_deleted_at"),
+  // Owner directive 2026-07-13 (HR Nazorat 4-page fix): reprimands auto soft-archive after
+  // business_settings `hr.discipline_archive_after_months` (default 6) — see discipline.cron.ts
+  // expireOldRecords(). Soft-archive = hidden from the active Intizom list (findDisciplineRecords /
+  // discipline-records-compat getDisciplineRecords filter is_archived=false), never hard-deleted
+  // (Q-46) and still counted cumulatively for escalation (discipline-escalation.helper.ts).
+  isArchived: boolean("is_archived").default(false),
+  archivedAt: timestamp("archived_at"),
+  // Escalation stage per vision: verbal -> written -> fine -> dismissal, based on the employee's
+  // cumulative violation count within a rolling window (business_settings hr.discipline_written_
+  // threshold/hr.discipline_fine_threshold/hr.discipline_dismissal_threshold, defaults 3/5/8 —
+  // same figures as the prior magic-numbers audit's late-count thresholds, generalised to ALL
+  // violation types). Computed + stamped at insert time by discipline-escalation.helper.ts.
+  escalationStage: varchar("escalation_stage", { length: 20 }).default("verbal"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [
@@ -44,6 +67,7 @@ export const disciplineRecords = pgTable("discipline_records", {
   check("discipline_records_severity_chk", sql`${t.severity} IS NULL OR ${t.severity} IN ('minor','moderate','serious','critical')`),
   check("discipline_records_fine_amount_chk", sql`${t.fineAmount} IS NULL OR ${t.fineAmount} >= 0`),
   check("discipline_records_suspension_days_chk", sql`${t.suspensionDays} IS NULL OR ${t.suspensionDays} >= 0`),
+  check("discipline_records_escalation_stage_chk", sql`${t.escalationStage} IS NULL OR ${t.escalationStage} IN ('verbal','written','fine','dismissal')`),
 ]);
 
 export const disciplineAppeals = pgTable("discipline_appeals", {

@@ -10,6 +10,7 @@ import { db,
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
 import { safeCall, Result } from '@common/result';
+import { computeDisciplineEscalation, escalationFlags } from '../hr/attendance/discipline-escalation.helper';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 const si = (v: unknown, d = 0) => parseInt(String(v ?? ''), 10) || d;
@@ -27,11 +28,13 @@ export class DisciplineRecordsCompatService {
       SELECT dr.id, dr.employee_id, dr.violation_type, dr.discipline_type,
              dr.severity, dr.violation_date, dr.issued_date, dr.description,
              dr.fine_amount, dr.suspension_days, dr.status, dr.created_at, dr.updated_at,
+             dr.escalation_stage, dr.violation_count_this_category,
              e.first_name || ' ' || e.last_name AS employee_name, d.name AS department_name
       FROM discipline_records dr
       JOIN employees e ON e.id = dr.employee_id
       LEFT JOIN departments d ON d.id = e.department_id
       WHERE dr.deleted_at IS NULL AND dr.is_soft_deleted = false
+        AND COALESCE(dr.is_archived, false) = false
         ${empFilter} ${typeFilter} ${statusFilter}
       ORDER BY dr.created_at DESC LIMIT ${MAX_QUERY_LIMIT}
     `);
@@ -59,14 +62,22 @@ export class DisciplineRecordsCompatService {
     if (!employee_id) throw new BadRequestException(await this.i18n.t('errors.employeeIdRequired'));
     if (!given_by)    throw new BadRequestException(await this.i18n.t('validation.givenByRequired'));
     if (!reason)      throw new BadRequestException(await this.i18n.t('validation.reasonRequired'));
+    // Owner directive 2026-07-13 (HR Nazorat fix): stamp cumulative escalation stage
+    // (verbal/written/fine/dismissal) — business_settings-driven, discipline-escalation.helper.ts.
+    const { stage, cumulativeCount, previousRecordId } = await computeDisciplineEscalation(si(employee_id));
+    const flags = escalationFlags(stage);
     const r = await rawSql(sql`
       INSERT INTO discipline_records
         (employee_id, violation_type, discipline_type, severity,
-         violation_date, issued_date, description, reason, reason_ru, given_by, fine_amount, status)
+         violation_date, issued_date, description, reason, reason_ru, given_by, fine_amount, status,
+         escalation_stage, violation_count_this_category, previous_warning_id,
+         is_first_warning, is_second_warning, is_final_warning)
       VALUES (${employee_id}, ${violation_type}, ${discipline_type ?? null},
               ${severity}, ${violation_date}::date, NOW()::date,
-              ${description}, ${reason}, ${reason_ru}, ${given_by}, ${fine_amount ?? null}, 'issued')
-      RETURNING id, violation_type, reason, given_by, severity, status, created_at
+              ${description}, ${reason}, ${reason_ru}, ${given_by}, ${fine_amount ?? null}, 'issued',
+              ${stage}, ${cumulativeCount}, ${previousRecordId},
+              ${flags.isFirstWarning}, ${flags.isSecondWarning}, ${flags.isFinalWarning})
+      RETURNING id, violation_type, reason, given_by, severity, status, created_at, escalation_stage
     `);
     const _found = dbRows(r)[0];
     if (!_found) throw new NotFoundException(await this.i18n.t('errors.recordNotFound'));

@@ -36,6 +36,7 @@ export interface IHrCompatSafetyRepo {
     expiryDate: unknown,
     score: unknown,
     isPassed: unknown,
+    trainingName?: unknown,
   ): Promise<Result<Row>>;
   getHazardZones(departmentId?: number): Promise<Result<Row[]>>;
   createHazardZone(
@@ -45,6 +46,9 @@ export interface IHrCompatSafetyRepo {
     hazardLevel: unknown,
     requiredPpe: unknown,
     maxOccupancy: unknown,
+    location?: unknown,
+    hazardType?: unknown,
+    description?: unknown,
   ): Promise<Result<Row>>;
   getPpeCompliance(employeeId?: number): Promise<Result<Row[]>>;
   createPpeCompliance(

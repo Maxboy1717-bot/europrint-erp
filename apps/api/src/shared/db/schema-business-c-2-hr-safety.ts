@@ -60,6 +60,11 @@ export const safety_training_records = pgTable('safety_training_records', {
   score:           numeric('score', { precision: 5, scale: 2 }),
   is_passed:       boolean('is_passed').default(false),
   certificate_url: text('certificate_url'),
+  // HR Nazorat fix (2026-07-13): HRSafetyDialogs.tsx TrainingDialog falls back to a
+  // free-text training name when no LMS course exists yet (training_id stays NULL) —
+  // this column was missing so the free-text name was silently dropped on submit
+  // (Q-40/Q-43 fake-save). See hr-compat-safety.controller.ts createSafetyTraining.
+  training_name:   text('training_name'),
   created_at:      timestamp('created_at').defaultNow(),
 });
 
@@ -76,6 +81,15 @@ export const hazard_zones = pgTable('hazard_zones', {
   is_active:             boolean('is_active').default(true),
   last_inspection_date:  date('last_inspection_date'),
   next_inspection_date:  date('next_inspection_date'),
+  // HR Nazorat fix (2026-07-13): HRSafetyDialogs.tsx ZoneDialog collects `location`
+  // (required) and `hazardType` (required, distinct from hazard_level's low/medium/high/
+  // critical severity — this is a free-text hazard category e.g. "electrical"/"chemical")
+  // and `description` (optional) — none had a column, so createHazardZone() silently
+  // dropped them on submit (Q-40/Q-43 fake-save). See hr-compat-safety.controller.ts
+  // createHazardZone.
+  location:              text('location'),
+  hazard_type:           text('hazard_type'),
+  description:           text('description'),
   created_at:            timestamp('created_at').defaultNow(),
 });
 

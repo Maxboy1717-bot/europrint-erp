@@ -129,7 +129,11 @@ export class HrCompatSafetyController {
     const completed_date = body.completed_date ?? body.scheduledDate;
     const expiry_date    = body.expiry_date   ?? body.expiryDate;
     const { score, is_passed } = body;
-    const data = await this.svc.createSafetyTraining(training_id, employee_id, completed_date, expiry_date, score, is_passed);
+    // HR Nazorat fix (2026-07-13): free-text training name (courses.length===0 fallback in
+    // TrainingDialog) was never extracted — silently dropped even though the FE collects it
+    // and requires either trainingId OR trainingName (HRSafetyTypes.TrainingSchema refine).
+    const training_name = body.trainingName ?? null;
+    const data = await this.svc.createSafetyTraining(training_id, employee_id, completed_date, expiry_date, score, is_passed, training_name);
     return { data };
   }
 
@@ -148,7 +152,12 @@ export class HrCompatSafetyController {
     const hazard_level = body.hazard_level ?? body.riskLevel;
     const required_ppe = body.required_ppe ?? body.requiredPpe;
     const max_occupancy = body.max_occupancy ?? body.maxOccupancy;
-    const data = await this.svc.createHazardZone(zone_name, zone_code, department_id, hazard_level, required_ppe, max_occupancy);
+    // HR Nazorat fix (2026-07-13): ZoneDialog collects `location` (required) and
+    // `hazardType` (required, free-text hazard category — distinct from hazard_level's
+    // severity enum) plus optional `description`; none were extracted here — silently
+    // dropped on submit even though the FE form validated them as mandatory.
+    const { location, hazardType, description } = body;
+    const data = await this.svc.createHazardZone(zone_name, zone_code, department_id, hazard_level, required_ppe, max_occupancy, location, hazardType, description);
     return { data };
   }
 

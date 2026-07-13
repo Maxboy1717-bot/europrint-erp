@@ -142,6 +142,11 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
         id:              safety_training_records.id,
         training_id:     safety_training_records.training_id,
         employee_id:     safety_training_records.employee_id,
+        // HR Nazorat fix (2026-07-13): free-text fallback name (no LMS course id) —
+        // was silently dropped on submit; now persisted + returned. Aliased to
+        // camelCase to match HRSafetyTypes.SafetyTraining.trainingName (FE reads
+        // t.trainingName directly).
+        trainingName:    safety_training_records.training_name,
         completed_date:  safety_training_records.completed_date,
         expiry_date:     safety_training_records.expiry_date,
         score:           safety_training_records.score,
@@ -159,11 +164,15 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
       }, 'DB_ERROR');
   }
 
-  async createSafetyTraining(trainingId: unknown, employeeId: unknown, completedDate: unknown, expiryDate: unknown, score: unknown, isPassed: unknown): Promise<Result<Row>> {
+  async createSafetyTraining(trainingId: unknown, employeeId: unknown, completedDate: unknown, expiryDate: unknown, score: unknown, isPassed: unknown, trainingName?: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(safety_training_records).values({
         training_id:    (trainingId ?? null) as number,
         employee_id:    (employeeId ?? null) as number,
+        // HR Nazorat fix (2026-07-13): free-text course-name fallback (courses.length===0
+        // path in TrainingDialog) — previously dropped on submit, see column doc-comment
+        // in schema-business-c-2-hr-safety.ts.
+        training_name:  (trainingName ?? null) as string,
         completed_date: (completedDate ?? null) as string,
         expiry_date:    (expiryDate ?? null) as string,
         score:          score != null ? String(score) : null,
@@ -188,6 +197,13 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
         next_inspection_date: hazard_zones.next_inspection_date,
         created_at:           hazard_zones.created_at,
         department_name:      hrDepartments.name,
+        // HR Nazorat fix (2026-07-13): were dropped on submit — now persisted + returned.
+        // `location` matches HRSafetyTypes.HazardZone.location as-is; `hazardType` aliased
+        // to camelCase to match the FE's ZonesSection (z.hazardType), distinct from
+        // hazard_level (low/medium/high/critical severity enum).
+        location:             hazard_zones.location,
+        hazardType:           hazard_zones.hazard_type,
+        description:          hazard_zones.description,
       })
         .from(hazard_zones)
         .leftJoin(hrDepartments, eq(hrDepartments.id, hazard_zones.department_id))
@@ -201,13 +217,19 @@ export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
       }, 'DB_ERROR');
   }
 
-  async createHazardZone(zoneName: unknown, zoneCode: unknown, departmentId: unknown, hazardLevel: unknown, requiredPpe: unknown, maxOccupancy: unknown): Promise<Result<Row>> {
+  async createHazardZone(zoneName: unknown, zoneCode: unknown, departmentId: unknown, hazardLevel: unknown, requiredPpe: unknown, maxOccupancy: unknown, location?: unknown, hazardType?: unknown, description?: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
       const rows = await db.insert(hazard_zones).values({
         zone_name:    (zoneName ?? '') as string,
         zone_code:    (zoneCode ?? null) as string,
         department_id: (departmentId ?? null) as number,
         hazard_level: (hazardLevel ?? 'low') as string,
+        // HR Nazorat fix (2026-07-13): location/hazardType/description were collected by
+        // ZoneDialog (location + hazardType required) but had no column — silently
+        // dropped on submit. See column doc-comment in schema-business-c-2-hr-safety.ts.
+        location:      (location ?? null) as string,
+        hazard_type:   (hazardType ?? null) as string,
+        description:   (description ?? null) as string,
         required_ppe: (requiredPpe ?? null) as string,
         max_occupancy: (maxOccupancy ?? null) as number,
         is_active:    true,

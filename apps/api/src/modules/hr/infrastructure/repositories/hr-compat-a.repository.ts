@@ -17,6 +17,8 @@ import {
 import { safeInt } from '../../common/db-rows';
 import { safeCall, Result } from '@common/result';
 import type { IHrCompatARepo } from '../../domain/repositories/i-hr-compat-a.repo';
+import { computeDisciplineEscalation, escalationFlags } from '../../attendance/discipline-escalation.helper';
+import { SYSTEM_USER_ID } from '@common/constants/app.constants';
 
 type Row = Record<string, unknown>;
 
@@ -224,8 +226,20 @@ export class HrCompatARepository implements IHrCompatARepo {
       }, 'DB_ERROR');
   }
 
-  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown): Promise<Result<Row>> {
+  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown, issuedBy?: unknown): Promise<Result<Row>> {
     return safeCall(async () => {
+      const empId = safeInt(employeeId, 0);
+      // Owner directive 2026-07-13 (HR Nazorat fix): stamp cumulative escalation stage
+      // (verbal/written/fine/dismissal) — business_settings-driven, discipline-escalation.helper.ts.
+      const { stage, cumulativeCount, previousRecordId } = await computeDisciplineEscalation(empId);
+      const flags = escalationFlags(stage);
+      // HR Nazorat fix (2026-07-13, verified live): reason/given_by are NOT NULL on the
+      // live DB (see lib/db/src/schema/discipline.ts doc-comment) but were never written
+      // here — every create from the real Discipline.tsx page 500'd. reason mirrors the
+      // required description; given_by falls back to SYSTEM_USER_ID only if the request
+      // somehow has no authenticated user (should not normally happen — controller passes
+      // the current HR user's id).
+      const issuedById = safeInt(issuedBy, SYSTEM_USER_ID) || SYSTEM_USER_ID;
       const rows = await db.insert(discipline_records).values({
         employeeId:    (employeeId ?? null) as number,
         violationType: (violationType ?? null) as string,
@@ -234,8 +248,15 @@ export class HrCompatARepository implements IHrCompatARepo {
         violationDate: (violationDate ?? null) as string,
         issuedDate:    sql`NOW()::date`,
         description:    (description ?? null) as string,
+        reason:         (description ?? 'Sabab ko\'rsatilmagan') as string,
+        givenBy:        issuedById,
+        issuedBy:       issuedById,
         fineAmount:    fineAmount != null ? String(fineAmount) : null,
         status:         'issued',
+        escalationStage: stage,
+        violationCountThisCategory: cumulativeCount,
+        previousWarningId: previousRecordId,
+        ...flags,
       }).returning();
       return castTo<Row>((rows[0] ?? {}));
       }, 'DB_ERROR');

@@ -87,16 +87,16 @@ export class HrCompatSafetyService {
     return safeCall(() => this.repo.getSafetyTrainings(employeeId ? safeInt(employeeId, 0) : undefined));
   }
 
-  async createSafetyTraining(trainingId: unknown, employeeId: unknown, completedDate: unknown, expiryDate: unknown, score: unknown, isPassed: unknown) {
-    return this.repo.createSafetyTraining(trainingId, employeeId, completedDate, expiryDate, score, isPassed);
+  async createSafetyTraining(trainingId: unknown, employeeId: unknown, completedDate: unknown, expiryDate: unknown, score: unknown, isPassed: unknown, trainingName?: unknown) {
+    return this.repo.createSafetyTraining(trainingId, employeeId, completedDate, expiryDate, score, isPassed, trainingName);
   }
 
   async getHazardZones(departmentId?: string) {
     return safeCall(() => this.repo.getHazardZones(departmentId ? safeInt(departmentId, 0) : undefined));
   }
 
-  async createHazardZone(zoneName: unknown, zoneCode: unknown, departmentId: unknown, hazardLevel: unknown, requiredPpe: unknown, maxOccupancy: unknown) {
-    return this.repo.createHazardZone(zoneName, zoneCode, departmentId, hazardLevel, requiredPpe, maxOccupancy);
+  async createHazardZone(zoneName: unknown, zoneCode: unknown, departmentId: unknown, hazardLevel: unknown, requiredPpe: unknown, maxOccupancy: unknown, location?: unknown, hazardType?: unknown, description?: unknown) {
+    return this.repo.createHazardZone(zoneName, zoneCode, departmentId, hazardLevel, requiredPpe, maxOccupancy, location, hazardType, description);
   }
 
   async getPpeCompliance(employeeId?: string) {

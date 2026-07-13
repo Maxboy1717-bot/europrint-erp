@@ -324,6 +324,10 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         violation_date:  discipline_records.violationDate,
         fine_amount:     discipline_records.fineAmount,
         created_at:      discipline_records.createdAt,
+        // Owner directive 2026-07-13: expose the cumulative escalation stage
+        // (verbal/written/fine/dismissal) — discipline-escalation.helper.ts.
+        escalation_stage: discipline_records.escalationStage,
+        violation_count_this_category: discipline_records.violationCountThisCategory,
         // P1.19.1: FE expects full_name and department — join departments
         full_name:       sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
         employee_name:   sql<string>`${hrEmployees.first_name} || ' ' || ${hrEmployees.last_name}`,
@@ -335,6 +339,7 @@ export class HrRepository extends HrBaseRepository implements IHrRepo {
         .leftJoin(hrDepartments, eq(hrDepartments.id, hrEmployees.department_id))
         .where(sql`
           ${discipline_records.isSoftDeleted} = false AND
+          COALESCE(${discipline_records.isArchived}, false) = false AND
           (${eid > 0 ? eid : null}::int IS NULL OR ${discipline_records.employeeId} = ${eid > 0 ? eid : null})
         `)
         .orderBy(sql`${discipline_records.createdAt} DESC`)

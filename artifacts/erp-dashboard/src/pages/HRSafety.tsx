@@ -117,11 +117,15 @@ export default function HRSafety() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
+  // NOTE (2026-07-13, HR Nazorat fix): the backend (hr-safety.controller.ts deleteIncident)
+  // never hard-deletes — it soft-closes the incident (status='closed', audit trail kept,
+  // see the controller's own doc-comment). "Hodisa o'chirildi" (deleted) was misleading;
+  // soft-close is the CORRECT behavior here, only the message was wrong.
   const deleteIncident = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/hr/safety/incidents/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/safety/incidents"] });
-      toast({ title: "Hodisa o'chirildi" });
+      toast({ title: "Hodisa yopildi" });
     },
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
@@ -190,14 +194,16 @@ export default function HRSafety() {
       <TrainingDialog open={showTraining} onOpenChange={setShowTraining} form={trainingForm} mutation={createTraining} />
       <ZoneDialog open={showZone} onOpenChange={setShowZone} form={zoneForm} mutation={createZone} />
 
+      {/* NOTE (2026-07-13): "yopish" (close) not "o'chirish" (delete) — this is a
+          soft-close (status='closed'), not a hard delete; see deleteIncident above. */}
       <ConfirmDialog
         open={confirmDeleteId !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-        title={t("hodisaniOchirish")}
-        description={t("ushbuXavfsizlikHodisasiniOchirishniTasdiqlaysizmi")}
-        confirmText="O'chirish"
+        title={t("hodisaniYopish")}
+        description={t("ushbuXavfsizlikHodisasiniYopishniTasdiqlaysizmi")}
+        confirmText="Yopish"
         cancelText="Bekor qilish"
-        variant="destructive"
+        variant="default"
         onConfirm={() => { if (confirmDeleteId !== null) deleteIncident.mutate(confirmDeleteId); }}
       />
     </div>
