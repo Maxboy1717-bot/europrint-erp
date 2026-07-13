@@ -56,6 +56,25 @@ export class CouncilMembersRepository {
     }
   }
 
+  // Owner decision 2026-07-13 (chat) — per-council quorum override (councils.quorum_numerator/
+  // quorum_denominator, council-quorum-override-2026-07-13.sql). NULL on either column means the
+  // caller falls back to the global COUNCIL_QUORUM_NUMERATOR/DENOMINATOR constants
+  // (business.constants.ts) — additive, no regression for councils that never set an override.
+  async getQuorumOverride(councilId: number): Promise<Result<{ numerator: number | null; denominator: number | null }>> {
+    try {
+      const r = await runQuery<{ quorum_numerator: number | null; quorum_denominator: number | null }>(sql`
+        SELECT quorum_numerator, quorum_denominator FROM councils WHERE id = ${councilId} LIMIT 1
+      `);
+      const row = r.rows[0];
+      return Ok({
+        numerator: row?.quorum_numerator ?? null,
+        denominator: row?.quorum_denominator ?? null,
+      });
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
   async add(councilId: number, userId: number, role: string, isPermanent: boolean): Promise<Result<{ id: number }>> {
     try {
       // bir foydalanuvchi kengashda bir marta — takror qo'shilsa rolni yangilaydi (upsert)

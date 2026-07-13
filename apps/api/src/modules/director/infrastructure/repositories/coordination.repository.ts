@@ -239,18 +239,25 @@ export class CoordinationRepository implements ICoordinationRepo {
     chairpersonId: number | null,
     description: string | null,
     meetingSchedule: string | null,
+    quorumNumerator: number | null,
+    quorumDenominator: number | null,
   ): Promise<Result<Row>> {
     return safeCall(async () => {
+      // Owner decision 2026-07-13 (chat) — per-council quorum override columns
+      // (council-quorum-override-2026-07-13.sql). Same COALESCE(param, existing) convention as
+      // the other three fields: NULL input leaves the stored value untouched.
       const r = await db.execute(sql`
         UPDATE councils
         SET
-          chairperson_id   = COALESCE(${chairpersonId}, chairperson_id),
-          description      = COALESCE(${description}, description),
-          meeting_schedule = COALESCE(${meetingSchedule}, meeting_schedule)
+          chairperson_id     = COALESCE(${chairpersonId}, chairperson_id),
+          description        = COALESCE(${description}, description),
+          meeting_schedule   = COALESCE(${meetingSchedule}, meeting_schedule),
+          quorum_numerator   = COALESCE(${quorumNumerator}, quorum_numerator),
+          quorum_denominator = COALESCE(${quorumDenominator}, quorum_denominator)
         WHERE id = ${id}
         RETURNING
           id, name, council_type, description, is_active, created_at,
-          chairperson_id, meeting_schedule
+          chairperson_id, meeting_schedule, quorum_numerator, quorum_denominator
       `);
       const rows = ((r as { rows?: unknown[] }).rows) ?? [];
       return (rows[0] ?? { message: 'Yangilandi' }) as Row;

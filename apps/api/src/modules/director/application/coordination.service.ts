@@ -163,6 +163,8 @@ export class CoordinationService {
     chairpersonId: number | null,
     description: string | null,
     meetingSchedule: string | null,
+    quorumNumerator: number | null,
+    quorumDenominator: number | null,
   ): Promise<Result<object, AppError>> {
     if (!PRIVILEGED_ROLES.has(userRole))
       return Err({ code: 'FORBIDDEN', message: "Faqat administrator, direktor yoki CEO o'zgartira oladi" });
@@ -170,7 +172,9 @@ export class CoordinationService {
     if (!existing.ok) return existing;
     if (!Array.isArray(existing.data) || !existing.data.length)
       return Err({ code: 'BAD_REQUEST', message: 'Kengash topilmadi' });
-    return safeCall(() => this.repo.updateCouncil(id, chairpersonId, description, meetingSchedule));
+    return safeCall(() =>
+      this.repo.updateCouncil(id, chairpersonId, description, meetingSchedule, quorumNumerator, quorumDenominator),
+    );
   }
 
   async getBaskets(): Promise<Result<object, AppError>> {

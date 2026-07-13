@@ -48,13 +48,23 @@ export const CoordinationCreateRaspSchema = z.object({
 }).refine(d => !!(d.title || d.task), { message: 'title yoki task majburiy' });
 export type CoordinationCreateRaspDto = z.infer<typeof CoordinationCreateRaspSchema>;
 
+// Owner decision 2026-07-13 (chat): quorum_numerator/quorum_denominator — per-council kvorum
+// override (councils.quorum_numerator/quorum_denominator, nullable). Berilmasa yoki NULL
+// qolsa council-quorum.service.ts global COUNCIL_QUORUM_NUMERATOR/DENOMINATOR (2/3) ga qaytadi.
 export const CoordinationUpdateCouncilSchema = z.object({
-  chairperson_id:   z.number().int().positive().optional(),
-  description:      z.string().max(500).optional(),
-  meeting_schedule: z.string().max(200).optional(),
+  chairperson_id:     z.number().int().positive().optional(),
+  description:        z.string().max(500).optional(),
+  meeting_schedule:   z.string().max(200).optional(),
+  quorum_numerator:   z.number().int().min(0).optional(),
+  quorum_denominator: z.number().int().min(1).optional(),
 }).refine(
-  d => d.chairperson_id !== undefined || d.description !== undefined || d.meeting_schedule !== undefined,
+  d => d.chairperson_id !== undefined || d.description !== undefined || d.meeting_schedule !== undefined
+    || d.quorum_numerator !== undefined || d.quorum_denominator !== undefined,
   { message: 'Kamida bitta maydon kerak' },
+).refine(
+  d => d.quorum_numerator === undefined || d.quorum_denominator === undefined
+    || d.quorum_numerator <= d.quorum_denominator,
+  { message: 'quorum_numerator quorum_denominator dan katta bo\'lmasligi kerak' },
 );
 export type CoordinationUpdateCouncilDto = z.infer<typeof CoordinationUpdateCouncilSchema>;
 

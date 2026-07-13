@@ -97,6 +97,7 @@ import { PrikazRepository } from './infrastructure/repositories/prikaz.repositor
 import { ProtocolRepository } from './infrastructure/repositories/protocol.repository';
 import { CouncilMembersRepository } from './infrastructure/repositories/council-members.repository';
 import { CouncilQuorumService } from './application/council-quorum.service';
+import { CouncilVotesRepository } from './infrastructure/repositories/council-votes.repository';
 import { RasporyazhenieEscalationCron } from './infrastructure/cron/rasporyazhenie-escalation.cron';
 // 07-03 to'lqin: ZNO/ZVS SLA eskalatsiya cron (vizyon 3.7)
 import { ZnoZvsSlaEscalationCron } from './infrastructure/cron/zno-zvs-sla-escalation.cron';
@@ -211,6 +212,7 @@ const Repositories = [
     ProtocolRepository,
     CouncilMembersRepository,
     CouncilQuorumService,
+    CouncilVotesRepository,
     RasporyazhenieEscalationCron,
     // 07-03 to'lqin: ZNO/ZVS SLA eskalatsiya cron (vizyon 3.7)
     ZnoZvsSlaEscalationCron,

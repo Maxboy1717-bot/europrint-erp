@@ -93,23 +93,22 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
     return safeCall(async () =>
       exec(sql`
         SELECT
-          d.name_uz AS department,
+          d.name AS department,
           COUNT(po.id)::int AS total,
           COUNT(po.id) FILTER (WHERE po.status = 'completed')::int AS completed,
           COUNT(po.id) FILTER (WHERE po.status = 'in_progress')::int AS in_progress,
           COUNT(po.id) FILTER (WHERE po.status NOT IN ('completed','cancelled'))::int AS remaining
-        FROM departments d
-        -- Join on org_department_id: production_orders has no plain department_id column, so
-        -- the old join threw a nonexistent-column error that safeCall swallowed into []
-        -- (green-lie) -- same class as the sales_orders status -> overall_status fix in
-        -- get-dashboard-kpis.handler. NB: org_department_id references the org-structure world
-        -- and is NULL on all rows today, so this makes the reader schema-correct (no more
-        -- swallowed error) though the widget stays empty until PP writes it; the
-        -- departments-vs-org_departments join target is an owner two-world call.
+        FROM org_departments d
+        -- org_departments is canonical (owner decision 2026-07-11/13): production_orders.org_department_id
+        -- FKs to org_departments(id) (verified live via \d production_orders), never to the legacy
+        -- departments(id) space -- mirror-sync (org-structure/sync-helper.ts) inserts departments rows
+        -- with their OWN auto-generated serial id (code = 'ORG-'+orgId), unrelated to org_departments.id,
+        -- so the previous 'FROM departments d' join could never match. Same join-shape as
+        -- director-data.repository.ts's getCkpDeadlineComplianceRate (FROM org_departments d ... f.card_id = d.id).
         LEFT JOIN production_orders po ON po.org_department_id = d.id
           AND DATE(po.created_at) = CURRENT_DATE
-        GROUP BY d.id, d.name_uz
-        ORDER BY d.name_uz
+        GROUP BY d.id, d.name
+        ORDER BY d.name
       `), 'DB_ERROR');
   }
 
@@ -122,8 +121,9 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
           ROUND(100.0 * COUNT(po.id) FILTER (WHERE po.status='completed')
                 / NULLIF(COUNT(po.id), 0), 1) AS readiness_pct,
           (
-            SELECT d.name_uz FROM production_orders pp
-            LEFT JOIN departments d ON d.id = pp.org_department_id
+            -- org_departments canonical (owner decision 2026-07-11/13) -- see getPlanFact comment above.
+            SELECT d.name FROM production_orders pp
+            LEFT JOIN org_departments d ON d.id = pp.org_department_id
             WHERE pp.sales_order_id = so.id AND pp.status = 'in_progress'
             ORDER BY pp.created_at DESC LIMIT 1
           ) AS current_department

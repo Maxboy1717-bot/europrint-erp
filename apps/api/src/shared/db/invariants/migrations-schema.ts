@@ -898,4 +898,45 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'certificates.cert_hash column (LMS-12 #30, SHA-256 digital-signature substitute)',
     sql: `ALTER TABLE IF EXISTS certificates ADD COLUMN IF NOT EXISTS cert_hash VARCHAR(64)`,
   },
+  // Owner decision 2026-07-13 (chat): council kvorumi endi HAR BIR kengash uchun CRUD orqali
+  // sozlanadigan bo'lishi kerak — avval COUNCIL_QUORUM_NUMERATOR/DENOMINATOR
+  // (business.constants.ts, 2/3) BARCHA kengashlarga global qattiq-kodlangan edi. Nullable —
+  // NULL qolsa council-quorum.service.ts o'sha global konstantalarga qaytadi (additive,
+  // regressiya yo'q). CRUD: mavjud PATCH /coordination/councils/:id (coordination.repository.ts
+  // updateCouncil) orqali. APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/council-quorum-override-2026-07-13.sql.
+  {
+    name: 'councils.quorum_numerator column (per-council kvorum override, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS councils ADD COLUMN IF NOT EXISTS quorum_numerator INTEGER`,
+  },
+  {
+    name: 'councils.quorum_denominator column (per-council kvorum override, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS councils ADD COLUMN IF NOT EXISTS quorum_denominator INTEGER`,
+  },
+  // council_votes — har bir a'zoning har bir qarorga (decision_ref) bergan alohida ovozi.
+  // council-quorum.service.ts'ning evaluateDecision() ilgari faqat agregat
+  // presentCount/votesFor/votesAgainst integer qabul qilardi (per-vote yozuv yo'q edi). Eski
+  // aggregat-integer yo'l o'zgarmasdan ishlaydi (Q-46); bu jadval council-members.controller.ts
+  // POST /councils/:councilId/votes orqali to'ldiriladi va decisionRef bilan tally qilinadi.
+  {
+    name: 'council_votes table (per-member vote logging, owner 2026-07-13)',
+    sql: `CREATE TABLE IF NOT EXISTS council_votes (
+      id            SERIAL PRIMARY KEY,
+      council_id    INTEGER     NOT NULL,
+      decision_ref  TEXT        NOT NULL,
+      voter_user_id INTEGER     NOT NULL,
+      vote          TEXT        NOT NULL,
+      voted_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT uq_council_votes_decision_voter UNIQUE (council_id, decision_ref, voter_user_id),
+      CONSTRAINT ck_council_votes_vote CHECK (vote IN ('for','against','abstain'))
+    )`,
+  },
+  {
+    name: 'council_votes (council_id, decision_ref) index',
+    sql: `CREATE INDEX IF NOT EXISTS idx_council_votes_decision ON council_votes (council_id, decision_ref)`,
+  },
+  {
+    name: 'council_votes.voter_user_id index',
+    sql: `CREATE INDEX IF NOT EXISTS idx_council_votes_voter ON council_votes (voter_user_id)`,
+  },
 ];

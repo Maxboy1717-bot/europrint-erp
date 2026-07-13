@@ -54,6 +54,8 @@ export interface ICoordinationRepo {
     chairpersonId: number | null,
     description: string | null,
     meetingSchedule: string | null,
+    quorumNumerator: number | null,
+    quorumDenominator: number | null,
   ): Promise<Result<Row>>;
 }
 

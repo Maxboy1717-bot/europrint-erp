@@ -46,7 +46,8 @@ export class CoordinationController {
       SELECT c.id, c.name, c.council_type, c.description, c.is_active, c.created_at,
              c.chairperson_id,
              TRIM(COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'')) AS chairperson_name,
-             c.meeting_schedule
+             c.meeting_schedule,
+             c.quorum_numerator, c.quorum_denominator
       FROM councils c
       LEFT JOIN employees emp ON emp.id = c.chairperson_id
       LEFT JOIN users u ON u.id = emp.user_id
@@ -55,7 +56,7 @@ export class CoordinationController {
     return ((r as { rows?: unknown[] }).rows) ?? [];
   }
 
-  @ApiOperation({ summary: 'Update council (chairperson, description, meeting_schedule)' })
+  @ApiOperation({ summary: 'Update council (chairperson, description, meeting_schedule, quorum override)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -67,7 +68,9 @@ export class CoordinationController {
     @Body() body: CoordinationUpdateCouncilDto,
     @CurrentUser() user: { id: number; role: string },
   ) {
-    const { chairperson_id, description, meeting_schedule } = body;
+    // Owner decision 2026-07-13 (chat): quorum_numerator/quorum_denominator — per-council
+    // kvorum override (falls back to the global COUNCIL_QUORUM_NUMERATOR/DENOMINATOR when unset).
+    const { chairperson_id, description, meeting_schedule, quorum_numerator, quorum_denominator } = body;
     return unwrapOrThrow(
       await this.svc.updateCouncilWithAuth(
         parseInt(id, 10),
@@ -75,6 +78,8 @@ export class CoordinationController {
         chairperson_id ?? null,
         description ?? null,
         meeting_schedule ?? null,
+        quorum_numerator ?? null,
+        quorum_denominator ?? null,
       ),
     );
   }
