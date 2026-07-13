@@ -30,9 +30,6 @@ import { NotificationSchedulesRepository } from './infrastructure/notification-s
 import { NotificationSchedulesController } from './presentation/notification-schedules.controller';
 import { NotificationRoutingRepository } from './infrastructure/notification-routing.repository';
 import { NotificationRoutingController } from './presentation/notification-routing.controller';
-import { TelegramSvc } from './telegram/telegram.service';
-import { DrizzleTelegramSvcRepository } from './telegram/drizzle-telegram-svc.repo';
-import { TELEGRAM_SVC_REPO } from './telegram/i-telegram-svc.repo';
 import { NotificationPreferencesService } from './application/notification-preferences.service';
 import { NotificationPreferencesRepository } from './infrastructure/repositories/notification-preferences.repository';
 import { NotificationSchemaService } from './infrastructure/notification-schema.service';
@@ -71,13 +68,12 @@ const repositories = [
     provide: NOTIFICATION_REPO,
     useClass: DrizzleNotificationRepository,
   },
-  { provide: TELEGRAM_SVC_REPO, useClass: DrizzleTelegramSvcRepository },
 ];
 
 @Module({
   imports: [CqrsModule, HttpModule],
   controllers: [NotificationsController, NotificationSchedulesController, NotificationRoutingController],
-  providers: [...commandHandlers, ...eventHandlers, ...queryHandlers, ...senders, ...repositories, TelegramSvc, NotificationPreferencesRepository, NotificationPreferencesService, NotificationSchemaRepository, NotificationSchemaService, NotificationScheduleCron, NotificationSchedulesRepository, NotificationRoutingRepository],
+  providers: [...commandHandlers, ...eventHandlers, ...queryHandlers, ...senders, ...repositories, NotificationPreferencesRepository, NotificationPreferencesService, NotificationSchemaRepository, NotificationSchemaService, NotificationScheduleCron, NotificationSchedulesRepository, NotificationRoutingRepository],
   exports: [
     EskizSmsAdapter,
     SmtpEmailAdapter,
@@ -86,8 +82,6 @@ const repositories = [
     EMAIL_SENDER,
     TELEGRAM_SENDER,
     NOTIFICATION_REPO,
-    TELEGRAM_SVC_REPO,
-    TelegramSvc,
     NotificationPreferencesService,
     NotificationRoutingRepository,
   ],
