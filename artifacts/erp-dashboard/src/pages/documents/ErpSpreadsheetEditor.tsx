@@ -107,6 +107,17 @@ export default function ErpSpreadsheetEditor() {
   }, [id, dirty, cells, title, tier, save.isPending]);
   const handleSaveClick = () => { if (!id) { setNameInput(title.trim()); setShowName(true); return; } doSave(); };
 
+  // Ctrl+S / Cmd+S = save now (suppress the browser save dialog); ref keeps the listener fresh.
+  const saveRef = useRef(handleSaveClick);
+  useEffect(() => { saveRef.current = handleSaveClick; });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveRef.current(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const print = useMutation({
     mutationFn: (reason: string) => apiRequest('POST', `/api/erp-spreadsheets/${id}/print`, { reason }),
     onSuccess: () => { setShowPrint(false); setPrintReason(''); setTimeout(() => window.print(), 100); },

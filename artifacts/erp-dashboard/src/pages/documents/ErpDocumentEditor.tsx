@@ -122,6 +122,18 @@ export default function ErpDocumentEditor() {
     doSave();
   };
 
+  // Ctrl+S / Cmd+S = save now (and suppress the browser's "save page" dialog). A ref keeps the
+  // one-time listener pointing at the latest save closure (no stale content).
+  const saveRef = useRef(handleSaveClick);
+  useEffect(() => { saveRef.current = handleSaveClick; });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveRef.current(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // Decision #4/#5 — gated print: reason required + leadership-only + logged, then browser print.
   const print = useMutation({
     mutationFn: (reason: string) => apiRequest('POST', `/api/erp-documents/${id}/print`, { reason }),
