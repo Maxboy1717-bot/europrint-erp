@@ -20,7 +20,9 @@ export function formatDisplay(display: string, fmt?: string): string {
   return display;
 }
 
-const A1_RE = /^([A-Z]+)([0-9]+)$/;
+// Absolute ($A$1) and relative (A1) refs both evaluate the same; $ only matters for fill/copy.
+const A1_RE = /^\$?([A-Z]+)\$?([0-9]+)$/;
+const normRef = (ref: string) => ref.replace(/\$/g, '');
 
 export function colToNum(col: string): number {
   let n = 0;
@@ -63,11 +65,20 @@ function evalArith(expr: string): number {
 }
 
 function resolveRefs(expr: string, cells: Cells, seen: Set<string>): string {
-  return expr.replace(/\b([A-Z]+[0-9]+)\b/g, (ref) => {
-    const v = evalCell(ref, cells, seen);
+  return expr.replace(/\$?[A-Z]+\$?[0-9]+/g, (ref) => {
+    const v = evalCell(normRef(ref), cells, seen);
     // Propagate errors (#CYCLE/#ERR) as NaN so arithmetic yields #ERR instead of a silent 0.
     return v.startsWith('#') ? 'NaN' : String(toNum(v));
   });
+}
+
+/** Resolve one function arg to a text value (quoted-literal, cell ref, or raw). */
+function argText(a: string, cells: Cells, seen: Set<string>): string {
+  const t = a.trim();
+  const sl = t.match(/^"(.*)"$/);
+  if (sl) return sl[1];
+  const nr = normRef(t);
+  return A1_RE.test(nr) ? evalCell(nr, cells, seen) : t;
 }
 
 function evalCondition(cond: string, cells: Cells, seen: Set<string>): boolean {
@@ -107,15 +118,52 @@ function evalFormula(expr: string, cells: Cells, seen: Set<string>): string {
       return evalCondition(args[0], cells, seen) ? branch(args[1]) : branch(args[2]);
     });
   }
-  // SUM / AVERAGE / COUNT
-  expr = expr.replace(/(SUM|AVERAGE|COUNT)\(([^()]*)\)/gi, (_m, fn, args) => {
+  // Zero-arg date functions.
+  expr = expr.replace(/\bTODAY\(\s*\)/gi, () => `"${new Date().toLocaleDateString('uz-UZ')}"`);
+  expr = expr.replace(/\bNOW\(\s*\)/gi, () => `"${new Date().toLocaleString('uz-UZ')}"`);
+  // ROUND(x, n) — innermost-first via loop.
+  let pr = '';
+  while (pr !== expr) {
+    pr = expr;
+    expr = expr.replace(/ROUND\(([^()]*)\)/i, (_m, inner) => {
+      const a = splitArgs(inner);
+      const x = evalArith(resolveRefs(a[0] ?? '0', cells, seen));
+      const d = Math.round(evalArith(resolveRefs(a[1] ?? '0', cells, seen)));
+      const f = Math.pow(10, d);
+      return Number.isNaN(x) ? '#ERR' : String(Math.round(x * f) / f);
+    });
+  }
+  // CONCATENATE(a, b, ...) -> quoted text.
+  expr = expr.replace(/CONCATENATE\(([^()]*)\)/gi, (_m, inner) =>
+    `"${splitArgs(inner).map((a) => argText(a, cells, seen)).join('')}"`);
+  // VLOOKUP(key, range, colIndex) — search col 1 of range for key, return colIndex cell.
+  expr = expr.replace(/VLOOKUP\(([^()]*)\)/gi, (_m, inner) => {
+    const a = splitArgs(inner);
+    if (a.length < 3) return '#ERR';
+    const key = String(argText(a[0], cells, seen));
+    const col = Math.round(evalArith(resolveRefs(a[2], cells, seen)));
+    const [s, e] = normRef(a[1].trim()).split(':');
+    const ms = A1_RE.exec(s ?? ''), me = A1_RE.exec(e ?? '');
+    if (!ms || !me) return '#ERR';
+    const c1 = colToNum(ms[1]), r1 = +ms[2], r2 = +me[2];
+    for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r++) {
+      if (String(evalCell(numToCol(c1) + r, cells, seen)) === key) {
+        return `"${evalCell(numToCol(c1 + col - 1) + r, cells, seen)}"`;
+      }
+    }
+    return '#ERR';
+  });
+  // SUM / AVERAGE / COUNT / MIN / MAX
+  expr = expr.replace(/(SUM|AVERAGE|COUNT|MIN|MAX)\(([^()]*)\)/gi, (_m, fn, args) => {
     const vals = splitArgs(args)
       .flatMap((a) => (a.includes(':') ? expandRange(a.trim()) : [a.trim()]))
-      .map((ref) => (A1_RE.test(ref) ? toNum(evalCell(ref, cells, seen)) : toNum(ref)));
+      .map((ref) => (A1_RE.test(normRef(ref)) ? toNum(evalCell(normRef(ref), cells, seen)) : toNum(ref)));
     const f = String(fn).toUpperCase();
     if (f === 'SUM') return String(vals.reduce((s, v) => s + v, 0));
     if (f === 'AVERAGE') return String(vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0);
-    return String(vals.filter((v) => v !== 0 || true).length); // COUNT of provided cells
+    if (f === 'MIN') return String(vals.length ? Math.min(...vals) : 0);
+    if (f === 'MAX') return String(vals.length ? Math.max(...vals) : 0);
+    return String(vals.length); // COUNT of provided cells
   });
   // If a quoted string literal remains, return it unquoted.
   const strLit = expr.trim().match(/^"(.*)"$/);
