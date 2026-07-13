@@ -18,7 +18,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { db, runQuery } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
-import type { DocumentRow, CreateDraftInput } from './types';
+import type { DocumentRow, CreateDraftInput, CcTemplateAdminRow, CreateTemplateInput, UpdateTemplateInput } from './types';
 import type { BasketState, WorkflowState } from '../../../domain/types';
 import { CcDocumentsReadRepo } from './cc-documents-read.repo';
 
@@ -320,6 +320,129 @@ export class CcDocumentsWriteRepo {
            ${args.titleUz}, ${args.titleRu}, ${args.messageUz}, ${args.messageRu}, ${args.titleUz}, ${args.messageUz})
       `);
       return Ok(undefined);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  // ─── Templates admin (super_admin only — owner decision 2026-07-13) ──────
+  // NOTE: `version` is never written here (create defaults it via the column's
+  // own DEFAULT 1; update never touches it) — it is a workflow-routing key
+  // (cc_workflow_steps.template_version, resolved live in cc-workflow.service.ts
+  // at draft-creation time) owned by a separate versioning flow. Bumping it on a
+  // plain metadata edit would silently orphan new drafts from their approval steps.
+
+  async createTemplate(input: CreateTemplateInput): Promise<Result<CcTemplateAdminRow>> {
+    try {
+      const dup = await runQuery<{ id: string }>(sql`
+        SELECT id FROM cc_document_templates WHERE code = ${input.code} LIMIT 1
+      `);
+      if (dup.rows[0]) return Err({ message: `Shablon kodi band: ${input.code}`, code: 'CONFLICT' });
+
+      const r = await runQuery<{ id: string }>(sql`
+        INSERT INTO cc_document_templates (
+          code, name_uz, name_ru, category, ai_questions, html_template,
+          default_priority, max_file_size_mb, allowed_file_types, print_requires_reason,
+          cooldown_days, archive_after_days, number_format,
+          inbox_sla_hours, reminder_hours, escalation_hours,
+          is_recurring, cron_expression, test_mode, is_active
+        )
+        VALUES (
+          ${input.code}, ${input.nameUz}, ${input.nameRu}, ${input.category},
+          ${JSON.stringify(input.aiQuestions ?? [])}::jsonb, ${input.htmlTemplate ?? null},
+          ${input.defaultPriority ?? 'normal'}, ${input.maxFileSizeMb ?? 10},
+          ${JSON.stringify(input.allowedFileTypes ?? ['pdf', 'png', 'jpg', 'jpeg', 'docx', 'xlsx'])}::jsonb,
+          ${input.printRequiresReason ?? true}, ${input.cooldownDays ?? null},
+          ${input.archiveAfterDays ?? null}, ${input.numberFormat ?? 'DOC-{YYYY}-{SEQ}'},
+          ${input.inboxSlaHours ?? 24}, ${input.reminderHours ?? 20}, ${input.escalationHours ?? 48},
+          ${input.isRecurring ?? false}, ${input.cronExpression ?? null}, ${input.testMode ?? false},
+          ${input.isActive ?? true}
+        )
+        RETURNING id::text AS id
+      `);
+      const row = r.rows[0];
+      if (!row) return Err({ message: 'Shablon yaratilmadi', code: 'DB_ERROR' });
+      const created = await this.reader.getTemplateAdmin(row.id);
+      if (!created.ok) return Err(created.error);
+      if (!created.data) return Err({ message: 'Yaratilgan shablonni o\'qib bo\'lmadi', code: 'DB_ERROR' });
+      return Ok(created.data);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  async updateTemplate(templateId: string, patch: UpdateTemplateInput): Promise<Result<CcTemplateAdminRow>> {
+    try {
+      const existing = await this.reader.getTemplateAdmin(templateId);
+      if (!existing.ok) return Err(existing.error);
+      if (!existing.data) return Err({ message: 'Shablon topilmadi', code: 'NOT_FOUND' });
+
+      if (patch.code && patch.code !== existing.data.code) {
+        const dup = await runQuery<{ id: string }>(sql`
+          SELECT id FROM cc_document_templates WHERE code = ${patch.code} AND id != ${templateId} LIMIT 1
+        `);
+        if (dup.rows[0]) return Err({ message: `Shablon kodi band: ${patch.code}`, code: 'CONFLICT' });
+      }
+
+      await runQuery(sql`
+        UPDATE cc_document_templates SET
+          code                  = COALESCE(${patch.code ?? null}, code),
+          name_uz               = COALESCE(${patch.nameUz ?? null}, name_uz),
+          name_ru               = COALESCE(${patch.nameRu ?? null}, name_ru),
+          category              = COALESCE(${patch.category ?? null}, category),
+          ai_questions          = COALESCE(${patch.aiQuestions ? JSON.stringify(patch.aiQuestions) : null}::jsonb, ai_questions),
+          html_template         = COALESCE(${patch.htmlTemplate ?? null}, html_template),
+          default_priority      = COALESCE(${patch.defaultPriority ?? null}, default_priority),
+          max_file_size_mb      = COALESCE(${patch.maxFileSizeMb ?? null}, max_file_size_mb),
+          allowed_file_types    = COALESCE(${patch.allowedFileTypes ? JSON.stringify(patch.allowedFileTypes) : null}::jsonb, allowed_file_types),
+          print_requires_reason = COALESCE(${patch.printRequiresReason ?? null}, print_requires_reason),
+          cooldown_days         = COALESCE(${patch.cooldownDays ?? null}, cooldown_days),
+          archive_after_days    = COALESCE(${patch.archiveAfterDays ?? null}, archive_after_days),
+          number_format         = COALESCE(${patch.numberFormat ?? null}, number_format),
+          inbox_sla_hours       = COALESCE(${patch.inboxSlaHours ?? null}, inbox_sla_hours),
+          reminder_hours        = COALESCE(${patch.reminderHours ?? null}, reminder_hours),
+          escalation_hours      = COALESCE(${patch.escalationHours ?? null}, escalation_hours),
+          is_recurring          = COALESCE(${patch.isRecurring ?? null}, is_recurring),
+          cron_expression       = COALESCE(${patch.cronExpression ?? null}, cron_expression),
+          test_mode             = COALESCE(${patch.testMode ?? null}, test_mode),
+          is_active             = COALESCE(${patch.isActive ?? null}, is_active),
+          updated_at            = NOW()
+        WHERE id = ${templateId}
+      `);
+
+      const updated = await this.reader.getTemplateAdmin(templateId);
+      if (!updated.ok) return Err(updated.error);
+      if (!updated.data) return Err({ message: 'Yangilangan shablonni o\'qib bo\'lmadi', code: 'DB_ERROR' });
+      return Ok(updated.data);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * Soft-delete (is_active = false) — NOT a hard DELETE. cc_documents / cc_ai_sessions
+   * reference cc_document_templates(id) without ON DELETE CASCADE (only
+   * cc_rejection_reasons / cc_workflow_steps cascade), so a hard delete on any
+   * template that already has documents would throw a FK violation, and even where
+   * it wouldn't, it would destroy history. `listTemplates` (GET /cc/templates)
+   * already filters `WHERE is_active = true`, so this is exactly equivalent to
+   * "remove from the template list" without breaking existing document references.
+   */
+  async deleteTemplate(templateId: string): Promise<Result<CcTemplateAdminRow>> {
+    try {
+      const existing = await this.reader.getTemplateAdmin(templateId);
+      if (!existing.ok) return Err(existing.error);
+      if (!existing.data) return Err({ message: 'Shablon topilmadi', code: 'NOT_FOUND' });
+
+      await runQuery(sql`
+        UPDATE cc_document_templates SET is_active = false, updated_at = NOW()
+        WHERE id = ${templateId}
+      `);
+
+      const updated = await this.reader.getTemplateAdmin(templateId);
+      if (!updated.ok) return Err(updated.error);
+      if (!updated.data) return Err({ message: 'Shablonni o\'qib bo\'lmadi', code: 'DB_ERROR' });
+      return Ok(updated.data);
     } catch (e) {
       return Err({ message: (e as Error).message, code: 'DB_ERROR' });
     }

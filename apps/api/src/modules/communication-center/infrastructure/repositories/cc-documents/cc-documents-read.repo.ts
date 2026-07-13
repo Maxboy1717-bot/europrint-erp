@@ -8,7 +8,7 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { Result, Ok, Err } from '@common/result';
 import { castTo } from '@common/db-rows';
-import type { DocumentRow, TemplateRow, WorkflowStepRow } from './types';
+import type { DocumentRow, TemplateRow, WorkflowStepRow, CcTemplateAdminRow } from './types';
 
 @Injectable()
 export class CcDocumentsReadRepo {
@@ -109,6 +109,47 @@ export class CcDocumentsReadRepo {
         id: x.id, approverUserId: x.approver_user_id,
         state: x.state, rejectionStops: x.rejection_stops,
       })));
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * Full-column template read for the super_admin-only template CRUD (owner decision
+   * 2026-07-13). Distinct from `getTemplate` above (narrower projection used by the
+   * live document/workflow path) — this backs create/update/delete round-trips in
+   * CcDocumentsWriteRepo.
+   */
+  async getTemplateAdmin(templateId: string): Promise<Result<CcTemplateAdminRow | null>> {
+    try {
+      const r = await runQuery<Record<string, unknown>>(sql`
+        SELECT
+          id::text              AS id,
+          code, name_uz         AS "nameUz",
+          name_ru               AS "nameRu",
+          category,
+          ai_questions          AS "aiQuestions",
+          html_template         AS "htmlTemplate",
+          version,
+          is_active             AS "isActive",
+          default_priority      AS "defaultPriority",
+          max_file_size_mb      AS "maxFileSizeMb",
+          allowed_file_types    AS "allowedFileTypes",
+          print_requires_reason AS "printRequiresReason",
+          cooldown_days         AS "cooldownDays",
+          archive_after_days    AS "archiveAfterDays",
+          number_format         AS "numberFormat",
+          inbox_sla_hours       AS "inboxSlaHours",
+          reminder_hours        AS "reminderHours",
+          escalation_hours      AS "escalationHours",
+          is_recurring          AS "isRecurring",
+          cron_expression       AS "cronExpression",
+          test_mode             AS "testMode",
+          created_at            AS "createdAt",
+          updated_at            AS "updatedAt"
+        FROM cc_document_templates WHERE id = ${templateId} LIMIT 1
+      `);
+      return Ok(r.rows[0] ? castTo<CcTemplateAdminRow>(r.rows[0]) : null);
     } catch (e) {
       return Err({ message: (e as Error).message, code: 'DB_ERROR' });
     }

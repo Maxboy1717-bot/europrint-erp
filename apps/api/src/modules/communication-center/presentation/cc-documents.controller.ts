@@ -13,10 +13,15 @@
  *
  *   POST /api/cc/pin                       — PIN o'rnatish/o'zgartirish
  *   GET  /api/cc/pin/status                — PIN o'rnatilganmi?
+ *
+ *   GET    /api/cc/templates               — shablonlar ro'yxati (faol)
+ *   POST   /api/cc/templates               — shablon yaratish (super_admin, 2026-07-13)
+ *   PATCH  /api/cc/templates/:id           — shablon tahrirlash (super_admin, 2026-07-13)
+ *   DELETE /api/cc/templates/:id           — shablonni deaktivatsiya (super_admin, 2026-07-13)
  */
 
 import {
-  Body, Controller, ForbiddenException, Get, NotFoundException, Param, Patch, Post, UseGuards, UseInterceptors, Res, Header,
+  Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Patch, Post, UseGuards, UseInterceptors, Res, Header,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -74,6 +79,43 @@ const CancelSchema   = z.object({
 const ComplaintSchema = z.object({ reason: z.string().min(5).max(4000) });
 const PrintSchema     = z.object({ reason: z.string().min(3).max(2000) });
 const SetPinSchema    = z.object({ pin: z.string().regex(/^\d{4,8}$/) });
+
+// ── Template admin schemas (owner decision 2026-07-13: super_admin only) ───
+// Field shape mirrors cc_document_templates columns (verified live via \d) and
+// AiQuestion (cc-ai-interview.types.ts) — no fabricated/invented fields.
+const AiQuestionSchema = z.object({
+  key:      z.string().min(1).max(100),
+  qUz:      z.string().min(1),
+  qRu:      z.string().min(1),
+  required: z.boolean(),
+  type:     z.enum(['text', 'choice', 'date', 'number']),
+  choices:  z.array(z.string()).optional(),
+});
+const CreateCcTemplateSchema = z.object({
+  code:                 z.string().trim().min(1).max(60),
+  nameUz:               z.string().trim().min(1).max(200),
+  nameRu:               z.string().trim().min(1).max(200),
+  category:             z.string().trim().min(1).max(30),
+  aiQuestions:          z.array(AiQuestionSchema).optional(),
+  htmlTemplate:         z.string().optional(),
+  defaultPriority:      z.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  maxFileSizeMb:        z.number().int().positive().optional(),
+  allowedFileTypes:     z.array(z.string()).optional(),
+  printRequiresReason:  z.boolean().optional(),
+  cooldownDays:         z.number().int().nonnegative().optional(),
+  archiveAfterDays:     z.number().int().nonnegative().optional(),
+  numberFormat:         z.string().trim().min(1).max(60).optional(),
+  inboxSlaHours:        z.number().int().positive().optional(),
+  reminderHours:        z.number().int().positive().optional(),
+  escalationHours:      z.number().int().positive().optional(),
+  isRecurring:          z.boolean().optional(),
+  cronExpression:       z.string().max(60).optional(),
+  testMode:             z.boolean().optional(),
+  isActive:             z.boolean().optional(),
+});
+// version is deliberately excluded — see CreateTemplateInput doc comment
+// (cc-documents/types.ts): it is a workflow-routing key owned by a separate flow.
+const UpdateCcTemplateSchema = CreateCcTemplateSchema.partial();
 
 @ApiThrottle()
 @ApiTags('Cc Documents')
@@ -149,6 +191,42 @@ export class CcDocumentsController {
       ORDER BY code
     `);
     return r.rows;
+  }
+
+  // ── Template admin (owner decision 2026-07-13: super_admin only) ────────
+  // Method-level @Roles('super_admin') overrides the class-level allow-list
+  // (same override mechanism the 'archive' route above already relies on).
+  @ApiOperation({ summary: 'Create a document template (super_admin only)' })
+  @ApiResponse({ status: 201, description: 'Created' })
+  @ApiResponse({ status: 409, description: 'Template code already exists' })
+  @Post('templates')
+  @Roles('super_admin')
+  async createTemplate(
+    @Body(new ZodValidationPipe(CreateCcTemplateSchema)) body: z.infer<typeof CreateCcTemplateSchema>,
+  ) {
+    return unwrapOrThrow(await this.docsRepo.createTemplate(body));
+  }
+
+  @ApiOperation({ summary: 'Update a document template (super_admin only)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Template code already exists' })
+  @Patch('templates/:id')
+  @Roles('super_admin')
+  async updateTemplate(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(UpdateCcTemplateSchema)) body: z.infer<typeof UpdateCcTemplateSchema>,
+  ) {
+    return unwrapOrThrow(await this.docsRepo.updateTemplate(id, body));
+  }
+
+  @ApiOperation({ summary: 'Delete (deactivate) a document template (super_admin only)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Delete('templates/:id')
+  @Roles('super_admin')
+  async deleteTemplate(@Param('id') id: string) {
+    return unwrapOrThrow(await this.docsRepo.deleteTemplate(id));
   }
 
   @ApiOperation({ summary: 'List rejection reasons' })

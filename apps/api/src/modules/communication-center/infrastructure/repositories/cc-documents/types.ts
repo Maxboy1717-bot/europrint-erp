@@ -4,6 +4,7 @@
  */
 
 import type { BasketState, Priority, Language, WorkflowState } from '../../../domain/types';
+import type { AiQuestion } from '../../../application/cc-ai-interview.types';
 
 export interface DocumentRow {
   id:                string;
@@ -77,3 +78,67 @@ export interface CreateDraftInput {
   /** 20-cc#5: true faqat AI-intervyu orqali yaratilgan qoralamalar uchun (o'zgarmas belgi). */
   aiDraft?: boolean;
 }
+
+/**
+ * Full-column template row for the super_admin-only template CRUD (owner decision
+ * 2026-07-13: templates editable only by super_admin — see cc-documents.controller.ts
+ * createTemplate/updateTemplate/deleteTemplate). Distinct from `TemplateRow` above,
+ * which is the narrower projection used by the live document/workflow read path.
+ */
+export interface CcTemplateAdminRow {
+  id:                   string;
+  code:                 string;
+  nameUz:               string;
+  nameRu:               string;
+  category:             string;
+  aiQuestions:          AiQuestion[];
+  htmlTemplate:         string | null;
+  version:              number;
+  isActive:             boolean;
+  defaultPriority:      Priority;
+  maxFileSizeMb:        number;
+  allowedFileTypes:     string[];
+  printRequiresReason:  boolean;
+  cooldownDays:         number | null;
+  archiveAfterDays:     number | null;
+  numberFormat:         string;
+  inboxSlaHours:        number;
+  reminderHours:        number;
+  escalationHours:      number;
+  isRecurring:          boolean;
+  cronExpression:       string | null;
+  testMode:             boolean;
+  createdAt:            string;
+  updatedAt:            string;
+}
+
+/**
+ * Create-template input. Note: `version` is intentionally NOT settable here —
+ * it is a workflow-routing key (cc_workflow_steps.template_version /
+ * cc_documents.template_version, resolved live in cc-workflow.service.ts:77 at
+ * draft-creation time) and stays owned by that separate versioning flow.
+ */
+export interface CreateTemplateInput {
+  code:                 string;
+  nameUz:               string;
+  nameRu:               string;
+  category:             string;
+  aiQuestions?:         AiQuestion[];
+  htmlTemplate?:        string | null;
+  defaultPriority?:     Priority;
+  maxFileSizeMb?:       number;
+  allowedFileTypes?:    string[];
+  printRequiresReason?: boolean;
+  cooldownDays?:        number | null;
+  archiveAfterDays?:    number | null;
+  numberFormat?:        string;
+  inboxSlaHours?:       number;
+  reminderHours?:       number;
+  escalationHours?:     number;
+  isRecurring?:         boolean;
+  cronExpression?:      string | null;
+  testMode?:            boolean;
+  isActive?:            boolean;
+}
+
+export type UpdateTemplateInput = Partial<CreateTemplateInput>;
