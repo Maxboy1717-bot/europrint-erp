@@ -1693,4 +1693,182 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'sales_order_items.setup_time_minutes column (custom-job spec, owner 2026-07-13)',
     sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS setup_time_minutes INTEGER`,
   },
+  // APPROVED: owner schema-approval 2026-07-13 (Muslimbek, chat) -- QC lab-tests session model.
+  // Owner decision (given directly in chat, not a Q-35 owner-data gap): the live FE
+  // (artifacts/erp-dashboard/src/components/production/qc/LabSection.tsx, LabSchema /
+  // createLabTest mutation) records ONE lab-test SESSION -- material identity
+  // (materialName/lotNumber) + 4 SIMULTANEOUS measurements (grammatura/qalinlik/bosim/
+  // namlik) + operator -- not the generic one-parameter-per-row model qc_lab_tests was
+  // originally built for (parameter_name + a single value/unit/min_value/max_value per
+  // row). These columns are ADDITIVE alongside that pre-existing generic-model shape
+  // (Q-46) -- nothing that reads/writes parameter_name/value/unit/min_value/max_value/
+  // tested_by is touched. POST /qc/lab-tests (QcNewController.createLabTest ->
+  // QcNewService.createLabTest -> QcNewRepository.insertLabTest) now accepts and persists
+  // whichever shape the caller sends.
+  // The pre-existing `result` TEXT NOT NULL DEFAULT 'pending' column is REUSED as-is for
+  // the session model's pass/fail/conditional choice (LabSchema.result on the FE already
+  // only allows those 3 values) -- no new result/status column or enum is added, per the
+  // "check LabSection.tsx's actual result field options before deciding" instruction: it's
+  // free text already, same convention the column always had (previously server-computed
+  // pass/fail/pending from a min/max compare; now it can also arrive pre-set from the FE).
+  // parameter_name's NOT NULL constraint is dropped in the same migration below: the
+  // session model has no single "parameter name" (4 simultaneous parameters, not 1).
+  // Verified live 2026-07-13 that QcNewRepository.insertLabTest (qc-new.repository.ts) is
+  // the ONLY live write path to this table -- QcParametersService.createTest /
+  // qc-parameters.repository.ts's insertTest also reference qc_lab_tests.parameterName but
+  // are dead code (no controller route calls QcParametersService.createTest; the sibling
+  // POST /qc/tests route in qc-parameters.controller.ts calls
+  // svc.createMaterialTest() -> qc_material_tests, a completely different table) --
+  // dropping the NOT NULL constraint cannot break any live caller.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/qc-lab-tests-session-model-2026-07-13.sql.
+  {
+    name: 'qc_lab_tests.material_name column (lab-session model, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS qc_lab_tests ADD COLUMN IF NOT EXISTS material_name TEXT`,
+  },
+  {
+    name: 'qc_lab_tests.lot_number column (lab-session model, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS qc_lab_tests ADD COLUMN IF NOT EXISTS lot_number TEXT`,
+  },
+  {
+    name: 'qc_lab_tests.grammatura column (lab-session model, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS qc_lab_tests ADD COLUMN IF NOT EXISTS grammatura NUMERIC`,
+  },
+  {
+    name: 'qc_lab_tests.qalinlik column (lab-session model, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS qc_lab_tests ADD COLUMN IF NOT EXISTS qalinlik NUMERIC`,
+  },
+  {
+    name: 'qc_lab_tests.bosim column (lab-session model, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS qc_lab_tests ADD COLUMN IF NOT EXISTS bosim NUMERIC`,
+  },
+  {
+    name: 'qc_lab_tests.namlik column (lab-session model, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS qc_lab_tests ADD COLUMN IF NOT EXISTS namlik NUMERIC`,
+  },
+  {
+    name: 'qc_lab_tests.operator_name column (lab-session model, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS qc_lab_tests ADD COLUMN IF NOT EXISTS operator_name TEXT`,
+  },
+  {
+    name: 'qc_lab_tests.parameter_name drop notnull (lab-session model has no single parameter, owner 2026-07-13)',
+    sql: `ALTER TABLE qc_lab_tests ALTER COLUMN parameter_name DROP NOT NULL`,
+  },
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) -- Q-35.
+  // Owner decision 2026-07-13 (chat): GET /ai/forecast/demand wired to the real forecast
+  // engines (was a hard-gated 501 stub, apps/api/src/modules/ai/
+  // presentation/ai.controller.ts). Owner explicitly ruled the minimum-history threshold
+  // must NOT be hardcoded/asked in chat -- read via getBusinessSettingNumber() with a
+  // CRUD-editable row, same pattern as sd.full_advance_discount_pct /
+  // cc.stale_draft_archive_days. Default=10 is a starting default pending owner tuning
+  // (DemandForecastService doc-comment), not an invented magic number pulled from nowhere.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/
+  // ai-forecast-min-orders-threshold-2026-07-13.sql.
+  {
+    name: 'business_settings ai.forecast_min_orders seed (demand-forecast min-history gate, owner 2026-07-13)',
+    sql: `
+      INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.forecast_min_orders', 'Talab bashorati uchun minimal tarixiy buyurtmalar soni', 'number', 10, 'ta', 1, NULL,
+        'GET /ai/forecast/demand shu sondan kam tarixiy (oxirgi 18 oy) savdo buyurtmasi bo''lsa EMA modelni ishga tushirmaydi, o''rniga status=insufficient_history qaytaradi (DemandForecastService.getDemandForecast, owner 2026-07-13).', true)
+      ON CONFLICT (setting_key) DO NOTHING
+    `,
+  },
+  // AI Rush Orders (owner 2026-07-13, chat) — ai.controller.ts had 3 hard-gated 501 stubs
+  // (GET /ai/rush-orders, POST :id/approve, POST :id/reject; FE reference already built:
+  // artifacts/erp-dashboard/src/pages/ai-planning/RushOrderPage.tsx). sales_orders has NO
+  // rush-specific columns and its existing master_status is a 23-value order-fulfillment
+  // lifecycle (draft..cancelled, see sd-orders.ts salesOrders CHECK) — unrelated to a rush
+  // approve/reject decision, so it is NOT overloaded here (Q-46). This new table is the
+  // dedicated persistence home for that decision, one row per sales_orders.id (unique
+  // order_id — GET always wants the CURRENT status, not a history of re-decisions).
+  // Snapshot columns (standard_lead_days/rush_lead_days/surcharge_pct/feasibility_score) are
+  // captured at approve/reject time so a later business_settings tuning change never mutates
+  // the audit trail of an already-decided request (only still-virtual/pending candidates in
+  // GET are computed live from current settings). Qualification rule, surcharge %, and
+  // feasibility-scoring weights are ALL owner-tunable via business_settings CRUD (Q-40) —
+  // none hardcoded; see rush-orders.service.ts getBusinessSettingNumber() calls. FK
+  // order_id -> sales_orders(id) ON DELETE CASCADE (row is meaningless without its order,
+  // mirrors kanban_wip_overrides' card_id/column_id FK convention). requested_by/approved_by
+  // -> users(id) ON DELETE SET NULL (keep the audit row if the acting user is later removed).
+  // APPROVED: owner schema-approval 2026-07-13 (Muslimbek, chat) — AI Rush Orders.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/rush-orders-2026-07-13.sql.
+  {
+    name: 'rush_order_requests table (AI rush-order approve/reject persistence, owner 2026-07-13)',
+    sql: `CREATE TABLE IF NOT EXISTS rush_order_requests (
+      id                  SERIAL PRIMARY KEY,
+      order_id            INTEGER NOT NULL REFERENCES sales_orders(id) ON DELETE CASCADE,
+      requested_by        INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      standard_lead_days  INTEGER NOT NULL,
+      rush_lead_days      INTEGER NOT NULL,
+      surcharge_pct       NUMERIC(5,2) NOT NULL,
+      feasibility_score   INTEGER NOT NULL,
+      status              VARCHAR(20) NOT NULL DEFAULT 'pending_approval',
+      approved_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      approved_at         TIMESTAMPTZ,
+      rejected_reason     TEXT,
+      created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+      CONSTRAINT rush_order_requests_status_chk CHECK (status IN ('pending_approval','approved','rejected')),
+      CONSTRAINT rush_order_requests_feasibility_chk CHECK (feasibility_score BETWEEN 0 AND 100)
+    )`,
+  },
+  {
+    name: 'rush_order_requests.order_id unique index (one current decision per order, owner 2026-07-13)',
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_rush_order_requests_order_id ON rush_order_requests (order_id)`,
+  },
+  {
+    name: 'rush_order_requests.status index (owner 2026-07-13)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_rush_order_requests_status ON rush_order_requests (status)`,
+  },
+  // business_settings seed: 5 owner-tunable rush-order numbers (Q-40 — none hardcoded in
+  // rush-orders.service.ts; all read via getBusinessSettingNumber(key, fallback) so a missing/
+  // inactive row silently falls back instead of throwing). Defaults below are placeholders
+  // pending owner tuning through the business_settings CRUD screen, NOT researched business
+  // numbers (explicit owner instruction 2026-07-13 chat).
+  //   rush_order_max_lead_days: an order qualifies as "rush" when its requested delivery date
+  //     is within N days of order creation (N=3 default placeholder).
+  //   rush_order_surcharge_pct: extra % charged on a rush order (20 default placeholder).
+  //   rush_order_standard_lead_days: the "normal" lead time shown on the FE next to the rush
+  //     lead time for comparison (RushOrderPage.tsx standardLeadDays field) — 14 default
+  //     placeholder (distinct from rush_order_max_lead_days, which gates qualification).
+  //   rush_order_load_penalty_per_order: feasibility-score points deducted per open
+  //     production_orders-per-active-work_center ratio (5 default placeholder).
+  //   rush_order_feasibility_weight_load_pct: 0-100 weight given to the production-load
+  //     component of the feasibility score; the remaining (100-weight) goes to the
+  //     lead-time-margin component (50/50 default placeholder split).
+  // APPROVED: owner schema-approval 2026-07-13 (Muslimbek, chat).
+  {
+    name: 'business_settings ai.rush_order_max_lead_days seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'rush_order_max_lead_days', 'Rush buyurtma - maksimal muddat (kun)', 'days', 3, 'kun', 1, 30,
+        'Buyurtma yaratilgan kundan talab qilingan yetkazib berish sanasigacha shu kundan kam/teng bo''lsa, "rush" (tezkor) deb hisoblanadi. Placeholder default=3, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.rush_order_surcharge_pct seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'rush_order_surcharge_pct', 'Rush buyurtma - qo''shimcha to''lov (%)', 'percent', 20, '%', 0, 100,
+        'Rush deb tasdiqlangan buyurtmaga qo''llaniladigan qo''shimcha to''lov foizi. Placeholder default=20, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.rush_order_standard_lead_days seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'rush_order_standard_lead_days', 'Standart ishlab chiqarish muddati (kun)', 'days', 14, 'kun', 1, NULL,
+        'Rush bo''lmagan buyurtma uchun odatiy ishlab chiqarish muddati - RushOrderPage taqqoslash uchun ko''rsatadi. Placeholder default=14, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.rush_order_load_penalty_per_order seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'rush_order_load_penalty_per_order', 'Rush feasibility - yuklama jarimasi', 'number', 5, NULL, 0, 100,
+        'Har bir ochiq production_orders / faol work_centers nisbati birligi uchun feasibility balidan ayiriladigan ball. Placeholder default=5, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.rush_order_feasibility_weight_load_pct seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'rush_order_feasibility_weight_load_pct', 'Rush feasibility - yuklama og''irligi (%)', 'percent', 50, '%', 0, 100,
+        'Feasibility skorida ishlab chiqarish yuklamasi komponentining og''irligi (%); qolgan qism muddat-zaxira komponentiga beriladi. Placeholder default=50 (teng bo''lingan), egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];
