@@ -1501,4 +1501,34 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         )
     `,
   },
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35. CC-COMPLETE-FRESH-
+  // ANALYSIS-2026-07-11.md item #12/#45/#50 ("Outbox + Finance reversal"): only the
+  // `document_hashes` half is built here — SHA-256 fingerprint of the final signed PDF export
+  // (CcPdfService.generate()) so Finance can verify byte-for-byte integrity before acting on a
+  // reversal. Distinct from the existing cc_approvals.signature_hash (cc-pin.service.ts:69-73)
+  // which proves a PIN-signed approval STEP happened, not that the rendered PDF bytes are
+  // unaltered. The `cc_outbox` half of the same audit item is INTENTIONALLY SKIPPED — verified
+  // live 2026-07-13 this repo already has a generic transactional-outbox (`domain_events` +
+  // OutboxRepository/OutboxEventWriter/OutboxPublisher, apps/api/src/modules/shared/outbox/,
+  // commit 21d775de 2026-06-26) that already durably captures CC's own eventBus.publish()
+  // calls (CcSpawnRequestedEvent — cc-webhook.controller.ts:105; CcDocumentFullyApprovedEvent —
+  // cc-workflow.service.ts:279) with zero extra code. A new `cc_outbox` would duplicate
+  // `domain_events` exactly as the sibling same-day migration qc-brak-snapshot-2026-07-11.sql:
+  // 6-10 already flagged for QC. Also: cc_documents.basket_state already has a live value named
+  // 'outbox' (Inbox/Pending/Outbox 3-basket UI) — naming-collision risk. Human-readable mirror:
+  // apps/api/src/shared/db/migrations/cc-document-hashes-2026-07-13.sql.
+  {
+    name: 'document_hashes table (PDF integrity hash for Finance-reversal check, owner 2026-07-11 Q-35)',
+    sql: `CREATE TABLE IF NOT EXISTS document_hashes (
+      id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      document_id   UUID NOT NULL REFERENCES cc_documents(id) ON DELETE CASCADE,
+      hash          VARCHAR(128) NOT NULL,
+      algorithm     VARCHAR(20) NOT NULL DEFAULT 'sha256',
+      created_at    TIMESTAMP NOT NULL DEFAULT now()
+    )`,
+  },
+  {
+    name: 'document_hashes.document_id index',
+    sql: `CREATE INDEX IF NOT EXISTS idx_document_hashes_document_id ON document_hashes (document_id)`,
+  },
 ];

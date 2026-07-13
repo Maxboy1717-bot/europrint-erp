@@ -224,3 +224,8 @@ export {
 
 // schema-outbox: Domain events outbox table (PA0-6)
 export { domain_events } from './schema-outbox';
+
+// schema-cc-document-hashes: CC document PDF integrity hash (Q-35, owner 2026-07-11,
+// CC-COMPLETE-FRESH-ANALYSIS item #12/#45/#50 "document_hashes" half; schema-only draft,
+// no dispatcher wired yet)
+export { document_hashes } from './schema-cc-document-hashes';
