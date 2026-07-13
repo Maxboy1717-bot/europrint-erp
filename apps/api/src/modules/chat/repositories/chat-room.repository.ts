@@ -194,11 +194,13 @@ export class ChatRoomRepository {
   // (basket_owner_user_id). Raw SQL o'qish (cross-modul jadval; yozish yo'q).
   async findRelatedTasks(userId: number): Promise<Result<Array<{ kind: string; id: string; label: string; status: string | null }>>> {
     return safeCall(async () => {
+      // NB: neither kanban_cards nor cc_documents has a `status` column in the
+      // live DB → NULL::text placeholder (label + kind are what the panel needs).
       const res = await db.execute(sql`
-        SELECT 'kanban' AS kind, id::text AS id, COALESCE(title, '') AS label, status::text AS status
+        SELECT 'kanban' AS kind, id::text AS id, COALESCE(title, '') AS label, NULL::text AS status
           FROM kanban_cards WHERE owner_user_id = ${userId}
         UNION ALL
-        SELECT 'cc' AS kind, id::text AS id, COALESCE(document_number, '') AS label, status::text AS status
+        SELECT 'cc' AS kind, id::text AS id, COALESCE(document_number, '') AS label, NULL::text AS status
           FROM cc_documents WHERE basket_owner_user_id = ${userId}
         LIMIT 40`);
       const rows = (res as unknown as { rows?: Array<{ kind: string; id: string; label: string; status: string | null }> }).rows ?? [];
