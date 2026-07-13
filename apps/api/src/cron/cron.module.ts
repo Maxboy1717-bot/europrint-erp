@@ -9,6 +9,7 @@ import { QcInternalAuditCron } from './qc-internal-audit.cron'
 import { QcInternalAuditService } from '../modules/qc/application/qc-internal-audit.service'
 import { QcInternalAuditRepository } from '../modules/qc/infrastructure/repositories/qc-internal-audit.repo'
 import { ScheduleModule } from '@nestjs/schedule'
+import { CqrsModule } from '@nestjs/cqrs'
 import { TelegramModule } from '../telegram/telegram.module'
 import { QueueModule } from '../modules/queue/queue.module'
 import { NotificationsModule } from '../modules/notifications/notifications.module'
@@ -83,7 +84,7 @@ import { HrAttentionDigestCron } from './hr-attention-digest.cron'
 import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.repository'
 
 @Module({
-  imports: [ScheduleModule.forRoot(), TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule],
+  imports: [ScheduleModule.forRoot(), CqrsModule, TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule],
   providers: [
     // 06-sd #27 — nofaol mijoz cron (har kuni 03:30) + manba service/repo
     CustomerInactivityCron,
