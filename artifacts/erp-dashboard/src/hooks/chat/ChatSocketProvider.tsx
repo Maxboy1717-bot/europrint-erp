@@ -59,6 +59,17 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
     s.on("connect", () => {
       setConnected(true);
       s.emit("get_rooms");
+      // Reconnect catch-up: this handler fires on the initial connect AND on
+      // every reconnect. If a room is open, re-fetch its recent messages so
+      // anything that arrived during a disconnect window is pulled in (the
+      // `messages_list` handler replaces the room list with fresh server
+      // state — no gap, no duplicates) and re-mark it read.
+      const activeRoomId = useChatStore.getState().activeRoomId;
+      if (activeRoomId) {
+        const rId = Number(activeRoomId) || activeRoomId;
+        s.emit("get_messages", { roomId: rId });
+        s.emit("mark_read", { roomId: rId });
+      }
     });
 
     s.on("disconnect", () => {
