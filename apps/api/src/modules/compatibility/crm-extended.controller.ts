@@ -65,13 +65,18 @@ export class CrmExtendedCompatController {
     return unwrapOrInternal(await this.svc.createTask(body));
   }
 
-  @Post(['chat', 'ai/extended/chat/respond'])
+  // Alias 'ai/extended/chat/respond' removed — it collided with the canonical
+  // crm/ai controller (crm-ai-extended.controller.ts:231), which owns that path and
+  // returns the honest 501 (Q-40). The collision crashed Fastify at boot.
+  @Post('chat')
   @HttpCode(HttpStatus.OK)
   async processChat(@Body() body: CrmChatDto) {
     return unwrapOrInternal(await this.svc.processChat(body));
   }
 
-  @Post(['auto-tasks', 'ai/extended/auto-tasks/create'])
+  // Alias 'ai/extended/auto-tasks/create' removed — collided with the canonical
+  // crm/ai controller (crm-ai-extended.controller.ts:119).
+  @Post('auto-tasks')
   @HttpCode(HttpStatus.OK)
   async runAutoTasks(@Body() body: CrmAutoTasksDto) {
     return unwrapOrInternal(await this.svc.runAutoTasks(body));
@@ -83,7 +88,9 @@ export class CrmExtendedCompatController {
     return unwrapOrInternal(await this.svc.churnAnalysis(body));
   }
 
-  @Post(['ai/voice', 'ai/extended/voice/analyze-call'])
+  // Alias 'ai/extended/voice/analyze-call' removed — collided with the canonical
+  // crm/ai controller (crm-ai-extended.controller.ts:223).
+  @Post('ai/voice')
   @HttpCode(HttpStatus.OK)
   async processVoice(@Body() body: CrmVoiceDto) {
     return unwrapOrInternal(await this.svc.processVoice(body));
