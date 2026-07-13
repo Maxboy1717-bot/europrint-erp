@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useRef, useState, ReactNode } fro
 import { io } from "socket.io-client";
 import { useChatStore, ChatRoom, ChatMessage, ChatReaction } from "@/store/chatStore";
 import { useAuth } from "@/hooks/useAuth";
+import { safeStorage } from "@/lib/safeStorage";
 import { setSharedSocket } from "./useChatSocket";
 
 const ChatSocketContext = createContext<{ connected: boolean }>({ connected: false });
@@ -19,18 +20,21 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // Auth: the JWT access token (same one used by REST) is passed via the
+    // socket handshake `auth.token`. `ChatGateway.handleConnection` reads
+    // `handshake.auth.token` (NOT a cookie), identical to the working
+    // `use-kanban-realtime.ts` / RecruitmentGateway pattern. Passing only a
+    // cookie left the handshake tokenless and the gateway disconnected every
+    // client — the module's P0 auth-drift bug.
+    const token = safeStorage.getItem("access_token");
+    if (!token) return;
+
     const wsUrl = `${window.location.protocol}//${window.location.host}`;
     const basePath = (import.meta.env.BASE_URL ?? "/erp-dashboard/").replace(/\/$/, "");
     const socketPath = `${basePath}/socket.io`;
 
-    // Socket.io: auth is delivered via the httpOnly access_token cookie
-    // attached to the WebSocket handshake when `withCredentials: true`.
-    // The server gateway extracts it via @WsCookies() (or equivalent) and
-    // performs the same JWT verification as REST routes. We keep the
-    // `auth` callback as a forward-compat hook for clients still passing
-    // a token — both flows are valid during the migration.
     const s = io(`${wsUrl}/chat`, {
-      withCredentials: true,
+      auth: { token },
       transports: ["websocket", "polling"],
       path: socketPath,
       reconnection: true,
