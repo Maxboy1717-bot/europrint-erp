@@ -104,6 +104,41 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
       `);
       const orderId = or.rows[0]?.['id'] != null ? parseInt(String(or.rows[0]['id']), 10) : null;
 
+      // 2.5. Copy the quotation's bespoke-job line items across (owner decision 2026-07-13,
+      // chat — "Mahsulot vs Buyurtma zanjiri"). sd_quotation_items has no product_id (this shop
+      // quotes custom jobs by physical spec, not catalog SKUs), so product_id stays NULL on the
+      // order line; the spec columns carry the job description across instead. Mirrors
+      // saveItems()'s item_number convention (create-order.handler.ts's canonical create path).
+      if (orderId) {
+        const qItems = await runQuery<Record<string, unknown>>(sql`
+          SELECT * FROM sd_quotation_items WHERE quotation_id = ${id} AND deleted_at IS NULL ORDER BY id
+        `);
+        for (let i = 0; i < qItems.rows.length; i++) {
+          const qi = qItems.rows[i];
+          const itemNumber = String((i + 1) * 10).padStart(6, '0');
+          const qty = Number(qi['quantity'] ?? 0);
+          const price = Number(qi['unit_price'] ?? 0);
+          await runQuery(sql`
+            INSERT INTO sales_order_items
+              (sales_order_id, item_number, quotation_item_id, description, order_quantity, open_quantity,
+               unit, net_price, total_price, product_type, paper_type, thickness_mm, length_mm, width_mm,
+               height_mm, print_colors, lamination, perforation, special_coating, is_new_die, printing_method,
+               machine_format, load_capacity_kg, core_diameter_mm, gilza_diameter_mm, roll_length_m,
+               kashirovka, print_sides, layer_count, setup_time_minutes, created_at)
+            VALUES
+              (${orderId}, ${itemNumber}, ${qi['id']}, ${qi['product_type'] ?? 'Maxsus buyurtma'}, ${qty}, ${qty},
+               'dona', ${price}, ${qty * price}, ${qi['product_type'] ?? null}, ${qi['paper_type'] ?? null},
+               ${qi['thickness_mm'] ?? null}, ${qi['length_mm'] ?? null}, ${qi['width_mm'] ?? null},
+               ${qi['height_mm'] ?? null}, ${qi['print_colors'] ?? null}, ${qi['lamination'] ?? null},
+               ${qi['perforation'] ?? null}, ${qi['special_coating'] ?? null}, ${qi['is_new_die'] ?? null},
+               ${qi['printing_method'] ?? null}, ${qi['machine_format'] ?? null}, ${qi['load_capacity_kg'] ?? null},
+               ${qi['core_diameter_mm'] ?? null}, ${qi['gilza_diameter_mm'] ?? null}, ${qi['roll_length_m'] ?? null},
+               ${qi['kashirovka'] ?? null}, ${qi['print_sides'] ?? null}, ${qi['layer_count'] ?? null},
+               ${qi['setup_time_minutes'] ?? null}, NOW())
+          `);
+        }
+      }
+
       // 3. Create a contract linked to the new order
       const contractNumber = `CNT-${Date.now()}`;
       if (orderId) {

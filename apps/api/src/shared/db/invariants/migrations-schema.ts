@@ -1583,4 +1583,114 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
     name: 'notifications.category_code column (notification-category taxonomy soft-reference, owner 2026-07-13)',
     sql: `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS category_code TEXT`,
   },
+  // Owner decision 2026-07-13 (chat) — "Mahsulot vs Buyurtma zanjiri" gap: sales_order_items
+  // only has product_id (finished-goods catalog SKU), but sd_quotation_items describes a
+  // bespoke print job by physical spec (paper_type, dimensions, print_colors, lamination, ...)
+  // with NO product_id at all — this print shop quotes custom jobs, not catalog SKUs. Because
+  // of this mismatch, the 2 quotation-to-order conversion paths (approveQuotation() in
+  // drizzle-quotation.repo.ts, convertQuotationToOrder() in sd-quotations.repository.ts) could
+  // only ever insert the sales_orders HEADER row — they had no column to carry the quotation's
+  // line-item spec into, so converted orders silently lost their entire product breakdown.
+  // These columns mirror sd_quotation_items' physical-spec columns 1:1 (types matched live via
+  // psql \d sd_quotation_items 2026-07-13) so a conversion can copy the spec across with
+  // product_id left NULL (the order line is "custom, no catalog SKU" — same convention as any
+  // other nullable optional column on this table). Quotation-internal PRICING breakdown columns
+  // (cost_price/paper_cost/production_cost/print_cost/delivery_cost/die_cost) are deliberately
+  // NOT mirrored — the order line's existing net_price/total_price already carry the final
+  // agreed price; those are quotation-margin-calculation internals, not order-fulfillment data.
+  // quotation_item_id is an additional soft-reference (no FK, taxonomy_entries-style convention
+  // already used elsewhere in this codebase) back to sd_quotation_items.id, so a re-run of the
+  // conversion can detect already-copied lines instead of duplicating them. All nullable,
+  // additive — existing product_id-based order-item rows and the canonical manual create-order
+  // flow (create-order.handler.ts's saveItems(), which only ever sets product_id/description/
+  // qty/unit/price) are completely unaffected (Q-46).
+  // Human-readable mirror: apps/api/src/shared/db/migrations/sales-order-items-custom-spec-2026-07-13.sql.
+  {
+    name: 'sales_order_items.quotation_item_id column (traceback to sd_quotation_items, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS quotation_item_id INTEGER`,
+  },
+  {
+    name: 'sales_order_items.product_type column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS product_type VARCHAR(100)`,
+  },
+  {
+    name: 'sales_order_items.paper_type column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS paper_type VARCHAR(100)`,
+  },
+  {
+    name: 'sales_order_items.thickness_mm column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS thickness_mm NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.length_mm column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS length_mm NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.width_mm column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS width_mm NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.height_mm column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS height_mm NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.print_colors column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS print_colors INTEGER`,
+  },
+  {
+    name: 'sales_order_items.lamination column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS lamination BOOLEAN`,
+  },
+  {
+    name: 'sales_order_items.perforation column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS perforation BOOLEAN`,
+  },
+  {
+    name: 'sales_order_items.special_coating column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS special_coating BOOLEAN`,
+  },
+  {
+    name: 'sales_order_items.is_new_die column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS is_new_die BOOLEAN`,
+  },
+  {
+    name: 'sales_order_items.printing_method column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS printing_method VARCHAR(100)`,
+  },
+  {
+    name: 'sales_order_items.machine_format column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS machine_format VARCHAR(100)`,
+  },
+  {
+    name: 'sales_order_items.load_capacity_kg column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS load_capacity_kg NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.core_diameter_mm column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS core_diameter_mm NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.gilza_diameter_mm column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS gilza_diameter_mm NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.roll_length_m column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS roll_length_m NUMERIC`,
+  },
+  {
+    name: 'sales_order_items.kashirovka column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS kashirovka BOOLEAN`,
+  },
+  {
+    name: 'sales_order_items.print_sides column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS print_sides SMALLINT`,
+  },
+  {
+    name: 'sales_order_items.layer_count column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS layer_count INTEGER`,
+  },
+  {
+    name: 'sales_order_items.setup_time_minutes column (custom-job spec, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS sales_order_items ADD COLUMN IF NOT EXISTS setup_time_minutes INTEGER`,
+  },
 ];
