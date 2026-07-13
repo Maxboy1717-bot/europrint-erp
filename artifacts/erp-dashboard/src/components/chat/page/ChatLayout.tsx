@@ -439,7 +439,7 @@ export function ChatLayout() {
       {/* Right panel: employee profile — ALWAYS shown for a 1:1 room (Crisp/
           Intercom 3-column layout, no toggle needed). */}
       {activeRoom && !threadRootMsg && isDirectRoom && panelEmployee && (
-        <aside className="hidden lg:flex w-full sm:w-[380px] flex-shrink-0 border-l border-[var(--ep-border)] flex-col">
+        <aside className="hidden md:flex w-full sm:w-[340px] lg:w-[380px] flex-shrink-0 border-l border-[var(--ep-border)] flex-col">
           <ChatEmployeeInfoPanel employee={panelEmployee} roomId={String(activeRoom.id)} onClose={() => setInfoOpen(false)} />
         </aside>
       )}
