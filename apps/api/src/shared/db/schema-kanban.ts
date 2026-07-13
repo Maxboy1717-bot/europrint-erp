@@ -48,6 +48,10 @@ export const kanbanCards = pgTable('kanban_cards', {
   progress:            numeric('progress'),                              // Tiraj/progress (percent or produced-vs-ordered count; owner didn't specify unit, Q-40)
   station_operator_id: integer('station_operator_id'),                   // stansiya-operator — FK -> work_centers.id
   comment_flag:        boolean('comment_flag').notNull().default(false), // Izoh-belgi ("has important note")
+  // Owner 2026-07-13: confidential-card flag — hides card from the general board view
+  // (kanban-visibility.helper.ts kanbanConfidentialClause); still visible to
+  // owner_user_id/assigner_user_id/privileged roles.
+  is_confidential:  boolean('is_confidential').notNull().default(false),
   sort_order:       integer('sort_order').notNull().default(0),
   created_at:       timestamp('created_at').notNull().defaultNow(),
   updated_at:       timestamp('updated_at').notNull().defaultNow(),

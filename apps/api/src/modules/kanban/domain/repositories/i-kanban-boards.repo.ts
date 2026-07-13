@@ -52,6 +52,8 @@ export interface KanbanCard {
   station_operator_id: number | null;
   /** Owner 4-field request (2026-07-13): Izoh-belgi — "has important note" flag. */
   comment_flag: boolean;
+  /** Owner 2026-07-13: hide from the general board (kanban-visibility.helper.ts kanbanConfidentialClause). */
+  is_confidential: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -96,6 +98,8 @@ export interface CreateCardInput {
   station_operator_id: string | null;
   /** Owner 4-field request (2026-07-13): Izoh-belgi flag. DB column is NOT NULL DEFAULT false. */
   comment_flag: boolean;
+  /** Owner 2026-07-13: confidential-card flag; null -> DB default (false). */
+  is_confidential: boolean | null;
 }
 
 export interface UpdateCardInput {
@@ -119,6 +123,8 @@ export interface UpdateCardInput {
   station_operator_id: number | null;
   /** Owner 4-field request (2026-07-13): Izoh-belgi flag. null = no change (COALESCE). */
   comment_flag: boolean | null;
+  /** Owner 2026-07-13: null = leave unchanged (COALESCE), else set exactly. */
+  is_confidential: boolean | null;
 }
 
 export interface MoveCardInput {

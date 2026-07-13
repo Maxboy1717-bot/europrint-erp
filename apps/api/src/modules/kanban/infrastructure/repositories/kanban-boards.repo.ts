@@ -30,7 +30,7 @@ import {
 import { kanbanBoards } from '../kanban-tables';
 import { KanbanColumnsRepository } from './kanban-columns.repo';
 import { KanbanCardsRepository } from './kanban-cards.repo';
-import { hasFullKanbanVisibility, kanbanCardVisibilityPredicate } from '../kanban-visibility.helper';
+import { hasFullKanbanVisibility, kanbanCardVisibilityPredicate, kanbanConfidentialClause } from '../kanban-visibility.helper';
 
 @Injectable()
 export class KanbanBoardsRepository implements IKanbanBoardsRepo {
@@ -76,6 +76,13 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
       const visible = viewer && !hasFullKanbanVisibility(viewer.role)
         ? kanbanCardVisibilityPredicate(Number(viewer.id))
         : sql`TRUE`;
+      // Confidential-card gate (owner decision 2026-07-13): kc.is_confidential=true
+      // kartalar umumiy boarddan yashiriladi — faqat egasi/topshiruvchisi yoki
+      // imtiyozli rol ko'radi. Viewer konteksti yo'q holatda xavfsiz-tomonga
+      // (fail-safe) — maxfiy kartalar yashiriladi.
+      const confidentialOk = viewer
+        ? kanbanConfidentialClause(Number(viewer.id), viewer.role)
+        : sql`kc.is_confidential = false`;
 
       const [columnsRows, cardsRows] = await Promise.all([
         db.execute<Record<string, unknown>>(sql`
@@ -86,7 +93,7 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
           SELECT kc.id, kc.board_id, kc.column_id, kc.title, kc.description, kc.priority, kc.due_date,
                  kc.sort_order, kc.owner_user_id, kc.related_type, kc.related_id, kc.related_ref, kc.source,
                  kc.start_date, kc.estimated_time, kc.accepted_at, kc.completed_at,
-                 kc.rating, kc.completion_report,
+                 kc.rating, kc.completion_report, kc.is_confidential,
                  kc.created_at, kc.updated_at,
                  (SELECT row_to_json(t) FROM kanban_time_tracks t
                   WHERE t.card_id = kc.id::text AND t.is_running = true
@@ -109,7 +116,7 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
                   WHERE kf.card_id = kc.id::text AND kf.deleted_at IS NULL
                  ) AS files_count
           FROM kanban_cards kc
-          WHERE kc.board_id = ${boardId} AND kc.deleted_at IS NULL AND ${visible}
+          WHERE kc.board_id = ${boardId} AND kc.deleted_at IS NULL AND ${visible} AND ${confidentialOk}
           ORDER BY kc.sort_order ASC
         `),
       ]);

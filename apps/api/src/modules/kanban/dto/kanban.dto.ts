@@ -56,6 +56,9 @@ export const KanbanAddCardSchema = z.object({
   station_operator_id: z.string().optional(),
   commentFlag:         z.boolean().optional(),
   comment_flag:        z.boolean().optional(),
+  // Owner 2026-07-13: confidential-card flag (hides from the general board — kanban-visibility.helper.ts).
+  isConfidential:   z.boolean().optional(),
+  is_confidential:  z.boolean().optional(),
 });
 export type KanbanAddCardDto = z.infer<typeof KanbanAddCardSchema>;
 
@@ -94,6 +97,9 @@ export const KanbanUpdateCardSchema = z.object({
   station_operator_id:  z.string().nullable().optional(),
   commentFlag:          z.boolean().nullable().optional(),
   comment_flag:         z.boolean().nullable().optional(),
+  // Owner 2026-07-13: confidential-card flag (hides from the general board — kanban-visibility.helper.ts).
+  isConfidential:     z.boolean().optional(),
+  is_confidential:    z.boolean().optional(),
 });
 export type KanbanUpdateCardDto = z.infer<typeof KanbanUpdateCardSchema>;
 

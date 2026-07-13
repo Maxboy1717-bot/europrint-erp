@@ -81,3 +81,32 @@ export function kanbanCardVisibilityPredicate(viewerUserId: number): SQL {
     )
   )`;
 }
+
+/**
+ * Confidential-card gate (owner decision 2026-07-13): `kanban_cards.is_confidential`
+ * exists precisely because confidential tasks/discipline records must stay OFF the
+ * general Kanban board (discipline_records is already a separate table for that
+ * concern — this closes the remaining "no per-card confidential flag" gap).
+ *
+ * A card with `is_confidential = true` is hidden from the board UNLESS the viewer is:
+ *   1. The card's owner (`owner_user_id`) or assigner (`assigner_user_id`) — "o'zining
+ *      maxfiy vazifasi" always stays visible to the two people who created/hold it.
+ *   2. A privileged role (`hasFullKanbanVisibility` — super_admin/director), same
+ *      privileged-role set already used by {@link kanbanCardVisibilityPredicate}'s
+ *      org-hierarchy bypass.
+ *
+ * This is INDEPENDENT of {@link kanbanCardVisibilityPredicate} — department-head or
+ * same-department "hamkasb" visibility does NOT by itself unlock a confidential card.
+ * Callers AND the two predicates together.
+ *
+ * `kanban_cards` jadvali `kc` alias bilan so'rovga qo'shilgan bo'lishi shart (mirrors
+ * kanbanCardVisibilityPredicate's alias contract).
+ */
+export function kanbanConfidentialClause(viewerUserId: number, role: string | undefined | null): SQL {
+  if (hasFullKanbanVisibility(role)) return sql`TRUE`;
+  return sql`(
+    kc.is_confidential = false
+    OR kc.owner_user_id = ${viewerUserId}
+    OR kc.assigner_user_id = ${viewerUserId}
+  )`;
+}

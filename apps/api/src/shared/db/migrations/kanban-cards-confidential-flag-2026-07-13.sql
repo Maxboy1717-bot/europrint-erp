@@ -1,0 +1,36 @@
+-- APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35
+-- Kanban — confidential card flag.
+--
+-- Owner decision (2026-07-13 chat): confidential tasks + discipline records live in a
+-- SEPARATE table (discipline_records — already true, confirmed separate live) and must
+-- NOT be visible on the general Kanban board. The missing piece: kanban_cards had NO
+-- confidential-type column at all, so there was no way to flag an individual card as
+-- "hide from the general board view".
+--
+-- Additive, NOT NULL DEFAULT false — every existing row becomes non-confidential on
+-- migrate (Q-46, zero regression; nothing that was visible becomes hidden by default).
+--
+-- Wired:
+--  - kanban-visibility.helper.ts: new kanbanConfidentialClause(viewerUserId, role) —
+--    mirrors the existing hasFullKanbanVisibility/kanbanCardVisibilityPredicate
+--    privileged-role pattern already used for org-scheme card visibility in this module.
+--    A card with is_confidential=true is hidden from the general board UNLESS the viewer
+--    is the card's owner (owner_user_id), its assigner (assigner_user_id), or holds a
+--    privileged role (super_admin/director via hasFullKanbanVisibility). This predicate is
+--    ANDed with the existing org-visibility predicate — department-head/colleague
+--    visibility does NOT by itself unlock a confidential card.
+--  - kanban-boards.repo.ts getBoardById(): board-detail card query (board+columns+cards,
+--    the main board-view endpoint GET /kanban/boards/:boardId) now also selects
+--    kc.is_confidential and ANDs in the confidential gate (fail-safe hidden when no
+--    viewer context).
+--  - kanban-cards.controller.ts cardVisibilityClause(): shared by getBoardCards()
+--    (GET /kanban/boards/:boardId/cards) and getAllCards() (GET /kanban/cards) — both
+--    SELECT kc.* so is_confidential is included automatically once ANDed with the gate.
+--  - kanban.dto.ts: KanbanAddCardSchema / KanbanUpdateCardSchema gain optional
+--    isConfidential / is_confidential boolean fields (settable on create/update).
+--  - kanban-boards.service.ts addCard()/updateCard(): map the DTO field through to the
+--    repo input (updateCard uses the existing "key absent -> leave unchanged" convention).
+--  - kanban-cards.repo.ts (KanbanCardsRepository) addCard()/updateCard(): raw-SQL
+--    INSERT/UPDATE now write is_confidential (COALESCE-preserve on update, same pattern
+--    as every other optional column in that method).
+ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS is_confidential BOOLEAN NOT NULL DEFAULT false;

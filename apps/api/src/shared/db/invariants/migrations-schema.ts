@@ -1069,4 +1069,21 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         )
     `,
   },
+  // Owner decision 2026-07-13 (chat): confidential kanban cards. discipline_records is
+  // already a SEPARATE table (confirmed live) for confidential tasks/discipline records —
+  // the missing piece was that kanban_cards had NO confidential-type column at all, so a
+  // card could never be flagged "hide from the general board". Additive, NOT NULL DEFAULT
+  // false — every existing row becomes non-confidential (Q-46, zero regression). Wired in
+  // kanban-visibility.helper.ts (new kanbanConfidentialClause, same privileged-role pattern
+  // as the existing hasFullKanbanVisibility/kanbanCardVisibilityPredicate org-visibility
+  // gate) + kanban-boards.repo.ts getBoardById() + kanban-cards.controller.ts
+  // cardVisibilityClause() (getBoardCards/getAllCards) + kanban.dto.ts
+  // (KanbanAddCardSchema/KanbanUpdateCardSchema) + kanban-boards.service.ts
+  // addCard()/updateCard() + kanban-cards.repo.ts addCard()/updateCard().
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/kanban-cards-confidential-flag-2026-07-13.sql.
+  {
+    name: 'kanban_cards.is_confidential column (confidential-card visibility gap, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS is_confidential BOOLEAN NOT NULL DEFAULT false`,
+  },
 ];

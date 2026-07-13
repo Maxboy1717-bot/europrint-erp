@@ -107,6 +107,14 @@ export class KanbanBoardsService {
           ? '__CLEAR__'                // null/'' → sentinel → DB da NULL
           : String(ownerRaw);          // qiymat bor → normal string
 
+    // is_confidential (owner 2026-07-13): kalit body da yo'q bo'lsa o'zgarmaydi (COALESCE);
+    // bor bo'lsa (hatto false bo'lsa ham) aynan shu qiymat yoziladi — owner_user_id'dagi
+    // NULL-clear sentinel kerak emas, chunki ustun NOT NULL DEFAULT false (bekor qilish = false).
+    const confidentialRaw = 'isConfidential' in body ? body.isConfidential
+                           : 'is_confidential' in body ? body.is_confidential
+                           : undefined;
+    const isConfidential: boolean | null = confidentialRaw === undefined ? null : Boolean(confidentialRaw);
+
     return this.boardsRepo.updateCard(id, {
       title:               str(body.title),
       description:         body.description !== undefined ? str(body.description) : null,
@@ -126,6 +134,7 @@ export class KanbanBoardsService {
       progress:             num(body.progress),
       station_operator_id:  num(body.stationOperatorId ?? body.station_operator_id),
       comment_flag:         bool(body.commentFlag ?? body.comment_flag),
+      is_confidential:      isConfidential,
     });
   }
 
@@ -353,6 +362,8 @@ export class KanbanBoardsService {
         ? String(rawStationOperator) : null;
       const rawCommentFlag = body.commentFlag ?? body.comment_flag;
       const commentFlag = typeof rawCommentFlag === 'boolean' ? rawCommentFlag : false;
+      const rawConfidential = body.isConfidential ?? body.is_confidential;
+      const isConfidential = rawConfidential != null ? Boolean(rawConfidential) : null;
 
       // EP-KAN §15 #29 (C29): kunlik "Shoshilinch" (urgent) limiti. Bir topshiruvchi
       // (assigner) bir kunda ko'pi bilan KANBAN_MAX_URGENT_PER_DAY ta urgent karta
@@ -377,6 +388,7 @@ export class KanbanBoardsService {
         progress,
         station_operator_id: stationOperatorId,
         comment_flag: commentFlag,
+        is_confidential: isConfidential,
       });
 
       if (result.ok && columnId && result.data?.id) {

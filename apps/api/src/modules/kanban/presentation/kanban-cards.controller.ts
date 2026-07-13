@@ -26,7 +26,7 @@ import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { AuthenticatedUser } from '@common/types/user.types';
-import { hasFullKanbanVisibility, kanbanCardVisibilityPredicate } from '../infrastructure/kanban-visibility.helper';
+import { hasFullKanbanVisibility, kanbanCardVisibilityPredicate, kanbanConfidentialClause } from '../infrastructure/kanban-visibility.helper';
 
 type Rows = { rows?: unknown[] };
 const ChatFileSchema = z.object({
@@ -107,7 +107,12 @@ export class KanbanCardsController {
   // bo'limi" doirasida (kanbanCardVisibilityPredicate, EP-KAN-084).
   private cardVisibilityClause(user: AuthenticatedUser): SQL {
     if (hasFullKanbanVisibility(user?.role)) return sql`TRUE`;
-    return kanbanCardVisibilityPredicate(Number(user?.id ?? 0));
+    // Confidential-card gate (owner decision 2026-07-13): AND the org-visibility
+    // predicate with kanbanConfidentialClause so an is_confidential=true card stays
+    // hidden from the general board unless the viewer is its owner/assigner (the
+    // privileged-role bypass above already covers super_admin/director).
+    const viewerId = Number(user?.id ?? 0);
+    return sql`(${kanbanCardVisibilityPredicate(viewerId)}) AND (${kanbanConfidentialClause(viewerId, user?.role)})`;
   }
 
   @Get('boards/:boardId/cards')
