@@ -138,4 +138,7 @@ export class ChatService {
   /** Returns users with status=ONLINE from DB (survives server restart). */
   getOnlineUsers() { return this.presenceRepo.findOnlineUsers(); }
   getUserPresence(userId: string) { return this.presenceRepo.findPresence(userId); }
+  listRoomTags(roomId: number) { return this.roomRepo.listRoomTags(roomId); }
+  addRoomTag(roomId: number, tag: string, createdBy: number) { return this.roomRepo.addRoomTag(roomId, tag, createdBy); }
+  removeRoomTag(roomId: number, tag: string) { return this.roomRepo.removeRoomTag(roomId, tag); }
 }

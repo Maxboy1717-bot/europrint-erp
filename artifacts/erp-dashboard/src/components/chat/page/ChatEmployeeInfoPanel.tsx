@@ -9,12 +9,14 @@
  */
 
 import type { ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { X, Phone, Mail, Briefcase, Building2, MapPin } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { X, Phone, Mail, Briefcase, Building2, MapPin, Plus, Tag } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { ChatAvatar } from "./ChatAvatar";
 import { useTranslation } from "@/lib/i18n";
+
+const SUGGESTED_TAGS = ["Muhim", "Kutilmoqda", "Tezkor"];
 
 export interface ChatPanelEmployee {
   userId: number;
@@ -57,8 +59,26 @@ function Field({ icon, label, value }: { icon: ReactNode; label: string; value?:
   );
 }
 
-export function ChatEmployeeInfoPanel({ employee, onClose }: { employee: ChatPanelEmployee; onClose: () => void }) {
+export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee: ChatPanelEmployee; roomId: string; onClose: () => void }) {
   const { t } = useTranslation("common");
+  const qc = useQueryClient();
+
+  // Suhbat teglari (Muhim/Kutilmoqda/Tezkor …)
+  const tagsKey = [`/api/chat/rooms/${roomId}/tags`];
+  const { data: tagsData } = useQuery<{ id: number; tag: string }[]>({
+    queryKey: tagsKey,
+    queryFn: () => apiRequest("GET", `/api/chat/rooms/${roomId}/tags`),
+    enabled: !!roomId,
+  });
+  const tags = Array.isArray(tagsData) ? tagsData : [];
+  const addTag = useMutation({
+    mutationFn: (tag: string) => apiRequest("POST", `/api/chat/rooms/${roomId}/tags`, { tag }),
+    onSuccess: (fresh) => qc.setQueryData(tagsKey, fresh),
+  });
+  const removeTag = useMutation({
+    mutationFn: (tag: string) => apiRequest("DELETE", `/api/chat/rooms/${roomId}/tags/${encodeURIComponent(tag)}`),
+    onSuccess: (fresh) => qc.setQueryData(tagsKey, fresh),
+  });
 
   // Kengaytirilgan profil — kanonik HR endpointidan (mavjud bo'lmasa dash).
   const { data } = useQuery<EmployeeProfile>({
@@ -107,6 +127,32 @@ export function ChatEmployeeInfoPanel({ employee, onClose }: { employee: ChatPan
           <Field icon={<Briefcase className="w-4 h-4" />} label={t("lavozim")} value={position} />
           <Field icon={<Building2 className="w-4 h-4" />} label={t("bolim")} value={department} />
           <Field icon={<MapPin className="w-4 h-4" />} label={t("bolimFilial")} value={location} />
+        </div>
+
+        {/* Teglar (Muhim / Kutilmoqda / Tezkor …) */}
+        <div className="pt-4 mt-2 border-t border-[var(--ep-border)]">
+          <div className="flex items-center gap-1.5 mb-2 text-[11px] uppercase tracking-wide text-[var(--ep-muted)]">
+            <Tag className="w-3.5 h-3.5" /> {t("teglar")}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map((tg) => (
+              <span key={tg.id} className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-full bg-[var(--ep-subtle)] text-[12px]">
+                {tg.tag}
+                <button onClick={() => removeTag.mutate(tg.tag)} className="p-0.5 rounded-full hover:bg-[var(--ep-border)]" title={t("olibTashlash")}>
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            {SUGGESTED_TAGS.filter((s) => !tags.some((tg) => tg.tag === s)).map((s) => (
+              <button
+                key={s}
+                onClick={() => addTag.mutate(s)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-dashed border-[var(--ep-border)] text-[12px] text-[var(--ep-muted)] hover:text-[var(--ep-text)] hover:border-[var(--ep-text)]"
+              >
+                <Plus className="w-3 h-3" /> {s}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

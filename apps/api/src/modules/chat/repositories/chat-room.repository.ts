@@ -10,7 +10,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { castTo } from '@common/db-rows';
 import { db } from '@shared/db';
 import { eq, and, isNotNull, sql } from 'drizzle-orm';
-import { chatRooms, chatMembers, chatMessages, appUsers } from '@shared/db';
+import { chatRooms, chatMembers, chatMessages, appUsers, chatRoomTags } from '@shared/db';
 import { ensureChatTables as _ensureChatTables, runChatMigrations as _runChatMigrations, ensureChatTrigger as _ensureChatTrigger } from '@common/database/ddl-migrations';
 import { safeCall, Result } from '@common/result';
 import { ChatRoomUsersRepository } from './chat-room-users.repository';
@@ -188,6 +188,30 @@ export class ChatRoomRepository {
         .returning();
       return castTo<Record<string, unknown>>(row);
       }, 'DB_ERROR');
+  }
+
+  // ── Suhbat teglari (xodim-info paneli) ──────────────────────────────────
+  async listRoomTags(roomId: number): Promise<Result<{ id: number; tag: string }[]>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({ id: chatRoomTags.id, tag: chatRoomTags.tag })
+        .from(chatRoomTags)
+        .where(eq(chatRoomTags.roomId, roomId))
+        .orderBy(chatRoomTags.id);
+      return castTo<{ id: number; tag: string }[]>(rows);
+    }, 'DB_ERROR');
+  }
+
+  async addRoomTag(roomId: number, tag: string, createdBy: number): Promise<Result<void>> {
+    return safeCall(async () => {
+      await db.insert(chatRoomTags).values({ roomId, tag, createdBy }).onConflictDoNothing();
+    }, 'DB_ERROR');
+  }
+
+  async removeRoomTag(roomId: number, tag: string): Promise<Result<void>> {
+    return safeCall(async () => {
+      await db.delete(chatRoomTags).where(and(eq(chatRoomTags.roomId, roomId), eq(chatRoomTags.tag, tag)));
+    }, 'DB_ERROR');
   }
 
   async updateRoomReadAt(roomIdStr: string, userIdStr: string): Promise<void> {

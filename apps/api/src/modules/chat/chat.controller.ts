@@ -9,7 +9,7 @@
 
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import {
-  Controller, Get, Patch, Post, Body, Param, Query,
+  Controller, Get, Patch, Post, Delete, Body, Param, Query,
   UseGuards, Logger, UseInterceptors, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { db } from '@shared/db';
@@ -227,6 +227,30 @@ export class ChatController {
   @Get('presence/:userId')
   async getUserPresence(@Param('userId') userId: string) {
     return unwrapOrInternal(await this.chatService.getUserPresence(userId));
+  }
+
+  @ApiOperation({ summary: 'Suhbat teglari (xodim-info paneli)' })
+  @Get('rooms/:roomId/tags')
+  async getRoomTags(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    return unwrapOrInternal(await this.chatService.listRoomTags(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbatga teg qo\'shish' })
+  @Post('rooms/:roomId/tags')
+  async addRoomTag(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Body() body: unknown) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    const tag = String((body as Record<string, unknown>)?.tag ?? '').trim().slice(0, 40);
+    if (tag) await this.chatService.addRoomTag(Number(roomId), tag, user.id);
+    return unwrapOrInternal(await this.chatService.listRoomTags(Number(roomId)));
+  }
+
+  @ApiOperation({ summary: 'Suhbatdan teg olib tashlash' })
+  @Delete('rooms/:roomId/tags/:tag')
+  async removeRoomTag(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string, @Param('tag') tag: string) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    await this.chatService.removeRoomTag(Number(roomId), decodeURIComponent(tag));
+    return unwrapOrInternal(await this.chatService.listRoomTags(Number(roomId)));
   }
 
   @ApiOperation({ summary: 'Update room' })

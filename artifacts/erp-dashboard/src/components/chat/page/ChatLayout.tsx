@@ -433,7 +433,7 @@ export function ChatLayout() {
       {infoOpen && activeRoom && !threadRootMsg && (
         <aside className="hidden lg:flex w-full sm:w-[380px] flex-shrink-0 border-l border-[var(--ep-border)] flex-col">
           {activeRoom.type === "direct" && panelEmployee ? (
-            <ChatEmployeeInfoPanel employee={panelEmployee} onClose={() => setInfoOpen(false)} />
+            <ChatEmployeeInfoPanel employee={panelEmployee} roomId={String(activeRoom.id)} onClose={() => setInfoOpen(false)} />
           ) : (
             <RoomInfoPanel room={activeRoom} onClose={() => setInfoOpen(false)} />
           )}
