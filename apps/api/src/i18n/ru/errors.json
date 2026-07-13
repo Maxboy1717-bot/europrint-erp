@@ -463,5 +463,6 @@
   "taskNotFoundWithId": "Задача #{id} не найдена",
   "glDocumentCreationFailed": "Ошибка создания GL-документа",
   "accountingPeriodAlreadyClosed": "Учётный период уже закрыт",
-  "currentUserNotIdentified": "Пользователь не определён"
+  "currentUserNotIdentified": "Пользователь не определён",
+  "reportPdfGenerationFailed": "Не удалось создать PDF-файл отчёта"
 }

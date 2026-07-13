@@ -576,6 +576,7 @@ export type I18nTranslations = {
         "glDocumentCreationFailed": string;
         "accountingPeriodAlreadyClosed": string;
         "currentUserNotIdentified": string;
+        "reportPdfGenerationFailed": string;
     };
     "messages": {
         "orderCancelled": string;

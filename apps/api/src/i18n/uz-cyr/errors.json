@@ -463,5 +463,6 @@
   "taskNotFoundWithId": "Вазифа #{id} топилмади",
   "glDocumentCreationFailed": "GL ҳужжат яратишда хатолик",
   "accountingPeriodAlreadyClosed": "Ҳисоб даври аллақачон ёпилган",
-  "currentUserNotIdentified": "Фойдаланувчи аниқланмади"
+  "currentUserNotIdentified": "Фойдаланувчи аниқланмади",
+  "reportPdfGenerationFailed": "Ҳисобот PDF файлини яратиб бўлмади"
 }

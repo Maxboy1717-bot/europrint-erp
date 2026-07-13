@@ -174,11 +174,12 @@ export class KanbanReportsController {
         res.header('Content-Type', 'application/pdf');
         res.header('Content-Disposition', 'attachment; filename="kanban-report.pdf"');
         return res.send(pdfBuf);
-      } catch {
-        // pdfmake yo'q yoki chiqib ketsa - sodda HTML PDF
-        res.header('Content-Type', 'application/pdf');
-        res.header('Content-Disposition', 'attachment; filename="kanban-report.pdf"');
-        return res.send(Buffer.from('%PDF-1.4 placeholder'));
+      } catch (error) {
+        this.logger.error('exportReport(pdf): ' + (error as Error).message);
+        throw new HttpException(
+          await this.i18n.t('errors.reportPdfGenerationFailed'),
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
 

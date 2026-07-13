@@ -463,5 +463,6 @@
   "taskNotFoundWithId": "Vazifa #{id} topilmadi",
   "glDocumentCreationFailed": "GL hujjat yaratishda xatolik",
   "accountingPeriodAlreadyClosed": "Hisob davri allaqachon yopilgan",
-  "currentUserNotIdentified": "Foydalanuvchi aniqlanmadi"
+  "currentUserNotIdentified": "Foydalanuvchi aniqlanmadi",
+  "reportPdfGenerationFailed": "Hisobot PDF faylini yaratib bo'lmadi"
 }
