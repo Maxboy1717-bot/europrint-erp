@@ -10,6 +10,7 @@ export {
   chatMembers,
   chatMessages,
   chatMessageHiddenFor,
+  chatRoomTags,
   chatReactions,
   chatPolls,
   chatPollVotes,

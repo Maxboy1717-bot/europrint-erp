@@ -131,9 +131,22 @@ export const chatUserPresence = pgTable('chat_user_presence', {
   userId:       text('user_id').primaryKey(),
   status:       varchar('status').default('OFFLINE'),
   customStatus: text('custom_status'),
+  // Work-status shown in the employee info panel (ishda/band/tushlikda/
+  // tatilda/tashqarida) — distinct from the ONLINE/OFFLINE socket presence.
+  workStatus:   varchar('work_status', { length: 20 }),
   lastSeenAt:   timestamp('last_seen_at'),
   activeRoomId: varchar('active_room_id'),
   updatedAt:    timestamp('updated_at').defaultNow(),
+});
+
+// Conversation tags for the employee info panel (Muhim/Kutilmoqda/Tezkor …).
+// room_id is INTEGER to match the live chat_rooms.id column.
+export const chatRoomTags = pgTable('chat_room_tags', {
+  id:        serial('id').primaryKey(),
+  roomId:    integer('room_id').notNull(),
+  tag:       varchar('tag', { length: 40 }).notNull(),
+  createdBy: integer('created_by'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 export const chatEmojiPacks = pgTable('chat_emoji_packs', {
