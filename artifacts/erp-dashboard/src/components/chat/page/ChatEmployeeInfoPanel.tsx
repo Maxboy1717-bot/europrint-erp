@@ -80,7 +80,7 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
     onSuccess: (fresh) => qc.setQueryData(tagsKey, fresh),
   });
 
-  const [tab, setTab] = useState<"umumiy" | "fayllar">("umumiy");
+  const [tab, setTab] = useState<"umumiy" | "fayllar" | "vazifalar">("umumiy");
   // Fayllar tab — suhbatda ulashilgan fayllar (mavjud endpoint).
   const { data: filesData } = useQuery<Array<{ fileUrl?: string; fileName?: string; fileType?: string }>>({
     queryKey: [`/api/chat/rooms/${roomId}/files`],
@@ -88,6 +88,13 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
     enabled: !!roomId && tab === "fayllar",
   });
   const files = Array.isArray(filesData) ? filesData : [];
+  // Bog'liq vazifalar — xodimga tayinlangan Kanban kartalar + CC hujjatlar.
+  const { data: tasksData } = useQuery<Array<{ kind: string; id: string; label: string; status: string | null }>>({
+    queryKey: [`/api/chat/employees/${employee.userId}/related-tasks`],
+    queryFn: () => apiRequest("GET", `/api/chat/employees/${employee.userId}/related-tasks`),
+    enabled: tab === "vazifalar",
+  });
+  const tasks = Array.isArray(tasksData) ? tasksData : [];
 
   // Kengaytirilgan profil — kanonik HR endpointidan (mavjud bo'lmasa dash).
   const { data } = useQuery<EmployeeProfile>({
@@ -119,7 +126,7 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
 
       {/* Tab bar */}
       <div className="flex border-b border-[var(--ep-border)] flex-shrink-0 px-2 text-[13px]">
-        {([["umumiy", t("umumiyMalumot")], ["fayllar", t("fayllar")]] as const).map(([key, label]) => (
+        {([["umumiy", t("umumiyMalumot")], ["fayllar", t("fayllar")], ["vazifalar", t("bogliqVazifalar")]] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -199,6 +206,23 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
                 <span className="text-[13px] truncate flex-1">{f.fileName || f.fileUrl}</span>
                 <Download className="w-4 h-4 text-[var(--ep-muted)] flex-shrink-0" />
               </a>
+            ))}
+          </div>
+        )}
+
+        {tab === "vazifalar" && (
+          <div className="space-y-1.5">
+            {tasks.length === 0 && (
+              <p className="text-[13px] text-[var(--ep-muted)] text-center py-6">{t("vazifaYoq")}</p>
+            )}
+            {tasks.map((tk) => (
+              <div key={tk.kind + tk.id} className="flex items-center gap-2 p-2 rounded-lg bg-[var(--ep-subtle)]">
+                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-[var(--ep-surface)] text-[var(--ep-muted)] flex-shrink-0">
+                  {tk.kind === "cc" ? "CC" : "Kanban"}
+                </span>
+                <span className="text-[13px] truncate flex-1">{tk.label || tk.id}</span>
+                {tk.status && <span className="text-[11px] text-[var(--ep-muted)] flex-shrink-0">{tk.status}</span>}
+              </div>
             ))}
           </div>
         )}

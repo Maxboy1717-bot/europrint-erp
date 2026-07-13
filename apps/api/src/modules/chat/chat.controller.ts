@@ -229,6 +229,12 @@ export class ChatController {
     return unwrapOrInternal(await this.chatService.getUserPresence(userId));
   }
 
+  @ApiOperation({ summary: 'Xodimga bog\'liq vazifalar (Kanban + CC)' })
+  @Get('employees/:userId/related-tasks')
+  async getRelatedTasks(@Param('userId') userId: string) {
+    return unwrapOrInternal(await this.chatService.getRelatedTasks(Number(userId)));
+  }
+
   @ApiOperation({ summary: 'Suhbat teglari (xodim-info paneli)' })
   @Get('rooms/:roomId/tags')
   async getRoomTags(@CurrentUser() user: AuthenticatedUser, @Param('roomId') roomId: string) {

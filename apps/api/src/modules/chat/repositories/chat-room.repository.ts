@@ -190,6 +190,22 @@ export class ChatRoomRepository {
       }, 'DB_ERROR');
   }
 
+  // Xodimga bog'liq vazifalar — Kanban kartalari (owner_user_id) + CC hujjatlar
+  // (basket_owner_user_id). Raw SQL o'qish (cross-modul jadval; yozish yo'q).
+  async findRelatedTasks(userId: number): Promise<Result<Array<{ kind: string; id: string; label: string; status: string | null }>>> {
+    return safeCall(async () => {
+      const res = await db.execute(sql`
+        SELECT 'kanban' AS kind, id::text AS id, COALESCE(title, '') AS label, status::text AS status
+          FROM kanban_cards WHERE owner_user_id = ${userId}
+        UNION ALL
+        SELECT 'cc' AS kind, id::text AS id, COALESCE(document_number, '') AS label, status::text AS status
+          FROM cc_documents WHERE basket_owner_user_id = ${userId}
+        LIMIT 40`);
+      const rows = (res as unknown as { rows?: Array<{ kind: string; id: string; label: string; status: string | null }> }).rows ?? [];
+      return castTo<Array<{ kind: string; id: string; label: string; status: string | null }>>(rows);
+    }, 'DB_ERROR');
+  }
+
   // ── Suhbat teglari (xodim-info paneli) ──────────────────────────────────
   async listRoomTags(roomId: number): Promise<Result<{ id: number; tag: string }[]>> {
     return safeCall(async () => {
