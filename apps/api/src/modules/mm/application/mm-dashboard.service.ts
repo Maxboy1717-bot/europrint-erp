@@ -79,4 +79,16 @@ export class MmDashboardService {
   async getThreeWayMatch() {
     return this.repo.getThreeWayMatch();
   }
+
+  async getFleetDeliveries() {
+    return this.repo.getFleetDeliveries();
+  }
+
+  async createFleetDelivery(body: Record<string, unknown>) {
+    return this.repo.createFleetDelivery(body);
+  }
+
+  async updateFleetDeliveryStatus(id: number, status: string) {
+    return this.repo.updateFleetDeliveryStatus(id, status);
+  }
 }

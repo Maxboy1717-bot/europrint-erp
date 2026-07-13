@@ -27,6 +27,9 @@ export interface IMmDashboardRepo {
   getVendorInvoices(): Promise<Result<Row[]>>;
   getVendorInvoiceById(id: number): Promise<Result<Row | null>>;
   getThreeWayMatch(): Promise<Result<Row[]>>;
+  getFleetDeliveries(): Promise<Result<Row[]>>;
+  createFleetDelivery(body: Row): Promise<Result<Row>>;
+  updateFleetDeliveryStatus(id: number, status: string): Promise<Result<Row | null>>;
 }
 
 export const MM_DASHBOARD_REPO = Symbol('MM_DASHBOARD_REPO');

@@ -164,3 +164,24 @@ export const MmCreateFuelLogSchema = z.object({
   odometer:   z.number().int().min(0).optional(),
 });
 export type MmCreateFuelLogDto = z.infer<typeof MmCreateFuelLogSchema>;
+
+// FX-2 fleet/deliveries — FE (LogisticsDashboard.tsx deliveryForm) sends all fields as
+// strings (controlled <Input> values, incl. type="number"), so weight/cost use
+// z.coerce.number() to accept the real wire shape rather than requiring pre-converted JSON.
+export const MmCreateFleetDeliverySchema = z.object({
+  orderNo:          z.string().max(50).optional(),
+  customerName:     z.string().max(200).optional(),
+  address:          z.string().optional(),
+  vehicleId:        z.string().optional(),
+  driverName:       z.string().max(100).optional(),
+  estimatedArrival: z.string().optional(),
+  weight:           z.coerce.number().nonnegative().optional(),
+  cost:             z.coerce.number().nonnegative().optional(),
+});
+export type MmCreateFleetDeliveryDto = z.infer<typeof MmCreateFleetDeliverySchema>;
+
+// mm_deliveries_status_chk CHECK constraint enum (lib/db/src/schema/mm-logistics.ts:240)
+export const MmUpdateFleetDeliveryStatusSchema = z.object({
+  status: z.enum(['planned', 'in_transit', 'delivered', 'failed', 'cancelled']),
+});
+export type MmUpdateFleetDeliveryStatusDto = z.infer<typeof MmUpdateFleetDeliveryStatusSchema>;

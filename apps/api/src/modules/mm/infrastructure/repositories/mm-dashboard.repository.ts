@@ -154,4 +154,34 @@ export class MmDashboardRepository implements IMmDashboardRepo {
   }
 
   }
+
+  // FX-2: mm_deliveries (lib/db/src/schema/mm-logistics.ts:198) — waybill CRUD for
+  // LogisticsDashboard.tsx + MMExtended.tsx (ScheduleTab). Previously an unwired 501 stub.
+  async getFleetDeliveries(): Promise<Result<Row[]>>  {
+  try {
+      return exec(sql`SELECT * FROM mm_deliveries ORDER BY created_at DESC LIMIT ${MAX_QUERY_LIMIT}`);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async createFleetDelivery(body: Row): Promise<Result<Row>>  {
+  try {
+      const vehicleId = (body.vehicleId ?? body.vehicle_id ?? null) as string | null;
+      const eta = (body.estimatedArrival ?? body.estimated_arrival) as string | undefined;
+      const r = await exec(sql`INSERT INTO mm_deliveries (order_no, customer_name, address, vehicle_id, plate_number, driver_name, estimated_arrival, weight, cost, status) VALUES (${body.orderNo ?? body.order_no ?? null}, ${body.customerName ?? body.customer_name ?? null}, ${body.address ?? null}, ${vehicleId}, (SELECT plate_number FROM mm_vehicles WHERE id::varchar = ${vehicleId}), ${body.driverName ?? body.driver_name ?? null}, ${eta && eta !== '' ? eta : null}, ${body.weight ?? null}, ${body.cost ?? null}, 'planned') RETURNING *`);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
+
+  async updateFleetDeliveryStatus(id: number, status: string): Promise<Result<Row | null>>  {
+  try {
+      const r = await exec(sql`UPDATE mm_deliveries SET status = ${status}, updated_at = NOW(), actual_arrival = CASE WHEN ${status} = 'delivered' THEN NOW() ELSE actual_arrival END WHERE id = ${id} RETURNING *`);
+      return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
+    return Err(String(_e));
+  }
+
+  }
 }

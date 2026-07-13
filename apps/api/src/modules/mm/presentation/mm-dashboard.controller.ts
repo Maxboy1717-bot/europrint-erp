@@ -31,7 +31,7 @@ import { MmDashboardService } from '../application/mm-dashboard.service';
 import { MmVendorRatingService } from '../application/mm-vendor-rating.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
-import { MmCreateFleetVehicleSchema, MmCreateFleetVehicleDto, MmCreateFuelLogSchema, MmCreateFuelLogDto } from '../dto/mm.dto';
+import { MmCreateFleetVehicleSchema, MmCreateFleetVehicleDto, MmCreateFuelLogSchema, MmCreateFuelLogDto, MmCreateFleetDeliverySchema, MmCreateFleetDeliveryDto, MmUpdateFleetDeliveryStatusSchema, MmUpdateFleetDeliveryStatusDto } from '../dto/mm.dto';
 import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
@@ -231,15 +231,24 @@ export class MmDashboardController {
   }
 
   @ApiOperation({ summary: 'Get fleet deliveries' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
+  @ApiResponse({ status: 200, description: 'OK' })
   @Get('fleet/deliveries') @Roles(...MM_READ)
-  async getFleetDeliveries() { return notImplemented('GET /mm/fleet/deliveries'); }
+  async getFleetDeliveries() {
+    this.logger.log('GET fleet deliveries');
+    return unwrapOrThrow(await this.svc.getFleetDeliveries());
+  }
 
   @ApiOperation({ summary: 'Update fleet delivery status' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
-  @Patch('fleet/deliveries/:id/status') @Roles(...MM_WRITE)
-  async updateFleetDeliveryStatus(@Param('id') _id: string, @Body() _body: Record<string, unknown>) {
-    return notImplemented('PATCH /mm/fleet/deliveries/:id/status');
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('fleet/deliveries/:id/status')
+  @UsePipes(new ZodValidationPipe(MmUpdateFleetDeliveryStatusSchema))
+  @Roles(...MM_WRITE)
+  async updateFleetDeliveryStatus(@Param('id') id: string, @Body() body: MmUpdateFleetDeliveryStatusDto) {
+    this.logger.log(`PATCH fleet delivery ${id} status -> ${body.status}`);
+    const row = unwrapOrThrow(await this.svc.updateFleetDeliveryStatus(safeInt(id, 0), body.status));
+    if (!row) throw new HttpException(await this.i18n.t('errors.deliveryNotFoundWithId', { args: { id } }), HttpStatus.NOT_FOUND);
+    return row;
   }
 
   @ApiOperation({ summary: 'Get vehicle locations' })
@@ -273,10 +282,14 @@ export class MmDashboardController {
   }
 
   @ApiOperation({ summary: 'Create fleet delivery' })
-  @ApiResponse({ status: 501, description: 'Feature gated off - tracking #FX-2' })
-  @Post('fleet/deliveries') @Roles(...MM_WRITE)
-  async createFleetDelivery(@Body() _body: Record<string, unknown>) {
-    return notImplemented('POST /mm/fleet/deliveries');
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @Post('fleet/deliveries')
+  @UsePipes(new ZodValidationPipe(MmCreateFleetDeliverySchema))
+  @Roles(...MM_WRITE)
+  async createFleetDelivery(@Body() body: MmCreateFleetDeliveryDto) {
+    this.logger.log('POST fleet delivery');
+    return unwrapOrThrow(await this.svc.createFleetDelivery(body));
   }
 
   @ApiOperation({ summary: 'Match vendor invoice (POST mirror)' })
