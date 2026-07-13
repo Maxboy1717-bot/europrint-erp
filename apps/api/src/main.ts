@@ -15,6 +15,7 @@ import 'dotenv/config';
 import 'module-alias/register';
 import 'reflect-metadata';
 import { initSentry } from './common/monitoring/sentry.config';
+import { configureDownloadBlock } from './common/document-control/download-block.hook';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
 import { Logger } from '@nestjs/common';
@@ -91,6 +92,10 @@ async function bootstrap(): Promise<void> {
   configureLoginRateLimit(app);
   configureAppMiddleware(app);
   const fastify = app.getHttpAdapter().getInstance() as RawFastify;
+  // Document Control (#1/#10): block Content-Disposition:attachment by default; client-facing
+  // export routes (#8) + the reason-gated storage download stay allowed. onSend hook = runs on
+  // every response incl. @Res() handlers, un-bypassable at the Fastify layer.
+  configureDownloadBlock(fastify as unknown as import('fastify').FastifyInstance);
   configureSwagger(app, fastify, port, logger);
   configureHealthRoutes(fastify, app);
 
