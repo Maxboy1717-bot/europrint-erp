@@ -7,7 +7,6 @@ import { createContext, useContext, useEffect, useRef, useState, ReactNode } fro
 import { io } from "socket.io-client";
 import { useChatStore, ChatRoom, ChatMessage, ChatReaction } from "@/store/chatStore";
 import { useAuth } from "@/hooks/useAuth";
-import { safeStorage } from "@/lib/safeStorage";
 import { setSharedSocket } from "./useChatSocket";
 
 const ChatSocketContext = createContext<{ connected: boolean }>({ connected: false });
@@ -31,21 +30,20 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Auth: the JWT access token (same one used by REST) is passed via the
-    // socket handshake `auth.token`. `ChatGateway.handleConnection` reads
-    // `handshake.auth.token` (NOT a cookie), identical to the working
-    // `use-kanban-realtime.ts` / RecruitmentGateway pattern. Passing only a
-    // cookie left the handshake tokenless and the gateway disconnected every
-    // client — the module's P0 auth-drift bug.
-    const token = safeStorage.getItem("access_token");
-    if (!token) return;
-
+    // Auth: this app authenticates via an httpOnly `access_token` COOKIE
+    // (auth-refresh.ts: "source of truth is the cookie"; jwt-auth.guard reads
+    // request.cookies['access_token']). JS cannot read that cookie, so
+    // `withCredentials: true` makes the browser attach it to the WS handshake;
+    // ChatGateway.handleConnection parses `access_token` out of the cookie
+    // header. (A prior fix wrongly read a NON-EXISTENT localStorage
+    // "access_token" → `if(!token) return` → the socket was never created →
+    // messages never sent. That is the bug this restores.)
     const wsUrl = `${window.location.protocol}//${window.location.host}`;
     const basePath = (import.meta.env.BASE_URL ?? "/erp-dashboard/").replace(/\/$/, "");
     const socketPath = `${basePath}/socket.io`;
 
     const s = io(`${wsUrl}/chat`, {
-      auth: { token },
+      withCredentials: true,
       transports: ["websocket", "polling"],
       path: socketPath,
       reconnection: true,

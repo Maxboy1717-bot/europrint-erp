@@ -31,6 +31,18 @@ import {
 // Re-export for back-compat
 export { _getChatServer as getChatServer, _broadcastToRoom as broadcastToRoom };
 
+// Extract a named value out of a raw `Cookie:` header string (WS handshakes
+// don't get cookie-parser). Mirrors jwt-auth.guard reading `access_token`.
+function cookieValue(cookieHeader: string | undefined, name: string): string | undefined {
+  if (!cookieHeader) return undefined;
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim());
+  }
+  return undefined;
+}
+
 @WebSocketGateway({
   namespace: '/chat',
   cors: {
@@ -72,9 +84,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const token =
         client.handshake.auth?.token ||
-        client.handshake.headers?.authorization?.split(' ')[1];
+        client.handshake.headers?.authorization?.split(' ')[1] ||
+        cookieValue(client.handshake.headers?.cookie, 'access_token');
 
       if (!token) {
+        this.logger.warn('Chat WS: no token (auth.token / Authorization / access_token cookie all empty)');
         client.disconnect();
         return;
       }
