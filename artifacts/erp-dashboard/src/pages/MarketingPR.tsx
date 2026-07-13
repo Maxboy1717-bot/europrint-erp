@@ -76,7 +76,7 @@ export default function MarketingPR() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <EPPageHeader
         breadcrumb={<>{t("dashboard9")}<b className="text-foreground">Marketing {t('prMedia')}</b></>}
-        title="Marketing {t('prMedia')}"
+        title={`Marketing ${t("prMedia")}`}
       />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
