@@ -5,7 +5,7 @@
 
 import { useState, type ElementType } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,7 @@ export default function MarketingContent() {
 
   const { data: contentList = [], isLoading, isError, error, refetch} = useQuery<ContentPost[]>({
     queryKey: ["/api/marketing/content/posts"],
+    select: selectArray<ContentPost>,
   });
 
   const createMutation = useMutation({

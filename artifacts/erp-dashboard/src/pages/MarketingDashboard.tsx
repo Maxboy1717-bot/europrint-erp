@@ -4,6 +4,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
+import { selectArray } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MarketingCampaign } from "@shared/schema";
 
@@ -32,6 +33,7 @@ export default function MarketingDashboard() {
 
   const { data: campaigns, isLoading: campaignsLoading } = useQuery<MarketingCampaign[]>({
     queryKey: ["/api/marketing/campaigns"],
+    select: selectArray<MarketingCampaign>,
   });
 
   const { data: inboxStats } = useQuery<{ totalConversations: number; openConversations: number; unreadCount: number }>({

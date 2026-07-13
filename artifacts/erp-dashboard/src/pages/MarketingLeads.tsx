@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, selectArray } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,15 +59,16 @@ export default function MarketingLeads() {
 
   // ── Queries ─────────────────────────────────────────────────────────────────
   const { data: leads = [], isLoading, isError, error, refetch } =
-    useQuery<MarketingLead[]>({ queryKey: ["/api/marketing/leads"] });
+    useQuery<MarketingLead[]>({ queryKey: ["/api/marketing/leads"], select: selectArray<MarketingLead> });
 
   const { data: overdue = [] } =
     useQuery<MarketingLead[]>({ queryKey: ["/api/marketing/leads/automation/overdue-leads"] });
 
-  const { data: funnelData = [] } = useQuery<FunnelStage[]>({
+  const { data: funnelRaw } = useQuery<{ stages: FunnelStage[]; total: number; conversionRate: number }>({
     queryKey: ["/api/marketing/funnel"],
     enabled: funnelOpen,
   });
+  const funnelData = selectArray<FunnelStage>(funnelRaw?.stages, "stages");
 
   const { data: contacts = [] } = useQuery<ContactLog[]>({
     queryKey: ["/api/marketing/leads", contactLeadId, "contacts"],
