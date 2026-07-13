@@ -9,6 +9,12 @@ import { Result } from '@common/result';
 type OnboardingPlanRow = typeof hrOnboardingPlans.$inferSelect;
 type EmployeeOnboardingRow = typeof hrEmployeeOnboardings.$inferSelect;
 
+/** One onboarding_tasks template row (position/card-scoped master data — id + title only). */
+export interface OnboardingDocTaskRow {
+  id: number;
+  title: string;
+}
+
 export interface IHrOnboardingRepository {
   createPlan(dto: unknown, createdById: number): Promise<Result<OnboardingPlanRow>>;
   listPlans(positionId?: number, departmentId?: number): Promise<Result<OnboardingPlanRow[]>>;
@@ -22,6 +28,19 @@ export interface IHrOnboardingRepository {
    * employees row (e.g. a system/admin account with no HR profile) — FABRIKATSIYA YO'Q.
    */
   findEmployeesIdByUserId(userId: number): Promise<Result<number | null>>;
+  /**
+   * 2026-07-13 onboarding→karta wiring: the REVERSE bridge (employees.id → users.id) — needed
+   * because `CARD_EMPLOYEE_ASSIGNED_EVENT.employeeId` is `employees.id` (org-structure id-space)
+   * but `hr_employee_onboardings.employee_id` is a `users.id` (see above). Returns null (not
+   * fabricated) when `employees.user_id` is unset — callers MUST degrade gracefully (log + skip).
+   */
+  findUserIdByEmployeeId(employeeId: number): Promise<Result<number | null>>;
+  /**
+   * 2026-07-13: resolve the CARD's own onboarding plan (org_department_id = cardId, active,
+   * newest wins). Card-centric per vision (plan derives from the CARD, not the employee).
+   * Returns null (not fabricated) when the owner hasn't bound a plan to this card yet.
+   */
+  findActivePlanByCard(cardId: number): Promise<Result<OnboardingPlanRow | null>>;
   startOnboarding(dto: { employeeId: number; planId: number; mentorId?: number; startDate: Date; expectedEndDate: Date; cardId?: number }): Promise<Result<EmployeeOnboardingRow>>;
   getOnboardingById(id: number): Promise<Result<EmployeeOnboardingRow | null>>;
   updateProgress(id: number, weeklyProgress: unknown[], updatedAt: Date): Promise<Result<EmployeeOnboardingRow>>;
@@ -29,6 +48,27 @@ export interface IHrOnboardingRepository {
   getEmployeeOnboarding(employeeId: number): Promise<Result<EmployeeOnboardingRow[]>>;
   assignBuddy(onboardingId: number, buddyId: number): Promise<Result<EmployeeOnboardingRow>>;
   listAllOnboardings(): Promise<Result<EmployeeOnboardingRow[]>>;
+
+  // ─── Onboarding-task template materialization (2026-07-13, `onboarding_tasks`/`user_onboarding_progress`) ───
+
+  /**
+   * All active (non-deleted) onboarding_tasks template rows bound to a card, for materializing
+   * a new hire's per-task tracking rows. NOTE (owner-data gap, Q-40 — NOT fabricated/worked
+   * around): `onboarding_tasks.org_function_id` FKs `org_functions(id)`, the STALE pre-migration
+   * card table (0 rows live) — NOT `org_departments` (the current canonical karta, 3 rows).
+   * This method queries the column exactly as it exists; it will honestly return [] until the
+   * owner either repoints this FK to org_departments or adds a dedicated card-link column.
+   */
+  findTemplateTasksForCard(cardId: number): Promise<Result<OnboardingDocTaskRow[]>>;
+  /** Idempotent: creates a `user_onboarding_progress` row (completed=false) unless one already exists. */
+  ensureTaskProgress(userId: number, taskId: number): Promise<Result<{ created: boolean }>>;
+  /**
+   * Required ('document' type, is_required=true) onboarding_tasks bound to a card — the set the
+   * Payroll document-complete gate must verify. Same org_function_id caveat as above.
+   */
+  findRequiredDocumentTasksByCard(cardId: number): Promise<Result<OnboardingDocTaskRow[]>>;
+  /** Which of the given task ids are marked `completed=true` in user_onboarding_progress for this user. */
+  findCompletedTaskIds(userId: number, taskIds: number[]): Promise<Result<Set<number>>>;
 }
 
 export const HR_ONBOARDING_REPO = 'IHrOnboardingRepository';

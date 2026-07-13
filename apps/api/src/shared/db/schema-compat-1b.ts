@@ -4,7 +4,7 @@
  */
 
 import { date } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, boolean, decimal, integer, createId, ts } from './schema-compat-helpers';
+import { pgTable, uuid, text, boolean, decimal, integer, jsonb, createId, ts } from './schema-compat-helpers';
 
 
 export const hrFunnelHistory = pgTable('hr_funnel_history', {
@@ -34,6 +34,24 @@ export const hrOnboardingPlans = pgTable('hr_onboarding_plans', {
   departmentId: text('department_id'),
   positionId: integer('position_id'),
   createdById: integer('created_by_id'),
+  // FIX 2026-07-13 (HR onboarding→karta wiring audit): these 7 columns are REAL on the live
+  // table (confirmed via information_schema.columns + pg_constraint — `fk_hr_onboard_org_dept`
+  // FKs org_department_id → org_departments(id), the CANONICAL karta table) but were NEVER
+  // declared here, so `createPlan`/`listPlans`/`getPlanById` silently dropped `nameRu` and
+  // `successCriteria` (data loss) and wrote `weeklyPlan`/`probationDays` into the LEGACY
+  // `tasks`/`duration_days` columns instead of these dedicated ones — and there was NO way,
+  // even manually, to bind a plan to a card (org_department_id was unreachable from any
+  // repo/DTO). This is the root cause of "reja↔karta binding ishlamagan" from the 2026-07-13
+  // onboarding audit — DRIFT-NN class bug, same pattern as the hr_employee_onboardings
+  // end_date/progress fix in this same file. Added, not migrated (columns already exist).
+  updatedAt: ts('updated_at').defaultNow(),
+  orgDepartmentId: integer('org_department_id'),
+  orgFunctionId: integer('org_function_id'),
+  name: text('name'),
+  nameRu: text('name_ru'),
+  weeklyPlan: jsonb('weekly_plan'),
+  probationDays: integer('probation_days'),
+  successCriteria: jsonb('success_criteria'),
 });
 
 export const hrEmployeeOnboardings = pgTable('hr_employee_onboardings', {

@@ -11,6 +11,7 @@ import { PayrollRecord } from '../domain/aggregates/payroll-record.aggregate';
 import { GlPostingService, type JournalLine } from '../../finance/domain/services/gl-posting.service';
 import { CkpGateService, type CkpGateDecision } from './ckp-gate';
 import { LmsCardGateService } from '../../lms/application/services/lms-card-gate.service';
+import { OnboardingDocumentGateService } from '../onboarding/onboarding-document-gate.service';
 import { BonusService } from './bonus.service';
 import { HR_REPO, type IHrRepo } from '../domain/repositories/i-hr.repo';
 import type { DomainEvent } from '@shared/domain/domain-event';
@@ -106,6 +107,8 @@ export class PayrollService {
     private readonly gl: GlPostingService,
     private readonly ckpGate: CkpGateService,
     private readonly lmsGate: LmsCardGateService,
+    // T7-10 sibling (2026-07-13): 30-day mandatory-document-complete gate (EP-ORG-027 pattern).
+    private readonly onboardingGate: OnboardingDocumentGateService,
     private readonly bonusSvc: BonusService,
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
     private readonly eventEmitter: EventEmitter2,
@@ -431,6 +434,8 @@ export class PayrollService {
       totalDays: number;
       lmsBlocked: boolean;
       lmsReasons: string[];
+      docsBlocked: boolean;
+      docsReasons: string[];
       days: Array<{ factDate: string; decision: CkpGateDecision; dayBase: number; dayPaid: number }>;
     }>
   > {
@@ -465,6 +470,25 @@ export class PayrollService {
       }
     }
 
+    // ⭐ 2026-07-13 ONBOARDING-HUJJAT-DARVOZA (§3.1/§4.1 vizyon): "30-kunlik sinov muddati —
+    // majburiy hujjatlar to'liq bo'lguncha Payroll blok, hujjat to'liq bo'lganda avto-ochiladi."
+    // Xuddi LMS-darvoza kabi FAIL-CLOSED: o'qish xatosi ham bloklaydi. Kartaga majburiy hujjat
+    // biriktirilmagan bo'lsa (owner-data, hozircha shunday) → bloklamaydi (HALOL ochiq, Q-40).
+    let docsBlocked = false;
+    let docsReasons: string[] = [];
+    if (typeof employeeId === 'number' && Number.isInteger(employeeId) && employeeId > 0) {
+      const docsR = await this.onboardingGate.isCardOnboardingDocsComplete(cardId, employeeId);
+      if (!docsR.ok) {
+        docsBlocked = true;
+        docsReasons = [`Onboarding-hujjat-darvoza o'qib bo'lmadi (fail-closed): ${docsR.error.message}`];
+      } else if (!docsR.data.allComplete) {
+        docsBlocked = true;
+        docsReasons = docsR.data.reasons.length > 0
+          ? docsR.data.reasons
+          : [`Karta #${cardId}: majburiy onboarding hujjatlari to'liq emas (oylik to'xtatildi)`];
+      }
+    }
+
     // A11 DARVOZA CHAQIRUVI — jonli ckp_fact_values; har kun qarori.
     // Prefetched-batch bo'lsa mapdan olinadi (fail-closed: karta xaritada yo'q → xato).
     let decisions: Array<{ factDate: string; decision: CkpGateDecision }>;
@@ -481,9 +505,10 @@ export class PayrollService {
     }
     const totalDays = decisions.length;
 
-    // LMS-darvoza yopiq → butun karta oyligi 0 (darslik tugamasa oylik yo'q — egasi).
-    // proratedGross null (ЦКП% yo'q) → darvoza baribir 0 berardi; gated ham null.
-    if (lmsBlocked || prorated.proratedGross === null || totalDays === 0) {
+    // LMS-darvoza YOKI onboarding-hujjat-darvoza yopiq → butun karta oyligi 0 (darslik
+    // tugamasa/hujjat to'liq bo'lmasa oylik yo'q — egasi vizyoni). proratedGross null
+    // (ЦКП% yo'q) → darvoza baribir 0 berardi; gated ham null.
+    if (lmsBlocked || docsBlocked || prorated.proratedGross === null || totalDays === 0) {
       return Ok({
         proratedGross: prorated.proratedGross,
         gatedGross: prorated.proratedGross === null ? null : 0,
@@ -492,6 +517,8 @@ export class PayrollService {
         totalDays,
         lmsBlocked,
         lmsReasons,
+        docsBlocked,
+        docsReasons,
         days: decisions.map((d) => ({ factDate: d.factDate, decision: d.decision, dayBase: 0, dayPaid: 0 })),
       });
     }
@@ -517,6 +544,8 @@ export class PayrollService {
       totalDays,
       lmsBlocked,
       lmsReasons,
+      docsBlocked,
+      docsReasons,
       days,
     });
   }
@@ -579,6 +608,8 @@ export class PayrollService {
       totalDays: number;
       lmsBlocked: boolean;
       lmsReasons: string[];
+      docsBlocked: boolean;
+      docsReasons: string[];
       days: Array<{ factDate: string; decision: CkpGateDecision; dayBase: number; dayPaid: number }>;
     }>
   > {
@@ -673,7 +704,7 @@ export class PayrollService {
       inserted: number;
       updated: number;
       skipped: number;
-      rows: Array<{ employeeId: number; cardId: number; gatedGross: number | null; lmsBlocked: boolean; inserted: boolean }>;
+      rows: Array<{ employeeId: number; cardId: number; gatedGross: number | null; lmsBlocked: boolean; docsBlocked: boolean; inserted: boolean }>;
     }>
   > {
     const periodR = await this.hrPayrollRepo.findPeriodById(periodId);
@@ -740,12 +771,12 @@ export class PayrollService {
     let inserted = 0;
     let updated = 0;
     let skipped = 0;
-    const rows: Array<{ employeeId: number; cardId: number; gatedGross: number | null; lmsBlocked: boolean; inserted: boolean }> = [];
+    const rows: Array<{ employeeId: number; cardId: number; gatedGross: number | null; lmsBlocked: boolean; docsBlocked: boolean; inserted: boolean }> = [];
 
     // ⭐ A6/EP-ORG-004 SUM-tamoyil: har karta uchun darvozalangan oylik hisoblanadi, so'ng
     // xodim bo'yicha GURUHLANIB YIG'ILADI (bitta xodim bir nechta aktiv kartaga ega bo'lishi
     // mumkin — `listActiveCardPayInputs` endi har kartani alohida qator qaytaradi).
-    type CardGate = { cardId: number; gatedGross: number | null; lmsBlocked: boolean; totalDays: number; gatedDays: number };
+    type CardGate = { cardId: number; gatedGross: number | null; lmsBlocked: boolean; docsBlocked: boolean; totalDays: number; gatedDays: number };
     const byEmployee = new Map<number, { baseSalary: number; cards: CardGate[] }>();
 
     for (const inp of inputs) {
@@ -777,6 +808,7 @@ export class PayrollService {
         cardId: inp.cardId,
         gatedGross: gatedR.data.gatedGross,
         lmsBlocked: gatedR.data.lmsBlocked,
+        docsBlocked: gatedR.data.docsBlocked,
         totalDays: gatedR.data.totalDays,
         gatedDays: gatedR.data.gatedDays,
       });
@@ -787,6 +819,7 @@ export class PayrollService {
       // SUM-tamoyil (EP-ORG-004): xodimning BARCHA aktiv kartalari darvozalangan oyliklari yig'iladi.
       const sumGatedGross = cards.reduce((sum, c) => sum + (c.gatedGross ?? 0), 0);
       const anyLmsBlocked = cards.some((c) => c.lmsBlocked);
+      const anyDocsBlocked = cards.some((c) => c.docsBlocked);
       // 3.15: HR/DIRECTOR tasdiqlagan mukofot (davr ichida) gross'ga qo'shiladi —
       // topilmasa 0 (Map.get undefined → soxta son yozilmaydi).
       const bonus = bonusByEmployee.get(employeeId) ?? 0;
@@ -800,10 +833,10 @@ export class PayrollService {
       // kelmay, ЦКП/LMS-gate haqiqatda oylikni kamaytirgan har qanday davrda buildJournal
       // "balansda emas" xatosi bilan closePeriod'ni butunlay bloklardi.
       const cardSummary = cards
-        .map((c) => `#${c.cardId}:${c.gatedDays}/${c.totalDays}${c.lmsBlocked ? '(LMS-yopiq)' : ''}`)
+        .map((c) => `#${c.cardId}:${c.gatedDays}/${c.totalDays}${c.lmsBlocked ? '(LMS-yopiq)' : ''}${c.docsBlocked ? '(onboarding-hujjat-yopiq)' : ''}`)
         .join(', ');
-      const note = anyLmsBlocked
-        ? `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ba'zi karta LMS-darvozasi yopiq — ${cardSummary}`
+      const note = anyLmsBlocked || anyDocsBlocked
+        ? `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ba'zi karta ${anyLmsBlocked ? 'LMS-darvozasi' : ''}${anyLmsBlocked && anyDocsBlocked ? ' / ' : ''}${anyDocsBlocked ? 'onboarding-hujjat-darvozasi' : ''} yopiq — ${cardSummary}`
         : `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ЦКП-gate — ${cardSummary}` +
           (bonus > 0 ? ` + mukofot ${bonus.toLocaleString('uz-UZ')}` : '');
       const totalGatedDays = cards.reduce((sum, c) => sum + c.gatedDays, 0);
@@ -834,6 +867,7 @@ export class PayrollService {
           cardId: c.cardId,
           gatedGross: c.gatedGross,
           lmsBlocked: c.lmsBlocked,
+          docsBlocked: c.docsBlocked,
           inserted: upsertR.data.inserted,
         });
       }
