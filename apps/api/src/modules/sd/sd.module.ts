@@ -56,6 +56,7 @@ import { PaymentReceivedListener } from './infrastructure/event-handlers/payment
 import { AdvanceApprovedFanoutListener } from './infrastructure/event-handlers/advance-approved-fanout.listener';
 import { PpCancelledSdListener } from './infrastructure/event-handlers/pp-cancelled-sd.listener';
 import { QcFailedSdListener } from './infrastructure/event-handlers/qc-failed-sd.listener';
+import { QcCustomerFaultSdListener } from './infrastructure/event-handlers/qc-customer-fault-sd.listener';
 import { AutoInvoiceListener } from './infrastructure/event-handlers/auto-invoice.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
 import { TashkentTimeService } from '@common/time';
@@ -140,6 +141,8 @@ const eventListeners = [
   AdvanceApprovedFanoutListener,
   PpCancelledSdListener, // PP→SD: production order cancelled -> sales order on_hold
   AutoInvoiceListener, // VISION-3340 #50: billable status transition -> auto draft invoice
+  // Owner decision 2026-07-13 (chat): QC defect "customer fault" -> auto-notify sales manager.
+  QcCustomerFaultSdListener,
 ];
 
 const repositories = [

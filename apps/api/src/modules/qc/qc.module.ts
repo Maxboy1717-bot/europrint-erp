@@ -28,6 +28,7 @@ import { ReportDefectHandler } from './application/commands/report-defect.handle
 import { ResolveDefectHandler } from './application/commands/resolve-defect.handler';
 import { RecategorizeDefectHandler } from './application/commands/recategorize-defect.handler';
 import { SetWasteCategoryHandler } from './application/commands/set-waste-category.handler';
+import { SetFaultAttributionHandler } from './application/commands/set-fault-attribution.handler';
 import { CreateReclamationHandler } from './application/commands/create-reclamation.handler';
 import { ResolveReclamationHandler } from './application/commands/resolve-reclamation.handler';
 import { CreateInspectionHandler } from './application/commands/create-inspection.handler';
@@ -103,6 +104,7 @@ const commandHandlers = [
   ResolveDefectHandler,
   RecategorizeDefectHandler,
   SetWasteCategoryHandler,
+  SetFaultAttributionHandler,
   CreateReclamationHandler,
   ResolveReclamationHandler,
   CreateInspectionHandler,

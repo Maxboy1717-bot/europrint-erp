@@ -1311,4 +1311,16 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
       'xabar', '[]'::jsonb, 1, true, 'normal', 'REJA-{YYYY}-{SEQ}'
     WHERE NOT EXISTS (SELECT 1 FROM cc_document_templates WHERE code = 'PLAN_CHANGE')`,
   },
+  // Owner decision 2026-07-13 (chat): a QC defect marked "customer fault" auto-notifies
+  // the sales manager who owns the linked order's customer. Nullable, no default —
+  // NULL = not yet classified; every existing qc_defects INSERT/UPDATE flow (saveDefect/
+  // updateDefect in drizzle-defect.repo.ts) keeps working unchanged (Q-46). Set via
+  // PATCH /qc/defects/:id/fault-attribution -> QcDefectCustomerFaultEvent ->
+  // sd/infrastructure/event-handlers/qc-customer-fault-sd.listener.ts. APPROVED: owner
+  // schema-approval 2026-07-11 (Muslimbek, chat) — Q-35. Human-readable mirror:
+  // apps/api/src/shared/db/migrations/qc-defects-customer-fault-2026-07-13.sql.
+  {
+    name: 'qc_defects.is_customer_fault column (owner 2026-07-13, sales-manager auto-notify)',
+    sql: `ALTER TABLE IF EXISTS qc_defects ADD COLUMN IF NOT EXISTS is_customer_fault BOOLEAN`,
+  },
 ];

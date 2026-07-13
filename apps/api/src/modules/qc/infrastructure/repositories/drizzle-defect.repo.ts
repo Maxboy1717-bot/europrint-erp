@@ -26,6 +26,13 @@ export interface IQcDefectRepository {
   updateDefect(defect: Defect): Promise<Result<Defect>>;
   recategorizeDefect(id: string, defectType: string): Promise<Result<{ id: number; defectType: string }>>;
   setWasteCategory(id: string, category: 'production' | 'setup'): Promise<Result<{ id: number; wasteCategory: string }>>;
+  // Owner decision 2026-07-13 (chat) — customer-fault flag; inspectionId/defectCode are
+  // returned alongside so the handler can publish QcDefectCustomerFaultEvent without a
+  // second round-trip query.
+  setFaultAttribution(
+    id: string,
+    isCustomerFault: boolean,
+  ): Promise<Result<{ id: number; isCustomerFault: boolean; inspectionId: number | null; defectCode: string }>>;
   getDefectStats(): Promise<Result<{ byStatus: Record<string, number>; bySeverity: Record<string, number>; totalQuantity: number; resolvedThisMonth: number }>>;
   findReclamationById(id: number): Promise<Result<Reclamation | null>>;
   findReclamations(filters: { status?: ReclamationStatus; severity?: DefectSeverity; from?: Date; to?: Date; page?: number; limit?: number }): Promise<Result<{ data: Reclamation[]; total: number }>>;
@@ -163,6 +170,36 @@ export class DrizzleDefectRepository implements IQcDefectRepository {
     } catch (error: unknown) {
       this.logger.error('Failed to set waste category');
       return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to set waste category' } };
+    }
+  }
+
+  // Owner decision 2026-07-13 (chat): QC defect customer-fault flag -> auto-notify sales
+  // manager. Xom parametrli SQL — live qc_defects.id INTEGER sequence (Drizzle drift uuid),
+  // recategorizeDefect/setWasteCategory kabi. inspection_id/defect_code RETURNING'ga
+  // qo'shildi — chaqiruvchi handler QcDefectCustomerFaultEvent uchun qayta so'rov qilmasin.
+  async setFaultAttribution(
+    id: string,
+    isCustomerFault: boolean,
+  ): Promise<Result<{ id: number; isCustomerFault: boolean; inspectionId: number | null; defectCode: string }>> {
+    try {
+      const oid = Number.parseInt(id, 10);
+      if (!Number.isInteger(oid) || oid <= 0) {
+        return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: 'Defect not found' } };
+      }
+      const res = await db.execute(sql`
+        UPDATE qc_defects
+        SET is_customer_fault = ${isCustomerFault}, updated_at = NOW()
+        WHERE id = ${oid}
+        RETURNING id, is_customer_fault AS "isCustomerFault", inspection_id AS "inspectionId", defect_code AS "defectCode"`);
+      const rows = ((res as unknown as { rows?: Array<{ id: number; isCustomerFault: boolean; inspectionId: number | null; defectCode: string | null }> }).rows) ?? [];
+      const row = rows[0];
+      if (!row) {
+        return { ok: false as const, error: { code: 'NOT_FOUND' as const, message: 'Defect not found' } };
+      }
+      return { ok: true as const, data: { ...row, defectCode: row.defectCode ?? '' } };
+    } catch (error: unknown) {
+      this.logger.error('Failed to set defect fault attribution');
+      return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to set defect fault attribution' } };
     }
   }
 

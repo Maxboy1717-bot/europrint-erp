@@ -1,0 +1,19 @@
+-- APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35
+-- Owner decision 2026-07-13 (chat): a QC defect marked "customer fault" must
+-- auto-notify the sales manager who owns the linked order's customer.
+--
+-- qc_defects.is_customer_fault — nullable boolean, no default. NULL = not yet
+-- classified (every existing/omitted-field flow keeps working unchanged, Q-46).
+-- TRUE is set via PATCH /qc/defects/:id/fault-attribution
+-- (set-fault-attribution.handler.ts), which then publishes
+-- QcDefectCustomerFaultEvent — consumed by
+-- apps/api/src/modules/sd/infrastructure/event-handlers/qc-customer-fault-sd.listener.ts
+-- (join chain: qc_defects.inspection_id -> qc_inspections.order_id ->
+-- production_orders.sales_order_id -> sales_orders.customer_id ->
+-- sd_customers.manager_id -> employees.user_id -> users.id) to resolve the
+-- recipient and dispatch CreateNotificationCommand (create-notification.handler.ts).
+--
+-- No existing rejection/root-cause taxonomy already covers this: qc_root_causes.category
+-- is a free-text 5-why classification (not customer-vs-internal), and qc_reclamations
+-- (customer complaint intake) is a separate downstream flow from the defect itself.
+ALTER TABLE IF EXISTS qc_defects ADD COLUMN IF NOT EXISTS is_customer_fault BOOLEAN;

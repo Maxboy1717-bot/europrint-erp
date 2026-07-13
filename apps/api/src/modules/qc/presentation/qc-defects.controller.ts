@@ -18,6 +18,7 @@ import { ReportDefectCommand } from '../application/commands/report-defect.comma
 import { ResolveDefectCommand } from '../application/commands/resolve-defect.command';
 import { RecategorizeDefectCommand } from '../application/commands/recategorize-defect.command';
 import { SetWasteCategoryCommand } from '../application/commands/set-waste-category.command';
+import { SetFaultAttributionCommand } from '../application/commands/set-fault-attribution.command';
 import { GetDefectsQuery } from '../application/queries/get-defects.query';
 import { GetDefectStatsQuery } from '../application/queries/get-defect-stats.query';
 import { GetWasteCategoryStatsQuery } from '../application/queries/get-waste-category-stats.query';
@@ -52,6 +53,12 @@ const RecategorizeDefectSchema = z.object({
 // vision 09-qc#96: priladka (setup) brakini ishlab-chiqarish brakidan alohida toifalash.
 const SetWasteCategorySchema = z.object({
   wasteCategory: z.enum(['production', 'setup']),
+});
+
+// Owner decision 2026-07-13 (chat): "customer fault" belgilansa sotuv menejeriga avtomatik
+// bildirishnoma yuboriladi (SetFaultAttributionHandler -> QcDefectCustomerFaultEvent).
+const SetFaultAttributionSchema = z.object({
+  isCustomerFault: z.boolean(),
 });
 
 enum Role {
@@ -192,6 +199,21 @@ export class QcDefectsController {
     const result = await this.commandBus.execute(cmd);
     assertOk(result);
     this.logger.log('Defect waste category set');
+    return { statusCode: HttpStatus.OK, data: (result).data };
+  }
+
+  @ApiOperation({ summary: 'Set defect fault attribution (customer vs internal) — customer fault auto-notifies the sales manager (owner 2026-07-13)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @Patch('defects/:id/fault-attribution')
+  @Roles(Role.QC_MANAGER, Role.TECHNOLOGIST, Role.SUPER_ADMIN)
+  async setDefectFaultAttribution(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const parsed = SetFaultAttributionSchema.parse(body);
+    const cmd = new SetFaultAttributionCommand(id, parsed.isCustomerFault, String(user?.id ?? user?.userId ?? 'system-user'));
+    const result = await this.commandBus.execute(cmd);
+    assertOk(result);
+    this.logger.log('Defect fault attribution set');
     return { statusCode: HttpStatus.OK, data: (result).data };
   }
 
