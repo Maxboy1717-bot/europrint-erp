@@ -74,6 +74,14 @@ export async function execSdSalesOrderInsert(
    * above — it is written on the base `sales_orders` table in the post-insert UPDATE.
    */
   crmLeadId?: number | null,
+  /** Bespoke-job print flags — previously hardcoded false, silently dropping the
+   * command's real designFlag/sampleFlag on every insert (see create-order.handler.ts,
+   * which still fires the DesignRequired event off the in-memory command value, so
+   * the event itself was never affected — only the persisted sales_orders row was wrong,
+   * breaking any later re-read of design_flag e.g. after a server restart). */
+  designFlag?: boolean,
+  sampleFlag?: boolean,
+  currency?: string,
 ): Promise<number> {
   const conn = (tx as typeof db | undefined) ?? db;
   const rows = await conn.insert(sd_sales_orders).values({
@@ -82,11 +90,12 @@ export async function execSdSalesOrderInsert(
     company_id: companyId as number,
     customer_id: customerId ?? null,
     total_amount: String(totalAmount),
+    currency: currency ?? 'UZS',
     advance_required: DEFAULT_ADVANCE_PERCENT,
     advance_paid: '0',
     advance_status: 'pending',
-    design_flag: false,
-    sample_flag: false,
+    design_flag: designFlag ?? false,
+    sample_flag: sampleFlag ?? false,
     // ⚠️ Pre-existing schema drift: live sales_orders.created_by is UUID but app user ids are integer.
     // The integer creator now lands in sales_orders.created_by_user_id (T8-01 column, FK→users) via the
     // post-insert UPDATE below — the `sd_sales_orders` view does not expose that column, so it cannot be

@@ -149,6 +149,7 @@ export const sd_sales_orders = pgTable('sd_sales_orders', {
   advance_required: integer('advance_required').default(70),
   advance_paid:   numeric('advance_paid', { precision: 15, scale: 2 }).default('0'),
   advance_status: text('advance_status').default('pending'),
+  currency:       text('currency'),
   design_flag:    boolean('design_flag').default(false),
   sample_flag:    boolean('sample_flag').default(false),
   is_vip:         boolean('is_vip').default(false),
