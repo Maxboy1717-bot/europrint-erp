@@ -190,6 +190,28 @@ export class ChatController {
     return pinned ? [pinned] : [];
   }
 
+  // FE (ChatLayout.handleRoomSelect) singular `rooms/:id/pinned` chaqiradi; oldin
+  // faqat `/api/hr-v2/chat/...`da bor edi → `/api/chat/...`da 404 berardi. Bir xil
+  // servis metodiga delegatsiya, FE kutgan yakka-obyekt shakli bilan.
+  @ApiOperation({ summary: 'Get pinned message (single)' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @Get('rooms/:roomId/pinned')
+  async getPinnedMessageSingle(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('roomId') roomId: string,
+  ) {
+    await this.chatService.assertRoomMember(roomId, user.id);
+    const pinned = await this.chatService.getPinnedMessage(roomId);
+    return pinned
+      ? {
+          id: String(pinned.id),
+          content: pinned.content,
+          sender_name: pinned.senderName,
+          created_at: pinned.createdAt,
+        }
+      : null;
+  }
+
   @ApiOperation({ summary: 'Get shared files in room' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('rooms/:roomId/files')
