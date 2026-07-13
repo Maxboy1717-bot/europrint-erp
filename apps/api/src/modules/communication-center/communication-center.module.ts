@@ -18,6 +18,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AiModule } from '../ai/ai.module';
 import { AgentsModule } from '../agents/agents.module';
+// 20-cc#49 (P0, owner 2026-07-11): CcApprovedGlPostingListener needs GlPostingService (the ONE
+// canonical `entries` posting engine) — mirrors pos.module.ts / sd.module.ts's FinanceModule import.
+import { FinanceModule } from '@modules/finance/finance.module';
 
 // Repositories
 import { CcBasketsRepository }            from './infrastructure/repositories/cc-baskets.repo';
@@ -51,12 +54,14 @@ import { CcSlaCron }       from './cron/cc-sla.cron';
 import { CcBotService }    from './telegram/cc-bot.service';
 import { CcEventListener } from './events/cc-event.listener';
 import { CcApprovedKassirListener } from './events/cc-approved-kassir.listener';
+import { CcApprovedGlPostingListener } from './events/cc-approved-gl-posting.listener';
 
 @Module({
   imports: [
     CqrsModule,
     AiModule,
     AgentsModule,                  // CcBotService → DirectorAgentService + StrategicAgentService
+    FinanceModule,                 // CcApprovedGlPostingListener → GlPostingService (20-cc#49)
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
@@ -97,6 +102,7 @@ import { CcApprovedKassirListener } from './events/cc-approved-kassir.listener';
     CcBotService,
     CcEventListener,
     CcApprovedKassirListener,   // G4: approve→kassir bildirishnoma ko'prigi
+    CcApprovedGlPostingListener, // 20-cc#49: approve→GL auto-post (P0)
   ],
   exports: [
     CcBasketsService,

@@ -1167,4 +1167,32 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'Owner 2026-07-13 (chat): TT/task karta uchun standart eskalatsiya SLA (soat) - CC cc_document_templates.inbox_sla_hours (24) bilan bir xil boshlang''ich qiymat. Karta darajasida (kanban_cards.sla_hours) yoki tur darajasida (taxonomy_entries.attrs->>''sla_hours'', category=''kanban_task_type'') override qilinishi mumkin; hech biri bo''lmasa shu global default ishlatiladi.'
       WHERE NOT EXISTS (SELECT 1 FROM business_settings WHERE setting_key = 'kanban.tt_task_sla_hours_default')`,
   },
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // 20-cc#49 (P0, owner 2026-07-11): CC hujjat tasdiqlanganda (ADVANCE/FINANCIAL_AID — publisher
+  // buni faqat shu ikki moliyaviy shablon uchun chiqaradi, cc-workflow.service.ts
+  // emitFullyApprovedIfFinancial) endi avtomatik GL yozuvi yaratiladi
+  // (CcApprovedGlPostingListener). gl_account_mappings jadvali POS harakatlari uchun allaqachon
+  // ishlatiladi (transaction_type keyed — GlPostingLogRepository.postMovementToLedger bilan bir xil
+  // naqsh); CC uchun ham AYNAN shu naqsh: transaction_type = CC shablon kodi. Standart hisob juftligi
+  // (owner/buxgalter mavjud GL Mapping CRUD orqali istalgan vaqt o'zgartirishi mumkin — bu faqat
+  // boshlang'ich default, Q-40):
+  //   ADVANCE       -> Dr 4200 (Xodimlardan olinadigan summalar — qaytariladigan avans debitor)
+  //                     Cr 5010 (Kassa — naqd pul chiqimi)
+  //   FINANCIAL_AID -> Dr 9500 (Boshqa operatsion xarajatlar — qaytarilmaydigan yordam xarajati)
+  //                     Cr 5010 (Kassa)
+  // Data-seed (DDL emas — gl_account_mappings jadvali allaqachon mavjud), idempotent (WHERE NOT
+  // EXISTS — mavjud transaction_type uchun qayta qo'shilmaydi). Human-readable mirror:
+  // apps/api/src/shared/db/migrations/seed-gl-account-mappings-cc-2026-07-13.sql.
+  {
+    name: 'gl_account_mappings seed: CC ADVANCE/FINANCIAL_AID (20-cc#49 GL auto-post)',
+    sql: `INSERT INTO gl_account_mappings (transaction_type, debit_account, credit_account, description, created_at, updated_at)
+      SELECT v.tt, v.da, v.ca, v.descr, NOW(), NOW()
+      FROM (VALUES
+        ('ADVANCE',       '4200', '5010', 'CC avans hujjati tasdiqlandi: Dr Xodimlardan olinadigan summalar / Cr Kassa'),
+        ('FINANCIAL_AID', '9500', '5010', 'CC moddiy yordam hujjati tasdiqlandi: Dr Boshqa operatsion xarajatlar / Cr Kassa')
+      ) AS v(tt, da, ca, descr)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM gl_account_mappings g WHERE g.transaction_type = v.tt
+      )`,
+  },
 ];

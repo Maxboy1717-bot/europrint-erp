@@ -17,6 +17,7 @@ import { CcDocumentNumberService } from './cc-document-number.service';
 import { CcKanbanBridgeService } from './cc-kanban-bridge.service';
 import { unwrapOrThrow } from '@common/http-result';
 import { isOk } from '@common/result';
+import { safeNum } from '@common/math';
 import { db } from '@shared/db';
 import {
   executeApproveTransaction, findMyPendingApproval, requireDocInProgress,
@@ -246,9 +247,10 @@ export class CcWorkflowService {
     );
 
     // G4: hujjat TO'LIQ tasdiqlandi (oxirgi bosqich) — moliyaviy shablon bo'lsa
-    // kassir-ko'prik event'i chiqadi (to'lov AVTO yaratilmaydi — faqat bildirishnoma).
+    // kassir-ko'prik event'i chiqadi (to'lov AVTO yaratilmaydi — faqat bildirishnoma)
+    // + (20-cc#49) GL auto-post listener shu event'ni ham qabul qiladi.
     if (result.status === 'finalized') {
-      await this.emitFullyApprovedIfFinancial(doc);
+      await this.emitFullyApprovedIfFinancial(doc, approverUserId);
     }
     return result;
   }
@@ -257,8 +259,13 @@ export class CcWorkflowService {
    * G4 approve→kassir ko'prigi: to'liq tasdiqlangan hujjat shabloni
    * ADVANCE/FINANCIAL_AID bo'lsa CcDocumentFullyApprovedEvent chiqaradi.
    * Xato approve javobini buzmasligi kerak — shuning uchun try/catch + logger.error.
+   *
+   * 20-cc#49 (P0, owner 2026-07-11): event'ga `amount` (ai_answers.amount) va
+   * `approverUserId` ham qo'shildi — CcApprovedGlPostingListener shu ikkalasidan
+   * foydalanib GL jurnal yozuvini avtomatik yaratadi (musbat summa + gl_account_mappings
+   * xaritalash mavjud bo'lsagina — Q-40, fabrikatsiya taqiq).
    */
-  private async emitFullyApprovedIfFinancial(doc: DocumentRow): Promise<void> {
+  private async emitFullyApprovedIfFinancial(doc: DocumentRow, approverUserId: number): Promise<void> {
     try {
       const tmplR = await this.docs.getTemplate(doc.templateId);
       if (!isOk(tmplR) || !tmplR.data) {
@@ -267,14 +274,18 @@ export class CcWorkflowService {
       }
       const code = tmplR.data.code;
       if (code !== 'ADVANCE' && code !== 'FINANCIAL_AID') return;
+      const rawAmount = safeNum(doc.aiAnswers?.['amount'], 0);
+      const amount = rawAmount > 0 ? rawAmount : null;
       this.eventBus.publish(new CcDocumentFullyApprovedEvent({
         documentId:     doc.id,
         documentNumber: doc.documentNumber,
         templateCode:   code,
         senderUserId:   doc.senderUserId,
         subject:        doc.subject,
+        amount,
+        approverUserId,
       }));
-      this.logger.log(`CcDocumentFullyApprovedEvent chiqarildi: ${doc.documentNumber} (${code})`);
+      this.logger.log(`CcDocumentFullyApprovedEvent chiqarildi: ${doc.documentNumber} (${code}, amount=${amount ?? 'yo\'q'})`);
     } catch (e) {
       this.logger.error(`emitFullyApprovedIfFinancial(${doc.id}): ${String(e)}`);
     }
