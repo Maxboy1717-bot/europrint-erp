@@ -6,11 +6,12 @@
 import { type LucideIcon } from "lucide-react";
 
 export interface AiTrendData {
-  totalBraks?: number;
-  summary?: string;
-  byReason?: Record<string, number>;
-  byStage?: Record<string, number>;
-  recommendations?: string[];
+  summary?: { totalTests: number; totalBraks: number; avgPassRate: number; trend: string };
+  weeklyTrend?: Array<{ week: string; total: number; passed: number; failed: number; passRate: number }>;
+  byReason?: Array<{ reason: string; count: number }>;
+  byStage?: Array<{ stage: string; count: number }>;
+  categoryStats?: Array<{ category: string; total: number; passed: number; passRate: number }>;
+  aiInsights?: string[];
 }
 
 export interface QCLabTest {
