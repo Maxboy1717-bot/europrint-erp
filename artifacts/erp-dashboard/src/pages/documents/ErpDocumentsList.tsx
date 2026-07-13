@@ -15,6 +15,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { tLabel } from '@/lib/i18n/tLabel';
+import { ImportDocxButton } from './ImportDocxButton';
 
 interface ErpDocRow {
   id: string;
@@ -99,6 +100,9 @@ export default function ErpDocumentsList() {
 
   return (
     <div className="p-4 space-y-4">
+      <div className="flex items-center justify-end">
+        <ImportDocxButton />
+      </div>
       <EPTable<ErpDocRow>
         title={tLabel('documents.myDocuments', 'Mening hujjatlarim')}
         columns={columns}
