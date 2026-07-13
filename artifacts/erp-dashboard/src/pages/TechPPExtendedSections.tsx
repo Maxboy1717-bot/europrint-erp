@@ -2,6 +2,7 @@
  * TechPPExtendedSections.tsx
  * Tab content section components for TechPPExtended.
  */
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +14,19 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Cpu, Calculator, Plus } from "lucide-react";
 import { StatCard, EmptyState } from "./TechPPExtendedDialogs";
 import type { TechCard } from "./TechPPExtendedTypes";
+import { useToast } from "@/hooks/use-toast";
 
 import { useTranslation } from '@/lib/i18n';
+
+// ─── Vaqt va Tannarx kalkulyatori konstantalari ────────────────────────────────
+// Standart stanok tezligi (bosma bosqichida) — dona/soat.
+const TIME_CALC_MACHINE_SPEED_UNITS_PER_HOUR = 1200;
+// Har bir bo'yoq uchun stanokni sozlash vaqti — soat.
+const TIME_CALC_COLOR_SETUP_HOURS = 0.5;
+// Dona boshiga bazaviy ishlab chiqarish tannarxi — so'm.
+const TIME_CALC_BASE_COST_PER_UNIT = 150;
+// Dona + bo'yoq boshiga qo'shimcha bo'yoq tannarxi — so'm.
+const TIME_CALC_COLOR_COST_PER_UNIT = 25;
 // ─── Tech: Material Muqobili ──────────────────────────────────────────────────
 interface TechMaterialsProps { techCards: TechCard[]; loading: boolean; }
 export function TechMaterialsSection({techCards, loading }: TechMaterialsProps) {
@@ -108,8 +120,33 @@ export function TechMachinesSection() {
 }
 
 // ─── Tech: Vaqt va Tannarx ────────────────────────────────────────────────────
+interface TimeCostResult { hours: number; cost: number; }
+
 export function TechTimeSection() {
   const { t } = useTranslation("common");
+  const { toast } = useToast();
+  const [orderNo, setOrderNo] = useState("");
+  const [tirajInput, setTirajInput] = useState("");
+  const [stanok, setStanok] = useState("");
+  const [colorsInput, setColorsInput] = useState("");
+  const [result, setResult] = useState<TimeCostResult | null>(null);
+
+  const handleCalculate = () => {
+    const tiraj = Number(tirajInput);
+    const colors = colorsInput.trim() === "" ? 0 : Number(colorsInput);
+    if (!tirajInput.trim() || !Number.isFinite(tiraj) || tiraj <= 0) {
+      toast({ title: "Tiraj noto'g'ri", description: "Tiraj musbat son bo'lishi kerak", variant: "destructive" });
+      return;
+    }
+    if (!Number.isFinite(colors) || colors < 0) {
+      toast({ title: "Bo'yoqlar soni noto'g'ri", description: "Bo'yoqlar soni manfiy bo'lmasligi kerak", variant: "destructive" });
+      return;
+    }
+    const hours = tiraj / TIME_CALC_MACHINE_SPEED_UNITS_PER_HOUR + colors * TIME_CALC_COLOR_SETUP_HOURS;
+    const cost = tiraj * TIME_CALC_BASE_COST_PER_UNIT + tiraj * colors * TIME_CALC_COLOR_COST_PER_UNIT;
+    setResult({ hours, cost });
+  };
+
   return (
     <TabsContent value="tech-time" className="mt-0 space-y-4">
       <h2 className="text-lg font-semibold">{t("vaqtVaTannarxKalkulyator")}</h2>
@@ -117,17 +154,48 @@ export function TechTimeSection() {
         <Card>
           <CardHeader><CardTitle className="text-base">{t("kalkulyatsiya")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {([{l:"Buyurtma raqami",p:""},{l:"Tiraj",p:""},{l:"Stanoq",p:""},{l:"Bo'yoqlar",p:""}]).map(f => (
-              <div key={f.l} className="space-y-1"><Label className="text-sm">{f.l}</Label><Input defaultValue={f.p} /></div>
-            ))}
-            <Button className="w-full gap-2" data-testid="button-calc-time">
+            <div className="space-y-1">
+              <Label className="text-sm">Buyurtma raqami</Label>
+              <Input value={orderNo} onChange={e => setOrderNo(e.target.value)} data-testid="input-time-order-no" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-sm">Tiraj</Label>
+              <Input type="number" min="0" value={tirajInput} onChange={e => setTirajInput(e.target.value)} data-testid="input-time-tiraj" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-sm">Stanoq</Label>
+              <Input value={stanok} onChange={e => setStanok(e.target.value)} data-testid="input-time-stanok" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-sm">Bo'yoqlar</Label>
+              <Input type="number" min="0" value={colorsInput} onChange={e => setColorsInput(e.target.value)} data-testid="input-time-colors" />
+            </div>
+            <Button className="w-full gap-2" data-testid="button-calc-time" onClick={handleCalculate}>
               <Calculator className="h-4 w-4" />{t("calculate")}
             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-base">{t("natija")}</CardTitle></CardHeader>
-          <CardContent><EmptyState message="Ma'lumot kiritilmagan" /></CardContent>
+          <CardContent>
+            {result === null ? (
+              <EmptyState message="Ma'lumot kiritilmagan" />
+            ) : (
+              <div className="grid grid-cols-1 gap-3" data-testid="time-cost-result">
+                <StatCard
+                  label="Ishlab chiqarish vaqti"
+                  value={`${result.hours.toFixed(1)} soat`}
+                  sub={orderNo ? `Buyurtma: ${orderNo}` : undefined}
+                />
+                <StatCard
+                  label="Tannarx"
+                  value={`${result.cost.toLocaleString("uz-UZ")} so'm`}
+                  color="text-[var(--ep-green)]"
+                  sub={stanok ? `Stanoq: ${stanok}` : undefined}
+                />
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </TabsContent>
