@@ -16,6 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 import { tLabel } from '@/lib/i18n/tLabel';
 import { RichTextEditor } from '@/components/document-control/RichTextEditor';
 import { SendToCcModal } from './SendToCcModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ErpDoc {
   id: string;
@@ -51,6 +53,8 @@ export default function ErpDocumentEditor() {
   const [contentHtml, setContentHtml] = useState('');
   const [dirty, setDirty] = useState(false);
   const [showSendCc, setShowSendCc] = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
   const docQ = useQuery<ErpDoc>({
     queryKey: [`/api/erp-documents/${id}`],
@@ -68,8 +72,8 @@ export default function ErpDocumentEditor() {
   }, [docQ.data]);
 
   const save = useMutation({
-    mutationFn: async () => {
-      const payload = { title: title.trim(), content: content ?? { type: 'doc', content: [] }, contentHtml, sensitivityTier: tier };
+    mutationFn: async (finalTitle: string) => {
+      const payload = { title: finalTitle.trim(), content: content ?? { type: 'doc', content: [] }, contentHtml, sensitivityTier: tier };
       return id
         ? apiRequest<ErpDoc>('PATCH', `/api/erp-documents/${id}`, payload)
         : apiRequest<ErpDoc>('POST', '/api/erp-documents', payload);
@@ -82,6 +86,18 @@ export default function ErpDocumentEditor() {
     },
     onError: () => toast({ title: tLabel('common.error', 'Xatolik'), description: tLabel('documents.saveFailed', "Saqlab bo'lmadi"), variant: 'destructive' }),
   });
+
+  // Word-style: first save of a brand-new doc prompts for a name; later saves are direct.
+  const doSave = (name?: string) => {
+    const finalTitle = (name ?? title).trim();
+    if (!finalTitle) return;
+    if (name && name.trim() !== title) setTitle(name.trim());
+    save.mutate(finalTitle);
+  };
+  const handleSaveClick = () => {
+    if (!id) { setNameInput(title.trim()); setShowNameModal(true); return; }
+    doSave();
+  };
 
   const statusText = save.isPending
     ? tLabel('documents.saving', 'Saqlanmoqda…')
@@ -136,8 +152,8 @@ export default function ErpDocumentEditor() {
           </button>
         )}
         <button
-          onClick={() => title.trim() && save.mutate()}
-          disabled={!title.trim() || save.isPending}
+          onClick={handleSaveClick}
+          disabled={save.isPending}
           className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--ep-primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 shrink-0"
         >
           {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -146,6 +162,29 @@ export default function ErpDocumentEditor() {
       </div>
 
       {id && <SendToCcModal erpDocumentId={id} open={showSendCc} onClose={() => setShowSendCc(false)} />}
+
+      {/* Word-style name prompt on first save of a new document */}
+      <Dialog open={showNameModal} onOpenChange={setShowNameModal}>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader>
+            <DialogTitle>{tLabel('documents.nameDocument', 'Hujjat nomini kiriting')}</DialogTitle>
+          </DialogHeader>
+          <input
+            autoFocus
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && nameInput.trim()) { setShowNameModal(false); doSave(nameInput); } }}
+            placeholder={tLabel('documents.titlePlaceholder', 'Hujjat sarlavhasi')}
+            className="w-full h-10 rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] px-3 text-sm outline-none focus:border-[var(--ep-blue)]"
+          />
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setShowNameModal(false)}>{tLabel('documents.cancel', 'Bekor')}</Button>
+            <Button onClick={() => { if (nameInput.trim()) { setShowNameModal(false); doSave(nameInput); } }} disabled={!nameInput.trim()}>
+              {tLabel('documents.save', 'Saqlash')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <RichTextEditor
         value={content}
