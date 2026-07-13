@@ -159,6 +159,17 @@ export const MES_ROUTES: [string, React.ComponentType][] = [
 export const QC_ROUTES: [string, React.ComponentType][] = [
   ['/qc/dashboard-home',    QCDashboard],
   ['/qc-module',            QCModule],
+  ['/qc/standards',         QCModule],           // Normalar — renders QCModule directly so
+                                                  // getInitialTab() sees "/qc/standards" and
+                                                  // selects the dedicated "standards" tab
+                                                  // (QCStandardsTab). Previously redirected to
+                                                  // "/qc-module", erasing the URL hint.
+  ['/qc/parameters',        QcParametersConfig], // Parametrlar — dedicated config page
+                                                  // (min/maqsad/max inline-edit), same
+                                                  // component as /qc/parameters-config.
+                                                  // Previously redirected to "/qc-module"
+                                                  // (physical tab), identical to Material
+                                                  // Testlari.
   ['/print/ink-coverage',   InkCoverageCalculator],
   ['/print/imposition',     ImpositionCalculator],
   ['/qc/approval',          QCApproval],

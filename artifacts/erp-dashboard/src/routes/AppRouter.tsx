@@ -65,8 +65,8 @@ const REDIRECT_PATHS = [
   '/crm/deals', '/crm/contacts', '/crm/companies', '/crm/proposals',
   '/crm/invoices', '/sd/quota-dashboard', '/erp/planning', '/erp/pp/mrp',
   '/tech/dashboard', '/tech/approval', '/tech/parameters', '/tech/standards',
-  '/iot/live', '/europrint/director', '/qc/dashboard', '/qc/standards',
-  '/qc/parameters', '/qc/tests', '/succession-planning',
+  '/iot/live', '/europrint/director', '/qc/dashboard',
+  '/qc/tests', '/succession-planning',
   '/hr/succession-planning', '/hr/leave',
   '/feedback', '/logout',
   '/sales', '/aisha',
@@ -174,9 +174,14 @@ export function AppRouter() {
       <Route path="/iot/live"><RoleRoute roles={IOT_ROLES}><Redirect to="/iot/dashboard" /></RoleRoute></Route>
       <Route path="/europrint/director"><RoleRoute roles={DIRECTOR_ROLES}><Redirect to="/" /></RoleRoute></Route>
       <Route path="/qc/dashboard"><RoleRoute roles={QC_ROLES}><Redirect to="/qc/dashboard-home" /></RoleRoute></Route>
-      <Route path="/qc/standards"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
-      <Route path="/qc/parameters"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
       <Route path="/qc/tests"><RoleRoute roles={QC_ROLES}><Redirect to="/qc-module" /></RoleRoute></Route>
+      {/* /qc/standards and /qc/parameters are NOT redirected — they render their own
+          dedicated components directly via QC_ROUTES (QCModule "standards" tab and
+          QcParametersConfig respectively). Routing them through <Redirect to="/qc-module"/>
+          rewrote the URL to "/qc-module" before QCModule ever mounted, so its
+          getInitialTab(location) URL-sniffing always saw "/qc-module" and fell through
+          to the "physical" tab — making Normalar/Parametrlar render identical content
+          to Material Testlari. See QC_ROUTES in ProductionRoutes.tsx. */}
       <Route path="/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
       <Route path="/hr/succession-planning"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/succession" /></RoleRoute></Route>
       <Route path="/hr/leave"><RoleRoute roles={HR_ROLES}><Redirect to="/hr/vacation-sick" /></RoleRoute></Route>
