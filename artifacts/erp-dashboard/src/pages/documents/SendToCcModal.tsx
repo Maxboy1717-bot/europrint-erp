@@ -17,8 +17,8 @@ import { tLabel } from '@/lib/i18n/tLabel';
 
 interface Employee { id: number; fullName: string; employeeId?: string | null; departmentName?: string | null; }
 
-export function SendToCcModal({ erpDocumentId, open, onClose }: {
-  erpDocumentId: string; open: boolean; onClose: () => void;
+export function SendToCcModal({ erpDocumentId, documentType = 'erp_document', open, onClose }: {
+  erpDocumentId: string; documentType?: 'erp_document' | 'erp_spreadsheet'; open: boolean; onClose: () => void;
 }) {
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -35,7 +35,7 @@ export function SendToCcModal({ erpDocumentId, open, onClose }: {
     : employees;
 
   const send = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/cc/documents/from-erp', { erpDocumentId, targetUserId: selected!.id }),
+    mutationFn: () => apiRequest('POST', '/api/cc/documents/from-erp', { erpDocumentId, documentType, targetUserId: selected!.id }),
     onSuccess: () => {
       toast({ title: tLabel('documents.sentToCc', 'CC orqali yuborildi'), description: selected?.fullName });
       setSelected(null); setSearch(''); onClose();

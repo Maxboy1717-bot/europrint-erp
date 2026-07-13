@@ -10,13 +10,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Save, ArrowLeft, Check, Printer } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Check, Printer, Share2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { tLabel } from '@/lib/i18n/tLabel';
 import { SpreadsheetGrid } from '@/components/document-control/SpreadsheetGrid';
 import { DocumentWatermark } from '@/components/document-control/DocumentWatermark';
+import { SendToCcModal } from './SendToCcModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Cells } from '@/lib/spreadsheet';
@@ -56,15 +57,23 @@ export default function ErpSpreadsheetEditor() {
   const [nameInput, setNameInput] = useState('');
   const [showPrint, setShowPrint] = useState(false);
   const [printReason, setPrintReason] = useState('');
+  const [showSendCc, setShowSendCc] = useState(false);
 
   const sheetQ = useQuery<ErpSheet>({
     queryKey: [`/api/erp-spreadsheets/${id}`],
     queryFn: () => apiRequest<ErpSheet>('GET', `/api/erp-spreadsheets/${id}`),
     enabled: !!id,
   });
+  // Seed local state from the server row ONCE per sheet id — a background refetch must not
+  // overwrite unsaved cell edits (see ErpDocumentEditor for the same guard).
+  const seededId = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (sheetQ.data) { setTitle(sheetQ.data.title); setTier(sheetQ.data.sensitivity_tier); const c = sheetQ.data.cells ?? {}; setCells(c); cellsRef.current = c; setDirty(false); }
-  }, [sheetQ.data]);
+    if (sheetQ.data && seededId.current !== id) {
+      seededId.current = id;
+      setTitle(sheetQ.data.title); setTier(sheetQ.data.sensitivity_tier);
+      const c = sheetQ.data.cells ?? {}; setCells(c); cellsRef.current = c; setDirty(false);
+    }
+  }, [sheetQ.data, id]);
 
   const save = useMutation({
     mutationFn: async (finalTitle: string) => {
@@ -127,10 +136,18 @@ export default function ErpSpreadsheetEditor() {
             <Printer className="w-4 h-4" />
           </button>
         )}
+        {id && (
+          <button onClick={() => setShowSendCc(true)} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-[var(--ep-border)] text-[var(--ep-text)] text-sm font-medium hover:bg-[var(--ep-bg)] shrink-0" title={tLabel('documents.sendViaCc', 'CC orqali yuborish')}>
+            <Share2 className="w-4 h-4" />
+            {tLabel('documents.sendViaCc', 'CC orqali yuborish')}
+          </button>
+        )}
         <button onClick={handleSaveClick} disabled={save.isPending} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--ep-primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 shrink-0">
           {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{tLabel('documents.save', 'Saqlash')}
         </button>
       </div>
+
+      {id && <SendToCcModal erpDocumentId={id} documentType="erp_spreadsheet" open={showSendCc} onClose={() => setShowSendCc(false)} />}
 
       <div className="p-4">
         <DocumentWatermark tier={tier}>

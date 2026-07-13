@@ -55,6 +55,7 @@ export class DocumentDeliveryService {
     switch (documentType) {
       case 'cc': return `/cc/documents/${documentId}`;
       case 'erp_document': return `/documents/${documentId}`;
+      case 'erp_spreadsheet': return `/spreadsheets/${documentId}`;
       default: return `/documents/${documentId}`;
     }
   }

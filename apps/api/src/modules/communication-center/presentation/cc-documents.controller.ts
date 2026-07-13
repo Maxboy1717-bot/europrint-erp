@@ -78,7 +78,7 @@ const CancelSchema   = z.object({
   reason: z.string().min(3).max(2000),
 });
 const ComplaintSchema = z.object({ reason: z.string().min(5).max(4000) });
-const FromErpSchema   = z.object({ erpDocumentId: z.string().uuid(), targetUserId: z.number().int().positive() });
+const FromErpSchema   = z.object({ erpDocumentId: z.string().uuid(), targetUserId: z.number().int().positive(), documentType: z.enum(['erp_document', 'erp_spreadsheet']).default('erp_document') });
 const ErkinHujjatSchema = z.object({ title: z.string().trim().min(1).max(500) });
 const PrintSchema     = z.object({ reason: z.string().min(3).max(2000) });
 const SetPinSchema    = z.object({ pin: z.string().regex(/^\d{4,8}$/) });
@@ -302,7 +302,7 @@ export class CcDocumentsController {
     @Body(new ZodValidationPipe(FromErpSchema)) body: z.infer<typeof FromErpSchema>,
     @CurrentUser() user: { id: number },
   ) {
-    return this.wf.surfaceErpInCc(body.erpDocumentId, user.id, body.targetUserId);
+    return this.wf.surfaceErpInCc(body.erpDocumentId, user.id, body.targetUserId, body.documentType);
   }
 
   // STEP 3.6b — start an "Erkin hujjat" from CC's create flow: makes a blank erp_document

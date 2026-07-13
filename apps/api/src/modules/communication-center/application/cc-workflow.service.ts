@@ -100,16 +100,25 @@ export class CcWorkflowService {
   // Reuses createDraft + transition (no parallel inbox). The erp doc itself stays
   // untouched and editable in /documents.
   // ─────────────────────────────────────────────────────────────────────
-  async surfaceErpInCc(erpDocumentId: string, senderUserId: number, targetUserId: number) {
+  async surfaceErpInCc(
+    erpDocumentId: string,
+    senderUserId: number,
+    targetUserId: number,
+    sourceType: 'erp_document' | 'erp_spreadsheet' = 'erp_document',
+  ) {
     if (targetUserId === senderUserId) {
       throw new BadRequestException("O'zingizga yubora olmaysiz");
     }
-    // erp doc title (cross-module DB read; erp doc must exist + not soft-deleted)
-    const titleRes = await db.execute(
-      sql`SELECT title FROM erp_documents WHERE id = ${erpDocumentId}::uuid AND deleted_at IS NULL LIMIT 1`,
-    );
+    const isSheet = sourceType === 'erp_spreadsheet';
+    const openPath = isSheet ? '/spreadsheets' : '/documents';
+    const label = isSheet ? 'Jadval' : 'Erkin hujjat';
+    // source title (cross-module DB read; source must exist + not soft-deleted). Two literal
+    // queries (no sql.raw on a variable — Qoida B) branched by source type.
+    const titleRes = isSheet
+      ? await db.execute(sql`SELECT title FROM erp_spreadsheets WHERE id = ${erpDocumentId}::uuid AND deleted_at IS NULL LIMIT 1`)
+      : await db.execute(sql`SELECT title FROM erp_documents WHERE id = ${erpDocumentId}::uuid AND deleted_at IS NULL LIMIT 1`);
     const title = (titleRes as unknown as { rows?: Array<{ title?: string }> }).rows?.[0]?.title;
-    if (!title) throw new NotFoundException('Erkin hujjat topilmadi');
+    if (!title) throw new NotFoundException(`${label} topilmadi`);
 
     // reserved generic template (seeded in the 3.6a-1 migration)
     const tplRes = await db.execute(sql`SELECT id FROM cc_document_templates WHERE code = 'ERKIN-HUJJAT' LIMIT 1`);
@@ -119,12 +128,15 @@ export class CcWorkflowService {
     const created = await this.createDraft(senderUserId, {
       templateId,
       subject: title,
-      aiBody: `Erkin hujjat: "${title}" — /documents orqali oching.`,
+      aiBody: `${label}: "${title}" — ${openPath}/${erpDocumentId} orqali oching.`,
     } as CreateDraftDto);
     const ccDocId = String((created as { id?: unknown }).id ?? '');
 
-    // link the CC record to the erp doc
-    await db.execute(sql`UPDATE cc_documents SET related_erp_document_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+    // link the CC record back to the source. related_erp_document_id exists only for erp docs;
+    // for spreadsheets the deep-link is carried by the body + chat ping (no schema change).
+    if (!isSheet) {
+      await db.execute(sql`UPDATE cc_documents SET related_erp_document_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+    }
 
     // route into the target employee's CC inbox (reuse the transition primitive)
     unwrapOrThrow(await this.docs.transition({
@@ -140,12 +152,12 @@ export class CcWorkflowService {
 
     // chat ping (reuse STEP 3.5 — no second notification pathway)
     void this.delivery.notifyDocumentAssigned(targetUserId, {
-      documentType: 'erp_document',
+      documentType: sourceType,
       documentId:   erpDocumentId,
       title,
     });
 
-    return { ccDocumentId: ccDocId, targetUserId, related_erp_document_id: erpDocumentId };
+    return { ccDocumentId: ccDocId, targetUserId, sourceType, related_erp_document_id: isSheet ? null : erpDocumentId };
   }
 
   // STEP 3.6b — "Erkin hujjat" started FROM CC's create flow: create a blank erp_document
