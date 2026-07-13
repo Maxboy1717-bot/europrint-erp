@@ -214,12 +214,28 @@ export async function execHrEmployeeImport(emp: Record<string, unknown>): Promis
 }
 
 export async function execHrBrandSettingsUpsert(jsonData: string): Promise<void> {
-  await db.insert(hr_brand_settings).values({
-    company_id: 'default',
-    brand_data: jsonData,
-  }).onConflictDoUpdate({
-    target: hr_brand_settings.company_id,
-    set: { brand_data: jsonData, updated_at: sql`NOW()` },
-  });
+  // Single-tenant singleton row: hr_brand_settings has no genuine per-company
+  // scoping (no companies/tenants table exists anywhere in this ERP; the
+  // `company_id` column was a vestigial multi-tenant leftover always set to
+  // the literal 'default'). There is at most one row — update it in place if
+  // present, otherwise create it.
+  // NOTE: this used to be `onConflictDoUpdate({ target: company_id })`, but
+  // the live DB has no unique constraint on company_id (schema drift — the
+  // Drizzle schema declared `.unique()` yet it was never applied), so every
+  // save threw "no unique or exclusion constraint matching ON CONFLICT
+  // specification" (confirmed live via psql, 2026-07-13). A manual
+  // select-then-branch sidesteps the missing constraint instead of requiring
+  // a new migration to add one for a column we no longer want to depend on.
+  const existing = await db.select({ id: hr_brand_settings.id })
+    .from(hr_brand_settings)
+    .orderBy(hr_brand_settings.id)
+    .limit(1);
+  if (existing[0]) {
+    await db.update(hr_brand_settings)
+      .set({ brand_data: jsonData, updated_at: sql`NOW()` })
+      .where(eq(hr_brand_settings.id, existing[0].id));
+  } else {
+    await db.insert(hr_brand_settings).values({ brand_data: jsonData });
+  }
 }
 

@@ -9,10 +9,27 @@ import {
 } from 'drizzle-orm/pg-core';
 
 // hr_brand_settings: NOT in lib/db barrel — kept as local stub.
+// SINGLE-TENANT SINGLETON (fixed 2026-07-13): `company_id` used to be
+// declared `.unique().notNull()` here, implying a real multi-tenant scoping
+// column. It never was one — EuroPrint is a single print-shop, single-company
+// ERP with no `companies`/`tenants` table anywhere in the schema, and the
+// live DB never actually had a unique constraint on this column (schema
+// drift: `.unique()` was aspirational, not applied). Every writer hardcoded
+// company_id='default' and every reader filtered on the same literal, so it
+// was a no-op scoping key — but repositories still called
+// `onConflictDoUpdate({ target: company_id })`, which requires a REAL unique
+// constraint to exist; since none did, every save threw "no unique or
+// exclusion constraint matching ON CONFLICT specification" (confirmed live
+// via psql). Fix: stop treating company_id as a scoping/conflict key — there
+// is at most one row, fetched/updated by `id` (see
+// hr-compat-safety.repository.ts + queries-remaining-b.ts). company_id stays
+// as a legacy nullable column (DB default 'default'::text) so old rows and
+// any stray reference to it don't break; it is no longer read for filtering.
 export const hr_brand_settings = pgTable('hr_brand_settings', {
   id:         serial('id').primaryKey(),
-  company_id: text('company_id').unique().notNull(),
+  company_id: text('company_id').default('default'),
   brand_data: jsonb('brand_data'),
+  created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });
 

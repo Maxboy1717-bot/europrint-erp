@@ -33,9 +33,14 @@ const masterEmployees = alias(hrEmployees, 'adaptation_master');
 export class HrCompatSafetyRepository implements IHrCompatSafetyRepo {
   async getBrandSettings(): Promise<Result<Row | null>> {
     return safeCall(async () => {
+      // Single-tenant singleton: EuroPrint is one company, so hr_brand_settings
+      // has at most one row. No company_id/tenant filter here — that column
+      // was a vestigial multi-tenant leftover (confirmed dead: no companies/
+      // tenants table exists, every writer/reader used the same hardcoded
+      // 'default' literal). Oldest row wins if more than one ever exists.
       const rows = await db.select({ brand_data: hr_brand_settings.brand_data, updated_at: hr_brand_settings.updated_at })
         .from(hr_brand_settings)
-        .where(eq(hr_brand_settings.company_id, 'default'))
+        .orderBy(hr_brand_settings.id)
         .limit(1);
       return castTo<Row | null>((rows[0] ?? null));
       }, 'DB_ERROR');
