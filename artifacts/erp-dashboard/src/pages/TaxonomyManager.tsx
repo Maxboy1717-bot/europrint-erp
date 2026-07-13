@@ -23,7 +23,14 @@ import { Tags, Save, Plus, Trash2 } from "lucide-react";
 interface Entry {
   id: number; category: string; code: string; name_uz: string; name_ru: string | null;
   sort_order: number; is_active: boolean; description: string | null;
+  attrs: Record<string, unknown> | null;
 }
+
+/** operation_type uchun norm-vaqt konvensiyasi: attrs.duration_minutes (number|null). */
+const getDurationMinutes = (attrs: Record<string, unknown> | null | undefined): string => {
+  const v = attrs?.duration_minutes;
+  return typeof v === "number" ? String(v) : "";
+};
 
 const KNOWN: [string, string][] = [
   ["product_type", "Mahsulot turi"],
@@ -44,7 +51,7 @@ const KNOWN: [string, string][] = [
   ["org_policy_series", "Orgsiyosat seriyasi"],
   ["manager_note_category", "Menejer izoh kategoriyasi"],
 ];
-const DEFAULT_NEW = { code: "", nameUz: "", nameRu: "", sortOrder: "" };
+const DEFAULT_NEW = { code: "", nameUz: "", nameRu: "", sortOrder: "", durationMinutes: "" };
 
 export default function TaxonomyManager() {
   const { toast } = useToast();
@@ -52,6 +59,7 @@ export default function TaxonomyManager() {
   const [category, setCategory] = useState<string>("product_type");
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
+  const [editDuration, setEditDuration] = useState("");
   const [newRow, setNewRow] = useState(DEFAULT_NEW);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -91,6 +99,9 @@ export default function TaxonomyManager() {
       category, code: newRow.code, nameUz: newRow.nameUz,
       nameRu: newRow.nameRu || undefined,
       sortOrder: newRow.sortOrder !== "" ? Number(newRow.sortOrder) : undefined,
+      attrs: category === "operation_type" && newRow.durationMinutes !== ""
+        ? { duration_minutes: Number(newRow.durationMinutes) }
+        : undefined,
     });
   };
 
@@ -138,6 +149,19 @@ export default function TaxonomyManager() {
               </Button>
             </div>
           </div>
+          {category === "operation_type" && (
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-5">
+              <div>
+                <Label>{tLabel("common.normVaqtDaqiqa", "Norm vaqt (daqiqa)")}</Label>
+                <Input
+                  type="number" min="0" className="h-9"
+                  value={newRow.durationMinutes}
+                  onChange={(e) => setNewRow({ ...newRow, durationMinutes: e.target.value })}
+                  placeholder={tLabel("common.keyinToldiriladi", "keyinroq to'ldiriladi")}
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -157,6 +181,9 @@ export default function TaxonomyManager() {
                     <th className="p-2">{tLabel("common.kod", "Kod")}</th>
                     <th className="p-2">{tLabel("common.nomUz", "Nom (uz)")}</th>
                     <th className="p-2">{tLabel("common.nomRu", "Nom (ru)")}</th>
+                    {category === "operation_type" && (
+                      <th className="p-2">{tLabel("common.normVaqtDaqiqa", "Norm vaqt (daqiqa)")}</th>
+                    )}
                     <th className="p-2 text-right">{tLabel("common.amal", "Amal")}</th>
                   </tr>
                 </thead>
@@ -175,17 +202,42 @@ export default function TaxonomyManager() {
                           )}
                         </td>
                         <td className="p-2 text-muted-foreground">{r.name_ru ?? "—"}</td>
+                        {category === "operation_type" && (
+                          <td className="p-2 text-muted-foreground">
+                            {editing ? (
+                              <Input
+                                type="number" min="0" className="h-8 w-24"
+                                value={editDuration}
+                                onChange={(e) => setEditDuration(e.target.value)}
+                              />
+                            ) : (
+                              getDurationMinutes(r.attrs) || "—"
+                            )}
+                          </td>
+                        )}
                         <td className="p-2 text-right">
                           {editing ? (
                             <div className="flex justify-end gap-2">
-                              <Button size="sm" onClick={() => patchMutation.mutate({ id: r.id, body: { nameUz: editName } })} disabled={patchMutation.isPending}>
+                              <Button
+                                size="sm"
+                                onClick={() => patchMutation.mutate({
+                                  id: r.id,
+                                  body: {
+                                    nameUz: editName,
+                                    ...(category === "operation_type"
+                                      ? { attrs: { ...(r.attrs ?? {}), duration_minutes: editDuration !== "" ? Number(editDuration) : null } }
+                                      : {}),
+                                  },
+                                })}
+                                disabled={patchMutation.isPending}
+                              >
                                 <Save className="mr-1 h-3 w-3" /> {tLabel("common.saqlash", "Saqlash")}
                               </Button>
                               <Button size="sm" variant="ghost" onClick={() => setEditId(null)}>{tLabel("common.bekor", "Bekor")}</Button>
                             </div>
                           ) : (
                             <div className="flex justify-end gap-2">
-                              <Button size="sm" variant="outline" onClick={() => { setEditId(r.id); setEditName(r.name_uz); }}>{tLabel("common.tahrir", "Tahrir")}</Button>
+                              <Button size="sm" variant="outline" onClick={() => { setEditId(r.id); setEditName(r.name_uz); setEditDuration(getDurationMinutes(r.attrs)); }}>{tLabel("common.tahrir", "Tahrir")}</Button>
                               <Button size="sm" variant="ghost" onClick={() => setDeleteId(r.id)}><Trash2 className="h-3 w-3" /></Button>
                             </div>
                           )}

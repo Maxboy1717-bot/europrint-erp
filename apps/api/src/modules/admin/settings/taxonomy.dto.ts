@@ -15,6 +15,9 @@ export const CreateTaxonomySchema = z.object({
   nameUz: z.string().min(1).max(200),
   nameRu: z.string().max(200).optional().nullable(),
   sortOrder: z.number().int().optional(),
+  // Konvensiya: category='operation_type' uchun attrs.duration_minutes (number|null) — norm-vaqt
+  // daqiqada, egasi keyinroq shu CRUD orqali to'ldiradi (owner decision 2026-07-13). Boshqa
+  // kategoriyalar o'z attrs maydonlaridan erkin foydalanishi mumkin — umumiy jsonb bucket.
   attrs: z.record(z.unknown()).optional().nullable(),
   description: z.string().max(2000).optional().nullable(),
 });
@@ -25,6 +28,7 @@ export const UpdateTaxonomySchema = z.object({
   nameRu: z.string().max(200).optional().nullable(),
   sortOrder: z.number().int().optional(),
   isActive: z.boolean().optional(),
+  // Konvensiya: category='operation_type' uchun attrs.duration_minutes (number|null) — norm-vaqt.
   attrs: z.record(z.unknown()).optional().nullable(),
   description: z.string().max(2000).optional().nullable(),
 }).refine((v) => Object.keys(v).length > 0, { message: 'Kamida bitta maydon kerak' });
