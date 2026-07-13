@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { BullModule } from '@nestjs/bullmq';
 import { AuthModule } from '../auth/auth.module';
 import { KanbanBoardsService } from './application/kanban-boards.service';
 import { KanbanExtService } from './application/kanban-ext.service';
@@ -32,8 +33,13 @@ import { KanbanCardsController, KanbanCardFilesController } from './presentation
 import { KanbanChecklistController } from './presentation/kanban-checklist.controller';
 import { KANBAN_BOARDS_REPO } from './domain/repositories/i-kanban-boards.repo';
 import { KanbanRepository } from './infrastructure/kanban.repository';
-// 06-30 to'lqin: muddati o'tgan vazifa eskalatsiya cron
-import { KanbanOverdueEscalationCron } from './infrastructure/cron/kanban-overdue-escalation.cron';
+// 2026-07-13 — Kanban davriy vazifalar BullMQ'ga ko'chirildi (durability/offline-resistance,
+// owner qarori): @nestjs/schedule @Cron o'rniga Redis-backed repeatable job. Ilgari shu joyda
+// KanbanOverdueEscalationCron (@Cron) edi — endi KanbanCronProcessor (BullMQ) bitta navbatda
+// OVERDUE_ESCALATION (avval shu yerda) + RECURRING_CARDS (avval apps/api/src/cron/kanban-recurring.cron.ts)
+// ikkalasini ham bajaradi.
+import { KanbanCronProcessor } from './infrastructure/cron/kanban-cron.processor';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 
 const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler, OrderStatusChangedKanbanHandler];
 
@@ -41,8 +47,25 @@ const repositories = [
   { provide: KANBAN_BOARDS_REPO, useClass: KanbanBoardsRepository   },
 ];
 
+/**
+ * kanban-cron BullMQ navbat uchun standart job parametrlari — queue.module.ts'dagi
+ * umumiy defaultJobOptions bilan bir xil shakl (attempts=10, exponential backoff
+ * t0=1000ms, removeOnComplete/Fail). Mahalliy nusxa: bu navbat markaziy queue.module.ts
+ * ro'yxatida emas, shu yerda (kanban.module.ts) registerQueue qilinadi.
+ */
+const kanbanCronJobOptions = {
+  attempts: 10,
+  removeOnComplete: { count: 100 },
+  removeOnFail: { count: 50 },
+  backoff: { type: 'exponential' as const, delay: 1000 },
+};
+
 @Module({
-  imports:     [CqrsModule, AuthModule],
+  imports:     [
+    CqrsModule,
+    AuthModule,
+    BullModule.registerQueue({ name: QUEUE_NAMES.KANBAN_CRON, defaultJobOptions: kanbanCronJobOptions }),
+  ],
   controllers: [
     KanbanBoardsController,
     KanbanCoreController,
@@ -70,8 +93,9 @@ const repositories = [
     DrizzleKanbanExtRepository,
     KanbanColumnsRepository,
     KanbanCardsRepository,
-    // 06-30 to'lqin: muddati o'tgan vazifa eskalatsiya cron
-    KanbanOverdueEscalationCron,
+    // 2026-07-13 — Kanban davriy vazifalar (eskalatsiya 09:00 + takrorlanuvchi kartalar 07:00)
+    // BullMQ repeatable job orqali; qarang infrastructure/cron/kanban-cron.processor.ts
+    KanbanCronProcessor,
   ],
   exports: [KanbanExtService],
 })

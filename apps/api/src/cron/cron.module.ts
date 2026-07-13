@@ -42,7 +42,9 @@ import { CandidateArchiveCron } from './candidate-archive.cron'
 import { AbsenceBlockCron } from './absence-block.cron'
 import { VacancyDeadlineCron } from './vacancy-deadline.cron'
 import { RetentionCron } from './retention.cron'
-import { KanbanRecurringCron } from './kanban-recurring.cron'
+// KanbanRecurringCron — 2026-07-13 BullMQ'ga ko'chirildi (qarang
+// apps/api/src/modules/kanban/infrastructure/cron/kanban-cron.processor.ts,
+// jobType='RECURRING_CARDS'); bu yerdan olib tashlandi, endi kanban.module.ts orqali ishlaydi.
 import { ActingRevertCron } from './acting-revert.cron'
 import { MesSosEscalationCron } from './mes-sos-escalation.cron'
 import { MesSosEscalationService } from '../modules/mes/application/mes-sos-escalation.service'
@@ -142,8 +144,8 @@ import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.
     CkpFactRepository,
     // Data retention cron (Task #180)
     RetentionCron,
-    // Kanban — takrorlanuvchi kartalar yaratish (har kuni 07:00)
-    KanbanRecurringCron,
+    // Kanban — takrorlanuvchi kartalar yaratish (2026-07-13: BullMQ'ga ko'chirildi,
+    // qarang modules/kanban/kanban.module.ts → KanbanCronProcessor)
     // A4 (vizyon) — har xodim kunlik ishlagan-pul PDF (har kuni 19:00 Toshkent):
     // uskunachi = production_fact real data, boshqa xodim = base_salary/oy-ish-kunlari
     EmployeeDailyInvoiceCron,
