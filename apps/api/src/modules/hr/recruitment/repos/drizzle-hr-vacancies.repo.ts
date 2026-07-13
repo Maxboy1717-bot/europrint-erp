@@ -167,8 +167,8 @@ export class DrizzleHrVacanciesRepository {
     return this.funnel.findPipelineById(id);
   }
 
-  updatePipelineStage(id: number, stage: string, updatedBy: number): Promise<Result<Row>> {
-    return this.funnel.updatePipelineStage(id, stage, updatedBy);
+  updatePipelineStage(id: number, stage: string, updatedBy: number, notes?: string): Promise<Result<Row>> {
+    return this.funnel.updatePipelineStage(id, stage, updatedBy, notes);
   }
 
   countByVacancy(): Promise<Result<Row[]>> {

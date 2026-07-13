@@ -69,16 +69,66 @@ export class DrizzleHrVacanciesFunnelRepository {
     }
   }
 
-  async updatePipelineStage(id: number, stage: string, _updatedBy: number): Promise<Result<Row>> {
+  // Q-Recruiting fix (2026-07-13): the Kanban page (RecruitingKanban.tsx /
+  // useKanbanDragDrop) moves candidates through THIS endpoint, not the
+  // `RecruitmentFunnelService.moveFunnelStage` state machine (they share the
+  // same `hr_candidate_funnels` / `hr_funnel_history` tables but are separate
+  // code paths — different stage vocab compatibility, see funnel-stage.vo.ts
+  // header comment on REFERENCES/SINOV_COMPLETE). Previously this method did a
+  // bare UPDATE with zero validation, zero `hr_funnel_history` audit row, and
+  // silently discarded the caller's rejection `notes` — every Kanban drag/drop
+  // and the "Rad etish" button left no trace and a rejected candidate's reason
+  // was lost. Fixed additively: guard against reopening a closed (HIRED/
+  // REJECTED) funnel, persist rejection_reason/is_active/rejected_at (or
+  // hired_at) on terminal moves, and always insert a funnel-history row via
+  // the existing `recordFunnelHistory` helper — reusing infra instead of
+  // duplicating the Funnel aggregate's stricter (and here incompatible)
+  // VALID_TRANSITIONS graph.
+  async updatePipelineStage(id: number, stage: string, updatedBy: number, notes?: string): Promise<Result<Row>> {
     try {
-      const r = await rawSql(sql`
-        UPDATE hr_candidate_funnels
-        SET funnel_stage = ${stage}, updated_at = NOW()
-        WHERE id = ${id}
-        RETURNING id, funnel_stage, candidate_id, vacancy_id, updated_at
+      const currentRows = await rawSql(sql`
+        SELECT id, funnel_stage FROM hr_candidate_funnels WHERE id = ${id}
       `);
-      const row = dbRows(r)[0];
-      return Ok((row ?? {}) as Row);
+      const current = dbRows(currentRows)[0];
+      if (!current) return Err(`Pipeline #${id} topilmadi`);
+
+      const fromStage = String(current['funnel_stage'] ?? '');
+      if (fromStage === 'HIRED' || fromStage === 'REJECTED') {
+        return Err(`Yopilgan funnel (${fromStage}) bosqichini o'zgartirib bo'lmaydi`);
+      }
+
+      let result;
+      if (stage === 'REJECTED') {
+        result = await rawSql(sql`
+          UPDATE hr_candidate_funnels
+          SET funnel_stage = ${stage}, is_active = false, rejected_at = NOW(),
+              rejection_reason = COALESCE(${notes ?? null}, rejection_reason),
+              updated_at = NOW()
+          WHERE id = ${id}
+          RETURNING id, funnel_stage, candidate_id, vacancy_id, is_active, rejection_reason, updated_at
+        `);
+      } else if (stage === 'HIRED') {
+        result = await rawSql(sql`
+          UPDATE hr_candidate_funnels
+          SET funnel_stage = ${stage}, hired_at = NOW(), updated_at = NOW()
+          WHERE id = ${id}
+          RETURNING id, funnel_stage, candidate_id, vacancy_id, is_active, rejection_reason, updated_at
+        `);
+      } else {
+        result = await rawSql(sql`
+          UPDATE hr_candidate_funnels
+          SET funnel_stage = ${stage}, updated_at = NOW()
+          WHERE id = ${id}
+          RETURNING id, funnel_stage, candidate_id, vacancy_id, is_active, rejection_reason, updated_at
+        `);
+      }
+
+      const row = dbRows(result)[0];
+      if (!row) return Err("Bosqichni yangilashda xatolik");
+
+      await this.recordFunnelHistory(String(id), stage, String(updatedBy), notes, fromStage);
+
+      return Ok({ ...(row as Row), from_stage: fromStage });
     } catch (e) {
       return Err(String(e));
     }
@@ -264,10 +314,10 @@ export class DrizzleHrVacanciesFunnelRepository {
     }
   }
 
-  async recordFunnelHistory(funnelId: string, stage: string, changedBy: string, notes?: string): Promise<Result<Row>> {
+  async recordFunnelHistory(funnelId: string, stage: string, changedBy: string, notes?: string, fromStage?: string | null): Promise<Result<Row>> {
     try {
       const [row] = await db.insert(hrFunnelHistory).values({
-        funnelId, stage, changedBy, fromStage: null, notes: notes ?? null,
+        funnelId, stage, changedBy, fromStage: fromStage ?? null, notes: notes ?? null,
       } as typeof hrFunnelHistory.$inferInsert).returning();
       return Ok((row ?? {}) as Row);
     } catch (e) {
