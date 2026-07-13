@@ -229,3 +229,8 @@ export { domain_events } from './schema-outbox';
 // CC-COMPLETE-FRESH-ANALYSIS item #12/#45/#50 "document_hashes" half; schema-only draft,
 // no dispatcher wired yet)
 export { document_hashes } from './schema-cc-document-hashes';
+
+// schema-document-control: cross-module document-leak-prevention layer (Q-28/owner 2026-07-13).
+// Single canonical document_access_log (view/print/copy/export). STEP 3.1.
+export { document_access_log, DOCUMENT_ACCESS_ACTIONS, SENSITIVITY_TIERS } from './schema-document-control';
+export type { DocumentAccessLogRow, DocumentAccessLogInsert, DocumentAccessAction, SensitivityTier } from './schema-document-control';
