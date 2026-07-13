@@ -120,7 +120,15 @@ export class DrizzleSdCustomersRepository {
         WHERE i.customer_id = ${cid} ORDER BY i.created_at DESC LIMIT 50
       `)),
       safe(runQuery<Row>(sql`SELECT * FROM sd_customer_competitors WHERE customer_id = ${cid} ORDER BY competitor_name`)),
-      safe(runQuery<Row>(sql`SELECT * FROM sd_payments WHERE customer_id = ${cid} ORDER BY payment_date DESC LIMIT 50`)),
+      // Bug fix 2026-07-13 (found while verifying a user-reported 500): sd_payments has no
+      // payment_date column (live: id/invoice_id/amount/currency/payment_method/
+      // reference_number/paid_at/recorded_by/notes/created_at/order_id/customer_id/type/
+      // status/due_date/paid_date/overdue_days/created_by/updated_at — confirmed via psql
+      // \d). The query didn't crash the request (wrapped in safe() -> []) but silently
+      // returned zero payment history for every customer, always (Q-40 "ishlaydi lekin
+      // noto'g'ri"). paid_date is the correct column for "when was this paid" ordering;
+      // NULLS LAST keeps not-yet-paid rows visible instead of hiding them at a random position.
+      safe(runQuery<Row>(sql`SELECT * FROM sd_payments WHERE customer_id = ${cid} ORDER BY paid_date DESC NULLS LAST LIMIT 50`)),
       safe(runQuery<Row>(sql`
         SELECT id, score, comment, created_at,
                CASE WHEN score >= 9 THEN 'promoter' WHEN score >= 7 THEN 'passive' ELSE 'detractor' END AS category

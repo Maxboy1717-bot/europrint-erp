@@ -191,8 +191,10 @@ export function buildCustomer360View(inp: Customer360Inputs): Record<string, unk
       totalPaid: payments.reduce((sum, x) => sum + Number(x.amount ?? 0), 0),
       openDebt: b.totalRevenue - payments.reduce((sum, x) => sum + Number(x.amount ?? 0), 0),
       payments: payments.map(x => ({
+        // sd_payments has no payment_date column — paid_date is the real "when paid" field
+        // (matches the ORDER BY fix in drizzle-sd-customers.repo.ts's get360View query).
         id: x.id, amount: Number(x.amount ?? 0),
-        paymentDate: x.payment_date, method: x.payment_method ?? x.method, status: x.status,
+        paymentDate: x.paid_date, method: x.payment_method ?? x.method, status: x.status,
       })),
     },
     ltv: {
