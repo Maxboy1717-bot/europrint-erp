@@ -24,18 +24,17 @@ import { useToast } from "@/hooks/use-toast";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface SupplierQualityRow {
-  vendorId: number;
-  vendorName: string;
-  totalReceipts: number;
-  passedCount: number;
-  failedCount: number;
-  passRate: number;
-  qualityScore: number;
-  grade: "A" | "B" | "C" | "D";
-  trendLast90Days: "up" | "down" | "flat";
-}
-
+// NOTE (crash fix 2026-07-13): GET /api/qc/supplier-quality returns the RAW
+// qc_supplier_quality rows (bare array, snake_case columns) — it does NOT return
+// an aggregated per-vendor rating with `grade`/`passRate`/`vendorName` etc. The
+// page used to trust a fictional `SupplierQualityRow` shape that the backend
+// never actually sends, so `GRADE_CONFIG[v.grade]` was always undefined and
+// `cfg.color` crashed the whole page as soon as any row existed (immediately
+// after the first successful save, since before that `items` was empty and the
+// crashing render path was never reached). Fix: render the REAL raw-record shape
+// and derive pass-rate/grade client-side from sample_size/defects_found/quality_score
+// (same formula the create-dialog preview already uses), so `grade` is always a
+// valid GRADE_CONFIG key.
 interface RawQualityRecord {
   id: number;
   supplier_name: string;
@@ -49,7 +48,9 @@ interface RawQualityRecord {
   created_at: string;
 }
 
-const GRADE_CONFIG: Record<SupplierQualityRow["grade"], { label: string; color: string }> = {
+type Grade = "A" | "B" | "C" | "D";
+
+const GRADE_CONFIG: Record<Grade, { label: string; color: string }> = {
   A: { label: "A'lo (81-100)",     color: "bg-[var(--ep-green)] text-white" },
   B: { label: "Yaxshi (61-80)",    color: "bg-[var(--ep-blue)] text-white" },
   C: { label: "Qoniqarli (41-60)", color: "bg-[var(--ep-yellow)] text-white" },
@@ -57,6 +58,23 @@ const GRADE_CONFIG: Record<SupplierQualityRow["grade"], { label: string; color: 
 };
 
 const PASS_RATE_THRESHOLD_GOOD = 95;
+
+/** Pass rate derived from the real fields the backend actually returns. */
+function computePassRate(r: RawQualityRecord): number | null {
+  if (r.sample_size != null && r.sample_size > 0 && r.defects_found != null && r.defects_found >= 0) {
+    return Math.round(((r.sample_size - r.defects_found) / r.sample_size) * 100);
+  }
+  if (r.quality_score != null) return Math.round(r.quality_score);
+  return null;
+}
+
+function gradeFor(passRate: number | null): Grade {
+  if (passRate == null) return "D";
+  if (passRate >= 81) return "A";
+  if (passRate >= 61) return "B";
+  if (passRate >= 41) return "C";
+  return "D";
+}
 
 // ── Create dialog ──────────────────────────────────────────────────────────────
 
@@ -166,16 +184,21 @@ export default function SupplierQualityPage() {
   const { t } = useTranslation('qc');
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data, isLoading } = useQuery<{ items: SupplierQualityRow[] }>({
+  const { data, isLoading } = useQuery<unknown>({
     queryKey: ["/api/qc/supplier-quality"],
     queryFn: () => apiRequest("GET", "/api/qc/supplier-quality"),
   });
 
-  const items = selectArray<SupplierQualityRow>(data, "items");
-  const aGrade = items.filter((s) => s.grade === "A").length;
-  const dGrade = items.filter((s) => s.grade === "D").length;
-  const avgPassRate = items.length > 0
-    ? Math.round(items.reduce((s, v) => s + v.passRate, 0) / items.length)
+  // Backend returns a bare array of raw records (see RawQualityRecord note above),
+  // but selectArray also tolerates a future { items: [...] } wrapper.
+  const items = selectArray<RawQualityRecord>(data, "items");
+  const vendorsCount = new Set(items.map((r) => r.supplier_name)).size;
+  const grades = items.map((r) => gradeFor(computePassRate(r)));
+  const aGrade = grades.filter((g) => g === "A").length;
+  const dGrade = grades.filter((g) => g === "D").length;
+  const passRates = items.map(computePassRate).filter((v): v is number => v != null);
+  const avgPassRate = passRates.length > 0
+    ? Math.round(passRates.reduce((s, v) => s + v, 0) / passRates.length)
     : 0;
 
   return (
@@ -184,7 +207,7 @@ export default function SupplierQualityPage() {
       description={t('supplierQc.description', "Vendor reyting: Narx 30% + Sifat 30% + Vaqt 20% + Xizmat 20%")}
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <KpiCard label={t('supplierQc.total', "Yetkazuvchilar")} value={items.length} icon={<Truck className="h-4 w-4" />} />
+        <KpiCard label={t('supplierQc.total', "Yetkazuvchilar")} value={vendorsCount} icon={<Truck className="h-4 w-4" />} />
         <KpiCard label={t('supplierQc.gradeA', "A reyting")} value={aGrade} icon={<Star className="h-4 w-4" />} variant="success" />
         <KpiCard label={t('supplierQc.gradeD', "D reyting")} value={dGrade} icon={<AlertTriangle className="h-4 w-4" />} variant={dGrade > 0 ? "danger" : "default"} />
         <KpiCard label={t('supplierQc.avgPassRate', "O'rtacha PASS%")} value={`${avgPassRate}%`} icon={<Star className="h-4 w-4" />} variant={avgPassRate >= PASS_RATE_THRESHOLD_GOOD ? "success" : "warning"} />
@@ -192,7 +215,7 @@ export default function SupplierQualityPage() {
 
       <Section title={t('supplierQc.list', "Yetkazuvchilar reytingi")}>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs text-muted-foreground">{items.length} ta yetkazuvchi</p>
+          <p className="text-xs text-muted-foreground">{items.length} ta tekshiruv</p>
           <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             Yangi tekshiruv
@@ -214,30 +237,30 @@ export default function SupplierQualityPage() {
               <thead className="border-b bg-muted/50">
                 <tr>
                   <th className="text-left p-2">{t('supplierQc.vendor', "Yetkazuvchi")}</th>
-                  <th className="text-right p-2">{t('supplierQc.receipts', "GR soni")}</th>
-                  <th className="text-right p-2">{t('supplierQc.passed', "Pass")}</th>
-                  <th className="text-right p-2">{t('supplierQc.failed', "Fail")}</th>
+                  <th className="text-left p-2">{t('supplierQc.date', "Sana")}</th>
+                  <th className="text-right p-2">{t('supplierQc.sample', "Namuna")}</th>
+                  <th className="text-right p-2">{t('supplierQc.failed', "Nuqson")}</th>
                   <th className="text-right p-2">{t('supplierQc.passRate', "Pass %")}</th>
                   <th className="text-right p-2">{t('supplierQc.score', "Ball")}</th>
                   <th className="text-center p-2">{t('supplierQc.grade', "Grade")}</th>
-                  <th className="text-center p-2">{t('supplierQc.trend', "Trend")}</th>
+                  <th className="text-center p-2">{t('supplierQc.status', "Status")}</th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((v) => {
-                  const cfg = GRADE_CONFIG[v.grade];
+                {items.map((r) => {
+                  const passRate = computePassRate(r);
+                  const grade = gradeFor(passRate);
+                  const cfg = GRADE_CONFIG[grade];
                   return (
-                    <tr key={v.vendorId} className="border-b">
-                      <td className="p-2 font-medium">{v.vendorName}</td>
-                      <td className="text-right p-2">{v.totalReceipts}</td>
-                      <td className="text-right p-2 text-[var(--ep-green)]">{v.passedCount}</td>
-                      <td className="text-right p-2 text-[var(--ep-red)]">{v.failedCount}</td>
-                      <td className="text-right p-2 font-medium">{v.passRate}%</td>
-                      <td className="text-right p-2 font-medium">{v.qualityScore}</td>
-                      <td className="text-center p-2"><Badge className={cfg.color}>{v.grade}</Badge></td>
-                      <td className="text-center p-2">
-                        {v.trendLast90Days === "up" ? "↑" : v.trendLast90Days === "down" ? "↓" : "→"}
-                      </td>
+                    <tr key={r.id} className="border-b">
+                      <td className="p-2 font-medium">{r.supplier_name}</td>
+                      <td className="p-2 text-muted-foreground">{r.delivery_date ?? "—"}</td>
+                      <td className="text-right p-2">{r.sample_size ?? "—"}</td>
+                      <td className="text-right p-2 text-[var(--ep-red)]">{r.defects_found ?? "—"}</td>
+                      <td className="text-right p-2 font-medium">{passRate != null ? `${passRate}%` : "—"}</td>
+                      <td className="text-right p-2 font-medium">{r.quality_score ?? (passRate ?? "—")}</td>
+                      <td className="text-center p-2"><Badge className={cfg.color}>{grade}</Badge></td>
+                      <td className="text-center p-2 text-muted-foreground">{r.status ?? "—"}</td>
                     </tr>
                   );
                 })}
