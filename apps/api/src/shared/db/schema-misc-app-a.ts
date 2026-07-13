@@ -68,8 +68,12 @@ export const hrEmployees = pgTable('employees', {
   photo_url:                   text('photo_url'),
   role:                        varchar('role'),
   total_points:                integer('total_points').default(0),
-  face_embedding:              pgVector('face_embedding', 512),
-  face_embedding_updated_at:   timestamp('face_embedding_updated_at'),
+  // face_embedding/face_embedding_updated_at removed (2026-07-13): declared as pgVector(512)
+  // but never existed on the live table AND the Postgres `vector` extension isn't installed on
+  // this deployment - every insert into `employees` implicitly referenced this phantom column
+  // and 500'd (including plain "add employee", unrelated to face-recognition). The real,
+  // working embedding storage is the separate `face_embeddings` table (plain text/JSON, no
+  // pgvector needed) - see drizzle-attendance.repo.ts, already wired to it correctly.
   address_actual:              text('address_actual'),
   lat:                         decimal('lat', { precision: 9, scale: 6 }),
   lng:                         decimal('lng', { precision: 9, scale: 6 }),
