@@ -165,6 +165,9 @@ export class SdQuotationsController {
       quantity: Number(body.quantity ?? 1),
       isNewDie: body.isNewDie === true,
       kashirovka: body.kashirovka === true,
+      lamination: body.lamination === true,
+      embossing: body.embossing === true,
+      perforation: body.perforation === true,
       advancePercent: body.advancePercent != null ? Number(body.advancePercent) : undefined,
     }, user?.role);
     assertOk(r);

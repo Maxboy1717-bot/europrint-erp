@@ -29,6 +29,10 @@ export type PriceCalcInput = {
   isNewDie: boolean;
   /** 06-sd #142: kashirovka (ofset+gofra) alohida operatsiya kerakmi. */
   kashirovka?: boolean;
+  /** Qo'shimcha ishlovlar (sd_price_formulas.lamination_price/embossing_price/perforation_price). */
+  lamination?: boolean;
+  embossing?: boolean;
+  perforation?: boolean;
   /**
    * 06-sd#12 (vision-1000-answers/06-sd.md #12, Q6): kotirovkaga rejalashtirilgan avans foizi
    * (0-100). Faqat TO'LIQ 100% avansda avtomatik chegirma qo'llanadi (95% = chegirmasiz).
@@ -239,7 +243,9 @@ export class SdQuotationsService {
       // RSC carton blank area per unit (m²): blank = (2*(L+W)+glueFlap) × (H+W). Real geometry, not a constant.
       const GLUE_FLAP_MM = 40;
       const MM2_PER_M2 = 1_000_000;
-      const areaPerUnitM2 = ((2 * (L + W) + GLUE_FLAP_MM) * (H + W)) / MM2_PER_M2;
+      const blankLengthMm = 2 * (L + W) + GLUE_FLAP_MM;
+      const blankWidthMm = H + W;
+      const areaPerUnitM2 = (blankLengthMm * blankWidthMm) / MM2_PER_M2;
 
       const paperRates: Record<string, number> = {
         'B-flute': num(cfg.paperBPrice), 'C-flute': num(cfg.paperCPrice),
@@ -256,7 +262,8 @@ export class SdQuotationsService {
       // operation (plates + run). printSides is the per-line 1|2 factor persisted on
       // sd_quotation_items; clamp defensively to {1,2} so a bad payload can't inflate cost.
       const printSides = num(input.printSides, 1) >= 2 ? 2 : 1;
-      const printCost = (colors > 0 ? num(cfg.plateCostPerColor) * colors + printRunRate : 0) * printSides;
+      const plateCost = (colors > 0 ? num(cfg.plateCostPerColor) * colors : 0) * printSides;
+      const printCost = (colors > 0 ? plateCost + printRunRate * printSides : 0);
 
       // Die/shtamp: new vs existing (EP-SD-042/125 klishe ownership).
       const dieCost = input.isNewDie ? num(cfg.dieCostNew) : num(cfg.dieCostExisting);
@@ -266,13 +273,22 @@ export class SdQuotationsService {
       // getPriceSettings camelCase proyeksiyasi bo'yicha cfg.kashirovkaPrice o'qiladi; default 0 = ta'sirsiz.
       const kashirovkaCost = input.kashirovka ? num(cfg.kashirovkaPrice) : 0;
 
+      // Qo'shimcha ishlovlar (FE "Дополнительный ishlovlar" checkboxlari): laminatsiya/bo'rtma/
+      // perforatsiya bayroqlari sd_price_formulas'da narxi bor edi, lekin bu yerda hech qachon
+      // o'qilmagan edi — belgilash narxga hech qanday ta'sir qilmasdi. cfg.laminationPrice/
+      // embossingPrice/perforationPrice getPriceSettings camelCase proyeksiyasidan keladi.
+      const laminationCost = input.lamination ? num(cfg.laminationPrice) : 0;
+      const embossingCost = input.embossing ? num(cfg.embossingPrice) : 0;
+      const perforationCost = input.perforation ? num(cfg.perforationPrice) : 0;
+      const extrasCost = laminationCost + embossingCost + perforationCost;
+
       // Labour throughput assumption: 1 labour-hour per UNITS_PER_LABOR_HOUR units.
       const UNITS_PER_LABOR_HOUR = 1000;
       const productionCost = num(cfg.hourlyLaborRate) * (qty / UNITS_PER_LABOR_HOUR);
 
       const deliveryCost = num(cfg.deliveryBaseCost);
 
-      const costPrice = paperCost + printCost + dieCost + kashirovkaCost + productionCost + deliveryCost;
+      const costPrice = paperCost + printCost + dieCost + kashirovkaCost + extrasCost + productionCost + deliveryCost;
       const markupPercent = num(cfg.defaultMarkupPercent, 35);
       const vatRate = num(cfg.vatRate, 12);
       // 06-sd#12 (vision-1000-answers/06-sd.md #12, Q6): "Chegirma faqat TO'LIQ 100% avans
@@ -292,10 +308,18 @@ export class SdQuotationsService {
       const unitPrice = qty > 0 ? totalPrice / qty : 0;
 
       const customerView = {
-        paperCost: round2(paperCost), printCost: round2(printCost), dieCost: round2(dieCost),
+        paperCost: round2(paperCost), printCost: round2(printCost), plateCost: round2(plateCost),
+        dieCost: round2(dieCost),
         kashirovkaCost: round2(kashirovkaCost),
+        // FE "Дополнительный ishlovlar" breakdown: processingCost = kashirovka (the one
+        // processing operation always relevant), extrasCost = lamination+embossing+perforation
+        // (the checkbox-driven optional extras).
+        processingCost: round2(kashirovkaCost), extrasCost: round2(extrasCost),
         productionCost: round2(productionCost), deliveryCost: round2(deliveryCost),
         unitPrice: round2(unitPrice), totalPrice: round2(totalPrice),
+        // Aliases matching the quotation-dialog FE's field names (same values as unitPrice/
+        // totalPrice — both already include VAT via priceBeforeVat * (1 + vatRate/100)).
+        unitPriceWithVat: round2(unitPrice), totalPriceWithVat: round2(totalPrice),
         markupPercent, vatRate,
         // 06-sd#12: 100%-avans chegirmasi qo'llanilganini FE'ga ko'rsatish uchun qo'shimcha
         // (additive) maydonlar — mavjud maydonlar semantikasi o'zgarmagan.
@@ -305,12 +329,23 @@ export class SdQuotationsService {
         // with the price so the FE quote form can pre-select offset/flexo (manager may override).
         printingMethodRecommendation: recommendPrintingMethod(qty, colors),
         areaPerUnitM2: round2(areaPerUnitM2), quantity: qty, currency: 'UZS', calculated_at: _time.now(),
+        // RSC blank geometry breakdown (same formula areaPerUnitM2 is derived from).
+        blankLengthMm: round2(blankLengthMm), blankWidthMm: round2(blankWidthMm),
+        blankAreaM2: round2(areaPerUnitM2), totalPaperM2: round2(areaPerUnitM2 * qty),
       };
       // EP-SD-043 (vision 06-sd #43, Q19): costPrice + margin are director-tier only. A sales
       // manager (sales_manager/SALES) gets the customer-facing price WITHOUT the company's internal
       // cost or profit. Role is case-normalised to match RolesGuard's case-insensitive comparison.
       if (!MARGIN_VISIBLE_ROLES.has((viewerRole ?? '').toLowerCase())) return customerView;
-      return { ...customerView, costPrice: round2(costPrice), margin: round2(totalPrice - costPrice) };
+      const margin = totalPrice - costPrice;
+      return {
+        ...customerView,
+        costPrice: round2(costPrice), margin: round2(margin),
+        totalCostPrice: round2(costPrice),
+        markupAmount: round2(costPrice * markupPercent / 100),
+        vatAmount: round2(priceBeforeVat * vatRate / 100),
+        grossMarginPercent: totalPrice > 0 ? round2((margin / totalPrice) * 100) : 0,
+      };
     });
   }
 

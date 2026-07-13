@@ -46,6 +46,9 @@ export const SdCalculatePriceSchema = z.object({
   quantity:     z.coerce.number().positive().default(1),
   isNewDie:     z.coerce.boolean().optional().default(false),
   kashirovka:   z.coerce.boolean().optional().default(false),
+  lamination:   z.coerce.boolean().optional().default(false),
+  embossing:    z.coerce.boolean().optional().default(false),
+  perforation:  z.coerce.boolean().optional().default(false),
   product_id:   z.union([z.string(), z.number()]).optional(),
   formula_id:   z.union([z.string(), z.number()]).optional(),
   // 06-sd#12 (vision-1000-answers/06-sd.md #12, Q6): rejalashtirilgan avans foizi (0-100).
