@@ -160,7 +160,7 @@ export class DrizzleMarketingExtRepository {
 
   async getContentPostById(id: string): Promise<Result<Record<string, unknown> | null>> {
     return safeCall(async () => {
-      const [row] = await db.select().from(marketingContentPosts).where(eq(marketingContentPosts.id, id)).limit(1);
+      const [row] = await db.select().from(marketingContentPosts).where(eq(marketingContentPosts.id, Number(id))).limit(1);
       return row ?? null;
     });
   }
@@ -169,7 +169,8 @@ export class DrizzleMarketingExtRepository {
     return safeCall(async () => {
       const [row] = await db.insert(marketingContentPosts).values({
         title:    String(data.title ?? ''),
-        content:  data.content as string,
+        content:  String(data.body ?? ''),
+        platform: String(data.platform ?? ''),
         postType: String(data.postType ?? 'blog'),
         authorId: data.authorId ? Number(data.authorId) : null,
       }).returning();
@@ -182,21 +183,21 @@ export class DrizzleMarketingExtRepository {
     return safeCall(async () => {
       const [row] = await db.update(marketingContentPosts)
         .set({ title: data.title as string, content: data.content as string, updatedAt: _time.now() })
-        .where(eq(marketingContentPosts.id, id))
+        .where(eq(marketingContentPosts.id, Number(id)))
         .returning();
       return row ?? { id };
     });
   }
 
   async deleteContentPost(id: string): Promise<Result<void>> {
-    return safeCall(async () => { await db.delete(marketingContentPosts).where(eq(marketingContentPosts.id, id)); });
+    return safeCall(async () => { await db.delete(marketingContentPosts).where(eq(marketingContentPosts.id, Number(id))); });
   }
 
   async publishContentPost(id: string): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db.update(marketingContentPosts)
         .set({ status: 'published', publishedAt: _time.now(), updatedAt: _time.now() })
-        .where(eq(marketingContentPosts.id, id))
+        .where(eq(marketingContentPosts.id, Number(id)))
         .returning();
       if (!row) throw new NotFoundException(await this.i18n.t('errors.marketingPostNotFoundWithId', { args: { id } }));
       return row;
@@ -402,18 +403,32 @@ export class DrizzleMarketingExtRepository {
 
       // Canonical funnel order: new → warm → hot → converted → lost
       const FUNNEL_ORDER = ['new', 'warm', 'hot', 'converted', 'lost'] as const;
-      type FunnelStage = { name: string; label: string; count: number };
-      const stages: FunnelStage[] = FUNNEL_ORDER.map(s => ({
-        name: s as string,
-        label: s === 'new' ? 'Yangi' : s === 'warm' ? 'Iliq' : s === 'hot' ? 'Issiq' : s === 'converted' ? 'Konvertatsiya' : 'Yo\'qotilgan',
-        count: map[s] ?? 0,
-      }));
+      type FunnelStage = { name: string; label: string; count: number; conversionRate: number; dropOff: number };
+      const stages: FunnelStage[] = FUNNEL_ORDER.map((s, i) => {
+        const count = map[s] ?? 0;
+        const prevCount = i > 0 ? (map[FUNNEL_ORDER[i - 1]] ?? 0) : 0;
+        return {
+          name: s as string,
+          label: s === 'new' ? 'Yangi' : s === 'warm' ? 'Iliq' : s === 'hot' ? 'Issiq' : s === 'converted' ? 'Konvertatsiya' : 'Yo\'qotilgan',
+          count,
+          // % of total leads that reached this stage — drives the FunnelDialog progress bar width.
+          conversionRate: total > 0 ? Math.round((count / total) * 100 * 10) / 10 : 0,
+          // % decline vs the previous canonical stage — drives the FunnelDialog "-X% oldingi bosqichdan" note.
+          dropOff: i > 0 && prevCount > 0 ? Math.max(0, Math.round(((prevCount - count) / prevCount) * 100 * 10) / 10) : 0,
+        };
+      });
 
       // Include any unknown statuses not in the canonical list
       const known = new Set(FUNNEL_ORDER as readonly string[]);
       for (const [status, cnt] of Object.entries(map)) {
         if (!known.has(status)) {
-          stages.push({ name: status, label: status, count: cnt });
+          stages.push({
+            name: status,
+            label: status,
+            count: cnt,
+            conversionRate: total > 0 ? Math.round((cnt / total) * 100 * 10) / 10 : 0,
+            dropOff: 0,
+          });
         }
       }
 
