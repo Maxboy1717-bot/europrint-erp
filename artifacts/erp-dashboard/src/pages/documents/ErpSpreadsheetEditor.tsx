@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { tLabel } from '@/lib/i18n/tLabel';
 import { SpreadsheetGrid } from '@/components/document-control/SpreadsheetGrid';
 import { DocumentWatermark } from '@/components/document-control/DocumentWatermark';
+import { DocumentLogo } from '@/components/document-control/DocumentLogo';
 import { SendToCcModal } from './SendToCcModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -171,6 +172,8 @@ export default function ErpSpreadsheetEditor() {
       {id && <SendToCcModal erpDocumentId={id} documentType="erp_spreadsheet" open={showSendCc} onClose={() => setShowSendCc(false)} />}
 
       <div className="p-4">
+        {/* EuroPrint letterhead — top-left of every spreadsheet (owner requirement). */}
+        <div className="mb-3 flex justify-start"><DocumentLogo /></div>
         <DocumentWatermark tier={tier}>
           <SpreadsheetGrid cells={cells} onChange={(c) => { cellsRef.current = c; setCells(c); setDirty(true); }} />
         </DocumentWatermark>
