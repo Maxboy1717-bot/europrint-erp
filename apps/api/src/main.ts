@@ -50,7 +50,11 @@ initSentry();
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: process.env.NODE_ENV === 'development', trustProxy: true, ignoreTrailingSlash: true }),
+    // bodyLimit: Fastify default = 1 MB → chat fayl-yuklash (storage MAX_UPLOAD_BYTES
+    // = 25 MB) 1 MB'dan katta faylda 413 "Request body is too large" berardi. 30 MB
+    // ga ko'taramiz (25 MB fayl + kodlash overhead) — storage controller o'zi 25 MB
+    // cheklovini yakuniy tekshiradi (toza "File too large" 400).
+    new FastifyAdapter({ logger: process.env.NODE_ENV === 'development', trustProxy: true, ignoreTrailingSlash: true, bodyLimit: 30 * 1024 * 1024 }),
     { logger: ['error', 'warn', 'log', 'debug'] },
   );
   app.useWebSocketAdapter(new IoAdapter(app));
