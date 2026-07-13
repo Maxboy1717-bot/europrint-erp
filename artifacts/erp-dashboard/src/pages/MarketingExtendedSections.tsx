@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from '@/lib/i18n';
 import {
   Globe, GitBranch, Scale, Plus,
-  TrendingUp, TrendingDown, ArrowUpRight, Star, Users, AlertTriangle,
+  TrendingUp, TrendingDown, ArrowUpRight, Users, AlertTriangle,
 } from "lucide-react";
 import {
   type MarketingCampaign,
@@ -244,34 +244,37 @@ export function CompSection({ competitors }: { competitors: Competitor[] }) {
         ) : (
           <>
             <div className="space-y-3 mb-6">
-              {competitors.map((c, i) => (
-                <div key={`k-${i}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-sm font-medium ${(c.companyName || c.name) === "Europrint" ? "text-primary" : "text-foreground"}`}>{c.companyName || c.name}</span>
-                    <span className="text-sm text-muted-foreground">{c.share}%</span>
+              {competitors.map((c, i) => {
+                const ourShare = Number(c.avgOurShare) || 0;
+                const theirShare = Number(c.avgTheirShare) || 0;
+                return (
+                  <div key={`k-${i}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground">{c.name}</span>
+                      <span className="text-sm text-muted-foreground">{t("bizningUlush")} {ourShare}% · {t("raqobatUlushi")} {theirShare}%</span>
+                    </div>
+                    <div className="w-full bg-muted/60 rounded-full h-2 flex overflow-hidden">
+                      <div className="h-2 bg-primary" style={{ width: `${ourShare}%` }} />
+                      <div className="h-2 bg-outline-variant" style={{ width: `${theirShare}%` }} />
+                    </div>
                   </div>
-                  <div className="w-full bg-muted/60 rounded-full h-2">
-                    <div className={`h-2 rounded-full ${(c.companyName || c.name) === "Europrint" ? "bg-primary" : "bg-outline-variant"}`} style={{ width: `${c.share}%` }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="ep-table-scroll"><Table>
               <TableHeader>
-                <TableRow><TH>{t("company")}</TH><TH>{t("price")}</TH><TH>{t("Sifat")}</TH><TH>{t("Yetkazish")}</TH><TH>{t("zaifTomon")}</TH></TableRow>
+                <TableRow><TH>{t("company")}</TH><TH>{t("mijozlarSoni")}</TH><TH>{t("bizningUlush")}</TH><TH>{t("raqobatUlushi")}</TH><TH>{t("kochishXavfi")}</TH></TableRow>
               </TableHeader>
               <TableBody>
                 {competitors.map((c, i) => (
-                  <TableRow key={`k-${i}`} className={`hover:bg-muted/40 transition-colors ${(c.companyName || c.name) === "Europrint" ? "bg-primary/5" : ""}`}>
-                    <TableCell className="font-medium py-3 px-6">{c.companyName || c.name}</TableCell>
-                    <TableCell className="py-3 px-6">{c.price || "—"}</TableCell>
+                  <TableRow key={`k-${i}`} className="hover:bg-muted/40 transition-colors">
+                    <TableCell className="font-medium py-3 px-6">{c.name}</TableCell>
+                    <TableCell className="py-3 px-6">{c.customersCount ?? 0}</TableCell>
+                    <TableCell className="py-3 px-6">{Number(c.avgOurShare) || 0}%</TableCell>
+                    <TableCell className="py-3 px-6">{Number(c.avgTheirShare) || 0}%</TableCell>
                     <TableCell className="py-3 px-6">
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: c.quality || 0 }).map((_, j) => <Star key={j} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
-                      </div>
+                      <Badge className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate", RISK_COLORS[c.switchRisk] || RISK_COLORS.medium)}>{t(c.switchRisk || "medium")}</Badge>
                     </TableCell>
-                    <TableCell className="py-3 px-6">{c.delivery || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm py-3 px-6">{c.weakness || "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

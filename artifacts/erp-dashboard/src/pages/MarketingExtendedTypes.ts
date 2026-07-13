@@ -62,14 +62,11 @@ export interface AbTest {
 }
 
 export interface Competitor {
-  id?: string;
   name: string;
-  share?: number;
-  price?: string;
-  quality?: number;
-  delivery?: string;
-  weakness?: string;
-  companyName?: string;
+  customersCount: number;
+  avgOurShare: number;
+  avgTheirShare: number;
+  switchRisk: string;
 }
 
 export interface SeoKeyword {
