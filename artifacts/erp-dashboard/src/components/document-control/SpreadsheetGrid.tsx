@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { Bold, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { evalCell, numToCol, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
 import { tLabel } from '@/lib/i18n/tLabel';
@@ -65,6 +65,21 @@ export function SpreadsheetGrid({
             </button>
           ))}
           <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
+          {/* Cell background fill (native picker) */}
+          <label title={tLabel('documents.cellFill', "To'ldirish rangi")}
+            className={cn('w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)] cursor-pointer relative', selStyle.bg && 'text-[var(--ep-blue)]')}>
+            <PaintBucket className="w-3.5 h-3.5" />
+            <input type="color" value={selStyle.bg ?? '#ffffff'} onChange={(e) => setStyle({ bg: e.target.value })}
+              className="absolute inset-0 opacity-0 cursor-pointer" />
+          </label>
+          {selStyle.bg && (
+            <button type="button" title={tLabel('documents.cellFillClear', "To'ldirishni tozalash")} onClick={() => setStyle({ bg: undefined })}
+              className="text-[10px] px-1 h-7 rounded hover:bg-[var(--ep-bg)] text-[var(--ep-muted)]">✕</button>
+          )}
+          {/* Cell border toggle */}
+          <button type="button" title={tLabel('documents.cellBorder', 'Chegara')} onClick={() => setStyle({ bd: !selStyle.bd })}
+            className={cn('w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)]', selStyle.bd && 'bg-[var(--ep-blue)]/12 text-[var(--ep-blue)]')}><Square className="w-3.5 h-3.5" /></button>
+          <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
           <select value={selStyle.fmt ?? 'num'} onChange={(e) => setStyle({ fmt: e.target.value as CellStyle['fmt'] })}
             title={tLabel('documents.numberFormat', 'Raqam formati')} className="h-7 text-xs rounded border border-[var(--ep-border)] bg-[var(--ep-surface)] px-1">
             <option value="num">{tLabel('documents.fmtPlain', 'Oddiy')}</option>
@@ -121,8 +136,10 @@ export function SpreadsheetGrid({
                       key={c}
                       onClick={() => setSel(ref)}
                       onDoubleClick={() => startEdit(ref)}
+                      style={style?.bg ? { backgroundColor: style.bg } : undefined}
                       className={cn(
-                        'min-w-[96px] h-7 border border-[var(--ep-border)] px-1.5 cursor-cell align-middle',
+                        'min-w-[96px] h-7 px-1.5 cursor-cell align-middle',
+                        style?.bd ? 'border-2 border-[var(--ep-text)]' : 'border border-[var(--ep-border)]',
                         isSel && 'ring-2 ring-[var(--ep-blue)] ring-inset',
                         align === 'r' ? 'text-right tabular-nums' : align === 'c' ? 'text-center' : 'text-left',
                       )}

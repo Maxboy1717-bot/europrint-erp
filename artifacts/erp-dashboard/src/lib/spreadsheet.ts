@@ -6,7 +6,7 @@
  * Cells are stored as { "A1": { v?: rawText, f?: "=SUM(...)" }, ... } in erp_spreadsheets.cells.
  */
 
-export interface CellStyle { b?: boolean; a?: 'l' | 'c' | 'r'; fmt?: 'num' | 'money' | 'pct' }
+export interface CellStyle { b?: boolean; a?: 'l' | 'c' | 'r'; fmt?: 'num' | 'money' | 'pct'; bg?: string; bd?: boolean }
 export interface Cell { v?: string; f?: string; s?: CellStyle }
 export type Cells = Record<string, Cell>;
 
