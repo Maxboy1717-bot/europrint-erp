@@ -4,7 +4,7 @@
  */
 
 import { useCallback } from "react";
-import { useChatStore } from "@/store/chatStore";
+import { useChatStore, ChatMessage } from "@/store/chatStore";
 import { useAuth } from "@/hooks/useAuth";
 
 let sharedSocketRef: { socket: import("socket.io-client").Socket | null } = { socket: null };
@@ -69,12 +69,30 @@ export function useChatSocket() {
     }
     const payload = { roomId, content: trimmed, replyToId, mentionedUserIds, clientMsgId };
     const s = sharedSocketRef.socket;
-    if (!s) {
+    // Offline queue: hold the message if the socket is missing OR not currently
+    // connected (mid-reconnect). `flushPendingQueue` drains it on the next
+    // `connect`. Without the `!s.connected` guard, a disconnected socket would
+    // silently drop the emit.
+    if (!s || !s.connected) {
       pendingQueue.push({ event: "message:send", data: payload });
       return;
     }
     s.emit("message:send", payload);
   }, [user]);
+
+  // Re-send a message that failed (server error or never delivered). Reuses the
+  // original clientMsgId so the server echo still reconciles the same bubble.
+  const retryMessage = useCallback((msg: ChatMessage) => {
+    if (!msg.clientMsgId || !msg.content) return;
+    useChatStore.getState().markMessageSending(msg.roomId, msg.clientMsgId);
+    const payload = { roomId: msg.roomId, content: msg.content, replyToId: msg.replyToId ?? undefined, clientMsgId: msg.clientMsgId };
+    const s = sharedSocketRef.socket;
+    if (!s || !s.connected) {
+      pendingQueue.push({ event: "message:send", data: payload });
+      return;
+    }
+    s.emit("message:send", payload);
+  }, []);
 
   const sendTypingStart = useCallback((roomId: string) => {
     sharedSocketRef.socket?.emit("typing", { roomId: Number(roomId) || roomId, isTyping: true });
@@ -103,6 +121,7 @@ export function useChatSocket() {
   return {
     joinRoom,
     sendMessage,
+    retryMessage,
     sendTypingStart,
     sendTypingStop,
     startDirect,

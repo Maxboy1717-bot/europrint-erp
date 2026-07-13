@@ -80,6 +80,18 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       setConnected(false);
     });
 
+    // Server-side send rejection (membership, etc.) — mark the optimistic
+    // bubble failed so the user sees a retry affordance instead of a bubble
+    // stuck forever in "sending".
+    s.on("error", (payload: { message?: string; clientMsgId?: string; roomId?: string }) => {
+      const cmid = payload?.clientMsgId;
+      if (!cmid) return;
+      const st = useChatStore.getState();
+      const roomId = payload.roomId
+        ?? Object.keys(st.messages).find((rid) => st.messages[rid]?.some((m) => m.clientMsgId === cmid));
+      if (roomId) st.markMessageFailed(String(roomId), cmid);
+    });
+
     // No `reconnect_failed` handler: with unbounded `reconnectionAttempts`
     // it never fires, and calling `disconnect()` there would defeat the
     // never-give-up reconnect policy this phase installs.

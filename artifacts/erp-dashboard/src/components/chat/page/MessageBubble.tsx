@@ -8,10 +8,12 @@ import {
   Check, CheckCheck, Pencil, Trash2, Paperclip,
   MessageSquare, CornerUpRight, Pin, Smile,
   Download, CornerDownRight, CheckSquare, Star,
+  Clock, AlertCircle,
 } from "lucide-react";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/store/chatStore";
+import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { ChatAvatar } from "./ChatAvatar";
 import { formatMsgTime } from "./ChatUtils";
 import { MessageReactions, EmojiPicker } from "./MessageReactions";
@@ -45,6 +47,7 @@ export function MessageBubble({
   onEdit, onDelete, onReply, onReact, onThread, onForward, onPin, onScrollTo,
 }: Props) {
   const { t } = useTranslation("common");
+  const { retryMessage } = useChatSocket();
   const [hover, setHover] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -381,10 +384,22 @@ export function MessageBubble({
                 {formatMsgTime(msg.createdAt)}
                 {isMe && (
                   <span className="ml-0.5 flex-shrink-0">
-                    {isRead
-                      ? <CheckCheck className="w-[14px] h-[14px] text-[#4fae4e]" />
-                      : <Check className="w-[14px] h-[14px]" />
-                    }
+                    {msg.status === "sending" ? (
+                      <Clock className="w-[13px] h-[13px] opacity-70" />
+                    ) : msg.status === "failed" ? (
+                      <button
+                        type="button"
+                        onClick={() => msg.clientMsgId && retryMessage(msg)}
+                        title={t("qaytaYuborish")}
+                        className="flex items-center"
+                      >
+                        <AlertCircle className="w-[14px] h-[14px] text-red-500" />
+                      </button>
+                    ) : isRead ? (
+                      <CheckCheck className="w-[14px] h-[14px] text-[#4fae4e]" />
+                    ) : (
+                      <Check className="w-[14px] h-[14px]" />
+                    )}
                   </span>
                 )}
               </span>

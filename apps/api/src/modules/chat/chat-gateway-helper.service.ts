@@ -80,7 +80,7 @@ export class ChatGatewayHelperService {
         data.content,
         { fileUrl: data.fileUrl, fileName: data.fileName, fileType: data.fileType, replyToId: data.replyToId ? Number(data.replyToId) : undefined, clientMsgId: data.clientMsgId },
       );
-      if (!sendResult.ok) { client.emit('error', { message: sendResult.error.message }); return; }
+      if (!sendResult.ok) { client.emit('error', { message: sendResult.error.message, clientMsgId: data.clientMsgId }); return; }
       const message = sendResult.data;
 
       this.server?.to(`room:${roomId}`).emit('new_message', message);
@@ -95,7 +95,7 @@ export class ChatGatewayHelperService {
 
       await this.sendTelegramNotification(roomId, userId, data.content, members);
     } catch (err) {
-      client.emit('error', { message: String(err) });
+      client.emit('error', { message: String(err), clientMsgId: data.clientMsgId });
     }
   }
 

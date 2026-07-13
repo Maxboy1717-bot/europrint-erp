@@ -117,6 +117,7 @@ interface ChatStore {
   addOptimisticMessage: (msg: ChatMessage) => void;
   reconcileMessage: (roomId: string, clientMsgId: string, serverMsg: ChatMessage) => void;
   markMessageFailed: (roomId: string, clientMsgId: string) => void;
+  markMessageSending: (roomId: string, clientMsgId: string) => void;
   editMessage: (roomId: string, messageId: string, content: string, isEdited: boolean) => void;
   deleteMessage: (roomId: string, messageId: string) => void;
   updateReactions: (roomId: string, messageId: string, reactions: ChatReaction[]) => void;
@@ -212,6 +213,18 @@ export const useChatStore = create<ChatStore>((set) => ({
         messages: {
           ...s.messages,
           [roomId]: list.map((m) => (m.clientMsgId === clientMsgId ? { ...m, status: "failed" } : m)),
+        },
+      };
+    }),
+
+  markMessageSending: (roomId, clientMsgId) =>
+    set((s) => {
+      const existing = s.messages[roomId] ?? [];
+      const list = Array.isArray(existing) ? existing : [];
+      return {
+        messages: {
+          ...s.messages,
+          [roomId]: list.map((m) => (m.clientMsgId === clientMsgId ? { ...m, status: "sending" } : m)),
         },
       };
     }),
