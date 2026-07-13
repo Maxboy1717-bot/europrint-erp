@@ -31,6 +31,14 @@ export class Notification extends AggregateRoot {
   referenceType: string | null;
   // 18-notif #88 — originating actor id (who sent this notification); null = system/cron.
   senderId: string | null;
+  // Owner decision 2026-07-13 (chat) — module_code/channel columns on notifications (single-table
+  // extension, not a new table). moduleCode = originating ERP module ('sd'/'mes'/'qc'/'pos'/...,
+  // matches business_settings.module vocabulary); channel = delivery channel actually attempted
+  // for this notification ('telegram'|'email'|'sms'|'in_app', same vocabulary as
+  // ExtendedCreateNotificationCommand.channels in create-notification.handler.ts). Both nullable —
+  // null when not supplied (additive, no regression on existing rows/callers).
+  moduleCode: string | null;
+  channel: string | null;
 
   constructor(userId: number | string, title: string, body: string, type?: NotificationType | string);
   constructor(
@@ -91,6 +99,8 @@ export class Notification extends AggregateRoot {
     this.updatedAt = _time.now();
     this.readAt = null;
     this.senderId = null;
+    this.moduleCode = null;
+    this.channel = null;
   }
 
   markAsRead(by?: number): Result<void> | void {

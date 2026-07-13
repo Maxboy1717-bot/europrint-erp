@@ -155,6 +155,20 @@ export const notifications = pgTable('notifications', {
                                 // as PriorityEnum in notification-schedules.controller.ts. Used to sort the
                                 // notification list (urgent/high first) in drizzle-notification.repo.ts.
   senderId: integer('sender_id'),   // 18-notif #88: originating actor (nullable, additive; NULL = system/cron)
+  // Owner decision 2026-07-13 (chat): 4 new columns on the single notifications table (not a
+  // new table). moduleCode = originating ERP module ('sd'/'mes'/'qc'/'pos'/... — same vocabulary
+  // as business_settings.module). channel = delivery channel attempted for this notification
+  // ('telegram'|'email'|'sms'|'in_app' — same vocabulary as channels[] in
+  // create-notification.handler.ts / ExtendedCreateNotificationCommand). status = delivery status
+  // ('pending'|'sent'|'failed' — distinct from isRead/readAt, which track READ status, not
+  // delivery status). immutable = marks certain notifications (e.g. official/legal notices) as
+  // non-deletable/non-editable; enforcement follows the existing CC "immutable document"
+  // convention (application-level check before mutate, see cc-retention.service.ts
+  // archiveWithRetention — no DB-trigger precedent exists in this codebase for that pattern).
+  moduleCode: text('module_code'),
+  channel: text('channel'),
+  status: text('status').default('pending'),
+  immutable: boolean('immutable').notNull().default(false),
 });
 
 export const marketingCampaigns = pgTable('marketing_campaigns', {

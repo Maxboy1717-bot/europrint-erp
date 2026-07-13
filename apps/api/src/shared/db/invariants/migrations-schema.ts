@@ -1195,4 +1195,25 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         SELECT 1 FROM gl_account_mappings g WHERE g.transaction_type = v.tt
       )`,
   },
+  // Owner decision 2026-07-13 (chat): 4 new columns on the single `notifications` table (not a
+  // new table) — module_code/channel/status/immutable. See
+  // apps/api/src/shared/db/migrations/notifications-module-channel-status-immutable-2026-07-13.sql
+  // for the full rationale (vocabulary sources, handler wiring, immutable-enforcement precedent).
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  {
+    name: 'notifications.module_code column (owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS module_code TEXT`,
+  },
+  {
+    name: 'notifications.channel column (owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS channel TEXT`,
+  },
+  {
+    name: 'notifications.status column (owner 2026-07-13, delivery status — distinct from is_read/read_at)',
+    sql: `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending'`,
+  },
+  {
+    name: 'notifications.immutable column (owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS immutable BOOLEAN NOT NULL DEFAULT false`,
+  },
 ];

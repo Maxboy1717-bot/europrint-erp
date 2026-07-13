@@ -46,6 +46,17 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     if (command.senderId) {
       notification.senderId = command.senderId;
     }
+    // Owner decision 2026-07-13 (chat) — module_code column: caller-supplied ERP module
+    // vocabulary (no reliable inference from referenceType exists across current callers).
+    if (command.moduleCode) {
+      notification.moduleCode = command.moduleCode;
+    }
+
+    const ext = command as ExtendedCreateNotificationCommand;
+    const channels = ext.channels ?? ['telegram', 'in_app'];
+    // channel column: primary channel attempted for this notification — first entry of the
+    // resolved channels list, i.e. the same list the per-channel delivery loop below iterates.
+    notification.channel = channels[0] ?? 'in_app';
 
     const saveResult = await this.notificationRepo.save(notification);
 
@@ -53,9 +64,6 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
       this.logger.error('Failed to create notification');
       return saveResult;
     }
-
-    const ext = command as ExtendedCreateNotificationCommand;
-    const channels = ext.channels ?? ['telegram', 'in_app'];
 
     const deliveries: Promise<void>[] = [];
 
