@@ -52,7 +52,11 @@ function evalArith(expr: string): number {
 }
 
 function resolveRefs(expr: string, cells: Cells, seen: Set<string>): string {
-  return expr.replace(/\b([A-Z]+[0-9]+)\b/g, (ref) => String(toNum(evalCell(ref, cells, seen))));
+  return expr.replace(/\b([A-Z]+[0-9]+)\b/g, (ref) => {
+    const v = evalCell(ref, cells, seen);
+    // Propagate errors (#CYCLE/#ERR) as NaN so arithmetic yields #ERR instead of a silent 0.
+    return v.startsWith('#') ? 'NaN' : String(toNum(v));
+  });
 }
 
 function evalCondition(cond: string, cells: Cells, seen: Set<string>): boolean {
@@ -86,9 +90,10 @@ function evalFormula(expr: string, cells: Cells, seen: Set<string>): string {
     expr = expr.replace(/IF\(([^()]*(?:\([^()]*\)[^()]*)*)\)/i, (_m, inner) => {
       const args = splitArgs(inner);
       if (args.length < 3) return '0';
-      return evalCondition(args[0], cells, seen)
-        ? evalFormula(args[1].trim(), cells, seen)
-        : evalFormula(args[2].trim(), cells, seen);
+      // Keep a quoted-string branch quoted so the outer pass returns it as text (not re-parsed
+      // as arithmetic); evaluate a formula/number branch normally.
+      const branch = (a: string) => { const t = a.trim(); return /^".*"$/.test(t) ? t : evalFormula(t, cells, seen); };
+      return evalCondition(args[0], cells, seen) ? branch(args[1]) : branch(args[2]);
     });
   }
   // SUM / AVERAGE / COUNT
