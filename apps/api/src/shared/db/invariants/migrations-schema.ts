@@ -1104,4 +1104,67 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
       ON CONFLICT (setting_key) DO NOTHING
     `,
   },
+  // Owner decision 2026-07-13 (chat): TT (topshiriq/task) majburiy-maydon + 24 soatlik
+  // eskalatsiya CC (Communication Center) shablon qoidalariga mos kelishi kerak — CRUD-
+  // extensible, CC'ning haqiqiy 24h SLA mexanizmini (cc_document_templates.inbox_sla_hours,
+  // cc-sla.cron.ts markInboxOverdue() — 30-daqiqalik poll) qayta ishlatib, Kanban'ning hozirgi
+  // umumiy KUNLIK-09:00 job'i (kanban-cron.processor.ts OVERDUE_ESCALATION, due_date-asosli)
+  // o'rniga emas — QO'SHIMCHA (Q-46, mavjud xatti-harakat o'zgarmaydi).
+  //
+  // kanban_cards.task_type — taxonomy_entries (category='kanban_task_type') kodiga soft-
+  // reference: shu jadvalning o'zidagi related_type ustuni bilan bir xil FK'siz varchar
+  // konvensiyasi (taxonomy_entries'ga HECH BIR jadval FK qilmaydi — 2026-07-13 tekshiruv:
+  // pg_constraint WHERE confrelid = 'taxonomy_entries'::regclass = 0 qator; egasi istalgan
+  // vaqt yangi TT turini mavjud generic Taksonomiya CRUD orqali qo'sha oladi —
+  // TaxonomyRepository.create(), taxonomy-entries-2026-07-11.sql). operation_type kategoriyasi
+  // ATAYLAB ishlatilmadi — u MES/ishlab-chiqarish operatsiyalari (bosma/kashirovka/kley/lak/
+  // rezka/vysechka) uchun, TT vazifa-turi bilan semantik aloqasi yo'q.
+  //
+  // kanban_cards.sla_hours — karta darajasidagi ixtiyoriy SLA override (soat). Cron effektiv
+  // SLA'ni ushbu zanjirdan hisoblaydi: (1) kanban_cards.sla_hours, (2)
+  // taxonomy_entries.attrs->>'sla_hours' (tur darajasidagi standart — attrs jsonb allaqachon
+  // shu maqsad uchun mo'ljallangan ustun, taxonomy-entries-2026-07-11.sql), (3)
+  // business_settings 'kanban.tt_task_sla_hours_default' (global default — Q-40, hech qanday
+  // raqam kodga hardcode qilinmaydi; CC inbox_sla_hours bilan bir xil boshlang'ich qiymat 24).
+  //
+  // Ikkalasi ham additive/nullable — mavjud kartalar (task_type=NULL) yangi TT_SLA_ESCALATION
+  // job query'siga kirmaydi; joriy due_date-asosidagi kunlik OVERDUE_ESCALATION O'ZGARMAYDI.
+  //
+  // C9 note (2026-07-13): kanban's cron infra migrated to BullMQ same day — this SLA job is
+  // registered as a 3rd repeatable job (TT_SLA_ESCALATION, every 30 min) in the same
+  // kanban-cron.processor.ts, not a standalone @Cron file.
+  //
+  // APPROVED: owner schema-approval 2026-07-11 (Muslimbek, chat) — Q-35.
+  // Human-readable mirror: apps/api/src/shared/db/migrations/kanban-tt-sla-2026-07-13.sql.
+  {
+    name: 'kanban_cards.task_type column (TT/task-type governs mandatory-field + SLA, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS task_type VARCHAR(60)`,
+  },
+  {
+    name: 'kanban_cards.sla_hours column (per-card SLA override in hours, owner 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS kanban_cards ADD COLUMN IF NOT EXISTS sla_hours NUMERIC(6,2)`,
+  },
+  {
+    name: 'kanban_cards.sla_hours positive-value check (owner 2026-07-13)',
+    sql: `
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'kanban_cards_sla_hours_chk'
+        ) THEN
+          ALTER TABLE kanban_cards ADD CONSTRAINT kanban_cards_sla_hours_chk CHECK (sla_hours IS NULL OR sla_hours > 0);
+        END IF;
+      END $$
+    `,
+  },
+  {
+    name: 'kanban_cards.task_type partial index (TT SLA-cron lookup, owner 2026-07-13)',
+    sql: `CREATE INDEX IF NOT EXISTS idx_kanban_cards_task_type ON kanban_cards (task_type) WHERE task_type IS NOT NULL`,
+  },
+  {
+    name: 'business_settings kanban.tt_task_sla_hours_default seed (owner 2026-07-13, CC-parity default 24h)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description)
+      SELECT 'kanban', 'kanban.tt_task_sla_hours_default', 'TT vazifa standart SLA (soat)', 'number', 24, 'soat', 1, 168,
+        'Owner 2026-07-13 (chat): TT/task karta uchun standart eskalatsiya SLA (soat) - CC cc_document_templates.inbox_sla_hours (24) bilan bir xil boshlang''ich qiymat. Karta darajasida (kanban_cards.sla_hours) yoki tur darajasida (taxonomy_entries.attrs->>''sla_hours'', category=''kanban_task_type'') override qilinishi mumkin; hech biri bo''lmasa shu global default ishlatiladi.'
+      WHERE NOT EXISTS (SELECT 1 FROM business_settings WHERE setting_key = 'kanban.tt_task_sla_hours_default')`,
+  },
 ];

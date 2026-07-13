@@ -52,6 +52,14 @@ export const kanbanCards = pgTable('kanban_cards', {
   // (kanban-visibility.helper.ts kanbanConfidentialClause); still visible to
   // owner_user_id/assigner_user_id/privileged roles.
   is_confidential:  boolean('is_confidential').notNull().default(false),
+  // Owner 2026-07-13 (chat): TT (topshiriq/task) turi — taxonomy_entries(category=
+  // 'kanban_task_type', code) ga soft-reference (related_type kabi FK'siz); qaysi mandatory-
+  // field/SLA qoidasi qo'llanishini belgilaydi (kanban-cron.processor.ts TT_SLA_ESCALATION).
+  // sla_hours — shu kartaning ixtiyoriy SLA override'i (soat); NULL bo'lsa job
+  // taxonomy_entries.attrs->>'sla_hours', undan keyin business_settings
+  // 'kanban.tt_task_sla_hours_default' (default 24) ga qaraydi.
+  task_type:        varchar('task_type', { length: 60 }),
+  sla_hours:        numeric('sla_hours', { precision: 6, scale: 2 }),
   sort_order:       integer('sort_order').notNull().default(0),
   created_at:       timestamp('created_at').notNull().defaultNow(),
   updated_at:       timestamp('updated_at').notNull().defaultNow(),

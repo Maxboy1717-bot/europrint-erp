@@ -1,7 +1,7 @@
 /**
  * kanban-cron.processor.ts — BullMQ 'kanban-cron' navbat workeri.
  *
- * Kanban modulining ikkita davriy vazifasini BITTA navbatda, jobType diskriminatori
+ * Kanban modulining uchta davriy vazifasini BITTA navbatda, jobType diskriminatori
  * bilan bajaradi (MrpRunProcessor'dagi EOQ_RECALC_ALL/SAFETY_STOCK_REFRESH naqshiga
  * o'xshash — qarang apps/api/src/modules/queue/processors/mrp-run.processor.ts):
  *
@@ -11,6 +11,9 @@
  *   - RECURRING_CARDS — takrorlanuvchi (recurrence_pattern <> 'none'), yakunlangan
  *     kartalarni keyingi sanaga qayta yaratish.
  *     Ilgari: apps/api/src/cron/kanban-recurring.cron.ts (@Cron('0 7 * * *')).
+ *   - TT_SLA_ESCALATION — TT (topshiriq/task) turi bor kartalar uchun CC-parity 24h SLA
+ *     (owner 2026-07-13), har 30 daqiqada — kanban_cards.sla_hours →
+ *     taxonomy_entries.attrs->>'sla_hours' → business_settings default zanjiri.
  *
  * Migratsiya sababi (egasi qarori, 2026-07-13): @nestjs/schedule @Cron in-process
  * ishlaydi — server tushgan payt jadval yo'qoladi. BullMQ repeatable job jadvalni
@@ -20,14 +23,14 @@
  * trigger/execution mexanizmi @Cron'dan BullMQ repeatable job'ga ko'chdi.
  *
  * Repeatable job'lar onModuleInit'da ro'yxatdan o'tkaziladi — BullMQ bir xil
- * job-nomi+pattern+tz bilan qayta chaqirishni idempotent qayta ishlaydi (dublikat
+ * job-nomi+pattern/every+tz bilan qayta chaqirishni idempotent qayta ishlaydi (dublikat
  * repeatable entry yaratmaydi), shuning uchun har boot'da/har replikada qayta
  * chaqirish xavfsiz.
  *
  * NOTE: Raw SQL — varchar due_date'ni xavfsiz date'ga cast + NOT EXISTS dedup;
  *   bularni Drizzle query-builder ifodalay olmaydi. See ARCHITECTURE_RULES.md Rule 4.
  *   (escalateOverdue/createRecurringCards ichidagi SQL — asl fayllardan o'zgarishsiz ko'chirilgan.)
- * concurrency: 1 — ikkala job ham kunlik bir martalik, parallel ishlash shart emas.
+ * concurrency: 1 — har uchala job ham qisqa-davrli, parallel ishlash shart emas.
  */
 import { Logger, OnModuleInit } from '@nestjs/common';
 import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
@@ -36,7 +39,7 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { QUEUE_NAMES, backoffDelay } from '../../../queue/queue.constants';
 
-export type KanbanCronJobType = 'OVERDUE_ESCALATION' | 'RECURRING_CARDS';
+export type KanbanCronJobType = 'OVERDUE_ESCALATION' | 'RECURRING_CARDS' | 'TT_SLA_ESCALATION';
 
 export interface KanbanCronJobData {
   jobType: KanbanCronJobType;
@@ -70,8 +73,15 @@ export class KanbanCronProcessor extends WorkerHost implements OnModuleInit {
         { jobType: 'RECURRING_CARDS', triggeredBy: 'bullmq-repeat' } satisfies KanbanCronJobData,
         { repeat: { pattern: '0 7 * * *', tz: 'Asia/Tashkent' } },
       );
+      // TT (topshiriq/task) SLA eskalatsiya (owner 2026-07-13) — CC'ning 30-daqiqalik
+      // inbox-SLA poll kadransiga mos (cc-sla.cron.ts markInboxOverdue()).
+      await this.kanbanCronQueue.add(
+        'tt-sla-escalation',
+        { jobType: 'TT_SLA_ESCALATION', triggeredBy: 'bullmq-repeat' } satisfies KanbanCronJobData,
+        { repeat: { every: 30 * 60 * 1000 } },
+      );
       this.logger.log(
-        "[kanban-cron] repeatable job'lar ro'yxatdan o'tdi: overdue-escalation (09:00), recurring-cards (07:00) Asia/Tashkent",
+        "[kanban-cron] repeatable job'lar ro'yxatdan o'tdi: overdue-escalation (09:00), recurring-cards (07:00) Asia/Tashkent, tt-sla-escalation (har 30 daqiqa)",
       );
     } catch (err) {
       this.logger.error(`[kanban-cron] repeatable job ro'yxatga olishda xato (Redis mavjudmi?): ${String(err)}`);
@@ -87,6 +97,8 @@ export class KanbanCronProcessor extends WorkerHost implements OnModuleInit {
         await this.escalateOverdue();
       } else if (job.data.jobType === 'RECURRING_CARDS') {
         await this.createRecurringCards();
+      } else if (job.data.jobType === 'TT_SLA_ESCALATION') {
+        await this.escalateTtSla();
       }
       this.logger.log(`[kanban-cron] Job #${job.id} muvaffaqiyatli yakunlandi`);
     } catch (err) {
@@ -166,6 +178,81 @@ export class KanbanCronProcessor extends WorkerHost implements OnModuleInit {
       VALUES
         (${userId}, ${type}, ${title}, ${body}, false, ${cardId}, 'kanban_card', ${priority}, NOW())
     `);
+  }
+
+  // ===== TT_SLA_ESCALATION — owner 2026-07-13, CC 24h-SLA mexanizmiga mos (yangi) =====
+
+  /**
+   * TT (topshiriq/task) tur-governance SLA — owner 2026-07-13 (chat): "TT majburiy maydon +
+   * 24 soatlik eskalatsiya CC shablon qoidalariga mos kelishi kerak" — CC'ning haqiqiy 24h SLA
+   * mexanizmini (cc_document_templates.inbox_sla_hours, cc-sla.cron.ts markInboxOverdue() — har
+   * 30 daqiqada tekshiradi) qayta ishlatib, yuqoridagi umumiy kunlik-09:00 escalateOverdue()
+   * (due_date-asosli) ustiga QO'SHIMCHA (Q-46 — mavjud xatti-harakat o'zgarmaydi). Faqat
+   * task_type BOR kartalar (TT kartalar) tekshiriladi; oddiy kanban kartalar (task_type=NULL)
+   * hamon escalateOverdue() bilan qamrab olinadi.
+   *
+   * Effektiv SLA (soat) zanjiri: kanban_cards.sla_hours (karta override) →
+   * taxonomy_entries.attrs->>'sla_hours' (tur standarti, category='kanban_task_type') →
+   * business_settings 'kanban.tt_task_sla_hours_default' (global default, CRUD orqali
+   * sozlanadi — Q-40, hech qanday raqam kodga hardcode qilinmagan).
+   *
+   * Dedup: yangi "yuborilganmi" ustuni QO'SHILMAYDI — escalateOverdue() bilan bir xil
+   * NOT EXISTS(notifications) konvensiyasi (bu safar kunlik emas — bir marta SLA buzilgani
+   * aniqlansa, bitta 'kanban_tt_sla_overdue' bildirishnoma umrbod kifoya, karta bajarilguncha).
+   */
+  private async escalateTtSla(): Promise<void> {
+    try {
+      const r = await runQuery<{
+        id: number; title: string | null; owner_user_id: number | null; assigner_user_id: number | null;
+      }>(sql`
+        WITH tt_sla AS (
+          SELECT c.id, c.title, c.owner_user_id, c.assigner_user_id, c.created_at,
+                 COALESCE(
+                   c.sla_hours,
+                   (te.attrs ->> 'sla_hours')::numeric,
+                   (SELECT value_num FROM business_settings
+                     WHERE setting_key = 'kanban.tt_task_sla_hours_default' AND is_active = true)
+                 ) AS effective_sla_hours
+          FROM kanban_cards c
+          LEFT JOIN taxonomy_entries te
+            ON te.category = 'kanban_task_type' AND te.code = c.task_type AND te.is_active = true
+          WHERE c.task_type IS NOT NULL
+            AND c.completed_at IS NULL
+            AND c.deleted_at IS NULL
+        )
+        SELECT id, title, owner_user_id, assigner_user_id
+        FROM tt_sla
+        WHERE effective_sla_hours IS NOT NULL
+          AND created_at + (effective_sla_hours || ' hours')::interval < NOW()
+          AND NOT EXISTS (
+            SELECT 1 FROM notifications n
+            WHERE n.reference_type = 'kanban_card'
+              AND n.reference_id = tt_sla.id
+              AND n.type = 'kanban_tt_sla_overdue'
+          )
+      `);
+      if (r.rows.length === 0) return;
+      this.logger.warn(`Kanban TT SLA: ${r.rows.length} vazifa SLA muddati o'tdi`);
+
+      // Pattern 2: har qatorning bildirishnomalari mustaqil — parallel.
+      await Promise.all(r.rows.map(async (row) => {
+        const t = (row.title ?? 'Vazifa').slice(0, 80);
+        if (row.owner_user_id) {
+          await this.notify(row.owner_user_id, row.id, 'kanban_tt_sla_overdue',
+            'TT vazifa SLA muddati o\'tdi',
+            `«${t}» vazifasi belgilangan SLA muddatida bajarilmadi. Iltimos, ko'rib chiqing.`,
+            'high');
+        }
+        if (row.assigner_user_id && row.assigner_user_id !== row.owner_user_id) {
+          await this.notify(row.assigner_user_id, row.id, 'kanban_tt_sla_overdue',
+            'Topshirgan TT vazifangiz SLA muddati o\'tdi',
+            `«${t}» vazifasi belgilangan SLA muddatida bajarilmadi.`,
+            'normal');
+        }
+      }));
+    } catch (e) {
+      this.logger.error(`escalateTtSla: ${(e as Error).message}`);
+    }
   }
 
   // ===== RECURRING_CARDS — apps/api/src/cron/kanban-recurring.cron.ts'dan ko'chirilgan, o'zgarishsiz =====
