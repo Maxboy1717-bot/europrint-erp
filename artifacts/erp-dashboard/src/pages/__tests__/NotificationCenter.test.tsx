@@ -44,8 +44,8 @@ describe('NotificationCenter page', () => {
   beforeEach(() => {
     apiRequestMock.mockReset();
     apiRequestMock.mockImplementation(async (method: string, url: string) => {
-      if (method === 'GET' && url === '/api/pos/notifications') {
-        return notifications;
+      if (method === 'GET' && url === '/api/notifications/my?limit=50') {
+        return { items: notifications };
       }
       return {};
     });
@@ -57,7 +57,7 @@ describe('NotificationCenter page', () => {
     await waitFor(() => {
       expect(apiRequestMock).toHaveBeenCalledWith(
         'GET',
-        '/api/pos/notifications',
+        '/api/notifications/my?limit=50',
       );
     });
   });
@@ -85,7 +85,7 @@ describe('NotificationCenter page', () => {
     await waitFor(() => {
       expect(apiRequestMock).toHaveBeenCalledWith(
         'GET',
-        '/api/pos/notifications',
+        '/api/notifications/my?limit=50',
       );
     });
     const markAll = screen
@@ -100,7 +100,7 @@ describe('NotificationCenter page', () => {
       await waitFor(() => {
         expect(apiRequestMock).toHaveBeenCalledWith(
           'POST',
-          '/api/pos/notifications/read-all',
+          '/api/notifications/my/mark-all-read',
         );
       });
     } else {

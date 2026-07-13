@@ -14,9 +14,8 @@ import { useTranslation } from '@/lib/i18n';
 
 interface Notification {
   id: number;
-  // The /api/pos/notifications view returns the category as `notificationType`; some legacy
-  // rows also carry `type`. The page previously read only `n.type` (undefined) so every item
-  // showed the generic fallback and the type-filter collapsed. Accept both — see catOf().
+  // Unified GET /api/notifications/my (converged 2026-07-13) returns the category as `type`;
+  // the legacy /api/pos/notifications view returned it as `notificationType`. Accept both — see catOf().
   type?: string;
   notificationType?: string;
   title: string;
@@ -27,7 +26,35 @@ interface Notification {
   createdAt: string;
 }
 
-/** Resolve a notification's category from either field name (API sends notificationType). */
+/** Raw shape returned by GET /api/notifications/my — `id` is a stringified PK there, not a number. */
+interface RawNotificationItem {
+  id: number | string;
+  type?: string;
+  notificationType?: string;
+  title: string;
+  body: string;
+  entityType?: string;
+  entityId?: number;
+  isRead: boolean;
+  createdAt: string | Date;
+}
+
+/** Adapt the unified endpoint's row shape to this page's local `Notification` type. */
+function toNotification(n: RawNotificationItem): Notification {
+  return {
+    id: typeof n.id === 'string' ? Number(n.id) : n.id,
+    type: n.type,
+    notificationType: n.notificationType,
+    title: n.title,
+    body: n.body,
+    entityType: n.entityType,
+    entityId: n.entityId,
+    isRead: Boolean(n.isRead),
+    createdAt: typeof n.createdAt === 'string' ? n.createdAt : new Date(n.createdAt).toISOString(),
+  };
+}
+
+/** Resolve a notification's category from either field name (API sends `type`). */
 function catOf(n: Notification): string {
   return n.notificationType ?? n.type ?? '';
 }
@@ -67,9 +94,15 @@ export default function NotificationCenter() {
   const load = async () => {
     setLoading(true);
     try {
-      const r = await apiRequest<Notification[] | { rows: Notification[] }>("GET", "/api/pos/notifications");
-      const list = Array.isArray(r) ? r : (r as { rows: Notification[] })?.rows ?? [];
-      setNotifications(list);
+      // Unified endpoint (POS-VIEW notifications converged into /api/notifications at the
+      // controller level 2026-07-13 — pos_notifications was already just a VIEW over
+      // notifications). limit=50 matches the old PosNotificationsRepository.getForUser(userId, 50)
+      // cap this page relied on; the unified route defaults to 10 without an explicit limit.
+      const r = await apiRequest<RawNotificationItem[] | { items?: RawNotificationItem[] }>(
+        "GET", "/api/notifications/my?limit=50",
+      );
+      const rows = Array.isArray(r) ? r : (r as { items?: RawNotificationItem[] })?.items ?? [];
+      setNotifications(rows.map(toNotification));
     } catch { setNotifications([]); }
     finally { setLoading(false); }
   };
@@ -82,14 +115,14 @@ export default function NotificationCenter() {
 
   const markRead = async (id: number) => {
     try {
-      await apiRequest("POST", `/api/pos/notifications/${id}/read`);
+      await apiRequest("PATCH", `/api/notifications/${id}/read`);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch { /* noop */ }
   };
 
   const markAllRead = async () => {
     try {
-      await apiRequest("POST", "/api/pos/notifications/read-all");
+      await apiRequest("POST", "/api/notifications/my/mark-all-read");
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch { /* noop */ }
   };
