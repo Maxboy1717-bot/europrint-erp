@@ -9,6 +9,8 @@ import { Controller, Get, Post, Put, Patch, Delete, Param, Query, Body, HttpCode
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { GoalsCompatService } from './goals-compat.service';
 import { unwrapOrInternal } from '@common/http-result';
@@ -60,9 +62,9 @@ export class GoalsCompatController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   // P1.8.2: validate goal fields; P1.8.3: startDate/endDate required
-  async createGoal(@Body() body: unknown) {
+  async createGoal(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateGoalSchema.parse(body);
-    return unwrapOrInternal(await this.svc.createGoal(dto));
+    return unwrapOrInternal(await this.svc.createGoal({ ...dto, createdBy: user.id }));
   }
 
   @Get(':id')
@@ -84,7 +86,11 @@ export class GoalsCompatController {
     return unwrapOrInternal(await this.svc.updateGoal(id, dto));
   }
 
+  // Delete is more sensitive than the rest of the CRUD — only HR/manager/director/admin
+  // tiers, not the general OPERATOR role (matches RazryadController's owner/manager/HR
+  // restriction pattern). Method-level @Roles() overrides the class-level list above.
   @Delete(':id')
+  @Roles(...HR_ROLES)
   async deleteGoal(@Param('id') id: string) {
     return unwrapOrInternal(await this.svc.deleteGoal(id));
   }

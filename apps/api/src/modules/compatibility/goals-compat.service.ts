@@ -41,17 +41,20 @@ export class GoalsCompatService {
   }
 
   async createGoal(body: Record<string, unknown>) {
-    const { title, description, category, target_type, target_id, metric,
-            current_value, target_value, start_date, end_date, status, priority, created_by } = body;
+    // NOTE: FE/DTO send camelCase (P1.8.2 CreateGoalSchema); this previously destructured
+    // snake_case here, so target_type/target_id/current_value/target_value/start_date/end_date
+    // were always undefined and start_date/end_date (NOT NULL columns) caused every insert to 500.
+    const { title, description, category, targetType, targetId, metric,
+            currentValue, targetValue, startDate, endDate, status, priority, createdBy } = body;
     if (!title) throw new BadRequestException(await this.i18n.t('errors.titleRequired'));
     const r = await safeCall(() => rawSql(sql`
       INSERT INTO goals (title, description, category, target_type, target_id, metric,
                         current_value, target_value, start_date, end_date, status, priority, created_by)
       VALUES (${title ?? ''}, ${description ?? null}, ${category ?? 'department'},
-              ${target_type ?? 'department'}, ${String(target_id ?? '')}, ${metric ?? null},
-              ${si(current_value)}, ${si(target_value, 100)},
-              ${start_date ?? null}, ${end_date ?? null},
-              ${status ?? 'active'}, ${priority ?? 'medium'}, ${String(created_by ?? '')})
+              ${targetType ?? 'department'}, ${String(targetId ?? '')}, ${metric ?? null},
+              ${si(currentValue)}, ${si(targetValue, 100)},
+              ${startDate ?? null}, ${endDate ?? null},
+              ${status ?? 'active'}, ${priority ?? 'medium'}, ${String(createdBy ?? '')})
       RETURNING id, title, status, priority, created_at
     `));
     if (!r.ok) { this.logger.error(`createGoal: ${r.error}`); throw new InternalServerErrorException(await this.i18n.t('errors.goalCreationFailed')); }
@@ -95,16 +98,21 @@ export class GoalsCompatService {
   }
 
   async updateGoal(id: string, body: Record<string, unknown>) {
-    const { title, description, current_value, target_value, status, priority, end_date } = body;
+    // NOTE: same camelCase/snake_case drift as createGoal — FE/DTO (UpdateGoalSchema) send
+    // camelCase, this used to destructure snake_case so current_value/target_value/end_date
+    // (and category/startDate, now also handled) silently never updated.
+    const { title, description, category, currentValue, targetValue, status, priority, startDate, endDate } = body;
     const r = await safeCall(() => rawSql(sql`
       UPDATE goals
       SET title = COALESCE(${title ?? null}, title),
           description = COALESCE(${description ?? null}, description),
-          current_value = COALESCE(${current_value ?? null}, current_value),
-          target_value = COALESCE(${target_value ?? null}, target_value),
+          category = COALESCE(${category ?? null}, category),
+          current_value = COALESCE(${currentValue ?? null}, current_value),
+          target_value = COALESCE(${targetValue ?? null}, target_value),
           status = COALESCE(${status ?? null}, status),
           priority = COALESCE(${priority ?? null}, priority),
-          end_date = COALESCE(${end_date ?? null}, end_date),
+          start_date = COALESCE(${startDate ?? null}, start_date),
+          end_date = COALESCE(${endDate ?? null}, end_date),
           updated_at = NOW()
       WHERE id = ${id}
       RETURNING id, title, status, current_value, target_value, updated_at
