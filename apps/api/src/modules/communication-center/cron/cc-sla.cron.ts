@@ -2,7 +2,9 @@
  * Communication Center — Cron jobs
  *
  *   Har 30 daqiqada — kiruvchi savat 24h SLA tekshiruvi + escalation + delegation cleanup
- *   Har soat        — takrorlanuvchi hujjatlar (cron_expression bo'yicha)
+ *   Har soat        — takrorlanuvchi hujjatlar (cron_expression bo'yicha, hozircha placeholder)
+ *                     + shablon archive_after_days arxivlash (owner 2026-07-13)
+ *                     + 90-kunlik eskirgan-qoralama arxivlash (owner 2026-07-13)
  */
 
 /**
@@ -23,10 +25,14 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { getCcGateway } from '../presentation/cc.gateway';
+import { CcRetentionService } from '../application/cc-retention.service';
+import { getBusinessSettingNumber } from '../../../shared/config/business-settings.reader';
 
 @Injectable()
 export class CcSlaCron {
   private readonly logger = new Logger(CcSlaCron.name);
+
+  constructor(private readonly retention: CcRetentionService) {}
 
   /**
    * Har 30 daqiqada:
@@ -47,13 +53,20 @@ export class CcSlaCron {
   }
 
   /**
-   * Har soatning 5-daqiqasida — takrorlanuvchi hujjatlarni tekshirish.
-   * (To'liq cron-expression matching keyingi versiyada — hozir faqat is_recurring tekshiruvi.)
+   * Har soatning 5-daqiqasida:
+   *  1. Takrorlanuvchi hujjatlarni tekshirish (is_recurring) — hozircha placeholder.
+   *     (To'liq cron-expression matching keyingi versiyada.)
+   *  2. Shablon darajasidagi archive_after_days (cc_document_templates) — tasdiqlangan
+   *     hujjatlarni muddati kelganda arxivlash (owner 2026-07-13).
+   *  3. 90 kunlik (business_settings 'cc.stale_draft_archive_days') — uzoq DRAFT holatda
+   *     qolgan hujjatlarni arxivlash (owner 2026-07-13).
    */
   @Cron('5 * * * *')
   async runEveryHour(): Promise<void> {
     try {
       await this.spawnRecurringDocuments();
+      await this.applyTemplateArchival();
+      await this.archiveStaleDrafts();
     } catch (e) {
       this.logger.error(`runEveryHour: ${(e as Error).message}`);
     }
@@ -221,6 +234,59 @@ export class CcSlaCron {
     // har soatda bitta marta sun'iy ravishda yaratish o'tkazib yuboriladi.
     // To'liq cron-expression matching kelajakda qo'shiladi.
     // (Hozir hech narsa qilmaydi; placeholder)
+  }
+
+  /**
+   * Owner 2026-07-13: cc_document_templates.archive_after_days (kun, 18 shablonda mavjud
+   * lekin hozirgacha hech qanday kod o'qimasdi) — endi haqiqatan qo'llaniladi. Tasdiqlangan
+   * (workflow_state='approved') hujjat shablonining archive_after_days muddatidan ko'proq
+   * vaqt oldin yakunlangan bo'lsa (updated_at — approve paytida transition() yangilaydi;
+   * cc-stats.service.ts ham shu ustunni "approved sana" sifatida ishlatadi) va hali
+   * arxivlanmagan bo'lsa (archived_at IS NULL) — mavjud arxiv mexanizmi
+   * (cc-retention.service.archiveWithRetention, Batch 5 Item 3) orqali arxivlanadi.
+   * Dublikat yo'q (Q-46) — arxivlash faqat shu bitta joyda amalga oshadi.
+   */
+  private async applyTemplateArchival(): Promise<void> {
+    const r = await runQuery<{ id: string }>(sql`
+      SELECT d.id::text AS id
+      FROM cc_documents d
+      JOIN cc_document_templates t ON t.id = d.template_id
+      WHERE d.workflow_state = 'approved'
+        AND d.archived_at IS NULL
+        AND t.archive_after_days IS NOT NULL
+        AND d.updated_at + (t.archive_after_days || ' days')::interval < NOW()
+    `);
+    if (r.rows.length === 0) return;
+    this.logger.log(`Shablon archive_after_days: ${r.rows.length} hujjat arxivlanmoqda`);
+    // Pattern 2: har bir hujjat arxivi mustaqil — parallel
+    await Promise.all(r.rows.map(async (row) => {
+      const res = await this.retention.archiveWithRetention(row.id);
+      if (!res.ok) this.logger.warn(`Shablon arxivi ${row.id}: ${res.error.message}`);
+    }));
+  }
+
+  /**
+   * Owner 2026-07-13: yangi qoida — DRAFT holatida uzoq (hech qachon yuborilmagan) qolgan
+   * hujjatlar "eskirgan qoralama" sifatida arxivlanadi (O'CHIRILMAYDI — faqat mavjud arxiv
+   * mexanizmi bilan archived_at o'rnatiladi, additive/soft). Muddat business_settings
+   * 'cc.stale_draft_archive_days' dan o'qiladi (default 90 — Q-40, chatda raqam hardcode
+   * qilinmaydi, CRUD orqali sozlanadi).
+   */
+  private async archiveStaleDrafts(): Promise<void> {
+    const staleDays = await getBusinessSettingNumber('cc.stale_draft_archive_days', 90);
+    const r = await runQuery<{ id: string }>(sql`
+      SELECT id::text AS id
+      FROM cc_documents
+      WHERE workflow_state = 'draft'
+        AND archived_at IS NULL
+        AND created_at < NOW() - (${staleDays} || ' days')::interval
+    `);
+    if (r.rows.length === 0) return;
+    this.logger.log(`Eskirgan qoralama (>${staleDays} kun): ${r.rows.length} hujjat arxivlanmoqda`);
+    await Promise.all(r.rows.map(async (row) => {
+      const res = await this.retention.archiveWithRetention(row.id);
+      if (!res.ok) this.logger.warn(`Eskirgan qoralama arxivi ${row.id}: ${res.error.message}`);
+    }));
   }
 
   // ─────────────────────────────────────────────────────────────────────
