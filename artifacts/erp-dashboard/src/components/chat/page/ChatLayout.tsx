@@ -11,6 +11,8 @@ import { useCallback, useState } from "react";
 import { useChatStore, ChatMessage, ChatRoom } from "@/store/chatStore";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { RoomInfoPanel } from "./RoomInfoPanel";
+import { ChatEmployeeInfoPanel, ChatPanelEmployee } from "./ChatEmployeeInfoPanel";
+import { useAuth } from "@/hooks/useAuth";
 import { ThreadPanel } from "./ThreadPanel";
 import { PollCreator } from "./PollCreator";
 import { ForwardModal } from "./ForwardModal";
@@ -48,6 +50,7 @@ export function ChatLayout() {
   const rooms = useChatStore((s) => s.rooms);
   const members = useChatStore((s) => s.members);
   const onlineUserIds = useChatStore((s) => s.onlineUserIds);
+  const { user } = useAuth();
   const infoOpen = useChatStore((s) => s.infoOpen);
   const setInfoOpen = useChatStore((s) => s.setInfoOpen);
   const toggleInfo = useChatStore((s) => s.toggleInfo);
@@ -89,6 +92,21 @@ export function ChatLayout() {
     : [];
   const isChannelReadOnly =
     activeRoom?.type === "channel" && activeRoom?.memberRole === "MEMBER";
+  // For a 1:1 (direct) room the info panel shows the OTHER participant's
+  // employee profile (Crisp/Intercom-style). Groups/channels keep RoomInfoPanel.
+  const panelMember = activeRoom?.type === "direct"
+    ? activeMembers.find((m) => String(m.userId) !== String(user?.id))
+    : undefined;
+  const panelEmployee: ChatPanelEmployee | undefined = panelMember
+    ? {
+        userId: Number(panelMember.userId),
+        fullName: panelMember.fullName,
+        role: "MEMBER",
+        avatarUrl: panelMember.avatarUrl ?? undefined,
+        employeeId: panelMember.employeeId != null ? String(panelMember.employeeId) : undefined,
+        isOnline: onlineUserIds.has(Number(panelMember.userId)),
+      }
+    : undefined;
   const memberCount = activeRoomId ? (members[activeRoomId] ?? []).length : 0;
   const typingText = (() => {
     if (!typingUsers || typingUsers.size === 0) return null;
@@ -411,10 +429,14 @@ export function ChatLayout() {
         </aside>
       )}
 
-      {/* Right panel: Room info */}
+      {/* Right panel: employee profile (direct rooms) or room info (groups) */}
       {infoOpen && activeRoom && !threadRootMsg && (
-        <aside className="hidden lg:flex w-full sm:w-[380px] flex-shrink-0 border-l border-[var(--tg-border)] bg-[var(--tg-sidebar-bg)] flex-col">
-          <RoomInfoPanel room={activeRoom} onClose={() => setInfoOpen(false)} />
+        <aside className="hidden lg:flex w-full sm:w-[380px] flex-shrink-0 border-l border-[var(--ep-border)] flex-col">
+          {activeRoom.type === "direct" && panelEmployee ? (
+            <ChatEmployeeInfoPanel employee={panelEmployee} onClose={() => setInfoOpen(false)} />
+          ) : (
+            <RoomInfoPanel room={activeRoom} onClose={() => setInfoOpen(false)} />
+          )}
         </aside>
       )}
 
