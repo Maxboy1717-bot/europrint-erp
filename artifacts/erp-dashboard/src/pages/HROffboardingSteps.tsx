@@ -68,19 +68,23 @@ export function ChecklistPanel({
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
-  const saveInterview = useMutation<ExitInterviewResult, Error, void>({
-    mutationFn: () =>
-      apiRequest<ExitInterviewResult>("POST", `/api/hr/offboarding/cases/${caseId}/exit-interview`, { answers }),
-    onSuccess: (data) => {
+  const saveInterview = useMutation<ExitInterviewResult, Error, { skipped?: boolean } | void>({
+    mutationFn: (opts) =>
+      apiRequest<ExitInterviewResult>("POST", `/api/hr/offboarding/cases/${caseId}/exit-interview`, {
+        answers,
+        skipped: opts?.skipped === true,
+      }),
+    onSuccess: (data, opts) => {
       queryClient.invalidateQueries({ queryKey: ["/api/hr/offboarding/cases", caseId] });
       queryClient.invalidateQueries({ queryKey: ["/api/hr/offboarding/cases"] });
       setShowInterviewForm(false);
-      if (data?.blocksSettlement) {
+      if (opts?.skipped) {
+        toast({ title: "Suhbat o'tkazib yuborildi — sabab: \"Javob bermadi\"" });
+      } else if (data?.blocksSettlement) {
         const missing = Array.isArray(data.missingAnswers) ? data.missingAnswers : [];
         toast({
-          title: "Suhbat saqlandi — hisob-kitob blokda",
+          title: "Suhbat saqlandi — ba'zi savollar javobsiz",
           description: `Javob berilmagan savollar: ${missing.join(", ")}`,
-          variant: "destructive",
         });
       } else {
         toast({ title: "Chiqish suhbati saqlandi — barcha savollar javoblangan" });
@@ -214,19 +218,35 @@ export function ChecklistPanel({
         ))}
       </div>
 
-      {/* Exit interview form */}
+      {/* Exit interview form — OPTIONAL per vision: HR may skip it entirely
+          ("Javob bermadi" / did-not-respond is a valid turnover category). */}
       {showInterviewForm && (
-        <ExitInterviewForm
-          answers={answers}
-          onAnswerChange={(key, value) => setAnswers(a => ({ ...a, [key]: value }))}
-          onSave={() => saveInterview.mutate()}
-          onCancel={() => setShowInterviewForm(false)}
-          isSaving={saveInterview.isPending}
-        />
+        <>
+          <ExitInterviewForm
+            answers={answers}
+            onAnswerChange={(key, value) => setAnswers(a => ({ ...a, [key]: value }))}
+            onSave={() => saveInterview.mutate(undefined)}
+            onCancel={() => setShowInterviewForm(false)}
+            isSaving={saveInterview.isPending}
+          />
+          <Button
+            size="sm" variant="ghost"
+            className="h-7 text-xs text-muted-foreground -mt-2"
+            onClick={() => saveInterview.mutate({ skipped: true })}
+            disabled={saveInterview.isPending}
+          >
+            {t("suhbatniOtkazibYuborish", "Suhbatni o'tkazib yuborish (xodim javob bermadi)")}
+          </Button>
+        </>
       )}
 
-      {/* Finalize button — only when 100% complete */}
-      {caseDetail.status === "active" && pct >= 100 && (
+      {/* Finalize button — checklist required items 100% complete. Exit
+          interview is optional, so this must show once status is either
+          still 'active' (interview never recorded / explicitly skipped) or
+          'exit_interviewed' (interview recorded) — it previously only
+          checked 'active', which hid the button forever once the interview
+          transitioned the case to 'exit_interviewed'. */}
+      {(caseDetail.status === "active" || caseDetail.status === "exit_interviewed") && pct >= 100 && (
         <Button
           className="w-full bg-[var(--ep-green)] hover:bg-[var(--ep-green)]/90 text-white"
           onClick={() => completeCase.mutate()}

@@ -19,12 +19,25 @@ interface CreateCaseInput {
 }
 
 interface ExitInterviewInput {
+  // Live-UI shape (HROffboardingInterview.tsx / OffboardingTabDialogs.tsx EXIT_QUESTIONS).
+  answers?: Record<string, string>;
+  // Explicit "skip" — vision: exit interview is OPTIONAL, not blocking.
+  skipped?: boolean;
+  // Legacy flat shape (back-compat API callers).
   rating?: number;
   wouldReturn?: boolean;
   mainReason?: string;
   feedback?: string;
   improvements?: string;
 }
+
+/** Mirrors the frontend's EXIT_QUESTIONS (HROffboardingTypes.ts). */
+const REQUIRED_EXIT_ANSWER_KEYS = [
+  'reason_for_leaving', 'management_rating', 'environment_rating', 'would_recommend',
+];
+
+/** Fallback "did not respond" turnover category — vision-required (2026-07-13). */
+const NO_RESPONSE_REASON = 'Javob bermadi';
 
 @Injectable()
 export class HrOffboardingService {
@@ -41,12 +54,22 @@ export class HrOffboardingService {
     const dismissalCheck = this.workflow.validateDismissalType(input.dismissalType);
     if (!dismissalCheck.ok) return dismissalCheck as Result<Row>;
 
+    // Guard against two concurrent active cases for the same employee — the
+    // live CreateCaseDialog already has an onError branch for this ("Bu
+    // xodim uchun faol offboarding jarayoni mavjud"), but nothing produced
+    // the error before this fix.
+    const existing = await this.repo.findActiveCaseByEmployee(input.employeeId);
+    if (existing.ok && existing.data) {
+      return Err(AppErr('CONFLICT', 'Bu xodim uchun faol offboarding jarayoni already exists'));
+    }
+
     const checklist = this.workflow.defaultChecklist();
     const created = await this.repo.createCase({
       employeeId:      input.employeeId,
       dismissalType:   input.dismissalType,
       lastWorkingDay:  input.lastWorkingDay,
       totalItems:      checklist.length,
+      initiatedBy:     input.initiatedBy,
     });
     if (!created.ok) return created;
 
@@ -66,15 +89,17 @@ export class HrOffboardingService {
       initiatedBy:   input.initiatedBy,
     });
 
-    return Ok({ ...caseRow, checklist_items: seeded.data });
+    return Ok({ ...caseRow, checklist_items: seeded.data, checklist: seeded.data });
   }
 
-  async listCases(filters: { status?: string; employeeId?: number } = {}): Promise<Result<Row[]>> {
+  async listCases(
+    filters: { status?: string; employeeId?: number; search?: string } = {},
+  ): Promise<Result<Row[]>> {
     return this.repo.listCases(filters);
   }
 
   async getCaseDetail(caseId: number): Promise<Result<Row | null>> {
-    const caseR = await this.repo.findCaseById(caseId);
+    const caseR = await this.repo.findCaseDetailById(caseId);
     if (!caseR.ok) return caseR;
     if (!caseR.data) return Ok(null);
     const items = await this.repo.listChecklistItems(caseId);
@@ -82,14 +107,30 @@ export class HrOffboardingService {
     const total = Number((caseR.data as Row)['total_items'] ?? itemsArr.length);
     const completed = Number((caseR.data as Row)['completed_items'] ?? 0);
     const progress = this.workflow.computeProgress({ total_items: total, completed_items: completed });
-    return Ok({ ...caseR.data, checklist_items: itemsArr, progress_percent: progress });
+    // `checklist` is what the live UI reads (HROffboardingSteps.tsx / OffboardingTab.tsx);
+    // `checklist_items` kept alongside for any back-compat callers.
+    return Ok({ ...caseR.data, checklist: itemsArr, checklist_items: itemsArr, progress_percent: progress });
   }
 
-  updateChecklistItem(caseId: number, itemId: number, done: boolean): Promise<Result<Row>> {
-    return this.repo.updateChecklistItem(caseId, itemId, done);
+  updateChecklistItem(
+    caseId: number,
+    itemId: number,
+    done: boolean,
+    opts: { notes?: string; returnStatus?: string; doneBy?: number } = {},
+  ): Promise<Result<Row>> {
+    return this.repo.updateChecklistItem(caseId, itemId, done, opts);
   }
 
-  /** Record exit interview answers: transitions active → exit_interviewed. */
+  /**
+   * Record the exit interview — or an explicit skip. Transitions
+   * active → exit_interviewed either way.
+   *
+   * Vision fix (2026-07-13): the exit interview is OPTIONAL. It no longer
+   * blocks `finalizeCase` (see OffboardingWorkflowService.canFinalize).
+   * When skipped (or no answers at all were given), the turnover "reason"
+   * is recorded as "Javob bermadi" (did not respond) instead of being left
+   * null/absent — a real, queryable turnover category rather than a gap.
+   */
   async recordExitInterview(caseId: number, input: ExitInterviewInput): Promise<Result<Row>> {
     const ratingCheck = this.workflow.validateInterviewRating(input.rating);
     if (!ratingCheck.ok) return ratingCheck as Result<Row>;
@@ -102,17 +143,50 @@ export class HrOffboardingService {
     const trans = this.workflow.assertTransition(status, 'exit_interviewed');
     if (!trans.ok) return trans as unknown as Result<Row>;
 
+    const answers = input.answers && typeof input.answers === 'object' ? input.answers : {};
+    const hasAnyAnswer = Object.values(answers).some((v) => String(v ?? '').trim() !== '');
+    const skipped = input.skipped === true || (!hasAnyAnswer && !input.mainReason);
+
+    const missingAnswers = REQUIRED_EXIT_ANSWER_KEYS.filter(
+      (k) => String(answers[k] ?? '').trim() === '',
+    );
+    const answersComplete = !skipped && missingAnswers.length === 0;
+    // Informational only now (Q-40 vision fix) — no longer a hard finalize gate.
+    const blocksSettlement = !skipped && !answersComplete;
+
+    const reason = skipped
+      ? NO_RESPONSE_REASON
+      : (answers['reason_for_leaving']?.trim() || input.mainReason?.trim() || NO_RESPONSE_REASON);
+
     const notes = JSON.stringify({
-      rating: ratingCheck.data,
+      answers,
+      skipped,
+      rating: ratingCheck.data ?? null,
       would_return: input.wouldReturn ?? null,
       main_reason: input.mainReason ?? null,
       feedback: input.feedback ?? null,
       improvements: input.improvements ?? null,
     });
-    return this.repo.recordExitInterview(caseId, notes);
+
+    const recorded = await this.repo.recordExitInterview(caseId, { notes, reason, blocksSettlement });
+    if (!recorded.ok) return recorded;
+
+    // Mark the (now-optional) 'exit_interview' checklist item done — HR
+    // addressed it either way (answered or explicitly skipped).
+    const item = await this.repo.findChecklistItemByKey(caseId, 'exit_interview');
+    if (item.ok && item.data) {
+      const itemId = Number((item.data as Row)['id'] ?? 0);
+      if (itemId > 0) {
+        await this.repo.updateChecklistItem(caseId, itemId, true, {
+          notes: skipped ? NO_RESPONSE_REASON : undefined,
+        });
+      }
+    }
+
+    return Ok({ ...(recorded.data as Row), answersComplete, blocksSettlement, missingAnswers });
   }
 
-  /** Finalize the case: completed_items must cover all required items + interview done. */
+  /** Finalize the case: completed_items must cover all required items. Exit interview is optional. */
   async finalizeCase(caseId: number): Promise<Result<Row>> {
     const caseR = await this.repo.findCaseById(caseId);
     if (!caseR.ok) return caseR as Result<Row>;

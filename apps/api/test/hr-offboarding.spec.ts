@@ -43,8 +43,8 @@ describe('OffboardingWorkflowService — T7.1 domain logic', () => {
     expect(wf.canTransition('active', 'exit_interviewed')).toBe(true);
   });
 
-  it('canTransition: active → completed FORBIDDEN (must go through interview)', () => {
-    expect(wf.canTransition('active', 'completed')).toBe(false);
+  it('canTransition: active → completed ALLOWED (exit interview is optional — vision fix 2026-07-13)', () => {
+    expect(wf.canTransition('active', 'completed')).toBe(true);
   });
 
   it('canTransition: exit_interviewed → completed allowed', () => {
@@ -64,7 +64,7 @@ describe('OffboardingWorkflowService — T7.1 domain logic', () => {
   });
 
   it('assertTransition returns Err with INVALID_TRANSITION for bad jump', () => {
-    const r = wf.assertTransition('active', 'completed');
+    const r = wf.assertTransition('completed', 'active');
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('INVALID_TRANSITION');
   });
@@ -85,9 +85,9 @@ describe('OffboardingWorkflowService — T7.1 domain logic', () => {
     expect(wf.computeProgress({ total_items: 8, completed_items: 12 })).toBe(100);
   });
 
-  it('canFinalize: status=active → INVALID_TRANSITION', () => {
+  it('canFinalize: status=completed (terminal) → INVALID_TRANSITION', () => {
     const r = wf.canFinalize({
-      status: 'active',
+      status: 'completed',
       total_items: 8,
       completed_items: 7,
       exit_interview_recorded: true,
@@ -96,15 +96,14 @@ describe('OffboardingWorkflowService — T7.1 domain logic', () => {
     if (!r.ok) expect(r.error.code).toBe('INVALID_TRANSITION');
   });
 
-  it('canFinalize: interview not recorded → BUSINESS_RULE_VIOLATION', () => {
+  it('canFinalize: status=active + required items done + NO interview recorded → Ok (vision fix: interview optional, not blocking)', () => {
     const r = wf.canFinalize({
-      status: 'exit_interviewed',
+      status: 'active',
       total_items: 8,
-      completed_items: 7,
+      completed_items: 6, // 6 required items (exit_interview + archive_documents are optional)
       exit_interview_recorded: false,
     });
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe('BUSINESS_RULE_VIOLATION');
+    expect(r.ok).toBe(true);
   });
 
   it('canFinalize: required items not done → BUSINESS_RULE_VIOLATION', () => {
@@ -162,13 +161,16 @@ describe('OffboardingWorkflowService — T7.1 domain logic', () => {
 describe('HrOffboardingService — T7.1 orchestration', () => {
   type RepoMock = {
     createCase: jest.Mock;
+    findActiveCaseByEmployee: jest.Mock;
     insertChecklistItems: jest.Mock;
     listChecklistItems: jest.Mock;
     updateChecklistItem: jest.Mock;
+    findChecklistItemByKey: jest.Mock;
     updateStatus: jest.Mock;
     recordExitInterview: jest.Mock;
     finalizeCase: jest.Mock;
     findCaseById: jest.Mock;
+    findCaseDetailById: jest.Mock;
     listCases: jest.Mock;
     stats: jest.Mock;
   };
@@ -179,13 +181,16 @@ describe('HrOffboardingService — T7.1 orchestration', () => {
   beforeEach(() => {
     repo = {
       createCase: jest.fn(),
+      findActiveCaseByEmployee: jest.fn().mockResolvedValue(Ok(null)),
       insertChecklistItems: jest.fn(),
       listChecklistItems: jest.fn(),
-      updateChecklistItem: jest.fn(),
+      updateChecklistItem: jest.fn().mockResolvedValue(Ok({})),
+      findChecklistItemByKey: jest.fn().mockResolvedValue(Ok(null)),
       updateStatus: jest.fn(),
       recordExitInterview: jest.fn(),
       finalizeCase: jest.fn(),
       findCaseById: jest.fn(),
+      findCaseDetailById: jest.fn(),
       listCases: jest.fn(),
       stats: jest.fn(),
     };
@@ -198,6 +203,14 @@ describe('HrOffboardingService — T7.1 orchestration', () => {
     const r = await svc.createCase({ employeeId: 5, dismissalType: 'alien' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('VALIDATION');
+    expect(repo.createCase).not.toHaveBeenCalled();
+  });
+
+  it('createCase: employee already has an active case → CONFLICT (no DB insert)', async () => {
+    repo.findActiveCaseByEmployee.mockResolvedValueOnce(Ok({ id: 1, employee_id: 5, status: 'active' }));
+    const r = await svc.createCase({ employeeId: 5, dismissalType: 'resignation' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('CONFLICT');
     expect(repo.createCase).not.toHaveBeenCalled();
   });
 
@@ -252,19 +265,50 @@ describe('HrOffboardingService — T7.1 orchestration', () => {
       rating: 8, wouldReturn: true, mainReason: 'Career', feedback: 'OK', improvements: '-',
     });
     expect(r.ok).toBe(true);
-    const notesArg = repo.recordExitInterview.mock.calls[0][1] as string;
-    const parsed = JSON.parse(notesArg);
+    const notesArg = repo.recordExitInterview.mock.calls[0][1] as { notes: string; reason: string; blocksSettlement: boolean };
+    const parsed = JSON.parse(notesArg.notes);
     expect(parsed.rating).toBe(8);
     expect(parsed.would_return).toBe(true);
+    // A legacy mainReason was given, so this is NOT treated as a skip/no-response.
+    expect(notesArg.reason).toBe('Career');
   });
 
-  it('finalizeCase: status active → INVALID_TRANSITION', async () => {
+  it('recordExitInterview: no answers + no mainReason → treated as skip, reason = "Javob bermadi"', async () => {
+    repo.findCaseById.mockResolvedValueOnce(Ok({ id: 1, status: 'active' }));
+    repo.recordExitInterview.mockResolvedValueOnce(Ok({ id: 1, status: 'exit_interviewed' }));
+    const r = await svc.recordExitInterview(1, {});
+    expect(r.ok).toBe(true);
+    const arg = repo.recordExitInterview.mock.calls[0][1] as { reason: string; blocksSettlement: boolean };
+    expect(arg.reason).toBe('Javob bermadi');
+    expect(arg.blocksSettlement).toBe(false);
+    if (r.ok) expect((r.data as { answersComplete: boolean }).answersComplete).toBe(false);
+  });
+
+  it('recordExitInterview: explicit skipped:true → reason = "Javob bermadi" even with partial answers', async () => {
+    repo.findCaseById.mockResolvedValueOnce(Ok({ id: 1, status: 'active' }));
+    repo.recordExitInterview.mockResolvedValueOnce(Ok({ id: 1, status: 'exit_interviewed' }));
+    const r = await svc.recordExitInterview(1, { skipped: true, answers: { reason_for_leaving: 'ignored' } });
+    expect(r.ok).toBe(true);
+    const arg = repo.recordExitInterview.mock.calls[0][1] as { reason: string };
+    expect(arg.reason).toBe('Javob bermadi');
+  });
+
+  it('finalizeCase: status completed (terminal) → INVALID_TRANSITION', async () => {
     repo.findCaseById.mockResolvedValueOnce(Ok({
-      id: 1, employee_id: 9, status: 'active', total_items: 8, completed_items: 8,
+      id: 1, employee_id: 9, status: 'completed', total_items: 8, completed_items: 8,
     }));
     const r = await svc.finalizeCase(1);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('INVALID_TRANSITION');
+  });
+
+  it('finalizeCase: status active + required items done + interview NEVER recorded → Ok (vision fix)', async () => {
+    repo.findCaseById.mockResolvedValueOnce(Ok({
+      id: 1, employee_id: 9, status: 'active', total_items: 8, completed_items: 6,
+    }));
+    repo.finalizeCase.mockResolvedValueOnce(Ok({ id: 1, status: 'completed' }));
+    const r = await svc.finalizeCase(1);
+    expect(r.ok).toBe(true);
   });
 
   it('finalizeCase: required items missing → BUSINESS_RULE_VIOLATION', async () => {
@@ -305,12 +349,13 @@ describe('HrOffboardingService — T7.1 orchestration', () => {
   });
 
   it('getCaseDetail: returns merged case + items + progress_percent', async () => {
-    repo.findCaseById.mockResolvedValueOnce(Ok({ id: 1, total_items: 8, completed_items: 4 }));
+    repo.findCaseDetailById.mockResolvedValueOnce(Ok({ id: 1, total_items: 8, completed_items: 4 }));
     repo.listChecklistItems.mockResolvedValueOnce(Ok([{ id: 100 }]));
     const r = await svc.getCaseDetail(1);
     expect(r.ok).toBe(true);
     if (r.ok && r.data) {
       expect((r.data as { progress_percent: number }).progress_percent).toBe(50);
+      expect((r.data as { checklist: unknown[] }).checklist).toHaveLength(1);
       expect((r.data as { checklist_items: unknown[] }).checklist_items).toHaveLength(1);
     }
   });

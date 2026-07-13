@@ -98,14 +98,19 @@ describe('HrOffboardingController', () => {
 
   // ─── getCase ──────────────────────────────────────────────────────────────
   describe('getCase', () => {
-    it('returns the case row with checklist_items wrapped in data', async () => {
-      const row = { id: 7, employee_id: 42, status: 'active', checklist_items: [{ id: 1, done: false }] };
+    // 2026-07-13 fix: the frontend's universal unwrapper (api-request.ts) only
+    // auto-unwraps `{ ok, data }` / `{ isSuccess, value }` shapes — a bare
+    // `{ data }` envelope (no `ok` key) falls through untouched, so every
+    // consumer's `caseDetail.full_name` / `.checklist` / `.status` read
+    // `undefined`. The controller must return the payload UNWRAPPED.
+    it('returns the case row directly (no extra { data } envelope)', async () => {
+      const row = { id: 7, employee_id: 42, status: 'active', checklist: [{ id: 1, done: false }] };
       svc.getCaseDetail.mockResolvedValue(ok(row));
 
       const out = await controller.getCase(7);
 
       expect(svc.getCaseDetail).toHaveBeenCalledWith(7);
-      expect(out).toEqual({ data: row });
+      expect(out).toEqual(row);
     });
 
     it('throws NotFound when case does not exist (getCaseDetail returns Ok(null))', async () => {
@@ -138,7 +143,8 @@ describe('HrOffboardingController', () => {
         dismissalType:  'resignation',
         lastWorkingDay: '2026-06-01',
       });
-      expect(out).toEqual({ data: created });
+      // 2026-07-13 fix: no extra { data } envelope — see getCase test above for rationale.
+      expect(out).toEqual(created);
     });
 
     it('passes null lastWorkingDay through to service unchanged', async () => {

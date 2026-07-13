@@ -223,15 +223,39 @@ export const offboarding_cases = pgTable('offboarding_cases', {
   completed_items:      integer('completed_items').default(0),
   created_at:           timestamp('created_at').defaultNow(),
   updated_at:           timestamp('updated_at').defaultNow(),
+  // Columns physically present on the live table (added by the
+  // migrations-drift.ts healer) but previously unmapped here — the
+  // repository silently discarded writes to them. Wired up 2026-07-13
+  // (HR Offboarding page completion): exit-interview persistence,
+  // turnover "reason" category, and the case-level status badges the
+  // frontend (HROffboardingDialogs/OffboardingTab) already renders.
+  reason:               text('reason'),
+  initiated_by:         integer('initiated_by'),
+  exit_interview_notes: text('exit_interview_notes'),
+  exit_interview_done:  boolean('exit_interview_done').default(false),
+  blocks_settlement:    boolean('blocks_settlement').default(false),
+  settlement_done:      boolean('settlement_done').default(false),
+  equipment_returned:   boolean('equipment_returned').default(false),
+  nda_signed:           boolean('nda_signed').default(false),
+  access_revoked:       boolean('access_revoked').default(false),
 });
 
 export const offboarding_checklist_items = pgTable('offboarding_checklist_items', {
-  id:        serial('id').primaryKey(),
-  case_id:   integer('case_id').notNull(),
-  item_key:  text('item_key'),
-  label:     text('label'),
-  done:      boolean('done').default(false),
-  order_num: integer('order_num').default(0),
+  id:            serial('id').primaryKey(),
+  case_id:       integer('case_id').notNull(),
+  item_key:      text('item_key'),
+  label:         text('label'),
+  done:          boolean('done').default(false),
+  order_num:     integer('order_num').default(0),
+  // Columns physically present on the live table (migrations-drift.ts
+  // healer) but previously unmapped — wired up 2026-07-13 (HR Offboarding
+  // page completion) so `done_at`/`notes`/`return_status` (rendered by
+  // HROffboardingSteps.tsx and employee-profile OffboardingTab.tsx) persist.
+  done_by:       integer('done_by'),
+  done_at:       timestamp('done_at'),
+  notes:         text('notes'),
+  return_status: varchar('return_status', { length: 20 }),
+  created_at:    timestamp('created_at').defaultNow(),
 });
 
 // ─── Shifts ────────────────────────────────────────────────────────────────

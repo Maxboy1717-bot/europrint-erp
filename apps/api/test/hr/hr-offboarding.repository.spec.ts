@@ -46,23 +46,28 @@ describe('HrOffboardingRepository', () => {
   });
 
   describe('recordExitInterview', () => {
-    it('returns Ok with row including notes when update succeeds', async () => {
-      dbStub.__setResolved([{ id: 1, status: 'exit_interviewed' }]);
-      const r = await repo.recordExitInterview(1, 'Constructive feedback');
+    // 2026-07-13 fix: signature changed from (caseId, notesString) to
+    // (caseId, { notes, reason, blocksSettlement }) — the old version computed
+    // `exit_interview_notes` but never persisted it (fake success, Q-40); now
+    // it's a real column write, so the row returned by the DB (mocked here)
+    // reflects whatever the mock resolves with, not the input notes string.
+    it('returns Ok with the updated row when update succeeds', async () => {
+      dbStub.__setResolved([{ id: 1, status: 'exit_interviewed', exit_interview_notes: 'Constructive feedback' }]);
+      const r = await repo.recordExitInterview(1, { notes: 'Constructive feedback', reason: 'Career', blocksSettlement: false });
       expect(r.ok).toBe(true);
       if (r.ok) expect((r.data as { exit_interview_notes: string }).exit_interview_notes).toBe('Constructive feedback');
     });
 
-    it('returns Ok with bare notes object when no row updated', async () => {
+    it('returns Ok with empty object when no row updated', async () => {
       dbStub.__setResolved([]);
-      const r = await repo.recordExitInterview(99, 'note');
+      const r = await repo.recordExitInterview(99, { notes: 'note', reason: 'Javob bermadi', blocksSettlement: false });
       expect(r.ok).toBe(true);
-      if (r.ok) expect((r.data as { exit_interview_notes: string }).exit_interview_notes).toBe('note');
+      if (r.ok) expect(r.data).toEqual({});
     });
 
     it('returns Err when DB throws', async () => {
       dbStub.__setRejected(new Error('boom'));
-      const r = await repo.recordExitInterview(1, 'note');
+      const r = await repo.recordExitInterview(1, { notes: 'note', reason: 'Javob bermadi', blocksSettlement: false });
       expect(r.ok).toBe(false);
     });
   });
