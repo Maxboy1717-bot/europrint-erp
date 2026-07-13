@@ -89,6 +89,20 @@ function SentryFallback({ error, resetError }: { error: unknown; resetError: () 
   );
 }
 
+// Dev self-heal: a service worker left over from an earlier PRODUCTION build can keep serving a
+// stale/broken app shell in dev and intercept /api calls — so the app "won't load" even after a
+// hard refresh (Ctrl+Shift+R does not bypass a controlling SW). In DEV, proactively unregister any
+// existing SW and drop its caches on startup, then reload once so the fresh Vite build takes over.
+if (import.meta.env.DEV && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    if (regs.length === 0) return;
+    Promise.all(regs.map((r) => r.unregister()))
+      .then(() => (typeof caches !== "undefined" ? caches.keys().then((ks) => Promise.all(ks.map((k) => caches.delete(k)))) : undefined))
+      .then(() => window.location.reload())
+      .catch(() => {});
+  }).catch(() => {});
+}
+
 createRoot(document.getElementById("root")!).render(
   <Sentry.ErrorBoundary fallback={SentryFallback} showDialog={false}>
     <App />
