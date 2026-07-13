@@ -24,10 +24,12 @@ type Row = Record<string, unknown>;
 export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
   async findAll(limit: number, offset: number, ownerId?: number | null): Promise<Result<{ data: Row[]; count: number }>> {
     try {
-      // Item A row-scoping: non-privileged callers see only their own deals (assigned_to = self),
-      // applied to BOTH the count and the page so the total never leaks the global count.
-      // ownerId == null → privileged → no filter.
-      const ownerFilter = ownerId != null ? sql`AND assigned_to = ${ownerId}` : sql``;
+      // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts
+      // module doc comment): non-privileged callers see only their own deals, filtered on
+      // COALESCE(assigned_by_id, manager_id) — assigned_to was the original canonical column but is
+      // superseded (empty on legacy rows / not authorization-trustworthy). Applied to BOTH the count
+      // and the page so the total never leaks the global count. ownerId == null → privileged → no filter.
+      const ownerFilter = ownerId != null ? sql`AND COALESCE(assigned_by_id, manager_id) = ${ownerId}` : sql``;
       const [countRes, dataRes] = await Promise.all([
         runQuery<{ c: string }>(sql`SELECT count(*)::text AS c FROM crm_deals WHERE deleted_at IS NULL ${ownerFilter}`),
         runQuery<Row>(sql`
@@ -43,9 +45,10 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
 
   async findAllForExport(ownerId?: number | null): Promise<Result<Row[]>> {
     try {
-      // Item 14: full (unpaginated) export, row-scoped identically to findAll. Safety-capped so a
+      // Item 14: full (unpaginated) export, row-scoped identically to findAll (COALESCE(assigned_by_id,
+      // manager_id) — corrected 2026-07-11, see findAll above / crm-row-scope.ts). Safety-capped so a
       // runaway export cannot OOM the API. ownerId == null → privileged → no owner filter.
-      const ownerFilter = ownerId != null ? sql`AND assigned_to = ${ownerId}` : sql``;
+      const ownerFilter = ownerId != null ? sql`AND COALESCE(assigned_by_id, manager_id) = ${ownerId}` : sql``;
       const res = await runQuery<Row>(sql`
         SELECT * FROM crm_deals
         WHERE deleted_at IS NULL ${ownerFilter}
@@ -108,10 +111,12 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       // (lead link → metadata jsonb).
       // crm_deals is a VIEW over `deals`; base `amount` is NOT NULL while the insert only set the
       // duplicate `opportunity` -> 23502. amount := opportunity (same deal value, no value-logic change).
-      // Item A (CRM ownership convergence): assigned_to is the canonical owner column (mirrors
-      // crm_leads). It already exists on base `deals` and is exposed by the crm_deals view, so no
-      // migration is needed — just populate it here from the same resolved owner (explicit assignee
-      // or, by default, the creator). assigned_by_id (Bitrix "responsible") is kept in sync.
+      // Item A (CRM ownership convergence) — CORRECTED 2026-07-11 (owner interview log; see
+      // crm-row-scope.ts module doc comment): this comment originally declared assigned_to the
+      // canonical owner column. That is superseded — assigned_by_id (Bitrix "responsible") is now
+      // the authoritative column row-scoping/authorization reads (falling back to manager_id).
+      // assigned_to is still written below (additive, unchanged) from the same resolved owner
+      // (explicit assignee or, by default, the creator) for any existing display-only reader.
       const res = await runQuery<Row>(sql`
         INSERT INTO crm_deals (
           title, stage_id, company_id, opportunity, amount, assigned_by_id, assigned_to, created_by_id,
@@ -136,8 +141,10 @@ export class DrizzleCrmDealsRepository implements ICrmDealsRepository {
       const opportunity  = (dto.opportunity  ?? dto.amount)         != null ? String(dto.opportunity  ?? dto.amount)        : null;
       const probability  = (dto.probability  != null)               ? Number(dto.probability)  : null;
       const assignedById = (dto.assignedById ?? dto.assigned_by_id) != null ? Number(dto.assignedById ?? dto.assigned_by_id) || null : null;
-      // Item A: reassignment updates the canonical assigned_to. Accepts assignedTo (preferred) or the
-      // Bitrix assignedById/assigned_by_id, so a manager can hand a deal to another manager.
+      // Item A: reassignment still updates assigned_to (unchanged, additive — see the CORRECTED
+      // 2026-07-11 note in create() above / crm-row-scope.ts: row-scoping/authorization now reads
+      // assigned_by_id, falling back to manager_id — NOT assigned_to). Accepts assignedTo (preferred)
+      // or the Bitrix assignedById/assigned_by_id, so a manager can hand a deal to another manager.
       const ownerId      = (dto.assignedTo ?? dto.assignedById ?? dto.assigned_by_id) != null ? Number(dto.assignedTo ?? dto.assignedById ?? dto.assigned_by_id) || null : null;
       const status       = (dto.status       != null) ? String(dto.status)                                       : null;
       const closeDate    = (dto.closeDate    ?? dto.close_date)     != null ? String(dto.closeDate    ?? dto.close_date)    : null;

@@ -25,7 +25,9 @@ export class LeadsService {
     const page = Number((query.page as number | undefined) ?? 1);
     const limit = Number((query.limit as number | undefined) ?? 10);
     const offset = (page - 1) * limit;
-    // Item A row-scoping: non-privileged callers see only their own leads (assigned_to = self);
+    // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts module
+    // doc comment): non-privileged callers see only their own leads, resolved via
+    // COALESCE(assigned_by_id, manager_id) — assigned_to is superseded as the scoping column;
     // super_admin/admin/director see all (ownerScope == null → no filter).
     const ownerScope = crmOwnerScope(user);
     const result = await this.crmLeadsRepo.findAll(limit, offset, ownerScope);
@@ -39,11 +41,14 @@ export class LeadsService {
     const result = await this.crmLeadsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     if (!result.data) throw new NotFoundException(await this.i18n.t('errors.leadNotFoundWithId', { args: { id } }));
-    // Item A row-scoping: a non-privileged caller may only read a lead they own. Return the same
-    // 404 (not 403) so ownership/existence isn't leaked. mapLeadRow exposes the owner as assignedById
-    // (= the assigned_to column). Privileged roles bypass.
+    // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts module
+    // doc comment): a non-privileged caller may only read a lead they own. Return the same 404 (not
+    // 403) so ownership/existence isn't leaked. mapLeadRow resolves the authoritative owner id as
+    // `ownerId` (assigned_by_id, falling back to manager_id via crmResolveOwnerId) — the pre-existing
+    // `assignedById` field (sourced from assigned_to) stays for display only; it is superseded as
+    // the authorization source. Privileged roles bypass.
     if (!crmSeesAllRows(user?.role)) {
-      const ownerRaw = (result.data as Record<string, unknown>).assignedById;
+      const ownerRaw = (result.data as Record<string, unknown>).ownerId;
       const ownerId = ownerRaw != null ? Number(ownerRaw) : null;
       if (ownerId == null || ownerId !== (user?.id ?? -1)) {
         throw new NotFoundException(await this.i18n.t('errors.leadNotFoundWithId', { args: { id } }));

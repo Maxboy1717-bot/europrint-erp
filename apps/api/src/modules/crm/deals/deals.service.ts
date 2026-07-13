@@ -7,7 +7,7 @@ import { Injectable, NotFoundException, InternalServerErrorException, Inject, Lo
 import { I18nService } from 'nestjs-i18n';
 import { ICrmDealsRepository, CRM_DEALS_REPO } from './i-crm-deals.repo';
 import { safeCall, Result, AppError } from '@common/result';
-import { crmOwnerScope, crmSeesAllRows } from '../common/crm-row-scope';
+import { crmOwnerScope, crmSeesAllRows, crmResolveOwnerId } from '../common/crm-row-scope';
 
 /** Minimal user shape used for row-scoping (id + role from the JWT). */
 type ScopeUser = { id?: number | null; role?: string | null } | null | undefined;
@@ -38,9 +38,11 @@ export class DealsService {
 
   /**
    * Item 14 (vision 13-crm#14): row-scoped export + audit. A non-privileged manager exports ONLY
-   * their own deals (assigned_to = self); super_admin/admin/director export all. Every export writes
-   * an audit_logs row (action='export') — satisfies "eksport urinishi loglanadi". The audit write is
-   * NOT best-effort: if it fails the whole export fails (the log is the point of this item).
+   * their own deals (COALESCE(assigned_by_id, manager_id) = self — corrected 2026-07-11, see
+   * crm-row-scope.ts module doc comment; assigned_to is superseded as the scoping column);
+   * super_admin/admin/director export all. Every export writes an audit_logs row (action='export')
+   * — satisfies "eksport urinishi loglanadi". The audit write is NOT best-effort: if it fails the
+   * whole export fails (the log is the point of this item).
    */
   async exportDeals(user?: ScopeUser): Promise<Result<object, AppError>> {
     return safeCall(async () => {
@@ -63,11 +65,13 @@ export class DealsService {
     const result = await this.crmDealsRepo.findById(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     if (!result.data) throw new NotFoundException(await this.i18n.t('errors.dealNotFoundWithId', { args: { id } }));
-    // Item A row-scoping: a non-privileged caller may only read a deal they own (assigned_to = self);
-    // same 404 (not 403) so ownership/existence isn't leaked. Privileged roles bypass.
+    // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts module
+    // doc comment): a non-privileged caller may only read a deal they own, resolved via
+    // crmResolveOwnerId (assigned_by_id, falling back to manager_id — assigned_to is superseded as
+    // the authorization source). Same 404 (not 403) so ownership/existence isn't leaked. Privileged
+    // roles bypass.
     if (!crmSeesAllRows(user?.role)) {
-      const ownerRaw = (result.data as Record<string, unknown>).assigned_to;
-      const ownerId = ownerRaw != null ? Number(ownerRaw) : null;
+      const ownerId = crmResolveOwnerId(result.data as Record<string, unknown>);
       if (ownerId == null || ownerId !== (user?.id ?? -1)) {
         throw new NotFoundException(await this.i18n.t('errors.dealNotFoundWithId', { args: { id } }));
       }

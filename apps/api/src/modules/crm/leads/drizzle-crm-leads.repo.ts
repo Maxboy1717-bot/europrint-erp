@@ -13,6 +13,7 @@ import { Result, Ok, Err } from '@common/result';
 import { toBitrixStatusId } from './lead-status-id.util';
 import { ICrmLeadsRepository } from './i-crm-leads.repo';
 import { CrmLeadScoringService } from '../domain/services/crm-lead-scoring.service';
+import { crmResolveOwnerId } from '../common/crm-row-scope';
 
 type Row = Record<string, unknown>;
 
@@ -72,6 +73,15 @@ function mapLeadRow(r: Row, scoringService: CrmLeadScoringService): Row {
     emails:       r['contact_email'] ? [{ value: r['contact_email'], type: 'WORK' }] : [],
     sourceId,
     assignedById: r['assigned_to'] ? String(r['assigned_to']) : null,
+    // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts module
+    // doc comment): authoritative ownership id for authorization checks (NOT assignedById above,
+    // which is superseded — sourced from assigned_to and kept only for display). Resolves the real
+    // assigned_by_id column (a normal getTableColumns property since 2026-07-11 — see
+    // schema-compat-1a.ts), falling back to raw_manager_id (the real physical manager_id, selected
+    // separately by findAll/findById since the `manager_id` property is aliased to assigned_to;
+    // absent on create/update returns, which don't need the fallback — those paths always set
+    // assigned_by_id directly).
+    ownerId:      crmResolveOwnerId({ assigned_by_id: r['assigned_by_id'], manager_id: r['raw_manager_id'] }),
     dateCreate:   r['date_create'] ?? new Date().toISOString(),
     opportunity:  budgetUzs ?? 0,
     notes:        r['comments'] ?? null,
@@ -92,19 +102,28 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
 
   async findAll(limit: number, offset: number, ownerId?: number | null): Promise<Result<{ data: Row[]; count: number }>> {
     try {
-      // Item A row-scoping: when ownerId is provided (non-privileged caller), restrict to leads the
-      // caller owns. crmLeads.manager_id is the Drizzle property mapping to the physical assigned_to
-      // column (the canonical ownership column). Applied to BOTH the count and the page so the
-      // paginated total never leaks the global count. ownerId == null → privileged → no filter.
-      const ownerFilter = ownerId != null ? eq(crmLeads.manager_id, ownerId) : undefined;
+      // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts module
+      // doc comment): when ownerId is provided (non-privileged caller), restrict to leads the caller
+      // owns. The original comment here said crmLeads.manager_id (a Drizzle compat alias that
+      // actually points at the PHYSICAL assigned_to column) was canonical — that's superseded.
+      // Ownership now resolves as COALESCE(assigned_by_id, manager_id) on the REAL physical columns;
+      // assigned_by_id is a normal (unaliased) property so it filters directly, but manager_id needs
+      // a raw SQL fragment here since that property name is already taken by the assigned_to alias.
+      // Applied to BOTH the count and the page so the paginated total never leaks the global count.
+      // ownerId == null → privileged → no filter.
+      const ownerFilter = ownerId != null ? sql`COALESCE(assigned_by_id, manager_id) = ${ownerId}` : undefined;
       const whereClause = ownerFilter ? and(isNull(crmLeads.deleted_at), ownerFilter) : isNull(crmLeads.deleted_at);
       const [countResult, rows] = await Promise.all([
         db.select({ count: count() }).from(crmLeads).where(whereClause).limit(1).offset(0),
-        // ...all lead columns + a correlated crm_activities count so the scorer's engagement
-        // dimension is real (was always 0). One query, no N+1.
+        // ...all lead columns (now including the real assigned_by_id, added 2026-07-11 — Item A
+        // corrected) + a correlated crm_activities count so the scorer's engagement dimension is
+        // real (was always 0) + raw_manager_id (the REAL physical manager_id column, since the
+        // `manager_id` property above is aliased to assigned_to). mapLeadRow resolves both into
+        // `ownerId` for the authorization check. One query, no N+1.
         db.select({
           ...getTableColumns(crmLeads),
           activity_count: sql<number>`(SELECT COUNT(*)::int FROM crm_activities a WHERE a.lead_id = ${crmLeads.id})`,
+          raw_manager_id: sql<number | null>`manager_id`,
         }).from(crmLeads).where(whereClause).orderBy(desc(crmLeads.created_at)).limit(limit).offset(offset),
       ]);
       return Ok({ data: (rows as Row[]).map(r => mapLeadRow(r, this.scoringService)), count: Number(countResult[0]?.count || 0) });
@@ -116,6 +135,10 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       const rows = await db.select({
         ...getTableColumns(crmLeads),
         activity_count: sql<number>`(SELECT COUNT(*)::int FROM crm_activities a WHERE a.lead_id = ${crmLeads.id})`,
+        // Item A row-scoping — CORRECTED 2026-07-11: the real physical manager_id column (the
+        // `manager_id` property from getTableColumns above is aliased to assigned_to), feeding
+        // mapLeadRow's `ownerId` resolution (see crm-row-scope.ts crmResolveOwnerId).
+        raw_manager_id: sql<number | null>`manager_id`,
       }).from(crmLeads).where(and(eq(crmLeads.id, id), isNull(crmLeads.deleted_at))).limit(1).offset(0);
       const row = (rows as Row[])[0] || null;
       return Ok(row ? mapLeadRow(row, this.scoringService) : null);
@@ -160,6 +183,13 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
         contact_email:      emailVal ?? null,
         notes:              (dto.notes as string | undefined) ?? (dto.comments as string | undefined) ?? null,  // → comments
         manager_id:         Number(dto.assignedById ?? dto.assignedTo ?? createdBy) || null,                    // → assigned_to
+        // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts
+        // module doc comment): also populate the real canonical ownership column with the same
+        // resolved owner — mirrors how deals' create() already keeps assigned_by_id/assigned_to in
+        // sync. Without this, COALESCE(assigned_by_id, manager_id) row-scoping would never resolve
+        // an owner for leads created through this path (manager_id above is the assigned_to alias,
+        // not the real physical manager_id column).
+        assigned_by_id:     Number(dto.assignedById ?? dto.assignedTo ?? createdBy) || null,                    // → assigned_by_id
         // Marketing-14 #59/#67: ofset/gofra/etiketka/flekso/blanka, validated by
         // LeadCreateSchema (crm-leads.controller.ts) when present. DB CHECK constraint
         // (crm_leads_product_type_check) is the last line of defense for any other caller.
@@ -200,7 +230,14 @@ export class DrizzleCrmLeadsRepository implements ICrmLeadsRepository {
       if (dto.email != null) setObj.contact_email = String(dto.email);
       if (dto.source != null || dto.sourceId != null) setObj.source = String(dto.source ?? dto.sourceId);
       if (dto.notes != null || dto.comments != null) setObj.notes = String(dto.notes ?? dto.comments);
-      if (dto.assignedById != null || dto.assignedTo != null) setObj.manager_id = Number(dto.assignedById ?? dto.assignedTo) || null;
+      if (dto.assignedById != null || dto.assignedTo != null) {
+        const ownerVal = Number(dto.assignedById ?? dto.assignedTo) || null;
+        setObj.manager_id = ownerVal; // → assigned_to (unchanged, additive)
+        // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see crm-row-scope.ts
+        // module doc comment): also converge the real canonical ownership column so
+        // COALESCE(assigned_by_id, manager_id) resolves correctly for reassignment.
+        setObj.assigned_by_id = ownerVal; // → assigned_by_id
+      }
       // Marketing-14 #59/#67: allow correcting the product type post-creation (e.g. from
       // a lead-detail edit form once one exists) — CHECK constraint guards the DB value.
       if (dto.productType != null) setObj.product_type = String(dto.productType);

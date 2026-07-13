@@ -115,9 +115,11 @@ export class CrmDealsController {
  async export(@CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Exporting deals');
   // Item 14 (vision 13-crm#14): a non-privileged manager exports ONLY their own deals
-  // (assigned_to = self); super_admin/admin/director export all. Every export writes an
-  // audit_logs row (action='export') — "eksport urinishi loglanadi". Declared BEFORE the
-  // @Get(':id') route so '/crm/deals/export' is not captured as an id param.
+  // (COALESCE(assigned_by_id, manager_id) = self — corrected 2026-07-11, see crm-row-scope.ts
+  // module doc comment; assigned_to is superseded as the scoping column); super_admin/admin/director
+  // export all. Every export writes an audit_logs row (action='export') — "eksport urinishi
+  // loglanadi". Declared BEFORE the @Get(':id') route so '/crm/deals/export' is not captured as an
+  // id param.
   return unwrapOrThrow(await this.dealsService.exportDeals(user));
  }
 

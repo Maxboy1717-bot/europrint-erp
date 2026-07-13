@@ -49,6 +49,14 @@ export const crmLeads = pgTable('crm_leads', {
   // title NOT NULL in live DB — exposed so DDD-layer save() + auto-lead inserts set it
   title:              text('title'),
   manager_id:         integer('assigned_to'),         // live: assigned_to
+  // Item A row-scoping — CORRECTED 2026-07-11 (owner interview log; see
+  // apps/api/src/modules/crm/common/crm-row-scope.ts module doc comment): assigned_to (exposed
+  // above as `manager_id`, confusingly) was declared canonical for CRM ownership but that is
+  // superseded — authorization now resolves COALESCE(assigned_by_id, manager_id) on the REAL
+  // physical columns. This property exposes the real assigned_by_id column, which was previously
+  // undeclared here (so any write to it was silently dropped by Drizzle — same footgun as
+  // created_by_id below), so drizzle-crm-leads.repo.ts can populate it going forward.
+  assigned_by_id:     integer('assigned_by_id'),       // live: assigned_by_id
   // B14 (2026-07-05): live column exists (created_by_id) but was never declared here,
   // so Drizzle silently dropped it on every insert/select — same alias pattern as
   // crmDeals.created_by below.

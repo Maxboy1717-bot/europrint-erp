@@ -186,10 +186,13 @@ export class WebsiteLeadRepository {
    * bermagani uchun ularning xatti-harakati o'zgarmaydi.
    */
   async assignManagerIfMissing(leadId: number, managerId: number, overwrite = false): Promise<Result<boolean>> {
-    // crm_leads.manager_id (legacy) + assigned_to (Item A canonical ownership — the row-scoping
-    // column). Both are set to the same manager so reassignment (incl. the aging cron) keeps the
-    // scoping column in sync. Non-overwrite guards on manager_id IS NULL to preserve the existing
-    // null-fill semantics for the standard callers.
+    // crm_leads.manager_id (legacy) + assigned_to (Item A). CORRECTED 2026-07-11 (owner interview
+    // log; see crm-row-scope.ts module doc comment): assigned_to is no longer the row-scoping
+    // column — authorization now resolves COALESCE(assigned_by_id, manager_id), so it's manager_id
+    // (set below) that keeps this write path's assignments visible to row-scoping, not assigned_to.
+    // Both columns are still set to the same manager (additive, unchanged) so reassignment (incl.
+    // the aging cron) keeps every ownership column in sync. Non-overwrite guards on manager_id IS
+    // NULL to preserve the existing null-fill semantics for the standard callers.
     return safeCall(async () => {
       const updated = overwrite
         ? await db.execute<Row>(sql`
