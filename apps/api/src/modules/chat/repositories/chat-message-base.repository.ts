@@ -6,7 +6,7 @@
 import { db } from '@shared/db';
 import { castTo } from '@common/db-rows';
 import { eq, and, isNull, sql } from 'drizzle-orm';
-import { chatMessages, chatMembers, chatReactions, chatPolls, chatPollVotes, appUsers, chatStarredMessages } from '@shared/db';
+import { chatMessages, chatMembers, chatReactions, chatPolls, chatPollVotes, appUsers, chatStarredMessages, chatMessageHiddenFor } from '@shared/db';
 import { safeCall, Result } from '@common/result';
 
 
@@ -64,6 +64,9 @@ export class ChatMessageBaseRepository {
             eq(chatMessages.roomId, roomIdStr),
             eq(chatMessages.isDeleted, false),
             isNull(chatMessages.threadRootId),
+            // "Delete for me": hide messages this user chose to remove from
+            // their own view (the row itself is never hard-deleted — audit channel).
+            sql`NOT EXISTS (SELECT 1 FROM chat_message_hidden_for h WHERE h.message_id = ${chatMessages.id} AND h.user_id = ${userIdStr}::int)`,
             before ? sql`${chatMessages.createdAt} < ${before}::timestamptz` : undefined,
           ),
         )
@@ -176,6 +179,28 @@ export class ChatMessageBaseRepository {
         .returning({ id: chatMessages.id, roomId: chatMessages.roomId });
       return (castTo<Record<string, unknown>>(row)) ?? null;
       }, 'DB_ERROR');
+  }
+
+  // "Delete for me" — record that this user hid the message from their view.
+  // The message row is NEVER hard-deleted (audit channel). Returns the roomId
+  // so the gateway can echo a `message:hidden` only to the requesting client.
+  // NB: matches on integer id explicitly (no ::text) to sidestep the drifted
+  // varchar chatMessages.id Drizzle typing (Phase-4 #23) vs live integer column.
+  async hideMessageForUser(messageId: string | number, userId: number): Promise<Result<{ roomId: string } | null>> {
+    return safeCall(async () => {
+      const roomRes = await db
+        .select({ roomId: chatMessages.roomId })
+        .from(chatMessages)
+        .where(sql`${chatMessages.id} = ${Number(messageId)}`)
+        .limit(1);
+      const roomId = roomRes[0]?.roomId as string | undefined;
+      if (roomId == null) return null;
+      await db
+        .insert(chatMessageHiddenFor)
+        .values({ messageId: Number(messageId), userId })
+        .onConflictDoNothing();
+      return { roomId: String(roomId) };
+    }, 'DB_ERROR');
   }
 
   async findMessageRoomId(msgIdStr: string): Promise<Result<Record<string, unknown> | null>> {

@@ -88,6 +88,11 @@ export class ChatMessageService {
     return result.ok ? (result.data as Record<string, unknown> | null) : null;
   }
 
+  async hideMessageForUser(messageId: string | number, userId: number): Promise<{ roomId: string } | null> {
+    const result = await this.msgRepo.hideMessageForUser(messageId, userId);
+    return result.ok ? result.data : null;
+  }
+
   async pinMessage(messageId: string | number, userId: number, pin: boolean): Promise<Record<string, unknown> | null> {
     const msgIdStr = String(messageId);
     const msgRowResult = await this.msgRepo.findMessageRoomId(msgIdStr);

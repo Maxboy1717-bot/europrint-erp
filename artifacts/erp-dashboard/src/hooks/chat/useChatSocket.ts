@@ -110,8 +110,8 @@ export function useChatSocket() {
     sharedSocketRef.socket?.emit("message:edit", { messageId, content });
   }, []);
 
-  const deleteMsg = useCallback((messageId: string) => {
-    sharedSocketRef.socket?.emit("message:delete", { messageId });
+  const deleteMsg = useCallback((messageId: string, scope: "me" | "everyone" = "everyone") => {
+    sharedSocketRef.socket?.emit("message:delete", { messageId, scope });
   }, []);
 
   const refreshRooms = useCallback(() => {

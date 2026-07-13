@@ -9,6 +9,7 @@ export {
   chatRooms,
   chatMembers,
   chatMessages,
+  chatMessageHiddenFor,
   chatReactions,
   chatPolls,
   chatPollVotes,

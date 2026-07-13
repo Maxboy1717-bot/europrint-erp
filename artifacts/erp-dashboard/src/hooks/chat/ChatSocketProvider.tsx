@@ -216,6 +216,12 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       useChatStore.getState().deleteMessage(roomId, id);
     });
 
+    // "Delete for me" echo (only to the requesting user's own sockets) —
+    // drop the message from this client's view without a placeholder.
+    s.on("message:hidden", ({ id, roomId }: { id: string; roomId: string }) => {
+      useChatStore.getState().removeMessage(String(roomId), String(id));
+    });
+
     s.on("reaction:updated", ({
       messageId, roomId, reactions,
     }: { messageId: string; roomId?: string; reactions: ChatReaction[] }) => {

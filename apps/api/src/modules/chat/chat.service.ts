@@ -121,6 +121,7 @@ export class ChatService {
   }
   editMessage(messageId: string | number, userId: number, content: string) { return this.msgSvc.editMessage(messageId, userId, content); }
   deleteMessage(messageId: string | number, userId: number) { return this.msgSvc.deleteMessage(messageId, userId); }
+  hideMessageForUser(messageId: string | number, userId: number) { return this.msgSvc.hideMessageForUser(messageId, userId); }
   pinMessage(messageId: string | number, userId: number, pin: boolean) { return this.msgSvc.pinMessage(messageId, userId, pin); }
   getPinnedMessage(roomId: string | number) { return this.msgSvc.getPinnedMessage(roomId); }
 

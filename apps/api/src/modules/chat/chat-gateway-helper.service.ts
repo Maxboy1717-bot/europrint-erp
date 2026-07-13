@@ -170,11 +170,21 @@ export class ChatGatewayHelperService {
     }
   }
 
-  async handleDeleteMessage(client: Socket, data: { messageId: number | string }) {
+  async handleDeleteMessage(client: Socket, data: { messageId: number | string; scope?: 'me' | 'everyone' }) {
     const userId = client.data?.userId;
     if (!userId) return;
 
     try {
+      // "Delete for me": hide from this user's view only; the row survives
+      // (audit channel). Echo only to the requesting client's sockets.
+      if (data.scope === 'me') {
+        const hidden = await this.chatService.hideMessageForUser(Number(data.messageId), userId);
+        if (hidden) {
+          this.emitToUser(Number(userId), 'message:hidden', { id: String(data.messageId), roomId: String(hidden.roomId) });
+        }
+        return;
+      }
+      // "Delete for everyone": soft-delete (is_deleted=true, sender-only) + broadcast.
       const deleted = await this.chatService.deleteMessage(Number(data.messageId), userId);
       if (deleted) {
         this.server?.to(`room:${deleted.roomId}`).emit('message:deleted', {

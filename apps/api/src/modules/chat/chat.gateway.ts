@@ -288,7 +288,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('message:delete')
   async handleDeleteMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { messageId: number | string },
+    @MessageBody() data: { messageId: number | string; scope?: 'me' | 'everyone' },
   ) {
     return this.helper.handleDeleteMessage(client, data);
   }

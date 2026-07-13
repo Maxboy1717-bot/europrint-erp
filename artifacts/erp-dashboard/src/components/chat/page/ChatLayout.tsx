@@ -16,7 +16,10 @@ import { PollCreator } from "./PollCreator";
 import { ForwardModal } from "./ForwardModal";
 import { CreateTaskModal } from "./CreateTaskModal";
 import { SocketReconnectBanner } from "@/components/chat/SocketReconnectBanner";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { getChatApiBase } from "@/lib/apiBase";
 import { apiRequest } from "@/lib/queryClient";
 import { ChatLayoutSidebar } from "./ChatLayoutSidebar";
@@ -424,16 +427,31 @@ export function ChatLayout() {
         <ForwardModal message={forwardMsg} onClose={() => setForwardMsg(null)} />
       )}
 
-      <ConfirmDialog
+      <AlertDialog
         open={confirmDeleteMsg !== null}
         onOpenChange={(open) => { if (!open) setConfirmDeleteMsg(null); }}
-        title={t("xabarniOchirish")}
-        description={t("ushbuXabarniOchirishniTasdiqlaysizmi")}
-        confirmText="O'chirish"
-        cancelText="Bekor qilish"
-        variant="destructive"
-        onConfirm={() => { if (confirmDeleteMsg) deleteMsg(confirmDeleteMsg.id); }}
-      />
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("xabarniOchirish")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("ushbuXabarniOchirishniTasdiqlaysizmi")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (confirmDeleteMsg) deleteMsg(confirmDeleteMsg.id, "me"); setConfirmDeleteMsg(null); }}
+            >
+              {t("ozimUchunOchirish")}
+            </AlertDialogAction>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => { if (confirmDeleteMsg) deleteMsg(confirmDeleteMsg.id, "everyone"); setConfirmDeleteMsg(null); }}
+            >
+              {t("hammaUchunOchirish")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <CreateTaskModal
         message={taskMsg}

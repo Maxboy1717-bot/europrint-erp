@@ -120,6 +120,7 @@ interface ChatStore {
   markMessageSending: (roomId: string, clientMsgId: string) => void;
   editMessage: (roomId: string, messageId: string, content: string, isEdited: boolean) => void;
   deleteMessage: (roomId: string, messageId: string) => void;
+  removeMessage: (roomId: string, messageId: string) => void;
   updateReactions: (roomId: string, messageId: string, reactions: ChatReaction[]) => void;
   updatePoll: (roomId: string, messageId: string, pollData: Partial<ChatPollData>) => void;
   updateThreadCount: (roomId: string, messageId: string, threadCount: number) => void;
@@ -246,6 +247,16 @@ export const useChatStore = create<ChatStore>((set) => ({
         [roomId]: (s.messages[roomId] ?? []).map((m) =>
           m.id === messageId ? { ...m, isDeleted: true, content: undefined } : m
         ),
+      },
+    })),
+
+  // "Delete for me": drop the message from this user's local view entirely
+  // (no "deleted" placeholder — that's what delete-for-everyone shows).
+  removeMessage: (roomId, messageId) =>
+    set((s) => ({
+      messages: {
+        ...s.messages,
+        [roomId]: (s.messages[roomId] ?? []).filter((m) => m.id !== messageId),
       },
     })),
 
