@@ -222,6 +222,13 @@ export class ChatController {
     return unwrapOrInternal(await this.chatService.getOnlineUsers());
   }
 
+  @ApiOperation({ summary: 'Get one user presence (status + work_status) for the info panel' })
+  @ApiResponse({ status: 200, description: '{ status, workStatus, lastSeenAt } yoki null' })
+  @Get('presence/:userId')
+  async getUserPresence(@Param('userId') userId: string) {
+    return unwrapOrInternal(await this.chatService.getUserPresence(userId));
+  }
+
   @ApiOperation({ summary: 'Update room' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Patch('rooms/:roomId')

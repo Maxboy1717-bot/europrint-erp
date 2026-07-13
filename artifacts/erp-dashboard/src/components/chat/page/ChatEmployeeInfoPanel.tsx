@@ -66,11 +66,17 @@ export function ChatEmployeeInfoPanel({ employee, onClose }: { employee: ChatPan
     queryFn: () => apiRequest("GET", `/api/hr/employees/${employee.employeeId}`),
     enabled: !!employee.employeeId,
   });
+  // Ish-holati — kanonik manba: chat_user_presence (HR profil emas).
+  const { data: presence } = useQuery<{ status?: string | null; workStatus?: string | null } | null>({
+    queryKey: [`/api/chat/presence/${employee.userId}`],
+    queryFn: () => apiRequest("GET", `/api/chat/presence/${employee.userId}`),
+  });
+
   const p = (data ?? {}) as EmployeeProfile;
   const position = p.positionName ?? p.position ?? "";
   const department = p.departmentName ?? p.department ?? "";
   const branch = p.branch ?? "";
-  const ws = p.workStatus ? WORK_STATUS[p.workStatus] : undefined;
+  const ws = presence?.workStatus ? WORK_STATUS[presence.workStatus] : undefined;
   const location = [branch, department].filter(Boolean).join(" · ");
 
   return (

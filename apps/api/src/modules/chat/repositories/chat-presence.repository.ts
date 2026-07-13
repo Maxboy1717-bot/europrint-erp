@@ -83,4 +83,23 @@ export class ChatPresenceRepository {
       return Err(String(e));
     }
   }
+
+  // Bitta foydalanuvchining holati (status + ish-holati) — xodim-info paneli uchun.
+  async findPresence(userId: string): Promise<Result<{ status: string | null; workStatus: string | null; lastSeenAt: Date | null } | null>> {
+    try {
+      const [row] = await db
+        .select({
+          status: chatUserPresence.status,
+          workStatus: chatUserPresence.workStatus,
+          lastSeenAt: chatUserPresence.lastSeenAt,
+        })
+        .from(chatUserPresence)
+        .where(eq(chatUserPresence.userId, userId))
+        .limit(1);
+      return Ok(row ?? null);
+    } catch (e: unknown) {
+      this.logger.warn(`findPresence error: ${String(e)}`);
+      return Err(String(e));
+    }
+  }
 }

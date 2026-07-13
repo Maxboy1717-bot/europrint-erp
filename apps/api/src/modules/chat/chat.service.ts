@@ -137,4 +137,5 @@ export class ChatService {
 
   /** Returns users with status=ONLINE from DB (survives server restart). */
   getOnlineUsers() { return this.presenceRepo.findOnlineUsers(); }
+  getUserPresence(userId: string) { return this.presenceRepo.findPresence(userId); }
 }
