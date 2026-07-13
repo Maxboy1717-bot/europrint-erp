@@ -94,80 +94,144 @@ function evalCondition(cond: string, cells: Cells, seen: Set<string>): boolean {
   }
 }
 
+// Quote-aware arg splitter: commas inside "..." or nested () are not separators.
 function splitArgs(s: string): string[] {
-  const out: string[] = []; let depth = 0, cur = '';
+  const out: string[] = []; let depth = 0, cur = '', inQ = false;
   for (const ch of s) {
-    if (ch === '(') depth++; if (ch === ')') depth--;
-    if (ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch;
+    if (ch === '"') inQ = !inQ;
+    if (!inQ && ch === '(') depth++;
+    if (!inQ && ch === ')') depth--;
+    if (!inQ && ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch;
   }
   if (cur.trim() !== '') out.push(cur);
   return out;
 }
 
-function evalFormula(expr: string, cells: Cells, seen: Set<string>): string {
-  // IF(cond, a, b) — evaluated first (may contain the others)
-  let prev = '';
-  while (prev !== expr) {
-    prev = expr;
-    expr = expr.replace(/IF\(([^()]*(?:\([^()]*\)[^()]*)*)\)/i, (_m, inner) => {
-      const args = splitArgs(inner);
-      if (args.length < 3) return '0';
-      // Keep a quoted-string branch quoted so the outer pass returns it as text (not re-parsed
-      // as arithmetic); evaluate a formula/number branch normally.
-      const branch = (a: string) => { const t = a.trim(); return /^".*"$/.test(t) ? t : evalFormula(t, cells, seen); };
-      return evalCondition(args[0], cells, seen) ? branch(args[1]) : branch(args[2]);
-    });
-  }
-  // Zero-arg date functions.
-  expr = expr.replace(/\bTODAY\(\s*\)/gi, () => `"${new Date().toLocaleDateString('uz-UZ')}"`);
-  expr = expr.replace(/\bNOW\(\s*\)/gi, () => `"${new Date().toLocaleString('uz-UZ')}"`);
-  // ROUND(x, n) — innermost-first via loop.
-  let pr = '';
-  while (pr !== expr) {
-    pr = expr;
-    expr = expr.replace(/ROUND\(([^()]*)\)/i, (_m, inner) => {
-      const a = splitArgs(inner);
-      const x = evalArith(resolveRefs(a[0] ?? '0', cells, seen));
-      const d = Math.round(evalArith(resolveRefs(a[1] ?? '0', cells, seen)));
-      const f = Math.pow(10, d);
-      return Number.isNaN(x) ? '#ERR' : String(Math.round(x * f) / f);
-    });
-  }
-  // CONCATENATE(a, b, ...) -> quoted text.
-  expr = expr.replace(/CONCATENATE\(([^()]*)\)/gi, (_m, inner) =>
-    `"${splitArgs(inner).map((a) => argText(a, cells, seen)).join('')}"`);
-  // VLOOKUP(key, range, colIndex) — search col 1 of range for key, return colIndex cell.
-  expr = expr.replace(/VLOOKUP\(([^()]*)\)/gi, (_m, inner) => {
-    const a = splitArgs(inner);
-    if (a.length < 3) return '#ERR';
-    const key = String(argText(a[0], cells, seen));
-    const col = Math.round(evalArith(resolveRefs(a[2], cells, seen)));
-    const [s, e] = normRef(a[1].trim()).split(':');
-    const ms = A1_RE.exec(s ?? ''), me = A1_RE.exec(e ?? '');
-    if (!ms || !me) return '#ERR';
-    const c1 = colToNum(ms[1]), r1 = +ms[2], r2 = +me[2];
-    for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r++) {
-      if (String(evalCell(numToCol(c1) + r, cells, seen)) === key) {
-        return `"${evalCell(numToCol(c1 + col - 1) + r, cells, seen)}"`;
-      }
+const numOut = (x: number): string => (Number.isNaN(x) || !Number.isFinite(x)) ? '#ERR' : String(Math.round(x * 1e10) / 1e10);
+
+/** Flatten an arg list into individual cell refs / literals (expanding A1:B3 ranges). */
+function flattenRefs(args: string[]): string[] {
+  return args.flatMap((a) => (a.includes(':') ? expandRange(normRef(a.trim())) : [a.trim()]));
+}
+const cellNum = (ref: string, cells: Cells, seen: Set<string>): number =>
+  A1_RE.test(normRef(ref)) ? toNum(evalCell(normRef(ref), cells, seen)) : toNum(ref);
+const cellStr = (ref: string, cells: Cells, seen: Set<string>): string =>
+  A1_RE.test(normRef(ref)) ? evalCell(normRef(ref), cells, seen) : ref;
+
+/** SUMIF/COUNTIF/AVERAGEIF criteria: ">5", "<=3", "<>x", or a plain equals value. */
+function matchCriteria(value: string, criteriaRaw: string): boolean {
+  const c = criteriaRaw.trim();
+  const m = c.match(/^(<=|>=|<>|=|<|>)(.*)$/);
+  if (m) {
+    const op = m[1], rhs = m[2].trim();
+    const vn = Number(value), rn = Number(rhs);
+    if (!Number.isNaN(vn) && !Number.isNaN(rn)) {
+      switch (op) { case '>': return vn > rn; case '<': return vn < rn; case '>=': return vn >= rn; case '<=': return vn <= rn; case '<>': return vn !== rn; default: return vn === rn; }
     }
-    return '#ERR';
+    if (op === '<>') return value !== rhs;
+    return value === rhs;
+  }
+  return value === c;
+}
+function condAgg(kind: 'sum' | 'count' | 'avg', args: string[], cells: Cells, seen: Set<string>): string {
+  const range = expandRange(normRef((args[0] ?? '').trim()));
+  const crit = argText(args[1] ?? '', cells, seen);
+  const sumRange = args[2] ? expandRange(normRef(args[2].trim())) : range;
+  let sum = 0, count = 0;
+  range.forEach((ref, i) => {
+    if (matchCriteria(evalCell(ref, cells, seen), crit)) { count++; sum += toNum(evalCell(sumRange[i] ?? ref, cells, seen)); }
   });
-  // SUM / AVERAGE / COUNT / MIN / MAX
-  expr = expr.replace(/(SUM|AVERAGE|COUNT|MIN|MAX)\(([^()]*)\)/gi, (_m, fn, args) => {
-    const vals = splitArgs(args)
-      .flatMap((a) => (a.includes(':') ? expandRange(a.trim()) : [a.trim()]))
-      .map((ref) => (A1_RE.test(normRef(ref)) ? toNum(evalCell(normRef(ref), cells, seen)) : toNum(ref)));
-    const f = String(fn).toUpperCase();
-    if (f === 'SUM') return String(vals.reduce((s, v) => s + v, 0));
-    if (f === 'AVERAGE') return String(vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0);
-    if (f === 'MIN') return String(vals.length ? Math.min(...vals) : 0);
-    if (f === 'MAX') return String(vals.length ? Math.max(...vals) : 0);
-    return String(vals.length); // COUNT of provided cells
-  });
-  // If a quoted string literal remains, return it unquoted.
+  if (kind === 'count') return String(count);
+  if (kind === 'avg') return count ? numOut(sum / count) : '#ERR';
+  return numOut(sum);
+}
+function truthyArg(a: string, cells: Cells, seen: Set<string>): boolean {
+  const t = a.trim();
+  if (/(<=|>=|<>|!=|==|=|<|>)/.test(t)) return evalCondition(t, cells, seen);
+  const up = t.replace(/"/g, '').toUpperCase();
+  if (up === 'TRUE') return true;
+  if (up === 'FALSE') return false;
+  return evalArith(resolveRefs(t, cells, seen)) !== 0;
+}
+function vlookup(args: string[], cells: Cells, seen: Set<string>): string {
+  if (args.length < 3) return '#ERR';
+  const key = argText(args[0], cells, seen);
+  const col = Math.round(evalArith(resolveRefs(args[2], cells, seen)));
+  const [s, e] = normRef(args[1].trim()).split(':');
+  const ms = A1_RE.exec(s ?? ''), me = A1_RE.exec(e ?? '');
+  if (!ms || !me) return '#ERR';
+  const c1 = colToNum(ms[1]), r1 = +ms[2], r2 = +me[2];
+  for (let r = Math.min(r1, r2); r <= Math.max(r1, r2); r++) {
+    if (String(evalCell(numToCol(c1) + r, cells, seen)) === key) return `"${evalCell(numToCol(c1 + col - 1) + r, cells, seen)}"`;
+  }
+  return '#ERR';
+}
+
+// Dispatch one function call. Returns a numeric string, a quoted "text", or TRUE/FALSE.
+function callFn(name: string, args: string[], cells: Cells, seen: Set<string>): string {
+  const U = name.toUpperCase();
+  const n = (i: number) => evalArith(resolveRefs(args[i] ?? '', cells, seen));
+  const s = (i: number) => argText(args[i] ?? '', cells, seen);
+  const q = (t: string) => `"${t}"`;
+  const numsAll = () => flattenRefs(args).map((r) => cellNum(r, cells, seen));
+  switch (U) {
+    case 'SUM': return numOut(numsAll().reduce((a, b) => a + b, 0));
+    case 'PRODUCT': return numOut(numsAll().reduce((a, b) => a * b, 1));
+    case 'AVERAGE': { const v = numsAll(); return v.length ? numOut(v.reduce((a, b) => a + b, 0) / v.length) : '0'; }
+    case 'MIN': { const v = numsAll(); return v.length ? numOut(Math.min(...v)) : '0'; }
+    case 'MAX': { const v = numsAll(); return v.length ? numOut(Math.max(...v)) : '0'; }
+    case 'MEDIAN': { const v = numsAll().slice().sort((a, b) => a - b); if (!v.length) return '0'; const m = Math.floor(v.length / 2); return numOut(v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2); }
+    case 'COUNT': return String(flattenRefs(args).map((r) => cellStr(r, cells, seen)).filter((x) => x !== '' && !Number.isNaN(Number(x))).length);
+    case 'COUNTA': return String(flattenRefs(args).map((r) => cellStr(r, cells, seen)).filter((x) => x !== '').length);
+    case 'SUMIF': return condAgg('sum', args, cells, seen);
+    case 'COUNTIF': return condAgg('count', args, cells, seen);
+    case 'AVERAGEIF': return condAgg('avg', args, cells, seen);
+    case 'ABS': return numOut(Math.abs(n(0)));
+    case 'SQRT': return numOut(Math.sqrt(n(0)));
+    case 'INT': return numOut(Math.floor(n(0)));
+    case 'SIGN': return numOut(Math.sign(n(0)));
+    case 'POWER': return numOut(Math.pow(n(0), n(1)));
+    case 'MOD': return numOut(n(0) % n(1));
+    case 'ROUND': { const d = Math.round(n(1)); const f = Math.pow(10, d); return numOut(Math.round(n(0) * f) / f); }
+    case 'ROUNDUP': { const d = Math.round(n(1)); const f = Math.pow(10, d); return numOut(Math.ceil(n(0) * f) / f); }
+    case 'ROUNDDOWN': { const d = Math.round(n(1)); const f = Math.pow(10, d); return numOut(Math.trunc(n(0) * f) / f); }
+    case 'CONCATENATE': return q(args.map((_, i) => s(i)).join(''));
+    case 'UPPER': return q(s(0).toUpperCase());
+    case 'LOWER': return q(s(0).toLowerCase());
+    case 'TRIM': return q(s(0).trim());
+    case 'LEN': return String(s(0).length);
+    case 'LEFT': { const k = args[1] ? Math.round(n(1)) : 1; return q(s(0).slice(0, Math.max(0, k))); }
+    case 'RIGHT': { const k = args[1] ? Math.round(n(1)) : 1; return q(k > 0 ? s(0).slice(-k) : ''); }
+    case 'MID': { const start = Math.max(0, Math.round(n(1)) - 1); const len = Math.max(0, Math.round(n(2))); return q(s(0).substring(start, start + len)); }
+    case 'IF': return evalCondition(args[0] ?? '', cells, seen) ? (args[1] ?? '').trim() : (args[2] ?? '').trim();
+    case 'AND': return args.every((a) => truthyArg(a, cells, seen)) ? 'TRUE' : 'FALSE';
+    case 'OR': return args.some((a) => truthyArg(a, cells, seen)) ? 'TRUE' : 'FALSE';
+    case 'NOT': return truthyArg(args[0] ?? '', cells, seen) ? 'FALSE' : 'TRUE';
+    case 'VLOOKUP': return vlookup(args, cells, seen);
+    case 'TODAY': return q(new Date().toLocaleDateString('uz-UZ'));
+    case 'NOW': return q(new Date().toLocaleString('uz-UZ'));
+    default: return '#NAME?';
+  }
+}
+
+// Innermost-first function-call resolver: repeatedly replace the innermost NAME(args) via the
+// dispatch table until none remain, then evaluate the leftover arithmetic. Nested calls resolve
+// naturally (the inner one has no parens inside, so it matches first).
+function evalFormula(expr: string, cells: Cells, seen: Set<string>): string {
+  const FN = /([A-Za-z][A-Za-z0-9]*)\s*\(([^()]*)\)/;
+  let prev = '', guard = 0;
+  while (prev !== expr && guard++ < 200) {
+    prev = expr;
+    expr = expr.replace(FN, (_m, name, inner) => callFn(name, splitArgs(inner), cells, seen));
+  }
+  // Preserve a standalone error marker (#NAME?/#ERR/#CYCLE) instead of the arithmetic pass
+  // swallowing it into a generic #ERR.
+  if (expr.trim().startsWith('#')) return expr.trim();
+  // A leftover quoted string literal → return it unquoted (text result).
   const strLit = expr.trim().match(/^"(.*)"$/);
   if (strLit) return strLit[1];
+  const up = expr.trim().toUpperCase();
+  if (up === 'TRUE' || up === 'FALSE') return up;
   const n = evalArith(resolveRefs(expr, cells, seen));
   return Number.isNaN(n) ? '#ERR' : String(Math.round(n * 1e10) / 1e10);
 }

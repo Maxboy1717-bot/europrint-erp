@@ -52,6 +52,51 @@ describe('spreadsheet formula engine', () => {
     expect(ev('=TODAY()').length).toBeGreaterThan(4);
     expect(ev('=NOW()').length).toBeGreaterThan(4);
   });
+  it('single-arg math: ABS / SQRT / INT / SIGN', () => {
+    expect(ev('=ABS(0-5)')).toBe('5');
+    expect(ev('=SQRT(9)')).toBe('3');
+    expect(ev('=INT(3.7)')).toBe('3');
+    expect(ev('=SIGN(0-2)')).toBe('-1');
+  });
+  it('two-arg math: POWER / MOD / ROUNDUP / ROUNDDOWN', () => {
+    expect(ev('=POWER(2,3)')).toBe('8');
+    expect(ev('=MOD(7,3)')).toBe('1');
+    expect(ev('=ROUNDUP(2.1,0)')).toBe('3');
+    expect(ev('=ROUNDDOWN(2.9,0)')).toBe('2');
+  });
+  it('PRODUCT / MEDIAN / COUNTA', () => {
+    expect(ev('=PRODUCT(A1:A3)')).toBe('6000'); // 10*20*30
+    expect(ev('=MEDIAN(A1:A3)')).toBe('20');
+    expect(ev('=COUNTA(B1:B3)')).toBe('3');
+  });
+  it('conditional aggregates: SUMIF / COUNTIF / AVERAGEIF', () => {
+    expect(ev('=SUMIF(A1:A3,">15")')).toBe('50');   // 20 + 30
+    expect(ev('=COUNTIF(A1:A3,">15")')).toBe('2');
+    expect(ev('=AVERAGEIF(A1:A3,">15")')).toBe('25');
+  });
+  it('text: LEFT / RIGHT / MID / LEN / UPPER / LOWER / TRIM', () => {
+    expect(ev('=LEFT("hello",2)')).toBe('he');
+    expect(ev('=RIGHT("hello",2)')).toBe('lo');
+    expect(ev('=MID("hello",2,3)')).toBe('ell');
+    expect(ev('=LEN("hello")')).toBe('5');
+    expect(ev('=UPPER("ab")')).toBe('AB');
+    expect(ev('=LOWER("AB")')).toBe('ab');
+    expect(ev('=TRIM(" x ")')).toBe('x');
+  });
+  it('logical: AND / OR / NOT', () => {
+    expect(ev('=AND(A1>5,A2>5)')).toBe('TRUE');
+    expect(ev('=OR(A1>100,A2>5)')).toBe('TRUE');
+    expect(ev('=NOT(A1>100)')).toBe('TRUE');
+  });
+  it('nested function calls resolve innermost-first', () => {
+    expect(ev('=SUM(A1:A2)+ABS(0-5)')).toBe('35'); // 30 + 5
+    expect(ev('=ROUND(SQRT(2),3)')).toBe('1.414');
+    expect(ev('=MAX(MIN(A1:A3),A2)')).toBe('20');  // MIN=10, MAX(10,20)=20
+  });
+  it('unknown function → #NAME?', () => {
+    expect(ev('=BOGUS(A1)')).toBe('#NAME?');
+  });
+
   it('errors: self-referential cycle is caught (does not hang or return a number)', () => {
     // Cycle is detected; inside arithmetic it surfaces as #ERR (the NaN propagation), which is
     // the correct guard — the key guarantee is an error marker, never a wrong number.
