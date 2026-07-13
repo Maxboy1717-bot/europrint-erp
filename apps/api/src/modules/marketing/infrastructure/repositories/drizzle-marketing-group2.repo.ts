@@ -140,6 +140,10 @@ export class DrizzleMarketingGroup2Repository {
           bodyUz: data['bodyUz'] as string | undefined,
           bodyRu: data['bodyRu'] as string | undefined,
           excerpt: data['excerpt'] as string | undefined,
+          coverImage: data['coverImage'] as string | undefined,
+          tags: (data['tags'] as unknown[] | undefined) ?? [],
+          seoTitle: data['seoTitle'] as string | undefined,
+          seoDescription: data['seoDescription'] as string | undefined,
           isPublished: false,
           authorId: data['authorId'] as string | undefined,
         })
@@ -160,6 +164,10 @@ export class DrizzleMarketingGroup2Repository {
           ...(data['bodyUz'] !== undefined && { bodyUz: String(data['bodyUz']) }),
           ...(data['bodyRu'] !== undefined && { bodyRu: String(data['bodyRu']) }),
           ...(data['excerpt'] !== undefined && { excerpt: String(data['excerpt']) }),
+          ...(data['coverImage'] !== undefined && { coverImage: String(data['coverImage']) }),
+          ...(data['tags'] !== undefined && { tags: data['tags'] as unknown[] }),
+          ...(data['seoTitle'] !== undefined && { seoTitle: String(data['seoTitle']) }),
+          ...(data['seoDescription'] !== undefined && { seoDescription: String(data['seoDescription']) }),
           updatedAt: _time.now(),
         })
         .where(eq(blogPosts.id, id))

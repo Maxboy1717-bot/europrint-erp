@@ -38,6 +38,10 @@ const CreateBlogPostSchema = z.object({
   bodyUz: z.string().optional(),
   bodyRu: z.string().optional(),
   excerpt: z.string().optional(),
+  coverImage: z.string().max(2000).optional(),
+  tags: z.array(z.string()).optional(),
+  seoTitle: z.string().max(255).optional(),
+  seoDescription: z.string().optional(),
   authorId: z.string().optional(),
 }).strict();
 
