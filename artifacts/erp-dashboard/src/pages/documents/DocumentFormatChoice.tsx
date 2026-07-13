@@ -52,8 +52,7 @@ export default function DocumentFormatChoice() {
           icon={<Table2 className="w-6 h-6" />}
           title={tLabel('documents.spreadsheet', 'Jadval')}
           desc={tLabel('documents.spreadsheetDesc', 'Excel uslubidagi jadval muharriri')}
-          disabled
-          badge={tLabel('documents.comingSoon', 'Tez orada')}
+          onClick={() => navigate('/spreadsheets/new')}
         />
       </div>
     </div>
