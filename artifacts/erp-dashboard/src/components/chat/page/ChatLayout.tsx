@@ -305,10 +305,11 @@ export function ChatLayout() {
     setActiveRoomId(null as unknown as string);
   }, [setActiveRoomId]);
 
-  const handleVideoCall = useCallback(async () => {
+  const handleVideoCall = useCallback(async (audioOnly = false) => {
     if (!activeRoomId || !activeRoom) return;
     if (videoCallUrl) { setVideoCallUrl(null); return; }
     setVideoLoading(true);
+    const label = audioOnly ? "🎙️ Audio" : "🎥 Video";
     try {
       const data = await apiRequest<{
         token: string | null;
@@ -317,28 +318,33 @@ export function ChatLayout() {
         embedUrl: string;
       }>('POST', `${getChatApiBase()}/video/token`, { roomId: activeRoomId });
       const separator = data.embedUrl.includes("#") ? "&" : "#";
+      // Audio-only: kamera o'chirilgan + startAudioOnly=true; toolbar'da kamera yo'q.
       const configFlags = [
         "config.prejoinPageEnabled=false",
         "config.startWithAudioMuted=false",
-        "config.startWithVideoMuted=false",
+        `config.startWithVideoMuted=${audioOnly ? "true" : "false"}`,
+        ...(audioOnly ? ["config.startAudioOnly=true"] : []),
         "config.disableDeepLinking=true",
         "config.hideConferenceSubject=false",
         "interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false",
-        'interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","tileview","fullscreen"]',
+        audioOnly
+          ? 'interfaceConfig.TOOLBAR_BUTTONS=["microphone","hangup","tileview","fullscreen"]'
+          : 'interfaceConfig.TOOLBAR_BUTTONS=["microphone","camera","hangup","tileview","fullscreen"]',
       ].join("&");
       const callUrl = data.embedUrl.includes("config.prejoinPageEnabled")
         ? data.embedUrl
         : `${data.embedUrl}${separator}${configFlags}`;
       sendMessage(
         activeRoomId,
-        `🎥 Video qo'ng'iroq boshlandi. Qo'shilish: ${data.embedUrl.split("#")[0].split("?jwt=")[0]}`
+        `${label} qo'ng'iroq boshlandi. Qo'shilish: ${data.embedUrl.split("#")[0].split("?jwt=")[0]}`
       );
       setVideoCallUrl(callUrl);
       setVideoMinimized(false);
     } catch {
       const roomSlug = `europrint-room-${activeRoomId}`;
-      const callUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true`;
-      sendMessage(activeRoomId, `🎥 Video qo'ng'iroq: https://meet.jit.si/${roomSlug}`);
+      const audioFlag = audioOnly ? "&config.startWithVideoMuted=true&config.startAudioOnly=true" : "&config.startWithVideoMuted=false";
+      const callUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false${audioFlag}&config.disableDeepLinking=true`;
+      sendMessage(activeRoomId, `${label} qo'ng'iroq: https://meet.jit.si/${roomSlug}`);
       setVideoCallUrl(callUrl);
       setVideoMinimized(false);
     } finally {
@@ -393,7 +399,8 @@ export function ChatLayout() {
         videoLoading={videoLoading}
         videoHeight={videoHeight}
         videoMinimized={videoMinimized}
-        onVideoCall={handleVideoCall}
+        onVideoCall={() => handleVideoCall(false)}
+        onAudioCall={() => handleVideoCall(true)}
         onVideoClose={() => { setVideoCallUrl(null); setVideoMinimized(false); }}
         onVideoToggleMinimize={() => setVideoMinimized((v) => !v)}
         onVideoToggleHeight={() =>

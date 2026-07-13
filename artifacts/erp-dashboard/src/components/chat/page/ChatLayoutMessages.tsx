@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { MessageArea } from "./MessageArea";
 import { MentionInput } from "./MentionInput";
 import { ChatAvatar } from "./ChatAvatar";
-import { Pin, X, Search, ArrowLeft, MoreVertical, Video, CheckSquare, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react";
+import { Pin, X, Search, ArrowLeft, MoreVertical, Video, Phone, CheckSquare, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react";
 import { ChatLayoutMessagesProps, VIDEO_HEIGHT_EXPANDED } from "./ChatLayoutTypes";
 
 import { useTranslation } from '@/lib/i18n';
@@ -33,6 +33,7 @@ function RoomHeader({
   onToggleInfo,
   onMobileBack,
   onVideoCall,
+  onAudioCall,
   onTaskFromLastMsg,
   activeRoomType,
 }: Pick<
@@ -49,6 +50,7 @@ function RoomHeader({
   | "onToggleInfo"
   | "onMobileBack"
   | "onVideoCall"
+  | "onAudioCall"
   | "onTaskFromLastMsg"
 > & { activeRoomType: string }) {
   const { t } = useTranslation('common');
@@ -108,6 +110,21 @@ function RoomHeader({
           title={t("search")}
         >
           <Search className="w-[22px] h-[22px]" />
+        </button>
+
+        {/* Audio call button (video/token bilan bir xil infra, faqat audio-only) */}
+        <button
+          onClick={onAudioCall}
+          disabled={videoLoading}
+          className={cn(
+            "p-2 rounded-full transition-colors",
+            videoLoading
+              ? "text-[var(--tg-text-secondary)] opacity-60"
+              : "text-[var(--tg-text-secondary)] hover:bg-[var(--tg-hover)]"
+          )}
+          title={t("audioQongiroq")}
+        >
+          <Phone className="w-[22px] h-[22px]" />
         </button>
 
         {/* Video call button */}
@@ -342,7 +359,7 @@ function EmptyState() {
  * Full center panel: header, banners, message list, video call embed,
  * edit indicator and message input. Renders EmptyState when no room is active.
  */
-export function ChatLayoutMessages({ activeRoom, activeRoomId, memberCount, canPin, isChannelReadOnly, activeMembers, onlineUserIds, typingText, pinnedMessage, uploadProgress, editingMsg, replyToMsg, onCancelEdit, onCancelReply, videoCallUrl, videoLoading, videoHeight, videoMinimized, onVideoCall, onVideoClose, onVideoToggleMinimize, onVideoToggleHeight, showSearch, infoOpen, onToggleSearch, onToggleInfo, onMobileBack, onTaskFromLastMsg, onSend, onEdit, onDelete, onReply, onReact, onThread, onForward, onPin, onUploadFile, onVoiceMessage, onCreatePoll, onTypingStart, onTypingStop, onUnpinMessage, mobileShowChat, }: ChatLayoutMessagesProps & { mobileShowChat: boolean }) {
+export function ChatLayoutMessages({ activeRoom, activeRoomId, memberCount, canPin, isChannelReadOnly, activeMembers, onlineUserIds, typingText, pinnedMessage, uploadProgress, editingMsg, replyToMsg, onCancelEdit, onCancelReply, videoCallUrl, videoLoading, videoHeight, videoMinimized, onVideoCall, onAudioCall, onVideoClose, onVideoToggleMinimize, onVideoToggleHeight, showSearch, infoOpen, onToggleSearch, onToggleInfo, onMobileBack, onTaskFromLastMsg, onSend, onEdit, onDelete, onReply, onReact, onThread, onForward, onPin, onUploadFile, onVoiceMessage, onCreatePoll, onTypingStart, onTypingStop, onUnpinMessage, mobileShowChat, }: ChatLayoutMessagesProps & { mobileShowChat: boolean }) {
   const { t } = useTranslation('common');
   return (
     <div
@@ -366,6 +383,7 @@ export function ChatLayoutMessages({ activeRoom, activeRoomId, memberCount, canP
             onToggleInfo={onToggleInfo}
             onMobileBack={onMobileBack}
             onVideoCall={onVideoCall}
+            onAudioCall={onAudioCall}
             onTaskFromLastMsg={onTaskFromLastMsg}
             activeRoomType={activeRoom.type}
           />
