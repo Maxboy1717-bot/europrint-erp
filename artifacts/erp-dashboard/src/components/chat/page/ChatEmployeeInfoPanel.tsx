@@ -10,11 +10,12 @@
 
 import { useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, Phone, Mail, Briefcase, Building2, MapPin, Plus, Tag, Paperclip, Download } from "lucide-react";
+import { X, Phone, Mail, Briefcase, Building2, MapPin, Plus, Tag, Paperclip, Download, ClipboardPlus } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { ChatAvatar } from "./ChatAvatar";
 import { useTranslation } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
 
 const SUGGESTED_TAGS = ["Muhim", "Kutilmoqda", "Tezkor"];
 
@@ -62,6 +63,22 @@ function Field({ icon, label, value }: { icon: ReactNode; label: string; value?:
 export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee: ChatPanelEmployee; roomId: string; onClose: () => void }) {
   const { t } = useTranslation("common");
   const qc = useQueryClient();
+  const { toast } = useToast();
+
+  // "Vazifa yaratish" — bu xodimga tayinlangan Kanban karta (mavjud endpoint,
+  // default board; assignedTo → owner_user_id → Bog'liq-vazifalar tab'da ko'rinadi).
+  // CC hujjat templateId (uuid) talab qiladi → paneldan inline emas (CC moduli orqali).
+  const [creatingTask, setCreatingTask] = useState(false);
+  const [taskTitle, setTaskTitle] = useState("");
+  const createTask = useMutation({
+    mutationFn: (title: string) => apiRequest("POST", "/api/kanban/cards", { title, assignedTo: employee.userId }),
+    onSuccess: () => {
+      toast({ title: t("vazifaYaratildi") });
+      setTaskTitle(""); setCreatingTask(false);
+      qc.invalidateQueries({ queryKey: [`/api/chat/employees/${employee.userId}/related-tasks`] });
+    },
+    onError: () => toast({ title: t("xatolik"), variant: "destructive" }),
+  });
 
   // Suhbat teglari (Muhim/Kutilmoqda/Tezkor …)
   const tagsKey = [`/api/chat/rooms/${roomId}/tags`];
@@ -177,6 +194,42 @@ export function ChatEmployeeInfoPanel({ employee, roomId, onClose }: { employee:
           <Field icon={<Briefcase className="w-4 h-4" />} label={t("lavozim")} value={position} />
           <Field icon={<Building2 className="w-4 h-4" />} label={t("bolim")} value={department} />
           <Field icon={<MapPin className="w-4 h-4" />} label={t("bolimFilial")} value={location} />
+        </div>
+
+        {/* Vazifa yaratish (3e) — xodimga tayinlangan Kanban karta */}
+        <div className="pt-3">
+          {!creatingTask ? (
+            <button
+              onClick={() => setCreatingTask(true)}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-[var(--ep-primary)] text-white text-[13px] font-medium hover:opacity-90"
+            >
+              <ClipboardPlus className="w-4 h-4" /> {t("vazifaYaratish")}
+            </button>
+          ) : (
+            <div className="flex gap-1.5">
+              <input
+                autoFocus
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && taskTitle.trim()) createTask.mutate(taskTitle.trim());
+                  if (e.key === "Escape") { setCreatingTask(false); setTaskTitle(""); }
+                }}
+                placeholder={t("vazifaNomi")}
+                className="flex-1 px-2.5 py-1.5 text-[13px] rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] outline-none focus:border-[var(--ep-primary)]"
+              />
+              <button
+                onClick={() => taskTitle.trim() && createTask.mutate(taskTitle.trim())}
+                disabled={createTask.isPending}
+                className="px-3 rounded-lg bg-[var(--ep-primary)] text-white text-[13px]"
+              >
+                {t("yaratish")}
+              </button>
+              <button onClick={() => { setCreatingTask(false); setTaskTitle(""); }} className="px-2 rounded-lg text-[var(--ep-muted)]">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Teglar (Muhim / Kutilmoqda / Tezkor …) */}
