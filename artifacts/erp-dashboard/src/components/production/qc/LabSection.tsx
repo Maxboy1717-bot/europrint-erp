@@ -62,7 +62,8 @@ export function LabSection({activeTab }: LabSectionProps) {
       labForm.reset();
       toast({ title: tQc("labResultSaved") });
     },
-    onError: () => toast({ title: tQc("errorOccurred"), variant: "destructive" }),
+    onError: (error: Error) =>
+      toast({ title: tQc("errorOccurred"), description: error?.message, variant: "destructive" }),
   });
 
   return (

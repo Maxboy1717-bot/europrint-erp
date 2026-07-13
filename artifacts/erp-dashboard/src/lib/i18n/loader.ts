@@ -52,6 +52,7 @@ import uzMyInventory   from '../../locales/uz/myInventory.json';
 import uzNav           from '../../locales/uz/nav.json';
 import uzOffline       from '../../locales/uz/offline.json';
 import uzQcreview      from '../../locales/uz/qcreview.json';
+import uzQc            from '../../locales/uz/qc.json';
 import uzQuarantine    from '../../locales/uz/quarantine.json';
 import uzReports       from '../../locales/uz/reports.json';
 import uzRequests      from '../../locales/uz/requests.json';
@@ -103,6 +104,7 @@ import cyrMyInventory   from '../../locales/uz-cyr/myInventory.json';
 import cyrNav           from '../../locales/uz-cyr/nav.json';
 import cyrOffline       from '../../locales/uz-cyr/offline.json';
 import cyrQcreview      from '../../locales/uz-cyr/qcreview.json';
+import cyrQc            from '../../locales/uz-cyr/qc.json';
 import cyrQuarantine    from '../../locales/uz-cyr/quarantine.json';
 import cyrReports       from '../../locales/uz-cyr/reports.json';
 import cyrRequests      from '../../locales/uz-cyr/requests.json';
@@ -154,6 +156,7 @@ import ruMyInventory   from '../../locales/ru/myInventory.json';
 import ruNav           from '../../locales/ru/nav.json';
 import ruOffline       from '../../locales/ru/offline.json';
 import ruQcreview      from '../../locales/ru/qcreview.json';
+import ruQc            from '../../locales/ru/qc.json';
 import ruQuarantine    from '../../locales/ru/quarantine.json';
 import ruReports       from '../../locales/ru/reports.json';
 import ruRequests      from '../../locales/ru/requests.json';
@@ -207,7 +210,7 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     nav:           uzNav           as unknown as TranslationModule,
     offline:       uzOffline       as unknown as TranslationModule,
     qcreview:      uzQcreview      as unknown as TranslationModule,
-    qc:            uzQcreview      as unknown as TranslationModule,
+    qc:            uzQc            as unknown as TranslationModule,
     quarantine:    uzQuarantine    as unknown as TranslationModule,
     reports:       uzReports       as unknown as TranslationModule,
     requests:      uzRequests      as unknown as TranslationModule,
@@ -259,7 +262,7 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     nav:           cyrNav           as unknown as TranslationModule,
     offline:       cyrOffline       as unknown as TranslationModule,
     qcreview:      cyrQcreview      as unknown as TranslationModule,
-    qc:            cyrQcreview      as unknown as TranslationModule,
+    qc:            cyrQc            as unknown as TranslationModule,
     quarantine:    cyrQuarantine    as unknown as TranslationModule,
     reports:       cyrReports       as unknown as TranslationModule,
     requests:      cyrRequests      as unknown as TranslationModule,
@@ -311,7 +314,7 @@ export const ALL_TRANSLATIONS: AllTranslations = {
     nav:           ruNav           as unknown as TranslationModule,
     offline:       ruOffline       as unknown as TranslationModule,
     qcreview:      ruQcreview      as unknown as TranslationModule,
-    qc:            ruQcreview      as unknown as TranslationModule,
+    qc:            ruQc            as unknown as TranslationModule,
     quarantine:    ruQuarantine    as unknown as TranslationModule,
     reports:       ruReports       as unknown as TranslationModule,
     requests:      ruRequests      as unknown as TranslationModule,
