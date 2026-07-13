@@ -38,7 +38,7 @@ export default function CamerasManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCamera, setEditingCamera] = useState<CameraData | null>(null);
 
-  const t = buildTranslations(language) as ReturnType<typeof buildTranslations> & ((key: string) => string);
+  const t = buildTranslations(language);
 
   // -------------------------------------------------------------------------
   // Queries
@@ -200,7 +200,7 @@ export default function CamerasManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <EPPageHeader
-        breadcrumb={<>{t("dashboard9")}<b className="text-foreground">{language === "uz" ? "Kameralar boshqaruvi" : "Управление камерами"}</b></>}
+        breadcrumb={<>{t.dashboard}<b className="text-foreground">{language === "uz" ? "Kameralar boshqaruvi" : "Управление камерами"}</b></>}
         title={language === "uz" ? "Kameralar boshqaruvi" : "Управление камерами"}
         subtitle={t.subtitle}
       />

@@ -62,6 +62,7 @@ export type Language = "uz" | "ru";
 export function buildTranslations(language: Language) {
   const uz = language === "uz";
   return {
+    dashboard:        uz ? "Dashboard ·"                             : "Панель ·",
     title:            uz ? "Kameralar Boshqaruvi"                         : "Управление камерами",
     subtitle:         uz ? "Kameralarni qo'shish, tahrirlash va boshqarish": "Добавление, редактирование и управление камерами",
     addCamera:        uz ? "Kamera qo'shish"                               : "Добавить камеру",
@@ -84,6 +85,8 @@ export function buildTranslations(language: Language) {
     activeCameras:    uz ? "Faol kameralar"                                : "Активные камеры",
     selectWorkCenter: uz ? "Ish markazini tanlang"                         : "Выберите рабочий центр",
     noCameras:        uz ? "Kameralar topilmadi"                           : "Камеры не найдены",
+    confirmDeleteTitle:   uz ? "Kamerani o'chirishni tasdiqlaysizmi?"          : "Kamerani o'chirishni подтверждаете??",
+    confirmDeleteDesc:    uz ? "Kamera va unga bog'liq barcha ma'lumotlar o'chiriladi." : "Камера va unga bog'liq barcha ma'lumotlar o'chiriladi.",
   } as const;
 }
 

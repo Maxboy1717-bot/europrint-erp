@@ -31,7 +31,7 @@ import type { CameraData, WorkCenter, Translations, Language } from "./cameras-m
 interface CameraStatsCardsProps {
   total: number;
   active: number;
-  t: Translations & ((key: string) => string);
+  t: Translations;
 }
 
 export function CameraStatsCards({ total, active, t }: CameraStatsCardsProps) {
@@ -68,7 +68,7 @@ interface CameraTableProps {
   cameras: CameraData[];
   workCenters: WorkCenter[] | undefined;
   language: Language;
-  t: Translations & ((key: string) => string);
+  t: Translations;
   isDeletePending: boolean;
   onEdit: (camera: CameraData) => void;
   onDelete: (id: string) => void;
@@ -142,7 +142,7 @@ interface CameraRowProps {
   camera: CameraData;
   workCenters: WorkCenter[] | undefined;
   language: Language;
-  t: Translations & ((key: string) => string);
+  t: Translations;
   isDeletePending: boolean;
   onEdit: (camera: CameraData) => void;
   onDelete: (id: string) => void;
@@ -243,8 +243,8 @@ function CameraRow({
             <Edit className="h-4 w-4" />
           </Button>
           <DeleteConfirmDialog
-            title={t("kameraniOchirishniTasdiqlaysizmi")}
-            description={t("kameraVaUngaBogliqBarcha")}
+            title={t.confirmDeleteTitle}
+            description={t.confirmDeleteDesc}
             onConfirm={() => onDelete(camera.id)}
             isPending={isDeletePending}
           />
