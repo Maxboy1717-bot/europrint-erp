@@ -54,9 +54,9 @@ export function TreeNodeCard({
         style={{
           width: CARD_W,
           minHeight: CARD_H,
-          background: `linear-gradient(135deg, ${baseColor}f0, ${baseColor}bb)`,
-          border: isDragTarget ? "2px solid var(--ep-green)" : isVacant ? "2px dashed var(--ep-red)" : `2px solid ${baseColor}44`,
-          boxShadow: isDragTarget ? "0 0 0 4px var(--ep-green-soft)" : `0 4px 16px ${baseColor}44`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${baseColor} 94%, transparent), color-mix(in srgb, ${baseColor} 73%, transparent))`,
+          border: isDragTarget ? "2px solid var(--ep-green)" : isVacant ? "2px dashed var(--ep-red)" : `2px solid color-mix(in srgb, ${baseColor} 27%, transparent)`,
+          boxShadow: isDragTarget ? "0 0 0 4px var(--ep-green-soft)" : `0 4px 16px color-mix(in srgb, ${baseColor} 27%, transparent)`,
           opacity: isDragging ? 0.5 : 1,
           outline: isDragTarget ? "2px solid var(--ep-green)" : undefined,
         }}
