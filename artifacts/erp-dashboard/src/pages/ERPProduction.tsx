@@ -62,7 +62,7 @@ export default function ERPProduction() {
           </TabsTrigger>
           <TabsTrigger value="products" data-testid="tab-products" className="flex-1 rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
             <Package className="h-4 w-4 mr-2" />
-            {t('products')}
+            {t('rawMaterials')}
           </TabsTrigger>
           <TabsTrigger value="orders" data-testid="tab-orders" className="flex-1 rounded-lg px-6 py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
             <ClipboardList className="h-4 w-4 mr-2" />
