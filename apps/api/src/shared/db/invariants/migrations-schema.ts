@@ -1871,4 +1871,172 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'Feasibility skorida ishlab chiqarish yuklamasi komponentining og''irligi (%); qolgan qism muddat-zaxira komponentiga beriladi. Placeholder default=50 (teng bo''lingan), egasi business_settings CRUD orqali sozlaydi.', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // AI HR Dashboard budgets (2026-07-13) — HRAIDashboard.tsx "Provayderlar va byudjet"
+  // panel + "AI vazifani ishga tushirish" panel. AiHrNewService.buildProviderBudgets()/
+  // submitTask() used to read hardcoded app.constants.ts numbers — two of the three
+  // "dailyRequestLimit" values were unrelated constants reused by numeric coincidence
+  // (MAX_EXPORT_LIMIT / AI_SHORT_MAX_TOKENS). Q-12/Q-40: every number now comes from
+  // business_settings via getBusinessSettingNumber(key, fallback), same pattern as
+  // ai.forecast_min_orders / rush_order_*. Defaults below are IDENTICAL to the previous
+  // hardcoded values (no visible change until owner tuning). Human-readable mirror:
+  // apps/api/src/shared/db/migrations/ai-hr-dashboard-budgets-2026-07-13.sql.
+  {
+    name: 'business_settings ai.hr_dashboard_budget_openai_monthly seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.hr_dashboard_budget_openai_monthly', 'AI HR Dashboard - OpenAI oylik byudjet', 'number', 100, 'USD', 0, NULL,
+        'AI HR Dashboard (Provayderlar va byudjet paneli) - OpenAI uchun oylik xarajat byudjeti ko''rsatkichi. Placeholder default=100, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.hr_dashboard_budget_gemini_monthly seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.hr_dashboard_budget_gemini_monthly', 'AI HR Dashboard - Gemini oylik byudjet', 'number', 50, 'USD', 0, NULL,
+        'AI HR Dashboard (Provayderlar va byudjet paneli) - Gemini uchun oylik xarajat byudjeti ko''rsatkichi. Placeholder default=50, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.hr_dashboard_budget_claude_monthly seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.hr_dashboard_budget_claude_monthly', 'AI HR Dashboard - Claude oylik byudjet', 'number', 80, 'USD', 0, NULL,
+        'AI HR Dashboard (Provayderlar va byudjet paneli) - Claude uchun oylik xarajat byudjeti ko''rsatkichi. Placeholder default=80, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.hr_dashboard_daily_limit_openai seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.hr_dashboard_daily_limit_openai', 'AI HR Dashboard - OpenAI kunlik so''rov chegarasi', 'number', 1000, 'so''rov/kun', 0, NULL,
+        'AI HR Dashboard (Provayderlar va byudjet paneli) - OpenAI uchun kunlik AI so''rovlar chegarasi ko''rsatkichi. Placeholder default=1000, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.hr_dashboard_daily_limit_gemini seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.hr_dashboard_daily_limit_gemini', 'AI HR Dashboard - Gemini kunlik so''rov chegarasi', 'number', 2000, 'so''rov/kun', 0, NULL,
+        'AI HR Dashboard (Provayderlar va byudjet paneli) - Gemini uchun kunlik AI so''rovlar chegarasi ko''rsatkichi. Placeholder default=2000, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.hr_dashboard_daily_limit_claude seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.hr_dashboard_daily_limit_claude', 'AI HR Dashboard - Claude kunlik so''rov chegarasi', 'number', 500, 'so''rov/kun', 0, NULL,
+        'AI HR Dashboard (Provayderlar va byudjet paneli) - Claude uchun kunlik AI so''rovlar chegarasi ko''rsatkichi. Placeholder default=500, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings ai.hr_dashboard_task_max_tokens seed (owner 2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('ai', 'ai.hr_dashboard_task_max_tokens', 'AI HR Dashboard - vazifa AI javobi token chegarasi', 'number', 800, 'token', 1, NULL,
+        'AiHrNewService.submitTask() (AI HR Dashboard "AI vazifani ishga tushirish" paneli) har bir ad-hoc AI chaqiruvi uchun max_tokens chegarasi. Placeholder default=800, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  // hr-employees-orphan-fields (2026-07-13): EmployeeDialog.tsx form fields with no
+  // matching `employees` column — silently discarded on save (Q-40/Q-43 fake-save).
+  // See apps/api/src/shared/db/migrations/hr-employees-orphan-fields-2026-07-13.sql
+  // for full rationale. Wired into saveEmployee()/updateEmployee() in
+  // drizzle-hr-base.repo.ts in the same change.
+  { name: 'employees.shift column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS shift VARCHAR(20)` },
+  { name: 'employees.salary_type column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS salary_type VARCHAR(20)` },
+  { name: 'employees.workshop_zone column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS workshop_zone VARCHAR(100)` },
+  { name: 'employees.attestation_date column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS attestation_date DATE` },
+  { name: 'employees.marital_status column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS marital_status VARCHAR(30)` },
+  { name: 'employees.children_count column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS children_count INTEGER` },
+  { name: 'employees.children_education column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS children_education VARCHAR(30)` },
+  { name: 'employees.household_size column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS household_size INTEGER` },
+  { name: 'employees.household_members column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS household_members TEXT` },
+  { name: 'employees.housing_type column (hr-employees-orphan-fields)', sql: `ALTER TABLE IF EXISTS employees ADD COLUMN IF NOT EXISTS housing_type VARCHAR(30)` },
+  // ── HR Nazorat 4-page fix (2026-07-13, Muslimbek chat directive) — Intizom (Discipline) ──
+  // discipline_records already has a real severity classifier + _applyLatenessPenalty fine
+  // calc (late-arrival.service.ts) — NOT rewritten. Missing per vision: (a) reprimands auto
+  // soft-archive after 6 months with repeat violations counted cumulatively; (b) escalation
+  // follows verbal -> written -> fine -> dismissal stages. Both wired via discipline-escalation
+  // .helper.ts (computeDisciplineEscalation) + discipline.cron.ts (expireOldRecords, unchanged
+  // cadence 01:00 daily). Thresholds are business_settings-driven (Q-40 — never hardcoded);
+  // defaults below reuse the 3/5/8 figures already live as DISCIPLINE_LATE_WARNING_THRESHOLD/
+  // DISCIPLINE_LATE_REPRIMAND_THRESHOLD/DISCIPLINE_LATE_DISCHARGE_THRESHOLD (business.constants.ts,
+  // flagged in project_magic_numbers_verify_2026_07_07.md), generalised here from "late arrivals
+  // per month" to "any discipline_records violation within a rolling window" (cumulative, not
+  // reset by archival). Columns is_archived/archived_at/escalation_stage added to
+  // lib/db/src/schema/discipline.ts disciplineRecords (see that file for full column rationale).
+  {
+    name: 'discipline_records.is_archived column (reprimand soft-archive, 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS discipline_records ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT false`,
+  },
+  {
+    name: 'discipline_records.archived_at column (2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS discipline_records ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP`,
+  },
+  {
+    name: 'discipline_records.escalation_stage column (verbal/written/fine/dismissal, 2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS discipline_records ADD COLUMN IF NOT EXISTS escalation_stage VARCHAR(20) DEFAULT 'verbal'`,
+  },
+  {
+    name: 'discipline_records.escalation_stage check constraint (2026-07-13)',
+    sql: `
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'discipline_records_escalation_stage_chk'
+        ) THEN
+          ALTER TABLE discipline_records ADD CONSTRAINT discipline_records_escalation_stage_chk
+            CHECK (escalation_stage IS NULL OR escalation_stage IN ('verbal','written','fine','dismissal'));
+        END IF;
+      END $$
+    `,
+  },
+  {
+    name: 'business_settings hr.discipline_archive_after_months seed (2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('hr', 'hr.discipline_archive_after_months', 'Intizom: ogohlantirish arxiv muddati (oy)', 'months', 6, 'oy', 1, 60,
+        'Discipline_records.discipline_type = ''reprimand'' bo''lgan yozuvlar shu oy sonidan (issued_date bo''yicha) o''tgach discipline.cron.ts orqali avtomatik soft-arxivlanadi (is_archived=true) — o''chirilmaydi, faqat faol Intizom ro''yxatidan yashiriladi, kumulyativ hisobga ta''sir qilmaydi. Default=6 oy, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings hr.discipline_escalation_window_months seed (2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('hr', 'hr.discipline_escalation_window_months', 'Intizom: eskalatsiya oyna muddati (oy)', 'months', 12, 'oy', 1, 60,
+        'Xodimning intizom eskalatsiya bosqichi (verbal/written/fine/dismissal) shu oy oynasi ichidagi qoidabuzarliklar soni bo''yicha hisoblanadi (discipline-escalation.helper.ts computeDisciplineEscalation). Default=12 oy, egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings hr.discipline_written_threshold seed (2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('hr', 'hr.discipline_written_threshold', 'Intizom: yozma ogohlantirish bosqichi (dona)', 'number', 3, 'ta', 1, NULL,
+        'Oyna ichida shu sondan ko''p (kumulyativ) qoidabuzarlik bo''lsa escalation_stage=''written''ga o''tadi. Default=3 — DISCIPLINE_LATE_WARNING_THRESHOLD (business.constants.ts) bilan bir xil boshlang''ich qiymat, endi barcha buzilish turlariga umumlashtirilgan. Egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings hr.discipline_fine_threshold seed (2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('hr', 'hr.discipline_fine_threshold', 'Intizom: jarima bosqichi (dona)', 'number', 5, 'ta', 1, NULL,
+        'Oyna ichida shu sondan ko''p (kumulyativ) qoidabuzarlik bo''lsa escalation_stage=''fine''ga o''tadi. Default=5 — DISCIPLINE_LATE_REPRIMAND_THRESHOLD bilan bir xil boshlang''ich qiymat, endi umumlashtirilgan. Egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings hr.discipline_dismissal_threshold seed (2026-07-13)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('hr', 'hr.discipline_dismissal_threshold', 'Intizom: ishdan bo''shatish bosqichi (dona)', 'number', 8, 'ta', 1, NULL,
+        'Oyna ichida shu sondan ko''p (kumulyativ) qoidabuzarlik bo''lsa escalation_stage=''dismissal''ga o''tadi. Default=8 — DISCIPLINE_LATE_DISCHARGE_THRESHOLD bilan bir xil boshlang''ich qiymat, endi umumlashtirilgan. Egasi business_settings CRUD orqali sozlaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  // ── HR Nazorat 4-page fix (2026-07-13) — Xavfsizlik/Sog'liq Nazorati (hr-safety) ──
+  // HRSafetyDialogs.tsx TrainingDialog free-text training name + ZoneDialog location/
+  // hazardType/description had no DB column at all — silently dropped on submit
+  // (Q-40/Q-43 fake-save). See schema-business-c-2-hr-safety.ts safety_training_records /
+  // hazard_zones for full column rationale; wired into hr-compat-safety.repository.ts
+  // createSafetyTraining/getSafetyTrainings/createHazardZone/getHazardZones in the same change.
+  {
+    name: 'safety_training_records.training_name column (2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS safety_training_records ADD COLUMN IF NOT EXISTS training_name TEXT`,
+  },
+  {
+    name: 'hazard_zones.location column (2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS hazard_zones ADD COLUMN IF NOT EXISTS location TEXT`,
+  },
+  {
+    name: 'hazard_zones.hazard_type column (2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS hazard_zones ADD COLUMN IF NOT EXISTS hazard_type TEXT`,
+  },
+  {
+    name: 'hazard_zones.description column (2026-07-13)',
+    sql: `ALTER TABLE IF EXISTS hazard_zones ADD COLUMN IF NOT EXISTS description TEXT`,
+  },
 ];

@@ -99,12 +99,13 @@ export const DECIMAL_PLACES = 2;
 // ─── AI — token chegaralari ───────────────────────────────────────────────────
 export const AI_MAX_TOKENS_STANDARD = 400;  // standart qisqa AI javob tokenlari
 export const AI_MAX_TOKENS_MEDIUM = 1_200;  // o'rtacha AI javob tokenlari
-export const AI_DAILY_LIMIT_HIGH = 2_000;   // kunlik so'rovlar chegarasi (yuqori)
-
-// ─── AI — provayder byudjetlari (USD, oylik) ─────────────────────────────────
-export const AI_BUDGET_OPENAI_MONTHLY  = 100;   // OpenAI oylik byudjet (USD)
-export const AI_BUDGET_GEMINI_MONTHLY  = 50;    // Gemini oylik byudjet (USD)
-export const AI_BUDGET_CLAUDE_MONTHLY  = 80;    // Claude oylik byudjet (USD)
+// AI_DAILY_LIMIT_HIGH / AI_BUDGET_OPENAI_MONTHLY / AI_BUDGET_GEMINI_MONTHLY /
+// AI_BUDGET_CLAUDE_MONTHLY removed 2026-07-13: these were only consumed by
+// ai-hr-new.service.ts's PROVIDER_BUDGETS array, which now reads the same numbers
+// (as owner-tunable defaults) from business_settings via getBusinessSettingNumber() —
+// see DEFAULT_* constants in that file + migration
+// ai-hr-dashboard-budgets-2026-07-13.sql. Removing rather than leaving as dead exports
+// (Q-46: fix-or-remove, no half-state).
 
 // ─── Foiz hisoblash ──────────────────────────────────────────────────────────
 export const PERCENT_BASIS = 10_000;        // 10000/100 → foiz ikki kasr bilan
