@@ -113,7 +113,7 @@ export function CreateCertificateDialog({
                 <SelectValue placeholder={t("kursniTanlang")} />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
-                {courses?.map(course => (
+                {(Array.isArray(courses) ? courses : []).map(course => (
                   <SelectItem key={course.id} value={course.id}>
                     {course.title} ({course.code})
                   </SelectItem>
