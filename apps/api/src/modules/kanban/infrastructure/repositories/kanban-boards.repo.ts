@@ -23,6 +23,9 @@ import {
   CreateCardInput,
   CreateColumnInput,
   CreateKanbanForOrderInput,
+  CreateKanbanForQcInspectionInput,
+  CreateKanbanForMesSessionInput,
+  CreateKanbanForDesignTaskInput,
   MoveCardInput,
   UpdateCardInput,
   UpdateColumnInput,
@@ -206,5 +209,14 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
   }
   moveOrderCardByStatusMap(orderId: number, newStatus: string): Promise<Result<void>> {
     return this.cardsRepo.moveOrderCardByStatusMap(orderId, newStatus);
+  }
+  createKanbanForQcInspection(input: CreateKanbanForQcInspectionInput): Promise<Result<void>> {
+    return this.cardsRepo.createKanbanForQcInspection(input);
+  }
+  createKanbanForMesSession(input: CreateKanbanForMesSessionInput): Promise<Result<void>> {
+    return this.cardsRepo.createKanbanForMesSession(input);
+  }
+  createKanbanForDesignTask(input: CreateKanbanForDesignTaskInput): Promise<Result<void>> {
+    return this.cardsRepo.createKanbanForDesignTask(input);
   }
 }

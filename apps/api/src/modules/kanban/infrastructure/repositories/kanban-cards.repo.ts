@@ -15,6 +15,9 @@ import { Result, Ok, Err } from '@common/result';
 import {
   CreateCardInput,
   CreateKanbanForOrderInput,
+  CreateKanbanForQcInspectionInput,
+  CreateKanbanForMesSessionInput,
+  CreateKanbanForDesignTaskInput,
   KanbanCard,
   MoveCardInput,
   UpdateCardInput,
@@ -435,5 +438,156 @@ export class KanbanCardsRepository {
       this.logger.error('moveOrderCardByStatusMap: ' + (error as Error).message);
       return Err({ message: (error as Error).message, code: 'DB_ERROR' });
     }
+  }
+
+  /**
+   * QC/MES/Design Kanban fan-out (owner decision 2026-07-13): shared board-lookup +
+   * card-insert helper used by {@link createKanbanForQcInspection},
+   * {@link createKanbanForMesSession} and {@link createKanbanForDesignTask}. Mirrors
+   * {@link createKanbanForOrder}'s transaction shape exactly (type match OR fuzzy
+   * name match on the oldest matching board, first column by sort_order) and its
+   * "skip silently, never block the source workflow" semantic: if no matching
+   * board/column exists yet (owner hasn't created one via CRUD) this returns Ok(void)
+   * without inserting — same as createKanbanForOrder behaved before any sales board
+   * existed.
+   */
+  private async createKanbanForSource(params: {
+    boardTypeHints: string[];
+    boardNameHints: string[];
+    title: string;
+    description: string;
+    relatedType: string;
+    relatedId: string | null;
+    relatedRef: string | null;
+    logLabel: string;
+  }): Promise<Result<void>> {
+    try {
+      const outcome = await db.transaction(async (tx) => {
+        const boardRows = await tx
+          .select({ id: kanbanBoards.id })
+          .from(kanbanBoards)
+          .where(
+            and(
+              isNull(kanbanBoards.deleted_at),
+              or(
+                ...params.boardTypeHints.map((t) => eq(kanbanBoards.type, t)),
+                ...params.boardNameHints.map((n) => ilike(kanbanBoards.name, `%${n}%`)),
+              ),
+            ),
+          )
+          .orderBy(asc(kanbanBoards.created_at))
+          .limit(1);
+
+        const boardId = boardRows[0]?.id;
+        if (!boardId) return { ok: false as const, reason: 'no-board' };
+
+        const colRows = await tx
+          .select({ id: kanbanColumns.id })
+          .from(kanbanColumns)
+          .where(and(eq(kanbanColumns.board_id, boardId), isNull(kanbanColumns.deleted_at)))
+          .orderBy(asc(kanbanColumns.sort_order))
+          .limit(1);
+
+        const columnId = colRows[0]?.id;
+        if (!columnId) return { ok: false as const, reason: 'no-column', boardId };
+
+        await tx.insert(kanbanCards).values({
+          board_id:     boardId,
+          column_id:    columnId,
+          title:        params.title,
+          description:  params.description,
+          priority:     'normal',
+          related_type: params.relatedType,
+          related_id:   params.relatedId,
+          related_ref:  params.relatedRef,
+          sort_order:   0,
+        });
+
+        return { ok: true as const, boardId, columnId };
+      });
+
+      if (!outcome.ok) {
+        if (outcome.reason === 'no-board') {
+          this.logger.warn(
+            `${params.logLabel}: mos board topilmadi (type/nom mos kelmadi). ` +
+            `Board ochish uchun mos type/nom bilan kanban board yarating.`,
+          );
+        } else {
+          this.logger.warn(`${params.logLabel}: board ${outcome.boardId} da ustun topilmadi.`);
+        }
+        return Ok(undefined);
+      }
+
+      this.logger.log(
+        `${params.logLabel}: karta yaratildi — boardId=${outcome.boardId}, columnId=${outcome.columnId}`,
+      );
+      return Ok(undefined);
+    } catch (error) {
+      this.logger.error(`${params.logLabel}: ` + (error as Error).message);
+      return Err({ message: (error as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /**
+   * QC inspection FAILED → Kanban karta (owner decision 2026-07-13). Triggered by
+   * QcFailedEvent (submit-inspection.handler.ts) via QcFailedKanbanHandler.
+   */
+  async createKanbanForQcInspection(input: CreateKanbanForQcInspectionInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['qc'],
+      boardNameHints: ['sifat', 'qc', 'nazorat'],
+      title:          `⛔ QC: buyurtma #${input.orderId} — tekshiruv #${input.inspectionId}`,
+      description:
+        `QC inspection ID: ${input.inspectionId}\n` +
+        `Buyurtma ID: ${input.orderId}\n` +
+        `Sabab: ${input.reason}`,
+      relatedType: 'qc_inspection',
+      relatedId:   input.inspectionId,
+      relatedRef:  null,
+      logLabel:    `createKanbanForQcInspection: inspectionId=${input.inspectionId} orderId=${input.orderId}`,
+    });
+  }
+
+  /**
+   * MES production session COMPLETED → Kanban karta (owner decision 2026-07-13).
+   * Triggered by MesCompletedEvent (complete-session.handler.ts, Trigger 10) via
+   * MesCompletedKanbanHandler.
+   */
+  async createKanbanForMesSession(input: CreateKanbanForMesSessionInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['production', 'mes'],
+      boardNameHints: ['ishlab chiqarish', 'mes', 'production'],
+      title:          `\u{1F3ED} MES sessiya tugadi — PP #${input.ppId} (sessiya #${input.sessionId})`,
+      description:
+        `MES sessiya ID: ${input.sessionId}\n` +
+        `Ishlab chiqarish reja ID: ${input.ppId}`,
+      relatedType: 'mes_session',
+      relatedId:   String(input.sessionId),
+      relatedRef:  null,
+      logLabel:    `createKanbanForMesSession: sessionId=${input.sessionId} ppId=${input.ppId}`,
+    });
+  }
+
+  /**
+   * Design task SO'RALDI → Kanban karta (owner decision 2026-07-13). Triggered by
+   * DesignRequestedEvent (request-design.handler.ts, Trigger 3) via
+   * DesignRequestedKanbanHandler. `designOrderId` is the DesignOrder aggregate's UUID
+   * (pre-existing two-worlds drift — it is NOT the design_orders integer PK), so it is
+   * stored in `related_ref` (the G4 UUID-source column) rather than `related_id`.
+   */
+  async createKanbanForDesignTask(input: CreateKanbanForDesignTaskInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['design'],
+      boardNameHints: ['dizayn', 'design'],
+      title:          `\u{1F3A8} Dizayn so'rovi — buyurtma #${input.salesOrderId}`,
+      description:
+        `Dizayn buyurtma UUID: ${input.designOrderId}\n` +
+        `Savdo buyurtma ID: ${input.salesOrderId}\n` +
+        `Mijoz ID: ${input.customerId}`,
+      relatedType: 'design_task',
+      relatedId:   null,
+      relatedRef:  input.designOrderId,
+      logLabel:    `createKanbanForDesignTask: designOrderId=${input.designOrderId} salesOrderId=${input.salesOrderId}`,
+    });
   }
 }

@@ -15,6 +15,9 @@ import { KanbanRobotService } from './application/kanban-robot.service';
 import { OrderCreatedKanbanHandler } from './application/event-handlers/order-created-kanban.handler';
 import { OrderCancelledKanbanHandler } from './application/event-handlers/order-cancelled-kanban.handler';
 import { OrderStatusChangedKanbanHandler } from './application/event-handlers/order-status-changed-kanban.handler';
+import { QcFailedKanbanHandler } from './application/event-handlers/qc-failed-kanban.handler';
+import { MesCompletedKanbanHandler } from './application/event-handlers/mes-completed-kanban.handler';
+import { DesignRequestedKanbanHandler } from './application/event-handlers/design-requested-kanban.handler';
 import { DrizzleKanbanExtRepository } from './infrastructure/repositories/drizzle-kanban-ext.repo';
 import { DrizzleKanbanCoreRepository } from './infrastructure/repositories/drizzle-kanban-core.repo';
 import { DrizzleKanbanFlowsRobotsRepository } from './infrastructure/repositories/drizzle-kanban-flows-robots.repo';
@@ -41,7 +44,19 @@ import { KanbanRepository } from './infrastructure/kanban.repository';
 import { KanbanCronProcessor } from './infrastructure/cron/kanban-cron.processor';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 
-const eventHandlers   = [OrderCreatedKanbanHandler, OrderCancelledKanbanHandler, OrderStatusChangedKanbanHandler];
+const eventHandlers   = [
+  OrderCreatedKanbanHandler,
+  OrderCancelledKanbanHandler,
+  OrderStatusChangedKanbanHandler,
+  // QC/MES/Design Kanban fan-out (owner decision 2026-07-13): every source module that
+  // already emits a real domain event gets a matching Kanban-card trigger, mirroring the
+  // 3 SD order handlers above. waste-tracking (apps/api/src/modules/remaining/waste.*)
+  // was evaluated too but has no domain-event emission at all (plain CRUD service) — not
+  // fabricated here per Q-40.
+  QcFailedKanbanHandler,
+  MesCompletedKanbanHandler,
+  DesignRequestedKanbanHandler,
+];
 
 const repositories = [
   { provide: KANBAN_BOARDS_REPO, useClass: KanbanBoardsRepository   },

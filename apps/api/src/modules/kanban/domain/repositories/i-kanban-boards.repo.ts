@@ -143,6 +143,42 @@ export interface CreateKanbanForOrderInput {
   companyId:   number;
 }
 
+/**
+ * Payload used by {@link IKanbanBoardsRepo.createKanbanForQcInspection}. `inspectionId`
+ * is the live-DB `qc_inspections.id` (stringified) — see submit-inspection.handler.ts's
+ * doc-comment confirming it has round-tripped through findById before the QcFailedEvent
+ * is published, so it is safe to store as `related_id` (same String(id) convention as
+ * {@link CreateKanbanForOrderInput}).
+ */
+export interface CreateKanbanForQcInspectionInput {
+  inspectionId: string;
+  orderId:      number;
+  reason:       string;
+}
+
+/**
+ * Payload used by {@link IKanbanBoardsRepo.createKanbanForMesSession}. `sessionId` and
+ * `ppId` are both real integer ids (`mes_production_sessions.id` / production-plan id)
+ * taken directly from the command, not a synthetic aggregate id.
+ */
+export interface CreateKanbanForMesSessionInput {
+  sessionId: number;
+  ppId:      number;
+}
+
+/**
+ * Payload used by {@link IKanbanBoardsRepo.createKanbanForDesignTask}. `designOrderId`
+ * is the `DesignOrder` aggregate's UUID (request-design.handler.ts: `design.id`) — it
+ * is NOT the `design_orders` integer PK (pre-existing two-worlds drift; see the G4
+ * `related_ref` convention already reserved for this exact case). `salesOrderId` is the
+ * real `sales_orders.id`.
+ */
+export interface CreateKanbanForDesignTaskInput {
+  designOrderId: string;
+  salesOrderId:  number;
+  customerId:    number;
+}
+
 export const KANBAN_BOARDS_REPO = Symbol('KANBAN_BOARDS_REPO');
 
 export interface IKanbanBoardsRepo {
@@ -205,4 +241,29 @@ export interface IKanbanBoardsRepo {
    * the SD status change.
    */
   moveOrderCardByStatusMap(orderId: number, newStatus: string): Promise<Result<void>>;
+
+  /**
+   * QC/MES/Design/waste Kanban fan-out (owner decision 2026-07-13): mirrors
+   * {@link createKanbanForOrder}'s board-lookup + card-insert shape, but targets a
+   * QC-labelled board (`type='qc'` or a fuzzy name match) instead of the sales board.
+   * Same "skip silently, never block the source workflow" semantic — if no QC board
+   * exists yet this returns Ok(void) without inserting.
+   */
+  createKanbanForQcInspection(input: CreateKanbanForQcInspectionInput): Promise<Result<void>>;
+
+  /**
+   * QC/MES/Design/waste Kanban fan-out (owner decision 2026-07-13): mirrors
+   * {@link createKanbanForOrder} but targets a production/MES-labelled board. Same
+   * "skip silently" semantic as {@link createKanbanForQcInspection}.
+   */
+  createKanbanForMesSession(input: CreateKanbanForMesSessionInput): Promise<Result<void>>;
+
+  /**
+   * QC/MES/Design/waste Kanban fan-out (owner decision 2026-07-13): mirrors
+   * {@link createKanbanForOrder} but targets a design-labelled board. Stores
+   * `designOrderId` in `related_ref` (not `related_id`) since it is a UUID, not the
+   * integer `design_orders` PK — see {@link CreateKanbanForDesignTaskInput}. Same
+   * "skip silently" semantic as {@link createKanbanForQcInspection}.
+   */
+  createKanbanForDesignTask(input: CreateKanbanForDesignTaskInput): Promise<Result<void>>;
 }
