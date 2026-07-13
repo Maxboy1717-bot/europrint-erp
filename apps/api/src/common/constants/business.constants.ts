@@ -647,3 +647,13 @@ export const KANBAN_CANCELLED_COLUMN_KEYWORDS = ['bekor', 'cancel'] as const;
  */
 export const KANBAN_RATING_WEIGHT_ACHIEVEMENT = 0.7;
 export const KANBAN_RATING_WEIGHT_ESCALATION = 0.3;
+
+// ---------------------------------------------------------------------------
+// PP — Quvvat rejasi / Load Analysis (Capacity Planning)
+// ---------------------------------------------------------------------------
+
+/** loadPercentage shu chegaradan oshsa work-center "bottleneck" (kritik) deb belgilanadi. */
+export const CAPACITY_BOTTLENECK_THRESHOLD_PCT = 90;
+
+/** loadPercentage shu chegaradan oshsa work-center "overloaded" (ortiqcha yuklangan) holatga o'tadi. */
+export const CAPACITY_OVERLOAD_THRESHOLD_PCT = 100;

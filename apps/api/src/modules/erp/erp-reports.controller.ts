@@ -210,8 +210,8 @@ export class ErpReportsController {
   @ApiOperation({ summary: 'Capacity load analysis' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('capacity/load-analysis')
-  async capacityLoadAnalysis() {
-    return unwrapOrThrow(await this.svc.capacityLoadAnalysis());
+  async capacityLoadAnalysis(@Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return unwrapOrThrow(await this.svc.capacityLoadAnalysis(startDate, endDate));
   }
 
   @ApiOperation({ summary: 'List shift calendars' })
@@ -288,7 +288,7 @@ export class ErpReportsController {
     return unwrapOrThrow(await this.svc.workCenterCapacity());
   }
 
-  @ApiOperation({ summary: 'Update work center capacity' })
+  @ApiOperation({ summary: 'Create or update work center capacity' })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post('work-center-capacity')
@@ -298,8 +298,9 @@ export class ErpReportsController {
     const patch = body as Record<string, unknown>;
     const id = patch['id'] !== undefined ? safeInt(String(patch['id']), 0) : 0;
     if (!id) {
-      // No id — return current capacity list (read-only fallback)
-      return unwrapOrThrow(await this.svc.workCenterCapacity());
+      // No id — this is a brand-new capacity entry (FE "Quvvat qo'shildi" dialog);
+      // insert a real row into work_center_capacity instead of silently no-op'ing.
+      return unwrapOrThrow(await this.svc.createWorkCenterCapacity(patch));
     }
     return unwrapOrThrow(await this.svc.updateWorkCenterCapacity(id, patch));
   }

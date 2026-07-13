@@ -114,7 +114,10 @@ export default function CapacityPlanning() {
       apiRequest("POST", "/api/erp/work-center-capacity", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/erp/work-center-capacity"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/erp/capacity"] });
+      // NOTE: the load-analysis query key is ["/api/erp/capacity/load-analysis", dateFrom, dateTo]
+      // — invalidating the bare "/api/erp/capacity" prefix never matched it (different string,
+      // not a parent key), so Yuklama Tahlili silently kept its stale cache after every create.
+      queryClient.invalidateQueries({ queryKey: ["/api/erp/capacity/load-analysis"] });
       setShowCapacityDialog(false);
       capacityForm.reset();
       toast({ title: t("capacityAdded") });
