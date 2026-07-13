@@ -55,6 +55,7 @@ import {
   SharedEventsModule, OutboxModule,
 } from './feature-modules';
 import { DocumentControlModule } from './common/document-control/document-control.module';
+import { ErpDocumentsModule } from './modules/erp-documents/erp-documents.module';
 
 @Module({
   imports: [
@@ -125,6 +126,7 @@ import { DocumentControlModule } from './common/document-control/document-contro
 
     // ── Document Control (cross-cutting leak-prevention layer, owner 2026-07-13) ──
     DocumentControlModule,
+    ErpDocumentsModule, // erkin hujjatlar — consumes DocumentControlModule
 
     // ── Core Modullar (24 ta) ─────────────────────────────────────────────────
     AuthModule,

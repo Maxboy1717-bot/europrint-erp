@@ -94,6 +94,7 @@ export class DocumentAccessLogService {
   async resolveTier(documentType: string, documentId: string | number): Promise<string | null> {
     const map: Record<string, { table: string; idIsUuid: boolean }> = {
       cc: { table: 'cc_documents', idIsUuid: true },
+      erp_document: { table: 'erp_documents', idIsUuid: true },
       hr_document: { table: 'hr_documents', idIsUuid: false },
       employment_contract: { table: 'employment_contracts', idIsUuid: false },
       technology_card: { table: 'technology_cards', idIsUuid: false },
