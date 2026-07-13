@@ -250,6 +250,7 @@ export type I18nTranslations = {
         "barcodeNotFoundWithValue": string;
         "cannotManageRequest": string;
         "closedHandoverCannotBeCancelled": string;
+        "customerCreditLimitExceeded": string;
         "damageMovementTypeNotFound": string;
         "departmentCannotRequestCategory": string;
         "departmentDataAccessDenied": string;
@@ -501,6 +502,7 @@ export type I18nTranslations = {
         "reportDefinitionNotFound": string;
         "campaignNotFoundWithId": string;
         "marketingLeadNotFoundWithId": string;
+        "marketingLeadRequisitesIncomplete": string;
         "marketingPostNotFoundWithId": string;
         "exhibitionNotFoundWithId": string;
         "prActivityNotFoundWithId": string;
@@ -522,6 +524,7 @@ export type I18nTranslations = {
         "deliveryStatusTransitionNotAllowed": string;
         "quotationCustomerIdInvalid": string;
         "customerExportFailed": string;
+        "customerNotOwnedByYou": string;
         "logisticsRouteNotFoundWithId": string;
         "alertIdMustBeNumeric": string;
         "deviceNotFoundWithId": string;
@@ -659,6 +662,7 @@ export type I18nTranslations = {
         "ean13BaseMustBe12Digits": string;
         "downloadReasonRequired": string;
         "internalReturnReasonRequired": string;
+        "unplannedIssueReasonRequired": string;
         "materialIdRequired": string;
         "materialIdAndQuantityRequired": string;
         "movementTypeIdOrCodeRequired": string;

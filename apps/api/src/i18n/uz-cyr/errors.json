@@ -412,6 +412,7 @@
   "deliveryStatusTransitionNotAllowed": "{from} → {to} ўтиш мумкин эмас",
   "quotationCustomerIdInvalid": "Таклифномада мижоз ID нотўғри ёки кўрсатилмаган",
   "customerExportFailed": "Мижозларни экспорт қилиб бўлмади",
+  "customerNotOwnedByYou": "Сиз бу мижознинг масъул менежери эмассиз — фақат эгаси ёки директор/super_admin таҳрирлаши мумкин",
   "logisticsRouteNotFoundWithId": "Маршрут #{id} топилмади",
   "alertIdMustBeNumeric": "alertId рақам бўлиши керак",
   "deviceNotFoundWithId": "Қурилма #{id} топилмади",

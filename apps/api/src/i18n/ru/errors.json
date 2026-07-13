@@ -412,6 +412,7 @@
   "deliveryStatusTransitionNotAllowed": "Переход {from} → {to} невозможен",
   "quotationCustomerIdInvalid": "Неверный или отсутствующий ID клиента в коммерческом предложении",
   "customerExportFailed": "Не удалось экспортировать клиентов",
+  "customerNotOwnedByYou": "Вы не являетесь ответственным менеджером этого клиента — редактировать может только владелец, директор или супер-админ",
   "logisticsRouteNotFoundWithId": "Маршрут #{id} не найден",
   "alertIdMustBeNumeric": "alertId должен быть числом",
   "deviceNotFoundWithId": "Устройство #{id} не найдено",

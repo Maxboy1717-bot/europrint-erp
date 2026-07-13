@@ -412,6 +412,7 @@
   "deliveryStatusTransitionNotAllowed": "{from} → {to} o'tish mumkin emas",
   "quotationCustomerIdInvalid": "Taklifnomada mijoz ID noto'g'ri yoki ko'rsatilmagan",
   "customerExportFailed": "Mijozlarni eksport qilib bo'lmadi",
+  "customerNotOwnedByYou": "Siz bu mijozning mas'ul menejeri emassiz — faqat egasi yoki direktor/super_admin tahrirlashi mumkin",
   "logisticsRouteNotFoundWithId": "Marshrut #{id} topilmadi",
   "alertIdMustBeNumeric": "alertId raqam bo'lishi kerak",
   "deviceNotFoundWithId": "Qurilma #{id} topilmadi",

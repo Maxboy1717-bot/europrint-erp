@@ -146,6 +146,19 @@ export class DrizzleSdCustomersRepository {
     });
   }
 
+  /**
+   * Owner decision 2026-07-13: ownership lookup for the update() authorization gate
+   * (SdCustomersService.update() / sd-customer-scope.ts). Deliberately unfiltered by
+   * status/deleted_at — mirrors update()'s own WHERE id = cid below, so the ownership
+   * check always sees exactly the row the UPDATE would touch.
+   */
+  async getOwnerId(cid: number): Promise<Row | undefined> {
+    const rows = await runQuery<Row>(sql`
+      SELECT id, manager_id FROM sd_customers WHERE id = ${cid}
+    `);
+    return rows.rows[0] as Row | undefined;
+  }
+
   async update(cid: number, body: Row, updatedBy?: number): Promise<Row[]> {
     const { name, title, stir, inn, phone, email, address, status, notes } = body;
     const finalName = name ?? title ?? null;

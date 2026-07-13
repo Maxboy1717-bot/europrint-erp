@@ -240,7 +240,9 @@ export class SdCustomersController {
   @UsePipes(new ZodValidationPipe(SdUpdateCustomerSchema))
   @Roles(...SD_WRITE_ROLES)
   async update(@Param('id') id: string, @Body() body: SdUpdateCustomerDto, @CurrentUser() user: AuthenticatedUser) {
-    const _rR = await this.svc.update(safeInt(id, 0), body, user.id);
+    // Ownership gate (owner decision 2026-07-13): svc.update() checks user.id/role
+    // against sd_customers.manager_id — see sd-customer-scope.ts.
+    const _rR = await this.svc.update(safeInt(id, 0), body, { id: user.id, role: user.role });
     const r = unwrapOrThrow(_rR);
     assertFound(r, await this.i18n.t('errors.customerNotFound'));
     return r[0];
