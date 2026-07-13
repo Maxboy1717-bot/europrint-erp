@@ -19,12 +19,13 @@ function setup(initial: Cells = {}) {
 }
 
 describe('SpreadsheetGrid — select-all / fx / filter', () => {
-  it('select-all (corner) then Bold applies to the whole 30x12 range', () => {
+  it('select-all button styles the whole 30x12 range and shows the range label', () => {
     const t = setup();
-    fireEvent.click(screen.getByTitle('Hammasini belgilash')); // corner = select all
-    fireEvent.click(screen.getByTitle('Qalin')); // Bold
+    fireEvent.click(screen.getByText('Hammasi')); // labelled select-all button
+    expect(screen.getByText(/A1:L30 \(360\)/)).toBeTruthy(); // visible feedback the range took
+    fireEvent.click(screen.getByTitle('Qalin')); // Bold applies to the whole selection
     const styled = Object.values(t.cells);
-    expect(styled.length).toBe(30 * 12); // every cell in the sheet
+    expect(styled.length).toBe(30 * 12);
     expect(styled.every((c) => c.s?.b === true)).toBe(true);
   });
 

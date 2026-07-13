@@ -9,7 +9,7 @@
  */
 
 import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter } from 'lucide-react';
+import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { evalCell, numToCol, colToNum, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
 import { tLabel } from '@/lib/i18n/tLabel';
@@ -138,6 +138,17 @@ export function SpreadsheetGrid({
 
   const insertFn = (name: string) => { startEdit(sel, `=${name}(`); setFxOpen(false); };
 
+  // Formula-bar label: single cell (A1) or, when a range is selected, "A1:L30 (count)" — visible
+  // proof that a selection (incl. select-all) took effect.
+  const rangeLabel = (() => {
+    const a = parseRef(anchor), b = parseRef(sel);
+    if (!a || !b || (a[0] === b[0] && a[1] === b[1])) return sel;
+    const tl = numToCol(Math.min(a[0], b[0])) + Math.min(a[1], b[1]);
+    const br = numToCol(Math.max(a[0], b[0])) + Math.max(a[1], b[1]);
+    const count = (Math.abs(a[0] - b[0]) + 1) * (Math.abs(a[1] - b[1]) + 1);
+    return `${tl}:${br} (${count})`;
+  })();
+
   // Column filtering: a row is visible if, for every column with filter text, that column's
   // displayed value contains the text (case-insensitive, AND across columns).
   const activeFilters = Object.entries(filters).filter(([, v]) => v.trim() !== '');
@@ -201,6 +212,12 @@ export function SpreadsheetGrid({
               </div>
             )}
           </div>
+          {/* Select-all (whole sheet) — labelled so it is obvious */}
+          <button type="button" title={tLabel('documents.selectAll', 'Hammasini belgilash')} onClick={selectAll}
+            className="inline-flex items-center gap-1 h-7 px-2 rounded hover:bg-[var(--ep-bg)] text-xs font-medium text-[var(--ep-text)]">
+            <Grid3x3 className="w-3.5 h-3.5" />{tLabel('documents.selectAllShort', 'Hammasi')}
+          </button>
+          <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
           {/* Filter toggle */}
           <button type="button" title={tLabel('documents.filter', 'Filtr')} onClick={() => setFilterOn((v) => !v)}
             className={cn('w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)]', filterOn && 'bg-[var(--ep-blue)]/12 text-[var(--ep-blue)]')}><Filter className="w-3.5 h-3.5" /></button>
@@ -209,7 +226,7 @@ export function SpreadsheetGrid({
 
       {/* Formula bar */}
       <div className="flex items-center gap-2 px-2 py-1.5 border-b border-[var(--ep-border)] bg-[var(--ep-surface)]">
-        <span className="text-xs font-mono font-semibold text-[var(--ep-muted)] w-12 text-center shrink-0">{sel}</span>
+        <span className="text-xs font-mono font-semibold text-[var(--ep-muted)] min-w-12 px-1 text-center shrink-0 whitespace-nowrap">{rangeLabel}</span>
         <span className="text-[var(--ep-border)]">|</span>
         <input
           value={editing === sel ? buf : raw(sel)}
@@ -275,7 +292,7 @@ export function SpreadsheetGrid({
                         'min-w-[96px] h-7 px-1.5 cursor-cell align-middle',
                         style?.bd ? 'border-2 border-[var(--ep-text)]' : 'border border-[var(--ep-border)]',
                         isSel && 'ring-2 ring-[var(--ep-blue)] ring-inset',
-                        ranged && 'bg-[var(--ep-blue)]/10',
+                        ranged && 'bg-[var(--ep-blue)]/20 ring-1 ring-[var(--ep-blue)]/30 ring-inset',
                         align === 'r' ? 'text-right tabular-nums' : align === 'c' ? 'text-center' : 'text-left',
                       )}
                     >
