@@ -1,17 +1,20 @@
 /**
  * @module DocumentsRoutes
- * @description Erkin hujjatlar (free-form documents) routes — Phase A3 (editor). The
- * "Mening hujjatlarim" list route ('/documents') is added in Phase A4.
- * Order matters: '/documents/new' before '/documents/:id' (wouter Switch = first match).
+ * @description Erkin hujjatlar (free-form documents) routes.
+ * '/documents/new' = format-choice screen (item #1); '/documents/matn' = text-editor create
+ * (literal path, listed before '/documents/:id' so the greedy :id doesn't swallow it);
+ * '/documents/:id' = text-editor edit; '/documents' = list.
  */
 
 import { lazy } from "react";
 
 const ErpDocumentEditor = lazy(() => import("@/pages/documents/ErpDocumentEditor"));
 const ErpDocumentsList = lazy(() => import("@/pages/documents/ErpDocumentsList"));
+const DocumentFormatChoice = lazy(() => import("@/pages/documents/DocumentFormatChoice"));
 
 export const DOCUMENTS_ROUTES: [string, React.ComponentType][] = [
-  ['/documents/new', ErpDocumentEditor], // before :id (wouter Switch = first match)
-  ['/documents/:id', ErpDocumentEditor],
+  ['/documents/new', DocumentFormatChoice], // format choice (Matn / Jadval)
+  ['/documents/matn', ErpDocumentEditor],   // text create (no :id -> create mode)
+  ['/documents/:id', ErpDocumentEditor],    // text edit
   ['/documents', ErpDocumentsList],
 ];
