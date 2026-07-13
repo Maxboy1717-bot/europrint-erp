@@ -85,14 +85,14 @@ export default function ErpDocumentEditor() {
   }, [docQ.data, id]);
 
   const save = useMutation({
-    mutationFn: async (finalTitle: string) => {
-      const payload = { title: finalTitle.trim(), content: content ?? { type: 'doc', content: [] }, contentHtml, sensitivityTier: tier };
+    mutationFn: async (vars: { finalTitle: string; silent?: boolean }) => {
+      const payload = { title: vars.finalTitle.trim(), content: content ?? { type: 'doc', content: [] }, contentHtml, sensitivityTier: tier };
       return id
         ? apiRequest<ErpDoc>('PATCH', `/api/erp-documents/${id}`, payload)
         : apiRequest<ErpDoc>('POST', '/api/erp-documents', payload);
     },
-    onSuccess: (doc) => {
-      toast({ title: tLabel('documents.saved', 'Saqlandi'), description: title.trim() });
+    onSuccess: (doc, vars) => {
+      if (!vars.silent) toast({ title: tLabel('documents.saved', 'Saqlandi'), description: title.trim() });
       setDirty(false);
       qc.invalidateQueries({ queryKey: ['/api/erp-documents'] });
       if (!id && doc?.id) navigate(`/documents/${doc.id}`);
@@ -105,8 +105,18 @@ export default function ErpDocumentEditor() {
     const finalTitle = (name ?? title).trim();
     if (!finalTitle) return;
     if (name && name.trim() !== title) setTitle(name.trim());
-    save.mutate(finalTitle);
+    save.mutate({ finalTitle });
   };
+
+  // Live autosave: once the doc exists (has id + a title), edits persist automatically after a
+  // short pause — no need to press Saqlash. A brand-new doc still takes one explicit named save
+  // first (it needs a title + id); after that every change is saved live and silently.
+  useEffect(() => {
+    if (!id || !dirty || save.isPending || !title.trim()) return;
+    const t = setTimeout(() => save.mutate({ finalTitle: title.trim(), silent: true }), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, dirty, content, title, tier, save.isPending]);
   const handleSaveClick = () => {
     if (!id) { setNameInput(title.trim()); setShowNameModal(true); return; }
     doSave();

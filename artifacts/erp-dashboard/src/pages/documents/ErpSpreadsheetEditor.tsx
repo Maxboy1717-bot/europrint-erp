@@ -76,12 +76,12 @@ export default function ErpSpreadsheetEditor() {
   }, [sheetQ.data, id]);
 
   const save = useMutation({
-    mutationFn: async (finalTitle: string) => {
-      const payload = { title: finalTitle.trim(), cells: cellsRef.current, sensitivityTier: tier };
+    mutationFn: async (vars: { finalTitle: string; silent?: boolean }) => {
+      const payload = { title: vars.finalTitle.trim(), cells: cellsRef.current, sensitivityTier: tier };
       return id ? apiRequest<ErpSheet>('PATCH', `/api/erp-spreadsheets/${id}`, payload) : apiRequest<ErpSheet>('POST', '/api/erp-spreadsheets', payload);
     },
-    onSuccess: (doc) => {
-      toast({ title: tLabel('documents.saved', 'Saqlandi'), description: title.trim() });
+    onSuccess: (doc, vars) => {
+      if (!vars.silent) toast({ title: tLabel('documents.saved', 'Saqlandi'), description: title.trim() });
       setDirty(false);
       qc.invalidateQueries({ queryKey: ['/api/erp-spreadsheets'] });
       if (!id && doc?.id) navigate(`/spreadsheets/${doc.id}`);
@@ -93,8 +93,18 @@ export default function ErpSpreadsheetEditor() {
     const finalTitle = (name ?? title).trim();
     if (!finalTitle) return;
     if (name && name.trim() !== title) setTitle(name.trim());
-    save.mutate(finalTitle);
+    save.mutate({ finalTitle });
   };
+
+  // Live autosave: an existing sheet (id + title) saves automatically a short pause after any
+  // cell edit — no Saqlash press needed. A brand-new sheet still takes one explicit named save
+  // first (needs a title + id); thereafter every change persists live and silently.
+  useEffect(() => {
+    if (!id || !dirty || save.isPending || !title.trim()) return;
+    const t = setTimeout(() => save.mutate({ finalTitle: title.trim(), silent: true }), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, dirty, cells, title, tier, save.isPending]);
   const handleSaveClick = () => { if (!id) { setNameInput(title.trim()); setShowName(true); return; } doSave(); };
 
   const print = useMutation({
