@@ -6,10 +6,10 @@
  * map to erp_spreadsheets.cells. Cell-formatting toolbar (bold/borders/number-format) is B-4.
  */
 
-import { useState } from 'react';
+import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { evalCell, numToCol, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
+import { evalCell, numToCol, colToNum, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
 import { tLabel } from '@/lib/i18n/tLabel';
 
 const ROWS = 30;
@@ -40,8 +40,34 @@ export function SpreadsheetGrid({
     onChange(next);
   };
 
-  const startEdit = (ref: string) => { if (!editable) return; setEditing(ref); setBuf(raw(ref)); };
+  const startEdit = (ref: string, initial?: string) => { if (!editable) return; setEditing(ref); setBuf(initial ?? raw(ref)); };
   const commitEdit = () => { if (editing) commit(editing, buf); setEditing(null); };
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const moveSel = (dc: number, dr: number) => {
+    const m = /^([A-Z]+)([0-9]+)$/.exec(sel);
+    if (!m) return;
+    const c = Math.min(COLS, Math.max(1, colToNum(m[1]) + dc));
+    const r = Math.min(ROWS, Math.max(1, +m[2] + dr));
+    setSel(numToCol(c) + r);
+  };
+  // Excel-style keyboard on the selected cell: single click selects, then typing edits
+  // immediately (no double-click needed); arrows move, F2 edits in place, Delete clears.
+  const onGridKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (editing || !editable) return; // while editing, the cell <input> owns the keys
+    const k = e.key;
+    switch (k) {
+      case 'ArrowUp': moveSel(0, -1); e.preventDefault(); return;
+      case 'ArrowDown': case 'Enter': moveSel(0, 1); e.preventDefault(); return;
+      case 'ArrowLeft': moveSel(-1, 0); e.preventDefault(); return;
+      case 'ArrowRight': case 'Tab': moveSel(1, 0); e.preventDefault(); return;
+      case 'F2': startEdit(sel); e.preventDefault(); return;
+      case 'Delete': case 'Backspace': commit(sel, ''); e.preventDefault(); return;
+      case 'Escape': return;
+      default:
+        if (k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { startEdit(sel, k); e.preventDefault(); }
+    }
+  };
 
   const setStyle = (patch: Partial<CellStyle>) => {
     if (!editable || !onChange) return;
@@ -105,7 +131,7 @@ export function SpreadsheetGrid({
       </div>
 
       {/* Grid */}
-      <div className="overflow-auto max-h-[62vh]">
+      <div ref={gridRef} tabIndex={0} onKeyDown={onGridKeyDown} className="overflow-auto max-h-[62vh] outline-none">
         <table className="border-collapse text-sm">
           <thead>
             <tr>
@@ -134,7 +160,7 @@ export function SpreadsheetGrid({
                   return (
                     <td
                       key={c}
-                      onClick={() => setSel(ref)}
+                      onClick={() => { setSel(ref); gridRef.current?.focus(); }}
                       onDoubleClick={() => startEdit(ref)}
                       style={style?.bg ? { backgroundColor: style.bg } : undefined}
                       className={cn(
@@ -150,7 +176,11 @@ export function SpreadsheetGrid({
                           value={buf}
                           onChange={(e) => setBuf(e.target.value)}
                           onBlur={commitEdit}
-                          onKeyDown={(e) => { if (e.key === 'Enter') { commitEdit(); } if (e.key === 'Escape') { setEditing(null); } }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { commitEdit(); moveSel(0, 1); gridRef.current?.focus(); e.preventDefault(); }
+                            else if (e.key === 'Tab') { commitEdit(); moveSel(1, 0); gridRef.current?.focus(); e.preventDefault(); }
+                            else if (e.key === 'Escape') { setEditing(null); gridRef.current?.focus(); }
+                          }}
                           className="w-full h-full outline-none bg-transparent text-sm font-mono"
                         />
                       ) : (
