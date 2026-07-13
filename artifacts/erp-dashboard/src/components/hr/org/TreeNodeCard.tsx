@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, UserX, Settings2, Users, ChevronUp, Brain, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { OrgNode, CARD_W, CARD_H, LEVEL_LABELS, HRC_INDICATORS } from "./types";
+import { OrgNode, CARD_W, CARD_H, LEVEL_LABELS, NODE_TYPE_LABELS, HRC_INDICATORS } from "./types";
 import { getLevelColor, getInitials } from "./helpers";
 import { useTranslation } from '@/lib/i18n';
 
@@ -111,7 +111,7 @@ export function TreeNodeCard({
         <div className="p-3 space-y-1.5 relative z-10">
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className="text-[9px] font-bold bg-white/25 rounded px-1.5 py-0.5 uppercase tracking-wide">
-              {LEVEL_LABELS[level] || `D${level}`}
+              {NODE_TYPE_LABELS[node.nodeType] || LEVEL_LABELS[level] || `D${level}`}
             </span>
             {razryadLevel != null && (
               <span className="text-[9px] font-bold bg-amber-300/40 rounded px-1.5 py-0.5" title="Razryad">
