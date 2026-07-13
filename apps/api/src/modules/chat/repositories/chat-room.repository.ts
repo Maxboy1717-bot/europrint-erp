@@ -239,13 +239,17 @@ export class ChatRoomRepository {
 
   async checkMembership(roomId: string, userId: number): Promise<Result<boolean>> {
     return safeCall(async () => {
+      // room_id & user_id are INTEGER in the live DB (the Drizzle varchar/text
+      // typing is drifted — Phase-4 #23). The old `= ${userId}::text` cast made
+      // it `integer = text` → Postgres error → membership always false → 403 on
+      // every members/pinned/tags call. Compare as integers.
       const rows = await db
         .select({ found: sql<number>`1` })
         .from(chatMembers)
         .where(
           and(
-            eq(chatMembers.roomId, roomId),
-            sql`${chatMembers.userId} = ${userId}::text`,
+            sql`${chatMembers.roomId} = ${Number(roomId)}`,
+            sql`${chatMembers.userId} = ${userId}`,
           ),
         )
         .limit(1);
