@@ -13,7 +13,6 @@ import { Loader2, Save, ArrowLeft } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { RichTextEditor } from '@/components/document-control/RichTextEditor';
-import { DocumentWatermark } from '@/components/document-control/DocumentWatermark';
 
 interface ErpDoc {
   id: string;
@@ -105,12 +104,11 @@ export default function ErpDocumentEditor() {
         </button>
       </div>
 
-      <DocumentWatermark tier={tier}>
-        <RichTextEditor
-          value={content}
-          onChange={(json, html) => { setContent(json); setContentHtml(html); }}
-        />
-      </DocumentWatermark>
+      <RichTextEditor
+        value={content}
+        tier={tier}
+        onChange={(json, html) => { setContent(json); setContentHtml(html); }}
+      />
     </div>
   );
 }
