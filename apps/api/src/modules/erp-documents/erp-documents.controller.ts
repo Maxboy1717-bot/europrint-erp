@@ -8,16 +8,22 @@
  */
 
 import {
-  Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Patch, Post, Req, UseGuards,
+  Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, NotFoundException, Param, Patch, Post, Req, UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { Roles } from '@common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { DocumentAccessLogService } from '@common/document-control/document-access-log.service';
 import { ErpDocumentsRepository } from './erp-documents.repository';
+
+// Decision #5 — printing is leadership-only (dept heads / leadership). admin/super_admin/
+// director always bypass RolesGuard; the *_manager roles are the dept-head set.
+const PRINT_ROLES = ['super_admin', 'director', 'manager', 'hr_manager', 'finance_manager', 'production_manager'];
+const PrintSchema = z.object({ reason: z.string().trim().min(3).max(2000) }); // #4 — reason required
 
 const TIER = z.enum(['oddiy', 'maxfiy', 'juda-maxfiy']);
 
@@ -104,6 +110,24 @@ export class ErpDocumentsController {
     });
     if (!updated) throw new NotFoundException('Hujjat topilmadi');
     return updated;
+  }
+
+  @ApiOperation({ summary: "Hujjatni chop etish (sabab majburiy, rahbariyat)" })
+  @Post(':id/print')
+  @HttpCode(HttpStatus.OK)
+  @Roles(...PRINT_ROLES)
+  async print(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(PrintSchema)) body: z.infer<typeof PrintSchema>,
+    @CurrentUser() user: { id: number; role?: string },
+    @Req() req: FastifyRequest,
+  ) {
+    const doc = await this.repo.getById(id);
+    if (!doc) throw new NotFoundException('Hujjat topilmadi');
+    if (!this.canAccess(doc.owner_id, user)) throw new ForbiddenException("Bu hujjatni chop etish huquqingiz yo'q");
+    // Decision #4/#7 — every print logged with the reason + tier (server-resolved).
+    await this.accessLog.logFromReq(req, { documentType: 'erp_document', documentId: id, action: 'print', reason: body.reason });
+    return { ok: true };
   }
 
   @ApiOperation({ summary: "Hujjatni o'chirish (soft-delete)" })

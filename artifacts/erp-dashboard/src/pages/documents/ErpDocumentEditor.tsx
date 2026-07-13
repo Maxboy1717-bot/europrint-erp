@@ -10,10 +10,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Save, ArrowLeft, Check, Share2 } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Check, Share2, Printer } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { tLabel } from '@/lib/i18n/tLabel';
+
+// Decision #5 — print is leadership-only (admin/super_admin/director bypass; *_manager = dept heads).
+const PRINT_ROLES = new Set(['admin', 'super_admin', 'director', 'manager', 'hr_manager', 'finance_manager', 'production_manager']);
 import { RichTextEditor } from '@/components/document-control/RichTextEditor';
 import { SendToCcModal } from './SendToCcModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -55,6 +59,10 @@ export default function ErpDocumentEditor() {
   const [showSendCc, setShowSendCc] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [showPrint, setShowPrint] = useState(false);
+  const [printReason, setPrintReason] = useState('');
+  const { user } = useAuth();
+  const canPrint = PRINT_ROLES.has((user?.role ?? '').toLowerCase());
 
   const docQ = useQuery<ErpDoc>({
     queryKey: [`/api/erp-documents/${id}`],
@@ -99,6 +107,13 @@ export default function ErpDocumentEditor() {
     doSave();
   };
 
+  // Decision #4/#5 — gated print: reason required + leadership-only + logged, then browser print.
+  const print = useMutation({
+    mutationFn: (reason: string) => apiRequest('POST', `/api/erp-documents/${id}/print`, { reason }),
+    onSuccess: () => { setShowPrint(false); setPrintReason(''); setTimeout(() => window.print(), 100); },
+    onError: () => toast({ title: tLabel('common.error', 'Xatolik'), description: tLabel('documents.printDenied', "Chop etish rad etildi"), variant: 'destructive' }),
+  });
+
   const statusText = save.isPending
     ? tLabel('documents.saving', 'Saqlanmoqda…')
     : dirty
@@ -141,6 +156,15 @@ export default function ErpDocumentEditor() {
             </span>
           </div>
         </div>
+        {id && canPrint && (
+          <button
+            onClick={() => setShowPrint(true)}
+            className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-[var(--ep-border)] text-[var(--ep-text)] hover:bg-[var(--ep-bg)] shrink-0"
+            title={tLabel('documents.print', 'Chop etish')}
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+        )}
         {id && (
           <button
             onClick={() => setShowSendCc(true)}
@@ -162,6 +186,30 @@ export default function ErpDocumentEditor() {
       </div>
 
       {id && <SendToCcModal erpDocumentId={id} open={showSendCc} onClose={() => setShowSendCc(false)} />}
+
+      {/* Gated print: reason required (#4) + leadership-only (#5) + logged, then browser print */}
+      <Dialog open={showPrint} onOpenChange={setShowPrint}>
+        <DialogContent className="max-w-sm p-6">
+          <DialogHeader>
+            <DialogTitle>{tLabel('documents.print', 'Chop etish')}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-[var(--ep-muted)] -mt-1">{tLabel('documents.printReasonHint', 'Chop etish sababi majburiy va jurnalga yoziladi.')}</p>
+          <input
+            autoFocus
+            value={printReason}
+            onChange={(e) => setPrintReason(e.target.value)}
+            placeholder={tLabel('documents.printReason', 'Chop etish sababi (kamida 3 belgi)')}
+            className="w-full h-10 rounded-lg border border-[var(--ep-border)] bg-[var(--ep-surface)] px-3 text-sm outline-none focus:border-[var(--ep-blue)]"
+          />
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setShowPrint(false)}>{tLabel('documents.cancel', 'Bekor')}</Button>
+            <Button onClick={() => printReason.trim().length >= 3 && print.mutate(printReason.trim())} disabled={printReason.trim().length < 3 || print.isPending} className="gap-1.5">
+              {print.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+              {tLabel('documents.print', 'Chop etish')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Word-style name prompt on first save of a new document */}
       <Dialog open={showNameModal} onOpenChange={setShowNameModal}>
