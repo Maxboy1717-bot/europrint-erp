@@ -7,7 +7,7 @@
  * (no autosave — every save bumps version).
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Save, ArrowLeft, Check, Share2, Printer } from 'lucide-react';
@@ -70,14 +70,19 @@ export default function ErpDocumentEditor() {
     enabled: !!id,
   });
 
+  // Seed the local buffer from the server row ONCE per document id. Seeding on every docQ.data
+  // change would let a background refetch (reconnect, invalidation) overwrite unsaved edits and
+  // reset `dirty` — i.e. typed changes silently disappear. Re-seeds only when the id changes.
+  const seededId = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (docQ.data) {
+    if (docQ.data && seededId.current !== id) {
+      seededId.current = id;
       setTitle(docQ.data.title);
       setTier(docQ.data.sensitivity_tier);
       setContent(docQ.data.content);
       setDirty(false);
     }
-  }, [docQ.data]);
+  }, [docQ.data, id]);
 
   const save = useMutation({
     mutationFn: async (finalTitle: string) => {
