@@ -19,6 +19,7 @@ import { unwrapOrThrow } from '@common/http-result';
 import { isOk } from '@common/result';
 import { safeNum } from '@common/math';
 import { db } from '@shared/db';
+import { sql } from 'drizzle-orm';
 import { DocumentDeliveryService } from '@common/document-control/document-delivery.service';
 import {
   executeApproveTransaction, findMyPendingApproval, requireDocInProgress,
@@ -90,6 +91,61 @@ export class CcWorkflowService {
       documentNumber,
     }));
     return created;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // STEP 3.6a — surface an erkin hujjat (erp_document) into CC:
+  // create a CC record (generic ERKIN-HUJJAT template) that LINKS the erp doc,
+  // route it into the target employee's CC inbox, and ping them via chat (3.5).
+  // Reuses createDraft + transition (no parallel inbox). The erp doc itself stays
+  // untouched and editable in /documents.
+  // ─────────────────────────────────────────────────────────────────────
+  async surfaceErpInCc(erpDocumentId: string, senderUserId: number, targetUserId: number) {
+    if (targetUserId === senderUserId) {
+      throw new BadRequestException("O'zingizga yubora olmaysiz");
+    }
+    // erp doc title (cross-module DB read; erp doc must exist + not soft-deleted)
+    const titleRes = await db.execute(
+      sql`SELECT title FROM erp_documents WHERE id = ${erpDocumentId}::uuid AND deleted_at IS NULL LIMIT 1`,
+    );
+    const title = (titleRes as unknown as { rows?: Array<{ title?: string }> }).rows?.[0]?.title;
+    if (!title) throw new NotFoundException('Erkin hujjat topilmadi');
+
+    // reserved generic template (seeded in the 3.6a-1 migration)
+    const tplRes = await db.execute(sql`SELECT id FROM cc_document_templates WHERE code = 'ERKIN-HUJJAT' LIMIT 1`);
+    const templateId = (tplRes as unknown as { rows?: Array<{ id?: string }> }).rows?.[0]?.id;
+    if (!templateId) throw new BadRequestException("ERKIN-HUJJAT shabloni topilmadi");
+
+    const created = await this.createDraft(senderUserId, {
+      templateId,
+      subject: title,
+      aiBody: `Erkin hujjat: "${title}" — /documents orqali oching.`,
+    } as CreateDraftDto);
+    const ccDocId = String((created as { id?: unknown }).id ?? '');
+
+    // link the CC record to the erp doc
+    await db.execute(sql`UPDATE cc_documents SET related_erp_document_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+
+    // route into the target employee's CC inbox (reuse the transition primitive)
+    unwrapOrThrow(await this.docs.transition({
+      documentId:       ccDocId,
+      newBasketState:   'inbox',
+      newBasketOwnerId: targetUserId,
+      newWorkflowState: 'in_progress',
+      newCurrentStep:   1,
+      actorUserId:      senderUserId,
+      auditAction:      'sent',
+      auditComment:     null,
+    }));
+
+    // chat ping (reuse STEP 3.5 — no second notification pathway)
+    void this.delivery.notifyDocumentAssigned(targetUserId, {
+      documentType: 'erp_document',
+      documentId:   erpDocumentId,
+      title,
+    });
+
+    return { ccDocumentId: ccDocId, targetUserId, related_erp_document_id: erpDocumentId };
   }
 
   // ─────────────────────────────────────────────────────────────────────

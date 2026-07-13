@@ -78,6 +78,7 @@ const CancelSchema   = z.object({
   reason: z.string().min(3).max(2000),
 });
 const ComplaintSchema = z.object({ reason: z.string().min(5).max(4000) });
+const FromErpSchema   = z.object({ erpDocumentId: z.string().uuid(), targetUserId: z.number().int().positive() });
 const PrintSchema     = z.object({ reason: z.string().min(3).max(2000) });
 const SetPinSchema    = z.object({ pin: z.string().regex(/^\d{4,8}$/) });
 
@@ -288,6 +289,19 @@ export class CcDocumentsController {
     @CurrentUser() user: { id: number },
   ) {
     return this.wf.createDraft(user.id, body);
+  }
+
+  // STEP 3.6a — surface an erkin hujjat (erp_document) into CC: create a linked CC
+  // record and route it into the target employee's inbox + chat ping (reuses createDraft
+  // + transition + STEP 3.5 delivery). The erp doc stays editable in /documents.
+  @ApiOperation({ summary: 'Erkin hujjatni CC orqali xodimga yuborish' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @Post('documents/from-erp')
+  fromErp(
+    @Body(new ZodValidationPipe(FromErpSchema)) body: z.infer<typeof FromErpSchema>,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.wf.surfaceErpInCc(body.erpDocumentId, user.id, body.targetUserId);
   }
 
   // 20-cc#39/76: bu route xuddi shu hujjatga cc-baskets.controller.ts:101 GET /baskets/:id
