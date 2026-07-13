@@ -228,7 +228,9 @@ export function SpreadsheetGrid({
           <thead>
             <tr>
               <th onClick={selectAll} title={tLabel('documents.selectAll', 'Hammasini belgilash')}
-                className="sticky top-0 left-0 z-10 w-10 h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] cursor-pointer hover:bg-[var(--ep-blue)]/10" />
+                className="sticky top-0 left-0 z-10 w-10 h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] cursor-pointer hover:bg-[var(--ep-blue)]/10 relative p-0">
+                <span className="absolute bottom-[2px] right-[2px] w-0 h-0 border-l-[7px] border-l-transparent border-b-[7px] border-b-[var(--ep-muted)]" />
+              </th>
               {Array.from({ length: COLS }, (_, c) => (
                 <th key={c} className="sticky top-0 z-[5] min-w-[96px] h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] text-[11px] font-semibold text-[var(--ep-muted)]">
                   {numToCol(c + 1)}

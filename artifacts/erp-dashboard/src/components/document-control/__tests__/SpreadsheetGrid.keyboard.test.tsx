@@ -46,4 +46,15 @@ describe('SpreadsheetGrid — Excel-style keyboard entry', () => {
     const input = t.dataCells[0].querySelector('input') as HTMLInputElement;
     expect(input.value).toBe('hello'); // existing value loaded for in-place edit
   });
+
+  it('editing a cell then blurring (clicking away to Save, no Enter) commits the value', () => {
+    // This is what backs the "Excel not saving" fix: the last edit must land in onChange (which
+    // the editor mirrors into cellsRef) when the user clicks Save without pressing Enter.
+    const t = setup();
+    fireEvent.click(t.dataCells[0]); // A1
+    fireEvent.keyDown(t.grid, { key: '9' }); // start editing with '9'
+    const input = t.dataCells[0].querySelector('input') as HTMLInputElement;
+    fireEvent.blur(input); // focus leaves to the Save button — no Enter pressed
+    expect(t.cells['A1']).toEqual({ v: '9' });
+  });
 });

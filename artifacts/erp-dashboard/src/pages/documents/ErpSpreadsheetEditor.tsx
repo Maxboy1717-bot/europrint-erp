@@ -7,7 +7,7 @@
  * CC-surfacing button is added in B-4.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Save, ArrowLeft, Check, Printer } from 'lucide-react';
@@ -47,6 +47,10 @@ export default function ErpSpreadsheetEditor() {
   const [title, setTitle] = useState('');
   const [tier, setTier] = useState('oddiy');
   const [cells, setCells] = useState<Cells>({});
+  // Always-current mirror of `cells`. The active cell commits on blur (fires just before the
+  // Save button's click), so reading this ref at save time captures the last edit even when the
+  // user clicks Save without pressing Enter first — setCells alone would be one render stale.
+  const cellsRef = useRef<Cells>({});
   const [dirty, setDirty] = useState(false);
   const [showName, setShowName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -59,12 +63,12 @@ export default function ErpSpreadsheetEditor() {
     enabled: !!id,
   });
   useEffect(() => {
-    if (sheetQ.data) { setTitle(sheetQ.data.title); setTier(sheetQ.data.sensitivity_tier); setCells(sheetQ.data.cells ?? {}); setDirty(false); }
+    if (sheetQ.data) { setTitle(sheetQ.data.title); setTier(sheetQ.data.sensitivity_tier); const c = sheetQ.data.cells ?? {}; setCells(c); cellsRef.current = c; setDirty(false); }
   }, [sheetQ.data]);
 
   const save = useMutation({
     mutationFn: async (finalTitle: string) => {
-      const payload = { title: finalTitle.trim(), cells, sensitivityTier: tier };
+      const payload = { title: finalTitle.trim(), cells: cellsRef.current, sensitivityTier: tier };
       return id ? apiRequest<ErpSheet>('PATCH', `/api/erp-spreadsheets/${id}`, payload) : apiRequest<ErpSheet>('POST', '/api/erp-spreadsheets', payload);
     },
     onSuccess: (doc) => {
@@ -130,7 +134,7 @@ export default function ErpSpreadsheetEditor() {
 
       <div className="p-4">
         <DocumentWatermark tier={tier}>
-          <SpreadsheetGrid cells={cells} onChange={(c) => { setCells(c); setDirty(true); }} />
+          <SpreadsheetGrid cells={cells} onChange={(c) => { cellsRef.current = c; setCells(c); setDirty(true); }} />
         </DocumentWatermark>
       </div>
 
