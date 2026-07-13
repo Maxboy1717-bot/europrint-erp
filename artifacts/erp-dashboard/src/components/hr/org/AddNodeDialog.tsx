@@ -20,15 +20,6 @@ import { NODE_TYPE_LABELS, OrgNode } from "./types";
 import { ParentCardSelect } from "./ParentCardSelect";
 import { useTranslation } from '@/lib/i18n';
 
-// 2026-07-11: default rang har node_type darajasi bo'yicha — egasi "yangi kartalar hammasi bir
-// xil rangda chiqyapti" deb topdi (root-cause: backend har doim '#3b82f6'ga fallback qiladi,
-// chunki bu forma color'ni umuman yubormasdi). Bu palette darrov vizual farq beradi; rang
-// pikkeri baribir erkin qayta tanlash imkonini beradi.
-const NODE_TYPE_DEFAULT_COLOR: Record<string, string> = {
-  owner: "#a855f7", top_director: "#3b82f6", director: "#2563eb", department: "#14b8a6",
-  otdeleniye: "#6366f1", otdel: "#06b6d4", sektsiya: "#10b981", sektor: "#f97316",
-};
-
 interface ShiftTypeOption {
   id: number; code: string; name_uz: string; start_time: string; end_time: string;
 }
@@ -54,7 +45,6 @@ function emptyForm(initialParentId?: string) {
     name: "",
     nameRu: "",
     nodeType: "department",
-    color: NODE_TYPE_DEFAULT_COLOR.department,
     tskp: "",
     parentId: initialParentId || "",
     // VISION node=karta — to'liq karta-maydonlari (HR 0 dan quradi)
@@ -81,7 +71,6 @@ function duplicatedForm(source: OrgNode, parentId: number | null) {
     name: `${source.name} (nusxa)`,
     nameRu: source.nameRu ? `${source.nameRu} (копия)` : "",
     nodeType: source.nodeType || "department",
-    color: source.color || NODE_TYPE_DEFAULT_COLOR[source.nodeType || "department"] || NODE_TYPE_DEFAULT_COLOR.department,
     tskp: source.tskp || "",
     parentId: parentId != null ? String(parentId) : "",
     razryadLevelId: source.razryadLevelId ?? null,
@@ -147,7 +136,6 @@ export function AddNodeDialog({
         name: form.name,
         nameRu: form.nameRu,
         nodeType: form.nodeType,
-        color: form.color,
         tskp: form.tskp,
         parentId,
         level,
@@ -202,32 +190,20 @@ export function AddNodeDialog({
             <Label>{t("type")}</Label>
             <Select value={form.nodeType} onValueChange={(v) => setForm((f) => ({
               ...f, nodeType: v,
-              // Turi o'zgarganda rang ham shu daraja default'iga yangilanadi (pastda erkin qayta tanlanadi).
-              color: NODE_TYPE_DEFAULT_COLOR[v] || f.color,
               otdeleniyeNo: v === "otdeleniye" ? f.otdeleniyeNo : null,
             }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(NODE_TYPE_LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: NODE_TYPE_DEFAULT_COLOR[v] || "var(--ep-muted)" }} />
-                      {l}
-                    </span>
-                  </SelectItem>
+                  <SelectItem key={v} value={v}>{l}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label>{t("rang", "Rang")}</Label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={form.color}
-                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                className="h-8 w-16 rounded border" />
-              <span className="text-sm text-muted-foreground">{form.color}</span>
-            </div>
-          </div>
+          {/* 2026-07-13 (egasi): rang tanlash umuman kerak emas — karta rangi standart 7 ta
+              daraja (hierarchyLevel) bo'yicha AVTOMATIK beriladi (TreeNodeCard/getLevelColor),
+              qo'lda rang tanlash butunlay olib tashlandi. `color` ustuni DB'da hamon bor
+              (legacy, default '#3b82f6') lekin FE endi umuman yubormaydi va o'qimaydi. */}
           {form.nodeType === "otdeleniye" && (
             <div>
               <Label>{t("otdeleniyeRaqami", "Otdeleniye raqami (1-7)")}</Label>

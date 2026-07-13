@@ -8,7 +8,6 @@ export interface OrgNode {
   name: string;
   nameRu?: string;
   description?: string;
-  color: string;
   tskp?: string;
   tskpRu?: string;
   headUserId?: number | null;
