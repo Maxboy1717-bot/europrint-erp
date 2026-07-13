@@ -12,6 +12,17 @@ import { setSharedSocket } from "./useChatSocket";
 
 const ChatSocketContext = createContext<{ connected: boolean }>({ connected: false });
 
+// WS reconnect transport defaults. Unbounded attempts with exponential backoff
+// between the initial delay and the cap (socket.io randomizes between the two)
+// so a dropped connection keeps retrying forever instead of giving up — a
+// prod-messenger never silently stops reconnecting.
+// NOTE (owner): sourcing these two values from `business_settings` (CRUD) is an
+// open sub-decision — the settings read endpoint is role-gated (READ excludes
+// plain operators → 403), so a per-user pre-connect fetch would break the very
+// connect path we just fixed. Flagged for the Phase-1 report.
+const WS_RECONNECT_DELAY_MS = 2000;      // initial backoff
+const WS_RECONNECT_DELAY_MAX_MS = 30000; // exponential-backoff cap
+
 export function ChatSocketProvider({ children }: { children: ReactNode }) {
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [connected, setConnected] = useState(false);
@@ -38,8 +49,9 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       transports: ["websocket", "polling"],
       path: socketPath,
       reconnection: true,
-      reconnectionDelay: 5000,
-      reconnectionAttempts: 3,
+      reconnectionDelay: WS_RECONNECT_DELAY_MS,
+      reconnectionDelayMax: WS_RECONNECT_DELAY_MAX_MS,
+      reconnectionAttempts: Infinity,
     });
 
     setSharedSocket(s);
@@ -57,10 +69,9 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       setConnected(false);
     });
 
-    s.on("reconnect_failed", () => {
-      setConnected(false);
-      s.disconnect();
-    });
+    // No `reconnect_failed` handler: with unbounded `reconnectionAttempts`
+    // it never fires, and calling `disconnect()` there would defeat the
+    // never-give-up reconnect policy this phase installs.
 
     const normalizeRooms = (rooms: Array<Record<string, unknown>>): ChatRoom[] =>
       (Array.isArray(rooms) ? rooms : []).map((r) => ({ ...r, id: String(r.id) } as ChatRoom));
