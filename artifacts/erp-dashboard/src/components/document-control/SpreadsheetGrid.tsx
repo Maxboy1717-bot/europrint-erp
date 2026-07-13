@@ -8,14 +8,16 @@
  * per-column filtering.
  */
 
-import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3 } from 'lucide-react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { evalCell, numToCol, colToNum, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
 import { tLabel } from '@/lib/i18n/tLabel';
 
-const ROWS = 30;
-const COLS = 12; // A..L
+const DEFAULT_ROWS = 30;
+const DEFAULT_COLS = 12; // A..L
+const MAX_ROWS = 500;
+const MAX_COLS = 60;
 
 // Formula helper catalog — name + a copy-of-syntax hint (so non-technical users don't need to
 // memorise the exact form). Data array (no translatable prose) → clicking inserts "=NAME(".
@@ -25,9 +27,33 @@ const FUNCTIONS: { name: string; hint: string }[] = [
   { name: 'MIN', hint: '=MIN(A1:A5)' },
   { name: 'MAX', hint: '=MAX(A1:A5)' },
   { name: 'COUNT', hint: '=COUNT(A1:A5)' },
+  { name: 'COUNTA', hint: '=COUNTA(A1:A5)' },
+  { name: 'PRODUCT', hint: '=PRODUCT(A1:A5)' },
+  { name: 'MEDIAN', hint: '=MEDIAN(A1:A5)' },
+  { name: 'SUMIF', hint: '=SUMIF(A1:A5,">10")' },
+  { name: 'COUNTIF', hint: '=COUNTIF(A1:A5,">10")' },
+  { name: 'AVERAGEIF', hint: '=AVERAGEIF(A1:A5,">10")' },
   { name: 'ROUND', hint: '=ROUND(A1,2)' },
+  { name: 'ROUNDUP', hint: '=ROUNDUP(A1,0)' },
+  { name: 'ROUNDDOWN', hint: '=ROUNDDOWN(A1,0)' },
+  { name: 'ABS', hint: '=ABS(A1)' },
+  { name: 'SQRT', hint: '=SQRT(A1)' },
+  { name: 'POWER', hint: '=POWER(A1,2)' },
+  { name: 'MOD', hint: '=MOD(A1,3)' },
+  { name: 'INT', hint: '=INT(A1)' },
+  { name: 'SIGN', hint: '=SIGN(A1)' },
   { name: 'IF', hint: '=IF(A1>10,x,y)' },
+  { name: 'AND', hint: '=AND(A1>1,B1>1)' },
+  { name: 'OR', hint: '=OR(A1>1,B1>1)' },
+  { name: 'NOT', hint: '=NOT(A1>1)' },
   { name: 'CONCATENATE', hint: '=CONCATENATE(A1," ",B1)' },
+  { name: 'LEFT', hint: '=LEFT(A1,3)' },
+  { name: 'RIGHT', hint: '=RIGHT(A1,3)' },
+  { name: 'MID', hint: '=MID(A1,2,3)' },
+  { name: 'LEN', hint: '=LEN(A1)' },
+  { name: 'UPPER', hint: '=UPPER(A1)' },
+  { name: 'LOWER', hint: '=LOWER(A1)' },
+  { name: 'TRIM', hint: '=TRIM(A1)' },
   { name: 'VLOOKUP', hint: '=VLOOKUP(A1,B1:C9,2)' },
   { name: 'TODAY', hint: '=TODAY()' },
   { name: 'NOW', hint: '=NOW()' },
@@ -54,10 +80,20 @@ export function SpreadsheetGrid({
   const [fxOpen, setFxOpen] = useState(false);
   const [filterOn, setFilterOn] = useState(false);
   const [filters, setFilters] = useState<Record<number, string>>({});
+  const [rows, setRows] = useState(DEFAULT_ROWS);
+  const [cols, setCols] = useState(DEFAULT_COLS);
   const gridRef = useRef<HTMLDivElement>(null);
 
+  // Grow (never shrink) so every populated cell is visible when a sheet loads.
+  useEffect(() => {
+    let mc = 0, mr = 0;
+    for (const k of Object.keys(cells)) { const m = /^([A-Z]+)([0-9]+)$/.exec(k); if (m) { mc = Math.max(mc, colToNum(m[1])); mr = Math.max(mr, +m[2]); } }
+    setCols((c) => Math.min(MAX_COLS, Math.max(c, mc)));
+    setRows((r) => Math.min(MAX_ROWS, Math.max(r, mr)));
+  }, [cells]);
+
   const raw = (ref: string) => { const c = cells[ref]; return c?.f ?? c?.v ?? ''; };
-  const LAST = numToCol(COLS) + ROWS;
+  const LAST = numToCol(cols) + rows;
 
   // All refs inside the anchor→sel rectangle (single cell when they are equal).
   const rectRefs = (): string[] => {
@@ -99,8 +135,8 @@ export function SpreadsheetGrid({
   const moveSel = (dc: number, dr: number, extend = false) => {
     const m = parseRef(sel);
     if (!m) return;
-    const c = Math.min(COLS, Math.max(1, m[0] + dc));
-    const r = Math.min(ROWS, Math.max(1, m[1] + dr));
+    const c = Math.min(cols, Math.max(1, m[0] + dc));
+    const r = Math.min(rows, Math.max(1, m[1] + dr));
     const ref = numToCol(c) + r;
     setSel(ref);
     if (!extend) setAnchor(ref);
@@ -157,7 +193,7 @@ export function SpreadsheetGrid({
     const disp = formatDisplay(evalCell(ref, cells), cells[ref]?.s?.fmt).toLowerCase();
     return disp.includes(v.trim().toLowerCase());
   });
-  const visibleRows = Array.from({ length: ROWS }, (_, r) => r).filter((r) => !filterOn || rowVisible(r));
+  const visibleRows = Array.from({ length: rows }, (_, r) => r).filter((r) => !filterOn || rowVisible(r));
 
   return (
     <div className="flex flex-col bg-white border border-[var(--ep-border)] rounded-lg overflow-hidden">
@@ -248,7 +284,7 @@ export function SpreadsheetGrid({
                 className="sticky top-0 left-0 z-10 w-10 h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] cursor-pointer hover:bg-[var(--ep-blue)]/10 relative p-0">
                 <span className="absolute bottom-[2px] right-[2px] w-0 h-0 border-l-[7px] border-l-transparent border-b-[7px] border-b-[var(--ep-muted)]" />
               </th>
-              {Array.from({ length: COLS }, (_, c) => (
+              {Array.from({ length: cols }, (_, c) => (
                 <th key={c} className="sticky top-0 z-[5] min-w-[96px] h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] text-[11px] font-semibold text-[var(--ep-muted)]">
                   {numToCol(c + 1)}
                 </th>
@@ -257,7 +293,7 @@ export function SpreadsheetGrid({
             {filterOn && (
               <tr>
                 <th className="sticky left-0 z-[4] w-10 h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)]" />
-                {Array.from({ length: COLS }, (_, c) => (
+                {Array.from({ length: cols }, (_, c) => (
                   <th key={c} className="min-w-[96px] h-7 bg-[var(--ep-surface)] border border-[var(--ep-border)] p-0.5">
                     <input value={filters[c] ?? ''} onChange={(e) => setFilters((f) => ({ ...f, [c]: e.target.value }))}
                       placeholder={tLabel('documents.filterCol', 'Filtr…')}
@@ -271,7 +307,7 @@ export function SpreadsheetGrid({
             {visibleRows.map((r) => (
               <tr key={r}>
                 <td className="sticky left-0 z-[5] w-10 h-7 bg-[var(--ep-bg)] border border-[var(--ep-border)] text-center text-[11px] font-semibold text-[var(--ep-muted)]">{r + 1}</td>
-                {Array.from({ length: COLS }, (_, c) => {
+                {Array.from({ length: cols }, (_, c) => {
                   const ref = numToCol(c + 1) + (r + 1);
                   const isSel = sel === ref;
                   const isEditing = editing === ref;
@@ -320,6 +356,21 @@ export function SpreadsheetGrid({
           </tbody>
         </table>
       </div>
+
+      {/* Grow the sheet — add rows / columns (owner: 'vertikal gorizontal jadval qo'shil bo'lmaydi') */}
+      {editable && (
+        <div className="flex items-center gap-2 px-2 py-1.5 border-t border-[var(--ep-border)] bg-[var(--ep-surface)]">
+          <button type="button" onClick={() => setRows((r) => Math.min(MAX_ROWS, r + 10))} disabled={rows >= MAX_ROWS}
+            className="inline-flex items-center gap-1 h-7 px-2 rounded border border-[var(--ep-border)] hover:bg-[var(--ep-bg)] text-xs font-medium disabled:opacity-40">
+            <Plus className="w-3.5 h-3.5" />{tLabel('documents.addRows', '10 qator')}
+          </button>
+          <button type="button" onClick={() => setCols((c) => Math.min(MAX_COLS, c + 1))} disabled={cols >= MAX_COLS}
+            className="inline-flex items-center gap-1 h-7 px-2 rounded border border-[var(--ep-border)] hover:bg-[var(--ep-bg)] text-xs font-medium disabled:opacity-40">
+            <Plus className="w-3.5 h-3.5" />{tLabel('documents.addCol', 'Ustun')}
+          </button>
+          <span className="text-[11px] text-[var(--ep-muted)] font-mono">{rows} × {cols}</span>
+        </div>
+      )}
     </div>
   );
 }

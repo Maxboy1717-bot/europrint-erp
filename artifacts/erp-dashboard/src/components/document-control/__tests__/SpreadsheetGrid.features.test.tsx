@@ -38,6 +38,23 @@ describe('SpreadsheetGrid — select-all / fx / filter', () => {
     expect(input.value).toBe('=SUM('); // A1 is now editing with the function stub
   });
 
+  it('add-rows / add-column grow the grid; loading tall data auto-fits', () => {
+    const t = setup();
+    // default 30 x 12
+    expect(t.container.querySelectorAll('td.cursor-cell').length).toBe(30 * 12);
+    fireEvent.click(screen.getByText('10 qator')); // +10 rows
+    expect(t.container.querySelectorAll('td.cursor-cell').length).toBe(40 * 12);
+    fireEvent.click(screen.getByText('Ustun')); // +1 col
+    expect(t.container.querySelectorAll('td.cursor-cell').length).toBe(40 * 13);
+  });
+
+  it('loading data beyond the default grid auto-grows to show it', () => {
+    // A cell at Z50 (col 26, row 50) must be visible after load, beyond default 30x12.
+    const t = setup({ Z50: { v: 'deep' } });
+    expect(screen.getByText('deep')).toBeTruthy();
+    expect(t.container.querySelectorAll('td.cursor-cell').length).toBe(50 * 26);
+  });
+
   it('column filter hides rows that do not match', () => {
     const t = setup({ A1: { v: 'apple' }, A2: { v: 'banana' }, A3: { v: 'apricot' } });
     expect(screen.getByText('banana')).toBeTruthy();
