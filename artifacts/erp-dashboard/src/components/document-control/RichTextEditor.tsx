@@ -7,26 +7,33 @@
  */
 
 import { useEditor, EditorContent } from '@tiptap/react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { documentEditorExtensions } from './documentEditorConfig';
 import { DocumentToolbar } from './DocumentToolbar';
 import { DocumentPaper } from './DocumentPaper';
 import { DocumentWatermark } from './DocumentWatermark';
 
+const EMPTY_DOC = { type: 'doc', content: [{ type: 'paragraph' }] };
+
 export function RichTextEditor({
   value,
+  contentKey,
   editable = true,
   tier,
   onChange,
 }: {
   value?: Record<string, unknown> | null;
+  /** Identity of the document/version whose content `value` holds. When it changes the editor
+   *  re-applies `value` (fixes async-loaded / imported content not showing after mount). It does
+   *  NOT change on keystrokes, so there is no per-edit setContent cost or feedback loop. */
+  contentKey?: string | number;
   editable?: boolean;
   tier?: string | null;
   onChange?: (json: Record<string, unknown>, html: string) => void;
 }) {
   const editor = useEditor({
     extensions: documentEditorExtensions,
-    content: value ?? { type: 'doc', content: [{ type: 'paragraph' }] },
+    content: value ?? EMPTY_DOC,
     editable,
     onUpdate: ({ editor: ed }) => onChange?.(ed.getJSON() as Record<string, unknown>, ed.getHTML()),
   });
@@ -34,6 +41,17 @@ export function RichTextEditor({
   useEffect(() => {
     editor?.setEditable(editable);
   }, [editable, editor]);
+
+  // Re-apply content when a DIFFERENT document/version loads (value may arrive async, after
+  // mount). Guarded by contentKey so typing (which changes `value` via onChange) never re-sets.
+  const loadedKey = useRef<string | number | undefined>(contentKey);
+  useEffect(() => {
+    if (!editor) return;
+    if (contentKey !== loadedKey.current) {
+      loadedKey.current = contentKey;
+      editor.commands.setContent(value ?? EMPTY_DOC, { emitUpdate: false });
+    }
+  }, [editor, contentKey, value]);
 
   if (!editor) return null;
 

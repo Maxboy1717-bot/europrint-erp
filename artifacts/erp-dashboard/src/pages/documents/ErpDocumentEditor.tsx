@@ -122,9 +122,16 @@ export default function ErpDocumentEditor() {
         ? tLabel('documents.allSaved', 'Barcha o\'zgarishlar saqlangan')
         : '';
 
-  if (id && docQ.isLoading) {
+  // Wait for the row itself (not just isLoading) so the editor never mounts before its content
+  // exists — otherwise it mounts empty and TipTap ignores the later-arriving content.
+  if (id && !docQ.data) {
     return <div className="p-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[var(--ep-muted)]" /></div>;
   }
+
+  // Editor initial content comes DIRECTLY from the loaded row (existing/imported docs) so it is
+  // present at mount; for a new doc it is the local buffer. contentKey re-applies it per document.
+  const editorValue = id ? (docQ.data?.content ?? null) : content;
+  const editorKey = id ? `${id}:${docQ.data?.version ?? 0}` : 'new';
 
   return (
     <div className="flex flex-col">
@@ -235,7 +242,9 @@ export default function ErpDocumentEditor() {
       </Dialog>
 
       <RichTextEditor
-        value={content}
+        key={editorKey}
+        contentKey={editorKey}
+        value={editorValue}
         tier={tier}
         onChange={(json, html) => { setContent(json); setContentHtml(html); setDirty(true); }}
       />
