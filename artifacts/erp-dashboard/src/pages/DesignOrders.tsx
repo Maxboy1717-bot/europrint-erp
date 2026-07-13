@@ -4,22 +4,12 @@
  */
 
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Plus, Search, Package, ExternalLink } from "lucide-react";
+import { Search, Package, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
-import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/lib/i18n";
 import { EPErrorState, EPPageHeader } from "@/components/ep";
 interface DesignOrder {
@@ -44,58 +34,21 @@ interface DesignOrder {
   } | null;
 }
 
-const designOrderSchema = z.object({
-  clientName: z.string().min(1, "Mijoz ismi majburiy"),
-  clientCompany: z.string().optional(),
-  clientPhone: z.string().optional(),
-  clientEmail: z.string().optional(),
-  productType: z.string().min(1, "Mahsulot turini tanlang"),
-  productName: z.string().min(1, "Mahsulot nomi majburiy"),
-  brandName: z.string().optional(),
-  quantity: z.coerce.number().min(1).default(1000),
-  description: z.string().optional(),
-  requirements: z.string().optional(),
-  priority: z.string().default("normal"),
-  deadline: z.string().optional(),
-});
-
-type DesignOrderFormData = z.infer<typeof designOrderSchema>;
-
 export default function DesignOrders() {
-  const { toast } = useToast();
   const { t } = useTranslation('common');
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const form = useForm<DesignOrderFormData>({
-    resolver: zodResolver(designOrderSchema),
-    defaultValues: {
-      clientName: "", clientCompany: "", clientPhone: "", clientEmail: "",
-      productType: "", productName: "", brandName: "",
-      quantity: 1000, description: "", requirements: "", priority: "normal", deadline: "",
-    },
-  });
-
+  // Owner decision 2026-07-13 (chat) — "buyurtma yaratish ... sahifalarini yo'qotish kerak
+  // to'liq": this page's own "Create design order" button posted to POST /api/design/orders,
+  // which is a permanent 501 stub (design.controller.ts) — it never worked. The real path is
+  // automatic: an order created at /order-create with designFlag=true fires DesignRequired ->
+  // design_orders gets a row via so-design-requested.listener.ts. A standalone "create a
+  // design order with no originating sales order" button was also the wrong workflow under
+  // that chain, not just a broken one — removed rather than repaired. This page now only
+  // lists/links the design_orders the real chain produces.
   const { data: orders = [], isLoading, isError, error, refetch} = useQuery<DesignOrder[]>({
     queryKey: ["/api/design/orders"],
   });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: DesignOrderFormData) => apiRequest('POST', '/api/design/orders', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/design/orders"] });
-      setIsCreateOpen(false);
-      form.reset();
-      toast({ title: t('createdSuccessfully'), description: "Yangi dizayn buyurtmasi muvaffaqiyatli yaratildi" });
-    },
-    onError: () => {
-      toast({ title: t('error'), description: t('operationFailed'), variant: "destructive" });
-    },
-  });
-
-  const onSubmit = (values: DesignOrderFormData) => {
-    createMutation.mutate(values);
-  };
 
   const filteredOrders = (Array.isArray(orders) ? orders : []).filter(item =>
     item.order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -169,119 +122,6 @@ export default function DesignOrders() {
         subtitle={t("barchaDizaynBuyurtmalariniBoshqarishVa")}
       />
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="button-create-order">
-                <Plus className="mr-2 h-4 w-4" /> {t('create')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-              <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold">{t("yangiDizaynBuyurtmasi")}</DialogTitle>
-                <DialogDescription>{t("yangiDizaynBuyurtmasiniYaratishUchun")}</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="clientName">{t("mijozIsmi1")}</Label>
-                    <Input id="clientName" {...form.register("clientName")} data-testid="input-client-name" />
-                    {form.formState.errors.clientName && <p className="text-sm text-destructive mt-1">{form.formState.errors.clientName.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="clientCompany">{t('company')}</Label>
-                    <Input id="clientCompany" {...form.register("clientCompany")} data-testid="input-client-company" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="clientPhone">{t('phone')}</Label>
-                    <Input id="clientPhone" {...form.register("clientPhone")} data-testid="input-client-phone" />
-                  </div>
-                  <div>
-                    <Label htmlFor="clientEmail">{t('email')}</Label>
-                    <Input id="clientEmail" type="email" {...form.register("clientEmail")} data-testid="input-client-email" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Mahsulot {t('type')} *</Label>
-                    <Controller control={form.control} name="productType" render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-product-type" className="h-9"><SelectValue placeholder={t('select')} /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="stakan">{t("stakan")}</SelectItem>
-                          <SelectItem value="quti">{t("quti")}</SelectItem>
-                          <SelectItem value="plakat">{t("plakat")}</SelectItem>
-                          <SelectItem value="qadoq">{t("qadoq")}</SelectItem>
-                          <SelectItem value="korrugirovanniy-quti">{t("korrugirovanniyQuti")}</SelectItem>
-                          <SelectItem value="tibbiy-qadoq">{t("tibbiyQadoq")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )} />
-                    {form.formState.errors.productType && <p className="text-sm text-destructive mt-1">{form.formState.errors.productType.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="productName">Mahsulot {t('name')} *</Label>
-                    <Input id="productName" {...form.register("productName")} data-testid="input-product-name" />
-                    {form.formState.errors.productName && <p className="text-sm text-destructive mt-1">{form.formState.errors.productName.message}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="brandName">Brend {t('name')}</Label>
-                    <Input id="brandName" {...form.register("brandName")} data-testid="input-brand-name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="quantity">{t('quantity')}</Label>
-                    <Input id="quantity" type="number" {...form.register("quantity", { valueAsNumber: true })} data-testid="input-quantity" />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">{t('description')}</Label>
-                  <Textarea id="description" {...form.register("description")} rows={3} data-testid="input-description" />
-                </div>
-
-                <div>
-                  <Label htmlFor="requirements">{t("maxsusTalablar")}</Label>
-                  <Textarea id="requirements" {...form.register("requirements")} rows={3} data-testid="input-requirements" />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>{t('priority')}</Label>
-                    <Controller control={form.control} name="priority" render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger data-testid="select-priority" className="h-9"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">{t('low')}</SelectItem>
-                          <SelectItem value="normal">{t('medium')}</SelectItem>
-                          <SelectItem value="high">{t('high')}</SelectItem>
-                          <SelectItem value="urgent">{t("Shoshilinch")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )} />
-                  </div>
-                  <div>
-                    <Label htmlFor="deadline">{t("muddati")}</Label>
-                    <Input id="deadline" type="date" {...form.register("deadline")} data-testid="input-deadline" />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => { setIsCreateOpen(false); form.reset(); }} data-testid="button-cancel">
-                    {t('cancel')}
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit">
-                    {createMutation.isPending ? t('loading') : t('create')}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
 
         <div className="flex items-center gap-2">
