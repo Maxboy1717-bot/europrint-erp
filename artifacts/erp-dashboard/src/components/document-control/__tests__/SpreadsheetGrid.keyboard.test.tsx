@@ -7,6 +7,7 @@
 
 import { render, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import { useState } from 'react';
 import { TestProviders } from '@/test/TestProviders';
 import { SpreadsheetGrid } from '../SpreadsheetGrid';
 import type { Cells } from '@/lib/spreadsheet';
@@ -56,5 +57,35 @@ describe('SpreadsheetGrid — Excel-style keyboard entry', () => {
     const input = t.dataCells[0].querySelector('input') as HTMLInputElement;
     fireEvent.blur(input); // focus leaves to the Save button — no Enter pressed
     expect(t.cells['A1']).toEqual({ v: '9' });
+  });
+});
+
+describe('SpreadsheetGrid — undo / redo (Ctrl+Z / Ctrl+Y)', () => {
+  // Controlled wrapper so onChange re-renders with the new cells (the grid is controlled) — this
+  // is what lets the undo history walk back through real edits, mirroring the live editor.
+  function renderControlled() {
+    let last: Cells = {};
+    function Wrap() {
+      const [cells, setCells] = useState<Cells>({});
+      return <SpreadsheetGrid cells={cells} onChange={(c) => { last = c; setCells(c); }} />;
+    }
+    const utils = render(<Wrap />, { wrapper: TestProviders });
+    const grid = utils.container.querySelector('[tabindex]') as HTMLElement;
+    const dataCells = utils.container.querySelectorAll('td.cursor-cell');
+    return { grid, dataCells, get last() { return last; } };
+  }
+
+  it('Ctrl+Z reverts the last edit and Ctrl+Y re-applies it', () => {
+    const t = renderControlled();
+    fireEvent.click(t.dataCells[0]);                 // A1
+    fireEvent.keyDown(t.grid, { key: '5' });         // start editing with '5'
+    fireEvent.keyDown(t.dataCells[0].querySelector('input') as HTMLInputElement, { key: 'Enter' }); // commit
+    expect(t.last['A1']).toEqual({ v: '5' });
+
+    fireEvent.keyDown(t.grid, { key: 'z', ctrlKey: true }); // undo
+    expect(t.last['A1']).toBeUndefined();
+
+    fireEvent.keyDown(t.grid, { key: 'y', ctrlKey: true }); // redo
+    expect(t.last['A1']).toEqual({ v: '5' });
   });
 });

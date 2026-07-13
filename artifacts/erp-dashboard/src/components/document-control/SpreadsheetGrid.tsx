@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3, Plus, Copy } from 'lucide-react';
+import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3, Plus, Copy, Undo2, Redo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { evalCell, numToCol, colToNum, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
 import { tLabel } from '@/lib/i18n/tLabel';
@@ -86,6 +86,36 @@ export function SpreadsheetGrid({
   const gridRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Undo/redo history (Ctrl+Z / Ctrl+Y). Every edit snapshots the PREVIOUS cells; applyChange is
+  // the single write path so undo can walk back through commits, clears, pastes and formatting.
+  const undoStack = useRef<Cells[]>([]);
+  const redoStack = useRef<Cells[]>([]);
+  const [, bumpHist] = useState(0);
+  const applyChange = (next: Cells) => {
+    if (!onChange) return;
+    undoStack.current.push(cells);
+    if (undoStack.current.length > 200) undoStack.current.shift();
+    redoStack.current = [];
+    onChange(next);
+    bumpHist((t) => t + 1);
+  };
+  const undo = () => {
+    if (!onChange) return;
+    const prev = undoStack.current.pop();
+    if (prev === undefined) return;
+    redoStack.current.push(cells);
+    onChange(prev);
+    bumpHist((t) => t + 1);
+  };
+  const redo = () => {
+    if (!onChange) return;
+    const next = redoStack.current.pop();
+    if (next === undefined) return;
+    undoStack.current.push(cells);
+    onChange(next);
+    bumpHist((t) => t + 1);
+  };
+
   // Grow (never shrink) so every populated cell is visible when a sheet loads.
   useEffect(() => {
     let mc = 0, mr = 0;
@@ -122,13 +152,13 @@ export function SpreadsheetGrid({
     if (t === '') delete next[ref];
     else if (t.startsWith('=')) next[ref] = { f: t };
     else next[ref] = { v: val };
-    onChange(next);
+    applyChange(next);
   };
   const clearRange = () => {
     if (!editable || !onChange) return;
     const next: Cells = { ...cells };
     for (const ref of rectRefs()) delete next[ref];
-    onChange(next);
+    applyChange(next);
   };
 
   // Bounds of the current selection rectangle (single cell when anchor===sel).
@@ -186,7 +216,7 @@ export function SpreadsheetGrid({
         else next[ref] = { ...cur, v: val, f: undefined };
       });
     });
-    onChange(next);
+    applyChange(next);
     toast({ title: tLabel('documents.pasted', 'Joylandi') });
   };
 
@@ -216,6 +246,9 @@ export function SpreadsheetGrid({
     if (mod && (k === 'v' || k === 'V')) { void pasteSelection(); e.preventDefault(); return; }
     if (mod && (k === 'a' || k === 'A')) { selectAll(); e.preventDefault(); return; }
     if (!editable) return;
+    // Undo / redo (Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z).
+    if (mod && (k === 'z' || k === 'Z') && !e.shiftKey) { undo(); e.preventDefault(); return; }
+    if (mod && ((k === 'y' || k === 'Y') || ((k === 'z' || k === 'Z') && e.shiftKey))) { redo(); e.preventDefault(); return; }
     switch (k) {
       case 'ArrowUp': moveSel(0, -1, e.shiftKey); e.preventDefault(); return;
       case 'ArrowDown': case 'Enter': moveSel(0, 1, e.shiftKey && k !== 'Enter'); e.preventDefault(); return;
@@ -237,7 +270,7 @@ export function SpreadsheetGrid({
       const cur = next[ref] ?? {};
       next[ref] = { ...cur, s: { ...(cur.s ?? {}), ...patch } };
     }
-    onChange(next);
+    applyChange(next);
   };
   const selStyle = cells[sel]?.s ?? {};
 
@@ -269,6 +302,12 @@ export function SpreadsheetGrid({
       {/* Cell-format toolbar */}
       {editable && (
         <div className="flex items-center gap-0.5 px-2 py-1 border-b border-[var(--ep-border)] bg-[var(--ep-surface)]">
+          {/* Undo / redo (also Ctrl+Z / Ctrl+Y) */}
+          <button type="button" title={tLabel('documents.undo', 'Orqaga (Ctrl+Z)')} onClick={undo} disabled={undoStack.current.length === 0}
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)] disabled:opacity-40"><Undo2 className="w-3.5 h-3.5" /></button>
+          <button type="button" title={tLabel('documents.redo', 'Oldinga (Ctrl+Y)')} onClick={redo} disabled={redoStack.current.length === 0}
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)] disabled:opacity-40"><Redo2 className="w-3.5 h-3.5" /></button>
+          <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
           <button type="button" title={tLabel('documents.bold', 'Qalin')} onClick={() => setStyle({ b: !selStyle.b })}
             className={cn('w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)]', selStyle.b && 'bg-[var(--ep-blue)]/12 text-[var(--ep-blue)]')}><Bold className="w-3.5 h-3.5" /></button>
           <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
