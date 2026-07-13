@@ -19,6 +19,7 @@ import { unwrapOrThrow } from '@common/http-result';
 import { isOk } from '@common/result';
 import { safeNum } from '@common/math';
 import { db } from '@shared/db';
+import { DocumentDeliveryService } from '@common/document-control/document-delivery.service';
 import {
   executeApproveTransaction, findMyPendingApproval, requireDocInProgress,
 } from './cc-workflow/cc-workflow-approve.helpers';
@@ -46,6 +47,7 @@ export class CcWorkflowService {
     private readonly i18n:    I18nService,
     private readonly eventBus: EventBus,
     private readonly kanban:  CcKanbanBridgeService,
+    private readonly delivery: DocumentDeliveryService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────
@@ -114,6 +116,11 @@ export class CcWorkflowService {
     }
 
     await this.transitionToFirstStep(doc, senderUserId, approvers[0], firstStepOrder);
+    // Doc Control #2: ping each assigned approver in-app via 'Tizim' chat with a document
+    // link (fire-and-forget — chat delivery must never delay/break the send workflow).
+    for (const uid of approvers) {
+      void this.delivery.notifyDocumentAssigned(uid, { documentType: 'cc', documentId: doc.id, title: doc.subject });
+    }
     return { ok: true, documentId: doc.id, currentStepOrder: firstStepOrder, pendingApproverIds: approvers };
   }
 
