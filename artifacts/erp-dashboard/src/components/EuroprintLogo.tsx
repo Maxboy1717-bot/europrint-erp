@@ -28,10 +28,12 @@ export function EuroprintLogo({height = 28, className = "" }: EuroprintLogoProps
 
   return (
     <img
-      src={`${import.meta.env.BASE_URL}europrint-logo.svg`}
+      src={`${import.meta.env.BASE_URL}europrint-doc-logo.png`}
       alt={t("europrint")}
       height={height}
-      style={{ height: `${height}px`, width: "auto", display: "block" }}
+      // height + width:auto + object-contain => the real logo is scaled whole, never cropped
+      // or stretched (owner: "qismasdan o'zgartirmasdan").
+      style={{ height: `${height}px`, width: "auto", display: "block", objectFit: "contain" }}
       className={className}
       draggable={false}
       onError={() => setImgError(true)}
