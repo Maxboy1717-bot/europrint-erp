@@ -8,8 +8,10 @@
 import { lazy } from "react";
 
 const ErpDocumentEditor = lazy(() => import("@/pages/documents/ErpDocumentEditor"));
+const ErpDocumentsList = lazy(() => import("@/pages/documents/ErpDocumentsList"));
 
 export const DOCUMENTS_ROUTES: [string, React.ComponentType][] = [
-  ['/documents/new', ErpDocumentEditor],
+  ['/documents/new', ErpDocumentEditor], // before :id (wouter Switch = first match)
   ['/documents/:id', ErpDocumentEditor],
+  ['/documents', ErpDocumentsList],
 ];

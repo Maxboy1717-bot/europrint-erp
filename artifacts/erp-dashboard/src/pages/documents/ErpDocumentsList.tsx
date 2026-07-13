@@ -14,6 +14,7 @@ import type { TableColumn } from '@/components/ep';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { tLabel } from '@/lib/i18n/tLabel';
 
 interface ErpDocRow {
   id: string;
@@ -24,9 +25,9 @@ interface ErpDocRow {
 }
 
 const TIER_BADGE: Record<string, { label: string; cls: string }> = {
-  oddiy: { label: 'Oddiy', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
-  maxfiy: { label: 'Maxfiy', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-  'juda-maxfiy': { label: 'Juda maxfiy', cls: 'bg-red-50 text-red-700 border-red-200' },
+  oddiy: { label: tLabel('documents.tierOddiy', 'Oddiy'), cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+  maxfiy: { label: tLabel('documents.tierMaxfiy', 'Maxfiy'), cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  'juda-maxfiy': { label: tLabel('documents.tierJudaMaxfiy', 'Juda maxfiy'), cls: 'bg-red-50 text-red-700 border-red-200' },
 };
 
 export default function ErpDocumentsList() {
@@ -43,10 +44,10 @@ export default function ErpDocumentsList() {
   const del = useMutation({
     mutationFn: (id: string) => apiRequest('DELETE', `/api/erp-documents/${id}`),
     onSuccess: () => {
-      toast({ title: "O'chirildi" });
+      toast({ title: tLabel('documents.deleted', "O'chirildi") });
       qc.invalidateQueries({ queryKey: ['/api/erp-documents'] });
     },
-    onError: () => toast({ title: 'Xatolik', variant: 'destructive' }),
+    onError: () => toast({ title: tLabel('common.error', 'Xatolik'), variant: 'destructive' }),
   });
 
   const rows = Array.isArray(listQ.data) ? listQ.data : [];
@@ -54,7 +55,7 @@ export default function ErpDocumentsList() {
   const columns: TableColumn<ErpDocRow>[] = [
     {
       key: 'title',
-      label: 'Sarlavha',
+      label: tLabel('documents.colTitle', 'Sarlavha'),
       sortable: true,
       render: (_v, row) => (
         <button onClick={() => navigate(`/documents/${row.id}`)} className="text-left font-medium text-[var(--ep-primary)] hover:underline">
@@ -64,17 +65,17 @@ export default function ErpDocumentsList() {
     },
     {
       key: 'sensitivity_tier',
-      label: 'Maxfiylik',
+      label: tLabel('documents.colTier', 'Maxfiylik'),
       width: '130px',
       render: (_v, row) => {
         const b = TIER_BADGE[row.sensitivity_tier] ?? TIER_BADGE.oddiy;
         return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${b.cls}`}>{b.label}</span>;
       },
     },
-    { key: 'version', label: 'Versiya', width: '90px' },
+    { key: 'version', label: tLabel('documents.colVersion', 'Versiya'), width: '90px' },
     {
       key: 'updated_at',
-      label: "O'zgartirilgan",
+      label: tLabel('documents.colUpdated', "O'zgartirilgan"),
       width: '170px',
       sortable: true,
       render: (_v, row) => new Date(row.updated_at).toLocaleString('uz-UZ'),
@@ -85,10 +86,10 @@ export default function ErpDocumentsList() {
       width: '90px',
       render: (_v, row) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => navigate(`/documents/${row.id}`)} title="Tahrirlash" className="p-1.5 rounded-md text-[var(--ep-muted)] hover:bg-[var(--ep-bg)]">
+          <button onClick={() => navigate(`/documents/${row.id}`)} title={tLabel('documents.edit', 'Tahrirlash')} className="p-1.5 rounded-md text-[var(--ep-muted)] hover:bg-[var(--ep-bg)]">
             <Pencil className="w-4 h-4" />
           </button>
-          <button onClick={() => setConfirmId(row.id)} title="O'chirish" className="p-1.5 rounded-md text-[var(--ep-muted)] hover:bg-[var(--ep-red)]/10 hover:text-[var(--ep-red)]">
+          <button onClick={() => setConfirmId(row.id)} title={tLabel('documents.delete', "O'chirish")} className="p-1.5 rounded-md text-[var(--ep-muted)] hover:bg-[var(--ep-red)]/10 hover:text-[var(--ep-red)]">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -99,23 +100,23 @@ export default function ErpDocumentsList() {
   return (
     <div className="p-4 space-y-4">
       <EPTable<ErpDocRow>
-        title="Mening hujjatlarim"
+        title={tLabel('documents.myDocuments', 'Mening hujjatlarim')}
         columns={columns}
         data={rows}
         isLoading={listQ.isLoading}
         searchable
-        searchPlaceholder="Hujjat qidirish..."
+        searchPlaceholder={tLabel('documents.searchPlaceholder', 'Hujjat qidirish...')}
         onAdd={() => navigate('/documents/new')}
-        addLabel="Yangi hujjat"
-        emptyMessage="Hali hujjat yo'q — 'Yangi hujjat' bilan yarating"
+        addLabel={tLabel('documents.newDocument', 'Yangi hujjat')}
+        emptyMessage={tLabel('documents.empty', "Hali hujjat yo'q — 'Yangi hujjat' bilan yarating")}
         zebra
       />
       <ConfirmDialog
         open={confirmId !== null}
         onOpenChange={(o) => { if (!o) setConfirmId(null); }}
-        title="Hujjatni o'chirish"
-        description="Bu hujjat o'chiriladi (qayta tiklab bo'lmaydi). Davom etamizmi?"
-        confirmText="O'chirish"
+        title={tLabel('documents.deleteTitle', "Hujjatni o'chirish")}
+        description={tLabel('documents.deleteDesc', "Bu hujjat o'chiriladi (qayta tiklab bo'lmaydi). Davom etamizmi?")}
+        confirmText={tLabel('documents.delete', "O'chirish")}
         variant="destructive"
         onConfirm={() => { if (confirmId) del.mutate(confirmId); setConfirmId(null); }}
       />

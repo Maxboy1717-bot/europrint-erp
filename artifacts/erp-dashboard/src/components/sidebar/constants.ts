@@ -676,6 +676,16 @@ import { LayoutDashboard, X,
       { title: "Kanallar", url: "chat", icon: Megaphone },
     ]
   },
+  hujjatlar: {
+    title: "Hujjatlar",
+    icon: FileText,
+    defaultUrl: "documents",
+    items: [
+      { title: "ERKIN HUJJATLAR", url: "", icon: FileText, separator: true },
+      { title: "Mening hujjatlarim", url: "documents", icon: FileText },
+      { title: "Yangi hujjat", url: "documents/new", icon: FileText },
+    ]
+  },
 };
 
   export const moduleColors: Record<string, { bg: string; text: string; activeBg: string; border: string }> = {
