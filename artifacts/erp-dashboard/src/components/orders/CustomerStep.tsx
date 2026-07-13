@@ -101,7 +101,7 @@ export function CustomerStep({
                       <CommandItem
                         key={company.id}
                         onSelect={() => {
-                          setFormData({ ...formData, mijozNomi: company.name });
+                          setFormData({ ...formData, mijozNomi: company.name, customerId: company.id });
                           setCustomerOpen(false);
                         }}
                         className="hover:bg-primary/10 cursor-pointer py-3"
@@ -221,21 +221,32 @@ export function CustomerStep({
             />
           </div>
           <div className="space-y-1">
-          <Label className="text-muted-foreground font-semibold">{t.krasok}</Label>
-            <Select
-              value={formData.krasok}
-              onValueChange={(val) => setFormData({ ...formData, krasok: val })}
-            >
-              <SelectTrigger className="bg-muted/40 border-border h-9">
-                <SelectValue placeholder={t.krasok} />
-              </SelectTrigger>
-              <SelectContent>
-                {(Array.isArray(KRASOK_OPTIONS) ? KRASOK_OPTIONS : []).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Label className="text-muted-foreground font-semibold">{t.narx} <span className="text-[var(--ep-red)]">*</span></Label>
+            <Input
+              type="number"
+              value={formData.narx}
+              onChange={(e) => setFormData({ ...formData, narx: Number(e.target.value) })}
+              className="bg-muted/40 border-border font-bold text-primary"
+              data-testid="input-narx"
+            />
           </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-muted-foreground font-semibold">{t.krasok}</Label>
+          <Select
+            value={formData.krasok}
+            onValueChange={(val) => setFormData({ ...formData, krasok: val })}
+          >
+            <SelectTrigger className="bg-muted/40 border-border h-9">
+              <SelectValue placeholder={t.krasok} />
+            </SelectTrigger>
+            <SelectContent>
+              {(Array.isArray(KRASOK_OPTIONS) ? KRASOK_OPTIONS : []).map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
