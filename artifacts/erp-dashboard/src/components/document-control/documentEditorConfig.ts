@@ -16,6 +16,7 @@ import { Color } from '@tiptap/extension-color';
 import { Highlight } from '@tiptap/extension-highlight';
 import { Image } from '@tiptap/extension-image';
 import type { Extensions } from '@tiptap/react';
+import { SearchReplace } from './SearchReplaceExtension';
 
 export const documentEditorExtensions: Extensions = [
   StarterKit,
@@ -27,4 +28,5 @@ export const documentEditorExtensions: Extensions = [
   Color,
   Highlight.configure({ multicolor: true }),
   Image.configure({ inline: false, allowBase64: false }),
+  SearchReplace, // P1-3 find & replace
 ];

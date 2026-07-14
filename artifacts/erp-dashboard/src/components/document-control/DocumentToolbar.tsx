@@ -14,7 +14,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code,
   Link as LinkIcon, Table as TableIcon, Undo, Redo,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify, Baseline, Highlighter, Image as ImageIcon, Upload,
+  AlignLeft, AlignCenter, AlignRight, AlignJustify, Baseline, Highlighter, Image as ImageIcon, Upload, Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tLabel } from '@/lib/i18n/tLabel';
@@ -83,7 +83,7 @@ function TBtn({ onClick, title, children }: { onClick: () => void; title: string
 const FONTS = ['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Tahoma'];
 const SIZES = ['10', '11', '12', '14', '16', '18', '24', '36'];
 
-export function DocumentToolbar({ editor }: { editor: Editor }) {
+export function DocumentToolbar({ editor, onFind }: { editor: Editor; onFind?: () => void }) {
   const setLink = () => {
     const prev = editor.getAttributes('link').href as string | undefined;
     const url = window.prompt('Havola (URL):', prev ?? 'https://');
@@ -106,6 +106,7 @@ export function DocumentToolbar({ editor }: { editor: Editor }) {
     <div className="sticky top-0 z-20 flex flex-wrap items-center gap-0.5 border-b border-[var(--ep-border)] bg-[var(--ep-surface)] px-3 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <Btn title="Orqaga (Ctrl+Z)" disabled={!editor.can().undo()} onClick={() => c().undo().run()}><Undo className="w-4 h-4" /></Btn>
       <Btn title="Oldinga (Ctrl+Y)" disabled={!editor.can().redo()} onClick={() => c().redo().run()}><Redo className="w-4 h-4" /></Btn>
+      {onFind && <Btn title={tLabel('documents.find', 'Qidirish va almashtirish (Ctrl+F)')} onClick={onFind}><Search className="w-4 h-4" /></Btn>}
       <Sep />
       <select
         title={tLabel('documents.fontFamily', 'Shrift')}
