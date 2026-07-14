@@ -30,7 +30,10 @@ function buildConnectors(nodes: LayoutNode[]): React.ReactNode[] {
     parent.children?.forEach((child, idx) => {
       const cx = child.x + CARD_W / 2;
       const cy = child.y;
-      const midY = py + V_GAP / 2;
+      // Midpoint between parent-bottom and child-top — not a fixed V_GAP/2, because a child's
+      // tier row can now sit several rows below its parent (skipped levels render in their own
+      // row per owner spec; see helpers.ts layoutTree), making the gap bigger than one V_GAP.
+      const midY = py + (cy - py) / 2;
       const key = `conn-${parent.node.id}-${child.node.id}-${idx}`;
       lines.push(
         <path
@@ -71,7 +74,7 @@ export function TreeCanvas({
   let xOffset = 0;
   (Array.isArray(roots) ? roots : []).forEach((r) => {
     const w = computeSubtreeWidth(r);
-    layouts.push(layoutTree(r, xOffset, 0));
+    layouts.push(layoutTree(r, xOffset));
     xOffset += w + H_GAP * 4;
   });
 

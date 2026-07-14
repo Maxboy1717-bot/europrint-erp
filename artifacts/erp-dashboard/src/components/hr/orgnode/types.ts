@@ -100,6 +100,7 @@ export {
   resolveNodeTypeLabel,
   resolveLevelLabel,
   resolveTierColor,
+  resolveTierIndex,
 } from "@/components/hr/org/types";
 
 /**

@@ -156,6 +156,17 @@ export function resolveTierColor(nodeType: string | undefined | null, hierarchyL
   return ORG_TIERS[hierarchyLevel]?.color ?? "hsl(var(--muted-foreground))";
 }
 
+/** Tree-layout ROW (0-5) for a card — TIER-driven (nodeType), same reasoning as
+ *  resolveTierColor: a card's vertical row on the org-sxema canvas must reflect its own
+ *  tier, not how many parent-hops separate it from the root (owner 2026-07-14: "hammasi
+ *  o'zini qatorida bo'lsin" — every card sits in its tier's row, even when its actual
+ *  parent lives several tiers up, e.g. Departament parented directly under Egasi). */
+export function resolveTierIndex(nodeType: string | undefined | null, hierarchyLevel: number): number {
+  const tier = nodeType ? TIER_BY_NODE_TYPE[nodeType] : undefined;
+  if (tier) return tier.level;
+  return Math.max(0, Math.min(hierarchyLevel, ORG_TIERS.length - 1));
+}
+
 export const CARD_W = 256;
 export const CARD_H = 142;
 export const H_GAP = 32;

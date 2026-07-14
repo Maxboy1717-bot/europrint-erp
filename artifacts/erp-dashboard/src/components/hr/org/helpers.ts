@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP } from "./types";
+import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP, resolveTierIndex } from "./types";
 
 export function computeSubtreeWidth(node: OrgNode): number {
   if (!node.children || node.children.length === 0) return CARD_W;
@@ -15,10 +15,15 @@ export function computeSubtreeWidth(node: OrgNode): number {
   return Math.max(CARD_W, childrenWidth);
 }
 
+/** Row (Y) is TIER-driven (resolveTierIndex), NOT tree-recursion depth — owner 2026-07-14:
+ *  "hammasi o'zini qatorida bo'lsin" (every card sits in its own tier's row). A card whose
+ *  parent lives several tiers up (e.g. Departament parented directly under Egasi, skipping
+ *  Bosh Direktor/Yo'nalish direktori) still renders in the Departament row; the connector
+ *  (TreeCanvas.tsx buildConnectors) draws the longer vertical drop to reach it. X-centering
+ *  still follows the actual parent-child tree structure (recursion), only Y changed. */
 export function layoutTree(
   node: OrgNode,
-  offsetX: number,
-  offsetY: number
+  offsetX: number
 ): LayoutNode {
   const totalChildWidth = node.children && node.children.length > 0
     ? node.children?.reduce((s, c) => s + computeSubtreeWidth(c), 0) +
@@ -26,16 +31,18 @@ export function layoutTree(
     : 0;
   const myWidth = Math.max(CARD_W, totalChildWidth);
   const myX = offsetX + (myWidth - CARD_W) / 2;
+  const myRow = resolveTierIndex(node.nodeType, node.hierarchyLevel ?? 0);
+  const myY = myRow * (CARD_H + V_GAP);
 
   let childX = offsetX;
   const layoutChildren: LayoutNode[] = (node.children || []).map((c) => {
     const cw = computeSubtreeWidth(c);
-    const laid = layoutTree(c, childX, offsetY + CARD_H + V_GAP);
+    const laid = layoutTree(c, childX);
     childX += cw + H_GAP;
     return laid;
   });
 
-  return { node, x: myX, y: offsetY, children: layoutChildren };
+  return { node, x: myX, y: myY, children: layoutChildren };
 }
 
 export function flattenLayout(root: LayoutNode): LayoutNode[] {
