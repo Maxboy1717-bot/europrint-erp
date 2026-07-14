@@ -132,9 +132,11 @@ export class CcWorkflowService {
     } as CreateDraftDto);
     const ccDocId = String((created as { id?: unknown }).id ?? '');
 
-    // link the CC record back to the source. related_erp_document_id exists only for erp docs;
-    // for spreadsheets the deep-link is carried by the body + chat ping (no schema change).
-    if (!isSheet) {
+    // link the CC record back to the source by its own FK column (P1-9: spreadsheets now have
+    // related_erp_spreadsheet_id too, so sheet-sourced CC records are joinable by sheet id).
+    if (isSheet) {
+      await db.execute(sql`UPDATE cc_documents SET related_erp_spreadsheet_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
+    } else {
       await db.execute(sql`UPDATE cc_documents SET related_erp_document_id = ${erpDocumentId}::uuid WHERE id = ${ccDocId}::uuid`);
     }
 
@@ -157,7 +159,11 @@ export class CcWorkflowService {
       title,
     });
 
-    return { ccDocumentId: ccDocId, targetUserId, sourceType, related_erp_document_id: isSheet ? null : erpDocumentId };
+    return {
+      ccDocumentId: ccDocId, targetUserId, sourceType,
+      related_erp_document_id: isSheet ? null : erpDocumentId,
+      related_erp_spreadsheet_id: isSheet ? erpDocumentId : null,
+    };
   }
 
   // STEP 3.6b — "Erkin hujjat" started FROM CC's create flow: create a blank erp_document
