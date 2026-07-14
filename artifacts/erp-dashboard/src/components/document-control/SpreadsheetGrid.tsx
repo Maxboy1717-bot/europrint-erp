@@ -9,9 +9,10 @@
  */
 
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3, Plus, Copy, Undo2, Redo2 } from 'lucide-react';
+import { Bold, AlignLeft, AlignCenter, AlignRight, PaintBucket, Square, Filter, Grid3x3, Plus, Copy, Undo2, Redo2, ArrowDownToLine, ArrowRightToLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { evalCell, numToCol, colToNum, formatDisplay, type Cells, type CellStyle } from '@/lib/spreadsheet';
+import { fillCell } from '@/lib/spreadsheetFill';
 import { tLabel } from '@/lib/i18n/tLabel';
 import { useToast } from '@/hooks/use-toast';
 
@@ -226,6 +227,39 @@ export function SpreadsheetGrid({
 
   const cutSelection = async () => { await copySelection(); clearRange(); };
 
+  // Fill down (Ctrl+D) / right (Ctrl+R): every cell in the selection is filled FROM the top row /
+  // left column of the selection, offsetting relative formula refs ($-locked ones stay fixed).
+  const fillDown = () => {
+    const b = rectBounds(); if (!b || !editable || !onChange) return;
+    const [c0, c1, r0, r1] = b;
+    if (r1 === r0) return;
+    const next: Cells = { ...cells };
+    for (let c = c0; c <= c1; c++) {
+      const src = cells[numToCol(c) + r0];
+      for (let r = r0 + 1; r <= r1; r++) {
+        const ref = numToCol(c) + r;
+        const filled = fillCell(src, 0, r - r0);
+        if (filled) next[ref] = filled; else delete next[ref];
+      }
+    }
+    applyChange(next);
+  };
+  const fillRight = () => {
+    const b = rectBounds(); if (!b || !editable || !onChange) return;
+    const [c0, c1, r0, r1] = b;
+    if (c1 === c0) return;
+    const next: Cells = { ...cells };
+    for (let r = r0; r <= r1; r++) {
+      const src = cells[numToCol(c0) + r];
+      for (let c = c0 + 1; c <= c1; c++) {
+        const ref = numToCol(c) + r;
+        const filled = fillCell(src, c - c0, 0);
+        if (filled) next[ref] = filled; else delete next[ref];
+      }
+    }
+    applyChange(next);
+  };
+
   const startEdit = (ref: string, initial?: string) => { if (!editable) return; setEditing(ref); setBuf(initial ?? raw(ref)); };
   const commitEdit = () => { if (editing) commit(editing, buf); setEditing(null); };
 
@@ -253,6 +287,9 @@ export function SpreadsheetGrid({
     // Undo / redo (Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z).
     if (mod && (k === 'z' || k === 'Z') && !e.shiftKey) { undo(); e.preventDefault(); return; }
     if (mod && ((k === 'y' || k === 'Y') || ((k === 'z' || k === 'Z') && e.shiftKey))) { redo(); e.preventDefault(); return; }
+    // Fill down / right (Excel Ctrl+D / Ctrl+R) — preventDefault also stops browser reload/bookmark.
+    if (mod && (k === 'd' || k === 'D')) { fillDown(); e.preventDefault(); return; }
+    if (mod && (k === 'r' || k === 'R')) { fillRight(); e.preventDefault(); return; }
     switch (k) {
       case 'ArrowUp': moveSel(0, -1, e.shiftKey); e.preventDefault(); return;
       case 'ArrowDown': case 'Enter': moveSel(0, 1, e.shiftKey && k !== 'Enter'); e.preventDefault(); return;
@@ -370,6 +407,11 @@ export function SpreadsheetGrid({
             className="inline-flex items-center gap-1 h-7 px-2 rounded hover:bg-[var(--ep-bg)] text-xs font-medium text-[var(--ep-text)]">
             <Copy className="w-3.5 h-3.5" />{tLabel('documents.copyShort', 'Nusxa')}
           </button>
+          {/* Fill down / right (also Ctrl+D / Ctrl+R) — relative formula refs shift, $-locked stay. */}
+          <button type="button" title={tLabel('documents.fillDown', 'Pastga to\'ldirish (Ctrl+D)')} onClick={fillDown}
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)] text-[var(--ep-text)]"><ArrowDownToLine className="w-3.5 h-3.5" /></button>
+          <button type="button" title={tLabel('documents.fillRight', 'O\'ngga to\'ldirish (Ctrl+R)')} onClick={fillRight}
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-[var(--ep-bg)] text-[var(--ep-text)]"><ArrowRightToLine className="w-3.5 h-3.5" /></button>
           <span className="w-px h-4 bg-[var(--ep-border)] mx-1" />
           {/* Filter toggle */}
           <button type="button" title={tLabel('documents.filter', 'Filtr')} onClick={() => setFilterOn((v) => !v)}

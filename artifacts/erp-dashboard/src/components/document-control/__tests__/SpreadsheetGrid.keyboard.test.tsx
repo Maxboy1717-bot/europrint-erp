@@ -75,6 +75,23 @@ describe('SpreadsheetGrid — undo / redo (Ctrl+Z / Ctrl+Y)', () => {
     return { grid, dataCells, get last() { return last; } };
   }
 
+  it('Ctrl+D fills down — values copy, relative formula refs shift', () => {
+    let last: Cells = {};
+    function Wrap() {
+      const [cells, setCells] = useState<Cells>({ A1: { v: '10' }, B1: { f: '=A1*2' } });
+      return <SpreadsheetGrid cells={cells} onChange={(c) => { last = c; setCells(c); }} />;
+    }
+    const utils = render(<Wrap />, { wrapper: TestProviders });
+    const grid = utils.container.querySelector('[tabindex]') as HTMLElement;
+    const dataCells = utils.container.querySelectorAll('td.cursor-cell');
+    fireEvent.click(dataCells[0]);               // A1 (anchor)
+    fireEvent.click(dataCells[25], { shiftKey: true }); // B3 (12 cols/row → row3 colB = 25); range A1:B3
+    fireEvent.keyDown(grid, { key: 'd', ctrlKey: true });
+    expect(last['A2']).toEqual({ v: '10' });     // value copied
+    expect(last['B2']).toEqual({ f: '=A2*2' });  // formula shifted +1 row
+    expect(last['B3']).toEqual({ f: '=A3*2' });  // shifted +2 rows
+  });
+
   it('Ctrl+Z reverts the last edit and Ctrl+Y re-applies it', () => {
     const t = renderControlled();
     fireEvent.click(t.dataCells[0]);                 // A1
