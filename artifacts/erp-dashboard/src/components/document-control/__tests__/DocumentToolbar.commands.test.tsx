@@ -14,6 +14,8 @@ const COMMANDS = [
   'setTextAlign', 'setColor', 'setHighlight',
   'setFontFamily', 'unsetFontFamily', 'setFontSize', 'unsetFontSize',
   'setLink', 'unsetLink', 'setImage', 'insertTable',
+  // P1-1 in-table controls (TableKit)
+  'addRowAfter', 'deleteRow', 'addColumnAfter', 'deleteColumn', 'mergeOrSplit', 'toggleHeaderRow', 'deleteTable',
 ] as const;
 
 describe('DocumentToolbar commands are all wired', () => {

@@ -53,6 +53,16 @@ function Sep() {
   return <span className="w-px h-5 bg-[var(--ep-border)] mx-1.5 shrink-0" />;
 }
 
+// Compact labelled button for the in-table controls (shown only when the caret is inside a table).
+function TBtn({ onClick, title, children }: { onClick: () => void; title: string; children: React.ReactNode }) {
+  return (
+    <button type="button" title={title} onClick={onClick}
+      className="h-8 px-1.5 rounded text-[11px] font-medium text-[var(--ep-text)] hover:bg-[var(--ep-bg)] whitespace-nowrap">
+      {children}
+    </button>
+  );
+}
+
 const FONTS = ['Arial', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Tahoma'];
 const SIZES = ['10', '11', '12', '14', '16', '18', '24', '36'];
 
@@ -114,6 +124,19 @@ export function DocumentToolbar({ editor }: { editor: Editor }) {
       <Btn title={tLabel('documents.linkBtn', 'Havola')} active={editor.isActive('link')} onClick={setLink}><LinkIcon className="w-4 h-4" /></Btn>
       <Btn title={tLabel('documents.insertImage', "Rasm qo'shish")} onClick={() => { const url = window.prompt(tLabel('documents.imageUrl', 'Rasm URL:')); if (url) c().setImage({ src: url }).run(); }}><ImageIcon className="w-4 h-4" /></Btn>
       <Btn title="Jadval qo'shish" onClick={() => c().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><TableIcon className="w-4 h-4" /></Btn>
+      {/* In-table controls (TableKit) — only while the caret is inside a table (P1-1). */}
+      {editor.isActive('table') && (
+        <>
+          <Sep />
+          <TBtn title={tLabel('documents.tblRowAfter', 'Pastdan qator')} onClick={() => c().addRowAfter().run()}>+{tLabel('documents.tblRow', 'Qator')}</TBtn>
+          <TBtn title={tLabel('documents.tblRowDel', "Qatorni o'chirish")} onClick={() => c().deleteRow().run()}>−{tLabel('documents.tblRow', 'Qator')}</TBtn>
+          <TBtn title={tLabel('documents.tblColAfter', "O'ngdan ustun")} onClick={() => c().addColumnAfter().run()}>+{tLabel('documents.tblCol', 'Ustun')}</TBtn>
+          <TBtn title={tLabel('documents.tblColDel', "Ustunni o'chirish")} onClick={() => c().deleteColumn().run()}>−{tLabel('documents.tblCol', 'Ustun')}</TBtn>
+          <TBtn title={tLabel('documents.tblMerge', "Kataklarni birlashtirish / bo'lish")} onClick={() => c().mergeOrSplit().run()}>{tLabel('documents.tblMergeShort', 'Birlash/Bo\'l')}</TBtn>
+          <TBtn title={tLabel('documents.tblHeader', 'Sarlavha qatori')} onClick={() => c().toggleHeaderRow().run()}>{tLabel('documents.tblHeaderShort', 'Sarlavha')}</TBtn>
+          <TBtn title={tLabel('documents.tblDelete', "Jadvalni o'chirish")} onClick={() => c().deleteTable().run()}>🗑 {tLabel('documents.tblTable', 'Jadval')}</TBtn>
+        </>
+      )}
     </div>
   );
 }
