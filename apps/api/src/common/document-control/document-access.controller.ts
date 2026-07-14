@@ -58,6 +58,15 @@ export class DocumentAccessController {
     });
   }
 
+  // P2-5 — idle-logout thresholds (minutes) by document tier, for the FE idle timer. Any
+  // authenticated user (no @Roles) — everyone needs auto-logout; the values come from DB, not code.
+  @ApiOperation({ summary: 'Idle-logout chegaralari (daqiqa) — hujjat maxfiyligi bo\'yicha' })
+  @ApiBearerAuth()
+  @Get('idle-thresholds')
+  async idleThresholds() {
+    return this.accessLog.getIdleThresholds();
+  }
+
   // STEP 3.9 — Director audit panel READ side. The one canonical reader of document_access_log.
   // Role-gated to leadership only via the global RolesGuard (admin/super_admin bypass it).
   @ApiOperation({ summary: 'Hujjat-kirish jurnali (director audit panel) — filtrlangan, sahifalangan' })

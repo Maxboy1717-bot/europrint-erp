@@ -133,6 +133,30 @@ export class DocumentAccessLogService {
   }
 
   /**
+   * P2-5 idle-logout thresholds (minutes) by document sensitivity tier — decision #9, stored in
+   * business_settings (CRUD-editable, never hardcoded in the FE). Any authenticated user may read
+   * these (the FE idle-timer needs them). Falls back to the seeded defaults if a row is missing.
+   */
+  async getIdleThresholds(): Promise<{ oddiyMin: number; maxfiyMin: number; judaMaxfiyMin: number }> {
+    const read = async (key: string, fallback: number): Promise<number> => {
+      try {
+        const r = await db.execute(
+          sql`SELECT value_num FROM business_settings WHERE module='document_control' AND setting_key=${key} LIMIT 1`,
+        );
+        const n = Number((r as unknown as { rows?: Array<{ value_num?: unknown }> }).rows?.[0]?.value_num);
+        return Number.isFinite(n) && n > 0 ? n : fallback;
+      } catch {
+        return fallback;
+      }
+    };
+    return {
+      oddiyMin: await read('idle_logout_oddiy_min', 30),
+      maxfiyMin: await read('idle_logout_maxfiy_min', 20),
+      judaMaxfiyMin: await read('idle_logout_juda_maxfiy_min', 15),
+    };
+  }
+
+  /**
    * document_type -> sensitivity_tier lookup. Hardcoded table allowlist (no SQL injection):
    * one case per module, added as the roll-out reaches it. Returns null if unknown/absent.
    */

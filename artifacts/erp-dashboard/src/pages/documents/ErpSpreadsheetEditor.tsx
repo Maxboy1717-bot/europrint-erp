@@ -22,6 +22,7 @@ import { SheetTabs } from '@/components/document-control/SheetTabs';
 import { SendToCcModal } from './SendToCcModal';
 import { logDocumentAccess } from '@/lib/documentAccessLog';
 import { parseWorkbook, serializeWorkbook, nextSheetName, type Workbook } from '@/lib/spreadsheetWorkbook';
+import { useSetIdleTier } from '@/components/IdleLogoutProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Cells } from '@/lib/spreadsheet';
@@ -59,6 +60,7 @@ export default function ErpSpreadsheetEditor() {
   const workbookRef = useRef<Workbook>(EMPTY_WB);
   const setWb = (next: Workbook) => { workbookRef.current = next; setWorkbook(next); };
   const cells = workbook.sheets[workbook.active] ?? {};
+  useSetIdleTier(tier); // P2-5: tighten idle-logout while a sensitive sheet is open
   const [dirty, setDirty] = useState(false);
   const [showName, setShowName] = useState(false);
   const [nameInput, setNameInput] = useState('');

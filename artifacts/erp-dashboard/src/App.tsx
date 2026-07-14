@@ -5,6 +5,7 @@
 
 import { useState, useEffect, lazy, Suspense } from "react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { IdleLogoutProvider } from "@/components/IdleLogoutProvider";
 import { ChatSocketProvider } from "@/hooks/chat/ChatSocketProvider";
 import { Router as WouterRouter, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
@@ -139,7 +140,9 @@ export default function App() {
             <LanguageProvider>
               <ErpThemeProvider>
                 <TooltipProvider>
-                  <MainApp />
+                  <IdleLogoutProvider>
+                    <MainApp />
+                  </IdleLogoutProvider>
                   <Toaster />
                 </TooltipProvider>
               </ErpThemeProvider>

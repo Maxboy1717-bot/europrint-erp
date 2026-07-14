@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { tLabel } from '@/lib/i18n/tLabel';
 import { logDocumentAccess } from '@/lib/documentAccessLog';
+import { useSetIdleTier } from '@/components/IdleLogoutProvider';
 
 // Decision #5 — print is leadership-only (admin/super_admin/director bypass; *_manager = dept heads).
 const PRINT_ROLES = new Set(['admin', 'super_admin', 'director', 'manager', 'hr_manager', 'finance_manager', 'production_manager']);
@@ -64,6 +65,7 @@ export default function ErpDocumentEditor() {
   const [printReason, setPrintReason] = useState('');
   const { user } = useAuth();
   const canPrint = PRINT_ROLES.has((user?.role ?? '').toLowerCase());
+  useSetIdleTier(tier); // P2-5: tighten idle-logout while a sensitive doc is open
 
   const docQ = useQuery<ErpDoc>({
     queryKey: [`/api/erp-documents/${id}`],
