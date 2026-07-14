@@ -3,7 +3,7 @@
  * @description React UI component.
  */
 
-import React, { useState } from "react";
+import React from "react";
 import { OrgNode, LayoutNode, CARD_W, CARD_H, H_GAP, V_GAP } from "./types";
 import { computeSubtreeWidth, layoutTree, flattenLayout } from "./helpers";
 import { TreeNodeCard } from "./TreeNodeCard";
@@ -59,19 +59,14 @@ export function TreeCanvas({
   roots,
   onNodeClick,
   onAddChild,
-  onMoveNode,
   onDuplicate,
 }: {
   roots: OrgNode[];
   onNodeClick: (id: number) => void;
   onAddChild: (parentId: string) => void;
-  onMoveNode?: (args: { nodeId: number; newParentId: number }) => void;
   /** G4: duplicate-card action — receives the source node plus its resolved parentId (null = root). */
   onDuplicate?: (node: OrgNode, parentId: number | null) => void;
 }) {
-  const [draggedId, setDraggedId] = useState<number | null>(null);
-  const [dropTargetId, setDropTargetId] = useState<number | null>(null);
-
   if (!roots || roots.length === 0) return null;
 
   const layouts: LayoutNode[] = [];
@@ -104,27 +99,13 @@ export function TreeCanvas({
         <div
           key={node.id}
           style={{ position: "absolute", left: x, top: y }}
-          draggable={!!onMoveNode}
           onMouseDown={(e) => e.stopPropagation()}
-          onDragStart={(e) => { e.stopPropagation(); setDraggedId(node.id); e.dataTransfer.effectAllowed = "move"; }}
-          onDragEnd={() => { setDraggedId(null); setDropTargetId(null); }}
-          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (draggedId !== node.id) setDropTargetId(node.id); }}
-          onDragLeave={() => setDropTargetId(null)}
-          onDrop={(e) => {
-            e.preventDefault(); e.stopPropagation();
-            if (draggedId && draggedId !== node.id && onMoveNode) {
-              onMoveNode({ nodeId: draggedId, newParentId: node.id });
-            }
-            setDraggedId(null); setDropTargetId(null);
-          }}
         >
           <TreeNodeCard
             node={node}
             onClick={onNodeClick}
             onAdd={onAddChild}
             onDuplicate={onDuplicate ? () => onDuplicate(node, parentMap?.get(node.id) ?? null) : undefined}
-            isDragging={draggedId === node.id}
-            isDragTarget={dropTargetId === node.id}
           />
         </div>
       ))}

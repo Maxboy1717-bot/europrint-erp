@@ -70,17 +70,6 @@ export default function OrgStructureHierarchy() {
     onError: () => toast({ title: "Xatolik", variant: "destructive" }),
   });
 
-  const moveMutation = useMutation({
-    mutationFn: ({ nodeId, newParentId }: { nodeId: number; newParentId: number }) =>
-      apiRequest("PATCH", `/api/org-structure/nodes/${nodeId}/move`, { newParentId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });
-      toast({ title: "Bo'lim ko'chirildi", description: "Tashkiliy tuzilma yangilandi" });
-    },
-    onError: () => toast({ title: "Ko'chirishda xatolik", variant: "destructive" }),
-  });
-
   const handleZoomIn = useCallback(() => setScale((s) => Math.min(3, s * 1.2)), []);
   const handleZoomOut = useCallback(() => setScale((s) => Math.max(0.1, s / 1.2)), []);
   const handleReset = useCallback(() => { setScale(0.85); setPosition({ x: 40, y: 20 }); }, []);
@@ -288,7 +277,6 @@ export default function OrgStructureHierarchy() {
               onNodeClick={(id) => navigate(`/org-structure/hierarchy/node/${id}`)}
               onAddChild={handleAddChild}
               onDuplicate={handleDuplicate}
-              onMoveNode={moveMutation.mutate}
             />
           </div>
         )}
