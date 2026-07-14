@@ -125,7 +125,14 @@ export class OrgQueriesRepo {
           // VISION: har node razryadga ega (raw column — Drizzle schema'da yo'q)
           razryadLevelId: sql<number | null>`razryad_level_id`,
           // VISION (node=karta): to'liq karta-maydonlari (raw — Drizzle schema'da yo'q)
-          salaryType: sql<string | null>`salary_type`,
+          // 2026-07-14: `salary_type` MUST be table-qualified — `users` (LEFT JOIN'langan appUsers)
+          // ham shu nomdagi ustunga ega, shuning uchun bare `salary_type` doim "ambiguous column"
+          // Postgres xatosi bilan portlagan — natijada findOneWithDetails() HAR DOIM Err qaytargan,
+          // va findOne() bo'sh {node:{}, employees:[], children:[]} fallback'ga tushgan (karta-detal
+          // sahifasi/tahrirlash formasi hech qachon haqiqiy ma'lumot ko'rmagan — egasi: "tahrirlash
+          // tabi rasvo, juda ko'p xatosi bor"). Boshqa raw ustunlarning hech biri `users`da mos
+          // nomga ega emas, shuning uchun faqat shu bittasi to'g'ridan-to'g'ri buzilgan edi.
+          salaryType: sql<string | null>`org_departments.salary_type`,
           minSalary: sql<number | null>`min_salary`,
           maxSalary: sql<number | null>`max_salary`,
           rbacTier: sql<string | null>`rbac_tier`,
