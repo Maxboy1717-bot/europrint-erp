@@ -31,7 +31,8 @@ interface RazryadLevel {
   coefficient?: number | string | null;
 }
 
-const SALARY_TYPE_LABEL: Record<string, string> = { oylik: "Oylik", soatbay: "Soatbay", ishbay: "Ishbay" };
+const SALARY_TYPE_KEY: Record<string, string> = { oylik: "oylikTuriOylik", soatbay: "oylikTuriSoatbay", ishbay: "oylikTuriIshbay" };
+const SALARY_TYPE_FALLBACK: Record<string, string> = { oylik: "Oylik", soatbay: "Soatbay", ishbay: "Ishbay" };
 
 function fmtSom(v: number | string | null | undefined): string | null {
   if (v == null || v === "") return null;
@@ -336,12 +337,12 @@ export function MainTab({ node }: MainTabProps) {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <DefRow label="ID" value={node.id} />
-          <DefRow label="Nom (UZ)" value={node.name} />
-          <DefRow label="Nom (RU)" value={node.nameRu || "—"} />
-          <DefRow label="Turi" value={resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType} />
-          <DefRow label="Daraja" value={node.hierarchyLevel} />
-          <DefRow label="Ota node" value={node.parentId ? `#${node.parentId}` : "Ildiz"} />
-          <DefRow label="Holat" value={node.isActive ? "Faol" : "Nofaol"} />
+          <DefRow label={t("nomiUz")} value={node.name} />
+          <DefRow label={t("nomiRu")} value={node.nameRu || "—"} />
+          <DefRow label={t("turiLabel", "Turi")} value={resolveNodeTypeLabel(node.nodeType, language) ?? node.nodeType} />
+          <DefRow label={t("darajaLabel", "Daraja")} value={node.hierarchyLevel} />
+          <DefRow label={t("otaNodeLabel", "Ota node")} value={node.parentId ? `#${node.parentId}` : t("ildizLabel", "Ildiz")} />
+          <DefRow label={t("holat")} value={node.isActive ? t("faolLabel", "Faol") : t("nofaolLabel", "Nofaol")} />
         </CardContent>
       </Card>
 
@@ -352,27 +353,32 @@ export function MainTab({ node }: MainTabProps) {
       <Card className="md:col-span-2">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Award className="h-4 w-4" />Karta ta'rifi
+            <Award className="h-4 w-4" />{t("kartaTarifi", "Karta ta'rifi")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {/* Karta-maydonlari (razryad endi alohida "Razryad" tabda) */}
           {hasCardFields ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-              {node.salaryType && <DefRow label="Oylik turi" value={SALARY_TYPE_LABEL[node.salaryType] ?? node.salaryType} />}
+              {node.salaryType && (
+                <DefRow
+                  label={t("oylikTuri", "Oylik turi")}
+                  value={SALARY_TYPE_KEY[node.salaryType] ? t(SALARY_TYPE_KEY[node.salaryType], SALARY_TYPE_FALLBACK[node.salaryType]) : node.salaryType}
+                />
+              )}
               {cardSalary && (
-                <DefRow label="Oylik diapazon" value={<span className="text-[var(--ep-green)] inline-flex items-center gap-1"><Wallet className="h-3 w-3" />{cardSalary}</span>} />
+                <DefRow label={t("oylikDiapazonLabel", "Oylik diapazon")} value={<span className="text-[var(--ep-green)] inline-flex items-center gap-1"><Wallet className="h-3 w-3" />{cardSalary}</span>} />
               )}
               {node.tskpTarget != null && (
-                <DefRow label="ЦКП maqsad" value={`${node.tskpTarget}${node.tskpMeasurementUnit ? " " + node.tskpMeasurementUnit : ""}`} />
+                <DefRow label={t("ckpMaqsadLabel", "ЦКП maqsad")} value={`${node.tskpTarget}${node.tskpMeasurementUnit ? " " + node.tskpMeasurementUnit : ""}`} />
               )}
-              {node.rbacTier && <DefRow label="Ruxsat (RBAC)" value={node.rbacTier} />}
-              {node.workSchedule && <DefRow label="Ish vaqti / smena" value={node.workSchedule} />}
-              {node.bonusConfig && <DefRow label="Bonus" value={node.bonusConfig} />}
-              {node.currentState && <DefRow label="Holat" value={node.currentState} />}
+              {node.rbacTier && <DefRow label={t("ruxsatRbacLabel", "Ruxsat (RBAC)")} value={node.rbacTier} />}
+              {node.workSchedule && <DefRow label={t("ishSoati", "Ish soati")} value={node.workSchedule} />}
+              {node.bonusConfig && <DefRow label={t("bonusLabel", "Bonus")} value={node.bonusConfig} />}
+              {node.currentState && <DefRow label={t("holat")} value={node.currentState} />}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">Karta maydonlari hali to'ldirilmagan — “Tahrirlash” orqali kiriting.</p>
+            <p className="text-xs text-muted-foreground">{t("kartaMaydonlariBosh", "Karta maydonlari hali to'ldirilmagan — “Tahrirlash” orqali kiriting.")}</p>
           )}
         </CardContent>
       </Card>
