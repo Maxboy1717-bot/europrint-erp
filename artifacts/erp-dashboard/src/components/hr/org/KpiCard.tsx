@@ -21,9 +21,9 @@ export function KpiCard({
 }) {
   return (
     <Card className="flex-1 min-w-[150px]">
-      <CardContent className="pt-4 pb-4 px-4 flex items-center gap-3">
+      <CardContent className="pt-2.5 pb-2.5 px-4 flex items-center gap-3">
         <div
-          className="rounded-lg p-2 shrink-0"
+          className="rounded-lg p-1.5 shrink-0"
           style={{ backgroundColor: `${color}20` }}
         >
           <div style={{ color }}>{icon}</div>

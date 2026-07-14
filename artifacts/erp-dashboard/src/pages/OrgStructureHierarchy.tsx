@@ -10,7 +10,7 @@ import {
   Building2, Users, ZoomIn, ZoomOut, RotateCcw, Move,
   Plus, Search, Bell, UserX,
   TrendingUp, AlertCircle, Network, X, Filter, Maximize2,
-  FileText, CheckSquare, Square, Upload,
+  CheckSquare, Square,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,6 @@ import { OrgNode, OrgStats, ORG_TIERS } from "@/components/hr/org/types";
 import { countNodes } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
 import { AddNodeDialog, DuplicateFromInput } from "@/components/hr/org/AddNodeDialog";
-import { ImportNodesDialog } from "@/components/hr/org/ImportNodesDialog";
 import { TreeCanvas } from "@/components/hr/org/TreeCanvas";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -47,9 +46,6 @@ export default function OrgStructureHierarchy() {
   const [addOpen, setAddOpen] = useState(false);
   const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
   const [duplicateFrom, setDuplicateFrom] = useState<DuplicateFromInput | null>(null);
-  // VISION-3340 #26 — bulk .xlsx import (org-structure.controller.ts POST nodes/import), the FE
-  // half that never existed for this already-real backend endpoint.
-  const [importOpen, setImportOpen] = useState(false);
   // VISION (egasi 2026-06-25): KARTA-markazli — sahifa FAQAT karta-daraxti. Alohida "Kartalar" va
   // "Razryadlar" tablar OLIB TASHLANDI: razryad har KARTA ichida (node-detal), alohida emas. Karta
   // bosilsa → /org-structure/hierarchy/node/:id = to'liq karta-detali (razryad/oylik/ЦКП/rbac/xodim).
@@ -67,7 +63,13 @@ export default function OrgStructureHierarchy() {
       ),
     onSuccess: (d) =>
       toast({ title: `${d.vacantCount} ta vakant bo'lim`, description: "Boshliqlari tayinlanmagan bo'limlar" }),
-    onError: () => toast({ title: "Xatolik", variant: "destructive" }),
+    // 2026-07-14 (egasi): generic "Xatolik" toast yashirardi — endi aniq xato matni ko'rsatiladi
+    // (masalan HttpError'ning haqiqiy status+xabari), keyingi safar xato chiqsa darrov aniqlansin.
+    onError: (e) => toast({
+      title: "Xatolik",
+      description: (e as Error).message,
+      variant: "destructive",
+    }),
   });
 
   const handleZoomIn = useCallback(() => setScale((s) => Math.min(3, s * 1.2)), []);
@@ -102,34 +104,6 @@ export default function OrgStructureHierarchy() {
     setScale(0.6);
     setPosition({ x: Math.max(20, (cw - 800) / 2), y: 20 });
   }, []);
-
-  const [exporting, setExporting] = useState<"" | "pdf" | "excel">("");
-
-  const handleExport = useCallback(async (format: "pdf" | "excel") => {
-    setExporting(format);
-    try {
-      const endpoint = format === "pdf" ? "/api/org-structure/export/pdf" : "/api/org-structure/export/excel";
-      // NOTE: Binary blob download (PDF/Excel) — keep raw fetch; apiRequest unwraps JSON envelopes.
-      // Auth via httpOnly cookie sent with credentials: 'include'.
-      // eslint-disable-next-line no-restricted-globals
-      const res = await fetch(endpoint, { credentials: "include" });
-      if (!res.ok) throw new Error("Export failed");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `org-structure-${new Date().toISOString().slice(0, 10)}.${format === "pdf" ? "pdf" : "xlsx"}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast({ title: format === "pdf" ? "PDF yuklandi" : "Excel yuklandi", description: "Fayl muvaffaqiyatli yuklandi" });
-    } catch {
-      toast({ title: "Xatolik", description: "Eksport amalga oshmadi", variant: "destructive" });
-    } finally {
-      setExporting("");
-    }
-  }, [toast]);
 
   const toggleLevel = useCallback((lvl: number) => {
     setFilterLevels((prev) => {
@@ -185,17 +159,8 @@ export default function OrgStructureHierarchy() {
             <p className="text-xs text-muted-foreground">{t("ierarxikKorinishBarchaBolimlarVa")}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button size="sm" variant="outline" onClick={() => handleExport("excel")} disabled={exporting === "excel"}>
-              <FileText className="h-3.5 w-3.5 mr-1" />{exporting === "excel" ? "..." : "Excel"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => handleExport("pdf")} disabled={exporting === "pdf"}>
-              <FileText className="h-3.5 w-3.5 mr-1" />{exporting === "pdf" ? "..." : "PDF"}
-            </Button>
             <Button size="sm" variant="outline" onClick={() => notifyMutation.mutate()} disabled={notifyMutation.isPending}>
               <Bell className="h-3.5 w-3.5 mr-1" />{t("vakantlar")}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)} data-testid="button-import-nodes">
-              <Upload className="h-3.5 w-3.5 mr-1" />{t("import", "Import")}
             </Button>
             <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => { setAddParentId(undefined); setAddOpen(true); }}>
               <Plus className="h-3.5 w-3.5 mr-1" />{t("bolimQoshish")}
@@ -282,7 +247,7 @@ export default function OrgStructureHierarchy() {
         )}
       </div>
 
-      <div className="border-t px-6 py-1.5 flex items-center gap-4 bg-background shrink-0">
+      <div className="px-6 py-1.5 flex items-center gap-4 bg-background shrink-0">
         {ORG_TIERS.map((tier) => (
           <div key={tier.level} className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <div className="h-2.5 w-2.5 rounded-full" style={{ background: tier.color }} />
@@ -297,15 +262,6 @@ export default function OrgStructureHierarchy() {
         onClose={() => { setAddOpen(false); setAddParentId(undefined); setDuplicateFrom(null); }}
         initialParentId={addParentId}
         duplicateFrom={duplicateFrom}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });
-        }}
-      />
-
-      <ImportNodesDialog
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });
