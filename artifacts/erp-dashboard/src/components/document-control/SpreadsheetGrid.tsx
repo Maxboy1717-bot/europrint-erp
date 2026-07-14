@@ -69,10 +69,13 @@ export function SpreadsheetGrid({
   cells,
   onChange,
   editable = true,
+  onCopy,
 }: {
   cells: Cells;
   onChange?: (cells: Cells) => void;
   editable?: boolean;
+  /** Fired after a successful clipboard copy (STEP 3.3 access logging). Best-effort. */
+  onCopy?: () => void;
 }) {
   const [sel, setSel] = useState('A1');       // active cell (range focus)
   const [anchor, setAnchor] = useState('A1'); // range anchor
@@ -187,6 +190,7 @@ export function SpreadsheetGrid({
     const tsv = lines.join('\n');
     try {
       await navigator.clipboard.writeText(tsv);
+      onCopy?.();
       const count = (c1 - c0 + 1) * (r1 - r0 + 1);
       toast({ title: tLabel('documents.copied', 'Nusxalandi'), description: `${count} ${tLabel('documents.cellsUnit', 'katak')}` });
     } catch {

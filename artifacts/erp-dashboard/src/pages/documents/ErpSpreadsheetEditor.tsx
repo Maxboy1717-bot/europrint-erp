@@ -19,6 +19,7 @@ import { SpreadsheetGrid } from '@/components/document-control/SpreadsheetGrid';
 import { DocumentWatermark } from '@/components/document-control/DocumentWatermark';
 import { DocumentLogo } from '@/components/document-control/DocumentLogo';
 import { SendToCcModal } from './SendToCcModal';
+import { logDocumentAccess } from '@/lib/documentAccessLog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Cells } from '@/lib/spreadsheet';
@@ -175,7 +176,7 @@ export default function ErpSpreadsheetEditor() {
         {/* EuroPrint letterhead — top-left of every spreadsheet (owner requirement). */}
         <div className="mb-3 flex justify-start"><DocumentLogo /></div>
         <DocumentWatermark tier={tier}>
-          <SpreadsheetGrid cells={cells} onChange={(c) => { cellsRef.current = c; setCells(c); setDirty(true); }} />
+          <SpreadsheetGrid cells={cells} onChange={(c) => { cellsRef.current = c; setCells(c); setDirty(true); }} onCopy={() => { if (id) logDocumentAccess('erp_spreadsheet', id, 'copy'); }} />
         </DocumentWatermark>
       </div>
 

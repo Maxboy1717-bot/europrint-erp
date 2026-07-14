@@ -15,6 +15,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { tLabel } from '@/lib/i18n/tLabel';
+import { logDocumentAccess } from '@/lib/documentAccessLog';
 
 // Decision #5 — print is leadership-only (admin/super_admin/director bypass; *_manager = dept heads).
 const PRINT_ROLES = new Set(['admin', 'super_admin', 'director', 'manager', 'hr_manager', 'finance_manager', 'production_manager']);
@@ -268,13 +269,17 @@ export default function ErpDocumentEditor() {
         </DialogContent>
       </Dialog>
 
-      <RichTextEditor
-        key={editorKey}
-        contentKey={editorKey}
-        value={editorValue}
-        tier={tier}
-        onChange={(json, html) => { setContent(json); setContentHtml(html); setDirty(true); }}
-      />
+      {/* onCopy bubbles up from the contenteditable — log every copy (best-effort, decision #6:
+          copy is allowed, only logged). Only for a saved doc (needs an id to reference). */}
+      <div onCopy={() => { if (id) logDocumentAccess('erp_document', id, 'copy'); }}>
+        <RichTextEditor
+          key={editorKey}
+          contentKey={editorKey}
+          value={editorValue}
+          tier={tier}
+          onChange={(json, html) => { setContent(json); setContentHtml(html); setDirty(true); }}
+        />
+      </div>
     </div>
   );
 }
