@@ -18,8 +18,10 @@ import { tLabel } from '@/lib/i18n/tLabel';
 import { SpreadsheetGrid } from '@/components/document-control/SpreadsheetGrid';
 import { DocumentWatermark } from '@/components/document-control/DocumentWatermark';
 import { DocumentLogo } from '@/components/document-control/DocumentLogo';
+import { SheetTabs } from '@/components/document-control/SheetTabs';
 import { SendToCcModal } from './SendToCcModal';
 import { logDocumentAccess } from '@/lib/documentAccessLog';
+import { parseWorkbook, serializeWorkbook, nextSheetName, type Workbook } from '@/lib/spreadsheetWorkbook';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Cells } from '@/lib/spreadsheet';
@@ -47,13 +49,16 @@ export default function ErpSpreadsheetEditor() {
   const { user } = useAuth();
   const canPrint = PRINT_ROLES.has((user?.role ?? '').toLowerCase());
 
+  const EMPTY_WB: Workbook = { order: ['Varaq 1'], active: 'Varaq 1', sheets: { 'Varaq 1': {} } };
   const [title, setTitle] = useState('');
   const [tier, setTier] = useState('oddiy');
-  const [cells, setCells] = useState<Cells>({});
-  // Always-current mirror of `cells`. The active cell commits on blur (fires just before the
+  const [workbook, setWorkbook] = useState<Workbook>(EMPTY_WB);
+  // Always-current mirror of the workbook. The active cell commits on blur (fires just before the
   // Save button's click), so reading this ref at save time captures the last edit even when the
-  // user clicks Save without pressing Enter first — setCells alone would be one render stale.
-  const cellsRef = useRef<Cells>({});
+  // user clicks Save without pressing Enter first — setWorkbook alone would be one render stale.
+  const workbookRef = useRef<Workbook>(EMPTY_WB);
+  const setWb = (next: Workbook) => { workbookRef.current = next; setWorkbook(next); };
+  const cells = workbook.sheets[workbook.active] ?? {};
   const [dirty, setDirty] = useState(false);
   const [showName, setShowName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -73,13 +78,13 @@ export default function ErpSpreadsheetEditor() {
     if (sheetQ.data && seededId.current !== id) {
       seededId.current = id;
       setTitle(sheetQ.data.title); setTier(sheetQ.data.sensitivity_tier);
-      const c = sheetQ.data.cells ?? {}; setCells(c); cellsRef.current = c; setDirty(false);
+      setWb(parseWorkbook(sheetQ.data.cells)); setDirty(false); // backward-compatible v1 -> single sheet
     }
   }, [sheetQ.data, id]);
 
   const save = useMutation({
     mutationFn: async (vars: { finalTitle: string; silent?: boolean }) => {
-      const payload = { title: vars.finalTitle.trim(), cells: cellsRef.current, sensitivityTier: tier };
+      const payload = { title: vars.finalTitle.trim(), cells: serializeWorkbook(workbookRef.current), sensitivityTier: tier };
       return id ? apiRequest<ErpSheet>('PATCH', `/api/erp-spreadsheets/${id}`, payload) : apiRequest<ErpSheet>('POST', '/api/erp-spreadsheets', payload);
     },
     onSuccess: (doc, vars) => {
@@ -106,7 +111,38 @@ export default function ErpSpreadsheetEditor() {
     const t = setTimeout(() => save.mutate({ finalTitle: title.trim(), silent: true }), 1000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, dirty, cells, title, tier, save.isPending]);
+  }, [id, dirty, workbook, title, tier, save.isPending]);
+
+  // ── P1-7 sheet operations (workbook CRUD) ──────────────────────────────────────────────
+  const updateActiveCells = (c: Cells) => {
+    setWb({ ...workbook, sheets: { ...workbook.sheets, [workbook.active]: c } });
+    setDirty(true);
+  };
+  const selectSheet = (name: string) => { setWb({ ...workbook, active: name }); };
+  const addSheet = () => {
+    const name = nextSheetName(workbook.order);
+    setWb({ order: [...workbook.order, name], active: name, sheets: { ...workbook.sheets, [name]: {} } });
+    setDirty(true);
+  };
+  const renameSheet = (oldName: string, newName: string) => {
+    if (workbook.order.includes(newName)) return; // keep names unique
+    const sheets: Record<string, Cells> = {};
+    for (const n of workbook.order) sheets[n === oldName ? newName : n] = workbook.sheets[n];
+    setWb({
+      order: workbook.order.map((n) => (n === oldName ? newName : n)),
+      active: workbook.active === oldName ? newName : workbook.active,
+      sheets,
+    });
+    setDirty(true);
+  };
+  const deleteSheet = (name: string) => {
+    if (workbook.order.length <= 1) return; // always keep at least one sheet
+    const order = workbook.order.filter((n) => n !== name);
+    const sheets = { ...workbook.sheets };
+    delete sheets[name];
+    setWb({ order, active: workbook.active === name ? order[0] : workbook.active, sheets });
+    setDirty(true);
+  };
   const handleSaveClick = () => { if (!id) { setNameInput(title.trim()); setShowName(true); return; } doSave(); };
 
   // Ctrl+S / Cmd+S = save now (suppress the browser save dialog); ref keeps the listener fresh.
@@ -176,7 +212,9 @@ export default function ErpSpreadsheetEditor() {
         {/* EuroPrint letterhead — top-left of every spreadsheet (owner requirement). */}
         <div className="mb-3 flex justify-start"><DocumentLogo /></div>
         <DocumentWatermark tier={tier}>
-          <SpreadsheetGrid cells={cells} onChange={(c) => { cellsRef.current = c; setCells(c); setDirty(true); }} onCopy={() => { if (id) logDocumentAccess('erp_spreadsheet', id, 'copy'); }} />
+          {/* key per sheet => fresh selection + undo history when switching sheets (P1-7). */}
+          <SpreadsheetGrid key={workbook.active} cells={cells} onChange={updateActiveCells} onCopy={() => { if (id) logDocumentAccess('erp_spreadsheet', id, 'copy'); }} />
+          <SheetTabs order={workbook.order} active={workbook.active} onSelect={selectSheet} onAdd={addSheet} onRename={renameSheet} onDelete={deleteSheet} />
         </DocumentWatermark>
       </div>
 
