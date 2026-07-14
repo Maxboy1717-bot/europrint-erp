@@ -142,6 +142,11 @@ export default function ErpDocumentEditor() {
     onError: () => toast({ title: tLabel('common.error', 'Xatolik'), description: tLabel('documents.printDenied', "Chop etish rad etildi"), variant: 'destructive' }),
   });
 
+  // P1-4 — live word/character count derived from the HTML (no extra TipTap extension needed).
+  const plainText = contentHtml.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ');
+  const wordCount = plainText.trim() ? plainText.trim().split(/\s+/).length : 0;
+  const charCount = plainText.replace(/\s+/g, '').length;
+
   const statusText = save.isPending
     ? tLabel('documents.saving', 'Saqlanmoqda…')
     : dirty
@@ -188,6 +193,10 @@ export default function ErpDocumentEditor() {
             <span className="text-[11px] text-[var(--ep-muted)] inline-flex items-center gap-1">
               {statusText && !dirty && !save.isPending && <Check className="w-3 h-3 text-[var(--ep-green)]" />}
               {statusText}
+            </span>
+            {/* P1-4 word/char count (live from the HTML). */}
+            <span className="text-[11px] text-[var(--ep-muted)]" title={tLabel('documents.wordCount', 'So\'z / belgi soni')}>
+              {wordCount} {tLabel('documents.words', "so'z")} · {charCount} {tLabel('documents.chars', 'belgi')}
             </span>
           </div>
         </div>
