@@ -294,18 +294,12 @@ export function CkpTab({ node }: { node: NodeDetail }) {
       toast({ title: e instanceof Error ? e.message : t("Xatolik", "Xatolik"), variant: "destructive" }),
   });
 
-  if (isLoading) return <EPLoader />;
-
-  const latest = facts.length > 0 ? facts[0] : null;
-  const latestPct = latest ? toNum(latest.achievement_pct) : null;
-  // T11-05 — kunlik deadline-enforcement: so'nggi fakt deadline'dan o'tib topshirilganmi (REAL data).
-  // node.ckpReportDeadlineHours (EGASI-DATA) + latest.submitted_at (DB) yo'q bo'lsa null → badge yo'q.
-  const latestOverdue = latest
-    ? computeOverdue(node.ckpReportDeadlineHours, latest.fact_date, latest.submitted_at)
-    : null;
-
   // ── SB0008 — "ЦКП status today" badge: bugun hisobot topshirilganmi/muddat o'tganmi/kutilmoqda. ──
   // FABRIKATSIYA YO'Q: faqat REAL fact_date=bugun qatorlar + deadlineHours (EGASI-DATA) asosida.
+  // 2026-07-14: bu ikki useMemo AVVAL `if (isLoading) return` DAN KEYIN edi — Rules-of-Hooks buzilishi
+  // (loading holatida bu hooklar chaqirilmasdi, keyingi render'da chaqirilardi → "Rendered more hooks
+  // than during the previous render" — butun ЦКП tab crash bo'lardi, har bir karta uchun). Hooklar
+  // shart-shароitsiz DOIM chaqirilishi kerak — shuning uchun early-return'dan OLDINGA ko'chirildi.
   const todayFacts = useMemo(() => facts.filter((f) => String(f.fact_date).slice(0, 10) === today), [facts, today]);
   const todayStatus = useMemo((): { tone: "success" | "warning" | "danger" | "info"; label: string } => {
     if (todayFacts.length > 0) return { tone: "success", label: t("ckpBugunTopshirildi", "Bugun topshirildi") };
@@ -321,6 +315,16 @@ export function CkpTab({ node }: { node: NodeDetail }) {
     if (overdueYesterday) return { tone: "danger", label: t("ckpBugunMuddatOtdi", "Muddat o'tdi — hisobot yo'q") };
     return { tone: "warning", label: t("ckpBugunKutilmoqda2", "Bugungi hisobot kutilmoqda") };
   }, [todayFacts, node.ckpReportDeadlineHours, today, t]);
+
+  if (isLoading) return <EPLoader />;
+
+  const latest = facts.length > 0 ? facts[0] : null;
+  const latestPct = latest ? toNum(latest.achievement_pct) : null;
+  // T11-05 — kunlik deadline-enforcement: so'nggi fakt deadline'dan o'tib topshirilganmi (REAL data).
+  // node.ckpReportDeadlineHours (EGASI-DATA) + latest.submitted_at (DB) yo'q bo'lsa null → badge yo'q.
+  const latestOverdue = latest
+    ? computeOverdue(node.ckpReportDeadlineHours, latest.fact_date, latest.submitted_at)
+    : null;
 
   return (
     <div className="space-y-4">
