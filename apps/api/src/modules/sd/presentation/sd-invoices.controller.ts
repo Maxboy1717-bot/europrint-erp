@@ -13,12 +13,15 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
   UseInterceptors, BadRequestException, NotFoundException, InternalServerErrorException} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { DocumentAccessLogService } from '@common/document-control/document-access-log.service';
+import { stampPdfWatermark } from '@common/pdf/pdf-watermark.helper';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -55,7 +58,21 @@ export class SdInvoicesController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly invoicePdfService: SdInvoicePdfService,
+    private readonly accessLog: DocumentAccessLogService,
   ) {}
+
+  // STEP 3.7 — client-export leak prevention: stamp the exporter identity onto the real PDF and
+  // record a `client_export` row in document_access_log (the director audit panel reads this).
+  // Dual-log: the existing audit_logs entry (AuditInterceptor) is left untouched.
+  private async watermarkAndLog(
+    buffer: Buffer, req: FastifyRequest, user: AuthenticatedUser, invoiceId: string, kind: string,
+  ): Promise<Buffer> {
+    const u = (user ?? {}) as { fullName?: string; full_name?: string; username?: string; id?: number };
+    const who = u.fullName ?? u.full_name ?? u.username ?? `#${u.id ?? ''}`;
+    const stamped = await stampPdfWatermark(buffer, `EuroPrint • ${kind} • ${who}`);
+    await this.accessLog.logFromReq(req, { documentType: 'sd_invoice', documentId: invoiceId, action: 'client_export' });
+    return stamped;
+  }
 
   @ApiOperation({ summary: 'Get invoices' })
   @ApiResponse({ status: 200, description: 'OK' })
@@ -100,7 +117,7 @@ export class SdInvoicesController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/pdf')
   @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
-  async downloadInvoicePdf(@Param('id') id: string, @Res() res: FastifyReply) {
+  async downloadInvoicePdf(@Param('id') id: string, @Res() res: FastifyReply, @Req() req: FastifyRequest, @CurrentUser() user: AuthenticatedUser) {
     const query = new GetInvoiceQuery(id);
     const result = await this.queryBus.execute(query);
     assertOk(result);
@@ -124,7 +141,7 @@ export class SdInvoicesController {
       this.logger.error(`Invoice PDF generatsiya xatoligi (id=${id}): ${pdfR.error.message}`);
       throw new InternalServerErrorException(pdfR.error.message);
     }
-    const buffer = pdfR.data;
+    const buffer = await this.watermarkAndLog(pdfR.data, req, user, id, 'INVOYS');
     res
       .header('Content-Type', 'application/pdf')
       .header('Content-Disposition', `attachment; filename="invoice-${id}.pdf"`)
@@ -137,7 +154,7 @@ export class SdInvoicesController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/export-pdf')
   @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
-  async downloadExportInvoicePdf(@Param('id') id: string, @Res() res: FastifyReply) {
+  async downloadExportInvoicePdf(@Param('id') id: string, @Res() res: FastifyReply, @Req() req: FastifyRequest, @CurrentUser() user: AuthenticatedUser) {
     const query = new GetInvoiceQuery(id);
     const result = await this.queryBus.execute(query);
     assertOk(result);
@@ -168,7 +185,7 @@ export class SdInvoicesController {
       this.logger.error(`Eksport-invoys PDF generatsiya xatoligi (id=${id}): ${pdfR.error.message}`);
       throw new InternalServerErrorException(pdfR.error.message);
     }
-    const buffer = pdfR.data;
+    const buffer = await this.watermarkAndLog(pdfR.data, req, user, id, 'EKSPORT-INVOYS');
     res
       .header('Content-Type', 'application/pdf')
       .header('Content-Disposition', `attachment; filename="export-invoice-${id}.pdf"`)
