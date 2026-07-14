@@ -140,7 +140,8 @@ export default function ErpDocumentEditor() {
   // Decision #4/#5 — gated print: reason required + leadership-only + logged, then browser print.
   const print = useMutation({
     mutationFn: (reason: string) => apiRequest('POST', `/api/erp-documents/${id}/print`, { reason }),
-    onSuccess: () => { setShowPrint(false); setPrintReason(''); setTimeout(() => window.print(), 100); },
+    // Reason logged server-side; open the chrome-free print/PDF view (P1-11) for a clean output.
+    onSuccess: () => { setShowPrint(false); setPrintReason(''); navigate(`/documents/${id}/print`); },
     onError: () => toast({ title: tLabel('common.error', 'Xatolik'), description: tLabel('documents.printDenied', "Chop etish rad etildi"), variant: 'destructive' }),
   });
 

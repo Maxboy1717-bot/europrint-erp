@@ -31,6 +31,7 @@ const HRCapitalPublicTest = lazy(() => import("@/pages/HRCapitalPublicTest"));
 const TelegramMiniApp = lazy(() => import("@/pages/mini-app/TelegramMiniApp"));
 const PosMonitorApp   = lazy(() => import("./pos-monitor/PosMonitorApp"));
 const ChatPageFull    = lazy(() => import("@/pages/chat/ChatPage"));
+const DocumentPrintView = lazy(() => import("@/pages/documents/DocumentPrintView"));
 
 function MainApp() {
   const [location, setLocation] = useLocation();
@@ -95,6 +96,12 @@ function MainApp() {
 
   if (location.startsWith("/pos-monitor")) {
     return <Suspense fallback={<PageLoader />}><PosMonitorApp /></Suspense>;
+  }
+
+  // P1-11 clean print/PDF view — rendered OUTSIDE the AppShell so window.print() produces a
+  // proper document (no sidebar/toolbar chrome). Auth-gated; the page itself is leadership-gated.
+  if (/^\/(documents|spreadsheets)\/[^/]+\/print$/.test(location)) {
+    return <PrivateRoute><Suspense fallback={<PageLoader />}><DocumentPrintView /></Suspense></PrivateRoute>;
   }
 
   if (location === "/chat" || location.startsWith("/chat/")) {

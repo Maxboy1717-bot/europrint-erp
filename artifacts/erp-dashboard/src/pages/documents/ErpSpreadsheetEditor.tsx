@@ -160,7 +160,8 @@ export default function ErpSpreadsheetEditor() {
 
   const print = useMutation({
     mutationFn: (reason: string) => apiRequest('POST', `/api/erp-spreadsheets/${id}/print`, { reason }),
-    onSuccess: () => { setShowPrint(false); setPrintReason(''); setTimeout(() => window.print(), 100); },
+    // Reason logged server-side; open the chrome-free print/PDF view (P1-11) for a clean output.
+    onSuccess: () => { setShowPrint(false); setPrintReason(''); navigate(`/spreadsheets/${id}/print`); },
     onError: () => toast({ title: tLabel('common.error', 'Xatolik'), description: tLabel('documents.printDenied', 'Chop etish rad etildi'), variant: 'destructive' }),
   });
 
