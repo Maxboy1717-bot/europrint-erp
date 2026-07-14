@@ -10,7 +10,7 @@ import { useChatStore, ChatMessage } from "@/store/chatStore";
 import { ChatAvatar } from "./ChatAvatar";
 import { formatMsgTime } from "./ChatUtils";
 import { useAuth } from "@/hooks/useAuth";
-import { getChatApiBase } from "@/lib/apiBase";
+import { getChatAdvancedApiBase } from "@/lib/apiBase";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from '@/lib/i18n';
 
@@ -34,7 +34,7 @@ export function ThreadPanel({ rootMessage, onClose }: Props) {
       try {
         const msgs = await apiRequest<ChatMessage[]>(
           'GET',
-          `${getChatApiBase()}/messages/${rootMessage.id}/thread`,
+          `${getChatAdvancedApiBase()}/messages/${rootMessage.id}/thread`,
         );
         setThreadMessages(rootMessage.id, msgs);
       } catch {
@@ -53,7 +53,7 @@ export function ThreadPanel({ rootMessage, onClose }: Props) {
     if (!content) return;
     setLoading(true);
     try {
-      await apiRequest('POST', `${getChatApiBase()}/messages/${rootMessage.id}/thread`, { content });
+      await apiRequest('POST', `${getChatAdvancedApiBase()}/messages/${rootMessage.id}/thread`, { content });
       setText("");
     } catch {
       // Silently ignore — keep text so user can retry

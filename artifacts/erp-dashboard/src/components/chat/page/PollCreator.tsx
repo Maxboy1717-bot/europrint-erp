@@ -48,8 +48,9 @@ export function PollCreator({ roomId, onClose, onCreated }: Props) {
     setLoading(true);
     setError("");
     try {
-      await apiRequest('POST', `${getChatApiBase()}/polls`, {
-        roomId,
+      // Canonical room-scoped create (chat-reactions.controller @Controller('chat')) — same poll
+      // system MessagePoll votes against (/api/chat/polls/:id/vote). roomId is in the URL here.
+      await apiRequest('POST', `${getChatApiBase()}/rooms/${roomId}/polls`, {
         question: question.trim(),
         options: validOptions,
         isMultiple,
