@@ -14,9 +14,9 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { db, document_access_log } from '@shared/db';
-import type { DocumentAccessAction } from '@shared/db';
+import type { DocumentAccessAction, DocumentAccessLogRow } from '@shared/db';
 
 export interface DocumentAccessEntry {
   userId?: number | null;
@@ -62,6 +62,51 @@ export class DocumentAccessLogService {
       // Never break the request over an audit-log write.
       this.logger.warn(`document_access_log write failed: ${String(e)}`);
     }
+  }
+
+  /**
+   * READ side (STEP 3.9 director audit panel). Paginated, filtered query over the append-only
+   * log. Filters are all optional AND-combined; newest first. Role-gating is enforced at the
+   * controller (director/super_admin only) — this method assumes an authorised caller.
+   */
+  async queryLog(f: {
+    userId?: number;
+    documentType?: string;
+    action?: DocumentAccessAction;
+    sensitivityTier?: string;
+    dateFrom?: string; // ISO
+    dateTo?: string;   // ISO
+    page: number;
+    limit: number;
+  }): Promise<{ items: DocumentAccessLogRow[]; total: number; page: number; limit: number }> {
+    const conds = [];
+    if (f.userId !== undefined) conds.push(eq(document_access_log.user_id, f.userId));
+    if (f.documentType) conds.push(eq(document_access_log.document_type, f.documentType));
+    if (f.action) conds.push(eq(document_access_log.action, f.action));
+    if (f.sensitivityTier) conds.push(eq(document_access_log.sensitivity_tier, f.sensitivityTier));
+    if (f.dateFrom) conds.push(gte(document_access_log.created_at, new Date(f.dateFrom)));
+    if (f.dateTo) conds.push(lte(document_access_log.created_at, new Date(f.dateTo)));
+    const where = conds.length ? and(...conds) : undefined;
+
+    const page = Math.max(1, Number(f.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(f.limit) || 50));
+    const offset = (page - 1) * limit;
+
+    const items = await db
+      .select()
+      .from(document_access_log)
+      .where(where)
+      .orderBy(desc(document_access_log.created_at))
+      .limit(limit)
+      .offset(offset);
+
+    const totalRes = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(document_access_log)
+      .where(where);
+    const total = Number(totalRes[0]?.n ?? 0);
+
+    return { items, total, page, limit };
   }
 
   /** Convenience: pull ip/user-agent/user off the request, resolve tier, then log. */

@@ -684,6 +684,10 @@ import { LayoutDashboard, X,
       { title: "ERKIN HUJJATLAR", url: "", icon: FileText, separator: true },
       { title: "Mening hujjatlarim", url: "documents", icon: FileText },
       { title: "Yangi hujjat", url: "documents/new", icon: FileText },
+      // STEP 3.9 director audit panel — the `director/` url prefix makes this visible ONLY to
+      // director/admin/super_admin via isMenuAllowed (use-role-menus.ts); BE is @Roles-gated too.
+      { title: "NAZORAT", url: "", icon: ScrollText, separator: true },
+      { title: "Hujjat-kirish jurnali", url: "director/document-audit", icon: ScrollText },
     ]
   },
 };

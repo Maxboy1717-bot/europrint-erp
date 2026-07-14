@@ -12,6 +12,7 @@ const ErpDocumentEditor = lazy(() => import("@/pages/documents/ErpDocumentEditor
 const ErpDocumentsList = lazy(() => import("@/pages/documents/ErpDocumentsList"));
 const DocumentFormatChoice = lazy(() => import("@/pages/documents/DocumentFormatChoice"));
 const ErpSpreadsheetEditor = lazy(() => import("@/pages/documents/ErpSpreadsheetEditor"));
+const DocumentAuditLog = lazy(() => import("@/pages/documents/DocumentAuditLog"));
 
 export const DOCUMENTS_ROUTES: [string, React.ComponentType][] = [
   ['/documents/new', DocumentFormatChoice], // format choice (Matn / Jadval)
@@ -20,4 +21,5 @@ export const DOCUMENTS_ROUTES: [string, React.ComponentType][] = [
   ['/documents', ErpDocumentsList],
   ['/spreadsheets/new', ErpSpreadsheetEditor], // grid create (before :id)
   ['/spreadsheets/:id', ErpSpreadsheetEditor], // grid edit
+  ['/director/document-audit', DocumentAuditLog], // STEP 3.9 director audit panel (role-gated BE + sidebar)
 ];
