@@ -30,10 +30,14 @@ function buildConnectors(nodes: LayoutNode[]): React.ReactNode[] {
     parent.children?.forEach((child, idx) => {
       const cx = child.x + CARD_W / 2;
       const cy = child.y;
-      // Midpoint between parent-bottom and child-top — not a fixed V_GAP/2, because a child's
-      // tier row can now sit several rows below its parent (skipped levels render in their own
-      // row per owner spec; see helpers.ts layoutTree), making the gap bigger than one V_GAP.
-      const midY = py + (cy - py) / 2;
+      // Jog right after the parent (not the true midpoint of the whole gap) — for an adjacent
+      // row this is the same point either way, but for a level-skipping child (owner spec: a
+      // card can be parented several tiers up) the true-midpoint jog used to land its horizontal
+      // segment in the middle of the intervening rows, visually cutting across unrelated cards
+      // and their own connectors ("chiziqlar tushunarsiz bo'lib qolgan"). Jogging right below the
+      // parent keeps the horizontal segment short and out of the busy rows; the rest of the drop
+      // is a single vertical run down the side to the child, same as any org-chart's direct line.
+      const midY = Math.min(py + V_GAP / 2, py + (cy - py) / 2);
       const key = `conn-${parent.node.id}-${child.node.id}-${idx}`;
       lines.push(
         <path
