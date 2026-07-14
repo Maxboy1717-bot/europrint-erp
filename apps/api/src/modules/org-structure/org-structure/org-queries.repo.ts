@@ -160,13 +160,21 @@ export class OrgQueriesRepo {
             JOIN users eu ON eu.id = eod.user_id AND eu.is_active = TRUE
             WHERE eod.org_department_id = ${orgDepartments.id}
           )`,
+          // 2026-07-14: subquery MUST alias its own org_departments reference (child_dept) —
+          // the outer .from(orgDepartments) below is unaliased, so a bare, same-named
+          // `org_departments.id` inside this subquery resolved to the SUBQUERY's OWN row
+          // (self-correlation), not the outer card — `parent_id = own id` is never true, so
+          // this returned 0 for EVERY card regardless of real children (verified live: node #8
+          // showed "Farzandlar (0)" while actually having 2). The correct aliased pattern
+          // already existed elsewhere in this same file (line 51, vacantCardCount `f` alias) —
+          // this one just missed it.
           childCount: sql<number>`(
-            SELECT COUNT(*)::int FROM org_departments
-            WHERE parent_id = ${orgDepartments.id} AND is_active = true
+            SELECT COUNT(*)::int FROM org_departments child_dept
+            WHERE child_dept.parent_id = ${orgDepartments.id} AND child_dept.is_active = true
           )`,
           vacantChildCount: sql<number>`(
-            SELECT COUNT(*)::int FROM org_departments
-            WHERE parent_id = ${orgDepartments.id} AND is_active = true AND head_user_id IS NULL
+            SELECT COUNT(*)::int FROM org_departments child_dept
+            WHERE child_dept.parent_id = ${orgDepartments.id} AND child_dept.is_active = true AND child_dept.head_user_id IS NULL
           )`,
         })
         .from(orgDepartments)
