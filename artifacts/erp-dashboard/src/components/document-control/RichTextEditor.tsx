@@ -10,7 +10,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import { useEffect, useRef, useState } from 'react';
 import { documentEditorExtensions } from './documentEditorConfig';
 import { DocumentToolbar } from './DocumentToolbar';
-import { DocumentPaper } from './DocumentPaper';
+import { DocumentPaper, type PageMargins } from './DocumentPaper';
 import { DocumentWatermark } from './DocumentWatermark';
 import { FindBar } from './FindBar';
 
@@ -21,6 +21,7 @@ export function RichTextEditor({
   contentKey,
   editable = true,
   tier,
+  margins,
   onChange,
 }: {
   value?: Record<string, unknown> | null;
@@ -30,6 +31,7 @@ export function RichTextEditor({
   contentKey?: string | number;
   editable?: boolean;
   tier?: string | null;
+  margins?: PageMargins;
   onChange?: (json: Record<string, unknown>, html: string) => void;
 }) {
   const editor = useEditor({
@@ -67,7 +69,7 @@ export function RichTextEditor({
     >
       {editable && <FindBar editor={editor} open={findOpen} onClose={() => setFindOpen(false)} />}
       {editable && <DocumentToolbar editor={editor} onFind={() => setFindOpen(true)} />}
-      <DocumentPaper>
+      <DocumentPaper margins={margins}>
         {/* Watermark wraps the writing surface only (over the paper, under the toolbar). */}
         <DocumentWatermark tier={tier}>
           <EditorContent

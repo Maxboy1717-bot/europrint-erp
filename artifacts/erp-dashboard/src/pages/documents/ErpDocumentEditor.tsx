@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { tLabel } from '@/lib/i18n/tLabel';
 import { logDocumentAccess } from '@/lib/documentAccessLog';
 import { useSetIdleTier } from '@/components/IdleLogoutProvider';
+import { MARGIN_PRESETS, loadMargins, saveMargins, type PageMargins } from '@/components/document-control/DocumentPaper';
 
 // Decision #5 — print is leadership-only (admin/super_admin/director bypass; *_manager = dept heads).
 const PRINT_ROLES = new Set(['admin', 'super_admin', 'director', 'manager', 'hr_manager', 'finance_manager', 'production_manager']);
@@ -55,6 +56,8 @@ export default function ErpDocumentEditor() {
 
   const [title, setTitle] = useState('');
   const [tier, setTier] = useState('oddiy');
+  const [margins, setMargins] = useState<PageMargins>(() => loadMargins(id));
+  const changeMargins = (m: PageMargins) => { setMargins(m); saveMargins(id, m); };
   const [content, setContent] = useState<Record<string, unknown> | null>(null);
   const [contentHtml, setContentHtml] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -193,6 +196,15 @@ export default function ErpDocumentEditor() {
             >
               {TIERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
+            {/* P1-5 page margins */}
+            <select
+              value={MARGIN_PRESETS.find((p) => p.m.x === margins.x && p.m.y === margins.y)?.key ?? 'normal'}
+              onChange={(e) => { const p = MARGIN_PRESETS.find((x) => x.key === e.target.value); if (p) changeMargins(p.m); }}
+              title={tLabel('documents.pageMargins', 'Sahifa chetlari')}
+              className="text-[11px] font-medium rounded-full border border-[var(--ep-border)] text-[var(--ep-muted)] px-2 py-0.5 outline-none cursor-pointer bg-[var(--ep-surface)]"
+            >
+              {MARGIN_PRESETS.map((p) => <option key={p.key} value={p.key}>{tLabel('documents.margin_' + p.key, p.label)}</option>)}
+            </select>
             <span className="text-[11px] text-[var(--ep-muted)] inline-flex items-center gap-1">
               {statusText && !dirty && !save.isPending && <Check className="w-3 h-3 text-[var(--ep-green)]" />}
               {statusText}
@@ -289,6 +301,7 @@ export default function ErpDocumentEditor() {
           contentKey={editorKey}
           value={editorValue}
           tier={tier}
+          margins={margins}
           onChange={(json, html) => { setContent(json); setContentHtml(html); setDirty(true); }}
         />
       </div>

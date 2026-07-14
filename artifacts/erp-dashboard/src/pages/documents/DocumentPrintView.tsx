@@ -18,6 +18,7 @@ import { RichTextEditor } from '@/components/document-control/RichTextEditor';
 import { SpreadsheetGrid } from '@/components/document-control/SpreadsheetGrid';
 import { DocumentWatermark } from '@/components/document-control/DocumentWatermark';
 import { DocumentLogo } from '@/components/document-control/DocumentLogo';
+import { loadMargins } from '@/components/document-control/DocumentPaper';
 import { parseWorkbook } from '@/lib/spreadsheetWorkbook';
 import type { Cells } from '@/lib/spreadsheet';
 
@@ -76,7 +77,7 @@ export default function DocumentPrintView() {
             </DocumentWatermark>
           </div>
         ) : (
-          <RichTextEditor value={q.data.content} editable={false} tier={tier} contentKey={`print:${id}`} />
+          <RichTextEditor value={q.data.content} editable={false} tier={tier} margins={loadMargins(id)} contentKey={`print:${id}`} />
         )}
       </div>
     </div>
