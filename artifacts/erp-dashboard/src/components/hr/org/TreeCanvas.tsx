@@ -60,12 +60,16 @@ export function TreeCanvas({
   onNodeClick,
   onAddChild,
   onDuplicate,
+  tierSeqMap,
 }: {
   roots: OrgNode[];
   onNodeClick: (id: number) => void;
   onAddChild: (parentId: string) => void;
   /** G4: duplicate-card action — receives the source node plus its resolved parentId (null = root). */
   onDuplicate?: (node: OrgNode, parentId: number | null) => void;
+  /** Per-tier "#N" sequence (helpers.ts computeTierSequences), keyed by node.id — computed over
+   *  the FULL node set so numbers stay stable across search/level filtering. */
+  tierSeqMap?: Map<number, number>;
 }) {
   if (!roots || roots.length === 0) return null;
 
@@ -106,6 +110,7 @@ export function TreeCanvas({
             onClick={onNodeClick}
             onAdd={onAddChild}
             onDuplicate={onDuplicate ? () => onDuplicate(node, parentMap?.get(node.id) ?? null) : undefined}
+            tierSeq={tierSeqMap?.get(node.id)}
           />
         </div>
       ))}

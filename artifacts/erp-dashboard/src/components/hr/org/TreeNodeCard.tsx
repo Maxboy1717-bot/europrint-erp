@@ -16,6 +16,7 @@ export function TreeNodeCard({
   onClick,
   onAdd,
   onDuplicate,
+  tierSeq,
 }: {
   node: OrgNode;
   onClick: (id: number) => void;
@@ -24,6 +25,9 @@ export function TreeNodeCard({
    * opens AddNodeDialog pre-filled from this card instead of a blank form. Optional so callers
    * that don't wire it (if any remain) keep the old add-child-only toolbar. */
   onDuplicate?: () => void;
+  /** Per-tier "#N" sequence (helpers.ts computeTierSequences) — falls back to the raw DB id
+   *  only if the caller didn't compute one, so the badge is never blank. */
+  tierSeq?: number;
 }) {
   const { t, language } = useTranslation("common");
   const [hrcExpanded, setHrcExpanded] = useState(false);
@@ -112,7 +116,7 @@ export function TreeNodeCard({
                 {razryadLevel}-razr
               </span>
             )}
-            <span className="text-[9px] text-white/50">#{node.id}</span>
+            <span className="text-[9px] text-white/50">#{tierSeq ?? node.id}</span>
           </div>
 
           <p className="font-bold text-sm leading-snug line-clamp-2">{node.name}</p>

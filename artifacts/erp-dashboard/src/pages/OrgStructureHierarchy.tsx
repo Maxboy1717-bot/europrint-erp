@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import {
   Building2, Users, ZoomIn, ZoomOut, RotateCcw, Move,
@@ -21,7 +21,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { OrgNode, OrgStats, ORG_TIERS } from "@/components/hr/org/types";
-import { countNodes } from "@/components/hr/org/helpers";
+import { countNodes, computeTierSequences } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
 import { AddNodeDialog, DuplicateFromInput } from "@/components/hr/org/AddNodeDialog";
 import { TreeCanvas } from "@/components/hr/org/TreeCanvas";
@@ -128,6 +128,8 @@ export default function OrgStructureHierarchy() {
   }
 
   const allNodes = hierarchyData?.nodes || [];
+  // Stable across search/level-filter changes — computed from the FULL node set, not filteredNodes.
+  const tierSeqMap = useMemo(() => computeTierSequences(allNodes), [allNodes]);
   const hasFilter = !!(search || filterStatus !== "all" || filterLevels.size > 0);
   const filteredNodes = hasFilter ? filterTree(allNodes, search) : allNodes;
   const totalFiltered = countNodes(filteredNodes);
@@ -242,6 +244,7 @@ export default function OrgStructureHierarchy() {
               onNodeClick={(id) => navigate(`/org-structure/hierarchy/node/${id}`)}
               onAddChild={handleAddChild}
               onDuplicate={handleDuplicate}
+              tierSeqMap={tierSeqMap}
             />
           </div>
         )}

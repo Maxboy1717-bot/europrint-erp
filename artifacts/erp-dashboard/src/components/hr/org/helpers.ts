@@ -55,6 +55,37 @@ export function countNodes(nodes: OrgNode[]): number {
   return (Array.isArray(nodes) ? nodes : []).reduce((sum, n) => sum + 1 + countNodes(n.children || []), 0);
 }
 
+function flattenOrgTree(nodes: OrgNode[]): OrgNode[] {
+  const result: OrgNode[] = [];
+  (Array.isArray(nodes) ? nodes : []).forEach((n) => {
+    result.push(n);
+    result.push(...flattenOrgTree(n.children || []));
+  });
+  return result;
+}
+
+/** Per-tier "#N" sequence for the card badge — owner 2026-07-14: "# dan keyingi raqamlar
+ *  faqat karta turlariga bog'liq bo'lsin ... umumiy emas" (the number after # must depend on
+ *  the card's TYPE, not a single shared/global counter). node.id is the raw DB primary key —
+ *  global across every card regardless of tier, so a Bo'lim card and a Sektor card could show
+ *  "#8"/"#13" with no relation to how many Bo'lim or Sektor cards actually exist. This computes
+ *  an independent 1,2,3... counter PER TIER (resolveTierIndex — the same 6-tier grouping used
+ *  for color/row), ordered by id ascending (creation order), over the FULL node set (not just
+ *  whatever is currently visible after search/level filtering) so the numbers stay stable
+ *  regardless of filter state. */
+export function computeTierSequences(nodes: OrgNode[]): Map<number, number> {
+  const flat = flattenOrgTree(nodes).slice().sort((a, b) => a.id - b.id);
+  const counters: Record<number, number> = {};
+  const map = new Map<number, number>();
+  for (const n of flat) {
+    const tier = resolveTierIndex(n.nodeType, n.hierarchyLevel ?? 0);
+    const next = (counters[tier] ?? 0) + 1;
+    counters[tier] = next;
+    map.set(n.id, next);
+  }
+  return map;
+}
+
 export function getInitials(name?: string | null): string {
   if (!name) return "?";
   return name
