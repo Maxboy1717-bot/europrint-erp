@@ -41,7 +41,6 @@ export function EditDialog({
   const [form, setForm] = useState({
     name: node.name,
     nameRu: node.nameRu || "",
-    color: node.color,
     tskp: node.tskp || "",
     tskpRu: node.tskpRu || "",
     description: node.description || "",
@@ -103,7 +102,7 @@ export function EditDialog({
       // VISION node=karta: bo'sh string'larni olib tashlab, raqamlarni number qilib yuboramiz (.strict() Zod)
       const numOrNull = (v: unknown) => { const n = Number(v); return v === "" || v == null || Number.isNaN(n) ? null : n; };
       const payload: Record<string, unknown> = {
-        name: form.name, nameRu: form.nameRu, color: form.color, tskp: form.tskp, tskpRu: form.tskpRu,
+        name: form.name, nameRu: form.nameRu, tskp: form.tskp, tskpRu: form.tskpRu,
         description: form.description, nodeType: form.nodeType, headUserId: form.headUserId,
         razryadLevelId: form.razryadLevelId,
         salaryType: form.salaryType || null,
@@ -169,27 +168,21 @@ export function EditDialog({
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label>{t("rang")}</Label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={form.color}
-                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                className="h-8 w-16 rounded border" />
-              <span className="text-sm text-muted-foreground">{form.color}</span>
-            </div>
-          </div>
+          {/* 2026-07-13 (egasi): rang tanlash umuman kerak emas — karta rangi TURI (nodeType, 6
+              ta tier — ORG_TIERS) bo'yicha AVTOMATIK beriladi, xuddi AddNodeDialog'da bo'lgani
+              kabi bu yerdan ham qo'lda rang tanlash butunlay olib tashlandi. */}
           <div className="col-span-2">
             <Label>{t("progress.description")}</Label>
             <Input value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </div>
           <div className="col-span-2">
-            <Label>Bo'lim boshlig'i</Label>
+            <Label>{t("bolimBoshligi", "Bo'lim boshlig'i")}</Label>
             <Select
               value={form.headUserId == null ? "__none__" : String(form.headUserId)}
               onValueChange={(v) => setForm((f) => ({ ...f, headUserId: v === "__none__" ? null : Number(v) }))}
             >
-              <SelectTrigger><SelectValue placeholder="Boshliq tanlang" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("boshliqTanlang", "Boshliq tanlang")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">— Yo'q (bo'sh) —</SelectItem>
                 {headOptions.map((o) => (
@@ -314,21 +307,26 @@ export function EditDialog({
             <Label>{t("ishSoati", "Ish soati")}</Label>
             <Input type="number" inputMode="numeric" min={0} max={24} value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="8" />
           </div>
-          <div>
-            <Label>{t("otdeleniye", "Otdeleniye (1-7)")}</Label>
-            <Select
-              value={form.otdeleniyeNo == null ? "__none__" : String(form.otdeleniyeNo)}
-              onValueChange={(v) => setForm((f) => ({ ...f, otdeleniyeNo: v === "__none__" ? null : Number(v) }))}
-            >
-              <SelectTrigger data-testid="select-node-otdeleniye"><SelectValue placeholder="—" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">— {t("yoq", "Yo'q")} —</SelectItem>
-                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n}-{t("otdeleniyeShort", "otdeleniye")}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* 2026-07-14: AddNodeDialog'dagi kabi faqat nodeType='otdeleniye' bo'lganda ko'rsatiladi —
+              avval bu maydon HAR QANDAY karta turida (Egasi, Bo'lim, Sektor va h.k.) ham chiqib
+              turardi, mazmunsiz/chalkash edi. */}
+          {form.nodeType === "otdeleniye" && (
+            <div>
+              <Label>{t("otdeleniye", "Otdeleniye (1-7)")}</Label>
+              <Select
+                value={form.otdeleniyeNo == null ? "__none__" : String(form.otdeleniyeNo)}
+                onValueChange={(v) => setForm((f) => ({ ...f, otdeleniyeNo: v === "__none__" ? null : Number(v) }))}
+              >
+                <SelectTrigger data-testid="select-node-otdeleniye"><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— {t("yoq", "Yo'q")} —</SelectItem>
+                  {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}-{t("otdeleniyeShort", "otdeleniye")}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label>{t("joriyHolat", "Joriy holat")}</Label>
             <Input value={form.currentState} onChange={(e) => setForm((f) => ({ ...f, currentState: e.target.value }))} />

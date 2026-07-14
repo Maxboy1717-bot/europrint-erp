@@ -24,6 +24,7 @@ import { OrgNode, OrgStats, ORG_TIERS } from "@/components/hr/org/types";
 import { countNodes, computeTierSequences } from "@/components/hr/org/helpers";
 import { KpiCard } from "@/components/hr/org/KpiCard";
 import { AddNodeDialog, DuplicateFromInput } from "@/components/hr/org/AddNodeDialog";
+import { VacantPositionsDialog } from "@/components/hr/org/VacantPositionsDialog";
 import { TreeCanvas } from "@/components/hr/org/TreeCanvas";
 import { EPErrorState, EPStatusPill } from "@/components/ep";
 import { useTranslation } from '@/lib/i18n';
@@ -46,6 +47,10 @@ export default function OrgStructureHierarchy() {
   const [addOpen, setAddOpen] = useState(false);
   const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
   const [duplicateFrom, setDuplicateFrom] = useState<DuplicateFromInput | null>(null);
+  // Owner 2026-07-14: "Vakant lavozimlar bosganda bu tab ochilib ko'rsatishi kerak" — real list
+  // view instead of just a toast (see VacantPositionsDialog.tsx + notifyMutation below).
+  const [vacantDialogOpen, setVacantDialogOpen] = useState(false);
+  const [vacantNodes, setVacantNodes] = useState<{ id: string; name: string }[]>([]);
   // VISION (egasi 2026-06-25): KARTA-markazli — sahifa FAQAT karta-daraxti. Alohida "Kartalar" va
   // "Razryadlar" tablar OLIB TASHLANDI: razryad har KARTA ichida (node-detal), alohida emas. Karta
   // bosilsa → /org-structure/hierarchy/node/:id = to'liq karta-detali (razryad/oylik/ЦКП/rbac/xodim).
@@ -61,8 +66,10 @@ export default function OrgStructureHierarchy() {
         "POST",
         "/api/org-departments/notify-vacancies",
       ),
-    onSuccess: (d) =>
-      toast({ title: `${d.vacantCount} ta vakant bo'lim`, description: "Boshliqlari tayinlanmagan bo'limlar" }),
+    onSuccess: (d) => {
+      setVacantNodes(Array.isArray(d.vacantNodes) ? d.vacantNodes : []);
+      setVacantDialogOpen(true);
+    },
     // 2026-07-14 (egasi): generic "Xatolik" toast yashirardi — endi aniq xato matni ko'rsatiladi
     // (masalan HttpError'ning haqiqiy status+xabari), keyingi safar xato chiqsa darrov aniqlansin.
     onError: (e) => toast({
@@ -269,6 +276,12 @@ export default function OrgStructureHierarchy() {
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/hierarchy"] });
           queryClient.invalidateQueries({ queryKey: ["/api/org-structure/stats"] });
         }}
+      />
+
+      <VacantPositionsDialog
+        open={vacantDialogOpen}
+        onClose={() => setVacantDialogOpen(false)}
+        nodes={vacantNodes}
       />
     </div>
   );
