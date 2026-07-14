@@ -5,7 +5,9 @@
 
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, UseGuards, UseInterceptors, HttpException, HttpStatus } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { DocumentAccessLogService } from '@common/document-control/document-access-log.service';
 import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
@@ -105,6 +107,7 @@ export class TechnologyController {
     private readonly svc: TechnologyService,
     private readonly grammage: TechnologyGrammageService,
     private readonly i18n: I18nService,
+    private readonly accessLog: DocumentAccessLogService,
   ) {}
 
   @Get('dashboard')
@@ -191,9 +194,11 @@ export class TechnologyController {
   @Get('cards/:id')
   @Roles(Role.SUPER_ADMIN, Role.DIRECTOR, Role.TECHNOLOGIST)
   @ApiOperation({ summary: 'Get technology card by ID' })
-  async getCardById(@Param('id') id: string) {
+  async getCardById(@Param('id') id: string, @Req() req: FastifyRequest) {
     const r = await this.svc.getCardById(id);
     if (!r.ok) throw new HttpException(await this.i18n.t('errors.technologyCardNotFound'), HttpStatus.NOT_FOUND);
+    // STEP 3.10 roll-out — log the single-card view.
+    await this.accessLog.logFromReq(req, { documentType: 'technology_card', documentId: id, action: 'view' });
     return r.data;
   }
 

@@ -33,6 +33,7 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { AuthenticatedUser } from '@common/types/user.types';
+import { DocumentAccessLogService } from '@common/document-control/document-access-log.service';
 import { LmsCertificatesStandaloneService } from '../application/services/lms-certificates-standalone.service';
 import { CreateCertificateSchema, CreateCertificateDto } from './dto/lms-questionnaire.dto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -45,6 +46,7 @@ export class LmsCertificatesStandaloneController {
   constructor(
     private readonly svc: LmsCertificatesStandaloneService,
     private readonly i18n: I18nService,
+    private readonly accessLog: DocumentAccessLogService,
   ) {}
 
   @Get('expiring')
@@ -106,9 +108,11 @@ export class LmsCertificatesStandaloneController {
 
   @Get(':id')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
-  async getCertificateById(@Param('id') id: string) {
+  async getCertificateById(@Param('id') id: string, @Req() req: FastifyRequest) {
     const row = await this._fetchCertificate(id);
     if (!row) throw new NotFoundException(await this.i18n.t('errors.certificateNotFoundWithId', { args: { id } }));
+    // STEP 3.10 roll-out — log the single-certificate view.
+    await this.accessLog.logFromReq(req, { documentType: 'lms_certificate', documentId: id, action: 'view' });
     return row;
   }
 
@@ -122,12 +126,14 @@ export class LmsCertificatesStandaloneController {
 
   @Get(':id/download')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
-  async downloadCertificate(@Param('id') id: string, @Res() res: FastifyReply) {
+  async downloadCertificate(@Param('id') id: string, @Res() res: FastifyReply, @Req() req: FastifyRequest) {
     // Was a green-lie stub: hardcoded HTML that never queried the DB, echoed only the URL id +
     // today's date, and 200'd for a non-existent cert. Now renders the REAL certificate (404 if
     // absent). Full legal PDF (SHA-256/hash, book format) stays a separate owner-gated item.
     const row = await this._fetchCertificate(id);
     if (!row) throw new NotFoundException(await this.i18n.t('errors.certificateNotFoundWithId', { args: { id } }));
+    // STEP 3.10 roll-out — certificate download is a print-class event.
+    await this.accessLog.logFromReq(req, { documentType: 'lms_certificate', documentId: id, action: 'print' });
     const esc = (v: unknown): string => String(v ?? '—').replace(/[<>&"]/g, (ch) =>
       ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[ch] ?? ch);
     const fmtDate = (v: unknown): string => (v ? new Date(String(v)).toLocaleDateString('uz-UZ') : '—');
