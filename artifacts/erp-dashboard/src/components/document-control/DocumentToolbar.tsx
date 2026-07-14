@@ -9,14 +9,31 @@
  */
 
 import { type Editor } from '@tiptap/react';
+import { useRef } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code,
   Link as LinkIcon, Table as TableIcon, Undo, Redo,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify, Baseline, Highlighter, Image as ImageIcon,
+  AlignLeft, AlignCenter, AlignRight, AlignJustify, Baseline, Highlighter, Image as ImageIcon, Upload,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tLabel } from '@/lib/i18n/tLabel';
+
+// P1-2 device image upload — PUT to /api/storage/upload (cookie-auth), returns the inline-served
+// URL. Reuses the existing storage controller; no new upload infra. Returns the src to embed.
+async function uploadDeviceImage(file: File): Promise<string> {
+  const extMatch = /\.[a-z0-9]+$/i.exec(file.name);
+  const ext = (extMatch ? extMatch[0] : '.png').toLowerCase();
+  const rand = Math.random().toString(36).slice(2, 8);
+  const key = `documents/${Date.now()}-${rand}${ext}`;
+  const fd = new FormData();
+  fd.append('file', file, file.name);
+  const res = await fetch(`/api/storage/upload?key=${encodeURIComponent(key)}&mime=${encodeURIComponent(file.type || 'image/png')}`, {
+    method: 'PUT', body: fd, credentials: 'include',
+  });
+  if (!res.ok) throw new Error('upload failed');
+  return `/api/storage/${key}`;
+}
 
 // A toolbar button whose icon opens the native color picker (text color / highlight).
 function ColorBtn({ title, icon, value, onPick }: {
@@ -75,6 +92,16 @@ export function DocumentToolbar({ editor }: { editor: Editor }) {
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
   const c = () => editor.chain().focus();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const onPickImage = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const src = await uploadDeviceImage(file);
+      c().setImage({ src }).run();
+    } catch {
+      window.alert(tLabel('documents.imageUploadFailed', "Rasmni yuklab bo'lmadi"));
+    }
+  };
   return (
     <div className="sticky top-0 z-20 flex flex-wrap items-center gap-0.5 border-b border-[var(--ep-border)] bg-[var(--ep-surface)] px-3 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <Btn title="Orqaga (Ctrl+Z)" disabled={!editor.can().undo()} onClick={() => c().undo().run()}><Undo className="w-4 h-4" /></Btn>
@@ -122,7 +149,10 @@ export function DocumentToolbar({ editor }: { editor: Editor }) {
       <ColorBtn title={tLabel('documents.highlight', "Ajratib ko'rsatish (marker)")} icon={<Highlighter className="w-4 h-4" />} value={(editor.getAttributes('highlight').color as string) ?? '#fff3a3'} onPick={(col) => c().setHighlight({ color: col }).run()} />
       <Sep />
       <Btn title={tLabel('documents.linkBtn', 'Havola')} active={editor.isActive('link')} onClick={setLink}><LinkIcon className="w-4 h-4" /></Btn>
-      <Btn title={tLabel('documents.insertImage', "Rasm qo'shish")} onClick={() => { const url = window.prompt(tLabel('documents.imageUrl', 'Rasm URL:')); if (url) c().setImage({ src: url }).run(); }}><ImageIcon className="w-4 h-4" /></Btn>
+      <Btn title={tLabel('documents.insertImage', "Rasm (URL)")} onClick={() => { const url = window.prompt(tLabel('documents.imageUrl', 'Rasm URL:')); if (url) c().setImage({ src: url }).run(); }}><ImageIcon className="w-4 h-4" /></Btn>
+      {/* P1-2 device upload */}
+      <Btn title={tLabel('documents.uploadImage', "Rasm yuklash (qurilmadan)")} onClick={() => fileRef.current?.click()}><Upload className="w-4 h-4" /></Btn>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void onPickImage(e.target.files?.[0]); e.target.value = ''; }} />
       <Btn title="Jadval qo'shish" onClick={() => c().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><TableIcon className="w-4 h-4" /></Btn>
       {/* In-table controls (TableKit) — only while the caret is inside a table (P1-1). */}
       {editor.isActive('table') && (
