@@ -205,16 +205,6 @@ export function AddNodeDialog({
             </div>
           )}
           <div>
-            <Label>{t("qyamAsosiyVazifasiMaks32Belgi")}</Label>
-            <Input
-              value={form.tskp}
-              onChange={(e) => setForm((f) => ({ ...f, tskp: e.target.value.slice(0, 32) }))}
-              placeholder={t("asosiyVazifasi")}
-              maxLength={32}
-            />
-            <p className="text-xs text-muted-foreground mt-0.5">{form.tskp.length}/32</p>
-          </div>
-          <div>
             <Label>{t("otaNodeId")}</Label>
             <ParentCardSelect
               value={form.parentId}
@@ -237,8 +227,42 @@ export function AddNodeDialog({
               </SelectContent>
             </Select>
           </div>
+          {/* 2026-07-14 (egasi): ЦКП maqsad, QYaM (asosiy vazifasi) va o'lchov birligi — uchalasi
+              bitta narsa (kartaning ЦКП/QYaM ta'rifi) — avval matn maydoni forma boshida, son+birlik
+              esa pastda alohida turardi; endi bitta joyda birlashtirildi. */}
+          <div className="space-y-2 rounded-md border border-border/50 p-2.5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("ckpQyam", "ЦКП (QYaM)")}</p>
+            <div>
+              <Label>{t("qyamAsosiyVazifasiMaks32Belgi")}</Label>
+              <Input
+                value={form.tskp}
+                onChange={(e) => setForm((f) => ({ ...f, tskp: e.target.value.slice(0, 32) }))}
+                placeholder={t("asosiyVazifasi")}
+                maxLength={32}
+              />
+              <p className="text-xs text-muted-foreground mt-0.5">{form.tskp.length}/32</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>{t("tskpMaqsadSon", "ЦКП maqsad")}</Label>
+                <Input type="number" value={form.tskpTarget} onChange={(e) => setForm((f) => ({ ...f, tskpTarget: e.target.value }))} />
+              </div>
+              <div>
+                <Label>{t("olchovBirligi", "ЦКП o'lchov")}</Label>
+                <Select value={form.tskpMeasurementUnit || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, tskpMeasurementUnit: v === "__none__" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">—</SelectItem>
+                    <SelectItem value="SON">SON</SelectItem>
+                    <SelectItem value="FOIZ">FOIZ</SelectItem>
+                    <SelectItem value="VAQT">VAQT</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
           {/* 2026-07-11: grid-cols-1 tor (mobil/Telegram Mini App) ekranda — 2-ustunli grid
-              raqam maydonlarini (masalan ЦКП maqsad) siqib qo'yardi ("juda qisqa" shikoyati). */}
+              raqam maydonlarini siqib qo'yardi ("juda qisqa" shikoyati). */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <Label>{t("oylikTuri", "Oylik turi")}</Label>
@@ -279,26 +303,12 @@ export function AddNodeDialog({
               <Label>{t("maxOylik", "Max oylik")}</Label>
               <Input type="number" value={form.maxSalary} onChange={(e) => setForm((f) => ({ ...f, maxSalary: e.target.value }))} />
             </div>
-            <div>
-              <Label>{t("tskpMaqsadSon", "ЦКП maqsad")}</Label>
-              <Input type="number" value={form.tskpTarget} onChange={(e) => setForm((f) => ({ ...f, tskpTarget: e.target.value }))} />
-            </div>
-            <div>
-              <Label>{t("olchovBirligi", "ЦКП o'lchov")}</Label>
-              <Select value={form.tskpMeasurementUnit || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, tskpMeasurementUnit: v === "__none__" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">—</SelectItem>
-                  <SelectItem value="SON">SON</SelectItem>
-                  <SelectItem value="FOIZ">FOIZ</SelectItem>
-                  <SelectItem value="VAQT">VAQT</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           <div>
+            {/* 2026-07-14 (egasi): "ish soati" — RAQAM (kuniga necha soat, masalan 8), vaqt-oralig'i
+                ("09:00-18:00") emas. */}
             <Label>{t("ishSoati", "Ish soati")}</Label>
-            <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
+            <Input type="number" inputMode="numeric" min={0} max={24} value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="8" />
           </div>
           <div>
             <Label>{t("bonus", "Bonus")}</Label>

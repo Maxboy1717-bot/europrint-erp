@@ -179,18 +179,6 @@ export function EditDialog({
             </div>
           </div>
           <div className="col-span-2">
-            <Label>{t("qyamUz")}</Label>
-            <Input value={form.tskp}
-              onChange={(e) => setForm((f) => ({ ...f, tskp: e.target.value }))}
-              placeholder={t("asosiyVazifasiQyam")} />
-          </div>
-          <div className="col-span-2">
-            <Label>{t("qyamRu")}</Label>
-            <Input value={form.tskpRu}
-              onChange={(e) => setForm((f) => ({ ...f, tskpRu: e.target.value }))}
-              placeholder={t("ru")} />
-          </div>
-          <div className="col-span-2">
             <Label>{t("progress.description")}</Label>
             <Input value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
@@ -224,6 +212,44 @@ export function EditDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* 2026-07-14 (egasi): ЦКП maqsad, QYaM (asosiy vazifasi) va o'lchov birligi — uchalasi
+              bitta narsa (kartaning ЦКП/QYaM ta'rifi) — avval matn maydoni forma boshida, son+birlik
+              esa pastda alohida turardi; endi bitta joyda birlashtirildi (QYaM RU ham shu yerda —
+              xuddi shu matnning rus tilidagi varianti). */}
+          <div className="col-span-2 space-y-2 rounded-md border border-border/50 p-2.5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("ckpQyam", "ЦКП (QYaM)")}</p>
+            <div>
+              <Label>{t("qyamUz")}</Label>
+              <Input value={form.tskp}
+                onChange={(e) => setForm((f) => ({ ...f, tskp: e.target.value }))}
+                placeholder={t("asosiyVazifasiQyam")} />
+            </div>
+            <div>
+              <Label>{t("qyamRu")}</Label>
+              <Input value={form.tskpRu}
+                onChange={(e) => setForm((f) => ({ ...f, tskpRu: e.target.value }))}
+                placeholder={t("ru")} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>{t("tskpMaqsadSon", "ЦКП maqsad (son)")}</Label>
+                <Input type="number" value={String(form.tskpTarget)} onChange={(e) => setForm((f) => ({ ...f, tskpTarget: e.target.value }))} />
+              </div>
+              <div>
+                <Label>{t("olchovBirligi", "ЦКП o'lchov")}</Label>
+                <Select value={form.tskpMeasurementUnit || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, tskpMeasurementUnit: v === "__none__" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">—</SelectItem>
+                    <SelectItem value="SON">SON</SelectItem>
+                    <SelectItem value="FOIZ">FOIZ (%)</SelectItem>
+                    <SelectItem value="VAQT">VAQT</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           {/* VISION node=karta — to'liq karta-maydonlari (HR 0 dan kiritadi) */}
@@ -267,22 +293,6 @@ export function EditDialog({
             <Input type="number" value={String(form.maxSalary)} onChange={(e) => setForm((f) => ({ ...f, maxSalary: e.target.value }))} />
           </div>
           <div>
-            <Label>{t("tskpMaqsadSon", "ЦКП maqsad (son)")}</Label>
-            <Input type="number" value={String(form.tskpTarget)} onChange={(e) => setForm((f) => ({ ...f, tskpTarget: e.target.value }))} />
-          </div>
-          <div>
-            <Label>{t("olchovBirligi", "ЦКП o'lchov")}</Label>
-            <Select value={form.tskpMeasurementUnit || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, tskpMeasurementUnit: v === "__none__" ? "" : v }))}>
-              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">—</SelectItem>
-                <SelectItem value="SON">SON</SelectItem>
-                <SelectItem value="FOIZ">FOIZ (%)</SelectItem>
-                <SelectItem value="VAQT">VAQT</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
             <Label>{t("ckpFormulaTuri", "ЦКП formula-turi")}</Label>
             <Select
               value={form.ckpFormulaType || "__none__"}
@@ -299,8 +309,10 @@ export function EditDialog({
             </Select>
           </div>
           <div>
+            {/* 2026-07-14 (egasi): "ish soati" — RAQAM (kuniga necha soat, masalan 8), vaqt-oralig'i
+                ("09:00-18:00") emas. */}
             <Label>{t("ishSoati", "Ish soati")}</Label>
-            <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
+            <Input type="number" inputMode="numeric" min={0} max={24} value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="8" />
           </div>
           <div>
             <Label>{t("otdeleniye", "Otdeleniye (1-7)")}</Label>
