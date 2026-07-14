@@ -107,6 +107,11 @@ export function useRoleMenus() {
     // Chat — barcha xodimlar uchun universal modul
     if (menuPath === 'chat' || menuPath === '/chat' || menuPath.startsWith('chat')) return true;
 
+    // Erkin hujjatlar (Mening hujjatlarim / Yangi hujjat) — hamma xodim uchun ochiq (owner).
+    // NB: 'director/document-audit' bu shartga TUSHMAYDI ('documents' bilan boshlanmaydi) —
+    // u Admin Panel modulida qoladi va faqat admin/super_admin ko'radi.
+    if (menuPath === 'documents' || menuPath.startsWith('documents')) return true;
+
     // DB da sozlangan ruxsatlar bo'lsa, o'shani ishlatamiz
     if (allowedMenus && allowedMenus.length > 0) {
       return (Array.isArray(allowedMenus) ? allowedMenus : []).some((menu: RoleMenu) =>

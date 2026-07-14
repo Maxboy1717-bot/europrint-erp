@@ -619,6 +619,9 @@ import { LayoutDashboard, X,
       { title: "Litsenziya va Tariflar", url: "saas/licensing", icon: Key },
       { title: "Modul Yoqish/O'chirish", url: "saas/module-control", icon: PanelLeftClose },
       { title: "TIZIM", url: "", icon: Server, separator: true },
+      // STEP 3.9 director/document-control audit panel — placed in the Admin Panel (super-admin)
+      // module per owner. Route stays /director/document-audit; BE is @Roles(director,super_admin).
+      { title: "Hujjat-kirish jurnali", url: "director/document-audit", icon: ScrollText },
       { title: "Monitoring", url: "saas/monitoring", icon: MonitorDot },
       { title: "Xatolar Logi", url: "saas/error-log", icon: Bug },
       { title: "Istisno Holatlar", url: "admin/exceptions", icon: AlertTriangle },
@@ -681,13 +684,10 @@ import { LayoutDashboard, X,
     icon: FileText,
     defaultUrl: "documents",
     items: [
+      // ERKIN HUJJATLAR — open to everyone (owner): the audit panel moved to the Admin Panel module.
       { title: "ERKIN HUJJATLAR", url: "", icon: FileText, separator: true },
       { title: "Mening hujjatlarim", url: "documents", icon: FileText },
       { title: "Yangi hujjat", url: "documents/new", icon: FileText },
-      // STEP 3.9 director audit panel — the `director/` url prefix makes this visible ONLY to
-      // director/admin/super_admin via isMenuAllowed (use-role-menus.ts); BE is @Roles-gated too.
-      { title: "NAZORAT", url: "", icon: ScrollText, separator: true },
-      { title: "Hujjat-kirish jurnali", url: "director/document-audit", icon: ScrollText },
     ]
   },
 };
