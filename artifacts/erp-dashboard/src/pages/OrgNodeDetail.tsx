@@ -182,6 +182,7 @@ export default function OrgNodeDetail() {
         title={t("bolimniOchirish")}
         description={`"${node.name}" bo'limini o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.`}
         confirmText="O'chirish"
+        cancelText={t("bekorQilish", "Bekor qilish")}
         variant="destructive"
         onConfirm={() => { deleteMutation.mutate(); setDeleteConfirmOpen(false); }}
       />
