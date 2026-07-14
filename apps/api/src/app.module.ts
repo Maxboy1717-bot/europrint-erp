@@ -114,7 +114,14 @@ import { ErpSpreadsheetsModule } from './modules/erp-spreadsheets/erp-spreadshee
         new HeaderResolver(['x-lang']),
         AcceptLanguageResolver,
       ],
-      typesOutputPath: path.join(__dirname, '../src/generated/i18n.generated.ts'),
+      // 2026-07-14: MUST stay OUTSIDE src/ (sourceRoot) — nestjs-i18n's loader (watch:true above)
+      // rewrites this file on every dist/i18n/*.json change (incl. the asset-copy every build
+      // already does). When this path pointed into src/generated/, `nest start --watch` (which
+      // watches sourceRoot="src") saw that rewrite as a source change and rebuilt — which
+      // re-copied the i18n assets — which re-triggered the loader's rewrite — an infinite
+      // restart loop ("lokal tinimsiz yangilanadi"). Nothing imports I18nTranslations today
+      // (grep confirmed), so relocating it has zero call-site impact.
+      typesOutputPath: path.join(__dirname, '../i18n-types/i18n.generated.ts'),
     }),
 
     // ── Infrastructure ────────────────────────────────────────────────────────
