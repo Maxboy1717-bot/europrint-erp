@@ -26,6 +26,7 @@ import type { PipelineEntry, Vacancy, CreateVacancyResponse, AIInterviewSession 
 import { KanbanBoardGrid } from "@/components/recruiting/KanbanBoardGrid";
 import { RecruitingHeaderActions } from "@/components/recruiting/RecruitingHeaderActions";
 import { VacancyFilterPanel } from "@/components/recruiting/VacancyFilterPanel";
+import { VacantOrgCardsPanel } from "@/components/recruiting/VacantOrgCardsPanel";
 import { useKanbanDragDrop } from "@/hooks/use-kanban-dnd";
 import { useKanbanRealtime } from "@/hooks/use-kanban-realtime";
 import { tLabel } from "@/lib/i18n/tLabel";
@@ -235,6 +236,8 @@ export default function RecruitingKanban() {
         </Button>
         {showProbationOnly && <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2 py-0.5">{t("recruitingKanban.probationOnly")}</span>}
       </div>
+
+      <VacantOrgCardsPanel />
 
       <VacancyFilterPanel
         open={vacancyPanelOpen}
