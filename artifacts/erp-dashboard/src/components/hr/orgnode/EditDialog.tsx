@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, selectArray } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { NodeDetail, NODE_TYPE_LABELS, resolveNodeTypeLabel } from "./types";
 import { useTranslation } from '@/lib/i18n';
 
@@ -25,10 +25,6 @@ import { useTranslation } from '@/lib/i18n';
 const RAZRYAD_LEVEL_TO_RBAC_TIER_HINT: Record<number, string> = {
   1: "operator", 2: "operator", 3: "specialist", 4: "specialist", 5: "manager", 6: "executive",
 };
-
-interface ShiftTypeOption {
-  id: number; code: string; name_uz: string; start_time: string; end_time: string;
-}
 
 interface EditDialogProps {
   node: NodeDetail;
@@ -80,13 +76,6 @@ export function EditDialog({
     staleTime: 60_000,
   });
   const razryadOptions = Array.isArray(razryadData?.items) ? razryadData.items : [];
-
-  const { data: shiftData } = useQuery<ShiftTypeOption[]>({
-    queryKey: ["/api/hr/shifts/types"],
-    select: selectArray<ShiftTypeOption>,
-    staleTime: 60_000,
-  });
-  const shiftOptions = Array.isArray(shiftData) ? shiftData : [];
 
   // Fetch all active users for the department-head picker.
   // 87% of org nodes have zero members → member-based list leaves headOptions=[].
@@ -310,21 +299,7 @@ export function EditDialog({
             </Select>
           </div>
           <div>
-            <Label>{t("ishVaqti", "Ish vaqti / smena")}</Label>
-            {shiftOptions.length > 0 && (
-              <Select value="__pick__" onValueChange={(v) => {
-                const s = shiftOptions.find((o) => String(o.id) === v);
-                if (s) setForm((f) => ({ ...f, workSchedule: `${s.start_time}-${s.end_time}` }));
-              }}>
-                <SelectTrigger className="mb-1"><SelectValue placeholder={t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__pick__" disabled>{t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")}</SelectItem>
-                  {shiftOptions.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>{s.name_uz} ({s.start_time}-{s.end_time})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <Label>{t("ishSoati", "Ish soati")}</Label>
             <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
           </div>
           <div>

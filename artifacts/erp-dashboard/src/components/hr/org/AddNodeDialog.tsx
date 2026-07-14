@@ -14,15 +14,11 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { apiRequest, selectArray } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NODE_TYPE_LABELS, OrgNode, resolveNodeTypeLabel } from "./types";
 import { ParentCardSelect } from "./ParentCardSelect";
 import { useTranslation } from '@/lib/i18n';
-
-interface ShiftTypeOption {
-  id: number; code: string; name_uz: string; start_time: string; end_time: string;
-}
 
 // 2026-07-11: egasi 2026-06-25 (AskUserQuestion) TASDIQLAGAN qoida — bir xil manba
 // apps/api/src/common/constants/rbac-tier.policy.ts bilan (backend derive-on-read; bu FE
@@ -117,15 +113,6 @@ export function AddNodeDialog({
     staleTime: 60_000,
   });
   const razryadOptions = Array.isArray(razryadData?.items) ? razryadData.items : [];
-
-  // 2026-07-11: "Ish vaqti" preset-tanlagich — shift_types (master-data, egasi-tahrirlanadigan)
-  // dan tayyor smenalarni taklif qiladi; matn maydoni pastda qoladi (erkin tahrir/qo'lda kiritish).
-  const { data: shiftData } = useQuery<ShiftTypeOption[]>({
-    queryKey: ["/api/hr/shifts/types"],
-    select: selectArray<ShiftTypeOption>,
-    staleTime: 60_000,
-  });
-  const shiftOptions = Array.isArray(shiftData) ? shiftData : [];
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -310,21 +297,7 @@ export function AddNodeDialog({
             </div>
           </div>
           <div>
-            <Label>{t("ishVaqti", "Ish vaqti / smena")}</Label>
-            {shiftOptions.length > 0 && (
-              <Select value="__pick__" onValueChange={(v) => {
-                const s = shiftOptions.find((o) => String(o.id) === v);
-                if (s) setForm((f) => ({ ...f, workSchedule: `${s.start_time}-${s.end_time}` }));
-              }}>
-                <SelectTrigger className="mb-1"><SelectValue placeholder={t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__pick__" disabled>{t("tayyorSmenadanTanlash", "Tayyor smenadan tanlash...")}</SelectItem>
-                  {shiftOptions.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>{s.name_uz} ({s.start_time}-{s.end_time})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <Label>{t("ishSoati", "Ish soati")}</Label>
             <Input value={form.workSchedule} onChange={(e) => setForm((f) => ({ ...f, workSchedule: e.target.value }))} placeholder="09:00-18:00" />
           </div>
           <div>
