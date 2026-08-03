@@ -65,6 +65,7 @@ export interface IHrCompatARepo {
     violationDate: unknown,
     description: unknown,
     fineAmount: unknown,
+    issuedBy?: unknown,
   ): Promise<Result<Row>>;
   getDepartments(isActive?: boolean): Promise<Result<Row[]>>;
   getPositions(departmentId?: number, isActive?: boolean): Promise<Result<Row[]>>;

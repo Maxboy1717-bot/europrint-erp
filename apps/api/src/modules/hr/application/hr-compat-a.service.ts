@@ -91,8 +91,8 @@ export class HrCompatAService {
     });
   }
 
-  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown) {
-    return this.repo.createDisciplineRecord(employeeId, violationType, disciplineType, severity, violationDate, description, fineAmount);
+  async createDisciplineRecord(employeeId: unknown, violationType: unknown, disciplineType: unknown, severity: unknown, violationDate: unknown, description: unknown, fineAmount: unknown, issuedBy?: unknown) {
+    return this.repo.createDisciplineRecord(employeeId, violationType, disciplineType, severity, violationDate, description, fineAmount, issuedBy);
   }
 
   async getPayrollRuns(period?: string) {

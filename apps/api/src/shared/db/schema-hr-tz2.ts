@@ -174,12 +174,20 @@ export const hr_referrals = pgTable(
     bonus_amount:        numeric('bonus_amount', { precision: 12, scale: 2 }),
     bonus_paid:          boolean('bonus_paid').default(false),
     hr_notes:            text('hr_notes'),
+    // 2026-07-13 — Referral Tizimi completion: links to the real recruiting-pipeline
+    // candidate identity and to the resulting employees row (see
+    // migrations/hr-referrals-linkage-2026-07-13.sql). Used by the funnel
+    // stage-sync listener and the probation-completed -> referral-bonus listener.
+    candidate_id:        integer('candidate_id'),       // FK -> candidates(id), nullable
+    hired_employee_id:   integer('hired_employee_id'),  // FK -> employees(id), nullable
     created_at:          timestamp('created_at').notNull().defaultNow(),
     updated_at:          timestamp('updated_at').notNull().defaultNow(),
   },
   (t) => [
     index('hr_referrals_referrer_idx').on(t.referrer_id),
     index('hr_referrals_status_idx').on(t.status),
+    index('hr_referrals_candidate_idx').on(t.candidate_id),
+    index('hr_referrals_hired_employee_idx').on(t.hired_employee_id),
   ],
 );
 

@@ -1,14 +1,14 @@
 {
   "summary": {
-    "totalLeaks": 262,
-    "filesWithLeaks": 49,
+    "totalLeaks": 276,
+    "filesWithLeaks": 54,
     "byKind": {
-      "JSX_TEXT": 133,
-      "PROP": 77,
-      "OBJECT_LABEL": 52
+      "JSX_TEXT": 139,
+      "PROP": 83,
+      "OBJECT_LABEL": 54
     },
     "byLocale": {
-      "uz": 260,
+      "uz": 274,
       "ru": 2
     },
     "topFiles": [
@@ -65,6 +65,10 @@
         "count": 7
       },
       {
+        "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
+        "count": 7
+      },
+      {
         "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\QualityCertificatesPage.tsx",
         "count": 6
       },
@@ -74,10 +78,6 @@
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\RazryadLevelConfig.tsx",
-        "count": 6
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
         "count": 6
       },
       {
@@ -94,6 +94,10 @@
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\Questionnaire.tsx",
+        "count": 5
+      },
+      {
+        "file": "artifacts\\erp-dashboard\\src\\components\\document-control\\DocumentToolbar.tsx",
         "count": 5
       },
       {
@@ -126,10 +130,6 @@
       },
       {
         "file": "artifacts\\erp-dashboard\\src\\pages\\GLDocuments.tsx",
-        "count": 3
-      },
-      {
-        "file": "artifacts\\erp-dashboard\\src\\pages\\MMExtended.tsx",
         "count": 3
       }
     ]
@@ -382,112 +382,112 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 257,
+      "line": 259,
       "text": "Yangi xato-katalog yozuvi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 264,
+      "line": 266,
       "text": "Nomi *",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 375,
+      "line": 377,
       "text": "Nomi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 141,
+      "line": 143,
       "text": "Xato nomi",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 157,
+      "line": 159,
       "text": "yuqori/o'rta/past",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 184,
+      "line": 186,
       "text": "Saqlash",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 188,
+      "line": 190,
       "text": "Bekor",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 194,
+      "line": 196,
       "text": "Tahrirlash",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 265,
+      "line": 267,
       "text": "Masalan: Bo'yoq notekis tushgan",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 283,
+      "line": 285,
       "text": "yuqori / o'rta / past",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 423,
+      "line": 425,
       "text": "Bu xato-katalog yozuvi defect-dropdowndan olib tashlanadi (soft-delete). Davom etilsinmi?",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 109,
+      "line": 111,
       "text": "Nomi bo'sh bo'lishi mumkin emas",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 233,
+      "line": 235,
       "text": "Xato nomi majburiy",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 326,
+      "line": 328,
       "text": "Xato-katalog yozuvi qo'shildi",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 327,
+      "line": 329,
       "text": "Qo'shishda xatolik",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ErrorCatalogConfig.tsx",
-      "line": 334,
+      "line": 336,
       "text": "Saqlash xatoligi",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
@@ -599,7 +599,7 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\kanban\\KanbanColumn.tsx",
-      "line": 189,
+      "line": 191,
       "text": "Ustun nomini o'zgartirish",
       "kind": "PROP",
       "locale": "uz"
@@ -1068,42 +1068,42 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\SupplierQualityPage.tsx",
-      "line": 114,
+      "line": 132,
       "text": "Yangi sifat tekshiruvi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\SupplierQualityPage.tsx",
-      "line": 118,
+      "line": 136,
       "text": "Yetkazuvchi nomi *",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\SupplierQualityPage.tsx",
-      "line": 124,
+      "line": 142,
       "text": "Namuna soni",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\SupplierQualityPage.tsx",
-      "line": 129,
+      "line": 147,
       "text": "Aniqlangan nuqsonlar",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\SupplierQualityPage.tsx",
-      "line": 119,
+      "line": 137,
       "text": "Yetkazuvchi nomi...",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\qc\\SupplierQualityPage.tsx",
-      "line": 146,
+      "line": 164,
       "text": "Qo'shimcha ma'lumot...",
       "kind": "PROP",
       "locale": "uz"
@@ -1207,6 +1207,34 @@
       "locale": "uz"
     },
     {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\ReferralPageDialogs.tsx",
+      "line": 128,
+      "text": "Bog'lanildi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\ReferralPageDialogs.tsx",
+      "line": 132,
+      "text": "Bonus to'landi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\ReferralPageTypes.ts",
+      "line": 52,
+      "text": "Bog'lanildi",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\ReferralPageTypes.ts",
+      "line": 56,
+      "text": "Bonus to'landi",
+      "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
       "line": 115,
       "text": "Yangi rulon kartasi",
@@ -1243,21 +1271,21 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 364,
+      "line": 366,
       "text": "Turi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 367,
+      "line": 369,
       "text": "Og'irlik (kg)",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 369,
+      "line": 371,
       "text": "Holat",
       "kind": "JSX_TEXT",
       "locale": "uz"
@@ -1292,35 +1320,35 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 342,
+      "line": 344,
       "text": "Jami rulon",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 343,
+      "line": 345,
       "text": "To'liq",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 347,
+      "line": 349,
       "text": "Rulon kartalar ro'yxati",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 403,
+      "line": 405,
       "text": "Og'irlikni yangilash",
       "kind": "PROP",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\RulonCards.tsx",
-      "line": 411,
+      "line": 413,
       "text": "Holat o'zgartirish",
       "kind": "PROP",
       "locale": "uz"
@@ -1369,7 +1397,7 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\SDSalesQuotes.tsx",
-      "line": 251,
+      "line": 283,
       "text": "Hozircha taklifnomalar yo'q",
       "kind": "PROP",
       "locale": "uz"
@@ -1397,44 +1425,72 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
-      "line": 167,
+      "line": 222,
       "text": "Smena Jadvali Konfiguratsiyasi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
-      "line": 181,
+      "line": 240,
       "text": "Nomi",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
-      "line": 60,
+      "line": 285,
+      "text": "Nomi",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
+      "line": 68,
       "text": "Koeffitsient 1 dan 5 gacha bo'lishi kerak",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
-      "line": 64,
+      "line": 72,
       "text": "Vaqt formati HH:MM bo'lishi kerak (masalan 08:00)",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
-      "line": 145,
+      "line": 164,
       "text": "Smena vaqti saqlandi",
       "kind": "OBJECT_LABEL",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\pages\\ShiftTypesConfig.tsx",
-      "line": 147,
+      "line": 166,
       "text": "Saqlash xatoligi",
       "kind": "OBJECT_LABEL",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedSections.tsx",
+      "line": 158,
+      "text": "Buyurtma raqami",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedSections.tsx",
+      "line": 170,
+      "text": "Bo'yoqlar",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\pages\\TechPPExtendedSections.tsx",
+      "line": 186,
+      "text": "Ishlab chiqarish vaqti",
+      "kind": "PROP",
       "locale": "uz"
     },
     {
@@ -1698,21 +1754,63 @@
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\cc\\NewDocumentModal.tsx",
-      "line": 276,
+      "line": 291,
       "text": "Yangi PIN (4-8 raqam)",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
+      "file": "artifacts\\erp-dashboard\\src\\components\\chat\\page\\ChatLayout.tsx",
+      "line": 479,
+      "text": "Bekor qilish",
+      "kind": "JSX_TEXT",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\document-control\\DocumentToolbar.tsx",
+      "line": 70,
+      "text": "Orqaga (Ctrl+Z)",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\document-control\\DocumentToolbar.tsx",
+      "line": 71,
+      "text": "Oldinga (Ctrl+Y)",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\document-control\\DocumentToolbar.tsx",
+      "line": 101,
+      "text": "Belgili ro'yxat",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\document-control\\DocumentToolbar.tsx",
+      "line": 102,
+      "text": "Raqamli ro'yxat",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
+      "file": "artifacts\\erp-dashboard\\src\\components\\document-control\\DocumentToolbar.tsx",
+      "line": 116,
+      "text": "Jadval qo'shish",
+      "kind": "PROP",
+      "locale": "uz"
+    },
+    {
       "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\EditDialog.tsx",
-      "line": 164,
+      "line": 210,
       "text": "Bo'lim boshlig'i",
       "kind": "JSX_TEXT",
       "locale": "uz"
     },
     {
       "file": "artifacts\\erp-dashboard\\src\\components\\hr\\orgnode\\EditDialog.tsx",
-      "line": 171,
+      "line": 217,
       "text": "— Yo'q (bo'sh) —",
       "kind": "JSX_TEXT",
       "locale": "uz"

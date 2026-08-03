@@ -13,7 +13,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Result, Err, AppErr, AppError } from '@common/result';
 import { BonusRepository, type BonusPaymentRow, type BonusStatus } from './bonus.repository';
 
-const VALID_BONUS_TYPES = ['performance', 'kpi', 'kaizen', 'quality', 'attendance', 'special', 'other'] as const;
+// 2026-07-13: + 'referral' (Referral Tizimi completion, vizyon 02-hr#12/20/21) —
+// system-triggered bonus paid once a referred candidate's probation completes
+// (ReferralBonusListener), additive to the existing manager-given types.
+const VALID_BONUS_TYPES = ['performance', 'kpi', 'kaizen', 'quality', 'attendance', 'special', 'referral', 'other'] as const;
 
 @Injectable()
 export class BonusService {

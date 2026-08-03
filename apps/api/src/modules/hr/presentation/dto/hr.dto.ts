@@ -170,13 +170,29 @@ export const HrSafetyTrainingSchema = z.object({
 export type HrSafetyTrainingDto = z.infer<typeof HrSafetyTrainingSchema>;
 
 // P1.23.4: accept FE field aliases; make strict fields optional
+//
+// HR Nazorat fix (2026-07-13, verified live: POST /api/hr/safety/hazard-zones ALWAYS
+// returned 400 "Validation failed"): zone_name was declared here WITHOUT .optional() —
+// but HRSafetyDialogs.tsx ZoneDialog's real <Input {...form.register("zoneName")}/> only
+// ever sends camelCase `zoneName`, never snake_case `zone_name`. The comment above
+// ("make strict fields optional") was the intent but zone_name itself was never actually
+// relaxed, so the Zod pipe rejected every real submission before the controller's
+// zone_name ?? zoneName fallback ever ran. Fixed by making zone_name optional too and
+// requiring at least one of the two via .refine() (same pattern as the FE's own
+// TrainingSchema trainingId/trainingName refine in HRSafetyTypes.ts).
 export const HrHazardZoneSchema = z.object({
-  zone_name:     z.string().min(1).max(MAX_NAME_LENGTH),
-  zoneName:      z.string().optional(),           // camelCase alias
+  zone_name:     z.string().min(1).max(MAX_NAME_LENGTH).optional(),
+  zoneName:      z.string().min(1).max(MAX_NAME_LENGTH).optional(),  // camelCase alias (FE's real field)
   zone_code:     z.string().max(50).optional(),
   zoneCode:      z.string().optional(),           // camelCase alias
   department_id: z.number().int().positive().optional(),
-  hazard_level:  z.enum(['low', 'medium', 'high', 'extreme']).optional().default('low'),
+  // HR Nazorat fix (2026-07-13, verified live): .default('low') here made Zod fill
+  // hazard_level='low' whenever the FE only sent riskLevel (its real field) — so the
+  // controller's `body.hazard_level ?? body.riskLevel` fallback never reached riskLevel
+  // (hazard_level was never actually undefined post-parse). Every zone silently saved
+  // as risk_level='low' no matter what the user picked. Default moved to the repository
+  // layer (hr-compat-safety.repository.ts createHazardZone already does `?? 'low'`).
+  hazard_level:  z.enum(['low', 'medium', 'high', 'extreme']).optional(),
   riskLevel:     z.enum(['low', 'medium', 'high', 'critical']).optional(),  // FE alias
   required_ppe:  z.string().max(MAX_NOTES_LENGTH).optional(),
   requiredPpe:   z.string().optional(),           // camelCase alias
@@ -185,7 +201,9 @@ export const HrHazardZoneSchema = z.object({
   location:      z.string().optional(),           // FE uses this
   hazardType:    z.string().optional(),           // FE uses this
   description:   z.string().optional(),           // FE uses this (HR Nazorat fix 2026-07-13)
-}).passthrough();
+}).passthrough().refine(d => d.zone_name || d.zoneName, {
+  message: 'zone_name yoki zoneName talab qilinadi', path: ['zoneName'],
+});
 export type HrHazardZoneDto = z.infer<typeof HrHazardZoneSchema>;
 
 export const HrPpeComplianceSchema = z.object({
