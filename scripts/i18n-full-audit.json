@@ -1,0 +1,567 @@
+{
+  "summary": {
+    "totalFiles": 1339,
+    "hardcodedTotal": 35,
+    "hardcodedFiles": 22,
+    "missingKeysTotal": 28,
+    "missingUzOnly": 0,
+    "missingRuOnly": 0,
+    "missingBoth": 28,
+    "topHardcodedFiles": [
+      [
+        "pos-monitor/components/PosAdminSections.tsx",
+        7
+      ],
+      [
+        "components/ui/sidebar/sidebar-root.tsx",
+        4
+      ],
+      [
+        "pages/EmployeeProfile.tsx",
+        3
+      ],
+      [
+        "hooks/useAuth.tsx",
+        2
+      ],
+      [
+        "pages/FinanceApproval.tsx",
+        2
+      ],
+      [
+        "components/cc/NewDocumentModal.tsx",
+        1
+      ],
+      [
+        "components/chat/page/VoiceRecorder.tsx",
+        1
+      ],
+      [
+        "components/ep/EPNumberedSection.tsx",
+        1
+      ],
+      [
+        "pages/Discipline.tsx",
+        1
+      ],
+      [
+        "pages/Employees.tsx",
+        1
+      ],
+      [
+        "pages/HRAlertBanner.tsx",
+        1
+      ],
+      [
+        "pages/HRConflict.tsx",
+        1
+      ],
+      [
+        "pages/HRDashboardSections.tsx",
+        1
+      ],
+      [
+        "pages/HRMilestones.tsx",
+        1
+      ],
+      [
+        "pages/HRPip.tsx",
+        1
+      ]
+    ],
+    "topMissingKeysFiles": [
+      [
+        "components/QCheckDialog.tsx",
+        11
+      ],
+      [
+        "pages/TechApproval.tsx",
+        6
+      ],
+      [
+        "components/ep/EPNumberedSection.tsx",
+        1
+      ],
+      [
+        "components/hr/org/CardDetailDialog.tsx",
+        1
+      ],
+      [
+        "components/kanban/BoardHeader.tsx",
+        1
+      ],
+      [
+        "components/pos/ProductList.tsx",
+        1
+      ],
+      [
+        "pages/CardDetail.tsx",
+        1
+      ],
+      [
+        "pages/DesignApproval.tsx",
+        1
+      ],
+      [
+        "pages/FinanceApproval.tsx",
+        1
+      ],
+      [
+        "pages/iot/IoTProductionDashboard.tsx",
+        1
+      ],
+      [
+        "pages/iot/IoTProductionDashboardDialogs.tsx",
+        1
+      ],
+      [
+        "pages/PlanningBoard.tsx",
+        1
+      ],
+      [
+        "pages/WarehouseMaterialKitsSections.tsx",
+        1
+      ]
+    ]
+  },
+  "findings": {
+    "hardcoded": [
+      {
+        "file": "components/cc/NewDocumentModal.tsx",
+        "line": 248,
+        "type": "JSX-text",
+        "text": "1 && step"
+      },
+      {
+        "file": "components/chat/page/VoiceRecorder.tsx",
+        "line": 53,
+        "type": "JSX-text",
+        "text": "(prev.length"
+      },
+      {
+        "file": "components/ep/EPNumberedSection.tsx",
+        "line": 8,
+        "type": "JSX-text",
+        "text": "Section content here"
+      },
+      {
+        "file": "components/ui/sidebar/sidebar-root.tsx",
+        "line": 69,
+        "type": "JSX-text",
+        "text": "Sidebar"
+      },
+      {
+        "file": "components/ui/sidebar/sidebar-root.tsx",
+        "line": 145,
+        "type": "JSX-text",
+        "text": "Toggle Sidebar"
+      },
+      {
+        "file": "components/ui/sidebar/sidebar-root.tsx",
+        "line": 157,
+        "type": "aria-label",
+        "text": "Toggle Sidebar"
+      },
+      {
+        "file": "components/ui/sidebar/sidebar-root.tsx",
+        "line": 160,
+        "type": "title",
+        "text": "Toggle Sidebar"
+      },
+      {
+        "file": "hooks/useAuth.tsx",
+        "line": 59,
+        "type": "JSX-text",
+        "text": "Promise"
+      },
+      {
+        "file": "hooks/useAuth.tsx",
+        "line": 60,
+        "type": "JSX-text",
+        "text": "Promise"
+      },
+      {
+        "file": "pages/Discipline.tsx",
+        "line": 291,
+        "type": "JSX-text",
+        "text": "Status"
+      },
+      {
+        "file": "pages/EmployeeProfile.tsx",
+        "line": 163,
+        "type": "JSX-text",
+        "text": "async (): Promise"
+      },
+      {
+        "file": "pages/EmployeeProfile.tsx",
+        "line": 299,
+        "type": "JSX-text",
+        "text": "c.expiryDate && new Date(c.expiryDate)"
+      },
+      {
+        "file": "pages/EmployeeProfile.tsx",
+        "line": 300,
+        "type": "JSX-text",
+        "text": "= today && new Date(c.expiryDate)"
+      },
+      {
+        "file": "pages/Employees.tsx",
+        "line": 126,
+        "type": "JSX-text",
+        "text": "u.hireDate && now - new Date(u.hireDate).getTime()"
+      },
+      {
+        "file": "pages/FinanceApproval.tsx",
+        "line": 45,
+        "type": "JSX-text",
+        "text": ")?.items ?? (d as Record"
+      },
+      {
+        "file": "pages/FinanceApproval.tsx",
+        "line": 45,
+        "type": "JSX-text",
+        "text": ")?.data ?? (d as Record"
+      },
+      {
+        "file": "pages/HRAlertBanner.tsx",
+        "line": 74,
+        "type": "JSX-text",
+        "text": "a.overdue_hours"
+      },
+      {
+        "file": "pages/HRConflict.tsx",
+        "line": 186,
+        "type": "JSX-text",
+        "text": "Status"
+      },
+      {
+        "file": "pages/HRDashboardSections.tsx",
+        "line": 274,
+        "type": "JSX-text",
+        "text": ": alert.severity === \"warning\" ?"
+      },
+      {
+        "file": "pages/HRMilestones.tsx",
+        "line": 230,
+        "type": "title",
+        "text": "Milestone Tracker"
+      },
+      {
+        "file": "pages/HRPip.tsx",
+        "line": 288,
+        "type": "JSX-text",
+        "text": "Status"
+      },
+      {
+        "file": "pages/IdealRasmPage.tsx",
+        "line": 76,
+        "type": "JSX-text",
+        "text": ": trend === \"down\" ?"
+      },
+      {
+        "file": "pages/MROExtended.tsx",
+        "line": 107,
+        "type": "JSX-text",
+        "text": "Number(i.quantity)"
+      },
+      {
+        "file": "pages/OrderApprovalWorkflowSections.tsx",
+        "line": 276,
+        "type": "JSX-text",
+        "text": ": item.approval?.status === \"rejected\" ?"
+      },
+      {
+        "file": "pages/PlanningBoardSections.tsx",
+        "line": 47,
+        "type": "JSX-text",
+        "text": "[]; items?: Record"
+      },
+      {
+        "file": "pages/RecruitingKanban.tsx",
+        "line": 195,
+        "type": "JSX-text",
+        "text": "Kanban"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 60,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 86,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 112,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 139,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 196,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 230,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/components/PosAdminSections.tsx",
+        "line": 256,
+        "type": "JSX-text",
+        "text": "(data).length === 0 &&"
+      },
+      {
+        "file": "pos-monitor/pages/PosAdmin.tsx",
+        "line": 21,
+        "type": "JSX-text",
+        "text": "Promise"
+      },
+      {
+        "file": "pos-monitor/pages/RequisitionDetail.modals.tsx",
+        "line": 18,
+        "type": "JSX-text",
+        "text": "Promise"
+      }
+    ],
+    "missingKeys": [
+      {
+        "file": "components/ep/EPNumberedSection.tsx",
+        "line": 7,
+        "key": "productType",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/hr/org/CardDetailDialog.tsx",
+        "line": 71,
+        "key": "xodimAjratildi",
+        "usedNs": "common",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/kanban/BoardHeader.tsx",
+        "line": 391,
+        "key": "Qidirish...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/pos/ProductList.tsx",
+        "line": 51,
+        "key": "Yuklanmoqda...",
+        "usedNs": "finance",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 88,
+        "key": "qcheck.title",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 94,
+        "key": "qcheck.completeness",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 102,
+        "key": "qcheck.confidenceLabel",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 108,
+        "key": "qcheck.missingFieldsTitle",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 118,
+        "key": "qcheck.preflightOk",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 118,
+        "key": "qcheck.preflightFail",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 134,
+        "key": "qcheck.autoCommitTitle",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 140,
+        "key": "qcheck.autoCommitHint",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 145,
+        "key": "qcheck.manualReview",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 153,
+        "key": "qcheck.cancelBtn",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "components/QCheckDialog.tsx",
+        "line": 158,
+        "key": "qcheck.commitNowBtn",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/CardDetail.tsx",
+        "line": 63,
+        "key": "xodimAjratildi",
+        "usedNs": "common",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/DesignApproval.tsx",
+        "line": 90,
+        "key": "Yuklanmoqda...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/FinanceApproval.tsx",
+        "line": 83,
+        "key": "Yuklanmoqda...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/iot/IoTProductionDashboard.tsx",
+        "line": 147,
+        "key": "Izohlang...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/iot/IoTProductionDashboardDialogs.tsx",
+        "line": 115,
+        "key": "Yuklanmoqda...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/PlanningBoard.tsx",
+        "line": 77,
+        "key": "foo",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/TechApproval.tsx",
+        "line": 114,
+        "key": "qcheck.errorTitle",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/TechApproval.tsx",
+        "line": 114,
+        "key": "qcheck.errorDesc",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/TechApproval.tsx",
+        "line": 121,
+        "key": "qcheck.commitAutoTitle",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/TechApproval.tsx",
+        "line": 121,
+        "key": "qcheck.commitManualTitle",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/TechApproval.tsx",
+        "line": 122,
+        "key": "qcheck.commitDesc",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/TechApproval.tsx",
+        "line": 204,
+        "key": "qcheck.techCardBtn",
+        "usedNs": "ai",
+        "missingUz": true,
+        "missingRu": true
+      },
+      {
+        "file": "pages/WarehouseMaterialKitsSections.tsx",
+        "line": 108,
+        "key": "Qidirish...",
+        "usedNs": null,
+        "missingUz": true,
+        "missingRu": true
+      }
+    ]
+  }
+}
