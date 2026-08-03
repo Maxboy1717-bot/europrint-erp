@@ -20,6 +20,7 @@ const Certificates = lazy(() => import("@/pages/Certificates"));
 const GoalsKPI = lazy(() => import("@/pages/GoalsKPI"));
 const KnowledgeBase = lazy(() => import("@/pages/KnowledgeBase"));
 const KanbanBoard = lazy(() => import("@/pages/KanbanBoard"));
+const KanbanStatusColumnMap = lazy(() => import("@/pages/KanbanStatusColumnMap"));
 const RecruitingKanban = lazy(() => import("@/pages/RecruitingKanban"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
 const NotificationCenter = lazy(() => import("@/pages/NotificationCenter"));
@@ -51,5 +52,6 @@ export const ANALYTICS_ROUTES: [string, React.ComponentType][] = [
   ['/goals',                          GoalsKPI],
   ['/knowledge-base',                 KnowledgeBase],
   ['/kanban',                         KanbanBoard],
+  ['/kanban/status-column-map',       KanbanStatusColumnMap],
   ['/hr/recruiting-kanban',           RecruitingKanban],
 ];

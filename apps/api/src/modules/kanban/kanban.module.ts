@@ -29,11 +29,14 @@ import { DrizzleKanbanStatsRepository } from './infrastructure/repositories/driz
 import { KanbanBoardsRepository } from './infrastructure/repositories/kanban-boards.repo';
 import { KanbanColumnsRepository } from './infrastructure/repositories/kanban-columns.repo';
 import { KanbanCardsRepository } from './infrastructure/repositories/kanban-cards.repo';
+import { KanbanStatusColumnMapRepository } from './infrastructure/repositories/kanban-status-column-map.repo';
+import { KanbanStatusColumnMapService } from './application/kanban-status-column-map.service';
 import { KanbanBoardsController } from './presentation/kanban-boards.controller';
 import { KanbanCoreController } from './presentation/kanban-core.controller';
 import { KanbanReportsController } from './presentation/kanban-reports.controller';
 import { KanbanCardsController, KanbanCardFilesController } from './presentation/kanban-cards.controller';
 import { KanbanChecklistController } from './presentation/kanban-checklist.controller';
+import { KanbanStatusColumnMapController } from './presentation/kanban-status-column-map.controller';
 import { KANBAN_BOARDS_REPO } from './domain/repositories/i-kanban-boards.repo';
 import { KanbanRepository } from './infrastructure/kanban.repository';
 // 2026-07-13 — Kanban davriy vazifalar BullMQ'ga ko'chirildi (durability/offline-resistance,
@@ -88,6 +91,7 @@ const kanbanCronJobOptions = {
     KanbanCardsController,
     KanbanCardFilesController,
     KanbanChecklistController,
+    KanbanStatusColumnMapController,
   ],
   providers: [
     ...eventHandlers,
@@ -108,6 +112,8 @@ const kanbanCronJobOptions = {
     DrizzleKanbanExtRepository,
     KanbanColumnsRepository,
     KanbanCardsRepository,
+    KanbanStatusColumnMapRepository,
+    KanbanStatusColumnMapService,
     // 2026-07-13 — Kanban davriy vazifalar (eskalatsiya 09:00 + takrorlanuvchi kartalar 07:00)
     // BullMQ repeatable job orqali; qarang infrastructure/cron/kanban-cron.processor.ts
     KanbanCronProcessor,

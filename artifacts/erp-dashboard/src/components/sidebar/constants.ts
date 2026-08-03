@@ -642,6 +642,7 @@ import { LayoutDashboard, X,
       { title: "Rekruting Kanbani", url: "hr/recruiting-kanban", icon: UserCheck },
       { title: "Strategik Vazifalar", url: "strategic-tasks", icon: Target },
       { title: "Ilovalar", url: "applications", icon: FileText },
+      { title: "Holat -> Ustun Xaritasi", url: "kanban/status-column-map", icon: Settings },
     ]
   },
   coordination: {
