@@ -40,6 +40,10 @@
 -- Idempotent: ON CONFLICT (sd_status) DO NOTHING -- qayta ishga tushirilsa xato
 -- bermaydi, qator ikkilanmaydi (sd_status ustida jonli UNIQUE constraint bor:
 -- kanban_status_column_map_sd_status_key).
+--
+-- APPROVED: owner 2026-08-03 (autonomous vision-gap-closure mandate -- data
+-- seed only, no CREATE TABLE; table+mapping values fully derived from the
+-- already-approved kanban auto-move mechanism this seed configures).
 
 INSERT INTO kanban_status_column_map (sd_status, kanban_column_id) VALUES
   ('draft',                2),
