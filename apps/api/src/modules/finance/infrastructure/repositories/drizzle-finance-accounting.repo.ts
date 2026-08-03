@@ -34,7 +34,10 @@ export class DrizzleFinanceAccountingRepo {
       SELECT
         (SELECT COUNT(*) FROM gl_documents) AS gl_total,
         (SELECT COUNT(*) FROM gl_documents WHERE status = 'posted') AS gl_posted,
-        (SELECT COUNT(*) FROM gl_lines) AS gl_entries,
+        -- GL two-world fix (2026-07-14): gl_lines has zero writers since the
+        -- 2026-06-22 SAP#76 consolidation (commit f45f5886) onto entries (ADR-003
+        -- canonical). Counting entries here so this stat isn't permanently frozen at 0.
+        (SELECT COUNT(*) FROM entries) AS gl_entries,
         (SELECT COUNT(*) FROM accounting_periods WHERE status = 'open') AS periods_open,
         (SELECT COUNT(*) FROM accounting_periods WHERE status = 'closed') AS periods_closed,
         (SELECT COALESCE(SUM(total_amount),0) FROM finance_invoices WHERE invoice_type = 'sales') AS ar_total,

@@ -1195,6 +1195,29 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         SELECT 1 FROM gl_account_mappings g WHERE g.transaction_type = v.tt
       )`,
   },
+  // 2026-08-03 fix: the ADVANCE mapping seeded above (20-cc#49) points debit_account at '4200',
+  // but account_code '4200' was never actually seeded into `accounts` (seed-00-foundation-canonical
+  // only has 1000/4000/5010/6310/6710/9010/9100/9500; the later 2026-07-13 patch added
+  // 9520/9820/9210/9220/1020 — never 4200). Verified by repo-wide grep across every
+  // `INSERT INTO accounts` source (seed-00-foundation-canonical-2026-06-19.sql,
+  // gl-loss-marketing-referral-intransit-accounts-2026-07-13.sql, this file) — none seed 4200.
+  // Net effect without this fix: CcApprovedGlPostingListener would resolve the ADVANCE mapping
+  // fine, but GlPostingService.postJournal -> insertJournal -> resolveAccountIds would fail with
+  // "GL account code(s) not in chart of accounts: 4200" for EVERY ADVANCE approval (logged as
+  // cc→GL error, no GL entry posted) — FINANCIAL_AID (9500/5010, both pre-existing) is unaffected.
+  // Sub-account of 4000 (Debitorlar/AR) — same parent-hierarchy convention as the 9820/9210/9220
+  // additions above. `account_type` lowercase 'asset' to match the Zod enum
+  // (insertAccountSchema in fi-gl.ts) and the majority of existing rows (the 2026-07-13 patch's
+  // uppercase 'ASSET'/'EXPENSE'/'REVENUE' values are the outlier, not a live enforced constraint —
+  // accounts_type_chk exists only in the Drizzle model file, not in DB_CONSTRAINTS).
+  // Human-readable mirror: apps/api/src/shared/db/migrations/cc-advance-account-4200-2026-08-03.sql.
+  {
+    name: 'accounts: 4200 employee-advance-receivable (CC ADVANCE GL mapping fix, 2026-08-03)',
+    sql: `INSERT INTO accounts (account_code, account_name, account_name_ru, account_type, parent_account_id, is_active, created_at, updated_at)
+      SELECT '4200', 'Xodimlardan olinadigan summalar (avans)', 'Расчёты с сотрудниками (аванс)', 'asset',
+             (SELECT id FROM accounts WHERE account_code = '4000'), true, NOW(), NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE account_code = '4200')`,
+  },
   // Owner decision 2026-07-13 (chat): 4 new columns on the single `notifications` table (not a
   // new table) — module_code/channel/status/immutable. See
   // apps/api/src/shared/db/migrations/notifications-module-channel-status-immutable-2026-07-13.sql

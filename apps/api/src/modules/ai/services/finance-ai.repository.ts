@@ -5,7 +5,11 @@
 
 import { Injectable } from '@nestjs/common';
 import { db } from '@shared/db';
-import { gl_entries as glDocuments } from '@shared/db';
+// GL two-world fix (2026-07-14): gl_entries has zero writers since the
+// 2026-06-17..07-02 SAP#76 consolidation onto `entries` (ADR-003 canonical) —
+// anomaly detection was silently seeing 0 rows. `entries` has the same
+// referenceType/createdAt/entryNumber/postedAt columns, so this is a straight swap.
+import { entries as glDocuments } from '@shared/db';
 import { desc, gte, sql, count } from 'drizzle-orm';
 
 export interface GlStats {
@@ -26,23 +30,23 @@ export class FinanceAiRepository {
     const [s] = await db
       .select({
         totalDocs: count(),
-        totalAmount: sql<string>`COALESCE(SUM(CASE WHEN ${glDocuments.reference_type} = 'payment' THEN 1 ELSE 0 END), 0)::text`,
+        totalAmount: sql<string>`COALESCE(SUM(CASE WHEN ${glDocuments.referenceType} = 'payment' THEN 1 ELSE 0 END), 0)::text`,
       })
       .from(glDocuments)
-      .where(gte(glDocuments.created_at, since));
+      .where(gte(glDocuments.createdAt, since));
     return s;
   }
 
   async loadRecentDocs(limit: number): Promise<GlDoc[]> {
     return db
       .select({
-        docNumber: glDocuments.entry_number,
-        docType: glDocuments.reference_type,
+        docNumber: glDocuments.entryNumber,
+        docType: glDocuments.referenceType,
         status: glDocuments.description,
-        date: glDocuments.posted_at,
+        date: glDocuments.postedAt,
       })
       .from(glDocuments)
-      .orderBy(desc(glDocuments.created_at))
+      .orderBy(desc(glDocuments.createdAt))
       .limit(limit);
   }
 }
