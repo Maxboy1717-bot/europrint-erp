@@ -101,6 +101,28 @@ export const kanbanStatusColumnMap = pgTable('kanban_status_column_map', {
   createdAt:      timestamp('created_at').defaultNow(),
 });
 
+// ── Per-column SLA (owner policy, Q-35 schema-gap close) ──────────────────────
+// NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md §1.3/§6 P0-4 Item 19
+// confirmed live: `kanban_column_sla` did not exist (to_regclass NULL). One row
+// per kanban_columns.id: how long a card may sit in that column before it is
+// SLA-late. business_settings-style CRUD-with-defaults: ships with ONE row per
+// existing column (see migration kanban-column-sla-2026-08-03.sql), slaHours
+// defaulting to the same 24h used elsewhere for task SLA
+// (business_settings 'kanban.tt_task_sla_hours_default', see kanbanCards.sla_hours
+// comment above). Owner tunes per column later via CRUD; no consumer (cron/alert)
+// wiring included in this change.
+export const kanbanColumnSla = pgTable('kanban_column_sla', {
+  id:                  serial('id').primaryKey(),
+  columnId:            integer('column_id').notNull().unique()
+                         .references(() => kanbanColumns.id, { onDelete: 'cascade' }),
+  slaHours:            numeric('sla_hours', { precision: 6, scale: 2 }).notNull().default('24'),
+  warningThresholdPct: numeric('warning_threshold_pct', { precision: 5, scale: 2 }).notNull().default('80'),
+  createdAt:           timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt:           timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index('kanban_column_sla_column_idx').on(t.columnId),
+]);
+
 export const kanbanFlows = pgTable('kanban_flows', {
   id:          uuid('id').primaryKey().defaultRandom(),
   boardId:     text('board_id'),

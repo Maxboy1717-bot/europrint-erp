@@ -75,13 +75,24 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     // 18-notif — KRITIK BUG (2026-07-11 topildi): bu yergacha command.userId
     // (ichki users.id) TO'G'RIDAN-TO'G'RI Telegram chat_id sifatida yuborilardi
     // — Telegram API buni HAR DOIM rad etardi (haqiqiy chat_id emas), xato esa
-    // .catch() ichida jimgina yutilardi. Endi haqiqiy users.telegram_chat_id
-    // avval qidiriladi; topilmasa — urinilmaydi (soxta muvaffaqiyat emas, Q-40).
+    // .catch() ichida jimgina yutilardi. Bir keyingi tuzatish `users.telegram_chat_id`
+    // ustunini qidira boshladi, lekin bu ustun HECH QACHON to'ldirilmaydi — real
+    // manba `employees.telegram_chat_id` (Telegram HR-bot /start bog'lash oqimi;
+    // bir xil naqsh telegram-auth.guard.ts:85-91, hr-bot-helpers.ts:41 da ishlatiladi
+    // — `employees e JOIN users u ON u.id = e.user_id WHERE e.telegram_chat_id = ...`).
+    // 2026-08-03: qidiruv shu haqiqiy ustunga to'g'irlandi (COALESCE bilan
+    // users.telegram_chat_id ham zaxira sifatida tekshiriladi, agar kelajakda
+    // to'g'ridan-to'g'ri to'ldirilsa); topilmasa — urinilmaydi (soxta muvaffaqiyat
+    // emas, Q-40).
     if (channels.includes('telegram')) {
       deliveries.push(
         (async (): Promise<void> => {
-          const row = await runQuery<{ telegram_chat_id: number | null }>(sql`
-            SELECT telegram_chat_id FROM users WHERE id = ${command.userId} LIMIT 1
+          const row = await runQuery<{ telegram_chat_id: string | null }>(sql`
+            SELECT COALESCE(e.telegram_chat_id, u.telegram_chat_id::text) AS telegram_chat_id
+            FROM users u
+            LEFT JOIN employees e ON e.user_id = u.id
+            WHERE u.id = ${command.userId}
+            LIMIT 1
           `);
           const chatId = row.rows[0]?.telegram_chat_id;
           if (!chatId) {
@@ -94,7 +105,9 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
             .catch((): void => {
               this.logger.warn('Telegram notification yuborilmadi');
             });
-        })(),
+        })().catch((err: unknown): void => {
+          this.logger.warn(`Telegram chat_id qidiruvi muvaffaqiyatsiz: ${String(err)}`);
+        }),
       );
     }
 

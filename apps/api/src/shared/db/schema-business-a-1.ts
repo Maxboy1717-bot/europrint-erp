@@ -20,7 +20,7 @@ export { enpsSurveys as enps_surveys } from '@workspace/db';
 // enps_survey_responses — NOT yet in lib/db
 
 import {
-  pgTable, serial, text, integer, boolean, timestamp, jsonb, date, unique,
+  pgTable, serial, text, integer, boolean, timestamp, jsonb, date, unique, numeric, varchar,
 } from 'drizzle-orm/pg-core';
 
 export const enps_survey_responses = pgTable('enps_survey_responses', {
@@ -103,3 +103,24 @@ export const notification_type_preferences = pgTable('notification_type_preferen
 // ─── Notifications ────────────────────────────────────────────────────────────
 // notifications → lib/db (core/core-users.ts), re-exported under legacy alias
 export { notifications as notificationsApp } from '@workspace/db';
+
+// ─── Alert thresholds (per-module configurable trigger values) ────────────────
+// Schema-gap close (Q-35): NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md
+// §1.3/§6 P0-4 confirmed live `alert_thresholds` did not exist (to_regclass NULL).
+// business_settings-style CRUD-with-defaults convention: threshold numbers are
+// NEVER hardcoded or asked of the owner in chat — this table ships with ONE
+// sensible default row per known alert_type (see migration
+// alert-thresholds-2026-08-03.sql), matching the `notification_routing_rules
+// .event_type` vocabulary (notification-routing-rules-2026-07-01.sql). Owner
+// tunes values later via CRUD; no consumer wiring included in this change.
+export const alert_thresholds = pgTable('alert_thresholds', {
+  id:              serial('id').primaryKey(),
+  alert_type:      text('alert_type').notNull().unique(),
+  threshold_value: numeric('threshold_value').notNull(),
+  unit:            varchar('unit', { length: 20 }).notNull(),
+  is_active:       boolean('is_active').notNull().default(true),
+  description:     text('description'),
+  created_at:      timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updated_at:      timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deleted_at:      timestamp('deleted_at', { withTimezone: true }),
+});

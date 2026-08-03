@@ -91,7 +91,7 @@ export {
   kanbanNotifications, kanbanTemplates, kanbanTimeTracks,
   kanbanTags, kanbanCardTags, kanbanResults, kanbanResultFiles,
   kanbanObservers, kanbanCoExecutors, kanbanFiles,
-  kanbanWipOverrides,
+  kanbanWipOverrides, kanbanColumnSla,
 } from './schema-kanban';
 
 // schema-ext: Extended/stub tables for Drizzle builder usage

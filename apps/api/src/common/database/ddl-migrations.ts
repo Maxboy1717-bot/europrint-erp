@@ -212,6 +212,24 @@ export async function ensureNotificationTables(): Promise<void> {
       UNIQUE(user_id, notification_type, channel)
     )
   `);
+  // Per-module/per-alert-type configurable trigger thresholds (Q-35 schema-gap
+  // close — NOTIFICATIONS-COMPLETE-FRESH-ANALYSIS-2026-07-11.md §1.3/§6 P0-4).
+  // Boot-time guard so a fresh/reset DB always has this table; seed defaults
+  // live in migration alert-thresholds-2026-08-03.sql (idempotent, run once).
+  // APPROVED: owner 2026-08-03 (autonomous vision-gap-closure mandate).
+  await ddlRun(sql`
+    CREATE TABLE IF NOT EXISTS alert_thresholds (
+      id SERIAL PRIMARY KEY,
+      alert_type TEXT NOT NULL UNIQUE,
+      threshold_value NUMERIC NOT NULL,
+      unit VARCHAR(20) NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      description TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMPTZ
+    )
+  `);
 }
 
 export async function ensureTechnologyTables(): Promise<void> {
