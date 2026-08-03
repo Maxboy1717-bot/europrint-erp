@@ -94,6 +94,12 @@ coverage/
 .claude/projects/
 # NOTE: .claude/agents/, .claude/hooks/, .claude/plugins/ ARE tracked (project config)
 
+# Runtime user uploads (chat files, documents, HR files — not source, not reproducible)
+apps/api/uploads/
+
+# Windows reserved-name artifact (accidental `> nul` redirect target)
+/nul
+
 # Misc
 *.tsbuildinfo
 .eslintcache
