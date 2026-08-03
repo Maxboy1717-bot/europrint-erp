@@ -1,0 +1,33 @@
+## [V/VERIFY] Coordination (04) — cross-ref hal qilindi
+
+> 26 "cross-ref kerak" qatori (Amalga-cell yoki Izoh'da) jonli kodga solishtirib hal qilindi.
+> Search roots: `apps/api/src/`, `lib/db/src/schema/`, `artifacts/erp-dashboard/src/`.
+
+| # | Savol (qisqa) | Oldingi | Hal qilingan status | Dalil (fayl:satr / jadval / grep) |
+|---|---|---|---|---|
+| 3 | Doklad per-camera VLM diarizatsiya (Gemini) + speaker embedding | Yo'q (cross-ref) | **Yo'q** | Gemini faqat HR ai-interview (`hr/ai-interview-v2/gemini-live.gateway.ts`) + IoT camera (`iot/application/camera-ai.service.ts`)da; COR `createDokla` matn-only (`coordination.controller.ts:92`); grep `diariz\|speaker_embedding`=0 COR'da |
+| 8 | 3soat/50% kvorum → favqulodda majlis, Rais qo'lda | Yo'q (cross-ref) | **Yo'q** | `councils` master-data bor (`coordination.controller.ts:41` getCouncils) lekin sessiya/kvorum-oqim yo'q; `coordination.service.ts`da kvorum logikasi=0; grep `kvorum/quorum`=0 kod |
+| 10 | PP↔COR optimistik qulf (409, version/updated_at) | Yo'q (cross-ref) | **Yo'q** | `coordination.service.ts`da version/optimistic tekshiruv yo'q; grep `optimistic\|version`=0 COR service |
+| 14 | Finance byudjet sinxron 5s timeout → "tasdiqsiz" | Yo'q (cross-ref) | **Yo'q** | COR↔Finance sinxron timeout/partial-tasdiq oqimi kodda yo'q; `coordination.service.ts` faqat dokla/rasp/council CRUD |
+| 15 | Telegram uzilsa BullMQ exponential backoff (3 urinish) | cross-ref | **Qisman** | BullMQ TELEGRAM navbat + exponential backoff MAVJUD, lekin `attempts:10` (vizyon 3 dedi) → `queue/queue.module.ts:51,54,87` + `queue/processors/telegram.processor.ts:25` |
+| 16 | Bajarish dalili 10MB, buzilsa `proof_status:missing` | Yo'q (cross-ref) | **Yo'q** | grep `proof_status/proof_url`=0 kod (faqat vizyon-hujjatlarda); fayl-saqlash+missing-flag qurilmagan |
+| 17 | Operator smena yopmasa MES cron 5/15daq avto "yopilmagan" | cross-ref (Area 10) | **Qisman** | MES smena infra bor (`mes/application/mes-shifts-stats.service.ts`, `production-session.aggregate.ts`, `cron/mes-sos-escalation.cron.ts`); aniq 5/15daq auto-close cron topilmadi — Area 10 mas'uliyati |
+| 18 | IoT offline chek-list IndexedDB, sync qaytganda | cross-ref (Area 08) | **Qisman** | Offline IndexedDB sync infra bor (`artifacts/.../lib/erp-offline-db.ts`, `hooks/useErpOfflineSync`, `pos-monitor/hooks/useOfflineSync.ts`); chek-list-maxsus + OEE qayta-hisob tasdiqlanmagan — Area 08 |
+| 19 | Multi-karta signali BUYURTMA-kartaga yoziladi | Yo'q (cross-ref) | **Yo'q** | grep `card.*signal/order.*card.*attribut`=0 kod; buyurtma-karta atribusiya mexanizmi yo'q |
+| 20 | Ish-vaqtdan tashqari Telegram tasdiq, mutlaq deadline | Yo'q (cross-ref) | **Yo'q** | Kod dalili yo'q; out-of-hours approval + absolute-deadline (EP-COR-092) qurilmagan |
+| 21 | Rais ruxsati band qo'shsa qayta NTF + doklad talab | Yo'q (cross-ref) | **Yo'q** | Council sessiya/agenda oqimi yo'q (#8 bilan bir); grep agenda/re-notify=0 |
+| 22 | HR prikaz effective-date cron (00:05), bayram surish | cross-ref (Area 02) | **Qisman** | `effective_date` ustuni HR sxemada bor (`schema-business-c-2-hr-payroll.ts`); 00:05 qo'llash-cron va bayram-surish yo'q — grep `effective_date` cron/`00:05`=0 `cron/` — Area 02 |
+| 24 | Uch karzina + Kanban alohida sahifa (COR izolyatsiya) | cross-ref | **Ha** | Real DB: `coordination.repository.ts:178` listBaskets (`cc_documents` basket_state/overdue); GET `/coordination/baskets` (`coordination.controller.ts:84`); FE `CoordinationPage.tsx` + `components/kanban/ThreeBasketsPanel.tsx` + `components/cc/BasketColumn.tsx` |
+| 27 | KPI outbox + `POST /kpi/recompute` endpoint | cross-ref | **Qisman** | Transactional outbox infra bor (`shared/db/schema-outbox.ts`); COR-maxsus kpi recompute endpoint yo'q — grep `recompute` faqat customer-abc/supplier-rating |
+| 28 | Kanban servis yo'q bo'lsa COR stale (`stale_at`) | Yo'q (cross-ref) | **Yo'q** | grep `stale_at/staleAt`=0 kod (faqat vizyon-hujjat); graceful-degradation qurilmagan |
+| 29 | Dokladga faqat CONFIRMED data, aks holda "qisman" | Yo'q (cross-ref) | **Yo'q** | `coordination.service.ts` updateDokla faqat status; confirmed/approved filtr yo'q; grep confirmed=0 COR |
+| 30 | STOP bo'lim alohida kategoriya, %'ga kirmaydi | Yo'q (cross-ref) | **Yo'q** | grep `STOP/stop_category`=0 `coordination.service.ts`; denominatordan-chiqar logikasi yo'q |
+| 34 | Maxfiy majlis: faqat tayinlanishdan keyingi majlislar | Yo'q (cross-ref) | **Yo'q** | Council sessiya/RLS oqimi yo'q; grep `created_at > assignment_date` filtr=0 |
+| 35 | TB xavfsizlik chek-list BIRINCHI qattiq gate | cross-ref (Area 08/10) | **Qisman** | IoT tablet safety-checklist bor (`iot/presentation/iot-tablet.controller.ts`, `drizzle-iot-main.repo.ts`, `hr/presentation/hr-gsd.controller.ts`); ketma-ket qattiq-gate (TB→smena) tartibi tasdiqlanmagan — Area 08/10 |
+| 36 | Bayram kuni cron keyingi ish kuniga surish + eslatma update | cross-ref | **Qisman** | `common/time/tashkent-time.service.ts:37` dam-kunni o'tkazadi, lekin `:38` "public holiday support" ochiq TODO; `notification_schedules` bor; bayram-kalendar qurilmagan |
+| 39 | Multi-karta bilim blanki har karta uchun alohida | cross-ref (Area 03) | **Ha** | LMS per-karta bilim moduli bor: `lms/presentation/card-required-knowledge.controller.ts` + `application/services/card-required-knowledge.service.ts` + `infrastructure/repositories/drizzle-card-required-knowledge.repo.ts` — karta-scope by design (konsolidatsiyasiz) |
+| 41 | Yangi xodim yo'q bo'lsa Telegram `/tanishuv` so'rovi | Yo'q (cross-ref) | **Yo'q** | grep `tanishuv/acquaint/familiariz`=0 `apps/api/src`; Telegram tanishuv-buyruq qurilmagan |
+| 42 | Ko'p majlis widget ikkalasini real-time ko'rsatadi | cross-ref | **Qisman** | Councils tab FE'da bor (`CoordinationPage.tsx:85` useQuery `/coordination/councils`) lekin refetchInterval/SSE/WS yo'q (real-time emas); kunlik ko'p-majlis widget yo'q |
+| 43 | Material yetishmovchilik fan-out (WMS+PP+logistika parallel) | cross-ref (Area 13/06) | **Qisman** | `remaining/exception-log.controller.ts:76` POST material-shortage → `exception-log.service.ts:105` faqat exception_log INSERT (status pending); parallel fan-out event + "harakatdaman" status yo'q — Area 13/06 |
+| 46 | ERP chat RASMIY kanal (auditga), Telegram norasmiy | cross-ref | **Yo'q** | Chat moduli bor (`components/cc/CommunicationCenter.tsx`) lekin rasmiy-kanal/audit-arxiv bayrog'i yo'q — grep `official.*channel/is_official/rasmiy.*kanal`=0 kod |
+| 48 | Qaytarish sabablari KODLANGAN ro'yxat + `version` | Yo'q (cross-ref) | **Yo'q** | `coordination.service.ts` updateDokla faqat status o'zgartiradi; kodlangan-sabab + version ustuni yo'q; grep=0 |
