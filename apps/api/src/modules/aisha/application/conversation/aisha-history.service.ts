@@ -112,7 +112,9 @@ export class AishaHistoryService {
 
     // 3) ACTUALLY execute the high-stake tool (real INSERT/UPDATE/external call).
     const startMs = Date.now();
-    const exec = await toolR.data.execute(resumable.input ?? {});
+    // High-stake-only resume path (send_email/telegram/schedule_meeting) — none of these
+    // are role-gated tools, so `role` isn't tracked at this call site (see AishaToolContext).
+    const exec = await toolR.data.execute(resumable.input ?? {}, { userId, role: null });
     const latencyMs = Date.now() - startMs;
     const payload = exec.ok ? exec.data : exec.error;
     const source = exec.ok ? 'tool' : 'tool_error';

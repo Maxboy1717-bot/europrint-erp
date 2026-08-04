@@ -24,7 +24,21 @@ export interface ToolResult<T> {
   provenance: Provenance;
 }
 
+/**
+ * Who is asking. Threaded from the chat controller (JWT `req.user`) through
+ * `AishaConversationService.runTurn` into every tool's `execute()`, so a
+ * tool that touches sensitive data (PII, financials) can apply the same
+ * role-gate the corresponding REST endpoint would. Optional — most tools
+ * (camera/machine/production status, etc.) are role-agnostic and never
+ * read it. `role` is `null` when the caller (e.g. the high-stake-approval
+ * resume path) doesn't currently track it.
+ */
+export interface AishaToolContext {
+  userId: number;
+  role:   string | null;
+}
+
 export interface IAishaTool {
   readonly definition: ToolDefinition;
-  execute(input: Record<string, unknown>): Promise<Result<ToolResult<unknown>>>;
+  execute(input: Record<string, unknown>, ctx?: AishaToolContext): Promise<Result<ToolResult<unknown>>>;
 }

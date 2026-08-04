@@ -61,8 +61,9 @@ export class AishaConversationService {
    * any high-stake tools awaiting human approval, and the persisted
    * conversationId so the caller can correlate the transcript.
    */
-  async runTurn(userId: number, userMessage: string, system: string): Promise<Result<AishaTurnResult, AppError>> {
+  async runTurn(userId: number, role: string | null, userMessage: string, system: string): Promise<Result<AishaTurnResult, AppError>> {
     return safeCall(async () => {
+      const ctx = { userId, role };
       const conversationId = await this.startConversation(userId, userMessage);
       const toolDefs = this.tools.size() > 0
         ? (this.tools.getDefinitions() as unknown as Array<Record<string, unknown>>)
@@ -106,7 +107,7 @@ export class AishaConversationService {
             continue;
           }
           const startMs = Date.now();
-          const exec = await toolR.data.execute(tu.input);   // REAL execution
+          const exec = await toolR.data.execute(tu.input, ctx);   // REAL execution
           const latencyMs = Date.now() - startMs;
           const payload = exec.ok ? exec.data : exec.error;
           toolResults.push({ name: tu.name, ok: exec.ok, result: payload });

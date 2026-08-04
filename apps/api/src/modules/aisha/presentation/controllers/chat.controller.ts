@@ -137,12 +137,15 @@ export class AishaChatController {
     const dto = ChatRequestSchema.parse(body);
     const sessionId = dto.sessionId ?? randomUUID();
     const userId = req.user?.userId ?? req.user?.id ?? req.user?.sub ?? 0;
+    const role = req.user?.role ?? null;
     const routed = this.routeOrReply(sessionId, dto.message.length);
     if (routed) return routed;
     try {
       // #15 P0: full tool-execution loop — tools actually run (read tools execute; high-stake pause for approval).
       // The turn is persisted (conversation + transcript + tool_calls + pending_approvals) inside runTurn.
-      const turnR = await this.conversation.runTurn(userId, dto.message, SYSTEM_PROMPT);
+      // `role` is threaded into every tool's execute() (AishaToolContext) so role-gated tools
+      // (get_employee_info, get_financial_summary) can enforce the same RBAC a REST endpoint would.
+      const turnR = await this.conversation.runTurn(userId, role, dto.message, SYSTEM_PROMPT);
       if (!turnR.ok) return this.errorReply(sessionId, turnR.error.message);
       const { conversationId, reply, toolsUsed, toolResults, pendingApprovals } = turnR.data;
       this.logger.log({ sessionId, conversationId, replyLength: reply.length, toolsUsed: toolsUsed.length, ran: toolResults.length, pending: pendingApprovals.length }, 'AIsha chat answered via tool loop');

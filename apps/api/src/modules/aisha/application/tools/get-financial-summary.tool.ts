@@ -12,11 +12,12 @@
 // architectural rationale.
 
 import { Injectable } from '@nestjs/common';
-import { Result, safeCall } from '@common/result';
+import { Result, Err, AppErr, safeCall } from '@common/result';
 import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
-import type { IAishaTool, ToolResult } from '../../domain/tool.interface';
-import { provSource, provResult, rowsOf } from './_helpers';
+import { FINANCE_ROLES } from '@common/constants/roles.constants';
+import type { IAishaTool, ToolResult, AishaToolContext } from '../../domain/tool.interface';
+import { provSource, provResult, rowsOf, hasAishaRole } from './_helpers';
 
 export interface FinancialSummary {
   cashPosition: number;
@@ -33,7 +34,14 @@ export class GetFinancialSummaryTool implements IAishaTool {
     input_schema: { type: 'object' as const, properties: {} },
   };
 
-  async execute(): Promise<Result<ToolResult<FinancialSummary>>> {
+  async execute(_input: Record<string, unknown>, ctx?: AishaToolContext): Promise<Result<ToolResult<FinancialSummary>>> {
+    // Discovery sweep 2026-08-03 P0 fix ("Aisha chat tool'lari RBAC-cheklovisiz ... moliya
+    // ma'lumotini qaytaradi"): company-wide cash/AP/AR/revenue was queryable by any
+    // authenticated Aisha user, unlike the equivalent REST endpoints (Finance module is
+    // @Roles-gated). Same allow-list precedent as get-employee-info.tool.ts / FINANCE_ROLES.
+    if (!hasAishaRole(ctx?.role, FINANCE_ROLES)) {
+      return Err(AppErr('FORBIDDEN', "Moliyaviy ma'lumotni faqat moliya/rahbariyat so'rashi mumkin"));
+    }
     return safeCall<ToolResult<FinancialSummary>>(async () => {
       const start = Date.now();
       const cash = rowsOf<{ s: number }>(await db.execute(sql`
