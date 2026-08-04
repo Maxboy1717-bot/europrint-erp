@@ -405,4 +405,51 @@ export class DrizzleMesRepository implements IMesRepository {
       return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Operator×mashina ruxsatini tekshirishda xatolik'));
     }
   }
+
+  /**
+   * Ikki-imzoli material-akt gate (08-mes vizyon #49 — "Akt 2 imzosiz material
+   * WMS'dan chiqmaydi + MES sessiyaga kirmaydi (blok)").
+   *
+   * Reuses the EXISTING `material_kits` table (lib/db/src/schema/mm-batch-mgmt.ts)
+   * as the "akt": `prepared_by`/`prepared_at` = 1-imzo (omborchi to'plamni
+   * tayyorlaydi), `confirmed_by`/`confirmed_at` = 2-imzo (ishlab-chiqarish ustasi
+   * qabul qilib tasdiqlaydi). Status ketma-ketligi pending→prepared→delivered→
+   * confirmed→in_use→completed (mm-batch-mgmt.ts check constraint) — faqat
+   * 'confirmed' yoki undan keyingi status ikkala imzo ham qo'yilganini bildiradi.
+   *
+   * `material_kits.order_id` da LIVE FK yo'q (pg_constraint bilan tasdiqlangan —
+   * qarang wms-catalog.controller.ts:171-178 izohi): Drizzle sxemasi hali eski
+   * `papka_orders`ga ishora qiladi, lekin haqiqiy runtime qiymati allaqachon
+   * `production_orders.id` fazosida (papka_orders 0-qatorli o'lik jadval edi
+   * ko'chirilganda). `production_sessions.production_order_id` (= bu sessiyaning
+   * ppId'i) xuddi shu id-fazoda — shuning uchun to'g'ridan-to'g'ri qo'shilishi
+   * mumkin, yangi ko'prik jadval kerak emas. `order_id::text` bilan solishtiriladi
+   * (getChecklistStatus'dagi kabi himoya-cast) — jonli ustun turi (varchar/integer)
+   * drizzle snapshot va runtime o'rtasida farq qilishi mumkinligi tasdiqlanmagan.
+   *
+   * Regressiyasiz (mavjud gate'lar bilan bir xil NULL-o'tkazish naqshi,
+   * checkOperatorMachineSkill'dagi kabi): agar shu buyurtma uchun HECH QANDAY kit
+   * qatori bo'lmasa (akt hali WMS'da ochilmagan) — bloklanmaydi. Kit(lar) bor-yu,
+   * kamida bittasi 'confirmed' bosqichiga yetmagan bo'lsa — HARD BLOCK.
+   */
+  async checkMaterialActSignatures(
+    productionOrderId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<{ blocked: boolean; pendingKits: string[] }>> {
+    try {
+      const rows = await exec(
+        sql`SELECT kit_number, status
+            FROM material_kits
+            WHERE order_id::text = ${String(productionOrderId)}
+              AND deleted_at IS NULL
+              AND status NOT IN ('confirmed', 'in_use', 'completed')`,
+        tx,
+      );
+      const pendingKits = rows.map((r) => String(r.kit_number ?? 'Nomsiz to\'plam'));
+      return Ok({ blocked: pendingKits.length > 0, pendingKits });
+    } catch (e: unknown) {
+      this.logger.error('Failed to check material act signatures');
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Material-akt imzolarini tekshirishda xatolik'));
+    }
+  }
 }

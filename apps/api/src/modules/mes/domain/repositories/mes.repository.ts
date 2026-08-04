@@ -36,6 +36,25 @@ export interface IMesRepository {
   ): Promise<Result<{ permitted: boolean; requiredSkill: string | null; machineType: string | null }>>;
 
   /**
+   * Ikki-imzoli material-akt gate — HARD BLOCK (08-mes vizyon #49: "Akt 2 imzosiz
+   * material WMS'dan chiqmaydi + MES sessiyaga kirmaydi").
+   *
+   * Reuses the EXISTING `material_kits` table as the "akt": `prepared_by` = 1-imzo
+   * (omborchi), `confirmed_by` = 2-imzo (ishlab-chiqarish ustasi qabul-tasdiq).
+   * `material_kits.order_id` keys off `production_orders.id` (same id-space as
+   * this session's `ppId` — see drizzle-mes.repo.ts implementation for the
+   * pg_constraint evidence), so no new table/bridge is needed.
+   *
+   * Regressiyasiz: buyurtma uchun kit qatori umuman bo'lmasa (akt hali ochilmagan)
+   * — bloklanmaydi (NULL-o'tkazish naqshi, checkOperatorMachineSkill bilan bir xil).
+   * Kit(lar) bor-yu, kamida bittasi 'confirmed' bosqichiga yetmagan bo'lsa — BLOCK.
+   */
+  checkMaterialActSignatures(
+    productionOrderId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<{ blocked: boolean; pendingKits: string[] }>>;
+
+  /**
    * 08-mes #4 — Sessiya BOSHLANGANDAGI norma versiyasini production_sessions.norma_version
    * ga snapshot qiladi (retro-buzilmaslik): started_at sanasida amalda bo'lgan
    * (material_norms.effective_date <= started_at) eng yuqori aktiv norma versiyasi.

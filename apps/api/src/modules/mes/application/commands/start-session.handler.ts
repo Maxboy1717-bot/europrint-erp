@@ -104,6 +104,25 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       return Err(AppErr('FORBIDDEN', msg));
     }
 
+    // Ikki-imzoli material-akt gate — HARD BLOCK (08-mes vizyon #49: "Akt 2 imzosiz
+    // material WMS'dan chiqmaydi + MES sessiyaga kirmaydi"). Reuses material_kits
+    // (prepared_by=1-imzo, confirmed_by=2-imzo) keyed off production_orders.id —
+    // see checkMaterialActSignatures() for the full evidence trail. Regressiyasiz:
+    // buyurtma uchun kit ochilmagan bo'lsa bloklamaydi; kit(lar) bor-yu hali
+    // 'confirmed'gacha yetmagan bo'lsa boshlashni rad etadi.
+    const actResult = await this.mesRepo.checkMaterialActSignatures(session.getPpId(), tx);
+    if (!actResult.ok) {
+      return Err(actResult.error);
+    }
+    if (actResult.data.blocked) {
+      const msg = `Material-akt 2-imzosiz: to'plam(lar) hali tasdiqlanmagan (${actResult.data.pendingKits.join(', ')}) — sessiya boshlanmaydi`;
+      this.logger.warn(
+        { sessionId: command.sessionId, ppId: session.getPpId(), pendingKits: actResult.data.pendingKits },
+        msg,
+      );
+      return Err(AppErr('FORBIDDEN', msg));
+    }
+
     // TB-safety / smena-readiness gate (Q-40 — real enforcement, no silent flip):
     // load REQUIRED checklist items from setup_checklists/checklist_items and BLOCK
     // start unless every required item is completed.
