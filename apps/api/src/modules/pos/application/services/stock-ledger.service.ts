@@ -40,9 +40,16 @@ export class StockLedgerService {
     batchId?: number,
   ): Promise<Result<LedgerRow, AppError>> {
     try {
-      const balanceR = await this.repo.getBalance(materialCardId, warehouseId);
-      const prevBalance = balanceR.ok && balanceR.data ? balanceR.data.balance : 0;
-      const balanceAfter = prevBalance + qtyChange;
+      // Q-53 fix: balance_after must mirror the CANONICAL warehouse_stock value, not an
+      // independently-accumulated ledger-only running total (prevBalance + qtyChange derived
+      // from this table's own prior row). Every caller of recordEntry() (pos-movement-status
+      // .service's _processCompletedMovement, and adjustStock() below) writes warehouse_stock
+      // FIRST and calls recordEntry() after, so by this point the canonical balance already
+      // reflects qtyChange — read it back instead of re-deriving it. This makes stock_ledger a
+      // self-correcting journal that can never drift from warehouse_stock, instead of a second,
+      // independently-drifting source of truth (the divergence risk this fix closes).
+      const canonicalR = await this.repo.getCanonicalBalance(materialCardId, warehouseId);
+      const balanceAfter = canonicalR.ok ? canonicalR.data : 0;
 
       const entryR = await this.repo.insertLedgerEntry({
         materialCardId,
@@ -87,11 +94,13 @@ export class StockLedgerService {
     }
   }
 
+  /** Real-time material balance (GET /pos/stock/:warehouseId/:materialId) — Q-53 fix: reads the
+   *  CANONICAL warehouse_stock balance, not the ledger's own (potentially stale) running total. */
   async getBalance(materialCardId: number, warehouseId: string): Promise<Result<number, AppError>> {
     try {
-      const r = await this.repo.getBalance(materialCardId, warehouseId);
+      const r = await this.repo.getCanonicalBalance(materialCardId, warehouseId);
       if (!r.ok) return Err(r.error);
-      return Ok(r.data ? r.data.balance : 0);
+      return Ok(r.data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return Err(AppErr('INTERNAL', message));
@@ -198,10 +207,20 @@ export class StockLedgerService {
     adjustedBy: number,
   ): Promise<Result<LedgerRow, AppError>> {
     try {
-      const balanceR = await this.repo.getBalance(materialCardId, warehouseId);
-      const current = balanceR.ok && balanceR.data ? balanceR.data.balance : 0;
+      // Q-53 fix: this used to compute delta from the ledger's own balance and call
+      // recordEntry() ONLY — it never touched warehouse_stock, so "Adjust stock" silently had
+      // zero effect on the canonical balance everything else reads (getAllStockSummary,
+      // getLowStock, WMS issue-guard, GL valuation). Read the canonical balance, write the
+      // adjustment to warehouse_stock FIRST, then record the ledger entry (which will read back
+      // the now-updated canonical balance — see recordEntry() above).
+      const canonicalR = await this.repo.getCanonicalBalance(materialCardId, warehouseId);
+      const current = canonicalR.ok ? canonicalR.data : 0;
       const delta = newQty - current;
       this.logger.log(`[STOCK] Adjust: mat=${materialCardId} wh=${warehouseId} delta=${delta} by=${adjustedBy}`);
+
+      const setR = await this.repo.setCanonicalBalance(materialCardId, warehouseId, newQty);
+      if (!setR.ok) return Err(setR.error);
+
       const r = await this.recordEntry(materialCardId, warehouseId, delta, 0, `Manual adjustment by ${adjustedBy}`);
       if (!r.ok) return Err(r.error);
       return Ok(r.data);

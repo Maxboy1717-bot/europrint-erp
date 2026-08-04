@@ -53,6 +53,57 @@ export class StockLedgerRepository {
     }
   }
 
+  /**
+   * Canonical stock balance read (Q-53 fix): `warehouse_stock.available_quantity` is the
+   * single source of truth for "how much is really there" (see ADR comment on
+   * getAllStockSummary() below — warehouse_stock is canonical, pos_stock_ledger is an
+   * append-only movement journal that must never be read as if it were the balance). Raw SQL,
+   * same reason as getAllStockSummary(): the live warehouse_stock.material_id/warehouse_id
+   * columns are integer while the Drizzle def (wms-schema.ts) declares them varchar — going
+   * through the ORM query-builder here would trip that drift.
+   */
+  async getCanonicalBalance(materialCardId: number, warehouseId: string): Promise<Result<number>> {
+    try {
+      const res = await db.execute(sql`
+        SELECT available_quantity AS balance
+        FROM warehouse_stock
+        WHERE material_id = ${materialCardId} AND warehouse_id = ${Number(warehouseId)}
+        LIMIT 1
+      `);
+      const rows = ((res as { rows?: Record<string, unknown>[] }).rows) ?? [];
+      return Ok(rows.length ? Number(rows[0].balance ?? 0) : 0);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  /**
+   * Manual/absolute adjustment write on the CANONICAL warehouse_stock table (Q-53 fix — used
+   * by StockLedgerService.adjustStock()). Sets on-hand quantity to `newQty` while preserving
+   * whatever is currently reserved (available = newQty - reserved), same lockstep
+   * quantity/available_quantity pattern as execCurrentStockUpsert/execCurrentStockDecrement
+   * (queries-remaining-a.ts) so POS, WMS and manual adjustments all write the same shape.
+   */
+  async setCanonicalBalance(materialCardId: number, warehouseId: string, newQty: number): Promise<Result<void>> {
+    try {
+      await db.execute(sql`
+        INSERT INTO warehouse_stock
+          (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+        VALUES
+          (${Number(warehouseId)}, ${materialCardId}, ${newQty}, 0, ${newQty}, NOW(), NOW(), NOW())
+        ON CONFLICT (warehouse_id, material_id)
+        DO UPDATE SET
+          quantity            = ${newQty},
+          available_quantity  = ${newQty} - warehouse_stock.reserved_quantity,
+          last_movement_at    = NOW(),
+          last_updated_at     = NOW()
+      `);
+      return Ok();
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
   async getLedgerHistory(materialCardId: number, warehouseId: string, limit: number = 50): Promise<Result<LedgerRow[]>> {
     try {
       const rows = await db
@@ -207,16 +258,24 @@ export class StockLedgerRepository {
     }
   }
 
+  /**
+   * Q-53 fix: this used to filter/report `stockLedger.balanceAfter` as if it were the current
+   * balance. It isn't — it's a ledger-local running total that drifts the instant any OTHER
+   * writer (WMS goods-receipt, quarantine release, delivery fulfillment — none of which go
+   * through StockLedgerService.recordEntry) touches the same material/warehouse pair. The
+   * ledger+movement-lines join below is still legitimate: it's metadata discovery (which
+   * material/warehouse pairs have a batch expiring soon), not a balance read. The actual
+   * "is there still stock" balance is now looked up from canonical warehouse_stock.
+   */
   async getExpiryAlerts(daysAhead: number): Promise<Result<StockSummary[]>> {
     try {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() + daysAhead);
 
-      const rows = await db
-        .select({
+      const pairs = await db
+        .selectDistinct({
           materialCardId: stockLedger.materialCardId,
           warehouseId:    stockLedger.warehouseId,
-          balanceAfter:   stockLedger.balanceAfter,
         })
         .from(stockLedger)
         .innerJoin(posMovementLines, and(
@@ -226,16 +285,33 @@ export class StockLedgerRepository {
         .where(and(
           isNotNull(posMovementLines.expiryDate),
           lte(posMovementLines.expiryDate, cutoff),
-          sql`${stockLedger.balanceAfter} > 0`,
-        ))
-        .orderBy(stockLedger.materialCardId, stockLedger.warehouseId, desc(stockLedger.ts));
+        ));
 
-      const distinct = dedupByKey(rows, r => `${r.materialCardId}:${r.warehouseId}`);
-      return Ok((Array.isArray(distinct) ? distinct : []).map(r => ({
-        materialCardId: r.materialCardId,
-        warehouseId:    r.warehouseId,
-        balance:        Number(r.balanceAfter ?? 0),
-      })));
+      const candidates = Array.isArray(pairs) ? pairs : [];
+      if (candidates.length === 0) return Ok([]);
+
+      const matIds = [...new Set(candidates.map(p => p.materialCardId))];
+      // `= ANY(${arr})` mis-binds a JS array in this project (see drizzle-gl-posting.repo.ts:31-32,
+      // notification-routing.repository.ts:13-15) — use sql.join(...) -> IN (...) instead.
+      const idList = sql.join(matIds.map(id => sql`${id}`), sql`, `);
+      const res = await db.execute(sql`
+        SELECT material_id, warehouse_id, available_quantity AS balance
+        FROM warehouse_stock
+        WHERE material_id IN (${idList}) AND available_quantity > 0
+      `);
+      const balRows = ((res as { rows?: Record<string, unknown>[] }).rows) ?? [];
+      const balanceMap = new Map<string, number>();
+      for (const r of (Array.isArray(balRows) ? balRows : [])) {
+        balanceMap.set(`${Number(r.material_id)}:${String(r.warehouse_id)}`, Number(r.balance ?? 0));
+      }
+
+      const distinct = dedupByKey(candidates, r => `${r.materialCardId}:${r.warehouseId}`);
+      const out: StockSummary[] = [];
+      for (const p of distinct) {
+        const bal = balanceMap.get(`${p.materialCardId}:${p.warehouseId}`);
+        if (bal != null && bal > 0) out.push({ materialCardId: p.materialCardId, warehouseId: p.warehouseId, balance: bal });
+      }
+      return Ok(out);
     } catch (e) {
       return Err(String(e));
     }
