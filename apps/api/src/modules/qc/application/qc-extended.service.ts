@@ -56,8 +56,8 @@ export class QcExtendedService {
     return this.repo.getFinalOrders(lim);
   }
 
-  async completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean) {
-    return this.repo.completeFinalInspection(id, inspResult, notes, defect_count, passed);
+  async completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean, parentOrderId: number | null = null, reworkCost: number | null = null) {
+    return this.repo.completeFinalInspection(id, inspResult, notes, defect_count, passed, parentOrderId, reworkCost);
   }
 
   async listInProcess(sid: number | null, status: string | undefined, lim: number) {

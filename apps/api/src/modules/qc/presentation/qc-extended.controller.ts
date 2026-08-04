@@ -134,7 +134,10 @@ export class QcExtendedController {
   @UsePipes(new ZodValidationPipe(QcCompleteFinalInspectionSchema))
   @Roles(...QC_WRITE_ROLES)
   async completeFinalInspection(@Param('id') id: string, @Body() body: QcCompleteFinalInspectionDto) {
-    const _rR = await this.svc.completeFinalInspection(safeInt(id, 0), body.result ?? null, body.notes ?? null, body.defect_count ?? 0, body.passed !== false);
+    const _rR = await this.svc.completeFinalInspection(
+      safeInt(id, 0), body.result ?? null, body.notes ?? null, body.defect_count ?? 0, body.passed !== false,
+      body.parent_order_id ?? null, body.rework_cost ?? null,
+    );
     assertOk(_rR);
     const r = _rR.data;
     assertFound(r, await this.i18n.t('errors.qcFinalInspectionNotFoundWithId', { args: { id: safeInt(id, 0) } }));

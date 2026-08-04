@@ -102,6 +102,12 @@ export const QcCompleteFinalInspectionSchema = z.object({
   notes:        z.string().optional(),
   defect_count: z.number().int().min(0).optional(),
   passed:       z.boolean().optional(),
+  // T11-06: only persisted when result is 'rework'/'rework_required' (see
+  // qc-extended-final.repository.ts). parent_order_id lets a caller override the
+  // default self-link (the row's own papka_order_id); rework_cost has no automatic
+  // Cost-of-Quality source yet, so it is manually supplied by the caller.
+  parent_order_id: z.number().int().positive().optional(),
+  rework_cost:  z.number().min(0).optional(),
 });
 export type QcCompleteFinalInspectionDto = z.infer<typeof QcCompleteFinalInspectionSchema>;
 

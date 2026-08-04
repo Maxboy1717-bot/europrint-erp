@@ -51,8 +51,8 @@ export class QcExtendedRepository implements IQcExtendedRepo {
   getFinalOrders(lim: number): Promise<Result<Row[]>> {
     return this.finalInspections.getFinalOrders(lim);
   }
-  completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean): Promise<Result<Row[]>> {
-    return this.finalInspections.completeFinalInspection(id, inspResult, notes, defect_count, passed);
+  completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean, parentOrderId: number | null = null, reworkCost: number | null = null): Promise<Result<Row[]>> {
+    return this.finalInspections.completeFinalInspection(id, inspResult, notes, defect_count, passed, parentOrderId, reworkCost);
   }
 
   listInProcess(sid: number | null, status: string | undefined, lim: number): Promise<Result<Row[]>> {

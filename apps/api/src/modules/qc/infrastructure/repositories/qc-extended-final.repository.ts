@@ -113,13 +113,29 @@ export class QcExtendedFinalRepository {
     }
   }
 
-  async completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean): Promise<Result<Row[]>>  {
+  // T11-06 (rework link + cost): `parent_order_id`/`rework_cost` are additive columns
+  // that only make sense when this decision IS a rework (result IN ('rework','rework_required')
+  // — matches the DB CHECK constraint's allowed values). parent_order_id defaults to the row's
+  // OWN papka_order_id (the order actually being reworked) unless the caller supplies an explicit
+  // override — no fabricated FK, only real order ids already known to the system. rework_cost is
+  // caller-supplied (no auto Cost-of-Quality calculator exists yet — Q-40, no invented numbers);
+  // COALESCE preserves a previously-set value across repeated completes of the same row.
+  async completeFinalInspection(
+    id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean,
+    parentOrderId: number | null = null, reworkCost: number | null = null,
+  ): Promise<Result<Row[]>>  {
     try {
       const status = passed ? 'passed' : 'failed';
       const rows = await runQuery<Row>(sql`
         UPDATE qc_final_inspections
         SET status = ${status}, result = ${inspResult ?? null},
             notes = COALESCE(${notes ?? null}, notes), defect_count = ${defect_count},
+            parent_order_id = CASE WHEN ${inspResult ?? null} IN ('rework','rework_required')
+                                    THEN COALESCE(${parentOrderId ?? null}, parent_order_id, papka_order_id)
+                                    ELSE parent_order_id END,
+            rework_cost = CASE WHEN ${inspResult ?? null} IN ('rework','rework_required')
+                                THEN COALESCE(${reworkCost ?? null}, rework_cost)
+                                ELSE rework_cost END,
             completed_at = NOW(), updated_at = NOW()
         WHERE id = ${id} RETURNING *
       `);

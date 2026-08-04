@@ -22,7 +22,7 @@ export interface IQcExtendedRepo {
   createFinalInspection(order_id: number | null, inspector_id: number | null, status: string | null, notes: string | null, passed: boolean | null, sampleSize: number, defectCount: number, passedCount: number, defectRate: number | null): Promise<Result<Row>>;
   updateFinalInspection(id: number, status: string | null, notes: string | null, passed: boolean | null): Promise<Result<Row[]>>;
   getFinalOrders(lim: number): Promise<Result<Row[]>>;
-  completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean): Promise<Result<Row[]>>;
+  completeFinalInspection(id: number, inspResult: string | null, notes: string | null, defect_count: number, passed: boolean, parentOrderId?: number | null, reworkCost?: number | null): Promise<Result<Row[]>>;
   listInProcess(sid: number | null, status: string | undefined, lim: number): Promise<Result<Row[]>>;
   createInProcessInspection(session_id: number, inspector_id: number | null, check_point: string | null, total: number, defects: number, status: string, notes: string | null): Promise<Result<Row>>;
   listRootCauses(): Promise<Result<Row[]>>;
