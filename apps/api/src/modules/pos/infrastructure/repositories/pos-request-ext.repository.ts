@@ -37,6 +37,15 @@ export class PosRequestExtRepository {
   }
 
   async paginateWithFilter(filter: RequestFilter, limit: number, offset: number): Promise<Result<{ items: unknown[]; total: number }>> {
+    // Discovery sweep 2026-08-03 ("status bo'yicha filtrlash doim DB xatosi beradi"): re-verified
+    // live (Q-29) — the RAW SQL comparison itself does not throw (posMaterialRequests.status is
+    // physically varchar(30); the requestStatusEnum PG type was never migrated). The real bug was
+    // a vocabulary mismatch one layer up, in RequestFilterSchema (see request.dto.ts fix,
+    // same commit): its Zod enum only accepted lowercase values, but every actual writer
+    // (pos-request.service.ts create/approve/reject, PosRequests.tsx FE tab logic) uses UPPERCASE
+    // ('DRAFT'/'SUBMITTED'/'APPROVED'/...) — matching this column's Drizzle-declared type below.
+    // A FE filter request for the real status values (e.g. ?status=SUBMITTED) was rejected by Zod
+    // before ever reaching this query — this cast is correct as-is; do not lowercase it.
     const conditions = [];
     if (filter.status)         conditions.push(eq(posMaterialRequests.status, filter.status as 'DRAFT' | 'REJECTED' | 'APPROVED' | 'SUBMITTED' | 'PARTIALLY_ISSUED' | 'FULLY_ISSUED' | 'CANCELLED'));
     if (filter.departmentCode) conditions.push(eq(posMaterialRequests.departmentCode, filter.departmentCode));
