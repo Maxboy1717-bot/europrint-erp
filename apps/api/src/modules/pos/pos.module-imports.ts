@@ -108,11 +108,6 @@ export { EmployeeWriteOffRepository }  from './infrastructure/repositories/emplo
 export { PosInventoryService } from './application/services/pos-inventory.service';
 export { PosInventoryRepository } from './infrastructure/repositories/pos-inventory.repository';
 
-// Legacy POS service with repository pattern
-export { PosService } from './application/services/pos.service';
-export { DrizzlePosSvcRepository } from './infrastructure/repositories/drizzle-pos-svc.repo';
-export { POS_SVC_REPO } from './domain/repositories/i-pos-svc.repo';
-
 // Events & Guards
 export { PosEventHandler }         from './application/event-handlers/pos.events';
 export { PosSecondaryEventsHandler } from './application/event-handlers/pos-secondary-events.handler';

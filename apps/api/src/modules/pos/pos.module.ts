@@ -50,7 +50,6 @@ import {
   EmployeeLedgerService, EmployeeLedgerRepository,
   EmployeeWriteOffService, EmployeeWriteOffRepository,
   PosInventoryService, PosInventoryRepository,
-  PosService, DrizzlePosSvcRepository, POS_SVC_REPO,
   PosEventHandler, PosSecondaryEventsHandler, PosEventRepository, PosDepartmentGuard,
   PosWmsSyncCreatedListener,
   PosAnomalyService, PosAnomalyRepository, PosAnomalyListener,
@@ -106,8 +105,7 @@ import { FinanceModule } from '@modules/finance/finance.module';
     DeliveryRequestFulfillmentController,
   ],
   providers: [
-    { provide: POS_SVC_REPO, useClass: DrizzlePosSvcRepository },
-    PosService,
+
     PosMovementRepository,
     { provide: POS_MOVEMENT_REPO, useExisting: PosMovementRepository },
     // P4-TECHCARD-VARIANCE: WMS solishtirish servisini POS DI'ga REUSE qilamiz
@@ -237,8 +235,6 @@ import { FinanceModule } from '@modules/finance/finance.module';
     QueueService,
   ],
   exports: [
-    POS_SVC_REPO,
-    PosService,
     PosMovementService,
     PosMovementStatusService,
     PosMovementQueryService,
