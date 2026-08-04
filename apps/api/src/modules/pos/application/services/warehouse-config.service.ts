@@ -36,7 +36,7 @@ export class WarehouseConfigService {
                wt.inbound_flow AS "inboundFlow", wt.outbound_flow AS "outboundFlow",
                wt.needs_quarantine AS "needsQuarantine", wt.needs_qc AS "needsQc",
                wt.unit_basis AS "unitBasis", wt.label_template AS "labelTemplate", wt.sort_order AS "sortOrder",
-               (SELECT COUNT(*)::int FROM warehouses w WHERE w.type = wt.code AND w.is_active) AS "warehouseCount"
+               (SELECT COUNT(*)::int FROM warehouses w WHERE w.type = wt.code AND w.is_active AND w.deleted_at IS NULL) AS "warehouseCount"
         FROM warehouse_types wt
         WHERE wt.is_active = true
         ORDER BY wt.sort_order
@@ -52,7 +52,7 @@ export class WarehouseConfigService {
       const rows = await rawSql(sql`
         SELECT id, code, name, name_ru AS "nameRu", type, location, is_active AS "isActive"
         FROM warehouses
-        WHERE is_active = true AND (${t}::text IS NULL OR type = ${t})
+        WHERE is_active = true AND deleted_at IS NULL AND (${t}::text IS NULL OR type = ${t})
         ORDER BY name
       `);
       return dbRows(rows);
@@ -274,7 +274,7 @@ export class WarehouseConfigService {
         FROM warehouses w
         LEFT JOIN warehouse_stock ws ON ws.warehouse_id = w.id
         LEFT JOIN material_cards mc ON mc.id = ws.material_id
-        WHERE w.is_active = true
+        WHERE w.is_active = true AND w.deleted_at IS NULL
         GROUP BY w.id, w.code, w.name, w.type
         ORDER BY "totalValue" DESC
       `));
@@ -297,7 +297,7 @@ export class WarehouseConfigService {
         FROM warehouse_stock ws
         JOIN material_cards mc ON mc.id = ws.material_id
         JOIN warehouses w ON w.id = ws.warehouse_id
-        WHERE w.is_active = true
+        WHERE w.is_active = true AND w.deleted_at IS NULL
           AND COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0) > 0
           AND ws.available_quantity < COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0)
         ORDER BY (COALESCE(NULLIF(mc.reorder_point, 0), mc.min_stock, 0) - ws.available_quantity) DESC
