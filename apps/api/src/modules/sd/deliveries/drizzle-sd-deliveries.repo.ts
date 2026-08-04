@@ -66,4 +66,19 @@ export class DrizzleSdDeliveriesRepository implements ISdDeliveriesRepository {
       return Ok(result[0]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Holat yangilashda xatolik'); }
   }
+
+  async hasExpiredCertificate(salesOrderId: number): Promise<Result<boolean>> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 1 FROM certificates
+        WHERE order_id = ${salesOrderId}
+          AND expiry_date IS NOT NULL
+          AND expiry_date::date < CURRENT_DATE
+          AND status != 'revoked'
+        LIMIT 1
+      `);
+      const rows = (result.rows ?? []) as unknown[];
+      return Ok(rows.length > 0);
+    } catch (e: unknown) { return Err((e as Error)?.message || 'Sertifikat muddatini tekshirishda xatolik'); }
+  }
 }

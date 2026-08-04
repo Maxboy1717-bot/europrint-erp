@@ -29,6 +29,7 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { Ok, Err, Result, safeCall } from '@common/result';
 import { toPdfSafeText } from '@common/pdf/pdf-safe-text.helper';
+import { QC_CERTIFICATE_DEFAULT_VALIDITY_DAYS } from '@common/constants/business.constants';
 
 type Row = Record<string, unknown>;
 
@@ -108,13 +109,20 @@ export class QcCertificatePdfService {
   ): Promise<number | null> {
     try {
       const today = new Date().toISOString().slice(0, 10);
+      // Discovery sweep 2026-08-03 fix ("QC mahsulot sertifikati muddati tekshirilmaydi") —
+      // expiry_date was never set, so CertificateExpiryCron had nothing to find. Default
+      // validity window (QC_CERTIFICATE_DEFAULT_VALIDITY_DAYS); real per-template days
+      // (qc_certificate_templates.validityDays) can override this once a caller supplies one.
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + QC_CERTIFICATE_DEFAULT_VALIDITY_DAYS);
+      const expiryDate = expiry.toISOString().slice(0, 10);
       const r = await db.execute(sql`
         INSERT INTO certificates
-          (user_id, course_id, certificate_number, cert_number, order_id, product_name, issued_date, status, notes, issued_by)
+          (user_id, course_id, certificate_number, cert_number, order_id, product_name, issued_date, expiry_date, status, notes, issued_by)
         VALUES
           (0, 0, ${certNumber}, ${certNumber},
            ${input.orderId ?? null}, ${input.productName ?? null},
-           ${today}, 'active', ${input.notes ?? null}, ${input.issuedBy ?? null})
+           ${today}, ${expiryDate}, 'active', ${input.notes ?? null}, ${input.issuedBy ?? null})
         RETURNING id
       `);
       const rows = ((r as { rows?: Row[] }).rows) ?? [];

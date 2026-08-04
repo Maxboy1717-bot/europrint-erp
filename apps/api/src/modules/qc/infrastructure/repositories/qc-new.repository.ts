@@ -12,6 +12,7 @@ import {
 } from '@shared/db';
 import { eq, ne, desc, gte, isNull, or, sql } from 'drizzle-orm';
 import { safeCall, Result, Ok, Err, AppErr } from '@common/result';
+import { QC_CERTIFICATE_DEFAULT_VALIDITY_DAYS } from '@common/constants/business.constants';
 
 /**
  * QC-birlashtirish (2026-07-02, APPROVED egasi): POST /qc/braks endi ReportDefectCommand
@@ -501,15 +502,21 @@ export class QcNewRepository {
     // with no FK constraints. We use sentinel 0/cert_number values for those columns so
     // that QC records are distinguishable (user_id=0 = QC origin) without DDL changes.
     return safeCall(async () => {
+      // Discovery sweep 2026-08-03 fix ("QC mahsulot sertifikati muddati tekshirilmaydi") —
+      // same default-validity computation as QcCertificatePdfService.persistCertificate().
+      const issuedAt = data.issuedDate ? new Date(data.issuedDate) : new Date();
+      const expiry = new Date(issuedAt);
+      expiry.setDate(expiry.getDate() + QC_CERTIFICATE_DEFAULT_VALIDITY_DAYS);
+      const expiryDate = expiry.toISOString().slice(0, 10);
       const r = await db.execute(sql`
         INSERT INTO certificates
-          (user_id, course_id, certificate_number, cert_number, order_id, product_name, issued_date, status, notes, issued_by)
+          (user_id, course_id, certificate_number, cert_number, order_id, product_name, issued_date, expiry_date, status, notes, issued_by)
         VALUES
           (0, 0, ${data.certNumber}, ${data.certNumber},
            ${data.orderId ?? null}, ${data.productName ?? null},
-           ${data.issuedDate ?? null}, ${data.status ?? 'active'},
+           ${data.issuedDate ?? null}, ${expiryDate}, ${data.status ?? 'active'},
            ${data.notes ?? null}, ${data.issuedBy ?? null})
-        RETURNING id, cert_number, order_id, product_name, issued_date, status, notes, issued_by, created_at
+        RETURNING id, cert_number, order_id, product_name, issued_date, expiry_date, status, notes, issued_by, created_at
       `);
       const rows = ((r as { rows?: Row[] }).rows) ?? [];
       return rows[0] as Row;

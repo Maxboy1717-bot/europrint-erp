@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, NotFoundException, InternalServerErrorException, Inject, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, ConflictException, Inject, Logger } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import { ISdDeliveriesRepository, SD_DELIVERIES_REPO } from './i-sd-deliveries.repo';
@@ -60,6 +60,23 @@ export class DeliveriesService {
   async updateStatus(id: number, status: string){
     return safeCall(async () => {
     const delivery = await this.findOne(id);
+    const rec = (delivery && typeof delivery === 'object') ? (delivery as Record<string, unknown>) : {};
+    const rawSoId = rec.sales_order_id ?? rec.salesOrderId ?? null;
+    const salesOrderId = rawSoId != null && Number.isFinite(Number(rawSoId)) ? Number(rawSoId) : null;
+
+    // Vision 09-qc.md #28 ("Muddati o'tgan sertifikat sotilmasin — buyurtma blok, SD ham"):
+    // goods may not physically leave the warehouse (in_transit/delivered) against a sales
+    // order whose QC product certificate has expired. Checked live against expiry_date, so
+    // this blocks correctly even before QcCertificateExpiryCron's nightly sweep has run.
+    if (DELIVERY_GOODS_ISSUED_STATUSES.has(status) && salesOrderId !== null) {
+      const certR = await this.sdDeliveriesRepo.hasExpiredCertificate(salesOrderId);
+      if (certR.ok && certR.data) {
+        throw new ConflictException(
+          `Buyurtma #${salesOrderId} sifat sertifikati muddati o'tgan — yetkazib berish bloklandi (QC bilan bog'laning)`,
+        );
+      }
+    }
+
     const result = await this.sdDeliveriesRepo.updateStatus(id, status);
     if (!result.ok) throw new InternalServerErrorException(result.error);
 
@@ -71,9 +88,6 @@ export class DeliveriesService {
     // logged here (mirrors UpdateOrderStatusHandler's in-process eventBus.publish).
     if (DELIVERY_GOODS_ISSUED_STATUSES.has(status)) {
       try {
-        const rec = (delivery && typeof delivery === 'object') ? (delivery as Record<string, unknown>) : {};
-        const rawSoId = rec.sales_order_id ?? rec.salesOrderId ?? null;
-        const salesOrderId = rawSoId != null && Number.isFinite(Number(rawSoId)) ? Number(rawSoId) : null;
         this.eventBus.publish(new DeliveryGoodsIssuedEvent(id, salesOrderId));
       } catch (err) {
         this.logger.error(

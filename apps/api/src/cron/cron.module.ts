@@ -50,6 +50,9 @@ import { ActingRevertCron } from './acting-revert.cron'
 // EP-ORG-137 — daily card-staleness scan (discovery sweep 2026-08-03: CardExpiredEvent gap);
 // CardRepository already provided below (ActingRevertCron sibling), reused (Q-40, no reimplementation).
 import { CardStalenessCron } from './card-staleness.cron'
+// 09-qc #28 — daily QC product-certificate expiry scan (discovery sweep 2026-08-03: "QC mahsulot
+// sertifikati muddati tekshirilmaydi" gap). Standalone (runQuery + CommandBus, no repo needed).
+import { QcCertificateExpiryCron } from './qc-certificate-expiry.cron'
 import { MesSosEscalationCron } from './mes-sos-escalation.cron'
 import { MesSosEscalationService } from '../modules/mes/application/mes-sos-escalation.service'
 import { MesSosEscalationRepository } from '../modules/mes/infrastructure/repositories/mes-sos-escalation.repo'
@@ -137,6 +140,8 @@ import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.
     CardRepository,
     // EP-ORG-137 — daily card-staleness scan → CardExpiredEvent (discovery sweep 2026-08-03 fix)
     CardStalenessCron,
+    // 09-qc #28 — daily QC product-certificate expiry scan (discovery sweep 2026-08-03 fix)
+    QcCertificateExpiryCron,
     // #11 — SOS/downtime org-zanjir timeout eskalatsiya (har 2 daqiqa); repo+service standalone (runQuery)
     MesSosEscalationCron,
     MesSosEscalationService,

@@ -546,6 +546,19 @@ export const QC_FINAL_SIGNOFF_MIN_RAZRYAD_LEVEL = 3;
  */
 export const QC_RECLAMATION_DEFAULT_SLA_DAYS = 5;
 
+/**
+ * Default `certificates.expiry_date` validity window (calendar days from issue),
+ * applied when a QC quality certificate is issued without an explicit expiry
+ * (both the auto-issue path — QcPassedCertificateListener → QcCertificatePdfService
+ * — and the manual `POST /qc/certificates` CRUD path). Discovery sweep 2026-08-03
+ * fix ("QC mahsulot sertifikati muddati tekshirilmaydi, SD blok yo'q" — vision
+ * 09-qc.md #28): certificates previously never had an expiry set at all, so the
+ * nightly expiry-check cron (CertificateExpiryCron) had nothing to find. 365 days
+ * (1 year) is the standard quality-certificate validity default; adjust per
+ * `qc_certificate_templates.validityDays` once a caller supplies a template.
+ */
+export const QC_CERTIFICATE_DEFAULT_VALIDITY_DAYS = 365;
+
 // ---------------------------------------------------------------------------
 // CRM — Lead-aging avtomatik qayta biriktirish (VISION-3340 #33)
 // ---------------------------------------------------------------------------
