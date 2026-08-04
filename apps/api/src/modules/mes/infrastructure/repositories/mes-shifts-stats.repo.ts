@@ -3,7 +3,7 @@
  * @description Repository / data-access layer. Wraps Drizzle ORM queries; returns Result<T>.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import {
@@ -12,11 +12,13 @@ import {
   OEE_ROUND_FACTOR,
   SECONDS_PER_MINUTE_OEE,
 } from '../../constants/mes.constants';
+import { execIssueFromWarehouseStock, execInsertWmsTransaction } from '@common/database/queries-wms';
 
 type Row = Record<string, unknown>;
 
 @Injectable()
 export class MesShiftsStatsRepository {
+  private readonly logger = new Logger(MesShiftsStatsRepository.name);
   async getCurrentShift(): Promise<Row | null> {
     const rows = await runQuery<Row>(sql`
       SELECT
@@ -369,12 +371,91 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
+  /**
+   * P0 fix (2026-08 discovery-sweep gap "MES sarfi WMS omborni real-time kamaytirmaydi"):
+   * this used to ONLY insert the audit row below — warehouse_stock was never decremented,
+   * so MES-recorded consumption never left WMS's books (golden-thread break: MES draws
+   * material but the warehouse balance stayed frozen; GL never saw the COGS movement).
+   *
+   * Now, after the audit-row INSERT, this mirrors the SAME guarded WMS stock-out mechanics
+   * already proven by the WMS event listeners (delivery-goods-issued.listener.ts /
+   * mes-completed-fg.listener.ts): resolve the canonical raw-material warehouse (`type =
+   * 'raw_material'`, same one-line resolution those listeners use for their own warehouse
+   * type), then `execIssueFromWarehouseStock` — the SAME guarded (`available_quantity >=
+   * amount`, never negative) decrement `GoodsIssueHandler` uses for the PP→WMS issue path —
+   * plus the matching 'OUT' `wms_transactions` ledger row (`execInsertWmsTransaction`, the
+   * same helper `recordWmsTransaction` calls) so the movement is visible to the dashboard
+   * "today_movements" KPI and material recent-transactions readers, exactly like every other
+   * WMS OUT movement.
+   *
+   * GL: no new posting code is added here. `execInsertWmsTransaction`'s ledger row is the
+   * exact shape `wms_transactions` movements already take; the correct golden-thread hop for
+   * "material left stock → COGS" is the existing `WmsGoodsIssuedEvent` → `WmsGoodsIssuedListener`
+   * (apps/api/src/modules/finance/infrastructure/event-handlers/wms-goods-issued.listener.ts) —
+   * publishing that event (done in the service layer, not here — repos don't own the event
+   * bus, Qoida 15) reuses the SAME Dr COGS / Cr Inventory posting every other WMS issue
+   * already gets, instead of duplicating GL logic in MES.
+   *
+   * BEST-EFFORT / NEVER BLOCKS the audit trail (Q-40 — never fabricate a decrement that
+   * didn't happen, but a missing raw_material warehouse or a material never received into
+   * stock — both expected during build-phase master-data gaps — must not stop the operator
+   * from recording what was consumed on the floor): a failed/skipped WMS sync is logged and
+   * surfaced via the returned row's `wms_stock_synced` flag, the consumption record itself
+   * always saves. Returns `wms_stock_synced=true` only when both the decrement AND the
+   * ledger row succeeded — the service layer uses that flag to gate the GL event publish so
+   * FIN never posts COGS for a movement that didn't actually happen.
+   */
   async recordMaterialConsumption(session_id: number, material_id: number, quantity: number, batch_number: string | null, unit_of_measure: string | null = null): Promise<Row[]> {
     // To'lqin 3: unit_of_measure ustuni endi INSERT'ga kiritiladi (avval e'tiborsiz → doim NULL edi).
     const rows = await runQuery<Row>(sql`
       INSERT INTO mes_material_consumption (session_id, material_id, quantity, batch_number, unit_of_measure, recorded_at)
       VALUES (${session_id}, ${material_id}, ${quantity ?? 0}, ${batch_number ?? null}, ${unit_of_measure ?? null}, NOW()) RETURNING *
     `);
+
+    const consumptionRow = rows.rows[0] as Row | undefined;
+    let stockSynced = false;
+    try {
+      if (material_id > 0 && Number(quantity) > 0) {
+        // Canonical raw-material warehouse resolution — same one-line pattern the WMS
+        // FG-side listeners use for `type = 'finished_goods'` (delivery-goods-issued.listener.ts,
+        // mes-completed-fg.listener.ts). No fallback to a default warehouse (Q-40).
+        const whRows = await runQuery<{ id: number | null }>(sql`
+          SELECT w.id FROM warehouses w WHERE w.type = 'raw_material' ORDER BY w.id LIMIT 1
+        `);
+        const warehouseId =
+          Array.isArray(whRows.rows) && whRows.rows[0]?.id != null ? Number(whRows.rows[0].id) : 0;
+
+        if (warehouseId > 0) {
+          const stockId = await execIssueFromWarehouseStock(warehouseId, material_id, Number(quantity));
+          if (stockId > 0) {
+            await execInsertWmsTransaction({
+              warehouseId,
+              materialId: material_id,
+              type: 'OUT',
+              quantity: Number(quantity),
+              referenceId: session_id,
+              createdBy: null,
+              notes: `MES session-${session_id} material consumption`,
+            });
+            stockSynced = true;
+          } else {
+            this.logger.warn(
+              `recordMaterialConsumption: warehouse_stock decrement skipped (insufficient/unknown stock) — material=${material_id} warehouse=${warehouseId} qty=${quantity} session=${session_id}. Consumption row still saved.`,
+            );
+          }
+        } else {
+          this.logger.warn(
+            `recordMaterialConsumption: no 'raw_material' warehouse configured — WMS decrement SKIPPED for material=${material_id} session=${session_id}. Consumption row still saved.`,
+          );
+        }
+      }
+    } catch (e) {
+      this.logger.error(
+        `recordMaterialConsumption: WMS stock-sync failed for material=${material_id} session=${session_id}: ${(e as Error)?.message ?? String(e)}`,
+      );
+    }
+
+    if (consumptionRow) consumptionRow.wms_stock_synced = stockSynced;
     return rows.rows as Row[];
   }
 
