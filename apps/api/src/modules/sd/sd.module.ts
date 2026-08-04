@@ -142,6 +142,10 @@ const eventListeners = [
   PaymentReceivedListener,
   AdvanceApprovedFanoutListener,
   PpCancelledSdListener, // PP→SD: production order cancelled -> sales order on_hold
+  QcFailedSdListener, // 06-sd#35: QC inspection failed -> linked sales order QC_HOLD. Found imported
+                       // but NEVER registered here during this pass (a dead listener — @EventsHandler
+                       // alone does nothing without provider registration in this module's DI graph) —
+                       // fixed in place per Q-46 (found broken, not left broken).
   AutoInvoiceListener, // VISION-3340 #50: billable status transition -> auto draft invoice
   // Owner decision 2026-07-13 (chat): QC defect "customer fault" -> auto-notify sales manager.
   QcCustomerFaultSdListener,
