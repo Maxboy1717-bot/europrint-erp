@@ -82,6 +82,28 @@ export class StartSessionHandler implements ICommandHandler<StartSessionCommand>
       }
     }
 
+    // Operator×mashina ruxsat-matritsasi — HARD BLOCK (P0). LMS kurs-sertifikati
+    // (yuqorida) "nazariyani bilasizmi"ni tekshiradi; bu MUSTAQIL gate "shu KONKRET
+    // mashina turiga ruxsatingiz bormi"ni tekshiradi — work_centers.required_skill_name
+    // (mavjud, texnolog sozlaydi) + employee_skills (mavjud HR skill-matrix). Cheklov
+    // sozlanmagan (NULL) mashinalar uchun hech narsa o'zgarmaydi (regressiyasiz).
+    const machineSkillResult = await this.mesRepo.checkOperatorMachineSkill(
+      command.operatorId,
+      command.workCenterId,
+      tx,
+    );
+    if (!machineSkillResult.ok) {
+      return Err(machineSkillResult.error);
+    }
+    if (!machineSkillResult.data.permitted) {
+      const msg = `Operator ${command.operatorId} ushbu mashina (${machineSkillResult.data.machineType ?? command.workCenterId}) uchun ruxsatga ega emas: talab qilinadigan ko'nikma "${machineSkillResult.data.requiredSkill}" employee_skills'da tasdiqlanmagan`;
+      this.logger.warn(
+        { operatorId: command.operatorId, workCenterId: command.workCenterId, requiredSkill: machineSkillResult.data.requiredSkill },
+        msg,
+      );
+      return Err(AppErr('FORBIDDEN', msg));
+    }
+
     // TB-safety / smena-readiness gate (Q-40 — real enforcement, no silent flip):
     // load REQUIRED checklist items from setup_checklists/checklist_items and BLOCK
     // start unless every required item is completed.

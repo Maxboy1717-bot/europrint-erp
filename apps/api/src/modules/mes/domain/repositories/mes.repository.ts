@@ -16,6 +16,26 @@ export interface IMesRepository {
   checkOperatorCertification(operatorId: number, courseId: number): Promise<Result<Record<string, unknown>>>;
 
   /**
+   * Operator × mashina (work_center) ruxsat-matritsasi — HARD BLOCK.
+   *
+   * `work_centers.required_skill_name` (mavjud, oldin yozilmagan ustun) shu ish
+   * markazida ishlash uchun talab qilinadigan ko'nikma nomini belgilaydi (masalan
+   * "Flekso operator", "Ofset operator"). NULL = bu mashina uchun cheklov yo'q —
+   * har qanday operator ruxsat etiladi (regressiyasiz, mavjud sessiyalar buzilmaydi).
+   *
+   * Belgilangan bo'lsa: operator `employee_skills`da SHU nom bilan (muddati
+   * o'tmagan) ko'nikma qatoriga ega bo'lishi SHART — aks holda start BLOCKED.
+   * LMS kurs-sertifikatidan (checkOperatorCertification) MUSTAQIL gate: kurs
+   * sertifikati "nazariyani bilasizmi", bu esa "shu KONKRET mashinaga ruxsatingiz
+   * bormi" — ikkalasi ham HARD BLOCK, biri ikkinchisini almashtirmaydi.
+   */
+  checkOperatorMachineSkill(
+    operatorId: number,
+    workCenterId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<{ permitted: boolean; requiredSkill: string | null; machineType: string | null }>>;
+
+  /**
    * 08-mes #4 — Sessiya BOSHLANGANDAGI norma versiyasini production_sessions.norma_version
    * ga snapshot qiladi (retro-buzilmaslik): started_at sanasida amalda bo'lgan
    * (material_norms.effective_date <= started_at) eng yuqori aktiv norma versiyasi.

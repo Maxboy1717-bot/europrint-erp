@@ -354,4 +354,55 @@ export class DrizzleMesRepository implements IMesRepository {
       return Err('Sertifikat tekshirishda xatolik');
     }
   }
+
+  /**
+   * Operator × mashina ruxsat-matritsasi (P0 — real enforcement, Q-40).
+   *
+   * `work_centers.required_skill_name` shu ish markazi uchun talab qilinadigan
+   * ko'nikma nomini belgilaydi (egasi/texnolog tomonidan sozlanadi; NULL = cheklov
+   * yo'q). Operator ushbu ko'nikmaga ega ekanini `employee_skills`dan (mavjud
+   * skill-matrix jadvali — HR moduli) tekshiramiz: `operatorId` bu yerda MES
+   * `worker_id` (= users.id, boshqa gate'lar bilan bir xil — checkOperatorCertification
+   * dagi lms_test_attempts.user_id kabi), shuning uchun users→employees orqali
+   * bog'lanadi (saveSession()dagi operator_card_id resolyutsiyasi bilan bir xil zanjir).
+   * Muddati o'tgan (`expiry_date < bugun`) ko'nikma HISOBGA OLINMAYDI — qayta
+   * sertifikatlashtirilishi kerak (LMS cert gate bilan bir xil qat'iylik).
+   */
+  async checkOperatorMachineSkill(
+    operatorId: number,
+    workCenterId: number,
+    tx?: DrizzleExecutor,
+  ): Promise<Result<{ permitted: boolean; requiredSkill: string | null; machineType: string | null }>> {
+    try {
+      const wcR = await exec(
+        sql`SELECT required_skill_name, type FROM work_centers WHERE id = ${workCenterId} LIMIT 1`,
+        tx,
+      );
+      const wc = wcR[0];
+      const requiredSkill = wc?.required_skill_name ? String(wc.required_skill_name) : null;
+      const machineType = wc?.type ? String(wc.type) : null;
+
+      // Bu mashina uchun sozlangan cheklov yo'q — hamma operator ruxsat etiladi.
+      if (!requiredSkill) {
+        return Ok({ permitted: true, requiredSkill: null, machineType });
+      }
+
+      const skillR = await exec(
+        sql`SELECT es.id
+            FROM employee_skills es
+            JOIN employees emp ON emp.id = es.employee_id
+            JOIN users u ON u.id = emp.user_id
+            WHERE u.id = ${operatorId}
+              AND es.skill_name = ${requiredSkill}
+              AND (es.expiry_date IS NULL OR es.expiry_date >= CURRENT_DATE)
+            LIMIT 1`,
+        tx,
+      );
+
+      return Ok({ permitted: skillR.length > 0, requiredSkill, machineType });
+    } catch (e: unknown) {
+      this.logger.error('Failed to check operator machine skill');
+      return Err(AppErr('DB_ERROR', (e as Error)?.message || 'Operator×mashina ruxsatini tekshirishda xatolik'));
+    }
+  }
 }
