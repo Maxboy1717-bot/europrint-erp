@@ -86,7 +86,7 @@ export function RoiSection({campaigns, totalBudget, totalSpent, roi }: RoiSectio
                   <TableCell className="font-medium py-3 px-6">{c.name}</TableCell>
                   <TableCell className="py-3 px-6"><Badge variant="outline" className="border-border text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{c.type || "—"}</Badge></TableCell>
                   <TableCell className="text-right py-3 px-6">{(Number(c.budget || 0) / 1000).toFixed(0)}K</TableCell>
-                  <TableCell className="text-right py-3 px-6">{(Number(c.spent || 0) / 1000).toFixed(0)}K</TableCell>
+                  <TableCell className="text-right py-3 px-6">{(Number(c.spentAmount || 0) / 1000).toFixed(0)}K</TableCell>
                   <TableCell className="py-3 px-6"><Badge variant={c.status === "active" ? "default" : "secondary"} className="rounded-full px-2.5 py-0.5 text-xs font-semibold no-default-hover-elevate">{c.status}</Badge></TableCell>
                 </TableRow>
               ))}

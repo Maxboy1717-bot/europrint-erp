@@ -58,8 +58,8 @@ export default function MarketingExtended() {
   });
 
   const totalBudget = (Array.isArray(campaigns) ? campaigns : []).reduce((s: number, c: MarketingCampaign) => s + (Number(c.budget) || 0), 0);
-  const totalSpent = (Array.isArray(campaigns) ? campaigns : []).reduce((s: number, c: MarketingCampaign) => s + (Number(c.spent) || 0), 0);
-  const roi = totalBudget > 0 ? ((totalBudget - totalSpent) / totalSpent) * 100 : 0;
+  const totalSpent = (Array.isArray(campaigns) ? campaigns : []).reduce((s: number, c: MarketingCampaign) => s + (Number(c.spentAmount) || 0), 0);
+  const roi = totalSpent > 0 ? ((totalBudget - totalSpent) / totalSpent) * 100 : 0;
 
   return (
     <div className="flex flex-col h-full p-5 lg:p-6 gap-5">

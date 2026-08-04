@@ -32,7 +32,8 @@ export interface MarketingCampaign {
   name?: string;
   type?: string;
   budget?: number | string;
-  spent?: number | string;
+  /** Aliased from live column `spent_amount` by campaigns.repository.ts (COLS). */
+  spentAmount?: number | string;
   status?: string;
 }
 
