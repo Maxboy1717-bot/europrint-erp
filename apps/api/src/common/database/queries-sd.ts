@@ -166,11 +166,43 @@ export async function execSdSalesOrderUpdate(
    * `unknown` to keep this shared helper agnostic of Drizzle internals.
    */
   tx?: unknown,
+  /**
+   * Technolog 3-checkpoint flags (Algoritm 11.2 §9) — golden-thread SD→PP gate.
+   * ApproveTechCheckpointHandler flips these on the in-memory SalesOrder
+   * aggregate via approveTechCheckpoint(), but DrizzleSalesOrderRepository.update()
+   * previously called this function with only status/advanceStatus, so the 3
+   * flags were silently dropped: every re-read (findById) lost the prior
+   * approval(s) and isThreeCheckpointPassed() could never go true across
+   * separate API calls. Optional so the single caller (repo.update()) can keep
+   * a 1:1 mapping to the aggregate; undefined leaves the column untouched.
+   */
+  techBomApproved?: boolean,
+  techRoutingApproved?: boolean,
+  techCardApproved?: boolean,
 ): Promise<void> {
   const conn = (tx as typeof db | undefined) ?? db;
   await conn.update(sd_sales_orders)
     .set({ status, advance_status: advanceStatus, updated_at: sql`NOW()` })
     .where(eq(sd_sales_orders.id, id as number));
+
+  // The sd_sales_orders Drizzle stub (schema-ext-a-1.ts) does not map
+  // tech_bom_approved/tech_routing_approved/tech_card_approved, so they cannot be
+  // targeted through the typed .set() above. Written directly on the base
+  // sales_orders table instead (same `conn`, so still atomic with the status
+  // UPDATE and any sibling outbox write when `tx` is passed) — same established
+  // pattern as markPendingMaterial() / execSdSalesOrderInsert's post-insert UPDATE.
+  // COALESCE(param, column) so a caller that only knows a subset of the 3 flags
+  // never clobbers the other two back to their old value.
+  if (techBomApproved !== undefined || techRoutingApproved !== undefined || techCardApproved !== undefined) {
+    await conn.execute(sql`
+      UPDATE sales_orders
+         SET tech_bom_approved     = COALESCE(${techBomApproved ?? null}, tech_bom_approved),
+             tech_routing_approved = COALESCE(${techRoutingApproved ?? null}, tech_routing_approved),
+             tech_card_approved    = COALESCE(${techCardApproved ?? null}, tech_card_approved),
+             updated_at            = NOW()
+       WHERE id = ${id as number}
+    `);
+  }
 }
 
 export async function execSdSalesOrderDelete(id: number): Promise<void> {

@@ -166,7 +166,19 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     try {
       // tx (when present) keeps the status write atomic with the sibling outbox
       // insert so the golden-thread OrderStatusChanged event can never be lost.
-      await execSdSalesOrderUpdate(order.getStatus(), order.getAdvanceStatus(), order.getId(), tx);
+      // Tech 3-checkpoint flags (bom/routing/card) are passed through too —
+      // previously dropped here, so ApproveTechCheckpointHandler's approvals
+      // never survived past the in-memory aggregate (golden-thread SD→PP never
+      // opened; see queries-sd.ts execSdSalesOrderUpdate for the persistence side).
+      await execSdSalesOrderUpdate(
+        order.getStatus(),
+        order.getAdvanceStatus(),
+        order.getId(),
+        tx,
+        order.getTechBomApproved(),
+        order.getTechRoutingApproved(),
+        order.getTechCardApproved(),
+      );
       return { ok: true as const, data: undefined };
     } catch (err) { return Err({ code: 'DB_ERROR', message: String(err) }); }
   }
