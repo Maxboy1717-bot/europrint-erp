@@ -19,19 +19,56 @@ const exec = (q: SQL | SQLWrapper): Promise<Result<Row[]>> => safeCall(async () 
  * qarang). Legacy qc_braks yozuvlari saqlanadi (Q-39/Q-46 — DROP TABLE yo'q), shuning uchun
  * barcha o'quvchi so'rovlar ikkala manbani ham UNION ALL bilan birlashtiradi, aks holda yangi
  * braklar (endi qc_defects'ga yoziladigan) dashboard/ro'yxatlarda ko'rinmay qoladi.
+ *
+ * Discovery sweep 2026-08-03 fix ("QC natijalari HR karta/GSD/razryadga avtomatik oqmaydi",
+ * vision 09-qc.md #25 "Kirim braki (oldingi bosqich) avto smena+operator karta bog'lash"):
+ * neither qc_braks (operator_id = a plain, unenforced employee id — no card link) nor
+ * qc_defects (no operator column at all — ReportDefectCommand never captured who ran the
+ * upstream production stage) exposed which KARTA/shift produced the now-defective material.
+ * `production_sessions` already tracks exactly that (`operator_card_id` FK -> org_departments,
+ * `shift_id`) per order — see MES module. A LEFT JOIN LATERAL resolves the nearest session for
+ * the same papka_order_id (closest by time to the defect's own timestamp, matching the
+ * inspector_card_id COALESCE-resolve convention in drizzle-inspection.repo.ts: read-time
+ * resolution, no new column/table, Q-46 no reimplementation). This closes the auto
+ * shift+operator-card linking half of the vision item.
+ *
+ * NOT built here (Q-40 fabrication ban, Q-34 owner-gated): the "GSD salbiy faqat inson (E1),
+ * oylik siklda" half — a human-confirmed, monthly-cycle negative-GSD-entry workflow. That
+ * needs the operation-type weighting formula (vision 09-qc.md #31, confirmed fully absent —
+ * no owner-supplied weight values exist anywhere) and an owner decision on who the "inson"
+ * approver is and the monthly cutoff mechanics. HR already has a human-entry path for this
+ * (HrGsdService.recordGsdActual -> ckp_fact_values) — this fix makes the responsible card
+ * visible on every defect record so that manual entry is now informed by real QC data instead
+ * of requiring HR to reconstruct it by hand.
  */
 const BRAK_UNION_SQL = sql`(
-  SELECT id, papka_order_id, brak_date, stage, quantity::numeric AS quantity, unit, reason, description,
-         equipment_id, operator_id, cost_impact, is_reworkable, reworked, created_by, created_at::timestamptz AS created_at,
-         production_order_id, material_id, status
-  FROM qc_braks
+  SELECT b.id, b.papka_order_id, b.brak_date, b.stage, b.quantity::numeric AS quantity, b.unit, b.reason, b.description,
+         b.equipment_id, b.operator_id, b.cost_impact, b.is_reworkable, b.reworked, b.created_by, b.created_at::timestamptz AS created_at,
+         b.production_order_id, b.material_id, b.status,
+         resp.operator_card_id AS responsible_operator_card_id, resp.shift_id AS responsible_shift_id
+  FROM qc_braks b
+  LEFT JOIN LATERAL (
+    SELECT ps.operator_card_id, ps.shift_id
+    FROM production_sessions ps
+    WHERE ps.production_order_id = b.papka_order_id AND ps.deleted_at IS NULL
+    ORDER BY ABS(EXTRACT(EPOCH FROM (COALESCE(ps.ended_at, ps.started_at, now()) - COALESCE(b.created_at, now()))))
+    LIMIT 1
+  ) resp ON true
   UNION ALL
-  SELECT id, papka_order_id, brak_date::text AS brak_date, stage, quantity::numeric AS quantity, unit, defect_code AS reason, description,
-         NULL::integer AS equipment_id, NULL::integer AS operator_id, cost_impact, is_reworkable, reworked,
-         CASE WHEN reported_by ~ '^[0-9]+$' THEN reported_by::integer ELSE NULL END AS created_by,
-         created_at::timestamptz AS created_at, NULL::integer AS production_order_id, NULL::integer AS material_id, status
-  FROM qc_defects
-  WHERE papka_order_id IS NOT NULL OR brak_date IS NOT NULL OR stage IS NOT NULL
+  SELECT d.id, d.papka_order_id, d.brak_date::text AS brak_date, d.stage, d.quantity::numeric AS quantity, d.unit, d.defect_code AS reason, d.description,
+         NULL::integer AS equipment_id, NULL::integer AS operator_id, d.cost_impact, d.is_reworkable, d.reworked,
+         CASE WHEN d.reported_by ~ '^[0-9]+$' THEN d.reported_by::integer ELSE NULL END AS created_by,
+         d.created_at::timestamptz AS created_at, NULL::integer AS production_order_id, NULL::integer AS material_id, d.status,
+         resp.operator_card_id AS responsible_operator_card_id, resp.shift_id AS responsible_shift_id
+  FROM qc_defects d
+  LEFT JOIN LATERAL (
+    SELECT ps.operator_card_id, ps.shift_id
+    FROM production_sessions ps
+    WHERE ps.production_order_id = d.papka_order_id AND ps.deleted_at IS NULL
+    ORDER BY ABS(EXTRACT(EPOCH FROM (COALESCE(ps.ended_at, ps.started_at, now()) - COALESCE(d.created_at, now()))))
+    LIMIT 1
+  ) resp ON true
+  WHERE d.papka_order_id IS NOT NULL OR d.brak_date IS NOT NULL OR d.stage IS NOT NULL
 )`;
 
 @Injectable()
