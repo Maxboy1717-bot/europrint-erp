@@ -204,4 +204,30 @@ export class AutoGlPostingRepository {
       LIMIT ${lim}
     `), 'DB_ERROR');
   }
+
+  /**
+   * Discovery sweep 2026-08-03 fix ("GL kanonik 'entries' mirror atomik emas — best-effort,
+   * avto-reconciliation yo'q"): postForMovement() (above, same module) writes the atomic
+   * pos_gl_postings subledger, then best-effort mirrors the same balanced legs into the
+   * canonical `entries` ledger via GlPostingService.postJournal — a failure there is only
+   * logger.warn'd, so the two ledgers can silently diverge with no way to find or fix it later.
+   *
+   * Finds movements that DO have a subledger posting but have NO matching canonical entry —
+   * entries.entry_number is `POS-<movement_number>-<ts>-<n>` (see
+   * DrizzleGlPostingRepository.findEntryIdByReference), so a LIKE-prefix anti-join is the same
+   * matching rule the idempotency check itself uses. Bounded by `limit` (cron safety — this is a
+   * backlog sweep, not a live-path query).
+   */
+  async findMovementsMissingCanonicalEntry(limit: number): Promise<Result<Array<{ movementId: number; movementNumber: string }>>> {
+    return safeCall(async () => typedExecute<{ movementId: number; movementNumber: string }>(sql`
+      SELECT DISTINCT gl.movement_id AS "movementId", pm.movement_number AS "movementNumber"
+      FROM pos_gl_postings gl
+      JOIN pos_movements pm ON pm.id = gl.movement_id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM entries e WHERE e.entry_number LIKE ('POS-' || pm.movement_number || '-%')
+      )
+      ORDER BY gl.movement_id
+      LIMIT ${limit}
+    `), 'DB_ERROR');
+  }
 }

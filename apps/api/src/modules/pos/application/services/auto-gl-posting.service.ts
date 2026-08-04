@@ -180,6 +180,50 @@ export class AutoGlPostingService {
   }
 
   /**
+   * Discovery sweep 2026-08-03 fix ("GL kanonik 'entries' mirror atomik emas — best-effort,
+   * avto-reconciliation yo'q"). Called from PosGlReconciliationCron (daily). For each movement
+   * whose atomic pos_gl_postings subledger has no matching canonical `entries` row, re-derive
+   * the JournalLines from the ALREADY-COMMITTED subledger rows (source of truth — not
+   * recomputed from calculateEntries(), which could have drifted since the original post) and
+   * retry postJournal(). Safe to retry: createJournalEntry's own findEntryIdByReference guard
+   * makes a re-post a no-op if some earlier attempt actually did land after all (race between
+   * the reconciliation query and a slow original write).
+   */
+  async reconcileMissingCanonicalEntries(limit = 200): Promise<Result<{ checked: number; posted: number; stillFailing: string[] }, AppError>> {
+    const candidatesR = await this.repo.findMovementsMissingCanonicalEntry(limit);
+    if (!candidatesR.ok) return Err(candidatesR.error);
+    const candidates = candidatesR.data;
+    if (candidates.length === 0) return Ok({ checked: 0, posted: 0, stillFailing: [] });
+
+    let posted = 0;
+    const stillFailing: string[] = [];
+
+    for (const { movementId, movementNumber } of candidates) {
+      const legsR = await this.repo.listForMovement(movementId);
+      if (!legsR.ok) { stillFailing.push(movementNumber); continue; }
+      const legs = legsR.data as Array<{ debit_account: string; credit_account: string; amount: number | string; description: string }>;
+      const canonicalLines: JournalLine[] = legs
+        .filter((l) => Number.isFinite(Number(l.amount)) && Number(l.amount) > 0 && l.debit_account !== l.credit_account)
+        .flatMap((l) => [
+          { accountCode: l.debit_account,  accountName: l.description, debit: Number(l.amount), credit: 0 } satisfies JournalLine,
+          { accountCode: l.credit_account, accountName: l.description, debit: 0, credit: Number(l.amount) } satisfies JournalLine,
+        ]);
+      if (canonicalLines.length === 0) continue; // subledger legs were all wash entries — nothing to mirror
+
+      const glR = await this.glPosting.postJournal(canonicalLines, `POS-${movementNumber}`);
+      if (glR.ok) {
+        posted++;
+        this.logger.log(`[AutoGL] Reconciliation: ${movementNumber} kanonik entries'ga backfill qilindi (entry id=${glR.data})`);
+      } else {
+        stillFailing.push(movementNumber);
+        this.logger.warn(`[AutoGL] Reconciliation: ${movementNumber} hamon muvaffaqiyatsiz — ${glR.error.message}`);
+      }
+    }
+
+    return Ok({ checked: candidates.length, posted, stillFailing });
+  }
+
+  /**
    * FAZA Auto-GL (I) — Finance tasdig'i: movement bo'yicha barcha pos_gl_postings
    * yozuvlarini is_approved=true qiladi (dead-end edi — approve endpoint yo'q edi).
    */

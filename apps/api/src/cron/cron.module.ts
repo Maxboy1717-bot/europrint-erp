@@ -50,6 +50,11 @@ import { ActingRevertCron } from './acting-revert.cron'
 // EP-ORG-137 — daily card-staleness scan (discovery sweep 2026-08-03: CardExpiredEvent gap);
 // CardRepository already provided below (ActingRevertCron sibling), reused (Q-40, no reimplementation).
 import { CardStalenessCron } from './card-staleness.cron'
+// GL kanonik 'entries' mirror reconciliation (discovery sweep 2026-08-03 fix)
+import { PosGlReconciliationCron } from './pos-gl-reconciliation.cron'
+import { AutoGlPostingService } from '../modules/pos/application/services/auto-gl-posting.service'
+import { AutoGlPostingRepository } from '../modules/pos/infrastructure/repositories/auto-gl-posting.repository'
+import { FinanceModule } from '../modules/finance/finance.module'
 // 09-qc #28 — daily QC product-certificate expiry scan (discovery sweep 2026-08-03: "QC mahsulot
 // sertifikati muddati tekshirilmaydi" gap). Standalone (runQuery + CommandBus, no repo needed).
 import { QcCertificateExpiryCron } from './qc-certificate-expiry.cron'
@@ -90,7 +95,7 @@ import { HrAttentionDigestCron } from './hr-attention-digest.cron'
 import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.repository'
 
 @Module({
-  imports: [ScheduleModule.forRoot(), CqrsModule, TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule],
+  imports: [ScheduleModule.forRoot(), CqrsModule, TelegramModule, QueueModule, AiFitModule, NotificationsModule, LmsModule, FinanceModule],
   providers: [
     // 06-sd #27 — nofaol mijoz cron (har kuni 03:30) + manba service/repo
     CustomerInactivityCron,
@@ -142,6 +147,11 @@ import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.
     CardStalenessCron,
     // 09-qc #28 — daily QC product-certificate expiry scan (discovery sweep 2026-08-03 fix)
     QcCertificateExpiryCron,
+    // GL kanonik 'entries' mirror reconciliation (discovery sweep 2026-08-03 fix) — repo standalone
+    // (typedExecute, no deps); GlPostingService comes from FinanceModule (imported above).
+    AutoGlPostingRepository,
+    AutoGlPostingService,
+    PosGlReconciliationCron,
     // #11 — SOS/downtime org-zanjir timeout eskalatsiya (har 2 daqiqa); repo+service standalone (runQuery)
     MesSosEscalationCron,
     MesSosEscalationService,
