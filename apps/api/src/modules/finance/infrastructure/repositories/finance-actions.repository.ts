@@ -13,7 +13,6 @@ import { Result, Ok, Err } from '@common/result';
 import { payroll_period_record } from '@shared/db/schema-business-c-2';
 import { payroll_advances } from '@shared/db/schema-business-b-1';
 import { hrEmployees } from '@shared/db/schema-misc-app-a';
-import { customer_payments } from '@shared/db/schema-compat-5';
 // OWNER QARORI 2026-07-02 (Moliya-GL-Kassa): finance_invoices = kanonik invoice-manba.
 // vendor_invoices / sales_invoices NOT NULL cheklovlari AR/AP insertni buzardi; oldin
 // `invoices` (fi_invoices view) ishlatilardi — endi finance_invoices (integer id, permissive
@@ -39,18 +38,30 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
     }
   }
 
+  /**
+   * Approve a payment — UPDATE finance_payments.status = 'approved'.
+   * FIX (2026-08-04, gap-sweep P0 "payment-approve updates an orphaned table"): this
+   * previously wrote to `customer_payments`, a table nothing ever INSERTs into (real
+   * payments live in `finance_payments`, written by FinanceOpsRepo.recordPayment / the
+   * FinanceInvoiceRepo insert path) — approving a real payment silently no-opped while
+   * the API reported HTTP 200 success. Now targets the canonical `finance_payments` table
+   * and checks rows-affected via RETURNING, mirroring verifyPayment() below.
+   * finance_payments has no Drizzle schema; raw SQL used (RULE4_EXCEPTION).
+   */
   async approvePayment(id: number, approvedBy: number | string): Promise<Result<Row>> {
     try {
       const now = _time.now();
-      await db.update(customer_payments)
-        .set({
-          status: 'approved',
-          approved_by: String(approvedBy),
-          approved_at: now,
-          applied_at: now,
-        })
-        .where(eq(customer_payments.id, id));
-      return Ok({ id, status: 'approved', approved_by: approvedBy, approved_at: now.toISOString() } as Row);
+      const note = ` | Approved by user #${approvedBy} at ${now.toISOString()}`;
+      const r = await db.execute(sql`
+        UPDATE finance_payments
+        SET    status = 'approved',
+               notes  = COALESCE(notes, '') || ${note}
+        WHERE  id = ${id}
+        RETURNING *
+      `);
+      const rows = ((r as { rows?: Row[] }).rows) ?? [];
+      if (!rows[0]) return Err(`Payment ${id} topilmadi`);
+      return Ok({ ...rows[0], approved_by: approvedBy, approved_at: now.toISOString() } as Row);
     } catch (e) {
       return Err(String(e));
     }
