@@ -21,8 +21,23 @@ import {
 } from '@shared/db';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { MM_THREE_WAY_MATCH_TOLERANCE } from '@common/constants/business.constants';
+// P0 fix (2026-08): mm_goods_receipts / goods_receipts is the SAME physical table the WMS
+// karantin darvozasi (quarantine gate) state-machine already governs (DRAFT -> KARANTIN ->
+// QC_PASS/REWORK/REJECT -> MAIN — see wms-quarantine.repository.ts, which runs its state
+// machine against this exact `mm_goods_receipts` VIEW). QUARANTINE_STATUS/normalizeStatus are
+// pure constants/functions (no NestJS DI, no side effects) — the single source of truth for
+// that state machine (CLAUDE.md Qoida 12, magic-number taqiq) — imported here so
+// execPostGoodsReceiptStock enforces the SAME gate instead of re-implementing it.
+import { QUARANTINE_STATUS, normalizeStatus } from '@modules/wms/domain/constants/wms-quarantine.constants';
 
 type Row = Record<string, unknown>;
+
+/** `tx.execute` natijasini har ikki shakl (massiv yoki `{rows}`) uchun normallashtiradi (wms-quarantine.repository.ts bilan bir xil naqsh). */
+function toTxRows(res: unknown): Row[] {
+  if (Array.isArray(res)) return res as Row[];
+  const r = (res as { rows?: unknown }).rows;
+  return Array.isArray(r) ? (r as Row[]) : [];
+}
 
 export async function queryGoodsReceipts(pid: number | null, status: string | undefined, lim: number, off: number): Promise<Row[]> {
   // mm_goods_receipts (VIEW over goods_receipts) has NO delivery_note / updated_at column
@@ -107,30 +122,70 @@ export async function execCreateGoodsReceipt(purchase_order_id: unknown, receive
   return (rowsRaw[0] ?? {}) as Row;
 }
 
+export type GoodsReceiptPostBlockReason = 'not_found' | 'already_posted' | 'blocked_quarantine';
+
+export type GoodsReceiptPostResult =
+  | { ok: true; lines: number; status: string }
+  | { ok: false; reason: GoodsReceiptPostBlockReason; status: string | null };
+
 /**
- * #09 xarid->kirim: post a goods receipt into the CANONICAL warehouse_stock. Sums received_qty per
- * material for the receipt's warehouse and upserts on (warehouse_id, material_id) — same proven
- * pattern as execReceiveFg. Reads the BASE goods_receipt_items (gr_id/raw_material_id, received_qty is
- * numeric). GROUP BY collapses duplicate-material lines so ON CONFLICT never updates one row twice.
- * Returns the number of (material) rows posted (0 if no warehouse_id or nothing received).
+ * #09 xarid->kirim + WMS karantin darvozasi (P0 fix, 2026-08): post a goods receipt into the
+ * CANONICAL warehouse_stock — but ONLY when the receipt has cleared the WMS quarantine gate
+ * (status normalizes to QUARANTINE_STATUS.QC_PASS). Previously this function wrote straight into
+ * warehouse_stock and flipped the receipt to an ad-hoc 'received' string that the quarantine state
+ * machine did not recognise — DRAFT -> KARANTIN -> QC_PASS -> MAIN never triggered this write, and
+ * skipping quarantine entirely never blocked it (mm_goods_receipts / goods_receipts.status is the
+ * SAME column WmsQuarantineGateService.releaseToMain gates — see wms-quarantine.repository.ts).
+ *
+ * Atomic + TOCTOU-safe: SELECT ... FOR UPDATE locks the row inside a SERIALIZABLE transaction,
+ * the gate is evaluated against the locked row's real status, and the stock upsert + status ->
+ * MAIN transition happen in the same transaction — mirrors
+ * WmsQuarantineRepository.transitionReceiptStatusAtomic (apps/api/src/modules/wms/infrastructure/
+ * repositories/wms-quarantine.repository.ts) so both write paths enforce one, single, source-of-
+ * truth state machine instead of two disconnected ones.
+ *
+ * Sums received_qty per material for the receipt's warehouse and upserts on
+ * (warehouse_id, material_id) — same proven pattern as execReceiveFg. Reads the BASE
+ * goods_receipt_items (gr_id/raw_material_id, received_qty is numeric). GROUP BY collapses
+ * duplicate-material lines so ON CONFLICT never updates one row twice.
  */
-export async function execPostGoodsReceiptStock(receiptId: number): Promise<number> {
-  const r = await typedExecute<Row>(sql`
-    INSERT INTO warehouse_stock
-      (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
-    SELECT gr.warehouse_id, i.raw_material_id, SUM(i.received_qty), 0, SUM(i.received_qty), NOW(), NOW(), NOW()
-    FROM goods_receipt_items i
-    JOIN goods_receipts gr ON gr.id = i.gr_id
-    WHERE i.gr_id = ${receiptId} AND gr.warehouse_id IS NOT NULL AND i.received_qty > 0
-    GROUP BY gr.warehouse_id, i.raw_material_id
-    ON CONFLICT (warehouse_id, material_id) DO UPDATE SET
-      quantity           = warehouse_stock.quantity + EXCLUDED.quantity,
-      available_quantity = warehouse_stock.available_quantity + EXCLUDED.available_quantity,
-      last_movement_at   = NOW(),
-      last_updated_at    = NOW()
-    RETURNING material_id
-  `);
-  return Array.isArray(r) ? r.length : 0;
+export async function execPostGoodsReceiptStock(receiptId: number): Promise<GoodsReceiptPostResult> {
+  return db.transaction(async (tx): Promise<GoodsReceiptPostResult> => {
+    const curRes = await tx.execute(sql`SELECT id, status FROM goods_receipts WHERE id = ${receiptId} FOR UPDATE`);
+    const cur = toTxRows(curRes)[0];
+    if (!cur) return { ok: false, reason: 'not_found', status: null };
+
+    const rawStatus = (cur.status as string | null) ?? null;
+    const normalized = normalizeStatus(rawStatus);
+    if (normalized === QUARANTINE_STATUS.MAIN) {
+      return { ok: false, reason: 'already_posted', status: rawStatus };
+    }
+    if (normalized !== QUARANTINE_STATUS.QC_PASS) {
+      // DRAFT / KARANTIN / REWORK / REJECT / unrecognised — karantin darvozasi stokni bloklaydi.
+      return { ok: false, reason: 'blocked_quarantine', status: rawStatus };
+    }
+
+    const insertRes = await tx.execute(sql`
+      INSERT INTO warehouse_stock
+        (warehouse_id, material_id, quantity, reserved_quantity, available_quantity, last_updated_at, created_at, last_movement_at)
+      SELECT gr.warehouse_id, i.raw_material_id, SUM(i.received_qty), 0, SUM(i.received_qty), NOW(), NOW(), NOW()
+      FROM goods_receipt_items i
+      JOIN goods_receipts gr ON gr.id = i.gr_id
+      WHERE i.gr_id = ${receiptId} AND gr.warehouse_id IS NOT NULL AND i.received_qty > 0
+      GROUP BY gr.warehouse_id, i.raw_material_id
+      ON CONFLICT (warehouse_id, material_id) DO UPDATE SET
+        quantity           = warehouse_stock.quantity + EXCLUDED.quantity,
+        available_quantity = warehouse_stock.available_quantity + EXCLUDED.available_quantity,
+        last_movement_at   = NOW(),
+        last_updated_at    = NOW()
+      RETURNING material_id
+    `);
+    const lines = toTxRows(insertRes).length;
+
+    await tx.execute(sql`UPDATE goods_receipts SET status = ${QUARANTINE_STATUS.MAIN} WHERE id = ${receiptId}`);
+
+    return { ok: true, lines, status: QUARANTINE_STATUS.MAIN };
+  }, { isolationLevel: 'serializable' });
 }
 
 export async function execInsertGoodsReceiptItem(receiptId: unknown, material_id: unknown, ordered_qty: unknown, received_qty: unknown, batch_number: unknown, unit?: unknown, zone_id?: unknown, bin_location_id?: unknown): Promise<void> {

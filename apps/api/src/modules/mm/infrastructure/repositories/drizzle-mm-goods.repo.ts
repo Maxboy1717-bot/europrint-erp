@@ -11,6 +11,7 @@ import {
   queryGoodsIssues, queryGoodsIssue, execCreateGoodsIssue, execInsertGoodsIssueItem,
   execUpdateGoodsIssue, execDeleteGoodsIssue,
   queryThreeWayMatch, queryCurrencies, queryPriceComparison,
+  type GoodsReceiptPostBlockReason,
 } from '@common/database/queries-mm-goods';
 
 type Row = Record<string, unknown>;
@@ -44,16 +45,21 @@ export class DrizzleMmGoodsRepository {
   }
 
   /**
-   * #09 xarid->kirim: post the receipt's received quantities into canonical warehouse_stock, then mark
-   * it 'received'. Idempotent — a receipt already 'received' is not posted again (no double stock).
+   * #09 xarid->kirim + WMS karantin darvozasi (P0 fix): post the receipt's received quantities into
+   * canonical warehouse_stock ONLY when the receipt has cleared the WMS quarantine gate (status
+   * QC_PASS) — execPostGoodsReceiptStock enforces this atomically (see queries-mm-goods.ts). Idempotent
+   * — a receipt already at MAIN is not posted again (no double stock). `blockedReason` surfaces WHY the
+   * write did not happen so the service layer can turn 'blocked_quarantine' into a real 409, same
+   * pattern as the existing missing-location gate in MmGoodsService.postGoodsReceipt.
    */
-  async postGoodsReceipt(gid: number): Promise<{ posted: boolean; lines: number; status: string }> {
-    const { receipt } = await queryGoodsReceipt(gid);
-    if (!receipt) return { posted: false, lines: 0, status: 'not_found' };
-    if (String(receipt.status ?? '') === 'received') return { posted: false, lines: 0, status: 'already_received' };
-    const lines = await execPostGoodsReceiptStock(gid);
-    await execUpdateGoodsReceipt(gid, 'received', null);
-    return { posted: true, lines, status: 'received' };
+  async postGoodsReceipt(gid: number): Promise<{ posted: boolean; lines: number; status: string; blockedReason?: GoodsReceiptPostBlockReason; currentStatus?: string | null }> {
+    const result = await execPostGoodsReceiptStock(gid);
+    if (!result.ok) {
+      if (result.reason === 'not_found') return { posted: false, lines: 0, status: 'not_found', blockedReason: 'not_found' };
+      if (result.reason === 'already_posted') return { posted: false, lines: 0, status: 'already_received', blockedReason: 'already_posted' };
+      return { posted: false, lines: 0, status: 'blocked_quarantine', blockedReason: 'blocked_quarantine', currentStatus: result.status };
+    }
+    return { posted: true, lines: result.lines, status: result.status };
   }
 
   async updateGoodsReceipt(gid: number, status: unknown, notes: unknown): Promise<Row[]> {

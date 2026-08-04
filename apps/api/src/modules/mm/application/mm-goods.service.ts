@@ -54,7 +54,16 @@ export class MmGoodsService {
           `Manzilsiz kirim akti tasdiqlanmaydi: ${missingLocation} qatorda joylashuv (zona) ko'rsatilmagan — omborchi kamida zona darajasida manzil kiritishi shart.`,
         );
       }
-      return this.repo.postGoodsReceipt(gid);
+      const result = await this.repo.postGoodsReceipt(gid);
+      // WMS karantin darvozasi (P0 fix): stok faqat QC_PASS holatidan keyin yoziladi — DRAFT/
+      // KARANTIN/REWORK/REJECT holatidagi (yoki karantindan umuman o'tmagan) qabul BLOK qilinadi.
+      if (result.blockedReason === 'blocked_quarantine') {
+        throw new ConflictException(
+          `Karantin darvozasi: stok faqat QC_PASS holatidan keyin MAIN omborga yoziladi (joriy holat: '${result.currentStatus ?? "noma'lum"}'). ` +
+          `Avval /warehouse/goods-receipts/${gid}/quarantine, so'ng /warehouse/goods-receipts/${gid}/qc-decision orqali QC dan o'tkazing.`,
+        );
+      }
+      return result;
     });
   }
 
