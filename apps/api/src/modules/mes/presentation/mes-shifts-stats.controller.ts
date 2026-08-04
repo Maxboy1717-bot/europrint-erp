@@ -42,8 +42,9 @@ export class MesShiftsStatsController {
   @ApiOperation({ summary: 'Get current shift' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('shifts/current')
-  async getCurrentShift() {
-    return unwrapOrThrow(await this.svc.getCurrentShift());
+  async getCurrentShift(@CurrentUser() user: AuthenticatedUser) {
+    const scope = await this.svc.resolveVisibilityScope(user);
+    return unwrapOrThrow(await this.svc.getCurrentShift(scope));
   }
 
   @ApiOperation({ summary: 'Shift handover' })
@@ -96,8 +97,9 @@ export class MesShiftsStatsController {
   @ApiOperation({ summary: 'Get oee' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('oee')
-  async getOee() {
-    return unwrapOrThrow(await this.svc.getOee());
+  async getOee(@CurrentUser() user: AuthenticatedUser) {
+    const scope = await this.svc.resolveVisibilityScope(user);
+    return unwrapOrThrow(await this.svc.getOee(scope));
   }
 
   @ApiOperation({ summary: 'Get stats' })
@@ -212,14 +214,17 @@ export class MesShiftsStatsController {
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @CurrentUser() user?: AuthenticatedUser,
   ) {
-    return unwrapOrThrow(await this.svc.getMaintenanceRequests(status, safeInt(limit, 50), safeInt(offset, 0)));
+    const scope = await this.svc.resolveVisibilityScope(user);
+    return unwrapOrThrow(await this.svc.getMaintenanceRequests(status, safeInt(limit, 50), safeInt(offset, 0), scope));
   }
 
   @ApiOperation({ summary: 'Get work center norms (capacity, efficiency, hours)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('work-centers/norms')
-  async getWorkCenterNorms() {
-    return unwrapOrThrow(await this.svc.getWorkCenterNorms());
+  async getWorkCenterNorms(@CurrentUser() user: AuthenticatedUser) {
+    const scope = await this.svc.resolveVisibilityScope(user);
+    return unwrapOrThrow(await this.svc.getWorkCenterNorms(scope));
   }
 }

@@ -19,7 +19,18 @@ type Row = Record<string, unknown>;
 @Injectable()
 export class MesShiftsStatsRepository {
   private readonly logger = new Logger(MesShiftsStatsRepository.name);
-  async getCurrentShift(): Promise<Row | null> {
+  /**
+   * Bo'lim-scope RBAC izolyatsiyasi (discovery-sweep gap, vizyon 08-mes.md #35 —
+   * "НО faqat o'z bo'limi ma'lumotini ko'radi"): `orgDepartmentId` — null bo'lsa
+   * cheklovsiz (privileged rol — production_manager/mro_manager/director/
+   * super_admin, MesShiftsStatsService.resolveVisibilityScope belgilaydi),
+   * raqam bo'lsa faqat shu KARTA (org_departments.id) ga tegishli mashina
+   * (equipment.work_center_id -> work_centers.org_department_id, T12-04 FK)
+   * bilan bog'liq qatorlar qaytadi. Bo'lim hali biriktirilmagan scoped-rol
+   * uchun xizmat qatlami -1 sentinel yuboradi (hech narsaga mos kelmaydi ->
+   * bo'sh natija, "hech narsani ko'rmaydi" xavfsiz-yopiq holat, Q-40).
+   */
+  async getCurrentShift(orgDepartmentId: number | null = null): Promise<Row | null> {
     const rows = await runQuery<Row>(sql`
       SELECT
         ms.id,
@@ -53,13 +64,35 @@ export class MesShiftsStatsRepository {
       FROM mes_sessions ms
       LEFT JOIN employees           e   ON e.id  = ms.operator_id
       LEFT JOIN equipment           eq  ON eq.id = ms.machine_id
+      LEFT JOIN work_centers        dwc ON dwc.id = eq.work_center_id
       LEFT JOIN mes_production_sessions mps ON mps.status IN ('running','in_progress')
       WHERE ms.status = 'active'
+        AND (${orgDepartmentId}::int IS NULL OR dwc.org_department_id = ${orgDepartmentId})
       GROUP BY ms.id, ms.status, ms.started_at, ms.operator_id, ms.notes,
                e.first_name, e.last_name, eq.status
       LIMIT 1
     `);
     return (rows.rows[0] ?? null) as Row | null;
+  }
+
+  /**
+   * Bo'lim-scope RBAC: viewer'ning birlamchi KARTA'si (org_departments.id),
+   * `employee_org_departments` kanonik jadvalidan (is_primary, is_active) —
+   * xuddi kanban-visibility.helper.ts / cc-org-resolver.service.ts ishlatgan
+   * bir xil live-DB manba (JWT `cardId` claim'iga emas, DB'ga ishonamiz —
+   * har doim yangi va rol o'zgarganda ham to'g'ri). Topilmasa (karta hali
+   * biriktirilmagan) — null; chaqiruvchi service shu holatni -1 sentinel'ga
+   * aylantiradi (fail-closed).
+   */
+  async resolveViewerOrgDepartmentId(userId: number): Promise<number | null> {
+    const rows = await runQuery<{ org_department_id: number | null }>(sql`
+      SELECT eod.org_department_id
+      FROM employee_org_departments eod
+      WHERE eod.user_id = ${userId} AND eod.is_primary = true AND eod.is_active = true
+      ORDER BY eod.id LIMIT 1
+    `);
+    const v = rows.rows[0]?.org_department_id;
+    return v != null ? Number(v) : null;
   }
 
   async shiftHandover(outgoing_supervisor: number, incoming_supervisor: number, notes: string | null, issues: string | null): Promise<Row[]> {
@@ -139,7 +172,7 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
-  async getOee(): Promise<{ machines: Row[]; averageOee: number }> {
+  async getOee(orgDepartmentId: number | null = null): Promise<{ machines: Row[]; averageOee: number }> {
     // REAL OEE — world-standard formula computed from production_sessions actual
     // signals, NOT the pre-stored ps.oee/availability/... columns (those held
     // inconsistent demo seed values mixing 0-1 and 0-100 scales, and a "running"
@@ -196,7 +229,9 @@ export class MesShiftsStatsRepository {
                   ELSE 0 END::numeric(5,2)                            AS quality
       FROM equipment e
       LEFT JOIN sess s ON s.equipment_id = e.id
+      LEFT JOIN work_centers owc ON owc.id = e.work_center_id
       WHERE e.is_active = true AND e.deleted_at IS NULL
+        AND (${orgDepartmentId}::int IS NULL OR owc.org_department_id = ${orgDepartmentId})
       GROUP BY e.id, e.name, e.status, s.session_count, s.run_s, s.stop_s, s.downtime_s, s.target_qty, s.actual_qty, s.defect_qty
       ORDER BY e.name
     `);
@@ -502,22 +537,28 @@ export class MesShiftsStatsRepository {
     return rows.rows as Row[];
   }
 
-  async getMaintenanceRequests(status: string | undefined, lim: number, off: number): Promise<Row[]> {
+  async getMaintenanceRequests(status: string | undefined, lim: number, off: number, orgDepartmentId: number | null = null): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
       SELECT mr.*,
              COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'') AS assigned_to_name,
              wc.name AS work_center_name
       FROM mes_maintenance_requests mr
-      LEFT JOIN employees e  ON e.id  = mr.assigned_to
-      LEFT JOIN equipment wc ON wc.id = mr.equipment_id
+      LEFT JOIN employees e   ON e.id   = mr.assigned_to
+      LEFT JOIN equipment wc  ON wc.id  = mr.equipment_id
+      LEFT JOIN work_centers mwc ON mwc.id = wc.work_center_id
       WHERE (${status ?? null}::text IS NULL OR mr.status = ${status ?? null})
+        AND (${orgDepartmentId}::int IS NULL OR mwc.org_department_id = ${orgDepartmentId})
       ORDER BY mr.created_at DESC LIMIT ${lim} OFFSET ${off}
     `);
     return rows.rows as Row[];
   }
 
-  /** Real equipment norms from work_centers (capacity_per_hour, efficiency_rate, hours_per_day, cost_per_hour). */
-  async getWorkCenterNorms(): Promise<Row[]> {
+  /**
+   * Real equipment norms from work_centers (capacity_per_hour, efficiency_rate, hours_per_day, cost_per_hour).
+   * Bo'lim-scope RBAC: work_centers.org_department_id (T12-04 KARTA FK) to'g'ridan filtrlanadi —
+   * boshqa uch metoddan farqli, bu yerda equipment/work_center chain kerak emas, jadval o'zida bor.
+   */
+  async getWorkCenterNorms(orgDepartmentId: number | null = null): Promise<Row[]> {
     const rows = await runQuery<Row>(sql`
       SELECT
         wc.id,
@@ -533,6 +574,7 @@ export class MesShiftsStatsRepository {
       FROM work_centers wc
       LEFT JOIN equipment eq ON eq.work_center_id = wc.id AND eq.is_active = true AND eq.deleted_at IS NULL
       WHERE wc.is_active = true AND wc.deleted_at IS NULL
+        AND (${orgDepartmentId}::int IS NULL OR wc.org_department_id = ${orgDepartmentId})
       GROUP BY wc.id, wc.name, wc.code, wc.type, wc.capacity_per_hour, wc.efficiency_rate, wc.hours_per_day, wc.cost_per_hour, wc.capacity
       ORDER BY wc.id
     `);

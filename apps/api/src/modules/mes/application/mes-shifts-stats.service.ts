@@ -11,6 +11,21 @@ import { safeCall, Result, AppError } from '@common/result';
 import { MesShiftsStatsRepository } from '../infrastructure/repositories/mes-shifts-stats.repo';
 import { WmsGoodsIssuedEvent } from '@modules/wms/application/events/wms-goods-issued.event';
 
+/**
+ * Bo'lim-scope RBAC izolyatsiyasi (discovery-sweep gap, vizyon `docs/vision/_parts/08-mes.md`
+ * #35 — "НО faqat o'z bo'limi (Ofset/Flekso) ma'lumotini ko'radi; boshqa uchun ruxsat").
+ * Floor/bo'lim-darajali rollar (operator/worker — sex ishchisi; shift_supervisor — "НО",
+ * vizyon itemning aynan o'zi) faqat o'z KARTA'siga (org_departments.id) tegishli mashina/
+ * ish-markazi ma'lumotini ko'radi. production_manager/mro_manager/super_admin/admin/director
+ * butun zavodni nazorat qiladigan rollar — cheklovsiz qoladi (mavjud MES_WRITE_ROLES/
+ * MES_FLOOR_ROLES konstantalarida bu ikkalasi doim super_admin/director bilan bir qatorda
+ * turadi — controller'dagi rol-guruhlash shu farqni allaqachon aks ettiradi).
+ */
+const MES_DEPT_SCOPED_ROLES = new Set(['operator', 'worker', 'shift_supervisor']);
+
+/** Bo'lim biriktirilmagan scoped-foydalanuvchi uchun "hech narsaga mos kelmaydi" sentinel (fail-closed, Q-40). */
+const NO_DEPARTMENT_SCOPE_SENTINEL = -1;
+
 @Injectable()
 export class MesShiftsStatsService {
   private readonly logger = new Logger(MesShiftsStatsService.name);
@@ -20,8 +35,24 @@ export class MesShiftsStatsService {
     private readonly eventBus: EventBus,
   ) {}
 
-  async getCurrentShift(): Promise<Result<object | null, AppError>> {
-    return safeCall(async () => this.repo.getCurrentShift());
+  /**
+   * `null`  — cheklovsiz (privileged rol; barcha bo'lim ko'rinadi).
+   * raqam   — faqat shu org_department_id (KARTA) bilan bog'liq qatorlar.
+   * `NO_DEPARTMENT_SCOPE_SENTINEL` (-1) — scoped rol, lekin viewer'ga hali karta biriktirilmagan
+   *           (owner-DATA gap, kutilgan — get-oee.handler.ts'dagi "shop" darajasi bilan bir xil holat) →
+   *           hech qanday haqiqiy org_department_id bilan mos kelmaydi, natija bo'sh (ko'rinmaydi emas,
+   *           "hozircha hech narsa" — xavfsiz-yopiq).
+   */
+  async resolveVisibilityScope(user: { id: number; role?: string | null } | undefined): Promise<number | null> {
+    const role = user?.role ? String(user.role).toLowerCase() : null;
+    if (!role || !MES_DEPT_SCOPED_ROLES.has(role)) return null;
+    if (!user?.id) return NO_DEPARTMENT_SCOPE_SENTINEL;
+    const deptId = await this.repo.resolveViewerOrgDepartmentId(user.id);
+    return deptId ?? NO_DEPARTMENT_SCOPE_SENTINEL;
+  }
+
+  async getCurrentShift(orgDepartmentId: number | null = null): Promise<Result<object | null, AppError>> {
+    return safeCall(async () => this.repo.getCurrentShift(orgDepartmentId));
   }
 
   async shiftHandover(outgoing_supervisor: number, incoming_supervisor: number, notes: string | null, issues: string | null) {
@@ -40,8 +71,8 @@ export class MesShiftsStatsService {
     return safeCall(async () => this.repo.getShiftEvaluations(from, to, lim));
   }
 
-  async getOee() {
-    return safeCall(async () => this.repo.getOee());
+  async getOee(orgDepartmentId: number | null = null) {
+    return safeCall(async () => this.repo.getOee(orgDepartmentId));
   }
 
   async getStats(date?: string) {
@@ -123,11 +154,11 @@ export class MesShiftsStatsService {
     return safeCall(async () => this.repo.getShifts(from, to, lim));
   }
 
-  async getMaintenanceRequests(status: string | undefined, lim: number, off: number) {
-    return safeCall(async () => this.repo.getMaintenanceRequests(status, lim, off));
+  async getMaintenanceRequests(status: string | undefined, lim: number, off: number, orgDepartmentId: number | null = null) {
+    return safeCall(async () => this.repo.getMaintenanceRequests(status, lim, off, orgDepartmentId));
   }
 
-  async getWorkCenterNorms() {
-    return safeCall(async () => this.repo.getWorkCenterNorms());
+  async getWorkCenterNorms(orgDepartmentId: number | null = null) {
+    return safeCall(async () => this.repo.getWorkCenterNorms(orgDepartmentId));
   }
 }
