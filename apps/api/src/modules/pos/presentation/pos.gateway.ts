@@ -40,12 +40,27 @@ const POS_ALLOWED_ROLES = new Set([
   'warehouse_viewer', 'qc_inspector', 'finance_head', 'admin', 'super_admin',
 ]);
 
+// Extract a named value out of a raw `Cookie:` header string (WS handshakes
+// don't get cookie-parser). Mirrors jwt-auth.guard reading `access_token`
+// and chat.gateway.ts's identical helper.
+function cookieValue(cookieHeader: string | undefined, name: string): string | undefined {
+  if (!cookieHeader) return undefined;
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim());
+  }
+  return undefined;
+}
+
 function extractToken(client: Socket): string | null {
   const auth  = client.handshake.auth as Record<string, unknown>;
   const query = client.handshake.query as Record<string, unknown>;
   return (
     (typeof auth?.token === 'string' ? auth.token : null) ??
     (typeof query?.token === 'string' ? query.token : null) ??
+    (client.handshake.headers?.authorization?.split(' ')[1]) ??
+    cookieValue(client.handshake.headers?.cookie, 'access_token') ??
     null
   );
 }
