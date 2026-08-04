@@ -226,8 +226,13 @@ export class OrgStructureController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('nodes/:id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return unwrapOrInternal(await this.service.findOne(id));
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    // P0 field-level RBAC (HR-ORG audit 2026-08-03): role travels down to the service so
+    // compensation fields (salary/bonus) can be redacted for non-compensation-tier roles.
+    return unwrapOrInternal(await this.service.findOne(id, user?.role ?? null));
   }
 
   // G1: write override — drops 'viewer' from the class-level read baseline.

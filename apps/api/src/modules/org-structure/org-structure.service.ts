@@ -13,6 +13,23 @@ import { DepartmentCreatedEvent } from './cascade/department-created.event';
 
 const ORG_DEFAULT_PAGE_LIMIT = 50;
 
+// P0 (field-level RBAC — HR-ORG audit 2026-08-03): findOneWithDetails() raw-selects a karta's
+// compensation columns (org-queries.repo.ts) with NO role check — the class-level @Roles list on
+// GET /org-structure/nodes/:id ('admin','manager','supervisor','viewer','director','hr','hr_manager')
+// let a plain 'viewer' or 'supervisor' read minSalary/maxSalary/salaryType/bonusConfig for ANY
+// karta. XAVFSIZLIK_STANDARTLARI.md §2 rol-matritsasi treats compensation as
+// super_admin/director/hr_manager-tier data (`@Roles('super_admin','director') @Get('reports/salary')`
+// example) — 'manager'/'supervisor'/'viewer' are NOT compensation-tier. This is READ-side redaction
+// only (write access — who may SET these fields — is unchanged; SENSITIVE_KARTA_FIELDS in
+// org-structure.controller.ts already gates writes with a mandatory reason).
+const KARTA_COMPENSATION_FIELDS = ['salaryType', 'minSalary', 'maxSalary', 'bonusConfig'] as const;
+const COMPENSATION_VISIBLE_ROLES = new Set(['admin', 'super_admin', 'director', 'hr', 'hr_manager']);
+
+function canViewCompensation(requesterRole?: string | null): boolean {
+  const roleLower = requesterRole ? requesterRole.toLowerCase() : null;
+  return roleLower !== null && COMPENSATION_VISIBLE_ROLES.has(roleLower);
+}
+
 @Injectable()
 export class OrgStructureService implements OnModuleInit {
   private readonly logger = new Logger(OrgStructureService.name);
@@ -91,11 +108,20 @@ export class OrgStructureService implements OnModuleInit {
     });
   }
 
-  async findOne(id: number) {
+  /**
+   * @param requesterRole - `request.user.role` (see RolesGuard). When the caller's role is not
+   *   in `COMPENSATION_VISIBLE_ROLES`, `KARTA_COMPENSATION_FIELDS` are stripped from the returned
+   *   node before it reaches the controller — field-level RBAC (P0 fix, see const doc above).
+   */
+  async findOne(id: number, requesterRole?: string | null) {
     return safeCall(async () => {
       const detailsR = await this.repo.findOneWithDetails(id);
       const { node, employees, children } = (detailsR.ok ? detailsR.data : { node: {}, employees: [], children: [] }) as { node: Record<string, unknown>; employees: Record<string, unknown>[]; children: Record<string, unknown>[] };
-      return { ...node, employees, children };
+      const safeNode = { ...node };
+      if (!canViewCompensation(requesterRole)) {
+        for (const field of KARTA_COMPENSATION_FIELDS) delete safeNode[field];
+      }
+      return { ...safeNode, employees, children };
     });
   }
 
