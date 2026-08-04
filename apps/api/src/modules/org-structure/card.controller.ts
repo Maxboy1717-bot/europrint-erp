@@ -76,6 +76,17 @@ const EquipmentItemSchema = z.object({
   item: z.string().min(1).max(300),
 }).strict();
 
+/** EP-ORG-064 "Ikki kartani birlashtirish" — :id = primary (survivor), body names the secondary. */
+const CardMergeSchema = z.object({
+  secondaryCardId: z.number().int().positive(),
+}).strict();
+
+/** EP-ORG-065 "Bitta kartani ikkiga bo'lish" — :id = source card, two brand-new card definitions. */
+const CardSplitSchema = z.object({
+  cardA: CardCreateSchema,
+  cardB: CardCreateSchema,
+}).strict();
+
 @Roles('admin', 'manager', 'hr_manager', 'director', 'super_admin')
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -328,6 +339,31 @@ export class CardController {
   @Patch(':id/restore')
   async restore(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.service.restoreCard(id));
+  }
+
+  // ─── EP-ORG-064 (merge) / EP-ORG-065 (split) ─────────────────────────────────
+  // Tavsiya A, docs/audit/decisions/01-org-kartalar.md:460-472 — Holat OCHIQ (final owner
+  // sign-off pending); implemented per the recorded recommendation so the endpoints exist
+  // meanwhile (2026-08-04 discovery-sweep item "Karta Merge/Split endpointlari umuman yo'q").
+
+  @ApiOperation({ summary: "Merge two cards (EP-ORG-064) — :id survives, secondary's history moves in + is archived" })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'primary === secondary' })
+  @ApiResponse({ status: 404, description: 'Either card not found / not live' })
+  @Post(':id/merge')
+  async merge(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = CardMergeSchema.parse(body);
+    return unwrapOrThrow(await this.service.mergeCards(id, dto.secondaryCardId));
+  }
+
+  @ApiOperation({ summary: "Split a card in two (EP-ORG-065) — :id is archived, two new cards link back via split_from_id" })
+  @ApiResponse({ status: 201, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Source card not found / not live' })
+  @Post(':id/split')
+  async split(@Param('id', ParseIntPipe) id: number, @Body() body: unknown) {
+    const dto = CardSplitSchema.parse(body);
+    return unwrapOrThrow(await this.service.splitCard(id, dto.cardA as CardInput, dto.cardB as CardInput));
   }
 
   @ApiOperation({ summary: "User's card-gate: card-derived RBAC tier + salary eligibility (EP-ORG-003)" })

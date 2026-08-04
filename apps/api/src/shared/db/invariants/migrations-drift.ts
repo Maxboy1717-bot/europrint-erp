@@ -4536,4 +4536,20 @@ $fn$ LANGUAGE plpgsql` },
     END IF;
   END $$` },
 
+  // 2026-08-04 (HR-ORG discovery sweep, task #5): EP-ORG-064 (merge)/EP-ORG-065 (split) card
+  // endpoints. Tavsiya A recorded in docs/audit/decisions/01-org-kartalar.md:460-472 (status
+  // still OCHIQ -- final owner sign-off pending, implemented per the recorded recommendation
+  // so the endpoints exist and are DB-provable meanwhile; SCOPED, follows existing precedent —
+  // no new mechanism invented). Both are plain nullable self-FK columns on the canonical card
+  // table, mirroring the SB0233 production_orders.org_department_id FK pattern above.
+  // merged_into_id: stamped on the SECONDARY card when two cards merge (EP-ORG-064) — points at
+  // the surviving primary. split_from_id: stamped on each of the two brand-new cards created by
+  // a split (EP-ORG-065) — points back at the now-archived source ("havola bilan bog'lanadi").
+  { name: 'org_departments.merged_into_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS merged_into_id INTEGER` },
+  { name: 'org_departments.merged_into_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_org_departments_merged_into') THEN ALTER TABLE org_departments ADD CONSTRAINT fk_org_departments_merged_into FOREIGN KEY (merged_into_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'org_departments.merged_into_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_org_departments_merged_into_id ON org_departments (merged_into_id) WHERE merged_into_id IS NOT NULL` },
+  { name: 'org_departments.split_from_id ADD COLUMN', sql: `ALTER TABLE IF EXISTS org_departments ADD COLUMN IF NOT EXISTS split_from_id INTEGER` },
+  { name: 'org_departments.split_from_id FK -> org_departments', sql: `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_org_departments_split_from') THEN ALTER TABLE org_departments ADD CONSTRAINT fk_org_departments_split_from FOREIGN KEY (split_from_id) REFERENCES org_departments(id) ON DELETE SET NULL; END IF; END $$` },
+  { name: 'org_departments.split_from_id idx', sql: `CREATE INDEX IF NOT EXISTS idx_org_departments_split_from_id ON org_departments (split_from_id) WHERE split_from_id IS NOT NULL` },
+
 ];

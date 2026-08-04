@@ -446,6 +446,76 @@ export class CardRepository {
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
+  /**
+   * EP-ORG-002 atomic guard — DB-transaction-level (closes the check-then-insert TOCTOU race that
+   * existed between CardService.canAssignEmployee (read) and .assignEmployee (write)). Two
+   * concurrent substantive-assign requests for the SAME card could previously both read
+   * activeOccupants=0 and both INSERT before either committed.
+   *
+   * A DB partial-unique index is intentionally NOT used (owner decision D2=Variant C,
+   * `org-phase6-employee-cards-2026-06-08.sql`: live data has 10 over-occupied cards — a hard
+   * constraint would fail today; deferred until the EP-ORG-037 seat-split). Instead this method
+   * takes `pg_advisory_xact_lock(82002, cardId)` — same convention as
+   * `mes/infrastructure/repositories/drizzle-mes.repo.ts` (`pg_advisory_xact_lock(88088, workCenterId)`)
+   * — for the lifetime of ONE transaction, so a second concurrent request for the same card blocks
+   * until the first commits, then re-reads the now-up-to-date occupant count and is correctly
+   * rejected. This makes the EXISTING application-layer guard atomic without touching the deferred
+   * schema decision.
+   *
+   * i.o./acting assigns (isActing=true, Phase 7 D2) still take the lock (so they cannot race a
+   * concurrent substantive assign into a stale "0 occupants" read) but SKIP the occupant-count
+   * guard itself — they do not consume the substantive seat.
+   */
+  async assignEmployeeGuarded(
+    cardId: number, employeeId: number, isPrimary: boolean,
+    isActing = false, actingSupplement: number | null = null, endedAt: string | null = null,
+  ): Promise<Result<{ inserted: Row | null; activeOccupants: number; blocked: boolean }>> {
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(82002, ${cardId})`);
+
+        let activeOccupants = 0;
+        if (!isActing) {
+          const cnt = await tx.execute(sql`
+            SELECT COUNT(*)::int AS c FROM employee_cards
+            WHERE card_id = ${cardId} AND is_active
+              AND COALESCE(is_acting, false) = false
+              AND (ended_at IS NULL OR ended_at > now())
+          `);
+          const cntRow = (cnt as unknown as { rows: Row[] }).rows?.[0];
+          activeOccupants = Number(cntRow?.c ?? 0);
+          if (activeOccupants > 0) {
+            // Still occupied — reject WITHOUT inserting. The advisory lock (held until this
+            // transaction ends) is released automatically here, unblocking the next waiter.
+            return { inserted: null, activeOccupants, blocked: true };
+          }
+        }
+
+        const ins = await tx.execute(sql`
+          INSERT INTO employee_cards
+            (employee_id, card_id, is_primary, is_active, is_acting, acting_supplement, assigned_at, ended_at, created_at, updated_at)
+          VALUES
+            (${employeeId}, ${cardId}, ${isPrimary}, true, ${isActing}, ${actingSupplement}, NOW(), ${endedAt}::timestamptz, NOW(), NOW())
+          ON CONFLICT (employee_id, card_id) WHERE is_active DO NOTHING
+          RETURNING id, employee_id, card_id, is_primary, is_acting
+        `);
+        const inserted = (ins as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        // Mirror sync mirrors the pre-existing (non-atomic) behaviour: ran whenever isPrimary=true,
+        // regardless of whether the INSERT produced a new row (idempotent ON CONFLICT DO NOTHING re-assign).
+        if (isPrimary) {
+          await tx.execute(sql`
+            UPDATE employee_cards SET is_primary = (card_id = ${cardId}), updated_at = NOW()
+            WHERE employee_id = ${employeeId} AND is_active
+          `);
+          await tx.execute(sql`UPDATE employees SET org_function_id = ${cardId} WHERE id = ${employeeId}`);
+        }
+
+        return { inserted, activeOccupants, blocked: false };
+      });
+    });
+  }
+
   /** Soft-remove an employee from a card; returns the removed link (incl. was-primary) or null if none active. */
   async unassignEmployee(cardId: number, employeeId: number): Promise<Result<Row | null>> {
     const r = await this.exec(sql`
@@ -641,6 +711,140 @@ export class CardRepository {
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
   }
 
+  // ─── EP-ORG-064 (merge) / EP-ORG-065 (split) ─────────────────────────────────
+  // Tavsiya A, docs/audit/decisions/01-org-kartalar.md:460-472 — Holat still OCHIQ (final owner
+  // sign-off pending); implemented per the recorded recommendation so the endpoints exist and are
+  // DB-provable meanwhile (2026-08-04 discovery-sweep item "Karta Merge/Split endpointlari
+  // umuman yo'q"). Columns `merged_into_id`/`split_from_id` were already added to org_departments
+  // (org-card-merge-split-2026-08-04.sql + migrations-drift.ts) by an earlier parallel pass — this
+  // is the first code that actually reads/writes them.
+
+  /**
+   * EP-ORG-064 · "Ikki kartani birlashtirish". Tavsiya A: asosiy karta tanlanadi, ikkinchisining
+   * tarixi (employee_cards occupancy + razryad_history) unga ko'chadi, ikkinchisi arxivlanadi
+   * (+ merged_into_id → primary). Advisory-locked (82003, primaryCardId) — same convention as
+   * assignEmployeeGuarded's 82002 lock — so a concurrent assign/merge on the primary card cannot
+   * interleave with this transaction. A moved employee_cards row that would collide with an
+   * already-active (employee_id, primaryCardId) pair (the partial unique index) is skipped rather
+   * than moved — it stays attached to the now-archived secondary card as pure history.
+   * Returns null when primaryCardId===secondaryCardId, or either card is missing/not a live
+   * (`is_active=true`, not already archived) `node_type='position'` card.
+   */
+  async mergeCards(
+    primaryCardId: number, secondaryCardId: number,
+  ): Promise<Result<{ primary: Row; secondary: Row } | null>> {
+    if (primaryCardId === secondaryCardId) return Ok(null);
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(82003, ${primaryCardId})`);
+
+        const cards = await tx.execute(sql`
+          SELECT id, is_active, current_state FROM org_departments
+          WHERE id IN (${primaryCardId}, ${secondaryCardId}) AND node_type = 'position'
+        `);
+        const rows = (cards as unknown as { rows: Row[] }).rows;
+        const isLive = (id: number) => {
+          const row = rows.find((r) => Number(r.id) === id);
+          return !!row && row.is_active === true && row.current_state !== 'archived';
+        };
+        if (!isLive(primaryCardId) || !isLive(secondaryCardId)) return null;
+
+        await tx.execute(sql`
+          UPDATE employee_cards SET card_id = ${primaryCardId}, updated_at = NOW()
+          WHERE card_id = ${secondaryCardId}
+            AND NOT (is_active AND EXISTS (
+              SELECT 1 FROM employee_cards ec2
+              WHERE ec2.employee_id = employee_cards.employee_id
+                AND ec2.card_id = ${primaryCardId} AND ec2.is_active
+            ))
+        `);
+        await tx.execute(sql`
+          UPDATE razryad_history SET card_id = ${primaryCardId} WHERE card_id = ${secondaryCardId}
+        `);
+
+        const upd = await tx.execute(sql`
+          UPDATE org_departments
+             SET is_active = false, current_state = 'archived', merged_into_id = ${primaryCardId}
+           WHERE id = ${secondaryCardId}
+          RETURNING id, name AS position_name, current_state AS status, merged_into_id
+        `);
+        const secondary = (upd as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        const pr = await tx.execute(sql`
+          SELECT *, name AS position_name, current_state AS status, parent_id AS manager_id
+          FROM org_departments WHERE id = ${primaryCardId}
+        `);
+        const primary = (pr as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        if (!secondary || !primary) return null;
+        return { primary, secondary };
+      });
+    });
+  }
+
+  /**
+   * EP-ORG-065 · "Bitta kartani ikkiga bo'lish". Tavsiya A: yangi ikki karta ochiladi (har biri
+   * `split_from_id` orqali manba kartaga havola bilan bog'lanadi), eski karta arxivga o'tadi
+   * (softDelete bilan bir xil arxivlash semantikasi: is_active=false + current_state='archived').
+   * Advisory-locked (82004, cardId) — assignEmployeeGuarded/mergeCards bilan bir xil konvensiya.
+   * Mavjud faol xodim-biriktirishlar (employee_cards) AVTOMATIK ko'chirilmaydi — bu ochiq semantik
+   * qaror (qaysi yangi kartaga o'tishi kerakligi aniq emas); HR mavjud assign/unassign
+   * endpointlari orqali qo'lda qayta biriktiradi (freeze/vacant/restore'dagi kabi arxivlangan
+   * karta ham eski employee_cards havolalarini saqlab qoladi — mavjud konvensiya, regress emas).
+   * Returns null when the source card is missing / not a live `node_type='position'` card.
+   */
+  async splitCard(
+    cardId: number, cardA: CardInput, cardB: CardInput,
+  ): Promise<Result<{ source: Row; cardA: Row; cardB: Row } | null>> {
+    return safeCall(async () => {
+      return await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(82004, ${cardId})`);
+
+        const src = await tx.execute(sql`
+          SELECT id, is_active, current_state, parent_id FROM org_departments
+          WHERE id = ${cardId} AND node_type = 'position'
+        `);
+        const srcRow = (src as unknown as { rows: Row[] }).rows?.[0];
+        if (!srcRow || srcRow.is_active !== true || srcRow.current_state === 'archived') return null;
+        const parentId = srcRow.parent_id == null ? null : Number(srcRow.parent_id);
+
+        const insertOne = async (dto: CardInput): Promise<Row | null> => {
+          const r = await tx.execute(sql`
+            INSERT INTO org_departments
+              (name, name_ru, parent_id, code, level, razryad_level_id,
+               salary_type, min_salary, max_salary, rbac_tier, current_state, tskp, tskp_target,
+               tskp_measurement_unit, statistics_type, ai_exam_enabled,
+               description, description_ru, node_type, is_active, split_from_id, created_at)
+            VALUES
+              (${dto.positionName ?? ''}, ${dto.positionNameRu ?? null}, ${dto.departmentId ?? parentId},
+               ${dto.code ?? null}, ${dto.level ?? null}, ${dto.razryadLevelId ?? null},
+               ${dto.salaryType ?? null}, ${dto.minSalary ?? null}, ${dto.maxSalary ?? null},
+               ${dto.rbacTier ?? null}, ${dto.status ?? 'active'}, ${dto.tskp ?? null},
+               ${dto.tskpTarget ?? null}, ${dto.tskpMeasurementUnit ?? null}, ${dto.statisticsType ?? null},
+               ${dto.aiExamEnabled ?? false},
+               ${dto.functionDescription ?? null}, ${dto.functionDescriptionRu ?? null},
+               'position', true, ${cardId}, NOW())
+            RETURNING *, name AS position_name, current_state AS status, parent_id AS manager_id
+          `);
+          return (r as unknown as { rows: Row[] }).rows?.[0] ?? null;
+        };
+
+        const newA = await insertOne(cardA);
+        const newB = await insertOne(cardB);
+
+        const arch = await tx.execute(sql`
+          UPDATE org_departments SET is_active = false, current_state = 'archived'
+          WHERE id = ${cardId} AND is_active = true
+          RETURNING id, name AS position_name, current_state AS status
+        `);
+        const source = (arch as unknown as { rows: Row[] }).rows?.[0] ?? null;
+
+        if (!newA || !newB || !source) return null;
+        return { source, cardA: newA, cardB: newB };
+      });
+    });
+  }
+
   // ─── Phase 7: card staleness (EP-ORG-137) + acting auto-revert (EP-ORG-060) ──
 
   /** EP-ORG-137: stamp last_reviewed_at = NOW() (resets the 1-year staleness clock). 404 if the card is gone. */
@@ -651,6 +855,51 @@ export class CardRepository {
       RETURNING id, last_reviewed_at
     `);
     return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);
+  }
+
+  /**
+   * EP-ORG-137: cards whose annual review is overdue (staleExpr) — feeds the daily
+   * CardExpiredEvent cron (../../cron/card-staleness.cron.ts). Archived cards excluded
+   * (nothing to review once retired). Read-only — does NOT touch last_reviewed_at.
+   */
+  async listStaleCards(): Promise<Result<Row[]>> {
+    return this.exec(sql`
+      SELECT f.id, f.name AS position_name, f.last_reviewed_at
+      FROM org_departments f
+      WHERE f.is_active = true AND f.node_type = 'position'
+        AND COALESCE(f.current_state, 'active') <> 'archived'
+        AND ${this.staleExpr}
+      ORDER BY f.last_reviewed_at ASC NULLS FIRST
+    `);
+  }
+
+  /**
+   * Payroll frozen-card gate batch prefetch (mirrors LmsRepository.findMandatoryCoursesByCards
+   * — N+1 fix pattern, owner-approved 2026-07-05): current_state + freeze_reason for MANY cards
+   * in ONE query, keyed by cardId. A card missing from the returned map (bad id / deleted) is
+   * simply absent — PayrollService treats an absent key as fail-closed (see computeGatedMonthlySalary).
+   */
+  async listCurrentStatesByIds(
+    cardIds: number[],
+  ): Promise<Result<Map<number, { status: string; freezeReason: string | null }>>> {
+    const uniqueIds = Array.from(new Set(cardIds.filter((id) => Number.isInteger(id) && id > 0)));
+    if (uniqueIds.length === 0) return Ok(new Map());
+    const r = await this.exec(sql`
+      SELECT id, COALESCE(current_state, 'active') AS status, freeze_reason
+      FROM org_departments
+      WHERE id = ANY(${uniqueIds}) AND node_type = 'position'
+    `);
+    if (!r.ok) return Err(r.error);
+    const byId = new Map<number, { status: string; freezeReason: string | null }>();
+    for (const row of r.data) {
+      const id = Number(row.id);
+      if (!Number.isInteger(id)) continue;
+      byId.set(id, {
+        status: String(row.status),
+        freezeReason: row.freeze_reason != null ? String(row.freeze_reason) : null,
+      });
+    }
+    return Ok(byId);
   }
 
   /**

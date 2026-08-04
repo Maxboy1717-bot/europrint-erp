@@ -12,6 +12,11 @@ import { GlPostingService, type JournalLine } from '../../finance/domain/service
 import { CkpGateService, type CkpGateDecision } from './ckp-gate';
 import { LmsCardGateService } from '../../lms/application/services/lms-card-gate.service';
 import { OnboardingDocumentGateService } from '../onboarding/onboarding-document-gate.service';
+// Discovery sweep 2026-08-03 fix ("CardStatusChangedEvent/CardExpiredEvent yo'q — muzlatilgan
+// karta oylikni to'xtatmaydi"): CardService already exported by OrgStructureModule (imported into
+// HrModule — see hr.module.ts) and already consumed the SAME way by onboarding.service.ts. Reused
+// here as the frozen-card oylik gate (mirrors the LMS/onboarding gate pattern, Q-40 no reimplementation).
+import { CardService } from '../../org-structure/card.service';
 import { BonusService } from './bonus.service';
 import { HR_REPO, type IHrRepo } from '../domain/repositories/i-hr.repo';
 import type { DomainEvent } from '@shared/domain/domain-event';
@@ -109,6 +114,8 @@ export class PayrollService {
     private readonly lmsGate: LmsCardGateService,
     // T7-10 sibling (2026-07-13): 30-day mandatory-document-complete gate (EP-ORG-027 pattern).
     private readonly onboardingGate: OnboardingDocumentGateService,
+    // Discovery sweep 2026-08-03: frozen-card oylik gate sibling (see import comment above).
+    private readonly cardService: CardService,
     private readonly bonusSvc: BonusService,
     @Inject(HR_REPO) private readonly hrRepo: IHrRepo,
     private readonly eventEmitter: EventEmitter2,
@@ -424,6 +431,11 @@ export class PayrollService {
     prefetched?: {
       ckpDaysByCard: Map<number, Array<{ factDate: string; decision: CkpGateDecision }>>;
       mandatoryCoursesByCard: Map<number, { id: number; passing_score: number }[]>;
+      // Discovery sweep 2026-08-03 fix (frozen-card gate) — OPTIONAL so existing callers that
+      // build `prefetched` without it (none currently do — see generatePeriodRows) still compile;
+      // absent map behaves exactly like `prefetched` being undefined for THIS gate only (falls
+      // back to the live per-card `cardService.findById` read below).
+      cardStatusByCard?: Map<number, { status: string; freezeReason: string | null }>;
     },
   ): Promise<
     Result<{
@@ -436,6 +448,8 @@ export class PayrollService {
       lmsReasons: string[];
       docsBlocked: boolean;
       docsReasons: string[];
+      cardFrozen: boolean;
+      cardFrozenReason: string | null;
       days: Array<{ factDate: string; decision: CkpGateDecision; dayBase: number; dayPaid: number }>;
     }>
   > {
@@ -489,6 +503,45 @@ export class PayrollService {
       }
     }
 
+    // ⭐ MUZLATILGAN-KARTA DARVOZASI (discovery sweep 2026-08-03: "CardStatusChangedEvent/
+    // CardExpiredEvent yo'q — muzlatilgan karta oylikni to'xtatmaydi"). Vizyon: karta 'frozen'
+    // holatiga o'tsa, o'sha kartaning oyligi to'xtaydi. Bir xil FAIL-CLOSED naqsh LMS/onboarding
+    // gate bilan: LIVE current_state o'qiladi (CardStatusChangedEvent'ga ISHONIB QOLINMAYDI —
+    // event faqat boshqa tinglovchilar uchun, bu yerda emas; Q-40 fabrikatsiya-taqiq — o'qish
+    // xatosi = "muzlatilgan" deb hisoblanadi, HECH QACHON "ochiq" deb FARAZ qilinmaydi).
+    //
+    // ⭐ OCHIQ QARDO (Q-34 dizayn-qaror, egasi hal qiladi): bu — BINAR karta-darajasidagi blok
+    // (LMS/onboarding gate bilan bir xil) — davr ichida qachon muzlatilganini bilib, FAQAT o'sha
+    // kundan keyingi kunlarni pro-rata bloklash (kun-darajasidagi ЦКП-darvoza kabi) HOZIR yo'q,
+    // chunki current_state faqat ENG SO'NGGI holatni saqlaydi (frozen_at thaw'da NULL'ga
+    // qaytariladi — tarixiy muzlash oynalarini rekonstruksiya qiladigan audit-trail yo'q, karta
+    // uchun audit_logs'ga hech narsa yozilmaydi — alohida, ushbu topshiriq doirasidan tashqari
+    // bo'shliq). Shu sabab: karta HOZIR muzlatilgan bo'lsa — BUTUN davr bloklanadi (0 so'm), xuddi
+    // LMS/onboarding darvozasi kabi — bu "muzlatilgan karta oylikni to'xtatmaydi" asosiy talabini
+    // yopadi, lekin muzlash sanasigacha bo'lgan kunlarni HALOL to'lash (kun-aniq pro-rata) — audit
+    // tarixi qo'shilmaguncha OCHIQ qoladi.
+    let cardFrozen = false;
+    let cardFrozenReason: string | null = null;
+    if (prefetched?.cardStatusByCard) {
+      const st = prefetched.cardStatusByCard.get(cardId);
+      if (!st) {
+        cardFrozen = true;
+        cardFrozenReason = `Karta #${cardId}: holati prefetch xaritasida topilmadi (fail-closed)`;
+      } else if (st.status === 'frozen') {
+        cardFrozen = true;
+        cardFrozenReason = st.freezeReason ?? `Karta #${cardId} muzlatilgan`;
+      }
+    } else {
+      const cardR = await this.cardService.findById(cardId);
+      if (!cardR.ok) {
+        cardFrozen = true;
+        cardFrozenReason = `Karta #${cardId}: holatini o'qib bo'lmadi (fail-closed): ${cardR.error.message}`;
+      } else if (cardR.data['status'] === 'frozen') {
+        cardFrozen = true;
+        cardFrozenReason = (cardR.data['freeze_reason'] as string | null) ?? `Karta #${cardId} muzlatilgan`;
+      }
+    }
+
     // A11 DARVOZA CHAQIRUVI — jonli ckp_fact_values; har kun qarori.
     // Prefetched-batch bo'lsa mapdan olinadi (fail-closed: karta xaritada yo'q → xato).
     let decisions: Array<{ factDate: string; decision: CkpGateDecision }>;
@@ -505,10 +558,11 @@ export class PayrollService {
     }
     const totalDays = decisions.length;
 
-    // LMS-darvoza YOKI onboarding-hujjat-darvoza yopiq → butun karta oyligi 0 (darslik
-    // tugamasa/hujjat to'liq bo'lmasa oylik yo'q — egasi vizyoni). proratedGross null
-    // (ЦКП% yo'q) → darvoza baribir 0 berardi; gated ham null.
-    if (lmsBlocked || docsBlocked || prorated.proratedGross === null || totalDays === 0) {
+    // LMS-darvoza YOKI onboarding-hujjat-darvoza YOKI muzlatilgan-karta darvozasi yopiq → butun
+    // karta oyligi 0 (darslik tugamasa/hujjat to'liq bo'lmasa/karta muzlatilgan bo'lsa oylik
+    // yo'q — egasi vizyoni). proratedGross null (ЦКП% yo'q) → darvoza baribir 0 berardi; gated
+    // ham null.
+    if (lmsBlocked || docsBlocked || cardFrozen || prorated.proratedGross === null || totalDays === 0) {
       return Ok({
         proratedGross: prorated.proratedGross,
         gatedGross: prorated.proratedGross === null ? null : 0,
@@ -519,6 +573,8 @@ export class PayrollService {
         lmsReasons,
         docsBlocked,
         docsReasons,
+        cardFrozen,
+        cardFrozenReason,
         days: decisions.map((d) => ({ factDate: d.factDate, decision: d.decision, dayBase: 0, dayPaid: 0 })),
       });
     }
@@ -546,6 +602,8 @@ export class PayrollService {
       lmsReasons,
       docsBlocked,
       docsReasons,
+      cardFrozen,
+      cardFrozenReason,
       days,
     });
   }
@@ -610,6 +668,8 @@ export class PayrollService {
       lmsReasons: string[];
       docsBlocked: boolean;
       docsReasons: string[];
+      cardFrozen: boolean;
+      cardFrozenReason: string | null;
       days: Array<{ factDate: string; decision: CkpGateDecision; dayBase: number; dayPaid: number }>;
     }>
   > {
@@ -752,12 +812,24 @@ export class PayrollService {
     const cardIds = Array.from(new Set(inputs.map((inp) => inp.cardId)));
     const ckpBatchR = await this.ckpGate.evaluatePeriodBatch(cardIds, from, to);
     const lmsBatchR = await this.lmsGate.prefetchMandatoryCourses(cardIds);
+    // Discovery sweep 2026-08-03 fix — same N+1 batch-prefetch pattern as ckpBatchR/lmsBatchR
+    // above (owner-approved 2026-07-05 precedent), sibling gate for the frozen-card check.
+    const cardStatusBatchR = await this.cardService.listCardStatuses(cardIds);
     let prefetched: {
       ckpDaysByCard: Map<number, Array<{ factDate: string; decision: CkpGateDecision }>>;
       mandatoryCoursesByCard: Map<number, { id: number; passing_score: number }[]>;
+      cardStatusByCard?: Map<number, { status: string; freezeReason: string | null }>;
     } | undefined;
     if (ckpBatchR.ok && lmsBatchR.ok) {
-      prefetched = { ckpDaysByCard: ckpBatchR.data, mandatoryCoursesByCard: lmsBatchR.data };
+      prefetched = {
+        ckpDaysByCard: ckpBatchR.data,
+        mandatoryCoursesByCard: lmsBatchR.data,
+        // A batch-fetch failure here degrades to per-card `cardService.findById` reads inside
+        // computeGatedMonthlySalary (still fail-closed, just not batched) — the SAME degrade
+        // rule as ckpBatchR/lmsBatchR, but scoped to only THIS gate (cardStatusByCard is
+        // optional on the `prefetched` type, unlike the two required siblings above).
+        cardStatusByCard: cardStatusBatchR.ok ? cardStatusBatchR.data : undefined,
+      };
     } else {
       if (!ckpBatchR.ok) {
         this.logger.warn(`generatePeriodRows: ЦКП batch-prefetch xato — per-karta so'rovga qaytildi: ${ckpBatchR.error.message}`);
@@ -765,6 +837,9 @@ export class PayrollService {
       if (!lmsBatchR.ok) {
         this.logger.warn(`generatePeriodRows: LMS batch-prefetch xato — per-karta so'rovga qaytildi: ${lmsBatchR.error.message}`);
       }
+    }
+    if (!cardStatusBatchR.ok) {
+      this.logger.warn(`generatePeriodRows: karta-holat batch-prefetch xato — per-karta so'rovga qaytildi: ${cardStatusBatchR.error.message}`);
     }
 
     let generated = 0;
@@ -776,7 +851,16 @@ export class PayrollService {
     // ⭐ A6/EP-ORG-004 SUM-tamoyil: har karta uchun darvozalangan oylik hisoblanadi, so'ng
     // xodim bo'yicha GURUHLANIB YIG'ILADI (bitta xodim bir nechta aktiv kartaga ega bo'lishi
     // mumkin — `listActiveCardPayInputs` endi har kartani alohida qator qaytaradi).
-    type CardGate = { cardId: number; gatedGross: number | null; lmsBlocked: boolean; docsBlocked: boolean; totalDays: number; gatedDays: number };
+    type CardGate = {
+      cardId: number;
+      gatedGross: number | null;
+      lmsBlocked: boolean;
+      docsBlocked: boolean;
+      cardFrozen: boolean;
+      cardFrozenReason: string | null;
+      totalDays: number;
+      gatedDays: number;
+    };
     const byEmployee = new Map<number, { baseSalary: number; cards: CardGate[] }>();
 
     for (const inp of inputs) {
@@ -809,6 +893,8 @@ export class PayrollService {
         gatedGross: gatedR.data.gatedGross,
         lmsBlocked: gatedR.data.lmsBlocked,
         docsBlocked: gatedR.data.docsBlocked,
+        cardFrozen: gatedR.data.cardFrozen,
+        cardFrozenReason: gatedR.data.cardFrozenReason,
         totalDays: gatedR.data.totalDays,
         gatedDays: gatedR.data.gatedDays,
       });
@@ -820,6 +906,7 @@ export class PayrollService {
       const sumGatedGross = cards.reduce((sum, c) => sum + (c.gatedGross ?? 0), 0);
       const anyLmsBlocked = cards.some((c) => c.lmsBlocked);
       const anyDocsBlocked = cards.some((c) => c.docsBlocked);
+      const anyCardFrozen = cards.some((c) => c.cardFrozen);
       // 3.15: HR/DIRECTOR tasdiqlagan mukofot (davr ichida) gross'ga qo'shiladi —
       // topilmasa 0 (Map.get undefined → soxta son yozilmaydi).
       const bonus = bonusByEmployee.get(employeeId) ?? 0;
@@ -833,10 +920,15 @@ export class PayrollService {
       // kelmay, ЦКП/LMS-gate haqiqatda oylikni kamaytirgan har qanday davrda buildJournal
       // "balansda emas" xatosi bilan closePeriod'ni butunlay bloklardi.
       const cardSummary = cards
-        .map((c) => `#${c.cardId}:${c.gatedDays}/${c.totalDays}${c.lmsBlocked ? '(LMS-yopiq)' : ''}${c.docsBlocked ? '(onboarding-hujjat-yopiq)' : ''}`)
+        .map((c) => `#${c.cardId}:${c.gatedDays}/${c.totalDays}${c.lmsBlocked ? '(LMS-yopiq)' : ''}${c.docsBlocked ? '(onboarding-hujjat-yopiq)' : ''}${c.cardFrozen ? `(MUZLATILGAN: ${c.cardFrozenReason ?? '-'})` : ''}`)
         .join(', ');
-      const note = anyLmsBlocked || anyDocsBlocked
-        ? `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ba'zi karta ${anyLmsBlocked ? 'LMS-darvozasi' : ''}${anyLmsBlocked && anyDocsBlocked ? ' / ' : ''}${anyDocsBlocked ? 'onboarding-hujjat-darvozasi' : ''} yopiq — ${cardSummary}`
+      const blockedLabels = [
+        anyLmsBlocked ? 'LMS-darvozasi' : null,
+        anyDocsBlocked ? 'onboarding-hujjat-darvozasi' : null,
+        anyCardFrozen ? 'muzlatilgan-karta-darvozasi' : null,
+      ].filter((l): l is string => l !== null);
+      const note = blockedLabels.length > 0
+        ? `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ba'zi karta ${blockedLabels.join(' / ')} yopiq — ${cardSummary}`
         : `karta-oylik (${cards.length} karta, xom baza ${baseSalary.toLocaleString('uz-UZ')}): ЦКП-gate — ${cardSummary}` +
           (bonus > 0 ? ` + mukofot ${bonus.toLocaleString('uz-UZ')}` : '');
       const totalGatedDays = cards.reduce((sum, c) => sum + c.gatedDays, 0);

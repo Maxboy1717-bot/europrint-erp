@@ -47,6 +47,9 @@ import { RetentionCron } from './retention.cron'
 // apps/api/src/modules/kanban/infrastructure/cron/kanban-cron.processor.ts,
 // jobType='RECURRING_CARDS'); bu yerdan olib tashlandi, endi kanban.module.ts orqali ishlaydi.
 import { ActingRevertCron } from './acting-revert.cron'
+// EP-ORG-137 — daily card-staleness scan (discovery sweep 2026-08-03: CardExpiredEvent gap);
+// CardRepository already provided below (ActingRevertCron sibling), reused (Q-40, no reimplementation).
+import { CardStalenessCron } from './card-staleness.cron'
 import { MesSosEscalationCron } from './mes-sos-escalation.cron'
 import { MesSosEscalationService } from '../modules/mes/application/mes-sos-escalation.service'
 import { MesSosEscalationRepository } from '../modules/mes/infrastructure/repositories/mes-sos-escalation.repo'
@@ -132,6 +135,8 @@ import { HrAttentionDigestRepository } from './repositories/hr-attention-digest.
     // ORG Phase 7 — i.o./acting auto-revert (EP-ORG-060); CardRepository = standalone (runQuery, no deps)
     ActingRevertCron,
     CardRepository,
+    // EP-ORG-137 — daily card-staleness scan → CardExpiredEvent (discovery sweep 2026-08-03 fix)
+    CardStalenessCron,
     // #11 — SOS/downtime org-zanjir timeout eskalatsiya (har 2 daqiqa); repo+service standalone (runQuery)
     MesSosEscalationCron,
     MesSosEscalationService,

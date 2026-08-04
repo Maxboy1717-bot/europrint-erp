@@ -23,6 +23,7 @@ function makeRepo(over: Partial<Record<keyof CardRepository, jest.Mock>> = {}): 
     listVacancies:       jest.fn().mockResolvedValue(Ok([])),
     listHistory:         jest.fn().mockResolvedValue(Ok([])),
     assignEmployee:      jest.fn().mockResolvedValue(Ok({ id: 1 })),
+    assignEmployeeGuarded: jest.fn().mockResolvedValue(Ok({ inserted: { id: 1 }, activeOccupants: 0, blocked: false })),
     unassignEmployee:    jest.fn().mockResolvedValue(Ok({ id: 1, is_primary: false })),
     setPrimaryCard:      jest.fn().mockResolvedValue(Ok([])),
     repointPrimaryMirror: jest.fn().mockResolvedValue(Ok([])),
@@ -110,31 +111,32 @@ describe('ORG card CRUD (CardService)', () => {
   });
 
   // Phase 6 employee↔card M:N + FORMULA A salary
-  it('assignEmployeeToCard → CONFLICT when the card already has an active occupant (EP-ORG-002 guard reused)', async () => {
-    const assignEmployee = jest.fn().mockResolvedValue(Ok({ id: 9 }));
+  // EP-ORG-002 guard is now enforced ATOMICALLY inside CardRepository.assignEmployeeGuarded
+  // (one DB transaction + pg_advisory_xact_lock(82002, cardId)) instead of two separate repo
+  // calls (canAssignEmployee read + assignEmployee write) — closes the TOCTOU race between them.
+  it('assignEmployeeToCard → CONFLICT when the guarded repo call reports the card occupied (EP-ORG-002)', async () => {
+    const assignEmployeeGuarded = jest.fn().mockResolvedValue(Ok({ inserted: null, activeOccupants: 1, blocked: true }));
     const svc = new CardService(makeRepo({
       findById: jest.fn().mockResolvedValue(Ok({ id: 5, position_name: 'Operator' })),
-      activeOccupantCount: jest.fn().mockResolvedValue(Ok(1)),
-      assignEmployee,
+      assignEmployeeGuarded,
     }));
     const r = await svc.assignEmployeeToCard(5, 42, false);
     expect(isErr(r)).toBe(true);
     if (isErr(r)) expect(r.error.code).toBe('CONFLICT');
-    expect(assignEmployee).not.toHaveBeenCalled(); // guard blocks BEFORE insert
+    expect(assignEmployeeGuarded).toHaveBeenCalledWith(5, 42, false, false, null, null);
   });
 
-  it('assignEmployeeToCard → assigns + syncs the primary mirror when the card is empty', async () => {
-    const assignEmployee = jest.fn().mockResolvedValue(Ok({ id: 9 }));
-    const setPrimaryCard = jest.fn().mockResolvedValue(Ok([]));
+  it('assignEmployeeToCard → assigns (guard+insert+mirror-sync in one atomic repo call) when the card is empty', async () => {
+    const assignEmployeeGuarded = jest.fn().mockResolvedValue(Ok({ inserted: { id: 9 }, activeOccupants: 0, blocked: false }));
     const svc = new CardService(makeRepo({
       findById: jest.fn().mockResolvedValue(Ok({ id: 5 })),
-      activeOccupantCount: jest.fn().mockResolvedValue(Ok(0)),
-      assignEmployee, setPrimaryCard,
+      assignEmployeeGuarded,
     }));
     const r = await svc.assignEmployeeToCard(5, 42, true);
     expect(isOk(r)).toBe(true);
-    expect(assignEmployee).toHaveBeenCalledWith(5, 42, true, false, null, null); // substantive: not acting
-    expect(setPrimaryCard).toHaveBeenCalledWith(42, 5); // mirror synced for primary
+    // primary=true (isPrimary && !isActing), isActing=false — guard+insert+mirror-sync all happen
+    // inside CardRepository.assignEmployeeGuarded now (see that method's own unit coverage/DB-proof).
+    expect(assignEmployeeGuarded).toHaveBeenCalledWith(5, 42, true, false, null, null);
   });
 
   it('unassignEmployeeFromCard → NOT_FOUND when no active link exists', async () => {
@@ -179,26 +181,25 @@ describe('ORG card CRUD (CardService)', () => {
 
   // Phase 7 i.o./acting + staleness
   it('assignEmployeeToCard(isActing) → SKIPS the seat guard, never primary (D2, EP-ORG-060/061)', async () => {
-    const activeOccupantCount = jest.fn().mockResolvedValue(Ok(1)); // card is occupied by a substantive emp
-    const assignEmployee = jest.fn().mockResolvedValue(Ok({ id: 9, is_acting: true }));
-    const setPrimaryCard = jest.fn().mockResolvedValue(Ok([]));
+    // isActing propagates into assignEmployeeGuarded, which internally skips the occupant-count
+    // guard + the primary-mirror sync for acting assigns (see repo method doc).
+    const assignEmployeeGuarded = jest.fn().mockResolvedValue(Ok({ inserted: { id: 9, is_acting: true }, activeOccupants: 0, blocked: false }));
     const svc = new CardService(makeRepo({
       findById: jest.fn().mockResolvedValue(Ok({ id: 5 })),
-      activeOccupantCount, assignEmployee, setPrimaryCard,
+      assignEmployeeGuarded,
     }));
     // acting assign to an OCCUPIED card succeeds (i.o. does not consume the seat)
     const r = await svc.assignEmployeeToCard(5, 42, true /*isPrimary ignored*/, true /*isActing*/, 500000, '2026-12-31');
     expect(isOk(r)).toBe(true);
-    expect(activeOccupantCount).not.toHaveBeenCalled();         // guard skipped for acting
-    expect(assignEmployee).toHaveBeenCalledWith(5, 42, false, true, 500000, '2026-12-31'); // primary forced false
-    expect(setPrimaryCard).not.toHaveBeenCalled();              // acting never becomes the mirror
+    expect(assignEmployeeGuarded).toHaveBeenCalledWith(5, 42, false, true, 500000, '2026-12-31'); // primary forced false
     if (isOk(r)) { expect(r.data.isActing).toBe(true); expect(r.data.isPrimary).toBe(false); }
   });
 
   it('assignEmployeeToCard(substantive) → still enforces the seat guard', async () => {
+    const assignEmployeeGuarded = jest.fn().mockResolvedValue(Ok({ inserted: null, activeOccupants: 1, blocked: true }));
     const svc = new CardService(makeRepo({
       findById: jest.fn().mockResolvedValue(Ok({ id: 5 })),
-      activeOccupantCount: jest.fn().mockResolvedValue(Ok(1)),
+      assignEmployeeGuarded,
     }));
     const r = await svc.assignEmployeeToCard(5, 42, false, false);
     expect(isErr(r)).toBe(true);
