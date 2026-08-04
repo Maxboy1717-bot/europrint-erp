@@ -35,6 +35,10 @@ function makeRepo(): Repo {
     unlockPlanning: jest.fn(),
     getProductionPlan: jest.fn(),
     getMachineLoad: jest.fn(),
+    // EP-PP-091/124 lab-gate — default to an approved card so tests that don't care about
+    // the gate (persistence-failure / happy-path) keep exercising the rest of the flow;
+    // the lab-gate-specific tests below override this per-case.
+    getLabApprovalStatus: jest.fn().mockResolvedValue(Ok({ cardExists: true, labApproved: true })),
   } as Repo;
 }
 
@@ -64,16 +68,38 @@ describe('ReleaseProductionOrderHandler', () => {
     if (!r.ok) expect(r.error.code).toBe('NOT_FOUND');
   });
 
-  it('returns Err when checkpoint not validated before release', async () => {
+  // EP-PP-091/EP-PP-124 lab-gate: release must hard-block when the technology card for
+  // the order's product is not LAB-approved — "sifat rejadan ustun" (EP-PP-123), no
+  // "continue with warning" bypass (this replaces the old aggregate-flag-only test, which
+  // no longer reflects how the handler decides checkpointValidated).
+  it('returns Err (BUSINESS_RULE_VIOLATION) when technology card exists but is not LAB-approved', async () => {
     const po = makePo({ checkpoint: false });
     const repo = makeRepo();
     repo.getPo.mockResolvedValue(Ok(po));
+    repo.getLabApprovalStatus.mockResolvedValue(Ok({ cardExists: true, labApproved: false }));
     const bus = makeEventBus();
     const handler = new ReleaseProductionOrderHandler(repo, bus);
 
     const r = await handler.execute(new ReleaseProductionOrderCommand(po.getId()));
 
     expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('BUSINESS_RULE_VIOLATION');
+    expect(bus.publish).not.toHaveBeenCalled();
+    expect(repo.savePo).not.toHaveBeenCalled();
+  });
+
+  it('returns Err (BUSINESS_RULE_VIOLATION) when no technology card exists for the product', async () => {
+    const po = makePo({ checkpoint: false });
+    const repo = makeRepo();
+    repo.getPo.mockResolvedValue(Ok(po));
+    repo.getLabApprovalStatus.mockResolvedValue(Ok({ cardExists: false, labApproved: false }));
+    const bus = makeEventBus();
+    const handler = new ReleaseProductionOrderHandler(repo, bus);
+
+    const r = await handler.execute(new ReleaseProductionOrderCommand(po.getId()));
+
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('BUSINESS_RULE_VIOLATION');
     expect(bus.publish).not.toHaveBeenCalled();
     expect(repo.savePo).not.toHaveBeenCalled();
   });

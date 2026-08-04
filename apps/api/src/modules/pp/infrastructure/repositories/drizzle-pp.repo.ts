@@ -225,4 +225,29 @@ export class DrizzlePpRepository implements IPpRepository {
       return Err('BOM komponentlarini o\'qishda xatolik');
     }
   }
+
+  // EP-PP-091 / EP-PP-124 lab-gate: latest active, non-deleted technology card for the
+  // production order's finished-good product (joined via production_orders.product_id =
+  // technology_cards.product_id — both integer columns on the live DB). `is_active`/
+  // `deleted_at` mirror the filters technology.repository.ts already applies elsewhere
+  // (findTechnologyCards / cloneLatestApproved); ORDER BY version DESC picks the newest
+  // revision when a product has more than one card.
+  async getLabApprovalStatus(poId: number): Promise<Result<{ cardExists: boolean; labApproved: boolean }>> {
+    try {
+      const result = await runQuery<DbRow>(sql`
+        SELECT tc.lab_approved AS "labApproved"
+        FROM production_orders po
+        JOIN technology_cards tc ON tc.product_id = po.product_id
+        WHERE po.id = ${poId} AND tc.is_active = true AND tc.deleted_at IS NULL
+        ORDER BY tc.version DESC, tc.id DESC
+        LIMIT 1
+      `);
+      const row = (result?.rows ?? [])[0];
+      if (!row) return Ok({ cardExists: false, labApproved: false });
+      return Ok({ cardExists: true, labApproved: row['labApproved'] === true });
+    } catch (e) {
+      this.logger.error(`Failed to check lab approval status: ${String(e)}`);
+      return Err('Lab tasdiq holatini tekshirishda xatolik');
+    }
+  }
 }
