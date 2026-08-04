@@ -26,6 +26,7 @@ import {
   CreateKanbanForQcInspectionInput,
   CreateKanbanForMesSessionInput,
   CreateKanbanForDesignTaskInput,
+  CreateKanbanForMaintenanceInput,
   MoveCardInput,
   UpdateCardInput,
   UpdateColumnInput,
@@ -218,5 +219,8 @@ export class KanbanBoardsRepository implements IKanbanBoardsRepo {
   }
   createKanbanForDesignTask(input: CreateKanbanForDesignTaskInput): Promise<Result<void>> {
     return this.cardsRepo.createKanbanForDesignTask(input);
+  }
+  createKanbanForMaintenanceRequest(input: CreateKanbanForMaintenanceInput): Promise<Result<void>> {
+    return this.cardsRepo.createKanbanForMaintenanceRequest(input);
   }
 }

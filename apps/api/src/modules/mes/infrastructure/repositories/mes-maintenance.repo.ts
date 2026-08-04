@@ -16,6 +16,12 @@ export interface CreateFromDowntimeResult {
   taskId: number | null;
   /** Why nothing was created (or 'created'): 'not_emergency' | 'duplicate' | 'created'. */
   outcome: 'not_emergency' | 'duplicate' | 'created';
+  /** mes_maintenance_requests.id carrying the machine link — only set when created=true. */
+  requestId: number | null;
+  /** Down machine / work-center id actually stored on the request — only set when created=true. */
+  equipmentId: number | null;
+  /** Human-readable reason text stored on the request/task — only set when created=true. */
+  description: string | null;
 }
 
 @Injectable()
@@ -162,7 +168,7 @@ export class MesMaintenanceRepository {
       const category = catRows[0]?.category ?? null;
       const isEmergency = category === 'breakdown' || reasonCode === 'BREAK';
       if (!isEmergency) {
-        return Ok({ created: false, taskId: null, outcome: 'not_emergency' });
+        return Ok({ created: false, taskId: null, outcome: 'not_emergency', requestId: null, equipmentId: null, description: null });
       }
 
       // 2) Resolve the machine (equipment) link: prefer the work-center from the
@@ -193,7 +199,7 @@ export class MesMaintenanceRepository {
         const dupRows = Array.isArray(dupRes.rows) ? dupRes.rows : [];
         const existingId = dupRows[0]?.id ?? null;
         if (existingId != null) {
-          return Ok({ created: false, taskId: Number(existingId), outcome: 'duplicate' });
+          return Ok({ created: false, taskId: Number(existingId), outcome: 'duplicate', requestId: null, equipmentId, description: null });
         }
       }
 
@@ -224,7 +230,7 @@ export class MesMaintenanceRepository {
       const taskRows = Array.isArray(taskRes.rows) ? taskRes.rows : [];
       const taskId = taskRows[0]?.id != null ? Number(taskRows[0].id) : null;
 
-      return Ok({ created: true, taskId, outcome: 'created' });
+      return Ok({ created: true, taskId, outcome: 'created', requestId, equipmentId, description });
     } catch (e) {
       return Err(`Avariya remont vazifasini ochishda xatolik: ${String(e)}`);
     }

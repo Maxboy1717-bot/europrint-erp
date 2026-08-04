@@ -18,6 +18,7 @@ import {
   CreateKanbanForQcInspectionInput,
   CreateKanbanForMesSessionInput,
   CreateKanbanForDesignTaskInput,
+  CreateKanbanForMaintenanceInput,
   KanbanCard,
   MoveCardInput,
   UpdateCardInput,
@@ -588,6 +589,31 @@ export class KanbanCardsRepository {
       relatedId:   null,
       relatedRef:  input.designOrderId,
       logLabel:    `createKanbanForDesignTask: designOrderId=${input.designOrderId} salesOrderId=${input.salesOrderId}`,
+    });
+  }
+
+  /**
+   * MES emergency/breakdown downtime → Kanban karta (VISION 08-mes#37 completion,
+   * mirrors the owner-decision-2026-07-13 QC/MES/Design fan-out shape). Triggered by
+   * MesBreakdownEvent (record-downtime.handler.ts) via MesBreakdownKanbanHandler, right
+   * after MesMaintenanceRepository.createFromDowntime auto-opens the
+   * request+task pair. `taskId` (mes_maintenance_tasks.id) is stored as `related_id` —
+   * the more specific "vazifa" (task) entity, consistent with the card's Uzbek title.
+   */
+  async createKanbanForMaintenanceRequest(input: CreateKanbanForMaintenanceInput): Promise<Result<void>> {
+    return this.createKanbanForSource({
+      boardTypeHints: ['maintenance', 'mes'],
+      boardNameHints: ["ta'mirlash", 'texnik xizmat', 'maintenance', 'mes'],
+      title:          `\u{1F527} Avariya remont — ${input.equipmentId != null ? `mashina #${input.equipmentId}` : `so'rov #${input.requestId}`}`,
+      description:
+        `Ta'mirlash so'rovi ID: ${input.requestId}\n` +
+        `Vazifa ID: ${input.taskId}\n` +
+        `${input.equipmentId != null ? `Mashina/ish markazi ID: ${input.equipmentId}\n` : ''}` +
+        `Sabab: ${input.description}`,
+      relatedType: 'mes_maintenance_task',
+      relatedId:   String(input.taskId),
+      relatedRef:  null,
+      logLabel:    `createKanbanForMaintenanceRequest: requestId=${input.requestId} taskId=${input.taskId}`,
     });
   }
 }

@@ -17,6 +17,7 @@ import { OrderCancelledKanbanHandler } from './application/event-handlers/order-
 import { OrderStatusChangedKanbanHandler } from './application/event-handlers/order-status-changed-kanban.handler';
 import { QcFailedKanbanHandler } from './application/event-handlers/qc-failed-kanban.handler';
 import { MesCompletedKanbanHandler } from './application/event-handlers/mes-completed-kanban.handler';
+import { MesBreakdownKanbanHandler } from './application/event-handlers/mes-breakdown-kanban.handler';
 import { DesignRequestedKanbanHandler } from './application/event-handlers/design-requested-kanban.handler';
 import { DrizzleKanbanExtRepository } from './infrastructure/repositories/drizzle-kanban-ext.repo';
 import { DrizzleKanbanCoreRepository } from './infrastructure/repositories/drizzle-kanban-core.repo';
@@ -58,6 +59,7 @@ const eventHandlers   = [
   // fabricated here per Q-40.
   QcFailedKanbanHandler,
   MesCompletedKanbanHandler,
+  MesBreakdownKanbanHandler,
   DesignRequestedKanbanHandler,
 ];
 

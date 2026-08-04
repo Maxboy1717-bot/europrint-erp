@@ -188,6 +188,20 @@ export interface CreateKanbanForDesignTaskInput {
   customerId:    number;
 }
 
+/**
+ * Payload used by {@link IKanbanBoardsRepo.createKanbanForMaintenanceRequest}.
+ * `requestId`/`taskId` are real integer ids (`mes_maintenance_requests.id` /
+ * `mes_maintenance_tasks.id`) created by `MesMaintenanceRepository.createFromDowntime`
+ * when an emergency/breakdown downtime auto-opens a technician task (VISION 08-mes#37).
+ */
+export interface CreateKanbanForMaintenanceInput {
+  requestId:   number;
+  taskId:      number;
+  equipmentId: number | null;
+  reasonCode:  string;
+  description: string;
+}
+
 export const KANBAN_BOARDS_REPO = Symbol('KANBAN_BOARDS_REPO');
 
 export interface IKanbanBoardsRepo {
@@ -275,4 +289,14 @@ export interface IKanbanBoardsRepo {
    * "skip silently" semantic as {@link createKanbanForQcInspection}.
    */
   createKanbanForDesignTask(input: CreateKanbanForDesignTaskInput): Promise<Result<void>>;
+
+  /**
+   * MES emergency/breakdown downtime Kanban fan-out (VISION 08-mes#37 completion —
+   * mirrors {@link createKanbanForMesSession}'s board-lookup + card-insert shape).
+   * Targets a maintenance/MES-labelled board (`type='maintenance'`/`'mes'` or a fuzzy
+   * name match). Same "skip silently, never block the source workflow" semantic as
+   * {@link createKanbanForQcInspection} — a missing board never blocks the already
+   * persisted `mes_maintenance_requests`/`mes_maintenance_tasks` rows.
+   */
+  createKanbanForMaintenanceRequest(input: CreateKanbanForMaintenanceInput): Promise<Result<void>>;
 }
