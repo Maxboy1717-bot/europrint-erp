@@ -248,11 +248,14 @@ export class DrizzleQuotationRepo implements IQuotationRepo {
   async markPaymentPaid(id: string, paymentDate: unknown): Promise<Result<MutationRow | null>> {
     try {
       const today = new Date().toISOString().split('T')[0] as string;
+      // EP-SD-030: `amount` must be RETURNING'd — sd_quotations.service.ts reads
+      // r.data['amount'] to decide whether to post the GL leg (postCustomerPayment).
+      // Without it the amount always reads as 0 and the GL entry silently never posts.
       const r = await runQuery<MutationRow>(sql`
         UPDATE sd_payments
         SET status = 'paid', paid_date = COALESCE(${paymentDate ?? null}, paid_date, ${today}), updated_at = NOW()
         WHERE id = ${id}
-        RETURNING id, status, updated_at
+        RETURNING id, status, updated_at, amount::float8 AS amount
       `);
       return Ok(r.rows[0] ?? null);
     } catch (e) {
