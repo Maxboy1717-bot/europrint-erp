@@ -13,24 +13,25 @@
  * ga bog'liq edi) shu bilan birga olib tashlandi — hech qanday live FE chaqiruvchi
  * yo'q edi (POSDashboard.tsx allaqachon mavjud emas, pos-sync.ts hech qayerdan
  * import qilinmaydi — ikkalasi ham tasdiqlangan orfan).
+ *
+ * Discovery sweep 2026-08-03 fix (Q-46 — code that doesn't work correctly is either
+ * fixed or fully removed, never left half-broken): removed the legacy
+ * `PATCH inventory/:productId/adjust` shim — confirmed zero live FE callers (the real
+ * adjust flow is `POST /pos/stock/adjust` -> StockLedgerService.adjustStock, already
+ * wired to canonical warehouse_stock per item #53). The shim wrote directly to
+ * pos_stock_ledger from inside the controller (Qoida 6/15 violation) with a swallowed
+ * `catch(_e){}` that always returned 200 `adjusted: false` on failure — a fake-success
+ * response (Qoida 10) for an endpoint nothing called anyway.
  */
 
-import { Controller, Get, Patch, Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
-import { z } from 'zod';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { StockLedgerService } from '../application/services/stock-ledger.service';
 import { unwrapOrInternal } from '@common/http-result';
-import { rawSql } from '@shared/db';
-import { sql } from 'drizzle-orm';
-
-const AdjustInventorySchema = z.object({
-  quantity: z.union([z.string(), z.number()]).optional(),
-  reason: z.string().max(500).optional(),
-}).passthrough();
 
 @ApiTags('POS - Inventar (Stub)')
 @ApiBearerAuth()
@@ -66,30 +67,5 @@ export class PosStubController {
   @ApiOperation({ summary: 'Oylik inventar hisoboti (pos_stock_ledger oylik aggregat)' })
   async getInventoryMonthlyReport(@Query('warehouseId') warehouseId?: string) {
     return unwrapOrInternal(await this.stockLedgerService.getMonthlyReport(warehouseId));
-  }
-
-  // Legacy adjust shim — writes a pos_stock_ledger entry so the adjustment is
-  // recorded. Canonical warehouse stock lives in warehouse_stock (WMS); this
-  // endpoint is kept for backward-compatibility with older screens.
-  // (pos-v2 module removed 2026-06-22 — it was a dead orphan duplicate.)
-  @Patch('inventory/:productId/adjust')
-  @ApiOperation({ summary: 'Inventar miqdorini moslashtirish (legacy v1)' })
-  async adjustInventory(@Param('productId') productId: string, @Body() body: unknown) {
-    const dto = AdjustInventorySchema.parse(body);
-    const matId = parseInt(productId, 10);
-    const qtyChange = dto.quantity !== undefined ? Number(dto.quantity) : null;
-    const reason = dto.reason ?? null;
-    let rowsWritten = 0;
-    if (!isNaN(matId) && qtyChange !== null) {
-      try {
-        const r = await rawSql(sql`
-          INSERT INTO pos_stock_ledger (material_id, qty_change, reason, ts)
-          VALUES (${matId}, ${qtyChange}, ${reason}, NOW())
-          RETURNING id
-        `);
-        rowsWritten = (r as { rows?: unknown[] }).rows?.length ?? 0;
-      } catch (_e) { /* ledger insert failed — non-fatal, continue */ }
-    }
-    return { productId, adjusted: rowsWritten > 0, rowsWritten, ...dto };
   }
 }
