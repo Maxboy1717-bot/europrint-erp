@@ -32,7 +32,7 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { SdPaymentsService } from '../application/sd-payments.service';
 import { SdCreatePaymentSchema, SdCreatePaymentDto } from '../dto/sd.dto';
 
-const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'accountant'];
+const SD_ROLES = ['sales_manager', 'SALES', 'manager', 'director', 'super_admin', 'accountant'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

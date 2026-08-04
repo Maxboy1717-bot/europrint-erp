@@ -22,7 +22,7 @@ import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { SdContractTermsRepository } from '../infrastructure/repositories/sd-contract-terms.repo';
 
-const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'FINANCE_MANAGER', 'ACCOUNTANT'];
+const SD_ROLES = ['sales_manager', 'SALES', 'manager', 'director', 'super_admin', 'FINANCE_MANAGER', 'ACCOUNTANT'];
 
 @ApiThrottle()
 @ApiTags('Sd Contracts')
@@ -93,7 +93,7 @@ export class SdContractsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/terms')
-  @Roles('sales_manager', 'director', 'super_admin', 'FINANCE_MANAGER')
+  @Roles('sales_manager', 'manager', 'director', 'super_admin', 'FINANCE_MANAGER')
   async setTerms(@Param('id') id: string, @Body() body: unknown) {
     const numId = parseInt(id, 10);
     if (Number.isNaN(numId)) throw new BadRequestException('Invalid ID');
@@ -112,7 +112,7 @@ export class SdContractsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id/sign')
-  @Roles('sales_manager', 'director', 'super_admin')
+  @Roles('sales_manager', 'manager', 'director', 'super_admin')
   async sign(@Param('id') id: string) {
     try {
       const numId = parseInt(id, 10);

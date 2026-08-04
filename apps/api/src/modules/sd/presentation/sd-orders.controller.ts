@@ -54,7 +54,7 @@ export class SdOrdersController {
  @ApiOperation({ summary: 'Export orders as CSV' })
  @ApiResponse({ status: 200, description: 'CSV file' })
  @Get('export')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE_MANAGER)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE_MANAGER)
  async exportOrders(
   @Query('status') status?: string,
   @Res({ passthrough: true }) res?: FastifyReply,
@@ -82,7 +82,7 @@ export class SdOrdersController {
  @ApiOperation({ summary: 'List orders' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get()
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
  async listOrders(
   @Query('companyId') companyId?: number,
   @Query('status') status?: string,
@@ -113,7 +113,7 @@ export class SdOrdersController {
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async getOrder(@Param('id', ParseIntPipe) id: number) {
   this.logger.log('Fetching order');
   const query = new GetOrderByIdQuery(id);
@@ -124,7 +124,7 @@ export class SdOrdersController {
  @ApiOperation({ summary: "Get an order's line-items (Takrorlash/clone enabler)" })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get(':id/items')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async getOrderItems(@Param('id', ParseIntPipe) id: number) {
   this.logger.log('Fetching order line-items');
   const query = new GetOrderItemsQuery(id);
@@ -136,7 +136,7 @@ export class SdOrdersController {
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN)
  async createOrder(@Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
   const validated = CreateOrderDtoSchema.parse(dto);
   this.logger.log('Creating order');
@@ -163,7 +163,7 @@ export class SdOrdersController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Order has no material-bound lines' })
  @Post('atp-check')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN, Role.FINANCE)
  async atpCheck(@Body() dto: unknown) {
   const validated = AtpCheckDtoSchema.parse(dto);
   this.logger.log('Running ATP availability check');
@@ -177,7 +177,7 @@ export class SdOrdersController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/status')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   this.logger.log('Updating order status');
@@ -237,7 +237,7 @@ export class SdOrdersController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Put(':id/status')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async putOrderStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = UpdateStatusDtoSchema.parse(dto);
   const command = new UpdateOrderStatusCommand(id, validated.newStatus);
@@ -250,7 +250,7 @@ export class SdOrdersController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @ApiResponse({ status: 409, description: 'Order not in a signalable state' })
  @Post(':id/material-signal')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async signalMaterial(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
   const validated = MaterialSignalDtoSchema.parse(dto);
   this.logger.log('Signalling order awaiting raw material');
