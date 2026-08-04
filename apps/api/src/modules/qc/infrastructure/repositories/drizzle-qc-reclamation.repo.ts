@@ -17,6 +17,7 @@ import { Reclamation, ReclamationStatus } from '../../domain/aggregates/reclamat
 import { DefectSeverity } from '../../domain/aggregates/defect.aggregate';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
+import { QC_RECLAMATION_DEFAULT_SLA_DAYS } from '@common/constants/business.constants';
 
 // Re-exported for downstream repos that previously imported this constant from here.
 export { qcReclamations };
@@ -35,6 +36,8 @@ export class DrizzleQcReclamationRepo {
       (row.severity as DefectSeverity | null) ?? DefectSeverity.MAJOR,
       (row.status as ReclamationStatus | null) ?? ReclamationStatus.NEW,
       (row.reportedAt as Date | null) ?? (row.createdAt as Date),
+      row.deadlineDays != null ? Number(row.deadlineDays) : QC_RECLAMATION_DEFAULT_SLA_DAYS,
+      row.slaDueAt as Date | null,
       null, // assignedTo — not tracked on the canonical schema (no live writer today).
       row.resolution ? String(row.resolution) : null,
       row.resolvedAt as Date | null,
@@ -102,6 +105,8 @@ export class DrizzleQcReclamationRepo {
         severity: reclamation.severity,
         status: reclamation.status,
         reportedAt: reclamation.reportedDate,
+        deadlineDays: reclamation.deadlineDays,
+        slaDueAt: reclamation.slaDueAt,
         resolution: reclamation.resolution,
         resolvedAt: reclamation.resolvedAt,
         createdAt: reclamation.createdAt,
@@ -126,11 +131,12 @@ export class DrizzleQcReclamationRepo {
     }
   }
 
-  async getReclamationStats(): Promise<Result<{ byStatus: Record<string, number>; avgResolutionDays: number; openCount: number }>> {
+  async getReclamationStats(): Promise<Result<{ byStatus: Record<string, number>; avgResolutionDays: number; openCount: number; overdueCount: number }>> {
     try {
       const rows = await db.select().from(qcReclamations);
       const byStatus: Record<string, number> = {};
-      let totalResolutionDays = 0, resolvedCount = 0, openCount = 0;
+      let totalResolutionDays = 0, resolvedCount = 0, openCount = 0, overdueCount = 0;
+      const now = Date.now();
       for (const _row of rows) {
         const row = _row as Record<string, unknown>;
         byStatus[String(row.status)] = (byStatus[String(row.status)] || 0) + 1;
@@ -141,8 +147,11 @@ export class DrizzleQcReclamationRepo {
           totalResolutionDays += days;
           resolvedCount++;
         }
+        // SLA timer: open reclamation (not resolved/rejected) whose sla_due_at has passed.
+        const openStatus = row.status !== ReclamationStatus.RESOLVED && row.status !== ReclamationStatus.REJECTED;
+        if (openStatus && row.slaDueAt && (row.slaDueAt as Date).getTime() < now) overdueCount++;
       }
-      return { ok: true as const, data: { byStatus, avgResolutionDays: resolvedCount > 0 ? Math.round(totalResolutionDays / resolvedCount) : 0, openCount } };
+      return { ok: true as const, data: { byStatus, avgResolutionDays: resolvedCount > 0 ? Math.round(totalResolutionDays / resolvedCount) : 0, openCount, overdueCount } };
     } catch (error: unknown) {
       this.logger.error('Failed to get reclamation stats');
       return { ok: false as const, error: { code: 'INTERNAL' as const, message: 'Failed to get reclamation stats' } };

@@ -536,6 +536,16 @@ export const QC_FINAL_INSPECTION_REFERENCE_TYPE = 'final';
  */
 export const QC_FINAL_SIGNOFF_MIN_RAZRYAD_LEVEL = 3;
 
+/**
+ * Default `qc_reclamations.deadline_days` — matches the live DB column's own
+ * DEFAULT 5 (lib/db/src/schema/qc-schema.ts:193). Used by
+ * CreateReclamationHandler to compute `sla_due_at` (reportedDate +
+ * N business days, weekends skipped via TashkentTimeService.addBusinessDays)
+ * when the aggregate is constructed. Named here instead of re-hardcoding the
+ * literal so the business-day SLA calc and the DB default stay in one place.
+ */
+export const QC_RECLAMATION_DEFAULT_SLA_DAYS = 5;
+
 // ---------------------------------------------------------------------------
 // CRM — Lead-aging avtomatik qayta biriktirish (VISION-3340 #33)
 // ---------------------------------------------------------------------------

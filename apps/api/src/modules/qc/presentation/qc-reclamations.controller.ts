@@ -74,7 +74,8 @@ export class QcReclamationsController {
         COUNT(*) FILTER (WHERE status = 'rejected') AS closed_count,
         COUNT(*) AS total,
         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') AS last_30_days,
-        ROUND(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/86400) FILTER (WHERE resolved_at IS NOT NULL), 1) AS avg_resolution_days
+        ROUND(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/86400) FILTER (WHERE resolved_at IS NOT NULL), 1) AS avg_resolution_days,
+        COUNT(*) FILTER (WHERE status NOT IN ('resolved', 'rejected') AND sla_due_at IS NOT NULL AND sla_due_at < NOW()) AS overdue_count
       FROM qc_reclamations
     `);
     return result.rows[0] ?? {};

@@ -8,6 +8,7 @@ const _time = new TashkentTimeService();
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Result, Ok } from '@common/result';
+import { QC_RECLAMATION_DEFAULT_SLA_DAYS } from '@common/constants/business.constants';
 import { CreateReclamationCommand } from './create-reclamation.command';
 import { Reclamation, ReclamationStatus } from '../../domain/aggregates/reclamation.aggregate';
 import { IQcDefectRepository, QC_DEFECT_REPO } from '../../infrastructure/repositories/drizzle-defect.repo';
@@ -24,6 +25,9 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
   async execute(command: CreateReclamationCommand): Promise<Result<Reclamation>> {
       // id=0 is a placeholder — the repository assigns the real serial id
       // (qc_reclamations_id_seq) and returns the persisted entity below.
+      const reportedDate = _time.now();
+      const deadlineDays = QC_RECLAMATION_DEFAULT_SLA_DAYS;
+      const slaDueAt = Reclamation.computeSlaDueAt(reportedDate, deadlineDays);
       const reclamation = new Reclamation(
         0,
         command.customerName,
@@ -32,12 +36,14 @@ export class CreateReclamationHandler implements ICommandHandler<CreateReclamati
         command.description,
         command.severity,
         ReclamationStatus.NEW,
-        _time.now(),
+        reportedDate,
+        deadlineDays,
+        slaDueAt,
         null,
         null,
         null,
-        _time.now(),
-        _time.now(),
+        reportedDate,
+        reportedDate,
         command.createdBy,
       );
 
