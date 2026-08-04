@@ -56,6 +56,8 @@ import { PaymentReceivedListener } from './infrastructure/event-handlers/payment
 import { AdvanceApprovedFanoutListener } from './infrastructure/event-handlers/advance-approved-fanout.listener';
 import { PpCancelledSdListener } from './infrastructure/event-handlers/pp-cancelled-sd.listener';
 import { QcFailedSdListener } from './infrastructure/event-handlers/qc-failed-sd.listener';
+import { PosExternalOutSdListener } from './infrastructure/event-handlers/pos-external-out-sd.listener';
+import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { QcCustomerFaultSdListener } from './infrastructure/event-handlers/qc-customer-fault-sd.listener';
 import { AutoInvoiceListener } from './infrastructure/event-handlers/auto-invoice.listener';
 import { loggerProvider } from '../shared/infrastructure/logger.provider';
@@ -143,6 +145,10 @@ const eventListeners = [
   AutoInvoiceListener, // VISION-3340 #50: billable status transition -> auto draft invoice
   // Owner decision 2026-07-13 (chat): QC defect "customer fault" -> auto-notify sales manager.
   QcCustomerFaultSdListener,
+  // Discovery sweep 2026-08-03 ("POS chiqim (EXTERNAL_OUT) harakati SD/logistika modulga
+  // event yubormaydi"): POS-initiated external stock-out -> notify the customer's account
+  // manager (or all active sales_manager as fallback).
+  PosExternalOutSdListener,
 ];
 
 const repositories = [
@@ -153,7 +159,7 @@ const repositories = [
 ];
 
 @Module({
-  imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule],
+  imports: [CqrsModule, EventEmitterModule.forRoot(), FinanceModule, NotificationsModule],
   controllers: [
     SdLegacyOrderController, // EP-SD-154
     SdOrderSyncController,

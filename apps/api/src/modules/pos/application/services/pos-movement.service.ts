@@ -18,6 +18,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventBus } from '@nestjs/cqrs';
 
 import { PosMovementCreatedEvent } from '../../domain/events/pos-movement-created.event';
+import { PosExternalOutCreatedEvent } from '../../domain/events/pos-external-out-created.event';
 import { LifecycleBlockService }   from './lifecycle-block.service';
 import { StockReservationService } from './stock-reservation.service';
 import { EmployeeLedgerService }   from './employee-ledger.service';
@@ -439,6 +440,20 @@ export class PosMovementService {
       // measure while migration is in flight.
       this.eventEmitter.emit('pos.movement.data.created', { movementId: movement.id, movementNumber, typeCode: movType.code, createdById, isUnplanned: dto.isUnplanned ?? false });
       this.eventBus.publish(new PosMovementCreatedEvent({ movementId: movement.id, movementNumber, typeCode: movType.code, createdById }));
+
+      // Discovery sweep 2026-08-03 fix ("POS chiqim (EXTERNAL_OUT) harakati SD/logistika
+      // modulga event yubormaydi"): PosMovementCreatedEvent above is generic and had zero
+      // cross-module consumers. EXTERNAL_OUT is the one type SD needs to know about (stock
+      // physically left for a customer) — publish a dedicated event so SD can react (see
+      // sd/infrastructure/event-handlers/pos-external-out-sd.listener.ts).
+      if (movType.code === 'EXTERNAL_OUT') {
+        this.eventBus.publish(new PosExternalOutCreatedEvent({
+          movementId: movement.id, movementNumber,
+          customerId: dto.customerId ?? null,
+          fromWarehouseId: dto.fromWarehouseId ?? null,
+          createdById,
+        }));
+      }
 
       if (dto.submit) {
         const statusR = await this.repo.updateMovementStatus(movement.id, 'pending');
