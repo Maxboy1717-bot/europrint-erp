@@ -4515,4 +4515,25 @@ $fn$ LANGUAGE plpgsql` },
       FROM vendors`,
   },
 
+  // 2026-08-04 P0 fix (HR-ORG discovery sweep): onboarding_tasks.org_function_id FK re-point
+  // org_functions -> org_departments (canonical karta table, PHASE-00/MASSIV-100). Same
+  // ID-space-mismatch bug the PHASE00 employee_cards/card_folders/org_node_portret entries
+  // above already fixed for their tables — this table was missed. `findTemplateTasksForCard`/
+  // `findRequiredDocumentTasksByCard` (drizzle-hr-onboarding.repo.ts) always compare
+  // org_function_id against a `cardId` that is an org_departments.id (every caller —
+  // OnboardingCardAssignedHandler, OnboardingDocumentGateService — documents this), but the
+  // live FK constrained the column to org_functions(id) — a disjoint id-range (org_functions
+  // 1..97 vs org_departments 19..166) that is now 0 rows post the 2026-07-11 full-company
+  // reset. Result: any future INSERT binding a task-template to a real card would be rejected
+  // by the FK (23503), and the template would never be findable by cardId. onboarding_tasks
+  // itself is 0 rows live (confirmed 2026-08-04) — pure structural FK re-point, no data to
+  // migrate/backfill. GUARDED+IDEMPOTENT (same shape as the PHASE00 entries above): only acts
+  // while the constraint still points at org_functions.
+  { name: 'onboarding_tasks.org_function_id FK -> org_departments', sql: `DO $$ BEGIN
+    IF (SELECT confrelid::regclass::text FROM pg_constraint WHERE conname='fk_onboarding_tasks_org_fn') = 'org_functions' THEN
+      ALTER TABLE onboarding_tasks DROP CONSTRAINT IF EXISTS fk_onboarding_tasks_org_fn;
+      ALTER TABLE onboarding_tasks ADD CONSTRAINT fk_onboarding_tasks_org_fn FOREIGN KEY (org_function_id) REFERENCES org_departments(id) ON DELETE SET NULL;
+    END IF;
+  END $$` },
+
 ];

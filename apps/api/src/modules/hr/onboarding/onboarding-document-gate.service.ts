@@ -8,11 +8,11 @@
  *   card-level verdict Payroll can gate on (`computeGatedMonthlySalary`).
  *
  * Fabrication ban (Q-40): when NO required document task is bound to the card
- * (`onboarding_tasks.org_function_id` currently 0 live rows — see repo doc-comment, this FK
- * still targets the STALE pre-migration `org_functions` table, not the canonical
- * `org_departments`) the verdict is `allComplete=true` with an empty incomplete list —
- * "no document bound = no block". This is the correct, honest open state, NOT a fabricated
- * pass. The moment the owner reconciles the card-link column and binds required documents,
+ * (`onboarding_tasks.org_function_id` — FK fixed 2026-08-04 to target the canonical
+ * `org_departments(id)`, see migrations-drift.ts; currently 0 live rows simply because no
+ * template has been bound yet, not an id-space mismatch) the verdict is `allComplete=true`
+ * with an empty incomplete list — "no document bound = no block". This is the correct, honest
+ * open state, NOT a fabricated pass. The moment the owner binds required documents to a card,
  * the gate starts blocking until they are genuinely completed.
  *
  * FAIL-CLOSED: a required document exists but the employees→users bridge is missing

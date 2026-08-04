@@ -121,10 +121,11 @@ export class OnboardingCardAssignedHandler {
   /**
    * Materialize the card's `onboarding_tasks` TEMPLATE into per-employee
    * `user_onboarding_progress` rows (idempotent — `ensureTaskProgress` no-ops on repeat).
-   * Q-40: a card with no bound tasks (owner-data gap — `onboarding_tasks.org_function_id`
-   * currently targets the STALE `org_functions` table, 0 rows live, see repo doc-comment) is a
-   * real no-op, NOT a fabricated checklist. Starts working the moment the owner reconciles the
-   * card-link column — no further code change needed.
+   * Q-40: a card with no bound tasks is a real no-op, NOT a fabricated checklist —
+   * `onboarding_tasks.org_function_id` FK was fixed 2026-08-04 to target the canonical
+   * `org_departments(id)` (was the STALE `org_functions` table, see migrations-drift.ts); the
+   * remaining no-op case is simply "owner hasn't bound a task template to this card yet"
+   * (real owner-data gap, no further code change needed).
    */
   private async materializeTasks(cardId: number, userId: number): Promise<void> {
     const tasksR = await this.repo.findTemplateTasksForCard(cardId);

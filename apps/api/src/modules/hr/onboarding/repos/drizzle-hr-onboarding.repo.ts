@@ -197,13 +197,19 @@ export class DrizzleHrOnboardingRepository implements IHrOnboardingRepository {
     } catch (e: unknown) { return Err((e as Error)?.message || 'Onboardinglar topilmadi'); }
   }
 
-  // ─── Onboarding-task template materialization (2026-07-13) ───────────────
+  // ─── Onboarding-task template materialization (2026-07-13, FK fixed 2026-08-04) ──────────
   // Raw SQL throughout this section (Rule 4): `onboarding_tasks`/`user_onboarding_progress`
   // are NOT re-exported through `@europrint/schemas` (the compat barrel this file otherwise
   // uses) and the `@workspace/db` Drizzle def for `user_onboarding_progress.task_id` is typed
   // `varchar` while the LIVE column is `integer` (confirmed via information_schema) — another
   // pre-existing schema drift. Raw parametrized SQL sidesteps both issues cleanly (same
   // precedent as findEmployeesIdByUserId/findUserIdByEmployeeId above).
+  //
+  // 2026-08-04 P0 fix: `onboarding_tasks.org_function_id` FK previously targeted the retired
+  // `org_functions(id)` id-space (disjoint from `org_departments`, the canonical karta table —
+  // see migrations-drift.ts "onboarding_tasks.org_function_id FK -> org_departments"). Every
+  // caller of the two methods below already passes an `org_departments.id` as `cardId` — the
+  // FK now matches that, so a task template bound to a real card is actually findable/insertable.
 
   async findTemplateTasksForCard(cardId: number) {
     try {

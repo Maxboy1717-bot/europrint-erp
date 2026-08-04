@@ -53,18 +53,21 @@ export interface IHrOnboardingRepository {
 
   /**
    * All active (non-deleted) onboarding_tasks template rows bound to a card, for materializing
-   * a new hire's per-task tracking rows. NOTE (owner-data gap, Q-40 — NOT fabricated/worked
-   * around): `onboarding_tasks.org_function_id` FKs `org_functions(id)`, the STALE pre-migration
-   * card table (0 rows live) — NOT `org_departments` (the current canonical karta, 3 rows).
-   * This method queries the column exactly as it exists; it will honestly return [] until the
-   * owner either repoints this FK to org_departments or adds a dedicated card-link column.
+   * a new hire's per-task tracking rows. `cardId` is an `org_departments.id` (the canonical
+   * karta table). `onboarding_tasks.org_function_id` FK was fixed 2026-08-04 (P0 discovery
+   * sweep) to reference `org_departments(id)` instead of the retired `org_functions(id)` — see
+   * migrations-drift.ts "onboarding_tasks.org_function_id FK -> org_departments" and the
+   * doc-comment in drizzle-hr-onboarding.repo.ts. Still honestly returns [] when the owner
+   * hasn't bound any task templates to the card (no fabrication, Q-40) — that is real absence
+   * of data, not the FK/id-space bug.
    */
   findTemplateTasksForCard(cardId: number): Promise<Result<OnboardingDocTaskRow[]>>;
   /** Idempotent: creates a `user_onboarding_progress` row (completed=false) unless one already exists. */
   ensureTaskProgress(userId: number, taskId: number): Promise<Result<{ created: boolean }>>;
   /**
    * Required ('document' type, is_required=true) onboarding_tasks bound to a card — the set the
-   * Payroll document-complete gate must verify. Same org_function_id caveat as above.
+   * Payroll document-complete gate must verify. Same `cardId` = `org_departments.id` semantics
+   * as findTemplateTasksForCard above (FK fixed 2026-08-04).
    */
   findRequiredDocumentTasksByCard(cardId: number): Promise<Result<OnboardingDocTaskRow[]>>;
   /** Which of the given task ids are marked `completed=true` in user_onboarding_progress for this user. */
