@@ -167,7 +167,9 @@ export class PosRequestService {
       .where(eq(posMaterialRequests.id, dto.requestId));
 
     if (!request) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: dto.requestId } }));
-    if (request.status !== 'DRAFT') {
+    // createRequest avtomatik DRAFT→SUBMITTED ga o'tkazadi (L130-134) — shuning uchun
+    // tasdiqlash uchun kutilayotgan haqiqiy holat SUBMITTED, DRAFT emas.
+    if (request.status !== 'SUBMITTED') {
       throw new BadRequestException(await this.i18n.t('errors.requestNotPending', { args: { status: request.status } }));
     }
 
@@ -197,7 +199,7 @@ export class PosRequestService {
       action:     'pos.request.approved',
       entityType: 'pos_material_requests',
       entityId:   dto.requestId,
-      oldValue:   { status: 'DRAFT' },
+      oldValue:   { status: 'SUBMITTED' },
       newValue:   { status: 'APPROVED' },
       ipAddress,
     });
@@ -224,7 +226,10 @@ export class PosRequestService {
       .where(eq(posMaterialRequests.id, dto.requestId));
 
     if (!request) throw new NotFoundException(await this.i18n.t('errors.requestNotFound', { args: { id: dto.requestId } }));
-    if (!['DRAFT', 'APPROVED'].includes(request.status)) {
+    // createRequest avtomatik DRAFT→SUBMITTED ga o'tkazadi — DRAFT holati DB'da hech qachon
+    // saqlanmaydi. Rad etish SUBMITTED (hali tasdiqlanmagan) yoki APPROVED (tasdiqlangan,
+    // lekin hali berilmagan) holatida ruxsat etiladi.
+    if (!['SUBMITTED', 'APPROVED'].includes(request.status)) {
       throw new BadRequestException(await this.i18n.t('errors.requestCannotBeRejected', { args: { status: request.status } }));
     }
 
