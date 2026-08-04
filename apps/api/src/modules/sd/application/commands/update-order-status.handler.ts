@@ -8,6 +8,7 @@ import { Result, Ok, Err, AppErr } from '@common/result';
 import { Inject, Logger } from '@nestjs/common';
 import { ISalesOrderRepository, SALES_ORDER_REPO } from '../../domain/repositories/i-sales-order.repo';
 import { OrderStatusChangedEvent } from '../../domain/events/order-status-changed.event';
+import { OrderCancelledEvent } from '../../domain/events/order-cancelled.event';
 import { AdvanceCheckFailedEvent } from '../../domain/events/advance-check-failed.event';
 import { OutboxRepository } from '../../../shared/outbox/outbox.repository';
 import { ERP_EVENTS } from '@common/constants/erp-events.constants';
@@ -108,6 +109,15 @@ export class UpdateOrderStatusHandler implements ICommandHandler<UpdateOrderStat
     // already references the sales order).
     const statusEvent = new OrderStatusChangedEvent(order.getId(), previousStatus, command.newStatus);
     this.eventBus.publish(statusEvent);
+
+    // Kanban dead-listener fix (P0): OrderCancelledKanbanHandler is @EventsHandler(OrderCancelledEvent)
+    // and moves/soft-deletes the order's linked kanban card(s), but until now nothing in the codebase
+    // ever constructed OrderCancelledEvent — cancellation only ever fired OrderStatusChangedEvent, so a
+    // cancelled order's card silently stayed active forever. Publish it here (in-process, same
+    // best-effort semantics as the kanban handler itself — never blocks/undoes the status change).
+    if (command.newStatus === 'cancelled') {
+      this.eventBus.publish(new OrderCancelledEvent(order.getId(), order.getOrderNumber()));
+    }
 
     this.logger.log({
       msg: 'Order status updated',
