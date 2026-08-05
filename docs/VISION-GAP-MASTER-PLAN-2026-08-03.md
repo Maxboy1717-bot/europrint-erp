@@ -139,6 +139,17 @@ bo'lib chiqdi — audit da'vosi ko'r-ko'rona ishonilmadi, jonli kod bilan tasdiq
 o'tildi. Qolgan P2 (EPPageHeader/EPTable/GlobalInboxBadge inline-style) — dizayn-uslub
 darajasida, funksional bo'shliq emas, alohida "dizayn-tozalash to'lqini"ga qoldiriladi.
 
+**KANBAN moduli tekshirildi** (#158-169, GanttView #168 ilgari tuzatilgan): 2026-07-11 audit
+hujjatidagi P1-FIX tavsiyalarining aksariyati (window.confirm→ConfirmDialog, placeholder-PDF
+green-lie, OrderCancelledKanbanHandler dead-listener, `/api/kanban/resource-allocation`
+FE→BE drift, WIP-guard fail-open, `drizzle-kanban-ext.repo.ts` 964-qator, `kanban-ext.controller.ts`
+barrel-chalkashlik) tekshirilganda ALLAQACHON boshqa to'lqinlarda tuzatilgan bo'lib chiqdi
+(Q-29 — jonli kod bilan tasdiqlandi, audit da'vosiga ishonilmadi). Faqat bitta haqiqiy qoldiq
+topildi va tuzatildi: o'lik `notImplemented` import (`kanban-reports.controller.ts`, `1ea4fb14`).
+Qolgan barcha band SCHEMA/DATA/DECISION — egasi-darvozasida (texnologik-bosqich seed, karta
+maydonlari #99-106, karta-markazli topshiruv #108/#132/#137, ShVB shaxsiy-dastur, norma-vaqt,
+Telegram CAPEX) — `docs/audit/KANBAN-COMPLETE-FRESH-ANALYSIS-2026-07-11.md` §8 da to'liq ro'yxat.
+
 ⚠️ **2026-08-05 davomida egasi aniq buyruq berdi: "workflow qilmasdan bajarish kerak"** — Workflow
 tool tarmoq xatolari bilan qayta-qayta qulab tushgani sabab, shu paytdan boshlab barcha keyingi
 tekshiruv+tuzatish ISHNI TO'G'RIDAN-TO'G'RI (Read/Grep/Edit/Bash, subagent/Workflow'siz) davom
@@ -149,4 +160,4 @@ ettirish kerak.
 - #85 (IoT camera-alerts producer + dead-cron tozalash), #118✅/#122✅/#123✅(bajarildi)
 - #126 (chat @mention), #164 (kanban karta-markazli tayinlash)
 - Fon-rejimda avval ishga tushirilgan (Workflow orqali, endi faqat natija sifatida o'qiladi) batchlar hali ham natija qaytarishi mumkin: Director #101-117 qolgan qismi, IoT #83-91, Chat #125-143 qolgan qismi, Kanban #158-169 qolgan qismi, SD #189-195 qolgan qismi, Marketing #198-207 qolgan qismi, Finance #209-215, AI-Aisha #171-185 — bular kelganda o'qib, to'g'ridan-to'g'ri (Workflow'siz) amalga oshiriladi. **CC #144-156 YOPILDI** (yuqorida).
-- **Navbatdagi modul: Kanban (#158-#167, #169)** — to'g'ridan-to'g'ri Read/Grep/Edit bilan davom etiladi.
+- **Kanban #158-169 YOPILDI** (yuqorida). **Navbatdagi modul: Chat (#127-#143 qolgan qismi)** — to'g'ridan-to'g'ri Read/Grep/Edit bilan davom etiladi.
