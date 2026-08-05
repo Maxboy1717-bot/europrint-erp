@@ -12,11 +12,14 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { typedExecute } from '@shared/db/typed-execute';
 import { safeCall, Result } from '@common/result';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 import type {
   IDiaryRepo,
   IDiaryEntry,
   DiarySaveInput,
 } from '../../domain/repositories/i-diary.repo';
+
+type CarryItem = { issue: string; from_date: string; days: number; chronic: boolean };
 
 /** YYYY-MM-DD sanadan bir kun oldingi sanani string sifatida qaytaradi (UTC). */
 function previousDay(dateStr: string): string {
@@ -147,10 +150,12 @@ export class DiaryRepository implements IDiaryRepo {
   }
 
   /**
-   * Kechagi (draft, ya'ni submit qilinmagan = hal qilinmagan) main_issue ni
-   * bugungi yozuvning carry_over_issues JSONB massiviga qo'shadi (EP-DIR-010).
-   * Idempotent: agar shu from_date allaqachon carry-over qilingan bo'lsa,
-   * qayta qo'shilmaydi.
+   * Kechagi (draft, ya'ni submit qilinmagan = hal qilinmagan) main_issue'ni
+   * bugungi yozuvning carry_over_issues JSONB massiviga qo'shadi (EP-DIR-010),
+   * har bir muammo uchun ketma-ket kun sanog'ini (days) yuritadi va chegaradan
+   * (director.diary_chronic_threshold_days, default=3) oshgan muammolarni
+   * "surunkali" deb belgilab, direktor + org_functions.manager_id zanjiridagi
+   * yuqori kartaga bir martalik eskalatsiya-bildirishnoma yuboradi (item #116).
    */
   async carryOverIssues(authorCardId: number, targetDate: string): Promise<Result<void>> {
     return safeCall(async () => {
@@ -162,18 +167,79 @@ export class DiaryRepository implements IDiaryRepo {
           AND date = ${yDate}::date
           AND status = 'draft'
       `);
-      const prevIssue = prev[0]?.main_issue;
-      if (!prevIssue) return;
+      const prevEntry = prev[0];
+      if (!prevEntry) return;
 
-      const payload = JSON.stringify([{ issue: prevIssue, from_date: yDate }]);
-      await typedExecute<unknown>(sql`
+      const threshold = await getBusinessSettingNumber('director.diary_chronic_threshold_days', 3);
+      const priorItems: CarryItem[] = Array.isArray(prevEntry.carry_over_issues)
+        ? (prevEntry.carry_over_issues as CarryItem[])
+        : [];
+
+      const items: CarryItem[] = [];
+      if (prevEntry.main_issue) {
+        items.push({ issue: prevEntry.main_issue, from_date: yDate, days: 1, chronic: threshold <= 1 });
+      }
+      for (const it of priorItems) {
+        if (!it?.issue || !it?.from_date) continue;
+        const days = Number(it.days ?? 1) + 1;
+        items.push({ issue: it.issue, from_date: it.from_date, days, chronic: days >= threshold });
+      }
+      if (items.length === 0) return;
+
+      const maxDays = Math.max(...items.map((i) => i.days));
+      const payload = JSON.stringify(items);
+
+      const updated = await typedExecute<{ id: number }>(sql`
         UPDATE diary_entries
-        SET carry_over_issues = carry_over_issues || ${payload}::jsonb,
-            updated_at = NOW()
-        WHERE author_card_id = ${authorCardId}
-          AND date = ${targetDate}::date
-          AND NOT (carry_over_issues @> ${JSON.stringify([{ from_date: yDate }])}::jsonb)
+        SET carry_over_issues = ${payload}::jsonb, dir_chronic_days = ${maxDays}, updated_at = NOW()
+        WHERE author_card_id = ${authorCardId} AND date = ${targetDate}::date
+        RETURNING id
       `);
+      const entryId = updated[0]?.id;
+      if (entryId && maxDays >= threshold) {
+        await this.notifyChronicEscalation(entryId, authorCardId, items.filter((i) => i.chronic), maxDays);
+      }
     }, 'DB_ERROR');
+  }
+
+  /**
+   * Item #116: bitta diary-yozuv uchun bir marta eskalatsiya (notifications'da
+   * reference_type='diary_chronic' + reference_id=entryId bo'yicha dedup) —
+   * shu kunlik kunlik qayta ochilsa ham qayta yuborilmaydi.
+   */
+  private async notifyChronicEscalation(
+    entryId: number, authorCardId: number, chronicItems: CarryItem[], days: number,
+  ): Promise<void> {
+    const already = await typedExecute<{ id: number }>(sql`
+      SELECT id FROM notifications WHERE reference_type = 'diary_chronic' AND reference_id = ${entryId} LIMIT 1
+    `);
+    if (already[0]) return;
+
+    const issueText = (chronicItems[0]?.issue ?? '').slice(0, 200);
+    const title = 'Surunkali muammo';
+    const body = `Kartaning kundaligida "${issueText}" ${days} kundan beri hal qilinmadi.`;
+
+    const directors = await typedExecute<{ id: number }>(sql`
+      SELECT id FROM users WHERE role IN ('director', 'super_admin') AND is_active = true
+    `);
+    const manager = await typedExecute<{ user_id: number | null }>(sql`
+      SELECT COALESCE(u.id, e_u.id) AS user_id
+      FROM org_functions f
+      LEFT JOIN users u ON u.org_function_id = f.manager_id
+      LEFT JOIN employees emp ON emp.org_function_id = f.manager_id AND emp.deleted_at IS NULL
+      LEFT JOIN users e_u ON e_u.id = emp.user_id
+      WHERE f.id = ${authorCardId}
+      LIMIT 1
+    `);
+
+    const recipients = new Set<number>(directors.map((d) => d.id));
+    if (manager[0]?.user_id) recipients.add(manager[0].user_id);
+
+    for (const userId of recipients) {
+      await typedExecute<unknown>(sql`
+        INSERT INTO notifications (user_id, type, title, body, is_read, reference_id, reference_type, priority, created_at)
+        VALUES (${userId}, 'diary_chronic', ${title}, ${body}, false, ${entryId}, 'diary_chronic', 'urgent', NOW())
+      `);
+    }
   }
 }

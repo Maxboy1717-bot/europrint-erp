@@ -17,6 +17,13 @@ import { BookOpen, Send, Save } from "lucide-react";
 import { EPStatusPill, EPPageHeader } from "@/components/ep";
 import { useTranslation } from "@/lib/i18n";
 
+interface CarryOverIssue {
+  issue: string;
+  from_date: string;
+  days: number;
+  chronic: boolean;
+}
+
 interface DiaryEntry {
   id: number;
   date: string;
@@ -25,6 +32,8 @@ interface DiaryEntry {
   solution?: string | null;
   tomorrow_plan?: string | null;
   main_kpi_value?: number | null;
+  dir_chronic_days?: number;
+  carry_over_issues?: CarryOverIssue[];
 }
 
 export default function DirectorDiaryPage() {
@@ -98,7 +107,39 @@ export default function DirectorDiaryPage() {
           <Skeleton className="h-32 w-full" />
         </div>
       ) : (
-        <Card>
+        <>
+          {Array.isArray(data?.carry_over_issues) && data.carry_over_issues.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {t("halQilinmaganMuammolar", "Hal qilinmagan muammolar")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {data.carry_over_issues.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start justify-between gap-3 rounded-lg border p-3"
+                    data-testid={`carry-over-issue-${idx}`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm">{item.issue}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t("boshlanganSana", "Boshlangan")}: {item.from_date}
+                      </p>
+                    </div>
+                    <EPStatusPill tone={item.chronic ? "danger" : "warning"}>
+                      {item.chronic
+                        ? t("surunkali", "Surunkali") + ` (${item.days} ${t("kun", "kun")})`
+                        : t("davomEtmoqda", "Davom etmoqda") + ` (${item.days} ${t("kun", "kun")})`}
+                    </EPStatusPill>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
           <CardHeader>
             <CardTitle className="text-base">
               {t("bugungiHisobot", "Bugungi hisobot")}
@@ -169,7 +210,8 @@ export default function DirectorDiaryPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+          </Card>
+        </>
       )}
     </div>
   );

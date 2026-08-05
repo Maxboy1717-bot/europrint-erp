@@ -2135,4 +2135,20 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'aiInsights ro''yxatida bir vaqtda korsatiladigan eng-yomon kartalar maksimal soni.', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Item #116: diary carry-over only ever looked 1 day back, so an unresolved
+  // problem silently stopped escalating unless the user retyped the exact same
+  // text. Vision (05-director.md #7) already specifies the default threshold (3
+  // days) and escalation recipients (director + org_functions.manager_id chain).
+  // Human-readable mirror: apps/api/src/shared/db/migrations/dir-diary-chronic-escalation-2026-08-05.sql.
+  {
+    name: 'diary_entries.dir_chronic_days column (2026-08-05)',
+    sql: `ALTER TABLE IF EXISTS diary_entries ADD COLUMN IF NOT EXISTS dir_chronic_days INTEGER NOT NULL DEFAULT 0`,
+  },
+  {
+    name: 'business_settings director.diary_chronic_threshold_days seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.diary_chronic_threshold_days', 'Surunkali muammo eskalatsiya chegarasi (kun)', 'days', 3, 'kun', 1, 30,
+        'diary_entries.main_issue shu kunlar soni ketma-ket carry-over qilinsa "surunkali muammo" deb belgilanadi va direktor + author_card_id ning org_functions.manager_id zanjiridagi yuqori kartaga eskalatsiya-bildirishnoma yuboriladi. Default=3 - vision-1000-answers/05-director.md#7.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];

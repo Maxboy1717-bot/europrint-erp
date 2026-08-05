@@ -19,7 +19,9 @@ export interface IDiaryEntry {
   main_issue?: string | null;
   solution?: string | null;
   tomorrow_plan?: string | null;
+  /** Har biri: { issue: string; from_date: string; days: number; chronic: boolean } */
   carry_over_issues: unknown[];
+  dir_chronic_days?: number;
   status: 'draft' | 'submitted';
   created_at: Date;
   updated_at: Date;
