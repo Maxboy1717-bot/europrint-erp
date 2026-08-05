@@ -112,12 +112,18 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 - #105 — Director ZNO/ZVS + rasporyazhenie SLA eskalatsiya (1-bosqichli edi, endi 3-bosqichli) — `35b727f7`
 - #85 — IoT camera-AI PPE/xavfsizlik topilmalari camera_alerts UI'ga yetib bormasdi — `0b034f84`
 - #106 — Director karta-AI agregatga "vazifa yubor" (Kanban) tugmasi qo'shildi — `91eaaa5b`
+- #153 — CC: o'lik GET /api/coordination/baskets so'rovi o'chirildi — `33d140a1`
+- #148 — CC: approval eskalatsiya holat belgilaydi, lekin hech kimga xabar bermas edi — `d6da370f`
 
-**Jami bu sessiyada: 16 ta real commit** (xavfsizlik ×1, yangi funksiya ×5, xato tuzatish ×8, o'lik kod tozalash ×2).
+**Jami bu sessiyada: 18 ta real commit** (xavfsizlik ×1, yangi funksiya ×5, xato tuzatish ×9, o'lik kod tozalash ×3).
 
 **DIRECTOR moduli yopildi** (#100-#117, 18 band): #100/#101/#104/#105/#106/#113/#116 tuzatildi;
-#108/#107/#114 egasi-data; #102/#103/#109-#112/#115/#117 hali fon-workflow natijasi/tekshiruv kutmoqda
-(keyingi navbat: shu qolganlarni yakunlab, CHAT/CC/KANBAN/IOT modullariga o'tish).
+#107/#108/#114 egasi-data; #102/#103/#109-#112/#115/#117 hali tekshirilmagan.
+
+**CC moduli boshlandi**: #148/#153 tuzatildi; #144/#145/#146/#149/#155/#156 egasi-data (ilgari
+belgilangan); #147 endi egasi-data deb qayta tasniflandi (createDraft senderUserId NOT NULL,
+lekin cc_document_templates'da "recurring sender/recipient" konsepti umuman yo'q — kim nomidan
+avto-hujjat yaratilishi kerakligi aniq emas, egasi qarori kerak). Qolgan: #150-#152, #154.
 
 ⚠️ **2026-08-05 davomida egasi aniq buyruq berdi: "workflow qilmasdan bajarish kerak"** — Workflow
 tool tarmoq xatolari bilan qayta-qayta qulab tushgani sabab, shu paytdan boshlab barcha keyingi
