@@ -29,7 +29,10 @@ interface DbStats {
   tables?: { table_name: string; live_rows?: number | string }[];
 }
 interface Integration { key?: string; name?: string; type?: string; status?: string }
-interface CronJob { name?: string; schedule?: string; module?: string }
+interface CronJob {
+  name?: string; schedule?: string; module?: string;
+  lastRanAt?: string | null; lastResult?: "success" | "failure" | "never"; lastError?: string | null;
+}
 
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation("common");
@@ -175,11 +178,20 @@ export default function SystemMonitor() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {cronJobs?.map((job, i) => (
                 <div key={`k-${i}`} className="flex items-start gap-2 p-2 rounded-md border border-border/50" data-testid={`card-cron-${i}`}>
-                  <CheckCircle className="w-3.5 h-3.5 text-[var(--ep-green)] mt-0.5 shrink-0" />
+                  {job.lastResult === "failure"
+                    ? <XCircle className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
+                    : job.lastResult === "success"
+                    ? <CheckCircle className="w-3.5 h-3.5 text-[var(--ep-green)] mt-0.5 shrink-0" />
+                    : <AlertTriangle className="w-3.5 h-3.5 text-[var(--ep-yellow)] mt-0.5 shrink-0" />}
                   <div className="min-w-0">
                     <div className="text-xs font-medium truncate">{job.name}</div>
                     <div className="text-xs text-muted-foreground">{job.schedule}</div>
-                    <Badge variant="outline" className="text-xs mt-0.5">{job.module}</Badge>
+                    <div className="text-xs text-muted-foreground">
+                      {job.lastRanAt ? new Date(job.lastRanAt).toLocaleString() : t("hechQachonIshlamagan", "Hech qachon ishlamagan")}
+                    </div>
+                    {job.lastResult === "failure" && job.lastError && (
+                      <div className="text-xs text-destructive truncate" title={job.lastError}>{job.lastError}</div>
+                    )}
                   </div>
                 </div>
               ))}
