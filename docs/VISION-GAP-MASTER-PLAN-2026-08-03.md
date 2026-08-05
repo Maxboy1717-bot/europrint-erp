@@ -76,3 +76,27 @@ To'liq ro'yxat va tafsilot — TaskList'da `[EGASI-DATA]` prefiksi bilan belgila
   Q-35 APPROVED marker bilan; haqiqiy yangi biznes qaror — egasiga qoldiriladi.
 - Commit format: `fix(<modul>): <qisqa tavsif>` — har band alohida commit.
 - Subagent commit qilmaydi — bosh sessiya tekshirib, commit+push qiladi (Q-31).
+
+## ⚠️ TaskList holati (2026-08-05)
+
+Sessiya davomida jarayon qayta ishga tushgan (crash) va shu bilan birga
+**TaskList tool holati yo'qolgan** — `TaskList()` endi bo'sh qaytaradi, garchi
+215 band ilgari o'sha tool orqali kuzatilgan bo'lsa ham. "Yagona haqiqat manbai
+TaskList" yozuvi (yuqorida) shuning uchun endi TO'G'RI EMAS bu sessiya uchun —
+**git log (`chore/schema-convergence`) + shu fayl** haqiqiy holat manbai.
+TaskList'ni 215 ta band bilan qayta qurish o'rniga, git commit tarixi orqali
+kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ...").
+
+### Bu sessiyada tugallangan (commit+push, `chore/schema-convergence`):
+- #119 — Lavozim yo'riqnoma fayl yuklash (2-bosqichli upload + positionName JOIN) — `dac0ccba`
+- #118 — Admin Queue Monitor real BullMQ (edi 100% soxta) — `102c1efc`
+- #122 — TenantFilterGuard global ro'yxatga olindi — `dc749dad`
+- #123 — Backup/cron monitor sidebar'ga ulandi — `8039ab7f`
+- #113 — Director Diary IDOR xavfsizlik tuzatildi (boshqa karta kundaligini o'qish/yozish) — `d23e650b`
+
+### Egasi-data deb qayta tasniflangan (bu sessiya, kod kerak emas):
+- #114 — Chiqindi (waste) → GL posting: kredit hisob tanlovi (Inventory 1000 vs COGS 9100) egasi qarori kerak
+- #145 — CC field-level rol-tahrirlash: maydon×lavozim mapping + identity axis (position_code) egasi qarori kerak; positions=0 qator (blok)
+
+### Navbatda (buildable-fix, reja mavjud, hali qurilmagan):
+- #101 (Director owner-summary FE ulanishi), #116 (kundalik surunkali-muammo eskalatsiya), #117 (setup-loss AI trigger), #85 (IoT camera-alerts producer + dead-cron tozalash) — to'liq reja workflow natijasida mavjud, keyingi sessiyada/navbatda amalga oshiriladi.
