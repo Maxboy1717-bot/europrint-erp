@@ -195,4 +195,10 @@ export class DashboardQueryService {
       ? r.data
       : { session_count: 0, total_setup_seconds: 0, total_main_seconds: 0, total_teardown_seconds: 0, setup_loss_pct: null };
   }
+
+  /** Karta-AI agregat (item #104). Xato bo'lsa bo'sh array (degrade). */
+  async getCardAiAggregate() {
+    const r = await this.statRepo.getCardAiAggregate();
+    return r.ok && Array.isArray(r.data) ? r.data : [];
+  }
 }

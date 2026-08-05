@@ -30,6 +30,7 @@ import { MetricCard } from "@/components/director/MetricCard";
 import { AlertFeed } from "@/components/director/AlertFeed";
 import { AIAdvisor } from "@/components/director/AIAdvisor";
 import { ModuleHealthGrid } from "@/components/director/ModuleHealthGrid";
+import { CardAiInsightsCard } from "@/components/director/CardAiInsightsCard";
 import { Inbox, AlertTriangle, Package, Activity, Sparkles } from "lucide-react";
 import { useTranslation } from '@/lib/i18n';
 import type {
@@ -155,6 +156,8 @@ export default function DirectorDashboard() {
         <AIAdvisor />
         <AlertFeed limit={15} />
       </div>
+
+      <CardAiInsightsCard items={dash?.aiInsights} isLoading={dashLoad} />
 
       {/* ── 20 modul holati grid ── */}
       <ModuleHealthGrid />

@@ -56,12 +56,13 @@ export class DashboardController {
   async getDashboard(@Query('mode') mode?: string) {
     // P30 EP-DIR-025/053: ?mode=snapshot (07:00 muzlatilgan) | realtime (joriy).
     const isSnapshot = mode === 'snapshot';
-    const [base, planFact, orderProgress, statTrends, openIssues] = await Promise.all([
+    const [base, planFact, orderProgress, statTrends, openIssues, cardAiAggregate] = await Promise.all([
       this.directorData.getDashboard(),
       this.queries.getPlanFact(),
       this.queries.getOrderProgress(),
       this.queries.getStatTrends(),
       this.queries.getOpenIssues(),
+      this.queries.getCardAiAggregate(),
     ]);
     const baseData = (base.ok ? base.data : {}) as Record<string, unknown>;
     return {
@@ -72,8 +73,11 @@ export class DashboardController {
       orderProgress: Array.isArray(orderProgress) ? orderProgress : [],
       statTrends:    Array.isArray(statTrends) ? statTrends : [],
       openIssues:    Array.isArray(openIssues) ? openIssues : [],
-      // EP-DIR-026 (kunlik AI tahlilchi) — to'liq P35/P36 (AI) ga deferred.
-      aiInsights:    [],
+      // EP-DIR-026's full daily strategic-AI-analyst TEXT (generateExecutiveSummary/
+      // assessRisks) is still deferred to P35/P36 (central AI infra) — unaffected here.
+      // aiInsights now serves the narrower item #104/#129 ("qaysi karta erishmayapti")
+      // from the real ckp_fact_values aggregate (Q-40: no data yet -> honest empty array).
+      aiInsights:    Array.isArray(cardAiAggregate) ? cardAiAggregate : [],
     };
   }
 

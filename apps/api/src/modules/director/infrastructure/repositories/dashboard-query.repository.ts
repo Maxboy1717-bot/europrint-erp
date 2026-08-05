@@ -9,6 +9,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { db , runQuery } from '@shared/db';
 import { SQL, SQLWrapper, sql } from 'drizzle-orm';
 import { safeCall, Result } from '@common/result';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 import type { IDashboardQueryRepo } from '../../domain/repositories/i-dashboard-query.repo';
 
 type Row = Record<string, unknown>;
@@ -255,6 +256,57 @@ export class DashboardQueryRepository implements IDashboardQueryRepo {
         WHERE started_at >= CURRENT_DATE - ${days}::int
       `);
       return (r[0] ?? {}) as Row;
+    }, 'DB_ERROR');
+  }
+
+  /**
+   * Karta-AI agregat (vizyon item #104/#129 — director dashboardidagi aiInsights
+   * hardcoded [] o'rniga). ckp_fact_values (AI-daily-report orqali to'ldiriladi)
+   * so'nggi N kunlik achievement_pct'ni karta (org_departments, node_type='position')
+   * bo'yicha o'rtachalab, chegaradan past kartalarni eng-yomonidan qaytaradi.
+   * Ma'lumot yo'q bo'lsa bo'sh array — fabrikatsiya yo'q (Q-40).
+   */
+  async getCardAiAggregate(): Promise<Result<Array<{
+    cardId: number; positionName: string; ckp: string | null;
+    avgAchievementPct: number; factCount: number; aiFactCount: number;
+    latestAiNote: string | null; lastFactDate: string | null;
+  }>>> {
+    return safeCall(async () => {
+      const lookbackDays = await getBusinessSettingNumber('director.card_ai_lookback_days', 7);
+      const thresholdPct = await getBusinessSettingNumber('director.card_ai_underperform_threshold_pct', 80);
+      const limit        = await getBusinessSettingNumber('director.card_ai_aggregate_limit', 10);
+      const rows = await exec(sql`
+        WITH recent AS (
+          SELECT
+            f.card_id,
+            AVG(f.achievement_pct)::numeric(6,2)                               AS avg_achievement_pct,
+            COUNT(*)::int                                                      AS fact_count,
+            COUNT(*) FILTER (WHERE f.source = 'AI_CHAT')::int                  AS ai_fact_count,
+            (ARRAY_AGG(f.notes ORDER BY f.fact_date DESC, f.created_at DESC)
+               FILTER (WHERE f.source = 'AI_CHAT' AND f.notes IS NOT NULL))[1] AS latest_ai_note,
+            MAX(f.fact_date)                                                   AS last_fact_date
+          FROM ckp_fact_values f
+          WHERE f.fact_date >= CURRENT_DATE - ${lookbackDays}::int
+          GROUP BY f.card_id
+        )
+        SELECT r.card_id, d.name AS position_name, d.tskp AS ckp,
+               r.avg_achievement_pct, r.fact_count, r.ai_fact_count, r.latest_ai_note, r.last_fact_date
+        FROM recent r
+        JOIN org_departments d ON d.id = r.card_id AND d.node_type = 'position' AND d.is_active = true
+        WHERE r.avg_achievement_pct < ${thresholdPct}
+        ORDER BY r.avg_achievement_pct ASC
+        LIMIT ${limit}
+      `);
+      return (Array.isArray(rows) ? rows : []).map((row) => ({
+        cardId:            Number(row.card_id),
+        positionName:      String(row.position_name ?? ''),
+        ckp:               row.ckp == null ? null : String(row.ckp),
+        avgAchievementPct: safeNum(row.avg_achievement_pct),
+        factCount:         Number(row.fact_count ?? 0),
+        aiFactCount:       Number(row.ai_fact_count ?? 0),
+        latestAiNote:      row.latest_ai_note == null ? null : String(row.latest_ai_note),
+        lastFactDate:      row.last_fact_date == null ? null : String(row.last_fact_date),
+      }));
     }, 'DB_ERROR');
   }
 }

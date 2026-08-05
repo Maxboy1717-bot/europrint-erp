@@ -9,12 +9,18 @@ export interface DirectorSummary {
   production: { value: number; formatted: string; change: string; trend: string };
   employees: { value: number; formatted: string; change: string; trend: string };
 }
+export interface CardAiInsight {
+  cardId: number; positionName: string; ckp: string | null;
+  avgAchievementPct: number; factCount: number; aiFactCount: number;
+  latestAiNote: string | null; lastFactDate: string | null;
+}
 export interface DirDashboard {
   orders: { month: number; completed: number; inProduction: number; overdue: number };
   production: { oee: string | null };
   hr: { present: number; total: number; active: number; late: number; attendanceRate: number };
   alerts: { minStock: number; iot: number };
   criticalStock?: number;
+  aiInsights?: CardAiInsight[];
 }
 export interface DirSummary {
   orders: { today: number; monthTotal: number; monthRevenue: number; activeProduction: number; pending: number; overdue: number };

@@ -2111,4 +2111,28 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'Xodim qo''shish formasidagi "Vysotskiy darajasi" tanlagichida D darajani tanlaganda asosiy maoshga taklif qilinadigan o''rtacha qiymat.', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Item #104: Director dashboard aiInsights was hardcoded []. Thresholds for the
+  // karta-AI aggregate (ckp_fact_values -> which cards are underperforming).
+  // Human-readable mirror: apps/api/src/shared/db/migrations/director-card-ai-aggregate-thresholds-2026-08-05.sql.
+  {
+    name: 'business_settings director.card_ai_lookback_days seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.card_ai_lookback_days', 'Karta-AI agregat - orqaga qarash oynasi (kun)', 'days', 7, 'kun', 1, 90,
+        'Director dashboard aiInsights (karta-AI agregat) ckp_fact_values dan shu sondan kam kun oldingi faktlarni o''rtachalaydi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings director.card_ai_underperform_threshold_pct seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.card_ai_underperform_threshold_pct', 'Karta-AI agregat - past-korsatkich chegarasi (%)', 'percent', 80, '%', 0, 100,
+        'Shu foizdan past o''rtacha achievement_pct bo''lgan kartalar "erishmayapti" deb aiInsights ro''yxatida chiqadi.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings director.card_ai_aggregate_limit seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.card_ai_aggregate_limit', 'Karta-AI agregat - korsatiladigan kartalar soni', 'number', 10, 'ta', 1, 50,
+        'aiInsights ro''yxatida bir vaqtda korsatiladigan eng-yomon kartalar maksimal soni.', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];
