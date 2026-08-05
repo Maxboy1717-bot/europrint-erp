@@ -14,6 +14,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { sql } from 'drizzle-orm';
 import { db } from '@shared/db';
 import { auditLogs as auditLogsTable } from '@shared/db/schema-rbac';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -96,6 +97,33 @@ function resolveWithinUploads(key: string): string | null {
   const resolved = path.resolve(UPLOADS_DIR, key);
   if (resolved !== UPLOADS_DIR && !resolved.startsWith(UPLOADS_DIR + path.sep)) return null;
   return resolved;
+}
+
+// Same system-level bypass set as RolesGuard (super_admin/admin/director) — kept
+// intentionally narrower than DOWNLOAD_ALLOWED_ROLES (no 'manager'): room privacy is a
+// membership fact, not a document-export permission.
+const CHAT_ROOM_SCOPE_BYPASS_ROLES = new Set(['super_admin', 'admin', 'director']);
+
+/**
+ * Chat audit tavsiya #11 (CHAT-COMPLETE-FRESH-ANALYSIS-2026-07-10-v1.md:262): any
+ * authenticated user could load ANY chat attachment by path (`chat/<roomId>/file/...`)
+ * regardless of chat_members — no room-scoping. Keys outside `chat/` are untouched
+ * (this only narrows access, never widens it).
+ */
+async function isChatFileAccessAllowed(filePath: string, user: AuthenticatedUser | undefined): Promise<boolean> {
+  const segments = filePath.split('/');
+  if (segments[0] !== 'chat') return true;
+  if (CHAT_ROOM_SCOPE_BYPASS_ROLES.has((user?.role ?? '').toLowerCase())) return true;
+
+  const roomId = Number(segments[1]);
+  if (!user?.id || !Number.isInteger(roomId) || roomId <= 0) return false;
+
+  const r = await db.execute(sql`
+    SELECT 1 FROM chat_members
+    WHERE room_id = ${roomId} AND user_id = ${user.id} AND left_at IS NULL
+    LIMIT 1
+  `);
+  return (((r as { rows?: unknown[] }).rows) ?? []).length > 0;
 }
 
 // Type stub for the @fastify/multipart decoration on FastifyRequest
@@ -210,6 +238,11 @@ export class StorageController {
     if (!safePath || !fs.existsSync(safePath)) {
       throw new NotFoundException(await this.i18n.t('errors.fileNotFound'));
     }
+    if (!(await isChatFileAccessAllowed(filePath, user))) {
+      const reason = `Rad etildi: foydalanuvchi (${user?.id}) chat xonasining a'zosi emas`;
+      await logDownloadAttempt({ filePath, allowed: false, reason, user, action: 'DOWNLOAD_DENIED' });
+      throw new ForbiddenException(reason);
+    }
 
     const ext = path.extname(filePath).toLowerCase();
     const isGatedDoc = GATED_DOC_EXTENSIONS.has(ext);
@@ -273,6 +306,11 @@ export class StorageController {
     const safePath = resolveWithinUploads(filePath);
     if (!safePath || !fs.existsSync(safePath)) {
       throw new NotFoundException(await this.i18n.t('errors.fileNotFound'));
+    }
+    if (!(await isChatFileAccessAllowed(filePath, user))) {
+      const reason = `Rad etildi (inline): foydalanuvchi (${user?.id}) chat xonasining a'zosi emas`;
+      await logDownloadAttempt({ filePath, allowed: false, reason, user, action: 'INLINE_VIEW_DENIED' });
+      throw new ForbiddenException(reason);
     }
     const ext = path.extname(filePath).toLowerCase();
 
