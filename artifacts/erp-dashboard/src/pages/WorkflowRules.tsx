@@ -13,10 +13,11 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api-request";
-import { GitBranch, Plus, Trash2 } from "lucide-react";
+import { GitBranch, Plus, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -25,6 +26,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
@@ -84,6 +88,8 @@ export default function WorkflowRules() {
   const qc = useQueryClient();
   const [form, setForm] = useState<RuleForm>(EMPTY_FORM);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editRule, setEditRule] = useState<RuleRow | null>(null);
+  const [editForm, setEditForm] = useState<RuleForm & { is_active: boolean }>({ ...EMPTY_FORM, is_active: true });
 
   const { data, isLoading, isError, refetch } = useQuery<{ data: RuleRow[] }>({
     queryKey: ["/api/coordination/workflow-rules"],
@@ -122,6 +128,48 @@ export default function WorkflowRules() {
     },
     onError: () => toast({ title: t("workflowRules.error", "Xatolik"), description: t("workflowRules.ruleSaveFailed", "Qoida saqlanmadi"), variant: "destructive" }),
   });
+
+  const updateMutation = useMutation({
+    mutationFn: (args: { id: number; body: Record<string, unknown> }) =>
+      apiRequest("PUT", `/api/coordination/workflow-rules/${args.id}`, args.body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/coordination/workflow-rules"] });
+      toast({ title: t("workflowRules.ruleUpdated", "Qoida yangilandi") });
+      setEditRule(null);
+    },
+    onError: () => toast({ title: t("workflowRules.error", "Xatolik"), description: t("workflowRules.ruleSaveFailed", "Qoida saqlanmadi"), variant: "destructive" }),
+  });
+
+  const openEdit = (rule: RuleRow) => {
+    setEditRule(rule);
+    setEditForm({
+      request_type: rule.request_type,
+      name: rule.name ?? "",
+      source_department_id: rule.source_department_id ? String(rule.source_department_id) : "",
+      source_function_id: rule.source_function_id ? String(rule.source_function_id) : "",
+      step_order: String(rule.step_order),
+      approver_department_id: rule.approver_department_id ? String(rule.approver_department_id) : "",
+      approver_function_id: rule.approver_function_id ? String(rule.approver_function_id) : "",
+      is_active: rule.is_active,
+    });
+  };
+
+  const submitEdit = () => {
+    if (!editRule) return;
+    updateMutation.mutate({
+      id: editRule.id,
+      body: {
+        request_type: editForm.request_type.trim(),
+        name: editForm.name.trim() || null,
+        source_department_id: numOrNull(editForm.source_department_id),
+        source_function_id: numOrNull(editForm.source_function_id),
+        step_order: numOrNull(editForm.step_order) ?? 1,
+        approver_department_id: numOrNull(editForm.approver_department_id),
+        approver_function_id: numOrNull(editForm.approver_function_id),
+        is_active: editForm.is_active,
+      },
+    });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/coordination/workflow-rules/${id}`),
@@ -260,7 +308,10 @@ export default function WorkflowRules() {
                       <TableCell>
                         <EPStatusPill tone={s.is_active ? "success" : "neutral"}>{s.is_active ? t("workflowRules.active", "Faol") : t("workflowRules.inactive", "O'chirilgan")}</EPStatusPill>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-1">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(s)} aria-label={t("workflowRules.edit", "Tahrirlash")} data-testid={`button-edit-rule-${s.id}`}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => setDeleteId(s.id)} aria-label={t("workflowRules.delete", "O'chirish")}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -283,6 +334,58 @@ export default function WorkflowRules() {
         variant="destructive"
         onConfirm={() => { if (deleteId) deleteMutation.mutate(deleteId); }}
       />
+
+      <Dialog open={editRule !== null} onOpenChange={(open) => { if (!open) setEditRule(null); }}>
+        <DialogContent className="max-w-lg" data-testid="dialog-edit-workflow-rule">
+          <DialogHeader>
+            <DialogTitle>{t("workflowRules.editTitle", "Qoidani tahrirlash")}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="ewr-rt">{t("workflowRules.requestType", "So'rov turi *")}</Label>
+              <Input id="ewr-rt" value={editForm.request_type} onChange={(e) => setEditForm({ ...editForm, request_type: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ewr-name">{t("workflowRules.name", "Nomi")}</Label>
+              <Input id="ewr-name" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ewr-step">{t("workflowRules.stepOrder", "Qadam tartibi *")}</Label>
+              <Input id="ewr-step" type="number" min={1} value={editForm.step_order} onChange={(e) => setEditForm({ ...editForm, step_order: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ewr-sdep">{t("workflowRules.sourceDeptId", "Manba bo'lim ID")}</Label>
+              <Input id="ewr-sdep" type="number" value={editForm.source_department_id} onChange={(e) => setEditForm({ ...editForm, source_department_id: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ewr-sfn">{t("workflowRules.sourceFnId", "Manba lavozim ID")}</Label>
+              <Input id="ewr-sfn" type="number" value={editForm.source_function_id} onChange={(e) => setEditForm({ ...editForm, source_function_id: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ewr-adep">{t("workflowRules.approverDeptId", "Tasdiqlovchi bo'lim ID")}</Label>
+              <Input id="ewr-adep" type="number" value={editForm.approver_department_id} onChange={(e) => setEditForm({ ...editForm, approver_department_id: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="ewr-afn">{t("workflowRules.approverFnId", "Tasdiqlovchi lavozim ID")}</Label>
+              <Input id="ewr-afn" type="number" value={editForm.approver_function_id} onChange={(e) => setEditForm({ ...editForm, approver_function_id: e.target.value })} />
+            </div>
+            <div className="flex items-center justify-between rounded-md border px-3 py-2">
+              <Label htmlFor="ewr-active">{t("workflowRules.active", "Faol")}</Label>
+              <Switch id="ewr-active" checked={editForm.is_active} onCheckedChange={(v) => setEditForm({ ...editForm, is_active: v })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditRule(null)}>{t("workflowRules.cancel", "Bekor qilish")}</Button>
+            <Button
+              onClick={submitEdit}
+              disabled={updateMutation.isPending || editForm.request_type.trim().length === 0 || numOrNull(editForm.step_order) === null}
+              data-testid="button-save-edit-rule"
+            >
+              {t("workflowRules.save", "Saqlash")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
