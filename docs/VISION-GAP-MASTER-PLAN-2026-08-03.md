@@ -115,7 +115,9 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 - #153 — CC: o'lik GET /api/coordination/baskets so'rovi o'chirildi — `33d140a1`
 - #148 — CC: approval eskalatsiya holat belgilaydi, lekin hech kimga xabar bermas edi — `d6da370f`
 
-**Jami bu sessiyada: 18 ta real commit** (xavfsizlik ×1, yangi funksiya ×5, xato tuzatish ×9, o'lik kod tozalash ×3).
+**Jami bu sessiyada: 19 ta real commit** (xavfsizlik ×1, yangi funksiya ×6, xato tuzatish ×9, o'lik kod tozalash ×3). #150 qo'shildi (WorkflowRules tahrirlash UI, `6e2fea7c`).
+
+⚠️ **2026-08-06: egasi "loop qiling hammasini" dedi** — avvalgi "loop kerak emas" qoidasi shu backlog-grind kontekstida bekor qilindi (memory: `feedback_no_loop.md` yangilandi). `/loop` skill dynamic-pacing rejimida ishga tushirildi — ScheduleWakeup orqali har safar keyingi modul/item ustida davom etadi, egasi "davom" demasdan.
 
 **DIRECTOR moduli yopildi** (#100-#117, 18 band): #100/#101/#104/#105/#106/#113/#116 tuzatildi;
 #107/#108/#114 egasi-data; #102/#103/#109-#112/#115/#117 hali tekshirilmagan.
