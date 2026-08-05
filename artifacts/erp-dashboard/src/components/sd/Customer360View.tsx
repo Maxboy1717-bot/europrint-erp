@@ -58,7 +58,7 @@ const SEG_LABELS: Record<string, string> = { A: "VIP", B: "Doimiy", C: "Oddiy", 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   active: { label: "Aktiv", cls: "bg-emerald-100 text-[var(--ep-green)] dark:bg-emerald-900/50 dark:text-emerald-300" },
   inactive: { label: "Nofaol", cls: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
-  blacklist: { label: "Qora ro'yxat", cls: "bg-rose-100 text-[var(--ep-red)] dark:bg-rose-900/50 dark:text-rose-300" },
+  blacklisted: { label: "Qora ro'yxat", cls: "bg-rose-100 text-[var(--ep-red)] dark:bg-rose-900/50 dark:text-rose-300" },
 };
 
 import type {

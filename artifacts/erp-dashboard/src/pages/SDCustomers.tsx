@@ -99,7 +99,7 @@ const segTone = (seg: string): EPStatusTone =>
   seg === "A" ? "success" : seg === "B" ? "info" : seg === "C" ? "warning" : seg === "D" ? "danger" : "neutral";
 
 const statusTone = (status: string): EPStatusTone =>
-  status === "active" ? "success" : status === "blacklist" ? "danger" : "warning";
+  status === "active" ? "success" : status === "blacklisted" ? "danger" : "warning";
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -259,8 +259,14 @@ export default function SDCustomers() {
       }),
   });
 
+  const VALID_EDIT_STATUSES = ["active", "inactive", "blacklisted"];
+
   const openEdit = (c: CustomerRow) => {
-    setEditForm({ title: c.name, phone: c.phone, email: c.email, address: c.address, status: c.status });
+    // Item #191: c.status may hold a legacy segment-tier value (e.g. "new") left
+    // over from create() — resending an invalid status 400s the update endpoint
+    // even when the user only meant to edit an unrelated field (phone/email/...).
+    const status = VALID_EDIT_STATUSES.includes(c.status) ? c.status : "active";
+    setEditForm({ title: c.name, phone: c.phone, email: c.email, address: c.address, status });
     setEditDialog({ open: true, customer: c });
   };
 
@@ -492,7 +498,7 @@ export default function SDCustomers() {
                 <SelectContent>
                   <SelectItem value="active">{tLabel("sd.status.active", "Faol")}</SelectItem>
                   <SelectItem value="inactive">{tLabel("sd.status.inactive", "Nofaol")}</SelectItem>
-                  <SelectItem value="blacklist">{tLabel("sd.status.blacklist", "Qora ro'yxat")}</SelectItem>
+                  <SelectItem value="blacklisted">{tLabel("sd.status.blacklist", "Qora ro'yxat")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -51,5 +51,5 @@ export const SEGMENT_CONF: Record<string, { label: string; bg: string; text: str
 export const STATUS_CONF: Record<string, { label: string; dot: string }> = {
   active: { label: "Aktiv", dot: "bg-emerald-500" },
   inactive: { label: tLabel('common.SDCustomers.nofaol', "Nofaol"), dot: "bg-gray-400" },
-  blacklist: { label: tLabel('common.SDCustomers.qoraRoyxat', "Qora ro'yxat"), dot: "bg-rose-500" },
+  blacklisted: { label: tLabel('common.SDCustomers.qoraRoyxat', "Qora ro'yxat"), dot: "bg-rose-500" },
 };

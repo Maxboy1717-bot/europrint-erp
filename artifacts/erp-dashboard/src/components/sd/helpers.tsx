@@ -33,7 +33,7 @@ export const CategoryBadge = ({ cat }: { cat: string | null | undefined }) => {
 
 export const StatusBadge = ({ status }: { status: string | null | undefined }) => {
   const { t } = useTranslation("common");
-  if (status === "blacklist") return <Badge variant="destructive" className="text-[10px]">{t("qoraRoyxat")}</Badge>;
+  if (status === "blacklisted") return <Badge variant="destructive" className="text-[10px]">{t("qoraRoyxat")}</Badge>;
   if (status === "inactive") return <Badge variant="secondary" className="text-[10px]">{t("inactive")}</Badge>;
   return <Badge className="text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800" variant="outline">{t("aktiv")}</Badge>;
 };
