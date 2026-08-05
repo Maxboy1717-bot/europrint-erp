@@ -31,7 +31,11 @@ export class PpPlanningRepository implements IPpPlanningRepo {
       // priority columns — additive insert contract preserved).
       // B14 (2026-07-05): created_by existed but was never written from this live,
       // @CurrentUser()-driven HTTP path (POST /planning/schedule).
-      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_start_date, planned_end_date, work_center_id, responsible_manager_id, sales_order_id, notes, status, created_by) VALUES (CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint), ${body.work_order_id ?? null}, ${body.quantity ?? 1}, ${body.quantity ?? 1}, ${body.planned_start ?? null}, ${body.planned_end ?? null}, ${body.work_center_id ?? null}, ${body.operator_id ?? null}, ${body.sales_order_id ?? null}, ${body.notes ?? null}, 'planned', ${createdBy ?? null}) RETURNING *`);
+      // Item #79: order_number was CONCAT('PO-', EXTRACT(EPOCH FROM NOW())::bigint) — second-
+      // precision, not atomic (two concurrent requests within the same second collided on the
+      // order_number UNIQUE constraint). nextval() is Postgres-atomic, same pattern as
+      // sales_order_number_seq (create-order.handler.ts) — see pp-schedule-order-seq-2026-08-05.sql.
+      const r = await exec(sql`INSERT INTO production_orders (order_number, product_id, quantity, planned_quantity, planned_start_date, planned_end_date, work_center_id, responsible_manager_id, sales_order_id, notes, status, created_by) VALUES ('PO-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-' || LPAD(nextval('pp_schedule_order_seq')::text, 5, '0'), ${body.work_order_id ?? null}, ${body.quantity ?? 1}, ${body.quantity ?? 1}, ${body.planned_start ?? null}, ${body.planned_end ?? null}, ${body.work_center_id ?? null}, ${body.operator_id ?? null}, ${body.sales_order_id ?? null}, ${body.notes ?? null}, 'planned', ${createdBy ?? null}) RETURNING *`);
       return r.ok ? Ok(r.data[0] ?? null) : Err(r.error);  } catch (_e) {
     return Err(String(_e));
   }

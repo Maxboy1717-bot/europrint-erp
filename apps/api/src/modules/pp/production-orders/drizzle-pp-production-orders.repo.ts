@@ -213,6 +213,13 @@ export class DrizzlePpProductionOrdersRepository implements IPpProductionOrdersR
   async reorderQueue(workCenterId: string, orderedIds: number[]): Promise<Result<Row[]>> {
     try {
       await db.transaction(async (tx) => {
+        // Item #79: advisory xact-lock (namespace 88088 = work-center) serializes concurrent
+        // reorders of the same work center's queue — reuses the identical key MES already takes
+        // for the same resource (drizzle-mes.repo.ts:lockWorkCenterAndCountActive), so a PP
+        // reorder and an MES session-start on the same work_center_id also serialize against each
+        // other. Without this, two parallel reorders could spuriously violate
+        // uq_production_orders_wc_queue_seq mid-transaction. Auto-released at transaction end.
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(88088, ${workCenterId}::integer)`);
         // Phase 1: park all target rows at negative sequences to clear the unique-index space.
         for (let i = 0; i < orderedIds.length; i++) {
           await tx.execute(sql`
