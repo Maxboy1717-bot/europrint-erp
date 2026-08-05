@@ -1,39 +1,34 @@
 /**
  * @module zno-zvs-sla-escalation.cron
  * @description Director/HR — ZNO (to'lov so'rovi) va ZVS (xarajat so'rovi) SLA-eskalatsiyasi.
- *   Vizyon (MASTER-REJA-VIZYON-2026-07-02.md band 3.7): "ZNO/ZVS 24/48h SLA-eskalatsiya cron —
- *   Muddati o'tgan so'rov avto-eskalatsiya". Tekshiruv (2026-07-03): `zno`/`zvs` jadvallarida
- *   `pending` holatda muddat-tekshiruvchi cron YO'Q edi — so'rov abadiy `pending`da qolishi mumkin
- *   edi. Bu cron shu bo'shliqni yopadi (cc-sla.cron / rasporyazhenie-escalation.cron bilan bir xil
- *   naqsh: UPDATE...RETURNING + fan-out bildirishnoma).
+ *   Vizyon (MASTER-REJA-VIZYON-2026-07-02.md band 3.7 + 05-director.md #33): 3-bosqichli
+ *   zanjir — (1) muddati o'tganda so'rov egasi + navbatdagi org-daraja (submitted_by'ning
+ *   menejeri) ogohlantiriladi (avvalgi 1-bosqichli xatti-harakat, o'zgarishsiz saqlanadi);
+ *   (2) yana bir SLA-multiplikator o'tsa — "menejerning menejeri"ga eskalatsiya; (3) yana
+ *   bir SLA-multiplikator o'tsa — HR intizom tizimiga (`discipline_records`) uzatiladi
+ *   (terminal, qayta eskalatsiya yo'q).
  *
- *   SLA muddati: ZNO = 24 soat (oddiy to'lov so'rovi, bir bosqichli tasdiq), ZVS = 48 soat
- *   (ko'p bosqichli: level 1/2/3 — yuqori darajali tasdiqlovchi topilishi ko'proq vaqt oladi;
- *   cc-sla.cron.ts'dagi 48h auto-reject bilan bir xil chegara).
+ *   Item #105 (2026-08-05): avvalgi versiya faqat 1-bosqichli edi (escalated_at IS NULL
+ *   dedup, bitta org-daraja, HR bilan bog'lanish yo'q edi). endi escalation_stage (0→1→2→3)
+ *   ustuni har bosqichni kuzatadi; chegaralar business_settings'dan o'qiladi (hardcode yo'q).
  *
- *   Eskalatsiya qabul-mezoni: muddati o'tgan `pending` so'rov holati o'zgartirilmaydi (hali
- *   tasdiq/rad kutmoqda — status='pending' qoladi, faqat `escalated_at` belgilanadi va
- *   dedup uchun ishlatiladi), lekin (a) so'rov egasiga "muddat o'tdi" bildirishnomasi va
- *   (b) navbatdagi org-daraja (submitted_by → employees.manager_id → users.id; agar
- *   manager_id yo'q/0 bo'lsa — org_departments daraxti bo'ylab yuqoriga eng yaqin
- *   head_user_id, `cc-org-resolver.service.ts`dagi MANAGER_OF_SENDER fallback bilan bir xil
- *   naqsh) uchun eskalatsiya-bildirishnomasi yuboriladi.
+ *   SLA muddati: ZNO = 24 soat, ZVS = 48 soat (1-bosqich, o'zgarishsiz). 2/3-bosqich
+ *   chegaralari business_settings'dagi director.escalation_stage2/3_sla_multiplier (bazaviy
+ *   SLA'ning necha barobari) orqali hisoblanadi.
  *
- *   Dedup: `escalated_at IS NULL` shartи — bir marta eskalatsiya qilingan so'rov qayta
- *   ishlanmaydi (keyingi yurishlarda o'tkazib yuboriladi, lekin submitted_by hali pending
- *   bo'lgani uchun ko'rinadi — takroriy notification-spam yo'q).
- *
- * NOTE: Raw SQL — UPDATE...RETURNING bir o'tishda `escalated_at` belgilash + bildirishnoma
- *   uchun qatorlarni qaytarish; `created_at + (N || ' hours')::interval < NOW()` vaqt-arifmetikasi
- *   (cc-sla.cron.ts'dagi `(inbox_sla_hours || ' hours')::interval` bilan bir xil naqsh).
- *   `zvs`/`zno` Drizzle schema barrelida yo'q (raw SQL bilan yozilgan repo naqshi allaqachon
- *   mavjud — zvs.repository.ts / zno.repository.ts). See ARCHITECTURE_RULES.md Rule 4.
+ * NOTE: Raw SQL — UPDATE...RETURNING bir o'tishda `escalation_stage` bosqichini oshirish +
+ *   bildirishnoma uchun qatorlarni qaytarish; `created_at + (N || ' hours')::interval < NOW()`
+ *   vaqt-arifmetikasi (cc-sla.cron.ts'dagi bilan bir xil naqsh). `zvs`/`zno` Drizzle schema
+ *   barrelida yo'q (raw SQL bilan yozilgan repo naqshi allaqachon mavjud). See ARCHITECTURE_RULES.md Rule 4.
  * @layer Cron (Director / HR — ZNO/ZVS)
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
+import { SYSTEM_USER_ID } from '@common/constants/app.constants';
+import { resolveNextOrgLevel, resolveEmployeeIdForUser } from './director-escalation-org-resolver.util';
 
 const ZNO_SLA_HOURS = 24;
 const ZVS_SLA_HOURS = 48;
@@ -50,136 +45,141 @@ export class ZnoZvsSlaEscalationCron {
   private readonly logger = new Logger(ZnoZvsSlaEscalationCron.name);
 
   /**
-   * Har soatning 15-daqiqasida — ZNO (24h) va ZVS (48h) muddati o'tgan `pending`
-   * so'rovlarni eskalatsiya qilish.
+   * Har soatning 15-daqiqasida — ZNO (24h) va ZVS (48h) bazaviy SLA'dan boshlab
+   * har 3 bosqichni tekshiradi.
    */
   @Cron('15 * * * *')
   async escalateOverdue(): Promise<void> {
+    const stage2Mult = await getBusinessSettingNumber('director.escalation_stage2_sla_multiplier', 2);
+    const stage3Mult = await getBusinessSettingNumber('director.escalation_stage3_sla_multiplier', 3);
+
     try {
-      await this.escalateZno();
+      await this.escalateKind('zno', ZNO_SLA_HOURS, stage2Mult, stage3Mult);
     } catch (e) {
       this.logger.error(`escalateZno: ${(e as Error).message}`);
     }
     try {
-      await this.escalateZvs();
+      await this.escalateKind('zvs', ZVS_SLA_HOURS, stage2Mult, stage3Mult);
     } catch (e) {
       this.logger.error(`escalateZvs: ${(e as Error).message}`);
     }
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  private async escalateZno(): Promise<void> {
-    const r = await runQuery<OverdueRow>(sql`
-      UPDATE zno
-      SET escalated_at = NOW(), updated_at = NOW()
-      WHERE status = 'pending'
-        AND escalated_at IS NULL
-        AND created_at + (${ZNO_SLA_HOURS} || ' hours')::interval < NOW()
-      RETURNING id, submitted_by, purpose, amount::text AS amount
-    `);
-    if (r.rows.length === 0) return;
-    this.logger.warn(`ZNO SLA eskalatsiya: ${r.rows.length} so'rov ${ZNO_SLA_HOURS}h muddatini o'tkazdi`);
-    await Promise.all(r.rows.map((row) => this.notifyOverdue('zno', row)));
+  private async escalateKind(kind: 'zno' | 'zvs', slaHours: number, stage2Mult: number, stage3Mult: number): Promise<void> {
+    await this.escalateStage(kind, slaHours, 0, 1, 1, (row) => this.notifyStage1(kind, slaHours, row));
+    await this.escalateStage(kind, slaHours, 1, 2, stage2Mult, (row) => this.notifyStage2(kind, slaHours, row));
+    await this.escalateStage(kind, slaHours, 2, 3, stage3Mult, (row) => this.escalateToHr(kind, row));
   }
 
-  private async escalateZvs(): Promise<void> {
-    const r = await runQuery<OverdueRow>(sql`
-      UPDATE zvs
-      SET escalated_at = NOW(), updated_at = NOW()
-      WHERE status = 'pending'
-        AND escalated_at IS NULL
-        AND created_at + (${ZVS_SLA_HOURS} || ' hours')::interval < NOW()
-      RETURNING id, submitted_by, purpose, amount::text AS amount
-    `);
+  // NOTE: table name is NOT interpolated as a SQL variable (Qoida B — sql.raw(variable)
+  // taqiqlangan) — two literal branches instead, exactly mirroring the original
+  // escalateZno()/escalateZvs() duplication, just with a shared stage-threshold param.
+  private async escalateStage(
+    kind: 'zno' | 'zvs', slaHours: number, fromStage: number, toStage: number, multiplier: number,
+    handle: (row: OverdueRow) => Promise<void>,
+  ): Promise<void> {
+    const hoursThreshold = slaHours * multiplier;
+    const r = kind === 'zno'
+      ? await runQuery<OverdueRow>(sql`
+          UPDATE zno
+          SET escalation_stage = ${toStage}, escalated_at = NOW(), updated_at = NOW()
+          WHERE status = 'pending'
+            AND escalation_stage = ${fromStage}
+            AND created_at + (${hoursThreshold} || ' hours')::interval < NOW()
+          RETURNING id, submitted_by, purpose, amount::text AS amount
+        `)
+      : await runQuery<OverdueRow>(sql`
+          UPDATE zvs
+          SET escalation_stage = ${toStage}, escalated_at = NOW(), updated_at = NOW()
+          WHERE status = 'pending'
+            AND escalation_stage = ${fromStage}
+            AND created_at + (${hoursThreshold} || ' hours')::interval < NOW()
+          RETURNING id, submitted_by, purpose, amount::text AS amount
+        `);
     if (r.rows.length === 0) return;
-    this.logger.warn(`ZVS SLA eskalatsiya: ${r.rows.length} so'rov ${ZVS_SLA_HOURS}h muddatini o'tkazdi`);
-    await Promise.all(r.rows.map((row) => this.notifyOverdue('zvs', row)));
+    this.logger.warn(`${kind.toUpperCase()} SLA eskalatsiya: ${r.rows.length} so'rov ${fromStage}->${toStage} bosqichga o'tdi`);
+    await Promise.all(r.rows.map(handle));
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  private async notifyOverdue(kind: 'zno' | 'zvs', row: OverdueRow): Promise<void> {
+  private async notifyStage1(kind: 'zno' | 'zvs', slaHours: number, row: OverdueRow): Promise<void> {
     const purposeShort = (row.purpose ?? (kind === 'zno' ? 'ZNO so\'rov' : 'ZVS so\'rov')).slice(0, 80);
     const kindLabel = kind === 'zno' ? 'ZNO (to\'lov so\'rovi)' : 'ZVS (xarajat so\'rovi)';
-    const slaHours = kind === 'zno' ? ZNO_SLA_HOURS : ZVS_SLA_HOURS;
 
-    // 1. So'rov egasi — o'z so'rovi hali ko'rib chiqilmagani haqida xabar.
     if (row.submitted_by) {
-      await this.notify(
-        row.submitted_by,
-        row.id,
-        `${kind}_sla_overdue`,
+      await this.notify(row.submitted_by, row.id, `${kind}_sla_overdue`,
         `${kindLabel} muddati o'tdi`,
         `«${purposeShort}» (${row.amount ?? ''}) ${slaHours} soatdan beri ko'rib chiqilmadi. Eskalatsiya qilindi.`,
-        'high',
-      );
+        'high', kind);
     }
 
-    // 2. Navbatdagi org-daraja — submitted_by'ning menejeri (yoki org daraxti bo'ylab
-    //    eng yaqin bo'lim rahbari — cc-org-resolver.service.ts MANAGER_OF_SENDER bilan bir xil naqsh).
-    const nextLevelUserId = row.submitted_by ? await this.resolveNextLevel(row.submitted_by) : null;
+    const nextLevelUserId = row.submitted_by ? await resolveNextOrgLevel(row.submitted_by) : null;
     if (nextLevelUserId && nextLevelUserId !== row.submitted_by) {
-      await this.notify(
-        nextLevelUserId,
-        row.id,
-        `${kind}_sla_escalated`,
+      await this.notify(nextLevelUserId, row.id, `${kind}_sla_escalated`,
         `${kindLabel} eskalatsiya qilindi`,
         `«${purposeShort}» (${row.amount ?? ''}) ${slaHours} soatdan ko'p tasdiqlanmadi. Ko'rib chiqishingiz so'raladi.`,
-        'urgent',
-      );
+        'urgent', kind);
     }
   }
 
-  // submitted_by → employees.manager_id → users.id; manager_id yo'q/0 bo'lsa
-  // org_departments daraxti bo'ylab yuqoriga eng yaqin head_user_id (cc-org-resolver.service.ts
-  // resolveManagerOfSender bilan bir xil ikki bosqichli fallback).
-  private async resolveNextLevel(senderUserId: number): Promise<number | null> {
-    const direct = await runQuery<{ user_id: number | null }>(sql`
-      SELECT m.user_id
-      FROM employees e
-      JOIN employees m ON m.id = e.manager_id
-      WHERE e.user_id = ${senderUserId} AND e.manager_id IS NOT NULL AND e.manager_id <> 0
-      LIMIT 1
-    `);
-    const directId = direct.rows[0]?.user_id ?? null;
-    if (directId) return directId;
+  /** 2-bosqich: submitted_by'ning menejerining menejeri (ikki qadam org-yurish). */
+  private async notifyStage2(kind: 'zno' | 'zvs', slaHours: number, row: OverdueRow): Promise<void> {
+    const purposeShort = (row.purpose ?? (kind === 'zno' ? 'ZNO so\'rov' : 'ZVS so\'rov')).slice(0, 80);
+    const kindLabel = kind === 'zno' ? 'ZNO (to\'lov so\'rovi)' : 'ZVS (xarajat so\'rovi)';
+    if (!row.submitted_by) return;
 
-    const walk = await runQuery<{ head_user_id: number | null }>(sql`
-      WITH RECURSIVE chain AS (
-        SELECT od.id, od.parent_id, od.head_user_id, 0 AS depth
-        FROM employee_org_departments eod
-        JOIN org_departments od ON od.id = eod.org_department_id
-        WHERE eod.user_id = ${senderUserId} AND eod.is_primary = true
-        UNION ALL
-        SELECT p.id, p.parent_id, p.head_user_id, c.depth + 1
-        FROM chain c
-        JOIN org_departments p ON p.id = c.parent_id
-        WHERE c.depth < 20
-      )
-      SELECT head_user_id FROM chain
-      WHERE head_user_id IS NOT NULL AND head_user_id <> ${senderUserId}
-      ORDER BY depth
-      LIMIT 1
-    `);
-    const headId = walk.rows[0]?.head_user_id ?? null;
-    if (!headId) {
-      this.logger.warn(
-        `resolveNextLevel(sender=${senderUserId}): manager_id NULL/0 va org tree'da bo'lim rahbari yo'q — escalation notify skip`,
-      );
-      return null;
+    const level1 = await resolveNextOrgLevel(row.submitted_by);
+    const level2 = level1 ? await resolveNextOrgLevel(level1) : null;
+    const target = level2 ?? level1;
+    if (!target) return;
+
+    await this.notify(target, row.id, `${kind}_sla_stage2_escalated`,
+      `${kindLabel} — takroriy eskalatsiya`,
+      `«${purposeShort}» (${row.amount ?? ''}) ${slaHours} soatlik bazaviy muddatdan ancha ko'p tasdiqlanmadi. Zudlik bilan ko'rib chiqing.`,
+      'urgent', kind);
+  }
+
+  /** 3-bosqich (terminal): HR discipline_records + best-effort xabar. */
+  private async escalateToHr(kind: 'zno' | 'zvs', row: OverdueRow): Promise<void> {
+    if (!row.submitted_by) return;
+    const purposeShort = (row.purpose ?? (kind === 'zno' ? 'ZNO so\'rov' : 'ZVS so\'rov')).slice(0, 80);
+
+    const employeeId = await resolveEmployeeIdForUser(row.submitted_by);
+    if (employeeId) {
+      await runQuery(sql`
+        INSERT INTO discipline_records
+          (employee_id, violation_type, discipline_type, severity, violation_date, issued_date,
+           description, reason, given_by, status)
+        VALUES (
+          ${employeeId}, ${kind + '_sla_unresolved'}, 'administrative', 'minor', CURRENT_DATE, CURRENT_DATE,
+          ${'#' + row.id + ' (' + purposeShort + ') 3x SLA dan keyin ham hal qilinmadi'},
+          ${'Avtomatik: director eskalatsiya zanjiri (vision 05-director.md #33)'},
+          ${SYSTEM_USER_ID}, 'open'
+        )
+      `);
+    } else {
+      this.logger.warn(`escalateToHr(${kind} #${row.id}): submitted_by=${row.submitted_by} uchun employees yozuvi topilmadi — discipline_records o'tkazib yuborildi`);
     }
-    return headId;
+
+    const target = await resolveNextOrgLevel(row.submitted_by);
+    if (target) {
+      await this.notify(target, row.id, `${kind}_sla_hr_escalated`,
+        'HR intizom tizimiga uzatildi',
+        `«${purposeShort}» so'rovi 3 marta SLA'dan oshdi — HR intizom yozuvi yaratildi.`,
+        'urgent', kind);
+    }
   }
 
   private async notify(
     userId: number, refId: number, type: string, title: string, body: string,
-    priority: 'low' | 'normal' | 'high' | 'urgent',
+    priority: 'low' | 'normal' | 'high' | 'urgent', refType: string,
   ): Promise<void> {
-    // notifications NOT NULL: user_id, type, title, body, is_read. reference_*/priority — havola.
     await runQuery(sql`
       INSERT INTO notifications
         (user_id, type, title, body, is_read, reference_id, reference_type, priority, created_at)
       VALUES
-        (${userId}, ${type}, ${title}, ${body}, false, ${refId}, ${type.split('_')[0]}, ${priority}, NOW())
+        (${userId}, ${type}, ${title}, ${body}, false, ${refId}, ${refType}, ${priority}, NOW())
     `);
   }
 }

@@ -2151,4 +2151,48 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'diary_entries.main_issue shu kunlar soni ketma-ket carry-over qilinsa "surunkali muammo" deb belgilanadi va direktor + author_card_id ning org_functions.manager_id zanjiridagi yuqori kartaga eskalatsiya-bildirishnoma yuboriladi. Default=3 - vision-1000-answers/05-director.md#7.', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Item #105: ZNO/ZVS and rasporyazhenie SLA escalation were both flat/single-shot —
+  // vision (05-director.md #33) asks for a 3-stage chain: notify -> escalate to
+  // manager's-manager -> HR discipline_records. Human-readable mirror:
+  // apps/api/src/shared/db/migrations/director-multistage-sla-escalation-2026-08-05.sql.
+  {
+    name: 'zno/zvs/rasporyazhenie.escalation_stage columns (2026-08-05)',
+    sql: `ALTER TABLE zno ADD COLUMN IF NOT EXISTS escalation_stage smallint NOT NULL DEFAULT 0`,
+  },
+  {
+    name: 'zvs.escalation_stage column (2026-08-05)',
+    sql: `ALTER TABLE zvs ADD COLUMN IF NOT EXISTS escalation_stage smallint NOT NULL DEFAULT 0`,
+  },
+  {
+    name: 'rasporyazhenie.escalation_stage column (2026-08-05)',
+    sql: `ALTER TABLE rasporyazhenie ADD COLUMN IF NOT EXISTS escalation_stage smallint NOT NULL DEFAULT 0`,
+  },
+  {
+    name: 'business_settings director.escalation_stage2_sla_multiplier seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.escalation_stage2_sla_multiplier', 'ZNO/ZVS 2-bosqich: bazaviy SLA soatining necha barobari', 'number', 2, 'x', 1, 10,
+        'stage 1->2 (managers-manager) necha x bazaviy SLA (24h/48h) dan keyin', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings director.escalation_stage3_sla_multiplier seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.escalation_stage3_sla_multiplier', 'ZNO/ZVS 3-bosqich: bazaviy SLA soatining necha barobari', 'number', 3, 'x', 2, 15,
+        'stage 2->3 (HR discipline_records) necha x bazaviy SLA dan keyin', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings director.rasp_escalation_stage2_days seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.rasp_escalation_stage2_days', 'Farmoyish 2-bosqich: overdue dan necha kun keyin', 'number', 1, 'kun', 0, 30,
+        'rasporyazhenie stage1(overdue)->2 (ijrochi menejerining menejeri) necha kundan keyin', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings director.rasp_escalation_stage3_days seed (2026-08-05)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('director', 'director.rasp_escalation_stage3_days', 'Farmoyish 3-bosqich: overdue dan necha kun keyin', 'number', 2, 'kun', 1, 60,
+        'rasporyazhenie stage2->3 (HR discipline_records) necha kundan keyin', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];
