@@ -129,6 +129,13 @@ export class DrizzleMarketingExtRepository {
         totalBudget: sql<number>`coalesce(sum(${marketingCampaigns.budget}::numeric), 0)`,
       }).from(marketingCampaigns).where(isNull(marketingCampaigns.deletedAt));
 
+      // Item #206: totalSpent was never computed here — "Sarflangan" always read
+      // undefined->0 and "Qoldiq" always equalled the full budget. Same aggregate
+      // pattern already used by getCampaignStats()/getCampaignAnalytics() below.
+      const [spentRow] = await db.select({
+        totalSpent: sql<number>`coalesce(sum(${marketingAds.spentAmount}), 0)::numeric`,
+      }).from(marketingAds).where(isNull(marketingAds.deletedAt));
+
       // recentLeads: leads created in last 30 days (created_at column, existing)
       const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const recentLeads = (Array.isArray(leads) ? leads : []).filter(l => {
@@ -143,6 +150,7 @@ export class DrizzleMarketingExtRepository {
         convertedLeads,
         conversionRate,
         totalBudget:  Number(budgetRow?.totalBudget ?? 0),
+        totalSpent:   Number(spentRow?.totalSpent ?? 0),
         recentLeads,
       };
     });
