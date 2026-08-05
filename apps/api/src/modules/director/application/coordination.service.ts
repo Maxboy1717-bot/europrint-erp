@@ -181,6 +181,14 @@ export class CoordinationService {
     return this.repo.listBaskets();
   }
 
+  async getCouncils() {
+    return this.repo.listCouncils();
+  }
+
+  async getUsersForSelect() {
+    return this.repo.listUsersForSelect();
+  }
+
   async getStats() {
     return safeCall(async () => {
       const [doklaResult, raspResult] = await Promise.all([

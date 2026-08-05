@@ -284,6 +284,52 @@ export class CoordinationRepository implements ICoordinationRepo {
     }, 'DB_ERROR');
   }
 
+  // Item #154 (CC audit tavsiya #33, Qoida 6): CoordinationController.getCouncils()
+  // ichida to'g'ridan-to'g'ri SQL bo'lgan (controller = faqat transport qatlami) — repo/service'ga ko'chirildi.
+  async listCouncils(): Promise<Result<unknown[]>> {
+    return safeCall(async () => {
+      // NOTE: councils.chairperson_id FK -> employees(id), NOT users(id).
+      // Double JOIN: employees for name, then users for display fallback.
+      const r = await db.execute(sql`
+        SELECT c.id, c.name, c.council_type, c.description, c.is_active, c.created_at,
+               c.chairperson_id,
+               TRIM(COALESCE(emp.first_name,'') || ' ' || COALESCE(emp.last_name,'')) AS chairperson_name,
+               c.meeting_schedule,
+               c.quorum_numerator, c.quorum_denominator
+        FROM councils c
+        LEFT JOIN employees emp ON emp.id = c.chairperson_id
+        LEFT JOIN users u ON u.id = emp.user_id
+        WHERE c.is_active = true ORDER BY c.id
+      `);
+      return ((r as { rows?: unknown[] }).rows) ?? [];
+    }, 'DB_ERROR');
+  }
+
+  // Item #154 (CC audit tavsiya #33, Qoida 6): CoordinationController.usersForSelect()
+  // ichida to'g'ridan-to'g'ri SQL bo'lgan — repo/service'ga ko'chirildi.
+  async listUsersForSelect(): Promise<Result<unknown[]>> {
+    return safeCall(async () => {
+      // NOTE: councils.chairperson_id FK -> employees(id).
+      // Returns employees.id as `id` so FE can set chairperson_id correctly.
+      // Also includes user_id and role for display context.
+      const r = await db.execute(sql`
+        SELECT
+          e.id,
+          u.id AS user_id,
+          TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')) AS full_name,
+          u.role
+        FROM employees e
+        JOIN users u ON u.id = e.user_id
+        WHERE (u.is_active = true OR u.is_active IS NULL)
+          AND e.deleted_at IS NULL
+          AND TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')) <> ''
+        ORDER BY e.first_name, e.last_name
+        LIMIT 200
+      `);
+      return ((r as { rows?: unknown[] }).rows) ?? [];
+    }, 'DB_ERROR');
+  }
+
   async getStatsRasp(): Promise<Result<RaspStats>> {
     return safeCall(async () => {
       const r = await db.select({

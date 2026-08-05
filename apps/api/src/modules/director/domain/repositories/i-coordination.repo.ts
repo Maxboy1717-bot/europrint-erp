@@ -57,6 +57,8 @@ export interface ICoordinationRepo {
     quorumNumerator: number | null,
     quorumDenominator: number | null,
   ): Promise<Result<Row>>;
+  listCouncils(): Promise<Result<unknown[]>>;
+  listUsersForSelect(): Promise<Result<unknown[]>>;
 }
 
 export const COORDINATION_REPO = Symbol('COORDINATION_REPO');
