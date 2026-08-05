@@ -19,11 +19,12 @@ export const ChatCreateGroupSchema = z.object({
 export type ChatCreateGroupDto = z.infer<typeof ChatCreateGroupSchema>;
 
 export const ChatSendMessageSchema = z.object({
-  content:   z.string().min(1).max(MAX_NOTES_LENGTH),
-  fileUrl:   z.string().url().optional(),
-  fileName:  z.string().max(255).optional(),
-  fileType:  z.string().max(100).optional(),
-  replyToId: z.number().int().positive().optional(),
+  content:          z.string().min(1).max(MAX_NOTES_LENGTH),
+  fileUrl:          z.string().url().optional(),
+  fileName:         z.string().max(255).optional(),
+  fileType:         z.string().max(100).optional(),
+  replyToId:        z.number().int().positive().optional(),
+  mentionedUserIds: z.array(z.number().int().positive()).max(50).optional(),
 });
 export type ChatSendMessageDto = z.infer<typeof ChatSendMessageSchema>;
 

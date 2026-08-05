@@ -118,6 +118,7 @@ export class ChatController {
       fileName: body.fileName,
       fileType: body.fileType,
       replyToId: body.replyToId,
+      mentionedUserIds: body.mentionedUserIds,
     }));
   }
 

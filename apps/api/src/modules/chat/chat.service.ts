@@ -122,7 +122,7 @@ export class ChatService {
   getMessages(roomId: string | number, userId: number, limit?: number, before?: string) { return this.msgSvc.getMessages(roomId, userId, limit, before); }
   sendMessage(roomId: string | number, senderId: number, content: string, opts?: Record<string, unknown>) {
     const replyToId = opts?.replyToId != null ? Number(opts.replyToId) : undefined;
-    return this.msgSvc.sendMessage(roomId, senderId, content, opts?.fileUrl as string | undefined, opts?.fileName as string | undefined, opts?.fileType as string | undefined, replyToId, opts?.clientMsgId as string | undefined);
+    return this.msgSvc.sendMessage(roomId, senderId, content, opts?.fileUrl as string | undefined, opts?.fileName as string | undefined, opts?.fileType as string | undefined, replyToId, opts?.clientMsgId as string | undefined, opts?.mentionedUserIds as (number | string)[] | undefined);
   }
   editMessage(messageId: string | number, userId: number, content: string) { return this.msgSvc.editMessage(messageId, userId, content); }
   deleteMessage(messageId: string | number, userId: number) { return this.msgSvc.deleteMessage(messageId, userId); }

@@ -50,7 +50,7 @@ export class ChatMessageService {
   async sendMessage(
     roomId: string | number, senderId: number, content: string,
     fileUrl?: string, fileName?: string, fileType?: string, replyToId?: number,
-    clientMsgId?: string,
+    clientMsgId?: string, mentionedUserIds?: (number | string)[],
   ): Promise<Result<Record<string, unknown>, AppError>> {
     const roomIdStr = String(roomId);
     const senderIdStr = String(senderId);
@@ -62,7 +62,7 @@ export class ChatMessageService {
     const msgResult = await this.msgRepo.insertMessage(
       roomIdStr, senderIdStr, content || null, fileUrl || null,
       fileName || null, fileType || null, messageType, replyToIdStr,
-      clientMsgId || null,
+      clientMsgId || null, (mentionedUserIds ?? []).map(String),
     );
     if (!msgResult.ok) return Err(msgResult.error.message);
     await this.msgRepo.incrementUnreadForOthers(roomIdStr, senderIdStr);

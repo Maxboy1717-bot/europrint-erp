@@ -28,6 +28,7 @@ export class ChatNotificationRepository {
         room_name:   chatRooms.name,
         sender_name: appUsers.full_name,
         last_read_at: chatMembers.lastReadAt,
+        mentioned_user_ids: chatMessages.mentionedUserIds,
       })
         .from(chatMessages)
         .innerJoin(chatMembers, and(
@@ -47,7 +48,9 @@ export class ChatNotificationRepository {
     if (isErr(res)) return Err(res.error);
     const items: ChatNotificationItem[] = Array.isArray(res.data) ? (Array.isArray(res.data) ? res.data : []).map((r) => ({
       id:        String(r.id),
-      type:      'MESSAGE' as const,
+      type:      (Array.isArray(r.mentioned_user_ids) && (r.mentioned_user_ids as unknown[]).map(String).includes(String(userId)))
+        ? 'MENTION' as const
+        : 'MESSAGE' as const,
       roomId:    String(r.room_id),
       messageId: String(r.id),
       roomName:  String(r.room_name ?? ''),

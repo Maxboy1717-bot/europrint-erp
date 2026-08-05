@@ -8,6 +8,7 @@ import { Result, AppError, safeCall } from '@common/result';
 import type { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { NotificationBotService } from '../hr/telegram-bots/notification-bot.service';
+import { PushService } from './push.service';
 
 @Injectable()
 export class ChatGatewayHelperService {
@@ -18,6 +19,7 @@ export class ChatGatewayHelperService {
   constructor(
     private readonly chatService: ChatService,
     private readonly notificationBot: NotificationBotService,
+    private readonly pushService: PushService,
   ) {}
 
   setContext(server: Server, userSockets: Map<number, Set<string>>) {
@@ -67,7 +69,7 @@ export class ChatGatewayHelperService {
 
   async handleSendMessage(
     client: Socket,
-    data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string; clientMsgId?: string },
+    data: { roomId: number | string; content: string; replyToId?: string; fileUrl?: string; fileName?: string; fileType?: string; clientMsgId?: string; mentionedUserIds?: (number | string)[] },
   ) {
     const userId = client.data?.userId;
     if (!userId) return;
@@ -78,7 +80,7 @@ export class ChatGatewayHelperService {
         roomId,
         userId,
         data.content,
-        { fileUrl: data.fileUrl, fileName: data.fileName, fileType: data.fileType, replyToId: data.replyToId ? Number(data.replyToId) : undefined, clientMsgId: data.clientMsgId },
+        { fileUrl: data.fileUrl, fileName: data.fileName, fileType: data.fileType, replyToId: data.replyToId ? Number(data.replyToId) : undefined, clientMsgId: data.clientMsgId, mentionedUserIds: data.mentionedUserIds },
       );
       if (!sendResult.ok) { client.emit('error', { message: sendResult.error.message, clientMsgId: data.clientMsgId }); return; }
       const message = sendResult.data;
@@ -93,7 +95,8 @@ export class ChatGatewayHelperService {
         this.emitToUser(Number(member.userId), 'room_updated', { roomId });
       }
 
-      await this.sendTelegramNotification(roomId, userId, data.content, members);
+      const mentionedIds = new Set((data.mentionedUserIds ?? []).map((id) => String(id)));
+      await this.sendTelegramNotification(roomId, userId, data.content, members, mentionedIds);
     } catch (err) {
       client.emit('error', { message: String(err), clientMsgId: data.clientMsgId });
     }
@@ -206,7 +209,10 @@ export class ChatGatewayHelperService {
     }
   }
 
-  private async sendTelegramNotification(roomId: number, senderId: number, content: string, members: Record<string, unknown>[]) {
+  private async sendTelegramNotification(
+    roomId: number, senderId: number, content: string, members: Record<string, unknown>[],
+    mentionedIds: Set<string> = new Set(),
+  ) {
     try {
       const room = await this.chatService.getRoomById(roomId);
       const senderName = (Array.isArray(members) ? members : []).find(m => m.userId === senderId)?.fullName || 'Xodim';
@@ -214,11 +220,20 @@ export class ChatGatewayHelperService {
 
       for (const member of members) {
         if (member.userId === senderId) continue;
+        const memberId = Number(member.userId);
+        const isMentioned = mentionedIds.has(String(memberId));
         await this.notificationBot.handleErpEvent({
-          event: 'chat.new_message',
-          employeeId: Number(member.userId),
+          event: isMentioned ? 'chat.mention' : 'chat.new_message',
+          employeeId: memberId,
           data: { senderName, roomName: room?.name || 'Shaxsiy chat', preview },
         });
+        if (isMentioned) {
+          await this.pushService.sendToUser(String(memberId), {
+            title: `${senderName} sizni belgiladi`,
+            body: preview,
+            url: `/chat/${roomId}`,
+          });
+        }
       }
     } catch (err) {
       this.logger.warn(`Telegram notification failed: ${err}`);

@@ -80,7 +80,7 @@ export class ChatMessageBaseRepository {
     roomIdStr: string, senderIdStr: string, content: string | null,
     fileUrl: string | null, fileName: string | null, fileType: string | null,
     messageType: string, replyToIdStr: string | null,
-    clientMsgId: string | null = null,
+    clientMsgId: string | null = null, mentionedUserIds: string[] = [],
   ): Promise<Result<Record<string, unknown>>> {
     return safeCall(async () => {
       const [row] = await db
@@ -95,6 +95,7 @@ export class ChatMessageBaseRepository {
           messageType: messageType,
           replyToId: replyToIdStr,
           clientMsgId: clientMsgId,
+          mentionedUserIds,
         })
         // Retry idempotency: a re-sent optimistic message carries the same
         // client_msg_id. The (room_id, client_msg_id) unique index makes this a
