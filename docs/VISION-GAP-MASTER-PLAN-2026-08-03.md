@@ -97,6 +97,8 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 ### Egasi-data deb qayta tasniflangan (bu sessiya, kod kerak emas):
 - #114 — Chiqindi (waste) → GL posting: kredit hisob tanlovi (Inventory 1000 vs COGS 9100) egasi qarori kerak
 - #145 — CC field-level rol-tahrirlash: maydon×lavozim mapping + identity axis (position_code) egasi qarori kerak; positions=0 qator (blok)
+- #108 — 5S sifat oqimi: `docs/audit/decisions/05-director.md` EP-DIR-085 hujjatida bu aynan "🔵 OCHIQ (A-default)" deb belgilangan — "Tozalik/intizom" KPI qo'shish + "har lavozim hujjatiga" bog'langan tozalik-mezoni hali egasi tomonidan tasdiqlanmagan. Mexanizmning o'zi (kamera-AI aniqlaydi→alert→inson tasdiqlaydi) endi #85 orqali umumiy holda ishlaydi (camera_alerts + CameraAlertsRouteController) — faqat "5S" mission-turi + director-panel KPI qo'shish qoladi, bu esa mezon tasdiqlangandan keyin mexanik ish.
+- #107 — Operatsiya-turi normalari/smena statistika/worker-norm% paneli: `docs/audit/decisions/05-director.md` EP-DIR-058/059/060 barchasi "🔵 OCHIQ (A-default)". EP-DIR-059 aniq `CREATE` amal talab qiladi — yangi `operation_norm` jadval (Q-35 ruxsat kerak) + 13 ta operatsiya turi (avtokley/GTO/kley/oynakcha/paypoq/rezka/samokley/skleyka/tigel/yoni/laminatsiya/lak/vib.lak) uchun REAL norma-qiymatlar — bular faqat egasining "Iyun ishchilar.xlsx" faylida bor, men to'qib chiqara olmayman. EP-DIR-058 (ishchi norma% formula) ham Excel-formulaga mos bo'lishi kerak — aniq formula egasidan so'raladi.
 
 ### Bu sessiyada tugallangan (davomi — Workflow to'xtatilgandan keyin, to'g'ridan-to'g'ri):
 - #104 — Director dashboard aiInsights: real karta-AI agregat (ckp_fact_values) — `a3a641a9`
@@ -109,8 +111,13 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 - #168 — Kanban GanttView.tsx.bak.t2c o'lik orfan fayl o'chirildi — `accb4c5b`
 - #105 — Director ZNO/ZVS + rasporyazhenie SLA eskalatsiya (1-bosqichli edi, endi 3-bosqichli) — `35b727f7`
 - #85 — IoT camera-AI PPE/xavfsizlik topilmalari camera_alerts UI'ga yetib bormasdi — `0b034f84`
+- #106 — Director karta-AI agregatga "vazifa yubor" (Kanban) tugmasi qo'shildi — `91eaaa5b`
 
-**Jami bu sessiyada: 15 ta real commit** (xavfsizlik ×1, yangi funksiya ×4, xato tuzatish ×8, o'lik kod tozalash ×2).
+**Jami bu sessiyada: 16 ta real commit** (xavfsizlik ×1, yangi funksiya ×5, xato tuzatish ×8, o'lik kod tozalash ×2).
+
+**DIRECTOR moduli yopildi** (#100-#117, 18 band): #100/#101/#104/#105/#106/#113/#116 tuzatildi;
+#108/#107/#114 egasi-data; #102/#103/#109-#112/#115/#117 hali fon-workflow natijasi/tekshiruv kutmoqda
+(keyingi navbat: shu qolganlarni yakunlab, CHAT/CC/KANBAN/IOT modullariga o'tish).
 
 ⚠️ **2026-08-05 davomida egasi aniq buyruq berdi: "workflow qilmasdan bajarish kerak"** — Workflow
 tool tarmoq xatolari bilan qayta-qayta qulab tushgani sabab, shu paytdan boshlab barcha keyingi
