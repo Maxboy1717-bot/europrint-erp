@@ -27,6 +27,7 @@ import { EventBus } from '@nestjs/cqrs';
 import { I18nService } from 'nestjs-i18n';
 import * as crypto from 'crypto';
 import { z } from 'zod';
+import { CacheService } from '@common/cache/cache.service';
 import { CcSpawnRequestedEvent, type CcSpawnRequestedEventProps as CcSpawnPayload } from '../domain/events/cc-spawn-requested.event';
 
 const CcWebhookSchema = z.object({
@@ -39,8 +40,7 @@ const CcWebhookSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 }).passthrough();
 
-const seenKeys = new Map<string, number>();   // idempotency cache (in-memory; TTL 1h)
-const IDEMPOTENCY_TTL_MS = 60 * 60 * 1000;
+const IDEMPOTENCY_TTL_SECONDS = 60 * 60; // 1h
 
 @Throttle({ default: { limit: 60, ttl: 60_000 } })
 @Controller('cc/webhooks')
@@ -51,6 +51,7 @@ export class CcWebhookController {
     private readonly eventBus: EventBus,
     private readonly cfg:      ConfigService,
     private readonly i18n:     I18nService,
+    private readonly cache:    CacheService,
   ) {}
 
   @Post(':source')
@@ -65,14 +66,13 @@ export class CcWebhookController {
     if (!signature) throw new UnauthorizedException(await this.i18n.t('errors.signatureHeaderRequired'));
     if (!idempKey)  throw new BadRequestException(await this.i18n.t('errors.idempotencyKeyRequired'));
 
-    // ── 1. Idempotency tekshiruv ────────────────────────────────────
-    this.gcIdempotency();
-    if (seenKeys.has(idempKey)) {
+    // ── 1. Idempotency tekshiruv (Redis orqali — API pod'lar orasida umumiy) ──
+    const idempCacheKey = `cc:webhook:idempotency:${idempKey}`;
+    const alreadySeen = await this.cache.get<boolean>(idempCacheKey);
+    if (alreadySeen) {
       return { ok: true, deduplicated: true };
     }
-    // WARN: in-memory idempotency — duplicates NOT caught across multiple API pods.
-    // Production fix: store idempKey in Redis with TTL = IDEMPOTENCY_TTL_MS.
-    seenKeys.set(idempKey, Date.now());
+    await this.cache.set(idempCacheKey, true, { ttlSeconds: IDEMPOTENCY_TTL_SECONDS });
 
     // ── 2. HMAC verification ─────────────────────────────────────────
     const secret = this.cfg.get<string>(`CC_WEBHOOK_SECRET_${source.toUpperCase()}`)
@@ -108,13 +108,6 @@ export class CcWebhookController {
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  private gcIdempotency() {
-    const cutoff = Date.now() - IDEMPOTENCY_TTL_MS;
-    for (const [key, ts] of seenKeys) {
-      if (ts < cutoff) seenKeys.delete(key);
-    }
-  }
-
   private timingSafeEqual(a: string, b: string): boolean {
     try {
       const bufA = Buffer.from(a, 'utf8');
