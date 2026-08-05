@@ -111,6 +111,11 @@ export class ChatService {
     const isMember = await this.roomSvc.isRoomMember(roomId, userId);
     if (!isMember) throw new ForbiddenException(await this.i18n.t('auth.permissionsDenied'));
   }
+
+  async assertRoomAdmin(roomId: string | number, userId: number): Promise<void> {
+    const isAdmin = await this.roomSvc.isRoomAdmin(roomId, userId);
+    if (!isAdmin) throw new ForbiddenException(await this.i18n.t('auth.permissionsDenied'));
+  }
   getTotalUnreadCount(userId: number) { return this.roomSvc.getTotalUnreadCount(userId); }
   getBulkUnreadCounts(userIds: number[]) { return this.roomSvc.getBulkUnreadCounts(userIds); }
   getAllEmployees(search?: string) { return this.roomSvc.getAllEmployees(search); }

@@ -89,6 +89,11 @@ export class ChatRoomService {
     return result.ok ? result.data : false;
   }
 
+  async isRoomAdmin(roomId: string | number, userId: number): Promise<boolean> {
+    const result = await this.roomRepo.checkIsAdmin(String(roomId), userId);
+    return result.ok ? result.data : false;
+  }
+
   async getTotalUnreadCount(userId: number): Promise<number> {
     const result = await this.roomRepo.getTotalUnread(String(userId));
     return result.ok ? result.data : 0;

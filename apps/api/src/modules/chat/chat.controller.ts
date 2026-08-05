@@ -359,7 +359,9 @@ export class ChatController {
     @Body() body: unknown,
   ) {
     const dto = (body ?? {}) as Record<string, unknown>;
-    await this.chatService.assertRoomMember(roomId, user.id);
+    // Item #12 (audit :263): nom/tavsif/avatar o'zgartirish ADMIN roliga cheklangan —
+    // oddiy a'zolik yetarli emas (xona yaratuvchisi createGroupRoom() da 'ADMIN' oladi).
+    await this.chatService.assertRoomAdmin(roomId, user.id);
     const r = await db.execute(sql`
       UPDATE chat_rooms SET
         name        = COALESCE(${dto['name']        ?? null}::text,    name),

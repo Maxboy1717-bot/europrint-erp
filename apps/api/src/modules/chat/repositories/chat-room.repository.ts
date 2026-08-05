@@ -289,6 +289,26 @@ export class ChatRoomRepository {
       }, 'DB_ERROR');
   }
 
+  // Chat audit tavsiya #12 (CHAT-COMPLETE-FRESH-ANALYSIS-2026-07-10-v1.md:263): updateRoom
+  // (nom/tavsif/avatar) hozircha faqat oddiy a'zolikni tekshirar edi — ADMIN roliga
+  // cheklanmagan. Xona yaratuvchisi createGroupRoom() da 'ADMIN' rol oladi (:74 yuqorida).
+  async checkIsAdmin(roomId: string, userId: number): Promise<Result<boolean>> {
+    return safeCall(async () => {
+      const rows = await db
+        .select({ found: sql<number>`1` })
+        .from(chatMembers)
+        .where(
+          and(
+            sql`${chatMembers.roomId} = ${Number(roomId)}`,
+            sql`${chatMembers.userId} = ${userId}`,
+            sql`UPPER(${chatMembers.role}) = 'ADMIN'`,
+          ),
+        )
+        .limit(1);
+      return rows.length > 0;
+      }, 'DB_ERROR');
+  }
+
   async getTotalUnread(userIdStr: string): Promise<Result<number>> {
     return safeCall(async () => {
       const [row] = await db
