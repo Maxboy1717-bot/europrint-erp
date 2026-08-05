@@ -104,7 +104,11 @@ function MainApp() {
     return <PrivateRoute><Suspense fallback={<PageLoader />}><DocumentPrintView /></Suspense></PrivateRoute>;
   }
 
-  if (location === "/chat" || location.startsWith("/chat/")) {
+  // Item #17 (CHAT-COMPLETE-FRESH-ANALYSIS-2026-07-10-v1.md:270): "/chat/*" used to swallow
+  // "/chat/admin" too, so the dedicated admin/director-gated route in AppRouter.tsx (:204,
+  // wrapped in the normal AppShellModern — a moderation dashboard, not the messenger) never
+  // ran; ChatAdminPage was unreachable by URL. "/chat/admin" now falls through to AppRouter.
+  if (location === "/chat" || (location.startsWith("/chat/") && !location.startsWith("/chat/admin"))) {
     return (
       <PrivateRoute>
         <ChatSocketProvider>
