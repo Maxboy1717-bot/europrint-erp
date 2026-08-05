@@ -11,6 +11,8 @@ import { SettingsAdminRepo } from './repositories/settings-admin.repo';
 
 type ResultData<R> = R extends Promise<infer T> ? (T extends { ok: true; data: infer D } ? D : never) : never;
 type GuidelineRow = ResultData<ReturnType<SettingsAdminRepo['findAllGuidelines']>> extends ReadonlyArray<infer R> ? R : never;
+// insertGuideline/updateGuideline .returning() the bare table row — no org_functions join, so no positionName.
+type GuidelineWriteRow = ResultData<ReturnType<SettingsAdminRepo['insertGuideline']>> extends ReadonlyArray<infer R> ? R : never;
 type FilterRow = ResultData<ReturnType<SettingsAdminRepo['findAllFilters']>> extends ReadonlyArray<infer R> ? R : never;
 
 export interface ContactSettingData {
@@ -43,20 +45,20 @@ export class SettingsAdminService {
     return Ok(result.data);
   }
 
-  async createGuideline(body: { title: string; content: string; category: string; isActive: boolean; createdBy?: string }): Promise<Result<GuidelineRow | undefined>> {
-    const result = await this.repo.insertGuideline({ title: body.title, content: body.content, category: body.category, isActive: body.isActive, createdBy: body.createdBy });
+  async createGuideline(body: { title?: string; content?: string; category: string; isActive: boolean; createdBy?: string; orgFunctionId: number; filePath: string; version: string }): Promise<Result<GuidelineWriteRow | undefined>> {
+    const result = await this.repo.insertGuideline(body);
     if (!result.ok) return Err(result.error);
     return Ok(result.data[0]);
   }
 
-  async updateGuideline(id: string, body: Partial<{ title: string; content: string; category: string; isActive: boolean; createdBy: string }>): Promise<Result<GuidelineRow | undefined>> {
+  async updateGuideline(id: number, body: Partial<{ title: string; content: string; category: string; isActive: boolean; createdBy: string; orgFunctionId: number; filePath: string; version: string }>): Promise<Result<GuidelineWriteRow | undefined>> {
     const result = await this.repo.updateGuideline(id, { ...body, updatedAt: _time.now() });
     if (!result.ok) return Err(result.error);
     if (result.data.length === 0) return Err({ code: 'NOT_FOUND', message: `Guideline ${id} not found` });
     return Ok(result.data[0]);
   }
 
-  async deleteGuideline(id: string): Promise<Result<{ deleted: true; id: string }>> {
+  async deleteGuideline(id: number): Promise<Result<{ deleted: true; id: number }>> {
     const result = await this.repo.deleteGuideline(id);
     if (!result.ok) return Err(result.error);
     if (result.data.length === 0) return Err({ code: 'NOT_FOUND', message: `Guideline ${id} not found` });
