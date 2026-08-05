@@ -17,6 +17,9 @@ export interface ModuleItem { key: string; label: string; enabled: boolean }
 
 export interface ExpiryAlert { tenantId: string; name: string; plan: string; status: string; expiresIn: number }
 
+export interface ErrorLogRow { id: unknown; level: 'error' | 'warn' | 'info'; message: unknown; requestPath: unknown; createdAt: unknown }
+interface RawErrorLogRow { id: unknown; timestamp: unknown; path: unknown; method: unknown; message: unknown; status_code: number | null; user_id: unknown }
+
 @Injectable()
 export class SaasService {
   constructor(private readonly repo: SaasRepo) {}
@@ -39,8 +42,27 @@ export class SaasService {
     return Ok({ totalTenants: all.length, activeTenants: active, inactiveTenants: all.length - active });
   }
 
-  getErrorLogs(): Promise<Result<{ logs: never[]; total: number }>> {
-    return Promise.resolve(Ok({ logs: [], total: 0 }));
+  // Item #121: was a hardcoded stub — the "Xatolar" admin tab always showed empty even
+  // though system_error_logs has real rows (client-error beacon writes to it). level is
+  // derived from status_code since the table has no level column of its own.
+  async getErrorLogs(): Promise<Result<{ logs: ErrorLogRow[]; total: number }>> {
+    const result = await this.repo.findErrorLogs(100);
+    if (!result.ok) return Err(result.error);
+    const rows = Array.isArray(result.data) ? (result.data as RawErrorLogRow[]) : [];
+    const logs = rows.map((row) => ({
+      id: row.id,
+      level: this.deriveLevel(row.status_code),
+      message: row.message,
+      requestPath: row.path,
+      createdAt: row.timestamp,
+    }));
+    return Ok({ logs, total: logs.length });
+  }
+
+  private deriveLevel(statusCode: number | null): 'error' | 'warn' | 'info' {
+    if (statusCode === null || statusCode === 0 || statusCode >= 500) return 'error';
+    if (statusCode >= 400) return 'warn';
+    return 'info';
   }
 
   async updateTenantStatus(id: string, status: string): Promise<Result<TenantRow | undefined>> {
