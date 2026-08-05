@@ -5,10 +5,13 @@
 
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bullmq';
 
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { AuthModule } from '../auth/auth.module';
 import { CronModule } from '../../cron/cron.module';
+import { QueueModule } from '../queue/queue.module';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 
 import { AdminUsersController } from './presentation/controllers/admin-users.controller';
 import { AdminSettingsController } from './presentation/controllers/admin-settings.controller';
@@ -47,6 +50,11 @@ import { TaxonomyRepository } from './settings/taxonomy.repo';
     DatabaseModule,
     AuthModule,
     CronModule,
+    // Item #118: real BullMQ access for AdminQueueService (Queue Monitor was 100% mocked).
+    // Re-importing QueueModule does not duplicate its processors — Nest dedupes static
+    // module imports across the graph (same pattern as cron.module.ts + app.module.ts).
+    QueueModule,
+    BullModule.registerQueue({ name: QUEUE_NAMES.KANBAN_CRON }),
     ThrottlerModule.forRoot([
       {
         name: 'admin',

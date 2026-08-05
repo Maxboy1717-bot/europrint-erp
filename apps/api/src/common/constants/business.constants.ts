@@ -60,6 +60,12 @@ export const PO_PRICE_VARIANCE_RED_PCT = 25;
 /** POS / queue status poll interval */
 export const QUEUE_POLL_INTERVAL_MS = 2_000;
 
+/** Admin Queue Monitor — max failed jobs listed per queue per request (pagination) */
+export const ADMIN_QUEUE_FAILED_JOBS_PAGE_SIZE = 100;
+
+/** Admin Queue Monitor — max failed jobs removed in one "clear all" bulk clean() call */
+export const ADMIN_QUEUE_CLEAN_LIMIT = 100_000;
+
 /** SMS token / session TTL (29 days in ms) */
 export const SMS_TOKEN_TTL_MS = 29 * 24 * 60 * 60 * 1_000;
 

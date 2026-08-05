@@ -34,12 +34,14 @@ export interface FailedJobsResponse {
   jobs: FailedJob[];
 }
 
+// Item #118: labels referenced a fictitious queue-name set that never matched any real
+// BullMQ queue in the backend — corrected to the 7 real queues (queue.constants.ts).
 export const QUEUE_LABELS: Record<string, string> = {
-  payroll: "Maosh (Payroll)",
-  mrp: "MRP",
-  "gl-post": "GL Posting",
-  notify: "Bildirishnomalar",
-  ai: "AI Tahlil",
-  reports: "Hisobotlar",
-  "payroll-dlq": "Payroll DLQ",
+  email: "Email",
+  telegram: "Telegram",
+  "pdf-generation": "PDF Generatsiya",
+  "label-print": "Etiketka Chop Etish",
+  "mrp-run": "MRP Qayta Hisoblash",
+  "forecast-recalc": "Talab Bashorati",
+  "kanban-cron": "Kanban Davriy Vazifalar",
 };

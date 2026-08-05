@@ -55,12 +55,12 @@ export class AdminQueueController {
     return unwrapOrInternal(await this.svc.retryJob(queue, jobId));
   }
 
-  @Delete('failed/:id')
+  @Delete('failed/:queue')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete a failed job permanently' })
-  @ApiResponse({ status: 200, description: 'Job deleted' })
-  @ApiResponse({ status: 404, description: 'Job not found' })
-  async deleteFailedJob(@Param('id') id: string) {
-    return this.svc.deleteFailedJob(id);
+  @ApiOperation({ summary: 'Clear all failed jobs for a queue' })
+  @ApiResponse({ status: 200, description: 'Failed jobs cleared' })
+  @ApiResponse({ status: 404, description: 'Queue not found' })
+  async clearFailedJobs(@Param('queue') queue: string) {
+    return unwrapOrInternal(await this.svc.clearFailedJobs(queue));
   }
 }
