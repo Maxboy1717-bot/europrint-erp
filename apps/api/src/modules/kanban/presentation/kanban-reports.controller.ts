@@ -38,7 +38,6 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 // ── Project Zod schemas ────────────────────────────────────────────────────
 const CreateProjectSchema = z.object({
