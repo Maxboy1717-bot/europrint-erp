@@ -26,7 +26,11 @@ export const productionOrders = pgTable('production_orders', {
   productId: text('product_id'),
   quantity: decimal('quantity', { precision: 15, scale: 4 }).notNull(),
   unit: text('unit'),
-  status: text('status').notNull().default('draft'),
+  // Item #81: default was 'draft', which is not in production_orders_status_chk's 13-value
+  // list — matches the live column default ('created'::character varying) instead. No live
+  // writer ever relied on the JS default (all real inserts set status explicitly), so this is
+  // a pure schema-accuracy fix, not a behavior change.
+  status: text('status').notNull().default('created'),
   // EP-PP-085 "Очеред" — operator ko'radigan stanok-ichi navbat raqami (Batch 5 Item 4).
   queueSequence: integer('queue_sequence'),
   plannedStart: ts('planned_start'),

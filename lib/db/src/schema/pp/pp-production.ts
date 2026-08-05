@@ -401,7 +401,9 @@ export const productionOrders = pgTable("production_orders", {
   confirmedQuantity: numericMoney("confirmed_quantity").notNull().default(0),
   scrapQuantity: numericMoney("scrap_quantity").notNull().default(0),
   orderType: varchar("order_type", { length: 20 }).notNull().default("standard"),
-  status: varchar("status", { length: 20 }).notNull().default("created"),
+  // Item #81: length was 20, which doesn't fit 'released_to_production' (22 chars) — one of
+  // this same table's own 13 status_chk values below. Live column is varchar(50) (confirmed).
+  status: varchar("status", { length: 50 }).notNull().default("created"),
   plannedStartDate: varchar("planned_start_date", { length: 10 }),
   plannedEndDate: varchar("planned_end_date", { length: 10 }),
   actualStartDate: varchar("actual_start_date", { length: 10 }),
@@ -467,7 +469,11 @@ export const insertProductionOrderSchema = createInsertSchema(productionOrders, 
   confirmedQuantity: z.number().nonnegative("Tasdiqlangan miqdor 0 yoki katta bo'lishi kerak"),
   scrapQuantity: z.number().nonnegative("Chiqindi miqdori 0 yoki katta bo'lishi kerak"),
   orderType: z.enum(["standard", "rework", "sample"]),
-  status: z.enum(["created", "released", "in_progress", "completed", "closed", "qc_hold"]),
+  // Item #81: was a 6-value subset that didn't match this table's own 13-value status_chk
+  // (line ~460) or PoStatus (production-order.aggregate.ts) — expanded to the full CHECK list.
+  // Not imported anywhere in apps/api (grepped), so this was a documentation-only drift, not a
+  // runtime gap; kept in sync anyway so a future consumer doesn't inherit a wrong constraint.
+  status: z.enum(["created", "pending", "planned", "confirmed", "released", "released_to_production", "in_progress", "in_qc", "qc_hold", "completed", "closed", "cancelled", "paused"]),
   priority: z.number().int().min(1).max(5, "Ustuvorlik 1-5 oralig'ida bo'lishi kerak"),
 }).omit({ id: true, createdAt: true, updatedAt: true } as never);
 
