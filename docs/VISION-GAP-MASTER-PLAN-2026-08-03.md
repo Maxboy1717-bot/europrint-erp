@@ -103,6 +103,12 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 - #191 — SD mijoz tahrirlash: "blacklist"/"blacklisted" mos kelmasligi + majburiy status-resend 400 — `a25d5fc4`
 - #206 — Marketing dashboard totalSpent hech qachon hisoblanmagan — `429f37cd`
 - #125 — Chat is_edited hech qachon saqlanmagan — `33634a35`
+- #116 — Director kunlik daftar surunkali-muammo eskalatsiyasi (1-kunlik edi) — `b546a7f7`
+- #126 — Chat @mention FE'da tutiladi, lekin BE'ning har bir bosqichida tashlanadi — `97d8809c`
+- #101 — Director owner-summary kunlik digest FE'ga ulandi (BE tayyor edi, iste'molchisi yo'q edi) — `f1caa337`
+- #168 — Kanban GanttView.tsx.bak.t2c o'lik orfan fayl o'chirildi — `accb4c5b`
+
+**Jami bu sessiyada: 13 ta real commit** (xavfsizlik tuzatish ×1, yangi funksiya ×3, xato tuzatish ×8, o'lik kod tozalash ×1).
 
 ⚠️ **2026-08-05 davomida egasi aniq buyruq berdi: "workflow qilmasdan bajarish kerak"** — Workflow
 tool tarmoq xatolari bilan qayta-qayta qulab tushgani sabab, shu paytdan boshlab barcha keyingi
