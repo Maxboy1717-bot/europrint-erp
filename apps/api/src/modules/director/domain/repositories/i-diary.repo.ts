@@ -41,9 +41,11 @@ export interface IDiaryRepo {
   /** Mavjud kun yozuvini qaytaradi yoki auto-fill bilan yangisini yaratadi. */
   getOrCreateToday(authorCardId: number, date: string): Promise<Result<IDiaryEntry>>;
   getByAuthorDate(authorCardId: number, date: string): Promise<Result<IDiaryEntry | null>>;
+  /** Egasini tekshirmasdan id bo'yicha yozuvni qaytaradi — service ownership-gate uchun ishlatadi. */
+  getById(id: number): Promise<Result<IDiaryEntry | null>>;
   listAll(from: string, to: string, authorCardId?: number): Promise<Result<IDiaryEntry[]>>;
-  save(id: number, dto: DiarySaveInput): Promise<Result<IDiaryEntry>>;
-  submit(id: number): Promise<Result<IDiaryEntry>>;
+  save(id: number, dto: DiarySaveInput, authorCardId: number): Promise<Result<IDiaryEntry>>;
+  submit(id: number, authorCardId: number): Promise<Result<IDiaryEntry>>;
   /** Kechagi (draft) hal qilinmagan main_issue ni bugungi carry_over_issues ga ko'chiradi. */
   carryOverIssues(authorCardId: number, targetDate: string): Promise<Result<void>>;
 }

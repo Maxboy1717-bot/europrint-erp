@@ -108,7 +108,16 @@ export class DiaryRepository implements IDiaryRepo {
     );
   }
 
-  async save(id: number, dto: DiarySaveInput): Promise<Result<IDiaryEntry>> {
+  async getById(id: number): Promise<Result<IDiaryEntry | null>> {
+    return safeCall(async () => {
+      const rows = await typedExecute<IDiaryEntry>(
+        sql`SELECT * FROM diary_entries WHERE id = ${id}`,
+      );
+      return rows[0] ?? null;
+    }, 'DB_ERROR');
+  }
+
+  async save(id: number, dto: DiarySaveInput, authorCardId: number): Promise<Result<IDiaryEntry>> {
     return safeCall(async () => {
       const rows = await typedExecute<IDiaryEntry>(sql`
         UPDATE diary_entries SET
@@ -117,7 +126,7 @@ export class DiaryRepository implements IDiaryRepo {
           tomorrow_plan = COALESCE(${dto.tomorrow_plan ?? null}, tomorrow_plan),
           status        = 'draft',
           updated_at    = NOW()
-        WHERE id = ${id}
+        WHERE id = ${id} AND author_card_id = ${authorCardId}
         RETURNING *
       `);
       if (!rows[0]) throw new Error('NOT_FOUND');
@@ -125,11 +134,11 @@ export class DiaryRepository implements IDiaryRepo {
     }, 'DB_ERROR');
   }
 
-  async submit(id: number): Promise<Result<IDiaryEntry>> {
+  async submit(id: number, authorCardId: number): Promise<Result<IDiaryEntry>> {
     return safeCall(async () => {
       const rows = await typedExecute<IDiaryEntry>(sql`
         UPDATE diary_entries SET status = 'submitted', updated_at = NOW()
-        WHERE id = ${id}
+        WHERE id = ${id} AND author_card_id = ${authorCardId}
         RETURNING *
       `);
       if (!rows[0]) throw new Error('NOT_FOUND');

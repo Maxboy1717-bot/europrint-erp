@@ -5,7 +5,7 @@
  *   day's unresolved issues. Returns Result<T>.
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { safeCall, Result } from '@common/result';
 import {
   DIARY_REPO,
@@ -63,12 +63,48 @@ export class DiaryService {
     }, 'DB_ERROR');
   }
 
-  async saveDraft(id: number, dto: DiarySaveInput): Promise<Result<IDiaryEntry>> {
-    return this.repo.save(id, dto);
+  /** users.org_function_id/employees.org_function_id fallback (openDiaryForUser bilan bir xil qoida). */
+  private async resolveCallerCardId(userId: number): Promise<number> {
+    const resolved = await this.repo.resolveAuthorCard(userId);
+    if (!resolved.ok) throw new Error(resolved.error.message);
+    return resolved.data ?? userId;
   }
 
-  async submitEntry(id: number): Promise<Result<IDiaryEntry>> {
-    return this.repo.submit(id);
+  /**
+   * Item #113 (IDOR fix): id bo'yicha yozuvni faqat egasi (o'z author_card_id'i)
+   * o'zgartira oladi — avval hech qanday tekshiruv yo'q edi, istalgan
+   * 'manager'-rol foydalanuvchi boshqa kartaning kundaligini o'qiy/tahrirlay olardi.
+   */
+  async saveDraft(id: number, dto: DiarySaveInput, userId: number): Promise<Result<IDiaryEntry>> {
+    return safeCall(async () => {
+      const cardId = await this.resolveCallerCardId(userId);
+      const existing = await this.repo.getById(id);
+      if (!existing.ok) throw new Error(existing.error.message);
+      if (!existing.data) throw new NotFoundException('Kundalik yozuvi topilmadi');
+      if (existing.data.author_card_id !== cardId) {
+        this.logger.warn({ code: 'EP-DIR-011', op: 'dir.diary.save.forbidden', userId, cardId, entryId: id, ownerCardId: existing.data.author_card_id });
+        throw new ForbiddenException("Boshqa bo'lim kundaligini tahrirlash mumkin emas");
+      }
+      const saved = await this.repo.save(id, dto, cardId);
+      if (!saved.ok) throw new Error(saved.error.message);
+      return saved.data;
+    }, 'DB_ERROR');
+  }
+
+  async submitEntry(id: number, userId: number): Promise<Result<IDiaryEntry>> {
+    return safeCall(async () => {
+      const cardId = await this.resolveCallerCardId(userId);
+      const existing = await this.repo.getById(id);
+      if (!existing.ok) throw new Error(existing.error.message);
+      if (!existing.data) throw new NotFoundException('Kundalik yozuvi topilmadi');
+      if (existing.data.author_card_id !== cardId) {
+        this.logger.warn({ code: 'EP-DIR-012', op: 'dir.diary.submit.forbidden', userId, cardId, entryId: id, ownerCardId: existing.data.author_card_id });
+        throw new ForbiddenException("Boshqa bo'lim kundaligini topshirish mumkin emas");
+      }
+      const submitted = await this.repo.submit(id, cardId);
+      if (!submitted.ok) throw new Error(submitted.error.message);
+      return submitted.data;
+    }, 'DB_ERROR');
   }
 
   async directorList(from: string, to: string, cardId?: number): Promise<Result<IDiaryEntry[]>> {

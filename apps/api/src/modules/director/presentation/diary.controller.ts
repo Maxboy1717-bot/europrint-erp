@@ -86,23 +86,25 @@ export class DiaryController {
   @Patch(':id')
   @ApiOperation({ summary: 'Save diary draft' })
   @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the entry owner' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  async save(@Param('id') id: string, @Body() body: unknown) {
+  async save(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: { id: number }) {
     const dto = DiarySaveSchema.parse(body);
     return unwrapOrInternal(
       await this.svc.saveDraft(parseInt(id, 10), {
         main_issue:    dto.main_issue ?? null,
         solution:      dto.solution ?? null,
         tomorrow_plan: dto.tomorrow_plan ?? null,
-      }),
+      }, user.id),
     );
   }
 
   @Post(':id/submit')
   @ApiOperation({ summary: 'Submit diary entry' })
   @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 403, description: 'Forbidden — not the entry owner' })
   @ApiResponse({ status: 404, description: 'Not found' })
-  async submit(@Param('id') id: string) {
-    return unwrapOrInternal(await this.svc.submitEntry(parseInt(id, 10)));
+  async submit(@Param('id') id: string, @CurrentUser() user: { id: number }) {
+    return unwrapOrInternal(await this.svc.submitEntry(parseInt(id, 10), user.id));
   }
 }
