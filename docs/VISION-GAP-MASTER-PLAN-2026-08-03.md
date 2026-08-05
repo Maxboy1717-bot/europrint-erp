@@ -160,4 +160,31 @@ ettirish kerak.
 - #85 (IoT camera-alerts producer + dead-cron tozalash), #118✅/#122✅/#123✅(bajarildi)
 - #126 (chat @mention), #164 (kanban karta-markazli tayinlash)
 - Fon-rejimda avval ishga tushirilgan (Workflow orqali, endi faqat natija sifatida o'qiladi) batchlar hali ham natija qaytarishi mumkin: Director #101-117 qolgan qismi, IoT #83-91, Chat #125-143 qolgan qismi, Kanban #158-169 qolgan qismi, SD #189-195 qolgan qismi, Marketing #198-207 qolgan qismi, Finance #209-215, AI-Aisha #171-185 — bular kelganda o'qib, to'g'ridan-to'g'ri (Workflow'siz) amalga oshiriladi. **CC #144-156 YOPILDI** (yuqorida).
-- **Kanban #158-169 YOPILDI** (yuqorida). **Navbatdagi modul: Chat (#127-#143 qolgan qismi)** — to'g'ridan-to'g'ri Read/Grep/Edit bilan davom etiladi.
+- **Kanban #158-169 YOPILDI** (yuqorida).
+
+**CHAT moduli: 2026-07-10 audit (CHAT-COMPLETE-FRESH-ANALYSIS-2026-07-10-v1.md) qayta
+tekshirildi.** ⭐ Eng katta xavotir — §0 "ENG KRITIK TOPILMA" (WS auth-drift: FE cookie
+uzatadi, gateway faqat auth.token o'qiydi → chat real-time UMUMAN ishlamaydi + zaif
+ulanishda xabar yo'qoladi) — Q-29 tekshiruvida BARCHASI ALLAQACHON boshqa to'lqinda
+tuzatilgan bo'lib chiqdi: gateway endi cookie'dan ham o'qiydi (`chat.gateway.ts:88`),
+reconnect cheksiz-exponential-backoff + reconnect-catch-up + optimistik-yuborish +
+client_msg_id barchasi tasdiqlandi (`ChatSocketProvider.tsx`). #125 (is_edited) va #126
+(@mention) ham ilgari shu sessiyada tuzatilgan edi. Qolgan tavsiyalarni tekshirishda
+5 ta HAQIQIY, hali ochiq topilma aniqlandi va tuzatildi:
+- **#11 (xavfsizlik, IDOR)** — chat fayl-biriktirmalar xona-a'zolik tekshiruvisiz, istalgan
+  autentifikatsiyalangan foydalanuvchi istalgan xonaning faylini ochishi mumkin edi —
+  `chat_members` tekshiruvi qo'shildi (`storage.controller.ts`) — `763869e7`
+- **#12 (xavfsizlik)** — `updateRoom` (nom/avatar) istalgan a'zoga ochiq edi, endi faqat
+  ADMIN roliga cheklangan — `50cec774`
+- **#8** — fayl-yuklash orqali yuborilgan xabar WS event-nomi drift sabab real-time
+  yetib bormasdi (`message:new` vs FE `new_message`) — `435c9ecb`
+- **#17** — `/chat/admin` (ChatAdminPage, admin/director moderatsiya paneli) App.tsx
+  route-shadow sabab HECH QACHON ishga tushmasdi — `77f98899`
+- **#18** — o'lik `ChatAdvancedController` (`hr-v2/chat`, ro'yxatsiz, to'liq funksional
+  dublikat) o'chirildi — `9b3cf05f`
+
+Qolgan P1/P2 (#9 REST-send broadcast, #10 delete-siyosati, #13 presence-TTL, #14-16
+push/FCM, #19-23 orphan-tozalash/FTS/kanal-semantika, #24-32 P2-dizayn/modernizatsiya) —
+aksariyati SCHEMA/DATA/DECISION yoki past-ustuvorlik P2; keyingi to'lqinga qoldiriladi.
+
+**Navbatdagi modul: AI-Aisha (#171-#185)** — to'g'ridan-to'g'ri Read/Grep/Edit bilan davom etiladi.
