@@ -24,7 +24,7 @@ import { I18nService } from 'nestjs-i18n';
 import { db, rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };
-import { unwrapOrInternal } from '@common/http-result';
+import { unwrapOrInternal, throwFromError } from '@common/http-result';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -35,6 +35,7 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { DocumentAccessLogService } from '@common/document-control/document-access-log.service';
 import { LmsCertificatesStandaloneService } from '../application/services/lms-certificates-standalone.service';
+import { LmsCertificatePdfService } from '../application/services/lms-certificate-pdf.service';
 import { CreateCertificateSchema, CreateCertificateDto } from './dto/lms-questionnaire.dto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
@@ -47,6 +48,7 @@ export class LmsCertificatesStandaloneController {
     private readonly svc: LmsCertificatesStandaloneService,
     private readonly i18n: I18nService,
     private readonly accessLog: DocumentAccessLogService,
+    private readonly certPdfSvc: LmsCertificatePdfService,
   ) {}
 
   @Get('expiring')
@@ -126,33 +128,20 @@ export class LmsCertificatesStandaloneController {
 
   @Get(':id/download')
   @Roles('EMPLOYEE', 'HR_SPECIALIST', 'HR_MANAGER', 'TRAINING_OFFICER', 'SUPER_ADMIN', 'DIRECTOR')
-  async downloadCertificate(@Param('id') id: string, @Res() res: FastifyReply, @Req() req: FastifyRequest) {
-    // Was a green-lie stub: hardcoded HTML that never queried the DB, echoed only the URL id +
-    // today's date, and 200'd for a non-existent cert. Now renders the REAL certificate (404 if
-    // absent). Full legal PDF (SHA-256/hash, book format) stays a separate owner-gated item.
-    const row = await this._fetchCertificate(id);
-    if (!row) throw new NotFoundException(await this.i18n.t('errors.certificateNotFoundWithId', { args: { id } }));
+  async downloadCertificate(@Param('id') id: string, @Res({ passthrough: true }) res: FastifyReply, @Req() req: FastifyRequest): Promise<Buffer> {
+    // Item #64: was HTML (green-lie stub predecessor was hardcoded, then a follow-up fix made it
+    // real-data HTML — still not a document a certificate is supposed to be). Now a real PDF via
+    // LmsCertificatePdfService (mirrors the QC/Razryad certificate-PDF pattern, same as
+    // razryad-history.controller.ts's certificatePdf()).
+    const result = await this.certPdfSvc.generateForCertificate(parseInt(id, 10));
+    if (!result.ok) throwFromError(result.error);
+    const { certNumber, pdf } = result.data;
     // STEP 3.10 roll-out — certificate download is a print-class event.
     await this.accessLog.logFromReq(req, { documentType: 'lms_certificate', documentId: id, action: 'print' });
-    const esc = (v: unknown): string => String(v ?? '—').replace(/[<>&"]/g, (ch) =>
-      ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[ch] ?? ch);
-    const fmtDate = (v: unknown): string => (v ? new Date(String(v)).toLocaleDateString('uz-UZ') : '—');
-    const certNo = row['certificateNumber'] ?? row['certNumber'] ?? id;
-    const html = [
-      '<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8">',
-      `<title>Sertifikat ${esc(certNo)}</title></head>`,
-      '<body style="font-family:sans-serif;text-align:center;padding:60px">',
-      '<h1>EuroPrint ERP Sertifikati</h1>',
-      `<p>Sertifikat raqami: <strong>${esc(certNo)}</strong></p>`,
-      `<p>Egasi: <strong>${esc(row['holderName'])}</strong></p>`,
-      `<p>Kurs: ${esc(row['courseTitle'])}</p>`,
-      `<p>Berilgan sana: ${fmtDate(row['issuedAt'])}</p>`,
-      `<p>Amal qilish muddati: ${fmtDate(row['expiresAt'])}</p>`,
-      `<p>Holati: ${esc(row['status'])}</p>`,
-      '</body></html>',
-    ].join('');
-    res.header('Content-Type', 'text/html');
-    res.header('Content-Disposition', `attachment; filename="certificate-${esc(certNo)}.html"`);
-    return res.send(html);
+    void res
+      .header('Content-Type', 'application/pdf')
+      .header('Content-Disposition', `attachment; filename="${certNumber}.pdf"`)
+      .header('X-Certificate-Number', certNumber);
+    return pdf;
   }
 }

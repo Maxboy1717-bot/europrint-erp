@@ -19,6 +19,7 @@ import { LmsExamsService } from './application/services/lms-exams.service';
 import { LmsCoursesExtendedService } from './application/services/lms-courses-extended.service';
 import { LmsTestsService } from './application/services/lms-tests.service';
 import { LmsCertificatesStandaloneService } from './application/services/lms-certificates-standalone.service';
+import { LmsCertificatePdfService } from './application/services/lms-certificate-pdf.service';
 import { LmsMiscService } from './application/services/lms-misc.service';
 import { LmsCompletionService } from './application/services/lms-completion.service';
 import { LmsCardGateService } from './application/services/lms-card-gate.service';
@@ -97,6 +98,7 @@ const appServices = [
   LmsCoursesExtendedService,
   LmsTestsService,
   LmsCertificatesStandaloneService,
+  LmsCertificatePdfService,
   LmsMiscService,
   CoursesService,
   EnrollmentsService,
