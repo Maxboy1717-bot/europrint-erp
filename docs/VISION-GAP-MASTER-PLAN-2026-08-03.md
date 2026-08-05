@@ -115,17 +115,29 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 - #153 — CC: o'lik GET /api/coordination/baskets so'rovi o'chirildi — `33d140a1`
 - #148 — CC: approval eskalatsiya holat belgilaydi, lekin hech kimga xabar bermas edi — `d6da370f`
 
-**Jami bu sessiyada: 19 ta real commit** (xavfsizlik ×1, yangi funksiya ×6, xato tuzatish ×9, o'lik kod tozalash ×3). #150 qo'shildi (WorkflowRules tahrirlash UI, `6e2fea7c`).
+**Jami bu sessiyada: 23 ta real commit** (xavfsizlik ×1, yangi funksiya ×6, xato tuzatish ×11, o'lik kod tozalash ×3, refaktor ×1, #150/#151/#152/#154 qo'shildi).
 
 ⚠️ **2026-08-06: egasi "loop qiling hammasini" dedi** — avvalgi "loop kerak emas" qoidasi shu backlog-grind kontekstida bekor qilindi (memory: `feedback_no_loop.md` yangilandi). `/loop` skill dynamic-pacing rejimida ishga tushirildi — ScheduleWakeup orqali har safar keyingi modul/item ustida davom etadi, egasi "davom" demasdan.
 
 **DIRECTOR moduli yopildi** (#100-#117, 18 band): #100/#101/#104/#105/#106/#113/#116 tuzatildi;
 #107/#108/#114 egasi-data; #102/#103/#109-#112/#115/#117 hali tekshirilmagan.
 
-**CC moduli boshlandi**: #148/#153 tuzatildi; #144/#145/#146/#149/#155/#156 egasi-data (ilgari
-belgilangan); #147 endi egasi-data deb qayta tasniflandi (createDraft senderUserId NOT NULL,
-lekin cc_document_templates'da "recurring sender/recipient" konsepti umuman yo'q — kim nomidan
-avto-hujjat yaratilishi kerakligi aniq emas, egasi qarori kerak). Qolgan: #150-#152, #154.
+**CC moduli YOPILDI** (#144-156, 13 band): #148/#150/#152/#153/#154 tuzatildi;
+#144/#145/#146/#149/#155/#156 egasi-data (ilgari belgilangan); #147 egasi-data deb
+qayta tasniflandi (createDraft senderUserId NOT NULL, lekin cc_document_templates'da
+"recurring sender/recipient" konsepti umuman yo'q — kim nomidan avto-hujjat
+yaratilishi kerakligi aniq emas, egasi qarori kerak).
+- #150 — Coordination WorkflowRules tahrirlash UI (PUT endpoint bor edi, FE yo'q edi) — `6e2fea7c`
+- #152 — CC webhook idempotency in-memory Map → CacheService (Redis, pod-lararo dedup) — `ffb9e567`
+- #151 — CC overdue-reminder 48h/24h hardcode INTERVAL → business_settings CRUD-sozlanadigan — `09582d90`
+- #154 — coordination.controller.ts inline SQL (Qoida 6) → repo/service qatlamiga ko'chirildi — `d0f86666`
+
+⚠️ Eslatma (Q-29): 2026-07-11 CC audit hujjatidagi bir nechta "P1 FIX" tavsiyasi (self-route SoD
+#21, delegatsiya 3-daraja cap #33, ambiguous_route #3, per-council kvorum override #18,
+explicit JwtAuthGuard #33-qism) tekshirilganda ALLAQACHON boshqa to'lqinda qurilgan/eskirgan
+bo'lib chiqdi — audit da'vosi ko'r-ko'rona ishonilmadi, jonli kod bilan tasdiqlangach chetlab
+o'tildi. Qolgan P2 (EPPageHeader/EPTable/GlobalInboxBadge inline-style) — dizayn-uslub
+darajasida, funksional bo'shliq emas, alohida "dizayn-tozalash to'lqini"ga qoldiriladi.
 
 ⚠️ **2026-08-05 davomida egasi aniq buyruq berdi: "workflow qilmasdan bajarish kerak"** — Workflow
 tool tarmoq xatolari bilan qayta-qayta qulab tushgani sabab, shu paytdan boshlab barcha keyingi
@@ -136,4 +148,5 @@ ettirish kerak.
 - #101 (Director owner-summary FE ulanishi), #105 (SLA ko'p-bosqichli eskalatsiya), #113✅(bajarildi), #116 (kundalik surunkali-muammo eskalatsiya), #117 (setup-loss AI trigger)
 - #85 (IoT camera-alerts producer + dead-cron tozalash), #118✅/#122✅/#123✅(bajarildi)
 - #126 (chat @mention), #164 (kanban karta-markazli tayinlash)
-- Fon-rejimda avval ishga tushirilgan (Workflow orqali, endi faqat natija sifatida o'qiladi) batchlar hali ham natija qaytarishi mumkin: Director #101-117 qolgan qismi, IoT #83-91, CC #144-156, Chat #125-143 qolgan qismi, Kanban #158-169 qolgan qismi, SD #189-195 qolgan qismi, Marketing #198-207 qolgan qismi, Finance #209-215, AI-Aisha #171-185 — bular kelganda o'qib, to'g'ridan-to'g'ri (Workflow'siz) amalga oshiriladi.
+- Fon-rejimda avval ishga tushirilgan (Workflow orqali, endi faqat natija sifatida o'qiladi) batchlar hali ham natija qaytarishi mumkin: Director #101-117 qolgan qismi, IoT #83-91, Chat #125-143 qolgan qismi, Kanban #158-169 qolgan qismi, SD #189-195 qolgan qismi, Marketing #198-207 qolgan qismi, Finance #209-215, AI-Aisha #171-185 — bular kelganda o'qib, to'g'ridan-to'g'ri (Workflow'siz) amalga oshiriladi. **CC #144-156 YOPILDI** (yuqorida).
+- **Navbatdagi modul: Kanban (#158-#167, #169)** — to'g'ridan-to'g'ri Read/Grep/Edit bilan davom etiladi.
