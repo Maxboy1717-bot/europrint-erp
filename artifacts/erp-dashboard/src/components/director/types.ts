@@ -86,3 +86,16 @@ export interface IdealVsActual {
   revenue: { actual: number; target: number; pct: number; deviation_pct: number; formatted_actual: string; formatted_target: string };
   orders: { completed: number; total: number; completion_pct: number };
 }
+export interface OwnerSummary {
+  generatedAt: string;
+  holat: { level: string; score: number; label: string; emoji: string };
+  numbers: {
+    newCustomers: number;
+    lostCustomers: number;
+    smallCustomers: number;
+    salesTrend: { currentWindow: number; previousWindow: number; deltaPct: number | null; windowDays: number };
+    topRisk: { customerId: number | null; customerName: string | null; churnRiskPct: number | null; openDebt: number | null } | null;
+  };
+  digestText: string;
+  telegram: { sent: boolean; reason: string };
+}
