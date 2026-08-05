@@ -32,6 +32,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { SodGuard } from './common/guards/sod.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
+import { TenantFilterGuard } from './common/guards/tenant-filter.guard';
 
 // Config
 import databaseConfig from './config/database.config';
@@ -212,6 +213,9 @@ import { ErpSpreadsheetsModule } from './modules/erp-spreadsheets/erp-spreadshee
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: SodGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
+    // Item #122: guard existed fully-built but was never registered — always
+    // returns true (pure pass-through), only populates request.tenantFilter.
+    { provide: APP_GUARD, useClass: TenantFilterGuard },
 
     // ── Sprint 3 startup migration ─────────────────────────────────────────
     // Ensures rfm_clusters, churn_model_params, imposition_layouts.
