@@ -162,7 +162,11 @@ export class ChatUploadsController {
       throw new InternalServerErrorException(sendResult.error.message);
     }
     const sentMessage: Record<string, unknown> = sendResult.data;
-    this.gateway.emitToRoom(dto.roomId, 'message:new', sentMessage);
+    // Item #8 (audit :259): FE faqat 'new_message' eventini tinglaydi
+    // (ChatSocketProvider.tsx:152) — boshqa 4 ta emit joyi (chat-advanced*.ts,
+    // chat-gateway-helper.service.ts) to'g'ri, faqat shu joy 'message:new' deb
+    // xato yozilgan edi -> upload orqali yuborilgan xabar real-time yetib bormasdi.
+    this.gateway.emitToRoom(dto.roomId, 'new_message', sentMessage);
     return { ok: true };
   }
 
