@@ -107,8 +107,10 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 - #126 — Chat @mention FE'da tutiladi, lekin BE'ning har bir bosqichida tashlanadi — `97d8809c`
 - #101 — Director owner-summary kunlik digest FE'ga ulandi (BE tayyor edi, iste'molchisi yo'q edi) — `f1caa337`
 - #168 — Kanban GanttView.tsx.bak.t2c o'lik orfan fayl o'chirildi — `accb4c5b`
+- #105 — Director ZNO/ZVS + rasporyazhenie SLA eskalatsiya (1-bosqichli edi, endi 3-bosqichli) — `35b727f7`
+- #85 — IoT camera-AI PPE/xavfsizlik topilmalari camera_alerts UI'ga yetib bormasdi — `0b034f84`
 
-**Jami bu sessiyada: 13 ta real commit** (xavfsizlik tuzatish ×1, yangi funksiya ×3, xato tuzatish ×8, o'lik kod tozalash ×1).
+**Jami bu sessiyada: 15 ta real commit** (xavfsizlik ×1, yangi funksiya ×4, xato tuzatish ×8, o'lik kod tozalash ×2).
 
 ⚠️ **2026-08-05 davomida egasi aniq buyruq berdi: "workflow qilmasdan bajarish kerak"** — Workflow
 tool tarmoq xatolari bilan qayta-qayta qulab tushgani sabab, shu paytdan boshlab barcha keyingi
