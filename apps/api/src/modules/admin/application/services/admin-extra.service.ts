@@ -3,7 +3,7 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { Result, AppError, safeCall } from '@common/result';
 import { ONE_MB } from '@common/constants/app.constants';
@@ -104,7 +104,11 @@ export class AdminExtraService {
     const notFoundMsg = await this.i18n.t('errors.notFound');
     return safeCall(async () => {
       const r = await this.repo.findAlertById(id);
-      if (!r.ok || r.data === null) return { id, message: notFoundMsg };
+      // Item #124: was `return { id, message }` — swallowed inside safeCall's Ok(), so
+      // unwrapOrInternal() saw a successful Result and returned HTTP 200 for a nonexistent
+      // alert. Throwing here is caught by safeCall's mapHttpExceptionToCode() → Err('NOT_FOUND'),
+      // which unwrapOrInternal already maps to a real 404 (no controller change needed).
+      if (!r.ok || r.data === null) throw new NotFoundException(notFoundMsg);
       return r.data as object;
     });
   }
