@@ -136,6 +136,15 @@ export class DirectorStateRepository implements IDirectorStateRepo {
 
     return safeCall(async () => {
       await execSalesOrderSetVip(orderId);
+      // Item #100: sales_orders.is_vip was set (via the sd_sales_orders view, which
+      // works), but PP's queue-priority logic (ProductionPriorityService.buildQueue,
+      // used by GET /pp/queue and the operator-facing PPQueue.tsx "ZARUR" badge) only
+      // reads production_orders.is_urgent — it never joins sales_orders, so a VIP
+      // marking never surfaced in production at all. Reuses the existing ZARUR/
+      // is_urgent mechanism (EP-PP-097) instead of inventing new VIP-specific queue
+      // logic — one UPDATE makes VIP immediately visible in both existing PP views.
+      await exec(sql`UPDATE production_orders SET is_urgent = true, updated_at = NOW()
+                      WHERE sales_order_id = ${orderId} AND deleted_at IS NULL`);
     }, 'DB_ERROR');
   }
 }
