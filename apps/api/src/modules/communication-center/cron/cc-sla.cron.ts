@@ -138,6 +138,8 @@ export class CcSlaCron {
    * "hali ko'rib chiqilmadi" eslatma yuboriladi, muddat cheksiz davom etadi.
    */
   private async remindOverdue48h(): Promise<void> {
+    const thresholdHours = await getBusinessSettingNumber('cc.overdue_reminder_threshold_hours', 48);
+    const repeatHours     = await getBusinessSettingNumber('cc.overdue_reminder_repeat_hours', 24);
     const r = await runQuery<{
       id: string; sender_user_id: number;
     }>(sql`
@@ -145,13 +147,13 @@ export class CcSlaCron {
       FROM cc_documents
       WHERE basket_state = 'inbox'
         AND is_inbox_overdue = true
-        AND basket_entered_at + INTERVAL '48 hours' < NOW()
+        AND basket_entered_at + (${thresholdHours} || ' hours')::interval < NOW()
         AND workflow_state NOT IN ('rejected', 'cancelled', 'approved')
-        AND (overdue_reminder_sent_at IS NULL OR overdue_reminder_sent_at < NOW() - INTERVAL '24 hours')
+        AND (overdue_reminder_sent_at IS NULL OR overdue_reminder_sent_at < NOW() - (${repeatHours} || ' hours')::interval)
     `);
 
     if (r.rows.length > 0) {
-      this.logger.warn(`48h+ overdue reminder: ${r.rows.length} hujjatga takroriy eslatma`);
+      this.logger.warn(`${thresholdHours}h+ overdue reminder: ${r.rows.length} hujjatga takroriy eslatma`);
       const overdueIds = r.rows.map(row => row.id);
 
       await runQuery(sql`
@@ -170,7 +172,7 @@ export class CcSlaCron {
         await runQuery(sql`
           INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
           VALUES (${row.id}, 'overdue_reminder', NULL,
-                  '48 soat SLA chegarasi oshdi — takroriy eslatma yuborildi (avto-rad etish YO''Q)')
+                  ${`${thresholdHours} soat SLA chegarasi oshdi — takroriy eslatma yuborildi (avto-rad etish YO'Q)`})
         `);
         await this.pushNotification({
           userId:    row.sender_user_id,
@@ -178,8 +180,8 @@ export class CcSlaCron {
           type:      'overdue_reminder',
           titleUz:   'Hujjat hali ko\'rib chiqilmadi',
           titleRu:   'Документ всё ещё не рассмотрен',
-          messageUz: 'Hujjatingiz 48 soatdan ortiq ko\'rib chiqilmayapti. Mas\'ul shaxsga yana eslatma yuborildi.',
-          messageRu: 'Ваш документ не рассмотрен более 48 часов. Ответственному отправлено повторное напоминание.',
+          messageUz: `Hujjatingiz ${thresholdHours} soatdan ortiq ko'rib chiqilmayapti. Mas'ul shaxsga yana eslatma yuborildi.`,
+          messageRu: `Ваш документ не рассмотрен более ${thresholdHours} часов. Ответственному отправлено повторное напоминание.`,
           priority:  'high',
         });
       }));
@@ -190,8 +192,8 @@ export class CcSlaCron {
         type:      'overdue_reminder_approver',
         titleUz:   'Sizga muddati o\'tgan hujjat kutmoqda',
         titleRu:   'Вас ожидает просроченный документ',
-        messageUz: '48 soatdan ortiq javob kutilayotgan hujjat bor — iltimos ko\'rib chiqing.',
-        messageRu: 'Есть документ, ожидающий ответа более 48 часов — пожалуйста, рассмотрите.',
+        messageUz: `${thresholdHours} soatdan ortiq javob kutilayotgan hujjat bor — iltimos ko'rib chiqing.`,
+        messageRu: `Есть документ, ожидающий ответа более ${thresholdHours} часов — пожалуйста, рассмотрите.`,
         priority:  'high',
       })));
     }

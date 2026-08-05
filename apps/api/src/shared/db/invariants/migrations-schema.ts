@@ -2195,4 +2195,21 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'rasporyazhenie stage2->3 (HR discipline_records) necha kundan keyin', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Item #151 (CC audit tavsiya #24, 2026-07-11): cc-sla.cron.ts remindOverdue48h()
+  // hardcoded INTERVAL '48 hours' / '24 hours' — CRUD-sozlanadigan qilindi, cc.stale_draft_archive_days
+  // bilan bir xil naqsh (business_settings, category='cc').
+  {
+    name: 'business_settings cc.overdue_reminder_threshold_hours seed (2026-08-06)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('cc', 'cc.overdue_reminder_threshold_hours', 'Kiruvchi savat: necha soatdan keyin takroriy eslatma boshlanadi', 'number', 48, 'soat', 1, 336,
+        'cc-sla.cron.ts remindOverdue48h() — basket_entered_at dan shu soatdan ko''p vaqt o''tgan hujjatlarga takroriy eslatma yuborish boshlanadi (avto-rad etish YO''Q, 20-cc#30)', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
+  {
+    name: 'business_settings cc.overdue_reminder_repeat_hours seed (2026-08-06)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('cc', 'cc.overdue_reminder_repeat_hours', 'Takroriy eslatma orasidagi minimal interval', 'number', 24, 'soat', 1, 168,
+        'cc-sla.cron.ts remindOverdue48h() — overdue_reminder_sent_at gate: shu soatdan kam vaqt o''tgan bo''lsa qayta eslatma yuborilmaydi', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];
