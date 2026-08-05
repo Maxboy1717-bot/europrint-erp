@@ -163,6 +163,7 @@ export class ChatGatewayHelperService {
           id: updated.id,
           roomId: updated.roomId,
           content: updated.content,
+          isEdited: updated.isEdited,
         });
       }
     } catch (err) {

@@ -206,8 +206,8 @@ export function ChatSocketProvider({ children }: { children: ReactNode }) {
       s.emit("get_rooms");
     });
 
-    s.on("message:edited", ({ id, roomId, content }: { id: string; roomId: string; content: string }) => {
-      useChatStore.getState().editMessage(roomId, id, content, true);
+    s.on("message:edited", ({ id, roomId, content, isEdited }: { id: string; roomId: string; content: string; isEdited?: boolean }) => {
+      useChatStore.getState().editMessage(roomId, id, content, isEdited ?? true);
     });
 
     s.on("message:deleted", ({ id, roomId }: { id: string; roomId: string }) => {

@@ -148,7 +148,7 @@ export class ChatMessageBaseRepository {
     return safeCall(async () => {
       const [row] = await db
         .update(chatMessages)
-        .set({ content })
+        .set({ content, isEdited: true })
         .where(
           and(
             sql`${chatMessages.id} = ${messageId}::text`,
@@ -160,6 +160,7 @@ export class ChatMessageBaseRepository {
           id: chatMessages.id,
           roomId: chatMessages.roomId,
           content: chatMessages.content,
+          isEdited: chatMessages.isEdited,
         });
       return (castTo<Record<string, unknown>>(row)) ?? null;
       }, 'DB_ERROR');
