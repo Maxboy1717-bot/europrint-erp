@@ -619,6 +619,9 @@ import { LayoutDashboard, X,
       { title: "Litsenziya va Tariflar", url: "saas/licensing", icon: Key },
       { title: "Modul Yoqish/O'chirish", url: "saas/module-control", icon: PanelLeftClose },
       { title: "TIZIM", url: "", icon: Server, separator: true },
+      // Item #123: cron/backup status dashboard was already fixed (real data), but page was
+      // never linked from the sidebar — orphaned route, admin had no way to reach it.
+      { title: "Tizim va Zaxira Monitoring", url: "system-monitor", icon: HardDrive },
       // STEP 3.9 director/document-control audit panel — placed in the Admin Panel (super-admin)
       // module per owner. Route stays /director/document-audit; BE is @Roles(director,super_admin).
       { title: "Hujjat-kirish jurnali", url: "director/document-audit", icon: ScrollText },
