@@ -98,5 +98,19 @@ kuzatiladi (har commit item raqamiga ishora qiladi, masalan "fix(admin): #118 ..
 - #114 — Chiqindi (waste) → GL posting: kredit hisob tanlovi (Inventory 1000 vs COGS 9100) egasi qarori kerak
 - #145 — CC field-level rol-tahrirlash: maydon×lavozim mapping + identity axis (position_code) egasi qarori kerak; positions=0 qator (blok)
 
-### Navbatda (buildable-fix, reja mavjud, hali qurilmagan):
-- #101 (Director owner-summary FE ulanishi), #116 (kundalik surunkali-muammo eskalatsiya), #117 (setup-loss AI trigger), #85 (IoT camera-alerts producer + dead-cron tozalash) — to'liq reja workflow natijasida mavjud, keyingi sessiyada/navbatda amalga oshiriladi.
+### Bu sessiyada tugallangan (davomi — Workflow to'xtatilgandan keyin, to'g'ridan-to'g'ri):
+- #104 — Director dashboard aiInsights: real karta-AI agregat (ckp_fact_values) — `a3a641a9`
+- #191 — SD mijoz tahrirlash: "blacklist"/"blacklisted" mos kelmasligi + majburiy status-resend 400 — `a25d5fc4`
+- #206 — Marketing dashboard totalSpent hech qachon hisoblanmagan — `429f37cd`
+- #125 — Chat is_edited hech qachon saqlanmagan — `33634a35`
+
+⚠️ **2026-08-05 davomida egasi aniq buyruq berdi: "workflow qilmasdan bajarish kerak"** — Workflow
+tool tarmoq xatolari bilan qayta-qayta qulab tushgani sabab, shu paytdan boshlab barcha keyingi
+tekshiruv+tuzatish ISHNI TO'G'RIDAN-TO'G'RI (Read/Grep/Edit/Bash, subagent/Workflow'siz) davom
+ettirish kerak.
+
+### Navbatda (buildable-fix, reja mavjud, hali qurilmagan — endi to'g'ridan-to'g'ri amalga oshiriladi):
+- #101 (Director owner-summary FE ulanishi), #105 (SLA ko'p-bosqichli eskalatsiya), #113✅(bajarildi), #116 (kundalik surunkali-muammo eskalatsiya), #117 (setup-loss AI trigger)
+- #85 (IoT camera-alerts producer + dead-cron tozalash), #118✅/#122✅/#123✅(bajarildi)
+- #126 (chat @mention), #164 (kanban karta-markazli tayinlash)
+- Fon-rejimda avval ishga tushirilgan (Workflow orqali, endi faqat natija sifatida o'qiladi) batchlar hali ham natija qaytarishi mumkin: Director #101-117 qolgan qismi, IoT #83-91, CC #144-156, Chat #125-143 qolgan qismi, Kanban #158-169 qolgan qismi, SD #189-195 qolgan qismi, Marketing #198-207 qolgan qismi, Finance #209-215, AI-Aisha #171-185 — bular kelganda o'qib, to'g'ridan-to'g'ri (Workflow'siz) amalga oshiriladi.
