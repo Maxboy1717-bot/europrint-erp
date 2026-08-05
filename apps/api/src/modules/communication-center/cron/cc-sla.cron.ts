@@ -26,13 +26,17 @@ import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
 import { getCcGateway } from '../presentation/cc.gateway';
 import { CcRetentionService } from '../application/cc-retention.service';
+import { CcOrgResolverService } from '../application/cc-org-resolver.service';
 import { getBusinessSettingNumber } from '../../../shared/config/business-settings.reader';
 
 @Injectable()
 export class CcSlaCron {
   private readonly logger = new Logger(CcSlaCron.name);
 
-  constructor(private readonly retention: CcRetentionService) {}
+  constructor(
+    private readonly retention: CcRetentionService,
+    private readonly orgResolver: CcOrgResolverService,
+  ) {}
 
   /**
    * Har 30 daqiqada:
@@ -193,6 +197,16 @@ export class CcSlaCron {
     }
   }
 
+  /**
+   * Item #148: this previously only flipped `cc_approvals.state = 'escalated'`
+   * and wrote an audit-trail row — nobody was ever notified or re-routed, so
+   * "escalated" documents silently sat with the same non-responsive approver
+   * forever. Now resolves the escalation target (the missed approver's own
+   * manager, via the same CcOrgResolverService used for workflow-step
+   * approval resolution) and notifies both the missed approver and their
+   * manager — same pushNotification mechanism already used by
+   * sendOverdueReminders() above.
+   */
   private async escalateApprovals(): Promise<void> {
     // pending approvals where deadline_at < NOW() AND escalated_at IS NULL
     const r = await runQuery<{
@@ -208,12 +222,42 @@ export class CcSlaCron {
     `);
     if (r.rows.length > 0) {
       this.logger.warn(`Escalated: ${r.rows.length} approval`);
-      // Pattern 2: per-row audit inserts are independent — run in parallel
-      await Promise.all(r.rows.map((row) => runQuery(sql`
-        INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
-        VALUES (${row.document_id}, 'escalated', ${row.approver_user_id},
-                ${`Step ${row.step_order} muddati o'tdi — eskalatsiya`})
-      `)));
+      // Pattern 2: per-row audit + notify + re-route are independent — parallel.
+      await Promise.all(r.rows.map(async (row) => {
+        await runQuery(sql`
+          INSERT INTO cc_audit_trail (document_id, action, performed_by_user_id, comment)
+          VALUES (${row.document_id}, 'escalated', ${row.approver_user_id},
+                  ${`Step ${row.step_order} muddati o'tdi — eskalatsiya`})
+        `);
+
+        await this.pushNotification({
+          userId:    row.approver_user_id,
+          docId:     row.document_id,
+          type:      'approval_escalated_from',
+          titleUz:   'Tasdiqlash muddati o\'tdi — eskalatsiya qilindi',
+          titleRu:   'Срок утверждения истёк — эскалировано',
+          messageUz: `${row.step_order}-bosqich tasdig\'i muddatida bajarilmadi. Rahbaringizga xabar berildi.`,
+          messageRu: `Утверждение на этапе ${row.step_order} не выполнено в срок. Ваш руководитель уведомлён.`,
+          priority:  'urgent',
+        });
+
+        const managerResult = await this.orgResolver.resolveApprover('MANAGER_OF_SENDER', row.approver_user_id);
+        if (!managerResult.ok) {
+          this.logger.warn(`escalateApprovals: approval=${row.id} approver=${row.approver_user_id} — manager topilmadi, faqat approver'ga xabar berildi (${managerResult.error.message})`);
+          return;
+        }
+        if (managerResult.data === row.approver_user_id) return;
+        await this.pushNotification({
+          userId:    managerResult.data,
+          docId:     row.document_id,
+          type:      'approval_escalated_to',
+          titleUz:   'Xodimingizning tasdiqlash muddati o\'tdi',
+          titleRu:   'У вашего сотрудника истёк срок утверждения',
+          messageUz: `${row.step_order}-bosqich tasdig\'i muddatida bajarilmadi — ko\'rib chiqishingiz so\'raladi.`,
+          messageRu: `Утверждение на этапе ${row.step_order} не выполнено в срок — просим рассмотреть.`,
+          priority:  'urgent',
+        });
+      }));
     }
   }
 
