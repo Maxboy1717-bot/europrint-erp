@@ -167,8 +167,22 @@ export class CameraAiService {
           severity: finding.severity,
           aiConfidence: finding.confidence,
         });
-        if (createResult.ok) persistedEventIds.push(createResult.data.id);
-        else this.logger.warn(`analyzeByMissions: camera_events insert xato — ${createResult.error.message}`);
+        if (createResult.ok) {
+          persistedEventIds.push(createResult.data.id);
+          // Item #85: without this, AI findings never reached camera_alerts —
+          // the human-confirm (acknowledge/resolve) UI stayed permanently empty.
+          const alertResult = await this.repo.createCameraAlert({
+            cameraId: input.cameraId,
+            cameraEventId: createResult.data.id,
+            alertType: finding.mission,
+            severity: finding.severity,
+            title: DEFAULT_MISSION_HINTS[finding.mission] ?? finding.mission,
+            message: finding.description,
+          });
+          if (!alertResult.ok) this.logger.warn(`analyzeByMissions: camera_alerts insert xato — ${alertResult.error.message}`);
+        } else {
+          this.logger.warn(`analyzeByMissions: camera_events insert xato — ${createResult.error.message}`);
+        }
       }
     }
 

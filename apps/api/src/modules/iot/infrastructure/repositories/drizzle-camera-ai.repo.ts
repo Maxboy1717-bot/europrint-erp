@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, and, gte, desc, count, sql } from 'drizzle-orm';
 import {
   db, cameras, camera_events, camera_safety_violations,
-  camera_quality_defects, camera_ai_configs,
+  camera_quality_defects, camera_ai_configs, camera_alerts,
 } from '@shared/db';
 import { Ok, Err, Result } from '@common/result';
 
@@ -305,6 +305,35 @@ export class DrizzleCameraAiRepo {
           ai_confidence: input.aiConfidence !== null ? String(input.aiConfidence) : null,
         })
         .returning({ id: camera_events.id });
+      return Ok({ id: row.id });
+    } catch (e) { return Err((e as Error).message); }
+  }
+
+  /**
+   * Item #85: AI-detected findings (createCameraEvent) never produced a
+   * camera_alerts row, so the already-built human-confirm (acknowledge/resolve)
+   * UI+API (CameraAlertsRouteController) was permanently empty — a disconnected
+   * half-loop. Links back to the source camera_events row via camera_event_id.
+   */
+  async createCameraAlert(input: {
+    cameraId: string;
+    cameraEventId: number;
+    alertType: string;
+    severity: string;
+    title: string;
+    message: string;
+  }): Promise<Result<{ id: number }>> {
+    try {
+      const [row] = await db.insert(camera_alerts)
+        .values({
+          camera_id: input.cameraId,
+          camera_event_id: String(input.cameraEventId),
+          alert_type: input.alertType,
+          severity: input.severity,
+          title: input.title,
+          message: input.message,
+        })
+        .returning({ id: camera_alerts.id });
       return Ok({ id: row.id });
     } catch (e) { return Err((e as Error).message); }
   }
