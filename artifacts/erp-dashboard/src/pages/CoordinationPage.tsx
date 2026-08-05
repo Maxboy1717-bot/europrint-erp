@@ -15,7 +15,7 @@ import { ArrowUp, ArrowDown, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   VALID_TABS,
-  type Council, type Dokla, type Raspo, type BasketDoc,
+  type Council, type Dokla, type Raspo,
   type CoordinationStats, type DoklaStatus, type RaspoStatus,
   type DoklaFormState, type RaspoFormState, type CouncilFormState,
   type Prikaz, type Protocol, type PrikazFormState, type ProtocolFormState,
@@ -106,13 +106,6 @@ export default function CoordinationPage() {
 
   const { data: stats } = useQuery<CoordinationStats>({
     queryKey: ["/api/coordination/stats"],
-    enabled: !!isAuthenticated,
-  });
-
-  // BasketDoc query kept for potential future use; data flows to CommunicationCenter internally
-  useQuery<BasketDoc[]>({
-    queryKey: ["/api/coordination/baskets"],
-    select: selectArray<BasketDoc>,
     enabled: !!isAuthenticated,
   });
 
