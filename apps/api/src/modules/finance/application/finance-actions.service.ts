@@ -45,8 +45,23 @@ export class FinanceActionsService {
         this.logger.error(
           `verifyPayment: GL post failed for payment id=${id} amount=${amount}: ${String(glR.error)}`,
         );
-        // Soft-fail: status already flipped; return payment row with GL error noted.
-        return { ok: true, data: { ...r.data, glError: String(glR.error) } };
+        // audit 2026-08-06 T25: was the weakest money↔GL window — status stayed
+        // 'verified' with no GL entry and only a glError field nobody watched.
+        // Now compensate: revert to the captured pre-verify status (same pattern
+        // as record-payment.handler's reverseInvoicePayment). If even the revert
+        // fails, log CRITICAL so ops can reconcile by hand.
+        const prev = String((r.data as Row)['previous_status'] ?? 'approved');
+        const revert = await this.repo.setPaymentStatus(id, prev);
+        if (!revert.ok) {
+          this.logger.error(
+            `CRITICAL: verifyPayment GL post AND compensation both failed — payment id=${id} left 'verified' WITHOUT a GL entry (wanted revert to '${prev}'): ${String(revert.error)}`,
+          );
+          return { ok: true, data: { ...r.data, glError: String(glR.error), compensationFailed: true } };
+        }
+        return {
+          ok: false,
+          error: { code: 'EXTERNAL_5XX', message: `GL post muvaffaqiyatsiz — to'lov holati '${prev}'ga qaytarildi: ${String(glR.error)}` },
+        } as Result<Row>;
       }
       return { ok: true, data: { ...r.data, glEntryId: glR.data } };
     }

@@ -16,6 +16,8 @@ export interface IFinanceActionsRepo {
   getSalaryBenchmark(): Promise<Result<Row>>;
   approvePayment(id: number, approvedBy: number | string): Promise<Result<Row>>;
   verifyPayment(id: number, verifiedBy: number): Promise<Result<Row>>;
+  /** audit 2026-08-06 T25: compensation helper — revert status after a failed GL post. */
+  setPaymentStatus(id: number, status: string): Promise<Result<Row>>;
   listAdvances(
     lim: number,
     off: number,

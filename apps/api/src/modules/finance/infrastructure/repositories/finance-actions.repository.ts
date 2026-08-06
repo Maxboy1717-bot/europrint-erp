@@ -73,15 +73,32 @@ export class FinanceActionsRepository implements IFinanceActionsRepo {
    */
   async verifyPayment(id: number, verifiedBy: number): Promise<Result<Row>> {
     try {
+      // audit 2026-08-06 T25: capture the pre-verify status so the service can
+      // compensate (revert) if the follow-up GL post fails.
       const r = await db.execute(sql`
+        WITH old AS (SELECT status FROM finance_payments WHERE id = ${id})
         UPDATE finance_payments
         SET    status = 'verified'
         WHERE  id = ${id}
-        RETURNING *
+        RETURNING *, (SELECT status FROM old) AS previous_status
       `);
       const rows = ((r as { rows?: Row[] }).rows) ?? [];
       if (!rows[0]) return Err(`Payment ${id} topilmadi yoki allaqachon verified`);
       return Ok({ ...rows[0], verified_by: verifiedBy } as Row);
+    } catch (e) {
+      return Err(String(e));
+    }
+  }
+
+  /** audit 2026-08-06 T25: compensation helper — revert a payment's status after a failed GL post. */
+  async setPaymentStatus(id: number, status: string): Promise<Result<Row>> {
+    try {
+      const r = await db.execute(sql`
+        UPDATE finance_payments SET status = ${status} WHERE id = ${id} RETURNING id, status
+      `);
+      const rows = ((r as { rows?: Row[] }).rows) ?? [];
+      if (!rows[0]) return Err(`Payment ${id} topilmadi`);
+      return Ok(rows[0] as Row);
     } catch (e) {
       return Err(String(e));
     }
