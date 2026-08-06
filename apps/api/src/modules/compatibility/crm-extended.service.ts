@@ -10,7 +10,7 @@ import { db,
   rawSql} from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { dbRows } from '../hr/common/db-rows';
-import { safeCall, Result, AppError } from '@common/result';
+import { safeCall, Result, AppError, AppErr, Err } from '@common/result';
 
 import { MAX_QUERY_LIMIT } from '@common/constants/app.constants';
 
@@ -152,23 +152,28 @@ export class CrmExtendedCompatService {
     });
   }
 
-  createTask(body: Record<string, unknown>) {
-    return { id: null as number | null, status: 'created', title: String(body['title'] ?? ''), createdAt: _time.now() };
+  // audit 2026-08-06 T20 (Qoida 10/40): these five compat AI endpoints returned
+  // hardcoded fake-success ({id:null}, empty transcript, churnRisk:'low' score:0, …)
+  // to any caller — a green-lie worse than an honest 501. Until a real AI
+  // integration is wired (AiRouterService pattern exists in modules/ai), they now
+  // return NOT_IMPLEMENTED, which unwrapOrInternal maps to HTTP 501.
+  createTask(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'CRM AI vazifa-yaratish hali ulanmagan — tez orada'));
   }
 
-  processChat(body: Record<string, unknown>) {
-    return { response: '', sessionId: String(body['sessionId'] ?? ''), timestamp: _time.now() };
+  processChat(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'CRM AI chat hali ulanmagan — tez orada'));
   }
 
-  runAutoTasks(body: Record<string, unknown>) {
-    return { tasksCreated: 0, message: 'Auto-tasks queued', params: body };
+  runAutoTasks(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'CRM avto-vazifalar hali ulanmagan — tez orada'));
   }
 
-  churnAnalysis(body: Record<string, unknown>) {
-    return { churnRisk: 'low', score: 0, recommendations: ([] as { action: string; priority: number }[]), entityId: body['entityId'] };
+  churnAnalysis(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'Churn-tahlil hali ulanmagan — tez orada'));
   }
 
-  processVoice(body: Record<string, unknown>) {
-    return { transcript: '', intent: null as string | null, confidence: 0, entityId: body['entityId'] };
+  processVoice(_body: Record<string, unknown>): Result<never, AppError> {
+    return Err(AppErr('NOT_IMPLEMENTED', 'Ovoz-tahlil hali ulanmagan — tez orada'));
   }
 }
