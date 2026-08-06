@@ -45,6 +45,7 @@ export class SdLeadsController {
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
+  @Roles(...SD_WRITE_ROLES)
   async list(@Query('status') status?: string, @Query('assignedTo') assignedTo?: string,
     @Query('search') search?: string, @Query('limit') limit?: string, @Query('offset') offset?: string) {
     const _rList = await this.svc.list(status, assignedTo ? safeInt(assignedTo, 0) : null,
@@ -56,6 +57,7 @@ export class SdLeadsController {
   @ApiOperation({ summary: 'Get stats' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('stats')
+  @Roles(...SD_WRITE_ROLES)
   async getStats() {
     return unwrapOrThrow(await this.svc.getStats());
   }
@@ -93,6 +95,7 @@ export class SdLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
+  @Roles(...SD_WRITE_ROLES)
   async getById(@Param('id') id: string) {
     const _rR = await this.svc.getById(safeInt(id, 0));
     assertOk(_rR);
@@ -178,6 +181,7 @@ export class SdLeadsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/activities')
+  @Roles(...SD_WRITE_ROLES)
   async getActivities(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getActivities(safeInt(id, 0)));
   }

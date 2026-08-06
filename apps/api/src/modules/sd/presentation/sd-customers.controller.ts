@@ -138,6 +138,7 @@ export class SdCustomersController {
   @ApiOperation({ summary: 'List' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
+  @Roles(...SD_WRITE_ROLES)
   async list(@Query('search') search?: string, @Query('status') status?: string,
     @Query('segment') segment?: string,
     @Query('limit') limit?: string, @Query('offset') offset?: string) {
@@ -169,6 +170,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
+  @Roles(...SD_WRITE_ROLES)
   async getById(@Param('id') id: string) {
     const cid = safeInt(id, 0);
     const _rR = await this.svc.getById(cid);
@@ -206,6 +208,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/360')
+  @Roles(...SD_WRITE_ROLES)
   async get360View(@Param('id') id: string) {
     const _rResult = await this.svc.get360View(safeInt(id, 0));
     const data = unwrapOrThrow(_rResult);
@@ -216,6 +219,7 @@ export class SdCustomersController {
   @ApiOperation({ summary: 'Credit-limit check (EP-SD-060/061/062)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get(':id/credit-check')
+  @Roles(...SD_WRITE_ROLES)
   async creditCheck(@Param('id') id: string, @Query('amount') amount?: string) {
     return unwrapOrThrow(await this.svc.getCreditStatus(safeInt(id, 0), Number(amount ?? 0)));
   }
@@ -270,6 +274,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/contacts')
+  @Roles(...SD_WRITE_ROLES)
   async getContacts(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getContacts(safeInt(id, 0)));
   }
@@ -327,6 +332,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/interactions')
+  @Roles(...SD_WRITE_ROLES)
   async getInteractions(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getInteractions(safeInt(id, 0)));
   }
@@ -346,6 +352,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/documents')
+  @Roles(...SD_WRITE_ROLES)
   async getDocuments(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getDocuments(safeInt(id, 0)));
   }
@@ -377,6 +384,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/competitors')
+  @Roles(...SD_WRITE_ROLES)
   async getCompetitors(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getCompetitors(safeInt(id, 0)));
   }
@@ -410,6 +418,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/nps')
+  @Roles(...SD_WRITE_ROLES)
   async getNps(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getNps(safeInt(id, 0)));
   }
@@ -441,6 +450,7 @@ export class SdCustomersController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/complaints')
+  @Roles(...SD_WRITE_ROLES)
   async getComplaints(@Param('id') id: string) {
     return unwrapOrThrow(await this.svc.getComplaints(safeInt(id, 0)));
   }
