@@ -81,12 +81,24 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     const total = Number(body.total_amount ?? body.total_value ?? body.totalAmount ?? 0);
     const validUntil = body.valid_until ?? body.validUntil ?? null;
     const qNum = (body.quotation_number as string) ?? `KP-${Math.floor(Date.now() / 1000)}`;
+    // SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3 §2.1 (2026-08-06 fix): sd_quotations.
+    // customer_name is live NOT NULL, but the FE create form (QuotationsTab.tsx) only ever
+    // collects customer_id (a <Select> picker) — no free-text name field exists — so this
+    // always resolved to NULL and every quotation-create attempt crashed with a NOT NULL
+    // violation. Resolve the name server-side from sd_customers (single source of truth)
+    // instead of requiring the FE to duplicate it; an explicit body.customer_name still wins
+    // if a caller supplies one.
+    let customerName = (body.customer_name ?? body.customerName ?? null) as string | null;
+    if (!customerName && customerId != null) {
+      const custR = await exec(sql`SELECT name FROM sd_customers WHERE id = ${customerId} LIMIT 1`);
+      customerName = custR.ok ? ((custR.data[0] as Row | undefined)?.name as string | undefined) ?? null : null;
+    }
     const r = await exec(sql`
       INSERT INTO sd_quotations
         (quotation_number, customer_id, customer_name, quotation_date, total_value, total_amount, net_value,
          currency, valid_until, status, notes, payment_terms, markup_percent, created_at, updated_at)
       VALUES
-        (${qNum}, ${customerId}, ${body.customer_name ?? body.customerName ?? null}, to_char(NOW(),'YYYY-MM-DD'), ${total}, ${total}, ${total},
+        (${qNum}, ${customerId}, ${customerName}, to_char(NOW(),'YYYY-MM-DD'), ${total}, ${total}, ${total},
          ${body.currency ?? 'UZS'}, COALESCE(${validUntil}, to_char(NOW() + INTERVAL '14 days', 'YYYY-MM-DD')), ${body.status ?? 'draft'}, ${body.notes ?? null},
          ${body.payment_terms ?? body.paymentTerms ?? null}, ${body.markup_percent ?? body.markupPercent ?? null}, NOW(), NOW())
       RETURNING *`);
