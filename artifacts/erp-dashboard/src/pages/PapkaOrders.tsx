@@ -126,6 +126,9 @@ export default function PapkaOrders() {
       form.reset(DEFAULT_FORM_VALUES);
       toast({ title: tr.orderUpdated });
     },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: tr.error, description: error.message || tr.error });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -136,6 +139,9 @@ export default function PapkaOrders() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/papka-orders"] });
       toast({ title: tr.orderCancelled });
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: tr.error, description: error.message || tr.error });
     },
   });
 

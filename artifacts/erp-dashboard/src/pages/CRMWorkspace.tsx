@@ -6,6 +6,16 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState, useMemo } from "react";
 import {
   format,
@@ -38,6 +48,11 @@ import { EPErrorState } from "@/components/ep";
 
 export default function CRMWorkspace() {
   const { t } = useTranslation("crm");
+  const { t: tc } = useTranslation("common");
+  // CLAUDE.md Qoida 14 / SD-CRM audit §6.3-F: bulk-delete and activity-delete used to
+  // call the mutation directly from onClick with no confirmation step.
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [confirmActivityDeleteId, setConfirmActivityDeleteId] = useState<number | null>(null);
   const {
     activeEntity, setActiveEntity,
     viewMode, setViewMode,
@@ -88,7 +103,7 @@ export default function CRMWorkspace() {
         nameSortAsc={nameSortAsc}
         setNameSortAsc={setNameSortAsc}
         selectedItemsCount={selectedItems.size}
-        onDeleteSelected={() => deleteItemsMutation.mutate(Array.from(selectedItems))}
+        onDeleteSelected={() => setConfirmBulkDelete(true)}
       />
       {showAdvancedFilters && (
         <AdvancedFilterPanel
@@ -174,7 +189,7 @@ export default function CRMWorkspace() {
                 isLoading={activitiesLoading}
                 onAddActivity={() => setShowActivityDialog(true)}
                 onDoneActivity={(id) => doneActivityMutation.mutate(id)}
-                onDeleteActivity={(id) => deleteActivityMutation.mutate(id)}
+                onDeleteActivity={(id) => setConfirmActivityDeleteId(id)}
               />
             )}
             {viewMode === "calendar" && (
@@ -212,6 +227,55 @@ export default function CRMWorkspace() {
           { value: "other",     label: t("activityType.other") },
         ]}
       />
+      <AlertDialog open={confirmBulkDelete} onOpenChange={setConfirmBulkDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tc("confirm.delete")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {tc("buAmalniQaytaribBolmaydiMalumot")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteItemsMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover-elevate"
+              onClick={() => {
+                deleteItemsMutation.mutate(Array.from(selectedItems));
+                setConfirmBulkDelete(false);
+              }}
+            >
+              {deleteItemsMutation.isPending ? tc("ochirilmoqda") : tc("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={confirmActivityDeleteId !== null}
+        onOpenChange={(open) => { if (!open) setConfirmActivityDeleteId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tc("confirm.delete")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {tc("buAmalniQaytaribBolmaydiMalumot")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteActivityMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover-elevate"
+              onClick={() => {
+                if (confirmActivityDeleteId !== null) deleteActivityMutation.mutate(confirmActivityDeleteId);
+                setConfirmActivityDeleteId(null);
+              }}
+            >
+              {deleteActivityMutation.isPending ? tc("ochirilmoqda") : tc("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

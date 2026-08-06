@@ -133,6 +133,12 @@ export default function SalesOrders() {
       queryClient.invalidateQueries({ queryKey: ["/api/sap/sales-orders"] });
       toast({ title: tCommon("deletedSuccessfully") });
     },
+    onError: (err: Error) => {
+      toast({
+        variant: "destructive",
+        description: err.message || tCommon('operationFailed'),
+      });
+    },
   });
 
   // -------------------------------------------------------------------------
