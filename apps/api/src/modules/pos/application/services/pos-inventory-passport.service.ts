@@ -5,6 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Ok, Err, Result, AppError } from '@common/result';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 import { PosInventoryPassportRepository, CreatePassportDto, PassportRow } from '../../infrastructure/repositories/pos-inventory-passport.repository';
 import { PosAuditService } from './pos-audit.service';
 import { PosTelegramService } from './pos-telegram.service';
@@ -61,13 +62,18 @@ export class PosInventoryPassportService {
   }
 
   async checkExpiredQuarantine(): Promise<void> {
-    const r = await this.repo.getExpiredQuarantine(48);
+    // audit 2026-08-06 T23A: was a hardcoded 48 while the sibling escalation path
+    // (quarantine-workflow.service.ts) reads pos.quarantine_escalation_hours from
+    // business_settings — the two paths diverged whenever the owner changed the CRUD
+    // value. Both now read the same key.
+    const hours = await getBusinessSettingNumber('pos.quarantine_escalation_hours', 48);
+    const r = await this.repo.getExpiredQuarantine(hours);
     if (!r.ok) return;
     for (const p of r.data) {
       this.logger.warn(`Karantin muddati o'tdi: passport #${p.id}, harakat #${p.movementId}`);
       await this.telegram.sendAlert({
         title: 'Karantin muddati tugadi',
-        body: `Harakat #${p.movementId} uchun inventar pasporti 48 soatdan ko'p karantinda`,
+        body: `Harakat #${p.movementId} uchun inventar pasporti ${hours} soatdan ko'p karantinda`,
         severity: 'critical',
       }).catch(() => null);
     }
