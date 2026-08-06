@@ -467,7 +467,10 @@ export class SdQuotationsService {
     // is logged + retryable, never blocks the paid status or fakes a posting.
     const amount = Number(r.data['amount'] ?? 0);
     if (amount > 0) {
-      const gl = await this.gl.postCustomerPayment(Number.isFinite(Number(id)) ? Number(id) : 0, amount);
+      // id is the real sd_payments uuid — pass through directly. Number(id) on a uuid is
+      // always NaN, which used to fall back to a shared 0 and collide every payment's GL
+      // reference onto the same CP-0 idempotency key (see gl-posting.service.ts comment).
+      const gl = await this.gl.postCustomerPayment(id, amount);
       if (!gl.ok) this.logger.warn(`[EP-SD-030] GL post failed for payment ${id}: ${String(gl.error)}`);
       else this.logger.log(`[EP-SD-030] payment ${id} → entries ledger (${amount})`);
     }

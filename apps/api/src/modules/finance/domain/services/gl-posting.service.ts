@@ -51,13 +51,25 @@ export class GlPostingService {
     return this.createJournalEntry(lines, `SI-${invoiceId}`);
   }
 
-  async postCustomerPayment(paymentId: number, amount: number): Promise<Result<number>> {
+  // paymentId is only ever used to build the `CP-${paymentId}` idempotency reference below —
+  // it is never parsed back to a number. sd_payments.id is a live uuid (see EP-SD-030 follow-up);
+  // forcing it through Number() collapsed every SD payment to the same fallback 0, so every
+  // payment after the first silently matched the CP-0 idempotency check and never posted.
+  async postCustomerPayment(paymentId: number | string, amount: number): Promise<Result<number>> {
     this.logger.debug(`Posting Customer Payment - ID: ${paymentId}, Amount: ${amount}`);
+    // entries.entry_number is varchar(50) and createJournalEntry builds it as
+    // `${reference}-${Date.now()}-${n}` — a full 36-char uuid reference ("CP-<uuid>", 39 chars)
+    // would overflow that limit and fail the insert outright. Shorten a long string id to its
+    // last 12 hex chars (48 bits of entropy — collision odds are negligible at any realistic SD
+    // payment volume) so it stays both unique per payment and within the column width.
+    const ref = typeof paymentId === 'string' && paymentId.length > 12
+      ? paymentId.replace(/-/g, '').slice(-12)
+      : paymentId;
     const lines: JournalLine[] = [
       { accountCode: GL.CASH, accountName: 'Cash', debit: amount, credit: 0 },
       { accountCode: GL.ACCOUNTS_RECEIVABLE_TRADE, accountName: 'Accounts Receivable', debit: 0, credit: amount },
     ];
-    return this.createJournalEntry(lines, `CP-${paymentId}`);
+    return this.createJournalEntry(lines, `CP-${ref}`);
   }
 
   async postGoodsReceipt(grId: number, amount: number): Promise<Result<number>> {
