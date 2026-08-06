@@ -338,6 +338,7 @@
   "ttMinutes": "daqiqa",
   "ttSetupStartedFillChecklist": "Sozlash boshlandi - Cheklistni to'ldiring",
   "ttMaterialScanned": "Material skanlandi",
+  "ttMaterialScanFailed": "Material skanlanmadi — xatolik",
   "ttProductionStartedExcl": "Ishlab chiqarish boshlandi!",
   "ttProductionStarted": "Ishlab chiqarish boshlandi",
   "ttSessionEnded": "Sessiya yakunlandi",

@@ -10,6 +10,7 @@
   "roleNotFound": "Rol topilmadi",
   "permissionNotFound": "Ruxsat topilmadi",
   "cardNotFound": "Karta topilmadi",
+  "materialKitItemNotFound": "Material to'plami elementi topilmadi (id: {id})",
   "projectNotFound": "Loyiha topilmadi",
   "permissionDenied": "Ruxsat berilmagan",
   "unauthorized": "Avtorizatsiyadan o'tilmagan",

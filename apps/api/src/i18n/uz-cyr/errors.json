@@ -10,6 +10,7 @@
   "roleNotFound": "Рол топилмади",
   "permissionNotFound": "Рухсат топилмади",
   "cardNotFound": "Карта топилмади",
+  "materialKitItemNotFound": "Материал тўплами элементи топилмади (id: {id})",
   "projectNotFound": "Лойиҳа топилмади",
   "permissionDenied": "Рухсат берилмаган",
   "unauthorized": "Авторизациядан ўтилмаган",

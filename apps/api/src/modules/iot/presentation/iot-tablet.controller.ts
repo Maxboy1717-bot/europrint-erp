@@ -340,6 +340,7 @@ export class IotTabletController {
     dto: { scannedBy?: number; batchId?: number },
   ): Promise<{ id: number; scanned: true; batchId: number | null }> {
     let batchDecrementedFrom: number | null = null;
+    let rowFound = false;
     await db.transaction(async (tx) => {
       const upd = await tx.execute(sql`
         UPDATE material_kit_items
@@ -350,9 +351,14 @@ export class IotTabletController {
         WHERE id = ${id}
         RETURNING required_quantity
       `);
-      if (dto.batchId != null) {
-        const row = ((upd as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
-        const consumedQty = row ? Number(row['required_quantity'] ?? 0) : 0;
+      // IOT-TABLET-PAGE-DEEP-DIVE-2026-07-04 Q13: previously unconditionally returned
+      // {scanned:true} with no row-count check — scanning a non-existent id looked
+      // like success. RETURNING is now checked regardless of whether batchId was
+      // supplied.
+      const row = ((upd as Rows).rows ?? [])[0] as Record<string, unknown> | undefined;
+      rowFound = row !== undefined;
+      if (dto.batchId != null && row) {
+        const consumedQty = Number(row['required_quantity'] ?? 0);
         await tx.execute(sql`
           UPDATE material_batches
           SET remaining_quantity = GREATEST(0, remaining_quantity - ${consumedQty})
@@ -361,6 +367,7 @@ export class IotTabletController {
         batchDecrementedFrom = dto.batchId;
       }
     });
+    if (!rowFound) throw new NotFoundException(await this.i18n.t('errors.materialKitItemNotFound', { args: { id } }));
     return { id, scanned: true, batchId: batchDecrementedFrom };
   }
 

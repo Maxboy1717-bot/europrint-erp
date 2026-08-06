@@ -338,6 +338,7 @@
   "ttMinutes": "дақиқа",
   "ttSetupStartedFillChecklist": "Созлаш бошланди - Чеклистни тўлдиринг",
   "ttMaterialScanned": "Материал сканланди",
+  "ttMaterialScanFailed": "Материал сканланмади — хатолик",
   "ttProductionStartedExcl": "Ишлаб чиқариш бошланди!",
   "ttProductionStarted": "Ишлаб чиқариш бошланди",
   "ttSessionEnded": "Сессия якунланди",

@@ -338,6 +338,7 @@
   "ttMinutes": "мин",
   "ttSetupStartedFillChecklist": "Настройка началась - Заполните чек-лист",
   "ttMaterialScanned": "Материал отсканирован",
+  "ttMaterialScanFailed": "Материал не отсканирован — ошибка",
   "ttProductionStartedExcl": "Производство началось!",
   "ttProductionStarted": "Производство началось",
   "ttSessionEnded": "Сессия завершена",

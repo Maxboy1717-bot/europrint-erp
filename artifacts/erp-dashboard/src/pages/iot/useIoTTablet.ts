@@ -149,15 +149,19 @@ export function useIoTTablet() {
     mutationFn: async (materialId: string) => {
       core.setScanningItemId(materialId);
       await new Promise(resolve => setTimeout(resolve, 500));
-      try {
-        // B14/Decision 1 (2026-07-06): was using apiRequest (ERP JWT/cookie auth), but
-        // this route now requires the tablet token (x-tablet-token) -- a bare kiosk
-        // tablet has no ERP session, so this call always silently failed.
-        await data.tabletFetch("POST", `/api/iot/material-kit-items/${materialId}/scan`, {
-          scannedBy: core.workerId,
-          barcode: (Array.isArray(core.checklistMaterials) ? core.checklistMaterials : []).find(m => m.id === materialId)?.itemBarcode,
-        });
-      } catch { /* ignore */ }
+      // B14/Decision 1 (2026-07-06): was using apiRequest (ERP JWT/cookie auth), but
+      // this route now requires the tablet token (x-tablet-token) -- a bare kiosk
+      // tablet has no ERP session, so this call always silently failed.
+      // IOT-TABLET-PAGE-DEEP-DIVE-2026-07-04 Q13: the failure used to be swallowed
+      // (try/catch{ignore}, no res.ok check) and the mutation always resolved as if
+      // the scan had succeeded — a frontend green-lie (item shown "scanned" even on
+      // a rejected scan, since fetch only rejects on network failure, not HTTP error
+      // status). Same res.ok-check pattern as submitHandover above.
+      const res = await data.tabletFetch("POST", `/api/iot/material-kit-items/${materialId}/scan`, {
+        scannedBy: core.workerId,
+        barcode: (Array.isArray(core.checklistMaterials) ? core.checklistMaterials : []).find(m => m.id === materialId)?.itemBarcode,
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "Scan xatolik");
       return materialId;
     },
     onSuccess: (materialId) => {
@@ -167,7 +171,10 @@ export function useIoTTablet() {
       core.setScanningItemId(null);
       toast({ title: core.t("ttMaterialScanned") });
     },
-    onError: () => { core.setScanningItemId(null); },
+    onError: (err: Error) => {
+      core.setScanningItemId(null);
+      toast({ title: core.t("ttMaterialScanFailed"), description: err.message, variant: "destructive" });
+    },
   });
 
   const startProductionFromChecklist = useMutation({

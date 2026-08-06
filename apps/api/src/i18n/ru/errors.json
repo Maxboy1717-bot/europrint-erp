@@ -10,6 +10,7 @@
   "roleNotFound": "Роль не найдена",
   "permissionNotFound": "Разрешение не найдено",
   "cardNotFound": "Карточка не найдена",
+  "materialKitItemNotFound": "Элемент комплекта материалов не найден (id: {id})",
   "projectNotFound": "Проект не найден",
   "permissionDenied": "Доступ запрещён",
   "unauthorized": "Не авторизован",
