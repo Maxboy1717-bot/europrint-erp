@@ -283,4 +283,16 @@ tuzatilgan**: `qc-extended.service.ts:77` endi `getConfigNumber('qc_lot_defect_f
 topildi — QC doirasidan tashqarida, keyingi to'lqinga (POS/MM navbati kelganda) qoldirildi.
 Guard/green-lie/stub muammosi boshqa topilmadi.
 
-**Navbatdagi modul: LMS (#taxminan 4 band)** — to'g'ridan-to'g'ri davom etiladi.
+**LMS moduli tekshirildi**: 2 ta o'lik `notImplemented` import o'chirildi (`3405c39e`).
+⭐ Bu naqsh (Kanban→Finance→QC→LMS, jami 7 ta fayl) shu qadar izchil chiqdiki, **butun
+backend bo'yicha repo-keng qidiruv** o'tkazildi: yana **15 ta** fayl topildi (compatibility,
+design, finance, hr, iot×4, kanban, mm, pp, remaining, wms×2) — hammasi tuzatildi
+(`2cfeb8c2`). Jami bu sessiyada o'lik `notImplemented` import: **22 ta fayl**.
+⭐ Qo'shimcha bonus-topilma: 3 ta fayl (`europrint-control-director.controller.ts`,
+`material-balance.controller.ts`, `finance-extended-payroll.controller.ts`) hali "501
+qaytaradi, hali ulanmagan" deb yozilgan edi, lekin metod tanasi ALLAQACHON haqiqiy DB-so'rov
+bilan almashtirilgan — eskirgan/chalg'ituvchi izohlar to'g'irlandi (Q-40 ruhida: kod nima
+qilishini aniq hujjatlash, aks holda keyingi agent/dasturchi "hali stub" deb noto'g'ri
+xulosa chiqarishi mumkin edi — aynan shu xato meni ilgari Finance to'lqinida chalg'itgan edi).
+
+**Navbatdagi modul: PP (#taxminan 7 band)** — to'g'ridan-to'g'ri davom etiladi.
