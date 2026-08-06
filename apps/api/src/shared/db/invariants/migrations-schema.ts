@@ -2223,4 +2223,15 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'quarantine-workflow.repository.ts escalateExpiredQuarantine() — status=''karantin'' shu soatdan ko''p turgan pos_movements avtomatik ''qc_review''ga o''tkaziladi (pos-quarantine-check.job.ts, har soatlik cron)', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3 §2.2 (fake-save): SdCreateContractSchema
+  // (sd-quotations.dto.ts) already accepts start_date/total_amount as input — the DTO
+  // contract committed to this shape — but sd_contracts had no backing column for either,
+  // so both were silently dropped on every contract create. Additive nullable columns,
+  // numeric(18,2) matches sales_orders.total_amount precedent.
+  {
+    name: 'sd_contracts.start_date + total_amount columns (2026-08-06, fake-save fix)',
+    sql: `ALTER TABLE IF EXISTS sd_contracts
+      ADD COLUMN IF NOT EXISTS start_date DATE,
+      ADD COLUMN IF NOT EXISTS total_amount NUMERIC(18,2)`,
+  },
 ];

@@ -143,15 +143,22 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     const contractNumber = body.contract_number ?? `CNT-${Date.now()}`;
     const orderId = body.order_id != null ? parseInt(String(body.order_id), 10) : null;
     const customerId = body.customer_id != null ? parseInt(String(body.customer_id), 10) : null;
-    // Use only columns that exist in the live sd_contracts table (build phase — no migrations yet)
+    // SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3 §2.2 (fake-save, 2026-08-06 fix):
+    // payment_terms/start_date/total_amount were all silently dropped — payment_terms
+    // was already a real column (just missing from the INSERT); start_date/total_amount
+    // had no backing column (added via migrations-schema.ts, "fake-save fix" entry).
     // valid_until maps from end_date if provided
     const validUntil = body.end_date != null ? String(body.end_date) : null;
+    const startDate = body.start_date != null ? String(body.start_date) : null;
+    const totalAmount = body.total_amount != null ? Number(body.total_amount) : null;
     const r = await exec(sql`
       INSERT INTO sd_contracts
-        (order_id, contract_number, template_type, status, customer_id, valid_until, notes)
+        (order_id, contract_number, template_type, status, customer_id, valid_until, notes,
+         payment_terms, start_date, total_amount)
       VALUES
         (${orderId}, ${contractNumber}, ${body.template_type ?? 'standard'}, ${body.status ?? 'draft'},
-         ${customerId}, ${validUntil}, ${body.notes ?? null})
+         ${customerId}, ${validUntil}, ${body.notes ?? null},
+         ${body.payment_terms ?? null}, ${startDate}, ${totalAmount})
       RETURNING *
     `);
     if (!r.ok) return r as Result<Row | null>;
