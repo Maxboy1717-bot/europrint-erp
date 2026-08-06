@@ -336,4 +336,13 @@ bo'lmagan id bilan skanlash har doim `{scanned:true}` qaytarardi (rollback-tx bi
 DB-isbotlangan: 0 qator ta'sirlansa ham). Bu — shu sessiyaning eng chuqur ikki-qatlamli
 (FE+BE) green-lie topilmasi.
 
-**Navbatdagi modul: POS (#taxminan 8 band, hali tegilmagan)** — to'g'ridan-to'g'ri davom etiladi.
+**POS moduli tekshirildi**: standart sweep toza. Memory'dagi "M6 2/4 gap — quarantine hali
+hardcoded" (2026-07-07) izlab topildi va tuzatildi: `quarantine-workflow.repository.ts`
+`escalateExpiredQuarantine()`dagi `INTERVAL '48 hours'` raw-SQL literal endi
+`business_settings 'pos.quarantine_escalation_hours'` (default 48) orqali CRUD-sozlanadigan
+— `4d7422fc`. Shu bilan M6 magic-number gap **4/4 to'liq yopildi** (QC 0.05 ilgari, endi
+POS quarantine ham). Boshqa POS-maxsus audit topilmasi (WMS-POS-FULL-AUDIT-2026-07-05
+asosan WMS-tomonlama edi, POS-side #4 predikat WMS to'lqinida allaqachon tuzatildi)
+qolmadi.
+
+**Navbatdagi modul: Director (#taxminan 11 qolgan band — #102/103/109-112/115/117)** — to'g'ridan-to'g'ri davom etiladi.
