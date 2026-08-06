@@ -457,3 +457,44 @@ ko'rsatishi kerakmi (backend `markLost` sabab talab qiladi)? Bu — Q-34
 **Tekshirilmagan qoldi** (SD-CRM audit §3.5 IDOR ro'yxati, §4 orphan sweep,
 §5 integratsiya-zanjir xaritasi, §6 dizayn, §7 vizyon-taqqoslash) — keyingi
 davomda.
+
+### §3.6 IDOR ro'yxati — tekshirildi, 5/5 band hal qilindi (2026-08-06)
+
+⭐⭐ **Xavfsizlik: item 1-2 haqiqiy "har qanday autentifikatsiyalangan
+foydalanuvchi" IDOR edi, tuzatildi** — `65b5626c`:
+- **Item 1 (eng keng ta'sir)**: `sd-customers.controller.ts` 10 ta GET
+  marshrut (`list`, `:id`, `:id/360`, `:id/credit-check`, `:id/contacts`,
+  `:id/interactions`, `:id/documents`, `:id/competitors`, `:id/nps`,
+  `:id/complaints`) `@Roles()`siz edi — RolesGuard qoidasi bo'yicha rolidan
+  qat'i nazar HAR QANDAY autentifikatsiyalangan foydalanuvchiga ochiq edi.
+- **Item 2**: `sd-leads.controller.ts` 4 ta GET marshrut (`list`, `stats`,
+  `:id`, `:id/activities`) xuddi shunday.
+- Ikkalasida ham mavjud `SD_WRITE_ROLES` (yozish-endpointlar allaqachon
+  ishlatgan) o'qish-marshrutlariga qo'shildi — yangi rol o'ylab topilmadi.
+
+**Item 3-5** (`sd/orders/:id`, `crm/deals/:id`+`/won`+`/lost`+`/stage`,
+`sd/payments/:id`) — tekshirildi, audit'ning o'z havolasi ham tasdiqlaydi:
+bular ALLAQACHON class-darajasida rol-gate qilingan (masalan
+`sd-payments.controller.ts:40` `@Roles(...SD_ROLES)` klass darajasida).
+Audit aslida "rol ICHIDA egalik-scoping yo'q" haqida (istalgan sotuv-menejer
+istalgan boshqa menejerning buyurtmasi/bitimi/to'lovini ko'radi/tahrirlaydi)
+— bu yangi egalik-modeli dizayn qarori (kim kimning yozuvini ko'rishi kerak?
+faqat o'ziniki? o'z jamoasi? hammasi?), egasi tasdig'i kerak, mexanik fix
+emas — bashorat qilib tuzatilmadi.
+
+### §4 Orphan sweep — tekshirildi, EHTIYOTKORLIK bilan O'CHIRILMADI
+
+Audit ~7010 qator FE-kod "o'chirish nomzodi" deb belgilagan, lekin audit
+**o'zi ham ochiq ehtiyot bildiradi** (§4.5): `CrmFunnelAnalytics`/
+`CrmRfmClusters` kabi ba'zilarining orqasida REAL, ishlaydigan backend
+xizmatlari bor (`funnel.service.ts`, `rfm/clv/kmeans.service.ts`) — bular
+"o'lik kod" emas, balki "ulanmagan qiymat" (FE sahifasi yo'q, lekin BE
+funksional). Audit o'zi ham "O'chirishdan oldin §8 qarori kerak" deydi.
+Q-46 (ishlab turgan kod o'chirilmaydi — hatto "orphan" tamg'asi bilan ham,
+agar orqasida real funksiya bo'lsa) + Q-35 ruhida — bu ommaviy o'chirish
+amali egasi ko'rib-chiqishi/tasdig'isiz amalga oshirilmadi. Har bir nomzod
+(~7010 qator, 12 komponent) alohida ko'rib chiqilishi kerak: ba'zilari
+xavfsiz o'chiriladigan haqiqiy o'lik kod (`SDDebitors`/`SDDeliveries` kabi —
+ularning "iste'molchisi" ham o'lik ekan), ba'zilari esa FE-ulanish
+qurilishi kerak bo'lgan qiymatli funksiya. **Egasi ro'yxatni ko'rib chiqishi
+kerak** — bu yerda hujjatlashtirildi, kod o'zgartirilmadi.
