@@ -345,4 +345,14 @@ POS quarantine ham). Boshqa POS-maxsus audit topilmasi (WMS-POS-FULL-AUDIT-2026-
 asosan WMS-tomonlama edi, POS-side #4 predikat WMS to'lqinida allaqachon tuzatildi)
 qolmadi.
 
-**Navbatdagi modul: Director (#taxminan 11 qolgan band — #102/103/109-112/115/117)** — to'g'ridan-to'g'ri davom etiladi.
+**Director qolgan qismi (#102/103/109-112/115/117) tekshirildi**: standart sweep
+(guard/green-lie/as-unknown/stub) toza. `DirectorRoutes.tsx`ni Chat'dagi `/chat/admin`
+shadow-bug patterniga o'xshab tekshirdim — `ModuleGroup.tsx` wouter `<Switch>` ishlatadi
+(birinchi mos `<Route>` array-tartibida), `/agents/:id` catch-all to'g'ri ravishda
+maxsus marshrutlardan KEYIN joylashgan — shadow yo'q. Dedikatsiyalangan audit hujjat
+yo'q (TaskList yo'qolgan, original band-ta'riflari qayta tiklanmaydi) — aniq nima
+qolganini bilib bo'lmaydi, faqat kod-sifat darajasida muammo topilmadi. Qolgan bandlar
+ehtimol egasi-data (`docs/audit/decisions/05-director.md`dagi 🔵 OCHIQ naqshiga mos)
+yoki oldingi to'lqinlarda allaqachon yopilgan.
+
+**Navbatdagi modul: Admin (#taxminan 7 band, hali tegilmagan)** — to'g'ridan-to'g'ri davom etiladi.
