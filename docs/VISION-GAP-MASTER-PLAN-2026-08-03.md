@@ -263,4 +263,16 @@ Qolgan asosiy §2/§4 topilmalar (head_user_id/manager_id zanjiri, ЦКП DATA, 
 karta oylik-cap DATA) — barchasi DATA/SCHEMA, egasi-darvozasida (memory:
 "org+users seed" — ko'p modulning umumiy bloklovchisi, faqat HR-Org'ga xos emas).
 
-**Navbatdagi modul: MES (#taxminan 12 band)** — to'g'ridan-to'g'ri davom etiladi.
+**MES moduli tekshirildi** (dedikatsiyalangan fresh-analysis yo'q; `MES-IOT-DEEP-DIVE-2026-07-04.md`
++ kod-sharh). `mes_telemetry` — REAL kod, 0 qator (hardware-gated, hujjat o'zi "do not act"
+deydi). Rol-gate tekshirildi: MES `production_manager`/`operator`/`technologist`/
+`shift_supervisor` talab qiladi — SD/CRM/Marketing'dagi kabi "manager" bilan bir xil emas
+(bu rollarning HECH biri hali real xodimga biriktirilmagan, "27 real user bloklangan"
+holati yo'q — bashorat qilib "manager" qo'shish noto'g'ri bo'lardi). Eski `MASSIV-50/P17`
+direktivasi (session→WMS material-deduction listener) fayl darajasida bajarilmagan
+ko'rindi, lekin funksiya allaqachon BOSHQA, ancha puxtaroq mexanizm bilan qoplangan:
+`material_kits` 2-imzoli WMS-chiqim gate (start-session.handler.ts) + idempotent
+`mes-completed-fg.listener.ts` (FG-kirim, EP-WMS-034/023, rollback-tx DB-isbotlangan).
+Green-lie/stub/guard muammosi topilmadi — **kod o'zgarishi kerak emas edi**.
+
+**Navbatdagi modul: QC (#taxminan 7 band)** — to'g'ridan-to'g'ri davom etiladi.
