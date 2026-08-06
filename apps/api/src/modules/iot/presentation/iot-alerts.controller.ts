@@ -17,7 +17,6 @@ import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { IotMainService } from '../application/iot-main.service';
 import { CameraAlertsQuerySchema } from './dto/iot-camera.dto';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateAlertSchema = z.object({
   type:     z.string().max(100).optional(),

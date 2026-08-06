@@ -16,7 +16,6 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { EuroprintControlDirectorService } from './europrint-control-director.service';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiTags('EuroPrint Control Center (Director)')
 @ApiBearerAuth()
@@ -84,10 +83,8 @@ export class EuroprintControlDirectorController {
 
   /**
    * AuditorPanel page calls GET /api/europrint-control/menus/admin to fetch
-   * the admin-only menu structure. Real implementation: query rbac_menus
-   * filtered by admin role.
-   *
-   * P3-26: returns 501 until the rbac_menus query is wired.
+   * the admin-only menu structure. Queries role_menus filtered by admin role
+   * (honest empty-array fallback if the table is unavailable).
    */
   @Get('menus/admin')
   async getAdminMenus() {

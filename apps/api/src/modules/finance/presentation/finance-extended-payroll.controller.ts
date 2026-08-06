@@ -4,7 +4,7 @@
  * The payroll calculate/ai-calculate/run/list/approve routes delegate to
  * FinanceExtendedPayrollService, which runs real INPS/JSHD/min-wage math against the
  * canonical payroll_* tables (#FX-1, resolved). `tax-calendar` and `salary-benchmark`
- * remain HTTP 501 placeholders — no source data table exists for them yet.
+ * now query real tables (`payroll_tax_rules`/`salary_bands`) — no longer 501 placeholders.
  */
 
 import { Controller, Post, Get, Patch, Body, Param, Query, HttpCode, HttpException, UseGuards, UseInterceptors, HttpStatus } from '@nestjs/common';
@@ -14,7 +14,6 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { FINANCE_ROLES, PayrollCalculateSchema, PayrollAiCalculateSchema, ApprovePayrollSchema, PayrollRunSchema, PayrollCreateContractSchema } from './finance-extended-dtos';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { unwrapOrInternal } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';

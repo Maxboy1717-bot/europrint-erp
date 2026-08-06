@@ -15,7 +15,6 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { WmsCatalogService } from '../application/wms-catalog.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 // P3-26: throw 501 instead of fake empty payloads so frontend can show
 const WH_READ = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'manager', 'accountant', 'finance'];

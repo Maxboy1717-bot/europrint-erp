@@ -24,7 +24,6 @@ import { db, runQuery } from '@shared/db';
 import { sql, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { KanbanExtService } from '../application/kanban-ext.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { hasFullKanbanVisibility, kanbanCardVisibilityPredicate, kanbanConfidentialClause } from '../infrastructure/kanban-visibility.helper';
 

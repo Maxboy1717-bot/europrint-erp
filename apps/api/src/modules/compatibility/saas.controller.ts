@@ -20,7 +20,6 @@ import { z } from 'zod';
 import { SaasService } from './saas.service';
 import { OrdersRegistryService } from './orders-registry.service';
 import { DEFAULT_PAGE_SIZE } from '@common/constants/app.constants';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 const CreateTenantSchema = z.object({
   name: z.string().min(1),

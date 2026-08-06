@@ -32,7 +32,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   OeeQuerySchema,
   SensorHistoryQuerySchema,

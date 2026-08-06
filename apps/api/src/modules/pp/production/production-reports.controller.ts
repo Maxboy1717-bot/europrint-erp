@@ -30,7 +30,6 @@ import { ProductionService } from './production.service';
 import { safeInt } from '../../hr/common/db-rows';
 
 import { MS_PER_DAY } from '@common/constants/app.constants';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 

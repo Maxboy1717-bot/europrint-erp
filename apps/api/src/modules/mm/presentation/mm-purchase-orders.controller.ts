@@ -25,7 +25,6 @@ import { GoodsReceiptCommand } from '../application/commands/goods-receipt.handl
 import { db } from '@shared/db';
 import { mm_purchase_orders } from '@shared/db';
 import { eq, sql, getTableColumns } from 'drizzle-orm';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 enum Role {
   PURCHASER = 'purchaser',

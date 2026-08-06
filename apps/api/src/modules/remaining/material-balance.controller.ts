@@ -15,7 +15,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { unwrapOrInternal } from '@common/http-result';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiThrottle()
 @Roles('admin', 'manager', 'hr_manager', 'director', 'SUPER_ADMIN')
@@ -97,11 +96,7 @@ export class MaterialBalanceController {
 
   /**
    * MaterialBalance page calls GET /api/material-balance/movements as a
-   * cross-material movement feed. Real implementation will join material
-   * movements across all materials.
-   *
-   * P3-26: returns 501 until the aggregator is wired; clients can fall back to
-   * /api/material-balance/:materialId/history per-material.
+   * cross-material movement feed — queries material_movements directly.
    */
   @Get('movements')
   async getMovements(@Query('limit') limit?: string) {

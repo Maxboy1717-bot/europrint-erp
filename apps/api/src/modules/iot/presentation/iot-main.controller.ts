@@ -16,7 +16,6 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotMainService } from '../application/iot-main.service';
 import { IotSensorsExtendedService } from '../application/iot-sensors-extended.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import {

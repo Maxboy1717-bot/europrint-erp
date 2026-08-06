@@ -34,7 +34,6 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { HrCompatAService } from '../application/hr-compat-a.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { z } from 'zod';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 type Rows = { rows?: unknown[] };

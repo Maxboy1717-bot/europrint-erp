@@ -41,7 +41,6 @@ import { sql } from 'drizzle-orm';
 import { IotTabletService } from '../application/iot-tablet.service';
 import { OeeCalculatorService } from '../oee/oee-calculator.service';
 import { MesBrakLimitRepository } from '@modules/mes/infrastructure/repositories/mes-brak-limit.repo';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { ReportDefectCommand } from '@modules/qc/application/commands/report-defect.command';
 import { DefectSeverity } from '@modules/qc/domain/aggregates/defect.aggregate';
 import { IOT_INLINE_QC_MAJOR_DEFECT_THRESHOLD_PCT } from '@common/constants/business.constants';

@@ -31,7 +31,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { IotEnhancedService } from '../application/iot-enhanced.service';
 import { safeInt } from '../../hr/common/db-rows';
 import { AuthenticatedUser } from '@common/types/user.types';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 

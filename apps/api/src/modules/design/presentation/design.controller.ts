@@ -33,7 +33,6 @@ import { GetDesignOrdersQuery} from '../application/queries/get-design-orders.qu
 import { GetDesignOrderQuery} from '../application/queries/get-design-order.query';
 import { RequestDesignDto, UpdateDesignStatusDto} from './dto/design.dto';
 import { z } from 'zod';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { IDesignRepo, DESIGN_REPO } from '../domain/repositories/i-design.repo';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
