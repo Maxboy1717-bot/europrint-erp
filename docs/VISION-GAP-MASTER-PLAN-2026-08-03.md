@@ -240,4 +240,13 @@ biriktirmagan). SD/CRM+Marketing holatlari alohida edi, chunki ular dedikatsiyal
 audit bilan DB-isbotlangan edi. Boshqa modullar uchun shu sinf muammoni "bashorat qilib"
 tuzatish shart emas — har modul o'z navbatida audit-tasdiqlanganda ko'riladi.
 
-**Navbatdagi modul: Finance (#209-#215)** — to'g'ridan-to'g'ri davom etiladi.
+**FINANCE moduli (#209-215): dedikatsiyalangan "COMPLETE-FRESH-ANALYSIS" audit yo'q**
+(pul-modul — SD/CRM/Marketing bilan bir xil "manager alias" fixni DB-isbotsiz bashorat
+qilib qo'llash xavfli, Q-34: pul-huquqlarni asossiz kengaytirish = xavfsizlik regressiyasi
+bo'lishi mumkin). To'g'ridan-to'g'ri kod-sharh: barcha controller guard-langan, green-lie
+yo'q, "as unknown" stub yo'q, payroll INPS/JSHD haqiqiy hisob-kitob (#FX-1 resolved,
+faqat tax-calendar/salary-benchmark honest-501, Q-17 mos). Faqat bitta o'lik
+`notImplemented` import topildi va o'chirildi (`reports.controller.ts`) — `b4dd38ce`.
+
+**Navbatdagi modul: HR-Org (#taxminan 13 band)** — `docs/audit/HR-ORG-VIZYON-VA-CHALA-ISHLAR-2026-07-13.md`
+asosida to'g'ridan-to'g'ri davom etiladi.
