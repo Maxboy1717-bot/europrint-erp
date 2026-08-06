@@ -295,4 +295,20 @@ bilan almashtirilgan — eskirgan/chalg'ituvchi izohlar to'g'irlandi (Q-40 ruhid
 qilishini aniq hujjatlash, aks holda keyingi agent/dasturchi "hali stub" deb noto'g'ri
 xulosa chiqarishi mumkin edi — aynan shu xato meni ilgari Finance to'lqinida chalg'itgan edi).
 
+**PP moduli tekshirildi**: stub/green-lie/guard sweep toza chiqdi. Bitta yolg'on-signal
+topildi va rad etildi (Q-29): `gofra-conversion.controller.ts`da explicit `@UseGuards` yo'q
+— lekin bu ATAYLAB (izoh: "JwtAuthGuard+RolesGuard global APP_GUARD orqali"), yozuvchi
+endpointlar (`PUT flute-types`, `PATCH config`) `@Roles(SUPER_ADMIN,DIRECTOR,TECHNOLOGIST)`
+bilan to'g'ri gate-langan, faqat o'qish/hisoblash endpointlari ochiq — bu CLAUDE.md'ning
+o'z `reviewer-jwt-guard.sh` skripti (✅ PASS) bilan mos, xato emas.
+
+⭐ **Original 18-modulli 215-band to'lqinning "asosiy" ro'yxati tugadi**: CC✅ Kanban✅
+Chat✅(qisman) AI-Aisha✅(qisman) SD✅(qisman) Marketing✅(qisman) Finance✅ HR-Org✅
+MES✅ QC✅ LMS✅ PP✅ — 12/18 modul shu sessiyada to'g'ridan-to'g'ri tekshirildi.
+**Tekshirilmagan qoldi**: WMS(8), IoT(9, faqat #85 ilgari), POS(8), Director(18, qisman —
+#100/101/104/105/106/113/116 bajarilgan, #102/103/109-112/115/117 hali yo'q), Admin(7),
+Notifications(0, bo'sh modul).
+
+**Navbatdagi modul: WMS (#taxminan 8 band)** — to'g'ridan-to'g'ri davom etiladi.
+
 **Navbatdagi modul: PP (#taxminan 7 band)** — to'g'ridan-to'g'ri davom etiladi.
