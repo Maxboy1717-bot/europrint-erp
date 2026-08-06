@@ -22,10 +22,19 @@ export class GetWarehousesHandler implements IQueryHandler<GetWarehousesQuery> {
   async execute(query: GetWarehousesQuery): Promise<Result<{ items: unknown[]; total: number }>> {
       this.logger.debug(`Fetching warehouses with filters: ${JSON.stringify(query.filters)}`);
 
+      // WMS-POS-FULL-AUDIT-2026-07-05, item 4: this query used to default to
+      // `deleted_at IS NULL` ONLY (no is_active check), while the POS-side warehouse
+      // list (pos-wms-query.service.ts) filters on `is_active = true` only — the two
+      // screens disagreed on the warehouse count. Also fixes a copy-paste bug: the
+      // `isActive` filter was being compared against `warehouses.isFreeStorage`
+      // instead of `warehouses.isActive`, so an explicit isActive filter silently
+      // filtered the wrong column.
       const conditions = [sql`deleted_at IS NULL`];
 
       if (query.filters?.isActive !== undefined) {
-        conditions.push(eq(warehouses.isFreeStorage, query.filters.isActive));
+        conditions.push(eq(warehouses.isActive, query.filters.isActive));
+      } else {
+        conditions.push(eq(warehouses.isActive, true));
       }
 
       if (query.filters?.isFreeStorage !== undefined) {
@@ -41,6 +50,7 @@ export class GetWarehousesHandler implements IQueryHandler<GetWarehousesQuery> {
           id: warehouses.id,
           name: warehouses.name,
           address: warehouses.address,
+          is_active: warehouses.isActive,
           is_free_storage: warehouses.isFreeStorage,
           free_storage_days: warehouses.freeStorageDays,
           monthly_rate: warehouses.monthlyRate,
