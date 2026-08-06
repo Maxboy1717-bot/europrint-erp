@@ -33,7 +33,8 @@ import {
   SendWhatsappDtoSchema, SendWhatsappDto,
 } from './dto/crm-comms.dto';
 
-const CRM_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'crm_manager'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin', 'crm_manager'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

@@ -27,8 +27,9 @@ import {
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@auth/types';
 
-const SD_WRITE_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
-const SD_ADMIN_ROLES = ['sales_manager', 'super_admin', 'director'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_WRITE_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
+const SD_ADMIN_ROLES = ['sales_manager', 'manager', 'super_admin', 'director'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

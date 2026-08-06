@@ -14,7 +14,9 @@ import { Roles } from '@common/decorators/roles.decorator';
 import { unwrapOrThrow } from '@common/http-result';
 import { CustomerInactivityService } from '../application/customer-inactivity.service';
 
-const SD_WRITE_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'
+// (RolesGuard has no alias); same fix already applied to sd-payments/sd-contracts/sd-orders.
+const SD_WRITE_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Sd Customers')

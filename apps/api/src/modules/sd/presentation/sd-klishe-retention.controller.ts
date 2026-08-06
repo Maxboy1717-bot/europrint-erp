@@ -21,7 +21,8 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { unwrapOrThrow } from '@common/http-result';
 import { KlisheRetentionService } from '../application/klishe-retention.service';
 
-const KLISHE_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'production_manager'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const KLISHE_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin', 'production_manager'];
 const MoldIdSchema = z.string().uuid();
 
 const WriteOffSchema = z.object({
@@ -58,7 +59,7 @@ export class SdKlisheRetentionController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @ApiResponse({ status: 409, description: 'Already written off' })
   @Post('klishe-retention/:moldId/write-off')
-  @Roles('sales_manager', 'director', 'super_admin', 'production_manager')
+  @Roles('sales_manager', 'manager', 'director', 'super_admin', 'production_manager')
   async writeOff(
     @Param('moldId') moldId: string,
     @Body(new ZodValidationPipe(WriteOffSchema)) body: z.infer<typeof WriteOffSchema>,

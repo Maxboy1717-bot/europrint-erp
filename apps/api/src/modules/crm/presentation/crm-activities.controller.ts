@@ -25,7 +25,8 @@ import {
   UpdateActivityDtoSchema, UpdateActivityDto,
 } from './dto/crm-activities.dto';
 
-const CRM_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manager', 'SALES'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_ROLES = ['sales_manager', 'manager', 'super_admin', 'director', 'crm_manager', 'SALES'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

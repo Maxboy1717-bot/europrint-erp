@@ -28,7 +28,7 @@ export class SdOrderDepartmentsController {
   @ApiOperation({ summary: 'List the order\'s selected departments' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get(':id/departments')
-  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async list(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.listForOrder(id));
   }
@@ -37,7 +37,7 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch(':id/departments')
-  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   @UsePipes(new ZodValidationPipe(SetOrderDepartmentsSchema))
   async set(@Param('id', ParseIntPipe) id: number, @Body() dto: SetOrderDepartmentsDto) {
     return unwrapOrThrow(await this.svc.setForOrder(id, dto.departments));
@@ -47,7 +47,7 @@ export class SdOrderDepartmentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/saga')
-  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async saga(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.svc.getSaga(id));
   }
@@ -105,7 +105,7 @@ export class SdOrderDepartmentsController {
   @ApiOperation({ summary: 'Shared forma auto-detect: physical dies (die_code) referenced by >1 order (vision 06-sd#18)' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('molds/shared-dies')
-  @Roles(Role.SALES_MANAGER, Role.PRODUCTION_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.PRODUCTION_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async sharedDies() {
     return unwrapOrThrow(await this.svc.getSharedDieWarnings());
   }

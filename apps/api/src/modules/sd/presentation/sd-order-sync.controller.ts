@@ -19,7 +19,8 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { unwrapOrThrow } from '@common/http-result';
 import { SdOrderSyncService } from '../application/sd-order-sync.service';
 
-const SD_SYNC_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin', 'technologist'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_SYNC_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin', 'technologist'];
 
 const SetPredecessorSchema = z.object({
   predecessorOrderId: z.number().int().positive().nullable(),
@@ -49,7 +50,7 @@ export class SdOrderSyncController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @ApiResponse({ status: 409, description: 'Cycle detected' })
   @Put(':id/predecessor')
-  @Roles('sales_manager', 'director', 'super_admin', 'technologist')
+  @Roles('sales_manager', 'manager', 'director', 'super_admin', 'technologist')
   async setPredecessor(
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(SetPredecessorSchema)) body: z.infer<typeof SetPredecessorSchema>,

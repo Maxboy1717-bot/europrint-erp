@@ -20,7 +20,8 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { unwrapOrThrow } from '@common/http-result';
 import { SdLostOrdersReclamationsService } from '../application/sd-lost-orders-reclamations.service';
 
-const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 const CreateLostOrderSchema = z.object({
   salesOrderId: z.number().int().positive().optional(),
@@ -108,7 +109,7 @@ export class SdLostOrdersReclamationsController {
   @ApiOperation({ summary: 'Resolve/reject reclamation' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Patch('reclamations/:id/resolve')
-  @Roles('sales_manager', 'director', 'super_admin')
+  @Roles('sales_manager', 'manager', 'director', 'super_admin')
   async resolveReclamation(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(ResolveReclamationSchema)) body: z.infer<typeof ResolveReclamationSchema>,

@@ -43,6 +43,8 @@ const Role = {
   SUPER_ADMIN: 'super_admin',
   DIRECTOR: 'director',
   SALES_MANAGER: 'sales_manager',
+  // SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+  MANAGER: 'manager',
 } as const;
 
 @ApiThrottle()
@@ -77,7 +79,7 @@ export class SdInvoicesController {
   @ApiOperation({ summary: 'Get invoices' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
-  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
   async getInvoices(@Query() queryParams: Record<string, unknown>) {
 
       const parsed = GetInvoicesDtoSchema.parse(queryParams);
@@ -101,7 +103,7 @@ export class SdInvoicesController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
-  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
   async getInvoice(@Param('id') id: string) {
 
       const query = new GetInvoiceQuery(id);
@@ -116,7 +118,7 @@ export class SdInvoicesController {
   @ApiResponse({ status: 200, description: 'PDF fayl' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/pdf')
-  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
   async downloadInvoicePdf(@Param('id') id: string, @Res() res: FastifyReply, @Req() req: FastifyRequest, @CurrentUser() user: AuthenticatedUser) {
     const query = new GetInvoiceQuery(id);
     const result = await this.queryBus.execute(query);
@@ -153,7 +155,7 @@ export class SdInvoicesController {
   @ApiResponse({ status: 200, description: 'PDF fayl' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id/export-pdf')
-  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER)
+  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER)
   async downloadExportInvoicePdf(@Param('id') id: string, @Res() res: FastifyReply, @Req() req: FastifyRequest, @CurrentUser() user: AuthenticatedUser) {
     const query = new GetInvoiceQuery(id);
     const result = await this.queryBus.execute(query);
@@ -217,7 +219,7 @@ export class SdInvoicesController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
-  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.SALES_MANAGER)
+  @Roles(Role.FINANCE_MANAGER, Role.SUPER_ADMIN, Role.SALES_MANAGER, Role.MANAGER)
   async createInvoice(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
 
       const parsed = CreateInvoiceDtoSchema.parse(body);

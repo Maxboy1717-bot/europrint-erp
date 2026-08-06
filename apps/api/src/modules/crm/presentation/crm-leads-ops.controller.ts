@@ -34,7 +34,8 @@ import { UpdateLeadStageCommand } from '../application/commands/update-lead-stag
 import { DeleteLeadCommand } from '../application/commands/delete-lead.handler';
 import { ConvertLeadToDealCommand } from '../application/commands/convert-lead-to-deal.handler';
 
-const CRM_WRITE_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manager'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_WRITE_ROLES = ['sales_manager', 'manager', 'super_admin', 'director', 'crm_manager'];
 const DEFAULT_DAYS_TO_CLOSURE = 30;
 
 @ApiThrottle()

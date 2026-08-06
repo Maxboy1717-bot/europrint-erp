@@ -31,7 +31,7 @@ export class SdLegacyOrderController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   @Get(':id/legacy-number')
-  @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
   async get(@Param('id', ParseIntPipe) id: number) {
     return unwrapOrThrow(await this.service.getLegacyNumber(id));
   }
@@ -40,7 +40,7 @@ export class SdLegacyOrderController {
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 404, description: 'Order not found' })
   @Patch(':id/legacy-number')
-  @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
+  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN)
   async set(@Param('id', ParseIntPipe) id: number, @Body() dto: unknown) {
     const parsed = SetLegacyNumberDtoSchema.parse(dto);
     return unwrapOrThrow(await this.service.setLegacyNumber(id, parsed.legacyOrderNumber ?? null));

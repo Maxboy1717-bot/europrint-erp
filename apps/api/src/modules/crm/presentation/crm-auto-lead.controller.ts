@@ -28,7 +28,8 @@ import {
   ChurnRescueDtoSchema, ChurnRescueDto,
 } from './dto/crm-auto-lead.dto';
 
-const CRM_AI_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_AI_ROLES = ['sales_manager', 'manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -56,7 +57,7 @@ export class CrmAutoLeadController {
   @ApiOperation({ summary: 'Get supervisor dashboard' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('supervisor-dashboard')
-  @Roles('sales_manager', 'director', 'super_admin')
+  @Roles('sales_manager', 'manager', 'director', 'super_admin')
   async getSupervisorDashboard() {
     return unwrapOrThrow(await this.svc.getSupervisorDashboard());
   }

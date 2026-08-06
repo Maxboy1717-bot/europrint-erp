@@ -31,7 +31,8 @@ const GenerateForecastSchema = z.object({
   period: z.string().max(50).optional(),
 }).passthrough();
 
-const SALES_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SALES_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

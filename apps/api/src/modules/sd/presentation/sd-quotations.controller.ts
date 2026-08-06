@@ -30,7 +30,8 @@ import { AuthenticatedUser } from '@auth/types';
 import { FastifyReply } from 'fastify';
 import { SdQuotationPdfService } from '../invoices/sd-quotation-pdf.service';
 
-const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 type Body_ = Record<string, unknown>;
 

@@ -96,7 +96,7 @@ export class CrmDealsController {
  @ApiOperation({ summary: 'List' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get()
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async list(
   @CurrentUser() user: AuthenticatedUser,
   @Query('companyId') companyId: number,
@@ -111,7 +111,7 @@ export class CrmDealsController {
  @ApiOperation({ summary: 'Export deals (row-scoped to caller; audited)' })
  @ApiResponse({ status: 200, description: 'OK' })
  @Get('export')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async export(@CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Exporting deals');
   // Item 14 (vision 13-crm#14): a non-privileged manager exports ONLY their own deals
@@ -127,7 +127,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 200, description: 'OK' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
- @Roles(Role.SALES_MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
  async getById(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Fetching deal');
   // findOne already unwraps — it returns the row or throws NotFound/500. It is NOT a
@@ -141,7 +141,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post()
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN)
  async create(@Body() dto: unknown, @CurrentUser() user: AuthenticatedUser) {
   const validated = CreateDealDtoSchema.parse(dto);
   this.logger.log('Creating deal');
@@ -166,7 +166,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/won')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async markWon(@Param('id') id: string) {
   this.logger.log('Marking deal as won');
 
@@ -182,7 +182,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/lost')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async markLost(@Param('id') id: string, @Body() body: unknown) {
   const dto = MarkDealLostSchema.parse(body);
   this.logger.log('Marking deal as lost');
@@ -200,7 +200,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id/stage')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async updateStage(@Param('id') id: string, @Body() body: unknown) {
   const dto = UpdateDealStageSchema.parse(body);
   const stageId = dto.stageId ?? dto.stage_id ?? dto.statusId;
@@ -216,7 +216,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async patchDeal(@Param('id') id: string, @Body() body: unknown) {
   const dto = PatchDealSchema.parse(body);
   const sanitized: Record<string, unknown> = {};
@@ -232,7 +232,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 400, description: 'Bad request' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Delete(':id')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
  async deleteDeal(@Param('id') id: string) {
   const res = await this.commandBus.execute(new DeleteDealCommand(String(id)));
   return unwrapOrThrow(res);
@@ -242,7 +242,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 404, description: 'Not found' })
  @Post(':id/clone')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN)
  async cloneDeal(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Cloning deal (repeat order)');
   // Item 93 (ГП-kod takror buyurtma tugmasi): one-click clone a past deal into a fresh
@@ -255,7 +255,7 @@ export class CrmDealsController {
  @ApiResponse({ status: 201, description: 'OK' })
  @ApiResponse({ status: 400, description: 'Bad request' })
  @Post('quick')
- @Roles(Role.SALES_MANAGER, Role.SUPER_ADMIN)
+ @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN)
  async createQuickDeal(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
   const parsed = QuickDealSchema.parse(body);
   // Minimal quick-create: customerName → title, amount, status (defaults to 'new').

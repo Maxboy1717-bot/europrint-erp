@@ -18,7 +18,8 @@ import { CrmDedupService } from '../application/crm-dedup.service';
 import { MergeLeadsDtoSchema, MergeLeadsDto } from './dto/crm-dedup.dto';
 
 // Same write-privileged roles the sibling CrmLeadsOpsController uses.
-const CRM_DEDUP_ROLES = ['sales_manager', 'super_admin', 'director', 'crm_manager'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_DEDUP_ROLES = ['sales_manager', 'manager', 'super_admin', 'director', 'crm_manager'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)

@@ -21,8 +21,9 @@ import { Role } from '@common/constants/roles.constants';
 import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { CrmSettingsService } from './crm-settings.service';
 
-const READ = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER];
-const WRITE = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER];
+// Role.MANAGER — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const READ = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER];
+const WRITE = [Role.SUPER_ADMIN, Role.DIRECTOR, Role.SALES_MANAGER, Role.MANAGER];
 const SEMANTICS = ['process', 'success', 'fail'] as const;
 
 const LossCreateSchema = z.object({

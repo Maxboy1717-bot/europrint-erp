@@ -105,7 +105,8 @@ function normalizeLeadDto(dto: Record<string, unknown>): Record<string, unknown>
   };
 }
 
-const CRM_READ_ROLES = ['sales_manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const CRM_READ_ROLES = ['sales_manager', 'manager', 'SALES', 'crm_manager', 'director', 'super_admin'];
 
 @ApiTags('Crm Leads')
 @ApiBearerAuth()

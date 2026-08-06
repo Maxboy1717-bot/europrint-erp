@@ -19,7 +19,8 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { unwrapOrThrow } from '@common/http-result';
 import { SdLineDeadlineService } from '../application/sd-line-deadline.service';
 
-const SD_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 const PerLineSchedulingSchema = z.object({
   enabled: z.boolean(),

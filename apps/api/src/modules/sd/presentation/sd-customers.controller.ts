@@ -101,7 +101,8 @@ import {
   SdAddDocumentSchema, SdAddDocumentDto,
 } from '../dto/sd.dto';
 
-const SD_WRITE_ROLES = ['sales_manager', 'SALES', 'director', 'super_admin'];
+// 'manager' — SD-CRM audit §3.2 (2026-07-10): live users seed 'manager', not 'sales_manager'.
+const SD_WRITE_ROLES = ['sales_manager', 'manager', 'SALES', 'director', 'super_admin'];
 
 @ApiThrottle()
 @UseInterceptors(AuditInterceptor)
@@ -151,7 +152,7 @@ export class SdCustomersController {
   @ApiOperation({ summary: 'Export customers as CSV' })
   @ApiResponse({ status: 200, description: 'CSV file' })
   @Get('export')
-  @Roles('super_admin', 'director', 'sales_manager')
+  @Roles('super_admin', 'director', 'sales_manager', 'manager')
   async exportCustomers(
     @Query('search') search?: string,
     @Query('status') status?: string,
