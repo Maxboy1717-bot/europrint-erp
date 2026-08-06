@@ -207,14 +207,14 @@ export class SdQuotationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('quotations/:id/convert-to-order') @HttpCode(HttpStatus.OK) @UseInterceptors(AuditInterceptor)
-  async convertToOrder(@Param('id') id: string) { return unwrapOrThrow(await this.svc.convertToOrder(id)); }
+  async convertToOrder(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) { return unwrapOrThrow(await this.svc.convertToOrder(id, user.id)); }
 
   @ApiOperation({ summary: 'Convert quotation' })
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('quotations/:id/convert') @HttpCode(HttpStatus.OK) @UseInterceptors(AuditInterceptor)
-  async convertQuotation(@Param('id') id: string) { return unwrapOrThrow(await this.svc.convertToOrder(id)); }
+  async convertQuotation(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) { return unwrapOrThrow(await this.svc.convertToOrder(id, user.id)); }
 
   // ── Status-transition routes (delegated to SdQuotationsService) ──────────────
 

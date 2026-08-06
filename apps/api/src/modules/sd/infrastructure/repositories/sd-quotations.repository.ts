@@ -340,7 +340,7 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
     return Ok(r.data[0] ?? null);
   }
 
-  async convertQuotationToOrder(id: string): Promise<Result<{ error: string } | { order: Row }>> {
+  async convertQuotationToOrder(id: string, convertedByUserId: number | null = null): Promise<Result<{ error: string } | { order: Row }>> {
     return safeCall(async () => {
       const quotationResult = await this.getQuotationById(id);
       if (!quotationResult.ok) return Promise.reject(quotationResult.error);
@@ -377,11 +377,23 @@ export class SdQuotationsRepository implements ISdQuotationsRepo {
       // feeds. No-orphan is preserved: still one transaction, and now an order can never be
       // created without its event (an outbox failure throws → the whole conversion rolls back).
       const insertedOrder = await db.transaction(async (tx) => {
+        // SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3 §2.4 (2026-08-06 fix): this INSERT
+        // hardcoded created_by=0 (an integer literal), but sales_orders.created_by is live
+        // uuid — every conversion attempt crashed with a type-mismatch 500, making
+        // convert-to-order permanently unreachable. Same convergence fix already applied to
+        // the canonical create-order path (queries-sd.ts execSdSalesOrderInsert, T8-01):
+        // created_by (uuid) stays NULL; the real integer converter goes into
+        // created_by_user_id (FK→users) instead. A SECOND, previously-masked NOT NULL
+        // violation was found while rollback-tx proving this fix: customer_id (also NOT
+        // NULL, no default) was never set either — the created_by crash always fired first
+        // so this one was never reached. companyId here is already resolved from
+        // quotation.customer_id (see above), matching the same dual company_id+customer_id
+        // write already used by the manual create-order path (SDSalesOrders.tsx #03).
         const orderRes = await tx.execute(sql`
           INSERT INTO sales_orders
-            (order_number, status, company_id, total_amount, advance_required, advance_paid, advance_status, design_flag, sample_flag, created_by)
+            (order_number, status, company_id, customer_id, total_amount, advance_required, advance_paid, advance_status, design_flag, sample_flag, created_by, created_by_user_id)
           VALUES
-            (${orderNumber}, 'pending', ${companyId}, ${totalAmount}, ${advancePercent}, '0', 'pending', false, false, 0)
+            (${orderNumber}, 'pending', ${companyId}, ${companyId}, ${totalAmount}, ${advancePercent}, '0', 'pending', false, false, NULL, ${convertedByUserId})
           RETURNING id, order_number, status, total_amount, created_at
         `);
         const order = (orderRes.rows?.[0] ?? null) as Row | null;

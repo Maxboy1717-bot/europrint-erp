@@ -386,8 +386,8 @@ export class SdQuotationsService {
     });
   }
 
-  async convertToOrder(id: string): Promise<Result<{ order: { id: unknown; documentNumber: string } }, AppError>> {
-    const result = await this.repo.convertQuotationToOrder(id);
+  async convertToOrder(id: string, convertedByUserId?: number): Promise<Result<{ order: { id: unknown; documentNumber: string } }, AppError>> {
+    const result = await this.repo.convertQuotationToOrder(id, convertedByUserId ?? null);
     if (!result.ok) return result as Result<{ order: { id: unknown; documentNumber: string } }, AppError>;
     if ('error' in result.data) return Err(AppErr('INTERNAL', result.data.error));
     const orderRow = (result.data as { order: Record<string, unknown> }).order;
