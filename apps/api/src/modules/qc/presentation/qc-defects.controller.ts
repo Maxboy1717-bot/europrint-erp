@@ -6,7 +6,6 @@
 import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';

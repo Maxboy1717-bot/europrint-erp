@@ -13,7 +13,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { Roles } from '@common/decorators/roles.decorator';
 import { Role } from '@common/constants/roles.constants';
 import { unwrapOrInternal, unwrapOrNotFound, throwFromError } from '@common/http-result';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 import { QcNewService } from '../application/qc-new.service';
