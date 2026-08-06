@@ -527,7 +527,7 @@ HRCapitalTests.tsx         ← faqat state + orchestration (≤ 900 qator)
 
 | Fayl | Qator | Amal |
 |------|-------|------|
-| `drizzle-kanban-ext.repo.ts` | 964 | 900+ — bo'linsin |
+| — | — | ✅ 2026-08-07: `drizzle-kanban-ext.repo.ts` (964) allaqachon bo'lingan — hozir 156-qatorli facade + 8 sub-repo; 900+ fayl qolmadi |
 
 > Eslatma: 300–899 qatorli fayllar endi qoidaga muvofiq (oldin bo'lish kerak edi). Kelajakda 900+ va funksiyalar 150+ qator bo'lgan joylarni bo'lish kifoya.
 
