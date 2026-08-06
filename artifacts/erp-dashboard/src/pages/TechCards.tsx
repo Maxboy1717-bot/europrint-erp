@@ -110,10 +110,18 @@ export default function TechCards() {
   };
 
   // Mutations
+  // audit 2026-08-06 T22A: BE endpoint is an honest 501 (#FX) — surface that as an
+  // informative "coming soon" toast instead of a scary destructive error.
+  const isNotImplemented = (err: Error) => /501|Not Implemented|amalga oshiriladi/i.test(err.message);
+
   const optimizeMutation = useMutation({
     mutationFn: (cardId: string) => apiRequest<OptimizeResult>('GET', `/api/technology/cards/${cardId}/optimize`),
     onSuccess: (data) => setOptimizeResult(data),
     onError: (err: Error) => {
+      if (isNotImplemented(err)) {
+        toast({ title: "Tez orada", description: "AI-optimallashtirish hali ulanmagan — bu funksiya keyingi bosqichda ishga tushadi" });
+        return;
+      }
       toast({ title: "Xatolik", description: err.message, variant: "destructive" });
     },
   });
@@ -195,7 +203,11 @@ export default function TechCards() {
       setGenDialog(false);
     } catch (err: unknown) {
       const e = err as Error;
-      toast({ title: "Xatolik", description: e.message, variant: "destructive" });
+      if (isNotImplemented(e)) {
+        toast({ title: "Tez orada", description: "AI karta-generatsiya hali ulanmagan — bu funksiya keyingi bosqichda ishga tushadi" });
+      } else {
+        toast({ title: "Xatolik", description: e.message, variant: "destructive" });
+      }
     } finally {
       setGenLoading(false);
     }
