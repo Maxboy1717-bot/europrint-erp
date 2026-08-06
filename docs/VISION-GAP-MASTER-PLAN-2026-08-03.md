@@ -275,4 +275,12 @@ ko'rindi, lekin funksiya allaqachon BOSHQA, ancha puxtaroq mexanizm bilan qoplan
 `mes-completed-fg.listener.ts` (FG-kirim, EP-WMS-034/023, rollback-tx DB-isbotlangan).
 Green-lie/stub/guard muammosi topilmadi — **kod o'zgarishi kerak emas edi**.
 
-**Navbatdagi modul: QC (#taxminan 7 band)** — to'g'ridan-to'g'ri davom etiladi.
+**QC moduli tekshirildi**: 2 ta o'lik `notImplemented` import o'chirildi (`442d6bd4`).
+Memory'dagi "M6 2/4 gap — QC 0.05 hardcoded" (2026-07-07) tekshirildi — **ALLAQACHON
+tuzatilgan**: `qc-extended.service.ts:77` endi `getConfigNumber('qc_lot_defect_fail_ratio',
+...)` orqali business_settings'dan o'qiydi, faqat fallback-const sifatida 0.05 qoladi
+(to'g'ri naqsh). "quarantine hardcode" izlanganda QC modulida emas, POS/MM modullarida
+topildi — QC doirasidan tashqarida, keyingi to'lqinga (POS/MM navbati kelganda) qoldirildi.
+Guard/green-lie/stub muammosi boshqa topilmadi.
+
+**Navbatdagi modul: LMS (#taxminan 4 band)** — to'g'ridan-to'g'ri davom etiladi.
