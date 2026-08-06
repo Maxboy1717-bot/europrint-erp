@@ -125,6 +125,58 @@ export class PpIntelligenceService implements OnModuleInit {
     }
   }
 
+  /**
+   * audit 2026-08-06 T22B (Qoida 6): moved verbatim from pp-intelligence.controller.ts —
+   * period-matrix assembly + iterative projected-on-hand is business math, not transport.
+   */
+  formatMrpResponse(result: EnrichedMrpResult, method: string, horizon: number) {
+    type PeriodCell = { grossReq: number; scheduledReceipts: number; netReq: number; projectedOnHand: number; plannedOrders: number };
+    const emptyPeriods = (): PeriodCell[] => Array.from({ length: horizon }, () => ({ grossReq: 0, scheduledReceipts: 0, netReq: 0, projectedOnHand: 0, plannedOrders: 0 }));
+    const byMaterial = new Map<string, PeriodCell[]>();
+
+    for (const nr of result.netRequirements ?? []) {
+      let periods = byMaterial.get(nr.materialId);
+      if (!periods) {
+        periods = emptyPeriods();
+        byMaterial.set(nr.materialId, periods);
+      }
+      const idx = Math.min(Math.max(0, nr.period), horizon - 1);
+      const p = periods[idx];
+      if (!p) continue;
+      p.grossReq = nr.gr; p.netReq = nr.nr; p.scheduledReceipts += nr.sr;
+    }
+    for (const po of result.plannedOrders ?? []) {
+      let periods = byMaterial.get(po.materialId);
+      if (!periods) {
+        periods = emptyPeriods();
+        byMaterial.set(po.materialId, periods);
+      }
+      const idx = Math.min(Math.max(0, po.periodIndex), horizon - 1);
+      const p = periods[idx];
+      if (!p) continue;
+      p.plannedOrders += po.qty;
+    }
+    for (const [materialId, periods] of byMaterial) {
+      let poh = result.openingOnHand[materialId] ?? 0;
+      for (const p of periods) { poh = poh + p.scheduledReceipts + p.plannedOrders - p.grossReq; p.projectedOnHand = poh; }
+    }
+
+    const policyMap = new Map((Array.isArray(result.policies) ? result.policies : []).map((p) => [p.materialId, p]));
+    const lines = Array.from(byMaterial.entries()).map(([materialId, periods]) => {
+      const policy = policyMap.get(materialId);
+      return {
+        itemId: materialId,
+        itemName: materialId,
+        lotSizingMethod: policy?.lotSizingMethod ?? method,
+        safetyStock: policy?.safetyStock ?? 0,
+        leadTimePeriods: Math.max(1, Math.ceil((policy?.leadTimeDays ?? 7) / 7)),
+        periods,
+      };
+    });
+
+    return { method, horizon, lines, runAt: result.runAt };
+  }
+
   private async insertRun(method: string, horizon: number): Promise<number> {
     // `pp_mrp_runs` is an auto-updatable VIEW over the base table `mrp_runs`, whose
     // `run_number` (varchar(50)) and `run_date` (varchar(10), ISO date) columns are
