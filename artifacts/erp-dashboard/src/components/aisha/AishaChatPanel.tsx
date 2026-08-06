@@ -21,10 +21,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Bot, History, Mic, MicOff, Send, X } from 'lucide-react';
+import { Bot, Check, History, Mic, MicOff, Send, ShieldAlert, X } from 'lucide-react';
 import { z } from 'zod';
 import { useTranslation } from '@/lib/i18n';
-import { useAisha, useAishaHistory } from '@/hooks/useAisha';
+import { useAisha, useAishaApprovals, useAishaHistory } from '@/hooks/useAisha';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EPErrorState } from '@/components/ep/EPErrorState';
 import { cn } from '@/lib/utils';
 import type {
+  AishaApproval,
   AishaMessage,
   AishaConversationListItem,
   AishaToolCall,
@@ -179,6 +180,80 @@ function HistoryPanel({ h }: { h: ReturnType<typeof useAishaHistory> }) {
   );
 }
 
+// ─── Pending approvals (HITL: AI proposes, human decides) ────────────────────
+
+function summariseApprovalInput(input: unknown): string {
+  if (!input || typeof input !== 'object') return '';
+  return Object.entries(input as Record<string, unknown>)
+    .map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+    .join(' · ')
+    .slice(0, 160);
+}
+
+function ApprovalRow({
+  item, busy, onApprove, onReject,
+}: { item: AishaApproval; busy: boolean; onApprove: () => void; onReject: () => void }) {
+  const { t } = useTranslation('aisha');
+  return (
+    <li
+      className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 px-2.5 py-2 text-xs space-y-1.5"
+      data-testid="aisha-approval-row"
+    >
+      <div className="flex items-center gap-1.5 font-medium text-amber-900 dark:text-amber-200">
+        <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+        <span>{item.toolName ?? '—'}</span>
+        <span className="text-[10px] font-normal text-amber-700/80 dark:text-amber-300/70">
+          {t('approval.highStake')}
+        </span>
+      </div>
+      {summariseApprovalInput(item.input) && (
+        <p className="text-[11px] text-muted-foreground break-words">{summariseApprovalInput(item.input)}</p>
+      )}
+      <div className="flex gap-2 pt-0.5">
+        <Button
+          type="button" size="sm" variant="default"
+          className="h-6 px-2 text-[11px] bg-emerald-600 hover:bg-emerald-700"
+          disabled={busy}
+          onClick={onApprove}
+          data-testid="aisha-approval-approve"
+        >
+          <Check className="h-3 w-3 mr-1" />{t('approval.approve')}
+        </Button>
+        <Button
+          type="button" size="sm" variant="outline"
+          className="h-6 px-2 text-[11px]"
+          disabled={busy}
+          onClick={onReject}
+          data-testid="aisha-approval-reject"
+        >
+          <X className="h-3 w-3 mr-1" />{t('approval.reject')}
+        </Button>
+      </div>
+    </li>
+  );
+}
+
+function ApprovalQueue({ a }: { a: ReturnType<typeof useAishaApprovals> }) {
+  const { t } = useTranslation('aisha');
+  if (a.pending.length === 0) return null;
+  return (
+    <ul className="space-y-1.5" data-testid="aisha-approval-queue">
+      <li className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+        {t('approval.title')} ({a.pending.length})
+      </li>
+      {a.pending.map((item) => (
+        <ApprovalRow
+          key={item.id}
+          item={item}
+          busy={a.isMutating && a.mutatingId === item.id}
+          onApprove={() => a.approve(item.id)}
+          onReject={() => a.reject(item.id)}
+        />
+      ))}
+    </ul>
+  );
+}
+
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export interface AishaChatPanelProps {
@@ -196,6 +271,7 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
   const [showHistory, setShowHistory] = useState(false);
   const a = useAisha();
   const h = useAishaHistory();
+  const approvals = useAishaApprovals();
 
   const form = useForm<ChatFormValues>({
     resolver: zodResolver(ChatFormSchema),
@@ -249,6 +325,7 @@ export function AishaChatPanel({ isDirector = true, className, closable = true }
       </CardHeader>
       <CardContent className="space-y-3">
         {showHistory && <HistoryPanel h={h} />}
+        <ApprovalQueue a={approvals} />
         <div className="max-h-72 min-h-[8rem] overflow-y-auto pr-1 border rounded-md bg-background/50 p-3">
           {a.error ? (
             <EPErrorState

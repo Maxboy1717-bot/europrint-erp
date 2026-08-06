@@ -29,13 +29,26 @@ export const AishaChatRequestSchema = z.object({
   sessionId: z.string().optional(),
 });
 
+// Item #171-185 wave: a chat turn that requested a high-stake tool (send_email /
+// send_telegram_to_team / schedule_meeting / assign_task) pauses and reports it here —
+// distinct from AishaApprovalSchema below (that's the persisted GET /approvals queue row;
+// this is the ephemeral per-turn signal the backend's ChatResponse.data carries, keyed by
+// the LLM's tool_use id rather than the DB approval id).
+export const AishaPendingApprovalSchema = z.object({
+  toolUseId: z.string(),
+  name:      z.string(),
+  input:     z.record(z.unknown()),
+  stake:     z.literal('high'),
+});
+
 export const AishaChatResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
-    reply:          z.string(),
-    sessionId:      z.string(),
-    conversationId: z.string().optional(),
-    toolsUsed:      z.array(z.string()).optional(),
+    reply:            z.string(),
+    sessionId:        z.string(),
+    conversationId:   z.string().optional(),
+    toolsUsed:        z.array(z.string()).optional(),
+    pendingApprovals: z.array(AishaPendingApprovalSchema).optional(),
   }),
 });
 
@@ -135,6 +148,26 @@ export const AishaApprovalListResponseSchema = z.object({
   }),
 });
 
+// POST /api/aisha/approvals/:id/approve — resumes and actually executes the tool;
+// the response carries the real executed result (never a silent no-op, Q-10/Q-40).
+export const AishaApprovalResumeResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    approval: AishaApprovalSchema,
+    tool: z.object({
+      name:   z.string(),
+      ok:     z.boolean(),
+      result: z.unknown(),
+    }),
+  }),
+});
+
+// POST /api/aisha/approvals/:id/reject
+export const AishaApprovalRejectResponseSchema = z.object({
+  success: z.boolean(),
+  data: AishaApprovalSchema,
+});
+
 // ─── Stream (SSE) events ─────────────────────────────────────────────────────
 
 export const AishaStreamEventSchema = z.discriminatedUnion('kind', [
@@ -166,6 +199,8 @@ export type AishaConversationListItem = z.infer<typeof AishaConversationListItem
 export type AishaToolCall             = z.infer<typeof AishaToolCallSchema>;
 export type AishaConversationDetail   = z.infer<typeof AishaConversationDetailResponseSchema>['data'];
 export type AishaApproval             = z.infer<typeof AishaApprovalSchema>;
+export type AishaPendingApproval      = z.infer<typeof AishaPendingApprovalSchema>;
+export type AishaApprovalResumeResult = z.infer<typeof AishaApprovalResumeResponseSchema>['data'];
 
 /**
  * Normalised wake-config view-model used by the React tree. Hides the

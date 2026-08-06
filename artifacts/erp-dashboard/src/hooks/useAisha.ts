@@ -15,18 +15,23 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import {
   AishaChatResponseSchema,
   AishaConversationListResponseSchema,
   AishaConversationDetailResponseSchema,
+  AishaApprovalListResponseSchema,
+  AishaApprovalResumeResponseSchema,
+  AishaApprovalRejectResponseSchema,
   AishaStreamEventSchema,
   AishaWakeConfigSchema,
   normaliseWakeConfig,
   type AishaChatResponse,
   type AishaConversationListItem,
   type AishaConversationDetail,
+  type AishaApproval,
+  type AishaApprovalResumeResult,
   type AishaMessage,
   type AishaWakeConfigView,
 } from '@/lib/api/aisha.schema';
@@ -108,6 +113,7 @@ export function useAisha(): UseAishaReturn {
   const [isListening, setIsListening] = useState(false);
   const [sessionId]                   = useState<string>(() => newSessionId());
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const queryClient = useQueryClient();
 
   const wakeQuery = useQuery<AishaWakeConfigView>({
     queryKey: ['/api/aisha/wake/config'],
@@ -119,6 +125,12 @@ export function useAisha(): UseAishaReturn {
     mutationFn: (text: string) => postChat(text, sessionId),
     onSuccess: (res) => {
       setMessages((prev) => [...prev, makeMessage('assistant', res.data.reply)]);
+      // Item #171-185: a high-stake tool call (send_email/telegram/schedule_meeting/
+      // assign_task) paused for human approval this turn — refresh the queue so it
+      // surfaces immediately instead of waiting for useAishaApprovals' own poll.
+      if (res.data.pendingApprovals && res.data.pendingApprovals.length > 0) {
+        void queryClient.invalidateQueries({ queryKey: ['/api/aisha/approvals'] });
+      }
     },
   });
 
@@ -282,5 +294,81 @@ export function useAishaHistory(): UseAishaHistoryReturn {
     detail:             detailQuery.data ?? null,
     isLoadingDetail:    detailQuery.isLoading,
     error,
+  };
+}
+
+// ─── Approvals (HITL queue: list pending + approve/reject) ─────────────────────
+// Item #171-185: the backend's high-stake tool gate (send_email/send_telegram_to_team/
+// schedule_meeting/assign_task) was fully built (aisha-history.controller.ts) but had
+// zero frontend surface — pending actions silently piled up with no way to act on them.
+
+async function getPendingApprovals(): Promise<AishaApproval[]> {
+  const raw = await apiRequest<unknown>('GET', '/api/aisha/approvals?status=pending&limit=50');
+  const parsed = AishaApprovalListResponseSchema.parse(raw);
+  return Array.isArray(parsed.data.items) ? parsed.data.items : [];
+}
+
+async function approveAction(id: string): Promise<AishaApprovalResumeResult> {
+  const raw = await apiRequest<unknown>('POST', `/api/aisha/approvals/${encodeURIComponent(id)}/approve`);
+  return AishaApprovalResumeResponseSchema.parse(raw).data;
+}
+
+async function rejectAction(id: string): Promise<AishaApproval> {
+  const raw = await apiRequest<unknown>('POST', `/api/aisha/approvals/${encodeURIComponent(id)}/reject`);
+  return AishaApprovalRejectResponseSchema.parse(raw).data;
+}
+
+export interface UseAishaApprovalsReturn {
+  pending:      AishaApproval[];
+  isLoading:    boolean;
+  error:        Error | null;
+  approve:      (id: string) => void;
+  reject:       (id: string) => void;
+  isMutating:   boolean;
+  mutatingId:   string | null;
+  lastResult:   AishaApprovalResumeResult | null;
+}
+
+export function useAishaApprovals(): UseAishaApprovalsReturn {
+  const queryClient = useQueryClient();
+  const [mutatingId, setMutatingId] = useState<string | null>(null);
+
+  const listQuery = useQuery<AishaApproval[]>({
+    queryKey: ['/api/aisha/approvals'],
+    queryFn:  getPendingApprovals,
+    staleTime: 15 * 1000,
+    refetchInterval: 30 * 1000,
+  });
+
+  const approveMutation = useMutation<AishaApprovalResumeResult, Error, string>({
+    mutationFn: approveAction,
+    onMutate:   (id) => setMutatingId(id),
+    onSettled:  () => setMutatingId(null),
+    onSuccess:  () => void queryClient.invalidateQueries({ queryKey: ['/api/aisha/approvals'] }),
+  });
+
+  const rejectMutation = useMutation<AishaApproval, Error, string>({
+    mutationFn: rejectAction,
+    onMutate:   (id) => setMutatingId(id),
+    onSettled:  () => setMutatingId(null),
+    onSuccess:  () => void queryClient.invalidateQueries({ queryKey: ['/api/aisha/approvals'] }),
+  });
+
+  const error = useMemo<Error | null>(() => {
+    if (listQuery.error)       return listQuery.error as Error;
+    if (approveMutation.error) return approveMutation.error;
+    if (rejectMutation.error)  return rejectMutation.error;
+    return null;
+  }, [listQuery.error, approveMutation.error, rejectMutation.error]);
+
+  return {
+    pending:    Array.isArray(listQuery.data) ? listQuery.data : [],
+    isLoading:  listQuery.isLoading,
+    error,
+    approve:    (id: string) => approveMutation.mutate(id),
+    reject:     (id: string) => rejectMutation.mutate(id),
+    isMutating: approveMutation.isPending || rejectMutation.isPending,
+    mutatingId,
+    lastResult: approveMutation.data ?? null,
   };
 }
