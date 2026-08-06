@@ -133,6 +133,9 @@ export class PushService {
     return true;
   }
 
+  // audit 2026-08-06 T18: was a green-lie — logged "FCM dispatch" and returned true
+  // without ever calling FCM. Now performs a real legacy-API send when the key is
+  // configured; honest false otherwise.
   private async sendFcm(sub: Record<string, unknown>, payload: PushPayload): Promise<boolean> {
     const token = String(sub['fcm_token'] ?? '');
     if (!token) return false;
@@ -141,16 +144,37 @@ export class PushService {
       this.logger.warn('FCM_SERVER_KEY not set — FCM skipped');
       return false;
     }
-    // WHY: do not log the raw token (Rule 15). Only emit non-sensitive metadata.
-    this.logger.log(`FCM dispatch: ${payload.title}`);
-    return true;
+    try {
+      const res = await fetch('https://fcm.googleapis.com/fcm/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `key=${fcmKey}` },
+        body: JSON.stringify({
+          to: token,
+          notification: { title: payload.title, body: payload.body, icon: payload.icon ?? '/icons/icon-192.png' },
+          data: { url: payload.url ?? '/', ...(payload.data ?? {}) },
+        }),
+      });
+      if (!res.ok) {
+        // WHY: do not log the raw token (Rule 15). Only emit non-sensitive metadata.
+        this.logger.warn(`FCM send failed: HTTP ${res.status}`);
+        return false;
+      }
+      this.logger.log(`FCM delivered: ${payload.title}`);
+      return true;
+    } catch (e) {
+      this.logger.warn(`FCM send error: ${(e as Error).message}`);
+      return false;
+    }
   }
 
+  // audit 2026-08-06 T18: was a green-lie — returned true without sending anything.
+  // A real APNs integration (p8 JWT + HTTP/2) needs owner-provisioned Apple
+  // credentials; until then this honestly reports non-delivery instead of faking it.
   private async sendApns(sub: Record<string, unknown>, payload: PushPayload): Promise<boolean> {
     const token = String(sub['apns_token'] ?? '');
     if (!token) return false;
     // WHY: do not log the raw token (Rule 15).
-    this.logger.log(`APNS dispatch: ${payload.title}`);
-    return true;
+    this.logger.warn(`APNS not configured (needs APNS_KEY_ID/APNS_TEAM_ID/APNS_PRIVATE_KEY) — "${payload.title}" not delivered`);
+    return false;
   }
 }
