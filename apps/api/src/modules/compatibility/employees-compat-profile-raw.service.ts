@@ -194,12 +194,22 @@ export class EmployeesCompatProfileRawService {
 
   async createPassport(employeeId: string, body: Row): Promise<Result<Row, AppError>> {
     return safeCall(async () => {
+      // audit 2026-08-06 T29: the FE passport form collected issue/expiry dates and
+      // national-id but this write silently dropped them (Q-43 fake-save) even though
+      // the employees columns exist. Accept both FE camelCase names (issuedDate/
+      // expiryDate — profile-types.ts) and canonical snake_case.
+      const issueDate  = body['passport_issue_date']  ?? body['passportIssueDate']  ?? body['issuedDate'] ?? null;
+      const expiryDate = body['passport_expiry_date'] ?? body['passportExpiryDate'] ?? body['expiryDate'] ?? null;
+      const nationalId = body['national_id'] ?? body['nationalId'] ?? null;
       const r = await rawSql(sql`
         UPDATE employees SET passport_series = COALESCE(${body['passport_series'] ?? body['passportSeries'] ?? null}, passport_series),
           passport_number = COALESCE(${body['passport_number'] ?? body['passportNumber'] ?? null}, passport_number),
+          passport_issue_date  = COALESCE(${issueDate}::date, passport_issue_date),
+          passport_expiry_date = COALESCE(${expiryDate}::date, passport_expiry_date),
+          national_id = COALESCE(${nationalId}, national_id),
           updated_at = NOW()
         WHERE id = ${si(employeeId)}
-        RETURNING id, passport_series, passport_number, updated_at
+        RETURNING id, passport_series, passport_number, passport_issue_date, passport_expiry_date, national_id, updated_at
       `);
       return (dbRows(r)[0] as Row | undefined) ?? { id: employeeId, updated: true };
     });

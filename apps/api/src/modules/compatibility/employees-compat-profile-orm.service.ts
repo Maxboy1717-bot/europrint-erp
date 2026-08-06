@@ -66,6 +66,11 @@ export class EmployeesCompatProfileOrmService {
         passportNumber:     row['passport_number'] ?? null,
         passportIssueDate:  row['passport_issue_date'] ?? null,
         passportExpiryDate: row['passport_expiry_date'] ?? null,
+        // audit 2026-08-06 T29: FE PassportData (profile-types.ts) expects
+        // issuedDate/expiryDate — the key-name mismatch meant even the stored dates
+        // never redisplayed. Serve both spellings.
+        issuedDate:         row['passport_issue_date'] ?? null,
+        expiryDate:         row['passport_expiry_date'] ?? null,
         nationalId:         row['national_id'] ?? null,
       };
     });

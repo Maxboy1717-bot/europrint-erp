@@ -68,14 +68,7 @@ export function PassportDialog({
               />
             </div>
           </div>
-          <div className="space-y-1">
-          <Label htmlFor="issuedBy">{t("kimTomonidanBerilgan")}</Label>
-            <Input
-              id="issuedBy"
-              value={form.issuedBy}
-              onChange={(e) => updateField("issuedBy", e.target.value)}
-            />
-          </div>
+          {/* audit 2026-08-06 T29: issuedBy/birthPlace/citizenship inputs removed — employees has no backing columns (Q-35-gated), so they were silently dropped on save (Q-43 fake-save). Re-add only after the owner approves the schema addition. */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
           <Label htmlFor="issuedDate">{t("berilganSana")}</Label>
@@ -95,22 +88,6 @@ export function PassportDialog({
                 onChange={(e) => updateField("expiryDate", e.target.value)}
               />
             </div>
-          </div>
-          <div className="space-y-1">
-          <Label htmlFor="birthPlace">{t("tugilganJoyi")}</Label>
-            <Input
-              id="birthPlace"
-              value={form.birthPlace}
-              onChange={(e) => updateField("birthPlace", e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-          <Label htmlFor="citizenship">{t("fuqaroligi")}</Label>
-            <Input
-              id="citizenship"
-              value={form.citizenship}
-              onChange={(e) => updateField("citizenship", e.target.value)}
-            />
           </div>
         </div>
         <DialogFooter>
