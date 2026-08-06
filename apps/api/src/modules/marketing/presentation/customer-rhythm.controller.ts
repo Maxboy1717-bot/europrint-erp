@@ -26,7 +26,7 @@ export class CustomerRhythmController {
    * Average days between orders for a customer, only after the first N orders.
    */
   @Get('customers/:customerId/rhythm')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getCustomerRhythm(@Param('customerId') customerId: string) {
     const id = Number.parseInt(customerId, 10);
     if (!Number.isInteger(id) || id <= 0) {

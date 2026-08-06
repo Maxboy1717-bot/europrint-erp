@@ -100,7 +100,7 @@ export class MarketingGroup2Controller {
   // ── Blog ──────────────────────────────────────────────────────────────────
 
   @Get('website/blog')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @ApiOperation({ summary: "Blog postlar ro'yxati (limit/offset, status filter)" })
   async getBlogPosts(
     @Query('limit') limit?: string,
@@ -116,7 +116,7 @@ export class MarketingGroup2Controller {
   }
 
   @Post('website/blog')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Blog post yaratish' })
   async createBlogPost(@Body() body: unknown) {
@@ -126,7 +126,7 @@ export class MarketingGroup2Controller {
   }
 
   @Patch('website/blog/:id')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @ApiOperation({ summary: "Blog post yangilash" })
   async updateBlogPost(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateBlogPostSchema.parse(body);
@@ -135,7 +135,7 @@ export class MarketingGroup2Controller {
   }
 
   @Post('website/blog/:id/publish')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Blog post nashr qilish (status = published)" })
   async publishBlogPost(@Param('id') id: string) {
@@ -144,7 +144,7 @@ export class MarketingGroup2Controller {
   }
 
   @Delete('website/blog/:id')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Blog post o'chirish" })
   async deleteBlogPost(@Param('id') id: string) {
@@ -155,7 +155,7 @@ export class MarketingGroup2Controller {
   // ── Budget ────────────────────────────────────────────────────────────────
 
   @Get('budget')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @ApiOperation({ summary: "Marketing byudjet ro'yxati (year, month filter)" })
   async getBudget(
     @Query('year') year?: string,
@@ -169,7 +169,7 @@ export class MarketingGroup2Controller {
   }
 
   @Get('budget/:id')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @ApiOperation({ summary: 'Byudjet qatori tafsiloti' })
   async getBudgetById(@Param('id') id: string) {
     const result = await this.svc.getBudgetLineById(id);
@@ -177,7 +177,7 @@ export class MarketingGroup2Controller {
   }
 
   @Post('budget')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Yangi byudjet qatori yaratish' })
   async createBudget(@Body() body: unknown) {
@@ -187,7 +187,7 @@ export class MarketingGroup2Controller {
   }
 
   @Put('budget/:id')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @ApiOperation({ summary: "Byudjet qatorini yangilash" })
   async updateBudget(@Param('id') id: string, @Body() body: unknown) {
     const dto = UpdateBudgetLineSchema.parse(body);
@@ -196,7 +196,7 @@ export class MarketingGroup2Controller {
   }
 
   @Delete('budget/:id')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Byudjet qatorini o\'chirish' })
   async deleteBudget(@Param('id') id: string) {
@@ -207,7 +207,7 @@ export class MarketingGroup2Controller {
   // ── Calendar ──────────────────────────────────────────────────────────────
 
   @Get('calendar')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @ApiOperation({ summary: "Marketing taqvim tadbirlari (from/to filter)" })
   async getCalendar(
     @Query('from') from?: string,
@@ -218,7 +218,7 @@ export class MarketingGroup2Controller {
   }
 
   @Get('calendar/:id')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @ApiOperation({ summary: 'Taqvim tadbiri tafsiloti' })
   async getCalendarById(@Param('id') id: string) {
     const result = await this.svc.getCalendarEventById(Number(id));
@@ -226,7 +226,7 @@ export class MarketingGroup2Controller {
   }
 
   @Post('calendar')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Yangi taqvim tadbiri yaratish' })
   async createCalendarEvent(@Body() body: unknown) {
@@ -236,7 +236,7 @@ export class MarketingGroup2Controller {
   }
 
   @Patch('calendar/:id')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @ApiOperation({ summary: 'Taqvim tadbirini yangilash' })
   async updateCalendarEvent(@Param('id') id: string, @Body() body: unknown) {
     const dto = z.object({
@@ -264,7 +264,7 @@ export class MarketingGroup2Controller {
   }
 
   @Delete('calendar/:id')
-  @Roles('super_admin', 'marketing_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Taqvim tadbirini o\'chirish' })
   async deleteCalendarEvent(@Param('id') id: string) {
@@ -275,7 +275,7 @@ export class MarketingGroup2Controller {
   // ── Papka repeat lookup (Item 14-75) ──────────────────────────────────────
 
   @Get('papka-lookup')
-  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   @ApiOperation({ summary: "Papka № (PT/KT/E) → bog'langan buyurtmani topish ('takror qil' uchun)" })
   async lookupPapka(@Query('papkaNo') papkaNo?: string) {
     const dto = PapkaLookupSchema.parse({ papkaNo });
@@ -286,7 +286,7 @@ export class MarketingGroup2Controller {
   // ── Competitors ───────────────────────────────────────────────────────────
 
   @Get('competitors')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @ApiOperation({ summary: "Raqiblar tahlili (sd_customer_competitors dan GROUP BY)" })
   async getCompetitors() {
     const result = await this.svc.getCompetitors();
@@ -296,7 +296,7 @@ export class MarketingGroup2Controller {
   // ── Design workload (kanban yuki) ───────────────────────────────────────────
 
   @Get('design-workload')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @ApiOperation({ summary: "Dizayn bandligi (kanban yuki) — ustun bo'yicha jonli karta soni; va'da berishdan oldin ko'riladi" })
   async getDesignWorkload() {
     const result = await this.svc.getDesignWorkload();
@@ -306,7 +306,7 @@ export class MarketingGroup2Controller {
   // ── Lead Contacts ─────────────────────────────────────────────────────────
 
   @Get('leads/:id/contacts')
-  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   @ApiOperation({ summary: "Lead aloqalar tarixi" })
   async getLeadContacts(@Param('id') id: string) {
     const result = await this.svc.getLeadContacts(id);
@@ -314,7 +314,7 @@ export class MarketingGroup2Controller {
   }
 
   @Post('leads/:id/contacts')
-  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Lead uchun yangi aloqa qo'shish" })
   async createLeadContact(@Param('id') id: string, @Body() body: unknown) {
@@ -324,7 +324,7 @@ export class MarketingGroup2Controller {
   }
 
   @Delete('leads/:id')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Lead soft delete (deletedAt to'ldiriladi)" })
   async deleteLead(@Param('id') id: string) {

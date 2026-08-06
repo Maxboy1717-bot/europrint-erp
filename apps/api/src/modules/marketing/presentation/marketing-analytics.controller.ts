@@ -149,7 +149,7 @@ export class MarketingAnalyticsController {
 
   @Patch('leads/:id')
   @UseInterceptors(AuditInterceptor)
-  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   @ApiOperation({ summary: "Lead ma'lumotlarini patch qilish" })
   @ApiResponse({ status: 200, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })

@@ -33,7 +33,7 @@ const CreatePromoCodeSchema = z.object({
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('marketing/promo-codes')
-@Roles('super_admin', 'director', 'marketing_manager')
+@Roles('super_admin', 'director', 'marketing_manager', 'manager')
 export class PromoCodesController {
   private readonly logger = new Logger(PromoCodesController.name);
 

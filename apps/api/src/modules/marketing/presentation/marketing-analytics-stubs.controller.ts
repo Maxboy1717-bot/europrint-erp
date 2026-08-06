@@ -118,7 +118,7 @@ export class MarketingAnalyticsStubsController {
   ) {}
 
   // -- Content ---------------------------------------------------------------
-  @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('content/ai-generate') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.CREATED)
   async aiGenerateContent(@Body() body: unknown) {
     // AI provider not wired — save draft content to marketing_content so the FE round-trip works.
@@ -137,13 +137,13 @@ export class MarketingAnalyticsStubsController {
 
   // -- NPS & Churn (already real via MarketingExtService) --------------------
   @Get('nps/stats')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getNpsStats() {
     return unwrapOrThrow(await this.svc.getNpsStats());
   }
 
   @Get('nps/monthly')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getNpsMonthly() {
     // FE reads this with `useQuery<NpsMonthly[]>` (no `select` unwrap) — must return
     // a bare array, not `{ monthlyTrend: [...] }`, or Array.isArray() fails silently
@@ -154,7 +154,7 @@ export class MarketingAnalyticsStubsController {
   }
 
   @Get('nps')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getNps() {
     return unwrapOrThrow(await this.svc.getNps());
   }
@@ -193,7 +193,7 @@ export class MarketingAnalyticsStubsController {
     return unwrapOrThrow(await this.svc.getChurnRisk(user?.role));
   }
 
-  @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'director') @HttpCode(HttpStatus.OK)
+  @Post('churn-risk/ai-signal') @Roles('super_admin', 'marketing_manager', 'manager', 'director') @HttpCode(HttpStatus.OK)
   async postChurnRiskAiSignal(@Body() body: unknown) {
     // Accept AI churn signal and lower scores for at-risk leads (score threshold: status=hot → -10)
     const dto = StubBodySchema.parse(body ?? {});
@@ -214,12 +214,12 @@ export class MarketingAnalyticsStubsController {
 
   // -- AI / Leads (already real or AI-gated) --------------------------------
   @Get('ai/hot-leads')
-  @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   async getAiHotLeads() {
     return unwrapOrThrow(await this.svc.getHotLeads());
   }
 
-  @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('ai-assistant') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getAiAssistant() {
     // AI assistant conversation history — stored in marketing_settings under 'ai_chat_history'
     try {
@@ -230,7 +230,7 @@ export class MarketingAnalyticsStubsController {
     } catch { return { messages: [], ai_provider: 'pending' }; }
   }
 
-  @Post('ai-assistant') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('ai-assistant') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.OK)
   async postAiAssistant(@Body() body: unknown) {
     const dto = StubBodySchema.parse(body ?? {});
@@ -252,18 +252,18 @@ export class MarketingAnalyticsStubsController {
   }
 
   @Get('leads/sources/summary')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getLeadsSourcesSummary() {
     return unwrapOrThrow(await this.svc.getLeadsSourcesSummary());
   }
 
   @Get('leads/automation/overdue-leads')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getAutomationOverdueLeads() {
     return unwrapOrThrow(await this.svc.getOverdueLeads());
   }
 
-  @Post('leads/recalculate-scores') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('leads/recalculate-scores') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.OK)
   async recalculateLeadScores(@Body() _body: unknown) {
     // Recompute score: base + channel bonus (organic/referral) + status bonus, capped at MAX.
@@ -286,7 +286,7 @@ export class MarketingAnalyticsStubsController {
     return { updated, message: `${updated} ta lid ball qayta hisoblandi` };
   }
 
-  @Post('leads/:id/convert-to-crm') @Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+  @Post('leads/:id/convert-to-crm') @Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
   @HttpCode(HttpStatus.CREATED)
   async convertLeadToCrm(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     // NOTE: marketing_leads.id is varchar(36) (UUID-style / seed slugs like "demo-lead-003"),
@@ -339,12 +339,12 @@ export class MarketingAnalyticsStubsController {
 
   // -- Inbox (no table — DDL-NEEDED) ----------------------------------------
   @Get('inbox/stats')
-  @Roles('super_admin', 'marketing_manager', 'director')
+  @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getInboxStats() {
     return unwrapOrThrow(await this.svc.getInboxStats());
   }
 
-  @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('inbox/conversations') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getInboxConversations(@Query('platform') platform?: string, @Query('status') status?: string) {
     const data = rows(await db.execute(sql`
       SELECT * FROM social_conversations
@@ -356,7 +356,7 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Get('inbox/conversations/:id/messages') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('inbox/conversations/:id/messages') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getConversationMessages(@Param('id') id: string) {
     const convId = parseInt(id, 10);
     const data = rows(await db.execute(sql`
@@ -368,7 +368,7 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Post('inbox/conversations/:id/reply') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('inbox/conversations/:id/reply') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.CREATED)
   async replyToConversation(@Param('id') id: string, @Body() body: unknown) {
     const dto = InboxReplySchema.parse(body ?? {});
@@ -387,7 +387,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Post('inbox/ai-reply/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  @Post('inbox/ai-reply/:id') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   @HttpCode(HttpStatus.CREATED)
   async aiReplyToConversation(@Param('id') id: string) {
     // AI provider not wired — insert placeholder outbound message so FE round-trip succeeds.
@@ -405,7 +405,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row, ai_provider: 'pending' };
   }
 
-  @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'director')
+  @Patch('inbox/conversations/:id/status') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async updateConversationStatus(@Param('id') id: string, @Body() body: unknown) {
     const dto = InboxStatusSchema.parse(body ?? {});
     await db.execute(sql`
@@ -415,12 +415,12 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- A/B tests (marketing_ab_tests EXISTS) ---------------------------------
-  @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('ab-tests') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getAbTests() {
     return { items: rows(await db.execute(sql`SELECT * FROM marketing_ab_tests ORDER BY created_at DESC`)) };
   }
 
-  @Post('ab-tests') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
+  @Post('ab-tests') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.CREATED)
   async createAbTest(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = AbTestSchema.parse(body ?? {});
     // marketing_ab_tests.id is varchar NOT NULL with no default (same as the PR-/AI- pattern in
@@ -446,7 +446,7 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- Exhibitions (exhibitions + exhibition_leads EXIST) --------------------
-  @Get('exhibitions') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitions() {
     const data = rows(await db.execute(sql`
       SELECT * FROM exhibitions WHERE deleted_at IS NULL ORDER BY created_at DESC
@@ -454,7 +454,7 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Get('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitionById(@Param('id') id: string) {
     const row = first(await db.execute(sql`
       SELECT * FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
@@ -463,7 +463,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitionLeads(@Param('id') id: string) {
     const data = rows(await db.execute(sql`
       SELECT * FROM exhibition_leads WHERE exhibition_id=${parseInt(id, 10)} ORDER BY created_at DESC
@@ -471,7 +471,7 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Get('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getExhibitionQr(@Param('id') id: string) {
     const row = first(await db.execute(sql`
       SELECT id, name, qr_code FROM exhibitions WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL LIMIT 1
@@ -480,7 +480,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Post('exhibitions') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
+  @Post('exhibitions') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.CREATED)
   async createExhibition(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = ExhibitionSchema.parse(body ?? {});
     const r = await db.execute(sql`
@@ -500,7 +500,7 @@ export class MarketingAnalyticsStubsController {
     return { data: first(r) };
   }
 
-  @Post('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'director') @HttpCode(HttpStatus.CREATED)
+  @Post('exhibitions/:id/leads') @Roles('super_admin', 'marketing_manager', 'manager', 'director') @HttpCode(HttpStatus.CREATED)
   async createExhibitionLead(@Param('id') id: string, @Body() body: unknown) {
     const dto = ExhibitionLeadSchema.parse(body ?? {});
     const r = await db.execute(sql`
@@ -522,7 +522,7 @@ export class MarketingAnalyticsStubsController {
     return { data: first(r) };
   }
 
-  @Post('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
+  @Post('exhibitions/:id/qr') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.OK)
   async generateExhibitionQr(@Param('id') id: string) {
     const code = `EXH-${id}-${Date.now()}`;
     await db.execute(sql`
@@ -531,7 +531,7 @@ export class MarketingAnalyticsStubsController {
     return { data: { exhibition_id: id, qr_code: code } };
   }
 
-  @Patch('exhibitions/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async updateExhibition(@Param('id') id: string, @Body() body: unknown) {
     const dto = z.object({
       name:        z.string().max(500).optional(),
@@ -562,7 +562,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Delete('exhibitions/:id') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
+  @Delete('exhibitions/:id') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.OK)
   async deleteExhibition(@Param('id') id: string) {
     await db.execute(sql`
       UPDATE exhibitions SET deleted_at = NOW() WHERE id = ${parseInt(id, 10)} AND deleted_at IS NULL
@@ -571,7 +571,7 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- PR (pr_activities table) ---------------------------------------------
-  @Get('pr') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('pr') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getPr(@Query('limit') limit?: string) {
     const lim = Math.min(parseInt(limit ?? '100', 10) || 100, 500);
     const data = rows(await db.execute(sql`
@@ -580,7 +580,7 @@ export class MarketingAnalyticsStubsController {
     return { items: data, total: data.length };
   }
 
-  @Get('pr/:id') @Roles('super_admin', 'marketing_manager', 'director')
+  @Get('pr/:id') @Roles('super_admin', 'marketing_manager', 'manager', 'director')
   async getPrById(@Param('id') id: string) {
     const row = first(await db.execute(sql`
       SELECT * FROM pr_activities WHERE id=${id} AND deleted_at IS NULL LIMIT 1
@@ -589,7 +589,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Post('pr') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.CREATED)
+  @Post('pr') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.CREATED)
   async createPr(@Body() body: unknown) {
     const dto = PrActivitySchema.parse(body ?? {});
     const id = `PR-${Date.now()}`;
@@ -605,7 +605,7 @@ export class MarketingAnalyticsStubsController {
     return { data: row };
   }
 
-  @Patch('pr/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('pr/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async updatePr(@Param('id') id: string, @Body() body: unknown) {
     const dto = PrActivitySchema.parse(body ?? {});
     await db.execute(sql`
@@ -625,7 +625,7 @@ export class MarketingAnalyticsStubsController {
     return { id, updated: true };
   }
 
-  @Delete('pr/:id') @Roles('super_admin', 'marketing_manager')
+  @Delete('pr/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async deletePr(@Param('id') id: string) {
     await db.execute(sql`
       UPDATE pr_activities SET deleted_at=NOW() WHERE id=${id} AND deleted_at IS NULL
@@ -634,18 +634,18 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- Settings (marketing_settings + social_api_configs EXIST) -------------
-  @Get('settings') @Roles('super_admin', 'marketing_manager')
+  @Get('settings') @Roles('super_admin', 'marketing_manager', 'manager')
   async getSettings() {
     return { items: rows(await db.execute(sql`SELECT id, key, value, category, description, updated_at FROM marketing_settings ORDER BY category, key`)) };
   }
 
-  @Get('settings/social-api') @Roles('super_admin', 'marketing_manager')
+  @Get('settings/social-api') @Roles('super_admin', 'marketing_manager', 'manager')
   async getSocialApiSettings() {
     // exclude access_token, bot_token, webhook_secret for security
     return { items: rows(await db.execute(sql`SELECT id, platform, page_id, account_id, is_active, last_sync_at, settings, updated_at FROM social_api_configs ORDER BY platform`)) };
   }
 
-  @Post('settings') @Roles('super_admin', 'marketing_manager') @HttpCode(HttpStatus.OK)
+  @Post('settings') @Roles('super_admin', 'marketing_manager', 'manager') @HttpCode(HttpStatus.OK)
   async saveSettings(@Body() body: unknown) {
     const dto = (z.record(z.string())).parse(body ?? {});
     for (const [key, value] of Object.entries(dto)) {
@@ -658,7 +658,7 @@ export class MarketingAnalyticsStubsController {
     return { updated: Object.keys(dto).length };
   }
 
-  @Post('settings/social-api') @Roles('super_admin', 'marketing_manager')
+  @Post('settings/social-api') @Roles('super_admin', 'marketing_manager', 'manager')
   async createSocialApiSetting(@Body() body: unknown) {
     const dto = SocialApiSchema.parse(body ?? {});
     const r = await db.execute(sql`
@@ -676,13 +676,13 @@ export class MarketingAnalyticsStubsController {
     return { data: first(r) };
   }
 
-  @Delete('settings/social-api/:id') @Roles('super_admin', 'marketing_manager')
+  @Delete('settings/social-api/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async deleteSocialApiSetting(@Param('id') id: string) {
     await db.execute(sql`DELETE FROM social_api_configs WHERE id=${id}`);
     return { id, deleted: true };
   }
 
-  @Patch('settings/social-api/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('settings/social-api/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async patchSocialApiSetting(@Param('id') id: string, @Body() body: unknown) {
     const dto = SocialApiSchema.partial().parse(body ?? {});
     await db.execute(sql`
@@ -696,7 +696,7 @@ export class MarketingAnalyticsStubsController {
     return { id, updated: true };
   }
 
-  @Post('settings/setup-telegram-webhook') @Roles('super_admin', 'marketing_manager')
+  @Post('settings/setup-telegram-webhook') @Roles('super_admin', 'marketing_manager', 'manager')
   async setupTelegramWebhook(@Body() body: unknown) {
     const dto = TelegramWebhookSchema.parse(body ?? {});
     await db.execute(sql`
@@ -709,7 +709,7 @@ export class MarketingAnalyticsStubsController {
     return { configured: true, platform: 'telegram' };
   }
 
-  @Patch('settings/:id') @Roles('super_admin', 'marketing_manager')
+  @Patch('settings/:id') @Roles('super_admin', 'marketing_manager', 'manager')
   async patchSettingById(@Param('id') id: string, @Body() body: unknown) {
     const dto = SettingsPatchSchema.parse(body ?? {});
     await db.execute(sql`
@@ -719,7 +719,7 @@ export class MarketingAnalyticsStubsController {
   }
 
   // -- Website / Blog (blog_posts EXISTS) ------------------------------------
-  @Patch('website/blog/:id/publish') @Roles('super_admin', 'marketing_manager')
+  @Patch('website/blog/:id/publish') @Roles('super_admin', 'marketing_manager', 'manager')
   async patchPublishBlogPost(@Param('id') id: string) {
     await db.execute(sql`
       UPDATE blog_posts SET is_published=true, published_at=COALESCE(published_at, NOW()), updated_at=NOW() WHERE id=${id}
@@ -727,7 +727,7 @@ export class MarketingAnalyticsStubsController {
     return { id, published: true };
   }
 
-  @Post('website/blog/ai-generate') @Roles('super_admin', 'marketing_manager')
+  @Post('website/blog/ai-generate') @Roles('super_admin', 'marketing_manager', 'manager')
   @HttpCode(HttpStatus.CREATED)
   async aiGenerateBlogPost(@Body() body: unknown) {
     // AI provider not wired — create draft blog post so FE round-trip succeeds.

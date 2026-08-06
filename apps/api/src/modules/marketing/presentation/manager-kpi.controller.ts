@@ -29,7 +29,7 @@ const QuerySchema = z.object({
 @ApiThrottle()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('marketing')
-@Roles('super_admin', 'marketing_manager', 'director', 'sales_manager')
+@Roles('super_admin', 'marketing_manager', 'manager', 'director', 'sales_manager')
 export class ManagerKpiController {
   constructor(private readonly svc: ManagerKpiService) {}
 
