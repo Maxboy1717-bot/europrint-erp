@@ -34,7 +34,6 @@ import { AuditInterceptor } from '@common/interceptors/audit.interceptor';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { LmsCoursesExtendedService } from '../application/services/lms-courses-extended.service';
 import { LmsMiscService } from '../application/services/lms-misc.service';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import {
   CreateLessonSchema, CreateLessonDto,
   UpdateLessonSchema, UpdateLessonDto,

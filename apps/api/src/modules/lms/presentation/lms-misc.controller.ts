@@ -43,7 +43,6 @@ import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import { AuthenticatedUser } from '@common/types/user.types';
 import { LmsMiscService } from '../application/services/lms-misc.service';
 import { VideoProgressSchema, VideoProgressDto, AssignCardMentorSchema, UpdateCardMentorSchema, RateCardMentorSchema } from './dto/courses.dto';
-import { notImplemented } from '@common/exceptions/not-implemented';
 
 @ApiThrottle()
 @ApiTags('Lms Misc')
