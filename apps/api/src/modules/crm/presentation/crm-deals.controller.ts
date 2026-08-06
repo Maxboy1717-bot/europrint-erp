@@ -217,13 +217,14 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Patch(':id')
  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async patchDeal(@Param('id') id: string, @Body() body: unknown) {
+ async patchDeal(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
   const dto = PatchDealSchema.parse(body);
   const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(dto)) {
     if (value !== undefined) sanitized[key] = value;
   }
-  const res = await this.commandBus.execute(new UpdateDealCommand(String(id), sanitized));
+  // audit 2026-08-06 T6 (IDOR item 4): pass the caller for ownership scoping.
+  const res = await this.commandBus.execute(new UpdateDealCommand(String(id), sanitized, { id: user?.id, role: user?.role }));
   return unwrapOrThrow(res);
 }
 
@@ -233,8 +234,9 @@ export class CrmDealsController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Delete(':id')
  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.SUPER_ADMIN, Role.DIRECTOR)
- async deleteDeal(@Param('id') id: string) {
-  const res = await this.commandBus.execute(new DeleteDealCommand(String(id)));
+ async deleteDeal(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  // audit 2026-08-06 T6 (IDOR item 4): pass the caller for ownership scoping.
+  const res = await this.commandBus.execute(new DeleteDealCommand(String(id), { id: user?.id, role: user?.role }));
   return unwrapOrThrow(res);
 }
 

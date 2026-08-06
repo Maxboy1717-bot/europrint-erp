@@ -87,9 +87,11 @@ export class DealsService {
 
     });}
 
-  async update(id: string, dto: Record<string, unknown>){
+  async update(id: string, dto: Record<string, unknown>, user?: ScopeUser){
     return safeCall(async () => {
-    await this.findOne(id);
+    // audit 2026-08-06 T6 (IDOR item 4): was findOne(id) WITHOUT the user — ownership
+    // scoping silently skipped, any manager could update any deal. Pass the caller.
+    await this.findOne(id, user);
     const result = await this.crmDealsRepo.update(id, dto);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return result.data;
@@ -108,9 +110,10 @@ export class DealsService {
 
     });}
 
-  async remove(id: string){
+  async remove(id: string, user?: ScopeUser){
     return safeCall(async () => {
-    await this.findOne(id);
+    // audit 2026-08-06 T6 (IDOR item 4): same fix as update() — enforce ownership.
+    await this.findOne(id, user);
     const result = await this.crmDealsRepo.softDelete(id);
     if (!result.ok) throw new InternalServerErrorException(result.error);
     return { message: "O'chirildi" };

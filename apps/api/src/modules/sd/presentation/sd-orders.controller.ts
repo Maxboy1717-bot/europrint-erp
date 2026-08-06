@@ -114,9 +114,10 @@ export class SdOrdersController {
  @ApiResponse({ status: 404, description: 'Not found' })
  @Get(':id')
  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
- async getOrder(@Param('id', ParseIntPipe) id: number) {
+ async getOrder(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Fetching order');
-  const query = new GetOrderByIdQuery(id);
+  // audit 2026-08-06 T6 (IDOR item 3): pass the caller for ownership scoping.
+  const query = new GetOrderByIdQuery(id, { id: user?.id, role: user?.role });
   const res = await this.queryBus.execute(query);
   return unwrapOrThrow(res);
 }
@@ -125,9 +126,10 @@ export class SdOrdersController {
  @ApiResponse({ status: 200, description: 'OK' })
  @Get(':id/items')
  @Roles(Role.SALES_MANAGER, Role.MANAGER, Role.DIRECTOR, Role.SUPER_ADMIN)
- async getOrderItems(@Param('id', ParseIntPipe) id: number) {
+ async getOrderItems(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthenticatedUser) {
   this.logger.log('Fetching order line-items');
-  const query = new GetOrderItemsQuery(id);
+  // audit 2026-08-06 T6 (IDOR item 3): pass the caller for ownership scoping.
+  const query = new GetOrderItemsQuery(id, { id: user?.id, role: user?.role });
   const res = await this.queryBus.execute(query);
   return unwrapOrThrow(res);
 }
