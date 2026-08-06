@@ -402,3 +402,58 @@ TaskList holati hali yo'qolgan — bu fayl davom etadigan yagona progress-yozuvc
 **Keyingi qadam egasi bilan kelishiladi**: yo chuqurroq har-modul ikkinchi to'lqin
 (P1/P2 darajadagi qolgan itemlar), yo boshqa ustuvorlik (real ma'lumot kiritish,
 deploy-tayyorgarlik, my.gov/PINFL integratsiya rejasi).
+
+---
+
+## ⭐ IKKINCHI TO'LQIN (2026-08-06, davom): SD-CRM chuqur audit §2
+
+Egasi "davom eting, tugating, loop qiling hammasini" dedi — birinchi to'lqin
+(yuqorida) barcha 18 modulni "standart sweep" darajasida yopgandan keyin,
+ikkinchi to'lqin **SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3.md**ning §2
+("MA'LUMOT YAXLITLIGI") bo'limini to'liq band-band tekshirdi — bu bo'lim
+avvalgi to'lqinda faqat §3.2 (rol-mos kelmasligi) qismigacha tekshirilgan edi.
+
+⭐ **4 ta HAQIQIY, hali ochiq blokловчи bug topildi va tuzatildi:**
+1. **§2.1 Shartnoma yaratish BLOKLANGAN** — `order_id` NOT NULL, FE yubormasdi.
+   Backend allaqachon qattiqlashtirilgan edi (Zod majburiy), lekin FE forma
+   buyurtma-tanlov taklif qilmasdi. Tuzatildi: mijoz->buyurtma ikki bosqichli
+   Select. + fake-save (`payment_terms`/`start_date`/`total_amount`) tuzatildi,
+   2 ta yangi ustun qo'shildi — `4e6bca52`.
+2. **§2.1 Taklifnoma yaratish BLOKLANGAN** — `customer_name` NOT NULL, FE hech
+   qachon yubormasdi (faqat customer_id picker). Tuzatildi: server tomonida
+   `sd_customers`dan avtomatik hal qilinadi — `9938b607`.
+3. **§2.1 Quick Create bitim (deal) yaratish BLOKLANGAN** — qattiq
+   `CreateDealDtoSchema` (companyId/leadId/totalAmount/expectedClosureDate/
+   assignedTo majburiy) vs yengil modal payload. Mo'ljallangan yumshoq
+   `/api/crm/deals/quick` endpoint bor edi-yu, hech kim chaqirmasdi. Tuzatildi:
+   kompaniya-Select qo'shildi, endi `/quick`ga yo'naltiriladi — `04a4e5db`.
+4. **§2.4 convert-to-order 500 bilan qulardi (2 QATLAMLI bug)** — `created_by`
+   uuid ustuniga butun-son `0` yozardi (500). Tuzatildi: canonical naqsh
+   (`created_by` NULL, `created_by_user_id` FK-integer). Rollback-tx bilan
+   tasdiqlash paytida IKKINCHI, avval niqoblangan bug topildi: `customer_id`
+   ham NOT NULL edi-yu INSERT'da umuman yo'q edi (birinchi xato doim oldinroq
+   ishga tushgani uchun hech qachon yetib bo'linmagan) — shu ham tuzatildi.
+   Ikkalasi ham rollback-tx bilan DB-isbotlangan — `c09e229c`.
+
+✅ **Tekshirilib, ALLAQACHON tuzatilgan deb tasdiqlangan** (Q-29, kod-izohlar
+bilan): §2.1 sotuv-buyurtma `customer_id` NULL (SDSalesOrders.tsx #03 —
+`customerId` allaqachon qo'shilgan), §2.1 taklifnoma `product_id` majburiyligi
+(Zod optional(), aniq izoh bilan), §2.2 to'lov CREATE camelCase/snake_case
+(sd-payments.repository.ts — professional darajada to'liq tuzatilgan, ikkala
+kelishik ham), §2.3 mijoz-tahrirlash status-enum lockout (Item #191, shu
+sessiyada ilgari tuzatilgan), §2.4 `tech-checkpoint` GREEN-LIE (to'liq DDD
+aggregate + real event-zanjiri bilan qayta qurilgan), §2.4 4 ta soxta CRM-AI
+compat endpoint (`crm-extended.service.ts` fayli UMUMAN o'chirilgan — Q-46
+to'liq o'chirish, yangi haqiqiy endpointlar `crm-ai-extended.controller.ts`da).
+
+⚠️ **Hujjatlashtirilgan, hali tuzatilmagan (dizayn-qaror kerak, shoshilinch
+"toza fix" emas)**: §2.4 bitim `won`/`lost` — real handler (DealWonEvent →
+CRM→SD golden-thread) mavjud, lekin FE kanban faqat generik `PATCH /:id/stage`
+chaqiradi (hech qanday event-zanjirini ishga tushirmaydi). To'g'ri tuzatish
+FE UX qarorini talab qiladi: kanbanda "Lost" ustuniga sudrash sabab-modalni
+ko'rsatishi kerakmi (backend `markLost` sabab talab qiladi)? Bu — Q-34
+"dizayn/semantik qaror", egasi tasdig'ini kutadi.
+
+**Tekshirilmagan qoldi** (SD-CRM audit §3.5 IDOR ro'yxati, §4 orphan sweep,
+§5 integratsiya-zanjir xaritasi, §6 dizayn, §7 vizyon-taqqoslash) — keyingi
+davomda.
