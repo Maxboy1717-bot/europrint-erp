@@ -498,3 +498,63 @@ xavfsiz o'chiriladigan haqiqiy o'lik kod (`SDDebitors`/`SDDeliveries` kabi —
 ularning "iste'molchisi" ham o'lik ekan), ba'zilari esa FE-ulanish
 qurilishi kerak bo'lgan qiymatli funksiya. **Egasi ro'yxatni ko'rib chiqishi
 kerak** — bu yerda hujjatlashtirildi, kod o'zgartirilmadi.
+
+### §5 Integratsiya xaritasi — tekshirildi, 3 ta tuzatildi, qolgani tasdiqlandi/kechiktirildi (2026-08-06)
+
+Audit'ning o'z tartib-jadvali (§5.4: `3 → 1+2 → 4 → 5 → 6 → 7 → 8`) bo'yicha
+har bandni jonli kod+DB bilan qayta tekshirildi (Q-29):
+
+- **1+2 (`tech_*_approved` yozish + `AdvanceApprovedEvent`)** — ALLAQACHON
+  tuzatilgan (`approve-tech-checkpoint.handler.ts` + `tech-three-checkpoint.listener.ts`,
+  "SB0811/SB0823 fix 2026-07-04" izohi bilan) — to'liq zanjir kodda o'qib
+  tasdiqlandi, o'zgartirilmadi.
+- **3 (`customer_id`)** — oldingi to'lqinda allaqachon tuzatilgan (tasdiqlandi).
+- **4 (FE'ni `/won` ga ulash)** — ⭐ **TUZATILDI** (commit `b1456816`).
+  Kanban'da bitimni "Yutildi" ustuniga sudrab tashlash `PATCH .../stage` emas,
+  endi maxsus `PATCH .../won` chaqiradi — backend (`markWon`→`DealWonEvent`→
+  `DealWonListener`→avtomatik SD buyurtma) allaqachon tayyor va to'g'ri edi,
+  faqat FE noto'g'ri endpointga borardi. `/lost` uchun alohida sabab-modal
+  UI kerak (`reason` majburiy, min 3 belgi) — bu qo'shimcha UI ish, alohida
+  band sifatida ochiq qoldi (DealLostEvent ham hozircha 0-tinglovchi).
+- **5 (`RETURNING amount` + uuid→`Number()`)** — ⭐ **TUZATILDI** (commit
+  `0e068ec5`). `RETURNING amount` qismi allaqachon tuzatilgan edi (EP-SD-030),
+  lekin audit'ning o'zi ogohlantirgan ikkinchi yarmi — `sd_payments.id` uuid
+  bo'lgani uchun `Number(id)` doim NaN→0 ga tushardi — **hali tuzatilmagan
+  edi**: har bir to'lov GL yozuvi bir xil `CP-0` ma'lumotnomasiga to'qnashib,
+  idempotency-tekshiruv orqali "allaqachon postlangan" deb hisoblanib, birinchi
+  to'lovdan keyingi HAMMA to'lov GL'ga yozilmasdan sukut saqlab qolardi.
+  Tuzatish: uzun string id oxirgi 12 hex-belgisiga qisqartiriladi (varchar(50)
+  `entry_number` ustuniga sig'ishi uchun — ustunni kengaytirish `gl_entries`
+  VIEW bog'liqligiga urilib, imkonsiz bo'ldi). Rollback-tx bilan ikki xil
+  to'lov uuid'i endi ikki xil GL-ma'lumotnoma hosil qilishi tasdiqlandi.
+- **6 (`employees.role`/`assigned_to` backfill)** — EGASI-DATA, kod bilan
+  hal qilinmaydi.
+- **7 (`delivery_items` yozuvchisi + `#51`)** — tekshirildi: `DELIVERY_51_DISABLED`
+  ATAYLAB o'chirilgan (Gate 4/5 cutover, FG ombor endi POS zayavka-yo'li orqali
+  kamayadi — `warehouse_stock_fg`). Bu XATO EMAS, tegilmadi. ⭐ Ammo shu
+  tekshiruv chog'ida **bonus xato topildi va TUZATILDI** (commit `b85d1d2f`):
+  `POST /sd/deliveries` jonli bazada haqiqatan ham yiqilardi — Drizzle
+  sxemasi `deliveries.id`ni uuid+cuid2 deb e'lon qilgan, jonli ustun esa
+  oddiy serial integer edi (`logistics` modulidagi BOSHQA repo bu farqni
+  allaqachon bilib, raw SQL bilan chetlab o'tgan edi — o'sha faylning o'z
+  izohi bunga guvoh). Sxema jonli haqiqatga moslab tuzatildi (id/sales_order_id/
+  driver_id — integer; DTO uchun kerakli customer_id/driver_name/created_by
+  ustunlari qo'shildi), `create()`dagi camelCase→snake_case mos kelmaslik ham
+  tuzatildi (aks holda `delivery_number` NOT NULL ham buzilardi). Rollback-tx:
+  eski xulq-atvor xato beradi (isbotlandi), yangisi muvaffaqiyatli yaratadi.
+  ⚠️ Nuance: `SDDeliveries.tsx` routed (`/sd/deliveries`) lekin sidebar'da
+  YO'Q (§4 orphan-sweep shu sababli uni "iste'molchisi o'lik" deb belgilagan)
+  — shunga qaramay, bu ATAYLAB o'chirilmagan, jonli, routed kod, shuning uchun
+  ishlamaydigan holda qoldirilmadi (Q-46). Agar egasi keyinchalik bu sahifani
+  o'chirishga qaror qilsa, backend fix zarar keltirmaydi (ishlaydigan holda
+  qoladi, faqat chaqirilmaydi).
+- **8 (Orphan o'chirish)** — §4'da hujjatlashtirilgan, kod o'zgartirilmadi.
+
+**Aniqlangan lekin TUZATILMAGAN qo'shimcha topilma**: `drizzle-delivery.repo.ts`
+(logistics modul) ichidagi `save()` metodi butun kod bazasida HECH QAYERDA
+chaqirilmaydi (`DELIVERY_REPO` orqali faqat `findById`/`update`/
+`findBySalesOrderId`/`createFromSalesOrder` ishlatiladi) va `as never` bilan
+tip-tekshiruvni butunlay chetlab o'tadi — agar chaqirilsa, domain-qatlamning
+string id'sini integer ustunga yozishga urinib, ehtimol yiqiladi. O'lik kod
+(chaqiruvchisi yo'q) — hozircha tegilmadi, alohida kichik tozalash bandi
+sifatida qayd etildi.
