@@ -224,4 +224,20 @@ Boshqa audit topilmalari (§2 fake-save/bloklangan CREATE, §3.6 IDOR ro'yxati, 
 sweep, §5 uzilgan integratsiya zanjirlari) hali tekshirilmagan — keyingi to'lqinga
 qoldiriladi (bu audit juda katta, 583+ qator).
 
-**Navbatdagi modul: Marketing (#198-#207 qolgan qismi)** — to'g'ridan-to'g'ri davom etiladi.
+**MARKETING moduli: 2026-07-10 audit (MARKETING-COMPLETE-FRESH-ANALYSIS-2026-07-10-v1.md)
+tekshirildi.** ⭐ Xuddi shu §3.2 P0 sinfi, **SD/CRM'dan ham og'irroq**: 74/117 endpoint
+`marketing_manager` (0 real foydalanuvchi) talab qilardi, 27 real `'manager'`dan atigi
+43/117 ochiq edi. ⭐ Qo'shimcha topilma (§3.3): FE `useAuth.tsx` o'zining `ROLE_ALIASES`
+orqali `'manager'`ni FE tomonida `'director'`ga aylantirar edi (izohda "backend bilan bir
+xil" deb yozilgan, lekin backendda alias UMUMAN yo'q edi) — shuning uchun sahifa ochilib,
+keyin ko'p chaqiruv 403 bilan qulardi (chalkash holat). 6 controllerda 69 qatorga
+`'manager'` qo'shildi: `5f26a02b`. `nps-requests.controller.ts` allaqachon to'g'ri edi.
+
+⚠️ Repo-keng tekshirdim: boshqa ~40 rol-satr (`accountant`/`hr_manager`/`warehouse_manager`
+va h.k.) hozir barchasi "0 real foydalanuvchi" — lekin bu FULL-COMPANY-RESET (2026-07-11)
+natijasi, alias-drift EMAS (egasi hali CRUD orqali bu rollarni real xodimlarga
+biriktirmagan). SD/CRM+Marketing holatlari alohida edi, chunki ular dedikatsiyalangan
+audit bilan DB-isbotlangan edi. Boshqa modullar uchun shu sinf muammoni "bashorat qilib"
+tuzatish shart emas — har modul o'z navbatida audit-tasdiqlanganda ko'riladi.
+
+**Navbatdagi modul: Finance (#209-#215)** — to'g'ridan-to'g'ri davom etiladi.
