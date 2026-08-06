@@ -309,6 +309,19 @@ MES✅ QC✅ LMS✅ PP✅ — 12/18 modul shu sessiyada to'g'ridan-to'g'ri teksh
 #100/101/104/105/106/113/116 bajarilgan, #102/103/109-112/115/117 hali yo'q), Admin(7),
 Notifications(0, bo'sh modul).
 
-**Navbatdagi modul: WMS (#taxminan 8 band)** — to'g'ridan-to'g'ri davom etiladi.
+**WMS moduli tekshirildi**: standart sweep toza. ⭐ `WMS-POS-FULL-AUDIT-2026-07-05.md`
+"Top 5" ro'yxatidan #2 (ombor-nomi uniqueness-guard) ALLAQACHON tuzatilgan edi (3/3 fayl).
+#4 (WMS `deleted_at IS NULL`-only vs POS `is_active=true`-only predikat nomuvofiqligi) —
+HALI OCHIQ edi va tuzatildi: `993c5175`. ⭐ Bonus: `get-warehouses.handler.ts`da copy-paste
+xato topildi (`isActive` filtri `isFreeStorage` ustuniga solishtirilardi) — tuzatildi.
+Bugun 19/19 ombor'da nomuvofiqlik ko'rinmaydi (barchasi is_active=true), lekin audit
+tavsiya qilgan "22 dublikat DEPT-* omborni is_active=false qilish" amalidan keyin darhol
+ko'rinar edi — proaktiv tuzatildi. #1 (org_departments 145→119 dedup) va #3/#5 (warehouse_types
+reconciliation, MM quarantine-gate) — DATA/arxitektura, "Awaiting owner decision" (audit
+o'zi shunday deydi), 'manager'-alias SD/CRM/Marketing bugidan farqli — DB-isbot yo'q
+(faqat bitta 'manager' foydalanuvchi bor, warehouse-maxsus rollar hali bo'sh), bashorat
+qilib tuzatilmadi.
+
+**Navbatdagi modul: IoT (#taxminan 9 band, faqat #85 ilgari bajarilgan)** — to'g'ridan-to'g'ri davom etiladi.
 
 **Navbatdagi modul: PP (#taxminan 7 band)** — to'g'ridan-to'g'ri davom etiladi.
