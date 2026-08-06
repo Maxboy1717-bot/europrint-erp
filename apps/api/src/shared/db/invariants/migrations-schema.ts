@@ -2234,4 +2234,15 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
       ADD COLUMN IF NOT EXISTS start_date DATE,
       ADD COLUMN IF NOT EXISTS total_amount NUMERIC(18,2)`,
   },
+  // audit 2026-08-06 T17: chat presence had no TTL — a user whose disconnect event was
+  // lost (server crash, Q-44 nest-watch kill) stayed "ONLINE" forever (live DB showed a
+  // row stuck ONLINE for 3+ weeks). chat-presence-cleanup.cron.ts sweeps stale rows;
+  // threshold is CRUD-configurable per the owner's business_settings rule.
+  {
+    name: 'business_settings chat.presence_ttl_minutes seed (2026-08-07)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('chat', 'chat.presence_ttl_minutes', 'Chat: necha daqiqa harakatsizlikdan keyin OFFLINE deb belgilanadi', 'number', 5, 'daqiqa', 1, 120,
+        'chat-presence-cleanup.cron.ts — last_seen_at shu daqiqadan eski ONLINE qatorlar avtomatik OFFLINE qilinadi (disconnect-event yo''qolgan holatlar uchun)', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];

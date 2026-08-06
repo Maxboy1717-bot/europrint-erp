@@ -84,6 +84,28 @@ export class ChatPresenceRepository {
     }
   }
 
+  /**
+   * audit 2026-08-06 T17: mark ONLINE rows stale-r than ttlMinutes as OFFLINE.
+   * Covers lost disconnect events (server crash / Q-44 nest-watch kill) — live DB
+   * showed a user stuck "ONLINE" for 3+ weeks. Returns number of rows swept.
+   */
+  async sweepStaleOnline(ttlMinutes: number): Promise<Result<number>> {
+    try {
+      const r = await db.execute(sql`
+        UPDATE chat_user_presence
+        SET status = 'OFFLINE', active_room_id = NULL, updated_at = NOW()
+        WHERE status = 'ONLINE'
+          AND last_seen_at < NOW() - make_interval(mins => ${ttlMinutes})
+        RETURNING user_id
+      `);
+      const rows = (r as unknown as { rows?: unknown[] }).rows ?? [];
+      return Ok(rows.length);
+    } catch (e: unknown) {
+      this.logger.warn(`sweepStaleOnline error: ${String(e)}`);
+      return Err(String(e));
+    }
+  }
+
   // Bitta foydalanuvchining holati (status + ish-holati) — xodim-info paneli uchun.
   async findPresence(userId: string): Promise<Result<{ status: string | null; workStatus: string | null; lastSeenAt: Date | null } | null>> {
     try {

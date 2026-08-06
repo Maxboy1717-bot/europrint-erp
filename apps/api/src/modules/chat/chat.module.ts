@@ -27,6 +27,7 @@ import { ChatExtController } from './chat-ext.controller';
 import { PushService } from './push.service';
 import { UploadService } from './upload.service';
 import { VideoTokenService } from './video-token.service';
+import { ChatPresenceCleanupCron } from './chat-presence-cleanup.cron';
 import { TelegramBotsModule } from '../hr/telegram-bots/telegram-bots.module';
 
 @Module({
@@ -60,6 +61,7 @@ import { TelegramBotsModule } from '../hr/telegram-bots/telegram-bots.module';
     PushService,
     PushNotificationRepository,
     ChatPresenceRepository,
+    ChatPresenceCleanupCron,
     UploadService,
     VideoTokenService,
   ],
