@@ -248,5 +248,19 @@ yo'q, "as unknown" stub yo'q, payroll INPS/JSHD haqiqiy hisob-kitob (#FX-1 resol
 faqat tax-calendar/salary-benchmark honest-501, Q-17 mos). Faqat bitta o'lik
 `notImplemented` import topildi va o'chirildi (`reports.controller.ts`) — `b4dd38ce`.
 
-**Navbatdagi modul: HR-Org (#taxminan 13 band)** — `docs/audit/HR-ORG-VIZYON-VA-CHALA-ISHLAR-2026-07-13.md`
-asosida to'g'ridan-to'g'ri davom etiladi.
+**HR-ORG moduli tekshirildi** (`docs/audit/HR-ORG-VIZYON-VA-CHALA-ISHLAR-2026-07-13.md`).
+§7 (2026-05-28 sahifa-darajali chuqur audit, 17 sahifa jadval) dan **7 ta eng jiddiy
+da'vo** tekshirildi — **barchasi ALLAQACHON tuzatilgan** (Q-29): HR Xarita lat/lng SELECT
+(bor), Goals PATCH+delete-role-gate (bor), Smena-almashish approve/reject action-branch
+(bor), Skills-matrix fake-endpoint (yo'q, real), Referral contract-drift (2026-07-13
+kunidayoq tuzatilgan, izohlar bilan tasdiqlangan), 3 compat-controller `@Roles()`siz
+xavfsizlik teshigi (hammasida `@Roles` bor). ⭐ Bu 2026-05-28 jadval umuman eskirgan —
+keyingi remediatsiya to'lqinida yopilgan, lekin audit-hujjat o'zi yangilanmagan.
+§4.9 "shartnoma-blok butun ERP'ni bloklaydi" da'vosi tasdiqlanmadi/rad etilmadi —
+aniq mexanizm topilmadi (faqat alohida `AbsenceBlockCron` — 3-kunlik yo'qlik → butun
+akkaunt o'chirish — topildi, bu boshqa, o'z-o'zidan mantiqan to'g'ri mexanizm).
+Qolgan asosiy §2/§4 topilmalar (head_user_id/manager_id zanjiri, ЦКП DATA, razryad DATA,
+karta oylik-cap DATA) — barchasi DATA/SCHEMA, egasi-darvozasida (memory:
+"org+users seed" — ko'p modulning umumiy bloklovchisi, faqat HR-Org'ga xos emas).
+
+**Navbatdagi modul: MES (#taxminan 12 band)** — to'g'ridan-to'g'ri davom etiladi.
