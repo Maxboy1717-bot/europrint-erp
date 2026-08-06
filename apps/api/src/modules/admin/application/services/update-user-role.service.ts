@@ -15,6 +15,7 @@ export interface UpdateUserRoleCommand {
   userId: number;
   newRole: UserRole;
   executorId: number;
+  executorRole: UserRole | string | undefined;
 }
 
 export type UpdateUserRoleCommandResult =
@@ -30,6 +31,13 @@ export class UpdateUserRoleService {
   ) {}
 
   async execute(command: UpdateUserRoleCommand): Promise<UpdateUserRoleCommandResult> {
+      // SECURITY (audit 2026-08-06 T2): @Roles(SUPER_ADMIN) on the controller is
+      // bypassed by RolesGuard's admin/director shortcut, so enforce it here too
+      // (same second-layer pattern as update-settings.service.ts).
+      if (String(command.executorRole ?? '').toLowerCase() !== UserRole.SUPER_ADMIN) {
+        this.logger.warn('Role-change blocked: non-super_admin executor ' + command.executorId);
+        return Err(AppErr('FORBIDDEN', "Faqat SUPER_ADMIN foydalanuvchi rolini o'zgartira oladi"));
+      }
       const user = await this.userRepo.findById(command.userId);
 
       if (!user) {

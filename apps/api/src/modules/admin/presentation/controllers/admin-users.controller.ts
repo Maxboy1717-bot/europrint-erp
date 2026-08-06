@@ -5,7 +5,7 @@
 
 import { assertOk, unwrapOrThrow } from '@common/http-result';
 import { assertValidated } from '@common/assertions';
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, InternalServerErrorException, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, Inject, InternalServerErrorException, NotFoundException, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors, Logger } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { I18nService } from 'nestjs-i18n';
@@ -57,6 +57,7 @@ export class AdminUsersController {
       role:         validated.role,
       departmentId: validated.departmentId,
       positionId:   validated.positionId,
+      executorRole: user.role,
     });
     const u = unwrapOrThrow(result);
     return {
@@ -101,7 +102,7 @@ export class AdminUsersController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     assertValidated(Object.values(UserRole).includes(body.role), await this.i18n.t('errors.invalidRole'));
-    const result = await this.updateUserRoleHandler.execute({ userId, newRole: body.role, executorId: user.id });
+    const result = await this.updateUserRoleHandler.execute({ userId, newRole: body.role, executorId: user.id, executorRole: user.role });
     assertOk(result);
     return { message: 'Role updated successfully' };
   }
@@ -111,12 +112,20 @@ export class AdminUsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Foydalanuvchini o'chirish" })
   async deleteUser(@Param('id', ParseIntPipe) userId: number, @CurrentUser() user: AuthenticatedUser) {
+    // SECURITY (audit 2026-08-06 T2): RolesGuard's director bypass ignores
+    // @Roles(SUPER_ADMIN) above — enforce it explicitly here as a second layer.
+    if (String(user.role ?? '').toLowerCase() !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException("Faqat SUPER_ADMIN foydalanuvchini o'chira oladi");
+    }
     assertValidated(userId !== user.id, await this.i18n.t('errors.cannotDeleteOwnAccount'));
+    let deleted: boolean;
     try {
-      await this.userRepo.softDelete(userId);
+      deleted = await this.userRepo.softDelete(userId);
     } catch {
       throw new InternalServerErrorException(await this.i18n.t('errors.deleteFailed'));
     }
+    // audit 2026-08-06 T3 (Qoida 11): nonexistent id must be 404, not fake 200.
+    if (!deleted) throw new NotFoundException(await this.i18n.t('errors.userNotFound'));
     return { message: await this.i18n.t('messages.userDeleted'), code: 'USER_DELETED' };
   }
 }

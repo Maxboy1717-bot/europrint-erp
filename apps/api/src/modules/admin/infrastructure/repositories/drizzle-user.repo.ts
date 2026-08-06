@@ -173,15 +173,16 @@ export class DrizzleUserRepo implements IUserRepo {
     }
   }
 
-  async softDelete(id: number): Promise<void> {
-    try {
-      await this.db.db
-        .update(users)
-        .set({ isActive: false, updatedAt: _time.now() })
-        .where(eq(users.id, id));
-    } catch (error: unknown) {
-      this.logger.error('Error soft deleting user');
-    }
+  async softDelete(id: number): Promise<boolean> {
+    // audit 2026-08-06 T3: was fire-and-forget (swallowed errors, ignored affected
+    // rows) — endpoint returned 200 even for nonexistent ids. Now returns whether
+    // a row was actually deactivated; DB errors propagate to the controller.
+    const result = await this.db.db
+      .update(users)
+      .set({ isActive: false, updatedAt: _time.now() })
+      .where(eq(users.id, id))
+      .returning({ id: users.id });
+    return result.length > 0;
   }
 
   async restore(id: number): Promise<void> {
