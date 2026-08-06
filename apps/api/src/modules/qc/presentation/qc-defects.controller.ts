@@ -7,7 +7,7 @@ import { assertOk, unwrapOrNotFoundDefined } from '@common/http-result';
 import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, UseGuards, UseInterceptors , BadRequestException, NotFoundException} from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus, EventBus } from '@nestjs/cqrs';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
@@ -28,6 +28,7 @@ import { DefectSeverity } from '../domain/aggregates/defect.aggregate';
 import { z } from 'zod';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { QcPassedEvent, QcFailedEvent } from '../domain/events';
 
 const QcApprovalSchema = z.object({
   notes: z.string().max(2000).optional(),
@@ -79,15 +80,25 @@ export class QcDefectsController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly i18n: I18nService,
+    private readonly eventBus: EventBus,
   ) {}
 
   /** Persist a QC status transition on the order's qc_inspections row (opened by the MES->QC trigger).
-   *  Was missing: the approve/reject/submit routes echoed {approved:true} without writing the DB. */
-  private async _setQcStatus(orderId: string, status: string): Promise<boolean> {
+   *  Was missing: the approve/reject/submit routes echoed {approved:true} without writing the DB.
+   *  Returns the qc_inspections.id (RETURNING) instead of a bare boolean — third-party audit
+   *  finding (2026-08-06): these raw-UPDATE approve/reject routes never published
+   *  QcPassedEvent/QcFailedEvent, so the 5 real downstream listeners (WMS defect-registration,
+   *  SD QC_HOLD, Kanban, notification, CC-document) never fired for a decision made through
+   *  the actual QCApproval.tsx/QCDashboard.tsx screens — only the separate CQRS
+   *  submit-inspection.handler.ts path (unused by any page) emitted them. */
+  private async _setQcStatus(orderId: string, status: string): Promise<string | null> {
     const oid = parseInt(orderId, 10);
-    if (!Number.isFinite(oid)) return false;
-    const r = await db.execute(sql`UPDATE qc_inspections SET status=${status}, updated_at=NOW() WHERE order_id=${oid}`);
-    return ((r as unknown as { rowCount?: number }).rowCount ?? 0) > 0;
+    if (!Number.isFinite(oid)) return null;
+    const r = await db.execute(sql`
+      UPDATE qc_inspections SET status=${status}, updated_at=NOW() WHERE order_id=${oid} RETURNING id
+    `);
+    const rows = (r as unknown as { rows?: Array<{ id: unknown }> }).rows ?? [];
+    return rows[0] ? String(rows[0].id) : null;
   }
 
   @ApiOperation({ summary: 'Get defects' })
@@ -256,6 +267,7 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/finance/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async approveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'finance_approved');
@@ -276,6 +288,7 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('approve/finance/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async postApproveFinance(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'finance_approved');
@@ -296,10 +309,11 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('approve/qc/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async approveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
-    const updated = await this._setQcStatus(orderId, 'qc_approved');
-    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const inspectionId = await this._setQcStatus(orderId, 'qc_approved');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -307,6 +321,11 @@ export class QcDefectsController {
         INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
         VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
       `);
+      // Third-party audit finding (2026-08-06): this raw-UPDATE approve path never
+      // published QcPassedEvent, so WMS/SD/Kanban/notification/CC listeners never
+      // fired for a decision made through the real QCApproval.tsx screen.
+      this.eventBus.publish(new QcPassedEvent(inspectionId, oid));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC approved (approve/qc route) - Trigger 11');
     }
     return { orderId, approved: true };
   }
@@ -316,10 +335,11 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('approve/qc/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async postApproveQc(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcApprovalSchema.parse(body ?? {});
-    const updated = await this._setQcStatus(orderId, 'qc_approved');
-    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const inspectionId = await this._setQcStatus(orderId, 'qc_approved');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     const oid = parseInt(orderId, 10);
     if (Number.isFinite(oid)) {
       const approver = dto.approvedBy != null ? Number(dto.approvedBy) || null : null;
@@ -327,6 +347,8 @@ export class QcDefectsController {
         INSERT INTO qc_approvals (order_id, approval_stage, approved_by, status, notes)
         VALUES (${oid}, 'qc', ${approver}, 'approved', ${dto.notes ?? null})
       `);
+      this.eventBus.publish(new QcPassedEvent(inspectionId, oid));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC approved (approve/qc route) - Trigger 11');
     }
     return { orderId, approved: true };
   }
@@ -350,11 +372,19 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('reject/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async rejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcRejectionSchema.parse(body ?? {});
-    const updated = await this._setQcStatus(orderId, 'rejected');
-    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const inspectionId = await this._setQcStatus(orderId, 'rejected');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     await this._recordRejection(orderId, dto);
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      // Third-party audit finding (2026-08-06): same missing event-publish as
+      // approveQc above, on the fail branch.
+      this.eventBus.publish(new QcFailedEvent(inspectionId, oid, dto.reason ?? ''));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC failed (reject route) - Trigger 11');
+    }
     return { orderId, rejected: true };
   }
 
@@ -363,11 +393,17 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('reject/:orderId')
+  @Roles(Role.QC_MANAGER, Role.SUPER_ADMIN)
   async postRejectOrder(@Param('orderId') orderId: string, @Body() body: unknown) {
     const dto = QcRejectionSchema.parse(body ?? {});
-    const updated = await this._setQcStatus(orderId, 'rejected');
-    if (!updated) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
+    const inspectionId = await this._setQcStatus(orderId, 'rejected');
+    if (!inspectionId) throw new NotFoundException(await this.i18n.t('errors.qcInspectionNotFoundForOrder', { args: { orderId } }));
     await this._recordRejection(orderId, dto);
+    const oid = parseInt(orderId, 10);
+    if (Number.isFinite(oid)) {
+      this.eventBus.publish(new QcFailedEvent(inspectionId, oid, dto.reason ?? ''));
+      this.logger.log({ orderId: oid, inspectionId }, 'QC failed (reject route) - Trigger 11');
+    }
     return { orderId, rejected: true };
   }
 
@@ -376,6 +412,7 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch('inspector-submit/:orderId')
+  @Roles(Role.QC_MANAGER, Role.PRODUCTION_MANAGER)
   async inspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'inspector_submitted');
@@ -388,6 +425,7 @@ export class QcDefectsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Post('inspector-submit/:orderId')
+  @Roles(Role.QC_MANAGER, Role.PRODUCTION_MANAGER)
   async postInspectorSubmit(@Param('orderId') orderId: string, @Body() body: unknown) {
     InspectorSubmitSchema.parse(body ?? {});
     const updated = await this._setQcStatus(orderId, 'inspector_submitted');
