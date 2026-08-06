@@ -3,15 +3,22 @@
  * @description Business-logic service. Returns Result<T> from @common/result; never throws raw Errors.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { castTo } from '@common/db-rows';
 import { Result, Err } from '@common/result';
 import { LmsExamsRepository } from '../../infrastructure/repositories/drizzle-lms-exams.repo';
 import { CreateExamDto, SubmitExamDto } from '../../presentation/dto/lms-core.dto';
+import { EXAM_PASSED_EVENT, type ExamPassedPayload } from '../../infrastructure/event-handlers/exam-passed.contract';
 
 @Injectable()
 export class LmsCoreService {
-  constructor(private readonly examsRepo: LmsExamsRepository) {}
+  private readonly logger = new Logger(LmsCoreService.name);
+
+  constructor(
+    private readonly examsRepo: LmsExamsRepository,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async getLesson(id: string): Promise<Result<Record<string, unknown>>> {
     return this.examsRepo.findLesson(id);
@@ -34,7 +41,28 @@ export class LmsCoreService {
     const answers = Array.isArray(dto.answers)
       ? (dto.answers as Array<{ questionId: number; selectedOption: number }>)
       : [];
-    return this.examsRepo.submitExam(examId, userId, answers);
+    const result = await this.examsRepo.submitExam(examId, userId, answers);
+    // audit 2026-08-06 T15: this is the path the real FE (LMSDashboard) uses, but it
+    // never emitted lms.exam.passed — so the razryad auto-request listener
+    // (exam-passed-razryad.listener.ts) could never fire. The "canonical"
+    // submitAttemptById path that does emit is unreachable (attempts are always
+    // inserted as status='submitted'). Emit here too, same guard pattern as
+    // lms-exams.service.ts.
+    if (result.ok && result.data['passed'] === true) {
+      try {
+        const payload: ExamPassedPayload = {
+          examId:    Number(result.data['exam_id'] ?? parseInt(examId, 10)),
+          userId:    parseInt(userId, 10),
+          attemptId: Number(result.data['id'] ?? 0),
+          score:     Number(result.data['score'] ?? 0),
+          passedAt:  new Date().toISOString(),
+        };
+        this.eventEmitter.emit(EXAM_PASSED_EVENT, payload);
+      } catch (e) {
+        this.logger.warn(`exam.passed emit skipped (exam=${examId}, user=${userId}): ${String(e)}`);
+      }
+    }
+    return result;
   }
 
   /** Returns exam questions (no correct_option) for the FE exam-taking UI. */
