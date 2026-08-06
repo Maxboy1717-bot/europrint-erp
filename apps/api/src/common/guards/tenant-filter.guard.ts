@@ -50,10 +50,13 @@
  *
  *   yoki per-controller: `@UseGuards(TenantFilterGuard)`.
  *
- *   ⚠️ Hozir global ulanmaydi — A90-A92 (SD/PP/MM/WMS/FIN tenant_id ustun rollout)
- *   tugagach, repository'lar `req.tenantFilter`'ni o'qishga tayyor bo'lganda
- *   yoqiladi. Shu sababli bu guard mexanizm sifatida quriladi (Q-40: struktura
- *   tayyor, soxta enforcement yo'q).
+ *   ⚠️ HOLAT (2026-08-07 yangilandi — audit T26C): guard endi app.module.ts:218'da
+ *   GLOBAL ro'yxatga OLINGAN (#122), lekin funksional jihatdan hali NO-OP —
+ *   canActivate() har doim true qaytaradi va hech bir controller/repository
+ *   `@CurrentTenantFilter()`/`req.tenantFilter`'ni o'qimaydi. Haqiqiy
+ *   multi-tenant enforcement A90-A92 (SD/PP/MM/WMS/FIN tenant_id ustun rollout)
+ *   tugagach, repository'lar filterni o'qishni boshlaganda kuchga kiradi
+ *   (Q-40: struktura tayyor, soxta enforcement yo'q).
  *
  * @see apps/api/src/shared/db/tenant-context.interceptor.ts — implicit scope (additiv juft)
  * @see apps/api/src/shared/db/tenant-context.ts — DEFAULT_TENANT_ID = 1 (integer)

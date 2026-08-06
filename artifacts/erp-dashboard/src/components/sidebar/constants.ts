@@ -629,6 +629,10 @@ import { LayoutDashboard, X,
       { title: "Xatolar Logi", url: "saas/error-log", icon: Bug },
       { title: "Istisno Holatlar", url: "admin/exceptions", icon: AlertTriangle },
       { title: "Navbat Monitori", url: "admin/queues", icon: Activity },
+      // audit 2026-08-06 T26A: both pages had live CRUD + routes but no sidebar entry —
+      // admins could only reach them by typing the URL by hand.
+      { title: "Foydalanuvchilar", url: "users", icon: Users },
+      { title: "Biznes Sozlamalar (CRUD)", url: "admin/business-settings", icon: Settings },
       { title: "Arizalar", url: "applications", icon: FileText },
       { title: "Sozlamalar", url: "settings", icon: Settings },
       { title: "TELEGRAM", url: "", icon: MessageSquare, separator: true },
