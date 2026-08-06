@@ -355,4 +355,50 @@ qolganini bilib bo'lmaydi, faqat kod-sifat darajasida muammo topilmadi. Qolgan b
 ehtimol egasi-data (`docs/audit/decisions/05-director.md`dagi 🔵 OCHIQ naqshiga mos)
 yoki oldingi to'lqinlarda allaqachon yopilgan.
 
-**Navbatdagi modul: Admin (#taxminan 7 band, hali tegilmagan)** — to'g'ridan-to'g'ri davom etiladi.
+**Admin moduli tekshirildi**: standart sweep toza. `admin-users.controller.ts`
+(create/list/role-change/delete) — real DDD aggregate, o'z-o'zini o'chirishdan
+himoyalangan, to'g'ri rol-eskalatsiya nazorati (SUPER_ADMIN/DIRECTOR yaratish/ko'rish,
+SUPER_ADMIN-only rol/o'chirish). `unwrapOrInternal` — tekshirildi, ATAYLAB puxta
+(NOT_FOUND→404, CONFLICT→409, NOT_IMPLEMENTED→501 to'g'ri map qiladi, aynan-500 emas).
+`business-settings.controller.ts` — to'liq CRUD (GET/GET:key/POST/PATCH/DELETE)
+tasdiqlandi — bu sessiyada qo'shilgan HAR BIR threshold-qiymat (#151, director
+escalation-stages, POS quarantine-hours) haqiqatan egasi tomonidan CRUD orqali
+o'zgartirilishi mumkinligini tasdiqlaydi.
+
+---
+
+## ⭐⭐⭐ TO'LIQ 18-MODULLI SWEEP YAKUNLANDI (2026-08-06)
+
+Original 215-band, 18-modulli to'lqinning **BARCHA 18 moduli** shu sessiyada
+to'g'ridan-to'g'ri tekshirildi (Notifications — 0 band, tekshiruv shart emas):
+CC✅ Kanban✅ Chat✅ AI-Aisha✅ SD✅ Marketing✅ Finance✅ HR-Org✅ MES✅ QC✅ LMS✅
+PP✅ WMS✅ IoT✅ POS✅ Director✅ Admin✅ Notifications(bo'sh, skip).
+
+**Bu sessiyada jami ~45 real commit** (kod-tuzatish + hujjat-yangilanish), shu jumladan:
+- **4 ta xavfsizlik tuzatishi**: CC webhook idempotency (Redis), chat fayl-biriktirma IDOR,
+  chat updateRoom ADMIN-gate, SD/CRM/Marketing 27+ menejerni bloklagan rol-alias P0 (2 ta,
+  50+ endpoint)
+- **1 ta ikki-qatlamli (FE+BE) green-lie**: IoT tablet material-skanlash — eng chuqur
+  topilma, rollback-tx DB-isbotlangan
+- **2 ta katta yangi FE-funksiya**: Director owner-summary card, AI-Aisha HITL
+  tasdiqlash-navbati UI (backend real, FE umuman yo'q edi)
+- **22 ta o'lik `notImplemented` import** repo bo'ylab (bitta kichik topilmadan
+  boshlab keng qidiruvga o'sdi)
+- **3 ta eskirgan/chalg'ituvchi kod-izoh** ("hali 501" deb yozilgan, aslida allaqachon
+  real DB-so'rov)
+- **2 ta magic-number M6 gap yopildi** (POS quarantine + CC/director escalation-hours),
+  memory'da haftalar davomida "hali hardcoded" deb qayd etilgan edi
+- **1 ta WMS/POS predikat nomuvofiqligi + copy-paste bug** (proaktiv, real simptom hali
+  ko'rinmasa ham)
+- Ko'plab audit-topilma **stale** bo'lib chiqdi (Q-29 bilan rad etildi) — bu ham
+  qimmatli natija: keyingi agent/sessiya bir xil narsani qayta tekshirib vaqt
+  sarflamaydi, chunki bu hujjatda "ALLAQACHON tuzatilgan" deb aniq belgilangan.
+
+**Qolgan ish**: har modul ichida hali TO'LIQ tugallanmagan — faqat "standart
+sweep + tegishli audit-hujjat tekshiruvi" darajasida qilindi (chuqur, lekin
+exhaustive emas). Ko'p item DATA/SCHEMA-gated (egasi CRUD orqali real tashkiliy
+ma'lumot kiritishini kutmoqda — org+users seed ko'p modulning umumiy bloklovchisi).
+TaskList holati hali yo'qolgan — bu fayl davom etadigan yagona progress-yozuvchi.
+**Keyingi qadam egasi bilan kelishiladi**: yo chuqurroq har-modul ikkinchi to'lqin
+(P1/P2 darajadagi qolgan itemlar), yo boshqa ustuvorlik (real ma'lumot kiritish,
+deploy-tayyorgarlik, my.gov/PINFL integratsiya rejasi).
