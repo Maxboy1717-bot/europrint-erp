@@ -27,6 +27,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 import { z } from 'zod';
 import type { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { Roles } from '@common/decorators/roles.decorator';
 import { unwrapOrThrow } from '@common/http-result';
 import { AishaHistoryService } from '../../application/conversation/aisha-history.service';
 
@@ -51,6 +52,9 @@ const UuidParamSchema = z.string().uuid();
 @ApiBearerAuth()
 @Controller('aisha')
 @UseGuards(JwtAuthGuard)
+// SECURITY (audit 2026-08-06 T9): mirror FE DIRECTOR_ROLES — without this any
+// authenticated employee could call Aisha (incl. self-approving HITL requests).
+@Roles('director', 'admin', 'super_admin', 'manager')
 export class AishaHistoryController {
   constructor(private readonly history: AishaHistoryService) {}
 

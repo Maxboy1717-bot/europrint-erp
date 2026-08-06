@@ -16,8 +16,9 @@ import { CLAUDE_PORT, IClaudePort, ClaudeMessage } from '../../domain/ports/i-cl
 import { ToolRegistry } from '../tools/tool.registry';
 import { AishaHistoryRepository } from '../../infrastructure/persistence/aisha-history.repo';
 
-/** Tools that mutate the outside world (email/telegram/calendar) — never auto-run; always confirm-gated. */
-const HIGH_STAKE_TOOLS = new Set(['send_email', 'send_telegram_to_team', 'schedule_meeting']);
+/** Tools that mutate the outside world (email/telegram/calendar/kanban) — never auto-run; always confirm-gated.
+ *  audit 2026-08-06 T11: assign_task did a real INSERT INTO kanban_cards without pause — added here. */
+const HIGH_STAKE_TOOLS = new Set(['send_email', 'send_telegram_to_team', 'schedule_meeting', 'assign_task']);
 const MAX_TOOL_ITERATIONS = 8;
 
 export interface AishaToolRun {

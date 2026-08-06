@@ -16,6 +16,7 @@ import { I18nService } from 'nestjs-i18n';
 import { z } from 'zod';
 import type { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { Roles } from '@common/decorators/roles.decorator';
 import { AishaConfig } from '../../config/aisha.config';
 import { WakeConfigRepository } from '../../infrastructure/persistence/wake-config.repo';
 
@@ -31,6 +32,9 @@ interface AuthedReq extends FastifyRequest {
 @ApiBearerAuth()
 @Controller('aisha/wake')
 @UseGuards(JwtAuthGuard)
+// SECURITY (audit 2026-08-06 T9): mirror FE DIRECTOR_ROLES — without this any
+// authenticated employee could call Aisha (incl. self-approving HITL requests).
+@Roles('director', 'admin', 'super_admin', 'manager')
 export class WakeConfigController {
   constructor(
     private readonly cfg: AishaConfig,

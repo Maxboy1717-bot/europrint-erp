@@ -29,6 +29,7 @@ import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import type { FastifyRequest } from 'fastify';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { Roles } from '@common/decorators/roles.decorator';
 import { AishaConfig } from '../../config/aisha.config';
 import { CLAUDE_PORT, IClaudePort } from '../../domain/ports/i-claude-port';
 import { ToolRegistry } from '../../application/tools/tool.registry';
@@ -65,6 +66,9 @@ const SYSTEM_PROMPT =
 @ApiBearerAuth()
 @Controller('aisha')
 @UseGuards(JwtAuthGuard)
+// SECURITY (audit 2026-08-06 T9): mirror FE DIRECTOR_ROLES — without this any
+// authenticated employee could call Aisha (incl. self-approving HITL requests).
+@Roles('director', 'admin', 'super_admin', 'manager')
 export class AishaChatController {
   private readonly logger = new Logger(AishaChatController.name);
 
