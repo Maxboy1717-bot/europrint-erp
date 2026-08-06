@@ -133,6 +133,7 @@ export function useIoTTablet() {
         productionOrderId: core.selectedOrder.id, equipmentId: core.selectedEquipment.id,
         targetQuantity: core.selectedOrder.quantity,
       });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "Session xatolik");
       return res.json() as Promise<ProductionSession>;
     },
     onSuccess: async (session) => {
@@ -143,6 +144,7 @@ export function useIoTTablet() {
       core.setShowChecklistModal(true);
       toast({ title: core.t("ttSetupStartedFillChecklist") });
     },
+    onError: (err: Error) => { toast({ title: err.message, variant: "destructive" }); },
   });
 
   const scanMaterial = useMutation({
@@ -180,8 +182,14 @@ export function useIoTTablet() {
   const startProductionFromChecklist = useMutation({
     mutationFn: async () => {
       if (!core.activeSession) throw new Error("No session");
-      await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/crew`, core.crewAssignment);
+      const crewRes: Response = await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/crew`, core.crewAssignment);
+      if (!crewRes.ok) throw new Error((await crewRes.json().catch(() => null))?.error || "Brigada xatolik");
       const res: Response = await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/start`);
+      // Third-party audit finding (2026-08-06): BE returns 422 BLOCKED when the
+      // safety checklist isn't complete (iot-tablet.controller.ts start handler).
+      // Without this check, res.json() on a 422 still resolves — the safety gate
+      // was silently swallowed and the FE showed "started" regardless.
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "Xavfsizlik checklist bloklandi");
       return res.json() as Promise<ProductionSession>;
     },
     onSuccess: (session) => {
@@ -189,12 +197,15 @@ export function useIoTTablet() {
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
       toast({ title: core.t("ttProductionStartedExcl") });
     },
+    onError: (err: Error) => { toast({ title: err.message, variant: "destructive" }); },
   });
 
   const startSession = useMutation({
     mutationFn: async () => {
       if (!core.activeSession) throw new Error("No session");
       const res: Response = await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/start`);
+      // Same safety-checklist-gate bypass as startProductionFromChecklist above.
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "Xavfsizlik checklist bloklandi");
       return res.json() as Promise<ProductionSession>;
     },
     onSuccess: (session) => {
@@ -202,6 +213,7 @@ export function useIoTTablet() {
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
       toast({ title: core.t("ttProductionStarted") });
     },
+    onError: (err: Error) => { toast({ title: err.message, variant: "destructive" }); },
   });
 
   const stopSession = useMutation({
@@ -211,6 +223,7 @@ export function useIoTTablet() {
         "POST", `/api/iot/production-sessions/${core.activeSession.id}/stop`,
         { runningTimeSeconds: core.elapsedTime },
       );
+      if (!response.ok) throw new Error((await response.json().catch(() => null))?.error || "To'xtatishda xatolik");
       return response.json();
     },
     onSuccess: (res: { report?: CompletionReportData }) => {
@@ -221,21 +234,24 @@ export function useIoTTablet() {
       queryClient.invalidateQueries({ queryKey: ["/api/iot/tablet/orders"] });
       toast({ title: core.t("ttSessionEnded") });
     },
+    onError: (err: Error) => { toast({ title: err.message, variant: "destructive" }); },
   });
 
   const reportDefect = useMutation({
     mutationFn: async () => {
       if (!core.activeSession) throw new Error("No session");
-      await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/defect`, {
+      const res: Response = await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/defect`, {
         quantity: parseInt(core.defectQty), reason: core.defectReason,
         reasonCode: core.defectReason, stage: core.defectStage || "any",
       });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "Brak qayd etishda xatolik");
     },
     onSuccess: () => {
       core.setShowDefectDialog(false); core.setDefectQty(""); core.setDefectReason(""); core.setDefectStage("");
       queryClient.invalidateQueries({ queryKey: ["/api/iot/production-sessions"] });
       toast({ title: core.t("ttDefectLogged") });
     },
+    onError: (err: Error) => { toast({ title: err.message, variant: "destructive" }); },
   });
 
   const submitHandover = useMutation({
@@ -263,10 +279,11 @@ export function useIoTTablet() {
   const submitInlineQC = useMutation({
     mutationFn: async () => {
       if (!core.activeSession) throw new Error("No session");
-      await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/inline-qc`, {
+      const res: Response = await data.tabletFetch("POST", `/api/iot/production-sessions/${core.activeSession.id}/inline-qc`, {
         sampleSize: parseInt(core.qcSampleSize) || 10, defectCount: parseInt(core.qcDefectCount) || 0,
         notes: core.qcNotes, quantity: core.activeSession.actualQuantity,
       });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "QC saqlashda xatolik");
     },
     onSuccess: () => {
       core.setShowQcFormDialog(false); alerts.setQcReminderVisible(false);
@@ -289,19 +306,21 @@ export function useIoTTablet() {
       // string). Falls back to the raw value if the row is not found (defensive).
       const picked = (Array.isArray(data.reasonCodes) ? data.reasonCodes : [])
         .find(rc => String(rc.id) === core.selectedReasonCode);
-      await data.tabletFetch("POST", "/api/iot/downtime-events", {
+      const res: Response = await data.tabletFetch("POST", "/api/iot/downtime-events", {
         sessionId: core.activeSession.id, eventType: "manual_entry",
         durationMinutes: minutes,
         reasonCode: picked?.code ?? core.selectedReasonCode,
         reasonId: picked ? Number(picked.id) : undefined,
         notes: core.downtimeNotes,
       });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "Prostoy qayd etishda xatolik");
     },
     onSuccess: () => {
       core.setShowDowntimeDialog(false);
       core.setSelectedReasonCode(""); core.setDowntimeNotes(""); core.setDowntimeMinutes("");
       toast({ title: core.t("ttDowntimeLogged") });
     },
+    onError: (err: Error) => { toast({ title: err.message, variant: "destructive" }); },
   });
 
   // ── Composed return ───────────────────────────────────────────────────────
