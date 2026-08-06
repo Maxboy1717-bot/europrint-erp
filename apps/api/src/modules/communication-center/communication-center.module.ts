@@ -21,6 +21,7 @@ import { AgentsModule } from '../agents/agents.module';
 // 20-cc#49 (P0, owner 2026-07-11): CcApprovedGlPostingListener needs GlPostingService (the ONE
 // canonical `entries` posting engine) — mirrors pos.module.ts / sd.module.ts's FinanceModule import.
 import { FinanceModule } from '@modules/finance/finance.module';
+import { NotificationsModule } from '@modules/notifications/notifications.module';
 
 // Repositories
 import { CcBasketsRepository }            from './infrastructure/repositories/cc-baskets.repo';
@@ -62,6 +63,7 @@ import { CcApprovedGlPostingListener } from './events/cc-approved-gl-posting.lis
     AiModule,
     AgentsModule,                  // CcBotService → DirectorAgentService + StrategicAgentService
     FinanceModule,                 // CcApprovedGlPostingListener → GlPostingService (20-cc#49)
+    NotificationsModule,           // CcSlaCron → TELEGRAM_SENDER (T24C: escalation Telegram delivery)
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({

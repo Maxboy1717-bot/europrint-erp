@@ -20,7 +20,7 @@
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { sql } from 'drizzle-orm';
 import { runQuery } from '@shared/db';
@@ -28,6 +28,7 @@ import { getCcGateway } from '../presentation/cc.gateway';
 import { CcRetentionService } from '../application/cc-retention.service';
 import { CcOrgResolverService } from '../application/cc-org-resolver.service';
 import { getBusinessSettingNumber } from '../../../shared/config/business-settings.reader';
+import { TELEGRAM_SENDER, type ITelegramSender } from '../../notifications/domain/ports/i-telegram-sender.port';
 
 @Injectable()
 export class CcSlaCron {
@@ -36,6 +37,10 @@ export class CcSlaCron {
   constructor(
     private readonly retention: CcRetentionService,
     private readonly orgResolver: CcOrgResolverService,
+    // audit 2026-08-06 T24C: escalation used to be in-app-only (raw INSERT bypassing
+    // the standard notification pipeline) — Telegram never fired. Optional so the
+    // cron still works if NotificationsModule wiring is absent.
+    @Optional() @Inject(TELEGRAM_SENDER) private readonly telegram?: ITelegramSender,
   ) {}
 
   /**
@@ -351,5 +356,25 @@ export class CcSlaCron {
         (${args.userId}, ${args.docId}, ${args.type}, ${args.priority ?? 'normal'},
          ${args.titleUz}, ${args.titleRu}, ${args.messageUz}, ${args.messageRu}, ${args.titleUz}, ${args.messageUz})
     `);
+    // audit 2026-08-06 T24C: best-effort Telegram delivery (same linked-chat lookup as
+    // CreateNotificationHandler) — recipients used to learn about escalations only if
+    // they happened to open the app.
+    if (this.telegram) {
+      try {
+        const chat = await runQuery<{ chat_id: string | null }>(sql`
+          SELECT COALESCE(e.telegram_chat_id, u.telegram_chat_id::text) AS chat_id
+          FROM users u
+          LEFT JOIN employees e ON e.user_id = u.id
+          WHERE u.id = ${args.userId}
+          LIMIT 1
+        `);
+        const chatId = chat.rows[0]?.chat_id;
+        if (chatId) {
+          await this.telegram.sendMessage(String(chatId), `⚠️ ${args.titleUz}\n\n${args.messageUz}`);
+        }
+      } catch (e) {
+        this.logger.warn(`CC escalation Telegram delivery skipped (user=${args.userId}): ${String(e)}`);
+      }
+    }
   }
 }

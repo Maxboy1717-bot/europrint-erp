@@ -28,6 +28,8 @@ export class CcDocumentsRepository {
   // ─── Read ────────────────────────────────────────────────────────────────
   getTemplate = (id: string) => this.reader.getTemplate(id);
   getTemplateAdmin = (id: string) => this.reader.getTemplateAdmin(id);
+  listActiveTemplates = () => this.reader.listActiveTemplates();
+  listRejectionReasons = (docId: string) => this.reader.listRejectionReasons(docId);
   getStepsForTemplate = (id: string, v: number) => this.reader.getStepsForTemplate(id, v);
   getById = (id: string) => this.reader.getById(id);
   getPendingApprovalsAtStep = (id: string, step: number) => this.reader.getPendingApprovalsAtStep(id, step);

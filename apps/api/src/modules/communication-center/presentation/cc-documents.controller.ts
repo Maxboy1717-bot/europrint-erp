@@ -190,20 +190,8 @@ export class CcDocumentsController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('templates')
   async listTemplates() {
-    const { runQuery } = await import('@shared/db');
-    const { sql } = await import('drizzle-orm');
-    const r = await runQuery<Record<string, unknown>>(sql`
-      SELECT id::text         AS id,
-             code,
-             name_uz          AS "nameUz",
-             name_ru          AS "nameRu",
-             category,
-             default_priority AS "defaultPriority"
-      FROM cc_document_templates
-      WHERE is_active = true
-      ORDER BY code
-    `);
-    return r.rows;
+    // Qoida 6 (audit 2026-08-06 T24A): SQL moved to CcDocumentsReadRepo.
+    return unwrapOrThrow(await this.docsRepo.listActiveTemplates());
   }
 
   // ── Template admin (owner decision 2026-07-13: super_admin only) ────────
@@ -247,17 +235,8 @@ export class CcDocumentsController {
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get('documents/:id/rejection-reasons')
   async listRejectionReasons(@Param('id') docId: string) {
-    const { runQuery } = await import('@shared/db');
-    const { sql } = await import('drizzle-orm');
-    const r = await runQuery<Record<string, unknown>>(sql`
-      SELECT rr.id::text AS id,
-             rr.reason_uz, rr.reason_ru
-      FROM cc_rejection_reasons rr
-      INNER JOIN cc_documents d ON d.template_id = rr.template_id
-      WHERE d.id = ${docId} AND rr.is_active = true
-      ORDER BY rr.sort_order ASC
-    `);
-    return r.rows;
+    // Qoida 6 (audit 2026-08-06 T24A): SQL moved to CcDocumentsReadRepo.
+    return unwrapOrThrow(await this.docsRepo.listRejectionReasons(docId));
   }
 
   // ── PIN ────────────────────────────────────────────────────────────

@@ -34,6 +34,43 @@ export class CcDocumentsReadRepo {
     }
   }
 
+  /** audit 2026-08-06 T24A (Qoida 6): moved from cc-documents.controller.ts listTemplates(). */
+  async listActiveTemplates(): Promise<Result<Record<string, unknown>[]>> {
+    try {
+      const r = await runQuery<Record<string, unknown>>(sql`
+        SELECT id::text         AS id,
+               code,
+               name_uz          AS "nameUz",
+               name_ru          AS "nameRu",
+               category,
+               default_priority AS "defaultPriority"
+        FROM cc_document_templates
+        WHERE is_active = true
+        ORDER BY code
+      `);
+      return Ok(r.rows);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
+  /** audit 2026-08-06 T24A (Qoida 6): moved from cc-documents.controller.ts listRejectionReasons(). */
+  async listRejectionReasons(docId: string): Promise<Result<Record<string, unknown>[]>> {
+    try {
+      const r = await runQuery<Record<string, unknown>>(sql`
+        SELECT rr.id::text AS id,
+               rr.reason_uz, rr.reason_ru
+        FROM cc_rejection_reasons rr
+        INNER JOIN cc_documents d ON d.template_id = rr.template_id
+        WHERE d.id = ${docId} AND rr.is_active = true
+        ORDER BY rr.sort_order ASC
+      `);
+      return Ok(r.rows);
+    } catch (e) {
+      return Err({ message: (e as Error).message, code: 'DB_ERROR' });
+    }
+  }
+
   async getStepsForTemplate(templateId: string, version: number): Promise<Result<WorkflowStepRow[]>> {
     try {
       const r = await runQuery<Record<string, unknown>>(sql`
