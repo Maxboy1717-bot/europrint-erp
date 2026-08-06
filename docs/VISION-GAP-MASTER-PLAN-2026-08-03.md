@@ -187,4 +187,23 @@ Qolgan P1/P2 (#9 REST-send broadcast, #10 delete-siyosati, #13 presence-TTL, #14
 push/FCM, #19-23 orphan-tozalash/FTS/kanal-semantika, #24-32 P2-dizayn/modernizatsiya) —
 aksariyati SCHEMA/DATA/DECISION yoki past-ustuvorlik P2; keyingi to'lqinga qoldiriladi.
 
+**AI-AISHA moduli (#171-185): dedikatsiyalangan audit hujjat yo'q edi (2026-07-11
+to'lqiniga kirmagan) — to'g'ridan-to'g'ri kod-sharh orqali tekshirildi.** Modul umuman
+kutilganidan ancha yaxshi holatda: honest-degraded chat javoblari (API kalit yo'q bo'lsa
+soxta-muvaffaqiyat emas, aniq "sozlanmagan" xabar), barcha 4 controller guard-langan,
+role-gated tool'lar (get_employee_info/get_financial_summary) haqiqatan tekshiradi
+(hasAishaRole), yuqori-xatarli tool'lar (send_email/telegram/schedule_meeting/assign_task)
+haqiqatan HITL-pauza qiladi (auto-execute qilmaydi). ⭐ **Faqat bitta, lekin katta bo'shliq
+topildi**: shu HITL tasdiqlash mexanizmining butun frontend qismi — backend to'liq tayyor
+(GET/POST /aisha/approvals/*, real ijro-qaytarish) edi, lekin Zod schema
+`pendingApprovals`ni jimgina tashlab yuborardi, hook uni o'qimasdi, panelda tasdiqlash UI
+umuman yo'q edi (mavjud-u ishlatilmagan `approval.*` i18n kalitlari buni tasdiqlaydi —
+kimdir rejalashtirgan, hech kim ulamagan). To'liq ulandi: `c99fe584` (schema+hook+UI, FE-only,
+BE'ga tegilmadi). Lokal backend Q-44 crash sabab qayta ko'tarildi (natija: BE typecheck ham
+0-xato); admin-parol yo'qligi sabab jonli-login-UI-tekshiruv qilinmadi — Q-32 static
+fallback (typecheck ikkala tomon + BE-kontrakt maydon-ma'ydon moslik + DB-jadval mavjudligi).
+Qolgan #171-185 orasidagi boshqa itemlar keyingi to'lqinda davom ettiriladi (bu modulda
+alohida audit hujjat yo'qligi sabab qolган band-sonini aniq bilib bo'lmaydi — TaskList
+manba yo'qolgan).
+
 **Navbatdagi modul: AI-Aisha (#171-#185)** — to'g'ridan-to'g'ri Read/Grep/Edit bilan davom etiladi.
