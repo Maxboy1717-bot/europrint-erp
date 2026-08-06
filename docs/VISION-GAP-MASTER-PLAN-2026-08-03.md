@@ -322,6 +322,18 @@ o'zi shunday deydi), 'manager'-alias SD/CRM/Marketing bugidan farqli — DB-isbo
 (faqat bitta 'manager' foydalanuvchi bor, warehouse-maxsus rollar hali bo'sh), bashorat
 qilib tuzatilmadi.
 
-**Navbatdagi modul: IoT (#taxminan 9 band, faqat #85 ilgari bajarilgan)** — to'g'ridan-to'g'ri davom etiladi.
+**IoT moduli tekshirildi** (`IOT-TABLET-PAGE-DEEP-DIVE-2026-07-04.md`, 2026-07-04, o'ta
+puxta live-probe audit). ⭐⭐ Audit'ning "THE blocker" P0'si — ~10 marshrut (`tablet/shift`,
+`tablet/sessions`, `production-sessions*`, `downtime-events`, `handover`, `inline-qc`)
+`JwtAuthGuard+@Roles(IOT_READ)` talab qilardi, lekin tablet FAQAT `x-tablet-token`
+yuboradi → butun ishlab-chiqarish oqimi (start→scan→run→defect→QC→stop→handover) 401
+edi — **ALLAQACHON tuzatilgan** (barcha marshrut `@Public()+TabletTokenGuard`ga
+o'tkazilgan). Lekin audit "item 3: FE green-lie" hali OCHIQ edi — topildi va tuzatildi
+FE+BE ikkalasida ham (`0f303945`): FE `scanMaterial` xatoni yutar edi (`res.ok`
+tekshirmasdi, `fetch` HTTP-xatoda reject qilmaydi); BE `persistKitItemScan`
+`UPDATE...RETURNING` natijasini faqat `batchId` berilganda tekshirardi — mavjud
+bo'lmagan id bilan skanlash har doim `{scanned:true}` qaytarardi (rollback-tx bilan
+DB-isbotlangan: 0 qator ta'sirlansa ham). Bu — shu sessiyaning eng chuqur ikki-qatlamli
+(FE+BE) green-lie topilmasi.
 
-**Navbatdagi modul: PP (#taxminan 7 band)** — to'g'ridan-to'g'ri davom etiladi.
+**Navbatdagi modul: POS (#taxminan 8 band, hali tegilmagan)** — to'g'ridan-to'g'ri davom etiladi.
