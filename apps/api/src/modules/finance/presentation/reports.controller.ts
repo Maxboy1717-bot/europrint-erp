@@ -14,7 +14,6 @@ import { FinanceReportsService } from '../reports/reports.service';
 import { TrialBalancePdfService } from '../reports/trial-balance-pdf.service';
 import { unwrapOrInternal, unwrapOrThrow } from '@common/http-result';
 import { TashkentTimeService } from '@common/time';
-import { notImplemented } from '@common/exceptions/not-implemented';
 import { db } from '@shared/db';
 import { sql } from 'drizzle-orm';
 
