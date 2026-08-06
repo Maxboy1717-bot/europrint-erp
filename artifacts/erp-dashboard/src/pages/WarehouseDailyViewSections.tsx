@@ -156,23 +156,13 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'preparing'); }}
+                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'prepared'); }}
                           data-testid={`button-start-preparing-${kit.id}`}
                         >
                           {t("WarehouseDailyView.startPreparingButton")}
                         </Button>
                       )}
-                      {kit.status === 'preparing' && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'ready'); }}
-                          data-testid={`button-mark-ready-${kit.id}`}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          {t("WarehouseDailyView.statusReady")}
-                        </Button>
-                      )}
-                      {kit.status === 'ready' && (
+                      {kit.status === 'prepared' && (
                         <Button
                           size="sm"
                           variant="secondary"
@@ -181,6 +171,16 @@ export function OrderCard({ order, onCreateKit, onOpenKitDetails, onUpdateKitSta
                         >
                           <Truck className="h-4 w-4 mr-2" />
                           {t("WarehouseDailyView.deliverButton")}
+                        </Button>
+                      )}
+                      {kit.status === 'delivered' && (
+                        <Button
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); onUpdateKitStatus(kit.id, 'confirmed'); }}
+                          data-testid={`button-confirm-${kit.id}`}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          {t("WarehouseDailyView.confirmButton")}
                         </Button>
                       )}
                     </div>

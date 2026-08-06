@@ -563,5 +563,7 @@
   "WarehouseReportsAll.taminotchiReytingi": "Рейтинг поставщика",
   "WarehouseReportsAll.taminotchilarReytingKorsatkichi": "Показатель рейтинга поставщиков",
   "WarehouseReportsAll.chopEtilganBarkodlarTarixi": "История напечатанных штрих-кодов",
-  "PosWarehouseDetail.nomalum": "Неизвестно"
+  "PosWarehouseDetail.nomalum": "Неизвестно",
+  "WarehouseDailyView.statusPrepared": "Подготовлен",
+  "WarehouseDailyView.confirmButton": "Подтвердить (2-я подпись)"
 }

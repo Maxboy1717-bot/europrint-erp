@@ -679,5 +679,7 @@
   "WarehouseReportsAll.taminotchiReytingi": "Таъминотчи Рейтинги",
   "WarehouseReportsAll.taminotchilarReytingKorsatkichi": "Таъминотчилар рейтинг кўрсаткичи",
   "WarehouseReportsAll.chopEtilganBarkodlarTarixi": "Чоп етилган баркодлар тарихи",
-  "PosWarehouseDetail.nomalum": "Номаълум"
+  "PosWarehouseDetail.nomalum": "Номаълум",
+  "WarehouseDailyView.statusPrepared": "Тайёрланди",
+  "WarehouseDailyView.confirmButton": "Тасдиқлаш (2-имзо)"
 }

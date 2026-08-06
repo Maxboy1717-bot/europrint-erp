@@ -563,5 +563,7 @@
   "WarehouseReportsAll.taminotchiReytingi": "Ta'minotchi Reytingi",
   "WarehouseReportsAll.taminotchilarReytingKorsatkichi": "Ta'minotchilar reyting ko'rsatkichi",
   "WarehouseReportsAll.chopEtilganBarkodlarTarixi": "Chop etilgan barkodlar tarixi",
-  "PosWarehouseDetail.nomalum": "Noma'lum"
+  "PosWarehouseDetail.nomalum": "Noma'lum",
+  "WarehouseDailyView.statusPrepared": "Tayyorlandi",
+  "WarehouseDailyView.confirmButton": "Tasdiqlash (2-imzo)"
 }

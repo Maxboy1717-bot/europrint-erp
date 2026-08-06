@@ -612,6 +612,28 @@ export class IotTabletController {
       );
     }
 
+    // audit 2026-08-06 T13: MES material-akt 2-imzo gate. This tablet route — the ONLY
+    // start path the real FE calls — previously bypassed checkMaterialActSignatures
+    // entirely (the gate lived only on POST /mes/sessions/:id/start, which no page
+    // invokes). Same rule as drizzle-mes.repo.ts: if kit rows exist for the session's
+    // production order and any is not yet 'confirmed' → HARD BLOCK; no kits at all →
+    // pass (act not opened in WMS yet — the established NULL-pass pattern).
+    const kitCheck = await db.execute(sql`
+      SELECT mk.kit_number
+      FROM material_kits mk
+      JOIN production_sessions ps ON mk.order_id::text = ps.production_order_id::text
+      WHERE ps.id = ${sessionId}
+        AND mk.deleted_at IS NULL
+        AND mk.status NOT IN ('confirmed', 'in_use', 'completed')
+    `);
+    const pendingKits = ((((kitCheck as Rows).rows) ?? []) as Array<{ kit_number?: unknown }>)
+      .map((k) => String(k.kit_number ?? "Nomsiz to'plam"));
+    if (pendingKits.length > 0) {
+      throw new UnprocessableEntityException(
+        `BLOCKED: material-akt 2-imzo bilan tasdiqlanmagan (${pendingKits.length} to'plam): ${pendingKits.join(', ')}`,
+      );
+    }
+
     // 3.6 MES stage-tracking: first start of a session opens the GSD SETUP stage
     // (current_stage/stage_started_at were NULL until now — mirrors
     // ProductionSession.beginStages()/advanceSessionStage's "current_stage NULL →

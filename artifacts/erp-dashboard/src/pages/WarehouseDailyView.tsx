@@ -105,7 +105,7 @@ export default function WarehouseDailyView() {
 
   const totalKits = (Array.isArray(orders) ? orders : []).reduce((sum, o) => sum + o.kits.length, 0);
   const readyKits = (Array.isArray(orders) ? orders : []).reduce(
-    (sum, o) => sum + o.kits.filter(k => k.status === 'ready' || k.status === 'delivered').length, 0
+    (sum, o) => sum + o.kits.filter(k => k.status === 'prepared' || k.status === 'delivered' || k.status === 'confirmed' || k.status === 'ready').length, 0
   );
 
   if (isError) {

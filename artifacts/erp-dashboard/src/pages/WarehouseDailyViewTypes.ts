@@ -22,7 +22,7 @@ export interface MaterialKit {
   id: string;
   kitNumber: string;
   orderId: string;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'confirmed' | 'consumed';
+  status: 'pending' | 'prepared' | 'delivered' | 'confirmed' | 'in_use' | 'completed' | 'preparing' | 'ready' | 'consumed';
   barcode: string;
   scheduledDate: string;
   scheduledTime: string;
@@ -54,6 +54,9 @@ export interface Equipment {
 export const STATUS_COLORS: Record<string, { bg: string; text: string; labelKey: string }> = {
   pending: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-800 dark:text-yellow-200", labelKey: "WarehouseDailyView.kutilmoqda" },
   preparing: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-200", labelKey: "WarehouseDailyView.tayyorlanmoqda" },
+  // audit 2026-08-06 T13.5: canonical DB vocabulary (material_kits_status_chk) —
+  // 'preparing'/'ready' above are legacy display-only (pre-fix rows).
+  prepared: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-200", labelKey: "WarehouseDailyView.statusPrepared" },
   ready: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-800 dark:text-green-200", labelKey: "WarehouseDailyView.statusReady" },
   delivered: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-800 dark:text-purple-200", labelKey: "WarehouseDailyView.statusDelivered" },
   confirmed: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-200", labelKey: "WarehouseDailyView.tasdiqlangan" },

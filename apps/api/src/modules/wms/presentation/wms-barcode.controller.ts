@@ -4,9 +4,11 @@
  */
 
 import {
-  Body, Controller, Delete, Get, HttpStatus, NotFoundException, Param, Patch, Post,
+  Body, Controller, Delete, ForbiddenException, Get, HttpStatus, NotFoundException, Param, Patch, Post,
   UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@common/types/user.types';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiThrottle } from '@common/decorators/throttle-profiles';
 import { z } from 'zod';
@@ -48,8 +50,11 @@ const MaterialKitSchema = z.object({
   warehouseId: z.union([z.string(), z.number()]).optional(),
 }).passthrough();
 
+// audit 2026-08-06 T13.5: constrain to the material_kits_status_chk vocabulary —
+// free-text used to let FE send 'preparing'/'ready' which violated the DB CHECK.
+const MATERIAL_KIT_STATUSES = ['pending', 'prepared', 'delivered', 'confirmed', 'in_use', 'completed'] as const;
 const MaterialKitStatusSchema = z.object({
-  status: z.string().max(50),
+  status: z.enum(MATERIAL_KIT_STATUSES),
 }).passthrough();
 
 const WH_READ  = ['super_admin', 'warehouse_manager', 'warehouse_keeper', 'warehouse', 'director', 'manager', 'accountant', 'finance'];
@@ -195,10 +200,42 @@ export class WmsBarcodeController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Patch('material-kits/:id/status')
   @Roles(...WH_WRITE)
-  async updateMaterialKitStatus(@Param('id') id: string, @Body() body: unknown) {
+  async updateMaterialKitStatus(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const dto = MaterialKitStatusSchema.parse(body);
-    await db.execute(sql`UPDATE material_kits SET status=${dto.status} WHERE id=${parseInt(id, 10)} AND deleted_at IS NULL`);
-    return { id: parseInt(id, 10), status: dto.status, updated: true };
+    const kitId = parseInt(id, 10);
+    const userId = Number(user?.id ?? 0) || null;
+
+    // audit 2026-08-06 T13.4: the "two-signature" MES gate used to be a plain status
+    // string — confirmed_by was never written and nothing stopped the preparer from
+    // confirming their own kit. Now each stage stamps its actor, and 'confirmed'
+    // enforces prepared_by !== confirmed_by (real two-person sign-off).
+    if (dto.status === 'confirmed') {
+      const pre = rows(await db.execute(
+        sql`SELECT prepared_by FROM material_kits WHERE id=${kitId} AND deleted_at IS NULL`,
+      ))[0];
+      if (!pre) throw new NotFoundException('Material-kit topilmadi');
+      const preparedBy = pre['prepared_by'] == null ? null : Number(pre['prepared_by']);
+      if (preparedBy != null && userId != null && preparedBy === userId) {
+        throw new ForbiddenException("Tayyorlagan shaxs o'zi tasdiqlay olmaydi (2-imzo talabi)");
+      }
+    }
+
+    const stamp =
+      dto.status === 'prepared'  ? sql`, prepared_by=${userId}, prepared_at=NOW()` :
+      dto.status === 'delivered' ? sql`, delivered_by=${userId}, delivered_at=NOW()` :
+      dto.status === 'confirmed' ? sql`, confirmed_by=${userId}, confirmed_at=NOW()` :
+      sql``;
+    const r = await db.execute(sql`
+      UPDATE material_kits SET status=${dto.status}${stamp}
+      WHERE id=${kitId} AND deleted_at IS NULL
+      RETURNING id
+    `);
+    if (rows(r).length === 0) throw new NotFoundException('Material-kit topilmadi');
+    return { id: kitId, status: dto.status, updated: true };
   }
 
   @ApiOperation({ summary: 'Get material kit items' })
