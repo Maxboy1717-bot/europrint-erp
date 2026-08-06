@@ -8,6 +8,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Result, Ok, Err, AppError } from '@common/result';
 import { getConfigString } from '@common/config/business-config.helper';
+import { getBusinessSettingNumber } from '../../../../shared/config/business-settings.reader';
 import { QuarantineWorkflowRepository } from '../../infrastructure/repositories/quarantine-workflow.repository';
 import { StockLedgerService } from './stock-ledger.service';
 
@@ -18,6 +19,11 @@ import { StockLedgerService } from './stock-ledger.service';
 // the code itself (not the type) remains the correct, owner-tunable identifier.
 const QUARANTINE_HOLD_WAREHOUSE_CODE_DEFAULT = 'QC-HOLD';
 const QUARANTINE_SOURCE_WAREHOUSE_CODE_DEFAULT = 'RM-MAIN';
+
+// M6 remaining gap (memory: "quarantine still hardcoded", flagged 2026-07-07): the
+// 48h auto-escalation (karantin -> qc_review) interval was a raw SQL literal —
+// business_settings CRUD-tunable now, same pattern as director/cc escalation hours.
+const QUARANTINE_ESCALATION_HOURS_DEFAULT = 48;
 
 export type MovementStatus =
   | 'draft' | 'pending' | 'karantin' | 'qc_review'
@@ -78,7 +84,8 @@ export class QuarantineWorkflowService {
 
   async escalateExpiredQuarantine(): Promise<Result<{ moved: number }, AppError>> {
     try {
-      const rows = await this.repo.escalateExpiredQuarantine();
+      const escalationHours = await getBusinessSettingNumber('pos.quarantine_escalation_hours', QUARANTINE_ESCALATION_HOURS_DEFAULT);
+      const rows = await this.repo.escalateExpiredQuarantine(escalationHours);
       if (rows.length > 0) {
         this.logger.log(`[Quarantine Cron] ${rows.length} ta movement → 'qc_review' ga ko'chirildi`);
         for (const row of rows) {

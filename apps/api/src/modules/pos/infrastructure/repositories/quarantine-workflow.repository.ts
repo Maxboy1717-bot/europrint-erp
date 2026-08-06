@@ -122,12 +122,12 @@ export class QuarantineWorkflowRepository {
     } catch { /* passport table may not exist — intentionally swallowed */ }
   }
 
-  async escalateExpiredQuarantine(): Promise<Array<{ id: number; movement_number: string }>> {
+  async escalateExpiredQuarantine(escalationHours: number): Promise<Array<{ id: number; movement_number: string }>> {
     return typedExecute<{ id: number; movement_number: string }>(sql`
       UPDATE pos_movements
          SET status = 'qc_review', updated_at = NOW()
        WHERE status = 'karantin'
-         AND created_at < NOW() - INTERVAL '48 hours'
+         AND created_at < NOW() - (${escalationHours} || ' hours')::interval
       RETURNING id, movement_number
     `);
   }

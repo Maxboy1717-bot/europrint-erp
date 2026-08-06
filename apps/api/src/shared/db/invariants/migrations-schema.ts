@@ -2212,4 +2212,15 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'cc-sla.cron.ts remindOverdue48h() — overdue_reminder_sent_at gate: shu soatdan kam vaqt o''tgan bo''lsa qayta eslatma yuborilmaydi', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Magic-Numbers M6 remaining gap (memory: "quarantine still hardcoded", 2026-07-07):
+  // quarantine-workflow.repository.ts escalateExpiredQuarantine() had a hardcoded
+  // INTERVAL '48 hours' — CRUD-sozlanadigan qilindi, director escalation-hours bilan
+  // bir xil naqsh (business_settings, category='pos').
+  {
+    name: 'business_settings pos.quarantine_escalation_hours seed (2026-08-06)',
+    sql: `INSERT INTO business_settings (module, setting_key, label, value_type, value_num, unit, min_val, max_val, description, is_active)
+      VALUES ('pos', 'pos.quarantine_escalation_hours', 'Karantin: necha soatdan keyin QC-ko''rikka avtomatik o''tkaziladi', 'number', 48, 'soat', 1, 336,
+        'quarantine-workflow.repository.ts escalateExpiredQuarantine() — status=''karantin'' shu soatdan ko''p turgan pos_movements avtomatik ''qc_review''ga o''tkaziladi (pos-quarantine-check.job.ts, har soatlik cron)', true)
+      ON CONFLICT (setting_key) DO NOTHING`,
+  },
 ];
