@@ -4,7 +4,7 @@
  */
 
 import {
-  pgTable, uuid, text, boolean, timestamp, decimal, integer,
+  pgTable, uuid, text, boolean, timestamp, decimal, integer, serial,
   index, uniqueIndex, date, jsonb,
 } from 'drizzle-orm/pg-core';
 import { createId } from '@paralleldrive/cuid2';
@@ -16,18 +16,30 @@ import {
 } from './schema-enums';
 import { users, sales_orders } from './schema-core';
 
+// SD-CRM audit §5.2(b)/§5.4 item 7 bonus (2026-08-06): the live `deliveries.id` is a plain
+// integer identity (nextval sequence), never a uuid — this table predates the uuid-cuid2
+// convention used elsewhere and was declared wrong here. The old `uuid().$defaultFn(createId)`
+// made every typed `db.insert(deliveries).values(...)` generate a CUID string client-side and
+// try to write it into an integer column, failing every POST /sd/deliveries outright
+// ("invalid input syntax for type integer"). `sales_order_id`/`driver_id`/`customer_id` are
+// integer FKs live too, not uuid. Column keys below are added/renamed to match what
+// drizzle-sd-deliveries.repo.ts's create() actually persists from SdCreateDeliverySchema.
 export const deliveries = pgTable('deliveries', {
-  id: uuid('id').primaryKey().$defaultFn(() => createId()),
-  sales_order_id: uuid('sales_order_id').references(() => sales_orders.id, { onDelete: 'set null' }),
+  id: serial('id').primaryKey(),
+  sales_order_id: integer('sales_order_id'),
+  customer_id: integer('customer_id'),
   delivery_number: text('delivery_number').notNull().unique(),
-  customer_name: text('customer_name').notNull(),
-  delivery_address: text('delivery_address').notNull(),
+  customer_name: text('customer_name'),
+  delivery_address: text('delivery_address'),
+  planned_goods_movement_date: text('planned_goods_movement_date'),
   status: deliveryStatusEnum('status').notNull().default('pending'),
-  driver_id: uuid('driver_id').references(() => users.id, { onDelete: 'set null' }),
+  driver_id: integer('driver_id'),
+  driver_name: text('driver_name'),
   vehicle_number: text('vehicle_number'),
   dispatched_at: timestamp('dispatched_at', { withTimezone: true }),
   delivered_at: timestamp('delivered_at', { withTimezone: true }),
   notes: text('notes'),
+  created_by: integer('created_by'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [

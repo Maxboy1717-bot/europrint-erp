@@ -6,7 +6,7 @@
 import { TashkentTimeService } from '@common/time';
 const _time = new TashkentTimeService();
 import { Injectable, Logger } from '@nestjs/common';
-import { and, eq, desc , sql } from 'drizzle-orm';
+import { and, desc , sql } from 'drizzle-orm';
 import { Result, Err , Ok } from '@common/types/result.type';
 import { IDeliveryRepo } from '../../domain/repositories/i-delivery.repo';
 import { Delivery } from '../../domain/aggregates/delivery.aggregate';
@@ -86,7 +86,10 @@ export class DrizzleDeliveryRepository implements IDeliveryRepo {
     return db
       .select()
       .from(deliveries)
-      .where(eq(deliveries.sales_order_id, salesOrderId))
+      // deliveries.sales_order_id is a live integer FK (see NOTE below); salesOrderId arrives
+      // as the domain-layer string id, so this uses the same raw-sql coercion pattern as the
+      // status/driver_id filters above instead of eq()'s stricter number-only overload.
+      .where(sql`${deliveries.sales_order_id} = ${salesOrderId}`)
       .execute()
       .then((rows) => {
         if (rows.length === 0) {

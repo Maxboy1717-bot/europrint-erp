@@ -1,9 +1,10 @@
 /**
  * NOTE: Raw SQL retained intentionally — Drizzle ORM cannot express:
  *   findItemsByDeliveryId queries delivery_items which has no Drizzle schema
- *   binding (legacy table), and the where-clause ${deliveries.id} = ${String(id)}
- *   coercion uses raw sql template because the id column is varchar in the
- *   shared schema while the API accepts numeric ids.
+ *   binding (legacy table). The ${deliveries.id} = ${String(id)} where-clauses are
+ *   plain raw-sql style but deliveries.id is a real integer (serial) column —
+ *   Postgres infers the parameter type from the `=` context, so the string
+ *   coercion is harmless, just not required.
  *   See ARCHITECTURE_RULES.md Rule 4: complex SQL is permitted with documentation.
  */
 /**
@@ -52,7 +53,23 @@ export class DrizzleSdDeliveriesRepository implements ISdDeliveriesRepository {
 
   async create(dto: Record<string, unknown>): Promise<Result<Record<string, unknown>>> {
     try {
-      const result = await db.insert(deliveries).values({ ...dto, status: 'pending' } as typeof deliveries.$inferInsert).returning();
+      // SD-CRM audit §5.2(b)/§5.4 item 7 bonus: dto arrives camelCase (SdCreateDeliverySchema:
+      // salesOrderId/customerId/plannedGoodsMovementDate/driverName/vehicleNumber/createdBy) plus
+      // the controller-appended deliveryNumber. None of those keys match the deliveries table's
+      // snake_case columns, so the old `{ ...dto, status: 'pending' }` spread silently inserted
+      // an almost-empty row (delivery_number NOT NULL would have failed once the id-type crash
+      // below was fixed). Map explicitly instead of relying on key-name coincidence.
+      const values: typeof deliveries.$inferInsert = {
+        delivery_number: String(dto.deliveryNumber ?? ''),
+        sales_order_id: dto.salesOrderId != null ? Number(dto.salesOrderId) : null,
+        customer_id: dto.customerId != null ? Number(dto.customerId) : null,
+        planned_goods_movement_date: dto.plannedGoodsMovementDate != null ? String(dto.plannedGoodsMovementDate) : null,
+        driver_name: dto.driverName != null ? String(dto.driverName) : null,
+        vehicle_number: dto.vehicleNumber != null ? String(dto.vehicleNumber) : null,
+        created_by: dto.createdBy != null ? Number(dto.createdBy) : null,
+        status: 'pending',
+      };
+      const result = await db.insert(deliveries).values(values).returning();
       return Ok(result[0]);
     } catch (e: unknown) { return Err((e as Error)?.message || 'Yaratishda xatolik'); }
   }
