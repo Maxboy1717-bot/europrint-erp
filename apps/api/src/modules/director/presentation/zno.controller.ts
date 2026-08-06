@@ -35,6 +35,8 @@ export class ZnoController {
   @ApiResponse({ status: 201, description: 'OK' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(...APPROVE_ROLES)
   @UsePipes(new ZodValidationPipe(ZnoCreateSchema))
   async createZno(
     @Body() body: ZnoCreateDto,
@@ -46,6 +48,8 @@ export class ZnoController {
   @ApiOperation({ summary: 'List zno' })
   @ApiResponse({ status: 200, description: 'OK' })
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(...APPROVE_ROLES)
   async listZno(
     @Query('status') status?: string,
     @Query('department_id') departmentId?: string,
