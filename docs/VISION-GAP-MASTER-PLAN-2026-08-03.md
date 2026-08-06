@@ -206,4 +206,22 @@ Qolgan #171-185 orasidagi boshqa itemlar keyingi to'lqinda davom ettiriladi (bu 
 alohida audit hujjat yo'qligi sabab qolган band-sonini aniq bilib bo'lmaydi — TaskList
 manba yo'qolgan).
 
-**Navbatdagi modul: AI-Aisha (#171-#185)** — to'g'ridan-to'g'ri Read/Grep/Edit bilan davom etiladi.
+**SD/CRM moduli: 2026-07-10 audit (SD-CRM-COMPLETE-FRESH-ANALYSIS-2026-07-10-v3.md) qayta
+tekshirildi.** ⭐⭐ **Eng katta topilma bu sessiyada**: §3.2 P0 — `RolesGuard`da `'manager'`
+↔ `'sales_manager'` aliasi yo'q (aynan-moslik), lekin jonli `users` jadvalida
+`role='sales_manager'` qatori 0 (barcha real menejerlar `'manager'`). Audit vaqtida
+(2026-07-10) bu 27/32 foydalanuvchiga 403 bergan (amalda modul 4 kishiga — super_admin+
+director — ochiq edi). To'liq kompaniya-reset (2026-07-11)dan keyin `users`=3 qator bo'lsa
+ham, **struktura bug hali tirik edi** — egasi CRUD orqali real menejer qo'shishi bilanoq
+qayta portlaydi. Tekshiruv: 28 ta SD+CRM controller `sales_manager` talab qiladi, shundan
+faqat 3 tasi (`sd-payments`/`sd-contracts`/`sd-orders`, oldingi to'lqinda) `'manager'`
+qo'shilgan edi — **qolgan 25 tasi hali buzuq edi**. Barchasi bir xil tasdiqlangan naqsh
+bilan tuzatildi (`'manager'` qo'shildi, RolesGuard'ning o'ziga tegilmadi — Q-34 tor-fix):
+`9fabdacb`. `sd-invoices.controller.ts`da alohida lokal `Role={...}` soxta-enum topildi
+(umumiy `roles.constants.ts`dan emas) — shu faylga ham `MANAGER` qo'shildi.
+
+Boshqa audit topilmalari (§2 fake-save/bloklangan CREATE, §3.6 IDOR ro'yxati, §4 orphan
+sweep, §5 uzilgan integratsiya zanjirlari) hali tekshirilmagan — keyingi to'lqinga
+qoldiriladi (bu audit juda katta, 583+ qator).
+
+**Navbatdagi modul: Marketing (#198-#207 qolgan qismi)** — to'g'ridan-to'g'ri davom etiladi.
