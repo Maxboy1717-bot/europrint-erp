@@ -91,14 +91,20 @@ export class WmsGatewayWarehousesController {
   @ApiResponse({ status: 200, description: 'OK' })
   @Get('warehouses')
   @Roles(...WH_READ)
-  async getWarehouses(@Query('type') type?: string) {
+  async getWarehouses(@Query('type') type?: string, @Query('isActive') isActive?: string) {
     try {
+      // audit 2026-08-06 T14: default to active-only, matching GetWarehousesHandler —
+      // this endpoint previously ignored is_active entirely (and silently dropped the
+      // ?isActive param the sidebar sends), so deactivated warehouses kept showing on
+      // WMSDashboard/Bins/Zones/GoodsIssue/InventoryCount/BarcodeSystem pages.
+      const includeInactive = isActive === 'false' || isActive === 'all';
       const r = await rawSql(sql`
         SELECT id::text AS id, code, name, name_ru, type, location, is_active,
                manager_id, created_at,
                (SELECT COUNT(*)::int FROM warehouse_stock ws WHERE ws.warehouse_id = warehouses.id) AS stock_items
         FROM warehouses
         WHERE deleted_at IS NULL
+          AND (${includeInactive} OR is_active = true)
           AND (${type ?? null}::text IS NULL OR type = ${type ?? null})
         ORDER BY name ASC LIMIT 200
       `);
