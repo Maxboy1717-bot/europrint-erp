@@ -5146,6 +5146,8 @@
   "tamirlashSorovi": "Запрос на ремонт",
   "barchaToxtashHodisalariVaTahlili": "Все остановка hodisalari и анализ",
   "toxtashQaydEtish": "Остановка qayd etish",
+  "toxtashTahlili": "Анализ простоев",
+  "engKopToxtaganMashina": "Наиболее часто простаивающий станок",
   "topSabablar": "Топ причин",
   "rejalanmagan": "Не запланировано",
   "toxtashTopilmadi": "Остановка не найдено",
