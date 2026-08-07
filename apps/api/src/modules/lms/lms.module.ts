@@ -28,7 +28,6 @@ import { IssueCertificateHandler } from './application/commands/issue-certificat
 import { EnrollCourseHandler } from './application/commands/enroll-course.handler';
 import { OperatorCertificationsHandler } from './application/queries/operator-certifications.handler';
 import { GetCoursesHandler } from './application/queries/get-courses.handler';
-import { GetMyEnrollmentsHandler } from './application/queries/get-my-enrollments.handler';
 import { CertExpiryHandler } from './infrastructure/event-handlers/cert-expiry.handler';
 import { WeeklyProgressReportHandler } from './infrastructure/event-handlers/weekly-progress-report.handler';
 import { CardEmployeeAssignedHandler } from './infrastructure/event-handlers/card-employee-assigned.handler';
@@ -57,15 +56,9 @@ import { CardRequiredKnowledgeController } from './presentation/card-required-kn
 import { CardRequiredKnowledgeService } from './application/services/card-required-knowledge.service';
 import { CardRequiredKnowledgeRepository } from './infrastructure/repositories/drizzle-card-required-knowledge.repo';
 import { LMS_REPO } from './domain/repositories/i-lms.repo';
-import { LMS_COURSES_REPO } from './courses/i-lms-courses.repo';
-import { DrizzleLmsCoursesRepository } from './courses/drizzle-lms-courses.repo';
-import { CoursesService } from './courses/courses.service';
-import { LMS_ENROLLMENTS_REPO } from './enrollments/i-lms-enrollments.repo';
-import { DrizzleLmsEnrollmentsRepository } from './enrollments/drizzle-lms-enrollments.repo';
-import { EnrollmentsService } from './enrollments/enrollments.service';
 
 const commandHandlers = [IssueCertificateHandler, EnrollCourseHandler];
-const queryHandlers = [OperatorCertificationsHandler, GetCoursesHandler, GetMyEnrollmentsHandler];
+const queryHandlers = [OperatorCertificationsHandler, GetCoursesHandler];
 const eventListeners = [CertExpiryHandler, CardEmployeeAssignedHandler, CourseCompletedCreditHandler, WeeklyProgressReportHandler];
 
 const appControllers = [
@@ -100,8 +93,6 @@ const appServices = [
   LmsCertificatesStandaloneService,
   LmsCertificatePdfService,
   LmsMiscService,
-  CoursesService,
-  EnrollmentsService,
   KnowledgeBaseService,
   CardRequiredKnowledgeService,
   // EP-ORG-027 LMS oylik/razryad gate (A73): PURE 3-condition evaluator + DB-wrapper.
@@ -119,8 +110,6 @@ const appRepos = [
   KnowledgeBaseRepository,
   CardRequiredKnowledgeRepository,
   { provide: LMS_REPO, useClass: LmsRepository },
-  { provide: LMS_COURSES_REPO, useClass: DrizzleLmsCoursesRepository },
-  { provide: LMS_ENROLLMENTS_REPO, useClass: DrizzleLmsEnrollmentsRepository },
 ];
 
 @Module({
