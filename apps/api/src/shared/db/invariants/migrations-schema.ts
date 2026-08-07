@@ -2289,4 +2289,18 @@ export const SCHEMA_MIGRATIONS: Array<MigrationDef> = [
         'mm-vendor-invoice.service.ts runThreeWayMatch()/matchInvoiceToPo() — hisob-faktura summasi xarid buyurtmasi (PO) summasidan shu ulushdan ko''p farq qilsa match_status=''variance'' va to''lov bloklanadi', true)
       ON CONFLICT (setting_key) DO NOTHING`,
   },
+  // Audit 2026-08-07: HitlApprovalRequestedEvent / ApprovalRequestedEvent had NO handler at all —
+  // an approval request reached nobody. approval-notification.listener.ts now resolves recipients
+  // through this table, so the owner changes who approves what via the routing CRUD rather than a
+  // code edit. Seeded with 'director' (the same role the listener falls back to when no active
+  // rule exists), so behaviour is identical until the owner narrows it.
+  {
+    name: 'notification_routing_rules director.approval_requested seed (2026-08-07)',
+    sql: `INSERT INTO notification_routing_rules (event_type, target_role, target_user_id, notes)
+      SELECT 'director.approval_requested', 'director', NULL,
+        'Tasdiqlash so''rovi yaratilganda kimga xabar borishi. approval-notification.listener.ts o''qiydi; qator o''chirilsa/nofaol qilinsa ''director'' roliga qaytadi.'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM notification_routing_rules WHERE event_type = 'director.approval_requested'
+      )`,
+  },
 ];
