@@ -75,6 +75,7 @@ export interface CameraConfigData {
   cameraName: string | null;
   cameraCode: string | null;
   triggerRules: Record<string, unknown>[];
+  aiPrompt: string | null;
   zone: string | null;
   alertThreshold: string | number;
   isActive: boolean;
@@ -227,15 +228,35 @@ export class DrizzleCameraAiRepo {
       const [config] = await db.select()
         .from(camera_ai_configs)
         .where(eq(camera_ai_configs.camera_id, id));
-      const raw = config?.detection_types;
-      const triggerRules: Record<string, unknown>[] = raw
-        ? (typeof raw === 'string' ? JSON.parse(raw) : [])
-        : [];
+      // Audit 2026-08-07: `detection_types` is a live `jsonb` column, but the Drizzle schema
+      // (schema-misc-iot.ts) declares it `text()` — a schema/DB type drift. The pg driver
+      // parses jsonb to a native JS value regardless of what Drizzle thinks the TS type is
+      // (verified live: `SELECT detection_types` returns a real array, not a JSON string), so
+      // the old `typeof raw === 'string'` check was ALWAYS false whenever a row actually had
+      // data — every configured camera silently fell back to the full default mission catalog
+      // (Q-40: looked like "no config yet" when a config existed).
+      //
+      // Two shapes exist in the wild (both written by working code — `updateCameraTriggerRulesFromBody`
+      // writes a plain array, `updateCameraPrompt`/`patchCameraAi` write `{ai_prompt, rules}`
+      // because `camera_ai_configs.ai_prompt` has no dedicated Drizzle column to write to
+      // directly). Both are parsed here so neither write path silently loses the other's data.
+      const raw: unknown = config?.detection_types;
+      const parsed: unknown = typeof raw === 'string' ? this._safeJsonParse(raw) : raw;
+      let triggerRules: Record<string, unknown>[] = [];
+      let aiPrompt: string | null = null;
+      if (Array.isArray(parsed)) {
+        triggerRules = parsed as Record<string, unknown>[];
+      } else if (parsed && typeof parsed === 'object') {
+        const obj = parsed as { rules?: unknown; ai_prompt?: unknown };
+        triggerRules = Array.isArray(obj.rules) ? (obj.rules as Record<string, unknown>[]) : [];
+        aiPrompt = typeof obj.ai_prompt === 'string' ? obj.ai_prompt : null;
+      }
       return Ok({
         cameraId: id,
         cameraName: cam.name,
         cameraCode: cam.code,
         triggerRules,
+        aiPrompt,
         zone: config?.zone ?? null,
         alertThreshold: config?.alert_threshold ?? 0.8,
         isActive: config?.is_active ?? true,
@@ -336,5 +357,9 @@ export class DrizzleCameraAiRepo {
         .returning({ id: camera_alerts.id });
       return Ok({ id: row.id });
     } catch (e) { return Err((e as Error).message); }
+  }
+
+  private _safeJsonParse(raw: string): unknown {
+    try { return JSON.parse(raw); } catch { return null; }
   }
 }
