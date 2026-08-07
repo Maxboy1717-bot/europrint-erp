@@ -72,11 +72,19 @@ import { GetTodayBriefingTool }         from './application/tools/get-today-brie
 import { ListAvailableCamerasTool }     from './application/tools/list-available-cameras.tool';
 import { ScheduleMeetingTool }          from './application/tools/schedule-meeting.tool';
 import { SendEmailTool }                from './application/tools/send-email.tool';
+import { EMAIL_SENDER as AISHA_EMAIL_SENDER } from './application/tools/send-email.tool';
+import { TELEGRAM_SENDER as AISHA_TELEGRAM_SENDER } from './application/tools/send-telegram-to-team.tool';
+// Audit 2026-08-06: the two tools' local Symbols were never bound to anything, so the
+// HITL approval flow completed and then sent nothing. These adapters bind them to the
+// real notifications infrastructure.
+import { AishaEmailSenderAdapter, AishaTelegramSenderAdapter } from './infrastructure/external/notification-sender.adapters';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { SendTelegramToTeamTool }       from './application/tools/send-telegram-to-team.tool';
 import { WhatIfSimulationTool }         from './application/tools/what-if-simulation.tool';
 
 @Module({
   imports: [
+    NotificationsModule,
     ConfigModule,
     CqrsModule,
     EventEmitterModule,
@@ -123,6 +131,9 @@ import { WhatIfSimulationTool }         from './application/tools/what-if-simula
     GetProductionStatusTool, GetQualityMetricsTool, GetTodayBriefingTool,
     ListAvailableCamerasTool, ScheduleMeetingTool, SendEmailTool,
     SendTelegramToTeamTool, WhatIfSimulationTool,
+    AishaEmailSenderAdapter, AishaTelegramSenderAdapter,
+    { provide: AISHA_EMAIL_SENDER, useExisting: AishaEmailSenderAdapter },
+    { provide: AISHA_TELEGRAM_SENDER, useExisting: AishaTelegramSenderAdapter },
     AishaToolBootstrap,
   ],
   controllers: [
