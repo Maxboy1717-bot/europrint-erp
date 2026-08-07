@@ -15,6 +15,7 @@ import { Inject, Logger } from '@nestjs/common';
 import { AppErr, Err, Ok, Result } from '@common/result';
 import { CRM_DEALS_REPO, ICrmDealsRepository } from '../../deals/i-crm-deals.repo';
 import { DealWonEvent } from '../../domain/events/deal-won.event';
+import { isLostStage, isWonStage, normalizeStage } from '../../domain/deal-stage-markers';
 
 export class MarkDealWonCommand {
   constructor(
@@ -26,12 +27,8 @@ export class MarkDealWonCommand {
 // Live crm_deals carries business status in the free-form `stage_id`; a deal is
 // already-terminal when stage_id is a won/lost marker. We block re-winning a
 // lost deal but treat an already-won deal as idempotent success (no re-emit).
-const LOST_MARKERS = ['lost', 'fail', 'c0:lose', 'lose'];
-const WON_MARKERS = ['won', 'success', 'win', 'c0:win'];
-
-function normalize(raw: unknown): string {
-  return String(raw ?? '').trim().toLowerCase();
-}
+// Marker lists live in domain/deal-stage-markers so this handler and
+// UpdateDealStageHandler (the Kanban path) cannot drift apart.
 
 @CommandHandler(MarkDealWonCommand)
 export class MarkDealWonHandler implements ICommandHandler<MarkDealWonCommand> {
@@ -48,14 +45,15 @@ export class MarkDealWonHandler implements ICommandHandler<MarkDealWonCommand> {
     if (!found.data) return Err(AppErr('NOT_FOUND', `Deal #${command.dealId} topilmadi`));
 
     const deal = found.data as Record<string, unknown>;
-    const currentStage = normalize(deal['stage_id'] ?? deal['stage_semantic_id'] ?? deal['status']);
+    const rawStage = deal['stage_id'] ?? deal['stage_semantic_id'] ?? deal['status'];
+    const currentStage = normalizeStage(rawStage);
 
-    if (LOST_MARKERS.includes(currentStage)) {
+    if (isLostStage(rawStage)) {
       return Err(AppErr('VALIDATION', `Cannot mark deal as won from terminal status '${currentStage}'`));
     }
 
     // Already won → idempotent: do not re-publish (the SO already exists/links).
-    if (WON_MARKERS.includes(currentStage) || deal['sales_order_id'] != null) {
+    if (isWonStage(rawStage) || deal['sales_order_id'] != null) {
       this.logger.log({ msg: 'Deal already won — idempotent no-op', dealId: command.dealId });
       return Ok({ id: command.dealId, status: 'won' });
     }
