@@ -9,6 +9,7 @@ import { PosFifoService } from '../services/pos-fifo.service';
 import { PosTelegramService } from '../services/pos-telegram.service';
 import { PosNotificationsService } from '../services/pos-notifications.service';
 import { NotificationRoutingRepository } from '../../../notifications/infrastructure/notification-routing.repository';
+import { getAlertThreshold, ALERT_TYPE } from '../../../../shared/config/alert-thresholds.reader';
 
 /** notification_routing_rules.event_type — config-driven qilib qo'yiladi (FAZA Bildirishnoma, 2026-07-01). */
 const LOW_STOCK_EVENT_TYPE = 'wms.low_stock';
@@ -18,6 +19,21 @@ const LOW_STOCK_EVENT_TYPE = 'wms.low_stock';
  * fallback when notification_routing_rules has no active rule for the event.
  */
 const LOW_STOCK_FALLBACK_ROLE = 'warehouse_keeper';
+
+/**
+ * Audit 2026-08-07: `alert_thresholds` da `wms.low_stock` qatori (20%, "reorder nuqtaning shu
+ * foizidan pastga tushsa ogohlantirish", 2026-08-03) mavjud edi, lekin **hech qanday kod uni
+ * o'qimasdi** — ya'ni egasi foizni o'zgartirsa hech narsa o'zgarmasdi.
+ *
+ * ⚠️ ZIDDIYAT va u qanday hal qilindi: joriy kod `available_quantity < min_stock` da, ya'ni
+ * reorder nuqtasining **100%** ida ogohlantiradi; jadval esa **20%** deydi. Agar chegara
+ * to'g'ridan-to'g'ri filtrga qo'yilsa, ogohlantirishlar keskin **kamayadi** — bu xavfli
+ * yo'nalishdagi regressiya bo'lardi (Q-39), va qaysi ma'no to'g'riligini egasi hal qilishi kerak
+ * (Q-34). Shuning uchun chegara **qo'shimcha daraja** sifatida ishlatiladi: barcha reorder
+ * ogohlantirishlari avvalgidek yuboriladi, chegaradan past tushganlari esa "KRITIK" deb
+ * belgilanadi. Egasining raqami jonli ta'sirga ega bo'ldi, hech bir signal yo'qolmadi.
+ */
+const LOW_STOCK_CRITICAL_PCT_FALLBACK = 20;
 
 @Injectable()
 export class PosLowStockJob {
@@ -50,24 +66,35 @@ export class PosLowStockJob {
       const userIdsResult = await this.routing.resolveUserIds(LOW_STOCK_EVENT_TYPE, LOW_STOCK_FALLBACK_ROLE);
       const targetUserIds = userIdsResult.ok ? userIdsResult.data : [];
 
+      const criticalPct = await getAlertThreshold(ALERT_TYPE.WMS_LOW_STOCK, LOW_STOCK_CRITICAL_PCT_FALLBACK);
+      const isCritical = (item: { currentQty: number; minQty: number }): boolean =>
+        item.minQty > 0 && item.currentQty < item.minQty * (criticalPct / 100);
+      const criticalCount = r.data.filter(isCritical).length;
+
       for (const item of r.data.slice(0, 20)) {
+        const critical = isCritical(item);
         for (const uid of targetUserIds) {
           await this.notifications.sendNotification(
             uid,
             'LOW_STOCK',
-            'Past qoldiq ogohlantirishi',
-            `Material ${item.materialCode}: ${item.currentQty}/${item.minQty} (Ombor #${item.warehouseId})`,
+            critical ? 'KRITIK past qoldiq' : 'Past qoldiq ogohlantirishi',
+            `Material ${item.materialCode}: ${item.currentQty}/${item.minQty} (Ombor #${item.warehouseId})`
+              + (critical ? ` — reorder nuqtasining ${criticalPct}% idan past!` : ''),
             'warehouse',
             item.warehouseId,
           ).catch(() => null);
         }
       }
 
-      const summary = r.data.slice(0, 5).map(i => `${i.materialCode}: ${i.currentQty}/${i.minQty}`).join('\n');
+      const summary = r.data.slice(0, 5)
+        .map(i => `${isCritical(i) ? '🔴' : '⚠️'} ${i.materialCode}: ${i.currentQty}/${i.minQty}`)
+        .join('\n');
       await this.telegram.sendAlert({
-        title: `⚠️ ${r.data.length} ta material tugayapti`,
+        title: criticalCount > 0
+          ? `🔴 ${criticalCount} ta material KRITIK (jami ${r.data.length} ta tugayapti)`
+          : `⚠️ ${r.data.length} ta material tugayapti`,
         body: summary,
-        severity: 'warning',
+        severity: criticalCount > 0 ? 'critical' : 'warning',
       }).catch(() => null);
     } catch (err: unknown) {
       this.logger.error('Low stock job xatosi:', err);

@@ -6,6 +6,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { rawSql } from '@shared/db';
 import { sql } from 'drizzle-orm';
+import { getAlertThreshold, ALERT_TYPE } from '../../../../shared/config/alert-thresholds.reader';
+
+/**
+ * "critical" chegarasi uchun fallback — `alert_thresholds.wms.lot_expiring` qatori yo'q/nofaol
+ * bo'lsa ishlatiladi. Bu aynan 2026-08-07 gacha shu faylda qotib turgan qiymat, ya'ni jadval
+ * yo'qolsa xatti-harakat o'zgarmaydi (Q-39).
+ */
+const EXPIRY_CRITICAL_DAYS_FALLBACK = 7;
+/** "warning" chegarasi — hozircha kodda; egasi uchun alohida CRUD qatori yo'q. */
+const EXPIRY_WARNING_DAYS = 30;
 
 @Injectable()
 export class WmsCatalogAbcAgingExpiryService {
@@ -102,6 +112,15 @@ export class WmsCatalogAbcAgingExpiryService {
 
   async getExpiry(daysAhead: number) {
     try {
+      // Audit 2026-08-07: `daysLeft <= 7` shu yerda qotib turgan edi, holbuki `alert_thresholds`
+      // da `wms.lot_expiring` qatori (7 kun, "CRUD orqali sozlanadi") 2026-08-03 dan beri
+      // to'ldirilgan va hech kim o'qimasdi. Endi shu qatordan o'qiladi — egasi kunni
+      // o'zgartirsa, StockAlertCron ham darhol yangi chegarada ishlaydi (u aynan shu
+      // `status === 'critical'` natijasiga tayanadi).
+      const criticalDays = await getAlertThreshold(
+        ALERT_TYPE.WMS_LOT_EXPIRING,
+        EXPIRY_CRITICAL_DAYS_FALLBACK,
+      );
       const r = await rawSql(sql`
         SELECT bl.id::text AS id, COALESCE(bl.lot_number, bl.batch_number) AS lot_number,
                COALESCE(mc.xom_ashyo, mc.kod) AS material_name, mc.kod AS material_code,
@@ -121,7 +140,11 @@ export class WmsCatalogAbcAgingExpiryService {
         const daysLeft = Number(row.days_until_expiry ?? 0);
         const qty = Number(row.quantity ?? 0);
         const price = Number(row.unit_price ?? 0);
-        const status = daysLeft < 0 ? 'expired' : daysLeft <= 7 ? 'critical' : daysLeft <= 30 ? 'warning' : 'ok';
+        const status = daysLeft < 0
+          ? 'expired'
+          : daysLeft <= criticalDays
+            ? 'critical'
+            : daysLeft <= EXPIRY_WARNING_DAYS ? 'warning' : 'ok';
         return {
           materialId: String(row.id), name: String(row.material_name ?? ''),
           batchNumber: String(row.lot_number ?? ''),
