@@ -14,6 +14,7 @@ import { INotificationRepo, NOTIFICATION_REPO } from '../../domain/repositories/
 import { ISmsSender, SMS_SENDER } from '../../domain/ports/i-sms-sender.port';
 import { IEmailSender, EMAIL_SENDER } from '../../domain/ports/i-email-sender.port';
 import { ITelegramSender, TELEGRAM_SENDER } from '../../domain/ports/i-telegram-sender.port';
+import { NotificationPreferencesService } from '../notification-preferences.service';
 
 export interface ExtendedCreateNotificationCommand extends CreateNotificationCommand {
   recipientEmail?: string;
@@ -32,7 +33,47 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     @Inject(TELEGRAM_SENDER) private readonly telegramService: ITelegramSender,
     @Inject(EMAIL_SENDER) private readonly emailService: IEmailSender,
     @Inject(SMS_SENDER) private readonly smsService: ISmsSender,
+    private readonly prefsService: NotificationPreferencesService,
       ) {}
+
+  /**
+   * Audit 2026-08-06 (Notifications): NotificationSettings.tsx saved channel toggles through
+   * a real CRUD path, but nothing on the send side ever read them — every notification went
+   * out on the caller's default channels regardless. The settings screen looked functional
+   * and changed nothing.
+   *
+   * Fails OPEN on purpose: if the preference lookup errors we keep the requested channels
+   * rather than silently muting someone. A duplicate notification is recoverable; a missed
+   * QC or security alert is not. 'in_app' is never filtered — it is the stored row itself.
+   */
+  private async applyUserPreferences(
+    rawUserId: string,
+    channels: Array<'telegram' | 'email' | 'sms' | 'in_app'>,
+  ): Promise<Array<'telegram' | 'email' | 'sms' | 'in_app'>> {
+    // CreateNotificationCommand.userId is a string; the prefs table keys on the numeric
+    // users.id. A non-numeric id means we cannot look preferences up — fail open.
+    const userId = Number.parseInt(String(rawUserId), 10);
+    if (!Number.isInteger(userId)) return channels;
+
+    const prefs = await this.prefsService.getPreferences(userId);
+    if (!prefs.ok) {
+      this.logger.warn(`Bildirishnoma sozlamalari o'qilmadi (user ${userId}) — so'ralgan kanallar saqlanadi`);
+      return channels;
+    }
+    const p = prefs.data;
+    const allowed = channels.filter((c) => {
+      if (c === 'in_app') return true;
+      if (c === 'email') return p.emailEnabled;
+      if (c === 'telegram') return p.telegramEnabled;
+      if (c === 'sms') return p.pushEnabled;
+      return true;
+    });
+    const muted = channels.filter((c) => !allowed.includes(c));
+    if (muted.length > 0) {
+      this.logger.log(`Foydalanuvchi ${userId} sozlamasi bo'yicha o'chirilgan kanallar: ${muted.join(', ')}`);
+    }
+    return allowed;
+  }
 
   async execute(command: CreateNotificationCommand): Promise<Result<Notification>> {
     const notification = Notification.createForUser(command.userId, command.title, command.body, command.type);
@@ -58,7 +99,8 @@ export class CreateNotificationHandler implements ICommandHandler<CreateNotifica
     }
 
     const ext = command as ExtendedCreateNotificationCommand;
-    const channels = ext.channels ?? ['telegram', 'in_app'];
+    const requestedChannels = ext.channels ?? ['telegram', 'in_app'];
+    const channels = await this.applyUserPreferences(command.userId, requestedChannels);
     // channel column: primary channel attempted for this notification — first entry of the
     // resolved channels list, i.e. the same list the per-channel delivery loop below iterates.
     notification.channel = channels[0] ?? 'in_app';
